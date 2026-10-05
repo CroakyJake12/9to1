@@ -6,56 +6,59 @@ export function installStagingAppsAction(): void {
   const button = form.querySelector<HTMLButtonElement>("button[type=submit]");
   let busy = false;
   const message = (text: string) => { status.textContent = text; };
-  const read = async () => {
+  type ClientState = { kind?: string; clientId?: unknown; registration?: unknown };
+  type State = ClientState & { native?: ClientState };
+  const read = async (): Promise<State> => {
     const response = await fetch("/account/staging-apps", {
       credentials: "same-origin", cache: "no-store", headers: { accept: "application/json" },
     });
     if (!response.ok) throw new Error("The current administrator session could not be verified.");
     return await response.json();
   };
-  const showReady = (state: { kind?: string; clientId?: unknown }): boolean => {
-    if (state.kind !== "ready" || typeof state.clientId !== "string" || !state.clientId) return false;
-    message("Staging app OAuth client connected. Public client ID: " + state.clientId);
-    if (button) button.disabled = true;
+  const ready = (client: ClientState | undefined): client is ClientState & { clientId: string } =>
+    client?.kind === "ready" && typeof client.clientId === "string" && !!client.clientId;
+  const showReady = (state: State): boolean => {
+    if (!ready(state) || !ready(state.native)) return false;
+    message("Staging clients connected. Web public client ID: " + state.clientId +
+      "; Windows native public client ID: " + state.native.clientId);
     return true;
   };
-  const connect = async () => {
+  const select = (state: State, target: "web" | "native"): ClientState | undefined =>
+    target === "web" ? state : state.native;
+  const connectOne = async (target: "web" | "native"): Promise<boolean> => {
+    // Fresh canonical admin/owner/metadata preflight before EACH possible POST.
     const state = await read();
-    if (showReady(state)) return;
-    if (state.kind !== "missing" || !state.registration) {
+    const current = select(state, target);
+    if (ready(current)) return true;
+    if (state.kind === "not-admin" || state.kind === "conflict" || state.native?.kind === "conflict" ||
+        current?.kind !== "missing" || !current.registration) {
       message("Existing staging client metadata needs review. No new client was created.");
-      return;
+      return false;
     }
     let response: Response | undefined;
-    let submitted = false;
-    let primary: unknown;
     try {
-      // This is the existing maintained session/CSRF/admin-privileged endpoint.
-      submitted = true;
+      // Same real browser session, CSRF/admin enforcement, maintained endpoint and native metadata validator.
       response = await fetch("/api/auth/oauth2/create-client", {
         method: "POST", credentials: "same-origin",
         headers: { "content-type": "application/json", accept: "application/json" },
-        body: JSON.stringify(state.registration),
+        body: JSON.stringify(current.registration),
       });
-    } catch (error) { primary = error; }
-    // A lost reply can follow a committed registration. Never automatically POST again.
+    } catch { /* A lost reply may follow a commit: reconcile without another POST. */ }
     try {
-      const current = await read();
-      if (showReady(current)) return;
-      if (current.kind === "conflict") {
+      const reconciled = await read();
+      if (ready(select(reconciled, target))) return true;
+      if (reconciled.kind === "conflict" || reconciled.native?.kind === "conflict")
         message("Staging client metadata needs review. No further registration was attempted.");
-      } else if (response && !response.ok) {
+      else if (response && !response.ok)
         message("Client registration was refused (HTTP " + response.status + "). Refresh the account page before retrying.");
-      } else {
-        message("Registration outcome could not be confirmed. Refresh the account page before retrying.");
-      }
-    } catch {
-      message(primary || submitted
-        ? "Registration outcome could not be confirmed. Refresh the account page before retrying."
-        : "The current administrator session could not be verified.");
-    }
-    // Keep the form disabled after a POST with an unconfirmed/refused outcome; a fresh GET reconciles.
-    if (button) button.disabled = true;
+      else message("Registration outcome could not be confirmed. Refresh the account page before retrying.");
+    } catch { message("Registration outcome could not be confirmed. Refresh the account page before retrying."); }
+    return false;
+  };
+  const connect = async () => {
+    if (!await connectOne("web")) return;
+    if (!await connectOne("native")) return;
+    if (!showReady(await read())) message("Client metadata changed. Refresh the account page before retrying.");
   };
   form.addEventListener("submit", async event => {
     event.preventDefault();
@@ -64,15 +67,15 @@ export function installStagingAppsAction(): void {
     if (button) button.disabled = true;
     message("Connecting staging apps…");
     try {
-      // Same-origin tabs with Web Locks share one preflight+POST+reconciliation interval.
+      // Preserve same-origin cross-tab suppression for the entire pair of originals.
       if (navigator.locks) {
         await navigator.locks.request("cake-connect-staging-apps", { ifAvailable: true }, async lock => {
           if (!lock) { message("Another account tab is connecting staging apps. Refresh when it finishes."); return; }
           await connect();
         });
       } else await connect();
-    } catch {
-      message("The current administrator session could not be verified. Refresh the account page.");
-    } finally { busy = false; }
+    } catch { message("The current administrator session could not be verified. Refresh the account page."); }
+    // Stay disabled after success/refusal/unknown outcome. A new page GET reconciles, never provisions.
+    finally { busy = false; }
   });
 }

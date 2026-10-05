@@ -26,8 +26,26 @@
         <StackPanel id="home-content" orientation="Vertical">
           <If Condition="{Binding IsDashboard}">
           <StackPanel id="dashboard-page" orientation="Vertical">
-          <TextBlock id="welcome-heading" text="Welcome to 9-1" font-size="32" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <TextBlock id="welcome-heading" text="{Binding AccountHeading, fallback=Welcome to 9-1}" font-size="32" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
           <TextBlock id="welcome-copy" text="Your day across 9-1" font-size="15" foreground="{Resource CuiTextSoftBrush}" margin="0 6 0 18" />
+          <StackPanel id="home-account" orientation="Vertical" margin="0 0 0 18">
+            <TextBlock id="home-account-status" text="{Binding AccountStatus}" foreground="{Resource CuiTextSoftBrush}" />
+            <WrapPanel margin="0 8 0 0">
+              <Button id="home-account-signin" action="AccountSignIn" content="Sign in" margin="0 0 8 0" />
+              <Button id="home-account-refresh" action="AccountRefresh" content="Refresh account" margin="0 0 8 0" />
+              <Button id="home-account-settings" action="NavigateSettings" content="Account settings" margin="0 0 8 0" />
+              <Button id="home-account-signout" action="AccountRequestSignOut" content="Sign out" />
+            </WrapPanel>
+            <If Condition="{Binding HasAccountConfirmation}">
+              <StackPanel id="home-account-confirmation" orientation="Vertical" margin="0 8 0 0">
+                <TextBlock text="{Binding AccountConfirmation}" foreground="{Resource CuiTextSoftBrush}" />
+                <WrapPanel margin="0 8 0 0">
+                  <Button id="home-account-confirm-signout" action="AccountConfirmSignOut" content="Confirm sign out" margin="0 0 8 0" />
+                  <Button id="home-account-cancel-signout" action="AccountCancelSignOut" content="Cancel" />
+                </WrapPanel>
+              </StackPanel>
+            </If>
+          </StackPanel>
           <StackPanel id="dashboard-brief" orientation="Vertical" margin="0 0 0 18">
             <TextBlock text="Your briefing" font-size="20" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" />
             <TextBlock id="dashboard-brief-status" text="{Binding BriefSummary, fallback=Your authorised activity will appear here}" foreground="{Resource CuiTextSoftBrush}" margin="0 6 0 12" />

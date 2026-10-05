@@ -1,0 +1,32 @@
+<Cui id="boards.browser" version="1">
+  <Actions><Action name="OpenSavedNotebook" command="Open" parameter="{Binding savedNotebook}" /></Actions>
+  <Grid RowDefinitions="Auto,Auto,*" margin="12">
+    <TextBlock grid-row="0" text="{Binding Title}" font-size="24" />
+    <StackPanel grid-row="1" margin="0,8">
+      <WrapPanel>
+        <Button content="New notebook" action="Create" />
+        <Button content="Save" action="Save" />
+        <Button content="Bold" action="Bold" />
+        <Button content="Undo" action="Undo" />
+        <Button content="Redo" action="Redo" />
+        <Button content="Close notebook" action="Close" />
+      </WrapPanel>
+      <TextBlock text="{Binding Status}" accessible-name="Notebook save status" text-wrapping="Wrap" />
+      <TextBlock text="Notebooks are stored on this browser. Account sign-in does not upload or share them." text-wrapping="Wrap" />
+      <If Condition="{Binding HasUnknownCommitOutcome}">
+        <StackPanel orientation="Vertical">
+          <TextBlock text="The save outcome is unknown. Inspect the saved notebook before another write or close." text-wrapping="Wrap" />
+          <Button content="Inspect saved state" action="Inspect" />
+        </StackPanel>
+      </If>
+      <TextBlock text="Saved notebooks on this browser" font-size="16" margin="0,8,0,4" />
+      <Button content="Refresh notebooks" action="Refresh" />
+      <ScrollViewer max-height="160">
+        <Repeat Source="{Binding Notebooks}" As="savedNotebook" Key="{Binding savedNotebook.Id}">
+          <Button content="{Binding savedNotebook.Title}" action="OpenSavedNotebook" />
+        </Repeat>
+      </ScrollViewer>
+    </StackPanel>
+    <ScrollViewer grid-row="2"><Object Type="BoardsNotebookSurface" /></ScrollViewer>
+  </Grid>
+</Cui>

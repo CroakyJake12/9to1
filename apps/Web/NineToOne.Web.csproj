@@ -31,6 +31,7 @@
     <ProjectReference Include="Write/Scene/Haven.WriteBrowser.Scene.csproj" />
     <ProjectReference Include="Productivity/Present/Scene/NineToOne.Present.BrowserScene.csproj" />
     <Compile Include="Productivity/Present/PresentBrowserFeature.cs;Productivity/Present/PresentBrowserSession.cs;Productivity/Present/PresentBrowserSurface.cs;Productivity/Present/Storage/*.cs" />
+    <Compile Include="Productivity/Boards/*.cs" />
     <Compile Include="../../9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/PresentRepository.cs" Link="Owner/PresentRepository.cs" />
     <ProjectReference Include="Write/Packages/NineToOne.Write.Packages.csproj" />
     <TrimmerRootAssembly Include="NineToOne.Web" />
@@ -42,12 +43,13 @@
     <TrimmerRootAssembly Include="Haven.Application" />
     <TrimmerRootAssembly Include="NineToOne.Write.Packages" />
     <TrimmerRootAssembly Include="NineToOne.Present.BrowserScene" />
-    <EmbeddedResource Include="../../9to1 Workspace/Home/UI/Home.cui" LogicalName="NineToOne.Web.Home.cui" />
+    <EmbeddedResource Include="Home/Home.cui" LogicalName="NineToOne.Web.Home.cui" />
     <EmbeddedResource Include="Wave/Wave.cui" LogicalName="NineToOne.Web.Wave.cui" />
     <EmbeddedResource Include="Picture/Picture.cui" LogicalName="NineToOne.Web.Picture.cui" />
     <EmbeddedResource Include="Accounts/Accounts.cui" LogicalName="NineToOne.Web.Accounts.cui" />
     <EmbeddedResource Include="Write/Write.cui" LogicalName="NineToOne.Web.Write.cui" />
     <EmbeddedResource Include="Productivity/Present/Present.cui" LogicalName="NineToOne.Web.Present.cui" />
+    <EmbeddedResource Include="Productivity/Boards/Boards.cui" LogicalName="NineToOne.Web.Boards.cui" />
     <Content Include="Media/wave-browser.js" Link="wwwroot/wave-browser.js" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Media/picture-browser.js" Link="wwwroot/picture-browser.js" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Services/account-service.js" Link="wwwroot/account-service.js" CopyToOutputDirectory="PreserveNewest" />

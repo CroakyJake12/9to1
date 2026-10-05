@@ -7,6 +7,7 @@ using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using HavenOS.Home.Core;
+using NineToOne.Web.Accounts;
 
 namespace NineToOne.Web;
 
@@ -20,6 +21,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
     private IDisposable? _surfaceLifetime;
     private BrowserActionAvailability.Observation? _availability;
     private BrowserHomeContext? _home;
+    private AccountSettingsFeature? _accountSettings;
     private CuiDocument? _homeDocument;
     private readonly Dictionary<string, Vector> _scrollOffsets = new(StringComparer.Ordinal);
     private string? _currentAddress;
@@ -61,7 +63,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
             throw new InvalidOperationException("A browser single-view lifetime is required.");
         lifetime.MainView = _view;
         Program.Attach(this);
-        BrowserFeatureComposition.Register(_surfaces);
+        _accountSettings = BrowserFeatureComposition.Register(_surfaces);
         base.OnFrameworkInitializationCompleted();
     }
 
@@ -102,8 +104,9 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         var dispatch = await BrowserRouteDispatcher.PrepareAsync(_surfaces, request!, BrowserHomeContext.CanOpen, target =>
         {
             EnsureHome();
-            var home = new BrowserHomeContext(_homeDocument!, NavigateHome);
-            return home.Open(target) ? new(_homeDocument!, home, home, Admission: new HomeAdmission(this, home)) : null;
+            var home = new BrowserHomeContext(_homeDocument!, NavigateHome, _accountSettings);
+            if (!home.Open(target)) { home.Dispose(); return null; }
+            return new(_homeDocument!, home, home, home, Admission: new HomeAdmission(this, home));
         }, cancellation);
         var (result, present, isUnavailableHome) = dispatch;
         if (_disposed || _closing || version != _navigationVersion || cancellation.IsCancellationRequested)
@@ -127,10 +130,15 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
                 return;
             }
             if (Render(surface, BrowserRouteCodec.Encode(request!)))
+            {
                 Program.ShowStatus(_presentationCleanupError is not null ? "BrowserPresentationCleanupFailed"
-                        : isUnavailableHome ? "HomeServiceUnavailable" : "Ready",
+                        : isUnavailableHome ? "HomeProvidersUnavailable" : "Ready",
                     _presentationCleanupError is not null ? "Your destination opened, but the previous view could not fully close."
-                        : isUnavailableHome ? "Account services are unavailable. Your files and activity have not been loaded." : "");
+                        : isUnavailableHome ? "Home files and activity are unavailable. Account status is checked separately." : "");
+                // Only after the native presentation is transferred; the actual Settings owner retains the refresh.
+                if (surface.Bindings is BrowserHomeContext home && ReferenceEquals(_home, home))
+                    _ = home.ActivateAsync();
+            }
         });
     }
 
@@ -321,6 +329,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         _surfaceLifetime = null;
         _availability = null;
         _home = null;
+        _accountSettings = null;
         _homeDocument = null;
         _presentationCleanupError = null;
         _scrollOffsets.Clear();
@@ -420,13 +429,13 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         if (_closeCompletion is { } closing) await closing.Task;
         await DrainPrivateContextResetTasksAsync();
         if (_disposed || _closing || version != _privateContextVersion || _privateContextResets != 0) return;
-        BrowserFeatureComposition.RegisterPrivateAccountSettings(_surfaces);
+        _accountSettings = BrowserFeatureComposition.RegisterPrivateAccountSettings(_surfaces);
         QueueNavigation(Program.ReadFragment());
     }
 
     private sealed class HomeAdmission(BrowserApplication application, BrowserHomeContext home) : IBrowserPresentationAdmission
     {
         public void Accept() => application._home = home;
-        public void Reject() { }
+        public void Reject() => home.Dispose();
     }
 }

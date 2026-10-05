@@ -48,6 +48,60 @@ public sealed class AccountSettingsFeature : IHomeFeatureRouteHandler, IDisposab
         return new(document, new BrowserAccountTransport(), present, signIn);
     }
 
+    // Home is another presentation of this SAME account owner, not a Home resource grant.
+    internal AccountBrowserBindings CreateHomeBinding()
+    {
+        lock (_ownership)
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            var binding = new AccountBrowserBindings(_transport, _present, _signIn);
+            _issuedBindings.Add(binding);
+            return binding;
+        }
+    }
+
+    internal Task RefreshHomeAsync(AccountBrowserBindings binding, CancellationToken caller = default,
+        CuiActionDispatchLifetime? lifetime = null)
+    {
+        TaskCompletionSource completion;
+        lock (_ownership)
+        {
+            if (_disposed) return Task.CompletedTask;
+            if (!_issuedBindings.Contains(binding)) throw new InvalidOperationException("A foreign account binding cannot refresh Home.");
+            completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            _issuedFactories.Add(completion.Task); // BEFORE the original dispatch/native notifications.
+        }
+        _ = SettleHomeRefreshAsync(binding, caller, lifetime, completion);
+        return completion.Task;
+    }
+
+    private async Task SettleHomeRefreshAsync(AccountBrowserBindings binding, CancellationToken caller,
+        CuiActionDispatchLifetime? lifetime, TaskCompletionSource completion)
+    {
+        Task? original = null;
+        try
+        {
+            var operation = lifetime is { } owned
+                ? binding.DispatchWithLifetimeAsync("Refresh", null, owned)
+                : binding.DispatchAsync("Refresh", null, caller);
+            original = operation.AsTask(); // Capture the SAME ValueTask exactly once.
+            await original;
+            completion.TrySetResult();
+        }
+        catch (OperationCanceledException error) when (original?.IsCanceled == true)
+        { completion.TrySetCanceled(error.CancellationToken); }
+        catch (Exception error)
+        {
+            if (original?.Exception is { } compound) completion.TrySetException(compound.InnerExceptions);
+            else completion.TrySetException(error);
+        }
+        finally
+        {
+            // Unknown failures remain in the existing owner close ledger.
+            if (!completion.Task.IsFaulted) lock (_ownership) _issuedFactories.Remove(completion.Task);
+        }
+    }
+
     public Task<HomeFeatureNavigationResult> OpenAsync(HomeFeatureNavigationRequest request,
         CancellationToken cancellationToken = default)
     {
