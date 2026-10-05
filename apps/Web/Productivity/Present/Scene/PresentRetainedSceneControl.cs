@@ -66,10 +66,18 @@ public sealed class PresentRetainedSceneControl : Panel, IDisposable
     }
     private void Refresh()
     {
-        if (_editor is null) return;
-        _canvas.SetSlide(_editor.Document, _editor.SelectedSlide, _editor.Selection.ElementIds);
-        _renderedSlide = _editor.Selection.SlideId;
-        if (_allowed) _scene.FocusElement(_canvas);
+        if (_disposed || _editor is null) return;
+        var originalEditor = _editor;
+        var originalSlide = originalEditor.Selection.SlideId;
+        var hadCanvasFocus = _scene.IsKeyboardFocusWithin;
+        _canvas.SetSlide(originalEditor.Document, originalEditor.SelectedSlide, originalEditor.Selection.ElementIds);
+        if (_disposed || !ReferenceEquals(originalEditor, _editor) ||
+            originalEditor.Selection.SlideId != originalSlide) return;
+        _renderedSlide = originalSlide;
+        // Model refresh must not steal focus from the native speaker-notes field.
+        // Preserve canvas focus only while the SAME scene still owns it after notifications.
+        if (_allowed && hadCanvasFocus && _scene.IsKeyboardFocusWithin && ReferenceEquals(_scene.Root, _canvas))
+            _scene.FocusElement(_canvas);
     }
     private void Changed(object? sender, EventArgs args) => Refresh();
     private void Select(Guid? id) { if (!_allowed || _editor is null) return; _editor.SelectElements(id is { } value ? [value] : []); Refresh(); }

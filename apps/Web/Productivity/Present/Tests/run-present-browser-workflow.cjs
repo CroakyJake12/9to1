@@ -7,7 +7,7 @@ assert(!fs.existsSync(output), 'Fresh evidence directory required');
 fs.mkdirSync(output, { recursive: true });
 const report = { scope: 'Present text/shape/notes create-save-normal-close-fresh-process-reopen only; media/format/auth/full parity not certified',
   outcomes: [], diagnostics: [], closes: [], pointerInputs: [] };
-let server, context, page, saved, firstError;
+let server, context, page, saved, savedNotesTitle, firstError;
 const causes = [];
 const add = error => { if (!causes.includes(error)) causes.push(error); };
 const hash = text => crypto.createHash('sha256').update(text).digest('hex');
@@ -115,7 +115,12 @@ let origin;
     const initial = await rows(); assert.equal(initial.length, 1); assert.equal(initial[0].current.version, 1); assert.equal(initial[0].previous, null);
     await click('Add text'); await click('Add shape');
     const notes = one(await ax(), 'textbox', 'Speaker notes');
-    await point(notes); await page.keyboard.press('Control+A'); await page.keyboard.type('Alpha beta gamma\nSpeaker notes preserved.');
+    await point(notes); await page.keyboard.press('Control+A');
+    await page.keyboard.type('Alpha beta gamma'); await page.keyboard.press('Enter');
+    await page.keyboard.type('Speaker notes preserved.');
+    const typed = await wait(s => s.elements.some(peer => peer.role === 'textbox' && peer.name === 'Speaker notes' &&
+      peer.value === 'Alpha beta gamma\nSpeaker notes preserved.'), 'Full original native notes before changing slide');
+    assert.equal(one(typed, 'textbox', 'Speaker notes').value, 'Alpha beta gamma\nSpeaker notes preserved.');
     await click('Add slide');
     await click('Save');
     const savedDeadline = Date.now() + 30000;
@@ -134,6 +139,7 @@ let origin;
     assert.equal(document.slides.length, previous.slides.length + 1);
     assert(document.slides.some(slide => slide.elements.some(element => element.kind === 2)), 'Actual owning shape persisted');
     assert(document.slides.some(slide => slide.speakerNotes === 'Alpha beta gamma\nSpeaker notes preserved.'));
+    savedNotesTitle = document.slides.find(slide => slide.speakerNotes === 'Alpha beta gamma\nSpeaker notes preserved.').title;
     assert.notDeepEqual(document.slides, previous.slides);
     report.outcomes.push({ name: 'actual-create-edit-save', state: 'PASS', id: saved.id, revision: document.version, sha256: saved.current.sha256 });
     await page.screenshot({ path: path.join(output, 'present-saved.png') });
@@ -141,6 +147,7 @@ let origin;
     await launch('#/app.present?entityType=PresentDocument&entityId=' + encodeURIComponent(saved.id));
     await wait(s => s.elements.some(peer => peer.role === 'button' && peer.name === 'Save' && peer.enabled), 'Fresh process opened saved canonical document');
     const reopened = await rows(); assert.deepEqual(reopened, [saved], 'Fresh process preserved exact current and previous bytes');
+    await click(savedNotesTitle); // Select the original notes slide through its actual native list button.
     assert((await ax()).elements.some(peer => peer.role === 'textbox' && peer.name === 'Speaker notes' &&
       peer.value === 'Alpha beta gamma\nSpeaker notes preserved.'), 'Actual reopened native speaker notes match');
     report.outcomes.push({ name: 'fresh-process-reopen', state: 'PASS', id: saved.id, revision: 2 });
