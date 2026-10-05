@@ -43,6 +43,71 @@ var checks = await headless.Dispatch(async () =>
     string Text(NotesDocument document) => string.Concat(First(document).Runs.Select(run => run.Text));
     var paths = new AppPaths();
     var repository = new NotesRepository(paths, new NotesDocumentValidator(), new ProductionDiagnostics(paths));
+    if (args.Contains("initial-focus", StringComparer.Ordinal))
+    {
+        // Actual native focus manager + original editor/input renderer, no fake
+        // FocusElement/counters. This does not exercise browser Space KeyDown.
+        var sentinel = new Button { Content = "Toolbar focus" };
+        using var focusHost = new WriteRetainedSceneControl(() => true);
+        var layout = new DockPanel(); DockPanel.SetDock(sentinel, Dock.Top);
+        layout.Children.Add(sentinel); layout.Children.Add(focusHost);
+        var focusWindow = new Window { Width = 1100, Height = 800, Content = layout };
+        focusWindow.Show();
+        try
+        {
+            using (var frame = focusWindow.CaptureRenderedFrame())
+                Check(frame is not null, "initial-focus actual native owner frame renders");
+            var nativeScene = focusHost.GetVisualDescendants().OfType<HavenSceneControl>().Single();
+            var firstDocument = NotesDocument.Create("Initial focus owner");
+            var firstEditor = new WriteDocumentEditor(firstDocument);
+            focusHost.SetInputAllowed(false); sentinel.Focus();
+            focusHost.SetEditor(firstEditor);
+            Check(ReferenceEquals(focusWindow.FocusManager?.GetFocusedElement(), sentinel),
+                "initial-focus disabled new editor does not seize native focus");
+            focusHost.SetInputAllowed(true);
+            Check(ReferenceEquals(focusWindow.FocusManager?.GetFocusedElement(), nativeScene),
+                "initial-focus new owner attachment focuses native scene once when enabled");
+            focusWindow.KeyTextInput("Alpha beta gamma");
+            Check(Text(firstDocument) == "Alpha beta gamma",
+                "initial-focus actual routed native text reaches same original owner editor");
+            sentinel.Focus(); focusHost.SetInputAllowed(false); focusHost.SetEditor(firstEditor);
+            focusHost.SetInputAllowed(true);
+            Check(ReferenceEquals(focusWindow.FocusManager?.GetFocusedElement(), sentinel),
+                "initial-focus same editor busy release preserves real toolbar focus");
+            focusWindow.KeyTextInput(" ignored");
+            Check(Text(firstDocument) == "Alpha beta gamma",
+                "initial-focus toolbar-focused text does not mutate original document");
+            var secondDocument = NotesDocument.Create("Replacement focus owner");
+            var secondEditor = new WriteDocumentEditor(secondDocument);
+            focusHost.SetInputAllowed(false); focusHost.SetEditor(secondEditor); focusHost.SetEditor(null);
+            focusHost.SetInputAllowed(true);
+            Check(ReferenceEquals(focusWindow.FocusManager?.GetFocusedElement(), sentinel) && nativeScene.Root is null,
+                "initial-focus null attachment clears pending focus before enable");
+            focusHost.SetEditor(secondEditor);
+            Check(ReferenceEquals(focusWindow.FocusManager?.GetFocusedElement(), nativeScene),
+                "initial-focus enabled non-null replacement uses actual owner focus");
+            focusHost.SetInputAllowed(false); focusHost.SetInputAllowed(true);
+            Check(ReferenceEquals(focusWindow.FocusManager?.GetFocusedElement(), nativeScene),
+                "initial-focus actual busy router renewal preserves already-native-focused scene");
+            focusWindow.KeyTextInput("Delta echo");
+            Check(Text(secondDocument) == "Delta echo",
+                "initial-focus renewed actual owner router accepts native text after busy roundtrip");
+            focusHost.SetInputAllowed(false); sentinel.Focus();
+            focusHost.SetInputAllowed(true);
+            Check(ReferenceEquals(focusWindow.FocusManager?.GetFocusedElement(), sentinel),
+                "initial-focus toolbar focus acquired during busy is not stolen on enable");
+            focusWindow.KeyTextInput(" ignored while toolbar focused");
+            Check(Text(secondDocument) == "Delta echo",
+                "initial-focus toolbar-focused native text after busy leaves canonical editor unchanged");
+            sentinel.Focus(); focusHost.SetInputAllowed(false);
+            focusHost.SetEditor(new WriteDocumentEditor(NotesDocument.Create("Disposed pending focus")));
+            focusHost.Dispose();
+            Check(ReferenceEquals(focusWindow.FocusManager?.GetFocusedElement(), sentinel) && nativeScene.Root is null,
+                "initial-focus disposed pending editor leaves native toolbar focused and root detached");
+            return assertions;
+        }
+        finally { focusWindow.Close(); }
+    }
     if (args.Contains("navigation", StringComparer.Ordinal))
     {
         var a = NotesDocument.Create("Canonical document A");

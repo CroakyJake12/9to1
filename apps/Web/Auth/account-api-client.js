@@ -42,7 +42,8 @@ export class AccountApiClient {
     this.#origin = resource.origin;
     this.#token = getAccessToken;
     this.#clear = onPrivateContextInvalidated;
-    this.#fetch = transport;
+    // Native fetch requires its Window receiver; injected transports retain their existing receiver.
+    this.#fetch = transport === globalThis.fetch ? transport.bind(globalThis) : transport;
   }
 
   /** Call before switching account/session/organisation; await cleanup before opening new private surfaces. */

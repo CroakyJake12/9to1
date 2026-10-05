@@ -1,0 +1,177 @@
+{
+  "state": "SELECTED_SOURCE_ONLY_NOT_RUN",
+  "baseCommit": "d93be09b52bfb805ddde6c1b222c78b70926cfb7",
+  "scope": "Selected native source closure; new public-ink criterion and explicit d93 unrepaired comparison. Historical selection64 failures preserved, not relabeled. No exhaustive compiler/runtime provenance.",
+  "files": {
+    "apps/Web/Wave/WaveBrowserSession.cs": {
+      "bytes": 34166,
+      "sha256": "467d0667ef7df79722f424acb7465161beb89366c0b2bd1f8a34528f6713abcd"
+    },
+    "apps/Web/BrowserRouteCodec.cs": {
+      "bytes": 4164,
+      "sha256": "ea5049804a70f8f6ab8f4681c384dfde1ff9b484410e23cdd36698213d92302a"
+    },
+    "apps/Web/BrowserRouteDispatcher.cs": {
+      "bytes": 2559,
+      "sha256": "0deb17b239d0cabe89f0c65633ea00275a415761955c51b0dd7b827c73d06ae6"
+    },
+    "apps/Web/BrowserHomeContext.cs": {
+      "bytes": 3223,
+      "sha256": "67d160a6cb30ed2bc5c1020235d02ba931fe276aeb23c83003263a4e48923829"
+    },
+    "apps/Web/BrowserActionAvailability.cs": {
+      "bytes": 7180,
+      "sha256": "ddf06cef31846c9b3b81017910c7779fced75b1b47560d696754995f56370369"
+    },
+    "apps/Web/BrowserAccessibilityBridge.cs": {
+      "bytes": 6998,
+      "sha256": "619782a51fd9d845913ae85e9787c48abf24be653fef6a1a653555f735d2f328"
+    },
+    "apps/Web/BrowserAccessibilityJsonContext.cs": {
+      "bytes": 389,
+      "sha256": "86b6b7b9aa6d39f4b0f51157322fd93ed599a9655c02d8d73ac7f662ab97d851"
+    },
+    "apps/Web/Tests/BrowserRenderPlatformShims.cs": {
+      "bytes": 1183,
+      "sha256": "d261718ea1a2a991c29afe9736c4e247a57d4ed045ea331ef7eedd37dd26347d"
+    },
+    "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj": {
+      "bytes": 6624,
+      "sha256": "c3430e7517586c6e6f0da26ffa8a91fb435828937ac5e46998f4e92ca17fb4e2"
+    },
+    "9to1 Workspace/Home/HavenOS.Home.csproj": {
+      "bytes": 1745,
+      "sha256": "917d137c252bff1b5c0f7c38bf047ca166e0611f226195dce2ac61b16579a9a8"
+    },
+    "framework/CUI/Core/CuiRuntimeContracts.cs": {
+      "bytes": 1441,
+      "sha256": "3fc6935ae8e607cfd5637b5f0ad766906aaa4a7a328ae368fdbf328a5a9fd8b4"
+    },
+    "framework/CUI/Runtime/CuiControlLoader.cs": {
+      "bytes": 90323,
+      "sha256": "ccfe9d900b1e0c5fa8664990f26474f6ee57a02af99dd746a60dca3b868dcfb8"
+    },
+    "framework/CUI/Runtime/CuiControlRegistry.cs": {
+      "bytes": 27472,
+      "sha256": "0e9d88c9e0f6d158ade46f05b25cf06b96cbff4816601cfc39f3ce158cddda8b"
+    },
+    "framework/CUI/Runtime/CuiNativeHost.cs": {
+      "bytes": 4202,
+      "sha256": "fe6b426a09c72f3ffe59ea6e1225d10b077da0f6869701dbe323e81f17d47b0c"
+    },
+    "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Presenters/ScrollContentPresenter.cs": {
+      "bytes": 44679,
+      "sha256": "3967b62e867bfde0799660c610ae96bd7246196cd67a89612a2f0a30312737af"
+    },
+    "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/WrapPanel.cs": {
+      "bytes": 14755,
+      "sha256": "59a9dd4b4ef942c937a2c2eec641916c7baed23e721c696e35384b0fa674eff6"
+    },
+    "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/StackPanel.cs": {
+      "bytes": 18890,
+      "sha256": "c4325c6c722dc84a5254ce2d0aa7fa391d03d33e771ad5ce821f889d96fd741f"
+    },
+    "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/TextBlockAutomationPeer.cs": {
+      "bytes": 1134,
+      "sha256": "be0f1e249ec2f12a8174fce36fd970f1d7f9f0ff99ebd5d7208861e4f52ba090"
+    },
+    "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/ButtonAutomationPeer.cs": {
+      "bytes": 1061,
+      "sha256": "2cf3aa4d9b42dcefac0a033b71b055daa79811b2ae8b675ea4a4e58e26e32f5b"
+    },
+    "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/TextBlock.cs": {
+      "bytes": 34179,
+      "sha256": "408cd0ef2f97ff51c7b4901f42c63ad73f767373dc030016887d722da5ee0dd7"
+    },
+    "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Button.cs": {
+      "bytes": 25239,
+      "sha256": "92552728cb3aa76fd85980f0259fa1541983439f471223658bbb556db9760149"
+    },
+    "apps/Web/wwwroot/browser-accessibility.js": {
+      "bytes": 9055,
+      "sha256": "1ab270bbc0fbe648f37495415ce550e09eec0c940280abb980389cb6c21066bc"
+    },
+    "apps/Web/wwwroot/browser-platform.js": {
+      "bytes": 3009,
+      "sha256": "4ddcd9ffad1aac575dcb3aa5a176df8bb8e5747d57975d3bfc87e8241650cb80"
+    },
+    "NuGet.Config": {
+      "bytes": 579,
+      "sha256": "6343458c92e08cdf00e557786aa43b59514ce7b6131bad9b678f77e6c461254e"
+    },
+    "apps/Web/BrowserApplication.cs": {
+      "bytes": 18796,
+      "sha256": "786242db9e6c2b8b44c03d47d669afa14e1a989ad2b892795544fe01ac1c5143"
+    },
+    "apps/Web/BrowserSurfaceRegistry.cs": {
+      "bytes": 14519,
+      "sha256": "ad3f2d66289501f5f7cf89b5acdf2520df0aabbd1d3b4e8023663be3df2a3283"
+    },
+    "apps/Web/Wave/Wave.cui": {
+      "bytes": 14504,
+      "sha256": "0e80d1cc3bffea5d5a9d3db6854339fd00b4bc6a1285501088a14dac3ff1586d"
+    },
+    "apps/Web/Wave/WaveBrowserFeature.cs": {
+      "bytes": 5080,
+      "sha256": "9b614ac89cf89cc6f0f7c39910b7ea31b2bf84d5021a7fd109d29ae119da7cc1"
+    },
+    "apps/Web/Wave/Tests/Fixtures/Original/BrowserApplication.cs": {
+      "bytes": 18556,
+      "sha256": "8e78a7aa6cc19b722feff81765a5465ecf5dc67d63ba3b613decf0be54d57581"
+    },
+    "apps/Web/Wave/Tests/Fixtures/Original/BrowserSurfaceRegistry.cs": {
+      "bytes": 14479,
+      "sha256": "79880d3fad52dc8f43c96375e4384bc4c956d69de672581db184c058206f4b94"
+    },
+    "apps/Web/Wave/Tests/Fixtures/Original/Wave.cui": {
+      "bytes": 10736,
+      "sha256": "be7dd65a38f2507e6ce309b99118e76ca1f2792bb33764be9d87793cf0694729"
+    },
+    "apps/Web/Wave/Tests/WaveResponsiveLayout.Tests.csproj": {
+      "bytes": 1601,
+      "sha256": "503671786674bab1ea0e78a3aac48d264b9831d82bfea23c702986023fdd5a21"
+    },
+    "apps/Web/Wave/Tests/WaveResponsiveLayoutControls.cs": {
+      "bytes": 22058,
+      "sha256": "1eec649ad9a542ad4559d697f407b1351fe54002f64b447b28be91aa4e3af7d7"
+    },
+    "apps/Web/Tests/ci/run-ordinary-native.py": {
+      "bytes": 19584,
+      "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
+    },
+    "framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj": {
+      "bytes": 1315,
+      "sha256": "7b38ee5f92368a5e47bd433594b3810157a0802c696905c116f82e47185d07c4"
+    },
+    "global.json": {
+      "bytes": 111,
+      "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b"
+    },
+    "apps/Web/Wave/Tests/WaveNativePaintCriteria.cs": {
+      "bytes": 11942,
+      "sha256": "a914e3675d49a0e6293ed2ca8904231cc19c5044312d09037a8304be9034ac10"
+    },
+    "apps/Web/Wave/Tests/WaveNativePaintCriterionControls.cs": {
+      "bytes": 10079,
+      "sha256": "ef210eeec40a04238cbae4323cd76846c5d42b7f6add17b187005de700e4c322"
+    },
+    "apps/Web/Wave/WaveNativePresentation.cs": {
+      "bytes": 6249,
+      "sha256": "01e6d8e19f7aa7b99f8069a98c7adeb2791ac857441a4941b8fcef93c6479a06"
+    },
+    "apps/Web/Wave/Tests/Fixtures/D93Unrepaired/BrowserApplication.cs": {
+      "bytes": 18796,
+      "sha256": "786242db9e6c2b8b44c03d47d669afa14e1a989ad2b892795544fe01ac1c5143"
+    },
+    "apps/Web/Wave/Tests/Fixtures/D93Unrepaired/BrowserSurfaceRegistry.cs": {
+      "bytes": 14519,
+      "sha256": "ad3f2d66289501f5f7cf89b5acdf2520df0aabbd1d3b4e8023663be3df2a3283"
+    },
+    "apps/Web/Wave/Tests/Fixtures/D93Unrepaired/Wave.cui": {
+      "bytes": 14376,
+      "sha256": "833732f152351b5807b026a341982064722d60d56ab6887b307aad3ad72b2f04"
+    }
+  },
+  "criterionVersion": "public-ink-source-clipping-v2",
+  "historicalOriginalCommit": "5864fa22990df233fef9b30a27355a2ab722797f"
+}

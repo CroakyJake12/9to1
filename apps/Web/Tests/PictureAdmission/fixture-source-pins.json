@@ -1,0 +1,57 @@
+{
+  "scope": "Actual controlled B-owned Feature/Session/CUI snapshots only; unchanged owner engine stays source-linked",
+  "sourceFiles": {
+    "Fixtures/ProductionOriginal/Picture.cui": {
+      "bytes": 5315,
+      "sha256": "d69c1d15a5aed28590b94e9e8caa9d9f89a8c9e06ca4a8d536b4af0edefb7fb3"
+    },
+    "Fixtures/ProductionOriginal/PictureBrowserSession.cs": {
+      "bytes": 25801,
+      "sha256": "24933899f9ea2f05ff0266588a4f87be183cb4441bce1587c7925cab1de63edb"
+    },
+    "Fixtures/ProductionOriginal/PictureBrowserFeature.cs": {
+      "bytes": 5561,
+      "sha256": "4709aafa462df1127ecdeb3aac9c61efafeabde2f107501d4873898f4b973451"
+    },
+    "Fixtures/Admission01/Picture.cui": {
+      "bytes": 5315,
+      "sha256": "d69c1d15a5aed28590b94e9e8caa9d9f89a8c9e06ca4a8d536b4af0edefb7fb3"
+    },
+    "Fixtures/Admission01/PictureBrowserSession.cs": {
+      "bytes": 31541,
+      "sha256": "b51a31b476755d0364084b1045b8d16f101ab9e2d00658a04a592b103ed7b8cf"
+    },
+    "Fixtures/Admission01/PictureBrowserFeature.cs": {
+      "bytes": 12715,
+      "sha256": "ac250d1a63bb70fee012b383d67a9427d2868af26e976a62a1958e0015144973"
+    },
+    "Fixtures/Admission01SameSessionRetirement/PictureBrowserFeature.cs": {
+      "bytes": 12785,
+      "sha256": "e96095a8a0631a0c51ab98af7cb2ca4c8b413532efade75f487465f2bb6e4a2b"
+    }
+  },
+  "png": {
+    "path": "Fixtures/Picture8x6.png",
+    "bytes": 667,
+    "sha256": "a17e304d0a333065202cf77c656d7bc86abdd37237b407a0a5cb870d33870297"
+  },
+  "parentSnapshots": {
+    "productionFeature": "4709aafa462df1127ecdeb3aac9c61efafeabde2f107501d4873898f4b973451",
+    "productionSession": "24933899f9ea2f05ff0266588a4f87be183cb4441bce1587c7925cab1de63edb",
+    "admission01Manifest": "f91a0fce6d4688ca3fb3692372496691e155b59536b361eddb25901c6b4d759f"
+  },
+  "currentActualSource": {
+    "PictureBrowserFeature.cs": {
+      "bytes": 13171,
+      "sha256": "86cc1c751e0217daa204c05fa57a1b7f7865a9b412e23c217b67373ec1726eec"
+    },
+    "PictureBrowserSession.cs": {
+      "bytes": 31704,
+      "sha256": "8f12c9b03cbda50ba1a9b0c65aa26649f07a8a9291d4920baaa5e83a44969a07"
+    },
+    "Picture.cui": {
+      "bytes": 5441,
+      "sha256": "2d408a38d204e9704a4f39491bf457355c38162d71a3f28fc9b9a83dc7a18402"
+    }
+  }
+}

@@ -1,0 +1,64 @@
+name: Original Canvas and Maps local owners
+on:
+  workflow_dispatch:
+  push:
+    branches: [team-b/astra-browser-validation-20261003]
+    paths:
+      - .github/workflows/team-b-original-canvas-maps.yml
+      - apps/Web/Productivity/Canvas/Tests/**
+      - apps/Web/Productivity/Maps/Tests/**
+      - apps/Web/Productivity/Tests/ci/**
+      - apps/Web/Tests/ci/run-ordinary-native.py
+      - 9to1 Workspace/Canvas/**
+      - 9to1 Workspace/Files/**
+      - 9to1 Workspace/Home/**
+      - 9to1 Workspace/shared/src/Haven.Application/**
+      - 9to1 Workspace/shared/src/Haven.Core/**
+      - 9to1 Workspace/shared/src/Haven.UI/**
+      - 9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/MapsJourneyAuthoringCaptureTests.cs
+      - 9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/AssemblyInfo.cs
+      - 9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/GlobalUsings.cs
+      - 9to1 Workspace/Directory.*
+      - 9to1 Workspace/shared/src/Directory.Packages.props
+      - 9to1 Models/Dulche Alpha/**
+      - framework/CUI/Core/**
+      - framework/CUI/Language/**
+      - framework/CUI/AI/**
+      - framework/CUI/Directory.Packages.props
+      - NuGet.Config
+      - global.json
+permissions:
+  contents: read
+jobs:
+  original-owners:
+    if: github.ref == 'refs/heads/team-b/astra-browser-validation-20261003'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [canvas8, maps6]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.401'
+      - name: Build actual owners and run unchanged original tests
+        env:
+          OWNER_SUITE: ${{ matrix.suite }}
+          OWNER_SOURCE_COMMIT: ${{ github.sha }}
+        run: >-
+          python3 apps/Web/Productivity/Tests/ci/run-original-canvas-maps.py
+          --suite "$OWNER_SUITE" --expected-commit "$OWNER_SOURCE_COMMIT"
+          --output "$RUNNER_TEMP/original-$OWNER_SUITE"
+      - name: Preserve actual first failure and source process custody
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-${{ matrix.suite }}-${{ github.sha }}
+          path: ${{ runner.temp }}/original-${{ matrix.suite }}/diagnostics/
+          if-no-files-found: error
+          retention-days: 14

@@ -119,6 +119,8 @@ export function createBrowserAccessibility(browserWindow, browserDocument, owner
             if (root.children[index] !== node) root.insertBefore(node, root.children[index] ?? null);
         });
         if (focused && elements.get(focused.dataset.nativePeerId) === focused
+            && projectedFocus?.id === focused.dataset.nativePeerId
+            && projectedFocus.generation === generation && nativeFocusedId === projectedFocus.id
             && !focused.disabled && focused.tabIndex >= 0 && browserDocument.activeElement !== focused) {
             restoringFocus = true;
             try { focused.focus({ preventScroll: true }); }

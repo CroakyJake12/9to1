@@ -1,0 +1,55 @@
+name: Team B Chat supporting interface controls
+
+on:
+  push:
+    branches: ["team-b/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  chat:
+    if: startsWith(github.ref, 'refs/heads/team-b/')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        variant: [original, current]
+    env:
+      DOTNET_NOLOGO: "1"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_GENERATE_ASPNET_CERTIFICATE: "false"
+      MSBUILDDISABLENODEREUSE: "1"
+    steps:
+      - name: Check out exact source commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Initialize only canonical pinned native submodules
+        run: |
+          git submodule update --init --recursive --depth 1 -- \
+            framework/CUI/vendor/Avalonia/external/XamlX \
+            framework/CUI/vendor/Avalonia/external/Avalonia.DBus
+      - name: Set up exact SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.401"
+      - name: Run same ten controlled-interface criteria
+        run: >-
+          python3 apps/Web/Tests/ci/run-chat-native.py
+          --variant '${{ matrix.variant }}'
+          --expected-commit '${{ github.sha }}'
+          --output "$RUNNER_TEMP/team-b-chat10-${{ matrix.variant }}"
+      - name: Upload full bounded command logs and custody metadata
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-b-chat10-${{ matrix.variant }}-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-chat10-${{ matrix.variant }}/diagnostics
+          if-no-files-found: warn
+          retention-days: 7

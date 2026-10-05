@@ -25,7 +25,7 @@ function environment() {
     setAttribute(k,v) { this.attributes[k]=v; }
     removeAttribute(k) { delete this.attributes[k]; }
     addEventListener(k,f) { this.handlers[k]=f; }
-    focus() { document.activeElement=this; }
+    focus() { if(document.activeElement===this)return; document.activeElement=this; this.handlers.focus?.(); }
   }
   const timers = new Map(); let serial=0;
   document={ body:new Element('body'), createElement:tag=>new Element(tag), activeElement:null };
@@ -48,8 +48,8 @@ const startupRollback = (create,e) => {
   assert.equal(e.timers.size,0);
 };
 const reorder = (create,e) => {
-  let ids=['1:a','1:b','1:c'];
-  const owner={ReadAccessibility:()=>JSON.stringify({generation:1,unsupported:[],elements:ids.map(id=>({id,role:'button',name:id,enabled:true,focusable:true}))}),PerformAccessibility:()=>true};
+  let ids=['1:a','1:b','1:c'],focused;
+  const owner={ReadAccessibility:()=>JSON.stringify({generation:1,unsupported:[],elements:ids.map(id=>({id,role:'button',name:id,enabled:true,focusable:true,focused:id===focused}))}),PerformAccessibility:(id,operation)=>{if(operation==='focus')focused=id;return true;}};
   const bridge=create(e.window,e.document,owner);
   try {
     const root=e.document.body.children[0];
@@ -71,12 +71,6 @@ const disposedEvents = (create,e) => {
   assert.equal(operations,0); assert.equal(e.timers.size,0); assert.equal(e.document.body.children.length,0);
 };
 function nativeEnvironment(e) {
-  const make=e.document.createElement;
-  e.document.createElement=tag=>{
-    const node=make(tag),focus=node.focus.bind(node);
-    node.focus=()=>{if(e.document.activeElement===node)return;focus();node.handlers.focus?.();};
-    return node;
-  };
   const host=e.document.createElement('main');host.tabIndex=0;host.attributes.tabindex='0';
   host.getAttribute=name=>host.attributes[name]??null;
   const set=host.setAttribute.bind(host),remove=host.removeAttribute.bind(host);
@@ -123,6 +117,33 @@ const nativeDisposed = (create,e) => {
   const event=native.event();retained(event);assert(!event.stopped&&!event.prevented);
   assert.equal(native.listeners.size,0);assert.equal(native.host.tabIndex,0);
 };
+// Controlled boundary negatives: neither a released projection nor another
+// current native focus authorizes tail DOM restoration after a native reorder.
+const staleTail = (create,e,refuseFocus) => {
+  let ids=['1:a','1:b','1:c'],focused='1:b';
+  const calls=[];
+  const owner={ReadAccessibility:()=>JSON.stringify({generation:1,unsupported:[],elements:ids.map(id=>({id,role:'button',name:id,enabled:true,focusable:true,focused:id===focused}))}),
+    PerformAccessibility:(id,operation)=>{calls.push({id,operation});if(refuseFocus)return false;if(operation==='focus')focused=id;return true;}};
+  const bridge=create(e.window,e.document,owner);
+  try {
+    const root=e.document.body.children[0],retained=root.children[1];
+    retained.focus();
+    assert.equal(e.document.activeElement,retained);
+    assert.deepEqual(calls,[{id:'1:b',operation:'focus'}]);
+    // Refusal releases the claim even if the native snapshot still reports b.
+    // Otherwise the native focus changes independently while DOM remains on b.
+    if(!refuseFocus)focused='1:a';
+    ids=['1:b','1:a','1:c'];bridge.refresh();
+    assert.deepEqual(root.children.map(node=>node.dataset.nativePeerId),ids);
+    assert.equal(root.children[0],retained);
+    assert.equal(e.document.activeElement,null);
+    assert.deepEqual(calls,[{id:'1:b',operation:'focus'}]);
+  } finally {bridge.dispose();}
+  assert.equal(e.timers.size,0);assert.equal(e.document.body.children.length,0);
+};
+const releasedProjection = (create,e) => staleTail(create,e,true);
+const nativeFocusElsewhere = (create,e) => staleTail(create,e,false);
+
 for(const [name,check] of [['native-nonfocusable-remains-out-of-tab-sequence',nonfocusable],['initial-snapshot-failure-removes-root-and-timer',startupRollback],['stable-peers-follow-current-native-order-and-retain-focus',reorder],['disposed-retained-dom-controls-stop-forwarding-operations',disposedEvents]]) {
   await test(source,check); checks.push({name,result:'PASS'});
 }
@@ -155,6 +176,21 @@ checks.push({name:'removed-native-tab-arbitration-subscription',result:'EXPECTED
 const focusOrderMutant=source.replace('nativeFocusedId = snapshot.elements.find(peer => peer.focused)?.id;','');
 assert.notEqual(focusOrderMutant,source);await assert.rejects(test(focusOrderMutant,nativeTab),assert.AssertionError);
 checks.push({name:'removed-actual-native-focus-order',result:'EXPECTED_FAILURE_DETECTED'});
+// Added guards stay separate from the original thirteen checks above.
+await test(source,releasedProjection);
+checks.push({name:'released-projected-claim-refused-focus-does-not-restore-after-reorder',result:'PASS'});
+await test(source,nativeFocusElsewhere);
+checks.push({name:'different-current-native-focus-does-not-restore-old-dom-focus-after-reorder',result:'PASS'});
+const releasedClaimMutant=source.replace(
+  '            && projectedFocus?.id === focused.dataset.nativePeerId\n            && projectedFocus.generation === generation && nativeFocusedId === projectedFocus.id\n',
+  '            && nativeFocusedId === focused.dataset.nativePeerId\n');
+assert.notEqual(releasedClaimMutant,source);
+await assert.rejects(test(releasedClaimMutant,releasedProjection),assert.AssertionError);
+checks.push({name:'removed-current-projected-claim-ownership',result:'EXPECTED_FAILURE_DETECTED'});
+const nativeMismatchMutant=source.replace(' && nativeFocusedId === projectedFocus.id','');
+assert.notEqual(nativeMismatchMutant,source);
+await assert.rejects(test(nativeMismatchMutant,nativeFocusElsewhere),assert.AssertionError);
+checks.push({name:'removed-matching-current-native-focus-guard',result:'EXPECTED_FAILURE_DETECTED'});
 const report={scope:'Mock DOM/provider source-level negative controls only; NOT actual browser/CUI/provider acceptance',sourcePath,sourceSha256:crypto.createHash('sha256').update(source).digest('hex'),runnerSha256:crypto.createHash('sha256').update(fs.readFileSync(import.meta.filename)).digest('hex'),checks,productParityVerified:false};
 fs.writeFileSync(outputPath,JSON.stringify(report,null,2));
 console.log(JSON.stringify(checks));

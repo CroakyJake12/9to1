@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AssemblyName>NineToOne.Picture.BrowserEngine</AssemblyName>
+    <PictureOwnerRoot>$(MSBuildProjectDirectory)/../../../../9to1 Workspace/Picture</PictureOwnerRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <PictureOwnerSource Include="$(PictureOwnerRoot)/PictureDocument.cs" ExpectedHash="4EBC98A8B0DA06C1B798E82B2A9F6CB06C028B854C4A4A5B9E0151D2A7AEAF1E" />
+    <PictureOwnerSource Include="$(PictureOwnerRoot)/PictureCropService.cs" ExpectedHash="EFB2F1E0BF47C10FED6A27088E82CCD9949F4AE49AA706DDF7EF872D7BFE8A6B" />
+    <PictureOwnerSource Include="$(PictureOwnerRoot)/ImageViewportState.cs" ExpectedHash="CC57FFA8F1D6280CB7CE5EB0679F4DD9E7E79F7E800CB73C00B95D085D13F6A9" />
+    <Compile Include="$(PictureOwnerRoot)/PictureDocument.cs" Link="Owner/PictureDocument.cs" />
+    <Compile Include="$(PictureOwnerRoot)/PictureCropService.cs" Link="Owner/PictureCropService.cs" />
+    <Compile Include="$(PictureOwnerRoot)/ImageViewportState.cs" Link="Owner/ImageViewportState.cs" />
+    <ProjectReference Include="../../../../framework/CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj" />
+    <ProjectReference Include="../../../../framework/CUI/vendor/Avalonia/src/Skia/Avalonia.Skia/Avalonia.Skia.csproj" />
+    <PackageReference Include="TagLibSharp" Version="2.3.0" />
+  </ItemGroup>
+  <Target Name="CheckReviewedPictureOwnerSources" BeforeTargets="CoreCompile">
+    <GetFileHash Files="@(PictureOwnerSource)" Algorithm="SHA256"><Output TaskParameter="Items" ItemName="PictureHashedOwner" /></GetFileHash>
+    <Error Condition="'%(PictureHashedOwner.FileHash)' != '%(PictureHashedOwner.ExpectedHash)'" Text="The owning Picture source %(PictureHashedOwner.Identity) changed. Review that owner revision and its browser dependency closure before updating the source pin." />
+  </Target>
+</Project>

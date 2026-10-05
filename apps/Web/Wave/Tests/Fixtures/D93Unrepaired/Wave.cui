@@ -1,0 +1,93 @@
+<Cui id="wave-browser" product="9-1" version="1">
+  <Actions>
+    <Action name="OpenProjectRow" command="OpenProject" parameter="{Binding item.ID}" />
+    <Action name="SelectTrackRow" command="SelectTrack" parameter="{Binding item.ID}" />
+    <Action name="SelectClipRow" command="SelectClip" parameter="{Binding item.ID}" />
+  </Actions>
+  <DefaultTheme value="Default">
+    <StackPanel id="wave-editor" orientation="Vertical" margin="16" spacing="12" background="{Resource CuiBackgroundBrush}">
+      <TextBlock text="Wave" font-size="30" font-weight="Bold" foreground="{Resource CuiTextBrush}"  text-wrapping="Wrap"/>
+      <TextBlock text="Local audio editor · projects and original WAV sources are stored in this browser. They are not synced to Files or another device. Browser data clearing removes these copies." text-wrapping="Wrap" max-width="760" foreground="{Resource CuiTextSoftBrush}" />
+      <TextBlock id="wave-status" text="{Binding Status}" text-wrapping="Wrap" max-width="760" accessible-name="Wave operation status" foreground="{Resource CuiTextBrush}" />
+      <Border padding="12" background="{Resource CuiPanelBrush}" corner-radius="8">
+        <StackPanel orientation="Vertical" spacing="8">
+          <TextBlock text="Create or reopen" font-size="18" font-weight="SemiBold"  text-wrapping="Wrap"/>
+          <WrapPanel>
+            <StackPanel margin="0 0 12 8"><TextBlock text="Project / new track name"  text-wrapping="Wrap"/><TextBox id="wave-title" text="{Binding Title, mode=TwoWay, type=string}" accessible-name="Project or new track name" min-width="0" max-width="220" /></StackPanel>
+            <StackPanel margin="0 0 12 8"><TextBlock text="Sample rate (Hz)"  text-wrapping="Wrap"/><TextBox id="wave-sample-rate" text="{Binding SampleRate, mode=TwoWay, type=string}" accessible-name="Project sample rate in Hertz" min-width="0" max-width="120" /></StackPanel>
+            <StackPanel margin="0 0 12 8"><TextBlock text="Channels"  text-wrapping="Wrap"/><TextBox id="wave-channels" text="{Binding Channels, mode=TwoWay, type=string}" accessible-name="Project channel count" min-width="0" max-width="90" /></StackPanel>
+            <Button id="wave-create" action="Create"  IsEnabled="{Binding NotBusy}" margin="0 20 8 8" accessible-name="Create project"><TextBlock id="wave-button-caption-01" text="Create project" text-wrapping="Wrap" /></Button>
+          </WrapPanel>
+          <Repeat Source="{Binding Projects}" As="item" Key="{Binding item.ID}" orientation="Vertical" spacing="4"><Button action="OpenProjectRow"  accessible-name="{Binding item.Label}" max-width="720"><TextBlock id="wave-button-caption-02" text="{Binding item.Label}" text-wrapping="Wrap" /></Button></Repeat>
+          <WrapPanel>
+            <Button action="Refresh"  margin="0 0 8 4" accessible-name="Refresh local list"><TextBlock id="wave-button-caption-03" text="Refresh local list" text-wrapping="Wrap" /></Button>
+            <Button id="wave-reopen" action="Reopen"  margin="0 0 8 4" accessible-name="Reopen last project"><TextBlock id="wave-button-caption-04" text="Reopen last project" text-wrapping="Wrap" /></Button>
+            <Button id="wave-save" action="Save"  IsEnabled="{Binding CanEdit}" margin="0 0 8 4" accessible-name="Save locally"><TextBlock id="wave-button-caption-05" text="Save locally" text-wrapping="Wrap" /></Button>
+            <Button id="wave-close" action="Close"  IsEnabled="{Binding CanEdit}" margin="0 0 8 4" accessible-name="Save and close"><TextBlock id="wave-button-caption-06" text="Save and close" text-wrapping="Wrap" /></Button>
+          </WrapPanel>
+        </StackPanel>
+      </Border>
+      <TextBlock id="wave-project-identity" text="{Binding ProjectIdentity}" text-wrapping="Wrap" max-width="760" accessible-name="Canonical Wave project identity and revision" />
+      <WrapPanel>
+        <Button id="wave-import" action="Import"  IsEnabled="{Binding CanEdit}" margin="0 0 8 4" accessible-name="Import WAV"><TextBlock id="wave-button-caption-07" text="Import WAV" text-wrapping="Wrap" /></Button>
+        <Button action="AddTrack"  IsEnabled="{Binding CanEdit}" margin="0 0 8 4" accessible-name="Add named track"><TextBlock id="wave-button-caption-08" text="Add named track" text-wrapping="Wrap" /></Button>
+        <Button id="wave-undo" action="Undo"  IsEnabled="{Binding CanUndo}" margin="0 0 8 4" accessible-name="Undo"><TextBlock id="wave-button-caption-09" text="Undo" text-wrapping="Wrap" /></Button>
+        <Button id="wave-redo" action="Redo"  IsEnabled="{Binding CanRedo}" margin="0 0 8 4" accessible-name="Redo"><TextBlock id="wave-button-caption-10" text="Redo" text-wrapping="Wrap" /></Button>
+        <Button id="wave-export" action="Export"  IsEnabled="{Binding CanEdit}" margin="0 0 8 4" accessible-name="Export PCM16 WAV"><TextBlock id="wave-button-caption-11" text="Export PCM16 WAV" text-wrapping="Wrap" /></Button>
+      </WrapPanel>
+      <Border padding="12" background="{Resource CuiPanelBrush}" corner-radius="8">
+        <StackPanel orientation="Vertical" spacing="8">
+          <TextBlock text="Transport" font-size="18" font-weight="SemiBold"  text-wrapping="Wrap"/>
+          <TextBlock id="wave-transport" text="{Binding Transport}" accessible-name="Playback position and state"  text-wrapping="Wrap"/>
+          <WrapPanel>
+            <Button id="wave-play" action="Play"  IsEnabled="{Binding CanEdit}" margin="0 0 8 4" accessible-name="Play mix"><TextBlock id="wave-button-caption-12" text="Play mix" text-wrapping="Wrap" /></Button>
+            <Button action="Pause"  margin="0 0 8 4" accessible-name="Pause"><TextBlock id="wave-button-caption-13" text="Pause" text-wrapping="Wrap" /></Button><Button action="Resume"  margin="0 0 8 4" accessible-name="Resume"><TextBlock id="wave-button-caption-14" text="Resume" text-wrapping="Wrap" /></Button><Button action="Stop"  margin="0 0 8 4" accessible-name="Stop"><TextBlock id="wave-button-caption-15" text="Stop" text-wrapping="Wrap" /></Button>
+            <Button action="ToggleLoop"  margin="0 0 8 4" accessible-name="{Binding LoopLabel}"><TextBlock id="wave-button-caption-16" text="{Binding LoopLabel}" text-wrapping="Wrap" /></Button>
+          </WrapPanel>
+          <WrapPanel><TextBox text="{Binding Seek, mode=TwoWay, type=string}" min-width="0" max-width="100" accessible-name="Seek position in seconds" margin="0 0 8 4" /><Button action="Seek" accessible-name="Seek to seconds"><TextBlock id="wave-button-caption-17" text="Seek to seconds" text-wrapping="Wrap" /></Button></WrapPanel>
+          <TextBlock text="Mixed waveform preview (computed from the Wave engine's PCM export when opened, played or exported)." text-wrapping="Wrap" max-width="700" />
+          <TextBlock text="{Binding PreviewStatus}" text-wrapping="Wrap" max-width="700" accessible-name="Mixed waveform summary" />
+          <StackPanel id="wave-waveform-scroll" HorizontalScrolling="true" max-width="700" height="110">
+            <Repeat Source="{Binding Waveform}" As="peak" Key="{Binding peak.ID}" orientation="Horizontal" spacing="1">
+              <Border width="2" height="{Binding peak.Height}" background="{Resource CuiTextBrush}" accessible-name="{Binding peak.Description}" />
+            </Repeat>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+      <Border padding="12" background="{Resource CuiPanelBrush}" corner-radius="8">
+        <StackPanel orientation="Vertical" spacing="8">
+          <TextBlock text="Multitrack timeline" font-size="18" font-weight="SemiBold"  text-wrapping="Wrap"/>
+          <Repeat Source="{Binding Timeline}" As="clip" Key="{Binding clip.ID}" orientation="Vertical" spacing="4"><TextBlock text="{Binding clip.Text}" text-wrapping="Wrap" max-width="720" /></Repeat>
+          <TextBlock text="Select a track"  text-wrapping="Wrap"/><Repeat Source="{Binding Tracks}" As="item" Key="{Binding item.ID}" orientation="Vertical" spacing="4"><Button action="SelectTrackRow"  accessible-name="{Binding item.Label}" max-width="720"><TextBlock id="wave-button-caption-18" text="{Binding item.Label}" text-wrapping="Wrap" /></Button></Repeat>
+          <TextBlock text="Select a clip"  text-wrapping="Wrap"/><Repeat Source="{Binding Clips}" As="item" Key="{Binding item.ID}" orientation="Vertical" spacing="4"><Button action="SelectClipRow"  accessible-name="{Binding item.Label}" max-width="720"><TextBlock id="wave-button-caption-19" text="{Binding item.Label}" text-wrapping="Wrap" /></Button></Repeat>
+          <TextBlock text="{Binding Selection}" text-wrapping="Wrap" max-width="720" accessible-name="Selected clip source range, timeline, identity and processing" />
+          <WrapPanel>
+            <StackPanel margin="0 0 12 8"><TextBlock text="Timeline seconds"  text-wrapping="Wrap"/><TextBox id="wave-start" text="{Binding Start, mode=TwoWay, type=string}" min-width="0" max-width="120" accessible-name="Timeline position in seconds for import split move duplicate marker" /></StackPanel>
+            <StackPanel margin="0 0 12 8"><TextBlock text="Trim from start (s)"  text-wrapping="Wrap"/><TextBox id="wave-trim-start" text="{Binding TrimStart, mode=TwoWay, type=string}" min-width="0" max-width="120" accessible-name="Seconds removed from clip start" /></StackPanel>
+            <StackPanel margin="0 0 12 8"><TextBlock text="Trim from end (s)"  text-wrapping="Wrap"/><TextBox id="wave-trim-end" text="{Binding TrimEnd, mode=TwoWay, type=string}" min-width="0" max-width="120" accessible-name="Seconds removed from clip end" /></StackPanel>
+          </WrapPanel>
+          <WrapPanel><TextBox text="{Binding JoinClipId, mode=TwoWay, type=string}" min-width="0" max-width="250" accessible-name="Adjacent clip identity to join" margin="0 0 8 4" /><Button action="Join"  IsEnabled="{Binding HasClip}" accessible-name="Join selected and adjacent clip"><TextBlock id="wave-button-caption-20" text="Join selected and adjacent clip" text-wrapping="Wrap" /></Button></WrapPanel>
+          <WrapPanel>
+            <Button id="wave-split" action="Split"  IsEnabled="{Binding HasClip}" margin="0 0 8 4" accessible-name="Split at timeline time"><TextBlock id="wave-button-caption-21" text="Split at timeline time" text-wrapping="Wrap" /></Button>
+            <Button id="wave-trim" action="Trim"  IsEnabled="{Binding HasClip}" margin="0 0 8 4" accessible-name="Trim selected clip"><TextBlock id="wave-button-caption-22" text="Trim selected clip" text-wrapping="Wrap" /></Button>
+            <Button id="wave-move" action="Move"  IsEnabled="{Binding HasClip}" margin="0 0 8 4" accessible-name="Move to timeline time"><TextBlock id="wave-button-caption-23" text="Move to timeline time" text-wrapping="Wrap" /></Button>
+            <Button id="wave-duplicate" action="Duplicate"  IsEnabled="{Binding HasClip}" margin="0 0 8 4" accessible-name="Duplicate at time"><TextBlock id="wave-button-caption-24" text="Duplicate at time" text-wrapping="Wrap" /></Button>
+            <Button action="Delete"  IsEnabled="{Binding HasClip}" margin="0 0 8 4" accessible-name="Delete clip"><TextBlock id="wave-button-caption-25" text="Delete clip" text-wrapping="Wrap" /></Button><Button action="RippleDelete"  IsEnabled="{Binding HasClip}" margin="0 0 8 4" accessible-name="Ripple delete"><TextBlock id="wave-button-caption-26" text="Ripple delete" text-wrapping="Wrap" /></Button>
+          </WrapPanel>
+          <WrapPanel>
+            <StackPanel margin="0 0 12 8"><TextBlock text="Gain (linear)"  text-wrapping="Wrap"/><TextBox id="wave-gain" text="{Binding Gain, mode=TwoWay, type=string}" min-width="0" max-width="100" accessible-name="Clip or track gain linear multiplier" /></StackPanel>
+            <StackPanel margin="0 0 12 8"><TextBlock text="Fade in (s)"  text-wrapping="Wrap"/><TextBox text="{Binding FadeIn, mode=TwoWay, type=string}" min-width="0" max-width="100" accessible-name="Clip fade in seconds" /></StackPanel>
+            <StackPanel margin="0 0 12 8"><TextBlock text="Fade out (s)"  text-wrapping="Wrap"/><TextBox text="{Binding FadeOut, mode=TwoWay, type=string}" min-width="0" max-width="100" accessible-name="Clip fade out seconds" /></StackPanel>
+            <StackPanel margin="0 0 12 8"><TextBlock text="Pan (-1 to 1)"  text-wrapping="Wrap"/><TextBox text="{Binding Pan, mode=TwoWay, type=string}" min-width="0" max-width="100" accessible-name="Track pan minus one left to one right" /></StackPanel>
+          </WrapPanel>
+          <Button action="Processing"  IsEnabled="{Binding HasClip}" accessible-name="Apply clip gain and fades"><TextBlock id="wave-button-caption-27" text="Apply clip gain and fades" text-wrapping="Wrap" /></Button>
+          <TextBlock text="{Binding Mixer}" text-wrapping="Wrap" max-width="720" />
+          <WrapPanel><Button action="Mixer"  IsEnabled="{Binding CanEdit}" margin="0 0 8 4" accessible-name="Apply track gain / pan"><TextBlock id="wave-button-caption-28" text="Apply track gain / pan" text-wrapping="Wrap" /></Button><Button action="Mute"  IsEnabled="{Binding CanEdit}" margin="0 0 8 4" accessible-name="Toggle track mute"><TextBlock id="wave-button-caption-29" text="Toggle track mute" text-wrapping="Wrap" /></Button><Button action="Solo"  IsEnabled="{Binding CanEdit}" accessible-name="Toggle track solo"><TextBlock id="wave-button-caption-30" text="Toggle track solo" text-wrapping="Wrap" /></Button></WrapPanel>
+          <WrapPanel><TextBox text="{Binding MarkerName, mode=TwoWay, type=string}" min-width="0" max-width="160" accessible-name="New marker name" margin="0 0 8 4" /><Button action="Marker"  IsEnabled="{Binding CanEdit}" accessible-name="Add marker at time"><TextBlock id="wave-button-caption-31" text="Add marker at time" text-wrapping="Wrap" /></Button></WrapPanel>
+          <TextBlock text="{Binding Annotations}" text-wrapping="Wrap" max-width="720" />
+        </StackPanel>
+      </Border>
+      <TextBlock text="Adapter limits: matching project sample rate and channel count; PCM / IEEE-float WAV import, PCM16 WAV export; 16 MiB per imported source or rendered output and 32 MiB per local package; 32 undo steps. Rendering runs in the foreground. Recording, sequencer, SFX, speech, spectral repair, effects plugins, AI tools and hosted Files continuity are not connected on this surface." text-wrapping="Wrap" max-width="760" foreground="{Resource CuiTextSoftBrush}" />
+    </StackPanel>
+  </DefaultTheme>
+</Cui>

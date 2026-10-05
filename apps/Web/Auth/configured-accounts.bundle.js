@@ -806,7 +806,7 @@ var BrowserPublicClient = class {
     this.#beginExpiry = beginTokenExpiryInvalidation;
     this.#config = validatePublicClientConfiguration(configuration, win.location.origin);
     this.#window = win;
-    this.#fetch = transport;
+    this.#fetch = transport === globalThis.fetch ? transport.bind(globalThis) : transport;
     this.#crypto = crypto2;
     this.#before = onBeforeSignIn;
     this.#verifyAccount = verifyCurrentAccount;
@@ -1152,7 +1152,7 @@ var AccountApiClient = class {
     this.#origin = resource.origin;
     this.#token = getAccessToken;
     this.#clear = onPrivateContextInvalidated;
-    this.#fetch = transport;
+    this.#fetch = transport === globalThis.fetch ? transport.bind(globalThis) : transport;
   }
   /** Call before switching account/session/organisation; await cleanup before opening new private surfaces. */
   // Explicit sync begin receipt only; caller MUST separately await its owning

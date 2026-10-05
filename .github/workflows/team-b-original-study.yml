@@ -1,0 +1,49 @@
+name: Original persisted Study scheduling and task linkage
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [team-b/astra-browser-validation-20261003]
+    paths:
+      - .github/workflows/team-b-original-study.yml
+      - apps/Web/Productivity/Planner/Tests/**
+      - apps/Web/Tests/ci/run-ordinary-native.py
+      - 9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PlannerRepositoryTests.cs
+      - 9to1 Workspace/shared/src/Haven.Application/Planner/**
+      - 9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/ContainerRepository.cs
+
+permissions:
+  contents: read
+
+jobs:
+  original-study:
+    if: github.ref == 'refs/heads/team-b/astra-browser-validation-20261003'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out the selected branch commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Set up the reviewed SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.401'
+      - name: Source-build original24 class and select four persisted Study Facts
+        env:
+          STUDY_EXPECTED_COMMIT: ${{ github.sha }}
+        run: >-
+          python3 apps/Web/Productivity/Planner/Tests/ci/run-original-study.py
+          --expected-commit "$STUDY_EXPECTED_COMMIT"
+          --output "$RUNNER_TEMP/study-original-persisted"
+      - name: Preserve bounded original evidence, including any first failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-study-persisted-${{ github.sha }}
+          if-no-files-found: error
+          path: |
+            ${{ runner.temp }}/study-original-persisted/diagnostics/
+            ${{ runner.temp }}/study-original-persisted/test-results/*.trx
+          retention-days: 14

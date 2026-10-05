@@ -12,7 +12,7 @@ namespace NineToOne.Web.Productivity.Boards;
 /// canonical Notes repository. It owns no replacement document or persistence model.
 /// A renderer and parent registration are deliberately absent pending owner closure.
 /// </summary>
-public sealed class BoardsBrowserCore : ICuiBindingContext, ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged, IAsyncDisposable
+public sealed partial class BoardsBrowserCore : ICuiBindingContext, ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged, IAsyncDisposable
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
     private readonly INotesRepository _repository;
@@ -68,7 +68,7 @@ public sealed class BoardsBrowserCore : ICuiBindingContext, ICuiActionDispatcher
     internal void AbandonUnadmittedPresentation()
     {
         if (!_presentationPending || IsBusy || _operations.CurrentCount != 1) throw new InvalidOperationException("An active core cannot be abandoned.");
-        _document = null; _disposed = true;
+        UnbindRichEditor(); _document = null; _disposed = true;
     }
     public Task<HomeCoreOperationResult<Guid>> OpenAsync(Guid id, bool readOnly = false, CancellationToken token = default) => Operate(async ct =>
     {
@@ -79,7 +79,7 @@ public sealed class BoardsBrowserCore : ICuiBindingContext, ICuiActionDispatcher
         if (document is null) return Failure<Guid>("NotFound", "This Boards notebook could not be found.");
         if (document.Id != id) return Failure<Guid>("DocumentIdMismatch", "The stored identity differs from this notebook link.");
         Attach(document, readOnly);
-        IsDirty = !readOnly && document.Recovery.HasUnsavedRecovery;
+        IsDirty = !readOnly && (IsDirty || document.Recovery.HasUnsavedRecovery);
         if (IsDirty) ++_generation;
         Status = readOnly ? "Read-only" : IsDirty ? "Recovered notebook; review and save" : "Saved";
         return Success(id);
@@ -129,7 +129,7 @@ public sealed class BoardsBrowserCore : ICuiBindingContext, ICuiActionDispatcher
         try { result = action(_boards, candidate); } // The maintained owner enforces page/layout rules.
         catch (InvalidOperationException) { return Task.FromResult(Failure<T>("OperationDenied", "The owner denied this notebook operation. The draft is preserved.")); }
         if (JsonSerializer.Serialize(candidate, Json) != JsonSerializer.Serialize(_document, Json))
-        { _document = candidate; ++_generation; IsDirty = true; Status = "Unsaved changes"; }
+        { Attach(candidate, IsReadOnly); ++_generation; IsDirty = true; Status = "Unsaved changes"; }
         return Task.FromResult(Success(result));
     }, token);
     public Task<HomeCoreOperationResult<bool>> SaveAsync(CancellationToken token = default) => Operate(SaveCore, token);
@@ -172,7 +172,7 @@ public sealed class BoardsBrowserCore : ICuiBindingContext, ICuiActionDispatcher
     {
         if (_presentationPending) return Failure<bool>("PresentationNotAdmitted", "This prepared view is not active.");
         if (!await SaveBeforeLeaving(ct)) return Failed<bool>();
-        _document = null; DurableRevision = 0; IsDirty = false; IsReadOnly = false; Status = "No notebook open"; return Success(true);
+        UnbindRichEditor(); _document = null; DurableRevision = 0; IsDirty = false; IsReadOnly = false; Status = "No notebook open"; return Success(true);
     }, token);
     private async Task<bool> SaveBeforeLeaving(CancellationToken ct)
     {
@@ -183,7 +183,7 @@ public sealed class BoardsBrowserCore : ICuiBindingContext, ICuiActionDispatcher
         Failure<bool>("UnsavedChanges", "Newer changes remain unsaved; save before leaving."); return false;
     }
     private void Attach(NotesDocument document, bool readOnly)
-    { _document = document; DurableRevision = document.Version; IsReadOnly = readOnly; IsDirty = false; }
+    { UnbindRichEditor(); _document = document; DurableRevision = document.Version; IsReadOnly = readOnly; IsDirty = false; BindRichEditor(); }
     private void Acknowledge(NotesSaveResult receipt)
     {
         if (_document?.Id != receipt.DocumentId) throw new InvalidDataException("The canonical receipt identity differs from this notebook.");
@@ -213,15 +213,19 @@ public sealed class BoardsBrowserCore : ICuiBindingContext, ICuiActionDispatcher
             "CanCreate" => IsActionAvailable("Create") == true, "CanOpen" => IsActionAvailable("Open") == true,
             "CanSave" => IsActionAvailable("Save") == true, "CanClose" => IsActionAvailable("Close") == true,
             "CanInspect" => IsActionAvailable("Inspect") == true,
+            "CanBold" => IsActionAvailable("Bold") == true, "CanUndo" => IsActionAvailable("Undo") == true,
+            "CanRedo" => IsActionAvailable("Redo") == true,
             _ => null
         };
-        return path is "Title" or "Status" or "Notebooks" or "HasUnknownCommitOutcome" or "CanCreate" or "CanOpen" or "CanSave" or "CanClose" or "CanInspect";
+        return path is "Title" or "Status" or "Notebooks" or "HasUnknownCommitOutcome" or "CanCreate" or "CanOpen" or "CanSave" or "CanClose" or "CanInspect" or "CanBold" or "CanUndo" or "CanRedo";
     }
     public bool? IsActionAvailable(string command) => !_disposed && !_presentationPending && !IsBusy &&
         (_pending is null || command is "Inspect" or "Refresh") && (command switch
         {
             "Create" or "Open" or "Refresh" => true, "Save" => _document is not null && !IsReadOnly,
-            "Close" => _document is not null, "Inspect" => _pending is not null, _ => false
+            "Close" => _document is not null, "Inspect" => _pending is not null,
+            "Bold" => RichEditingPermitted, "Undo" => RichEditingPermitted && _richEditor?.CanUndo == true,
+            "Redo" => RichEditingPermitted && _richEditor?.CanRedo == true, _ => false
         });
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
@@ -232,6 +236,9 @@ public sealed class BoardsBrowserCore : ICuiBindingContext, ICuiActionDispatcher
             case "Open" when parameter is BoardsNotebookRow row && _notebooks.Any(item => item.Id == row.Summary.Id):
                 await OpenAsync(row.Summary.Id, token: cancellationToken); break;
             case "Save": await SaveAsync(cancellationToken); break;
+            case "Bold": await BoldRichSelectionAsync(cancellationToken); break;
+            case "Undo": await UndoRichTextAsync(cancellationToken); break;
+            case "Redo": await RedoRichTextAsync(cancellationToken); break;
             case "Close": await CloseAsync(cancellationToken); break;
             case "Inspect": await InspectDurableStateAsync(cancellationToken); break;
             case "Refresh": await ListAsync(cancellationToken); Notify(); break;
@@ -252,7 +259,7 @@ public sealed class BoardsBrowserCore : ICuiBindingContext, ICuiActionDispatcher
     public async ValueTask DisposeAsync()
     {
         await _operations.WaitAsync();
-        try { if (_disposed) return; if (IsDirty || _pending is not null) throw new InvalidOperationException("Save or resolve this notebook before disposal."); _document = null; _disposed = true; }
+        try { if (_disposed) return; if (IsDirty || _pending is not null) throw new InvalidOperationException("Save or resolve this notebook before disposal."); UnbindRichEditor(); _document = null; _disposed = true; }
         finally { _operations.Release(); }
     }
     private sealed record PendingCommit(NotesDocument Snapshot, long BaseRevision, long Generation);

@@ -28,6 +28,32 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
         _actor = authenticatedActor;
     }
 
+    private readonly object _issuedGate = new();
+    private readonly HashSet<TaskCompletionSource> _issued = [];
+    private bool _lifetimeDisposed;
+    internal Func<bool>? CommandAdmission { get; set; }
+    public bool HasUnsavedChanges => !_disposed && (_editing || _pending is not null || _busy);
+    internal Task DrainIssuedAsync()
+    {
+        lock (_issuedGate) return Task.WhenAll(_issued.Select(work => work.Task).ToArray());
+    }
+    private IDisposable EnterIssued()
+    {
+        lock (_issuedGate)
+        {
+            if (_disposed) throw new OperationCanceledException("Private presentation closed.");
+            var work = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _issued.Add(work); return new IssuedLease(this, work);
+        }
+    }
+    private sealed class IssuedLease(FilesBrowserController owner, TaskCompletionSource work) : IDisposable
+    {
+        public void Dispose()
+        {
+            lock (owner._issuedGate) { owner._issued.Remove(work); work.TrySetResult(); }
+        }
+    }
+
     public event PropertyChangedEventHandler? PropertyChanged;
     public HostedItemId? CurrentFolderId => _folder?.Id;
     public HostedItemMetadata? SelectedItem => _selected;
@@ -35,6 +61,7 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
 
     public async Task InitializeAsync(HostedItemId? folderId, CancellationToken cancellationToken)
     {
+        using var issued = EnterIssued();
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetime.Token);
         if (!_provider.Location.IsAvailable || !_provider.Location.Capabilities.Supports(FilesProviderCapabilities.Read))
             throw new InvalidOperationException("Files location is unavailable.");
@@ -74,6 +101,7 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
 
     public bool TrySetValue(string path, object? value)
     {
+        if (CommandAdmission?.Invoke() == false) return false;
         if (path != "Name" || value is not string name || _disposed || _busy || !_editing || _pending is not null)
             return false;
         _name = name;
@@ -81,7 +109,7 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
         return true;
     }
 
-    public bool? IsActionAvailable(string command) => Available(command);
+    public bool? IsActionAvailable(string command) => CommandAdmission?.Invoke() == false ? false : Available(command);
 
     private bool Available(string command)
     {
@@ -104,7 +132,8 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
 
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
-        if (!Available(command)) return;
+        if (CommandAdmission?.Invoke() == false || !Available(command)) return;
+        using var issued = EnterIssued();
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetime.Token);
         var ct = linked.Token;
         _busy = true;
@@ -271,10 +300,18 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
         }
     }
 
+    internal void ClearPrivatePresentation()
+    {
+        _disposed = true; _items = []; _selected = _folder = null; _cursor = null; EndEdit(); _status = "";
+    }
     public void Dispose()
     {
-        if (_disposed) return;
-        _disposed = true; _items = []; _selected = _folder = null; _cursor = null; EndEdit(); _status = "";
+        lock (_issuedGate)
+        {
+            if (_lifetimeDisposed) return;
+            _lifetimeDisposed = true;
+        }
+        ClearPrivatePresentation();
         try { _lifetime.Cancel(); }
         catch (Exception error) { System.Diagnostics.Trace.TraceWarning("Files owner cancellation callback failed: {0}", error.GetType().Name); }
         finally { _lifetime.Dispose(); }
