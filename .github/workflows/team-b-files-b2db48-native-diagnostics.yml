@@ -1,0 +1,40 @@
+name: Team B exact failed Files b2db48 native diagnostic selection
+
+on:
+  push:
+    branches: [custody/team-b-files-native-b2db48-diagnostics-20261005]
+    paths:
+      - .github/workflows/team-b-files-b2db48-native-diagnostics.yml
+      - apps/Web/Files/Tests/ci/export-existing-files-b2db48-native-diagnostics.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-selected-diagnostics:
+    if: github.ref == 'refs/heads/custody/team-b-files-native-b2db48-diagnostics-20261005' && github.repository == 'CroakyJake12/9to1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out exact diagnostic source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify whole original and select two complete diagnostic members
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python3 apps/Web/Files/Tests/ci/export-existing-files-b2db48-native-diagnostics.py
+          --output "$RUNNER_TEMP/team-b-files-b2db48-native-diagnostics"
+      - name: Upload bounded selected custody diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: files-b2db48-native-diagnostics-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-files-b2db48-native-diagnostics/diagnostics
+          if-no-files-found: warn
+          retention-days: 7
