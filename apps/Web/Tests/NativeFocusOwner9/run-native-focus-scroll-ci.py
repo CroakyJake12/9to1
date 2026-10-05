@@ -249,7 +249,7 @@ def main():
         "HAVEN_DATA_DIR": "fixture-data",
     }.items():
         owned = output / directory
-        owned.mkdir()
+        owned.mkdir(exist_ok=True)
         env[variable] = str(owned)
     env.update(DOTNET_GENERATE_ASPNET_CERTIFICATE="false", DOTNET_CLI_TELEMETRY_OPTOUT="1",
                DOTNET_NOLOGO="1", MSBUILDDISABLENODEREUSE="1")
