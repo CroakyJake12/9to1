@@ -2730,6 +2730,15 @@
     "pendingChecks": "Deep donor/platform/accessibility/stress/recovery/signing/clean-install acceptance remains pending or failed, never waived.",
     "currentResult": "Team A rebuilt current CUI modules and executed the original 90-case Debug runtime baseline: 90 passed, zero failed/skipped. This is dependency evidence, not an application staging claim.",
     "next": "Deliver usable Home/runtime and repaired Canvas Windows candidates through C; bind real main workflows and authentication; defer competing queued deep checks.",
-    "constraints": "No new paid purchase, live charge, production cutover/customer migration, unapproved external mail/inference, fake auth/publisher or disabled security."
+    "constraints": "No new paid purchase, live charge, production cutover/customer migration, unapproved external mail/inference, fake auth/publisher or disabled security.",
+    "continuation": {
+      "acknowledgedUTC": "2026-10-05T09:59:00Z",
+      "desiredDeadlineUnchanged": "2026-10-05T11:00:00+01:00",
+      "ifIncomplete": "Publish genuinely working URLs/downloads, give one brief remainder and next action, and immediately continue authorized implementation and staging.",
+      "contingency": "A necessary one or two hour overrun is acceptable; do not adopt a later deadline or stop at 11:00.",
+      "forecast": "Flag concrete reasons promptly if the full-set forecast extends substantially beyond that contingency.",
+      "deepAcceptance": "Resume automatically after the full applicable set is staged; Tuesday target and Thursday morning hard readiness deadline.",
+      "execution": "Disclose an actual execution/usage stop and preserve resumable state; never claim execution continues after it ends."
+    }
   }
 }
