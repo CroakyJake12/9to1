@@ -2,8 +2,8 @@
   "state": "SOURCE_ONLY_FUTURE_ADOPTION_REQUIREMENTS",
   "sourceFiles": {
     "apps/Web/Tests/WaveResponsiveBrowser/run-wave-responsive-browser.cjs": {
-      "bytes": 25352,
-      "sha256": "60beb88876d0913cc3cad5f212bb7c52de37dd0149f0a1c10298d9aac2179157"
+      "bytes": 26470,
+      "sha256": "4124b49af57bcbeae6c325bf45784375d7da72abe4a61516f9dbe1e12ea0b4a0"
     },
     "apps/Web/Tests/WaveResponsiveBrowser/zoom-extension/manifest.json": {
       "bytes": 164,
@@ -62,8 +62,8 @@
       "sha256": "f1811d2d58f97583c5ec92514cf898549a09040453cb886f384d2bbc0d710847"
     },
     "apps/Web/wwwroot/browser-accessibility.js": {
-      "bytes": 8891,
-      "sha256": "9682f9cd5e92d96416afafd3edc83cb30ada1cf367da0ea07400a5ef12bceda9"
+      "bytes": 9055,
+      "sha256": "1ab270bbc0fbe648f37495415ce550e09eec0c940280abb980389cb6c21066bc"
     },
     "apps/Web/BrowserAccessibilityBridge.cs": {
       "bytes": 6998,
