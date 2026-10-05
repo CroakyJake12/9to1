@@ -168,7 +168,10 @@ def finish_owned_container(container, diagnostics, rows):
     errors, state, forced, removed = [], None, False, False
     try:
         state = json.loads(subprocess.check_output(["docker", "inspect", container], timeout=30))[0]["State"]
+        if not isinstance(state.get("Running"), bool):
+            raise ValueError("Owned container inspection lacks a typed Running state")
     except Exception as error:
+        state = None
         errors.append({"stage": "inspect", "errorType": type(error).__name__, "error": str(error)})
     if state is None or state["Running"]:
         forced = True
@@ -192,7 +195,10 @@ def observe_inputs(root, rows):
     actual, errors = [], []
     for row in rows:
         try:
-            actual.append({"path": row["path"], **identity(root / row["path"])})
+            path = root / row["path"]
+            if path.is_symlink() or not path.is_file():
+                raise ValueError("Declared original input is no longer a regular non-symlink file")
+            actual.append({"path": row["path"], **identity(path)})
         except Exception as error:
             errors.append({"path": row["path"], "errorType": type(error).__name__})
     return actual, errors
@@ -340,6 +346,13 @@ done
                 result["returnCode"] = 1
         result["sourceAfter"], source_errors = observe_inputs(repo, catalog["sourcePins"])
         result["probeAfter"], probe_errors = observe_inputs(probes, catalog["originalProbes"])
+        try:
+            result["exactSixProbeFilesAfter"] = sorted(p.name for p in probes.iterdir()) == sorted(row["path"] for row in catalog["originalProbes"])
+            if not result["exactSixProbeFilesAfter"]:
+                probe_errors.append({"stage": "declared-six-probe-set", "errorType": "OriginalProbeSetChanged"})
+        except OSError as error:
+            result["exactSixProbeFilesAfter"] = False
+            probe_errors.append({"stage": "declared-six-probe-set", "errorType": type(error).__name__})
         result["inputReadbackErrors"] = source_errors + probe_errors
         result["unchangedInputs"] = not result["inputReadbackErrors"] and result["sourceAfter"] == before_source and result["probeAfter"] == before_probes
         if not result["unchangedInputs"]:
