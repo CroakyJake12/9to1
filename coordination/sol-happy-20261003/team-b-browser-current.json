@@ -2,9 +2,9 @@
   "schema": "TEAM_B_CURRENT_SANITIZED_REQUEST",
   "source": "2db6e230bba48517844b6550da90b9355bf3c1b4",
   "status": "ACCEPTANCE_INCOMPLETE",
-  "validation": "Current source runtime pending. Prior5ee: native proposed64PASS; original48PASS16FAIL qualified negative; original browser14PASS; responsive0PASS1FAIL2NOT_RUN waiting for native Import focus after saved revision1.",
-  "run": "https://github.com/CroakyJake12/9to1/actions/runs/37245186076",
-  "next": "Reviewed single Window blur event-target correction published. Only browser JS and its two hash bindings changed; all native/test/oracle paths conserved. Unchanged affected gates starting on this exact commit.",
+  "validation": "Current2db: native proposed64PASS; original48PASS16FAIL qualified negative; original browser14PASS; responsivecommand failed, detailedcasecounts/cause pending exactraw review.",
+  "run": "https://github.com/CroakyJake12/9to1/actions/runs/37247109783",
+  "next": "Receive exactexisting2db failed diagnostics. Reviewed Window blur correction remains in source; no claim of passing responsive gate or exact failure attribution. Original assertions and guards retained.",
   "diagnostics": "Exact existing failed archive selected read-only; original evidence retained. No whole-original receiving or physical-browser acceptance claim.",
   "receivingRequest": "Publish the actual filesystem indeterminate-commit exception type or maintained transport code, source/ref and owning constructor call-site. B can then bind that exact type through existing Func<Exception,bool>. Authorised LoadAsync must settle or refuse unresolved publication before allowing retry. Existing browser IndexedDB mapping is already present.",
   "deadline": "22:30 Europe/London 4 October missed; no verification waiver."
