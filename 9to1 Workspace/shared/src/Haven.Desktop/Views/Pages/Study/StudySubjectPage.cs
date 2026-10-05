@@ -748,7 +748,7 @@ internal sealed class StudySubjectScene : IDisposable
             var paper = string.IsNullOrWhiteSpace(state.Paper) ? string.Empty : $" • Paper {state.Paper}";
             var section = string.IsNullOrWhiteSpace(state.Section) ? string.Empty : $" • {state.Section}";
             card.Add(new HavenText { Content = lesson.Name });
-            card.Add(Muted($"{lesson.TopicGroup}{paper}{section} • {state.ProgressPercent}% proficiency"));
+            card.Add(Muted($"{lesson.TopicGroup}{paper}{section} • Difficulty: {StudyLessonMetadata.RagLabel(state.Rag)}"));
             var actions = new HavenContainer { Layout = HavenLayout.Horizontal };
             actions.SetValue(HavenProperties.Gap, HavenLength.Px(6));
             var rag = new HavenButton { Content = $"RAG: {StudyLessonMetadata.RagLabel(state.Rag)}", Variant = ButtonVariant.Tertiary };

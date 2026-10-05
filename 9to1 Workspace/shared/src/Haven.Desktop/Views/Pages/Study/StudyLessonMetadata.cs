@@ -24,13 +24,7 @@ internal sealed record StudyLessonState(
     string? Paper,
     string? Section)
 {
-    public int ProgressPercent => Rag switch
-    {
-        "green" => 100,
-        "amber" => 60,
-        "red" => 25,
-        _ => 0
-    };
+    public bool HasRecordedDifficulty => Rag is "red" or "amber" or "green";
 
     public int TotalMinutes => Sessions.Sum(item => Math.Max(0, item.Minutes));
 }

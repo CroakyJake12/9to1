@@ -275,12 +275,12 @@ internal sealed class StudyHomeScene : IDisposable
         {
             var lessons = lessonsBySubject.GetValueOrDefault(subject.Id, []);
             var assignments = assignmentsBySubject.GetValueOrDefault(subject.Id, []);
-            var progress = lessons.Count == 0 ? 0 : (int)Math.Round(lessons.Select(StudyLessonMetadata.Read).Average(item => item.ProgressPercent));
+            var ratedTopics = lessons.Count(lesson => StudyLessonMetadata.Read(lesson).HasRecordedDifficulty);
             var subjectMinutes = StudyLessonMetadata.StudyMinutes(lessons, now).CurrentWeekMinutes;
             var open = new HavenButton
             {
                 Name = $"StudySubject-{subject.Id:N}",
-                Content = $"{subject.Name}\n{progress}% complete • {FormatMinutes(subjectMinutes)} this week",
+                Content = $"{subject.Name}\n{ratedTopics} of {lessons.Count} topics rated • {FormatMinutes(subjectMinutes)} this week",
                 Variant = ButtonVariant.Navigation
             };
             open.SetValue(HavenProperties.Width, HavenLength.Percent(100));

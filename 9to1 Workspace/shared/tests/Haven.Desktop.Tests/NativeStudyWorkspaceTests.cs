@@ -123,6 +123,65 @@ public sealed class NativeStudyWorkspaceTests
         Assert.Contains(StudyLessonMetadata.Read(completed).Sessions, session => session.Minutes >= 2);
     }
 
+    [Fact]
+    public void Topic_tracker_shows_recorded_difficulty_without_inventing_proficiency()
+    {
+        var now = DateTimeOffset.Parse("2026-10-04T12:00:00Z");
+        var subject = new ContainerDefinition(Guid.NewGuid(), HavenMode.Study, "Maths", null,
+            string.Empty, string.Empty, now, now);
+        var lesson = new Lesson(Guid.NewGuid(), subject.Id, "Pure", "Algebra",
+            "{\"preserved\":\"original topic structure\"}", 0, now, now);
+        using var scene = new StudySubjectScene();
+
+        foreach (var rag in new[] { "none", "red", "amber", "green" })
+        {
+            var current = rag == "none" ? lesson : StudyLessonMetadata.WithRag(lesson, rag, now);
+            scene.Render(subject, [current], [], [], [], (0, 0, 0), (0, 1, 0), now, null);
+            Invoke(FindButton(scene, "Topics"));
+
+            Assert.Contains(Texts(scene), text => text.Content ==
+                $"Pure • Difficulty: {StudyLessonMetadata.RagLabel(rag)}");
+            Assert.DoesNotContain(Texts(scene), text =>
+                text.Content.Contains("% proficiency", StringComparison.Ordinal));
+            Assert.Equal(rag != "none", StudyLessonMetadata.Read(current).HasRecordedDifficulty);
+            Assert.Equal(lesson.Id, current.Id);
+            Assert.Equal(lesson.SubjectId, current.SubjectId);
+            using var structure = System.Text.Json.JsonDocument.Parse(current.StructureJson);
+            Assert.Equal("original topic structure", structure.RootElement.GetProperty("preserved").GetString());
+        }
+
+        Assert.Equal("{\"preserved\":\"original topic structure\"}", lesson.StructureJson);
+        Assert.Null(StudyLessonMetadata.Read(lesson).LastReviewedAt);
+    }
+
+    [Fact]
+    public void Subject_summary_counts_recorded_topic_ratings_without_claiming_completion()
+    {
+        var now = DateTimeOffset.Parse("2026-10-04T12:00:00Z");
+        var subject = new ContainerDefinition(Guid.NewGuid(), HavenMode.Study, "Maths", null,
+            string.Empty, string.Empty, now, now);
+        Lesson Topic(string name) => new(Guid.NewGuid(), subject.Id, "Pure", name, "{}", 0, now, now);
+        var unrated = Topic("Unassessed");
+        var red = StudyLessonMetadata.WithRag(Topic("Recorded hard"), "red", now);
+        var green = StudyLessonMetadata.WithRag(Topic("Recorded easy"), "green", now);
+        using var scene = new StudyHomeScene();
+        var assignments = new Dictionary<Guid, IReadOnlyList<Haven.Application.PlannerStudyAssignment>> { [subject.Id] = [] };
+        var lessons = new Dictionary<Guid, IReadOnlyList<Lesson>> { [subject.Id] = [unrated, red, green] };
+
+        scene.Render(now, (0, 0, 0), (0, 1, 0), [subject], lessons, assignments);
+        var actualSubjectButton = Assert.Single(scene.Root.DescendantsAndSelf().OfType<Button>(),
+            button => button.Name == $"StudySubject-{subject.Id:N}");
+        Assert.Equal("Maths\n2 of 3 topics rated • 0 min this week", actualSubjectButton.Content);
+        Assert.DoesNotContain("% complete", actualSubjectButton.Content, StringComparison.Ordinal);
+
+        lessons[subject.Id] = [unrated];
+        scene.Render(now, (0, 0, 0), (0, 1, 0), [subject], lessons, assignments);
+        var unassessedSubjectButton = Assert.Single(scene.Root.DescendantsAndSelf().OfType<Button>(),
+            button => button.Name == $"StudySubject-{subject.Id:N}");
+        Assert.Equal("Maths\n0 of 1 topics rated • 0 min this week", unassessedSubjectButton.Content);
+        Assert.Equal("none", StudyLessonMetadata.Read(unrated).Rag);
+    }
+
     private static IEnumerable<Button> Buttons(StudySubjectScene scene) =>
         scene.Root.DescendantsAndSelf().OfType<Button>();
 
