@@ -47,6 +47,12 @@ public sealed class CuiSceneHost(CuiControlRegistry? registry = null) : ContentC
     private sealed class OriginalPublication
     {
         internal Task<CuiSceneAvailability>? Show;
+        internal Task<CuiSceneAvailability>? Readiness;
+        internal Task? ShowBody;
+        internal Task? NativePublication;
+        internal Exception? ReadinessCancellation;
+        internal List<OperationCanceledException> SourceWithdrawals { get; } = [];
+        internal List<(Exception Wrapper, Exception[] Causes)> ProducedShowFailures { get; } = [];
         internal CuiControlLoader? Loader;
         internal Control? Root;
         internal Avalonia.Controls.ResourceDictionary? Resources;
@@ -108,7 +114,20 @@ public sealed class CuiSceneHost(CuiControlRegistry? registry = null) : ContentC
         CuiNativeScene scene, Func<bool> predicate, CancellationToken cancellationToken)
     {
         await start.ConfigureAwait(false);
-        return await ShowCoreAsync(scene, publication, predicate, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var actual = ShowCoreAsync(scene, publication, predicate, cancellationToken);
+            publication.ShowBody = actual;
+            return await actual.ConfigureAwait(false);
+        }
+        catch (Exception error)
+        {
+            CaptureOriginalStage(publication, publication.ShowBody, error);
+            // A faulted/synchronous OCE is a retained fault. Only an exact owner-produced
+            // withdrawal or the actual canceled readiness Task keeps canceled Show status.
+            ThrowOriginalShow(publication);
+            throw;
+        }
     }
 
     /// <summary>
@@ -160,7 +179,7 @@ public sealed class CuiSceneHost(CuiControlRegistry? registry = null) : ContentC
         {
             if (publication.Show is null) continue;
             try { await publication.Show.ConfigureAwait(false); }
-            catch (Exception error) { AddOriginal(errors, error); }
+            catch (Exception error) { CaptureOriginalStage(publication, publication.Show, error); }
         }
         // All admitted Show work has settled. No new loader/banner admission is permitted.
         // A pending readiness/action that ignores cancellation remains a genuinely pending close.
@@ -178,9 +197,10 @@ public sealed class CuiSceneHost(CuiControlRegistry? registry = null) : ContentC
                 await JoinOriginalTaskAsync(pipeline, errors).ConfigureAwait(false);
             if (publication.TerminalActions is { } terminal)
                 await JoinOriginalTaskAsync(terminal, errors).ConfigureAwait(false);
-            foreach (var error in publication.Errors)
-                if (!publication.ReportedShowErrors.Any(reported => ReferenceEquals(reported, error)))
-                    AddOriginal(errors, error);
+            // The original Show Task and every original stage are settled. Keep its exact
+            // recorded causes, including faulted OCEs and known withdrawal causes; never
+            // replace them with an await-generated TaskCanceledException or lose a sibling.
+            foreach (var error in publication.Errors) AddOriginal(errors, error);
         }
         try
         {
@@ -201,7 +221,7 @@ public sealed class CuiSceneHost(CuiControlRegistry? registry = null) : ContentC
             });
         }
         catch (Exception error) { AddOriginal(errors, error); }
-        ThrowOriginal(errors);
+        ThrowOriginalClose(errors, originals);
     }
 
     private OriginalPublication AdmitOriginalBanner()
@@ -259,10 +279,30 @@ public sealed class CuiSceneHost(CuiControlRegistry? registry = null) : ContentC
         ArgumentException.ThrowIfNullOrWhiteSpace(scene.Surface);
         using var request = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token, cancellationToken);
         var generation = Interlocked.Increment(ref _generation);
-        var availability = await scene.Readiness.CheckAsync(request.Token).ConfigureAwait(false);
+        CuiSceneAvailability availability;
+        try
+        {
+            if (publication is null)
+                availability = await scene.Readiness.CheckAsync(request.Token).ConfigureAwait(false);
+            else
+            {
+                var originalReadiness = scene.Readiness.CheckAsync(request.Token).AsTask();
+                publication.Readiness = originalReadiness; // SAME raw owner Task, materialized once.
+                availability = await originalReadiness.ConfigureAwait(false);
+            }
+        }
+        catch (Exception error)
+        {
+            if (publication is not null)
+            {
+                if (publication.Readiness?.IsCanceled == true) publication.ReadinessCancellation = error;
+                CaptureOriginalStage(publication, publication.Readiness, error);
+            }
+            throw;
+        }
         if (!Enum.IsDefined(availability.State) || string.IsNullOrWhiteSpace(availability.Code) || string.IsNullOrWhiteSpace(availability.Message))
             throw new InvalidOperationException("The scene readiness handshake returned an invalid result.");
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        var originalNativePublication = Dispatcher.UIThread.InvokeAsync(() =>
         {
             request.Token.ThrowIfCancellationRequested();
             if (isPublicationCurrent is not null)
@@ -311,7 +351,14 @@ public sealed class CuiSceneHost(CuiControlRegistry? registry = null) : ContentC
             Diagnostics = loaded.Diagnostics;
             Availability = availability;
             old?.Dispose();
-        });
+        }).GetTask();
+        if (publication is not null) publication.NativePublication = originalNativePublication;
+        try { await originalNativePublication.ConfigureAwait(false); }
+        catch (Exception error)
+        {
+            if (publication is not null) CaptureOriginalStage(publication, originalNativePublication, error);
+            throw;
+        }
         return availability;
     }
 
@@ -351,7 +398,7 @@ public sealed class CuiSceneHost(CuiControlRegistry? registry = null) : ContentC
         var errors = publication.Errors;
         try
         {
-            DemandPublicationCurrent(generation, isPublicationCurrent, cancellationToken);
+            DemandPublicationCurrent(generation, isPublicationCurrent, cancellationToken, publication);
             var appearance = scene.Appearance ?? CuiThemeScopeApplier.DetectAppearance();
             visualResources = publication.Resources = CuiSceneVisualResources.Create(scene.Surface, appearance);
             next = publication.Loader = new CuiControlLoader(_registry);
@@ -369,16 +416,16 @@ public sealed class CuiSceneHost(CuiControlRegistry? registry = null) : ContentC
                 next.SetBindingContext(status);
                 next.SetActionDispatcher(status);
             }
-            DemandPublicationCurrent(generation, isPublicationCurrent, cancellationToken);
+            DemandPublicationCurrent(generation, isPublicationCurrent, cancellationToken, publication);
             var document = availability.State == CuiSceneAvailabilityState.Ready ? scene.Document :
                 new CuiRichParser().Parse("<Cui><StackPanel><TextBlock id=\"scene-availability\" text=\"{Binding AvailabilityMessage}\" accessible-name=\"Application availability\" /></StackPanel></Cui>");
             var loaded = next.TryLoad(document);
             root = publication.Root = loaded.Root;
             if (root is null || loaded.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
                 throw new InvalidDataException("The canonical CUI scene did not produce a usable root control.");
-            DemandPublicationCurrent(generation, isPublicationCurrent, cancellationToken);
+            DemandPublicationCurrent(generation, isPublicationCurrent, cancellationToken, publication);
             next.WireBindings(root);
-            DemandPublicationCurrent(generation, isPublicationCurrent, cancellationToken);
+            DemandPublicationCurrent(generation, isPublicationCurrent, cancellationToken, publication);
             var originalLoader = next;
             next.ActionFailed += (_, failure) => ShowGuardedActionFailure(originalLoader, failure, generation, isPublicationCurrent);
             if (_visualResources is { } oldResources)
@@ -424,15 +471,15 @@ public sealed class CuiSceneHost(CuiControlRegistry? registry = null) : ContentC
             if (previousFailure is not null) RetireOriginal(previousFailure, errors);
             if (previous is not null) RetireOriginal(previous, errors);
         }
-        if (complete) AttemptOriginal(errors, () => DemandPublicationCurrent(generation, isPublicationCurrent, cancellationToken));
+        if (complete) AttemptOriginal(errors, () => DemandPublicationCurrent(generation, isPublicationCurrent, cancellationToken, publication));
         publication.ReportedShowErrors = errors.ToArray(); // Preserve prefix without clearing later error custody.
-        ThrowOriginal(publication.ReportedShowErrors.ToList());
+        ThrowOriginalShow(publication);
 
         void Publish(Action write)
         {
-            DemandPublicationCurrent(generation, isPublicationCurrent, cancellationToken);
+            DemandPublicationCurrent(generation, isPublicationCurrent, cancellationToken, publication);
             write();
-            DemandPublicationCurrent(generation, isPublicationCurrent, cancellationToken);
+            DemandPublicationCurrent(generation, isPublicationCurrent, cancellationToken, publication);
         }
     }
 
@@ -454,7 +501,7 @@ public sealed class CuiSceneHost(CuiControlRegistry? registry = null) : ContentC
         {
             publication = AdmitOriginalBanner();
             errors = publication.Errors;
-            DemandPublicationCurrent(generation, isPublicationCurrent, CancellationToken.None);
+            DemandPublicationCurrent(generation, isPublicationCurrent, CancellationToken.None, publication);
             Publish(() => LastActionFailure = failure);
             Publish(() => Diagnostics = Diagnostics.Append(new CuiDiagnostic(failure.Code,
                 failure.Cancelled ? CuiDiagnosticSeverity.Info : CuiDiagnosticSeverity.Error, failure.Message, default)).ToArray());
@@ -467,7 +514,7 @@ public sealed class CuiSceneHost(CuiControlRegistry? registry = null) : ContentC
                 var banner = acquired.Load(new CuiRichParser().Parse(
                     "<Cui><TextBlock id=\"scene-action-status\" text=\"{Binding ActionStatus}\" text-wrapping=\"Wrap\" margin=\"12\" /></Cui>"))
                     ?? throw new InvalidDataException("The action status CUI did not produce a control.");
-                DemandPublicationCurrent(generation, isPublicationCurrent, CancellationToken.None);
+                DemandPublicationCurrent(generation, isPublicationCurrent, CancellationToken.None, publication);
                 var original = Content as Control;
                 _failureLoader = acquired; _failureModel = model;
                 Publish(() => Content = null);
@@ -511,25 +558,85 @@ public sealed class CuiSceneHost(CuiControlRegistry? registry = null) : ContentC
 
         void Publish(Action write)
         {
-            DemandPublicationCurrent(generation, isPublicationCurrent, CancellationToken.None);
+            DemandPublicationCurrent(generation, isPublicationCurrent, CancellationToken.None, publication);
             write();
-            DemandPublicationCurrent(generation, isPublicationCurrent, CancellationToken.None);
+            DemandPublicationCurrent(generation, isPublicationCurrent, CancellationToken.None, publication);
         }
     }
 
-    private void DemandPublicationCurrent(long generation, Func<bool> isPublicationCurrent, CancellationToken cancellationToken)
+    private void DemandPublicationCurrent(long generation, Func<bool> isPublicationCurrent,
+        CancellationToken cancellationToken, OriginalPublication? publication = null)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        lock (_originalGate)
-            if (_originalClose is not null) throw _ownerClosedRefusal!;
-        if (_disposed || generation != Interlocked.Read(ref _generation))
-            throw new OperationCanceledException("The original CUI scene publication retired.");
-        var current = isPublicationCurrent(); // Synchronous owner observation; errors keep their original identity.
-        cancellationToken.ThrowIfCancellationRequested();
-        lock (_originalGate)
-            if (_originalClose is not null) throw _ownerClosedRefusal!;
-        if (!current || _disposed || generation != Interlocked.Read(ref _generation))
-            throw new OperationCanceledException("The original CUI scene publication retired.");
+        DemandOwnerBeforeOrAfterPredicate();
+        var current = isPublicationCurrent(); // A callback-thrown OCE remains an original fault.
+        DemandOwnerBeforeOrAfterPredicate();
+        if (!current) Withdraw(new OperationCanceledException("The original CUI scene publication retired."));
+
+        void DemandOwnerBeforeOrAfterPredicate()
+        {
+            try { cancellationToken.ThrowIfCancellationRequested(); }
+            catch (OperationCanceledException error) { Withdraw(error); }
+            lock (_originalGate)
+                if (_originalClose is not null) Withdraw(_ownerClosedRefusal!);
+            if (_disposed || generation != Interlocked.Read(ref _generation))
+                Withdraw(new OperationCanceledException("The original CUI scene publication retired."));
+        }
+        void Withdraw(OperationCanceledException cause)
+        {
+            publication?.SourceWithdrawals.Add(cause); // Exact cause produced by this source check only.
+            throw cause;
+        }
+    }
+
+    private static void CaptureOriginalStage(OriginalPublication publication, Task? actual, Exception caught)
+    {
+        if (actual?.Exception is { InnerExceptions.Count: > 0 } group)
+        {
+            foreach (var cause in group.InnerExceptions)
+            {
+                var produced = publication.ProducedShowFailures.FirstOrDefault(item => ReferenceEquals(item.Wrapper, cause));
+                if (produced.Wrapper is not null)
+                    foreach (var original in produced.Causes) AddOriginal(publication.Errors, original);
+                else AddOriginal(publication.Errors, cause); // Unknown/empty Aggregate stays opaque.
+            }
+        }
+        else if (publication.Errors.Count == 0)
+            AddOriginal(publication.Errors, caught); // Canceled Task with no earlier captured stage cause.
+    }
+
+    private static void ThrowOriginalShow(OriginalPublication publication)
+    {
+        var causes = publication.Errors.ToArray();
+        publication.ReportedShowErrors = causes;
+        if (causes.Length == 0) return;
+        var sourceCanceled = causes.Length == 1 &&
+            (ReferenceEquals(causes[0], publication.ReadinessCancellation) ||
+             publication.SourceWithdrawals.Any(cause => ReferenceEquals(cause, causes[0])));
+        if (causes.Length > 1 || causes[0] is OperationCanceledException && !sourceCanceled)
+        {
+            var failure = new AggregateException("Original CUI publication and independent cleanup failed.", causes);
+            publication.ProducedShowFailures.Add((failure, causes)); // Exact own wrapper provenance, no Flatten.
+            throw failure;
+        }
+        System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(causes[0]).Throw();
+    }
+
+    private static void ThrowOriginalClose(List<Exception> errors, OriginalPublication[] originals)
+    {
+        // Reuse ONLY our own actually reported aggregate whose complete input sequence is
+        // this final set. Independent later causes require a new compound result.
+        foreach (var original in originals.Reverse())
+            foreach (var produced in original.ProducedShowFailures.AsEnumerable().Reverse())
+                if (produced.Causes.Length == errors.Count &&
+                    produced.Causes.All(cause => errors.Any(error => ReferenceEquals(cause, error))))
+                    System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(produced.Wrapper).Throw();
+        // Preserve the existing sole source-withdrawal cancellation result and exact cause.
+        // It remains retained in this owner's publication ledger, never a success proof.
+        // A faulted/synchronous OCE or canceled-readiness observation is not this source witness.
+        if (errors.Count == 1 && errors[0] is OperationCanceledException &&
+            !originals.Any(original => original.SourceWithdrawals.Any(cause => ReferenceEquals(cause, errors[0]))))
+            throw new AggregateException("Original CUI close retained its exact original cancellation/fault cause.", errors);
+        ThrowOriginal(errors);
     }
 
     private static async Task JoinOriginalTaskAsync(Task original, List<Exception> errors)
