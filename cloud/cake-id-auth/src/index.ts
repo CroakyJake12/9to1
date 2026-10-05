@@ -82,6 +82,9 @@ export async function fetchRequest(request: Request, env: Env, ctx: ExecutionCon
     return publicCors ? addCors(unavailable, publicCors) : unavailable;
   }
 
+  if (request.method === "GET" && url.pathname === "/") {
+    return new Response(null, { status: 303, headers: { "location": `${url.origin}/account`, "cache-control": "no-store" } });
+  }
   if (request.method === "GET" && url.pathname === "/assets/auth-ui.js") {
     return new Response(AUTH_UI, { headers: { "content-type": "text/javascript; charset=utf-8", "cache-control": "public, max-age=3600", "x-content-type-options": "nosniff" } });
   }

@@ -73,7 +73,7 @@ export function createAuthOptions(env: Env): BetterAuthOptions {
     disabledPaths: ["/update-user", "/update-username"],
     emailAndPassword: {
       enabled: true,
-      minPasswordLength: 12,
+      minPasswordLength: 8,
       maxPasswordLength: 128,
       requireEmailVerification: true,
       autoSignIn: false,

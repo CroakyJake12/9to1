@@ -20,7 +20,7 @@ export function signInPage(): Response {
 }
 
 export function signUpPage(): Response {
-  return frame("Create CAKE ID", `<p>Your account works across CAKE and 9to1.</p><form id="sign-up-form"><label for="name">Name</label><input id="name" name="name" autocomplete="name" required maxlength="100"><label for="username">Username</label><input id="username" name="username" autocomplete="username" required minlength="3" maxlength="30"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required maxlength="320"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="new-password" required minlength="12" maxlength="128"><button type="submit">Create account</button></form><p role="status" aria-live="polite"></p><nav><a href="/sign-in">Sign in</a></nav>`);
+  return frame("Create CAKE ID", `<p>Your account works across CAKE and 9to1.</p><form id="sign-up-form"><label for="name">Name</label><input id="name" name="name" autocomplete="name" required maxlength="100"><label for="username">Username</label><input id="username" name="username" autocomplete="username" required minlength="3" maxlength="30"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required maxlength="320"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="128"><button type="submit">Create account</button></form><p role="status" aria-live="polite"></p><nav><a href="/sign-in">Sign in</a></nav>`);
 }
 
 export function forgotPasswordPage(): Response {
@@ -28,7 +28,7 @@ export function forgotPasswordPage(): Response {
 }
 
 export function resetPasswordPage(): Response {
-  return frame("Choose a new password", `<form id="reset-password-form"><label for="password">New password</label><input id="password" name="password" type="password" autocomplete="new-password" required minlength="12" maxlength="128"><button type="submit">Save password</button></form><p role="status" aria-live="polite"></p>`);
+  return frame("Choose a new password", `<form id="reset-password-form"><label for="password">New password</label><input id="password" name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="128"><button type="submit">Save password</button></form><p role="status" aria-live="polite"></p>`);
 }
 
 export function consentPage(clientId: string, requestedScopes: string[]): Response {
