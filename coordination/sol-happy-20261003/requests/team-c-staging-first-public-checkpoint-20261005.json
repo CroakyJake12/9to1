@@ -1,0 +1,210 @@
+{
+  "schemaVersion": 1,
+  "team": "C",
+  "recordedUTC": "2026-10-05T09:04:13.806275+00:00",
+  "coordinationBasis": "80230f2692d89f40490ba2fc1c2a89ee4cbc253a",
+  "currentGlobalSource": "285e97e3a62e75636879c098174d3c6141c94f8b",
+  "acceptedHead": null,
+  "releaseAccepted": false,
+  "deliveryOrder": {
+    "state": "ACKNOWLEDGED_STAGING_FIRST",
+    "targetEuropeLondon": "2026-10-05T11:00:00+01:00",
+    "targetUTC": "2026-10-05T10:00:00Z",
+    "sequence": [
+      "Implement and connect",
+      "Brief staging checks",
+      "Stage current launch apps progressively on applicable web and Windows surfaces",
+      "Resume deep acceptance on exact staged versions"
+    ],
+    "candidateLabel": "STAGED — DEEP ACCEPTANCE PENDING",
+    "deepAcceptance": "PENDING; historical failures and NOT_RUN states retained",
+    "healthyRunningTests": "Do not terminate",
+    "newQueuedDeepTests": "Deferred when competing with staging capacity",
+    "marketingWebsiteAndProductionCutover": "Not required for this staging milestone; existing public website unchanged"
+  },
+  "currentResults": {
+    "home": {
+      "producer": "c01916bd5a27548db65c058d107ef77811a5626d",
+      "runId": 37280174415,
+      "normalOwningCases": {
+        "Debug": {
+          "passed": 117,
+          "failed": 0,
+          "skipped": 0
+        },
+        "Release": {
+          "passed": 117,
+          "failed": 0,
+          "skipped": 0
+        }
+      },
+      "focusedSubset": {
+        "cases": 12,
+        "Debug": "PASS",
+        "Release": "PASS",
+        "includedInNormalOwningCases": true
+      },
+      "separateClassifierCases": {
+        "cases": 17,
+        "Debug": "PASS",
+        "Release": "PASS",
+        "failed": 0,
+        "skipped": 0
+      },
+      "qualification": "Owning tests and separate classifier controls; not proof of installed application authentication or staging availability"
+    },
+    "canvas": {
+      "executableReceivingHandoff": "DELIVERED_VIA_EXISTING_PRIVATE_ROUTE",
+      "nativeGUI": "NOT_RUN",
+      "historicalFailures": "Preserved",
+      "qualification": "Package handoff is not a checked main workflow or staged-app claim"
+    },
+    "writer": {
+      "diagnosisSource": "3ebe2b230b7b54a1bfdbfff49bed658862d0f584",
+      "state": "CORRECTED_PUBLIC_DIAGNOSIS_PREINVOKE_SOURCE_REVIEW",
+      "actualNewRuntimeResult": "NOT_RUN",
+      "historicalFailure": "Preserved"
+    },
+    "installedHomeApprovalIPC": {
+      "owner": "Team A4",
+      "state": "ACTIVE_IMPLEMENTATION_AND_CONNECTION",
+      "stagingDependency": "Genuine installed application identity and approval connection; no synthetic grant or authentication replacement"
+    }
+  },
+  "currentLaunchRoster": {
+    "authority": "Latest staging-first clarification and named launch sections of the live specification, reconciled with post-release scope; no historical 29/30-app denominator reused",
+    "liveSpecification": "https://docs.google.com/document/d/1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+    "postReleaseScope": "https://docs.google.com/document/d/1yZCIP-ogTPLBfqcnc5EFMsL2FO5DoLYBTbGGPTk7Aks",
+    "requiredAppGroups": {
+      "workspace": [
+        "Home",
+        "9to1 Admin",
+        "Files",
+        "Connect",
+        "Mail",
+        "Games"
+      ],
+      "AI": [
+        "Spaces",
+        "Vision & Voice",
+        "AI Studio",
+        "Play"
+      ],
+      "productivity": [
+        "Write",
+        "Present",
+        "Canvas",
+        "Boards",
+        "Planner",
+        "Automations"
+      ],
+      "creative": [
+        "Picture",
+        "Wave",
+        "Motion"
+      ],
+      "data": [
+        "Data",
+        "Forms"
+      ],
+      "developer": [
+        "Dev",
+        "Stacks",
+        "Sites",
+        "Terminal",
+        "Mini Computer"
+      ],
+      "utilities": [
+        "Browse",
+        "Maps",
+        "Shelf"
+      ],
+      "additionalLaunchApps": [
+        "Link",
+        "Prototype",
+        "Paths",
+        "Cards"
+      ]
+    },
+    "platformApplicability": {
+      "webAndWindows": "Useful canonical launch experiences, genuine account integration and compatible dependencies where required; capabilities must be declared per app",
+      "TerminalWeb": "Requires an authorised remote shell execution provider; no local browser process authority implied",
+      "MiniComputerWeb": "Remote provider/VM management and viewing where an authorised provider exists; no unrestricted browser hardware virtualisation",
+      "Launcher": "Android/9to1-OS home launcher; not a Windows/web staging app or package installer",
+      "Go": "9to1-OS search/start primitive and reusable framework; not a separate Windows/web app download"
+    },
+    "retainedBaselineCapabilities": [
+      "Existing Agents API and Space behaviour",
+      "Study resource/revision baseline",
+      "Research provenance/citations baseline",
+      "Planner Burrows",
+      "Replay and Variants owning-app operations",
+      "Existing Mesh pairing/transfer baseline"
+    ],
+    "excludedPostReleaseAdditions": [
+      "Assistants/Specialists migration and new Assistants app",
+      "Community/workspace Kits",
+      "Advanced Study specification mapping, assessment and exam practice",
+      "Additional Mesh phone capture/continuity increments",
+      "Shared creative libraries/publishing sets",
+      "Research evidence/source-change extensions",
+      "Droid Android ROM and explicitly out-of-scope Training Lab"
+    ],
+    "availableSourceBuildEntries": {
+      "browser": {
+        "project": "apps/Web/NineToOne.Web.csproj",
+        "composition": "apps/Web/BrowserFeatureComposition.cs",
+        "currentDefaultRegistrations": [
+          "Wave",
+          "Picture",
+          "Write",
+          "Account settings"
+        ],
+        "state": "SOURCE_PRESENT; not a complete launch-route bundle, configured real login, deployed private access gate or staged-app claim"
+      },
+      "windowsHome": {
+        "nativeProject": "apps/Home/src/AvaloniaHome/AvaloniaHome.csproj",
+        "coreProject": "9to1 Workspace/Home/HavenOS.Home.csproj",
+        "state": "Current owning controls pass; use compatible source-built runtime and current private package handoff for launch check"
+      },
+      "windowsCanvas": {
+        "state": "Executable receiving handoff delivered privately; unchanged original native GUI/main-workflow check remains NOT_RUN"
+      },
+      "otherApps": {
+        "state": "Owners must supply exact current deployable entrypoint/package or bundle manifest; source headings and placeholder links do not prove staging availability"
+      }
+    }
+  },
+  "ownerActions": [
+    {
+      "owner": "Team B",
+      "action": "Supply exact existing browser bundle source/ref, app-to-route/build manifest and required service configuration with genuine deployed application sign-in/callback/session integration promptly through the private engineering handoff; do not duplicate shared implementations"
+    },
+    {
+      "owner": "Team A",
+      "action": "Supply usable current Windows app entrypoints, compatible Home/runtime/native dependencies and downloadable packages through the existing authorised private delivery route; finish installed Home approval and broken main workflows"
+    },
+    {
+      "owner": "Team C Root",
+      "action": "Integrate reviewed usable source, configure protected staging and genuine application authentication, progressively deploy ready apps and deliver Windows artifacts; Root is the sole integration/deployment/publisher owner"
+    },
+    {
+      "owner": "All teams",
+      "action": "Run only relevant brief build/open/access/login/session/main-workflow and editor save/reopen checks before staging; retain deep acceptance as pending and resume it after the full applicable staging set is available"
+    }
+  ],
+  "stagingCounts": {
+    "webAppsStaged": null,
+    "windowsAppsAvailable": null,
+    "appsStagedOnBothApplicableSurfaces": null,
+    "deepAcceptanceVerified": null,
+    "launchDenominator": null,
+    "reason": "Exact current owner route/package manifest and actual staging checks pending; no unmeasured expanded scope or placeholder counted"
+  },
+  "publicSafety": {
+    "privateDeliveryDetails": "Held in the established private engineering/delivery lane; omitted here",
+    "secretsOrPrivatePayloadIdentifiersIncluded": false,
+    "historicalRecords": "Existing index.json and team-c.json are unchanged",
+    "finalReleaseAcceptance": "Not promoted by this staging acknowledgement"
+  }
+}
