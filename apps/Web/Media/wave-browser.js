@@ -65,7 +65,7 @@ function observeFocusClaims() {
             try { if (!native.contains(event.target) && !semantic.contains(event.target)) revokeFocusClaim(); }
             catch { revokeFocusClaim(); }
         });
-        install(globalThis, 'blur', revokeFocusClaim);
+        install(globalThis, 'blur', event => { if (event.target === globalThis) revokeFocusClaim(); });
         install(doc, 'visibilitychange', () => {
             try { if (doc.visibilityState !== 'visible') revokeFocusClaim(); } catch { revokeFocusClaim(); }
         });

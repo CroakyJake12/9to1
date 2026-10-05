@@ -50,8 +50,8 @@
       "sha256": "467d0667ef7df79722f424acb7465161beb89366c0b2bd1f8a34528f6713abcd"
     },
     "apps/Web/Media/wave-browser.js": {
-      "bytes": 15940,
-      "sha256": "1e0d65775847cecd42218485f2fde15c0d8380597c5c9d775c7dde3457fc934c"
+      "bytes": 15989,
+      "sha256": "65bf2119cc76c1c935046b9d9a7c360107bd6c742eca5238e30ec1469a3a9077"
     },
     "apps/Web/NineToOne.Web.csproj": {
       "bytes": 4978,
