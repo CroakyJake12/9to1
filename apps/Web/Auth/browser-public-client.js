@@ -54,7 +54,8 @@ export class BrowserPublicClient {
     if(beginTokenExpiryInvalidation !== undefined && typeof beginTokenExpiryInvalidation !== 'function') throw problem('InvalidConfiguration');
     this.#beginExpiry = beginTokenExpiryInvalidation;
     this.#config = validatePublicClientConfiguration(configuration, win.location.origin);
-    this.#window = win; this.#fetch = transport; this.#crypto = crypto; this.#before = onBeforeSignIn;
+    // Native fetch requires its Window receiver; injected transports retain their existing receiver.
+    this.#window = win; this.#fetch = transport === globalThis.fetch ? transport.bind(globalThis) : transport; this.#crypto = crypto; this.#before = onBeforeSignIn;
     this.#verifyAccount = verifyCurrentAccount; this.#verified = onVerifiedIdentity; this.#signInFailed = onSignInFailed; this.#expired = onTokenExpired; this.#failure = onFailure;
   }
   get configuration() { return this.#config; } // Public configuration only.

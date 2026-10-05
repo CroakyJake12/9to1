@@ -1,0 +1,55 @@
+name: Team B paired native-fetch receiver UNIT patch
+on:
+  push:
+    branches: [custody/team-b-native-fetch-receiver-controls-20261005]
+    paths:
+      - .github/workflows/team-b-native-fetch-receiver.yml
+      - apps/Web/Auth/ci/run-native-fetch-receiver.py
+      - apps/Web/Auth/browser-public-client.js
+      - apps/Web/Auth/account-api-client.js
+      - apps/Web/Auth/configured-accounts.bundle.js
+      - apps/Web/Auth/fetch-receiver.test.js
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  paired-receiver:
+    if: github.repository == 'CroakyJake12/9to1' && github.ref == 'refs/heads/custody/team-b-native-fetch-receiver-controls-20261005'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Check out exact proposed source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: current
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Check out immutable original569 source independently
+        uses: actions/checkout@v4
+        with:
+          ref: 5695619c2cf97af4b8f73e1e019ddb575335e0fd
+          path: original-owner
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Select exact Node22.14.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.14.0
+      - name: Execute strict original11 corrected11 and unchanged44
+        working-directory: current
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: >-
+          python3 -B apps/Web/Auth/ci/run-native-fetch-receiver.py
+          --expected-commit '${{ github.sha }}'
+          --original-checkout "$GITHUB_WORKSPACE/original-owner"
+          --output "$RUNNER_TEMP/native-fetch-receiver-unit"
+      - name: Preserve complete original failure and paired custody
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-fetch-receiver-unit-${{ github.sha }}
+          path: ${{ runner.temp }}/native-fetch-receiver-unit/diagnostics
+          if-no-files-found: warn
+          retention-days: 7
