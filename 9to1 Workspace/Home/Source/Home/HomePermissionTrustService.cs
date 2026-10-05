@@ -560,8 +560,9 @@ public sealed class HomePermissionTrustService
         {
             var state = await LoadAsync(cancellationToken).ConfigureAwait(false);
             var now = _timeProvider.GetUtcNow();
-            await ExpireGrantsAsync(state, now, cancellationToken).ConfigureAwait(false);
-            await SaveAsync(state, cancellationToken).ConfigureAwait(false);
+            var changed = await ExpireGrantsAsync(state, now, cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (changed) await SaveAsync(state, cancellationToken).ConfigureAwait(false);
             var audit = state.Audit.OrderByDescending(entry => entry.Timestamp).ThenByDescending(entry => entry.AuditId)
                 .Skip(auditOffset).Take(auditPageSize + 1).ToArray();
             return new HomePermissionManagementSnapshot(
@@ -606,11 +607,13 @@ public sealed class HomePermissionTrustService
         finally { _gate.Release(); }
     }
 
-    private async Task ExpireGrantsAsync(PersistedState state, DateTimeOffset now, CancellationToken cancellationToken)
+    private async Task<bool> ExpireGrantsAsync(PersistedState state, DateTimeOffset now, CancellationToken cancellationToken)
     {
-        foreach (var grant in state.Grants.Where(item => !item.IsRevoked &&
-                     (item.ExpiresAt <= now || item.TrustLevel == HomeTrustLevel.TemporaryAlwaysTrust && item.RemainingActions is <= 0)).ToArray())
+        var expired = state.Grants.Where(item => !item.IsRevoked &&
+            (item.ExpiresAt <= now || item.TrustLevel == HomeTrustLevel.TemporaryAlwaysTrust && item.RemainingActions is <= 0)).ToArray();
+        foreach (var grant in expired)
             await ExpireTemporaryGrantAsync(state, grant, now, cancellationToken).ConfigureAwait(false);
+        return expired.Length != 0;
     }
 
     private async Task ExpireTemporaryGrantAsync(
