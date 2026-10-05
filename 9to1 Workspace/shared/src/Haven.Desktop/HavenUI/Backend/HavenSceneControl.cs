@@ -4,6 +4,8 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Media.TextFormatting;
+using Avalonia.Utilities;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Haven.Desktop.HavenUI.Tokens;
@@ -16,6 +18,7 @@ namespace Haven.Desktop.HavenUI.Backend;
 public sealed class HavenSceneControl : Panel, IHavenMeasureContext
 {
     private readonly HavenLayoutEngine _layout = new();
+    private readonly Dictionary<AvaloniaParagraphLayout, TextLayout> _paragraphFrames = [];
     private readonly HavenSceneRenderer _renderer = new();
     private readonly HavenAnimationEngine _animations = new();
     private readonly HavenResourceSet _resources = HavenResourceSet.LoadEmbedded();
@@ -248,6 +251,8 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
         finally
         {
             while (drawingScopes.Count > 0) drawingScopes.Pop().Dispose();
+            foreach (var paragraph in _paragraphFrames.Values) paragraph.Dispose();
+            _paragraphFrames.Clear();
         }
     }
 
@@ -503,6 +508,11 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
         if (selection.SelectionLength <= 0 || string.IsNullOrEmpty(selection.Layout.Text) || selection.Rect.Width <= 0 || selection.Rect.Height <= 0)
             return [];
 
+        if (selection.Layout.Paragraph is { } paragraph)
+            return paragraph.SelectionRects(selection.SelectionStart, selection.SelectionLength)
+                .Select(range => new Avalonia.Rect(selection.Layout.ParagraphOrigin.X + range.X,
+                    selection.Layout.ParagraphOrigin.Y + range.Y, range.Width, range.Height)).ToArray();
+
         using var layout = CreateEditableTextLayout(selection.Layout);
         var start = Math.Clamp(selection.SelectionStart, 0, selection.Layout.Text.Length);
         var length = Math.Clamp(selection.SelectionLength, 0, selection.Layout.Text.Length - start);
@@ -525,6 +535,12 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
     {
         if (caret.Rect.Width <= 0 || caret.Rect.Height <= 0) return default;
         var layoutInfo = caret.FullLayout ?? caret.PrefixLayout;
+        if (layoutInfo.Paragraph is { } paragraph)
+        {
+            var paragraphPosition = paragraph.CaretRect(caret.CaretIndex >= 0 ? caret.CaretIndex : layoutInfo.Text.Length);
+            return new Avalonia.Rect(layoutInfo.ParagraphOrigin.X + paragraphPosition.X,
+                layoutInfo.ParagraphOrigin.Y + paragraphPosition.Y, 1.5d, paragraphPosition.Height);
+        }
         using var layout = CreateEditableTextLayout(layoutInfo);
         var caretIndex = caret.CaretIndex >= 0
             ? Math.Clamp(caret.CaretIndex, 0, layoutInfo.Text.Length)
@@ -545,7 +561,7 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
     {
         var family = layout.FontFamily;
         var fontFamily = HavenUiFont.Resolve(family);
-        var typeface = new Typeface(fontFamily, FontStyle.Normal, Weight(layout.FontWeight), FontStretch.Normal);
+        var typeface = new Typeface(fontFamily, layout.Italic ? FontStyle.Italic : FontStyle.Normal, Weight(layout.FontWeight), FontStretch.Normal);
         return new Avalonia.Media.TextFormatting.TextLayout(
             layout.Text,
             typeface,
@@ -611,6 +627,12 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
             case HavenStrokeRoundedRectCommand stroke: context.DrawRectangle(null, new Pen(Resolve(stroke.Pen.Brush), stroke.Pen.Thickness), Rect(stroke.Rect), stroke.Radius, stroke.Radius, default); break;
             case HavenTextCommand text:
             {
+                if (text.Layout.Paragraph is AvaloniaParagraphLayout paragraph)
+                {
+                    paragraph.Draw(ParagraphFrame(paragraph), context, text.Layout.ParagraphOrigin,
+                        text.Layout.ParagraphStart, text.Layout.ParagraphLength);
+                    break;
+                }
                 var formatted = CreateText(text.Layout.Text, text.Layout.FontFamily, text.Layout.FontSize, text.Layout.FontWeight, text.Layout.MaxWidth, Resolve(text.Brush), text.Layout.Italic);
                 var y = text.Layout.CenterVertically
                     ? text.Rect.Y + Math.Max(0, (text.Rect.Height - formatted.Height) / 2d)
@@ -621,13 +643,27 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
             case HavenTextSelectionCommand selection:
             {
                 var brush = Resolve(selection.Brush);
-                foreach (var range in ResolveSelectionRects(selection))
+                var ranges = selection.Layout.Paragraph is AvaloniaParagraphLayout paragraph
+                    ? paragraph.SelectionRects(ParagraphFrame(paragraph), selection.SelectionStart, selection.SelectionLength)
+                        .Select(range => new Avalonia.Rect(selection.Layout.ParagraphOrigin.X + range.X,
+                            selection.Layout.ParagraphOrigin.Y + range.Y, range.Width, range.Height))
+                    : ResolveSelectionRects(selection);
+                foreach (var range in ranges)
                     context.DrawRectangle(brush, null, range, 0, 0, default);
                 break;
             }
             case HavenCaretCommand caret:
             {
-                var rect = ResolveCaretRect(caret);
+                var descriptor = caret.FullLayout ?? caret.PrefixLayout;
+                Avalonia.Rect rect;
+                if (descriptor.Paragraph is AvaloniaParagraphLayout paragraph)
+                {
+                    var position = paragraph.CaretRect(ParagraphFrame(paragraph),
+                        caret.CaretIndex >= 0 ? caret.CaretIndex : descriptor.Text.Length);
+                    rect = new Avalonia.Rect(descriptor.ParagraphOrigin.X + position.X,
+                        descriptor.ParagraphOrigin.Y + position.Y, 1.5d, position.Height);
+                }
+                else rect = ResolveCaretRect(caret);
                 if (rect.Width <= 0 || rect.Height <= 0) break;
                 var brush = Resolve(caret.Brush);
                 context.DrawLine(new Pen(brush, rect.Width), new Point(rect.X, rect.Y), new Point(rect.X, rect.Bottom));
@@ -738,6 +774,181 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
 
     private static Avalonia.Rect Rect(HavenRect rect) => new(rect.X, rect.Y, rect.Width, rect.Height);
     private void UpdateSurfaceMetrics(double width, double height) => SurfaceMetrics = new(new HavenSize(Math.Max(0, width), Math.Max(0, height)), Math.Max(.01d, TopLevel.GetTopLevel(this)?.RenderScaling ?? 1d), Platform);
+    private TextLayout ParagraphFrame(AvaloniaParagraphLayout paragraph)
+    {
+        if (!_paragraphFrames.TryGetValue(paragraph, out var shaped))
+            _paragraphFrames.Add(paragraph, shaped = paragraph.Create());
+        return shaped;
+    }
+
+    internal static HavenParagraphLayout ShapeParagraph(IReadOnlyList<HavenParagraphRun> runs, double width,
+        double lineSpacing = 1, HavenParagraphAlignment alignment = HavenParagraphAlignment.Left, bool wrap = true) =>
+        new AvaloniaParagraphLayout(runs, width, lineSpacing, alignment, wrap);
+
+    /// <summary>Freezes the same resolved faces and properties for measurement, queries and painting.</summary>
+    private sealed class AvaloniaParagraphLayout : HavenParagraphLayout
+    {
+        private readonly HavenParagraphRun[] _runs;
+        private readonly ValueSpan<TextRunProperties>[] _styles;
+        private readonly GenericTextRunProperties _defaultStyle;
+        private readonly double _width;
+        private readonly double _lineHeight;
+        private readonly TextAlignment _alignment;
+        private readonly TextWrapping _wrapping;
+        private readonly HavenParagraphLine[] _lines;
+        private readonly HavenParagraphSegment[] _segments;
+        public override string Text { get; }
+        public override IReadOnlyList<HavenParagraphRun> Runs => Array.AsReadOnly(_runs);
+        public override HavenSize Size { get; }
+        public override IReadOnlyList<HavenParagraphLine> Lines => Array.AsReadOnly(_lines);
+        public override IReadOnlyList<HavenParagraphSegment> Segments => Array.AsReadOnly(_segments);
+
+        internal AvaloniaParagraphLayout(IReadOnlyList<HavenParagraphRun> runs, double width, double spacing,
+            HavenParagraphAlignment alignment, bool wrap)
+        {
+            if (runs is null || runs.Count == 0 || !double.IsFinite(width) || width <= 0 ||
+                !double.IsFinite(spacing) || spacing <= 0 || runs.Any(run => run is null || run.Text is null ||
+                    string.IsNullOrWhiteSpace(run.FontFamily) || !double.IsFinite(run.FontSize) || run.FontSize <= 0))
+                throw new ArgumentException("A finite styled paragraph is required.");
+            _runs = runs.ToArray();
+            Text = string.Concat(_runs.Select(run => run.Text));
+            _width = width;
+            _alignment = alignment switch
+            {
+                HavenParagraphAlignment.Center => TextAlignment.Center,
+                HavenParagraphAlignment.Right => TextAlignment.Right,
+                HavenParagraphAlignment.Justify => TextAlignment.Justify,
+                _ => TextAlignment.Left
+            };
+            _wrapping = wrap ? TextWrapping.Wrap : TextWrapping.NoWrap;
+            var styles = new List<ValueSpan<TextRunProperties>>();
+            GenericTextRunProperties? defaultStyle = null;
+            var offset = 0;
+            foreach (var run in _runs)
+            {
+                var decorations = new TextDecorationCollection();
+                if (run.Underline) foreach (var decoration in TextDecorations.Underline) decorations.Add(decoration);
+                if (run.StrikeThrough) foreach (var decoration in TextDecorations.Strikethrough) decorations.Add(decoration);
+                var properties = new GenericTextRunProperties(
+                    new Typeface(HavenUiFont.Resolve(run.FontFamily), run.Italic ? FontStyle.Italic : FontStyle.Normal,
+                        Weight(run.FontWeight), FontStretch.Normal), run.FontSize,
+                    textDecorations: decorations, foregroundBrush: Resolve(run.Foreground),
+                    backgroundBrush: run.Background is null ? null : Resolve(run.Background), cultureInfo: CultureInfo.CurrentCulture);
+                defaultStyle ??= properties;
+                if (run.Text.Length != 0) styles.Add(new(offset, run.Text.Length, properties));
+                offset += run.Text.Length;
+            }
+            _styles = styles.ToArray();
+            _defaultStyle = defaultStyle!;
+            // Authored spacing scales the actual shaped font heights, never estimated character sizes.
+            using (var natural = Create(double.NaN))
+                _lineHeight = natural.TextLines.Max(line => line.Height) * spacing;
+            using var shaped = Create();
+            Size = new(shaped.WidthIncludingTrailingWhitespace, shaped.Height);
+            var lines = new List<HavenParagraphLine>();
+            var segments = new List<HavenParagraphSegment>();
+            var y = 0d;
+            foreach (var line in shaped.TextLines)
+            {
+                lines.Add(new(line.FirstTextSourceIndex, line.Length, line.NewLineLength,
+                    new HavenRect(line.Start, y, line.WidthIncludingTrailingWhitespace, line.Height), line.Baseline));
+                var runStart = 0;
+                for (var runIndex = 0; runIndex < _runs.Length; runIndex++)
+                {
+                    var start = Math.Max(runStart, line.FirstTextSourceIndex);
+                    var end = Math.Min(runStart + _runs[runIndex].Text.Length,
+                        line.FirstTextSourceIndex + line.Length - line.NewLineLength);
+                    if (end > start)
+                        foreach (var bounds in line.GetTextBounds(start, end - start))
+                        {
+                            // A bidi range may have several visual rectangles. Keep their actual source
+                            // ranges separate so a fragment never paints the same shaped run twice.
+                            var segmentStart = Math.Max(start, bounds.TextRunBounds.Min(run => run.TextSourceCharacterIndex));
+                            var segmentEnd = Math.Min(end, bounds.TextRunBounds.Max(run => run.TextSourceCharacterIndex + run.Length));
+                            if (segmentEnd > segmentStart)
+                                segments.Add(new(segmentStart, segmentEnd - segmentStart, runIndex,
+                                    new HavenRect(bounds.Rectangle.X, y, Math.Max(1, Math.Ceiling(bounds.Rectangle.Width)), line.Height)));
+                        }
+                    runStart += _runs[runIndex].Text.Length;
+                }
+                y += line.Height;
+            }
+            _lines = lines.ToArray();
+            _segments = segments.ToArray();
+        }
+
+        internal TextLayout Create() => Create(_lineHeight);
+        private TextLayout Create(double lineHeight) => new(Text, _defaultStyle.Typeface,
+            _defaultStyle.FontRenderingEmSize, _defaultStyle.ForegroundBrush, textAlignment: _alignment,
+            textWrapping: _wrapping, maxWidth: _width, maxHeight: double.PositiveInfinity,
+            lineHeight: lineHeight, textStyleOverrides: _styles);
+
+        public override HavenRect CaretRect(int offset)
+        {
+            using var shaped = Create();
+            return CaretRect(shaped, offset);
+        }
+        internal HavenRect CaretRect(TextLayout shaped, int offset)
+        {
+            var rect = shaped.HitTestTextPosition(Math.Clamp(offset, 0, Text.Length));
+            return new(rect.X, rect.Y, 1.5d, rect.Height > 0 ? rect.Height : shaped.Height);
+        }
+        public override IReadOnlyList<HavenRect> SelectionRects(int start, int length)
+        {
+            using var shaped = Create();
+            return SelectionRects(shaped, start, length);
+        }
+        internal IReadOnlyList<HavenRect> SelectionRects(TextLayout shaped, int start, int length)
+        {
+            start = Math.Clamp(start, 0, Text.Length);
+            length = Math.Clamp(length, 0, Text.Length - start);
+            return shaped.HitTestTextRange(start, length).Select(rect => new HavenRect(rect.X, rect.Y, rect.Width, rect.Height)).ToArray();
+        }
+        public override int HitTest(HavenPoint point)
+        {
+            using var shaped = Create();
+            var hit = shaped.HitTestPoint(new Point(point.X, point.Y)).CharacterHit;
+            return Math.Clamp(hit.FirstCharacterIndex + hit.TrailingLength, 0, Text.Length);
+        }
+        public override int LineIndex(int offset)
+        {
+            using var shaped = Create();
+            return Math.Clamp(shaped.GetLineIndexFromCharacterIndex(Math.Clamp(offset, 0, Text.Length), false), 0, _lines.Length - 1);
+        }
+        public override int NavigateVertical(int offset, int lineDelta)
+        {
+            using var shaped = Create();
+            var current = Math.Clamp(shaped.GetLineIndexFromCharacterIndex(Math.Clamp(offset, 0, Text.Length), false), 0, _lines.Length - 1);
+            var target = Math.Clamp(current + lineDelta, 0, _lines.Length - 1);
+            var caret = shaped.HitTestTextPosition(Math.Clamp(offset, 0, Text.Length));
+            var hit = shaped.HitTestPoint(new Point(caret.X, _lines[target].Bounds.Y + _lines[target].Bounds.Height / 2)).CharacterHit;
+            return Math.Clamp(hit.FirstCharacterIndex + hit.TrailingLength, 0, Text.Length);
+        }
+
+        internal void Draw(TextLayout shaped, DrawingContext context, HavenPoint origin, int start, int length)
+        {
+            if (length <= 0) return;
+            var end = Math.Min(Text.Length, start + length);
+            var y = 0d;
+            foreach (var line in shaped.TextLines)
+            {
+                if (line.Length == 0) { y += line.Height; continue; }
+                var indices = line.GetTextBounds(line.FirstTextSourceIndex, line.Length)
+                    .SelectMany(bounds => bounds.TextRunBounds).ToArray();
+                var x = line.Start;
+                foreach (var textRun in line.TextRuns)
+                {
+                    if (textRun is not DrawableTextRun drawable) continue;
+                    if (indices.Any(bounds => ReferenceEquals(bounds.TextRun, textRun) &&
+                        bounds.TextSourceCharacterIndex >= start && bounds.TextSourceCharacterIndex < end))
+                        drawable.Draw(context, new Point(origin.X + x, origin.Y + y + line.Baseline - drawable.Baseline));
+                    x += drawable.Size.Width;
+                }
+                y += line.Height;
+            }
+        }
+    }
+
     private static FormattedText CreateText(string text, HavenElement element, double maxWidth) => CreateText(text, element.GetValue(HavenProperties.FontFamily), element.GetValue(HavenProperties.FontSize), element.GetValue(HavenProperties.FontWeight), maxWidth, HavenAvaloniaThemeResolver.Resolve(element.GetValue(HavenProperties.Foreground)));
     private static FormattedText CreateText(string text, string family, double size, int weight, double maxWidth, IBrush foreground, bool italic = false)
     {
