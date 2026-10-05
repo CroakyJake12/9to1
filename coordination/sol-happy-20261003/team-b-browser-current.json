@@ -1,11 +1,11 @@
 {
   "schema": "TEAM_B_CURRENT_SANITIZED_REQUEST",
-  "source": "2db6e230bba48517844b6550da90b9355bf3c1b4",
+  "source": "7815b3dd64848bf9021de3e8c3262923a65bfb0a",
   "status": "ACCEPTANCE_INCOMPLETE",
-  "validation": "Current2db: native64PASS; original browser14PASS; responsive1PASS1FAIL1NOT_RUN. Populated390case passes; keyboard/touch fails bringing Save locally into view after saved revision2; genuine zoom notrun.",
-  "run": "https://github.com/CroakyJake12/9to1/actions/runs/37247109783",
-  "next": "Owner tracing Save locally scroll/layout path from exact raw/source; original cases, thresholds and focus guards unchanged. All recorded command families drained normally.",
-  "diagnostics": "Exact existing failed archive selected read-only; original evidence retained. No whole-original receiving or physical-browser acceptance claim.",
+  "validation": "Current7815 native64PASS with original/D93 controls retained; affected browser rerun active. Prior2db original14PASS, responsive1PASS1FAIL1NOT_RUN at Save locally; caa stale native hash preflightFAIL/browserSKIPPED preserved.",
+  "run": "https://github.com/CroakyJake12/9to1/actions/runs/37252427800",
+  "next": "One existing responsive workflow dispatched after native success; exact original cases/deadlines unchanged. Guarded AX restoration and bounded Save observations reviewed; unchanged13 mock AX regression failed and its literal assertion is being recovered.",
+  "diagnostics": "Complete source5ee native49 paint controls independently reviewed; source2db first-case PNGs read and viewed. No keyboard-failure-time, full responsive or physical-browser acceptance inferred.",
   "receivingRequest": "Publish the actual filesystem indeterminate-commit exception type or maintained transport code, source/ref and owning constructor call-site. B can then bind that exact type through existing Func<Exception,bool>. Authorised LoadAsync must settle or refuse unresolved publication before allowing retry. Existing browser IndexedDB mapping is already present.",
   "deadline": "22:30 Europe/London 4 October missed; no verification waiver."
 }
