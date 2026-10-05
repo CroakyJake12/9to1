@@ -1,11 +1,11 @@
 {
   "schema": "TEAM_B_CURRENT_SANITIZED_REQUEST",
-  "source": "494485cd41aab65bc80cc120073aeb3afe2a9180",
+  "source": "9efff83de1890968e4dd055b986977bbca15ef56",
   "status": "ACCEPTANCE_INCOMPLETE",
-  "validation": "The completed Wave candidate passed 64 native geometry checks and the original 14 browser cases; responsive acceptance remains incomplete. Corrected accessibility regression: 17 unit controls pass. The original Files bootstrap compilation failure is preserved; its reviewed repair is running the unchanged four tests.",
-  "run": "https://github.com/CroakyJake12/9to1/actions/runs/37255699999",
-  "next": "Finish the original Files rerun, preserve the paired fetch-receiver unit results, and complete the affected focus repair. Original assertions, thresholds and deadlines remain unchanged.",
-  "diagnostics": "Detailed evidence and dependency requests retained in private coordination. No physical-browser or installed acceptance claimed.",
+  "validation": "The four unchanged original Files native tests pass, with complete TRX and normal process receipts independently reviewed. The adopted fetch-receiver fix passes its paired unit controls and unchanged regressions. Scoped Write native/package/browser checks pass. Native Wave geometry and original browser cases pass on their recorded candidates; responsive focus remains incomplete.",
+  "run": "https://github.com/CroakyJake12/9to1/actions/runs/37264670527",
+  "next": "Finish the affected focus regression execution and remaining exact raw package/storage custody; complete browser/provider, installed-package and shared persistence integration with the existing owners. Original assertions, thresholds and deadlines remain unchanged.",
+  "diagnostics": "Complete original failures and current raw evidence retained in private coordination. Scoped tests do not establish full browser, installed or overall acceptance.",
   "receivingRequest": "Publish the actual filesystem indeterminate-commit exception type or maintained transport code, source/ref and owning constructor call-site. B can then bind that exact type through existing Func<Exception,bool>. Authorised LoadAsync must settle or refuse unresolved publication before allowing retry. Existing browser IndexedDB mapping is already present.",
   "deadline": "22:30 Europe/London 4 October missed; no verification waiver."
 }
