@@ -18,6 +18,8 @@
     <Compile Include="ModelRouteRegistry.cs" />
     <Compile Include="ModelRouteResolver.cs" />
     <Compile Include="Runtime.cs" />
+    <Compile Include="DulcheRuntime.CanonicalProvider.cs" />
+    <Compile Include="ManagedProviderDulcheAdapter.cs" />
     <Compile Include="ActionSecurity.cs" />
     <Compile Include="TranslateContracts.cs" />
     <Compile Include="TranslateRepository.cs" />
