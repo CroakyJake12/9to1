@@ -267,11 +267,18 @@ public sealed class AgentBudgetLedger
                 decimal.ToInt64(stepReserved),
                 decimal.ToInt64(toolReserved),
                 costReserved,
-                decimal.ToInt64(node.KnownSubtotals.GetValueOrDefault(BudgetKind.Tokens)),
+                decimal.ToInt64(node.Settled.GetValueOrDefault(BudgetKind.Tokens)),
                 decimal.ToInt64(node.KnownSubtotals.GetValueOrDefault(BudgetKind.ToolCalls)),
                 node.KnownSubtotals.GetValueOrDefault(BudgetKind.Cost),
                 invocations,
-                unavailable));
+                unavailable)
+            {
+                MeasuredTokenSubtotal = decimal.ToInt64(node.KnownSubtotals.GetValueOrDefault(BudgetKind.Tokens)),
+                UnmeasuredTokenReservationCharge = decimal.ToInt64(node.Settled.GetValueOrDefault(BudgetKind.Tokens)
+                    - node.KnownSubtotals.GetValueOrDefault(BudgetKind.Tokens)),
+                KnownTokenSubtotalBasis = node.UnavailableCounts.GetValueOrDefault(BudgetKind.Tokens) > 0
+                    ? "measured-plus-unmeasured-reservation-charge" : "measured-usage"
+            });
         }
     }
 

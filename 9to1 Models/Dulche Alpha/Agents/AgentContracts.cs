@@ -358,6 +358,12 @@ public sealed record AgentBudgetUsage(
     int IncludedInvocationCount = 0,
     int UnavailableInvocationCount = 0)
 {
+    /// <summary>Measured token usage only; unavailable provider usage is excluded.</summary>
+    public long MeasuredTokenSubtotal { get; init; }
+    /// <summary>Already settled token reservations charged when provider usage was unavailable.</summary>
+    public long UnmeasuredTokenReservationCharge { get; init; }
+    public string? KnownTokenSubtotalBasis { get; init; }
+
     public static AgentBudgetUsage Empty { get; } = new(
         UsageValue<long>.Empty(), UsageValue<TimeSpan>.Empty(), UsageValue<long>.Measured(0),
         UsageValue<long>.Measured(0), UsageValue<decimal>.Empty());

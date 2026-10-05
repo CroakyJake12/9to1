@@ -17,6 +17,7 @@ public sealed class DulcheRuntime
     private readonly ConcurrentDictionary<string, EndpointSlot> _endpoints = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, SessionSlot> _sessions = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, RequestSlot> _requests = new(StringComparer.Ordinal);
+    private readonly ConditionalWeakTable<RuntimeRequestHandle, RequestSlot> _originalRequestHandles = new();
     private readonly ConcurrentDictionary<string, DulcheRequest> _preparedPrompts = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, GenerationSettings> _endpointSettings = new(StringComparer.Ordinal);
     private readonly RuntimeEventHub _eventHub = new();
@@ -114,11 +115,24 @@ public sealed class DulcheRuntime
     public Task<OperationResult<ModelArtifact>> RollbackModelReplacementAsync(string providerId, string rollbackId, CancellationToken cancellationToken = default) =>
         _acquisition.TryGetValue(providerId, out var adapter) ? adapter.RollbackAsync(rollbackId, cancellationToken) : Task.FromResult(Failure<ModelArtifact>(DulcheErrorCode.ProviderUnavailable, "Provider does not expose rollback.", providerId));
 
-    private async Task ReleaseTemporaryOwnershipAsync(string ownerScopeId, CancellationToken cancellationToken)
+    private async Task ReleaseTemporaryOwnershipAsync(string ownerScopeId, CancellationToken cancellationToken, RequestSlot originalOwner)
     {
         if (!_temporaryOwnership.TryRemove(ownerScopeId, out var models)) return;
+        var failures = new List<Exception>();
         foreach (var (providerId, model) in models)
-            if (_acquisition.TryGetValue(providerId, out var adapter)) await adapter.ReleaseTemporaryOwnershipAsync(model, ownerScopeId, cancellationToken).ConfigureAwait(false);
+        {
+            if (!_acquisition.TryGetValue(providerId, out var adapter)) continue;
+            Task original;
+            try
+            {
+                original = adapter.ReleaseTemporaryOwnershipAsync(model, ownerScopeId, cancellationToken)
+                    ?? throw new InvalidOperationException("The acquisition adapter returned no original ownership-release task.");
+                originalOwner.RetainOriginalTemporaryRelease(original); // SAME captured attempt, never a replacement found by logical ID.
+            }
+            catch (Exception error) { AddOriginalStopCause(failures, error); continue; }
+            await JoinOriginalStopTaskAsync(original, failures).ConfigureAwait(false);
+        }
+        ThrowOriginalStopCauses(failures);
     }
 
     public OperationResult<Unit> PreparePrompt(string callerId, DulcheRequest request)
@@ -219,12 +233,12 @@ public sealed class DulcheRuntime
         if (!endpoint.Enqueue(slot, priority, dependencyId))
         {
             _requests.TryRemove(requestId, out _);
-            return Failure<RuntimeRequestHandle>(DulcheErrorCode.QueueFull, "Endpoint request queue is full.", endpointId, true);
+            return endpoint.IsRetiring
+                ? Failure<RuntimeRequestHandle>(DulcheErrorCode.InvalidState, "Endpoint retirement has sealed request admission.", endpointId)
+                : Failure<RuntimeRequestHandle>(DulcheErrorCode.QueueFull, "Endpoint request queue is full.", endpointId, true);
         }
         slot.RunTask = endpoint.EnsureWorker(ProcessOneAsync);
-        return OperationResult<RuntimeRequestHandle>.Success(new(requestId, sessionId, endpointId,
-            cancellationToken => AwaitRequestAsync(slot, cancellationToken),
-            (after, cancellationToken) => _eventHub.ReadAsync(requestId, after, cancellationToken)));
+        return OperationResult<RuntimeRequestHandle>.Success(Handle(slot));
     }
 
     public OperationResult<DulcheQueueSnapshot> GetQueueSnapshot(string endpointId)
@@ -233,8 +247,12 @@ public sealed class DulcheRuntime
         return OperationResult<DulcheQueueSnapshot>.Success(endpoint.SnapshotQueue());
     }
 
-    private async Task ProcessOneAsync(EndpointSlot endpoint, RequestSlot slot)
+    private Task ProcessOneAsync(EndpointSlot endpoint, RequestSlot slot) =>
+        slot.StartOriginalProcessing(start => ProcessOneOriginalAsync(endpoint, slot, start));
+
+    private async Task ProcessOneOriginalAsync(EndpointSlot endpoint, RequestSlot slot, Task start)
     {
+        await start.ConfigureAwait(false); // SAME whole-body/finally Task published before the first callback.
         if (slot.State is RequestState.Cancelled or RequestState.Replaced) { slot.Complete(); return; }
         if (slot.DependsOnRequestId is { } dependency && (!_requests.TryGetValue(dependency, out var parent) || parent.State != RequestState.Completed))
         {
@@ -268,9 +286,11 @@ public sealed class DulcheRuntime
 
     private async Task ExecuteAsync(EndpointSlot endpoint, RequestSlot slot)
     {
-        slot.State = RequestState.Running;
-        endpoint.Current = slot;
-        endpoint.Endpoint = endpoint.Endpoint with { State = EndpointState.Busy, UpdatedAt = DateTimeOffset.UtcNow };
+        if (!endpoint.TryBeginExecution(slot))
+        {
+            slot.State = RequestState.Cancelled; slot.FinishReason = FinishReason.Cancelled; slot.Complete();
+            return;
+        }
         slot.StartedAt = Stopwatch.GetTimestamp();
         Publish(slot, "Started");
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(endpoint.Stopping.Token, slot.Cancellation.Token);
@@ -284,6 +304,7 @@ public sealed class DulcheRuntime
         try
         {
             if (slot.State == RequestState.Failed) return;
+            linked.Token.ThrowIfCancellationRequested();
             var adapterEndpoint = endpoint.Endpoint with { Model = slot.Request.Model };
             await ConsumeAsync(endpoint.Adapter.GenerateAsync(adapterEndpoint, slot.Request, slot.RequestId, linked.Token), 0).ConfigureAwait(false);
             if (slot.State == RequestState.Running) { slot.State = RequestState.Completed; slot.FinishReason = FinishReason.Completed; }
@@ -359,7 +380,7 @@ public sealed class DulcheRuntime
             endpoint.Current = null;
             if (endpoint.Endpoint.State is not (EndpointState.Stopped or EndpointState.Stopping))
                 endpoint.Endpoint = endpoint.Endpoint with { State = EndpointState.Ready, UpdatedAt = DateTimeOffset.UtcNow };
-            await ReleaseTemporaryOwnershipAsync(slot.RequestId, CancellationToken.None).ConfigureAwait(false);
+            await ReleaseTemporaryOwnershipAsync(slot.RequestId, CancellationToken.None, slot).ConfigureAwait(false);
         }
     }
 
@@ -477,7 +498,12 @@ public sealed class DulcheRuntime
             var replacement = CreateReplacement(previous, prompt, previous.Revision + 1);
             previous.State = RequestState.Replaced; previous.FinishReason = FinishReason.Replaced; previous.Complete();
             _requests[requestId] = replacement;
-            endpoint.Enqueue(replacement, priority: previous.State == RequestState.Paused);
+            if (!endpoint.Enqueue(replacement, priority: previous.State == RequestState.Paused))
+            {
+                replacement.State = RequestState.Cancelled; replacement.FinishReason = FinishReason.Cancelled; replacement.Complete();
+                return Failure<RuntimeRequestHandle>(endpoint.IsRetiring ? DulcheErrorCode.InvalidState : DulcheErrorCode.QueueFull,
+                    endpoint.IsRetiring ? "Endpoint retirement has sealed request admission." : "Endpoint request queue is full.", previous.EndpointId, !endpoint.IsRetiring);
+            }
             replacement.RunTask = endpoint.EnsureWorker(ProcessOneAsync);
             Publish(replacement, "Replaced", "Queued prompt replaced in place.");
             return OperationResult<RuntimeRequestHandle>.Success(Handle(replacement));
@@ -489,14 +515,42 @@ public sealed class DulcheRuntime
         }
         var next = CreateReplacement(previous, prompt, previous.Revision + 1);
         _requests[requestId] = next;
-        if (!endpoint.Enqueue(next, priority: true)) return Failure<RuntimeRequestHandle>(DulcheErrorCode.QueueFull, "Endpoint request queue is full.", previous.EndpointId, true);
+        if (!endpoint.Enqueue(next, priority: true))
+        {
+            next.State = RequestState.Cancelled; next.FinishReason = FinishReason.Cancelled; next.Complete();
+            return Failure<RuntimeRequestHandle>(endpoint.IsRetiring ? DulcheErrorCode.InvalidState : DulcheErrorCode.QueueFull,
+                endpoint.IsRetiring ? "Endpoint retirement has sealed request admission." : "Endpoint request queue is full.", previous.EndpointId, !endpoint.IsRetiring);
+        }
         next.RunTask = endpoint.EnsureWorker(ProcessOneAsync);
         Publish(next, "Replaced", "New attempt created with stable logical RequestID.");
         return OperationResult<RuntimeRequestHandle>.Success(Handle(next));
     }
 
     private RequestSlot CreateReplacement(RequestSlot previous, string prompt, int revision) => new(previous.RequestId, Guid.NewGuid().ToString("N"), previous.SessionId, previous.EndpointId, previous.Request with { Input = prompt, Messages = null }) { Revision = revision };
-    private RuntimeRequestHandle Handle(RequestSlot slot) => new(slot.RequestId, slot.SessionId, slot.EndpointId, token => AwaitRequestAsync(slot, token), (after, token) => _eventHub.ReadAsync(slot.RequestId, after, token));
+    private RuntimeRequestHandle Handle(RequestSlot slot)
+    {
+        var original = new RuntimeRequestHandle(slot.RequestId, slot.SessionId, slot.EndpointId,
+            token => AwaitRequestAsync(slot, token), (after, token) => _eventHub.ReadAsync(slot.RequestId, after, token));
+        _originalRequestHandles.Add(original, slot);
+        return original;
+    }
+
+    /// <summary>Observation only: an exact issued handle identifies its actual attempt.
+    /// The response result is not settlement. The shared endpoint worker is diagnostic,
+    /// and cannot stand in for an individual attempt's original whole-body/finally Task.</summary>
+    public bool TryObserveOriginalRequestWork(RuntimeRequestHandle originalHandle,
+        out Task? originalProcessing, out Task? originalEndpointWorker, out IReadOnlyList<Task> originalCleanup)
+    {
+        ArgumentNullException.ThrowIfNull(originalHandle);
+        if (_originalRequestHandles.TryGetValue(originalHandle, out var original))
+        {
+            original.ObserveOriginalWork(out originalProcessing, out originalCleanup);
+            originalEndpointWorker = original.RunTask;
+            return originalProcessing is not null;
+        }
+        originalProcessing = null; originalEndpointWorker = null; originalCleanup = Array.Empty<Task>();
+        return false;
+    }
 
     public async Task<OperationResult<DulcheEndpoint>> PauseEndpointAsync(string endpointId, CancellationToken cancellationToken = default)
     {
@@ -521,17 +575,101 @@ public sealed class DulcheRuntime
         return OperationResult<DulcheEndpoint>.Success(endpoint.Endpoint);
     }
 
-    public async Task<OperationResult<DulcheEndpoint>> StopEndpointAsync(string endpointId, CancellationToken cancellationToken = default)
+    /// <summary>Retires this endpoint's admitted work. Call from an independent owner,
+    /// never await this operation from a generation/tool callback that it must itself join.
+    /// A caller cancellation withdraws only that caller's wait; the original retirement stays owned.</summary>
+    public Task<OperationResult<DulcheEndpoint>> StopEndpointAsync(string endpointId, CancellationToken cancellationToken = default)
     {
-        if (!_endpoints.TryGetValue(endpointId, out var endpoint)) return Failure<DulcheEndpoint>(DulcheErrorCode.EndpointNotFound, "Endpoint not found.", endpointId);
-        endpoint.Endpoint = endpoint.Endpoint with { State = EndpointState.Stopping, UpdatedAt = DateTimeOffset.UtcNow };
-        endpoint.Stopping.Cancel();
-        foreach (var pending in endpoint.Drain()) { pending.State = RequestState.Cancelled; pending.FinishReason = FinishReason.Cancelled; pending.Cancellation.Cancel(); pending.Complete(); Publish(pending, "Cancelled", "Endpoint stopped."); }
-        if (endpoint.Current is { } active) await StopResponseAsync(active.RequestId, cancellationToken).ConfigureAwait(false);
-        var stopped = await endpoint.Adapter.StopAsync(endpoint.Endpoint, cancellationToken).ConfigureAwait(false);
-        endpoint.Endpoint = endpoint.Endpoint with { State = stopped.Succeeded ? EndpointState.Stopped : EndpointState.Failed, LastError = stopped.Error, UpdatedAt = DateTimeOffset.UtcNow };
-        PublishEndpoint(endpoint, endpoint.Endpoint.State.ToString());
-        return stopped.Succeeded ? OperationResult<DulcheEndpoint>.Success(endpoint.Endpoint) : OperationResult<DulcheEndpoint>.Failure(stopped.Error!);
+        if (!_endpoints.TryGetValue(endpointId, out var endpoint))
+            return Task.FromResult(Failure<DulcheEndpoint>(DulcheErrorCode.EndpointNotFound, "Endpoint not found.", endpointId));
+        if (cancellationToken.IsCancellationRequested)
+            return Task.FromCanceled<OperationResult<DulcheEndpoint>>(cancellationToken);
+        var original = endpoint.StartOriginalStop(StopEndpointOriginalAsync);
+        return cancellationToken.CanBeCanceled ? original.WaitAsync(cancellationToken) : original;
+    }
+
+    private async Task<OperationResult<DulcheEndpoint>> StopEndpointOriginalAsync(
+        EndpointSlot endpoint, Task start, Task? originalWorker, RequestSlot[] queued)
+    {
+        await start.ConfigureAwait(false); // The SAME original stop is published and admission sealed first.
+        var failures = new List<Exception>();
+        var active = endpoint.Current;
+        try { endpoint.Stopping.Cancel(); } catch (Exception error) { AddOriginalStopCause(failures, error); }
+        var originalQueuedWork = new List<Task>();
+        foreach (var pending in queued)
+        {
+            pending.State = RequestState.Cancelled; pending.FinishReason = FinishReason.Cancelled;
+            originalQueuedWork.Add(ProcessOneAsync(endpoint, pending)); // Owned pre-body withdrawal, never a fabricated completed task.
+            try { pending.Cancellation.Cancel(); } catch (Exception error) { AddOriginalStopCause(failures, error); }
+            pending.Complete();
+            try { Publish(pending, "Cancelled", "Endpoint stopped."); } catch (Exception error) { AddOriginalStopCause(failures, error); }
+        }
+
+        Task<OperationResult<Unit>>? cancel = null;
+        if (active is not null)
+        {
+            try
+            {
+                cancel = endpoint.Adapter.CancelAsync(endpoint.Endpoint, active.RequestId, CancellationToken.None).AsTask();
+                endpoint.OriginalAdapterCancel = cancel;
+            }
+            catch (Exception error) { AddOriginalStopCause(failures, error); }
+        }
+        Task<OperationResult<Unit>>? stop = null;
+        try
+        {
+            stop = endpoint.Adapter.StopAsync(endpoint.Endpoint, CancellationToken.None).AsTask();
+            endpoint.OriginalAdapterStop = stop;
+        }
+        catch (Exception error) { AddOriginalStopCause(failures, error); }
+        // Stop/cancel may be necessary to release a provider stream. Their return alone is
+        // not settlement: independently join the actual worker, including its complete finally.
+        if (cancel is not null) await JoinOriginalStopTaskAsync(cancel, failures).ConfigureAwait(false);
+        if (stop is not null) await JoinOriginalStopTaskAsync(stop, failures).ConfigureAwait(false);
+        if (originalWorker is not null) await JoinOriginalStopTaskAsync(originalWorker, failures).ConfigureAwait(false);
+        foreach (var queuedWork in originalQueuedWork) await JoinOriginalStopTaskAsync(queuedWork, failures).ConfigureAwait(false);
+
+        var stopped = stop?.IsCompletedSuccessfully == true ? stop.GetAwaiter().GetResult() : null;
+        var cancelled = cancel?.IsCompletedSuccessfully == true ? cancel.GetAwaiter().GetResult() : null;
+        var resultError = stopped?.Error ?? cancelled?.Error;
+        var succeeded = failures.Count == 0 && stopped?.Succeeded == true && cancelled?.Succeeded != false;
+        if (!succeeded && resultError is null)
+            resultError = new(DulcheErrorCode.ProviderUnavailable, "The original endpoint retirement did not settle successfully.", endpoint.Endpoint.EndpointId, true);
+        endpoint.Endpoint = endpoint.Endpoint with
+        {
+            State = succeeded ? EndpointState.Stopped : EndpointState.Failed,
+            LastError = resultError, UpdatedAt = DateTimeOffset.UtcNow
+        };
+        try { PublishEndpoint(endpoint, endpoint.Endpoint.State.ToString()); } catch (Exception error) { AddOriginalStopCause(failures, error); }
+        if (failures.Count != 0)
+        {
+            endpoint.Endpoint = endpoint.Endpoint with { State = EndpointState.Failed };
+            ThrowOriginalStopCauses(failures);
+        }
+        return succeeded ? OperationResult<DulcheEndpoint>.Success(endpoint.Endpoint)
+            : OperationResult<DulcheEndpoint>.Failure(resultError!);
+    }
+
+    private static void AddOriginalStopCause(List<Exception> errors, Exception error)
+    {
+        if (!errors.Any(current => ReferenceEquals(current, error))) errors.Add(error);
+    }
+
+    private static async Task JoinOriginalStopTaskAsync(Task original, List<Exception> errors)
+    {
+        try { await original.ConfigureAwait(false); }
+        catch (Exception error)
+        {
+            AddOriginalStopCause(errors, error);
+            if (original.Exception is { } compound)
+                foreach (var member in compound.InnerExceptions) AddOriginalStopCause(errors, member);
+        }
+    }
+
+    private static void ThrowOriginalStopCauses(List<Exception> errors)
+    {
+        if (errors.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(errors[0]).Throw();
+        if (errors.Count > 1) throw new AggregateException("Original endpoint retirement/cleanup failures.", errors);
     }
 
     public OperationResult<DulcheEndpoint> InspectEndpoint(string endpointId) => _endpoints.TryGetValue(endpointId, out var endpoint)
@@ -609,6 +747,34 @@ public sealed class DulcheRuntime
     {
         public string RequestId { get; } = requestId; public string AttemptId { get; } = attemptId; public string SessionId { get; } = sessionId; public string EndpointId { get; } = endpointId; public DulcheRequest Request { get; set; } = request;
         public TaskCompletionSource Completion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously); public Task? RunTask; public CancellationTokenSource Cancellation { get; } = new(); public TaskCompletionSource ResumeSignal { get; set; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly object _originalWorkGate = new();
+        private Task? _originalProcessing;
+        private readonly List<Task> _originalTemporaryReleaseTasks = [];
+        public Task StartOriginalProcessing(Func<Task, Task> body)
+        {
+            TaskCompletionSource start;
+            Task original;
+            lock (_originalWorkGate)
+            {
+                if (_originalProcessing is not null) return _originalProcessing;
+                start = new(TaskCreationOptions.RunContinuationsAsynchronously);
+                original = _originalProcessing = body(start.Task);
+            }
+            start.SetResult();
+            return original;
+        }
+        public void RetainOriginalTemporaryRelease(Task original)
+        {
+            lock (_originalWorkGate) _originalTemporaryReleaseTasks.Add(original);
+        }
+        public void ObserveOriginalWork(out Task? processing, out IReadOnlyList<Task> cleanup)
+        {
+            lock (_originalWorkGate)
+            {
+                processing = _originalProcessing;
+                cleanup = Array.AsReadOnly(_originalTemporaryReleaseTasks.ToArray());
+            }
+        }
         public ConcurrentQueue<RuntimeEvent> Events { get; } = new(); public List<DulcheError> Errors { get; } = []; public List<string> Tools { get; } = []; public StringBuilder Text { get; } = new(); public StringBuilder Thinking { get; } = new(); public RequestState State = RequestState.Queued; public FinishReason? FinishReason; public int Revision = 1; public long Sequence; public long? OutputTokens; public long? InputTokens; public string? ProviderFinishReason; public long AcceptedAt = Stopwatch.GetTimestamp(); public long? StartedAt; public long? FirstOutputAt; public long? CompletedAt; public long? PausedAt; public long PausedTicks; public int ToolSteps; public GeneratedUiPayload? GeneratedUI; public bool PauseRequested; public string? DependsOnRequestId;
         public bool IsTerminal => State is RequestState.Completed or RequestState.Cancelled or RequestState.Replaced or RequestState.Blocked or RequestState.Failed;
         public void Complete() => Completion.TrySetResult();
@@ -617,11 +783,82 @@ public sealed class DulcheRuntime
     private sealed class EndpointSlot(DulcheEndpoint endpoint, IDulcheAdapter adapter, int maxQueue)
     {
         private readonly object _gate = new(); private readonly LinkedList<RequestSlot> _queue = []; private readonly SemaphoreSlim _signal = new(0); private Task? _worker;
+        private bool _retiring;
+        private Task<OperationResult<DulcheEndpoint>>? _originalStop;
+        public Task<OperationResult<Unit>>? OriginalAdapterCancel;
+        public Task<OperationResult<Unit>>? OriginalAdapterStop;
+        public bool IsRetiring { get { lock (_gate) return _retiring; } }
         public DulcheEndpoint Endpoint = endpoint; public IDulcheAdapter Adapter { get; } = adapter; public int MaxQueue { get; } = maxQueue; public CancellationTokenSource Stopping { get; } = new(); public RequestSlot? Current; public bool ManualPause;
-        public bool Enqueue(RequestSlot slot, bool priority = false, string? afterRequestId = null) { lock (_gate) { if (_queue.Count >= MaxQueue) return false; var dependency = afterRequestId is null ? null : Find(afterRequestId); if (dependency is not null) _queue.AddAfter(dependency, slot); else if (priority || afterRequestId is not null) _queue.AddFirst(slot); else _queue.AddLast(slot); _signal.Release(); return true; } }
+        public bool Enqueue(RequestSlot slot, bool priority = false, string? afterRequestId = null) { lock (_gate) { if (_worker is { IsCompleted: true, IsCompletedSuccessfully: false }) SealAfterOriginalWorkerFailure(); if (_retiring || _queue.Count >= MaxQueue) return false; var dependency = afterRequestId is null ? null : Find(afterRequestId); if (dependency is not null) _queue.AddAfter(dependency, slot); else if (priority || afterRequestId is not null) _queue.AddFirst(slot); else _queue.AddLast(slot); _signal.Release(); return true; } }
+        public bool TryBeginExecution(RequestSlot slot)
+        {
+            lock (_gate)
+            {
+                if (_retiring) return false;
+                slot.State = RequestState.Running; Current = slot;
+                Endpoint = Endpoint with { State = EndpointState.Busy, UpdatedAt = DateTimeOffset.UtcNow };
+                return true;
+            }
+        }
         public DulcheQueueSnapshot SnapshotQueue() { lock (_gate) return new(Endpoint.EndpointId, Current?.RequestId, _queue.Select((slot, index) => new DulcheQueueItem(slot.RequestId, slot.SessionId, slot.State, index + 1, DateTimeOffset.UtcNow - Stopwatch.GetElapsedTime(slot.AcceptedAt), slot.Request.QueueTimeoutSeconds)).ToArray(), MaxQueue, DateTimeOffset.UtcNow); }
-        public bool TryDequeue(out RequestSlot slot) { lock (_gate) { if (_queue.First is null) { slot = null!; return false; } slot = _queue.First.Value; _queue.RemoveFirst(); return true; } }
-        public Task EnsureWorker(Func<EndpointSlot, RequestSlot, Task> run) { lock (_gate) { if (_worker is { IsCompleted: false }) { Signal(); return _worker; } _worker = Task.Run(async () => { try { while (!Stopping.IsCancellationRequested) { await _signal.WaitAsync(Stopping.Token).ConfigureAwait(false); if (TryDequeue(out var next)) await run(this, next).ConfigureAwait(false); } } catch (OperationCanceledException) when (Stopping.IsCancellationRequested) { } }, Stopping.Token); return _worker; } }
+        public bool TryDequeue(out RequestSlot slot) { lock (_gate) { if (_retiring || _queue.First is null) { slot = null!; return false; } slot = _queue.First.Value; _queue.RemoveFirst(); return true; } }
+        public Task? EnsureWorker(Func<EndpointSlot, RequestSlot, Task> run)
+        {
+            TaskCompletionSource start;
+            Task original;
+            lock (_gate)
+            {
+                if (_retiring) return _worker; // Null means no worker was acquired; it is not completed-task proof.
+                if (_worker is not null)
+                {
+                    if (_worker.IsCompleted) SealAfterOriginalWorkerFailure();
+                    else Signal();
+                    return _worker; // The SAME original is never overwritten, including a faulted/cancelled worker.
+                }
+                start = new(TaskCreationOptions.RunContinuationsAsynchronously);
+                original = _worker = Task.Run(async () =>
+                {
+                    await start.Task.ConfigureAwait(false);
+                    while (!Stopping.IsCancellationRequested)
+                    {
+                        try { await _signal.WaitAsync(Stopping.Token).ConfigureAwait(false); }
+                        catch (OperationCanceledException) when (Stopping.IsCancellationRequested) { break; }
+                        // Only the directly owned idle wait cancellation is handled above.
+                        // A body/finally exception must remain on the actual original worker.
+                        if (TryDequeue(out var next)) await run(this, next).ConfigureAwait(false);
+                    }
+                });
+            }
+            start.SetResult();
+            return original;
+        }
+
+        // Called only under _gate. A failed original worker is fail-stop, not restart permission.
+        private void SealAfterOriginalWorkerFailure()
+        {
+            _retiring = true;
+            Endpoint = Endpoint with { State = EndpointState.Failed,
+                LastError = new(DulcheErrorCode.ProviderUnavailable, "The original endpoint worker terminated; retire this owner before creating another endpoint.", Endpoint.EndpointId, true),
+                UpdatedAt = DateTimeOffset.UtcNow };
+        }
+
+        public Task<OperationResult<DulcheEndpoint>> StartOriginalStop(
+            Func<EndpointSlot, Task, Task?, RequestSlot[], Task<OperationResult<DulcheEndpoint>>> close)
+        {
+            TaskCompletionSource start;
+            Task<OperationResult<DulcheEndpoint>> original;
+            lock (_gate)
+            {
+                if (_originalStop is not null) return _originalStop;
+                start = new(TaskCreationOptions.RunContinuationsAsynchronously);
+                _retiring = true;
+                Endpoint = Endpoint with { State = EndpointState.Stopping, UpdatedAt = DateTimeOffset.UtcNow };
+                var queued = _queue.ToArray(); _queue.Clear();
+                original = _originalStop = close(this, start.Task, _worker, queued);
+            }
+            start.SetResult();
+            return original;
+        }
         public void Signal() { try { _signal.Release(); } catch (SemaphoreFullException) { } }
         public void RemoveQueued(string requestId) { lock (_gate) { var node = _queue.First; while (node is not null) { var next = node.Next; if (node.Value.RequestId == requestId) _queue.Remove(node); node = next; } } }
         public void MoveAfterDependency(string queuedId, string dependencyId) { lock (_gate) { var queued = Find(queuedId); var dependency = Find(dependencyId); if (queued is null || dependency is null || queued == dependency) return; _queue.Remove(queued); _queue.AddAfter(dependency, queued); } }

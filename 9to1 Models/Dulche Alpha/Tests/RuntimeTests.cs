@@ -156,6 +156,13 @@ public sealed class RuntimeTests
         public IModelProvider? Find(string providerId) => null;
         public IModelProvider GetRequired(string providerId) => throw new NotSupportedException();
         public Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken) => Task.FromResult(models);
+        public Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(ModelCataloguePolicy policy, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult<IReadOnlyList<ProviderModelDescriptor>>(models.Where(model =>
+                (model.IsLocal ? policy.AllowLocal : policy.AllowRemote) &&
+                (policy.AllowedProviderIds is null || policy.AllowedProviderIds.Contains(model.ProviderId))).ToArray());
+        }
     }
 
     private sealed class FakeAdapter(int delayMilliseconds = 0) : IDulcheAdapter
