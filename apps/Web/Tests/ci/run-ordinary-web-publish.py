@@ -156,6 +156,7 @@ def main():
     parser.add_argument("--expected-commit", required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--package-cache", type=Path, help="Reuse an existing owned NuGet package cache; all build outputs remain isolated")
+    parser.add_argument("--artifacts-cache", type=Path, help="Reuse this checkout's existing ordinary SDK build outputs; normal Build and Publish still run")
     args = parser.parse_args()
     root, output = Path.cwd().resolve(), args.output.resolve()
     if output.exists() or output.is_relative_to(root):
@@ -224,7 +225,12 @@ def main():
             raise RuntimeError("Actual owner build.js asset exports missing")
         write_json(diagnostics / "owner-built-assets.json", asset_rows)
         project = "apps/Web/NineToOne.Web.csproj"
-        artifacts = output / "artifacts"
+        artifacts = output / "artifacts" if args.artifacts_cache is None else args.artifacts_cache.absolute()
+        if args.artifacts_cache is not None:
+            if not artifacts.is_dir() or artifacts.is_symlink() or artifacts.resolve().is_relative_to(root):
+                raise RuntimeError("Existing regular SDK artifacts directory outside checkout required")
+            artifacts = artifacts.resolve()
+        result["buildArtifacts"] = str(artifacts)
         task = artifacts / "bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
         props = ["-p:AvaloniaBuildTasksLocation=" + str(task), "-p:UseSharedCompilation=false"]
         commands.run("restore", ["dotnet", "restore", project, "--artifacts-path", str(artifacts),
