@@ -3,7 +3,7 @@
   "team": "A",
   "thread": "Project Astra la Vista",
   "ownerIdentity": "Project Astra existing root integrator",
-  "updatedUTC": "2026-10-05T08:29:06Z",
+  "updatedUTC": "2026-10-05T09:07:21Z",
   "canonicalRemote": "https://github.com/CroakyJake12/9to1.git",
   "sourceBranch": "astra/launch-integration-20260930",
   "candidateCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
@@ -1366,7 +1366,7 @@
     },
     "qualification": "EntirepreviouscurrentExecution979 remainsinimmutablefullrecord; latest progress belongs canonicalcurrentExecution989."
   },
-  "canonicalExecutionField": "currentExecution20261005DependencyBreak",
+  "canonicalExecutionField": "currentStagingOrder20261005",
   "currentExecution989": {
     "historicalFullRecordPreserved": {
       "commit": "9b37814cc31716c8b7e6b59a82327eed8da695ed",
@@ -2712,5 +2712,24 @@
     "status": "Implementation and receiving tests in progress. Full installed/signing/clean-machine and all-group acceptance remain open; no overall completion percentage inferred.",
     "delivery": "Exact source and execution handoffs use existing authorized private coordination; Team C retains sole global integration.",
     "constraints": "No production, billing, account import, trust identity, release or shutdown change."
+  },
+  "currentStagingOrder20261005": {
+    "acknowledgedUTC": "2026-10-05T09:07:21Z",
+    "deadline": "2026-10-05T11:00:00+01:00",
+    "utcDeadline": "2026-10-05T10:00:00Z",
+    "order": "Implement and connect; brief staging checks; stage the complete applicable web and Windows app set; then resume deep acceptance.",
+    "supersedes": "Full app/pass/platform acceptance is no longer a prerequisite for private staging or candidate delivery.",
+    "scope": "Current launch baseline and incorporated requirements; expressly scheduled post-release additions excluded without deferring baseline apps.",
+    "candidates": "STAGED — DEEP ACCEPTANCE PENDING; immutable versions; publish ready apps progressively.",
+    "owners": {
+      "A": "Native/runtime Windows package wiring",
+      "B": "Actual browser apps and simple selector",
+      "C": "Sole integration, private deployment and artifact delivery"
+    },
+    "briefChecks": "Delivered artifact/URL opens; server-side private access; genuine application login/session/signout where applicable; representative workflow and editor save/reopen; required dependencies; no serious credential/data-loss/authority defect.",
+    "pendingChecks": "Deep donor/platform/accessibility/stress/recovery/signing/clean-install acceptance remains pending or failed, never waived.",
+    "currentResult": "Team A rebuilt current CUI modules and executed the original 90-case Debug runtime baseline: 90 passed, zero failed/skipped. This is dependency evidence, not an application staging claim.",
+    "next": "Deliver usable Home/runtime and repaired Canvas Windows candidates through C; bind real main workflows and authentication; defer competing queued deep checks.",
+    "constraints": "No new paid purchase, live charge, production cutover/customer migration, unapproved external mail/inference, fake auth/publisher or disabled security."
   }
 }
