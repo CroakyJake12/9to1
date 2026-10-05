@@ -1,0 +1,42 @@
+name: Team B faithful caa6712 AX17 regression
+
+on:
+  push:
+    branches: [custody/team-b-browser-ax-caa6712-corrected-unit-20261005]
+    paths:
+      - .github/workflows/team-b-browser-ax-corrected17.yml
+      - apps/Web/Tests/ci/run-browser-ax-corrected17.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  faithful-corrected17:
+    if: github.ref == 'refs/heads/custody/team-b-browser-ax-caa6712-corrected-unit-20261005' && github.repository == 'CroakyJake12/9to1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.14.0"
+      - name: Run original thirteen assertions and four additive mock guards
+        run: >-
+          python3 apps/Web/Tests/ci/run-browser-ax-corrected17.py
+          --expected-commit '${{ github.sha }}'
+          --output "$RUNNER_TEMP/team-b-ax-corrected17"
+      - name: Preserve raw corrected failure or complete result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-b-ax-corrected17-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-ax-corrected17/diagnostics
+          if-no-files-found: warn
+          retention-days: 7
