@@ -176,9 +176,23 @@ public sealed class NativeFilesWorkspaceService(IHomeCoreStateStore home, HomeLo
             }
             var write = await home.WriteGuardedAsync(new(RecordId(actor.ProfileId), "files.native-workspace", 1, HomeDataScope.DeviceLocal,
                 HomeRecordAuthority.LocalCanonical, 1, JsonSerializer.SerializeToElement(configuration)), 0, actor, profiles, cancellationToken).ConfigureAwait(false);
-            if (write.Failure?.Code == HomeCoreErrorCode.PermissionDenied)
-                throw new UnauthorizedAccessException("Home profile changed before Files setup configuration publication.");
-            if (!write.IsSuccess) throw new InvalidOperationException("Files setup configuration conflicted; created Files data was preserved for recovery.");
+            if (!write.IsSuccess)
+            {
+                var failure = write.Failure ?? throw new InvalidOperationException("Home returned an unsuccessful Files configuration write without failure details; created Files data was preserved for recovery.");
+                var message = failure.Code == HomeCoreErrorCode.HomeStateConflict
+                    ? "Files setup configuration conflicted. " + failure.Message
+                    : failure.Message;
+                message += " Created Files data was preserved for recovery.";
+                if (!string.IsNullOrWhiteSpace(failure.RecoveryAction)) message += " " + failure.RecoveryAction;
+                Exception exception = failure.Code switch
+                {
+                    HomeCoreErrorCode.HomeStateConflict => new InvalidOperationException(message),
+                    HomeCoreErrorCode.PermissionDenied => new UnauthorizedAccessException(message),
+                    _ => new HomeCoreStateUnavailableException(failure.Code, message),
+                };
+                exception.Data["HomeCoreFailure"] = failure;
+                throw exception;
+            }
             return workspace;
         }
         finally { _creating.TryRemove(evidence.StoreId, out _); }
