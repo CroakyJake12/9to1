@@ -1,0 +1,46 @@
+name: Team C original Writer minimal runtime diagnosis
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [team-c/sol-happy-c4-write-runtime-diagnosis-20261005]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  original-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Receive original six-file packaged probe
+        uses: actions/download-artifact@v8
+        with:
+          artifact-ids: 11319347078
+          run-id: 37246601959
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/writer-original-probes
+      - name: Permit execution of the original unchanged binary/script files
+        shell: bash
+        run: |
+          chmod 0755 "$RUNNER_TEMP/writer-original-probes/"{lok_probe,lok_semantic_probe,haven_write_engine_poc,haven_write_engine_client,run-ipc-probe.sh}
+      - name: Execute both original runtime sequences and all outside verifiers
+        shell: bash
+        run: |
+          python3 .github/scripts/team-c-write-runtime-diagnosis.py \
+            --repo "$GITHUB_WORKSPACE" \
+            --probes "$RUNNER_TEMP/writer-original-probes" \
+            --output "$RUNNER_TEMP/writer-two-arm-${{ github.run_id }}-${{ github.run_attempt }}" \
+            --expected-source '${{ github.sha }}'
+      - name: Retain bounded fictional-document diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: original-writer-runtime-diagnosis-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/writer-two-arm-${{ github.run_id }}-${{ github.run_attempt }}/public/
+          if-no-files-found: error
+          retention-days: 7

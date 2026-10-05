@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "sourceBasis": "285e97e3a62e75636879c098174d3c6141c94f8b",
+  "diagnosticPaths": [
+    ".github/workflows/team-c-write-runtime-diagnosis.yml",
+    ".github/scripts/team-c-write-runtime-diagnosis.py",
+    ".github/validation/team-c-write-runtime-diagnosis.json",
+    "eng/release-validation/write-runtime-diagnosis/README.md"
+  ],
+  "originalRun": {
+    "id": 37246601959,
+    "head": "a38e4e20bdd3a49aceaa69c251c773cc5748dec9",
+    "actualCheckout": "8a361a26c8ae0009d0d917940acb8d63e3dad779",
+    "runtimeJob": 111566015380,
+    "failure": "client65/InsertText status4 selected32 bytes marker absent; outside persisted verification skipped"
+  },
+  "originalProbeArtifact": {
+    "id": 11319347078,
+    "bytes": 122642,
+    "sha256": "5e9c9c9f3600881fa8c4bee69f265f0f1f21080c1930d606f5e79c398f43b830"
+  },
+  "runtimePackages": {
+    "libreoffice-core-nogui": "4:24.2.7-0ubuntu0.24.04.6",
+    "libreoffice-writer-nogui": "4:24.2.7-0ubuntu0.24.04.6"
+  },
+  "sourcePins": [
+    {
+      "path": ".github/workflows/validate-write-libreoffice-poc.yml",
+      "bytes": 19093,
+      "sha256": "ddc8a38f005e34e19bf6cb5964bee299e139ca3edcbd11730126304822ab3099"
+    },
+    {
+      "path": "9to1 Workspace/Write/write-libreoffice-poc/haven_write_engine_poc.cxx",
+      "bytes": 27414,
+      "sha256": "088fdedac7d8533ebd5ed25073a5bece5d7e57ce7336b4353a3a7ddbdd8210be"
+    },
+    {
+      "path": "9to1 Workspace/Write/write-libreoffice-poc/haven_write_engine_client.cxx",
+      "bytes": 9294,
+      "sha256": "9b5ca310408c958b4c10df9a2ad249db229268a141ac0d48603a22b0955d292e"
+    },
+    {
+      "path": "9to1 Workspace/Write/write-libreoffice-poc/run-ipc-probe.sh",
+      "bytes": 5347,
+      "sha256": "a7173e83d848503f55d660ac3289c6f7223f1b33c78c1c7924fbc0be743fbd51"
+    },
+    {
+      "path": "9to1 Workspace/Write/write-libreoffice-poc/lok_probe.cxx",
+      "bytes": 9529,
+      "sha256": "9dc01acd7a4610b3153bf3d6aa18073db9c739f21f7935f442d37eee43384121"
+    },
+    {
+      "path": "9to1 Workspace/Write/write-libreoffice-poc/lok_semantic_probe.cxx",
+      "bytes": 11618,
+      "sha256": "b64f59667105b53fa5f2d36d9680dbcd64880e79e927dc26d7ada9d4410594a5"
+    },
+    {
+      "path": "9to1 Workspace/Write/write-libreoffice-poc/verify-semantic-odt.py",
+      "bytes": 3562,
+      "sha256": "44174a60d0df4c107a55de43550fa4e01d5212651fb667e9d62cb4fc535edf94"
+    }
+  ],
+  "originalProbes": [
+    {
+      "path": "haven_write_engine_client",
+      "bytes": 85160,
+      "sha256": "1b91c2addcf1da8aad66e11973e06ef1dc13a1c832cc1cb62e97cd710e05d4e4"
+    },
+    {
+      "path": "lok_probe",
+      "bytes": 86616,
+      "sha256": "a3de1db580e4a68593d3fa509fc400b9f4ec4a3a59f1249499705af2d7b6fbf3"
+    },
+    {
+      "path": "haven_write_engine_poc",
+      "bytes": 139848,
+      "sha256": "b16615c638a02797d20530f03c4546ec0f4acdf91d6883b442bedfa39d49fe23"
+    },
+    {
+      "path": "lok_semantic_probe",
+      "bytes": 93392,
+      "sha256": "3c43b447a69e0e948e14576dd72740a4c53a7deb4c4040ef57611303885dbc04"
+    },
+    {
+      "path": "run-ipc-probe.sh",
+      "bytes": 5347,
+      "sha256": "a7173e83d848503f55d660ac3289c6f7223f1b33c78c1c7924fbc0be743fbd51"
+    },
+    {
+      "path": "verify-semantic-odt.py",
+      "bytes": 3562,
+      "sha256": "44174a60d0df4c107a55de43550fa4e01d5212651fb667e9d62cb4fc535edf94"
+    }
+  ]
+}
