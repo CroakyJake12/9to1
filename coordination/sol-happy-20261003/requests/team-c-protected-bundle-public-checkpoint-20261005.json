@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "team": "C",
+  "recordedUTC": "2026-10-05T10:06:06.238244+00:00",
+  "coordinationBasis": "8064780f7e3acda220c1f8250ba0d6d784a73f22",
+  "currentGlobalSource": "3e39ede0d7d4c28b20043a840415351817bf3ef0",
+  "acceptedHead": null,
+  "releaseAccepted": false,
+  "checkpoint": "PROTECTED_BUNDLE_DEPLOYED; WORKING_APP_STAGING INCOMPLETE; DEEP ACCEPTANCE PENDING",
+  "deliveryOrder": {
+    "stagingFirst": "ACKNOWLEDGED",
+    "initialTargetEuropeLondon": "2026-10-05T11:00:00+01:00",
+    "latestDirection": "Continue after the initial target until the full working staging goal is delivered; deep acceptance target Tuesday, hard target Thursday",
+    "healthyJobs": "Preserved; no restart or cancellation"
+  },
+  "progress": {
+    "qualifiedWebApps": 0,
+    "qualifiedBothApplicableSurfaces": 0,
+    "windowsDownloadableCandidates": 1,
+    "windowsCheckedMainWorkflows": 0,
+    "realApplicationLoginQualified": {
+      "web": 0,
+      "windows": 0
+    },
+    "provisionalDenominators": {
+      "web": 32,
+      "windows": 33,
+      "bothApplicableSurfaces": 32,
+      "wholeDeepAcceptance": 33,
+      "state": "PROVISIONAL_C4_RECONCILIATION_RECEIPT_PENDING",
+      "MiniComputerWeb": "EXEMPT_PROVISIONAL"
+    },
+    "expandedDeepAcceptanceMeasured": false,
+    "qualifiedDeepAcceptanceApps": 0
+  },
+  "changeSummary": {
+    "webBundle": {
+      "state": "DEPLOYED_BEHIND_SERVER_EDGE_ACCESS_RESTRICTION",
+      "originalAssetFiles": 285,
+      "qualifiedAppWorkflowClaim": false,
+      "anonymousChecks": {
+        "checked": 4,
+        "challengeRedirects": 4
+      }
+    },
+    "applicationAuthentication": "Genuine user/client and required service configuration remain incomplete; the outer restriction does not qualify application login",
+    "windowsCanvas": {
+      "privateExecutableDelivery": "DELIVERED_VIA_EXISTING_AUTHORISED_ROUTE",
+      "nativeGUI": "NOT_RUN",
+      "mainWorkflowQualified": false
+    },
+    "installedHomeApprovalIPC": {
+      "owner": "Team A4",
+      "state": "ACTIVE"
+    }
+  },
+  "evidence": {
+    "webPublication": {
+      "source": "3ebe2b230b7b54a1bfdbfff49bed658862d0f584",
+      "runId": 37287303531,
+      "state": "SUCCESS; current Web product bodies conserved"
+    },
+    "writerMaintainedWorkflow": {
+      "source": "3e39ede0d7d4c28b20043a840415351817bf3ef0",
+      "runId": 37290641320,
+      "state": "ORIGINAL_MAINTAINED_LINUX_POC_PASS",
+      "attempt": 1,
+      "qualification": "Linux LibreOfficeKit PoC only; not IWriteDocumentEngine, full Write application staging or deep acceptance",
+      "jobs": [
+        111699953759,
+        111700606171
+      ],
+      "persistedChecks": {
+        "originalEditMarker": "PASS in both cohorts",
+        "semanticBoldPersistence": "PASS in both cohorts",
+        "helperIPCBoldPersistence": "PASS in both cohorts"
+      },
+      "helperCleanup": "Actual helper clean-exit witness in both cohorts"
+    },
+    "historicalRecords": "All prior fields, failures, raw records and index/team-c files preserved"
+  },
+  "nextAction": "Root completes genuine application authentication and progressive ready-app staging; A/B provide current usable source, route/package and service contracts through the existing private handoff. Resume deep acceptance on exact staged builds.",
+  "publicSafety": {
+    "deploymentURLsAndProviderIDs": "OMITTED",
+    "privatePayloadsPathsIdentifiersAndDerivatives": "OMITTED",
+    "publisher": "Team C Root only"
+  }
+}
