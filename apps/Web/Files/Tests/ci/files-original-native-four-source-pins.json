@@ -353,9 +353,9 @@
     },
     {
       "path": "apps/Web/Files/Tests/OriginalNativeOwner4/HeadlessSelection.cs",
-      "bytes": 144,
-      "sha256": "8034f5e6143655e0171eae458cb830f5228027d2ca2d7a796dd07eafde90deee",
-      "gitSha": "72e5d587d5770ab846ad71fad44234e943c3d1a3"
+      "bytes": 138,
+      "sha256": "1a93dc78d0deb589034f193553e07ccc138f1868540ac4f6986eeee21cbe42a7",
+      "gitSha": "38d41d5394f7a4f49fd9a956a736cd319f256229"
     }
   ],
   "ownerSubtrees": [

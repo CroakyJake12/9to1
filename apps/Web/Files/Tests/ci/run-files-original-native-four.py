@@ -16,7 +16,7 @@ COMMON = "apps/Web/Tests/ci/run-ordinary-native.py"
 COMMON_SHA = "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
 PROJECT = "apps/Web/Files/Tests/OriginalNativeOwner4/FilesOriginal.NativeOwner.Tests.csproj"
 LEDGER = "apps/Web/Files/Tests/ci/files-original-native-four-source-pins.json"
-LEDGER_SHA = "4e0bf630865d730d7c2ab6b83287aa445e6c4f28b7c2d38ebc4f2a47b377bf55"
+LEDGER_SHA = "507694c2a446e308934fdd6c235504de650007237eeab3605330ce7a58612915"
 CASE_PAIRS = [
     {
         "className": "Haven.Desktop.Tests.FilesNativeBrowserSurfaceTests",
@@ -108,7 +108,12 @@ def resource_sample(output, diagnostics, phase):
               "freeFloorBytes": 256 * 1024**2,
               "projectedRemainingReserveBytes": max(0, 3 * 1024**3 - total)}
     if total + 65536 > 3 * 1024**3 or diagnostic_bytes + 65536 > 32 * 1024**2 or free < 256 * 1024**2 + sample["projectedRemainingReserveBytes"] + 65536:
-        raise RuntimeError("Ordinary CI resource sample outside declared bounds")
+        sample["violations"] = {
+            "ownedSampleCap": total + 65536 > 3 * 1024**3,
+            "diagnosticSampleCap": diagnostic_bytes + 65536 > 32 * 1024**2,
+            "remainingReserveFloor": free < 256 * 1024**2 + sample["projectedRemainingReserveBytes"] + 65536,
+        }
+        raise RuntimeError("Ordinary CI resource sample outside declared bounds: " + json.dumps(sample, sort_keys=True, separators=(",", ":")))
     return sample
 
 
