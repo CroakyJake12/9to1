@@ -10,7 +10,7 @@ from pathlib import Path
 import re
 
 COMMANDS_SHA256 = "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
-LEDGER_SHA256 = "1df832a7acadf34c786e6e3264acbb55fc379dfb0c74eb080024a074d59ac313"
+LEDGER_SHA256 = "61397b8f66a7998d241b359ef6686646cc7e69e1c893350667d67ea86b350e46"
 DIRECTORY = "apps/Web/Wave/Tests"
 PROJECT = DIRECTORY + "/WaveResponsiveLayout.Tests.csproj"
 LEDGER = DIRECTORY + "/responsive-source-pins.json"

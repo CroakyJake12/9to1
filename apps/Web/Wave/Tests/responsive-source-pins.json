@@ -88,8 +88,8 @@
       "sha256": "92552728cb3aa76fd85980f0259fa1541983439f471223658bbb556db9760149"
     },
     "apps/Web/wwwroot/browser-accessibility.js": {
-      "bytes": 8891,
-      "sha256": "9682f9cd5e92d96416afafd3edc83cb30ada1cf367da0ea07400a5ef12bceda9"
+      "bytes": 9055,
+      "sha256": "1ab270bbc0fbe648f37495415ce550e09eec0c940280abb980389cb6c21066bc"
     },
     "apps/Web/wwwroot/browser-platform.js": {
       "bytes": 3009,
