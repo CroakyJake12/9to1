@@ -66,7 +66,7 @@ guardedSubmit("reset-password-form", async (form) => {
 
 const consent = document.getElementById("consent");
 if (consent) {
-  const clientId = consent.dataset.clientId ?? "";
+  const clientId = JSON.parse(consent.dataset.clientId ?? '""') as string;
   const scopes = JSON.parse(consent.dataset.scopes ?? "[]") as string[];
   const scopeList = document.getElementById("scope-list");
   if (scopeList) {
