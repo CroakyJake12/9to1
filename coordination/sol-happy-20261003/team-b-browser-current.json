@@ -2,9 +2,9 @@
   "schema": "TEAM_B_CURRENT_SANITIZED_REQUEST",
   "source": "2db6e230bba48517844b6550da90b9355bf3c1b4",
   "status": "ACCEPTANCE_INCOMPLETE",
-  "validation": "Current2db: native proposed64PASS; original48PASS16FAIL qualified negative; original browser14PASS; responsivecommand failed, detailedcasecounts/cause pending exactraw review.",
+  "validation": "Current2db: native64PASS; original browser14PASS; responsive1PASS1FAIL1NOT_RUN. Populated390case passes; keyboard/touch fails bringing Save locally into view after saved revision2; genuine zoom notrun.",
   "run": "https://github.com/CroakyJake12/9to1/actions/runs/37247109783",
-  "next": "Receive exactexisting2db failed diagnostics. Reviewed Window blur correction remains in source; no claim of passing responsive gate or exact failure attribution. Original assertions and guards retained.",
+  "next": "Owner tracing Save locally scroll/layout path from exact raw/source; original cases, thresholds and focus guards unchanged. All recorded command families drained normally.",
   "diagnostics": "Exact existing failed archive selected read-only; original evidence retained. No whole-original receiving or physical-browser acceptance claim.",
   "receivingRequest": "Publish the actual filesystem indeterminate-commit exception type or maintained transport code, source/ref and owning constructor call-site. B can then bind that exact type through existing Func<Exception,bool>. Authorised LoadAsync must settle or refuse unresolved publication before allowing retry. Existing browser IndexedDB mapping is already present.",
   "deadline": "22:30 Europe/London 4 October missed; no verification waiver."
