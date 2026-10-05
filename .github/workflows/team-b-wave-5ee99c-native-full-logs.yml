@@ -1,0 +1,40 @@
+name: Team B exact original Wave 5ee99c complete native log custody
+
+on:
+  push:
+    branches: [custody/team-b-wave-native-5ee99c-full-logs-20261005]
+    paths:
+      - .github/workflows/team-b-wave-5ee99c-native-full-logs.yml
+      - apps/Web/Wave/Tests/ci/export-existing-wave-5ee99c-native-full-logs.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-selected-diagnostics:
+    if: github.ref == 'refs/heads/custody/team-b-wave-native-5ee99c-full-logs-20261005' && github.repository == 'CroakyJake12/9to1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out exact diagnostic source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify whole original and retain complete seven log byte custody
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python3 apps/Web/Wave/Tests/ci/export-existing-wave-5ee99c-native-full-logs.py
+          --output "$RUNNER_TEMP/team-b-wave-5ee99c-native-full-logs"
+      - name: Upload bounded complete raw custody diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave-5ee99c-native-full-logs-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-wave-5ee99c-native-full-logs/diagnostics
+          if-no-files-found: warn
+          retention-days: 7
