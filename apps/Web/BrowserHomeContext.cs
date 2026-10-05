@@ -23,6 +23,22 @@ internal sealed class BrowserHomeContext : ICuiBindingContext, ICuiLifetimeAware
         ["AccountConfirmSignOut"] = "ConfirmSessionMutation",
         ["AccountCancelSignOut"] = "CancelSessionMutation",
     };
+    private static readonly IReadOnlyDictionary<string, string> FeatureActions = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["NavigateApps"] = HomeFeatureRouteIds.Apps,
+        ["NavigateDiscover"] = HomeFeatureRouteIds.Discover,
+        ["NavigateMesh"] = HomeFeatureRouteIds.Mesh,
+        ["NavigatePermissions"] = HomeFeatureRouteIds.Permissions,
+        ["NavigateNotifications"] = HomeFeatureRouteIds.Notifications,
+        ["NavigateSpaces"] = HomeFeatureRouteIds.Spaces,
+        ["NavigateAutomations"] = HomeFeatureRouteIds.Automations,
+        ["OpenStudio"] = "app.studio",
+        ["OpenWrite"] = "app.write",
+        ["OpenBrowse"] = "app.browse",
+        ["OpenData"] = "app.data",
+        ["OpenBoards"] = "app.boards",
+    };
+    private readonly Func<string, bool>? _isRegisteredRoute;
     private readonly HomeCuiSurface _surface;
     private readonly HomeNavigationState _navigation = new();
     private readonly Action<HomeFeatureNavigationRequest> _navigate;
@@ -32,11 +48,12 @@ internal sealed class BrowserHomeContext : ICuiBindingContext, ICuiLifetimeAware
     private bool _disposed;
 
     public BrowserHomeContext(CuiDocument document, Action<HomeFeatureNavigationRequest> navigate,
-        AccountSettingsFeature? accountOwner = null)
+        AccountSettingsFeature? accountOwner = null, Func<string, bool>? isRegisteredRoute = null)
     {
         _surface = new(document);
         _navigate = navigate;
         _accountOwner = accountOwner;
+        _isRegisteredRoute = isRegisteredRoute;
         // The SAME registered feature enrols this binding before any original service callback.
         _account = accountOwner?.CreateHomeBinding();
         _surface.PropertyChanged += OnChanged;
@@ -99,6 +116,8 @@ internal sealed class BrowserHomeContext : ICuiBindingContext, ICuiLifetimeAware
         if (command == "AccountRefresh") return _account?.IsActionAvailable("Refresh") == true;
         if (AccountActions.TryGetValue(command, out var accountCommand))
             return _account?.IsActionAvailable(accountCommand) == true;
+        if (FeatureActions.TryGetValue(command, out var featureRoute))
+            return _isRegisteredRoute?.Invoke(featureRoute) == true;
         return command == "NavigateSettings" || ShellActions.ContainsKey(command);
     }
 
@@ -121,6 +140,9 @@ internal sealed class BrowserHomeContext : ICuiBindingContext, ICuiLifetimeAware
                 : _account.DispatchAsync(accountCommand, parameter, caller);
         if (command == "NavigateSettings") _navigate(new(HomeFeatureRouteIds.Settings));
         else if (ShellActions.TryGetValue(command, out var route)) _navigate(new(HomeRouteIds.For(route)));
+        else if (FeatureActions.TryGetValue(command, out var featureRoute) &&
+            _isRegisteredRoute?.Invoke(featureRoute) == true)
+            _navigate(new(featureRoute));
         else Program.ShowStatus("HomeServiceUnavailable", "This action requires an available Home service.");
         return ValueTask.CompletedTask;
     }
