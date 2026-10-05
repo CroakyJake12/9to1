@@ -87,7 +87,7 @@ public sealed partial class App : Avalonia.Application
         collection.AddSingleton(provider => new JudgeService(new TrainingJudgeAdapter(provider.GetRequiredService<IOllamaClient>()), provider.GetRequiredService<IExecutionEventSink>()));
         collection.AddSingleton<ChatSessionService>(provider => new ChatSessionService(
             provider.GetRequiredService<IConversationRepository>(),
-            provider.GetRequiredService<ProviderRoutingModelClient>(),
+            provider.GetRequiredService<IProviderModelClient>(),
             provider.GetRequiredService<CapabilityPreflightService>(),
             provider.GetRequiredService<IConversationSafetyService>(),
             provider.GetRequiredService<WorkspaceToolRuntime>(),
