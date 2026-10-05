@@ -1,6 +1,6 @@
 {
   "schema": "TEAM_B_PUBLIC_BROWSER_RECEIVING_REQUEST_2",
-  "recordedAtUTC": "2026-10-04 23:51:17 UTC",
+  "recordedAtUTC": "2026-10-05 00:00:30 UTC",
   "source": "c49eec00ad74f811c2e6f4f2cf272b3559e6d5ff",
   "run": 37241408354,
   "browserJob": 111551453106,
@@ -142,7 +142,7 @@
     "session": "apps/Web/Write/WriteBrowserSession.cs",
     "sessionSHA256": "741ff7c1f65dddc4faad5a3ff38dc2b90715d3d09476cb6f43826e3e1dacfd5f",
     "existingSeam": "Func<Exception,bool> third constructor argument; feature forwards it to every session",
-    "filesystemMapping": "HELD_FOR_ACTUAL_RECEIVER_TYPED_CONTRACT",
+    "filesystemMapping": "RECEIVER_TYPED_UNKNOWN_CONTRACT_REQUIRED_NOT_PUBLISHED",
     "requiredHandoff": [
       "Published exception namespace/type or typed transport code",
       "Owning assembly/project, source path/ref/full SHA",
@@ -153,12 +153,20 @@
     "minimumChange": "Inject predicate matching only the actual published receiver fault at its owned composition call-site. No default change, all-IOException classification, name/message matching, domain type invention or backend writer.",
     "inspection": "Use the same grant-bearing repository and preserve pending GUID/base/content until explicit settled inspection; fresh reopen grants no new authority.",
     "receiverContractCurrentlyPublished": false,
-    "verification": "Full current browser composition, feature, session and transport bodies remotely checked; no indeterminate filesystem fixture was executed."
+    "verification": "Full current browser composition, feature, session and transport bodies remotely checked; no indeterminate filesystem fixture was executed.",
+    "currentSource": "5ee99c19d42e9e6ae687c7ef528fd947a8828540",
+    "existingCompositionPreservedByFullTreeProof": true
   },
   "ownedProcessCheckpoint": {
     "localJobs": "NONE",
     "localReaders": "CLOSED",
-    "cloudProductJob": "TERMINAL",
+    "cloudProductJob": {
+      "source": "5ee99c19d42e9e6ae687c7ef528fd947a8828540",
+      "run": 37245186076,
+      "job": 111562277941,
+      "state": "ACTIVE_SEPARATE_HOSTED_RUNNER",
+      "userComputerDependency": false
+    },
     "cloudReadOnlyExport": "TERMINAL_SUCCESS",
     "userComputerDependency": false,
     "shutdownOwner": "EXISTING_RECEIVING_OWNER_ONLY_AFTER_CONDITION_COMPLETION_AND_SAFE_DRAIN"
@@ -284,7 +292,7 @@
     ],
     "nativeGraph": "Optional capture/validate delegates default DENY, so the unchanged native fixture adds no browser source dependency or stub.",
     "browserGraph": "Existing named Wave module supplies actual synchronous imports; host claim stamp must reject blur, hidden state, off-app focus or later input. No shared main/platform changes.",
-    "runtime": "PENDING_NEW_SOURCE_ACTUAL_RUN",
+    "runtime": "PROPOSED_NATIVE64_PASS_ORIGINAL48_16_EXPECTED_NEGATIVE; BROWSER_PENDING",
     "productSourcePins": [
       {
         "path": "apps/Web/Wave/WaveNativePresentation.cs",
@@ -348,6 +356,40 @@
     "existingTreeLeaves": 9749,
     "changedExistingPaths": 10,
     "newOrDeletedFiles": 0,
-    "actualAffectedRuntime": "PENDING_NEW_SOURCE_RUN"
+    "actualAffectedRuntime": {
+      "run": 37245186076,
+      "browserJob": 111562277941,
+      "browser": "ACTIVE_GENUINE_PUBLISHER_NO_BROWSER_RESULT_YET",
+      "native": {
+        "proposed": {
+          "passed": 64,
+          "failed": 0,
+          "notRun": 0,
+          "status": "PROPOSED_NATIVE_LAYOUT_PASS",
+          "selectedSourceAfterUnchanged": true,
+          "selectedBinaryAfterUnchanged": true,
+          "artifact": {
+            "id": 11318504142,
+            "bytes": 1113896,
+            "sha256": "ef919c6d4b42c9f6fa0020557bb7ee078d7a205c3ce6867964e9e75b8f820f03"
+          }
+        },
+        "original": {
+          "passed": 48,
+          "failed": 16,
+          "notRun": 0,
+          "status": "ORIGINAL_LAYOUT_RED_CONTROL_OBSERVED",
+          "qualification": "EXPECTED_NEGATIVE_ORIGINAL_CONTROL",
+          "selectedSourceAfterUnchanged": true,
+          "selectedBinaryAfterUnchanged": true,
+          "artifact": {
+            "id": 11318908155,
+            "bytes": 959968,
+            "sha256": "95f5d333d398b31f2d54814e9c495942b546cfa010857d806f1ec3c26b51eeb0"
+          }
+        },
+        "fullNative49RawBodyReview": "PENDING"
+      }
+    }
   }
 }
