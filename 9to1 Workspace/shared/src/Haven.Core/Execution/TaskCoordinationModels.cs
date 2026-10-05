@@ -81,7 +81,11 @@ public sealed record TaskPlanNode(
     int PlanVersion,
     Guid? SupersedesActionId = null,
     Guid? RemediationId = null,
-    IReadOnlyList<string>? RequiredPermissionScopes = null);
+    IReadOnlyList<string>? RequiredPermissionScopes = null)
+{
+    public TaskActionAcceptance? Acceptance { get; init; }
+    public TaskOriginalToolIntent? OriginalToolIntent { get; init; }
+}
 
 public sealed record SteerInstruction(
     Guid Id,
@@ -123,7 +127,14 @@ public sealed record TaskExecutionSnapshot(
     IReadOnlyList<string> ApprovedPermissionScopes,
     Guid? LastCheckpointActionId,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt)
+{
+    /// <summary>Only acknowledged owner CAS advances this revision. Legacy persisted rows begin at zero.</summary>
+    public long PersistenceRevision { get; init; }
+    public TaskExecutionOwnerBinding? OwnerBinding { get; init; }
+    public IReadOnlyList<TaskRunAttempt> Attempts { get; init; } = [];
+    public Guid? CheckpointId { get; init; }
+}
 
 public sealed record FollowUpDecision(
     TaskFollowUpMode Mode,
