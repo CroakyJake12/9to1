@@ -245,6 +245,14 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ITaskRunAdmissionAuthority>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
         services.AddSingleton<ITaskRunCommandAuthority>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
         services.AddSingleton<ITaskRunSelectedRouteCapture>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
+        services.AddSingleton<TaskRunCloudPermissionRemediationOwner>(provider => new TaskRunCloudPermissionRemediationOwner(
+            provider.GetRequiredService<TaskRunCentralCloudUsePermissionSource>(),
+            provider.GetRequiredService<TaskRunPermissionAuthority>(),
+            () => provider.GetRequiredService<TaskExecutionCoordinator>(),
+            provider.GetRequiredService<RemediationCoordinator>(),
+            provider.GetRequiredService<IRemediationRepository>(),
+            provider.GetRequiredService<RemediationContinuationRegistry>(),
+            provider.GetRequiredService<IExecutionEventSink>()));
         services.AddSingleton<TaskRunOriginalFrameOwner>(provider => new TaskRunOriginalFrameOwner(
             (task, run, attempt, token) => provider.GetRequiredService<TaskExecutionCoordinator>()
                 .TryGetIssuedAttemptAsync(task, run, attempt, token)));

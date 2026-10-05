@@ -108,7 +108,8 @@ public sealed partial class App : Avalonia.Application
             memorySource: provider.GetRequiredService<IMemoryQuerySource>(),
             taskCoordinator: provider.GetRequiredService<TaskExecutionCoordinator>(),
             taskToolOwner: provider.GetRequiredService<ITaskRunToolActionOwner>(),
-            taskProviderContextCapture: provider.GetRequiredService<ITaskRunProviderContextCapture>()));
+            taskProviderContextCapture: provider.GetRequiredService<ITaskRunProviderContextCapture>(),
+            taskCloudPermissionRemediation: provider.GetRequiredService<TaskRunCloudPermissionRemediationOwner>()));
         collection.AddSingleton<UserPreferencesService>();
         collection.AddSingleton<Services.AvatarStore>();
         collection.AddSingleton<Services.OllamaWakeService>();

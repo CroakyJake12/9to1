@@ -14,6 +14,8 @@ public sealed class TaskRunCloudPermissionRemediationOwner : IAsyncDisposable
     private readonly RemediationCoordinator _remediation;
     private readonly IRemediationRepository _repository;
     private readonly RemediationContinuationRegistry _continuations;
+    private readonly IExecutionEventSink? _canonicalEvents;
+    public bool HasCanonicalTelemetry => _canonicalEvents is not null; // Configuration observation only.
     private readonly object _sync = new();
     private readonly CancellationTokenSource _stop = new();
     private readonly CancellationToken _ownerToken;
@@ -64,17 +66,26 @@ public sealed class TaskRunCloudPermissionRemediationOwner : IAsyncDisposable
         public Guid? ExpectedAttempt; public bool Captured, ApprovalValidated;
         public Task<RemediationRequest> Publication = null!;
         public RemediationRequest? Published;
-        public Task<PermissionDecision>? Decision;
+        public Task<PermissionDecision>? Decision, OriginalSourceDecision;
         public bool? Approved;
         public Task<RemediationRequest>? Approval;
         public Task<PermissionDecision>? Denial;
         public Task<RemediationContinuationResult>? Callback;
+        public Task? RequestEvent, DecisionEvent;
     }
     public TaskRunCloudPermissionRemediationOwner(TaskRunCentralCloudUsePermissionSource sameSource,
         TaskRunPermissionAuthority sameTaskAuthority, Func<TaskExecutionCoordinator> originalTaskLookup,
         RemediationCoordinator sameRemediation, IRemediationRepository sameRemediationRepository,
         RemediationContinuationRegistry sameOriginalContinuations)
+        : this(sameSource, sameTaskAuthority, originalTaskLookup, sameRemediation,
+            sameRemediationRepository, sameOriginalContinuations, canonicalEvents: null) { }
+
+    public TaskRunCloudPermissionRemediationOwner(TaskRunCentralCloudUsePermissionSource sameSource,
+        TaskRunPermissionAuthority sameTaskAuthority, Func<TaskExecutionCoordinator> originalTaskLookup,
+        RemediationCoordinator sameRemediation, IRemediationRepository sameRemediationRepository,
+        RemediationContinuationRegistry sameOriginalContinuations, IExecutionEventSink? canonicalEvents)
     {
+        _canonicalEvents = canonicalEvents;
         _source = sameSource ?? throw new ArgumentNullException(nameof(sameSource));
         _authority = sameTaskAuthority ?? throw new ArgumentNullException(nameof(sameTaskAuthority));
         if (!ReferenceEquals(_source.OriginalTaskActors, _authority.OriginalTaskActors))
@@ -124,6 +135,7 @@ public sealed class TaskRunCloudPermissionRemediationOwner : IAsyncDisposable
             var request = new RemediationRequest(record.Id, current.ExecutionId, record.ActionId,
                 RemediationType.PermissionRequest, "Allow remote model use for this task?",
                 "Task: " + SensitiveTextRedactor.Redact(current.PromptSummary, 600) + ". " +
+                "Task ID: " + current.TaskId.ToString("D") + "; run ID: " + current.ExecutionId.ToString("D") + ". " +
                 "Allow only this task/run/actor/model scope. Provider costs and monetary budget are unknown. " +
                 "This decision does not approve private workspace/domain egress or start/retry any provider operation.",
                 ComponentId, "Task remote-use permission", record.Original.OriginalCandidate.ProviderId + "/" + record.Original.OriginalCandidate.ModelId,
@@ -132,6 +144,7 @@ public sealed class TaskRunCloudPermissionRemediationOwner : IAsyncDisposable
                 RemediationState.Waiting, now, now);
             actual = CallOriginal(() => _remediation.RequestAsync(request, (resolution, _) => OnOriginalResolutionAsync(record, resolution), _ownerToken));
             record.Published = await ObserveAsync(actual).ConfigureAwait(false);
+            await ObserveAsync(StartOriginalCanonicalEvent(record, decision: null)).ConfigureAwait(false);
             completion.TrySetResult(record.Published);
         }
         catch (Exception error) { completion.TrySetException((Exception?)actual?.Exception ?? error); }
@@ -287,7 +300,10 @@ public sealed class TaskRunCloudPermissionRemediationOwner : IAsyncDisposable
             _ownerToken.ThrowIfCancellationRequested();
             actual = CallOriginal(() => _source.ResolveOriginalRequestAsync(record.Original, approved,
                 token => DemandFinalOriginalCurrentAsync(record, token), _ownerToken));
-            completion.TrySetResult(await ObserveAsync(actual).ConfigureAwait(false));
+            lock (_sync) record.OriginalSourceDecision = actual; // Retain SAME source task separately from its later event.
+            var recorded = await ObserveAsync(actual).ConfigureAwait(false); // Real source decision ACK precedes telemetry.
+            await ObserveAsync(StartOriginalCanonicalEvent(record, recorded)).ConfigureAwait(false);
+            completion.TrySetResult(recorded);
         }
         catch (Exception error) { completion.TrySetException((Exception?)actual?.Exception ?? error); }
         finally { ExitOriginal(phase); }
@@ -321,6 +337,71 @@ public sealed class TaskRunCloudPermissionRemediationOwner : IAsyncDisposable
         await DemandCurrentAsync(record, capture: false).ConfigureAwait(false);
         token.ThrowIfCancellationRequested();
     }
+    /// <summary>Detached display observation from an actual successful original publication;
+    /// this never supplies actor, task, route, effect or continuation authority.</summary>
+    public TaskExecutionOwnerBinding? GetOriginalOwner(Guid id)
+    {
+        lock (_sync)
+            return _ids.TryGetValue(id, out var record) && record.Publication.IsCompletedSuccessfully
+                ? record.Original.OriginalOwner : null;
+    }
+    /// <summary>Exact label from the privately retained source candidate; display only.</summary>
+    public string? GetOriginalModelLabel(Guid id)
+    {
+        lock (_sync)
+            return _ids.TryGetValue(id, out var record) && record.Publication.IsCompletedSuccessfully
+                ? record.Original.OriginalCandidate.ProviderId + "/" + record.Original.OriginalCandidate.ModelId : null;
+    }
+
+    private Task StartOriginalCanonicalEvent(Binding record, PermissionDecision? decision)
+    {
+        // The exact six-argument legacy constructor keeps its original observation path.
+        // Root's production seven-argument factory supplies SAME actual event sink explicitly.
+        if (_canonicalEvents is null) return Task.CompletedTask;
+        TaskCompletionSource completion;
+        lock (_sync)
+        {
+            var existing = decision is null ? record.RequestEvent : record.DecisionEvent;
+            if (existing is not null) return existing;
+            completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            if (decision is null) record.RequestEvent = completion.Task; else record.DecisionEvent = completion.Task;
+        }
+        PublishCanonicalEvent(record, decision, completion); // Exact original published before sink callback.
+        return completion.Task;
+    }
+    private void PublishCanonicalEvent(Binding record, PermissionDecision? decision, TaskCompletionSource completion)
+    {
+        var phase = EnterOriginal(completion.Task);
+        try
+        {
+            var owner = record.Original.OriginalOwner;
+            var now = DateTimeOffset.UtcNow;
+            var eventKind = decision is null ? "request" : "decision";
+            var decisionKind = decision?.Kind.ToString() ?? "Ask";
+            var entry = new ExecutionEvent(Guid.NewGuid(), owner.ExecutionId, record.ActionId, null,
+                ExecutionOrigin.Haven, decision?.Kind == PermissionDecisionKind.Denied
+                    ? ExecutionActionType.PermissionDenied : ExecutionActionType.UserActionRequired,
+                ExecutionActionStatus.Suspended, "Task remote-use permission " + eventKind,
+                "Only the permission response is " + (decision is null ? "waiting" : "recorded") +
+                    "; permission admission stays paused and no operation resumes automatically. The canonical Task owner separately records run suspension.",
+                decision is null ? "A source-issued explicit task/run/model decision is required."
+                    : "Permission decision: " + decisionKind + ". No provider, tool, egress, budget or work completion is implied.",
+                ComponentId, now, now, decision is null ? null : now,
+                RemediationId: record.Id, TaskId: owner.TaskId,
+                SafeMetadata: new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["eventKind"] = "task-cloud-permission", ["permissionPhase"] = eventKind,
+                    ["permissionDecision"] = decisionKind,
+                    ["permissionResponseStatus"] = decision is null ? "waiting" : "completed",
+                    ["taskRunStatus"] = "not-resumed", ["taskRunCompletion"] = "not-implied"
+                });
+            if (!CallOriginal(() => _canonicalEvents!.TryPublish(entry)))
+                throw new InvalidOperationException("The actual canonical permission event sink did not acknowledge publication; no response replay is implied.");
+            completion.TrySetResult();
+        }
+        catch (Exception error) { completion.TrySetException(error); }
+        finally { ExitOriginal(phase); }
+    }
     public void RetireResolvedOriginal(Guid id)
     {
         lock (_sync)
@@ -328,12 +409,22 @@ public sealed class TaskRunCloudPermissionRemediationOwner : IAsyncDisposable
             var record = RequireRecord(id);
             if (!record.Publication.IsCompletedSuccessfully || record.Decision is not { IsCompletedSuccessfully: true } ||
                 record.Callback is { IsCompletedSuccessfully: false } ||
+                record.RequestEvent is { IsCompletedSuccessfully: false } || record.DecisionEvent is { IsCompletedSuccessfully: false } ||
                 (record.Approval is not { IsCompletedSuccessfully: true } && record.Denial is not { IsCompletedSuccessfully: true }))
                 throw new InvalidOperationException("Only all-successful actual original response tasks may retire.");
             _source.RetireResolvedOriginalRequest(record.Original);
             _requests.Remove(record.Original); _ids.Remove(record.Id);
         }
     }
+    /// <summary>Display only: an actual successful source decision can be known even when its
+    /// later telemetry failed. It supplies no continuation, effect or domain authority.</summary>
+    public PermissionDecision? GetAcknowledgedOriginalDecision(Guid id)
+    {
+        lock (_sync)
+            return _ids.GetValueOrDefault(id)?.OriginalSourceDecision is { IsCompletedSuccessfully: true } original
+                ? original.Result : null;
+    }
+
     /// <summary>The retained original decision Task is separate from metadata Completed. This is
     /// an observation of grant/denial work, not an effect/egress/continuation authority.</summary>
     public Task<PermissionDecision>? GetOriginalDecision(Guid id)
@@ -349,7 +440,7 @@ public sealed class TaskRunCloudPermissionRemediationOwner : IAsyncDisposable
         {
             if (_close is not null) return _close;
             _closing = true; completion = new(TaskCreationOptions.RunContinuationsAsynchronously); _close = completion.Task;
-            originals = _requests.Values.SelectMany(value => new Task?[] { value.Publication, value.Approval, value.Denial, value.Decision, value.Callback })
+            originals = _requests.Values.SelectMany(value => new Task?[] { value.Publication, value.Approval, value.Denial, value.Decision, value.Callback, value.RequestEvent, value.DecisionEvent })
                 .Where(value => value is not null).Cast<Task>().Distinct<Task>(ReferenceEqualityComparer.Instance).ToArray();
         }
         _ = ClosePublishedAsync(originals, completion); return completion.Task;

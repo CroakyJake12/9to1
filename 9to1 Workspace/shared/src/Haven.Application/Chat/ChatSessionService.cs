@@ -41,8 +41,39 @@ public sealed class ChatSessionService(
     IMemoryQuerySource? memorySource = null,
     TaskExecutionCoordinator? taskCoordinator = null,
     ITaskRunToolActionOwner? taskToolOwner = null,
-    ITaskRunProviderContextCapture? taskProviderContextCapture = null)
+    ITaskRunProviderContextCapture? taskProviderContextCapture = null,
+    TaskRunCloudPermissionRemediationOwner? taskCloudPermissionRemediation = null)
 {
+    // Preserve the selected 25-argument CLR constructor; adding the Ask owner is opt-in.
+    public ChatSessionService(
+        IConversationRepository conversations,
+        IOllamaClient ollama,
+        CapabilityPreflightService preflight,
+        IConversationSafetyService safety,
+        WorkspaceToolRuntime workspaceTools,
+        ComputerToolRuntime computerTools,
+        BrowserToolRuntime? browserTools,
+        AutomationToolRuntime? automationTools,
+        ToolAvailabilityPlanner? toolAvailability,
+        ChatModelInventoryCache? modelInventory,
+        McpToolRuntime? mcpTools,
+        CalendarConnectionToolRuntime? calendarTools,
+        PluginToolRuntime? pluginTools,
+        IExecutionEventSink? executionEvents,
+        AutonomousRecoveryService? recovery,
+        RemediationCoordinator? remediations,
+        ModelPersonalityService? personalities,
+        ModelPermissionEvaluator? modelPermissions,
+        IDefaultProviderStore? defaultProviders,
+        CheckpointService? checkpoints,
+        IProjectInstructionSource? projectInstructionFiles,
+        IMemoryQuerySource? memorySource,
+        TaskExecutionCoordinator? taskCoordinator,
+        ITaskRunToolActionOwner? taskToolOwner,
+        ITaskRunProviderContextCapture? taskProviderContextCapture)
+        : this(conversations, ollama, preflight, safety, workspaceTools, computerTools, browserTools, automationTools, toolAvailability, modelInventory, mcpTools, calendarTools, pluginTools, executionEvents, recovery, remediations, personalities, modelPermissions, defaultProviders, checkpoints, projectInstructionFiles, memorySource, taskCoordinator, taskToolOwner, taskProviderContextCapture, taskCloudPermissionRemediation: null)
+    { }
+
     // Preserve the already compiled Source09 constructor while adding the context capture port.
     public ChatSessionService(
         IConversationRepository conversations,
@@ -684,6 +715,27 @@ public sealed class ChatSessionService(
             }
         }
 
+        async Task<RemediationRequest> PublishOriginalCloudPermissionAsync(TaskRunCloudPermissionRequiredException actualAsk)
+        {
+            if (!canonicalIntent || taskCloudPermissionRemediation is null || originalCustody is null)
+                throw actualAsk;
+            originalCustody.Retain(actualAsk);
+            Task<RemediationRequest>? actualPublication = null;
+            try
+            {
+                actualPublication = taskCloudPermissionRemediation.RequestOriginalAsync(actualAsk, cancellationToken);
+                originalCustody.RetainAdditionalOriginal("permission.request", actualPublication);
+                var metadata = await actualPublication.ConfigureAwait(false);
+                originalCustody.BindPublishedOriginalPermission(actualAsk, actualPublication);
+                return metadata; // Request metadata is never a grant, effect or resume receipt.
+            }
+            catch (Exception publicationFailure)
+            {
+                originalCustody.Retain(publicationFailure, actualPublication);
+                throw;
+            }
+        }
+
         var assistantId = Guid.NewGuid();
         var buffer = new StringBuilder();
         var toolActivities = new List<ToolActivity>();
@@ -1014,6 +1066,8 @@ public sealed class ChatSessionService(
                 cancellationToken.ThrowIfCancellationRequested();
                 OllamaToolResponse? response = null;
                 var unsupportedToolSchema = false;
+                TaskRunCloudPermissionRequiredException? originalPermissionRequired = null;
+                Task<OllamaToolResponse>? originalToolTurn = null;
                 try
                 {
                     await safety.EnsureMayActAsync(conversation.Id, "chat.model-tool-turn", cancellationToken).ConfigureAwait(false);
@@ -1022,7 +1076,9 @@ public sealed class ChatSessionService(
                         turnModel.Name, turns, toolDefinitions, effort, system, generationOptions)
                     { ExecutionContext = await ProviderContextAsync(parentActionId).ConfigureAwait(false) };
                     await CaptureOriginalToolsAsync(originalRequest, actualInventory, cancellationToken).ConfigureAwait(false);
-                    response = await ollama.ChatWithToolsAsync(originalRequest, cancellationToken).ConfigureAwait(false);
+                    originalToolTurn = ollama.ChatWithToolsAsync(originalRequest, cancellationToken);
+                    if (canonicalIntent) originalCustody!.RetainAdditionalOriginal("provider.tools", originalToolTurn);
+                    response = await originalToolTurn.ConfigureAwait(false);
                     if (canonicalIntent && response is null)
                         throw new InvalidOperationException("The actual canonical provider returned no response observation.");
                     if (canonicalIntent && response.ToolCalls.Count > 0 && response.EffectiveModel is null)
@@ -1038,9 +1094,27 @@ public sealed class ChatSessionService(
                         modelPlan = availabilityPlan.RestrictToModel(turnModel);
                     }
                 }
+                catch (TaskRunCloudPermissionRequiredException actualAsk) when (canonicalIntent && taskCloudPermissionRemediation is not null)
+                {
+                    originalCustody!.Retain(actualAsk, originalToolTurn);
+                    originalPermissionRequired = actualAsk;
+                }
                 catch (HttpRequestException ex) when (IsUnsupportedToolSchema(ex))
                 {
+                    if (canonicalIntent) originalCustody!.Retain(ex, originalToolTurn);
                     unsupportedToolSchema = true;
+                }
+                catch (Exception originalFailure) when (canonicalIntent)
+                {
+                    originalCustody!.Retain(originalFailure, originalToolTurn);
+                    throw;
+                }
+
+                if (originalPermissionRequired is not null)
+                {
+                    var metadata = await PublishOriginalCloudPermissionAsync(originalPermissionRequired).ConfigureAwait(false);
+                    yield return ChatStreamEvent.PermissionRequired(assistantId, metadata);
+                    yield break;
                 }
 
                 if (unsupportedToolSchema)
@@ -1139,27 +1213,110 @@ public sealed class ChatSessionService(
             var actualInventory = canonicalIntent ? await CaptureInventoryAsync(cancellationToken).ConfigureAwait(false) : null;
             var originalRequest = new OllamaChatRequest(turnModel.Name, requestMessages, effort, system, Options: generationOptions)
             { ExecutionContext = await ProviderContextAsync(parentActionId).ConfigureAwait(false) };
-            await CaptureOriginalChatAsync(originalRequest, actualInventory, cancellationToken).ConfigureAwait(false);
-            await foreach (var chunk in ollama.StreamChatAsync(originalRequest, cancellationToken).ConfigureAwait(false))
+            if (!canonicalIntent)
             {
-                if (firstChunk)
+                await CaptureOriginalChatAsync(originalRequest, actualInventory, cancellationToken).ConfigureAwait(false);
+                await foreach (var chunk in ollama.StreamChatAsync(originalRequest, cancellationToken).ConfigureAwait(false))
                 {
-                    execution.Update(ChatExecutionStage.Generating, "Writing Response");
-                    firstChunk = false;
-                }
+                    if (firstChunk)
+                    {
+                        execution.Update(ChatExecutionStage.Generating, "Writing Response");
+                        firstChunk = false;
+                    }
 
-                // Detect thinking tokens (prefixed with \x00T:)
-                await safety.EnsureMayActAsync(conversation.Id, "chat.model-stream-chunk", cancellationToken).ConfigureAwait(false);
-                if (chunk.StartsWith("\x00T:"))
-                {
-                    var thinkingContent = chunk[3..];
-                    thinkingBuffer.Append(thinkingContent);
-                    yield return ChatStreamEvent.ThinkingDelta(assistantId, thinkingContent);
+                    // Detect thinking tokens (prefixed with \x00T:)
+                    await safety.EnsureMayActAsync(conversation.Id, "chat.model-stream-chunk", cancellationToken).ConfigureAwait(false);
+                    if (chunk.StartsWith("\x00T:"))
+                    {
+                        var thinkingContent = chunk[3..];
+                        thinkingBuffer.Append(thinkingContent);
+                        yield return ChatStreamEvent.ThinkingDelta(assistantId, thinkingContent);
+                    }
+                    else
+                    {
+                        buffer.Append(chunk);
+                        yield return ChatStreamEvent.AssistantDelta(assistantId, chunk);
+                    }
                 }
-                else
+            }
+            else
+            {
+                IAsyncEnumerator<string>? actualStream = null;
+                TaskRunCloudPermissionRequiredException? originalPermissionRequired = null;
+                try
                 {
-                    buffer.Append(chunk);
-                    yield return ChatStreamEvent.AssistantDelta(assistantId, chunk);
+                    await CaptureOriginalChatAsync(originalRequest, actualInventory, cancellationToken).ConfigureAwait(false);
+                    actualStream = ollama.StreamChatAsync(originalRequest, cancellationToken).GetAsyncEnumerator(cancellationToken);
+                }
+                catch (TaskRunCloudPermissionRequiredException actualAsk) when (taskCloudPermissionRemediation is not null)
+                { originalCustody!.Retain(actualAsk); originalPermissionRequired = actualAsk; }
+                if (originalPermissionRequired is not null)
+                {
+                    var metadata = await PublishOriginalCloudPermissionAsync(originalPermissionRequired).ConfigureAwait(false);
+                    yield return ChatStreamEvent.PermissionRequired(assistantId, metadata);
+                    yield break;
+                }
+                if (actualStream is null) throw new InvalidOperationException("The actual canonical stream iterator is unavailable.");
+                try
+                {
+                    while (true)
+                    {
+                        Task<bool>? actualMove = null;
+                        bool hasChunk;
+                        try
+                        {
+                            actualMove = actualStream.MoveNextAsync().AsTask();
+                            originalCustody!.RetainAdditionalOriginal("provider.stream.move", actualMove);
+                            hasChunk = await actualMove.ConfigureAwait(false);
+                        }
+                        catch (TaskRunCloudPermissionRequiredException actualAsk) when (taskCloudPermissionRemediation is not null)
+                        {
+                            originalCustody!.Retain(actualAsk, actualMove);
+                            originalPermissionRequired = actualAsk;
+                            break;
+                        }
+                        catch (Exception originalFailure)
+                        { originalCustody!.Retain(originalFailure, actualMove); throw; }
+                        if (!hasChunk) break;
+                        var chunk = actualStream.Current;
+                        if (firstChunk)
+                        {
+                            execution.Update(ChatExecutionStage.Generating, "Writing Response");
+                            firstChunk = false;
+                        }
+
+                        // Detect thinking tokens (prefixed with \x00T:)
+                        await safety.EnsureMayActAsync(conversation.Id, "chat.model-stream-chunk", cancellationToken).ConfigureAwait(false);
+                        if (chunk.StartsWith("\x00T:"))
+                        {
+                            var thinkingContent = chunk[3..];
+                            thinkingBuffer.Append(thinkingContent);
+                            yield return ChatStreamEvent.ThinkingDelta(assistantId, thinkingContent);
+                        }
+                        else
+                        {
+                            buffer.Append(chunk);
+                            yield return ChatStreamEvent.AssistantDelta(assistantId, chunk);
+                        }
+                    }
+                }
+                finally
+                {
+                    Task? actualDispose = null;
+                    try
+                    {
+                        actualDispose = actualStream.DisposeAsync().AsTask();
+                        originalCustody!.RetainAdditionalOriginal("provider.stream.dispose", actualDispose);
+                        await actualDispose.ConfigureAwait(false);
+                    }
+                    catch (Exception originalCleanup)
+                    { originalCustody!.Retain(originalCleanup, actualDispose); throw; }
+                }
+                if (originalPermissionRequired is not null)
+                {
+                    var metadata = await PublishOriginalCloudPermissionAsync(originalPermissionRequired).ConfigureAwait(false);
+                    yield return ChatStreamEvent.PermissionRequired(assistantId, metadata);
+                    yield break;
                 }
             }
         }
@@ -1189,6 +1346,7 @@ public sealed class ChatSessionService(
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var original = originalBody.GetAsyncEnumerator(cancellationToken);
+        TaskExecutionSnapshot? acknowledgedOriginalTerminal = null;
         try
         {
             while (true)
@@ -1208,6 +1366,13 @@ public sealed class ChatSessionService(
                 {
                     originalCustody.Retain(bodyFailure, originalMove);
                     break;
+                }
+                if (item.Kind == ChatStreamEventKind.PermissionRequired)
+                {
+                    if (originalCustody.DeferredPermissionRequiredMessage is not null)
+                        throw new InvalidOperationException("The actual original produced more than one permission request.");
+                    originalCustody.DeferredPermissionRequiredMessage = item;
+                    continue; // Publish only after actual cleanup and the acknowledged suspension.
                 }
                 if (item.Kind == ChatStreamEventKind.AssistantCompleted)
                 {
@@ -1262,10 +1427,30 @@ public sealed class ChatSessionService(
             try
             {
                 var observed = await taskCoordinator!.ObserveOriginalInvocationTerminalAsync(originalCustody).ConfigureAwait(false);
-                if (observed is not null) CurrentCanonicalTask = observed;
+                if (observed is not null)
+                {
+                    acknowledgedOriginalTerminal = observed;
+                    CurrentCanonicalTask = observed;
+                }
             }
             catch (Exception observationFailure) { taskCoordinator!.RetainOriginalInvocationObservationFailure(originalCustody, observationFailure); }
-            originalCustody.ThrowRetained();
+            // A sole source-issued expected Ask may return its waiting metadata only after
+            // actual cleanup and the SAME run's suspension CAS are acknowledged. All siblings
+            // and uncertain observation/write outcomes retain their original thrown failures.
+            if (!originalCustody.CanReturnPublishedPermissionRefusal(acknowledgedOriginalTerminal))
+                originalCustody.ThrowRetained();
+        }
+        if (originalCustody.CanReturnPublishedPermissionRefusal(acknowledgedOriginalTerminal)
+            && originalCustody.DeferredPermissionRequiredMessage is { } required)
+        {
+            var acknowledged = acknowledgedOriginalTerminal
+                ?? throw new InvalidOperationException("No actual acknowledged suspended task observation exists.");
+            yield return required with
+            {
+                CanonicalTaskContext = new ProviderExecutionContext(acknowledged.TaskId, acknowledged.ContextId,
+                    acknowledged.ExecutionId, acknowledged.Attempts.LastOrDefault()?.Id, acknowledged.PersistenceRevision)
+            };
+            yield break;
         }
         if (originalCustody.OriginalCompletion is { IsCompletedSuccessfully: true }
             && originalCustody.DeferredCompletedMessage is { } completed)
@@ -1729,6 +1914,13 @@ public sealed record ChatStreamEvent(
     CapabilityPreflightResult? PreflightResult = null,
     ToolActivity? ToolActivity = null)
 {
+    /// <summary>Source-issued waiting request metadata only; never permission or resume authority.</summary>
+    public RemediationRequest? PermissionRequest { get; init; }
+    /// <summary>Detached IDs/revision from the SAME acknowledged suspension; observation only, never a grant.</summary>
+    public ProviderExecutionContext? CanonicalTaskContext { get; init; }
+    public static ChatStreamEvent PermissionRequired(Guid messageId, RemediationRequest actualRequest) =>
+        new(ChatStreamEventKind.PermissionRequired, MessageId: messageId) { PermissionRequest = actualRequest };
+
     /// <summary>
     /// Performs the user step owned by this component.
     /// </summary>
@@ -1762,4 +1954,4 @@ public sealed record ChatStreamEvent(
 /// <summary>
 /// Lists the supported chat stream event kind values used to make state explicit and type-safe.
 /// </summary>
-public enum ChatStreamEventKind { UserMessage, AssistantStarted, AssistantDelta, AssistantCompleted, ThinkingDelta, ToolActivity, PreflightFailed }
+public enum ChatStreamEventKind { UserMessage, AssistantStarted, AssistantDelta, AssistantCompleted, ThinkingDelta, ToolActivity, PreflightFailed, PermissionRequired }

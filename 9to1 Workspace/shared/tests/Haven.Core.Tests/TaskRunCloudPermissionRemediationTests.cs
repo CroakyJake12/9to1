@@ -418,6 +418,85 @@ public sealed class TaskRunCloudPermissionRemediationTests
         });
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Own_permission_telemetry_uses_actual_task_run_permission_action_without_completing_or_resuming_the_run(bool allow)
+    {
+        await RunAsync(async rig =>
+        {
+            var request = await rig.Owner.RequestOriginalAsync(await rig.AskAsync(), default);
+            Assert.True(rig.Owner.HasCanonicalTelemetry); Assert.Equal(rig.Task.OwnerBinding, rig.Owner.GetOriginalOwner(request.Id));
+            if (allow) await rig.Owner.ApproveOriginalAsync(request.Id, default);
+            else await rig.Owner.DenyOriginalAsync(request.Id, default);
+            var actual = rig.Events.Accepted.Where(value => value.SafeMetadata?.GetValueOrDefault("eventKind") == "task-cloud-permission").ToArray();
+            Assert.Equal(2, actual.Length);
+            Assert.All(actual, value =>
+            {
+                Assert.Equal(rig.Task.TaskId, value.TaskId); Assert.Equal(rig.Task.ExecutionId, value.ExecutionId);
+                Assert.Equal(request.ActionId, value.ActionId); Assert.Equal(request.Id, value.RemediationId);
+                Assert.Equal(ExecutionActionStatus.Suspended, value.Status);
+            });
+            Assert.Equal("request", actual[0].SafeMetadata!["permissionPhase"]);
+            Assert.Equal("decision", actual[1].SafeMetadata!["permissionPhase"]);
+            Assert.Equal(allow ? "Allowed" : "Denied", actual[1].SafeMetadata!["permissionDecision"]);
+            Assert.Equal("completed", actual[1].SafeMetadata!["permissionResponseStatus"]);
+            Assert.Equal("not-resumed", actual[1].SafeMetadata!["taskRunStatus"]);
+            Assert.Equal("not-implied", actual[1].SafeMetadata!["taskRunCompletion"]);
+            var current = await rig.Tasks.GetAsync(rig.Task.TaskId, default); Assert.NotNull(current);
+            Assert.Equal(rig.Task.State, current!.State); Assert.Equal(0, rig.Provider.Starts);
+            rig.Owner.RetireResolvedOriginal(request.Id);
+        });
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Actual_compound_event_fault_after_known_permission_decision_is_retained_without_replay_or_revocation(bool allow)
+    {
+        await RunAsync(async rig =>
+        {
+            var request = await rig.Owner.RequestOriginalAsync(await rig.AskAsync(), default);
+            var first = new IOException("Actual canonical event failure one"); var second = new InvalidOperationException("Actual canonical event failure two");
+            rig.Expect(first); rig.Expect(second);
+            rig.Events.OnEvent = value =>
+            {
+                if (value.SafeMetadata?.GetValueOrDefault("permissionPhase") == "decision") throw new AggregateException(first, second);
+            };
+            Task response = allow ? rig.Owner.ApproveOriginalAsync(request.Id, default) : rig.Owner.DenyOriginalAsync(request.Id, default);
+            var error = await Record.ExceptionAsync(() => response); Assert.NotNull(error); rig.Expect(error!);
+            Assert.Contains(Leaves(error!), value => ReferenceEquals(value, first)); Assert.Contains(Leaves(error!), value => ReferenceEquals(value, second));
+            var scope = TaskRunCentralCloudUsePermissionSource.ScopeFor(rig.Task.OwnerBinding!, rig.Candidate);
+            if (allow) Assert.Contains(scope, rig.Policy.Grants); else Assert.Empty(rig.Policy.Grants);
+            var acknowledged = rig.Owner.GetAcknowledgedOriginalDecision(request.Id); Assert.NotNull(acknowledged);
+            Assert.Equal(allow ? PermissionDecisionKind.Allowed : PermissionDecisionKind.Denied, acknowledged!.Kind);
+            Assert.Equal(scope, acknowledged.Scope); Assert.True(rig.Owner.GetOriginalDecision(request.Id)!.IsFaulted);
+            Assert.False(rig.Owner.CanRespond(request.Id)); Assert.Equal(0, rig.Provider.Starts);
+            Task same = allow ? rig.Owner.ApproveOriginalAsync(request.Id, default) : rig.Owner.DenyOriginalAsync(request.Id, default);
+            Assert.Same(response, same); Assert.Throws<InvalidOperationException>(() => rig.Owner.RetireResolvedOriginal(request.Id));
+            var closeError = await Record.ExceptionAsync(rig.Owner.CloseAndDrainAsync); Assert.NotNull(closeError); rig.Expect(closeError!);
+            Assert.Contains(Leaves(closeError!), value => ReferenceEquals(value, first)); Assert.Contains(Leaves(closeError!), value => ReferenceEquals(value, second));
+            if (allow) Assert.Contains(scope, rig.Policy.Grants); else Assert.Empty(rig.Policy.Grants); // An event failure cannot undo/pretend no grant.
+        });
+    }
+
+    [Fact]
+    public async Task Request_event_refusal_after_real_request_ACK_is_retained_and_never_approves_or_retries()
+    {
+        await RunAsync(async rig =>
+        {
+            rig.Events.AcceptOriginal = value => value.SafeMetadata?.GetValueOrDefault("permissionPhase") != "request";
+            var original = rig.Owner.RequestOriginalAsync(await rig.AskAsync(), default);
+            var error = await Record.ExceptionAsync(() => original); Assert.NotNull(error); rig.Expect(error!);
+            Assert.Contains(Leaves(error!), value => value is InvalidOperationException);
+            Assert.Single(rig.RemediationRows.Rows); Assert.Empty(rig.Policy.Grants); Assert.Equal(0, rig.Provider.Starts);
+            var persisted = rig.RemediationRows.Rows.Values.Single();
+            Assert.Null(rig.Owner.GetOriginalOwner(persisted.Id)); Assert.Null(rig.Owner.GetAcknowledgedOriginalDecision(persisted.Id));
+            Assert.False(rig.Owner.CanRespond(persisted.Id));
+            var closeError = await Record.ExceptionAsync(rig.Owner.CloseAndDrainAsync); Assert.NotNull(closeError); rig.Expect(closeError!);
+        });
+    }
+
     private static async Task RunAsync(Func<Rig, Task> body)
     {
         Rig? rig = null; Task? actual = null; Task? close = null; var errors = new List<Exception>();
@@ -468,7 +547,7 @@ public sealed class TaskRunCloudPermissionRemediationTests
             Authority = new(Actors, Providers, Configurations, new Privacy(), new(new Permissions()));
             Tasks = new(TaskRows, Events, admissionAuthority: Authority);
             Remediation = new(RemediationRows, new Secrets(), Events, Registry);
-            Owner = new(Source, Authority, () => Tasks, Remediation, RemediationRows, Registry);
+            Owner = new(Source, Authority, () => Tasks, Remediation, RemediationRows, Registry, Events);
         }
         public static async Task<Rig> CreateAsync()
         {
@@ -529,7 +608,17 @@ public sealed class TaskRunCloudPermissionRemediationTests
         public Task<IReadOnlyList<RemediationRequest>> GetWaitingAsync(CancellationToken token) => Task.FromResult<IReadOnlyList<RemediationRequest>>(Rows.Values.Where(value => value.State is RemediationState.Waiting or RemediationState.InProgress).ToArray());
     }
     private sealed class Events : IExecutionEventSink
-    { public Action<ExecutionEvent>? OnEvent; public bool TryPublish(ExecutionEvent value) { OnEvent?.Invoke(value); return true; } }
+    {
+        public Action<ExecutionEvent>? OnEvent;
+        public Func<ExecutionEvent, bool>? AcceptOriginal = null;
+        public readonly List<ExecutionEvent> Accepted = new();
+        public bool TryPublish(ExecutionEvent value)
+        {
+            OnEvent?.Invoke(value);
+            if (AcceptOriginal?.Invoke(value) == false) return false;
+            Accepted.Add(value); return true;
+        }
+    }
     private sealed class Actors : IAuthenticatedResourceActorSource
     {
         public AuthenticatedResourceActor? Current = new("synthetic-task-owner", "synthetic-task-profile", null, null, "current-revision");

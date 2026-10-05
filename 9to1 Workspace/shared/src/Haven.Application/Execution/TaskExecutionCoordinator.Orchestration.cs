@@ -14,6 +14,9 @@ internal sealed class TaskRunInvocationCustody
     internal readonly TaskExecutionCoordinator Issuer;
     internal readonly Guid ObservationId = Guid.NewGuid();
     internal readonly List<Task> OriginalMoves = [];
+    private readonly List<(string Stage, Task Actual)> _additionalOriginals = [];
+    private TaskRunCloudPermissionRequiredException? _originalPermissionCause;
+    private Task<RemediationRequest>? _originalPermissionPublication;
     internal Task? OriginalDispose;
     internal bool DisposeInvoked;
     internal Exception? DisposeDirectFailure;
@@ -33,6 +36,7 @@ internal sealed class TaskRunInvocationCustody
     internal bool CompletionCallAdmitted;
     internal Action? DeferredCompletionPublication;
     internal ChatStreamEvent? DeferredCompletedMessage;
+    internal ChatStreamEvent? DeferredPermissionRequiredMessage;
     internal bool OwnedCleanupTerminal;
     internal bool SlotReserved;
     internal bool ReachedEnd;
@@ -46,6 +50,43 @@ internal sealed class TaskRunInvocationCustody
     {
         ArgumentNullException.ThrowIfNull(original);
         lock (_gate) OriginalMoves.Add(original);
+    }
+    internal void RetainAdditionalOriginal(string stage, Task original)
+    {
+        ArgumentNullException.ThrowIfNull(original);
+        lock (_gate) _additionalOriginals.Add((stage, original));
+    }
+    internal void BindPublishedOriginalPermission(TaskRunCloudPermissionRequiredException actualAsk, Task<RemediationRequest> actualPublication)
+    {
+        if (actualAsk.OriginalRequest is null || !actualPublication.IsCompletedSuccessfully)
+            throw new InvalidOperationException("Only the actual successfully published source-issued Ask may be observed.");
+        lock (_gate)
+        {
+            if (_originalPermissionCause is not null && (!ReferenceEquals(_originalPermissionCause, actualAsk)
+                || !ReferenceEquals(_originalPermissionPublication, actualPublication)))
+                throw new InvalidOperationException("Another original permission request is already bound to this invocation.");
+            _originalPermissionCause = actualAsk;
+            _originalPermissionPublication = actualPublication;
+        }
+    }
+    internal bool CanReturnPublishedPermissionRefusal(TaskExecutionSnapshot? acknowledged)
+    {
+        lock (_gate)
+            return _originalPermissionCause is not null && _originalPermissionPublication is { IsCompletedSuccessfully: true }
+                && DeferredPermissionRequiredMessage is { PermissionRequest: { } metadata }
+                && ReferenceEquals(metadata, _originalPermissionPublication.Result)
+                && _causes.Count == 1 && ReferenceEquals(_causes[0], _originalPermissionCause)
+                && OwnedCleanupTerminal && ResourcesDisposed && OriginalDispose is { IsCompletedSuccessfully: true }
+                && (OriginalTracker is null || OriginalTrackerDispose is { IsCompletedSuccessfully: true })
+                && acknowledged is { State: TaskExecutionLifecycle.Suspended, RecoveryObservation: { } recovery }
+                && OriginalBinding is { } binding && acknowledged.TaskId == binding.TaskId
+                && acknowledged.ExecutionId == binding.ExecutionId && acknowledged.ContextId == binding.ContextId
+                && acknowledged.OwnerBinding == binding.OwnerBinding && recovery.ObservationId == ObservationId
+                && (OriginalSettlement is { IsCompletedSuccessfully: true }
+                    && recovery.SettlementOutcome == TaskRunOriginalSettlementOutcome.Joined
+                    || OriginalSettlement is null && BoundByActualBegin && !AttemptAdmissionInvoked
+                    && acknowledged.Attempts.Count == 0
+                    && recovery.SettlementOutcome == TaskRunOriginalSettlementOutcome.NoAttemptAdmissionWasInvoked);
     }
     internal TaskRunOriginalRecoveryCapture CaptureRecoveryOriginals()
     {
@@ -65,6 +106,7 @@ internal sealed class TaskRunInvocationCustody
             Capture("runtime.settlement", OriginalSettlement);
             Capture("task.completion", OriginalCompletion);
             Capture("task.owning-completion", OriginalOwningCompletion);
+            foreach (var source in _additionalOriginals) Capture(source.Stage, source.Actual);
             var causes = _causes.ToList();
             // A raw source may have become Faulted before its owning catch runs. Its
             // captured status and actual Task.Exception supply this same observation.

@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Haven.Infrastructure.Tests;
 
-public sealed class CanonicalDiResolutionTests08
+public sealed partial class CanonicalDiResolutionTests08
 {
     [Fact]
     public Task Canonical_runtime_aliases_resolve_same_original_without_eager_issuer_cycle()
