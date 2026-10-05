@@ -21,7 +21,7 @@ PROPOSED = "apps/Web/Tests/NativeFocusOwner9/ProposedBrowserAccessibilityBridge.
 PINNED = {
     COMMON: (19584, COMMON_SHA),
     PROJECT: (979, "d6df5325108efded38150d15427deec887f910fdc63d4ea9ec6484c7afc48445"),
-    "apps/Web/Tests/BrowserFocusScrollRegression.cs": (9324, "f2629eb576b43f4bf4205ef283c4b72c4576f3d0ff053947a3e7a7d8f3ae7248"),
+    "apps/Web/Tests/BrowserFocusScrollRegression.cs": (9324, "9de483f8c22a6cfe3f790134c27d892dea528fec612b5d6c38f0d1d3498b3a42"),
     "apps/Web/BrowserAccessibilityBridge.cs": (6998, "619782a51fd9d845913ae85e9787c48abf24be653fef6a1a653555f735d2f328"),
     PROPOSED: (8872, "c03add21cf0ff7f83555355037b779a0f0415a2dc9970f60c146d942742dad1c"),
     "apps/Web/BrowserAccessibilityJsonContext.cs": (389, "86b6b7b9aa6d39f4b0f51157322fd93ed599a9655c02d8d73ac7f662ab97d851"),

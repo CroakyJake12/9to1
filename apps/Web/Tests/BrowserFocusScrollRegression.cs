@@ -73,7 +73,7 @@ var failed = await session.Dispatch(() =>
             && before.Height == 32 && scroll.Extent.Height > scroll.Viewport.Height && scroll.Offset.Y == 0);
         var requests = 0;
         EventHandler<RequestBringIntoViewEventArgs> handler = (_, e) => { if (ReferenceEquals(e.TargetObject, target)) ++requests; };
-        scroll.AddHandler(Control.RequestBringIntoViewEvent, handler, RoutingStrategies.Tunnel, true);
+        scroll.AddHandler(Control.RequestBringIntoViewEvent, handler, RoutingStrategies.Bubble, true);
         try
         {
             var returned = bridge.Perform(id, "focus", null);
