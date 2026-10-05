@@ -21,6 +21,9 @@ public sealed class CuiControlLoader : IDisposable
     private bool _disposed;
     private readonly object _actionTasksGate = new();
     private readonly HashSet<Task> _pendingActionTasks = [];
+    private const int MaximumRetainedActionTasks = 128;
+    private Task? _admissionFailureTask;
+    private Task? _disposalTask;
     public event EventHandler<CuiActionFailure>? ActionFailed;
     private readonly Dictionary<string, string> _resourceScope;
     private readonly List<CuiDiagnostic> _runtimeDiagnostics = [];
@@ -63,41 +66,127 @@ public sealed class CuiControlLoader : IDisposable
     /// <summary>Set an action dispatcher for action= and on:click= attributes.</summary>
     public void SetActionDispatcher(ICuiActionDispatcher dispatcher) => _actionDispatcher = dispatcher;
 
-    /// <summary>Snapshot completion of the actual button dispatch pipelines already accepted by this loader.
+    /// <summary>Snapshot active dispatches and retained failed button dispatch pipelines already accepted by this loader.
     /// Call after raising the click. This does not dispatch an action, attest success, or include future clicks.
-    /// Captured tasks remain awaitable after disposal, including dispatcher cancellation and cleanup.</summary>
+    /// Captured tasks remain awaitable after disposal, including original dispatcher, observer and cleanup failures.
+    /// An action must not await a snapshot containing itself; its owning caller joins outside the dispatch.</summary>
     public Task WhenActionsIdleAsync()
     {
-        lock (_actionTasksGate) return Task.WhenAll(_pendingActionTasks.ToArray());
+        lock (_actionTasksGate)
+        {
+            var tasks = _pendingActionTasks.ToList();
+            if (_admissionFailureTask is not null) tasks.Add(_admissionFailureTask);
+            if (_disposalTask is not null) tasks.Add(_disposalTask);
+            return Task.WhenAll(tasks);
+        }
     }
 
     private void ObserveButtonDispatch(Button button)
     {
-        var task = DispatchButtonAsync(button);
-        lock (_actionTasksGate) _pendingActionTasks.Add(task);
-        _ = task.ContinueWith(static (completed, state) =>
+        if (_disposed || !button.IsEnabled || !_wiredActions.Contains(button) ||
+            _actionDispatcher is not { } dispatcher || !TryGetActionInvocation(button, out var invocation)) return;
+
+        // The actual async pipeline waits at this gate. Publish it before releasing any
+        // dispatcher/observer callback; the original UI context is retained by the await.
+        var start = new TaskCompletionSource();
+        lock (_actionTasksGate)
         {
-            var loader = (CuiControlLoader)state!;
-            lock (loader._actionTasksGate) loader._pendingActionTasks.Remove(completed);
-        }, this, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            if (_disposed || _admissionFailureTask is not null) return;
+            _pendingActionTasks.RemoveWhere(static task => task.IsCompletedSuccessfully);
+            if (_pendingActionTasks.Count >= MaximumRetainedActionTasks)
+                _admissionFailureTask = RejectButtonDispatchAsync(start.Task, button);
+            else
+                _pendingActionTasks.Add(DispatchButtonAsync(start.Task, button, dispatcher, invocation));
+        }
+        start.SetResult();
     }
 
     public void Dispose()
     {
-        if (_disposed) return;
-        _disposed = true;
-        _lifetime.Cancel();
-        ActionFailed = null;
-        if (_bindingContext is INotifyPropertyChanged observable && _bindingChangedHandler is not null)
-            observable.PropertyChanged -= _bindingChangedHandler;
-        _bindingChangedHandler = null;
-        _liveBindings.Clear();
-        _liveConditionals.Clear();
-        ClearRepeatSubscriptions();
-        _repeats.Clear();
-        ClearActionHandlers();
-        _actionInvocations.Clear();
-        _currentRepeatIdentity = null;
+        var start = new TaskCompletionSource();
+        var failures = new List<Exception>();
+        lock (_actionTasksGate)
+        {
+            if (_disposed) return;
+            _disposed = true;
+            var actions = _admissionFailureTask is null ? _pendingActionTasks.ToArray()
+                : _pendingActionTasks.Append(_admissionFailureTask).ToArray();
+            // Retain the actual terminal task before cancellation or unsubscribe reentry.
+            _disposalTask = CompleteDisposalAsync(start.Task, actions, failures);
+        }
+        void Attempt(Action cleanup)
+        {
+            try { cleanup(); }
+            catch (Exception error) { AddDistinctFailure(failures, error); }
+        }
+        try
+        {
+            Attempt(_lifetime.Cancel);
+            ActionFailed = null;
+            if (_bindingContext is INotifyPropertyChanged observable && _bindingChangedHandler is not null)
+                Attempt(() => observable.PropertyChanged -= _bindingChangedHandler);
+            _bindingChangedHandler = null;
+            _liveBindings.Clear();
+            _liveConditionals.Clear();
+            foreach (var repeat in _repeats.ToArray()) Attempt(repeat.Dispose);
+            foreach (var scope in _scopeChangedHandlers.Keys.ToArray()) Attempt(() => UnsubscribeScope(scope));
+            _repeats.Clear();
+            foreach (var (button, handler) in _actionHandlers.ToArray()) Attempt(() => button.Click -= handler);
+            _actionHandlers.Clear();
+            _wiredActions.Clear();
+            _actionInvocations.Clear();
+            _currentRepeatIdentity = null;
+        }
+        catch (Exception error) { AddDistinctFailure(failures, error); }
+        finally { start.SetResult(); }
+        if (CombineFailures(failures) is { } failure)
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
+    }
+
+    private async Task CompleteDisposalAsync(Task start, Task[] actions, List<Exception> cleanupFailures)
+    {
+        await start;
+        // Copy only after all synchronous cleanup attempts have settled and opened the gate.
+        var failures = new List<Exception>(cleanupFailures);
+        foreach (var action in actions)
+        {
+            try { await action; }
+            catch (Exception error) { AddOriginalTaskFailure(failures, action, error); }
+        }
+        try { _lifetime.Dispose(); }
+        catch (Exception error) { AddDistinctFailure(failures, error); }
+        ThrowRetainedFailures(failures);
+    }
+
+    private static void AddOriginalTaskFailure(List<Exception> failures, Task? original, Exception caught)
+    {
+        // Read the actual Task payload once. Do not Flatten: an opaque/empty aggregate
+        // can itself be the original cause, and every direct sibling must survive await.
+        if (original?.Exception is { InnerExceptions.Count: > 0 } group)
+            foreach (var cause in group.InnerExceptions) AddDistinctFailure(failures, cause);
+        else AddDistinctFailure(failures, caught);
+    }
+
+    private static void AddDistinctFailure(List<Exception> failures, Exception error)
+    {
+        if (!failures.Any(previous => ReferenceEquals(previous, error))) failures.Add(error);
+    }
+
+    private static Exception? CombineFailures(List<Exception> failures) => failures.Count switch
+    {
+        0 => null,
+        1 => failures[0],
+        _ => new AggregateException("Original CUI action or cleanup failures were retained.", failures)
+    };
+
+    private static void ThrowRetainedFailures(List<Exception> failures)
+    {
+        if (CombineFailures(failures) is not { } failure) return;
+        // Async methods otherwise convert a thrown OCE into a canceled Task with no
+        // Exception payload. Keep that exact unknown cause as a fault, never a waiver.
+        if (failure is OperationCanceledException)
+            throw new AggregateException("The original CUI cancellation cause was retained.", failure);
+        System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
     }
 
     /// <summary>Set the surface name for theme resolution (default: "Home").</summary>
@@ -258,33 +347,65 @@ public sealed class CuiControlLoader : IDisposable
         WireBindingsRecursive(root);
     }
 
-    private async Task DispatchButtonAsync(Button button)
+    private async Task DispatchButtonAsync(Task start, Button button, ICuiActionDispatcher dispatcher,
+        CuiActionInvocation invocation)
     {
-        if (_disposed || !button.IsEnabled || !_wiredActions.Contains(button) ||
-            _actionDispatcher is not { } dispatcher || !TryGetActionInvocation(button, out var invocation)) return;
+        await start;
+        Task? actualDispatcher = null;
         try
         {
-            if (dispatcher is ICuiLifetimeAwareActionDispatcher aware)
-            {
-                // This accepted native Button event has a view lifetime and no separate
-                // external caller token. The host alone decides whether work transfers.
-                await aware.DispatchWithLifetimeAsync(invocation.Command, invocation.Parameter,
-                    new CuiActionDispatchLifetime(_lifetime.Token, CancellationToken.None));
-            }
-            else await dispatcher.DispatchAsync(invocation.Command, invocation.Parameter, _lifetime.Token);
+            // Consume the returned ValueTask once and retain its actual Task before await.
+            actualDispatcher = dispatcher is ICuiLifetimeAwareActionDispatcher aware
+                ? aware.DispatchWithLifetimeAsync(invocation.Command, invocation.Parameter,
+                    new CuiActionDispatchLifetime(_lifetime.Token, CancellationToken.None)).AsTask()
+                : dispatcher.DispatchAsync(invocation.Command, invocation.Parameter, _lifetime.Token).AsTask();
+            await actualDispatcher;
         }
-        catch (OperationCanceledException)
-        { if (!_disposed) ReportActionFailure(button, new("CUIA_CANCELLED", "The action was cancelled.", true)); }
-        catch (Exception)
-        { if (!_disposed) ReportActionFailure(button, new("CUIA_FAILED", "The action could not complete. Check the current state before trying again.", false)); }
+        catch (Exception error)
+        {
+            var failures = new List<Exception>();
+            AddOriginalTaskFailure(failures, actualDispatcher, error);
+            RetainButtonFailure(button, error, failures);
+            ThrowRetainedFailures(failures);
+        }
     }
-    private void ReportActionFailure(Button button, CuiActionFailure failure)
+
+    private async Task RejectButtonDispatchAsync(Task start, Button button)
+    {
+        await start;
+        var original = new InvalidOperationException("The loader retained-action limit was reached; further effects require owner drainage and a new loader.");
+        var failures = new List<Exception> { original };
+        RetainButtonFailure(button, original, failures);
+        ThrowRetainedFailures(failures);
+    }
+
+    private void RetainButtonFailure(Button button, Exception original, List<Exception> failures)
+    {
+        if (!_disposed)
+        {
+            var failure = original is OperationCanceledException
+                ? new CuiActionFailure("CUIA_CANCELLED", "The action was cancelled.", true)
+                : new CuiActionFailure("CUIA_FAILED", "The action could not complete. Check the current state before trying again.", false);
+            try
+            {
+                if (ReportActionFailure(button, failure) is { } observerFailure)
+                    AddDistinctFailure(failures, observerFailure);
+            }
+            catch (Exception error) { AddDistinctFailure(failures, error); }
+        }
+    }
+
+    private Exception? ReportActionFailure(Button button, CuiActionFailure failure)
     {
         var span = _authoredControls.TryGetValue(button, out var authored) ? authored.Span : default;
         _runtimeDiagnostics.Add(new(failure.Code, failure.Cancelled ? CuiDiagnosticSeverity.Info : CuiDiagnosticSeverity.Error, failure.Message, span));
         try { ActionFailed?.Invoke(this, failure); }
-        catch (Exception)
-        { _runtimeDiagnostics.Add(new("CUIA_OBSERVER_FAILED", CuiDiagnosticSeverity.Error, "The action status could not be displayed.", span)); }
+        catch (Exception error)
+        {
+            _runtimeDiagnostics.Add(new("CUIA_OBSERVER_FAILED", CuiDiagnosticSeverity.Error, "The action status could not be displayed.", span));
+            return error;
+        }
+        return null;
     }
 
     private void WireBindingsRecursive(Control control)
