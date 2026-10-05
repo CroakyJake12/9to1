@@ -1,0 +1,113 @@
+name: Team C original Canvas inner ZIP byte parts (unaccepted)
+on:
+  push:
+    branches: [team-c/sol-happy-c5-canvas-original-inner-private-binding-20261005]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: team-c-canvas-original-inner-parts-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  original-parts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact ORIGINAL public provider metadata only
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request
+          expected = [(11304710012,302578514,'51af4aced29d8cf68e2f1e0b5cb0200194ce44d6772aae914da6d79b6878f9c0',37203799923,'e2effba426353978b11fc1c0f2fc8e3e533318e4'),(11303769280,28074,'f94aaa0636891a6906015ed55f437e166422fdcab96101f67f0b72670d11e818',37205514551,'f661e909e080d68a9b5505016386c6406c6c87f6')]
+          for artifact,size,digest,run,head in expected:
+              request=urllib.request.Request('https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/'+str(artifact),headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'})
+              with urllib.request.urlopen(request,timeout=30) as response: actual=json.load(response)
+              if actual['id']!=artifact or actual['size_in_bytes']!=size or actual['digest']!='sha256:'+digest or actual['expired'] or actual['workflow_run']['id']!=run or actual['workflow_run']['head_sha']!=head: raise SystemExit('Original provider tuple refused')
+          PY
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 37203799923
+          artifact-ids: 11304710012
+          path: ${{ runner.temp }}/canvas-original-package-input
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 37205514551
+          artifact-ids: 11303769280
+          path: ${{ runner.temp }}/canvas-original-manifest-input
+      - name: Hash all 418 original members and retain exact inner ZIP parts
+        id: retain
+        shell: bash
+        run: |
+          python3 .github/scripts/canvas-original-inner-parts.py --package-input '${{ runner.temp }}/canvas-original-package-input' --observation-input '${{ runner.temp }}/canvas-original-manifest-input' --output '${{ runner.temp }}/canvas-original-byte-parts'
+      - name: Retain only original public manifest and part index
+        if: steps.retain.outputs.parts_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: canvas-original-parts-metadata-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/canvas-original-byte-parts/original-result.json
+            ${{ runner.temp }}/canvas-original-byte-parts/original-parts-index.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain ORIGINAL part 01 below connector cap
+        if: steps.retain.outputs.parts_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: canvas-original-part-01-${{ github.sha }}
+          path: ${{ runner.temp }}/canvas-original-byte-parts/original-canvas.zip.part-01
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain ORIGINAL part 02 below connector cap
+        if: steps.retain.outputs.parts_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: canvas-original-part-02-${{ github.sha }}
+          path: ${{ runner.temp }}/canvas-original-byte-parts/original-canvas.zip.part-02
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain ORIGINAL part 03 below connector cap
+        if: steps.retain.outputs.parts_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: canvas-original-part-03-${{ github.sha }}
+          path: ${{ runner.temp }}/canvas-original-byte-parts/original-canvas.zip.part-03
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain ORIGINAL part 04 below connector cap
+        if: steps.retain.outputs.parts_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: canvas-original-part-04-${{ github.sha }}
+          path: ${{ runner.temp }}/canvas-original-byte-parts/original-canvas.zip.part-04
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain ORIGINAL part 05 below connector cap
+        if: steps.retain.outputs.parts_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: canvas-original-part-05-${{ github.sha }}
+          path: ${{ runner.temp }}/canvas-original-byte-parts/original-canvas.zip.part-05
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain ORIGINAL part 06 below connector cap
+        if: steps.retain.outputs.parts_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: canvas-original-part-06-${{ github.sha }}
+          path: ${{ runner.temp }}/canvas-original-byte-parts/original-canvas.zip.part-06
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
