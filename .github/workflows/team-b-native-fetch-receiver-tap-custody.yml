@@ -1,0 +1,40 @@
+name: Team B exact successful receiver original and corrected TAP custody
+
+on:
+  push:
+    branches: [custody/team-b-native-fetch-receiver-tap-custody-20261005]
+    paths:
+      - .github/workflows/team-b-native-fetch-receiver-tap-custody.yml
+      - apps/Web/Auth/ci/export-existing-native-fetch-receiver-tap.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-selected-diagnostics:
+    if: github.ref == 'refs/heads/custody/team-b-native-fetch-receiver-tap-custody-20261005' && github.repository == 'CroakyJake12/9to1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out exact diagnostic source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify whole successful original and select three complete UNIT TAP logs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python3 apps/Web/Auth/ci/export-existing-native-fetch-receiver-tap.py
+          --output "$RUNNER_TEMP/team-b-native-fetch-receiver-tap-custody"
+      - name: Upload bounded selected custody diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-fetch-receiver-tap-custody-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-native-fetch-receiver-tap-custody/diagnostics
+          if-no-files-found: warn
+          retention-days: 7
