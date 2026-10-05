@@ -1,0 +1,40 @@
+name: Team B exact failed Wave 2db6e2 recorded PNG custody
+
+on:
+  push:
+    branches: [custody/team-b-wave-2db6e2-real-png-custody-20261005]
+    paths:
+      - .github/workflows/team-b-wave-2db6e2-real-png-custody.yml
+      - apps/Web/Wave/Tests/ci/export-existing-wave-2db6e2-real-png-custody.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-selected-diagnostics:
+    if: github.ref == 'refs/heads/custody/team-b-wave-2db6e2-real-png-custody-20261005' && github.repository == 'CroakyJake12/9to1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out exact diagnostic source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify whole failed original and retain all six recorded PNG byte custody
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python3 apps/Web/Wave/Tests/ci/export-existing-wave-2db6e2-real-png-custody.py
+          --output "$RUNNER_TEMP/team-b-wave-2db6e2-real-png-custody"
+      - name: Upload bounded complete PNG custody diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave-2db6e2-real-png-custody-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-wave-2db6e2-real-png-custody/diagnostics
+          if-no-files-found: warn
+          retention-days: 7
