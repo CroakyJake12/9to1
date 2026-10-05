@@ -1,6 +1,6 @@
 # Current Home Windows original117 validation
 
-This four-path isolated producer is rooted at exact canonical 285e97e3a62e75636879c098174d3c6141c94f8b, directly descended from a38e4e20bdd3a49aceaa69c251c773cc5748dec9 via the guarded2 production replacements+3 additions and exact NativeFiles failure-classification branch+2 separate classifier leaves. CI/README only are added. All product/test/project/policy bodies are actual canonical Git inputs; no private overlay, alternate actor/provider, reconstruction or assertion edits.
+This six-path isolated producer is rooted at exact canonical 285e97e3a62e75636879c098174d3c6141c94f8b, directly descended from a38e4e20bdd3a49aceaa69c251c773cc5748dec9 via the guarded2 production replacements+3 additions and exact NativeFiles failure-classification branch+2 separate classifier leaves. CI/README only are added. All product/test/project/policy bodies are actual canonical Git inputs; no private overlay, alternate actor/provider, reconstruction or assertion edits.
 
 The complete18,007-byte controller from 9e53815b62e11e6607f5e6a7f86d11488bc17d8a stays byte-exact. It consumes current catalogue117 and exact source groups. Both Debug and Release must discover/execute genuine unfiltered117 with normal process exit0 and0fail/skip, plus unchanged focused12.117=original54 Facts+12 Windows+45 PR15+2 PR14+4 new owning Den observation cases. New fixture is2 Facts+one2-row Theory. No standalone4 execution is claimed.
 
