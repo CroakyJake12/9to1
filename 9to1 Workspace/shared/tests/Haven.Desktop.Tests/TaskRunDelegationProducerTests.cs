@@ -17,20 +17,20 @@ public sealed partial class ChatCloudPermissionCallerTests
         var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         rig.Rows.BeforeWrite = next => next.Delegations.Count == 0 ? null : HoldAsync(next);
-        var actual = rig.Tasks.RegisterOriginalDelegationIntentAsync(parent, "fixed-once", new string('a', 64), "Child", [], default);
+        var actual = rig.Tasks.RegisterOriginalDelegationIntentAsync(parent, "fixed-once", new string('a', 64), "Child", [], TestContext.Current.CancellationToken);
         try
         {
-            await entered.Task.WaitAsync(TimeSpan.FromSeconds(5)); Assert.False(actual.IsCompleted);
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken); Assert.False(actual.IsCompleted);
             Assert.Empty(rig.Rows.ChildCreated);
-            Assert.Same(actual, rig.Tasks.RegisterOriginalDelegationIntentAsync(parent, "fixed-once", new string('a', 64), "Child", [], default));
+            Assert.Same(actual, rig.Tasks.RegisterOriginalDelegationIntentAsync(parent, "fixed-once", new string('a', 64), "Child", [], TestContext.Current.CancellationToken));
         }
         finally { release.TrySetResult(); }
         var intent = await actual; rig.Rows.BeforeWrite = null;
         Assert.NotEqual(parent.Snapshot.TaskId, intent.Intent.ChildTaskId);
-        var creation = await rig.Tasks.CreateOriginalDelegatedChildAsync(intent, default);
-        Assert.Same(creation, await rig.Tasks.CreateOriginalDelegatedChildAsync(intent, default));
+        var creation = await rig.Tasks.CreateOriginalDelegatedChildAsync(intent, TestContext.Current.CancellationToken);
+        Assert.Same(creation, await rig.Tasks.CreateOriginalDelegatedChildAsync(intent, TestContext.Current.CancellationToken));
         Assert.Equal(intent.Intent.ChildTaskId, creation.Child.TaskId); Assert.Single(rig.Rows.ChildCreated);
-        Assert.Equal(TaskRunDelegationState.IntentAcknowledged, Assert.Single((await rig.Tasks.GetAsync(parent.Snapshot.TaskId, default))!.Delegations).State);
+        Assert.Equal(TaskRunDelegationState.IntentAcknowledged, Assert.Single((await rig.Tasks.GetAsync(parent.Snapshot.TaskId, TestContext.Current.CancellationToken))!.Delegations).State);
         async Task HoldAsync(TaskExecutionSnapshot next)
         { entered.TrySetResult(); await release.Task; rig.Rows.Commit(next); }
     }
@@ -39,44 +39,44 @@ public sealed partial class ChatCloudPermissionCallerTests
     public async Task Delegation_copied_parent_admission_refuses_intent_and_child_effects()
     {
         await using var rig = new ChildRig(); var parent = await rig.ParentAsync();
-        var actual = rig.Tasks.RegisterOriginalDelegationIntentAsync(parent with { }, "foreign", new string('a', 64), "Child", [], default);
+        var actual = rig.Tasks.RegisterOriginalDelegationIntentAsync(parent with { }, "foreign", new string('a', 64), "Child", [], TestContext.Current.CancellationToken);
         Assert.NotNull(await Record.ExceptionAsync(() => actual));
         Assert.True(actual.IsFaulted); Assert.Empty(rig.Rows.ChildCreated);
-        Assert.Empty((await rig.Tasks.GetAsync(parent.Snapshot.TaskId, default))!.Delegations);
+        Assert.Empty((await rig.Tasks.GetAsync(parent.Snapshot.TaskId, TestContext.Current.CancellationToken))!.Delegations);
     }
 
     [Fact]
     public async Task Delegation_unknown_child_cas_keeps_same_original_task_and_preserves_full_raw_faults_without_parent_link()
     {
         await using var rig = new ChildRig(); var parent = await rig.ParentAsync();
-        var intent = await rig.Tasks.RegisterOriginalDelegationIntentAsync(parent, "uncertain", new string('b', 64), "Child", [], default);
+        var intent = await rig.Tasks.RegisterOriginalDelegationIntentAsync(parent, "uncertain", new string('b', 64), "Child", [], TestContext.Current.CancellationToken);
         var first = new OperationCanceledException("FAULTED child write, not caller cancellation");
         var second = new IOException("Independent actual child write sibling");
         var raw = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously); raw.SetException([first, second]);
         rig.Rows.BeforeWrite = next => next.ParentDelegation is null ? null : raw.Task;
-        var actual = rig.Tasks.CreateOriginalDelegatedChildAsync(intent, default);
+        var actual = rig.Tasks.CreateOriginalDelegatedChildAsync(intent, TestContext.Current.CancellationToken);
         Assert.NotNull(await Record.ExceptionAsync(() => actual)); Assert.True(actual.IsFaulted); Assert.False(actual.IsCanceled);
         Assert.Contains(Leaves(actual.Exception!), cause => ReferenceEquals(cause, first));
         Assert.Contains(Leaves(actual.Exception!), cause => ReferenceEquals(cause, second));
-        Assert.Same(actual, rig.Tasks.CreateOriginalDelegatedChildAsync(intent, default));
+        Assert.Same(actual, rig.Tasks.CreateOriginalDelegatedChildAsync(intent, TestContext.Current.CancellationToken));
         Assert.Empty(rig.Rows.ChildCreated); Assert.Equal(0, rig.Client.Dispatches);
-        Assert.Equal(TaskRunDelegationState.IntentAcknowledged, Assert.Single((await rig.Tasks.GetAsync(parent.Snapshot.TaskId, default))!.Delegations).State);
+        Assert.Equal(TaskRunDelegationState.IntentAcknowledged, Assert.Single((await rig.Tasks.GetAsync(parent.Snapshot.TaskId, TestContext.Current.CancellationToken))!.Delegations).State);
     }
 
     [Fact]
     public async Task Delegation_parent_link_cas_loss_reconciles_same_child_without_second_creation_or_dispatch()
     {
         await using var rig = new ChildRig(); var parent = await rig.ParentAsync();
-        var intent = await rig.Tasks.RegisterOriginalDelegationIntentAsync(parent, "link-retry", new string('c', 64), "Child", [], default);
-        var creation = await rig.Tasks.CreateOriginalDelegatedChildAsync(intent, default);
+        var intent = await rig.Tasks.RegisterOriginalDelegationIntentAsync(parent, "link-retry", new string('c', 64), "Child", [], TestContext.Current.CancellationToken);
+        var creation = await rig.Tasks.CreateOriginalDelegatedChildAsync(intent, TestContext.Current.CancellationToken);
         var cause = new TaskExecutionRevisionConflictException(parent.Snapshot.TaskId, 1, 2);
         rig.Rows.BeforeWrite = next => next.ParentDelegation is null && next.Delegations.Any(value => value.State == TaskRunDelegationState.ChildLinked)
             ? Task.FromException(cause) : null;
-        var failed = rig.Tasks.LinkOriginalDelegatedChildAsync(creation, default);
+        var failed = rig.Tasks.LinkOriginalDelegatedChildAsync(creation, TestContext.Current.CancellationToken);
         Assert.NotNull(await Record.ExceptionAsync(() => failed)); Assert.True(failed.IsFaulted);
         Assert.Contains(Leaves(failed.Exception!), value => ReferenceEquals(value, cause));
         rig.Rows.BeforeWrite = null;
-        var linked = await rig.Tasks.LinkOriginalDelegatedChildAsync(creation, default);
+        var linked = await rig.Tasks.LinkOriginalDelegatedChildAsync(creation, TestContext.Current.CancellationToken);
         Assert.Equal(creation.Child.TaskId, linked.Child.TaskId); Assert.Equal(creation.Child.ExecutionId, linked.Child.ExecutionId);
         Assert.Equal(TaskRunDelegationState.ChildLinked, Assert.Single(linked.Parent.Delegations).State);
         Assert.Single(rig.Rows.ChildCreated); Assert.Equal(0, rig.Client.Dispatches);
@@ -86,17 +86,17 @@ public sealed partial class ChatCloudPermissionCallerTests
     public async Task Delegation_task_owned_intent_rebinds_after_real_parent_settlement_and_preserves_queue_and_child_ids()
     {
         await using var rig = new ChildRig(); var parent = await rig.ParentAsync();
-        var intent = await rig.Tasks.RegisterOriginalDelegationIntentAsync(parent, "after-fallback", new string('d', 64), "Child", [], default);
-        await rig.Tasks.SubmitFollowUpAsync(parent.Snapshot.TaskId, "After children, inspect results", TaskFollowUpMode.Queue, null, null, default);
-        var before = (await rig.Tasks.GetAsync(parent.Snapshot.TaskId, default))!;
+        var intent = await rig.Tasks.RegisterOriginalDelegationIntentAsync(parent, "after-fallback", new string('d', 64), "Child", [], TestContext.Current.CancellationToken);
+        await rig.Tasks.SubmitFollowUpAsync(parent.Snapshot.TaskId, "After children, inspect results", TaskFollowUpMode.Queue, null, null, TestContext.Current.CancellationToken);
+        var before = (await rig.Tasks.GetAsync(parent.Snapshot.TaskId, TestContext.Current.CancellationToken))!;
         var failed = await rig.Tasks.RecordAttemptFailureAsync(before.TaskId, before.ExecutionId, parent.AttemptId,
-            new("synthetic-provider-unavailable", "No original provider was invoked", "Known zero-frame parent attempt"), default);
-        var candidate = await rig.Authority.CaptureSelectedRouteAsync(failed, rig.Provider.Model, [ToolCapability.Text], [], default);
-        var fresh = await rig.Tasks.ResumeAttemptAsync(failed.TaskId, failed.ExecutionId, parent.AttemptId, candidate, default);
+            new("synthetic-provider-unavailable", "No original provider was invoked", "Known zero-frame parent attempt"), TestContext.Current.CancellationToken);
+        var candidate = await rig.Authority.CaptureSelectedRouteAsync(failed, rig.Provider.Model, [ToolCapability.Text], [], TestContext.Current.CancellationToken);
+        var fresh = await rig.Tasks.ResumeAttemptAsync(failed.TaskId, failed.ExecutionId, parent.AttemptId, candidate, TestContext.Current.CancellationToken);
         Assert.NotEqual(parent.AttemptId, fresh.AttemptId);
-        Assert.NotNull(await Record.ExceptionAsync(() => parent.Lease.RevalidateAsync(default).AsTask()));
-        var creation = await rig.Tasks.CreateOriginalDelegatedChildAsync(intent, default);
-        var linked = await rig.Tasks.LinkOriginalDelegatedChildAsync(creation, default);
+        Assert.NotNull(await Record.ExceptionAsync(() => parent.Lease.RevalidateAsync(TestContext.Current.CancellationToken).AsTask()));
+        var creation = await rig.Tasks.CreateOriginalDelegatedChildAsync(intent, TestContext.Current.CancellationToken);
+        var linked = await rig.Tasks.LinkOriginalDelegatedChildAsync(creation, TestContext.Current.CancellationToken);
         Assert.Equal(before.TaskId, linked.Parent.TaskId); Assert.Equal(before.ExecutionId, linked.Parent.ExecutionId);
         Assert.Equal(intent.Intent.ChildTaskId, linked.Child.TaskId); Assert.Equal(intent.Intent.ChildExecutionId, linked.Child.ExecutionId);
         Assert.Equal(parent.AttemptId, Assert.Single(linked.Parent.Delegations).CreatedByAttemptId);
@@ -108,12 +108,12 @@ public sealed partial class ChatCloudPermissionCallerTests
     public async Task Delegation_unfinished_actual_child_link_refuses_parent_completion()
     {
         await using var rig = new ChildRig(); var parent = await rig.ParentAsync();
-        var intent = await rig.Tasks.RegisterOriginalDelegationIntentAsync(parent, "unfinished", new string('e', 64), "Child", [], default);
-        var creation = await rig.Tasks.CreateOriginalDelegatedChildAsync(intent, default);
-        await rig.Tasks.LinkOriginalDelegatedChildAsync(creation, default);
+        var intent = await rig.Tasks.RegisterOriginalDelegationIntentAsync(parent, "unfinished", new string('e', 64), "Child", [], TestContext.Current.CancellationToken);
+        var creation = await rig.Tasks.CreateOriginalDelegatedChildAsync(intent, TestContext.Current.CancellationToken);
+        await rig.Tasks.LinkOriginalDelegatedChildAsync(creation, TestContext.Current.CancellationToken);
         Assert.NotNull(await Record.ExceptionAsync(() => rig.Tasks.CompleteAttemptAsync(parent.Snapshot.TaskId,
-            parent.Snapshot.ExecutionId, parent.AttemptId, default)));
-        Assert.Equal(TaskExecutionLifecycle.Running, (await rig.Tasks.GetAsync(parent.Snapshot.TaskId, default))!.State);
+            parent.Snapshot.ExecutionId, parent.AttemptId, TestContext.Current.CancellationToken)));
+        Assert.Equal(TaskExecutionLifecycle.Running, (await rig.Tasks.GetAsync(parent.Snapshot.TaskId, TestContext.Current.CancellationToken))!.State);
         Assert.Equal(0, rig.Client.Dispatches); Assert.Single(rig.Rows.ChildCreated);
     }
 
@@ -121,19 +121,19 @@ public sealed partial class ChatCloudPermissionCallerTests
     public async Task Delegation_actual_saved_agent_runs_same_fixed_child_then_parent_accepts_only_whole_child_completion()
     {
         await using var rig = new ChildRig(); var parent = await rig.ParentAsync();
-        var run = await rig.Agents.RunDelegatedAsync(parent, rig.Definition.Id, "actual-child", "Actual fixed child input", [], default);
+        var run = await rig.Agents.RunDelegatedAsync(parent, rig.Definition.Id, "actual-child", "Actual fixed child input", [], TestContext.Current.CancellationToken);
         Assert.Equal(AgentRunStatus.Completed, run.Status); Assert.Equal(100, run.ProgressPercent);
         var binding = Assert.IsType<AgentRunCanonicalBinding>(run.CanonicalTask);
-        var currentParent = (await rig.Tasks.GetAsync(parent.Snapshot.TaskId, default))!;
+        var currentParent = (await rig.Tasks.GetAsync(parent.Snapshot.TaskId, TestContext.Current.CancellationToken))!;
         var intent = Assert.Single(currentParent.Delegations);
         Assert.Equal(TaskRunDelegationState.ChildCompleted, intent.State);
         Assert.Equal(intent.ChildTaskId, binding.TaskId); Assert.Equal(intent.ChildContextId, binding.ContextId);
         Assert.Equal(intent.ChildExecutionId, binding.ExecutionId); Assert.Equal(TaskExecutionLifecycle.Completed, binding.State);
         Assert.Equal(binding.TaskId, run.Id); Assert.Equal(1, rig.Client.Dispatches); Assert.Single(rig.Rows.ChildCreated);
-        Assert.Single(rig.AgentRows.Values); Assert.NotNull(await rig.Agents.GetRecordedInvocationEvidenceAsync(run.Id));
-        var same = await rig.Agents.RunDelegatedAsync(parent, rig.Definition.Id, "actual-child", "Actual fixed child input", [], default);
+        Assert.Single(rig.AgentRows.Values); Assert.NotNull(await rig.Agents.GetRecordedInvocationEvidenceAsync(run.Id, TestContext.Current.CancellationToken));
+        var same = await rig.Agents.RunDelegatedAsync(parent, rig.Definition.Id, "actual-child", "Actual fixed child input", [], TestContext.Current.CancellationToken);
         Assert.Equal(run, same); Assert.Equal(1, rig.Client.Dispatches); Assert.Single(rig.Rows.ChildCreated);
-        var complete = await rig.Tasks.CompleteAttemptAsync(currentParent.TaskId, currentParent.ExecutionId, parent.AttemptId, default);
+        var complete = await rig.Tasks.CompleteAttemptAsync(currentParent.TaskId, currentParent.ExecutionId, parent.AttemptId, TestContext.Current.CancellationToken);
         Assert.Equal(TaskExecutionLifecycle.Completed, complete.State);
     }
 
@@ -143,14 +143,14 @@ public sealed partial class ChatCloudPermissionCallerTests
         await using var rig = new ChildRig(); var parent = await rig.ParentAsync();
         var cause = new IOException("Exact actual finite child stream Dispose failure");
         rig.Client.OriginalDispose = Task.FromException(cause);
-        var run = await rig.Agents.RunDelegatedAsync(parent, rig.Definition.Id, "cleanup-failed", "Child input", [], default);
+        var run = await rig.Agents.RunDelegatedAsync(parent, rig.Definition.Id, "cleanup-failed", "Child input", [], TestContext.Current.CancellationToken);
         Assert.Equal(AgentRunStatus.Suspended, run.Status); Assert.Null(run.CompletedAt);
         Assert.Contains(cause.Message, run.Error, StringComparison.Ordinal);
-        var child = (await rig.Tasks.GetAsync(run.CanonicalTask!.TaskId, default))!;
+        var child = (await rig.Tasks.GetAsync(run.CanonicalTask!.TaskId, TestContext.Current.CancellationToken))!;
         Assert.Equal(TaskExecutionLifecycle.Suspended, child.State); Assert.NotNull(child.RecoveryObservation);
-        Assert.Equal(TaskRunDelegationState.ChildLinked, Assert.Single((await rig.Tasks.GetAsync(parent.Snapshot.TaskId, default))!.Delegations).State);
-        Assert.Null(await rig.Agents.GetRecordedInvocationEvidenceAsync(run.Id));
-        Assert.NotNull(await Record.ExceptionAsync(() => rig.Tasks.CompleteAttemptAsync(parent.Snapshot.TaskId, parent.Snapshot.ExecutionId, parent.AttemptId, default)));
+        Assert.Equal(TaskRunDelegationState.ChildLinked, Assert.Single((await rig.Tasks.GetAsync(parent.Snapshot.TaskId, TestContext.Current.CancellationToken))!.Delegations).State);
+        Assert.Null(await rig.Agents.GetRecordedInvocationEvidenceAsync(run.Id, TestContext.Current.CancellationToken));
+        Assert.NotNull(await Record.ExceptionAsync(() => rig.Tasks.CompleteAttemptAsync(parent.Snapshot.TaskId, parent.Snapshot.ExecutionId, parent.AttemptId, TestContext.Current.CancellationToken)));
         Assert.Equal(1, rig.Client.Dispatches); Assert.Single(rig.Rows.ChildCreated);
     }
 
@@ -158,15 +158,15 @@ public sealed partial class ChatCloudPermissionCallerTests
     public async Task Delegation_copied_parent_cannot_retrieve_already_acknowledged_intent_or_completed_child_result()
     {
         await using var rig = new ChildRig(); var parent = await rig.ParentAsync();
-        var intent = await rig.Tasks.RegisterOriginalDelegationIntentAsync(parent, "private-retrieval", new string('f', 64), "Child", [], default);
+        var intent = await rig.Tasks.RegisterOriginalDelegationIntentAsync(parent, "private-retrieval", new string('f', 64), "Child", [], TestContext.Current.CancellationToken);
         Assert.Throws<InvalidOperationException>(() =>
-        { _ = rig.Tasks.RegisterOriginalDelegationIntentAsync(parent with { }, "private-retrieval", new string('f', 64), "Child", [], default); });
-        Assert.Same(intent, await rig.Tasks.RegisterOriginalDelegationIntentAsync(parent, "private-retrieval", new string('f', 64), "Child", [], default));
-        var run = await rig.Agents.RunDelegatedAsync(parent, rig.Definition.Id, "private-child", "Child input", [], default);
+        { _ = rig.Tasks.RegisterOriginalDelegationIntentAsync(parent with { }, "private-retrieval", new string('f', 64), "Child", [], TestContext.Current.CancellationToken); });
+        Assert.Same(intent, await rig.Tasks.RegisterOriginalDelegationIntentAsync(parent, "private-retrieval", new string('f', 64), "Child", [], TestContext.Current.CancellationToken));
+        var run = await rig.Agents.RunDelegatedAsync(parent, rig.Definition.Id, "private-child", "Child input", [], TestContext.Current.CancellationToken);
         Assert.Equal(AgentRunStatus.Completed, run.Status); Assert.Equal(1, rig.Client.Dispatches);
         Assert.Throws<InvalidOperationException>(() =>
-        { _ = rig.Agents.RunDelegatedAsync(parent with { }, rig.Definition.Id, "private-child", "Child input", [], default); });
-        Assert.Equal(run, await rig.Agents.RunDelegatedAsync(parent, rig.Definition.Id, "private-child", "Child input", [], default));
+        { _ = rig.Agents.RunDelegatedAsync(parent with { }, rig.Definition.Id, "private-child", "Child input", [], TestContext.Current.CancellationToken); });
+        Assert.Equal(run, await rig.Agents.RunDelegatedAsync(parent, rig.Definition.Id, "private-child", "Child input", [], TestContext.Current.CancellationToken));
         Assert.Equal(1, rig.Client.Dispatches); Assert.Single(rig.Rows.ChildCreated);
     }
 
@@ -183,7 +183,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         fault.SetException([first, second]);
         var raw = canceled ? Task.FromCanceled<TaskExecutionSnapshot?>(withdrawal.Token) : fault.Task;
         rig.Rows.ReadOriginal = (_, _) => raw;
-        var actual = rig.Tasks.RegisterOriginalDelegationIntentAsync(parent, "read-custody", new string('1', 64), "Child", [], default);
+        var actual = rig.Tasks.RegisterOriginalDelegationIntentAsync(parent, "read-custody", new string('1', 64), "Child", [], TestContext.Current.CancellationToken);
         try { Assert.NotNull(await Record.ExceptionAsync(() => actual)); }
         finally { rig.Rows.ReadOriginal = null; }
         if (canceled)
@@ -194,7 +194,7 @@ public sealed partial class ChatCloudPermissionCallerTests
             Assert.Contains(Leaves(actual.Exception!), value => ReferenceEquals(value, first));
             Assert.Contains(Leaves(actual.Exception!), value => ReferenceEquals(value, second));
         }
-        Assert.Empty((await rig.Tasks.GetAsync(parent.Snapshot.TaskId, default))!.Delegations);
+        Assert.Empty((await rig.Tasks.GetAsync(parent.Snapshot.TaskId, TestContext.Current.CancellationToken))!.Delegations);
         Assert.Empty(rig.Rows.ChildCreated); Assert.Equal(0, rig.Client.Dispatches);
     }
 
@@ -202,21 +202,21 @@ public sealed partial class ChatCloudPermissionCallerTests
     public async Task Delegation_remote_permission_approval_continues_same_actual_child_without_second_creation_begin_or_user_input()
     {
         await using var rig = new ChildRig(remoteAsk: true); var parent = await rig.ParentAsync();
-        var paused = await rig.Agents.RunDelegatedAsync(parent, rig.Definition.Id, "remote-child", "Same private child input", [], default);
+        var paused = await rig.Agents.RunDelegatedAsync(parent, rig.Definition.Id, "remote-child", "Same private child input", [], TestContext.Current.CancellationToken);
         Assert.Equal(AgentRunStatus.Suspended, paused.Status); Assert.Null(paused.CompletedAt);
-        var initial = (await rig.Tasks.GetAsync(paused.CanonicalTask!.TaskId, default))!;
+        var initial = (await rig.Tasks.GetAsync(paused.CanonicalTask!.TaskId, TestContext.Current.CancellationToken))!;
         Assert.Empty(initial.Attempts); Assert.NotNull(initial.ParentDelegation);
         Assert.Equal(TaskRunOriginalSettlementOutcome.NoAttemptAdmissionWasInvoked, initial.RecoveryObservation!.SettlementOutcome);
-        Assert.Equal(TaskRunDelegationState.ChildLinked, Assert.Single((await rig.Tasks.GetAsync(parent.Snapshot.TaskId, default))!.Delegations).State);
+        Assert.Equal(TaskRunDelegationState.ChildLinked, Assert.Single((await rig.Tasks.GetAsync(parent.Snapshot.TaskId, TestContext.Current.CancellationToken))!.Delegations).State);
         Assert.False(rig.Agents.HasOriginalUnstartedRetrySource(paused.Id));
         var user = await ReadActualChildUserAsync(rig, initial);
         var waiting = Assert.Single(rig.PermissionRows.Rows.Values);
         Assert.Equal(0, rig.Client.Dispatches); Assert.Single(rig.Rows.ChildCreated);
-        await rig.PermissionOwner!.ApproveOriginalAsync(waiting.Id, default);
+        await rig.PermissionOwner!.ApproveOriginalAsync(waiting.Id, TestContext.Current.CancellationToken);
         Assert.True(rig.Agents.HasOriginalUnstartedRetrySource(paused.Id)); Assert.Equal(0, rig.Client.Dispatches);
-        var complete = await rig.Agents.RetryAsync(paused.Id, default);
+        var complete = await rig.Agents.RetryAsync(paused.Id, TestContext.Current.CancellationToken);
         Assert.Equal(paused.Id, complete.Id); Assert.Equal(AgentRunStatus.Completed, complete.Status);
-        var child = (await rig.Tasks.GetAsync(initial.TaskId, default))!;
+        var child = (await rig.Tasks.GetAsync(initial.TaskId, TestContext.Current.CancellationToken))!;
         Assert.Equal(initial.TaskId, child.TaskId); Assert.Equal(initial.ContextId, child.ContextId); Assert.Equal(initial.ExecutionId, child.ExecutionId);
         Assert.Equal(initial.ParentDelegation, child.ParentDelegation); Assert.Equal(TaskExecutionLifecycle.Completed, child.State);
         Assert.Null(child.RecoveryObservation); Assert.Equal(JsonSerializer.Serialize(initial.RecoveryObservation), JsonSerializer.Serialize(Assert.Single(child.RecoveryHistory)));
@@ -231,25 +231,25 @@ public sealed partial class ChatCloudPermissionCallerTests
         var actualChat = original.GetType().GetField("Chat", flags)!.GetValue(original)!;
         var actualCustody = actualChat.GetType().GetField("Original", flags)!.GetValue(actualChat)!;
         Assert.Same(user, actualCustody.GetType().GetField("OriginalUserMessage", flags)!.GetValue(actualCustody));
-        var acknowledgedParent = (await rig.Tasks.GetAsync(parent.Snapshot.TaskId, default))!;
+        var acknowledgedParent = (await rig.Tasks.GetAsync(parent.Snapshot.TaskId, TestContext.Current.CancellationToken))!;
         Assert.Equal(TaskRunDelegationState.ChildCompleted, Assert.Single(acknowledgedParent.Delegations).State);
-        Assert.NotNull(await rig.Agents.GetRecordedInvocationEvidenceAsync(complete.Id));
+        Assert.NotNull(await rig.Agents.GetRecordedInvocationEvidenceAsync(complete.Id, TestContext.Current.CancellationToken));
         Assert.Equal(TaskExecutionLifecycle.Completed, (await rig.Tasks.CompleteAttemptAsync(parent.Snapshot.TaskId,
-            parent.Snapshot.ExecutionId, parent.AttemptId, default)).State);
+            parent.Snapshot.ExecutionId, parent.AttemptId, TestContext.Current.CancellationToken)).State);
     }
 
     [Fact]
     public async Task Delegation_public_task_ids_cannot_replace_private_saved_child_retry_after_real_approval()
     {
         await using var rig = new ChildRig(remoteAsk: true); var parent = await rig.ParentAsync();
-        var paused = await rig.Agents.RunDelegatedAsync(parent, rig.Definition.Id, "public-child", "Same child", [], default);
-        var before = (await rig.Tasks.GetAsync(paused.CanonicalTask!.TaskId, default))!;
-        await rig.PermissionOwner!.ApproveOriginalAsync(Assert.Single(rig.PermissionRows.Rows.Values).Id, default);
+        var paused = await rig.Agents.RunDelegatedAsync(parent, rig.Definition.Id, "public-child", "Same child", [], TestContext.Current.CancellationToken);
+        var before = (await rig.Tasks.GetAsync(paused.CanonicalTask!.TaskId, TestContext.Current.CancellationToken))!;
+        await rig.PermissionOwner!.ApproveOriginalAsync(Assert.Single(rig.PermissionRows.Rows.Values).Id, TestContext.Current.CancellationToken);
         var refused = await Record.ExceptionAsync(async () =>
-        { await foreach (var _ in rig.Chat.ContinueUnstartedOriginalAsync(before.TaskId, before.ExecutionId, default)) { } });
+        { await foreach (var _ in rig.Chat.ContinueUnstartedOriginalAsync(before.TaskId, before.ExecutionId, TestContext.Current.CancellationToken)) { } });
         Assert.IsType<InvalidOperationException>(refused); Assert.Equal(0, rig.Client.Dispatches); Assert.Single(rig.Rows.ChildCreated);
-        Assert.Equal(JsonSerializer.Serialize(before), JsonSerializer.Serialize(await rig.Tasks.GetAsync(before.TaskId, default)));
-        Assert.Equal(TaskRunDelegationState.ChildLinked, Assert.Single((await rig.Tasks.GetAsync(parent.Snapshot.TaskId, default))!.Delegations).State);
+        Assert.Equal(JsonSerializer.Serialize(before), JsonSerializer.Serialize(await rig.Tasks.GetAsync(before.TaskId, TestContext.Current.CancellationToken)));
+        Assert.Equal(TaskRunDelegationState.ChildLinked, Assert.Single((await rig.Tasks.GetAsync(parent.Snapshot.TaskId, TestContext.Current.CancellationToken))!.Delegations).State);
     }
 
     [Fact]
@@ -260,18 +260,18 @@ public sealed partial class ChatCloudPermissionCallerTests
         // separately faulted after that source Ask; no empty durable history can waive it.
         var originalFailure = new IOException("Exact child tracker cleanup failure");
         rig.Chat.ExecutionChanged += value => { if (value.Stage == ChatExecutionStage.Cancelled) throw originalFailure; };
-        var paused = await rig.Agents.RunDelegatedAsync(parent, rig.Definition.Id, "unknown-child", "Same child", [], default);
+        var paused = await rig.Agents.RunDelegatedAsync(parent, rig.Definition.Id, "unknown-child", "Same child", [], TestContext.Current.CancellationToken);
         Assert.Equal(AgentRunStatus.Suspended, paused.Status); Assert.Contains(originalFailure.Message, paused.Error, StringComparison.Ordinal);
-        var before = (await rig.Tasks.GetAsync(paused.CanonicalTask!.TaskId, default))!;
+        var before = (await rig.Tasks.GetAsync(paused.CanonicalTask!.TaskId, TestContext.Current.CancellationToken))!;
         Assert.Empty(before.Attempts); Assert.NotNull(before.RecoveryObservation);
         var waiting = Assert.Single(rig.PermissionRows.Rows.Values);
-        await rig.PermissionOwner!.ApproveOriginalAsync(waiting.Id, default);
+        await rig.PermissionOwner!.ApproveOriginalAsync(waiting.Id, TestContext.Current.CancellationToken);
         Assert.False(rig.Agents.HasOriginalUnstartedRetrySource(paused.Id));
-        Assert.NotNull(await Record.ExceptionAsync(() => rig.Agents.RetryAsync(paused.Id, default)));
-        Assert.Equal(JsonSerializer.Serialize(before.RecoveryObservation), JsonSerializer.Serialize((await rig.Tasks.GetAsync(before.TaskId, default))!.RecoveryObservation));
-        Assert.Empty((await rig.Tasks.GetAsync(before.TaskId, default))!.RecoveryHistory);
+        Assert.NotNull(await Record.ExceptionAsync(() => rig.Agents.RetryAsync(paused.Id, TestContext.Current.CancellationToken)));
+        Assert.Equal(JsonSerializer.Serialize(before.RecoveryObservation), JsonSerializer.Serialize((await rig.Tasks.GetAsync(before.TaskId, TestContext.Current.CancellationToken))!.RecoveryObservation));
+        Assert.Empty((await rig.Tasks.GetAsync(before.TaskId, TestContext.Current.CancellationToken))!.RecoveryHistory);
         Assert.Equal(0, rig.Client.Dispatches); Assert.Single(rig.Rows.ChildCreated);
-        Assert.Equal(TaskRunDelegationState.ChildLinked, Assert.Single((await rig.Tasks.GetAsync(parent.Snapshot.TaskId, default))!.Delegations).State);
+        Assert.Equal(TaskRunDelegationState.ChildLinked, Assert.Single((await rig.Tasks.GetAsync(parent.Snapshot.TaskId, TestContext.Current.CancellationToken))!.Delegations).State);
     }
 
     private static async Task<ChatMessage> ReadActualChildUserAsync(ChildRig rig, TaskExecutionSnapshot snapshot)

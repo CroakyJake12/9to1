@@ -104,7 +104,7 @@ public sealed partial class FilesDeveloperOriginalSetupScopeTests
     }
     private sealed class Captures(Capture capture) : IDeveloperProjectOriginalCaptureAuthority
     {
-        internal Action? OnRevalidate; internal int ResourceEffects;
+        internal Action? OnRevalidate; internal int ResourceEffects = 0;
         public bool IsIssuedOriginal(IDeveloperProjectOriginalSourceCapture actual) => ReferenceEquals(actual, capture);
         public Task RevalidateOriginalAsync(IDeveloperProjectOriginalSourceCapture actual, AuthenticatedResourceActor actor, CancellationToken token)
         { token.ThrowIfCancellationRequested(); if (!IsIssuedOriginal(actual)) throw new UnauthorizedAccessException(); var callback = OnRevalidate; OnRevalidate = null; callback?.Invoke(); return Task.CompletedTask; }

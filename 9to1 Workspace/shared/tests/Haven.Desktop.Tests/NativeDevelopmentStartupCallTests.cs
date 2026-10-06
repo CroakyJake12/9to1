@@ -1,4 +1,5 @@
 using System.Reflection;
+using Haven.Desktop.Services;
 using HavenOS.Apps.Dev;
 using HavenOS.Files.NativeHost;
 using HavenOS.Home.Core;

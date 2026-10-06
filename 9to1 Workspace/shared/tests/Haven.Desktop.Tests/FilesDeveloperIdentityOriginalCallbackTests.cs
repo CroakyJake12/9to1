@@ -157,9 +157,9 @@ public sealed partial class FilesDeveloperIdentityOriginalCallbackTests
                 services.AddSingleton<IResourceStoreOwnershipAuthority, HomeResourceStoreOwnershipAuthority>();
                 services.AddSingleton<ResourceAuthorizationService>(); services.AddFilesNativeHost();
                 rig.Graph = services.BuildServiceProvider();
-                rig.Actor = (await profiles.GetCurrentAsync())!;
+                rig.Actor = (await profiles.GetCurrentAsync(TestContext.Current.CancellationToken))!;
                 var chosen = Path.Combine(rig.Directory, "chosen"); System.IO.Directory.CreateDirectory(chosen);
-                await rig.Graph.GetRequiredService<NativeFilesWorkspaceService>().ConfigureNewAsync(chosen, rig.Graph.GetRequiredService<HomeLocalStoreOwnership>());
+                await rig.Graph.GetRequiredService<NativeFilesWorkspaceService>().ConfigureNewAsync(chosen, rig.Graph.GetRequiredService<HomeLocalStoreOwnership>(), TestContext.Current.CancellationToken);
                 var workspace = (await rig.Graph.GetRequiredService<NativeFilesWorkspaceAuthority>().GetCurrentAsync())!;
                 var folderId = new HostedItemId(Guid.NewGuid()); var now = DateTimeOffset.UtcNow;
                 var operation = new FilesOperation(new(Guid.NewGuid()), rig.Actor.ActorId, folderId, null, null,

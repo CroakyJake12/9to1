@@ -14,16 +14,16 @@ public sealed partial class ChatCloudPermissionCallerTests
     public async Task Canonical_outer_dispose_is_the_same_actual_task_and_keeps_current_after_real_suspension_ack()
     {
         await using var rig = new Rig();
-        var actual = StartProcessChat(rig).GetAsyncEnumerator();
+        var actual = StartProcessChat(rig).GetAsyncEnumerator(TestContext.Current.CancellationToken);
         Assert.True(await actual.MoveNextAsync());
         var published = actual.Current;
         Assert.Equal(ChatStreamEventKind.UserMessage, published.Kind);
         var binding = rig.Service.CurrentCanonicalTask!;
         var dispose = actual.DisposeAsync().AsTask();
         Assert.Same(dispose, actual.DisposeAsync().AsTask());
-        await dispose.WaitAsync(TimeSpan.FromSeconds(5));
+        await dispose.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         Assert.Same(published, actual.Current);
-        var acknowledged = (await rig.Tasks.GetAsync(binding.TaskId, default))!;
+        var acknowledged = (await rig.Tasks.GetAsync(binding.TaskId, TestContext.Current.CancellationToken))!;
         Assert.Equal(binding.TaskId, acknowledged.TaskId);
         Assert.Equal(binding.ContextId, acknowledged.ContextId);
         Assert.Equal(binding.ExecutionId, acknowledged.ExecutionId);
@@ -33,22 +33,22 @@ public sealed partial class ChatCloudPermissionCallerTests
         Assert.Equal(0, rig.Client.Dispatches);
         var close = rig.Tasks.CloseAndSuspendOriginalProducersAsync();
         Assert.Same(close, rig.Tasks.CloseAndSuspendOriginalProducersAsync());
-        await close.WaitAsync(TimeSpan.FromSeconds(5));
+        await close.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
     }
 
     [Fact]
     public async Task Whole_process_request_refuses_existing_moves_enumeration_and_new_chat_before_any_body()
     {
         await using var rig = new Rig();
-        var claimed = StartProcessChat(rig).GetAsyncEnumerator();
+        var claimed = StartProcessChat(rig).GetAsyncEnumerator(TestContext.Current.CancellationToken);
         var unclaimed = StartProcessChat(rig);
         rig.Tasks.RequestOriginalProcessRetirement();
         Assert.Throws<InvalidOperationException>(() => { claimed.MoveNextAsync(); });
-        Assert.Throws<InvalidOperationException>(() => { unclaimed.GetAsyncEnumerator(); });
+        Assert.Throws<InvalidOperationException>(() => { unclaimed.GetAsyncEnumerator(TestContext.Current.CancellationToken); });
         Assert.Throws<InvalidOperationException>(() => { StartProcessChat(rig); });
         var close = rig.Tasks.CloseAndSuspendOriginalProducersAsync();
         Assert.Same(close, rig.Tasks.CloseAndSuspendOriginalProducersAsync());
-        await close.WaitAsync(TimeSpan.FromSeconds(5));
+        await close.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         Assert.Null(rig.Service.CurrentCanonicalTask);
         Assert.Empty(rig.Conversations.Messages);
         Assert.Equal(0, rig.Capture.ChatCaptures);
@@ -60,8 +60,8 @@ public sealed partial class ChatCloudPermissionCallerTests
     public async Task Request_all_reaches_both_actual_cancellation_callbacks_before_either_whole_close_is_joined()
     {
         await using var rig = new Rig();
-        var first = StartProcessChat(rig).GetAsyncEnumerator();
-        var second = StartProcessChat(rig).GetAsyncEnumerator();
+        var first = StartProcessChat(rig).GetAsyncEnumerator(TestContext.Current.CancellationToken);
+        var second = StartProcessChat(rig).GetAsyncEnumerator(TestContext.Current.CancellationToken);
         Assert.True(await first.MoveNextAsync());
         Assert.True(await second.MoveNextAsync());
         var firstEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -76,7 +76,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         var close = rig.Tasks.CloseAndSuspendOriginalProducersAsync();
         try
         {
-            await Task.WhenAll(firstEntered.Task, secondEntered.Task).WaitAsync(TimeSpan.FromSeconds(5));
+            await Task.WhenAll(firstEntered.Task, secondEntered.Task).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             Assert.False(close.IsCompleted);
             Assert.Throws<InvalidOperationException>(() => { first.MoveNextAsync(); });
             Assert.Throws<InvalidOperationException>(() => { second.MoveNextAsync(); });
@@ -84,7 +84,7 @@ public sealed partial class ChatCloudPermissionCallerTests
             Assert.Same(ReadProcessMember<Task>(second, "_dispose"), second.DisposeAsync().AsTask());
             Assert.Equal(0, rig.Client.Dispatches);
         }
-        finally { firstRelease.Set(); secondRelease.Set(); await close.WaitAsync(TimeSpan.FromSeconds(5)); }
+        finally { firstRelease.Set(); secondRelease.Set(); await JoinIndependentCanonicalFixtureCleanupAsync(close); }
         Assert.Equal(TaskExecutionLifecycle.Suspended, rig.Service.CurrentCanonicalTask!.State);
     }
 
@@ -103,12 +103,12 @@ public sealed partial class ChatCloudPermissionCallerTests
                 refusal = Record.Exception(() => { rig.Tasks.CloseAndSuspendOriginalProducersAsync(); });
             }, null);
         };
-        var actual = StartProcessChat(rig).GetAsyncEnumerator();
+        var actual = StartProcessChat(rig).GetAsyncEnumerator(TestContext.Current.CancellationToken);
         Assert.True(await actual.MoveNextAsync());
         Assert.IsType<InvalidOperationException>(refusal);
         Assert.Equal(ChatStreamEventKind.UserMessage, actual.Current.Kind);
         await actual.DisposeAsync();
-        await rig.Tasks.CloseAndSuspendOriginalProducersAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        await rig.Tasks.CloseAndSuspendOriginalProducersAsync().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         Assert.Equal(0, rig.Client.Dispatches);
         Assert.NotNull(rig.Service.CurrentCanonicalTask!.RecoveryObservation);
     }
@@ -127,9 +127,9 @@ public sealed partial class ChatCloudPermissionCallerTests
         var actualProducer = ReadProcessMember<Task<AgentRun>>(presentation, "Producer");
         var first = new OperationCanceledException("Actual faulted discovery OCE, independent from process stop");
         var second = new IOException("Actual late discovery sibling");
-        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         lease.RequestOriginalObservationRetirement();
-        await lease.DetachAndDrainOriginalObservationAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        await lease.DetachAndDrainOriginalObservationAsync().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         Assert.Equal(AgentRunObservationDisposition.ObservationDetached, (await lease.WaitOriginalObservationAsync()).Disposition);
         Assert.False(actualProducer.IsCompleted);
         service.RequestOriginalProcessRetirement();
@@ -139,10 +139,10 @@ public sealed partial class ChatCloudPermissionCallerTests
         {
             Assert.False(close.IsCompleted);
             Assert.False(raw.Task.IsCompleted);
-            Assert.Throws<InvalidOperationException>(() => { service.StartObservedOriginalRun(definition.Id, "Denied after seal", default); });
+            Assert.Throws<InvalidOperationException>(() => { service.StartObservedOriginalRun(definition.Id, "Denied after seal", TestContext.Current.CancellationToken); });
         }
         finally { raw.TrySetException([first, second]); }
-        var failed = await Record.ExceptionAsync(() => close.WaitAsync(TimeSpan.FromSeconds(5)));
+        var failed = await Record.ExceptionAsync(() => close.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
         Assert.NotNull(failed);
         Assert.True(close.IsFaulted);
         Assert.True(actualProducer.IsFaulted);
@@ -178,11 +178,11 @@ public sealed partial class ChatCloudPermissionCallerTests
         Assert.IsType<InvalidOperationException>(refusal);
         Assert.Equal(AgentRunStatus.Suspended, returned.Status);
         Assert.Equal(TaskExecutionLifecycle.Suspended, returned.CanonicalTask!.State);
-        Assert.Null(await service.GetRecordedInvocationEvidenceAsync(returned.Id));
+        Assert.Null(await service.GetRecordedInvocationEvidenceAsync(returned.Id, TestContext.Current.CancellationToken));
         var close = service.CloseAndSuspendOriginalProducersAsync();
         Assert.Same(close, service.CloseAndSuspendOriginalProducersAsync());
-        await close.WaitAsync(TimeSpan.FromSeconds(5));
-        await rig.Tasks.CloseAndSuspendOriginalProducersAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        await close.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await rig.Tasks.CloseAndSuspendOriginalProducersAsync().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -199,8 +199,8 @@ public sealed partial class ChatCloudPermissionCallerTests
             taskCloudPermissionRemediation: rig.Owner);
         var stream = service.SendAsync(rig.Conversation, "Bounded controlled raw output", rig.Provider.Model.Model with
             { Name = rig.Provider.Model.Key, Capabilities = new HashSet<ToolCapability> { ToolCapability.Text } },
-            EffortLevel.Medium, [], "controlled", "", DuoMode.Solo, null, null, null, null, default,
-            taskExecutionIntent: TaskRunExecutionIntent.CanonicalAgenticTask).GetAsyncEnumerator();
+            EffortLevel.Medium, [], "controlled", "", DuoMode.Solo, null, null, null, null, TestContext.Current.CancellationToken,
+            taskExecutionIntent: TaskRunExecutionIntent.CanonicalAgenticTask).GetAsyncEnumerator(TestContext.Current.CancellationToken);
         for (var index = 0; index < 4096; index++) Assert.True(await stream.MoveNextAsync());
         var retainedCurrent = stream.Current;
         var priorRawMoves = raw.Moves;
@@ -212,18 +212,18 @@ public sealed partial class ChatCloudPermissionCallerTests
         Assert.All(actualMoves, actual => Assert.True(actual.IsCompletedSuccessfully));
         var dispose = stream.DisposeAsync().AsTask();
         Assert.Same(dispose, stream.DisposeAsync().AsTask());
-        var failedClose = await Record.ExceptionAsync(() => dispose.WaitAsync(TimeSpan.FromSeconds(5)));
+        var failedClose = await Record.ExceptionAsync(() => dispose.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
         Assert.NotNull(failedClose);
         Assert.Contains(Leaves(failedClose!), cause => ReferenceEquals(cause, refused));
         Assert.Same(retainedCurrent, stream.Current);
         Assert.Equal(1, raw.Disposals);
-        var current = (await rig.Tasks.GetAsync(service.CurrentCanonicalTask!.TaskId, default))!;
+        var current = (await rig.Tasks.GetAsync(service.CurrentCanonicalTask!.TaskId, TestContext.Current.CancellationToken))!;
         Assert.Equal(TaskExecutionLifecycle.Suspended, current.State);
         Assert.NotNull(current.RecoveryObservation);
         Assert.Empty(current.Attempts);
         Assert.Equal(0, rig.Client.Dispatches);
         var processClose = rig.Tasks.CloseAndSuspendOriginalProducersAsync();
-        var processFailure = await Record.ExceptionAsync(() => processClose.WaitAsync(TimeSpan.FromSeconds(5)));
+        var processFailure = await Record.ExceptionAsync(() => processClose.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
         Assert.NotNull(processFailure);
         Assert.Contains(Leaves(processFailure!), cause => ReferenceEquals(cause, refused));
     }
@@ -271,13 +271,13 @@ public sealed partial class ChatCloudPermissionCallerTests
         var actual = service.RunAsync(definition.Id, "Real held history read then callbacks", CancellationToken.None);
         try
         {
-            await rows.ReadEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await rows.ReadEntered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             Assert.False(actual.IsCompleted);
             rows.ReleaseSameAcknowledgedRead();
-            var returned = await actual.WaitAsync(TimeSpan.FromSeconds(5));
+            var returned = await actual.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             Assert.Equal(AgentRunStatus.Suspended, returned.Status);
             Assert.NotEmpty(refusals);
-            Assert.Equal(returned, await rows.Inner.GetAsync(returned.Id, default));
+            Assert.Equal(returned, await rows.Inner.GetAsync(returned.Id, TestContext.Current.CancellationToken));
             Assert.True(actual.IsCompletedSuccessfully);
             var process = Assert.Single(ReadProcessMember<IEnumerable>(service, "_agentProcessOperations").Cast<object>());
             var original = ReadProcessMember<object>(ReadProcessMember<object>(process, "Original"), "OriginalCanonicalAgent");
@@ -287,13 +287,13 @@ public sealed partial class ChatCloudPermissionCallerTests
             Assert.Contains(histories, history => ReadProcessMember<IReadOnlyList<Task>>(history, "Sources")
                 .Any(task => ReferenceEquals(task, rows.LastWrite)));
             Assert.Empty(ReadProcessMember<IEnumerable>(service, "OriginalObservationFailures").Cast<object>());
-            await service.CloseAndSuspendOriginalProducersAsync().WaitAsync(TimeSpan.FromSeconds(5));
-            await rig.Tasks.CloseAndSuspendOriginalProducersAsync().WaitAsync(TimeSpan.FromSeconds(5));
+            await service.CloseAndSuspendOriginalProducersAsync().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            await rig.Tasks.CloseAndSuspendOriginalProducersAsync().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         }
         finally
         {
             rows.ReleaseSameAcknowledgedRead();
-            _ = await Record.ExceptionAsync(() => actual.WaitAsync(TimeSpan.FromSeconds(5)));
+            _ = await Record.ExceptionAsync(() => JoinIndependentCanonicalFixtureCleanupAsync(actual));
         }
     }
 
@@ -311,26 +311,30 @@ public sealed partial class ChatCloudPermissionCallerTests
         service.RunChanged += value =>
         { if (value.Status == AgentRunStatus.Suspended) throw changedCause; };
         var actual = service.RunAsync(definition.Id, "Durable ACK distinct from observer outcome", CancellationToken.None);
-        var returned = await actual.WaitAsync(TimeSpan.FromSeconds(5));
+        var returned = await actual.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         Assert.True(actual.IsCompletedSuccessfully);
         Assert.Equal(AgentRunStatus.Suspended, returned.Status);
         Assert.Equal(TaskExecutionLifecycle.Suspended, returned.CanonicalTask!.State);
-        Assert.Equal(returned, await rows.Inner.GetAsync(returned.Id, default));
+        Assert.Equal(returned, await rows.Inner.GetAsync(returned.Id, TestContext.Current.CancellationToken));
         Assert.True(rows.LastWrite!.IsCompletedSuccessfully);
         var errors = ReadProcessMember<IEnumerable>(service, "OriginalObservationFailures").Cast<object>().ToArray();
         Assert.Contains(errors, value => ReferenceEquals(ReadProcessMember<Exception>(value, "Item2"), activityCause));
         Assert.Contains(errors, value => ReferenceEquals(ReadProcessMember<Exception>(value, "Item2"), changedCause));
         var processClose = service.CloseAndSuspendOriginalProducersAsync();
-        var failure = await Record.ExceptionAsync(() => processClose.WaitAsync(TimeSpan.FromSeconds(5)));
+        var failure = await Record.ExceptionAsync(() => processClose.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
         Assert.NotNull(failure);
         Assert.True(processClose.IsFaulted);
         Assert.Contains(Leaves(failure!), cause => ReferenceEquals(cause, activityCause));
         Assert.Contains(Leaves(failure!), cause => ReferenceEquals(cause, changedCause));
-        Assert.Equal(returned, await rows.Inner.GetAsync(returned.Id, default));
+        Assert.Equal(returned, await rows.Inner.GetAsync(returned.Id, TestContext.Current.CancellationToken));
         Assert.Single(ReadProcessMember<IEnumerable>(service, "_agentProcessOperations").Cast<object>());
-        await rig.Tasks.CloseAndSuspendOriginalProducersAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        await rig.Tasks.CloseAndSuspendOriginalProducersAsync().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         Assert.Equal(0, rig.Client.Dispatches);
     }
+
+    // Independent mandatory cleanup keeps the original timeout and never withdraws its join on runner cancellation.
+    private static Task JoinIndependentCanonicalFixtureCleanupAsync(Task sameActual) =>
+        sameActual.WaitAsync(TimeSpan.FromSeconds(5), CancellationToken.None);
 
     private static (AgentTaskRuntimeService Runtime, AgentDefinition Definition) CreateProcessPublicationAgent(
         Rig rig, ProcessPublicationRows rows, FloatingActivityStateStore activity)

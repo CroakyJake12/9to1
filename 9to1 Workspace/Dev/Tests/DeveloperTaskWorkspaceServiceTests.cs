@@ -16,11 +16,11 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         try
         {
             var store = new FileDeveloperWorkspaceStore(directory);
-            Assert.True((await store.CreateAsync(f.Store.Workspace)).Succeeded);
+            Assert.True((await store.CreateAsync(f.Store.Workspace, cancellationToken: OriginalTestBodyToken)).Succeeded);
             var service = new DeveloperTaskWorkspaceService(new FileDeveloperWorkspaceStore(directory),
                 new(new Conversations(f.Conversation), f.Containers), f.Tasks, f.Owner, new(f.Tools));
-            var opened = await service.ResolveAsync(f.Reference);
-            var reopened = await service.ResolveAsync(f.Reference);
+            var opened = await service.ResolveAsync(f.Reference, cancellationToken: OriginalTestBodyToken);
+            var reopened = await service.ResolveAsync(f.Reference, cancellationToken: OriginalTestBodyToken);
             Assert.True(opened.Succeeded);
             Assert.True(reopened.Succeeded);
             Assert.Equal(f.Reference, reopened.Value!.Reference);
@@ -35,7 +35,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     public async Task Resolve_preserves_existing_workspace_project_root_and_repository_identity()
     {
         var f = await Fixture.CreateAsync();
-        var result = await f.Dev.ResolveAsync(f.Reference);
+        var result = await f.Dev.ResolveAsync(f.Reference, cancellationToken: OriginalTestBodyToken);
         Assert.True(result.Succeeded);
         Assert.Same(f.Store.Workspace, result.Value!.Workspace);
         Assert.Equal(f.Reference.ProjectId, result.Value.Project.ProjectId);
@@ -48,8 +48,8 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     public async Task Stale_workspace_and_project_revisions_refuse_before_any_tool_preparation()
     {
         var f = await Fixture.CreateAsync();
-        var staleWorkspace = await f.Dev.ResolveAsync(f.Reference with { WorkspaceRevision = 2 });
-        var staleProject = await f.Dev.ResolveAsync(f.Reference with { ProjectRevision = 2 });
+        var staleWorkspace = await f.Dev.ResolveAsync(f.Reference with { WorkspaceRevision = 2 }, cancellationToken: OriginalTestBodyToken);
+        var staleProject = await f.Dev.ResolveAsync(f.Reference with { ProjectRevision = 2 }, cancellationToken: OriginalTestBodyToken);
         Assert.Equal(DeveloperOperationErrorCode.RevisionConflict, staleWorkspace.Error!.Code);
         Assert.Equal(DeveloperOperationErrorCode.RevisionConflict, staleProject.Error!.Code);
         Assert.Equal(0, f.Owner.PrepareCalls);
@@ -60,7 +60,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     {
         var f = await Fixture.CreateAsync();
         f.Containers.Container = f.Containers.Container with { RootPath = Path.GetFullPath("other-root") };
-        var result = await f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document);
+        var result = await f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document, cancellationToken: OriginalTestBodyToken);
         Assert.Equal(DeveloperOperationErrorCode.PermissionDenied, result.Error!.Code);
         Assert.Equal(0, f.Owner.PrepareCalls);
         Assert.Equal(0, f.Tools.ReadCalls);
@@ -70,10 +70,10 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     public async Task Source_read_does_not_inherit_execution_trust_but_process_requires_it()
     {
         var f = await Fixture.CreateAsync(trusted: false);
-        var read = await f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document);
+        var read = await f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document, cancellationToken: OriginalTestBodyToken);
         Assert.True(read.Succeeded);
         Assert.Equal("original source", read.Value!.OriginalToolResult!.Output);
-        var run = await f.Dev.RunTestsAsync(f.Reference, f.Context(), "dotnet test");
+        var run = await f.Dev.RunTestsAsync(f.Reference, f.Context(), "dotnet test", cancellationToken: OriginalTestBodyToken);
         Assert.Equal(DeveloperOperationErrorCode.PermissionRequired, run.Error!.Code);
         Assert.Equal(0, f.Tools.ProcessCalls);
     }
@@ -82,8 +82,8 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     public async Task Wrong_context_or_stale_task_revision_does_not_dispatch()
     {
         var f = await Fixture.CreateAsync();
-        var wrong = await f.Dev.ReadFileAsync(f.Reference, f.Context() with { ContextId = Guid.NewGuid() }, f.Document);
-        var stale = await f.Dev.ReadFileAsync(f.Reference, f.Context() with { PersistenceRevision = f.Current.PersistenceRevision + 1 }, f.Document);
+        var wrong = await f.Dev.ReadFileAsync(f.Reference, f.Context() with { ContextId = Guid.NewGuid() }, f.Document, cancellationToken: OriginalTestBodyToken);
+        var stale = await f.Dev.ReadFileAsync(f.Reference, f.Context() with { PersistenceRevision = f.Current.PersistenceRevision + 1 }, f.Document, cancellationToken: OriginalTestBodyToken);
         Assert.Equal(DeveloperOperationErrorCode.InvalidInput, wrong.Error!.Code);
         Assert.Equal(DeveloperOperationErrorCode.RevisionConflict, stale.Error!.Code);
         Assert.Equal(0, f.Owner.ExecuteCalls);
@@ -96,12 +96,12 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         f.Owner.BeforeBody = release.Task;
         var context = f.Context();
-        var first = f.Dev.ReadFileAsync(f.Reference, context, f.Document);
+        var first = f.Dev.ReadFileAsync(f.Reference, context, f.Document, cancellationToken: OriginalTestBodyToken);
         Task<DeveloperOperationResult<DeveloperActionObservation>>? duplicate = null;
         try
         {
             await f.Owner.Entered.Task;
-            duplicate = f.Dev.ReadFileAsync(f.Reference, context, f.Document);
+            duplicate = f.Dev.ReadFileAsync(f.Reference, context, f.Document, cancellationToken: OriginalTestBodyToken);
             Assert.NotSame(first, duplicate); // fresh authority driver; SAME business body is not redispatched
             Assert.Equal(1, f.Owner.ExecuteCalls);
             Assert.False(first.IsCompleted);
@@ -118,8 +118,8 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     {
         var f = await Fixture.CreateAsync();
         var context = f.Context();
-        var first = await f.Dev.ReadFileAsync(f.Reference, context, f.Document);
-        var second = await f.Dev.ReadFileAsync(f.Reference, context, f.Document);
+        var first = await f.Dev.ReadFileAsync(f.Reference, context, f.Document, cancellationToken: OriginalTestBodyToken);
+        var second = await f.Dev.ReadFileAsync(f.Reference, context, f.Document, cancellationToken: OriginalTestBodyToken);
         Assert.True(first.Succeeded);
         Assert.True(second.Value!.AlreadyAcknowledged);
         Assert.Null(second.Value.OriginalToolResult);
@@ -132,7 +132,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     {
         var f = await Fixture.CreateAsync();
         f.Owner.OnPrepare = () => f.Store.Workspace = f.Store.Workspace with { Revision = 2 };
-        var actual = f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document);
+        var actual = f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document, cancellationToken: OriginalTestBodyToken);
         await Assert.ThrowsAnyAsync<Exception>(() => actual);
         Assert.Equal(0, f.Tools.ReadCalls);
         Assert.Equal(0, f.Owner.ExecuteCalls);
@@ -146,7 +146,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         f.Store.BeforeRead = async () => { entered.TrySetResult(); await release.Task; };
-        var actual = f.Dev.GitAsync(f.Reference, f.Context(), DeveloperGitOperation.Status);
+        var actual = f.Dev.GitAsync(f.Reference, f.Context(), DeveloperGitOperation.Status, cancellationToken: OriginalTestBodyToken);
         Task? close = null;
         try
         {
@@ -175,12 +175,12 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
             denials++;
             f.Dev.RequestRetirement();
         };
-        var result = await f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document);
+        var result = await f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document, cancellationToken: OriginalTestBodyToken);
         Assert.True(result.Succeeded);
         Assert.Equal(1, denials);
         Assert.Equal(1, f.Tools.ReadCalls);
         await f.Dev.CloseAndDrainAsync();
-        Assert.Throws<InvalidOperationException>(() => { _ = f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document); });
+        Assert.Throws<InvalidOperationException>(() => { _ = f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document, cancellationToken: OriginalTestBodyToken); });
     }
 
     [Fact]
@@ -192,7 +192,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         var failed = new TaskCompletionSource<DeveloperOperationResult<DeveloperWorkspace>>();
         failed.SetException([first, second]);
         f.Store.ActualRead = failed.Task;
-        var actual = f.Dev.GitAsync(f.Reference, f.Context(), DeveloperGitOperation.Status);
+        var actual = f.Dev.GitAsync(f.Reference, f.Context(), DeveloperGitOperation.Status, cancellationToken: OriginalTestBodyToken);
         var error = await Assert.ThrowsAnyAsync<Exception>(() => actual);
         Assert.True(Contains(error, first));
         Assert.True(Contains(error, second));
@@ -207,7 +207,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     {
         var f = await Fixture.CreateAsync();
         f.Tools.Process = new(1, "one test failed", "", TimeSpan.FromMilliseconds(2), false);
-        var result = await f.Dev.RunTestsAsync(f.Reference, f.Context(), "dotnet test");
+        var result = await f.Dev.RunTestsAsync(f.Reference, f.Context(), "dotnet test", cancellationToken: OriginalTestBodyToken);
         Assert.True(result.Succeeded);
         Assert.Same(f.Tools.Process, result.Value!.OriginalProcessResult);
         Assert.False(result.Value.ProcessSucceeded);
@@ -223,7 +223,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         f.Owner.UnknownOutcome = true;
         var context = f.Context();
         var edit = new DeveloperReviewedTextEdit(f.Document, new string('a', 64), "replacement");
-        var actual = f.Dev.ApplyEditAsync(f.Reference, context, edit);
+        var actual = f.Dev.ApplyEditAsync(f.Reference, context, edit, cancellationToken: OriginalTestBodyToken);
         var result = await actual;
         Assert.Equal(TaskPlanNodeState.RequiresReexecution, result.Value!.Action!.State);
         Assert.Null(result.Value.OwnerReceiptReference);
@@ -239,7 +239,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         var originalOwnerTask = Assert.Single(originalSources.OfType<Task<TaskRunToolActionResult>>());
         var originalPreparationCount = f.Owner.PrepareCalls;
         var revalidations = ((Lease)f.Attempt.Lease).Revalidations;
-        var observation = f.Dev.ApplyEditAsync(f.Reference, context, edit);
+        var observation = f.Dev.ApplyEditAsync(f.Reference, context, edit, cancellationToken: OriginalTestBodyToken);
         Assert.NotSame(actual, observation);
         Assert.Same(result, await observation);
         Assert.Same(originalTask, retained.GetType().GetField("Original")!.GetValue(retained));
@@ -250,7 +250,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         Assert.Equal(0, f.Tools.WriteCalls);
         // Copied IDs after actual actor/attempt retirement do not disclose that old result.
         ((Lease)f.Attempt.Lease).Retired = true;
-        var denied = f.Dev.ApplyEditAsync(f.Reference, context with { }, edit);
+        var denied = f.Dev.ApplyEditAsync(f.Reference, context with { }, edit, cancellationToken: OriginalTestBodyToken);
         var originalRefusal = await Assert.ThrowsAnyAsync<Exception>(() => denied);
         Assert.True(ContainsType<UnauthorizedAccessException>(originalRefusal));
         Assert.Equal(1, f.Owner.ExecuteCalls);
@@ -267,7 +267,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     {
         var f = await Fixture.CreateAsync();
         var reads = f.Store.GetCalls;
-        Assert.Throws<ArgumentException>(() => { _ = f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document with { RelativePath = path }); });
+        Assert.Throws<ArgumentException>(() => { _ = f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document with { RelativePath = path }, cancellationToken: OriginalTestBodyToken); });
         Assert.Equal(reads, f.Store.GetCalls);
         Assert.Equal(0, f.Tools.ReadCalls);
     }
@@ -277,13 +277,13 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     {
         var f = await Fixture.CreateAsync(); var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         f.Owner.BeforeBody = release.Task; var context = f.Context();
-        var first = f.Dev.ReadFileAsync(f.Reference, context, f.Document);
+        var first = f.Dev.ReadFileAsync(f.Reference, context, f.Document, cancellationToken: OriginalTestBodyToken);
         Task<DeveloperOperationResult<DeveloperActionObservation>>? duplicate = null;
         try
         {
             await f.Owner.Entered.Task;
             await f.Attempt.Lease.DisposeAsync();
-            duplicate = f.Dev.ReadFileAsync(f.Reference with { }, context with { }, f.Document);
+            duplicate = f.Dev.ReadFileAsync(f.Reference with { }, context with { }, f.Document, cancellationToken: OriginalTestBodyToken);
             var refused = await Assert.ThrowsAnyAsync<Exception>(() => duplicate);
             Assert.True(ContainsType<UnauthorizedAccessException>(refused));
             Assert.Equal(1, f.Owner.ExecuteCalls);
@@ -302,7 +302,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         var heldValidation = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var validationEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         f.Owner.BeforeBody = releaseBody.Task; var context = f.Context();
-        var first = f.Dev.ReadFileAsync(f.Reference, context, f.Document);
+        var first = f.Dev.ReadFileAsync(f.Reference, context, f.Document, cancellationToken: OriginalTestBodyToken);
         Task<DeveloperOperationResult<DeveloperActionObservation>>? duplicate = null;
         try
         {
@@ -313,7 +313,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
                 if (lease.Revalidations == 4) { validationEntered.TrySetResult(); return heldValidation.Task; }
                 return Task.CompletedTask;
             };
-            duplicate = f.Dev.ReadFileAsync(f.Reference, context with { }, f.Document);
+            duplicate = f.Dev.ReadFileAsync(f.Reference, context with { }, f.Document, cancellationToken: OriginalTestBodyToken);
             releaseBody.TrySetResult(); Assert.True((await first).Succeeded);
             await validationEntered.Task; // actual post-join disclosure validation is now held
             await lease.DisposeAsync(); heldValidation.TrySetResult();
@@ -332,14 +332,14 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         var releaseValidation = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var validationEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         f.Owner.BeforeBody = releaseBody.Task; var context = f.Context();
-        var first = f.Dev.ReadFileAsync(f.Reference, context, f.Document);
+        var first = f.Dev.ReadFileAsync(f.Reference, context, f.Document, cancellationToken: OriginalTestBodyToken);
         Task<DeveloperOperationResult<DeveloperActionObservation>>? duplicate = null; Task? close = null;
         try
         {
             await f.Owner.Entered.Task;
             var lease = (Lease)f.Attempt.Lease;
             lease.BeforeRevalidate = () => { validationEntered.TrySetResult(); return releaseValidation.Task; };
-            duplicate = f.Dev.ReadFileAsync(f.Reference, context, f.Document);
+            duplicate = f.Dev.ReadFileAsync(f.Reference, context, f.Document, cancellationToken: OriginalTestBodyToken);
             await validationEntered.Task;
             close = f.Dev.CloseAndDrainAsync(); Assert.Same(close, f.Dev.CloseAndDrainAsync());
             lease.BeforeRevalidate = null; releaseBody.TrySetResult(); Assert.True((await first).Succeeded);
@@ -364,7 +364,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
             }
             return Task.CompletedTask;
         };
-        var actual = f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document); Task? close = null;
+        var actual = f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document, cancellationToken: OriginalTestBodyToken); Task? close = null;
         try { await entered.Task; close = f.Dev.CloseAndDrainAsync(); Assert.False(actual.IsCompleted); Assert.False(close.IsCompleted); }
         finally { release.TrySetResult(); await actual; if (close is not null) await close; }
         Assert.Equal(1, f.Tools.ReadCalls);
@@ -376,7 +376,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         var f = await Fixture.CreateAsync(); var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         f.Containers.BeforeRead = () => { entered.TrySetResult(); return release.Task; };
-        var actual = f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document);
+        var actual = f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document, cancellationToken: OriginalTestBodyToken);
         try
         {
             await entered.Task;
@@ -399,7 +399,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
             if (++reads == 2) f.Containers.Container = f.Containers.Container with { RootPath = Path.GetFullPath("changed-root") };
             return Task.CompletedTask;
         };
-        var result = await f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document);
+        var result = await f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document, cancellationToken: OriginalTestBodyToken);
         Assert.Equal(DeveloperOperationErrorCode.PermissionDenied, result.Error!.Code);
         Assert.Equal(0, f.Owner.PrepareCalls); Assert.Equal(0, f.Tools.ReadCalls);
         await f.Dev.CloseAndDrainAsync();
@@ -423,7 +423,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
             { Assert.Throws<InvalidOperationException>(() => { _ = f.Dev.CloseAndDrainAsync(); }); denials++; }, null);
             return Task.CompletedTask;
         };
-        var actual = f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document);
+        var actual = f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document, cancellationToken: OriginalTestBodyToken);
         try { await entered.Task; release.TrySetResult(); Assert.True((await actual).Succeeded); }
         finally { release.TrySetResult(); await actual; }
         Assert.Equal(1, denials); await f.Dev.CloseAndDrainAsync();
@@ -435,7 +435,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         var f = await Fixture.CreateAsync(); var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var raw = new TaskCompletionSource<IReadOnlyList<ContainerDefinition>>(TaskCreationOptions.RunContinuationsAsynchronously);
         f.Containers.OriginalReadSource = () => { entered.TrySetResult(); return raw.Task; };
-        var actual = f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document); Task? close = null;
+        var actual = f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document, cancellationToken: OriginalTestBodyToken); Task? close = null;
         try
         {
             await entered.Task;
@@ -468,7 +468,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         var raw = new TaskCompletionSource<IReadOnlyList<ContainerDefinition>>(TaskCreationOptions.RunContinuationsAsynchronously);
         var first = new IOException("actual repository first"); var second = new OperationCanceledException("faulted repository sibling");
         f.Containers.OriginalReadSource = () => { entered.TrySetResult(); return raw.Task; };
-        var actual = f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document); Task? close = null;
+        var actual = f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document, cancellationToken: OriginalTestBodyToken); Task? close = null;
         try
         {
             await entered.Task; close = f.Dev.CloseAndDrainAsync(); Assert.False(close.IsCompleted);
@@ -485,7 +485,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     public async Task Git_transport_uses_literal_platform_syntax_and_same_registered_process()
     {
         var f = await Fixture.CreateAsync(trusted: true);
-        var result = await f.Dev.GitAsync(f.Reference, f.Context(), DeveloperGitOperation.Status);
+        var result = await f.Dev.GitAsync(f.Reference, f.Context(), DeveloperGitOperation.Status, cancellationToken: OriginalTestBodyToken);
         Assert.True(result.Succeeded); Assert.Equal(1, f.Tools.ProcessCalls);
         var request = Assert.IsType<ProcessRequest>(f.Tools.LastProcessRequest);
         if (OperatingSystem.IsWindows())
@@ -502,6 +502,20 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
             Assert.Contains("'status' '--porcelain=v1' '--branch'", request.ArgumentList[1]);
         }
         await f.Dev.CloseAndDrainAsync();
+    }
+
+    // This whole fixture is compiled by Dev.Tests (xUnit 2, net10) and linked
+    // by Desktop.Tests (xUnit 3, net10-windows). WINDOWS is the owning target symbol.
+    private static CancellationToken OriginalTestBodyToken
+    {
+        get
+        {
+#if WINDOWS
+            return Xunit.TestContext.Current.CancellationToken;
+#else
+            return CancellationToken.None;
+#endif
+        }
     }
 
     private static bool ContainsType<T>(Exception error) where T : Exception => error is T ||

@@ -29,7 +29,7 @@ public sealed class FilesOriginalProductCaptureTests
             raw.TrySetResult(owned);
             var error = await Assert.ThrowsAnyAsync<Exception>(() => driver);
             Assert.Same(owned, captured); Assert.True(driver.IsFaulted); Assert.Contains(Causes(error), value => ReferenceEquals(value, cause));
-            Assert.True(captured.CanRead);
+            Assert.True(Assert.IsType<FileStream>(captured).CanRead);
         }
         finally
         {

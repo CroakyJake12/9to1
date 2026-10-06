@@ -24,7 +24,7 @@ public sealed partial class TaskRunLateAdmissionProcessTests
         var rawAuthorization = actualAuthorizationGate.Task;
         var lease = Assert.Single(h.Authority.Leases);
         h.Coordinator.RequestOriginalProcessRetirement();
-        Assert.Throws<InvalidOperationException>(() => { h.Coordinator.StartAttemptAsync(begin.TaskId, begin.ExecutionId, Route(), token); });
+        Assert.Throws<InvalidOperationException>((Action)(() => { _ = h.Coordinator.StartAttemptAsync(begin.TaskId, begin.ExecutionId, Route(), token); }));
         actualAuthorizationGate.SetResult(lease);
         var failure = await Record.ExceptionAsync(() => actual.WaitAsync(token));
         Assert.NotNull(failure);
@@ -250,7 +250,7 @@ public sealed partial class TaskRunLateAdmissionProcessTests
         internal Task<TaskRunAttemptAdmission?>? OverrideIssuedLookup = null;
         internal Harness()
         {
-            Runtime = new((task, run, attempt, token) => OverrideIssuedLookup ?? Coordinator.GetIssuedAttemptAsync(task, run, attempt, token));
+            Runtime = new((task, run, attempt, token) => OverrideIssuedLookup ?? Coordinator!.GetIssuedAttemptAsync(task, run, attempt, token));
             Coordinator = new(Rows, new Sink(), admissionAuthority: Authority, runtimeSettlement: Runtime);
         }
         internal Task<TaskExecutionSnapshot> BeginAsync(CancellationToken token) => Coordinator.BeginAuthorizedAsync(Guid.NewGuid(), Guid.NewGuid(),

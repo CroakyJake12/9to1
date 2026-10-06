@@ -29,7 +29,7 @@ public sealed class WorkspaceTabOriginalRetirementTests
         Assert.False(close.IsCompleted);
         c.Close.TrySetResult();
         await close.WaitAsync(Bound);
-        Assert.Empty(new[] { tab.CanGoBack, tab.CanGoForward }.Where(value => value));
+        Assert.DoesNotContain(new[] { tab.CanGoBack, tab.CanGoForward }, value => value);
     });
 
     [Fact]
@@ -216,7 +216,7 @@ public sealed class WorkspaceTabOriginalRetirementTests
         foreach (var tab in scope.Tabs)
         {
             foreach (var page in scope.Pages) { page.Guard = null; page.Request = null; }
-            try { scope.Track(tab.CloseAndDrainAsync()); } catch (Exception error) { errors.Add(error); }
+            try { _ = scope.Track(tab.CloseAndDrainAsync()); } catch (Exception error) { errors.Add(error); }
         }
         foreach (var actual in scope.Tasks.Distinct<Task>(ReferenceEqualityComparer.Instance))
             try { await actual.WaitAsync(Bound); }

@@ -11,7 +11,7 @@ public sealed partial class FilesDeveloperIdentityOriginalCallbackTests
     public async Task Registered_workbench_factory_read_is_the_same_global_original_during_close_and_preserves_file_ids()
     {
         await using var rig = await Rig.CreateAsync();
-        var actual = rig.Browser.ResolveOriginalDeveloperDocumentAsync(rig.Project, "main.cs", () => true);
+        var actual = rig.Browser.ResolveOriginalDeveloperDocumentAsync(rig.Project, "main.cs", () => true, TestContext.Current.CancellationToken);
         rig._actualReads.Add(actual);
         await rig.Projects.Entered.Task.WaitAsync(Bound, TestContext.Current.CancellationToken);
         var close = rig.Browser.CloseOriginalDeveloperReadsAsync();
@@ -34,7 +34,7 @@ public sealed partial class FilesDeveloperIdentityOriginalCallbackTests
         await using var rig = await Rig.CreateAsync();
         var files = System.IO.Directory.GetFiles(rig.Directory, "*", SearchOption.AllDirectories)
             .Where(value => value.EndsWith(".json", StringComparison.Ordinal)).ToDictionary(value => value, File.ReadAllBytes);
-        var actual = rig.Browser.ResolveOriginalDeveloperDocumentAsync(rig.Project, "missing.cs", () => true);
+        var actual = rig.Browser.ResolveOriginalDeveloperDocumentAsync(rig.Project, "missing.cs", () => true, TestContext.Current.CancellationToken);
         rig._actualReads.Add(actual); rig.ExpectedReadFault = true;
         await rig.Projects.Entered.Task.WaitAsync(Bound, TestContext.Current.CancellationToken);
         rig.Projects.Release.TrySetResult();
@@ -61,7 +61,7 @@ public sealed partial class FilesDeveloperIdentityOriginalCallbackTests
                 catch (InvalidOperationException) { guarded++; }
             }, null);
             throw exact;
-        });
+        }, TestContext.Current.CancellationToken);
         rig._actualReads.Add(actual); rig.ExpectedReadFault = true;
         await rig.Projects.Entered.Task.WaitAsync(Bound, TestContext.Current.CancellationToken);
         fail = true; rig.Projects.Release.TrySetResult();
@@ -78,18 +78,18 @@ public sealed partial class FilesDeveloperIdentityOriginalCallbackTests
     {
         await using var rig = await Rig.CreateAsync();
         rig.Projects.Release.TrySetResult();
-        var workspace = (await rig.Graph.GetRequiredService<HavenOS.Files.NativeHost.NativeFilesWorkspaceAuthority>().GetCurrentAsync())!;
+        var workspace = (await rig.Graph.GetRequiredService<HavenOS.Files.NativeHost.NativeFilesWorkspaceAuthority>().GetCurrentAsync(TestContext.Current.CancellationToken))!;
         var now = DateTimeOffset.UtcNow; var child = new HostedItemId(Guid.NewGuid());
         var folder = new FilesOperation(new(Guid.NewGuid()), rig.Actor.ActorId, child, null, rig.Root.FolderId,
             "CreateFolder", null, null, FilesOperationState.Pending, now, now, null, null);
-        Assert.True((await workspace.Provider.MutateAsync(folder, "src", default)).IsSuccess);
+        Assert.True((await workspace.Provider.MutateAsync(folder, "src", TestContext.Current.CancellationToken)).IsSuccess);
         var directory = Path.Combine(rig.Root.DirectoryPath, "src"); System.IO.Directory.CreateDirectory(directory);
         var bytes = System.Text.Encoding.UTF8.GetBytes("actual nested source\n");
         var id = new HostedItemId(Guid.NewGuid()); var revision = new FilesRevisionId(Guid.NewGuid());
         var hash = "sha256:" + Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
         await File.WriteAllBytesAsync(Path.Combine(directory, "nested.cs"), bytes, TestContext.Current.CancellationToken);
         Assert.True((await workspace.Provider.CommitUploadedContentAsync(new(id, child, "nested.cs", "text/plain", revision,
-            null, rig.Actor.ActorId, now, bytes.Length, hash, "fixtures/nested-source"))).IsSuccess);
+            null, rig.Actor.ActorId, now, bytes.Length, hash, "fixtures/nested-source"), TestContext.Current.CancellationToken)).IsSuccess);
         await workspace.Materializations.RegisterValidatedAsync(Path.Combine(directory, "nested.cs"), new(id, revision, hash,
             bytes.Length, now), SyncAvailability.AvailableOffline, TestContext.Current.CancellationToken);
         var old = rig.Project.Workspace;
@@ -98,7 +98,7 @@ public sealed partial class FilesDeveloperIdentityOriginalCallbackTests
             TestContext.Current.CancellationToken)).Value!;
         var reference = rig.Project.Reference with { WorkspaceRevision = updated.Revision };
         rig.Project = rig.Project with { Reference = reference, Workspace = updated };
-        var actual = rig.Browser.ResolveOriginalDeveloperDocumentAsync(rig.Project, "src/nested.cs", () => true);
+        var actual = rig.Browser.ResolveOriginalDeveloperDocumentAsync(rig.Project, "src/nested.cs", () => true, TestContext.Current.CancellationToken);
         rig._actualReads.Add(actual);
         var observed = await actual.WaitAsync(Bound, TestContext.Current.CancellationToken);
         Assert.True(observed.Succeeded);

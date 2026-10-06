@@ -49,7 +49,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         Task? close = null;
         try
         {
-            Assert.Same(cause, Assert.Throws<InvalidOperationException>(() => { page.CloseAndDrainAsync(); }));
+            Assert.Same(cause, Assert.Throws<InvalidOperationException>(() => { _ = page.CloseAndDrainAsync(); }));
             var work = Field("_work").GetValue(page)!;
             Assert.Null(work.GetType().GetField("_close", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(work));
             live = false; close = page.CloseAndDrainAsync(); await close; Assert.Same(close, page.CloseAndDrainAsync());
@@ -151,7 +151,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         {
             var resolved = (await f.Dev.ResolveAsync(f.Reference)).Value!;
             page = CreateReadinessChildPage(f, resolved, original => page = original, _ => child);
-            Assert.Same(child.LiveCause, Assert.Throws<InvalidOperationException>(() => { page.CloseAndDrainAsync(); }));
+            Assert.Same(child.LiveCause, Assert.Throws<InvalidOperationException>(() => { _ = page.CloseAndDrainAsync(); }));
             var work = Field("_work").GetValue(page)!;
             Assert.Null(work.GetType().GetField("_close", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(work));
             child.Live = false; close = page.CloseAndDrainAsync(); await close; Assert.Same(close, page.CloseAndDrainAsync());
