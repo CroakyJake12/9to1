@@ -17,6 +17,7 @@
     <Compile Include="ToolRegistry.cs" />
     <Compile Include="ModelRouteRegistry.cs" />
     <Compile Include="ModelRouteResolver.cs" />
+    <Compile Include="ModelRouteResolver.CatalogueEligibility.cs" />
     <Compile Include="Runtime.cs" />
     <Compile Include="DulcheRuntime.CanonicalProvider.cs" />
     <Compile Include="ManagedProviderDulcheAdapter.cs" />
