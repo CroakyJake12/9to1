@@ -30,11 +30,16 @@ internal sealed class CanonicalContinuationProcessCustody(TaskExecutionCoordinat
     private readonly List<Exception> _causes = [];
     private bool _fault;
     internal TaskRunUnstartedContinuationBinding? OriginalPreparation;
+    internal TaskRunColdContinuationBinding? OriginalColdPreparation;
     internal IAsyncEnumerable<ChatStreamEvent>? OriginalChild;
     internal Task? OriginalChildDispose;
     internal bool IteratorClosed;
     internal bool RetirementRequested;
-    public bool HasOwnedTerminalObservation => IteratorClosed && OriginalPreparation is { Claimed: true, Bound: true } binding
+    public bool HasOwnedTerminalObservation => IteratorClosed && OriginalColdPreparation is { BodyBound: true, JournalTerminalAcknowledged: true } cold
+        && ReferenceEquals(OriginalChild, cold.Invocation.OriginalProcessProducer)
+        && OriginalChildDispose is { IsCompletedSuccessfully: true }
+        && cold.Invocation.OriginalProcessProducer is { HasHealthyClosedOriginal: true }
+        || IteratorClosed && OriginalPreparation is { Claimed: true, Bound: true } binding
         && ReferenceEquals(OriginalChild, binding.Next.OriginalProcessProducer)
         && OriginalChildDispose is { IsCompletedSuccessfully: true }
         && binding.Next.OriginalProcessProducer is { HasHealthyClosedOriginal: true };
