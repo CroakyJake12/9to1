@@ -275,7 +275,8 @@ public sealed partial class TaskExecutionCoordinator
 
         private static void Retain(List<Exception> errors, Exception cause, Task? actual)
         {
-            foreach (var original in actual?.Exception is { } group ? group.InnerExceptions : new[] { cause })
+            IEnumerable<Exception> originals = actual?.Exception is { } group ? group.InnerExceptions : new[] { cause };
+            foreach (var original in originals)
                 if (!errors.Any(prior => ReferenceEquals(prior, original))) errors.Add(original);
         }
     }

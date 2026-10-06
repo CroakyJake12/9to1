@@ -77,7 +77,7 @@ public sealed class CloudflareTaskRunToolActionOwner : ITaskRunToolActionOwner
             catch { Outcome = Issuer._runtime.TryReadOriginalOutcome(OriginalInvocation); throw; }
             finally
             {
-                foreach (var actual in runtimeStages.OriginalTasks) Stages.Track(actual);
+                foreach (var actual in runtimeStages.OriginalTasks) _ = Stages.Track(actual);
                 foreach (var error in runtimeStages.OriginalErrors) Stages.Retain(error);
             }
         }
@@ -114,7 +114,7 @@ public sealed class CloudflareTaskRunToolActionOwner : ITaskRunToolActionOwner
         await stages.AwaitAsync(stages.Invoke(() => _namespaces.DemandOriginalNamespaceAsync(compiled, token))).ConfigureAwait(false);
         var preparation = new Preparation(this, admission, actionId, captured, compiled) { OriginalCallerCallback = callback };
         preparation.Stages.BindOriginalCallerCallback(callback);
-        foreach (var task in stages.OriginalTasks) preparation.Stages.Track(task);
+        foreach (var task in stages.OriginalTasks) _ = preparation.Stages.Track(task);
         foreach (var error in stages.OriginalErrors) preparation.Stages.Retain(error);
         lock (_sync)
         { if (_prepared.Count >= 128) throw new InvalidOperationException("CF original preparation custody is full."); _prepared.Add(preparation); }

@@ -85,7 +85,7 @@ public sealed class TaskRunVerifiedActorReauthenticationSource : ITaskRunVerifie
     private async Task<ITaskRunVerifiedReauthenticationLease> RunOriginalAsync(Operation operation, Task start, bool acquire)
     {
         await start.ConfigureAwait(false);
-        var old = _executing.Value; var phase = new(this, old); _executing.Value = phase;
+        var old = _executing.Value; var phase = new Phase(this, old); _executing.Value = phase;
         CancellationTokenSource? linked = null;
         ITaskRunVerifiedReauthenticationLease? result = null;
         var failures = new List<Exception>();
@@ -201,7 +201,7 @@ public sealed class TaskRunVerifiedActorReauthenticationSource : ITaskRunVerifie
     private async Task CloseLeaseOriginalAsync(IdentityLease lease, Task start)
     {
         await start.ConfigureAwait(false);
-        var old = _executing.Value; var phase = new(this, old); _executing.Value = phase;
+        var old = _executing.Value; var phase = new Phase(this, old); _executing.Value = phase;
         var failures = new List<Exception>();
         try
         {
@@ -235,7 +235,7 @@ public sealed class TaskRunVerifiedActorReauthenticationSource : ITaskRunVerifie
     private async Task CloseSourceOriginalAsync(Task start)
     {
         await start.ConfigureAwait(false);
-        var old = _executing.Value; var phase = new(this, old); _executing.Value = phase;
+        var old = _executing.Value; var phase = new Phase(this, old); _executing.Value = phase;
         var failures = new List<Exception>();
         try
         {

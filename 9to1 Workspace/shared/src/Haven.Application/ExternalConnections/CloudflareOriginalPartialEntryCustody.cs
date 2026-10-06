@@ -9,7 +9,7 @@ public static class CloudflareOriginalPartialEntryCustody
     {
         var errors = new List<Exception>(); T result = default!;
         Task<T>? actualBody = null;
-        try { stages.Invoke(() => { actualBody = originalBody(); return actualBody; }); }
+        try { _ = stages.Invoke(() => { actualBody = originalBody(); return actualBody; }); }
         catch (Exception error) { stages.Retain(error); errors.Add(error); }
         if (actualBody is not null)
             try { result = await stages.AwaitAsync(actualBody).ConfigureAwait(false); }

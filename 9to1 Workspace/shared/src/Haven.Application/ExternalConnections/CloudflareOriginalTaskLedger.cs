@@ -57,14 +57,14 @@ public sealed class CloudflareOriginalTaskLedger
     public ValueTask<T> Invoke<T>(Func<ValueTask<T>> finite) => new(Invoke(() => finite().AsTask()));
     public async Task<T> AwaitAsync<T>(Task<T> original)
     {
-        Track(original);
+        _ = Track(original);
         try { return await original.ConfigureAwait(false); }
         catch (Exception error) { Capture(original, error); if (original.IsFaulted) throw new AggregateException(original.Exception!.InnerExceptions); throw; }
     }
     public Task<T> AwaitAsync<T>(ValueTask<T> original) => AwaitAsync(original.AsTask());
     public async Task AwaitAsync(Task original)
     {
-        Track(original);
+        _ = Track(original);
         try { await original.ConfigureAwait(false); }
         catch (Exception error) { Capture(original, error); if (original.IsFaulted) throw new AggregateException(original.Exception!.InnerExceptions); throw; }
     }
@@ -92,7 +92,7 @@ public sealed class CloudflareOriginalTaskLedger
     public async Task<T> CaptureOriginalAcquisitionAsync<T>(Func<Task<T>> finite, Action<T> retainActualResult)
     {
         Task<T>? actual = null; Exception? failure = null; T result = default!;
-        try { Invoke(() => { actual = finite(); Track(actual); return actual; }); }
+        try { _ = Invoke(() => { actual = finite(); Track(actual); return actual; }); }
         catch (Exception error) { failure = error; Retain(error); }
         if (actual is not null)
         {
@@ -112,7 +112,7 @@ public sealed class CloudflareOriginalTaskLedger
     public async Task ObserveOriginalCloseAsync(Func<ValueTask> finite)
     {
         Task? actual = null; var errors = new List<Exception>(); bool knownFault = false;
-        try { Invoke(() => { actual = finite().AsTask(); Track(actual); return actual; }); }
+        try { _ = Invoke(() => { actual = finite().AsTask(); Track(actual); return actual; }); }
         catch (Exception error) { knownFault = true; Retain(error); errors.Add(error); }
         if (actual is not null)
             try { await actual.ConfigureAwait(false); }

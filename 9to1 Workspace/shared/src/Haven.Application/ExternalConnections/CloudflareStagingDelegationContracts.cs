@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Haven.Core;
 namespace Haven.Application;
 
 /// <summary>Explicit nonsecret selection, not namespace ownership or an operation grant.</summary>
