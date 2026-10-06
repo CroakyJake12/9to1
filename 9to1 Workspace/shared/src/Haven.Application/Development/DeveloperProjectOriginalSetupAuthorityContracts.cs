@@ -43,6 +43,8 @@ public interface IDeveloperProjectOriginalSetupPermissionSource
 }
 public interface IDeveloperProjectOriginalSetupPermission : IAsyncDisposable
 {
+    // Exact private returned-entry pairing and held lifetime; metadata/interfaces cannot issue it.
+    bool IsIssuedOriginalStepEntry(DeveloperProjectSetupStep sameStep, IDeveloperProjectOriginalSetupStepEntry sameEntry);
     Task<IDeveloperProjectOriginalSetupStepEntry> EnterOriginalStepAsync(
         DeveloperProjectSetupStep sameStep, CancellationToken cancellationToken);
     Task ValidateOriginalStepResultAsync(DeveloperProjectSetupStep sameStep,

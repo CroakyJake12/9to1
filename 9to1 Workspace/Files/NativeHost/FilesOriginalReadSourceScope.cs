@@ -43,4 +43,28 @@ internal sealed class FilesOriginalReadSourceScope(Action<Action> synchronousSco
             }
         if (causes.Count != 0) throw new AggregateException("Original read source/enrollment failed; all acquired actual Tasks were independently joined.", causes);
     }
+    /// <summary>Keep a genuinely acquired cleanup-bearing product BEFORE reporting an
+    /// acquisition-scope/enrollment failure. The capture callback records private ownership;
+    /// it must not publish domain effects or infer a result from Task.Result/status.</summary>
+    internal async Task<T> ObserveProduct<T>(Func<Task<T>> source, Action<T> captureActualProduct)
+    {
+        Task<T>? actual = null; T value = default!; var causes = new List<Exception>();
+        try { Invoke(() => { actual = source() ?? throw new InvalidOperationException("Original product source returned no Task."); retainOriginalTask(actual); return true; }); }
+        catch (Exception error) { causes.Add(error); }
+        if (actual is not null)
+            try
+            {
+                value = await actual.ConfigureAwait(false);
+                // Actual await returned this SAME product. Preserve it before aggregate
+                // propagation, including a scope error that occurred after raw acquisition.
+                Invoke(() => { captureActualProduct(value); return true; });
+            }
+            catch (Exception error)
+            {
+                if (actual.IsCanceled && causes.Count == 0) throw;
+                causes.AddRange(actual.IsFaulted ? actual.Exception!.InnerExceptions : new[] { error }.AsEnumerable());
+            }
+        if (causes.Count != 0) throw new AggregateException("Original product acquisition/capture failed; retain and independently close every acquired product.", causes);
+        return value;
+    }
 }
