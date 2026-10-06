@@ -13,9 +13,9 @@ public sealed partial class ChatCloudPermissionCallerTests
         await using var rig = new Rig();
         var rows = new AgentRows();
         var (service, definition) = CreateAgentCaller(rig, rows);
-        var paused = await service.RunAsync(definition.Id, "Original Agent task", default);
+        var paused = await service.RunAsync(definition.Id, "Original Agent task", TestContext.Current.CancellationToken);
         var binding = Assert.IsType<AgentRunCanonicalBinding>(paused.CanonicalTask);
-        var actual = (await rig.Tasks.GetAsync(binding.TaskId, default))!;
+        var actual = (await rig.Tasks.GetAsync(binding.TaskId, TestContext.Current.CancellationToken))!;
         Assert.Equal(AgentRunStatus.Suspended, paused.Status);
         Assert.Null(paused.CompletedAt);
         Assert.InRange(paused.ProgressPercent, 0, 90);
@@ -23,7 +23,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         Assert.Equal(actual.ContextId, binding.ContextId);
         Assert.Equal(actual.ExecutionId, binding.ExecutionId);
         Assert.False(JsonSerializer.Deserialize<AgentActivityObservation>(paused.ActivityJson)!.ObservationComplete);
-        Assert.Null(await service.GetRecordedInvocationEvidenceAsync(paused.Id));
+        Assert.Null(await service.GetRecordedInvocationEvidenceAsync(paused.Id, TestContext.Current.CancellationToken));
         Assert.Equal(0, rig.Client.Dispatches);
         Assert.False(service.HasOriginalUnstartedRetrySource(paused.Id));
         Assert.Equal(1, JsonSerializer.Deserialize<AgentActivityObservation>(paused.ActivityJson)!.CanonicalBindingVersion);
@@ -36,18 +36,18 @@ public sealed partial class ChatCloudPermissionCallerTests
         await using var rig = new Rig();
         var rows = new AgentRows();
         var (service, definition) = CreateAgentCaller(rig, rows);
-        var paused = await service.RunAsync(definition.Id, "Same Agent task", default);
+        var paused = await service.RunAsync(definition.Id, "Same Agent task", TestContext.Current.CancellationToken);
         var binding = paused.CanonicalTask!;
-        var failure = await Record.ExceptionAsync(() => service.RetryAsync(paused.Id, default));
+        var failure = await Record.ExceptionAsync(() => service.RetryAsync(paused.Id, TestContext.Current.CancellationToken));
         Assert.NotNull(failure);
         Assert.Equal(0, rig.Client.Dispatches);
         Assert.Single(rows.Values);
         var waiting = Assert.Single(rig.RemediationRows.Rows.Values);
-        await rig.Owner.ApproveOriginalAsync(waiting.Id, default);
+        await rig.Owner.ApproveOriginalAsync(waiting.Id, TestContext.Current.CancellationToken);
         Assert.Equal(0, rig.Client.Dispatches);
         Assert.True(service.HasOriginalUnstartedRetrySource(paused.Id));
         rig.Client.RunApprovedOwnedFrame = true;
-        var completed = await service.RetryAsync(paused.Id, default);
+        var completed = await service.RetryAsync(paused.Id, TestContext.Current.CancellationToken);
         Assert.Equal(paused.Id, completed.Id);
         Assert.Equal(binding.TaskId, completed.CanonicalTask!.TaskId);
         Assert.Equal(binding.ContextId, completed.CanonicalTask.ContextId);
@@ -56,10 +56,10 @@ public sealed partial class ChatCloudPermissionCallerTests
         Assert.Equal(TaskExecutionLifecycle.Completed, completed.CanonicalTask.State);
         Assert.Equal(100, completed.ProgressPercent);
         Assert.True(JsonSerializer.Deserialize<AgentActivityObservation>(completed.ActivityJson)!.ObservationComplete);
-        Assert.NotNull(await service.GetRecordedInvocationEvidenceAsync(completed.Id));
+        Assert.NotNull(await service.GetRecordedInvocationEvidenceAsync(completed.Id, TestContext.Current.CancellationToken));
         Assert.Single(rows.Values);
-        Assert.Single(await rig.TaskRows.GetResumableAsync(default));
-        Assert.Single((await rig.Tasks.GetAsync(binding.TaskId, default))!.RecoveryHistory);
+        Assert.Single(await rig.TaskRows.GetResumableAsync(TestContext.Current.CancellationToken));
+        Assert.Single((await rig.Tasks.GetAsync(binding.TaskId, TestContext.Current.CancellationToken))!.RecoveryHistory);
         Assert.Equal(1, rig.Client.Dispatches);
     }
 
@@ -69,19 +69,19 @@ public sealed partial class ChatCloudPermissionCallerTests
         await using var rig = new Rig();
         var rows = new AgentRows();
         var (service, definition) = CreateAgentCaller(rig, rows);
-        var first = await service.RunAsync(definition.Id, "Retained Agent input", default);
+        var first = await service.RunAsync(definition.Id, "Retained Agent input", TestContext.Current.CancellationToken);
         var firstBinding = first.CanonicalTask!;
         var firstPermission = Assert.Single(rig.RemediationRows.Rows.Values);
         await rig.RunAsync(false); // Changes the singleton display to a distinct real canonical task.
         var unrelated = rig.Service.CurrentCanonicalTask!;
         Assert.NotEqual(firstBinding.TaskId, unrelated.TaskId);
-        await rig.Owner.ApproveOriginalAsync(firstPermission.Id, default);
+        await rig.Owner.ApproveOriginalAsync(firstPermission.Id, TestContext.Current.CancellationToken);
         rig.Client.RunApprovedOwnedFrame = true;
-        var completed = await service.RetryAsync(first.Id, default);
+        var completed = await service.RetryAsync(first.Id, TestContext.Current.CancellationToken);
         Assert.Equal(firstBinding.TaskId, completed.CanonicalTask!.TaskId);
         Assert.Equal(firstBinding.ExecutionId, completed.CanonicalTask.ExecutionId);
-        Assert.Equal(TaskExecutionLifecycle.Suspended, (await rig.Tasks.GetAsync(unrelated.TaskId, default))!.State);
-        Assert.Equal(2, (await rig.TaskRows.GetResumableAsync(default)).Count);
+        Assert.Equal(TaskExecutionLifecycle.Suspended, (await rig.Tasks.GetAsync(unrelated.TaskId, TestContext.Current.CancellationToken))!.State);
+        Assert.Equal(2, (await rig.TaskRows.GetResumableAsync(TestContext.Current.CancellationToken)).Count);
     }
 
     [Fact]
@@ -91,15 +91,15 @@ public sealed partial class ChatCloudPermissionCallerTests
         rig.Capture.OpenActualAttemptBeforeAsk = true;
         var rows = new AgentRows();
         var (service, definition) = CreateAgentCaller(rig, rows);
-        var paused = await service.RunAsync(definition.Id, "Actual admitted attempt", default);
+        var paused = await service.RunAsync(definition.Id, "Actual admitted attempt", TestContext.Current.CancellationToken);
         Assert.NotNull(paused.CanonicalTask!.AttemptId);
-        await rig.Owner.ApproveOriginalAsync(Assert.Single(rig.RemediationRows.Rows.Values).Id, default);
-        var failure = await Record.ExceptionAsync(() => service.RetryAsync(paused.Id, default));
+        await rig.Owner.ApproveOriginalAsync(Assert.Single(rig.RemediationRows.Rows.Values).Id, TestContext.Current.CancellationToken);
+        var failure = await Record.ExceptionAsync(() => service.RetryAsync(paused.Id, TestContext.Current.CancellationToken));
         Assert.NotNull(failure);
         Assert.Single(rows.Values);
-        Assert.Single(await rig.TaskRows.GetResumableAsync(default));
+        Assert.Single(await rig.TaskRows.GetResumableAsync(TestContext.Current.CancellationToken));
         Assert.Equal(0, rig.Client.Dispatches);
-        Assert.Null(await service.GetRecordedInvocationEvidenceAsync(paused.Id));
+        Assert.Null(await service.GetRecordedInvocationEvidenceAsync(paused.Id, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -108,12 +108,12 @@ public sealed partial class ChatCloudPermissionCallerTests
         await using var rig = new Rig();
         var rows = new AgentRows();
         var (original, definition) = CreateAgentCaller(rig, rows);
-        var paused = await original.RunAsync(definition.Id, "Historical binding only", default);
+        var paused = await original.RunAsync(definition.Id, "Historical binding only", TestContext.Current.CancellationToken);
         var (restarted, _) = CreateAgentCaller(rig, rows);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => restarted.RetryAsync(paused.Id, default));
-        Assert.Null(await restarted.GetRecordedInvocationEvidenceAsync(paused.Id));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => restarted.RetryAsync(paused.Id, TestContext.Current.CancellationToken));
+        Assert.Null(await restarted.GetRecordedInvocationEvidenceAsync(paused.Id, TestContext.Current.CancellationToken));
         Assert.Single(rows.Values);
-        Assert.Single(await rig.TaskRows.GetResumableAsync(default));
+        Assert.Single(await rig.TaskRows.GetResumableAsync(TestContext.Current.CancellationToken));
         Assert.Equal(0, rig.Client.Dispatches);
     }
 
@@ -123,20 +123,20 @@ public sealed partial class ChatCloudPermissionCallerTests
         await using var rig = new Rig();
         var rows = new AgentRows();
         var (service, definition) = CreateAgentCaller(rig, rows);
-        var paused = await service.RunAsync(definition.Id, "Actual failed cleanup", default);
-        await rig.Owner.ApproveOriginalAsync(Assert.Single(rig.RemediationRows.Rows.Values).Id, default);
+        var paused = await service.RunAsync(definition.Id, "Actual failed cleanup", TestContext.Current.CancellationToken);
+        await rig.Owner.ApproveOriginalAsync(Assert.Single(rig.RemediationRows.Rows.Values).Id, TestContext.Current.CancellationToken);
         rig.Client.RunApprovedOwnedFrame = true;
         var cause = new IOException("Exact original provider close failure");
         rig.Client.OriginalDispose = Task.FromException(cause);
-        var failed = await service.RetryAsync(paused.Id, default);
+        var failed = await service.RetryAsync(paused.Id, TestContext.Current.CancellationToken);
         Assert.Equal(paused.Id, failed.Id);
         Assert.Equal(paused.CanonicalTask!.TaskId, failed.CanonicalTask!.TaskId);
         Assert.Equal(AgentRunStatus.Suspended, failed.Status);
         Assert.Contains(cause.Message, failed.Error, StringComparison.Ordinal);
         Assert.False(JsonSerializer.Deserialize<AgentActivityObservation>(failed.ActivityJson)!.ObservationComplete);
-        Assert.Null(await service.GetRecordedInvocationEvidenceAsync(failed.Id));
+        Assert.Null(await service.GetRecordedInvocationEvidenceAsync(failed.Id, TestContext.Current.CancellationToken));
         Assert.Single(rows.Values);
-        Assert.Single(await rig.TaskRows.GetResumableAsync(default));
+        Assert.Single(await rig.TaskRows.GetResumableAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -145,8 +145,8 @@ public sealed partial class ChatCloudPermissionCallerTests
         await using var rig = new Rig();
         var rows = new AgentRows();
         var (service, definition) = CreateAgentCaller(rig, rows);
-        var first = await service.RunAsync(definition.Id, "Explicit first work", default);
-        var second = await service.RunAsync(definition.Id, "Explicit second work", default);
+        var first = await service.RunAsync(definition.Id, "Explicit first work", TestContext.Current.CancellationToken);
+        var second = await service.RunAsync(definition.Id, "Explicit second work", TestContext.Current.CancellationToken);
         Assert.NotEqual(first.Id, second.Id);
         Assert.NotEqual(first.CanonicalTask!.TaskId, second.CanonicalTask!.TaskId);
         Assert.NotEqual(first.CanonicalTask.ContextId, second.CanonicalTask.ContextId);
@@ -165,18 +165,18 @@ public sealed partial class ChatCloudPermissionCallerTests
         await using var rig = new Rig();
         var rows = new AgentRows();
         var (service, definition) = CreateAgentCaller(rig, rows);
-        var paused = await service.RunAsync(definition.Id, "Actual immutable original Agent input", default);
-        await rig.Owner.ApproveOriginalAsync(Assert.Single(rig.RemediationRows.Rows.Values).Id, default);
+        var paused = await service.RunAsync(definition.Id, "Actual immutable original Agent input", TestContext.Current.CancellationToken);
+        await rig.Owner.ApproveOriginalAsync(Assert.Single(rig.RemediationRows.Rows.Values).Id, TestContext.Current.CancellationToken);
         var altered = changeIdentity ? paused with { AgentId = Guid.NewGuid() }
             : paused with { Task = "Foreign task claiming the same canonical binding" };
         rows.Values[paused.Id] = JsonSerializer.Serialize(altered);
-        var failure = await Record.ExceptionAsync(() => service.RetryAsync(paused.Id, default));
+        var failure = await Record.ExceptionAsync(() => service.RetryAsync(paused.Id, TestContext.Current.CancellationToken));
         Assert.IsType<InvalidOperationException>(failure);
         Assert.Equal(0, rig.Client.Dispatches);
         Assert.Single(rows.Values);
-        Assert.Equal(altered, await rows.GetAsync(paused.Id, default));
-        Assert.Equal(TaskExecutionLifecycle.Suspended, (await rig.Tasks.GetAsync(paused.CanonicalTask!.TaskId, default))!.State);
-        Assert.Null(await service.GetRecordedInvocationEvidenceAsync(paused.Id));
+        Assert.Equal(altered, await rows.GetAsync(paused.Id, TestContext.Current.CancellationToken));
+        Assert.Equal(TaskExecutionLifecycle.Suspended, (await rig.Tasks.GetAsync(paused.CanonicalTask!.TaskId, TestContext.Current.CancellationToken))!.State);
+        Assert.Null(await service.GetRecordedInvocationEvidenceAsync(paused.Id, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -189,7 +189,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         var source = new TaskCompletionSource<IReadOnlyList<ModelDescriptor>>(TaskCreationOptions.RunContinuationsAsynchronously);
         source.SetException([first, second]);
         var (service, definition) = CreateAgentCaller(rig, rows, model => new ControlledAgentDiscovery(() => source.Task));
-        var actual = service.RunAsync(definition.Id, "Discovery has not admitted a canonical Task", default);
+        var actual = service.RunAsync(definition.Id, "Discovery has not admitted a canonical Task", TestContext.Current.CancellationToken);
         var failure = await Record.ExceptionAsync(() => actual);
         Assert.NotNull(failure);
         Assert.Contains(Leaves(failure), cause => ReferenceEquals(cause, first));
@@ -217,7 +217,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         var raw = Task.FromException<IReadOnlyList<ModelDescriptor>>(cause);
         var (service, definition) = CreateAgentCaller(rig, rows,
             model => new ControlledAgentDiscovery(() => synchronous ? throw cause : raw));
-        var actual = service.RunAsync(definition.Id, "No canonical effect", default);
+        var actual = service.RunAsync(definition.Id, "No canonical effect", TestContext.Current.CancellationToken);
         var failure = await Record.ExceptionAsync(() => actual);
         Assert.NotNull(failure);
         Assert.Contains(Leaves(failure), retained => ReferenceEquals(retained, cause));
@@ -236,7 +236,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         canceledSource.Cancel();
         var raw = Task.FromCanceled<IReadOnlyList<ModelDescriptor>>(canceledSource.Token);
         var (service, definition) = CreateAgentCaller(rig, rows, model => new ControlledAgentDiscovery(() => raw));
-        var actual = service.RunAsync(definition.Id, "No canonical task was admitted", default);
+        var actual = service.RunAsync(definition.Id, "No canonical task was admitted", TestContext.Current.CancellationToken);
         var failure = await Record.ExceptionAsync(() => actual);
         Assert.IsAssignableFrom<OperationCanceledException>(failure);
         Assert.True(raw.IsCanceled);
@@ -259,21 +259,22 @@ public sealed partial class ChatCloudPermissionCallerTests
             entered.TrySetResult(); return release.Task;
         };
         var (service, definition) = CreateAgentCaller(rig, rows);
-        var actual = service.RunAsync(definition.Id, "Held actual terminal history", default);
+        var actual = service.RunAsync(definition.Id, "Held actual terminal history", TestContext.Current.CancellationToken);
         try
         {
-            await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             var previous = Assert.Single(rows.Values);
             var id = previous.Key;
-            await rig.Owner.ApproveOriginalAsync(Assert.Single(rig.RemediationRows.Rows.Values).Id, default);
-            var refusal = await Record.ExceptionAsync(() => service.RetryAsync(id, default));
+            await rig.Owner.ApproveOriginalAsync(Assert.Single(rig.RemediationRows.Rows.Values).Id, TestContext.Current.CancellationToken);
+            var refusal = await Record.ExceptionAsync(() => service.RetryAsync(id, TestContext.Current.CancellationToken));
             Assert.IsType<InvalidOperationException>(refusal);
             Assert.False(actual.IsCompleted);
             Assert.Equal(0, rig.Client.Dispatches);
         }
-        finally { release.TrySetResult(); await actual.WaitAsync(TimeSpan.FromSeconds(5)); }
-        Assert.Equal(AgentRunStatus.Suspended, actual.Result.Status);
-        Assert.True(service.HasOriginalUnstartedRetrySource(actual.Result.Id)); // Real approval is now available; it never dispatched.
+        finally { release.TrySetResult(); await JoinIndependentFixtureCleanupAsync(actual, TimeSpan.FromSeconds(5)); }
+        var completedOriginal = await actual;
+        Assert.Equal(AgentRunStatus.Suspended, completedOriginal.Status);
+        Assert.True(service.HasOriginalUnstartedRetrySource(completedOriginal.Id)); // Real approval is now available; it never dispatched.
         Assert.Equal(0, rig.Client.Dispatches);
     }
 
@@ -293,11 +294,11 @@ public sealed partial class ChatCloudPermissionCallerTests
             try { service.RetryAsync(value.Id, default).GetAwaiter().GetResult(); }
             catch (Exception cause) { actualRefusal = cause; }
         };
-        var paused = await service.RunAsync(definition.Id, "Actual synchronous observer original", default);
+        var paused = await service.RunAsync(definition.Id, "Actual synchronous observer original", TestContext.Current.CancellationToken);
         Assert.Equal(1, callbacks);
         Assert.IsType<InvalidOperationException>(actualRefusal);
         Assert.Equal(AgentRunStatus.Suspended, paused.Status);
-        Assert.Equal(paused, await rows.GetAsync(paused.Id, default));
+        Assert.Equal(paused, await rows.GetAsync(paused.Id, TestContext.Current.CancellationToken));
         Assert.Equal(0, rig.Client.Dispatches);
         Assert.True(service.HasOriginalUnstartedRetrySource(paused.Id));
     }
@@ -308,34 +309,38 @@ public sealed partial class ChatCloudPermissionCallerTests
         await using var rig = new Rig();
         var rows = new AgentRows();
         var (service, definition) = CreateAgentCaller(rig, rows);
-        var paused = await service.RunAsync(definition.Id, "Genuine original input remains private", default);
-        await rig.Owner.ApproveOriginalAsync(Assert.Single(rig.RemediationRows.Rows.Values).Id, default);
+        var paused = await service.RunAsync(definition.Id, "Genuine original input remains private", TestContext.Current.CancellationToken);
+        await rig.Owner.ApproveOriginalAsync(Assert.Single(rig.RemediationRows.Rows.Values).Id, TestContext.Current.CancellationToken);
         rig.Client.RunApprovedOwnedFrame = true;
         var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         rig.Client.NextDisposeEntered = entered;
         rig.Client.OriginalDispose = release.Task;
-        var actual = service.RetryAsync(paused.Id, default);
+        var actual = service.RetryAsync(paused.Id, TestContext.Current.CancellationToken);
         AgentRun? foreign = null;
         try
         {
-            await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             Assert.False(actual.IsCompleted);
             Assert.Equal(1, rig.Client.Dispatches);
-            var prior = Assert.IsType<AgentRun>(await rows.GetAsync(paused.Id, default));
+            var prior = Assert.IsType<AgentRun>(await rows.GetAsync(paused.Id, TestContext.Current.CancellationToken));
             foreign = prior with { AgentId = Guid.NewGuid(), Task = "Foreign input reusing canonical IDs" };
             rows.Values[paused.Id] = JsonSerializer.Serialize(foreign);
         }
         finally { release.TrySetResult(); }
-        var failure = await Record.ExceptionAsync(() => actual.WaitAsync(TimeSpan.FromSeconds(5)));
+        var failure = await Record.ExceptionAsync(() => actual.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
         Assert.IsType<InvalidOperationException>(failure);
-        Assert.Equal(foreign, await rows.GetAsync(paused.Id, default));
+        Assert.Equal(foreign, await rows.GetAsync(paused.Id, TestContext.Current.CancellationToken));
         Assert.Single(rows.Values);
         Assert.Equal(1, rig.Client.Dispatches);
-        Assert.Equal(TaskExecutionLifecycle.Completed, (await rig.Tasks.GetAsync(paused.CanonicalTask!.TaskId, default))!.State);
-        Assert.Null(await service.GetRecordedInvocationEvidenceAsync(paused.Id));
+        Assert.Equal(TaskExecutionLifecycle.Completed, (await rig.Tasks.GetAsync(paused.CanonicalTask!.TaskId, TestContext.Current.CancellationToken))!.State);
+        Assert.Null(await service.GetRecordedInvocationEvidenceAsync(paused.Id, TestContext.Current.CancellationToken));
         Assert.False(service.HasOriginalUnstartedRetrySource(paused.Id));
     }
+
+    // Owning teardown joins stay independent of runner withdrawal; the actual cleanup Task is never cancelled here.
+    private static Task JoinIndependentFixtureCleanupAsync(Task actual, TimeSpan timeout) =>
+        actual.WaitAsync(timeout, CancellationToken.None);
 
     private static (AgentTaskRuntimeService Runtime, AgentDefinition Definition) CreateAgentCaller(Rig rig, AgentRows rows, Func<ModelDescriptor, IOllamaClient>? discovery = null)
     {

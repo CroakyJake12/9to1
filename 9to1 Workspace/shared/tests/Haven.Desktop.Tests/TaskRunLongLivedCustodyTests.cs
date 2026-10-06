@@ -16,18 +16,18 @@ public sealed class TaskRunLongLivedCustodyTests
         for (var index = 0; index < 136; index++)
         {
             var task = await h.Coordinator.BeginAuthorizedAsync(Guid.NewGuid(), Guid.NewGuid(), "synthetic healthy run",
-                TaskExecutionDurability.PersistedPlan, [], default);
-            var original = await h.Coordinator.StartAttemptAsync(task.TaskId, task.ExecutionId, Route(), default);
-            await h.Runtime.RegisterOriginalAttemptAsync(original, default);
-            var frame = h.Runtime.StartOriginalFrameAsync(original, _ => Task.FromResult(index), default);
+                TaskExecutionDurability.PersistedPlan, [], TestContext.Current.CancellationToken);
+            var original = await h.Coordinator.StartAttemptAsync(task.TaskId, task.ExecutionId, Route(), TestContext.Current.CancellationToken);
+            await h.Runtime.RegisterOriginalAttemptAsync(original, TestContext.Current.CancellationToken);
+            var frame = h.Runtime.StartOriginalFrameAsync(original, _ => Task.FromResult(index), TestContext.Current.CancellationToken);
             Assert.Equal(index, await frame);
-            var done = await h.Coordinator.CompleteAttemptAsync(task.TaskId, task.ExecutionId, original.AttemptId, default);
+            var done = await h.Coordinator.CompleteAttemptAsync(task.TaskId, task.ExecutionId, original.AttemptId, TestContext.Current.CancellationToken);
             Assert.Equal(task.TaskId, done.TaskId);
             Assert.Equal(task.ExecutionId, done.ExecutionId);
             Assert.Equal(TaskExecutionLifecycle.Completed, done.State);
             Assert.Equal(1, ((Lease)original.Lease).Disposes);
             await Assert.ThrowsAsync<InvalidOperationException>(() => h.Runtime.AwaitSettlementAsync(task.TaskId,
-                task.ExecutionId, original.AttemptId, default)); // Missing retired registry is refusal, never a fake completed task.
+                task.ExecutionId, original.AttemptId, TestContext.Current.CancellationToken)); // Missing retired registry is refusal, never a fake completed task.
         }
         Assert.Equal(136, h.Runtime.Retirements.Count);
         Assert.Equal(136, h.Authority.Leases.Count);
@@ -48,14 +48,14 @@ public sealed class TaskRunLongLivedCustodyTests
                 TaskFollowUpMode.Queue, null, [], default);
         };
         await Assert.ThrowsAsync<TaskExecutionRevisionConflictException>(() => h.Coordinator.CompleteAttemptAsync(
-            original.Snapshot.TaskId, original.Snapshot.ExecutionId, original.AttemptId, default));
+            original.Snapshot.TaskId, original.Snapshot.ExecutionId, original.AttemptId, TestContext.Current.CancellationToken));
         Assert.Equal(1, ((Lease)original.Lease).Disposes);
         Assert.Empty(h.Runtime.Retirements);
-        var saved = await h.Coordinator.GetAsync(original.Snapshot.TaskId, default);
+        var saved = await h.Coordinator.GetAsync(original.Snapshot.TaskId, TestContext.Current.CancellationToken);
         Assert.Equal(action, saved!.LastCheckpointActionId);
         Assert.Single(saved.Queue);
         Assert.NotEqual(TaskExecutionLifecycle.Completed, saved.State);
-        var done = await h.Coordinator.CompleteAttemptAsync(saved.TaskId, saved.ExecutionId, original.AttemptId, default);
+        var done = await h.Coordinator.CompleteAttemptAsync(saved.TaskId, saved.ExecutionId, original.AttemptId, TestContext.Current.CancellationToken);
         Assert.Equal(original.Snapshot.TaskId, done.TaskId);
         Assert.Equal(original.Snapshot.ExecutionId, done.ExecutionId);
         Assert.Equal(action, done.LastCheckpointActionId);
@@ -82,10 +82,10 @@ public sealed class TaskRunLongLivedCustodyTests
             await h.Coordinator.RecordCheckpointAsync(original.Snapshot.TaskId, original.Snapshot.ExecutionId, checkpoint.Id, default);
         };
         await Assert.ThrowsAsync<TaskExecutionRevisionConflictException>(() => h.Coordinator.CompleteAttemptAsync(
-            original.Snapshot.TaskId, original.Snapshot.ExecutionId, original.AttemptId, default));
+            original.Snapshot.TaskId, original.Snapshot.ExecutionId, original.AttemptId, TestContext.Current.CancellationToken));
         await Assert.ThrowsAsync<InvalidOperationException>(() => h.Coordinator.CompleteAttemptAsync(
-            original.Snapshot.TaskId, original.Snapshot.ExecutionId, original.AttemptId, default));
-        var saved = await h.Coordinator.GetAsync(original.Snapshot.TaskId, default);
+            original.Snapshot.TaskId, original.Snapshot.ExecutionId, original.AttemptId, TestContext.Current.CancellationToken));
+        var saved = await h.Coordinator.GetAsync(original.Snapshot.TaskId, TestContext.Current.CancellationToken);
         Assert.Equal(h.Checkpoints.Current!.Id, saved!.CheckpointId);
         Assert.NotEqual(TaskExecutionLifecycle.Completed, saved.State);
         Assert.Empty(h.Runtime.Retirements);
@@ -101,18 +101,18 @@ public sealed class TaskRunLongLivedCustodyTests
         var cleanup = new IOException("Exact original lease cleanup failure");
         ((Lease)original.Lease).CleanupFailure = cleanup;
         var first = await Record.ExceptionAsync(() => h.Coordinator.CompleteAttemptAsync(original.Snapshot.TaskId,
-            original.Snapshot.ExecutionId, original.AttemptId, default));
+            original.Snapshot.ExecutionId, original.AttemptId, TestContext.Current.CancellationToken));
         Assert.Contains(Causes(first!), error => ReferenceEquals(error, cleanup));
         h.Authority.AllowCurrentActor = false;
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => h.Coordinator.CompleteAttemptAsync(original.Snapshot.TaskId,
-            original.Snapshot.ExecutionId, original.AttemptId, default));
+            original.Snapshot.ExecutionId, original.AttemptId, TestContext.Current.CancellationToken));
         h.Authority.AllowCurrentActor = true;
         var retry = await Record.ExceptionAsync(() => h.Coordinator.CompleteAttemptAsync(original.Snapshot.TaskId,
-            original.Snapshot.ExecutionId, original.AttemptId, default));
+            original.Snapshot.ExecutionId, original.AttemptId, TestContext.Current.CancellationToken));
         Assert.Contains(Causes(retry!), error => ReferenceEquals(error, cleanup));
         Assert.Empty(h.Runtime.Retirements);
         Assert.Equal(1, ((Lease)original.Lease).Disposes);
-        Assert.NotEqual(TaskExecutionLifecycle.Completed, (await h.Coordinator.GetAsync(original.Snapshot.TaskId, default))!.State);
+        Assert.NotEqual(TaskExecutionLifecycle.Completed, (await h.Coordinator.GetAsync(original.Snapshot.TaskId, TestContext.Current.CancellationToken))!.State);
         var closed = await Record.ExceptionAsync(() => h.Runtime.CloseAndDrainAsync());
         Assert.Contains(Causes(closed!), error => ReferenceEquals(error, cleanup));
     }
@@ -123,19 +123,19 @@ public sealed class TaskRunLongLivedCustodyTests
         var h = await Harness.StartAsync();
         var original = h.Current!;
         h.Runtime.ProbeCopiedReceipt = true;
-        await h.Coordinator.CompleteAttemptAsync(original.Snapshot.TaskId, original.Snapshot.ExecutionId, original.AttemptId, default);
+        await h.Coordinator.CompleteAttemptAsync(original.Snapshot.TaskId, original.Snapshot.ExecutionId, original.AttemptId, TestContext.Current.CancellationToken);
         Assert.Single(h.Runtime.Retirements);
         Assert.NotNull(h.Runtime.CopiedReceiptRefusal);
         var receipt = h.Runtime.Retirements.Single();
-        var late = await Record.ExceptionAsync(() => h.Runtime.Inner.RetireAcknowledgedOriginalAttemptAsync(receipt, default).AsTask());
+        var late = await Record.ExceptionAsync(() => h.Runtime.Inner.RetireAcknowledgedOriginalAttemptAsync(receipt, TestContext.Current.CancellationToken).AsTask());
         Assert.NotNull(late);
         var nextTask = await h.Coordinator.BeginAuthorizedAsync(Guid.NewGuid(), Guid.NewGuid(), "other real admission",
-            TaskExecutionDurability.PersistedPlan, [], default);
-        var next = await h.Coordinator.StartAttemptAsync(nextTask.TaskId, nextTask.ExecutionId, Route(), default);
-        await h.Runtime.RegisterOriginalAttemptAsync(next, default);
+            TaskExecutionDurability.PersistedPlan, [], TestContext.Current.CancellationToken);
+        var next = await h.Coordinator.StartAttemptAsync(nextTask.TaskId, nextTask.ExecutionId, Route(), TestContext.Current.CancellationToken);
+        await h.Runtime.RegisterOriginalAttemptAsync(next, TestContext.Current.CancellationToken);
         Assert.Equal(0, ((Lease)next.Lease).Disposes);
         Assert.Equal(1, ((Lease)original.Lease).Disposes);
-        await h.Coordinator.CompleteAttemptAsync(nextTask.TaskId, nextTask.ExecutionId, next.AttemptId, default);
+        await h.Coordinator.CompleteAttemptAsync(nextTask.TaskId, nextTask.ExecutionId, next.AttemptId, TestContext.Current.CancellationToken);
         await h.Runtime.CloseAndDrainAsync();
     }
 

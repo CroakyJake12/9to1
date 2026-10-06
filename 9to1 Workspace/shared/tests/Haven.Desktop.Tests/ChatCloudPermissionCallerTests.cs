@@ -18,7 +18,7 @@ public sealed partial class ChatCloudPermissionCallerTests
     {
         await using var rig = new Rig();
         await rig.RunAsync(tools);
-        var required = Assert.Single(rig.Stream.Where(item => item.Kind == ChatStreamEventKind.PermissionRequired));
+        var required = Assert.Single(rig.Stream, item => item.Kind == ChatStreamEventKind.PermissionRequired);
         var metadata = Assert.IsType<RemediationRequest>(required.PermissionRequest);
         Assert.Equal(RemediationState.Waiting, metadata.State);
         Assert.Equal(metadata.Id, Assert.Single(rig.RemediationRows.Rows.Values).Id);
@@ -38,7 +38,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         Assert.NotNull(same.RecoveryObservation);
         Assert.Empty(same.Attempts);
         Assert.Equal(1, rig.Tasks.LiveOriginalInvocationCount);
-        var inspection = await rig.Tasks.InspectOriginalRecoveryAsync(same.TaskId, same.ExecutionId, default);
+        var inspection = await rig.Tasks.InspectOriginalRecoveryAsync(same.TaskId, same.ExecutionId, TestContext.Current.CancellationToken);
         Assert.Contains(inspection.OriginalWork, value => value.Stage == "permission.request" && value.Status == TaskStatus.RanToCompletion);
         Assert.NotEmpty(inspection.Causes);
     }
@@ -50,10 +50,10 @@ public sealed partial class ChatCloudPermissionCallerTests
         await rig.RunAsync(false);
         Assert.Equal(1, rig.Client.StreamDisposals);
         Assert.Equal(0, rig.Client.Dispatches);
-        Assert.Single(rig.Stream.Where(value => value.Kind == ChatStreamEventKind.PermissionRequired));
+        Assert.Single(rig.Stream, value => value.Kind == ChatStreamEventKind.PermissionRequired);
         var same = rig.Service.CurrentCanonicalTask!;
         Assert.Equal(TaskExecutionLifecycle.Suspended, same.State);
-        var observation = await rig.Tasks.InspectOriginalRecoveryAsync(same.TaskId, same.ExecutionId, default);
+        var observation = await rig.Tasks.InspectOriginalRecoveryAsync(same.TaskId, same.ExecutionId, TestContext.Current.CancellationToken);
         Assert.Contains(observation.OriginalWork, value => value.Stage == "provider.stream.move" && value.Status == TaskStatus.Faulted);
         Assert.Contains(observation.OriginalWork, value => value.Stage == "provider.stream.dispose" && value.Status == TaskStatus.RanToCompletion);
         Assert.DoesNotContain(rig.Stream, value => value.Kind == ChatStreamEventKind.AssistantCompleted);
@@ -75,7 +75,7 @@ public sealed partial class ChatCloudPermissionCallerTests
             Assert.Empty(rig.RemediationRows.Rows);
             Assert.Equal(TaskExecutionLifecycle.Running, rig.Service.CurrentCanonicalTask!.State);
             held.SetResult(); await actual;
-            Assert.Single(rig.Stream.Where(value => value.Kind == ChatStreamEventKind.PermissionRequired));
+            Assert.Single(rig.Stream, value => value.Kind == ChatStreamEventKind.PermissionRequired);
             Assert.Equal(TaskExecutionLifecycle.Suspended, rig.Service.CurrentCanonicalTask!.State);
             Assert.Equal(1, rig.Client.StreamDisposals);
         }
@@ -106,7 +106,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         Assert.Contains(Leaves(actual!), value => ReferenceEquals(value, rig.Capture.OriginalAsk));
         Assert.Single(rig.RemediationRows.Rows);
         Assert.DoesNotContain(rig.Stream, value => value.Kind is ChatStreamEventKind.PermissionRequired or ChatStreamEventKind.AssistantCompleted);
-        Assert.Equal(TaskExecutionLifecycle.Running, (await rig.Tasks.GetAsync(rig.Service.CurrentCanonicalTask!.TaskId, default))!.State);
+        Assert.Equal(TaskExecutionLifecycle.Running, (await rig.Tasks.GetAsync(rig.Service.CurrentCanonicalTask!.TaskId, TestContext.Current.CancellationToken))!.State);
         Assert.Equal(1, rig.Tasks.LiveOriginalInvocationCount);
         Assert.Equal(0, rig.Client.Dispatches); Assert.Empty(rig.Policy.Grants);
     }
@@ -143,7 +143,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         var same = rig.Service.CurrentCanonicalTask!;
         Assert.Equal(TaskRunOriginalSettlementOutcome.Failed, same.RecoveryObservation!.SettlementOutcome);
         Assert.Equal(TaskExecutionLifecycle.Suspended, same.State);
-        var inspection = await rig.Tasks.InspectOriginalRecoveryAsync(same.TaskId, same.ExecutionId, default);
+        var inspection = await rig.Tasks.InspectOriginalRecoveryAsync(same.TaskId, same.ExecutionId, TestContext.Current.CancellationToken);
         Assert.Contains(inspection.OriginalWork, value => value.Stage == "runtime.settlement" && value.Status == TaskStatus.Faulted);
         Assert.Equal(0, rig.Client.Dispatches); Assert.Empty(rig.Policy.Grants);
     }
@@ -168,7 +168,7 @@ public sealed partial class ChatCloudPermissionCallerTests
     {
         await using var rig = new Rig();
         await rig.RunAsync(false);
-        var required = Assert.Single(rig.Stream.Where(value => value.Kind == ChatStreamEventKind.PermissionRequired));
+        var required = Assert.Single(rig.Stream, value => value.Kind == ChatStreamEventKind.PermissionRequired);
         var observation = Assert.IsType<ProviderExecutionContext>(required.CanonicalTaskContext);
         var acknowledged = Assert.IsType<TaskExecutionSnapshot>(rig.Service.CurrentCanonicalTask);
         Assert.Equal(acknowledged.TaskId, observation.TaskId);
@@ -180,8 +180,8 @@ public sealed partial class ChatCloudPermissionCallerTests
         Assert.Null(observation.SelectedCandidate);
         Assert.Equal(TaskExecutionLifecycle.Suspended, acknowledged.State);
         await rig.Tasks.SubmitFollowUpAsync(acknowledged.TaskId, "preserve this queued follow-up", TaskFollowUpMode.Queue,
-            null, null, default);
-        var later = (await rig.Tasks.GetAsync(acknowledged.TaskId, default))!;
+            null, null, TestContext.Current.CancellationToken);
+        var later = (await rig.Tasks.GetAsync(acknowledged.TaskId, TestContext.Current.CancellationToken))!;
         Assert.True(later.PersistenceRevision > observation.PersistenceRevision);
         Assert.Equal(acknowledged.PersistenceRevision, required.CanonicalTaskContext!.PersistenceRevision);
         Assert.Equal(observation, required.CanonicalTaskContext);
@@ -198,12 +198,12 @@ public sealed partial class ChatCloudPermissionCallerTests
         await rig.RunAsync(false);
         var original = rig.Service.CurrentCanonicalTask!;
         var user = Assert.Single(rig.Conversations.Messages);
-        var waiting = Assert.Single(rig.Stream.Where(value => value.Kind == ChatStreamEventKind.PermissionRequired)).PermissionRequest!;
-        await rig.Owner.ApproveOriginalAsync(waiting.Id, default);
+        var waiting = Assert.Single(rig.Stream, value => value.Kind == ChatStreamEventKind.PermissionRequired).PermissionRequest!;
+        await rig.Owner.ApproveOriginalAsync(waiting.Id, TestContext.Current.CancellationToken);
         Assert.Equal(0, rig.Client.Dispatches); // The approval callback did not dispatch.
         rig.Client.RunApprovedOwnedFrame = true;
         var continued = new List<ChatStreamEvent>();
-        await foreach (var value in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, default)) continued.Add(value);
+        await foreach (var value in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, TestContext.Current.CancellationToken)) continued.Add(value);
         var completed = rig.Service.CurrentCanonicalTask!;
         Assert.Equal(original.TaskId, completed.TaskId);
         Assert.Equal(original.ExecutionId, completed.ExecutionId);
@@ -213,9 +213,9 @@ public sealed partial class ChatCloudPermissionCallerTests
         Assert.Equal(JsonSerializer.Serialize(original.RecoveryObservation), JsonSerializer.Serialize(Assert.Single(completed.RecoveryHistory)));
         Assert.Single(completed.Attempts);
         Assert.Equal(TaskRunAttemptState.Completed, completed.Attempts[0].State);
-        Assert.Equal(user, Assert.Single(rig.Conversations.Messages.Where(value => value.Role == MessageRole.User)));
+        Assert.Equal(user, Assert.Single(rig.Conversations.Messages, value => value.Role == MessageRole.User));
         Assert.DoesNotContain(continued, value => value.Kind == ChatStreamEventKind.UserMessage);
-        Assert.Single(continued.Where(value => value.Kind == ChatStreamEventKind.AssistantCompleted));
+        Assert.Single(continued, value => value.Kind == ChatStreamEventKind.AssistantCompleted);
         Assert.Equal(1, rig.Client.Dispatches);
         Assert.Equal(0, rig.Workspace.Effects);
     }
@@ -228,20 +228,20 @@ public sealed partial class ChatCloudPermissionCallerTests
         var original = rig.Service.CurrentCanonicalTask!;
         var acceptedUser = Assert.Single(rig.Conversations.Messages);
         var refusal = await Record.ExceptionAsync(async () =>
-        { await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, default)) { } });
+        { await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, TestContext.Current.CancellationToken)) { } });
         Assert.NotNull(refusal);
         Assert.Equal(0, rig.Client.Dispatches);
-        Assert.Equal(JsonSerializer.Serialize(original.RecoveryObservation), JsonSerializer.Serialize((await rig.Tasks.GetAsync(original.TaskId, default))!.RecoveryObservation));
-        var inspection = await rig.Tasks.InspectOriginalRecoveryAsync(original.TaskId, original.ExecutionId, default);
+        Assert.Equal(JsonSerializer.Serialize(original.RecoveryObservation), JsonSerializer.Serialize((await rig.Tasks.GetAsync(original.TaskId, TestContext.Current.CancellationToken))!.RecoveryObservation));
+        var inspection = await rig.Tasks.InspectOriginalRecoveryAsync(original.TaskId, original.ExecutionId, TestContext.Current.CancellationToken);
         Assert.Contains(inspection.OriginalWork, value => value.Stage == "continuation.preparation" && value.Status == TaskStatus.Faulted);
-        var waiting = Assert.Single(rig.Stream.Where(value => value.Kind == ChatStreamEventKind.PermissionRequired)).PermissionRequest!;
-        await rig.Owner.ApproveOriginalAsync(waiting.Id, default);
+        var waiting = Assert.Single(rig.Stream, value => value.Kind == ChatStreamEventKind.PermissionRequired).PermissionRequest!;
+        await rig.Owner.ApproveOriginalAsync(waiting.Id, TestContext.Current.CancellationToken);
         rig.Client.RunApprovedOwnedFrame = true;
-        await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, default)) { }
+        await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, TestContext.Current.CancellationToken)) { }
         Assert.Equal(original.TaskId, rig.Service.CurrentCanonicalTask!.TaskId);
         Assert.Equal(original.ExecutionId, rig.Service.CurrentCanonicalTask.ExecutionId);
         Assert.Equal(TaskExecutionLifecycle.Completed, rig.Service.CurrentCanonicalTask.State);
-        Assert.Equal(acceptedUser, Assert.Single(rig.Conversations.Messages.Where(value => value.Role == MessageRole.User)));
+        Assert.Equal(acceptedUser, Assert.Single(rig.Conversations.Messages, value => value.Role == MessageRole.User));
         Assert.Equal(1, rig.Client.Dispatches);
     }
 
@@ -251,13 +251,13 @@ public sealed partial class ChatCloudPermissionCallerTests
         await using var rig = new Rig(temporary: false);
         await rig.RunAsync(false);
         var original = rig.Service.CurrentCanonicalTask!;
-        var waiting = Assert.Single(rig.Stream.Where(value => value.Kind == ChatStreamEventKind.PermissionRequired)).PermissionRequest!;
-        await rig.Owner.ApproveOriginalAsync(waiting.Id, default);
+        var waiting = Assert.Single(rig.Stream, value => value.Kind == ChatStreamEventKind.PermissionRequired).PermissionRequest!;
+        await rig.Owner.ApproveOriginalAsync(waiting.Id, TestContext.Current.CancellationToken);
         rig.Conversations.Messages[0] = rig.Conversations.Messages[0] with { Content = "foreign replacement" };
         var refusal = await Record.ExceptionAsync(async () =>
-        { await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, default)) { } });
+        { await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, TestContext.Current.CancellationToken)) { } });
         Assert.NotNull(refusal);
-        var current = (await rig.Tasks.GetAsync(original.TaskId, default))!;
+        var current = (await rig.Tasks.GetAsync(original.TaskId, TestContext.Current.CancellationToken))!;
         Assert.Equal(original.PersistenceRevision, current.PersistenceRevision);
         Assert.Equal(JsonSerializer.Serialize(original.RecoveryObservation), JsonSerializer.Serialize(current.RecoveryObservation));
         Assert.Empty(current.RecoveryHistory);
@@ -273,11 +273,11 @@ public sealed partial class ChatCloudPermissionCallerTests
         _ = await Record.ExceptionAsync(() => rig.RunAsync(false));
         var original = rig.Service.CurrentCanonicalTask!;
         var waiting = Assert.Single(rig.RemediationRows.Rows.Values);
-        await rig.Owner.ApproveOriginalAsync(waiting.Id, default);
+        await rig.Owner.ApproveOriginalAsync(waiting.Id, TestContext.Current.CancellationToken);
         var refusal = await Record.ExceptionAsync(async () =>
-        { await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, default)) { } });
+        { await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, TestContext.Current.CancellationToken)) { } });
         Assert.NotNull(refusal);
-        var current = (await rig.Tasks.GetAsync(original.TaskId, default))!;
+        var current = (await rig.Tasks.GetAsync(original.TaskId, TestContext.Current.CancellationToken))!;
         Assert.Equal(original.PersistenceRevision, current.PersistenceRevision);
         Assert.Single(current.Attempts);
         Assert.Equal(TaskRunOriginalSettlementOutcome.Failed, current.RecoveryObservation!.SettlementOutcome);
@@ -291,24 +291,24 @@ public sealed partial class ChatCloudPermissionCallerTests
         await using var rig = new Rig();
         await rig.RunAsync(false);
         var original = rig.Service.CurrentCanonicalTask!;
-        var waiting = Assert.Single(rig.Stream.Where(value => value.Kind == ChatStreamEventKind.PermissionRequired)).PermissionRequest!;
-        await rig.Owner.ApproveOriginalAsync(waiting.Id, default);
+        var waiting = Assert.Single(rig.Stream, value => value.Kind == ChatStreamEventKind.PermissionRequired).PermissionRequest!;
+        await rig.Owner.ApproveOriginalAsync(waiting.Id, TestContext.Current.CancellationToken);
         var first = new IOException("actual continuation CAS first cause");
         var second = new OperationCanceledException("actual continuation CAS faulted OCE sibling");
         var actual = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         actual.SetException([first, second]); rig.TaskRows.ContinuationWrite = actual.Task;
         var failed = await Record.ExceptionAsync(async () =>
-        { await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, default)) { } });
+        { await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, TestContext.Current.CancellationToken)) { } });
         Assert.NotNull(failed);
         Assert.Contains(Leaves(failed!), value => ReferenceEquals(value, first));
         Assert.Contains(Leaves(failed!), value => ReferenceEquals(value, second));
         var retry = await Record.ExceptionAsync(async () =>
-        { await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, default)) { } });
+        { await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, TestContext.Current.CancellationToken)) { } });
         Assert.NotNull(retry);
         Assert.Equal(1, rig.TaskRows.ContinuationWriteCalls);
         Assert.Equal(0, rig.Client.Dispatches);
-        Assert.Equal(JsonSerializer.Serialize(original.RecoveryObservation), JsonSerializer.Serialize((await rig.Tasks.GetAsync(original.TaskId, default))!.RecoveryObservation));
-        var inspection = await rig.Tasks.InspectOriginalRecoveryAsync(original.TaskId, original.ExecutionId, default);
+        Assert.Equal(JsonSerializer.Serialize(original.RecoveryObservation), JsonSerializer.Serialize((await rig.Tasks.GetAsync(original.TaskId, TestContext.Current.CancellationToken))!.RecoveryObservation));
+        var inspection = await rig.Tasks.InspectOriginalRecoveryAsync(original.TaskId, original.ExecutionId, TestContext.Current.CancellationToken);
         Assert.Contains(inspection.OriginalWork, value => value.Stage == "continuation.task-write" && value.Status == TaskStatus.Faulted);
     }
 
@@ -319,13 +319,13 @@ public sealed partial class ChatCloudPermissionCallerTests
         await rig.RunAsync(false);
         var original = rig.Service.CurrentCanonicalTask!;
         Assert.Empty(original.Attempts);
-        var waiting = Assert.Single(rig.Stream.Where(value => value.Kind == ChatStreamEventKind.PermissionRequired)).PermissionRequest!;
-        await rig.Owner.ApproveOriginalAsync(waiting.Id, default);
+        var waiting = Assert.Single(rig.Stream, value => value.Kind == ChatStreamEventKind.PermissionRequired).PermissionRequest!;
+        await rig.Owner.ApproveOriginalAsync(waiting.Id, TestContext.Current.CancellationToken);
         rig.Client.RunApprovedOwnedFrame = true;
         var refused = await Record.ExceptionAsync(async () =>
-        { await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, default)) { } });
+        { await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, TestContext.Current.CancellationToken)) { } });
         Assert.NotNull(refused);
-        var current = (await rig.Tasks.GetAsync(original.TaskId, default))!;
+        var current = (await rig.Tasks.GetAsync(original.TaskId, TestContext.Current.CancellationToken))!;
         Assert.Equal(original.PersistenceRevision, current.PersistenceRevision);
         Assert.Empty(current.RecoveryHistory);
         Assert.Equal(0, rig.Client.Dispatches);
@@ -342,7 +342,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         var modelCapabilities = new HashSet<ToolCapability> { ToolCapability.Text };
         var selected = rig.Provider.Model.Model with { Name = rig.Provider.Model.Key, Capabilities = modelCapabilities };
         var original = rig.Service.SendAsync(rig.Conversation, "immutable original input", selected, EffortLevel.Medium,
-            capabilities, "controlled", "", DuoMode.Solo, null, null, null, images, default,
+            capabilities, "controlled", "", DuoMode.Solo, null, null, null, images, TestContext.Current.CancellationToken,
             taskExecutionIntent: TaskRunExecutionIntent.CanonicalAgenticTask);
         // These mutations occur BEFORE first enumeration, not just after the initial request.
         capabilities.Add(new("foreign", "foreign", "", "foreign instruction", "", ""));
@@ -352,12 +352,12 @@ public sealed partial class ChatCloudPermissionCallerTests
         var first = Assert.Single(rig.Capture.ChatWire);
         Assert.DoesNotContain("foreign instruction", first, StringComparison.Ordinal);
         Assert.DoesNotContain("foreign image", first, StringComparison.Ordinal);
-        var waiting = Assert.Single(rig.Stream.Where(value => value.Kind == ChatStreamEventKind.PermissionRequired)).PermissionRequest!;
-        await rig.Owner.ApproveOriginalAsync(waiting.Id, default);
+        var waiting = Assert.Single(rig.Stream, value => value.Kind == ChatStreamEventKind.PermissionRequired).PermissionRequest!;
+        await rig.Owner.ApproveOriginalAsync(waiting.Id, TestContext.Current.CancellationToken);
         rig.Client.RunApprovedOwnedFrame = true;
-        await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(task.TaskId, task.ExecutionId, default)) { }
+        await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(task.TaskId, task.ExecutionId, TestContext.Current.CancellationToken)) { }
         Assert.Collection(rig.Capture.ChatWire, value => Assert.Equal(first, value), value => Assert.Equal(first, value));
-        Assert.Single(rig.Conversations.Messages.Where(value => value.Role == MessageRole.User));
+        Assert.Single(rig.Conversations.Messages, value => value.Role == MessageRole.User);
         Assert.Equal(task.ExecutionId, rig.Service.CurrentCanonicalTask!.ExecutionId);
         Assert.Equal(TaskExecutionLifecycle.Completed, rig.Service.CurrentCanonicalTask.State);
     }
@@ -379,13 +379,13 @@ public sealed partial class ChatCloudPermissionCallerTests
         Assert.False(continued.IsCanceled);
         Assert.Contains(Leaves(failed!), value => ReferenceEquals(value, oce));
         Assert.Contains(Leaves(failed!), value => ReferenceEquals(value, sibling));
-        var current = (await rig.Tasks.GetAsync(original.TaskId, default))!;
+        var current = (await rig.Tasks.GetAsync(original.TaskId, TestContext.Current.CancellationToken))!;
         Assert.Equal(original.PersistenceRevision, current.PersistenceRevision);
         Assert.Equal(JsonSerializer.Serialize(original.RecoveryObservation), JsonSerializer.Serialize(current.RecoveryObservation));
         Assert.Empty(current.RecoveryHistory);
         Assert.Equal(0, rig.Client.Dispatches);
         Assert.Empty(rig.Policy.Grants);
-        var inspected = await rig.Tasks.InspectOriginalRecoveryAsync(original.TaskId, original.ExecutionId, default);
+        var inspected = await rig.Tasks.InspectOriginalRecoveryAsync(original.TaskId, original.ExecutionId, TestContext.Current.CancellationToken);
         Assert.Contains(inspected.OriginalWork, value => value.Stage == "continuation.input-history" && value.Status == TaskStatus.Faulted);
         Assert.Contains(inspected.OriginalWork, value => value.Stage == "continuation.preparation" && value.Status == TaskStatus.Faulted);
         async Task DrainAsync()
@@ -405,12 +405,12 @@ public sealed partial class ChatCloudPermissionCallerTests
         Assert.IsAssignableFrom<OperationCanceledException>(refusal);
         Assert.True(continued.IsCanceled);
         Assert.False(continued.IsFaulted);
-        var current = (await rig.Tasks.GetAsync(original.TaskId, default))!;
+        var current = (await rig.Tasks.GetAsync(original.TaskId, TestContext.Current.CancellationToken))!;
         Assert.Equal(original.PersistenceRevision, current.PersistenceRevision);
         Assert.Empty(current.RecoveryHistory);
         Assert.Equal(0, rig.Client.Dispatches);
         Assert.Empty(rig.Policy.Grants);
-        var inspected = await rig.Tasks.InspectOriginalRecoveryAsync(original.TaskId, original.ExecutionId, default);
+        var inspected = await rig.Tasks.InspectOriginalRecoveryAsync(original.TaskId, original.ExecutionId, TestContext.Current.CancellationToken);
         Assert.Contains(inspected.OriginalWork, value => value.Stage == "continuation.input-history" && value.Status == TaskStatus.Canceled);
         Assert.Contains(inspected.OriginalWork, value => value.Stage == "continuation.preparation" && value.Status == TaskStatus.Canceled);
         async Task DrainAsync()
@@ -428,17 +428,17 @@ public sealed partial class ChatCloudPermissionCallerTests
             rig.Stream.Clear(); rig.Client.RunApprovedOwnedFrame = false;
             await rig.RunAsync(false);
             var original = rig.Service.CurrentCanonicalTask!;
-            var required = Assert.Single(rig.Stream.Where(value => value.Kind == ChatStreamEventKind.PermissionRequired));
-            await rig.Owner.ApproveOriginalAsync(required.PermissionRequest!.Id, default);
+            var required = Assert.Single(rig.Stream, value => value.Kind == ChatStreamEventKind.PermissionRequired);
+            await rig.Owner.ApproveOriginalAsync(required.PermissionRequest!.Id, TestContext.Current.CancellationToken);
             rig.Client.RunApprovedOwnedFrame = true;
             var actual = new List<ChatStreamEvent>();
-            await foreach (var value in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, default)) actual.Add(value);
+            await foreach (var value in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, TestContext.Current.CancellationToken)) actual.Add(value);
             var completed = rig.Service.CurrentCanonicalTask!;
             Assert.Equal(original.TaskId, completed.TaskId); Assert.Equal(original.ExecutionId, completed.ExecutionId);
             Assert.Equal(original.ContextId, completed.ContextId); Assert.Equal(TaskExecutionLifecycle.Completed, completed.State);
             Assert.True(completedTasks.Add(completed.TaskId)); Assert.True(completedRuns.Add(completed.ExecutionId));
             Assert.Equal(JsonSerializer.Serialize(original.RecoveryObservation), JsonSerializer.Serialize(Assert.Single(completed.RecoveryHistory)));
-            Assert.Single(actual.Where(value => value.Kind == ChatStreamEventKind.AssistantCompleted));
+            Assert.Single(actual, value => value.Kind == ChatStreamEventKind.AssistantCompleted);
             Assert.DoesNotContain(actual, value => value.Kind == ChatStreamEventKind.UserMessage);
             Assert.Null(rig.Owner.GetOriginalOwner(required.PermissionRequest.Id)); // Actual resolved source record retired.
         }
@@ -454,8 +454,8 @@ public sealed partial class ChatCloudPermissionCallerTests
         await using var rig = new Rig();
         await rig.RunAsync(false);
         var original = rig.Service.CurrentCanonicalTask!;
-        var required = Assert.Single(rig.Stream.Where(value => value.Kind == ChatStreamEventKind.PermissionRequired));
-        await rig.Owner.ApproveOriginalAsync(required.PermissionRequest!.Id, default);
+        var required = Assert.Single(rig.Stream, value => value.Kind == ChatStreamEventKind.PermissionRequired);
+        await rig.Owner.ApproveOriginalAsync(required.PermissionRequest!.Id, TestContext.Current.CancellationToken);
         var held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var cause = new IOException("actual resumed stream cleanup failed");
         var resumedDisposeEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -464,26 +464,26 @@ public sealed partial class ChatCloudPermissionCallerTests
         var resumed = DrainAsync();
         try
         {
-            await resumedDisposeEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await resumedDisposeEntered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             Assert.True(Assert.Single(rig.Capture.ApprovedRunningOriginals).IsCompletedSuccessfully);
             Assert.False(resumed.IsCompleted);
-            var waiting = (await rig.Tasks.GetAsync(original.TaskId, default))!;
+            var waiting = (await rig.Tasks.GetAsync(original.TaskId, TestContext.Current.CancellationToken))!;
             Assert.Equal(TaskExecutionLifecycle.Running, waiting.State);
             Assert.Equal(original.TaskId, waiting.TaskId); Assert.Equal(original.ExecutionId, waiting.ExecutionId);
             Assert.Equal(TaskRunAttemptState.Running, Assert.Single(waiting.Attempts).State);
             Assert.DoesNotContain(rig.Stream, value => value.Kind == ChatStreamEventKind.AssistantCompleted);
             Assert.Single(waiting.RecoveryHistory);
-            Assert.Empty(rig.Events.Observed.Where(value => value.SafeMetadata?.GetValueOrDefault("resolutionKind") == "live-never-started-original"));
+            Assert.DoesNotContain(rig.Events.Observed, value => value.SafeMetadata?.GetValueOrDefault("resolutionKind") == "live-never-started-original");
             Assert.NotNull(rig.Owner.GetOriginalOwner(required.PermissionRequest.Id));
         }
         finally { held.TrySetException(cause); }
         var failure = await Record.ExceptionAsync(() => resumed);
         Assert.NotNull(failure); Assert.Contains(Leaves(failure!), value => ReferenceEquals(value, cause));
-        var current = (await rig.Tasks.GetAsync(original.TaskId, default))!;
+        var current = (await rig.Tasks.GetAsync(original.TaskId, TestContext.Current.CancellationToken))!;
         Assert.Equal(TaskExecutionLifecycle.Suspended, current.State);
         Assert.NotNull(current.RecoveryObservation);
         Assert.Equal(JsonSerializer.Serialize(original.RecoveryObservation), JsonSerializer.Serialize(Assert.Single(current.RecoveryHistory)));
-        Assert.Empty(rig.Events.Observed.Where(value => value.SafeMetadata?.GetValueOrDefault("resolutionKind") == "live-never-started-original"));
+        Assert.DoesNotContain(rig.Events.Observed, value => value.SafeMetadata?.GetValueOrDefault("resolutionKind") == "live-never-started-original");
         Assert.NotNull(rig.Owner.GetOriginalOwner(required.PermissionRequest.Id));
         async Task DrainAsync()
         { await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, default)) { } }

@@ -14,12 +14,12 @@ public sealed class TaskRunCoordinatorRecoveryTests
         var h = await Harness.CreateAsync();
         var action = await h.AcceptSyntheticOwnerActionAsync();
         var cause = new HttpRequestException("Synthetic raw quota", null, System.Net.HttpStatusCode.TooManyRequests);
-        var frame = h.Runtime.StartOriginalFrameAsync<string>(h.Admission, _ => Task.FromException<string>(cause), default);
+        var frame = h.Runtime.StartOriginalFrameAsync<string>(h.Admission, _ => Task.FromException<string>(cause), TestContext.Current.CancellationToken);
         Assert.Same(cause, await Assert.ThrowsAsync<HttpRequestException>(() => frame));
         var observation = h.Runtime.CreateProviderFailureObservation(h.Admission, frame, cause);
         await h.Coordinator.RecordAttemptFailureAsync(h.Task.TaskId, h.Task.ExecutionId, h.Admission.AttemptId,
-            new("QUOTA", "Quota", "Synthetic raw quota"), default, observation);
-        var resumed = await h.Coordinator.ResumeAttemptAsync(h.Task.TaskId, h.Task.ExecutionId, h.Admission.AttemptId, Route("local"), default);
+            new("QUOTA", "Quota", "Synthetic raw quota"), TestContext.Current.CancellationToken, observation);
+        var resumed = await h.Coordinator.ResumeAttemptAsync(h.Task.TaskId, h.Task.ExecutionId, h.Admission.AttemptId, Route("local"), TestContext.Current.CancellationToken);
         Assert.Equal(h.Task.TaskId, resumed.Snapshot.TaskId);
         Assert.Equal(h.Task.ContextId, resumed.Snapshot.ContextId);
         Assert.Equal(h.Task.ExecutionId, resumed.Snapshot.ExecutionId);
@@ -35,19 +35,19 @@ public sealed class TaskRunCoordinatorRecoveryTests
         var h = await Harness.CreateAsync();
         var first = new HttpRequestException("Synthetic primary", null, System.Net.HttpStatusCode.TooManyRequests);
         var sibling = new HttpRequestException("Synthetic sibling", null, System.Net.HttpStatusCode.ServiceUnavailable);
-        var firstFrame = h.Runtime.StartOriginalFrameAsync<string>(h.Admission, _ => Task.FromException<string>(first), default);
-        var siblingFrame = h.Runtime.StartOriginalFrameAsync<string>(h.Admission, _ => Task.FromException<string>(sibling), default);
+        var firstFrame = h.Runtime.StartOriginalFrameAsync<string>(h.Admission, _ => Task.FromException<string>(first), TestContext.Current.CancellationToken);
+        var siblingFrame = h.Runtime.StartOriginalFrameAsync<string>(h.Admission, _ => Task.FromException<string>(sibling), TestContext.Current.CancellationToken);
         Assert.Same(first, await Assert.ThrowsAsync<HttpRequestException>(() => firstFrame));
         Assert.Same(sibling, await Assert.ThrowsAsync<HttpRequestException>(() => siblingFrame));
         var firstObservation = h.Runtime.CreateProviderFailureObservation(h.Admission, firstFrame, first);
         var siblingObservation = h.Runtime.CreateProviderFailureObservation(h.Admission, siblingFrame, sibling);
         var failed = await h.Coordinator.RecordAttemptFailureAsync(h.Task.TaskId, h.Task.ExecutionId, h.Admission.AttemptId,
-            new("PRIMARY", "Primary", "Synthetic primary"), default, firstObservation);
+            new("PRIMARY", "Primary", "Synthetic primary"), TestContext.Current.CancellationToken, firstObservation);
         var unchanged = await h.Coordinator.RecordAttemptFailureAsync(h.Task.TaskId, h.Task.ExecutionId, h.Admission.AttemptId,
-            new("SIBLING", "Sibling", "Synthetic sibling"), default, siblingObservation);
+            new("SIBLING", "Sibling", "Synthetic sibling"), TestContext.Current.CancellationToken, siblingObservation);
         Assert.Equal(failed.PersistenceRevision, unchanged.PersistenceRevision);
         var blocked = await Record.ExceptionAsync(() => h.Coordinator.ResumeAttemptAsync(h.Task.TaskId, h.Task.ExecutionId,
-            h.Admission.AttemptId, Route("local"), default));
+            h.Admission.AttemptId, Route("local"), TestContext.Current.CancellationToken));
         Assert.NotNull(blocked);
         Assert.Contains(Causes(blocked!), error => ReferenceEquals(error, sibling));
         Assert.Single(h.Authority.Leases);
@@ -60,13 +60,13 @@ public sealed class TaskRunCoordinatorRecoveryTests
         var cleanup = new IOException("Synthetic exact original lease cleanup");
         ((SyntheticLease)h.Admission.Lease).CleanupFailure = cleanup;
         var body = new HttpRequestException("Synthetic terminal body", null, System.Net.HttpStatusCode.TooManyRequests);
-        var frame = h.Runtime.StartOriginalFrameAsync<string>(h.Admission, _ => Task.FromException<string>(body), default);
+        var frame = h.Runtime.StartOriginalFrameAsync<string>(h.Admission, _ => Task.FromException<string>(body), TestContext.Current.CancellationToken);
         Assert.Same(body, await Assert.ThrowsAsync<HttpRequestException>(() => frame));
         var observation = h.Runtime.CreateProviderFailureObservation(h.Admission, frame, body);
         await h.Coordinator.RecordAttemptFailureAsync(h.Task.TaskId, h.Task.ExecutionId, h.Admission.AttemptId,
-            new("QUOTA", "Quota", "Synthetic terminal body"), default, observation);
+            new("QUOTA", "Quota", "Synthetic terminal body"), TestContext.Current.CancellationToken, observation);
         var blocked = await Record.ExceptionAsync(() => h.Coordinator.ResumeAttemptAsync(h.Task.TaskId, h.Task.ExecutionId,
-            h.Admission.AttemptId, Route("local"), default));
+            h.Admission.AttemptId, Route("local"), TestContext.Current.CancellationToken));
         Assert.NotNull(blocked);
         Assert.Contains(Causes(blocked!), error => ReferenceEquals(error, cleanup));
         Assert.Single(h.Authority.Leases);
@@ -79,15 +79,15 @@ public sealed class TaskRunCoordinatorRecoveryTests
         var h = await Harness.CreateAsync();
         var action = Guid.NewGuid();
         await h.Coordinator.RegisterActionAsync(h.Task.TaskId, action, null, "Synthetic unknown committed effect",
-            TaskActionInterruptionPolicy.AtomicCommit, null, [], default, h.Admission.AttemptId);
+            TaskActionInterruptionPolicy.AtomicCommit, null, [], TestContext.Current.CancellationToken, h.Admission.AttemptId);
         await Assert.ThrowsAsync<InvalidOperationException>(() => h.Coordinator.CompleteAttemptAsync(
-            h.Task.TaskId, h.Task.ExecutionId, h.Admission.AttemptId, default));
+            h.Task.TaskId, h.Task.ExecutionId, h.Admission.AttemptId, TestContext.Current.CancellationToken));
         Assert.Equal(0, ((SyntheticLease)h.Admission.Lease).DisposeCount);
         await h.Coordinator.RecordAttemptFailureAsync(h.Task.TaskId, h.Task.ExecutionId, h.Admission.AttemptId,
-            new("OWNER_UNKNOWN", "Unknown", "No owner acceptance observed"), default);
+            new("OWNER_UNKNOWN", "Unknown", "No owner acceptance observed"), TestContext.Current.CancellationToken);
         await Assert.ThrowsAsync<InvalidOperationException>(() => h.Coordinator.ResumeAttemptAsync(
-            h.Task.TaskId, h.Task.ExecutionId, h.Admission.AttemptId, Route("local"), default));
-        var saved = await h.Repository.GetAsync(h.Task.TaskId, default);
+            h.Task.TaskId, h.Task.ExecutionId, h.Admission.AttemptId, Route("local"), TestContext.Current.CancellationToken));
+        var saved = await h.Repository.GetAsync(h.Task.TaskId, TestContext.Current.CancellationToken);
         Assert.Equal(TaskPlanNodeState.Running, saved!.Plan.Single().State);
         Assert.Null(saved.LastCheckpointActionId);
         Assert.Single(h.Authority.Leases);
@@ -97,12 +97,12 @@ public sealed class TaskRunCoordinatorRecoveryTests
     public async Task Zero_frame_completion_requires_actual_registration_and_refuses_legacy_boolean()
     {
         var h = await Harness.CreateAsync();
-        await Assert.ThrowsAsync<InvalidOperationException>(() => h.Coordinator.ReachCheckpointAsync(h.Task.TaskId, null, true, default));
-        var done = await h.Coordinator.CompleteAttemptAsync(h.Task.TaskId, h.Task.ExecutionId, h.Admission.AttemptId, default);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => h.Coordinator.ReachCheckpointAsync(h.Task.TaskId, null, true, TestContext.Current.CancellationToken));
+        var done = await h.Coordinator.CompleteAttemptAsync(h.Task.TaskId, h.Task.ExecutionId, h.Admission.AttemptId, TestContext.Current.CancellationToken);
         Assert.Equal(TaskExecutionLifecycle.Completed, done.State);
         Assert.Equal(TaskRunAttemptState.Completed, done.Attempts.Single().State);
         Assert.Equal(1, ((SyntheticLease)h.Admission.Lease).DisposeCount);
-        Assert.Null(await h.Coordinator.TryGetIssuedAttemptAsync(h.Task.TaskId, h.Task.ExecutionId, h.Admission.AttemptId, default));
+        Assert.Null(await h.Coordinator.TryGetIssuedAttemptAsync(h.Task.TaskId, h.Task.ExecutionId, h.Admission.AttemptId, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -113,15 +113,15 @@ public sealed class TaskRunCoordinatorRecoveryTests
             CheckpointMode.BeforeFileChanges, 0, DateTimeOffset.UtcNow.AddDays(-1));
         h.Checkpoints.Records.Add(old.Id, old);
         await Assert.ThrowsAsync<InvalidOperationException>(() => h.Coordinator.RecordCheckpointAsync(h.Task.TaskId,
-            h.Task.ExecutionId, old.Id, default));
+            h.Task.ExecutionId, old.Id, TestContext.Current.CancellationToken));
         h.Checkpoints.Originals.Add(Guid.NewGuid(), old.Id);
         await Assert.ThrowsAsync<InvalidOperationException>(() => h.Coordinator.RecordCheckpointAsync(h.Task.TaskId,
-            h.Task.ExecutionId, old.Id, default));
-        Assert.Null((await h.Repository.GetAsync(h.Task.TaskId, default))!.CheckpointId);
+            h.Task.ExecutionId, old.Id, TestContext.Current.CancellationToken));
+        Assert.Null((await h.Repository.GetAsync(h.Task.TaskId, TestContext.Current.CancellationToken))!.CheckpointId);
         var current = old with { Id = Guid.NewGuid(), Label = "current" };
         h.Checkpoints.Records.Add(current.Id, current);
         h.Checkpoints.Originals.Add(h.Task.ExecutionId, current.Id);
-        var acknowledged = await h.Coordinator.RecordCheckpointAsync(h.Task.TaskId, h.Task.ExecutionId, current.Id, default);
+        var acknowledged = await h.Coordinator.RecordCheckpointAsync(h.Task.TaskId, h.Task.ExecutionId, current.Id, TestContext.Current.CancellationToken);
         Assert.Equal(current.Id, acknowledged.CheckpointId);
     }
 
@@ -130,10 +130,10 @@ public sealed class TaskRunCoordinatorRecoveryTests
     {
         var repository = new SyntheticRepository();
         var coordinator = new TaskExecutionCoordinator(repository, new NullSink());
-        var task = await coordinator.BeginAsync(Guid.NewGuid(), Guid.NewGuid(), "legacy metadata", TaskExecutionDurability.PersistedPlan, [], default);
+        var task = await coordinator.BeginAsync(Guid.NewGuid(), Guid.NewGuid(), "legacy metadata", TaskExecutionDurability.PersistedPlan, [], TestContext.Current.CancellationToken);
         var action = Guid.NewGuid();
-        await coordinator.RegisterActionAsync(task.TaskId, action, null, "runtime return", TaskActionInterruptionPolicy.AtomicCommit, null, [], default);
-        task = await coordinator.CompleteActionAsync(task.TaskId, action, true, default);
+        await coordinator.RegisterActionAsync(task.TaskId, action, null, "runtime return", TaskActionInterruptionPolicy.AtomicCommit, null, [], TestContext.Current.CancellationToken);
+        task = await coordinator.CompleteActionAsync(task.TaskId, action, true, TestContext.Current.CancellationToken);
         var projection = TaskExecutionProjection.From(task);
         Assert.Empty(projection.AcceptedActions);
         Assert.Null(projection.LastAcceptedActionId);

@@ -19,6 +19,7 @@ internal sealed class AgentCanonicalOriginal(AgentRun expected)
     internal readonly List<Task> ActualDisposals = [];
     internal readonly List<Task> ActualPersistence = [];
     internal readonly List<AgentRuntimeOriginalCustody> ActualHistoryOperations = [];
+    internal readonly List<AgentOriginalObservationCustody> ActualPresentationObservations = [];
     private readonly List<Exception> _causes = [];
     internal IReadOnlyList<Exception> Causes { get { lock (Gate) return _causes.ToArray(); } }
     internal readonly List<Task> ActualPreparations = [];

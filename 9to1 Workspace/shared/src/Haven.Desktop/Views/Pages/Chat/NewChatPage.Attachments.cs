@@ -31,7 +31,13 @@ public sealed partial class NewChatPage
         return chips;
     }
 
-    private async void OnAttachmentRemoveRequested(object? sender, string id)
+    private void OnAttachmentRemoveRequested(object? sender, string id)
+    {
+        if (_originalWork.IsRetiring) return;
+        _ = RunChatOriginalAsync(() => OnAttachmentRemoveRequestedOriginalBodyAsync(sender, id));
+    }
+
+    private async Task OnAttachmentRemoveRequestedOriginalBodyAsync(object? sender, string id)
     {
         if (string.IsNullOrWhiteSpace(id)) return;
         var changed = false;
@@ -39,16 +45,17 @@ public sealed partial class NewChatPage
         {
             try
             {
-                await _messageAttachments.DeleteAsync(attachmentId, CancellationToken.None);
+                await AwaitChatOriginalAsync(_messageAttachments.DeleteAsync(attachmentId, RequireChatOriginal().Token));
                 changed = _persistedAttachments.RemoveAll(item => item.Id == attachmentId) > 0;
                 _pendingAttachmentIds.Remove(attachmentId);
                 if (_attachmentSourcePaths.Remove(attachmentId, out var sourcePath))
                     _taskAttachments.RemoveFile(sourcePath);
-                await RefreshPersistedAttachmentPromptContextAsync();
-                await SavePendingAttachmentDraftAsync();
+                await AwaitChatOriginalAsync(RefreshPersistedAttachmentPromptContextAsync());
+                await AwaitChatOriginalAsync(SavePendingAttachmentDraftAsync());
             }
             catch (Exception exception) when (exception is IOException or InvalidOperationException or UnauthorizedAccessException)
             {
+                RetainHandledOriginalChatCause(exception);
                 _scene.SetStatus("The attachment could not be removed: " + exception.Message);
                 return;
             }
@@ -82,7 +89,9 @@ public sealed partial class NewChatPage
         FocusComposer();
     }
 
-    private async Task LoadPendingPersistedAttachmentsAsync(Conversation conversation)
+    private Task LoadPendingPersistedAttachmentsAsync(Conversation conversation) => RunChatNestedOriginalAsync(() => LoadPendingPersistedAttachmentsOriginalBodyAsync(conversation));
+
+    private async Task LoadPendingPersistedAttachmentsOriginalBodyAsync(Conversation conversation)
     {
         _pendingAttachmentIds.Clear();
         _persistedAttachments.Clear();
@@ -91,9 +100,9 @@ public sealed partial class NewChatPage
 
         try
         {
-            var branch = await _conversationProduction.GetCurrentBranchAsync(conversation.Id, CancellationToken.None)
-                         ?? await _conversationProduction.EnsureRootBranchAsync(conversation.Id, CancellationToken.None);
-            var draft = await _conversationProduction.GetDraftAsync(conversation.Id, branch.Id, CancellationToken.None);
+            var branch = await AwaitChatOriginalAsync(_conversationProduction.GetCurrentBranchAsync(conversation.Id, RequireChatOriginal().Token))
+                         ?? await AwaitChatOriginalAsync(_conversationProduction.EnsureRootBranchAsync(conversation.Id, RequireChatOriginal().Token));
+            var draft = await AwaitChatOriginalAsync(_conversationProduction.GetDraftAsync(conversation.Id, branch.Id, RequireChatOriginal().Token));
             if (draft is null || string.IsNullOrWhiteSpace(draft.AttachmentIdsJson)) return;
 
             Guid[] ids;
@@ -101,67 +110,81 @@ public sealed partial class NewChatPage
             {
                 ids = JsonSerializer.Deserialize<Guid[]>(draft.AttachmentIdsJson) ?? [];
             }
-            catch (JsonException)
+            catch (JsonException originalCaughtCause)
             {
+                RetainHandledOriginalChatCause(originalCaughtCause);
                 ids = [];
             }
             foreach (var id in ids.Where(id => id != Guid.Empty)) _pendingAttachmentIds.Add(id);
             if (_pendingAttachmentIds.Count == 0) return;
 
-            var attachments = await _conversationProduction.GetAttachmentsAsync(conversation.Id, messageId: null, CancellationToken.None);
+            var attachments = await AwaitChatOriginalAsync(_conversationProduction.GetAttachmentsAsync(conversation.Id, messageId: null, RequireChatOriginal().Token));
             _persistedAttachments.AddRange(attachments.Where(item => _pendingAttachmentIds.Contains(item.Id)));
             _pendingAttachmentIds.IntersectWith(_persistedAttachments.Select(item => item.Id));
-            await RefreshPersistedAttachmentPromptContextAsync();
+            await AwaitChatOriginalAsync(RefreshPersistedAttachmentPromptContextAsync());
         }
         catch (Exception exception) when (exception is IOException or InvalidOperationException or UnauthorizedAccessException)
         {
+            RetainHandledOriginalChatCause(exception);
             _scene.SetStatus("Pending attachments could not be restored: " + exception.Message);
         }
     }
 
-    private async Task<Guid?> EnsureAttachmentBranchAsync(CancellationToken cancellationToken)
+    private Task<Guid?> EnsureAttachmentBranchAsync(CancellationToken cancellationToken) => RunChatNestedOriginalAsync(() => EnsureAttachmentBranchOriginalBodyAsync(cancellationToken));
+
+    private async Task<Guid?> EnsureAttachmentBranchOriginalBodyAsync(CancellationToken cancellationToken)
     {
+        using var originalCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, RequireChatOriginal().Token);
+        cancellationToken = originalCancellation.Token;
         if (_conversationProduction is null || _conversation.IsTemporary) return null;
-        var branch = await _conversationProduction.GetCurrentBranchAsync(_conversation.Id, cancellationToken)
-                     ?? await _conversationProduction.EnsureRootBranchAsync(_conversation.Id, cancellationToken);
+        var branch = await AwaitChatOriginalAsync(_conversationProduction.GetCurrentBranchAsync(_conversation.Id, cancellationToken))
+                     ?? await AwaitChatOriginalAsync(_conversationProduction.EnsureRootBranchAsync(_conversation.Id, cancellationToken));
         return branch.Id;
     }
 
-    private async Task SavePendingAttachmentDraftAsync(CancellationToken cancellationToken = default)
+    private Task SavePendingAttachmentDraftAsync(CancellationToken cancellationToken = default) => RunChatNestedOriginalAsync(() => SavePendingAttachmentDraftOriginalBodyAsync(cancellationToken));
+
+    private async Task SavePendingAttachmentDraftOriginalBodyAsync(CancellationToken cancellationToken = default)
     {
+        using var originalCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, RequireChatOriginal().Token);
+        cancellationToken = originalCancellation.Token;
         if (_conversationProduction is null || _conversation.IsTemporary) return;
-        var branchId = await EnsureAttachmentBranchAsync(cancellationToken);
+        var branchId = await AwaitChatOriginalAsync(EnsureAttachmentBranchAsync(cancellationToken));
         if (branchId is null) return;
         if (_pendingAttachmentIds.Count == 0 && string.IsNullOrWhiteSpace(_scene.Instruction.Text))
         {
-            await _conversationProduction.DeleteDraftAsync(_conversation.Id, branchId, cancellationToken);
+            await AwaitChatOriginalAsync(_conversationProduction.DeleteDraftAsync(_conversation.Id, branchId, cancellationToken));
             return;
         }
-        await _conversationProduction.SaveDraftAsync(
+        await AwaitChatOriginalAsync(_conversationProduction.SaveDraftAsync(
             new ConversationDraft(
                 _conversation.Id,
                 branchId.Value,
                 _scene.Instruction.Text,
                 JsonSerializer.Serialize(_pendingAttachmentIds.OrderBy(id => id).ToArray()),
                 DateTimeOffset.UtcNow),
-            cancellationToken);
+            cancellationToken));
     }
 
-    private async Task AssociatePendingAttachmentsWithUserMessageAsync(Guid userMessageId, CancellationToken cancellationToken)
+    private Task AssociatePendingAttachmentsWithUserMessageAsync(Guid userMessageId, CancellationToken cancellationToken) => RunChatNestedOriginalAsync(() => AssociatePendingAttachmentsWithUserMessageOriginalBodyAsync(userMessageId, cancellationToken));
+
+    private async Task AssociatePendingAttachmentsWithUserMessageOriginalBodyAsync(Guid userMessageId, CancellationToken cancellationToken)
     {
+        using var originalCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, RequireChatOriginal().Token);
+        cancellationToken = originalCancellation.Token;
         if (_conversationProduction is null || _pendingAttachmentIds.Count == 0 || _conversation.IsTemporary || userMessageId == Guid.Empty) return;
 
-        var attachments = await _conversationProduction.GetAttachmentsAsync(_conversation.Id, messageId: null, cancellationToken);
+        var attachments = await AwaitChatOriginalAsync(_conversationProduction.GetAttachmentsAsync(_conversation.Id, messageId: null, cancellationToken));
         var now = DateTimeOffset.UtcNow;
         foreach (var attachment in attachments.Where(item => _pendingAttachmentIds.Contains(item.Id)))
         {
-            await _conversationProduction.UpsertAttachmentAsync(
+            await AwaitChatOriginalAsync(_conversationProduction.UpsertAttachmentAsync(
                 attachment with { MessageId = userMessageId, UpdatedAt = now },
-                cancellationToken);
+                cancellationToken));
         }
 
-        var branch = await _conversationProduction.GetCurrentBranchAsync(_conversation.Id, cancellationToken);
-        await _conversationProduction.DeleteDraftAsync(_conversation.Id, branch?.Id, cancellationToken);
+        var branch = await AwaitChatOriginalAsync(_conversationProduction.GetCurrentBranchAsync(_conversation.Id, cancellationToken));
+        await AwaitChatOriginalAsync(_conversationProduction.DeleteDraftAsync(_conversation.Id, branch?.Id, cancellationToken));
         ClearPendingPersistedAttachmentsFromComposer();
     }
 

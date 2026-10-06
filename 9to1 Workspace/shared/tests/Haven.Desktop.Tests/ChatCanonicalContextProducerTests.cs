@@ -73,7 +73,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         Assert.Equal(0, h.Workspace.Effects);
         Assert.Equal(0, h.Provider.CompatibilityCompletions);
         // This source proves the pre-effect refusal, not yet the separate orchestration suspension successor.
-        Assert.NotEqual(TaskExecutionLifecycle.Completed, (await h.Coordinator.GetAsync(capture.Current.TaskId, default))!.State);
+        Assert.NotEqual(TaskExecutionLifecycle.Completed, (await h.Coordinator.GetAsync(capture.Current.TaskId, TestContext.Current.CancellationToken))!.State);
         await h.Runtime.CloseAndDrainAsync();
     }
 
@@ -100,7 +100,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         h.Capture.BeforeCapture = () => h.Authority.AllowCurrentActor = false;
         h.Capture.Refusal = actual;
         Assert.Same(actual, await Record.ExceptionAsync(() => h.RunAsync("owned private context")));
-        var saved = await h.Coordinator.GetAsync(h.Service.CurrentCanonicalTask!.TaskId, default);
+        var saved = await h.Coordinator.GetAsync(h.Service.CurrentCanonicalTask!.TaskId, TestContext.Current.CancellationToken);
         Assert.Equal(TaskExecutionLifecycle.Suspended, saved!.State);
         Assert.Equal(h.Service.CurrentCanonicalTask.ExecutionId, saved.ExecutionId);
         Assert.Equal(TaskRunOriginalSettlementOutcome.NoAttemptAdmissionWasInvoked, saved.RecoveryObservation!.SettlementOutcome);
@@ -109,7 +109,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         Assert.Equal(0, h.Authority.AttemptChecks);
         Assert.Equal(0, h.Provider.Frames);
         await Assert.ThrowsAsync<InvalidOperationException>(() => h.Coordinator.StartAttemptAsync(saved.TaskId, saved.ExecutionId,
-            new TaskRunRouteCandidate("synthetic-route", 1, "synthetic", h.Model.Name, null, false, ["Text"]), default));
+            new TaskRunRouteCandidate("synthetic-route", 1, "synthetic", h.Model.Name, null, false, ["Text"]), TestContext.Current.CancellationToken));
         await h.Runtime.CloseAndDrainAsync();
     }
 
@@ -128,7 +128,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         Assert.IsType<AggregateException>(observed);
         Assert.Contains(OriginalCauses(observed!), cause => ReferenceEquals(cause, body));
         Assert.Contains(OriginalCauses(observed!), cause => ReferenceEquals(cause, cleanup));
-        var saved = await h.Coordinator.GetAsync(h.Service.CurrentCanonicalTask!.TaskId, default);
+        var saved = await h.Coordinator.GetAsync(h.Service.CurrentCanonicalTask!.TaskId, TestContext.Current.CancellationToken);
         Assert.Equal(TaskExecutionLifecycle.Suspended, saved!.State);
         Assert.Contains(saved.RecoveryObservation!.Causes, cause => cause.Message == body.Message);
         Assert.Contains(saved.RecoveryObservation.Causes, cause => cause.Message == cleanup.Message);
@@ -141,14 +141,14 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
     {
         var h = Harness.Create(temporary: true);
         var iterator = h.Service.SendAsync(h.Conversation, "actual queued input", h.Model, EffortLevel.Medium, [], "controlled", "",
-            DuoMode.Solo, "synthetic-workspace", null, null, null, default,
-            taskExecutionIntent: TaskRunExecutionIntent.CanonicalAgenticTask).GetAsyncEnumerator();
+            DuoMode.Solo, "synthetic-workspace", null, null, null, TestContext.Current.CancellationToken,
+            taskExecutionIntent: TaskRunExecutionIntent.CanonicalAgenticTask).GetAsyncEnumerator(TestContext.Current.CancellationToken);
         while (await iterator.MoveNextAsync())
             if (iterator.Current.Kind == ChatStreamEventKind.AssistantStarted) break;
         var originalDispose = iterator.DisposeAsync().AsTask();
         await originalDispose;
         Assert.True(originalDispose.IsCompletedSuccessfully);
-        var saved = await h.Coordinator.GetAsync(h.Service.CurrentCanonicalTask!.TaskId, default);
+        var saved = await h.Coordinator.GetAsync(h.Service.CurrentCanonicalTask!.TaskId, TestContext.Current.CancellationToken);
         Assert.Equal(TaskExecutionLifecycle.Suspended, saved!.State);
         Assert.Equal(TaskRunIteratorTerminalOutcome.ClosedBeforeEnd, saved.RecoveryObservation!.IteratorOutcome);
         Assert.Equal(TaskRunOriginalSettlementOutcome.NoAttemptAdmissionWasInvoked, saved.RecoveryObservation.SettlementOutcome);
@@ -178,7 +178,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         var observed = await Record.ExceptionAsync(() => h.RunAsync("Create the file"));
         Assert.Contains(OriginalCauses(observed!), cause => ReferenceEquals(cause, cleanup));
         Assert.Contains(OriginalCauses(observed!), cause => cause.Message.Contains("effective model is unknown", StringComparison.Ordinal));
-        var saved = await h.Coordinator.GetAsync(originalTask, default);
+        var saved = await h.Coordinator.GetAsync(originalTask, TestContext.Current.CancellationToken);
         Assert.Equal(originalTask, saved!.TaskId); Assert.Equal(originalRun, saved.ExecutionId);
         Assert.Equal(originalAttempt, Assert.Single(saved.Attempts).Id);
         Assert.Equal(TaskPlanNodeState.Completed, Assert.Single(saved.Plan).State);
@@ -188,7 +188,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         Assert.Equal(TaskRunOriginalSettlementOutcome.Failed, saved.RecoveryObservation!.SettlementOutcome);
         Assert.Equal(1, h.Authority.Lease!.Disposes);
         await Assert.ThrowsAsync<InvalidOperationException>(() => h.Coordinator.ResumeAttemptAsync(originalTask, originalRun, originalAttempt,
-            new TaskRunRouteCandidate("another-route", 2, "synthetic", h.Model.Name, null, false, ["Text"]), default));
+            new TaskRunRouteCandidate("another-route", 2, "synthetic", h.Model.Name, null, false, ["Text"]), TestContext.Current.CancellationToken));
         Assert.Contains(OriginalCauses((await Record.ExceptionAsync(() => h.Runtime.CloseAndDrainAsync()))!),
             cause => ReferenceEquals(cause, cleanup));
     }
@@ -214,7 +214,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
             && OriginalCauses(observed!).Any(original => ReferenceEquals(original, envelope)));
         Assert.Contains(h.Coordinator.ObservationFailures, value => ReferenceEquals(value.OriginalException, first));
         Assert.Contains(h.Coordinator.ObservationFailures, value => ReferenceEquals(value.OriginalException, second));
-        var saved = (await h.Coordinator.GetAsync(h.Service.CurrentCanonicalTask!.TaskId, default))!;
+        var saved = (await h.Coordinator.GetAsync(h.Service.CurrentCanonicalTask!.TaskId, TestContext.Current.CancellationToken))!;
         Assert.Null(saved.RecoveryObservation);
         Assert.NotEqual(TaskExecutionLifecycle.Completed, saved.State);
         Assert.Equal(0, h.Provider.Frames);
@@ -235,13 +235,13 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         var observed = await Record.ExceptionAsync(() => h.RunAsync("actual original"));
         Assert.Contains(OriginalCauses(observed!), cause => ReferenceEquals(cause, body));
         Assert.Contains(OriginalCauses(observed!), cause => cause is TaskExecutionRevisionConflictException);
-        var saved = await h.Coordinator.GetAsync(h.Service.CurrentCanonicalTask!.TaskId, default);
+        var saved = await h.Coordinator.GetAsync(h.Service.CurrentCanonicalTask!.TaskId, TestContext.Current.CancellationToken);
         Assert.Single(saved!.Queue);
         Assert.Null(saved.RecoveryObservation); // A lost CAS is not represented as an acknowledged projection.
         Assert.NotEqual(TaskExecutionLifecycle.Completed, saved.State);
         Assert.Contains(h.Coordinator.ObservationFailures, cause => cause.OriginalException is TaskExecutionRevisionConflictException);
         await Assert.ThrowsAsync<InvalidOperationException>(() => h.Coordinator.StartAttemptAsync(saved.TaskId, saved.ExecutionId,
-            new TaskRunRouteCandidate("synthetic-route", 1, "synthetic", h.Model.Name, null, false, ["Text"]), default));
+            new TaskRunRouteCandidate("synthetic-route", 1, "synthetic", h.Model.Name, null, false, ["Text"]), TestContext.Current.CancellationToken));
         Assert.Equal(0, h.Provider.Frames);
         Assert.Equal(0, h.Authority.AttemptChecks);
         await h.Runtime.CloseAndDrainAsync();
@@ -291,7 +291,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         Assert.True(original.IsFaulted);
         Assert.False(original.IsCanceled);
         Assert.Contains(OriginalCauses(observed!), cause => ReferenceEquals(cause, actual));
-        var current = (await h.Coordinator.GetAsync(h.Service.CurrentCanonicalTask!.TaskId, default))!;
+        var current = (await h.Coordinator.GetAsync(h.Service.CurrentCanonicalTask!.TaskId, TestContext.Current.CancellationToken))!;
         Assert.Equal(TaskExecutionLifecycle.Suspended, current.State);
         Assert.Contains(current.RecoveryObservation!.Causes, cause => cause.Message == actual.Message);
         Assert.Equal(0, h.Provider.Frames);
@@ -331,17 +331,17 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         var original = h.RunAsync("held owning originals");
         try
         {
-            await bodyFinallyEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await bodyFinallyEntered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             Assert.False(original.IsCompleted);
             Assert.Empty(completed);
             Assert.DoesNotContain(h.Events, value => value.Kind == ChatStreamEventKind.AssistantCompleted);
-            Assert.Equal(TaskExecutionLifecycle.Running, (await h.Coordinator.GetAsync(h.Service.CurrentCanonicalTask!.TaskId, default))!.State);
+            Assert.Equal(TaskExecutionLifecycle.Running, (await h.Coordinator.GetAsync(h.Service.CurrentCanonicalTask!.TaskId, TestContext.Current.CancellationToken))!.State);
             releaseBodyFinally.SetResult();
-            await leaseCloseEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await leaseCloseEntered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             Assert.False(original.IsCompleted);
             Assert.Empty(completed);
             Assert.DoesNotContain(h.Events, value => value.Kind == ChatStreamEventKind.AssistantCompleted);
-            Assert.Equal(TaskExecutionLifecycle.Running, (await h.Coordinator.GetAsync(h.Service.CurrentCanonicalTask!.TaskId, default))!.State);
+            Assert.Equal(TaskExecutionLifecycle.Running, (await h.Coordinator.GetAsync(h.Service.CurrentCanonicalTask!.TaskId, TestContext.Current.CancellationToken))!.State);
         }
         finally
         {
@@ -351,7 +351,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         }
         Assert.Equal(TaskExecutionLifecycle.Completed, h.Service.CurrentCanonicalTask!.State);
         Assert.Single(completed);
-        Assert.Single(h.Events.Where(value => value.Kind == ChatStreamEventKind.AssistantCompleted));
+        Assert.Single(h.Events, value => value.Kind == ChatStreamEventKind.AssistantCompleted);
         Assert.Equal(0, h.Coordinator.LiveOriginalInvocationCount);
         await h.Runtime.CloseAndDrainAsync();
     }
@@ -383,7 +383,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         await h.RunAsync("actual final observer");
         Assert.Equal(TaskExecutionLifecycle.Completed, h.Service.CurrentCanonicalTask!.State);
         Assert.Null(h.Service.CurrentCanonicalTask.RecoveryObservation);
-        Assert.Single(h.Events.Where(value => value.Kind == ChatStreamEventKind.AssistantCompleted));
+        Assert.Single(h.Events, value => value.Kind == ChatStreamEventKind.AssistantCompleted);
         Assert.Contains(h.Coordinator.ObservationFailures, value => ReferenceEquals(value.OriginalException, actual));
         Assert.Equal(1, h.Provider.Frames);
         Assert.Equal(0, h.Coordinator.LiveOriginalInvocationCount);
@@ -440,7 +440,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         };
         Task? originalClose = null;
         Exception? observed = null;
-        try { await invoked.Task.WaitAsync(ChatExecutionTracker.VisibilityDelay + TimeSpan.FromSeconds(5)); }
+        try { await invoked.Task.WaitAsync(ChatExecutionTracker.VisibilityDelay + TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken); }
         finally
         {
             originalClose = tracker.DisposeAsync().AsTask();
@@ -484,7 +484,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
             tracker.RequestStop();
         };
         var actualClose = tracker.DisposeAsync().AsTask();
-        await actualClose.WaitAsync(TimeSpan.FromSeconds(5));
+        await actualClose.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         Assert.IsType<InvalidOperationException>(actualRefusal);
         Assert.Same(actualClose, tracker.DisposeAsync().AsTask());
         Assert.True(actualClose.IsCompletedSuccessfully);
@@ -504,11 +504,11 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
             invoked.TrySetResult();
         };
         Task? actualClose = null;
-        try { await invoked.Task.WaitAsync(ChatExecutionTracker.VisibilityDelay + TimeSpan.FromSeconds(5)); }
+        try { await invoked.Task.WaitAsync(ChatExecutionTracker.VisibilityDelay + TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken); }
         finally
         {
             actualClose = tracker.DisposeAsync().AsTask();
-            await actualClose.WaitAsync(TimeSpan.FromSeconds(5));
+            await JoinIndependentFixtureCleanupAsync(actualClose, TimeSpan.FromSeconds(5));
         }
         Assert.IsType<InvalidOperationException>(actualRefusal);
         Assert.Same(actualClose, tracker.DisposeAsync().AsTask());
@@ -572,7 +572,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
             release.Task.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
         });
         tracker.RequestStop();
-        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         var actualWithdrawal = OriginalWithdrawal(tracker);
         var actualClose = tracker.DisposeAsync().AsTask();
         try
@@ -583,7 +583,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
             Assert.IsType<InvalidOperationException>(actualRefusal);
             Assert.Equal(1, callbacks);
         }
-        finally { release.TrySetResult(); await actualClose.WaitAsync(TimeSpan.FromSeconds(5)); }
+        finally { release.TrySetResult(); await JoinIndependentFixtureCleanupAsync(actualClose, TimeSpan.FromSeconds(5)); }
         Assert.True(actualWithdrawal.IsCompletedSuccessfully);
         Assert.Same(actualClose, tracker.DisposeAsync().AsTask());
         Assert.Throws<ObjectDisposedException>(() => { _ = actualCts.Token; });
@@ -604,7 +604,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         }, null);
         tracker.RequestStop();
         var actualClose = tracker.DisposeAsync().AsTask();
-        await actualClose.WaitAsync(TimeSpan.FromSeconds(5));
+        await actualClose.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         Assert.IsType<InvalidOperationException>(actualRefusal);
         Assert.Equal(1, callbacks);
         Assert.True(OriginalWithdrawal(tracker).IsCompletedSuccessfully);
@@ -627,7 +627,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         using var registration = actualCts.Token.Register(() => throw withdrawalFailure);
         Task? actualClose = null;
         Exception? observed = null;
-        try { await timerEntered.Task.WaitAsync(ChatExecutionTracker.VisibilityDelay + TimeSpan.FromSeconds(5)); }
+        try { await timerEntered.Task.WaitAsync(ChatExecutionTracker.VisibilityDelay + TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken); }
         finally
         {
             tracker.RequestStop();
@@ -658,12 +658,16 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
             });
         };
         var actualClose = tracker.DisposeAsync().AsTask();
-        await actualClose.WaitAsync(TimeSpan.FromSeconds(5));
+        await actualClose.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         releaseDescendant.TrySetResult();
         Assert.NotNull(actualDescendant);
-        Assert.Same(actualClose, await actualDescendant!.WaitAsync(TimeSpan.FromSeconds(5)));
+        Assert.Same(actualClose, await actualDescendant!.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
         Assert.True(actualClose.IsCompletedSuccessfully);
     }
+
+    // Owning teardown joins stay independent of runner withdrawal; the actual cleanup Task is never cancelled here.
+    private static Task JoinIndependentFixtureCleanupAsync(Task actual, TimeSpan timeout) =>
+        actual.WaitAsync(timeout, CancellationToken.None);
 
     private static CancellationTokenSource OriginalLifetime(ChatExecutionTracker tracker) =>
         (CancellationTokenSource)typeof(ChatExecutionTracker).GetField("_lifetime", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(tracker)!;
@@ -740,7 +744,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         h.Capture.Refusal = exact;
         Assert.Same(exact, await Record.ExceptionAsync(() => h.RunAsync("inspect original")));
         var saved = h.Service.CurrentCanonicalTask!;
-        var inspection = await h.Coordinator.InspectOriginalRecoveryAsync(saved.TaskId, saved.ExecutionId, default);
+        var inspection = await h.Coordinator.InspectOriginalRecoveryAsync(saved.TaskId, saved.ExecutionId, TestContext.Current.CancellationToken);
         Assert.Equal(saved.TaskId, inspection.Snapshot.TaskId);
         Assert.Equal(saved.ExecutionId, inspection.Snapshot.ExecutionId);
         Assert.Equal(saved.PersistenceRevision, inspection.Snapshot.PersistenceRevision);
@@ -755,7 +759,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         Assert.Equal(0, h.Authority.AttemptChecks);
         Assert.Equal(0, h.Provider.Frames);
         Assert.Equal(0, h.Workspace.Effects);
-        Assert.Equal(saved, await h.Coordinator.GetAsync(saved.TaskId, default));
+        Assert.Equal(saved, await h.Coordinator.GetAsync(saved.TaskId, TestContext.Current.CancellationToken));
         await h.Runtime.CloseAndDrainAsync();
     }
 
@@ -768,7 +772,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         var saved = h.Service.CurrentCanonicalTask!;
         var restarted = new TaskExecutionCoordinator(h.TaskRepository, new Sink(), admissionAuthority: h.Authority,
             runtimeSettlement: h.Runtime);
-        var inspection = await restarted.InspectOriginalRecoveryAsync(saved.TaskId, saved.ExecutionId, default);
+        var inspection = await restarted.InspectOriginalRecoveryAsync(saved.TaskId, saved.ExecutionId, TestContext.Current.CancellationToken);
         Assert.Equal(TaskRunOriginalRecoveryAvailability.OriginalUnavailable, inspection.Availability);
         Assert.Null(inspection.OriginalObservationId);
         Assert.Empty(inspection.OriginalWork);
@@ -776,7 +780,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         Assert.Equal(saved.RecoveryObservation!.ObservationId, inspection.Snapshot.RecoveryObservation!.ObservationId);
         Assert.Equal(saved.RecoveryObservation.Causes.ToArray(), inspection.Snapshot.RecoveryObservation.Causes.ToArray());
         await Assert.ThrowsAsync<InvalidOperationException>(() => restarted.StartAttemptAsync(saved.TaskId, saved.ExecutionId,
-            new TaskRunRouteCandidate("synthetic-route", 1, "synthetic", h.Model.Name, null, false, ["Text"]), default));
+            new TaskRunRouteCandidate("synthetic-route", 1, "synthetic", h.Model.Name, null, false, ["Text"]), TestContext.Current.CancellationToken));
         Assert.Equal(0, h.Authority.AttemptChecks);
         Assert.Equal(0, h.Provider.Frames);
         Assert.Equal(0, restarted.LiveOriginalInvocationCount);
@@ -793,10 +797,10 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         var saved = h.Service.CurrentCanonicalTask!;
         h.Authority.AllowCurrentActor = false;
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
-            h.Coordinator.InspectOriginalRecoveryAsync(saved.TaskId, saved.ExecutionId, default));
+            h.Coordinator.InspectOriginalRecoveryAsync(saved.TaskId, saved.ExecutionId, TestContext.Current.CancellationToken));
         Assert.Equal(0, h.Authority.AttemptChecks);
         Assert.Equal(0, h.Provider.Frames);
-        Assert.Equal(saved, await h.Coordinator.GetAsync(saved.TaskId, default));
+        Assert.Equal(saved, await h.Coordinator.GetAsync(saved.TaskId, TestContext.Current.CancellationToken));
         await h.Runtime.CloseAndDrainAsync();
     }
 
@@ -814,8 +818,8 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         };
         h.Authority.BeforeCommandValidation = () => h.TaskRepository.UpsertAsync(replaced, default);
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            h.Coordinator.InspectOriginalRecoveryAsync(saved.TaskId, saved.ExecutionId, default));
-        Assert.Equal(replaced, await h.Coordinator.GetAsync(saved.TaskId, default));
+            h.Coordinator.InspectOriginalRecoveryAsync(saved.TaskId, saved.ExecutionId, TestContext.Current.CancellationToken));
+        Assert.Equal(replaced, await h.Coordinator.GetAsync(saved.TaskId, TestContext.Current.CancellationToken));
         Assert.Equal(0, h.Authority.AttemptChecks);
         Assert.Equal(0, h.Provider.Frames);
         await h.Runtime.CloseAndDrainAsync();
@@ -832,7 +836,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         h.TaskRepository.ReadCount = 0;
         h.TaskRepository.BeforeRead = async count => { if (count == 3) { entered.SetResult(); await release.Task; } };
-        var actualInspection = h.Coordinator.InspectOriginalRecoveryAsync(saved.TaskId, saved.ExecutionId, default);
+        var actualInspection = h.Coordinator.InspectOriginalRecoveryAsync(saved.TaskId, saved.ExecutionId, TestContext.Current.CancellationToken);
         try
         {
             await entered.Task;
@@ -840,7 +844,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
             Assert.False(actualInspection.IsCompleted);
             release.SetResult();
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() => actualInspection);
-            Assert.Equal(saved, await h.Coordinator.GetAsync(saved.TaskId, default));
+            Assert.Equal(saved, await h.Coordinator.GetAsync(saved.TaskId, TestContext.Current.CancellationToken));
             Assert.Equal(0, h.Provider.Frames);
             Assert.Equal(0, h.Workspace.Effects);
         }
@@ -872,7 +876,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         };
         try
         {
-            var inspection = await h.Coordinator.InspectOriginalRecoveryAsync(saved.TaskId, saved.ExecutionId, default);
+            var inspection = await h.Coordinator.InspectOriginalRecoveryAsync(saved.TaskId, saved.ExecutionId, TestContext.Current.CancellationToken);
             Assert.Contains(inspection.OriginalWork, work => work.Stage.StartsWith("body.move:", StringComparison.Ordinal)
                 && work.Status == TaskStatus.Faulted);
             Assert.NotEmpty(inspection.Causes);

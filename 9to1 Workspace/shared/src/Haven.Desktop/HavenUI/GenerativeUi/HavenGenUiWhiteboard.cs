@@ -1,4 +1,6 @@
 using System.Text.Json;
+using Avalonia.Threading;
+using Haven.Desktop.Services;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.HavenUI.Creative;
@@ -10,7 +12,7 @@ using HavenText = Haven.UI.Components.Text;
 namespace Haven.Desktop.HavenUI.GenerativeUi;
 
 /// <summary>Haven-owned interactive whiteboard using the same Canvas engine as the standalone Canvas app.</summary>
-internal sealed class HavenGenUiWhiteboard : Container, IDisposable
+internal sealed class HavenGenUiWhiteboard : Container, IDisposable, IAsyncDisposable
 {
     private static readonly (string Name, string Value)[] Palette =
     [
@@ -20,6 +22,7 @@ internal sealed class HavenGenUiWhiteboard : Container, IDisposable
     ];
 
     private readonly Action<JsonElement> _persist;
+    private readonly Action<JsonElement>? _originalRetirementPersist;
     private readonly Func<JsonElement, Task>? _requestAgent;
     private readonly CanvasInteractionController _controller;
     private readonly UnifiedCanvasSurface _canvas;
@@ -31,13 +34,28 @@ internal sealed class HavenGenUiWhiteboard : Container, IDisposable
     private readonly Slider _thickness = new();
     private readonly Select _colour = new();
     private bool _disposed;
+    private readonly DesktopOriginalWorkLifetime _originalWork;
+    private readonly Func<bool>? _originalPresentationCurrent;
+    private long _generation;
+    private GenUiComponent? _originalComponent;
+    private int _originalReleaseDepth;
+    private int _originalReleaseThreadId;
+    private bool _originalReleasePending;
+    public Task? OriginalClose => _originalWork.OriginalClose;
 
     public HavenGenUiWhiteboard(
         GenUiComponent component,
         JsonElement? persistedState,
         Action<JsonElement> persist,
         Func<JsonElement, Task>? requestAgent)
+        : this(component, persistedState, persist, requestAgent, null, null) { }
+    internal HavenGenUiWhiteboard(GenUiComponent component, JsonElement? persistedState,
+        Action<JsonElement> persist, Func<JsonElement, Task>? requestAgent,
+        Func<bool>? originalPresentationCurrent, Action<JsonElement>? originalRetirementPersist)
     {
+        _originalRetirementPersist = originalRetirementPersist;
+        _originalPresentationCurrent = originalPresentationCurrent;
+        _originalWork = new DesktopOriginalWorkLifetime(StopOriginalInputAsync, CleanupOriginalAsync);
         _persist = persist ?? throw new ArgumentNullException(nameof(persist));
         _requestAgent = requestAgent;
         var restored = UnifiedCanvasStateCodec.Restore(persistedState);
@@ -61,7 +79,9 @@ internal sealed class HavenGenUiWhiteboard : Container, IDisposable
 
         _canvas = new UnifiedCanvasSurface(_controller, () => string.IsNullOrWhiteSpace(_textInput.Text) ? "Text" : _textInput.Text.Trim())
         {
-            ShowGrid = restored.ShowGrid
+            ShowGrid = restored.ShowGrid,
+            OriginalInputOwner = RunOriginalCanvasInput,
+            DemandOriginalInputCurrent = DemandOriginalPublication
         };
         _canvas.SetTool(restored.Tool);
         _canvas.Changed += OnCanvasChanged;
@@ -94,12 +114,12 @@ internal sealed class HavenGenUiWhiteboard : Container, IDisposable
         _colour.SelectedIndex = Math.Max(0, Array.FindIndex(Palette, item => item.Value.Equals(_controller.PenColour, StringComparison.OrdinalIgnoreCase)));
         _colour.Accessibility.AccessibleName = "Whiteboard colour";
         _colour.SetValue(HavenProperties.MinWidth, HavenLength.Px(110));
-        _colour.SelectionChanged += (_, _) =>
+        _colour.SelectionChanged += (_, _) => RunOriginalCallback(() =>
         {
             if (_colour.SelectedIndex < 0 || _colour.SelectedIndex >= Palette.Length) return;
             _controller.PenColour = Palette[_colour.SelectedIndex].Value;
             PersistSession();
-        };
+        });
         controls.Add(_colour);
 
         _thickness.Minimum = 2;
@@ -108,11 +128,11 @@ internal sealed class HavenGenUiWhiteboard : Container, IDisposable
         _thickness.Value = Math.Clamp(_controller.PenWidth, 2, 32);
         _thickness.Accessibility.AccessibleName = "Whiteboard pen thickness";
         _thickness.SetValue(HavenProperties.MinWidth, HavenLength.Px(150));
-        _thickness.ValueChanged += (_, _) =>
+        _thickness.ValueChanged += (_, _) => RunOriginalCallback(() =>
         {
             _controller.PenWidth = _thickness.Value;
             PersistSession();
-        };
+        });
         controls.Add(_thickness);
 
         _textInput.Placeholder = "Text to add or update";
@@ -148,36 +168,55 @@ internal sealed class HavenGenUiWhiteboard : Container, IDisposable
         Update(component);
     }
 
-    public bool OwnsInput(Input input) => ReferenceEquals(input, _textInput) || ReferenceEquals(input, _agentInput);
+    public bool OwnsInput(Input input) => !_originalWork.IsRetiring && (ReferenceEquals(input, _textInput) || ReferenceEquals(input, _agentInput));
 
-    public async Task SubmitInputAsync(Input input)
+    public Task SubmitInputAsync(Input input, CancellationToken cancellationToken = default)
     {
-        if (ReferenceEquals(input, _textInput)) { ApplyText(); return; }
-        if (ReferenceEquals(input, _agentInput)) await SubmitAgentAsync();
+        var generation = _generation;
+        return _originalWork.RunAsync(async original =>
+        {
+            BindOriginal(original, generation);
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(original.Token, cancellationToken);
+            linked.Token.ThrowIfCancellationRequested();
+            original.DemandPublication();
+            if (ReferenceEquals(input, _textInput)) { ApplyText(); return; }
+            if (ReferenceEquals(input, _agentInput)) await original.AwaitAsync(SubmitAgentAsync(linked.Token));
+            original.DemandPublication();
+        });
     }
 
-    public void Update(GenUiComponent component)
+    public void Update(GenUiComponent component) => _originalWork.RunSynchronous(original =>
     {
-        _title.Content = ReadString(component, "title") ?? "Whiteboard";
-        _prompt.Content = ReadString(component, "prompt") ?? ReadString(component, "emptyText") ?? string.Empty;
-        _prompt.SetValue(HavenProperties.Visibility, string.IsNullOrWhiteSpace(_prompt.Content) ? HavenVisibility.Collapsed : HavenVisibility.Visible);
+        if (!ReferenceEquals(_originalComponent, component))
+        { _originalComponent = component; ++_generation; }
+        BindOriginal(original, _generation);
+        original.DemandPublication();
+        UpdateOriginalCore(component);
+        original.DemandPublication();
+    });
+
+    private void UpdateOriginalCore(GenUiComponent component)
+    {
+        Publish(() => _title.Content = ReadString(component, "title") ?? "Whiteboard");
+        Publish(() => _prompt.Content = ReadString(component, "prompt") ?? ReadString(component, "emptyText") ?? string.Empty);
+        Publish(() => _prompt.SetValue(HavenProperties.Visibility, string.IsNullOrWhiteSpace(_prompt.Content) ? HavenVisibility.Collapsed : HavenVisibility.Visible));
         var minHeight = Math.Max(320, ReadDouble(component, "minHeight", 420));
-        _canvas.SetValue(HavenProperties.Height, HavenLength.Px(Math.Max(280, minHeight - 110)));
-        _canvas.SetValue(HavenProperties.Width, HavenLength.Percent(100));
-        SetValue(HavenProperties.MinHeight, HavenLength.Px(minHeight));
-        Accessibility.AccessibleName = ReadString(component, "automationName") ?? _title.Content;
+        Publish(() => _canvas.SetValue(HavenProperties.Height, HavenLength.Px(Math.Max(280, minHeight - 110))));
+        Publish(() => _canvas.SetValue(HavenProperties.Width, HavenLength.Percent(100)));
+        Publish(() => SetValue(HavenProperties.MinHeight, HavenLength.Px(minHeight)));
+        Publish(() => Accessibility.AccessibleName = ReadString(component, "automationName") ?? _title.Content);
     }
 
     private void AddToolButton(Container parent, string label, UnifiedCanvasTool tool)
     {
         var button = new HavenButton { Content = label, Variant = ButtonVariant.Ghost };
         button.Accessibility.AccessibleName = $"Use {label} whiteboard tool";
-        button.Invoked += (_, _) =>
+        button.Invoked += (_, _) => RunOriginalCallback(() =>
         {
             _canvas.SetTool(tool);
             PersistSession();
             SetStatus($"{label} tool selected.");
-        };
+        });
         parent.Add(button);
     }
 
@@ -185,11 +224,11 @@ internal sealed class HavenGenUiWhiteboard : Container, IDisposable
     {
         var button = new HavenButton { Content = label, Variant = variant };
         button.Accessibility.AccessibleName = label;
-        button.Invoked += (_, _) =>
+        button.Invoked += (_, _) => RunOriginalCallback(() =>
         {
             if (action()) OnCanvasChanged(this, EventArgs.Empty);
             SetStatus(label);
-        };
+        });
         parent.Add(button);
     }
 
@@ -197,7 +236,7 @@ internal sealed class HavenGenUiWhiteboard : Container, IDisposable
     {
         var button = new HavenButton { Content = label, Variant = variant };
         button.Accessibility.AccessibleName = label;
-        button.Invoked += (_, _) => { action(); SetStatus(label); };
+        button.Invoked += (_, _) => RunOriginalCallback(() => { action(); SetStatus(label); });
         parent.Add(button);
     }
 
@@ -231,55 +270,158 @@ internal sealed class HavenGenUiWhiteboard : Container, IDisposable
         return true;
     }
 
-    private void OnCanvasChanged(object? sender, EventArgs e)
+    private void OnCanvasChanged(object? sender, EventArgs e) => RunOriginalCallback(() =>
     {
         PersistSession();
-        _canvas.RefreshSurface();
-        Invalidate();
-    }
+        Publish(_canvas.RefreshSurface);
+        Publish(Invalidate);
+    });
 
-    private void OnSelectionChanged(object? sender, EventArgs e)
+    private void OnSelectionChanged(object? sender, EventArgs e) => RunOriginalCallback(() =>
     {
         var selected = _controller.SelectedObjects;
-        if (selected.Count == 1 && selected[0].Kind == NotesCanvasObjectKind.Text) _textInput.Text = selected[0].Text;
+        if (selected.Count == 1 && selected[0].Kind == NotesCanvasObjectKind.Text) Publish(() => _textInput.Text = selected[0].Text);
         SetStatus(selected.Count switch { 0 => "Nothing selected.", 1 => $"{selected[0].Kind} selected.", _ => $"{selected.Count} objects selected." });
+    });
+
+    private Task SubmitAgentAsync(CancellationToken cancellationToken = default)
+    {
+        var generation = _generation;
+        return _originalWork.RunAsync(async original =>
+        {
+            BindOriginal(original, generation);
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(original.Token, cancellationToken);
+            linked.Token.ThrowIfCancellationRequested();
+            original.DemandPublication();
+            if (_requestAgent is null) return;
+            var instruction = _agentInput.Text.Trim();
+            if (string.IsNullOrWhiteSpace(instruction)) { SetStatus("Enter an instruction for Haven first."); return; }
+            SetStatus("Sending whiteboard context to Haven…");
+            Task? actualRequest = null;
+            try
+            {
+                original.DemandPublication();
+                actualRequest = _requestAgent(JsonSerializer.SerializeToElement(new
+                {
+                    instruction,
+                    title = _title.Content,
+                    prompt = _prompt.Content,
+                    selectedElementIds = _controller.SelectedObjectIds.Select(id => id.ToString("N")).ToArray(),
+                    canvasState = UnifiedCanvasStateCodec.ToJson(_controller, _canvas.Tool, _canvas.ShowGrid)
+                }));
+                await original.AwaitAsync(actualRequest);
+                await PublishOriginalAsync(original, () =>
+                {
+                    original.DemandPublication();
+                    _agentInput.Text = string.Empty;
+                    original.DemandPublication();
+                    SetStatus("Haven received the whiteboard request.");
+                });
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                original.Capture(actualRequest, exception);
+                if (original.IsPublicationCurrent)
+                    await PublishOriginalAsync(original, () => SetStatus("Haven could not process the whiteboard request: " + exception.Message));
+            }
+        });
     }
 
-    private async Task SubmitAgentAsync()
+    private void BindOriginal(DesktopOriginalWorkLifetime.Original original, long generation) =>
+        original.BindPublicationGuard(() => !_disposed && _generation == generation && (_originalPresentationCurrent?.Invoke() ?? true));
+
+    private void RunOriginalCallback(Action body)
     {
-        if (_requestAgent is null) return;
-        var instruction = _agentInput.Text.Trim();
-        if (string.IsNullOrWhiteSpace(instruction)) { SetStatus("Enter an instruction for Haven first."); return; }
-        SetStatus("Sending whiteboard context to Haven…");
+        if (_originalWork.Executing is { } executing)
+        { executing.DemandPublication(); body(); executing.DemandPublication(); return; }
+        _originalWork.RunSynchronous(original =>
+        {
+            BindOriginal(original, _generation);
+            original.DemandPublication(); body(); original.DemandPublication();
+        });
+    }
+    private bool RunOriginalCanvasInput(UnifiedCanvasInputOperation operation, Func<bool> actualCore)
+    {
+        if (_originalReleaseDepth != 0 && _originalReleaseThreadId == Environment.CurrentManagedThreadId &&
+            _originalReleasePending && operation == UnifiedCanvasInputOperation.ReleaseInputState)
+        {
+            _originalReleasePending = false; // Reentrant release cannot borrow this exact one-shot acquisition.
+            // Only the explicit release issued by this SAME published close uses its
+            // cleanup scope. Reentrant pointer/key input still meets sealed admission.
+            var result = false;
+            _originalWork.RunCloseCallback(() => result = actualCore());
+            return result;
+        }
+        var inputResult = false;
+        RunOriginalCallback(() => inputResult = actualCore());
+        return inputResult;
+    }
+    private void DemandOriginalPublication()
+    {
+        if (_originalReleaseDepth != 0 && _originalReleaseThreadId == Environment.CurrentManagedThreadId) return; // Physical SAME-thread close-release scope only.
+        if (_originalWork.Executing is { } original) original.DemandPublication();
+        else _originalWork.DemandAdmission(); // Constructor-before-return remains a stated acquisition prerequisite.
+    }
+    private void Publish(Action actualWrite)
+    { DemandOriginalPublication(); actualWrite(); DemandOriginalPublication(); }
+    private async Task PublishOriginalAsync(DesktopOriginalWorkLifetime.Original original, Action actualWrite)
+    {
+        var actualDispatcher = Dispatcher.UIThread.InvokeAsync(() => _originalWork.RunSynchronous(callbackOriginal =>
+        {
+            callbackOriginal.BindPublicationGuard(() => original.IsPublicationCurrent);
+            original.DemandPublication(); callbackOriginal.DemandPublication();
+            actualWrite();
+            callbackOriginal.DemandPublication(); original.DemandPublication();
+        })).GetTask();
+        await original.AwaitAsync(actualDispatcher);
+    }
+    private void SetStatus(string value) => Publish(() => _status.Content = value);
+    private void PersistSession()
+    {
+        DemandOriginalPublication();
+        _persist(UnifiedCanvasStateCodec.ToJson(_controller, _canvas.Tool, _canvas.ShowGrid));
+        DemandOriginalPublication();
+    }
+    public void RequestRetirement() => _originalWork.RequestRetirement();
+    internal void DemandOriginalExternalClose() => _originalWork.DemandExternalClose();
+    public Task CloseAndDrainAsync()
+    { DemandOriginalExternalClose(); return _originalWork.CloseAndDrainAsync(); }
+    public void Dispose() => RequestRetirement();
+    public ValueTask DisposeAsync() => new(CloseAndDrainAsync());
+
+    private Task StopOriginalInputAsync() => Dispatcher.UIThread.InvokeAsync(() => _originalWork.RunCloseCallback(() =>
+    {
+        // Admission is sealed and the actual close is published before this callback.
+        // Finish the original gesture bookkeeping and preserve its pending persistence.
+        if (_canvas is null) return;
+        _originalReleaseDepth++;
+        _originalReleaseThreadId = Environment.CurrentManagedThreadId;
+        _originalReleasePending = true;
         try
         {
-            await _requestAgent(JsonSerializer.SerializeToElement(new
+            if (_canvas.ReleaseInputState())
             {
-                instruction,
-                title = _title.Content,
-                prompt = _prompt.Content,
-                selectedElementIds = _controller.SelectedObjectIds.Select(id => id.ToString("N")).ToArray(),
-                canvasState = UnifiedCanvasStateCodec.ToJson(_controller, _canvas.Tool, _canvas.ShowGrid)
-            }));
-            _agentInput.Text = string.Empty;
-            SetStatus("Haven received the whiteboard request.");
+                // This exact payload follows the SAME one-shot physical close release.
+                // Its parent callback is private, source-created cleanup, not a new input.
+                var actualState = UnifiedCanvasStateCodec.ToJson(_controller, _canvas.Tool, _canvas.ShowGrid);
+                (_originalRetirementPersist ?? _persist)(actualState);
+            }
         }
-        catch (Exception exception) when (exception is not OperationCanceledException)
+        finally
         {
-            SetStatus("Haven could not process the whiteboard request: " + exception.Message);
+            _originalReleasePending = false;
+            _originalReleaseThreadId = 0;
+            _originalReleaseDepth--;
         }
-    }
-
-    private void SetStatus(string value) => _status.Content = value;
-    private void PersistSession() => _persist(UnifiedCanvasStateCodec.ToJson(_controller, _canvas.Tool, _canvas.ShowGrid));
-
-    public void Dispose()
+    })).GetTask();
+    private Task CleanupOriginalAsync() => Dispatcher.UIThread.InvokeAsync(() => _originalWork.RunCloseCallback(() =>
     {
-        if (_disposed) return;
         _disposed = true;
-        _canvas.Changed -= OnCanvasChanged;
-        _canvas.SelectionChanged -= OnSelectionChanged;
-    }
+        var failures = new List<Exception>();
+        try { if (_canvas is not null) _canvas.Changed -= OnCanvasChanged; } catch (Exception cause) { failures.Add(cause); }
+        try { if (_canvas is not null) _canvas.SelectionChanged -= OnSelectionChanged; } catch (Exception cause) { failures.Add(cause); }
+        if (failures.Count != 0) throw new AggregateException("Independent whiteboard subscription cleanup failed.", failures);
+    })).GetTask();
 
     private static string? ReadString(GenUiComponent component, string key) =>
         component.Properties.TryGetValue(key, out var value) ? value.ValueKind == JsonValueKind.String ? value.GetString() : value.ToString() : null;

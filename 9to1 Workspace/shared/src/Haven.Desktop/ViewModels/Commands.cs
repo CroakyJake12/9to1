@@ -8,6 +8,7 @@
  */
 
 using System.Windows.Input;
+using Haven.Desktop.Services;
 
 namespace Haven.Desktop.ViewModels;
 
@@ -58,83 +59,243 @@ public sealed class RelayCommand<T>(Action<T?> execute, Func<T?, bool>? canExecu
 }
 
 /// <summary>
-/// Represents async relay command and keeps its related state and behavior together.
+/// Retains the complete async invocation and its actual delegate task. A host must
+/// request retirement, leave an admitted callback, then externally join the same close.
 /// </summary>
-public sealed class AsyncRelayCommand(Func<Task> execute, Func<bool>? canExecute = null) : ICommand
+public sealed class AsyncRelayCommand : ICommand, IAsyncDisposable,
+    IDesktopOriginalRetirementParticipant, IDesktopOriginalRetirementJoinGuard
 {
-    /// <summary>
-    /// Stores running locally so this component can preserve the dependency, cache, or state between member calls.
-    /// </summary>
-    private bool _running;
-    /// <summary>
-    /// Reports whether execute changed applies to the current state.
-    /// </summary>
-    public event EventHandler? CanExecuteChanged;
-    /// <summary>
-    /// Reports whether execute applies to the current state.
-    /// </summary>
-    public bool CanExecute(object? parameter) => !_running && (canExecute?.Invoke() ?? true);
+    private readonly Func<Task> _execute;
+    private readonly Func<bool>? _canExecute;
+    private readonly DesktopOriginalWorkLifetime _originalWork;
+    private int _running;
+    private Task? _originalExecution;
 
-    /// <summary>
-    /// Runs execute while preserving the surrounding cancellation and error-handling contract.
-    /// </summary>
-    public async void Execute(object? parameter) => await ExecuteAsync().ConfigureAwait(true);
-
-    /// <summary>
-    /// Runs execute async while preserving the surrounding cancellation and error-handling contract.
-    /// </summary>
-    public async Task ExecuteAsync()
+    public AsyncRelayCommand(Func<Task> execute, Func<bool>? canExecute = null)
     {
-        if (!CanExecute(null)) return;
-        _running = true;
-        RaiseCanExecuteChanged();
-        try { await execute().ConfigureAwait(true); }
-        finally { _running = false; RaiseCanExecuteChanged(); }
+        _execute = execute;
+        _canExecute = canExecute;
+        _originalWork = new DesktopOriginalWorkLifetime(StopOriginalAsync, CleanupOriginalAsync);
     }
 
-    /// <summary>
-    /// Performs the raise can execute changed step owned by this component.
-    /// </summary>
-    public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+    public event EventHandler? CanExecuteChanged;
+
+    /// <summary>The latest admitted invocation only; the cohort's drain is OriginalClose.</summary>
+    public Task? OriginalExecution => Volatile.Read(ref _originalExecution);
+    public Task? OriginalClose => _originalWork.OriginalClose;
+
+    public bool CanExecute(object? parameter)
+    {
+        if (_originalWork.IsRetiring || Volatile.Read(ref _running) != 0) return false;
+        var allowed = false;
+        _originalWork.RunSynchronous(original =>
+        {
+            original.DemandPublication();
+            allowed = _canExecute?.Invoke() ?? true;
+            // A predicate can synchronously retire or invoke this same command.
+            if (_originalWork.IsRetiring || Volatile.Read(ref _running) != 0) allowed = false;
+        });
+        return allowed;
+    }
+
+    // Preserve ICommand's original async-void exception delivery. The owned task
+    // below is retained; external async-void subscribers/posts are not drain proof.
+    public async void Execute(object? parameter) =>
+        await ExecuteAsync().ConfigureAwait(true);
+
+    public Task ExecuteAsync() => AcquireOriginal(ExecuteOriginalAsync);
+
+    private Task AcquireOriginal(Func<DesktopOriginalWorkLifetime.Original, Task> body)
+    {
+        try
+        {
+            return _originalWork.RunAsync(body,
+                actual => Volatile.Write(ref _originalExecution, actual));
+        }
+        catch (Exception admissionFailure)
+        {
+            // The old async Task API also returned a faulted task on refusal. No
+            // callback or delegate was acquired; this is not an admitted original.
+            return Task.FromException(admissionFailure);
+        }
+    }
+
+    private async Task ExecuteOriginalAsync(DesktopOriginalWorkLifetime.Original original)
+    {
+        Task? actualDelegate = null;
+        var claimedRunning = false;
+        try
+        {
+            if (Volatile.Read(ref _running) != 0) return;
+            original.DemandPublication();
+            var allowed = _canExecute?.Invoke() ?? true;
+            original.DemandPublication();
+            if (!allowed || Interlocked.CompareExchange(ref _running, 1, 0) != 0) return;
+            claimedRunning = true;
+            original.DemandPublication();
+            NotifyOriginalCanExecuteChanged();
+            original.DemandPublication();
+            actualDelegate = _execute();
+            await original.AwaitAsync(actualDelegate).ConfigureAwait(true);
+        }
+        catch (Exception error) { original.Capture(actualDelegate, error); }
+        finally
+        {
+            if (claimedRunning)
+            {
+                Interlocked.Exchange(ref _running, 0);
+                // This source-owned final callback remains part of this exact original
+                // even after permanent retirement; failure cannot replace the body cause.
+                try { NotifyOriginalCanExecuteChanged(); }
+                catch (Exception error) { original.Retain(error); }
+            }
+        }
+        original.ThrowRetained();
+    }
+
+    public void RaiseCanExecuteChanged() => _originalWork.RunSynchronous(original =>
+    {
+        original.DemandPublication();
+        NotifyOriginalCanExecuteChanged();
+    });
+
+    private void NotifyOriginalCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+    private Task StopOriginalAsync()
+    {
+        // Func<Task> has no cancellation argument. Seal and publish disabled state
+        // promptly, then retain/await the actual delegate rather than invent a stop ACK.
+        NotifyOriginalCanExecuteChanged();
+        return Task.CompletedTask;
+    }
+    private Task CleanupOriginalAsync()
+    {
+        CanExecuteChanged = null;
+        return Task.CompletedTask;
+    }
+
+    public void RequestRetirement() => _originalWork.RequestRetirement();
+    public void DemandExternalOriginalRetirementJoin() => _originalWork.DemandExternalClose();
+    public Task CloseAndDrainAsync() => _originalWork.CloseAndDrainAsync();
+    public ValueTask DisposeAsync() => new(CloseAndDrainAsync());
 }
 
 /// <summary>
-/// Represents async relay command and keeps its related state and behavior together.
+/// Retains the complete async invocation and its actual delegate task. A host must
+/// request retirement, leave an admitted callback, then externally join the same close.
 /// </summary>
-public sealed class AsyncRelayCommand<T>(Func<T?, Task> execute, Func<T?, bool>? canExecute = null) : ICommand
+public sealed class AsyncRelayCommand<T> : ICommand, IAsyncDisposable,
+    IDesktopOriginalRetirementParticipant, IDesktopOriginalRetirementJoinGuard
 {
-    /// <summary>
-    /// Stores running locally so this component can preserve the dependency, cache, or state between member calls.
-    /// </summary>
-    private bool _running;
-    /// <summary>
-    /// Reports whether execute changed applies to the current state.
-    /// </summary>
-    public event EventHandler? CanExecuteChanged;
-    /// <summary>
-    /// Reports whether execute applies to the current state.
-    /// </summary>
-    public bool CanExecute(object? parameter) => !_running && (canExecute?.Invoke((T?)parameter) ?? true);
+    private readonly Func<T?, Task> _execute;
+    private readonly Func<T?, bool>? _canExecute;
+    private readonly DesktopOriginalWorkLifetime _originalWork;
+    private int _running;
+    private Task? _originalExecution;
 
-    /// <summary>
-    /// Runs execute while preserving the surrounding cancellation and error-handling contract.
-    /// </summary>
-    public async void Execute(object? parameter) => await ExecuteAsync((T?)parameter).ConfigureAwait(true);
-
-    /// <summary>
-    /// Runs execute async while preserving the surrounding cancellation and error-handling contract.
-    /// </summary>
-    public async Task ExecuteAsync(T? parameter)
+    public AsyncRelayCommand(Func<T?, Task> execute, Func<T?, bool>? canExecute = null)
     {
-        if (!CanExecute(parameter)) return;
-        _running = true;
-        RaiseCanExecuteChanged();
-        try { await execute(parameter).ConfigureAwait(true); }
-        finally { _running = false; RaiseCanExecuteChanged(); }
+        _execute = execute;
+        _canExecute = canExecute;
+        _originalWork = new DesktopOriginalWorkLifetime(StopOriginalAsync, CleanupOriginalAsync);
     }
 
-    /// <summary>
-    /// Performs the raise can execute changed step owned by this component.
-    /// </summary>
-    public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+    public event EventHandler? CanExecuteChanged;
+
+    /// <summary>The latest admitted invocation only; the cohort's drain is OriginalClose.</summary>
+    public Task? OriginalExecution => Volatile.Read(ref _originalExecution);
+    public Task? OriginalClose => _originalWork.OriginalClose;
+
+    public bool CanExecute(object? parameter)
+    {
+        if (_originalWork.IsRetiring || Volatile.Read(ref _running) != 0) return false;
+        var allowed = false;
+        _originalWork.RunSynchronous(original =>
+        {
+            original.DemandPublication();
+            allowed = _canExecute?.Invoke((T?)parameter) ?? true;
+            // A predicate can synchronously retire or invoke this same command.
+            if (_originalWork.IsRetiring || Volatile.Read(ref _running) != 0) allowed = false;
+        });
+        return allowed;
+    }
+
+    // Preserve ICommand's original async-void exception delivery. The owned task
+    // below is retained; external async-void subscribers/posts are not drain proof.
+    public async void Execute(object? parameter) =>
+        await AcquireOriginal(original => ExecuteOriginalAsync(original, (T?)parameter)).ConfigureAwait(true);
+
+    public Task ExecuteAsync(T? parameter) => AcquireOriginal(original => ExecuteOriginalAsync(original, parameter));
+
+    private Task AcquireOriginal(Func<DesktopOriginalWorkLifetime.Original, Task> body)
+    {
+        try
+        {
+            return _originalWork.RunAsync(body,
+                actual => Volatile.Write(ref _originalExecution, actual));
+        }
+        catch (Exception admissionFailure)
+        {
+            // The old async Task API also returned a faulted task on refusal. No
+            // callback or delegate was acquired; this is not an admitted original.
+            return Task.FromException(admissionFailure);
+        }
+    }
+
+    private async Task ExecuteOriginalAsync(DesktopOriginalWorkLifetime.Original original, T? parameter)
+    {
+        Task? actualDelegate = null;
+        var claimedRunning = false;
+        try
+        {
+            if (Volatile.Read(ref _running) != 0) return;
+            original.DemandPublication();
+            var allowed = _canExecute?.Invoke(parameter) ?? true;
+            original.DemandPublication();
+            if (!allowed || Interlocked.CompareExchange(ref _running, 1, 0) != 0) return;
+            claimedRunning = true;
+            original.DemandPublication();
+            NotifyOriginalCanExecuteChanged();
+            original.DemandPublication();
+            actualDelegate = _execute(parameter);
+            await original.AwaitAsync(actualDelegate).ConfigureAwait(true);
+        }
+        catch (Exception error) { original.Capture(actualDelegate, error); }
+        finally
+        {
+            if (claimedRunning)
+            {
+                Interlocked.Exchange(ref _running, 0);
+                // This source-owned final callback remains part of this exact original
+                // even after permanent retirement; failure cannot replace the body cause.
+                try { NotifyOriginalCanExecuteChanged(); }
+                catch (Exception error) { original.Retain(error); }
+            }
+        }
+        original.ThrowRetained();
+    }
+
+    public void RaiseCanExecuteChanged() => _originalWork.RunSynchronous(original =>
+    {
+        original.DemandPublication();
+        NotifyOriginalCanExecuteChanged();
+    });
+
+    private void NotifyOriginalCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+    private Task StopOriginalAsync()
+    {
+        // Func<Task> has no cancellation argument. Seal and publish disabled state
+        // promptly, then retain/await the actual delegate rather than invent a stop ACK.
+        NotifyOriginalCanExecuteChanged();
+        return Task.CompletedTask;
+    }
+    private Task CleanupOriginalAsync()
+    {
+        CanExecuteChanged = null;
+        return Task.CompletedTask;
+    }
+
+    public void RequestRetirement() => _originalWork.RequestRetirement();
+    public void DemandExternalOriginalRetirementJoin() => _originalWork.DemandExternalClose();
+    public Task CloseAndDrainAsync() => _originalWork.CloseAndDrainAsync();
+    public ValueTask DisposeAsync() => new(CloseAndDrainAsync());
 }
