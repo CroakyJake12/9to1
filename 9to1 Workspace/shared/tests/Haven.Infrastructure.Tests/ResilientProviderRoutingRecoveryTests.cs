@@ -10,6 +10,29 @@ namespace Haven.Infrastructure.Tests;
 public sealed class ResilientProviderRoutingRecoveryTests
 {
     [Fact]
+    public async Task OrdinaryOllamaTextCatalogueStillStreamsWithoutNewOptionalEligibilityPort()
+    {
+        var original = new Provider("ollama", isLocal: true, capabilities: new HashSet<ToolCapability> { ToolCapability.Text });
+        var shown = new List<string>();
+        await foreach (var delta in Client([original]).StreamChatAsync(Chat(original), CancellationToken.None)) shown.Add(delta);
+        Assert.Equal(new[] { "ollama result" }, shown);
+        Assert.Equal(1, original.StreamCalls);
+    }
+
+    [Fact]
+    public async Task NewLlamaCppTextOnlyCatalogueCannotDispatchAnUnobservedStream()
+    {
+        var original = new Provider("llama-cpp", isLocal: true, capabilities: new HashSet<ToolCapability> { ToolCapability.Text });
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await foreach (var delta in Client([original]).StreamChatAsync(Chat(original), CancellationToken.None)) { _ = delta; }
+        });
+        Assert.Equal(0, original.StreamCalls);
+        Assert.Equal(0, original.CompletionCalls);
+        Assert.Equal(0, original.ToolCalls);
+    }
+
+    [Fact]
     public void OriginalSixArgumentClrConstructorRemainsAvailableToCompiledOrdinaryClients()
     {
         var original = Assert.IsAssignableFrom<System.Reflection.ConstructorInfo>(

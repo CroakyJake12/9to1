@@ -31,7 +31,8 @@ public sealed class ResilientProviderRoutingModelClient(
     ITaskRunSelectedRouteCapture? routeCapture = null,
     ITaskRunOriginalFrameOwner? originalFrames = null,
     ModelPermissionEvaluator? modelPermissions = null,
-    ITaskRunProviderContextAuthority? taskContextAuthority = null) : IProviderModelClient
+    ITaskRunProviderContextAuthority? taskContextAuthority = null,
+    IProviderCatalogueEligibility? catalogueEligibility = null) : IProviderModelClient
 {
     // Preserve the original six-argument CLR entry for already compiled ordinary clients.
     // Its absence of canonical owners conveys no Task/Run, cloud context or tool authority.
@@ -43,6 +44,16 @@ public sealed class ResilientProviderRoutingModelClient(
             taskCoordinator: null, routeCapture: null, originalFrames: null, modelPermissions: null, taskContextAuthority: null)
     {
     }
+
+    // Preserve the prior eleven-argument CLR entry for already compiled canonical clients.
+    public ResilientProviderRoutingModelClient(ProviderRoutingModelClient primary, IModelProviderRegistry providers,
+        IProviderConfigurationStore configurations, IPrivacyPreferenceStore privacy,
+        IModelFallbackOrderStore? fallbackOrder, IExecutionEventSink? executionEvents,
+        TaskExecutionCoordinator? taskCoordinator, ITaskRunSelectedRouteCapture? routeCapture,
+        ITaskRunOriginalFrameOwner? originalFrames, ModelPermissionEvaluator? modelPermissions,
+        ITaskRunProviderContextAuthority? taskContextAuthority)
+        : this(primary, providers, configurations, privacy, fallbackOrder, executionEvents, taskCoordinator,
+            routeCapture, originalFrames, modelPermissions, taskContextAuthority, catalogueEligibility: null) { }
 
     /// <summary>
     /// Reports whether available async applies to the current state.
@@ -69,7 +80,7 @@ public sealed class ResilientProviderRoutingModelClient(
         var required = RequiredCapabilities(request);
         var state = new RoutingState(request.ExecutionContext);
         await CaptureOriginalAttemptAsync(state, cancellationToken).ConfigureAwait(false);
-        var candidates = await GetCandidatesAsync(request.Model, required, cancellationToken, context: state.Context).ConfigureAwait(false);
+        var candidates = await GetCandidatesAsync(request.Model, required, cancellationToken, context: state.Context, requireObservedLocalStreaming: true).ConfigureAwait(false);
         Exception? firstFailure = null;
         var emitted = false;
         for (var index = 0; index < candidates.Count; index++)
@@ -81,7 +92,9 @@ public sealed class ResilientProviderRoutingModelClient(
                 firstFailure ??= catalogueFailure.Cause;
                 continue;
             }
-            await PrepareAttemptAsync(state, selected, required, [], index > 0, cancellationToken).ConfigureAwait(false);
+            var selectedRequirements = selected.Descriptor?.ProviderId == "llama-cpp"
+                ? new HashSet<ToolCapability>(required) { ToolCapability.Streaming } : required;
+            await PrepareAttemptAsync(state, selected, selectedRequirements, [], index > 0, cancellationToken).ConfigureAwait(false);
             if (index > 0) PublishFallback(request.Model, selected.Key, state.Context);
             using var frameCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var channel = Channel.CreateBounded<string>(new BoundedChannelOptions(1)
@@ -320,7 +333,7 @@ public sealed class ResilientProviderRoutingModelClient(
         IReadOnlySet<ToolCapability> required,
         CancellationToken cancellationToken,
         IReadOnlyCollection<RestrictedModelCapability>? restrictions = null,
-        ProviderExecutionContext? context = null)
+        ProviderExecutionContext? context = null, bool requireObservedLocalStreaming = false)
     {
         var availability = await GetEligibleModelsAsync(cancellationToken).ConfigureAwait(false);
         var descriptors = availability.Models;
@@ -382,7 +395,18 @@ public sealed class ResilientProviderRoutingModelClient(
                      .ThenByDescending(item => item.ContextWindow ?? 0)
                      .ThenBy(item => item.Label, StringComparer.OrdinalIgnoreCase))
             Add(descriptor);
-        return result.DistinctBy(item => item.Key, StringComparer.OrdinalIgnoreCase).ToArray();
+        var ordered = result.DistinctBy(candidate => candidate.Key, StringComparer.OrdinalIgnoreCase)
+            .Where(candidate => !requireObservedLocalStreaming || (candidate.Descriptor?.ProviderId ?? ProviderId(candidate.Key)) != "llama-cpp"
+                || candidate.Descriptor?.Capabilities.Contains(ToolCapability.Streaming) == true).ToArray();
+        if (catalogueEligibility is null) return ordered;
+        var originalDescriptors = ordered.Where(item => item.Descriptor is not null).Select(item => item.Descriptor!).ToArray();
+        var observedEligible = catalogueEligibility.ObserveOriginalCatalogueEligibility(originalDescriptors, required,
+            new ModelRoutingPolicy(ModelRoutingMode.ManualFallback, PreferLocal: true, AllowCloud: allowCloud,
+                PreferredModelKeys: ordered.Select(item => item.Key).ToArray(), AllowFallback: true));
+        // Preserve unavailable original catalogue observations for the existing canonical failure
+        // protocol. This metadata seam neither clones a selected descriptor nor adds a dispatch loop.
+        return ordered.Where(item => item.Descriptor is null
+            || observedEligible.Any(original => ReferenceEquals(original, item.Descriptor))).ToArray();
 
         void Add(ProviderModelDescriptor descriptor)
         {
@@ -819,7 +843,7 @@ public sealed class ResilientProviderRoutingModelClient(
         var separator = model.IndexOf(':');
         if (separator <= 0) return "ollama";
         var prefix = model[..separator];
-        return prefix is "openai" or "anthropic" or "gemini" or "openrouter" or "openai-compatible" or "ollama" ? prefix : "ollama";
+        return prefix is "openai" or "anthropic" or "gemini" or "openrouter" or "openai-compatible" or "ollama" or "llama-cpp" ? prefix : "ollama";
     }
 
     /// <summary>

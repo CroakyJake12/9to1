@@ -68,7 +68,8 @@ public sealed class StartupRecoveryFinalCleanTests : IDisposable
         {
             close = writer.CompleteAfterOriginalDrainAsync(held.Task, CancellationToken.None);
             Assert.Same(close, writer.CompleteAfterOriginalDrainAsync(held.Task, CancellationToken.None));
-            Assert.Throws<InvalidOperationException>(() => { writer.CompleteAfterOriginalDrainAsync(Task.CompletedTask, CancellationToken.None); });
+            Action rejectForeignDrain = () => { _ = writer.CompleteAfterOriginalDrainAsync(Task.CompletedTask, CancellationToken.None); };
+            Assert.Throws<InvalidOperationException>(rejectForeignDrain);
             Assert.False(close.IsCompleted);
             Assert.False(ReadClean());
             held.SetResult();

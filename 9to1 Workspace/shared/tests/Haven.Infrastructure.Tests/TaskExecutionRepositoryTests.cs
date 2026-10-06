@@ -69,8 +69,8 @@ public sealed class TaskExecutionRepositoryTests : IDisposable
         start.SetResult();
         var results = await Task.WhenAll(a, b);
 
-        Assert.Single(results.Where(result => result));
-        Assert.Single(results.Where(result => !result));
+        Assert.Single(results, result => result);
+        Assert.Single(results, result => !result);
         var current = Assert.IsType<TaskExecutionSnapshot>(await new TaskExecutionRepository(database).GetAsync(original.TaskId, CancellationToken.None));
         Assert.Equal(results[0] ? "Left" : "Right", current.PromptSummary);
         Assert.Equal(2, current.PersistenceRevision);
