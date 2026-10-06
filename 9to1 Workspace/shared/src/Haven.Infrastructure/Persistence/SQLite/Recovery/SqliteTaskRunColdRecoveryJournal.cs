@@ -68,6 +68,8 @@ public sealed partial class SqliteTaskRunColdRecoveryJournal(SqliteDatabase data
         internal readonly string Expected = expected;
         internal readonly Guid Id = id;
         internal Acknowledgment? Acknowledgment;
+        internal ContextLease? ProjectContext;
+        internal bool ProjectContextAdmitted;
         internal readonly SqliteConnection CommitConnection = commitConnection;
         internal readonly byte[] Key = key;
         internal Task? Close;
@@ -99,7 +101,7 @@ public sealed partial class SqliteTaskRunColdRecoveryJournal(SqliteDatabase data
         public ITaskRunColdJournalClaim OriginalClaim => Claim;
         public TaskExecutionSnapshot AcknowledgedTask => UnifiedPersistenceJson.Read<TaskExecutionSnapshot>(Payload);
     }
-    private sealed class ContextLease(SqliteTaskRunColdRecoveryJournal owner, Claim claim,
+    private sealed partial class ContextLease(SqliteTaskRunColdRecoveryJournal owner, Claim claim,
         AuthenticatedResourceActor actor, NativePersonalTaskRecoveryStore store) : ITaskRunColdContextLease
     {
         internal readonly SqliteTaskRunColdRecoveryJournal Owner = owner;
@@ -111,6 +113,7 @@ public sealed partial class SqliteTaskRunColdRecoveryJournal(SqliteDatabase data
         public AuthenticatedResourceActor CurrentActor { get; } = actor;
         public ValueTask DisposeAsync()
         {
+            if (ProjectSource is not null || ReferenceEquals(Claim.ProjectContext, this)) DemandExternalOriginalProjectContextJoin();
             lock (this)
             {
                 if (Close is not null) return new(Close);
@@ -119,7 +122,12 @@ public sealed partial class SqliteTaskRunColdRecoveryJournal(SqliteDatabase data
             }
         }
         private async Task CloseOriginalAsync(Task start)
-        { await start.ConfigureAwait(false); Claim.Entry.Sources.Invoke(() => { Store.Dispose(); Closed = true; return true; }); }
+        {
+            await start.ConfigureAwait(false);
+            if (ProjectSource is null)
+            { Claim.Entry.Sources.Invoke(() => { Store.Dispose(); Closed = true; return true; }); return; }
+            await Owner.CloseOriginalProjectContextAsync(this).ConfigureAwait(false);
+        }
     }
 
     public bool HasOriginalComposition(SqliteDatabase sameDatabase, IAppPaths samePaths,
@@ -128,6 +136,7 @@ public sealed partial class SqliteTaskRunColdRecoveryJournal(SqliteDatabase data
 
     private async Task InitializeOriginalAsync(TaskRunColdOriginalSourceScope sources, CancellationToken token)
     {
+        SealOriginalProjectComposition();
         await AwaitActualAsync(sources, () => _migrationGate.WaitAsync(token)).ConfigureAwait(false);
         try
         {
@@ -330,6 +339,9 @@ public sealed partial class SqliteTaskRunColdRecoveryJournal(SqliteDatabase data
             throw new InvalidOperationException("Cold CAS changes only the exact SAME owner activation/revision, never work/history/IDs.");
         if (claim.Close is not null) throw new InvalidOperationException("The original CAS connection is closing/closed.");
         var connection = claim.CommitConnection;
+        // Native/Home project custody was acquired outside the AUTH metadata pin.
+        // This demand starts no managed callback/lease and precedes the genuine SQL CAS.
+        DemandOriginalProjectCommitForClaim(claim);
         var transaction = sources.Invoke(() => connection.BeginTransaction(deferred: false));
         try
         {
@@ -412,6 +424,10 @@ public sealed partial class SqliteTaskRunColdRecoveryJournal(SqliteDatabase data
         if (UnifiedPersistenceJson.Write(current) != UnifiedPersistenceJson.Write(actualCurrent))
             throw new InvalidOperationException("The actual same-run input basis changed during restored body validation.");
         await DemandInputAsync(currentSources, ack.Claim.Entry.Capsule, token).ConfigureAwait(false);
+        if (ack.Claim.Entry.Capsule.OriginalProjectIdentity is not null)
+            await ValidateOriginalClosedProjectBodyAsync(ack.Claim.ProjectContext
+                ?? throw new InvalidOperationException("No actual closed project Context is retained."), ack,
+                current, currentSources, token).ConfigureAwait(false);
         await DemandActorAsync(currentSources, current.OwnerBinding!, token).ConfigureAwait(false);
     }
 
@@ -420,14 +436,47 @@ public sealed partial class SqliteTaskRunColdRecoveryJournal(SqliteDatabase data
     {
         var claim = RequireClaim(sameClaim);
         await ValidateOriginalClaimAsync(claim, actualExpected, token).ConfigureAwait(false);
+        if (claim.Entry.Capsule.OriginalProjectIdentity is not null)
+            lock (claim)
+            {
+                if (claim.Close is not null || claim.ProjectContextAdmitted)
+                    throw new InvalidOperationException("This SAME project claim already admitted preparation or is retiring.");
+                // A failed or declined genuine preparation remains sticky. It cannot
+                // replace the first Context/late lease with another unjoined original.
+                claim.ProjectContextAdmitted = true;
+            }
         var store = OriginalSources(claim.Entry.Sources).Invoke(() => NativePersonalTaskRecoveryStore.Acquire(paths.DataDirectory, paths.DatabasePath));
         try
         {
             var actor = await DemandActorAsync(OriginalSources(claim.Entry.Sources), actualExpected.OwnerBinding!, token).ConfigureAwait(false);
             OriginalSources(claim.Entry.Sources).Invoke(() => { store.Validate(); return true; });
-            return new ContextLease(this, claim, actor, store);
+            var context = new ContextLease(this, claim, actor, store);
+            if (claim.Entry.Capsule.OriginalProjectIdentity is null) return context;
+            claim.ProjectContext = context;
+            try
+            {
+                await PrepareOriginalProjectContextAsync(context, actualExpected, token).ConfigureAwait(false);
+                return context;
+            }
+            catch (Exception primary)
+            {
+                // The exact late lease is retained even if its factory/caller faults.
+                // Close its children before propagating all original preparation causes.
+                Exception? cleanup = null;
+                try { await AwaitActualAsync(OriginalSources(claim.Entry.Sources), () => context.DisposeAsync().AsTask()).ConfigureAwait(false); }
+                catch (Exception cause) { cleanup = cause; }
+                if (cleanup is not null) throw new AggregateException("Project context preparation and independent cleanup failed.", primary, cleanup);
+                throw;
+            }
         }
-        catch { OriginalSources(claim.Entry.Sources).Invoke(() => { store.Dispose(); return true; }); throw; }
+        catch
+        {
+            // Project Context already owns the store and its exact close. Avoid a second
+            // disposal after failed/uncertain project cleanup; preserve the retained driver.
+            if (claim.ProjectContext is null)
+                OriginalSources(claim.Entry.Sources).Invoke(() => { store.Dispose(); return true; });
+            throw;
+        }
     }
     public bool IsIssuedOriginal(ITaskRunColdContextLease sameLease, ITaskRunColdJournalClaim sameClaim) =>
         sameLease is ContextLease lease && ReferenceEquals(lease.Owner, this) && ReferenceEquals(lease.Claim, sameClaim);
@@ -436,8 +485,12 @@ public sealed partial class SqliteTaskRunColdRecoveryJournal(SqliteDatabase data
         if (sameLease is not ContextLease lease || !ReferenceEquals(lease.Owner, this) || lease.Closed)
             throw new UnauthorizedAccessException("No same live personal-store context lease exists.");
         await ValidateOriginalClaimAsync(lease.Claim, actualExpected, token).ConfigureAwait(false);
-        OriginalSources(lease.Claim.Entry.Sources).Invoke(() => { lease.Store.Validate(); return true; });
-        if (await DemandActorAsync(OriginalSources(lease.Claim.Entry.Sources), actualExpected.OwnerBinding!, token).ConfigureAwait(false) != lease.CurrentActor)
+        var sources = OriginalSources(lease.Claim.Entry.Sources);
+        sources.Invoke(() => { lease.Store.Validate(); return true; });
+        if (lease.Claim.Entry.Capsule.OriginalProjectIdentity is not null)
+            await ValidateOriginalProjectBoundaryWithinSourceAsync(lease.Claim, lease, actualExpected,
+                ProjectCaller(sources), ProjectRetainer(sources), token).ConfigureAwait(false);
+        if (await DemandActorAsync(sources, actualExpected.OwnerBinding!, token).ConfigureAwait(false) != lease.CurrentActor)
             throw new UnauthorizedAccessException("The actual current local activation changed.");
     }
     public async ValueTask ValidateOriginalClosedContextAsync(ITaskRunColdContextLease sameLease,
@@ -449,7 +502,10 @@ public sealed partial class SqliteTaskRunColdRecoveryJournal(SqliteDatabase data
             || lease.Claim.Close is not { IsCompletedSuccessfully: true })
             throw new UnauthorizedAccessException("The SAME acquired context/CAS connection originals must close successfully before activation.");
         await ValidateOriginalAcknowledgmentAsync(ack, token).ConfigureAwait(false);
-        if (await DemandActorAsync(OriginalSources(lease.Claim.Entry.Sources), ack.AcknowledgedTask.OwnerBinding!, token).ConfigureAwait(false) != lease.CurrentActor)
+        var sources = OriginalSources(lease.Claim.Entry.Sources);
+        if (lease.Claim.Entry.Capsule.OriginalProjectIdentity is not null)
+            await ValidateOriginalClosedProjectBodyAsync(lease, ack, ack.AcknowledgedTask, sources, token).ConfigureAwait(false);
+        if (await DemandActorAsync(sources, ack.AcknowledgedTask.OwnerBinding!, token).ConfigureAwait(false) != lease.CurrentActor)
             throw new UnauthorizedAccessException("The actual current activation changed after the acknowledged reads.");
     }
 

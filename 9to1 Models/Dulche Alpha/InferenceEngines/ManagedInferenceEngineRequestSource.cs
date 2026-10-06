@@ -62,7 +62,7 @@ internal sealed class ManagedInferenceEngineRequestSource(IModelProvider provide
       if (bodyFailure is not null) Add(errors, bodyFailure);
       if (reader is not null)
       {
-        try { Capture(originalScope, () => {
+        try { _ = Capture(originalScope, () => {
           cleanup = reader.DisposeAsync().AsTask(); originalScope.RetainOriginalTask(cleanup); return cleanup;
         }, cleanup: true); }
         catch (Exception cause) { Add(errors, cause is OperationCanceledException

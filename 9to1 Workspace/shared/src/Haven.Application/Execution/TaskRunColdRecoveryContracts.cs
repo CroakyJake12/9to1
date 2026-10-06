@@ -22,6 +22,8 @@ public sealed record TaskRunColdCapsule(int SchemaVersion, Guid CapsuleId,
     TaskRunColdChatInput OriginalInput, DateTimeOffset CapturedAt)
 {
     public TaskRunColdToolCheckpoint? OriginalToolCheckpoint { get; init; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public TaskRunColdProjectIdentity? OriginalProjectIdentity { get; init; }
 }
 
 /// <summary>Issued only by the actual Chat producer after its entire original body and cleanup.

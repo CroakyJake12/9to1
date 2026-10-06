@@ -18,6 +18,23 @@ public sealed partial class ChatSessionService
         PermissionMode commandPermission = PermissionMode.FullAccess, PermissionMode browserPermission = PermissionMode.FullAccess,
         IReadOnlyCollection<ToolCapability>? explicitCapabilities = null,
         IReadOnlyCollection<ActiveCapability>? availableCapabilities = null, ComputerUseRequest? computerUseRequest = null)
+        => StartObservedOriginalTaskSendCore(conversation, prompt, model, effort, capabilities,
+            agentName, agentInstructions, duoMode, workspaceRoot, projectContext, projectInstructions,
+            images, observationCancellationToken, prompts, registeredContext, generationOptions,
+            filePermission, commandPermission, browserPermission, explicitCapabilities,
+            availableCapabilities, computerUseRequest, null);
+
+    private Task<TaskRunOriginalInitialChatObservationLease> StartObservedOriginalTaskSendCore(
+        Conversation conversation, string prompt, ModelDescriptor model, EffortLevel effort,
+        IReadOnlyCollection<ActiveCapability> capabilities, string agentName, string agentInstructions,
+        DuoMode duoMode, string? workspaceRoot, string? projectContext, string? projectInstructions,
+        IReadOnlyList<string>? images, CancellationToken observationCancellationToken,
+        IReadOnlyCollection<ActivePrompt>? prompts = null, string? registeredContext = null,
+        GenerationOptions? generationOptions = null, PermissionMode filePermission = PermissionMode.FullAccess,
+        PermissionMode commandPermission = PermissionMode.FullAccess, PermissionMode browserPermission = PermissionMode.FullAccess,
+        IReadOnlyCollection<ToolCapability>? explicitCapabilities = null,
+        IReadOnlyCollection<ActiveCapability>? availableCapabilities = null, ComputerUseRequest? computerUseRequest = null,
+        ITaskRunColdOriginalProjectInput? projectInput = null)
     {
         ArgumentNullException.ThrowIfNull(conversation);
         if (conversation.Id == Guid.Empty || conversation.Mode != HavenMode.Tasks)
@@ -43,7 +60,7 @@ public sealed partial class ChatSessionService
         // Restored ExecutionContext cannot bypass this same source's physical join guard.
         try
         {
-            input = original.Stage!.Invoke(() => new InitialTaskInput(conversation, prompt,
+            input = original.Stage!.Invoke(() => BindOriginalInitialProjectInput(original.Stage!, new InitialTaskInput(conversation, prompt,
                 model with { Capabilities = model.Capabilities.ToFrozenSet() }, effort,
                 Array.AsReadOnly(capabilities.ToArray()), agentName, agentInstructions, duoMode,
                 workspaceRoot, projectContext, projectInstructions,
@@ -53,7 +70,7 @@ public sealed partial class ChatSessionService
                 explicitCapabilities is null ? null : Array.AsReadOnly(explicitCapabilities.ToArray()),
                 availableCapabilities is null ? null : Array.AsReadOnly(availableCapabilities.ToArray()),
                 computerUseRequest is null ? null : computerUseRequest with
-                { Invocations = Array.AsReadOnly(computerUseRequest.Invocations.ToArray()) }));
+                { Invocations = Array.AsReadOnly(computerUseRequest.Invocations.ToArray()) }), projectInput));
         }
         catch (Exception cause) { original.InputFailure = cause; }
         finally { acquisitionWait.StartOriginal(); original.InputReady.TrySetResult(); }
@@ -121,6 +138,11 @@ public sealed partial class ChatSessionService
         history = await stage.Await(() => conversations.GetMessagesAsync(stored.Id, token)).ConfigureAwait(false);
         if (history.Count != 0) throw new InvalidOperationException("Original Tasks input already exists; use its actual task commands.");
         await stage.Await(() => original.Coordinator.ValidateOriginalInitialTaskContextAsync(original, token)).ConfigureAwait(false);
+        await ValidateOriginalInitialProjectInputAsync(original, input, token).ConfigureAwait(false);
+        // Project validation awaited current resource/container reads. Canonical context
+        // remains last, then the existing admitted finite Send factory owns the body.
+        if (input.ProjectInput is not null)
+            await stage.Await(() => original.Coordinator.ValidateOriginalInitialTaskContextAsync(original, token)).ConfigureAwait(false);
         try
         {
             stage.Invoke(() => { CaptureOriginalColdInitialInput(original, input); return true; });
@@ -200,5 +222,6 @@ public sealed partial class ChatSessionService
         string? RegisteredContext, GenerationOptions? GenerationOptions, PermissionMode FilePermission,
         PermissionMode CommandPermission, PermissionMode BrowserPermission,
         IReadOnlyCollection<ToolCapability>? ExplicitCapabilities,
-        IReadOnlyCollection<ActiveCapability>? AvailableCapabilities, ComputerUseRequest? ComputerUseRequest);
+        IReadOnlyCollection<ActiveCapability>? AvailableCapabilities, ComputerUseRequest? ComputerUseRequest,
+        ITaskRunColdOriginalProjectInput? ProjectInput = null, ITaskRunColdProjectResourceSource? ProjectSource = null);
 }

@@ -51,7 +51,7 @@ public sealed partial class InferenceEngineDispatcher
             try {
                 parent.DemandCurrentRequestBinding(actual,lease,model);token.ThrowIfCancellationRequested();
                 linked=CancellationTokenSource.CreateLinkedTokenSource(token,actual.Retirement.Token);
-                try { scope.InvokeOriginalFactory(()=> {
+                try { _ = scope.InvokeOriginalFactory(()=> {
                     raw=factory(scope,linked.Token)??throw new InvalidOperationException("The original raw provider returned no task.");
                     scope.RetainOriginalTask(raw);return raw;
                 }); }
@@ -102,7 +102,7 @@ public sealed partial class InferenceEngineDispatcher
                 });
                 while(true) {
                     Task<bool>? move=null;Exception? direct=null;
-                    try { scope.InvokeOriginalFactory(()=> { move=iterator!.MoveNextAsync().AsTask();scope.RetainOriginalTask(move);return move; }); }
+                    try { _ = scope.InvokeOriginalFactory(()=> { move=iterator!.MoveNextAsync().AsTask();scope.RetainOriginalTask(move);return move; }); }
                     catch(Exception error) { direct=error;onlyCanceledOriginals=false;Add(errors,error); }
                     if(move is not null) onlyCanceledOriginals&=await JoinOnce(move,joined,errors).ConfigureAwait(false);
                     if(direct is not null||errors.Count!=0) break;
@@ -116,7 +116,7 @@ public sealed partial class InferenceEngineDispatcher
             finally {
                 if(iterator is not null) {
                     Task? dispose=null;
-                    try { scope.InvokeOriginalCleanup(()=> { dispose=iterator.DisposeAsync().AsTask();scope.RetainOriginalTask(dispose);return dispose; }); }
+                    try { _ = scope.InvokeOriginalCleanup(()=> { dispose=iterator.DisposeAsync().AsTask();scope.RetainOriginalTask(dispose);return dispose; }); }
                     catch(Exception error) { onlyCanceledOriginals=false;Add(errors,error); }
                     if(dispose is not null) onlyCanceledOriginals&=await JoinOnce(dispose,joined,errors,cleanup:true).ConfigureAwait(false);
                 }

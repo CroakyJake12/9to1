@@ -336,7 +336,7 @@ public sealed class StrataNativeArtifactSource : IOriginalStrataModelSource, IOr
         public override void DemandCurrentOriginalBinding() => held.Demand();
         public override ValueTask DisposeAsync() => new(held.CloseOriginalAsync());
     }
-    private sealed class ModelLease(HeldLease held) : StrataOriginalModelLease, IStrataOriginalArtifactBinding, IStrataOriginalHardwareBinding
+    private sealed class ModelLease(HeldLease held) : StrataOriginalModelLease, IStrataOriginalArtifactBinding, IStrataOriginalHardwareBinding, IStrataOriginalModelSizeBinding
     {
         public HeldLease Held { get; } = held;
         public ModelIdentity OriginalModel => held.Model;
@@ -344,6 +344,15 @@ public sealed class StrataNativeArtifactSource : IOriginalStrataModelSource, IOr
         public StrataOriginalHardwareObservation OriginalHardwareProbe => held.Hardware ?? throw new InvalidDataException("No actual hardware probe was retained.");
         public InferenceEngineSupport? OriginalBuildSupport => held.Metadata.BuildSupport;
         public InferenceHardware OriginalHardwareObservation => OriginalHardwareProbe.Hardware;
+        public long OriginalModelSizeBytes
+        {
+            get
+            {
+                held.Demand();
+                var bytes = held.Metadata.Files.Aggregate(0L, (sum, file) => checked(sum + file.Length));
+                held.Demand(); return bytes;
+            }
+        }
         public override InferenceModelRequirements Requirements => held.Metadata.Requirements;
         public override string OriginalCheckpointDirectory => held.Root.DescriptorPath;
         public override IReadOnlyList<int> ActualCudaDeviceIndices => Array.AsReadOnly(held.Metadata.Devices);

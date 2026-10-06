@@ -48,7 +48,7 @@ public interface IOriginalCanonicalReadResolver : ICanonicalResourceAccessResolv
 }
 
 /// <summary>Intersection of verified ambient actor and each canonical owner's current resource authority.</summary>
-public sealed class ResourceAuthorizationService(IAuthenticatedResourceActorSource actors,
+public sealed partial class ResourceAuthorizationService(IAuthenticatedResourceActorSource actors,
     IEnumerable<ICanonicalResourceAccessResolver> resolvers)
 {
     /// <summary>Pure component identity only; this grants no actor or resource access.</summary>

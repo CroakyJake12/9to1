@@ -31,6 +31,14 @@ public interface IOriginalStrataWorkerSource
     bool IsIssuedOriginalWorkerLease(StrataOriginalWorkerLease sameLease, TaskRunAttemptAdmission sameModelUseAdmission);
 }
 
+/// <summary>Observed byte count of the SAME held, verified checkpoint inventory. It is
+/// model artifact metadata, not RAM/VRAM capacity, residency or permission. The actual
+/// source must demand its live private model binding before disclosing the count.</summary>
+public interface IStrataOriginalModelSizeBinding
+{
+    long OriginalModelSizeBytes { get; }
+}
+
 /// <summary>Fresh adapter around the SAME configured raw local provider. The provider lifetime is borrowed.</summary>
 public sealed class ConfiguredManagedInferenceEngineFactory : IInferenceEngineAdapterFactory
 {
@@ -150,6 +158,17 @@ public sealed class StrataManagedInferenceEngineFactory : IInferenceEngineAdapte
                 modelOwned=true;return true;
             });
             var heldModel=originalModel??throw new InvalidOperationException("No actual issued model lease was returned.");
+            var originalModelSizeBytes=originalScope.InvokeOriginalFactory(()=> {
+                heldModel.DemandCurrentOriginalBinding();
+                if(heldModel is not IStrataOriginalModelSizeBinding observedSize)
+                    throw new InferenceEngineException(new(DulcheErrorCode.ProviderUnavailable,
+                        "Strata setup requires the genuine held checkpoint inventory byte-count source.",sameModel.StableKey,false));
+                var actualBytes=observedSize.OriginalModelSizeBytes;
+                heldModel.DemandCurrentOriginalBinding();
+                if(actualBytes<=0)throw new InferenceEngineException(new(DulcheErrorCode.ModelLoadFailed,
+                    "The actual held checkpoint inventory has no positive model artifact byte count.",sameModel.StableKey,false));
+                return actualBytes;
+            });
             scopedModel=originalScope.InvokeOriginalFactory(()=> {
                 if(heldModel.Requirements.Model!=sameModel)throw new InvalidDataException("The authentic model lease names another model.");
                 heldModel.DemandCurrentOriginalBinding();heldBinary.DemandCurrentOriginalBinding();
@@ -174,7 +193,7 @@ public sealed class StrataManagedInferenceEngineFactory : IInferenceEngineAdapte
                     ||!Uri.TryCreate(configuration.Endpoint,UriKind.Absolute,out var target)||target!=_target)
                     throw new UnauthorizedAccessException("The original configured local engine target changed during initialization.");
                 var requirements=worker.Model;
-                var descriptor=new ProviderModelDescriptor(_providerId,true,new(sameModel.ModelId,null,"Strata","","",
+                var descriptor=new ProviderModelDescriptor(_providerId,true,new(sameModel.ModelId,originalModelSizeBytes,"Strata","","",
                     new HashSet<ToolCapability>{ToolCapability.Text,ToolCapability.Streaming},DateTimeOffset.UtcNow),
                     requirements.ContextTokens,sameModel.ModelId);
                 var raw=new StrataRawModelProvider(_providerId,worker,descriptor);

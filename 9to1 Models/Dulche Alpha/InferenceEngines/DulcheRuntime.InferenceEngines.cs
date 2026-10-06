@@ -75,7 +75,7 @@ public sealed partial class DulcheRuntime
             var queue=endpoint.SnapshotQueue();
             if(queue.RunningRequestId is not null||queue.Queued.Count!=0)
                 denied=OperationResult<Unit>.Failure(new(DulcheErrorCode.Conflict,"An original request still owns this endpoint.",endpoint.Endpoint.EndpointId,false));
-            else try { InvokePhysicalOriginalEndpoint(endpoint,()=> {
+            else try { _ = InvokePhysicalOriginalEndpoint(endpoint,()=> {
                 stage.Raw=dispatcher.SwitchInferenceEngineAsync(endpoint.Endpoint.EndpointId,engine,linked.Token);
                 return stage.Raw;
             }); }

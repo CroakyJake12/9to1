@@ -113,6 +113,12 @@ public static partial class TaskRunColdRecoveryBoundary
             || capsule.OriginalInput.ProjectInstructions is not null || capsule.OriginalInput.RegisteredContext is not null || capsule.OriginalInput.ComputerUseRequest is not null
             || capsule.OriginalInput.Images is { Count: > 0 } || capsule.AcceptedConversation.ContainerId is not null
             || capsule.AcceptedConversation.LessonId is not null)
-            throw new InvalidOperationException("This cold boundary has no fresh owner for its additional context resources.");
+        {
+            if (capsule.OriginalProjectIdentity is null)
+                throw new InvalidOperationException("This cold boundary has no fresh owner for its additional context resources.");
+            TaskRunColdProjectBoundary.DemandOriginalProjectMaterial(capsule);
+        }
+        else if (capsule.OriginalProjectIdentity is not null)
+            throw new InvalidOperationException("A project descriptor cannot replace the original resource-free input.");
     }
 }

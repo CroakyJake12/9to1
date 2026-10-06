@@ -8,7 +8,7 @@ namespace HavenOS.Home.PermissionsTrustNotifications;
 /// Home-owned permission decision and trust state for app API calls. The caller cannot select an
 /// action risk: the trusted target-action resolver supplies it for every request.
 /// </summary>
-public sealed class HomePermissionTrustService
+public sealed partial class HomePermissionTrustService
 {
     internal bool IsBoundToStore(IHomeCoreStateStore candidate) => ReferenceEquals(_stateStore, candidate);
     // Trusted configured catalog only; no request/page metadata supplies a policy.

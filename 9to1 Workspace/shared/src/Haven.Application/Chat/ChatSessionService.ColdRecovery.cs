@@ -8,9 +8,12 @@ public sealed partial class ChatSessionService : ITaskRunOriginalColdCaptureSour
     private readonly object _coldCaptureMarker = new();
     private readonly ConditionalWeakTable<HostedInitialTaskSend, ColdInitialCapture> _coldInitialCaptures = new();
 
-    private sealed class ColdInitialCapture(TaskRunColdChatInput input)
+    private sealed class ColdInitialCapture(TaskRunColdChatInput input,
+        ITaskRunColdOriginalProjectInput? projectInput, ITaskRunColdProjectResourceSource? projectSource)
     {
         internal readonly TaskRunColdChatInput Input = input;
+        internal readonly ITaskRunColdOriginalProjectInput? ProjectInput = projectInput;
+        internal readonly ITaskRunColdProjectResourceSource? ProjectSource = projectSource;
         internal TaskRunOriginalColdCapture? Capture;
         internal readonly AgentRuntimeOriginalCustody Custody = new();
         internal Task? Driver;
@@ -60,6 +63,17 @@ public sealed partial class ChatSessionService : ITaskRunOriginalColdCaptureSour
                     this, invocation, terminal, new TaskRunColdOriginalSourceScope(operation), CancellationToken.None), owningCleanup: true).ConfigureAwait(false);
                 capsule = new(2, Guid.NewGuid(), TaskRunColdBoundaryKind.SettledUnfinishedToolResponse,
                     terminal, conversation, user, capture.Input, DateTimeOffset.UtcNow) { OriginalToolCheckpoint = material };
+                if (capture.ProjectInput is { } projectInput)
+                {
+                    var source = capture.ProjectSource ?? throw new InvalidOperationException("The privately captured project source is absent.");
+                    if (!operation.Invoke(() => source.IsOwnedOriginalProjectInput(projectInput), owningCleanup: true))
+                        throw new UnauthorizedAccessException("No SAME historical project input custody remains for closed capture.");
+                    var identity = await operation.AwaitAsync(() => source.CaptureOriginalClosedProjectIdentityWithinSourceAsync(
+                        projectInput, terminal, capture.Input,
+                        callback => operation.Invoke(() => { callback(); return true; }, owningCleanup: true),
+                        operation.RetainSource, CancellationToken.None), owningCleanup: true).ConfigureAwait(false);
+                    capsule = capsule with { OriginalProjectIdentity = identity };
+                }
                 TaskRunColdRecoveryBoundary.DemandRestorableBoundary(capsule, terminal);
             }
             var issued = new TaskRunOriginalColdCapture(this, _coldCaptureMarker, original, capsule);
@@ -74,13 +88,8 @@ public sealed partial class ChatSessionService : ITaskRunOriginalColdCaptureSour
     private void CaptureOriginalColdInitialInput(HostedInitialTaskSend original, InitialTaskInput input)
     {
         if (taskCoordinator?.OriginalColdRecoveryJournal is null) return;
-        _coldInitialCaptures.Add(original, new ColdInitialCapture(new(input.Conversation, input.Prompt,
-            input.Model, input.Effort, Array.AsReadOnly(input.Capabilities.ToArray()), input.AgentName,
-            input.AgentInstructions, input.DuoMode, input.WorkspaceRoot, input.ProjectContext,
-            input.ProjectInstructions, input.Images, input.Prompts is null ? null : Array.AsReadOnly(input.Prompts.ToArray()),
-            input.RegisteredContext, input.GenerationOptions, input.FilePermission, input.CommandPermission,
-            input.BrowserPermission, input.ExplicitCapabilities is null ? null : Array.AsReadOnly(input.ExplicitCapabilities.ToArray()),
-            input.AvailableCapabilities is null ? null : Array.AsReadOnly(input.AvailableCapabilities.ToArray()), input.ComputerUseRequest)));
+        _coldInitialCaptures.Add(original, new ColdInitialCapture(DetachOriginalColdInput(input),
+            input.ProjectInput, input.ProjectSource));
     }
 
     public bool IsIssuedOriginalColdCapture(TaskRunOriginalColdCapture sameCapture) =>
@@ -119,6 +128,22 @@ public sealed partial class ChatSessionService : ITaskRunOriginalColdCaptureSour
                 this, invocation, sameCapture.Capsule.AcknowledgedTask, new TaskRunColdOriginalSourceScope(operation), token), owningCleanup: true).ConfigureAwait(false);
             if (System.Text.Json.JsonSerializer.Serialize(reobserved) != System.Text.Json.JsonSerializer.Serialize(sameCapture.Capsule.OriginalToolCheckpoint))
                 throw new InvalidOperationException("The genuine settled transcript/action outcomes changed before publication.");
+        }
+        if (sameCapture.Capsule.OriginalProjectIdentity is not null)
+        {
+            var owned = _coldInitialCaptures.GetValue(sameCapture.Original,
+                _ => throw new UnauthorizedAccessException("No actual project capture custody exists."));
+            var source = owned.ProjectSource ?? throw new InvalidOperationException("The actual source-captured project producer is absent.");
+            var projectInput = owned.ProjectInput ?? throw new InvalidOperationException("No original private project input was captured.");
+            if (!operation.Invoke(() => source.IsOwnedOriginalProjectInput(projectInput), owningCleanup: true))
+                throw new UnauthorizedAccessException("The configured producer does not own this historical project input.");
+            var identity = await operation.AwaitAsync(() => source.CaptureOriginalClosedProjectIdentityWithinSourceAsync(
+                projectInput, current, owned.Input,
+                callback => operation.Invoke(() => { callback(); return true; }, owningCleanup: true),
+                operation.RetainSource, token), owningCleanup: true).ConfigureAwait(false);
+            if (System.Text.Json.JsonSerializer.Serialize(identity)
+                != System.Text.Json.JsonSerializer.Serialize(sameCapture.Capsule.OriginalProjectIdentity))
+                throw new InvalidOperationException("The source-captured original project boundary changed before authenticated publication.");
         }
         TaskRunColdRecoveryBoundary.DemandRestorableBoundary(sameCapture.Capsule, current);
     }

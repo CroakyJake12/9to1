@@ -91,7 +91,8 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunColdOwnerAuthor
             scope.Expected, callback, retain, token).AsTask())).ConfigureAwait(false);
         if (!_coldContext!.IsIssuedOriginal(scope.OriginalContext, scope.OriginalClaim)) throw new UnauthorizedAccessException("The genuine context scope retired.");
         await ValidateColdAcceptedBoundaryAsync(work, sources, scope, token).ConfigureAwait(false);
-        await ReadColdActivationPolicyAsync(sources, scope.OriginalClaim.OriginalEntry.Capsule, token).ConfigureAwait(false);
+        await ValidateColdProjectBeforeCasAsync(work, sources, scope, token).ConfigureAwait(false);
+        await ReadColdActivationPolicyForScopeAsync(sources, scope, token).ConfigureAwait(false);
         await sources.ObserveAllOriginalTasksAsync().ConfigureAwait(false);
         if(sources.OriginalErrors.Count!=0) throw new AggregateException("Actual cold source validation failed.",sources.OriginalErrors);
         // The actual configured actor is read LAST after journal/context/model/policy awaits.
@@ -198,6 +199,8 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunColdOwnerAuthor
         internal ITaskRunColdJournalAcknowledgment? Acknowledgment;
         internal ITaskRunColdAcceptedBoundarySource? AcceptedBoundaryIssuer;
         internal Task? AcceptedBoundaryValidation;
+        internal ITaskRunColdOriginalProjectBoundarySource? ProjectBoundaryIssuer;
+        internal Task? ProjectBoundaryValidation;
         public ValueTask RevalidateAsync(CancellationToken token) => new(Issuer.StartColdWork(this, token, async (work, sources) =>
         { await Issuer.ValidateColdBeforeCasAsync(work, sources, this, token).ConfigureAwait(false); return true; }));
         public ValueTask<IAsyncDisposable> AcquireOriginalCommitPinAsync(CancellationToken token) => new(Issuer.StartColdWork(this, token, async (_, sources) =>
@@ -307,8 +310,10 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunColdOwnerAuthor
             var callback=ColdCaller(sources); Action<Task> retain=raw=>RetainColdRaw(work,sources,raw);
             await sources.AwaitAsync(sources.Invoke(()=>_coldSource!.ValidateOriginalAcknowledgmentWithinSourceAsync(acknowledgment,callback,retain,token))).ConfigureAwait(false);
             DemandColdAcceptedBoundaryProof(scope);
-            await ReadColdActivationPolicyAsync(sources,scope.OriginalClaim.OriginalEntry.Capsule,token).ConfigureAwait(false);
+            DemandColdProjectBoundaryProof(scope);
+            await ReadColdActivationPolicyForScopeAsync(sources,scope,token).ConfigureAwait(false);
             await sources.AwaitAsync(sources.Invoke(()=>_coldSource!.ValidateOriginalClosedContextWithinSourceAsync(scope.OriginalContext,acknowledgment,callback,retain,token).AsTask())).ConfigureAwait(false);
+            await ValidateColdClosedProjectAsync(work, sources, scope, acknowledgment, token).ConfigureAwait(false);
             await sources.ObserveAllOriginalTasksAsync().ConfigureAwait(false);
             if(sources.OriginalErrors.Count!=0) throw new AggregateException("Actual cold activation sources failed.",sources.OriginalErrors);
             var actor=await ReadColdActivationActorAsync(work,sources,scope,token).ConfigureAwait(false);
