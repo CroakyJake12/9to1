@@ -157,7 +157,7 @@ public sealed partial class WorkspaceToolService
             Func<Task<T>> source, CancellationToken token)
         {
             Task<T>? actual = null; T value = default!; var errors = new List<Exception>();
-            try { Invoke(() => admission.RunOriginalRead(() =>
+            try { _ = Invoke(() => admission.RunOriginalRead(() =>
                 { actual = source(); Retain(original, actual); return actual; }, token)); }
             catch (Exception error) { AddOriginalErrors(errors, null, error); }
             if (actual is not null)

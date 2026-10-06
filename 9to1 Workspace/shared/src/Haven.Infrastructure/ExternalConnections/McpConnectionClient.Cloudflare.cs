@@ -59,7 +59,7 @@ public sealed partial class McpConnectionClient
                 token.ThrowIfCancellationRequested();
                 sameActionClaims.DemandOriginalActionAdmission(original.ActionAdmission, original.OriginalPreparation, original.OriginalAttempt);
                 dispatchStarted = true;
-                actualCall = tool.CallAsync(values, cancellationToken: token);
+                actualCall = tool.CallAsync(values, cancellationToken: token).AsTask();
                 return stages.Track(actualCall);
             }, token));
         }

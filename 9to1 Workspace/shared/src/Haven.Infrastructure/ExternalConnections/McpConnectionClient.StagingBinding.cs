@@ -32,10 +32,10 @@ public sealed partial class McpConnectionClient : ICloudflareWorkerBindingClient
                 throw new NotSupportedException("Unsupported official account-scoped execute schema.");
             entry = await stages.CaptureOriginalAcquisitionAsync(() => authority.EnterOriginalWorkerReadAsync(service, selection, token), value => entry = value).ConfigureAwait(false);
             stages.Invoke(() => { authority.DemandOriginalWorkerReadEntry(service, selection, entry); return true; });
-            stages.Invoke(() => entry.RunOriginalRead(() =>
+            _ = stages.Invoke(() => entry.RunOriginalRead(() =>
             {
                 token.ThrowIfCancellationRequested(); authority.DemandOriginalWorkerReadEntry(service, selection, entry);
-                call = tool.CallAsync(new Dictionary<string, object?> { ["account_id"] = service.AccountId, ["code"] = code }, cancellationToken: token);
+                call = tool.CallAsync(new Dictionary<string, object?> { ["account_id"] = service.AccountId, ["code"] = code }, cancellationToken: token).AsTask();
                 return stages.Track(call);
             }, token));
         }
