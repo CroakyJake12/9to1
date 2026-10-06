@@ -265,6 +265,9 @@ public sealed partial class ChatSessionService(
             originalCustody.OriginalConversation = conversation;
             originalCustody.OriginalInputCurrentness = token => ValidateOriginalInputAsync(originalCustody, token);
             originalCustody.OriginalContinuationFactory = (nextCustody, context, token) => CreateOriginal(nextCustody, context, token);
+            originalCustody.OriginalToolContinuationFactory = (binding, token) =>
+                CreateOriginalToolCheckpointContinuation(binding, conversation, agentName, workspaceRoot,
+                    filePermission, commandPermission, browserPermission, token);
         }
         IAsyncEnumerable<ChatStreamEvent> CreateOriginal(TaskRunInvocationCustody? custody, ProviderExecutionContext? context, CancellationToken token)
         {
@@ -1298,7 +1301,11 @@ public sealed partial class ChatSessionService(
                     {
                         originalCheckpoint = CaptureOriginalToolCheckpoint(originalCustody!, originalRequest,
                             actualInventory ?? throw new InvalidOperationException("The actual tool context inventory is unavailable."),
-                            assistantId, buffer.ToString(), toolActivities, callsUsed, toolCallLimit, lastToolCall, lastToolResult);
+                            assistantId, buffer.ToString(), toolActivities, callsUsed, toolCallLimit, lastToolCall, lastToolResult,
+                            toolDefinitions.ToDictionary(definition => definition.Name,
+                                definition => modelPlan.TryGetRuntime(definition.Name, out var runtime) ? runtime
+                                    : throw new InvalidOperationException("The original offered tool has no actual runtime binding."), StringComparer.Ordinal),
+                            canonicalTask ?? throw new InvalidOperationException("The actual provider task basis is unavailable."));
                         originalRequest = originalCheckpoint.OriginalRequest;
                     }
                     await CaptureOriginalToolsAsync(originalRequest, actualInventory, cancellationToken).ConfigureAwait(false);

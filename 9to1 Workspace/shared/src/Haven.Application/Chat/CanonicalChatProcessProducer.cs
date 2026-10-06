@@ -17,6 +17,7 @@ internal sealed class CanonicalChatProcessProducer : IAsyncEnumerable<ChatStream
     private readonly object _gate = new();
     private readonly TaskExecutionCoordinator _owner;
     private readonly ICanonicalProcessEnumerableCustody _custody;
+    private readonly TaskRunInvocationCustody? _originalInvocation;
     private readonly Func<CancellationToken, IAsyncEnumerable<ChatStreamEvent>> _source;
     private readonly CancellationTokenSource _lifetime;
     private readonly List<Task> _moves = [];
@@ -40,7 +41,7 @@ internal sealed class CanonicalChatProcessProducer : IAsyncEnumerable<ChatStream
 
     internal CanonicalChatProcessProducer(TaskExecutionCoordinator owner, TaskRunInvocationCustody custody,
         Func<CancellationToken, IAsyncEnumerable<ChatStreamEvent>> source, CancellationToken callerToken)
-        : this(owner, new TaskRunInvocationProcessCustody(custody), source, callerToken) { }
+        : this(owner, new TaskRunInvocationProcessCustody(custody), source, callerToken) { _originalInvocation = custody; }
 
     internal CanonicalChatProcessProducer(TaskExecutionCoordinator owner, ICanonicalProcessEnumerableCustody custody,
         Func<CancellationToken, IAsyncEnumerable<ChatStreamEvent>> source, CancellationToken callerToken)
@@ -64,6 +65,49 @@ internal sealed class CanonicalChatProcessProducer : IAsyncEnumerable<ChatStream
                 && _moves.All(actual => actual.IsCompletedSuccessfully)
                 && _raw.All(actual => actual.IsCompletedSuccessfully) && _causes.Count == 0
                 && (!_sourceInvoked || _custody.HasOwnedTerminalObservation);
+        }
+    }
+
+    // This observes the actual outer tasks after the private caller has obtained its
+    // genuine failed-frame settlement. It does not waive a canceled task, stop failure,
+    // unrelated cause or inner cleanup fault, and issues no replay permission.
+    internal bool HasClosedOriginalWithExpectedProviderFailure(Task sameCall, Exception sameOutward)
+    {
+        if (!sameCall.IsFaulted || sameCall.Exception is not { } originalFault) return false;
+        var known = new HashSet<Exception>(ReferenceEqualityComparer.Instance) { sameOutward };
+        void Keep(Exception cause)
+        {
+            known.Add(cause);
+            if (cause is AggregateException group)
+                foreach (var direct in group.InnerExceptions) Keep(direct);
+        }
+        foreach (var direct in originalFault.InnerExceptions) Keep(direct);
+        bool Known(Exception cause) => known.Contains(cause)
+            || cause is AggregateException { InnerExceptions.Count: > 0 } group && group.InnerExceptions.All(Known);
+        bool Terminal(Task actual) => actual.IsCompletedSuccessfully
+            || actual.IsFaulted && actual.Exception is { InnerExceptions.Count: > 0 } group && group.InnerExceptions.All(Known);
+        lock (_gate) return _dispose is not null && Terminal(_dispose) && _lifetimeDisposed
+            && _capacityFailure is null && (_stop is null || _stop.IsCompletedSuccessfully)
+            && _moves.All(Terminal) && _raw.All(Terminal) && _causes.Count > 0 && _causes.All(Known)
+            && (!_sourceInvoked || _custody.HasOwnedTerminalObservation);
+    }
+
+    internal bool HasSuccessfullyResolvedOriginalToolCheckpoint
+    {
+        get
+        {
+            var receipt = _originalInvocation?.OriginalResolvedToolCheckpoint;
+            if (receipt is null) return false;
+            var binding = receipt.Binding;
+            return ReferenceEquals(binding.Issuer, _owner) && ReferenceEquals(binding.Original, _originalInvocation)
+                && ReferenceEquals(binding.Original.OriginalProcessProducer, this)
+                && ReferenceEquals(binding.Resolution, receipt) && binding.Claimed && binding.Bound
+                && receipt.Completion.IsCompletedSuccessfully
+                && receipt.ActualBusinessDriver.IsCompletedSuccessfully && receipt.ActualResolutionValidation.IsCompletedSuccessfully
+                && binding.OriginalResolutionDriver is { IsCompletedSuccessfully: true }
+                && binding.Next.OriginalProcessProducer is { HasHealthyClosedOriginal: true }
+                && binding.Boundary.ActualCall is { } actual && binding.Boundary.ActualOutwardFailure is { } outward
+                && HasClosedOriginalWithExpectedProviderFailure(actual, outward);
         }
     }
 

@@ -10,6 +10,8 @@ public sealed record TaskExecutionProjection(
     IReadOnlyList<TaskPlanNode> UnfinishedActions)
 {
     public TaskRunRecoveryObservation? RecoveryObservation { get; init; }
+    public IReadOnlyList<TaskRunDelegationIntent> ChildRuns { get; init; } = [];
+    public TaskRunParentDelegation? ParentDelegation { get; init; }
 
     public static TaskExecutionProjection From(TaskExecutionSnapshot snapshot)
     {
@@ -22,7 +24,14 @@ public sealed record TaskExecutionProjection(
             accepted.Any(action => action.ActionId == snapshot.LastCheckpointActionId) ? snapshot.LastCheckpointActionId : null,
             snapshot.CheckpointId, Array.AsReadOnly(accepted), Array.AsReadOnly(snapshot.Plan
                 .Where(node => node.State is not (TaskPlanNodeState.Completed or TaskPlanNodeState.Superseded)).ToArray()))
-        { RecoveryObservation = snapshot.RecoveryObservation };
+        {
+            RecoveryObservation = snapshot.RecoveryObservation,
+            ChildRuns = Array.AsReadOnly(snapshot.Delegations.Select(intent => intent with
+            {
+                RequestedPermissionScopes = Array.AsReadOnly(intent.RequestedPermissionScopes.ToArray())
+            }).ToArray()),
+            ParentDelegation = snapshot.ParentDelegation
+        };
     }
 }
 

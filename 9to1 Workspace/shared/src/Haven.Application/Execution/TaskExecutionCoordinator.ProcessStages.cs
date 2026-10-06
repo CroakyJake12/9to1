@@ -35,7 +35,7 @@ public sealed partial class TaskExecutionCoordinator
         lock (_processProducerGate)
         {
             if (_processProducerAdmissionSealed) throw new InvalidOperationException("Canonical continuation source admission is sealed.");
-            _processChatProducers.RemoveAll(static prior => prior.HasHealthyClosedOriginal);
+            _processChatProducers.RemoveAll(static prior => prior.HasHealthyClosedOriginal || prior.HasSuccessfullyResolvedOriginalToolCheckpoint);
             if (_processChatProducers.Count >= OriginalInvocationCapacity)
                 throw new InvalidOperationException("Finite actual continuation producer custody requires inspection.");
             var original = new CanonicalChatProcessProducer(this, custody, source, callerToken);

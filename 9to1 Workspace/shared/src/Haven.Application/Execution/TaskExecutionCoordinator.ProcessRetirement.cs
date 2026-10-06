@@ -22,7 +22,7 @@ public sealed partial class TaskExecutionCoordinator : ITaskRunProcessRetirement
         {
             if (_processProducerAdmissionSealed)
                 throw new InvalidOperationException("Canonical process producer admission is sealed.");
-            _processChatProducers.RemoveAll(static prior => prior.HasHealthyClosedOriginal);
+            _processChatProducers.RemoveAll(static prior => prior.HasHealthyClosedOriginal || prior.HasSuccessfullyResolvedOriginalToolCheckpoint);
             if (_processChatProducers.Count >= OriginalInvocationCapacity)
                 throw new InvalidOperationException("Actual unresolved canonical producers require original-custody inspection.");
             if (custody.OriginalProcessProducer is not null)
@@ -52,6 +52,9 @@ public sealed partial class TaskExecutionCoordinator : ITaskRunProcessRetirement
         {
             if (_originalProcessRequest is not null) return;
             _processProducerAdmissionSealed = true;
+            // Historical failed Tasks keep their exact fault/cause status. Only a SAME
+            // privately completed successor receipt retires their already joined cohort.
+            _processChatProducers.RemoveAll(static prior => prior.HasSuccessfullyResolvedOriginalToolCheckpoint);
             _processSealedChatCohort = _processChatProducers.ToArray();
             _sealedOriginalProcessStages = _originalProcessStages.ToArray();
             _sealedHostedOriginalRunResumes = _hostedOriginalRunResumes.ToArray();

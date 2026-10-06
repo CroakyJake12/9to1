@@ -12,7 +12,8 @@ internal sealed class ChatOriginalToolCheckpointBoundary(
     TaskRunContextInventory inventory, Guid assistantId, string assistantText,
     IReadOnlyList<ToolActivity> activities, int callsUsed, int toolLimit,
     OllamaToolCall? lastCall, WorkspaceToolResult? lastResult,
-    IReadOnlyList<TaskRunOriginalToolOutcomeCustody> toolOutcomes)
+    IReadOnlyList<TaskRunOriginalToolOutcomeCustody> toolOutcomes,
+    IReadOnlyDictionary<string, ToolRuntimeKind> runtimeByName, string originalControlFingerprint)
 {
     private readonly object _gate = new();
     internal readonly ChatSessionService Chat = chat;
@@ -27,6 +28,8 @@ internal sealed class ChatOriginalToolCheckpointBoundary(
     internal readonly OllamaToolCall? LastCall = lastCall;
     internal readonly WorkspaceToolResult? LastResult = lastResult;
     internal readonly IReadOnlyList<TaskRunOriginalToolOutcomeCustody> ToolOutcomes = toolOutcomes;
+    internal readonly IReadOnlyDictionary<string, ToolRuntimeKind> RuntimeByName = runtimeByName;
+    internal readonly string OriginalControlFingerprint = originalControlFingerprint;
     internal Task<OllamaToolResponse>? ActualCall;
     internal Exception? ActualOutwardFailure;
     internal bool ResponseDelivered;
@@ -135,7 +138,8 @@ public sealed partial class ChatSessionService
     private ChatOriginalToolCheckpointBoundary CaptureOriginalToolCheckpoint(
         TaskRunInvocationCustody custody, OllamaToolRequest proposed, TaskRunContextInventory inventory,
         Guid assistantId, string assistantText, IReadOnlyList<ToolActivity> activities,
-        int callsUsed, int toolLimit, OllamaToolCall? lastCall, WorkspaceToolResult? lastResult)
+        int callsUsed, int toolLimit, OllamaToolCall? lastCall, WorkspaceToolResult? lastResult,
+        IReadOnlyDictionary<string, ToolRuntimeKind> runtimeByName, TaskExecutionSnapshot actualProviderBasis)
     {
         ChatOriginalToolCheckpointBoundary? original = null;
         try
@@ -149,6 +153,10 @@ public sealed partial class ChatSessionService
                     || context.ContextId != binding.ContextId || context.ExecutionId != binding.ExecutionId
                     || assistantId == Guid.Empty || callsUsed < 0 || callsUsed > toolLimit || toolLimit is < 1 or > 100)
                     throw new InvalidOperationException("The exact original Chat/tool-response binding is unavailable.");
+                if (actualProviderBasis.TaskId != context.TaskId || actualProviderBasis.ContextId != context.ContextId
+                    || actualProviderBasis.ExecutionId != context.ExecutionId
+                    || actualProviderBasis.PersistenceRevision != context.PersistenceRevision)
+                    throw new InvalidOperationException("The actual provider context and acknowledged control basis differ.");
                 var request = DetachOriginalToolRequest(proposed);
                 original = new(this, custody, request, inventory, assistantId, assistantText,
                     Array.AsReadOnly(activities.Select(item => item with
@@ -157,7 +165,10 @@ public sealed partial class ChatSessionService
                             : Array.AsReadOnly(item.InvocationEvidence.ToArray())
                     }).ToArray()), callsUsed, toolLimit,
                     lastCall is null ? null : DetachOriginalToolCall(lastCall), lastResult,
-                    custody.CaptureOriginalToolOutcomes());
+                    custody.CaptureOriginalToolOutcomes(),
+                    new ReadOnlyDictionary<string, ToolRuntimeKind>(runtimeByName.ToDictionary(
+                        pair => pair.Key, pair => pair.Value, StringComparer.Ordinal)),
+                    OriginalToolCheckpointControlFingerprint(actualProviderBasis));
                 custody.BindOriginalToolCheckpoint(original);
             });
             return original ?? throw new InvalidOperationException("No actual original tool checkpoint was captured.");
@@ -170,6 +181,9 @@ public sealed partial class ChatSessionService
             throw;
         }
     }
+
+    internal static string OriginalToolCheckpointControlFingerprint(TaskExecutionSnapshot original) =>
+        JsonSerializer.Serialize(new { original.Steers, original.Queue });
 
     // Both the actual provider request and its retained transcript use the SAME detached
     // values. Caller/adapter mutation cannot later redefine what was originally sent.

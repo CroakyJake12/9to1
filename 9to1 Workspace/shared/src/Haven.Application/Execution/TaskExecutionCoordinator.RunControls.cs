@@ -36,7 +36,8 @@ public sealed partial class TaskExecutionCoordinator
             var live = TryGetOriginalRunControlSource(current);
             var canWithdraw = live is not null && current.State is not (TaskExecutionLifecycle.Completed or TaskExecutionLifecycle.Cancelled);
             return new TaskRunOriginalRunControlAvailability(OriginalRunControlContext(current), canWithdraw, canWithdraw,
-                live is not null && HasOriginalUnstartedRunResume(live, current));
+                live is not null && HasOriginalUnstartedRunResume(live, current))
+            { CanResumeOriginalToolCheckpoint = live is not null && HasOriginalToolCheckpointRunResume(live, current) };
         });
 
     public Task<TaskRunOriginalRunControlResult> PauseOriginalRunAsync(
@@ -220,7 +221,8 @@ public sealed partial class TaskExecutionCoordinator
     private TaskRunOriginalRunControlResult OriginalRunControlResult(TaskRunOriginalRunControlKind kind,
         TaskRunOriginalRunControlDisposition disposition, TaskExecutionSnapshot current, TaskRunInvocationCustody original) =>
         new(kind, disposition, OriginalRunControlContext(current), current.State, current.RecoveryObservation is not null,
-            HasOriginalUnstartedRunResume(original, current));
+            HasOriginalUnstartedRunResume(original, current))
+        { CanResumeOriginalToolCheckpoint = HasOriginalToolCheckpointRunResume(original, current) };
     private static ProviderExecutionContext OriginalRunControlContext(TaskExecutionSnapshot current) =>
         new(current.TaskId, current.ContextId, current.ExecutionId, current.Attempts.LastOrDefault()?.Id, current.PersistenceRevision);
 }

@@ -152,3 +152,40 @@ Saved Agent invocation binding and supported retry
 The existing `agent_runs.activity_json` carries an additive `CanonicalBindingVersion: 1` envelope and `CanonicalTask` display observation. Old activity arrays remain readable; adding a display binding wraps the actual old entries without inserting an activity. Unknown fields remain intact. Numeric Agent statuses zero through four are unchanged; Suspended is appended as five. This JSON never reconstructs an input producer, actor grant, runtime settlement or continuation receipt.
 
 `RetryAsync` uses only a retained live private original and the narrowly supported source-approved never-started continuation. It preserves the same Agent row and canonical IDs and never falls back to `RunAsync` automatically. Historical/invoked/unknown recovery is explicitly unavailable. `RunAsync` remains an explicit new-work action. `HasOriginalUnstartedRetrySource` is deny-only UI availability; every retry still performs fresh owning policy and input checks. Parent/child delegation and accepted-checkpoint recovery remain separate unfinished production seams.
+
+
+## Spaces and Dev composition boundaries
+
+Spaces task presentations read the canonical `TaskExecutionSnapshot`; `Conversation.Id`
+is the actual task context and never an account, profile or Space identifier. Reopening
+a task or embedded Dev project resolves the existing Task/Run and saved
+`DeveloperProjectReference` (workspace/project/root identity and revisions). It does
+not clone a project or start a replacement task. `DeveloperTaskWorkspaceService`
+uses the same workspace store, coordinator and typed Workspace action owner/runtime.
+Files document identities come from the original Files resolver, not a view-local registry.
+
+Steering is an owning coordinator command with fresh actor checks. Pause and stop
+require a retained private producer and its actual drain/CAS acknowledgement. A
+source-issued observed-resume lease owns only its wait and detach acknowledgement;
+its durable host retains the actual business iterator. View retirement seals callbacks
+and joins its own work without cancelling that host or retiring the global Dev/Files
+services. Agent observation retirement remains the distinct contract documented in
+[Agent observation retirement](agent-observation-retirement.md). Snapshot fields,
+availability results and lease result metadata do not recreate permission or recovery
+authority. Unknown or historical originals remain unavailable.
+
+The native composition proposals call `AddFilesNativeHost` followed by
+`AddHavenOriginalNativeDevelopment` before the same provider is built, only when
+the supplied original Home/resource registrations are complete. They retain the
+same Dev, Task and Files singletons; a missing or partial Home tuple leaves these
+routes unconfigured while ordinary routes remain available. Process shutdown must
+retain the actual Dev/Files adapters and all canonical business owners, request
+retirement, independently join their original Tasks, then dispose the provider and
+acknowledge clean shutdown. Startup partial-acquisition cleanup is separate and
+cannot acknowledge clean startup or exit.
+
+These composition and presentation additions are source checkpoints. The actual
+installed Home Windows startup connection/approved host tuple, configured workspace
+trust, complete process-owner handoff and native/browser runtime acceptance remain
+required receiving dependencies. A compatibility readiness check is not a rendered
+frame, installed authority, successful tool effect or completed durable task.

@@ -27,6 +27,9 @@ internal sealed partial class TaskRunInvocationCustody
     internal Task? OriginalUserMessageWrite;
     internal Func<CancellationToken, Task>? OriginalInputCurrentness;
     internal Func<TaskRunInvocationCustody, ProviderExecutionContext, CancellationToken, IAsyncEnumerable<ChatStreamEvent>>? OriginalContinuationFactory;
+    internal Func<TaskRunToolCheckpointContinuationBinding, CancellationToken, IAsyncEnumerable<ChatStreamEvent>>? OriginalToolContinuationFactory;
+    internal TaskRunToolCheckpointContinuationBinding? OriginalToolContinuation;
+    internal TaskRunResolvedToolCheckpointContinuation? OriginalResolvedToolCheckpoint;
     internal TaskRunUnstartedContinuationBinding? OriginalUnstartedContinuation;
     internal TaskRunDelegatedChildLinkAcknowledgment? OriginalDelegatedChildLink;
     internal TaskRunDelegatedUnstartedInvocationWitness? OriginalDelegatedNeverStarted;
@@ -344,6 +347,13 @@ public sealed partial class TaskExecutionCoordinator
             && completed.Result.TaskId == current.TaskId && completed.Result.ExecutionId == current.ExecutionId
             && current.State == TaskExecutionLifecycle.Completed)
         {
+            if (custody.OriginalToolContinuation is not null)
+            {
+                RememberAcknowledgedOriginalToolCheckpointCompletion(custody, current);
+                // The encompassing hosted producer and its final Move/Dispose are still
+                // live here. Their actual success, not this inner CAS, releases both slots.
+                return current;
+            }
             RetireResolvedOriginalUnstartedContinuation(custody, current);
             _originalInvocations.TryRemove(new KeyValuePair<Guid, TaskRunInvocationCustody>(current.TaskId, custody));
             ReleaseHealthyOrUnstartedInvocation(custody);

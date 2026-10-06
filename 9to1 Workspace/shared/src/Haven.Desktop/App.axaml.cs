@@ -143,13 +143,16 @@ public sealed partial class App : Avalonia.Application
         collection.AddTransient<MainView>();
         collection.AddSingleton<WorkspaceSessionCoordinator>();
         collection.AddSingleton<WorkspaceWindowService>();
+#if !ANDROID
+        ConfigureOriginalNativeDevelopmentRegistrations(collection);
+#endif
         _services = collection.BuildServiceProvider(new ServiceProviderOptions
         {
             ValidateOnBuild = true,
             ValidateScopes = true
         });
         Services = _services;
-        _services.GetRequiredService<ComputerUseOverlayCoordinator>();
+        _actualComputerUseOverlay = ResolveOriginalComputerUseOverlay(_services);
         Subscribe.EventBus = _services.GetRequiredService<HavenEventBus>();
         _startupRecovery = _services.GetRequiredService<IStartupRecoveryCoordinator>();
         _productionDiagnostics = _services.GetRequiredService<IProductionDiagnostics>();
@@ -168,8 +171,8 @@ public sealed partial class App : Avalonia.Application
             mainView.ApplyEdition(HavenStartupExperiencePolicy.Edition);
             _services.GetRequiredService<WorkspaceSessionCoordinator>().Register(mainView, WorkspaceWindowKind.Main, queueSave: false);
             var window = new MainWindow(preferences) { DataContext = mainView, PreserveWorkspaceSessionOnClose = true };
-            window.Opened += async (_, _) => await InitialiseHaven(mainView);
-            window.Closed += (_, _) => desktop.Shutdown();
+            ConfigureOriginalDesktopShutdown(desktop, window, mainView);
+            window.Opened += (_, _) => { _ = InitialiseHaven(mainView); };
             desktop.MainWindow = window;
         }
 #endif
@@ -177,41 +180,53 @@ public sealed partial class App : Avalonia.Application
         base.OnFrameworkInitializationCompleted();
     }
 
-    private async Task InitialiseHaven(MainView shell)
+    private Task InitialiseHaven(MainView shell) => _originalAppWork.RunAsync(
+        original => InitialiseOriginalHavenAsync(original, shell), actual => _actualStartupOriginal = actual);
+
+    private async Task InitialiseOriginalHavenAsync(DesktopOriginalWorkLifetime.Original original, MainView shell)
     {
         var correlationId = Guid.NewGuid().ToString("N");
         try
         {
             var services = _services ?? throw new InvalidOperationException("Haven services have not been initialized.");
             var recovery = _startupRecovery ?? services.GetRequiredService<IStartupRecoveryCoordinator>();
-            var recoveryState = await recovery.BeginStartupAsync(CancellationToken.None);
-            BrowserAutomationRegistry.Register(
-                services.GetRequiredService<BrowserSessionService>(),
-                services.GetRequiredService<IBrowserAutomationService>());
+            var recoveryState = await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
+                () => recovery.BeginStartupAsync(CancellationToken.None)));
+            AcquireOriginalAppSynchronous(original, () =>
+            {
+                BrowserAutomationRegistry.Register(
+                    services.GetRequiredService<BrowserSessionService>(),
+                    services.GetRequiredService<IBrowserAutomationService>());
+                return true;
+            });
 
             var lifecycle = services.GetRequiredService<IApplicationLifecycle>();
-            await lifecycle.CrashRecoveryAsync(CancellationToken.None);
-            await lifecycle.StartupAsync(CancellationToken.None);
-            await services.GetRequiredService<ModeSeedService>().SeedBuiltInModesAsync(CancellationToken.None);
-            var migration = await services.GetRequiredService<ILegacyStateMigrator>().MigrateIfNeededAsync(CancellationToken.None);
-            await shell.InitializeAsync(migration, CancellationToken.None);
-            await shell.RestoreWorkspaceSessionAsync(CancellationToken.None);
+            await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => lifecycle.CrashRecoveryAsync(CancellationToken.None)));
+            await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => lifecycle.StartupAsync(CancellationToken.None)));
+            await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => services.GetRequiredService<ModeSeedService>().SeedBuiltInModesAsync(CancellationToken.None)));
+            var migration = await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
+                () => services.GetRequiredService<ILegacyStateMigrator>().MigrateIfNeededAsync(CancellationToken.None)));
+            await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => shell.InitializeAsync(migration, CancellationToken.None)));
+            await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => shell.RestoreWorkspaceSessionAsync(CancellationToken.None)));
 
 #if !ANDROID
-            await services.GetRequiredService<Haven.Desktop.Overlay.OverlayWorkspaceController>().InitializeAsync(CancellationToken.None);
+            await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => services.GetRequiredService<Haven.Desktop.Overlay.OverlayWorkspaceController>().InitializeAsync(CancellationToken.None)));
 #endif
             // Scheduled Tasks have no parallel automation delivery loop.
 
             if (recoveryState.IsSafeMode)
             {
-                services.GetRequiredService<NotificationService>().Show(
-                    "Haven recovery safe mode",
-                    recoveryState.Reason + " Local Ollama chat and read-only workspace inspection remain available.",
-                    ToastKind.Warning,
-                    TimeSpan.FromSeconds(30));
+                AcquireOriginalAppSynchronous(original, () =>
+                {
+                    services.GetRequiredService<NotificationService>().Show(
+                        "Haven recovery safe mode",
+                        recoveryState.Reason + " Local Ollama chat and read-only workspace inspection remain available.",
+                        ToastKind.Warning, TimeSpan.FromSeconds(30));
+                    return true;
+                });
             }
 
-            await recovery.MarkStartupCompletedAsync(CancellationToken.None);
+            await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => recovery.MarkStartupCompletedAsync(CancellationToken.None)));
 
             // Optional Mesh warmup must not delay interactive readiness; data-safety
             // work above stays on the critical path, Mesh does not.
@@ -219,89 +234,66 @@ public sealed partial class App : Avalonia.Application
             {
                 try
                 {
-                    await services.GetRequiredService<MeshCoordinator>().InitialiseAsync(CancellationToken.None);
+                    await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => services.GetRequiredService<MeshCoordinator>().InitialiseAsync(CancellationToken.None)));
                 }
                 catch (Exception meshException)
                 {
+                    original.Retain(meshException); // Optional UI startup tolerance is not a clean original drain.
                     try
                     {
-                        await (_productionDiagnostics ?? services.GetRequiredService<IProductionDiagnostics>()).WriteAsync(
-                            ReliabilitySeverity.Warning,
-                            "mesh",
-                            "startup-unavailable",
-                            meshException.ToString(),
-                            cancellationToken: CancellationToken.None);
+                        await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
+                            () => (_productionDiagnostics ?? services.GetRequiredService<IProductionDiagnostics>()).WriteAsync(
+                                ReliabilitySeverity.Warning,
+                                "mesh",
+                                "startup-unavailable",
+                                meshException.ToString(),
+                                cancellationToken: CancellationToken.None).AsTask()));
                     }
-                    catch
+                    catch (Exception diagnosticFailure)
                     {
-                        // Mesh is optional at startup; diagnostics must not turn it into an app-start failure.
+                        original.Retain(diagnosticFailure); // UI tolerance keeps both real causes inspectable.
                     }
                 }
             }
         }
         catch (Exception ex)
         {
+            original.Retain(ex);
             try
             {
-                await LogExceptionAsync("startup-failed", ex, correlationId);
+                await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => LogExceptionAsync("startup-failed", ex, correlationId)));
             }
-            catch
+            catch (Exception diagnosticFailure)
             {
-                // The diagnostics sink must not hide the primary startup failure.
+                original.Retain(diagnosticFailure); // Never hide the primary or actual sink failure.
             }
 
             var userMessage = $"Haven could not finish starting. Diagnostic reference: {correlationId}.";
-            shell.SetStartupError(userMessage);
+            AcquireOriginalAppSynchronous(original, () => { shell.SetStartupError(userMessage); return true; });
             try
             {
-                _services?.GetService<NotificationService>()?.Show(
-                    "Haven startup problem",
-                    userMessage,
-                    ToastKind.Error,
-                    TimeSpan.FromSeconds(30));
+                AcquireOriginalAppSynchronous(original, () =>
+                {
+                    _services?.GetService<NotificationService>()?.Show(
+                        "Haven startup problem", userMessage, ToastKind.Error, TimeSpan.FromSeconds(30));
+                    return true;
+                });
             }
-            catch
+            catch (Exception toastFailure)
             {
-                // The persistent shell status remains available if toast delivery fails.
+                original.Retain(toastFailure); // Persistent UI status still exists; failed original remains inspectable.
             }
         }
     }
 
-    private async void OnDesktopExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
+    private void OnDesktopExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
     {
-        var services = _services;
-        var recovery = _startupRecovery;
-        try
-        {
-            if (_productionDiagnostics is not null)
-            {
-                await _productionDiagnostics.WriteAsync(
-                    ReliabilitySeverity.Information,
-                    "desktop",
-                    "shutdown-begin",
-                    "Haven began coordinated shutdown.",
-                    cancellationToken: CancellationToken.None);
-            }
-
-            if (recovery is not null)
-                await recovery.MarkCleanShutdownAsync(CancellationToken.None);
-            if (services is not null)
-                await services.DisposeAsync();
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine("[Haven shutdown] " + ex);
-        }
-        finally
-        {
-            Subscribe.EventBus?.Dispose();
-            Subscribe.EventBus = null;
-            _services = null;
-            Services = null;
-            _productionDiagnostics = null;
-            _startupRecovery = null;
-            DetachExceptionHooks();
-        }
+        // Exit cannot hold Avalonia's dispatcher alive. The actual pre-close owner
+        // must already have joined originals/provider and issued its final writer.
+        if (_actualShutdownSequence?.OriginalShutdown is not { IsCompletedSuccessfully: true } ||
+            _actualWindowClosure is not { IsCompletedSuccessfully: true })
+            _actualShutdownFailure ??= new InvalidOperationException(
+                "Desktop exited without the actual original pre-close drain; clean shutdown was not acknowledged.");
     }
 
     private void AttachUpdateServices()
@@ -314,6 +306,7 @@ public sealed partial class App : Avalonia.Application
 
             // Every lifecycle transition is recorded so Settings/About can show honest state even
             // when it changed before any surface existed. Failures arrive here as Failed reports.
+            _actualSubscribedUpdates = updates;
             updates.StatusChanged += OnUpdateStatusChanged;
             UpdateOrchestrator.PendingUpdateDetectedOnStartup += OnPendingStartupUpdateDetected;
 
@@ -335,16 +328,18 @@ public sealed partial class App : Avalonia.Application
                 }
             }
 
-            _ = Task.Run(async () =>
+            _ = _originalAppWork.RunAsync(async original =>
             {
-                try
+                var actualWorker = AcquireOriginalAppSynchronous(original, () => Task.Run(async () =>
                 {
-                    await updates.CheckInBackgroundAsync(CancellationToken.None);
-                }
-                catch
-                {
-                    // CheckInBackgroundAsync is no-throw by contract; this guard only keeps the detached task from crashing the process.
-                }
+                    try
+                    {
+                        await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
+                            () => updates.CheckInBackgroundAsync(CancellationToken.None)));
+                    }
+                    catch (Exception error) { original.Retain(error); } // Optional UI tolerance; original fault remains owned.
+                }));
+                await original.AwaitAsync(actualWorker);
             });
         }
         catch
@@ -355,34 +350,39 @@ public sealed partial class App : Avalonia.Application
 
     private void OnUpdateStatusChanged(UpdateStatusReport report)
     {
-        UpdateStatusSnapshot.Record(report);
+        if (_originalAppWork.IsRetiring) return;
+        _originalAppWork.RunSynchronous(original => AcquireOriginalAppSynchronous(original, () =>
+        { UpdateStatusSnapshot.Record(report); return true; }));
     }
 
     private void OnPendingStartupUpdateDetected(UpdateStatusReport report)
     {
-        UpdateStatusSnapshot.Record(report);
-        try
+        if (_originalAppWork.IsRetiring) return; // Detached event cannot admit new borrowed work after the permanent seal.
+        _ = _originalAppWork.RunAsync(async original =>
         {
-            var notification = _services?.GetService<NotificationService>();
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            try
             {
-                try
-                {
-                    notification?.Show(
-                        "Staged update waiting",
-                        report.Message ?? "An update staged in a previous session is waiting for the external installer to apply it on the next start.",
-                        ToastKind.Info,
-                        TimeSpan.FromSeconds(12));
-                }
-                catch
-                {
-                    // Toast delivery must never break the update pipeline.
-                }
-            });
-        }
-        catch
-        {
-        }
+                AcquireOriginalAppSynchronous(original, () => { UpdateStatusSnapshot.Record(report); return true; });
+                var notification = AcquireOriginalAppSynchronous(original, () => _services?.GetService<NotificationService>());
+                var actualDispatch = AcquireOriginalAppSynchronous(original,
+                    () => Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        try
+                        {
+                            AcquireOriginalAppSynchronous(original, () =>
+                            {
+                                notification?.Show("Staged update waiting", report.Message ??
+                                    "An update staged in a previous session is waiting for the external installer to apply it on the next start.",
+                                    ToastKind.Info, TimeSpan.FromSeconds(12));
+                                return true;
+                            });
+                        }
+                        catch (Exception error) { original.Retain(error); } // Existing toast tolerance, never a clean receipt.
+                    }).GetTask());
+                await original.AwaitAsync(actualDispatch);
+            }
+            catch (Exception error) { original.Retain(error); }
+        });
     }
 
     private void AttachExceptionHooks()
@@ -416,10 +416,13 @@ public sealed partial class App : Avalonia.Application
         finally { eventArgs.SetObserved(); }
     }
 
-    private async Task LogExceptionAsync(string eventName, Exception exception, string correlationId)
+    private Task LogExceptionAsync(string eventName, Exception exception, string correlationId) =>
+        _originalAppWork.RunAsync(original => LogOriginalExceptionAsync(original, eventName, exception, correlationId));
+
+    private async Task LogOriginalExceptionAsync(DesktopOriginalWorkLifetime.Original original, string eventName, Exception exception, string correlationId)
     {
         if (_productionDiagnostics is null) return;
-        await _productionDiagnostics.WriteAsync(
+        await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => _productionDiagnostics.WriteAsync(
             ReliabilitySeverity.Critical,
             "desktop",
             eventName,
@@ -430,6 +433,6 @@ public sealed partial class App : Avalonia.Application
                 ["hResult"] = exception.HResult.ToString(System.Globalization.CultureInfo.InvariantCulture)
             },
             correlationId,
-            CancellationToken.None);
+            CancellationToken.None).AsTask()));
     }
 }
