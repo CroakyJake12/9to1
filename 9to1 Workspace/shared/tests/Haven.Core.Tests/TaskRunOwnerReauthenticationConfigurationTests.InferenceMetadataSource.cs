@@ -66,7 +66,7 @@ public sealed partial class TaskRunOwnerReauthenticationConfigurationTests
             { if (!failures.Any(value => ReferenceEquals(value, error))) failures.Add(error); }
         }
     }
-    private sealed class InferenceLocalMetadataProvider(IModelProvider inner) : IModelProvider
+    private sealed partial class InferenceLocalMetadataProvider(IModelProvider inner) : IModelProvider
     {
         internal Action? ReadIsLocal;
         public string Id => inner.Id; public string DisplayName => inner.DisplayName;

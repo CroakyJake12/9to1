@@ -5,6 +5,9 @@ namespace HavenOS.Files.NativeHost;
 /// scope and retains its SAME returned Task before await, including post-await invocations.</summary>
 internal sealed class FilesOriginalReadSourceScope(Action<Action> synchronousScope, Action<Task> retainOriginalTask)
 {
+    internal Action<Action> OriginalSynchronousScope => callback => Invoke(() => { callback(); return true; });
+    internal Action<Task> RetainOriginalTask => retainOriginalTask;
+
     internal T Invoke<T>(Func<T> source)
     {
         T value = default!; Exception? failure = null;

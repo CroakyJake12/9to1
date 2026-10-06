@@ -235,7 +235,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ITaskRunCloudAdmissionSource>(provider => provider.GetRequiredService<TaskRunConfiguredCloudAdmissionSource>());
         services.AddSingleton<ITaskRunProviderContextCapture>(provider => provider.GetRequiredService<TaskRunConfiguredCloudAdmissionSource>());
         services.AddSingleton<ITaskRunProviderContextAuthority>(provider => provider.GetRequiredService<TaskRunConfiguredCloudAdmissionSource>());
-        services.AddSingleton<TaskRunPermissionAuthority>(provider => new TaskRunPermissionAuthority(
+        services.AddSingleton<TaskRunPermissionAuthority>(provider =>
+        {
+            var originalAuthority = new TaskRunPermissionAuthority(
             provider.GetRequiredService<HostLocalTaskActorSource>(),
             provider.GetRequiredService<IModelProviderRegistry>(),
             provider.GetRequiredService<IProviderConfigurationStore>(),
@@ -243,10 +245,14 @@ public static class ServiceCollectionExtensions
             provider.GetRequiredService<ModelPermissionEvaluator>(),
             cloud: provider.GetRequiredService<ITaskRunCloudAdmissionSource>(),
             receipts: provider.GetRequiredService<ITaskRunActionReceiptAuthority>(),
-            routes: provider.GetService<ITaskRunRouteObservationSource>()));
+            routes: provider.GetService<ITaskRunRouteObservationSource>());
+            provider.GetService<NativePersonalTaskColdRecoveryHost>()?.ConfigureOriginalAuthority(provider, originalAuthority);
+            return originalAuthority;
+        });
         services.AddSingleton<ITaskRunAdmissionAuthority>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
         services.AddSingleton<ITaskRunCommandAuthority>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
         services.AddSingleton<ITaskRunSelectedRouteCapture>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
+        services.AddSingleton<ITaskRunOriginalSelectedRouteCaptureSource>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
         services.AddSingleton<ITaskRunOriginalIssuedRouteConfigurationSource>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
         services.AddSingleton<ITaskRunOriginalInferenceAdmissionSource>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
         services.AddSingleton<ITaskRunOriginalResponseAdmissionSource>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
@@ -278,7 +284,11 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<Dulche.Runtime.IOriginalStrataWorkerSource>(provider => provider.GetRequiredService<StrataNativeArtifactSource>());
         services.TryAddSingleton<StrataRuntimeObservationSource>(provider => new StrataRuntimeObservationSource(
             provider.GetRequiredService<StrataNativeArtifactSource>()));
-        services.TryAddSingleton<Dulche.Runtime.IInferenceRuntimeObservationSource>(provider => provider.GetRequiredService<StrataRuntimeObservationSource>());
+        services.TryAddSingleton<LlamaCppRuntimeObservationSource>(provider => new LlamaCppRuntimeObservationSource(
+            provider.GetRequiredService<LlamaCppModelProvider>(), provider.GetRequiredService<TaskExecutionCoordinator>(),
+            provider.GetService<StrataRuntimeObservationSource>()));
+        services.TryAddSingleton<Dulche.Runtime.IInferenceRuntimeObservationSource>(provider => provider.GetRequiredService<LlamaCppRuntimeObservationSource>());
+        services.TryAddSingleton<IManagedOriginalRequestRuntimeObservationSource>(provider => provider.GetRequiredService<LlamaCppRuntimeObservationSource>());
         services.TryAddSingleton<IStrataOriginalRequestObservationSource>(provider => provider.GetRequiredService<StrataRuntimeObservationSource>());
         services.TryAddSingleton<ManagedDulcheInferenceComposition>(provider => new ManagedDulcheInferenceComposition(
             provider.GetRequiredService<Dulche.Runtime.IInferenceRuntimeObservationSource>(),
@@ -313,7 +323,9 @@ public static class ServiceCollectionExtensions
                 OperatingSystem.IsLinux() ? CapabilityPlatform.Linux : CapabilityPlatform.None,
             provider.GetRequiredService<WorkspaceTaskRunReceiptAuthority>()));
         services.AddSingleton<ITaskRunToolActionOwner>(provider => provider.GetRequiredService<WorkspaceTaskRunToolActionOwner>());
-        services.AddSingleton<TaskExecutionCoordinator>(provider => new TaskExecutionCoordinator(
+        services.AddSingleton<TaskExecutionCoordinator>(provider =>
+        {
+            var originalCoordinator = new TaskExecutionCoordinator(
             provider.GetRequiredService<ITaskExecutionRepository>(),
             provider.GetRequiredService<IExecutionEventSink>(),
             provider.GetService<TimeProvider>(),
@@ -322,7 +334,10 @@ public static class ServiceCollectionExtensions
             provider.GetRequiredService<ICheckpointRepository>(),
             provider.GetRequiredService<ITaskRunToolActionOwner>(),
             provider.GetRequiredService<ICheckpointExecutionObservationSource>(),
-            unstartedPermissionSource: provider.GetRequiredService<TaskRunCloudPermissionRemediationOwner>()));
+            unstartedPermissionSource: provider.GetRequiredService<TaskRunCloudPermissionRemediationOwner>());
+            provider.GetService<NativePersonalTaskColdRecoveryHost>()?.ConfigureOriginalCoordinator(provider, originalCoordinator);
+            return originalCoordinator;
+        });
         services.AddSingleton<ITaskRunOriginalActionAdmissionSource>(provider => provider.GetRequiredService<TaskExecutionCoordinator>());
         services.AddSingleton<ITaskRunOriginalInferenceAttemptSource>(provider => provider.GetRequiredService<TaskExecutionCoordinator>());
         services.AddSingleton<ITaskRunProcessRetirementParticipant>(provider => provider.GetRequiredService<TaskExecutionCoordinator>());
@@ -360,10 +375,12 @@ public static class ServiceCollectionExtensions
             modelPermissions: provider.GetService<ModelPermissionEvaluator>(),
             taskContextAuthority: provider.GetService<ITaskRunProviderContextAuthority>(),
             catalogueEligibility: provider.GetService<IProviderCatalogueEligibility>(),
-            originalModelRequests: provider.GetService<IManagedDulcheOriginalModelRequestConsumer>()));
+            originalModelRequests: provider.GetService<IManagedDulcheOriginalModelRequestConsumer>(),
+            coldRecoveryJournal: provider.GetService<ITaskRunColdRecoveryJournal>()));
         services.AddSingleton<IProviderModelClient>(provider => provider.GetRequiredService<ResilientProviderRoutingModelClient>());
         services.AddSingleton<ITaskRunOriginalRequestFailureSource>(provider => provider.GetRequiredService<ResilientProviderRoutingModelClient>());
         services.AddSingleton<ITaskRunOriginalToolCheckpointSelectionSource>(provider => provider.GetRequiredService<ResilientProviderRoutingModelClient>());
+        services.AddSingleton<ITaskRunColdToolCheckpointSelectionSource>(provider => provider.GetRequiredService<ResilientProviderRoutingModelClient>());
         services.AddSingleton<ITaskRunOriginalToolResponseDispatchWitnessSource>(provider => provider.GetRequiredService<ResilientProviderRoutingModelClient>());
         services.AddSingleton<INotesAiService>(provider => new NotesAiService(
             provider.GetRequiredService<IProviderModelClient>(),

@@ -25,7 +25,7 @@ public sealed record LlamaCppLocalEndpointOptions(
 /// <summary>One borrowed, kernel-identified local llama.cpp endpoint. It owns its HTTP work;
 /// the external process owner must close this provider after Dulche/Task originals drain and
 /// before terminating the server. Construction never sends, launches, loads, or grants use.</summary>
-public sealed class LlamaCppModelProvider : IModelProvider, ILocalModelEndpointObservationSource, IOriginalInferenceEngineModelSource, IAsyncDisposable
+public sealed partial class LlamaCppModelProvider : IModelProvider, ILocalModelEndpointObservationSource, IOriginalInferenceEngineModelSource, IAsyncDisposable
 {
     private const int Capacity = 128;
     private readonly object _sync = new();
@@ -290,7 +290,6 @@ public sealed class LlamaCppModelProvider : IModelProvider, ILocalModelEndpointO
         if (configuration is not { IsEnabled: true }) throw new InvalidOperationException("The actual local provider is disabled in the configuration store.");
         // IsLocal and Endpoint values in configuration are observations only; neither controls transport.
         await ValidateActualPeerAsync(token).ConfigureAwait(false);
-        var model = await HashActualModelAsync(token).ConfigureAwait(false);
         _ = await GetJsonAsync("health", token).ConfigureAwait(false);
         var catalogue = await GetJsonAsync("v1/models", token).ConfigureAwait(false);
         var available = catalogue.GetProperty("data").EnumerateArray().Any(item => item.GetProperty("id").GetString() == _options.ModelAlias
@@ -298,8 +297,9 @@ public sealed class LlamaCppModelProvider : IModelProvider, ILocalModelEndpointO
             && meta.TryGetProperty("n_vocab", out var vocab) && vocab.GetInt64() > 0);
         if (!available) throw new InvalidOperationException("The actual loaded local model is absent or has no real vocabulary/parameters.");
         var props = await GetJsonAsync("props", token).ConfigureAwait(false);
-        if (props.GetProperty("model_path").GetString() != _options.ModelPath || props.GetProperty("model_alias").GetString() != _options.ModelAlias)
+        if (props.GetProperty("model_alias").GetString() != _options.ModelAlias)
             throw new InvalidOperationException("The actual local server has a different observed model path/alias.");
+        var model = await HashActualModelAsync(props.GetProperty("model_path").GetString(), token).ConfigureAwait(false);
         var context = props.GetProperty("default_generation_settings").GetProperty("n_ctx").GetInt32();
         if (context <= 0) throw new InvalidDataException("The local context observation is invalid.");
         lock (_sync)
@@ -332,10 +332,10 @@ public sealed class LlamaCppModelProvider : IModelProvider, ILocalModelEndpointO
     private async ValueTask<Stream> ConnectOriginalSocketAsync(SocketsHttpConnectionContext context, CancellationToken token)
     {
         ValidateOptions();
-        var socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
+        var socket = AcquireOriginalDisposable(() => new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified));
         try
         {
-            await socket.ConnectAsync(new UnixDomainSocketEndPoint(_options.SocketPath!), token).ConfigureAwait(false);
+            await ObserveOriginalAsync(() => socket.ConnectAsync(new UnixDomainSocketEndPoint(_options.SocketPath!), token).AsTask()).ConfigureAwait(false);
             await BindActualPeerAsync(socket, token).ConfigureAwait(false);
             return new NetworkStream(socket, ownsSocket: true);
         }
@@ -343,8 +343,8 @@ public sealed class LlamaCppModelProvider : IModelProvider, ILocalModelEndpointO
     }
     private async Task ValidateActualPeerAsync(CancellationToken token)
     {
-        using var socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
-        try { await socket.ConnectAsync(new UnixDomainSocketEndPoint(_options.SocketPath!), token).ConfigureAwait(false); }
+        using var socket = AcquireOriginalDisposable(() => new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified));
+        try { await ObserveOriginalAsync(() => socket.ConnectAsync(new UnixDomainSocketEndPoint(_options.SocketPath!), token).AsTask()).ConfigureAwait(false); }
         catch (SocketException cause) { throw new IOException("The original local Unix endpoint is unavailable.", cause); }
         await BindActualPeerAsync(socket, token).ConfigureAwait(false);
     }
@@ -354,11 +354,11 @@ public sealed class LlamaCppModelProvider : IModelProvider, ILocalModelEndpointO
         if (getsockopt(socket.SafeHandle.DangerousGetHandle().ToInt32(), 1, 17, out var credentials, ref length) != 0
             || length != Marshal.SizeOf<PeerCredentials>() || credentials.Pid <= 0 || credentials.Uid != geteuid())
             throw new UnauthorizedAccessException("The actual Unix peer has no matching local kernel identity.");
-        var stat = await File.ReadAllTextAsync($"/proc/{credentials.Pid}/stat", token).ConfigureAwait(false);
+        var stat = await ObserveOriginalAsync(() => File.ReadAllTextAsync($"/proc/{credentials.Pid}/stat", token)).ConfigureAwait(false);
         var afterName = stat[(stat.LastIndexOf(')') + 2)..].Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (afterName.Length < 20) throw new InvalidDataException("The actual local process start identity is missing.");
-        await using var executable = File.OpenRead($"/proc/{credentials.Pid}/exe");
-        var sha = Convert.ToHexString(await SHA256.HashDataAsync(executable, token).ConfigureAwait(false)).ToLowerInvariant();
+        using var executable = AcquireOriginalDisposable(() => File.OpenRead($"/proc/{credentials.Pid}/exe"));
+        var sha = Convert.ToHexString(await ObserveOriginalAsync(() => SHA256.HashDataAsync(executable, token).AsTask()).ConfigureAwait(false)).ToLowerInvariant();
         if (!sha.Equals(_options.ExpectedExecutableSha256, StringComparison.OrdinalIgnoreCase))
             throw new UnauthorizedAccessException("The actual local peer executable differs from the selected runtime bytes.");
         var peer = new Peer(credentials.Pid, afterName[19], sha);
@@ -368,23 +368,80 @@ public sealed class LlamaCppModelProvider : IModelProvider, ILocalModelEndpointO
             _peer ??= peer;
         }
     }
-    private async Task<(string Sha, long Bytes, ulong Tensors)> HashActualModelAsync(CancellationToken token)
+    private async Task<(string Sha, long Bytes, ulong Tensors)> HashActualModelAsync(string? reportedModelPath, CancellationToken token)
     {
         Peer peer; lock (_sync) peer = _peer ?? throw new InvalidOperationException("No original kernel peer owns this model-path observation.");
         // Read the actual peer namespace, including its private SHM path. Ordinary filesystem
         // permissions still apply; denied access remains unavailable, never a DTO/hash approval.
-        var physicalPath = $"/proc/{peer.Pid}/root" + _options.ModelPath;
-        await using var stream = new FileStream(physicalPath, FileMode.Open, FileAccess.Read, FileShare.Read, 65536, FileOptions.Asynchronous);
-        var header = new byte[24]; await stream.ReadExactlyAsync(header, token).ConfigureAwait(false);
+        var physicalPath = InvokePhysical(() => OriginalModelReadPath(peer.Pid, _options.ModelPath!, reportedModelPath));
+        using var stream = AcquireOriginalDisposable(() => new FileStream(physicalPath, FileMode.Open, FileAccess.Read, FileShare.Read, 65536, FileOptions.Asynchronous));
+        var identity = InvokePhysical(() => ReadOriginalModelIdentity(stream));
+        if (reportedModelPath != _options.ModelPath)
+        {
+            using var configured = AcquireOriginalDisposable(() => new FileStream($"/proc/{peer.Pid}/root" + _options.ModelPath,
+                FileMode.Open, FileAccess.Read, FileShare.Read, 65536, FileOptions.Asynchronous));
+            if (InvokePhysical(() => ReadOriginalModelIdentity(configured)) != identity)
+                throw new UnauthorizedAccessException("The actual held peer model descriptor does not name the SAME configured model file.");
+        }
+        var header = new byte[24];
+        await ObserveOriginalAsync(() => stream.ReadExactlyAsync(header, token).AsTask()).ConfigureAwait(false);
         var version = BinaryPrimitives.ReadUInt32LittleEndian(header.AsSpan(4));
         var tensors = BinaryPrimitives.ReadUInt64LittleEndian(header.AsSpan(8));
         if (!header.AsSpan(0, 4).SequenceEqual("GGUF"u8) || version is not (2 or 3) || tensors == 0)
             throw new InvalidDataException("The actual file is not a GGUF with real tensors.");
-        stream.Position = 0;
-        var sha = Convert.ToHexString(await SHA256.HashDataAsync(stream, token).ConfigureAwait(false)).ToLowerInvariant();
+        if (CurrentOriginalWork().CaptureRuntimeMetadata)
+            InvokePhysical(() => { stream.Position = 0; CaptureOriginalRuntimeMetadata(stream, token); return true; });
+        InvokePhysical(() => { stream.Position = 0; return true; });
+        var sha = Convert.ToHexString(await ObserveOriginalAsync(() => SHA256.HashDataAsync(stream, token).AsTask()).ConfigureAwait(false)).ToLowerInvariant();
         if (!sha.Equals(_options.ExpectedModelSha256, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("The actual configured GGUF differs from its exact selected SHA256.");
+        if (InvokePhysical(() => ReadOriginalModelIdentity(stream)) != identity)
+            throw new UnauthorizedAccessException("The actual held model changed during whole-byte observation.");
+        using var latest = AcquireOriginalDisposable(() => new FileStream(physicalPath, FileMode.Open, FileAccess.Read, FileShare.Read, 65536, FileOptions.Asynchronous));
+        if (InvokePhysical(() => ReadOriginalModelIdentity(latest)) != identity)
+            throw new UnauthorizedAccessException("The actual peer model descriptor changed during observation.");
+        var latestPeer = await ObserveOriginalAsync(() => File.ReadAllTextAsync($"/proc/{peer.Pid}/stat", token)).ConfigureAwait(false);
+        if (latestPeer[(latestPeer.LastIndexOf(')') + 2)..].Split(' ', StringSplitOptions.RemoveEmptyEntries).ElementAtOrDefault(19) != peer.Start)
+            throw new UnauthorizedAccessException("The original loaded-model process ended or changed during observation.");
         return (sha, stream.Length, tensors);
     }
+    // A server's /proc/self/fd path names its own held descriptor. Resolve only this exact
+    // syntax through the SAME SO_PEERCRED process, never through the reader's self namespace.
+    internal static string OriginalModelReadPath(int samePeerPid, string configuredModelPath, string? reportedModelPath)
+    {
+        if (samePeerPid <= 0 || !Path.IsPathFullyQualified(configuredModelPath)
+            || configuredModelPath.StartsWith("/proc/self/fd/", StringComparison.Ordinal))
+            throw new UnauthorizedAccessException("The actual peer and separate configured absolute model path are required.");
+        if (reportedModelPath == configuredModelPath) return $"/proc/{samePeerPid}/root" + configuredModelPath;
+        const string prefix = "/proc/self/fd/";
+        if (reportedModelPath is null || !reportedModelPath.StartsWith(prefix, StringComparison.Ordinal)
+            || !int.TryParse(reportedModelPath.AsSpan(prefix.Length), System.Globalization.NumberStyles.None,
+                System.Globalization.CultureInfo.InvariantCulture, out var descriptor)
+            || descriptor < 3 || descriptor > 1048576
+            || reportedModelPath[prefix.Length..] != descriptor.ToString(System.Globalization.CultureInfo.InvariantCulture))
+            throw new UnauthorizedAccessException("The server reported a different or unbounded model path.");
+        return $"/proc/{samePeerPid}/fd/{descriptor}";
+    }
+    private readonly record struct OriginalModelFileIdentity(ulong Inode, uint Major, uint Minor,
+        long Bytes, long ModifiedSeconds, uint ModifiedNanoseconds, long ChangedSeconds, uint ChangedNanoseconds);
+    private static OriginalModelFileIdentity ReadOriginalModelIdentity(FileStream sameOpenedFile)
+    {
+        var fields = new byte[256];
+        const uint consumed = 0x3c3U; // TYPE/MODE, INO, SIZE, MTIME, CTIME.
+        if (StatOriginalModel(sameOpenedFile.SafeFileHandle.DangerousGetHandle().ToInt32(), "", 0x1000,
+            consumed, fields) != 0)
+            throw new System.ComponentModel.Win32Exception(Marshal.GetLastPInvokeError(), "The actual model descriptor identity is unavailable.");
+        if ((BitConverter.ToUInt32(fields, 0) & consumed) != consumed
+            || (BitConverter.ToUInt16(fields, 28) & 0xf000) != 0x8000
+            || BitConverter.ToUInt64(fields, 32) == 0 || BitConverter.ToInt64(fields, 40) < 24)
+            throw new UnauthorizedAccessException("The actual model descriptor is not an observed regular complete file.");
+        return new(BitConverter.ToUInt64(fields, 32), BitConverter.ToUInt32(fields, 136), BitConverter.ToUInt32(fields, 140),
+            BitConverter.ToInt64(fields, 40), BitConverter.ToInt64(fields, 112), BitConverter.ToUInt32(fields, 120),
+            BitConverter.ToInt64(fields, 96), BitConverter.ToUInt32(fields, 104));
+    }
+
+    [DllImport("libc", EntryPoint = "statx", SetLastError = true)]
+    private static extern int StatOriginalModel(int descriptor, [MarshalAs(UnmanagedType.LPUTF8Str)] string path,
+        int flags, uint mask, [Out] byte[] result);
     private async Task<JsonElement> GetJsonAsync(string path, CancellationToken token)
     {
         using var response = await ObserveOriginalAsync(() => _http.GetAsync(path, HttpCompletionOption.ResponseHeadersRead, token)).ConfigureAwait(false);
@@ -500,16 +557,27 @@ public sealed class LlamaCppModelProvider : IModelProvider, ILocalModelEndpointO
     private Task<T> StartOriginal<T>(Func<CancellationToken, Task<T>> body, CancellationToken token) =>
         StartOriginalCore(body, token, externalLive: false, out _);
     private Task<T> StartOriginalCore<T>(Func<CancellationToken, Task<T>> body, CancellationToken token,
-        bool externalLive, out OriginalWork work)
+        bool externalLive, out OriginalWork work, IInferenceEngineOriginalSourceScope? originalScope = null,
+        bool captureRuntimeMetadata = false)
     {
         token.ThrowIfCancellationRequested();
         var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously); Task<T> whole;
         lock (_sync)
         {
-            DemandOpen(); PrepareCapacityLocked(); work = new() { ExternalLive = externalLive };
+            DemandOpen(); PrepareCapacityLocked(); work = new() { ExternalLive = externalLive,
+                OriginalSourceScope = originalScope, CaptureRuntimeMetadata = captureRuntimeMetadata };
             whole = RunOriginalAsync(gate.Task, work, body, token); work.Whole = whole; _work.Add(work);
         }
-        gate.SetResult(); return whole;
+        try { InvokePhysical(() => { originalScope?.RetainOriginalTask(whole); return true; }); }
+        catch (Exception cause)
+        {
+            // Keep the actual acquired whole, but withdraw productive admission before
+            // its start gate opens when original publication failed.
+            lock (_sync) { work.PublicationFailure = cause; Add(work.SynchronousErrors, cause); }
+            throw;
+        }
+        finally { gate.SetResult(); }
+        return whole;
     }
     private async Task<T> RunOriginalAsync<T>(Task start, OriginalWork work, Func<CancellationToken, Task<T>> body, CancellationToken token)
     {
@@ -519,14 +587,59 @@ public sealed class LlamaCppModelProvider : IModelProvider, ILocalModelEndpointO
         CancellationTokenSource? lifetime = null; Task<T>? actual = null; T? result = default;
         try
         {
-            lifetime = CancellationTokenSource.CreateLinkedTokenSource(token, _stop.Token);
+            if (work.PublicationFailure is { } publicationFailure)
+                ExceptionDispatchInfo.Capture(FaultEnvelope(publicationFailure)).Throw();
+            InvokePhysical(() => { lifetime = CancellationTokenSource.CreateLinkedTokenSource(token, _stop.Token); return true; });
             actual = AcquireOriginalTask(() => body(lifetime.Token), work);
             result = await ObserveAcquiredAsync(actual, work).ConfigureAwait(false);
         }
         catch (Exception cause) { AddTask(errors, actual, cause); }
         finally
         {
-            try { InvokePhysical(() => { lifetime?.Dispose(); return true; }); } catch (Exception cause) { Add(cleanup, FaultEnvelope(cause)); }
+            // A parent scope may fail AFTER acquiring a raw Task. The actual original is
+            // retained inside its factory and joined independently before this whole ends.
+            if (errors.Count != 0 && lifetime is not null)
+            {
+                try { InvokePhysical(() => { lifetime.Cancel(); return true; }, cleanup: true); }
+                catch (Exception cause) { Add(cleanup, FaultEnvelope(cause)); }
+            }
+            while (true)
+            {
+                Task[] retained;
+                lock (_sync) retained = work.Sources.Where(raw => !work.Observed.Contains(raw)).ToArray();
+                if (retained.Length == 0) break;
+                foreach (var raw in retained)
+                {
+                    try
+                    {
+                        await raw.ConfigureAwait(false);
+                        // A factory can return a genuine resource only AFTER its caller scope
+                        // failed. Capture and retire that unused late product, not just its Task.
+                        if (raw is Task<HttpResponseMessage> response)
+                            InvokePhysical(() => { response.Result.Dispose(); return true; }, cleanup: true);
+                        else if (raw is Task<Stream> stream)
+                        {
+                            Task? close = null;
+                            try { _ = InvokePhysical(() =>
+                            {
+                                close = stream.Result.DisposeAsync().AsTask();
+                                lock (_sync) work.Sources.Add(close);
+                                return close;
+                            }, cleanup: true); }
+                            catch (Exception cause) { Add(cleanup, FaultEnvelope(cause)); }
+                            if (close is not null)
+                            {
+                                try { await close.ConfigureAwait(false); }
+                                catch (Exception cause) { AddTask(cleanup, close, cause); }
+                                finally { lock (_sync) work.Observed.Add(close); }
+                            }
+                        }
+                    }
+                    catch (Exception cause) { AddTask(cleanup, raw, cause); }
+                    finally { lock (_sync) work.Observed.Add(raw); }
+                }
+            }
+            try { InvokePhysical(() => { lifetime?.Dispose(); return true; }, cleanup: true); } catch (Exception cause) { Add(cleanup, FaultEnvelope(cause)); }
             foreach (var cause in cleanup) Add(errors, cause);
             phase.Live = false; _executing.Value = prior;
             lock (_sync) foreach (var cause in errors) Add(_errors, cause);
@@ -542,17 +655,37 @@ public sealed class LlamaCppModelProvider : IModelProvider, ILocalModelEndpointO
         ? phase.Work : throw new InvalidOperationException("No original local operation owns this source acquisition.");
     private Task<T> AcquireOriginalTask<T>(Func<Task<T>> factory, OriginalWork? work = null, bool cleanup = false)
     {
-        work ??= CurrentOriginalWork(); ReserveSource(work, cleanup); Task<T> actual;
-        try { actual = InvokePhysical(factory) ?? throw new InvalidOperationException("The original local source returned no Task."); }
-        catch (Exception cause) { ReleaseReservation(work, cause); throw FaultEnvelope(cause); }
-        RetainReserved(work, actual); return actual;
+        work ??= CurrentOriginalWork(); ReserveSource(work, cleanup); Task<T>? actual = null; var retained = false;
+        try { InvokePhysical(() =>
+        {
+            actual = factory() ?? throw new InvalidOperationException("The original local source returned no Task.");
+            RetainReserved(work, actual); retained = true;
+            return actual;
+        }, cleanup); }
+        catch (Exception cause)
+        {
+            if (!retained) ReleaseReservation(work, cause);
+            else lock (_sync) Add(work.SynchronousErrors, cause);
+            throw FaultEnvelope(cause);
+        }
+        return actual!;
     }
     private Task AcquireOriginalTask(Func<Task> factory, OriginalWork? work = null, bool cleanup = false)
     {
-        work ??= CurrentOriginalWork(); ReserveSource(work, cleanup); Task actual;
-        try { actual = InvokePhysical(factory) ?? throw new InvalidOperationException("The original local source returned no Task."); }
-        catch (Exception cause) { ReleaseReservation(work, cause); throw FaultEnvelope(cause); }
-        RetainReserved(work, actual); return actual;
+        work ??= CurrentOriginalWork(); ReserveSource(work, cleanup); Task? actual = null; var retained = false;
+        try { InvokePhysical(() =>
+        {
+            actual = factory() ?? throw new InvalidOperationException("The original local source returned no Task.");
+            RetainReserved(work, actual); retained = true;
+            return actual;
+        }, cleanup); }
+        catch (Exception cause)
+        {
+            if (!retained) ReleaseReservation(work, cause);
+            else lock (_sync) Add(work.SynchronousErrors, cause);
+            throw FaultEnvelope(cause);
+        }
+        return actual!;
     }
     private void ReserveSource(OriginalWork work, bool cleanup)
     {
@@ -577,14 +710,14 @@ public sealed class LlamaCppModelProvider : IModelProvider, ILocalModelEndpointO
     {
         work ??= CurrentOriginalWork();
         try { return await AwaitOriginal(actual).ConfigureAwait(false); }
-        finally { lock (_sync) if (actual.IsCompletedSuccessfully) work.Observed.Add(actual); }
+        finally { lock (_sync) work.Observed.Add(actual); }
     }
     private async Task ObserveAcquiredAsync(Task actual, OriginalWork? work = null)
     {
         work ??= CurrentOriginalWork();
         try { await actual.ConfigureAwait(false); }
         catch (Exception cause) { if (actual.IsFaulted) ThrowOriginal(actual.Exception!.InnerExceptions, false); ExceptionDispatchInfo.Capture(cause).Throw(); }
-        finally { lock (_sync) if (actual.IsCompletedSuccessfully) work.Observed.Add(actual); }
+        finally { lock (_sync) work.Observed.Add(actual); }
     }
     private Task<T> ObserveOriginalAsync<T>(Func<Task<T>> factory, bool cleanup = false) => ObserveAcquiredAsync(AcquireOriginalTask(factory, cleanup: cleanup));
     private Task ObserveOriginalAsync(Func<Task> factory, bool cleanup = false) => ObserveAcquiredAsync(AcquireOriginalTask(factory, cleanup: cleanup));
@@ -598,7 +731,7 @@ public sealed class LlamaCppModelProvider : IModelProvider, ILocalModelEndpointO
     private async Task CancelOriginalAsync(Task start, CancellationTokenSource source)
     {
         await start.ConfigureAwait(false);
-        try { InvokePhysical(() => { source.Cancel(); return true; }); }
+        try { InvokePhysical(() => { source.Cancel(); return true; }, cleanup: true); }
         catch (Exception cause) { throw FaultEnvelope(cause); }
     }
     private static Exception FaultEnvelope(Exception cause) => cause is OperationCanceledException
@@ -611,9 +744,72 @@ public sealed class LlamaCppModelProvider : IModelProvider, ILocalModelEndpointO
         { var cause = _capacityRefusal ??= new InvalidOperationException("Original local provider custody is full."); Add(_errors, cause); throw cause; }
     }
     private void DemandOpen() { if (_closing) throw new ObjectDisposedException(nameof(LlamaCppModelProvider)); }
-    private T InvokePhysical<T>(Func<T> callback)
+    private T AcquireOriginalDisposable<T>(Func<T> factory) where T : class, IDisposable
     {
-        (_physical ??= []).Add(this); try { return callback(); } finally { _physical.RemoveAt(_physical.Count - 1); }
+        T? actual = null;
+        try { InvokePhysical(() => actual = factory() ?? throw new InvalidOperationException("No actual concrete local resource was returned.")); return actual!; }
+        catch (Exception primary)
+        {
+            var causes = new List<Exception> { primary };
+            if (actual is not null)
+            {
+                var cleanupInvoked = false;
+                try { InvokePhysical(() => { cleanupInvoked = true; actual.Dispose(); return true; }, cleanup: true); }
+                catch (Exception cleanup) { Add(causes, cleanup); }
+                if (!cleanupInvoked)
+                {
+                    // A caller's cleanup refusal cannot orphan an already captured concrete
+                    // kernel resource. The provider owns this release; refusal stays faulted.
+                    (_physical ??= []).Add(this);
+                    try { actual.Dispose(); } catch (Exception cleanup) { Add(causes, cleanup); }
+                    finally { _physical.RemoveAt(_physical.Count - 1); }
+                }
+            }
+            throw new AggregateException("The actual local resource acquisition and independent cleanup failed.", causes);
+        }
+    }
+    private T InvokePhysical<T>(Func<T> callback, bool cleanup = false)
+    {
+        (_physical ??= []).Add(this);
+        try
+        {
+            var original = _executing.Value is { Live: true } phase && ReferenceEquals(phase.Owner, this)
+                ? phase.Work.OriginalSourceScope : null;
+            if (original is null) return callback();
+            var work = CurrentOriginalWork();
+            T actual = default!; var active = 1; var invoked = 0;
+            var thread = Environment.CurrentManagedThreadId; var errors = new List<Exception>();
+            void Keep(Exception cause)
+            { lock (errors) Add(errors, cause); lock (_sync) Add(work.SynchronousErrors, cause); }
+            T Capture()
+            {
+                try
+                {
+                    if (Volatile.Read(ref active) == 0 || Environment.CurrentManagedThreadId != thread
+                        || Interlocked.CompareExchange(ref invoked, 1, 0) != 0)
+                        throw new InvalidOperationException("The actual local source requires its live issuing thread and one finite callback.");
+                    actual = callback();
+                    if (actual is Task task) original.RetainOriginalTask(task);
+                    return actual;
+                }
+                catch (Exception cause) { Keep(cause); throw; }
+            }
+            // The entire external scope remains inside the provider's physical factor.
+            // Return the actual callback value, never a substituted scope return value.
+            try
+            {
+                if (cleanup) _ = original.InvokeOriginalCleanup(Capture);
+                else _ = original.InvokeOriginalFactory(Capture);
+            }
+            catch (Exception cause) { Keep(cause); }
+            finally { Volatile.Write(ref active, 0); }
+            if (Volatile.Read(ref invoked) == 0)
+                Keep(new InvalidOperationException("The original local scope omitted its actual factory."));
+            Exception[] causes; lock (errors) causes = errors.ToArray();
+            if (causes.Length != 0) throw new AggregateException("Every actual local factory and source-scope cause is retained.", causes);
+            return actual;
+        }
+        finally { _physical.RemoveAt(_physical.Count - 1); }
     }
     public Task CloseAndDrainAsync()
     {
@@ -667,7 +863,9 @@ public sealed class LlamaCppModelProvider : IModelProvider, ILocalModelEndpointO
     }
     private sealed record Peer(int Pid, string Start, string BinarySha);
     private sealed class OriginalWork
-    { public Task Whole = null!; public bool ExternalLive; public int Reservations; public Exception? Refusal; public readonly List<Task> Sources = []; public readonly HashSet<Task> Observed = []; public readonly List<Exception> SynchronousErrors = []; }
+    { public Task Whole = null!; public bool ExternalLive; public int Reservations; public Exception? Refusal; public Exception? PublicationFailure;
+      public IInferenceEngineOriginalSourceScope? OriginalSourceScope; public bool CaptureRuntimeMetadata;
+      public readonly List<Task> Sources = []; public readonly HashSet<Task> Observed = []; public readonly List<Exception> SynchronousErrors = []; }
     private sealed class Phase(LlamaCppModelProvider owner, Phase? parent, OriginalWork work)
     { public LlamaCppModelProvider Owner { get; } = owner; public Phase? Parent { get; } = parent; public OriginalWork Work { get; } = work; public volatile bool Live = true; }
     private sealed class StreamResource(LlamaCppModelProvider owner, HttpRequestMessage request, HttpResponseMessage response, Stream stream)

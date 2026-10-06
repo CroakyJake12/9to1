@@ -25,6 +25,7 @@ public sealed partial class StrataOriginalCompositionRegistrationTests
             var coordinator = new TaskExecutionCoordinator(null!, null!, null);
             var services = new ServiceCollection(); services.AddHavenInfrastructure();
             // Actual maintained instances replace unrelated host graph requirements for this identity-only control.
+            services.AddSingleton<IAppPaths>(paths); services.AddSingleton<IProviderConfigurationStore>(configurations);
             services.AddSingleton(coordinator); services.AddSingleton(authority);
             provider = services.BuildServiceProvider();
             var artifacts = provider.GetRequiredService<StrataNativeArtifactSource>();
@@ -35,12 +36,17 @@ public sealed partial class StrataOriginalCompositionRegistrationTests
             Assert.Same(coordinator, Field(artifacts, "_tasks")); Assert.Same(authority, Field(artifacts, "_authority"));
             Assert.Null(Field(artifacts, "_installations"));
             var observations = provider.GetRequiredService<StrataRuntimeObservationSource>();
-            Assert.Same(observations, provider.GetRequiredService<IInferenceRuntimeObservationSource>());
+            Assert.Same(provider.GetRequiredService<LlamaCppRuntimeObservationSource>(), provider.GetRequiredService<IInferenceRuntimeObservationSource>());
             Assert.Same(observations, provider.GetRequiredService<IStrataOriginalRequestObservationSource>());
+            var llama = provider.GetRequiredService<LlamaCppRuntimeObservationSource>();
+            Assert.Same(llama, provider.GetRequiredService<IManagedOriginalRequestRuntimeObservationSource>());
+            Assert.Same(provider.GetRequiredService<LlamaCppModelProvider>(), Field(llama, "_provider"));
+            Assert.Same(coordinator, Field(llama, "_coordinator"));
+            Assert.Same(observations, Field(llama, "_strata"));
             var composition = provider.GetRequiredService<ManagedDulcheInferenceComposition>();
             Assert.Same(composition, provider.GetRequiredService<IManagedDulcheInferenceCompositionSource>());
             Assert.Same(artifacts, Field(composition, "_strataModels")); Assert.Same(artifacts, Field(composition, "_strataBinaries"));
-            Assert.Same(observations, Field(composition, "_observations"));
+            Assert.Same(provider.GetRequiredService<LlamaCppRuntimeObservationSource>(), Field(composition, "_observations"));
             var scope = new Scope();
             var original = observations.ObserveOriginalAsync(new("strata", "model"), scope, default);
             var refusal = await Assert.ThrowsAsync<InferenceEngineException>(() => original);

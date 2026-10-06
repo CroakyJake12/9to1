@@ -43,7 +43,7 @@ public sealed partial class TaskRunOwnerReauthenticationConfigurationTests
         try
         {
             var driver = authority.ValidateOriginalInferenceAdmissionAsync(admission,
-                action => { if (++callbacks == 4) delayed = action; else action(); }, originals.Add, default);
+                action => { if (++callbacks == 7) delayed = action; else action(); }, originals.Add, default);
             var error = await Assert.ThrowsAsync<AggregateException>(() => driver);
             Assert.Contains(error.Flatten().InnerExceptions, cause => cause is InvalidOperationException);
             knownOwnerCauses = error.Flatten().InnerExceptions.ToArray();

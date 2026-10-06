@@ -33,6 +33,11 @@ internal static class Program
         try
         {
             ConfigureThreadPool();
+            if (args.Length > 0 && args[0] == "--local-task-console")
+            {
+                Environment.ExitCode = Services.OriginalLocalTaskConsole.RunAsync(args[1..]).GetAwaiter().GetResult();
+                return;
+            }
             if (OperatingSystem.IsWindows())
                 SetCurrentProcessExplicitAppUserModelID(DesktopProductIdentity.WindowsAppId);
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);

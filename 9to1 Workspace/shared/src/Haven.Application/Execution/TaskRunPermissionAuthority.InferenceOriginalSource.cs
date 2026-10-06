@@ -31,6 +31,8 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunOriginalInferen
     {
         ArgumentNullException.ThrowIfNull(originalSynchronousScope); ArgumentNullException.ThrowIfNull(retainOriginalTask);
         DemandOriginalInferenceAdmission(sameAdmission);
+        if (_actors is not ITaskRunOriginalTaskActorObservationSource originalActors)
+            throw new InvalidOperationException("The SAME configured Task actor lacks actual original scoped observation support.");
         // Existing authority request seal/drain owns this gated actual driver before callbacks.
         return StartRenewalWork<object?>(null, token, async work =>
         {
@@ -46,7 +48,7 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunOriginalInferen
                 var binding = retained.Activation.Binding;
                 var expectedActor = new AuthenticatedResourceActor(binding.ActorId, binding.ProfileId,
                     binding.AccountId, binding.OrganisationId, binding.AuthenticationRevision);
-                if (await source.ReadAsync(() => _actors.GetCurrentAsync(token).AsTask()).ConfigureAwait(false) != expectedActor)
+                if (await source.ReadAsync(() => originalActors.GetOriginalCurrentWithinSourceAsync(source.Run, source.Retain, token)).ConfigureAwait(false) != expectedActor)
                     throw new UnauthorizedAccessException("Actual native model actor changed.");
                 var selected = retained.Selection;
                 var provider = source.Invoke(() => _providers.Find(selected.Model.ProviderId))
@@ -57,7 +59,9 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunOriginalInferen
                     RuntimeSafetyState.IsSafeMode && !provider.IsLocal || _privacy.Current.LocalOnlyMode && !provider.IsLocal))
                     throw new UnauthorizedAccessException("Current local provider/privacy policy refuses native model use.");
                 // Direct SAME provider Task; no catalogue proxy silently discards raw failures.
-                var catalogue = await source.ReadAsync(() => provider.GetModelsAsync(token)).ConfigureAwait(false);
+                if (provider is not ITaskRunOriginalProviderCatalogueSource originalCatalogue)
+                    throw new InvalidOperationException("The SAME local provider lacks actual original scoped catalogue support.");
+                var catalogue = await source.ReadAsync(() => originalCatalogue.GetModelsWithinOriginalTaskSourceAsync(source.Run, source.Retain, token)).ConfigureAwait(false);
                 var matches = source.Invoke(() => catalogue.Where(model => model.ProviderId == provider.Id &&
                     model.Name == selected.Model.Name && model.IsLocal).Take(2).ToArray());
                 var required = selected.Candidate.RequiredCapabilities.Select(value => Enum.Parse<ToolCapability>(value, false)).ToArray();
@@ -79,7 +83,7 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunOriginalInferen
                         observation, source.Run, source.Retain, token)).ConfigureAwait(false);
                 }
                 // Actual actor LAST after all provider/model/policy/route reads.
-                if (await source.ReadAsync(() => _actors.GetCurrentAsync(token).AsTask()).ConfigureAwait(false) != expectedActor)
+                if (await source.ReadAsync(() => originalActors.GetOriginalCurrentWithinSourceAsync(source.Run, source.Retain, token)).ConfigureAwait(false) != expectedActor)
                     throw new UnauthorizedAccessException("Actual native model actor changed after held reads.");
                 token.ThrowIfCancellationRequested();
                 lock (_sync)
@@ -105,9 +109,14 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunOriginalInferen
         public readonly List<Task> Originals = [];
         public void Retain(Task raw)
         {
-            if (!Originals.Any(item => ReferenceEquals(item, raw))) Originals.Add(raw);
-            if (!work.Raw.Any(item => ReferenceEquals(item, raw))) work.Raw.Add(raw);
-            retain(raw);
+            bool newlyCaptured;
+            lock (owner._sync)
+            {
+                newlyCaptured = !Originals.Any(item => ReferenceEquals(item, raw));
+                if (newlyCaptured) Originals.Add(raw);
+                if (!work.Raw.Any(item => ReferenceEquals(item, raw))) work.Raw.Add(raw);
+            }
+            if (newlyCaptured) retain(raw);
         }
         public void Run(Action body) => Invoke(() => { body(); return 0; });
         public T Invoke<T>(Func<T> body) => owner.InvokeRenewalPhysical(() => InvokeScoped(body));

@@ -11,7 +11,7 @@ namespace Haven.Infrastructure.Tests;
 
 /// <summary>Actual maintained protocol/owner stages with controlled streams and Tasks.
 /// These controls issue no local peer, model, capability, permission or live inference proof.</summary>
-public sealed class LlamaCppOriginalProtocolCustodyTests
+public sealed partial class LlamaCppOriginalProtocolCustodyTests
 {
     [Fact]
     public async Task TruncatedSseRetainsShownDeltaAndFaultsActualProducerBeforeClose()

@@ -33,7 +33,8 @@ public sealed partial class ResilientProviderRoutingModelClient(
     ModelPermissionEvaluator? modelPermissions = null,
     ITaskRunProviderContextAuthority? taskContextAuthority = null,
     IProviderCatalogueEligibility? catalogueEligibility = null,
-    IManagedDulcheOriginalModelRequestConsumer? originalModelRequests = null) : IProviderModelClient, ITaskRunOriginalRequestFailureSource, ITaskRunOriginalToolCheckpointSelectionSource, ITaskRunOriginalToolResponseDispatchWitnessSource
+    IManagedDulcheOriginalModelRequestConsumer? originalModelRequests = null,
+    ITaskRunColdRecoveryJournal? coldRecoveryJournal = null) : IProviderModelClient, ITaskRunOriginalRequestFailureSource, ITaskRunOriginalToolCheckpointSelectionSource, ITaskRunOriginalToolResponseDispatchWitnessSource, ITaskRunColdToolCheckpointSelectionSource
 {
     // Preserve the original six-argument CLR entry for already compiled ordinary clients.
     // Its absence of canonical owners conveys no Task/Run, cloud context or tool authority.
@@ -64,6 +65,16 @@ public sealed partial class ResilientProviderRoutingModelClient(
         ITaskRunProviderContextAuthority? taskContextAuthority, IProviderCatalogueEligibility? catalogueEligibility)
         : this(primary, providers, configurations, privacy, fallbackOrder, executionEvents, taskCoordinator, routeCapture,
             originalFrames, modelPermissions, taskContextAuthority, catalogueEligibility, originalModelRequests: null) { }
+
+    // Preserve the thirteen-argument typed original-model request CLR entry.
+    public ResilientProviderRoutingModelClient(ProviderRoutingModelClient primary, IModelProviderRegistry providers,
+        IProviderConfigurationStore configurations, IPrivacyPreferenceStore privacy, IModelFallbackOrderStore? fallbackOrder,
+        IExecutionEventSink? executionEvents, TaskExecutionCoordinator? taskCoordinator, ITaskRunSelectedRouteCapture? routeCapture,
+        ITaskRunOriginalFrameOwner? originalFrames, ModelPermissionEvaluator? modelPermissions,
+        ITaskRunProviderContextAuthority? taskContextAuthority, IProviderCatalogueEligibility? catalogueEligibility,
+        IManagedDulcheOriginalModelRequestConsumer? originalModelRequests)
+        : this(primary, providers, configurations, privacy, fallbackOrder, executionEvents, taskCoordinator, routeCapture,
+            originalFrames, modelPermissions, taskContextAuthority, catalogueEligibility, originalModelRequests, coldRecoveryJournal: null) { }
 
     /// <summary>
     /// Reports whether available async applies to the current state.

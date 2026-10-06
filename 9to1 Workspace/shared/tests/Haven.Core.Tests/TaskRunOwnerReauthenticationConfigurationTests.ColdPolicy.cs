@@ -123,7 +123,7 @@ public sealed partial class TaskRunOwnerReauthenticationConfigurationTests
         public Task<ModelPermissionPolicy> GetPolicyAsync(CancellationToken token) { Reads++; return Read(); }
         public Task SavePolicyAsync(ModelPermissionPolicy value, CancellationToken token) => throw new NotSupportedException();
     }
-    private sealed class PolicyProvider(string id, Func<Task<IReadOnlyList<ProviderModelDescriptor>>> read) : IModelProvider
+    private sealed partial class PolicyProvider(string id, Func<Task<IReadOnlyList<ProviderModelDescriptor>>> read) : IModelProvider
     {
         internal Func<Task<IReadOnlyList<ProviderModelDescriptor>>> Read = read;
         internal ProviderModelDescriptor Model = new(id, true, new ModelDescriptor("synthetic-model", 123, "synthetic", "7B", "Q8",

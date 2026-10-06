@@ -55,7 +55,7 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunColdOwnerAuthor
     {
         if (!_coldJournal!.IsIssuedOriginalEntry(claim.OriginalEntry) || !_coldContext!.IsIssuedOriginal(context, claim) ||
             !ReferenceEquals(context.OriginalClaim, claim)) throw new UnauthorizedAccessException("SAME privately issued journal claim and fresh context are required.");
-        TaskRunColdRecoveryBoundary.DemandNeverStarted(claim.OriginalEntry.Capsule, expected);
+        TaskRunColdRecoveryBoundary.DemandRestorableBoundary(claim.OriginalEntry.Capsule, expected);
         if (FingerprintCold(expected) != FingerprintCold(claim.OriginalExpected)) throw new UnauthorizedAccessException("The exact current expected snapshot is required.");
         var old = expected.OwnerBinding ?? throw new UnauthorizedAccessException("The original actor audit binding is unavailable.");
         if (old.TaskId != expected.TaskId || old.ContextId != expected.ContextId || old.ExecutionId != expected.ExecutionId)
@@ -90,12 +90,12 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunColdOwnerAuthor
         await sources.AwaitAsync(sources.Invoke(() => _coldSource!.ValidateOriginalContextWithinSourceAsync(scope.OriginalContext,
             scope.Expected, callback, retain, token).AsTask())).ConfigureAwait(false);
         if (!_coldContext!.IsIssuedOriginal(scope.OriginalContext, scope.OriginalClaim)) throw new UnauthorizedAccessException("The genuine context scope retired.");
-        TaskRunColdRecoveryBoundary.DemandNeverStarted(scope.OriginalClaim.OriginalEntry.Capsule, scope.Expected);
-        await ReadColdPolicyAsync(sources, scope.OriginalClaim.OriginalEntry.Capsule.OriginalInput, token).ConfigureAwait(false);
+        await ValidateColdAcceptedBoundaryAsync(work, sources, scope, token).ConfigureAwait(false);
+        await ReadColdActivationPolicyAsync(sources, scope.OriginalClaim.OriginalEntry.Capsule, token).ConfigureAwait(false);
         await sources.ObserveAllOriginalTasksAsync().ConfigureAwait(false);
         if(sources.OriginalErrors.Count!=0) throw new AggregateException("Actual cold source validation failed.",sources.OriginalErrors);
         // The actual configured actor is read LAST after journal/context/model/policy awaits.
-        var actor = await sources.AwaitAsync(sources.Invoke(() => _actors.GetCurrentAsync(token))).ConfigureAwait(false);
+        var actor = await ReadColdActivationActorAsync(work, sources, scope, token).ConfigureAwait(false);
         if (actor is null || actor != scope.OriginalContext.CurrentActor || !ValidActor(actor)) throw new UnauthorizedAccessException("The genuine fresh actor changed during cold owner validation.");
         DemandStableRenewalIdentity(scope.PreviousOwner, actor);
         token.ThrowIfCancellationRequested();
@@ -196,6 +196,8 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunColdOwnerAuthor
         internal readonly List<ColdPin> Pins = [];
         internal Task? Close, Activation; internal bool Closing, Activated;
         internal ITaskRunColdJournalAcknowledgment? Acknowledgment;
+        internal ITaskRunColdAcceptedBoundarySource? AcceptedBoundaryIssuer;
+        internal Task? AcceptedBoundaryValidation;
         public ValueTask RevalidateAsync(CancellationToken token) => new(Issuer.StartColdWork(this, token, async (work, sources) =>
         { await Issuer.ValidateColdBeforeCasAsync(work, sources, this, token).ConfigureAwait(false); return true; }));
         public ValueTask<IAsyncDisposable> AcquireOriginalCommitPinAsync(CancellationToken token) => new(Issuer.StartColdWork(this, token, async (_, sources) =>
@@ -304,11 +306,12 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunColdOwnerAuthor
             if (FingerprintCold(intended)!=FingerprintCold(acknowledged)) throw new UnauthorizedAccessException("Cold binding CAS changed the original Task/run/input/history.");
             var callback=ColdCaller(sources); Action<Task> retain=raw=>RetainColdRaw(work,sources,raw);
             await sources.AwaitAsync(sources.Invoke(()=>_coldSource!.ValidateOriginalAcknowledgmentWithinSourceAsync(acknowledgment,callback,retain,token))).ConfigureAwait(false);
-            await ReadColdPolicyAsync(sources,scope.OriginalClaim.OriginalEntry.Capsule.OriginalInput,token).ConfigureAwait(false);
+            DemandColdAcceptedBoundaryProof(scope);
+            await ReadColdActivationPolicyAsync(sources,scope.OriginalClaim.OriginalEntry.Capsule,token).ConfigureAwait(false);
             await sources.AwaitAsync(sources.Invoke(()=>_coldSource!.ValidateOriginalClosedContextWithinSourceAsync(scope.OriginalContext,acknowledgment,callback,retain,token).AsTask())).ConfigureAwait(false);
             await sources.ObserveAllOriginalTasksAsync().ConfigureAwait(false);
             if(sources.OriginalErrors.Count!=0) throw new AggregateException("Actual cold activation sources failed.",sources.OriginalErrors);
-            var actor=await sources.AwaitAsync(sources.Invoke(()=>_actors.GetCurrentAsync(token))).ConfigureAwait(false);
+            var actor=await ReadColdActivationActorAsync(work,sources,scope,token).ConfigureAwait(false);
             if(actor is null || actor!=scope.OriginalContext.CurrentActor || !ValidActor(actor)) throw new UnauthorizedAccessException("The actual fresh actor retired after final journal/input policy reads.");
             token.ThrowIfCancellationRequested();
             return true;

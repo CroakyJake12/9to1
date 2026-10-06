@@ -176,7 +176,9 @@ public sealed partial class InferenceEngineDispatcher : IDulcheOriginalProviderA
                 await Original(owner, prior.CloseOriginalAsync).ConfigureAwait(false);
             }
             var observation = InferenceCompatibilityRegistry.Detach(await Original(owner,
-                () => _observations.ObserveOriginalAsync(model, sourceScope, cancellationToken)).ConfigureAwait(false));
+                () => _observations is IInferenceEngineRuntimeObservationSource engineObservations
+                    ? engineObservations.ObserveOriginalForEngineAsync(model, preference, sourceScope, cancellationToken)
+                    : _observations.ObserveOriginalAsync(model, sourceScope, cancellationToken)).ConfigureAwait(false));
             if (observation.Requirements.Model != model) return Error<Unit>(DulcheErrorCode.ModelLoadFailed, "The actual model observation names a different canonical artifact.");
             var reports = observation.Engines.Select(profile => InferenceCompatibilityRegistry.Inspect(observation.Requirements, observation.Hardware, profile)).ToArray();
             if (reports.Select(report => report.Engine).Distinct().Count() != reports.Length)

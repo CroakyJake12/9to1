@@ -324,6 +324,11 @@ public sealed partial class ChatSessionService(
         if (!ReferenceEquals(original.OriginalChatOwner, this) || original.OriginalConversation is not { } conversation
             || original.OriginalUserMessage is not { } message || !original.OriginalUserMessagePublished)
             throw new InvalidOperationException("The actual original accepted user input is unavailable.");
+        if (original.OriginalColdContinuation is { } cold)
+        {
+            await taskCoordinator!.ValidateOriginalColdInputAsync(cold, original, token).ConfigureAwait(false);
+            return;
+        }
         if (conversation.IsTemporary)
         {
             // This is the retained genuine transient object/input, never an invented repository row.
@@ -550,7 +555,9 @@ public sealed partial class ChatSessionService(
         execution.Changed += PublishExecution;
 
         var now = DateTimeOffset.UtcNow;
-        var resumedInput = originalCustody?.OriginalUnstartedContinuation is { } continuation
+        var resumedInput = originalCustody?.OriginalColdContinuation is { } coldContinuation
+            ? coldContinuation.Entry.Capsule.AcceptedUserMessage
+            : originalCustody?.OriginalUnstartedContinuation is { } continuation
             ? continuation.Original.OriginalUserMessage
                 ?? throw new InvalidOperationException("The actual accepted continuation input is unavailable.")
             : null;
@@ -1312,6 +1319,8 @@ public sealed partial class ChatSessionService(
                     }
                     if (canonicalIntent) taskCoordinator!.CaptureOriginalResponseRequest(originalResponse!, originalRequest);
                     await CaptureOriginalToolsAsync(originalRequest, actualInventory, cancellationToken).ConfigureAwait(false);
+                    if (originalCustody?.OriginalColdContinuation is { } coldToolInput)
+                        await taskCoordinator!.ValidateOriginalColdInputAsync(coldToolInput, originalCustody, cancellationToken).ConfigureAwait(false);
                     originalToolTurn = canonicalIntent
                         ? InvokeOriginalToolCheckpointCall(originalCheckpoint!, () => ollama.ChatWithToolsAsync(originalRequest, cancellationToken))
                         : ollama.ChatWithToolsAsync(originalRequest, cancellationToken);
@@ -1496,6 +1505,8 @@ public sealed partial class ChatSessionService(
                 try
                 {
                     await CaptureOriginalChatAsync(originalRequest, actualInventory, cancellationToken).ConfigureAwait(false);
+                    if (originalCustody?.OriginalColdContinuation is { } coldStreamInput)
+                        await taskCoordinator!.ValidateOriginalColdInputAsync(coldStreamInput, originalCustody, cancellationToken).ConfigureAwait(false);
                     taskCoordinator!.CaptureOriginalResponseRequest(originalResponse!, originalRequest);
                     InvokeOriginalResponseCallback(originalResponse!, () =>
                     {
@@ -1535,7 +1546,7 @@ public sealed partial class ChatSessionService(
                                 originalCustody!.RetainAdditionalOriginal("provider.stream.move", actualMove);
                                 taskCoordinator!.CaptureOriginalResponseMove(originalResponse!, actualMove);
                             });
-                            hasChunk = await actualMove.ConfigureAwait(false);
+                            hasChunk = await actualMove!.ConfigureAwait(false);
                         }
                         catch (TaskRunCloudPermissionRequiredException actualAsk) when (taskCloudPermissionRemediation is not null)
                         {
@@ -1585,7 +1596,7 @@ public sealed partial class ChatSessionService(
                             originalCustody!.RetainAdditionalOriginal("provider.stream.dispose", actualDispose);
                             taskCoordinator!.CaptureOriginalResponseDispose(originalResponse!, actualDispose);
                         }, cleanup: true);
-                        await actualDispose.ConfigureAwait(false);
+                        await actualDispose!.ConfigureAwait(false);
                     }
                     catch (Exception originalCleanup)
                     {

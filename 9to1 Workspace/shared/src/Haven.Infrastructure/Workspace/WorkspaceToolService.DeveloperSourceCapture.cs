@@ -101,6 +101,7 @@ public sealed partial class WorkspaceToolService
         }
         private T Invoke<T>(Func<T> source)
         {
+            if (_savedRootParentSource.Value is { } parent) return parent.Invoke(source);
             var depths = _physicalSources ??= []; depths.TryGetValue(this, out var old); depths[this] = old + 1;
             try { return source(); }
             catch (OperationCanceledException cause) { throw new AggregateException("Synchronous kernel/source fault returned no canceled original Task.", cause); }
@@ -119,6 +120,7 @@ public sealed partial class WorkspaceToolService
             var original = _executing.Value;
             if (original is null || !ReferenceEquals(original.Owner, owner)) throw new InvalidOperationException("No actual source original owns this returned Task.");
             lock (_gate) original.Sources.Add(actual);
+            _savedRootParentSource.Value?.Retain(actual);
         }
         private Task<T> Start<T>(PhysicalSelection original, Func<Task<T>> body, Action<Original, Task<T>>? publishOriginalMetadata = null)
         {

@@ -308,6 +308,12 @@ public sealed partial class ManagedDulcheRuntimeService : IAsyncDisposable, IDul
         }
     }
 
+    /// <summary>Pure preflight for an external process owner before it requests any closes.</summary>
+    public void DemandExternalOriginalProcessJoin()
+    {
+        lock (_sync) RequireIndependentClose();
+    }
+
     public Task CloseAndDrainAsync()
     {
         TaskCompletionSource? start = null; Task actual;

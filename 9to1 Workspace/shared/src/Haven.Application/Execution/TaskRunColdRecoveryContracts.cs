@@ -14,12 +14,15 @@ public sealed record TaskRunColdChatInput(
 
 /// <summary>The initially supported boundary has no invoked attempt or accepted/uncertain effect.
 /// An interrupted claim is permanently unavailable for automatic replay.</summary>
-public enum TaskRunColdBoundaryKind { NeverStartedAcceptedInput = 1 }
+public enum TaskRunColdBoundaryKind { NeverStartedAcceptedInput = 1, SettledUnfinishedToolResponse = 2 }
 
 public sealed record TaskRunColdCapsule(int SchemaVersion, Guid CapsuleId,
     TaskRunColdBoundaryKind Boundary, TaskExecutionSnapshot AcknowledgedTask,
     Conversation AcceptedConversation, ChatMessage AcceptedUserMessage,
-    TaskRunColdChatInput OriginalInput, DateTimeOffset CapturedAt);
+    TaskRunColdChatInput OriginalInput, DateTimeOffset CapturedAt)
+{
+    public TaskRunColdToolCheckpoint? OriginalToolCheckpoint { get; init; }
+}
 
 /// <summary>Issued only by the actual Chat producer after its entire original body and cleanup.
 /// The journal must validate the issuing source, not the Capsule fields.</summary>
@@ -86,32 +89,42 @@ public sealed class TaskRunColdOriginalSourceScope
             {
                 int active = 1, invoked = 0;
                 var thread = Environment.CurrentManagedThreadId;
+                var errors = new List<Exception>();
+                var causeGate = new object();
+                void Keep(Exception cause)
+                { lock (causeGate) if (!errors.Any(prior => ReferenceEquals(prior, cause))) errors.Add(cause); }
                 void Run()
                 {
-                    if (Volatile.Read(ref active) == 0 || Environment.CurrentManagedThreadId != thread
-                        || Interlocked.CompareExchange(ref invoked, 1, 0) != 0)
-                        throw new InvalidOperationException("The cold source scope requires its active issuing thread and one finite invocation.");
-                    actual = actualSource();
-                    if (actual is Task task) { parent.RetainOriginalTask(task); _retainer!(task); }
+                    try
+                    {
+                        if (Volatile.Read(ref active) == 0 || Environment.CurrentManagedThreadId != thread
+                            || Interlocked.CompareExchange(ref invoked, 1, 0) != 0)
+                            throw new InvalidOperationException("The cold source scope requires its active issuing thread and one finite invocation.");
+                        actual = actualSource();
+                        if (actual is Task task) { parent.RetainOriginalTask(task); _retainer!(task); }
+                    }
+                    catch (Exception cause) { Keep(cause); throw; }
                 }
-                try
-                {
-                    _caller!(Run);
-                    if (Volatile.Read(ref invoked) == 0) throw new InvalidOperationException("The original cold caller did not invoke its finite source.");
-                    return actual;
-                }
+                try { _caller!(Run); }
+                catch (Exception cause) { Keep(cause); }
                 finally { Volatile.Write(ref active, 0); }
+                if (Volatile.Read(ref invoked) == 0)
+                    Keep(new InvalidOperationException("The original cold caller did not invoke its finite source."));
+                Exception[] retained; lock (causeGate) retained = errors.ToArray();
+                if (retained.Length != 0) throw new AggregateException("Every actual cold source/scope refusal is retained.", retained);
+                return actual;
             });
         }
         if (_invocation is { } invocation)
         {
-            return (invocation.OriginalProcessProducer ?? throw new InvalidOperationException("No same actual input producer exists."))
+            T actual = default!;
+            (invocation.OriginalProcessProducer ?? throw new InvalidOperationException("No same actual input producer exists."))
                 .InvokeOriginalCallback(() =>
                 {
-                    var actual = actualSource();
+                    actual = actualSource();
                     if (actual is Task task) invocation.RetainAdditionalOriginal("cold.body-source", task);
-                    return actual;
                 });
+            return actual;
         }
         return _operation!.Invoke(() =>
         {
@@ -188,7 +201,7 @@ public interface ITaskRunColdOwnerAuthority
         ITaskRunColdJournalAcknowledgment sameAcknowledgment, CancellationToken token);
 }
 
-public static class TaskRunColdRecoveryBoundary
+public static partial class TaskRunColdRecoveryBoundary
 {
     public static void DemandNeverStarted(TaskRunColdCapsule capsule, TaskExecutionSnapshot actual)
     {

@@ -13,7 +13,7 @@ namespace Haven.Infrastructure;
 /// Register this concrete source only as TaskRunPermissionAuthority's local host input. Its identity
 /// grants no resource/installed-application/Home rights; those owners keep their own canonical actor.
 /// Browser execution must supply its genuine verified session source instead.</summary>
-public sealed class HostLocalTaskActorSource : IAuthenticatedResourceActorSource
+public sealed partial class HostLocalTaskActorSource : IAuthenticatedResourceActorSource
 {
     public ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken token)
     {

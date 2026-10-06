@@ -9,7 +9,7 @@ namespace HavenOS.Files.NativeHost;
 /// exact setup intent and issues its held final entry. This source neither creates a folder,
 /// adopts a store, registers a project nor treats initial source-read custody as write approval.
 /// References are retained with a finite fail-stop limit until this owner is retired.</summary>
-public sealed class FilesDeveloperOriginalSetupScopeSource(NativeFilesWorkspaceAuthority workspaces,
+public sealed partial class FilesDeveloperOriginalSetupScopeSource(NativeFilesWorkspaceAuthority workspaces,
     IDeveloperProjectOriginalCaptureAuthority captures, Func<HomeDeveloperProjectSetupJournal> journal)
     : IDeveloperProjectOriginalSetupScopeSource, ICanonicalResourceAccessResolver, IAsyncDisposable
 {

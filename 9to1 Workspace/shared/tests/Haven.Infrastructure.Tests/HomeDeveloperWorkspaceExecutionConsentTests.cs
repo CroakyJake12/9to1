@@ -9,7 +9,7 @@ namespace Haven.Infrastructure.Tests;
 
 // Real Home store/profile/review/Accept/claim/held leases. Saved-root and Task preparation
 // issuers plus the finite native callback are synthetic; these prove no Task/Files/process grant.
-public sealed class HomeDeveloperWorkspaceExecutionConsentTests
+public sealed partial class HomeDeveloperWorkspaceExecutionConsentTests
 {
     [Fact] public Task Copied_public_binding_is_refused_before_review_or_tool_validation() => Run(async rig =>
     {
@@ -186,22 +186,31 @@ public sealed class HomeDeveloperWorkspaceExecutionConsentTests
         if (errors.Count != 0) throw new AggregateException("Actual Home execution consent control/drain failed.", errors);
         // Expected negatives assert required exact causes, not absence of extra unknown cleanup causes.
     }
-    private sealed class Rig
+    private sealed partial class Rig
     {
         internal readonly string Root = Path.Combine(Path.GetTempPath(), "haven-dev-execution-" + Guid.NewGuid().ToString("N"));
         internal readonly Principal Principals = new();
         internal readonly HomeLocalProfileIdentity Profiles; internal readonly HomePermissionTrustService Permissions;
-        internal readonly HomeDeveloperWorkspaceExecutionConsentSource Source; internal readonly BindingSource Bindings = new(); internal BindingSource CurrentBindings;
+        internal readonly HomeDeveloperWorkspaceExecutionConsentSource Source; internal readonly BindingSource Bindings = new(); internal IDeveloperWorkspaceOriginalExecutionBindingSource CurrentBindings;
         internal readonly ToolSource Tools = new(); internal Binding? Binding => Bindings.Binding;
         internal readonly Action<Action> Callback = body => body();
         internal readonly List<Task> Originals = []; internal readonly HashSet<Task> Expected = new(ReferenceEqualityComparer.Instance);
         internal bool ExpectedClose; internal int Starts; internal Guid RequestId;
         internal Rig()
         {
+            try
+            {
             Directory.CreateDirectory(Root); var store = new FileHomeCoreStateStore(Path.Combine(Root, "home.json")); Profiles = new(store, Principals);
             var policy = new HomeDeveloperWorkspaceExecutionActionPolicySource(); Permissions = new(store, policy.TryGet); CurrentBindings = Bindings;
             var broker = new HomeResourceOperationBroker(new ResourceAuthorizationService(Profiles, [Bindings]), Permissions);
             Source = new(store, Profiles, broker, Permissions, () => CurrentBindings, () => Tools);
+            }
+            catch (Exception primary)
+            {
+                try { if (Directory.Exists(Root)) Directory.Delete(Root, true); }
+                catch (Exception cleanup) { throw new AggregateException("Actual execution fixture acquisition/independent directory cleanup failed.", primary, cleanup); }
+                throw;
+            }
         }
         internal T Own<T>(T actual) where T : Task { Originals.Add(actual); return actual; }
         internal void Expect(Task actual) => Expected.Add(actual);
@@ -235,7 +244,7 @@ public sealed class HomeDeveloperWorkspaceExecutionConsentTests
     }
     private sealed record Binding(Guid WorkspaceId, Guid ProjectId, Guid RootId, long WorkspaceRevision, string CanonicalRoot,
         AuthenticatedResourceActor OriginalActor) : IDeveloperWorkspaceOriginalExecutionBinding;
-    private sealed class BindingSource : IDeveloperWorkspaceOriginalExecutionBindingSource, ICanonicalResourceAccessResolver
+    private sealed partial class BindingSource : IDeveloperWorkspaceOriginalExecutionBindingSource, ICanonicalResourceAccessResolver
     {
         internal Binding? Binding; internal Func<Task>? Validation;
         private readonly ResourceScope _scope = new("dev.workspace.execute", "synthetic-private-saved-root", "saved-root-revision-1", ResourceAccess.Execute);

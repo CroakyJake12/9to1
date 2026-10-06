@@ -136,6 +136,9 @@ public sealed partial class HomeDeveloperWorkspaceExecutionConsentSource : IWork
         private readonly List<(Task Driver, CloudflareOriginalTaskLedger Sources)> _validations = [];
         internal Task<IWorkspaceOriginalProcessStartConsent> Acquisition = null!;
         private IDeveloperWorkspaceOriginalExecutionBindingSource _bindingSource = null!;
+        private IDeveloperWorkspaceOriginalExecutionScopedBindingSource _scopedBindingSource = null!;
+        private IDeveloperWorkspaceOriginalExecutionCommitBindingSource _commitSource = null!;
+        private IDeveloperWorkspaceOriginalExecutionPinCustodySource _pinCustody = null!;
         private ITaskRunToolActionOwner _toolSource = null!;
         private ResourceScope[] _scopes = [];
         private HomeResourcePreparedReview? _review;
@@ -173,7 +176,8 @@ public sealed partial class HomeDeveloperWorkspaceExecutionConsentSource : IWork
             if (!sources.Invoke(() => ReferenceEquals(owner._bindings(), _bindingSource) && ReferenceEquals(owner._tools(), _toolSource)
                 && _bindingSource.IsIssuedOriginalBinding(binding)))
                 throw new UnauthorizedAccessException("The genuine configured saved project/root issuer changed or is unavailable.");
-            await sources.AwaitAsync(sources.Invoke(() => _bindingSource.RevalidateOriginalAsync(binding, binding.OriginalActor, token))).ConfigureAwait(false);
+            await sources.AwaitAsync(sources.Invoke(() => _scopedBindingSource.RevalidateOriginalWithinSourceAsync(binding, binding.OriginalActor,
+                body => RunOriginalScopedSource(sources, body), actual => RetainOriginalScopedTask(sources, actual), token))).ConfigureAwait(false);
             var actor = await sources.AwaitAsync(sources.Invoke(() => owner._profiles.GetCurrentAsync(body => RunOriginalScopedSource(sources, body),
                 actual => RetainOriginalScopedTask(sources, actual), token))).ConfigureAwait(false);
             if (actor is null || actor != binding.OriginalActor || !sources.Invoke(() => _bindingSource.IsIssuedOriginalBinding(binding)
@@ -194,6 +198,11 @@ public sealed partial class HomeDeveloperWorkspaceExecutionConsentSource : IWork
                 _toolSource = _sources.Invoke(owner._tools) ?? throw new InvalidOperationException("The genuine configured canonical tool owner is unavailable.");
                 if (!_sources.Invoke(() => _bindingSource.IsIssuedOriginalBinding(binding)))
                     throw new UnauthorizedAccessException("Public workspace/project/root facts cannot mint execution trust.");
+                if (_bindingSource is not IDeveloperWorkspaceOriginalExecutionScopedBindingSource scopedBindings ||
+                    _bindingSource is not IDeveloperWorkspaceOriginalExecutionCommitBindingSource commitSource ||
+                    _bindingSource is not IDeveloperWorkspaceOriginalExecutionPinCustodySource pinCustody)
+                    throw new InvalidOperationException("DEV_EXECUTION_NATIVE_PIN_SETUP_REQUIRED: SAME scoped saved-root issuer and historical pin custody are required.");
+                _scopedBindingSource = scopedBindings; _commitSource = commitSource; _pinCustody = pinCustody;
                 await _sources.AwaitAsync(_sources.Invoke(() => _toolSource.ValidateOriginalPreparationAsync(preparation, current, token))).ConfigureAwait(false);
                 _scopes = _sources.Invoke(() => _bindingSource.GetOriginalExecutionScopes(binding)).ToArray();
                 if (_scopes.Length != 1 || _scopes[0].Kind != "dev.workspace.execute" || _scopes[0].Access != ResourceAccess.Execute

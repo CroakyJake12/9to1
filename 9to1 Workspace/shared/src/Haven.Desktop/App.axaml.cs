@@ -52,64 +52,7 @@ public sealed partial class App : Avalonia.Application
         collection.AddHavenMesh();
         collection.AddSingleton<ScheduledTaskScheduleCalculator>();
         collection.AddSingleton<ScheduledTaskRunner>();
-        collection.AddSingleton<BrowserSessionService>();
-        collection.AddSingleton<BrowserDataService>();
-        collection.AddSingleton<BrowserNavigationPolicy>();
-        collection.AddSingleton<IBrowserNavigationPolicy>(provider => provider.GetRequiredService<BrowserNavigationPolicy>());
-        collection.AddSingleton<BrowserAutomationStore>();
-        collection.AddSingleton<IBrowserAutomationStore>(provider => provider.GetRequiredService<BrowserAutomationStore>());
-        collection.AddSingleton<BrowserDownloadTransport>();
-        collection.AddSingleton<BrowserBackgroundPageLoader>();
-        collection.AddSingleton(provider => new BrowserAutomationService(
-            provider.GetRequiredService<BrowserSessionService>(),
-            provider.GetRequiredService<IBrowserNavigationPolicy>(),
-            provider.GetRequiredService<IBrowserAutomationStore>(),
-            provider.GetRequiredService<BrowserDownloadTransport>(),
-            provider.GetRequiredService<BrowserBackgroundPageLoader>()));
-        collection.AddSingleton(provider => new SafeModeBrowserAutomationService(
-            provider.GetRequiredService<BrowserAutomationService>(),
-            provider.GetRequiredService<IProductionDiagnostics>()));
-        collection.AddSingleton(provider => new BrowserNativeDownloadAutomationService(
-            provider.GetRequiredService<SafeModeBrowserAutomationService>(),
-            provider.GetRequiredService<IBrowserNavigationPolicy>(),
-            provider.GetRequiredService<IBrowserAutomationStore>()));
-        collection.AddSingleton<IBrowserAutomationService>(provider => provider.GetRequiredService<BrowserNativeDownloadAutomationService>());
-        collection.AddSingleton<IBrowserNativeDownloadService>(provider => provider.GetRequiredService<BrowserNativeDownloadAutomationService>());
-        collection.AddSingleton<IBrowserToolService>(provider => provider.GetRequiredService<BrowserSessionService>());
-        collection.AddSingleton<BrowserCompletionService>();
-        collection.AddSingleton<BrowserToolRuntime>();
-        collection.AddSingleton<AutomationToolRuntime>();
-        collection.AddSingleton<CapabilityPreflightService>();
-        collection.AddSingleton<TerminalCommandActivityHub>();
-        collection.AddSingleton<WorkspaceToolRuntime>();
-        collection.AddSingleton<ComputerToolRuntime>();
-        collection.AddSingleton(provider => new DualModelService(provider.GetRequiredService<IOllamaClient>(), provider.GetRequiredService<IExecutionEventSink>()));
-        collection.AddSingleton(provider => new JudgeService(new TrainingJudgeAdapter(provider.GetRequiredService<IOllamaClient>()), provider.GetRequiredService<IExecutionEventSink>()));
-        collection.AddSingleton<ChatSessionService>(provider => new ChatSessionService(
-            provider.GetRequiredService<IConversationRepository>(),
-            provider.GetRequiredService<IProviderModelClient>(),
-            provider.GetRequiredService<CapabilityPreflightService>(),
-            provider.GetRequiredService<IConversationSafetyService>(),
-            provider.GetRequiredService<WorkspaceToolRuntime>(),
-            provider.GetRequiredService<ComputerToolRuntime>(),
-            provider.GetRequiredService<BrowserToolRuntime>(),
-            provider.GetRequiredService<AutomationToolRuntime>(),
-            mcpTools: provider.GetRequiredService<McpToolRuntime>(),
-            calendarTools: provider.GetRequiredService<CalendarConnectionToolRuntime>(),
-            pluginTools: provider.GetRequiredService<PluginToolRuntime>(),
-            executionEvents: provider.GetRequiredService<IExecutionEventSink>(),
-            recovery: provider.GetRequiredService<AutonomousRecoveryService>(),
-            remediations: provider.GetRequiredService<RemediationCoordinator>(),
-            personalities: provider.GetRequiredService<ModelPersonalityService>(),
-            modelPermissions: provider.GetRequiredService<ModelPermissionEvaluator>(),
-            defaultProviders: provider.GetRequiredService<IDefaultProviderStore>(),
-            checkpoints: provider.GetRequiredService<CheckpointService>(),
-            projectInstructionFiles: provider.GetRequiredService<IProjectInstructionSource>(),
-            memorySource: provider.GetRequiredService<IMemoryQuerySource>(),
-            taskCoordinator: provider.GetRequiredService<TaskExecutionCoordinator>(),
-            taskToolOwner: provider.GetRequiredService<ITaskRunToolActionOwner>(),
-            taskProviderContextCapture: provider.GetRequiredService<ITaskRunProviderContextCapture>(),
-            taskCloudPermissionRemediation: provider.GetRequiredService<TaskRunCloudPermissionRemediationOwner>()));
+        collection.AddHavenOriginalTaskExecutionServices();
         collection.AddSingleton<UserPreferencesService>();
         collection.AddSingleton<Services.AvatarStore>();
         collection.AddSingleton<Services.OllamaWakeService>();
@@ -131,7 +74,6 @@ public sealed partial class App : Avalonia.Application
         
         collection.AddSingleton<FloatingActivityStateStore>();
         collection.AddSingleton<Haven.Desktop.Views.Pages.Imagine.VisionWorkspaceStateStore>();
-        collection.AddSingleton<AgentTaskRuntimeService>();
 #if ANDROID
         collection.AddSingleton<IFloatingActivityHost, global::Haven.Android.Compatibility.AndroidFloatingActivityHost>();
 #else

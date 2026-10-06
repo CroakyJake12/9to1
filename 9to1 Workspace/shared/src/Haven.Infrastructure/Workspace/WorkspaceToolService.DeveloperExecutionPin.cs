@@ -195,7 +195,7 @@ public sealed partial class WorkspaceToolService
                 while (offset < bytes!.Length)
                 {
                     Task<int>? read = null;
-                    Invoke(() => { read = stream!.ReadAsync(bytes.AsMemory(offset), token).AsTask(); lock (_gate) original.Sources.Add(read); return true; });
+                    Invoke(() => { read = stream!.ReadAsync(bytes.AsMemory(offset), token).AsTask(); lock (_gate) original.Sources.Add(read); _savedRootParentSource.Value?.Retain(read); return true; });
                     actual = read; var count = await read!.ConfigureAwait(false);
                     if (count == 0) throw new EndOfStreamException("The actual descriptor read ended before the retained document size."); offset += count;
                 }
@@ -204,7 +204,7 @@ public sealed partial class WorkspaceToolService
             finally
             {
                 Task? close = null;
-                try { Invoke(() => { if (stream is not null) { close = stream.DisposeAsync().AsTask(); lock (_gate) original.Sources.Add(close); } return true; }); }
+                try { InvokeSavedRootOwnedCleanup(() => { if (stream is not null) { close = stream.DisposeAsync().AsTask(); lock (_gate) original.Sources.Add(close); _savedRootParentSource.Value?.Retain(close); } return true; }); }
                 catch (Exception error) { AddOriginalErrors(errors, null, error); }
                 if (close is not null) try { await close.ConfigureAwait(false); } catch (Exception error) { AddOriginalErrors(errors, close, error); }
                 try { borrowed?.Dispose(); } catch (Exception error) { AddOriginalErrors(errors, null, error); }
@@ -274,7 +274,7 @@ public sealed partial class WorkspaceToolService
             // independently joined and retained on the admitted acquisition original.
             foreach (var owned in new IDisposable?[] { pin.WorkingRoot, pin.RegistrationHandle, pin.MetadataHandle, pin.FilesRoot, pin.MetadataRoot })
                 if (owned is not null)
-                    try { Invoke(() => { owned.Dispose(); return true; }); }
+                    try { InvokeSavedRootOwnedCleanup(() => { owned.Dispose(); return true; }); }
                     catch (Exception error) { AddOriginalErrors(errors, null, error); }
             Task[] tasks; lock (_gate) tasks = pin.OriginalCleanup.ToArray();
             foreach (var raw in tasks) try { await raw.ConfigureAwait(false); } catch (Exception error) { AddOriginalErrors(errors, raw, error); }
@@ -282,6 +282,7 @@ public sealed partial class WorkspaceToolService
         }
         private void DemandOriginalSavedRootDependencies()
         {
+            DemandSavedRootParentJoin();
             for (var original = _savedRootAcquiring.Value; original is not null; original = original.Parent)
                 if (Volatile.Read(ref original.Live)) throw new InvalidOperationException("An actual saved-root acquisition cannot join its kernel owner.");
             var visited = _checkingSavedRootDependencies ??= [];
@@ -295,6 +296,7 @@ public sealed partial class WorkspaceToolService
         }
         private async Task DrainOriginalSavedRootAcquisitions(List<Exception> errors)
         {
+            await DrainSavedRootParentOriginals(errors).ConfigureAwait(false);
             SavedRootAcquisition[] originals; lock (_gate) originals = _originalSavedRootAcquisitions.ToArray();
             foreach (var original in originals)
                 try { await original.Driver.ConfigureAwait(false); }

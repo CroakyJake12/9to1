@@ -34,8 +34,21 @@ public sealed partial class HomeDeveloperWorkspaceExecutionConsentSource
                 {
                     await ValidateSourcesAsync(sources, token).ConfigureAwait(false);
                     IAsyncDisposable? completion = null; IHomeLocalOperationLease? home = null;
+                    IDeveloperWorkspaceOriginalExecutionCommitPin? nativePin = null;
                     return await CloudflareOriginalPartialEntryCustody.RunOriginalAsync<IWorkspaceOriginalProcessStartEntry>(sources, async () =>
                     {
+                        // Native document/registration/root custody comes BEFORE Home. No logical
+                        // Files/store lease is held across Home entry acquisition.
+                        nativePin = await sources.CaptureOriginalAcquisitionAsync(() => _scopedBindingSource.AcquireOriginalExecutionPinWithinSourceAsync(Binding,
+                            body => RunOriginalScopedSource(sources, body), actual => RetainOriginalScopedTask(sources, actual), token), actual =>
+                        {
+                            if (actual is null || !CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => _pinCustody.IsOwnedOriginalExecutionPin(Binding, actual)))
+                                throw new UnauthorizedAccessException("The returned native pin has no SAME private historical issuer custody.");
+                            nativePin = actual; // Capture a genuine late product before any prior scope error escapes.
+                        }).ConfigureAwait(false);
+                        if (!sources.Invoke(() => _commitSource.IsIssuedOriginalExecutionPin(Binding, nativePin)))
+                            throw new UnauthorizedAccessException("The SAME actual native saved-root pin is no longer eligible for use.");
+                        sources.Invoke(() => { nativePin.DemandOriginalExecutionBinding(); return true; });
                         completion = await sources.CaptureOriginalAcquisitionAsync(() => _capability!.AcquireCommitCompletionLeaseAsync(Owner._broker, token),
                             actual => completion = actual).ConfigureAwait(false)
                             ?? throw new UnauthorizedAccessException("The original Home execution completion lease is unavailable.");
@@ -49,18 +62,20 @@ public sealed partial class HomeDeveloperWorkspaceExecutionConsentSource
                             body => RunOriginalScopedSource(sources, body), actual => RetainOriginalScopedTask(sources, actual), token))).ConfigureAwait(false))
                             throw new UnauthorizedAccessException("The held Home actor/claim changed before native start admission.");
                         DemandLive();
-                        var entry = new Entry(this, home, completion, token);
+                        sources.Invoke(() => { nativePin.DemandOriginalExecutionBinding(); return true; });
+                        var entry = new Entry(this, home, completion, nativePin, token);
                         lock (_gate)
                         {
                             if (_retiring || _entry is not null) throw new UnauthorizedAccessException("The original process-start entry is retired or already issued.");
                             _entry = entry;
                         }
-                        home = null; completion = null; return entry;
+                        home = null; completion = null; nativePin = null; return entry;
                     }, () =>
                     {
                         var closes = new List<Func<ValueTask>>();
                         if (home is { } actualHome) closes.Add(actualHome.DisposeAsync);
                         if (completion is { } actualCompletion) closes.Add(actualCompletion.DisposeAsync);
+                        if (nativePin is { } actualPin) closes.Add(actualPin.DisposeAsync);
                         return closes;
                     }).ConfigureAwait(false);
                 }).ConfigureAwait(false);
@@ -97,7 +112,8 @@ public sealed partial class HomeDeveloperWorkspaceExecutionConsentSource
             }
             private static HomeDeveloperWorkspaceExecutionConsentSource ownerOf(Consent consent) => consent.Owner;
         }
-        private sealed class Entry(Consent consent, IHomeLocalOperationLease home, IAsyncDisposable completion, CancellationToken token)
+        private sealed class Entry(Consent consent, IHomeLocalOperationLease home, IAsyncDisposable completion,
+            IDeveloperWorkspaceOriginalExecutionCommitPin nativePin, CancellationToken token)
             : IWorkspaceOriginalProcessStartEntry
         {
             private readonly object _gate = new();
@@ -111,6 +127,10 @@ public sealed partial class HomeDeveloperWorkspaceExecutionConsentSource
             public void DemandOriginalProcessStart(string root, string target, string sha)
             {
                 consent.DemandLive(); token.ThrowIfCancellationRequested();
+                // SAME retained native pin AND genuine held Home claim, at finite native Start.
+                // This descriptor-only demand performs no profile/store/Files/policy acquisition.
+                try { CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { nativePin.DemandOriginalExecutionBinding(); return true; }); }
+                catch (Exception cause) { _closing.Retain(cause); throw; }
                 lock (_gate)
                 {
                     if (_close is not null || _invoked || root != consent.Binding.CanonicalRoot || string.IsNullOrWhiteSpace(target)
@@ -150,11 +170,16 @@ public sealed partial class HomeDeveloperWorkspaceExecutionConsentSource
             private async Task ClosePublishedAsync(Task begin)
             {
                 await begin.ConfigureAwait(false); using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
-                // Each exact close is captured once; release Home before completion and any audit/callback.
-                try { await _closing.ObserveOriginalCloseAsync(home.DisposeAsync).ConfigureAwait(false); } catch (Exception cause) { _closing.Retain(cause); }
-                try { await _closing.ObserveOriginalCloseAsync(completion.DisposeAsync).ConfigureAwait(false); } catch (Exception cause) { _closing.Retain(cause); }
+                // Start every actual close independently, Home first. No sibling failure/hold
+                // can skip native custody or completion release before the process waits.
+                var closes = new List<Task>();
+                foreach (var close in new Func<ValueTask>[] { home.DisposeAsync, completion.DisposeAsync, nativePin.DisposeAsync })
+                    try { _ = _closing.Invoke(() => { var actual = close().AsTask(); closes.Add(actual); _ = _closing.Track(actual); return actual; }); }
+                    catch (Exception cause) { _closing.Retain(cause); }
+                foreach (var actual in closes)
+                    try { await _closing.AwaitAsync(actual).ConfigureAwait(false); } catch (Exception cause) { _closing.Retain(cause); }
                 await _closing.ObserveAllOriginalTasksAsync().ConfigureAwait(false);
-                if (_closing.OriginalErrors.Count != 0) throw new AggregateException("Actual process-start Home/completion cleanup failed.", _closing.OriginalErrors);
+                if (_closing.OriginalErrors.Count != 0) throw new AggregateException("Actual process-start Home/completion/native pin cleanup failed.", _closing.OriginalErrors);
             }
         }
     }

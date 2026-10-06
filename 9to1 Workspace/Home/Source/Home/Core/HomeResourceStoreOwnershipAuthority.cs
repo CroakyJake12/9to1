@@ -3,7 +3,7 @@ using Haven.Application;
 namespace HavenOS.Home.Core;
 
 /// <summary>Read-only Application port over canonical Home ownership; cannot create or approve a binding.</summary>
-public sealed class HomeResourceStoreOwnershipAuthority(HomeLocalStoreOwnership ownership,
+public sealed partial class HomeResourceStoreOwnershipAuthority(HomeLocalStoreOwnership ownership,
     IAuthenticatedResourceActorSource actors) : IResourceStoreOwnershipReceiptAuthority
 {
     internal bool IsBoundTo(IHomeCoreStateStore store, HomeLocalProfileIdentity profiles) =>

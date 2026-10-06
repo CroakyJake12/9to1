@@ -19,7 +19,7 @@ public interface IHomeLocalStoreEvidenceProvider
     string ResourceKind { get; }
     ValueTask<HomeLocalStoreEvidence?> ReadAsync(string storeId, CancellationToken cancellationToken);
 }
-public sealed class HomeLocalStoreEvidenceRegistry(IEnumerable<IHomeLocalStoreEvidenceProvider> providers) : IHomeLocalStoreEvidenceSource
+public sealed partial class HomeLocalStoreEvidenceRegistry(IEnumerable<IHomeLocalStoreEvidenceProvider> providers) : IHomeLocalStoreEvidenceSource
 {
     private readonly IHomeLocalStoreEvidenceProvider[] _providers = providers.ToArray();
     public ValueTask<HomeLocalStoreEvidence?> ReadAsync(string kind, string storeId, CancellationToken cancellationToken)

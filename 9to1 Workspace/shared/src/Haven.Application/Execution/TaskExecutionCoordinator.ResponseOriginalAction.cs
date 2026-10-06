@@ -29,6 +29,7 @@ internal sealed class TaskRunOriginalResponseOperation(TaskExecutionCoordinator 
     internal readonly Guid ActionId = action;
     internal readonly Guid? ParentActionId = parent;
     internal readonly TaskRunOriginalResponseOperation? Prior = prior;
+    internal TaskRunColdContinuationBinding? ColdPrior;
     internal object? Request;
     internal string? RequestFingerprint;
     internal readonly List<Binding> Bindings = [];
@@ -41,7 +42,7 @@ internal sealed class TaskRunOriginalResponseOperation(TaskExecutionCoordinator 
     internal readonly TaskCompletionSource CleanupReady = new(TaskCreationOptions.RunContinuationsAsynchronously);
     internal Task<TaskRunOriginalResponseOutcome?>? OriginalTerminal;
     internal TaskRunOriginalResponseOutcome? Outcome;
-    internal bool DeferredToWholeContinuation => Prior is not null;
+    internal bool DeferredToWholeContinuation => Prior is not null || ColdPrior is not null;
 
     public Task<TaskRunOriginalResponseActionAcknowledgment> BindOriginalResponseAsync(OllamaChatRequest request,
         TaskRunAttemptAdmission admission, TaskExecutionSnapshot running, Action<Action> scope, Action<Task> retain, CancellationToken token) =>
@@ -197,7 +198,7 @@ public sealed partial class TaskExecutionCoordinator
         Task gate, CancellationToken token)
     {
         await gate.ConfigureAwait(false);
-        var source = new ResponseCallbacks(this, original, binding, cleanup: false);
+        var source = new ResponseCallbacks(original, binding, cleanup: false);
         TaskRunOriginalResponseActionAcknowledgment? acknowledgment = null;
         try
         {
@@ -269,8 +270,11 @@ public sealed partial class TaskExecutionCoordinator
     {
         var acknowledged = original.Bindings.Select(value => value.Acknowledgment).LastOrDefault(value => value is not null)
             ?? original.Prior?.Bindings.Select(value => value.Acknowledgment).LastOrDefault(value => value is not null);
-        return acknowledged is not null && node.State == TaskPlanNodeState.Running
+        if (acknowledged is not null) return node.State == TaskPlanNodeState.Running
             && SameOriginalToolCheckpointNode(acknowledged.AcknowledgedSnapshot.Plan.Single(value => value.ActionId == original.ActionId), node);
+        // Fresh private cold journal provenance, not a revived response receipt. This
+        // permits only the exact unresolved node to receive its first new binding ACK.
+        return original.ColdPrior is { } cold && HasOriginalColdUnfinishedResponseNode(cold, original, node);
     }
     internal bool IsOriginalResponseAcknowledgment(TaskRunOriginalResponseOperation original,
         TaskRunOriginalResponseActionAcknowledgment ack, object request, TaskRunAttemptAdmission admission)
@@ -318,7 +322,7 @@ public sealed partial class TaskExecutionCoordinator
             await original.CleanupReady.Task.ConfigureAwait(false);
             if (!HasOriginalResponseContinuationCleanup(original)) return null;
         }
-        var source = new ResponseCallbacks(this, original, binding, cleanup: true);
+        var source = new ResponseCallbacks(original, binding, cleanup: true);
         TaskRunOriginalResponseOutcome? outcome = null;
         try
         {
@@ -399,7 +403,7 @@ public sealed partial class TaskExecutionCoordinator
                 && HasSuccessfulOriginalResponseOutcome(next) && HasOriginalResponseContinuationCleanup(next));
     }
 
-    private sealed class ResponseCallbacks(TaskExecutionCoordinator owner, TaskRunOriginalResponseOperation original,
+    private sealed class ResponseCallbacks(TaskRunOriginalResponseOperation original,
         TaskRunOriginalResponseOperation.Binding binding, bool cleanup)
     {
         private readonly object _causeGate = new();

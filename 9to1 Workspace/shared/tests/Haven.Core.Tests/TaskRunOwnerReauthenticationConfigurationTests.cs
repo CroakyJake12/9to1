@@ -86,12 +86,12 @@ public sealed partial class TaskRunOwnerReauthenticationConfigurationTests
         public ValueTask<IAsyncDisposable> AcquireOriginalCommitPinAsync(CancellationToken token)
         { Pins++; throw new UnauthorizedAccessException("Synthetic unissued scope must never be consumed."); }
     }
-    private sealed class Actors : IAuthenticatedResourceActorSource
+    private sealed partial class Actors : IAuthenticatedResourceActorSource
     {
         public int Reads; public AuthenticatedResourceActor? Actor = new("synthetic-product-owner", "synthetic-profile", Guid.Parse("222f7a40-c183-488e-a7ad-5566c82f06a4"), null, "revision-one");
         public ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken token) { Reads++; token.ThrowIfCancellationRequested(); return ValueTask.FromResult(Actor); }
     }
-    private sealed class Provider(string id, bool local) : IModelProvider
+    private sealed partial class Provider(string id, bool local) : IModelProvider
     {
         public string Id => id; public string DisplayName => id; public bool IsLocal => local; public bool CanManageModels => false;
         public ModelProviderKind Kind => local ? ModelProviderKind.Ollama : ModelProviderKind.OpenAI;

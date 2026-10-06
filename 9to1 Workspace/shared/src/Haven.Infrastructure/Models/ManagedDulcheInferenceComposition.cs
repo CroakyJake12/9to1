@@ -69,7 +69,10 @@ public sealed class ManagedDulcheInferenceComposition : IManagedDulcheInferenceC
                     ||target.Scheme!=Uri.UriSchemeHttps&&!target.IsLoopback)
                     throw new UnauthorizedAccessException("No SAME configured concrete local engine route is available.");
                 original.Observation=originalScope.RunOriginalFactoryInvocation(()=>
-                    _observations is IStrataOriginalRequestObservationSource perRequest
+                    _observations is IManagedOriginalRequestRuntimeObservationSource modelRequest
+                        ? modelRequest.BindOriginalRequest(sameModel,sameModelUseAdmission,raw)
+                            ??throw new InvalidOperationException("No SAME concrete provider/model request observer was returned.")
+                        : _observations is IStrataOriginalRequestObservationSource perRequest
                         ? perRequest.BindOriginalRequest(sameModelUseAdmission)
                             ??throw new InvalidOperationException("No SAME request-bound inference observer was returned.")
                         : _observations);

@@ -38,6 +38,9 @@ public sealed class DeveloperTaskWorkspaceService(
     }
     private readonly List<Invocation> _observations = [];
 
+    /// <summary>Observation of the SAME configured canonical owner; this grants no authority.</summary>
+    public bool IsBoundToOriginalCanonicalOwner(TaskExecutionCoordinator sameOwner) => ReferenceEquals(tasks, sameOwner);
+
     public void RequestRetirement() { lock (_gate) _retiring = true; }
     public void DemandExternalOriginalRetirementJoin()
     {
