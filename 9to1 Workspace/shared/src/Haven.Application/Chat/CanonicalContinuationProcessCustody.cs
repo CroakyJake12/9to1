@@ -68,6 +68,17 @@ internal sealed class CanonicalContinuationProcessCustody(TaskExecutionCoordinat
         }
         catch (Exception cause) { Capture(cause, actual); ThrowRetained(); throw; }
     }
+    internal async Task Await(string stage, Func<Task> source)
+    {
+        Task? actual = null;
+        try
+        {
+            actual = Invoke(source) ?? throw new InvalidOperationException("No actual direct continuation source Task was returned.");
+            RetainSource(stage, actual);
+            await actual.ConfigureAwait(false);
+        }
+        catch (Exception cause) { Capture(cause, actual); ThrowRetained(); throw; }
+    }
     internal async Task DisposeChildAsync(IAsyncEnumerator<ChatStreamEvent> iterator)
     {
         Task? actual = null;

@@ -46,7 +46,7 @@ public static class FilesOriginalSourceCallbackScope
     }
     private static void Add(List<Exception> errors, Exception error)
     {
-        if (error is AggregateException group)
+        if (error is AggregateException { InnerExceptions.Count: > 0 } group)
         { foreach (var cause in group.InnerExceptions) Add(errors, cause); }
         else if (!errors.Any(cause => ReferenceEquals(cause, error))) errors.Add(error);
     }

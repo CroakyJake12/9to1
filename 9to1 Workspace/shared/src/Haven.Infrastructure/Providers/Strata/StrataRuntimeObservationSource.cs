@@ -35,7 +35,7 @@ public sealed class StrataRuntimeObservationSource(StrataNativeArtifactSource ar
             Invoke(() => { lease.DemandCurrentOriginalBinding(); return 0; });
             if (lease is not IStrataOriginalArtifactBinding binding) throw new InvalidDataException("The actual protected artifact observation port is missing.");
             var hardware = binding.OriginalHardwareProbe;
-            var requirements = lease.Requirements;
+            var requirements = Invoke(() => ObserveRequestRequirements(lease.Requirements, admission));
             var support = ObserveBuildSupport(hardware, binding.OriginalBuildSupport);
             result = new(requirements, hardware.Hardware, new[] { support });
         }
@@ -85,6 +85,14 @@ public sealed class StrataRuntimeObservationSource(StrataNativeArtifactSource ar
             finally { Interlocked.Exchange(ref active, 0); }
         }
     }
+    private static InferenceModelRequirements ObserveRequestRequirements(InferenceModelRequirements original,
+        TaskRunAttemptAdmission sameAdmission) => original with
+    {
+        // This exact privately admitted request can require more than its installation
+        // manifest. It is a hard fit condition, never engine support or a permission grant.
+        RequiredFeatures = original.RequiredFeatures.Concat(sameAdmission.Lease.Candidate.RequiredCapabilities)
+            .ToFrozenSet(StringComparer.Ordinal)
+    };
     private static InferenceEngineSupport ObserveBuildSupport(StrataOriginalHardwareObservation hardware, InferenceEngineSupport? verifiedBuild)
     {
         if (verifiedBuild is null || verifiedBuild.Engine != InferenceEngine.Strata || verifiedBuild.RuntimeBuild != hardware.RuntimeBuild ||
@@ -95,6 +103,9 @@ public sealed class StrataRuntimeObservationSource(StrataNativeArtifactSource ar
                 FrozenSet<string>.Empty, FrozenSet<string>.Empty, FrozenSet<string>.Empty, RequiresCuda: true);
         // The real package inventory and observed hello are independent of requested requirements.
         // No architecture/family/quantization/required feature is copied from the model request.
-        return verifiedBuild;
+        // Package inventory cannot advertise features that this bundled managed/native
+        // request bridge does not implement. Intersect; never add a feature from demand.
+        return verifiedBuild with { Features = verifiedBuild.Features
+            .Where(value => value is "Text" or "Streaming").ToFrozenSet(StringComparer.Ordinal) };
     }
 }

@@ -160,7 +160,12 @@ public sealed partial class HomeCloudflareServiceOwner : ICanonicalResourceAcces
         }
         private async Task<CloudflareSetupObservation> CommitPublishedAsync(Task begin, CancellationToken token)
         {
-            await begin.ConfigureAwait(false); using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this); await stages.AwaitAsync(SubmitOriginalAsync(token)).ConfigureAwait(false);
+            await begin.ConfigureAwait(false); using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+            // This driver was externally admitted before publication. Recheck the host gate
+            // and acquire the SAME coalesced submit without joining its own public ancestry.
+            Task<CloudflareSetupObservation> actualSubmit;
+            lock (owner._hostGate) { owner.DemandOriginalHostAdmission(); actualSubmit = SubmitAdmittedAsync(token); }
+            await stages.AwaitAsync(actualSubmit).ConfigureAwait(false);
             var observed = await stages.AwaitAsync(stages.Invoke(() => owner._broker.ObservePreparedReviewAsync(prepared, token))).ConfigureAwait(false);
             if (observed.Request?.State != HomePermissionRequestState.Approved) throw new CloudflareSetupRequiredException(CloudflareSetupStage.ApprovalRequired, "CF_SETUP_APPROVAL_REQUIRED", "Accept the exact connection selection in Home before saving.", RequestId);
             var latest = await stages.AwaitAsync(stages.Invoke(() => owner._connections.GetAsync(connection.Id, token))).ConfigureAwait(false);

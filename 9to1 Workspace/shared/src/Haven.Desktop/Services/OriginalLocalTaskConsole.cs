@@ -1,6 +1,7 @@
 using System.Runtime.ExceptionServices;
 using System.Security.Cryptography;
 using System.Text.Json;
+using Dulche.Runtime;
 using Haven.Application;
 using Haven.Core;
 using Haven.Infrastructure;
@@ -18,7 +19,7 @@ namespace Haven.Desktop.Services;
 /// <summary>Explicit Linux console over the normal configured business owners. It owns
 /// process startup and observation, not a second model/tool loop. Saved IDs, displayed
 /// requests and provider catalogues remain observations; their actual issuers authorize work.</summary>
-public static class OriginalLocalTaskConsole
+public static partial class OriginalLocalTaskConsole
 {
     public static async Task<int> RunAsync(string[] arguments, CancellationToken cancellationToken = default)
     {
@@ -67,13 +68,15 @@ public static class OriginalLocalTaskConsole
     }
 
     private static readonly string[] Help = [
-        "models <provider-id> | probe | model <observed-provider:model-key>",
+        "models <provider-id> | probe | model <observed-provider:model-key> | engine Automatic|LlamaCpp|Strata",
         "files-configure <chosen empty absolute directory> | files-status",
         "containers | project <workspace-id> <project-id> <root-id> <existing-container-id> | project-clear | spaces | space <space-id> | space-create <name>",
         "task <instruction> | context | attach | open <space-id> <reference-id> <task-id> <run-id>",
         "status | read <project-relative-path> | steer <instruction> | queue <instruction> | pause | stop | resume",
         "cold-input | cold-resume (explicit protected native recovery opt-in; the same saved Task/Run)",
         "home-requests | home-display <request-id> | home-accept <displayed-request-id> | home-decline <displayed-request-id>",
+        "cf-connections | cf-setup | cf-prepare <saved-connection-id> <account-id> <observed-revision> | cf-commit <prepared-request-id>",
+        "cf-discover (read-only KV list on the SAME authentic current Task attempt) | history",
         "cloud-approve <displayed-request-id> | cloud-deny <displayed-request-id> | quit",
         "Approval never resumes a Task. Resume is a separate fresh-authorized command.",
         "Project selection requires existing reviewed metadata/root/file registration. Browser, computer and unconfigured Dev execution remain unavailable.",
@@ -104,7 +107,7 @@ public static class OriginalLocalTaskConsole
         public string LegacyStatePath => Path.Combine(DataDirectory, "legacy-state.json");
     }
 
-    private sealed class Host
+    private sealed partial class Host
     {
         private readonly object _gate = new();
         private readonly IAppPaths _paths;
@@ -131,6 +134,7 @@ public static class OriginalLocalTaskConsole
         private NativePersonalTaskColdRecoveryHost? _coldHost;
         private Task? _startup;
         private NewChatOriginalInitialTaskObservation? _currentInitial;
+        private readonly OriginalTaskSelection _selectedTask = new();
         private SpaceDevTaskAttachmentSession.SpaceDevTaskAttachment? _attachment;
         private DeveloperResolvedProject? _project;
         private ContainerDefinition? _container;
@@ -279,6 +283,29 @@ public static class OriginalLocalTaskConsole
                 case "model":
                     lock (_gate) _model = _catalogue.Single(value => value.Key == argument);
                     Write(new { selectedModel = _model.Key, note = "Observed catalogue selection; request authorities still validate current use." }); break;
+                case "engine":
+                {
+                    var requested = argument.ToLowerInvariant() switch
+                    {
+                        "automatic" => InferenceEngine.Automatic,
+                        "llamacpp" => InferenceEngine.LlamaCpp,
+                        "strata" => InferenceEngine.Strata,
+                        _ => throw new ArgumentException("Choose Automatic, LlamaCpp or Strata.")
+                    };
+                    ProviderModelDescriptor selected;
+                    lock (_gate) selected = _model ?? throw new InvalidOperationException("Select an actual observed model first.");
+                    var preferences = Resolve<ConfiguredInferenceEnginePreferences>(original);
+                    if (!ReferenceEquals(Resolve<IInferenceEnginePreferenceSource>(original), preferences))
+                        throw new InvalidOperationException("The configured engine preference source was replaced.");
+                    // Normal selected-route capture conserves this observed catalogue identity
+                    // and explicitly refuses an artifact revision. This is requested configuration
+                    // only; no endpoint is created, switched or declared effective here.
+                    var identity = new ModelIdentity(selected.ProviderId, selected.Model.Name);
+                    Scope(original, () => preferences.SetRequestedInferenceEngine(identity, requested));
+                    Write(new { requestedEngine = requested.ToString(), model = selected.Key,
+                        note = "Applies when the actual next request initializes its endpoint. Effective engine and admission remain owned by that source." });
+                    break;
+                }
                 case "files-configure":
                     if (!Path.IsPathFullyQualified(argument)) throw new ArgumentException("Choose an actual empty absolute Files directory.");
                     Write(await Acquire(original, () => _nativeFiles!.ConfigureNewAsync(argument, Home.LocalStoreOwnership, token)).ConfigureAwait(false)); break;
@@ -327,12 +354,14 @@ public static class OriginalLocalTaskConsole
                         ?? throw new KeyNotFoundException("The saved Space is unavailable.");
                     _attachment = await Acquire(original, () => _session!.AttachOriginalAsync(space.Id, space.Revision,
                         context.ContextId, context.TaskId, context.ExecutionId, project.Reference, token)).ConfigureAwait(false);
+                    SelectOriginalAttachment(_attachment);
                     Write(_attachment.View); break;
                 }
                 case "open":
                 {
                     var ids = Ids(argument, 4);
                     _attachment = await Acquire(original, () => _session!.OpenOriginalAsync(ids[0], ids[1], ids[2], ids[3], token)).ConfigureAwait(false);
+                    SelectOriginalAttachment(_attachment);
                     _project = _attachment.View.Project; _container = null; _spaceId = ids[0]; Write(_attachment.View); break;
                 }
                 case "status": Write(await Acquire(original, () => _session!.GetOriginalRunControlAvailabilityAsync(Attachment, token)).ConfigureAwait(false)); break;
@@ -350,6 +379,16 @@ public static class OriginalLocalTaskConsole
                 case "cold-input":
                     Write(await Acquire(original, () => _coldHost!.ObserveOriginalInputAsync(Attachment.View.Link.TaskId, Attachment.View.Link.ExecutionId, token)).ConfigureAwait(false)); break;
                 case "cold-resume": LaunchColdObserver(original, token); break;
+                case "cf-connections": await ObserveOriginalCloudflareConnectionsAsync(original, token).ConfigureAwait(false); break;
+                case "cf-setup": Write(await Acquire(original, () => RequireOriginalCloudflareSetupSource(original).GetSetupAsync(token)).ConfigureAwait(false)); break;
+                case "cf-prepare": await PrepareOriginalCloudflareSetupAsync(original, argument, token).ConfigureAwait(false); break;
+                case "cf-commit": await CommitOriginalCloudflareSetupAsync(original, argument, token).ConfigureAwait(false); break;
+                case "cf-discover":
+                    if (argument.Length != 0) throw new ArgumentException("cf-discover accepts no code, scope or operation overrides.");
+                    LaunchOriginalCloudflareDiscovery(original, token); break;
+                case "history":
+                    if (argument.Length != 0) throw new ArgumentException("history observes the SAME acknowledged or reopened Task only.");
+                    await ObserveOriginalHistoryAsync(original, token).ConfigureAwait(false); break;
                 case "home-requests": Write(await Acquire(original, () => Home.Permissions.GetSnapshotAsync(cancellationToken: token)).ConfigureAwait(false)); break;
                 case "home-display": await DisplayHomeRequestAsync(original, argument, token).ConfigureAwait(false); break;
                 case "home-accept":
@@ -405,6 +444,7 @@ public static class OriginalLocalTaskConsole
             var draft = new Conversation(Guid.NewGuid(), HavenMode.Tasks, ConversationKind.Task,
                 "Task", container?.Id, null, false, false, now, now, SpaceId: space);
             // The durable Chat producer snapshots and saves this draft. The console never presaves or retries it.
+            var selectedInitial = _selectedTask.CreatePendingInitial();
             _ = _work.RunAsync(async original =>
             {
                 var available = await Acquire(original, () => catalogue.DiscoverAsync(CapabilityPlatform.Linux, token)).ConfigureAwait(false);
@@ -421,10 +461,16 @@ public static class OriginalLocalTaskConsole
                         PublishOriginalEventAsync, () => _work.IsRetiring,
                         chat.DemandExternalOriginalTaskObservationSourceJoin);
                     lock (_gate) { _initials.Add(child); _currentInitial = child; }
+                    selectedInitial.CaptureObservation(() =>
+                    {
+                        var actual = child!.CurrentAcknowledgedContext
+                            ?? throw new InvalidOperationException("Wait for the selected authentic initial source acknowledgement.");
+                        return (actual.TaskId, actual.ExecutionId, actual.ContextId);
+                    });
                 });
                 child!.BeginOriginalAcquisition();
                 await original.AwaitAsync(child.ActualObservation).ConfigureAwait(false);
-            }); // The original factor retains the complete driver before its gate opens.
+            }, _ => _selectedTask.SelectInitial(selectedInitial)); // Selection follows actual driver admission, before its body gate opens.
             Write(new { initialObservationStarted = true, conversationId = draft.Id, model = selected.Key,
                 note = "Task/Run IDs will come from the actual source acknowledgement." });
         }

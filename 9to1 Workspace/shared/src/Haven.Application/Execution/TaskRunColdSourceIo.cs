@@ -12,7 +12,7 @@ internal static class TaskRunColdSourceIo
         Exception? acquisition = null;
         Exception? terminal = null;
         T result = default!;
-        try { sources.Invoke(() => actual = factory() ?? throw new InvalidOperationException("No actual cold source Task was returned.")); }
+        try { _ = sources.Invoke(() => actual = factory() ?? throw new InvalidOperationException("No actual cold source Task was returned.")); }
         catch (Exception cause) { acquisition = cause; }
         if (actual is not null)
             try { result = await actual.ConfigureAwait(false); }
@@ -28,7 +28,7 @@ internal static class TaskRunColdSourceIo
         Task? actual = null;
         Exception? acquisition = null;
         Exception? terminal = null;
-        try { sources.Invoke(() => actual = factory() ?? throw new InvalidOperationException("No actual cold source Task was returned.")); }
+        try { _ = sources.Invoke(() => actual = factory() ?? throw new InvalidOperationException("No actual cold source Task was returned.")); }
         catch (Exception cause) { acquisition = cause; }
         if (actual is not null)
             try { await actual.ConfigureAwait(false); }

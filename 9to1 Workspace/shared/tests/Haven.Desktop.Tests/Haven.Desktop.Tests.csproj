@@ -27,6 +27,7 @@
   <ItemGroup>
     <ProjectReference Include="../../../Dev/HavenOS.Dev.csproj" />
     <Compile Include="../../../Dev/Tests/DeveloperTaskWorkspaceServiceTests.cs" Link="Dev/DeveloperTaskWorkspaceServiceTests.cs" />
+    <Compile Include="../../../Dev/Tests/DeveloperOriginalPreparedConsentTests.cs" Link="Dev/DeveloperOriginalPreparedConsentTests.cs" />
     <Compile Include="../../../Dev/Tests/DeveloperSourceReviewSessionTests.cs" Link="Dev/DeveloperSourceReviewSessionTests.cs" />
   </ItemGroup>
 </Project>

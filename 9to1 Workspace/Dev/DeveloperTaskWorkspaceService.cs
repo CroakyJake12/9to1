@@ -48,6 +48,8 @@ public sealed class DeveloperTaskWorkspaceService(
         if (_synchronousSources?.ContainsKey(this) == true) throw new InvalidOperationException("An original source callback cannot join its development owner.");
         for (var original = _executing.Value; original is not null; original = original.Parent)
             if (Volatile.Read(ref original.Live)) throw new InvalidOperationException("A live development original cannot join its own retirement.");
+        if (executionTrust is IDeveloperWorkspaceOriginalProjectExecutionTrustService originalTrust)
+            originalTrust.DemandExternalOriginalExecutionTrustJoin();
     }
     public Task CloseAndDrainAsync()
     {
@@ -375,10 +377,22 @@ public sealed class DeveloperTaskWorkspaceService(
             return Fail<DeveloperActionObservation>(DeveloperOperationErrorCode.PermissionDenied,
                 "The project root is not the workspace selected by this task's actual conversation.", project.RootId);
         // Reading/editing source is distinct from trusting repository-controlled code to execute.
-        if (call.Name is "run_command" or "run_tests" && (executionTrust is null ||
-            !await ObserveOriginalAsync(() => executionTrust.IsTrustedAsync(project.WorkspaceId, token)).ConfigureAwait(false)))
-            return Fail<DeveloperActionObservation>(DeveloperOperationErrorCode.PermissionRequired,
-                "Workspace execution trust is required before running commands or project scripts.", project.WorkspaceId);
+        var originalTrust = executionTrust as IDeveloperWorkspaceOriginalProjectExecutionTrustService;
+        IDeveloperWorkspaceOriginalExecutionBinding? executionBinding = null;
+        if (call.Name is "run_command" or "run_tests")
+        {
+            if (originalTrust is not null)
+            {
+                if (!await ObserveOriginalAsync(() => Task.FromResult(originalTrust.IsBoundToOriginalToolOwner(toolOwner))).ConfigureAwait(false))
+                    throw new UnauthorizedAccessException("The exact-project trust adapter belongs to a different canonical tool owner.");
+                executionBinding = await ObserveOriginalAsync(() => originalTrust.ResolveOriginalBindingAsync(resolved.Value,
+                    RunOriginalSourceCallback, RetainOriginalSource, token)).ConfigureAwait(false);
+            }
+            else if (executionTrust is null ||
+                !await ObserveOriginalAsync(() => executionTrust.IsTrustedAsync(project.WorkspaceId, token)).ConfigureAwait(false))
+                return Fail<DeveloperActionObservation>(DeveloperOperationErrorCode.PermissionRequired,
+                    "Workspace execution trust is required before running commands or project scripts.", project.WorkspaceId);
+        }
         var attempt = await ObserveOriginalAsync(() => tasks.GetIssuedAttemptAsync(context.TaskId, context.ExecutionId, context.AttemptId, token)).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("The original live issuer-owned task attempt is unavailable.");
         // Even viewing an already accepted action uses the current original actor/attempt. Recorded
@@ -412,16 +426,34 @@ public sealed class DeveloperTaskWorkspaceService(
              !SameDefinition(freshStage, expectedStage)))
             throw new InvalidOperationException("The original development project/task changed during admission; no tool body was dispatched.");
         if (!await ObserveOriginalAsync(() => workspaceBinding.IsCurrentAsync(current, fresh.Value, token, RetainOriginalSource)).ConfigureAwait(false) ||
-            call.Name is "run_command" or "run_tests" && (executionTrust is null ||
+            call.Name is "run_command" or "run_tests" && originalTrust is null && (executionTrust is null ||
                 !await ObserveOriginalAsync(() => executionTrust.IsTrustedAsync(project.WorkspaceId, token)).ConfigureAwait(false)))
             throw new UnauthorizedAccessException("Workspace acceptance was revoked before dispatch.");
+        if (executionBinding is not null && originalTrust is not null)
+            await ObserveOriginalAsync(() => originalTrust.ValidateOriginalBindingAsync(fresh.Value, executionBinding,
+                RunOriginalSourceCallback, RetainOriginalSource, token)).ConfigureAwait(false);
         var latest = await ObserveOriginalAsync(() => tasks.GetAsync(context.TaskId, token)).ConfigureAwait(false);
         if (latest is null || latest.ExecutionId != context.ExecutionId || latest.ContextId != context.ContextId ||
             latest.PersistenceRevision != context.PersistenceRevision)
             throw new InvalidOperationException("The canonical task changed during development admission; no tool body was dispatched.");
+        if (executionBinding is not null && originalTrust is not null)
+        {
+            if (preparation is not IWorkspaceToolActionPreparation workspacePreparation)
+                throw new UnauthorizedAccessException("The actual original preparation is not a Workspace preparation.");
+            return await ObserveOriginalAsync(() => ExecutePreparedOriginalWithConsentAsync(project, context, resolved.Value,
+                fresh.Value, call, summary, preparation, workspacePreparation, current, executionBinding, originalTrust, token)).ConfigureAwait(false);
+        }
+        return await ObserveOriginalAsync(() => ExecutePreparedOriginalBodyAsync(project, context, resolved.Value,
+            call, summary, preparation, current, token)).ConfigureAwait(false);
+    }
+
+    private async Task<DeveloperOperationResult<DeveloperActionObservation>> ExecutePreparedOriginalBodyAsync(
+        DeveloperProjectReference project, DeveloperCanonicalActionContext context, DeveloperResolvedProject resolved,
+        OllamaToolCall call, string summary, ITaskRunToolActionPreparation preparation, TaskExecutionSnapshot current, CancellationToken token)
+    {
         current = await ObserveOriginalAsync(() => tasks.RegisterOriginalToolActionAsync(preparation, context.ParentActionId, summary, token)).ConfigureAwait(false);
         var owned = await ObserveOriginalAsync(() => toolOwner.ExecuteOriginalAsync(preparation,
-            ct => runtime.ExecuteOriginalAsync(resolved.Value.Root.Location, call, preparation, ct, context.ContextId), token)).ConfigureAwait(false);
+            ct => runtime.ExecuteOriginalAsync(resolved.Root.Location, call, preparation, ct, context.ContextId), token)).ConfigureAwait(false);
         await ObserveOriginalAsync(() => toolOwner.ValidateOriginalResultAsync(preparation, owned, token).AsTask()).ConfigureAwait(false);
         // The configured canonical owner records request completion separately from business
         // success (including a known nonzero test exit), conserving the once-only receipt.
@@ -430,6 +462,59 @@ public sealed class DeveloperTaskWorkspaceService(
         return DeveloperOperationResult<DeveloperActionObservation>.Success(new(project, context, current, call.Name, owned.OriginalResult, AlreadyAcknowledged: false)
             { KnownNoEffect = owned.KnownNoEffect }, context.ActionId);
     }
+
+    private async Task<DeveloperOperationResult<DeveloperActionObservation>> ExecutePreparedOriginalWithConsentAsync(
+        DeveloperProjectReference project, DeveloperCanonicalActionContext context, DeveloperResolvedProject resolved,
+        DeveloperResolvedProject fresh, OllamaToolCall call, string summary, ITaskRunToolActionPreparation preparation,
+        IWorkspaceToolActionPreparation workspacePreparation, TaskExecutionSnapshot current,
+        IDeveloperWorkspaceOriginalExecutionBinding binding, IDeveloperWorkspaceOriginalProjectExecutionTrustService trust,
+        CancellationToken token)
+    {
+        Task<IWorkspaceOriginalProcessStartConsent>? acquisition = null;
+        Task<DeveloperOperationResult<DeveloperActionObservation>>? body = null;
+        IWorkspaceOriginalProcessStartConsent? consent = null; Task? close = null;
+        DeveloperOperationResult<DeveloperActionObservation>? result = null; var errors = new List<Exception>();
+        try
+        {
+            acquisition = trust.AcquireAndBindOriginalConsentAsync(fresh, binding, workspacePreparation, current,
+                RunOriginalSourceCallback, RetainOriginalSource, token);
+            RetainOriginalSource(acquisition);
+            consent = await acquisition.ConfigureAwait(false);
+            // The real adapter has verified the private issuer and bound SAME preparation
+            // before this first CAS. Entry06 rechecks the native pin at finite Start.
+            body = ExecutePreparedOriginalBodyAsync(project, context, resolved, call, summary, preparation, current, token);
+            RetainOriginalSource(body); result = await body.ConfigureAwait(false);
+        }
+        catch (Exception error)
+        {
+            if (body is not null) CaptureOriginalCauses(errors, body, error);
+            else if (acquisition is not null) CaptureOriginalCauses(errors, acquisition, error);
+            else AddOriginalCause(errors, error is OperationCanceledException ? new AggregateException(error) : error);
+        }
+        finally
+        {
+            // This authentic live-issued product is cleanup-owned even if retirement
+            // occurs after acquisition. Do not retire the borrowed global Home source.
+            if (consent is not null)
+            {
+                try { close = AcquireOriginalSource(() => consent.DisposeAsync().AsTask()); RetainOriginalSource(close); }
+                catch (Exception error) { AddOriginalCause(errors, error); }
+                if (close is not null)
+                    try { await close.ConfigureAwait(false); }
+                    catch (Exception error) { CaptureOriginalCauses(errors, close, error); }
+            }
+        }
+        if (errors.Count != 0)
+        {
+            if ((body ?? (Task?)acquisition)?.IsCanceled == true && (consent is null || close?.IsCompletedSuccessfully == true) &&
+                errors.All(value => value is OperationCanceledException))
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(errors[0]).Throw();
+            throw new AggregateException("Original development consent/body/cleanup did not settle cleanly.", errors);
+        }
+        return result ?? throw new InvalidOperationException("No original development body result exists.");
+    }
+    private void RunOriginalSourceCallback(Action callback)
+        => AcquireOriginalSource(() => { callback(); return true; });
 
     private async Task<T> ObserveOriginalAsync<T>(Func<Task<T>> source)
     {
