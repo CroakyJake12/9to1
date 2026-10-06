@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Haven.Application;
 using Haven.Core;
 
@@ -77,7 +79,7 @@ public sealed class AgentRunRepository(ISqliteConnectionFactory factory) : IAgen
         return result;
     }
 
-    private static AgentRun Read(Microsoft.Data.Sqlite.SqliteDataReader reader) => new(
+    private static AgentRun Read(Microsoft.Data.Sqlite.SqliteDataReader reader) => new AgentRun(
         reader.Guid("id"),
         reader.Guid("agent_id"),
         reader.String("agent_name"),
@@ -93,7 +95,42 @@ public sealed class AgentRunRepository(ISqliteConnectionFactory factory) : IAgen
         reader.NullableDateTimeOffset("completed_at"),
         reader.NullableGuid("retry_of_run_id"),
         reader.IsDBNull(reader.GetOrdinal("resource_reference")) ? null : reader.GetString(reader.GetOrdinal("resource_reference")),
-        reader.Int32("progress_percent"));
+        reader.Int32("progress_percent"))
+        { CanonicalTask = ReadCanonicalObservation(reader.String("activity_json")) };
+
+    // This is display metadata only. Deserialization never reconstructs live issuer/input custody.
+    private static AgentRunCanonicalBinding? ReadCanonicalObservation(string json)
+    {
+        try
+        {
+            using var envelope = JsonDocument.Parse(json);
+            if (envelope.RootElement.ValueKind != JsonValueKind.Object
+                || !envelope.RootElement.TryGetProperty("CanonicalBindingVersion", out var version)
+                || version.ValueKind != JsonValueKind.Number || !version.TryGetInt32(out var value) || value != 1
+                || !envelope.RootElement.TryGetProperty("CanonicalTask", out var binding)) return null;
+            var observation = binding.Deserialize<AgentRunCanonicalBinding>();
+            return observation is not null && observation.TaskId != Guid.Empty
+                && observation.ContextId != Guid.Empty && observation.ExecutionId != Guid.Empty
+                && observation.PersistenceRevision > 0 && Enum.IsDefined(observation.State)
+                ? observation : null;
+        }
+        catch (JsonException) { return null; } // Existing legacy array/unknown activity schemas remain readable.
+    }
+
+    private static string BindCanonicalObservation(AgentRun run)
+    {
+        if (run.CanonicalTask is null) return run.ActivityJson;
+        var activity = JsonNode.Parse(run.ActivityJson);
+        var original = activity as JsonObject;
+        if (original is null && activity is JsonArray legacy)
+            original = new JsonObject { ["LegacyActivitySchema"] = "array", ["Activities"] = legacy };
+        if (original is null)
+            throw new InvalidOperationException("A canonical Agent display binding requires an existing activity object or array.");
+        original["CanonicalBindingVersion"] = 1;
+        original["CanonicalTask"] = JsonSerializer.SerializeToNode(run.CanonicalTask);
+        return original.ToJsonString();
+    }
+
 
     private static void Bind(Microsoft.Data.Sqlite.SqliteCommand command, AgentRun run)
     {
@@ -106,7 +143,7 @@ public sealed class AgentRunRepository(ISqliteConnectionFactory factory) : IAgen
         command.Parameters.AddWithValue("$result", run.Result);
         command.Parameters.AddWithValue("$error", run.Error);
         command.Parameters.AddWithValue("$capabilitiesJson", run.CapabilitiesJson);
-        command.Parameters.AddWithValue("$activityJson", run.ActivityJson);
+        command.Parameters.AddWithValue("$activityJson", BindCanonicalObservation(run));
         command.Parameters.AddWithValue("$createdAt", run.CreatedAt.ToString("O"));
         command.Parameters.AddWithValue("$startedAt", (object?)run.StartedAt?.ToString("O") ?? DBNull.Value);
         command.Parameters.AddWithValue("$completedAt", (object?)run.CompletedAt?.ToString("O") ?? DBNull.Value);

@@ -7,6 +7,9 @@ public sealed record AgentActivityObservation(int SchemaVersion, string Producer
     bool ObservationComplete, bool HasDeferredInvocations, IReadOnlyList<ToolActivity> Activities,
     IReadOnlyList<ToolInvocationEvidence> Invocations)
 {
+    public int CanonicalBindingVersion { get; init; }
+    public AgentRunCanonicalBinding? CanonicalTask { get; init; }
+
     public const int CurrentSchemaVersion = 1;
     public const string OwningProducer = "haven.chat-dispatch.agent";
     public const string ToolIdentityNamespace = "haven.registered-local-tool";

@@ -9,7 +9,7 @@ namespace Haven.Desktop.Tests;
 
 /// <summary>Actual canonical Chat + central source Ask + Task issuer + remediation owner.
 /// Actor/catalogue/repos are explicitly synthetic; no account, credential, network or billing acceptance.</summary>
-public sealed class ChatCloudPermissionCallerTests
+public sealed partial class ChatCloudPermissionCallerTests
 {
     [Theory]
     [InlineData(false)]

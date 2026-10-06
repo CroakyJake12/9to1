@@ -17,7 +17,7 @@ namespace Haven.Application;
 /// <summary>
 /// Represents chat session service and keeps its related state and behavior together.
 /// </summary>
-public sealed class ChatSessionService(
+public sealed partial class ChatSessionService(
     IConversationRepository conversations,
     IOllamaClient ollama,
     CapabilityPreflightService preflight,
@@ -229,6 +229,26 @@ public sealed class ChatSessionService(
     {
         var originalCustody = taskExecutionIntent == TaskRunExecutionIntent.CanonicalAgenticTask
             ? taskCoordinator?.CreateOriginalInvocationCustody() : null;
+        return CreateOriginalSend(conversation, prompt, model, effort, capabilities, agentName,
+            agentInstructions, duoMode, workspaceRoot, projectContext, projectInstructions, images,
+            cancellationToken, prompts, registeredContext, generationOptions, filePermission,
+            commandPermission, browserPermission, explicitCapabilities, availableCapabilities,
+            computerUseRequest, executionContext, taskExecutionIntent, originalCustody);
+    }
+
+    private IAsyncEnumerable<ChatStreamEvent> CreateOriginalSend(
+        Conversation conversation, string prompt, ModelDescriptor model, EffortLevel effort,
+        IReadOnlyCollection<ActiveCapability> capabilities, string agentName, string agentInstructions,
+        DuoMode duoMode, string? workspaceRoot, string? projectContext, string? projectInstructions,
+        IReadOnlyList<string>? images, CancellationToken cancellationToken,
+        IReadOnlyCollection<ActivePrompt>? prompts, string? registeredContext,
+        GenerationOptions? generationOptions, PermissionMode filePermission,
+        PermissionMode commandPermission, PermissionMode browserPermission,
+        IReadOnlyCollection<ToolCapability>? explicitCapabilities,
+        IReadOnlyCollection<ActiveCapability>? availableCapabilities,
+        ComputerUseRequest? computerUseRequest, ProviderExecutionContext? executionContext,
+        TaskRunExecutionIntent taskExecutionIntent, TaskRunInvocationCustody? originalCustody)
+    {
         if (originalCustody is not null)
         {
             // One detached immutable snapshot is used by BOTH actual initial input and
@@ -1532,6 +1552,7 @@ public sealed class ChatSessionService(
                 if (observed is not null)
                 {
                     acknowledgedOriginalTerminal = observed;
+                    originalCustody.OriginalTerminalObservation = observed;
                     CurrentCanonicalTask = observed;
                 }
             }

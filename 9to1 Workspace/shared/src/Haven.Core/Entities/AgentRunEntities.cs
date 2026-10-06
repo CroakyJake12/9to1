@@ -7,7 +7,8 @@ public enum AgentRunStatus
     Running = 1,
     Completed = 2,
     Failed = 3,
-    Cancelled = 4
+    Cancelled = 4,
+    Suspended = 5
 }
 
 /// <summary>
@@ -30,4 +31,13 @@ public sealed record AgentRun(
     DateTimeOffset? CompletedAt,
     Guid? RetryOfRunId = null,
     string? ResourceReference = null,
-    int ProgressPercent = 0);
+    int ProgressPercent = 0)
+{
+    /// <summary>A display binding observed from this actual invocation; IDs and state grant no authority.</summary>
+    public AgentRunCanonicalBinding? CanonicalTask { get; init; }
+}
+
+/// <summary>Detached canonical observation persisted within the existing activity JSON; never a grant or recovery receipt.</summary>
+public sealed record AgentRunCanonicalBinding(
+    Guid TaskId, Guid ContextId, Guid ExecutionId, long PersistenceRevision,
+    TaskExecutionLifecycle State, Guid? AttemptId = null);

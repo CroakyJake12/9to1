@@ -40,6 +40,7 @@ internal sealed class TaskRunInvocationCustody
     internal Task<TaskExecutionSnapshot>? OriginalCompletion;
     internal Task? OriginalSettlement;
     internal TaskExecutionSnapshot? OriginalBinding;
+    internal TaskExecutionSnapshot? OriginalTerminalObservation;
     internal TaskExecutionSnapshot? ProposedBinding;
     internal Task<TaskExecutionSnapshot>? OriginalBegin;
     internal TaskExecutionSnapshot? CompletionBasis;
