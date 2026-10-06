@@ -13,6 +13,46 @@ public interface IDulcheOriginalProviderAdapter : IDulcheAdapter
         DulcheRequest originalFrozenRequest, DulcheRequest actualDispatchRequest);
 }
 
+/// <summary>Private source-issued cancellation evidence changes response status only; it never settles or authorizes a Task/Run.</summary>
+public interface IDulcheOriginalCancellationSource
+{
+    bool TryObserveOriginalCancellation(RuntimeRequestHandle originalHandle, Exception originalOutwardFailure,
+        CancellationToken originalOwnerCancellation, out DulcheOriginalCancellationObservation? observation);
+}
+
+public sealed class DulcheOriginalCancellationObservation
+{
+    internal DulcheOriginalCancellationObservation(RuntimeRequestHandle handle, AggregateException error,
+        Task reader, Exception readerCause, Task raw, Exception rawCause, Task frame, Task producer,
+        Task terminal, Task readerDispose, Task cancel, Task release, Task resourceClose,
+        Task outwardMove, Task outwardDispose, CancellationToken ownerToken, object turn)
+    {
+        OriginalHandle = handle; OriginalOutwardFailure = error; OriginalReaderMove = reader;
+        OriginalReaderCause = readerCause; OriginalRawMove = raw; OriginalRawCause = rawCause;
+        OriginalProviderFrame = frame; OriginalProducer = producer; OriginalTerminalObserver = terminal;
+        OriginalReaderDispose = readerDispose; OriginalTurnCancel = cancel; OriginalTurnRelease = release;
+        OriginalResourceClose = resourceClose; OriginalInnerMove = outwardMove;
+        OriginalInnerDispose = outwardDispose; OwnerToken = ownerToken; Turn = turn;
+    }
+    public RuntimeRequestHandle OriginalHandle { get; }
+    public AggregateException OriginalOutwardFailure { get; }
+    public Task OriginalReaderMove { get; }
+    public Exception OriginalReaderCause { get; }
+    public Task OriginalRawMove { get; }
+    public Exception OriginalRawCause { get; }
+    public Task OriginalProviderFrame { get; }
+    public Task OriginalProducer { get; }
+    public Task OriginalTerminalObserver { get; }
+    public Task OriginalReaderDispose { get; }
+    public Task OriginalTurnCancel { get; }
+    public Task OriginalTurnRelease { get; }
+    public Task OriginalResourceClose { get; }
+    public Task OriginalInnerMove { get; }
+    public Task OriginalInnerDispose { get; }
+    internal CancellationToken OwnerToken { get; }
+    internal object Turn { get; }
+}
+
 public sealed partial class DulcheRuntime
 {
     private readonly AsyncLocal<OriginalEndpointPhase?> _originalSubmitting = new();
@@ -46,6 +86,111 @@ public sealed partial class DulcheRuntime
         try { return callback(); }
         finally { calls.RemoveAt(calls.Count - 1); }
     }
+    private async Task<bool> TryProjectOriginalManagedCancellationAsync(EndpointSlot endpoint, RequestSlot slot,
+        Exception error, CancellationToken ownerToken)
+    {
+        if (!ownerToken.IsCancellationRequested || slot.OriginalProviderHandle is not { } handle
+            || endpoint.Adapter is not IDulcheOriginalCancellationSource source) return false;
+        var admission = ReferenceEquals(slot.OriginalManagedRequestCancellationHandle, handle)
+            ? slot.OriginalManagedRequestCancellationAdmission
+            : ReferenceEquals(endpoint.OriginalManagedCancellationHandle, handle)
+                ? endpoint.OriginalManagedCancellationAdmission : null;
+        if (admission is null) return false;
+        // The SAME finite stage is published BEFORE callbacks and never joins provider work.
+        try { await admission.Task.ConfigureAwait(false); }
+        catch { return false; } // Exact faults remain on the stage and existing endpoint original-work ledger.
+        var cancel = ReferenceEquals(slot.OriginalManagedRequestCancellationAdmission, admission)
+            ? slot.OriginalManagedRequestAdapterCancel : endpoint.OriginalAdapterCancel;
+        if (cancel is null) return false;
+        try { await cancel.ConfigureAwait(false); }
+        catch { return false; }
+        if (!cancel.IsCompletedSuccessfully || !cancel.Result.Succeeded) return false;
+        // These are the actual PUBLIC adapter iterator originals acquired by this Runtime,
+        // distinct from the adapter's retained inner iterator/opaque source observation.
+        if (slot.OriginalAdapterConsumerMove is not { IsFaulted: true } publicMove
+            || slot.OriginalAdapterConsumerDispose is not { IsCompletedSuccessfully: true } publicDispose
+            || publicMove.Exception?.InnerExceptions.Any(cause => ReferenceEquals(cause, error)) != true) return false;
+        if (!source.TryObserveOriginalCancellation(handle, error, ownerToken, out var observation)
+            || observation is null) return false;
+        return endpoint.TryRetainOriginalManagedCancellation(observation, publicMove, publicDispose);
+    }
+
+    private async IAsyncEnumerable<AdapterDelta> CaptureOriginalAdapterConsumptionAsync(RequestSlot slot,
+        IAsyncEnumerable<AdapterDelta> originalSource,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ownerToken)
+    {
+        var originalEnumerator = originalSource.GetAsyncEnumerator(ownerToken);
+        Task<bool>? originalMove = null;
+        var failures = new List<Exception>();
+        try
+        {
+            while (true)
+            {
+                bool more;
+                try
+                {
+                    originalMove = originalEnumerator.MoveNextAsync().AsTask();
+                    slot.OriginalAdapterConsumerMove = originalMove;
+                    more = await originalMove.ConfigureAwait(false);
+                }
+                catch (Exception error)
+                {
+                    AddOriginalStopCause(failures, error);
+                    if (originalMove?.Exception is { } compound)
+                        foreach (var cause in compound.InnerExceptions) AddOriginalStopCause(failures, cause);
+                    break;
+                }
+                if (!more) break;
+                yield return originalEnumerator.Current;
+            }
+        }
+        finally
+        {
+            Task? originalDispose = null;
+            try
+            {
+                originalDispose = originalEnumerator.DisposeAsync().AsTask();
+                slot.OriginalAdapterConsumerDispose = originalDispose;
+            }
+            catch (Exception error) { AddOriginalStopCause(failures, error); }
+            if (originalDispose is not null) await JoinOriginalStopTaskAsync(originalDispose, failures).ConfigureAwait(false);
+            ThrowOriginalStopCauses(failures); // No replacement of the actual public failed move or its full payload.
+        }
+    }
+
+    private Task<OperationResult<Unit>> StartOriginalManagedRequestCancellation(EndpointSlot endpoint, RequestSlot slot,
+        bool originalReplacementIntent = false)
+        => slot.StartOriginalManagedCancellation(endpoint, start => CancelOriginalManagedRequestBodyAsync(endpoint, slot, start), originalReplacementIntent);
+
+    private async Task<OperationResult<Unit>> CancelOriginalManagedRequestBodyAsync(EndpointSlot endpoint,
+        RequestSlot slot, Task start)
+    {
+        var failures = new List<Exception>();
+        Task<OperationResult<Unit>>? cancel = null;
+        try
+        {
+            await start.ConfigureAwait(false); // Whole original and finite admission were retained before callbacks.
+            try { CancelOriginalRequest(slot); } catch (Exception error) { AddOriginalStopCause(failures, error); }
+            try
+            {
+                cancel = InvokePhysicalOriginalEndpoint(endpoint,
+                    () => endpoint.Adapter.CancelAsync(endpoint.Endpoint, slot.RequestId, CancellationToken.None).AsTask());
+                slot.OriginalManagedRequestAdapterCancel = cancel;
+            }
+            catch (Exception error) { AddOriginalStopCause(failures, error); }
+        }
+        catch (Exception error) { AddOriginalStopCause(failures, error); }
+        finally
+        {
+            if (failures.Count == 0) slot.OriginalManagedRequestCancellationAdmission!.TrySetResult();
+            else slot.OriginalManagedRequestCancellationAdmission!.TrySetException(failures);
+        }
+        if (cancel is not null) await JoinOriginalStopTaskAsync(cancel, failures).ConfigureAwait(false);
+        ThrowOriginalStopCauses(failures);
+        return cancel?.IsCompletedSuccessfully == true ? cancel.Result
+            : Failure<Unit>(DulcheErrorCode.ProviderUnavailable, "No original request cancellation task was acquired.", slot.RequestId);
+    }
+
     private void CancelOriginalRequest(RequestSlot request)
     {
         if (_endpoints.TryGetValue(request.EndpointId, out var endpoint))

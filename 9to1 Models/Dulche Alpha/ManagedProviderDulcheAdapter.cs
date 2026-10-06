@@ -37,7 +37,7 @@ public interface IDulcheOriginalFactoryCallbackScope
 /// A Task/Run issuer lease is borrowed, retained by the shared frame owner, and never disposed here.
 /// Model residency, installation and exact pause/resume are unavailable through this provider contract.
 /// </summary>
-public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapter, IAsyncDisposable
+public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapter, IDulcheOriginalCancellationSource, IAsyncDisposable
 {
     private const int Capacity = 128;
     private readonly object _sync = new();
@@ -301,7 +301,7 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
 
     public IAsyncEnumerable<AdapterDelta> GenerateAsync(DulcheEndpoint endpoint, DulcheRequest request,
         string requestId, CancellationToken cancellationToken)
-        => GenerateOriginalAsync(RequireRequest(endpoint, request, requestId), cancellationToken);
+        => ObserveOriginalOutwardAsync(RequireRequest(endpoint, request, requestId), cancellationToken);
 
     public async IAsyncEnumerable<AdapterDelta> ContinueWithToolResultAsync(DulcheEndpoint endpoint, DulcheRequest request,
         string requestId, ToolInvocationResult result, [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -323,6 +323,80 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
         await foreach (var delta in GenerateOriginalAsync(original, cancellationToken).ConfigureAwait(false)) yield return delta;
     }
 
+    private async IAsyncEnumerable<AdapterDelta> ObserveOriginalOutwardAsync(Request request,
+        [EnumeratorCancellation] CancellationToken ownerToken)
+    {
+        var enumerator = GenerateOriginalAsync(request, ownerToken).GetAsyncEnumerator(ownerToken);
+        Task<bool>? move = null;
+        Exception? originalFailure = null;
+        var failures = new List<Exception>();
+        try
+        {
+            while (true)
+            {
+                bool more;
+                try
+                {
+                    move = enumerator.MoveNextAsync().AsTask(); RetainRequestRaw(request, move);
+                    more = await move.ConfigureAwait(false); ReleaseObservedHealthyRaw(request, move);
+                }
+                catch (Exception error) { originalFailure = error; AddTask(failures, error, move); break; }
+                if (!more) break;
+                yield return enumerator.Current;
+            }
+        }
+        finally
+        {
+            Task? dispose = null;
+            try { dispose = enumerator.DisposeAsync().AsTask(); RetainRequestRaw(request, dispose); }
+            catch (Exception error) { Add(failures, error); }
+            if (dispose is not null) await Join(dispose, failures).ConfigureAwait(false);
+            if (dispose is not null) ReleaseObservedHealthyRaw(request, dispose);
+            if (originalFailure is AggregateException aggregate && move is { IsFaulted: true }
+                && dispose is { IsCompletedSuccessfully: true } && failures.Count == 1)
+                PublishOriginalCancellationObservation(request, aggregate, move, dispose);
+            Throw(failures); // SAME aggregate and actual Faulted outward move survive the response projection.
+        }
+    }
+
+    public bool TryObserveOriginalCancellation(RuntimeRequestHandle originalHandle, Exception originalOutwardFailure,
+        CancellationToken originalOwnerCancellation, out DulcheOriginalCancellationObservation? observation)
+    {
+        lock (_sync)
+        {
+            observation = null;
+            var request = _endpoints.Values.SelectMany(owner => owner.Requests)
+                .SingleOrDefault(item => ReferenceEquals(item.Handle, originalHandle));
+            if (request?.ActiveTurn is not { } turn || request.CancellationObservation is not { } actual
+                || !ReferenceEquals(actual.Turn, turn) || !ReferenceEquals(actual.OriginalOutwardFailure, originalOutwardFailure)
+                || actual.OwnerToken != originalOwnerCancellation || !originalOwnerCancellation.IsCancellationRequested
+                || !actual.OriginalReaderMove.IsCanceled || !actual.OriginalRawMove.IsCanceled
+                || !actual.OriginalProviderFrame.IsCanceled || !actual.OriginalProducer.IsCanceled
+                || !actual.OriginalInnerMove.IsFaulted || !actual.OriginalInnerDispose.IsCompletedSuccessfully
+                || !actual.OriginalReaderDispose.IsCompletedSuccessfully || !actual.OriginalResourceClose.IsCompletedSuccessfully
+                || !actual.OriginalTerminalObserver.IsCompletedSuccessfully || !actual.OriginalTurnCancel.IsCompletedSuccessfully
+                || !actual.OriginalTurnRelease.IsCompletedSuccessfully || turn.OriginalErrors.Count != 0
+                || request.Owner.Errors.Any(error => !ReferenceEquals(error, actual.OriginalOutwardFailure)
+                    && !ReferenceEquals(error, actual.OriginalReaderCause) && !ReferenceEquals(error, actual.OriginalRawCause))) return false;
+            observation = actual; return true;
+        }
+    }
+
+    private void PublishOriginalCancellationObservation(Request request, AggregateException error, Task outwardMove, Task outwardDispose)
+    {
+        lock (_sync)
+        {
+            if (request.ActiveTurn is not { } turn || turn.Candidate is not { } candidate
+                || !ReferenceEquals(candidate.Error, error) || outwardMove.Exception?.InnerExceptions.Any(cause => ReferenceEquals(cause, error)) != true)
+                return;
+            var resource = turn.Resource!;
+            request.CancellationObservation = new(request.Handle, error, candidate.Reader, candidate.ReaderCause,
+                resource.CanceledRawMove!, resource.CanceledRawCause!, turn.ProviderFrame!, candidate.Producer,
+                candidate.Terminal, candidate.ReaderDispose, candidate.Cancel, turn.OriginalRelease!, resource.OriginalClose!,
+                outwardMove, outwardDispose, candidate.OwnerToken, turn);
+        }
+    }
+
     private async IAsyncEnumerable<AdapterDelta> GenerateOriginalAsync(Request request,
         [EnumeratorCancellation] CancellationToken callerCancellation)
     {
@@ -330,6 +404,7 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
             { SingleReader = true, SingleWriter = true, FullMode = BoundedChannelFullMode.Wait });
         var cancellation = new OriginalTurnCancellation(this, request.Owner,
             CancellationTokenSource.CreateLinkedTokenSource(callerCancellation, request.Lifetime.Token));
+        lock (_sync) { request.ActiveTurn = cancellation; request.CancellationObservation = null; }
         Task<bool> original;
         try { original = StartOwned(request.Owner, () => ProduceOriginalTurnAsync(request, channel.Writer, cancellation), callerCancellation); }
         catch (Exception error)
@@ -343,13 +418,14 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
         var reader = channel.Reader.ReadAllAsync(callerCancellation).GetAsyncEnumerator(callerCancellation);
         var failures = new List<Exception>();
         Task<bool>? move = null;
+        Exception? readerCause = null;
         try
         {
             while (true)
             {
                 bool more;
                 try { move = reader.MoveNextAsync().AsTask(); more = await move.ConfigureAwait(false); }
-                catch (Exception error) { AddTask(failures, error, move); break; }
+                catch (Exception error) { readerCause = error; AddTask(failures, error, move); break; }
                 if (!more) break;
                 yield return reader.Current;
             }
@@ -366,6 +442,20 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
             if (dispose is not null) await Join(dispose, failures).ConfigureAwait(false);
             await Join(original, failures).ConfigureAwait(false);
             await Join(terminal, failures).ConfigureAwait(false);
+            if (move is { IsCanceled: true } && readerCause is OperationCanceledException readerCanceled
+                && readerCanceled.CancellationToken == callerCancellation && callerCancellation.IsCancellationRequested
+                && original.IsCanceled && terminal.IsCompletedSuccessfully && dispose is { IsCompletedSuccessfully: true }
+                && actualCancel.IsCompletedSuccessfully && cancellation.OriginalRelease is { IsCompletedSuccessfully: true }
+                && cancellation.OriginalErrors.Count == 0 && cancellation.ProviderFrame is { IsCanceled: true }
+                && cancellation.Resource is { OriginalClose.IsCompletedSuccessfully: true, CanceledRawMove.IsCanceled: true,
+                    CanceledRawCause: not null } resource
+                && failures.Count > 1 && failures.All(error => ReferenceEquals(error, readerCause) || ReferenceEquals(error, resource.CanceledRawCause)))
+            {
+                var aggregate = new AggregateException(failures);
+                cancellation.Candidate = new(aggregate, move, readerCause, original, terminal, dispose, actualCancel, callerCancellation);
+                lock (_sync) { Add(request.Owner.Errors, aggregate); foreach (var cause in failures) Add(request.Owner.Errors, cause); }
+                throw aggregate;
+            }
             Throw(failures);
         }
     }
@@ -382,7 +472,8 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
             if (request.Tools.Count == 0 && request.Dispatch!.Stream)
             {
                 var wire = ChatRequest(request);
-                var actual = StartStreamFrame(request, wire, writer, token);
+                var actual = StartStreamFrame(request, wire, writer, cancellation, token);
+                cancellation.ProviderFrame = actual;
                 actualProvider = actual;
                 await actual.ConfigureAwait(false);
             }
@@ -469,24 +560,29 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
                 actualMove = StartActualRaw(request, _ => originalEnumerator.MoveNextAsync().AsTask(), token);
             }
         }
-        catch (Exception error) { ThrowTask(error, actualMove); throw; }
+        catch (Exception error)
+        {
+            if (actualMove is { IsCanceled: true } && error is OperationCanceledException canceled && canceled.CancellationToken == token)
+            { lifetime.CanceledRawMove = actualMove; lifetime.CanceledRawCause = error; }
+            ThrowTask(error, actualMove); throw;
+        }
         // Enumerator/context Dispose are performed by the resource owner in the frame's
         // NON-provider cleanup, not folded into acknowledgment-eligible raw body failures.
         return true;
     }
 
     private Task<bool> StartStreamFrame(Request request, OllamaChatRequest wire,
-        ChannelWriter<AdapterDelta> writer, CancellationToken token)
+        ChannelWriter<AdapterDelta> writer, OriginalTurnCancellation cancellation, CancellationToken token)
         => EnrollOriginalFrame(request, () => _frames.StartOriginalResourceFrameAsync<bool, OriginalStreamResource>(
             request.Admission,
-            ct => AcquireOriginalStreamResourceAsync(request, wire, ct),
+            ct => AcquireOriginalStreamResourceAsync(request, wire, cancellation, ct),
             (resource, ct) => resource.RevalidateOriginalAsync(ct),
             (resource, ct) => ProduceRawStreamAsync(request, wire, writer, resource, ct), token));
 
     private async Task<OriginalStreamResource> AcquireOriginalStreamResourceAsync(Request request,
-        OllamaChatRequest wire, CancellationToken token)
+        OllamaChatRequest wire, OriginalTurnCancellation cancellation, CancellationToken token)
     {
-        if (IsLocal) return new(this, request, null);
+        if (IsLocal) return cancellation.Resource = new(this, request, null);
         if (_contextSource is null || _contextAuthority is null)
             throw new UnauthorizedAccessException("No trusted original source/context owner is composed for remote egress.");
         var actualAcquire = AcquireOriginalCloudFrameAsync(request, wire, token);
@@ -495,7 +591,7 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
         try { context = await actualAcquire.ConfigureAwait(false); }
         catch (Exception error) { ThrowTask(error, actualAcquire); throw; }
         // Capture the actual acquired scope BEFORE resource revalidation can refuse.
-        return new(this, request, context);
+        return cancellation.Resource = new(this, request, context);
     }
 
     private Task<T> StartProviderFrame<T>(Request request, object originalWire,
@@ -859,6 +955,9 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
         public readonly ITaskRunProviderContextFrame? Context = context;
         public IAsyncEnumerator<string>? Enumerator;
         private Task? _close;
+        public Task? OriginalClose { get { lock (_gate) return _close; } }
+        public Task? CanceledRawMove;
+        public Exception? CanceledRawCause;
         private readonly object _gate = new();
 
         public Task RevalidateOriginalAsync(CancellationToken token)
@@ -919,6 +1018,10 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
         private readonly object _gate = new();
         private readonly List<Exception> _errors = new();
         private Task? _cancel, _release;
+        public Task? OriginalRelease { get { lock (_gate) return _release; } }
+        public OriginalStreamResource? Resource;
+        public Task? ProviderFrame;
+        public CancellationCandidate? Candidate;
         public IReadOnlyList<Exception> OriginalErrors { get { lock (_gate) return _errors.ToArray(); } }
 
         public Task CancelOriginalAsync()
@@ -1007,6 +1110,9 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
         public bool IsLive => Volatile.Read(ref _live) != 0;
         public void Retire() => Interlocked.Exchange(ref _live, 0);
     }
+    private sealed record CancellationCandidate(AggregateException Error, Task Reader, Exception ReaderCause,
+        Task Producer, Task Terminal, Task ReaderDispose, Task Cancel, CancellationToken OwnerToken);
+
     private sealed class Endpoint(ManagedProviderDulcheAdapter originalOwner, string id)
     {
         public readonly ManagedProviderDulcheAdapter OriginalOwner = originalOwner;
@@ -1042,5 +1148,7 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
         public Task<IReadOnlyList<OllamaToolDefinition>>? ToolBinding;
         public Task<IReadOnlyList<ProviderModelDescriptor>>? Catalogue;
         public Exception? CapacityRefusal;
+        public OriginalTurnCancellation? ActiveTurn;
+        public DulcheOriginalCancellationObservation? CancellationObservation;
     }
 }
