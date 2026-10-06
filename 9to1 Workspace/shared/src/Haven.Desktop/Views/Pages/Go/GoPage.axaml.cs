@@ -12,7 +12,7 @@ namespace Haven.Desktop.Views.Pages.Go;
 /// Product adapter for the Haven.UI Go scene. Existing services, navigation,
 /// pending-task state and event contracts remain outside the UI framework.
 /// </summary>
-public sealed partial class GoPage : UserControl, IDisposable
+public sealed partial class GoPage : UserControl, IDisposable, IAsyncDisposable, IDesktopOriginalRetirementParticipant, IDesktopOriginalRetirementJoinGuard
 {
     private readonly HavenEventBus _bus;
     private readonly GoHavenScene _route;
@@ -29,6 +29,7 @@ public sealed partial class GoPage : UserControl, IDisposable
     public GoPage(HavenEventBus bus)
     {
         _bus = bus;
+        _originalGoWork = new(StopOriginalGoSourcesAsync, CleanupOriginalGoAsync);
         InitializeComponent();
         _route = new GoHavenScene();
         Scene.Root = _route.Root;
@@ -49,15 +50,21 @@ public sealed partial class GoPage : UserControl, IDisposable
     internal HavenElement SceneRoot => _route.Root;
     internal IReadOnlyList<GoSuggestion> Suggestions => _suggestions;
 
-    internal void SetAppShortcuts(IReadOnlyList<GoAppShortcut> shortcuts) => _route.SetAppShortcuts(shortcuts);
+    internal void SetAppShortcuts(IReadOnlyList<GoAppShortcut> shortcuts) => RunOriginalGoSynchronous(() => _route.SetAppShortcuts(shortcuts));
 
     public void AttachFiles(IEnumerable<string> paths)
+    { RunOriginalGoSynchronous(() => AttachFilesOriginal(paths)); }
+
+    private void AttachFilesOriginal(IEnumerable<string> paths)
     {
         _attachments.AttachFiles(paths);
         RefreshAttachmentStatus();
     }
 
     public void AttachApp(ModeDefinition app)
+    { RunOriginalGoSynchronous(() => AttachAppOriginal(app)); }
+
+    private void AttachAppOriginal(ModeDefinition app)
     {
         _attachments.AttachApp(app);
         RefreshAttachmentStatus();
@@ -66,6 +73,9 @@ public sealed partial class GoPage : UserControl, IDisposable
     public bool IsCapabilityAttached(Guid capabilityId) => _attachments.IsCapabilityAttached(capabilityId);
 
     public void ToggleCapability(CapabilityDefinition capability)
+    { RunOriginalGoSynchronous(() => ToggleCapabilityOriginal(capability)); }
+
+    private void ToggleCapabilityOriginal(CapabilityDefinition capability)
     {
         if (_attachments.IsCapabilityAttached(capability.Id)) _attachments.RemoveCapability(capability.Id);
         else AttachCapability(capability);
@@ -79,6 +89,9 @@ public sealed partial class GoPage : UserControl, IDisposable
     }
 
     public TaskAttachmentSnapshot TakeAttachments()
+    => RunOriginalGoSynchronous(() => TakeAttachmentsOriginal());
+
+    private TaskAttachmentSnapshot TakeAttachmentsOriginal()
     {
         var snapshot = _attachments.TakeSnapshot();
         RefreshAttachmentStatus();
@@ -86,6 +99,9 @@ public sealed partial class GoPage : UserControl, IDisposable
     }
 
     internal GoTaskSnapshot TakeTaskSnapshot()
+    => RunOriginalGoSynchronous(() => TakeTaskSnapshotOriginal());
+
+    private GoTaskSnapshot TakeTaskSnapshotOriginal()
     {
         var snapshot = new GoTaskSnapshot(
             _attachments.TakeSnapshot(),
@@ -103,14 +119,17 @@ public sealed partial class GoPage : UserControl, IDisposable
     }
 
     internal (string Instruction, GoTaskSnapshot Snapshot) CloneTaskState() =>
-        (_route.Instruction.Text ?? string.Empty, new GoTaskSnapshot(
+        RunOriginalGoSynchronous(() => (_route.Instruction.Text ?? string.Empty, new GoTaskSnapshot(
             _attachments.Snapshot(), _activeAgent, _activeInstructions.ToArray(),
-            _actionModeOverride, _visualResponseModeOverride));
+            _actionModeOverride, _visualResponseModeOverride)));
 
     public void RestorePendingTask(string instruction, TaskAttachmentSnapshot snapshot) =>
         RestorePendingTask(instruction, new GoTaskSnapshot(snapshot, null, [], null, null));
 
     internal void RestorePendingTask(string instruction, GoTaskSnapshot snapshot)
+    { RunOriginalGoSynchronous(() => RestorePendingTaskOriginal(instruction, snapshot)); }
+
+    private void RestorePendingTaskOriginal(string instruction, GoTaskSnapshot snapshot)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         _attachments.AttachSnapshot(snapshot.Attachments);
@@ -126,9 +145,15 @@ public sealed partial class GoPage : UserControl, IDisposable
         FocusComposer();
     }
 
-    public void FocusComposer() => Scene.FocusElement(_route.Instruction);
+    public void FocusComposer() => RunOriginalGoSynchronous(() => Scene.FocusElement(_route.Instruction));
 
     internal Task SubmitOverlayInstructionAsync(string instruction)
+    {
+        if (_disposed || string.IsNullOrWhiteSpace(instruction)) return Task.CompletedTask;
+        return RunOriginalGoSynchronous(() => SubmitOverlayInstructionAsyncOriginal(instruction));
+    }
+
+    private Task SubmitOverlayInstructionAsyncOriginal(string instruction)
     {
         if (_disposed || string.IsNullOrWhiteSpace(instruction)) return Task.CompletedTask;
         _route.Instruction.Text = instruction.Trim();
@@ -138,6 +163,9 @@ public sealed partial class GoPage : UserControl, IDisposable
     }
 
     internal void ApplyTaskSelection(AddMenuSelection selection)
+    { RunOriginalGoSynchronous(() => ApplyTaskSelectionOriginal(selection)); }
+
+    private void ApplyTaskSelectionOriginal(AddMenuSelection selection)
     {
         ArgumentNullException.ThrowIfNull(selection);
         switch (selection.Item)
@@ -166,6 +194,9 @@ public sealed partial class GoPage : UserControl, IDisposable
     }
 
     public void SetSuggestions(IReadOnlyList<GoSuggestion> suggestions)
+    { if (_disposed || suggestions.Count != 4) return; RunOriginalGoSynchronous(() => SetSuggestionsOriginal(suggestions)); }
+
+    private void SetSuggestionsOriginal(IReadOnlyList<GoSuggestion> suggestions)
     {
         if (_disposed || suggestions.Count != 4) return;
         _suggestions = suggestions.ToArray();
@@ -177,12 +208,22 @@ public sealed partial class GoPage : UserControl, IDisposable
         IReadOnlyList<CapabilityDefinition> capabilities,
         IReadOnlyList<PromptDefinition> instructions,
         IReadOnlyList<ModeDefinition> apps)
+    { RunOriginalGoSynchronous(() => SetAddCatalogueOriginal(agents, capabilities, instructions, apps)); }
+
+    private void SetAddCatalogueOriginal(
+        IReadOnlyList<AgentDefinition> agents,
+        IReadOnlyList<CapabilityDefinition> capabilities,
+        IReadOnlyList<PromptDefinition> instructions,
+        IReadOnlyList<ModeDefinition> apps)
     {
         _availableApps = apps;
         _route.SetCatalogue(agents, capabilities, instructions, apps);
     }
 
     public void SetRefreshInProgress(bool inProgress)
+    { if (_disposed) return; RunOriginalGoSynchronous(() => SetRefreshInProgressOriginal(inProgress)); }
+
+    private void SetRefreshInProgressOriginal(bool inProgress)
     {
         if (!_disposed) _route.SetRefreshInProgress(inProgress);
     }
@@ -202,33 +243,47 @@ public sealed partial class GoPage : UserControl, IDisposable
         {
             var suggestionIndex = index;
             foreach (var button in _route.SuggestionButtons(index))
-                button.Invoked += (_, _) => SubmitSuggestion(suggestionIndex);
+            {
+                EventHandler actual = (_, _) => RunOriginalGoEvent(() => SubmitSuggestion(suggestionIndex));
+                button.Invoked += actual;
+                _originalGoDetaches.Add(() => button.Invoked -= actual);
+            }
         }
-
-        _route.LoadMoreButton.Invoked += (_, _) =>
+        EventHandler more = (_, _) => RunOriginalGoEvent(() =>
         {
             _bus.Fire("Go.Suggestions.LoadMore.Click");
             RefreshSuggestionsRequested?.Invoke(this, EventArgs.Empty);
-        };
-        _route.SendButton.Invoked += (_, _) => Submit();
+        });
+        _route.LoadMoreButton.Invoked += more;
+        _originalGoDetaches.Add(() => _route.LoadMoreButton.Invoked -= more);
+        EventHandler send = (_, _) => RunOriginalGoEvent(Submit);
+        _route.SendButton.Invoked += send;
+        _originalGoDetaches.Add(() => _route.SendButton.Invoked -= send);
         Scene.InputSubmitted += OnInputSubmitted;
         Scene.PointerPressedOutside += OnPointerPressedOutside;
-
-        _route.AddActionSelected += (_, action) => AddRequested?.Invoke(this, action);
-        _route.AppShortcutInvoked += (_, app) => AppShortcutInvoked?.Invoke(this, app);
-        _route.CatalogItemSelected += (_, selection) =>
+        _originalGoDetaches.Add(() => Scene.InputSubmitted -= OnInputSubmitted);
+        _originalGoDetaches.Add(() => Scene.PointerPressedOutside -= OnPointerPressedOutside);
+        EventHandler<AddMenu.AddMenuAction> add = (_, action) => RunOriginalGoEvent(() => AddRequested?.Invoke(this, action));
+        _route.AddActionSelected += add;
+        _originalGoDetaches.Add(() => _route.AddActionSelected -= add);
+        EventHandler<ModeDefinition> shortcut = (_, app) => RunOriginalGoEvent(() => AppShortcutInvoked?.Invoke(this, app));
+        _route.AppShortcutInvoked += shortcut;
+        _originalGoDetaches.Add(() => _route.AppShortcutInvoked -= shortcut);
+        EventHandler<AddMenuSelection> selection = (_, actualSelection) => RunOriginalGoEvent(() =>
         {
-            ApplyTaskSelection(selection);
-            AddCatalogItemSelected?.Invoke(this, selection);
-        };
+            ApplyTaskSelection(actualSelection);
+            AddCatalogItemSelected?.Invoke(this, actualSelection);
+        });
+        _route.CatalogItemSelected += selection;
+        _originalGoDetaches.Add(() => _route.CatalogItemSelected -= selection);
     }
 
-    private void OnInputSubmitted(Haven.UI.Components.Input input)
+    private void OnInputSubmitted(Haven.UI.Components.Input input) => RunOriginalGoEvent(() =>
     {
         if (ReferenceEquals(input, _route.Instruction)) Submit();
-    }
+    });
 
-    private void OnPointerPressedOutside() => _route.HideAddMenu();
+    private void OnPointerPressedOutside() => RunOriginalGoEvent(_route.HideAddMenu);
 
     private void Register(string name, IEnumerable<HavenElement> elements)
     {
@@ -236,7 +291,7 @@ public sealed partial class GoPage : UserControl, IDisposable
         foreach (var element in elements)
         {
             var previous = element.State;
-            EventHandler handler = (_, _) =>
+            EventHandler handler = (_, _) => RunOriginalGoEvent(() =>
             {
                 var next = element.State;
                 if (previous.HasFlag(HavenElementState.Hover) != next.HasFlag(HavenElementState.Hover))
@@ -244,7 +299,7 @@ public sealed partial class GoPage : UserControl, IDisposable
                 if (previous.HasFlag(HavenElementState.Pressed) != next.HasFlag(HavenElementState.Pressed))
                     _bus.Fire(name + (next.HasFlag(HavenElementState.Pressed) ? ".Press" : ".Release"));
                 previous = next;
-            };
+            });
             element.Invalidated += handler;
             _stateSubscriptions.Add((element, handler));
         }
@@ -288,17 +343,9 @@ public sealed partial class GoPage : UserControl, IDisposable
             _actionModeOverride ?? ChatActionMode.AllowBasicActions,
             _visualResponseModeOverride ?? GenerativeUiResponseMode.Auto);
 
-    public void Dispose()
-    {
-        if (_disposed) return;
-        _disposed = true;
-        Scene.InputSubmitted -= OnInputSubmitted;
-        Scene.PointerPressedOutside -= OnPointerPressedOutside;
-        foreach (var (element, handler) in _stateSubscriptions) element.Invalidated -= handler;
-        _stateSubscriptions.Clear();
-        _route.Dispose();
-        Disposed?.Invoke(this, EventArgs.Empty);
-    }
+    public void Dispose() => RequestRetirement(); // Request only; external owning close joins actual sources.
+    public ValueTask DisposeAsync() => new(CloseAndDrainAsync());
+
 }
 
 internal sealed record GoTaskSnapshot(

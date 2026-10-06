@@ -171,7 +171,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         var denials = 0;
         f.Owner.OnPrepare = () =>
         {
-            Assert.Throws<InvalidOperationException>(() => { f.Dev.CloseAndDrainAsync(); });
+            Assert.Throws<InvalidOperationException>(() => { _ = f.Dev.CloseAndDrainAsync(); });
             denials++;
             f.Dev.RequestRetirement();
         };
@@ -180,7 +180,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         Assert.Equal(1, denials);
         Assert.Equal(1, f.Tools.ReadCalls);
         await f.Dev.CloseAndDrainAsync();
-        Assert.Throws<InvalidOperationException>(() => { f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document); });
+        Assert.Throws<InvalidOperationException>(() => { _ = f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document); });
     }
 
     [Fact]
@@ -267,7 +267,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     {
         var f = await Fixture.CreateAsync();
         var reads = f.Store.GetCalls;
-        Assert.Throws<ArgumentException>(() => { f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document with { RelativePath = path }); });
+        Assert.Throws<ArgumentException>(() => { _ = f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document with { RelativePath = path }); });
         Assert.Equal(reads, f.Store.GetCalls);
         Assert.Equal(0, f.Tools.ReadCalls);
     }
@@ -359,7 +359,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         {
             if (++calls == 2)
             {
-                Assert.Throws<InvalidOperationException>(() => { f.Dev.CloseAndDrainAsync(); });
+                Assert.Throws<InvalidOperationException>(() => { _ = f.Dev.CloseAndDrainAsync(); });
                 entered.TrySetResult(); return release.Task;
             }
             return Task.CompletedTask;
@@ -420,7 +420,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         f.Containers.BeforeRead = () =>
         {
             if (++containerReads == 2) ExecutionContext.Run(originalContext, _ =>
-            { Assert.Throws<InvalidOperationException>(() => { f.Dev.CloseAndDrainAsync(); }); denials++; }, null);
+            { Assert.Throws<InvalidOperationException>(() => { _ = f.Dev.CloseAndDrainAsync(); }); denials++; }, null);
             return Task.CompletedTask;
         };
         var actual = f.Dev.ReadFileAsync(f.Reference, f.Context(), f.Document);

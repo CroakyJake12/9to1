@@ -18,7 +18,7 @@ public sealed partial class DeveloperOriginalKernelCaptureTests
             Directory.CreateDirectory(Path.Combine(rig.Project, "src"));
             File.WriteAllText(Path.Combine(rig.Project, "src", "code.cs"), "genuine selected source");
             var root = await rig.Select();
-            var capture = await rig.Source.CaptureOriginalAsync(root, rig.Selections.Logical, rig.Reads.Admission, TestContext.Current.CancellationToken);
+            var capture = await rig.Source.CaptureOriginalAsync(root, rig.Selections.Logical, rig.Reads.Admission, CancellationToken.None);
             Assert.Equal(rig.Project, capture.OriginalExistingProjectRoot);
             Assert.Equal("src", Assert.Single(capture.OriginalFolderPaths));
             var file = Assert.Single(capture.OriginalFiles);
@@ -27,7 +27,7 @@ public sealed partial class DeveloperOriginalKernelCaptureTests
             Assert.Equal(bytes.Length, file.SizeBytes);
             Assert.Equal(Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant(), file.ContentSha256);
             Assert.True(rig.Source.IsIssuedOriginalCapture(capture, root, rig.Selections.Logical));
-            await rig.Source.RevalidateOriginalCaptureAsync(capture, TestContext.Current.CancellationToken);
+            await rig.Source.RevalidateOriginalCaptureAsync(capture, CancellationToken.None);
             Assert.True(rig.Reads.Validations > 0);
             Assert.True(rig.Reads.ReadStarts > 0);
             var close = rig.Source.CloseAndDrainOriginalCapturesAsync();
@@ -47,7 +47,7 @@ public sealed partial class DeveloperOriginalKernelCaptureTests
         {
             File.WriteAllText(Path.Combine(rig.Project, "secret.cs"), "not authorized for this read cohort");
             var root = await rig.Select(); rig.Reads.Refusal = refusal;
-            var actual = rig.Source.CaptureOriginalAsync(root, rig.Selections.Logical, rig.Reads.Admission, TestContext.Current.CancellationToken);
+            var actual = rig.Source.CaptureOriginalAsync(root, rig.Selections.Logical, rig.Reads.Admission, CancellationToken.None);
             var error = await Assert.ThrowsAnyAsync<Exception>(() => actual);
             Assert.True(Contains(error, refusal));
             Assert.Equal(0, rig.Reads.ReadStarts);
@@ -68,10 +68,10 @@ public sealed partial class DeveloperOriginalKernelCaptureTests
         {
             var path = Path.Combine(rig.Project, "code.cs"); File.WriteAllText(path, "first captured bytes");
             var root = await rig.Select();
-            var capture = await rig.Source.CaptureOriginalAsync(root, rig.Selections.Logical, rig.Reads.Admission, TestContext.Current.CancellationToken);
+            var capture = await rig.Source.CaptureOriginalAsync(root, rig.Selections.Logical, rig.Reads.Admission, CancellationToken.None);
             File.WriteAllText(path, "changed bytes with a different size");
-            await Assert.ThrowsAnyAsync<Exception>(() => rig.Source.RevalidateOriginalCaptureAsync(capture, TestContext.Current.CancellationToken));
-            await Assert.ThrowsAnyAsync<Exception>(() => rig.Source.CaptureOriginalAsync(root, rig.Selections.Logical, rig.Reads.Admission, TestContext.Current.CancellationToken));
+            await Assert.ThrowsAnyAsync<Exception>(() => rig.Source.RevalidateOriginalCaptureAsync(capture, CancellationToken.None));
+            await Assert.ThrowsAnyAsync<Exception>(() => rig.Source.CaptureOriginalAsync(root, rig.Selections.Logical, rig.Reads.Admission, CancellationToken.None));
             Assert.Equal(Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes("first captured bytes"))).ToLowerInvariant(), Assert.Single(capture.OriginalFiles).ContentSha256);
             await Assert.ThrowsAnyAsync<Exception>(() => rig.Source.CloseAndDrainOriginalCapturesAsync());
         }
@@ -90,7 +90,7 @@ public sealed partial class DeveloperOriginalKernelCaptureTests
                 try { rig.Source.CloseAndDrainOriginalCapturesAsync().GetAwaiter().GetResult(); }
                 catch (Exception error) { observed = error; }
             }, null);
-            var capture = await rig.Source.CaptureOriginalAsync(root, rig.Selections.Logical, rig.Reads.Admission, TestContext.Current.CancellationToken);
+            var capture = await rig.Source.CaptureOriginalAsync(root, rig.Selections.Logical, rig.Reads.Admission, CancellationToken.None);
             Assert.IsType<InvalidOperationException>(observed);
             Assert.True(rig.Source.IsIssuedOriginalCapture(capture, root, rig.Selections.Logical));
             rig.Reads.BeforeValidation = null;
@@ -110,7 +110,7 @@ public sealed partial class DeveloperOriginalKernelCaptureTests
         public Rig()
         { Directory.CreateDirectory(Project); Source = new WorkspaceToolService().CreateOriginalDeveloperCaptureSource(Reads, () => Selections); }
         public async Task<IDeveloperProjectOriginalPhysicalSelection> Select()
-        { var actual = await Source.OpenOriginalSelectionAsync(Root, Project, TestContext.Current.CancellationToken); Selections.Root = actual; return actual; }
+        { var actual = await Source.OpenOriginalSelectionAsync(Root, Project, CancellationToken.None); Selections.Root = actual; return actual; }
         public async ValueTask DisposeAsync()
         {
             try { await Source.CloseAndDrainOriginalCapturesAsync(); } catch { }

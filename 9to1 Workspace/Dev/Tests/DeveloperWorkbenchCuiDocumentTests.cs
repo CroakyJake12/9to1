@@ -24,13 +24,13 @@ public sealed class DeveloperWorkbenchCuiDocumentTests
         var nodes = Descendants(DeveloperWorkbenchCuiDocument.Load().Components).ToArray();
         foreach (var id in new[] { "dev-pass-before", "dev-pass-after", "dev-terminal-output" })
         {
-            var node = Assert.Single(nodes.Where(value => value.Name == id));
+            var node = Assert.Single(nodes, value => value.Name == id);
             Assert.Equal("Object", node.Type);
             Assert.True(node.TryGetLiteralAttribute("type", out var actual));
             Assert.Equal("DeveloperReadonlySource", actual);
             Assert.DoesNotContain(node.Properties.Keys, value => value.Equals("readonly", StringComparison.OrdinalIgnoreCase));
         }
-        Assert.Equal("TextBox", Assert.Single(nodes.Where(value => value.Name == "dev-code-editor")).Type);
+        Assert.Equal("TextBox", Assert.Single(nodes, value => value.Name == "dev-code-editor").Type);
     }
     private static IEnumerable<CuiComponent> Descendants(IEnumerable<CuiComponent> nodes)
     {

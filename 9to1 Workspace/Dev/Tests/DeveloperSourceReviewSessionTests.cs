@@ -111,7 +111,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         var draft = review.UpdateDraft(opened.EditorId, 1, "first draft");
         var prepared = (await review.PreviewAsync(opened.EditorId, draft.DraftRevision, f.Context())).Value!;
         var newer = review.UpdateDraft(opened.EditorId, draft.DraftRevision, "second draft");
-        Assert.Throws<InvalidOperationException>(() => { review.ApplyAsync(opened.EditorId, prepared.ChangeSetId, newer.DraftRevision, f.Context()); });
+        Assert.Throws<InvalidOperationException>(() => { _ = review.ApplyAsync(opened.EditorId, prepared.ChangeSetId, newer.DraftRevision, f.Context()); });
         Assert.Equal("original source", f.Tools.TextValue); Assert.Equal(0, f.Tools.WriteCalls);
         Assert.Equal("second draft", review.GetSnapshot(opened.EditorId).DraftText); await f.Dev.CloseAndDrainAsync();
     }

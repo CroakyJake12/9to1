@@ -1,4 +1,5 @@
 using Haven.Application;
+using HavenOS.Home.Core;
 using Xunit;
 namespace Haven.Infrastructure.Tests;
 
@@ -6,7 +7,7 @@ public sealed partial class HomeDeveloperProjectReadAdmissionTests
 {
     [Fact] public Task Held_public_resource_evaluation_is_owned_before_retirement_and_conserves_its_late_faults() => Run(async rig =>
     {
-        var read = await rig.Accept(); var actor = await rig.Own(rig.Profiles.GetCurrentAsync(default)); Assert.NotNull(actor);
+        var read = await rig.Accept(); var actor = await rig.Own(rig.Profiles.GetCurrentAsync(default).AsTask()); Assert.NotNull(actor);
         var scope = Assert.Single(rig.Selections.GetOriginalReadScopes(rig.Selections.Original));
         var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

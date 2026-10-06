@@ -73,11 +73,11 @@ public sealed partial class HomeDeveloperProjectReadAdmissionTests
     [Fact] public Task Real_Home_caller_revocation_blocks_the_next_finite_source_read() => Run(async rig =>
     {
         var read = await rig.Accept(); await rig.Own(read.RevalidateOriginalAsync(default));
-        var actor = await rig.Own(rig.Profiles.GetCurrentAsync(default)); Assert.NotNull(actor);
+        var actor = await rig.Own(rig.Profiles.GetCurrentAsync(default).AsTask()); Assert.NotNull(actor);
         Assert.True((await rig.Own(rig.Permissions.BlockCallerAsync(actor!.ActorId))).Succeeded);
         var validation = rig.Own(read.RevalidateOriginalAsync(default));
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => validation); rig.Expected.Add(validation); rig.ExpectedClose = true;
-        Assert.Throws<UnauthorizedAccessException>(() => read.RunOriginalRead(() => { rig.FiniteReads++; return Task.CompletedTask; }, default));
+        Assert.Throws<UnauthorizedAccessException>((Action)(() => { _ = rig.Own(read.RunOriginalRead(() => { rig.FiniteReads++; return Task.CompletedTask; }, default)); }));
         Assert.Equal(0, rig.FiniteReads);
     });
     private static IEnumerable<Exception> Leaves(Exception value) => value is AggregateException group ? group.InnerExceptions.SelectMany(Leaves) : [value];
