@@ -10,6 +10,9 @@
 #include <type_traits>
 #include <vector>
 #include <unistd.h>
+#if STRATA_HAS_CUDA
+#include <cuda_runtime.h>
+#endif
 
 /* Dedicated bundled worker: crashes/OOM/forced cancellation cannot destroy the Dulche host.
    stdin/stdout carry only bounded little-endian frames; native diagnostic stdout goes to stderr. */
@@ -58,6 +61,42 @@ bool read(Buffer& result) {
     if (std::fread(result.bytes.data(),1,size,stdin) != size) throw std::invalid_argument("Truncated native command frame.");
     return true;
 }
+/* Fixed no-model probe. The sole admitted argument bypasses RuntimeSession construction,
+   loads no checkpoint, accepts no stdin model commands and naturally exits after its receipt. */
+Buffer hardware_probe() {
+    Buffer output;
+#if STRATA_HAS_CUDA
+    const auto require = [](cudaError_t status, const char* operation) {
+        if (status != cudaSuccess) throw std::runtime_error(std::string(operation) + ": " + cudaGetErrorString(status));
+    };
+    int runtime{}, driver{}, count{};
+    require(cudaRuntimeGetVersion(&runtime), "cudaRuntimeGetVersion");
+    require(cudaDriverGetVersion(&driver), "cudaDriverGetVersion");
+    require(cudaGetDeviceCount(&count), "cudaGetDeviceCount");
+    if (runtime <= 0 || driver <= 0 || count < 0 || count > 64) throw std::runtime_error("Invalid bounded actual CUDA inventory.");
+    output.number<uint32_t>(0); output.number<uint32_t>(0);
+    output.number(static_cast<uint32_t>(runtime)); output.number(static_cast<uint32_t>(driver)); output.number(static_cast<uint32_t>(count));
+    for (int index = 0; index < count; ++index) {
+        cudaDeviceProp properties{}; require(cudaGetDeviceProperties(&properties,index), "cudaGetDeviceProperties");
+        require(cudaSetDevice(index), "cudaSetDevice");
+        size_t free{}, total{}; require(cudaMemGetInfo(&free,&total), "cudaMemGetInfo");
+        if (properties.major < 0 || properties.minor < 0 || total == 0 || free > total || properties.totalGlobalMem == 0)
+            throw std::runtime_error("Invalid actual CUDA device properties/memory.");
+        std::string uuid; uuid.reserve(32); constexpr char hex[] = "0123456789abcdef";
+        for (const auto byte : properties.uuid.bytes) {
+            const auto value = static_cast<unsigned char>(byte);
+            uuid.push_back(hex[value >> 4U]); uuid.push_back(hex[value & 15U]);
+        }
+        output.number(static_cast<uint32_t>(index));
+        output.text(std::string(properties.name, ::strnlen(properties.name,sizeof(properties.name)))); output.text(uuid);
+        output.number(static_cast<uint32_t>(properties.major)); output.number(static_cast<uint32_t>(properties.minor));
+        output.number(static_cast<uint64_t>(properties.totalGlobalMem)); output.number(static_cast<uint64_t>(free)); output.number(static_cast<uint64_t>(total));
+    }
+    return output;
+#else
+    output.number<uint32_t>(1); output.number<uint32_t>(1); output.text(std::string("This worker has no actual CUDA build.")); return output;
+#endif
+}
 using Result = std::unique_ptr<dulche_strata_result,decltype(&dulche_strata_free_result)>;
 void errors(Buffer& output, const dulche_strata_result* result) {
     output.number(static_cast<uint32_t>(dulche_strata_result_code(result)));
@@ -100,15 +139,27 @@ void generate(dulche_strata_session* session, Buffer& input, FILE* wire) {
     terminal.number(static_cast<uint32_t>(dulche_strata_stopped(result.get()))); write(wire,2,terminal);
 }
 }
-int main() {
+int main(int argc, char** argv) {
+    const bool probe = argc == 2 && std::strcmp(argv[1],"--hardware-probe") == 0;
+    if (argc != 1 && !probe) return 64;
     FILE* wire=::fdopen(::dup(STDOUT_FILENO),"wb"); if(wire==nullptr || ::dup2(STDERR_FILENO,STDOUT_FILENO)<0) return 70;
-    std::unique_ptr<dulche_strata_session,decltype(&dulche_strata_destroy)> session(dulche_strata_create(),dulche_strata_destroy);
-    if(!session) return 71;
+    std::unique_ptr<dulche_strata_session,decltype(&dulche_strata_destroy)> session(nullptr,dulche_strata_destroy);
+    if(!probe) { session.reset(dulche_strata_create()); if(!session) return 71; }
     try {
         Buffer hello; hello.number(dulche_strata_abi_version()); hello.text(std::string(dulche_strata_origin_commit()));
         hello.number(static_cast<uint32_t>(dulche_strata_has_cuda())); hello.number(static_cast<uint32_t>(dulche_strata_has_nccl()));
         const auto* registry=dulche_strata_registered_models(); if(registry==nullptr) throw std::bad_alloc();
         hello.text(std::string(registry)); write(wire,0,hello);
+        if(probe) {
+            try {
+                const auto observed = hardware_probe(); write(wire,6,observed); std::fclose(wire);
+                return dulche_strata_has_cuda() ? 0 : 69;
+            }
+            catch(const std::exception& error) {
+                Buffer failure; failure.number<uint32_t>(3); failure.number<uint32_t>(1); failure.text(std::string(error.what()));
+                write(wire,6,failure); std::fclose(wire); return 69;
+            }
+        }
         Buffer command;
         while(read(command)) {
             const auto operation=command.read_number<uint32_t>();

@@ -369,6 +369,7 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunOwnerReauthenti
         {
             lock (_sync) { work = _renewalWork.ToArray(); scopes = _renewals.ToArray(); }
             foreach (var operation in work) await JoinRenewalWorkAsync(operation, failures).ConfigureAwait(false);
+            await JoinOriginalColdScopesAsync(failures).ConfigureAwait(false);
             foreach (var renewal in scopes)
             {
                 await JoinRenewalTaskAsync(StartRenewalScopeClose(renewal), failures).ConfigureAwait(false);

@@ -25,7 +25,7 @@ public sealed record StrataGenerationObservation(long PromptTokens, long Prefill
 
 /// <summary>Actual bundled native process, one retained session/model. Process termination is cancellation
 /// during load/prefill; it requires reinitialization, never pretends to preserve destroyed KV state.</summary>
-public sealed class StrataNativeWorker : IAsyncDisposable
+public sealed class StrataNativeWorker : IAsyncDisposable, IOriginalInferenceCalibrationSource
 {
     private const int FrameLimit = 16 * 1024 * 1024;
     private const string Origin = "015b075079c51a7aec670ee24924f920f5e7bb2b";
@@ -50,6 +50,9 @@ public sealed class StrataNativeWorker : IAsyncDisposable
     private bool _sealed;
     private bool _loaded;
     private bool _invalidated;
+    private InferenceCalibrationReading? _lastCalibration;
+    private Task? _lastCalibrationOriginal;
+    public string RuntimeFingerprint=>"strata/"+Origin+"/abi1/"+_binary.ExpectedSha256.ToLowerInvariant();
     public StrataBuildObservation? Build { get; private set; }
     public StrataGenerationObservation? LastGeneration { get; private set; }
     public InferenceModelRequirements Model => _requirements;
@@ -67,6 +70,25 @@ public sealed class StrataNativeWorker : IAsyncDisposable
             return Task.FromResult(live ? OperationResult<Unit>.Success(Unit.Value)
                 :OperationResult<Unit>.Failure(new(DulcheErrorCode.ModelLoadFailed,"No current initialized original native model is available.",sameModel.StableKey,true)));
         });
+
+    public bool TryObserveOriginalCalibration(ModelIdentity sameModel,out InferenceCalibrationReading? reading)
+    {
+        reading=null;
+        lock(_gate) if(_sealed||_invalidated||!_loaded||_lastCalibration is null||_lastCalibrationOriginal?.IsCompletedSuccessfully!=true||sameModel!=Model.Model) return false;
+        if(_model is not IStrataOriginalHardwareBinding hardware) return false;
+        Physical(()=> { _model.DemandCurrentOriginalBinding(); return 0; });
+        var current=Physical(()=>hardware.OriginalHardwareObservation);
+        lock(_gate) {
+            if(_sealed||_invalidated||!_loaded||_lastCalibration is null||_lastCalibrationOriginal?.IsCompletedSuccessfully!=true
+                ||sameModel!=Model.Model||_lastCalibration.Key.HardwareFingerprint!=current.Fingerprint) return false;
+            reading=_lastCalibration; return true;
+        }
+    }
+    public bool IsIssuedOriginalCalibration(InferenceCalibrationReading sameOriginal)
+    {
+        lock(_gate) return !_sealed&&!_invalidated&&_loaded&&ReferenceEquals(sameOriginal,_lastCalibration)
+            &&_lastCalibrationOriginal?.IsCompletedSuccessfully==true;
+    }
 
     public Task<Haven.Core.ProviderHealthStatus> CheckOriginalHealthAsync(string providerId,CancellationToken cancellationToken)
         => Publish(() => {
@@ -204,9 +226,17 @@ public sealed class StrataNativeWorker : IAsyncDisposable
                         var tail=decoder.Feed([],true);
                         if(tail.Length!=0) await output.Writer.WriteAsync(tail,linked.Token).ConfigureAwait(false);
                         Physical(() => { _model.DemandCurrentOriginalBinding(); return 0; });
+                        var measured=new StrataGenerationObservation(prompt,prefill,decode,prefillSeconds,decodeSeconds,reused,kv,stopped);
+                        var hardware=_model is IStrataOriginalHardwareBinding binding ? Physical(()=>binding.OriginalHardwareObservation) : null;
                         lock(_gate) {
                             if(_sealed||_invalidated||!_loaded) throw new InvalidOperationException("The original native session retired before terminal disclosure.");
-                            LastGeneration=new(prompt,prefill,decode,prefillSeconds,decodeSeconds,reused,kv,stopped);
+                            LastGeneration=measured;
+                            _lastCalibration=null; _lastCalibrationOriginal=null;
+                            if(hardware is not null&&(request.Options?.Temperature??0.7)==0.7) {
+                                _lastCalibration=new(new(InferenceEngine.Strata,Model.Model,Model.ArtifactFingerprint,hardware.Fingerprint,
+                                    RuntimeFingerprint,Model.ContextTokens,InferenceCalibrationCache.DefaultSettings),measured);
+                                _lastCalibrationOriginal=_executing.Value?.Original;
+                            }
                         }
                         break;
                     }
@@ -348,12 +378,13 @@ public sealed class StrataNativeWorker : IAsyncDisposable
         {
             if(_sealed||_drivers.Count>=128) throw new InvalidOperationException("Native original driver admission is sealed or full.");
             var start=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            var actual=DriveAsync(start.Task,body); _drivers.Add(actual); start.SetResult(); return actual;
+            Task<T>? actual=null;
+            actual=DriveAsync(start.Task,body,()=>actual!); _drivers.Add(actual); start.SetResult(); return actual;
         }
     }
-    private async Task<T> DriveAsync<T>(Task start,Func<Task<T>> body)
+    private async Task<T> DriveAsync<T>(Task start,Func<Task<T>> body,Func<Task> samePublishedOriginal)
     {
-        await start.ConfigureAwait(false); var prior=_executing.Value; var phase=new Phase(prior); _executing.Value=phase;
+        await start.ConfigureAwait(false); var prior=_executing.Value; var phase=new Phase(prior) { Original=samePublishedOriginal() }; _executing.Value=phase;
         try { return await body().ConfigureAwait(false); } finally { phase.Live=false; _executing.Value=prior; }
     }
     private Task Retain(Task task) { lock(_gate) { _raw.Add(task); return task; } }
@@ -385,6 +416,6 @@ public sealed class StrataNativeWorker : IAsyncDisposable
     private static async Task Join(Task task,List<Exception> errors)
     { try { await task.ConfigureAwait(false); } catch(Exception error) { Add(errors,error); } if(task.Exception is { } group) { foreach(var cause in group.InnerExceptions) Add(errors,cause); if(group.InnerExceptions.Count==1 && group.InnerExceptions[0] is OperationCanceledException) Add(errors,group); } }
     private static void Throw(List<Exception> errors) { if(errors.Count==1) ExceptionDispatchInfo.Capture(errors[0]).Throw(); if(errors.Count>1) throw new AggregateException(errors); }
-    private sealed class Phase(Phase? parent) { public Phase? Parent { get; }=parent; public volatile bool Live=true; }
+    private sealed class Phase(Phase? parent) { public Phase? Parent { get; }=parent; public volatile bool Live=true; public Task? Original; }
     private sealed record Frame(uint Type,byte[] Body) { public BinaryReader Reader()=>new(new MemoryStream(Body,false),new UTF8Encoding(false,true),false); }
 }

@@ -386,7 +386,8 @@ public sealed partial class DulcheRuntime
             else
             {
                 slot.State = RequestState.Failed; slot.FinishReason = FinishReason.Error;
-                slot.Errors.Add(new(DulcheErrorCode.ProviderUnavailable, "Provider generation failed.", endpoint.Endpoint.ProviderId, true, Details: new Dictionary<string, string> { ["exceptionType"] = ex.GetType().Name }));
+                slot.Errors.Add(ex is InferenceEngineException native ? native.Error
+                    : new(DulcheErrorCode.ProviderUnavailable, "Provider generation failed.", endpoint.Endpoint.ProviderId, true, Details: new Dictionary<string, string> { ["exceptionType"] = ex.GetType().Name }));
             }
         }
         finally
@@ -631,8 +632,12 @@ public sealed partial class DulcheRuntime
     /// cannot join any active ancestor endpoint whose work this task must drain.</summary>
     public Task<OperationResult<DulcheEndpoint>> JoinEndpointStopAsync(string endpointId, CancellationToken cancellationToken = default)
     {
-        if (_endpoints.TryGetValue(endpointId, out var endpoint) && IsLiveOriginalEndpointCall(endpoint))
-            throw new InvalidOperationException("An original endpoint callback cannot join the endpoint containing it.");
+        if (_endpoints.TryGetValue(endpointId, out var endpoint))
+        {
+            if (IsLiveOriginalEndpointCall(endpoint))
+                throw new InvalidOperationException("An original endpoint callback cannot join the endpoint containing it.");
+            if (endpoint.Adapter is InferenceEngineDispatcher dispatcher) dispatcher.DemandExternalOriginalJoin();
+        }
         return StopEndpointAsync(endpointId, cancellationToken);
     }
 

@@ -905,7 +905,7 @@ public sealed partial class ChatCanonicalContextProducerTests : IDisposable
         public ValueTask CaptureOriginalAsync(TaskExecutionSnapshot current, OllamaToolRequest request, TaskRunContextInventory inventory, CancellationToken token)
         { BeforeCapture?.Invoke(); if (OriginalFailureTask is { } original) return new ValueTask(original); if (Refusal is { } failure) return ValueTask.FromException(failure); Tools.Add(new(current, request, inventory)); return ValueTask.CompletedTask; }
     }
-    private sealed class Provider(ModelDescriptor model, TaskExecutionCoordinator coordinator, TaskRunOriginalFrameOwner runtime, Capture capture) : IOllamaClient
+    private sealed partial class Provider(ModelDescriptor model, TaskExecutionCoordinator coordinator, TaskRunOriginalFrameOwner runtime, Capture capture) : IOllamaClient
     {
         public OllamaChatRequest? ChatRequest; public OllamaToolRequest? ToolRequest; public int Frames; public int CompatibilityCompletions;
         public Func<TaskRunAttemptAdmission, Task>? BeforeToolResponse;
@@ -925,6 +925,7 @@ public sealed partial class ChatCanonicalContextProducerTests : IDisposable
         {
             Assert.Same(request, Assert.Single(capture.Chat).Request); ChatRequest = request;
             var admission = await OpenAsync(request.ExecutionContext, token);
+            await BindActualResponseAsync(request, admission, token);
             var original = runtime.StartOriginalFrameAsync(admission, _ => { Frames++; return Task.FromResult("actual controlled reply"); }, token);
             try { yield return await original; }
             finally { if (OnStreamFinally is { } close) await close(); }
@@ -935,10 +936,12 @@ public sealed partial class ChatCanonicalContextProducerTests : IDisposable
         {
             Assert.Same(request, Assert.Single(capture.Tools).Request); ToolRequest = request;
             var admission = await OpenAsync(request.ExecutionContext, token);
+            await BindActualResponseAsync(request, admission, token);
             if (BeforeToolResponse is not null) await BeforeToolResponse(admission);
             return await runtime.StartOriginalFrameAsync(admission, _ =>
             {
                 Frames++;
+                if (ControlledResponse is not null) return ControlledResponse;
                 using var json = JsonDocument.Parse("{\"path\":\"actual.txt\",\"content\":\"actual\"}");
                 var args = json.RootElement.EnumerateObject().ToDictionary(value => value.Name, value => value.Value.Clone());
                 return Task.FromResult(new OllamaToolResponse("", [new OllamaToolCall("write_file", args)]));
@@ -965,7 +968,9 @@ public sealed partial class ChatCanonicalContextProducerTests : IDisposable
                 throw new TaskExecutionRevisionConflictException(next.TaskId, next.PersistenceRevision - 1, next.PersistenceRevision);
             _rows[next.TaskId] = next;
         }
-        public async Task<TaskExecutionSnapshot?> GetAsync(Guid id, CancellationToken token)
+        public Task<TaskExecutionSnapshot?>? ResponseRead;
+        public Task<TaskExecutionSnapshot?> GetAsync(Guid id, CancellationToken token) => ResponseRead ?? GetActualAsync(id, token);
+        private async Task<TaskExecutionSnapshot?> GetActualAsync(Guid id, CancellationToken token)
         { var count = ++ReadCount; if (BeforeRead is { } before) await before(count); return _rows.GetValueOrDefault(id); }
         public Task<TaskExecutionSnapshot?> GetByContextAsync(Guid id, CancellationToken token) => Task.FromResult(_rows.Values.FirstOrDefault(row => row.ContextId == id));
         public Task<IReadOnlyList<TaskExecutionSnapshot>> GetResumableAsync(CancellationToken token) => Task.FromResult<IReadOnlyList<TaskExecutionSnapshot>>(_rows.Values.ToArray());
@@ -980,7 +985,7 @@ public sealed partial class ChatCanonicalContextProducerTests : IDisposable
         public Task AddMessageAsync(ChatMessage message, CancellationToken token) { Writes++; Messages.Add(message); return Task.CompletedTask; }
         public Task DeleteConversationAsync(Guid id, CancellationToken token) => throw new NotSupportedException();
     }
-    private sealed class Authority : ITaskRunCommandAuthority
+    private sealed partial class Authority : ITaskRunCommandAuthority
     {
         public Lease? Lease;
         public bool AllowCurrentActor = true;

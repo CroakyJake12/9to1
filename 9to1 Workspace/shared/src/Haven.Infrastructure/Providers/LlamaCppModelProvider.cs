@@ -11,6 +11,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
 using Haven.Application;
+using Dulche.Runtime;
 using Haven.Core;
 
 namespace Haven.Infrastructure;
@@ -24,7 +25,7 @@ public sealed record LlamaCppLocalEndpointOptions(
 /// <summary>One borrowed, kernel-identified local llama.cpp endpoint. It owns its HTTP work;
 /// the external process owner must close this provider after Dulche/Task originals drain and
 /// before terminating the server. Construction never sends, launches, loads, or grants use.</summary>
-public sealed class LlamaCppModelProvider : IModelProvider, ILocalModelEndpointObservationSource, IAsyncDisposable
+public sealed class LlamaCppModelProvider : IModelProvider, ILocalModelEndpointObservationSource, IOriginalInferenceEngineModelSource, IAsyncDisposable
 {
     private const int Capacity = 128;
     private readonly object _sync = new();
@@ -62,6 +63,22 @@ public sealed class LlamaCppModelProvider : IModelProvider, ILocalModelEndpointO
     public ModelProviderKind Kind => ModelProviderKind.OpenAICompatible;
     public bool IsLocal => true; // The only transport is a validated local Unix-domain socket.
     public bool CanManageModels => false;
+
+    /// <summary>Initialized-model observation for the common engine bridge. Actual previous text
+    /// and stream probes for this SAME still-current local process are required; this performs no load.</summary>
+    public Task<OperationResult<Unit>> ObserveOriginalInitializedModelAsync(ModelIdentity sameModel, CancellationToken token)
+        => StartOriginal(async ct =>
+        {
+            var actual = await ObserveEndpointBodyAsync(ct).ConfigureAwait(false);
+            if (sameModel.ProviderId != Id || sameModel.ModelId != actual.ModelId
+                || sameModel.ArtifactRevision is not null && !StringComparer.OrdinalIgnoreCase.Equals(sameModel.ArtifactRevision, actual.ConfiguredModelSha256)
+                || !actual.ObservedCapabilities.Contains(ToolCapability.Text)
+                || !actual.ObservedCapabilities.Contains(ToolCapability.Streaming)
+                || !IsOriginalEndpointObservation(actual))
+                return OperationResult<Unit>.Failure(new(DulcheErrorCode.ModelLoadFailed,
+                    "No SAME live, artifact-bound and text/stream-probed llama.cpp model is initialized.", sameModel.StableKey, false));
+            return OperationResult<Unit>.Success(Unit.Value);
+        }, token);
 
     public Task<LocalModelEndpointObservation> ObserveOriginalEndpointAsync(CancellationToken token) =>
         StartOriginal(ct => ObserveEndpointBodyAsync(ct), token);

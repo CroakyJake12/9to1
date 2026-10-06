@@ -6,7 +6,7 @@ namespace Haven.Core.Tests;
 /// <summary>Synthetic current actor, repository, credential and issued-attempt fixtures exercise
 /// the actual cloud/context source. No real credential/provider, Home grant, paid request,
 /// native session, browser login, quota balance or domain egress authority is manufactured.</summary>
-public sealed class TaskRunCloudContextTests
+public sealed partial class TaskRunCloudContextTests
 {
     [Fact]
     public async Task Same_original_context_supports_healthy_frames_without_releasing_attempt_lease()

@@ -14,7 +14,7 @@ namespace Haven.Application;
 /// Capture belongs only to the trusted Chat producer after its existing source authorization.
 /// Foreign/shared context requires its real domain owner; this adapter cannot grant it from text.
 /// </summary>
-public sealed class TaskRunConfiguredCloudAdmissionSource : ITaskRunCloudAdmissionSource,
+public sealed partial class TaskRunConfiguredCloudAdmissionSource : ITaskRunCloudAdmissionSource,
     ITaskRunProviderContextCapture, ITaskRunProviderContextAuthority
 {
     private readonly IAuthenticatedResourceActorSource _actors;
@@ -391,7 +391,7 @@ public sealed class TaskRunConfiguredCloudAdmissionSource : ITaskRunCloudAdmissi
         if (errors.Count > 1) throw new AggregateException("Actual context admission and original permission cleanup failed.", errors);
     }
 
-    private sealed class ConfiguredLease : ITaskRunCloudAdmissionLease
+    private sealed partial class ConfiguredLease : ITaskRunCloudAdmissionLease
     {
         private readonly TaskRunConfiguredCloudAdmissionSource _source;
         private readonly TaskExecutionOwnerBinding _owner;
@@ -412,13 +412,15 @@ public sealed class TaskRunConfiguredCloudAdmissionSource : ITaskRunCloudAdmissi
         }
         public ValueTask DisposeAsync()
         {
+            DemandExternalOriginalScopedCloudJoin();
             TaskCompletionSource start; Task close;
             lock (_gate)
             {
                 if (_close is not null) return new ValueTask(_close);
                 _closed = true;
                 start = new(TaskCreationOptions.RunContinuationsAsynchronously);
-                close = _close = ClosePermissionAsync(_permission, start.Task);
+                close = _close = _originalScopedValidations.Count == 0
+                    ? ClosePermissionAsync(_permission, start.Task) : CloseScopedPermissionAsync(start.Task);
             }
             start.SetResult();
             return new ValueTask(close);

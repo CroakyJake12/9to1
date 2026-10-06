@@ -488,6 +488,7 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
     {
         public required SyntheticProvider Provider { get; init; }
         public required SyntheticAuthority Authority { get; init; }
+        public required SyntheticRepository Repository { get; init; }
         public required TaskExecutionCoordinator Coordinator { get; init; }
         public required TaskRunOriginalFrameOwner Frames { get; init; }
         public required ObservedFrames ObservedFrames { get; init; }
@@ -524,7 +525,7 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
             var endpoint = new DulcheEndpoint(Guid.NewGuid().ToString("N"), provider.Id, adapter.OriginalConfiguredTarget.GetLeftPart(UriPartial.Path),
                 remote ? null : adapter.OriginalConfiguredTarget.Port, EndpointState.Starting, null, adapter.Capabilities, remote, DateTimeOffset.UtcNow);
             Assert.True((await adapter.StartAsync(endpoint, default)).Succeeded);
-            return new() { Provider = provider, Authority = authority, Coordinator = coordinator, Frames = frames,
+            return new() { Provider = provider, Authority = authority, Repository = repository, Coordinator = coordinator, Frames = frames,
                 ObservedFrames = observed, Snapshot = snapshot, Admission = admission, Adapter = adapter, Endpoint = endpoint,
                 Tools = tools, Context = context };
         }
@@ -660,7 +661,7 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
         public Task ValidateAcceptedActionAsync(TaskExecutionSnapshot snapshot, Guid attempt, Guid action, string reference, CancellationToken token)
             => throw new NotSupportedException("No synthetic control action is a native mutation receipt.");
     }
-    private sealed class SyntheticLease(TaskExecutionOwnerBinding owner, Guid attempt, TaskRunRouteCandidate candidate) : ITaskRunAdmissionLease
+    private sealed partial class SyntheticLease(TaskExecutionOwnerBinding owner, Guid attempt, TaskRunRouteCandidate candidate) : ITaskRunAdmissionLease
     {
         public TaskExecutionOwnerBinding Owner => owner;
         public Guid AttemptId => attempt;
@@ -675,6 +676,7 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
     private sealed class SyntheticRepository : ITaskExecutionRepository
     {
         private readonly ConcurrentDictionary<Guid, TaskExecutionSnapshot> _rows = new();
+        public Func<Guid, CancellationToken, Task<TaskExecutionSnapshot?>>? OriginalRead;
         public Task UpsertAsync(TaskExecutionSnapshot snapshot, CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
@@ -687,7 +689,7 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
                 throw new TaskExecutionRevisionConflictException(snapshot.TaskId, snapshot.PersistenceRevision - 1, snapshot.PersistenceRevision);
             return Task.CompletedTask;
         }
-        public Task<TaskExecutionSnapshot?> GetAsync(Guid task, CancellationToken token) => Task.FromResult(_rows.GetValueOrDefault(task));
+        public Task<TaskExecutionSnapshot?> GetAsync(Guid task, CancellationToken token) => OriginalRead?.Invoke(task, token) ?? Task.FromResult(_rows.GetValueOrDefault(task));
         public Task<TaskExecutionSnapshot?> GetByContextAsync(Guid context, CancellationToken token) => Task.FromResult(_rows.Values.FirstOrDefault(row => row.ContextId == context));
         public Task<IReadOnlyList<TaskExecutionSnapshot>> GetResumableAsync(CancellationToken token) => Task.FromResult<IReadOnlyList<TaskExecutionSnapshot>>(_rows.Values.ToArray());
     }

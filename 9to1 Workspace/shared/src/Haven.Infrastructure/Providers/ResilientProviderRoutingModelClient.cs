@@ -32,7 +32,8 @@ public sealed partial class ResilientProviderRoutingModelClient(
     ITaskRunOriginalFrameOwner? originalFrames = null,
     ModelPermissionEvaluator? modelPermissions = null,
     ITaskRunProviderContextAuthority? taskContextAuthority = null,
-    IProviderCatalogueEligibility? catalogueEligibility = null) : IProviderModelClient, ITaskRunOriginalRequestFailureSource, ITaskRunOriginalToolCheckpointSelectionSource, ITaskRunOriginalToolResponseDispatchWitnessSource
+    IProviderCatalogueEligibility? catalogueEligibility = null,
+    IManagedDulcheOriginalModelRequestConsumer? originalModelRequests = null) : IProviderModelClient, ITaskRunOriginalRequestFailureSource, ITaskRunOriginalToolCheckpointSelectionSource, ITaskRunOriginalToolResponseDispatchWitnessSource
 {
     // Preserve the original six-argument CLR entry for already compiled ordinary clients.
     // Its absence of canonical owners conveys no Task/Run, cloud context or tool authority.
@@ -54,6 +55,15 @@ public sealed partial class ResilientProviderRoutingModelClient(
         ITaskRunProviderContextAuthority? taskContextAuthority)
         : this(primary, providers, configurations, privacy, fallbackOrder, executionEvents, taskCoordinator,
             routeCapture, originalFrames, modelPermissions, taskContextAuthority, catalogueEligibility: null) { }
+
+    // Preserve the twelve-argument catalogue-eligibility CLR constructor.
+    public ResilientProviderRoutingModelClient(ProviderRoutingModelClient primary, IModelProviderRegistry providers,
+        IProviderConfigurationStore configurations, IPrivacyPreferenceStore privacy, IModelFallbackOrderStore? fallbackOrder,
+        IExecutionEventSink? executionEvents, TaskExecutionCoordinator? taskCoordinator, ITaskRunSelectedRouteCapture? routeCapture,
+        ITaskRunOriginalFrameOwner? originalFrames, ModelPermissionEvaluator? modelPermissions,
+        ITaskRunProviderContextAuthority? taskContextAuthority, IProviderCatalogueEligibility? catalogueEligibility)
+        : this(primary, providers, configurations, privacy, fallbackOrder, executionEvents, taskCoordinator, routeCapture,
+            originalFrames, modelPermissions, taskContextAuthority, catalogueEligibility, originalModelRequests: null) { }
 
     /// <summary>
     /// Reports whether available async applies to the current state.
@@ -95,6 +105,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
             var selectedRequirements = selected.Descriptor?.ProviderId == "llama-cpp"
                 ? new HashSet<ToolCapability>(required) { ToolCapability.Streaming } : required;
             await PrepareAttemptAsync(state, selected, selectedRequirements, [], index > 0, cancellationToken).ConfigureAwait(false);
+            await BindOriginalResponseActionAsync(request, state, cancellationToken).ConfigureAwait(false);
             if (index > 0) PublishFallback(request.Model, selected.Key, state.Context);
             using var frameCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var channel = Channel.CreateBounded<string>(new BoundedChannelOptions(1)
@@ -114,7 +125,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
                     // Maintained provider streams are actual async iterators: their factory and
                     // enumerator creation defer provider work until the first MoveNext invocation.
                     // Gate that SAME finite original operation, never an async loop or its await.
-                    original = RawStream(selected, routedRequest, token).GetAsyncEnumerator(token);
+                    original = RawOriginalSelectedStream(state, request, selected, routedRequest, token).GetAsyncEnumerator(token);
                     var firstMove = StartRawInvocation(invocationFence, original.MoveNextAsync);
                     var move = firstMove.AsTask();
                     while (true)
@@ -242,6 +253,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
                     continue;
                 }
                 await PrepareAttemptAsync(state, selected, required, [], index > 0, cancellationToken).ConfigureAwait(false);
+                await BindOriginalResponseActionAsync(request, state, cancellationToken).ConfigureAwait(false);
                 if (index > 0) PublishFallback(request.Model, selected.Key, state.Context);
                 Exception? synchronousProviderFailure = null;
                 Task<string>? originalProviderTask = null;
@@ -252,7 +264,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
                     originalFrame = RunOriginalContextFrameAsync(state, request, routedRequest, (invocationFence, token) =>
                     {
                         GuardSelectedProvider(selected);
-                        try { return originalProviderTask = StartRawInvocation(invocationFence, () => RawCompleteAsync(selected, routedRequest, token)); }
+                        try { return originalProviderTask = StartRawInvocation(invocationFence, () => RawOriginalSelectedComplete(state, request, selected, routedRequest, token)); }
                         catch (Exception failure) { synchronousProviderFailure = failure; throw; }
                     }, cancellationToken);
                     return await AwaitExactTaskAsync(originalFrame).ConfigureAwait(false);
@@ -300,6 +312,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
                     continue;
                 }
                 await PrepareAttemptAsync(state, selected, required, restrictions, index > 0, cancellationToken).ConfigureAwait(false);
+                await BindOriginalResponseActionAsync(request, state, cancellationToken).ConfigureAwait(false);
                 if (index > 0) PublishFallback(request.Model, selected.Key, state.Context);
                 Exception? synchronousProviderFailure = null;
                 Task<OllamaToolResponse>? originalProviderTask = null;
@@ -310,7 +323,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
                     originalFrame = RunOriginalContextFrameAsync(state, request, routedRequest, (invocationFence, token) =>
                     {
                         GuardSelectedProvider(selected);
-                        try { return originalProviderTask = StartRawInvocation(invocationFence, () => RawToolsWithOriginalDispatchAsync(state, selected, routedRequest, token)); }
+                        try { return originalProviderTask = StartRawInvocation(invocationFence, () => RawOriginalSelectedTools(state, request, selected, routedRequest, token)); }
                         catch (Exception failure) { synchronousProviderFailure = failure; throw; }
                     }, cancellationToken);
                     BindOriginalToolDispatchFrame(state, originalFrame);
@@ -438,6 +451,8 @@ public sealed partial class ResilientProviderRoutingModelClient(
         public bool InitialObservationValidated { get; set; }
         public TaskExecutionOwnerBinding? OriginalOwner { get; set; }
         public OriginalRequestFailureBody? OriginalRequestFailure { get; set; }
+        public TaskRunOriginalResponseActionAcknowledgment? ResponseAcknowledgment { get; set; }
+        public List<Task> OriginalResponseTasks { get; } = [];
     }
 
     private static string RequestKey(ProviderModelDescriptor descriptor) =>

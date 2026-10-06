@@ -554,7 +554,7 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunDelegationAutho
         { System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(original.Exception!).Throw(); throw; }
     }
 
-    private sealed class Lease(TaskRunPermissionAuthority issuer, Owner owner, Selection selection, Guid attemptId,
+    private sealed partial class Lease(TaskRunPermissionAuthority issuer, Owner owner, Selection selection, Guid attemptId,
         ITaskRunCloudAdmissionLease? cloud) : ITaskRunAdmissionCommitLease
     {
         private readonly object _sync = new();
@@ -570,6 +570,7 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunDelegationAutho
         public Guid AttemptId { get; } = attemptId;
         public TaskRunRouteCandidate Candidate => selection.Candidate;
         internal ProviderConfiguration OriginalCapturedRouteConfiguration => selection.Configuration;
+        internal ITaskRunCloudAdmissionLease? OriginalCloudAdmission => cloud;
         internal void DemandOriginalToolAdmission()
         {
             lock (_sync) if (_closing) throw new UnauthorizedAccessException("Original typed tool lease retired.");

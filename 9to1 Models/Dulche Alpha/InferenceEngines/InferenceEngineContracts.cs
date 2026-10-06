@@ -42,7 +42,16 @@ public sealed record InferenceCompatibility(InferenceEngine Engine, string Runti
 
 public sealed record InferenceEngineDiagnostic(InferenceEngine Requested, InferenceEngine? Effective,
     string Reason, ModelIdentity? Model, string? HardwareFingerprint,
-    IReadOnlyList<InferenceCompatibility> Compatibility, IReadOnlyList<DulcheError> InitializationFailures);
+    IReadOnlyList<InferenceCompatibility> Compatibility, IReadOnlyList<DulcheError> InitializationFailures)
+{
+    /// <summary>Actual selected session mode; null during initialization or without an active engine.</summary>
+    public InferenceEngine? ActiveSelectionPreference { get; init; }
+    /// <summary>Requested override, including a pending preference that has not replaced the loaded session.</summary>
+    public InferenceEngine PendingPreference { get; init; }
+    public bool SelectionPending { get; init; }
+    public string SelectionMode=>ActiveSelectionPreference is null ? "Unselected"
+        :ActiveSelectionPreference==InferenceEngine.Automatic ? "Automatic" :"Manual";
+}
 
 /// <summary>Observed profile is metadata, not authority. Actual adapters must still validate/load their artifact.
 /// Prefill/decode may be fused; KV export, image input and cancellation granularity are explicit features.</summary>

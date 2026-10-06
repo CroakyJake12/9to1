@@ -47,7 +47,7 @@ public interface ITaskRunCloudPermissionOriginalRequest
     PermissionDecision OriginalDecision { get; }
 }
 
-public sealed class TaskRunCentralCloudUsePermissionSource : ITaskRunCloudUsePermissionSource
+public sealed partial class TaskRunCentralCloudUsePermissionSource : ITaskRunCloudUsePermissionSource
 {
     private readonly IAuthenticatedResourceActorSource _actors;
     private readonly PermissionDecisionEngine _policy;
@@ -229,7 +229,7 @@ public sealed class TaskRunCentralCloudUsePermissionSource : ITaskRunCloudUsePer
         token.ThrowIfCancellationRequested();
     }
 
-    private sealed class Lease : ITaskRunCloudUsePermissionLease
+    private sealed partial class Lease : ITaskRunCloudUsePermissionLease
     {
         private readonly TaskRunCentralCloudUsePermissionSource _source;
         private readonly TaskExecutionOwnerBinding _owner;

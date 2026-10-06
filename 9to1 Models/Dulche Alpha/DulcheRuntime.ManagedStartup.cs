@@ -53,6 +53,21 @@ public sealed partial class DulcheRuntime
     /// The returned startup stays gated until its owner retains the receipt and calls StartOriginal; no model load or fake readiness.</summary>
     public DulcheEndpointStartupOriginal PrepareManagedProviderOriginal(string providerId,
         CancellationToken cancellationToken = default)
+        => PrepareManagedProviderOriginalCore(providerId, null, cancellationToken);
+
+    /// <summary>Model-bearing original acquisition. The model is an observation to the actual
+    /// engine source; this method neither loads a model nor supplies context/permission authority.</summary>
+    public DulcheEndpointStartupOriginal PrepareManagedProviderOriginal(string providerId,
+        ModelIdentity sameModel, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(sameModel);
+        if (!StringComparer.Ordinal.Equals(providerId, sameModel.ProviderId) || string.IsNullOrWhiteSpace(sameModel.ModelId))
+            throw new ArgumentException("A SAME provider-scoped model is required.", nameof(sameModel));
+        return PrepareManagedProviderOriginalCore(providerId, sameModel, cancellationToken);
+    }
+
+    private DulcheEndpointStartupOriginal PrepareManagedProviderOriginalCore(string providerId,
+        ModelIdentity? sameModel, CancellationToken cancellationToken)
     {
         if (!_adapters.TryGetValue(providerId, out var registered) || registered is not IDulcheOriginalProviderAdapter adapter)
             throw new InvalidOperationException("No original managed provider is composed.");
@@ -63,7 +78,7 @@ public sealed partial class DulcheRuntime
         cancellationToken.ThrowIfCancellationRequested();
         var endpoint = new DulcheEndpoint(Guid.NewGuid().ToString("N"), adapter.ProviderId,
             target.GetLeftPart(UriPartial.Path), adapter.IsLocal ? target.Port : null,
-            EndpointState.Starting, null, adapter.Capabilities.ToFrozenSet(StringComparer.Ordinal), !adapter.IsLocal, DateTimeOffset.UtcNow);
+            EndpointState.Starting, sameModel, adapter.Capabilities.ToFrozenSet(StringComparer.Ordinal), !adapter.IsLocal, DateTimeOffset.UtcNow);
         var slot = new EndpointSlot(endpoint, adapter, _maximumQueueDepth);
         var receipt = new DulcheEndpointStartupOriginal(endpoint);
         var original = StartManagedEndpointOriginalAsync(slot, receipt, receipt.OriginalStartSignal, cancellationToken);

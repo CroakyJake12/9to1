@@ -1132,6 +1132,18 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
             throw new InvalidOperationException("A provider original cannot join its containing service.");
     }
 
+    /// <summary>Exact retained provider snapshot for trusted same-adapter composition.
+    /// This does not admit a request or grant model, context or provider authority.</summary>
+    internal IModelProvider ObserveOriginalRawModelProvider()
+    {
+        RequireIndependentOriginalProviderJoin();
+        lock (_sync)
+        {
+            RequireOpen();
+            return _provider;
+        }
+    }
+
     private bool IsLiveOriginalCall(Endpoint owner)
     {
         for (var phase = _executing.Value; phase is not null; phase = phase.Parent)

@@ -244,6 +244,7 @@ public sealed partial class ChatSessionService
             return result.OriginalResult;
         }
 
+        var firstOriginalResponse = true;
         while (callsUsed < boundary.ToolLimit)
         {
             token.ThrowIfCancellationRequested();
@@ -251,17 +252,21 @@ public sealed partial class ChatSessionService
             await AwaitOriginalCheckpointStage(original, "checkpoint.model-turn-safety", () =>
                 safety.EnsureMayActAsync(conversation.Id, "chat.model-tool-turn", token)).ConfigureAwait(false);
             await ReadCurrent("checkpoint.provider-current").ConfigureAwait(false);
+            var responseOriginal = ReserveOriginalChatResponse(original, boundary.OriginalRequest.ExecutionContext?.ActionId,
+                firstOriginalResponse ? binding : null);
+            firstOriginalResponse = false;
             var request = boundary.OriginalRequest with
             {
                 Model = requestModel, Messages = Array.AsReadOnly(turns.ToArray()),
                 ExecutionContext = new(current.TaskId, current.ContextId, current.ExecutionId, issued.AttemptId,
-                    current.PersistenceRevision, current.LastCheckpointActionId)
+                    current.PersistenceRevision, responseOriginal.ActionId)
                 { RequestedCandidate = selected.ActualSelectedCandidate, SelectedCandidate = selected.ActualSelectedCandidate }
             };
             var nextBoundary = CaptureOriginalToolCheckpoint(original, request, boundary.OriginalInventory,
                 assistantId, buffer.ToString(), activities, callsUsed, boundary.ToolLimit, lastCall, lastResult,
                 runtimeByName, current);
             request = nextBoundary.OriginalRequest;
+            coordinator.CaptureOriginalResponseRequest(responseOriginal, request);
             await AwaitOriginalCheckpointStage(original, "checkpoint.provider-context-capture", () =>
                 capture.CaptureOriginalAsync(current, request, boundary.OriginalInventory, token).AsTask()).ConfigureAwait(false);
             // Context capture can await arbitrary source reads. Re-observe the genuine
@@ -276,9 +281,15 @@ public sealed partial class ChatSessionService
                 response = await raw.ConfigureAwait(false);
                 if (response is null) throw new InvalidOperationException("The actual provider returned no tool response.");
                 nextBoundary.RecordActualResponse(response);
+                var responseAck = await ObserveOriginalChatResponseTerminalAsync(responseOriginal, raw).ConfigureAwait(false);
+                if (responseAck is not null) current = responseAck;
             }
             catch (Exception cause)
-            { nextBoundary.RecordActualFailure(cause, raw); original.Retain(cause, raw); throw; }
+            {
+                nextBoundary.RecordActualFailure(cause, raw); original.Retain(cause, raw);
+                await ObserveOriginalChatResponseTerminalAsync(responseOriginal, raw, cause).ConfigureAwait(false);
+                throw;
+            }
             if (response.EffectiveModel is not { } actualModel || actualModel.Key != descriptor.Key
                 || !actualModel.Supports(ToolCapability.Text) || !actualModel.Supports(ToolCapability.Tools))
                 throw new InvalidOperationException("The effective response model is not the actual selected capable local model.");

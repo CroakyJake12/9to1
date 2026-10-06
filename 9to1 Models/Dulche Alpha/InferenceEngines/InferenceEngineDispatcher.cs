@@ -7,12 +7,16 @@ namespace Dulche.Runtime;
 
 /// <summary>One adapter inside the existing Dulche runtime. Selection changes the engine only;
 /// SAME canonical request, original admission/handle, context and permission owners are forwarded.</summary>
-public sealed class InferenceEngineDispatcher : IDulcheOriginalProviderAdapter, IDulcheOriginalCancellationSource, IAsyncDisposable
+public sealed partial class InferenceEngineDispatcher : IDulcheOriginalProviderAdapter, IDulcheOriginalCancellationSource, IAsyncDisposable
 {
     private const int Capacity = 128;
     private readonly object _gate = new();
     private readonly Dictionary<InferenceEngine, IInferenceEngineAdapterFactory> _engines;
     private readonly IInferenceRuntimeObservationSource _observations;
+    private readonly InferenceCalibrationCache _calibration;
+    public string? LastCalibrationDiagnostic { get; private set; }
+    private readonly List<Exception> _calibrationFailures=[];
+    private int _calibrationReservations;
     private readonly Dictionary<string, Endpoint> _endpoints = new(StringComparer.Ordinal);
     private readonly AsyncLocal<Phase?> _executing = new();
     [ThreadStatic] private static List<InferenceEngineDispatcher>? _physical;
@@ -22,6 +26,10 @@ public sealed class InferenceEngineDispatcher : IDulcheOriginalProviderAdapter, 
 
     public InferenceEngineDispatcher(string providerId, Uri originalConfiguredTarget,
         IEnumerable<InferenceEngineRegistration> engines, IInferenceRuntimeObservationSource observations)
+        :this(providerId,originalConfiguredTarget,engines,observations,null) { }
+    public InferenceEngineDispatcher(string providerId, Uri originalConfiguredTarget,
+        IEnumerable<InferenceEngineRegistration> engines, IInferenceRuntimeObservationSource observations,
+        string? configuredLocalCalibrationDiagnosticFile)
     {
         ProviderId = string.IsNullOrWhiteSpace(providerId) ? throw new ArgumentException("Provider identity is required.", nameof(providerId)) : providerId;
         OriginalConfiguredTarget = originalConfiguredTarget ?? throw new ArgumentNullException(nameof(originalConfiguredTarget));
@@ -34,6 +42,7 @@ public sealed class InferenceEngineDispatcher : IDulcheOriginalProviderAdapter, 
                 throw new ArgumentException("Each concrete local engine must share the SAME configured provider and target.", nameof(engines));
         }
         if (_engines.Count == 0) throw new ArgumentException("At least one actual engine is required.", nameof(engines));
+        _calibration=new(configuredLocalCalibrationDiagnosticFile);
     }
 
     public string ProviderId { get; }
@@ -60,13 +69,38 @@ public sealed class InferenceEngineDispatcher : IDulcheOriginalProviderAdapter, 
 
     public InferenceEngineDiagnostic GetInferenceEngine(string? endpointId = null)
     {
-        lock (_gate)
-        {
-            if (endpointId is not null && _endpoints.TryGetValue(endpointId, out var owner))
-                return owner.Diagnostic with { Requested = _requested };
-            if (endpointId is null && _endpoints.Count == 1)
-                return _endpoints.Values.Single().Diagnostic with { Requested = _requested };
-            return new(_requested, null, "Preference applies at the next explicit model initialization; existing loaded sessions stay pinned.", null, null, [], []);
+        lock(_gate) {
+            Endpoint? owner=endpointId is not null ? _endpoints.GetValueOrDefault(endpointId)
+                :_endpoints.Count==1 ? _endpoints.Values.Single() :null;
+            if(owner is null) return new(_requested,null,"No unique active engine; preference applies at model initialization.",null,null,[],[]) { PendingPreference=_requested };
+            var active=!_sealed&&!owner.Sealed&&!owner.Initializing&&owner.Selected is not null;
+            return owner.Diagnostic with {
+                Requested=_requested, PendingPreference=_requested,
+                Effective=active ? owner.Diagnostic.Effective :null,
+                ActiveSelectionPreference=active ? owner.ActiveSelectionPreference :null,
+                SelectionPending=owner.Initializing||active&&owner.ActiveSelectionPreference!=_requested
+            };
+        }
+    }
+
+    /// <summary>Explicit active switch of the SAME loaded model. The returned actual driver is
+    /// published/owned before any callback; initialization joins the old lease before fresh load.</summary>
+    public Task<OperationResult<Unit>> SwitchInferenceEngineAsync(string endpointId,InferenceEngine requested,CancellationToken cancellationToken=default)
+    {
+        DemandExternalJoin();
+        if(!Enum.IsDefined(requested)) return Task.FromResult(Error<Unit>(DulcheErrorCode.InvalidArgument,"Unknown inference engine."));
+        lock(_gate) {
+            var owner=Required(endpointId);
+            if(_sealed||owner.Sealed||owner.Diagnostic.Model is not { } model)
+                return Task.FromResult(Error<Unit>(DulcheErrorCode.InvalidState,"No original model is available for an engine switch."));
+            if(owner.Operations.Count>=4096||_endpoints.Values.Any(value=>value.Initializing||value.Handles.Count!=0||value.Operations.Any(task=>!task.IsCompleted)))
+                return Task.FromResult(Error<Unit>(DulcheErrorCode.Conflict,"An original request or initialization still owns this runtime."));
+            cancellationToken.ThrowIfCancellationRequested();
+            if(_requested!=requested) foreach(var value in _endpoints.Values) value.ManualFallback=null;
+            _requested=requested;
+            var start=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var original=Drive(owner,start.Task,actual=>InitializeAsync(actual,actual.Original with { Model=model },model,cancellationToken));
+            owner.Operations.Add(original);owner.EngineChange=original;start.SetResult();return original;
         }
     }
 
@@ -108,7 +142,14 @@ public sealed class InferenceEngineDispatcher : IDulcheOriginalProviderAdapter, 
                 &&(_requested==InferenceEngine.Automatic||_requested==actual.Diagnostic.Effective);
             if(same) {
                 var health=await Original(actual,()=>Selected(actual).HealthAsync(endpoint,cancellationToken).AsTask()).ConfigureAwait(false);
-                if(health.State==EndpointState.Ready) return OperationResult<Unit>.Success(Unit.Value);
+                if(health.State==EndpointState.Ready) {
+                    lock(_gate) {
+                        if(_sealed||actual.Sealed) throw new InvalidOperationException("The same-model observation retired before selected-mode disclosure.");
+                        cancellationToken.ThrowIfCancellationRequested();
+                        actual.ActiveSelectionPreference=_requested;
+                    }
+                    return OperationResult<Unit>.Success(Unit.Value);
+                }
             }
             return await InitializeAsync(actual, endpoint, model, cancellationToken).ConfigureAwait(false);
         }));
@@ -129,9 +170,10 @@ public sealed class InferenceEngineDispatcher : IDulcheOriginalProviderAdapter, 
         {
             if (owner.CurrentLease is not null)
             {
-                owner.CurrentLease.DemandExternalOriginalJoin();
-                await Original(owner, owner.CurrentLease.CloseOriginalAsync).ConfigureAwait(false);
-                lock (_gate) { owner.Selected = null; owner.CurrentLease = null; }
+                var prior=owner.CurrentLease;
+                prior.DemandExternalOriginalJoin();
+                lock (_gate) { owner.Selected = null; owner.CurrentLease = null; owner.ActiveSelectionPreference=null; }
+                await Original(owner, prior.CloseOriginalAsync).ConfigureAwait(false);
             }
             var observation = InferenceCompatibilityRegistry.Detach(await Original(owner,
                 () => _observations.ObserveOriginalAsync(model, sourceScope, cancellationToken)).ConfigureAwait(false));
@@ -143,6 +185,8 @@ public sealed class InferenceEngineDispatcher : IDulcheOriginalProviderAdapter, 
             var preferred = observation.Requirements.PreferredEngines ?? [];
             var ordered = fit.OrderBy(engine => preferred.Contains(engine) ? preferred.ToList().IndexOf(engine) : int.MaxValue)
                 .ThenBy(engine => engine == InferenceEngine.LlamaCpp ? 0 : 1).ToArray();
+            var calibrated=_calibration.TryOrder(observation,ordered,out var measuredOrder,out var calibrationReason);
+            if(preference==InferenceEngine.Automatic&&calibrated) ordered=measuredOrder;
             bool manualFallback; lock (_gate) {
                 var permit=owner.ManualFallback; owner.ManualFallback=null;
                 manualFallback=permit is not null&&permit.Model==model&&permit.Engine==preference
@@ -152,7 +196,7 @@ public sealed class InferenceEngineDispatcher : IDulcheOriginalProviderAdapter, 
                 : ordered.Where(engine => engine == preference).Concat(manualFallback ? ordered.Where(engine => engine != preference) : []).ToArray();
             var failures = new List<DulcheError>();
             lock (_gate) owner.Diagnostic = new(preference, null,
-                preference == InferenceEngine.Automatic ? "Compatible engines ordered by declared fit; llama.cpp is the uncalibrated default. No local timing measurement is claimed."
+                preference == InferenceEngine.Automatic ? (calibrated ? calibrationReason : "Compatible engines ordered by declared fit; llama.cpp is the uncalibrated default. No local timing measurement is claimed. "+calibrationReason)
                 : "Explicit manual engine; no substitution without this failure's post-failure permission.", model, observation.Hardware.Fingerprint, reports, []);
             if (candidates.Length == 0)
             {
@@ -183,7 +227,7 @@ public sealed class InferenceEngineDispatcher : IDulcheOriginalProviderAdapter, 
                         {
                             if(_sealed||owner.Sealed) throw new InvalidOperationException("The original initialization was retired before disclosure.");
                             cancellationToken.ThrowIfCancellationRequested();
-                            owner.Selected = actual; owner.CurrentLease = lease; owner.LastFailure = null;
+                            owner.Selected = actual; owner.CurrentLease = lease; owner.LastFailure = null; owner.ActiveSelectionPreference=preference;
                             owner.Diagnostic = owner.Diagnostic with { Effective = candidate, InitializationFailures = failures.ToArray(),
                                 Reason = failures.Count == 0 ? owner.Diagnostic.Reason : owner.Diagnostic.Reason + " Prior compatible initialization failed and its actual cleanup succeeded." };
                         }
@@ -214,11 +258,26 @@ public sealed class InferenceEngineDispatcher : IDulcheOriginalProviderAdapter, 
     public Task BindOriginalRequestAsync(DulcheEndpoint endpoint, DulcheRequest originalFrozenRequest,
         RuntimeRequestHandle originalHandle, TaskRunAttemptAdmission originalAdmission, Guid originalActionId, CancellationToken cancellationToken)
     {
-        var owner = RequiredThreadSafe(endpoint.EndpointId);
-        lock (_gate) owner.Handles.Add(originalHandle);
-        try { return Forward(owner, () => Selected(owner).BindOriginalRequestAsync(endpoint, originalFrozenRequest, originalHandle,
-            originalAdmission, originalActionId, cancellationToken)); }
-        catch { lock (_gate) owner.Handles.Remove(originalHandle); throw; }
+        var owner=RequiredThreadSafe(endpoint.EndpointId);
+        lock(_gate) if(owner.EngineChange is { IsCompleted:false } change)
+            return Publish(owner,actual=>BindAfterOriginalEngineChange(actual,change,endpoint,originalFrozenRequest,originalHandle,originalAdmission,originalActionId,cancellationToken));
+        return BindSelectedOriginal(owner,endpoint,originalFrozenRequest,originalHandle,originalAdmission,originalActionId,cancellationToken);
+    }
+    private async Task<Unit> BindAfterOriginalEngineChange(Endpoint owner,Task<OperationResult<Unit>> sameChange,DulcheEndpoint endpoint,
+        DulcheRequest request,RuntimeRequestHandle handle,TaskRunAttemptAdmission admission,Guid action,CancellationToken cancellationToken)
+    {
+        var result=await Original(owner,()=>sameChange.WaitAsync(cancellationToken)).ConfigureAwait(false);
+        if(!result.Succeeded) throw new InferenceEngineException(result.Error!);
+        CheckAdmission(owner);cancellationToken.ThrowIfCancellationRequested();
+        await Original(owner,()=>BindSelectedOriginal(owner,endpoint,request,handle,admission,action,cancellationToken)).ConfigureAwait(false);
+        return Unit.Value;
+    }
+    private Task BindSelectedOriginal(Endpoint owner,DulcheEndpoint endpoint,DulcheRequest request,RuntimeRequestHandle handle,
+        TaskRunAttemptAdmission admission,Guid action,CancellationToken cancellationToken)
+    {
+        lock(_gate) { if(owner.Initializing) throw new InvalidOperationException("The actual engine initialization has no completed selected binding.");owner.Handles.Add(handle); }
+        try { return Forward(owner,()=>Selected(owner).BindOriginalRequestAsync(endpoint,request,handle,admission,action,cancellationToken)); }
+        catch { lock(_gate) owner.Handles.Remove(handle);throw; }
     }
 
     public void CaptureOriginalDispatchRequest(RuntimeRequestHandle originalHandle, DulcheRequest originalFrozenRequest, DulcheRequest actualDispatchRequest)
@@ -252,6 +311,31 @@ public sealed class InferenceEngineDispatcher : IDulcheOriginalProviderAdapter, 
                 if (iterator is not null)
                     try { await Original(actual, () => iterator.DisposeAsync().AsTask(), owningCleanup:true).ConfigureAwait(false); }
                     catch (Exception error) { Add(errors, error); }
+                if(errors.Count==0&&request.Model is { } model) {
+                    try {
+                        OriginalInferenceEngineLease? lease;
+                        lock(_gate) {
+                            lease=_sealed||actual.Sealed||_calibrationReservations>=4096 ? null : actual.CurrentLease;
+                            if(lease is IOriginalInferenceCalibrationLease) _calibrationReservations++;
+                        }
+                        if(lease is IOriginalInferenceCalibrationLease measuredLease) {
+                            // The actual generation/dispose driver already owns this finite observation.
+                            // Source getters/callbacks run outside the metadata gate on its physical scope.
+                            Physical(()=> {
+                                var source=measuredLease.CalibrationSource;
+                                if(source is not null&&source.TryObserveOriginalCalibration(model,out var reading)&&reading is not null)
+                                    _calibration.RecordOriginal(source,reading);
+                                return Unit.Value;
+                            });
+                        }
+                    }
+                    catch(Exception calibrationFailure) {
+                        lock(_gate) {
+                            Add(_calibrationFailures,calibrationFailure);
+                            LastCalibrationDiagnostic="Actual inference completed; optional calibration observation unavailable: "+calibrationFailure.Message;
+                        }
+                    }
+                }
                 lock (_gate) actual.Handles.RemoveWhere(handle => handle.RequestId == requestId);
                 output.Writer.TryComplete(errors.Count == 0 ? null : errors.Count == 1 ? errors[0] : new AggregateException(errors));
             }
@@ -302,7 +386,7 @@ public sealed class InferenceEngineDispatcher : IDulcheOriginalProviderAdapter, 
     private async Task<OperationResult<Unit>> StopBody(Endpoint owner, DulcheEndpoint endpoint, Task start)
     {
         await start.ConfigureAwait(false); var failures = new List<Exception>();
-        try { owner.Retirement.Cancel(); } catch (Exception error) { Add(failures, error); }
+        try { Physical(()=> { owner.Retirement.Cancel();return Unit.Value; }); } catch (Exception error) { Add(failures, error); }
         var closes = new Dictionary<OriginalInferenceEngineLease,Task>(ReferenceEqualityComparer.Instance);
         void StartCloses()
         {
@@ -350,6 +434,10 @@ public sealed class InferenceEngineDispatcher : IDulcheOriginalProviderAdapter, 
             if (stop.IsCompletedSuccessfully && !stop.Result.Succeeded) Add(failures, new InvalidOperationException(stop.Result.Error!.Message));
         }
         foreach (var owner in owners) try { owner.Retirement.Dispose(); } catch (Exception error) { Add(failures, error); }
+        Task? calibrationClose=null;
+        try { calibrationClose=_calibration.DisposeAsync().AsTask(); } catch(Exception error) { Add(failures,error); }
+        if(calibrationClose is not null) await Join(calibrationClose,failures).ConfigureAwait(false);
+        lock(_gate) foreach(var failure in _calibrationFailures) Add(failures,failure);
         Throw(failures);
     }
 
@@ -435,6 +523,7 @@ public sealed class InferenceEngineDispatcher : IDulcheOriginalProviderAdapter, 
     public void DemandExternalOriginalJoin()=>DemandExternalJoin();
     private void DemandExternalJoin()
     {
+        _calibration.DemandExternalOriginalJoin();
         OriginalInferenceEngineLease[] leases; lock(_gate) leases=_endpoints.Values.SelectMany(owner=>owner.Leases).ToArray();
         foreach(var lease in leases) lease.DemandExternalOriginalJoin();
         for (var phase = _executing.Value; phase is not null; phase = phase.Parent)
@@ -487,7 +576,8 @@ public sealed class InferenceEngineDispatcher : IDulcheOriginalProviderAdapter, 
     {
         public DulcheEndpoint Original { get; } = original;
         public IDulcheOriginalProviderAdapter? Selected; public OriginalInferenceEngineLease? CurrentLease; public bool Sealed; public bool Initializing; public ManualFallbackPermit? ManualFallback;
-        public DulcheError? LastFailure; public Task<OperationResult<Unit>>? Stop;
+        public DulcheError? LastFailure; public Task<OperationResult<Unit>>? Stop; public Task<OperationResult<Unit>>? EngineChange;
+        public InferenceEngine? ActiveSelectionPreference;
         public int RawReservations; public int CleanupReservations;
         public CancellationTokenSource Retirement { get; } = new();
         public List<Task> Operations { get; } = []; public List<Task> Raw { get; } = [];

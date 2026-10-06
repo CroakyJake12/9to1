@@ -220,7 +220,8 @@ public sealed partial class TaskExecutionCoordinator
             || current.ExecutionId != original.OriginalBinding.ExecutionId || current.OwnerBinding != original.OriginalBinding.OwnerBinding
             || ChatSessionService.OriginalToolCheckpointControlFingerprint(current) != boundary.OriginalControlFingerprint
             || current.ParentDelegation is not null // Saved child producer binding requires its owning Agent handoff.
-            || current.Plan.Any(node => node.State is not (TaskPlanNodeState.Completed or TaskPlanNodeState.Superseded))
+            || current.Plan.Any(node => node.State is not (TaskPlanNodeState.Completed or TaskPlanNodeState.Superseded)
+                && !HasSameFailedResponseBoundary(original, boundary, node))
             || current.Delegations.Any(intent => intent.State != TaskRunDelegationState.ChildCompleted))
             throw new InvalidOperationException("The actual unfinished tool step has no complete original cleanup/accepted-work boundary.");
         var known = new HashSet<Exception>(ReferenceEqualityComparer.Instance) { outward };
@@ -249,6 +250,7 @@ public sealed partial class TaskExecutionCoordinator
         }
         foreach (var node in current.Plan.Where(node => node.State == TaskPlanNodeState.Completed))
         {
+            if (HasSameSuccessfulResponseNode(original, node)) continue;
             var outcome = boundary.ToolOutcomes.SingleOrDefault(value => value.OriginalNode.ActionId == node.ActionId);
             if (outcome is null || !HasSuccessfulOriginalToolCheckpointOutcome(outcome)
                 || !SameOriginalToolCheckpointNode(outcome.OriginalNode, node))
@@ -374,6 +376,7 @@ public sealed partial class TaskExecutionCoordinator
                 next.OriginalInputCurrentness = original.OriginalInputCurrentness;
                 next.OriginalToolContinuationFactory = original.OriginalToolContinuationFactory;
                 foreach (var outcome in boundary.ToolOutcomes) next.RetainOriginalToolOutcome(outcome);
+                foreach (var outcome in original.CaptureOriginalResponseOutcomes()) next.BorrowOriginalResponseOutcome(binding, outcome);
             }
             PublishAcknowledgedSnapshot(binding.Acknowledged);
             // This is actual fresh issuer/lease/registration work, not selection metadata.

@@ -1290,13 +1290,15 @@ public sealed partial class ChatSessionService(
                 TaskRunCloudPermissionRequiredException? originalPermissionRequired = null;
                 Task<OllamaToolResponse>? originalToolTurn = null;
                 ChatOriginalToolCheckpointBoundary? originalCheckpoint = null;
+                TaskRunOriginalResponseOperation? originalResponse = null;
                 try
                 {
                     await safety.EnsureMayActAsync(conversation.Id, "chat.model-tool-turn", cancellationToken).ConfigureAwait(false);
                     var actualInventory = canonicalIntent ? await CaptureInventoryAsync(cancellationToken).ConfigureAwait(false) : null;
+                    originalResponse = canonicalIntent ? ReserveOriginalChatResponse(originalCustody!, parentActionId) : null;
                     var originalRequest = new OllamaToolRequest(
                         turnModel.Name, turns, toolDefinitions, effort, system, generationOptions)
-                    { ExecutionContext = await ProviderContextAsync(parentActionId).ConfigureAwait(false) };
+                    { ExecutionContext = await ProviderContextAsync(originalResponse?.ActionId ?? parentActionId).ConfigureAwait(false) };
                     if (canonicalIntent)
                     {
                         originalCheckpoint = CaptureOriginalToolCheckpoint(originalCustody!, originalRequest,
@@ -1308,6 +1310,7 @@ public sealed partial class ChatSessionService(
                             canonicalTask ?? throw new InvalidOperationException("The actual provider task basis is unavailable."));
                         originalRequest = originalCheckpoint.OriginalRequest;
                     }
+                    if (canonicalIntent) taskCoordinator!.CaptureOriginalResponseRequest(originalResponse!, originalRequest);
                     await CaptureOriginalToolsAsync(originalRequest, actualInventory, cancellationToken).ConfigureAwait(false);
                     originalToolTurn = canonicalIntent
                         ? InvokeOriginalToolCheckpointCall(originalCheckpoint!, () => ollama.ChatWithToolsAsync(originalRequest, cancellationToken))
@@ -1315,7 +1318,12 @@ public sealed partial class ChatSessionService(
                     response = await originalToolTurn.ConfigureAwait(false);
                     if (canonicalIntent && response is null)
                         throw new InvalidOperationException("The actual canonical provider returned no response observation.");
-                    if (canonicalIntent) originalCheckpoint!.RecordActualResponse(response);
+                    if (canonicalIntent)
+                    {
+                        originalCheckpoint!.RecordActualResponse(response);
+                        var responseAck = await ObserveOriginalChatResponseTerminalAsync(originalResponse, originalToolTurn).ConfigureAwait(false);
+                        if (responseAck is not null) canonicalTask = responseAck;
+                    }
                     if (canonicalIntent && response.ToolCalls.Count > 0 && response.EffectiveModel is null)
                         throw new InvalidOperationException("The actual effective model is unknown; canonical tools were refused before dispatch.");
                     if (response.EffectiveModel is { } actualModel)
@@ -1333,18 +1341,21 @@ public sealed partial class ChatSessionService(
                 {
                     originalCheckpoint?.RecordActualFailure(actualAsk, originalToolTurn);
                     originalCustody!.Retain(actualAsk, originalToolTurn);
+                    await ObserveOriginalChatResponseTerminalAsync(originalResponse, originalToolTurn, actualAsk).ConfigureAwait(false);
                     originalPermissionRequired = actualAsk;
                 }
                 catch (HttpRequestException ex) when (IsUnsupportedToolSchema(ex))
                 {
                     originalCheckpoint?.RecordActualFailure(ex, originalToolTurn);
                     if (canonicalIntent) originalCustody!.Retain(ex, originalToolTurn);
+                    if (canonicalIntent) await ObserveOriginalChatResponseTerminalAsync(originalResponse, originalToolTurn, ex).ConfigureAwait(false);
                     unsupportedToolSchema = true;
                 }
                 catch (Exception originalFailure) when (canonicalIntent)
                 {
                     originalCheckpoint?.RecordActualFailure(originalFailure, originalToolTurn);
                     originalCustody!.Retain(originalFailure, originalToolTurn);
+                    await ObserveOriginalChatResponseTerminalAsync(originalResponse, originalToolTurn, originalFailure).ConfigureAwait(false);
                     throw;
                 }
 
@@ -1449,8 +1460,9 @@ public sealed partial class ChatSessionService(
             var thinkingBuffer = new StringBuilder();
             await safety.EnsureMayActAsync(conversation.Id, "chat.model-stream", cancellationToken).ConfigureAwait(false);
             var actualInventory = canonicalIntent ? await CaptureInventoryAsync(cancellationToken).ConfigureAwait(false) : null;
+            var originalResponse = canonicalIntent ? ReserveOriginalChatResponse(originalCustody!, parentActionId) : null;
             var originalRequest = new OllamaChatRequest(turnModel.Name, requestMessages, effort, system, Options: generationOptions)
-            { ExecutionContext = await ProviderContextAsync(parentActionId).ConfigureAwait(false) };
+            { ExecutionContext = await ProviderContextAsync(originalResponse?.ActionId ?? parentActionId).ConfigureAwait(false) };
             if (!canonicalIntent)
             {
                 await CaptureOriginalChatAsync(originalRequest, actualInventory, cancellationToken).ConfigureAwait(false);
@@ -1484,11 +1496,24 @@ public sealed partial class ChatSessionService(
                 try
                 {
                     await CaptureOriginalChatAsync(originalRequest, actualInventory, cancellationToken).ConfigureAwait(false);
-                    originalCustody!.OriginalProviderInvocationInvoked = true;
-                    actualStream = ollama.StreamChatAsync(originalRequest, cancellationToken).GetAsyncEnumerator(cancellationToken);
+                    taskCoordinator!.CaptureOriginalResponseRequest(originalResponse!, originalRequest);
+                    InvokeOriginalResponseCallback(originalResponse!, () =>
+                    {
+                        originalCustody!.OriginalProviderInvocationInvoked = true;
+                        actualStream = ollama.StreamChatAsync(originalRequest, cancellationToken).GetAsyncEnumerator(cancellationToken);
+                    });
                 }
                 catch (TaskRunCloudPermissionRequiredException actualAsk) when (taskCloudPermissionRemediation is not null)
-                { originalCustody!.Retain(actualAsk); originalPermissionRequired = actualAsk; }
+                {
+                    originalCustody!.Retain(actualAsk); originalPermissionRequired = actualAsk;
+                    await ObserveOriginalChatResponseTerminalAsync(originalResponse, failure: actualAsk).ConfigureAwait(false);
+                }
+                catch (Exception actualFailure)
+                {
+                    originalCustody!.Retain(actualFailure);
+                    await ObserveOriginalChatResponseTerminalAsync(originalResponse, failure: actualFailure).ConfigureAwait(false);
+                    throw;
+                }
                 if (originalPermissionRequired is not null)
                 {
                     var metadata = await PublishOriginalCloudPermissionAsync(originalPermissionRequired).ConfigureAwait(false);
@@ -1504,20 +1529,30 @@ public sealed partial class ChatSessionService(
                         bool hasChunk;
                         try
                         {
-                            actualMove = actualStream.MoveNextAsync().AsTask();
-                            originalCustody!.RetainAdditionalOriginal("provider.stream.move", actualMove);
+                            InvokeOriginalResponseCallback(originalResponse!, () =>
+                            {
+                                actualMove = actualStream.MoveNextAsync().AsTask();
+                                originalCustody!.RetainAdditionalOriginal("provider.stream.move", actualMove);
+                                taskCoordinator!.CaptureOriginalResponseMove(originalResponse!, actualMove);
+                            });
                             hasChunk = await actualMove.ConfigureAwait(false);
                         }
                         catch (TaskRunCloudPermissionRequiredException actualAsk) when (taskCloudPermissionRemediation is not null)
                         {
                             originalCustody!.Retain(actualAsk, actualMove);
                             originalPermissionRequired = actualAsk;
+                            await ObserveOriginalChatResponseTerminalAsync(originalResponse, failure: actualAsk).ConfigureAwait(false);
                             break;
                         }
                         catch (Exception originalFailure)
-                        { originalCustody!.Retain(originalFailure, actualMove); throw; }
-                        if (!hasChunk) break;
-                        var chunk = actualStream.Current;
+                        {
+                            originalCustody!.Retain(originalFailure, actualMove);
+                            await ObserveOriginalChatResponseTerminalAsync(originalResponse, failure: originalFailure).ConfigureAwait(false);
+                            throw;
+                        }
+                        if (!hasChunk) { originalResponse!.StreamReachedEnd = true; break; }
+                        string chunk = "";
+                        InvokeOriginalResponseCallback(originalResponse!, () => chunk = actualStream.Current, cleanup: true);
                         if (firstChunk)
                         {
                             execution.Update(ChatExecutionStage.Generating, "Writing Response");
@@ -1544,12 +1579,25 @@ public sealed partial class ChatSessionService(
                     Task? actualDispose = null;
                     try
                     {
-                        actualDispose = actualStream.DisposeAsync().AsTask();
-                        originalCustody!.RetainAdditionalOriginal("provider.stream.dispose", actualDispose);
+                        InvokeOriginalResponseCallback(originalResponse!, () =>
+                        {
+                            actualDispose = actualStream.DisposeAsync().AsTask();
+                            originalCustody!.RetainAdditionalOriginal("provider.stream.dispose", actualDispose);
+                            taskCoordinator!.CaptureOriginalResponseDispose(originalResponse!, actualDispose);
+                        }, cleanup: true);
                         await actualDispose.ConfigureAwait(false);
                     }
                     catch (Exception originalCleanup)
-                    { originalCustody!.Retain(originalCleanup, actualDispose); throw; }
+                    {
+                        originalCustody!.Retain(originalCleanup, actualDispose);
+                        await ObserveOriginalChatResponseTerminalAsync(originalResponse, failure: originalCleanup).ConfigureAwait(false);
+                        throw;
+                    }
+                    finally
+                    {
+                        var responseAck = await ObserveOriginalChatResponseTerminalAsync(originalResponse).ConfigureAwait(false);
+                        if (responseAck is not null) canonicalTask = responseAck;
+                    }
                 }
                 if (originalPermissionRequired is not null)
                 {
@@ -1655,6 +1703,17 @@ public sealed partial class ChatSessionService(
                 try { resource.Dispose(); } catch (Exception resourceFailure) { originalCustody.Retain(resourceFailure); }
             originalCustody.ResourcesDisposed = true;
             originalCustody.OwnedCleanupTerminal = true;
+            Task? actualResponseCleanup = null;
+            try
+            {
+                originalCustody.OriginalProcessProducer!.InvokeOriginalCallback(() =>
+                {
+                    actualResponseCleanup = taskCoordinator!.FinishOriginalResponseOwnerCleanupAsync(originalCustody);
+                    originalCustody.RetainAdditionalOriginal("response.owner-cleanup", actualResponseCleanup);
+                });
+                await actualResponseCleanup!.ConfigureAwait(false);
+            }
+            catch (Exception responseCleanup) { originalCustody.Retain(responseCleanup, actualResponseCleanup); }
             if (originalCustody.ReachedEnd && originalCustody.Causes.Count == 0 && originalCustody.DeferredCompletedMessage is not null)
             {
                 try
