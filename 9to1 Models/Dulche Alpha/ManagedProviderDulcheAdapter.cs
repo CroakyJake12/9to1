@@ -147,6 +147,48 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
         catch (Exception error) { ThrowTask(error, actual); throw; }
     }
 
+    internal static ManagedProviderDulcheAdapter CreateOriginalStrataProvider(StrataRawModelProvider sameActualProvider,
+        Uri originalConfiguredTarget, TaskExecutionCoordinator coordinator, ITaskRunOriginalFrameOwner frames,
+        IOriginalDulcheProviderToolSource? tools, IOriginalDulcheProviderContextSource? contexts,
+        ITaskRunProviderContextAuthority? contextAuthority)
+        => new(sameActualProvider, originalConfiguredTarget, coordinator, frames, tools, contexts, contextAuthority);
+
+    /// <summary>Observes the SAME actual engine source's initialized model. Generic raw providers
+    /// retain UnsupportedCapability; health or a model name never substitutes for engine initialization.</summary>
+    public ValueTask<OperationResult<Unit>> LoadModelAsync(DulcheEndpoint endpoint, ModelIdentity model,
+        CancellationToken cancellationToken)
+    {
+        if (_provider is not IOriginalInferenceEngineModelSource source)
+            return ValueTask.FromResult(OperationResult<Unit>.Failure(new(DulcheErrorCode.UnsupportedCapability,
+                "The raw provider has no original initialized-model source.", model.StableKey, false)));
+        if (endpoint.Model != model || model.ProviderId != ProviderId)
+            return ValueTask.FromResult(OperationResult<Unit>.Failure(new(DulcheErrorCode.InvalidArgument,
+                "The endpoint and actual model binding differ.", model.StableKey, false)));
+        Endpoint owner; lock (_sync) owner = RequireEndpoint(endpoint);
+        return new(StartOwned(owner, async () =>
+        {
+            Task<OperationResult<Unit>> actual;
+            try
+            {
+                actual = InvokePhysicalOriginal(owner, () =>
+                {
+                    var original = source.ObserveOriginalInitializedModelAsync(model, cancellationToken)
+                        ?? throw new InvalidOperationException("The engine source returned no original initialization observation Task.");
+                    RetainRaw(owner, original);
+                    return original;
+                });
+            }
+            catch (OperationCanceledException original)
+            { throw new AggregateException("The original initialized-model source faulted synchronously.", original); }
+            try { return await actual.ConfigureAwait(false); }
+            catch (Exception error) when (actual.IsFaulted)
+            {
+                var causes = new List<Exception>(); AddTask(causes, error, actual);
+                throw new AggregateException("The original initialized-model observation task faulted.", causes);
+            }
+        }, cancellationToken));
+    }
+
     public string ProviderId => _provider.Id;
     public string RuntimeVersion => "managed-raw-provider-1";
     public bool IsLocal => _provider.IsLocal;

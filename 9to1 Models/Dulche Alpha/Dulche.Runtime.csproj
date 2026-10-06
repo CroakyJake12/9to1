@@ -28,5 +28,6 @@
     <Compile Include="LanguageResolver.cs" />
     <Compile Include="DulcheTranslateRuntime.cs" />
     <Compile Include="Agents/**/*.cs" />
+    <Compile Include="InferenceEngines/**/*.cs" />
   </ItemGroup>
 </Project>
