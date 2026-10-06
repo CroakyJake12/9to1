@@ -81,12 +81,17 @@ public sealed partial class App
         lock (_actualStartupAcquisitionGate) originals = _actualFailedStartupAcquisitionCloses.ToArray();
         var failures = new List<Exception>();
 #if !ANDROID
+        Task? actualCanonicalProcessDrain = null;
+        try { _originalAppWork.RunCloseCallback(() => actualCanonicalProcessDrain = JoinOriginalUntransferredCanonicalProcessBorrowersAsync()); }
+        catch (Exception error) { AddAppCause(failures, error); }
         Task? actualNativeDevelopmentDrain = null;
         try { _originalAppWork.RunCloseCallback(() => actualNativeDevelopmentDrain = JoinOriginalUntransferredNativeDevelopmentBorrowersAsync()); }
         catch (Exception error) { AddAppCause(failures, error); }
 #endif
         foreach (var actual in originals) await JoinOriginalAppTaskAsync(actual, failures);
 #if !ANDROID
+        if (actualCanonicalProcessDrain is not null)
+            await JoinOriginalAppTaskAsync(actualCanonicalProcessDrain, failures);
         if (actualNativeDevelopmentDrain is not null)
             await JoinOriginalAppTaskAsync(actualNativeDevelopmentDrain, failures);
 #endif
@@ -116,7 +121,13 @@ public sealed partial class App
         var notifications = services.GetRequiredService<NotificationService>();
         var actualRecovery = _startupRecovery as IStartupRecoveryFinalCleanWriterSource
             ?? throw new InvalidOperationException("The actual startup owner has no prepared final-writer port.");
-        var actualBorrowers = new List<object> { shell, windows, notifications };
+        var actualBorrowers = new List<object>();
+#if !ANDROID
+        // After whole-cohort pure preflight, seal canonical business admission
+        // FIRST, before shell/window retirement callbacks can initiate more work.
+        actualBorrowers.Add(CaptureOriginalCanonicalProcessBorrower());
+#endif
+        actualBorrowers.AddRange([shell, windows, notifications]);
 #if !ANDROID
         actualBorrowers.AddRange(CaptureOriginalNativeDevelopmentBorrowers(services));
 #endif
@@ -139,7 +150,11 @@ public sealed partial class App
             () => services.DisposeAsync().AsTask(),
             signal => Dispatcher.UIThread.InvokeAsync(signal, DispatcherPriority.Background).GetTask());
 #if !ANDROID
-        lock (_actualStartupAcquisitionGate) _nativeDevelopmentBorrowersTransferred = true;
+        lock (_actualStartupAcquisitionGate)
+        {
+            _canonicalProcessBorrowersTransferred = true;
+            _nativeDevelopmentBorrowersTransferred = true;
+        }
 #endif
         window.Closing += OnOriginalPrimaryWindowClosing;
         desktop.ShutdownRequested += OnOriginalDesktopShutdownRequested;

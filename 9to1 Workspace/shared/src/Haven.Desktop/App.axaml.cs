@@ -152,6 +152,9 @@ public sealed partial class App : Avalonia.Application
             ValidateScopes = true
         });
         Services = _services;
+#if !ANDROID
+        CaptureOriginalCanonicalProcessOwner(_services);
+#endif
         _actualComputerUseOverlay = ResolveOriginalComputerUseOverlay(_services);
         Subscribe.EventBus = _services.GetRequiredService<HavenEventBus>();
         _startupRecovery = _services.GetRequiredService<IStartupRecoveryCoordinator>();

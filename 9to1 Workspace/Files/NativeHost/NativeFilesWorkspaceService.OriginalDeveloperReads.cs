@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Haven.Application;
+using HavenOS.Home.Core;
 
 namespace HavenOS.Files.NativeHost;
 

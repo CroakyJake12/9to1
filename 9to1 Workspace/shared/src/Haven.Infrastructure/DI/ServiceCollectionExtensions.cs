@@ -259,6 +259,7 @@ public static class ServiceCollectionExtensions
             (task, run, attempt, token) => provider.GetRequiredService<TaskExecutionCoordinator>()
                 .TryGetIssuedAttemptAsync(task, run, attempt, token)));
         services.AddSingleton<ITaskRunOriginalFrameOwner>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
+        services.AddSingleton<ITaskRunOriginalFrameProcessJoinGuard>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
         services.AddSingleton<ITaskRunOriginalAttemptRegistrationSource>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
         services.AddSingleton<ITaskRunRuntimeSettlement>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
         services.AddSingleton<ITaskRunProviderFailureSettlement>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
@@ -298,6 +299,11 @@ public static class ServiceCollectionExtensions
             unstartedPermissionSource: provider.GetRequiredService<TaskRunCloudPermissionRemediationOwner>()));
         services.AddSingleton<ITaskRunOriginalActionAdmissionSource>(provider => provider.GetRequiredService<TaskExecutionCoordinator>());
         services.AddSingleton<ITaskRunProcessRetirementParticipant>(provider => provider.GetRequiredService<TaskExecutionCoordinator>());
+        services.AddSingleton<TaskRunCanonicalProcessRetirementOwner>(provider => new TaskRunCanonicalProcessRetirementOwner(
+            provider.GetRequiredService<TaskExecutionCoordinator>(),
+            provider.GetRequiredService<AgentTaskRuntimeService>(),
+            provider.GetRequiredService<TaskRunPermissionAuthority>(),
+            provider.GetRequiredService<TaskRunOriginalFrameOwner>()));
         services.AddSingleton<IProjectPreviewProvider, WebProjectPreviewProvider>();
         services.AddSingleton<IModelProvider>(provider => new OllamaModelProvider(
             provider.GetRequiredService<ILocalOllamaClient>(),
