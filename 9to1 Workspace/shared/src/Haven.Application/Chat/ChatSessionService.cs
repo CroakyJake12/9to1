@@ -268,26 +268,52 @@ public sealed partial class ChatSessionService(
         }
         IAsyncEnumerable<ChatStreamEvent> CreateOriginal(TaskRunInvocationCustody? custody, ProviderExecutionContext? context, CancellationToken token)
         {
-            var original = SendOriginalAsync(conversation, prompt, model, effort, capabilities, agentName, agentInstructions,
-                duoMode, workspaceRoot, projectContext, projectInstructions, images, token, prompts, registeredContext,
-                generationOptions, filePermission, commandPermission, browserPermission, explicitCapabilities,
-                availableCapabilities, computerUseRequest, context, taskExecutionIntent, custody);
-            return custody is null ? original : ObserveOriginalSendAsync(original, custody, token);
+            IAsyncEnumerable<ChatStreamEvent> CreateBody(CancellationToken originalToken)
+            {
+                var original = SendOriginalAsync(conversation, prompt, model, effort, capabilities, agentName, agentInstructions,
+                    duoMode, workspaceRoot, projectContext, projectInstructions, images, originalToken, prompts, registeredContext,
+                    generationOptions, filePermission, commandPermission, browserPermission, explicitCapabilities,
+                    availableCapabilities, computerUseRequest, context, taskExecutionIntent, custody);
+                return custody is null ? original : ObserveOriginalSendAsync(original, custody, originalToken);
+            }
+            return custody is null ? CreateBody(token)
+                : taskCoordinator!.RegisterOriginalCanonicalChatProducer(custody, CreateBody, token);
         }
         return CreateOriginal(originalCustody, executionContext, cancellationToken);
     }
 
     /// <summary>Explicit continuation of the SAME source-approved, live, never-started run.
     /// It is unavailable for unknown work, invoked attempts or reconstructed historical inputs.</summary>
-    public async IAsyncEnumerable<ChatStreamEvent> ContinueUnstartedOriginalAsync(
-        Guid taskId, Guid expectedExecutionId,
+    public IAsyncEnumerable<ChatStreamEvent> ContinueUnstartedOriginalAsync(
+        Guid taskId, Guid expectedExecutionId, CancellationToken cancellationToken)
+    {
+        var coordinator = taskCoordinator ?? throw new InvalidOperationException("The canonical Task owner is unavailable.");
+        var original = new CanonicalContinuationProcessCustody(coordinator);
+        return coordinator.RegisterOriginalContinuationProcessProducer(original,
+            token => ContinueUnstartedOriginalBodyAsync(taskId, expectedExecutionId, original, token), cancellationToken);
+    }
+
+    private async IAsyncEnumerable<ChatStreamEvent> ContinueUnstartedOriginalBodyAsync(
+        Guid taskId, Guid expectedExecutionId, CanonicalContinuationProcessCustody original,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var coordinator = taskCoordinator ?? throw new InvalidOperationException("The canonical Task owner is unavailable.");
-        var inspection = await coordinator.InspectOriginalRecoveryAsync(taskId, expectedExecutionId, cancellationToken).ConfigureAwait(false);
-        var prepared = await coordinator.PrepareOriginalUnstartedContinuationAsync(inspection, this, cancellationToken).ConfigureAwait(false);
-        var actual = coordinator.ClaimOriginalUnstartedContinuation(prepared, this, cancellationToken);
-        await foreach (var value in actual.WithCancellation(cancellationToken).ConfigureAwait(false)) yield return value;
+        var inspection = await original.Await("process.continuation-inspection", () =>
+            coordinator.InspectOriginalRecoveryAsync(taskId, expectedExecutionId, cancellationToken)).ConfigureAwait(false);
+        if (inspection.OriginalCustody?.OriginalDelegatedChildLink is not null)
+            throw new InvalidOperationException("The original saved child Agent must continue through its retained Retry producer; public IDs cannot replace it.");
+        var prepared = await original.Await("process.continuation-preparation", () =>
+            coordinator.PrepareOriginalUnstartedContinuationAsync(inspection, this, cancellationToken)).ConfigureAwait(false);
+        original.OriginalPreparation = prepared;
+        var child = original.Invoke(() => coordinator.ClaimOriginalUnstartedContinuation(prepared, this, cancellationToken));
+        original.OriginalChild = child;
+        var iterator = original.Invoke(() => child.GetAsyncEnumerator(cancellationToken));
+        try
+        {
+            while (await original.Await("process.continuation-child-move", () => iterator.MoveNextAsync().AsTask()).ConfigureAwait(false))
+                yield return original.Invoke(() => iterator.Current);
+        }
+        finally { await original.DisposeChildAsync(iterator).ConfigureAwait(false); }
     }
 
     private async Task ValidateOriginalInputAsync(TaskRunInvocationCustody original, CancellationToken token)
@@ -306,12 +332,14 @@ public sealed partial class ChatSessionService(
             || original.OriginalUserMessageWrite is not { IsCompletedSuccessfully: true }
             || original.OriginalPersistedConversation is not { } acceptedConversation)
             throw new InvalidOperationException("Unknown original input writes cannot be retried or skipped.");
-        var actualConversationRead = conversations.GetAsync(conversation.Id, token)
+        var actualConversationRead = (taskCoordinator ?? throw new InvalidOperationException("The original input's canonical owner is unavailable."))
+            .InvokeOriginalProcessInputSource(() => conversations.GetAsync(conversation.Id, token))
             ?? throw new InvalidOperationException("No original conversation read Task was returned.");
         original.RetainAdditionalOriginal("continuation.input-conversation", actualConversationRead);
         var current = await AwaitOriginalInputReadAsync(actualConversationRead).ConfigureAwait(false);
         if (current != acceptedConversation) throw new InvalidOperationException("The accepted conversation identity/state changed.");
-        var actualHistoryRead = conversations.GetMessagesAsync(conversation.Id, token)
+        var actualHistoryRead = (taskCoordinator ?? throw new InvalidOperationException("The original input's canonical owner is unavailable."))
+            .InvokeOriginalProcessInputSource(() => conversations.GetMessagesAsync(conversation.Id, token))
             ?? throw new InvalidOperationException("No original history read Task was returned.");
         original.RetainAdditionalOriginal("continuation.input-history", actualHistoryRead);
         var history = await AwaitOriginalInputReadAsync(actualHistoryRead).ConfigureAwait(false);
@@ -440,7 +468,9 @@ public sealed partial class ChatSessionService(
         void PublishBoundEvent(ExecutionEvent value)
         {
             var bound = canonicalTask is null ? value : value with { ExecutionId = canonicalTask.ExecutionId, TaskId = canonicalTask.TaskId };
-            executionEvents?.TryPublish(bound);
+            if (originalCustody?.OriginalProcessProducer is { } producer)
+                producer.InvokeOriginalCallback(() => { executionEvents?.TryPublish(bound); });
+            else executionEvents?.TryPublish(bound);
         }
 
         var promptActionId = Guid.NewGuid();
@@ -472,7 +502,9 @@ public sealed partial class ChatSessionService(
             try
             {
             CurrentExecution = snapshot;
-            ExecutionChanged?.Invoke(snapshot);
+            if (originalCustody?.OriginalProcessProducer is { } producer)
+                producer.InvokeOriginalCallback(() => ExecutionChanged?.Invoke(snapshot));
+            else ExecutionChanged?.Invoke(snapshot);
             if (executionEvents is null) return;
             for (; publishedLogCount < snapshot.Log.Count; publishedLogCount++)
             {
@@ -693,6 +725,41 @@ public sealed partial class ChatSessionService(
         var mcpDefinitions = mcpTools is null
             ? []
             : await mcpTools.GetDefinitionsAsync(selectedRegisteredCapabilities, cancellationToken).ConfigureAwait(false);
+        Action<Action>? originalCloudflareCallerCallback = null;
+        if (canonicalIntent && taskToolOwner is CanonicalWorkspaceCloudflareToolActionOwner originalCloudflareCatalogueOwner)
+        {
+            // Observe only the SAME actual selected capabilities. Definitions grant no
+            // execution; Prepare/Register/Execute still require private owning originals.
+            var originalCloudflareProducer = originalCustody?.OriginalProcessProducer
+                ?? throw new InvalidOperationException("The original canonical Chat producer is unavailable before Cloudflare catalogue acquisition.");
+            originalCloudflareCallerCallback = originalCloudflareProducer.InvokeOriginalCallback;
+            Task<IReadOnlyList<OllamaToolDefinition>>? originalCloudflareDefinitions = null;
+            try
+            {
+                originalCloudflareCallerCallback(() =>
+                {
+                    originalCloudflareDefinitions = originalCloudflareCatalogueOwner.GetCloudflareDefinitionsAsync(selectedRegisteredCapabilities, originalCloudflareCallerCallback, cancellationToken);
+                    originalCustody!.RetainAdditionalOriginal("tools.cloudflare-definitions", originalCloudflareDefinitions);
+                });
+                var actualDefinitions = originalCloudflareDefinitions
+                    ?? throw new InvalidOperationException("The original Cloudflare catalogue callback returned no actual Task.");
+                var declared = await actualDefinitions.ConfigureAwait(false);
+                if (declared.Any(candidate => mcpDefinitions.Any(existing => existing.Name.Equals(candidate.Name, StringComparison.Ordinal))))
+                    throw new InvalidOperationException("A fixed canonical Cloudflare definition collides with an existing MCP definition.");
+                mcpDefinitions = Array.AsReadOnly(mcpDefinitions.Concat(declared).ToArray());
+            }
+            catch (Exception cause)
+            {
+                if (originalCloudflareDefinitions is not null)
+                    originalCustody!.RetainAdditionalOriginal("tools.cloudflare-definitions", originalCloudflareDefinitions);
+                originalCustody!.Retain(cause, originalCloudflareDefinitions);
+                if (originalCloudflareDefinitions?.IsFaulted == true)
+                    throw new AggregateException(originalCloudflareDefinitions.Exception!.InnerExceptions);
+                if (originalCloudflareDefinitions is null && cause is OperationCanceledException)
+                    throw new AggregateException("Synchronous canonical Cloudflare definition callback fault.", cause);
+                throw;
+            }
+        }
         var pluginBindings = pluginTools?.GetBindings(selectedRegisteredCapabilities) ?? [];
         var calendarDefinitions = calendarTools is null
             ? []
@@ -884,6 +951,34 @@ public sealed partial class ChatSessionService(
                     return await browserTools.ExecuteAsync(call, token).ConfigureAwait(false);
                 if (runtime == ToolRuntimeKind.Automation && automationTools is not null)
                     return await automationTools.ExecuteAsync(call, conversation.Mode, conversation.Id, conversation.ContainerId, token).ConfigureAwait(false);
+                if (canonicalIntent && runtime == ToolRuntimeKind.Mcp && originalPreparation is not null
+                    && taskToolOwner is CanonicalWorkspaceCloudflareToolActionOwner originalCloudflareRuntimeOwner)
+                {
+                    Task<WorkspaceToolResult>? originalCloudflareRuntime = null;
+                    try
+                    {
+                        var originalRuntimeCallback = originalCloudflareCallerCallback
+                            ?? throw new InvalidOperationException("The original canonical Cloudflare caller scope is unavailable before runtime dispatch.");
+                        originalRuntimeCallback(() =>
+                        {
+                            originalCloudflareRuntime = originalCloudflareRuntimeOwner.ExecuteOriginalCloudflareRuntimeAsync(call, originalPreparation, originalRuntimeCallback, token);
+                            originalCustody!.RetainAdditionalOriginal("tools.cloudflare-runtime", originalCloudflareRuntime);
+                        });
+                        return await (originalCloudflareRuntime
+                            ?? throw new InvalidOperationException("The original Cloudflare runtime callback returned no actual Task.")).ConfigureAwait(false);
+                    }
+                    catch (Exception cause)
+                    {
+                        if (originalCloudflareRuntime is not null)
+                            originalCustody!.RetainAdditionalOriginal("tools.cloudflare-runtime", originalCloudflareRuntime);
+                        originalCustody!.Retain(cause, originalCloudflareRuntime);
+                        if (originalCloudflareRuntime?.IsFaulted == true)
+                            throw new AggregateException(originalCloudflareRuntime.Exception!.InnerExceptions);
+                        if (originalCloudflareRuntime is null && cause is OperationCanceledException)
+                            throw new AggregateException("Synchronous canonical Cloudflare runtime callback fault.", cause);
+                        throw;
+                    }
+                }
                 if (runtime == ToolRuntimeKind.Mcp && mcpTools is not null)
                     return await mcpTools.ExecuteAsync(call, selectedRegisteredCapabilities, permission, token).ConfigureAwait(false);
                 if (runtime == ToolRuntimeKind.Plugin && pluginTools is not null)
@@ -962,8 +1057,12 @@ public sealed partial class ChatSessionService(
                             RestrictedModelCapability.RunCommands => commandPermission,
                             _ => permission
                         };
-                        var preparation = await owner.PrepareOriginalAsync(originalAttempt, canonicalTask,
-                            invocationId, call, selectedRuntime, toolPermissionIntent, workspaceRoot, token).ConfigureAwait(false);
+                        var preparation = owner is CanonicalWorkspaceCloudflareToolActionOwner originalScopedCloudflareOwner
+                            ? await originalScopedCloudflareOwner.PrepareCallerScopedOriginalAsync(originalAttempt, canonicalTask,
+                                invocationId, call, selectedRuntime, toolPermissionIntent, workspaceRoot, originalCloudflareCallerCallback
+                                    ?? throw new InvalidOperationException("The original canonical Cloudflare preparation scope is unavailable."), token).ConfigureAwait(false)
+                            : await owner.PrepareOriginalAsync(originalAttempt, canonicalTask,
+                                invocationId, call, selectedRuntime, toolPermissionIntent, workspaceRoot, token).ConfigureAwait(false);
                         if (!ReferenceEquals(preparation.OriginalAttempt, originalAttempt) || preparation.ActionId != invocationId)
                             throw new InvalidOperationException("The tool owner did not retain the exact original attempt and action.");
                         canonicalTask = await coordinator.RegisterOriginalToolActionAsync(preparation,
@@ -973,13 +1072,12 @@ public sealed partial class ChatSessionService(
                                 originalToken, preparation), token).ConfigureAwait(false);
                         await owner.ValidateOriginalResultAsync(preparation, ownedResult, token).ConfigureAwait(false);
                         observed = ownedResult.OriginalResult;
-                        canonicalTask = preparation.InterruptionPolicy != TaskActionInterruptionPolicy.ReadOnlyCancellable
-                            && ownedResult.OwnerReceiptReference is { Length: > 0 } actualOwnerReceipt
-                            ? await coordinator.AcceptActionAsync(canonicalTask.TaskId, canonicalTask.ExecutionId,
-                                currentAttemptId, invocationId, actualOwnerReceipt, token).ConfigureAwait(false)
-                            : await coordinator.RecordObservedActionOutcomeAsync(preparation, ownedResult, token).ConfigureAwait(false);
+                        canonicalTask = await coordinator.RecordOriginalToolActionOutcomeAsync(
+                            preparation, ownedResult, token).ConfigureAwait(false);
                         CurrentCanonicalTask = canonicalTask;
                         await coordinator.RetireAcknowledgedToolOriginalAsync(preparation, canonicalTask).ConfigureAwait(false);
+                        originalCustody!.RetainOriginalToolOutcome(coordinator.CaptureOriginalToolOutcomeCustody(
+                            preparation, ownedResult, canonicalTask));
                     }
                     else
                     {
@@ -1188,6 +1286,7 @@ public sealed partial class ChatSessionService(
                 var unsupportedToolSchema = false;
                 TaskRunCloudPermissionRequiredException? originalPermissionRequired = null;
                 Task<OllamaToolResponse>? originalToolTurn = null;
+                ChatOriginalToolCheckpointBoundary? originalCheckpoint = null;
                 try
                 {
                     await safety.EnsureMayActAsync(conversation.Id, "chat.model-tool-turn", cancellationToken).ConfigureAwait(false);
@@ -1195,13 +1294,21 @@ public sealed partial class ChatSessionService(
                     var originalRequest = new OllamaToolRequest(
                         turnModel.Name, turns, toolDefinitions, effort, system, generationOptions)
                     { ExecutionContext = await ProviderContextAsync(parentActionId).ConfigureAwait(false) };
+                    if (canonicalIntent)
+                    {
+                        originalCheckpoint = CaptureOriginalToolCheckpoint(originalCustody!, originalRequest,
+                            actualInventory ?? throw new InvalidOperationException("The actual tool context inventory is unavailable."),
+                            assistantId, buffer.ToString(), toolActivities, callsUsed, toolCallLimit, lastToolCall, lastToolResult);
+                        originalRequest = originalCheckpoint.OriginalRequest;
+                    }
                     await CaptureOriginalToolsAsync(originalRequest, actualInventory, cancellationToken).ConfigureAwait(false);
-                    if (originalCustody is not null) originalCustody.OriginalProviderInvocationInvoked = true;
-                    originalToolTurn = ollama.ChatWithToolsAsync(originalRequest, cancellationToken);
-                    if (canonicalIntent) originalCustody!.RetainAdditionalOriginal("provider.tools", originalToolTurn);
+                    originalToolTurn = canonicalIntent
+                        ? InvokeOriginalToolCheckpointCall(originalCheckpoint!, () => ollama.ChatWithToolsAsync(originalRequest, cancellationToken))
+                        : ollama.ChatWithToolsAsync(originalRequest, cancellationToken);
                     response = await originalToolTurn.ConfigureAwait(false);
                     if (canonicalIntent && response is null)
                         throw new InvalidOperationException("The actual canonical provider returned no response observation.");
+                    if (canonicalIntent) originalCheckpoint!.RecordActualResponse(response);
                     if (canonicalIntent && response.ToolCalls.Count > 0 && response.EffectiveModel is null)
                         throw new InvalidOperationException("The actual effective model is unknown; canonical tools were refused before dispatch.");
                     if (response.EffectiveModel is { } actualModel)
@@ -1217,16 +1324,19 @@ public sealed partial class ChatSessionService(
                 }
                 catch (TaskRunCloudPermissionRequiredException actualAsk) when (canonicalIntent && taskCloudPermissionRemediation is not null)
                 {
+                    originalCheckpoint?.RecordActualFailure(actualAsk, originalToolTurn);
                     originalCustody!.Retain(actualAsk, originalToolTurn);
                     originalPermissionRequired = actualAsk;
                 }
                 catch (HttpRequestException ex) when (IsUnsupportedToolSchema(ex))
                 {
+                    originalCheckpoint?.RecordActualFailure(ex, originalToolTurn);
                     if (canonicalIntent) originalCustody!.Retain(ex, originalToolTurn);
                     unsupportedToolSchema = true;
                 }
                 catch (Exception originalFailure) when (canonicalIntent)
                 {
+                    originalCheckpoint?.RecordActualFailure(originalFailure, originalToolTurn);
                     originalCustody!.Retain(originalFailure, originalToolTurn);
                     throw;
                 }

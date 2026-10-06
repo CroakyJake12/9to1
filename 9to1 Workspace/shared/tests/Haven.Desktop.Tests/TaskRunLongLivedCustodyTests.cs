@@ -234,9 +234,13 @@ public sealed class TaskRunLongLivedCustodyTests
         { token.ThrowIfCancellationRequested(); if (Disposes != 0) throw new ObjectDisposedException(nameof(Lease)); return ValueTask.CompletedTask; }
         public ValueTask DisposeAsync() { Disposes++; return CleanupFailure is { } failure ? ValueTask.FromException(failure) : ValueTask.CompletedTask; }
     }
-    private sealed class RecordingRuntime(TaskRunOriginalFrameOwner inner) : ITaskRunOriginalFrameOwner, ITaskRunOriginalAttemptRetirement
+    private sealed class RecordingRuntime(TaskRunOriginalFrameOwner inner) : ITaskRunOriginalFrameOwner, ITaskRunOriginalAttemptRetirement, ITaskRunOriginalAttemptRegistrationSource
     {
         public TaskRunOriginalFrameOwner Inner => inner;
+        public TaskRunOriginalAttemptRegistrationDisposition RegisterOriginalAttemptDisposition(TaskRunAttemptAdmission original, CancellationToken token) =>
+            inner.RegisterOriginalAttemptDisposition(original, token);
+        public bool IsIssuedOriginalAttemptRegistrationDisposition(TaskRunOriginalAttemptRegistrationDisposition disposition, TaskRunAttemptAdmission original) =>
+            inner.IsIssuedOriginalAttemptRegistrationDisposition(disposition, original);
         public List<TaskRunOriginalRetirementAcknowledgment> Retirements { get; } = [];
         public bool ProbeCopiedReceipt;
         public Exception? CopiedReceiptRefusal;

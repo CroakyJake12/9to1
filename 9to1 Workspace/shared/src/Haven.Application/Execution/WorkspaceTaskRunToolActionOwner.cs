@@ -21,11 +21,14 @@ public sealed class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFinalFenceAu
     }
     public bool IsIssuedOriginal(IWorkspaceToolFinalFence originalFence)
     { lock (_sync) return originalFence is Fence original && _issued.Contains(original); }
+    internal Task ValidateOriginalToolAsync(TaskRunAttemptAdmission original, string toolName, CancellationToken token) =>
+        _tasks.ValidateOriginalToolAsync(original, toolName, token);
     internal Fence IssueOriginal(TaskRunAttemptAdmission original, Guid actionId, string root,
         OllamaToolCall call, CapabilityDefinition actualCapability)
     {
         if (!_tasks.IsIssuedOriginal(original.Lease) || original.AttemptId != original.Lease.AttemptId)
             throw new UnauthorizedAccessException("SAME actual task admission issuer required.");
+        _tasks.DemandOriginalToolIntent(original.Lease, call.Name);
         var scope = "capability:" + actualCapability.Key;
         var requires = actualCapability.Availability == CapabilityAvailability.PermissionRequired ||
             actualCapability.RiskClass >= CapabilityRiskClass.Consequential;
@@ -49,6 +52,52 @@ public sealed class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFinalFenceAu
         private readonly object _sync = new();
         private int _pins;
         private bool _closed;
+        private ITaskRunToolActionPreparation? _preparation;
+        private ITaskRunOriginalActionAdmissionSource? _actionSource;
+        private TaskRunOriginalActionAdmission? _actionReceipt;
+        private readonly List<Task> _actionValidations = [];
+        internal void BindOriginalPreparation(ITaskRunToolActionPreparation preparation, ITaskRunOriginalActionAdmissionSource source)
+        {
+            ArgumentNullException.ThrowIfNull(preparation); ArgumentNullException.ThrowIfNull(source);
+            lock (_sync)
+            {
+                if (_closed || _preparation is not null || !ReferenceEquals(preparation.OriginalAttempt, OriginalAttempt) || preparation.ActionId != ActionId)
+                    throw new UnauthorizedAccessException("SAME private preparation/final fence binding required.");
+                _preparation = preparation; _actionSource = source;
+            }
+        }
+        internal async Task ValidateOriginalActionAsync(CancellationToken token)
+        {
+            ITaskRunToolActionPreparation preparation; ITaskRunOriginalActionAdmissionSource source;
+            lock (_sync)
+            {
+                if (_closed) throw new UnauthorizedAccessException("Original workspace action fence retired.");
+                preparation = _preparation ?? throw new UnauthorizedAccessException("Original preparation is not bound.");
+                source = _actionSource ?? throw new InvalidOperationException("Actual canonical action admission source is unavailable.");
+            }
+            var receipt = source.RequireOriginalActionAdmission(preparation, OriginalAttempt);
+            Task validation;
+            try { validation = source.ValidateOriginalActionAdmissionAsync(receipt, preparation, OriginalAttempt, token); }
+            catch (OperationCanceledException error) { throw new AggregateException("Synchronous original action validation source fault.", error); }
+            lock (_sync)
+            {
+                if (_actionReceipt is not null && !ReferenceEquals(_actionReceipt, receipt))
+                    throw new UnauthorizedAccessException("The original action receipt cannot be replaced.");
+                _actionReceipt = receipt; _actionValidations.Add(validation);
+            }
+            try { await validation.ConfigureAwait(false); }
+            catch (Exception) when (validation.IsFaulted)
+            { System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(validation.Exception!).Throw(); throw; }
+            lock (_sync) DemandOriginalAction();
+        }
+        private void DemandOriginalAction()
+        {
+            if (_closed || _preparation is null || _actionSource is null || _actionReceipt is null ||
+                _actionValidations.Count == 0 || _actionValidations.Any(task => !task.IsCompletedSuccessfully))
+                throw new UnauthorizedAccessException("SAME successful original action validation required.");
+            // Source Demand is metadata-only, without callbacks or repository/policy I/O.
+            _actionSource.DemandOriginalActionAdmission(_actionReceipt, _preparation, OriginalAttempt);
+        }
         public TaskRunAttemptAdmission OriginalAttempt { get; } = original;
         public Guid ActionId { get; } = actionId;
         public string CanonicalWorkspaceRoot { get; } = root;
@@ -58,7 +107,8 @@ public sealed class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFinalFenceAu
             // Canonical actor/model/privacy I/O occurs BEFORE native owner locks. The returned pin
             // is raw retirement custody only and never acquires Home/Files/SQLite/Context locks.
             if (!issuer.IsIssuedOriginal(this) || OriginalAttempt.Lease is not ITaskRunAdmissionCommitLease actual) return null;
-            await actual.RevalidateAsync(token).ConfigureAwait(false);
+            await ValidateOriginalActionAsync(token).ConfigureAwait(false);
+            await issuer._tasks.ValidateOriginalToolAsync(OriginalAttempt, OriginalCall.Name, token).ConfigureAwait(false);
             var pin = await actual.AcquireOriginalCommitPinAsync(token).ConfigureAwait(false);
             if (pin is null) return null;
             bool accepted;
@@ -81,6 +131,7 @@ public sealed class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFinalFenceAu
                     kind == WorkspaceToolEffectKind.AtomicWrite && OriginalCall.Name is not ("write_file" or "replace_in_file" or "apply_change_set") ||
                     kind == WorkspaceToolEffectKind.RollbackDelete && OriginalCall.Name != "apply_change_set")
                     throw new UnauthorizedAccessException("Original typed tool does not own this native effect kind.");
+                DemandOriginalAction();
                 // Physical owner independently validates exact call->path/content/process preimage.
                 // SHA describes that original effect; it is never independently an authority.
             }
@@ -90,7 +141,11 @@ public sealed class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFinalFenceAu
             lock (_sync)
             {
                 DemandOriginalEffect(actualRoot, kind, target, sha);
-                return issuer._effects.RunOriginalEffect(scope, risk, requires, "Original workspace final native effect", body);
+                return issuer._effects.RunOriginalEffect(scope, risk, requires, "Original workspace final native effect", () =>
+                {
+                    DemandOriginalAction(); // Same active private claim at the finite central policy/native boundary.
+                    return body();
+                });
             }
         }
         internal void Seal() { lock (_sync) _closed = true; }
@@ -143,7 +198,7 @@ public sealed class WorkspaceTaskRunToolActionOwner : ITaskRunToolActionOwner
         IWorkspaceToolService service, CapabilityRegistryService capabilities, WorkspaceTaskRunEffectAuthority effects,
         CapabilityPlatform platform, WorkspaceTaskRunReceiptAuthority receipts)
     {
-        if (platform is CapabilityPlatform.None or CapabilityPlatform.All) throw new ArgumentException("Actual configured host platform required.");
+        if (platform is not (CapabilityPlatform.Windows or CapabilityPlatform.Android or CapabilityPlatform.Linux)) throw new ArgumentException("Actual configured host platform required.");
         _coordinator = coordinator ?? throw new ArgumentNullException(nameof(coordinator)); _receipts = receipts; _frames = frames; _service = service; _capabilities = capabilities; _effects = effects; _platform = platform;
     }
     private sealed class Preparation(WorkspaceTaskRunToolActionOwner owner, TaskRunAttemptAdmission admission,
@@ -224,7 +279,7 @@ public sealed class WorkspaceTaskRunToolActionOwner : ITaskRunToolActionOwner
         if (!readOnly && current.Plan.Any(node => node.State == TaskPlanNodeState.RequiresReexecution &&
                 node.InterruptionPolicy is TaskActionInterruptionPolicy.AtomicCommit or TaskActionInterruptionPolicy.SafeBoundary))
             throw new UnauthorizedAccessException("An unresolved owner effect requires inspection before another mutation.");
-        await original.Lease.RevalidateAsync(token).ConfigureAwait(false);
+        await _effects.ValidateOriginalToolAsync(original, call.Name, token).ConfigureAwait(false);
         var root = Path.GetFullPath(originalWorkspaceRoot);
         var captured = call with { Arguments = call.Arguments.ToFrozenDictionary(value => value.Key, value => value.Value.Clone(), StringComparer.Ordinal) };
         var implementation = readOnly ? "workspace.read-file" : call.Name is "run_command" ? "workspace.run-command" :
@@ -238,6 +293,9 @@ public sealed class WorkspaceTaskRunToolActionOwner : ITaskRunToolActionOwner
         {
             fence = _effects.IssueOriginal(original, actionId, root, captured, declared[0]);
             prepared = new(this, original, actionId, root, captured, readOnly, fence);
+            var actionSource = (object)_coordinator() as ITaskRunOriginalActionAdmissionSource
+                ?? throw new InvalidOperationException("The configured canonical coordinator has no original action admission source.");
+            fence.BindOriginalPreparation(prepared, actionSource); // No action ACK is claimed during preparation.
             lock (_sync)
             {
                 if (_prepared.Count == 128) throw new InvalidOperationException("Retained original workspace action custody is full.");
@@ -305,7 +363,7 @@ public sealed class WorkspaceTaskRunToolActionOwner : ITaskRunToolActionOwner
         var actual = await _coordinator().TryGetIssuedAttemptAsync(snapshot.TaskId, snapshot.ExecutionId,
             original.OriginalAttempt.AttemptId, token).ConfigureAwait(false);
         if (!ReferenceEquals(actual, original.OriginalAttempt)) throw new UnauthorizedAccessException("Actual current original attempt required.");
-        await original.OriginalAttempt.Lease.RevalidateAsync(token).ConfigureAwait(false);
+        await _effects.ValidateOriginalToolAsync(original.OriginalAttempt, original.OriginalCall.Name, token).ConfigureAwait(false);
     }
 
     private async Task<TaskRunToolActionResult> ExecuteCoreAsync(Preparation original,
@@ -320,7 +378,8 @@ public sealed class WorkspaceTaskRunToolActionOwner : ITaskRunToolActionOwner
                 !current.Plan.Any(node => node.ActionId == original.ActionId && node.OriginalToolIntent == original.OriginalToolIntent &&
                     node.InterruptionPolicy == original.InterruptionPolicy && node.State is TaskPlanNodeState.Pending or TaskPlanNodeState.Running))
                 throw new UnauthorizedAccessException("Actual action acknowledgement required before effect.");
-            await admission.Lease.RevalidateAsync(token).ConfigureAwait(false);
+            await (original.Fence ?? throw new UnauthorizedAccessException("Actual original action fence required.")).ValidateOriginalActionAsync(token).ConfigureAwait(false);
+            await _effects.ValidateOriginalToolAsync(admission, original.OriginalCall.Name, token).ConfigureAwait(false);
             lock (_sync) { original.RuntimeAdmissionOpen = true; original.OriginalRuntimeToken = token; }
             actualBody = body(token); result = await actualBody.ConfigureAwait(false);
             if (!WorkspaceToolRuntime.IsIssuedOriginalResult(original, result))

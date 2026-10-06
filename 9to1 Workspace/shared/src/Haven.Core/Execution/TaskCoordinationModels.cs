@@ -85,6 +85,8 @@ public sealed record TaskPlanNode(
 {
     public TaskActionAcceptance? Acceptance { get; init; }
     public TaskOriginalToolIntent? OriginalToolIntent { get; init; }
+    /// <summary>Owning original result observation, not receipt authority. Legacy/unknown results remain null.</summary>
+    public TaskActionOperationOutcome? OriginalOperationOutcome { get; init; }
 }
 
 public sealed record SteerInstruction(
@@ -137,6 +139,9 @@ public sealed record TaskExecutionSnapshot(
     public TaskRunRecoveryObservation? RecoveryObservation { get; init; }
     /// <summary>Conserved original observations resolved by an owning live continuation; history supplies no authority.</summary>
     public IReadOnlyList<TaskRunRecoveryObservation> RecoveryHistory { get; init; } = [];
+    /// <summary>Fixed canonical child observations. Persisted links and scopes never issue authority.</summary>
+    public IReadOnlyList<TaskRunDelegationIntent> Delegations { get; init; } = [];
+    public TaskRunParentDelegation? ParentDelegation { get; init; }
 }
 
 public sealed record FollowUpDecision(
@@ -152,3 +157,12 @@ public sealed record FollowUpDecision(
 public sealed record QueueCheckpointResult(
     TaskExecutionSnapshot Snapshot,
     QueuedFollowUpTask? ReadyTask);
+
+/// <summary>Completion of a once-requested operation is distinct from business success.
+/// These persisted fields supply no execution or replay authority.</summary>
+public sealed record TaskActionOperationOutcome(
+    bool? RequestedOperationCompleted,
+    bool? BusinessSucceeded,
+    int? ProcessExitCode,
+    bool? ProcessTimedOut,
+    DateTimeOffset ObservedAt);

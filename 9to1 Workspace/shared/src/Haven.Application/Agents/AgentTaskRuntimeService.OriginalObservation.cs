@@ -59,8 +59,19 @@ public sealed partial class AgentTaskRuntimeService : IAgentRunOriginalObservati
             () => RequestOriginalObservationRetirement(original),
             () => DetachOriginalObservation(original));
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        lock (_originalObservationGate)
+        lock (_agentProcessGate)
         {
+            if (_agentProcessSealed) throw new InvalidOperationException("Agent encompassing producer admission is sealed.");
+            _agentProcessPresentations.RemoveAll(static prior => prior.CanRetireHealthyAdmission);
+            original.ProducerCustody.OriginalProcessOwner = this;
+            original.WaitCustody.OriginalProcessOwner = this;
+            original.DetachCustody.OriginalProcessOwner = this;
+            // These already admitted pure presentation originals may finish their actual wait
+            // and detach after seal. They cannot acquire the business Run/Retry producer.
+            original.WaitCustody.OriginalObservationDrainStage = true;
+            original.DetachCustody.OriginalObservationDrainStage = true;
+            lock (_originalObservationGate)
+            {
             // Remove only acknowledged healthy admission slots. Exact custody remains on the
             // actual canonical invocation and issued lease; failed/unknown producers stay here.
             _originalObservations.RemoveAll(static prior => prior.CanRetireHealthyAdmission);
@@ -93,6 +104,8 @@ public sealed partial class AgentTaskRuntimeService : IAgentRunOriginalObservati
                 var returned = await operation.AwaitAsync(() => producer).ConfigureAwait(false);
                 return new(AgentRunObservationDisposition.ProducerTerminal, returned);
             });
+            }
+            _agentProcessPresentations.Add(original); // Include the encompassing driver, not only its raw Run/Retry.
         }
         // Both actual drivers, the lease and admission are visible before any producer callback.
         start.SetResult();

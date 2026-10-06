@@ -58,7 +58,7 @@ public interface ITaskRunOriginalFrameOwner : ITaskRunProviderFailureSettlement,
 /// coordinator's actual GetIssuedAttemptAsync, supplied by the composition owner. IDs, copied records,
 /// provider output, and acknowledgments cannot mint a lease. Never call settlement from a frame it joins.
 /// </summary>
-public sealed class TaskRunOriginalFrameOwner : ITaskRunOriginalFrameOwner
+public sealed partial class TaskRunOriginalFrameOwner : ITaskRunOriginalFrameOwner
 {
     private const int Capacity = 128;
     private readonly object _sync = new();
@@ -82,6 +82,7 @@ public sealed class TaskRunOriginalFrameOwner : ITaskRunOriginalFrameOwner
         lock (_sync)
         {
             RequireOpen();
+            DemandNoOriginalRegistrationRefusal(originalAdmission);
             var key = Key(originalAdmission);
             if (_attempts.TryGetValue(key, out attempt!))
             {
@@ -540,7 +541,10 @@ public sealed class TaskRunOriginalFrameOwner : ITaskRunOriginalFrameOwner
             // Only fully healthy originals release capacity; returned tasks remain their real historical witnesses.
             if (attempt.Frames.All(frame => frame.BodyErrors.Count == 0 && frame.Errors.Count == 0
                 && frame.ResultObservationErrors.Count == 0))
+            {
+                PreserveOriginalRetiredRegistration(attempt);
                 _attempts.Remove(Key(admission));
+            }
         }
         return ValueTask.CompletedTask;
     }

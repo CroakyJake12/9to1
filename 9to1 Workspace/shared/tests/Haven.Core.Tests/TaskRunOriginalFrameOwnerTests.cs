@@ -6,7 +6,7 @@ using Xunit;
 namespace Haven.Application.Tests;
 
 /// <summary>Actual original frame owner with synthetic issued lease; HttpClient timeout uses its real managed cancellation path. No installed authority/provider acceptance.</summary>
-public sealed class TaskRunOriginalFrameOwnerTests
+public sealed partial class TaskRunOriginalFrameOwnerTests
 {
     [Fact]
     public async Task Registration_failure_completes_stream_reader_without_entering_original_body()

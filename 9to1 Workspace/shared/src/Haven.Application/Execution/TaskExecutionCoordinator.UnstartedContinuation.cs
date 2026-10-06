@@ -13,6 +13,7 @@ internal sealed class TaskRunUnstartedContinuationBinding(
     internal readonly TaskRunInvocationCustody Next = next;
     internal readonly ChatSessionService SameChat = sameChat;
     internal Task<TaskRunUnstartedContinuationBinding> Preparation = null!;
+    internal TaskRunProcessStageCustody? OriginalProcessPreparation;
     internal readonly List<Task> ActualStages = [];
     internal Task<ITaskRunUnstartedContinuationPermissionLease>? OriginalPermissionAcquisition;
     internal ITaskRunUnstartedContinuationPermissionLease? OriginalPermissionLease;
@@ -67,11 +68,15 @@ public sealed partial class TaskExecutionCoordinator
             if (ReferenceEquals(phase.Owner, this) && Volatile.Read(ref phase.Active) != 0)
                 throw new InvalidOperationException("An actual continuation preparation cannot join itself.");
     }
-    private T AcquireOriginalContinuationCall<T>(Func<T> callback)
+    private T AcquireOriginalContinuationCall<T>(Func<T> callback, bool owningCleanup = false)
     {
         var owners = _physicalContinuationOwners ??= [];
         owners.Add(this);
-        try { return callback(); }
+        try
+        {
+            var stage = TaskRunProcessStageCustody.CurrentFor(this);
+            return stage is null ? callback() : stage.Invoke(callback, owningCleanup);
+        }
         finally { owners.RemoveAt(owners.Count - 1); }
     }
 
@@ -106,7 +111,14 @@ public sealed partial class TaskExecutionCoordinator
             start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             // The actual full orchestration Task, not a substitute completion promise,
             // is published before its first callback; the start gate has no grant meaning.
-            binding.Preparation = PreparePublishedOriginalUnstartedAsync(start.Task, binding, inspection, token);
+            binding.Preparation = StartOriginalProcessStage("task.prepare-unstarted-original", token,
+                stageToken => PreparePublishedOriginalUnstartedAsync(start.Task, binding, inspection, stageToken),
+                stage =>
+                {
+                    binding.OriginalProcessPreparation = stage;
+                    stage.OriginalResultClosed = () => binding.Claimed && binding.Bound
+                        && binding.Next.OriginalProcessProducer is { HasHealthyClosedOriginal: true };
+                });
             _unstartedContinuations.Add(inspection.ActualSnapshot.TaskId, binding);
             original.RetainAdditionalOriginal("continuation.preparation", binding.Preparation);
         }
@@ -116,7 +128,7 @@ public sealed partial class TaskExecutionCoordinator
 
     private static void RequireOriginalNeverStarted(TaskRunInvocationCustody original, TaskExecutionSnapshot current)
     {
-        if (!original.BoundByActualBegin || original.OriginalBegin is not { IsCompletedSuccessfully: true }
+        if (!original.Issuer.HasOriginalNeverStartedBinding(original, current)
             || original.AttemptAdmissionInvoked || original.OriginalProviderInvocationInvoked || current.Attempts.Count != 0
             || !original.CanReturnPublishedPermissionRefusal(current)
             || current.RecoveryObservation is not { SettlementOutcome: TaskRunOriginalSettlementOutcome.NoAttemptAdmissionWasInvoked }
@@ -154,13 +166,14 @@ public sealed partial class TaskExecutionCoordinator
         T Track<T>(string stage, T actual) where T : Task
         {
             binding.ActualStages.Add(actual);
+            RequireOriginalProcessStage().RetainSource(actual);
             activeOriginal = actual;
             original.RetainAdditionalOriginal(stage, actual);
             return actual;
         }
         try
         {
-            var currentRead = Track("continuation.initial-task-read", AcquireOriginalContinuationCall(() => RequireAsync(inspection.ActualSnapshot.TaskId, token)));
+            var currentRead = Track("continuation.initial-task-read", AcquireOriginalContinuationCall(() => RequireOriginalProcessSnapshotAsync(inspection.ActualSnapshot.TaskId, token)));
             var current = await currentRead.ConfigureAwait(false);
             RequireOriginalInvocation(original);
             RequireRun(current, inspection.ActualSnapshot.ExecutionId);
@@ -183,7 +196,7 @@ public sealed partial class TaskExecutionCoordinator
                 owner.AcquireOriginalUnstartedContinuationAsync(ask, publication, current, token).AsTask());
             _ = Track("continuation.permission-acquisition", binding.OriginalPermissionAcquisition);
             binding.OriginalPermissionLease = await binding.OriginalPermissionAcquisition.ConfigureAwait(false);
-            var latestRead = Track("continuation.final-task-read", AcquireOriginalContinuationCall(() => RequireAsync(current.TaskId, token)));
+            var latestRead = Track("continuation.final-task-read", AcquireOriginalContinuationCall(() => RequireOriginalProcessSnapshotAsync(current.TaskId, token)));
             var latest = await latestRead.ConfigureAwait(false);
             RequireRun(latest, current.ExecutionId);
             if (latest.OwnerBinding != current.OwnerBinding || latest.ContextId != current.ContextId)
@@ -223,7 +236,7 @@ public sealed partial class TaskExecutionCoordinator
             if (actualPin is not null)
                 try
                 {
-                    binding.OriginalPinClose = AcquireOriginalContinuationCall(() => actualPin.DisposeAsync().AsTask());
+                    binding.OriginalPinClose = AcquireOriginalContinuationCall(() => actualPin.DisposeAsync().AsTask(), owningCleanup: true);
                     _ = Track("continuation.pin-close", binding.OriginalPinClose);
                     await binding.OriginalPinClose.ConfigureAwait(false);
                 }
@@ -231,7 +244,7 @@ public sealed partial class TaskExecutionCoordinator
             if (binding.OriginalPermissionLease is not null)
                 try
                 {
-                    binding.OriginalPermissionClose = AcquireOriginalContinuationCall(() => binding.OriginalPermissionLease.DisposeAsync().AsTask());
+                    binding.OriginalPermissionClose = AcquireOriginalContinuationCall(() => binding.OriginalPermissionLease.DisposeAsync().AsTask(), owningCleanup: true);
                     _ = Track("continuation.permission-close", binding.OriginalPermissionClose);
                     await binding.OriginalPermissionClose.ConfigureAwait(false);
                 }
@@ -260,8 +273,10 @@ public sealed partial class TaskExecutionCoordinator
                     var next = binding.Next;
                     next.OriginalUnstartedContinuation = binding;
                     next.OriginalBinding = acknowledged;
-                    next.BoundByActualBegin = true; // SAME retained actual successful Begin, not durable-state inference.
+                    next.BoundByActualBegin = original.BoundByActualBegin; // Preserve actual Begin versus actual child-creation provenance.
                     next.OriginalBegin = original.OriginalBegin;
+                    next.OriginalDelegatedChildLink = original.OriginalDelegatedChildLink;
+                    next.OriginalDelegatedNeverStarted = original.OriginalDelegatedNeverStarted;
                     next.OriginalChatOwner = original.OriginalChatOwner;
                     next.OriginalConversation = original.OriginalConversation;
                     next.OriginalPersistedConversation = original.OriginalPersistedConversation;
@@ -309,7 +324,7 @@ public sealed partial class TaskExecutionCoordinator
                     try
                     {
                         var actualObservation = Track("continuation.failed-terminal-observation", AcquireOriginalContinuationCall(() =>
-                            ObserveOriginalInvocationTerminalAsync(original)));
+                            ObserveOriginalInvocationTerminalAsync(original), owningCleanup: true));
                         await actualObservation.ConfigureAwait(false);
                     }
                     catch (Exception observationFailure) { Keep(observationFailure); }

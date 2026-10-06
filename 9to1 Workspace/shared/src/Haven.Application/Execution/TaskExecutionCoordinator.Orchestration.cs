@@ -5,7 +5,7 @@ using Haven.Core;
 namespace Haven.Application;
 
 /// <summary>Custody of the actual invocation's source tasks, never reconstructed from durable text or task status.</summary>
-internal sealed class TaskRunInvocationCustody
+internal sealed partial class TaskRunInvocationCustody
 {
     private readonly object _gate = new();
     private readonly List<Exception> _causes = [];
@@ -28,6 +28,8 @@ internal sealed class TaskRunInvocationCustody
     internal Func<CancellationToken, Task>? OriginalInputCurrentness;
     internal Func<TaskRunInvocationCustody, ProviderExecutionContext, CancellationToken, IAsyncEnumerable<ChatStreamEvent>>? OriginalContinuationFactory;
     internal TaskRunUnstartedContinuationBinding? OriginalUnstartedContinuation;
+    internal TaskRunDelegatedChildLinkAcknowledgment? OriginalDelegatedChildLink;
+    internal TaskRunDelegatedUnstartedInvocationWitness? OriginalDelegatedNeverStarted;
     internal Task? OriginalDispose;
     internal bool DisposeInvoked;
     internal Exception? DisposeDirectFailure;
@@ -56,6 +58,8 @@ internal sealed class TaskRunInvocationCustody
     internal bool BoundByActualBegin;
     internal bool AttemptAdmissionInvoked;
     internal bool OriginalProviderInvocationInvoked;
+    internal bool OriginalProcessRetirementRequested;
+    internal CanonicalChatProcessProducer? OriginalProcessProducer;
 
     internal TaskRunInvocationCustody(TaskExecutionCoordinator issuer) { Issuer = issuer; OriginalSelf = this; }
     internal IReadOnlyList<Exception> Causes { get { lock (_gate) return _causes.ToArray(); } }
@@ -106,7 +110,7 @@ internal sealed class TaskRunInvocationCustody
                 && acknowledged.OwnerBinding == binding.OwnerBinding && recovery.ObservationId == ObservationId
                 && (OriginalSettlement is { IsCompletedSuccessfully: true }
                     && recovery.SettlementOutcome == TaskRunOriginalSettlementOutcome.Joined
-                    || OriginalSettlement is null && BoundByActualBegin && !AttemptAdmissionInvoked
+                    || OriginalSettlement is null && Issuer.HasOriginalNeverStartedBinding(this, acknowledged) && !AttemptAdmissionInvoked
                     && acknowledged.Attempts.Count == 0
                     && recovery.SettlementOutcome == TaskRunOriginalSettlementOutcome.NoAttemptAdmissionWasInvoked);
     }
@@ -212,10 +216,11 @@ public sealed partial class TaskExecutionCoordinator
             || custody.OriginalTracker is not null && custody.OriginalTrackerDispose is not { IsCompletedSuccessfully: true }
             || !custody.ResourcesDisposed || custody.DeferredCompletedMessage is null || custody.OriginalCompletion is not null)
             throw new InvalidOperationException("Original body, iterator and resource cleanup must succeed before canonical completion.");
-        var current = await RequireAsync(basis.TaskId, CancellationToken.None).ConfigureAwait(false);
+        var current = await RequireOriginalInvocationSnapshotAsync(custody, basis.TaskId, "completion.pre-read").ConfigureAwait(false);
         RequireCompletionBasis(basis, current);
         var attempt = current.Attempts.LastOrDefault() ?? throw new InvalidOperationException("No original attempt is available for completion.");
-        await ValidateTaskCommandAsync(current, "complete-original-invocation-after-cleanup", CancellationToken.None).ConfigureAwait(false);
+        await AwaitOriginalInvocationObservationSourceAsync(custody, "completion.command", () =>
+            ValidateTaskCommandAsync(current, "complete-original-invocation-after-cleanup", CancellationToken.None)).ConfigureAwait(false);
         custody.CompletionCallAdmitted = true;
         var published = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         async Task<TaskExecutionSnapshot> CompletePublishedOriginalAsync()
@@ -263,7 +268,11 @@ public sealed partial class TaskExecutionCoordinator
         RequireOriginalInvocation(custody, boundRequired: false);
         if (custody.OriginalUnstartedContinuation is { } approved)
             return await BindAcknowledgedUnstartedContinuationAsync(approved, custody, observation, actualContextId, token).ConfigureAwait(false);
+        if (custody.OriginalDelegatedChildLink is { } childLink)
+            return await BindOriginalDelegatedInvocationAsync(custody, childLink, observation, actualContextId, token).ConfigureAwait(false);
         var current = await RequireAsync(observation.TaskId, token).ConfigureAwait(false);
+        if (current.ParentDelegation is not null)
+            throw new InvalidOperationException("A public task observation cannot manufacture the original delegated-child input producer.");
         if (current.ContextId != actualContextId || current.ContextId != observation.ContextId
             || current.ExecutionId != observation.ExecutionId || current.PersistenceRevision != observation.PersistenceRevision
             || observation.AttemptId is { } id && current.Attempts.LastOrDefault()?.Id != id)
@@ -326,7 +335,7 @@ public sealed partial class TaskExecutionCoordinator
             || !custody.ResourcesDisposed)
             throw new InvalidOperationException("The original iterator and Dispose have not reached terminal state.");
         var binding = custody.OriginalBinding;
-        var current = await RequireAsync(binding.TaskId, CancellationToken.None).ConfigureAwait(false);
+        var current = await RequireOriginalInvocationSnapshotAsync(custody, binding.TaskId, "terminal.read").ConfigureAwait(false);
         RequireRun(current, binding.ExecutionId);
         if (current.ContextId != binding.ContextId || current.OwnerBinding != binding.OwnerBinding)
             throw new InvalidOperationException("The durable task no longer has the original invocation's owner/run binding.");
@@ -341,6 +350,10 @@ public sealed partial class TaskExecutionCoordinator
             return current;
         }
 
+        // Only the actual same-invocation successful completion CAS can conserve this
+        // terminal state when a later owning driver/cleanup fails. A copied status cannot.
+        var acknowledgedCompletion = RequireMatchingOriginalCompletionCasAcknowledgment(custody, current);
+
         // Old actor revocation cannot manufacture a fresh grant: this original issuer records only
         // the outcome it actually owns. All dispatch/replay stays refused by RecoveryObservation.
         var iteratorOutcome = custody.Causes.Count > 0 ? TaskRunIteratorTerminalOutcome.Failed
@@ -351,10 +364,10 @@ public sealed partial class TaskExecutionCoordinator
         if (attempt is null)
             // Only this original Begin+coordinator producer can observe that admission was never
             // invoked. Empty durable history after restart alone is not an absence witness.
-            settlementOutcome = custody.BoundByActualBegin && !custody.AttemptAdmissionInvoked
+            settlementOutcome = HasOriginalNeverStartedBinding(custody, current) && !custody.AttemptAdmissionInvoked
                 ? TaskRunOriginalSettlementOutcome.NoAttemptAdmissionWasInvoked
                 : TaskRunOriginalSettlementOutcome.OriginalUnavailable;
-        else if (custody.OriginalCompletion is { IsCompletedSuccessfully: true })
+        else if (acknowledgedCompletion is not null || custody.OriginalCompletion is { IsCompletedSuccessfully: true })
             settlementOutcome = TaskRunOriginalSettlementOutcome.JoinedByOriginalCompletion;
         else if (_issuedAdmissions.TryGetValue(attempt.Id, out var original)
             && original.Snapshot.TaskId == current.TaskId && original.Snapshot.ExecutionId == current.ExecutionId
@@ -364,20 +377,22 @@ public sealed partial class TaskExecutionCoordinator
             settlementOutcome = TaskRunOriginalSettlementOutcome.OriginalUnavailable;
 
         TaskRunRecoveryObservation Projection(TaskRunOriginalSettlementOutcome outcome) => new(
-            custody.ObservationId, "ORIGINAL_INVOCATION_REQUIRES_INSPECTION", _time.GetUtcNow(), iteratorOutcome, outcome,
+            custody.ObservationId, custody.OriginalProcessRetirementRequested
+                ? "PROCESS_RETIREMENT_ORIGINAL_INVOCATION_SUSPENDED" : "ORIGINAL_INVOCATION_REQUIRES_INSPECTION",
+            _time.GetUtcNow(), iteratorOutcome, outcome,
             Array.AsReadOnly(custody.Causes.SelectMany(OriginalDiagnosticCauses)
                 .Select(error => new ExecutionFailure("ORIGINAL_INVOCATION_CAUSE",
                 SensitiveTextRedactor.Redact(error.GetType().Name, 128), SensitiveTextRedactor.Redact(error.Message, 2000),
                 AffectedComponent: "task-orchestration")).ToArray()));
 
-        current = await PersistAsync(current with
+        current = await AwaitOriginalInvocationObservationSourceAsync(custody, "terminal.publication", () => PersistAsync(current with
         {
-            State = TaskExecutionLifecycle.Suspended,
+            State = acknowledgedCompletion is not null ? TaskExecutionLifecycle.Completed : TaskExecutionLifecycle.Suspended,
             Attempts = current.Attempts.Select(value => value.Id == attempt?.Id
                 && value.State is TaskRunAttemptState.Admitted or TaskRunAttemptState.Running
                 ? value with { State = TaskRunAttemptState.Suspended, UpdatedAt = _time.GetUtcNow() } : value).ToArray(),
             RecoveryObservation = Projection(settlementOutcome), UpdatedAt = _time.GetUtcNow()
-        }, CancellationToken.None).ConfigureAwait(false);
+        }, CancellationToken.None, owningProcessCleanup: true)).ConfigureAwait(false);
         custody.PublicationAcknowledged = true;
 
         if (originalAdmission is not null)
@@ -385,9 +400,9 @@ public sealed partial class TaskExecutionCoordinator
             try
             {
                 var owner = _runtimeSettlement ?? throw new InvalidOperationException("The actual original runtime settlement owner is unavailable.");
-                custody.OriginalSettlement = owner.AwaitSettlementAsync(current.TaskId, current.ExecutionId,
-                    originalAdmission.AttemptId, CancellationToken.None);
-                await custody.OriginalSettlement.ConfigureAwait(false);
+                custody.OriginalSettlement = InvokeOriginalInvocationObservationSource(custody, () =>
+                    owner.AwaitSettlementAsync(current.TaskId, current.ExecutionId, originalAdmission.AttemptId, CancellationToken.None));
+                await AwaitOriginalInvocationObservationSourceAsync(custody, "terminal.runtime-settlement", () => custody.OriginalSettlement).ConfigureAwait(false);
                 settlementOutcome = TaskRunOriginalSettlementOutcome.Joined;
             }
             catch (Exception settlementFailure)
@@ -396,12 +411,13 @@ public sealed partial class TaskExecutionCoordinator
                 settlementOutcome = TaskRunOriginalSettlementOutcome.Failed;
             }
             // Re-read after joining all actual originals. Queue/accepted work stays conserved.
-            current = await RequireAsync(binding.TaskId, CancellationToken.None).ConfigureAwait(false);
+            current = await RequireOriginalInvocationSnapshotAsync(custody, binding.TaskId, "terminal.read").ConfigureAwait(false);
             RequireRun(current, binding.ExecutionId);
             if (current.OwnerBinding != binding.OwnerBinding || current.RecoveryObservation?.ObservationId != custody.ObservationId)
                 throw new InvalidOperationException("The original recovery observation was replaced during actual settlement.");
-            current = await PersistAsync(current with { RecoveryObservation = Projection(settlementOutcome), UpdatedAt = _time.GetUtcNow() },
-                CancellationToken.None).ConfigureAwait(false);
+            current = await AwaitOriginalInvocationObservationSourceAsync(custody, "terminal.settled-publication", () =>
+                PersistAsync(current with { RecoveryObservation = Projection(settlementOutcome), UpdatedAt = _time.GetUtcNow() },
+                CancellationToken.None, owningProcessCleanup: true)).ConfigureAwait(false);
         }
         return current;
     }

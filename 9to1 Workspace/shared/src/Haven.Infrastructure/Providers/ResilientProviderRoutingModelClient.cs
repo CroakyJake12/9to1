@@ -20,7 +20,7 @@ namespace Haven.Infrastructure;
 /// Honours the user's ordered fallback preference ahead of automatic ranking and records real
 /// model switches in the Action Graph.
 /// </summary>
-public sealed class ResilientProviderRoutingModelClient(
+public sealed partial class ResilientProviderRoutingModelClient(
     ProviderRoutingModelClient primary,
     IModelProviderRegistry providers,
     IProviderConfigurationStore configurations,
@@ -32,7 +32,7 @@ public sealed class ResilientProviderRoutingModelClient(
     ITaskRunOriginalFrameOwner? originalFrames = null,
     ModelPermissionEvaluator? modelPermissions = null,
     ITaskRunProviderContextAuthority? taskContextAuthority = null,
-    IProviderCatalogueEligibility? catalogueEligibility = null) : IProviderModelClient
+    IProviderCatalogueEligibility? catalogueEligibility = null) : IProviderModelClient, ITaskRunOriginalRequestFailureSource, ITaskRunOriginalToolCheckpointSelectionSource, ITaskRunOriginalToolResponseDispatchWitnessSource
 {
     // Preserve the original six-argument CLR entry for already compiled ordinary clients.
     // Its absence of canonical owners conveys no Task/Run, cloud context or tool authority.
@@ -226,47 +226,52 @@ public sealed class ResilientProviderRoutingModelClient(
     public async Task<string> CompleteAsync(OllamaChatRequest request, CancellationToken cancellationToken)
     {
         var required = RequiredCapabilities(request);
-        var state = new RoutingState(request.ExecutionContext);
-        await CaptureOriginalAttemptAsync(state, cancellationToken).ConfigureAwait(false);
-        var candidates = await GetCandidatesAsync(request.Model, required, cancellationToken, context: state.Context).ConfigureAwait(false);
-        Exception? firstFailure = null;
-        for (var index = 0; index < candidates.Count; index++)
+        var state = CreateOriginalFailureRoutingState(request, request.ExecutionContext, cancellationToken, required, []);
+        try
         {
-            var selected = candidates[index];
-            if (selected.CatalogueFailure is { } catalogueFailure && state.Admission is not null)
+            await CaptureOriginalAttemptAsync(state, cancellationToken).ConfigureAwait(false);
+            var candidates = await GetCandidatesAsync(request.Model, required, cancellationToken, context: state.Context).ConfigureAwait(false);
+            Exception? firstFailure = null;
+            for (var index = 0; index < candidates.Count; index++)
             {
-                await RecordCatalogueUnavailableAsync(state, selected, catalogueFailure, cancellationToken).ConfigureAwait(false);
-                firstFailure ??= catalogueFailure.Cause;
-                continue;
-            }
-            await PrepareAttemptAsync(state, selected, required, [], index > 0, cancellationToken).ConfigureAwait(false);
-            if (index > 0) PublishFallback(request.Model, selected.Key, state.Context);
-            Exception? synchronousProviderFailure = null;
-            Task<string>? originalProviderTask = null;
-            Task<string>? originalFrame = null;
-            var routedRequest = CreateRoutedRequest(request, selected, state.Context);
-            try
-            {
-                originalFrame = RunOriginalContextFrameAsync(state, request, routedRequest, (invocationFence, token) =>
+                var selected = candidates[index];
+                if (selected.CatalogueFailure is { } catalogueFailure && state.Admission is not null)
                 {
-                    GuardSelectedProvider(selected);
-                    try { return originalProviderTask = StartRawInvocation(invocationFence, () => RawCompleteAsync(selected, routedRequest, token)); }
-                    catch (Exception failure) { synchronousProviderFailure = failure; throw; }
-                }, cancellationToken);
-                return await AwaitExactTaskAsync(originalFrame).ConfigureAwait(false);
+                    await RecordCatalogueUnavailableAsync(state, selected, catalogueFailure, cancellationToken).ConfigureAwait(false);
+                    firstFailure ??= catalogueFailure.Cause;
+                    continue;
+                }
+                await PrepareAttemptAsync(state, selected, required, [], index > 0, cancellationToken).ConfigureAwait(false);
+                if (index > 0) PublishFallback(request.Model, selected.Key, state.Context);
+                Exception? synchronousProviderFailure = null;
+                Task<string>? originalProviderTask = null;
+                Task<string>? originalFrame = null;
+                var routedRequest = CreateRoutedRequest(request, selected, state.Context);
+                try
+                {
+                    originalFrame = RunOriginalContextFrameAsync(state, request, routedRequest, (invocationFence, token) =>
+                    {
+                        GuardSelectedProvider(selected);
+                        try { return originalProviderTask = StartRawInvocation(invocationFence, () => RawCompleteAsync(selected, routedRequest, token)); }
+                        catch (Exception failure) { synchronousProviderFailure = failure; throw; }
+                    }, cancellationToken);
+                    return await AwaitExactTaskAsync(originalFrame).ConfigureAwait(false);
+                }
+                catch (Exception failure)
+                {
+                    var originalObservation = originalFrame is null ? null : ObserveOriginalFrame(state, originalFrame);
+                    var observed = originalObservation?.OriginalCause ?? ObserveExactRawFailure(originalProviderTask, synchronousProviderFailure, failure);
+                    if (observed is null) throw;
+                    await RecordProviderFailureAsync(state, originalFrame!, observed, cancellationToken,
+                        originalObservation: originalObservation).ConfigureAwait(false);
+                    if (!IsRecoverable(observed, cancellationToken, state.Admission?.Lease.Candidate.ProviderId)) ExceptionDispatchInfo.Capture(observed).Throw();
+                    firstFailure ??= observed;
+                }
             }
-            catch (Exception failure)
-            {
-                var originalObservation = originalFrame is null ? null : ObserveOriginalFrame(state, originalFrame);
-                var observed = originalObservation?.OriginalCause ?? ObserveExactRawFailure(originalProviderTask, synchronousProviderFailure, failure);
-                if (observed is null) throw;
-                await RecordProviderFailureAsync(state, originalFrame!, observed, cancellationToken,
-                    originalObservation: originalObservation).ConfigureAwait(false);
-                if (!IsRecoverable(observed, cancellationToken, state.Admission?.Lease.Candidate.ProviderId)) ExceptionDispatchInfo.Capture(observed).Throw();
-                firstFailure ??= observed;
-            }
+            throw CreateOriginalExhaustedRequestFailure(state, "Every compatible model failed before completing the request.", firstFailure);
         }
-        throw new InvalidOperationException("Every compatible model failed before completing the request.", firstFailure);
+        catch (Exception outward) { ObserveOriginalFiniteRequestFailure(state, outward); throw; }
+        finally { EndOriginalFiniteRequest(state); }
     }
 
     /// <summary>Preserves the original tool transcript and accepted work on authorized same-run recovery.</summary>
@@ -279,50 +284,56 @@ public sealed class ResilientProviderRoutingModelClient(
         var required = RequiredCapabilities(request);
         var restrictions = request.Tools.Select(tool => ModelToolPermissionMap.Map(tool.Name))
             .Where(capability => capability.HasValue).Select(capability => capability!.Value).Distinct().ToArray();
-        var state = new RoutingState(request.ExecutionContext);
-        await CaptureOriginalAttemptAsync(state, cancellationToken).ConfigureAwait(false);
-        var candidates = await GetCandidatesAsync(request.Model, required, cancellationToken, restrictions, state.Context).ConfigureAwait(false);
-        Exception? firstFailure = null;
-        for (var index = 0; index < candidates.Count; index++)
+        var state = CreateOriginalFailureRoutingState(request, request.ExecutionContext, cancellationToken, required, restrictions);
+        try
         {
-            var selected = candidates[index];
-            if (selected.CatalogueFailure is { } catalogueFailure && state.Admission is not null)
+            await CaptureOriginalAttemptAsync(state, cancellationToken).ConfigureAwait(false);
+            var candidates = await GetCandidatesAsync(request.Model, required, cancellationToken, restrictions, state.Context).ConfigureAwait(false);
+            Exception? firstFailure = null;
+            for (var index = 0; index < candidates.Count; index++)
             {
-                await RecordCatalogueUnavailableAsync(state, selected, catalogueFailure, cancellationToken).ConfigureAwait(false);
-                firstFailure ??= catalogueFailure.Cause;
-                continue;
-            }
-            await PrepareAttemptAsync(state, selected, required, restrictions, index > 0, cancellationToken).ConfigureAwait(false);
-            if (index > 0) PublishFallback(request.Model, selected.Key, state.Context);
-            Exception? synchronousProviderFailure = null;
-            Task<OllamaToolResponse>? originalProviderTask = null;
-            Task<OllamaToolResponse>? originalFrame = null;
-            var routedRequest = CreateRoutedRequest(request, selected, state.Context);
-            try
-            {
-                originalFrame = RunOriginalContextFrameAsync(state, request, routedRequest, (invocationFence, token) =>
+                var selected = candidates[index];
+                if (selected.CatalogueFailure is { } catalogueFailure && state.Admission is not null)
                 {
-                    GuardSelectedProvider(selected);
-                    try { return originalProviderTask = StartRawInvocation(invocationFence, () => RawToolsAsync(selected, routedRequest, token)); }
-                    catch (Exception failure) { synchronousProviderFailure = failure; throw; }
-                }, cancellationToken);
-                var response = await AwaitExactTaskAsync(originalFrame).ConfigureAwait(false);
-                if (response is null || response.ToolCalls is null)
-                    throw new InvalidDataException("The provider returned a malformed tool response.");
-                return response with { EffectiveModel = selected.Descriptor, ExecutionContext = state.Context };
+                    await RecordCatalogueUnavailableAsync(state, selected, catalogueFailure, cancellationToken).ConfigureAwait(false);
+                    firstFailure ??= catalogueFailure.Cause;
+                    continue;
+                }
+                await PrepareAttemptAsync(state, selected, required, restrictions, index > 0, cancellationToken).ConfigureAwait(false);
+                if (index > 0) PublishFallback(request.Model, selected.Key, state.Context);
+                Exception? synchronousProviderFailure = null;
+                Task<OllamaToolResponse>? originalProviderTask = null;
+                Task<OllamaToolResponse>? originalFrame = null;
+                var routedRequest = CreateRoutedRequest(request, selected, state.Context);
+                try
+                {
+                    originalFrame = RunOriginalContextFrameAsync(state, request, routedRequest, (invocationFence, token) =>
+                    {
+                        GuardSelectedProvider(selected);
+                        try { return originalProviderTask = StartRawInvocation(invocationFence, () => RawToolsWithOriginalDispatchAsync(state, selected, routedRequest, token)); }
+                        catch (Exception failure) { synchronousProviderFailure = failure; throw; }
+                    }, cancellationToken);
+                    BindOriginalToolDispatchFrame(state, originalFrame);
+                    var response = await AwaitExactTaskAsync(originalFrame).ConfigureAwait(false);
+                    if (response is null || response.ToolCalls is null)
+                        throw new InvalidDataException("The provider returned a malformed tool response.");
+                    return response with { EffectiveModel = selected.Descriptor, ExecutionContext = state.Context };
+                }
+                catch (Exception failure)
+                {
+                    var originalObservation = originalFrame is null ? null : ObserveOriginalFrame(state, originalFrame);
+                    var observed = originalObservation?.OriginalCause ?? ObserveExactRawFailure(originalProviderTask, synchronousProviderFailure, failure);
+                    if (observed is null) throw;
+                    await RecordProviderFailureAsync(state, originalFrame!, observed, cancellationToken,
+                        originalObservation: originalObservation).ConfigureAwait(false);
+                    if (!IsRecoverable(observed, cancellationToken, state.Admission?.Lease.Candidate.ProviderId)) ExceptionDispatchInfo.Capture(observed).Throw();
+                    firstFailure ??= observed;
+                }
             }
-            catch (Exception failure)
-            {
-                var originalObservation = originalFrame is null ? null : ObserveOriginalFrame(state, originalFrame);
-                var observed = originalObservation?.OriginalCause ?? ObserveExactRawFailure(originalProviderTask, synchronousProviderFailure, failure);
-                if (observed is null) throw;
-                await RecordProviderFailureAsync(state, originalFrame!, observed, cancellationToken,
-                    originalObservation: originalObservation).ConfigureAwait(false);
-                if (!IsRecoverable(observed, cancellationToken, state.Admission?.Lease.Candidate.ProviderId)) ExceptionDispatchInfo.Capture(observed).Throw();
-                firstFailure ??= observed;
-            }
+            throw CreateOriginalExhaustedRequestFailure(state, "Every compatible model failed during the same tool conversation.", firstFailure);
         }
-        throw new InvalidOperationException("Every compatible model failed during the same tool conversation.", firstFailure);
+        catch (Exception outward) { ObserveOriginalFiniteRequestFailure(state, outward); throw; }
+        finally { EndOriginalFiniteRequest(state); }
     }
 
     /// <summary>
@@ -426,6 +437,7 @@ public sealed class ResilientProviderRoutingModelClient(
         public TaskExecutionSnapshot? CurrentSnapshot { get; set; }
         public bool InitialObservationValidated { get; set; }
         public TaskExecutionOwnerBinding? OriginalOwner { get; set; }
+        public OriginalRequestFailureBody? OriginalRequestFailure { get; set; }
     }
 
     private static string RequestKey(ProviderModelDescriptor descriptor) =>
@@ -488,6 +500,7 @@ public sealed class ResilientProviderRoutingModelClient(
         IReadOnlySet<ToolCapability> required, IReadOnlyCollection<RestrictedModelCapability> restrictions,
         bool fallback, CancellationToken token)
     {
+        ClearOriginalRequestFailure(state);
         token.ThrowIfCancellationRequested();
         GuardSelectedProvider(selected);
         if (selected.Descriptor is not null && restrictions.Count != 0)
@@ -674,6 +687,7 @@ public sealed class ResilientProviderRoutingModelClient(
             var acknowledged = await taskCoordinator.RecordAttemptFailureAsync(context.TaskId, context.ExecutionId,
                 admission.AttemptId, safeFailure, token, originalFailure: originalFailure).ConfigureAwait(false);
             state.Context = context with { PersistenceRevision = acknowledged.PersistenceRevision };
+            RecordOriginalAcknowledgedRequestFailure(state, originalFailure);
         }
         catch (Exception observationFailure)
         {
@@ -694,6 +708,7 @@ public sealed class ResilientProviderRoutingModelClient(
 
     private async Task RecordCatalogueUnavailableAsync(RoutingState state, SelectedProvider selected, ProviderCatalogueFailure original, CancellationToken token)
     {
+        ClearOriginalRequestFailure(state);
         var context = state.Context ?? throw new InvalidOperationException("A real canonical provider attempt is required.");
         var admission = state.Admission ?? throw new InvalidOperationException("Original attempt custody is unavailable.");
         if (taskCoordinator is null || originalFrames is null)

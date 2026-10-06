@@ -109,7 +109,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IAgentRunRepository, AgentRunRepository>();
         services.AddSingleton<ICapabilityRepository, CapabilityRepository>();
         services.AddSingleton<IExternalConnectionRepository, ExternalConnectionRepository>();
-        services.AddSingleton<IMcpConnectionClient, McpConnectionClient>();
+        services.AddSingleton<McpConnectionClient>();
+        services.AddSingleton<IMcpConnectionClient>(provider => provider.GetRequiredService<McpConnectionClient>());
         services.AddSingleton<ExternalConnectionRegistryService>();
         services.AddSingleton<McpToolRuntime>();
         services.AddSingleton<CapabilityRegistryService>();
@@ -245,6 +246,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ITaskRunAdmissionAuthority>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
         services.AddSingleton<ITaskRunCommandAuthority>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
         services.AddSingleton<ITaskRunSelectedRouteCapture>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
+        services.AddSingleton<ITaskRunOriginalIssuedRouteConfigurationSource>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
         services.AddSingleton<TaskRunCloudPermissionRemediationOwner>(provider => new TaskRunCloudPermissionRemediationOwner(
             provider.GetRequiredService<TaskRunCentralCloudUsePermissionSource>(),
             provider.GetRequiredService<TaskRunPermissionAuthority>(),
@@ -257,9 +259,11 @@ public static class ServiceCollectionExtensions
             (task, run, attempt, token) => provider.GetRequiredService<TaskExecutionCoordinator>()
                 .TryGetIssuedAttemptAsync(task, run, attempt, token)));
         services.AddSingleton<ITaskRunOriginalFrameOwner>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
+        services.AddSingleton<ITaskRunOriginalAttemptRegistrationSource>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
         services.AddSingleton<ITaskRunRuntimeSettlement>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
         services.AddSingleton<ITaskRunProviderFailureSettlement>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
         services.AddSingleton<ITaskRunOriginalAttemptRetirement>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
+        services.AddSingleton<ITaskRunOriginalFailedAttemptSettlementSource>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
         services.AddSingleton<ManagedDulcheRuntimeService>(provider => new ManagedDulcheRuntimeService(
             provider.GetRequiredService<IModelProviderRegistry>(),
             provider.GetRequiredService<IProviderConfigurationStore>(),
@@ -277,7 +281,9 @@ public static class ServiceCollectionExtensions
             provider.GetRequiredService<IWorkspaceToolService>(),
             provider.GetRequiredService<CapabilityRegistryService>(),
             provider.GetRequiredService<WorkspaceTaskRunEffectAuthority>(),
-            OperatingSystem.IsAndroid() ? CapabilityPlatform.Android : CapabilityPlatform.Windows,
+            OperatingSystem.IsWindows() ? CapabilityPlatform.Windows :
+                OperatingSystem.IsAndroid() ? CapabilityPlatform.Android :
+                OperatingSystem.IsLinux() ? CapabilityPlatform.Linux : CapabilityPlatform.None,
             provider.GetRequiredService<WorkspaceTaskRunReceiptAuthority>()));
         services.AddSingleton<ITaskRunToolActionOwner>(provider => provider.GetRequiredService<WorkspaceTaskRunToolActionOwner>());
         services.AddSingleton<TaskExecutionCoordinator>(provider => new TaskExecutionCoordinator(
@@ -290,6 +296,8 @@ public static class ServiceCollectionExtensions
             provider.GetRequiredService<ITaskRunToolActionOwner>(),
             provider.GetRequiredService<ICheckpointExecutionObservationSource>(),
             unstartedPermissionSource: provider.GetRequiredService<TaskRunCloudPermissionRemediationOwner>()));
+        services.AddSingleton<ITaskRunOriginalActionAdmissionSource>(provider => provider.GetRequiredService<TaskExecutionCoordinator>());
+        services.AddSingleton<ITaskRunProcessRetirementParticipant>(provider => provider.GetRequiredService<TaskExecutionCoordinator>());
         services.AddSingleton<IProjectPreviewProvider, WebProjectPreviewProvider>();
         services.AddSingleton<IModelProvider>(provider => new OllamaModelProvider(
             provider.GetRequiredService<ILocalOllamaClient>(),
@@ -299,6 +307,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IModelProvider, CustomOpenAiCompatibleModelProvider>();
         services.AddSingleton<IModelProvider, AnthropicModelProvider>();
         services.AddSingleton<IModelProvider, GeminiModelProvider>();
+        services.AddHavenObservedLocalLlamaCpp(LocalLlamaCppRegistration.ReadExplicitEnvironment());
         services.AddSingleton<IModelProviderRegistry, ModelProviderRegistry>();
         services.AddSingleton<IModelRouter, ModelRouter>();
         services.AddSingleton<ProviderRoutingModelClient>(provider => new ProviderRoutingModelClient(
@@ -307,6 +316,9 @@ public static class ServiceCollectionExtensions
             provider.GetRequiredService<IPrivacyPreferenceStore>()));
         services.AddSingleton<ResilientProviderRoutingModelClient>();
         services.AddSingleton<IProviderModelClient>(provider => provider.GetRequiredService<ResilientProviderRoutingModelClient>());
+        services.AddSingleton<ITaskRunOriginalRequestFailureSource>(provider => provider.GetRequiredService<ResilientProviderRoutingModelClient>());
+        services.AddSingleton<ITaskRunOriginalToolCheckpointSelectionSource>(provider => provider.GetRequiredService<ResilientProviderRoutingModelClient>());
+        services.AddSingleton<ITaskRunOriginalToolResponseDispatchWitnessSource>(provider => provider.GetRequiredService<ResilientProviderRoutingModelClient>());
         services.AddSingleton<INotesAiService>(provider => new NotesAiService(
             provider.GetRequiredService<IProviderModelClient>(),
             provider.GetRequiredService<IProductionDiagnostics>()));
@@ -343,6 +355,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ExtensionManager>();
         services.AddSingleton<PluginToolRuntime>();
         services.AddSingleton<IVersionedSettingsStore, VersionedAtomicSettingsStore>();
+        services.AddSingleton<SpaceRegistry>(provider => new SpaceRegistry(provider.GetRequiredService<IVersionedSettingsStore>()));
         services.AddSingleton<IUpdatePreferenceStore, VersionedUpdatePreferenceStore>();
         services.AddSingleton(new Func<InstallationInfo>(WindowsInstallationDetector.DetectInstallationSource));
         services.AddSingleton(new Func<string>(CurrentExecutableVersion));

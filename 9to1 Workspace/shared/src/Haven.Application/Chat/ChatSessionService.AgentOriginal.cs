@@ -95,6 +95,7 @@ public sealed partial class ChatSessionService
             throw new InvalidOperationException("Another original invocation owns this task's recovery custody.");
         var prepared = await operation.AwaitAsync(() => coordinator.PrepareOriginalUnstartedContinuationAsync(inspection, this, token)).ConfigureAwait(false);
         var actual = coordinator.ClaimOriginalUnstartedContinuation(prepared, this, token);
-        return new(this, sameOriginal.OriginalConversation, prepared.Next, actual);
+        var next = new ChatOriginalAgentInvocation(this, sameOriginal.OriginalConversation, prepared.Next, actual);
+        return operation.Invoke(() => coordinator.BindOriginalDelegatedAgentSuccessor(sameOriginal, prepared, next));
     }
 }

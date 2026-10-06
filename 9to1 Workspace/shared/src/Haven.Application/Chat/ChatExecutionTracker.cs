@@ -372,6 +372,12 @@ public sealed class ChatExecutionTracker : IAsyncDisposable
         }
     }
 
+    internal void DemandExternalOriginalProcessJoin()
+    {
+        if (IsInsideOwningOriginal())
+            throw new InvalidOperationException("An original tracker callback cannot join its owning process drain.");
+    }
+
     public ValueTask DisposeAsync()
     {
         if (IsInsideOwningOriginal())

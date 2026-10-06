@@ -24,6 +24,7 @@ public sealed class TaskRunOriginalRecoveryInspection
     internal readonly TaskExecutionSnapshot ActualSnapshot;
     internal readonly IReadOnlyList<TaskRunOriginalSource> ActualSources;
     internal readonly IReadOnlyList<Exception> ActualCauses;
+    internal TaskRunProcessStageCustody? OriginalProcessInspection;
 
     internal TaskRunOriginalRecoveryInspection(
         TaskExecutionCoordinator issuer, TaskExecutionSnapshot snapshot, TaskRunInvocationCustody? original,
@@ -79,21 +80,26 @@ public sealed class TaskRunOriginalRecoveryInspection
 public sealed partial class TaskExecutionCoordinator
 {
     /// <summary>Inspects the same current task/run under fresh command authority. Missing historical custody stays unavailable.</summary>
-    public async Task<TaskRunOriginalRecoveryInspection> InspectOriginalRecoveryAsync(
+    public Task<TaskRunOriginalRecoveryInspection> InspectOriginalRecoveryAsync(
+        Guid taskId, Guid expectedExecutionId, CancellationToken cancellationToken) =>
+        StartOriginalProcessStage("task.inspect-original-recovery", cancellationToken,
+            token => InspectOriginalRecoveryBodyAsync(taskId, expectedExecutionId, token));
+
+    private async Task<TaskRunOriginalRecoveryInspection> InspectOriginalRecoveryBodyAsync(
         Guid taskId, Guid expectedExecutionId, CancellationToken cancellationToken)
     {
         if (taskId == Guid.Empty || expectedExecutionId == Guid.Empty)
             throw new ArgumentException("Exact canonical task and execution identities are required.");
-        var initial = await RequireAsync(taskId, cancellationToken).ConfigureAwait(false);
+        var initial = await RequireOriginalProcessSnapshotAsync(taskId, cancellationToken).ConfigureAwait(false);
         RequireRun(initial, expectedExecutionId);
         if (initial.OwnerBinding is null)
             throw new InvalidOperationException("An original recovery inspection requires the actual canonical owner binding.");
         ValidateOwner(initial, initial.OwnerBinding);
-        await ValidateTaskCommandAsync(initial, "task.inspect-original-recovery", cancellationToken).ConfigureAwait(false);
+        await ValidateOriginalProcessCommandAsync(initial, "task.inspect-original-recovery", cancellationToken).ConfigureAwait(false);
 
         // An awaited actor/policy check cannot freeze repository state. Benign queue changes
         // may advance the revision; replacement owner/run/recovery observations are refused.
-        var current = await RequireAsync(taskId, cancellationToken).ConfigureAwait(false);
+        var current = await RequireOriginalProcessSnapshotAsync(taskId, cancellationToken).ConfigureAwait(false);
         RequireRun(current, expectedExecutionId);
         if (current.ContextId != initial.ContextId || current.CreatedAt != initial.CreatedAt
             || current.OwnerBinding != initial.OwnerBinding
@@ -114,9 +120,9 @@ public sealed partial class TaskExecutionCoordinator
 
         // This final actual actor check precedes disclosure. No task/body/settlement is joined,
         // no persistence is performed and neither durable text nor this projection grants replay.
-        await ValidateTaskCommandAsync(current, "task.inspect-original-recovery", cancellationToken).ConfigureAwait(false);
+        await ValidateOriginalProcessCommandAsync(current, "task.inspect-original-recovery", cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
-        var final = await RequireAsync(taskId, cancellationToken).ConfigureAwait(false);
+        var final = await RequireOriginalProcessSnapshotAsync(taskId, cancellationToken).ConfigureAwait(false);
         RequireRun(final, expectedExecutionId);
         if (final.ContextId != current.ContextId || final.CreatedAt != current.CreatedAt || final.OwnerBinding != current.OwnerBinding
             || final.RecoveryObservation?.ObservationId != current.RecoveryObservation?.ObservationId)
@@ -128,7 +134,7 @@ public sealed partial class TaskExecutionCoordinator
         }
         // The final repository await may outlive an authentication revision. Ask the
         // genuine command authority again after it, before any private disclosure.
-        await ValidateTaskCommandAsync(final, "task.inspect-original-recovery", cancellationToken).ConfigureAwait(false);
+        await ValidateOriginalProcessCommandAsync(final, "task.inspect-original-recovery", cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
         if (original is not null && (!_originalInvocations.TryGetValue(taskId, out var finalOriginal)
             || !ReferenceEquals(finalOriginal, original))) original = null;
@@ -138,6 +144,8 @@ public sealed partial class TaskExecutionCoordinator
         var safeCauses = capture.Causes.SelectMany(OriginalDiagnosticCauses).Select(cause => new ExecutionFailure(
             "ORIGINAL_INVOCATION_CAUSE", SensitiveTextRedactor.Redact(cause.GetType().Name, 128),
             SensitiveTextRedactor.Redact(cause.Message, 2_000), AffectedComponent: "task-recovery-inspection")).ToArray();
-        return new TaskRunOriginalRecoveryInspection(this, final, original, _time.GetUtcNow(), capture, safeCauses);
+        var result = new TaskRunOriginalRecoveryInspection(this, final, original, _time.GetUtcNow(), capture, safeCauses);
+        result.OriginalProcessInspection = RequireOriginalProcessStage();
+        return result;
     }
 }

@@ -7,7 +7,7 @@ namespace Haven.Core.Tests;
 /// <summary>Real coordinator, issuer, central permission engine, runtime and frame owner controls.
 /// Actor/provider/repository/physical receipt producer are explicitly synthetic fixture owners;
 /// actual temporary-file reads/moves and original Tasks are exercised, no production grant issued.</summary>
-public sealed class WorkspaceTaskRunToolOwnerTests
+public sealed partial class WorkspaceTaskRunToolOwnerTests
 {
     [Fact]
     public async Task Held_original_read_and_duplicate_runtime_entry_share_the_actual_task_then_record_readonly_without_acceptance()

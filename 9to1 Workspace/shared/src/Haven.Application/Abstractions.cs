@@ -365,7 +365,12 @@ public interface IBrowserToolService
 /// <summary>
 /// Represents process request and keeps its related state and behavior together.
 /// </summary>
-public sealed record ProcessRequest(string FileName, string Arguments, string WorkingDirectory, TimeSpan Timeout, IReadOnlyDictionary<string, string>? Environment = null, bool DetachGui = false);
+public sealed record ProcessRequest(string FileName, string Arguments, string WorkingDirectory, TimeSpan Timeout, IReadOnlyDictionary<string, string>? Environment = null, bool DetachGui = false)
+{
+    // Exact host argument vector. Positional constructor/legacy Arguments remain unchanged.
+    // Maintained process owners copy it and refuse simultaneous nonempty Arguments.
+    public IReadOnlyList<string>? ArgumentList { get; init; }
+}
 /// <summary>
 /// Represents process result and keeps its related state and behavior together.
 /// </summary>

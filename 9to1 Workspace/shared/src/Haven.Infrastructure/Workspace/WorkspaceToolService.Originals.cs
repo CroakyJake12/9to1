@@ -47,6 +47,7 @@ public sealed partial class WorkspaceToolService
         private bool _sealed;
         private bool _processReserved;
         private readonly OriginalWindowsPathLease? _physicalRoot;
+        private readonly OriginalLinuxPathLease? _linuxRoot;
         private WorkspaceToolPhysicalOutcome? _outcome;
         private bool? _completedBody;
         public WorkspaceToolService Owner { get; }
@@ -98,6 +99,7 @@ public sealed partial class WorkspaceToolService
             else if (_call.Name is not ("read_file" or "run_command" or "run_tests"))
                 throw new UnauthorizedAccessException("This original call is not an implemented workspace tool.");
             if (OperatingSystem.IsWindows()) _physicalRoot = new OriginalWindowsPathLease(Root);
+            else if (OperatingSystem.IsLinux()) _linuxRoot = new OriginalLinuxPathLease(Root);
         }
 
         public void DemandIssued()
@@ -140,8 +142,10 @@ public sealed partial class WorkspaceToolService
             DemandRoot(workspaceRoot);
             lock (_gate) if (_sealed) throw new ObjectDisposedException(nameof(Invocation));
             var path = ResolveDeclared(relativePath);
-            if (_physicalRoot is null) throw new PlatformNotSupportedException("The original physical path requires retained Windows ancestors.");
-            _physicalRoot.EnsureDirectory(Directory.Exists(path) ? path : Path.GetDirectoryName(path)!, null);
+            var directory = Directory.Exists(path) ? path : Path.GetDirectoryName(path)!;
+            if (_physicalRoot is not null) _physicalRoot.EnsureDirectory(directory, null);
+            else if (_linuxRoot is not null) _linuxRoot.EnsureDirectory(directory);
+            else throw new PlatformNotSupportedException("The original physical path requires a supported retained directory owner.");
             return path;
         }
 
@@ -262,6 +266,7 @@ public sealed partial class WorkspaceToolService
 
         private async Task<string> ReadOriginalTextAsync(string path, CancellationToken token)
         {
+            if (_linuxRoot is not null) { DemandIssued(); var actual = await _linuxRoot.ReadTextAsync(path, token).ConfigureAwait(false); DemandIssued(); return actual; }
             if (_physicalRoot is null) throw new PlatformNotSupportedException("The original read has no retained physical Windows path owner.");
             token.ThrowIfCancellationRequested();
             var errors = new List<Exception>();
@@ -315,13 +320,13 @@ public sealed partial class WorkspaceToolService
             var timeout = Integer("timeout_seconds", _call.Name == "run_tests" ? 600 : 120);
             if (_call.Name == "run_tests") timeout = Math.Clamp(timeout, 1, 1800);
             timeout = Math.Clamp(timeout, 1, 900);
-            var expected = new ProcessRequest("powershell.exe", "-NoProfile -NonInteractive -EncodedCommand " +
-                Convert.ToBase64String(Encoding.Unicode.GetBytes(command)), Root, TimeSpan.FromSeconds(timeout));
+            var expected = WorkspaceToolProcessRequestFactory.CreateOriginal(Root, command, timeout);
             var digest = WorkspaceToolOriginalDigest.Process(actual);
             if (!string.Equals(digest, WorkspaceToolOriginalDigest.Process(expected), StringComparison.Ordinal))
                 throw new UnauthorizedAccessException("The process fields differ from the original declared command.");
-            if (_physicalRoot is null) throw new PlatformNotSupportedException("The original process root requires retained Windows ancestor exclusion.");
-            _physicalRoot.EnsureDirectory(Root, null);
+            if (_physicalRoot is not null) _physicalRoot.EnsureDirectory(Root, null);
+            else if (_linuxRoot is not null) _linuxRoot.DemandCurrent();
+            else throw new PlatformNotSupportedException("The original process requires a supported retained root descriptor.");
             var effect = new OriginalEffect(WorkspaceToolEffectKind.ProcessStart, Root, digest);
             lock (_gate)
             {
@@ -331,6 +336,27 @@ public sealed partial class WorkspaceToolService
             }
             return effect;
         }
+
+        public string OriginalProcessWorkingDirectory()
+        {
+            DemandIssued();
+            return _linuxRoot is not null ? _linuxRoot.ProcessWorkingDirectory : Root;
+        }
+        public Microsoft.Win32.SafeHandles.SafeFileHandle OpenOriginalLinuxParent(string path)
+        {
+            DemandIssued();
+            if (_linuxRoot is null) throw new PlatformNotSupportedException("No original Linux directory owner is available.");
+            try { return _linuxRoot.OpenDirectory(Path.GetDirectoryName(path)!, flushable: true); }
+            catch (FileNotFoundException missing)
+            { throw new PlatformNotSupportedException("The bounded Linux edit adapter requires an existing parent; it never creates unchecked directory components.", missing); }
+        }
+        public Microsoft.Win32.SafeHandles.SafeFileHandle OpenOriginalLinuxTarget(string path)
+        {
+            DemandIssued();
+            if (_linuxRoot is null) throw new PlatformNotSupportedException("No original Linux file owner is available.");
+            return _linuxRoot.OpenRead(path);
+        }
+        public void DemandOriginalLinuxRoot() { DemandIssued(); _linuxRoot?.DemandCurrent(); }
 
         public void FinishEffect(OriginalEffect effect, bool admitted, bool known, bool terminal, int? processId = null, int? exitCode = null, bool? eligible = null)
         {
@@ -410,6 +436,7 @@ public sealed partial class WorkspaceToolService
                 if (!operation.ExpectedReadAbsence || !observed.All(IsReadAbsence)) errors.AddRange(observed);
             }
             try { _physicalRoot?.Dispose(); } catch (Exception error) { AddOriginalErrors(errors, null, error); }
+            try { _linuxRoot?.Dispose(); } catch (Exception error) { AddOriginalErrors(errors, null, error); }
             try { _lifetime.Dispose(); } catch (Exception error) { AddOriginalErrors(errors, null, error); }
             lock (_gate) _errors.AddRange(errors);
             // The SAME close task retains terminal failures. Physical outcome observation below
@@ -443,7 +470,7 @@ public sealed partial class WorkspaceToolService
                 var expected = (_call.Name == "preview_change_set" ? 0 : _declaredWrites.Count) + (_call.Name is "run_command" or "run_tests" ? 1 : 0);
                 var complete = effectBodySucceeded && errors.Length == 0 && effects.Length == expected && _effects.All(effect => effect.Eligible) && effects.All(effect =>
                     effect.Admitted && effect.EffectKnown && effect.TerminalOutcomeKnown &&
-                    (effect.Kind != WorkspaceToolEffectKind.ProcessStart || effect.ExitCode == 0));
+                    (effect.Kind != WorkspaceToolEffectKind.ProcessStart || effect.ExitCode is not null));
                 var noEffect = effects.All(effect => !effect.Admitted);
                 _completedBody = effectBodySucceeded;
                 _outcome = new WorkspaceToolPhysicalOutcome(complete && expected > 0 ? Guid.NewGuid().ToString("N") : null,

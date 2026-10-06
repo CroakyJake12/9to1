@@ -8,7 +8,7 @@ using Xunit;
 namespace Haven.Desktop.Tests;
 
 /// <summary>Actual Chat producer and coordinator/frame owner; controlled repository/actor/provider only, never cloud or installed authority proof.</summary>
-public sealed class ChatCanonicalContextProducerTests : IDisposable
+public sealed partial class ChatCanonicalContextProducerTests : IDisposable
 {
     private static readonly AsyncLocal<ChatCanonicalContextProducerTests?> OriginalFixtureOwner = new();
     private readonly List<string> _ownedWorkspaces = [];
@@ -698,7 +698,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         public required Workspace Workspace;
         public required ChatSessionService Service;
         public List<ChatStreamEvent> Events { get; } = [];
-        public static Harness Create(bool temporary, bool tools = false)
+        public static Harness Create(bool temporary, bool tools = false, Func<TaskRunOriginalFrameOwner, ITaskRunRuntimeSettlement>? runtimeOwner = null)
         {
             var fixtureOwner = OriginalFixtureOwner.Value ?? throw new InvalidOperationException("The actual test workspace owner is unavailable.");
             var actualWorkspaceRoot = Path.Combine(Path.GetTempPath(), "astra-task-context-fixture-" + Guid.NewGuid().ToString("N"));
@@ -715,7 +715,7 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
             var runtime = new TaskRunOriginalFrameOwner((task, run, attempt, token) =>
                 coordinator!.TryGetIssuedAttemptAsync(task, run, attempt, token));
             var taskRepository = new Tasks();
-            coordinator = new TaskExecutionCoordinator(taskRepository, new Sink(), admissionAuthority: authority, runtimeSettlement: runtime);
+            coordinator = new TaskExecutionCoordinator(taskRepository, new Sink(), admissionAuthority: authority, runtimeSettlement: runtimeOwner?.Invoke(runtime) ?? runtime);
             var capture = new Capture(); var conversations = new Conversations(); var workspace = new Workspace(); var owner = new ToolsOwner();
             var provider = new Provider(model, coordinator, runtime, capture);
             return new Harness

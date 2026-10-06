@@ -7,7 +7,7 @@ using Haven.Infrastructure;
 namespace Haven.Infrastructure.Tests;
 
 /// <summary>Original production router regressions; synthetic providers do not certify a deployed model.</summary>
-public sealed class ResilientProviderRoutingRecoveryTests
+public sealed partial class ResilientProviderRoutingRecoveryTests
 {
     [Fact]
     public async Task OrdinaryOllamaTextCatalogueStillStreamsWithoutNewOptionalEligibilityPort()

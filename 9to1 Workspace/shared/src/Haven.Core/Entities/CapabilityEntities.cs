@@ -6,6 +6,8 @@ public enum CapabilityPlatform
     None = 0,
     Windows = 1,
     Android = 2,
+    Linux = 4,
+    // Persisted legacy All remains exactly 3; Linux support is declared per maintained capability.
     All = Windows | Android
 }
 

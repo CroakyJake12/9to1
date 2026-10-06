@@ -565,10 +565,13 @@ public sealed partial class ChatCloudPermissionCallerTests
     {
         public bool AskDuringCapture = true;
         public int ChatCaptures; public int ToolCaptures;
+        public Task? OriginalToolCapture = null;
+        public TaskCompletionSource ToolCaptureEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public List<string> ChatWire { get; } = [];
         public bool OpenActualAttemptBeforeAsk;
         public TaskRunCloudPermissionRequiredException? OriginalAsk;
         public List<Task<TaskExecutionSnapshot>> ApprovedRunningOriginals { get; } = [];
+        public Func<CancellationToken, Task<bool>>? ApprovedProviderBody = null;
         public async Task AskAsync(ProviderExecutionContext observation, CancellationToken token)
         {
             var actual = await tasks.GetAsync(observation.TaskId, token) ?? throw new InvalidOperationException();
@@ -592,7 +595,7 @@ public sealed partial class ChatCloudPermissionCallerTests
             ApprovedRunningOriginals.Add(actualRunning);
             await actualRunning.ConfigureAwait(false);
             var actual = scope.RunOriginalInvocation(() => runtime.StartOriginalFrameAsync(issued, _ =>
-            { actualDispatch(); return Task.FromResult(false); }, token));
+            { actualDispatch(); return ApprovedProviderBody is { } originalBody ? originalBody(_) : Task.FromResult(false); }, token));
             return await actual;
         }
         public ValueTask CaptureOriginalAsync(TaskExecutionSnapshot current, OllamaChatRequest request, TaskRunContextInventory inventory, CancellationToken token)
@@ -602,7 +605,12 @@ public sealed partial class ChatCloudPermissionCallerTests
             return AskDuringCapture ? new(AskAsync(request.ExecutionContext!, token)) : ValueTask.CompletedTask;
         }
         public ValueTask CaptureOriginalAsync(TaskExecutionSnapshot current, OllamaToolRequest request, TaskRunContextInventory inventory, CancellationToken token)
-        { ToolCaptures++; return AskDuringCapture ? new(AskAsync(request.ExecutionContext!, token)) : ValueTask.CompletedTask; }
+        {
+            ToolCaptures++;
+            ToolCaptureEntered.TrySetResult();
+            return OriginalToolCapture is { } original ? new(original)
+                : AskDuringCapture ? new(AskAsync(request.ExecutionContext!, token)) : ValueTask.CompletedTask;
+        }
     }
     private sealed class Client(Capture capture) : IOllamaClient
     {
@@ -612,11 +620,18 @@ public sealed partial class ChatCloudPermissionCallerTests
         public Task? OriginalDispose;
         public TaskCompletionSource? NextDisposeEntered = null;
         public Task<OllamaToolResponse>? OriginalToolFailure;
+        public TaskCompletionSource<OllamaToolRequest> ToolRequestEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public Action? OriginalToolCallback = null;
         public TaskCompletionSource DisposeEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Task<bool> IsAvailableAsync(CancellationToken token) => Task.FromResult(true);
         public Task<IReadOnlyList<ModelDescriptor>> GetModelsAsync(CancellationToken token) => Task.FromResult<IReadOnlyList<ModelDescriptor>>([]);
         public Task<string> CompleteAsync(OllamaChatRequest request, CancellationToken token) => throw new InvalidOperationException("No nonowned compatibility provider call");
-        public Task<OllamaToolResponse> ChatWithToolsAsync(OllamaToolRequest request, CancellationToken token) => OriginalToolFailure ?? AskToolAsync(request, token);
+        public Task<OllamaToolResponse> ChatWithToolsAsync(OllamaToolRequest request, CancellationToken token)
+        {
+            ToolRequestEntered.TrySetResult(request);
+            OriginalToolCallback?.Invoke();
+            return OriginalToolFailure ?? AskToolAsync(request, token);
+        }
         private async Task<OllamaToolResponse> AskToolAsync(OllamaToolRequest request, CancellationToken token)
         { await _capture.AskAsync(request.ExecutionContext!, token); Dispatches++; throw new InvalidOperationException("No approved provider fixture starts"); }
         public IAsyncEnumerable<string> StreamChatAsync(OllamaChatRequest request, CancellationToken token) => new Stream(this, request, token);
@@ -639,8 +654,13 @@ public sealed partial class ChatCloudPermissionCallerTests
     /// <summary>Controlled failure of the actual settlement PORT Task; the real registry remains retained
     /// and is actually joined during Rig disposal. This is not production settlement authority.</summary>
     private sealed class ControlledSettlement(TaskRunOriginalFrameOwner original, Func<Exception?> exactAsk)
-        : ITaskRunRuntimeSettlement, ITaskRunOriginalAttemptRetirement
+        : ITaskRunRuntimeSettlement, ITaskRunOriginalAttemptRetirement, ITaskRunOriginalAttemptRegistrationSource
     {
+        public TaskRunOriginalAttemptRegistrationDisposition RegisterOriginalAttemptDisposition(TaskRunAttemptAdmission sameOriginal, CancellationToken token) =>
+            ((ITaskRunOriginalAttemptRegistrationSource)original).RegisterOriginalAttemptDisposition(sameOriginal, token);
+        public bool IsIssuedOriginalAttemptRegistrationDisposition(TaskRunOriginalAttemptRegistrationDisposition receipt, TaskRunAttemptAdmission sameOriginal) =>
+            ((ITaskRunOriginalAttemptRegistrationSource)original).IsIssuedOriginalAttemptRegistrationDisposition(receipt, sameOriginal);
+
         public bool FailWithOriginalAsk; public int Calls; public Task? ActualReturned;
         public ValueTask RetireAcknowledgedOriginalAttemptAsync(TaskRunOriginalRetirementAcknowledgment receipt, CancellationToken token) =>
             original.RetireAcknowledgedOriginalAttemptAsync(receipt, token); // Forward SAME private actual receipt to real owner.

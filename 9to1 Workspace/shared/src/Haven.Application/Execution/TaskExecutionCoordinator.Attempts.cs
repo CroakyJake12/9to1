@@ -22,10 +22,19 @@ public sealed partial class TaskExecutionCoordinator
         BeginAuthorizedOriginalAsync(contextId, executionId, promptSummary, durability, requestedPermissionScopes,
             cancellationToken, custody: null);
 
-    private async Task<TaskExecutionSnapshot> BeginAuthorizedOriginalAsync(
+    private Task<TaskExecutionSnapshot> BeginAuthorizedOriginalAsync(
         Guid contextId, Guid executionId, string promptSummary, TaskExecutionDurability durability,
         IReadOnlyCollection<string>? requestedPermissionScopes, CancellationToken cancellationToken, TaskRunInvocationCustody? custody)
     {
+        return StartOriginalProcessStage("begin-original-task", cancellationToken, token =>
+            BeginAuthorizedProcessBodyAsync(contextId, executionId, promptSummary, durability, requestedPermissionScopes, token, custody));
+    }
+
+    private async Task<TaskExecutionSnapshot> BeginAuthorizedProcessBodyAsync(
+        Guid contextId, Guid executionId, string promptSummary, TaskExecutionDurability durability,
+        IReadOnlyCollection<string>? requestedPermissionScopes, CancellationToken cancellationToken, TaskRunInvocationCustody? custody)
+    {
+        var stage = RequireOriginalProcessStage();
         var authority = RequireAuthority();
         if (contextId == Guid.Empty || executionId == Guid.Empty)
             throw new ArgumentException("Canonical context and execution identities are required.");
@@ -34,7 +43,7 @@ public sealed partial class TaskExecutionCoordinator
             SensitiveTextRedactor.Redact(promptSummary, 240), TaskExecutionLifecycle.Running, durability,
             1, [], [], [], NormalizeScopes(requestedPermissionScopes), null, now, now);
         if (custody is not null) custody.ProposedBinding = proposed;
-        var owner = await authority.AuthorizeStartAsync(proposed, cancellationToken).ConfigureAwait(false);
+        var owner = await stage.Await(() => authority.AuthorizeStartAsync(proposed, cancellationToken)).ConfigureAwait(false);
         ValidateOwner(proposed, owner);
         proposed = proposed with { OwnerBinding = owner };
         if (custody is not null)
@@ -43,13 +52,23 @@ public sealed partial class TaskExecutionCoordinator
             if (!_originalInvocations.TryAdd(proposed.TaskId, custody))
                 throw new InvalidOperationException("Another original invocation owns this exact new task identity.");
         }
-        var originalBegin = PersistAsync(proposed, cancellationToken);
+        var originalBegin = stage.Invoke(() => PersistAsync(proposed, cancellationToken));
+        stage.RetainSource(originalBegin);
         if (custody is not null) custody.OriginalBegin = originalBegin;
         var acknowledged = await originalBegin.ConfigureAwait(false);
         if (custody is not null)
         {
             custody.BoundByActualBegin = true;
             BindOriginalInvocation(custody, acknowledged, alreadyRegistered: true);
+        }
+        RetainOriginalBeginProcessResult(stage, acknowledged, custody);
+        if (HasSealedOriginalProcessProducerAdmission || cancellationToken.IsCancellationRequested)
+        {
+            // The actual CAS acknowledged despite withdrawal. Preserve that SAME task/run and
+            // bind the original receipt before recording this owning producer's suspended outcome.
+            await SuspendOriginalLateAdmissionAsync(stage, acknowledged, null).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            throw new InvalidOperationException("The original task begin acknowledged after process admission sealed.");
         }
         return acknowledged;
     }
@@ -63,13 +82,20 @@ public sealed partial class TaskExecutionCoordinator
         TaskRunRouteCandidate candidate, CancellationToken cancellationToken) =>
         AdmitAttemptAsync(taskId, expectedExecutionId, expectedAttemptId, candidate, cancellationToken);
 
-    private async Task<TaskRunAttemptAdmission> AdmitAttemptAsync(
+    private Task<TaskRunAttemptAdmission> AdmitAttemptAsync(
+        Guid taskId, Guid expectedExecutionId, Guid? previousAttemptId,
+        TaskRunRouteCandidate candidate, CancellationToken cancellationToken) =>
+        StartOriginalProcessStage(previousAttemptId is null ? "start-original-attempt" : "resume-original-attempt",
+            cancellationToken, token => AdmitAttemptProcessBodyAsync(taskId, expectedExecutionId, previousAttemptId, candidate, token));
+
+    private async Task<TaskRunAttemptAdmission> AdmitAttemptProcessBodyAsync(
         Guid taskId, Guid expectedExecutionId, Guid? previousAttemptId,
         TaskRunRouteCandidate candidate, CancellationToken cancellationToken)
     {
+        var stage = RequireOriginalProcessStage();
         var authority = RequireAuthority();
         TaskRunAttemptAdmission? retiringOriginal = null;
-        var snapshot = await RequireAsync(taskId, cancellationToken).ConfigureAwait(false);
+        var snapshot = await RequireOriginalProcessSnapshotAsync(taskId, cancellationToken).ConfigureAwait(false);
         RequireRun(snapshot, expectedExecutionId);
         ValidateOwner(snapshot, snapshot.OwnerBinding);
         ValidateCandidate(candidate);
@@ -92,7 +118,7 @@ public sealed partial class TaskExecutionCoordinator
                 && node.State is TaskPlanNodeState.Running or TaskPlanNodeState.WaitingSafeBoundary or TaskPlanNodeState.RequiresReexecution))
                 throw new InvalidOperationException("An unresolved owner mutation requires inspection before any fallback.");
             var settlement = _runtimeSettlement ?? throw new InvalidOperationException("The original runtime settlement owner is unavailable.");
-            await settlement.AwaitSettlementAsync(snapshot.TaskId, snapshot.ExecutionId, old.Id, cancellationToken).ConfigureAwait(false);
+            await stage.Await(() => settlement.AwaitSettlementAsync(snapshot.TaskId, snapshot.ExecutionId, old.Id, cancellationToken)).ConfigureAwait(false);
             if (_issuedAdmissions.TryGetValue(old.Id, out var prior))
             {
                 // Keep this authentic closed original until the successor CAS acknowledges the same run.
@@ -100,7 +126,7 @@ public sealed partial class TaskExecutionCoordinator
                 retiringOriginal = prior;
             }
             var settledOwner = snapshot.OwnerBinding;
-            snapshot = await RequireAsync(taskId, cancellationToken).ConfigureAwait(false);
+            snapshot = await RequireOriginalProcessSnapshotAsync(taskId, cancellationToken).ConfigureAwait(false);
             RequireRun(snapshot, expectedExecutionId);
             ValidateOwner(snapshot, snapshot.OwnerBinding);
             if (snapshot.OwnerBinding != settledOwner || snapshot.State is TaskExecutionLifecycle.Completed or TaskExecutionLifecycle.Cancelled)
@@ -114,60 +140,82 @@ public sealed partial class TaskExecutionCoordinator
         // No fresh model, worker, or permission is selected by this state owner.
         var attemptId = Guid.NewGuid();
         if (_originalInvocations.TryGetValue(taskId, out var originalInvocation)) originalInvocation.AttemptAdmissionInvoked = true;
-        var lease = await authority.AuthorizeAttemptAsync(snapshot, attemptId, candidate, previousAttemptId, cancellationToken).ConfigureAwait(false);
+        var lease = await stage.Await(() => authority.AuthorizeAttemptAsync(snapshot, attemptId, candidate, previousAttemptId, cancellationToken)).ConfigureAwait(false);
+        var resource = new OriginalAttemptProcessResource(this, stage, lease);
+        stage.OriginalResultClosed = resource.HasSuccessfulOriginalTerminal;
+        stage.OriginalResultJoin = resource.JoinOriginalTerminalAsync;
         try
         {
-            ValidateOwner(snapshot, lease.Owner);
-            if (lease.Owner != snapshot.OwnerBinding || lease.AttemptId != attemptId || !CandidatesEqual(lease.Candidate, candidate)
-                || string.IsNullOrWhiteSpace(lease.ReceiptReference))
-                throw new InvalidOperationException("The actual attempt admission does not bind this canonical owner and candidate.");
-            await lease.RevalidateAsync(cancellationToken).ConfigureAwait(false);
+            stage.Invoke(() =>
+            {
+                ValidateOwner(snapshot, lease.Owner);
+                if (lease.Owner != snapshot.OwnerBinding || lease.AttemptId != attemptId || !CandidatesEqual(lease.Candidate, candidate)
+                    || string.IsNullOrWhiteSpace(lease.ReceiptReference))
+                    throw new InvalidOperationException("The actual attempt admission does not bind this canonical owner and candidate.");
+                return true;
+            });
+            await stage.Await(() => lease.RevalidateAsync(cancellationToken).AsTask()).ConfigureAwait(false);
             var now = _time.GetUtcNow();
+            var receiptReference = stage.Invoke(() => lease.ReceiptReference);
             var attempt = new TaskRunAttempt(attemptId, candidate, TaskRunAttemptState.Admitted,
-                lease.ReceiptReference, now, now, previousAttemptId);
-            var next = await PersistAsync(snapshot with
+                receiptReference, now, now, previousAttemptId);
+            var next = await stage.Await(() => PersistAsync(snapshot with
             {
                 Attempts = snapshot.Attempts.Append(attempt).ToArray(),
                 State = TaskExecutionLifecycle.Running,
                 UpdatedAt = now
-            }, cancellationToken).ConfigureAwait(false);
+            }, cancellationToken)).ConfigureAwait(false);
             var issued = new TaskRunAttemptAdmission(next, attemptId, lease);
             if (!_issuedAdmissions.TryAdd(attemptId, issued))
                 throw new InvalidOperationException("The original attempt admission could not be retained.");
-            PublishAttempt(next, attempt, previousAttemptId is null ? ExecutionActionType.Resume : ExecutionActionType.ModelFallback,
-                previousAttemptId is null ? "Provider attempt admitted" : "Same task resumed through authorised fallback");
+            resource.BindIssuedOriginal(issued);
+            await stage.Await(() => resource.RegisterOriginalOwnershipAsync(cancellationToken), owningCleanup: true).ConfigureAwait(false);
+            TaskRunProcessProducerContext.Invoke(this, () =>
+            {
+                PublishAttempt(next, attempt, previousAttemptId is null ? ExecutionActionType.Resume : ExecutionActionType.ModelFallback,
+                    previousAttemptId is null ? "Provider attempt admitted" : "Same task resumed through authorised fallback");
+                return true;
+            });
             if (retiringOriginal is not null)
-                await RetireOriginalAfterAcknowledgmentAsync(retiringOriginal, next).ConfigureAwait(false);
+                await stage.Await(() => RetireOriginalAfterAcknowledgmentAsync(retiringOriginal, next).AsTask(), owningCleanup: true).ConfigureAwait(false);
+            // Registration transfers cleanup ownership only. Fresh process admission is still
+            // required before this caller can hand the attempt to any provider/effect dispatcher.
+            cancellationToken.ThrowIfCancellationRequested();
+            stage.Invoke(() => true);
             return issued;
         }
         catch (Exception admissionFailure)
         {
-            Task? originalLeaseClose = null;
-            try
-            {
-                originalLeaseClose = lease.DisposeAsync().AsTask();
-                await originalLeaseClose.ConfigureAwait(false);
-            }
+            // Even a late CAS or a registered lookup fault cannot prove absence of frame ownership.
+            // The privately retained resource chooses cleanup ONLY from the actual owner receipt.
+            if (resource.IssuedOriginal is { } issued)
+                try { await SuspendOriginalLateAdmissionAsync(stage, issued.Snapshot, issued.AttemptId).ConfigureAwait(false); }
+                catch (Exception observationFailure) { resource.RetainObservationFailure(observationFailure); }
+            try { await stage.Await(resource.CloseAfterOriginalAdmissionFailureAsync, owningCleanup: true).ConfigureAwait(false); }
             catch (Exception closeFailure)
             {
-                IEnumerable<Exception> closeCauses = originalLeaseClose?.Exception is { } originalCloseFaults
-                    ? originalCloseFaults.InnerExceptions : new[] { closeFailure };
-                throw new AggregateException("The original admission and its issuer-lease cleanup both failed.",
-                    new[] { admissionFailure }.Concat(closeCauses));
+                throw new AggregateException("The original admission and its actual cleanup owner failed.",
+                    admissionFailure, closeFailure);
             }
             throw;
         }
     }
 
-    public async Task<TaskExecutionSnapshot> MarkAttemptRunningAsync(
+    public Task<TaskExecutionSnapshot> MarkAttemptRunningAsync(
+        Guid taskId, Guid expectedExecutionId, Guid expectedAttemptId, CancellationToken cancellationToken) =>
+        StartOriginalProcessStage("mark-original-attempt-running", cancellationToken, token =>
+            MarkAttemptRunningProcessBodyAsync(taskId, expectedExecutionId, expectedAttemptId, token));
+
+    private async Task<TaskExecutionSnapshot> MarkAttemptRunningProcessBodyAsync(
         Guid taskId, Guid expectedExecutionId, Guid expectedAttemptId, CancellationToken cancellationToken)
     {
-        var snapshot = await RequireAsync(taskId, cancellationToken).ConfigureAwait(false);
+        var stage = RequireOriginalProcessStage();
+        var snapshot = await RequireOriginalProcessSnapshotAsync(taskId, cancellationToken).ConfigureAwait(false);
         RequireRun(snapshot, expectedExecutionId);
         var attempt = RequireCurrentAttempt(snapshot, expectedAttemptId);
-        var issued = await GetIssuedAttemptAsync(taskId, expectedExecutionId, expectedAttemptId, cancellationToken).ConfigureAwait(false)
+        var issued = await stage.Await(() => GetIssuedAttemptAsync(taskId, expectedExecutionId, expectedAttemptId, cancellationToken)).ConfigureAwait(false)
             ?? throw new InvalidOperationException("The original issuer-owned attempt is unavailable.");
-        await issued.Lease.RevalidateAsync(cancellationToken).ConfigureAwait(false);
+        await stage.Await(() => issued.Lease.RevalidateAsync(cancellationToken).AsTask()).ConfigureAwait(false);
         if (attempt.State == TaskRunAttemptState.Running) return snapshot;
         var updated = attempt with { State = TaskRunAttemptState.Running, UpdatedAt = _time.GetUtcNow() };
         return await PersistAsync(snapshot with
@@ -182,11 +230,18 @@ public sealed partial class TaskExecutionCoordinator
         Guid taskId, Guid expectedExecutionId, Guid expectedAttemptId, CancellationToken cancellationToken) =>
         CompleteAttemptOriginalAsync(taskId, expectedExecutionId, expectedAttemptId, cancellationToken, invocation: null);
 
-    private async Task<TaskExecutionSnapshot> CompleteAttemptOriginalAsync(
+    private Task<TaskExecutionSnapshot> CompleteAttemptOriginalAsync(
+        Guid taskId, Guid expectedExecutionId, Guid expectedAttemptId, CancellationToken cancellationToken,
+        TaskRunInvocationCustody? invocation) =>
+        StartOriginalProcessStage("complete-original-attempt", cancellationToken, token =>
+            CompleteAttemptProcessBodyAsync(taskId, expectedExecutionId, expectedAttemptId, token, invocation));
+
+    private async Task<TaskExecutionSnapshot> CompleteAttemptProcessBodyAsync(
         Guid taskId, Guid expectedExecutionId, Guid expectedAttemptId, CancellationToken cancellationToken,
         TaskRunInvocationCustody? invocation)
     {
-        var snapshot = await RequireAsync(taskId, cancellationToken).ConfigureAwait(false);
+        var stage = RequireOriginalProcessStage();
+        var snapshot = await RequireOriginalProcessSnapshotAsync(taskId, cancellationToken).ConfigureAwait(false);
         RequireRun(snapshot, expectedExecutionId);
         RequireNoUnresolvedOriginalInvocation(taskId, invocation);
         ValidateOwner(snapshot, snapshot.OwnerBinding);
@@ -195,7 +250,8 @@ public sealed partial class TaskExecutionCoordinator
             return snapshot;
         RequireCurrentAttempt(snapshot, expectedAttemptId);
         RequireAcceptedPlan(snapshot);
-        var issued = await GetIssuedAttemptAsync(taskId, expectedExecutionId, expectedAttemptId, cancellationToken).ConfigureAwait(false)
+        RequireAcknowledgedDelegationCompletions(snapshot);
+        var issued = await stage.Await(() => GetIssuedAttemptAsync(taskId, expectedExecutionId, expectedAttemptId, cancellationToken)).ConfigureAwait(false)
             ?? throw new InvalidOperationException("The original issuer-owned attempt is unavailable.");
         CompletionSettlementCustody custody;
         if (_completionSettlements.TryGetValue(expectedAttemptId, out var retained))
@@ -204,15 +260,15 @@ public sealed partial class TaskExecutionCoordinator
                 throw new InvalidOperationException("A copied admission cannot replace original completion custody.");
             RequireCompletionBasis(retained.CompletionBasis, snapshot);
             // This is an explicit retry of the SAME original join, not a rebuilt or revalidated closed lease.
-            await ValidateTaskCommandAsync(snapshot, "complete-task-after-original-settlement", cancellationToken).ConfigureAwait(false);
+            await ValidateOriginalProcessCommandAsync(snapshot, "complete-task-after-original-settlement", cancellationToken).ConfigureAwait(false);
             custody = retained;
         }
         else
         {
-            await issued.Lease.RevalidateAsync(cancellationToken).ConfigureAwait(false);
+            await stage.Await(() => issued.Lease.RevalidateAsync(cancellationToken).AsTask()).ConfigureAwait(false);
             var settlement = _runtimeSettlement ?? throw new InvalidOperationException("The original runtime settlement owner is unavailable.");
             // Retain the actual owning join. Caller cancellation may cancel only its wait, never this original.
-            var originalSettlement = settlement.AwaitSettlementAsync(taskId, expectedExecutionId, expectedAttemptId, CancellationToken.None)
+            var originalSettlement = stage.Invoke(() => settlement.AwaitSettlementAsync(taskId, expectedExecutionId, expectedAttemptId, CancellationToken.None))
                 ?? throw new InvalidOperationException("The original runtime returned no settlement task.");
             var proposed = new CompletionSettlementCustody(issued, snapshot, originalSettlement);
             custody = _completionSettlements.GetOrAdd(expectedAttemptId, proposed);
@@ -225,29 +281,35 @@ public sealed partial class TaskExecutionCoordinator
                 throw new InvalidOperationException("A different runtime join cannot replace this actual invocation's original settlement.");
             invocation.OriginalSettlement = custody.OriginalSettlement; // SAME actual owner join, retained before wait.
         }
-        if (cancellationToken.CanBeCanceled)
-            await custody.OriginalSettlement.WaitAsync(cancellationToken).ConfigureAwait(false);
-        else
-            await custody.OriginalSettlement.ConfigureAwait(false);
+        await AwaitOriginalProcessSettlementAsync(stage, custody.OriginalSettlement, cancellationToken).ConfigureAwait(false);
         // Neither durable Completed text nor absence in a fresh runtime can satisfy this live witness.
         if (!custody.OriginalSettlement.IsCompletedSuccessfully)
             throw new InvalidOperationException("The actual original settlement did not complete successfully.");
-        snapshot = await RequireAsync(taskId, cancellationToken).ConfigureAwait(false);
+        snapshot = await RequireOriginalProcessSnapshotAsync(taskId, cancellationToken).ConfigureAwait(false);
         RequireRun(snapshot, expectedExecutionId);
         RequireCompletionBasis(custody.CompletionBasis, snapshot);
         attempt = RequireCurrentAttempt(snapshot, expectedAttemptId);
         RequireAcceptedPlan(snapshot);
-        await ValidateTaskCommandAsync(snapshot, "complete-task-after-original-settlement", cancellationToken).ConfigureAwait(false);
+        RequireAcknowledgedDelegationCompletions(snapshot);
+        await ValidateOriginalProcessCommandAsync(snapshot, "complete-task-after-original-settlement", cancellationToken).ConfigureAwait(false);
         var now = _time.GetUtcNow();
         var completed = attempt with { State = TaskRunAttemptState.Completed, UpdatedAt = now };
-        var next = await PersistAsync(snapshot with
+        var originalCompletionWrite = stage.Invoke(() => PersistAsync(snapshot with
         {
             Attempts = snapshot.Attempts.Select(item => item.Id == expectedAttemptId ? completed : item).ToArray(),
             State = TaskExecutionLifecycle.Completed,
             UpdatedAt = now
-        }, cancellationToken).ConfigureAwait(false);
-        PublishAttempt(next, completed, ExecutionActionType.FinalResponse, "Canonical task completed after original runtime settlement");
-        await RetireOriginalAfterAcknowledgmentAsync(issued, next).ConfigureAwait(false);
+        }, cancellationToken));
+        stage.RetainSource(originalCompletionWrite);
+        var next = await originalCompletionWrite.ConfigureAwait(false);
+        if (invocation is not null)
+            BindOriginalCompletionCasAcknowledgment(invocation, stage, issued, custody.OriginalSettlement, originalCompletionWrite, next);
+        TaskRunProcessProducerContext.Invoke(this, () =>
+        {
+            PublishAttempt(next, completed, ExecutionActionType.FinalResponse, "Canonical task completed after original runtime settlement");
+            return true;
+        });
+        await stage.Await(() => RetireOriginalAfterAcknowledgmentAsync(issued, next).AsTask(), owningCleanup: true).ConfigureAwait(false);
         return next;
     }
 
@@ -261,7 +323,8 @@ public sealed partial class TaskExecutionCoordinator
             || current.PlanVersion != basis.PlanVersion || current.CheckpointId != basis.CheckpointId
             || current.LastCheckpointActionId != basis.LastCheckpointActionId
             || !current.ApprovedPermissionScopes.SequenceEqual(basis.ApprovedPermissionScopes, StringComparer.Ordinal)
-            || current.Plan.Count != basis.Plan.Count || current.Steers.Count != basis.Steers.Count)
+            || current.Plan.Count != basis.Plan.Count || current.Steers.Count != basis.Steers.Count
+            || current.ParentDelegation != basis.ParentDelegation || !SameDelegationObservations(current.Delegations, basis.Delegations))
             throw new InvalidOperationException("The canonical completion basis changed while the original runtime settled.");
         for (var index = 0; index < current.Plan.Count; index++)
         {
@@ -289,13 +352,18 @@ public sealed partial class TaskExecutionCoordinator
         TaskRunAttemptAdmission originalAdmission, TaskExecutionSnapshot acknowledgedSnapshot)
     {
         Task? originalRetirement = null;
+        var processStage = TaskRunProcessStageCustody.CurrentFor(this);
         try
         {
             var retirement = _runtimeSettlement as ITaskRunOriginalAttemptRetirement
                 ?? throw new InvalidOperationException("The actual healthy-original retirement owner is unavailable.");
             var receipt = new TaskRunOriginalRetirementAcknowledgment(originalAdmission, acknowledgedSnapshot);
-            originalRetirement = retirement.RetireAcknowledgedOriginalAttemptAsync(receipt, CancellationToken.None).AsTask();
+            originalRetirement = processStage is null
+                ? retirement.RetireAcknowledgedOriginalAttemptAsync(receipt, CancellationToken.None).AsTask()
+                : processStage.Invoke(() => retirement.RetireAcknowledgedOriginalAttemptAsync(receipt, CancellationToken.None).AsTask(), owningCleanup: true);
+            processStage?.RetainSource(originalRetirement);
             await originalRetirement.ConfigureAwait(false);
+            ObserveOriginalRetiredProcessResource(originalAdmission, originalRetirement);
             _issuedAdmissions.TryRemove(new KeyValuePair<Guid, TaskRunAttemptAdmission>(originalAdmission.AttemptId, originalAdmission));
             if (_completionSettlements.TryGetValue(originalAdmission.AttemptId, out var settled)
                 && ReferenceEquals(settled.OriginalAdmission, originalAdmission))
@@ -303,6 +371,7 @@ public sealed partial class TaskExecutionCoordinator
         }
         catch (Exception originalRetirementFailure)
         {
+            processStage?.RetainOriginalFailure(originalRetirementFailure, originalRetirement);
             _observationFailures.Enqueue(new TaskObservationFailure(acknowledgedSnapshot.TaskId, acknowledgedSnapshot.ExecutionId,
                 acknowledgedSnapshot.PersistenceRevision, "original-attempt-retirement-after-cas",
                 (Exception?)originalRetirement?.Exception ?? originalRetirementFailure));
@@ -320,30 +389,10 @@ public sealed partial class TaskExecutionCoordinator
     }
 
     /// <summary>Records an owner-correlated read/no-effect observation without inventing an accepted mutation checkpoint.</summary>
-    public async Task<TaskExecutionSnapshot> RegisterOriginalToolActionAsync(
+    public Task<TaskExecutionSnapshot> RegisterOriginalToolActionAsync(
         ITaskRunToolActionPreparation originalPreparation, Guid? parentActionId,
-        string summary, CancellationToken cancellationToken)
-    {
-        ArgumentNullException.ThrowIfNull(originalPreparation);
-        var owner = _toolActionOwner ?? throw new InvalidOperationException("The actual tool-action owner is unavailable.");
-        var original = originalPreparation.OriginalAttempt;
-        var snapshot = await RequireAsync(original.Snapshot.TaskId, cancellationToken).ConfigureAwait(false);
-        RequireRun(snapshot, original.Snapshot.ExecutionId);
-        RequireCurrentAttempt(snapshot, original.AttemptId);
-        var live = await GetIssuedAttemptAsync(snapshot.TaskId, snapshot.ExecutionId, original.AttemptId, cancellationToken).ConfigureAwait(false);
-        if (!ReferenceEquals(live, original))
-            throw new InvalidOperationException("Tool registration requires the exact original issuer-owned attempt.");
-        await owner.ValidateOriginalPreparationAsync(originalPreparation, snapshot, cancellationToken).ConfigureAwait(false);
-        var intent = originalPreparation.OriginalToolIntent;
-        if (intent is null || string.IsNullOrWhiteSpace(intent.RuntimeKey) || intent.RuntimeKey.Length > 256
-            || string.IsNullOrWhiteSpace(intent.ToolName) || intent.ToolName.Length > 256
-            || string.IsNullOrWhiteSpace(intent.CallDigest) || intent.CallDigest.Length > 128
-            || intent.CanonicalWorkspaceRoot is { Length: > 32768 })
-            throw new InvalidOperationException("The original owner supplied no bounded exact tool intent.");
-        return await RegisterActionAsync(snapshot.TaskId, originalPreparation.ActionId, parentActionId, summary,
-            originalPreparation.InterruptionPolicy, null, originalPreparation.RequiredPermissionScopes,
-            cancellationToken, original.AttemptId, intent).ConfigureAwait(false);
-    }
+        string summary, CancellationToken cancellationToken) =>
+        RegisterOriginalActionWithCustodyAsync(originalPreparation, parentActionId, summary, cancellationToken);
 
     /// <summary>Records an owner-correlated read/no-effect observation without inventing an accepted mutation checkpoint.</summary>
     public async Task<TaskExecutionSnapshot> RecordObservedActionOutcomeAsync(
@@ -379,13 +428,21 @@ public sealed partial class TaskExecutionCoordinator
         }, cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<TaskExecutionSnapshot> RecordAttemptFailureAsync(
+    public Task<TaskExecutionSnapshot> RecordAttemptFailureAsync(
         Guid taskId, Guid expectedExecutionId, Guid expectedAttemptId,
         ExecutionFailure observedFailure, CancellationToken cancellationToken,
-        TaskRunOriginalFailureObservation? originalFailure = null)
+        TaskRunOriginalFailureObservation? originalFailure = null) =>
+        StartOriginalProcessStage("record-original-attempt-failure", cancellationToken, token =>
+            RecordAttemptFailureProcessBodyAsync(taskId, expectedExecutionId, expectedAttemptId, observedFailure, token, originalFailure));
+
+    private async Task<TaskExecutionSnapshot> RecordAttemptFailureProcessBodyAsync(
+        Guid taskId, Guid expectedExecutionId, Guid expectedAttemptId,
+        ExecutionFailure observedFailure, CancellationToken cancellationToken,
+        TaskRunOriginalFailureObservation? originalFailure)
     {
+        var stage = RequireOriginalProcessStage();
         ArgumentNullException.ThrowIfNull(observedFailure);
-        var snapshot = await RequireAsync(taskId, cancellationToken).ConfigureAwait(false);
+        var snapshot = await RequireOriginalProcessSnapshotAsync(taskId, cancellationToken).ConfigureAwait(false);
         RequireRun(snapshot, expectedExecutionId);
         var attempt = RequireCurrentAttempt(snapshot, expectedAttemptId, activeRequired: false);
         if (attempt.State == TaskRunAttemptState.Completed)
@@ -397,9 +454,9 @@ public sealed partial class TaskExecutionCoordinator
         {
             originalFailureOwner = _runtimeSettlement as ITaskRunProviderFailureSettlement
                 ?? throw new InvalidOperationException("The actual provider-frame failure owner is unavailable.");
-            originalAdmission = await GetIssuedAttemptAsync(taskId, expectedExecutionId, expectedAttemptId, cancellationToken).ConfigureAwait(false)
+            originalAdmission = await stage.Await(() => GetIssuedAttemptAsync(taskId, expectedExecutionId, expectedAttemptId, cancellationToken)).ConfigureAwait(false)
                 ?? throw new InvalidOperationException("The original issued attempt for this provider failure is unavailable.");
-            if (!originalFailureOwner.ValidateProviderFailureObservation(originalFailure, originalAdmission))
+            if (!stage.Invoke(() => originalFailureOwner.ValidateProviderFailureObservation(originalFailure, originalAdmission)))
                 throw new InvalidOperationException("This is not the original runtime-owned failure observation for this attempt.");
         }
         var safeFailure = observedFailure with
@@ -419,7 +476,11 @@ public sealed partial class TaskExecutionCoordinator
         if (originalFailure is not null)
         {
             var acknowledgedFailure = new TaskRunFailurePersistenceAcknowledgment(originalFailure, originalAdmission!, next);
-            try { originalFailureOwner!.AcknowledgeProviderFailure(originalFailure, originalAdmission!, acknowledgedFailure); }
+            try { stage.Invoke(() =>
+            {
+                originalFailureOwner!.AcknowledgeProviderFailure(originalFailure, originalAdmission!, acknowledgedFailure);
+                return true;
+            }, owningCleanup: true); }
             catch (Exception acknowledgmentFailure)
             {
                 _observationFailures.Enqueue(new TaskObservationFailure(next.TaskId, next.ExecutionId,
@@ -427,7 +488,11 @@ public sealed partial class TaskExecutionCoordinator
                 throw;
             }
         }
-        PublishAttempt(next, failed, ExecutionActionType.Error, "Provider attempt suspended; accepted work retained");
+        TaskRunProcessProducerContext.Invoke(this, () =>
+        {
+            PublishAttempt(next, failed, ExecutionActionType.Error, "Provider attempt suspended; accepted work retained");
+            return true;
+        });
         return next;
     }
 
@@ -494,7 +559,8 @@ public sealed partial class TaskExecutionCoordinator
     public async Task<TaskRunAttemptAdmission?> GetIssuedAttemptAsync(
         Guid taskId, Guid expectedExecutionId, Guid expectedAttemptId, CancellationToken cancellationToken)
     {
-        var snapshot = await RequireAsync(taskId, cancellationToken).ConfigureAwait(false);
+        var snapshot = await ReadOriginalAttemptSnapshotAsync(taskId, cancellationToken).ConfigureAwait(false)
+            ?? throw new KeyNotFoundException("Task execution was not found.");
         RequireRun(snapshot, expectedExecutionId);
         RequireCurrentAttempt(snapshot, expectedAttemptId);
         if (!_issuedAdmissions.TryGetValue(expectedAttemptId, out var issued) || issued.Snapshot.TaskId != taskId
@@ -508,7 +574,7 @@ public sealed partial class TaskExecutionCoordinator
     {
         if (taskId == Guid.Empty || expectedExecutionId == Guid.Empty || expectedAttemptId == Guid.Empty)
             throw new ArgumentException("Exact canonical task, execution, and attempt identities are required.");
-        var snapshot = await repository.GetAsync(taskId, cancellationToken).ConfigureAwait(false);
+        var snapshot = await ReadOriginalAttemptSnapshotAsync(taskId, cancellationToken).ConfigureAwait(false);
         if (snapshot is null || snapshot.ExecutionId != expectedExecutionId
             || snapshot.State is TaskExecutionLifecycle.Completed or TaskExecutionLifecycle.Cancelled)
             return null;
@@ -521,6 +587,32 @@ public sealed partial class TaskExecutionCoordinator
             || issued.Snapshot.ExecutionId != expectedExecutionId)
             return null;
         return issued;
+    }
+
+    private async Task<TaskExecutionSnapshot?> ReadOriginalAttemptSnapshotAsync(Guid taskId, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested(); // Genuine pre-call withdrawal invokes no repository callback.
+        Task<TaskExecutionSnapshot?> actual;
+        try
+        {
+            var stage = TaskRunProcessStageCustody.CurrentFor(this);
+            actual = stage is null ? repository.GetAsync(taskId, token)
+                : stage.Invoke(() => repository.GetAsync(taskId, token), owningCleanup: true);
+            if (actual is null) throw new InvalidOperationException("The canonical repository returned no original attempt read Task.");
+            stage?.RetainSource(actual);
+        }
+        catch (OperationCanceledException synchronousCause)
+        {
+            // No canceled original Task was returned by this synchronous callback.
+            throw new AggregateException("The actual synchronous attempt read failed.", synchronousCause);
+        }
+        try { return await actual.ConfigureAwait(false); }
+        catch (Exception) when (actual.IsFaulted && actual.Exception is { })
+        {
+            // Preserve the actual read's complete fault envelope, including faulted OCE.
+            // A genuine canceled original follows normal canceled-task semantics instead.
+            throw actual.Exception;
+        }
     }
 
     private ITaskRunAdmissionAuthority RequireAuthority() => _admissionAuthority
@@ -542,11 +634,11 @@ public sealed partial class TaskExecutionCoordinator
         if (action?.State != TaskPlanNodeState.Completed
             || action.Acceptance is null && originalPreparation.InterruptionPolicy != TaskActionInterruptionPolicy.ReadOnlyCancellable)
             return; // Unknown, failed and CAS-lost originals remain in their actual owner's custody.
-        var owner = _toolActionOwner ?? throw new InvalidOperationException("The actual tool-action owner is unavailable.");
+        _ = _toolActionOwner ?? throw new InvalidOperationException("The actual tool-action owner is unavailable.");
         try
         {
             // Cleanup owns its lifetime. Caller cancellation after ACK cannot suppress or mislabel it.
-            await owner.RetireAcknowledgedOriginalAsync(originalPreparation, acknowledgedSnapshot, CancellationToken.None).ConfigureAwait(false);
+            await RetireAcknowledgedOriginalToolActionAsync(originalPreparation, acknowledgedSnapshot, CancellationToken.None).ConfigureAwait(false);
         }
         catch (Exception originalRetirementFailure)
         {
@@ -596,15 +688,17 @@ public sealed partial class TaskExecutionCoordinator
         && left.ModelId == right.ModelId && left.ArtifactIdentity == right.ArtifactIdentity && left.UsesCloud == right.UsesCloud
         && left.RequiredCapabilities.SequenceEqual(right.RequiredCapabilities, StringComparer.Ordinal);
 
-    private async Task<TaskExecutionSnapshot> PersistAsync(TaskExecutionSnapshot snapshot, CancellationToken cancellationToken)
+    private async Task<TaskExecutionSnapshot> PersistAsync(TaskExecutionSnapshot snapshot, CancellationToken cancellationToken,
+        bool owningProcessCleanup = false)
     {
-        var acknowledged = await PersistOriginalWriteOnlyAsync(snapshot, cancellationToken).ConfigureAwait(false);
-        PublishAcknowledgedSnapshot(acknowledged);
+        var acknowledged = await PersistOriginalWriteOnlyAsync(snapshot, cancellationToken,
+            owningProcessCleanup: owningProcessCleanup).ConfigureAwait(false);
+        TaskRunProcessProducerContext.Invoke(this, () => { PublishAcknowledgedSnapshot(acknowledged); return true; });
         return acknowledged;
     }
 
     private async Task<TaskExecutionSnapshot> PersistOriginalWriteOnlyAsync(TaskExecutionSnapshot snapshot, CancellationToken cancellationToken,
-        Action<Task>? retainActualRepositoryWrite = null)
+        Action<Task>? retainActualRepositoryWrite = null, bool owningProcessCleanup = false)
     {
         if (snapshot.PersistenceRevision < 0) throw new InvalidDataException("The persisted task revision is invalid.");
         var proposed = snapshot with
@@ -620,6 +714,8 @@ public sealed partial class TaskExecutionCoordinator
                 RequiredPermissionScopes = Array.AsReadOnly((steer.RequiredPermissionScopes ?? []).ToArray())
             }).ToArray()),
             Queue = Array.AsReadOnly(snapshot.Queue.ToArray()),
+            Delegations = Array.AsReadOnly(snapshot.Delegations.Select(intent => intent with
+            { RequestedPermissionScopes = Array.AsReadOnly(intent.RequestedPermissionScopes.ToArray()) }).ToArray()),
             RecoveryHistory = Array.AsReadOnly(snapshot.RecoveryHistory.Select(history => history with
             { Causes = Array.AsReadOnly(history.Causes.ToArray()) }).ToArray()),
             ApprovedPermissionScopes = Array.AsReadOnly(snapshot.ApprovedPermissionScopes.ToArray()),
@@ -628,8 +724,11 @@ public sealed partial class TaskExecutionCoordinator
                 Candidate = attempt.Candidate with { RequiredCapabilities = Array.AsReadOnly(attempt.Candidate.RequiredCapabilities.ToArray()) }
             }).ToArray())
         };
-        var actualWrite = repository.UpsertAsync(proposed, cancellationToken)
-            ?? throw new InvalidOperationException("The canonical repository returned no actual write Task.");
+        var stage = TaskRunProcessStageCustody.CurrentFor(this);
+        var actualWrite = stage is null ? repository.UpsertAsync(proposed, cancellationToken)
+            : stage.Invoke(() => repository.UpsertAsync(proposed, cancellationToken), owningProcessCleanup);
+        if (actualWrite is null) throw new InvalidOperationException("The canonical repository returned no actual write Task.");
+        stage?.RetainSource(actualWrite);
         retainActualRepositoryWrite?.Invoke(actualWrite);
         try { await actualWrite.ConfigureAwait(false); }
         catch (Exception) when (actualWrite.IsFaulted && actualWrite.Exception is { })
@@ -638,6 +737,7 @@ public sealed partial class TaskExecutionCoordinator
             // and sibling custody at the async persistence boundary. No retry is inferred.
             throw actualWrite.Exception;
         }
+        ObserveOriginalActionAcknowledgedSnapshot(proposed);
         return proposed;
     }
 

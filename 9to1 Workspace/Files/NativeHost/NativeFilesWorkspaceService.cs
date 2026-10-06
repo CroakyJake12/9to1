@@ -14,7 +14,7 @@ public sealed record NativeFilesWorkspace(AuthenticatedResourceActor Actor, Nati
     DurableDriveProvider Provider, FilesWorkspaceDirectoryResolver Directories, FilesMaterializationRegistry Materializations);
 
 /// <summary>Files owns this explicit native configuration. Apps cannot choose another profile or invent a fallback directory.</summary>
-public sealed class NativeFilesWorkspaceService(IHomeCoreStateStore home, HomeLocalProfileIdentity profiles) : IHomeLocalStoreEvidenceProvider
+public sealed partial class NativeFilesWorkspaceService(IHomeCoreStateStore home, HomeLocalProfileIdentity profiles) : IHomeLocalStoreEvidenceProvider
 {
     private readonly ConcurrentDictionary<(string Profile, long Revision), NativeFilesWorkspace> _cache = new();
     private readonly ConcurrentDictionary<Guid, NativeFilesWorkspace> _creating = new();
@@ -218,7 +218,7 @@ public sealed class NativeFilesWorkspaceService(IHomeCoreStateStore home, HomeLo
     }
 }
 
-public sealed class NativeFilesWorkspaceAuthority(NativeFilesWorkspaceService workspaces, HomeLocalProfileIdentity profiles,
+public sealed partial class NativeFilesWorkspaceAuthority(NativeFilesWorkspaceService workspaces, HomeLocalProfileIdentity profiles,
     IResourceStoreOwnershipAuthority ownership)
 {
     /// <summary>Exact borrowed owner identities only; this never returns a workspace or grant.</summary>

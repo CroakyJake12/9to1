@@ -16,14 +16,16 @@ internal sealed class AgentCanonicalOriginal(AgentRun expected)
     internal Task? OriginalCancellation;
     internal bool LifetimeDisposed;
     internal readonly List<Task> ActualMoves = [];
+    internal object? OriginalProcessOwner;
+    internal readonly List<AgentRuntimeOriginalCustody> ActualServiceOperations = [];
     internal readonly List<Task> ActualDisposals = [];
     internal readonly List<Task> ActualPersistence = [];
     internal readonly List<AgentRuntimeOriginalCustody> ActualHistoryOperations = [];
-    internal readonly List<AgentOriginalObservationCustody> ActualPresentationObservations = [];
     private readonly List<Exception> _causes = [];
     internal IReadOnlyList<Exception> Causes { get { lock (Gate) return _causes.ToArray(); } }
     internal readonly List<Task> ActualPreparations = [];
     internal readonly List<ToolActivity> Activities = [];
+    internal readonly List<AgentOriginalObservationCustody> ActualPresentationObservations = [];
     internal readonly StringBuilder Output = new();
 
     internal void Retain(Exception cause, Task? actual = null)
@@ -51,24 +53,13 @@ public sealed partial class AgentTaskRuntimeService
     internal IReadOnlyList<AgentRuntimeOriginalCustody> OriginalRuntimeOperations
     { get { lock (_originalOperationGate) return _originalOperations.ToArray(); } }
 
-    private Task<T> RunOriginalOperation<T>(Func<AgentRuntimeOriginalCustody, Task<T>> body)
-    {
-        AgentRuntimeOriginalCustody original;
-        lock (_originalOperationGate)
-        {
-            _originalOperations.RemoveAll(static prior => prior.Healthy);
-            if (_originalOperations.Count >= 128)
-                throw new InvalidOperationException("Actual failed or unknown Agent source operations require owning-service inspection.");
-            original = new();
-            _originalOperations.Add(original);
-        }
-        return original.Start(body);
-    }
+    private Task<T> RunOriginalOperation<T>(Func<AgentRuntimeOriginalCustody, Task<T>> body) =>
+        StartOriginalAgentProcessOperation((operation, _) => body(operation), callerToken: null);
 
     private static async Task CancelPublishedOriginalAsync(AgentCanonicalOriginal original, Task start)
     {
         await start.ConfigureAwait(false);
-        try { original.Lifetime!.Cancel(); }
+        try { TaskRunProcessProducerContext.Invoke(original.OriginalProcessOwner, () => { original.Lifetime!.Cancel(); return true; }); }
         catch (OperationCanceledException actualCallbackFault)
         { throw new AggregateException("The actual Agent cancellation callback faulted.", actualCallbackFault); }
     }

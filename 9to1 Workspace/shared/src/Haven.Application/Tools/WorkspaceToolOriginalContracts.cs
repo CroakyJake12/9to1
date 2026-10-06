@@ -88,13 +88,29 @@ public static class WorkspaceToolOriginalDigest
         Arguments = call.Arguments.OrderBy(value => value.Key, StringComparer.Ordinal)
             .Select(value => new { value.Key, Value = value.Value }).ToArray()
     })));
-    public static string Process(ProcessRequest request) => Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new
+    public static string Process(ProcessRequest request)
+    {
+        if (request.ArgumentList is { } vector)
+        {
+            if (!string.IsNullOrEmpty(request.Arguments) || vector.Any(value => value is null || value.Contains('\0')))
+                throw new ArgumentException("An exact process vector cannot coexist with legacy Arguments or contain NUL.");
+            return Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new
+            {
+                request.FileName, request.Arguments, ArgumentList = vector.ToArray(), request.WorkingDirectory,
+                TimeoutTicks = request.Timeout.Ticks, request.DetachGui,
+                Environment = request.Environment?.OrderBy(value => value.Key, StringComparer.Ordinal)
+                    .Select(value => new { value.Key, value.Value }).ToArray()
+            })));
+        }
+        // Preserve every original legacy/Windows digest byte when no vector was supplied.
+        return Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new
     {
         request.FileName, request.Arguments, request.WorkingDirectory, TimeoutTicks = request.Timeout.Ticks,
         request.DetachGui,
         Environment = request.Environment?.OrderBy(value => value.Key, StringComparer.Ordinal)
             .Select(value => new { value.Key, value.Value }).ToArray()
-    })));
+        })));
+    }
 }
 
 /// <summary>Additive source proof; never derived from ToolActivity.Succeeded.</summary>

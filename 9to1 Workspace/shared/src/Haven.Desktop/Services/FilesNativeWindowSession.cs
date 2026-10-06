@@ -10,7 +10,7 @@ namespace Haven.Desktop.Services;
 /// <summary>Native-only entry into the approved owning Desktop route candidate.
 /// The actual Windows Home owner must supply its SAME initialized provider and authenticated
 /// startup connection. No default registration or pipe/provider/actor/grant is manufactured here.</summary>
-internal sealed class FilesNativeWindowSession : IAsyncDisposable
+internal sealed partial class FilesNativeWindowSession : IAsyncDisposable
 {
     private readonly IServiceProvider _originalProvider;
     private readonly IHomeNativeStartupSession _originalStartup;
@@ -83,6 +83,7 @@ internal sealed class FilesNativeWindowSession : IAsyncDisposable
             _shell = _originalProvider.GetRequiredService<MainView>();
             _shell.ApplyEdition(HavenStartupExperiencePolicy.Edition);
             _shell.AttachOriginalFilesRoute(_route, _originalProvider);
+            AttachOriginalCanonicalTaskRoutes(_shell);
             // This is the actual owning initializer over this exact shell, not a success receipt
             // copied from another view. Its original Task is retained before awaiting it.
             var initialize = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -136,6 +137,7 @@ internal sealed class FilesNativeWindowSession : IAsyncDisposable
 
     internal Task CloseAndDrainAsync()
     {
+        DemandExternalOriginalTaskCompositionJoin();
         lock (_sync)
         {
             if (_originalClose is not null) return _originalClose;

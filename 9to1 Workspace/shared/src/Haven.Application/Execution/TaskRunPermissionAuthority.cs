@@ -62,7 +62,7 @@ public interface ITaskRunSelectedRouteCapture
 /// Selected-route capture is a trusted production factory operation after actual model selection,
 /// not an API accepting a candidate's claimed eligibility or a client's permission scope list.
 /// </summary>
-public sealed class TaskRunPermissionAuthority : ITaskRunCommandAuthority, ITaskRunSelectedRouteCapture
+public sealed partial class TaskRunPermissionAuthority : ITaskRunDelegationAuthority, ITaskRunSelectedRouteCapture
 {
     private readonly IAuthenticatedResourceActorSource _actors;
     private readonly IModelProviderRegistry _providers;
@@ -72,14 +72,50 @@ public sealed class TaskRunPermissionAuthority : ITaskRunCommandAuthority, ITask
     private readonly ITaskRunCloudAdmissionSource? _cloud;
     private readonly ITaskRunActionReceiptAuthority? _receipts;
     private readonly ITaskRunRouteObservationSource? _routes;
+    private readonly Func<TaskExecutionCoordinator>? _originalTasks;
+    private readonly ITaskRunVerifiedReauthenticationSource? _verifiedReauthentication;
+    private readonly ITaskRunContextReauthenticationSource? _contextReauthentication;
+    private readonly ITaskRunReauthenticationCustodySource? _reauthenticationCustody;
     private readonly object _sync = new();
     private readonly Dictionary<Guid, Owner> _owners = [];
+    private bool _originalAdmissionSealed;
+
+    // Request-only process retirement. This is neither original settlement nor permission.
+    public bool IsOriginalAdmissionSealed { get { lock (_sync) return _originalAdmissionSealed; } }
+    public void RequestOriginalAdmissionSeal()
+    {
+        lock (_sync)
+        {
+            _originalAdmissionSealed = true;
+            foreach (var owner in _owners.Values) owner.Activation.Seal();
+        }
+    }
+    private void DemandOriginalAdmissionOpen()
+    {
+        lock (_sync)
+            if (_originalAdmissionSealed) throw new ObjectDisposedException("Task authority original admission");
+    }
     private sealed class Owner(TaskExecutionOwnerBinding binding)
     {
-        public TaskExecutionOwnerBinding Binding { get; } = binding;
+        // Stable task-owned registry identity is distinct from each immutable authentication activation.
+        public OwnerActivation Activation { get; private set; } = new(binding);
+        public TaskExecutionOwnerBinding Binding => Activation.Binding;
+        public void PublishActivation(OwnerActivation previous, OwnerActivation next)
+        {
+            if (!ReferenceEquals(Activation, previous) || !previous.IsSealed)
+                throw new UnauthorizedAccessException("The original activation was not sealed for this renewal.");
+            Activation = next;
+        }
         public readonly Dictionary<string, Selection> Selections = new(StringComparer.Ordinal);
         public Selection? First;
         public readonly Dictionary<Guid, Lease> Attempts = [];
+    }
+    private sealed class OwnerActivation(TaskExecutionOwnerBinding binding)
+    {
+        public TaskExecutionOwnerBinding Binding { get; } = binding;
+        private int _sealed;
+        public bool IsSealed => Volatile.Read(ref _sealed) != 0;
+        public void Seal() => Interlocked.Exchange(ref _sealed, 1);
     }
     private sealed record Selection(TaskRunRouteCandidate Candidate, ProviderModelDescriptor Model,
         ProviderConfiguration Configuration, string ModelFingerprint, string ConfigurationFingerprint,
@@ -89,21 +125,47 @@ public sealed class TaskRunPermissionAuthority : ITaskRunCommandAuthority, ITask
     public TaskRunPermissionAuthority(IAuthenticatedResourceActorSource actors, IModelProviderRegistry providers,
         IProviderConfigurationStore configurations, IPrivacyPreferenceStore privacy, ModelPermissionEvaluator modelPermissions,
         ITaskRunCloudAdmissionSource? cloud = null, ITaskRunActionReceiptAuthority? receipts = null,
-        ITaskRunRouteObservationSource? routes = null)
+        ITaskRunRouteObservationSource? routes = null, Func<TaskExecutionCoordinator>? originalTasks = null)
+        : this(actors, providers, configurations, privacy, modelPermissions, cloud, receipts, routes, originalTasks,
+            verifiedReauthentication: null, contextReauthentication: null, reauthenticationCustody: null) { }
+
+    // All three specialized producers are required for renewal. Neither a configured identity
+    // reader nor this constructor implies usable context, no-overlap custody or a binding CAS.
+    public TaskRunPermissionAuthority(IAuthenticatedResourceActorSource actors, IModelProviderRegistry providers,
+        IProviderConfigurationStore configurations, IPrivacyPreferenceStore privacy, ModelPermissionEvaluator modelPermissions,
+        ITaskRunCloudAdmissionSource? cloud, ITaskRunActionReceiptAuthority? receipts,
+        ITaskRunRouteObservationSource? routes, Func<TaskExecutionCoordinator>? originalTasks,
+        ITaskRunVerifiedReauthenticationSource? verifiedReauthentication,
+        ITaskRunContextReauthenticationSource? contextReauthentication,
+        ITaskRunReauthenticationCustodySource? reauthenticationCustody)
     {
         _actors = actors ?? throw new ArgumentNullException(nameof(actors));
         _providers = providers ?? throw new ArgumentNullException(nameof(providers));
         _configurations = configurations ?? throw new ArgumentNullException(nameof(configurations));
         _privacy = privacy ?? throw new ArgumentNullException(nameof(privacy));
         _modelPermissions = modelPermissions ?? throw new ArgumentNullException(nameof(modelPermissions));
-        _cloud = cloud; _receipts = receipts; _routes = routes;
+        _cloud = cloud; _receipts = receipts; _routes = routes; _originalTasks = originalTasks;
+        if (verifiedReauthentication is not null && (verifiedReauthentication is not TaskRunVerifiedActorReauthenticationSource actual ||
+            !ReferenceEquals(actual.OriginalVerifiedTaskActors, actors)))
+            throw new ArgumentException("Renewal must borrow the SAME trusted Task actor source.", nameof(verifiedReauthentication));
+        _verifiedReauthentication = verifiedReauthentication;
+        _contextReauthentication = contextReauthentication;
+        _reauthenticationCustody = reauthenticationCustody;
     }
+
+    // Preserve the original eight-parameter CLR constructor. Optional legacy composition
+    // conveys no canonical parent lookup or child authority.
+    public TaskRunPermissionAuthority(IAuthenticatedResourceActorSource actors, IModelProviderRegistry providers,
+        IProviderConfigurationStore configurations, IPrivacyPreferenceStore privacy, ModelPermissionEvaluator modelPermissions,
+        ITaskRunCloudAdmissionSource? cloud, ITaskRunActionReceiptAuthority? receipts, ITaskRunRouteObservationSource? routes)
+        : this(actors, providers, configurations, privacy, modelPermissions, cloud, receipts, routes, originalTasks: null) { }
 
     public async Task<TaskExecutionOwnerBinding> AuthorizeStartAsync(TaskExecutionSnapshot proposed, CancellationToken token)
     {
         ArgumentNullException.ThrowIfNull(proposed);
+        DemandOriginalAdmissionOpen();
         if (proposed.TaskId == Guid.Empty || proposed.ContextId == Guid.Empty || proposed.ExecutionId == Guid.Empty ||
-            proposed.OwnerBinding is not null || proposed.Attempts.Count != 0)
+            proposed.OwnerBinding is not null || proposed.Attempts.Count != 0 || proposed.ParentDelegation is not null)
             throw new UnauthorizedAccessException("A fresh canonical task/run intent is required.");
         var actor = await _actors.GetCurrentAsync(token).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("Current product actor is unavailable.");
@@ -116,6 +178,7 @@ public sealed class TaskRunPermissionAuthority : ITaskRunCommandAuthority, ITask
             "task-owner:" + Guid.NewGuid().ToString("N"));
         lock (_sync)
         {
+            DemandOriginalAdmissionOpen();
             if (_owners.ContainsKey(proposed.TaskId)) throw new UnauthorizedAccessException("A task owner cannot be replaced.");
             if (_owners.Count == 1024) throw new InvalidOperationException("Retained task authority capacity exhausted.");
             _owners.Add(proposed.TaskId, new(binding));
@@ -137,6 +200,7 @@ public sealed class TaskRunPermissionAuthority : ITaskRunCommandAuthority, ITask
         ArgumentNullException.ThrowIfNull(actualSelection); ArgumentNullException.ThrowIfNull(requiredCapabilities);
         ArgumentNullException.ThrowIfNull(requiredRestrictedCapabilities);
         var owner = RequireOwner(snapshot);
+        await DemandDelegatedParentAsync(owner, token).ConfigureAwait(false);
         await RequireActorAsync(owner.Binding, token).ConfigureAwait(false);
         var required = requiredCapabilities.Distinct().Order().ToArray();
         var restrictions = requiredRestrictedCapabilities.Distinct().Order().ToArray();
@@ -160,9 +224,10 @@ public sealed class TaskRunPermissionAuthority : ITaskRunCommandAuthority, ITask
             ModelFingerprint(model), ConfigurationFingerprint(configuration), restrictions, snapshot,
             observed is null ? null : observed with { RequiredCapabilities = Array.AsReadOnly(observed.RequiredCapabilities.ToArray()) });
         await RequireActorAsync(owner.Binding, token).ConfigureAwait(false);
+        await DemandDelegatedParentAsync(owner, token).ConfigureAwait(false);
         lock (_sync)
         {
-            if (!ReferenceEquals(_owners.GetValueOrDefault(snapshot.TaskId), owner)) throw new UnauthorizedAccessException("Task authority retired.");
+            if (!ReferenceEquals(RequireOwner(snapshot), owner)) throw new UnauthorizedAccessException("Task authority activation retired.");
             if (owner.First is { } published && (published.Candidate.RouteId != candidate.RouteId ||
                 published.Candidate.RouteRevision != candidate.RouteRevision))
                 throw new UnauthorizedAccessException("Concurrent route capture changed the original task route identity.");
@@ -186,10 +251,12 @@ public sealed class TaskRunPermissionAuthority : ITaskRunCommandAuthority, ITask
     {
         ArgumentNullException.ThrowIfNull(requiredCapabilities);
         var owner = RequireOwner(snapshot);
+        await DemandDelegatedParentAsync(owner, token).ConfigureAwait(false);
         await RequireActorAsync(owner.Binding, token).ConfigureAwait(false);
         Selection? selected;
         lock (_sync)
         {
+            _ = RequireOwner(snapshot); // Recheck the exact activation after all awaited owner reads.
             var candidates = owner.Selections.Values.Where(value => value.Model.Key == requestedModelKey &&
                 requiredCapabilities.All(capability => value.Model.Supports(capability))).Take(2).ToArray();
             selected = candidates.Length == 1 ? candidates[0] : null;
@@ -204,6 +271,7 @@ public sealed class TaskRunPermissionAuthority : ITaskRunCommandAuthority, ITask
     {
         if (proposedAttemptId == Guid.Empty) throw new UnauthorizedAccessException("Original attempt identity required.");
         var owner = RequireOwner(snapshot);
+        await DemandDelegatedParentAsync(owner, token).ConfigureAwait(false);
         Selection selection;
         lock (_sync)
             selection = owner.Selections.GetValueOrDefault(CandidateKey(candidate))
@@ -227,9 +295,12 @@ public sealed class TaskRunPermissionAuthority : ITaskRunCommandAuthority, ITask
                 await cloud.RevalidateAsync(token).ConfigureAwait(false);
             }
             await RevalidateSelectionAsync(owner, selection, token).ConfigureAwait(false);
-            var lease = new Lease(this, owner, selection, proposedAttemptId, cloud);
+            await DemandDelegatedParentAsync(owner, token).ConfigureAwait(false);
+            Lease lease;
             lock (_sync)
             {
+                _ = RequireOwner(snapshot); // Capture one immutable activation under its publication gate.
+                lease = new Lease(this, owner, selection, proposedAttemptId, cloud);
                 if (owner.Attempts.Count == 128 || !owner.Attempts.TryAdd(proposedAttemptId, lease))
                     throw new InvalidOperationException("Retained attempt authority capacity/identity conflict.");
             }
@@ -266,6 +337,66 @@ public sealed class TaskRunPermissionAuthority : ITaskRunCommandAuthority, ITask
         await receipts.ValidateOriginalAsync(snapshot, attemptId, actionId, ownerReceiptReference, token).ConfigureAwait(false);
     }
 
+    /// <summary>Fresh denial-only typed tool policy for the SAME private issued lease and selected model.
+    /// The tool name comes from the registered owner, not a candidate or persisted scope grant.</summary>
+    public Task ValidateOriginalToolAsync(TaskRunAttemptAdmission original, string exactToolName, CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(original); ArgumentException.ThrowIfNullOrWhiteSpace(exactToolName);
+        if (exactToolName.Length > 200) throw new ArgumentException("Registered typed tool name exceeded its bound.");
+        return ValidateOriginalToolBodyAsync(original, exactToolName, token);
+    }
+    private async Task ValidateOriginalToolBodyAsync(TaskRunAttemptAdmission original, string exactToolName, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        var owner = RequireOwner(original.Snapshot);
+        Lease lease; Selection selected;
+        lock (_sync)
+        {
+            lease = owner.Attempts.GetValueOrDefault(original.AttemptId)
+                ?? throw new UnauthorizedAccessException("Actual original attempt issuer required.");
+            if (!ReferenceEquals(original.Lease, lease) || original.AttemptId != lease.AttemptId)
+                throw new UnauthorizedAccessException("SAME privately issued attempt lease required for typed tool admission.");
+            selected = owner.Selections.GetValueOrDefault(CandidateKey(lease.Candidate))
+                ?? throw new UnauthorizedAccessException("Original selected model is unavailable.");
+            lease.DemandOriginalToolAdmission();
+        }
+        await ObserveOriginalPermissionReadAsync(RunOriginalToolPolicyRead(() => lease.RevalidateAsync(token).AsTask(), token)).ConfigureAwait(false);
+        var required = ModelToolPermissionMap.Map(exactToolName);
+        if (required is { } restricted)
+        {
+            var policy = await ObserveOriginalPermissionReadAsync(RunOriginalToolPolicyRead(() => _modelPermissions.GetOriginalPolicyAsync(token), token)).ConfigureAwait(false);
+            if (!ModelPermissionEvaluator.Evaluate(policy, selected.Model, restricted).Allowed)
+                throw new UnauthorizedAccessException("Current model policy denies the actual typed tool.");
+            // Held actor/model/config reads occur before the final fresh policy observation.
+            await ObserveOriginalPermissionReadAsync(RunOriginalToolPolicyRead(() => lease.RevalidateAsync(token).AsTask(), token)).ConfigureAwait(false);
+            policy = await ObserveOriginalPermissionReadAsync(RunOriginalToolPolicyRead(() => _modelPermissions.GetOriginalPolicyAsync(token), token)).ConfigureAwait(false);
+            if (!ModelPermissionEvaluator.Evaluate(policy, selected.Model, restricted).Allowed)
+                throw new UnauthorizedAccessException("Model tool permission retired during admission.");
+        }
+        token.ThrowIfCancellationRequested();
+        lock (_sync)
+        {
+            if (!ReferenceEquals(RequireOwner(original.Snapshot), owner) || !ReferenceEquals(owner.Attempts.GetValueOrDefault(original.AttemptId), lease) ||
+                !ReferenceEquals(owner.Selections.GetValueOrDefault(CandidateKey(lease.Candidate)), selected))
+                throw new UnauthorizedAccessException("Original task/model activation retired during typed tool validation.");
+            lease.DemandOriginalToolAdmission();
+        }
+        // Fresh policy observations precede the raw lifetime/native effect gate. This does not
+        // claim an atomic model-policy writer lock, monetary reservation, Home permission or network exclusion.
+    }
+    private static Task<T> RunOriginalToolPolicyRead<T>(Func<Task<T>> finite, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        try { return finite(); }
+        catch (OperationCanceledException original) { throw new AggregateException("Synchronous original tool-policy callback fault.", original); }
+    }
+    private static Task RunOriginalToolPolicyRead(Func<Task> finite, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        try { return finite(); }
+        catch (OperationCanceledException original) { throw new AggregateException("Synchronous original tool-policy callback fault.", original); }
+    }
+
     /// <summary>Pure private issuer identity; no actor/model/resource permission is granted by this check.</summary>
     public bool IsIssuedOriginal(ITaskRunAdmissionLease original)
     {
@@ -277,15 +408,31 @@ public sealed class TaskRunPermissionAuthority : ITaskRunCommandAuthority, ITask
     public async Task ValidateTaskCommandAsync(TaskExecutionSnapshot snapshot, string command, CancellationToken token)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
+        DemandOriginalAdmissionOpen();
         ArgumentException.ThrowIfNullOrWhiteSpace(command);
         if (command.Length > 128 || snapshot.OwnerBinding is not { } owner ||
             snapshot.TaskId != owner.TaskId || snapshot.ContextId != owner.ContextId || snapshot.ExecutionId != owner.ExecutionId)
             throw new UnauthorizedAccessException("Current task owner provenance is unavailable.");
         // Persisted ownership supplies the expected identity only. A fresh actual host/session
         // observation supplies current authentication; this creates no route/tool/Home grant.
+        if (snapshot.ParentDelegation is not null)
+            await DemandDelegatedParentAsync(RequireOwner(snapshot), token).ConfigureAwait(false);
+        else
+        {
+            Owner? live;
+            lock (_sync) live = _owners.GetValueOrDefault(snapshot.TaskId);
+            if (live is not null) await DemandDelegatedParentAsync(live, token).ConfigureAwait(false);
+        }
         await RequireActorAsync(owner, token).ConfigureAwait(false);
         token.ThrowIfCancellationRequested();
         await RequireActorAsync(owner, token).ConfigureAwait(false);
+        lock (_sync)
+        {
+            DemandOriginalAdmissionOpen();
+            if (_owners.TryGetValue(snapshot.TaskId, out var original) &&
+                (original.Activation.IsSealed || original.Binding != owner))
+                throw new UnauthorizedAccessException("The original Task activation is sealed or changed; specialized renewal is required.");
+        }
     }
 
     internal IAuthenticatedResourceActorSource OriginalTaskActors => _actors;
@@ -316,7 +463,8 @@ public sealed class TaskRunPermissionAuthority : ITaskRunCommandAuthority, ITask
         ArgumentNullException.ThrowIfNull(snapshot);
         lock (_sync)
         {
-            if (!_owners.TryGetValue(snapshot.TaskId, out var owner) || snapshot.OwnerBinding != owner.Binding ||
+            DemandOriginalAdmissionOpen();
+            if (!_owners.TryGetValue(snapshot.TaskId, out var owner) || owner.Activation.IsSealed || snapshot.OwnerBinding != owner.Binding ||
                 snapshot.ContextId != owner.Binding.ContextId || snapshot.ExecutionId != owner.Binding.ExecutionId)
                 throw new UnauthorizedAccessException("Actual original task owner issuance required; recorded receipt text is insufficient.");
             return owner;
@@ -326,7 +474,7 @@ public sealed class TaskRunPermissionAuthority : ITaskRunCommandAuthority, ITask
     {
         token.ThrowIfCancellationRequested();
         var expected = new AuthenticatedResourceActor(binding.ActorId, binding.ProfileId, binding.AccountId, binding.OrganisationId, binding.AuthenticationRevision);
-        var originalActor = _actors.GetCurrentAsync(token).AsTask(); // SAME ValueTask consumed once.
+        var originalActor = RunDelegationCallback(() => _actors.GetCurrentAsync(token).AsTask(), token); // SAME ValueTask consumed once.
         if (await ObserveOriginalPermissionReadAsync(originalActor).ConfigureAwait(false) != expected)
             throw new UnauthorizedAccessException("Original product actor/revision is no longer current.");
     }
@@ -334,44 +482,58 @@ public sealed class TaskRunPermissionAuthority : ITaskRunCommandAuthority, ITask
         ProviderModelDescriptor expected, IReadOnlyCollection<ToolCapability> requirements,
         IReadOnlyCollection<RestrictedModelCapability> restrictions, CancellationToken token)
     {
-        var provider = _providers.Find(expected.ProviderId) ?? throw new InvalidOperationException("Actual provider is unavailable.");
-        var originalConfiguration = _configurations.GetAsync(expected.ProviderId, token);
+        var provider = RunDelegationCallback(() => _providers.Find(expected.ProviderId)) ?? throw new InvalidOperationException("Actual provider is unavailable.");
+        var originalConfiguration = RunDelegationCallback(() => _configurations.GetAsync(expected.ProviderId, token), token);
         var configuration = await ObserveOriginalPermissionReadAsync(originalConfiguration).ConfigureAwait(false)
             ?? throw new InvalidOperationException("Actual provider configuration is unavailable.");
         if (!configuration.IsEnabled || configuration.Id != provider.Id || configuration.IsLocal != provider.IsLocal ||
             expected.IsLocal != provider.IsLocal || RuntimeSafetyState.IsSafeMode && !provider.IsLocal ||
             _privacy.Current.LocalOnlyMode && !provider.IsLocal)
             throw new UnauthorizedAccessException("Provider locality/configuration/privacy admission denied.");
-        var originalCatalogue = _providers.GetModelsAsync(new ModelCataloguePolicy(AllowLocal: expected.IsLocal,
-            AllowRemote: !expected.IsLocal, AllowedProviderIds: new[] { expected.ProviderId }.ToFrozenSet(StringComparer.Ordinal)), token);
+        var originalCatalogue = RunDelegationCallback(() => _providers.GetModelsAsync(new ModelCataloguePolicy(AllowLocal: expected.IsLocal,
+            AllowRemote: !expected.IsLocal, AllowedProviderIds: new[] { expected.ProviderId }.ToFrozenSet(StringComparer.Ordinal)), token), token);
         var models = await ObserveOriginalPermissionReadAsync(originalCatalogue).ConfigureAwait(false);
         var matches = models.Where(model => model.ProviderId == expected.ProviderId && model.Name == expected.Name).Take(2).ToArray();
         if (matches.Length != 1 || matches[0].IsLocal != expected.IsLocal || requirements.Any(capability => !matches[0].Supports(capability)))
             throw new UnauthorizedAccessException("Selected model/capabilities are not current in the actual provider catalogue.");
         foreach (var capability in restrictions)
-            if (!(await ObserveOriginalPermissionReadAsync(_modelPermissions.EvaluateAsync(matches[0], capability, acrossMesh: false, cancellationToken: token)).ConfigureAwait(false)).Allowed)
+            if (!(await ObserveOriginalPermissionReadAsync(RunDelegationCallback(() => _modelPermissions.EvaluateAsync(matches[0], capability, acrossMesh: false, cancellationToken: token), token)).ConfigureAwait(false)).Allowed)
                 throw new UnauthorizedAccessException("Current central model permission policy denies a required typed capability.");
         token.ThrowIfCancellationRequested();
         return (matches[0], configuration);
     }
     private async Task RevalidateSelectionAsync(Owner owner, Selection selection, CancellationToken token)
     {
-        await RequireActorAsync(owner.Binding, token).ConfigureAwait(false);
+        OwnerActivation activation;
+        lock (_sync)
+        {
+            activation = owner.Activation;
+            DemandSameActivation(owner, activation);
+        }
+        await RequireActorAsync(activation.Binding, token).ConfigureAwait(false);
         var required = selection.Candidate.RequiredCapabilities.Select(value => Enum.Parse<ToolCapability>(value, ignoreCase: false)).ToArray();
         var actual = await ReadSelectedAsync(selection.Model, required, selection.Restrictions, token).ConfigureAwait(false);
         if (ModelFingerprint(actual.Model) != selection.ModelFingerprint || ConfigurationFingerprint(actual.Configuration) != selection.ConfigurationFingerprint)
             throw new UnauthorizedAccessException("Actual provider/model/configuration changed after route capture.");
         if (selection.ConfiguredObservation is { } configured)
-            await ObserveOriginalPermissionReadAsync(_routes!.DemandOriginalCurrentAsync(selection.OriginalSnapshot, configured, token).AsTask()).ConfigureAwait(false);
+            await ObserveOriginalPermissionReadAsync(RunDelegationCallback(() => _routes!.DemandOriginalCurrentAsync(selection.OriginalSnapshot, configured, token).AsTask(), token)).ConfigureAwait(false);
         var first = owner.First ?? throw new UnauthorizedAccessException("Original selected route missing.");
         if (first.Model.IsLocal && !selection.Model.IsLocal)
         {
-            var originalConfigurationTask = _configurations.GetAsync(first.Model.ProviderId, token);
+            var originalConfigurationTask = RunDelegationCallback(() => _configurations.GetAsync(first.Model.ProviderId, token), token);
             var originalConfiguration = await ObserveOriginalPermissionReadAsync(originalConfigurationTask).ConfigureAwait(false);
             if (originalConfiguration is null || !originalConfiguration.IsEnabled || !originalConfiguration.AllowCloudFallback ||
                 _privacy.Current.LocalOnlyMode) throw new UnauthorizedAccessException("Original local selection does not allow cloud fallback.");
         }
-        await RequireActorAsync(owner.Binding, token).ConfigureAwait(false);
+        await RequireActorAsync(activation.Binding, token).ConfigureAwait(false);
+        lock (_sync) DemandSameActivation(owner, activation);
+    }
+
+    private void DemandSameActivation(Owner owner, OwnerActivation activation)
+    {
+        if (activation.IsSealed || !ReferenceEquals(owner.Activation, activation) ||
+            !ReferenceEquals(_owners.GetValueOrDefault(activation.Binding.TaskId), owner))
+            throw new UnauthorizedAccessException("The original Task owner activation is no longer current.");
     }
 
     // Capture the actual returned child task once. Faulted OCE remains a fault payload;
@@ -399,57 +561,136 @@ public sealed class TaskRunPermissionAuthority : ITaskRunCommandAuthority, ITask
         private readonly SemaphoreSlim _commit = new(1, 1);
         private bool _closing;
         private Task? _close;
-        public TaskExecutionOwnerBinding Owner => owner.Binding;
+        private readonly Owner _originalOwner = owner;
+        private readonly OwnerActivation _activation = owner.Activation;
+        private readonly TaskExecutionOwnerBinding _originalBinding = owner.Binding;
+        public TaskExecutionOwnerBinding Owner => _originalBinding; // Never rewrites old attempt/audit identity.
+        private void DemandCurrentActivation()
+        { lock (issuer._sync) issuer.DemandSameActivation(_originalOwner, _activation); }
         public Guid AttemptId { get; } = attemptId;
         public TaskRunRouteCandidate Candidate => selection.Candidate;
+        internal ProviderConfiguration OriginalCapturedRouteConfiguration => selection.Configuration;
+        internal void DemandOriginalToolAdmission()
+        {
+            lock (_sync) if (_closing) throw new UnauthorizedAccessException("Original typed tool lease retired.");
+        }
         public string ReceiptReference { get; } = "task-attempt:" + Guid.NewGuid().ToString("N");
         public async ValueTask RevalidateAsync(CancellationToken token)
         {
+            DemandCurrentActivation();
             lock (_sync) if (_closing) throw new UnauthorizedAccessException("Original attempt retired.");
-            await issuer.RevalidateSelectionAsync(owner, selection, token).ConfigureAwait(false);
-            if (cloud is not null) await cloud.RevalidateAsync(token).ConfigureAwait(false);
+            await issuer.DemandDelegatedParentAsync(_originalOwner, token).ConfigureAwait(false);
+            await issuer.RevalidateSelectionAsync(_originalOwner, selection, token).ConfigureAwait(false);
+            if (cloud is not null)
+                await ObserveOriginalPermissionReadAsync(issuer.RunDelegationCallback(() => cloud.RevalidateAsync(token).AsTask(), token)).ConfigureAwait(false);
+            await issuer.DemandDelegatedParentAsync(_originalOwner, token).ConfigureAwait(false);
             token.ThrowIfCancellationRequested();
+            DemandCurrentActivation();
             lock (_sync) if (_closing) throw new UnauthorizedAccessException("Original attempt retired during policy read.");
         }
-        public async ValueTask<IAsyncDisposable?> AcquireOriginalCommitPinAsync(CancellationToken token)
+        public ValueTask<IAsyncDisposable?> AcquireOriginalCommitPinAsync(CancellationToken token)
+        {
+            DemandExternalClose(); // A cloud-close callback cannot wait for its own held retirement gate.
+            return AcquireOriginalCommitPinBodyAsync(token);
+        }
+        private async ValueTask<IAsyncDisposable?> AcquireOriginalCommitPinBodyAsync(CancellationToken token)
         {
             // Raw lifetime only: NO provider/Home/Files/SQLite/Context read under owner transaction.
             await _commit.WaitAsync(token).ConfigureAwait(false);
+            lock (issuer._sync)
             lock (_sync)
             {
-                if (_closing) { _commit.Release(); return null; }
+                if (_closing || _activation.IsSealed || !ReferenceEquals(_originalOwner.Activation, _activation) ||
+                    !ReferenceEquals(issuer._owners.GetValueOrDefault(_originalBinding.TaskId), _originalOwner))
+                { _commit.Release(); return null; }
                 return new Pin(_commit);
             }
         }
+        private static readonly AsyncLocal<LeaseClosePhase?> CloseExecuting = new();
+        private readonly List<Task> _originalCloseStages = [];
+        [ThreadStatic] private static List<LeaseClosePhase>? _closePhysical;
         public ValueTask DisposeAsync()
         {
-            TaskCompletionSource completion;
+            DemandExternalClose(); TaskCompletionSource? start = null; Task actual;
+            var parent = _closePhysical?.LastOrDefault() ?? CloseExecuting.Value; // Capture actual live ancestry before the gate/callbacks.
             lock (_sync)
             {
-                if (_close is not null) return new(_close);
-                _closing = true; completion = new(TaskCreationOptions.RunContinuationsAsynchronously); _close = completion.Task;
+                if (_close is null)
+                {
+                    _closing = true; start = new(TaskCreationOptions.RunContinuationsAsynchronously);
+                    _close = ClosePublishedAsync(start.Task, parent); // SAME actual whole driver, before callbacks.
+                }
+                actual = _close;
             }
-            _ = ClosePublishedAsync(completion);
-            return new(completion.Task);
+            start?.SetResult(); return new(actual);
         }
-        private async Task ClosePublishedAsync(TaskCompletionSource completion)
+        private async Task ClosePublishedAsync(Task start, LeaseClosePhase? parent)
         {
-            Task? originalClose = null;
+            await start.ConfigureAwait(false);
+            var previous = CloseExecuting.Value; var phase = new LeaseClosePhase(this, _close!, parent); CloseExecuting.Value = phase;
+            var errors = new List<Exception>(); var acquired = false; Task? originalWait = null, originalClose = null;
             try
             {
-                await _commit.WaitAsync().ConfigureAwait(false);
                 try
                 {
-                    if (cloud is not null)
-                    {
-                        originalClose = cloud.DisposeAsync().AsTask();
-                        await originalClose.ConfigureAwait(false);
-                    }
+                    originalWait = _commit.WaitAsync(); _originalCloseStages.Add(originalWait);
+                    await JoinCloseStageAsync(originalWait, errors).ConfigureAwait(false);
+                    acquired = originalWait.IsCompletedSuccessfully;
                 }
-                finally { _commit.Release(); }
-                completion.TrySetResult();
+                catch (Exception error) { AddCloseCause(errors, error); }
+                if (acquired && cloud is not null)
+                {
+                    try
+                    {
+                        var calls = _closePhysical ??= []; calls.Add(phase);
+                        try { originalClose = cloud.DisposeAsync().AsTask(); _originalCloseStages.Add(originalClose); }
+                        finally { calls.RemoveAt(calls.Count - 1); }
+                    }
+                    catch (Exception error) { AddCloseCause(errors, error); }
+                    if (originalClose is not null) await JoinCloseStageAsync(originalClose, errors).ConfigureAwait(false);
+                }
             }
-            catch (Exception error) { completion.TrySetException((Exception?)originalClose?.Exception ?? error); }
+            finally
+            {
+                if (acquired) try { _commit.Release(); } catch (Exception error) { AddCloseCause(errors, error); }
+                phase.Retire(); CloseExecuting.Value = previous;
+            }
+            foreach (var actualOriginal in _originalCloseStages)
+                await JoinCloseStageAsync(actualOriginal, errors).ConfigureAwait(false);
+            if (errors.Count == 1 && errors[0] is not OperationCanceledException)
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(errors[0]).Throw();
+            if (errors.Count != 0) throw new AggregateException("Original attempt lease close faults/cancellation/cleanup.", errors);
+        }
+        private void DemandExternalClose()
+        {
+            for (var phase = CloseExecuting.Value; phase is not null; phase = phase.Parent)
+                if (phase.Live && ReferenceEquals(phase.Owner, this)) throw new InvalidOperationException("An actual attempt lease close original cannot join itself.");
+            if (_closePhysical is { } physical)
+                foreach (var call in physical)
+                    for (var phase = call; phase is not null; phase = phase.Parent)
+                        if (phase.Live && ReferenceEquals(phase.Owner, this))
+                            throw new InvalidOperationException("An attempt lease close callback cannot join its containing original/ancestor.");
+        }
+        private sealed class LeaseClosePhase(Lease owner, Task original, LeaseClosePhase? parent)
+        {
+            public Lease Owner { get; } = owner;
+            public Task Original { get; } = original;
+            public LeaseClosePhase? Parent { get; } = parent;
+            private int _active = 1;
+            public bool Live => Volatile.Read(ref _active) != 0 || !Original.IsCompleted;
+            public void Retire() => Interlocked.Exchange(ref _active, 0);
+        }
+        private static void AddCloseCause(List<Exception> errors, Exception actual)
+        { if (!errors.Any(error => ReferenceEquals(error, actual))) errors.Add(actual); }
+        private static async Task JoinCloseStageAsync(Task actual, List<Exception> errors)
+        {
+            try { await actual.ConfigureAwait(false); }
+            catch (Exception observed)
+            {
+                AddCloseCause(errors, observed);
+                if (actual.Exception is { } group)
+                { AddCloseCause(errors, group); foreach (var cause in group.InnerExceptions) AddCloseCause(errors, cause); }
+            }
         }
         private sealed class Pin(SemaphoreSlim gate) : IAsyncDisposable
         {

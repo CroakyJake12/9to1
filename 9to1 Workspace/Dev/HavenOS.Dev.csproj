@@ -11,6 +11,7 @@
     <DefaultItemExcludes>$(DefaultItemExcludes);Source\**\*;Tests\**\*</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
     <ProjectReference Include="..\shared\src\Haven.Application\Haven.Application.csproj" />
     <ProjectReference Include="..\shared\src\Haven.Core\Haven.Core.csproj" />
   </ItemGroup>

@@ -5,7 +5,7 @@ namespace Haven.Core.Tests;
 
 /// <summary>Independent synthetic providers/actors exercise the real authority and central evaluator.
 /// These controls issue no production profile, provider credential, resource grant or cloud consent.</summary>
-public sealed class TaskRunPermissionAuthorityTests
+public sealed partial class TaskRunPermissionAuthorityTests
 {
     [Fact]
     public async Task Current_local_selection_issues_one_attempt_without_Home_or_cloud_authority()

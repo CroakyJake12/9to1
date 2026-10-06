@@ -72,7 +72,8 @@ public sealed partial class WorkspaceToolService(IWorkspaceToolFinalFenceAuthori
     {
         if (invocation is not null)
         {
-            await WriteOriginalWindowsAsync(workspaceRoot, relativePath, content, invocation, cancellationToken).ConfigureAwait(false);
+            if (OperatingSystem.IsLinux()) await WriteOriginalLinuxAsync(workspaceRoot, relativePath, content, invocation, cancellationToken).ConfigureAwait(false);
+            else await WriteOriginalWindowsAsync(workspaceRoot, relativePath, content, invocation, cancellationToken).ConfigureAwait(false);
             return;
         }
         var path = ResolveWorkspacePath(workspaceRoot, relativePath);
@@ -128,7 +129,13 @@ public sealed partial class WorkspaceToolService(IWorkspaceToolFinalFenceAuthori
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        request = request with { Environment = request.Environment is null ? null : new Dictionary<string, string>(request.Environment) };
+        request = request with
+        {
+            Environment = request.Environment is null ? null : new Dictionary<string, string>(request.Environment),
+            ArgumentList = request.ArgumentList is null ? null : Array.AsReadOnly(request.ArgumentList.ToArray())
+        };
+        if (request.ArgumentList is not null && !string.IsNullOrEmpty(request.Arguments))
+            throw new ArgumentException("A process request cannot specify both a literal argument vector and an argument string.", nameof(request));
         if (!Directory.Exists(request.WorkingDirectory)) throw new DirectoryNotFoundException(request.WorkingDirectory);
         var process = new Process
         {
@@ -167,6 +174,8 @@ public sealed partial class WorkspaceToolService(IWorkspaceToolFinalFenceAuthori
         var stop = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         try
         {
+        if (request.ArgumentList is not null)
+            foreach (var argument in request.ArgumentList) process.StartInfo.ArgumentList.Add(argument);
         if (!request.DetachGui && Path.GetFileName(request.FileName).Equals("powershell.exe", StringComparison.OrdinalIgnoreCase))
         {
             process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
@@ -178,6 +187,9 @@ public sealed partial class WorkspaceToolService(IWorkspaceToolFinalFenceAuthori
             if (invocation is not null)
             {
                 effect = invocation.PrepareProcess(request);
+                // Linux launches from the SAME held descriptor through the parent procfs
+                // descriptor path, not a mutable checked-then-used workspace pathname.
+                process.StartInfo.WorkingDirectory = invocation.OriginalProcessWorkingDirectory();
                 originalAcquire = invocation.Fence.AcquireOriginalCommitPinAsync(cancellationToken).AsTask();
                 originalPin = await originalAcquire.ConfigureAwait(false)
                     ?? throw new UnauthorizedAccessException("The actual original task commit pin is unavailable.");
@@ -189,6 +201,7 @@ public sealed partial class WorkspaceToolService(IWorkspaceToolFinalFenceAuthori
                     request.WorkingDirectory, digest, () =>
                     {
                         cancellationToken.ThrowIfCancellationRequested();
+                        process.StartInfo.WorkingDirectory = invocation.OriginalProcessWorkingDirectory();
                         admitted = true;
                         return process.Start();
                     });
@@ -288,8 +301,11 @@ public sealed partial class WorkspaceToolService(IWorkspaceToolFinalFenceAuthori
                 catch (Exception error) { AddOriginalErrors(errors, null, error); }
                 terminal = originalStdout?.IsCompletedSuccessfully == true && originalStderr?.IsCompletedSuccessfully == true;
             }
+            if (invocation is not null && OperatingSystem.IsLinux())
+                try { invocation.DemandOriginalLinuxRoot(); }
+                catch (Exception error) { AddOriginalErrors(errors, null, error); }
             if (effect is not null) invocation!.FinishEffect(effect, admitted, launched, terminal, processId, actualExitCode,
-                eligible: result is { ExitCode: 0, TimedOut: false } && !request.DetachGui && errors.Count == 0);
+                eligible: result is { TimedOut: false } && !request.DetachGui && terminal && actualExitCode is not null && errors.Count == 0);
             Task? originalDispose = null;
             try
             {

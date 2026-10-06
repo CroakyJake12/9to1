@@ -24,6 +24,12 @@ public sealed record WorkspaceToolResult(ToolActivity Activity, string Output, T
     // caller-written fields, Activity.Succeeded and output prose never become accepted mutation.
     public bool OriginalEffectBodyCompleted { get; init; }
     public Exception? OriginalRuntimeError { get; init; }
+    // SAME returned process outcome; observation only, never permission or accepted-effect evidence.
+    [System.Text.Json.Serialization.JsonIgnore]
+    public ProcessResult? OriginalProcessResult { get; init; }
+    // Full SAME original read result for local Dev/editor consumers; agent output remains bounded.
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string? OriginalReadText { get; init; }
 }
 
 /// <summary>
@@ -79,10 +85,10 @@ public sealed class WorkspaceToolRuntime(
             new() { ["changes_json"] = StringProperty("JSON array of objects with path, content, and optional expectedSha256.") }, "changes_json"),
         Definition("apply_change_set", "Apply a preflightable multi-file change set transactionally. If any write fails, earlier writes are rolled back.",
             new() { ["changes_json"] = StringProperty("JSON array of objects with path, content, and optional expectedSha256.") }, "changes_json"),
-        Definition("run_command", "Run a PowerShell command in the selected workspace and return its exit code, output, and errors.",
-            new() { ["command"] = StringProperty("PowerShell command."), ["timeout_seconds"] = IntegerProperty("Timeout from 1 to 900 seconds.") }, "command"),
+        Definition("run_command", "Run a command in the selected workspace using PowerShell on Windows or /bin/sh on POSIX, returning its exit code, output, and errors.",
+            new() { ["command"] = StringProperty("Original command in the host shell: PowerShell on Windows, /bin/sh on POSIX."), ["timeout_seconds"] = IntegerProperty("Timeout from 1 to 900 seconds.") }, "command"),
         Definition("run_tests", "Detect and run this workspace's tests, or run a supplied test command.",
-            new() { ["command"] = StringProperty("Optional explicit PowerShell test command."), ["timeout_seconds"] = IntegerProperty("Timeout from 1 to 1800 seconds.") })
+            new() { ["command"] = StringProperty("Optional explicit command in the same host shell (PowerShell on Windows, /bin/sh on POSIX)."), ["timeout_seconds"] = IntegerProperty("Timeout from 1 to 1800 seconds.") })
     ];
 
     /// <summary>
@@ -120,6 +126,8 @@ public sealed class WorkspaceToolRuntime(
         var started = Stopwatch.GetTimestamp();
         var originalEffectBodyCompleted = false;
         Task? originalHistoryTask = null;
+        var originalProcess = new ProcessObservation();
+        var originalRead = new ReadObservation();
         try
         {
             IReadOnlyList<WorkspaceMutation> mutations = [];
@@ -147,10 +155,10 @@ public sealed class WorkspaceToolRuntime(
                     output = call.Name switch
                     {
                         "list_files" => await ListFilesAsync(workspaceRoot, Text(call, "path", "."), Integer(call, "max_depth", 5), cancellationToken).ConfigureAwait(false),
-                        "read_file" => await ReadFileAsync(workspaceRoot, RequiredText(call, "path"), cancellationToken, originalOwned).ConfigureAwait(false),
+                        "read_file" => await ReadFileAsync(workspaceRoot, RequiredText(call, "path"), cancellationToken, originalOwned, originalRead).ConfigureAwait(false),
                         "search_files" => await SearchFilesAsync(workspaceRoot, Text(call, "path", "."), RequiredText(call, "query"), Integer(call, "max_results", 100), cancellationToken).ConfigureAwait(false),
-                        "run_command" => await RunCommandAsync(workspaceRoot, RequiredText(call, "command"), Integer(call, "timeout_seconds", 120), cancellationToken).ConfigureAwait(false),
-                        "run_tests" => await RunTestsAsync(workspaceRoot, Text(call, "command"), Integer(call, "timeout_seconds", 600), cancellationToken).ConfigureAwait(false),
+                        "run_command" => await RunCommandAsync(workspaceRoot, RequiredText(call, "command"), Integer(call, "timeout_seconds", 120), cancellationToken, originalProcess).ConfigureAwait(false),
+                        "run_tests" => await RunTestsAsync(workspaceRoot, Text(call, "command"), Integer(call, "timeout_seconds", 600), cancellationToken, originalProcess).ConfigureAwait(false),
                         _ => throw new InvalidOperationException($"Unknown workspace tool '{call.Name}'.")
                     };
                     break;
@@ -173,9 +181,11 @@ public sealed class WorkspaceToolRuntime(
             var removed = mutations.Sum(item => item.LinesRemoved);
             return new WorkspaceToolResult(
                 new ToolActivity(Guid.NewGuid(), HumanLabel(call.Name), FirstLine(output), true, Stopwatch.GetElapsedTime(started), DateTimeOffset.UtcNow, added, removed),
-                output) { OriginalEffectBodyCompleted = originalOwned && originalEffectBodyCompleted };
+                output) { OriginalEffectBodyCompleted = originalOwned && originalEffectBodyCompleted,
+                    OriginalProcessResult = originalProcess.Result, OriginalReadText = originalOwned ? originalRead.Text : null };
         }
-        catch (Exception ex) when (ex is not OperationCanceledException || originalOwned && originalHistoryTask?.IsFaulted == true)
+        catch (Exception ex) when (ex is not OperationCanceledException || originalOwned &&
+            (originalHistoryTask?.IsFaulted == true || originalProcess.Task?.IsFaulted == true))
         {
             var output = $"Tool error: {ex.Message}";
             return new WorkspaceToolResult(
@@ -185,7 +195,10 @@ public sealed class WorkspaceToolRuntime(
                 OriginalEffectBodyCompleted = originalOwned && originalEffectBodyCompleted,
                 // One actual Task.Exception capture preserves every direct original history cause.
                 // A sole cause keeps its exact object; nested groups remain exact, never Flattened.
-                OriginalRuntimeError = originalOwned ? OriginalHistoryCause(originalHistoryTask, ex) : null
+                OriginalRuntimeError = originalOwned ? OriginalHistoryCause(originalHistoryTask?.IsFaulted == true
+                    ? originalHistoryTask : originalProcess.Task, ex) : null,
+                OriginalProcessResult = originalProcess.Result,
+                OriginalReadText = originalOwned ? originalRead.Text : null
             };
         }
     }
@@ -254,7 +267,9 @@ public sealed class WorkspaceToolRuntime(
     /// <summary>
     /// Performs read file asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    private async Task<string> ReadFileAsync(string root, string path, CancellationToken cancellationToken, bool originalOwned)
+    private sealed class ReadObservation { internal string? Text; }
+
+    private async Task<string> ReadFileAsync(string root, string path, CancellationToken cancellationToken, bool originalOwned, ReadObservation observation)
     {
         var resolved = tools.ResolveWorkspacePath(root, path);
         if (!originalOwned)
@@ -267,6 +282,7 @@ public sealed class WorkspaceToolRuntime(
         // limit. Do not follow a mutable filename again outside that owning read port.
         var content = await tools.ReadTextAsync(root, path, cancellationToken).ConfigureAwait(false);
         if (content.IndexOf('\0') >= 0) throw new InvalidOperationException("File appears to be binary.");
+        if (originalOwned) observation.Text = content; // SAME returned read string, before presentation truncation.
         return Truncate(content, MaxFileCharacters);
     }
 
@@ -342,7 +358,14 @@ public sealed class WorkspaceToolRuntime(
     /// <summary>
     /// Runs run command async while preserving the surrounding cancellation and error-handling contract.
     /// </summary>
-    private async Task<string> RunCommandAsync(string root, string command, int timeoutSeconds, CancellationToken cancellationToken)
+    private sealed class ProcessObservation
+    {
+        internal Task<ProcessResult>? Task;
+        internal ProcessResult? Result;
+    }
+
+    private async Task<string> RunCommandAsync(string root, string command, int timeoutSeconds, CancellationToken cancellationToken,
+        ProcessObservation observation)
     {
         timeoutSeconds = Math.Clamp(timeoutSeconds, 1, 900);
         var executionId = Guid.NewGuid();
@@ -350,9 +373,10 @@ public sealed class WorkspaceToolRuntime(
         commandActivity?.Publish(new TerminalCommandActivity(executionId, TerminalCommandOrigin.Agent, TerminalExecutionState.Running, command, root, null, null, DateTimeOffset.UtcNow));
         try
         {
-            var encoded = Convert.ToBase64String(Encoding.Unicode.GetBytes(command));
-            var result = await tools.RunProcessAsync(new ProcessRequest(
-                "powershell.exe", $"-NoProfile -NonInteractive -EncodedCommand {encoded}", root, TimeSpan.FromSeconds(timeoutSeconds)), cancellationToken).ConfigureAwait(false);
+            var originalRequest = WorkspaceToolProcessRequestFactory.CreateOriginal(root, command, timeoutSeconds);
+            observation.Task = tools.RunProcessAsync(originalRequest, cancellationToken);
+            var result = await observation.Task.ConfigureAwait(false);
+            observation.Result = result; // Retain known process outcome before observer/formatting work.
             var state = result.TimedOut ? TerminalExecutionState.Cancelled : result.ExitCode == 0 ? TerminalExecutionState.Succeeded : TerminalExecutionState.Failed;
             commandActivity?.Publish(new TerminalCommandActivity(executionId, TerminalCommandOrigin.Agent, state, command, root, result, result.TimedOut ? "Command timed out." : null, DateTimeOffset.UtcNow));
             return FormatProcess(result);
@@ -372,7 +396,8 @@ public sealed class WorkspaceToolRuntime(
     /// <summary>
     /// Runs run tests async while preserving the surrounding cancellation and error-handling contract.
     /// </summary>
-    private async Task<string> RunTestsAsync(string root, string command, int timeoutSeconds, CancellationToken cancellationToken)
+    private async Task<string> RunTestsAsync(string root, string command, int timeoutSeconds, CancellationToken cancellationToken,
+        ProcessObservation observation)
     {
         if (string.IsNullOrWhiteSpace(command))
         {
@@ -381,7 +406,7 @@ public sealed class WorkspaceToolRuntime(
                 : File.Exists(Path.Combine(root, "go.mod")) ? "go test ./..."
                 : throw new InvalidOperationException("No supported test project was detected. Supply a test command.");
         }
-        return await RunCommandAsync(root, command, Math.Clamp(timeoutSeconds, 1, 1800), cancellationToken).ConfigureAwait(false);
+        return await RunCommandAsync(root, command, Math.Clamp(timeoutSeconds, 1, 1800), cancellationToken, observation).ConfigureAwait(false);
     }
 
     /// <summary>

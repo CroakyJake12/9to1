@@ -117,6 +117,10 @@ public sealed partial class TaskExecutionCoordinator(
                 throw new InvalidOperationException("An accepted action identity cannot be reused for different work.");
             return snapshot;
         }
+        if (snapshot.OwnerBinding is not null && index >= 0
+            && (nodes[index].OriginalToolIntent is not null || originalToolIntent is not null)
+            && nodes[index].State != TaskPlanNodeState.Pending)
+            throw new InvalidOperationException("An admitted or uncertain original tool action cannot be reacquired by ActionId.");
         if (index >= 0) nodes[index] = node; else nodes.Add(node);
         var updated = snapshot with { Plan = nodes, State = TaskExecutionLifecycle.Running, UpdatedAt = _time.GetUtcNow() };
         updated = await PersistAsync(updated, cancellationToken).ConfigureAwait(false);

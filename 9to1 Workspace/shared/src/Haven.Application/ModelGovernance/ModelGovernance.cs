@@ -91,6 +91,9 @@ public sealed class ModelPersonalityService(IModelPersonalisationStore store)
 /// </summary>
 public sealed class ModelPermissionEvaluator(IModelPermissionStore store)
 {
+    /// <summary>Returns the actual owner policy Task without an await proxy; strict original consumers retain its identity and direct causes.</summary>
+    public Task<ModelPermissionPolicy> GetOriginalPolicyAsync(CancellationToken cancellationToken) => store.GetPolicyAsync(cancellationToken);
+
     public async Task<ModelPermissionDecision> EvaluateAsync(
         ProviderModelDescriptor model,
         RestrictedModelCapability capability,

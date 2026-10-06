@@ -17,7 +17,7 @@ namespace Haven.Core.Tests;
 /// <summary>
 /// Represents chat session tool loop tests and keeps its related state and behavior together.
 /// </summary>
-public sealed class ChatSessionToolLoopTests : IDisposable
+public sealed partial class ChatSessionToolLoopTests : IDisposable
 {
     /// <summary>
     /// Stores root locally so this component can preserve the dependency, cache, or state between member calls.

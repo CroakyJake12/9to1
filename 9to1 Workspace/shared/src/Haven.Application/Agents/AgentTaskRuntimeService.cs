@@ -57,8 +57,8 @@ public sealed partial class AgentTaskRuntimeService(
     public Task<AgentRun> RunAsync(
         Guid agentId, string task, CancellationToken cancellationToken,
         Guid? retryOfRunId = null, string? resourceReference = null) =>
-        RunOriginalOperation(operation => RunOriginalAgentAsync(operation, agentId, task,
-            cancellationToken, retryOfRunId, resourceReference));
+        RunOriginalBusinessProcessOperation((operation, processToken) => RunOriginalAgentAsync(operation, agentId, task,
+            processToken, retryOfRunId, resourceReference), cancellationToken);
 
     private async Task<AgentRun> RunOriginalAgentAsync(
         AgentRuntimeOriginalCustody operation, Guid agentId, string task,
@@ -103,7 +103,9 @@ public sealed partial class AgentTaskRuntimeService(
             string.IsNullOrWhiteSpace(resourceReference) ? null : resourceReference.Trim(),
             0);
 
-        var invocation = new AgentCanonicalOriginal(run);
+        var invocation = new AgentCanonicalOriginal(run) { OriginalProcessOwner = this };
+        operation.OriginalCanonicalAgent = invocation;
+        invocation.ActualServiceOperations.Add(operation);
         lock (_canonicalAdmissionGate)
         {
             if (_canonicalRuns.Count >= 128 || _observerFailures.Count >= 1024 || !_canonicalRuns.TryAdd(run.Id, invocation))
@@ -122,8 +124,8 @@ public sealed partial class AgentTaskRuntimeService(
             var now = DateTimeOffset.UtcNow;
             var conversation = new Conversation(Guid.NewGuid(), HavenMode.Tasks, ConversationKind.Chat,
                 $"Agent · {agent.Name}", null, null, false, true, now, now);
-            invocation.Chat = chat.CreateOriginalAgentInvocation(conversation, BuildExecutionTask(run), model,
-                activeCapabilities, agent.Name, BuildExecutionInstructions(agent.Instructions, policy), linked.Token);
+            invocation.Chat = operation.Invoke(() => chat.CreateOriginalAgentInvocation(conversation, BuildExecutionTask(run), model,
+                activeCapabilities, agent.Name, BuildExecutionInstructions(agent.Instructions, policy), linked.Token));
             run = await operation.AwaitAsync(() => ConsumeCanonicalOriginalAsync(invocation, run, linked.Token)).ConfigureAwait(false);
         }
         catch (Exception actualFailure)
@@ -133,7 +135,7 @@ public sealed partial class AgentTaskRuntimeService(
         }
         finally
         {
-            try { await operation.AwaitAsync(() => JoinOriginalCancellationAndCloseAsync(invocation)).ConfigureAwait(false); }
+            try { await operation.AwaitAsync(() => JoinOriginalCancellationAndCloseAsync(invocation), owningCleanup: true).ConfigureAwait(false); }
             catch (Exception cancellationCleanupFailure) { invocation.Retain(cancellationCleanupFailure, invocation.OriginalCancellation); }
         }
         if (invocation.Causes.Count > 0) run = ProjectFailedOriginal(invocation, run, cancellationToken.IsCancellationRequested);
@@ -141,7 +143,7 @@ public sealed partial class AgentTaskRuntimeService(
         // Canonical completion itself is issued only by the retained Chat coordinator receipt.
         try
         {
-            await operation.AwaitAsync(() => PersistAsync(run, CancellationToken.None)).ConfigureAwait(false);
+            await operation.AwaitAsync(() => PersistAsync(run, CancellationToken.None), owningCleanup: true).ConfigureAwait(false);
             RecordCompletedOriginal(invocation, run);
             return run;
         }
@@ -156,11 +158,11 @@ public sealed partial class AgentTaskRuntimeService(
             var requiresPermission =
                 definition.Availability == CapabilityAvailability.PermissionRequired ||
                 definition.RiskClass >= CapabilityRiskClass.Consequential;
-            var decision = permissionEngine.Evaluate(
+            var decision = operation.Invoke(() => permissionEngine.Evaluate(
                 $"capability:{definition.Key}",
                 definition.RiskClass,
                 requiresPermission,
-                $"Agent '{agent.Name}' requested {definition.Name}.");
+                $"Agent '{agent.Name}' requested {definition.Name}."));
             return decision.Kind != PermissionDecisionKind.Denied;
         }
     }
@@ -182,13 +184,15 @@ public sealed partial class AgentTaskRuntimeService(
     }
 
     public Task<AgentRun> RetryAsync(Guid runId, CancellationToken cancellationToken) =>
-        RunOriginalOperation(operation => RetryOriginalAgentAsync(operation, runId, cancellationToken));
+        RunOriginalBusinessProcessOperation((operation, processToken) => RetryOriginalAgentAsync(operation, runId, processToken), cancellationToken);
 
     private async Task<AgentRun> RetryOriginalAgentAsync(
         AgentRuntimeOriginalCustody operation, Guid runId, CancellationToken cancellationToken)
     {
         if (!_canonicalRuns.TryGetValue(runId, out var original) || original.Chat is null)
             throw new InvalidOperationException("The SAME original Agent Task/Run custody is unavailable. Start explicit new work; historical recovery is not implemented.");
+        operation.OriginalCanonicalAgent = original;
+        lock (original.Gate) original.ActualServiceOperations.Add(operation);
         var expected = original.Expected;
         var previous = await operation.AwaitAsync(() => runs.GetAsync(runId, cancellationToken)).ConfigureAwait(false)
             ?? throw new InvalidOperationException("The Agent run no longer exists.");
@@ -230,7 +234,7 @@ public sealed partial class AgentTaskRuntimeService(
             }
             finally
             {
-                try { await operation.AwaitAsync(() => JoinOriginalCancellationAndCloseAsync(original)).ConfigureAwait(false); }
+                try { await operation.AwaitAsync(() => JoinOriginalCancellationAndCloseAsync(original), owningCleanup: true).ConfigureAwait(false); }
                 catch (Exception closeFailure)
                 { failures.AddRange(original.OriginalCancellation?.Exception is { } cancelFaults ? cancelFaults.InnerExceptions : new[] { closeFailure }); }
             }
@@ -238,8 +242,9 @@ public sealed partial class AgentTaskRuntimeService(
                 throw new AggregateException("The SAME original Agent continuation or its cleanup was refused.", failures);
             var run = acknowledged ?? throw new InvalidOperationException("No actual Agent continuation result exists.");
             if (original.Causes.Count > 0) run = ProjectFailedOriginal(original, run, cancellationToken.IsCancellationRequested);
-            await operation.AwaitAsync(() => PersistAsync(run, CancellationToken.None)).ConfigureAwait(false);
+            await operation.AwaitAsync(() => PersistAsync(run, CancellationToken.None), owningCleanup: true).ConfigureAwait(false);
             RecordCompletedOriginal(original, run);
+            await AcknowledgeCompletedOriginalDelegatedRetryAsync(original, operation, CancellationToken.None).ConfigureAwait(false);
             return run;
         }
         finally
@@ -294,7 +299,7 @@ public sealed partial class AgentTaskRuntimeService(
         {
             if (owning.ActualHistoryOperations.Count >= 256)
                 throw new InvalidOperationException("Retained original Agent history capacity requires owning inspection.");
-            operation = new();
+            operation = new() { OriginalProcessOwner = this, OriginalAcknowledgedHistoryStage = true };
             owning.ActualHistoryOperations.Add(operation);
         }
         return operation.Start(async actual =>
@@ -316,7 +321,7 @@ public sealed partial class AgentTaskRuntimeService(
         Task? actualWrite = null;
         try
         {
-            actualWrite = runs.UpsertAsync(run, cancellationToken);
+            actualWrite = operation.Invoke(() => runs.UpsertAsync(run, cancellationToken));
             if (_canonicalRuns.TryGetValue(run.Id, out var owning)) owning.ActualPersistence.Add(actualWrite);
             await operation.AwaitAsync(() => actualWrite ?? throw new InvalidOperationException("No actual original Agent history write Task exists.")).ConfigureAwait(false);
         }
@@ -339,16 +344,20 @@ public sealed partial class AgentTaskRuntimeService(
                     AgentRunStatus.Failed => FloatingActivityState.Failed,
                     _ => FloatingActivityState.Dismissed
                 };
-                activityStore.Set(new FloatingActivitySnapshot(
-                    run.Id, activityState, 0, 0, 0, 0,
-                    run.Status == AgentRunStatus.Failed ? run.Error : null));
+                TaskRunProcessProducerContext.Invoke(operation.OriginalProcessOwner, () =>
+                {
+                    activityStore.Set(new FloatingActivitySnapshot(
+                        run.Id, activityState, 0, 0, 0, 0,
+                        run.Status == AgentRunStatus.Failed ? run.Error : null));
+                    return true;
+                });
             }
         }
         catch (Exception actualActivityObserverFailure) { _observerFailures.Enqueue((run.Id, actualActivityObserverFailure)); }
         if (_canonicalRuns.TryGetValue(run.Id, out var original)) original.Expected = run;
         if (RunChanged is { } observers)
             foreach (Action<AgentRun> observer in observers.GetInvocationList())
-                try { observer(run); }
+                try { TaskRunProcessProducerContext.Invoke(operation.OriginalProcessOwner, () => { observer(run); return true; }); }
                 catch (Exception actualObserverFailure) { _observerFailures.Enqueue((run.Id, actualObserverFailure)); }
     }
 
