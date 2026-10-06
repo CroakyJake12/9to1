@@ -135,6 +135,8 @@ public sealed record TaskExecutionSnapshot(
     public IReadOnlyList<TaskRunAttempt> Attempts { get; init; } = [];
     public Guid? CheckpointId { get; init; }
     public TaskRunRecoveryObservation? RecoveryObservation { get; init; }
+    /// <summary>Conserved original observations resolved by an owning live continuation; history supplies no authority.</summary>
+    public IReadOnlyList<TaskRunRecoveryObservation> RecoveryHistory { get; init; } = [];
 }
 
 public sealed record FollowUpDecision(

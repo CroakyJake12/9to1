@@ -857,6 +857,22 @@ public sealed partial class DulcheRuntime
             gate.SetResult();
             return original;
         }
+        public void RetainOriginalStartup(Task original)
+        {
+            lock (_gate)
+            {
+                RequireOriginalSubmissionOpen();
+                _originalSubmissions.Add(original); // One actual startup before this slot becomes visible.
+            }
+        }
+        public void PublishOriginalManagedReady()
+        {
+            lock (_gate)
+            {
+                RequireOriginalSubmissionOpen();
+                Endpoint = Endpoint with { State = EndpointState.Ready, UpdatedAt = DateTimeOffset.UtcNow };
+            }
+        }
         public void RequireOriginalSubmissionOpen()
         {
             lock (_gate)

@@ -191,6 +191,304 @@ public sealed class ChatCloudPermissionCallerTests
         Assert.Equal(0, rig.Client.Dispatches);
     }
 
+    [Fact]
+    public async Task Explicit_original_source_approval_continues_the_same_live_run_without_duplicating_the_accepted_user_message()
+    {
+        await using var rig = new Rig(temporary: false);
+        await rig.RunAsync(false);
+        var original = rig.Service.CurrentCanonicalTask!;
+        var user = Assert.Single(rig.Conversations.Messages);
+        var waiting = Assert.Single(rig.Stream.Where(value => value.Kind == ChatStreamEventKind.PermissionRequired)).PermissionRequest!;
+        await rig.Owner.ApproveOriginalAsync(waiting.Id, default);
+        Assert.Equal(0, rig.Client.Dispatches); // The approval callback did not dispatch.
+        rig.Client.RunApprovedOwnedFrame = true;
+        var continued = new List<ChatStreamEvent>();
+        await foreach (var value in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, default)) continued.Add(value);
+        var completed = rig.Service.CurrentCanonicalTask!;
+        Assert.Equal(original.TaskId, completed.TaskId);
+        Assert.Equal(original.ExecutionId, completed.ExecutionId);
+        Assert.Equal(original.ContextId, completed.ContextId);
+        Assert.Equal(TaskExecutionLifecycle.Completed, completed.State);
+        Assert.Null(completed.RecoveryObservation);
+        Assert.Equal(JsonSerializer.Serialize(original.RecoveryObservation), JsonSerializer.Serialize(Assert.Single(completed.RecoveryHistory)));
+        Assert.Single(completed.Attempts);
+        Assert.Equal(TaskRunAttemptState.Completed, completed.Attempts[0].State);
+        Assert.Equal(user, Assert.Single(rig.Conversations.Messages.Where(value => value.Role == MessageRole.User)));
+        Assert.DoesNotContain(continued, value => value.Kind == ChatStreamEventKind.UserMessage);
+        Assert.Single(continued.Where(value => value.Kind == ChatStreamEventKind.AssistantCompleted));
+        Assert.Equal(1, rig.Client.Dispatches);
+        Assert.Equal(0, rig.Workspace.Effects);
+    }
+
+    [Fact]
+    public async Task Refused_preapproval_preparation_keeps_actual_diagnostics_then_real_approval_continues_the_same_run()
+    {
+        await using var rig = new Rig(temporary: false);
+        await rig.RunAsync(false);
+        var original = rig.Service.CurrentCanonicalTask!;
+        var acceptedUser = Assert.Single(rig.Conversations.Messages);
+        var refusal = await Record.ExceptionAsync(async () =>
+        { await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, default)) { } });
+        Assert.NotNull(refusal);
+        Assert.Equal(0, rig.Client.Dispatches);
+        Assert.Equal(JsonSerializer.Serialize(original.RecoveryObservation), JsonSerializer.Serialize((await rig.Tasks.GetAsync(original.TaskId, default))!.RecoveryObservation));
+        var inspection = await rig.Tasks.InspectOriginalRecoveryAsync(original.TaskId, original.ExecutionId, default);
+        Assert.Contains(inspection.OriginalWork, value => value.Stage == "continuation.preparation" && value.Status == TaskStatus.Faulted);
+        var waiting = Assert.Single(rig.Stream.Where(value => value.Kind == ChatStreamEventKind.PermissionRequired)).PermissionRequest!;
+        await rig.Owner.ApproveOriginalAsync(waiting.Id, default);
+        rig.Client.RunApprovedOwnedFrame = true;
+        await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, default)) { }
+        Assert.Equal(original.TaskId, rig.Service.CurrentCanonicalTask!.TaskId);
+        Assert.Equal(original.ExecutionId, rig.Service.CurrentCanonicalTask.ExecutionId);
+        Assert.Equal(TaskExecutionLifecycle.Completed, rig.Service.CurrentCanonicalTask.State);
+        Assert.Equal(acceptedUser, Assert.Single(rig.Conversations.Messages.Where(value => value.Role == MessageRole.User)));
+        Assert.Equal(1, rig.Client.Dispatches);
+    }
+
+    [Fact]
+    public async Task Replaced_physical_accepted_input_refuses_continuation_before_task_cas_or_provider_dispatch()
+    {
+        await using var rig = new Rig(temporary: false);
+        await rig.RunAsync(false);
+        var original = rig.Service.CurrentCanonicalTask!;
+        var waiting = Assert.Single(rig.Stream.Where(value => value.Kind == ChatStreamEventKind.PermissionRequired)).PermissionRequest!;
+        await rig.Owner.ApproveOriginalAsync(waiting.Id, default);
+        rig.Conversations.Messages[0] = rig.Conversations.Messages[0] with { Content = "foreign replacement" };
+        var refusal = await Record.ExceptionAsync(async () =>
+        { await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, default)) { } });
+        Assert.NotNull(refusal);
+        var current = (await rig.Tasks.GetAsync(original.TaskId, default))!;
+        Assert.Equal(original.PersistenceRevision, current.PersistenceRevision);
+        Assert.Equal(JsonSerializer.Serialize(original.RecoveryObservation), JsonSerializer.Serialize(current.RecoveryObservation));
+        Assert.Empty(current.RecoveryHistory);
+        Assert.Equal(0, rig.Client.Dispatches);
+        Assert.Single(rig.Conversations.Messages);
+    }
+
+    [Fact]
+    public async Task Invoked_attempt_and_faulted_original_settlement_never_receive_the_no_attempt_continuation()
+    {
+        await using var rig = new Rig(); rig.Capture.AskDuringCapture = false;
+        rig.Capture.OpenActualAttemptBeforeAsk = true; rig.Settlement.FailWithOriginalAsk = true;
+        _ = await Record.ExceptionAsync(() => rig.RunAsync(false));
+        var original = rig.Service.CurrentCanonicalTask!;
+        var waiting = Assert.Single(rig.RemediationRows.Rows.Values);
+        await rig.Owner.ApproveOriginalAsync(waiting.Id, default);
+        var refusal = await Record.ExceptionAsync(async () =>
+        { await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, default)) { } });
+        Assert.NotNull(refusal);
+        var current = (await rig.Tasks.GetAsync(original.TaskId, default))!;
+        Assert.Equal(original.PersistenceRevision, current.PersistenceRevision);
+        Assert.Single(current.Attempts);
+        Assert.Equal(TaskRunOriginalSettlementOutcome.Failed, current.RecoveryObservation!.SettlementOutcome);
+        Assert.Empty(current.RecoveryHistory);
+        Assert.Equal(0, rig.Client.Dispatches);
+    }
+
+    [Fact]
+    public async Task Invoked_continuation_cas_fault_keeps_original_history_and_never_dispatches_or_blindly_retries()
+    {
+        await using var rig = new Rig();
+        await rig.RunAsync(false);
+        var original = rig.Service.CurrentCanonicalTask!;
+        var waiting = Assert.Single(rig.Stream.Where(value => value.Kind == ChatStreamEventKind.PermissionRequired)).PermissionRequest!;
+        await rig.Owner.ApproveOriginalAsync(waiting.Id, default);
+        var first = new IOException("actual continuation CAS first cause");
+        var second = new OperationCanceledException("actual continuation CAS faulted OCE sibling");
+        var actual = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        actual.SetException([first, second]); rig.TaskRows.ContinuationWrite = actual.Task;
+        var failed = await Record.ExceptionAsync(async () =>
+        { await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, default)) { } });
+        Assert.NotNull(failed);
+        Assert.Contains(Leaves(failed!), value => ReferenceEquals(value, first));
+        Assert.Contains(Leaves(failed!), value => ReferenceEquals(value, second));
+        var retry = await Record.ExceptionAsync(async () =>
+        { await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, default)) { } });
+        Assert.NotNull(retry);
+        Assert.Equal(1, rig.TaskRows.ContinuationWriteCalls);
+        Assert.Equal(0, rig.Client.Dispatches);
+        Assert.Equal(JsonSerializer.Serialize(original.RecoveryObservation), JsonSerializer.Serialize((await rig.Tasks.GetAsync(original.TaskId, default))!.RecoveryObservation));
+        var inspection = await rig.Tasks.InspectOriginalRecoveryAsync(original.TaskId, original.ExecutionId, default);
+        Assert.Contains(inspection.OriginalWork, value => value.Stage == "continuation.task-write" && value.Status == TaskStatus.Faulted);
+    }
+
+    [Fact]
+    public async Task An_actual_raw_provider_callback_Ask_without_recorded_attempt_is_not_a_no_dispatcher_absence_witness()
+    {
+        await using var rig = new Rig(); rig.Capture.AskDuringCapture = false;
+        await rig.RunAsync(false);
+        var original = rig.Service.CurrentCanonicalTask!;
+        Assert.Empty(original.Attempts);
+        var waiting = Assert.Single(rig.Stream.Where(value => value.Kind == ChatStreamEventKind.PermissionRequired)).PermissionRequest!;
+        await rig.Owner.ApproveOriginalAsync(waiting.Id, default);
+        rig.Client.RunApprovedOwnedFrame = true;
+        var refused = await Record.ExceptionAsync(async () =>
+        { await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, default)) { } });
+        Assert.NotNull(refused);
+        var current = (await rig.Tasks.GetAsync(original.TaskId, default))!;
+        Assert.Equal(original.PersistenceRevision, current.PersistenceRevision);
+        Assert.Empty(current.RecoveryHistory);
+        Assert.Equal(0, rig.Client.Dispatches);
+        Assert.Equal(1, rig.Client.StreamDisposals);
+        Assert.Equal(JsonSerializer.Serialize(original.RecoveryObservation), JsonSerializer.Serialize(current.RecoveryObservation));
+    }
+
+    [Fact]
+    public async Task Canonical_initial_and_resumed_requests_use_one_detached_input_when_caller_lists_and_model_capabilities_change()
+    {
+        await using var rig = new Rig(temporary: false);
+        var capabilities = new List<ActiveCapability>();
+        var images = new List<string>();
+        var modelCapabilities = new HashSet<ToolCapability> { ToolCapability.Text };
+        var selected = rig.Provider.Model.Model with { Name = rig.Provider.Model.Key, Capabilities = modelCapabilities };
+        var original = rig.Service.SendAsync(rig.Conversation, "immutable original input", selected, EffortLevel.Medium,
+            capabilities, "controlled", "", DuoMode.Solo, null, null, null, images, default,
+            taskExecutionIntent: TaskRunExecutionIntent.CanonicalAgenticTask);
+        // These mutations occur BEFORE first enumeration, not just after the initial request.
+        capabilities.Add(new("foreign", "foreign", "", "foreign instruction", "", ""));
+        images.Add("foreign image"); modelCapabilities.Clear();
+        await foreach (var value in original) rig.Stream.Add(value);
+        var task = rig.Service.CurrentCanonicalTask!;
+        var first = Assert.Single(rig.Capture.ChatWire);
+        Assert.DoesNotContain("foreign instruction", first, StringComparison.Ordinal);
+        Assert.DoesNotContain("foreign image", first, StringComparison.Ordinal);
+        var waiting = Assert.Single(rig.Stream.Where(value => value.Kind == ChatStreamEventKind.PermissionRequired)).PermissionRequest!;
+        await rig.Owner.ApproveOriginalAsync(waiting.Id, default);
+        rig.Client.RunApprovedOwnedFrame = true;
+        await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(task.TaskId, task.ExecutionId, default)) { }
+        Assert.Collection(rig.Capture.ChatWire, value => Assert.Equal(first, value), value => Assert.Equal(first, value));
+        Assert.Single(rig.Conversations.Messages.Where(value => value.Role == MessageRole.User));
+        Assert.Equal(task.ExecutionId, rig.Service.CurrentCanonicalTask!.ExecutionId);
+        Assert.Equal(TaskExecutionLifecycle.Completed, rig.Service.CurrentCanonicalTask.State);
+    }
+
+    [Fact]
+    public async Task Faulted_actual_accepted_history_read_preserves_all_direct_causes_before_any_permission_scope_or_task_write()
+    {
+        await using var rig = new Rig(temporary: false);
+        await rig.RunAsync(false);
+        var original = rig.Service.CurrentCanonicalTask!;
+        var oce = new OperationCanceledException("actual faulted history read first cause");
+        var sibling = new IOException("actual faulted history read sibling");
+        var actual = new TaskCompletionSource<IReadOnlyList<ChatMessage>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        actual.SetException([oce, sibling]); rig.Conversations.OverrideHistory = actual.Task;
+        var continued = DrainAsync();
+        var failed = await Record.ExceptionAsync(() => continued);
+        Assert.NotNull(failed);
+        Assert.True(continued.IsFaulted);
+        Assert.False(continued.IsCanceled);
+        Assert.Contains(Leaves(failed!), value => ReferenceEquals(value, oce));
+        Assert.Contains(Leaves(failed!), value => ReferenceEquals(value, sibling));
+        var current = (await rig.Tasks.GetAsync(original.TaskId, default))!;
+        Assert.Equal(original.PersistenceRevision, current.PersistenceRevision);
+        Assert.Equal(JsonSerializer.Serialize(original.RecoveryObservation), JsonSerializer.Serialize(current.RecoveryObservation));
+        Assert.Empty(current.RecoveryHistory);
+        Assert.Equal(0, rig.Client.Dispatches);
+        Assert.Empty(rig.Policy.Grants);
+        var inspected = await rig.Tasks.InspectOriginalRecoveryAsync(original.TaskId, original.ExecutionId, default);
+        Assert.Contains(inspected.OriginalWork, value => value.Stage == "continuation.input-history" && value.Status == TaskStatus.Faulted);
+        Assert.Contains(inspected.OriginalWork, value => value.Stage == "continuation.preparation" && value.Status == TaskStatus.Faulted);
+        async Task DrainAsync()
+        { await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, default)) { } }
+    }
+
+    [Fact]
+    public async Task Genuine_canceled_actual_history_read_stays_canceled_without_dispatch_or_losing_its_original_status()
+    {
+        await using var rig = new Rig(temporary: false);
+        await rig.RunAsync(false);
+        var original = rig.Service.CurrentCanonicalTask!;
+        using var withdrawal = new CancellationTokenSource(); withdrawal.Cancel();
+        rig.Conversations.OverrideHistory = Task.FromCanceled<IReadOnlyList<ChatMessage>>(withdrawal.Token);
+        var continued = DrainAsync();
+        var refusal = await Record.ExceptionAsync(() => continued);
+        Assert.IsAssignableFrom<OperationCanceledException>(refusal);
+        Assert.True(continued.IsCanceled);
+        Assert.False(continued.IsFaulted);
+        var current = (await rig.Tasks.GetAsync(original.TaskId, default))!;
+        Assert.Equal(original.PersistenceRevision, current.PersistenceRevision);
+        Assert.Empty(current.RecoveryHistory);
+        Assert.Equal(0, rig.Client.Dispatches);
+        Assert.Empty(rig.Policy.Grants);
+        var inspected = await rig.Tasks.InspectOriginalRecoveryAsync(original.TaskId, original.ExecutionId, default);
+        Assert.Contains(inspected.OriginalWork, value => value.Stage == "continuation.input-history" && value.Status == TaskStatus.Canceled);
+        Assert.Contains(inspected.OriginalWork, value => value.Stage == "continuation.preparation" && value.Status == TaskStatus.Canceled);
+        async Task DrainAsync()
+        { await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, default)) { } }
+    }
+
+    [Fact]
+    public async Task One_actual_service_completes_136_source_approved_same_run_continuations_without_leaking_original_admission_capacity()
+    {
+        await using var rig = new Rig();
+        var completedTasks = new HashSet<Guid>();
+        var completedRuns = new HashSet<Guid>();
+        for (var index = 0; index < 136; index++)
+        {
+            rig.Stream.Clear(); rig.Client.RunApprovedOwnedFrame = false;
+            await rig.RunAsync(false);
+            var original = rig.Service.CurrentCanonicalTask!;
+            var required = Assert.Single(rig.Stream.Where(value => value.Kind == ChatStreamEventKind.PermissionRequired));
+            await rig.Owner.ApproveOriginalAsync(required.PermissionRequest!.Id, default);
+            rig.Client.RunApprovedOwnedFrame = true;
+            var actual = new List<ChatStreamEvent>();
+            await foreach (var value in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, default)) actual.Add(value);
+            var completed = rig.Service.CurrentCanonicalTask!;
+            Assert.Equal(original.TaskId, completed.TaskId); Assert.Equal(original.ExecutionId, completed.ExecutionId);
+            Assert.Equal(original.ContextId, completed.ContextId); Assert.Equal(TaskExecutionLifecycle.Completed, completed.State);
+            Assert.True(completedTasks.Add(completed.TaskId)); Assert.True(completedRuns.Add(completed.ExecutionId));
+            Assert.Equal(JsonSerializer.Serialize(original.RecoveryObservation), JsonSerializer.Serialize(Assert.Single(completed.RecoveryHistory)));
+            Assert.Single(actual.Where(value => value.Kind == ChatStreamEventKind.AssistantCompleted));
+            Assert.DoesNotContain(actual, value => value.Kind == ChatStreamEventKind.UserMessage);
+            Assert.Null(rig.Owner.GetOriginalOwner(required.PermissionRequest.Id)); // Actual resolved source record retired.
+        }
+        Assert.Equal(136, completedTasks.Count); Assert.Equal(136, completedRuns.Count);
+        Assert.Equal(136, rig.Client.Dispatches);
+        Assert.Equal(136, rig.Events.Observed.Count(value => value.SafeMetadata?.GetValueOrDefault("resolutionKind") == "live-never-started-original"));
+        Assert.Equal(0, rig.Workspace.Effects);
+    }
+
+    [Fact]
+    public async Task Held_then_faulted_actual_resumed_cleanup_refuses_retirement_and_preserves_original_recovery_history()
+    {
+        await using var rig = new Rig();
+        await rig.RunAsync(false);
+        var original = rig.Service.CurrentCanonicalTask!;
+        var required = Assert.Single(rig.Stream.Where(value => value.Kind == ChatStreamEventKind.PermissionRequired));
+        await rig.Owner.ApproveOriginalAsync(required.PermissionRequest!.Id, default);
+        var held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var cause = new IOException("actual resumed stream cleanup failed");
+        var resumedDisposeEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        rig.Client.NextDisposeEntered = resumedDisposeEntered;
+        rig.Client.RunApprovedOwnedFrame = true; rig.Client.OriginalDispose = held.Task;
+        var resumed = DrainAsync();
+        try
+        {
+            await resumedDisposeEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.True(Assert.Single(rig.Capture.ApprovedRunningOriginals).IsCompletedSuccessfully);
+            Assert.False(resumed.IsCompleted);
+            var waiting = (await rig.Tasks.GetAsync(original.TaskId, default))!;
+            Assert.Equal(TaskExecutionLifecycle.Running, waiting.State);
+            Assert.Equal(original.TaskId, waiting.TaskId); Assert.Equal(original.ExecutionId, waiting.ExecutionId);
+            Assert.Equal(TaskRunAttemptState.Running, Assert.Single(waiting.Attempts).State);
+            Assert.DoesNotContain(rig.Stream, value => value.Kind == ChatStreamEventKind.AssistantCompleted);
+            Assert.Single(waiting.RecoveryHistory);
+            Assert.Empty(rig.Events.Observed.Where(value => value.SafeMetadata?.GetValueOrDefault("resolutionKind") == "live-never-started-original"));
+            Assert.NotNull(rig.Owner.GetOriginalOwner(required.PermissionRequest.Id));
+        }
+        finally { held.TrySetException(cause); }
+        var failure = await Record.ExceptionAsync(() => resumed);
+        Assert.NotNull(failure); Assert.Contains(Leaves(failure!), value => ReferenceEquals(value, cause));
+        var current = (await rig.Tasks.GetAsync(original.TaskId, default))!;
+        Assert.Equal(TaskExecutionLifecycle.Suspended, current.State);
+        Assert.NotNull(current.RecoveryObservation);
+        Assert.Equal(JsonSerializer.Serialize(original.RecoveryObservation), JsonSerializer.Serialize(Assert.Single(current.RecoveryHistory)));
+        Assert.Empty(rig.Events.Observed.Where(value => value.SafeMetadata?.GetValueOrDefault("resolutionKind") == "live-never-started-original"));
+        Assert.NotNull(rig.Owner.GetOriginalOwner(required.PermissionRequest.Id));
+        async Task DrainAsync()
+        { await foreach (var _ in rig.Service.ContinueUnstartedOriginalAsync(original.TaskId, original.ExecutionId, default)) { } }
+    }
+
     private static IEnumerable<Exception> Leaves(Exception cause)
     {
         if (cause is AggregateException aggregate)
@@ -216,11 +514,13 @@ public sealed class ChatCloudPermissionCallerTests
         public Workspace Workspace { get; } = new(); public ToolsOwner ToolOwner { get; } = new();
         public Conversation Conversation { get; } = new(Guid.NewGuid(), HavenMode.Studio, ConversationKind.StudioChat,
             "synthetic caller", null, null, false, true, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch);
+        public Conversations Conversations { get; } = new();
         public ChatSessionService Service { get; }
         public List<ChatStreamEvent> Stream { get; } = [];
         private readonly string _root = Path.Combine(Path.GetTempPath(), "astra-ask-caller-" + Guid.NewGuid().ToString("N"));
-        public Rig()
+        public Rig(bool temporary = true)
         {
+            Conversation = Conversation with { IsTemporary = temporary };
             Directory.CreateDirectory(_root);
             Source = new(Actors, Policy);
             Authority = new(Actors, new ProviderRegistry(Provider), new Configurations(), new Privacy(), new(new Permissions()), cloud: new ControlledCloudAdmission());
@@ -230,10 +530,10 @@ public sealed class ChatCloudPermissionCallerTests
             Settlement = new(Runtime, () => originalCapture?.OriginalAsk);
             Tasks = tasks = new(TaskRows, Events, admissionAuthority: Authority, runtimeSettlement: Settlement);
             Remediation = new(RemediationRows, new Secrets(), Events, Registry);
-            Owner = new(Source, Authority, () => Tasks, Remediation, RemediationRows, Registry);
+            Owner = new(Source, Authority, () => Tasks, Remediation, RemediationRows, Registry, Events);
             Capture = originalCapture = new(Tasks, Authority, Source, Provider, Runtime);
             Client = new(Capture);
-            Service = new(new Conversations(), Client, new CapabilityPreflightService(), new Safety(),
+            Service = new(Conversations, Client, new CapabilityPreflightService(), new Safety(),
                 new WorkspaceToolRuntime(Workspace), new ComputerToolRuntime(new Computer()),
                 taskCoordinator: Tasks, taskToolOwner: ToolOwner, taskProviderContextCapture: Capture, taskCloudPermissionRemediation: Owner);
         }
@@ -265,8 +565,10 @@ public sealed class ChatCloudPermissionCallerTests
     {
         public bool AskDuringCapture = true;
         public int ChatCaptures; public int ToolCaptures;
+        public List<string> ChatWire { get; } = [];
         public bool OpenActualAttemptBeforeAsk;
         public TaskRunCloudPermissionRequiredException? OriginalAsk;
+        public List<Task<TaskExecutionSnapshot>> ApprovedRunningOriginals { get; } = [];
         public async Task AskAsync(ProviderExecutionContext observation, CancellationToken token)
         {
             var actual = await tasks.GetAsync(observation.TaskId, token) ?? throw new InvalidOperationException();
@@ -279,8 +581,26 @@ public sealed class ChatCloudPermissionCallerTests
             try { await using var gate = await source.AcquireOriginalAsync(actual.OwnerBinding!, candidate, token); }
             catch (TaskRunCloudPermissionRequiredException ask) { OriginalAsk = ask; throw; }
         }
+        public async Task<bool> RunApprovedOriginalFrameAsync(ProviderExecutionContext observation, Action actualDispatch, CancellationToken token)
+        {
+            var current = (await tasks.GetAsync(observation.TaskId, token))!;
+            var candidate = await authority.CaptureSelectedRouteAsync(current, provider.Model, [ToolCapability.Text], [], token);
+            await using var scope = await source.AcquireOriginalAsync(current.OwnerBinding!, candidate, token);
+            var issued = await tasks.StartAttemptAsync(current.TaskId, current.ExecutionId, candidate, token);
+            await runtime.RegisterOriginalAttemptAsync(issued, token);
+            var actualRunning = tasks.MarkAttemptRunningAsync(current.TaskId, current.ExecutionId, issued.AttemptId, token);
+            ApprovedRunningOriginals.Add(actualRunning);
+            await actualRunning.ConfigureAwait(false);
+            var actual = scope.RunOriginalInvocation(() => runtime.StartOriginalFrameAsync(issued, _ =>
+            { actualDispatch(); return Task.FromResult(false); }, token));
+            return await actual;
+        }
         public ValueTask CaptureOriginalAsync(TaskExecutionSnapshot current, OllamaChatRequest request, TaskRunContextInventory inventory, CancellationToken token)
-        { ChatCaptures++; return AskDuringCapture ? new(AskAsync(request.ExecutionContext!, token)) : ValueTask.CompletedTask; }
+        {
+            ChatCaptures++;
+            ChatWire.Add(JsonSerializer.Serialize(new { request.Model, request.Messages, request.Effort, request.SystemPrompt, request.EnableTools, request.Options }));
+            return AskDuringCapture ? new(AskAsync(request.ExecutionContext!, token)) : ValueTask.CompletedTask;
+        }
         public ValueTask CaptureOriginalAsync(TaskExecutionSnapshot current, OllamaToolRequest request, TaskRunContextInventory inventory, CancellationToken token)
         { ToolCaptures++; return AskDuringCapture ? new(AskAsync(request.ExecutionContext!, token)) : ValueTask.CompletedTask; }
     }
@@ -288,7 +608,9 @@ public sealed class ChatCloudPermissionCallerTests
     {
         private readonly Capture _capture = capture;
         public int Dispatches; public int StreamDisposals;
+        public bool RunApprovedOwnedFrame;
         public Task? OriginalDispose;
+        public TaskCompletionSource? NextDisposeEntered = null;
         public Task<OllamaToolResponse>? OriginalToolFailure;
         public TaskCompletionSource DisposeEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Task<bool> IsAvailableAsync(CancellationToken token) => Task.FromResult(true);
@@ -304,17 +626,25 @@ public sealed class ChatCloudPermissionCallerTests
             public IAsyncEnumerator<string> GetAsyncEnumerator(CancellationToken ignored = default) => this;
             public ValueTask<bool> MoveNextAsync() => new(MoveOriginalAsync());
             private async Task<bool> MoveOriginalAsync()
-            { await owner._capture.AskAsync(request.ExecutionContext!, token); owner.Dispatches++; return false; }
+            {
+                if (owner.RunApprovedOwnedFrame)
+                    return await owner._capture.RunApprovedOriginalFrameAsync(request.ExecutionContext!, () => owner.Dispatches++, token);
+                await owner._capture.AskAsync(request.ExecutionContext!, token); owner.Dispatches++; return false;
+            }
             public ValueTask DisposeAsync()
-            { owner.StreamDisposals++; owner.DisposeEntered.TrySetResult(); return owner.OriginalDispose is { } actual ? new(actual) : ValueTask.CompletedTask; }
+            { owner.StreamDisposals++; owner.DisposeEntered.TrySetResult(); owner.NextDisposeEntered?.TrySetResult(); return owner.OriginalDispose is { } actual ? new(actual) : ValueTask.CompletedTask; }
         }
 
     }
     /// <summary>Controlled failure of the actual settlement PORT Task; the real registry remains retained
     /// and is actually joined during Rig disposal. This is not production settlement authority.</summary>
-    private sealed class ControlledSettlement(TaskRunOriginalFrameOwner original, Func<Exception?> exactAsk) : ITaskRunRuntimeSettlement
+    private sealed class ControlledSettlement(TaskRunOriginalFrameOwner original, Func<Exception?> exactAsk)
+        : ITaskRunRuntimeSettlement, ITaskRunOriginalAttemptRetirement
     {
         public bool FailWithOriginalAsk; public int Calls; public Task? ActualReturned;
+        public ValueTask RetireAcknowledgedOriginalAttemptAsync(TaskRunOriginalRetirementAcknowledgment receipt, CancellationToken token) =>
+            original.RetireAcknowledgedOriginalAttemptAsync(receipt, token); // Forward SAME private actual receipt to real owner.
+
         public Task AwaitSettlementAsync(Guid task, Guid run, Guid attempt, CancellationToken token)
         {
             Calls++;
@@ -341,10 +671,13 @@ public sealed class ChatCloudPermissionCallerTests
         private readonly Dictionary<Guid, string> _rows = [];
         public Task<TaskExecutionSnapshot?>? OverrideRead = null;
         public bool RefuseSuspension;
+        public Task? ContinuationWrite; public int ContinuationWriteCalls;
         public TaskCompletionSource OverrideReadEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Task UpsertAsync(TaskExecutionSnapshot value, CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
+            if (value.RecoveryObservation is null && value.RecoveryHistory.Count > 0 && ContinuationWrite is { } actual)
+            { ContinuationWriteCalls++; return actual; }
             if (RefuseSuspension && value.State == TaskExecutionLifecycle.Suspended) throw new TaskExecutionRevisionConflictException(value.TaskId, value.PersistenceRevision - 1, value.PersistenceRevision);
             var before = _rows.TryGetValue(value.TaskId, out var json) ? JsonSerializer.Deserialize<TaskExecutionSnapshot>(json) : null;
             if (value.PersistenceRevision != (before?.PersistenceRevision ?? 0) + 1) throw new TaskExecutionRevisionConflictException(value.TaskId, value.PersistenceRevision - 1, before?.PersistenceRevision ?? 0);
@@ -366,7 +699,8 @@ public sealed class ChatCloudPermissionCallerTests
         public Task<IReadOnlyList<RemediationRequest>> GetWaitingAsync(CancellationToken token) => Task.FromResult<IReadOnlyList<RemediationRequest>>(Rows.Values.Where(value => value.State is RemediationState.Waiting or RemediationState.InProgress).ToArray());
     }
     private sealed class Events : IExecutionEventSink
-    { public Action<ExecutionEvent>? OnEvent = null; public bool TryPublish(ExecutionEvent value) { OnEvent?.Invoke(value); return true; } }
+    { public Action<ExecutionEvent>? OnEvent = null; public List<ExecutionEvent> Observed { get; } = [];
+      public bool TryPublish(ExecutionEvent value) { OnEvent?.Invoke(value); Observed.Add(value); return true; } }
     private sealed class Actors : IAuthenticatedResourceActorSource
     {
         public AuthenticatedResourceActor? Current = new("synthetic-task-owner", "synthetic-task-profile", null, null, "current-revision");
@@ -411,9 +745,11 @@ public sealed class ChatCloudPermissionCallerTests
     private sealed class Conversations : IConversationRepository
     {
         public Conversation? Current; public int Writes; public int Reads; public List<ChatMessage> Messages { get; } = [];
+        public Task<IReadOnlyList<ChatMessage>>? OverrideHistory = null;
         public Task<Conversation?> GetAsync(Guid id, CancellationToken token) { Reads++; return Task.FromResult(Current?.Id == id ? Current : null); }
         public Task<IReadOnlyList<Conversation>> GetRecentAsync(HavenMode? mode, int count, CancellationToken token) => Task.FromResult<IReadOnlyList<Conversation>>(Current is null ? [] : [Current]);
-        public Task<IReadOnlyList<ChatMessage>> GetMessagesAsync(Guid id, CancellationToken token) => Task.FromResult<IReadOnlyList<ChatMessage>>(Messages.Where(value => value.ConversationId == id).ToArray());
+        public Task<IReadOnlyList<ChatMessage>> GetMessagesAsync(Guid id, CancellationToken token) => OverrideHistory
+            ?? Task.FromResult<IReadOnlyList<ChatMessage>>(Messages.Where(value => value.ConversationId == id).ToArray());
         public Task UpsertConversationAsync(Conversation value, CancellationToken token) { Writes++; Current = value; return Task.CompletedTask; }
         public Task AddMessageAsync(ChatMessage message, CancellationToken token) { Writes++; Messages.Add(message); return Task.CompletedTask; }
         public Task DeleteConversationAsync(Guid id, CancellationToken token) => throw new NotSupportedException();

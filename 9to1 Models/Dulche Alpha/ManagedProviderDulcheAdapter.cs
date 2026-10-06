@@ -26,6 +26,12 @@ public interface IOriginalDulcheProviderContextSource
         CancellationToken cancellationToken);
 }
 
+/// <summary>Finite caller-lifetime callback scope only. It is not model, route, paid-use or tool authority.</summary>
+public interface IDulcheOriginalFactoryCallbackScope
+{
+    T RunOriginalFactoryInvocation<T>(Func<T> actualCallback);
+}
+
 /// <summary>
 /// Adapts the selected RAW provider; never calls the resilient router from inside a registered frame.
 /// A Task/Run issuer lease is borrowed, retained by the shared frame owner, and never disposed here.
@@ -58,29 +64,87 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
     }
 
     /// <summary>Composition must retain/join this original factory task before disposing its configuration owner.</summary>
-    public static async Task<ManagedProviderDulcheAdapter> CreateAsync(string providerId,
+    public static Task<ManagedProviderDulcheAdapter> CreateAsync(string providerId,
         IModelProviderRegistry registry, IProviderConfigurationStore configurations,
         TaskExecutionCoordinator coordinator, ITaskRunOriginalFrameOwner frames,
         IOriginalDulcheProviderToolSource? tools = null, CancellationToken cancellationToken = default,
         IOriginalDulcheProviderContextSource? contextSource = null, ITaskRunProviderContextAuthority? contextAuthority = null)
+        => CreateCoreAsync(providerId, registry, configurations, coordinator, frames, tools, cancellationToken, contextSource, contextAuthority, null);
+
+    private static async Task<ManagedProviderDulcheAdapter> CreateCoreAsync(string providerId,
+        IModelProviderRegistry registry, IProviderConfigurationStore configurations,
+        TaskExecutionCoordinator coordinator, ITaskRunOriginalFrameOwner frames,
+        IOriginalDulcheProviderToolSource? tools, CancellationToken cancellationToken,
+        IOriginalDulcheProviderContextSource? contextSource, ITaskRunProviderContextAuthority? contextAuthority,
+        IDulcheOriginalFactoryCallbackScope? actualFactoryOwner)
     {
         ArgumentNullException.ThrowIfNull(registry); ArgumentNullException.ThrowIfNull(configurations);
         ArgumentNullException.ThrowIfNull(coordinator); ArgumentNullException.ThrowIfNull(frames);
-        var originalConfiguration = configurations.GetAsync(providerId, cancellationToken)
-            ?? throw new InvalidOperationException("The configuration owner returned no original task.");
+        if (actualFactoryOwner is not null) cancellationToken.ThrowIfCancellationRequested();
+        Task<ProviderConfiguration?> originalConfiguration;
+        try
+        {
+            originalConfiguration = (actualFactoryOwner is null ? configurations.GetAsync(providerId, cancellationToken)
+                : actualFactoryOwner.RunOriginalFactoryInvocation(() => configurations.GetAsync(providerId, cancellationToken)))
+                ?? throw new InvalidOperationException("The configuration owner returned no original task.");
+        }
+        catch (OperationCanceledException original) when (actualFactoryOwner is not null)
+        { throw new AggregateException("The actual configuration callback faulted synchronously.", original); }
         ProviderConfiguration? configuration;
         try { configuration = await originalConfiguration.ConfigureAwait(false); }
+        catch (OperationCanceledException original) when (actualFactoryOwner is not null && originalConfiguration.IsFaulted)
+        {
+            var causes = new List<Exception>(); Add(causes, original);
+            foreach (var cause in originalConfiguration.Exception!.InnerExceptions) Add(causes, cause);
+            throw new AggregateException("The original configuration task faulted.", causes);
+        }
         catch (Exception error) { ThrowTask(error, originalConfiguration); throw; }
-        var provider = registry.GetRequired(providerId); // The actual selected raw provider, not IProviderModelClient routing.
-        if (configuration is null || !configuration.IsEnabled || configuration.Id != provider.Id
-            || configuration.Kind != provider.Kind || configuration.IsLocal != provider.IsLocal
-            || !Uri.TryCreate(configuration.Endpoint, UriKind.Absolute, out var target)
-            || target.Scheme is not ("http" or "https") || !string.IsNullOrEmpty(target.UserInfo)
-            || !string.IsNullOrEmpty(target.Fragment) || !string.IsNullOrEmpty(target.Query)
-            || target.Scheme != Uri.UriSchemeHttps && !target.IsLoopback)
-            throw new UnauthorizedAccessException("No genuine enabled, matching configured provider target is available.");
+        IModelProvider provider;
+        try
+        {
+            provider = actualFactoryOwner is null ? registry.GetRequired(providerId)
+                : actualFactoryOwner.RunOriginalFactoryInvocation(() => registry.GetRequired(providerId)); // Exact raw provider, never resilient recursion.
+        }
+        catch (OperationCanceledException original) when (actualFactoryOwner is not null)
+        { throw new AggregateException("The actual registry callback faulted synchronously.", original); }
+        Uri ValidateOriginalTarget()
+        {
+            if (configuration is null || !configuration.IsEnabled || configuration.Id != provider.Id
+                || configuration.Kind != provider.Kind || configuration.IsLocal != provider.IsLocal
+                || !Uri.TryCreate(configuration.Endpoint, UriKind.Absolute, out var target)
+                || target.Scheme is not ("http" or "https") || !string.IsNullOrEmpty(target.UserInfo)
+                || !string.IsNullOrEmpty(target.Fragment) || !string.IsNullOrEmpty(target.Query)
+                || target.Scheme != Uri.UriSchemeHttps && !target.IsLoopback)
+                throw new UnauthorizedAccessException("No genuine enabled, matching configured provider target is available.");
+            return target;
+        }
+        Uri originalTarget;
+        try
+        {
+            originalTarget = actualFactoryOwner is null ? ValidateOriginalTarget()
+                : actualFactoryOwner.RunOriginalFactoryInvocation(ValidateOriginalTarget);
+        }
+        catch (OperationCanceledException original) when (actualFactoryOwner is not null)
+        { throw new AggregateException("The actual provider metadata callback faulted synchronously.", original); }
         cancellationToken.ThrowIfCancellationRequested();
-        return new(provider, target, coordinator, frames, tools, contextSource, contextAuthority);
+        return new(provider, originalTarget, coordinator, frames, tools, contextSource, contextAuthority);
+    }
+
+    /// <summary>Caller publishes this actual factory Task before releasing originalStart. The
+    /// original nested configuration/factory failures are retained directly, never hidden by await.</summary>
+    public static async Task<ManagedProviderDulcheAdapter> CreateAfterPublicationAsync(Task originalStart, string providerId,
+        IModelProviderRegistry registry, IProviderConfigurationStore configurations,
+        TaskExecutionCoordinator coordinator, ITaskRunOriginalFrameOwner frames,
+        IOriginalDulcheProviderToolSource? tools = null, CancellationToken cancellationToken = default,
+        IOriginalDulcheProviderContextSource? contextSource = null, ITaskRunProviderContextAuthority? contextAuthority = null,
+        IDulcheOriginalFactoryCallbackScope? actualFactoryOwner = null)
+    {
+        ArgumentNullException.ThrowIfNull(originalStart);
+        await originalStart.ConfigureAwait(false);
+        var actual = CreateCoreAsync(providerId, registry, configurations, coordinator, frames, tools,
+            cancellationToken, contextSource, contextAuthority, actualFactoryOwner);
+        try { return await actual.ConfigureAwait(false); }
+        catch (Exception error) { ThrowTask(error, actual); throw; }
     }
 
     public string ProviderId => _provider.Id;
@@ -99,7 +163,7 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
             if (_endpoints.ContainsKey(endpoint.EndpointId))
                 return ValueTask.FromResult(Failure("This original endpoint was already started.", endpoint.EndpointId));
             if (_endpoints.Count >= Capacity) throw new InvalidOperationException("Original provider endpoint custody is full.");
-            owner = new(endpoint.EndpointId);
+            owner = new(this, endpoint.EndpointId);
             _endpoints.Add(owner.Id, owner);
         }
         return new(StartOwned(owner, async () =>
@@ -701,7 +765,7 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
             }
             // The whole original was enrolled by StartOwned before this callback. Shared owner
             // APIs/permission/tool callbacks never execute while adapter state is locked.
-            original = body() ?? throw new InvalidOperationException("No original provider control task was returned.");
+            original = InvokePhysicalOriginal(owner, body) ?? throw new InvalidOperationException("No original provider control task was returned.");
             RetainRaw(owner, original);
             return await original.ConfigureAwait(false);
         }
@@ -913,6 +977,16 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
             Throw(errors);
         }
     }
+    /// <summary>Finite, lock-free dependency check for a containing lifetime owner before it seals close.
+    /// The physical stack survives restored ExecutionContext inside an actual provider callback.</summary>
+    public void RequireIndependentOriginalProviderJoin()
+    {
+        for (var phase = _executing.Value; phase is not null; phase = phase.Parent)
+            if (phase.IsLive) throw new InvalidOperationException("A provider original cannot join its containing service.");
+        if (_physicalOriginalCalls?.Any(actual => ReferenceEquals(actual.OriginalOwner, this)) == true)
+            throw new InvalidOperationException("A provider original cannot join its containing service.");
+    }
+
     private bool IsLiveOriginalCall(Endpoint owner)
     {
         for (var phase = _executing.Value; phase is not null; phase = phase.Parent)
@@ -933,8 +1007,9 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
         public bool IsLive => Volatile.Read(ref _live) != 0;
         public void Retire() => Interlocked.Exchange(ref _live, 0);
     }
-    private sealed class Endpoint(string id)
+    private sealed class Endpoint(ManagedProviderDulcheAdapter originalOwner, string id)
     {
+        public readonly ManagedProviderDulcheAdapter OriginalOwner = originalOwner;
         public readonly string Id = id;
         public readonly List<Request> Requests = new();
         public readonly List<Task> Work = new(), RawTasks = new();

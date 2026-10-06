@@ -10,7 +10,7 @@ namespace Dulche.Runtime.Tests;
 
 /// <summary>Actual adapter/runtime/frame/coordinator implementations; explicitly synthetic raw
 /// providers, durable repository, permission leases and context scope. No network/OS authority.</summary>
-public sealed class ManagedProviderDulcheAdapterOriginalTests
+public sealed partial class ManagedProviderDulcheAdapterOriginalTests
 {
     [Fact]
     public async Task Actual_runtime_managed_start_and_original_context_submission_reach_selected_raw_provider()

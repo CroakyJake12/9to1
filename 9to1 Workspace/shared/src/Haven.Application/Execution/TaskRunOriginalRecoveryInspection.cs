@@ -64,6 +64,8 @@ public sealed class TaskRunOriginalRecoveryInspection
             RequiredPermissionScopes = steer.RequiredPermissionScopes is { } scopes ? Array.AsReadOnly(scopes.ToArray()) : null
         }).ToArray()),
         Queue = Array.AsReadOnly(value.Queue.ToArray()),
+        RecoveryHistory = Array.AsReadOnly(value.RecoveryHistory.Select(history => history with
+        { Causes = Array.AsReadOnly(history.Causes.ToArray()) }).ToArray()),
         ApprovedPermissionScopes = Array.AsReadOnly(value.ApprovedPermissionScopes.ToArray()),
         Attempts = Array.AsReadOnly(value.Attempts.Select(attempt => attempt with
         {

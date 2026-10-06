@@ -7,7 +7,7 @@ namespace Haven.Core.Tests;
 /// <summary>Real central policy, Task issuer, coordinator, remediation registry and owner;
 /// explicitly synthetic actor/catalogue/repositories. No provider request, UI click, real account,
 /// Home authority, credential, paid action or monetary balance is manufactured.</summary>
-public sealed class TaskRunCloudPermissionRemediationTests
+public sealed partial class TaskRunCloudPermissionRemediationTests
 {
     [Fact]
     public async Task Real_original_Ask_requires_explicit_same_scope_approval_and_never_starts_a_provider()

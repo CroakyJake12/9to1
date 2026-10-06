@@ -32,6 +32,7 @@ public sealed partial class DulcheRuntime
         => IsLiveEndpointPhase(_originalSubmitting.Value, endpoint)
             || IsLiveEndpointPhase(_originalExecutingEndpoint.Value, endpoint)
             || IsLiveEndpointPhase(_originalRetiringEndpoint.Value, endpoint)
+            || IsLiveEndpointPhase(_originalStartingEndpoint.Value, endpoint)
             || _physicalOriginalEndpointCalls?.Any(actual => ReferenceEquals(actual, endpoint)) == true;
     private static bool IsLiveEndpointPhase(OriginalEndpointPhase? phase, EndpointSlot endpoint)
     {

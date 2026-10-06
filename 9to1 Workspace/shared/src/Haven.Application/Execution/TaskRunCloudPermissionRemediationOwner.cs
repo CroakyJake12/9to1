@@ -5,7 +5,7 @@ namespace Haven.Application;
 
 /// <summary>One source-issued Ask and explicit UI decision. This is not a provider continuation,
 /// Home grant, resource-egress permit, monetary reservation or proof from remediation Completed.</summary>
-public sealed class TaskRunCloudPermissionRemediationOwner : IAsyncDisposable
+public sealed partial class TaskRunCloudPermissionRemediationOwner : IAsyncDisposable
 {
     public const string ComponentId = "haven.task-cloud-permission";
     private readonly TaskRunCentralCloudUsePermissionSource _source;
@@ -72,6 +72,13 @@ public sealed class TaskRunCloudPermissionRemediationOwner : IAsyncDisposable
         public Task<PermissionDecision>? Denial;
         public Task<RemediationContinuationResult>? Callback;
         public Task? RequestEvent, DecisionEvent;
+        public TaskRunCloudPermissionRequiredException? OriginalAsk;
+        public Task<ITaskRunUnstartedContinuationPermissionLease>? Continuation;
+        public long ContinuationRevision;
+        public UnstartedPermissionLease? ContinuationLease;
+        public Task<ITaskRunCloudUsePermissionLease>? ActualContinuationPermissionAcquisition;
+        public ITaskRunCloudUsePermissionLease? AcquiredContinuationPermission;
+        public Task? ActualUnpublishedContinuationClose;
     }
     public TaskRunCloudPermissionRemediationOwner(TaskRunCentralCloudUsePermissionSource sameSource,
         TaskRunPermissionAuthority sameTaskAuthority, Func<TaskExecutionCoordinator> originalTaskLookup,
@@ -99,8 +106,16 @@ public sealed class TaskRunCloudPermissionRemediationOwner : IAsyncDisposable
         _ownerToken = _stop.Token;
     }
     public Task<RemediationRequest> RequestOriginalAsync(TaskRunCloudPermissionRequiredException original,
-        CancellationToken token) => RequestOriginalAsync(original.OriginalRequest
-            ?? throw new UnauthorizedAccessException("A legacy/caller-created permission exception is not an original Ask issuer."), token);
+        CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(original);
+        var request = original.OriginalRequest
+            ?? throw new UnauthorizedAccessException("A legacy/caller-created permission exception is not an original Ask issuer.");
+        var publication = RequestOriginalAsync(request, token);
+        lock (_sync)
+            if (_requests.TryGetValue(request, out var record)) record.OriginalAsk ??= original;
+        return publication;
+    }
 
     public Task<RemediationRequest> RequestOriginalAsync(ITaskRunCloudPermissionOriginalRequest original, CancellationToken token)
     {
@@ -412,7 +427,12 @@ public sealed class TaskRunCloudPermissionRemediationOwner : IAsyncDisposable
                 record.RequestEvent is { IsCompletedSuccessfully: false } || record.DecisionEvent is { IsCompletedSuccessfully: false } ||
                 (record.Approval is not { IsCompletedSuccessfully: true } && record.Denial is not { IsCompletedSuccessfully: true }))
                 throw new InvalidOperationException("Only all-successful actual original response tasks may retire.");
+            if (record.Continuation is not null &&
+                (!record.Continuation.IsCompletedSuccessfully || record.ContinuationLease is not { SuccessfullyClosed: true } ||
+                 _continuationOperations.Any(value => ReferenceEquals(value.Binding, record) && (!value.Published.IsCompletedSuccessfully || !value.Runner.IsCompletedSuccessfully))))
+                throw new InvalidOperationException("Live, failed or unknown original continuation custody cannot retire.");
             _source.RetireResolvedOriginalRequest(record.Original);
+            if (record.ContinuationLease is { } lease) _continuationLeases.Remove(lease);
             _requests.Remove(record.Original); _ids.Remove(record.Id);
         }
     }
@@ -440,8 +460,10 @@ public sealed class TaskRunCloudPermissionRemediationOwner : IAsyncDisposable
         {
             if (_close is not null) return _close;
             _closing = true; completion = new(TaskCreationOptions.RunContinuationsAsynchronously); _close = completion.Task;
-            originals = _requests.Values.SelectMany(value => new Task?[] { value.Publication, value.Approval, value.Denial, value.Decision, value.Callback, value.RequestEvent, value.DecisionEvent })
-                .Where(value => value is not null).Cast<Task>().Distinct<Task>(ReferenceEqualityComparer.Instance).ToArray();
+            originals = _requests.Values.SelectMany(value => new Task?[] { value.Publication, value.Approval, value.Denial, value.Decision, value.Callback, value.RequestEvent, value.DecisionEvent, value.Continuation })
+                .Where(value => value is not null).Cast<Task>()
+                .Concat(_continuationOperations.SelectMany(value => new[] { value.Published, value.Runner }))
+                .Distinct<Task>(ReferenceEqualityComparer.Instance).ToArray();
         }
         _ = ClosePublishedAsync(originals, completion); return completion.Task;
     }
@@ -458,6 +480,13 @@ public sealed class TaskRunCloudPermissionRemediationOwner : IAsyncDisposable
                 if (payload is null) Add(errors, error); else foreach (var cause in payload.InnerExceptions) Add(errors, cause);
             }
         }
+        Task? continuationClose = null;
+        try
+        {
+            continuationClose = CloseOriginalContinuationLifetimesAsync(errors);
+            await ObserveAsync(continuationClose).ConfigureAwait(false);
+        }
+        catch (Exception error) { AddContinuationCauses(errors, error, continuationClose); }
         try { _stop.Dispose(); } catch (Exception error) { Add(errors, error); }
         if (errors.Count == 0) completion.TrySetResult();
         else completion.TrySetException(new AggregateException("Original cloud-permission tasks and cleanup failed.", errors));

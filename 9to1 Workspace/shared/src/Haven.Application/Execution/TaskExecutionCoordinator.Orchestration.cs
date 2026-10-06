@@ -17,6 +17,17 @@ internal sealed class TaskRunInvocationCustody
     private readonly List<(string Stage, Task Actual)> _additionalOriginals = [];
     private TaskRunCloudPermissionRequiredException? _originalPermissionCause;
     private Task<RemediationRequest>? _originalPermissionPublication;
+    internal TaskRunCloudPermissionRemediationOwner? OriginalPermissionOwner;
+    internal ChatSessionService? OriginalChatOwner;
+    internal Conversation? OriginalConversation;
+    internal Conversation? OriginalPersistedConversation;
+    internal ChatMessage? OriginalUserMessage;
+    internal bool OriginalUserMessagePublished;
+    internal Task? OriginalConversationWrite;
+    internal Task? OriginalUserMessageWrite;
+    internal Func<CancellationToken, Task>? OriginalInputCurrentness;
+    internal Func<TaskRunInvocationCustody, ProviderExecutionContext, CancellationToken, IAsyncEnumerable<ChatStreamEvent>>? OriginalContinuationFactory;
+    internal TaskRunUnstartedContinuationBinding? OriginalUnstartedContinuation;
     internal Task? OriginalDispose;
     internal bool DisposeInvoked;
     internal Exception? DisposeDirectFailure;
@@ -43,6 +54,7 @@ internal sealed class TaskRunInvocationCustody
     internal bool PublicationAcknowledged;
     internal bool BoundByActualBegin;
     internal bool AttemptAdmissionInvoked;
+    internal bool OriginalProviderInvocationInvoked;
 
     internal TaskRunInvocationCustody(TaskExecutionCoordinator issuer) { Issuer = issuer; OriginalSelf = this; }
     internal IReadOnlyList<Exception> Causes { get { lock (_gate) return _causes.ToArray(); } }
@@ -56,7 +68,7 @@ internal sealed class TaskRunInvocationCustody
         ArgumentNullException.ThrowIfNull(original);
         lock (_gate) _additionalOriginals.Add((stage, original));
     }
-    internal void BindPublishedOriginalPermission(TaskRunCloudPermissionRequiredException actualAsk, Task<RemediationRequest> actualPublication)
+    internal void BindPublishedOriginalPermission(TaskRunCloudPermissionRequiredException actualAsk, Task<RemediationRequest> actualPublication, TaskRunCloudPermissionRemediationOwner actualOwner)
     {
         if (actualAsk.OriginalRequest is null || !actualPublication.IsCompletedSuccessfully)
             throw new InvalidOperationException("Only the actual successfully published source-issued Ask may be observed.");
@@ -67,7 +79,16 @@ internal sealed class TaskRunInvocationCustody
                 throw new InvalidOperationException("Another original permission request is already bound to this invocation.");
             _originalPermissionCause = actualAsk;
             _originalPermissionPublication = actualPublication;
+            OriginalPermissionOwner = actualOwner;
         }
+    }
+    internal (TaskRunCloudPermissionRequiredException Ask, Task<RemediationRequest> Publication,
+        TaskRunCloudPermissionRemediationOwner Owner) RequireOriginalPublishedPermission()
+    {
+        lock (_gate)
+            return (_originalPermissionCause ?? throw new InvalidOperationException("The actual original Ask is unavailable."),
+                _originalPermissionPublication ?? throw new InvalidOperationException("The actual publication Task is unavailable."),
+                OriginalPermissionOwner ?? throw new InvalidOperationException("The actual permission owner is unavailable."));
     }
     internal bool CanReturnPublishedPermissionRefusal(TaskExecutionSnapshot? acknowledged)
     {
@@ -221,8 +242,9 @@ public sealed partial class TaskExecutionCoordinator
     {
         custody.Retain(cause);
         if (custody.OriginalBinding is { } binding)
-            _observationFailures.Enqueue(new TaskObservationFailure(binding.TaskId, binding.ExecutionId,
-                binding.PersistenceRevision, "original-invocation-terminal-observation", cause));
+            foreach (var originalCause in OriginalDiagnosticCauses(cause))
+                _observationFailures.Enqueue(new TaskObservationFailure(binding.TaskId, binding.ExecutionId,
+                    binding.PersistenceRevision, "original-invocation-terminal-observation", originalCause));
     }
 
     internal async Task<TaskExecutionSnapshot> BeginOriginalInvocationAsync(
@@ -238,6 +260,8 @@ public sealed partial class TaskExecutionCoordinator
         TaskRunInvocationCustody custody, ProviderExecutionContext observation, Guid actualContextId, CancellationToken token)
     {
         RequireOriginalInvocation(custody, boundRequired: false);
+        if (custody.OriginalUnstartedContinuation is { } approved)
+            return await BindAcknowledgedUnstartedContinuationAsync(approved, custody, observation, actualContextId, token).ConfigureAwait(false);
         var current = await RequireAsync(observation.TaskId, token).ConfigureAwait(false);
         if (current.ContextId != actualContextId || current.ContextId != observation.ContextId
             || current.ExecutionId != observation.ExecutionId || current.PersistenceRevision != observation.PersistenceRevision
@@ -310,6 +334,7 @@ public sealed partial class TaskExecutionCoordinator
             && completed.Result.TaskId == current.TaskId && completed.Result.ExecutionId == current.ExecutionId
             && current.State == TaskExecutionLifecycle.Completed)
         {
+            RetireResolvedOriginalUnstartedContinuation(custody, current);
             _originalInvocations.TryRemove(new KeyValuePair<Guid, TaskRunInvocationCustody>(current.TaskId, custody));
             ReleaseHealthyOrUnstartedInvocation(custody);
             return current;

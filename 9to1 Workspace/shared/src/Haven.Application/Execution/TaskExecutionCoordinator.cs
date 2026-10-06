@@ -15,8 +15,18 @@ public sealed partial class TaskExecutionCoordinator(
     ITaskRunRuntimeSettlement? runtimeSettlement = null,
     ICheckpointRepository? checkpointRepository = null,
     ITaskRunToolActionOwner? toolActionOwner = null,
-    ICheckpointExecutionObservationSource? checkpointObservationSource = null)
+    ICheckpointExecutionObservationSource? checkpointObservationSource = null,
+    TaskRunCloudPermissionRemediationOwner? unstartedPermissionSource = null)
 {
+    // Retain the exact selected eight-parameter CLR constructor and captured-owner semantics.
+    public TaskExecutionCoordinator(ITaskExecutionRepository repository, IExecutionEventSink events,
+        TimeProvider? timeProvider, ITaskRunAdmissionAuthority? admissionAuthority,
+        ITaskRunRuntimeSettlement? runtimeSettlement, ICheckpointRepository? checkpointRepository,
+        ITaskRunToolActionOwner? toolActionOwner, ICheckpointExecutionObservationSource? checkpointObservationSource)
+        : this(repository, events, timeProvider, admissionAuthority, runtimeSettlement,
+            checkpointRepository, toolActionOwner, checkpointObservationSource, unstartedPermissionSource: null)
+    { }
+
     // Preserve the original three-parameter CLR constructor without claiming attempt authority.
     public TaskExecutionCoordinator(ITaskExecutionRepository repository, IExecutionEventSink events, TimeProvider? timeProvider)
         : this(repository, events, timeProvider, admissionAuthority: null, runtimeSettlement: null,
@@ -24,6 +34,7 @@ public sealed partial class TaskExecutionCoordinator(
     {
     }
 
+    private readonly TaskRunCloudPermissionRemediationOwner? _unstartedPermissionSource = unstartedPermissionSource;
     private readonly ITaskRunAdmissionAuthority? _admissionAuthority = admissionAuthority;
     private readonly ITaskRunRuntimeSettlement? _runtimeSettlement = runtimeSettlement;
     private readonly ICheckpointRepository? _checkpointRepository = checkpointRepository;

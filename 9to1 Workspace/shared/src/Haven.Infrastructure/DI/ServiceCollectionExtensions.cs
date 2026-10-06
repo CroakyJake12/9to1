@@ -260,6 +260,15 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ITaskRunRuntimeSettlement>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
         services.AddSingleton<ITaskRunProviderFailureSettlement>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
         services.AddSingleton<ITaskRunOriginalAttemptRetirement>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
+        services.AddSingleton<ManagedDulcheRuntimeService>(provider => new ManagedDulcheRuntimeService(
+            provider.GetRequiredService<IModelProviderRegistry>(),
+            provider.GetRequiredService<IProviderConfigurationStore>(),
+            provider.GetRequiredService<TaskExecutionCoordinator>(),
+            provider.GetRequiredService<ITaskRunOriginalFrameOwner>(),
+            tools: provider.GetService<Dulche.Runtime.IOriginalDulcheProviderToolSource>(),
+            contextSource: provider.GetService<Dulche.Runtime.IOriginalDulcheProviderContextSource>(),
+            contextAuthority: provider.GetRequiredService<ITaskRunProviderContextAuthority>(),
+            toolCoordinator: provider.GetService<Dulche.Runtime.IDulcheToolCoordinator>()));
         services.AddSingleton<WorkspaceTaskRunEffectAuthority>();
         services.AddSingleton<IWorkspaceToolFinalFenceAuthority>(provider => provider.GetRequiredService<WorkspaceTaskRunEffectAuthority>());
         services.AddSingleton<WorkspaceTaskRunToolActionOwner>(provider => new WorkspaceTaskRunToolActionOwner(
@@ -279,7 +288,8 @@ public static class ServiceCollectionExtensions
             provider.GetRequiredService<ITaskRunRuntimeSettlement>(),
             provider.GetRequiredService<ICheckpointRepository>(),
             provider.GetRequiredService<ITaskRunToolActionOwner>(),
-            provider.GetRequiredService<ICheckpointExecutionObservationSource>()));
+            provider.GetRequiredService<ICheckpointExecutionObservationSource>(),
+            unstartedPermissionSource: provider.GetRequiredService<TaskRunCloudPermissionRemediationOwner>()));
         services.AddSingleton<IProjectPreviewProvider, WebProjectPreviewProvider>();
         services.AddSingleton<IModelProvider>(provider => new OllamaModelProvider(
             provider.GetRequiredService<ILocalOllamaClient>(),

@@ -7,6 +7,7 @@
  * Maintenance: Preserve the layer boundary, nullability annotations, cancellation flow, and existing public signatures when changing this file.
  */
 
+using System.Collections.Frozen;
 using System.Text;
 using System.Text.Json;
 using Haven.Core;
@@ -228,8 +229,85 @@ public sealed class ChatSessionService(
     {
         var originalCustody = taskExecutionIntent == TaskRunExecutionIntent.CanonicalAgenticTask
             ? taskCoordinator?.CreateOriginalInvocationCustody() : null;
-        var original = SendOriginalAsync(conversation, prompt, model, effort, capabilities, agentName, agentInstructions, duoMode, workspaceRoot, projectContext, projectInstructions, images, cancellationToken, prompts, registeredContext, generationOptions, filePermission, commandPermission, browserPermission, explicitCapabilities, availableCapabilities, computerUseRequest, executionContext, taskExecutionIntent, originalCustody);
-        return originalCustody is null ? original : ObserveOriginalSendAsync(original, originalCustody, cancellationToken);
+        if (originalCustody is not null)
+        {
+            // One detached immutable snapshot is used by BOTH actual initial input and
+            // its private continuation. Ordinary conversation behavior is unchanged.
+            capabilities = Array.AsReadOnly(capabilities.ToArray());
+            prompts = prompts is null ? null : Array.AsReadOnly(prompts.ToArray());
+            images = images is null ? null : Array.AsReadOnly(images.ToArray());
+            explicitCapabilities = explicitCapabilities is null ? null : Array.AsReadOnly(explicitCapabilities.ToArray());
+            availableCapabilities = availableCapabilities is null ? null : Array.AsReadOnly(availableCapabilities.ToArray());
+            model = model with { Capabilities = model.Capabilities.ToFrozenSet() };
+            computerUseRequest = computerUseRequest is null ? null : computerUseRequest with
+            { Invocations = Array.AsReadOnly(computerUseRequest.Invocations.ToArray()) };
+            originalCustody.OriginalChatOwner = this;
+            originalCustody.OriginalConversation = conversation;
+            originalCustody.OriginalInputCurrentness = token => ValidateOriginalInputAsync(originalCustody, token);
+            originalCustody.OriginalContinuationFactory = (nextCustody, context, token) => CreateOriginal(nextCustody, context, token);
+        }
+        IAsyncEnumerable<ChatStreamEvent> CreateOriginal(TaskRunInvocationCustody? custody, ProviderExecutionContext? context, CancellationToken token)
+        {
+            var original = SendOriginalAsync(conversation, prompt, model, effort, capabilities, agentName, agentInstructions,
+                duoMode, workspaceRoot, projectContext, projectInstructions, images, token, prompts, registeredContext,
+                generationOptions, filePermission, commandPermission, browserPermission, explicitCapabilities,
+                availableCapabilities, computerUseRequest, context, taskExecutionIntent, custody);
+            return custody is null ? original : ObserveOriginalSendAsync(original, custody, token);
+        }
+        return CreateOriginal(originalCustody, executionContext, cancellationToken);
+    }
+
+    /// <summary>Explicit continuation of the SAME source-approved, live, never-started run.
+    /// It is unavailable for unknown work, invoked attempts or reconstructed historical inputs.</summary>
+    public async IAsyncEnumerable<ChatStreamEvent> ContinueUnstartedOriginalAsync(
+        Guid taskId, Guid expectedExecutionId,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        var coordinator = taskCoordinator ?? throw new InvalidOperationException("The canonical Task owner is unavailable.");
+        var inspection = await coordinator.InspectOriginalRecoveryAsync(taskId, expectedExecutionId, cancellationToken).ConfigureAwait(false);
+        var prepared = await coordinator.PrepareOriginalUnstartedContinuationAsync(inspection, this, cancellationToken).ConfigureAwait(false);
+        var actual = coordinator.ClaimOriginalUnstartedContinuation(prepared, this, cancellationToken);
+        await foreach (var value in actual.WithCancellation(cancellationToken).ConfigureAwait(false)) yield return value;
+    }
+
+    private async Task ValidateOriginalInputAsync(TaskRunInvocationCustody original, CancellationToken token)
+    {
+        if (!ReferenceEquals(original.OriginalChatOwner, this) || original.OriginalConversation is not { } conversation
+            || original.OriginalUserMessage is not { } message || !original.OriginalUserMessagePublished)
+            throw new InvalidOperationException("The actual original accepted user input is unavailable.");
+        if (conversation.IsTemporary)
+        {
+            // This is the retained genuine transient object/input, never an invented repository row.
+            if (original.OriginalConversationWrite is not null || original.OriginalUserMessageWrite is not null)
+                throw new InvalidOperationException("Transient input has unexpected persisted-write custody.");
+            return;
+        }
+        if (original.OriginalConversationWrite is not { IsCompletedSuccessfully: true }
+            || original.OriginalUserMessageWrite is not { IsCompletedSuccessfully: true }
+            || original.OriginalPersistedConversation is not { } acceptedConversation)
+            throw new InvalidOperationException("Unknown original input writes cannot be retried or skipped.");
+        var actualConversationRead = conversations.GetAsync(conversation.Id, token)
+            ?? throw new InvalidOperationException("No original conversation read Task was returned.");
+        original.RetainAdditionalOriginal("continuation.input-conversation", actualConversationRead);
+        var current = await AwaitOriginalInputReadAsync(actualConversationRead).ConfigureAwait(false);
+        if (current != acceptedConversation) throw new InvalidOperationException("The accepted conversation identity/state changed.");
+        var actualHistoryRead = conversations.GetMessagesAsync(conversation.Id, token)
+            ?? throw new InvalidOperationException("No original history read Task was returned.");
+        original.RetainAdditionalOriginal("continuation.input-history", actualHistoryRead);
+        var history = await AwaitOriginalInputReadAsync(actualHistoryRead).ConfigureAwait(false);
+        if (history.Count(item => item.Id == message.Id) != 1 || history.Single(item => item.Id == message.Id) != message)
+            throw new InvalidOperationException("The exact accepted user message is missing or was replaced.");
+    }
+
+    private static async Task<T> AwaitOriginalInputReadAsync<T>(Task<T> actual)
+    {
+        try { return await actual.ConfigureAwait(false); }
+        catch (Exception) when (actual.IsFaulted && actual.Exception is { })
+        {
+            // Preserve ALL direct actual read siblings and faulted-OCE status before the
+            // preparation boundary. This observation is not permission or read retry.
+            throw actual.Exception;
+        }
     }
 
     private async IAsyncEnumerable<ChatStreamEvent> SendOriginalAsync(
@@ -417,7 +495,11 @@ public sealed class ChatSessionService(
         execution.Changed += PublishExecution;
 
         var now = DateTimeOffset.UtcNow;
-        var userMessage = new ChatMessage(
+        var resumedInput = originalCustody?.OriginalUnstartedContinuation is { } continuation
+            ? continuation.Original.OriginalUserMessage
+                ?? throw new InvalidOperationException("The actual accepted continuation input is unavailable.")
+            : null;
+        var userMessage = resumedInput ?? new ChatMessage(
             Guid.NewGuid(),
             conversation.Id,
             MessageRole.User,
@@ -429,16 +511,34 @@ public sealed class ChatSessionService(
 
         // Yield before model discovery, context loading, or network preflight so the
         // user's message is visible immediately.
-        yield return ChatStreamEvent.User(userMessage);
-
-        if (!conversation.IsTemporary)
+        if (resumedInput is null)
         {
-            await conversations.UpsertConversationAsync(
-                conversation with { UpdatedAt = now },
-                cancellationToken).ConfigureAwait(false);
-            await conversations.AddMessageAsync(
-                userMessage,
-                cancellationToken).ConfigureAwait(false);
+            if (originalCustody is not null) originalCustody.OriginalUserMessage = userMessage;
+            yield return ChatStreamEvent.User(userMessage);
+            if (originalCustody is not null) originalCustody.OriginalUserMessagePublished = true;
+            if (!conversation.IsTemporary)
+            {
+                var acceptedConversation = conversation with { UpdatedAt = now };
+                var actualConversationWrite = conversations.UpsertConversationAsync(acceptedConversation, cancellationToken);
+                if (originalCustody is not null)
+                {
+                    originalCustody.OriginalPersistedConversation = acceptedConversation;
+                    originalCustody.OriginalConversationWrite = actualConversationWrite;
+                    originalCustody.RetainAdditionalOriginal("input.conversation-write", actualConversationWrite);
+                }
+                try { await actualConversationWrite.ConfigureAwait(false); }
+                catch (Exception failure) when (originalCustody is not null)
+                { originalCustody.Retain(failure, actualConversationWrite); throw; }
+                var actualMessageWrite = conversations.AddMessageAsync(userMessage, cancellationToken);
+                if (originalCustody is not null)
+                {
+                    originalCustody.OriginalUserMessageWrite = actualMessageWrite;
+                    originalCustody.RetainAdditionalOriginal("input.user-message-write", actualMessageWrite);
+                }
+                try { await actualMessageWrite.ConfigureAwait(false); }
+                catch (Exception failure) when (originalCustody is not null)
+                { originalCustody.Retain(failure, actualMessageWrite); throw; }
+            }
         }
 
         // Haven owns the Generative UI registry, so a capability-status answer
@@ -726,7 +826,7 @@ public sealed class ChatSessionService(
                 actualPublication = taskCloudPermissionRemediation.RequestOriginalAsync(actualAsk, cancellationToken);
                 originalCustody.RetainAdditionalOriginal("permission.request", actualPublication);
                 var metadata = await actualPublication.ConfigureAwait(false);
-                originalCustody.BindPublishedOriginalPermission(actualAsk, actualPublication);
+                originalCustody.BindPublishedOriginalPermission(actualAsk, actualPublication, taskCloudPermissionRemediation);
                 return metadata; // Request metadata is never a grant, effect or resume receipt.
             }
             catch (Exception publicationFailure)
@@ -1076,6 +1176,7 @@ public sealed class ChatSessionService(
                         turnModel.Name, turns, toolDefinitions, effort, system, generationOptions)
                     { ExecutionContext = await ProviderContextAsync(parentActionId).ConfigureAwait(false) };
                     await CaptureOriginalToolsAsync(originalRequest, actualInventory, cancellationToken).ConfigureAwait(false);
+                    if (originalCustody is not null) originalCustody.OriginalProviderInvocationInvoked = true;
                     originalToolTurn = ollama.ChatWithToolsAsync(originalRequest, cancellationToken);
                     if (canonicalIntent) originalCustody!.RetainAdditionalOriginal("provider.tools", originalToolTurn);
                     response = await originalToolTurn.ConfigureAwait(false);
@@ -1246,6 +1347,7 @@ public sealed class ChatSessionService(
                 try
                 {
                     await CaptureOriginalChatAsync(originalRequest, actualInventory, cancellationToken).ConfigureAwait(false);
+                    originalCustody!.OriginalProviderInvocationInvoked = true;
                     actualStream = ollama.StreamChatAsync(originalRequest, cancellationToken).GetAsyncEnumerator(cancellationToken);
                 }
                 catch (TaskRunCloudPermissionRequiredException actualAsk) when (taskCloudPermissionRemediation is not null)

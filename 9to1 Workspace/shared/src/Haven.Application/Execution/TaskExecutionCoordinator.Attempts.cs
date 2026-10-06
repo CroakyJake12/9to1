@@ -219,6 +219,12 @@ public sealed partial class TaskExecutionCoordinator
             if (!ReferenceEquals(custody.OriginalAdmission, issued) || !ReferenceEquals(custody.OriginalSettlement, originalSettlement))
                 throw new InvalidOperationException("The original completion join changed during concurrent admission.");
         }
+        if (invocation is not null)
+        {
+            if (invocation.OriginalSettlement is { } prior && !ReferenceEquals(prior, custody.OriginalSettlement))
+                throw new InvalidOperationException("A different runtime join cannot replace this actual invocation's original settlement.");
+            invocation.OriginalSettlement = custody.OriginalSettlement; // SAME actual owner join, retained before wait.
+        }
         if (cancellationToken.CanBeCanceled)
             await custody.OriginalSettlement.WaitAsync(cancellationToken).ConfigureAwait(false);
         else
@@ -592,6 +598,14 @@ public sealed partial class TaskExecutionCoordinator
 
     private async Task<TaskExecutionSnapshot> PersistAsync(TaskExecutionSnapshot snapshot, CancellationToken cancellationToken)
     {
+        var acknowledged = await PersistOriginalWriteOnlyAsync(snapshot, cancellationToken).ConfigureAwait(false);
+        PublishAcknowledgedSnapshot(acknowledged);
+        return acknowledged;
+    }
+
+    private async Task<TaskExecutionSnapshot> PersistOriginalWriteOnlyAsync(TaskExecutionSnapshot snapshot, CancellationToken cancellationToken,
+        Action<Task>? retainActualRepositoryWrite = null)
+    {
         if (snapshot.PersistenceRevision < 0) throw new InvalidDataException("The persisted task revision is invalid.");
         var proposed = snapshot with
         {
@@ -606,13 +620,29 @@ public sealed partial class TaskExecutionCoordinator
                 RequiredPermissionScopes = Array.AsReadOnly((steer.RequiredPermissionScopes ?? []).ToArray())
             }).ToArray()),
             Queue = Array.AsReadOnly(snapshot.Queue.ToArray()),
+            RecoveryHistory = Array.AsReadOnly(snapshot.RecoveryHistory.Select(history => history with
+            { Causes = Array.AsReadOnly(history.Causes.ToArray()) }).ToArray()),
             ApprovedPermissionScopes = Array.AsReadOnly(snapshot.ApprovedPermissionScopes.ToArray()),
             Attempts = Array.AsReadOnly(snapshot.Attempts.Select(attempt => attempt with
             {
                 Candidate = attempt.Candidate with { RequiredCapabilities = Array.AsReadOnly(attempt.Candidate.RequiredCapabilities.ToArray()) }
             }).ToArray())
         };
-        await repository.UpsertAsync(proposed, cancellationToken).ConfigureAwait(false);
+        var actualWrite = repository.UpsertAsync(proposed, cancellationToken)
+            ?? throw new InvalidOperationException("The canonical repository returned no actual write Task.");
+        retainActualRepositoryWrite?.Invoke(actualWrite);
+        try { await actualWrite.ConfigureAwait(false); }
+        catch (Exception) when (actualWrite.IsFaulted && actualWrite.Exception is { })
+        {
+            // The actual repository Task owns every direct cause; preserve faulted-OCE
+            // and sibling custody at the async persistence boundary. No retry is inferred.
+            throw actualWrite.Exception;
+        }
+        return proposed;
+    }
+
+    private void PublishAcknowledgedSnapshot(TaskExecutionSnapshot proposed)
+    {
         // This is an acknowledged write. Observer exceptions or late cancellation cannot erase it.
         if (SnapshotChanged is { } handlers)
             foreach (EventHandler<TaskExecutionSnapshot> handler in handlers.GetInvocationList())
@@ -622,7 +652,6 @@ public sealed partial class TaskExecutionCoordinator
                     _observationFailures.Enqueue(new TaskObservationFailure(proposed.TaskId, proposed.ExecutionId,
                         proposed.PersistenceRevision, "snapshot-observer", observerFailure));
                 }
-        return proposed;
     }
 
     private void ObserveEvent(TaskExecutionSnapshot snapshot, ExecutionEvent executionEvent)

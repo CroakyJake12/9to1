@@ -194,6 +194,34 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
     }
 
     [Fact]
+    public async Task Terminal_observation_keeps_same_raw_repository_envelope_and_every_exact_direct_cause()
+    {
+        var h = Harness.Create(temporary: true);
+        var body = new UnauthorizedAccessException("Actual no-frame context refusal");
+        h.Capture.Refusal = body;
+        var first = new OperationCanceledException("Faulted raw repository payload with live caller token");
+        var second = new IOException("Independent raw repository sibling");
+        var actual = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        actual.SetException(new Exception[] { first, second });
+        h.TaskRepository.OriginalSuspensionFailureTask = actual.Task;
+        var observed = await Record.ExceptionAsync(() => h.RunAsync("actual original"));
+        Assert.True(actual.Task.IsFaulted);
+        Assert.Contains(OriginalCauses(observed!), value => ReferenceEquals(value, first));
+        Assert.Contains(OriginalCauses(observed!), value => ReferenceEquals(value, second));
+        Assert.Contains(h.Coordinator.ObservationFailures, value => value.OriginalException is AggregateException envelope
+            && envelope.InnerExceptions.Count == 2 && ReferenceEquals(envelope.InnerExceptions[0], first)
+            && ReferenceEquals(envelope.InnerExceptions[1], second)
+            && OriginalCauses(observed!).Any(original => ReferenceEquals(original, envelope)));
+        Assert.Contains(h.Coordinator.ObservationFailures, value => ReferenceEquals(value.OriginalException, first));
+        Assert.Contains(h.Coordinator.ObservationFailures, value => ReferenceEquals(value.OriginalException, second));
+        var saved = (await h.Coordinator.GetAsync(h.Service.CurrentCanonicalTask!.TaskId, default))!;
+        Assert.Null(saved.RecoveryObservation);
+        Assert.NotEqual(TaskExecutionLifecycle.Completed, saved.State);
+        Assert.Equal(0, h.Provider.Frames);
+        await h.Runtime.CloseAndDrainAsync();
+    }
+
+    [Fact]
     public async Task Suspension_CAS_loss_preserves_actual_fault_and_concurrent_queue_and_refuses_live_original_replay()
     {
         var h = Harness.Create(temporary: true);
@@ -920,7 +948,11 @@ public sealed class ChatCanonicalContextProducerTests : IDisposable
         public Func<Task>? BeforeSuspension;
         public int ReadCount;
         public Func<int, Task>? BeforeRead;
-        public async Task UpsertAsync(TaskExecutionSnapshot next, CancellationToken token)
+        public Task? OriginalSuspensionFailureTask = null;
+        public Task UpsertAsync(TaskExecutionSnapshot next, CancellationToken token) =>
+            next.State == TaskExecutionLifecycle.Suspended && OriginalSuspensionFailureTask is { } actual
+                ? actual : UpsertOriginalAsync(next, token);
+        private async Task UpsertOriginalAsync(TaskExecutionSnapshot next, CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
             if (next.State == TaskExecutionLifecycle.Suspended && BeforeSuspension is { } before)

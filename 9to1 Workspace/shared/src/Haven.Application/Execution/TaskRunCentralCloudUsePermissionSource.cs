@@ -138,6 +138,16 @@ public sealed class TaskRunCentralCloudUsePermissionSource : ITaskRunCloudUsePer
     internal bool IsIssuedOriginalRequest(ITaskRunCloudPermissionOriginalRequest original)
     { lock (_requestGate) return original is OriginalRequest request && _originalRequests.Values.Any(value => ReferenceEquals(value, request)); }
 
+    // No grant or new Ask is issued by this pure current-policy check after awaited owner reads.
+    internal void DemandOriginalAllowedUnstartedRequest(ITaskRunCloudPermissionOriginalRequest original)
+    {
+        if (!IsIssuedOriginalRequest(original)) throw new UnauthorizedAccessException("The original Ask issuer retired.");
+        var scope = ScopeFor(original.OriginalOwner, original.OriginalCandidate);
+        var decision = _policy.Evaluate(scope, CapabilityRiskClass.Consequential, requiresPermission: true,
+            Reason(original.OriginalCandidate));
+        if (decision.Kind != PermissionDecisionKind.Allowed) throw new TaskRunCloudPermissionRequiredException(decision);
+    }
+
     // Called only by the source-owned explicit-decision handler after actual Task/route checks.
     // Completed remediation, IDs or explanation text never call this port themselves.
     internal Task<PermissionDecision> ResolveOriginalRequestAsync(ITaskRunCloudPermissionOriginalRequest original,
