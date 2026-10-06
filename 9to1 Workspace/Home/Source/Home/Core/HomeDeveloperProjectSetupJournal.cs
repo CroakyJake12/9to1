@@ -353,7 +353,7 @@ public sealed partial class HomeDeveloperProjectSetupJournal(
         {
             if (_close is not null) return _close;
             _retiring = true; start = new(TaskCreationOptions.RunContinuationsAsynchronously);
-            actual = Drain(start.Task, _originals.ToArray()); _close = actual;
+            actual = Drain(start.Task, _originals.Concat(OriginalAcknowledgementOwners()).Distinct().ToArray()); _close = actual;
         }
         start.TrySetResult(); return actual;
     }

@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 using Haven.Application;
+using HavenOS.Apps.Dev;
 using HavenOS.Home.Core;
 
 namespace HavenOS.Files.NativeHost;
@@ -9,7 +10,7 @@ namespace HavenOS.Files.NativeHost;
 /// the existing Files provider. It keeps one actual declared operation, Home entry, provider
 /// result and pending/ACK journal lineage. Unsupported physical/map/workspace steps refuse
 /// BEFORE pending admission; this partial producer cannot claim whole-project setup success.</summary>
-public sealed class FilesDeveloperOriginalFolderSetupProducer(FilesDeveloperOriginalSetupScopeSource scopes,
+public sealed partial class FilesDeveloperOriginalFolderSetupProducer(FilesDeveloperOriginalSetupScopeSource scopes,
     Func<HomeDeveloperProjectSetupJournal> journal,
     Func<IDeveloperProjectOriginalSetupPermissionSource> permissions)
     : IDeveloperProjectOriginalSetupStepOutcomeSource, IAsyncDisposable
@@ -47,6 +48,30 @@ public sealed class FilesDeveloperOriginalFolderSetupProducer(FilesDeveloperOrig
         internal FilesResult<FilesOperation>? ActualResult;
         internal IDeveloperProjectOriginalSetupStepEntry? ActualEntry;
         internal Task? ActualEntryClose;
+        internal IDeveloperProjectOriginalDirectoryObservationSource? DirectorySource;
+        internal IDeveloperProjectOriginalDirectoryPreparation? DirectoryPreparation;
+        internal Task<IDeveloperProjectOriginalDirectoryObservation>? ActualDirectoryTask;
+        internal IDeveloperProjectOriginalDirectoryObservation? ActualDirectoryResult;
+        internal Task? ActualDirectoryPreparationClose;
+        internal IDeveloperProjectOriginalDirectoryRegistrationSource? RegistrationSource;
+        internal IDeveloperProjectOriginalDirectoryRegistrationPreparation? RegistrationPreparation;
+        internal Task<FilesResult<FilesWorkspaceDirectoryBinding>>? ActualRegistrationTask;
+        internal Task<FilesResult<FilesWorkspaceDirectoryBinding>>? ActualBindingTask;
+        internal FilesResult<FilesWorkspaceDirectoryBinding>? ActualBindingResult;
+        internal Task? ActualRegistrationPreparationClose;
+        internal IDeveloperProjectOriginalFileRegistrationSource? FileSource;
+        internal IDeveloperProjectOriginalFileRegistrationPreparation? FilePreparation;
+        internal Task? ActualFileTask, ActualFileMetadataTask, ActualFilePreparationClose;
+        internal object? ActualFileResult;
+        internal IDeveloperProjectOriginalWorkspaceMetadataSource? MetadataSource;
+        internal IDeveloperProjectOriginalWorkspaceMetadataPreparation? MetadataPreparation;
+        internal Task<DeveloperOriginalWorkspaceSetupResult>? ActualWorkspaceStoreTask;
+        internal DeveloperOriginalWorkspaceSetupResult? ActualWorkspaceStoreResult;
+        internal Task<IDeveloperProjectOriginalWorkspaceMetadataObservation>? ActualWorkspaceNativeTask;
+        internal IDeveloperProjectOriginalWorkspaceMetadataObservation? ActualWorkspaceNativeObservation;
+        internal Task? ActualWorkspacePreparationClose;
+        internal Task? ActualTask => (Task?)ActualProviderTask ?? (Task?)ActualDirectoryTask ?? (Task?)ActualRegistrationTask ?? ActualFileTask ?? ActualWorkspaceStoreTask;
+        internal object? ActualOutcome => (object?)ActualResult ?? (object?)ActualDirectoryResult ?? (object?)ActualBindingResult ?? ActualFileResult ?? ActualWorkspaceStoreResult;
         internal volatile bool PhysicalConfirmed;
         internal volatile bool HomeValidated;
         internal DeveloperProjectOriginalStepOutcomeObservation? Observation;
@@ -89,6 +114,21 @@ public sealed class FilesDeveloperOriginalFolderSetupProducer(FilesDeveloperOrig
             if (!scopes.IsCheckingOriginalJournalDependencies)
                 foreach (var owner in owners) owner.DemandExternalOriginalRetirementJoin();
             foreach (var issuer in issuers) issuer.DemandExternalOriginalSetupJoin();
+            IDeveloperProjectOriginalDirectoryObservationSource[] directories;
+            lock (_gate) directories = _steps.Values.Where(value => value.DirectorySource is not null)
+                .Select(value => value.DirectorySource!).Distinct().ToArray();
+            foreach (var source in directories) source.DemandExternalOriginalDirectoryJoin();
+            IDeveloperProjectOriginalDirectoryRegistrationSource[] registrations;
+            lock (_gate) registrations = _steps.Values.Where(value => value.RegistrationSource is not null)
+                .Select(value => value.RegistrationSource!).Distinct().ToArray();
+            foreach (var source in registrations) source.DemandExternalOriginalDirectoryRegistrationJoin();
+            IDeveloperProjectOriginalFileRegistrationSource[] files;
+            lock (_gate) files = _steps.Values.Where(value => value.FileSource is not null).Select(value => value.FileSource!).Distinct().ToArray();
+            foreach (var source in files) source.DemandExternalOriginalFileRegistrationJoin();
+            IDeveloperProjectOriginalWorkspaceMetadataSource[] metadata;
+            lock (_gate) metadata = _steps.Values.Where(value => value.MetadataSource is not null)
+                .Select(value => value.MetadataSource!).Distinct().ToArray();
+            foreach (var source in metadata) source.DemandExternalOriginalWorkspaceMetadataJoin();
         }
         finally { visited.Remove(this); }
     }
@@ -251,7 +291,7 @@ public sealed class FilesDeveloperOriginalFolderSetupProducer(FilesDeveloperOrig
         lock (_gate)
             if (_steps.TryGetValue((intent.SetupId, step.StepId), out var physical) && ReferenceEquals(physical.Intent, intent) &&
                 ReferenceEquals(physical.Capture, capture) && ReferenceEquals(physical.Step, step) &&
-                ReferenceEquals(physical.ActualProviderTask, actual) && ReferenceEquals(physical.ActualResult, result) && physical.PhysicalConfirmed)
+                ReferenceEquals(physical.ActualTask, actual) && ReferenceEquals(physical.ActualOutcome, result) && physical.PhysicalConfirmed)
                 return physical;
         throw new UnauthorizedAccessException("No SAME privately confirmed actual folder Task/result/entry cleanup exists.");
     }
@@ -262,8 +302,35 @@ public sealed class FilesDeveloperOriginalFolderSetupProducer(FilesDeveloperOrig
         DeveloperProjectSetupStep step, Task actual, object? result, CancellationToken token) => Start(async sources =>
     {
         var physical = RequirePhysical(intent, capture, step, actual, result);
-        await sources.Observe(() => physical.ActualProviderTask!).ConfigureAwait(false);
+        await sources.ObserveVoid(() => physical.ActualTask!).ConfigureAwait(false);
         await sources.ObserveVoid(() => physical.ActualEntryClose!).ConfigureAwait(false);
+        if (physical.DirectorySource is { } directorySource)
+        {
+            await sources.ObserveVoid(() => physical.ActualDirectoryPreparationClose!).ConfigureAwait(false);
+            await sources.ObserveVoid(() => directorySource.ValidateOriginalDirectoryOutcomeAsync(
+                physical.DirectoryPreparation!, physical.ActualDirectoryTask!, physical.ActualDirectoryResult!, token)).ConfigureAwait(false);
+        }
+        if (physical.RegistrationSource is { } registrationSource)
+        {
+            await sources.ObserveVoid(() => physical.ActualBindingTask!).ConfigureAwait(false);
+            await sources.ObserveVoid(() => physical.ActualRegistrationPreparationClose!).ConfigureAwait(false);
+            await sources.ObserveVoid(() => registrationSource.ValidateOriginalDirectoryRegistrationOutcomeAsync(
+                physical.RegistrationPreparation!, physical.ActualRegistrationTask!, physical.ActualBindingTask!, physical.ActualBindingResult, token)).ConfigureAwait(false);
+        }
+        if (physical.FileSource is { } fileSource)
+        {
+            await sources.ObserveVoid(() => physical.ActualFileMetadataTask!).ConfigureAwait(false);
+            await sources.ObserveVoid(() => physical.ActualFilePreparationClose!).ConfigureAwait(false);
+            await sources.ObserveVoid(() => fileSource.ValidateOriginalFileRegistrationOutcomeAsync(
+                physical.FilePreparation!, physical.ActualFileTask!, physical.ActualFileMetadataTask!, physical.ActualFileResult, token)).ConfigureAwait(false);
+        }
+        if (physical.MetadataSource is { } metadataSource)
+        {
+            await sources.ObserveVoid(() => physical.ActualWorkspaceNativeTask!).ConfigureAwait(false);
+            await sources.ObserveVoid(() => physical.ActualWorkspacePreparationClose!).ConfigureAwait(false);
+            await sources.ObserveVoid(() => metadataSource.ValidateOriginalWorkspaceMetadataOutcomeAsync(
+                physical.MetadataPreparation!, physical.ActualWorkspaceNativeTask!, physical.ActualWorkspaceNativeObservation!, token)).ConfigureAwait(false);
+        }
         await sources.ObserveVoid(() => scopes.RevalidateOriginalSetupAsync(intent, capture, intent.OriginalActor, token)).ConfigureAwait(false);
         RequirePhysical(intent, capture, step, actual, result); return true;
     });
@@ -286,10 +353,11 @@ public sealed class FilesDeveloperOriginalFolderSetupProducer(FilesDeveloperOrig
         }
         start.TrySetResult(); return actual;
     }
-    private static async Task Drain(Task start, Original[] originals)
+    private async Task Drain(Task start, Original[] originals)
     {
         await start.ConfigureAwait(false); var errors = new List<Exception>();
         foreach (var original in originals) try { await original.Driver.ConfigureAwait(false); } catch (Exception error) { AddTask(errors, original.Driver, error); }
+        await DrainOriginalExecutionPins(errors).ConfigureAwait(false);
         if (errors.Count != 0) throw new AggregateException("Actual folder setup originals failed; partial outcomes remain retained.", errors);
     }
     public ValueTask DisposeAsync() => new(CloseAndDrainOriginalFolderSetupsAsync());

@@ -18,6 +18,7 @@ public static class CloudflareTypedToolCatalogue
         new CloudflareToolDescriptor("cloudflare_kv_put_task_marker", "cloudflare.kv.marker.put", CloudflareOperationKind.KvMarkerPut, false, true),
         new CloudflareToolDescriptor("cloudflare_kv_get_task_marker", "cloudflare.kv.marker.get", CloudflareOperationKind.KvMarkerGet, true, true),
         new CloudflareToolDescriptor("cloudflare_kv_delete_task_marker", "cloudflare.kv.marker.delete", CloudflareOperationKind.KvMarkerDelete, false, true),
+        new CloudflareToolDescriptor("cloudflare_kv_verify_task_marker_absent", "cloudflare.kv.marker.verifyAbsent", CloudflareOperationKind.KvMarkerVerifyAbsent, true, true),
         new CloudflareToolDescriptor("cloudflare_kv_delete_isolated", "cloudflare.kv.delete", CloudflareOperationKind.KvDelete, false, true),
         new CloudflareToolDescriptor("cloudflare_workers_read", "cloudflare.workers.read", CloudflareOperationKind.WorkerRead, true, false),
         new CloudflareToolDescriptor("cloudflare_workers_deploy", "cloudflare.workers.deploy", CloudflareOperationKind.WorkerDeploy, false, false),
@@ -64,8 +65,9 @@ public static class CloudflareTypedToolCatalogue
             case CloudflareOperationKind.KvMarkerPut:
             case CloudflareOperationKind.KvMarkerGet:
             case CloudflareOperationKind.KvMarkerDelete:
+            case CloudflareOperationKind.KvMarkerVerifyAbsent:
                 path += "/values/" + Uri.EscapeDataString("9to1-task/" + taskId.ToString("N") + "/" + executionId.ToString("N") + "/proof");
-                method = descriptor.Kind == CloudflareOperationKind.KvMarkerPut ? "PUT" : descriptor.Kind == CloudflareOperationKind.KvMarkerGet ? "GET" : "DELETE";
+                method = descriptor.Kind == CloudflareOperationKind.KvMarkerPut ? "PUT" : descriptor.Kind is CloudflareOperationKind.KvMarkerGet or CloudflareOperationKind.KvMarkerVerifyAbsent ? "GET" : "DELETE";
                 if (method == "PUT") { body = ",body:" + JsonSerializer.Serialize(marker) + ",contentType:'application/octet-stream',rawBody:true"; query = ",query:{expiration_ttl:120}"; }
                 // Raw GET uses the separate fixed official fetch/body-byte compiler below.
                 // No generic response result string is used as marker byte proof.
@@ -86,6 +88,8 @@ public static class CloudflareTypedToolCatalogue
         }
         if (descriptor.Kind == CloudflareOperationKind.KvMarkerGet)
             code = CloudflareRawTaskMarkerTransport.CompileOriginal(service, path, marker, key);
+        if (descriptor.Kind == CloudflareOperationKind.KvMarkerVerifyAbsent)
+            code = CloudflareRawTaskMarkerAbsenceTransport.CompileOriginal(service, root + "/" + ns, path, ns!, key);
         var invocation = new CloudflareCompiledInvocation(service, descriptor, taskId, executionId, actionId, digest, key, ns, code, marker);
         Issued.Add(invocation, new()); return invocation;
     }
@@ -95,7 +99,7 @@ public static class CloudflareTypedToolCatalogue
         if (!IsIssuedOriginal(original) || envelope.ValueKind != JsonValueKind.Object || envelope.GetRawText().Length > 128_000 ||
             envelope.EnumerateObject().Count() != 4 || !envelope.TryGetProperty("operation_key", out var key) || key.GetString() != original.OperationKey ||
             !envelope.TryGetProperty("ok", out var ok) || ok.ValueKind != JsonValueKind.True ||
-            !envelope.TryGetProperty("status", out var status) || !status.TryGetInt32(out var code) || code is < 200 or > 299 || !envelope.TryGetProperty("data", out var data))
+            !envelope.TryGetProperty("status", out var status) || !status.TryGetInt32(out var code) || (original.Descriptor.Kind == CloudflareOperationKind.KvMarkerVerifyAbsent ? code != 404 : code is < 200 or > 299) || !envelope.TryGetProperty("data", out var data))
             throw new InvalidOperationException("The exact compiled operation response is unconfirmed; reconcile before any write retry.");
         if (original.Descriptor.Kind is CloudflareOperationKind.KvCreate or CloudflareOperationKind.KvInspect)
         {
@@ -115,6 +119,10 @@ public static class CloudflareTypedToolCatalogue
         else if (original.Descriptor.Kind == CloudflareOperationKind.KvMarkerGet)
         {
             CloudflareRawTaskMarkerTransport.DemandOriginalResponse(original, data);
+        }
+        else if (original.Descriptor.Kind == CloudflareOperationKind.KvMarkerVerifyAbsent)
+        {
+            CloudflareRawTaskMarkerAbsenceTransport.DemandOriginalResponse(original, data);
         }
         else if (data.ValueKind != JsonValueKind.Null) throw new InvalidOperationException("Unexpected remote content.");
         return data.Clone();

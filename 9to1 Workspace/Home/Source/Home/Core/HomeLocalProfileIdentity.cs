@@ -35,10 +35,13 @@ public sealed class OperatingSystemPrincipalSource : ITrustedHostPrincipalSource
 public sealed record HomeLocalProfile(Guid ProfileId, string PrincipalDigest, DateTimeOffset CreatedAtUtc);
 
 /// <summary>Local OS profile identity is independent of CAKE AccountID and OrganisationID. This creates no artifact ownership grants.</summary>
-public sealed class HomeLocalProfileIdentity(IHomeCoreStateStore store, ITrustedHostPrincipalSource principals)
+public sealed partial class HomeLocalProfileIdentity(IHomeCoreStateStore store, ITrustedHostPrincipalSource principals)
     : IAuthenticatedResourceActorSource, IHomeStateCommitActorGuard
 {
     internal bool IsBoundToStore(IHomeCoreStateStore candidate) => ReferenceEquals(store, candidate);
+
+    private IHomeCoreStateStore OriginalStore => store;
+    private ITrustedHostPrincipalSource OriginalPrincipals => principals;
 
     private const string RecordId = "home.local-profile";
     private const int SchemaVersion = 1;

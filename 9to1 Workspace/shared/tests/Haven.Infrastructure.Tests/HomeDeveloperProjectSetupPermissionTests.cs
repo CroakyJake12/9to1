@@ -7,7 +7,7 @@ namespace Haven.Infrastructure.Tests;
 
 // Real local Home store/profile/review/Accept/claim/held entry. Destination, capture and
 // physical outcome issuers below are synthetic private sources, not Files/kernel evidence.
-public sealed class HomeDeveloperProjectSetupPermissionTests
+public sealed partial class HomeDeveloperProjectSetupPermissionTests
 {
     [Fact] public Task A_value_equal_public_intent_cannot_acquire_the_private_destination_review() => Run(async rig =>
     {
@@ -116,9 +116,9 @@ public sealed class HomeDeveloperProjectSetupPermissionTests
         }
     });
     private static IEnumerable<Exception> Leaves(Exception value) => value is AggregateException group ? group.InnerExceptions.SelectMany(Leaves) : [value];
-    private static async Task Run(Func<Rig, Task> body)
+    private static async Task Run(Func<Rig, Task> body, IDeveloperProjectOriginalSetupCompletionSource? completions = null)
     {
-        var rig = new Rig(); var errors = new List<Exception>();
+        var rig = new Rig(completions); var errors = new List<Exception>();
         try { await body(rig); } catch (Exception cause) { errors.Add(cause); }
         try { await rig.Source.CloseAndDrainOriginalSetupsAsync(); }
         catch (Exception cause)
@@ -139,12 +139,14 @@ public sealed class HomeDeveloperProjectSetupPermissionTests
         internal readonly HomeDeveloperProjectSetupPermissionSource Source; internal readonly Issuer Issuer = new();
         internal readonly List<Task> Originals = []; internal readonly HashSet<Task> Expected = new(ReferenceEqualityComparer.Instance);
         internal bool ExpectedClose; internal int Effects;
-        internal Rig()
+        internal Rig(IDeveloperProjectOriginalSetupCompletionSource? completions = null)
         {
             Directory.CreateDirectory(Root); var store = new FileHomeCoreStateStore(Path.Combine(Root, "home.json")); Profiles = new(store, new Principal());
             var policy = new HomeDeveloperProjectSetupActionPolicySource(); Permissions = new(store, policy.TryGet);
             var broker = new HomeResourceOperationBroker(new ResourceAuthorizationService(Profiles, [Issuer]), Permissions);
-            Source = new(store, Profiles, broker, Permissions, () => Issuer, () => Issuer, () => Issuer);
+            Source = completions is null
+                ? new(store, Profiles, broker, Permissions, () => Issuer, () => Issuer, () => Issuer)
+                : new(store, Profiles, broker, Permissions, () => Issuer, () => Issuer, () => Issuer, () => completions);
         }
         internal T Own<T>(T original) where T : Task { Originals.Add(original); return original; }
         internal async Task<DeveloperProjectSetupIntent> Prepare()

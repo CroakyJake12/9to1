@@ -17,9 +17,19 @@ public sealed partial class WorkspaceToolService
         Func<IDeveloperProjectOriginalPhysicalReadSelectionSource> configuredOriginalSelections)
         => new DeveloperCaptureSource(originalReadAdmissionSource, configuredOriginalSelections);
 
-    private sealed class DeveloperCaptureSource(
+    /// <summary>Additive actual setup-issuer composition; the original read-only factory's
+    /// CLR signature and behavior remain available. Missing setup composition refuses only
+    /// the new existing-directory setup observation; it never enables mutations.</summary>
+    public IDeveloperProjectOriginalPhysicalCaptureSource CreateOriginalDeveloperCaptureSource(
+        IDeveloperProjectOriginalReadAdmissionSource originalReadAdmissionSource,
+        Func<IDeveloperProjectOriginalPhysicalReadSelectionSource> configuredOriginalSelections,
+        Func<IDeveloperProjectOriginalSetupPermissionSource> configuredOriginalSetupPermissions)
+        => new DeveloperCaptureSource(originalReadAdmissionSource, configuredOriginalSelections, configuredOriginalSetupPermissions);
+
+    private sealed partial class DeveloperCaptureSource(
         IDeveloperProjectOriginalReadAdmissionSource admissions,
-        Func<IDeveloperProjectOriginalPhysicalReadSelectionSource> selections) : IDeveloperProjectOriginalPhysicalCaptureSource
+        Func<IDeveloperProjectOriginalPhysicalReadSelectionSource> selections,
+        Func<IDeveloperProjectOriginalSetupPermissionSource>? setupPermissions) : IDeveloperProjectOriginalPhysicalCaptureSource
     {
         private readonly AsyncLocal<Original?> _executing = new();
         [ThreadStatic] private static Dictionary<DeveloperCaptureSource, int>? _physicalSources;
@@ -85,6 +95,9 @@ public sealed partial class WorkspaceToolService
             if (admissions is not IDeveloperProjectOriginalReadAdmissionJoinGuard homeGuard)
                 throw new InvalidOperationException("The genuine Home read-owner join guard is unavailable.");
             Invoke(() => { homeGuard.DemandExternalOriginalReadAdmissionJoin(); selections().DemandExternalOriginalReadSelectionJoin(); return true; });
+            DemandOriginalDirectoryDependencies();
+            DemandOriginalWorkspaceMetadataDependencies();
+            DemandOriginalSavedRootDependencies();
         }
         private T Invoke<T>(Func<T> source)
         {
@@ -107,7 +120,7 @@ public sealed partial class WorkspaceToolService
             if (original is null || !ReferenceEquals(original.Owner, owner)) throw new InvalidOperationException("No actual source original owns this returned Task.");
             lock (_gate) original.Sources.Add(actual);
         }
-        private Task<T> Start<T>(PhysicalSelection original, Func<Task<T>> body)
+        private Task<T> Start<T>(PhysicalSelection original, Func<Task<T>> body, Action<Original, Task<T>>? publishOriginalMetadata = null)
         {
             TaskCompletionSource start; Task<T> actual;
             lock (_gate)
@@ -118,6 +131,9 @@ public sealed partial class WorkspaceToolService
                 var marker = new Original(original, _executing.Value);
                 start = new(TaskCreationOptions.RunContinuationsAsynchronously);
                 actual = Run(start.Task, marker, body); marker.Driver = actual; original.Originals.Add(marker);
+                // Private metadata-only assignment, before the start gate; no domain/source
+                // callback executes here. Actual whole driver identity is visible to close.
+                publishOriginalMetadata?.Invoke(marker, actual);
             }
             start.TrySetResult(); return actual;
         }
@@ -346,6 +362,7 @@ public sealed partial class WorkspaceToolService
         private async Task DrainAll(Task start, PhysicalSelection[] originals)
         {
             await start.ConfigureAwait(false); var errors = new List<Exception>(); var closes = new List<Task>();
+            await DrainOriginalSavedRootAcquisitions(errors).ConfigureAwait(false);
             // Every actual acquired root, including failed acquisition, is retained privately.
             foreach (var original in originals) try { closes.Add(Close(original)); } catch (Exception error) { AddOriginalErrors(errors, null, error); }
             foreach (var close in closes) try { await close.ConfigureAwait(false); } catch (Exception error) { AddOriginalErrors(errors, close, error); }
@@ -365,8 +382,15 @@ public sealed partial class WorkspaceToolService
         private async Task Drain(Task start, PhysicalSelection actual)
         {
             await start.ConfigureAwait(false); var errors = new List<Exception>(); Original[] originals;
-            lock (_gate) originals = actual.Originals.ToArray();
+            await DrainOriginalSavedRootAcquisitions(errors).ConfigureAwait(false);
+            lock (_gate) originals = actual.Originals.Concat(OriginalDirectoryOwners(actual)).Concat(OriginalFileRegistrationOwners(actual)).Concat(OriginalWorkspaceMetadataOwners(actual)).Concat(OriginalSavedRootOwners(actual)).Distinct().ToArray();
             foreach (var original in originals) try { await original.Driver.ConfigureAwait(false); } catch (Exception error) { AddOriginalErrors(errors, original.Driver, error); }
+            // Lease cleanup follows every admitted original before captured streams/root
+            // descriptors retire. Request signals alone never prove cleanup completion.
+            await DrainOriginalDirectoryPreparations(actual, errors).ConfigureAwait(false);
+            await DrainOriginalFileRegistrations(actual, errors).ConfigureAwait(false);
+            await DrainOriginalWorkspaceMetadata(actual, errors).ConfigureAwait(false);
+            await DrainOriginalSavedRoots(actual, errors).ConfigureAwait(false);
             Capture[] captures; lock (_gate) captures = _captures.Where(value => ReferenceEquals(value.Physical, actual)).ToArray();
             foreach (var capture in captures)
             {
@@ -393,7 +417,9 @@ public sealed partial class WorkspaceToolService
             try { actual.Project?.Dispose(); } catch (Exception error) { AddOriginalErrors(errors, null, error); }
             try { actual.Root?.Dispose(); } catch (Exception error) { AddOriginalErrors(errors, null, error); }
             // Parent drivers settle before collecting their complete admitted child inventory.
-            Task[] finalSources; lock (_gate) finalSources = actual.Originals.SelectMany(value => value.Sources).Concat(actual.OriginalCleanupTasks).ToArray();
+            Task[] finalSources; lock (_gate) finalSources = actual.Originals.Concat(OriginalDirectoryOwners(actual)).Concat(OriginalFileRegistrationOwners(actual)).Concat(OriginalWorkspaceMetadataOwners(actual)).Concat(OriginalSavedRootOwners(actual)).Distinct()
+                .SelectMany(value => value.Sources).Concat(actual.OriginalCleanupTasks)
+                .Concat(_fileRegistrations.Where(value => ReferenceEquals(value.Capture.Physical, actual)).SelectMany(value => value.OriginalCleanup)).ToArray();
             foreach (var source in finalSources) try { await source.ConfigureAwait(false); } catch (Exception error) { AddOriginalErrors(errors, source, error); }
             ThrowOriginalErrors(errors);
             lock (_gate) { _issued.Remove(actual); foreach (var capture in captures) _captures.Remove(capture); }

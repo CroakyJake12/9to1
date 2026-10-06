@@ -13,6 +13,14 @@ public static class DeveloperProjectSetupServiceCollectionExtensions
         Func<IServiceProvider, IDeveloperProjectOriginalSetupScopeSource> actualScopes,
         Func<IServiceProvider, IDeveloperProjectOriginalCaptureAuthority> actualCaptures,
         Func<IServiceProvider, IDeveloperProjectOriginalSetupStepOutcomeSource> actualOutcomes)
+        => AddHavenOwnedDeveloperSetups(services, actualHomeComponents, actualScopes, actualCaptures, actualOutcomes, null);
+
+    public static IServiceCollection AddHavenOwnedDeveloperSetups(this IServiceCollection services,
+        Func<IServiceProvider, HomeNativeWindowsOwnerComponents> actualHomeComponents,
+        Func<IServiceProvider, IDeveloperProjectOriginalSetupScopeSource> actualScopes,
+        Func<IServiceProvider, IDeveloperProjectOriginalCaptureAuthority> actualCaptures,
+        Func<IServiceProvider, IDeveloperProjectOriginalSetupStepOutcomeSource> actualOutcomes,
+        Func<IServiceProvider, IDeveloperProjectOriginalSetupCompletionSource>? actualCompletions)
     {
         ArgumentNullException.ThrowIfNull(services); ArgumentNullException.ThrowIfNull(actualHomeComponents);
         ArgumentNullException.ThrowIfNull(actualScopes); ArgumentNullException.ThrowIfNull(actualCaptures); ArgumentNullException.ThrowIfNull(actualOutcomes);
@@ -25,7 +33,8 @@ public static class DeveloperProjectSetupServiceCollectionExtensions
             if (!home.Resources.IsBoundToActorSource(home.Profiles) || !home.Broker.IsBoundToOriginalComposition(home.Resources, home.Permissions))
                 throw new UnauthorizedAccessException("The SAME current Home actor/resource/broker/policy tuple is required.");
             return new(home.StateStore, home.Profiles, home.Broker, home.Permissions,
-                () => actualScopes(provider), () => actualCaptures(provider), () => actualOutcomes(provider));
+                () => actualScopes(provider), () => actualCaptures(provider), () => actualOutcomes(provider),
+                actualCompletions is null ? null : () => actualCompletions(provider));
         });
         services.AddSingleton<IDeveloperProjectOriginalSetupPermissionSource>(provider => provider.GetRequiredService<HomeDeveloperProjectSetupPermissionSource>());
         return services;

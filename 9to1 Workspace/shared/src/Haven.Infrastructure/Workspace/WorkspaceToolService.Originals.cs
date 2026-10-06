@@ -29,7 +29,7 @@ public sealed partial class WorkspaceToolService
     /// <summary>One privately issued original call over the existing physical service. Its retained
     /// operations are joined before outcome publication. Persisted IDs, hashes and public interfaces
     /// cannot manufacture this source's original invocation or an accepted physical receipt.</summary>
-    private sealed class Invocation : IWorkspaceOriginalInvocation, IWorkspaceOriginalRollbackService
+    private sealed partial class Invocation : IWorkspaceOriginalInvocation, IWorkspaceOriginalRollbackService
     {
         private readonly object _gate = new();
         private readonly CancellationTokenSource _lifetime = new();
@@ -406,6 +406,8 @@ public sealed partial class WorkspaceToolService
 
         public Task CloseAndDrainAsync()
         {
+            // Pure own/source ancestry guard precedes even an existing coalesced close.
+            DemandExternalOriginalProcessStartReleaseJoin();
             TaskCompletionSource<Task> completion;
             Operation[] operations;
             lock (_gate)
@@ -435,6 +437,12 @@ public sealed partial class WorkspaceToolService
                 await JoinOriginalAsync(original, observed).ConfigureAwait(false);
                 if (!operation.ExpectedReadAbsence || !observed.All(IsReadAbsence)) errors.AddRange(observed);
             }
+            // Actual process originals above publish/retain late start-entry cleanup before
+            // they can terminate. Snapshot only after those genuine originals have joined.
+            Task[] releases;
+            lock (_gate) releases = _originalProcessStartEntryReleases.ToArray();
+            foreach (var actualRelease in releases)
+                await JoinOriginalAsync(actualRelease, errors).ConfigureAwait(false);
             try { _physicalRoot?.Dispose(); } catch (Exception error) { AddOriginalErrors(errors, null, error); }
             try { _linuxRoot?.Dispose(); } catch (Exception error) { AddOriginalErrors(errors, null, error); }
             try { _lifetime.Dispose(); } catch (Exception error) { AddOriginalErrors(errors, null, error); }

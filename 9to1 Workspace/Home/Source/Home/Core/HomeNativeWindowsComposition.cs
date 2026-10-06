@@ -40,7 +40,7 @@ public sealed record HomeNativeWindowsOwnerComponents(
 /// permission service and private session issuer. Its immutable provider belongs to this
 /// Home process. Native apps own separate providers and require issued IPC domain ports;
 /// compatibility/readiness never transfers raw Home objects, store bindings or receipts.</summary>
-public sealed class HomeNativeWindowsComposition : IAsyncDisposable
+public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
 {
     private readonly object _sync = new();
     private readonly CancellationTokenSource _process = new();
@@ -181,7 +181,7 @@ public sealed class HomeNativeWindowsComposition : IAsyncDisposable
     {
         lock (_sync)
         {
-            ObjectDisposedException.ThrowIf(_closing, this);
+            ObjectDisposedException.ThrowIf(_closing || _originalProcessRetiring, this);
             if (_start is not null) return _start;
             var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             _start = StartCoreAsync(gate.Task);
@@ -193,7 +193,8 @@ public sealed class HomeNativeWindowsComposition : IAsyncDisposable
     private async Task StartCoreAsync(Task gate)
     {
         await gate.ConfigureAwait(false);
-        var actor = await Profiles.GetCurrentAsync(_process.Token).ConfigureAwait(false)
+        using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+        var actor = await Profiles.GetCurrentAsync(RunOriginalHomeProcessSource, RetainOriginalHomeProcessSource, _process.Token).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("The original OS-local Home profile is unavailable.");
         HomeNativeWindowsBootstrap bootstrap;
         Task bootstrapStart;
@@ -206,7 +207,7 @@ public sealed class HomeNativeWindowsComposition : IAsyncDisposable
             bootstrapStart = _originalBootstrapStart = bootstrap.OriginalStartTask;
         }
         await bootstrapStart.ConfigureAwait(false);
-        if (actor != await Profiles.GetCurrentAsync(_process.Token).ConfigureAwait(false))
+        if (actor != await Profiles.GetCurrentAsync(RunOriginalHomeProcessSource, RetainOriginalHomeProcessSource, _process.Token).ConfigureAwait(false))
             throw new UnauthorizedAccessException("The original Home profile retired during startup.");
         _process.Token.ThrowIfCancellationRequested();
         lock (_sync) ObjectDisposedException.ThrowIf(_closing, this);
@@ -214,6 +215,7 @@ public sealed class HomeNativeWindowsComposition : IAsyncDisposable
 
     public Task CloseAndDrainAsync()
     {
+        DemandExternalOriginalProcessJoin();
         lock (_sync)
         {
             if (_close is not null) return _close;
@@ -229,6 +231,7 @@ public sealed class HomeNativeWindowsComposition : IAsyncDisposable
     private async Task CloseCoreAsync(Task gate)
     {
         await gate.ConfigureAwait(false);
+        using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
         List<Exception> failures = [];
         lock (_sync)
             try { if (_bootstrap is not null) _originalBootstrapClose = _bootstrap.CloseAndDrainAsync(); }
@@ -249,6 +252,7 @@ public sealed class HomeNativeWindowsComposition : IAsyncDisposable
         try { _originalRuntimeClose = Runtime.DisposeAsync().AsTask(); } catch (Exception error) { Add(error); }
         try { if (_originalRuntimeClose is not null) await _originalRuntimeClose.ConfigureAwait(false); }
         catch (Exception error) { Add(error); }
+        await JoinOriginalHomeProcessSourcesAsync(failures).ConfigureAwait(false);
         try { _process.Dispose(); } catch (Exception error) { Add(error); }
         if (failures.Count == 1) ExceptionDispatchInfo.Capture(failures[0]).Throw();
         if (failures.Count > 1) throw new AggregateException("Original Windows Home startup and shutdown failed.", failures);

@@ -59,7 +59,7 @@ public sealed partial class FileHomeCoreStateStore
     private sealed class LocalOperationLease(SemaphoreSlim storeGate, FileStream processLock,
         HomeCoreStoredState lockedState, Func<CancellationToken, Task<HomeStateReadResult>> readUnlocked,
         HomeLocalProfileIdentity profiles, AuthenticatedResourceActor originalActor, IHomeStateCommitActorGuard? issuerGuard)
-        : IHomeLocalOperationLease
+        : IHomeOriginalScopedLocalOperationLease
     {
         private readonly byte[] _originalStateDigest = Fingerprint(lockedState);
         private readonly SemaphoreSlim _checks = new(1, 1);
@@ -83,6 +83,29 @@ public sealed partial class FileHomeCoreStateStore
                 if (issuerGuard is not null && !await issuerGuard.CheckAsync(before.State!, originalActor,
                         HomeStateCommitPhase.Publication, cancellationToken).ConfigureAwait(false)) return false;
                 var after = await readUnlocked(cancellationToken).ConfigureAwait(false);
+                return Matches(after) && Volatile.Read(ref _revoked) == 0;
+            }
+            finally { _checks.Release(); }
+        }
+        public async ValueTask<bool> IsCurrentAsync(Action<Action> originalSynchronousScope, Action<Task> retainOriginalTask, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(originalSynchronousScope); ArgumentNullException.ThrowIfNull(retainOriginalTask);
+            if (issuerGuard is not null && issuerGuard is not IHomeOriginalScopedStateCommitActorGuard)
+                throw new InvalidOperationException("The actual held Home issuer guard has no scoped original callback producer.");
+            if (Volatile.Read(ref _revoked) != 0) return false;
+            await _checks.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                if (Volatile.Read(ref _revoked) != 0) return false;
+                // Uses the existing gate/process lease: never calls ReadAsync or another owner resolver.
+                var before = await HomeOriginalScopedSourceCallbacks.AwaitAsync(() => readUnlocked(cancellationToken), originalSynchronousScope, retainOriginalTask).ConfigureAwait(false);
+                if (!Matches(before) || Volatile.Read(ref _revoked) != 0) return false;
+                var current = await HomeOriginalScopedSourceCallbacks.AwaitAsync(() => profiles.CheckAsync(before.State!, originalActor,
+                    HomeStateCommitPhase.Publication, originalSynchronousScope, retainOriginalTask, cancellationToken).AsTask(), originalSynchronousScope, retainOriginalTask).ConfigureAwait(false);
+                if (!current || Volatile.Read(ref _revoked) != 0) return false;
+                if (issuerGuard is IHomeOriginalScopedStateCommitActorGuard scoped && !await HomeOriginalScopedSourceCallbacks.AwaitAsync(() => scoped.CheckAsync(before.State!, originalActor,
+                        HomeStateCommitPhase.Publication, originalSynchronousScope, retainOriginalTask, cancellationToken).AsTask(), originalSynchronousScope, retainOriginalTask).ConfigureAwait(false)) return false;
+                var after = await HomeOriginalScopedSourceCallbacks.AwaitAsync(() => readUnlocked(cancellationToken), originalSynchronousScope, retainOriginalTask).ConfigureAwait(false);
                 return Matches(after) && Volatile.Read(ref _revoked) == 0;
             }
             finally { _checks.Release(); }

@@ -46,10 +46,14 @@ public sealed partial class HomeDeveloperProjectSetupPermissionSource
                             ?? throw new UnauthorizedAccessException("Original setup completion admission is closing.");
                         home = await _sources.CaptureOriginalAcquisitionAsync(
                             () => permission.Owner._store.AcquireLocalOperationLeaseCoreAsync(permission.Owner._profiles,
-                                permission.OriginalIntent.OriginalActor, new ClaimedActorGuard(permission, _sources), token),
+                                permission.OriginalIntent.OriginalActor, new ClaimedActorGuard(permission, _sources),
+                                body => { _ = _sources.Invoke(() => { body(); return true; }); }, actualTask => { _ = _sources.Track(actualTask); }, token),
                             actual => home = actual).ConfigureAwait(false)
                             ?? throw new UnauthorizedAccessException("The genuine held Home setup entry was rejected.");
-                        if (!await _sources.AwaitAsync(_sources.Invoke(() => home.IsCurrentAsync(token))).ConfigureAwait(false))
+                        if (home is not IHomeOriginalScopedLocalOperationLease scopedHome)
+                            throw new InvalidOperationException("The actual setup entry requires the original scoped Home callback producer.");
+                        if (!await _sources.AwaitAsync(_sources.Invoke(() => scopedHome.IsCurrentAsync(
+                            body => { _ = _sources.Invoke(() => { body(); return true; }); }, actualTask => { _ = _sources.Track(actualTask); }, token))).ConfigureAwait(false))
                             throw new UnauthorizedAccessException("The held original Home setup actor/claim changed.");
                         permission.DemandLive();
                         var original = new Entry(this, permission, originalStep, home, completion);
@@ -108,6 +112,14 @@ public sealed partial class HomeDeveloperProjectSetupPermissionSource
                         throw new UnauthorizedAccessException("The original physical outcome issuer retired during its final reads.");
                 }).ConfigureAwait(false);
             }
+            internal bool HasSuccessfulOriginalCompletion(DeveloperProjectSetupStep sameStep)
+            {
+                lock (_gate) return ReferenceEquals(originalStep, sameStep)
+                    && Acquisition.IsCompletedSuccessfully && _validation?.IsCompletedSuccessfully == true
+                    && _actualStep?.IsCompletedSuccessfully == true && ReferenceEquals(Entry?.OriginalBody, _actualStep)
+                    && Entry?.OriginalClose?.IsCompletedSuccessfully == true && _close?.IsCompletedSuccessfully == true
+                    && _sources.OriginalErrors.Count == 0 && _closing.OriginalErrors.Count == 0;
+            }
             internal ValueTask CloseAsync()
             {
                 DemandExternalJoin(); Task actual; TaskCompletionSource begin;
@@ -135,7 +147,7 @@ public sealed partial class HomeDeveloperProjectSetupPermissionSource
             }
         }
 
-        private sealed class ClaimedActorGuard(Permission permission, CloudflareOriginalTaskLedger sources) : IHomeStateCommitActorGuard
+        private sealed class ClaimedActorGuard(Permission permission, CloudflareOriginalTaskLedger sources) : IHomeOriginalScopedStateCommitActorGuard
         {
             public async ValueTask<bool> CheckAsync(HomeCoreStoredState state, AuthenticatedResourceActor expected,
                 HomeStateCommitPhase phase, CancellationToken token)
@@ -146,10 +158,18 @@ public sealed partial class HomeDeveloperProjectSetupPermissionSource
                 // completion or resource lease acquisition is allowed from this guard.
                 return await sources.AwaitAsync(sources.Invoke(() => permission.Owner._profiles.CheckAsync(state, expected, phase, token))).ConfigureAwait(false);
             }
+            public ValueTask<bool> CheckAsync(HomeCoreStoredState state, AuthenticatedResourceActor expected,
+                HomeStateCommitPhase phase, Action<Action> originalSynchronousScope, Action<Task> retainOriginalTask, CancellationToken token)
+            {
+                if (expected != permission.OriginalIntent.OriginalActor || permission._attestation is null
+                    || !permission.Owner._broker.IsClaimedAttestationCurrentInState(permission._attestation, expected, state)) return ValueTask.FromResult(false);
+                return permission.Owner._profiles.CheckAsync(state, expected, phase, originalSynchronousScope, retainOriginalTask, token);
+            }
+
         }
 
         private sealed class Entry(Step step, Permission permission, DeveloperProjectSetupStep originalStep,
-            IHomeLocalOperationLease home, IAsyncDisposable completion) : IDeveloperProjectOriginalSetupStepEntry
+            IHomeLocalOperationLease home, IAsyncDisposable completion) : IDeveloperProjectOriginalSetupScopedStepEntry
         {
             private readonly object _gate = new();
             private readonly CloudflareOriginalTaskLedger _sources = new();
@@ -186,6 +206,44 @@ public sealed partial class HomeDeveloperProjectSetupPermissionSource
                 DemandOriginalStepEntry(sameStep);
                 var current = await _sources.AwaitAsync(_sources.Invoke(() => home.IsCurrentAsync(token))).ConfigureAwait(false);
                 DemandOriginalStepEntry(sameStep); return current;
+            }
+            public ValueTask<bool> CheckOriginalStepCommitAsync(DeveloperProjectSetupStep sameStep,
+                Action<Action> originalSynchronousScope, Action<Task> retainOriginalTask, CancellationToken token)
+            {
+                ArgumentNullException.ThrowIfNull(originalSynchronousScope); ArgumentNullException.ThrowIfNull(retainOriginalTask);
+                DemandOriginalStepEntry(sameStep); Task<bool> actual; TaskCompletionSource begin;
+                lock (_gate)
+                {
+                    if (_close is not null || _checks.Count >= 32) throw new UnauthorizedAccessException("Original scoped commit-check admission is closed or full.");
+                    _sources.BindOriginalOwner(this); begin = new(TaskCreationOptions.RunContinuationsAsynchronously);
+                    actual = CheckScopedPublishedAsync(begin.Task, sameStep, originalSynchronousScope, retainOriginalTask, token); _checks.Add(actual);
+                }
+                begin.SetResult(); return new(actual);
+            }
+            private async Task<bool> CheckScopedPublishedAsync(Task begin, DeveloperProjectSetupStep sameStep,
+                Action<Action> originalSynchronousScope, Action<Task> retainOriginalTask, CancellationToken token)
+            {
+                await begin.ConfigureAwait(false); using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+                var sources = new CloudflareOriginalTaskLedger(); sources.BindOriginalOwner(this); sources.BindOriginalCallerCallback(originalSynchronousScope);
+                try
+                {
+                    return await sources.RunToOriginalSettlementAsync(async () =>
+                    {
+                        DemandOriginalStepEntry(sameStep);
+                        if (home is not IHomeOriginalScopedLocalOperationLease scoped)
+                            throw new InvalidOperationException("The genuine held Home lease has no original scoped callback producer.");
+                        void Scope(Action callback) => originalSynchronousScope(() => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { callback(); return true; }));
+                        void Retain(Task sameRaw) { _ = _sources.Track(sameRaw); retainOriginalTask(sameRaw); }
+                        var current = await sources.CaptureOriginalAcquisitionAsync(
+                            () => scoped.IsCurrentAsync(Scope, Retain, token).AsTask(), _ => { }).ConfigureAwait(false);
+                        DemandOriginalStepEntry(sameStep); return current;
+                    }).ConfigureAwait(false);
+                }
+                finally
+                {
+                    foreach (var original in sources.OriginalTasks) _ = _sources.Track(original);
+                    foreach (var cause in sources.OriginalErrors) _sources.Retain(cause);
+                }
             }
             public T RunOriginalStep<T>(DeveloperProjectSetupStep sameStep, Func<T> body, CancellationToken token)
             {

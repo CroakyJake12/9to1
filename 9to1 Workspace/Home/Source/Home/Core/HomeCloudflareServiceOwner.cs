@@ -47,7 +47,7 @@ public sealed partial class HomeCloudflareServiceOwner : ICanonicalResourceAcces
     { var found = state.Records.Where(x => x.RecordId == id).Take(2).ToArray(); return found.Length == 1 ? found[0] : null; }
     private static string SetupScopeId(AuthenticatedResourceActor actor) => "cloudflare:profile:" + actor.ProfileId;
     private async Task<AuthenticatedResourceActor> ActorAsync(CloudflareOriginalTaskLedger stages, CancellationToken token) =>
-        await stages.AwaitAsync(stages.Invoke(() => _profiles.GetCurrentAsync(token))).ConfigureAwait(false)
+        await stages.AwaitAsync(stages.Invoke(() => _profiles.GetCurrentAsync(body => RunOriginalHostCallback(stages, body), actual => RetainOriginalHostTask(stages, actual), token))).ConfigureAwait(false)
             ?? throw new CloudflareSetupRequiredException(CloudflareSetupStage.HomeProfileRequired, "CF_HOME_PROFILE_REQUIRED", "Open the installed local Home profile before configuring Cloudflare.");
     private async Task<HomeCoreStoredState> StateAsync(CloudflareOriginalTaskLedger stages, CancellationToken token)
     {
@@ -89,16 +89,19 @@ public sealed partial class HomeCloudflareServiceOwner : ICanonicalResourceAcces
         if (await ActorAsync(stages, token).ConfigureAwait(false) != actor) throw new UnauthorizedAccessException("Home actor changed after the final configuration read.");
         return new(actor, record, config, connection!, stages);
     }
-    public async Task<CloudflareSetupObservation> GetSetupAsync(CancellationToken token)
+    public Task<CloudflareSetupObservation> GetSetupAsync(CancellationToken token) => StartOriginalHostAsync(() => GetSetupBodyAsync(token));
+    private async Task<CloudflareSetupObservation> GetSetupBodyAsync(CancellationToken token)
     {
-        var stages = new CloudflareOriginalTaskLedger();
+        var stages = CreateOriginalHostSources();
         try { var actual = await ReadCaptureAsync(stages, token).ConfigureAwait(false); return new(true, "CF_CONFIGURED_CREDENTIAL_AVAILABILITY_UNOBSERVED", null, actual.Record.Revision); }
         catch (CloudflareSetupRequiredException missing) { return new(false, missing.Code, missing.ReviewRequestId, 0); }
     }
-    public async Task<ICloudflareOriginalSetupReview> PrepareSetupAsync(CloudflareSetupSelection explicitSelection, long expectedRevision, CancellationToken token)
+    public Task<ICloudflareOriginalSetupReview> PrepareSetupAsync(CloudflareSetupSelection explicitSelection, long expectedRevision, CancellationToken token)
+        => StartOriginalHostAsync(() => PrepareSetupBodyAsync(explicitSelection, expectedRevision, token));
+    private async Task<ICloudflareOriginalSetupReview> PrepareSetupBodyAsync(CloudflareSetupSelection explicitSelection, long expectedRevision, CancellationToken token)
     {
         DemandSelection(explicitSelection); if (expectedRevision < 0) throw new ArgumentOutOfRangeException(nameof(expectedRevision));
-        var stages = new CloudflareOriginalTaskLedger(); var actor = await ActorAsync(stages, token).ConfigureAwait(false);
+        var stages = CreateOriginalHostSources(); var actor = await ActorAsync(stages, token).ConfigureAwait(false);
         var state = await StateAsync(stages, token).ConfigureAwait(false); var prior = Single(state, ConfigurationId);
         if ((prior?.Revision ?? 0) != expectedRevision || prior is not null && (!RecordShape(prior, ConfigurationId) || prior.Payload.Deserialize<Configuration>()?.ProfileId != actor.ProfileId))
             throw new CloudflareSetupRequiredException(CloudflareSetupStage.ConfigurationConflict, "CF_CONFIGURATION_CONFLICT", "Reload Cloudflare setup before saving.");
@@ -120,12 +123,17 @@ public sealed partial class HomeCloudflareServiceOwner : ICanonicalResourceAcces
         public string RequestId => prepared.RequestId;
         public Task<CloudflareSetupObservation> SubmitOriginalAsync(CancellationToken token)
         {
+            CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
+            lock (owner._hostGate) { owner.DemandOriginalHostAdmission(); return SubmitAdmittedAsync(token); }
+        }
+        private Task<CloudflareSetupObservation> SubmitAdmittedAsync(CancellationToken token)
+        {
             lock (_sync)
             {
                 if (_submit is not null) return _submit;
                 stages.BindOriginalOwner(this);
                 var begin = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-                _submit = SubmitPublishedAsync(begin.Task, token); begin.SetResult(); return _submit;
+                _submit = SubmitPublishedAsync(begin.Task, token); owner.RetainExistingOriginalHostTask(_submit, stages, this); begin.SetResult(); return _submit;
             }
         }
         private async Task<CloudflareSetupObservation> SubmitPublishedAsync(Task begin, CancellationToken token)
@@ -138,11 +146,16 @@ public sealed partial class HomeCloudflareServiceOwner : ICanonicalResourceAcces
         }
         public Task<CloudflareSetupObservation> CommitOriginalAsync(CancellationToken token)
         {
+            CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
+            lock (owner._hostGate) { owner.DemandOriginalHostAdmission(); return CommitAdmittedAsync(token); }
+        }
+        private Task<CloudflareSetupObservation> CommitAdmittedAsync(CancellationToken token)
+        {
             lock (_sync)
             {
                 if (_commit is not null) return _commit;
                 var begin = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-                _commit = CommitPublishedAsync(begin.Task, token); begin.SetResult(); return _commit;
+                _commit = CommitPublishedAsync(begin.Task, token); owner.RetainExistingOriginalHostTask(_commit, stages, this); begin.SetResult(); return _commit;
             }
         }
         private async Task<CloudflareSetupObservation> CommitPublishedAsync(Task begin, CancellationToken token)
@@ -157,7 +170,7 @@ public sealed partial class HomeCloudflareServiceOwner : ICanonicalResourceAcces
             var claim = await stages.AwaitAsync(stages.Invoke(() => owner._broker.ClaimExecutionObservedAsync(capability, "cloudflare", SetupAction, prepared.Scopes, arguments, token))).ConfigureAwait(false);
             if (claim.Disposition != HomeResourceClaimDisposition.Claimed || claim.Actor != actor) throw new UnauthorizedAccessException("Home setup claim rejected.");
             var attestation = owner._broker.CaptureClaimedAttestation(capability) ?? throw new UnauthorizedAccessException("Individual Home Accept is required for this setup.");
-            var guard = new ClaimedStateGuard(owner, actor, attestation, prior is null ? [] : [prior], ConfigurationId, prior?.Revision ?? 0);
+            var guard = new ClaimedStateGuard(owner, stages, actor, attestation, prior is null ? [] : [prior], ConfigurationId, prior?.Revision ?? 0);
             var record = new HomeCoreStateRecord(ConfigurationId, ConfigurationId, 1, HomeDataScope.DeviceLocal, HomeRecordAuthority.LocalCanonical,
                 checked((prior?.Revision ?? 0) + 1), JsonSerializer.SerializeToElement(configuration));
             var written = await stages.AwaitAsync(stages.Invoke(() => owner._store.WriteGuardedAsync(record, prior?.Revision ?? 0, actor, guard, token))).ConfigureAwait(false);
@@ -169,9 +182,11 @@ public sealed partial class HomeCloudflareServiceOwner : ICanonicalResourceAcces
         }
     }
     public Task<CloudflareSavedService> AcquireOriginalAsync(CancellationToken token) => AcquireCallerScopedOriginalAsync(null, token);
-    public async Task<CloudflareSavedService> AcquireCallerScopedOriginalAsync(Action<Action>? callback, CancellationToken token)
+    public Task<CloudflareSavedService> AcquireCallerScopedOriginalAsync(Action<Action>? callback, CancellationToken token)
+        => StartOriginalHostAsync(() => AcquireCallerScopedBodyAsync(callback, token));
+    private async Task<CloudflareSavedService> AcquireCallerScopedBodyAsync(Action<Action>? callback, CancellationToken token)
     {
-        var stages = new CloudflareOriginalTaskLedger(); stages.BindOriginalCallerCallback(callback);
+        var stages = CreateOriginalHostSources(callback);
         return await stages.RunToOriginalSettlementAsync(async () =>
         {
 
@@ -182,10 +197,12 @@ public sealed partial class HomeCloudflareServiceOwner : ICanonicalResourceAcces
         }).ConfigureAwait(false);
     }
     public Task RevalidateOriginalAsync(CloudflareSavedService service, CancellationToken token) => RevalidateCallerScopedOriginalAsync(service, null, token);
-    public async Task RevalidateCallerScopedOriginalAsync(CloudflareSavedService service, Action<Action>? callback, CancellationToken token)
+    public Task RevalidateCallerScopedOriginalAsync(CloudflareSavedService service, Action<Action>? callback, CancellationToken token)
+        => StartOriginalHostAsync(() => RevalidateCallerScopedBodyAsync(service, callback, token));
+    private async Task RevalidateCallerScopedBodyAsync(CloudflareSavedService service, Action<Action>? callback, CancellationToken token)
     {
         if (!_services.TryGetValue(service, out var original)) throw new UnauthorizedAccessException("SAME Home-issued saved Cloudflare service required.");
-        original.Stages.BindOriginalCallerCallback(callback);
+        original.Stages.BindOriginalCallerCallback(OriginalHostCaller(callback)); AttachOriginalHostSources(original.Stages);
         await original.Stages.RunToOriginalSettlementAsync(async () =>
         {
             var current = await ReadCaptureAsync(original.Stages, token).ConfigureAwait(false);
@@ -193,9 +210,11 @@ public sealed partial class HomeCloudflareServiceOwner : ICanonicalResourceAcces
                 throw new UnauthorizedAccessException("Original Home service selection changed.");
         }).ConfigureAwait(false);
     }
-    public async ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor, string actionId, ResourceScope scope, CancellationToken token)
+    public ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor, string actionId, ResourceScope scope, CancellationToken token)
+        => new(StartOriginalHostAsync(() => EvaluateBodyAsync(actor, actionId, scope, token)));
+    private async Task<ResourceAccessDecision> EvaluateBodyAsync(AuthenticatedResourceActor actor, string actionId, ResourceScope scope, CancellationToken token)
     {
-        var stages = new CloudflareOriginalTaskLedger(); var actualActor = await ActorAsync(stages, token).ConfigureAwait(false);
+        var stages = CreateOriginalHostSources(); var actualActor = await ActorAsync(stages, token).ConfigureAwait(false);
         var state = await StateAsync(stages, token).ConfigureAwait(false); var configRecord = Single(state, ConfigurationId);
         var actualRevision = configRecord?.Revision ?? 0; bool allowed = false;
         if (actionId == SetupAction && scope.Id == SetupScopeId(actor) && scope.Access == ResourceAccess.Write)
@@ -207,7 +226,7 @@ public sealed partial class HomeCloudflareServiceOwner : ICanonicalResourceAcces
             if ((actionId == ReconcileAction || actionId == StagingAction) && scope.Id == "cloudflare:account:" + config.Selection.AccountId && scope.Access == ResourceAccess.Write)
                 allowed = actualActor == actor;
             var descriptor = CloudflareTypedToolCatalogue.Descriptors.SingleOrDefault(x => x.ActionId == actionId && x.IsImplemented);
-            if (descriptor?.Kind is CloudflareOperationKind.KvMarkerPut or CloudflareOperationKind.KvMarkerGet or CloudflareOperationKind.KvMarkerDelete && scope.Access == ResourceAccess.Read)
+            if (descriptor?.Kind is CloudflareOperationKind.KvMarkerPut or CloudflareOperationKind.KvMarkerGet or CloudflareOperationKind.KvMarkerDelete or CloudflareOperationKind.KvMarkerVerifyAbsent && scope.Access == ResourceAccess.Read)
             {
                 var bound = state.Records.SingleOrDefault(x => RecordShape(x, "home.cloudflare.staging") && x.Payload.Deserialize<BorrowedNamespace>() is { } ns &&
                     WorkerScopeId(ns.AccountId, ns.Selection.WorkerName, ns.Selection.BindingName) == scope.Id && ns.ProfileId == actor.ProfileId &&
@@ -221,7 +240,7 @@ public sealed partial class HomeCloudflareServiceOwner : ICanonicalResourceAcces
                 {
                     var record = state.Records.SingleOrDefault(x => RecordShape(x, "home.cloudflare.namespace") &&
                         x.Payload.Deserialize<Namespace>() is { } ns && "cloudflare:kv:" + ns.AccountId + "/" + ns.NamespaceId == scope.Id);
-                    if (record is null && descriptor.Kind is CloudflareOperationKind.KvMarkerPut or CloudflareOperationKind.KvMarkerGet or CloudflareOperationKind.KvMarkerDelete)
+                    if (record is null && descriptor.Kind is CloudflareOperationKind.KvMarkerPut or CloudflareOperationKind.KvMarkerGet or CloudflareOperationKind.KvMarkerDelete or CloudflareOperationKind.KvMarkerVerifyAbsent)
                         record = state.Records.SingleOrDefault(x => RecordShape(x, "home.cloudflare.staging") && x.Payload.Deserialize<BorrowedNamespace>() is { } ns &&
                             "cloudflare:kv:" + ns.AccountId + "/" + ns.NamespaceId == scope.Id && ns.ProfileId == actor.ProfileId &&
                             ns.AccountId == config.Selection.AccountId && ns.ConnectionId == config.Selection.ConnectionId);
@@ -255,9 +274,13 @@ public sealed partial class HomeCloudflareServiceOwner : ICanonicalResourceAcces
             throw new CloudflareSetupRequiredException(CloudflareSetupStage.NamespaceRecoveryRequired, "CF_TASK_NAMESPACE_NOT_OWNED", "This namespace is not an acknowledged isolated resource of the SAME Task/Run. Inspect or reconcile its original create first.");
         return record;
     }
-    public async ValueTask DemandOriginalNamespaceAsync(CloudflareCompiledInvocation original, CancellationToken token)
+    public ValueTask DemandOriginalNamespaceAsync(CloudflareCompiledInvocation original, CancellationToken token)
+        => new(StartOriginalHostAsync(() => DemandNamespaceBodyAsync(original, token)));
+    private async Task DemandNamespaceBodyAsync(CloudflareCompiledInvocation original, CancellationToken token)
     { await RevalidateOriginalAsync(original.Service, token).ConfigureAwait(false); await NamespaceRecordAsync(original, _services.TryGetValue(original.Service, out var captured) ? captured.Stages : throw new UnauthorizedAccessException("Original Home service unavailable."), token).ConfigureAwait(false); }
     public Task<ICloudflareOriginalPermission> AcquireOriginalAsync(CloudflareOriginalTaskBinding binding, CancellationToken token)
+    { lock (_hostGate) { DemandOriginalHostAdmission(); return AcquirePermissionBody(binding, token); } }
+    private Task<ICloudflareOriginalPermission> AcquirePermissionBody(CloudflareOriginalTaskBinding binding, CancellationToken token)
     {
         Permission original;
         lock (_sync)
@@ -288,15 +311,18 @@ public sealed partial class HomeCloudflareServiceOwner : ICanonicalResourceAcces
             _originals.Remove(invocation); return Task.CompletedTask;
         }
     }
-    private sealed class ClaimedStateGuard(HomeCloudflareServiceOwner owner, AuthenticatedResourceActor actor,
-        HomeClaimedResourceAttestation admission, HomeCoreStateRecord[] expectedRecords, string? expectedAbsentId = null, long expectedRevision = -1) : IHomeStateCommitActorGuard
+    private sealed class ClaimedStateGuard(HomeCloudflareServiceOwner owner, CloudflareOriginalTaskLedger stages, AuthenticatedResourceActor actor,
+        HomeClaimedResourceAttestation admission, HomeCoreStateRecord[] expectedRecords, string? expectedAbsentId = null, long expectedRevision = -1) : IHomeOriginalScopedStateCommitActorGuard
     {
-        public async ValueTask<bool> CheckAsync(HomeCoreStoredState state, AuthenticatedResourceActor expected, HomeStateCommitPhase phase, CancellationToken token)
+        public ValueTask<bool> CheckAsync(HomeCoreStoredState state, AuthenticatedResourceActor expected, HomeStateCommitPhase phase, CancellationToken token)
+            => CheckAsync(state, expected, phase, body => owner.RunOriginalHostCallback(stages, body), actual => owner.RetainOriginalHostTask(stages, actual), token);
+        public async ValueTask<bool> CheckAsync(HomeCoreStoredState state, AuthenticatedResourceActor expected, HomeStateCommitPhase phase, Action<Action> scope, Action<Task> retain, CancellationToken token)
         {
+            lock (owner._hostGate) if (owner._hostRetiring) return false;
             if (expected != actor || !owner._broker.IsClaimedAttestationCurrentInState(admission, actor, state)) return false;
             foreach (var original in expectedRecords) if (Single(state, original.RecordId) is not { } current || Fingerprint(current) != Fingerprint(original)) return false;
             if (expectedAbsentId is not null && (Single(state, expectedAbsentId)?.Revision ?? 0) != expectedRevision) return false;
-            return await owner._profiles.CheckAsync(state, actor, phase, token).ConfigureAwait(false);
+            return await owner._profiles.CheckAsync(state, actor, phase, scope, retain, token).ConfigureAwait(false);
         }
     }
 }

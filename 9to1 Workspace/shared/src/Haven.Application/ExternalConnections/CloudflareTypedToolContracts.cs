@@ -2,7 +2,7 @@ using System.Text.Json;
 using Haven.Core;
 namespace Haven.Application;
 
-public enum CloudflareOperationKind { KvList, KvInspect, KvCreate, KvMarkerPut, KvMarkerGet, KvMarkerDelete, KvDelete, WorkerRead, WorkerDeploy, DnsRead, DnsWrite, SecretNamesRead, SecretWriteByReference, AccountWide, Destructive }
+public enum CloudflareOperationKind { KvList, KvInspect, KvCreate, KvMarkerPut, KvMarkerGet, KvMarkerDelete, KvDelete, WorkerRead, WorkerDeploy, DnsRead, DnsWrite, SecretNamesRead, SecretWriteByReference, AccountWide, Destructive, KvMarkerVerifyAbsent }
 public sealed record CloudflareToolDescriptor(string ToolName, string ActionId, CloudflareOperationKind Kind, bool IsReadOnly, bool IsImplemented);
 
 /// <summary>Non-secret host configuration. Account selection is explicit; a connector credential is not resource ownership.</summary>

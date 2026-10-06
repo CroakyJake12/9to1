@@ -24,12 +24,13 @@ public sealed partial class HomeCloudflareServiceOwner : ICloudflareKnownCreateR
         foreach (var original in originals) original.DemandExternalOriginalJoin();
     }
     public Task CloseAndDrainOriginalRecoveriesAsync()
+    { DemandExternalOriginalRecoveryJoin(); return CloseOriginalHostRecoveriesAsync(); }
+    private Task CloseOriginalHostRecoveriesAsync()
     {
-        DemandExternalOriginalRecoveryJoin();
-        lock (_sync)
+        lock (_hostGate) lock (_sync)
         {
             if (_recoveryClose is not null) return _recoveryClose;
-            _recoveryAdmissionSealed = true; _recoveryStages.BindOriginalOwner(this);
+            _recoveryAdmissionSealed = true; _recoveryStages.BindOriginalOwner(this); _recoveryStages.BindOriginalCallerCallback(OriginalHostCaller(null)); AttachOriginalHostSources(_recoveryStages);
             var originals = _recoveries.Values.ToArray();
             var begin = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             _recoveryClose = CloseRecoveryPublishedAsync(begin.Task, originals); begin.SetResult(); return _recoveryClose;
@@ -62,7 +63,7 @@ public sealed partial class HomeCloudflareServiceOwner : ICloudflareKnownCreateR
         if (invocation.Descriptor.Kind != CloudflareOperationKind.KvCreate || !CloudflareTypedToolCatalogue.IsIssuedOriginal(invocation))
             throw new UnauthorizedAccessException("SAME privately compiled original create required.");
         var known = RequireKnownCreate(invocation);
-        lock (_sync)
+        lock (_hostGate) lock (_sync)
         {
             if (_recoveryAdmissionSealed) throw new ObjectDisposedException("Original known-create recovery admission");
             if (_recoveries.TryGetValue(invocation, out var prior)) { prior.DemandExternalOriginalJoin(); return prior.OriginalPreparation; }
@@ -74,7 +75,7 @@ public sealed partial class HomeCloudflareServiceOwner : ICloudflareKnownCreateR
     private sealed class KnownCreateReview(HomeCloudflareServiceOwner owner, CloudflareCompiledInvocation invocation, KnownCreate known)
         : ICloudflareOriginalKnownCreateReview
     {
-        private readonly object _sync = new(); private readonly CloudflareOriginalTaskLedger _stages = new();
+        private readonly object _sync = new(); private readonly CloudflareOriginalTaskLedger _stages = owner.CreateOriginalHostSources();
         internal Task<ICloudflareOriginalKnownCreateReview> OriginalPreparation { get; private set; } = null!;
         private Task<CloudflareNamespaceRecoveryObservation>? _submit, _commit;
         private CancellationTokenSource? _stop; private bool _retiring; private Task? _close;
@@ -221,7 +222,7 @@ public sealed partial class HomeCloudflareServiceOwner : ICloudflareKnownCreateR
                     invocation.TaskId, invocation.ExecutionId, invocation.OperationKey, known.Title, false);
                 var record = new HomeCoreStateRecord(recordId, "home.cloudflare.namespace", 1, HomeDataScope.DeviceLocal, HomeRecordAuthority.LocalCanonical,
                     1, JsonSerializer.SerializeToElement(ns));
-                var guard = new ClaimedStateGuard(owner, known.Capture.Actor, attestation, [known.Capture.Record], recordId, 0);
+                var guard = new ClaimedStateGuard(owner, _stages, known.Capture.Actor, attestation, [known.Capture.Record], recordId, 0);
                 var saved = await _stages.AwaitAsync(_stages.Invoke(() => owner._store.WriteGuardedAsync(record, 0, known.Capture.Actor, guard, token))).ConfigureAwait(false);
                 if (!saved.IsSuccess) throw new InvalidOperationException("Known original remote response retained; local custody recovery CAS is unconfirmed.");
                 revision = 1;
@@ -235,9 +236,9 @@ public sealed partial class HomeCloudflareServiceOwner : ICloudflareKnownCreateR
                     completion = await _stages.AwaitAsync(_stages.Invoke(() => capability.AcquireCommitCompletionLeaseAsync(owner._broker, token))).ConfigureAwait(false)
                         ?? throw new UnauthorizedAccessException("Known recovery completion is closing.");
                     held = await _stages.AwaitAsync(_stages.Invoke(() => owner._store.AcquireLocalOperationLeaseCoreAsync(owner._profiles, known.Capture.Actor,
-                        new ClaimedStateGuard(owner, known.Capture.Actor, attestation, [known.Capture.Record, _existing!]), token))).ConfigureAwait(false)
+                        new ClaimedStateGuard(owner, _stages, known.Capture.Actor, attestation, [known.Capture.Record, _existing!]), body => owner.RunOriginalHostCallback(_stages, body), raw => owner.RetainOriginalHostTask(_stages, raw), token))).ConfigureAwait(false)
                         ?? throw new UnauthorizedAccessException("Original known namespace custody changed.");
-                    if (!await _stages.AwaitAsync(_stages.Invoke(() => held.IsCurrentAsync(token))).ConfigureAwait(false)) throw new UnauthorizedAccessException("Original known namespace custody is stale.");
+                    if (!await _stages.AwaitAsync(_stages.Invoke(() => (held as IHomeOriginalScopedLocalOperationLease ?? throw new InvalidOperationException("Original scoped Home lease required.")).IsCurrentAsync(body => owner.RunOriginalHostCallback(_stages, body), raw => owner.RetainOriginalHostTask(_stages, raw), token))).ConfigureAwait(false)) throw new UnauthorizedAccessException("Original known namespace custody is stale.");
                 }
                 catch (Exception error) { errors.Add(error); }
                 finally

@@ -5,7 +5,7 @@ namespace Haven.Application;
 /// <summary>One canonical dispatcher, with fixed owning implementations. Public tool names only
 /// select an owner; a private issuing preparation registry determines validation and retirement.</summary>
 public sealed class CanonicalWorkspaceCloudflareToolActionOwner(WorkspaceTaskRunToolActionOwner workspace,
-    CloudflareTaskRunToolActionOwner cloudflare, CloudflareTypedToolRuntime runtime, ICloudflareSavedServiceSource services) : ITaskRunToolActionOwner
+    CloudflareTaskRunToolActionOwner cloudflare, CloudflareTypedToolRuntime runtime, ICloudflareSavedServiceSource services) : ITaskRunToolActionOwner, IWorkspaceOriginalProcessStartConsentBindingOwner
 {
     private readonly object _sync = new();
     private readonly Dictionary<ITaskRunToolActionPreparation, ITaskRunToolActionOwner> _issued = new(ReferenceEqualityComparer.Instance);
@@ -38,6 +38,12 @@ public sealed class CanonicalWorkspaceCloudflareToolActionOwner(WorkspaceTaskRun
     }
     private ITaskRunToolActionOwner Require(ITaskRunToolActionPreparation actual)
     { lock (_sync) return _issued.GetValueOrDefault(actual) ?? throw new UnauthorizedAccessException("SAME private issuing-owner preparation required."); }
+    public void BindOriginalProcessStartConsent(ITaskRunToolActionPreparation preparation, IWorkspaceOriginalProcessStartConsent consent)
+    {
+        if (!ReferenceEquals(Require(preparation), workspace))
+            throw new UnauthorizedAccessException("A Cloudflare preparation cannot own a Workspace process consent.");
+        workspace.BindOriginalProcessStartConsent(preparation, consent);
+    }
     public Task<TaskRunToolActionResult> ExecuteOriginalAsync(ITaskRunToolActionPreparation preparation, Func<CancellationToken, Task<WorkspaceToolResult>> body, CancellationToken token)
         => Require(preparation).ExecuteOriginalAsync(preparation, body, token);
     public ValueTask ValidateOriginalPreparationAsync(ITaskRunToolActionPreparation preparation, TaskExecutionSnapshot current, CancellationToken token)
@@ -74,7 +80,7 @@ public sealed class CanonicalWorkspaceCloudflareToolActionOwner(WorkspaceTaskRun
         catch (CloudflareSetupRequiredException) { return []; } // Existing ordinary connection/workspace tools remain unchanged.
         if (!active.Any(x => x.Key.Equals(ExternalConnectionNaming.CapabilityKey(service.Connection.Id), StringComparison.OrdinalIgnoreCase))) return [];
         await stages.AwaitAsync(stages.Invoke(() => CloudflareCallerScopedServiceRead.RevalidateOriginalAsync(services, service, callback, token))).ConfigureAwait(false);
-        return Array.AsReadOnly(CloudflareTypedToolCatalogue.Descriptors.Where(x => x.IsImplemented && (x.Kind != CloudflareOperationKind.KvMarkerGet || CloudflareRawTaskMarkerTransport.IsSupportedSavedService(service))).Select(x =>
+        return Array.AsReadOnly(CloudflareTypedToolCatalogue.Descriptors.Where(x => x.IsImplemented && (x.Kind is not (CloudflareOperationKind.KvMarkerGet or CloudflareOperationKind.KvMarkerVerifyAbsent) || CloudflareRawTaskMarkerTransport.IsSupportedSavedService(service))).Select(x =>
         {
             var ns = x.Kind is not (CloudflareOperationKind.KvList or CloudflareOperationKind.KvCreate);
             return new OllamaToolDefinition(x.ToolName, x.IsReadOnly ? "Inspect the explicitly configured Cloudflare isolated Task resource through Home permissions." :

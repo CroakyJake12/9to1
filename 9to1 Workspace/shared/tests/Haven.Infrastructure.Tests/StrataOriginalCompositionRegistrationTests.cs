@@ -7,7 +7,7 @@ namespace Haven.Infrastructure.Tests;
 
 // A reduced maintained descriptor graph, not full Desktop bootstrap/model readiness.
 // The genuine authority constructor has an empty provider catalogue; no admission is issued.
-public sealed class StrataOriginalCompositionRegistrationTests
+public sealed partial class StrataOriginalCompositionRegistrationTests
 {
     [Fact]
     public async Task Actual_lazy_source_aliases_reuse_configured_owners_and_refuse_taskless_observation()

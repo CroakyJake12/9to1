@@ -20,6 +20,7 @@ public sealed partial class FilesWorkspaceDirectoryResolver
         _providers = authorisedAccountProvider ?? throw new ArgumentNullException(nameof(authorisedAccountProvider));
         _profileProviders = authorisedProfileProvider;
         _store = new(statePath, 1, () => new BindingState([]));
+        _originalExecutionStatePath = Path.GetFullPath(statePath);
     }
 
     /// <summary>Trusted Home/Files setup operation; never expose this method as an unreviewed raw path web action.</summary>

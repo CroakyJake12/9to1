@@ -159,6 +159,7 @@ public sealed partial class WorkspaceToolService(IWorkspaceToolFinalFenceAuthori
         Task<string>? originalStderr = null;
         IAsyncDisposable? originalPin = null;
         Task<IAsyncDisposable?>? originalAcquire = null;
+        Task? originalStartEntryRelease = null;
         OriginalEffect? effect = null;
         var admitted = false;
         var launched = false;
@@ -174,6 +175,10 @@ public sealed partial class WorkspaceToolService(IWorkspaceToolFinalFenceAuthori
         var stop = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         try
         {
+            // Every finite start/acquisition failure still releases the separately issued
+            // Home entry before any child wait, pipe join or observer can borrow Home again.
+            try
+            {
         if (request.ArgumentList is not null)
             foreach (var argument in request.ArgumentList) process.StartInfo.ArgumentList.Add(argument);
         if (!request.DetachGui && Path.GetFileName(request.FileName).Equals("powershell.exe", StringComparison.OrdinalIgnoreCase))
@@ -221,14 +226,36 @@ public sealed partial class WorkspaceToolService(IWorkspaceToolFinalFenceAuthori
                 originalStderr = ReadLimitedAsync(process.StandardError, CancellationToken.None);
                 originalJoined = Task.WhenAll(originalExit, originalStdout, originalStderr);
             }
-            // The original attempt pin protects the finite native start, never the external
-            // command's lifetime. Joining child tasks cannot hold the retirement/permission gate.
-            if (originalPin is not null)
+            }
+            finally
             {
-                var releasedPin = originalPin;
-                originalPin = null;
-                var originalRelease = releasedPin.DisposeAsync().AsTask();
-                await JoinOriginalAsync(originalRelease, errors).ConfigureAwait(false);
+                // The optional SAME issuing fence owns Home -> completion -> saved-root
+                // entry cleanup. Its raw Task is retained even if close was already requested.
+                // This is outside RunOriginalEffect and every native/central permission gate.
+                if (invocation?.Fence is IWorkspaceOriginalProcessStartEntryReleaseFence releaseFence)
+                    try
+                    {
+                        originalStartEntryRelease = InvokeOriginalProcessStartEntryRelease(invocation, releaseFence,
+                            request.WorkingDirectory, WorkspaceToolOriginalDigest.Process(request));
+                        try { invocation.RetainOriginalProcessStartEntryRelease(originalStartEntryRelease); }
+                        catch (Exception error) { AddOriginalErrors(errors, null, error); }
+                        await JoinOriginalAsync(originalStartEntryRelease, errors).ConfigureAwait(false);
+                    }
+                    catch (Exception error) { AddOriginalErrors(errors, originalStartEntryRelease, error); }
+                // Existing original attempt-pin cleanup also remains independent. Neither
+                // held permission owner spans the external command's asynchronous lifetime.
+                if (originalPin is not null)
+                {
+                    var releasedPin = originalPin;
+                    originalPin = null;
+                    Task? originalRelease = null;
+                    try
+                    {
+                        originalRelease = releasedPin.DisposeAsync().AsTask();
+                        await JoinOriginalAsync(originalRelease, errors).ConfigureAwait(false);
+                    }
+                    catch (Exception error) { AddOriginalErrors(errors, originalRelease, error); }
+                }
             }
             if (request.DetachGui)
                 result = new ProcessResult(0, string.Empty, string.Empty, Stopwatch.GetElapsedTime(started), false);
@@ -321,7 +348,7 @@ public sealed partial class WorkspaceToolService(IWorkspaceToolFinalFenceAuthori
             try { deadline?.Dispose(); } catch (Exception error) { AddOriginalErrors(errors, null, error); }
             try { process.Dispose(); } catch (Exception error) { AddOriginalErrors(errors, null, error); }
         }
-        ThrowOriginalErrors(errors, callerRetirement || originalAcquire?.IsCanceled == true);
+        ThrowOriginalErrors(errors, callerRetirement || originalAcquire?.IsCanceled == true || originalStartEntryRelease?.IsCanceled == true);
         return result ?? throw new InvalidOperationException("The original process produced no confirmed result.");
     }
 

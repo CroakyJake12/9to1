@@ -12,9 +12,26 @@ public sealed partial class DurableDriveProvider
     /// The SAME genuine Home original entry and current native handle/root predicate must remain
     /// held through this original result/cleanup. No UploadedContent or immutable historical
     /// reference is created; content readers must refuse unavailable immutable revision bytes.</summary>
-    public async Task<FilesResult<FilesRevision>> RegisterOriginalLocalDeveloperFileAsync(
+    public Task<FilesResult<FilesRevision>> RegisterOriginalLocalDeveloperFileAsync(
         FilesOriginalLocalDeveloperSource observedSource, IReadOnlyList<FilesItemRevisionPrecondition> originalParents,
         Guid originalStoreId, FilesCommitAuthorityGuard originalAuthority, CancellationToken cancellationToken)
+        => RegisterOriginalLocalDeveloperFileCoreAsync(observedSource, originalParents, originalStoreId,
+            originalAuthority, null, null, cancellationToken);
+
+    public Task<FilesResult<FilesRevision>> RegisterOriginalLocalDeveloperFileAsync(
+        FilesOriginalLocalDeveloperSource observedSource, IReadOnlyList<FilesItemRevisionPrecondition> originalParents,
+        Guid originalStoreId, FilesCommitAuthorityGuard originalAuthority,
+        Action<Action> originalSynchronousScope, Action<Task> retainOriginalTask, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(originalSynchronousScope); ArgumentNullException.ThrowIfNull(retainOriginalTask);
+        return RegisterOriginalLocalDeveloperFileCoreAsync(observedSource, originalParents, originalStoreId,
+            originalAuthority, originalSynchronousScope, retainOriginalTask, cancellationToken);
+    }
+
+    private async Task<FilesResult<FilesRevision>> RegisterOriginalLocalDeveloperFileCoreAsync(
+        FilesOriginalLocalDeveloperSource observedSource, IReadOnlyList<FilesItemRevisionPrecondition> originalParents,
+        Guid originalStoreId, FilesCommitAuthorityGuard originalAuthority,
+        Action<Action>? originalSynchronousScope, Action<Task>? retainOriginalTask, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(observedSource); ArgumentNullException.ThrowIfNull(originalParents);
         ArgumentNullException.ThrowIfNull(originalAuthority);
@@ -34,7 +51,7 @@ public sealed partial class DurableDriveProvider
         Task<State> actual;
         try
         {
-            actual = _store.UpdateAsync(state =>
+            Task<State> BeginOriginalUpdate() => _store.UpdateAsync(state =>
             {
                 void Refuse(FilesErrorCode code, string message) => throw new OriginalLocalDeveloperRefusal(Error(code, message));
                 if (state.StoreId != originalStoreId || state.StoreOwnerPrincipalId != _owner || state.StoreLocationId != Location.Id)
@@ -64,6 +81,8 @@ public sealed partial class DurableDriveProvider
                     Events = [.. state.Events, change] };
                 // UploadedContents and RevisionContentReferences remain exact original collections.
             }, originalAuthority.ValidateAsync, cancellationToken);
+            actual = originalSynchronousScope is null ? BeginOriginalUpdate() :
+                FilesOriginalDeveloperTaskSource.ObserveAsync(BeginOriginalUpdate, originalSynchronousScope, retainOriginalTask!);
         }
         catch (OperationCanceledException original)
         {
@@ -77,7 +96,9 @@ public sealed partial class DurableDriveProvider
         { return FilesResult<FilesRevision>.Failure(Error(FilesErrorCode.PermissionDenied, "The genuine final source/Home authority changed before publication.")); }
         catch when (actual.IsFaulted) { throw actual.Exception!; }
         if (acknowledged is null) throw new InvalidOperationException("No original local-source metadata acknowledgement was observed.");
-        foreach (var subscriber in _subscribers.Values) subscriber.Writer.TryWrite(true);
+        void PublishOriginalSubscribers() { foreach (var subscriber in _subscribers.Values) subscriber.Writer.TryWrite(true); }
+        if (originalSynchronousScope is null) PublishOriginalSubscribers();
+        else FilesOriginalDeveloperTaskSource.Invoke(PublishOriginalSubscribers, originalSynchronousScope);
         return FilesResult<FilesRevision>.Success(acknowledged);
     }
     private sealed class OriginalLocalDeveloperRefusal(FilesError originalError) : InvalidOperationException(originalError.Message)

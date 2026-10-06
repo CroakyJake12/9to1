@@ -32,6 +32,7 @@ public sealed partial class ManagedDulcheRuntimeService : IAsyncDisposable, IDul
     private readonly ITaskRunProviderContextAuthority? _contextAuthority;
     private readonly IDulcheToolCoordinator? _toolCoordinator;
     private readonly IManagedDulcheInferenceCompositionSource? _inferenceComposition;
+    private readonly IInferenceEnginePreferenceSource? _inferencePreferences;
     private ModelIdentity? _inferenceModel;
     private TaskRunAttemptAdmission? _modelUseAdmission;
     private Task<TaskRunAttemptAdmission?>? _originalModelUseLookup;
@@ -63,7 +64,8 @@ public sealed partial class ManagedDulcheRuntimeService : IAsyncDisposable, IDul
         ITaskRunOriginalFrameOwner frames, IOriginalDulcheProviderToolSource? tools = null,
         IOriginalDulcheProviderContextSource? contextSource = null,
         ITaskRunProviderContextAuthority? contextAuthority = null, IDulcheToolCoordinator? toolCoordinator = null,
-        IManagedDulcheInferenceCompositionSource? inferenceComposition = null)
+        IManagedDulcheInferenceCompositionSource? inferenceComposition = null,
+        IInferenceEnginePreferenceSource? inferencePreferences = null)
     {
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
         _configurations = configurations ?? throw new ArgumentNullException(nameof(configurations));
@@ -71,6 +73,7 @@ public sealed partial class ManagedDulcheRuntimeService : IAsyncDisposable, IDul
         _frames = frames ?? throw new ArgumentNullException(nameof(frames));
         _tools = tools; _contextSource = contextSource; _contextAuthority = contextAuthority;
         _toolCoordinator = toolCoordinator; _inferenceComposition = inferenceComposition;
+        _inferencePreferences = inferencePreferences;
     }
 
     /// <summary>The same original initialization is coalesced for the actual selected provider.
@@ -138,6 +141,7 @@ public sealed partial class ManagedDulcheRuntimeService : IAsyncDisposable, IDul
     {
         var admission = _modelUseAdmission!;
         await ValidateOriginalModelUseAsync(admission).ConfigureAwait(false);
+        var requestedEngine = CaptureOriginalEnginePreference(_inferenceModel!);
         var factoryStart = Signal();
         var actual = AcquireOriginalModelSource(() => _inferenceComposition!.CreateAfterPublicationAsync(factoryStart.Task,
             _providerId!, _inferenceModel!, admission, _registry, _configurations, _coordinator, _frames, _tools,
@@ -148,6 +152,7 @@ public sealed partial class ManagedDulcheRuntimeService : IAsyncDisposable, IDul
         try { lease = await actual.ConfigureAwait(false); }
         catch (Exception cause) { ThrowTask(cause, actual); throw; }
         lock (_sync) _inferenceLease = lease; // Retain every late acquired product before any seal check.
+        ApplyOriginalEnginePreference(lease, requestedEngine, _inferenceModel!);
         var runtime = InvokePhysical(() => new DulcheRuntime([lease.Adapter], toolCoordinator: _toolCoordinator));
         lock (_sync) { _runtime = runtime; RequireOpen(); _ownerStop.Token.ThrowIfCancellationRequested(); }
         var startup = InvokePhysical(() => runtime.PrepareManagedProviderOriginal(_providerId!, _inferenceModel!, _ownerStop.Token));

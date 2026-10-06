@@ -26,13 +26,14 @@ public sealed partial class HomeCloudflareServiceOwner : ICloudflareStagingDeleg
         foreach (var original in originals) original.DemandExternalJoin();
     }
     public Task CloseAndDrainOriginalStagingReviewsAsync()
+    { DemandExternalOriginalStagingJoin(); return CloseOriginalHostStagingAsync(); }
+    private Task CloseOriginalHostStagingAsync()
     {
-        DemandExternalOriginalStagingJoin();
-        lock (_sync)
+        lock (_hostGate) lock (_sync)
         {
             if (_stagingClose is not null) return _stagingClose; _stagingSealed = true;
             var originals = _stagingReviews.ToArray(); var begin = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            _stagingCloseStages.BindOriginalOwner(this); _stagingClose = CloseStagingPublishedAsync(begin.Task, originals); begin.SetResult(); return _stagingClose;
+            _stagingCloseStages.BindOriginalOwner(this); _stagingCloseStages.BindOriginalCallerCallback(OriginalHostCaller(null)); AttachOriginalHostSources(_stagingCloseStages); _stagingClose = CloseStagingPublishedAsync(begin.Task, originals); begin.SetResult(); return _stagingClose;
         }
     }
     private async Task CloseStagingPublishedAsync(Task begin, StagingReview[] originals)
@@ -49,7 +50,7 @@ public sealed partial class HomeCloudflareServiceOwner : ICloudflareStagingDeleg
     {
         CloudflareStagingBindingContract.DemandSelection(selection);
         if (expectedRevision < 0) throw new ArgumentOutOfRangeException(nameof(expectedRevision));
-        lock (_sync)
+        lock (_hostGate) lock (_sync)
         {
             if (_stagingSealed) throw new ObjectDisposedException("Original staging delegation admission");
             if (_stagingReviews.Count >= 128) throw new InvalidOperationException("Original staging review custody is full.");
@@ -61,7 +62,7 @@ public sealed partial class HomeCloudflareServiceOwner : ICloudflareStagingDeleg
     }
     private HomeCoreStateRecord? FindBorrowedNamespace(HomeCoreStoredState state, CloudflareCompiledInvocation invocation)
     {
-        if (invocation.Descriptor.Kind is not (CloudflareOperationKind.KvMarkerPut or CloudflareOperationKind.KvMarkerGet or CloudflareOperationKind.KvMarkerDelete)) return null;
+        if (invocation.Descriptor.Kind is not (CloudflareOperationKind.KvMarkerPut or CloudflareOperationKind.KvMarkerGet or CloudflareOperationKind.KvMarkerDelete or CloudflareOperationKind.KvMarkerVerifyAbsent)) return null;
         var found = state.Records.Where(x => RecordShape(x, "home.cloudflare.staging") && x.Payload.Deserialize<BorrowedNamespace>() is { } ns &&
             ns.NamespaceId == invocation.NamespaceId && ns.AccountId == invocation.Service.AccountId && ns.ConnectionId == invocation.Service.Connection.Id).Take(2).ToArray();
         if (found.Length > 1) throw new InvalidDataException("Ambiguous borrowed staging namespace; review its original provenance.");
@@ -69,13 +70,13 @@ public sealed partial class HomeCloudflareServiceOwner : ICloudflareStagingDeleg
     }
     private static bool IsBorrowedMarker(CloudflareCompiledInvocation invocation, HomeCoreStateRecord record) =>
         RecordShape(record, "home.cloudflare.staging") && invocation.Descriptor.Kind is
-            CloudflareOperationKind.KvMarkerPut or CloudflareOperationKind.KvMarkerGet or CloudflareOperationKind.KvMarkerDelete;
+            CloudflareOperationKind.KvMarkerPut or CloudflareOperationKind.KvMarkerGet or CloudflareOperationKind.KvMarkerDelete or CloudflareOperationKind.KvMarkerVerifyAbsent;
 
     private sealed class StagingReview(HomeCloudflareServiceOwner owner, CloudflareStagingBindingSelection selection, long expectedRevision)
         : ICloudflareOriginalStagingReview
     {
-        private readonly object _gate = new(); private readonly CloudflareOriginalTaskLedger _stages = new();
-        private readonly CloudflareOriginalTaskLedger _closingStages = new();
+        private readonly object _gate = new(); private readonly CloudflareOriginalTaskLedger _stages = owner.CreateOriginalHostSources();
+        private readonly CloudflareOriginalTaskLedger _closingStages = owner.CreateOriginalHostSources();
         private Task<ICloudflareOriginalStagingReview>? _prepare; private Task<CloudflareSetupObservation>? _submit, _commit;
         private CancellationTokenSource? _stop; private Task? _close; private bool _sealed;
         private CloudflareSavedService? _service; private Capture? _capture; private HomeCoreStateRecord? _prior;
@@ -174,7 +175,7 @@ public sealed partial class HomeCloudflareServiceOwner : ICloudflareStagingDeleg
                 var value = new BorrowedNamespace(_capture!.Actor.ProfileId, _service.Connection.Id, _service.AccountId, selection, _binding.NamespaceId, Fingerprint(_binding.OriginalProjection));
                 var record = new HomeCoreStateRecord(recordId, "home.cloudflare.staging", 1, HomeDataScope.DeviceLocal, HomeRecordAuthority.LocalCanonical,
                     checked(expectedRevision + 1), JsonSerializer.SerializeToElement(value));
-                var guard = new StagingCommitGuard(this, new ClaimedStateGuard(owner, _capture.Actor, attestation, _prior is null ? [_capture.Record] : [_capture.Record, _prior], recordId, expectedRevision));
+                var guard = new StagingCommitGuard(this, new ClaimedStateGuard(owner, _stages, _capture.Actor, attestation, _prior is null ? [_capture.Record] : [_capture.Record, _prior], recordId, expectedRevision));
                 DemandLive();
                 var saved = await _stages.AwaitAsync(_stages.Invoke(() => owner._store.WriteGuardedAsync(record, expectedRevision, _capture.Actor, guard, activeToken))).ConfigureAwait(false);
                 if (!saved.IsSuccess) throw new CloudflareSetupRequiredException(CloudflareSetupStage.ConfigurationConflict, "CF_STAGING_CAS_UNCONFIRMED", "Retain the original setup; its guarded save was not acknowledged.", RequestId);
@@ -246,6 +247,7 @@ public sealed partial class HomeCloudflareServiceOwner : ICloudflareStagingDeleg
             originals.BindOriginalCallerCallback(action => parent.Invoke(() => { action(); return true; })); return originals;
         }
         private CloudflareOriginalTaskLedger Stages => _workerStages;
+        private void ownerCallback(Action body) => owner.RunOriginalHostCallback(_workerStages, body);
         private T Invoke<T>(Func<T> finite) => _workerStages.Invoke(() => CloudflareOriginalExecutionGuard.InvokeOriginal(this, finite));
         private void TransferOriginalCustody()
         {
@@ -284,9 +286,9 @@ public sealed partial class HomeCloudflareServiceOwner : ICloudflareStagingDeleg
                 completion = await _workerStages.CaptureOriginalAcquisitionAsync(() => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => capability.AcquireCommitCompletionLeaseAsync(owner._broker, token).AsTask()), actual => completion = actual).ConfigureAwait(false)
                     ?? throw new UnauthorizedAccessException("Original binding read completion is closing.");
                 home = await _workerStages.CaptureOriginalAcquisitionAsync(() => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => owner._store.AcquireLocalOperationLeaseCoreAsync(owner._profiles, capture.Actor,
-                    new WorkerReadStateGuard(this, new ClaimedStateGuard(owner, capture.Actor, attestation, records)), token).AsTask()), actual => home = actual).ConfigureAwait(false)
+                    new WorkerReadStateGuard(this, new ClaimedStateGuard(owner, _workerStages, capture.Actor, attestation, records)), body => owner.RunOriginalHostCallback(_workerStages, body), raw => owner.RetainOriginalHostTask(_workerStages, raw), token).AsTask()), actual => home = actual).ConfigureAwait(false)
                     ?? throw new UnauthorizedAccessException("Original binding read Home entry is stale.");
-                if (!await _workerStages.AwaitAsync(Invoke(() => home.IsCurrentAsync(token).AsTask())).ConfigureAwait(false)) throw new UnauthorizedAccessException("Original binding read Home state changed.");
+                if (!await _workerStages.AwaitAsync(Invoke(() => (home as IHomeOriginalScopedLocalOperationLease ?? throw new InvalidOperationException("Original scoped Home lease required.")).IsCurrentAsync(body => owner.RunOriginalHostCallback(_workerStages, body), raw => owner.RetainOriginalHostTask(_workerStages, raw), token).AsTask())).ConfigureAwait(false)) throw new UnauthorizedAccessException("Original binding read Home state changed.");
                 if (taskBinding is not null)
                 {
                     if (taskBinding.OriginalAttempt.Lease is not ITaskRunAdmissionCommitLease lease) throw new UnauthorizedAccessException("Actual attempt lifetime pin required.");
@@ -307,11 +309,13 @@ public sealed partial class HomeCloudflareServiceOwner : ICloudflareStagingDeleg
                 await _workerStages.ObserveAllOriginalTasksAsync().ConfigureAwait(false); TransferOriginalCustody();
             }
         }
-        private sealed class WorkerReadStateGuard(WorkerReadAdmission admission, IHomeStateCommitActorGuard inner) : IHomeStateCommitActorGuard
+        private sealed class WorkerReadStateGuard(WorkerReadAdmission admission, IHomeOriginalScopedStateCommitActorGuard inner) : IHomeOriginalScopedStateCommitActorGuard
         {
-            public async ValueTask<bool> CheckAsync(HomeCoreStoredState state, AuthenticatedResourceActor actor, HomeStateCommitPhase phase, CancellationToken token)
+            public ValueTask<bool> CheckAsync(HomeCoreStoredState state, AuthenticatedResourceActor actor, HomeStateCommitPhase phase, CancellationToken token)
+                => CheckAsync(state, actor, phase, body => admission.ownerCallback(body), raw => { _ = admission.Stages.Track(raw); }, token);
+            public async ValueTask<bool> CheckAsync(HomeCoreStoredState state, AuthenticatedResourceActor actor, HomeStateCommitPhase phase, Action<Action> scope, Action<Task> retain, CancellationToken token)
             {
-                admission.DemandLive(); var allowed = await admission.Stages.AwaitAsync(admission.Invoke(() => inner.CheckAsync(state, actor, phase, token).AsTask())).ConfigureAwait(false);
+                admission.DemandLive(); var allowed = await admission.Stages.AwaitAsync(admission.Invoke(() => inner.CheckAsync(state, actor, phase, scope, retain, token).AsTask())).ConfigureAwait(false);
                 admission.DemandLive(); return allowed;
             }
         }

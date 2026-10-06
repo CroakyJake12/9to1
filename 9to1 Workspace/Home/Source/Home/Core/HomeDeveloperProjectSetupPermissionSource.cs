@@ -16,6 +16,7 @@ public sealed partial class HomeDeveloperProjectSetupPermissionSource : IDevelop
     private readonly Func<IDeveloperProjectOriginalSetupScopeSource> _scopes;
     private readonly Func<IDeveloperProjectOriginalCaptureAuthority> _captures;
     private readonly Func<IDeveloperProjectOriginalSetupStepOutcomeSource> _outcomes;
+    private readonly Func<IDeveloperProjectOriginalSetupCompletionSource>? _completions;
     private readonly object _gate = new();
     private readonly Dictionary<DeveloperProjectSetupIntent, Permission> _originals = new(ReferenceEqualityComparer.Instance);
     private bool _retiring;
@@ -26,11 +27,18 @@ public sealed partial class HomeDeveloperProjectSetupPermissionSource : IDevelop
         HomeResourceOperationBroker broker, HomePermissionTrustService permissions,
         Func<IDeveloperProjectOriginalSetupScopeSource> scopes, Func<IDeveloperProjectOriginalCaptureAuthority> captures,
         Func<IDeveloperProjectOriginalSetupStepOutcomeSource> outcomes)
+        : this(store, profiles, broker, permissions, scopes, captures, outcomes, null) { }
+
+    public HomeDeveloperProjectSetupPermissionSource(FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
+        HomeResourceOperationBroker broker, HomePermissionTrustService permissions,
+        Func<IDeveloperProjectOriginalSetupScopeSource> scopes, Func<IDeveloperProjectOriginalCaptureAuthority> captures,
+        Func<IDeveloperProjectOriginalSetupStepOutcomeSource> outcomes,
+        Func<IDeveloperProjectOriginalSetupCompletionSource>? completions)
     {
         ArgumentNullException.ThrowIfNull(scopes); ArgumentNullException.ThrowIfNull(captures); ArgumentNullException.ThrowIfNull(outcomes);
         if (!profiles.IsBoundToStore(store) || !permissions.IsBoundToStore(store) || !broker.IsBoundToPermissions(permissions))
             throw new UnauthorizedAccessException("SAME configured Home store/profile/resource broker/policy is required.");
-        _store = store; _profiles = profiles; _broker = broker; _scopes = scopes; _captures = captures; _outcomes = outcomes;
+        _store = store; _profiles = profiles; _broker = broker; _scopes = scopes; _captures = captures; _outcomes = outcomes; _completions = completions;
     }
     public Task<IDeveloperProjectOriginalSetupPermission> AcquireOriginalAsync(DeveloperProjectSetupIntent intent,
         IDeveloperProjectOriginalSourceCapture capture, CancellationToken token)
@@ -121,6 +129,7 @@ public sealed partial class HomeDeveloperProjectSetupPermissionSource : IDevelop
             CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
             Step[] steps; lock (_gate) steps = _steps.Values.ToArray();
             foreach (var step in steps) step.DemandExternalJoin();
+            _completionSource?.DemandExternalOriginalSetupCompletionJoin();
         }
         private void DemandLive()
         {
@@ -166,6 +175,7 @@ public sealed partial class HomeDeveloperProjectSetupPermissionSource : IDevelop
                 _scopeSource = _sources.Invoke(owner._scopes) ?? throw new InvalidOperationException("The actual journal-bound Files destination source is unavailable.");
                 _captureSource = _sources.Invoke(owner._captures) ?? throw new InvalidOperationException("The actual physical capture authority is unavailable.");
                 _outcomeSource = _sources.Invoke(owner._outcomes) ?? throw new InvalidOperationException("The actual Files step outcome issuer is unavailable.");
+                _completionSource = owner._completions is null ? null : _sources.Invoke(owner._completions);
                 if (!_sources.Invoke(() => _scopeSource.IsIssuedOriginalSetupBinding(intent, capture) && _captureSource.IsIssuedOriginal(capture)))
                     throw new UnauthorizedAccessException("No genuine SAME journal/destination/source setup binding exists.");
                 _stop = _sources.Invoke(() => CancellationTokenSource.CreateLinkedTokenSource(token));
@@ -280,17 +290,21 @@ public sealed partial class HomeDeveloperProjectSetupPermissionSource : IDevelop
             foreach (var cause in _sources.OriginalErrors) _closing.Retain(cause);
             if (_capability is not null)
             {
-                // Journal ACK is a separately owned private source. This bounded folder
-                // producer cannot certify complete import/registration from result Tasks.
-                // Until that actual final-ACK port is composed, terminal setup success is
-                // unavailable even if every observed individual step validated successfully.
-                var incomplete = new InvalidOperationException("DEV_SETUP_FINAL_JOURNAL_ACK_REQUIRED: retained step outcomes do not certify complete setup; no replay or new IDs.");
-                _closing.Retain(incomplete);
+                bool acknowledged = false;
+                if (_closing.OriginalErrors.Count == 0)
+                    try { acknowledged = await _closing.AwaitAsync(StartOriginalFinalCompletion()).ConfigureAwait(false); }
+                    catch (Exception cause) { _closing.Retain(cause); }
+                foreach (var actual in _completionStages.OriginalTasks) _ = _closing.Track(actual);
+                foreach (var cause in _completionStages.OriginalErrors) _closing.Retain(cause);
+                if (!acknowledged)
+                    _closing.Retain(new InvalidOperationException("DEV_SETUP_FINAL_JOURNAL_ACK_REQUIRED: retained step outcomes do not certify complete setup; no replay or new IDs."));
                 try
                 {
                     var audit = await _closing.AwaitAsync(_closing.Invoke(() => owner._broker.CompleteExecutionAsync(_capability,
-                        new(HomePermissionRequestState.PartiallyCompleted, "DEV_SETUP_ORIGINAL_INCOMPLETE",
-                            "Retained the exact original step/cleanup outcomes. Complete journal acknowledgment and remaining declared steps are separately required.", []), CancellationToken.None))).ConfigureAwait(false);
+                        new(acknowledged ? HomePermissionRequestState.Succeeded : HomePermissionRequestState.PartiallyCompleted,
+                            acknowledged ? "DEV_SETUP_ORIGINAL_ACKNOWLEDGED" : "DEV_SETUP_ORIGINAL_INCOMPLETE",
+                            acknowledged ? "The same original declared setup steps, cleanup and private final journal acknowledgment completed. Command and business permissions remain separate."
+                                : "Retained the exact original step/cleanup outcomes. Complete journal acknowledgment and remaining declared steps are separately required.", []), CancellationToken.None))).ConfigureAwait(false);
                     if (!audit.Succeeded) throw new InvalidOperationException("Known setup outcomes retained; Home terminal audit unfinished: " + audit.Code);
                 }
                 catch (Exception cause) { _closing.Retain(cause); }

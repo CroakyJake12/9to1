@@ -218,6 +218,7 @@ public sealed partial class ManagedDulcheRuntimeService : IManagedDulcheOriginal
   private async Task<bool> InitializeSelectedRequestEndpointAsync(SelectedRequestEndpoint original)
   {
     await ValidateSelectedRequestAdmissionAsync(original).ConfigureAwait(false);
+    original.RequestedEngine = CaptureOriginalEnginePreference(original.Model);
     var factoryStart = Signal();
     original.Factory = AcquireOriginalModelSource(() => _inferenceComposition!.CreateAfterPublicationAsync(factoryStart.Task,
       original.Model.ProviderId, original.Model, original.Admission, _registry, _configurations, _coordinator, _frames,
@@ -226,6 +227,7 @@ public sealed partial class ManagedDulcheRuntimeService : IManagedDulcheOriginal
     try { original.Lease = await original.Factory.ConfigureAwait(false); }
     catch (Exception cause) { ThrowObservedModelTask(cause, original.Factory); throw; }
     // An actual late acquired lease is retained before any current-use/seal checks.
+    ApplyOriginalEnginePreference(original.Lease, original.RequestedEngine, original.Model);
     original.Runtime = InvokePhysical(() => new DulcheRuntime([original.Lease.Adapter], toolCoordinator: _toolCoordinator));
     lock (_sync) { RequireOpen(); _ownerStop.Token.ThrowIfCancellationRequested(); }
     original.Startup = InvokePhysical(() => original.Runtime.PrepareManagedProviderOriginal(original.Model.ProviderId, original.Model, _ownerStop.Token));
@@ -315,6 +317,7 @@ public sealed partial class ManagedDulcheRuntimeService : IManagedDulcheOriginal
   private sealed class SelectedRequestEndpoint(TaskRunAttemptAdmission admission, ModelIdentity model)
   {
     public TaskRunAttemptAdmission Admission { get; } = admission; public ModelIdentity Model { get; } = model;
+    public InferenceEngine RequestedEngine;
     public Task<bool>? Initialization; public Task<OriginalInferenceEngineLease>? Factory; public OriginalInferenceEngineLease? Lease;
     public DulcheRuntime? Runtime; public DulcheEndpointStartupOriginal? Startup;
     public Task<OperationResult<DulcheEndpoint>>? Stop; public Task? Close;

@@ -285,6 +285,8 @@ public static class ServiceCollectionExtensions
             provider.GetRequiredService<Dulche.Runtime.IOriginalStrataModelSource>(),
             provider.GetRequiredService<Dulche.Runtime.IOriginalStrataWorkerSource>()));
         services.TryAddSingleton<IManagedDulcheInferenceCompositionSource>(provider => provider.GetRequiredService<ManagedDulcheInferenceComposition>());
+        services.TryAddSingleton<Dulche.Runtime.ConfiguredInferenceEnginePreferences>();
+        services.TryAddSingleton<Dulche.Runtime.IInferenceEnginePreferenceSource>(provider => provider.GetRequiredService<Dulche.Runtime.ConfiguredInferenceEnginePreferences>());
         services.AddSingleton<ManagedDulcheRuntimeService>(provider => new ManagedDulcheRuntimeService(
             provider.GetRequiredService<IModelProviderRegistry>(),
             provider.GetRequiredService<IProviderConfigurationStore>(),
@@ -294,8 +296,10 @@ public static class ServiceCollectionExtensions
             contextSource: provider.GetService<Dulche.Runtime.IOriginalDulcheProviderContextSource>(),
             contextAuthority: provider.GetRequiredService<ITaskRunProviderContextAuthority>(),
             toolCoordinator: provider.GetService<Dulche.Runtime.IDulcheToolCoordinator>(),
-            inferenceComposition: provider.GetService<IManagedDulcheInferenceCompositionSource>()));
+            inferenceComposition: provider.GetService<IManagedDulcheInferenceCompositionSource>(),
+            inferencePreferences: provider.GetService<Dulche.Runtime.IInferenceEnginePreferenceSource>()));
         services.AddSingleton<IManagedDulcheOriginalModelRequestConsumer>(provider => provider.GetRequiredService<ManagedDulcheRuntimeService>());
+        services.AddSingleton<IManagedDulcheOriginalInferenceSettingsSource>(provider => provider.GetRequiredService<ManagedDulcheRuntimeService>());
         services.AddSingleton<WorkspaceTaskRunEffectAuthority>();
         services.AddSingleton<IWorkspaceToolFinalFenceAuthority>(provider => provider.GetRequiredService<WorkspaceTaskRunEffectAuthority>());
         services.AddSingleton<WorkspaceTaskRunToolActionOwner>(provider => new WorkspaceTaskRunToolActionOwner(

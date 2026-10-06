@@ -6,7 +6,7 @@ namespace Haven.Application;
 
 /// <summary>Independent private final-fence registry. It does not depend on the coordinator/router
 /// or physical tool service, so shared DI has no authority/service construction cycle.</summary>
-public sealed class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFinalFenceAuthority
+public sealed partial class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFinalFenceAuthority
 {
     private readonly TaskRunPermissionAuthority _tasks;
     private readonly IPermissionDecisionEngine _policy;
@@ -15,7 +15,11 @@ public sealed class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFinalFenceAu
     private readonly HashSet<Fence> _issued = [];
     public WorkspaceTaskRunEffectAuthority(TaskRunPermissionAuthority tasks, IPermissionDecisionEngine policy,
         IPermissionOriginalEffectFence effects)
+        : this(tasks, policy, effects, null) { }
+    public WorkspaceTaskRunEffectAuthority(TaskRunPermissionAuthority tasks, IPermissionDecisionEngine policy,
+        IPermissionOriginalEffectFence effects, Func<IWorkspaceOriginalProcessStartConsentSource>? processConsents)
     {
+        _processConsents = processConsents;
         if (!ReferenceEquals(policy, effects)) throw new ArgumentException("SAME central policy/effect writer gate required.");
         _tasks = tasks; _policy = policy; _effects = effects;
     }
@@ -45,10 +49,11 @@ public sealed class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFinalFenceAu
     internal void RetireOriginal(Fence original)
     { original.Seal(); lock (_sync) _issued.Remove(original); }
 
-    internal sealed class Fence(WorkspaceTaskRunEffectAuthority issuer, TaskRunAttemptAdmission original,
+    internal sealed partial class Fence(WorkspaceTaskRunEffectAuthority issuer, TaskRunAttemptAdmission original,
         Guid actionId, string root, OllamaToolCall call, string scope, CapabilityRiskClass risk, bool requires)
         : IWorkspaceToolFinalFence
     {
+        private WorkspaceTaskRunEffectAuthority Issuer => issuer;
         private readonly object _sync = new();
         private int _pins;
         private bool _closed;
@@ -111,9 +116,30 @@ public sealed class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFinalFenceAu
             await issuer._tasks.ValidateOriginalToolAsync(OriginalAttempt, OriginalCall.Name, token).ConfigureAwait(false);
             var pin = await actual.AcquireOriginalCommitPinAsync(token).ConfigureAwait(false);
             if (pin is null) return null;
+            try { await AcquireOriginalProcessStartEntryAsync(token).ConfigureAwait(false); }
+            catch (Exception primary)
+            {
+                var errors = new List<Exception> { primary };
+                Task? homeClose = null; Task? pinClose = null;
+                try { homeClose = CloseOriginalProcessConsentAsync(); await homeClose.ConfigureAwait(false); }
+                catch (Exception cause) { errors.Add((Exception?)homeClose?.Exception ?? cause); }
+                try { pinClose = pin.DisposeAsync().AsTask(); _ = _entryClosing.Track(pinClose); await pinClose.ConfigureAwait(false); }
+                catch (Exception cause) { errors.Add((Exception?)pinClose?.Exception ?? cause); }
+                throw new AggregateException("Original attempt pin/Home entry acquisition and independent cleanup failed.", errors);
+            }
             bool accepted;
             lock (_sync) { accepted = !_closed; if (accepted) _pins++; }
-            if (!accepted) { await pin.DisposeAsync().ConfigureAwait(false); return null; }
+            if (!accepted)
+            {
+                var errors = new List<Exception>(); Task? homeClose = null; Task? pinClose = null;
+                if (HasOriginalProcessConsent)
+                    try { homeClose = CloseOriginalProcessConsentAsync(); await homeClose.ConfigureAwait(false); }
+                    catch (Exception cause) { errors.Add((Exception?)homeClose?.Exception ?? cause); }
+                try { pinClose = pin.DisposeAsync().AsTask(); _ = _entryClosing.Track(pinClose); await pinClose.ConfigureAwait(false); }
+                catch (Exception cause) { errors.Add((Exception?)pinClose?.Exception ?? cause); }
+                if (errors.Count != 0) throw new AggregateException("Rejected original process entry and independent attempt pin cleanup failed.", errors);
+                return null;
+            }
             return new Pin(this, pin);
         }
         public void DemandOriginalEffect(string actualRoot, WorkspaceToolEffectKind kind, string target, string sha)
@@ -132,6 +158,7 @@ public sealed class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFinalFenceAu
                     kind == WorkspaceToolEffectKind.RollbackDelete && OriginalCall.Name != "apply_change_set")
                     throw new UnauthorizedAccessException("Original typed tool does not own this native effect kind.");
                 DemandOriginalAction();
+                if (kind == WorkspaceToolEffectKind.ProcessStart) DemandOriginalProcessStartConsent(actualRoot, target, sha);
                 // Physical owner independently validates exact call->path/content/process preimage.
                 // SHA describes that original effect; it is never independently an authority.
             }
@@ -144,7 +171,8 @@ public sealed class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFinalFenceAu
                 return issuer._effects.RunOriginalEffect(scope, risk, requires, "Original workspace final native effect", () =>
                 {
                     DemandOriginalAction(); // Same active private claim at the finite central policy/native boundary.
-                    return body();
+                    return kind == WorkspaceToolEffectKind.ProcessStart
+                        ? RunOriginalProcessStartConsent(actualRoot, target, sha, body) : body();
                 });
             }
         }
@@ -183,7 +211,7 @@ public sealed class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFinalFenceAu
 /// <summary>Canonical Chat workspace owner. It wraps the existing executor once, preserves exact
 /// original results, and accepts only a privately validated native owner receipt. Local reads do
 /// not require CAKE login, Home installation manager, publisher, or fabricated profile.</summary>
-public sealed class WorkspaceTaskRunToolActionOwner : ITaskRunToolActionOwner
+public sealed partial class WorkspaceTaskRunToolActionOwner : ITaskRunToolActionOwner
 {
     private readonly Func<TaskExecutionCoordinator> _coordinator;
     private readonly WorkspaceTaskRunReceiptAuthority _receipts;
@@ -320,6 +348,12 @@ public sealed class WorkspaceTaskRunToolActionOwner : ITaskRunToolActionOwner
                 try { close = physical.CloseAndDrainAsync(); await close.ConfigureAwait(false); }
                 catch (Exception error) { closed = false; Add(errors, (Exception?)close?.Exception ?? error); }
             }
+            if (fence is { HasOriginalProcessConsent: true })
+            {
+                Task? consentClose = null;
+                try { consentClose = fence.CloseOriginalProcessConsentAsync(); await consentClose.ConfigureAwait(false); }
+                catch (Exception error) { closed = false; Add(errors, (Exception?)consentClose?.Exception ?? error); }
+            }
             if (fence is not null && closed) _effects.RetireOriginal(fence);
             // Already-admitted failed partial originals remain bounded in the private registry.
             if (errors.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(primary).Throw();
@@ -397,6 +431,12 @@ public sealed class WorkspaceTaskRunToolActionOwner : ITaskRunToolActionOwner
             {
                 try { await runtime.ConfigureAwait(false); }
                 catch (Exception error) { Add(original.Errors, (Exception?)runtime.Exception ?? error); }
+            }
+            if (original.Fence is { HasOriginalProcessConsent: true } entryFence)
+            {
+                Task? consentClose = null;
+                try { consentClose = entryFence.CloseOriginalProcessConsentAsync(); await consentClose.ConfigureAwait(false); }
+                catch (Exception error) { Add(original.Errors, (Exception?)consentClose?.Exception ?? error); }
             }
             if (original.OriginalInvocation is { } physical)
             {

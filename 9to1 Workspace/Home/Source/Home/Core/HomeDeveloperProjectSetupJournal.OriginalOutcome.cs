@@ -60,7 +60,8 @@ public sealed partial class HomeDeveloperProjectSetupJournal
                 observation.OriginalReceiptReference, observation.OriginalOutcomeDigest.ToLowerInvariant(), null)) };
         var record = new HomeCoreStateRecord(RecordId(before.Intent.OriginalActor, before.Intent.SetupId), RecordType, 1,
             HomeDataScope.DeviceLocal, HomeRecordAuthority.LocalCanonical, next.Revision, JsonSerializer.SerializeToElement(next));
-        var write = await Await(original, () => store.WriteGuardedAsync(record, before.Revision, before.Intent.OriginalActor,
+        Task<HomeStateWriteResult>? originalWrite = null;
+        var write = await Await(original, () => originalWrite = store.WriteGuardedAsync(record, before.Revision, before.Intent.OriginalActor,
             new OriginalOutcomeGuard(this, original, prepared, before, sameAdmission.Step, issuer, sameActualStepTask, sameActualResult), ct)).ConfigureAwait(false);
         if (!write.IsSuccess) throw new StorageFailure(write.Failure!);
         var acknowledged = Decode(write.State!.Records.Single(value => value.RecordId == record.RecordId));
@@ -70,6 +71,8 @@ public sealed partial class HomeDeveloperProjectSetupJournal
         lock (_gate)
         {
             if (!ReferenceEquals(prepared.Checkpoint, before)) throw new InvalidOperationException("The original journal changed during outcome acknowledgement.");
+            RetainOriginalAcknowledgement(original, prepared, sameAdmission, sameCapture, issuer,
+                sameActualStepTask, sameActualResult, originalWrite!, write, acknowledged);
             prepared.Checkpoint = acknowledged;
         }
         return acknowledged;

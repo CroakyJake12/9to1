@@ -10,7 +10,7 @@ public sealed partial class HomeCloudflareServiceOwner
     {
         internal CloudflareOriginalTaskBinding Binding { get; } = binding;
         private readonly object _sync = new();
-        private readonly CloudflareOriginalTaskLedger _stages = new();
+        private readonly CloudflareOriginalTaskLedger _stages = owner.CreateOriginalHostSources(binding.OriginalCallerCallback);
         private Task<ICloudflareOriginalPermission>? _acquire;
         private Task? _close;
         private Capture? _capture;
@@ -31,10 +31,10 @@ public sealed partial class HomeCloudflareServiceOwner
             {
                 if (_acquire is not null) return _acquire;
                 if (_sealed) throw new ObjectDisposedException(nameof(Permission));
-                _stages.BindOriginalOwner(this); _stages.BindOriginalCallerCallback(Binding.OriginalCallerCallback);
+                _stages.BindOriginalOwner(this); _stages.BindOriginalCallerCallback(owner.OriginalHostCaller(Binding.OriginalCallerCallback));
                 _stop = CancellationTokenSource.CreateLinkedTokenSource(token);
                 var begin = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-                _acquire = AcquirePublishedAsync(begin.Task, _stop.Token); begin.SetResult(); return _acquire;
+                _acquire = AcquirePublishedAsync(begin.Task, _stop.Token); owner.RetainExistingOriginalHostTask(_acquire, _stages, this); begin.SetResult(); return _acquire;
             }
         }
         private async Task<ICloudflareOriginalPermission> AcquirePublishedAsync(Task begin, CancellationToken token)
@@ -93,6 +93,7 @@ public sealed partial class HomeCloudflareServiceOwner
         });
         private void DemandPair(CloudflareOriginalTaskBinding actual)
         {
+            owner.DemandOriginalHostAdmission();
             lock (_sync)
                 if (_sealed || !ReferenceEquals(actual.Invocation, Binding.Invocation) || !ReferenceEquals(actual.OriginalPreparation, Binding.OriginalPreparation) ||
                     _acquire?.IsCompletedSuccessfully != true || _capability is null || _attestation is null || !_capability.IsUncompletedClaim(owner._broker))
@@ -115,7 +116,7 @@ public sealed partial class HomeCloudflareServiceOwner
             if (_namespace is null || !IsBorrowedMarker(Binding.Invocation, _namespace)) return;
             if (!ReferenceEquals(sdk, owner._mcp)) throw new UnauthorizedAccessException("SAME configured actual SDK binding reader required.");
             var borrowed = _namespace.Payload.Deserialize<BorrowedNamespace>()!;
-            var stages = new CloudflareOriginalTaskLedger(); stages.BindOriginalOwner(this); stages.BindOriginalCallerCallback(Binding.OriginalCallerCallback);
+            var stages = owner.CreateOriginalHostSources(Binding.OriginalCallerCallback); stages.BindOriginalOwner(this);
             try
             {
                 var read = new WorkerReadAdmission(owner, Binding.Invocation.Service, borrowed.Selection, _capture!, _capability!, _attestation!,
@@ -149,9 +150,9 @@ public sealed partial class HomeCloudflareServiceOwner
                     ?? throw new UnauthorizedAccessException("Original Home completion is closing.");
                 var records = _namespace is null ? new[] { _capture!.Record } : new[] { _capture!.Record, _namespace! };
                 home = await _stages.CaptureOriginalAcquisitionAsync(() => owner._store.AcquireLocalOperationLeaseCoreAsync(owner._profiles, _capture!.Actor,
-                    new ClaimedStateGuard(owner, _capture.Actor, _attestation!, records), token), actual => home = actual).ConfigureAwait(false)
+                    new ClaimedStateGuard(owner, _stages, _capture.Actor, _attestation!, records), body => owner.RunOriginalHostCallback(_stages, body), raw => owner.RetainOriginalHostTask(_stages, raw), token), actual => home = actual).ConfigureAwait(false)
                     ?? throw new UnauthorizedAccessException("Original Home held account/namespace entry rejected.");
-                if (!await _stages.AwaitAsync(_stages.Invoke(() => home.IsCurrentAsync(token))).ConfigureAwait(false)) throw new UnauthorizedAccessException("Original held Home entry is stale.");
+                if (!await _stages.AwaitAsync(_stages.Invoke(() => (home as IHomeOriginalScopedLocalOperationLease ?? throw new InvalidOperationException("Original scoped Home lease required.")).IsCurrentAsync(body => owner.RunOriginalHostCallback(_stages, body), raw => owner.RetainOriginalHostTask(_stages, raw), token))).ConfigureAwait(false)) throw new UnauthorizedAccessException("Original held Home entry is stale.");
                 var entry = new Entry(this, home, completion);
                 lock (_sync) { DemandPair(Binding); if (_entry is not null) throw new UnauthorizedAccessException("Repeated final dispatch."); _entry = entry; }
                 home = null; completion = null; return entry;
@@ -212,7 +213,7 @@ public sealed partial class HomeCloudflareServiceOwner
                     invocation.Descriptor.Kind == CloudflareOperationKind.KvDelete);
                 var record = new HomeCoreStateRecord(recordId, "home.cloudflare.namespace", 1, HomeDataScope.DeviceLocal, HomeRecordAuthority.LocalCanonical,
                     checked((old?.Revision ?? 0) + 1), JsonSerializer.SerializeToElement(ns));
-                var guard = new ClaimedStateGuard(owner, _capture.Actor, _attestation!, old is null ? [_capture.Record] : [_capture.Record, old!], recordId, old?.Revision ?? 0);
+                var guard = new ClaimedStateGuard(owner, _stages, _capture.Actor, _attestation!, old is null ? [_capture.Record] : [_capture.Record, old!], recordId, old?.Revision ?? 0);
                 var write = await _stages.AwaitAsync(_stages.Invoke(() => owner._store.WriteGuardedAsync(record, old?.Revision ?? 0, _capture.Actor, guard, token))).ConfigureAwait(false);
                 if (!write.IsSuccess) throw new InvalidOperationException("Remote response is known but isolated namespace custody save is unconfirmed; reconcile before any effect.");
             }
