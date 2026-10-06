@@ -242,6 +242,14 @@ public sealed partial class TaskExecutionCoordinator
             AttachHostedActualRun(observation, checkpoint.Next);
             return;
         }
+        if (observation.Source.OriginalContinuationCustody?.OriginalColdPreparation is { BodyBound: true } cold)
+        {
+            if (!ReferenceEquals(cold.Owner, this)
+                || !ReferenceEquals(cold.Invocation.OriginalProcessProducer, observation.Source.OriginalContinuationCustody.OriginalChild))
+                throw new InvalidOperationException("The hosted cold source did not bind the same private reconstructed input.");
+            AttachHostedActualRun(observation, cold.Invocation);
+            return;
+        }
         var binding = observation.Source.OriginalContinuationCustody?.OriginalPreparation;
         if (binding is not { Claimed: true, Bound: true } || !ReferenceEquals(binding.Issuer, this)
             || !ReferenceEquals(binding.Next.OriginalProcessProducer, observation.Source.OriginalContinuationCustody?.OriginalChild))

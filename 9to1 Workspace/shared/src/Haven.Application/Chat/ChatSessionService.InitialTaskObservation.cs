@@ -123,6 +123,7 @@ public sealed partial class ChatSessionService
         await stage.Await(() => original.Coordinator.ValidateOriginalInitialTaskContextAsync(original, token)).ConfigureAwait(false);
         try
         {
+            stage.Invoke(() => { CaptureOriginalColdInitialInput(original, input); return true; });
             original.Invocation = stage.Invoke(original.Coordinator.CreateOriginalInvocationCustody);
             original.Source = stage.Invoke(() => CreateOriginalSend(input.Conversation, input.Prompt,
                 input.Model, input.Effort, input.Capabilities, input.AgentName, input.AgentInstructions,

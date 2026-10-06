@@ -90,7 +90,8 @@ public sealed partial class TaskExecutionCoordinator
 
     private async Task<TaskRunAttemptAdmission> AdmitAttemptProcessBodyAsync(
         Guid taskId, Guid expectedExecutionId, Guid? previousAttemptId,
-        TaskRunRouteCandidate candidate, CancellationToken cancellationToken)
+        TaskRunRouteCandidate candidate, CancellationToken cancellationToken,
+        TaskRunColdContinuationBinding? originalColdBoundary = null)
     {
         var stage = RequireOriginalProcessStage();
         var authority = RequireAuthority();
@@ -118,7 +119,10 @@ public sealed partial class TaskExecutionCoordinator
                 && node.State is TaskPlanNodeState.Running or TaskPlanNodeState.WaitingSafeBoundary or TaskPlanNodeState.RequiresReexecution))
                 throw new InvalidOperationException("An unresolved owner mutation requires inspection before any fallback.");
             var settlement = _runtimeSettlement ?? throw new InvalidOperationException("The original runtime settlement owner is unavailable.");
-            await stage.Await(() => settlement.AwaitSettlementAsync(snapshot.TaskId, snapshot.ExecutionId, old.Id, cancellationToken)).ConfigureAwait(false);
+            if (originalColdBoundary is null)
+                await stage.Await(() => settlement.AwaitSettlementAsync(snapshot.TaskId, snapshot.ExecutionId, old.Id, cancellationToken)).ConfigureAwait(false);
+            else
+                await DemandOriginalColdHistoricalSettlementAsync(originalColdBoundary, snapshot, old.Id, stage, cancellationToken).ConfigureAwait(false);
             if (_issuedAdmissions.TryGetValue(old.Id, out var prior))
             {
                 // Keep this authentic closed original until the successor CAS acknowledges the same run.

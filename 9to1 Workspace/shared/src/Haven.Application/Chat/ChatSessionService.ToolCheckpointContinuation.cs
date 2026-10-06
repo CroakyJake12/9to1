@@ -94,8 +94,58 @@ public sealed partial class ChatSessionService
         }
     }
 
-    private async IAsyncEnumerable<ChatStreamEvent> SendOriginalToolCheckpointAsync(
+    // Both paths enter the SAME maintained loop. Cold material is only projected after
+    // the protected journal's private claim, fresh owner and actual attempt admission.
+    private sealed class OriginalToolContinuationState
+    {
+        internal readonly TaskRunToolCheckpointContinuationBinding? Live;
+        internal readonly TaskRunColdContinuationBinding? Cold;
+        internal readonly TaskRunInvocationCustody Next;
+        internal readonly OllamaToolRequest OriginalRequest;
+        internal readonly TaskRunContextInventory OriginalInventory;
+        internal readonly Guid AssistantId;
+        internal readonly string AssistantText;
+        internal readonly IReadOnlyList<ToolActivity> Activities;
+        internal readonly int CallsUsed, ToolLimit;
+        internal readonly OllamaToolCall? LastCall;
+        internal readonly WorkspaceToolResult? LastResult;
+        internal readonly IReadOnlyDictionary<string, ToolRuntimeKind> RuntimeByName;
+        internal readonly string OriginalControlFingerprint;
+        internal readonly ProviderModelDescriptor Model;
+        internal readonly TaskRunRouteCandidate Candidate;
+        internal readonly TaskRunAttemptAdmission Admission;
+        internal readonly Guid TaskId;
+        internal OriginalToolContinuationState(TaskRunToolCheckpointContinuationBinding live)
+        {
+            Live = live; Next = live.Next; var value = live.Boundary;
+            OriginalRequest = value.OriginalRequest; OriginalInventory = value.OriginalInventory;
+            AssistantId = value.AssistantId; AssistantText = value.AssistantText; Activities = value.Activities;
+            CallsUsed = value.CallsUsed; ToolLimit = value.ToolLimit; LastCall = value.LastCall; LastResult = value.LastResult;
+            RuntimeByName = value.RuntimeByName; OriginalControlFingerprint = value.OriginalControlFingerprint;
+            Model = live.Selection!.ActualSelectedModel; Candidate = live.Selection.ActualSelectedCandidate;
+            Admission = live.NewAdmission!; TaskId = live.Acknowledged!.TaskId;
+        }
+        internal OriginalToolContinuationState(TaskRunColdContinuationBinding cold)
+        {
+            Cold = cold; Next = cold.Invocation; var value = cold.Entry.Capsule.OriginalToolCheckpoint!;
+            OriginalRequest = value.OriginalNextRequest; OriginalInventory = value.OriginalInventory;
+            AssistantId = value.AssistantId; AssistantText = value.AssistantText; Activities = value.Activities;
+            CallsUsed = value.CallsUsed; ToolLimit = value.ToolLimit; LastCall = value.LastCall; LastResult = value.LastResult;
+            RuntimeByName = value.RuntimeByName; OriginalControlFingerprint = value.OriginalControlFingerprint;
+            Model = cold.Selection!.ActualSelectedModel; Candidate = cold.Selection.ActualSelectedCandidate;
+            Admission = cold.NewAdmission!; TaskId = cold.Acknowledgment.AcknowledgedTask.TaskId;
+        }
+    }
+
+    private IAsyncEnumerable<ChatStreamEvent> SendOriginalToolCheckpointAsync(
         TaskRunToolCheckpointContinuationBinding binding, Conversation conversation, string agentName,
+        string? workspaceRoot, PermissionMode filePermission, PermissionMode commandPermission,
+        PermissionMode browserPermission, CancellationToken token) =>
+        SendOriginalToolContinuationBodyAsync(new OriginalToolContinuationState(binding), conversation,
+            agentName, workspaceRoot, filePermission, commandPermission, browserPermission, token);
+
+    private async IAsyncEnumerable<ChatStreamEvent> SendOriginalToolContinuationBodyAsync(
+        OriginalToolContinuationState binding, Conversation conversation, string agentName,
         string? workspaceRoot, PermissionMode filePermission, PermissionMode commandPermission,
         PermissionMode browserPermission,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
@@ -104,11 +154,12 @@ public sealed partial class ChatSessionService
         var owner = taskToolOwner ?? throw new InvalidOperationException("The original typed tool owner is unavailable.");
         var capture = taskProviderContextCapture ?? throw new InvalidOperationException("The actual request-context owner is unavailable.");
         var original = binding.Next;
-        var boundary = binding.Boundary;
-        var selected = binding.Selection ?? throw new InvalidOperationException("No original local selection was issued.");
-        var issued = binding.NewAdmission ?? throw new InvalidOperationException("No actual new same-run attempt was acknowledged.");
+        var boundary = binding;
+        var issued = binding.Admission;
         var current = await AwaitOriginalCheckpointStage(original, "checkpoint.body-bind", () =>
-            coordinator.BindOriginalToolCheckpointBodyAsync(binding, this, conversation.Id, token)).ConfigureAwait(false);
+            binding.Live is { } live
+                ? coordinator.BindOriginalToolCheckpointBodyAsync(live, this, conversation.Id, token)
+                : coordinator.BindOriginalColdToolBodyAsync(binding.Cold!, this, conversation.Id, token)).ConfigureAwait(false);
         CurrentCanonicalTask = current;
         var tracker = new ChatExecutionTracker(ChatExecutionStage.Recovering, null, current.ExecutionId);
         original.OriginalTracker = tracker;
@@ -134,7 +185,7 @@ public sealed partial class ChatSessionService
         var callsUsed = boundary.CallsUsed;
         var lastCall = boundary.LastCall;
         var lastResult = boundary.LastResult;
-        var descriptor = selected.ActualSelectedModel;
+        var descriptor = binding.Model;
         var requestModel = descriptor.ProviderId.Equals("ollama", StringComparison.OrdinalIgnoreCase)
             ? descriptor.Name : descriptor.Key;
         var tools = boundary.OriginalRequest.Tools;
@@ -147,7 +198,7 @@ public sealed partial class ChatSessionService
         {
             var row = await AwaitOriginalCheckpointStage(original, phase, () => coordinator.GetAsync(current.TaskId, token)).ConfigureAwait(false)
                 ?? throw new InvalidOperationException("The actual same-run task disappeared.");
-            if (row.TaskId != binding.Acknowledged!.TaskId || row.ContextId != conversation.Id
+            if (row.TaskId != binding.TaskId || row.ContextId != conversation.Id
                 || row.ExecutionId != issued.Snapshot.ExecutionId || row.OwnerBinding != issued.Snapshot.OwnerBinding
                 || row.Attempts.LastOrDefault()?.Id != issued.AttemptId || row.RecoveryObservation is not null
                 || OriginalToolCheckpointControlFingerprint(row) != boundary.OriginalControlFingerprint
@@ -197,8 +248,11 @@ public sealed partial class ChatSessionService
                     : owner.PrepareOriginalAsync(actualAdmission, row, actionId, call, runtime, permission, workspaceRoot, token)).ConfigureAwait(false);
             if (!ReferenceEquals(preparation.OriginalAttempt, actualAdmission) || preparation.ActionId != actionId)
                 throw new InvalidOperationException("The tool preparation did not retain the actual resumed admission/action.");
-            if (original.CaptureOriginalToolOutcomes().Any(prior => prior.OriginalNode.Acceptance is not null
-                    && prior.OriginalNode.OriginalToolIntent is { } intent
+            var acknowledgedNodes = original.CaptureOriginalToolOutcomes().Select(prior => prior.OriginalNode)
+                .Concat(binding.Cold is { } coldBoundary
+                    ? coordinator.CaptureAuthenticatedColdAcceptedNodes(coldBoundary) : []);
+            if (acknowledgedNodes.Any(prior => (binding.Cold is not null || prior.Acceptance is not null)
+                    && prior.OriginalToolIntent is { } intent
                     && intent.RuntimeKey == preparation.OriginalToolIntent.RuntimeKey
                     && intent.ToolName == preparation.OriginalToolIntent.ToolName
                     && intent.CanonicalWorkspaceRoot == preparation.OriginalToolIntent.CanonicalWorkspaceRoot
@@ -252,15 +306,17 @@ public sealed partial class ChatSessionService
             await AwaitOriginalCheckpointStage(original, "checkpoint.model-turn-safety", () =>
                 safety.EnsureMayActAsync(conversation.Id, "chat.model-tool-turn", token)).ConfigureAwait(false);
             await ReadCurrent("checkpoint.provider-current").ConfigureAwait(false);
-            var responseOriginal = ReserveOriginalChatResponse(original, boundary.OriginalRequest.ExecutionContext?.ActionId,
-                firstOriginalResponse ? binding : null);
+            var responseOriginal = firstOriginalResponse && binding.Cold is { } cold
+                ? coordinator.ReserveOriginalColdResponse(cold, this)
+                : ReserveOriginalChatResponse(original, boundary.OriginalRequest.ExecutionContext?.ActionId,
+                    firstOriginalResponse ? binding.Live : null);
             firstOriginalResponse = false;
             var request = boundary.OriginalRequest with
             {
                 Model = requestModel, Messages = Array.AsReadOnly(turns.ToArray()),
                 ExecutionContext = new(current.TaskId, current.ContextId, current.ExecutionId, issued.AttemptId,
                     current.PersistenceRevision, responseOriginal.ActionId)
-                { RequestedCandidate = selected.ActualSelectedCandidate, SelectedCandidate = selected.ActualSelectedCandidate }
+                { RequestedCandidate = binding.Candidate, SelectedCandidate = binding.Candidate }
             };
             var nextBoundary = CaptureOriginalToolCheckpoint(original, request, boundary.OriginalInventory,
                 assistantId, buffer.ToString(), activities, callsUsed, boundary.ToolLimit, lastCall, lastResult,

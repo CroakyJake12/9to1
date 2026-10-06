@@ -269,6 +269,8 @@ public sealed partial class TaskExecutionCoordinator
         TaskRunInvocationCustody custody, ProviderExecutionContext observation, Guid actualContextId, CancellationToken token)
     {
         RequireOriginalInvocation(custody, boundRequired: false);
+        if (custody.OriginalColdContinuation is { } cold)
+            return await BindOriginalColdContinuationAsync(cold, custody, observation, actualContextId, token).ConfigureAwait(false);
         if (custody.OriginalUnstartedContinuation is { } approved)
             return await BindAcknowledgedUnstartedContinuationAsync(approved, custody, observation, actualContextId, token).ConfigureAwait(false);
         if (custody.OriginalDelegatedChildLink is { } childLink)

@@ -88,6 +88,7 @@ public sealed partial class TaskExecutionCoordinator
             sameStage.RetainSource(original.Producer);
             sameStage.RetainSource(original.Wait);
             sameStage.RetainSource(original.Detach);
+            original.Chat.RegisterOriginalColdInitialCapture(original, start.Task);
             sameStage.OriginalResultClosed = () => original.Healthy;
             sameStage.OriginalResultJoin = () => sameSource.ActualClose
                 ?? sameSource.CloseAndSuspendOriginalProducerAsync();

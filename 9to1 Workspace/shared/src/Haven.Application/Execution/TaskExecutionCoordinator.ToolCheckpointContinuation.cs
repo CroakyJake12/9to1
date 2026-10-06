@@ -195,7 +195,8 @@ public sealed partial class TaskExecutionCoordinator
         => RequireOriginalToolCheckpointBoundary(binding.Original, binding.Boundary, current);
 
     private void RequireOriginalToolCheckpointBoundary(TaskRunInvocationCustody original,
-        ChatOriginalToolCheckpointBoundary boundary, TaskExecutionSnapshot current)
+        ChatOriginalToolCheckpointBoundary boundary, TaskExecutionSnapshot current,
+        Func<TaskPlanNode, bool>? actualFailedResponse = null)
     {
         var raw = boundary.ActualCall;
         var outward = boundary.ActualOutwardFailure;
@@ -221,7 +222,7 @@ public sealed partial class TaskExecutionCoordinator
             || ChatSessionService.OriginalToolCheckpointControlFingerprint(current) != boundary.OriginalControlFingerprint
             || current.ParentDelegation is not null // Saved child producer binding requires its owning Agent handoff.
             || current.Plan.Any(node => node.State is not (TaskPlanNodeState.Completed or TaskPlanNodeState.Superseded)
-                && !HasSameFailedResponseBoundary(original, boundary, node))
+                && !(actualFailedResponse?.Invoke(node) ?? HasSameFailedResponseBoundary(original, boundary, node)))
             || current.Delegations.Any(intent => intent.State != TaskRunDelegationState.ChildCompleted))
             throw new InvalidOperationException("The actual unfinished tool step has no complete original cleanup/accepted-work boundary.");
         var known = new HashSet<Exception>(ReferenceEqualityComparer.Instance) { outward };

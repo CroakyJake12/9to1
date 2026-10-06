@@ -540,6 +540,7 @@ public sealed partial class TaskExecutionCoordinator
     internal bool HasOriginalNeverStartedBinding(TaskRunInvocationCustody custody, TaskExecutionSnapshot current)
     {
         if (!ReferenceEquals(custody.Issuer, this) || !ReferenceEquals(custody.OriginalSelf, custody)) return false;
+        if (HasOriginalColdNeverStartedBinding(custody, current)) return true;
         if (custody.BoundByActualBegin && custody.OriginalBegin is { IsCompletedSuccessfully: true } actualBegin)
             return current.ParentDelegation is null && actualBegin.Result.TaskId == current.TaskId
                 && actualBegin.Result.ContextId == current.ContextId && actualBegin.Result.ExecutionId == current.ExecutionId
