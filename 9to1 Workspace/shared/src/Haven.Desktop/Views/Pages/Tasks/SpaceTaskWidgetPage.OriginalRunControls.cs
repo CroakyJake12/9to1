@@ -28,7 +28,7 @@ public sealed partial class SpaceTaskWidgetPage
         {
             "task.pause" => available.CanPause,
             "task.stop" => available.CanStop,
-            "task.resume-original" => available.CanResumeUnstartedOriginal,
+            "task.resume-original" => available.CanResumeUnstartedOriginal || available.CanResumeOriginalToolCheckpoint,
             _ => false
         }; // Detached availability is never a command grant; the owner freshly validates every call.
     }

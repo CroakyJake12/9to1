@@ -219,6 +219,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     /// </summary>
     public bool TryStopResponse()
     {
+        if (_conversation.Mode == HavenMode.Tasks) return TryStopOriginalCanonicalTaskResponse();
         var cancellation = _sendCancellation;
         if (cancellation is null || cancellation.IsCancellationRequested) return false;
 
@@ -547,6 +548,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     private async Task LoadConversationOriginalBodyAsync(Conversation conversation)
     {
         DemandOriginalChatPublication();
+        RetireOriginalInitialTaskPresentationsForNewTarget();
         _activeAgent = null;
         _activeInstructions.Clear();
         _chatActionModeOverride = null;
@@ -1111,6 +1113,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         }
 
         CancellationTokenSource? originalSendCancellation = null;
+        NewChatOriginalInitialTaskObservation? initialTaskObservation = null;
         try
         {
         _pendingInstruction = null;
@@ -1144,13 +1147,75 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
             async Task FlushDeltasAsync()
             {
+                if (initialTaskObservation is { IsPresentationRetiring: true }) { deltaBuffer.Clear(); return; }
                 if (bufferedMessageId is not { } messageId || deltaBuffer.Length == 0) return;
                 var delta = deltaBuffer.ToString();
                 deltaBuffer.Clear();
-                await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() => ApplyStreamEvent(ChatStreamEvent.AssistantDelta(messageId, delta))));
+                await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() => ApplyOriginalObservedStreamEvent(ChatStreamEvent.AssistantDelta(messageId, delta))));
             }
 
-            await RequireChatOriginal().ReadStreamAsync(_sessions.SendAsync(
+            void ApplyOriginalObservedStreamEvent(ChatStreamEvent actual)
+            {
+                if (initialTaskObservation is null) ApplyStreamEvent(actual);
+                else if (!initialTaskObservation.IsPresentationRetiring)
+                    initialTaskObservation.InvokeOriginalPresentationCallback(() => ApplyStreamEvent(actual));
+            }
+
+            async Task PublishOriginalStreamEventAsync(ChatStreamEvent streamEvent)
+            {
+                if (initialTaskObservation is { IsPresentationRetiring: true }) return;
+                if (streamEvent.Kind == ChatStreamEventKind.AssistantDelta && streamEvent.MessageId is { } deltaMessageId)
+                {
+                    if (bufferedMessageId is not null && bufferedMessageId != deltaMessageId) await AwaitChatOriginalAsync(FlushDeltasAsync());
+                    bufferedMessageId = deltaMessageId;
+                    deltaBuffer.Append(streamEvent.Delta);
+                    if (Environment.TickCount64 < nextDeltaFlushAt) return;
+                    await AwaitChatOriginalAsync(FlushDeltasAsync());
+                    nextDeltaFlushAt = Environment.TickCount64 + 50;
+                    return;
+                }
+                if (streamEvent.Kind == ChatStreamEventKind.UserMessage && streamEvent.Message is not null)
+                    emittedUserMessageId = streamEvent.Message.Id;
+                else if (streamEvent.Kind is ChatStreamEventKind.PreflightFailed or ChatStreamEventKind.PermissionRequired)
+                    sendReportedFailure = true;
+                await AwaitChatOriginalAsync(FlushDeltasAsync());
+                await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() => ApplyOriginalObservedStreamEvent(streamEvent)));
+            }
+            if (originalConversation.Mode == HavenMode.Tasks)
+            {
+                var actualModel = _selectedModel ?? throw new InvalidOperationException("The original Tasks model selection is unavailable.");
+                var actualEffort = _effortOverride ?? _preferences.DefaultEffort;
+                var actualAgentName = _activeAgent?.Name ?? "Haven";
+                var actualAgentInstructions = _activeAgent?.Instructions ?? string.Empty;
+                var actualImages = _attachedImages.Count == 0 ? null : _attachedImages.ToArray();
+                var actualPrompts = _activeInstructions.Select(item => new ActivePrompt(item.Name, item.IconKey, item.Persists, item.Instructions)).ToArray();
+                var actualRegisteredContext = BuildRegisteredContext();
+                var actualGenerationOptions = _preferences.GenerationOptions;
+                var actualFilePermission = _preferences.FilePermission;
+                var actualCommandPermission = _preferences.CommandPermission;
+                var actualBrowserPermission = _preferences.BrowserPermission;
+                var actualCapabilities = ActiveCapabilitiesForCurrentChat();
+                var actualObservationToken = originalSendCancellation.Token;
+                initialTaskObservation = CaptureOriginalInitialTaskObservation(originalConversation,
+                    () => _sessions.StartObservedOriginalTaskSendAsync(originalConversation, instruction,
+                        actualModel, actualEffort, [], actualAgentName, actualAgentInstructions, DuoMode.Solo,
+                        null, null, null, actualImages, actualObservationToken,
+                        prompts: actualPrompts, registeredContext: actualRegisteredContext,
+                        generationOptions: actualGenerationOptions, filePermission: actualFilePermission,
+                        commandPermission: actualCommandPermission, browserPermission: actualBrowserPermission,
+                        availableCapabilities: actualCapabilities), PublishOriginalStreamEventAsync);
+                initialTaskObservation.BeginOriginalAcquisition(); // Exact holder/callback capture precede callbacks.
+                var actualObservation = await RequireChatOriginal().AwaitAsync(initialTaskObservation.ActualObservation).ConfigureAwait(false);
+                if (initialTaskObservation.IsPresentationRetiring || _originalWork.IsRetiring) return;
+                if (actualObservation?.Disposition == TaskRunInitialChatObservationDisposition.ObservationDetached)
+                {
+                    await AwaitChatOriginalAsync(SetStatusAsync("Task presentation detached; its original work remains owned by Haven."));
+                    return; // No completion, cancellation or replacement Task is inferred.
+                }
+            }
+            else
+            {
+                await RequireChatOriginal().ReadStreamAsync(_sessions.SendAsync(
                                originalConversation,
                                instruction,
                                _selectedModel,
@@ -1172,25 +1237,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                                browserPermission: _preferences.BrowserPermission,
                                availableCapabilities: ActiveCapabilitiesForCurrentChat(),
                                taskExecutionIntent: originalConversation.Mode == HavenMode.Tasks
-                                   ? TaskRunExecutionIntent.CanonicalAgenticTask : TaskRunExecutionIntent.OrdinaryConversation), async streamEvent =>
-            {
-                if (streamEvent.Kind == ChatStreamEventKind.AssistantDelta && streamEvent.MessageId is { } deltaMessageId)
-                {
-                    if (bufferedMessageId is not null && bufferedMessageId != deltaMessageId) await AwaitChatOriginalAsync(FlushDeltasAsync());
-                    bufferedMessageId = deltaMessageId;
-                    deltaBuffer.Append(streamEvent.Delta);
-                    if (Environment.TickCount64 < nextDeltaFlushAt) return;
-                    await AwaitChatOriginalAsync(FlushDeltasAsync());
-                    nextDeltaFlushAt = Environment.TickCount64 + 50;
-                    return;
-                }
-                if (streamEvent.Kind == ChatStreamEventKind.UserMessage && streamEvent.Message is not null)
-                    emittedUserMessageId = streamEvent.Message.Id;
-                else if (streamEvent.Kind is ChatStreamEventKind.PreflightFailed or ChatStreamEventKind.PermissionRequired)
-                    sendReportedFailure = true;
-                await AwaitChatOriginalAsync(FlushDeltasAsync());
-                await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() => ApplyStreamEvent(streamEvent)));
-            }).ConfigureAwait(false);
+                                   ? TaskRunExecutionIntent.CanonicalAgenticTask : TaskRunExecutionIntent.OrdinaryConversation), PublishOriginalStreamEventAsync).ConfigureAwait(false);
+            }
             await AwaitChatOriginalAsync(FlushDeltasAsync());
             if (!sendReportedFailure && emittedUserMessageId is { } userMessageId)
                 await AwaitChatOriginalAsync(AssociatePendingAttachmentsWithUserMessageAsync(userMessageId, RequireChatOriginal().Token));
@@ -1209,6 +1257,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         }
         finally
         {
+            if (initialTaskObservation is not null)
+                await RequireChatOriginal().AwaitAsync(FinishOriginalInitialTaskObservationAsync(initialTaskObservation));
             await RequireChatOriginal().AwaitAsync(FinishOriginalSendAsync(originalSendCancellation));
         }
     }

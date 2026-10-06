@@ -248,7 +248,7 @@ public sealed partial class HomeDeveloperProjectSetupJournalTests
             {
                 rig.Store = new(new FileHomeCoreStateStore(Path.Combine(rig.Directory, "home.json")));
                 rig.Profiles = new(rig.Store, new OperatingSystemPrincipalSource());
-                rig.Actor = (await rig.Profiles.GetCurrentAsync())!;
+                rig.Actor = (await rig.Profiles.GetCurrentAsync(CancellationToken.None))!;
                 rig.Captures = new(rig.Source);
                 rig.Owner = rig.OtherOwner(); return rig;
             }

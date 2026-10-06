@@ -45,7 +45,12 @@ public sealed partial class MainView
             ? OpenTabs.FirstOrDefault(tab => tab.SessionId == id)
             : OpenTabs.FirstOrDefault(tab => tab.Key.Equals(identity, StringComparison.OrdinalIgnoreCase));
 
-    private async void OnTopRailTabCommandRequested(object? sender, TabCommandRequestedEventArgs request)
+    private void OnTopRailTabCommandRequested(object? sender, TabCommandRequestedEventArgs request)
+    {
+        if (!IsDisposed) _ = _originalShellWork.RunAsync(original => RunOriginalTabCommandAsync(original, request));
+    }
+
+    private async Task RunOriginalTabCommandAsync(DesktopOriginalWorkLifetime.Original original, TabCommandRequestedEventArgs request)
     {
         var tab = ResolveTab(request.Key);
         if (tab is null) return;
@@ -53,21 +58,21 @@ public sealed partial class MainView
         {
             switch (request.Command)
             {
-                case "generate-name": await GenerateTabNameAsync(tab); break;
-                case "duplicate": await DuplicateTabAsync(tab); break;
+                case "generate-name": await original.AwaitAsync(GenerateTabNameAsync(tab)); break;
+                case "duplicate": await original.AwaitAsync(DuplicateTabAsync(tab)); break;
                 case "move-left": MoveTab(tab, -1); break;
                 case "move-right": MoveTab(tab, 1); break;
                 case "split": OpenInSplitView(tab); break;
                 case "new-window": App.Services?.GetService<WorkspaceWindowService>()?.OpenInNewWindow(this, tab); break;
                 case "popup": App.Services?.GetService<WorkspaceWindowService>()?.OpenInPopUp(this, tab); break;
-                case "create-group": await CreateTabGroupAsync(tab); break;
+                case "create-group": await original.AwaitAsync(CreateTabGroupAsync(tab)); break;
                 case "remove-group": RemoveFromGroup(tab); break;
-                case "rename-group": await RenameTabGroupAsync(tab); break;
+                case "rename-group": await original.AwaitAsync(RenameTabGroupAsync(tab)); break;
                 case "toggle-group": ToggleTabGroup(tab); break;
                 case "dissolve-group": DissolveTabGroup(tab); break;
-                case "close-others": await CloseTabsAsync(OpenTabs.Where(item => !ReferenceEquals(item, tab)).ToArray()); break;
-                case "close-left": await CloseTabsAsync(OpenTabs.Take(OpenTabs.IndexOf(tab)).ToArray()); break;
-                case "close-right": await CloseTabsAsync(OpenTabs.Skip(OpenTabs.IndexOf(tab) + 1).ToArray()); break;
+                case "close-others": await original.AwaitAsync(CloseTabsAsync(OpenTabs.Where(item => !ReferenceEquals(item, tab)).ToArray())); break;
+                case "close-left": await original.AwaitAsync(CloseTabsAsync(OpenTabs.Take(OpenTabs.IndexOf(tab)).ToArray())); break;
+                case "close-right": await original.AwaitAsync(CloseTabsAsync(OpenTabs.Skip(OpenTabs.IndexOf(tab) + 1).ToArray())); break;
                 default:
                     if (request.Command.StartsWith("move-group:", StringComparison.Ordinal) &&
                         Guid.TryParse(request.Command["move-group:".Length..], out var groupId))
@@ -75,11 +80,11 @@ public sealed partial class MainView
                     break;
             }
         }
-        catch (OperationCanceledException) when (tab.LifetimeToken.IsCancellationRequested)
-        {
-        }
+        catch (OperationCanceledException error) when (tab.LifetimeToken.IsCancellationRequested)
+        { original.Retain(error); }
         catch (Exception ex)
         {
+            original.Retain(ex);
             App.Services?.GetService<NotificationService>()?.Show(
                 "Tab action failed",
                 SensitiveTextRedactor.Redact(ex.Message),
@@ -130,7 +135,7 @@ public sealed partial class MainView
         SplitDivider.IsVisible = true;
         SecondaryPageContent.IsVisible = true;
         SecondaryPageContent.Content = tab.Page;
-        if (tab.Page is IActivatablePage page) _ = page.ActivateAsync(CancellationToken.None);
+        if (tab.Page is IActivatablePage page) _ = _originalShellWork.RunAsync(async original => await original.AwaitAsync(page.ActivateAsync(CancellationToken.None)));
         RaisePropertyChanged(nameof(SecondaryTab));
         RaisePropertyChanged(nameof(IsSplitView));
         ApplyShellVisualState();
@@ -508,7 +513,7 @@ public sealed partial class MainView
         .Select(group => new TabGroupSnapshot(group.Key, group.First().GroupName, group.First().IsGroupCollapsed,
             group.Select(tab => tab.SessionId).ToArray())).ToArray();
 
-    private void QueueWorkspaceSessionSave() => App.Services?.GetService<WorkspaceSessionCoordinator>()?.QueueSave();
+    private void QueueWorkspaceSessionSave() { if (!IsDisposed) App.Services?.GetService<WorkspaceSessionCoordinator>()?.QueueSave(); }
 
     public async Task RestoreWorkspaceSessionAsync(CancellationToken cancellationToken)
     {

@@ -9,7 +9,7 @@ public sealed class CloudflareOriginalCallerScopeTests
         var stages = new CloudflareOriginalTaskLedger(); var returned = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var originalCause = new IOException("scope after actual Task factory");
         stages.BindOriginalCallerCallback(body => { body(); throw originalCause; });
-        Assert.Same(originalCause, Assert.Throws<IOException>(() => stages.Invoke(() => returned.Task)));
+        Assert.Same(originalCause, Assert.Throws<IOException>((Action)(() => { _ = stages.Invoke(() => returned.Task); })));
         Assert.Same(returned.Task, Assert.Single(stages.OriginalTasks)); Assert.Contains(originalCause, stages.OriginalErrors);
         returned.SetResult(); Assert.True(returned.Task.IsCompletedSuccessfully);
     }
@@ -18,7 +18,7 @@ public sealed class CloudflareOriginalCallerScopeTests
         var stages = new CloudflareOriginalTaskLedger(); using var token = new CancellationTokenSource();
         var original = new OperationCanceledException("independent synchronous factory", token.Token);
         stages.BindOriginalCallerCallback(body => body());
-        var error = Assert.Throws<AggregateException>(() => stages.Invoke<Task>(() => { token.Cancel(); throw original; }));
+        var error = Assert.Throws<AggregateException>((Action)(() => { _ = stages.Invoke((Func<Task>)(() => { token.Cancel(); throw original; })); }));
         Assert.Contains(original, error.InnerExceptions); Assert.Contains(original, stages.OriginalErrors); Assert.Empty(stages.OriginalTasks);
     }
     [Fact] public async Task Faulted_actual_Task_keeps_all_direct_siblings_under_same_caller_scope()

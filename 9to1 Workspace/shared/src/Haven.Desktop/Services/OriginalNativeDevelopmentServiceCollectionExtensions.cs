@@ -1,4 +1,5 @@
 using Haven.Application;
+using Haven.Application.Compatibility;
 using HavenOS.Apps.Dev;
 using HavenOS.Files.NativeHost;
 using HavenOS.Home.Core;

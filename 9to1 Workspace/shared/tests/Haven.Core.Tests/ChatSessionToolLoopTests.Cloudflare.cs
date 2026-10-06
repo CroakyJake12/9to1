@@ -32,7 +32,7 @@ public sealed partial class ChatSessionToolLoopTests
         var now = DateTimeOffset.UtcNow; var conversation = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "ordinary", null, null, false, true, now, now);
         var active = new ActiveCapability(ExternalConnectionNaming.CapabilityKey(connection.Id), ExternalConnectionNaming.PluginName(connection.Name), "connection", "Use connection", "connection.mcp", "haven.connections");
         var events = new List<ChatStreamEvent>();
-        await foreach (var item in service.SendAsync(conversation, "Write the item", model, EffortLevel.Medium, [active], "Default", "", DuoMode.Solo, null, "", "", null, default, commandPermission: PermissionMode.AlwaysAllow)) events.Add(item);
+        await foreach (var item in service.SendAsync(conversation, "Write the item", model, EffortLevel.Medium, [active], "Default", "", DuoMode.Solo, null, "", "", null, default, commandPermission: PermissionMode.FullAccess)) events.Add(item);
         Assert.Equal(1, client.InvocationCount); Assert.Equal(0, source.Calls); Assert.Single(events, item => item.Kind == ChatStreamEventKind.AssistantCompleted);
     }
     private sealed class NeverOrdinaryCloudflareSource : ICloudflareSavedServiceSource

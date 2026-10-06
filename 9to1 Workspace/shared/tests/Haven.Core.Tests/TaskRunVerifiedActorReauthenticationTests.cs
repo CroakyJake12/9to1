@@ -107,7 +107,7 @@ public sealed class TaskRunVerifiedActorReauthenticationTests
     public async Task Actual_session_revocation_denies_existing_original_and_retains_its_failure()
     {
         var previous = Previous(); AuthenticatedResourceActor? current = Fresh(previous);
-        var source = new TaskRunVerifiedActorReauthenticationSource(new Actors(_ => ValueTask.FromResult(current)));
+        var source = new TaskRunVerifiedActorReauthenticationSource(new Actors(_ => ValueTask.FromResult<AuthenticatedResourceActor?>(current)));
         var original = await source.AcquireOriginalAsync(previous, CancellationToken.None);
         try
         {

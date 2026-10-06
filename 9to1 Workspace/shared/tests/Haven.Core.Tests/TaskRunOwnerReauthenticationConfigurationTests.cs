@@ -30,7 +30,7 @@ public sealed partial class TaskRunOwnerReauthenticationConfigurationTests
     }
 
     [Fact]
-    public void Foreign_actor_reader_cannot_become_the_configured_renewal_identity_source()
+    public async Task Foreign_actor_reader_cannot_become_the_configured_renewal_identity_source()
     {
         var rig = new Setup(); var other = new Actors();
         var identity = new TaskRunVerifiedActorReauthenticationSource(other);
@@ -39,7 +39,7 @@ public sealed partial class TaskRunOwnerReauthenticationConfigurationTests
             Assert.Throws<ArgumentException>(() => rig.Create(identity));
             Assert.Equal(0, other.Reads); Assert.Equal(0, rig.Actors.Reads);
         }
-        finally { identity.DisposeAsync().AsTask().GetAwaiter().GetResult(); }
+        finally { await identity.DisposeAsync(); }
     }
 
     [Fact]

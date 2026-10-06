@@ -34,6 +34,7 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
 
     private void RecordOriginalConversationTransition()
     {
+        RetireOriginalInitialTaskPresentationsForNewTarget();
         if (_originalWork.Executing is not { } original) return;
         if (!original.AllowsSourceContextTransition)
             throw new InvalidOperationException("An original stream cannot acquire a different conversation presentation.");
@@ -80,6 +81,7 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
     public void DemandExternalOriginalRetirementJoin()
     {
         _originalWork.DemandExternalClose();
+        DemandOriginalInitialTaskExternalJoins();
         foreach (var mount in _originalGeneratedMounts.ToArray()) mount.DemandOriginalExternalClose();
     }
     public Task CloseAndDrainAsync()
@@ -305,6 +307,7 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
             Attempt(() => _scene.DualSecondModelChosen -= OnDualSecondModelChosen);
             Attempt(() => Scene.InputSubmitted -= OnInputSubmitted);
             Attempt(() => Scene.PointerPressedOutside -= OnOriginalPointerPressedOutside);
+            RequestAllOriginalInitialTaskStops(failures); // Observation stop only, never Task business stop.
             foreach (var mount in _originalGeneratedMounts.ToArray())
                 Attempt(() => CaptureOriginalGeneratedStop(mount)); // Start all actual child stops before page originals join.
             foreach (var cause in _originalGeneratedStopCauses) AddOriginalGeneratedCause(failures, cause);
@@ -317,6 +320,7 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
         // Page originals are terminal. Capture any constructor-acquired late mount
         // too, then independently join every SAME child task even if a sibling fails.
         var failures = new List<Exception>();
+        await JoinAllOriginalInitialTaskStopsAsync(failures); // SAME late lease/driver, independent of mount faults.
         foreach (var mount in _originalGeneratedMounts.ToArray()) CaptureOriginalGeneratedStop(mount);
         foreach (var cause in _originalGeneratedStopCauses) AddOriginalGeneratedCause(failures, cause);
         foreach (var mount in _originalGeneratedMounts.ToArray())

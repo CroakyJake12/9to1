@@ -39,19 +39,19 @@ public sealed class CloudflareRawAndEntryCustodyTests
             () => new Func<ValueTask>[] { () => { entered.SetResult(); return new(close.Task); } });
         try { await entered.Task; Assert.False(original.IsCompleted); Assert.Contains(ledger.OriginalTasks, task => ReferenceEquals(task, close.Task)); }
         finally { close.TrySetResult(); await original; }
-        Assert.Equal(3, original.Result); Assert.Equal(1, ledger.OriginalTasks.Count(task => ReferenceEquals(task, close.Task)));
+        Assert.Equal(3, await original); Assert.Equal(1, ledger.OriginalTasks.Count(task => ReferenceEquals(task, close.Task)));
     }
     [Fact] public void Raw_compile_is_fixed_official_endpoint_and_exact_Task_Run_bytes_only()
     {
         var original = Get(); Assert.Contains("fetch(\"https://api.cloudflare.com/client/v4/accounts/", original.Code);
         Assert.Contains("redirect:'error'", original.Code); Assert.Contains("response.body.getReader()", original.Code);
         Assert.DoesNotContain("response.text", original.Code); Assert.DoesNotContain("access_token", original.Code);
-        Assert.DoesNotContain("cloudflare.request", original.Code); Assert.Contains(JsonSerializer.Serialize(original.Marker), original.Code);
+        Assert.DoesNotContain("cloudflare.request", original.Code); Assert.Contains(JsonSerializer.Serialize(ExpectedMarker(original)), original.Code);
     }
     [Theory] [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)]
     public void Raw_result_requires_match_exact_length_and_exact_SHA_with_no_foreign_fields(int kind)
     {
-        var original = Get(); var bytes = Encoding.UTF8.GetBytes(original.Marker); var hash = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+        var original = Get(); var bytes = Encoding.UTF8.GetBytes(ExpectedMarker(original)); var hash = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
         object data = kind switch { 0 => new { matches = false, length = bytes.Length, sha256 = hash },
             1 => new { matches = true, length = bytes.Length + 3, sha256 = hash },
             2 => new { matches = true, length = bytes.Length, sha256 = new string('0', 64) },
@@ -61,10 +61,18 @@ public sealed class CloudflareRawAndEntryCustodyTests
     }
     [Fact] public void Exact_generated_marker_digest_is_confirmed_without_returning_raw_bytes()
     {
-        var original = Get(); var bytes = Encoding.UTF8.GetBytes(original.Marker);
+        var original = Get(); var bytes = Encoding.UTF8.GetBytes(ExpectedMarker(original));
         var response = JsonSerializer.SerializeToElement(new { operation_key = original.OperationKey, ok = true, status = 200,
             data = new { matches = true, length = bytes.Length, sha256 = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant() } });
         var data = CloudflareTypedToolCatalogue.DemandBoundedResponse(original, response); Assert.Equal(3, data.EnumerateObject().Count()); Assert.True(data.GetProperty("matches").GetBoolean());
+    }
+    // Independently construct the declared marker format from the SAME public Task/Run
+    // observations; the production internal marker and issuing authority stay private.
+    private static string ExpectedMarker(CloudflareCompiledInvocation original)
+    {
+        var taskId = original.TaskId; var executionId = original.ExecutionId;
+        var taskRunDigest = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(taskId.ToString("N") + ":" + executionId.ToString("N")))).ToLowerInvariant();
+        return JsonSerializer.Serialize(new { taskId, executionId, taskRunDigest });
     }
     private static CloudflareCompiledInvocation Get()
     {

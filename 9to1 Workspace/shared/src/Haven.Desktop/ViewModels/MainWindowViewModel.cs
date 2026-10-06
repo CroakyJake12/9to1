@@ -25,7 +25,7 @@ public sealed record CommandPaletteItemViewModel(string Name, string Description
 /// <summary>
 /// Represents workspace tab view model and keeps its related state and behavior together.
 /// </summary>
-public sealed class WorkspaceTabViewModel : ObservableObject, IDisposable
+public sealed partial class WorkspaceTabViewModel : ObservableObject, IDisposable, Haven.Desktop.Services.IDesktopOriginalRetirementParticipant, Haven.Desktop.Services.IDesktopOriginalRetirementJoinGuard
 {
     private string _title;
     private bool _isSelected;
@@ -74,18 +74,24 @@ public sealed class WorkspaceTabViewModel : ObservableObject, IDisposable
     public bool CanGoForward => _forwardHistory.Count > 0;
     public CancellationToken LifetimeToken => _lifetime.Token;
 
-    public void NavigateTo(string key, string title, object page, bool isCloseable, HavenSurface surface)
+    public void NavigateTo(string key, string title, object page, bool isCloseable, HavenSurface surface) =>
+        RunOriginalNavigation(page, () => { NavigateToOriginalCore(key, title, page, isCloseable, surface); return true; });
+
+    private void NavigateToOriginalCore(string key, string title, object page, bool isCloseable, HavenSurface surface)
     {
         if (ReferenceEquals(Page, page) && Key.Equals(key, StringComparison.OrdinalIgnoreCase))
         {
             Title = title;
+            DemandOriginalNavigationAdmission();
             IsCloseable = isCloseable;
+            DemandOriginalNavigationAdmission();
             SetSurface(surface);
             return;
         }
 
         _backHistory.Push(CaptureState());
         DisposeAbandonedForwardHistory(page);
+        DemandOriginalNavigationAdmission();
         ApplyState(new WorkspaceTabState(key, InferAppKey(key), title, page, isCloseable, surface));
         RaiseHistoryChanged();
     }
@@ -98,26 +104,34 @@ public sealed class WorkspaceTabViewModel : ObservableObject, IDisposable
             .Append(nextPage)
             .ToHashSet(ReferenceEqualityComparer.Instance);
         foreach (var abandoned in _forwardHistory.Select(state => state.Page).Distinct(ReferenceEqualityComparer.Instance))
-            if (!retained.Contains(abandoned) && abandoned is IDisposable disposable) disposable.Dispose();
+            if (!retained.Contains(abandoned)) RetireOriginalAbandonedPage(abandoned);
         _forwardHistory.Clear();
     }
 
     public bool TryGoBack()
     {
+        DemandOriginalNavigationAdmission();
         if (_backHistory.Count == 0) return false;
-        _forwardHistory.Push(CaptureState());
-        ApplyState(_backHistory.Pop());
-        RaiseHistoryChanged();
-        return true;
+        return RunOriginalNavigation(_backHistory.Peek().Page, () =>
+        {
+            _forwardHistory.Push(CaptureState());
+            ApplyState(_backHistory.Pop());
+            RaiseHistoryChanged();
+            return true;
+        });
     }
 
     public bool TryGoForward()
     {
+        DemandOriginalNavigationAdmission();
         if (_forwardHistory.Count == 0) return false;
-        _backHistory.Push(CaptureState());
-        ApplyState(_forwardHistory.Pop());
-        RaiseHistoryChanged();
-        return true;
+        return RunOriginalNavigation(_forwardHistory.Peek().Page, () =>
+        {
+            _backHistory.Push(CaptureState());
+            ApplyState(_forwardHistory.Pop());
+            RaiseHistoryChanged();
+            return true;
+        });
     }
 
     private WorkspaceTabState CaptureState() => new(Key, AppKey, Title, Page, IsCloseable, Surface);
@@ -125,13 +139,19 @@ public sealed class WorkspaceTabViewModel : ObservableObject, IDisposable
     private void ApplyState(WorkspaceTabState state)
     {
         Key = state.Key;
+        DemandOriginalNavigationAdmission();
         AppKey = state.AppKey;
+        DemandOriginalNavigationAdmission();
         Title = state.Title;
+        DemandOriginalNavigationAdmission();
         Page = state.Page;
         IsCloseable = state.IsCloseable;
+        DemandOriginalNavigationAdmission();
         Surface = state.Surface;
         RaisePropertyChanged(nameof(Page));
+        DemandOriginalNavigationAdmission();
         RaisePropertyChanged(nameof(Surface));
+        DemandOriginalNavigationAdmission();
     }
 
     private void RaiseHistoryChanged()
@@ -140,29 +160,17 @@ public sealed class WorkspaceTabViewModel : ObservableObject, IDisposable
         RaisePropertyChanged(nameof(CanGoForward));
     }
 
-    public void Dispose()
-    {
-        if (Interlocked.Exchange(ref _disposed, 1) == 1) return;
-        _lifetime.Cancel();
-        var pages = _backHistory.Select(state => state.Page)
-            .Concat(_forwardHistory.Select(state => state.Page))
-            .Append(Page)
-            .Distinct(ReferenceEqualityComparer.Instance);
-        foreach (var page in pages)
-            if (page is IDisposable disposable) disposable.Dispose();
-        _backHistory.Clear();
-        _forwardHistory.Clear();
-        RaiseHistoryChanged();
-        _lifetime.Dispose();
-    }
+    public void Dispose() => RequestRetirement();
 
-    public void ReplacePage(object page)
+    public void ReplacePage(object page) => RunOriginalNavigation(page, () =>
     {
-        if (ReferenceEquals(Page, page)) return;
-        if (Page is IDisposable disposable) disposable.Dispose();
+        if (ReferenceEquals(Page, page)) return true;
+        RetireOriginalAbandonedPage(Page);
+        DemandOriginalNavigationAdmission();
         Page = page;
         RaisePropertyChanged(nameof(Page));
-    }
+        return true;
+    });
 
     public void SetSurface(HavenSurface surface)
     {

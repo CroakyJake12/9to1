@@ -58,6 +58,7 @@ public sealed partial class TaskExecutionCoordinator : ITaskRunProcessRetirement
             _processSealedChatCohort = _processChatProducers.ToArray();
             _sealedOriginalProcessStages = _originalProcessStages.ToArray();
             _sealedHostedOriginalRunResumes = _hostedOriginalRunResumes.ToArray();
+            SealOriginalInitialTaskObservations();
             foreach (var stage in _sealedOriginalProcessStages) stage.Seal();
             // Pure metadata seals only: no callback, cancellation or task join under the registry gate.
             // Child admissions consult the SAME global seal without acquiring this registry lock.
@@ -87,6 +88,7 @@ public sealed partial class TaskExecutionCoordinator : ITaskRunProcessRetirement
         foreach (var observation in observations)
             try { RequestHostedObservationRetirement(observation); }
             catch (Exception cause) { RetainOriginalProcessFailure(cause); }
+        RequestOriginalInitialTaskObservations();
         foreach (var stage in stages)
             try { stage.RequestStop(); } catch (Exception cause) { RetainOriginalProcessFailure(cause); }
         ThrowOriginalProcessFailures();

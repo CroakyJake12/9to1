@@ -41,7 +41,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Desktop.Views.Shell;
 
-public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDisposable
+public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDisposable, IDesktopOriginalRetirementParticipant, IDesktopOriginalRetirementJoinGuard
 {
 #pragma warning disable CS8618
     private readonly IConversationRepository _conversations;
@@ -130,7 +130,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     private WorkspaceTabViewModel? _selectedTab;
     private string _startupStatus = "Starting Haven\u2026";
     private string _searchQuery = string.Empty;
-    private readonly Haven.Desktop.HavenUI.Runtime.TrailingDebouncer _sidebarSearchDebouncer = new(TimeSpan.FromMilliseconds(200));
+    private readonly DesktopOriginalTrailingRefresh _originalSidebarSearch;
     private readonly Haven.Desktop.HavenUI.Runtime.LatestOperationGate _sidebarSearchGate = new();
     private string _commandSearch = string.Empty;
     private bool _isSidebarOpen = true;
@@ -285,7 +285,9 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         _pins = pins;
         _companionDockVm = new CompanionDockViewModel(new Haven.Infrastructure.CompanionDockService(), _conversations);
         _reminderTimer = new DispatcherTimer(TimeSpan.FromMinutes(1), DispatcherPriority.Background,
-            async (_, _) => await PollPlannerRemindersAsync());
+            (_, _) => { if (!IsDisposed) _ = PollPlannerRemindersAsync(); });
+        _originalShellWork = new(StopOriginalShellProducersAsync, CloseOriginalShellChildrenAsync);
+        _originalSidebarSearch = new(_originalShellWork, TimeSpan.FromMilliseconds(200), RunSidebarSearchRefreshAsync);
 
         NavigateChatCommand = new AsyncRelayCommand(() => NavigateModeAsync(HavenMode.Chat, false));
         NavigateStudyCommand = new AsyncRelayCommand(() => SwitchNativeChatModeAsync(HavenMode.Study));
@@ -610,22 +612,21 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             // debounced so "hello" triggers roughly one refresh, and a stale
             // completion can never overwrite a newer one.
             var generation = _sidebarSearchGate.Begin();
-            _sidebarSearchDebouncer.Schedule(() =>
-            {
-                if (!_sidebarSearchGate.IsActive(generation)) return;
-                _ = RunSidebarSearchRefreshAsync(generation);
-            });
+            if (!IsDisposed) _originalSidebarSearch.Schedule(generation);
         }
     }
 
-    private async Task RunSidebarSearchRefreshAsync(int generation)
+    private async Task RunSidebarSearchRefreshAsync(DesktopOriginalWorkLifetime.Original original, int generation)
     {
+        if (IsDisposed || !_sidebarSearchGate.IsActive(generation)) return;
         try
         {
-            await RefreshRecentsAsync(CancellationToken.None);
+            await original.AwaitAsync(AcquireOriginalShellSynchronous(original,
+                () => RefreshRecentsAsync(CancellationToken.None)));
         }
         catch (Exception ex)
         {
+            original.Retain(ex); // Existing debug tolerance is not a successful external drain.
             System.Diagnostics.Debug.WriteLine($"[Sidebar search] {ex}");
         }
     }
@@ -825,19 +826,22 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
 
     public void SetStartupError(string message) => StartupStatus = $"Startup problem: {message}";
 
-    private async Task PollPlannerRemindersAsync()
+    private Task PollPlannerRemindersAsync() => _originalShellWork.RunAsync(PollOriginalPlannerRemindersAsync);
+
+    private async Task PollOriginalPlannerRemindersAsync(DesktopOriginalWorkLifetime.Original original)
     {
         if (Interlocked.Exchange(ref _isPollingReminders, 1) != 0) return;
         try
         {
-            foreach (var reminder in await _planner.GetDueRemindersAsync(DateTimeOffset.UtcNow, 20, CancellationToken.None))
+            foreach (var reminder in await original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => _planner.GetDueRemindersAsync(DateTimeOffset.UtcNow, 20, original.Token))))
             {
                 _notifications.Show("Planner reminder", reminder.Title, ToastKind.Info, TimeSpan.FromSeconds(12));
-                await _planner.MarkReminderDeliveredAsync(reminder, DateTimeOffset.UtcNow, CancellationToken.None);
+                await original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => _planner.MarkReminderDeliveredAsync(reminder, DateTimeOffset.UtcNow, CancellationToken.None)));
             }
         }
         catch (Exception ex)
         {
+            original.Retain(ex);
             System.Diagnostics.Debug.WriteLine($"[Planner reminders] {ex.Message}");
         }
         finally
@@ -1073,7 +1077,8 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     private PlayPage CreatePlayPage()
     {
         var page = new PlayPage(_playSessions, _genUiRouter);
-        page.CreateRequested += async (_, _) => await OpenNewChatAsync("Help me create an interactive Play experience. Ask what I want to play, then design it with Haven interactive UI and deterministic local state where possible.");
+        page.CreateRequested += (_, _) => StartOriginalShellEvent(original =>
+            original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => OpenNewChatAsync("Help me create an interactive Play experience. Ask what I want to play, then design it with Haven interactive UI and deterministic local state where possible."))));
         return page;
     }
 
@@ -1945,15 +1950,23 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     private GoPage CreateGoPage()
     {
         var page = new GoPage(_bus);
-        page.SubmitRequested += async (_, instruction) =>
-            await RouteGoSubmissionAsync(page, instruction);
+        page.SubmitRequested += (_, instruction) => StartOriginalShellEvent(original =>
+        {
+            page.RetainOriginalParentBorrower(original.Task, DemandOriginalShellProducerJoin);
+            return original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => RouteGoSubmissionAsync(page, instruction)));
+        });
         page.RefreshSuggestionsRequested += (_, _) =>
             QueueGoSuggestionRefresh(page, "The user asked Haven for another set of useful next actions.", TimeSpan.Zero, true);
         page.Disposed += OnGoPageDisposed;
         page.AddRequested += OnGoAddRequested;
         page.AddCatalogItemSelected += OnGoCatalogItemSelected;
-        page.AppShortcutInvoked += async (_, app) => await LaunchAppAsync(app, false);
-        _ = ConfigureAddMenuAsync(page);
+        page.AppShortcutInvoked += (_, app) => StartOriginalShellEvent(original =>
+            original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => LaunchAppAsync(app, false))));
+        StartOriginalShellEvent(original =>
+        {
+            page.RetainOriginalParentBorrower(original.Task, DemandOriginalShellProducerJoin);
+            return original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => ConfigureAddMenuAsync(page)));
+        });
         QueueGoSuggestionRefresh(
             page,
             "The user is viewing the Go workspace and has not entered a new instruction yet.",
@@ -1968,25 +1981,28 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             _bus, _modeRegistry, _modeUsage, _pins, _conversations, _versionedSettings,
             _dashboard, _dashboardLayout, _dashboardProviders);
         page.EnableDashboardAssistant(new DashboardEditPlanner(_ollama, () => _preferences.DefaultModel));
-        page.DashboardActionRequested += async (_, actionKey) =>
+        page.DashboardActionRequested += (_, actionKey) => StartOriginalShellEvent(async original =>
         {
             switch (actionKey.Trim().ToLowerInvariant())
             {
-                case "new-chat": await OpenNewChatAsync(); break;
-                case "call": await OpenVoiceSessionFromActionAsync(); break;
-                case "plan": OpenPlan(); break;
-                case "browse": OpenBrowser(); break;
-                case "automations": OpenAutomations(); break;
-                default: await LaunchAppByKeyAsync(actionKey); break;
+                case "new-chat": await original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => OpenNewChatAsync())); break;
+                case "call": await original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => OpenVoiceSessionFromActionAsync())); break;
+                case "plan": AcquireOriginalShellSynchronous(original, () => { OpenPlan(); return true; }); break;
+                case "browse": AcquireOriginalShellSynchronous(original, () => { OpenBrowser(); return true; }); break;
+                case "automations": AcquireOriginalShellSynchronous(original, () => { OpenAutomations(); return true; }); break;
+                default: await original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => LaunchAppByKeyAsync(actionKey))); break;
             }
-        };
-        page.ModeRequested += async (_, mode) => await LaunchAppAsync(mode, false);
-        page.ConversationRequested += async (_, conversation) =>
+        });
+        page.ModeRequested += (_, mode) => StartOriginalShellEvent(original =>
+            original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => LaunchAppAsync(mode, false))));
+        page.ConversationRequested += (_, conversation) => StartOriginalShellEvent(async original =>
         {
-            await OpenNewChatAsync();
-            if (_newChatPage is not null) await _newChatPage.LoadConversationAsync(conversation);
-        };
-        page.ManageAppsRequested += async (_, _) => await ShowAppLauncherAsync(false);
+            await original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => OpenNewChatAsync()));
+            if (_newChatPage is not null) await original.AwaitAsync(AcquireOriginalShellSynchronous(original,
+                () => _newChatPage.LoadConversationAsync(conversation)));
+        });
+        page.ManageAppsRequested += (_, _) => StartOriginalShellEvent(original =>
+            original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => ShowAppLauncherAsync(false))));
         return page;
     }
 
@@ -2163,55 +2179,56 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
 
     private void QueueGoSuggestionRefresh(GoPage page, string activity, TimeSpan delay, bool showProgress)
     {
-        CancellationTokenSource cancellation;
-        lock (_goSuggestionRefreshes)
+        _ = _originalShellWork.RunAsync(original =>
         {
-            if (_goSuggestionRefreshes.Remove(page, out var previous))
-            {
-                previous.Cancel();
-                previous.Dispose();
-            }
-
-            cancellation = new CancellationTokenSource();
-            _goSuggestionRefreshes[page] = cancellation;
-        }
-
-        if (showProgress) page.SetRefreshInProgress(true);
-        _ = RefreshGoSuggestionsAsync(page, activity, delay, showProgress, cancellation);
+            page.RetainOriginalParentBorrower(original.Task, DemandOriginalShellProducerJoin);
+            return QueueOriginalGoSuggestionRefreshAsync(original, page, activity, delay, showProgress);
+        });
     }
 
-    private async Task RefreshGoSuggestionsAsync(
-        GoPage page,
-        string activity,
-        TimeSpan delay,
-        bool showProgress,
-        CancellationTokenSource cancellation)
+    private async Task QueueOriginalGoSuggestionRefreshAsync(DesktopOriginalWorkLifetime.Original original,
+        GoPage page, string activity, TimeSpan delay, bool showProgress)
     {
+        var cancellation = new CancellationTokenSource();
+        CancellationTokenSource? previous;
+        lock (_goSuggestionRefreshes)
+        {
+            _goSuggestionRefreshes.Remove(page, out previous);
+            _goSuggestionRefreshes[page] = cancellation;
+        }
         try
         {
+            // Native cancellation callbacks execute OUTSIDE the dictionary lock.
+            // The previous original retains/disposes its own CTS only after its Tasks settle.
+            AcquireOriginalShellSynchronous(original, () => { previous?.Cancel(); return true; });
+            if (showProgress) page.SetRefreshInProgress(true);
             if (delay > TimeSpan.Zero)
-                await Task.Delay(delay, cancellation.Token).ConfigureAwait(false);
-
-            var suggestions = await _goSuggestions.GenerateAsync(activity, cancellation.Token).ConfigureAwait(false);
-            await Dispatcher.UIThread.InvokeAsync(() => page.SetSuggestions(suggestions));
+                await original.AwaitAsync(Task.Delay(delay, cancellation.Token)).ConfigureAwait(false);
+            var suggestions = await original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => _goSuggestions.GenerateAsync(activity, cancellation.Token))).ConfigureAwait(false);
+            await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (original.IsPublicationCurrent) page.SetSuggestions(suggestions);
+            }).GetTask()).ConfigureAwait(false);
         }
-        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
-        {
-        }
+        catch (OperationCanceledException error) when (cancellation.IsCancellationRequested) { original.Retain(error); }
+        catch (Exception error) { original.Retain(error); throw; }
         finally
         {
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            try
             {
-                if (showProgress) page.SetRefreshInProgress(false);
-                lock (_goSuggestionRefreshes)
+                await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    if (_goSuggestionRefreshes.TryGetValue(page, out var current) && ReferenceEquals(current, cancellation))
-                    {
-                        _goSuggestionRefreshes.Remove(page);
-                        cancellation.Dispose();
-                    }
-                }
-            });
+                    if (showProgress) page.SetRefreshInProgress(false);
+                    lock (_goSuggestionRefreshes)
+                        if (_goSuggestionRefreshes.TryGetValue(page, out var current) && ReferenceEquals(current, cancellation))
+                            _goSuggestionRefreshes.Remove(page);
+                }).GetTask()).ConfigureAwait(false);
+            }
+            finally
+            {
+                try { cancellation.Dispose(); }
+                catch (Exception error) { original.Retain(error); throw; }
+            }
         }
     }
 
@@ -2219,12 +2236,11 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     {
         if (sender is not GoPage page) return;
         page.Disposed -= OnGoPageDisposed;
-        lock (_goSuggestionRefreshes)
-        {
-            if (!_goSuggestionRefreshes.Remove(page, out var cancellation)) return;
-            cancellation.Cancel();
-            cancellation.Dispose();
-        }
+        CancellationTokenSource? cancellation;
+        lock (_goSuggestionRefreshes) _goSuggestionRefreshes.Remove(page, out cancellation);
+        // No premature CTS.Dispose while the actual Generate/dispatcher originals are running.
+        if (cancellation is not null)
+            _originalShellWork.RunSynchronous(_ => cancellation.Cancel());
     }
 
     private HomePage CreateHomePage() => new(
@@ -3758,37 +3774,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         }
     }
 
-    public void Dispose()
-    {
-        if (IsDisposed) return;
-        IsDisposed = true;
-        // The native window owner awaits this SAME retained task before its scope can be released.
-        _ = BeginOriginalFilesClose();
-        _reminderTimer.Stop();
-        StopAutomationScheduler();
-        lock (_goSuggestionRefreshes)
-        {
-            foreach (var cancellation in _goSuggestionRefreshes.Values)
-            {
-                cancellation.Cancel();
-                cancellation.Dispose();
-            }
-            _goSuggestionRefreshes.Clear();
-        }
-        _callCoordinator.StateChanged -= OnCallStateChanged;
-        _homePage?.Deactivate();
-        _newDashboardPage?.Deactivate();
-        _newDashboardPage?.Dispose();
-        _newChatPage?.Dispose();
-        _studyAssignmentsSidebar?.Dispose();
-        _nativeChatSidebar?.Dispose();
-        _planPage?.Dispose();
-        _companionDockVm.Dispose();
-        RemoveSplitView();
-        foreach (var tab in OpenTabs.ToArray()) tab.Dispose();
-        OpenTabs.Clear();
-        TopRail.Dispose();
-    }
+    public void Dispose() => RequestRetirement();
 
     [DllImport("user32.dll")]
     private static extern void keybd_event(byte virtualKey, byte scanCode, uint flags, UIntPtr extraInfo);
