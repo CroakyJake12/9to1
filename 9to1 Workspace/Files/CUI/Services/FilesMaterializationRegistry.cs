@@ -8,7 +8,7 @@ public sealed class FilesMaterializationRegistryState
 }
 
 /// <summary>Persists explicit links between local materialisations and canonical hosted item/revision identities.</summary>
-public sealed class FilesMaterializationRegistry
+public sealed partial class FilesMaterializationRegistry
 {
 	private readonly string _syncRoot;
 	private readonly VersionedJsonStateStore<FilesMaterializationRegistryState> _store;

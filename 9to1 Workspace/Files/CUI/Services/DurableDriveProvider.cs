@@ -66,12 +66,49 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
         return new(page, offset + page.Length < items.Length ? (offset + page.Length).ToString(System.Globalization.CultureInfo.InvariantCulture) : null);
     }
 
-    public async Task<FilesResult<FilesOperation>> MutateAsync(FilesOperation operation, string? newName, CancellationToken cancellationToken)
+    public Task<FilesResult<FilesOperation>> MutateAsync(FilesOperation operation, string? newName, CancellationToken cancellationToken) =>
+        MutateCoreAsync(operation, newName, null, [], null, cancellationToken);
+
+    /// <summary>Trusted original Dev import only. No other structural mutation is exposed through
+    /// this additive port. The caller owns the actual held Home entry and once-created step IDs.</summary>
+    public Task<FilesResult<FilesOperation>> CreateOriginalDeveloperFolderAsync(FilesOperation operation, string newName,
+        Guid originalStoreId, IReadOnlyList<FilesItemRevisionPrecondition> originalParents,
+        FilesCommitAuthorityGuard originalAuthority, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(operation); ArgumentNullException.ThrowIfNull(originalParents);
+        ArgumentNullException.ThrowIfNull(originalAuthority);
+        var captured = originalParents.ToArray();
+        if (originalStoreId == Guid.Empty || operation.Operation != "CreateFolder" || operation.State != FilesOperationState.Pending ||
+            operation.ActorId != _owner || originalAuthority.ActorId != _owner || operation.ItemId.Value == Guid.Empty ||
+            captured.Length is 0 or > 65 || captured.Any(value => value is null || value.ItemId.Value == Guid.Empty || value.ExpectedRevision is null) ||
+            captured.Select(value => value.ItemId).Distinct().Count() != captured.Length ||
+            operation.DestinationParentId is not { } parent || !captured.Any(value => value.ItemId == parent))
+            return Task.FromResult(Fail<FilesOperation>(FilesErrorCode.PermissionDenied,
+                "Retain the original owned store, parent revisions, once-created folder/step IDs and held commit authority.", operation.Operation, operation.ItemId));
+        return MutateCoreAsync(operation, newName, originalStoreId, captured, originalAuthority, cancellationToken);
+    }
+
+    private async Task<FilesResult<FilesOperation>> MutateCoreAsync(FilesOperation operation, string? newName,
+        Guid? originalStoreId, IReadOnlyList<FilesItemRevisionPrecondition> originalParents,
+        FilesCommitAuthorityGuard? originalAuthority, CancellationToken cancellationToken)
     {
         FilesResult<FilesOperation>? result = null;
-        await _store.UpdateAsync(state =>
+        try
         {
+        Task<State> actual;
+        try { actual = _store.UpdateAsync(state =>
+        {
+            if (originalStoreId is { } store && state.StoreId != store) throw new OriginalFilesStoreChangedException();
+            foreach (var expected in originalParents)
+            {
+                var actual = state.Items.SingleOrDefault(value => value.Metadata.Id == expected.ItemId);
+                if (actual is null || !IsVisible(state, actual) || actual.Metadata.Kind != HostedItemKind.Folder ||
+                    actual.Metadata.CurrentRevisionId != expected.ExpectedRevision)
+                { result = Fail<FilesOperation>(FilesErrorCode.RevisionConflict, "An original project parent changed before folder publication.", operation.Operation, operation.ItemId); return state; }
+            }
             var prior = state.Operations.FirstOrDefault(item => item.Id == operation.Id);
+            if (originalStoreId is not null && prior is not null)
+            { result = Fail<FilesOperation>(FilesErrorCode.InvalidState, "The original setup step is already recorded; inspect its outcome without another folder admission.", operation.Operation, operation.ItemId); return state; }
             if (prior is not null)
             {
                 result = prior.ActorId == operation.ActorId && prior.ItemId == operation.ItemId && prior.Operation == operation.Operation &&
@@ -123,7 +160,20 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
             var change = new FilesChangeEvent(Guid.NewGuid().ToString("N"), new(state.Events.Count + 1), operation.Id, operation.ItemId, operation.ActorId, operation.Operation, operation.BaseRevisionId, revision, now, metadata);
             result = FilesResult<FilesOperation>.Success(committed);
             return state with { Items = [.. state.Items.Where(item => item.Metadata.Id != operation.ItemId), entry], Operations = [.. state.Operations, committed], Events = [.. state.Events, change] };
-        }, cancellationToken);
+        }, originalAuthority is null ? null : originalAuthority.ValidateAsync, cancellationToken); }
+        catch (OperationCanceledException original) when (originalAuthority is not null)
+        { throw new AggregateException("The original folder commit source returned no canceled original Task; outcome may be unknown.", original); }
+        try { await actual.ConfigureAwait(false); }
+        catch when (originalAuthority is not null && actual.IsFaulted &&
+            actual.Exception!.InnerExceptions.Count != 1) { throw actual.Exception!; }
+        catch (Exception) when (originalAuthority is not null && actual.IsFaulted &&
+            actual.Exception!.InnerException is not (OriginalFilesStoreChangedException or FilesCommitAuthorityChangedException))
+        { throw actual.Exception!; }
+        }
+        catch (OriginalFilesStoreChangedException)
+        { return Fail<FilesOperation>(FilesErrorCode.RevisionConflict, "The original Dev destination store changed.", operation.Operation, operation.ItemId); }
+        catch (FilesCommitAuthorityChangedException)
+        { return Fail<FilesOperation>(FilesErrorCode.PermissionDenied, "The actual held Dev import authority changed before folder publication.", operation.Operation, operation.ItemId); }
         if (result!.IsSuccess) foreach (var subscriber in _subscribers.Values) subscriber.Writer.TryWrite(true);
         return result;
     }

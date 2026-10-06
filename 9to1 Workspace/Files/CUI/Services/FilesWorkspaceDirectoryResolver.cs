@@ -7,7 +7,7 @@ public sealed record FilesWorkspaceDirectoryBinding(Guid AccountId, HostedItemId
 /// Explicit Files-owned materialisation bindings. Hosts register only authorised canonical folders;
 /// there is no generated account directory or private app-storage fallback.
 /// </summary>
-public sealed class FilesWorkspaceDirectoryResolver
+public sealed partial class FilesWorkspaceDirectoryResolver
 {
     public sealed record BindingState(IReadOnlyList<FilesWorkspaceDirectoryBinding> Bindings);
     private readonly VersionedJsonStateStore<BindingState> _store;

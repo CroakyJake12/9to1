@@ -30,7 +30,9 @@ public sealed class DeveloperCanonicalWorkspaceBinding(IConversationRepository c
             return false;
         var selected = (await ObserveAsync(() => containers.GetByModeAsync(conversation.Mode, token), retainOriginal).ConfigureAwait(false))
             .Where(value => value.Id == containerId && !value.IsArchived && value.Mode == conversation.Mode).Take(2).ToArray();
-        if (selected.Length != 1 || string.IsNullOrWhiteSpace(selected[0].RootPath) || !Path.IsPathRooted(selected[0].RootPath)) return false;
+        if (selected.Length != 1) return false;
+        var originalSelectedRoot = selected[0].RootPath;
+        if (string.IsNullOrWhiteSpace(originalSelectedRoot) || !Path.IsPathRooted(originalSelectedRoot)) return false;
         // Awaited container reads can race a real workspace-selection change. Re-read the
         // actual conversation after that await; metadata is still a finite observation, not
         // a distributed final-effect lock. The native owner must check its own final fence.
@@ -41,7 +43,7 @@ public sealed class DeveloperCanonicalWorkspaceBinding(IConversationRepository c
         if (currentSelection.Length != 1 || currentSelection[0] != selected[0]) return false;
         token.ThrowIfCancellationRequested();
         var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-        return string.Equals(Path.GetFullPath(selected[0].RootPath).TrimEnd(Path.DirectorySeparatorChar),
+        return string.Equals(Path.GetFullPath(originalSelectedRoot).TrimEnd(Path.DirectorySeparatorChar),
             Path.GetFullPath(project.Root.Location).TrimEnd(Path.DirectorySeparatorChar), comparison);
     }
 

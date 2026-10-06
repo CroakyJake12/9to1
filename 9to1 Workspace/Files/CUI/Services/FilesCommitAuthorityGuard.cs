@@ -16,8 +16,14 @@ public sealed class FilesCommitAuthorityGuard
     internal async ValueTask ValidateAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (!await _isCurrent(cancellationToken).ConfigureAwait(false))
-            throw new FilesCommitAuthorityChangedException();
+        Task<bool> actual;
+        try { actual = _isCurrent(cancellationToken).AsTask(); }
+        catch (OperationCanceledException original)
+        { throw new AggregateException("The synchronous original authority source returned no canceled original Task.", original); }
+        bool current;
+        try { current = await actual.ConfigureAwait(false); }
+        catch when (actual.IsFaulted) { throw actual.Exception!; }
+        if (!current) throw new FilesCommitAuthorityChangedException();
         cancellationToken.ThrowIfCancellationRequested();
     }
 }
