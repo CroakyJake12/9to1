@@ -128,7 +128,7 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
     internal (Guid TaskId, Guid ExecutionId, Guid ContextId) OriginalReadinessContext => (_taskId, _runId, _contextId);
     internal bool IsOriginalReadinessPresentationCurrent(CuiSceneHost exactHost, long originalGeneration) =>
         ReferenceEquals(exactHost, _host) && IsCurrent(originalGeneration);
-    public event PropertyChangedEventHandler? PropertyChanged;
+    public new event PropertyChangedEventHandler? PropertyChanged;
     public DeveloperActionObservation? OriginalDeveloperObservation { get; private set; }
     public DeveloperSourceChangePass? OriginalSourcePass { get; private set; }
     // The Files resolver consumes this exact generation observer only to refuse stale

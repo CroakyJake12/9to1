@@ -2,6 +2,7 @@ using Avalonia.Threading;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Services;
+using HavenOS.Apps.Spaces.Tasks;
 
 namespace Haven.Desktop.Views.Pages.Tasks;
 

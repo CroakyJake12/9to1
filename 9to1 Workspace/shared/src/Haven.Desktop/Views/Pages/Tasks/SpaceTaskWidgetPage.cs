@@ -126,7 +126,7 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
 
     public CuiDocument Document { get; }
     internal CuiSceneHost OriginalHost => _host; // Root's genuine native-frame producer binds this exact host.
-    public event PropertyChangedEventHandler? PropertyChanged;
+    public new event PropertyChangedEventHandler? PropertyChanged;
     public FollowUpDecision? AcknowledgedFollowUp { get; private set; }
     public DeveloperOperationResult<DeveloperActionObservation>? OriginalDeveloperReply { get; private set; }
     private bool IsCurrent(long generation)
