@@ -197,6 +197,7 @@ public static partial class OriginalLocalTaskConsole
             {
                 var collection = new ServiceCollection();
                 collection.AddHavenInfrastructure();
+                collection.AddHavenPlannerInfrastructure();
                 collection.AddHavenOwnedNativeTaskColdRecovery(_coldConfiguration!);
                 _registration!.ConfigureOriginalServices(collection);
                 // Exactly the same precreated Files objects feed Home evidence/resolution
