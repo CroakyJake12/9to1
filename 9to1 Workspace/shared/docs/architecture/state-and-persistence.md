@@ -19,9 +19,11 @@ Agentic recovery data is also durable SQLite (migration 23):
   insert trigger and indexed per workspace root.
 - `agent_checkpoints` — one row per recorded checkpoint (id, optional
   conversation/container ids, `workspace_root`, label, `CheckpointMode`,
-  `start_sequence`, `created_at`). Restores replay every recorded mutation
-  after `start_sequence`, taking the latest before-content per path, so
-  recovery works in non-Git directories. Owned by `CheckpointRepository`.
+  `start_sequence`, `created_at`). Full restores take the before-content of
+  each path's earliest mutation after `start_sequence`, ordered by sequence.
+  Later before-content reflects intermediate edits, not checkpoint-time state.
+  `UndoLastActionAsync` separately reverses only the most recent mutation.
+  Recovery works in non-Git directories. Owned by `CheckpointRepository`.
 
 ## 2. User preferences — JSON files
 
@@ -163,6 +165,23 @@ a task or embedded Dev project resolves the existing Task/Run and saved
 not clone a project or start a replacement task. `DeveloperTaskWorkspaceService`
 uses the same workspace store, coordinator and typed Workspace action owner/runtime.
 Files document identities come from the original Files resolver, not a view-local registry.
+
+Direct typed Dev file edits use the same maintained `CheckpointService` instance
+observed by the canonical coordinator. Inside the original admitted tool owner's
+body, before physical `apply_change_set` dispatch, Dev observes the actual task
+conversation/container and saved project root, awaits `EnsureBeforeMutationAsync`
+under the same canonical execution ID, and records that actual checkpoint through
+`RecordCheckpointAsync`. The checkpoint write advances this operation's expected
+task revision; current original action/actor/workspace checks repeat against that
+acknowledged revision before dispatch. Mutation history carries the same actual
+conversation and container IDs, so shared restore also works in non-Git roots.
+
+An explicit `CheckpointService.Mode == Off` remains the user's policy. Missing
+producer/conversation configuration, unacknowledged saves (including a physical
+save followed by a fault), or changed task/workspace/policy observations refuse
+before file mutation. Dev retains and joins the actual checkpoint driver Tasks;
+accepted-action markers never substitute a workspace checkpoint or authorize
+effect replay. Runtime acceptance of this connection remains required.
 
 Steering is an owning coordinator command with fresh actor checks. Pause and stop
 require a retained private producer and its actual drain/CAS acknowledgement. A

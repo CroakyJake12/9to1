@@ -5,7 +5,7 @@
  *       checkpoint system for agentic file modifications that does NOT depend on Git
  *       (state lives in the SQLite workspace-version history).
  * How: A checkpoint records the workspace version-history sequence at creation time. Restoring
- *      replays the recorded BeforeContent of every later mutation per path (latest wins), which is
+ *      selects the recorded BeforeContent of the earliest later mutation per path, which is
  *      exact for any directory including non-Git workspaces.
  * Why: Recovery must be inspectable (Action Graph), policy-driven and honest about reversibility.
  * Maintenance: Keep restore plans pure so Infrastructure only performs confined file writes.
@@ -250,8 +250,8 @@ public sealed class CheckpointService(
         var plan = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var entry in versions.OrderBy(item => item.Sequence))
         {
-            // The latest recorded before-content per path reconstructs the checkpoint-time state.
-            plan[entry.RelativePath] = entry.BeforeContent;
+            // The first mutation after the checkpoint still records that path's checkpoint-time content.
+            plan.TryAdd(entry.RelativePath, entry.BeforeContent);
         }
         return new CheckpointRestorePlan(checkpoint.Id, plan);
     }

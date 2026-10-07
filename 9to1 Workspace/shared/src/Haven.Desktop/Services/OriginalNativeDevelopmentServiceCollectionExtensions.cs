@@ -35,10 +35,16 @@ public static class OriginalNativeDevelopmentServiceCollectionExtensions
         services.AddSingleton<IDeveloperWorkspaceStore>(provider => provider.GetRequiredService<FileDeveloperWorkspaceStore>());
         services.AddSingleton<DeveloperCanonicalWorkspaceBinding>(provider => new(
             provider.GetRequiredService<IConversationRepository>(), provider.GetRequiredService<IContainerRepository>()));
-        services.AddSingleton<DeveloperTaskWorkspaceService>(provider => new(
-            provider.GetRequiredService<IDeveloperWorkspaceStore>(), provider.GetRequiredService<DeveloperCanonicalWorkspaceBinding>(),
-            provider.GetRequiredService<TaskExecutionCoordinator>(), provider.GetRequiredService<ITaskRunToolActionOwner>(),
-            provider.GetRequiredService<WorkspaceToolRuntime>(), provider.GetService<IDeveloperWorkspaceTrustService>()));
+        services.AddSingleton<DeveloperTaskWorkspaceService>(provider =>
+        {
+            var checkpoints = provider.GetRequiredService<CheckpointService>();
+            if (!ReferenceEquals(checkpoints, provider.GetRequiredService<ICheckpointExecutionObservationSource>()))
+                throw new InvalidOperationException("Dev must retain the same shared checkpoint producer observed by the canonical Task owner.");
+            return new(provider.GetRequiredService<IDeveloperWorkspaceStore>(), provider.GetRequiredService<DeveloperCanonicalWorkspaceBinding>(),
+                provider.GetRequiredService<TaskExecutionCoordinator>(), provider.GetRequiredService<ITaskRunToolActionOwner>(),
+                provider.GetRequiredService<WorkspaceToolRuntime>(), provider.GetService<IDeveloperWorkspaceTrustService>(),
+                checkpoints, provider.GetRequiredService<IConversationRepository>());
+        });
         services[browsers[0].index] = ServiceDescriptor.Singleton<FilesNativeBrowserService>(provider => new(
             provider.GetRequiredService<NativeFilesWorkspaceAuthority>(), provider.GetRequiredService<IAuthenticatedResourceActorSource>(),
             provider.GetRequiredService<ResourceAuthorizationService>(), provider.GetRequiredService<ICompatibilityPackageContentSource>(),

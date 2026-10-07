@@ -1,5 +1,7 @@
 using Haven.Application;
 using Haven.Core;
+using System.Security.Cryptography;
+using System.Text;
 using Xunit;
 
 namespace HavenOS.Apps.Dev.Tests;
@@ -504,6 +506,209 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         await f.Dev.CloseAndDrainAsync();
     }
 
+    [Fact]
+    public async Task Direct_edit_records_same_run_checkpoint_before_non_git_file_effect_and_restores()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "dev-checkpoint-control-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var f = await Fixture.CreateAsync(rootLocation: directory);
+            Directory.CreateDirectory(Path.Combine(directory, "src"));
+            var path = Path.Combine(directory, "src", "code.cs");
+            await File.WriteAllTextAsync(path, f.Tools.TextValue, OriginalTestBodyToken);
+            var context = f.Context(); var edit = ReviewedEdit(f, "changed source");
+            f.Tools.OnWrite = () =>
+            {
+                Assert.NotNull(f.Current.CheckpointId);
+                Assert.Equal(f.CheckpointStore.LastSaved!.Id, f.Current.CheckpointId);
+                Assert.True(f.CheckpointStore.OriginalSave!.IsCompletedSuccessfully);
+                Assert.Empty(f.CheckpointStore.Versions);
+            };
+            var result = await f.Dev.ApplyEditAsync(f.Reference, context, edit, OriginalTestBodyToken);
+            Assert.True(result.Succeeded); Assert.True(result.Value!.OriginalToolResult!.Activity.Succeeded);
+            Assert.Equal(context.TaskId, f.Current.TaskId); Assert.Equal(context.ExecutionId, f.Current.ExecutionId);
+            var checkpoint = Assert.IsType<CheckpointInfo>(f.CheckpointStore.LastSaved);
+            Assert.Equal(context.ContextId, checkpoint.ConversationId);
+            Assert.Equal(f.Conversation.ContainerId, checkpoint.ContainerId);
+            Assert.Equal(directory, checkpoint.WorkspaceRoot);
+            Assert.Equal(0, checkpoint.StartSequence);
+            Assert.Equal(checkpoint.Id, f.Current.CheckpointId);
+            Assert.Same(checkpoint, await f.Checkpoints.GetOriginalCheckpointAsync(context.ExecutionId, checkpoint.Id, OriginalTestBodyToken));
+            var version = Assert.Single(f.CheckpointStore.Versions).Version;
+            Assert.Equal(context.ContextId, version.ConversationId); Assert.Equal(checkpoint.ContainerId, version.ContainerId);
+            Assert.Equal("original source", version.BeforeContent); Assert.Equal("changed source", version.AfterContent);
+            Assert.Equal("changed source", await File.ReadAllTextAsync(path, OriginalTestBodyToken));
+            Assert.False(Directory.Exists(Path.Combine(directory, ".git"))); Assert.Equal(0, f.Tools.ProcessCalls);
+            // The accepted action is observed rather than replayed, even with its old input revision.
+            var again = await f.Dev.ApplyEditAsync(f.Reference, context, edit, OriginalTestBodyToken);
+            Assert.True(again.Value!.AlreadyAcknowledged); Assert.Equal(1, f.CheckpointStore.SaveCalls); Assert.Equal(1, f.Tools.WriteCalls);
+            f.Tools.OnWrite = null;
+            Assert.Equal(new[] { f.Document.RelativePath }, await f.Checkpoints.RestoreCheckpointAsync(checkpoint.Id, OriginalTestBodyToken));
+            Assert.Equal("original source", await File.ReadAllTextAsync(path, OriginalTestBodyToken));
+            await f.Dev.CloseAndDrainAsync();
+        }
+        finally { if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true); }
+    }
+
+    [Fact]
+    public async Task Direct_edit_held_original_checkpoint_save_refuses_early_effect_and_retirement_waits()
+    {
+        var f = await Fixture.CreateAsync(); var save = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        f.CheckpointStore.ActualSave = save.Task;
+        var actual = f.Dev.ApplyEditAsync(f.Reference, f.Context(), ReviewedEdit(f, "changed source"), OriginalTestBodyToken); Task? close = null;
+        try
+        {
+            await f.CheckpointStore.SaveEntered.Task;
+            Assert.Same(save.Task, f.CheckpointStore.OriginalSave);
+            Assert.Equal(0, f.Tools.WriteCalls); Assert.Null(f.Current.CheckpointId);
+            close = f.Dev.CloseAndDrainAsync(); Assert.False(close.IsCompleted); Assert.False(actual.IsCompleted);
+            save.TrySetResult(); Assert.True((await actual).Succeeded); await close;
+            Assert.Equal(1, f.Tools.WriteCalls); Assert.Equal(1, f.CheckpointStore.SaveCalls);
+        }
+        finally { save.TrySetResult(); try { await actual; } catch { } if (close is not null) try { await close; } catch { } }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Direct_edit_faulted_original_save_never_mutates_replays_or_borrows_saved_row(bool savedBeforeFault)
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "dev-checkpoint-fault-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var f = await Fixture.CreateAsync(rootLocation: directory);
+            Directory.CreateDirectory(Path.Combine(directory, "src")); var path = Path.Combine(directory, "src", "code.cs");
+            await File.WriteAllTextAsync(path, f.Tools.TextValue, OriginalTestBodyToken);
+            var originalFault = new OperationCanceledException("faulted original checkpoint source OCE", new CancellationToken(canceled: true));
+            var sibling = new InvalidDataException("original checkpoint sibling failure");
+            var faulted = new TaskCompletionSource(); faulted.SetException([originalFault, sibling]);
+            f.CheckpointStore.ActualSave = faulted.Task; f.CheckpointStore.PersistOnSave = savedBeforeFault;
+            var context = f.Context(); var edit = ReviewedEdit(f, "changed source");
+            var actual = f.Dev.ApplyEditAsync(f.Reference, context, edit, OriginalTestBodyToken);
+            var failure = await Assert.ThrowsAnyAsync<Exception>(async () => await actual);
+            Assert.True(Contains(failure, originalFault)); Assert.True(Contains(failure, sibling));
+            Assert.True(actual.IsFaulted); Assert.False(actual.IsCanceled);
+            Assert.Same(faulted.Task, f.CheckpointStore.OriginalSave); Assert.True(f.CheckpointStore.OriginalSave!.IsFaulted);
+            Assert.Equal(savedBeforeFault, f.CheckpointStore.Checkpoints.Count != 0);
+            // The test persistence provider really writes the record before returning
+            // the faulted original Task; disk/row existence cannot publish an ACK.
+            var savedCheckpoint = f.CheckpointStore.LastSaved!;
+            var savedPath = Path.Combine(f.CheckpointStore.PersistenceDirectory!, savedCheckpoint.Id.ToString("N") + ".json");
+            Assert.Equal(savedBeforeFault, File.Exists(savedPath));
+            Assert.Null(f.Current.CheckpointId); Assert.Null(f.Current.LastCheckpointActionId); Assert.Equal(0, f.Tools.WriteCalls);
+            Assert.Null(await f.Checkpoints.GetOriginalCheckpointAsync(context.ExecutionId, savedCheckpoint.Id, OriginalTestBodyToken));
+            var sameAction = f.Dev.ApplyEditAsync(f.Reference, context with { }, edit, OriginalTestBodyToken);
+            await Assert.ThrowsAnyAsync<Exception>(async () => await sameAction);
+            // A fresh action under the SAME execution cannot turn row existence into an ACK or launch another save.
+            var nextAction = f.Dev.ApplyEditAsync(f.Reference, f.Context(), edit, OriginalTestBodyToken);
+            var refused = await Assert.ThrowsAnyAsync<Exception>(async () => await nextAction);
+            Assert.Contains("second save is refused", refused.ToString(), StringComparison.Ordinal);
+            Assert.Equal(1, f.CheckpointStore.SaveCalls); Assert.Equal(0, f.Tools.WriteCalls);
+            Assert.Equal("original source", await File.ReadAllTextAsync(path, OriginalTestBodyToken));
+            var drain = await Assert.ThrowsAnyAsync<Exception>(() => f.Dev.CloseAndDrainAsync());
+            Assert.True(Contains(drain, originalFault)); Assert.True(Contains(drain, sibling));
+        }
+        finally { if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true); }
+    }
+
+    [Theory]
+    [InlineData("root")]
+    [InlineData("actor")]
+    [InlineData("revision")]
+    [InlineData("policy")]
+    public async Task Direct_edit_checkpoint_callbacks_cannot_replace_original_dispatch_basis(string change)
+    {
+        var f = await Fixture.CreateAsync(); var save = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        f.CheckpointStore.ActualSave = save.Task;
+        var actual = f.Dev.ApplyEditAsync(f.Reference, f.Context(), ReviewedEdit(f, "changed source"), OriginalTestBodyToken);
+        try
+        {
+            await f.CheckpointStore.SaveEntered.Task; Assert.Equal(0, f.Tools.WriteCalls);
+            if (change == "root") f.Containers.Container = f.Containers.Container with { RootPath = Path.GetFullPath("different-root") };
+            if (change == "actor") ((Lease)f.Attempt.Lease).Retired = true;
+            if (change == "revision") await f.Repository.UpsertAsync(f.Current with { PersistenceRevision = f.Current.PersistenceRevision + 1 }, OriginalTestBodyToken);
+            if (change == "policy") f.Checkpoints.Mode = CheckpointMode.Off;
+            save.TrySetResult(); await Assert.ThrowsAnyAsync<Exception>(async () => await actual);
+            Assert.Equal(0, f.Tools.WriteCalls); Assert.Null(f.Current.LastCheckpointActionId);
+            await Assert.ThrowsAnyAsync<Exception>(() => f.Dev.CloseAndDrainAsync());
+        }
+        finally { save.TrySetResult(); try { await actual; } catch { } }
+    }
+
+    [Fact]
+    public async Task Direct_edit_root_replacement_during_post_checkpoint_actor_check_refuses_before_effect()
+    {
+        var f = await Fixture.CreateAsync();
+        ((Lease)f.Attempt.Lease).BeforeRevalidate = () =>
+        {
+            if (f.Current.CheckpointId is not null)
+                f.Containers.Container = f.Containers.Container with { RootPath = Path.GetFullPath("replaced-after-checkpoint-root") };
+            return Task.CompletedTask;
+        };
+        await Assert.ThrowsAnyAsync<Exception>(() => f.Dev.ApplyEditAsync(f.Reference, f.Context(), ReviewedEdit(f, "changed source"), OriginalTestBodyToken));
+        Assert.NotNull(f.Current.CheckpointId); Assert.Null(f.Current.LastCheckpointActionId); Assert.Equal(0, f.Tools.WriteCalls);
+        await Assert.ThrowsAnyAsync<Exception>(() => f.Dev.CloseAndDrainAsync());
+    }
+
+    [Fact]
+    public async Task Direct_edit_actual_policy_off_skips_checkpoint_and_preserves_actual_container_history()
+    {
+        var f = await Fixture.CreateAsync(); f.Checkpoints.Mode = CheckpointMode.Off;
+        var context = f.Context(); var result = await f.Dev.ApplyEditAsync(f.Reference, context, ReviewedEdit(f, "changed source"), OriginalTestBodyToken);
+        Assert.True(result.Succeeded); Assert.Equal(1, f.Tools.WriteCalls); Assert.Equal(0, f.CheckpointStore.SaveCalls);
+        Assert.Null(f.Current.CheckpointId);
+        Assert.Equal(f.Conversation.ContainerId, Assert.Single(f.CheckpointStore.Versions).Version.ContainerId);
+        await f.Dev.CloseAndDrainAsync();
+    }
+
+    [Fact]
+    public async Task Direct_edit_legacy_missing_producer_refuses_before_mutation_while_read_still_works()
+    {
+        var f = await Fixture.CreateAsync();
+        var legacy = new DeveloperTaskWorkspaceService(f.Store, new(f.ConversationSource, f.Containers), f.Tasks, f.Owner, new(f.Tools), new Trust(true));
+        Assert.True((await legacy.ReadFileAsync(f.Reference, f.Context(), f.Document, OriginalTestBodyToken)).Succeeded);
+        var failure = await Assert.ThrowsAnyAsync<Exception>(() => legacy.ApplyEditAsync(f.Reference, f.Context(), ReviewedEdit(f, "changed source"), OriginalTestBodyToken));
+        Assert.Contains("checkpoint producer is unavailable", failure.ToString(), StringComparison.Ordinal);
+        Assert.Equal(0, f.Tools.WriteCalls); Assert.Equal(0, f.CheckpointStore.SaveCalls);
+        await Assert.ThrowsAnyAsync<Exception>(() => legacy.CloseAndDrainAsync());
+        await f.Dev.CloseAndDrainAsync();
+    }
+
+    [Fact]
+    public async Task Direct_edit_rejects_checkpoint_from_another_producer_or_cached_container()
+    {
+        var f = await Fixture.CreateAsync();
+        var other = new CheckpointService(f.CheckpointStore, new Restore(f.Tools));
+        var service = new DeveloperTaskWorkspaceService(f.Store, new(f.ConversationSource, f.Containers), f.Tasks, f.Owner,
+            new(f.Tools, f.CheckpointStore), new Trust(true), other, f.ConversationSource);
+        var failure = await Assert.ThrowsAnyAsync<Exception>(() => service.ApplyEditAsync(f.Reference, f.Context(), ReviewedEdit(f, "changed source"), OriginalTestBodyToken));
+        Assert.Contains("same original execution", failure.ToString(), StringComparison.Ordinal);
+        Assert.Equal(0, f.Tools.WriteCalls); Assert.Null(f.Current.CheckpointId);
+        await Assert.ThrowsAnyAsync<Exception>(() => service.CloseAndDrainAsync()); await f.Dev.CloseAndDrainAsync();
+        var cached = await Fixture.CreateAsync();
+        await cached.Checkpoints.EnsureBeforeMutationAsync(cached.Current.ExecutionId, cached.Current.ContextId, Guid.NewGuid(),
+            cached.Document.WorkspaceRoot, cached.Checkpoints.Mode, OriginalTestBodyToken);
+        var mismatch = await Assert.ThrowsAnyAsync<Exception>(() => cached.Dev.ApplyEditAsync(cached.Reference, cached.Context(), ReviewedEdit(cached, "changed source"), OriginalTestBodyToken));
+        Assert.Contains("different current edit workspace/context", mismatch.ToString(), StringComparison.Ordinal);
+        Assert.Equal(1, cached.CheckpointStore.SaveCalls); Assert.Equal(0, cached.Tools.WriteCalls); Assert.Null(cached.Current.CheckpointId);
+        await Assert.ThrowsAnyAsync<Exception>(() => cached.Dev.CloseAndDrainAsync());
+    }
+
+    [Fact]
+    public async Task Direct_edit_checkpoint_record_saved_then_faulted_never_dispatches_file_runtime()
+    {
+        var f = await Fixture.CreateAsync(); var fault = new IOException("checkpoint task row saved then faulted");
+        var original = Task.FromException(fault); f.Repository.CheckpointWriteSource = original;
+        var actual = f.Dev.ApplyEditAsync(f.Reference, f.Context(), ReviewedEdit(f, "changed source"), OriginalTestBodyToken);
+        var failure = await Assert.ThrowsAnyAsync<Exception>(async () => await actual);
+        Assert.True(Contains(failure, fault)); Assert.NotNull(f.Current.CheckpointId); Assert.Null(f.Current.LastCheckpointActionId);
+        Assert.Equal(0, f.Tools.WriteCalls); Assert.Equal(1, f.CheckpointStore.SaveCalls);
+        var drain = await Assert.ThrowsAnyAsync<Exception>(() => f.Dev.CloseAndDrainAsync()); Assert.True(Contains(drain, fault));
+    }
+
+    private static DeveloperReviewedTextEdit ReviewedEdit(Fixture f, string replacement) =>
+        new(f.Document, Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(f.Tools.TextValue))), replacement);
+
     // This whole fixture is compiled by Dev.Tests (xUnit 2, net10) and linked
     // by Desktop.Tests (xUnit 3, net10-windows). WINDOWS is the owning target symbol.
     private static CancellationToken OriginalTestBodyToken
@@ -529,13 +734,16 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         public Store Store = null!; public Containers Containers = null!; public Tools Tools = new(); public Owner Owner = null!;
         public Conversation Conversation = null!; public Conversations ConversationSource = null!;
         public TaskRepository Repository = new(); public TaskExecutionCoordinator Tasks = null!; public DeveloperTaskWorkspaceService Dev = null!;
+        public CheckpointHistory CheckpointStore = new(); public CheckpointService Checkpoints = null!;
         public DeveloperProjectReference Reference = null!; public DeveloperCodeDocument Document = null!; public TaskRunAttemptAdmission Attempt = null!;
         public TaskExecutionSnapshot Current => Repository.Current!;
         public DeveloperCanonicalActionContext Context() => new(Current.TaskId, Current.ExecutionId, Current.ContextId,
             Attempt.AttemptId, Current.PersistenceRevision, Guid.NewGuid());
-        public static async Task<Fixture> CreateAsync(bool trusted = true)
+        public static async Task<Fixture> CreateAsync(bool trusted = true, string? rootLocation = null)
         {
-            var f = new Fixture(); var root = new DeveloperWorkspaceRoot(Guid.NewGuid(), Path.GetFullPath("dev-accepted-root"));
+            var f = new Fixture(); var root = new DeveloperWorkspaceRoot(Guid.NewGuid(), rootLocation ?? Path.GetFullPath("dev-accepted-root"));
+            f.Tools.PhysicalFiles = rootLocation is not null;
+            f.CheckpointStore.PersistenceDirectory = rootLocation is null ? null : Path.Combine(rootLocation, ".checkpoint-test-records");
             var project = new DeveloperProject(Guid.NewGuid(), "existing", "existing project", [root.RootId], "C#", null, "dotnet", [], [], [], [], null);
             var workspace = DeveloperWorkspace.Create([root]) with { Projects = [project], SourceControlBindings = [new("scm-existing", root.RootId, "git", "repo-existing")] };
             f.Store = new() { Workspace = workspace };
@@ -545,11 +753,14 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
             var conversation = new Conversation(Guid.NewGuid(), HavenMode.Tasks, ConversationKind.Task, "original context", container.Id, null, false, false, now, now);
             f.Conversation = conversation;
             f.Containers = new() { Container = container }; f.Owner = new(f.Tools);
-            f.Tasks = new(f.Repository, new Events(), admissionAuthority: new Authority(), toolActionOwner: f.Owner);
+            f.Checkpoints = new(f.CheckpointStore, new Restore(f.Tools));
+            f.Tasks = new(f.Repository, new Events(), admissionAuthority: new Authority(), toolActionOwner: f.Owner,
+                checkpointRepository: f.CheckpointStore, checkpointObservationSource: f.Checkpoints);
             var started = await f.Tasks.BeginAuthorizedAsync(conversation.Id, Guid.NewGuid(), "original task", TaskExecutionDurability.PersistedPlan, [], default);
             f.Attempt = await f.Tasks.StartAttemptAsync(started.TaskId, started.ExecutionId, new("local", 1, "synthetic", "synthetic", null, false, []), default);
             f.ConversationSource = new(conversation);
-            f.Dev = new(f.Store, new(f.ConversationSource, f.Containers), f.Tasks, f.Owner, new(f.Tools), new Trust(trusted));
+            f.Dev = new(f.Store, new(f.ConversationSource, f.Containers), f.Tasks, f.Owner, new(f.Tools, f.CheckpointStore),
+                new Trust(trusted), f.Checkpoints, f.ConversationSource);
             return f;
         }
     }
@@ -573,20 +784,30 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     { public Task<bool> IsTrustedAsync(Guid workspaceId, CancellationToken token) => Task.FromResult(trusted); }
     private sealed class TaskRepository : ITaskExecutionRepository
     {
-        public TaskExecutionSnapshot? Current;
+        public TaskExecutionSnapshot? Current; public Task? CheckpointWriteSource;
         public Task UpsertAsync(TaskExecutionSnapshot snapshot, CancellationToken token)
-        { if (snapshot.PersistenceRevision != (Current?.PersistenceRevision ?? 0) + 1) throw new InvalidOperationException("Synthetic CAS conflict"); Current = snapshot; return Task.CompletedTask; }
+        { if (snapshot.PersistenceRevision != (Current?.PersistenceRevision ?? 0) + 1) throw new InvalidOperationException("Synthetic CAS conflict"); Current = snapshot; return snapshot.CheckpointId is not null && CheckpointWriteSource is not null ? CheckpointWriteSource : Task.CompletedTask; }
         public Task<TaskExecutionSnapshot?> GetAsync(Guid id, CancellationToken token) => Task.FromResult(Current?.TaskId == id ? Current : null);
         public Task<TaskExecutionSnapshot?> GetByContextAsync(Guid id, CancellationToken token) => Task.FromResult(Current?.ContextId == id ? Current : null);
         public Task<IReadOnlyList<TaskExecutionSnapshot>> GetResumableAsync(CancellationToken token) => Task.FromResult<IReadOnlyList<TaskExecutionSnapshot>>(Current is null ? [] : [Current]);
     }
     private sealed class Events : IExecutionEventSink { public bool TryPublish(ExecutionEvent value) => true; }
-    private sealed class Authority : ITaskRunAdmissionAuthority
+    private sealed class Authority : ITaskRunCommandAuthority
     {
-        public Task<TaskExecutionOwnerBinding> AuthorizeStartAsync(TaskExecutionSnapshot task, CancellationToken token) =>
-            Task.FromResult(new TaskExecutionOwnerBinding(task.TaskId, task.ContextId, task.ExecutionId, "synthetic actor", "synthetic profile", null, null, "revision", "synthetic receipt"));
+        private TaskExecutionOwnerBinding? _owner;
+        public Task<TaskExecutionOwnerBinding> AuthorizeStartAsync(TaskExecutionSnapshot task, CancellationToken token)
+        {
+            var owner = new TaskExecutionOwnerBinding(task.TaskId, task.ContextId, task.ExecutionId, "synthetic actor", "synthetic profile", null, null, "revision", "synthetic receipt");
+            _owner = owner; return Task.FromResult(owner);
+        }
         public Task<ITaskRunAdmissionLease> AuthorizeAttemptAsync(TaskExecutionSnapshot task, Guid id, TaskRunRouteCandidate candidate, Guid? previous, CancellationToken token) => Task.FromResult<ITaskRunAdmissionLease>(new Lease(task.OwnerBinding!, id, candidate));
         public Task ValidateAcceptedActionAsync(TaskExecutionSnapshot task, Guid attempt, Guid action, string receipt, CancellationToken token) => Task.CompletedTask;
+        public Task ValidateTaskCommandAsync(TaskExecutionSnapshot task, string command, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            if (_owner is null || task.OwnerBinding != _owner) throw new UnauthorizedAccessException("The synthetic original task-command owner changed.");
+            return Task.CompletedTask;
+        }
     }
     private sealed class Lease(TaskExecutionOwnerBinding owner, Guid id, TaskRunRouteCandidate candidate) : ITaskRunAdmissionLease
     {
@@ -635,11 +856,70 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     private sealed class Tools : IWorkspaceToolService
     {
         public int ReadCalls; public int WriteCalls; public string TextValue = "original source"; public Task? BeforeWrite; public int ProcessCalls; public ProcessRequest? LastProcessRequest; public ProcessResult Process = new(0, "observed", "", TimeSpan.Zero, false);
+        public bool PhysicalFiles; public Action? OnWrite;
         public string ResolveWorkspacePath(string root, string path) => Path.GetFullPath(Path.Combine(root, path));
-        public Task<string> ReadTextAsync(string root, string path, CancellationToken token) { ReadCalls++; return Task.FromResult(TextValue); }
-        public async Task WriteTextAtomicAsync(string root, string path, string content, CancellationToken token) { if (BeforeWrite is not null) await BeforeWrite; token.ThrowIfCancellationRequested(); WriteCalls++; TextValue = content; }
+        public async Task<string> ReadTextAsync(string root, string path, CancellationToken token)
+        { ReadCalls++; token.ThrowIfCancellationRequested(); return PhysicalFiles ? await File.ReadAllTextAsync(ResolveWorkspacePath(root, path), token) : TextValue; }
+        public async Task WriteTextAtomicAsync(string root, string path, string content, CancellationToken token)
+        {
+            if (BeforeWrite is not null) await BeforeWrite; token.ThrowIfCancellationRequested(); OnWrite?.Invoke();
+            if (PhysicalFiles)
+            {
+                var destination = ResolveWorkspacePath(root, path); var temporary = destination + ".dev-test-" + Guid.NewGuid().ToString("N");
+                try { await File.WriteAllTextAsync(temporary, content, token); File.Move(temporary, destination, overwrite: true); }
+                finally { if (File.Exists(temporary)) File.Delete(temporary); }
+            }
+            WriteCalls++; TextValue = content;
+        }
         public Task<IReadOnlyList<string>> SearchFilesAsync(string root, string search, CancellationToken token) => throw new NotSupportedException();
         public Task<ProcessResult> RunProcessAsync(ProcessRequest request, CancellationToken token) { ProcessCalls++; LastProcessRequest = request; return Task.FromResult(Process); }
+    }
+    // Explicit test persistence/restore providers; the production CheckpointService,
+    // TaskCoordinator and WorkspaceToolRuntime remain the SAME maintained owners.
+    // This control does not certify SQLite, native resource permission or Home policy.
+    private sealed class CheckpointHistory : ICheckpointRepository, IWorkspaceStateRepository
+    {
+        public Dictionary<Guid, CheckpointInfo> Checkpoints = []; public List<(long Sequence, WorkspaceVersion Version)> Versions = [];
+        public int SaveCalls; public bool PersistOnSave = true; public CheckpointInfo? LastSaved; public Task? ActualSave; public Task? OriginalSave;
+        public string? PersistenceDirectory;
+        public TaskCompletionSource SaveEntered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public Task SaveAsync(CheckpointInfo checkpoint, CancellationToken token)
+        {
+            SaveCalls++; LastSaved = checkpoint;
+            if (PersistOnSave)
+            {
+                if (PersistenceDirectory is not null)
+                {
+                    Directory.CreateDirectory(PersistenceDirectory);
+                    File.WriteAllText(Path.Combine(PersistenceDirectory, checkpoint.Id.ToString("N") + ".json"), System.Text.Json.JsonSerializer.Serialize(checkpoint));
+                }
+                Checkpoints[checkpoint.Id] = checkpoint;
+            }
+            OriginalSave = ActualSave ?? Task.CompletedTask; SaveEntered.TrySetResult(); return OriginalSave;
+        }
+        public Task<CheckpointInfo?> GetLatestAsync(Guid? conversation, string root, CancellationToken token) =>
+            Task.FromResult(Checkpoints.Values.LastOrDefault(value => value.ConversationId == conversation && value.WorkspaceRoot == root));
+        public Task<CheckpointInfo?> GetAsync(Guid id, CancellationToken token) => Task.FromResult(Checkpoints.GetValueOrDefault(id));
+        public Task<long> GetLatestVersionSequenceAsync(string root, CancellationToken token) => Task.FromResult(Versions.Where(value => value.Version.WorkspaceRoot == root).Select(value => value.Sequence).DefaultIfEmpty().Max());
+        public Task<IReadOnlyList<WorkspaceRestoreEntry>> GetVersionsSinceAsync(string root, long sequence, CancellationToken token) =>
+            Task.FromResult<IReadOnlyList<WorkspaceRestoreEntry>>(Versions.Where(value => value.Sequence > sequence && value.Version.WorkspaceRoot == root)
+                .Select(value => new WorkspaceRestoreEntry(value.Sequence, value.Version.RelativePath, (int)value.Version.Kind, value.Version.BeforeContent, value.Version.AfterContent)).ToArray());
+        public Task<WorkspaceRestoreEntry?> GetLatestVersionAsync(string root, CancellationToken token) =>
+            Task.FromResult(Versions.Where(value => value.Version.WorkspaceRoot == root).Select(value => new WorkspaceRestoreEntry(value.Sequence, value.Version.RelativePath, (int)value.Version.Kind, value.Version.BeforeContent, value.Version.AfterContent)).LastOrDefault());
+        public Task AddVersionAsync(WorkspaceVersion version, CancellationToken token) { Versions.Add((Versions.Count + 1, version)); return Task.CompletedTask; }
+        public Task<IReadOnlyList<WorkspaceVersion>> GetVersionsAsync(Guid? container, string? path, int limit, CancellationToken token) =>
+            Task.FromResult<IReadOnlyList<WorkspaceVersion>>(Versions.Select(value => value.Version).Where(value => value.ContainerId == container && (path is null || value.RelativePath == path)).TakeLast(limit).ToArray());
+        public Task<IReadOnlyList<ReusableTaskDefinition>> GetReusableTasksAsync(Guid? container, CancellationToken token) => throw new NotSupportedException();
+        public Task UpsertReusableTaskAsync(ReusableTaskDefinition macro, CancellationToken token) => throw new NotSupportedException();
+        public Task DeleteReusableTaskAsync(Guid id, CancellationToken token) => throw new NotSupportedException();
+        public Task<IReadOnlyList<DecisionRecord>> GetDecisionsAsync(Guid container, CancellationToken token) => throw new NotSupportedException();
+        public Task UpsertDecisionAsync(DecisionRecord decision, CancellationToken token) => throw new NotSupportedException();
+        public Task DeleteDecisionAsync(Guid id, CancellationToken token) => throw new NotSupportedException();
+    }
+    private sealed class Restore(Tools tools) : ICheckpointRestorer
+    {
+        public async Task<IReadOnlyList<string>> RestoreAsync(string root, CheckpointRestorePlan plan, CancellationToken token)
+        { foreach (var value in plan.PathToBeforeContent) await tools.WriteTextAtomicAsync(root, value.Key, value.Value, token); return plan.PathToBeforeContent.Keys.ToArray(); }
     }
     private sealed class Conversations(Conversation actual) : IConversationRepository
     {

@@ -14,8 +14,17 @@ namespace HavenOS.Apps.Dev;
 public sealed class DeveloperTaskWorkspaceService(
     IDeveloperWorkspaceStore workspaces, DeveloperCanonicalWorkspaceBinding workspaceBinding,
     TaskExecutionCoordinator tasks, ITaskRunToolActionOwner toolOwner, WorkspaceToolRuntime runtime,
-    IDeveloperWorkspaceTrustService? executionTrust = null) : IAsyncDisposable
+    IDeveloperWorkspaceTrustService? executionTrust, CheckpointService? checkpoints,
+    IConversationRepository? conversations) : IAsyncDisposable
 {
+    // Retain the existing CLR constructor. Hosts without the shared producer may still
+    // observe source or run explicitly trusted commands; file mutation fails closed.
+    public DeveloperTaskWorkspaceService(IDeveloperWorkspaceStore workspaces,
+        DeveloperCanonicalWorkspaceBinding workspaceBinding, TaskExecutionCoordinator tasks,
+        ITaskRunToolActionOwner toolOwner, WorkspaceToolRuntime runtime,
+        IDeveloperWorkspaceTrustService? executionTrust = null)
+        : this(workspaces, workspaceBinding, tasks, toolOwner, runtime, executionTrust, null, null) { }
+
     // Unresolved original calls remain inspectable. This is runtime custody, not a purchased allowance.
     public const int MaximumRetainedInvocations = 128;
     private readonly object _gate = new();
@@ -453,7 +462,8 @@ public sealed class DeveloperTaskWorkspaceService(
     {
         current = await ObserveOriginalAsync(() => tasks.RegisterOriginalToolActionAsync(preparation, context.ParentActionId, summary, token)).ConfigureAwait(false);
         var owned = await ObserveOriginalAsync(() => toolOwner.ExecuteOriginalAsync(preparation,
-            ct => runtime.ExecuteOriginalAsync(resolved.Root.Location, call, preparation, ct, context.ContextId), token)).ConfigureAwait(false);
+            ct => ObserveOriginalAsync(() => ExecuteCheckpointedOriginalRuntimeAsync(project, context, resolved,
+                call, preparation, current, ct)), token)).ConfigureAwait(false);
         await ObserveOriginalAsync(() => toolOwner.ValidateOriginalResultAsync(preparation, owned, token).AsTask()).ConfigureAwait(false);
         // The configured canonical owner records request completion separately from business
         // success (including a known nonzero test exit), conserving the once-only receipt.
@@ -461,6 +471,78 @@ public sealed class DeveloperTaskWorkspaceService(
         await ObserveOriginalAsync(() => tasks.RetireAcknowledgedToolOriginalAsync(preparation, current).AsTask()).ConfigureAwait(false);
         return DeveloperOperationResult<DeveloperActionObservation>.Success(new(project, context, current, call.Name, owned.OriginalResult, AlreadyAcknowledged: false)
             { KnownNoEffect = owned.KnownNoEffect }, context.ActionId);
+    }
+
+    private async Task<WorkspaceToolResult> ExecuteCheckpointedOriginalRuntimeAsync(
+        DeveloperProjectReference project, DeveloperCanonicalActionContext context, DeveloperResolvedProject resolved,
+        OllamaToolCall call, ITaskRunToolActionPreparation preparation, TaskExecutionSnapshot current, CancellationToken token)
+    {
+        // apply_change_set is the typed editor's physical mutation. Preview, reads and
+        // process commands retain their existing paths and acquire no file checkpoint.
+        if (call.Name != "apply_change_set")
+            return await ObserveOriginalAsync(() => runtime.ExecuteOriginalAsync(resolved.Root.Location,
+                call, preparation, token, context.ContextId)).ConfigureAwait(false);
+        var producer = checkpoints ?? throw new InvalidOperationException("The shared pre-mutation checkpoint producer is unavailable; no file edit was dispatched.");
+        var source = conversations ?? throw new InvalidOperationException("The actual task conversation source is unavailable; no file edit was dispatched.");
+        var conversation = await ObserveOriginalAsync(() => source.GetAsync(context.ContextId, token)).ConfigureAwait(false);
+        if (conversation is null || conversation.Id != context.ContextId || conversation.IsArchived ||
+            conversation.Mode is not (HavenMode.Tasks or HavenMode.Studio) || conversation.ContainerId is null)
+            throw new UnauthorizedAccessException("The actual current task conversation/container is unavailable for this edit.");
+        var admission = AcquireOriginalSource(() => tasks.RequireOriginalActionAdmission(preparation, preparation.OriginalAttempt));
+        await DemandOriginalEditBasisAsync(project, context, resolved, conversation, preparation, admission, current, token).ConfigureAwait(false);
+        // Read the maintained user policy, including an explicit Off. Missing producer
+        // configuration is never interpreted as that policy. The SAME Ensure driver
+        // owns and awaits the producer's physical Save before publishing its checkpoint.
+        var mode = producer.Mode;
+        var checkpoint = await ObserveOriginalAsync(() => producer.EnsureBeforeMutationAsync(current.ExecutionId,
+            conversation.Id, conversation.ContainerId, resolved.Root.Location, mode, token)).ConfigureAwait(false);
+        await DemandOriginalEditBasisAsync(project, context, resolved, conversation, preparation, admission, current, token).ConfigureAwait(false);
+        if (mode != CheckpointMode.Off && checkpoint is null)
+            throw new InvalidOperationException("The required shared checkpoint was not acknowledged; no file edit was dispatched.");
+        if (checkpoint is not null)
+        {
+            if (checkpoint.ConversationId != conversation.Id || checkpoint.ContainerId != conversation.ContainerId ||
+                !string.Equals(Path.GetFullPath(checkpoint.WorkspaceRoot), Path.GetFullPath(resolved.Root.Location),
+                    OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
+                throw new InvalidOperationException("The shared checkpoint belongs to a different current edit workspace/context.");
+            var beforeCheckpointRevision = current.PersistenceRevision;
+            current = await ObserveOriginalAsync(() => tasks.RecordCheckpointAsync(context.TaskId, context.ExecutionId,
+                checkpoint.Id, token)).ConfigureAwait(false);
+            if (current.TaskId != context.TaskId || current.ExecutionId != context.ExecutionId || current.ContextId != context.ContextId ||
+                current.PersistenceRevision != beforeCheckpointRevision + 1 || current.CheckpointId != checkpoint.Id)
+                throw new InvalidOperationException("The canonical task changed during checkpoint acknowledgement; no file edit was dispatched.");
+        }
+        // RecordCheckpoint is this admitted edit's own CAS increment. Revalidate against
+        // its acknowledged snapshot, never against the caller's now-stale input revision.
+        await DemandOriginalEditBasisAsync(project, context, resolved, conversation, preparation, admission, current, token).ConfigureAwait(false);
+        if (producer.Mode != mode)
+            throw new InvalidOperationException("The checkpoint policy changed during edit admission; no file edit was dispatched.");
+        return await ObserveOriginalAsync(() => runtime.ExecuteOriginalAsync(resolved.Root.Location,
+            call, preparation, token, conversation.Id, conversation.ContainerId)).ConfigureAwait(false);
+    }
+
+    private async Task DemandOriginalEditBasisAsync(DeveloperProjectReference project, DeveloperCanonicalActionContext context,
+        DeveloperResolvedProject resolved, Conversation conversation, ITaskRunToolActionPreparation preparation,
+        TaskRunOriginalActionAdmission admission, TaskExecutionSnapshot expected, CancellationToken token)
+    {
+        // Check fresh actor/lease first, then reobserve project/root after its callbacks.
+        // Keep the SAME private action receipt and preparation throughout the edit.
+        await ObserveOriginalAsync(() => tasks.ValidateOriginalActionAdmissionAsync(admission,
+            preparation, preparation.OriginalAttempt, token)).ConfigureAwait(false);
+        var fresh = await ResolveAsync(project, token).ConfigureAwait(false);
+        if (!fresh.Succeeded || fresh.Value is null || fresh.Value.Root != resolved.Root || fresh.Value.Repository != resolved.Repository ||
+            !await ObserveOriginalAsync(() => workspaceBinding.IsCurrentAsync(expected, fresh.Value, token, RetainOriginalSource)).ConfigureAwait(false))
+            throw new UnauthorizedAccessException("The current project/workspace binding changed during checkpoint admission; no file edit was dispatched.");
+        var actualConversation = await ObserveOriginalAsync(() => conversations!.GetAsync(context.ContextId, token)).ConfigureAwait(false);
+        var latest = await ObserveOriginalAsync(() => tasks.GetAsync(context.TaskId, token)).ConfigureAwait(false);
+        if (actualConversation != conversation || latest is null || latest.TaskId != expected.TaskId ||
+            latest.ExecutionId != expected.ExecutionId || latest.ContextId != expected.ContextId ||
+            latest.PersistenceRevision != expected.PersistenceRevision || latest.OwnerBinding != expected.OwnerBinding)
+            throw new InvalidOperationException("The original task/context changed during checkpoint admission; no file edit was dispatched.");
+        RunOriginalSourceCallback(() => tasks.DemandOriginalActionAdmission(admission, preparation, preparation.OriginalAttempt));
+        token.ThrowIfCancellationRequested();
+        // These metadata observations do not replace the maintained native owner's
+        // original action/resource fence at the physical runtime dispatch.
     }
 
     private async Task<DeveloperOperationResult<DeveloperActionObservation>> ExecutePreparedOriginalWithConsentAsync(

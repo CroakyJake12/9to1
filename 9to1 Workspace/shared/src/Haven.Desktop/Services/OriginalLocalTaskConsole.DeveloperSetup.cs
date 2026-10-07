@@ -24,6 +24,7 @@ public static partial class OriginalLocalTaskConsole
         private HomeDeveloperProjectReadAdmissionSource? _setupReads;
         private HomeDeveloperProjectSetupPermissionSource? _setupPermissions;
         private HomeDeveloperProjectSetupJournal? _setupJournal;
+        private FileDeveloperWorkspaceStore? _setupWorkspaceStore;
         private readonly Dictionary<string, (Guid SetupId, Guid WorkspaceId)> _projectRegistrations = new(StringComparer.Ordinal);
 
         private void PrepareOriginalDeveloperPolicies()
@@ -43,15 +44,23 @@ public static partial class OriginalLocalTaskConsole
             services.AddHavenOwnedDeveloperSetups(domain,
                 provider => provider.GetRequiredService<FilesDeveloperOriginalSetupScopeSource>(),
                 provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
-                provider => provider.GetRequiredService<FilesDeveloperOriginalFolderSetupProducer>(), _setupPolicy!);
+                _ => _setupSteps
+                    ?? throw new InvalidOperationException("The SAME captured Files step outcome owner is unavailable."), _setupPolicy!);
             services.AddFilesOriginalDeveloperSetups(_setupDestinationResolver!, provider =>
                 (provider.GetRequiredService<IWorkspaceToolService>() as Haven.Infrastructure.WorkspaceToolService
                     ?? throw new InvalidOperationException("The SAME actual workspace kernel is required."))
                 .CreateOriginalDeveloperCaptureSource(provider.GetRequiredService<HomeDeveloperProjectReadAdmissionSource>(),
-                    () => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
-                    () => provider.GetRequiredService<HomeDeveloperProjectSetupPermissionSource>(),
-                    () => provider.GetRequiredService<FileDeveloperWorkspaceStore>(),
-                    () => provider.GetRequiredService<FilesDeveloperOriginalFolderSetupProducer>()),
+                    // Construction remains lazy for the genuine Files/Home cycle.
+                    // Capture the SAME configured owners before public startup; disposal
+                    // guards still walk them after the provider stops service resolution.
+                    () => _setupSelections
+                        ?? throw new InvalidOperationException("The SAME captured Files source selection owner is unavailable."),
+                    () => _setupPermissions
+                        ?? throw new InvalidOperationException("The SAME captured Home setup permission owner is unavailable."),
+                    () => _setupWorkspaceStore
+                        ?? throw new InvalidOperationException("The SAME captured Dev workspace store is unavailable."),
+                    () => _setupSteps
+                        ?? throw new InvalidOperationException("The SAME captured Files step outcome owner is unavailable.")),
                 provider => provider.GetRequiredService<HomeDeveloperProjectSetupJournal>(),
                 provider => provider.GetRequiredService<HomeDeveloperProjectReadAdmissionSource>(),
                 provider => provider.GetRequiredService<HomeDeveloperProjectSetupPermissionSource>(),
@@ -60,6 +69,7 @@ public static partial class OriginalLocalTaskConsole
 
         private void CaptureOriginalDeveloperSetupOwners(DesktopOriginalWorkLifetime.Original original)
         {
+            Resolve<FileDeveloperWorkspaceStore>(original, value => _setupWorkspaceStore = value);
             Resolve<HomeDeveloperProjectReadAdmissionSource>(original, value => _setupReads = value);
             Resolve<HomeDeveloperProjectSetupJournal>(original, value => _setupJournal = value);
             Resolve<HomeDeveloperProjectSetupPermissionSource>(original, value => _setupPermissions = value);
