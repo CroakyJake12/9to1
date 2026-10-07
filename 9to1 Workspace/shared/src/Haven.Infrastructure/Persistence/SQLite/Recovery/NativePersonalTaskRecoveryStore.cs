@@ -79,8 +79,8 @@ internal sealed class NativePersonalTaskRecoveryStore : IDisposable
                 }
                 else
                 {
-                    using var handle = new SafeFileHandle((IntPtr)fd, ownsHandle: true);
-                    using var stream = new FileStream(handle, FileAccess.Write);
+                    using var createdHandle = new SafeFileHandle((IntPtr)fd, ownsHandle: true);
+                    using var stream = new FileStream(createdHandle, FileAccess.Write);
                     stream.Write(bytes); stream.Flush(flushToDisk: true);
                 }
             }

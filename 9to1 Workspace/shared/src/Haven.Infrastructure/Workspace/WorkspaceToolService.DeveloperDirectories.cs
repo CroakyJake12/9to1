@@ -7,7 +7,7 @@ public sealed partial class WorkspaceToolService
 {
     private sealed partial class DeveloperCaptureSource : IDeveloperProjectOriginalDirectoryObservationSource
     {
-        private DeveloperCaptureSource(IDeveloperProjectOriginalReadAdmissionSource originalReads,
+        internal DeveloperCaptureSource(IDeveloperProjectOriginalReadAdmissionSource originalReads,
             Func<IDeveloperProjectOriginalPhysicalReadSelectionSource> originalSelections)
             : this(originalReads, originalSelections, null) { }
 

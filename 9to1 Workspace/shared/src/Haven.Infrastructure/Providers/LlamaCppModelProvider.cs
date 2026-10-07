@@ -590,7 +590,7 @@ public sealed partial class LlamaCppModelProvider : IModelProvider, ILocalModelE
             if (work.PublicationFailure is { } publicationFailure)
                 ExceptionDispatchInfo.Capture(FaultEnvelope(publicationFailure)).Throw();
             InvokePhysical(() => { lifetime = CancellationTokenSource.CreateLinkedTokenSource(token, _stop.Token); return true; });
-            actual = AcquireOriginalTask(() => body(lifetime.Token), work);
+            actual = AcquireOriginalTask(() => body(lifetime!.Token), work);
             result = await ObserveAcquiredAsync(actual, work).ConfigureAwait(false);
         }
         catch (Exception cause) { AddTask(errors, actual, cause); }

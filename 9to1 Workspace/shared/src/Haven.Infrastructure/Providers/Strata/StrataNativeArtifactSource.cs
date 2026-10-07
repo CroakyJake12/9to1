@@ -290,17 +290,30 @@ public sealed class StrataNativeArtifactSource : IOriginalStrataModelSource, IOr
         finally { actual.Live = false; _closingExecuting.Value = previous; }
     }
 
-    private sealed class HeldLease(StrataNativeArtifactSource issuer, Work work, ModelIdentity model,
-        TaskRunAttemptAdmission admission, StrataVerifiedInstallationLease installation, IAsyncDisposable pin, ProtectedRoot root,
-        StrataOriginalHardwareObservation? hardware, InstallationCapture metadata)
+    private sealed class HeldLease
     {
-        public StrataNativeArtifactSource Issuer { get; } = issuer;
-        public ModelIdentity Model { get; } = model;
-        public TaskRunAttemptAdmission Admission { get; } = admission;
-        public StrataVerifiedInstallationLease Installation { get; } = installation;
-        public ProtectedRoot Root { get; } = root;
-        public StrataOriginalHardwareObservation? Hardware { get; } = hardware;
-        public InstallationCapture Metadata { get; } = metadata;
+        private readonly StrataNativeArtifactSource issuer;
+        private readonly Work work;
+        private readonly TaskRunAttemptAdmission admission;
+        private readonly StrataVerifiedInstallationLease installation;
+        private readonly IAsyncDisposable pin;
+        private readonly ProtectedRoot root;
+        public HeldLease(StrataNativeArtifactSource issuer, Work work, ModelIdentity model,
+            TaskRunAttemptAdmission admission, StrataVerifiedInstallationLease installation, IAsyncDisposable pin, ProtectedRoot root,
+            StrataOriginalHardwareObservation? hardware, InstallationCapture metadata)
+        {
+            this.issuer = issuer; this.work = work; this.admission = admission;
+            this.installation = installation; this.pin = pin; this.root = root;
+            Issuer = issuer; Model = model; Admission = admission; Installation = installation;
+            Root = root; Hardware = hardware; Metadata = metadata;
+        }
+        public StrataNativeArtifactSource Issuer { get; }
+        public ModelIdentity Model { get; }
+        public TaskRunAttemptAdmission Admission { get; }
+        public StrataVerifiedInstallationLease Installation { get; }
+        public ProtectedRoot Root { get; }
+        public StrataOriginalHardwareObservation? Hardware { get; }
+        public InstallationCapture Metadata { get; }
         public bool Closing; private Task? _close;
         public void Demand()
         {
@@ -328,17 +341,21 @@ public sealed class StrataNativeArtifactSource : IOriginalStrataModelSource, IOr
             }).ConfigureAwait(false);
         }
     }
-    private sealed class WorkerLease(HeldLease held) : StrataOriginalWorkerLease
+    private sealed class WorkerLease : StrataOriginalWorkerLease
     {
-        public HeldLease Held { get; } = held;
+        private readonly HeldLease held;
+        public WorkerLease(HeldLease held) { this.held = held; Held = held; }
+        public HeldLease Held { get; }
         // Source-created descriptor path, never a model/config controlled executable path.
         public override StrataBundledWorker OriginalWorker => new(held.Root.SingleFilePath, held.Metadata.WorkerFile.Sha256);
         public override void DemandCurrentOriginalBinding() => held.Demand();
         public override ValueTask DisposeAsync() => new(held.CloseOriginalAsync());
     }
-    private sealed class ModelLease(HeldLease held) : StrataOriginalModelLease, IStrataOriginalArtifactBinding, IStrataOriginalHardwareBinding, IStrataOriginalModelSizeBinding
+    private sealed class ModelLease : StrataOriginalModelLease, IStrataOriginalArtifactBinding, IStrataOriginalHardwareBinding, IStrataOriginalModelSizeBinding
     {
-        public HeldLease Held { get; } = held;
+        private readonly HeldLease held;
+        public ModelLease(HeldLease held) { this.held = held; Held = held; }
+        public HeldLease Held { get; }
         public ModelIdentity OriginalModel => held.Model;
         public TaskRunAttemptAdmission OriginalAdmission => held.Admission;
         public StrataOriginalHardwareObservation OriginalHardwareProbe => held.Hardware ?? throw new InvalidDataException("No actual hardware probe was retained.");

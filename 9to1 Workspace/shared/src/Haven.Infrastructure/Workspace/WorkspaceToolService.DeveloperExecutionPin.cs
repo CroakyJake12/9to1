@@ -24,7 +24,7 @@ public sealed partial class WorkspaceToolService
         private readonly HashSet<SavedRootAcquisition> _originalSavedRootAcquisitions = [];
         private readonly AsyncLocal<SavedRootAcquisition?> _savedRootAcquiring = new();
         [ThreadStatic] private static HashSet<DeveloperCaptureSource>? _checkingSavedRootDependencies;
-        private DeveloperCaptureSource(IDeveloperProjectOriginalReadAdmissionSource reads,
+        internal DeveloperCaptureSource(IDeveloperProjectOriginalReadAdmissionSource reads,
             Func<IDeveloperProjectOriginalPhysicalReadSelectionSource> selections,
             Func<IDeveloperProjectOriginalSetupPermissionSource> permissions,
             Func<IDeveloperProjectOriginalWorkspaceMetadataStore> store,

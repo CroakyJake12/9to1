@@ -107,7 +107,7 @@ public sealed partial class WorkspaceToolService
             if (actual is not IDeveloperWorkspaceOriginalExecutionScopedBindingSource scoped)
                 throw new NotSupportedException("The original saved-root issuer lacks parent-source custody.");
             Task? raw = null; var errors = new List<Exception>();
-            try { source.Invoke(() => raw = scoped.RevalidateOriginalWithinSourceAsync(binding, actor, source.Scope, source.Retain, token)); }
+            try { _ = source.Invoke(() => raw = scoped.RevalidateOriginalWithinSourceAsync(binding, actor, source.Scope, source.Retain, token)); }
             catch (Exception error) { AddOriginalErrors(errors, null, error); }
             if (raw is not null) try { await raw.ConfigureAwait(false); } catch (Exception error) { AddOriginalErrors(errors, raw, error); }
             if (raw?.IsCanceled == true && !Volatile.Read(ref source.CallbackFailed) && errors.Count != 0 && errors.All(ParentCancellation))
@@ -173,7 +173,7 @@ public sealed partial class WorkspaceToolService
                 foreach (var error in source.PublicationCauses) AddOriginalErrors(errors, null, error);
                 if (errors.Count == 0)
                 {
-                    try { source.Invoke(() => actual = body(source)); }
+                    try { _ = source.Invoke(() => actual = body(source)); }
                     catch (Exception error) { AddOriginalErrors(errors, null, error); }
                     if (actual is not null) try { result = await actual.ConfigureAwait(false); }
                         catch (Exception error) { AddOriginalErrors(errors, actual, error); }

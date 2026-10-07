@@ -72,7 +72,8 @@ public sealed partial class ResilientProviderRoutingModelClient
                 return original;
             });
             var required = RequiredCapabilities(checkpoint.OriginalNextRequest);
-            var restrictions = checkpoint.OriginalNextRequest.Tools.Select(tool => ModelToolPermissionMap.Map(tool.Name)).Distinct().ToArray();
+            var restrictions = checkpoint.OriginalNextRequest.Tools.Select(tool => ModelToolPermissionMap.Map(tool.Name))
+                .Where(capability => capability.HasValue).Select(capability => capability!.Value).Distinct().ToArray();
             var digest = SnapshotFingerprint(body.Expected);
             var current = await body.Read(() => taskCoordinator.GetAsync(body.Expected.TaskId, body.Token)).ConfigureAwait(false);
             if (current is null || SnapshotFingerprint(current) != digest)

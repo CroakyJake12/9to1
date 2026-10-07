@@ -195,7 +195,7 @@ public sealed partial class SqliteTaskRunColdRecoveryJournal : ITaskRunColdOrigi
         Exception? acquisition = null; Exception? terminal = null;
         try
         {
-            context.ProjectPhysical(() => sources.Invoke(() => actual = source.PrepareOriginalProjectRestorationWithinSourceAsync(material,
+            _ = context.ProjectPhysical(() => sources.Invoke(() => actual = source.PrepareOriginalProjectRestorationWithinSourceAsync(material,
                 ProjectCaller(sources, context), ProjectRetainer(sources, context), token)
                 ?? throw new InvalidOperationException("No actual project preparation Task was returned.")));
         }

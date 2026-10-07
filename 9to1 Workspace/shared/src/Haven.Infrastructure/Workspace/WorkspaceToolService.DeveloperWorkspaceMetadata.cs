@@ -23,7 +23,7 @@ public sealed partial class WorkspaceToolService
     {
         private readonly Func<IDeveloperProjectOriginalWorkspaceMetadataStore>? _originalWorkspaceStore;
         private readonly HashSet<WorkspaceMetadataPreparation> _workspaceMetadataPreparations = [];
-        private DeveloperCaptureSource(IDeveloperProjectOriginalReadAdmissionSource reads,
+        internal DeveloperCaptureSource(IDeveloperProjectOriginalReadAdmissionSource reads,
             Func<IDeveloperProjectOriginalPhysicalReadSelectionSource> selections,
             Func<IDeveloperProjectOriginalSetupPermissionSource> permissions,
             Func<IDeveloperProjectOriginalWorkspaceMetadataStore> store) : this(reads, selections, permissions)

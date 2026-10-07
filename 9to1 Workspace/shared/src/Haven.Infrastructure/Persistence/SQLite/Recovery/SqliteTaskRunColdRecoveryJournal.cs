@@ -489,7 +489,7 @@ public sealed partial class SqliteTaskRunColdRecoveryJournal(SqliteDatabase data
         sources.Invoke(() => { lease.Store.Validate(); return true; });
         if (lease.Claim.Entry.Capsule.OriginalProjectIdentity is not null)
             await ValidateOriginalProjectBoundaryWithinSourceAsync(lease.Claim, lease, actualExpected,
-                ProjectCaller(sources), ProjectRetainer(sources), token).ConfigureAwait(false);
+                ProjectCaller(sources, lease), ProjectRetainer(sources, lease), token).ConfigureAwait(false);
         if (await DemandActorAsync(sources, actualExpected.OwnerBinding!, token).ConfigureAwait(false) != lease.CurrentActor)
             throw new UnauthorizedAccessException("The actual current local activation changed.");
     }

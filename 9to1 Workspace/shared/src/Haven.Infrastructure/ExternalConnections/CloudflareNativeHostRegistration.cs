@@ -1,5 +1,6 @@
 using Haven.Application;
 using HavenOS.Home.Core;
+using HomePermissionTrustService = HavenOS.Home.PermissionsTrustNotifications.HomePermissionTrustService;
 using Microsoft.Extensions.DependencyInjection;
 namespace Haven.Infrastructure;
 
