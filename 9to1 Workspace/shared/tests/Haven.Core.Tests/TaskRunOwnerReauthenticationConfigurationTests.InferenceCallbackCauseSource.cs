@@ -29,7 +29,7 @@ public sealed partial class TaskRunOwnerReauthenticationConfigurationTests
             Assert.Contains(failure.Flatten().InnerExceptions, error => ReferenceEquals(error, refusal));
             Assert.All(failure.Flatten().InnerExceptions, error => Assert.Same(refusal, error));
             Assert.Equal(1, callbacks); Assert.Equal(0, catalogueReads);
-            Assert.Single(originals); Assert.All(originals, task => Assert.True(task.IsCompletedSuccessfully));
+            _ = Assert.Single(originals); Assert.All(originals, task => Assert.True(task.IsCompletedSuccessfully));
         }
         catch (Exception error) { primary = error; throw; }
         finally

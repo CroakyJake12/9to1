@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Haven.Application;
 using HavenOS.Home.Core;
+using HavenOS.Home.PermissionsTrustNotifications;
 using Xunit;
 
 namespace Haven.Infrastructure.Tests;

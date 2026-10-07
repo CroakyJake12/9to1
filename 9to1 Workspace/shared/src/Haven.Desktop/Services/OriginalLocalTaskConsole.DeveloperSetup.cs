@@ -171,7 +171,7 @@ public static partial class OriginalLocalTaskConsole
             var read = await Acquire(original, () => _setupReads!.AcquireOriginalAsync(selection, token)).ConfigureAwait(false);
             var capture = await Acquire(original, () => _setupSelections!.CaptureOriginalAsync(selection, read, token)).ConfigureAwait(false);
             var actualDestination = await Acquire(original, () => _setupScopes!.CaptureOriginalDestinationAsync(
-                configuration.StoreId, new HostedItemId(destinationFolder), token)).ConfigureAwait(false);
+                configuration.StoreId, new HavenOS.Files.HostedItemId(destinationFolder), token)).ConfigureAwait(false);
             var prepared = await Acquire(original, () => _setupJournal!.PrepareExistingOriginalAsync(setupId,
                 actualDestination.OriginalActor, actualDestination.OriginalStoreId, actualDestination.OriginalConfigurationDigest,
                 actualDestination.OriginalFolderId, actualDestination.OriginalFolderRevision, capture, workspaceId, 0,

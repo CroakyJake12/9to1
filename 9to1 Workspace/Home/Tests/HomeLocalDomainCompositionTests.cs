@@ -55,7 +55,7 @@ public sealed class HomeLocalDomainCompositionTests
                 new(["dev.root"], 1, [new("dev.root", "control-root")], false));
             var submitted = await domain.Permissions.AuthorizeAsync(request, CancellationToken.None);
             Assert.Equal(HomePermissionRequestState.PendingApproval, submitted.State);
-            var snapshot = await domain.Permissions.GetSnapshotAsync(CancellationToken.None);
+            var snapshot = await domain.Permissions.GetSnapshotAsync(cancellationToken: CancellationToken.None);
             var shown = Assert.Single(snapshot.PendingRequests, item => item.RequestId == submitted.RequestId);
             var digest = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(shown)));
             Assert.False(string.IsNullOrWhiteSpace(digest));
@@ -113,7 +113,7 @@ public sealed class HomeLocalDomainCompositionTests
         if (!OperatingSystem.IsLinux()) return;
         var captured = ExecutionContext.Capture()!;
         var source = new RestoringPrincipal(captured);
-        await WithDomain(source, async (domain, _) =>
+        await WithDomain(source, async (domain, expected) =>
         {
             source.Domain = domain;
             var actual = domain.StartOriginalAsync();
@@ -146,6 +146,7 @@ public sealed class HomeLocalDomainCompositionTests
             Directory.CreateDirectory(root);
             var mode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
                 UnixFileMode.GroupRead | UnixFileMode.GroupExecute | UnixFileMode.OtherRead | UnixFileMode.OtherExecute;
+            if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("The original local Home fixture requires Linux.");
             File.SetUnixFileMode(root, mode);
             var path = Path.Combine(root, "home-state.json");
             var failure = Assert.Throws<AggregateException>(() => { _ = new HomeLocalDomainComposition(new(path), source); });
@@ -165,6 +166,7 @@ public sealed class HomeLocalDomainCompositionTests
         WithTemporaryRoot(root, () =>
         {
             Directory.CreateDirectory(root);
+            if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("The original local Home fixture requires Linux.");
             File.SetUnixFileMode(root, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
             var target = Path.Combine(root, "original.json");
             File.WriteAllText(target, "retained-original");
@@ -197,6 +199,7 @@ public sealed class HomeLocalDomainCompositionTests
                 await AwaitEnrollment(domain, source.Raw.Task);
                 Directory.Move(root, displaced);
                 Directory.CreateDirectory(root);
+                if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("The original local Home fixture requires Linux.");
                 File.SetUnixFileMode(root, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
                 source.Raw.TrySetResult(await new OperatingSystemPrincipalSource().GetPrincipalAsync(CancellationToken.None));
                 var refusal = await Assert.ThrowsAsync<AggregateException>(() => actual);
@@ -530,6 +533,7 @@ public sealed class HomeLocalDomainCompositionTests
         try
         {
             Directory.CreateDirectory(root);
+            if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("The original local Home fixture requires Linux.");
             File.SetUnixFileMode(root, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
             domain = new(new(Path.Combine(root, "home-state.json")), principals, originalActionPolicies: policies,
                 originalSynchronousScope: originalScope, retainOriginalTask: retainRaw);

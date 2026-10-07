@@ -90,7 +90,7 @@ public static partial class OriginalLocalTaskConsole
     { lock (OutputGate) Console.Out.WriteLine(JsonSerializer.Serialize(value)); }
     private static void Capture(List<Exception> failures, Task? actual, Exception caught)
     {
-        foreach (var cause in actual?.Exception is { InnerExceptions.Count: > 0 } group ? group.InnerExceptions : new[] { caught })
+        foreach (var cause in actual?.Exception is { InnerExceptions.Count: > 0 } group ? (IEnumerable<Exception>)group.InnerExceptions : new[] { caught })
             if (!failures.Any(prior => ReferenceEquals(prior, cause))) failures.Add(cause);
     }
     private static void Throw(List<Exception> failures)
@@ -361,8 +361,8 @@ public static partial class OriginalLocalTaskConsole
                 }
                 case "space":
                 {
-                    var id = Ids(argument, 1)[0];
-                    var actual = await Acquire(original, () => Resolve<SpaceRegistry>(original).ReadExistingAsync(id, token)).ConfigureAwait(false)
+                    var spaceId = Ids(argument, 1)[0];
+                    var actual = await Acquire(original, () => Resolve<SpaceRegistry>(original).ReadExistingAsync(spaceId, token)).ConfigureAwait(false)
                         ?? throw new KeyNotFoundException("The saved Space is unavailable.");
                     _spaceId = actual.Id; Write(actual); break;
                 }
@@ -519,7 +519,8 @@ public static partial class OriginalLocalTaskConsole
         {
             var attachment = Attachment;
             var coordinator = Resolve<TaskExecutionCoordinator>(commandOriginal);
-            var task = attachment.View.Task.Snapshot;
+            var task = attachment.View.Task.Snapshot
+                ?? throw new InvalidOperationException("The selected attachment has no observed canonical Task snapshot.");
             lock (_gate)
                 if (_coldObservers.Count >= 128) throw new InvalidOperationException("Original cold observation custody requires retirement.");
             _ = _work.RunAsync(async original =>

@@ -173,6 +173,7 @@ public sealed class NativeFilesOriginalScopedEvidenceTests
         try
         {
             Directory.CreateDirectory(root);
+            if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("The original local Home fixture requires Linux.");
             File.SetUnixFileMode(root, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
             await rig.Principal.Initialize();
             rig.Domain = new(new(Path.Combine(root, "home-state.json")), rig.Principal,

@@ -86,7 +86,7 @@ public sealed partial class HomeColdProjectReadReconciliationTests
     [Fact]
     public async Task Actual_scoped_prepared_review_gate_is_released_after_raw_retention_failure()
     {
-        await WithSource(async (source, _, known) =>
+        await WithSource(async (source, unusedFactoryCause, known) =>
         {
             var broker = (HomeResourceOperationBroker)typeof(HomeColdProjectReadReconciliation).GetField("_broker", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(source)!;
             var prepared = broker.PrepareReviewForActor(new("controlled-prefix", "controlled-prefix-profile", null, null, "controlled"), "dev",
@@ -99,7 +99,7 @@ public sealed partial class HomeColdProjectReadReconciliationTests
                 actual = broker.AuthorizePreparedReviewWithinOriginalSourceAsync(prepared, body => body(), raw => { originals.Add(raw); throw cause; }, CancellationToken.None);
                 var failure = await Assert.ThrowsAsync<AggregateException>(() => actual);
                 Assert.True(actual.IsFaulted); Assert.Contains(Leaves(failure), error => ReferenceEquals(error, cause));
-                Assert.Single(originals); Assert.True(originals[0].IsCompletedSuccessfully);
+                _ = Assert.Single(originals); Assert.True(originals[0].IsCompletedSuccessfully);
                 var gate = (SemaphoreSlim)typeof(HomeResourcePreparedReview).GetField("Gate", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(prepared)!;
                 Assert.Equal(1, gate.CurrentCount);
             }

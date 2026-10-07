@@ -50,7 +50,9 @@ public sealed partial class TaskRunOwnerReauthenticationConfigurationTests
                 }, null);
                 actual = authority.CaptureSelectedRouteWithinOriginalSourceAsync(current, provider.Model, [ToolCapability.Text], [],
                     callback => callback(), raw => { originals.Add(raw); if (ReferenceEquals(raw, held.Task)) enrolled.TrySetResult(); }, default);
-                originals.Add(actual); await enrolled.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+                originals.Add(actual);
+                using var observationCancellation = new CancellationTokenSource();
+                await enrolled.Task.WaitAsync(TimeSpan.FromSeconds(5), observationCancellation.Token);
                 Assert.Contains(originals, raw => ReferenceEquals(raw, held.Task)); Assert.False(actual.IsCompleted);
                 held.TrySetResult(configuration.Configuration); await actual;
                 Assert.True(guarded > 0); Assert.Equal(1, provider.Reads);
@@ -116,7 +118,8 @@ public sealed partial class TaskRunOwnerReauthenticationConfigurationTests
                 var current = proposed with { OwnerBinding = await mint };
                 var actual = authority.CaptureSelectedRouteWithinOriginalSourceAsync(current, inner.Model, [ToolCapability.Text], [],
                     callback => callback(), raw => { originals.Add(raw); if (ReferenceEquals(raw, held.Task)) enrolled.TrySetResult(); }, default); originals.Add(actual);
-                await enrolled.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+                using var observationCancellation = new CancellationTokenSource();
+                await enrolled.Task.WaitAsync(TimeSpan.FromSeconds(5), observationCancellation.Token);
                 Assert.False(actual.IsCompleted); Assert.Equal(0, refused);
                 held.TrySetResult(true); var candidate = await actual;
                 Assert.Equal(1, refused); Assert.Equal(inner.Model.Name, candidate.ModelId);
