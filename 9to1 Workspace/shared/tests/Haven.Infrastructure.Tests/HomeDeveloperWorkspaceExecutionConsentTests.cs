@@ -232,7 +232,7 @@ public sealed partial class HomeDeveloperWorkspaceExecutionConsentTests
         }
         internal async Task<IWorkspaceOriginalProcessStartConsent> Accept()
         {
-            await Prepare(); var original = Acquire(); var request = await Pending(); RequestId = request.RequestId;
+            await Prepare(); var original = Acquire(); var request = await Pending(); RequestId = Guid.ParseExact(request.RequestId, "N");
             Assert.True((await Own(Permissions.DecideAsync(request.RequestId, HomeApprovalChoice.Accept))).Succeeded); return await original;
         }
     }

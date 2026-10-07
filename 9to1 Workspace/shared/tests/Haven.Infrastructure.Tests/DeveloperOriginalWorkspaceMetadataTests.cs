@@ -238,7 +238,7 @@ public sealed class DeveloperOriginalWorkspaceMetadataTests
     }
     private sealed class SetupSource : IDeveloperProjectOriginalSetupPermissionSource
     {
-        private readonly HashSet<Permission> _issued = []; internal Task Validation = Task.CompletedTask; internal Action? BeforeValidation;
+        private readonly HashSet<Permission> _issued = []; internal Task Validation = Task.CompletedTask; internal Action? BeforeValidation = null;
         internal Permission Issue(DeveloperProjectSetupIntent intent) { var result = new Permission(intent); _issued.Add(result); return result; }
         public Task<IDeveloperProjectOriginalSetupPermission> AcquireOriginalAsync(DeveloperProjectSetupIntent intent, IDeveloperProjectOriginalSourceCapture capture, CancellationToken token) => throw new NotSupportedException("No Home setup review is simulated.");
         public Task ValidateOriginalAsync(DeveloperProjectSetupIntent intent, IDeveloperProjectOriginalSetupPermission actual, CancellationToken token)
@@ -259,7 +259,7 @@ public sealed class DeveloperOriginalWorkspaceMetadataTests
     }
     private sealed class Entry(DeveloperProjectSetupStep step) : IDeveloperProjectOriginalSetupStepEntry, IDeveloperProjectOriginalSetupScopedStepEntry
     {
-        internal DeveloperProjectSetupStep Step => step; internal bool Closed; internal Action? Check; internal Task<bool>? HeldCheck; private bool _used;
+        internal DeveloperProjectSetupStep Step => step; internal bool Closed; internal Action? Check = null; internal Task<bool>? HeldCheck; private bool _used;
         public void DemandOriginalStepEntry(DeveloperProjectSetupStep actual) { if (Closed || !ReferenceEquals(actual, step)) throw new UnauthorizedAccessException(); }
         public ValueTask<bool> CheckOriginalStepCommitAsync(DeveloperProjectSetupStep actual, CancellationToken token)
         { token.ThrowIfCancellationRequested(); DemandOriginalStepEntry(actual); Check?.Invoke(); return HeldCheck is { } original ? new ValueTask<bool>(original) : ValueTask.FromResult(true); }

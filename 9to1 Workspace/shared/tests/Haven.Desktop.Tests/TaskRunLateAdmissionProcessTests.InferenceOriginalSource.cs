@@ -323,7 +323,7 @@ public sealed partial class TaskRunLateAdmissionProcessTests
             expected = failure;
             Assert.IsType<InvalidOperationException>(failure);
             Assert.True(original.IsFaulted);
-            Assert.Single(retained);
+            _ = Assert.Single(retained);
             Assert.True(retained[0].IsCompletedSuccessfully);
             Assert.Same(admission, ReadIssued(h.Coordinator, admission.AttemptId));
         }

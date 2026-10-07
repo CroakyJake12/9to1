@@ -239,7 +239,7 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
       Task<string>? frame = null; var errors = new List<Exception>();
       h.Repository.OriginalRead = (_, _) =>
       {
-        if (h.Provider.CatalogueCalls <= catalogueBefore) return Task.FromResult(current);
+        if (h.Provider.CatalogueCalls <= catalogueBefore) return Task.FromResult<TaskExecutionSnapshot?>(current);
         entered.TrySetResult(); return released.Task;
       };
       try

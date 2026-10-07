@@ -21,8 +21,8 @@ public sealed partial class ChatCloudPermissionCallerTests
                 basis.Claim, basis.Context, basis.Before, callback => { callbacks++; callback(); },
                 task => { lock (retained) retained.Add(task); }, TestContext.Current.CancellationToken));
             var failure = await Assert.ThrowsAnyAsync<Exception>(() => actual);
-            var refusal = Assert.Single(Leaves(failure).Where(value => value is InvalidOperationException
-                && value.Message == "This project capsule has no exact source-captured, bounded resource material."));
+            var refusal = Assert.Single(Leaves(failure), value => value is InvalidOperationException
+                && value.Message == "This project capsule has no exact source-captured, bounded resource material.");
             originals.Expect(refusal);
             Assert.True(actual.IsFaulted); Assert.False(actual.IsCanceled); Assert.True(callbacks > 0);
             lock (retained) Assert.NotEmpty(retained);

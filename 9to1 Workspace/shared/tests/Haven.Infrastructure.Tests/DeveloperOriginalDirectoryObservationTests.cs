@@ -13,7 +13,8 @@ public sealed partial class DeveloperOriginalDirectoryObservationTests
     [WorkspaceOriginalLinuxTests.LinuxOriginalFact]
     public async Task Same_existing_directory_observation_closes_actual_handle_without_source_copy_or_new_root()
     {
-        await using var rig = new Rig(); var token = TestContext.Current.CancellationToken;
+        using var directoryLifetime = new CancellationTokenSource();
+        await using var rig = new Rig(); var token = directoryLifetime.Token;
         var capture = await rig.Capture(token); var intent = rig.Intent(capture); var permission = rig.Setups.Issue(intent);
         var step = intent.Steps[1]; var before = File.ReadAllBytes(rig.File);
         var prepared = await rig.Directories.PrepareOriginalDirectoryAsync(intent, capture, permission, step, token);
@@ -38,7 +39,8 @@ public sealed partial class DeveloperOriginalDirectoryObservationTests
     [WorkspaceOriginalLinuxTests.LinuxOriginalFact]
     public async Task Replaced_actual_directory_refuses_prior_handle_observation_without_replaying_original_step()
     {
-        await using var rig = new Rig(); var token = TestContext.Current.CancellationToken;
+        using var directoryLifetime = new CancellationTokenSource();
+        await using var rig = new Rig(); var token = directoryLifetime.Token;
         var capture = await rig.Capture(token); var intent = rig.Intent(capture); var permission = rig.Setups.Issue(intent);
         var step = intent.Steps[1]; var prepared = await rig.Directories.PrepareOriginalDirectoryAsync(intent, capture, permission, step, token);
         try
@@ -51,7 +53,7 @@ public sealed partial class DeveloperOriginalDirectoryObservationTests
                 var actual = entry.RunOriginalStep(step, () => prepared.ObserveOriginalDirectoryAsync(entry, token), token);
                 await Assert.ThrowsAnyAsync<Exception>(() => actual);
                 Assert.True(actual.IsFaulted);
-                Assert.Throws<UnauthorizedAccessException>(() => prepared.ObserveOriginalDirectoryAsync(entry, token));
+                Assert.Throws<UnauthorizedAccessException>((Action)(() => { _ = prepared.ObserveOriginalDirectoryAsync(entry, token); }));
                 Assert.Equal(1, permission.EntryStarts); Assert.Equal("different physical directory", File.ReadAllText(rig.File));
             }
             finally { await entry.DisposeAsync(); }
@@ -62,7 +64,8 @@ public sealed partial class DeveloperOriginalDirectoryObservationTests
     [WorkspaceOriginalLinuxTests.LinuxOriginalFact]
     public async Task Held_actual_setup_validation_keeps_same_source_close_pending_and_retains_faulted_oce_siblings()
     {
-        await using var rig = new Rig(); var token = TestContext.Current.CancellationToken;
+        using var directoryLifetime = new CancellationTokenSource();
+        await using var rig = new Rig(); var token = directoryLifetime.Token;
         var capture = await rig.Capture(token); var intent = rig.Intent(capture); var permission = rig.Setups.Issue(intent);
         var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -95,7 +98,8 @@ public sealed partial class DeveloperOriginalDirectoryObservationTests
     [WorkspaceOriginalLinuxTests.LinuxOriginalFact]
     public async Task Restored_actual_held_entry_callback_cannot_join_same_directory_source_original()
     {
-        await using var rig = new Rig(); var token = TestContext.Current.CancellationToken;
+        using var directoryLifetime = new CancellationTokenSource();
+        await using var rig = new Rig(); var token = directoryLifetime.Token;
         var capture = await rig.Capture(token); var intent = rig.Intent(capture); var permission = rig.Setups.Issue(intent);
         var oldContext = ExecutionContext.Capture(); Exception? refusal = null;
         var prepared = await rig.Directories.PrepareOriginalDirectoryAsync(intent, capture, permission, intent.Steps[1], token);
@@ -122,7 +126,8 @@ public sealed partial class DeveloperOriginalDirectoryObservationTests
     [WorkspaceOriginalLinuxTests.LinuxOriginalFact]
     public async Task Public_preparation_close_joins_same_held_observation_before_actual_handle_cleanup()
     {
-        await using var rig = new Rig(); var token = TestContext.Current.CancellationToken;
+        using var directoryLifetime = new CancellationTokenSource();
+        await using var rig = new Rig(); var token = directoryLifetime.Token;
         var capture = await rig.Capture(token); var intent = rig.Intent(capture); var permission = rig.Setups.Issue(intent);
         var step = intent.Steps[1]; var prepared = await rig.Directories.PrepareOriginalDirectoryAsync(intent, capture, permission, step, token);
         var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

@@ -12,7 +12,8 @@ public sealed partial class DeveloperOriginalDirectoryObservationTests
     [WorkspaceOriginalLinuxTests.LinuxOriginalFact]
     public async Task Registration_close_joins_exact_held_raw_metadata_before_descriptor_retirement_and_preserves_private_result_pairing()
     {
-        await using var rig = new Rig(); var token = TestContext.Current.CancellationToken;
+        using var directoryLifetime = new CancellationTokenSource();
+        await using var rig = new Rig(); var token = directoryLifetime.Token;
         var original = await OriginalRegistration(rig, token);
         var held = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
         var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -47,7 +48,8 @@ public sealed partial class DeveloperOriginalDirectoryObservationTests
     [WorkspaceOriginalLinuxTests.LinuxOriginalFact]
     public async Task Registration_actual_faulted_oce_and_sibling_remain_original_faults_without_private_result_or_replay()
     {
-        await using var rig = new Rig(); var token = TestContext.Current.CancellationToken; var original = await OriginalRegistration(rig, token);
+        using var directoryLifetime = new CancellationTokenSource();
+        await using var rig = new Rig(); var token = directoryLifetime.Token; var original = await OriginalRegistration(rig, token);
         var first = new OperationCanceledException("Original raw metadata fault, no canceled Task."); var second = new IOException("Original raw metadata sibling.");
         var raw = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously); raw.SetException([first, second]);
         Entry? entry = null; Task<object>? driver = null; var errors = new List<Exception>();
@@ -77,7 +79,8 @@ public sealed partial class DeveloperOriginalDirectoryObservationTests
     [WorkspaceOriginalLinuxTests.LinuxOriginalFact]
     public async Task Restored_metadata_factory_cannot_join_same_kernel_registration_original_and_second_body_is_refused()
     {
-        await using var rig = new Rig(); var token = TestContext.Current.CancellationToken; var original = await OriginalRegistration(rig, token);
+        using var directoryLifetime = new CancellationTokenSource();
+        await using var rig = new Rig(); var token = directoryLifetime.Token; var original = await OriginalRegistration(rig, token);
         var oldContext = ExecutionContext.Capture(); Exception? refusal = null; Entry? entry = null; Task<object>? driver = null;
         var result = new object(); var raw = Task.FromResult(result); var calls = 0; var errors = new List<Exception>();
         try
@@ -107,7 +110,8 @@ public sealed partial class DeveloperOriginalDirectoryObservationTests
     [WorkspaceOriginalLinuxTests.LinuxOriginalFact]
     public async Task Post_await_restored_source_callback_uses_same_kernel_scope_and_retains_exact_nested_task()
     {
-        await using var rig = new Rig(); var token = TestContext.Current.CancellationToken;
+        using var directoryLifetime = new CancellationTokenSource();
+        await using var rig = new Rig(); var token = directoryLifetime.Token;
         var original = await OriginalRegistration(rig, token); var oldContext = ExecutionContext.Capture();
         var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

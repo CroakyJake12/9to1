@@ -36,6 +36,7 @@ public sealed partial class OriginalLocalTaskConsoleSmokeTests
         try
         {
             root = Directory.CreateTempSubdirectory("haven-real-console-smoke-").FullName;
+            PrepareOriginalPrivateHomeDirectory(root);
             suppliedInput = new(input);
             Console.SetIn(suppliedInput);
             Console.SetOut(output);
@@ -59,10 +60,10 @@ public sealed partial class OriginalLocalTaskConsoleSmokeTests
         {
             // Independent joins retain genuine originals even if an assertion or read failed.
             if (actualRun is not null)
-                try { await actualRun.ConfigureAwait(false); }
+                try { await actualRun.ConfigureAwait(true); }
                 catch (Exception cause) { Capture(failures, actualRun, cause); }
             if (actualRead is not null)
-                try { await actualRead.ConfigureAwait(false); }
+                try { await actualRead.ConfigureAwait(true); }
                 catch (Exception cause) { Capture(failures, actualRead, cause); }
             try { Console.SetIn(previousInput); }
             catch (Exception cause) { Capture(failures, null, cause); }

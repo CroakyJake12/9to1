@@ -95,7 +95,7 @@ public sealed partial class FilesDeveloperOriginalDirectorySetupProducerTests
             release.TrySetResult(); var result = await actual;
             Assert.IsType<InvalidOperationException>(refusal); Assert.True(result.OriginalMetadataResult.IsSuccess);
             Assert.Equal(DeveloperProjectSetupStepState.Acknowledged, result.AcknowledgedCheckpoint.Observations[rig.Prepared.Intent.Steps.IndexOf(step)].State);
-            Assert.True(OriginalKernelTasks(rig.Kernel).Contains(nested));
+            Assert.Contains(nested, OriginalKernelTasks(rig.Kernel));
             Assert.Equal("original selected source", File.ReadAllText(rig.SourcePath));
         }
         catch (Exception error) { errors.Add(error); }

@@ -56,7 +56,7 @@ public sealed partial class StrataOriginalCompositionRegistrationTests
         catch (Exception error) { primary = error; throw; }
         finally
         {
-            await CloseActualFixtureAsync(provider, configurations, directory, primary).ConfigureAwait(false);
+            await CloseActualFixtureAsync(provider, configurations, directory, primary);
         }
     }
     [Fact]
@@ -92,7 +92,7 @@ public sealed partial class StrataOriginalCompositionRegistrationTests
         catch (Exception error) { primary = error; throw; }
         finally
         {
-            await CloseActualFixtureAsync(provider, configurations, directory, primary).ConfigureAwait(false);
+            await CloseActualFixtureAsync(provider, configurations, directory, primary);
         }
     }
     private static async Task CloseActualFixtureAsync(ServiceProvider? provider,

@@ -68,7 +68,8 @@ public sealed class OriginalTaskActorObservationTests
     private static IEnumerable<Exception> Leaves(Exception cause) => cause is AggregateException group ? group.InnerExceptions.SelectMany(Leaves) : [cause];
     private static async Task Run(Func<Rig, Task> body)
     {
-        var rig = new Rig(); Exception? primary = null; var failures = new List<Exception>();
+        using var observationLifetime = new CancellationTokenSource();
+        var rig = new Rig(observationLifetime.Token); Exception? primary = null; var failures = new List<Exception>();
         try { rig.Root = Directory.CreateTempSubdirectory("actual-task-actor-").FullName; await body(rig); }
         catch (Exception cause) { primary = cause; }
         // Acquire all actual owner closes independently before joining any observation.
@@ -82,10 +83,10 @@ public sealed class OriginalTaskActorObservationTests
         if (failures.Count != 0) throw new AggregateException("Actual Task actor observation and independent cleanup failed.", failures);
         void Add(Exception cause) { foreach (var leaf in Leaves(cause)) if (!rig.Expected.Contains(leaf) && !failures.Any(value => ReferenceEquals(value, leaf))) failures.Add(leaf); }
     }
-    private sealed class Rig
+    private sealed class Rig(CancellationToken testToken)
     {
         internal string? Root; internal ProviderConfigurationStore? Configurations;
-        internal CancellationToken Token => TestContext.Current.CancellationToken;
+        internal CancellationToken Token => testToken;
         internal readonly List<TaskRunPermissionAuthority> Authorities = []; internal readonly List<Task> Originals = [];
         internal readonly HashSet<Exception> Expected = new(ReferenceEqualityComparer.Instance);
         internal T Own<T>(T raw) where T : Task { OwnRaw(raw); return raw; }

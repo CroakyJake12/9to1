@@ -49,8 +49,8 @@ public sealed partial class ChatCloudPermissionCallerTests
         {
             var read = fresh.ObserveOriginalColdInputAsync(before.TaskId, before.ExecutionId, TestContext.Current.CancellationToken);
             var failure = await Assert.ThrowsAnyAsync<Exception>(() => read);
-            var refused = Assert.Single(Leaves(failure).Where(value => value is UnauthorizedAccessException
-                && value.Message == "The original capsule provenance authentication failed."));
+            var refused = Assert.Single(Leaves(failure), value => value is UnauthorizedAccessException
+                && value.Message == "The original capsule provenance authentication failed.");
             expected.Add(refused);
             Assert.True(read.IsFaulted); Assert.Equal(0, fixture.Client.Dispatches);
             Assert.Equal(before.TaskId, (await fixture.Rows.GetAsync(before.TaskId, TestContext.Current.CancellationToken))!.TaskId);

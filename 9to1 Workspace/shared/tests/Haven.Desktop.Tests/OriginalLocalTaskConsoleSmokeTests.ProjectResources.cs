@@ -32,6 +32,7 @@ public sealed partial class OriginalLocalTaskConsoleSmokeTests
         try
         {
             root = Directory.CreateTempSubdirectory("haven-real-project-console-").FullName;
+            PrepareOriginalPrivateHomeDirectory(root);
             Environment.SetEnvironmentVariable(NativePersonalTaskColdRecoveryConfiguration.OriginalEnvironmentSelector, "1");
             Console.SetIn(input);
             Console.SetOut(output);
@@ -62,7 +63,7 @@ public sealed partial class OriginalLocalTaskConsoleSmokeTests
         {
             foreach (var actual in new Task?[] { actualRun, recoveryRead, databaseOpen, count })
                 if (actual is not null)
-                    try { await actual.ConfigureAwait(false); }
+                    try { await actual.ConfigureAwait(true); }
                     catch (Exception cause) { Capture(failures, actual, cause); }
             try { query?.Dispose(); }
             catch (Exception cause) { Capture(failures, null, cause); }
@@ -71,7 +72,7 @@ public sealed partial class OriginalLocalTaskConsoleSmokeTests
                 try { databaseClose = database.DisposeAsync().AsTask(); }
                 catch (Exception cause) { Capture(failures, null, cause); }
                 if (databaseClose is not null)
-                    try { await databaseClose.ConfigureAwait(false); }
+                    try { await databaseClose.ConfigureAwait(true); }
                     catch (Exception cause) { Capture(failures, databaseClose, cause); }
             }
             try { Environment.SetEnvironmentVariable(NativePersonalTaskColdRecoveryConfiguration.OriginalEnvironmentSelector, previousSelector); }

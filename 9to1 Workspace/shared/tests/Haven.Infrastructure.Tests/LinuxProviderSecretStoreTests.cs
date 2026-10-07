@@ -19,12 +19,13 @@ public sealed class LinuxProviderSecretStoreTests
     public async Task Actual_private_store_roundtrips_without_plaintext_and_reopens_then_deletes()
     {
         if (!OperatingSystem.IsLinux()) return;
+        using var credentialLifetime = new CancellationTokenSource();
         var root = Directory.CreateTempSubdirectory("haven-credential-control-").FullName;
         LinuxProviderSecretStore? source = null; Exception? primary = null;
         try
         {
             File.SetUnixFileMode(root, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-            var token = TestContext.Current.CancellationToken;
+            var token = credentialLifetime.Token;
             var paths = new Paths(root); source = new(paths); const string value = "controlled-not-a-real-OAuth-token";
             Assert.True(source.HasOriginalComposition(paths));
             await source.SetAsync("mcp.controlled", "oauth.tokens", value, token);
@@ -44,12 +45,13 @@ public sealed class LinuxProviderSecretStoreTests
     public async Task Substituted_namespace_or_modified_ciphertext_is_not_a_credential()
     {
         if (!OperatingSystem.IsLinux()) return;
+        using var credentialLifetime = new CancellationTokenSource();
         var root = Directory.CreateTempSubdirectory("haven-credential-control-").FullName;
         LinuxProviderSecretStore? source = null; Exception? primary = null;
         try
         {
             File.SetUnixFileMode(root, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-            var token = TestContext.Current.CancellationToken;
+            var token = credentialLifetime.Token;
             source = new(new Paths(root));
             await source.SetAsync("first", "name", "controlled", token);
             var original = Directory.GetFiles(Path.Combine(root, "Credentials"), "*.credential").Single();

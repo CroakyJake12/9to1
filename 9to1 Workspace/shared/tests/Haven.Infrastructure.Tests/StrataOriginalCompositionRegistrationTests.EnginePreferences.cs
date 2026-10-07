@@ -37,6 +37,6 @@ public sealed partial class StrataOriginalCompositionRegistrationTests
             Assert.False(authority.IsOriginalAdmissionSealed);
         }
         catch (Exception cause) { primary = cause; throw; }
-        finally { await CloseActualFixtureAsync(provider, configurations, directory, primary).ConfigureAwait(false); }
+        finally { await CloseActualFixtureAsync(provider, configurations, directory, primary); }
     }
 }

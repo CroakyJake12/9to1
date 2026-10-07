@@ -85,6 +85,7 @@ public sealed class StrataProtectedArtifactSourceTests
         var path = Directory.CreateTempSubdirectory("strata-kernel-").FullName; object? root = null;
         try
         {
+            if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("The original protected Strata fixture requires Linux.");
             File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
             root = Root(path, false); Call(root, "DemandCurrent");
             Directory.Move(path, path + "-old"); Directory.CreateDirectory(path);
@@ -99,6 +100,7 @@ public sealed class StrataProtectedArtifactSourceTests
         var path = Directory.CreateTempSubdirectory("strata-kernel-").FullName;
         try
         {
+            if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("The original protected Strata fixture requires Linux.");
             File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
             Directory.CreateSymbolicLink(path + "-link", path);
             var error = Assert.Throws<TargetInvocationException>(() => Root(path + "-link", false));
@@ -114,6 +116,7 @@ public sealed class StrataProtectedArtifactSourceTests
         var scope = new Scope(); var work = Work(scope); var bytes = Encoding.ASCII.GetBytes("actual mutable bytes");
         try
         {
+            if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("The original protected Strata fixture requires Linux.");
             File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
             File.WriteAllBytes(Path.Combine(path, "worker"), bytes);
             File.SetUnixFileMode(Path.Combine(path, "worker"), UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);

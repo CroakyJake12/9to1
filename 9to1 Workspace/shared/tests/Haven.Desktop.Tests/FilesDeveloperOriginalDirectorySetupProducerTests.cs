@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Haven.Application;
 using HavenOS.Apps.Dev;
 using Haven.Infrastructure;
@@ -51,7 +52,8 @@ public sealed partial class FilesDeveloperOriginalDirectorySetupProducerTests
 
     public sealed class LinuxDirectoryFactAttribute : FactAttribute
     {
-        public LinuxDirectoryFactAttribute()
+        public LinuxDirectoryFactAttribute([CallerFilePath] string? sourceFilePath = null, [CallerLineNumber] int sourceLineNumber = 0)
+            : base(sourceFilePath, sourceLineNumber)
         { if (!OperatingSystem.IsLinux()) Skip = "The maintained original kernel directory boundary is Linux-only; Windows execution remains unvalidated."; }
     }
 

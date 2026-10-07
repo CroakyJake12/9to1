@@ -60,7 +60,8 @@ public sealed class HomeOriginalScopedOwnershipReadTests
     private static IEnumerable<Exception> Leaves(Exception cause) => cause is AggregateException group ? group.InnerExceptions.SelectMany(Leaves) : [cause];
     private static async Task Run(Func<Rig, Task> body)
     {
-        var rig = new Rig(); Exception? primary = null; var failures = new List<Exception>();
+        using var observationLifetime = new CancellationTokenSource();
+        var rig = new Rig(observationLifetime.Token); Exception? primary = null; var failures = new List<Exception>();
         try { rig.Root = Directory.CreateTempSubdirectory("scoped-ownership-").FullName; await body(rig); }
         catch (Exception cause) { primary = cause; }
         foreach (var actual in rig.Originals.Distinct<Task>(ReferenceEqualityComparer.Instance))
@@ -69,13 +70,13 @@ public sealed class HomeOriginalScopedOwnershipReadTests
         if (primary is not null) failures.Insert(0, primary);
         if (failures.Count != 0) throw new AggregateException("Actual scoped Home ownership/body and independent raw cleanup failed.", failures);
     }
-    private sealed class Rig
+    private sealed class Rig(CancellationToken testToken)
     {
         internal string? Root; internal bool UseLegacy; internal readonly Principal Principal = new(); internal readonly Evidence Evidence = new();
         internal AuthenticatedResourceActor? Actor; internal HomeResourceStoreOwnershipAuthority? Authority;
         internal readonly object Parent = new(); internal readonly List<Task> Originals = [];
         internal readonly HashSet<Exception> Expected = new(ReferenceEqualityComparer.Instance);
-        internal CancellationToken Token => TestContext.Current.CancellationToken;
+        internal CancellationToken Token => testToken;
         internal void Scope(Action body) => CloudflareOriginalExecutionGuard.InvokeOriginal(Parent, () => { body(); return true; });
         internal void OwnRaw(Task raw) { if (!Originals.Any(value => ReferenceEquals(value, raw))) Originals.Add(raw); }
         internal T Own<T>(T raw) where T : Task { OwnRaw(raw); return raw; }

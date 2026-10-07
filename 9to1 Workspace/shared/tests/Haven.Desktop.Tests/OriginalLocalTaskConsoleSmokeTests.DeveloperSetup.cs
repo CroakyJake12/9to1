@@ -32,6 +32,7 @@ public sealed partial class OriginalLocalTaskConsoleSmokeTests
         try
         {
             root = Directory.CreateTempSubdirectory("haven-real-fresh-setup-console-").FullName;
+            PrepareOriginalPrivateHomeDirectory(root);
             filesRoot = Directory.CreateTempSubdirectory("haven-explicit-empty-files-").FullName;
             Environment.SetEnvironmentVariable(selector, "0");
             input = new StringReader("files-configure " + filesRoot + "\nfiles-status\nhome-requests\n" + (quit ? "quit\n" : ""));
@@ -52,14 +53,14 @@ public sealed partial class OriginalLocalTaskConsoleSmokeTests
             var observed = await actualHomeRead;
             Assert.True(observed.IsSuccess);
             var state = observed.State ?? throw new InvalidOperationException("The real Home store returned no state.");
-            var record = Assert.Single(state.Records.Where(value => value.RecordType == "files.native-workspace"));
+            var record = Assert.Single(state.Records, value => value.RecordType == "files.native-workspace");
             var configuration = record.Payload.Deserialize<NativeFilesWorkspaceConfiguration>()
                 ?? throw new InvalidOperationException("No actual persisted Files configuration exists.");
             Assert.Equal(filesRoot, configuration.RootDirectory);
             Assert.NotEqual(Guid.Empty, configuration.StoreId);
             Assert.NotEqual(Guid.Empty, configuration.AppFolders["write"].Value);
             Assert.True(Directory.Exists(Path.Combine(filesRoot, "Write")));
-            Assert.Empty(state.Records.Where(value => value.RecordType.StartsWith("dev.project.setup", StringComparison.Ordinal)));
+            Assert.DoesNotContain(state.Records, value => value.RecordType.StartsWith("dev.project.setup", StringComparison.Ordinal));
             database = new SqliteConnection(new SqliteConnectionStringBuilder
             { DataSource = Path.Combine(root, "haven.db"), Mode = SqliteOpenMode.ReadOnly, Pooling = false }.ToString());
             databaseOpen = database.OpenAsync(token); await databaseOpen;
@@ -72,7 +73,7 @@ public sealed partial class OriginalLocalTaskConsoleSmokeTests
         {
             foreach (var actual in new Task?[] { actualRun, actualHomeRead, databaseOpen, count })
                 if (actual is not null)
-                    try { await actual.ConfigureAwait(false); }
+                    try { await actual.ConfigureAwait(true); }
                     catch (Exception cause) { Capture(failures, actual, cause); }
             try { query?.Dispose(); } catch (Exception cause) { Capture(failures, null, cause); }
             if (database is not null)
@@ -80,7 +81,7 @@ public sealed partial class OriginalLocalTaskConsoleSmokeTests
                 try { databaseClose = database.DisposeAsync().AsTask(); }
                 catch (Exception cause) { Capture(failures, null, cause); }
                 if (databaseClose is not null)
-                    try { await databaseClose.ConfigureAwait(false); }
+                    try { await databaseClose.ConfigureAwait(true); }
                     catch (Exception cause) { Capture(failures, databaseClose, cause); }
             }
             try { Environment.SetEnvironmentVariable(selector, previousSelector); }

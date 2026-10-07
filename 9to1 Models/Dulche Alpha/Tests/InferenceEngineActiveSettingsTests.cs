@@ -193,7 +193,7 @@ public sealed class InferenceEngineActiveSettingsTests
         }
         var allowed=expected.Where(task=>task?.Exception is not null).SelectMany(task=>Graph(task!.Exception!)).ToHashSet(ReferenceEqualityComparer.Instance);
         bool Known(Exception cause)=>allowed.Contains(cause)||cause is AggregateException group&&group.InnerExceptions.All(Known);
-        var unexpected=causes.Where(cause=>!Known(cause)).Distinct(ReferenceEqualityComparer.Instance).ToList();
+        var unexpected=causes.Where(cause=>!Known(cause)).Distinct<Exception>(ReferenceEqualityComparer.Instance).ToList();
         if(primary is not null) unexpected.Insert(0,primary);
         if(unexpected.Count==1) ExceptionDispatchInfo.Capture(unexpected[0]).Throw();
         if(unexpected.Count>1) throw new AggregateException("Actual active-engine control and independent cleanup failed.",unexpected);

@@ -205,7 +205,7 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
                 [new("fixture.echo", new Dictionary<string, JsonElement> { ["value"] = element }, "actual-call")]));
             var bound = await h.BindAsync(tools: true);
             var values = await h.ConsumeAsync(bound);
-            var proposal = Assert.Single(values.Where(v => v.ToolProposal is not null)).ToolProposal!;
+            var proposal = Assert.Single(values, v => v.ToolProposal is not null).ToolProposal!;
             document.Dispose();
             Assert.Equal("actual-call", proposal.InvocationId);
             Assert.Equal("original-json", proposal.Arguments.GetProperty("value").GetString());

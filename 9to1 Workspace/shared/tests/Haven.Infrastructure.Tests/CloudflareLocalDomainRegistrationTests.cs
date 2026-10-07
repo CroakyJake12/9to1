@@ -2,6 +2,7 @@ using Haven.Application;
 using Haven.Core;
 using Haven.Infrastructure;
 using HavenOS.Home.Core;
+using HavenOS.Home.PermissionsTrustNotifications;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -15,6 +16,7 @@ public sealed class CloudflareLocalDomainRegistrationTests
     public async Task Actual_local_aliases_share_domain_and_require_original_start_before_setup()
     {
         if (!OperatingSystem.IsLinux()) return;
+        using var domainLifetime = new CancellationTokenSource();
         string? root = null; CloudflareLocalDomainRegistration? registration = null; ServiceProvider? provider = null;
         Exception? primary = null;
         try
@@ -31,10 +33,10 @@ public sealed class CloudflareLocalDomainRegistrationTests
             Assert.Same(registration.OriginalHome.Broker, provider.GetRequiredService<HomeResourceOperationBroker>());
             Assert.Same(provider.GetRequiredService<LinuxProviderSecretStore>(), provider.GetRequiredService<IProviderSecretStore>());
             Assert.Null(provider.GetService<HomeNativeWindowsComposition>());
-            Assert.Throws<CloudflareSetupRequiredException>((Action)(() => { _ = owner.GetSetupAsync(TestContext.Current.CancellationToken); }));
+            Assert.Throws<CloudflareSetupRequiredException>((Action)(() => { _ = owner.GetSetupAsync(domainLifetime.Token); }));
             var start = registration.StartOriginalHomeAsync(); Assert.Same(start, registration.OriginalStartTask); await start;
             Assert.Same(owner, registration.CaptureOriginalOwner(provider));
-            var setup = await owner.GetSetupAsync(TestContext.Current.CancellationToken);
+            var setup = await owner.GetSetupAsync(domainLifetime.Token);
             Assert.False(setup.Configured); Assert.Equal("CF_SETUP_REQUIRED", setup.Code);
         }
         catch (Exception cause) { primary = cause; }
@@ -65,6 +67,7 @@ public sealed class CloudflareLocalDomainRegistrationTests
     public async Task Actual_request_precedes_held_start_join_and_raw_principal_fault_is_conserved()
     {
         if (!OperatingSystem.IsLinux()) return;
+        using var domainLifetime = new CancellationTokenSource();
         string? root = null; CloudflareLocalDomainRegistration? registration = null; ServiceProvider? provider = null;
         Task? actualStart = null, actualClose = null; Exception? primary = null;
         var reached = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -77,12 +80,12 @@ public sealed class CloudflareLocalDomainRegistrationTests
                 new Principal(token => { reached.TrySetResult(); return new(raw.Task); }), paths);
             var services = Graph(); registration.ConfigureOriginalServices(services); provider = services.BuildServiceProvider();
             var owner = registration.CaptureOriginalOwner(provider); actualStart = registration.StartOriginalHomeAsync();
-            await reached.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            await reached.Task.WaitAsync(TimeSpan.FromSeconds(5), domainLifetime.Token);
             registration.RequestOriginalCloudflareRetirement();
             Assert.NotNull(registration.OriginalHome.OriginalProcessRetirementRequestTask);
             actualClose = registration.CloseAndDrainOriginalCloudflareAsync();
             Assert.False(actualStart.IsCompleted); Assert.False(actualClose.IsCompleted);
-            Assert.Throws<ObjectDisposedException>((Action)(() => { _ = owner.GetSetupAsync(TestContext.Current.CancellationToken); }));
+            Assert.Throws<ObjectDisposedException>((Action)(() => { _ = owner.GetSetupAsync(domainLifetime.Token); }));
             raw.TrySetException(failure);
             var startError = await Assert.ThrowsAsync<AggregateException>(() => actualStart);
             Assert.Contains(Leaves(startError), cause => ReferenceEquals(cause, failure));
@@ -129,7 +132,7 @@ public sealed class CloudflareLocalDomainRegistrationTests
     private static string NewRoot()
     {
         var root = Directory.CreateTempSubdirectory("cloudflare-domain-").FullName;
-        try { File.SetUnixFileMode(root, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute); return root; }
+        try { if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("The original local Cloudflare fixture requires Linux."); File.SetUnixFileMode(root, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute); return root; }
         catch (Exception primary)
         {
             try { Directory.Delete(root, true); }

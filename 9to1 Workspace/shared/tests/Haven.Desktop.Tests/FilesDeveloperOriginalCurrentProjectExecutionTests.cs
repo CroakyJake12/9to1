@@ -3,6 +3,7 @@ using Haven.Application;
 using Haven.Core;
 using Haven.Infrastructure;
 using HavenOS.Apps.Dev;
+using HavenOS.Files;
 using HavenOS.Files.NativeHost;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -110,7 +111,7 @@ public sealed partial class FilesDeveloperOriginalDirectorySetupProducerTests
             Assert.Same(refusal, Assert.Single(CurrentProjectLeaves(observed)));
             Assert.True(joined.IsFaulted); Assert.False(joined.IsCanceled);
             Assert.True(held.Task.IsCompletedSuccessfully);
-            Assert.Equal(0, reads.Captures.Count);
+            Assert.Empty(reads.Captures);
         }
         catch (Exception error) { Keep(null, error); }
         finally

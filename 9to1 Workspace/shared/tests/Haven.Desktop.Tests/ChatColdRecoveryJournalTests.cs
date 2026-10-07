@@ -265,7 +265,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         internal readonly SqliteTaskRunColdRecoveryJournal Journal;
         internal readonly Conversation Conversation = new(Guid.NewGuid(), HavenMode.Tasks, ConversationKind.Task,
             "genuine protected initial input", null, null, false, false, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch);
-        private ColdPersonalFixture()
+        internal ColdPersonalFixture()
         {
             Database = new(Paths); Rows = new(Database); Conversations = new(Database);
             Diagnostics = new(Paths); Maintenance = new(Paths, Diagnostics);
