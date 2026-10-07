@@ -1,5 +1,5 @@
 <Cui id="9to1.Files.NativeBrowser" version="1">
-  <Grid id="files-browser-shell" rows="Auto,Auto,*,Auto,Auto" accessible-name="Files browser">
+  <Grid id="files-browser-shell" rows="Auto,Auto,Auto,*,Auto,Auto" accessible-name="Files browser">
     <WrapPanel orientation="Horizontal">
       <Button id="files-home" content="Files" action="9to1.Files.Home" is-enabled="{Binding CanNavigate}" accessible-name="Go to Files root" />
       <Button id="files-up" content="Up" action="9to1.Files.Up" is-enabled="{Binding CanUp}" accessible-name="Go to canonical parent folder" />
@@ -15,8 +15,17 @@
       <FilesDisplayedSortInput id="files-displayed-sort" accessible-name="Sort names on this displayed page" />
       <Button id="files-search" content="Search" action="9to1.Files.Search" is-enabled="{Binding CanNavigate}" accessible-name="Search canonical names in this folder" />
     </StackPanel>
-    <FilesCanonicalList id="files-canonical-list" grid-row="2" accessible-name="Canonical Files items" />
-    <TextBlock id="files-selected-details" grid-row="3" text="{Binding SelectedDetails}" accessible-name="Selected item displayed details" />
-    <TextBlock id="files-status" grid-row="4" text="{Binding Status}" accessible-name="Files operation status" />
+    <WrapPanel grid-row="2" orientation="Horizontal" accessible-name="Folder and item changes">
+      <FilesNameInput id="files-name-input" accessible-name="Folder or item name" />
+      <Button id="files-create-folder" content="New folder" action="9to1.Files.CreateFolder" is-enabled="{Binding CanCreateFolder}" accessible-name="Review creating a folder in Home" />
+      <Button id="files-rename" content="Rename" action="9to1.Files.Rename" is-enabled="{Binding CanRename}" accessible-name="Review renaming the selected item in Home" />
+      <TextBlock text="{Binding PendingChange}" accessible-name="Pending Files change" />
+      <Button id="files-apply" content="Apply" action="9to1.Files.Apply" is-enabled="{Binding CanApply}" accessible-name="Apply the original Home-reviewed Files change" />
+      <Button id="files-cancel-review" content="Cancel change" action="9to1.Files.CancelReview" is-enabled="{Binding CanCancelReview}" accessible-name="Cancel the pending change before execution" />
+      <Button id="files-retry-audit" content="Retry audit" action="9to1.Files.RetryAudit" is-enabled="{Binding CanRetryAudit}" accessible-name="Retry Home audit without repeating the Files change" />
+    </WrapPanel>
+    <FilesCanonicalList id="files-canonical-list" grid-row="3" accessible-name="Canonical Files items" />
+    <TextBlock id="files-selected-details" grid-row="4" text="{Binding SelectedDetails}" accessible-name="Selected item displayed details" />
+    <TextBlock id="files-status" grid-row="5" text="{Binding Status}" accessible-name="Files operation status" />
   </Grid>
 </Cui>

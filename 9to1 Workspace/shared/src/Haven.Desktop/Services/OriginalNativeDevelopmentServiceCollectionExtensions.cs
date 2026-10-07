@@ -48,7 +48,8 @@ public static class OriginalNativeDevelopmentServiceCollectionExtensions
         services[browsers[0].index] = ServiceDescriptor.Singleton<FilesNativeBrowserService>(provider => new(
             provider.GetRequiredService<NativeFilesWorkspaceAuthority>(), provider.GetRequiredService<IAuthenticatedResourceActorSource>(),
             provider.GetRequiredService<ResourceAuthorizationService>(), provider.GetRequiredService<ICompatibilityPackageContentSource>(),
-            provider.GetRequiredService<FilesOriginalChildFolderReadSource>(), provider.GetRequiredService<IDeveloperWorkspaceStore>()));
+            provider.GetRequiredService<FilesOriginalChildFolderReadSource>(), provider.GetRequiredService<FileDeveloperWorkspaceStore>(),
+            provider.GetService<HomeResourceOperationBroker>()));
         services.AddSingleton<DeveloperProjectWorkbenchPageFactory>(provider => new(
             provider.GetRequiredService<DeveloperTaskWorkspaceService>(), provider.GetRequiredService<TaskExecutionCoordinator>(),
             provider.GetRequiredService<FilesNativeBrowserService>()));

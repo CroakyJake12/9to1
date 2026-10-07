@@ -88,9 +88,35 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
         return MutateCoreAsync(operation, newName, originalStoreId, captured, originalAuthority, cancellationToken);
     }
 
+    /// <summary>Owning native browser commit after its actual Home claim. The exact displayed
+    /// store revision and parent/item revisions are checked inside the metadata transaction;
+    /// the supplied guard holds the same claimed Home fence through durable publication.</summary>
+    public Task<FilesResult<FilesOperation>> CommitNativeBrowserStructureAsync(FilesOperation operation,
+        string newName, Guid originalStoreId, string originalStoreRevision,
+        IReadOnlyList<FilesItemRevisionPrecondition> originalParents, FilesCommitAuthorityGuard originalAuthority,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(operation); ArgumentNullException.ThrowIfNull(originalParents);
+        ArgumentNullException.ThrowIfNull(originalAuthority);
+        var parents = originalParents.ToArray();
+        if (originalStoreId == Guid.Empty || string.IsNullOrWhiteSpace(originalStoreRevision)
+            || operation.State != FilesOperationState.Pending || operation.Id.Value == Guid.Empty
+            || operation.ItemId.Value == Guid.Empty || operation.ActorId != _owner || originalAuthority.ActorId != _owner
+            || operation.Operation is not ("CreateFolder" or "Rename") || parents.Length > 1
+            || parents.Any(parent => parent is null || parent.ItemId.Value == Guid.Empty || parent.ExpectedRevision is null)
+            || operation.Operation == "CreateFolder" && (operation.BaseRevisionId is not null
+                || operation.DestinationParentId is not { } destination || parents.Length != 1 || parents[0].ItemId != destination)
+            || operation.Operation == "Rename" && operation.BaseRevisionId is null)
+            return Task.FromResult(Fail<FilesOperation>(FilesErrorCode.PermissionDenied,
+                "Retain the exact native browser operation, original store/parents and held Home commit guard.", operation.Operation, operation.ItemId));
+        return MutateCoreAsync(operation, newName, originalStoreId, parents, originalAuthority,
+            cancellationToken, originalStoreRevision);
+    }
+
     private async Task<FilesResult<FilesOperation>> MutateCoreAsync(FilesOperation operation, string? newName,
         Guid? originalStoreId, IReadOnlyList<FilesItemRevisionPrecondition> originalParents,
-        FilesCommitAuthorityGuard? originalAuthority, CancellationToken cancellationToken)
+        FilesCommitAuthorityGuard? originalAuthority, CancellationToken cancellationToken,
+        string? expectedStoreRevision = null)
     {
         FilesResult<FilesOperation>? result = null;
         try
@@ -99,6 +125,10 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
         try { actual = _store.UpdateAsync(state =>
         {
             if (originalStoreId is { } store && state.StoreId != store) throw new OriginalFilesStoreChangedException();
+            if (expectedStoreRevision is not null && (state.StoreOwnerPrincipalId != _owner ||
+                state.StoreLocationId != Location.Id || expectedStoreRevision != Convert.ToHexString(
+                    System.Security.Cryptography.SHA256.HashData(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(state)))))
+            { result = Fail<FilesOperation>(FilesErrorCode.RevisionConflict, "The displayed Files store changed before publication.", operation.Operation, operation.ItemId); return state; }
             foreach (var expected in originalParents)
             {
                 var actual = state.Items.SingleOrDefault(value => value.Metadata.Id == expected.ItemId);

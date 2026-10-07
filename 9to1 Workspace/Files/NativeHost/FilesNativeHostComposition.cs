@@ -22,6 +22,7 @@ public static class FilesNativeHostComposition
         services.TryAddSingleton<NativeFilesArtifactContentReader>();
         services.TryAddSingleton<FilesNativeFolderReadSource>();
         services.TryAddSingleton<FilesNativeBrowserService>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeActionPolicySource, FilesNativeBrowserActionPolicySource>());
         services.TryAddSingleton<FilesCompatibilityPackageContentSource>();
         services.TryAddSingleton<ICompatibilityPackageContentSource>(provider => provider.GetRequiredService<FilesCompatibilityPackageContentSource>());
         services.AddSingleton<IMediaAssetSourceResolver>(provider => provider.GetRequiredService<NativeFilesMediaAssetSourceResolver>());

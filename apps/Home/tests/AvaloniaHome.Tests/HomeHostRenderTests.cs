@@ -1,6 +1,9 @@
 #nullable enable
 using System;
 using System.IO;
+using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
+using System.Threading.Tasks;
 using System.Linq;
 using System.Threading;
 using Avalonia;
@@ -13,6 +16,8 @@ using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
 using Haven.CUI.DevTools;
 using HavenOS.Home;
+using HavenOS.Home.Core;
+using Haven.Application;
 using Xunit;
 
 namespace AvaloniaHome.Tests;
@@ -27,9 +32,21 @@ public sealed class HomeHostRenderTests
         Directory.CreateDirectory(dataDirectory);
         Environment.SetEnvironmentVariable("HAVEN_DATA_DIR", dataDirectory);
         File.WriteAllText(Path.Combine(dataDirectory, "preferences.json"), """{"havenUiThemeName":"Bubble"}""");
+        HomeNativeWindowsComposition? originalComposition = null;
+        HomeApp? originalApp = null;
+        var failures = new List<Exception>();
         try
         {
-            AppBuilder.Configure<HomeApp>()
+            originalComposition = new HomeNativeWindowsComposition(
+                new FileHomeCoreStateStore(Path.Combine(dataDirectory, "home-core-state.json")),
+                new OperatingSystemPrincipalSource(), new TestPaths(dataDirectory),
+                new HomeNativeWindowsEndpoint("9to1.home.render." + Guid.NewGuid().ToString("N")));
+            AppBuilder.Configure(() =>
+                {
+                    var app = new HomeApp(originalComposition);
+                    originalApp = app;
+                    return app;
+                })
                 .UseHeadless(new AvaloniaHeadlessPlatformOptions())
                 .UseSkia()
                 .SetupWithoutStarting();
@@ -74,7 +91,7 @@ public sealed class HomeHostRenderTests
                 Assert.True(action.DispatcherConnected);
                 Assert.True(action.DispatchWired);
                 Assert.True(action.HandlerRegistered);
-                Assert.False(action.HostAvailable);
+                Assert.True(action.HostAvailable);
                 Assert.True(action.NativeEnabled);
 
                 var heroId = Assert.Single(inspection.Tree.Search("home-hero")).ElementId;
@@ -103,15 +120,34 @@ public sealed class HomeHostRenderTests
 
                 var settings = Assert.Single(controls.OfType<Button>(), control => control.Name == "nav-settings");
                 settings.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                WaitFor(() => window.GetVisualDescendants().Any(control => control.Name == "home-settings-page"),
+                    "The original Home Settings route did not open.");
+                var settingsStatus = Assert.Single(window.GetVisualDescendants().OfType<TextBlock>(),
+                    control => control.Name == "home-layout-status");
+                Assert.Contains("Saved revision 0", settingsStatus.Text, StringComparison.Ordinal);
+                Assert.Contains("Account sign-in is not connected", Assert.Single(window.GetVisualDescendants().OfType<TextBlock>(),
+                    control => control.Name == "home-profile-status").Text, StringComparison.Ordinal);
+                var allowTiles = Assert.Single(window.GetVisualDescendants().OfType<Button>(),
+                    control => control.Name == "settings-allow-ai-tiles");
+                allowTiles.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                WaitFor(() => Assert.Single(window.GetVisualDescendants().OfType<TextBlock>(),
+                    control => control.Name == "home-layout-status").Text?.Contains("AI tiles: allowed", StringComparison.Ordinal) == true,
+                    "The original Home layout operation did not persist its preference.");
+                var persisted = originalComposition.StateStore.ReadAsync().GetAwaiter().GetResult();
+                Assert.True(persisted.IsSuccess);
+                Assert.Single(persisted.State!.Records, record => record.RecordId == "home.dashboard.layout");
+                Assert.False(originalComposition.InstalledPeerAdmissionConfigured);
+                var homeButton = Assert.Single(window.GetVisualDescendants().OfType<Button>(), control => control.Name == "nav-home");
+                homeButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                WaitFor(() => window.GetVisualDescendants().Any(control => control.Name == "dashboard-page"),
+                    "The original Home dashboard route did not reopen.");
+                var add = Assert.Single(window.GetVisualDescendants().OfType<Button>(), control => control.Name == "add-dashboard-tile");
+                add.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                WaitFor(() => Assert.Single(window.GetVisualDescendants().OfType<ListBox>(),
+                    control => control.Name == "dashboard-tiles").ItemCount == 1,
+                    "The original Core tile did not appear after saving.");
+                var updated = Assert.IsType<CuiLiveTreeInspector>(originalApp!.CaptureDiagnostics(window));
                 var operationStatus = Assert.Single(window.GetVisualDescendants().OfType<TextBlock>(), control => control.Name == "operation-status");
-                Assert.True(SpinWait.SpinUntil(() =>
-                {
-                    Dispatcher.UIThread.RunJobs();
-                    operationStatus = Assert.Single(window.GetVisualDescendants().OfType<TextBlock>(), control => control.Name == "operation-status");
-                    return operationStatus.Text?.Contains("not connected", StringComparison.OrdinalIgnoreCase) == true;
-                }, TimeSpan.FromSeconds(10)), "The original Home action did not project its completed status.");
-                Assert.Contains("not connected", operationStatus.Text, StringComparison.OrdinalIgnoreCase);
-                var updated = Assert.IsType<CuiLiveTreeInspector>(Assert.IsType<HomeApp>(Application.Current).CaptureDiagnostics(window));
                 var operationId = Assert.Single(updated.Tree.Search("operation-status")).ElementId;
                 Assert.Equal(operationStatus.Text, Assert.Single(updated.GetBindingTraces(operationId)).NativeValue);
 
@@ -144,7 +180,13 @@ public sealed class HomeHostRenderTests
                 window.Close();
             }
             File.WriteAllText(Path.Combine(dataDirectory, "preferences.json"), """{"havenUiThemeName":"Retro"}""");
-            var reopened = Assert.IsType<HomeApp>(Application.Current).BuildWindow();
+            var reopen = originalApp!.ShowOriginalShellAsync();
+            Assert.NotNull(reopen);
+            WaitFor(() => reopen.IsCompleted, "The same owning Home reopen driver did not settle.");
+            reopen.GetAwaiter().GetResult();
+            var reopened = Assert.IsType<Window>(originalApp.OriginalShellWindow);
+            Assert.NotSame(window, reopened);
+            Assert.True(reopened.IsVisible);
             try
             {
                 Assert.Equal(CuiTheme.Retro, CuiSurfacePaletteCatalog.ActiveTheme);
@@ -152,6 +194,19 @@ public sealed class HomeHostRenderTests
                 reopened.Show();
                 reopened.Measure(new Size(1200, 800));
                 reopened.Arrange(new Rect(0, 0, 1200, 800));
+                reopened.UpdateLayout();
+                Assert.Equal(1, Assert.Single(reopened.GetVisualDescendants().OfType<ListBox>(),
+                    control => control.Name == "dashboard-tiles").ItemCount);
+                var reopenedSettings = Assert.Single(reopened.GetVisualDescendants().OfType<Button>(), control => control.Name == "nav-settings");
+                reopenedSettings.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                WaitFor(() => reopened.GetVisualDescendants().Any(control => control.Name == "home-layout-status"),
+                    "Reopened Settings was unavailable.");
+                Assert.Contains("AI tiles: allowed", Assert.Single(reopened.GetVisualDescendants().OfType<TextBlock>(),
+                    control => control.Name == "home-layout-status").Text, StringComparison.Ordinal);
+                Assert.Single(reopened.GetVisualDescendants().OfType<Button>(), control => control.Name == "nav-home")
+                    .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                WaitFor(() => reopened.GetVisualDescendants().Any(control => control.Name == "home-hero"),
+                    "Reopened dashboard was unavailable.");
                 var retroInspection = Assert.IsType<CuiLiveTreeInspector>(Assert.IsType<HomeApp>(Application.Current).CaptureDiagnostics(reopened));
                 var retroHero = Assert.Single(retroInspection.Tree.Search("home-hero")).ElementId;
                 Assert.NotEqual(bubbleRadius, Assert.Single(retroInspection.GetResources(retroHero).Values,
@@ -162,12 +217,44 @@ public sealed class HomeHostRenderTests
                 reopened.Close();
             }
         }
+        catch (Exception original) { failures.Add(original); }
         finally
         {
+            // Always join the SAME original host sources, even when a UI assertion failed.
+            try
+            {
+                var close = originalApp?.CloseAndDrainOriginalHostAsync() ?? originalComposition?.CloseAndDrainAsync();
+                if (close is not null)
+                {
+                    while (!close.IsCompleted) { Dispatcher.UIThread.RunJobs(); Thread.Yield(); }
+                    try { close.GetAwaiter().GetResult(); }
+                    catch when (close.IsFaulted) { throw close.Exception!; }
+                }
+            }
+            catch (Exception cleanup) { failures.Add(cleanup); }
             Environment.SetEnvironmentVariable("HAVEN_DATA_DIR", previousDataDirectory);
             CuiSurfacePaletteCatalog.ActiveTheme = CuiTheme.Glow;
-            Directory.Delete(dataDirectory, recursive: true);
+            try { Directory.Delete(dataDirectory, recursive: true); }
+            catch (Exception cleanup) { failures.Add(cleanup); }
         }
+        if (failures.Count == 1) ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1) throw new AggregateException("Original Home render and cleanup failures.", failures);
+    }
+
+    private static void WaitFor(Func<bool> completed, string message) => Assert.True(SpinWait.SpinUntil(() =>
+    {
+        Dispatcher.UIThread.RunJobs();
+        return completed();
+    }, TimeSpan.FromSeconds(10)), message);
+
+    private sealed class TestPaths(string root) : IAppPaths
+    {
+        public string DataDirectory => root;
+        public string DatabasePath => Path.Combine(root, "haven.db");
+        public string BrowserProfileDirectory => Path.Combine(root, "browser-profile");
+        public string AttachmentsDirectory => Path.Combine(root, "attachments");
+        public string LogsDirectory => Path.Combine(root, "logs");
+        public string LegacyStatePath => Path.Combine(root, "state.json");
     }
 
     private static CuiViewModel CreateRouteOnlyBindingContext()

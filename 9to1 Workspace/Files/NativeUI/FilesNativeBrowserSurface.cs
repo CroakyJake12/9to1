@@ -10,6 +10,7 @@ using CakeOS.Cui.Runtime;
 using Haven.Application;
 using HavenOS.Files;
 using HavenOS.Files.NativeHost;
+using HavenOS.Home.PermissionsTrustNotifications;
 
 namespace HavenOS.Files.NativeUI;
 
@@ -29,6 +30,9 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable, IAsync
     private readonly List<(Guid? ID, string Title)> _history = [(null, "Files")];
     private readonly ListBox _items = new();
     private readonly TextBox _search = new() { PlaceholderText = "Search this folder", Width = 280, MaxLength = 256 };
+    private readonly TextBox _editName = new() { PlaceholderText = "Folder or item name", Width = 280, MaxLength = 255 };
+    private readonly string _mutationSession = Guid.NewGuid().ToString("N");
+    private FilesNativeBrowserService.PreparedMutation? _pendingMutation;
     private readonly ComboBox _sort = new()
     {
         ItemsSource = new[] { "Displayed names: A–Z", "Displayed names: Z–A" },
@@ -80,6 +84,7 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable, IAsync
         { if (args.Key == Key.Enter) { args.Handled = true; await InvokeFromNativeEventAsync("9to1.Files.Open"); } };
         _search.KeyDown += async (_, args) =>
         { if (args.Key == Key.Enter) { args.Handled = true; await InvokeFromNativeEventAsync("9to1.Files.Search"); } };
+        _editName.TextChanged += (_, _) => { if (OriginalAlive()) RunOriginalNativeMutation(Changed); };
     }
 
     public Task InitializeAsync(CancellationToken token = default)
@@ -105,6 +110,7 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable, IAsync
             registry.RegisterControlType("FilesCanonicalList", _ => _items);
             registry.RegisterControlType("FilesSearchInput", _ => _search);
             registry.RegisterControlType("FilesDisplayedSortInput", _ => _sort);
+            registry.RegisterControlType("FilesNameInput", _ => _editName);
             _scene = new CuiSceneHost(registry);
             var available = await _scene.ShowAsync(new("files", "Files", "Browser", LoadDocument(), this, this, _readiness), linked.Token);
             if (available.State != CuiSceneAvailabilityState.Ready) throw new UnauthorizedAccessException(available.Message);
@@ -174,15 +180,22 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable, IAsync
             "FolderTitle" => _history[_historyIndex].Title,
             "SelectedDetails" => SelectedDetails,
             "Status" => _status,
-            "CanNavigate" => Available,
-            "CanUp" => Available && _page?.ParentID is not null,
-            "CanBack" => Available && _historyIndex > 0,
-            "CanForward" => Available && _historyIndex + 1 < _history.Count,
-            "CanMore" => Available && _page?.Next is not null,
-            "CanOpen" => Available && CanOpenSelection,
+            "CanNavigate" => IsActionAvailable("9to1.Files.Refresh"),
+            "CanUp" => IsActionAvailable("9to1.Files.Up"),
+            "CanBack" => IsActionAvailable("9to1.Files.Back"),
+            "CanForward" => IsActionAvailable("9to1.Files.Forward"),
+            "CanMore" => IsActionAvailable("9to1.Files.More"),
+            "CanOpen" => IsActionAvailable("9to1.Files.Open"),
+            "CanCreateFolder" => IsActionAvailable("9to1.Files.CreateFolder"),
+            "CanRename" => IsActionAvailable("9to1.Files.Rename"),
+            "CanApply" => IsActionAvailable("9to1.Files.Apply"),
+            "CanCancelReview" => IsActionAvailable("9to1.Files.CancelReview"),
+            "CanRetryAudit" => IsActionAvailable("9to1.Files.RetryAudit"),
+            "PendingChange" => _pendingMutation?.Description ?? "",
             _ => null
         };
-        return path is "SelectedDetails" or "FolderTitle" or "Status" or "CanNavigate" or "CanUp" or "CanBack" or "CanForward" or "CanMore" or "CanOpen";
+        return path is "SelectedDetails" or "FolderTitle" or "Status" or "CanNavigate" or "CanUp" or "CanBack" or "CanForward" or "CanMore" or "CanOpen"
+            or "CanCreateFolder" or "CanRename" or "CanApply" or "CanCancelReview" or "CanRetryAudit" or "PendingChange";
     }
     private string SelectedDetails
     {
@@ -202,12 +215,20 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable, IAsync
          Path.GetExtension(selected.Name).ToLowerInvariant() is ".exe" or ".msi" or ".apk");
     public bool? IsActionAvailable(string command) => command switch
     {
-        "9to1.Files.Home" or "9to1.Files.Refresh" or "9to1.Files.Search" => Available,
-        "9to1.Files.Up" => Available && _page?.ParentID is not null,
-        "9to1.Files.Back" => Available && _historyIndex > 0,
-        "9to1.Files.Forward" => Available && _historyIndex + 1 < _history.Count,
-        "9to1.Files.More" => Available && _page?.Next is not null,
-        "9to1.Files.Open" => Available && CanOpenSelection,
+        "9to1.Files.Home" or "9to1.Files.Refresh" or "9to1.Files.Search" => Available && _pendingMutation is null,
+        "9to1.Files.Up" => Available && _pendingMutation is null && _page?.ParentID is not null,
+        "9to1.Files.Back" => Available && _pendingMutation is null && _historyIndex > 0,
+        "9to1.Files.Forward" => Available && _pendingMutation is null && _historyIndex + 1 < _history.Count,
+        "9to1.Files.More" => Available && _pendingMutation is null && _page?.Next is not null,
+        "9to1.Files.Open" => Available && _pendingMutation is null && CanOpenSelection,
+        "9to1.Files.CreateFolder" => Available && _pendingMutation is null && _browser.HasNativeMutationOwner
+            && _page?.ParentID is not null && !string.IsNullOrWhiteSpace(_editName.Text),
+        "9to1.Files.Rename" => Available && _pendingMutation is null && !string.IsNullOrWhiteSpace(_editName.Text)
+            && _page is { } page && _items.SelectedItem is HostedItemMetadata row && _browser.CanRenameNativeSelection(page, row),
+        "9to1.Files.Apply" => Available && _pendingMutation is { HasObservedOutcome: false } pending
+            && (pending.Approval.IsAllowed || pending.Approval.State == HomePermissionRequestState.PendingApproval),
+        "9to1.Files.CancelReview" => Available && _pendingMutation is { HasObservedOutcome: false },
+        "9to1.Files.RetryAudit" => Available && _pendingMutation is { HasObservedOutcome: true },
         _ => false
     };
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
@@ -237,6 +258,8 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable, IAsync
         var originalSelection = _items.SelectedItem as HostedItemMetadata;
         var originalHistoryIndex = _historyIndex;
         var originalSearch = _search.Text ?? "";
+        var originalName = _editName.Text ?? "";
+        string? completedMessage = null;
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, _lifetime.Token);
         await _operations.WaitAsync(linked.Token);
         Exception? handled = null;
@@ -248,9 +271,42 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable, IAsync
             _busy = true; Changed(); RequireOriginalAlive(linked.Token);
             await RequireReadyAsync(linked.Token);
             RequireRetainedPage();
-            if (command != "9to1.Files.Refresh" && originalPage is not null)
+            if (command is not ("9to1.Files.Refresh" or "9to1.Files.RetryAudit" or "9to1.Files.CancelReview") && originalPage is not null)
                 await _browser.RevalidateAsync(originalPage, _originalActor, linked.Token);
             RequireRetainedPage();
+            if (command is "9to1.Files.CreateFolder" or "9to1.Files.Rename")
+            {
+                _pendingMutation = await _browser.PrepareNativeMutationAsync(originalPage!,
+                    command == "9to1.Files.Rename" ? originalSelection : null, _originalActor,
+                    command == "9to1.Files.Rename" ? "Rename" : "CreateFolder", originalName,
+                    OriginalAlive, _mutationSession, linked.Token);
+                RequireRetainedPage();
+                _status = _pendingMutation.Approval.IsAllowed ? "Ready to apply this change."
+                    : _pendingMutation.Approval.State == HomePermissionRequestState.PendingApproval
+                        ? "Review this change in Home, then choose Apply." : _pendingMutation.Approval.Message;
+                return;
+            }
+            if (command == "9to1.Files.CancelReview")
+            {
+                _browser.RetireNativeMutationReview(_pendingMutation!);
+                _pendingMutation = null; _status = "Change cancelled before execution."; return;
+            }
+            if (command == "9to1.Files.RetryAudit")
+            {
+                var audit = await _browser.RetryNativeMutationAuditAsync(_pendingMutation!, linked.Token);
+                RequireRetainedPage(); _status = audit.Message;
+                if (!audit.Succeeded) return;
+                _pendingMutation = null; completedMessage = "Home audit recorded.";
+            }
+            if (command == "9to1.Files.Apply")
+            {
+                var outcome = await _browser.ApplyNativeMutationAsync(_pendingMutation!, linked.Token);
+                RequireRetainedPage(); _status = outcome.Message;
+                if (outcome.AwaitingHomeReview) return;
+                if (outcome.AuditRecorded) _pendingMutation = null;
+                completedMessage = outcome.Message;
+                _editName.Text = "";
+            }
             var index = _historyIndex; var destination = _history[index];
             FilesNativeBrowserCursor? cursor = null;
             var appendHistory = false;
@@ -303,7 +359,7 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable, IAsync
             RequireOriginalAlive(linked.Token);
             ApplyDisplayedNameSort();
             RequireOriginalAlive(linked.Token);
-            _status = $"{page.Items.Count} items";
+            _status = completedMessage ?? $"{page.Items.Count} items";
         }
         catch (Exception error)
         {
@@ -350,7 +406,8 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable, IAsync
         {
             RequireOriginalAlive(linked.Token);
             if (!ReferenceEquals(_page, originalPage) || _historyIndex != originalHistoryIndex ||
-                command == "9to1.Files.Open" && _items.SelectedItem as HostedItemMetadata != originalSelection)
+                (command is "9to1.Files.Open" or "9to1.Files.Rename")
+                    && _items.SelectedItem as HostedItemMetadata != originalSelection)
                 throw new InvalidOperationException("The original Files selection changed before navigation.");
         }
     }
@@ -422,6 +479,7 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable, IAsync
         // rechecks its original lifetime after each synchronous native notification.
         var publishing = OriginalAlive();
         _sort.IsEnabled = Available && _page is not null;
+        _editName.IsEnabled = Available && _pendingMutation is null;
         if (publishing) RequireOriginalAlive(CancellationToken.None);
         PropertyChanged?.Invoke(this, new(null));
         if (publishing) RequireOriginalAlive(CancellationToken.None);

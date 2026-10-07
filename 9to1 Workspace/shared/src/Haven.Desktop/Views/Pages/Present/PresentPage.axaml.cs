@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
@@ -20,6 +21,9 @@ public sealed partial class PresentPage : UserControl, IDisposable
     private int _deckIndex;
     private int _slideIndex;
     private int _saveRunning;
+    private long _editGeneration;
+    private bool _closePreparing;
+    private static readonly JsonSerializerOptions DocumentJson = new(JsonSerializerDefaults.Web);
     private bool _initialized;
     private bool _busy;
     private bool _dirty;
@@ -53,7 +57,7 @@ public sealed partial class PresentPage : UserControl, IDisposable
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        if (_initialized || _disposed) return;
+        if (_initialized || _disposed || _closePreparing) return;
         _initialized = true; SetBusy(true);
         try
         {
@@ -69,19 +73,64 @@ public sealed partial class PresentPage : UserControl, IDisposable
 
     public async Task<bool> SaveAsync(string reason = "Manual save", CancellationToken cancellationToken = default)
     {
+        if (_disposed) return false;
         if (Document is null || !_dirty) return true;
         if (Interlocked.Exchange(ref _saveRunning, 1) != 0) return false;
         try
         {
-            if (string.IsNullOrWhiteSpace(Document.Title)) Document.Title = "Untitled presentation";
-            var result = await _repository.SaveAsync(Document, reason, cancellationToken);
-            Document.Version = result.Version; _dirty = false;
-            await RefreshDocumentsAsync(cancellationToken); _deckIndex = IndexOfDocument(Document.Id); RenderCurrent();
-            _route.SetStatus($"Saved locally at {result.SavedAt.LocalDateTime:t} · v{result.Version}"); _bus.Fire("Present.Saved"); return true;
+            var document = Document;
+            if (string.IsNullOrWhiteSpace(document.Title)) document.Title = "Untitled presentation";
+            var generation = _editGeneration;
+            var snapshot = JsonSerializer.Deserialize<PresentDocument>(
+                JsonSerializer.Serialize(document, DocumentJson), DocumentJson)
+                ?? throw new InvalidDataException("The presentation could not be snapshotted.");
+            var result = await _repository.SaveAsync(snapshot, reason, cancellationToken);
+            if (Document is { } current && current.Id == document.Id)
+            {
+                current.Version = result.Version;
+                current.Recovery = snapshot.Recovery;
+                if (snapshot.Metadata.TryGetValue("lastSaveReason", out var savedReason))
+                    current.Metadata["lastSaveReason"] = savedReason;
+                if (generation == _editGeneration) current.UpdatedAt = snapshot.UpdatedAt;
+                _dirty = generation != _editGeneration;
+            }
+            await RefreshDocumentsAsync(cancellationToken);
+            if (Document?.Id == document.Id)
+            {
+                _deckIndex = IndexOfDocument(document.Id); RenderCurrent();
+                _route.SetStatus(_dirty ? "Newer changes remain unsaved. Save them before closing."
+                    : $"Saved locally at {result.SavedAt.LocalDateTime:t} · v{result.Version}");
+            }
+            _bus.Fire("Present.Saved"); return Document?.Id == document.Id && !_dirty;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (Exception ex) { _route.SetStatus("Couldn’t save this presentation: " + ex.Message); return false; }
         finally { Interlocked.Exchange(ref _saveRunning, 0); }
+    }
+
+    /// <summary>Refuses close over active owner work or edits newer than the saved snapshot.</summary>
+    public async Task<bool> PrepareToCloseAsync(
+        string reason = "Autosave before closing Present", CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_disposed) return false;
+        if (_busy || _closePreparing || Volatile.Read(ref _saveRunning) != 0)
+        {
+            _route.SetStatus("Finish the current Present operation before closing.");
+            return false;
+        }
+        _closePreparing = true; SetBusy(true);
+        try
+        {
+            if (!await SaveAsync(reason, cancellationToken)) return false;
+            if (_dirty)
+            {
+                _route.SetStatus("Newer changes remain unsaved. Save them before closing.");
+                return false;
+            }
+            return true;
+        }
+        finally { _closePreparing = false; SetBusy(false); }
     }
 
     private async void OnLoaded(object? sender, RoutedEventArgs e) { await InitializeAsync(); if (!_disposed) _autosaveTimer.Start(); }
@@ -105,7 +154,7 @@ public sealed partial class PresentPage : UserControl, IDisposable
 
     private void MarkDirty()
     {
-        if (Document is null) return; Document.UpdatedAt = DateTimeOffset.UtcNow; _dirty = true; _route.SetStatus("Unsaved changes · autosave is on");
+        if (Document is null) return; Document.UpdatedAt = DateTimeOffset.UtcNow; ++_editGeneration; _dirty = true; _route.SetStatus("Unsaved changes · autosave is on");
     }
 
     private void MoveSlide(int offset)
@@ -233,7 +282,7 @@ public sealed partial class PresentPage : UserControl, IDisposable
     private int IndexOfDocument(Guid id) { for (var index = 0; index < _documents.Count; index++) if (_documents[index].Id == id) return index; return 0; }
     private async Task RunBusyAsync(Func<Task> action, string description)
     {
-        if (_busy || _disposed) return; SetBusy(true);
+        if (_busy || _disposed || _closePreparing) return; SetBusy(true);
         try { await action(); } catch (Exception ex) { _route.SetStatus($"Couldn’t {description}: {ex.Message}"); } finally { SetBusy(false); }
     }
     private void SetBusy(bool busy) { _busy = busy; _route.SetBusy(busy); _route.SetPhase2Busy(busy); }

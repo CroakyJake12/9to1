@@ -7,7 +7,7 @@
         <Button id="open-studio" action="OpenStudio" content="Open Studio" margin="0 0 8 0" />
         <Button id="install-all" action="InstallAllUpdates" content="Install apps" />
       </StackPanel>
-      <StackPanel id="home-body" orientation="Horizontal" margin="24">
+      <ScrollViewer id="home-workspace-scroll" height="700" horizontal-scrolling="true" vertical-scrolling="true"><StackPanel id="home-body" orientation="Horizontal" margin="24">
         <Border id="navigation-rail" background="{Resource CuiPanelBrush}" border-brush="{Resource CuiLineBrush}" border-thickness="1" padding="14" width="176" margin="0 0 20 0">
           <StackPanel orientation="Vertical">
             <Button id="nav-home" action="NavigateDashboard" content="Home" />
@@ -31,7 +31,7 @@
           <StackPanel id="dashboard-brief" orientation="Vertical" margin="0 0 0 18">
             <TextBlock text="Your briefing" font-size="20" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" />
             <TextBlock id="dashboard-brief-status" text="{Binding BriefSummary, fallback=Your authorised activity will appear here}" foreground="{Resource CuiTextSoftBrush}" margin="0 6 0 12" />
-            <WrapPanel id="dashboard-tiles" margin="0 0 0 8" />
+             <ListBox id="dashboard-tiles" height="140" margin="0 0 0 8" />
           </StackPanel>
           <Border id="home-hero" background="{Resource CuiPanel2Brush}" border-brush="{Resource CuiLineBrush}" border-thickness="1" corner-radius="14" padding="24" margin="0 0 18 0">
             <StackPanel orientation="Horizontal">
@@ -87,9 +87,12 @@
                 <Button id="remove-dashboard-tile" action="RemoveSelectedDashboardTile" content="Remove selected" margin="0 0 8 0" />
                 <Button id="move-dashboard-tile-up" action="MoveSelectedDashboardTileUp" content="Move up" margin="0 0 8 0" />
                 <Button id="move-dashboard-tile-down" action="MoveSelectedDashboardTileDown" content="Move down" margin="0 0 8 0" />
-                <Button id="pin-dashboard-tile" action="PinSelectedDashboardTile" content="Pin" margin="0 0 8 0" />
-                <Button id="lock-dashboard-tile" action="LockSelectedDashboardTile" content="Lock" margin="0 0 8 0" />
-                <Button id="hide-dashboard-tile" action="HideSelectedDashboardTile" content="Hide" margin="0 0 8 0" />
+                 <Button id="pin-dashboard-tile" action="PinSelectedDashboardTile" content="Pin" margin="0 0 8 0" />
+                 <Button id="unpin-dashboard-tile" action="UnpinSelectedDashboardTile" content="Unpin" margin="0 0 8 0" />
+                 <Button id="lock-dashboard-tile" action="LockSelectedDashboardTile" content="Lock" margin="0 0 8 0" />
+                 <Button id="unlock-dashboard-tile" action="UnlockSelectedDashboardTile" content="Unlock" margin="0 0 8 0" />
+                 <Button id="hide-dashboard-tile" action="HideSelectedDashboardTile" content="Hide" margin="0 0 8 0" />
+                 <Button id="show-dashboard-tile" action="ShowSelectedDashboardTile" content="Show" margin="0 0 8 0" />
                 <Button id="refresh-dashboard-tile" action="RefreshSelectedDashboardTile" content="Refresh selected" />
               </StackPanel>
               <StackPanel orientation="Horizontal" margin="0 8 0 0">
@@ -128,9 +131,38 @@
               <TextBlock id="events-page-items" text="{Binding EventItemsSummary}" foreground="{Resource CuiTextBrush}" />
               <Button id="events-open-selected" action="OpenEventObject" content="Open selected activity item" margin="0 12 0 0" />
             </StackPanel>
-          </If>
-        </StackPanel>
-      </StackPanel>
+           </If>
+           <If Condition="{Binding IsSettings}">
+             <StackPanel id="home-settings-page" orientation="Vertical">
+               <TextBlock text="Home settings" font-size="28" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+               <TextBlock id="home-profile-status" text="{Binding HomeProfileSummary}" foreground="{Resource CuiTextSoftBrush}" margin="0 12 0 12" />
+               <TextBlock id="home-layout-status" text="{Binding HomeLayoutSummary}" foreground="{Resource CuiTextBrush}" margin="0 0 0 12" />
+               <StackPanel orientation="Horizontal">
+                 <Button id="settings-allow-ai-tiles" action="EnableAIGeneratedTiles" content="Allow AI tiles" margin="0 0 8 0" />
+                 <Button action="DisableAIGeneratedTiles" content="Keep AI tiles off" margin="0 0 8 0" />
+                 <Button action="EnableAIReorder" content="Allow AI rearrangement" margin="0 0 8 0" />
+                 <Button action="DisableAIReorder" content="Keep layout fixed" />
+               </StackPanel>
+               <Button action="RefreshHomeWorkspace" content="Reload saved preferences" margin="0 12 0 0" />
+               <TextBlock text="{Binding NavigationStatus}" foreground="{Resource CuiTextSoftBrush}" margin="0 12 0 0" />
+             </StackPanel>
+           </If>
+           <If Condition="{Binding IsPermissions}">
+             <StackPanel id="home-permissions-page" orientation="Vertical">
+               <TextBlock text="Permissions" font-size="28" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+               <TextBlock text="{Binding HomePermissionSummary}" foreground="{Resource CuiTextSoftBrush}" margin="0 12 0 12" />
+               <Button action="RefreshHomePermissions" content="Refresh requests" margin="0 0 0 12" />
+               <ListBox id="home-permission-requests" height="200" />
+               <TextBlock text="{Binding SelectedHomePermission}" foreground="{Resource CuiTextBrush}" margin="0 12 0 12" />
+               <StackPanel orientation="Horizontal">
+                 <Button id="home-permission-accept" content="Allow once" margin="0 0 12 0" />
+                 <Button id="home-permission-decline" content="Decline" />
+               </StackPanel>
+               <TextBlock text="{Binding NavigationStatus}" foreground="{Resource CuiTextSoftBrush}" margin="0 12 0 0" />
+             </StackPanel>
+           </If>
+         </StackPanel>
+      </StackPanel></ScrollViewer>
     </StackPanel>
   </DefaultTheme>
 </Cui>

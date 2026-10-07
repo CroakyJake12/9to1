@@ -96,7 +96,7 @@ internal static class Program
 /// Avalonia Application that renders the canonical Home CUI surface and projects only
 /// observed Home-domain state. Providers that are not configured remain visibly unavailable.
 /// </summary>
-internal sealed class HomeApp : Application
+internal sealed partial class HomeApp : Application
 {
     private readonly CuiViewModel _viewModel = new();
     private readonly HomeDashboard _dashboard = new();
@@ -106,7 +106,7 @@ internal sealed class HomeApp : Application
     private readonly HomeCoreRuntime _homeCore;
     private readonly HomeCoreApi _homeCoreApi;
     private readonly HomeFeatureNavigationHost _featureNavigation = new();
-    private readonly HomeCuiController _controller;
+    private HomeCuiController _controller;
     private IDisposable? _homeCoreSubscription;
     private CuiControlLoader? _loader;
     private readonly HomeHostOriginalLifetime _originalLifetime;
@@ -135,6 +135,9 @@ internal sealed class HomeApp : Application
             var originalStart = _originalLifetime.TryRunOriginal(_nativeComposition.StartOriginalAsync)
                 ?? throw new InvalidOperationException("The original native Home startup was refused.");
             originalStart.GetAwaiter().GetResult();
+            var workspaceStart = _originalLifetime.TryRunOriginal(InitializeWorkspaceAsync)
+                ?? throw new InvalidOperationException("The original Home workspace startup was refused.");
+            workspaceStart.GetAwaiter().GetResult();
             if (!_nativeComposition.InstalledPeerAdmissionConfigured)
                 Console.WriteLine("[9-1 Home] Protected installed-peer verification is not configured; app admission is unavailable.");
             ApplySnapshot(_controller.ShowCurrent());
@@ -154,6 +157,7 @@ internal sealed class HomeApp : Application
             RegisterUnavailableAction("NavigateAutomations", "Automations navigation is not connected in this host.");
             RegisterUnavailableAction("NavigateDiscover", "Discover navigation is not connected in this host.");
             RegisterUnavailableAction("NavigateSettings", "Settings navigation is not connected in this host.");
+            RegisterWorkspaceActions();
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
@@ -168,6 +172,7 @@ internal sealed class HomeApp : Application
                 };
                 var window = BuildWindow();
                 desktop.MainWindow = window;
+                ConfigureOriginalShellTray();
             }
 
             base.OnFrameworkInitializationCompleted();
@@ -177,11 +182,16 @@ internal sealed class HomeApp : Application
             // No native loop has started. Drain the original Home owner without queuing an
             // exit callback to a dispatcher whose initialization just failed.
             _nativeInitializationFailed = true;
+            Exception? trayFailure = null;
+            try { RetireOriginalShellTray(); } catch (Exception error) { trayFailure = error; }
             Exception? cleanup = null;
             try { _originalLifetime.RequestShutdownAsync().GetAwaiter().GetResult(); }
             catch (Exception error) { cleanup = error; }
-            if (cleanup is not null && !ReferenceEquals(original, cleanup))
-                throw new AggregateException("Original native Home initialization and shutdown failed.", original, cleanup);
+            var failures = new List<Exception> { original };
+            if (trayFailure is not null && !ReferenceEquals(original, trayFailure)) failures.Add(trayFailure);
+            if (cleanup is not null && !failures.Any(error => ReferenceEquals(error, cleanup))) failures.Add(cleanup);
+            if (failures.Count > 1)
+                throw new AggregateException("Original native Home initialization and shutdown failed.", failures);
             System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(original).Throw();
             throw;
         }
@@ -189,6 +199,9 @@ internal sealed class HomeApp : Application
 
     internal Window BuildWindow()
     {
+        if (_workspaceWindow?.IsVisible == true)
+            throw new InvalidOperationException("The original Home shell is already open.");
+        _loader?.Dispose();
         CuiThemeScopeApplier.ApplyGlobalTheme(CuiThemePreferenceReader.Read());
         var window = new Window
         {
@@ -213,6 +226,7 @@ internal sealed class HomeApp : Application
         {
             Console.WriteLine($"[9-1 Home] Loading canonical .cui: {cuiPath}");
             _loader = new CuiControlLoader();
+            RegisterWorkspaceControls(_loader, window);
             _loader.SetBindingContext(_viewModel);
             _loader.SetActionDispatcher(_viewModel);
 
@@ -305,6 +319,7 @@ internal sealed class HomeApp : Application
         _viewModel.Set("RuntimeSummary", snapshot.Runtime.Runtime.Message);
         _viewModel.Set("EventsSummary", "An events provider is not configured in this host.");
         _viewModel.Set("OperationSummary", $"{snapshot.LastOperation.State}: {snapshot.LastOperation.Message}");
+        ApplyWorkspaceBindings();
         _loader?.RefreshBindings();
     }
 
@@ -363,9 +378,18 @@ internal sealed class HomeApp : Application
             System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(coreFailure).Throw();
     }
 
+    internal Task CloseAndDrainOriginalHostAsync() => _originalLifetime.RequestShutdownAsync();
+
     private Task ExitOriginalDesktopAsync(int exitCode) =>
-        _nativeInitializationFailed ? Task.CompletedTask :
-            Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => _desktop!.Shutdown(exitCode)).GetTask();
+        _nativeInitializationFailed || (_desktop is null && ApplicationLifetime is null) ? Task.CompletedTask :
+            Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var failures = new List<Exception>();
+                try { RetireOriginalShellTray(); } catch (Exception error) { failures.Add(error); }
+                try { _desktop!.Shutdown(exitCode); } catch (Exception error) { failures.Add(error); }
+                if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+                if (failures.Count > 1) throw new AggregateException("Original Home tray and desktop retirement failed.", failures);
+            }).GetTask();
 
     internal HomeCoreRuntime HomeCore => _homeCore;
     internal IHomeCoreApi HomeCoreApi => _homeCoreApi;

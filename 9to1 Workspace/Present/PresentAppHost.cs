@@ -79,7 +79,7 @@ public sealed class PresentAppHost : IDisposable
     public Task<bool> TrySaveBeforeCloseAsync(CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        return Page.SaveAsync("Autosave before closing Present", cancellationToken);
+        return Page.PrepareToCloseAsync("Autosave before closing Present", cancellationToken);
     }
 
     public void Dispose()

@@ -170,6 +170,8 @@ public sealed partial class FilesArtifactResourceResolver : IOriginalCanonicalRe
         var mediaRead = actionId == "media.asset.read" && scope.Access == ResourceAccess.Read;
         var folderRead = actionId == "files.folder.native-root.read" && scope.Access == ResourceAccess.Read;
         var browserRead = actionId == "files.browser.read" && scope.Access == ResourceAccess.Read;
+        var browserWrite = (actionId is "9to1.Files.CreateFolder" or "9to1.Files.Rename")
+            && scope.Access == ResourceAccess.Write;
         var packageRead = actionId == "os.compatibility.package.read" && scope.Access == ResourceAccess.Read;
         var mailAttachmentRead = actionId == "mail.attachment.read" && scope.Access == ResourceAccess.Read
             && originalProvider is DurableDriveProvider && originalStoreId is not null;
@@ -183,7 +185,7 @@ public sealed partial class FilesArtifactResourceResolver : IOriginalCanonicalRe
         };
         if ((sitesWrite || pictureImport) && scope.Access != ResourceAccess.Write) return Deny("FilesActionInvalid");
         if ((pictureExport || pictureCopy) && scope.Access is not (ResourceAccess.Read or ResourceAccess.Write)) return Deny("FilesActionInvalid");
-        if (!pictureExport && !pictureCopy && !sitesWrite && !mediaRead && !packageRead && !mailAttachmentRead && !folderRead && !browserRead && (ownerApp is null || scope.Access != ((actionId.EndsWith(".open", StringComparison.Ordinal) || actionId == "games.scene.observe") ? ResourceAccess.Read : ResourceAccess.Write)))
+        if (!pictureExport && !pictureCopy && !sitesWrite && !mediaRead && !packageRead && !mailAttachmentRead && !folderRead && !browserRead && !browserWrite && (ownerApp is null || scope.Access != ((actionId.EndsWith(".open", StringComparison.Ordinal) || actionId == "games.scene.observe") ? ResourceAccess.Read : ResourceAccess.Write)))
             return Deny("FilesActionInvalid");
         var provider = originalProvider ?? await _providers(actor, cancellationToken).ConfigureAwait(false);
         if (provider is null) return Deny("FilesProviderUnauthorised");
@@ -215,6 +217,8 @@ public sealed partial class FilesArtifactResourceResolver : IOriginalCanonicalRe
         if (folderRead) return item.Kind == HostedItemKind.Folder
             ? new(true, "Allowed", actor.ActorId, revision, null) : Deny("FilesNativeFolderInvalid");
         if (browserRead) return new(true, "Allowed", actor.ActorId, revision, null);
+        if (browserWrite) return actionId != "9to1.Files.CreateFolder" || item.Kind == HostedItemKind.Folder
+            ? new(true, "Allowed", actor.ActorId, revision, null) : Deny("FilesDestinationInvalid");
         if (mediaRead || packageRead || mailAttachmentRead) return item.Kind == HostedItemKind.File
             ? new(true, "Allowed", actor.ActorId, revision, null) : Deny("FilesMediaSourceInvalid");
         var creating = actionId.EndsWith(".create", StringComparison.Ordinal);
