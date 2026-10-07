@@ -8,7 +8,11 @@ public sealed record StrataInstalledFile(string RelativeName, long Length, strin
 
 /// <summary>The actual installation owner holds its original signed/approved installation
 /// and model read authorization. No implementation is inferred from a hash, settings, Home
-/// routing preferences, a Task actor or a Codex connector. Missing producer is setup-required.</summary>
+/// routing preferences, a Task actor or a Codex connector. A configured developer-artifact
+/// variant may instead hold the SAME explicit individual Home read/use approval over the full
+/// tuple; that does not assert publisher trust, signed system installation, or Ready status.
+/// Its current Home claim and original Task/model authority remain independently mandatory.
+/// Missing producer or missing required artifact/hardware evidence is setup-required.</summary>
 public abstract class StrataVerifiedInstallationLease : IAsyncDisposable
 {
     public abstract TaskRunAttemptAdmission OriginalAdmission { get; }
@@ -19,7 +23,10 @@ public abstract class StrataVerifiedInstallationLease : IAsyncDisposable
     public abstract IReadOnlyList<StrataInstalledFile> OriginalCheckpointFiles { get; }
     public abstract InferenceModelRequirements OriginalRequirements { get; }
     /// <summary>Actual verified package/build capability inventory, never copied from model
-    /// requirements or user settings. Null means that native capability observation is absent.</summary>
+    /// requirements or user settings. An explicitly Home-reviewed independent developer-signed
+    /// inventory is verified against the exact worker; actual native hello/hardware must still
+    /// agree. Its developer key creates no system publisher trust. Null means that native
+    /// capability observation is absent.</summary>
     public virtual InferenceEngineSupport? OriginalBuildSupport => null;
     public abstract IReadOnlyList<int> OriginalCudaDeviceIndices { get; }
     public abstract void DemandCurrentOriginalInstallation();

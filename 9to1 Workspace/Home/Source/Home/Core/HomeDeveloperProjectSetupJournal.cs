@@ -341,9 +341,12 @@ public sealed partial class HomeDeveloperProjectSetupJournal(
         _captureAuthority.DemandExternalOriginalCaptureJoin();
         if (_originalStepOutcomeSource is not null)
         {
+            IDeveloperProjectOriginalSetupStepOutcomeSource outcomeSource;
             (_callbacks ??= []).Add(this);
-            try { _originalStepOutcomeSource().DemandExternalOriginalSetupStepOutcomeJoin(); }
+            try { outcomeSource = _originalStepOutcomeSource(); }
             finally { _callbacks.RemoveAt(_callbacks.Count - 1); }
+            // The same owner's dependency preflight is not a journal source callback.
+            outcomeSource.DemandExternalOriginalSetupStepOutcomeJoin();
         }
     }
     public Task CloseAndDrainAsync()

@@ -70,6 +70,7 @@ public static partial class OriginalLocalTaskConsole
     private static readonly string[] Help = [
         "local-configure <explicit loopback logical HTTP/HTTPS URI> | models <provider-id> | probe | model <observed-provider:model-key> | engine Automatic|LlamaCpp|Strata",
         "files-configure <chosen empty absolute directory> | files-status | files-list [observed parent GUID]",
+        "strata-select <explicit nonsecret developer artifact JSON> (configuration only; Task-scoped individual Home READ approval follows; protected Safetensors/CUDA remain required)",
         "project-register <write or observed destination folder GUID> <existing absolute project path> | container-create <saved workspace GUID> <saved project GUID> <saved root GUID> <name>",
         "containers | project <workspace-id> <project-id> <root-id> <existing-container-id> | project-clear | spaces | space <space-id> | space-create <name>",
         "task <instruction> | context | attach | open <space-id> <reference-id> <task-id> <run-id>",
@@ -124,6 +125,8 @@ public static partial class OriginalLocalTaskConsole
         private readonly Dictionary<Guid, RemediationRequest> _displayedCloud = [];
         private readonly List<ProviderModelDescriptor> _catalogue = [];
         private CloudflareLocalDomainRegistration? _registration;
+        private HomeApprovedStrataDeveloperArtifactSource? _strataInstallations;
+        private readonly HomeStrataDeveloperArtifactResourceResolver _strataArtifactResolver;
         private ServiceProvider? _provider;
         private TaskRunCanonicalProcessRetirementOwner? _canonicalProcess;
         private DeveloperTaskWorkspaceService? _developer;
@@ -149,6 +152,7 @@ public static partial class OriginalLocalTaskConsole
         internal Host(IAppPaths paths)
         {
             _paths = paths;
+            _strataArtifactResolver = new(() => _strataInstallations ?? throw new InvalidOperationException("Resolve the SAME original approved developer artifact owner first."));
             _work = new(StopOriginalObserversAsync, () => Task.CompletedTask);
             _shutdown = new(RetireAndJoinProcessWorkAsync, () => Task.CompletedTask,
                 PrepareOriginalFinalWriterAsync, JoinOriginalBorrowersAsync, DisposeOriginalProviderAsync);
@@ -174,11 +178,11 @@ public static partial class OriginalLocalTaskConsole
                 PrepareOriginalCurrentProjectExecutionPolicies();
                 _registration = CloudflareLocalDomainRegistration.CreateOriginal(store, new OperatingSystemPrincipalSource(), _paths,
                     originalResolvers: ProjectConfigurationRequested
-                        ? [new HomeColdProjectReadResourceResolver(RequireCapturedOriginalProjectSource), _setupReadResolver!, _setupDestinationResolver!, _currentExecutionResolver!]
-                        : [_setupReadResolver!, _setupDestinationResolver!],
+                        ? [new HomeColdProjectReadResourceResolver(RequireCapturedOriginalProjectSource), _setupReadResolver!, _setupDestinationResolver!, _currentExecutionResolver!, _strataArtifactResolver]
+                        : [_setupReadResolver!, _setupDestinationResolver!, _strataArtifactResolver],
                     originalPolicies: ProjectConfigurationRequested
-                        ? [new HomeColdProjectReadActionPolicySource(), _setupReadPolicy!, _setupPolicy!, _currentExecutionPolicy!]
-                        : [_setupReadPolicy!, _setupPolicy!],
+                        ? [new HomeColdProjectReadActionPolicySource(), _setupReadPolicy!, _setupPolicy!, _currentExecutionPolicy!, new HomeStrataDeveloperArtifactActionPolicySource()]
+                        : [_setupReadPolicy!, _setupPolicy!, new HomeStrataDeveloperArtifactActionPolicySource()],
                     configureOriginalStores: identity =>
                     {
                         _nativeFiles = new NativeFilesWorkspaceService(identity.StateStore, identity.Profiles);
@@ -200,6 +204,7 @@ public static partial class OriginalLocalTaskConsole
                 collection.AddHavenPlannerInfrastructure();
                 collection.AddHavenOwnedNativeTaskColdRecovery(_coldConfiguration!);
                 _registration!.ConfigureOriginalServices(collection);
+                collection.AddHavenApprovedDeveloperStrataArtifacts(_registration.OriginalHome);
                 // Exactly the same precreated Files objects feed Home evidence/resolution
                 // and normal Files/Dev service factories. TryAdd cannot create replacements.
                 collection.AddSingleton(_nativeFiles!);
@@ -212,6 +217,7 @@ public static partial class OriginalLocalTaskConsole
                 ConfigureOriginalCurrentProjectExecutionOwners(collection);
                 collection.AddHavenOriginalTaskExecutionServices();
                 _provider = collection.BuildServiceProvider();
+                _strataInstallations = _provider.GetRequiredService<HomeApprovedStrataDeveloperArtifactSource>();
             });
             Resolve<TaskRunCanonicalProcessRetirementOwner>(original, value => _canonicalProcess = value);
             var coordinator = Resolve<TaskExecutionCoordinator>(original);
@@ -367,6 +373,8 @@ public static partial class OriginalLocalTaskConsole
                         ?? throw new KeyNotFoundException("The saved Space is unavailable.");
                     _spaceId = actual.Id; Write(actual); break;
                 }
+                case "strata-select":
+                    Write(new { developerArtifactSelectionRevision = _strataInstallations!.SelectOriginalDeveloperArtifacts(argument), installationReady = false }); break;
                 case "task": await LaunchInitialAsync(original, argument, token).ConfigureAwait(false); break;
                 case "context": Write((object?)CurrentInitial()?.CurrentAcknowledgedContext ?? _attachment?.View.Task.Snapshot); break;
                 case "attach":
@@ -629,6 +637,7 @@ public static partial class OriginalLocalTaskConsole
             _developer?.DemandExternalOriginalRetirementJoin();
             _files?.DemandExternalOriginalDeveloperReadJoin();
             _managed?.DemandExternalOriginalProcessJoin();
+            _strataInstallations?.DemandExternalOriginalJoin();
             _projectResources?.DemandExternalOriginalJoin();
             DemandOriginalDeveloperSetupJoins();
             DemandOriginalCurrentProjectExecutionJoins();
@@ -656,6 +665,7 @@ public static partial class OriginalLocalTaskConsole
             if (_developer is not null) Request(_developer.RequestRetirement);
             if (_files is not null) Request(_files.RequestOriginalDeveloperReadRetirement);
             if (_managed is not null) Request(_managed.RequestStop);
+            if (_strataInstallations is not null) Request(_strataInstallations.RequestOriginalRetirement);
             if (_session is not null) Request(_session.RequestOriginalObservationRetirement);
             Request(_work.RequestRetirement);
             Task? actual = null;
@@ -699,6 +709,13 @@ public static partial class OriginalLocalTaskConsole
             if (_registration is not null) AcquireClose(_registration.CloseAndDrainOriginalCloudflareAsync, closes, failures);
             await JoinAll(closes, failures).ConfigureAwait(false);
             Throw(failures); // Failed/unknown borrowers keep shared Home/provider alive.
+            if (_strataInstallations is not null)
+            {
+                var artifactCloses = new List<Task>();
+                AcquireClose(_strataInstallations.CloseAndDrainOriginalAsync, artifactCloses, failures);
+                await JoinAll(artifactCloses, failures).ConfigureAwait(false);
+                Throw(failures); // Its actual Home READ audit settles before shared Home retires.
+            }
             if (_registration is not null)
             {
                 var homeCloses = new List<Task>();

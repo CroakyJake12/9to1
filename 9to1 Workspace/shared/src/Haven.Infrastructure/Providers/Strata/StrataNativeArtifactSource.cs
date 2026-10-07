@@ -40,7 +40,7 @@ public sealed class StrataNativeArtifactSource : IOriginalStrataModelSource, IOr
     public Task<StrataOriginalWorkerLease> AcquireOriginalAsync(TaskRunAttemptAdmission sameAdmission,
         IInferenceEngineOriginalSourceScope originalScope, CancellationToken token) =>
         Start(originalScope, work => AcquireAsync(work,
-            new ModelIdentity(sameAdmission.Lease.Candidate.ProviderId, sameAdmission.Lease.Candidate.ModelId), sameAdmission, worker: true, token))
+            new ModelIdentity(sameAdmission.Lease.Candidate.ProviderId, sameAdmission.Lease.Candidate.ModelId, sameAdmission.Lease.Candidate.ArtifactIdentity), sameAdmission, worker: true, token))
             .ContinueWorker();
 
     public bool IsIssuedOriginalModelLease(StrataOriginalModelLease lease, ModelIdentity model, TaskRunAttemptAdmission admission)
