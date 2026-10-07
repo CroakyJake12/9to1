@@ -755,7 +755,7 @@ public sealed partial class HomeColdProjectReadReconciliation : ITaskRunColdProj
 public sealed class HomeColdProjectReadActionPolicySource : IHomeActionPolicySource
 {
     public HomePermissionActionPolicy? TryGet(string appId, string actionId) => appId == "dev" && actionId == HomeColdProjectReadReconciliation.ReadAction
-        ? new(HomePermissionRisk.Elevated, false, false, RequiresPerActionApproval: true) : null;
+        ? new(HavenOS.Home.PermissionsTrustNotifications.HomePermissionRisk.Elevated, false, false, RequiresPerActionApproval: true) : null;
 }
 public sealed class HomeColdProjectReadResourceResolver(Func<HomeColdProjectReadReconciliation> source)
     : IOriginalScopedCanonicalResourceAccessResolver

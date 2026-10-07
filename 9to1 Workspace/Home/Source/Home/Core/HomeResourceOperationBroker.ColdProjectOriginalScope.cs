@@ -97,7 +97,7 @@ public sealed partial class HomeResourceOperationBroker
         HomeResourceExecutionCapability capability, string targetAppId, string actionId,
         IReadOnlyList<ResourceScope> scopes, JsonElement arguments, Action<Action> scope, Action<Task> retain,
         Action<Action> cleanupScope, CancellationToken token)
-        => RunColdProjectBrokerAsync(scope, retain, async sources =>
+        => RunColdProjectBrokerAsync<HomeResourceClaimResult>(scope, retain, async sources =>
         {
             ArgumentNullException.ThrowIfNull(capability); ArgumentNullException.ThrowIfNull(scopes);
             var captured = sources.Invoke(() => scopes.Take(1001).ToArray());
