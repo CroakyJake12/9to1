@@ -86,7 +86,11 @@ public sealed partial class App : Avalonia.Application
         collection.AddSingleton<WorkspaceSessionCoordinator>();
         collection.AddSingleton<WorkspaceWindowService>();
 #if !ANDROID
+        ConfigureOriginalWindowsHomeRegistrations(collection);
         ConfigureOriginalNativeDevelopmentRegistrations(collection);
+        ConfigureOriginalWindowsDeveloperRegistrations(collection);
+        AddNativeCakeAccountServices(collection);
+        ConfigureOriginalNativeHomeApprovalServices(collection);
 #endif
         _services = collection.BuildServiceProvider(new ServiceProviderOptions
         {
@@ -96,6 +100,7 @@ public sealed partial class App : Avalonia.Application
         Services = _services;
 #if !ANDROID
         CaptureOriginalCanonicalProcessOwner(_services);
+        CaptureOriginalWindowsDeveloperBorrowers(_services);
 #endif
         _actualComputerUseOverlay = ResolveOriginalComputerUseOverlay(_services);
         Subscribe.EventBus = _services.GetRequiredService<HavenEventBus>();
@@ -116,6 +121,7 @@ public sealed partial class App : Avalonia.Application
             mainView.ApplyEdition(HavenStartupExperiencePolicy.Edition);
             _services.GetRequiredService<WorkspaceSessionCoordinator>().Register(mainView, WorkspaceWindowKind.Main, queueSave: false);
             var window = new MainWindow(preferences) { DataContext = mainView, PreserveWorkspaceSessionOnClose = true };
+            ConfigureOriginalWindowsNativeRoutes(window, mainView);
             ConfigureOriginalDesktopShutdown(desktop, window, mainView);
             window.Opened += (_, _) => { _ = InitialiseHaven(mainView); };
             desktop.MainWindow = window;
@@ -148,11 +154,19 @@ public sealed partial class App : Avalonia.Application
             var lifecycle = services.GetRequiredService<IApplicationLifecycle>();
             await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => lifecycle.CrashRecoveryAsync(CancellationToken.None)));
             await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => lifecycle.StartupAsync(CancellationToken.None)));
+#if !ANDROID
+            await original.AwaitAsync(AcquireOriginalAppSynchronous(original, StartOriginalWindowsHomeAsync));
+#endif
             await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => services.GetRequiredService<ModeSeedService>().SeedBuiltInModesAsync(CancellationToken.None)));
             var migration = await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
                 () => services.GetRequiredService<ILegacyStateMigrator>().MigrateIfNeededAsync(CancellationToken.None)));
             await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => shell.InitializeAsync(migration, CancellationToken.None)));
             await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => shell.RestoreWorkspaceSessionAsync(CancellationToken.None)));
+
+#if !ANDROID
+            await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
+                () => OpenOriginalInitialProductRouteAsync(shell, original.Token)));
+#endif
 
 #if !ANDROID
             await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => services.GetRequiredService<Haven.Desktop.Overlay.OverlayWorkspaceController>().InitializeAsync(CancellationToken.None)));

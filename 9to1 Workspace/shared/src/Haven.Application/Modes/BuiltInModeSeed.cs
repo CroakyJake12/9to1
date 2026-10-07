@@ -64,6 +64,13 @@ public sealed class BuiltInModeSeed
             DateTimeOffset.MinValue, DateTimeOffset.MinValue)
         { InvocationOperability = new(AppOperabilityClassification.OrdinaryApplication, AppOperabilityPath.TypedApi) },
         new ModeDefinition(
+            Guid.Parse("a0000000-0000-0000-0000-000000000028"),
+            "dev", "Dev", "Reopen saved development projects and their existing tasks", "code",
+            HavenMode.Studio, "[\"Dev\"]", "[]", "[]", "[]", "Open saved development project references and the same existing canonical task and run. Opening a saved project starts no task, grants no permission, and does not authorize replay of accepted work.",
+            ModeSource.BuiltIn, ModeInstallState.BuiltIn, "Haven", "1.0.0", "[\"developer\",\"productivity\"]",
+            DateTimeOffset.MinValue, DateTimeOffset.MinValue)
+        { InvocationOperability = new(AppOperabilityClassification.OrdinaryApplication, AppOperabilityPath.TypedApi) },
+        new ModeDefinition(
             Guid.Parse("a0000000-0000-0000-0000-000000000005"),
             "browse", "Browse", "Isolated tabbed browser with side assistant", "globe",
             HavenMode.Chat, "[\"Browse\"]", "[]", "[]", "[\"BrowserUse\",\"WebSearch\"]", "",

@@ -340,6 +340,67 @@ public sealed partial class SpaceTasksDashboardOriginalWorkTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Saved_owner_authentication_revision_is_provenance_while_same_current_actor_reopens_readonly()
+    {
+        var home = new NativeReadinessStartup(); home.Release();
+        await using var control = await NativeReadinessControl.CreateAsync(home);
+        var actor = control.Actors.Current;
+        var prior = control.Context.Snapshot;
+        var saved = prior with { OwnerBinding = new(prior.TaskId, prior.ContextId, prior.ExecutionId,
+            actor.ActorId, actor.ProfileId, actor.AccountId, actor.OrganisationId,
+            "controlled-historical-process-authentication", "controlled historical provenance; no command grant") };
+        control.Context.Snapshot = saved; control.Context.Tasks.Current = saved;
+        var actual = control.Start();
+        Assert.Null(await control.InspectAsync(actual));
+        var check = control.Forwarder.ActualCheck!;
+        Assert.Null(await control.InspectAsync(check));
+        Assert.True(check.IsCompletedSuccessfully);
+        var observed = await check; // Join the SAME completed original; no blocking Result accessor.
+        Assert.Equal(CuiSceneAvailabilityState.Unavailable, observed.State);
+        Assert.Equal("CONTROLLED_UNAVAILABLE_HOME", observed.Code); // No Ready/frame is manufactured.
+        Assert.True(control.Actors.Calls >= 3);
+        Assert.Equal(actor, control.Actors.Current);
+        Assert.Same(saved, control.Context.Tasks.Current);
+        Assert.Equal("controlled-historical-process-authentication", saved.OwnerBinding!.AuthenticationRevision);
+        Assert.Equal(0, control.Context.Tasks.Writes); Assert.Equal(0, home.CloseCalls);
+    }
+
+    [AvaloniaTheory]
+    [InlineData("actor")]
+    [InlineData("profile")]
+    [InlineData("account")]
+    [InlineData("organisation")]
+    public async Task Saved_different_stable_owner_refuses_native_observation_before_Home_check(string changed)
+    {
+        var home = new NativeReadinessStartup();
+        await using var control = await NativeReadinessControl.CreateAsync(home);
+        var actor = control.Actors.Current;
+        var prior = control.Context.Snapshot;
+        var owner = new Haven.Core.TaskExecutionOwnerBinding(prior.TaskId, prior.ContextId, prior.ExecutionId,
+            actor.ActorId, actor.ProfileId, actor.AccountId, actor.OrganisationId,
+            "historical-process-authentication", "controlled provenance; no command grant");
+        owner = changed switch
+        {
+            "actor" => owner with { ActorId = "different controlled owner" },
+            "profile" => owner with { ProfileId = "different controlled profile" },
+            "account" => owner with { AccountId = Guid.NewGuid() },
+            _ => owner with { OrganisationId = Guid.NewGuid() }
+        };
+        var saved = prior with { OwnerBinding = owner };
+        control.Context.Snapshot = saved; control.Context.Tasks.Current = saved;
+        var actual = control.Start();
+        Assert.NotNull(await control.InspectAsync(actual));
+        var check = control.Forwarder.ActualCheck!;
+        Assert.NotNull(await control.InspectAsync(check)); Assert.True(check.IsFaulted);
+        Assert.NotNull(FindCause<UnauthorizedAccessException>(check.Exception!, x => x.Message.Contains("recorded Task owner", StringComparison.Ordinal)));
+        Assert.Equal(0, home.Calls); Assert.Same(saved, control.Context.Tasks.Current);
+        Assert.Equal(0, control.Context.Tasks.Writes);
+        control.Page.RequestRetirement();
+        Assert.NotNull(await control.InspectAsync(control.Frame.CloseAndDrainAsync()));
+        Assert.NotNull(await control.InspectAsync(control.Page.CloseAndDrainAsync()));
+    }
+
     private static async Task<Exception?> InspectNativeOriginalAsync(Task actual)
     {
         try { await actual.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken); return null; }

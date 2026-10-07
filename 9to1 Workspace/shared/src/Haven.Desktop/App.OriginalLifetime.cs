@@ -81,8 +81,24 @@ public sealed partial class App
         lock (_actualStartupAcquisitionGate) originals = _actualFailedStartupAcquisitionCloses.ToArray();
         var failures = new List<Exception>();
 #if !ANDROID
+        // Pure Home preflight precedes every failed-startup retirement effect.
+        _originalAppWork.RunCloseCallback(DemandOriginalWindowsHomeRetirementJoin);
+        _originalAppWork.RunCloseCallback(DemandOriginalWindowsNativeRouteRetirementJoin);
+        _originalAppWork.RunCloseCallback(DemandOriginalWindowsDeveloperRetirementJoin);
+        _originalAppWork.RunCloseCallback(DemandOriginalNativeCakeAccountRetirementJoin);
+        _originalAppWork.RunCloseCallback(DemandOriginalNativeHomeApprovalRetirementJoin);
         Task? actualCanonicalProcessDrain = null;
         try { _originalAppWork.RunCloseCallback(() => actualCanonicalProcessDrain = JoinOriginalUntransferredCanonicalProcessBorrowersAsync()); }
+        catch (Exception error) { AddAppCause(failures, error); }
+        RequestOriginalWindowsDeveloperRetirement(failures);
+        Task? actualNativeHomeApprovalDrain = null;
+        try { _originalAppWork.RunCloseCallback(() => actualNativeHomeApprovalDrain = JoinOriginalUntransferredNativeHomeApprovalsAsync()); }
+        catch (Exception error) { AddAppCause(failures, error); }
+        Task? actualNativeCakeAccountDrain = null;
+        try { _originalAppWork.RunCloseCallback(() => actualNativeCakeAccountDrain = JoinOriginalUntransferredNativeCakeAccountAsync()); }
+        catch (Exception error) { AddAppCause(failures, error); }
+        Task? actualWindowsNativeRoutesDrain = null;
+        try { _originalAppWork.RunCloseCallback(() => actualWindowsNativeRoutesDrain = JoinOriginalUntransferredWindowsNativeRoutesAsync()); }
         catch (Exception error) { AddAppCause(failures, error); }
         Task? actualNativeDevelopmentDrain = null;
         try { _originalAppWork.RunCloseCallback(() => actualNativeDevelopmentDrain = JoinOriginalUntransferredNativeDevelopmentBorrowersAsync()); }
@@ -92,8 +108,38 @@ public sealed partial class App
 #if !ANDROID
         if (actualCanonicalProcessDrain is not null)
             await JoinOriginalAppTaskAsync(actualCanonicalProcessDrain, failures);
+        if (actualWindowsNativeRoutesDrain is not null)
+            await JoinOriginalAppTaskAsync(actualWindowsNativeRoutesDrain, failures);
         if (actualNativeDevelopmentDrain is not null)
             await JoinOriginalAppTaskAsync(actualNativeDevelopmentDrain, failures);
+        if (actualNativeCakeAccountDrain is not null)
+            await JoinOriginalAppTaskAsync(actualNativeCakeAccountDrain, failures);
+        if (actualNativeHomeApprovalDrain is not null)
+            await JoinOriginalAppTaskAsync(actualNativeHomeApprovalDrain, failures);
+        Task? actualWindowsDeveloperDrain = null;
+        if ((actualCanonicalProcessDrain is null || actualCanonicalProcessDrain.IsCompletedSuccessfully) &&
+            (actualWindowsNativeRoutesDrain is null || actualWindowsNativeRoutesDrain.IsCompletedSuccessfully) &&
+            (actualNativeDevelopmentDrain is null || actualNativeDevelopmentDrain.IsCompletedSuccessfully))
+        {
+            try { _originalAppWork.RunCloseCallback(() => actualWindowsDeveloperDrain = JoinOriginalUntransferredWindowsDeveloperBorrowersAsync()); }
+            catch (Exception error) { AddAppCause(failures, error); }
+            if (actualWindowsDeveloperDrain is not null) await JoinOriginalAppTaskAsync(actualWindowsDeveloperDrain, failures);
+        }
+        else AddAppCause(failures, new InvalidOperationException("Original Windows developer completion dependencies remain live because business/source retirement did not settle successfully."));
+#endif
+#if !ANDROID
+        // Do not retire Home while an unresolved borrower may still use its state/permission ports.
+        if ((actualCanonicalProcessDrain is null || actualCanonicalProcessDrain.IsCompletedSuccessfully) &&
+            (actualNativeDevelopmentDrain is null || actualNativeDevelopmentDrain.IsCompletedSuccessfully) &&
+            (actualWindowsNativeRoutesDrain is null || actualWindowsNativeRoutesDrain.IsCompletedSuccessfully) &&
+            (actualWindowsDeveloperDrain is { IsCompletedSuccessfully: true }) &&
+            (actualNativeHomeApprovalDrain is null || actualNativeHomeApprovalDrain.IsCompletedSuccessfully))
+        {
+            Task? actualHomeDrain = null;
+            try { _originalAppWork.RunCloseCallback(() => actualHomeDrain = JoinOriginalUntransferredWindowsHomeAsync()); }
+            catch (Exception error) { AddAppCause(failures, error); }
+            if (actualHomeDrain is not null) await JoinOriginalAppTaskAsync(actualHomeDrain, failures);
+        }
 #endif
         ThrowAppCauses(failures); // Failed partial construction remains failed, never inferred as no effect.
     }
@@ -130,6 +176,8 @@ public sealed partial class App
         actualBorrowers.AddRange([shell, windows, notifications]);
 #if !ANDROID
         actualBorrowers.AddRange(CaptureOriginalNativeDevelopmentBorrowers(services));
+        actualBorrowers.Add(CaptureOriginalNativeCakeAccountBorrower(services));
+        actualBorrowers.AddRange(CaptureOriginalNativeHomeApprovalBorrowers(services));
 #endif
         if (_actualComputerUseOverlay is { } actualComputerUse) actualBorrowers.Add(actualComputerUse);
         else throw new InvalidOperationException("The original App has not retained its actual Computer Use singleton.");
@@ -154,6 +202,11 @@ public sealed partial class App
         {
             _canonicalProcessBorrowersTransferred = true;
             _nativeDevelopmentBorrowersTransferred = true;
+            _windowsHomeBorrowerTransferred = true;
+            _windowsNativeRoutesTransferred = true;
+            _windowsDeveloperBorrowersTransferred = true;
+            _nativeCakeBorrowerTransferred = true;
+            _nativeHomeApprovalBorrowerTransferred = true;
         }
 #endif
         window.Closing += OnOriginalPrimaryWindowClosing;
@@ -225,6 +278,12 @@ public sealed partial class App
         // Pure whole-cohort preflight before ANY stop/close acquisition. A live
         // child's encompassing self-join cannot partially retire its siblings.
         var preflightFailures = new List<Exception>();
+#if !ANDROID
+        try { DemandOriginalWindowsDeveloperRetirementJoin(); }
+        catch (Exception error) { AddAppCause(preflightFailures, error); }
+        try { DemandOriginalWindowsHomeRetirementJoin(); }
+        catch (Exception error) { AddAppCause(preflightFailures, error); }
+#endif
         foreach (var owner in actualOwners)
             if (owner is IDesktopOriginalRetirementJoinGuard guard)
                 try { guard.DemandExternalOriginalRetirementJoin(); }
@@ -236,6 +295,9 @@ public sealed partial class App
             { failures.Add(new DesktopOriginalRetirementUnavailableException(owner.GetType())); continue; }
             try { participant.RequestRetirement(); } catch (Exception error) { AddAppCause(failures, error); }
         }
+#if !ANDROID
+        RequestOriginalWindowsDeveloperRetirement(failures);
+#endif
         var actualTasks = new List<Task>();
         foreach (var owner in actualOwners)
             if (owner is IDesktopOriginalRetirementParticipant participant && owner is IDesktopOriginalRetirementJoinGuard guard)
@@ -256,6 +318,11 @@ public sealed partial class App
         foreach (var actual in actualWindowResources.Distinct<Task>(ReferenceEqualityComparer.Instance))
             await JoinOriginalAppTaskAsync(actual, failures);
         ThrowAppCauses(failures);
+#if !ANDROID
+        try { await JoinOriginalAppTaskAsync(JoinOriginalWindowsDeveloperBorrowersAsync(), failures); }
+        catch (Exception error) { AddAppCause(failures, error); }
+        ThrowAppCauses(failures);
+#endif
         // Closed callbacks are original work too. Retain them while diagnostics,
         // provider and dispatcher still exist; no final marker precedes this phase.
         var closeStart = new TaskCompletionSource();
@@ -263,6 +330,13 @@ public sealed partial class App
         closeStart.SetResult();
         await JoinOriginalAppTaskAsync(_actualWindowClosure, failures);
         ThrowAppCauses(failures);
+#if !ANDROID
+        // Native resources and all original business borrowers have settled; only now
+        // may their SAME Home owner stop its listener/issuer and dispose its runtime.
+        try { await JoinOriginalAppTaskAsync(JoinOriginalWindowsHomeAfterBorrowersAsync(), failures); }
+        catch (Exception error) { AddAppCause(failures, error); }
+        ThrowAppCauses(failures);
+#endif
         // Concrete diagnostics source custody02 must be selected and verified by
         // Root. A generic IDisposable/boolean cannot certify another sink's writers.
         if (_productionDiagnostics is ProductionDiagnostics diagnostics)

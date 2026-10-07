@@ -46,6 +46,9 @@ public sealed partial class WorkspaceToolService
             internal string DirectoryPath => directory;
             internal string[] Components => components;
             internal OriginalLinuxPathLease? Root;
+            internal DeveloperWindowsRootLease? WindowsRoot;
+            internal DeveloperWindowsIdentity? WindowsAncestorIdentity;
+            internal string? WindowsSid;
             internal SafeFileHandle? AncestorHandle;
             internal LinuxIdentity AncestorIdentity;
             internal Original PreparingOriginal = null!;
@@ -77,17 +80,21 @@ public sealed partial class WorkspaceToolService
             internal Task? OriginalCanceledTask;
             internal Exception? OriginalCancellationCause;
             internal LinuxIdentity CommittedIdentity;
+            internal DeveloperWindowsIdentity? WindowsCommittedIdentity;
+            internal bool WindowsPublished;
+            internal bool WindowsNamespaceAttempted;
             internal SafeFileHandle? LockHandle, StageHandle, InputHandle, BorrowedStageHandle;
             internal readonly List<SafeFileHandle> Parents = [];
             internal FileStream? Output, Input;
         }
         private sealed class WorkspaceMetadataObservation(WorkspaceMetadataPreparation preparation,
-            WorkspaceMetadataOperation operation, string document, string hash, LinuxIdentity identity)
+            WorkspaceMetadataOperation operation, string document, string hash, LinuxIdentity identity, DeveloperWindowsIdentity? windowsIdentity = null)
             : IDeveloperProjectOriginalWorkspaceMetadataObservation
         {
             internal WorkspaceMetadataPreparation Preparation => preparation;
             internal WorkspaceMetadataOperation Operation => operation;
             internal LinuxIdentity Identity => identity;
+            internal DeveloperWindowsIdentity? WindowsIdentity => windowsIdentity;
             public string OriginalCommittedDocument => document;
             public string OriginalDocumentSha256 => hash;
         }
@@ -121,7 +128,7 @@ public sealed partial class WorkspaceToolService
         {
             lock (_gate) return !_retiring && value is WorkspaceMetadataPreparation preparation &&
                 ReferenceEquals(preparation.Owner, this) && ReferenceEquals(preparation.Store, store) &&
-                _workspaceMetadataPreparations.Contains(preparation) && preparation.Root is not null &&
+                _workspaceMetadataPreparations.Contains(preparation) && (preparation.Root is not null || preparation.WindowsRoot is not null) &&
                 !preparation.Sealed && preparation.Intent.WorkspaceId == workspaceId && !preparation.Attempted;
         }
         public Task<IDeveloperProjectOriginalWorkspaceMetadataPreparation> PrepareOriginalWorkspaceMetadataAsync(
@@ -151,7 +158,8 @@ public sealed partial class WorkspaceToolService
                     token.ThrowIfCancellationRequested(); RequireWorkspaceMetadataExports();
                     var ancestor = Path.TrimEndingDirectorySeparator(Path.GetFullPath(store.OriginalWorkspaceMetadataAncestor));
                     var directory = Path.TrimEndingDirectorySeparator(Path.GetFullPath(store.OriginalWorkspaceMetadataDirectory));
-                    if (!IsWithinRoot(ancestor, directory, StringComparison.Ordinal) || ancestor == directory)
+                    var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+                    if (!IsWithinRoot(ancestor, directory, comparison) || string.Equals(ancestor, directory, comparison))
                         throw new UnauthorizedAccessException("The configured metadata directory escapes its bounded actual ancestor.");
                     var components = Path.GetRelativePath(ancestor, directory).Split(Path.DirectorySeparatorChar);
                     if (components.Length is < 1 or > 4 || components.Any(value => !SafeLeaf(value)))
@@ -166,6 +174,14 @@ public sealed partial class WorkspaceToolService
                     }
                     // Retain actual ancestor before returning the preparation. No metadata
                     // directory/file is created until the separately held original Home entry.
+                    if (OperatingSystem.IsWindows())
+                    {
+                        preparation.WindowsRoot = new DeveloperWindowsRootLease(ancestor);
+                        preparation.WindowsSid = preparation.WindowsRoot.Principal;
+                        preparation.AncestorHandle = preparation.WindowsRoot.OpenDirectory(ancestor);
+                        DemandDeveloperWindowsOwner(preparation.AncestorHandle, preparation.WindowsSid);
+                        preparation.WindowsAncestorIdentity = ReadDeveloperWindowsIdentity(preparation.AncestorHandle); return true;
+                    }
                     preparation.Root = new OriginalLinuxPathLease(ancestor);
                     preparation.AncestorHandle = preparation.Root.OpenDirectory(ancestor);
                     preparation.AncestorIdentity = ReadLinuxIdentity(preparation.AncestorHandle); return true;
@@ -262,6 +278,7 @@ public sealed partial class WorkspaceToolService
             if (!ReferenceEquals(preparation.Operation, operation) || !preparation.Permission.IsIssuedOriginalStepEntry(preparation.Step, operation.Entry))
                 throw new UnauthorizedAccessException("No SAME privately issued held entry owns this native metadata step.");
             operation.Entry.DemandOriginalStepEntry(preparation.Step); DemandCurrent(preparation.Capture.Physical);
+            if (preparation.WindowsRoot is not null) { DemandWindowsWorkspaceMetadata(preparation, operation); return; }
             preparation.Root!.DemandCurrent();
             var path = preparation.Ancestor;
             for (var i = 0; i < operation.Parents.Count; i++)
@@ -280,6 +297,7 @@ public sealed partial class WorkspaceToolService
         private async Task<IDeveloperProjectOriginalWorkspaceMetadataObservation> WriteWorkspaceMetadata(
             WorkspaceMetadataPreparation preparation, WorkspaceMetadataOperation operation, CancellationToken token)
         {
+            if (preparation.WindowsRoot is not null) return await WriteWindowsWorkspaceMetadata(preparation, operation, token).ConfigureAwait(false);
             var errors = new List<Exception>(); WorkspaceMetadataObservation? observation = null;
             try
             {
@@ -418,8 +436,10 @@ public sealed partial class WorkspaceToolService
             await begin.ConfigureAwait(false); var errors = new List<Exception>();
             foreach (var actual in new[] { preparation.PreparingOriginal.Driver, preparation.Operation?.Driver }.OfType<Task>())
                 try { await actual.ConfigureAwait(false); } catch (Exception error) { AddOriginalErrors(errors, actual, error); }
-            try { Invoke(() => { preparation.AncestorHandle?.Dispose(); return true; }); } catch (Exception error) { AddOriginalErrors(errors, null, error); }
+            try { if (preparation.WindowsRoot is not null) InvokeSavedRootOwnedCleanup(() => { preparation.AncestorHandle?.Dispose(); return true; });
+                else Invoke(() => { preparation.AncestorHandle?.Dispose(); return true; }); } catch (Exception error) { AddOriginalErrors(errors, null, error); }
             try { Invoke(() => { preparation.Root?.Dispose(); return true; }); } catch (Exception error) { AddOriginalErrors(errors, null, error); }
+            try { InvokeSavedRootOwnedCleanup(() => { preparation.WindowsRoot?.Dispose(); return true; }); } catch (Exception error) { AddOriginalErrors(errors, null, error); }
             ThrowOriginalErrors(errors);
         }
         private WorkspaceMetadataPreparation RequireWorkspaceMetadataOutcome(IDeveloperProjectOriginalWorkspaceMetadataPreparation value,
@@ -453,6 +473,8 @@ public sealed partial class WorkspaceToolService
         private async Task ValidateCommittedWorkspaceDocument(WorkspaceMetadataPreparation preparation,
             WorkspaceMetadataObservation observation, CancellationToken token)
         {
+            if (preparation.WindowsAncestorIdentity is not null)
+            { await ValidateWindowsCommittedWorkspaceDocument(preparation, observation, token).ConfigureAwait(false); return; }
             OriginalLinuxPathLease? root = null; SafeFileHandle? ancestor = null, handle = null; FileStream? input = null;
             var errors = new List<Exception>(); var original = _executing.Value ?? throw new InvalidOperationException("No actual validation original exists.");
             Task? actual = null;
@@ -515,7 +537,8 @@ public sealed partial class WorkspaceToolService
     }
     private static void RequireWorkspaceMetadataExports()
     {
-        if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("Strict original Dev metadata currently requires Linux descriptor-relative create-only link; Windows selection remains unconfigured.");
+        if (OperatingSystem.IsWindows()) { RequireDeveloperWindowsExports(); return; }
+        if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("Strict original Dev metadata requires supported descriptor-relative create-only publication.");
         RequireLinuxExports();
         if (!NativeLibrary.TryLoad("libc.so.6", out var library)) throw new PlatformNotSupportedException("No supported native metadata library exists.");
         try { foreach (var name in new[] { "mkdirat", "flock" }) if (!NativeLibrary.TryGetExport(library, name, out _)) throw new PlatformNotSupportedException("The required original native metadata primitive is unavailable: " + name); }

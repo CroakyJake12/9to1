@@ -1,0 +1,37 @@
+<Cui id="9to1.Sites.NativeAuthoring" version="1">
+  <Grid id="sites-authoring-shell" rows="Auto,Auto,*,Auto,Auto,Auto,Auto" accessible-name="Sites authoring">
+    <WrapPanel orientation="Horizontal">
+      <Button content="Refresh" action="9to1.Sites.Refresh" is-enabled="{Binding CanRefresh}" accessible-name="Reload original Sites projects" />
+      <SitesNameInput accessible-name="Project or page name" />
+      <SitesPathInput accessible-name="Project folder or page route" />
+      <Button content="New project" action="9to1.Sites.CreateProject" is-enabled="{Binding CanCreateProject}" accessible-name="Review new Sites project in Home" />
+      <Button content="New page" action="9to1.Sites.CreatePage" is-enabled="{Binding CanCreatePage}" accessible-name="Review new page in Home" />
+    </WrapPanel>
+    <TextBlock grid-row="1" text="{Binding Selection}" accessible-name="Selected project and saved revision" />
+    <Grid grid-row="2" columns="*,*,*" accessible-name="Project pages and content">
+      <SitesProjects grid-column="0" accessible-name="Sites projects" />
+      <SitesPages grid-column="1" accessible-name="Selected project pages" />
+      <SitesComponents grid-column="2" accessible-name="Selected page headings and text" />
+    </Grid>
+    <StackPanel grid-row="3">
+      <SitesTextInput accessible-name="Heading or text content" />
+      <WrapPanel orientation="Horizontal">
+        <Button content="Add heading" action="9to1.Sites.AddHeading" is-enabled="{Binding CanAdd}" accessible-name="Review adding a heading in Home" />
+        <Button content="Add text" action="9to1.Sites.AddText" is-enabled="{Binding CanAdd}" accessible-name="Review adding text in Home" />
+        <Button content="Save text" action="9to1.Sites.SaveText" is-enabled="{Binding CanSaveText}" accessible-name="Review saving selected text in Home" />
+        <Button content="Preview" action="9to1.Sites.Preview" is-enabled="{Binding CanPreview}" accessible-name="Preview saved page headings text and HTML" />
+      </WrapPanel>
+    </StackPanel>
+    <WrapPanel grid-row="4" orientation="Horizontal">
+      <TextBlock text="{Binding PendingChange}" accessible-name="Pending Sites edit" />
+      <Button content="Apply" action="9to1.Sites.Apply" is-enabled="{Binding CanApply}" accessible-name="Apply the original Home-reviewed Sites edit" />
+      <Button content="Cancel change" action="9to1.Sites.CancelReview" is-enabled="{Binding CanCancel}" accessible-name="Retire the original edit before execution" />
+      <Button content="Retry audit" action="9to1.Sites.RetryAudit" is-enabled="{Binding CanRetryAudit}" accessible-name="Retry only the saved Sites Home audit" />
+    </WrapPanel>
+    <StackPanel grid-row="5" accessible-name="Saved page preview">
+      <SitesPreview accessible-name="Saved page heading and text preview" />
+      <SitesHtmlPreview accessible-name="Generated HTML preview" />
+    </StackPanel>
+    <TextBlock grid-row="6" text="{Binding Status}" accessible-name="Sites operation status" />
+  </Grid>
+</Cui>

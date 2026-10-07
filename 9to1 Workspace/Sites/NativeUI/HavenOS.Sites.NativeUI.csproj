@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>HavenOS.Sites.NativeUI</AssemblyName>
+    <RootNamespace>HavenOS.Apps.Sites.NativeUI</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../HavenOS.Sites.csproj" />
+    <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+    <EmbeddedResource Include="UI/SitesAuthoring.cui" LogicalName="HavenOS.Sites.NativeUI.UI.SitesAuthoring.cui" />
+  </ItemGroup>
+</Project>

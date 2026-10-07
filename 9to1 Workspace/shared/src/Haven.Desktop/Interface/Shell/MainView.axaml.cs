@@ -1673,6 +1673,10 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         {
             await OpenFilesAsync(openInNewTab);
         }
+        else if (route.Kind == HavenAppRouteKind.Dev)
+        {
+            await OpenOriginalDevelopmentCatalogAsync(openInNewTab);
+        }
         else if (route.Kind == HavenAppRouteKind.Plan)
         {
             if (openInNewTab) AddFallbackTab();

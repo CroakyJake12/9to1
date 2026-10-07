@@ -34,12 +34,15 @@
     <ProjectReference Include="../../../Spaces/HavenOS.Spaces.csproj" />
     <ProjectReference Include="../../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
     <ProjectReference Include="..\Haven.Infrastructure\Haven.Infrastructure.csproj" />
+    <ProjectReference Include="../../../Accounts/Remote/NineToOne.Accounts.Remote.csproj" />
+    <ProjectReference Include="../../../Home/NativeUI/HavenOS.Home.NativeUI.csproj" />
     <ProjectReference Include="../../../Files/NativeUI/HavenOS.Files.NativeUI.csproj" />
     <ProjectReference Include="..\Haven.Browser\Haven.Browser.csproj" />
     <!-- During Phase 2 this desktop project is the Avalonia backend/host for platform-neutral Haven.UI. -->
     <ProjectReference Include="..\Haven.UI\Haven.UI.csproj" />
     <!-- The original Sites authority adapter consumes the existing typed Files/Home ownership modules. -->
     <ProjectReference Include="../../../Sites/HavenOS.Sites.csproj" />
+    <ProjectReference Include="../../../Sites/NativeUI/HavenOS.Sites.NativeUI.csproj" />
     <ProjectReference Include="../../../Files/NativeHost/HavenOS.Files.NativeHost.csproj" />
     <Using Include="HavenOS.Files.NativeHost" />
     <!-- Legacy Haven.Automations project retired; scheduled Tasks live in Haven.Application. -->
@@ -74,5 +77,11 @@
     <Compile Update="Views\Pages\Home\NewDashboardPage.axaml.cs">
       <DependentUpon>NewDashboardPage.axaml</DependentUpon>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- SAME canonical platform-neutral account binding and CUI; no parallel native account page. -->
+    <Compile Include="../../../../apps/Web/Accounts/AccountBrowserBindings.cs" Link="Accounts/Shared/AccountBrowserBindings.cs" />
+    <Compile Include="../../../../apps/Web/Services/IAccountBrowserTransport.cs" Link="Accounts/Shared/IAccountBrowserTransport.cs" />
+    <EmbeddedResource Include="../../../../apps/Web/Accounts/Accounts.cui" LogicalName="Haven.Desktop.NativeCake.Accounts.cui" />
   </ItemGroup>
 </Project>

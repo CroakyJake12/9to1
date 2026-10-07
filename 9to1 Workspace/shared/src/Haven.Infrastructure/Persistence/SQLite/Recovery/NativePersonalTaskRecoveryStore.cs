@@ -5,7 +5,7 @@ namespace Haven.Infrastructure;
 
 /// <summary>Actual configured Linux personal-store kernel identity. This is not Home, Windows,
 /// browser/account ownership, a model grant or an inferred owner from environment usernames.</summary>
-internal sealed class NativePersonalTaskRecoveryStore : IDisposable
+internal sealed partial class NativePersonalTaskRecoveryStore : IDisposable
 {
     private readonly SafeFileHandle _directory;
     private readonly SafeFileHandle _database;
@@ -39,9 +39,11 @@ internal sealed class NativePersonalTaskRecoveryStore : IDisposable
         catch { _directory.Dispose(); throw; }
     }
 
-    internal static NativePersonalTaskRecoveryStore Acquire(string directory, string database) => new(directory, database);
+    internal static NativePersonalTaskRecoveryStore Acquire(string directory, string database) =>
+        OperatingSystem.IsWindows() ? AcquireOriginalWindows(directory, database) : new(directory, database);
     internal void Validate()
     {
+        if (_windows is { } windows) { windows.Validate(); return; }
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (GetEffectiveUserId() != _uid || !Observe(_directory, true).SameObject(_expectedDirectory)
             || !Observe(_database, false).SameObject(_expectedDatabase)
@@ -56,6 +58,7 @@ internal sealed class NativePersonalTaskRecoveryStore : IDisposable
 
     internal byte[] ReadOrCreateAuthenticationKey(bool create)
     {
+        if (_windows is { } windows) return windows.ReadOrCreateAuthenticationKey(create);
         if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("Protected personal-store keys require the actual Linux kernel owner.");
         Validate();
         var path = Path.Combine(_directoryPath, ".task-recovery-auth.v1");
@@ -139,6 +142,7 @@ internal sealed class NativePersonalTaskRecoveryStore : IDisposable
     }
     public void Dispose()
     {
+        if (_windows is { } windows) { windows.Dispose(); return; }
         if (_disposed) return; _disposed = true;
         try { _database.Dispose(); } finally { _directory.Dispose(); }
     }

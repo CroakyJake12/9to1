@@ -128,6 +128,7 @@ public sealed class WorkspaceToolRuntime(
         Task? originalHistoryTask = null;
         var originalProcess = new ProcessObservation();
         var originalRead = new ReadObservation();
+        var originalTraversal = new TraversalObservation();
         try
         {
             IReadOnlyList<WorkspaceMutation> mutations = [];
@@ -154,9 +155,13 @@ public sealed class WorkspaceToolRuntime(
                 default:
                     output = call.Name switch
                     {
-                        "list_files" => await ListFilesAsync(workspaceRoot, Text(call, "path", "."), Integer(call, "max_depth", 5), cancellationToken).ConfigureAwait(false),
+                        "list_files" => originalOwned
+                            ? await TraverseOriginalAsync(workspaceRoot, Text(call, "path", "."), Integer(call, "max_depth", 5), null, cancellationToken, originalTraversal).ConfigureAwait(false)
+                            : await ListFilesAsync(workspaceRoot, Text(call, "path", "."), Integer(call, "max_depth", 5), cancellationToken).ConfigureAwait(false),
                         "read_file" => await ReadFileAsync(workspaceRoot, RequiredText(call, "path"), cancellationToken, originalOwned, originalRead).ConfigureAwait(false),
-                        "search_files" => await SearchFilesAsync(workspaceRoot, Text(call, "path", "."), RequiredText(call, "query"), Integer(call, "max_results", 100), cancellationToken).ConfigureAwait(false),
+                        "search_files" => originalOwned
+                            ? await TraverseOriginalAsync(workspaceRoot, Text(call, "path", "."), Integer(call, "max_results", 100), RequiredText(call, "query"), cancellationToken, originalTraversal).ConfigureAwait(false)
+                            : await SearchFilesAsync(workspaceRoot, Text(call, "path", "."), RequiredText(call, "query"), Integer(call, "max_results", 100), cancellationToken).ConfigureAwait(false),
                         "run_command" => await RunCommandAsync(workspaceRoot, RequiredText(call, "command"), Integer(call, "timeout_seconds", 120), cancellationToken, originalProcess).ConfigureAwait(false),
                         "run_tests" => await RunTestsAsync(workspaceRoot, Text(call, "command"), Integer(call, "timeout_seconds", 600), cancellationToken, originalProcess).ConfigureAwait(false),
                         _ => throw new InvalidOperationException($"Unknown workspace tool '{call.Name}'.")
@@ -185,7 +190,7 @@ public sealed class WorkspaceToolRuntime(
                     OriginalProcessResult = originalProcess.Result, OriginalReadText = originalOwned ? originalRead.Text : null };
         }
         catch (Exception ex) when (ex is not OperationCanceledException || originalOwned &&
-            (originalHistoryTask?.IsFaulted == true || originalProcess.Task?.IsFaulted == true))
+            (originalHistoryTask?.IsFaulted == true || originalProcess.Task?.IsFaulted == true || originalTraversal.Task?.IsFaulted == true))
         {
             var output = $"Tool error: {ex.Message}";
             return new WorkspaceToolResult(
@@ -196,11 +201,34 @@ public sealed class WorkspaceToolRuntime(
                 // One actual Task.Exception capture preserves every direct original history cause.
                 // A sole cause keeps its exact object; nested groups remain exact, never Flattened.
                 OriginalRuntimeError = originalOwned ? OriginalHistoryCause(originalHistoryTask?.IsFaulted == true
-                    ? originalHistoryTask : originalProcess.Task, ex) : null,
+                    ? originalHistoryTask : originalProcess.Task?.IsFaulted == true ? originalProcess.Task : originalTraversal.Task, ex) : null,
                 OriginalProcessResult = originalProcess.Result,
                 OriginalReadText = originalOwned ? originalRead.Text : null
             };
         }
+    }
+
+    private sealed class TraversalObservation { internal Task<WorkspaceOriginalTraversalResult>? Task; }
+    private async Task<string> TraverseOriginalAsync(string root, string path, int limit, string? query,
+        CancellationToken token, TraversalObservation observation)
+    {
+        if (tools is not IWorkspaceOriginalTraversalService traversal)
+            throw new PlatformNotSupportedException("The original invocation has no retained per-child traversal owner.");
+        observation.Task = query is null ? traversal.ListOriginalFilesAsync(root, path, limit, token)
+            : traversal.SearchOriginalFilesAsync(root, path, query, limit, token);
+        var result = await observation.Task.ConfigureAwait(false);
+        var lines = query is null
+            ? result.Entries.Select(entry => entry.IsDirectory ? entry.RelativePath + "/" : $"{entry.RelativePath} ({entry.Size} bytes)")
+            : result.Matches.Select(match => $"{match.RelativePath}:{match.Line}: {match.Text}");
+        var body = string.Join('\n', lines);
+        // Keep the coverage footer inside the existing presentation bound. The outer
+        // runtime truncation must never erase a reached limit or exclusion report.
+        const string marker = "\n[output character limit reached]";
+        var outputLimited = body.Length > MaxToolOutputCharacters - 512;
+        if (outputLimited) body = body[..(MaxToolOutputCharacters - 512 - marker.Length)] + marker;
+        var bounded = outputLimited || result.EntryLimitReached || result.DepthLimitReached || result.ResultLimitReached || result.ByteLimitReached || result.ValidationLimitReached;
+        if (body.Length == 0) body = query is null ? "No entries observed." : "No matches observed.";
+        return body + $"\n[read coverage: {(bounded ? "bounded" : "declared folder scanned")}; output-limit={outputLimited}; entry-limit={result.EntryLimitReached}; depth-limit={result.DepthLimitReached}; match-limit={result.ResultLimitReached}; byte-limit={result.ByteLimitReached}; validation-limit={result.ValidationLimitReached}; ignored-folders={result.IgnoredDirectoryCount}; large-files={result.LargeFileCount}; binary-files={result.BinaryFileCount}]";
     }
 
     private static Exception OriginalHistoryCause(Task? actualHistory, Exception observed)

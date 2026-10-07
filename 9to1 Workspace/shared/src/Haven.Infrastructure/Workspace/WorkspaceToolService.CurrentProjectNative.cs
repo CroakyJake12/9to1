@@ -17,7 +17,7 @@ public sealed partial class WorkspaceToolService
         IDeveloperProjectOriginalWorkspaceMetadataStore originalStore)
         => new CurrentProjectNativeSource(originalSelections, originalReads, originalStore);
 
-    private sealed class CurrentProjectNativeSource(
+    private sealed partial class CurrentProjectNativeSource(
         Func<IDeveloperOriginalCurrentProjectSelectionSource> selections,
         IDeveloperOriginalCurrentProjectReadAdmissionSource reads,
         IDeveloperProjectOriginalWorkspaceMetadataStore store) : IDeveloperOriginalCurrentProjectNativeSource
@@ -51,6 +51,9 @@ public sealed partial class WorkspaceToolService
             internal readonly object NativeGate = new();
             internal bool Sealed, Published;
             internal OriginalLinuxPathLease? MetadataRoot, FilesRoot;
+            internal DeveloperWindowsRootLease? WindowsMetadataRoot, WindowsFilesRoot;
+            internal DeveloperWindowsIdentity? WindowsMetadataIdentity, WindowsRegistrationIdentity, WindowsWorkingIdentity;
+            internal string? WindowsSid;
             internal SafeFileHandle? MetadataHandle, RegistrationHandle, WorkingRoot;
             internal LinuxIdentity MetadataIdentity, RegistrationIdentity, WorkingIdentity;
             internal uint OriginalUid;
@@ -214,6 +217,7 @@ public sealed partial class WorkspaceToolService
             Invoke(work, () =>
             {
                 token.ThrowIfCancellationRequested();
+                if (OperatingSystem.IsWindows()) { CaptureWindowsDescriptors(read); return true; }
                 if (!OperatingSystem.IsLinux() || RuntimeInformation.ProcessArchitecture is not (Architecture.X64 or Architecture.Arm64))
                     throw new PlatformNotSupportedException("Current project reconciliation requires supported Linux64 descriptor primitives.");
                 RequireLinuxExports();
@@ -252,7 +256,8 @@ public sealed partial class WorkspaceToolService
                     throw new UnauthorizedAccessException("The actual descriptor-backed registration state/selected project differ from current Files observations.");
                 DemandDocument(document.RootElement, descriptor);
                 read.Document = Encoding.UTF8.GetString(metadata); read.DocumentSha = Digest(metadata); read.RegistrationSha = Digest(registration);
-                read.Fingerprint = Digest(JsonSerializer.SerializeToUtf8Bytes(new
+                if (read.WindowsSid is not null) read.Fingerprint = WindowsFingerprint(read, selected.RootElement);
+                else read.Fingerprint = Digest(JsonSerializer.SerializeToUtf8Bytes(new
                 {
                     Registration = selected.RootElement, Root = new { read.WorkingIdentity.Inode, read.WorkingIdentity.DeviceMajor,
                         read.WorkingIdentity.DeviceMinor, read.WorkingIdentity.MountId }, descriptor.ConfiguredFilesRoot,
@@ -279,14 +284,23 @@ public sealed partial class WorkspaceToolService
         private async Task<byte[]> ReadBytes(Read read, SafeFileHandle handle, CancellationToken token)
         {
             var work = read.Work; FileStream? stream = null; Task? actual = null;
-            var errors = new List<Exception>(); byte[]? result = null; LinuxIdentity before = default;
+            var errors = new List<Exception>(); byte[]? result = null; LinuxIdentity before = default; DeveloperWindowsIdentity? windowsBefore = null;
             try
             {
                 Invoke(work, () =>
                 {
+                    if (read.WindowsSid is not null)
+                    {
+                        windowsBefore = ReadDeveloperWindowsIdentity(handle); DemandDeveloperWindowsOwner(handle, read.WindowsSid);
+                        if (!windowsBefore.Value.IsRegular || windowsBefore.Value.Links != 1 || windowsBefore.Value.Size > 1024UL * 1024)
+                            throw new UnauthorizedAccessException("The current Windows project document is not a bounded single-link regular file.");
+                    }
+                    else
+                    {
                     before = ReadLinuxIdentity(handle); DemandUid(handle, read.OriginalUid);
                     if (!before.IsRegular || before.Links != 1 || before.Size > 1024UL * 1024)
                         throw new UnauthorizedAccessException("The current project document is not a bounded single-link regular file.");
+                    }
                     // The private native owner retains the real handle. The stream owns only
                     // this nonowning wrapper, so stream retirement cannot retire that pin.
                     var wrapper = new SafeFileHandle(handle.DangerousGetHandle(), ownsHandle: false);
@@ -311,9 +325,18 @@ public sealed partial class WorkspaceToolService
                 }
                 Invoke(work, () =>
                 {
+                    if (windowsBefore is { } windows)
+                    {
+                        var observed = ReadDeveloperWindowsIdentity(handle); DemandDeveloperWindowsOwner(handle, read.WindowsSid!);
+                        if (!observed.IsRegular || observed.Links != 1 || !windows.SameReadVersion(observed) || (ulong)bytes.Length != observed.Size)
+                            throw new IOException("The actual current Windows project document changed during its native read.");
+                    }
+                    else
+                    {
                     var after = ReadLinuxIdentity(handle); DemandUid(handle, read.OriginalUid);
                     if (!after.IsRegular || after.Links != 1 || !before.SameReadVersion(after) || (ulong)bytes.Length != after.Size)
                         throw new IOException("The actual current project document changed during its descriptor read.");
+                    }
                     return true;
                 });
                 result = bytes.ToArray();
@@ -374,6 +397,7 @@ public sealed partial class WorkspaceToolService
         {
             lock (read.NativeGate)
             {
+                if (read.WindowsSid is not null) { DemandWindowsNative(read); return; }
                 if (read.NativeClose is not null || CurrentProjectGetEuid() != read.OriginalUid)
                     throw new ObjectDisposedException("current project native descriptors");
                 read.MetadataRoot!.DemandCurrent(); read.FilesRoot!.DemandCurrent();
@@ -448,7 +472,7 @@ public sealed partial class WorkspaceToolService
             // These are fixed privately acquired descriptors only. Parent refusal cannot
             // suppress owed disposal, and refusal remains a direct close failure.
             foreach (var handle in new IDisposable?[] { read.WorkingRoot, read.RegistrationHandle,
-                read.MetadataHandle, read.FilesRoot, read.MetadataRoot })
+                read.MetadataHandle, read.FilesRoot, read.MetadataRoot, read.WindowsFilesRoot, read.WindowsMetadataRoot })
                 if (handle is not null)
                     try { OwnedCleanup(read.Work, handle.Dispose); } catch (Exception error) { Add(errors, error); }
             Throw(errors);

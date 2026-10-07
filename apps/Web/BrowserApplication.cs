@@ -105,7 +105,8 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         {
             EnsureHome();
             var home = new BrowserHomeContext(_homeDocument!, NavigateHome, _accountSettings,
-                route => _surfaces.AvailableRoutes.Contains(route, StringComparer.Ordinal));
+                route => _surfaces.AvailableRoutes.Contains(route, StringComparer.Ordinal),
+                BrowserHomeDashboardLayoutStore.GetCurrent(_surfaces));
             if (!home.Open(target)) { home.Dispose(); return null; }
             return new(_homeDocument!, home, home, home, Admission: new HomeAdmission(this, home));
         }, cancellation);

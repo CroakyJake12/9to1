@@ -125,7 +125,7 @@ public sealed class HomeHostRenderTests
                 var settingsStatus = Assert.Single(window.GetVisualDescendants().OfType<TextBlock>(),
                     control => control.Name == "home-layout-status");
                 Assert.Contains("Saved revision 0", settingsStatus.Text, StringComparison.Ordinal);
-                Assert.Contains("Account sign-in is not connected", Assert.Single(window.GetVisualDescendants().OfType<TextBlock>(),
+                Assert.Contains("CAKE ID sign-in is separate from Home permissions", Assert.Single(window.GetVisualDescendants().OfType<TextBlock>(),
                     control => control.Name == "home-profile-status").Text, StringComparison.Ordinal);
                 var allowTiles = Assert.Single(window.GetVisualDescendants().OfType<Button>(),
                     control => control.Name == "settings-allow-ai-tiles");

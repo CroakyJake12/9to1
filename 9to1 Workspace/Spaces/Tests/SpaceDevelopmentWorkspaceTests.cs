@@ -10,7 +10,7 @@ namespace HavenOS.Apps.Spaces.Tests;
 /// <summary>Real versioned Space settings and Dev workspace files with fresh service instances.
 /// Task/conversation repositories are controlled observations; no native actor, installed Home,
 /// SQLite crash recovery, model execution or accepted physical effect is certified here.</summary>
-public sealed class SpaceDevelopmentWorkspaceTests
+public sealed partial class SpaceDevelopmentWorkspaceTests
 {
     [Fact]
     public async Task Saved_attachment_reopens_from_fresh_store_instances_with_same_ids_and_accepted_checkpoint()

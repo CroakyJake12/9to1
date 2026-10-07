@@ -28,6 +28,7 @@ public sealed partial class WorkspaceToolService
             internal string DirectoryPath => directoryPath;
             internal SafeFileHandle? Handle;
             internal LinuxIdentity Identity;
+            internal DeveloperWindowsIdentity? WindowsIdentity;
             internal readonly TaskCompletionSource Release = new(TaskCreationOptions.RunContinuationsAsynchronously);
             internal Task OriginalLifetime = null!;
             internal Task? OriginalPublicClose;
@@ -141,10 +142,14 @@ public sealed partial class WorkspaceToolService
                     Invoke(() =>
                     {
                         DemandCurrent(capture.Physical);
+                        if (capture.Physical.WindowsRoot is not null) CaptureWindowsDirectory(preparation);
+                        else
+                        {
                         preparation.Handle = capture.Physical.Root.OpenDirectory(preparation.DirectoryPath);
                         preparation.Identity = ReadLinuxIdentity(preparation.Handle);
                         DemandLinuxDescriptorPath(preparation.Handle, preparation.DirectoryPath);
                         if (!preparation.Identity.IsDirectory) throw new UnauthorizedAccessException("The actual captured path is not a directory.");
+                        }
                         return true;
                     });
                     return preparation;
@@ -208,7 +213,8 @@ public sealed partial class WorkspaceToolService
             await preparation.Release.Task.ConfigureAwait(false);
             // Actual native handle disposal runs under the same finite physical guard.
             // This original lifetime task, not the request TCS, is the joined cleanup.
-            Invoke(() => { preparation.Handle?.Dispose(); return true; });
+            if (preparation.Capture.Physical.WindowsRoot is not null) InvokeSavedRootOwnedCleanup(() => { preparation.Handle?.Dispose(); return true; });
+            else Invoke(() => { preparation.Handle?.Dispose(); return true; });
         }
 
         private Task<IDeveloperProjectOriginalDirectoryObservation> ObserveDirectory(DirectoryPreparation preparation,
@@ -241,9 +247,13 @@ public sealed partial class WorkspaceToolService
                         if (preparation.Handle is null || preparation.Handle.IsClosed)
                             throw new UnauthorizedAccessException("The actual directory descriptor retired before native observation.");
                         DemandCurrent(preparation.Capture.Physical);
+                        if (preparation.WindowsIdentity is not null) DemandWindowsDirectoryVersion(preparation, preparation.Handle);
+                        else
+                        {
                         DemandLinuxDescriptorPath(preparation.Handle, preparation.DirectoryPath);
                         if (!ReadLinuxIdentity(preparation.Handle).SameReadVersion(preparation.Identity))
                             throw new IOException("The exact existing directory changed before registration observation.");
+                        }
                         observation = new(preparation); return true;
                     });
                 }
@@ -294,10 +304,18 @@ public sealed partial class WorkspaceToolService
                     Invoke(() =>
                     {
                         token.ThrowIfCancellationRequested(); DemandCurrent(preparation.Capture.Physical);
+                        if (preparation.WindowsIdentity is not null)
+                        {
+                            current = preparation.Capture.Physical.WindowsRoot!.OpenDirectory(preparation.DirectoryPath);
+                            DemandWindowsDirectoryVersion(preparation, current);
+                        }
+                        else
+                        {
                         current = preparation.Capture.Physical.Root.OpenDirectory(preparation.DirectoryPath);
                         DemandLinuxDescriptorPath(current, preparation.DirectoryPath);
                         if (!ReadLinuxIdentity(current).SameReadVersion(preparation.Identity))
                             throw new IOException("The SAME directory observation no longer matches the original native identity/version.");
+                        }
                         RequireDirectoryOutcome(samePreparation, sameActual, sameObservation); return true;
                     });
                 }

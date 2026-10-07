@@ -51,7 +51,7 @@ public sealed partial class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFina
 
     internal sealed partial class Fence(WorkspaceTaskRunEffectAuthority issuer, TaskRunAttemptAdmission original,
         Guid actionId, string root, OllamaToolCall call, string scope, CapabilityRiskClass risk, bool requires)
-        : IWorkspaceToolFinalFence
+        : IWorkspaceOriginalReadFence
     {
         private WorkspaceTaskRunEffectAuthority Issuer => issuer;
         private readonly object _sync = new();
@@ -176,6 +176,52 @@ public sealed partial class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFina
                 });
             }
         }
+        private readonly List<Task> _readValidations = [];
+        public async ValueTask RevalidateOriginalReadAsync(CancellationToken token)
+        {
+            await ValidateOriginalActionAsync(token).ConfigureAwait(false);
+            Task validation;
+            try { validation = issuer._tasks.ValidateOriginalToolAsync(OriginalAttempt, OriginalCall.Name, token); }
+            catch (OperationCanceledException error)
+            { throw new AggregateException("Synchronous original read authority source fault.", error); }
+            lock (_sync) _readValidations.Add(validation);
+            try { await validation.ConfigureAwait(false); }
+            catch (Exception) when (validation.IsFaulted)
+            { System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(validation.Exception!).Throw(); throw; }
+            lock (_sync)
+            {
+                if (_closed || _pins == 0) throw new UnauthorizedAccessException("Original read retirement pin is unavailable.");
+                DemandOriginalAction();
+            }
+        }
+        public T RunOriginalRead<T>(string actualRoot, string target, Func<T> nativeRead, CancellationToken token)
+        {
+            ArgumentNullException.ThrowIfNull(nativeRead);
+            token.ThrowIfCancellationRequested();
+            var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+            var capturedRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(CanonicalWorkspaceRoot));
+            lock (_sync)
+            {
+                if (_closed || _pins == 0 || !Path.TrimEndingDirectorySeparator(Path.GetFullPath(actualRoot)).Equals(capturedRoot, comparison) ||
+                    OriginalCall.Name is not ("list_files" or "search_files") || _readValidations.Count == 0 ||
+                    _readValidations.Any(task => !task.IsCompletedSuccessfully))
+                    throw new UnauthorizedAccessException("SAME validated original action/raw-pin read pairing required.");
+                var declared = OriginalCall.Arguments.TryGetValue("path", out var value) && value.ValueKind == JsonValueKind.String
+                    ? value.GetString() ?? "." : OriginalCall.Arguments.TryGetValue("path", out value) ? value.ToString() : ".";
+                var start = Path.TrimEndingDirectorySeparator(Path.GetFullPath(Path.Combine(CanonicalWorkspaceRoot, declared)));
+                var exactTarget = Path.TrimEndingDirectorySeparator(Path.GetFullPath(target));
+                if (!(start.Equals(capturedRoot, comparison) || start.StartsWith(capturedRoot + Path.DirectorySeparatorChar, comparison)) ||
+                    !(exactTarget.Equals(start, comparison) || exactTarget.StartsWith(start + Path.DirectorySeparatorChar, comparison)))
+                    throw new UnauthorizedAccessException("The original read target escapes the captured folder.");
+                DemandOriginalAction();
+                // Same writer gate as Grant/Revoke/SetPolicy, finite native read initiation or
+                // observation only. All awaited authority/read/cleanup tasks run outside it.
+                return issuer._effects.RunOriginalEffect(scope, risk, requires, "Original workspace finite native read", () =>
+                {
+                    token.ThrowIfCancellationRequested(); DemandOriginalAction(); return nativeRead();
+                });
+            }
+        }
         internal void Seal() { lock (_sync) _closed = true; }
         private sealed class Pin(Fence owner, IAsyncDisposable actual) : IAsyncDisposable
         {
@@ -244,6 +290,9 @@ public sealed partial class WorkspaceTaskRunToolActionOwner : ITaskRunToolAction
         public WorkspaceTaskRunEffectAuthority.Fence? Fence { get; } = fence;
         public bool ReadOnly { get; } = readOnly;
         public Task<TaskRunToolActionResult>? OriginalExecution;
+        public Task<TaskRunToolActionResult>? OriginalToolFrame;
+        public int OriginalToolBodyEntered;
+        public Task? OriginalPreBodyClose;
         public TaskRunToolActionResult? Result;
         public WorkspaceToolPhysicalOutcome? Outcome;
         public readonly List<Exception> Errors = [];
@@ -285,7 +334,9 @@ public sealed partial class WorkspaceTaskRunToolActionOwner : ITaskRunToolAction
     }
     public bool SupportsCanonicalInvocation(ToolRuntimeKind runtime, string toolName) =>
         runtime == ToolRuntimeKind.Workspace && _service is IWorkspaceOriginalInvocationSource &&
-            (toolName is "read_file" or "preview_change_set" or "write_file" or "replace_in_file" or "apply_change_set" or "run_command" or "run_tests");
+            ((toolName is "read_file" or "preview_change_set" or "write_file" or "replace_in_file" or "apply_change_set" or "run_command" or "run_tests") ||
+             (toolName is "list_files" or "search_files") && _service is IWorkspaceOriginalTraversalSource traversal &&
+                 traversal.SupportsOriginalTraversal(toolName));
 
     private bool IsIssued(Preparation original) { lock (_sync) return _prepared.Contains(original); }
     public async Task<ITaskRunToolActionPreparation> PrepareOriginalAsync(TaskRunAttemptAdmission original,
@@ -377,16 +428,49 @@ public sealed partial class WorkspaceTaskRunToolActionOwner : ITaskRunToolAction
     private async Task StartPublishedAsync(Preparation original, Func<CancellationToken, Task<WorkspaceToolResult>> body,
         CancellationToken token, TaskCompletionSource<TaskRunToolActionResult> completion)
     {
+        // ExecuteOriginalAsync publishes under its registry lock. Yield before any frame
+        // callback or synchronous pre-body refusal can initiate independent native cleanup.
+        await Task.Yield();
         Task<TaskRunToolActionResult>? frame = null;
         try
         {
-            frame = _frames.StartOriginalToolFrameAsync(original.OriginalAttempt,
-                ct => ExecuteCoreAsync(original, body, ct), token);
+            frame = _frames.StartOriginalToolFrameAsync(original.OriginalAttempt, ct =>
+            {
+                Interlocked.Exchange(ref original.OriginalToolBodyEntered, 1);
+                return ExecuteCoreAsync(original, body, ct);
+            }, token);
+            original.OriginalToolFrame = frame; // SAME source Task, never an idle/response proxy.
             completion.TrySetResult(await frame.ConfigureAwait(false));
         }
-        catch (Exception error) { completion.TrySetException((Exception?)frame?.Exception ?? error); }
+        catch (Exception error)
+        {
+            var primary = (Exception?)frame?.Exception ?? error;
+            if (Volatile.Read(ref original.OriginalToolBodyEntered) != 0)
+            {
+                // Entered bodies retain their existing Complete/Close finally and exact result/fault path.
+                completion.TrySetException(primary); return;
+            }
+            var errors = new List<Exception> { primary };
+            if (original.OriginalInvocation is { } physical)
+            {
+                try
+                {
+                    original.OriginalPreBodyClose = physical.CloseAndDrainAsync();
+                    await original.OriginalPreBodyClose.ConfigureAwait(false);
+                }
+                catch (Exception cause) { errors.Add((Exception?)original.OriginalPreBodyClose?.Exception ?? cause); }
+            }
+            // Only a successfully joined actual close permits retiring this SAME issued fence.
+            // No CompleteOriginalAsync(true), fabricated result, receipt or action ACK is published.
+            if (original.OriginalPreBodyClose?.IsCompletedSuccessfully == true && original.Fence is { } fence)
+                try { _effects.RetireOriginal(fence); } catch (Exception cause) { errors.Add(cause); }
+            lock (_sync) foreach (var cause in errors) Add(original.Errors, cause);
+            if (errors.Count == 1 && frame?.IsCanceled == true && error is OperationCanceledException canceled)
+                completion.TrySetCanceled(canceled.CancellationToken);
+            else completion.TrySetException(errors.Count == 1 ? primary :
+                new AggregateException("Original workspace pre-body frame and independent physical cleanup failed.", errors));
+        }
     }
-
     public async ValueTask ValidateOriginalPreparationAsync(ITaskRunToolActionPreparation preparation,
         TaskExecutionSnapshot snapshot, CancellationToken token)
     {

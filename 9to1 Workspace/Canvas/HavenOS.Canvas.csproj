@@ -5,7 +5,11 @@
     <DefaultItemExcludes>$(DefaultItemExcludes);Source\**\*</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="Tests\**\*.cs" />
+    <Compile Remove="Tests\**\*.cs;NativeUI/**/*.cs;NativeUI.Tests/**/*.cs;Host/**/*.cs;CanvasNativeViewport.cs" />
+    <ProjectReference Include="../Home/HavenOS.Home.csproj" />
+    <ProjectReference Include="../../framework/CUI/Core/CakeOS.Cui.Core.csproj" />
+    <ProjectReference Include="../Files/CUI/HavenOS.Files.CUI.csproj" />
+    <EmbeddedResource Include="UI/CanvasWorkspace.cui" LogicalName="HavenOS.Apps.Canvas.UI.CanvasWorkspace.cui" />
     <ProjectReference Include="..\shared\src\Haven.Application\Haven.Application.csproj" />
     <ProjectReference Include="..\shared\src\Haven.Core\Haven.Core.csproj" />
   </ItemGroup>

@@ -26,6 +26,7 @@ public sealed partial class WorkspaceToolService
             internal SafeFileHandle? Handle;
             internal FileStream? Stream;
             internal LinuxIdentity Identity;
+            internal DeveloperWindowsIdentity? WindowsIdentity;
             internal Original PreparingOriginal = null!;
             internal Task OriginalLifetime = null!;
             internal readonly TaskCompletionSource Release = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -109,20 +110,41 @@ public sealed partial class WorkspaceToolService
                     Invoke(() =>
                     {
                         token.ThrowIfCancellationRequested(); DemandCurrent(capture.Physical);
+                        if (capture.Physical.WindowsRoot is not null)
+                        {
+                            preparation.Handle = capture.Physical.WindowsRoot.OpenRead(preparation.OriginalFilePath);
+                            preparation.WindowsIdentity = ReadDeveloperWindowsIdentity(preparation.Handle);
+                            if (held.WindowsIdentity is not { } identity || !preparation.WindowsIdentity.Value.SameReadVersion(identity) ||
+                                preparation.WindowsIdentity.Value.Size != (ulong)file.SizeBytes)
+                                throw new IOException("The exact captured Windows source changed before its metadata lease.");
+                        }
+                        else
+                        {
                         preparation.Handle = capture.Physical.Root.OpenRead(preparation.OriginalFilePath);
                         preparation.Identity = ReadLinuxIdentity(preparation.Handle);
                         if (!preparation.Identity.SameReadVersion(held.Identity) || preparation.Identity.Size != (ulong)file.SizeBytes)
                             throw new IOException("The exact captured source changed before its metadata lease.");
+                        }
                         preparation.Stream = new FileStream(preparation.Handle, FileAccess.Read, 4096, isAsync: false); return true;
                     });
                     Invoke(() => { hash = SHA256.HashDataAsync(preparation.Stream!, token).AsTask(); Retain(capture.Physical, hash); return true; });
                     var actualHash = await hash!.ConfigureAwait(false);
                     Invoke(() =>
                     {
-                        DemandCurrent(capture.Physical); DemandLinuxDescriptorPath(preparation.Handle!, preparation.OriginalFilePath);
+                        DemandCurrent(capture.Physical);
+                        if (preparation.WindowsIdentity is not null)
+                        {
+                            DemandWindowsFileVersion(preparation);
+                            if (Convert.ToHexString(actualHash).ToLowerInvariant() != file.ContentSha256)
+                                throw new IOException("The actual Windows source hash changed during original metadata preparation.");
+                        }
+                        else
+                        {
+                        DemandLinuxDescriptorPath(preparation.Handle!, preparation.OriginalFilePath);
                         if (!ReadLinuxIdentity(preparation.Handle!).SameReadVersion(preparation.Identity) ||
                             Convert.ToHexString(actualHash).ToLowerInvariant() != file.ContentSha256)
                             throw new IOException("The actual source identity/hash changed during original metadata preparation.");
+                        }
                         preparation.Stream!.Position = 0; return true;
                     });
                     return preparation;
@@ -151,9 +173,13 @@ public sealed partial class WorkspaceToolService
             entry.DemandOriginalStepEntry(preparation.Step); DemandCurrent(preparation.Capture.Physical);
             var handle = preparation.Handle;
             if (handle is null || handle.IsClosed) throw new UnauthorizedAccessException("The actual source handle retired.");
+            if (preparation.WindowsIdentity is not null) DemandWindowsFileVersion(preparation);
+            else
+            {
             DemandLinuxDescriptorPath(handle, preparation.OriginalFilePath);
             if (!ReadLinuxIdentity(handle).SameReadVersion(preparation.Identity))
                 throw new IOException("The exact original file changed before metadata publication.");
+            }
             return true;
         });
         private Task<T> RunFileRegistration<T>(FileRegistrationPreparation preparation,
@@ -219,6 +245,17 @@ public sealed partial class WorkspaceToolService
             var errors = new List<Exception>(); Task? close = null;
             try
             {
+                if (preparation.Capture.Physical.WindowsRoot is not null)
+                    InvokeSavedRootOwnedCleanup(() =>
+                    {
+                        if (preparation.Stream is not null)
+                        {
+                            close = preparation.Stream.DisposeAsync().AsTask();
+                            lock (_gate) preparation.OriginalCleanup.Add(close);
+                        }
+                        return true;
+                    });
+                else
                 Invoke(() =>
                 {
                     if (preparation.Stream is not null)
@@ -231,7 +268,8 @@ public sealed partial class WorkspaceToolService
             }
             catch (Exception error) { AddOriginalErrors(errors, null, error); }
             if (close is not null) try { await close.ConfigureAwait(false); } catch (Exception error) { AddOriginalErrors(errors, close, error); }
-            try { Invoke(() => { preparation.Handle?.Dispose(); return true; }); } catch (Exception error) { AddOriginalErrors(errors, null, error); }
+            try { if (preparation.Capture.Physical.WindowsRoot is not null) InvokeSavedRootOwnedCleanup(() => { preparation.Handle?.Dispose(); return true; });
+                else Invoke(() => { preparation.Handle?.Dispose(); return true; }); } catch (Exception error) { AddOriginalErrors(errors, null, error); }
             ThrowOriginalErrors(errors);
         }
         private FileRegistrationPreparation RequireFileRegistrationOutcome(IDeveloperProjectOriginalFileRegistrationPreparation value,

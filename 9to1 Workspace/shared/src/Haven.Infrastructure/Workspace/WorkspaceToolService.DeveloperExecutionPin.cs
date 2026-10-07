@@ -54,6 +54,9 @@ public sealed partial class WorkspaceToolService
             internal Task? Close;
             internal readonly List<Task> OriginalCleanup = [];
             internal OriginalLinuxPathLease? MetadataRoot, FilesRoot;
+            internal DeveloperWindowsRootLease? WindowsMetadataRoot, WindowsFilesRoot;
+            internal DeveloperWindowsIdentity? WindowsMetadataIdentity, WindowsRegistrationIdentity, WindowsWorkingIdentity;
+            internal string? WindowsSid;
             internal SafeFileHandle? MetadataHandle, RegistrationHandle, WorkingRoot;
             internal LinuxIdentity MetadataIdentity, RegistrationIdentity, WorkingIdentity;
             internal readonly object NativeGate = new();
@@ -130,6 +133,7 @@ public sealed partial class WorkspaceToolService
                         throw new UnauthorizedAccessException("The actual saved store/root source changed before descriptor acquisition.");
                     // Every acquired native product is assigned to its retained private pin
                     // before the next acquisition/effect can throw.
+                    if (actual.WindowsRoot is not null) { CaptureWindowsSavedRoot(pin); return true; }
                     pin.MetadataRoot = new OriginalLinuxPathLease(pin.Preparation.Ancestor);
                     pin.FilesRoot = new OriginalLinuxPathLease(pin.Evidence.OriginalFilesRoot);
                     pin.MetadataHandle = pin.MetadataRoot.OpenRead(SavedMetadataPath(pin));
@@ -184,10 +188,20 @@ public sealed partial class WorkspaceToolService
             {
                 Invoke(() =>
                 {
+                    if (pin.WindowsSid is not null)
+                    {
+                        var windows = ReadDeveloperWindowsIdentity(handle); DemandDeveloperWindowsOwner(handle, pin.WindowsSid);
+                        if (!windows.IsRegular || windows.Links != 1 || windows.Size is 0 or > 1024 * 1024)
+                            throw new InvalidDataException("The original Windows saved/registration document exceeds its bounded physical contract.");
+                        bytes = new byte[checked((int)windows.Size)];
+                    }
+                    else
+                    {
                     var identity = ReadLinuxIdentity(handle);
                     if (!identity.IsRegular || identity.Links != 1 || identity.Size is 0 or > 1024 * 1024)
                         throw new InvalidDataException("The original saved/registration document exceeds the bounded regular-file contract.");
                     bytes = new byte[checked((int)identity.Size)];
+                    }
                     borrowed = new SafeFileHandle(handle.DangerousGetHandle(), ownsHandle: false);
                     stream = new FileStream(borrowed, FileAccess.Read, 16 * 1024, isAsync: false); return true;
                 });
@@ -219,6 +233,7 @@ public sealed partial class WorkspaceToolService
             lock (pin.NativeGate)
             {
                 if (pin.Sealed) throw new ObjectDisposedException("original saved-root descriptor pin");
+                if (pin.WindowsSid is not null) { DemandWindowsSavedRoot(pin); return; }
                 pin.MetadataRoot!.DemandCurrent(); pin.FilesRoot!.DemandCurrent();
                 DemandLinuxDescriptorPath(pin.MetadataHandle!, SavedMetadataPath(pin));
                 DemandLinuxDescriptorPath(pin.RegistrationHandle!, pin.Evidence.OriginalRegistrationStatePath);
@@ -272,7 +287,7 @@ public sealed partial class WorkspaceToolService
             // These are the actual SafeFileHandle/lease synchronous close originals, not
             // fake asynchronous notifications. Read FileStream Dispose Tasks were already
             // independently joined and retained on the admitted acquisition original.
-            foreach (var owned in new IDisposable?[] { pin.WorkingRoot, pin.RegistrationHandle, pin.MetadataHandle, pin.FilesRoot, pin.MetadataRoot })
+            foreach (var owned in new IDisposable?[] { pin.WorkingRoot, pin.RegistrationHandle, pin.MetadataHandle, pin.FilesRoot, pin.MetadataRoot, pin.WindowsFilesRoot, pin.WindowsMetadataRoot })
                 if (owned is not null)
                     try { InvokeSavedRootOwnedCleanup(() => { owned.Dispose(); return true; }); }
                     catch (Exception error) { AddOriginalErrors(errors, null, error); }

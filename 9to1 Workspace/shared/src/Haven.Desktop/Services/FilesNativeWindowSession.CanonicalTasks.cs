@@ -74,6 +74,22 @@ internal sealed partial class FilesNativeWindowSession
             });
             CheckAlive();
         }
+        // Composition only: the catalogue borrows the SAME configured Task actor and the
+        // retained Files route's actual Home metadata readiness. A missing/mismatched optional
+        // graph leaves an explicit Dev setup-required surface; no replacement owner is created.
+        var authority = InvokeOriginalTaskComposition(() => _originalProvider.GetService<TaskRunPermissionAuthority>());
+        CheckAlive();
+        if (development is not null && actualDevelopmentFactory is not null && authority is not null && _route is { } actualCatalogRoute &&
+            canonical.HasOriginalAdmissionAuthority(authority) && authority.HasOriginalTaskActorSource(actors))
+        {
+            InvokeOriginalTaskComposition(() =>
+            {
+                actualShell.ConfigureOriginalDevelopmentCatalog(actualCatalogRoute, authority, actors,
+                    _originalConnectionLifetime, _windowLifetime.Token);
+                return true;
+            });
+            CheckAlive();
+        }
         // The maintained factory captures the SAME partial Page before child creation or
         // constructor publication. Return its product directly to the owning shell cohort:
         // no post-factory check can discard an already acquired child, and no second Activate

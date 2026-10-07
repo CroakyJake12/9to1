@@ -15,6 +15,7 @@ using CakeOS.Cui.Themes;
 using Haven.CUI.DevTools;
 using HavenOS.Home;
 using HavenOS.Home.Core;
+using NineToOne.Accounts.Native;
 
 namespace AvaloniaHome;
 
@@ -54,10 +55,11 @@ internal static class Program
 
     /// <summary>The trusted native producer supplies the protected verifier and registered owners;
     /// no command-line app claim or compatibility response constructs this composition.</summary>
-    internal static AppBuilder BuildOriginalWindowsApp(HomeNativeWindowsComposition originalComposition)
+    internal static AppBuilder BuildOriginalWindowsApp(HomeNativeWindowsComposition originalComposition,
+        INativeCakeAccountSession? borrowedAccountSession = null)
     {
         ArgumentNullException.ThrowIfNull(originalComposition);
-        return AppBuilder.Configure(() => new HomeApp(originalComposition))
+        return AppBuilder.Configure(() => new HomeApp(originalComposition, borrowedAccountSession))
             .UseWin32()
             .UseSkia()
             .UseHarfBuzz()
@@ -115,7 +117,7 @@ internal sealed partial class HomeApp : Application
 
     public HomeApp() : this(HomeNativeWindowsComposition.CreateCandidate()) { }
 
-    internal HomeApp(HomeNativeWindowsComposition originalComposition)
+    internal HomeApp(HomeNativeWindowsComposition originalComposition, INativeCakeAccountSession? borrowedAccountSession = null)
     {
         _nativeComposition = originalComposition ?? throw new ArgumentNullException(nameof(originalComposition));
         _coreStateStore = originalComposition.StateStore;
@@ -124,6 +126,7 @@ internal sealed partial class HomeApp : Application
         _homeCoreApi = originalComposition.Api;
         _controller = new HomeCuiController(_dashboard);
         _originalLifetime = new HomeHostOriginalLifetime(CloseOriginalCoreAsync, ExitOriginalDesktopAsync);
+        _nativeCakeAccount = new HomeNativeCakeAccountOwner(borrowedAccountSession);
     }
 
     public override void OnFrameworkInitializationCompleted()
@@ -158,6 +161,7 @@ internal sealed partial class HomeApp : Application
             RegisterUnavailableAction("NavigateDiscover", "Discover navigation is not connected in this host.");
             RegisterUnavailableAction("NavigateSettings", "Settings navigation is not connected in this host.");
             RegisterWorkspaceActions();
+            RegisterNativeCakeAccountActions();
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
@@ -185,7 +189,7 @@ internal sealed partial class HomeApp : Application
             Exception? trayFailure = null;
             try { RetireOriginalShellTray(); } catch (Exception error) { trayFailure = error; }
             Exception? cleanup = null;
-            try { _originalLifetime.RequestShutdownAsync().GetAwaiter().GetResult(); }
+            try { RequestOriginalHostShutdownAsync().GetAwaiter().GetResult(); }
             catch (Exception error) { cleanup = error; }
             var failures = new List<Exception> { original };
             if (trayFailure is not null && !ReferenceEquals(original, trayFailure)) failures.Add(trayFailure);
@@ -351,34 +355,36 @@ internal sealed partial class HomeApp : Application
     {
         if (_desktop is null)
             throw new InvalidOperationException("The original native desktop lifetime is not registered.");
+        return RequestOriginalHostShutdownAsync();
+    }
+
+    private Task RequestOriginalHostShutdownAsync()
+    {
+        // The account owner publishes/seals its close and stops actual auth/helper sources
+        // BEFORE the parent waits for admitted native actions. A self-join refuses first.
+        _ = PrepareOriginalNativeAccountClose(); // SAME task remains retained by its owning field.
         return _originalLifetime.RequestShutdownAsync();
     }
 
     private async Task CloseOriginalCoreAsync()
     {
-        Exception? subscriptionFailure = null;
+        var failures = new List<Exception>();
         try { _homeCoreSubscription?.Dispose(); }
-        catch (Exception error) { subscriptionFailure = error; }
+        catch (Exception error) { HomeNativeCakeCauses.Add(failures, error); }
         finally { _homeCoreSubscription = null; }
 
-        Exception? coreFailure = null;
-        try
-        {
-            var original = _nativeComposition.CloseAndDrainAsync();
-            await original.ConfigureAwait(false);
-        }
-        catch (Exception error) { coreFailure = error; }
-
-        if (subscriptionFailure is not null && coreFailure is not null &&
-            !ReferenceEquals(subscriptionFailure, coreFailure))
-            throw new AggregateException("Original Home subscription and Core close failed.", subscriptionFailure, coreFailure);
-        if (subscriptionFailure is not null)
-            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(subscriptionFailure).Throw();
-        if (coreFailure is not null)
-            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(coreFailure).Throw();
+        Task? accountClose = null, coreClose = null;
+        try { accountClose = _nativeCakeAccount.CloseAndDrainAsync(); }
+        catch (Exception error) { HomeNativeCakeCauses.Add(failures, error); }
+        try { coreClose = _nativeComposition.CloseAndDrainAsync(); }
+        catch (Exception error) { HomeNativeCakeCauses.Add(failures, error); }
+        // Start both original owners independently, then preserve every original fault.
+        if (accountClose is not null) await HomeNativeCakeCauses.JoinAsync(accountClose, failures).ConfigureAwait(false);
+        if (coreClose is not null) await HomeNativeCakeCauses.JoinAsync(coreClose, failures).ConfigureAwait(false);
+        HomeNativeCakeCauses.Throw(failures);
     }
 
-    internal Task CloseAndDrainOriginalHostAsync() => _originalLifetime.RequestShutdownAsync();
+    internal Task CloseAndDrainOriginalHostAsync() => RequestOriginalHostShutdownAsync();
 
     private Task ExitOriginalDesktopAsync(int exitCode) =>
         _nativeInitializationFailed || (_desktop is null && ApplicationLifetime is null) ? Task.CompletedTask :

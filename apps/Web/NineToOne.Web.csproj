@@ -43,6 +43,7 @@
     <TrimmerRootAssembly Include="Haven.Application" />
     <TrimmerRootAssembly Include="NineToOne.Write.Packages" />
     <TrimmerRootAssembly Include="NineToOne.Present.BrowserScene" />
+    <TrimmerRootDescriptor Include="Home/home-dashboard-trimmer.xml" />
     <EmbeddedResource Include="Home/Home.cui" LogicalName="NineToOne.Web.Home.cui" />
     <EmbeddedResource Include="Wave/Wave.cui" LogicalName="NineToOne.Web.Wave.cui" />
     <EmbeddedResource Include="Picture/Picture.cui" LogicalName="NineToOne.Web.Picture.cui" />
@@ -52,6 +53,7 @@
     <EmbeddedResource Include="Productivity/Boards/Boards.cui" LogicalName="NineToOne.Web.Boards.cui" />
     <Content Include="Media/wave-browser.js" Link="wwwroot/wave-browser.js" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Media/picture-browser.js" Link="wwwroot/picture-browser.js" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Home/Storage/home-dashboard-indexeddb.js" Link="wwwroot/Home/Storage/home-dashboard-indexeddb.js" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Services/account-service.js" Link="wwwroot/account-service.js" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Auth/configured-accounts.bundle.js" Link="wwwroot/configured-accounts.bundle.js" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Services/notes-indexeddb.js" Link="wwwroot/notes-indexeddb.js" CopyToOutputDirectory="PreserveNewest" />

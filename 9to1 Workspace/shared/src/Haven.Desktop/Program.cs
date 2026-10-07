@@ -30,6 +30,13 @@ internal static class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        // Explicit create-new setup owns all its refusals BEFORE generic bootstrap
+        // reporting can construct a default Haven/Logs directory.
+        if (Services.WindowsNativePersonalTaskStoreSetupCommand.IsInvocation(args))
+        {
+            if (!Services.WindowsNativePersonalTaskStoreSetupCommand.Run(args, Console.Out, Console.Error)) return;
+            args = [];
+        }
         try
         {
             ConfigureThreadPool();
@@ -44,6 +51,12 @@ internal static class Program
         }
         catch (Exception ex)
         {
+            if (Services.WindowsNativePersonalTaskStoreSetupCommand.HasActualSetupObservation)
+            {
+                Services.WindowsNativePersonalTaskStoreSetupCommand.ReportFailure(ex, Console.Error);
+                Environment.ExitCode = 1;
+                return;
+            }
             ReportBootstrapFailure(ex);
             Environment.ExitCode = 1;
         }

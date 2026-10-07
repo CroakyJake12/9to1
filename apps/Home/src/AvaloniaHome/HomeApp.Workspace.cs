@@ -321,7 +321,7 @@ internal sealed partial class HomeApp
         _viewModel.Set("BriefSummary", surface.BriefSummary);
         _viewModel.Set("DashboardTilesSummary", surface.DashboardTilesSummary);
         _viewModel.Set("HomeProfileSummary", _workspaceActor is null ? "Local profile is unavailable." :
-            $"Device profile {_workspaceActor.ProfileId}. Account sign-in is not connected in this native host.");
+            $"Device profile {_workspaceActor.ProfileId}. CAKE ID sign-in is separate from Home permissions. Open CAKE ID account to connect your session.");
         _viewModel.Set("HomeLayoutSummary", surface.Layout is null ? "Dashboard preferences have not loaded." :
             $"Saved revision {surface.Layout.Revision}. AI tiles: {(surface.Layout.AllowAiGeneratedTiles ? "allowed" : "off")}. " +
             $"AI rearrangement: {(surface.Layout.AllowAiReorder ? "allowed" : "off")}.");

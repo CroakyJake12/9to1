@@ -94,6 +94,46 @@ public sealed partial class WorkspaceToolService
                 ThrowOriginalErrors(errors); throw;
             }
         }
+        // These children are opened relative to the SAME retained directory, never a
+        // mutable recursive path. The owning invocation supplies its fresh read fence.
+        public SafeFileHandle OpenTraversalChild(SafeFileHandle parent, string name, string full)
+        {
+            DemandCurrent();
+            var child = OpenLinuxAt(parent, name, LinuxPath | LinuxCloseOnExec);
+            try
+            {
+                DemandLinuxDescriptorPath(child, full);
+                var identity = ReadLinuxIdentity(child);
+                if (!identity.IsDirectory && (!identity.IsRegular || identity.Links != 1))
+                    throw new UnauthorizedAccessException("Original traversal refuses special files and hard-link aliases.");
+                return child;
+            }
+            catch (Exception error)
+            {
+                var errors = new List<Exception> { error };
+                try { child.Dispose(); } catch (Exception close) { AddOriginalErrors(errors, null, close); }
+                ThrowOriginalErrors(errors); throw;
+            }
+        }
+        public SafeFileHandle OpenTraversalRead(SafeFileHandle parent, string name, string full, LinuxIdentity expected)
+        {
+            DemandCurrent();
+            var child = OpenLinuxAt(parent, name, LinuxCloseOnExec | LinuxNonBlocking);
+            try
+            {
+                DemandLinuxDescriptorPath(child, full);
+                var identity = ReadLinuxIdentity(child);
+                if (!identity.IsRegular || identity.Links != 1 || identity.Size > 2UL * 1024 * 1024 || !expected.SameReadVersion(identity))
+                    throw new IOException("The original traversal file changed before its bounded held-handle read.");
+                return child;
+            }
+            catch (Exception error)
+            {
+                var errors = new List<Exception> { error };
+                try { child.Dispose(); } catch (Exception close) { AddOriginalErrors(errors, null, close); }
+                ThrowOriginalErrors(errors); throw;
+            }
+        }
         public string ProcessWorkingDirectory
         {
             get { DemandCurrent(); return $"/proc/{Environment.ProcessId}/fd/{LinuxDescriptor(_rootHandle)}"; }

@@ -38,3 +38,10 @@ The physical save/reopen controls use managed session fixtures. The preserved
 native Rnote component results and DLL closure require their own exact source and
 package lineage; these controls establish no installed GUI, account admission or
 full application acceptance.
+# Recovered native Home owning route
+
+`Host/CanvasHomeWindowFactory` opens the compatible Rnote Canvas window inside the same genuine Windows Home process, using its actual profile, broker, Files owner and process lifetime. Root supplies the owning Home navigation/composition seam. Canvas joins its original input, render, CUI and approval work before releasing its local native document; it does not retire global Home or Files owners.
+
+The production Files bridge retains Windows physical ancestors, single-link artifact handles and the original Files directory-binding record, then passes the actual privately claimed Home commit fence through canonical Files CAS. It preserves an actual provider acknowledgement before later audit/reopen work and never replays that mutation. Unconfigured standalone Canvas launch refuses honestly.
+
+The compatible C22 engine imports 28 functions present in the preserved ABI-3 native kit. `tools/original-windows-native-kit.json` pins its 33-DLL closure; `tools/Stage-OriginalWindowsNativeKit.ps1` stages that original closure/licenses into a normal Home publish output. The later user-layer/filtered-render exports are unavailable. Source recovery, kit staging and component controls do not establish GUI, installed-domain, signing or clean-host acceptance; actual owning build and draw/save/normal-close/fresh-process-reopen evidence remains required.

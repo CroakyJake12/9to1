@@ -104,6 +104,57 @@ public sealed partial class WorkspaceToolService
             }
         }
 
+        public void DemandCurrent()
+        {
+            lock (_gate)
+            {
+                if (_closed) throw new ObjectDisposedException(nameof(OriginalWindowsPathLease));
+                foreach (var original in _directories)
+                    DemandExactHandlePath(original.Value, original.Key, requireDirectory: true);
+            }
+        }
+        public SafeFileHandle OpenTraversalDirectory(string path)
+        {
+            EnsureDirectory(path, null);
+            return OpenTraversalHandle(path, 0x81U, requireDirectory: true);
+        }
+        public SafeFileHandle OpenTraversalEntry(string path)
+        {
+            EnsureDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!, null);
+            return OpenTraversalHandle(path, 0x80U, requireDirectory: null);
+        }
+        private SafeFileHandle OpenTraversalHandle(string path, uint access, bool? requireDirectory)
+        {
+            var full = Path.GetFullPath(path);
+            if (!IsWithinRoot(_root, full, StringComparison.OrdinalIgnoreCase))
+                throw new UnauthorizedAccessException("The original traversal escapes its physical root.");
+            lock (_gate)
+            {
+                if (_closed) throw new ObjectDisposedException(nameof(OriginalWindowsPathLease));
+                var handle = CreateFileW(full, access, 1U, IntPtr.Zero, 3, 0x02000000U | 0x00200000U, IntPtr.Zero);
+                if (handle.IsInvalid)
+                {
+                    var code = Marshal.GetLastPInvokeError(); handle.Dispose();
+                    throw new Win32Exception(code, "The original traversal handle could not be retained.");
+                }
+                try
+                {
+                    var identity = ReadTraversalWindowsIdentity(handle);
+                    DemandExactHandlePath(handle, full, requireDirectory ?? identity.IsDirectory);
+                    if (requireDirectory is { } directory && identity.IsDirectory != directory ||
+                        !identity.IsDirectory && identity.Links != 1)
+                        throw new UnauthorizedAccessException("Original traversal refuses changed kinds and hard-link aliases.");
+                    return handle;
+                }
+                catch (Exception error)
+                {
+                    var errors = new List<Exception> { error };
+                    try { handle.Dispose(); } catch (Exception close) { AddOriginalErrors(errors, null, close); }
+                    ThrowOriginalErrors(errors); throw;
+                }
+            }
+        }
+
         public void Dispose()
         {
             SafeFileHandle[] originals;

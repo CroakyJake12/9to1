@@ -7,6 +7,7 @@ import { createNotesModule } from './notes-indexeddb.js';
 import * as writePackages from './write-packages.js';
 import { createPresentModule } from './present-indexeddb.js';
 import { createPrivateContextLifecycle } from './browser-private-context.js';
+import { createTaskExecutionHost } from './task-execution-host.js';
 
 const platform = createBrowserPlatform(window, document);
 let accessibility;
@@ -15,6 +16,7 @@ let accounts;
 let owner;
 let notes;
 let present;
+let taskStorage;
 let released = false;
 let releaseTask;
 const verifiedOwnerChange = Symbol('verified owner change');
@@ -49,7 +51,10 @@ function releasePrivateAccountContext() {
     let presentDrain;
     try { presentDrain = present?.dispose(); }
     catch (error) { lifecycle.holdFailure(error); errors.push(error); }
-    Promise.allSettled([lifecycle.join(), accountDrain, presentDrain]).then(async settled => {
+    let taskStorageDrain;
+    try { taskStorageDrain = taskStorage?.dispose(); }
+    catch (error) { lifecycle.holdFailure(error); errors.push(error); }
+    Promise.allSettled([lifecycle.join(), accountDrain, presentDrain, taskStorageDrain]).then(async settled => {
         for (const result of settled) if (result.status === 'rejected') errors.push(result.reason);
         // A real broker continuation may issue another native reset after the
         // first join settles. Join it once all broker work has truly settled.
@@ -88,6 +93,7 @@ try {
             onFailure: () => platform.showStatus('AuthenticationRequired', 'Sign-in did not complete. Try signing in again.') });
         notes = createNotesModule();
         present = createPresentModule();
+        taskStorage = createTaskExecutionHost();
         if (!isCompatible) throw new Error('BrowserCapabilityUnavailable');
         const { dotnet } = await import('./_framework/dotnet.js');
         const runtime = await dotnet.create();
@@ -95,6 +101,13 @@ try {
         runtime.setModuleImports('nineToOneWave', waveBrowser);
         runtime.setModuleImports('nineToOnePicture', pictureBrowser);
         runtime.setModuleImports('nineToOneAccounts', accounts);
+        runtime.setModuleImports('nineToOneTaskIdentity', {
+            readCurrent: id => accounts.readTaskIdentity(id),
+            confirmCurrent: id => accounts.confirmTaskIdentity(id),
+            cancel: id => accounts.cancelTaskIdentity(id),
+            release: id => accounts.releaseTaskIdentity(id),
+        });
+        runtime.setModuleImports('nineToOneTaskExecution', taskStorage);
         runtime.setModuleImports('nineToOneNotes', notes);
         runtime.setModuleImports('nineToOnePresent', present);
         runtime.setModuleImports('nineToOneWritePackages', writePackages);

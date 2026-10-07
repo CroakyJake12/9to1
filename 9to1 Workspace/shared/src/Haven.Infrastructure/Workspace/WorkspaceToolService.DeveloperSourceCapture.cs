@@ -10,8 +10,8 @@ public sealed partial class WorkspaceToolService
 {
     /// <summary>Root composes this SAME kernel owner with the actual Home read-admission issuer
     /// and Files selection source. No source content is read before their original validation.
-    /// This initial implementation requires the maintained Linux openat2/statx boundary;
-    /// Windows selection is explicitly unsupported here, while existing Windows tools remain intact.</summary>
+    /// Physical selection requires the maintained Linux or Windows retained native boundary;
+    /// missing native capability refuses before capture, while ordinary tools remain intact.</summary>
     public IDeveloperProjectOriginalPhysicalCaptureSource CreateOriginalDeveloperCaptureSource(
         IDeveloperProjectOriginalReadAdmissionSource originalReadAdmissionSource,
         Func<IDeveloperProjectOriginalPhysicalReadSelectionSource> configuredOriginalSelections)
@@ -55,8 +55,10 @@ public sealed partial class WorkspaceToolService
             public string OriginalProjectRoot => projectRoot;
             public string ConfiguredRoot => configuredRoot;
             public OriginalLinuxPathLease Root = null!;
+            public DeveloperWindowsRootLease? WindowsRoot;
             public SafeFileHandle Project = null!;
             public LinuxIdentity ProjectIdentity;
+            public DeveloperWindowsIdentity? WindowsProjectIdentity;
             public readonly HashSet<Original> Originals = [];
             public readonly List<Task> OriginalCleanupTasks = [];
             public Task? Close;
@@ -84,7 +86,8 @@ public sealed partial class WorkspaceToolService
         }
         private static bool SafeLeaf(string value) => !string.IsNullOrWhiteSpace(value) && value.Length <= 255 &&
             value is not ("." or "..") && !value.Any(c => c is '/' or '\\' or ':' || char.IsControl(c));
-        private sealed record HeldFile(string RelativePath, FileStream OriginalStream, SafeFileHandle OriginalHandle, LinuxIdentity Identity);
+        private sealed record HeldFile(string RelativePath, FileStream OriginalStream, SafeFileHandle OriginalHandle, LinuxIdentity Identity,
+            DeveloperWindowsIdentity? WindowsIdentity = null);
 
         public void DemandExternalOriginalJoin()
         {
@@ -186,10 +189,11 @@ public sealed partial class WorkspaceToolService
         }
         public Task<IDeveloperProjectOriginalPhysicalSelection> OpenOriginalSelectionAsync(string configuredRoot, string selectedRoot, CancellationToken token)
         {
-            if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("Original developer source capture requires the supported Linux kernel boundary.");
+            if (!OperatingSystem.IsLinux() && !OperatingSystem.IsWindows()) throw new PlatformNotSupportedException("Original developer source capture requires a supported retained native kernel boundary.");
             configuredRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(configuredRoot));
             selectedRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(selectedRoot));
-            if (selectedRoot == configuredRoot || !IsWithinRoot(configuredRoot, selectedRoot, StringComparison.Ordinal))
+            var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+            if (string.Equals(selectedRoot, configuredRoot, comparison) || !IsWithinRoot(configuredRoot, selectedRoot, comparison))
                 throw new UnauthorizedAccessException("Select an existing project strictly beneath the genuine Files root.");
             PhysicalSelection original;
             lock (_gate)
@@ -201,6 +205,13 @@ public sealed partial class WorkspaceToolService
             return Start<IDeveloperProjectOriginalPhysicalSelection>(original, () =>
             {
                 token.ThrowIfCancellationRequested();
+                if (OperatingSystem.IsWindows())
+                {
+                    original.WindowsRoot = Invoke(() => new DeveloperWindowsRootLease(configuredRoot));
+                    original.Project = Invoke(() => original.WindowsRoot.OpenDirectory(selectedRoot));
+                    original.WindowsProjectIdentity = Invoke(() => ReadDeveloperWindowsIdentity(original.Project));
+                    DemandCurrent(original); return Task.FromResult<IDeveloperProjectOriginalPhysicalSelection>(original);
+                }
                 original.Root = Invoke(() => new OriginalLinuxPathLease(configuredRoot));
                 original.Project = Invoke(() => original.Root.OpenDirectory(selectedRoot));
                 original.ProjectIdentity = Invoke(() => ReadLinuxIdentity(original.Project));
@@ -210,6 +221,13 @@ public sealed partial class WorkspaceToolService
         private void DemandCurrent(PhysicalSelection original)
         {
             if (original.Sealed) throw new UnauthorizedAccessException("Original developer root retired.");
+            if (original.WindowsRoot is { } windows)
+            {
+                windows.DemandCurrent(); DemandDeveloperWindowsPath(original.Project, original.OriginalProjectRoot, true);
+                if (original.WindowsProjectIdentity is not { } identity || !ReadDeveloperWindowsIdentity(original.Project).SameFile(identity))
+                    throw new UnauthorizedAccessException("Original Windows project directory changed.");
+                return;
+            }
             original.Root.DemandCurrent(); DemandLinuxDescriptorPath(original.Project, original.OriginalProjectRoot);
             if (!ReadLinuxIdentity(original.Project).SameFile(original.ProjectIdentity)) throw new UnauthorizedAccessException("Original project directory changed.");
         }
@@ -234,7 +252,9 @@ public sealed partial class WorkspaceToolService
                 long total = 0; var errors = new List<Exception>();
                 try
                 {
-                    await Observe(original, () => Visit(original.OriginalProjectRoot, "", 0)).ConfigureAwait(false);
+                    if (original.WindowsRoot is not null)
+                        await Observe(original, () => VisitWindows(original, logical, admission, folders, files, held, token)).ConfigureAwait(false);
+                    else await Observe(original, () => Visit(original.OriginalProjectRoot, "", 0)).ConfigureAwait(false);
                     if (files.Count == 0) throw new InvalidOperationException("Select a nonempty bounded source project; empty capture was not published.");
                     await Observe(original, () => admissions.ValidateOriginalAsync(logical, admission, token)).ConfigureAwait(false);
                     Invoke(() => { DemandCurrent(original); return true; });
@@ -340,6 +360,12 @@ public sealed partial class WorkspaceToolService
                     DemandCurrent(actual.Physical);
                     foreach (var file in actual.Held)
                     {
+                        if (file.WindowsIdentity is { } windows)
+                        {
+                            DemandDeveloperWindowsPath(file.OriginalHandle, Path.Combine(actual.OriginalExistingProjectRoot, file.RelativePath), false);
+                            if (!ReadDeveloperWindowsIdentity(file.OriginalHandle).SameReadVersion(windows)) throw new IOException("Captured original Windows source changed before setup.");
+                            continue;
+                        }
                         DemandLinuxDescriptorPath(file.OriginalHandle, Path.Combine(actual.OriginalExistingProjectRoot, file.RelativePath));
                         if (!ReadLinuxIdentity(file.OriginalHandle).SameReadVersion(file.Identity)) throw new IOException("Captured original source changed before setup.");
                     }
@@ -418,6 +444,7 @@ public sealed partial class WorkspaceToolService
             }
             try { actual.Project?.Dispose(); } catch (Exception error) { AddOriginalErrors(errors, null, error); }
             try { actual.Root?.Dispose(); } catch (Exception error) { AddOriginalErrors(errors, null, error); }
+            try { actual.WindowsRoot?.Dispose(); } catch (Exception error) { AddOriginalErrors(errors, null, error); }
             // Parent drivers settle before collecting their complete admitted child inventory.
             Task[] finalSources; lock (_gate) finalSources = actual.Originals.Concat(OriginalDirectoryOwners(actual)).Concat(OriginalFileRegistrationOwners(actual)).Concat(OriginalWorkspaceMetadataOwners(actual)).Concat(OriginalSavedRootOwners(actual)).Distinct()
                 .SelectMany(value => value.Sources).Concat(actual.OriginalCleanupTasks)

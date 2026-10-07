@@ -24,6 +24,16 @@ public interface IWorkspaceToolFinalFence
         string canonicalTarget, string exactContentOrRequestSha256, Func<T> originalNativeEffect);
 }
 
+/// <summary>Optional SAME-action read fence. Awaited validation stays outside the finite
+/// central permission/native gate; reads do not manufacture a mutation effect or receipt.</summary>
+public interface IWorkspaceOriginalReadFence : IWorkspaceToolFinalFence
+{
+    // Fresh actual canonical action/actor/model I/O runs outside the finite native permission gate.
+    ValueTask RevalidateOriginalReadAsync(CancellationToken cancellationToken);
+    T RunOriginalRead<T>(string canonicalWorkspaceRoot, string canonicalTarget,
+        Func<T> originalNativeRead, CancellationToken cancellationToken);
+}
+
 /// <summary>Configured private issuer registry, not a caller-supplied validation Boolean.
 /// Physical sources accept only a fence actually issued by this SAME registered authority.</summary>
 public interface IWorkspaceToolFinalFenceAuthority
@@ -38,6 +48,30 @@ public interface IWorkspaceOriginalInvocationSource : IWorkspaceToolService
     IWorkspaceOriginalInvocation AcquireOriginalInvocation(IWorkspaceToolFinalFence originalFence);
     bool IsIssuedOriginal(IWorkspaceOriginalInvocation originalInvocation);
     bool ValidateOriginalOutcome(IWorkspaceOriginalInvocation originalInvocation, WorkspaceToolPhysicalOutcome originalOutcome);
+}
+
+/// <summary>Deny-only availability from the actual physical owner, never a tool-name whitelist.
+/// Acquisition still requires its private original fence and the supported native ABI.</summary>
+public interface IWorkspaceOriginalTraversalSource : IWorkspaceOriginalInvocationSource
+{
+    bool SupportsOriginalTraversal(string toolName);
+}
+
+public sealed record WorkspaceOriginalDirectoryEntry(string RelativePath, bool IsDirectory, long Size);
+public sealed record WorkspaceOriginalTextMatch(string RelativePath, int Line, string Text);
+
+/// <summary>Read observations only: explicit bounded coverage, no mutation receipt or grant.</summary>
+public sealed record WorkspaceOriginalTraversalResult(
+    IReadOnlyList<WorkspaceOriginalDirectoryEntry> Entries, IReadOnlyList<WorkspaceOriginalTextMatch> Matches,
+    bool EntryLimitReached, bool DepthLimitReached, bool ResultLimitReached, bool ByteLimitReached,
+    int IgnoredDirectoryCount, int LargeFileCount, int BinaryFileCount, bool ValidationLimitReached = false);
+
+public interface IWorkspaceOriginalTraversalService : IWorkspaceToolService
+{
+    Task<WorkspaceOriginalTraversalResult> ListOriginalFilesAsync(string workspaceRoot, string relativePath,
+        int maxDepth, CancellationToken cancellationToken);
+    Task<WorkspaceOriginalTraversalResult> SearchOriginalFilesAsync(string workspaceRoot, string relativePath,
+        string query, int maxResults, CancellationToken cancellationToken);
 }
 
 public interface IWorkspaceOriginalInvocation : IAsyncDisposable

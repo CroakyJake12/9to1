@@ -38,6 +38,7 @@ public sealed class BrowserSurfaceRegistry
     private HomeFeatureNavigationHost _navigation = new();
     private readonly Dictionary<string, Func<HomeFeatureViewState, BrowserCuiSurface>> _renderers = new(StringComparer.Ordinal);
     private readonly Dictionary<string, (IHomeFeatureRouteHandler Handler, BrowserSurfaceScope Scope)> _handlers = new(StringComparer.Ordinal);
+    private readonly HashSet<IBrowserPrivateContextParticipant> _privateLifetimeOwners = new(ReferenceEqualityComparer.Instance);
     private readonly SemaphoreSlim _closeOperations = new(1, 1);
     private bool _closing;
     private readonly object _privateResetGate = new();
@@ -61,16 +62,18 @@ public sealed class BrowserSurfaceRegistry
             CancellationToken cancellationToken = default) => owner.OpenAsync(request, cancellationToken);
     }
 
-    internal bool CanResetPrivateContextSynchronously => !PrivateResetPending
+    internal bool CanResetPrivateContextSynchronously => !PrivateResetPending && _privateLifetimeOwners.Count == 0
         && !_handlers.Values.Any(entry => entry.Scope == BrowserSurfaceScope.PrivateContext
             && entry.Handler is IAsyncDisposable);
 
     public IReadOnlyCollection<string> AvailableRoutes => _navigation.AvailableRoutes;
-    public bool HasUnsavedChanges => _handlers.Values.Any(entry => entry.Handler is IBrowserCloseParticipant { HasUnsavedChanges: true });
+    public bool HasUnsavedChanges => _handlers.Values.Any(entry => entry.Handler is IBrowserCloseParticipant { HasUnsavedChanges: true })
+        || _privateLifetimeOwners.Any(owner => owner is IBrowserCloseParticipant { HasUnsavedChanges: true });
 
     public async Task<HomeCoreOperationResult<bool>> PrepareToCloseAsync(CancellationToken cancellationToken = default)
     {
-        foreach (var participant in _handlers.Values.Select(entry => entry.Handler).OfType<IBrowserCloseParticipant>().ToArray())
+        foreach (var participant in _handlers.Values.Select(entry => (object)entry.Handler)
+            .Concat(_privateLifetimeOwners).OfType<IBrowserCloseParticipant>().ToArray())
         {
             cancellationToken.ThrowIfCancellationRequested();
             var result = await participant.PrepareToCloseAsync(cancellationToken);
@@ -93,6 +96,12 @@ public sealed class BrowserSurfaceRegistry
             cancellationToken.ThrowIfCancellationRequested();
             var removed = DetachHandlers(privateOnly: false);
             List<Exception>? errors = null;
+            // Fence the whole detached private cohort before any cleanup/cancellation callback.
+            foreach (var owner in removed.OfType<IBrowserPrivateContextParticipant>())
+            {
+                try { owner.RevokePrivateContext(); }
+                catch (Exception error) { (errors ??= []).Add(error); }
+            }
             foreach (var handler in removed)
             {
                 try
@@ -102,7 +111,12 @@ public sealed class BrowserSurfaceRegistry
                 }
                 catch (Exception error) { (errors ??= []).Add(error); }
             }
-            if (errors is not null) throw new AggregateException("Browser owners were detached with teardown failures.", errors);
+            if (errors is not null)
+            {
+                var failure = new AggregateException("Browser owners were detached with teardown failures.", errors);
+                HoldPrivateContextFailure(failure);
+                throw failure;
+            }
             return new(true, "Succeeded", "Browser owners closed.", true);
         }
         finally
@@ -115,7 +129,7 @@ public sealed class BrowserSurfaceRegistry
     /// <summary>Remove prior account/organisation adapters before a new private context is opened.</summary>
     public void Clear()
     {
-        if (_handlers.Values.Any(entry => entry.Handler is IAsyncDisposable or IBrowserCloseParticipant))
+        if (!CanResetPrivateContextSynchronously || _handlers.Values.Any(entry => entry.Handler is IAsyncDisposable or IBrowserCloseParticipant))
             throw new InvalidOperationException("Asynchronous browser owners require awaited ClearAsync before detachment.");
         RemoveHandlers(privateOnly: false);
     }
@@ -168,7 +182,7 @@ public sealed class BrowserSurfaceRegistry
             throw new AggregateException("Issued private owner drains failed.", errors);
     }
 
-    internal sealed class PrivateContextReset(IHomeFeatureRouteHandler[] owners,
+    internal sealed class PrivateContextReset(object[] owners,
         List<Exception> errors, Action released)
     {
         private readonly object _gate = new();
@@ -226,14 +240,32 @@ public sealed class BrowserSurfaceRegistry
         if (errors is not null) throw new AggregateException("Browser route teardown failed after its context was removed.", errors);
     }
 
-    private IHomeFeatureRouteHandler[] DetachHandlers(bool privateOnly)
+    private object[] DetachHandlers(bool privateOnly)
     {
         var removed = _handlers.Where(pair => !privateOnly || pair.Value.Scope == BrowserSurfaceScope.PrivateContext).ToArray();
         foreach (var pair in removed) { _handlers.Remove(pair.Key); _renderers.Remove(pair.Key); }
         // Invalidate every in-flight request before calling an owner's teardown.
         _navigation = new();
         foreach (var pair in _handlers) _navigation.Register(new CapturedRoute(pair.Key, pair.Value.Handler));
-        return removed.Select(pair => pair.Value.Handler).ToArray();
+        var lifetimeOwners = _privateLifetimeOwners.ToArray();
+        _privateLifetimeOwners.Clear(); // SAME real cohort detached before reentrant callbacks.
+        return removed.Select(pair => (object)pair.Value.Handler).Concat(lifetimeOwners).ToArray();
+    }
+
+    /// <summary>Enrol a genuine private infrastructure lifetime without manufacturing a route.
+    /// The SAME owner is revoked and drained by existing private reset and terminal close.</summary>
+    public HomeCoreOperationResult<bool> RegisterPrivateLifetime(IBrowserPrivateContextParticipant owner)
+    {
+        ArgumentNullException.ThrowIfNull(owner);
+        if (PrivateContextFailed)
+            return new(false, "PrivateContextCleanupFailed", "Private cleanup failed. Reload before opening private content.");
+        if (PrivateResetPending)
+            return new(false, "PrivateContextClosing", "Wait for the revoked private owners to finish cleanup.");
+        if (_closing) return new(false, "BrowserClosing", "Wait for the browser owners to finish closing.");
+        if (_privateLifetimeOwners.Contains(owner) || _handlers.Values.Any(entry => ReferenceEquals(entry.Handler, owner)))
+            return new(false, "PrivateOwnerAlreadyRegistered", "The same private owner is already enrolled.");
+        _privateLifetimeOwners.Add(owner);
+        return new(true, "Succeeded", "Private owner enrolled.", true);
     }
 
     /// <summary>The caller supplies the existing authenticated domain adapter, not an endpoint guessed by the shell.</summary>
@@ -242,6 +274,8 @@ public sealed class BrowserSurfaceRegistry
     {
         ArgumentNullException.ThrowIfNull(handler);
         ArgumentNullException.ThrowIfNull(render);
+        if (handler is IBrowserPrivateContextParticipant lifetime && _privateLifetimeOwners.Contains(lifetime))
+            return new(false, "PrivateOwnerAlreadyRegistered", "The same private owner is already enrolled.");
         if (scope == BrowserSurfaceScope.PrivateContext && (handler is IAsyncDisposable or IBrowserCloseParticipant)
             && handler is not IBrowserPrivateContextParticipant)
             return new(false, "HomeServiceIncompatible", "This private owner requires an asynchronous context teardown contract.");

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../NativeUI/HavenOS.Canvas.NativeUI.csproj" />
+    <ProjectReference Include="../Host/HavenOS.Canvas.Host.csproj" />
+    <ProjectReference Include="../../Files/NativeHost/HavenOS.Files.NativeHost.csproj" />
+    <ProjectReference Include="../../Home/NativeUI/HavenOS.Home.NativeUI.csproj" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio"><PrivateAssets>all</PrivateAssets></PackageReference>
+  </ItemGroup>
+</Project>

@@ -1,4 +1,4 @@
-// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/buffer_utils.js
+// ../node_modules/jose/dist/webapi/lib/buffer_utils.js
 var encoder = new TextEncoder();
 var decoder = new TextDecoder();
 var strictDecoder = new TextDecoder("utf-8", { fatal: true });
@@ -40,7 +40,7 @@ function decodeBase64(encoded, url = false) {
   return bytes;
 }
 
-// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/util/errors.js
+// ../node_modules/jose/dist/webapi/util/errors.js
 var JOSEError = class extends Error {
   static code = "ERR_JOSE_GENERIC";
   code = "ERR_JOSE_GENERIC";
@@ -119,7 +119,7 @@ var JWSSignatureVerificationFailed = class extends JOSEError {
   }
 };
 
-// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/util/base64url.js
+// ../node_modules/jose/dist/webapi/util/base64url.js
 var invalid = "The input to be decoded is not correctly encoded.";
 function decode(input) {
   try {
@@ -129,7 +129,7 @@ function decode(input) {
   }
 }
 
-// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/validate.js
+// ../node_modules/jose/dist/webapi/lib/validate.js
 function isObject(input) {
   if (typeof input != "object" || input === null || Object.prototype.toString.call(input) !== "[object Object]")
     return false;
@@ -209,7 +209,7 @@ function validateB64(protectedHeader, extensions) {
   return true;
 }
 
-// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/key.js
+// ../node_modules/jose/dist/webapi/lib/key.js
 var tag = (key) => key[Symbol.toStringTag];
 var jwkMatchesOp = (entry, key, usage) => {
   const { alg } = entry;
@@ -340,7 +340,7 @@ async function rawKey(key, expected, usage, extractable = false) {
   return key instanceof Uint8Array && (key = await crypto.subtle.importKey("raw", key, expected, extractable, [usage])), checkCryptoKey(key, expected, usage), key;
 }
 
-// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/key_descriptor.js
+// ../node_modules/jose/dist/webapi/lib/key_descriptor.js
 function table(entries) {
   const out = { __proto__: null };
   for (const alg in entries)
@@ -348,7 +348,7 @@ function table(entries) {
   return out;
 }
 
-// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jws_algorithms.js
+// ../node_modules/jose/dist/webapi/lib/jws_algorithms.js
 var sig = [["verify"], ["sign"]];
 function hmac(bits) {
   const subtle = { name: "HMAC", hash: `SHA-${bits}` };
@@ -418,7 +418,7 @@ function jwsAlgorithm(alg) {
   return entry;
 }
 
-// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jws_verify.js
+// ../node_modules/jose/dist/webapi/lib/jws_verify.js
 function prepareVerify(options) {
   return [options && validateAlgorithms("algorithms", options.algorithms), options?.crit];
 }
@@ -470,7 +470,7 @@ async function verifyCompact(jws, shared, key) {
   return verifySignature({ payload, protected: protectedHeader, signature }, shared, key, encodeCompactUnencodedPayload);
 }
 
-// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jwt_claims_set.js
+// ../node_modules/jose/dist/webapi/lib/jwt_claims_set.js
 var epoch = (date2) => Math.floor(date2.getTime() / 1e3);
 var multipliers = {
   s: 1,
@@ -556,7 +556,7 @@ function validateClaimsSet(protectedHeader, encodedPayload, options = {}) {
   return payload;
 }
 
-// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/jwt/verify.js
+// ../node_modules/jose/dist/webapi/jwt/verify.js
 async function jwtVerify(jwt, key, options) {
   const [verified, b64] = await verifyCompact(jwt, prepareVerify(options), key);
   if (!b64)
@@ -565,7 +565,7 @@ async function jwtVerify(jwt, key, options) {
   return { ...verified, payload };
 }
 
-// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/jwks/local.js
+// ../node_modules/jose/dist/webapi/jwks/local.js
 function isUsableJWK(jwk, entry, alg, kid) {
   const { kty, key_ops: keyOps, ext, kid: jwkKid, alg: jwkAlg, use, crv } = jwk;
   return (ext === void 0 || typeof ext == "boolean") && (keyOps === void 0 || Array.isArray(keyOps) && keyOps.every((operation, index) => typeof operation == "string" && keyOps.indexOf(operation) === index) && keyOps.includes("verify")) && entry.kty.includes(kty) && (kid === void 0 || typeof kid == "string" && kid === jwkKid) && (jwkAlg === void 0 ? kty !== "AKP" : alg === jwkAlg) && (use === void 0 || use === "sig") && (!entry.crv || crv === entry.crv);
@@ -619,7 +619,7 @@ function createLocalJWKSet(jwks) {
   });
 }
 
-// ../../workspace/team-c-release/cloud/cake-id-auth/node_modules/jose/dist/webapi/jwks/remote.js
+// ../node_modules/jose/dist/webapi/jwks/remote.js
 function isCloudflareWorkers() {
   return typeof WebSocketPair < "u" || typeof navigator < "u" && navigator.userAgent === "Cloudflare-Workers" || typeof EdgeRuntime < "u" && EdgeRuntime === "vercel";
 }
@@ -780,6 +780,10 @@ var BrowserPublicClient = class {
   #cleanupErrors = [];
   #cleanupTask;
   #beginExpiry;
+  #taskIdentity = null;
+  #taskProfile;
+  #ownerEpoch;
+  #issuedTaskIdentities = /* @__PURE__ */ new WeakMap();
   #token = null;
   #expires = 0;
   #timer;
@@ -799,10 +803,14 @@ var BrowserPublicClient = class {
     onSignInFailed,
     onTokenExpired,
     onFailure,
-    beginTokenExpiryInvalidation = void 0
+    beginTokenExpiryInvalidation = void 0,
+    readCurrentTaskProfile = void 0
   }) {
     if (!win || typeof transport !== "function" || !crypto2?.subtle || typeof onBeforeSignIn !== "function" || typeof verifyCurrentAccount !== "function" || typeof onVerifiedIdentity !== "function" || typeof onSignInFailed !== "function" || typeof onTokenExpired !== "function" || typeof onFailure !== "function") throw problem("InvalidConfiguration");
     if (beginTokenExpiryInvalidation !== void 0 && typeof beginTokenExpiryInvalidation !== "function") throw problem("InvalidConfiguration");
+    if (readCurrentTaskProfile !== void 0 && typeof readCurrentTaskProfile !== "function") throw problem("InvalidConfiguration");
+    this.#taskProfile = readCurrentTaskProfile;
+    this.#ownerEpoch = base64url(crypto2.getRandomValues(new Uint8Array(32)));
     this.#beginExpiry = beginTokenExpiryInvalidation;
     this.#config = validatePublicClientConfiguration(configuration, win.location.origin);
     this.#window = win;
@@ -824,10 +832,32 @@ var BrowserPublicClient = class {
   }
   clearToken({ cancelPending = true } = {}) {
     this.#generation++;
+    this.#taskIdentity = null;
     this.#token = null;
     this.#expires = 0;
     clearTimeout(this.#timer);
     if (cancelPending) this.#pending?.controller.abort();
+  }
+  readCurrentTaskIdentity({ signal } = {}) {
+    return this.#issue("task-identity", async () => {
+      const original = this.#taskIdentity;
+      if (!original || !this.#taskProfile || !this.#taskIdentityCurrent(original)) return null;
+      if (signal?.aborted) throw problem("Cancelled");
+      const profile2 = await this.#taskProfile(original.accountId, signal);
+      if (signal?.aborted) throw problem("Cancelled");
+      if (!this.#taskIdentityCurrent(original)) throw problem("SessionContextChanged");
+      if (!object(profile2) || profile2.accountId !== original.accountId || !Number.isSafeInteger(profile2.revision) || profile2.revision <= 0) throw problem("TaskProfileVerificationFailed");
+      const observed = Object.freeze({ ...original, profileAccountId: profile2.accountId, profileRevision: profile2.revision });
+      this.#issuedTaskIdentities.set(observed, original);
+      return observed;
+    });
+  }
+  isOriginalTaskIdentityCurrent(observed) {
+    const original = object(observed) ? this.#issuedTaskIdentities.get(observed) : null;
+    return original !== void 0 && original !== null && this.#taskIdentityCurrent(original);
+  }
+  #taskIdentityCurrent(original) {
+    return !this.#disposed && original === this.#taskIdentity && original.generation === this.#generation && this.#token !== null && Date.now() < this.#expires && Date.now() < original.expiresAt * 1e3;
   }
   async #json(url, options, signal) {
     const response = await this.#fetch(url, { ...options, credentials: "omit", cache: "no-store", redirect: "error", referrerPolicy: "no-referrer", signal });
@@ -916,6 +946,20 @@ var BrowserPublicClient = class {
       throw problem("PrivateContextCleanupFailed");
     }
     if (pending.controller.signal.aborted || pending.generation !== this.#generation || this.#disposed) throw problem("SessionContextChanged");
+    if (Number.isSafeInteger(access.iat) && access.iat >= 0 && access.iat <= access.exp && Number.isSafeInteger(id.exp) && id.exp * 1e3 > Date.now()) {
+      this.#taskIdentity = Object.freeze({
+        version: 1,
+        issuer: this.#config.issuer,
+        apiResource: this.#config.apiResource,
+        clientId: this.#config.clientId,
+        accountId: id.sub,
+        sessionId: access.sid,
+        issuedAt: access.iat,
+        expiresAt: Math.min(access.exp, id.exp),
+        ownerEpoch: this.#ownerEpoch,
+        generation: this.#generation
+      });
+    }
     const tokenGeneration = this.#generation;
     this.#timer = setTimeout(() => {
       if (this.#disposed || tokenGeneration !== this.#generation) return;
@@ -1086,6 +1130,7 @@ var BrowserPublicClient = class {
     this.#expired = null;
     this.#failure = null;
     this.#beginExpiry = void 0;
+    this.#taskProfile = void 0;
     this.#discovery = void 0;
     this.#jwks = void 0;
   }
@@ -1494,7 +1539,7 @@ function createConfiguredAccounts({
   if (typeof onPrivateContextInvalidated !== "function" || typeof onVerifiedIdentity !== "function" || typeof onFailure !== "function") throw new TypeError("Private context callbacks are required.");
   if (beginPrivateContextInvalidation !== void 0 && typeof beginPrivateContextInvalidation !== "function") throw new TypeError("A synchronous root private fence is required when supplied.");
   let broker, api, disposed = false, prepared = false, cleanupTask, module;
-  const signIns = /* @__PURE__ */ new Map(), issued = /* @__PURE__ */ new Set(), cleanupErrors = [];
+  const signIns = /* @__PURE__ */ new Map(), taskReads = /* @__PURE__ */ new Map(), taskIdentityReceipts = /* @__PURE__ */ new Map(), issued = /* @__PURE__ */ new Set(), cleanupErrors = [];
   const issue = (action, factory) => {
     if (disposed) return Promise.reject(new Error("ServiceUnavailable"));
     let settle;
@@ -1525,6 +1570,7 @@ function createConfiguredAccounts({
   };
   const base = configuration === null ? createAccountModule() : (() => {
     const begin = (reason) => {
+      taskIdentityReceipts.clear();
       broker?.clearToken({ cancelPending: false });
       try {
         const acknowledgement = beginPrivateContextInvalidation(reason);
@@ -1538,6 +1584,7 @@ function createConfiguredAccounts({
       }
     };
     const clear = async (reason) => {
+      taskIdentityReceipts.clear();
       if (beginPrivateContextInvalidation === void 0)
         broker?.clearToken({ cancelPending: reason !== "sign_in_started" });
       await onPrivateContextInvalidated(reason);
@@ -1551,6 +1598,15 @@ function createConfiguredAccounts({
       verifyCurrentAccount: async (subject, signal) => {
         const current = await api.getCurrent({ signal });
         if (!current.ok || current.body.accountId !== subject || signal.aborted) throw new Error("CurrentAccountVerificationFailed");
+      },
+      readCurrentTaskProfile: async (subject, signal) => {
+        const current = await api.getCurrent({ signal });
+        if (!current.ok) throw Object.assign(new Error("TaskIdentityUnavailable"), { code: "TaskIdentityUnavailable" });
+        if (current.body.accountId !== subject || signal?.aborted) throw Object.assign(new Error("SessionContextChanged"), { code: "SessionContextChanged" });
+        const response = await api.getProfile({ signal });
+        if (!response.ok) throw Object.assign(new Error("TaskIdentityUnavailable"), { code: "TaskIdentityUnavailable" });
+        if (response.body.profile.accountId !== subject || signal?.aborted) throw Object.assign(new Error("TaskProfileVerificationFailed"), { code: "TaskProfileVerificationFailed" });
+        return { accountId: response.body.profile.accountId, revision: response.body.profile.revision };
       },
       onVerifiedIdentity,
       onSignInFailed: () => api.invalidatePrivateContext("sign_in_failed"),
@@ -1604,6 +1660,36 @@ function createConfiguredAccounts({
         return base.invoke(id, action, args);
       });
     },
+    readTaskIdentity(id) {
+      return issue("task-identity", async () => {
+        if (!broker || !prepared || disposed) return JSON.stringify({ ok: false, code: "AuthenticationRequired" });
+        if (typeof id !== "string" || !id || taskReads.has(id) || taskIdentityReceipts.has(id)) throw new TypeError("Invalid Task identity request.");
+        if (taskReads.size + taskIdentityReceipts.size >= 128) throw new Error("Task identity request custody is full.");
+        const controller = new AbortController();
+        taskReads.set(id, controller);
+        try {
+          const identity = await broker.readCurrentTaskIdentity({ signal: controller.signal });
+          if (disposed || controller.signal.aborted) return JSON.stringify({ ok: false, code: "Cancelled" });
+          if (identity !== null && !broker.isOriginalTaskIdentityCurrent(identity)) throw Object.assign(new Error("SessionContextChanged"), { code: "SessionContextChanged" });
+          if (identity !== null) taskIdentityReceipts.set(id, identity);
+          return identity === null ? JSON.stringify({ ok: false, code: "AuthenticationRequired" }) : JSON.stringify({ ok: true, identity });
+        } finally {
+          taskReads.delete(id);
+        }
+      });
+    },
+    confirmTaskIdentity(id) {
+      const original = taskIdentityReceipts.get(id);
+      taskIdentityReceipts.delete(id);
+      return !disposed && broker !== void 0 && original !== void 0 && broker.isOriginalTaskIdentityCurrent(original);
+    },
+    releaseTaskIdentity(id) {
+      taskIdentityReceipts.delete(id);
+    },
+    cancelTaskIdentity(id) {
+      taskIdentityReceipts.delete(id);
+      taskReads.get(id)?.abort();
+    },
     signInAvailable() {
       return Boolean(broker && prepared && !disposed);
     },
@@ -1630,12 +1716,14 @@ function createConfiguredAccounts({
     },
     revokePrivateContext() {
       disposed = true;
+      taskIdentityReceipts.clear();
       broker?.revokePrivateContext();
       base.revokePrivateContext();
     },
     disposeAsync() {
       if (cleanupTask) return cleanupTask;
       disposed = true;
+      taskIdentityReceipts.clear();
       broker?.revokePrivateContext();
       base.revokePrivateContext();
       let resolve, reject;
@@ -1644,7 +1732,7 @@ function createConfiguredAccounts({
         reject = b;
       });
       const errors = [];
-      for (const controller of signIns.values()) try {
+      for (const controller of [...signIns.values(), ...taskReads.values()]) try {
         controller.abort();
       } catch (error) {
         errors.push(error);

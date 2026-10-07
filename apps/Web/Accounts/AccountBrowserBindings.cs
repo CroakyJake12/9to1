@@ -217,7 +217,7 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
             else
             {
                 if (command == "DiscardAndReload") await Present(() => { _changed.Clear(); _conflict = false; });
-                await RefreshAsync(request.Token);
+                await RefreshAsync(request.Token, generation);
             }
         }
         catch (OperationCanceledException) when (request.IsCancellationRequested)
@@ -232,40 +232,41 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
     }
     private string? _pendingMutation;
 
-    private async Task RefreshAsync(CancellationToken ct)
+    private async Task RefreshAsync(CancellationToken ct, long originalGeneration)
     {
-        var current = await InvokeOwnedAsync("GetCurrent", null, ct);
-        if (!Succeeded(current)) { await Present(() => { ClearPrivate(); Fail(current); }); return; }
+        Task Publish(Action write) => Present(write, originalGeneration);
+        var current = await InvokeOwnedAsync("GetCurrent", null, ct, originalGeneration);
+        if (!Succeeded(current)) { await Publish(() => { ClearPrivate(); Fail(current); }); return; }
         var body = current.GetProperty("body");
         var id = Text(body, "accountId");
-        if (id is null) { await Present(() => { ClearPrivate(); _status = "Account services returned an incompatible record."; }); return; }
+        if (id is null) { await Publish(() => { ClearPrivate(); _status = "Account services returned an incompatible record."; }); return; }
         if (_current is not null && Text(_current, "accountId") != id)
-            await Present(ClearPrivate);
-        await Present(() => _current = body.Clone());
-        var profile = await InvokeOwnedAsync("GetProfile", null, ct);
+            await Publish(ClearPrivate);
+        await Publish(() => _current = body.Clone());
+        var profile = await InvokeOwnedAsync("GetProfile", null, ct, originalGeneration);
         if (Succeeded(profile))
         {
             var record = profile.GetProperty("body").GetProperty("profile");
-            if (Text(record, "accountId") != id) { await Present(() => { ClearPrivate(); _status = "The account context changed. Reopen account settings."; }); return; }
-            await Present(() =>
+            if (Text(record, "accountId") != id) { await Publish(() => { ClearPrivate(); _status = "The account context changed. Reopen account settings."; }); return; }
+            await Publish(() =>
             {
                 if (_changed.Count == 0) ApplyProfile(record);
                 else if (_revision != record.GetProperty("revision").GetInt64())
                 { _conflict = true; _conflictRevision = record.GetProperty("revision").GetInt64(); }
             });
         }
-        else { await Present(() => Fail(profile)); if (PrivateFailure(profile)) return; }
-        var sessions = await InvokeOwnedAsync("ListSessions", null, ct);
+        else { await Publish(() => Fail(profile)); if (PrivateFailure(profile)) return; }
+        var sessions = await InvokeOwnedAsync("ListSessions", null, ct, originalGeneration);
         if (Succeeded(sessions))
         {
             var rows = sessions.GetProperty("body").GetProperty("sessions").EnumerateArray().Select(row => row.Clone()).ToArray();
             if (rows.Any(row => Text(row, "accountId") != id))
-            { await Present(() => { ClearPrivate(); _status = "The account context changed. Reopen account settings."; }); return; }
-            await Present(() => { _sessions = rows; _sessionsChecked = true; _selectedSession = null; _confirmation = null; _pendingMutation = null;
+            { await Publish(() => { ClearPrivate(); _status = "The account context changed. Reopen account settings."; }); return; }
+            await Publish(() => { _sessions = rows; _sessionsChecked = true; _selectedSession = null; _confirmation = null; _pendingMutation = null;
                 if (Succeeded(profile)) _status = _conflict ? "Your profile changed elsewhere. Your draft is preserved. Discard and reload before saving."
                     : _changed.Count > 0 ? "Account checked. Your unsaved profile draft is preserved." : "Account, profile and sessions checked."; });
         }
-        else await Present(() => Fail(sessions));
+        else await Publish(() => Fail(sessions));
     }
 
     private async Task SaveAsync(CancellationToken ct)
@@ -338,24 +339,39 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
     private static string? Text(JsonElement? value, string field) => value is { ValueKind: JsonValueKind.Object } record && record.TryGetProperty(field, out var item) && item.ValueKind == JsonValueKind.String ? item.GetString() : null;
     private static object? Scalar(JsonElement value) => value.ValueKind switch
     { JsonValueKind.String => value.GetString(), JsonValueKind.Number => value.GetRawText(), JsonValueKind.True => true, JsonValueKind.False => false, _ => null };
-    private Task Present(Action action)
+    private Task Present(Action action, long? expectedGeneration = null)
     {
-        var generation = _generation;
+        var generation = expectedGeneration ?? _generation;
         var present = _present;
-        return _disposed || present is null ? Task.CompletedTask : present(() =>
+        return _disposed || generation != _generation || present is null ? Task.CompletedTask : present(() =>
         { if (!_disposed && generation == _generation) { action(); Changed(); } });
     }
-    private async Task<JsonElement> InvokeOwnedAsync(string action, JsonElement? args, CancellationToken ct)
+    private async Task<JsonElement> InvokeOwnedAsync(string action, JsonElement? args, CancellationToken ct, long? expectedGeneration = null)
     {
         ct.ThrowIfCancellationRequested();
-        var generation = _generation;
+        var generation = expectedGeneration ?? _generation;
         var transport = _transport;
-        if (_disposed || transport is null) throw new OperationCanceledException(ct);
+        if (_disposed || generation != _generation || transport is null) throw new OperationCanceledException(ct);
         var result = await transport.InvokeAsync(action, args, ct);
         // A backend ignoring cancellation must not repopulate or start a follow-up request.
         ct.ThrowIfCancellationRequested();
         if (_disposed || generation != _generation) throw new OperationCanceledException(ct);
         return result;
+    }
+    /// <summary>Nonterminal native privacy fence. The owning UI invokes this on its
+    /// presentation thread when the genuine session changes. No account or Home
+    /// authority is conferred; existing reads/presentations cannot restore old data.</summary>
+    public void ClearAccountObservations(string status)
+    {
+        ArgumentNullException.ThrowIfNull(status);
+        lock (_ownership)
+        {
+            if (_disposed) return;
+            ++_generation;
+            ClearPrivate();
+            _status = status;
+        }
+        Changed(); // Private fields and generation are fenced before observer callbacks.
     }
     private void Changed() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     private void ClearPrivate() { _current = null; _profile = null; _sessions = []; _sessionsChecked = false; _draft.Clear(); _changed.Clear(); _conflict = false; _conflictRevision = null; _revision = 0; _selectedSession = null; _confirmation = null; _pendingMutation = null; }

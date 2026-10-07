@@ -37,3 +37,13 @@ dotnet test "9to1 Workspace/Spaces/Tests/HavenOS.Spaces.Tests.csproj" --filter "
 ```
 
 These commands describe the normal owning projects. The current source changes require fresh build/test evidence; this page makes no test-pass claim. Native rendering, packaging, cross-platform behavior and actual model-backed same-ID takeover remain unverified until their actual runtime controls execute.
+
+## Bounded original project traversal candidate
+
+The baseline traversal refusal described above is superseded in this source candidate by `WorkspaceToolService.OriginalTraversal.cs`. The canonical original owner makes `list_files` and `search_files` available only through the actual optional traversal source and its privately issued read fence. The per-call port preserves the same canonical Task/Run/action, fresh actor/model/root observations and the maintained central permission gate. It issues no mutation receipt or checkpoint. Standalone Dev launch and additional presentation bindings remain outside this connection.
+
+Linux reads directory names through the held directory descriptor and opens each child with `openat2` beneath that same handle, refusing symlink, magic-link, mount and hard-link aliases. Windows reads native directory records from the held directory handle; retained ancestors exclude rename/reparse substitution, and file identity/link-count checks guard the held read. Windows requires the observed case-insensitive directory and supported native record APIs. Linux detects observed path/inode/version changes; it does not promise exclusion of external writers. Unsupported native paths fail closed.
+
+Read coverage is explicit: depth at most 10, at most 2,000 enumerated entries, at most 200 matches, at most 2 MiB per searched file and 16 MiB total. The original action has finite validation custody, so the traversal uses at most 48 fresh read revalidations and reports when that limit truncates coverage. Ignored folders, large files and binary/invalid UTF-8 exclusions are counted; the runtime preserves that coverage footer inside its existing 120,000-character output bound. Permission, identity, I/O and cleanup failures are errors rather than successful empty scans. All source validation/read/disposal tasks settle before original outcome acceptance.
+
+Owning controls are `WorkspaceOriginalTraversalTests` in `Haven.Infrastructure.Tests` and `WorkspaceTaskRunTraversalTests` in `Haven.Core.Tests`. They require fresh normal owning builds and tests on supported Linux and Windows hosts; this source packet does not claim SDK, native, UI or actual model-backed takeover validation.

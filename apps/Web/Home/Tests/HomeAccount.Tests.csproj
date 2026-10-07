@@ -8,6 +8,9 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="../../BrowserHomeContext.cs" />
+    <Compile Include="../../BrowserHomeDashboardLayoutStore.cs" />
+    <Compile Include="../../Services/BrowserTaskActorSource.cs" />
+    <Compile Include="../../Services/BrowserTaskIdentityReadOperation.cs" />
     <Compile Include="../../BrowserSurfaceRegistry.cs" />
     <Compile Include="../../Accounts/AccountSettingsFeature.cs" />
     <Compile Include="../../Accounts/AccountBrowserBindings.cs" />

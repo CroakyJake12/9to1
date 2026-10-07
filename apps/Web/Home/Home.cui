@@ -49,7 +49,7 @@
           <StackPanel id="dashboard-brief" orientation="Vertical" margin="0 0 0 18">
             <TextBlock text="Your briefing" font-size="20" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" />
             <TextBlock id="dashboard-brief-status" text="{Binding BriefSummary, fallback=Your authorised activity will appear here}" foreground="{Resource CuiTextSoftBrush}" margin="0 6 0 12" />
-            <WrapPanel id="dashboard-tiles" margin="0 0 0 8" />
+            <TextBlock id="dashboard-tiles" text="{Binding BriefSummary}" foreground="{Resource CuiTextSoftBrush}" margin="0 0 0 8" />
           </StackPanel>
           <Border id="home-hero" background="{Resource CuiPanel2Brush}" border-brush="{Resource CuiLineBrush}" border-thickness="1" corner-radius="14" padding="24" margin="0 0 18 0">
             <StackPanel orientation="Horizontal">
@@ -75,6 +75,7 @@
             </StackPanel>
             <WrapPanel id="app-cards" margin="0 10 0 18">
               <Button id="shortcut-write" action="OpenWrite" content="Write" width="148" height="58" margin="0 0 10 10" />
+              <Button id="shortcut-present" action="OpenPresent" content="Present" width="148" height="58" margin="0 0 10 10" />
               <Button id="shortcut-browse" action="OpenBrowse" content="Browse" width="148" height="58" margin="0 0 10 10" />
               <Button id="shortcut-data" action="OpenData" content="Data" width="148" height="58" margin="0 0 10 10" />
               <Button id="shortcut-boards" action="OpenBoards" content="Boards" width="148" height="58" margin="0 0 10 10" />
@@ -100,16 +101,22 @@
                 <Button id="reset-dashboard-layout" action="ResetDashboardLayout" content="Reset layout" />
               </StackPanel>
               <TextBlock id="dashboard-tiles-summary" text="{Binding DashboardTilesSummary}" foreground="{Resource CuiTextSoftBrush}" margin="0 12 0 10" />
-              <StackPanel orientation="Horizontal">
-                <Button id="add-dashboard-tile" action="AddDashboardTile" content="Add tile" margin="0 0 8 0" />
+              <If Condition="{Binding DashboardHasLayout}">
+                <ListBox id="dashboard-tile-list" items-source="{Binding DashboardTilesItems}" selected-index="{Binding SelectedDashboardTileIndex, mode=TwoWay}" accessible-name="Saved dashboard tiles" height="144" margin="0 0 0 10" />
+              </If>
+              <WrapPanel>
+                <Button id="add-dashboard-tile" action="AddDashboardTile" content="Add account status tile" margin="0 0 8 0" />
                 <Button id="remove-dashboard-tile" action="RemoveSelectedDashboardTile" content="Remove selected" margin="0 0 8 0" />
                 <Button id="move-dashboard-tile-up" action="MoveSelectedDashboardTileUp" content="Move up" margin="0 0 8 0" />
                 <Button id="move-dashboard-tile-down" action="MoveSelectedDashboardTileDown" content="Move down" margin="0 0 8 0" />
                 <Button id="pin-dashboard-tile" action="PinSelectedDashboardTile" content="Pin" margin="0 0 8 0" />
                 <Button id="lock-dashboard-tile" action="LockSelectedDashboardTile" content="Lock" margin="0 0 8 0" />
                 <Button id="hide-dashboard-tile" action="HideSelectedDashboardTile" content="Hide" margin="0 0 8 0" />
-                <Button id="refresh-dashboard-tile" action="RefreshSelectedDashboardTile" content="Refresh selected" />
-              </StackPanel>
+                <Button id="refresh-dashboard-tile" action="RefreshSelectedDashboardTile" content="Refresh saved layout" />
+                <Button id="unpin-dashboard-tile" action="UnpinSelectedDashboardTile" content="Unpin" margin="8 0 0 0" />
+                <Button id="unlock-dashboard-tile" action="UnlockSelectedDashboardTile" content="Unlock" margin="8 0 0 0" />
+                <Button id="show-dashboard-tile" action="ShowSelectedDashboardTile" content="Show" margin="8 0 0 0" />
+              </WrapPanel>
               <StackPanel orientation="Horizontal" margin="0 8 0 0">
                 <Button id="resize-dashboard-tile-small" action="ResizeSelectedDashboardTileSmall" content="Small" margin="0 0 8 0" />
                 <Button id="resize-dashboard-tile-medium" action="ResizeSelectedDashboardTileMedium" content="Medium" margin="0 0 8 0" />

@@ -23,7 +23,7 @@ internal sealed partial class NativeCanonicalTaskSceneReadiness
         if (context.TaskId != _taskId || context.ExecutionId != _runId || context.ContextId != _contextId)
             throw new InvalidOperationException("The actual acquired Dev page belongs to a different original Task/Run/context.");
         _windowLifetime.ThrowIfCancellationRequested();
-        if (_startup is not null) _connectionLifetime.ThrowIfCancellationRequested();
+        if (_startup is not null || _sameProcessHome is not null) _connectionLifetime.ThrowIfCancellationRequested();
         return new NativeCanonicalDevelopmentSceneReadiness(this, actualPage);
     }
 
@@ -37,6 +37,8 @@ internal sealed partial class NativeCanonicalTaskSceneReadiness
         private readonly CuiSceneHost _host;
         private readonly SpaceTaskWorkspaceService _source;
         private readonly IHomeNativeStartupSession? _startup;
+        private readonly HomeNativeWindowsComposition? _sameProcessHome;
+        private readonly IServiceProvider? _sameProcessProvider;
         private readonly IAuthenticatedResourceActorSource _actors;
         private readonly CancellationToken _connectionLifetime, _windowLifetime;
         private readonly DesktopOriginalWorkLifetime _work = new(
@@ -53,6 +55,7 @@ internal sealed partial class NativeCanonicalTaskSceneReadiness
             _page = actualPage; _host = actualPage.OriginalHost;
             _source = actualIssuer._source;
             _startup = actualIssuer._startup; _actors = actualIssuer._actors;
+            _sameProcessHome = actualIssuer._sameProcessHome; _sameProcessProvider = actualIssuer._sameProcessProvider;
             _connectionLifetime = actualIssuer._connectionLifetime; _windowLifetime = actualIssuer._windowLifetime;
             (_spaceId, _contextId, _taskId, _runId) =
                 (actualIssuer._spaceId, actualIssuer._contextId, actualIssuer._taskId, actualIssuer._runId);
@@ -70,6 +73,8 @@ internal sealed partial class NativeCanonicalTaskSceneReadiness
             using var scope = CancellationTokenSource.CreateLinkedTokenSource(original.Token, caller, _windowLifetime, _connectionLifetime);
             var token = scope.Token;
             DemandOriginal(original, token);
+            if (_sameProcessHome is not null)
+                return await CheckSameProcessOriginalAsync(original, token).ConfigureAwait(false);
             if (_startup is null)
                 return new(CuiSceneAvailabilityState.Unavailable, "HomeStartupAttachmentUnavailable",
                     "Connect to the required original Home service. No installation or Task authority is inferred from this unavailable attachment.");
@@ -98,6 +103,38 @@ internal sealed partial class NativeCanonicalTaskSceneReadiness
             return new(home.CanStartNormally ? CuiSceneAvailabilityState.Ready : CuiSceneAvailabilityState.Unavailable,
                 home.Code, home.Message); // SAME actual compatibility observation, never a frame/permission witness.
         }
+        private async Task<CuiSceneAvailability> CheckSameProcessOriginalAsync(DesktopOriginalWorkLifetime.Original original,
+            CancellationToken token)
+        {
+            var actor = await ReadActualActorAsync(original, token);
+            if (actor is null) return new(CuiSceneAvailabilityState.Unavailable, "TaskProfileUnavailable", "The original current Task profile is unavailable.");
+            lock (_gate)
+            {
+                if (_originalActor is null) _originalActor = actor;
+                else if (_originalActor != actor) throw new UnauthorizedAccessException("The original canonical Task profile/authentication changed.");
+            }
+            var before = await ReadActualContextAsync(original, token);
+            DemandActorBinding(before, actor);
+            void OwnSource(Action body) => AcquireActualSource(original, () => { DemandOriginal(original, token); body(); return true; });
+            var home = await original.AwaitAsync(AcquireActualSource(original, () =>
+                WindowsHomeSameProcessRuntimeObservation.CheckAsync(_sameProcessProvider!, _sameProcessHome!,
+                    _connectionLifetime, _windowLifetime, OwnSource, () => DemandOriginal(original, token), token))).ConfigureAwait(false);
+            DemandOriginal(original, token);
+            if (await ReadActualActorAsync(original, token) != actor)
+                throw new UnauthorizedAccessException("The canonical Task actor changed during same-process Home observation.");
+            var after = await ReadActualContextAsync(original, token);
+            DemandActorBinding(after, actor);
+            if (before.SpaceRevision != after.SpaceRevision || before.Snapshot?.OwnerBinding != after.Snapshot?.OwnerBinding)
+                throw new InvalidOperationException("The SAME original Task context/owner changed during Home observation.");
+            if (await ReadActualActorAsync(original, token) != actor)
+                throw new UnauthorizedAccessException("The canonical Task actor changed before native publication.");
+            DemandOriginal(original, token);
+            var final = AcquireActualSource(original, () => WindowsHomeSameProcessRuntimeObservation.RevalidateBeforePublication(
+                _sameProcessProvider!, _sameProcessHome!, home));
+            DemandOriginal(original, token);
+            return final;
+        }
+
         private async Task<AuthenticatedResourceActor?> ReadActualActorAsync(DesktopOriginalWorkLifetime.Original original, CancellationToken token)
         {
             DemandOriginal(original, token);
@@ -124,10 +161,12 @@ internal sealed partial class NativeCanonicalTaskSceneReadiness
         private static void DemandActorBinding(SpaceTaskObservation observation, AuthenticatedResourceActor actor)
         {
             // Historical/unstarted records without owner provenance remain observation only.
-            // Existing owner provenance must match the actual current Task source; it grants no command.
+            // Compare the saved stable owner identity, as the maintained portable reopening owner does.
+        // Historical AuthenticationRevision remains audit provenance. Fresh actor observations
+        // still compare the complete current actor around Home/context reads; no command is granted.
             if (observation.Snapshot?.OwnerBinding is { } owner &&
                 (owner.ActorId != actor.ActorId || owner.ProfileId != actor.ProfileId || owner.AccountId != actor.AccountId ||
-                 owner.OrganisationId != actor.OrganisationId || owner.AuthenticationRevision != actor.AuthenticationRevision))
+                 owner.OrganisationId != actor.OrganisationId))
                 throw new UnauthorizedAccessException("The recorded Task owner differs from the actual current Task actor.");
         }
         private void DemandOriginal(DesktopOriginalWorkLifetime.Original original, CancellationToken token)

@@ -181,8 +181,13 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
             original.DemandPublication();
             project = await original.AwaitAsync(InvokeOriginalSource(() => _development.OpenAsync(_spaceId, id, token, OwnNestedOriginalSource))).ConfigureAwait(false);
             if (project.Task.Snapshot?.TaskId != observation.Snapshot?.TaskId ||
-                project.Task.Snapshot?.ExecutionId != observation.Snapshot?.ExecutionId)
+                project.Task.Snapshot?.ExecutionId != observation.Snapshot?.ExecutionId ||
+                project.Task.Snapshot?.ContextId != observation.Snapshot?.ContextId ||
+                project.Task.Conversation.Id != observation.Conversation.Id)
                 throw new InvalidDataException("The Dev project belongs to a different original Task/Run.");
+            // Dev reopening resolves the project and then reads the SAME task again.
+            // Present that fresh canonical revision, including acknowledged actions/checkpoint.
+            observation = project.Task;
         }
         await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
         {

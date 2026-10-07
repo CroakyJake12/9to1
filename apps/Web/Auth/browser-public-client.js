@@ -46,12 +46,17 @@ export function handleOAuthPopupCallback(configuration, win = globalThis.window)
 export class BrowserPublicClient {
   #config; #window; #fetch; #crypto; #before; #verifyAccount; #verified; #signInFailed; #expired; #failure;
   #issued = new Set(); #cleanupErrors = []; #cleanupTask; #beginExpiry;
+  #taskIdentity = null; #taskProfile; #ownerEpoch; #issuedTaskIdentities = new WeakMap();
   #token = null; #expires = 0; #timer; #pending = null; #generation = 0; #disposed = false; #discovery; #jwks;
   constructor({ configuration, window: win = globalThis.window, fetch: transport = globalThis.fetch,
-    crypto = globalThis.crypto, onBeforeSignIn, verifyCurrentAccount, onVerifiedIdentity, onSignInFailed, onTokenExpired, onFailure, beginTokenExpiryInvalidation = undefined }) {
+    crypto = globalThis.crypto, onBeforeSignIn, verifyCurrentAccount, onVerifiedIdentity, onSignInFailed, onTokenExpired, onFailure, beginTokenExpiryInvalidation = undefined, readCurrentTaskProfile = undefined }) {
     if (!win || typeof transport !== 'function' || !crypto?.subtle || typeof onBeforeSignIn !== 'function' ||
         typeof verifyCurrentAccount !== 'function' || typeof onVerifiedIdentity !== 'function' || typeof onSignInFailed !== 'function' || typeof onTokenExpired !== 'function' || typeof onFailure !== 'function') throw problem('InvalidConfiguration');
     if(beginTokenExpiryInvalidation !== undefined && typeof beginTokenExpiryInvalidation !== 'function') throw problem('InvalidConfiguration');
+    if(readCurrentTaskProfile !== undefined && typeof readCurrentTaskProfile !== 'function') throw problem('InvalidConfiguration');
+    this.#taskProfile = readCurrentTaskProfile;
+    // Local owner activation label only: neither an account ID nor server auth_revision.
+    this.#ownerEpoch = base64url(crypto.getRandomValues(new Uint8Array(32)));
     this.#beginExpiry = beginTokenExpiryInvalidation;
     this.#config = validatePublicClientConfiguration(configuration, win.location.origin);
     // Native fetch requires its Window receiver; injected transports retain their existing receiver.
@@ -61,8 +66,33 @@ export class BrowserPublicClient {
   get configuration() { return this.#config; } // Public configuration only.
   getAccessToken() { return !this.#disposed && this.#token && Date.now() < this.#expires ? this.#token : null; }
   clearToken({ cancelPending = true } = {}) {
-    this.#generation++; this.#token = null; this.#expires = 0; clearTimeout(this.#timer);
+    this.#generation++; this.#taskIdentity = null; this.#token = null; this.#expires = 0; clearTimeout(this.#timer);
     if (cancelPending) this.#pending?.controller.abort();
+  }
+  readCurrentTaskIdentity({ signal } = {}) {
+    return this.#issue('task-identity', async () => {
+      const original = this.#taskIdentity;
+      if (!original || !this.#taskProfile || !this.#taskIdentityCurrent(original)) return null;
+      if (signal?.aborted) throw problem('Cancelled');
+      // This callback is the configured owner's actual current-account + profile API read.
+      // No subject, session, profile or claimed generation is accepted from the caller.
+      const profile = await this.#taskProfile(original.accountId, signal);
+      if (signal?.aborted) throw problem('Cancelled');
+      if (!this.#taskIdentityCurrent(original)) throw problem('SessionContextChanged');
+      if (!object(profile) || profile.accountId !== original.accountId ||
+          !Number.isSafeInteger(profile.revision) || profile.revision <= 0) throw problem('TaskProfileVerificationFailed');
+      const observed = Object.freeze({ ...original, profileAccountId: profile.accountId, profileRevision: profile.revision });
+      this.#issuedTaskIdentities.set(observed, original);
+      return observed;
+    });
+  }
+  isOriginalTaskIdentityCurrent(observed) {
+    const original = object(observed) ? this.#issuedTaskIdentities.get(observed) : null;
+    return original !== undefined && original !== null && this.#taskIdentityCurrent(original);
+  }
+  #taskIdentityCurrent(original) {
+    return !this.#disposed && original === this.#taskIdentity && original.generation === this.#generation &&
+      this.#token !== null && Date.now() < this.#expires && Date.now() < original.expiresAt * 1000;
   }
   async #json(url, options, signal) {
     const response = await this.#fetch(url, { ...options, credentials: 'omit', cache: 'no-store', redirect: 'error', referrerPolicy: 'no-referrer', signal });
@@ -117,6 +147,15 @@ export class BrowserPublicClient {
     try { await pending.callbacks.verified(); }
     catch { if (pending.generation === this.#generation) this.clearToken({ cancelPending: false }); throw problem('PrivateContextCleanupFailed'); }
     if (pending.controller.signal.aborted || pending.generation !== this.#generation || this.#disposed) throw problem('SessionContextChanged');
+    // Publish Task identity only after both signed tokens, actual current-account verification,
+    // and the private native owner replacement have completed successfully. Never retain tokens here.
+    if (Number.isSafeInteger(access.iat) && access.iat >= 0 && access.iat <= access.exp &&
+        Number.isSafeInteger(id.exp) && id.exp * 1000 > Date.now()) {
+      this.#taskIdentity = Object.freeze({ version: 1, issuer: this.#config.issuer,
+        apiResource: this.#config.apiResource, clientId: this.#config.clientId,
+        accountId: id.sub, sessionId: access.sid, issuedAt: access.iat,
+        expiresAt: Math.min(access.exp, id.exp), ownerEpoch: this.#ownerEpoch, generation: this.#generation });
+    }
     const tokenGeneration = this.#generation;
     this.#timer = setTimeout(() => {
       if(this.#disposed || tokenGeneration !== this.#generation) return;
@@ -219,7 +258,7 @@ export class BrowserPublicClient {
     this.#disposed=true; this.clearToken({cancelPending:false});
     if(this.#pending) { this.#pending.verifier=null; this.#pending.nonce=null; this.#pending.state=null; }
     this.#before=null;this.#verifyAccount=null;this.#verified=null;this.#signInFailed=null;
-    this.#expired=null;this.#failure=null;this.#beginExpiry=undefined;
+    this.#expired=null;this.#failure=null;this.#beginExpiry=undefined;this.#taskProfile=undefined;
     this.#discovery=undefined;this.#jwks=undefined;
   }
   disposeAsync() {

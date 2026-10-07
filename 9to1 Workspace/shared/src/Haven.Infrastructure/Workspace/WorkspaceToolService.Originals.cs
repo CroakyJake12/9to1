@@ -95,7 +95,11 @@ public sealed partial class WorkspaceToolService
                 }
             }
             else if (_call.Name is "list_files" or "search_files")
-                throw new PlatformNotSupportedException("Original directory traversal requires an owning safe per-child traversal port; ordinary local tools remain available.");
+            {
+                if (fence is not IWorkspaceOriginalReadFence || !owner.SupportsOriginalTraversal(_call.Name))
+                    throw new PlatformNotSupportedException("Original traversal requires a supported retained per-child owner and its issued read fence.");
+                _ = ResolveDeclared(Text("path", "."));
+            }
             else if (_call.Name is not ("read_file" or "run_command" or "run_tests"))
                 throw new UnauthorizedAccessException("This original call is not an implemented workspace tool.");
             if (OperatingSystem.IsWindows()) _physicalRoot = new OriginalWindowsPathLease(Root);

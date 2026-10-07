@@ -24,8 +24,10 @@ public sealed class NativePersonalTaskColdRecoveryConfiguration
             "Personal-store cold recovery is disabled; ordinary Task execution is unchanged.") :
         value != "1" ? new(NativePersonalTaskColdRecoveryConfigurationKind.MalformedConfiguration,
             "The explicit personal-store recovery selector must be 0 or 1.") :
+        OperatingSystem.IsWindows() && Environment.Is64BitProcess ? new(NativePersonalTaskColdRecoveryConfigurationKind.RequestedUnverified,
+            "Requested Windows64; the SAME canonical sources must be configured before use. Actual SID/ACL/held-path/storage synchronization and fresh recovery authority remain unverified.") :
         !OperatingSystem.IsLinux() ? new(NativePersonalTaskColdRecoveryConfigurationKind.UnsupportedPlatform,
-            "The actual protected personal-store producer currently supports Linux only.") :
+            "The actual protected personal-store producer supports Linux or Windows64; this platform is unsupported.") :
         new(NativePersonalTaskColdRecoveryConfigurationKind.RequestedUnverified,
             "Requested; the SAME canonical sources must be configured before use. Store protection and fresh recovery authority remain unverified."));
 }

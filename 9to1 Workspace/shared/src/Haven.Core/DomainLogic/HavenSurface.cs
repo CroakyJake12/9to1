@@ -46,6 +46,7 @@ public enum HavenSurface
     Forms = 27,
     Shelf = 28,
     Files = 29,
+    Sites = 30,
     // UI aliases retained for saved layout JSON written before the rename.
     Teach = Study,
     Do = Tasks

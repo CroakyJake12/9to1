@@ -82,11 +82,20 @@ public sealed partial class WorkspaceToolService
                     Invoke(() =>
                     {
                         token.ThrowIfCancellationRequested(); DemandCurrent(capture.Physical);
+                        if (capture.Physical.WindowsRoot is not null)
+                        {
+                            CaptureWindowsDirectory(actual);
+                            if (observed.WindowsIdentity is not { } identity || !actual.WindowsIdentity!.Value.SameReadVersion(identity))
+                                throw new IOException("The exact observed Windows project directory changed before the registration lease.");
+                        }
+                        else
+                        {
                         actual.Handle = capture.Physical.Root.OpenDirectory(actual.DirectoryPath);
                         DemandLinuxDescriptorPath(actual.Handle, actual.DirectoryPath);
                         actual.Identity = ReadLinuxIdentity(actual.Handle);
                         if (!actual.Identity.IsDirectory || !actual.Identity.SameReadVersion(observed.Identity))
                             throw new IOException("The exact observed project directory changed before the registration lease.");
+                        }
                         return true;
                     });
                     return registration;
@@ -117,9 +126,13 @@ public sealed partial class WorkspaceToolService
             var handle = preparation.Actual.Handle;
             if (handle is null || handle.IsClosed || operation.Confirmed)
                 throw new UnauthorizedAccessException("The original directory metadata operation or descriptor is no longer active.");
+            if (preparation.Actual.WindowsIdentity is not null) DemandWindowsDirectoryVersion(preparation.Actual, handle);
+            else
+            {
             DemandLinuxDescriptorPath(handle, preparation.Actual.DirectoryPath);
             if (!ReadLinuxIdentity(handle).SameReadVersion(preparation.Actual.Identity))
                 throw new IOException("The held original project directory changed before Files binding publication.");
+            }
             return true;
         });
 
@@ -150,6 +163,9 @@ public sealed partial class WorkspaceToolService
                     if (actual is not null)
                         try { value = await actual.ConfigureAwait(false); }
                         catch (Exception error) { AddOriginalErrors(errors, actual, error); }
+                    if (errors.Count == 0 && preparation.Actual.WindowsIdentity is not null)
+                        try { CheckDirectoryRegistration(preparation, entry, token); }
+                        catch (Exception error) { AddOriginalErrors(errors, null, error); }
                     ThrowOriginalErrors(errors, actual?.IsCanceled == true && errors.Count == 1);
                     lock (_gate) { operation.Result = value; operation.Confirmed = true; }
                     return value;
@@ -224,10 +240,18 @@ public sealed partial class WorkspaceToolService
                     Invoke(() =>
                     {
                         token.ThrowIfCancellationRequested(); DemandCurrent(preparation.Actual.Capture.Physical);
+                        if (preparation.Actual.WindowsIdentity is not null)
+                        {
+                            current = preparation.Actual.Capture.Physical.WindowsRoot!.OpenDirectory(preparation.Actual.DirectoryPath);
+                            DemandWindowsDirectoryVersion(preparation.Actual, current);
+                        }
+                        else
+                        {
                         current = preparation.Actual.Capture.Physical.Root.OpenDirectory(preparation.Actual.DirectoryPath);
                         DemandLinuxDescriptorPath(current, preparation.Actual.DirectoryPath);
                         if (!ReadLinuxIdentity(current).SameReadVersion(preparation.Actual.Identity))
                             throw new IOException("The original registered directory no longer matches the retained native identity/version.");
+                        }
                         RequireDirectoryRegistration(samePreparation, sameRegistrationTask, sameMetadataTask, sameResult); return true;
                     });
                 }

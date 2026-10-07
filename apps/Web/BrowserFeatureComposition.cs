@@ -1,5 +1,6 @@
 using Avalonia.Threading;
 using System.Runtime.Versioning;
+using NineToOne.Web.Spaces.Storage;
 using NineToOne.Web.Accounts;
 using NineToOne.Web.Wave;
 using NineToOne.Web.Picture;
@@ -43,6 +44,9 @@ internal static class BrowserFeatureComposition
     [SupportedOSPlatform("browser")]
     public static AccountSettingsFeature RegisterPrivateAccountSettings(BrowserSurfaceRegistry registry)
     {
+        BrowserPrivateTaskStorageEnrollment.Register(registry);
+        var samePrivateOwner = BrowserPrivateTaskStorageEnrollment.GetCurrent(registry);
+        BrowserHomeDashboardLayoutStore.Register(registry, samePrivateOwner.DemandPrivateContextCurrent);
         var settings = AccountSettingsFeature.CreateForBrowser(action => Dispatcher.UIThread.InvokeAsync(action).GetTask(),
             BrowserAccountSignIn.IsAvailable ? BrowserAccountSignIn.RequestAsync : null);
         var registered = registry.Register(settings, settings.Render);

@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 1,
+  "archiveBytes": 25224103,
+  "archiveSha256": "799261e5e57fa68062d76c314a3004ac6cfd37934ea8b5bb507a99e9397dfaf8",
+  "architecture": "win-x64",
+  "nativeAbi": 3,
+  "namedExports": 36,
+  "originalManagedImports": [
+    "cake_canvas_abi_version",
+    "cake_canvas_begin_stroke",
+    "cake_canvas_buffer_release",
+    "cake_canvas_delete_stroke",
+    "cake_canvas_end_stroke",
+    "cake_canvas_engine_free",
+    "cake_canvas_engine_from_rnote",
+    "cake_canvas_engine_from_xopp",
+    "cake_canvas_engine_new",
+    "cake_canvas_export_selected_strokes",
+    "cake_canvas_quick_erase_api_version",
+    "cake_canvas_quick_erase_target",
+    "cake_canvas_redo",
+    "cake_canvas_render_frame",
+    "cake_canvas_render_frame_release",
+    "cake_canvas_rendered_stroke_keys",
+    "cake_canvas_save_rnote",
+    "cake_canvas_selection_api_version",
+    "cake_canvas_set_eraser",
+    "cake_canvas_set_pen_style",
+    "cake_canvas_set_stroke_tool",
+    "cake_canvas_split_erase_api_version",
+    "cake_canvas_split_erase_candidate",
+    "cake_canvas_stroke_keys",
+    "cake_canvas_stroke_mutation_api_version",
+    "cake_canvas_translate_stroke",
+    "cake_canvas_undo",
+    "cake_canvas_update_stroke"
+  ],
+  "files": [
+    {
+      "name": "cakeos_canvas_rnote_poc.dll",
+      "bytes": 42968282,
+      "sha256": "5ce1542bc3f580782ea83145d90895cad1a290c3bc8f177d754912b2d930b4f4"
+    },
+    {
+      "name": "libcairo-2.dll",
+      "bytes": 1231234,
+      "sha256": "31b32048884040c1edb0743f7406efab83ee8ed1d3ee23e33260e39664b74517"
+    },
+    {
+      "name": "libcairo-gobject-2.dll",
+      "bytes": 35715,
+      "sha256": "cdb828e9ef29cd3ea890a309c089a4310b79fec2d024ac6c72725531cd79a55e"
+    },
+    {
+      "name": "libgio-2.0-0.dll",
+      "bytes": 1918835,
+      "sha256": "1404c1bf2ce190032ab6a50ed8afa09d52e9e85fe806a20ae10019a04ec72c2e"
+    },
+    {
+      "name": "libglib-2.0-0.dll",
+      "bytes": 1571222,
+      "sha256": "9778ba7e7a3a3e92e7c1802a45cd9350a905ff3fbff193566630b6c47a3e7b9c"
+    },
+    {
+      "name": "libgobject-2.0-0.dll",
+      "bytes": 357682,
+      "sha256": "2ea01b58d9a0972c34eed00f012c0fb5cb4178267c4181296e84c50647062000"
+    },
+    {
+      "name": "libintl-8.dll",
+      "bytes": 301688,
+      "sha256": "17bdd3de3329156e032949abcf3f0f9163febd0fb9299864b7eff7f31e7c15d4"
+    },
+    {
+      "name": "libpango-1.0-0.dll",
+      "bytes": 434535,
+      "sha256": "078881c139e7dd422c4cb5f9c43b939712eb7ad4f3d7d25c41639873e8aec6d6"
+    },
+    {
+      "name": "libpangocairo-1.0-0.dll",
+      "bytes": 83118,
+      "sha256": "b9f800abeafd27c07dc9f9fa4a41bb614564038ce7ac5753ca6c60c1d7d555cc"
+    },
+    {
+      "name": "libxml2-16.dll",
+      "bytes": 1255475,
+      "sha256": "81e97f59e486f95de3b8b12973860102cddebbaaeedbbc22786aaec0728b2c68"
+    },
+    {
+      "name": "libfontconfig-1.dll",
+      "bytes": 508462,
+      "sha256": "bed1827dbb226483026b2b33127866ce173aa2423d89ae7da6f88d6328792ec9"
+    },
+    {
+      "name": "libfreetype-6.dll",
+      "bytes": 790651,
+      "sha256": "bbb3e6390ee229c867ef31f10e42a49a61a92e434a11d40c6139a2608ebc6194"
+    },
+    {
+      "name": "libgcc_s_seh-1.dll",
+      "bytes": 149364,
+      "sha256": "d7e343dd266747177c3699bc3201ea36eceef158e98530e089263bc55bb2a6d7"
+    },
+    {
+      "name": "libpixman-1-0.dll",
+      "bytes": 740378,
+      "sha256": "55ce45825eb8e825c635416171be4736147a6b0b690469f545d8c4ae8e85b4a3"
+    },
+    {
+      "name": "libpng16-16.dll",
+      "bytes": 260070,
+      "sha256": "fdac85bb70ec3af940810036eb9838765dceb61aaf81a60b244209f99c617f3d"
+    },
+    {
+      "name": "libstdc++-6.dll",
+      "bytes": 2659216,
+      "sha256": "494bd9045948198ef4d3bc838c7362d4cfd49c890b439c096b1817aa7c7fa6ff"
+    },
+    {
+      "name": "zlib1.dll",
+      "bytes": 128488,
+      "sha256": "93e9243a44c29200eeacaf9658efe2558581770e4b11ca4b500e18e424a6e3b5"
+    },
+    {
+      "name": "libgmodule-2.0-0.dll",
+      "bytes": 23387,
+      "sha256": "20d170ae2d89710376bdd64638399de48a417281769ccb6930927aa28a26d704"
+    },
+    {
+      "name": "libpcre2-8-0.dll",
+      "bytes": 706915,
+      "sha256": "68a7cee2acc36d6a61d73f78825d17dfd32f8580f4bb1bc399134719518213d5"
+    },
+    {
+      "name": "libffi-8.dll",
+      "bytes": 39699,
+      "sha256": "b649c515907436a3299326f83aea0e8d75c61853eb1609602603bbcb9b00b4db"
+    },
+    {
+      "name": "libiconv-2.dll",
+      "bytes": 1143148,
+      "sha256": "7a282a854e01be726c6cccfe46f548c716aa45b3014818468253aaa4efbcd067"
+    },
+    {
+      "name": "libfribidi-0.dll",
+      "bytes": 154276,
+      "sha256": "ae9e30c61e1c62886d36e23a91d2943970ae990f85155cbd222b9ba44de9c51b"
+    },
+    {
+      "name": "libharfbuzz-0.dll",
+      "bytes": 1597490,
+      "sha256": "419bd6d37f05864aa0cb03f9925f4d7e9dd81c2f2a9cb3d9c0f7cef2f7eed397"
+    },
+    {
+      "name": "libthai-0.dll",
+      "bytes": 72294,
+      "sha256": "5d741974fdec19e0f6cddbcdb539428af0c7392740a056634714c2884157fdb9"
+    },
+    {
+      "name": "libpangoft2-1.0-0.dll",
+      "bytes": 111841,
+      "sha256": "38602e75c85e149bf7294bccb8792f54299daed45509a8ac4b3a18e3921ec56e"
+    },
+    {
+      "name": "libpangowin32-1.0-0.dll",
+      "bytes": 111376,
+      "sha256": "2fb6d21cce830182c9d4bf22015dec9abbb0846ebce828ca0a5d4cefc74e46c6"
+    },
+    {
+      "name": "libexpat-1.dll",
+      "bytes": 238525,
+      "sha256": "a79b7025c3fdccb6fe38fb560f3b6cfa75c26750052cf6de307816fb7c22faa0"
+    },
+    {
+      "name": "libbrotlidec.dll",
+      "bytes": 62461,
+      "sha256": "a142dc6cfa77cb907028aa9426f486f3d8de37855e8db2ae2894147908121881"
+    },
+    {
+      "name": "libbz2-1.dll",
+      "bytes": 108633,
+      "sha256": "a4fbb97c26662d2b8a80bf4597ed3effb69b12048b0cb1eef2c3f211e2e66673"
+    },
+    {
+      "name": "libwinpthread-1.dll",
+      "bytes": 66333,
+      "sha256": "72bf8802de3a99d28f0bc2db9a11f281a9f9f3fa83dab2bc67e69fac3bd3d9c0"
+    },
+    {
+      "name": "libgraphite2.dll",
+      "bytes": 167155,
+      "sha256": "063a9ad34a5ec87d038b4646660957395224ecf2cf707917256b7d251a7c5f57"
+    },
+    {
+      "name": "libdatrie-1.dll",
+      "bytes": 35033,
+      "sha256": "2f784872e6404e57847201fe1e7e591bd5b5be4a319ef38ebcb36014ac7f385d"
+    },
+    {
+      "name": "libbrotlicommon.dll",
+      "bytes": 143429,
+      "sha256": "ca7bc06ead80259971badf2cd0bfc688db9154dad65f139f49a38b4be9976f97"
+    }
+  ],
+  "qualification": "Exact private native component closure; genuine Home owning normal build/publish and real draw/save/reopen remain required. Independent installed-domain/signing/clean-machine acceptance is unverified."
+}

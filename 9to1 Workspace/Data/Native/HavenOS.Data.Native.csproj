@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="PlatformTarget">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType>
+    <RootNamespace>HavenOS.Apps.Data.Native</RootNamespace><AssemblyName>HavenOS.Data.Native</AssemblyName>
+    <Platforms>x64</Platforms><Platform>x64</Platform><PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../shared/src/Haven.Desktop/Haven.Desktop.csproj" />
+    <ProjectReference Include="../../shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj" />
+    <PackageReference Include="Avalonia" /><PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <Compile Remove="Tests/**/*.cs" />
+  </ItemGroup>
+</Project>

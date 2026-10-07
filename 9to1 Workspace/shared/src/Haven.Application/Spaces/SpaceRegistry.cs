@@ -81,6 +81,29 @@ public sealed partial class SpaceRegistry
         return matches.Length == 1 ? CloneSpace(matches[0]) : null;
     }
 
+    /// <summary>Reads a bounded census of active existing stored Spaces only. Never seeds,
+    /// reconciles, migrates, changes current selection or grants access. Over-bound inventories
+    /// require an explicitly narrower owning selection; this method never silently truncates.</summary>
+    public async Task<IReadOnlyList<SpaceDefinition>> ReadExistingPageAsync(int maximumSpaces = 64,
+        CancellationToken cancellationToken = default)
+    {
+        if (maximumSpaces is < 1 or > 64) throw new ArgumentOutOfRangeException(nameof(maximumSpaces));
+        Task<SpaceRegistryState?> actual;
+        try { actual = _settings.GetAsync<SpaceRegistryState>(SettingsKey, cancellationToken); }
+        catch (OperationCanceledException fault) { throw new AggregateException("The existing Space census source faulted synchronously.", fault); }
+        SpaceRegistryState? state;
+        try { state = await actual.ConfigureAwait(false); }
+        catch { if (actual.IsFaulted) throw actual.Exception!; throw; } // Whole raw fault; actual cancellation remains canceled.
+        cancellationToken.ThrowIfCancellationRequested();
+        if (state is null) return [];
+        if (state.Version is < 2 or > CurrentVersion) throw new InvalidDataException("A stored Space census requires a supported schema.");
+        ValidateDeletionState(state); ValidateRegistry(state.Spaces);
+        var active = state.Spaces.Where(space => !space.IsArchived).ToArray();
+        if (active.Length > maximumSpaces)
+            throw new InvalidOperationException("The existing Space census exceeds its explicit bound; select fewer Spaces through the owning service.");
+        return active.Select(CloneSpace).ToArray();
+    }
+
     public async Task<SpaceDefinition> CreateAsync(string name, string? description = null, CancellationToken cancellationToken = default)
         => await CreateAsync(name, description, null, cancellationToken).ConfigureAwait(false);
 

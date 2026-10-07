@@ -18,6 +18,8 @@ internal sealed class NativeFilesDesktopRoute : IAsyncDisposable
 {
     private readonly IServiceProvider _originalProvider;
     private readonly IHomeNativeStartupSession _originalStartup;
+    private readonly HomeNativeWindowsComposition? _sameProcessHome;
+    private readonly HashSet<Task> _originalSameProcessChecks = [];
     private readonly CancellationToken _originalConnectionLifetime;
     private readonly CancellationTokenSource _windowLifetime;
     private readonly HomeLocalProfileIdentity _profiles;
@@ -83,7 +85,40 @@ internal sealed class NativeFilesDesktopRoute : IAsyncDisposable
             originalWindowLifetime);
     }
 
+    // This separate factory is called only by the trusted owning App over its actual
+    // Home/provider. The installed-IPC factory and its original checks are unchanged.
+    internal static NativeFilesDesktopRoute BindOriginalSameProcess(IServiceProvider originalHomeProvider,
+        HomeNativeWindowsComposition sameHome, CancellationToken originalAppLifetime,
+        CancellationToken originalWindowLifetime)
+    {
+        WindowsHomeSameProcessRuntimeObservation.DemandOriginalBinding(originalHomeProvider, sameHome);
+        originalAppLifetime.ThrowIfCancellationRequested(); originalWindowLifetime.ThrowIfCancellationRequested();
+        if (!originalAppLifetime.CanBeCanceled || !originalWindowLifetime.CanBeCanceled)
+            throw new ArgumentException("Retain the actual App and native window work lifetimes.");
+        return new(originalHomeProvider, sameHome, originalAppLifetime, originalWindowLifetime);
+    }
+
+    private NativeFilesDesktopRoute(IServiceProvider provider, HomeNativeWindowsComposition sameHome,
+        CancellationToken originalAppLifetime, CancellationToken originalWindowLifetime)
+        : this(provider, (IHomeNativeStartupSession)null!, originalAppLifetime, originalWindowLifetime)
+    {
+        // No installed startup is fabricated. Only the distinct same-process branch
+        // below can read this route's real process-owned Home runtime.
+        _sameProcessHome = sameHome;
+    }
+
     internal bool IsOriginalProvider(IServiceProvider candidate) => ReferenceEquals(_originalProvider, candidate);
+
+    // Borrow the SAME live observation source; this reference is neither Ready nor an action grant.
+    internal ICuiSceneReadiness BorrowOriginalHomeReadinessForMetadata()
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        lock (_sync)
+        {
+            ThrowIfRetired();
+            return _readiness;
+        }
+    }
 
     internal Task<FilesNativeBrowserSurface> OpenAsync(CancellationToken cancellationToken)
     {
@@ -103,6 +138,7 @@ internal sealed class NativeFilesDesktopRoute : IAsyncDisposable
 
     private async Task<FilesNativeBrowserSurface> RunOpenAttemptAsync(Task start, CancellationToken caller)
     {
+        using var phase = _sameProcessHome is null ? null : CloudflareOriginalExecutionGuard.EnterOriginal(this);
         try { return await OpenOriginalAsync(start, caller); }
         catch
         {
@@ -116,7 +152,7 @@ internal sealed class NativeFilesDesktopRoute : IAsyncDisposable
     {
         await start;
         using var token = CancellationTokenSource.CreateLinkedTokenSource(caller, _windowLifetime.Token);
-        var actor = await _actors.GetCurrentAsync(token.Token)
+        var actor = await ReadOriginalRouteActorAsync(token.Token)
             ?? throw new UnauthorizedAccessException("The original Files native actor is unavailable.");
         lock (_sync)
         {
@@ -178,9 +214,10 @@ internal sealed class NativeFilesDesktopRoute : IAsyncDisposable
     private async Task AdmitOriginalShellInitializationCoreAsync(Task start, CancellationToken token)
     {
         await start;
+        using var phase = _sameProcessHome is null ? null : CloudflareOriginalExecutionGuard.EnterOriginal(this);
         try
         {
-            var actor = await _actors.GetCurrentAsync(token)
+            var actor = await ReadOriginalRouteActorAsync(token)
                 ?? throw new UnauthorizedAccessException("The original Files actor is unavailable.");
             lock (_sync)
             {
@@ -219,6 +256,7 @@ internal sealed class NativeFilesDesktopRoute : IAsyncDisposable
         CancellationToken cancellationToken)
     {
         await start;
+        using var phase = _sameProcessHome is null ? null : CloudflareOriginalExecutionGuard.EnterOriginal(this);
         try
         {
             if (!ReferenceEquals(originalSurface, _surface))
@@ -242,6 +280,7 @@ internal sealed class NativeFilesDesktopRoute : IAsyncDisposable
     {
         Dispatcher.UIThread.VerifyAccess();
         ArgumentNullException.ThrowIfNull(originalPublication);
+        using var phase = _sameProcessHome is null ? null : CloudflareOriginalExecutionGuard.EnterOriginal(this);
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         lock (_sync)
         {
@@ -275,6 +314,7 @@ internal sealed class NativeFilesDesktopRoute : IAsyncDisposable
 
     private async ValueTask<CuiSceneAvailability> CheckReadyAsync(CancellationToken token)
     {
+        if (_sameProcessHome is not null) return await CheckSameProcessReadyAsync(token);
         token.ThrowIfCancellationRequested(); ThrowIfRetired();
         var actor = _originalActor;
         if (actor is null || await _actors.GetCurrentAsync(token) != actor)
@@ -287,6 +327,72 @@ internal sealed class NativeFilesDesktopRoute : IAsyncDisposable
         token.ThrowIfCancellationRequested(); ThrowIfRetired();
         return new(observed.CanStartNormally ? CuiSceneAvailabilityState.Ready
             : CuiSceneAvailabilityState.Unavailable, observed.Code, observed.Message);
+    }
+
+    private ValueTask<AuthenticatedResourceActor?> ReadOriginalRouteActorAsync(CancellationToken token) =>
+        _sameProcessHome is null ? _actors.GetCurrentAsync(token) : new(ReadOriginalSameProcessActorAsync(token));
+
+    private Task<AuthenticatedResourceActor?> ReadOriginalSameProcessActorAsync(CancellationToken token)
+    {
+        var home = _sameProcessHome ?? throw new InvalidOperationException("The actual same-process Home is absent.");
+        var originals = new CloudflareOriginalTaskLedger(); originals.BindOriginalOwner(this);
+        originals.BindOriginalCallerCallback(body => CloudflareOriginalExecutionGuard.InvokeOriginal(home, () =>
+        { token.ThrowIfCancellationRequested(); ThrowIfRetired(); body(); return true; }));
+        return originals.RunToOriginalSettlementAsync(async () =>
+        {
+            using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+            using var homePhase = CloudflareOriginalExecutionGuard.EnterOriginal(home);
+            void OwnSource(Action body) => originals.Invoke(() => { body(); return true; });
+            void Retain(Task actual) { _ = originals.Track(actual); }
+            var actor = await originals.AwaitAsync(originals.Invoke(() =>
+                home.Profiles.GetCurrentAsync(OwnSource, Retain, token).AsTask()));
+            token.ThrowIfCancellationRequested(); ThrowIfRetired();
+            return actor;
+        });
+    }
+
+    private Task<CuiSceneAvailability> CheckSameProcessReadyAsync(CancellationToken token)
+    {
+        lock (_sync)
+        {
+            ThrowIfRetired(); token.ThrowIfCancellationRequested();
+            _originalSameProcessChecks.RemoveWhere(actual => actual.IsCompletedSuccessfully);
+            if (_originalSameProcessChecks.Count >= 128)
+                throw new InvalidOperationException("The original same-process Files checks require external route retirement.");
+            var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var actual = CheckOriginalSameProcessReadyAsync(gate.Task, token);
+            _originalSameProcessChecks.Add(actual); gate.SetResult();
+            return actual;
+        }
+    }
+
+    private async Task<CuiSceneAvailability> CheckOriginalSameProcessReadyAsync(Task gate, CancellationToken caller)
+    {
+        await gate;
+        using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+        using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(caller, _windowLifetime.Token);
+        var token = lifetime.Token;
+        token.ThrowIfCancellationRequested(); ThrowIfRetired();
+        var actor = _originalActor;
+        if (actor is null || await ReadOriginalRouteActorAsync(token) != actor)
+            throw new UnauthorizedAccessException("The original same-process Files actor retired.");
+        void OwnSource(Action body) => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
+        { token.ThrowIfCancellationRequested(); ThrowIfRetired(); body(); return true; });
+        var observed = await WindowsHomeSameProcessRuntimeObservation.CheckAsync(_originalProvider,
+            _sameProcessHome!, _originalConnectionLifetime, _windowLifetime.Token, OwnSource, ThrowIfRetired, token);
+        token.ThrowIfCancellationRequested(); ThrowIfRetired();
+        if (await ReadOriginalRouteActorAsync(token) != actor)
+            throw new UnauthorizedAccessException("The original Files actor changed during same-process Home observation.");
+        token.ThrowIfCancellationRequested(); ThrowIfRetired();
+        var final = WindowsHomeSameProcessRuntimeObservation.RevalidateBeforePublication(
+            _originalProvider, _sameProcessHome!, observed);
+        token.ThrowIfCancellationRequested(); ThrowIfRetired();
+        return final;
+    }
+
+    internal void DemandExternalOriginalRetirementJoin()
+    {
+        if (_sameProcessHome is not null) CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
     }
 
     private async Task RequireReadyAsync(CancellationToken token)
@@ -303,12 +409,13 @@ internal sealed class NativeFilesDesktopRoute : IAsyncDisposable
 
     internal Task CloseAndDrainAsync()
     {
+        DemandExternalOriginalRetirementJoin();
         lock (_sync)
         {
             if (_close is not null) return _close;
             _closing = true;
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            _close = CloseOriginalAsync(start.Task, _open, _originalPublications.ToArray());
+            _close = CloseOriginalAsync(start.Task, _open, _originalPublications.Concat(_originalSameProcessChecks).ToArray());
             start.SetResult();
             return _close;
         }

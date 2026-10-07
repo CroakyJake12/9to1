@@ -32,6 +32,7 @@ public sealed partial class MainView
         if (_synchronousShellSources?.Any(owner => ReferenceEquals(owner, this)) == true)
             throw new InvalidOperationException("An actual shell callback must return before its encompassing external join.");
         _originalShellWork.DemandExternalClose();
+        _originalFilesRoute?.DemandExternalOriginalRetirementJoin();
         DemandOriginalShellChildJoins(_originalShellChildren, CaptureCurrentOriginalShellChildren());
         DemandOriginalShellTabJoins(_originalShellTabs, OpenTabs, _secondaryTab);
     }

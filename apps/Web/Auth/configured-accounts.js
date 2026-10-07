@@ -8,7 +8,7 @@ export function createConfiguredAccounts({ configuration = null, window = global
   if (typeof onPrivateContextInvalidated !== 'function' || typeof onVerifiedIdentity !== 'function' || typeof onFailure !== 'function') throw new TypeError('Private context callbacks are required.');
   if (beginPrivateContextInvalidation !== undefined && typeof beginPrivateContextInvalidation !== 'function') throw new TypeError('A synchronous root private fence is required when supplied.');
   let broker, api, disposed = false, prepared = false, cleanupTask, module;
-  const signIns = new Map(), issued = new Set(), cleanupErrors = [];
+  const signIns = new Map(), taskReads = new Map(), taskIdentityReceipts = new Map(), issued = new Set(), cleanupErrors = [];
   const issue = (action, factory) => {
     if(disposed)return Promise.reject(new Error('ServiceUnavailable'));
     let settle;const completion=new Promise(resolve=>{settle=resolve;});const entry={action,completion};issued.add(entry);
@@ -21,6 +21,7 @@ export function createConfiguredAccounts({ configuration = null, window = global
   const joinIssued = async()=>{while(issued.size)await Promise.all([...issued].map(e=>e.completion));if(cleanupErrors.length)throw new AggregateError([...cleanupErrors],'Configured lifecycle cleanup failed.');};
   const base = configuration === null ? createAccountModule() : (() => {
     const begin = reason => {
+      taskIdentityReceipts.clear(); // Synchronous private reset removes observed account/profile metadata.
       // Real parent-memory credentials/generation cleared without abort callbacks.
       broker?.clearToken({ cancelPending: false });
       try {
@@ -36,6 +37,7 @@ export function createConfiguredAccounts({ configuration = null, window = global
       }
     };
     const clear = async reason => {
+      taskIdentityReceipts.clear(); // The legacy awaited reset also retires all one-use identity observations.
       if (beginPrivateContextInvalidation === undefined)
         broker?.clearToken({ cancelPending: reason !== 'sign_in_started' });
       // Explicit begin is invoked by API BEFORE its cancellations; clear is JOIN only.
@@ -48,6 +50,16 @@ export function createConfiguredAccounts({ configuration = null, window = global
       verifyCurrentAccount: async (subject, signal) => {
         const current = await api.getCurrent({ signal });
         if (!current.ok || current.body.accountId !== subject || signal.aborted) throw new Error('CurrentAccountVerificationFailed');
+      },
+      readCurrentTaskProfile: async (subject, signal) => {
+        const current = await api.getCurrent({ signal });
+        if (!current.ok) throw Object.assign(new Error('TaskIdentityUnavailable'), { code: 'TaskIdentityUnavailable' });
+        if (current.body.accountId !== subject || signal?.aborted) throw Object.assign(new Error('SessionContextChanged'), { code: 'SessionContextChanged' });
+        const response = await api.getProfile({ signal });
+        if (!response.ok) throw Object.assign(new Error('TaskIdentityUnavailable'), { code: 'TaskIdentityUnavailable' });
+        if (response.body.profile.accountId !== subject || signal?.aborted) throw Object.assign(new Error('TaskProfileVerificationFailed'), { code: 'TaskProfileVerificationFailed' });
+        // The maintained API profile's real primary key is accountId; no invented profile UUID.
+        return { accountId: response.body.profile.accountId, revision: response.body.profile.revision };
       },
       onVerifiedIdentity, onSignInFailed: () => api.invalidatePrivateContext('sign_in_failed'), onTokenExpired: () => beginPrivateContextInvalidation === undefined ? api.invalidatePrivateContext('token_expired') : onPrivateContextInvalidated('token_expired'),
       beginTokenExpiryInvalidation: beginPrivateContextInvalidation === undefined ? undefined : () => api.beginPrivateContextInvalidation('token_expired'), onFailure });
@@ -82,6 +94,26 @@ export function createConfiguredAccounts({ configuration = null, window = global
       }
       return base.invoke(id, action, args);
     }); },
+    readTaskIdentity(id) { return issue('task-identity', async () => {
+      if (!broker || !prepared || disposed) return JSON.stringify({ ok: false, code: 'AuthenticationRequired' });
+      if (typeof id !== 'string' || !id || taskReads.has(id) || taskIdentityReceipts.has(id)) throw new TypeError('Invalid Task identity request.');
+      if (taskReads.size + taskIdentityReceipts.size >= 128) throw new Error('Task identity request custody is full.');
+      const controller = new AbortController(); taskReads.set(id, controller);
+      try {
+        const identity = await broker.readCurrentTaskIdentity({ signal: controller.signal });
+        if (disposed || controller.signal.aborted) return JSON.stringify({ ok: false, code: 'Cancelled' });
+        if (identity !== null && !broker.isOriginalTaskIdentityCurrent(identity)) throw Object.assign(new Error('SessionContextChanged'), { code: 'SessionContextChanged' });
+        if (identity !== null) taskIdentityReceipts.set(id, identity);
+        return identity === null ? JSON.stringify({ ok: false, code: 'AuthenticationRequired' }) : JSON.stringify({ ok: true, identity });
+      } finally { taskReads.delete(id); }
+    }); },
+    confirmTaskIdentity(id) {
+      const original = taskIdentityReceipts.get(id);
+      taskIdentityReceipts.delete(id); // Single observation consumption, never a reusable permission.
+      return !disposed && broker !== undefined && original !== undefined && broker.isOriginalTaskIdentityCurrent(original);
+    },
+    releaseTaskIdentity(id) { taskIdentityReceipts.delete(id); },
+    cancelTaskIdentity(id) { taskIdentityReceipts.delete(id); taskReads.get(id)?.abort(); },
     signInAvailable() { return Boolean(broker && prepared && !disposed); },
     requestSignIn(id) { if(disposed)return Promise.resolve(JSON.stringify({ok:false,error:{code:'ServiceUnavailable'}}));return issue('sign-in',async()=>{
       if (!broker || !prepared || disposed) return JSON.stringify({ ok: false, error: { code: 'ServiceUnavailable' } });
@@ -92,14 +124,14 @@ export function createConfiguredAccounts({ configuration = null, window = global
       finally { signIns.delete(id); }
     }); },
     cancel(id) { base.cancel(id); signIns.get(id)?.abort(); },
-    revokePrivateContext() { disposed=true; broker?.revokePrivateContext(); base.revokePrivateContext(); },
+    revokePrivateContext() { disposed=true; taskIdentityReceipts.clear(); broker?.revokePrivateContext(); base.revokePrivateContext(); },
     disposeAsync() {
       if(cleanupTask) return cleanupTask;
       // Externally-owned terminal release only. Root09 MUST nativeRevoke BEFORE this call.
       // onPrivateContextInvalidated cannot call this full join from an owned command.
-      disposed=true; broker?.revokePrivateContext(); base.revokePrivateContext();
+      disposed=true; taskIdentityReceipts.clear(); broker?.revokePrivateContext(); base.revokePrivateContext();
       let resolve,reject;cleanupTask=new Promise((a,b)=>{resolve=a;reject=b;});
-      const errors=[];for(const controller of signIns.values())try{controller.abort();}catch(error){errors.push(error);}
+      const errors=[];for(const controller of [...signIns.values(), ...taskReads.values()])try{controller.abort();}catch(error){errors.push(error);}
       Promise.allSettled([base.disposeAsync(),broker?.disposeAsync() ?? Promise.resolve(),joinIssued()]).then(results=>{
         errors.push(...results.filter(r=>r.status==='rejected').map(r=>r.reason));
         if(errors.length)reject(new AggregateError(errors,'Configured account cleanup failed.'));else resolve();

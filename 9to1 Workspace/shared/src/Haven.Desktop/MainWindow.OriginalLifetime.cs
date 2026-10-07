@@ -18,6 +18,16 @@ public sealed partial class MainWindow
     private readonly AsyncLocal<LiveWindowDelivery?> _liveWindowDelivery = new();
     private readonly TaskCompletionSource _actualClosedSettlement = new(TaskCreationOptions.RunContinuationsAsynchronously);
     internal Task OriginalNativeClosedCallback => _actualClosedSettlement.Task;
+
+    // Return the SAME existing native window work token; this creates no new lifetime.
+    internal CancellationToken AcquireOriginalWindowLifetime()
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        CancellationToken actual = default;
+        _originalWindowWork.RunSynchronous(original =>
+            AcquireOriginalWindowCallback(original, () => { original.DemandPublication(); actual = original.Token; }));
+        return actual;
+    }
     private sealed class LiveWindowDelivery(Task actual, LiveWindowDelivery? parent)
     {
         internal Task Actual { get; } = actual;
