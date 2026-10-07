@@ -1,6 +1,7 @@
 using Haven.Application;
 using HavenOS.Home.Core;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 namespace Haven.Infrastructure;
 
 /// <summary>Explicit trusted Home host composition only. AddHavenInfrastructure keeps its
@@ -27,6 +28,21 @@ public static class CloudflareTaskToolServiceCollectionExtensions
             throw new InvalidOperationException("Call after the reviewed AddHavenInfrastructure composition; use its SAME canonical Task and MCP owners.");
         if (services.Any(x => x.ServiceType == typeof(HomeCloudflareServiceOwner)))
             throw new InvalidOperationException("The original Home Cloudflare producer is already configured.");
+        ServiceDescriptor RequireOriginalSingleton(Type type)
+        {
+            var rows = services.Where(row => row.ServiceType == type).Take(2).ToArray();
+            if (rows.Length != 1 || rows[0].Lifetime != ServiceLifetime.Singleton)
+                throw new InvalidOperationException("One SAME maintained original singleton is required before Cloudflare composition: " + type.Name);
+            return rows[0];
+        }
+        RequireOriginalSingleton(typeof(WorkspaceTaskRunToolActionOwner));
+        RequireOriginalSingleton(typeof(WorkspaceTaskRunReceiptAuthority));
+        var originalToolAlias = RequireOriginalSingleton(typeof(ITaskRunToolActionOwner));
+        var originalReceiptAlias = RequireOriginalSingleton(typeof(ITaskRunActionReceiptAuthority));
+        var originalToolFactory = originalToolAlias.ImplementationFactory
+            ?? throw new InvalidOperationException("The maintained original Workspace tool alias factory is required.");
+        var originalReceiptFactory = originalReceiptAlias.ImplementationFactory
+            ?? throw new InvalidOperationException("The maintained original Workspace receipt alias factory is required.");
         // Home composition must use this SAME lazy resolver and compiled action policy when
         // constructing its real ResourceAuthorizationService / HomePermissionTrustService.
         // A missing resolver/policy is a denied review, never a synthesized replacement graph.
@@ -66,8 +82,18 @@ public static class CloudflareTaskToolServiceCollectionExtensions
             provider.GetRequiredService<CloudflareOriginalActionAdmissionSource>(), provider.GetRequiredService<CloudflareTaskRunReceiptAuthority>()));
         services.AddSingleton<CanonicalWorkspaceCloudflareToolActionOwner>();
         services.AddSingleton<CanonicalWorkspaceCloudflareReceiptAuthority>();
-        services.AddSingleton<ITaskRunToolActionOwner>(provider => provider.GetRequiredService<CanonicalWorkspaceCloudflareToolActionOwner>());
-        services.AddSingleton<ITaskRunActionReceiptAuthority>(provider => provider.GetRequiredService<CanonicalWorkspaceCloudflareReceiptAuthority>());
+        services.Replace(ServiceDescriptor.Singleton<ITaskRunToolActionOwner>(provider =>
+        {
+            if (!ReferenceEquals(originalToolFactory(provider), provider.GetRequiredService<WorkspaceTaskRunToolActionOwner>()))
+                throw new UnauthorizedAccessException("The original Workspace tool alias must resolve to the SAME configured concrete owner.");
+            return provider.GetRequiredService<CanonicalWorkspaceCloudflareToolActionOwner>();
+        }));
+        services.Replace(ServiceDescriptor.Singleton<ITaskRunActionReceiptAuthority>(provider =>
+        {
+            if (!ReferenceEquals(originalReceiptFactory(provider), provider.GetRequiredService<WorkspaceTaskRunReceiptAuthority>()))
+                throw new UnauthorizedAccessException("The original Workspace receipt alias must resolve to the SAME configured concrete authority.");
+            return provider.GetRequiredService<CanonicalWorkspaceCloudflareReceiptAuthority>();
+        }));
         return services;
     }
 }
