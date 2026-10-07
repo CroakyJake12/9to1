@@ -159,14 +159,14 @@ public sealed class FilesNativeBrowserMutationTests
         Assert.Same(actual, h.Browser.ApplyNativeMutationAsync(prepared, token));
         Assert.Same(failure, await Assert.ThrowsAsync<AggregateException>(() => actual));
         var evidence = await h.Workspace.Provider.GetStoreEvidenceAsync(page.StoreID, token);
-        var change = Assert.Single((await h.Workspace.Provider.GetChangesAsync(null, 100, token)).Items
-            .Where(row => row.ItemId == ack.Value.ItemId));
+        var change = Assert.Single((await h.Workspace.Provider.GetChangesAsync(null, 100, token)).Items,
+            row => row.ItemId == ack.Value.ItemId);
         Assert.Equal(ack.Value.Id, change.OperationId);
         observer.BeforeAcknowledgement = null;
         Assert.True((await h.Browser.RetryNativeMutationAuditAsync(prepared, token)).Succeeded);
         Assert.Same(ack, prepared.ObservedOperation);
         Assert.Equal(evidence, await h.Workspace.Provider.GetStoreEvidenceAsync(page.StoreID, token));
-        Assert.Single((await h.Workspace.Provider.GetChangesAsync(null, 100, token)).Items.Where(row => row.ItemId == ack.Value.ItemId));
+        Assert.Single((await h.Workspace.Provider.GetChangesAsync(null, 100, token)).Items, row => row.ItemId == ack.Value.ItemId);
         Assert.Same(actual, h.Browser.ApplyNativeMutationAsync(prepared, token));
         Assert.Equal(1, faultCount);
     }
