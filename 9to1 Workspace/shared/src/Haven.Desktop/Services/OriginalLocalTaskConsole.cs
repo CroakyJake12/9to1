@@ -69,7 +69,8 @@ public static partial class OriginalLocalTaskConsole
 
     private static readonly string[] Help = [
         "local-configure <explicit loopback logical HTTP/HTTPS URI> | models <provider-id> | probe | model <observed-provider:model-key> | engine Automatic|LlamaCpp|Strata",
-        "files-configure <chosen empty absolute directory> | files-status",
+        "files-configure <chosen empty absolute directory> | files-status | files-list [observed parent GUID]",
+        "project-register <write or observed destination folder GUID> <existing absolute project path> | container-create <saved workspace GUID> <saved project GUID> <saved root GUID> <name>",
         "containers | project <workspace-id> <project-id> <root-id> <existing-container-id> | project-clear | spaces | space <space-id> | space-create <name>",
         "task <instruction> | context | attach | open <space-id> <reference-id> <task-id> <run-id>",
         "status | read <project-relative-path> | steer <instruction> | queue <instruction> | pause | stop | resume",
@@ -80,6 +81,8 @@ public static partial class OriginalLocalTaskConsole
         "cloud-approve <displayed-request-id> | cloud-deny <displayed-request-id> | quit",
         "Approval never resumes a Task. Resume is a separate fresh-authorized command.",
         "Project task submission requires explicit cold opt-in and a fresh current Home READ; use home-requests, home-display and explicit home-accept/home-decline while the SAME preparation waits. Browser, computer and unconfigured Dev execution remain unavailable.",
+        "Register-existing uses separate current source READ and high-risk manifest reviews on the SAME pending background operation; use home-display and explicit decisions. No unknown step is replayed.",
+        "Dev read still requires a separately configured current execution bridge; initial project input does not issue execution trust.",
         "quit/EOF drains actual owners. External process termination leaves crash/cold recovery to its protected source."
     ];
     private static readonly object OutputGate = new();
@@ -167,9 +170,14 @@ public static partial class OriginalLocalTaskConsole
             {
                 _coldConfiguration = NativePersonalTaskColdRecoveryConfiguration.ReadExplicitEnvironment();
                 var store = new FileHomeCoreStateStore(Path.Combine(_paths.DataDirectory, "Home", "state.json"));
+                PrepareOriginalDeveloperPolicies();
                 _registration = CloudflareLocalDomainRegistration.CreateOriginal(store, new OperatingSystemPrincipalSource(), _paths,
-                    originalResolvers: ProjectConfigurationRequested ? [new HomeColdProjectReadResourceResolver(RequireCapturedOriginalProjectSource)] : null,
-                    originalPolicies: ProjectConfigurationRequested ? [new HomeColdProjectReadActionPolicySource()] : null,
+                    originalResolvers: ProjectConfigurationRequested
+                        ? [new HomeColdProjectReadResourceResolver(RequireCapturedOriginalProjectSource), _setupReadResolver!, _setupDestinationResolver!]
+                        : [_setupReadResolver!, _setupDestinationResolver!],
+                    originalPolicies: ProjectConfigurationRequested
+                        ? [new HomeColdProjectReadActionPolicySource(), _setupReadPolicy!, _setupPolicy!]
+                        : [_setupReadPolicy!, _setupPolicy!],
                     configureOriginalStores: identity =>
                     {
                         _nativeFiles = new NativeFilesWorkspaceService(identity.StateStore, identity.Profiles);
@@ -198,6 +206,7 @@ public static partial class OriginalLocalTaskConsole
                 collection.AddFilesNativeHost();
                 collection.AddHavenOriginalNativeDevelopment();
                 if (ProjectConfigurationRequested) collection.AddHavenOwnedNativeColdProjectResources(_registration!.OriginalHome);
+                ConfigureOriginalDeveloperSetupOwners(collection);
                 collection.AddHavenOriginalTaskExecutionServices();
                 _provider = collection.BuildServiceProvider();
             });
@@ -210,6 +219,7 @@ public static partial class OriginalLocalTaskConsole
                 throw new InvalidOperationException("The original configured canonical process tuple changed.");
             Scope(original, () => _registration!.CaptureOriginalOwner(Provider)); // Early source custody before Home startup.
             CaptureOriginalProjectResources(original, coordinator);
+            CaptureOriginalDeveloperSetupOwners(original);
             Resolve<DeveloperTaskWorkspaceService>(original, value => _developer = value);
             Resolve<FilesNativeBrowserService>(original, value => _files = value);
             Resolve<ManagedDulcheRuntimeService>(original, value => _managed = value);
@@ -318,6 +328,9 @@ public static partial class OriginalLocalTaskConsole
                     Write(await Acquire(original, () => _nativeFiles!.ConfigureNewAsync(argument, Home.LocalStoreOwnership, token)).ConfigureAwait(false)); break;
                 case "files-status":
                     Write(await Acquire(original, () => _nativeFiles!.GetConfigurationAsync(token)).ConfigureAwait(false)); break;
+                case "files-list": await ListOriginalFilesAsync(original, argument, token).ConfigureAwait(false); break;
+                case "project-register": LaunchOriginalExistingProjectRegistration(original, argument, token); break;
+                case "container-create": await CreateOriginalProjectContainerAsync(original, argument, token).ConfigureAwait(false); break;
                 case "containers": Write(await Acquire(original, () => Resolve<IContainerRepository>(original).GetByModeAsync(HavenMode.Tasks, token)).ConfigureAwait(false)); break;
                 case "project-clear": _project = null; _container = null; Write(new { projectSelectionCleared = true }); break;
                 case "project":
@@ -612,6 +625,7 @@ public static partial class OriginalLocalTaskConsole
             _files?.DemandExternalOriginalDeveloperReadJoin();
             _managed?.DemandExternalOriginalProcessJoin();
             _projectResources?.DemandExternalOriginalJoin();
+            DemandOriginalDeveloperSetupJoins();
             _registration?.DemandExternalOriginalCloudflareJoin();
         }
         internal Task CloseAndDrainAsync()
@@ -630,6 +644,7 @@ public static partial class OriginalLocalTaskConsole
             { try { CleanupCallback(source); } catch (Exception cause) { Capture(failures, null, cause); } }
             if (_canonicalProcess is not null) Request(_canonicalProcess.RequestOriginalProcessRetirement); // FIRST synchronous business seal.
             if (_projectResources is not null) Request(_projectResources.RequestOriginalRetirement);
+            RequestOriginalDeveloperSetupRetirement(failures);
             if (_registration is not null) Request(_registration.RequestOriginalCloudflareRetirement);
             if (_developer is not null) Request(_developer.RequestRetirement);
             if (_files is not null) Request(_files.RequestOriginalDeveloperReadRetirement);
@@ -672,6 +687,7 @@ public static partial class OriginalLocalTaskConsole
             if (_files is not null) AcquireClose(_files.CloseOriginalDeveloperReadsAsync, closes, failures);
             if (_managed is not null) AcquireClose(_managed.CloseAndDrainAsync, closes, failures);
             if (_projectResources is not null) AcquireClose(_projectResources.CloseAndDrainOriginalAsync, closes, failures);
+            AcquireOriginalDeveloperSetupCloses(closes, failures);
             if (_registration is not null) AcquireClose(_registration.CloseAndDrainOriginalCloudflareAsync, closes, failures);
             await JoinAll(closes, failures).ConfigureAwait(false);
             Throw(failures); // Failed/unknown borrowers keep shared Home/provider alive.

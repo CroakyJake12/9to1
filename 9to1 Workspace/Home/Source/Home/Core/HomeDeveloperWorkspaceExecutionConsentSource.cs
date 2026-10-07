@@ -203,6 +203,7 @@ public sealed partial class HomeDeveloperWorkspaceExecutionConsentSource : IWork
                     _bindingSource is not IDeveloperWorkspaceOriginalExecutionPinCustodySource pinCustody)
                     throw new InvalidOperationException("DEV_EXECUTION_NATIVE_PIN_SETUP_REQUIRED: SAME scoped saved-root issuer and historical pin custody are required.");
                 _scopedBindingSource = scopedBindings; _commitSource = commitSource; _pinCustody = pinCustody;
+                ConfigureOriginalScopedReview(_sources);
                 await _sources.AwaitAsync(_sources.Invoke(() => _toolSource.ValidateOriginalPreparationAsync(preparation, current, token))).ConfigureAwait(false);
                 _scopes = _sources.Invoke(() => _bindingSource.GetOriginalExecutionScopes(binding)).ToArray();
                 if (_scopes.Length != 1 || _scopes[0].Kind != "dev.workspace.execute" || _scopes[0].Access != ResourceAccess.Execute
@@ -218,20 +219,21 @@ public sealed partial class HomeDeveloperWorkspaceExecutionConsentSource : IWork
                 _review = _sources.Invoke(() => owner._broker.PrepareReviewForActor(binding.OriginalActor, "dev", ExecuteAction, _scopes, args,
                     "Execute only this reviewed command or project script at the current owned saved project root. Process exit remains a separate observation.",
                     null, "dev:execute:" + binding.OriginalActor.AuthenticationRevision));
-                var observed = await _sources.AwaitAsync(_sources.Invoke(() => owner._broker.AuthorizePreparedReviewAsync(_review, _stop.Token))).ConfigureAwait(false);
+                var observed = await _sources.AwaitAsync(_sources.Invoke(() => AuthorizeOriginalReviewAsync(_sources, _stop.Token))).ConfigureAwait(false);
                 var deadline = DateTimeOffset.UtcNow.AddMinutes(5);
+                StartOriginalPendingValidationWindow();
                 while (observed.Request?.State == HomePermissionRequestState.PendingApproval)
                 {
                     if (DateTimeOffset.UtcNow >= deadline) throw new UnauthorizedAccessException("DEV_EXECUTION_APPROVAL_REQUIRED: explicitly accept this genuine project command review in Home.");
                     await _sources.AwaitAsync(Task.Delay(TimeSpan.FromSeconds(1), _stop.Token)).ConfigureAwait(false);
-                    await ValidateSourcesAsync(_sources, _stop.Token).ConfigureAwait(false);
-                    observed = await _sources.AwaitAsync(_sources.Invoke(() => owner._broker.ObservePreparedReviewAsync(_review, _stop.Token))).ConfigureAwait(false);
+                    await ValidateOriginalPendingSourcesAsync(_sources, _stop.Token).ConfigureAwait(false);
+                    observed = await _sources.AwaitAsync(_sources.Invoke(() => ObserveOriginalReviewAsync(_sources, _stop.Token))).ConfigureAwait(false);
                 }
                 if (observed.Request?.State != HomePermissionRequestState.Approved) throw new UnauthorizedAccessException("Original project execution was not explicitly approved.");
                 await ValidateSourcesAsync(_sources, _stop.Token).ConfigureAwait(false);
-                _capability = await _sources.AwaitAsync(_sources.Invoke(() => owner._broker.BeginExecutionCapabilityAsync(_review.RequestId, args, _stop.Token))).ConfigureAwait(false)
+                _capability = await _sources.AwaitAsync(_sources.Invoke(() => BeginOriginalReviewedExecutionAsync(_sources, args, _stop.Token))).ConfigureAwait(false)
                     ?? throw new UnauthorizedAccessException("The actual reviewed execution capability is unavailable.");
-                var claimed = await _sources.AwaitAsync(_sources.Invoke(() => owner._broker.ClaimExecutionObservedAsync(_capability, "dev", ExecuteAction, _scopes, args, _stop.Token))).ConfigureAwait(false);
+                var claimed = await _sources.AwaitAsync(_sources.Invoke(() => ClaimOriginalReviewedExecutionAsync(_sources, args, _stop.Token))).ConfigureAwait(false);
                 if (claimed.Disposition != HomeResourceClaimDisposition.Claimed || claimed.Actor != binding.OriginalActor)
                     throw new UnauthorizedAccessException("The genuine original Home execution claim was refused.");
                 _attestation = _sources.Invoke(() => owner._broker.CaptureClaimedAttestation(_capability))
