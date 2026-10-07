@@ -82,6 +82,22 @@ public static partial class OriginalLocalTaskConsole
         }
         private void RequestOriginalDeveloperSetupRetirement(List<Exception> failures)
         {
+            // Seal new setup admission now. The same permission's final completion
+            // still reads its live journal/source/scope/outcome/READ dependencies.
+            if (_setupPermissions is not null)
+                try { CleanupCallback(_setupPermissions.RequestOriginalSetupRetirement); }
+                catch (Exception cause) { Capture(failures, null, cause); }
+        }
+        private async Task CloseAndDrainOriginalDeveloperSetupsAsync()
+        {
+            var failures = new List<Exception>(); var permissionCloses = new List<Task>();
+            if (_setupPermissions is not null)
+                AcquireClose(_setupPermissions.CloseAndDrainOriginalSetupsAsync, permissionCloses, failures);
+            await JoinAll(permissionCloses, failures).ConfigureAwait(false);
+
+            // Preserve every actual failed permission and independently drain every
+            // dependency. Retire these issuers only after final completion/audit settles;
+            // persisted ACK rows never replace the same private completion authority.
             void Request(Action request)
             { try { CleanupCallback(request); } catch (Exception cause) { Capture(failures, null, cause); } }
             if (_setupSteps is not null) Request(_setupSteps.RequestOriginalFolderSetupRetirement);
@@ -90,17 +106,15 @@ public static partial class OriginalLocalTaskConsole
             if (_setupPhysical is not null) Request(_setupPhysical.RequestOriginalCaptureRetirement);
             if (_setupJournal is not null) Request(_setupJournal.RequestRetirement);
             if (_setupReads is not null) Request(_setupReads.RequestOriginalReadRetirement);
-            if (_setupPermissions is not null) Request(_setupPermissions.RequestOriginalSetupRetirement);
-        }
-        private void AcquireOriginalDeveloperSetupCloses(List<Task> closes, List<Exception> failures)
-        {
+            var closes = new List<Task>();
             if (_setupSteps is not null) AcquireClose(_setupSteps.CloseAndDrainOriginalFolderSetupsAsync, closes, failures);
             if (_setupScopes is not null) AcquireClose(_setupScopes.CloseAndDrainOriginalSetupScopesAsync, closes, failures);
             if (_setupSelections is not null) AcquireClose(_setupSelections.CloseAndDrainOriginalSelectionsAsync, closes, failures);
             if (_setupPhysical is not null) AcquireClose(_setupPhysical.CloseAndDrainOriginalCapturesAsync, closes, failures);
             if (_setupJournal is not null) AcquireClose(_setupJournal.CloseAndDrainAsync, closes, failures);
             if (_setupReads is not null) AcquireClose(_setupReads.CloseAndDrainOriginalReadsAsync, closes, failures);
-            if (_setupPermissions is not null) AcquireClose(_setupPermissions.CloseAndDrainOriginalSetupsAsync, closes, failures);
+            await JoinAll(closes, failures).ConfigureAwait(false);
+            Throw(failures);
         }
 
         private async Task ListOriginalFilesAsync(DesktopOriginalWorkLifetime.Original original,

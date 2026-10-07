@@ -1,4 +1,5 @@
 #include "dulche_strata.h"
+#include "strata/engine/model_executor.hpp"
 #include <bit>
 #include <cstdio>
 #include <cstring>
@@ -106,7 +107,9 @@ void errors(Buffer& output, const dulche_strata_result* result) {
 dulche_strata_text span(const std::string& value) { return {value.data(),value.size()}; }
 struct Part { uint32_t kind{}; std::string data,mime; };
 struct Message { uint32_t role{}; std::string text,name; std::vector<Part> parts; std::vector<dulche_strata_part> raw_parts; };
-void generate(dulche_strata_session* session, Buffer& input, FILE* wire) {
+void generate(dulche_strata_session* session, Buffer& input, FILE* wire, bool structured_tools = false,
+    const strata::ReasoningFormat* loaded_reasoning = nullptr) {
+    if (structured_tools && loaded_reasoning == nullptr) throw std::invalid_argument("No reasoning format belongs to the loaded native registration.");
     const auto count=input.read_number<uint32_t>(); if (count>4096) throw std::invalid_argument("Too many native chat messages.");
     std::vector<Message> messages; messages.reserve(count);
     for (uint32_t index=0;index<count;++index) {
@@ -131,12 +134,25 @@ void generate(dulche_strata_session* session, Buffer& input, FILE* wire) {
         [](uint32_t token,const char* value,size_t size,void* state) {
             Buffer delta; delta.number(token); delta.text(dulche_strata_text{value,size}); write(static_cast<FILE*>(state),1,delta); return 1;
         },wire),dulche_strata_free_result);
-    Buffer terminal; errors(terminal,result.get()); terminal.text(dulche_strata_result_text(result.get()));
+    Buffer terminal;
+    if (structured_tools) {
+        terminal.number(uint32_t{1}); // Bounded JSON tool-codec version, not a permission.
+        // Exact metadata from the SAME successfully loaded registration, never a model-name heuristic.
+        const auto bounded_tag = [](const char* value) {
+            if (value == nullptr) return std::string{};
+            const auto size = ::strnlen(value,4097);
+            if (size > 4096) throw std::invalid_argument("Native reasoning metadata exceeds its finite tag limit.");
+            return std::string(value,size);
+        };
+        terminal.text(bounded_tag(loaded_reasoning->open)); terminal.text(bounded_tag(loaded_reasoning->close));
+        terminal.number(static_cast<uint32_t>(loaded_reasoning->opened_by_prompt));
+    }
+    errors(terminal,result.get()); terminal.text(dulche_strata_result_text(result.get()));
     terminal.number(dulche_strata_prompt_tokens(result.get())); terminal.number(dulche_strata_prefill_tokens(result.get())); terminal.number(dulche_strata_decode_tokens(result.get()));
     terminal.real(dulche_strata_prefill_seconds(result.get())); terminal.real(dulche_strata_decode_seconds(result.get()));
     uint64_t reused{}; const auto has_reused=dulche_strata_reused_tokens(result.get(),&reused); terminal.number(static_cast<uint32_t>(has_reused)); if(has_reused) terminal.number(reused);
     int incremental{}; const auto has_incremental=dulche_strata_incremental_kv(result.get(),&incremental); terminal.number(static_cast<uint32_t>(has_incremental)); if(has_incremental) terminal.number(static_cast<uint32_t>(incremental));
-    terminal.number(static_cast<uint32_t>(dulche_strata_stopped(result.get()))); write(wire,2,terminal);
+    terminal.number(static_cast<uint32_t>(dulche_strata_stopped(result.get()))); write(wire,structured_tools ? 7U : 2U,terminal);
 }
 }
 int main(int argc, char** argv) {
@@ -144,6 +160,7 @@ int main(int argc, char** argv) {
     if (argc != 1 && !probe) return 64;
     FILE* wire=::fdopen(::dup(STDOUT_FILENO),"wb"); if(wire==nullptr || ::dup2(STDERR_FILENO,STDOUT_FILENO)<0) return 70;
     std::unique_ptr<dulche_strata_session,decltype(&dulche_strata_destroy)> session(nullptr,dulche_strata_destroy);
+    const strata::ModelRegistration* loaded_registration = nullptr;
     if(!probe) { session.reset(dulche_strata_create()); if(!session) return 71; }
     try {
         Buffer hello; hello.number(dulche_strata_abi_version()); hello.text(std::string(dulche_strata_origin_commit()));
@@ -170,18 +187,28 @@ int main(int argc, char** argv) {
                     const auto id=command.read_number<uint32_t>(); if(id>static_cast<uint32_t>(std::numeric_limits<int>::max())) throw std::invalid_argument("Invalid CUDA device index.");
                     devices.push_back(static_cast<int>(id));
                 }
-                command.end(); Result result(dulche_strata_load(session.get(),span(directory),span(registration),context,devices.data(),devices.size()),dulche_strata_free_result);
+                command.end(); loaded_registration = nullptr;
+                Result result(dulche_strata_load(session.get(),span(directory),span(registration),context,devices.data(),devices.size()),dulche_strata_free_result);
+                if (dulche_strata_result_code(result.get()) == 0) {
+                    loaded_registration = strata::find_model_by_cli_name(registration);
+                    if (loaded_registration == nullptr) throw std::invalid_argument("The loaded registration has no exact native metadata.");
+                }
                 Buffer loaded; errors(loaded,result.get()); write(wire,4,loaded);
             }
             else if(operation==2) generate(session.get(),command,wire);
-            else if(operation==3) { command.end(); session.reset(); Buffer stopped; write(wire,3,stopped); std::fclose(wire); return 0; }
+            else if(operation==4) {
+                if(command.read_number<uint32_t>()!=1) throw std::invalid_argument("Unsupported structured tool wire version.");
+                if (loaded_registration == nullptr) throw std::invalid_argument("No successful original model load exists for structured tools.");
+                generate(session.get(),command,wire,true,&loaded_registration->reasoning);
+            }
+            else if(operation==3) { command.end(); loaded_registration = nullptr; session.reset(); Buffer stopped; write(wire,3,stopped); std::fclose(wire); return 0; }
             else throw std::invalid_argument("Unsupported native operation.");
         }
-        session.reset(); std::fclose(wire); return 0;
+        loaded_registration = nullptr; session.reset(); std::fclose(wire); return 0;
     }
     catch(const std::exception& error) {
         try { Buffer failure; failure.number<uint32_t>(3); failure.number<uint32_t>(1); failure.text(std::string(error.what())); write(wire,5,failure); } catch(...) {}
-        session.reset(); std::fclose(wire); return 72;
+        loaded_registration = nullptr; session.reset(); std::fclose(wire); return 72;
     }
-    catch(...) { session.reset(); std::fclose(wire); return 73; }
+    catch(...) { loaded_registration = nullptr; session.reset(); std::fclose(wire); return 73; }
 }

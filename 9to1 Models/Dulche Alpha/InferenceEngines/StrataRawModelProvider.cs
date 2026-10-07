@@ -16,8 +16,9 @@ public sealed class StrataRawModelProvider : IModelProvider, IAsyncDisposable, I
         _worker=actualLoadedWorker??throw new ArgumentNullException(nameof(actualLoadedWorker));
         if(string.IsNullOrWhiteSpace(sameConfiguredProviderId)||originalDescriptor.ProviderId!=sameConfiguredProviderId
             ||!originalDescriptor.IsLocal||originalDescriptor.Name!=_worker.Model.Model.ModelId
-            ||originalDescriptor.Model.Capabilities.Any(value=>value is not (ToolCapability.Text or ToolCapability.Streaming)))
-            throw new ArgumentException("The current native raw provider supports only its SAME local text model and stream.",nameof(originalDescriptor));
+            ||originalDescriptor.Model.Capabilities.Any(value=>value is not (ToolCapability.Text or ToolCapability.Streaming or ToolCapability.Tools))
+            ||originalDescriptor.Model.Supports(ToolCapability.Tools)&&!_worker.OriginalStructuredToolsAvailable)
+            throw new ArgumentException("The current native raw provider requires its SAME local model and actual observed tool capability.",nameof(originalDescriptor));
         Id=sameConfiguredProviderId; _model=originalDescriptor with { Model=originalDescriptor.Model with {
             Capabilities=originalDescriptor.Model.Capabilities.ToFrozenSet() } };
     }
@@ -31,12 +32,18 @@ public sealed class StrataRawModelProvider : IModelProvider, IAsyncDisposable, I
         =>_worker.ObserveOriginalInitializedModelAsync(sameModel,cancellationToken);
     public Task<ProviderHealthStatus> CheckHealthAsync(CancellationToken cancellationToken)=>_worker.CheckOriginalHealthAsync(Id,cancellationToken);
     public async Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken)
-        => (await CheckHealthAsync(cancellationToken).ConfigureAwait(false)).IsHealthy ? [_model] : [];
+    {
+        if (!(await CheckHealthAsync(cancellationToken).ConfigureAwait(false)).IsHealthy) return [];
+        if (_model.Supports(ToolCapability.Tools) && !_worker.OriginalStructuredToolsAvailable)
+            return [_model with { Model = _model.Model with { Capabilities = _model.Model.Capabilities
+                .Where(value => value != ToolCapability.Tools).ToFrozenSet() } }];
+        return [_model];
+    }
     public IAsyncEnumerable<string> StreamChatAsync(OllamaChatRequest request,CancellationToken cancellationToken)
         =>_worker.StreamOriginalAsync(request,cancellationToken);
     public Task<string> CompleteAsync(OllamaChatRequest request,CancellationToken cancellationToken)
         =>_worker.CompleteOriginalAsync(request,cancellationToken);
     public Task<OllamaToolResponse> ChatWithToolsAsync(OllamaToolRequest request,CancellationToken cancellationToken)
-        =>Task.FromException<OllamaToolResponse>(new NotSupportedException("No actual Strata structured-tool protocol has been implemented; text is never parsed into a tool authority."));
+        =>_worker.ToolsOriginalAsync(request,cancellationToken);
     public ValueTask DisposeAsync()=>_worker.DisposeAsync();
 }

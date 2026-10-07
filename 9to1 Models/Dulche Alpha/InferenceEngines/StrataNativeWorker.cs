@@ -15,6 +15,8 @@ public abstract class StrataOriginalModelLease : IAsyncDisposable
     public abstract InferenceModelRequirements Requirements { get; }
     public abstract string OriginalCheckpointDirectory { get; }
     public abstract IReadOnlyList<int> ActualCudaDeviceIndices { get; }
+    /// <summary>Same independently observed build metadata; absent never grants support.</summary>
+    public virtual InferenceEngineSupport? OriginalBuildSupport => null;
     public abstract void DemandCurrentOriginalBinding();
     public abstract ValueTask DisposeAsync();
 }
@@ -52,6 +54,8 @@ public sealed class StrataNativeWorker : IAsyncDisposable, IOriginalInferenceCal
     private bool _invalidated;
     private InferenceCalibrationReading? _lastCalibration;
     private Task? _lastCalibrationOriginal;
+    private Task? _originalToolProbe;
+    private bool _toolsProven;
     public string RuntimeFingerprint=>"strata/"+Origin+"/abi1/"+_binary.ExpectedSha256.ToLowerInvariant();
     public StrataBuildObservation? Build { get; private set; }
     public StrataGenerationObservation? LastGeneration { get; private set; }
@@ -175,15 +179,91 @@ public sealed class StrataNativeWorker : IAsyncDisposable, IOriginalInferenceCal
     public Task<string> CompleteOriginalAsync(OllamaChatRequest sameRequest, CancellationToken cancellationToken)
         => Publish(async () => { var output = new StringBuilder(); await foreach(var token in StreamAsync(sameRequest,cancellationToken).ConfigureAwait(false)) output.Append(token); return output.ToString(); });
 
-    private async IAsyncEnumerable<string> StreamAsync(OllamaChatRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+    /// <summary>Actual protected worker capability only after a successful same-worker model probe.
+    /// A signed inventory alone, implementation presence or requested feature never supplies this.</summary>
+    public bool OriginalStructuredToolsAvailable
+    {
+        get
+        {
+            lock (_gate) if (_sealed || _invalidated || !_loaded) return false;
+            var eligible = IndependentToolInventory();
+            lock (_gate) return eligible && !_sealed && !_invalidated && _loaded && _toolsProven &&
+                _originalToolProbe?.IsCompletedSuccessfully == true;
+        }
+    }
+    private bool IndependentToolInventory() => Physical(() =>
+    {
+        _model.DemandCurrentOriginalBinding();
+        var support = _model.OriginalBuildSupport;
+        var build = Build;
+        return support is { Engine: InferenceEngine.Strata, Available: true, RequiresCuda: true } &&
+            support.RuntimeBuild == RuntimeFingerprint && support.Features.Contains("Tools") &&
+            build is { CudaBuilt: true } && support.NcclBuilt == build.NcclBuilt &&
+            support.NativeRegistrations is { } registrations && registrations.Contains(Model.NativeRegistration!);
+    });
+
+    /// <summary>Harmless local model proposal probe inside this genuine approved-load owner.
+    /// It neither runs the proposed function nor issues Task/Run or tool authority.</summary>
+    public Task<bool> ProbeOriginalStructuredToolsAsync(CancellationToken cancellationToken) => Publish(async () =>
+    {
+        if (!IndependentToolInventory()) throw new NotSupportedException("No same-worker independent Tools inventory exists.");
+        lock (_gate) { _toolsProven = false; _originalToolProbe = null; }
+        var nonce = Guid.NewGuid().ToString("N");
+        var definition = new OllamaToolDefinition("dulche_transport_probe", "Return the exact supplied nonce; the host does not execute this probe.",
+            new Dictionary<string, object> { ["nonce"] = new { type = "string" } }, ["nonce"]);
+        var request = new OllamaToolRequest(Model.Model.ModelId,
+            [new("user", "Propose exactly one dulche_transport_probe call with nonce " + nonce + ".")],
+            [definition], Haven.Core.EffortLevel.Medium, Options: new(0.7, Model.ContextTokens, 24));
+        var actual = RunStructuredToolsAsync(request, cancellationToken, probe: true);
+        var result = await actual.ConfigureAwait(false);
+        Physical(() => { _model.DemandCurrentOriginalBinding(); return 0; });
+        if (result.ToolCalls.Count != 1 || result.ToolCalls[0].Name != definition.Name ||
+            result.ToolCalls[0].Arguments.Count != 1 || !result.ToolCalls[0].Arguments.TryGetValue("nonce", out var value) ||
+            value.ValueKind != System.Text.Json.JsonValueKind.String || value.GetString() != nonce)
+            throw new NotSupportedException("The actual model did not produce the correlated structured tool probe.");
+        lock (_gate)
+        {
+            if (_sealed || _invalidated || !_loaded) throw new InvalidOperationException("The original model retired during its tool probe.");
+            _toolsProven = true; _originalToolProbe = _executing.Value?.Original
+                ?? throw new InvalidOperationException("No original probe driver is in custody.");
+        }
+        return true;
+    });
+    public Task<OllamaToolResponse> ToolsOriginalAsync(OllamaToolRequest sameRequest, CancellationToken cancellationToken)
+        => RunStructuredToolsAsync(sameRequest, cancellationToken, probe: false);
+    private Task<OllamaToolResponse> RunStructuredToolsAsync(OllamaToolRequest request, CancellationToken cancellationToken, bool probe)
+        => Publish(async () =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (probe ? !IndependentToolInventory() : !OriginalStructuredToolsAvailable)
+                throw new NotSupportedException("No actual same-model structured tool support has been observed.");
+            var captured = Physical(() => StrataStructuredToolCodec.Capture(request));
+            var output = new StringBuilder(); var terminal = new StructuredTerminal();
+            await foreach (var text in StreamAsync(captured.Chat, cancellationToken, structuredTools: true,
+                structuredNames: captured.MessageNames, structuredTerminal: terminal).ConfigureAwait(false)) output.Append(text);
+            var result = Physical(() => StrataStructuredToolCodec.ParseResponse(captured, output.ToString(),
+                terminal.Reasoning ?? throw new InvalidDataException("The actual native terminal has no loaded-registration reasoning metadata.")));
+            Physical(() => { _model.DemandCurrentOriginalBinding(); return 0; });
+            cancellationToken.ThrowIfCancellationRequested();
+            return result;
+        });
+
+    private sealed class StructuredTerminal { public StrataDeclaredReasoningFormat? Reasoning; }
+    private async IAsyncEnumerable<string> StreamAsync(OllamaChatRequest request, [EnumeratorCancellation] CancellationToken cancellationToken,
+        bool structuredTools = false, IReadOnlyList<string>? structuredNames = null, StructuredTerminal? structuredTerminal = null)
     {
         request=request with { Messages=request.Messages.Select(message=>message with { Images=message.Images?.ToArray() }).ToArray() };
+        if (structuredTools && (structuredTerminal is null || structuredNames is null || structuredNames.Count != request.Messages.Count))
+            throw new InvalidDataException("Structured native message names must match the frozen original history.");
+        structuredNames = structuredNames?.ToArray();
         var output=Channel.CreateBounded<string>(new BoundedChannelOptions(8) { SingleWriter=true,SingleReader=true,FullMode=BoundedChannelFullMode.Wait });
         using var linked=CancellationTokenSource.CreateLinkedTokenSource(cancellationToken,_retirement.Token);
         var actual=Publish(async () =>
         {
             var acquired=false; var commandStarted=false; var errors=new List<Exception>();
             var decoder=new TokenDecoder();
+            var structuredTokens = structuredTools ? new StringBuilder() : null;
+            var structuredBytes = 0;
             CancellationTokenRegistration cancellation=default;
             try
             {
@@ -197,9 +277,14 @@ public sealed class StrataNativeWorker : IAsyncDisposable, IOriginalInferenceCal
                 // The current raw provider does not infer a model-specific reasoning budget from generic EffortLevel.
                 if(request.Effort!=Haven.Core.EffortLevel.Medium) throw new NotSupportedException("A nondefault effort requires a genuine native budget mapping.");
                 var messages=request.SystemPrompt is null ? request.Messages.ToArray() : new[] { new OllamaMessage("system",request.SystemPrompt) }.Concat(request.Messages).ToArray();
+                var names = structuredNames is null ? null : request.SystemPrompt is null
+                    ? structuredNames.ToArray() : new[] { "" }.Concat(structuredNames).ToArray();
                 var command=Command(writer => {
-                    writer.Write(2u); writer.Write(checked((uint)messages.Length));
-                    foreach(var message in messages) { writer.Write(Role(message.Role)); Text(writer,message.Content); Text(writer,""); writer.Write(0u); }
+                    writer.Write(structuredTools ? 4u : 2u);
+                    if (structuredTools) writer.Write(1u); // Explicit tool-wire version, not a text flag.
+                    writer.Write(checked((uint)messages.Length));
+                    for (var index = 0; index < messages.Length; index++) { var message = messages[index];
+                        writer.Write(Role(message.Role)); Text(writer,message.Content); Text(writer,names is null ? "" : names[index]); writer.Write(0u); }
                     writer.Write(256u); writer.Write(request.Options?.Temperature??0.7); writer.Write(1.0); writer.Write(0u); writer.Write(33377335UL); writer.Write(0u); Text(writer,"");
                 });
                 // Even a partial command write makes this session unusable after failure.
@@ -212,11 +297,24 @@ public sealed class StrataNativeWorker : IAsyncDisposable, IOriginalInferenceCal
                     if(frame.Type==1) {
                         _=input.ReadUInt32(); var bytes=Bytes(input); End(input);
                         var token=decoder.Feed(bytes,false);
-                        if(token.Length!=0) await output.Writer.WriteAsync(token,linked.Token).ConfigureAwait(false);
+                        if (structuredTokens is not null) {
+                            structuredTokens.Append(token);
+                            structuredBytes = checked(structuredBytes + Encoding.UTF8.GetByteCount(token));
+                            if (structuredBytes > StrataStructuredToolCodec.MaximumBytes)
+                                throw new InvalidDataException("The actual structured tool generation exceeds its finite limit.");
+                        }
+                        else if(token.Length!=0) await output.Writer.WriteAsync(token,linked.Token).ConfigureAwait(false);
                     }
-                    else if(frame.Type==2)
+                    else if(frame.Type==(structuredTools ? 7u : 2u))
                     {
-                        NativeErrors(input); _=Text(input); var prompt=checked((long)input.ReadUInt64()); var prefill=checked((long)input.ReadUInt64()); var decode=checked((long)input.ReadUInt64());
+                        if (structuredTools) {
+                            if (input.ReadUInt32() != 1) throw new InvalidDataException("Unexpected structured tool terminal version.");
+                            var open = Text(input); var close = Text(input); var opened = input.ReadUInt32();
+                            if (opened > 1 || Encoding.UTF8.GetByteCount(open) > 4096 || Encoding.UTF8.GetByteCount(close) > 4096)
+                                throw new InvalidDataException("The actual loaded registration reasoning metadata is not bounded.");
+                            structuredTerminal!.Reasoning = new(open, close, opened == 1);
+                        }
+                        NativeErrors(input); var terminalText=Text(input); var prompt=checked((long)input.ReadUInt64()); var prefill=checked((long)input.ReadUInt64()); var decode=checked((long)input.ReadUInt64());
                         var prefillSeconds=input.ReadDouble(); var decodeSeconds=input.ReadDouble();
                         long? reused=input.ReadUInt32()==0 ? null : checked((long)input.ReadUInt64());
                         bool? kv=input.ReadUInt32()==0 ? null : input.ReadUInt32()!=0; var stopped=input.ReadUInt32()!=0; End(input);
@@ -224,7 +322,13 @@ public sealed class StrataNativeWorker : IAsyncDisposable, IOriginalInferenceCal
                         // Native callback slices can split UTF8 scalars. Only the real terminal flush
                         // may establish that all streamed bytes ended at a valid scalar boundary.
                         var tail=decoder.Feed([],true);
-                        if(tail.Length!=0) await output.Writer.WriteAsync(tail,linked.Token).ConfigureAwait(false);
+                        if (structuredTokens is not null) {
+                            structuredTokens.Append(tail);
+                            if (!string.Equals(structuredTokens.ToString(), terminalText, StringComparison.Ordinal))
+                                throw new InvalidDataException("The actual structured terminal does not match the native token stream.");
+                            await output.Writer.WriteAsync(terminalText, linked.Token).ConfigureAwait(false);
+                        }
+                        else if(tail.Length!=0) await output.Writer.WriteAsync(tail,linked.Token).ConfigureAwait(false);
                         Physical(() => { _model.DemandCurrentOriginalBinding(); return 0; });
                         var measured=new StrataGenerationObservation(prompt,prefill,decode,prefillSeconds,decodeSeconds,reused,kv,stopped);
                         var hardware=_model is IStrataOriginalHardwareBinding binding ? Physical(()=>binding.OriginalHardwareObservation) : null;
@@ -232,7 +336,7 @@ public sealed class StrataNativeWorker : IAsyncDisposable, IOriginalInferenceCal
                             if(_sealed||_invalidated||!_loaded) throw new InvalidOperationException("The original native session retired before terminal disclosure.");
                             LastGeneration=measured;
                             _lastCalibration=null; _lastCalibrationOriginal=null;
-                            if(hardware is not null&&(request.Options?.Temperature??0.7)==0.7) {
+                            if(!structuredTools&&hardware is not null&&(request.Options?.Temperature??0.7)==0.7) {
                                 _lastCalibration=new(new(InferenceEngine.Strata,Model.Model,Model.ArtifactFingerprint,hardware.Fingerprint,
                                     RuntimeFingerprint,Model.ContextTokens,InferenceCalibrationCache.DefaultSettings),measured);
                                 _lastCalibrationOriginal=_executing.Value?.Original;

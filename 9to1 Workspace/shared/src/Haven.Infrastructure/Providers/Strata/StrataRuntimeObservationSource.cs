@@ -103,9 +103,10 @@ public sealed class StrataRuntimeObservationSource(StrataNativeArtifactSource ar
                 FrozenSet<string>.Empty, FrozenSet<string>.Empty, FrozenSet<string>.Empty, RequiresCuda: true);
         // The real package inventory and observed hello are independent of requested requirements.
         // No architecture/family/quantization/required feature is copied from the model request.
-        // Package inventory cannot advertise features that this bundled managed/native
-        // request bridge does not implement. Intersect; never add a feature from demand.
+        // Eligibility is independent inventory, not effective model capability. The actual
+        // protected factory must additionally observe a correlated same-worker/model tool
+        // probe before any raw catalogue advertises Tools. Images remain unimplemented.
         return verifiedBuild with { Features = verifiedBuild.Features
-            .Where(value => value is "Text" or "Streaming").ToFrozenSet(StringComparer.Ordinal) };
+            .Where(value => value is "Text" or "Streaming" or "Tools").ToFrozenSet(StringComparer.Ordinal) };
     }
 }

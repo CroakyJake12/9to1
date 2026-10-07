@@ -25,6 +25,7 @@ internal sealed class ManagedInferenceEngineRequestSource(IModelProvider provide
   {
     await ValidateAsync(sameRequest.Model, sameRequest.ExecutionContext, sameAdmission, acknowledgedResponseAction,
       originalScope, [ToolCapability.Text, ToolCapability.Tools], sameRequest.Messages.Any(message => message.Images?.Count > 0), cancellationToken).ConfigureAwait(false);
+    DemandNativeSettings(sameRequest.Effort, sameRequest.Options);
     var raw = Own(originalScope, () => { DemandOriginalCurrentLease(sameAdmission); return provider.ChatWithToolsAsync(sameRequest, cancellationToken); });
     return await AwaitOriginal(raw).ConfigureAwait(false);
   }
@@ -82,16 +83,20 @@ internal sealed class ManagedInferenceEngineRequestSource(IModelProvider provide
   private void DemandChatFeatures(OllamaChatRequest request)
   {
     if (request.EnableTools) throw Unsupported("Structured tools require the actual typed tool-response path.");
-    if (nativeContextLimit is { } limit && (request.Effort != EffortLevel.Medium
-      || request.Options is { } options && (options.ContextLimit != limit || options.ActionLimit != 24)))
+    DemandNativeSettings(request.Effort, request.Options);
+  }
+  private void DemandNativeSettings(EffortLevel effort, GenerationOptions? settings)
+  {
+    if (nativeContextLimit is { } limit && (effort != EffortLevel.Medium
+      || settings is { } options && (options.ContextLimit != limit || options.ActionLimit != 24)))
       throw Unsupported("The actual native worker has no faithful nondefault effort/context/action-budget mapping.");
   }
   private async Task ValidateAsync(string wireModel, ProviderExecutionContext? context, TaskRunAttemptAdmission admission,
     Guid action, IInferenceEngineOriginalSourceScope scope, IReadOnlyList<ToolCapability> required, bool images, CancellationToken token)
   {
     ArgumentNullException.ThrowIfNull(admission); ArgumentNullException.ThrowIfNull(scope);
-    if (nativeContextLimit is not null && (required.Contains(ToolCapability.Tools) || images))
-      throw Unsupported("The actual native Strata transport supports text/stream only.");
+    if (nativeContextLimit is not null && images)
+      throw Unsupported("The actual native Strata transport has no image protocol.");
     var lookup = Own(scope, () => coordinator.GetIssuedAttemptWithinOriginalSourceAsync(admission,
       callback => scope.InvokeOriginalFactory(() => { callback(); return true; }), scope.RetainOriginalTask, token));
     if (!ReferenceEquals(await AwaitOriginal(lookup).ConfigureAwait(false), admission))

@@ -123,14 +123,15 @@ public sealed class StrataManagedInferenceEngineFactory : IInferenceEngineAdapte
         var models=_models;var binaries=_binaries;
         if(models is null||binaries is null||_modelUseAdmission is null) throw new InferenceEngineException(new(DulcheErrorCode.ProviderUnavailable,
             "Strata setup requires actual protected installed-worker and Safetensors model owners.",sameModel.StableKey,false));
-        if(_modelUseAdmission.Lease.Candidate.RequiredCapabilities.Any(value=>value is "Tools" or "Vision"))
+        if(_modelUseAdmission.Lease.Candidate.RequiredCapabilities.Any(value=>value is "Vision"))
             throw new InferenceEngineException(new(DulcheErrorCode.UnsupportedCapability,
-                "The actual native Strata transport has no tool/image execution protocol.",sameModel.StableKey,false));
+                "The actual native Strata transport has no image execution protocol.",sameModel.StableKey,false));
         lock(_custodyGate) { if(_admissions>=128)throw new InvalidOperationException("Original native factory custody is full.");_admissions++; }
         Task<StrataOriginalModelLease>? acquisition=null; Task<StrataNativeWorker>? creation=null;
         Task<ProviderConfiguration?>? currentConfiguration=null;
         Task<StrataOriginalWorkerLease>? binaryAcquisition=null;StrataOriginalWorkerLease? originalBinary=null;
-        bool modelOwned=false,binaryOwned=false;
+        bool modelOwned=false,binaryOwned=false,toolsObserved=false;
+        Task<bool>? toolProbe=null; Task<TaskRunAttemptAdmission?>? toolAdmissionLookup=null;
         StrataOriginalModelLease? originalModel=null; ScopedOriginalModel? scopedModel=null;
         StrataNativeWorker? worker=null; ManagedProviderDulcheAdapter? adapter=null;
         try
@@ -184,6 +185,26 @@ public sealed class StrataManagedInferenceEngineFactory : IInferenceEngineAdapte
             lock(_custodyGate)_originalAcquisitions.Add(creation);
             start.SetResult(); worker=await creation.ConfigureAwait(false);
             lock(_custodyGate)_originalProducts.Add(worker);
+            if (_modelUseAdmission.Lease.Candidate.RequiredCapabilities.Contains("Tools", StringComparer.Ordinal))
+            {
+                // Inventory is eligibility only. Load remains the original protected owner;
+                // only a real correlated proposal from this model establishes raw Tools support.
+                toolAdmissionLookup=ManagedEngineLease.Own(originalScope,()=>_coordinator.GetIssuedAttemptWithinOriginalSourceAsync(
+                    _modelUseAdmission,callback=>originalScope.InvokeOriginalFactory(()=> { callback();return true; }),originalScope.RetainOriginalTask,cancellationToken));
+                lock(_custodyGate)_originalAcquisitions.Add(toolAdmissionLookup);
+                if(!ReferenceEquals(await toolAdmissionLookup.ConfigureAwait(false),_modelUseAdmission))
+                    throw new UnauthorizedAccessException("The original Task attempt changed before its native tool probe.");
+                toolProbe=ManagedEngineLease.Own(originalScope,()=>worker.ProbeOriginalStructuredToolsAsync(cancellationToken));
+                lock(_custodyGate)_originalAcquisitions.Add(toolProbe);
+                if(!await toolProbe.ConfigureAwait(false))throw new NotSupportedException("No actual model structured-tool probe succeeded.");
+                toolAdmissionLookup=ManagedEngineLease.Own(originalScope,()=>_coordinator.GetIssuedAttemptWithinOriginalSourceAsync(
+                    _modelUseAdmission,callback=>originalScope.InvokeOriginalFactory(()=> { callback();return true; }),originalScope.RetainOriginalTask,cancellationToken));
+                lock(_custodyGate)_originalAcquisitions.Add(toolAdmissionLookup);
+                if(!ReferenceEquals(await toolAdmissionLookup.ConfigureAwait(false),_modelUseAdmission))
+                    throw new UnauthorizedAccessException("The original Task attempt changed during its native tool probe.");
+                toolsObserved=originalScope.InvokeOriginalFactory(()=>worker.OriginalStructuredToolsAvailable);
+                if(!toolsObserved)throw new NotSupportedException("The actual original native Tools proof is no longer current.");
+            }
             currentConfiguration=ManagedEngineLease.Own(originalScope,()=>_configurations.GetAsync(_providerId,cancellationToken));
             lock(_custodyGate)_originalAcquisitions.Add(currentConfiguration);
             var configuration=await currentConfiguration.ConfigureAwait(false);
@@ -194,7 +215,8 @@ public sealed class StrataManagedInferenceEngineFactory : IInferenceEngineAdapte
                     throw new UnauthorizedAccessException("The original configured local engine target changed during initialization.");
                 var requirements=worker.Model;
                 var descriptor=new ProviderModelDescriptor(_providerId,true,new(sameModel.ModelId,originalModelSizeBytes,"Strata","","",
-                    new HashSet<ToolCapability>{ToolCapability.Text,ToolCapability.Streaming},DateTimeOffset.UtcNow),
+                    toolsObserved ? new HashSet<ToolCapability>{ToolCapability.Text,ToolCapability.Streaming,ToolCapability.Tools}
+                        : new HashSet<ToolCapability>{ToolCapability.Text,ToolCapability.Streaming},DateTimeOffset.UtcNow),
                     requirements.ContextTokens,sameModel.ModelId);
                 var raw=new StrataRawModelProvider(_providerId,worker,descriptor);
                 return ManagedProviderDulcheAdapter.CreateOriginalStrataProvider(raw,_target,_coordinator,_frames,
@@ -207,7 +229,7 @@ public sealed class StrataManagedInferenceEngineFactory : IInferenceEngineAdapte
         }
         catch(Exception cause)
         {
-            var errors=new List<Exception>(); ManagedEngineLease.AddTask(errors,cause,(Task?)currentConfiguration??(Task?)creation??(Task?)acquisition??binaryAcquisition);
+            var errors=new List<Exception>(); ManagedEngineLease.AddTask(errors,cause,(Task?)currentConfiguration??(Task?)toolAdmissionLookup??(Task?)toolProbe??(Task?)creation??(Task?)acquisition??binaryAcquisition);
             await ManagedEngineLease.CloseFailedAsync(adapter,worker,originalScope,errors).ConfigureAwait(false);
             // Worker initialization owns its model as soon as its actual driver is acquired; its failure
             // already joins model close. The wrapper coalesces that SAME cleanup if queried here too.
@@ -245,6 +267,7 @@ public sealed class StrataManagedInferenceEngineFactory : IInferenceEngineAdapte
         public override InferenceModelRequirements Requirements=>Read(()=>original.Requirements);
         public override string OriginalCheckpointDirectory=>Read(()=>original.OriginalCheckpointDirectory);
         public override IReadOnlyList<int> ActualCudaDeviceIndices=>Read(()=>original.ActualCudaDeviceIndices);
+        public override InferenceEngineSupport? OriginalBuildSupport=>Read(()=>original.OriginalBuildSupport);
         public override void DemandCurrentOriginalBinding()=>Read(()=> { binary.DemandCurrentOriginalBinding();original.DemandCurrentOriginalBinding();return true; });
         public void PublishOriginal() { lock(_gate) _published=true; }
         public override ValueTask DisposeAsync()

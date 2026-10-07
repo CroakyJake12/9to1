@@ -704,7 +704,7 @@ public static partial class OriginalLocalTaskConsole
             if (_files is not null) AcquireClose(_files.CloseOriginalDeveloperReadsAsync, closes, failures);
             if (_managed is not null) AcquireClose(_managed.CloseAndDrainAsync, closes, failures);
             if (_projectResources is not null) AcquireClose(_projectResources.CloseAndDrainOriginalAsync, closes, failures);
-            AcquireOriginalDeveloperSetupCloses(closes, failures);
+            AcquireClose(CloseAndDrainOriginalDeveloperSetupsAsync, closes, failures);
             AcquireOriginalCurrentProjectExecutionCloses(closes, failures);
             if (_registration is not null) AcquireClose(_registration.CloseAndDrainOriginalCloudflareAsync, closes, failures);
             await JoinAll(closes, failures).ConfigureAwait(false);

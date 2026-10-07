@@ -359,7 +359,7 @@ public sealed class StrataNativeArtifactSource : IOriginalStrataModelSource, IOr
         public ModelIdentity OriginalModel => held.Model;
         public TaskRunAttemptAdmission OriginalAdmission => held.Admission;
         public StrataOriginalHardwareObservation OriginalHardwareProbe => held.Hardware ?? throw new InvalidDataException("No actual hardware probe was retained.");
-        public InferenceEngineSupport? OriginalBuildSupport => held.Metadata.BuildSupport;
+        public override InferenceEngineSupport? OriginalBuildSupport => held.Metadata.BuildSupport;
         public InferenceHardware OriginalHardwareObservation => OriginalHardwareProbe.Hardware;
         public long OriginalModelSizeBytes
         {
