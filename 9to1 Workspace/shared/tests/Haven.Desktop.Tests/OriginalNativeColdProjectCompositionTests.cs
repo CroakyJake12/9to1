@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 namespace Haven.Desktop.Tests;
 
-public sealed class OriginalNativeColdProjectCompositionTests
+public sealed partial class OriginalNativeColdProjectCompositionTests
 {
     [Fact]
     public Task Actual_project_configuration_is_fixed_on_the_same_journal_before_exposure_without_any_read_or_claim()
@@ -54,7 +54,8 @@ public sealed class OriginalNativeColdProjectCompositionTests
             Assert.DoesNotContain(services, row => row.ServiceType == typeof(HomeColdProjectReadReconciliation));
             Assert.False(File.Exists(paths.DatabasePath)); return Task.CompletedTask;
         });
-    private static async Task WithGraph(string selector, Func<ServiceCollection, CloudflareLocalDomainRegistration, Paths, Action<HomeColdProjectReadReconciliation>, Task> body)
+    private static async Task WithGraph(string selector, Func<ServiceCollection, CloudflareLocalDomainRegistration, Paths, Action<HomeColdProjectReadReconciliation>, Task> body,
+        IReadOnlyList<ICanonicalResourceAccessResolver>? additionalOriginalResolvers = null, IReadOnlyList<IHomeActionPolicySource>? additionalOriginalPolicies = null)
     {
         if (!OperatingSystem.IsLinux()) return;
         var directory = Directory.CreateTempSubdirectory("original-project-di-").FullName;
@@ -68,8 +69,8 @@ public sealed class OriginalNativeColdProjectCompositionTests
             NativeFilesWorkspaceService? files = null; NativeFilesWorkspaceAuthority? authority = null;
             HomeColdProjectReadReconciliation? source = null;
             registration = CloudflareLocalDomainRegistration.CreateOriginal(store, new OperatingSystemPrincipalSource(), paths,
-                originalResolvers: [new HomeColdProjectReadResourceResolver(() => source ?? throw new InvalidOperationException("Unresolved source is unavailable"))],
-                originalPolicies: [new HomeColdProjectReadActionPolicySource()],
+                originalResolvers: new ICanonicalResourceAccessResolver[] { new HomeColdProjectReadResourceResolver(() => source ?? throw new InvalidOperationException("Unresolved source is unavailable")) }.Concat(additionalOriginalResolvers ?? []),
+                originalPolicies: new IHomeActionPolicySource[] { new HomeColdProjectReadActionPolicySource() }.Concat(additionalOriginalPolicies ?? []),
                 configureOriginalStores: identity =>
                 {
                     files = new(identity.StateStore, identity.Profiles);

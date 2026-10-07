@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Haven.Application;
+using Haven.Core;
 using HavenOS.Home.PermissionsTrustNotifications;
 
 namespace HavenOS.Home.Core;
