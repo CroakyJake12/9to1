@@ -26,7 +26,7 @@ public sealed partial class WorkspaceToolService
             public void RetainOriginalDirectoryTask(Task sameActualTask)
                 => owner.RetainDirectoryRegistrationTask(this, sameActualTask);
             public Task CloseAndDrainAsync()
-            { owner.DemandExternalOriginalDirectoryRegistrationJoin(); return owner.CloseDirectory(actual); }
+            { owner.DemandExternalDirectoryPreparationJoin(actual); return owner.CloseDirectory(actual); }
             public ValueTask DisposeAsync() => new(CloseAndDrainAsync());
         }
         private sealed class RegistrationOperation(IDeveloperProjectOriginalSetupStepEntry entry)

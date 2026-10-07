@@ -154,6 +154,7 @@ public sealed class CloudflareLocalDomainRegistrationTests
     private static ServiceCollection Graph()
     {
         var services = new ServiceCollection(); services.AddHavenInfrastructure();
+        services.AddHavenPlannerInfrastructure();
         // Maintained required Chat descriptors, supported nullable Browser/Automation absent.
         // This constructs the original cohort; it does not issue an admission or initialize a model.
         services.AddSingleton<CapabilityPreflightService>(); services.AddSingleton<TerminalCommandActivityHub>();

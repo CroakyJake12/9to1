@@ -47,11 +47,27 @@ public sealed partial class WorkspaceToolService
                 lock (owner._gate) operation.Original.Sources.Add(actual);
             }
             public Task CloseAndDrainAsync()
-            { owner.DemandExternalOriginalFileRegistrationJoin(); return owner.CloseFileRegistration(this); }
+            { owner.DemandExternalFilePreparationJoin(this); return owner.CloseFileRegistration(this); }
             public ValueTask DisposeAsync() => new(CloseAndDrainAsync());
         }
 
         public void DemandExternalOriginalFileRegistrationJoin() => DemandExternalOriginalJoin();
+        private void DemandExternalFilePreparationJoin(FileRegistrationPreparation preparation)
+        {
+            // This leaf joins only its own preparation/registration driver, retained
+            // cleanup and native lifetime; no encompassing saved-root parent is joined.
+            if (_physicalSources?.ContainsKey(this) == true)
+                throw new InvalidOperationException("An actual file source callback cannot join the same preparation.");
+            lock (_gate)
+            {
+                if (!ReferenceEquals(preparation.Owner, this) || !_fileRegistrations.Contains(preparation))
+                    throw new UnauthorizedAccessException("Foreign original file registration preparation.");
+                for (var current = _executing.Value; current is not null; current = current.Parent)
+                    if (Volatile.Read(ref current.Live) && (ReferenceEquals(current, preparation.PreparingOriginal) ||
+                        ReferenceEquals(current, preparation.Operation?.Original)))
+                        throw new InvalidOperationException("A live actual file original cannot join its own preparation.");
+            }
+        }
         public Task<IDeveloperProjectOriginalFileRegistrationPreparation> PrepareOriginalFileRegistrationAsync(
             DeveloperProjectSetupIntent intent, IDeveloperProjectOriginalSourceCapture value,
             IDeveloperProjectOriginalSetupPermission permission, DeveloperProjectSetupStep step, CancellationToken token)

@@ -41,7 +41,7 @@ public sealed partial class WorkspaceToolService
                 IDeveloperProjectOriginalSetupStepEntry sameEntry, CancellationToken token) => owner.ObserveDirectory(this, sameEntry, token);
             public Task CloseAndDrainAsync()
             {
-                owner.DemandExternalOriginalDirectoryJoin();
+                owner.DemandExternalDirectoryPreparationJoin(this);
                 return owner.CloseDirectory(this);
             }
             public ValueTask DisposeAsync() => new(CloseAndDrainAsync());
@@ -54,6 +54,23 @@ public sealed partial class WorkspaceToolService
         }
 
         public void DemandExternalOriginalDirectoryJoin() => DemandExternalOriginalJoin();
+        private void DemandExternalDirectoryPreparationJoin(DirectoryPreparation preparation)
+        {
+            // This leaf joins only its own preparation/observation/registration drivers
+            // and native lifetime, never the encompassing saved-root or Files parent.
+            if (_physicalSources?.ContainsKey(this) == true)
+                throw new InvalidOperationException("An actual directory source callback cannot join the same preparation.");
+            lock (_gate)
+            {
+                if (!ReferenceEquals(preparation.Owner, this) || !_directoryPreparations.Contains(preparation))
+                    throw new UnauthorizedAccessException("Foreign original directory preparation.");
+                for (var current = _executing.Value; current is not null; current = current.Parent)
+                    if (Volatile.Read(ref current.Live) && (ReferenceEquals(current, preparation.PreparationOwner) ||
+                        ReferenceEquals(current, preparation.ObservationOwner) ||
+                        preparation.OriginalRegistrations.Any(value => ReferenceEquals(current, value.Original))))
+                        throw new InvalidOperationException("A live actual directory original cannot join its own preparation.");
+            }
+        }
 
         private void DemandOriginalDirectoryDependencies()
         {

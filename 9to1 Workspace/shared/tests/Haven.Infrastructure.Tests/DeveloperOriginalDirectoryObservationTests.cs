@@ -168,10 +168,14 @@ public sealed partial class DeveloperOriginalDirectoryObservationTests
         internal readonly SetupSource Setups = new();
         internal readonly IDeveloperProjectOriginalPhysicalCaptureSource Source;
         internal IDeveloperProjectOriginalDirectoryObservationSource Directories => (IDeveloperProjectOriginalDirectoryObservationSource)Source;
-        internal Rig()
+        internal Rig(IDeveloperWorkspaceOriginalExecutionDescriptorBindingSource? originalBindings = null)
         {
             Directory.CreateDirectory(Project); System.IO.File.WriteAllText(File, "original source stays in place");
-            Source = new WorkspaceToolService().CreateOriginalDeveloperCaptureSource(Reads, () => Selections, () => Setups);
+            Source = originalBindings is null
+                ? new WorkspaceToolService().CreateOriginalDeveloperCaptureSource(Reads, () => Selections, () => Setups)
+                : new WorkspaceToolService().CreateOriginalDeveloperCaptureSource(Reads, () => Selections, () => Setups,
+                    () => throw new NotSupportedException("This leaf-only fixture issues no workspace metadata store or saved-root authority."),
+                    () => originalBindings);
         }
         internal async Task<IDeveloperProjectOriginalExistingSourceCapture> Capture(CancellationToken token)
         {
