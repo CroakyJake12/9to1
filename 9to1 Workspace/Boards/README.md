@@ -70,3 +70,18 @@ Then build/test the Flutter preview and the shared HUI runtime before changing t
 ## Evidence states
 
 Repository state alone is **implemented source**. Do not describe this slice as built, tested, packaged, booted, or runtime-proven until those stages are directly executed on the approved desktop/Ubuntu VM.
+
+## Current native rich editor
+
+The CUI Win32 editor entrypoint is `app/CakeOS.Apps.Boards.App.csproj`. It binds
+`ContractSessionAdapter` to the existing `RichBoardSession` and
+`JsonFileHavenBoardStore` for physical `.9to1board` persistence. Save As retains
+the stable document identity and changes the session's current path only after
+the store acknowledges the destination. A rejected target or failed promotion
+leaves normal Save and close using the last acknowledged path. The owning
+`tests/CakeOS.Apps.Boards.Tests.csproj` controls cover both occupied targets and
+physical promotion failure, followed by successful save and fresh reopen.
+
+Current packaging and account-backed Home entry remain separate acceptance
+gates. The standalone editor's local persistence controls establish no genuine
+app login, permission grant, installed GUI or complete donor-parity acceptance.

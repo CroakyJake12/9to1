@@ -68,6 +68,15 @@ public sealed class SpaceDevelopmentWorkspace(
             matching.Length == 0 ? DateTimeOffset.UtcNow : matching[0].AddedAt);
         if (matching.Length == 0) refs.Add(reference);
         else refs[refs.FindIndex(item => item.ContextId == referenceId)] = reference;
+        // Resolving a saved project may await storage while the task is replaced or
+        // leaves this Space. Reobserve the SAME task before persisting its attachment.
+        // This finite observation is metadata validation, never execution authority.
+        var currentTask = await taskViews.ReadAsync(spaceId, originalConversationId,
+            cancellationToken, originalSourceCallbackScope).ConfigureAwait(false);
+        DemandTask(currentTask, expectedTaskId, expectedExecutionId);
+        if (currentTask.SpaceRevision != space.Revision)
+            throw new SpaceRevisionConflictException(spaceId, space.Revision, currentTask.SpaceRevision);
+        cancellationToken.ThrowIfCancellationRequested();
         var saved = await Join(() => spaces.UpdateAsync(space with { ContextReferences = refs.ToArray() },
             expectedSpaceRevision, cancellationToken), originalSourceCallbackScope).ConfigureAwait(false);
         // Preserve the actual metadata ACK even when the following refresh fails.
@@ -98,8 +107,16 @@ public sealed class SpaceDevelopmentWorkspace(
         if (current is null || current.IsArchived || current.Revision != space.Revision ||
             current.ContextReferences?.SingleOrDefault(item => item.ContextId == originalContextReferenceId) != row)
             throw new InvalidOperationException("The original Space project reference changed during open; refresh before presenting it.");
+        // Project resolution and the final Space read can both suspend. Publish a
+        // fresh canonical observation rather than the earlier detached task snapshot.
+        // Accepted work/checkpoints may advance under the SAME IDs; replacements refuse.
+        var currentTask = await taskViews.ReadAsync(spaceId, link.ConversationId,
+            cancellationToken, originalSourceCallbackScope).ConfigureAwait(false);
+        DemandTask(currentTask, link.TaskId, link.ExecutionId);
+        if (currentTask.SpaceRevision != current.Revision)
+            throw new SpaceRevisionConflictException(spaceId, current.Revision, currentTask.SpaceRevision);
         cancellationToken.ThrowIfCancellationRequested();
-        return new(current, row.ContextId, link, task, project);
+        return new(current, row.ContextId, link, currentTask, project);
     }
 
     /// <summary>
