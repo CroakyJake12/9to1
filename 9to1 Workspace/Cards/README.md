@@ -206,6 +206,39 @@ denial and CUI recovery using isolated test owner doubles.
 rich renderer or UI host has been connected.** Permanent purge and retention
 policies are intentionally not invented in this Cards-owned slice.
 
+## Private reviews and canonical Study evidence (current slice)
+
+The Cards-owned `CardStudyReviewCoordinator` implements review-delivery
+orchestration, not a replacement Study engine or personal review database.
+It reads the set through the canonical principal-scoped Files owner,
+resolves the current caller through the host, prepares a personal
+`CardReviewRecord`, and requires the existing private-review owner to
+return a verified identity-, rating- and fingerprint-matched **committed
+review receipt**. A replay must return that ORIGINAL persisted review,
+including its saved topic and timestamp; a later changed card topic
+cannot silently reattribute historical evidence.
+
+Only the existing Study authority may confirm that a card's TopicID is
+valid for the current learner. The Study evidence owner may then return
+Submitted, QueuedDurably, Rejected or Unavailable; a durable queue is
+reported as queued and **never misreported as confirmed progress**.
+An unlinked card remains reviewable and never fabricates a topic.
+If Study I/O fails after the private review commits, the review stays
+saved and Study is reported as **not confirmed**.
+
+The CUI bridge `CardCuiStudyReviewOwner` delegates rating actions to
+this coordinator, and shared status presentation distinguishes private
+review saved from linked Study submission/queuing. Existing CUI hosts
+must inject real canonical owner instances; no test fake is valid for
+release deployment.
+
+New focused xUnit cases cover reviewed/unlinked topics, denied or
+unavailable Study links, queued/submitted/rejected delivery,
+private-review permission denial, private owner receipt mismatch,
+Study receipt identity mismatch, replay under changed topic, transport
+failures, cross-principal reads and deleted cards. **Actual Study and
+private-review provider implementations are still required.**
+
 ## Local focused checks
 
 From `9to1 Workspace` with .NET SDK 10 installed:
