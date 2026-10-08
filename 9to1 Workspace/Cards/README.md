@@ -29,6 +29,11 @@ mutation rules**, rather than each inventing a private flashcard model.
 - Principal-scoped review queue projections with red/amber/green difficult-first
   and difficult-only modes; mixed-owner data is ignored by the projection.
 - Versioned import validation that explicitly rejects malformed/unversioned JSON.
+- Canonical Files asset-reference manifest (stable AssetID, Files reference,
+  MIME type, content hash and byte length), with revision-checked atomic
+  registration, duplicate-ID rejection and lossless metadata round trips.
+  This registers *metadata only*: it does not upload an asset, validate an
+  external Files object or grant file permissions.
 - Focused xUnit regression cases covering these domain operations.
 
 ## Integration required before any app-readiness claim
@@ -39,6 +44,8 @@ These **remain open** and are intentionally not simulated:
    including inherited approval for destructive edits.
 2. A durable, atomic, versioned CAS store with operationId replay deduplication,
    interrupted-save recovery and source-preserving import/export.
+   Files-owned asset existence/hash/permission checking and attachment mutation
+   through the real Shared Productivity Engine are likewise outstanding.
 3. Real Shared Productivity Engine formatting, image/graph/ink rendering and
    editing, font/background colour, history and undo/redo.
 4. Separate private review storage and authorised, attributable Study evidence
