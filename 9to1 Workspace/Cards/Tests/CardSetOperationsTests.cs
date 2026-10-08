@@ -54,7 +54,7 @@ public sealed class CardSetOperationsTests
         Assert.Equal(set.SetId, reopened.SetId);
         Assert.Equal(set.ArtifactId, reopened.ArtifactId);
         Assert.Equal(set.Cards[0].CardId, reopened.Cards[0].CardId);
-        Assert.Equal(front.Document.GetRawText(), reopened.Cards[0].Front.Document.GetRawText());
+        Assert.True(JsonElement.DeepEquals(front.Document, reopened.Cards[0].Front.Document));
         Assert.Equal("asset-01", reopened.Cards[0].Back.Document.GetProperty("nodes")[0].GetProperty("assetId").GetString());
     }
 
