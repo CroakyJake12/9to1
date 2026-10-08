@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Haven.Core;
 using HavenOS.Home.Core;
 using Xunit;
 
@@ -53,6 +54,27 @@ public sealed class CardHomeProductivityBridgeTests
         Assert.True(JsonElement.DeepEquals(unknown.Content,
             JsonSerializer.Deserialize<HomeProductivityObjectBundle>(
                 side.Document.GetRawText())!.Objects.Single().Content));
+    }
+
+    [Fact]
+    public void ActualHomeParagraphHandlerAcceptsCompatibleRichCardContent()
+    {
+        var engine = new HomeProductivityEngine();
+        NotesBlock paragraph = NotesBlock.CreateParagraph("Cells");
+        paragraph.StyleId = string.Empty;
+        paragraph.Runs.Add(new NotesTextRun { Text = "Cells", Bold = true });
+        HomeProductivityObject canonical = HomeNotesSharedObjects.Project(paragraph);
+        var bundle = new HomeProductivityObjectBundle(
+            1, [canonical], [], [], EmptyObject(), EmptyObject());
+        CardSide side = CardHomeProductivityBridge.CaptureBundle(bundle, "Cells");
+
+        CardProductivityInspection inspection = CardHomeProductivityBridge.Inspect(
+            side, engine, Guid.NewGuid(), 1);
+
+        Assert.True(inspection.Compatible, inspection.Code);
+        Assert.Equal("Compatible", inspection.Code);
+        Assert.Empty(inspection.UnsupportedObjectTypes);
+        Assert.Equal(paragraph.Id, bundle.Objects.Single().ObjectId);
     }
 
     [Fact]
