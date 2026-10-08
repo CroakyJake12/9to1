@@ -76,6 +76,9 @@ public sealed class CardCuiWorkspace(
     private CardSet? _set;
     private readonly CardNavigationSession _navigation = new();
     private bool _busy;
+    private int _recoveryOffset;
+    private int _selectedRecoveryIndex;
+    private const int RecoveryPageSize = 25;
     private string _status = "Open an authorised Cards set";
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -109,6 +112,21 @@ public sealed class CardCuiWorkspace(
         && _navigation.Current is not null;
     public bool CanDelete => !_busy && _navigation.Mode == CardInteractionMode.Edit
         && _navigation.Current is not null && deletion is not null;
+    // A recovery picker is read-only; actual restoration still uses the same
+    // authorised mutation gateway and observed canonical commit receipt.
+    private CardRecoveryPage? RecoveryPage => _set is null ? null
+        : CardRecoveryQueries.GetPage(_set, _recoveryOffset, RecoveryPageSize);
+    public IReadOnlyList<string> RecoveryNames => RecoveryPage?.Items.Select(item =>
+        $"{item.OriginalMembershipPosition + 1}: {item.FrontPreview}").ToArray() ?? [];
+    public int SelectedRecoveryIndex => _selectedRecoveryIndex < RecoveryNames.Count
+        ? _selectedRecoveryIndex : -1;
+    public bool CanRestore => !_busy && _navigation.Mode == CardInteractionMode.Edit
+        && RecoveryPage is { Items.Count: > 0 } && SelectedRecoveryIndex >= 0;
+    public bool CanNextRecoveryPage => !_busy && RecoveryPage?.HasMore == true;
+    public bool CanPreviousRecoveryPage => !_busy && _set is not null && _recoveryOffset > 0;
+    public string RecoveryPosition => RecoveryPage is { } page
+        ? $"Deleted cards {page.Offset + (page.Items.Count > 0 ? 1 : 0)}–{page.Offset + page.Items.Count}"
+        : "No deleted cards";
     public bool CanRate => !_busy && reviews is not null && _navigation.Current is not null;
     public bool CanPrevious => !_busy && _navigation.Index > 0;
     public bool CanNext => !_busy && _navigation.Index >= 0
@@ -163,7 +181,10 @@ public sealed class CardCuiWorkspace(
             "CanOpen" => CanOpen, "CanChangeMode" => CanChangeMode, "CanFlip" => CanFlip,
             "CanEdit" => CanEdit, "CanCreate" => CanCreate,
             "CanDuplicate" => CanDuplicate, "CanDelete" => CanDelete,
-            "CanRate" => CanRate,
+            "CanRestore" => CanRestore, "CanNextRecoveryPage" => CanNextRecoveryPage,
+            "CanPreviousRecoveryPage" => CanPreviousRecoveryPage,
+            "RecoveryNames" => RecoveryNames, "SelectedRecoveryIndex" => SelectedRecoveryIndex,
+            "RecoveryPosition" => RecoveryPosition, "CanRate" => CanRate,
             "CanPrevious" => CanPrevious,
             "CanNext" => CanNext,
             _ => null,
@@ -174,12 +195,21 @@ public sealed class CardCuiWorkspace(
             or "CanGroup" or "CanSelectGroup" or "SideLabel"
             or "PreviousPreview" or "NextPreview" or "ContentHint" or "PositionLabel"
             or "CanOpen" or "CanChangeMode" or "CanFlip" or "CanEdit" or "CanRate"
-            or "CanPrevious" or "CanNext" or "CanCreate" or "CanDuplicate" or "CanDelete";
+            or "CanPrevious" or "CanNext" or "CanCreate" or "CanDuplicate" or "CanDelete"
+            or "CanRestore" or "CanNextRecoveryPage" or "CanPreviousRecoveryPage"
+            or "RecoveryNames" or "SelectedRecoveryIndex" or "RecoveryPosition";
     }
 
     public bool TrySetValue(string path, object? value)
     {
         if (_busy) return false;
+        if (path == "SelectedRecoveryIndex" && _set is not null
+            && value is int selected && selected >= 0 && selected < RecoveryNames.Count)
+        {
+            _selectedRecoveryIndex = selected;
+            Changed();
+            return true;
+        }
         if (path == "SelectedGroupIndex" && CanSelectGroup && value is int index
             && index >= 0 && index < GroupNames.Count)
         {
@@ -207,6 +237,9 @@ public sealed class CardCuiWorkspace(
         "9to1.Cards.Add" => CanCreate,
         "9to1.Cards.Duplicate" => CanDuplicate,
         "9to1.Cards.Delete" => CanDelete,
+        "9to1.Cards.Restore" => CanRestore,
+        "9to1.Cards.RecoveryNext" => CanNextRecoveryPage,
+        "9to1.Cards.RecoveryPrevious" => CanPreviousRecoveryPage,
         "9to1.Cards.RateRed" or "9to1.Cards.RateAmber" or "9to1.Cards.RateGreen" => CanRate,
         _ => false,
     });
@@ -270,6 +303,19 @@ public sealed class CardCuiWorkspace(
                     case "9to1.Cards.Delete":
                         await DeleteAsync(cancellationToken).ConfigureAwait(false);
                         break;
+                    case "9to1.Cards.Restore":
+                        await RestoreAsync(cancellationToken).ConfigureAwait(false);
+                        break;
+                    case "9to1.Cards.RecoveryNext":
+                        _recoveryOffset += RecoveryPageSize;
+                        _selectedRecoveryIndex = 0;
+                        _status = RecoveryPosition;
+                        break;
+                    case "9to1.Cards.RecoveryPrevious":
+                        _recoveryOffset = Math.Max(0, _recoveryOffset - RecoveryPageSize);
+                        _selectedRecoveryIndex = 0;
+                        _status = RecoveryPosition;
+                        break;
                     case "9to1.Cards.RateRed":
                     case "9to1.Cards.RateAmber":
                     case "9to1.Cards.RateGreen":
@@ -300,6 +346,8 @@ public sealed class CardCuiWorkspace(
         if (savedPreferences is not null)
             _navigation.ApplyPreferences(savedPreferences);
         _set = loaded;
+        _recoveryOffset = 0;
+        _selectedRecoveryIndex = 0;
         _navigation.Load(loaded);
         _status = $"Opened {loaded.Title} at revision {loaded.Revision}";
     }
@@ -375,6 +423,22 @@ public sealed class CardCuiWorkspace(
             token).ConfigureAwait(false);
     }
 
+    private async Task RestoreAsync(CancellationToken token)
+    {
+        CardSet set = _set ?? throw new InvalidOperationException("Open the set first.");
+        CardRecoveryPage page = RecoveryPage
+            ?? throw new InvalidOperationException("No recovery source is available.");
+        if (_selectedRecoveryIndex < 0 || _selectedRecoveryIndex >= page.Items.Count)
+            throw new InvalidOperationException("Select a deleted card to restore.");
+        CardRecoveryItem selected = page.Items[_selectedRecoveryIndex];
+        // The revision belongs to the same source used for the recovery preview.
+        // The canonical commit store must still enforce the latest revision.
+        var request = new CardMutation.Restore(Guid.NewGuid().ToString("D"), set.SetId,
+            page.SetRevision, CardInteractionMode.Edit, selected.CardId);
+        CardMutationOutcome receipt = await mutations.ExecuteAsync(request, token).ConfigureAwait(false);
+        await ReloadAfterCommitAsync(set, receipt, "Card restored", token).ConfigureAwait(false);
+    }
+
     private async Task ReloadAfterCommitAsync(CardSet original, CardMutationOutcome receipt,
         string successLabel, CancellationToken token)
     {
@@ -393,6 +457,12 @@ public sealed class CardCuiWorkspace(
         CardSetOperations.Validate(committed);
         _set = committed;
         _navigation.Load(committed);
+        // A restoration may empty the current page. Return to the nearest
+        // valid page without losing the canonical recovered card identity.
+        while (_recoveryOffset > 0 && CardRecoveryQueries.GetPage(
+            committed, _recoveryOffset, RecoveryPageSize).Items.Count == 0)
+            _recoveryOffset = Math.Max(0, _recoveryOffset - RecoveryPageSize);
+        _selectedRecoveryIndex = 0;
         _status = $"{successLabel}; saved revision {committed.Revision}";
     }
 
