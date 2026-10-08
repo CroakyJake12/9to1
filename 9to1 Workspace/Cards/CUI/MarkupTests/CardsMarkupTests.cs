@@ -44,7 +44,7 @@ public sealed class CardsMarkupTests
         ];
         foreach (string action in required)
             Assert.Contains($"action=\"{action}\"", source);
-        string[] ids = Regex.Matches(source, """\bid="([^"]+)"""")
+        string[] ids = Regex.Matches(source, "\\bid=\"([^\"]+)\"")
             .Select(match => match.Groups[1].Value).ToArray();
         Assert.Equal(ids.Length, ids.Distinct(StringComparer.Ordinal).Count());
     }
