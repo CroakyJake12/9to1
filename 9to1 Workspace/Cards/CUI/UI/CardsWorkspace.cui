@@ -1,0 +1,33 @@
+<Cui id="9to1.Cards" version="1">
+  <Grid rows="Auto,*,Auto" accessible-name="9to1 Cards">
+    <WrapPanel orientation="Horizontal" spacing="8">
+      <TextBlock text="{Binding SetTitle}" accessible-name="Current flashcard set" />
+      <TextBlock text="{Binding PositionLabel}" accessible-name="Current card position" />
+      <Button id="cards-open" action="9to1.Cards.Open" content="Open set" accessible-name="Open authorised flashcard set" is-enabled="{Binding CanOpen}" />
+      <Button id="cards-mode" action="9to1.Cards.ToggleMode" content="{Binding ModeLabel}" accessible-name="Switch view and edit modes" is-enabled="{Binding CanChangeMode}" />
+      <TextBox id="cards-search" text="{Binding SearchText, Mode=TwoWay}" accessible-name="Search flashcards" watermark="Search cards" />
+    </WrapPanel>
+    <Grid grid-row="1" columns="Auto,*,Auto" accessible-name="Focused flashcard and nearby cards">
+      <StackPanel spacing="8">
+        <Button id="cards-prev" action="9to1.Cards.Previous" content="Previous card" accessible-name="Previous flashcard" is-enabled="{Binding CanPrevious}" />
+        <TextBlock text="{Binding PreviousPreview}" accessible-name="Previous card preview" />
+      </StackPanel>
+      <StackPanel grid-column="1" spacing="12" accessible-name="Focused flashcard">
+        <TextBlock text="{Binding SideLabel}" accessible-name="Currently shown card side" />
+        <TextBlock text="{Binding ContentHint}" accessible-name="Structured content preview status" />
+        <Button id="cards-flip" action="9to1.Cards.Flip" content="Flip card" accessible-name="Flip front and back" is-enabled="{Binding CanFlip}" />
+        <Button id="cards-edit" action="9to1.Cards.EditSide" content="Edit current side" accessible-name="Open the shared rich-content editor" is-enabled="{Binding CanEdit}" />
+        <WrapPanel spacing="8" accessible-name="Personal review">
+          <Button id="cards-red" action="9to1.Cards.RateRed" content="Difficult" accessible-name="Rate this card red" is-enabled="{Binding CanRate}" />
+          <Button id="cards-amber" action="9to1.Cards.RateAmber" content="Needs practice" accessible-name="Rate this card amber" is-enabled="{Binding CanRate}" />
+          <Button id="cards-green" action="9to1.Cards.RateGreen" content="Understood" accessible-name="Rate this card green" is-enabled="{Binding CanRate}" />
+        </WrapPanel>
+      </StackPanel>
+      <StackPanel grid-column="2" spacing="8">
+        <TextBlock text="{Binding NextPreview}" accessible-name="Next card preview" />
+        <Button id="cards-next" action="9to1.Cards.Next" content="Next card" accessible-name="Next flashcard" is-enabled="{Binding CanNext}" />
+      </StackPanel>
+    </Grid>
+    <TextBlock grid-row="2" text="{Binding Status}" accessible-name="Cards operation status" />
+  </Grid>
+</Cui>
