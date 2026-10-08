@@ -38,6 +38,7 @@ public sealed class CardsMarkupTests
         string[] required =
         [
             "9to1.Cards.Open", "9to1.Cards.CycleGrouping",
+            "9to1.Cards.Add", "9to1.Cards.Duplicate", "9to1.Cards.Delete",
             "9to1.Cards.Next", "9to1.Cards.Previous", "9to1.Cards.Flip",
             "9to1.Cards.ToggleMode", "9to1.Cards.EditSide",
             "9to1.Cards.RateRed", "9to1.Cards.RateAmber", "9to1.Cards.RateGreen",
