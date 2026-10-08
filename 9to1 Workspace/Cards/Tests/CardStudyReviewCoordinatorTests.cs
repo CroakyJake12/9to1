@@ -41,6 +41,7 @@ public sealed class CardStudyReviewCoordinatorTests
         public bool AllowPersonalWrite { get; set; } = true;
         public bool StudyTransportUnavailable { get; set; }
         public bool ReturnMismatchedStudyOperation { get; set; }
+        public bool OmitDeliveryIdentity { get; set; }
         public bool ReturnBadPrivateReceipt { get; set; }
         public CardReviewRecord? LastStudyReview { get; private set; }
 
@@ -99,7 +100,11 @@ public sealed class CardStudyReviewCoordinatorTests
             return Task.FromResult(new CardStudyDeliveryReceipt(
                 DeliveryStatus,
                 ReturnMismatchedStudyOperation ? "different-operation" : receipt.OperationId,
-                DeliveryStatus.ToString()));
+                DeliveryStatus.ToString(),
+                EvidenceId: DeliveryStatus == CardStudyDeliveryStatus.Submitted && !OmitDeliveryIdentity
+                    ? "canonical-study-evidence-id" : null,
+                QueueReceiptId: DeliveryStatus == CardStudyDeliveryStatus.QueuedDurably && !OmitDeliveryIdentity
+                    ? "canonical-study-outbox-receipt" : null));
         }
 
         // The review coordinator uses only Files' authorised read port.
@@ -178,6 +183,27 @@ public sealed class CardStudyReviewCoordinatorTests
         Assert.Equal(expected, result.StudyState);
         Assert.Equal(1, owner.PersonalCommits);
         Assert.Equal(1, owner.StudyAttempts);
+    }
+
+    [Theory]
+    [InlineData(CardStudyDeliveryStatus.Submitted, "StudyEvidenceReceiptMissing")]
+    [InlineData(CardStudyDeliveryStatus.QueuedDurably, "StudyQueueReceiptMissing")]
+    public async Task NoStudySuccessWithoutAuthoritativeEvidenceOrQueueIdentity(
+        CardStudyDeliveryStatus status, string missingReceipt)
+    {
+        CardSet set = Deck("canonical-topic");
+        var owner = new OwnerState(set)
+        {
+            DeliveryStatus = status,
+            OmitDeliveryIdentity = true,
+        };
+
+        CardReviewOutcome result = await Service(owner).RateAsync(Request(set));
+
+        Assert.True(result.ReviewSaved);
+        Assert.Equal(CardStudyEvidenceState.StudyNotConfirmed, result.StudyState);
+        Assert.Equal(missingReceipt, result.StudyCode);
+        Assert.Equal(1, owner.PersonalCommits);
     }
 
     [Fact]
