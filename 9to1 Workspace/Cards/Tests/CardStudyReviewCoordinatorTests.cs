@@ -39,6 +39,9 @@ public sealed class CardStudyReviewCoordinatorTests
         public CardStudyDeliveryStatus DeliveryStatus { get; set; } = CardStudyDeliveryStatus.Submitted;
         public CardStudyLinkStatus LinkStatus { get; set; } = CardStudyLinkStatus.Valid;
         public bool AllowPersonalWrite { get; set; } = true;
+        public bool StudyTransportUnavailable { get; set; }
+        public bool ReturnMismatchedStudyOperation { get; set; }
+        public bool ReturnBadPrivateReceipt { get; set; }
         public CardReviewRecord? LastStudyReview { get; private set; }
 
         public ValueTask<CardTrustedCaller?> ResolveAsync(CancellationToken cancellationToken) =>
@@ -73,7 +76,8 @@ public sealed class CardStudyReviewCoordinatorTests
                 request.OperationId, fingerprint, proposed.ReviewedAt, "Committed", proposed);
             _committed.Add(request.OperationId, (fingerprint, receipt));
             PersonalCommits++;
-            return Task.FromResult(receipt);
+            return Task.FromResult(ReturnBadPrivateReceipt
+                ? receipt with { PrincipalId = "wrong-principal" } : receipt);
         }
 
         public Task<CardStudyLinkDecision> CheckLinkAsync(CardTrustedCaller caller,
@@ -90,8 +94,12 @@ public sealed class CardStudyReviewCoordinatorTests
         {
             StudyAttempts++;
             LastStudyReview = saved;
+            if (StudyTransportUnavailable)
+                throw new IOException("Study provider cannot be reached.");
             return Task.FromResult(new CardStudyDeliveryReceipt(
-                DeliveryStatus, receipt.OperationId, DeliveryStatus.ToString()));
+                DeliveryStatus,
+                ReturnMismatchedStudyOperation ? "different-operation" : receipt.OperationId,
+                DeliveryStatus.ToString()));
         }
 
         // The review coordinator uses only Files' authorised read port.
@@ -183,6 +191,47 @@ public sealed class CardStudyReviewCoordinatorTests
         Assert.False(result.ReviewSaved);
         Assert.Equal(CardStudyEvidenceState.ReviewNotSaved, result.StudyState);
         Assert.Equal(0, owner.PersonalCommits);
+        Assert.Equal(0, owner.StudyAttempts);
+    }
+
+    [Fact]
+    public async Task StudyTransportFailureDoesNotUndoAlreadyCommittedPersonalReview()
+    {
+        CardSet set = Deck("valid-topic");
+        var owner = new OwnerState(set) { StudyTransportUnavailable = true };
+
+        CardReviewOutcome outcome = await Service(owner).RateAsync(Request(set));
+
+        Assert.True(outcome.ReviewSaved);
+        Assert.Equal(CardStudyEvidenceState.StudyNotConfirmed, outcome.StudyState);
+        Assert.Equal("StudyTransportUnavailable", outcome.StudyCode);
+        Assert.Equal(1, owner.PersonalCommits);
+        Assert.Equal(1, owner.StudyAttempts);
+    }
+
+    [Fact]
+    public async Task AStudyReceiptForAnotherOperationIsNeverAccepted()
+    {
+        CardSet set = Deck("verified-topic");
+        var owner = new OwnerState(set) { ReturnMismatchedStudyOperation = true };
+
+        CardOperationException error = await Assert.ThrowsAsync<CardOperationException>(
+            () => Service(owner).RateAsync(Request(set)));
+
+        Assert.Equal(CardFailureCode.InvalidState, error.Code);
+        Assert.Equal(1, owner.PersonalCommits);
+    }
+
+    [Fact]
+    public async Task PrivateReviewReceiptCannotSubstituteAnotherPrincipal()
+    {
+        CardSet set = Deck("topic");
+        var owner = new OwnerState(set) { ReturnBadPrivateReceipt = true };
+
+        CardOperationException error = await Assert.ThrowsAsync<CardOperationException>(
+            () => Service(owner).RateAsync(Request(set)));
+
+        Assert.Equal(CardFailureCode.InvalidState, error.Code);
         Assert.Equal(0, owner.StudyAttempts);
     }
 
