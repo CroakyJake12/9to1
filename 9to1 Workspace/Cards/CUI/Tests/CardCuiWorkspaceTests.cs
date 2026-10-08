@@ -88,6 +88,43 @@ public sealed class CardCuiWorkspaceTests
     }
 
     [Fact]
+    public async Task SubjectAndTopicSidebarFiltersWithoutDuplicatingOrSavingChanges()
+    {
+        CardSet empty = CardSetOperations.Create("owner:alpha", "Topics");
+        CardSet set = CardSetOperations.AddCards(empty,
+            [(Side("Card A"), Side("A")), (Side("Card B"), Side("B"))],
+            empty.Revision, CardInteractionMode.Edit);
+        Guid first = set.Cards[0].CardId;
+        Guid second = set.Cards[1].CardId;
+        set = CardSetOperations.AssignGrouping(set, first, "Law", "Mens rea",
+            null, set.Revision, CardInteractionMode.Edit);
+        set = CardSetOperations.AssignGrouping(set, second, "Maths", "Mechanics",
+            null, set.Revision, CardInteractionMode.Edit);
+        var state = new SceneState(set);
+        var ui = new CardCuiWorkspace(state, new CardMutationGateway(state, state, state), state, state);
+        state.Ui = ui;
+
+        await ui.DispatchAsync("9to1.Cards.Open", null);
+        Assert.Equal("Grouping: set", ui.GroupModeLabel);
+        await ui.DispatchAsync("9to1.Cards.CycleGrouping", null);
+        Assert.Equal("Grouping: subject", ui.GroupModeLabel);
+        Assert.Equal(new[] { "Law", "Maths" }, ui.GroupNames);
+        Assert.Equal(first, ui.SelectedCardId);
+        Assert.True(ui.TrySetValue("SelectedGroupIndex", 1));
+        Assert.Equal(second, ui.SelectedCardId);
+        Assert.False(ui.TrySetValue("SelectedGroupIndex", 100));
+        Assert.Equal("1 / 1", ui.PositionLabel);
+        await ui.DispatchAsync("9to1.Cards.CycleGrouping", null);
+        Assert.Equal("Grouping: topic", ui.GroupModeLabel);
+        Assert.Contains("Mens rea", ui.GroupNames);
+        Assert.Contains("Mechanics", ui.GroupNames);
+        Assert.Equal(set.SetId, state.Canonical.SetId);
+        Assert.Equal(set.Revision, state.Canonical.Revision);
+        Assert.Equal(0, state.Commits);
+        Assert.Contains("session only", ui.Status);
+    }
+
+    [Fact]
     public async Task PersonalReviewRequiresActualReceiptButDoesNotMutateSharedDeck()
     {
         SceneState state = Build();
