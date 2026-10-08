@@ -124,6 +124,35 @@ commit receipts and personal review receipts using **test-only** owner
 fakes. A separate CI job exercises the real CUI project and test graph;
 it must pass before this CUI slice is labelled build-verified.
 
+## Focused navigation and preference receipts — current contribution
+
+The Cards-owned `CardNavigationSession` now centralises deterministic
+selection, front/back flips, keyboard direction, grouped navigation,
+query filtering and preservation of CardID when the canonical deck is
+refreshed. It publishes a **bounded three-card focused window** (previous,
+current, next), not a duplicate card store or rendered UI. Underlying
+collections are still memory-backed; true large-deck storage paging and
+host-side visual virtualisation are not yet verified.
+
+Vertical navigation is the default; horizontal arrow navigation is
+supported when that preference is chosen. A changed orientation preserves
+the currently selected group and CardID when still present. Deleted or
+filtered-out cards cannot remain selected.
+
+The CUI presenter now delegates focus/group/search/flip/navigation state
+to this shared Cards session, avoiding a second implementation of those
+rules. The `ICardCuiPreferencesOwner` port requires an actual authorised
+settings-owner receipt for durable navigation preference changes. If no
+owner is supplied, orientation is explicitly session-only. A denied write
+leaves the chosen preference unchanged. A real horizontal *visual* layout,
+scroll/touch routing, preferences provider and installed platform rendering
+remain outstanding.
+
+The new core navigation tests can run without the blocked CUI runtime.
+The full CUI action tests still require the repository's vendored Avalonia
+dependency graph, which currently fails independently of Cards source.
+Do not claim runtime/UI verification from a passing parser or core test.
+
 ## Local focused checks
 
 From `9to1 Workspace` with .NET SDK 10 installed:
