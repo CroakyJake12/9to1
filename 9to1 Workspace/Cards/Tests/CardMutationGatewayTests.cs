@@ -118,6 +118,100 @@ public sealed class CardMutationGatewayTests
         Assert.Equal(0, store.CommitCount);
     }
 
+    [Fact]
+    public async Task CreatesRealFrontAndBackAndAcknowledgesRevisionOnlyAfterCommit()
+    {
+        CardSet initial = CardSetOperations.Create("personal:student-a", "Questions");
+        var store = new FakeStore(initial);
+        var gateway = Build(store, new FakeAdmission());
+        var command = new CardMutation.AddCards("new-1", initial.SetId,
+            initial.Revision, CardInteractionMode.Edit,
+            [new CardDraft(NewSide(), NewSide()), new CardDraft(NewSide(), NewSide())]);
+
+        CardMutationOutcome result = await gateway.ExecuteAsync(command);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(initial.Revision + 1, result.CommittedRevision);
+        Assert.Equal(2, store.Current.Cards.Count);
+        Assert.All(store.Current.Cards, card => Assert.NotEqual(Guid.Empty, card.CardId));
+        Assert.NotEqual(store.Current.Cards[0].CardId, store.Current.Cards[1].CardId);
+        Assert.Equal(1, store.CommitCount);
+        CardMutationOutcome replay = await gateway.ExecuteAsync(command);
+        Assert.True(replay.Replayed);
+        Assert.Equal(2, store.Current.Cards.Count);
+        Assert.Equal(1, store.CommitCount);
+    }
+
+    [Fact]
+    public async Task DuplicateKeepsRichContentButUsesNewStableCardId()
+    {
+        CardSet empty = CardSetOperations.Create("personal:student-a", "Questions");
+        CardSet start = CardSetOperations.AddCards(empty, [(NewSide(), NewSide())],
+            empty.Revision, CardInteractionMode.Edit);
+        var store = new FakeStore(start);
+        var gateway = Build(store, new FakeAdmission());
+        var command = new CardMutation.Duplicate("duplicate-1", start.SetId,
+            start.Revision, CardInteractionMode.Edit, start.Cards[0].CardId);
+
+        var result = await gateway.ExecuteAsync(command);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(2, store.Current.Cards.Count);
+        Assert.Equal(start.Cards[0].CardId, store.Current.Cards[0].CardId);
+        Assert.NotEqual(start.Cards[0].CardId, store.Current.Cards[1].CardId);
+        Assert.True(System.Text.Json.JsonElement.DeepEquals(start.Cards[0].Front.Document,
+            store.Current.Cards[1].Front.Document));
+    }
+
+    [Fact]
+    public async Task ViewModeNeverCreatesOrDuplicatesCards()
+    {
+        CardSet initial = CardSetOperations.Create("personal:student-a", "Questions");
+        var store = new FakeStore(initial);
+        var gateway = Build(store, new FakeAdmission());
+        var add = new CardMutation.AddCards("create-view", initial.SetId,
+            initial.Revision, CardInteractionMode.View, [new CardDraft(NewSide(), NewSide())]);
+
+        var failure = await Assert.ThrowsAsync<CardOperationException>(() => gateway.ExecuteAsync(add));
+
+        Assert.Equal(CardFailureCode.ViewIsReadOnly, failure.Code);
+        Assert.Empty(store.Current.Cards);
+        Assert.Equal(0, store.CommitCount);
+    }
+
+    [Fact]
+    public async Task InvalidBulkCreationDoesNotCommitPartialResults()
+    {
+        CardSet initial = CardSetOperations.Create("personal:student-a", "Questions");
+        var store = new FakeStore(initial);
+        var gateway = Build(store, new FakeAdmission());
+        CardSide invalid = NewSide() with { DocumentFormat = "" };
+        var command = new CardMutation.AddCards("bad-create", initial.SetId,
+            initial.Revision, CardInteractionMode.Edit,
+            [new CardDraft(NewSide(), NewSide()), new CardDraft(invalid, NewSide())]);
+
+        var failure = await Assert.ThrowsAsync<CardOperationException>(() => gateway.ExecuteAsync(command));
+
+        Assert.Equal(CardFailureCode.InvalidContent, failure.Code);
+        Assert.Empty(store.Current.Cards);
+        Assert.Equal(0, store.CommitCount);
+    }
+
+    [Fact]
+    public async Task DeniedCreationCannotManufactureCommittedCards()
+    {
+        CardSet initial = CardSetOperations.Create("personal:student-a", "Questions");
+        var store = new FakeStore(initial);
+        var gateway = Build(store, new FakeAdmission { Allowed = false });
+        var command = new CardMutation.AddCards("no-create", initial.SetId,
+            initial.Revision, CardInteractionMode.Edit, [new CardDraft(NewSide(), NewSide())]);
+
+        CardMutationOutcome outcome = await gateway.ExecuteAsync(command);
+        Assert.False(outcome.Succeeded);
+        Assert.Empty(store.Current.Cards);
+        Assert.Equal(0, store.CommitCount);
+    }
+
     private static CardSide NewSide() => new()
     {
         DocumentFormat = "9to1.shared-productivity/1",
