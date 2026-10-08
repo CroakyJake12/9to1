@@ -122,3 +122,37 @@ jobs:
           path: |
             9to1 Workspace/Cards/CUI/Tests/TestResults/**/*.trx
           retention-days: 14
+
+  test-cui-language:
+    name: Cards CUI parser-only contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact Cards branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.401'
+
+      - name: Restore canonical Core and Language graph
+        run: dotnet restore "9to1 Workspace/Cards/CUI/MarkupTests/HavenOS.Cards.CUI.MarkupTests.csproj" --nologo
+
+      - name: Test Cards authored markup with the real parser
+        run: |
+          dotnet test "9to1 Workspace/Cards/CUI/MarkupTests/HavenOS.Cards.CUI.MarkupTests.csproj" \
+            -c Release --no-restore --nologo \
+            --logger "trx;LogFileName=Cards-CUI-Markup-Release.trx"
+
+      - name: Preserve parser check evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cards-cui-parser-${{ github.sha }}
+          if-no-files-found: warn
+          path: |
+            9to1 Workspace/Cards/CUI/MarkupTests/TestResults/**/*.trx
+          retention-days: 14
