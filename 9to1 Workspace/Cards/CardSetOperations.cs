@@ -71,6 +71,47 @@ public static class CardSetOperations
         return Next(set, cards);
     }
 
+    /// <summary>
+    /// Apply multiple side edits as one atomic set revision. An invalid or stale
+    /// card rejects the entire batch; no caller-owned source is modified.
+    /// </summary>
+    public static CardSet BulkEditSides(CardSet set, IEnumerable<CardSideEdit> edits,
+        long expectedRevision, CardInteractionMode mode)
+    {
+        EnsureWritable(set, expectedRevision, mode);
+        ArgumentNullException.ThrowIfNull(edits);
+        CardSideEdit[] batch = edits.ToArray();
+        if (batch.Length == 0)
+            throw Fail(CardFailureCode.InvalidContent, "At least one side edit is required.");
+
+        var updated = set.Cards.ToArray();
+        var seen = new HashSet<Guid>();
+        foreach (CardSideEdit edit in batch)
+        {
+            if (edit is null || !seen.Add(edit.CardId))
+                throw Fail(CardFailureCode.DuplicateCard, "Each CardID may occur only once in an atomic edit.");
+            if (edit.Front is null && edit.Back is null)
+                throw Fail(CardFailureCode.InvalidContent, "A side edit must replace at least one side.");
+            edit.Front?.Validate();
+            edit.Back?.Validate();
+
+            int index = ActiveCardIndex(updated, edit.CardId);
+            CardEntry original = updated[index];
+            if (original.Revision != edit.ExpectedCardRevision)
+                throw Fail(CardFailureCode.RevisionConflict,
+                    $"Card {edit.CardId:D} is at revision {original.Revision}, not {edit.ExpectedCardRevision}.");
+
+            updated[index] = original with
+            {
+                Front = edit.Front is null ? original.Front : CloneSide(edit.Front),
+                Back = edit.Back is null ? original.Back : CloneSide(edit.Back),
+                Revision = checked(original.Revision + 1),
+            };
+        }
+
+        return Next(set, updated);
+    }
+
     public static CardSet Duplicate(CardSet set, Guid cardId, long expectedRevision, CardInteractionMode mode)
     {
         EnsureWritable(set, expectedRevision, mode);
@@ -105,6 +146,46 @@ public static class CardSetOperations
             Revision = checked(original.Revision + 1),
         };
         return Next(set, cards);
+    }
+
+    public static CardSet RenameSet(CardSet set, string title,
+        long expectedRevision, CardInteractionMode mode)
+    {
+        EnsureWritable(set, expectedRevision, mode);
+        if (string.IsNullOrWhiteSpace(title))
+            throw Fail(CardFailureCode.InvalidState, "A set title is required.");
+        string renamed = title.Trim();
+        return string.Equals(set.Title, renamed, StringComparison.Ordinal)
+            ? set
+            : set with { Title = renamed, Revision = checked(set.Revision + 1) };
+    }
+
+    /// <summary>
+    /// Reorder by visible position, without moving a hidden tombstone into a
+    /// visible viewport or changing its original physical membership slot.
+    /// </summary>
+    public static CardSet MoveVisible(CardSet set, Guid cardId, int destinationIndex,
+        long expectedRevision, CardInteractionMode mode)
+    {
+        EnsureWritable(set, expectedRevision, mode);
+        var live = set.Cards.Where(card => !card.IsDeleted).ToList();
+        int currentIndex = live.FindIndex(card => card.CardId == cardId);
+        if (currentIndex < 0)
+        {
+            _ = ActiveCardIndex(set.Cards, cardId);
+            throw Fail(CardFailureCode.CardNotFound, "CardID is not present in this set.");
+        }
+        if (destinationIndex < 0 || destinationIndex >= live.Count)
+            throw Fail(CardFailureCode.InvalidOrdering, "Visible destination is outside the live card list.");
+        if (destinationIndex == currentIndex)
+            return set;
+        CardEntry moving = live[currentIndex];
+        live.RemoveAt(currentIndex);
+        live.Insert(destinationIndex, moving);
+        int liveIndex = 0;
+        CardEntry[] reordered = set.Cards.Select(card =>
+            card.IsDeleted ? card : live[liveIndex++]).ToArray();
+        return Next(set, reordered);
     }
 
     // newIndex addresses the entire ordered membership including hidden tombstones.
@@ -181,6 +262,30 @@ public static class CardSetOperations
                 || card.Front.SearchText.Contains(query, StringComparison.OrdinalIgnoreCase)
                 || card.Back.SearchText.Contains(query, StringComparison.OrdinalIgnoreCase)))
             .ToArray();
+    }
+
+    /// <summary>
+    /// Return at most 100 visible entries and one has-more flag, suitable for
+    /// a virtualised viewport. SearchText is a derived index, not rich content.
+    /// </summary>
+    public static CardPage GetPage(CardSet set, int offset, int pageSize,
+        string? query = null, string? subjectId = null, string? topicId = null)
+    {
+        Validate(set);
+        if (offset < 0 || pageSize < 1 || pageSize > 100)
+            throw Fail(CardFailureCode.InvalidPage, "Page offset must be nonnegative and size must be 1–100.");
+
+        string search = query?.Trim() ?? string.Empty;
+        IEnumerable<CardEntry> filtered = set.Cards.Where(card => !card.IsDeleted
+            && (subjectId is null || string.Equals(card.SubjectId, subjectId, StringComparison.Ordinal))
+            && (topicId is null || string.Equals(card.TopicId, topicId, StringComparison.Ordinal))
+            && (search.Length == 0
+                || card.Front.SearchText.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || card.Back.SearchText.Contains(search, StringComparison.OrdinalIgnoreCase)));
+        CardEntry[] window = filtered.Skip(offset).Take(pageSize + 1).ToArray();
+        bool hasMore = window.Length > pageSize;
+        return new CardPage(set.SetId, set.Revision, offset,
+            hasMore ? window[..pageSize] : window, hasMore);
     }
 
     public static IReadOnlyDictionary<string, IReadOnlyList<CardEntry>> Group(
