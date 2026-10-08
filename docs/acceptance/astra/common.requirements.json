@@ -1,0 +1,607 @@
+{
+  "domain": "Common application acceptance",
+  "preparation_only": true,
+  "coverage_note": "Initial cross-application test-family mapping. Product-specific canonical sections, complete donor features, atomic assertions, documented exceptions and per-platform execution must be reconciled for every admitted candidate before full acceptance. No product tests executed.",
+  "requirements": [
+    {
+      "id": "CM-001",
+      "requirement": "Complete product functionality and discoverable real workflows",
+      "sources": [
+        {
+          "document": "development-specification.txt",
+          "line_start": 41,
+          "line_end": 51,
+          "quote": "Clarification — working apps and real login, not merely a protected preview\nThe staging milestone requires the actual in-scope Windows and browser applications with their required functionality implemented and connected, including genuine application sign-in and session handling. Deferring deep acceptance is not permission to defer implementation, substitute mock or partial applications, or call a launch-only shell complete. Short staging checks are not proof of full acceptance; known missing or broken required app/login functionality remains delivery work. Ready apps may be staged progressively while the remainder is finished.\nThe separate public-facing main/marketing website, its finished public content/design and production WordPress migration/cutover need not be completed for this staging milestone if they are not ready. This does not defer the web apps themselves, working account/login routes, required API/backend services, or functionality inside the Sites authoring app. Keep the current public website unchanged unless a separate instruction authorises changing it.\nAn outer server/edge login gate is additional protection for private staging, not a replacement for genuine CAKE ID/application authentication. An admitted tester must be able to use the application's real login and authorised account-backed workflows; no fake user, shared administrator session, authentication bypass or inert login page counts. Isolated test accounts/data and existing permissions continue. Complete the working app set on both surfaces first, then concentrate on exhaustive acceptance of those exact builds. Label builds STAGED — DEEP ACCEPTANCE PENDING until that later verification is complete.\nJacob's latest explicit decision is to prioritise staging the full in-scope applications on BOTH the web, behind gated login access, and Windows. Deep acceptance follows once all applications are staged. Acceptance is NOT dropped, weakened or marked passed by staging. This sequencing instruction supersedes earlier directions that made complete app/pass/platform acceptance a prerequisite for private staging or candidate downloads. The missed 07:00 milestone remains history; the immediate delivery target is 11:00 Europe/London today, Monday 5 October 2026, for the working app set on Windows and gated web with real app login, not an unsupported claim of final release acceptance.\nScope is the current launch specification, including incorporated Lunar Eclipse requirements, reconciled with 9to1 Post-Release Updates. The Agentic Update from that roadmap is explicitly pulled forward into the current development push under the priority order above; it MUST NOT be deferred merely because older roadmap wording described it as post-launch. Other expressly post-release additions remain post-release unless they are a necessary dependency of the pulled-forward framework/agentic work or a later explicit instruction brings them forward. Existing baseline launch requirements remain launch requirements and MUST NOT be silently deferred. Record exact app/platform applicability rather than blindly reusing the historical 30-app denominator.\nStage real integrated applications and their existing functionality, not replacement shells, mock dashboards or source-only archives. Publish ready apps progressively while completing the rest. Supply usable Windows packages with their required dependencies and a protected web deployment with working navigation. Before private staging, perform a short build/launch/main-workflow smoke check and verify the actual access boundary and isolated test-data configuration. For an editor, include one basic save/reopen check with disposable data. These are staging checks, not the complete acceptance programme. Record remaining defects clearly; do not label an app complete when its principal workflow is still broken.\nWeb staging must restrict access to Jacob and explicitly authorised testers at a server/edge boundary protecting application routes and private APIs, not just hide the UI behind a client-side login. Use isolated staging accounts/data/storage and no production secrets or customer-data migration. Windows staging uses separate test profiles/data and the existing supported trust mechanisms; do not bypass Home authorisation or disable OS security. Keep paid/live billing, external mail/inference and production cutover disabled unless separately authorised. Block or isolate only an unsafe/unusable affected operation; do not make unrelated deep acceptance suites prerequisites for the entire staging set.\nTeam A owns Windows/native/runtime work, Team B browser applications, and Team C the single integration/deployment and handoff path. Preserve reviewed work and use the existing private delivery route. Do not start another broad worker rollout or repeatedly reconstruct/retest unchanged evidence. Batch focused checks, return only useful failure summaries, and preserve sufficient execution capacity for packaging, deployment and handoff rather than spending it all on repeated audits.\nAfter the web AND Windows staging set is available, prioritise deep acceptance on those exact versions: full functional/donor parity, accessibility, permissions/privacy, recovery/concurrency, resource and platform matrices, provider integration and release signing/install requirements. Keep every required test and every failure/not-run state. Existing independent validation may continue when it does not delay staging; do not terminate healthy running tests merely to reorder the queue. Production/RC acceptance and acceptedHead remain separate from staged status.\nReport web staged n/N, Windows packages available n/N, apps with both applicable staging surfaces n/N, and acceptance verified separately. Provide real URLs/downloads, source/package/deployment identities, known issues and a resumable handoff. Keep artifacts immutable and version later fixes. If execution ends before deep acceptance, preserve the accessible staging builds and pending tests, explicitly unverified; do not claim background work continues or that final release acceptance passed."
+        }
+      ],
+      "platforms": [
+        "Windows",
+        "web",
+        "9to1-OS where declared applicable"
+      ],
+      "steps": [
+        "Use the packaged app to complete all named core workflows from ordinary navigation; inventory each visible operation and compare the complete canonical product section and retained donor operations."
+      ],
+      "expected": [
+        "No inert control, mock state, missing principal function or launch-only shell; every mandatory applicable operation is separately evidenced."
+      ],
+      "evidence_required": [
+        "Final source/artifact/dependency/spec identity and environment",
+        "Original assertion, exact user/API steps, canonical IDs, state before/after and logs",
+        "Actual rendered screenshots and interaction evidence where relevant"
+      ],
+      "status": "NOT EXECUTED",
+      "reason": "No smoke-qualified candidate received; this is initial reusable preparation."
+    },
+    {
+      "id": "CM-002",
+      "requirement": "Canonical donor source, functionality and quality-of-life parity",
+      "sources": [
+        {
+          "document": "development-specification.txt",
+          "line_start": 913,
+          "line_end": 913,
+          "quote": "Where an app declares a donor/upstream project, the implementation MUST contain the actual donor source (forked, vendored or otherwise included according to the repository architecture) in the app’s source tree/build graph. Runtime installation MUST NOT require the user to separately download the donor application merely to obtain donor functionality. The selected donor revision/version and local modifications MUST be traceable."
+        }
+      ],
+      "platforms": [
+        "Windows",
+        "web",
+        "9to1-OS where declared applicable"
+      ],
+      "steps": [
+        "Trace pinned donor source into the actual build; execute donor-derived editing, keyboard, menus and edge-case operations using a disposable realistic document."
+      ],
+      "expected": [
+        "Actual donor code/revision/licence and complete retained capability surface are traceable; documented explicit exceptions only."
+      ],
+      "evidence_required": [
+        "Final source/artifact/dependency/spec identity and environment",
+        "Original assertion, exact user/API steps, canonical IDs, state before/after and logs",
+        "Actual rendered screenshots and interaction evidence where relevant"
+      ],
+      "status": "NOT EXECUTED",
+      "reason": "No smoke-qualified candidate received; this is initial reusable preparation."
+    },
+    {
+      "id": "CM-003",
+      "requirement": "Cross-app canonical artifact integration",
+      "sources": [
+        {
+          "document": "development-specification.txt",
+          "line_start": 903,
+          "line_end": 903,
+          "quote": "* Deep interoperability is mandatory. 9to1 apps are not independent silos. When a target app declares support for an artifact type, links/embeds MUST reference the canonical underlying document/project/entity rather than create an unmanaged duplicate. Unsupported artifact/app combinations MUST fail explicitly rather than silently flattening, copying or losing functionality."
+        }
+      ],
+      "platforms": [
+        "Windows",
+        "web",
+        "9to1-OS where declared applicable"
+      ],
+      "steps": [
+        "Create an authorised artifact in its owner, embed/link it in a declared consumer, edit in both views, rename/move and reopen."
+      ],
+      "expected": [
+        "The same canonical artifact ID and revision is observed; unsupported combinations fail explicitly without flattening or unmanaged copies."
+      ],
+      "evidence_required": [
+        "Final source/artifact/dependency/spec identity and environment",
+        "Original assertion, exact user/API steps, canonical IDs, state before/after and logs",
+        "Actual rendered screenshots and interaction evidence where relevant"
+      ],
+      "status": "NOT EXECUTED",
+      "reason": "No smoke-qualified candidate received; this is initial reusable preparation."
+    },
+    {
+      "id": "CM-004",
+      "requirement": "All user operations have equivalent typed APIs",
+      "sources": [
+        {
+          "document": "development-specification.txt",
+          "line_start": 199,
+          "line_end": 199,
+          "quote": "Every 9to1 app must expose a first-party automation API whose action surface is exhaustive for user-accessible app functionality. An authorised MCP, plugin, script, agent or other client must be able to perform anything the user can perform in the app through supported UI, subject to the same account, object, platform and security restrictions. APIs must not be intentionally limited to a small automation subset while important user actions remain UI-only."
+        }
+      ],
+      "platforms": [
+        "Windows",
+        "web",
+        "9to1-OS where declared applicable"
+      ],
+      "steps": [
+        "Enumerate UI operations against the action catalogue; run equivalent disposable operations through UI and an authorised API caller."
+      ],
+      "expected": [
+        "Equivalent state, validation, risk, scope, errors, cancellation and audit results; no UI-only mandatory feature or competing implementation."
+      ],
+      "evidence_required": [
+        "Final source/artifact/dependency/spec identity and environment",
+        "Original assertion, exact user/API steps, canonical IDs, state before/after and logs",
+        "Actual rendered screenshots and interaction evidence where relevant"
+      ],
+      "status": "NOT EXECUTED",
+      "reason": "No smoke-qualified candidate received; this is initial reusable preparation."
+    },
+    {
+      "id": "CM-005",
+      "requirement": "Home permission grant lifecycle and actual dispatch boundary",
+      "sources": [
+        {
+          "document": "development-specification.txt",
+          "line_start": 220,
+          "line_end": 220,
+          "quote": "9to1 Home is the central permission broker for app APIs. A caller never dispatches a protected action directly to the target app without Home first resolving its permission state. If Home is not open, 9to1 opens it and shows the approval prompt before the target action executes. A caller may submit the request to the broker, but the requested app action remains PendingApproval until Home grants it."
+        }
+      ],
+      "platforms": [
+        "Windows",
+        "web",
+        "9to1-OS where declared applicable"
+      ],
+      "steps": [
+        "With Home closed, request a protected action; exercise Decline, Block, Accept, 30-day trust expiry, temporary action/time limits, Always Trust warning, scope escalation and revocation before queued dispatch."
+      ],
+      "expected": [
+        "Actions remain PendingApproval until authorised; denied/revoked actions have no effect, caller-name spoofing never inherits trust, high-risk and underlying account limits remain enforced."
+      ],
+      "evidence_required": [
+        "Final source/artifact/dependency/spec identity and environment",
+        "Original assertion, exact user/API steps, canonical IDs, state before/after and logs",
+        "Actual rendered screenshots and interaction evidence where relevant"
+      ],
+      "status": "NOT EXECUTED",
+      "reason": "No smoke-qualified candidate received; this is initial reusable preparation."
+    },
+    {
+      "id": "CM-006",
+      "requirement": "Genuine CAKE ID sign-in and server authority",
+      "sources": [
+        {
+          "document": "development-specification.txt",
+          "line_start": 1480,
+          "line_end": 1480,
+          "quote": "9to1 web apps authenticate against CAKEMODS/CAKE ID using a browser-based OAuth 2.0 Authorization Code flow with PKCE or an equivalent secure public-client flow. Desktop, web and open-source/custom clients are treated as untrusted public clients: they receive short-lived user access tokens and never contain provider keys, billing secrets or entitlement-signing secrets."
+        }
+      ],
+      "platforms": [
+        "Windows",
+        "web",
+        "9to1-OS where declared applicable"
+      ],
+      "steps": [
+        "Use isolated real test accounts to sign in/out, inspect/revoke sessions, restart and request account-backed objects; exercise invalid/expired sessions and client-modified entitlement claims."
+      ],
+      "expected": [
+        "Real authorised canonical account/session; short-lived public-client credentials, server-enforced account/entitlement scopes and structured rejection; no fake user/shared admin substitute."
+      ],
+      "evidence_required": [
+        "Final source/artifact/dependency/spec identity and environment",
+        "Original assertion, exact user/API steps, canonical IDs, state before/after and logs",
+        "Actual rendered screenshots and interaction evidence where relevant"
+      ],
+      "status": "NOT EXECUTED",
+      "reason": "No smoke-qualified candidate received; this is initial reusable preparation."
+    },
+    {
+      "id": "CM-007",
+      "requirement": "Web private access boundary independently from application login",
+      "sources": [
+        {
+          "document": "development-specification.txt",
+          "line_start": 48,
+          "line_end": 48,
+          "quote": "Web staging must restrict access to Jacob and explicitly authorised testers at a server/edge boundary protecting application routes and private APIs, not just hide the UI behind a client-side login. Use isolated staging accounts/data/storage and no production secrets or customer-data migration. Windows staging uses separate test profiles/data and the existing supported trust mechanisms; do not bypass Home authorisation or disable OS security. Keep paid/live billing, external mail/inference and production cutover disabled unless separately authorised. Block or isolate only an unsafe/unusable affected operation; do not make unrelated deep acceptance suites prerequisites for the entire staging set."
+        }
+      ],
+      "platforms": [
+        "Windows",
+        "web",
+        "9to1-OS where declared applicable"
+      ],
+      "steps": [
+        "From an unauthorised browser and API client request application routes, asset/data APIs and direct object URLs; then enter as an authorised tester and use the actual app login."
+      ],
+      "expected": [
+        "Server/edge boundary rejects outsiders for private routes and APIs; application sign-in still governs account/object access and test data is isolated."
+      ],
+      "evidence_required": [
+        "Final source/artifact/dependency/spec identity and environment",
+        "Original assertion, exact user/API steps, canonical IDs, state before/after and logs",
+        "Actual rendered screenshots and interaction evidence where relevant"
+      ],
+      "status": "NOT EXECUTED",
+      "reason": "No smoke-qualified candidate received; this is initial reusable preparation."
+    },
+    {
+      "id": "CM-008",
+      "requirement": "Native package dependencies, install, update, repair and rollback",
+      "sources": [
+        {
+          "document": "development-specification.txt",
+          "line_start": 11736,
+          "line_end": 11736,
+          "quote": "The single trusted installer MUST install Home, all mandatory modules, the selected app and its app-required dependencies. Selecting a second app MUST reuse compatible shared packages. Internal platform package formats may be used; separate user-facing standalone MSIX installers for individual apps are not the distribution model. Native Windows and 9to1-OS use this contract through their supported packaging mechanisms. Browser apps use authenticated shared web services and MUST NOT require a local Home installation."
+        }
+      ],
+      "platforms": [
+        "Windows",
+        "web",
+        "9to1-OS where declared applicable"
+      ],
+      "steps": [
+        "On each admitted supported native architecture install from the exact installer; select two apps, cancel optional module installation, interrupt update/activation, repair, rollback and uninstall one app."
+      ],
+      "expected": [
+        "Home and compatible mandatory/shared dependencies install and are reused; staged/atomic activation or recovery preserves valid install and user artifacts; separate user-facing per-app MSIX is not the required model."
+      ],
+      "evidence_required": [
+        "Final source/artifact/dependency/spec identity and environment",
+        "Original assertion, exact user/API steps, canonical IDs, state before/after and logs",
+        "Actual rendered screenshots and interaction evidence where relevant"
+      ],
+      "status": "NOT EXECUTED",
+      "reason": "No smoke-qualified candidate received; this is initial reusable preparation."
+    },
+    {
+      "id": "CM-009",
+      "requirement": "Versioned stable persistence and unknown schema recovery",
+      "sources": [
+        {
+          "document": "development-specification.txt",
+          "line_start": 97,
+          "line_end": 97,
+          "quote": "Persisted formats MUST be versioned. Readers MUST reject, migrate or preserve unknown incompatible schema versions explicitly; they MUST NOT reinterpret unknown data using a guessed schema."
+        }
+      ],
+      "platforms": [
+        "Windows",
+        "web",
+        "9to1-OS where declared applicable"
+      ],
+      "steps": [
+        "Create duplicate display names, edit/save, close/reopen, rename/move and restore; test supported migration and an unknown incompatible persisted version on disposable copied data."
+      ],
+      "expected": [
+        "Stable identity/history survives; unknown formats are explicitly rejected/migrated/preserved without guessed reinterpretation or destroying the only copy."
+      ],
+      "evidence_required": [
+        "Final source/artifact/dependency/spec identity and environment",
+        "Original assertion, exact user/API steps, canonical IDs, state before/after and logs",
+        "Actual rendered screenshots and interaction evidence where relevant"
+      ],
+      "status": "NOT EXECUTED",
+      "reason": "No smoke-qualified candidate received; this is initial reusable preparation."
+    },
+    {
+      "id": "CM-010",
+      "requirement": "Atomic mutations, conflict and partial success integrity",
+      "sources": [
+        {
+          "document": "development-specification.txt",
+          "line_start": 91,
+          "line_end": 91,
+          "quote": "Mutations MUST be atomic at the smallest user-visible operation boundary unless the operation explicitly declares partial-success semantics. When a multi-object operation can partially succeed, the result MUST identify every succeeded, failed, skipped and rolled-back item."
+        }
+      ],
+      "platforms": [
+        "Windows",
+        "web",
+        "9to1-OS where declared applicable"
+      ],
+      "steps": [
+        "Interrupt a multi-object mutation at supported failure boundaries and race two authorised clients at different revisions; reopen and inspect all target IDs."
+      ],
+      "expected": [
+        "Atomic boundary holds or structured result lists succeeded/failed/skipped/rolled-back items; stale revisions do not silently overwrite accepted work."
+      ],
+      "evidence_required": [
+        "Final source/artifact/dependency/spec identity and environment",
+        "Original assertion, exact user/API steps, canonical IDs, state before/after and logs",
+        "Actual rendered screenshots and interaction evidence where relevant"
+      ],
+      "status": "NOT EXECUTED",
+      "reason": "No smoke-qualified candidate received; this is initial reusable preparation."
+    },
+    {
+      "id": "CM-011",
+      "requirement": "Durable recovery and consequential-action replay",
+      "sources": [
+        {
+          "document": "development-specification.txt",
+          "line_start": 110,
+          "line_end": 110,
+          "quote": "APIs that enumerate unbounded collections MUST define pagination or streaming. APIs that can produce long-running work MUST expose request/job identity, status and cancellation. APIs that retry or can be replayed MUST define idempotency semantics so an interrupted client does not accidentally duplicate consequential mutations."
+        }
+      ],
+      "platforms": [
+        "Windows",
+        "web",
+        "9to1-OS where declared applicable"
+      ],
+      "steps": [
+        "Page a realistic data set; start/cancel a long operation; lose the response after an authorised consequential action and resume using the same request/task ID."
+      ],
+      "expected": [
+        "No skipped/duplicate records; request/job identity, status/cancellation and idempotent reconciliation prevent duplicated effects."
+      ],
+      "evidence_required": [
+        "Final source/artifact/dependency/spec identity and environment",
+        "Original assertion, exact user/API steps, canonical IDs, state before/after and logs",
+        "Actual rendered screenshots and interaction evidence where relevant"
+      ],
+      "status": "NOT EXECUTED",
+      "reason": "No smoke-qualified candidate received; this is initial reusable preparation."
+    },
+    {
+      "id": "CM-012",
+      "requirement": "Privacy ceiling, minimisation and cloud/local boundary",
+      "sources": [
+        {
+          "document": "development-specification.txt",
+          "line_start": 194,
+          "line_end": 194,
+          "quote": "Privacy acceptance MUST include automated and manual tests for least-privilege access, unauthorised cross-app data access, cloud/local boundary enforcement, retention/deletion propagation, export correctness, consent/withdrawal, encryption-state truthfulness, metadata minimisation, log redaction, provider failure and jurisdiction-profile changes. A product is not privacy-complete merely because its privacy policy text exists."
+        }
+      ],
+      "platforms": [
+        "Windows",
+        "web",
+        "9to1-OS where declared applicable"
+      ],
+      "steps": [
+        "Exercise scoped cross-app access, opt-out/consent withdrawal, local-to-cloud routing denial, retention/deletion propagation and export; inspect disposable diagnostic/audit outputs for secrets."
+      ],
+      "expected": [
+        "No unauthorised content exposure, remote transfer or stale readable cache; encryption-state claims are truthful and logs redact secrets/unnecessary personal data."
+      ],
+      "evidence_required": [
+        "Final source/artifact/dependency/spec identity and environment",
+        "Original assertion, exact user/API steps, canonical IDs, state before/after and logs",
+        "Actual rendered screenshots and interaction evidence where relevant"
+      ],
+      "status": "NOT EXECUTED",
+      "reason": "No smoke-qualified candidate received; this is initial reusable preparation."
+    },
+    {
+      "id": "CM-013",
+      "requirement": "CUI themes, actual rendered inputs and responsiveness",
+      "sources": [
+        {
+          "document": "development-specification.txt",
+          "line_start": 1000,
+          "line_end": 1000,
+          "quote": "CUI/theme acceptance MUST exercise switching Home's preferred theme among Glow, Professional and a supported custom theme, applying `Name=\"user_preference\"` in at least two independent running apps, observing correct live/restored styling across restart and signed-in supported surfaces, then testing offline cached preference, missing/invalid custom theme fallback, descendant explicit override and return to parent preference, plus reduced-motion/contrast/accessibility inheritance. Theme updates MUST NOT change user content or canonical artifact state."
+        }
+      ],
+      "platforms": [
+        "Windows",
+        "web",
+        "9to1-OS where declared applicable"
+      ],
+      "steps": [
+        "Use actual running independent apps at desktop and narrow supported sizes; switch Glow, Professional and installed custom theme from Home; restart/offline/fallback/descendant override/reduced-motion."
+      ],
+      "expected": [
+        "Canonical shared preference applies live/restored; layout remains usable without clipping; no theme action changes canonical content; capture and inspect actual rendered output."
+      ],
+      "evidence_required": [
+        "Final source/artifact/dependency/spec identity and environment",
+        "Original assertion, exact user/API steps, canonical IDs, state before/after and logs",
+        "Actual rendered screenshots and interaction evidence where relevant"
+      ],
+      "status": "NOT EXECUTED",
+      "reason": "No smoke-qualified candidate received; this is initial reusable preparation."
+    },
+    {
+      "id": "CM-014",
+      "requirement": "Keyboard, screen-reader, focus, contrast, scaling and localisation",
+      "sources": [
+        {
+          "document": "development-specification.txt",
+          "line_start": 1279,
+          "line_end": 1279,
+          "quote": "CUI MUST make accessible behaviour the default. Interactive built-ins provide appropriate semantic roles, focusability and keyboard behaviour unless explicitly overridden for a valid reason."
+        }
+      ],
+      "platforms": [
+        "Windows",
+        "web",
+        "9to1-OS where declared applicable"
+      ],
+      "steps": [
+        "Complete all principal journeys by keyboard and supported assistive technology; test modal focus/restoration, hidden/disabled controls, scaling/high contrast/reduced motion and RTL/localised formats."
+      ],
+      "expected": [
+        "Semantic names/roles and visible focus are correct, hidden/inactive elements do not trap focus, controls remain reachable and state is not conveyed only through colour."
+      ],
+      "evidence_required": [
+        "Final source/artifact/dependency/spec identity and environment",
+        "Original assertion, exact user/API steps, canonical IDs, state before/after and logs",
+        "Actual rendered screenshots and interaction evidence where relevant"
+      ],
+      "status": "NOT EXECUTED",
+      "reason": "No smoke-qualified candidate received; this is initial reusable preparation."
+    },
+    {
+      "id": "CM-015",
+      "requirement": "AI integration uses genuine authorised models and semantic actions",
+      "sources": [
+        {
+          "document": "development-specification.txt",
+          "line_start": 904,
+          "line_end": 904,
+          "quote": "* Spaces is the conversational editing layer. Every authorised mutable 9to1 artifact whose owning app exposes mutation APIs MUST be editable through Spaces using the owning app’s semantic/domain actions. Read-only artifacts MUST be surfaced as read-only with an explicit reason. Spaces MUST NOT substitute raw UI simulation for an available typed action."
+        }
+      ],
+      "platforms": [
+        "Windows",
+        "web",
+        "9to1-OS where declared applicable"
+      ],
+      "steps": [
+        "Select an actual eligible local/cloud model within the authorised route; ask for an owning-app edit and inspect real typed calls, resulting state and canonical project/task IDs."
+      ],
+      "expected": [
+        "Real inference and owning domain actions effect the change; Read mode and revoked access prevent edits; fake provider responses and raw input simulation do not qualify equivalent typed actions."
+      ],
+      "evidence_required": [
+        "Final source/artifact/dependency/spec identity and environment",
+        "Original assertion, exact user/API steps, canonical IDs, state before/after and logs",
+        "Actual rendered screenshots and interaction evidence where relevant"
+      ],
+      "status": "NOT EXECUTED",
+      "reason": "No smoke-qualified candidate received; this is initial reusable preparation."
+    },
+    {
+      "id": "CM-016",
+      "requirement": "Errors, unavailable values and lifecycle truthfulness",
+      "sources": [
+        {
+          "document": "development-specification.txt",
+          "line_start": 113,
+          "line_end": 113,
+          "quote": "Unknown, unavailable and empty values MUST remain distinguishable. A value MUST NOT be replaced with zero, false, an empty string or an invented default merely because the provider/backend cannot supply it. Component-specific contracts such as Dulche’s null/Na distinction override this general rule where defined."
+        }
+      ],
+      "platforms": [
+        "Windows",
+        "web",
+        "9to1-OS where declared applicable"
+      ],
+      "steps": [
+        "Disconnect a required provider, remove a dependency, cancel a pending operation and reopen after supported interruption; compare UI, typed result and audit history."
+      ],
+      "expected": [
+        "Unavailable/error/empty remain distinct and structured; clean lifecycle/cancellation leaves truthful recoverable state, no invented success or unexplained data loss."
+      ],
+      "evidence_required": [
+        "Final source/artifact/dependency/spec identity and environment",
+        "Original assertion, exact user/API steps, canonical IDs, state before/after and logs",
+        "Actual rendered screenshots and interaction evidence where relevant"
+      ],
+      "status": "NOT EXECUTED",
+      "reason": "No smoke-qualified candidate received; this is initial reusable preparation."
+    },
+    {
+      "id": "CM-017",
+      "requirement": "Performance and reliability with realistic user data",
+      "sources": [
+        {
+          "document": "development-specification.txt",
+          "line_start": 699,
+          "line_end": 710,
+          "quote": "23. Performance\nThe agent must consider performance where its implementation could materially affect normal product use. Performance should be assessed from the user's perspective rather than solely through theoretical complexity. The agent should avoid introducing:\n* unnecessary blocking operations;\n* excessive memory usage;\n* avoidable repeated network requests;\n* needless re-rendering;\n* unbounded caches;\n* uncontrolled background loops;\n* excessive startup work;\n* unnecessary polling;\n* and operations that scale poorly with realistic user data.\nOptimisation should not sacrifice correctness without an explicit reason."
+        }
+      ],
+      "platforms": [
+        "Windows",
+        "web",
+        "9to1-OS where declared applicable"
+      ],
+      "steps": [
+        "Use a candidate-specific realistic corpus; measure startup, primary interaction, long operation, memory growth and repeated open/close while inspecting responsiveness and cancellation."
+      ],
+      "expected": [
+        "No uncontrolled loops, unbounded cache or unnecessary polling/full-tree work; specified resource limits and user-visible performance thresholds hold without weakening correctness."
+      ],
+      "evidence_required": [
+        "Final source/artifact/dependency/spec identity and environment",
+        "Original assertion, exact user/API steps, canonical IDs, state before/after and logs",
+        "Actual rendered screenshots and interaction evidence where relevant"
+      ],
+      "status": "NOT EXECUTED",
+      "reason": "No smoke-qualified candidate received; this is initial reusable preparation."
+    },
+    {
+      "id": "CM-018",
+      "requirement": "Independent supported platform contracts and capability negotiation",
+      "sources": [
+        {
+          "document": "development-specification.txt",
+          "line_start": 716,
+          "line_end": 716,
+          "quote": "Where a project supports multiple operating systems, architectures, browsers, devices, or runtime environments, changes must account for the supported matrix. The agent must not unknowingly introduce a dependency on the environment it personally used for development. Platform-specific behaviour should be isolated where appropriate. Where comprehensive multi-platform testing is unavailable, affected platforms must be identified as unverified rather than implicitly claimed as validated."
+        }
+      ],
+      "platforms": [
+        "Windows",
+        "web",
+        "9to1-OS where declared applicable"
+      ],
+      "steps": [
+        "Reconcile the exact platform matrix and scoped exceptions; execute required native Windows and web journeys independently, plus other declared native platforms, browser engines and architectures."
+      ],
+      "expected": [
+        "Each required platform has its own final-artifact evidence; explicit capability limits/exemptions only, unavailable platform execution stays NOT EXECUTED."
+      ],
+      "evidence_required": [
+        "Final source/artifact/dependency/spec identity and environment",
+        "Original assertion, exact user/API steps, canonical IDs, state before/after and logs",
+        "Actual rendered screenshots and interaction evidence where relevant"
+      ],
+      "status": "NOT EXECUTED",
+      "reason": "No smoke-qualified candidate received; this is initial reusable preparation."
+    },
+    {
+      "id": "CM-019",
+      "requirement": "Shared state identity between browser and desktop",
+      "sources": [
+        {
+          "document": "development-specification.txt",
+          "line_start": 1454,
+          "line_end": 1454,
+          "quote": "Cakemods.com MUST host a web version of every 9-1 Workspace/AI product that is not explicitly listed as web-exempt. Web surfaces MUST share the same CAKE ID identity, canonical artifact formats, domain APIs, permission model and underlying server-side entities as desktop equivalents. Browser-specific UI/layout MAY differ, but it MUST NOT create a separate incompatible product model."
+        }
+      ],
+      "platforms": [
+        "Windows",
+        "web",
+        "9to1-OS where declared applicable"
+      ],
+      "steps": [
+        "Open the same authorised account and canonical object on packaged desktop and the pinned web deployment; mutate/reopen through both UI and domain APIs and test permissions."
+      ],
+      "expected": [
+        "Shared CAKE ID/entity/artifact formats/domain operations and grants; browser layout differences do not create a second incompatible data model."
+      ],
+      "evidence_required": [
+        "Final source/artifact/dependency/spec identity and environment",
+        "Original assertion, exact user/API steps, canonical IDs, state before/after and logs",
+        "Actual rendered screenshots and interaction evidence where relevant"
+      ],
+      "status": "NOT EXECUTED",
+      "reason": "No smoke-qualified candidate received; this is initial reusable preparation."
+    },
+    {
+      "id": "CM-020",
+      "requirement": "All original requirements and failures preserved through final qualification",
+      "sources": [
+        {
+          "document": "development-specification.txt",
+          "line_start": 133,
+          "line_end": 133,
+          "quote": "Known failing requirements MUST remain explicitly recorded as open blockers or scoped exceptions. They MUST NOT be omitted from release/completion reporting."
+        }
+      ],
+      "platforms": [
+        "Windows",
+        "web",
+        "9to1-OS where declared applicable"
+      ],
+      "steps": [
+        "Reconcile the final candidate requirement list against original spec/donor assertions and all historical failures; verify each applicable atomic result, evidence binding and any documented exception."
+      ],
+      "expected": [
+        "Every mandatory applicable requirement passes on the final candidate before full VERIFIED; failures/not-executed and independent platform gaps remain visible, with no readiness promotion from preparation/staging/source checks."
+      ],
+      "evidence_required": [
+        "Final source/artifact/dependency/spec identity and environment",
+        "Original assertion, exact user/API steps, canonical IDs, state before/after and logs",
+        "Actual rendered screenshots and interaction evidence where relevant"
+      ],
+      "status": "NOT EXECUTED",
+      "reason": "No smoke-qualified candidate received; this is initial reusable preparation."
+    }
+  ]
+}

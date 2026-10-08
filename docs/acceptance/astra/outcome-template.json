@@ -1,0 +1,31 @@
+{
+  "candidate_id": "REQUIRED_FROM_SMOKE_TESTER",
+  "app": "REQUIRED",
+  "source_revision": "REQUIRED_EXACT_REVISION",
+  "artifact_sha256_or_deployment_identity": "REQUIRED",
+  "spec_snapshot_identity": "REQUIRED",
+  "scope_reconciliation_complete": false,
+  "requirements": [
+    {
+      "requirement_id": "REQUIRED_ATOMIC_REQUIREMENT_ID",
+      "original_assertion": "REQUIRED_VERBATIM_ASSERTION",
+      "original_source_citation": "REQUIRED",
+      "platform": "REQUIRED",
+      "status": "NOT EXECUTED",
+      "reason": "No eligible candidate received",
+      "observed": null,
+      "expected": "REQUIRED",
+      "reproduction_steps": [],
+      "execution_environment": null,
+      "evidence": [],
+      "history": [],
+      "not_applicable_authority": null
+    }
+  ],
+  "full_verified": false,
+  "handoff": {
+    "minor_repairs": "Smoke Tester must rebuild/package/smoke requalify before affected acceptance rerun",
+    "major_failures": "Existing Astra Implementer with exact failure, reproduction and identity",
+    "accepted": "Existing Astra coordinator and shared delivery index only after all mandatory applicable requirements pass on final candidate"
+  }
+}

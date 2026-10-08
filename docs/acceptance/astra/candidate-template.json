@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "candidate_id": "REPLACE_WITH_DELIVERY_CANDIDATE_ID",
+  "delivery_index_entry": "REPLACE_WITH_IMMUTABLE_INDEX_ENTRY_REFERENCE",
+  "source": {
+    "repository": "REPLACE_WITH_EXACT_ORIGIN_URL",
+    "revision": "REPLACE_WITH_FULL_COMMIT_HASH",
+    "checkout": "/REPLACE_WITH_CLEAN_ACTUAL_CANDIDATE_SOURCE_CHECKOUT",
+    "source_files": [
+      {"path": "REPLACE_WITH_COMMITTED_PRODUCT_SOURCE_FILE", "sha256": "REPLACE_WITH_SHA256"}
+    ]
+  },
+  "specs": [
+    {
+      "id": "development",
+      "document_id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+      "revision": "REPLACE_WITH_PROVIDER_REVISION_OF_SNAPSHOT",
+      "path": "REPLACE_WITH_LOCAL_DEVELOPMENT_SPEC_SNAPSHOT",
+      "sha256": "REPLACE_WITH_SNAPSHOT_SHA256",
+      "revision_evidence": {"path": "REPLACE_WITH_PROVIDER_REVISION_JSON", "sha256": "REPLACE_WITH_SHA256"}
+    },
+    {
+      "id": "postrelease",
+      "document_id": "1yZCIP-ogTPLBfqcnc5EFMsL2FO5DoLYBTbGGPTk7Aks",
+      "revision": "REPLACE_WITH_PROVIDER_REVISION_OF_SNAPSHOT",
+      "path": "REPLACE_WITH_LOCAL_POSTRELEASE_SPEC_SNAPSHOT",
+      "sha256": "REPLACE_WITH_SNAPSHOT_SHA256",
+      "revision_evidence": {"path": "REPLACE_WITH_PROVIDER_REVISION_JSON", "sha256": "REPLACE_WITH_SHA256"}
+    }
+  ],
+  "locks": [
+    {"role": "dependencies", "path": "REPLACE_WITH_COMMITTED_DEPENDENCY_LOCK", "sha256": "REPLACE_WITH_SHA256"},
+    {"role": "donors", "path": "REPLACE_WITH_COMMITTED_DONOR_PROVENANCE_LOCK", "sha256": "REPLACE_WITH_SHA256"}
+  ],
+  "scope": {
+    "claims": [
+      {
+        "id": "REPLACE_WITH_REQUIREMENT_OR_JOURNEY_ID",
+        "description": "REPLACE_WITH_BOUNDED_CLAIM",
+        "platforms": ["REPLACE_WITH_PLATFORM_ID"],
+        "spec_citations": [{"spec_id": "development", "locator": "REPLACE_WITH_EXACT_SECTION_OR_REQUIREMENT_RANGE"}]
+      }
+    ],
+    "platform_matrix": [
+      {
+        "id": "REPLACE_WITH_PLATFORM_ID",
+        "kind": "native",
+        "required": true,
+        "spec_citations": [{"spec_id": "development", "locator": "REPLACE_WITH_PLATFORM_REQUIREMENT"}]
+      }
+    ]
+  },
+  "artifacts": [
+    {
+      "id": "REPLACE_WITH_IMMUTABLE_PACKAGE_ID",
+      "platform": "REPLACE_WITH_PLATFORM_ID",
+      "path": "REPLACE_WITH_LOCAL_PACKAGED_ARTIFACT",
+      "sha256": "REPLACE_WITH_OBSERVED_ARTIFACT_SHA256",
+      "source_repository": "REPLACE_WITH_EXACT_ORIGIN_URL",
+      "source_revision": "REPLACE_WITH_FULL_COMMIT_HASH"
+    }
+  ],
+  "smoke": {
+    "path": "REPLACE_WITH_LOCAL_INDEPENDENT_SMOKE_REPORT_JSON",
+    "sha256": "REPLACE_WITH_REPORT_SHA256",
+    "report_id": "REPLACE_WITH_SMOKE_TESTER_REPORT_ID",
+    "issuer": "REPLACE_WITH_IDENTIFIABLE_INDEPENDENT_SMOKE_TESTER"
+  }
+}

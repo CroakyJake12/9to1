@@ -1,0 +1,29 @@
+{
+  "note": "Readable-text snapshots fetched before separately observing provider revision IDs; content hash is the reproducible retrieval identity, not an atomic revision/export guarantee. Re-read latest relevant sections at candidate acceptance.",
+  "documents": [
+    {
+      "name": "development-specification.txt",
+      "document_id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+      "title": "9to1 Development Specification",
+      "url": "https://docs.google.com/document/d/1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg/edit",
+      "modified_time": "2026-10-08T09:47:47.491Z",
+      "provider_revision_observed": "ANLCKQlGV-4pjogbJ8KNKTIJh95FXpzVNyyGudznrAwCF5v8YUH9MKLF6v12_I7NO4kuQ_gFqKINQo8xWeCtthei_Muf-fvH8WeCfOWyJcE",
+      "readable_snapshot_sha256": "6b20bca3064d599408de5b952de00aebc22fc4d7f72c33eb47796e25ced71b26",
+      "bytes": 1424979,
+      "lines": 12117
+    },
+    {
+      "name": "post-release-updates.txt",
+      "document_id": "1yZCIP-ogTPLBfqcnc5EFMsL2FO5DoLYBTbGGPTk7Aks",
+      "title": "9to1 Post-Release Updates",
+      "url": "https://docs.google.com/document/d/1yZCIP-ogTPLBfqcnc5EFMsL2FO5DoLYBTbGGPTk7Aks/edit",
+      "modified_time": "2026-10-07T16:29:09.962Z",
+      "provider_revision_observed": "ANLCKQkSVZrxkLC8ZwUuozCSw4u_AsSqWQ9sXB5T29hofuQzw1kGZBxQ7v4ZfYoLkG1efDNvwGpfSPG21OFw3KFYN4_zzDT4jqc_wBEWP0Q",
+      "readable_snapshot_sha256": "2b3981f007c68c1519c45476d2ff408f603fc209397f312116f638d4240fdce2",
+      "bytes": 52905,
+      "lines": 386
+    }
+  ],
+  "manifest_assembled_utc": "2026-10-08T18:53:46.096601+00:00",
+  "retrieval_date_utc": "2026-10-08"
+}
