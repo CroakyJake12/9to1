@@ -194,28 +194,45 @@ public sealed class CardStudyReviewCoordinator(
             || !StringComparer.Ordinal.Equals(committed.EvidenceType, "CardsReview"))
             throw new CardOperationException(CardFailureCode.InvalidState,
                 "The committed review's identity, rating or timestamp does not match its receipt.");
-        CardStudyLinkDecision link = await topics.CheckLinkAsync(
-            caller, committed, cancellationToken);
-        if (link.Status == CardStudyLinkStatus.Unlinked)
-            return Outcome(CardStudyEvidenceState.Unlinked, link.Code);
-        if (link.Status != CardStudyLinkStatus.Valid
-            || string.IsNullOrWhiteSpace(link.CanonicalTopicId)
-            || !StringComparer.Ordinal.Equals(link.CanonicalTopicId, committed.TopicId))
-            return Outcome(CardStudyEvidenceState.StudyNotConfirmed, link.Code);
-
-        CardStudyDeliveryReceipt delivery = await study.DeliverAsync(
-            caller, committed, receipt, link.CanonicalTopicId,
-            cancellationToken);
-        if (!StringComparer.Ordinal.Equals(delivery.OperationId, request.OperationId))
-            throw new CardOperationException(CardFailureCode.InvalidState,
-                "Study returned evidence for a different review operation.");
-
-        return Outcome(delivery.Status switch
+        try
         {
-            CardStudyDeliveryStatus.Submitted => CardStudyEvidenceState.StudySubmitted,
-            CardStudyDeliveryStatus.QueuedDurably => CardStudyEvidenceState.StudyQueued,
-            _ => CardStudyEvidenceState.StudyNotConfirmed,
-        }, delivery.Code);
+            CardStudyLinkDecision link = await topics.CheckLinkAsync(
+                caller, committed, cancellationToken);
+            if (link.Status == CardStudyLinkStatus.Unlinked)
+                return Outcome(CardStudyEvidenceState.Unlinked, link.Code);
+            if (link.Status != CardStudyLinkStatus.Valid
+                || string.IsNullOrWhiteSpace(link.CanonicalTopicId)
+                || !StringComparer.Ordinal.Equals(link.CanonicalTopicId, committed.TopicId))
+                return Outcome(CardStudyEvidenceState.StudyNotConfirmed, link.Code);
+
+            CardStudyDeliveryReceipt delivery = await study.DeliverAsync(
+                caller, committed, receipt, link.CanonicalTopicId,
+                cancellationToken);
+            if (!StringComparer.Ordinal.Equals(delivery.OperationId, request.OperationId))
+                throw new CardOperationException(CardFailureCode.InvalidState,
+                    "Study returned evidence for a different review operation.");
+
+            return Outcome(delivery.Status switch
+            {
+                CardStudyDeliveryStatus.Submitted => CardStudyEvidenceState.StudySubmitted,
+                CardStudyDeliveryStatus.QueuedDurably => CardStudyEvidenceState.StudyQueued,
+                _ => CardStudyEvidenceState.StudyNotConfirmed,
+            }, delivery.Code);
+        }
+        catch (IOException)
+        {
+            // Only Study transmission/verification failed. Never erase or
+            // misreport the actually acknowledged private review.
+            return Outcome(CardStudyEvidenceState.StudyNotConfirmed, "StudyTransportUnavailable");
+        }
+        catch (TimeoutException)
+        {
+            return Outcome(CardStudyEvidenceState.StudyNotConfirmed, "StudyTransportTimeout");
+        }
+        catch (HttpRequestException)
+        {
+            return Outcome(CardStudyEvidenceState.StudyNotConfirmed, "StudyNetworkUnavailable");
+        }
 
         CardReviewOutcome Outcome(CardStudyEvidenceState state, string code) =>
             new(true, receipt.Status == CardPrivateReviewStatus.AlreadyCommitted,
