@@ -27,7 +27,8 @@ public sealed record CardPrivateReviewReceipt(
     string OperationId,
     string RequestFingerprint,
     DateTimeOffset? ReviewedAtUtc,
-    string Code);
+    string Code,
+    CardReviewRecord? SavedReview = null);
 
 /// <summary>
 /// The *existing* private review owner is responsible for persisted, replay-safe
@@ -178,16 +179,21 @@ public sealed class CardStudyReviewCoordinator(
                 CardStudyEvidenceState.ReviewNotSaved,
                 request.OperationId, request.SetId, request.CardId, null);
 
-        if (receipt.ReviewedAtUtc is null)
+        // On replay the card's live topic and revision may have changed.
+        // Use ONLY the persisted owner's exact committed review (including
+        // TopicID/evidence time), never the current snapshot as a substitute.
+        CardReviewRecord committed = receipt.SavedReview
+            ?? throw new CardOperationException(CardFailureCode.InvalidState,
+                "The committed private review is unavailable from its owning store.");
+        if (receipt.ReviewedAtUtc is null
+            || receipt.ReviewedAtUtc != committed.ReviewedAt
+            || committed.PrincipalId != caller.PrincipalId
+            || committed.SetId != request.SetId
+            || committed.CardId != request.CardId
+            || committed.Rating != request.Rating
+            || !StringComparer.Ordinal.Equals(committed.EvidenceType, "CardsReview"))
             throw new CardOperationException(CardFailureCode.InvalidState,
-                "The committed private review lacks its actual saved timestamp.");
-
-        // Study must receive the *actually committed* review, not the draft
-        // timestamp or a guess about whether the TopicID exists.
-        CardReviewRecord committed = prepared with
-        {
-            ReviewedAt = receipt.ReviewedAtUtc.Value,
-        };
+                "The committed review's identity, rating or timestamp does not match its receipt.");
         CardStudyLinkDecision link = await topics.CheckLinkAsync(
             caller, committed, cancellationToken);
         if (link.Status == CardStudyLinkStatus.Unlinked)
