@@ -6,6 +6,7 @@
       <Button id="cards-mode" action="9to1.Cards.ToggleMode" content="{Binding ModeLabel}" accessible-name="Switch view and edit modes" is-enabled="{Binding CanChangeMode}" />
       <Button id="cards-add" action="9to1.Cards.Add" content="New card" accessible-name="Create a real structured flashcard with front and back" is-enabled="{Binding CanCreate}" />
       <Button id="cards-duplicate" action="9to1.Cards.Duplicate" content="Duplicate" accessible-name="Duplicate the selected flashcard" is-enabled="{Binding CanDuplicate}" />
+      <Button id="cards-delete" action="9to1.Cards.Delete" content="Delete card" accessible-name="Review deleting the selected flashcard with recoverable deletion" is-enabled="{Binding CanDelete}" />
     </WrapPanel>
     <Grid grid-row="1" columns="Auto,*" accessible-name="Cards workspace and navigation">
       <StackPanel grid-column="0" spacing="8" accessible-name="Subjects and topics">
