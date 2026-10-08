@@ -74,7 +74,8 @@ public enum CardStudyDeliveryStatus
 }
 
 public sealed record CardStudyDeliveryReceipt(
-    CardStudyDeliveryStatus Status, string OperationId, string Code);
+    CardStudyDeliveryStatus Status, string OperationId, string Code,
+    string? EvidenceId = null, string? QueueReceiptId = null);
 
 /// <summary>
 /// Study owns the attributed evidence and durable delivery outbox. Returning
@@ -212,12 +213,23 @@ public sealed class CardStudyReviewCoordinator(
                 throw new CardOperationException(CardFailureCode.InvalidState,
                     "Study returned evidence for a different review operation.");
 
-            return Outcome(delivery.Status switch
+            // A provider status string is NOT the observed evidence itself.
+            // Submitted requires a concrete Study evidence identity; QueuedDurably
+            // requires the owning outbox's durable queue receipt identity.
+            return delivery.Status switch
             {
-                CardStudyDeliveryStatus.Submitted => CardStudyEvidenceState.StudySubmitted,
-                CardStudyDeliveryStatus.QueuedDurably => CardStudyEvidenceState.StudyQueued,
-                _ => CardStudyEvidenceState.StudyNotConfirmed,
-            }, delivery.Code);
+                CardStudyDeliveryStatus.Submitted when
+                    !string.IsNullOrWhiteSpace(delivery.EvidenceId) =>
+                        Outcome(CardStudyEvidenceState.StudySubmitted, delivery.Code),
+                CardStudyDeliveryStatus.QueuedDurably when
+                    !string.IsNullOrWhiteSpace(delivery.QueueReceiptId) =>
+                        Outcome(CardStudyEvidenceState.StudyQueued, delivery.Code),
+                CardStudyDeliveryStatus.Submitted =>
+                    Outcome(CardStudyEvidenceState.StudyNotConfirmed, "StudyEvidenceReceiptMissing"),
+                CardStudyDeliveryStatus.QueuedDurably =>
+                    Outcome(CardStudyEvidenceState.StudyNotConfirmed, "StudyQueueReceiptMissing"),
+                _ => Outcome(CardStudyEvidenceState.StudyNotConfirmed, delivery.Code),
+            };
         }
         catch (IOException)
         {
