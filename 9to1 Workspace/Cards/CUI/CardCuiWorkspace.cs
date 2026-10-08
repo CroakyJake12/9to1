@@ -30,6 +30,13 @@ public interface ICardCuiReviewOwner
 
 public sealed record CardReviewWriteReceipt(bool Committed, string Code);
 
+/// <summary>Creates both real structured sides with the existing shared editor.
+/// A cancelled draft must not create an empty card or a saved artifact.</summary>
+public interface ICardCuiCardCreator
+{
+    Task<CardDraft?> CreateAsync(Guid setId, CancellationToken cancellationToken);
+}
+
 /// <summary>The Home preferences owner stores authorised per-user Cards settings.
 /// This adapter MUST bind settings to the current authenticated principal and
 /// canonical SetID rather than accepting an arbitrary caller-supplied identity.</summary>
@@ -52,7 +59,8 @@ public sealed class CardCuiWorkspace(
     CardMutationGateway mutations,
     ICardCuiRichEditor? richEditor = null,
     ICardCuiReviewOwner? reviews = null,
-    ICardCuiPreferencesOwner? preferences = null)
+    ICardCuiPreferencesOwner? preferences = null,
+    ICardCuiCardCreator? creator = null)
     : ICuiWritableBindingContext, ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged
 {
     private readonly SemaphoreSlim _operations = new(1, 1);
@@ -86,6 +94,10 @@ public sealed class CardCuiWorkspace(
     public bool CanFlip => !_busy && _navigation.Current is not null;
     public bool CanEdit => !_busy && _navigation.Mode == CardInteractionMode.Edit
         && richEditor is not null && _navigation.Current is not null;
+    public bool CanCreate => !_busy && _navigation.Mode == CardInteractionMode.Edit
+        && _set is not null && creator is not null;
+    public bool CanDuplicate => !_busy && _navigation.Mode == CardInteractionMode.Edit
+        && _navigation.Current is not null;
     public bool CanRate => !_busy && reviews is not null && _navigation.Current is not null;
     public bool CanPrevious => !_busy && _navigation.Index > 0;
     public bool CanNext => !_busy && _navigation.Index >= 0
@@ -138,7 +150,9 @@ public sealed class CardCuiWorkspace(
             "PreviousPreview" => PreviousPreview, "NextPreview" => NextPreview,
             "ContentHint" => ContentHint, "PositionLabel" => PositionLabel,
             "CanOpen" => CanOpen, "CanChangeMode" => CanChangeMode, "CanFlip" => CanFlip,
-            "CanEdit" => CanEdit, "CanRate" => CanRate, "CanPrevious" => CanPrevious,
+            "CanEdit" => CanEdit, "CanCreate" => CanCreate,
+            "CanDuplicate" => CanDuplicate, "CanRate" => CanRate,
+            "CanPrevious" => CanPrevious,
             "CanNext" => CanNext,
             _ => null,
         };
@@ -148,7 +162,7 @@ public sealed class CardCuiWorkspace(
             or "CanGroup" or "CanSelectGroup" or "SideLabel"
             or "PreviousPreview" or "NextPreview" or "ContentHint" or "PositionLabel"
             or "CanOpen" or "CanChangeMode" or "CanFlip" or "CanEdit" or "CanRate"
-            or "CanPrevious" or "CanNext";
+            or "CanPrevious" or "CanNext" or "CanCreate" or "CanDuplicate";
     }
 
     public bool TrySetValue(string path, object? value)
@@ -178,6 +192,8 @@ public sealed class CardCuiWorkspace(
         "9to1.Cards.ToggleOrientation" => CanChangeOrientation,
         "9to1.Cards.CycleGrouping" => CanGroup,
         "9to1.Cards.EditSide" => CanEdit,
+        "9to1.Cards.Add" => CanCreate,
+        "9to1.Cards.Duplicate" => CanDuplicate,
         "9to1.Cards.RateRed" or "9to1.Cards.RateAmber" or "9to1.Cards.RateGreen" => CanRate,
         _ => false,
     });
@@ -231,6 +247,12 @@ public sealed class CardCuiWorkspace(
                         break;
                     case "9to1.Cards.EditSide":
                         await EditAsync(cancellationToken).ConfigureAwait(false);
+                        break;
+                    case "9to1.Cards.Add":
+                        await AddAsync(cancellationToken).ConfigureAwait(false);
+                        break;
+                    case "9to1.Cards.Duplicate":
+                        await DuplicateAsync(cancellationToken).ConfigureAwait(false);
                         break;
                     case "9to1.Cards.RateRed":
                     case "9to1.Cards.RateAmber":
@@ -290,6 +312,52 @@ public sealed class CardCuiWorkspace(
         // no physical CUI orientation claim is made until the native host uses them.
         _navigation.ApplyPreferences(proposed);
         _status = "Orientation setting saved";
+    }
+
+    private async Task AddAsync(CancellationToken token)
+    {
+        CardSet set = _set ?? throw new InvalidOperationException("Open the set first.");
+        CardDraft? draft = await creator!.CreateAsync(set.SetId, token).ConfigureAwait(false);
+        if (draft is null)
+        {
+            _status = "New card cancelled; nothing saved";
+            return;
+        }
+        var request = new CardMutation.AddCards(Guid.NewGuid().ToString("D"), set.SetId,
+            set.Revision, CardInteractionMode.Edit, [draft]);
+        CardMutationOutcome receipt = await mutations.ExecuteAsync(request, token).ConfigureAwait(false);
+        await ReloadAfterCommitAsync(set, receipt, "Card created", token).ConfigureAwait(false);
+    }
+
+    private async Task DuplicateAsync(CancellationToken token)
+    {
+        CardSet set = _set ?? throw new InvalidOperationException("Open the set first.");
+        CardEntry card = Selected ?? throw new InvalidOperationException("Select a card first.");
+        var request = new CardMutation.Duplicate(Guid.NewGuid().ToString("D"), set.SetId,
+            set.Revision, CardInteractionMode.Edit, card.CardId);
+        CardMutationOutcome receipt = await mutations.ExecuteAsync(request, token).ConfigureAwait(false);
+        await ReloadAfterCommitAsync(set, receipt, "Card duplicated", token).ConfigureAwait(false);
+    }
+
+    private async Task ReloadAfterCommitAsync(CardSet original, CardMutationOutcome receipt,
+        string successLabel, CancellationToken token)
+    {
+        if (!receipt.Succeeded)
+        {
+            _status = $"No changes saved: {receipt.Code}";
+            return;
+        }
+        CardSet? committed = await sets.OpenCurrentAsync(token).ConfigureAwait(false);
+        if (committed is null || committed.SetId != original.SetId
+            || committed.Revision != receipt.CommittedRevision)
+        {
+            _status = "Save acknowledged; reopen the canonical revision to refresh";
+            return;
+        }
+        CardSetOperations.Validate(committed);
+        _set = committed;
+        _navigation.Load(committed);
+        _status = $"{successLabel}; saved revision {committed.Revision}";
     }
 
     private async Task EditAsync(CancellationToken token)
