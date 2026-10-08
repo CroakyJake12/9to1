@@ -85,7 +85,7 @@ public sealed record CardAssetReference
     {
         if (AssetId == Guid.Empty || string.IsNullOrWhiteSpace(CanonicalFileId)
             || string.IsNullOrWhiteSpace(MediaType) || ByteLength < 0
-            || Sha256.Length != 64 || !Sha256.All(Uri.IsHexDigit))
+            || string.IsNullOrWhiteSpace(Sha256) || Sha256.Length != 64 || !Sha256.All(Uri.IsHexDigit))
             throw new CardOperationException(CardFailureCode.InvalidContent,
                 "An asset requires a nonempty identity, canonical Files reference, MIME type, size and SHA-256.");
     }
