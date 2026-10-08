@@ -21,6 +21,7 @@ public enum CardFailureCode
     ViewIsReadOnly,
     InvalidOrdering,
     InvalidPage,
+    DuplicateAsset,
     DuplicateCard,
     UnsupportedSchema,
 }
@@ -67,6 +68,29 @@ public sealed record CardEntry
     public Dictionary<string, JsonElement>? Extensions { get; init; }
 }
 
+// The Files owner resolves and verifies these references; registering one
+// never uploads bytes, grants permissions or implies an accessible asset.
+public sealed record CardAssetReference
+{
+    public required Guid AssetId { get; init; }
+    public required string CanonicalFileId { get; init; }
+    public required string MediaType { get; init; }
+    public required string Sha256 { get; init; }
+    public long ByteLength { get; init; }
+
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement>? Extensions { get; init; }
+
+    public void Validate()
+    {
+        if (AssetId == Guid.Empty || string.IsNullOrWhiteSpace(CanonicalFileId)
+            || string.IsNullOrWhiteSpace(MediaType) || ByteLength < 0
+            || Sha256.Length != 64 || !Sha256.All(Uri.IsHexDigit))
+            throw new CardOperationException(CardFailureCode.InvalidContent,
+                "An asset requires a nonempty identity, canonical Files reference, MIME type, size and SHA-256.");
+    }
+}
+
 public sealed record CardSet
 {
     public int SchemaVersion { get; init; } = 1;
@@ -77,6 +101,7 @@ public sealed record CardSet
     public long Revision { get; init; } = 1;
     // Array order is the membership order. Tombstones keep stable IDs for recovery.
     public IReadOnlyList<CardEntry> Cards { get; init; } = [];
+    public IReadOnlyList<CardAssetReference> Assets { get; init; } = [];
 
     [JsonExtensionData]
     public Dictionary<string, JsonElement>? Extensions { get; init; }
