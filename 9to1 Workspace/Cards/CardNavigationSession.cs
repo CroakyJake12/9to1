@@ -81,8 +81,10 @@ public sealed class CardNavigationSession
                 && string.IsNullOrWhiteSpace(preferences.CustomGroupKey)))
             throw new CardOperationException(CardFailureCode.InvalidState,
                 "Unsupported Cards navigation preferences.");
+        bool groupingChanged = _preferences.Grouping != preferences.Grouping
+            || !string.Equals(_preferences.CustomGroupKey, preferences.CustomGroupKey, StringComparison.Ordinal);
         _preferences = preferences;
-        _groupKey = null;
+        if (groupingChanged) _groupKey = null;
         Refresh();
     }
 
