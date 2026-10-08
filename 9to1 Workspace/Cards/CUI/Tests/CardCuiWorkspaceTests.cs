@@ -125,6 +125,30 @@ public sealed class CardCuiWorkspaceTests
     }
 
     [Fact]
+    public async Task OrientationPreferencesOnlyAdvanceAfterCanonicalOwnerAcknowledgement()
+    {
+        SceneState state = Build();
+        var ui = new CardCuiWorkspace(state,
+            new CardMutationGateway(state, state, state), state, state, state);
+        state.Ui = ui;
+        await ui.DispatchAsync("9to1.Cards.Open", null);
+        Assert.Equal("Navigation: vertical", ui.OrientationLabel);
+
+        state.CanWritePreferences = false;
+        await ui.DispatchAsync("9to1.Cards.ToggleOrientation", null);
+        Assert.Equal("Navigation: vertical", ui.OrientationLabel);
+        Assert.Contains("not changed", ui.Status);
+
+        state.CanWritePreferences = true;
+        await ui.DispatchAsync("9to1.Cards.ToggleOrientation", null);
+        Assert.Equal("Navigation: horizontal", ui.OrientationLabel);
+        Assert.Equal(CardNavigationDirection.Horizontal,
+            state.SavedPreferences?.Navigation);
+        Assert.Contains("saved", ui.Status);
+        Assert.Equal(0, state.Commits);
+    }
+
+    [Fact]
     public async Task PersonalReviewRequiresActualReceiptButDoesNotMutateSharedDeck()
     {
         SceneState state = Build();
@@ -143,7 +167,8 @@ public sealed class CardCuiWorkspaceTests
 
     private sealed class SceneState(CardSet original) :
         ICardCuiSetSource, ICardCuiRichEditor, ICardCuiReviewOwner,
-        ICardCanonicalMutationStore, ICardTrustedCallerSource, ICardMutationAdmission
+        ICardCuiPreferencesOwner, ICardCanonicalMutationStore,
+        ICardTrustedCallerSource, ICardMutationAdmission
     {
         public CardCuiWorkspace? Ui { get; set; }
         public CardSet Original { get; } = original;
@@ -151,6 +176,8 @@ public sealed class CardCuiWorkspaceTests
         public int Commits { get; private set; }
         public bool CanApprove { get; set; } = true;
         public bool CanWriteReview { get; set; } = true;
+        public bool CanWritePreferences { get; set; } = true;
+        public CardViewPreferences? SavedPreferences { get; private set; }
         public CardReviewRating? PersonalReview { get; private set; }
 
         public Task<CardSet?> OpenCurrentAsync(CancellationToken token) =>
@@ -167,6 +194,18 @@ public sealed class CardCuiWorkspaceTests
                 return Task.FromResult(new CardReviewWriteReceipt(false, "HomePermissionDenied"));
             PersonalReview = rating;
             return Task.FromResult(new CardReviewWriteReceipt(true, "Committed"));
+        }
+
+        public Task<CardViewPreferences?> ReadCurrentAsync(Guid setId, CancellationToken token) =>
+            Task.FromResult(SavedPreferences);
+
+        public Task<CardPreferencesWriteReceipt> SaveCurrentAsync(Guid setId,
+            CardViewPreferences preferences, CancellationToken token)
+        {
+            if (!CanWritePreferences)
+                return Task.FromResult(new CardPreferencesWriteReceipt(false, "HomePermissionDenied"));
+            SavedPreferences = preferences;
+            return Task.FromResult(new CardPreferencesWriteReceipt(true, "Committed"));
         }
 
         public ValueTask<CardTrustedCaller?> ResolveAsync(CancellationToken token) =>
