@@ -184,6 +184,28 @@ Known product gaps: actual Shared Productivity Engine creation UI,
 identity/permission/storage providers, recovery picker, Study evidence,
 horizontal responsive layout, native CUI host and installed acceptance.
 
+## Recoverable deletion browser and restore — current checkpoint
+
+Cards now exposes a **revision-bound, bounded recovery query** over existing
+canonical card tombstones. It returns at most 100 metadata entries per page
+(with an explicit next-page bit and original ordered position). It does not
+create a separate trash database, clone rich content or expose personal reviews.
+
+The CUI scene includes a deleted-card picker, next/previous recovery pages
+and **Restore selected card**. Restore submits the original CardID through
+the existing typed `CardMutation.Restore` gateway, requires Edit mode,
+respects canonical Home permission service, enforces expected revision
+and only reports success after a real storage receipt and canonical reload.
+It retains the CardID, structured front/back content and ordered membership.
+A refused restore leaves the deleted source intact.
+
+New tests check bounded paging, no duplicate/omitted tombstones, stale-page
+rejection, stable identity after restore, replay deduplication, permission
+denial and CUI recovery using isolated test owner doubles.
+**This does not prove an installed app's Files store, Home authorisation,
+rich renderer or UI host has been connected.** Permanent purge and retention
+policies are intentionally not invented in this Cards-owned slice.
+
 ## Local focused checks
 
 From `9to1 Workspace` with .NET SDK 10 installed:
