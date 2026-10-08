@@ -147,9 +147,7 @@ public sealed class CardMutationGateway(
                 current, rename.Title, rename.ExpectedSetRevision, rename.Mode),
             CardMutation.BulkEdit edit => CardSetOperations.BulkEditSides(
                 current, edit.Edits, edit.ExpectedSetRevision, edit.Mode),
-            CardMutation.AddCards add => CardSetOperations.AddCards(current,
-                add.Drafts.Select(draft => (draft.Front, draft.Back)),
-                add.ExpectedSetRevision, add.Mode),
+            CardMutation.AddCards add => CreateCards(current, add),
             CardMutation.Duplicate duplicate => CardSetOperations.Duplicate(current,
                 duplicate.CardId, duplicate.ExpectedSetRevision, duplicate.Mode),
             CardMutation.Move move => CardSetOperations.MoveVisible(current,
@@ -167,6 +165,17 @@ public sealed class CardMutationGateway(
             cancellationToken);
 
         return FromReceipt(command, receipt, expectedReplay: false);
+    }
+
+    private static CardSet CreateCards(CardSet set, CardMutation.AddCards add)
+    {
+        if (add.Drafts is null || add.Drafts.Count is < 1 or > 500
+            || add.Drafts.Any(draft => draft is null))
+            throw new CardOperationException(CardFailureCode.InvalidContent,
+                "Bulk creation requires 1–500 complete canonical card drafts.");
+        return CardSetOperations.AddCards(set,
+            add.Drafts.Select(draft => (draft.Front, draft.Back)),
+            add.ExpectedSetRevision, add.Mode);
     }
 
     private static CardSet DeleteCards(CardSet set, CardMutation.Delete delete)
