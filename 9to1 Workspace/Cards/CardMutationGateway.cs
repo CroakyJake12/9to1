@@ -16,6 +16,14 @@ public abstract record CardMutation(string OperationId, Guid SetId, long Expecte
         CardInteractionMode Mode, IReadOnlyList<CardSideEdit> Edits)
         : CardMutation(OperationId, SetId, ExpectedSetRevision, Mode);
 
+    public sealed record AddCards(string OperationId, Guid SetId, long ExpectedSetRevision,
+        CardInteractionMode Mode, IReadOnlyList<CardDraft> Drafts)
+        : CardMutation(OperationId, SetId, ExpectedSetRevision, Mode);
+
+    public sealed record Duplicate(string OperationId, Guid SetId, long ExpectedSetRevision,
+        CardInteractionMode Mode, Guid CardId)
+        : CardMutation(OperationId, SetId, ExpectedSetRevision, Mode);
+
     public sealed record Move(string OperationId, Guid SetId, long ExpectedSetRevision,
         CardInteractionMode Mode, Guid CardId, int VisibleDestination)
         : CardMutation(OperationId, SetId, ExpectedSetRevision, Mode);
@@ -139,6 +147,11 @@ public sealed class CardMutationGateway(
                 current, rename.Title, rename.ExpectedSetRevision, rename.Mode),
             CardMutation.BulkEdit edit => CardSetOperations.BulkEditSides(
                 current, edit.Edits, edit.ExpectedSetRevision, edit.Mode),
+            CardMutation.AddCards add => CardSetOperations.AddCards(current,
+                add.Drafts.Select(draft => (draft.Front, draft.Back)),
+                add.ExpectedSetRevision, add.Mode),
+            CardMutation.Duplicate duplicate => CardSetOperations.Duplicate(current,
+                duplicate.CardId, duplicate.ExpectedSetRevision, duplicate.Mode),
             CardMutation.Move move => CardSetOperations.MoveVisible(current,
                 move.CardId, move.VisibleDestination, move.ExpectedSetRevision, move.Mode),
             CardMutation.Delete delete => DeleteCards(current, delete),
