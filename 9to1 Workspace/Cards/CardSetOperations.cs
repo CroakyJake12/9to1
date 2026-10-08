@@ -269,9 +269,13 @@ public static class CardSetOperations
     /// a virtualised viewport. SearchText is a derived index, not rich content.
     /// </summary>
     public static CardPage GetPage(CardSet set, int offset, int pageSize,
-        string? query = null, string? subjectId = null, string? topicId = null)
+        string? query = null, string? subjectId = null, string? topicId = null,
+        long? expectedRevision = null)
     {
         Validate(set);
+        if (expectedRevision is not null && set.Revision != expectedRevision.Value)
+            throw Fail(CardFailureCode.RevisionConflict,
+                $"The requested page belongs to revision {expectedRevision}, not {set.Revision}.");
         if (offset < 0 || pageSize < 1 || pageSize > 100)
             throw Fail(CardFailureCode.InvalidPage, "Page offset must be nonnegative and size must be 1–100.");
 
@@ -333,11 +337,25 @@ public static class CardSetOperations
     public static CardSet ImportJson(string json)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(json);
-        CardSet? set = JsonSerializer.Deserialize<CardSet>(json);
-        if (set is null)
-            throw Fail(CardFailureCode.InvalidState, "The Cards payload is empty.");
-        Validate(set);
-        return set;
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(json);
+            if (document.RootElement.ValueKind != JsonValueKind.Object
+                || !document.RootElement.TryGetProperty(nameof(CardSet.SchemaVersion), out JsonElement version)
+                || !version.TryGetInt32(out _))
+                throw Fail(CardFailureCode.InvalidContent,
+                    "Import requires an explicit integer SchemaVersion and a Cards object.");
+            CardSet? set = JsonSerializer.Deserialize<CardSet>(json);
+            if (set is null)
+                throw Fail(CardFailureCode.InvalidContent, "The Cards payload is empty.");
+            Validate(set);
+            return set;
+        }
+        catch (JsonException exception)
+        {
+            throw new CardOperationException(CardFailureCode.InvalidContent,
+                $"Invalid Cards JSON payload: {exception.Message}");
+        }
     }
 
     private static CardSet Next(CardSet set, IEnumerable<CardEntry> cards) =>
@@ -369,7 +387,7 @@ public static class CardSetOperations
         return index;
     }
 
-    private static void Validate(CardSet? set)
+    internal static void Validate(CardSet? set)
     {
         if (set is null || set.SetId == Guid.Empty || set.ArtifactId == Guid.Empty
             || string.IsNullOrWhiteSpace(set.Title) || string.IsNullOrWhiteSpace(set.OwnerScope)
