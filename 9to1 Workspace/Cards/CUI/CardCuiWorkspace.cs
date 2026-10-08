@@ -30,6 +30,18 @@ public interface ICardCuiReviewOwner
 
 public sealed record CardReviewWriteReceipt(bool Committed, string Code);
 
+/// <summary>The Home preferences owner stores authorised per-user Cards settings.
+/// This adapter MUST bind settings to the current authenticated principal and
+/// canonical SetID rather than accepting an arbitrary caller-supplied identity.</summary>
+public interface ICardCuiPreferencesOwner
+{
+    Task<CardViewPreferences?> ReadCurrentAsync(Guid setId, CancellationToken cancellationToken);
+    Task<CardPreferencesWriteReceipt> SaveCurrentAsync(Guid setId,
+        CardViewPreferences preferences, CancellationToken cancellationToken);
+}
+
+public sealed record CardPreferencesWriteReceipt(bool Committed, string Code);
+
 /// <summary>
 /// CUI action and binding context. The scene always reflects an observed saved
 /// set and refuses to announce a write until the canonical owner acknowledges.
@@ -39,7 +51,8 @@ public sealed class CardCuiWorkspace(
     ICardCuiSetSource sets,
     CardMutationGateway mutations,
     ICardCuiRichEditor? richEditor = null,
-    ICardCuiReviewOwner? reviews = null)
+    ICardCuiReviewOwner? reviews = null,
+    ICardCuiPreferencesOwner? preferences = null)
     : ICuiWritableBindingContext, ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged
 {
     private readonly SemaphoreSlim _operations = new(1, 1);
@@ -53,6 +66,9 @@ public sealed class CardCuiWorkspace(
     public string Status => _status;
     public string SearchText => _navigation.SearchText;
     public string ModeLabel => _navigation.Mode == CardInteractionMode.Edit ? "Switch to view" : "Switch to edit";
+    public string OrientationLabel => _navigation.Preferences.Navigation == CardNavigationDirection.Vertical
+        ? "Navigation: vertical" : "Navigation: horizontal";
+    public bool CanChangeOrientation => !_busy && _set is not null;
     public string GroupModeLabel => _navigation.Preferences.Grouping switch
     {
         CardGroupingKind.Subject => "Grouping: subject",
@@ -114,7 +130,8 @@ public sealed class CardCuiWorkspace(
         value = path switch
         {
             "SetTitle" => SetTitle, "Status" => Status, "SearchText" => SearchText,
-            "ModeLabel" => ModeLabel, "GroupModeLabel" => GroupModeLabel,
+            "ModeLabel" => ModeLabel, "OrientationLabel" => OrientationLabel,
+            "CanChangeOrientation" => CanChangeOrientation, "GroupModeLabel" => GroupModeLabel,
             "GroupNames" => GroupNames, "SelectedGroupIndex" => SelectedGroupIndex,
             "CanGroup" => CanGroup, "CanSelectGroup" => CanSelectGroup,
             "SideLabel" => SideLabel,
@@ -126,6 +143,7 @@ public sealed class CardCuiWorkspace(
             _ => null,
         };
         return path is "SetTitle" or "Status" or "SearchText" or "ModeLabel"
+            or "OrientationLabel" or "CanChangeOrientation"
             or "GroupModeLabel" or "GroupNames" or "SelectedGroupIndex"
             or "CanGroup" or "CanSelectGroup" or "SideLabel"
             or "PreviousPreview" or "NextPreview" or "ContentHint" or "PositionLabel"
@@ -157,6 +175,7 @@ public sealed class CardCuiWorkspace(
         "9to1.Cards.Previous" => CanPrevious,
         "9to1.Cards.Flip" => CanFlip,
         "9to1.Cards.ToggleMode" => CanChangeMode,
+        "9to1.Cards.ToggleOrientation" => CanChangeOrientation,
         "9to1.Cards.CycleGrouping" => CanGroup,
         "9to1.Cards.EditSide" => CanEdit,
         "9to1.Cards.RateRed" or "9to1.Cards.RateAmber" or "9to1.Cards.RateGreen" => CanRate,
@@ -200,6 +219,9 @@ public sealed class CardCuiWorkspace(
                         });
                         _status = GroupModeLabel + " (session only; settings persistence not connected)";
                         break;
+                    case "9to1.Cards.ToggleOrientation":
+                        await ToggleOrientationAsync(cancellationToken).ConfigureAwait(false);
+                        break;
                     case "9to1.Cards.ToggleMode":
                         _navigation.SetMode(_navigation.Mode == CardInteractionMode.Edit
                             ? CardInteractionMode.View : CardInteractionMode.Edit);
@@ -235,9 +257,39 @@ public sealed class CardCuiWorkspace(
             return;
         }
         CardSetOperations.Validate(loaded);
+        CardViewPreferences? savedPreferences = preferences is null ? null
+            : await preferences.ReadCurrentAsync(loaded.SetId, token).ConfigureAwait(false);
+        if (savedPreferences is not null)
+            _navigation.ApplyPreferences(savedPreferences);
         _set = loaded;
         _navigation.Load(loaded);
         _status = $"Opened {loaded.Title} at revision {loaded.Revision}";
+    }
+
+    private async Task ToggleOrientationAsync(CancellationToken token)
+    {
+        CardSet set = _set ?? throw new InvalidOperationException("Open the set first.");
+        CardNavigationDirection next = _navigation.Preferences.Navigation == CardNavigationDirection.Vertical
+            ? CardNavigationDirection.Horizontal : CardNavigationDirection.Vertical;
+        CardViewPreferences proposed = _navigation.Preferences with { Navigation = next };
+        if (preferences is null)
+        {
+            _navigation.ApplyPreferences(proposed);
+            _status = "Orientation changed for this session; persistent settings unavailable";
+            return;
+        }
+
+        CardPreferencesWriteReceipt receipt = await preferences.SaveCurrentAsync(set.SetId,
+            proposed, token).ConfigureAwait(false);
+        if (!receipt.Committed)
+        {
+            _status = $"Orientation not changed: {receipt.Code}";
+            return;
+        }
+        // A signed store receipt reports the exact requested settings as committed;
+        // no physical CUI orientation claim is made until the native host uses them.
+        _navigation.ApplyPreferences(proposed);
+        _status = "Orientation setting saved";
     }
 
     private async Task EditAsync(CancellationToken token)
