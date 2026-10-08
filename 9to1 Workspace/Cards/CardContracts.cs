@@ -20,6 +20,7 @@ public enum CardFailureCode
     RevisionConflict,
     ViewIsReadOnly,
     InvalidOrdering,
+    InvalidPage,
     DuplicateCard,
     UnsupportedSchema,
 }
@@ -91,6 +92,23 @@ public sealed record CardReviewRecord(
     CardReviewRating Rating,
     string EvidenceType,
     DateTimeOffset ReviewedAt);
+
+// One atomic replacement of any selected side(s), checked against the specific
+// Card revision as well as the enclosing Set revision. Null means "unchanged".
+public sealed record CardSideEdit(
+    Guid CardId,
+    int ExpectedCardRevision,
+    CardSide? Front = null,
+    CardSide? Back = null);
+
+// A bounded viewport over the canonical ordered membership. TotalCount is
+// deliberately not fabricated by an unbounded count/query.
+public sealed record CardPage(
+    Guid SetId,
+    long SetRevision,
+    int Offset,
+    IReadOnlyList<CardEntry> Cards,
+    bool HasMore);
 
 public sealed record CardDeletePreview(long ExpectedSetRevision, IReadOnlyList<Guid> CardIds)
 {
