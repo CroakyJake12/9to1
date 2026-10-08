@@ -136,7 +136,10 @@ public sealed class CardStudyReviewCoordinatorTests
         Assert.Equal("alice", owner.LastStudyReview?.PrincipalId);
         Assert.Equal(set.SetId, owner.LastStudyReview?.SetId);
         Assert.Equal(set.Revision, owner.Set.Revision);
-        Assert.DoesNotContain("alice", CardSetOperations.ExportJson(set));
+        string sharedDeck = CardSetOperations.ExportJson(set);
+        Assert.DoesNotContain("\"PrincipalId\"", sharedDeck);
+        Assert.DoesNotContain("\"ReviewedAt\"", sharedDeck);
+        Assert.DoesNotContain("\"CardsReview\"", sharedDeck);
     }
 
     [Fact]
