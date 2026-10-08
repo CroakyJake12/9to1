@@ -55,6 +55,40 @@ public static class CardSetOperations
         return Next(set, result);
     }
 
+    /// <summary>
+    /// Register canonical Files assets as metadata only. The Files authority must
+    /// confirm each referenced asset and its hash before invoking this operation.
+    /// No bytes are uploaded and no external permission is granted here.
+    /// </summary>
+    public static CardSet RegisterAssets(CardSet set, IEnumerable<CardAssetReference> assets,
+        long expectedRevision, CardInteractionMode mode)
+    {
+        EnsureWritable(set, expectedRevision, mode);
+        ArgumentNullException.ThrowIfNull(assets);
+        CardAssetReference[] incoming = assets.ToArray();
+        if (incoming.Length == 0)
+            throw Fail(CardFailureCode.InvalidContent, "At least one asset is required.");
+
+        var seen = new HashSet<Guid>(set.Assets.Select(asset => asset.AssetId));
+        foreach (CardAssetReference asset in incoming)
+        {
+            if (asset is null)
+                throw Fail(CardFailureCode.InvalidContent, "Asset entries cannot be null.");
+            asset.Validate();
+            if (!seen.Add(asset.AssetId))
+                throw Fail(CardFailureCode.DuplicateAsset, "An AssetID may only appear once in a set.");
+        }
+        return set with
+        {
+            Revision = checked(set.Revision + 1),
+            Assets = set.Assets.Concat(incoming.Select(asset => asset with
+            {
+                Extensions = asset.Extensions?.ToDictionary(pair => pair.Key,
+                    pair => pair.Value.Clone(), StringComparer.Ordinal),
+            })).ToArray(),
+        };
+    }
+
     public static CardSet EditSide(CardSet set, Guid cardId, bool isFront, CardSide replacement,
         long expectedRevision, CardInteractionMode mode)
     {
@@ -391,10 +425,19 @@ public static class CardSetOperations
     {
         if (set is null || set.SetId == Guid.Empty || set.ArtifactId == Guid.Empty
             || string.IsNullOrWhiteSpace(set.Title) || string.IsNullOrWhiteSpace(set.OwnerScope)
-            || set.Cards is null || set.Revision < 1)
+            || set.Cards is null || set.Assets is null || set.Revision < 1)
             throw Fail(CardFailureCode.InvalidState, "The card set has invalid identity or metadata.");
         if (set.SchemaVersion != 1)
             throw Fail(CardFailureCode.UnsupportedSchema, "This Cards schema requires migration.");
+        var assetIds = new HashSet<Guid>();
+        foreach (CardAssetReference asset in set.Assets)
+        {
+            if (asset is null)
+                throw Fail(CardFailureCode.InvalidContent, "Asset entries cannot be null.");
+            asset.Validate();
+            if (!assetIds.Add(asset.AssetId))
+                throw Fail(CardFailureCode.DuplicateAsset, "Duplicate asset identities are not valid.");
+        }
         var unique = new HashSet<Guid>();
         foreach (CardEntry card in set.Cards)
         {
