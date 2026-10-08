@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>HavenOS.Apps.Cards.CUI</AssemblyName>
+    <RootNamespace>HavenOS.Apps.Cards.CUI</RootNamespace>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Tests\**\*</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HavenOS.Cards.csproj" />
+    <ProjectReference Include="..\..\..\framework\CUI\Runtime\CakeOS.Cui.Runtime.csproj" />
+    <EmbeddedResource Include="UI\CardsWorkspace.cui" LogicalName="HavenOS.Apps.Cards.CUI.UI.CardsWorkspace.cui" />
+  </ItemGroup>
+</Project>
