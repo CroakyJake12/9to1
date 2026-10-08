@@ -23,7 +23,7 @@ public sealed class CardCuiWorkspaceTests
         var state = new SceneState(original);
         state.Ui = new CardCuiWorkspace(state,
             new CardMutationGateway(state, state, state),
-            state, state);
+            state, state, creator: state);
         return state;
     }
 
@@ -149,6 +149,59 @@ public sealed class CardCuiWorkspaceTests
     }
 
     [Fact]
+    public async Task CanonicalCreateAndDuplicateRetainStructuredSidesAndReloadCommittedRevisions()
+    {
+        SceneState state = Build();
+        CardCuiWorkspace ui = state.Ui!;
+        await ui.DispatchAsync("9to1.Cards.Open", null);
+        Assert.False(ui.CanCreate);
+        Assert.False(ui.CanDuplicate);
+        await ui.DispatchAsync("9to1.Cards.ToggleMode", null);
+
+        Assert.True(ui.CanCreate);
+        Assert.True(ui.CanDuplicate);
+        await ui.DispatchAsync("9to1.Cards.Add", null);
+        Assert.Equal(4, state.Canonical.Cards.Count);
+        Assert.Equal(3, state.Canonical.Revision);
+        Assert.Equal(1, state.Commits);
+        Assert.Contains("Card created", ui.Status);
+        var ids = state.Canonical.Cards.Select(card => card.CardId).ToArray();
+        Assert.Equal(ids.Length, ids.Distinct().Count());
+
+        await ui.DispatchAsync("9to1.Cards.Duplicate", null);
+        Assert.Equal(5, state.Canonical.Cards.Count);
+        Assert.Equal(4, state.Canonical.Revision);
+        Assert.Equal(2, state.Commits);
+        Assert.Contains("Card duplicated", ui.Status);
+        Assert.Equal(state.Canonical.Cards[0].Front.Document.GetRawText(),
+            state.Canonical.Cards[1].Front.Document.GetRawText());
+    }
+
+    [Fact]
+    public async Task CancelledCreationAndDeniedWritesDoNotMutateCanonicalSet()
+    {
+        SceneState state = Build();
+        CardCuiWorkspace ui = state.Ui!;
+        await ui.DispatchAsync("9to1.Cards.Open", null);
+        await ui.DispatchAsync("9to1.Cards.ToggleMode", null);
+
+        state.CancelCreation = true;
+        await ui.DispatchAsync("9to1.Cards.Add", null);
+        Assert.Equal(0, state.Commits);
+        Assert.Equal(3, state.Canonical.Cards.Count);
+        Assert.Contains("cancelled", ui.Status);
+
+        state.CancelCreation = false;
+        state.CanApprove = false;
+        await ui.DispatchAsync("9to1.Cards.Add", null);
+        Assert.Equal(0, state.Commits);
+        Assert.Contains("No changes saved", ui.Status);
+        await ui.DispatchAsync("9to1.Cards.Duplicate", null);
+        Assert.Equal(0, state.Commits);
+        Assert.Equal(3, state.Canonical.Cards.Count);
+    }
+
+    [Fact]
     public async Task PersonalReviewRequiresActualReceiptButDoesNotMutateSharedDeck()
     {
         SceneState state = Build();
@@ -167,7 +220,7 @@ public sealed class CardCuiWorkspaceTests
 
     private sealed class SceneState(CardSet original) :
         ICardCuiSetSource, ICardCuiRichEditor, ICardCuiReviewOwner,
-        ICardCuiPreferencesOwner, ICardCanonicalMutationStore,
+        ICardCuiPreferencesOwner, ICardCuiCardCreator, ICardCanonicalMutationStore,
         ICardTrustedCallerSource, ICardMutationAdmission
     {
         public CardCuiWorkspace? Ui { get; set; }
@@ -177,6 +230,7 @@ public sealed class CardCuiWorkspaceTests
         public bool CanApprove { get; set; } = true;
         public bool CanWriteReview { get; set; } = true;
         public bool CanWritePreferences { get; set; } = true;
+        public bool CancelCreation { get; set; }
         public CardViewPreferences? SavedPreferences { get; private set; }
         public CardReviewRating? PersonalReview { get; private set; }
 
@@ -186,6 +240,10 @@ public sealed class CardCuiWorkspaceTests
         public Task<CardSide?> EditAsync(Guid setId, Guid cardId, bool front,
             CardSide current, CancellationToken token) =>
             Task.FromResult<CardSide?>(Side("Edited by canonical engine"));
+
+        public Task<CardDraft?> CreateAsync(Guid setId, CancellationToken token) =>
+            Task.FromResult<CardDraft?>(CancelCreation ? null
+                : new CardDraft(Side("New question"), Side("New answer")));
 
         public Task<CardReviewWriteReceipt> RateCurrentAsync(Guid setId, Guid cardId,
             CardReviewRating rating, CancellationToken token)
