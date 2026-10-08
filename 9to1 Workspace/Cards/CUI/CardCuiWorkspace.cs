@@ -44,63 +44,56 @@ public sealed class CardCuiWorkspace(
 {
     private readonly SemaphoreSlim _operations = new(1, 1);
     private CardSet? _set;
-    private Guid? _selected;
-    private bool _front = true;
-    private bool _editing;
+    private readonly CardNavigationSession _navigation = new();
     private bool _busy;
-    private string _search = string.Empty;
-    private CardGroupingKind _grouping = CardGroupingKind.Set;
-    private int _selectedGroupIndex;
     private string _status = "Open an authorised Cards set";
 
     public event PropertyChangedEventHandler? PropertyChanged;
     public string SetTitle => _set?.Title ?? "Cards";
     public string Status => _status;
-    public string SearchText => _search;
-    public string ModeLabel => _editing ? "Switch to view" : "Switch to edit";
-    public string GroupModeLabel => _grouping switch
+    public string SearchText => _navigation.SearchText;
+    public string ModeLabel => _navigation.Mode == CardInteractionMode.Edit ? "Switch to view" : "Switch to edit";
+    public string GroupModeLabel => _navigation.Preferences.Grouping switch
     {
         CardGroupingKind.Subject => "Grouping: subject",
         CardGroupingKind.Topic => "Grouping: topic",
         _ => "Grouping: set",
     };
-    public IReadOnlyList<string> GroupNames => _set is null ? []
-        : CardSetOperations.Group(_set, _grouping).Keys.Order(StringComparer.Ordinal).ToArray();
-    public int SelectedGroupIndex => _selectedGroupIndex;
+    public IReadOnlyList<string> GroupNames => _navigation.GroupNames;
+    public int SelectedGroupIndex => GroupNames.ToList().FindIndex(name =>
+        string.Equals(name, _navigation.SelectedGroup, StringComparison.Ordinal));
     public bool CanGroup => !_busy && _set is not null;
     public bool CanSelectGroup => CanGroup && GroupNames.Count > 0;
-    public string SideLabel => _front ? "Front" : "Back";
+    public string SideLabel => _navigation.FrontVisible ? "Front" : "Back";
     public bool CanOpen => !_busy;
     public bool CanChangeMode => !_busy && _set is not null;
-    public bool CanFlip => !_busy && Selected is not null;
-    public bool CanEdit => !_busy && _editing && richEditor is not null && Selected is not null;
-    public bool CanRate => !_busy && reviews is not null && Selected is not null;
-    public bool CanPrevious => !_busy && SelectedIndex > 0;
-    public bool CanNext => !_busy && SelectedIndex >= 0 && SelectedIndex < Visible.Count - 1;
-    public Guid? SelectedCardId => _selected;
-    public string PositionLabel => SelectedIndex < 0 ? "No cards" : $"{SelectedIndex + 1} / {Visible.Count}";
-    public string PreviousPreview => SelectedIndex > 0 ? Summarise(Visible[SelectedIndex - 1]) : "";
-    public string NextPreview => CanNext ? Summarise(Visible[SelectedIndex + 1]) : "";
-    public string ContentHint => Selected is null ? "No card selected"
+    public bool CanFlip => !_busy && _navigation.Current is not null;
+    public bool CanEdit => !_busy && _navigation.Mode == CardInteractionMode.Edit
+        && richEditor is not null && _navigation.Current is not null;
+    public bool CanRate => !_busy && reviews is not null && _navigation.Current is not null;
+    public bool CanPrevious => !_busy && _navigation.Index > 0;
+    public bool CanNext => !_busy && _navigation.Index >= 0
+        && _navigation.Index < _navigation.Count - 1;
+    public Guid? SelectedCardId => _navigation.SelectedCardId;
+    public string PositionLabel => _navigation.Index < 0
+        ? "No cards" : $"{_navigation.Index + 1} / {_navigation.Count}";
+    public string PreviousPreview => _set is null ? ""
+        : _navigation.Window().Previous?.Front.SearchText ?? "";
+    public string NextPreview => _set is null ? ""
+        : _navigation.Window().Next?.Front.SearchText ?? "";
+    public string ContentHint => _navigation.Current is null ? "No card selected"
         : "Structured rich content is owned by the shared productivity renderer.";
+    private CardEntry? Selected => _navigation.Current;
 
-    private IReadOnlyList<CardEntry> Visible
+    /// <summary>Native keyboard/touch input must call this once the host binds its
+    /// original input stream. This is deterministic presentation, not a write.</summary>
+    public bool Navigate(CardNavigationInput input)
     {
-        get
-        {
-            if (_set is null || _selectedGroupIndex < 0
-                || _selectedGroupIndex >= GroupNames.Count) return [];
-            string selectedGroup = GroupNames[_selectedGroupIndex];
-            IReadOnlyList<CardEntry> group = CardSetOperations.Group(_set, _grouping)[selectedGroup];
-            return group.Where(card => _search.Length == 0
-                || card.Front.SearchText.Contains(_search, StringComparison.OrdinalIgnoreCase)
-                || card.Back.SearchText.Contains(_search, StringComparison.OrdinalIgnoreCase)).ToArray();
-        }
+        if (_busy || _set is null) return false;
+        bool changed = _navigation.Navigate(input);
+        if (changed) Changed();
+        return changed;
     }
-    private int SelectedIndex => _selected is { } id
-        ? Visible.ToList().FindIndex(card => card.CardId == id) : -1;
-    private CardEntry? Selected => SelectedIndex is var index && index >= 0 ? Visible[index] : null;
-    private string Summarise(CardEntry card) => card.Front.SearchText;
 
     public static CuiDocument LoadDocument()
     {
@@ -146,15 +139,13 @@ public sealed class CardCuiWorkspace(
         if (path == "SelectedGroupIndex" && CanSelectGroup && value is int index
             && index >= 0 && index < GroupNames.Count)
         {
-            _selectedGroupIndex = index;
-            ReconcileSelection();
+            if (!_navigation.SelectGroup(GroupNames[index])) return false;
             Changed();
             return true;
         }
         if (path != "SearchText" || value is not string text || text.Length > 256)
             return false;
-        _search = text;
-        ReconcileSelection();
+        _navigation.SetSearch(text);
         Changed();
         return true;
     }
@@ -193,28 +184,27 @@ public sealed class CardCuiWorkspace(
                         break;
                     case "9to1.Cards.Next":
                     case "9to1.Cards.Previous":
-                        int index = SelectedIndex + (command.EndsWith("Next", StringComparison.Ordinal) ? 1 : -1);
-                        _selected = Visible[index].CardId;
-                        _front = true;
+                        if (!_navigation.Move(command.EndsWith("Next", StringComparison.Ordinal) ? 1 : -1))
+                            throw new InvalidOperationException("The Cards focus changed before navigation.");
                         _status = PositionLabel;
                         break;
                     case "9to1.Cards.Flip":
-                        _front = !_front;
+                        if (!_navigation.Flip()) throw new InvalidOperationException("No card is focused.");
                         break;
                     case "9to1.Cards.CycleGrouping":
-                        _grouping = _grouping switch
+                        _navigation.SetGrouping(_navigation.Preferences.Grouping switch
                         {
                             CardGroupingKind.Set => CardGroupingKind.Subject,
                             CardGroupingKind.Subject => CardGroupingKind.Topic,
                             _ => CardGroupingKind.Set,
-                        };
-                        _selectedGroupIndex = 0;
-                        ReconcileSelection();
+                        });
                         _status = GroupModeLabel + " (session only; settings persistence not connected)";
                         break;
                     case "9to1.Cards.ToggleMode":
-                        _editing = !_editing;
-                        _status = _editing ? "Editing enabled; changes require Home approval"
+                        _navigation.SetMode(_navigation.Mode == CardInteractionMode.Edit
+                            ? CardInteractionMode.View : CardInteractionMode.Edit);
+                        _status = _navigation.Mode == CardInteractionMode.Edit
+                            ? "Editing enabled; changes require Home approval"
                             : "View mode; content editing disabled";
                         break;
                     case "9to1.Cards.EditSide":
@@ -246,8 +236,7 @@ public sealed class CardCuiWorkspace(
         }
         CardSetOperations.Validate(loaded);
         _set = loaded;
-        _selectedGroupIndex = 0;
-        ReconcileSelection();
+        _navigation.Load(loaded);
         _status = $"Opened {loaded.Title} at revision {loaded.Revision}";
     }
 
@@ -255,13 +244,14 @@ public sealed class CardCuiWorkspace(
     {
         CardSet set = _set ?? throw new InvalidOperationException("Open the set first.");
         CardEntry card = Selected ?? throw new InvalidOperationException("Select a card first.");
-        CardSide current = _front ? card.Front : card.Back;
+        CardSide current = _navigation.FrontVisible ? card.Front : card.Back;
         CardSide? replacement = await richEditor!.EditAsync(set.SetId, card.CardId,
-            _front, current, token).ConfigureAwait(false);
+            _navigation.FrontVisible, current, token).ConfigureAwait(false);
         if (replacement is null) { _status = "Editing cancelled; no changes saved"; return; }
         var request = new CardMutation.BulkEdit(Guid.NewGuid().ToString("D"), set.SetId,
             set.Revision, CardInteractionMode.Edit,
-            [new(card.CardId, card.Revision, _front ? replacement : null, _front ? null : replacement)]);
+            [new(card.CardId, card.Revision, _navigation.FrontVisible ? replacement : null,
+                _navigation.FrontVisible ? null : replacement)]);
         CardMutationOutcome result = await mutations.ExecuteAsync(request, token).ConfigureAwait(false);
         if (!result.Succeeded)
         {
@@ -278,6 +268,7 @@ public sealed class CardCuiWorkspace(
         }
         CardSetOperations.Validate(saved);
         _set = saved;
+        _navigation.Load(saved);
         _status = $"Saved revision {saved.Revision}";
     }
 
@@ -291,14 +282,6 @@ public sealed class CardCuiWorkspace(
             card.CardId, rating, token).ConfigureAwait(false);
         _status = receipt.Committed ? $"Review saved: {rating}" :
             $"Review not saved: {receipt.Code}";
-    }
-
-    private void ReconcileSelection()
-    {
-        IReadOnlyList<CardEntry> visible = Visible;
-        if (visible.Count == 0) { _selected = null; return; }
-        if (_selected is null || visible.All(card => card.CardId != _selected.Value))
-            _selected = visible[0].CardId;
     }
 
     private void Changed() => PropertyChanged?.Invoke(this,
