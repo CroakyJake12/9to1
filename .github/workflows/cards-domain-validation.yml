@@ -1,0 +1,56 @@
+name: Cards isolated domain validation
+
+on:
+  push:
+    branches:
+      - chatgpt/cards-canonical-core-20261008
+    paths:
+      - '9to1 Workspace/Cards/**'
+      - '.github/workflows/cards-domain-validation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cards-domain-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-cards:
+    name: Cards ${{ matrix.configuration }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
+    steps:
+      - name: Checkout immutable candidate
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.401'
+
+      - name: Restore Cards test graph
+        run: dotnet restore "9to1 Workspace/Cards/Tests/HavenOS.Cards.Tests.csproj" --nologo
+
+      - name: Run owning Cards tests
+        run: |
+          dotnet test "9to1 Workspace/Cards/Tests/HavenOS.Cards.Tests.csproj" \
+            -c "${{ matrix.configuration }}" --no-restore \
+            --nologo --logger "trx;LogFileName=Cards-${{ matrix.configuration }}.trx"
+
+      - name: Retain available test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cards-${{ matrix.configuration }}-${{ github.sha }}
+          if-no-files-found: warn
+          path: |
+            9to1 Workspace/Cards/Tests/TestResults/**/*.trx
+          retention-days: 14
