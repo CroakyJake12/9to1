@@ -96,6 +96,24 @@ public sealed class CardNavigationSessionTests
     }
 
     [Fact]
+    public void ChangingOrientationRetainsActiveSubjectAndFocusedCard()
+    {
+        CardSet set = Deck();
+        var session = new CardNavigationSession();
+        session.Load(set);
+        session.SetGrouping(CardGroupingKind.Subject);
+        Assert.True(session.SelectGroup("Chemistry"));
+        Guid focused = session.SelectedCardId!.Value;
+
+        session.SetDirection(CardNavigationDirection.Horizontal);
+
+        Assert.Equal("Chemistry", session.SelectedGroup);
+        Assert.Equal(focused, session.SelectedCardId);
+        Assert.Equal(1, session.Window().TotalCount);
+        Assert.Equal(CardNavigationDirection.Horizontal, session.Window().Preferences.Navigation);
+    }
+
+    [Fact]
     public void FilteringCanProduceEmptyStateWithoutSelectingWrongCard()
     {
         CardSet set = Deck();
