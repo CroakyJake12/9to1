@@ -49,6 +49,8 @@ public sealed class CardCuiWorkspace(
     private bool _editing;
     private bool _busy;
     private string _search = string.Empty;
+    private CardGroupingKind _grouping = CardGroupingKind.Set;
+    private int _selectedGroupIndex;
     private string _status = "Open an authorised Cards set";
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -56,6 +58,17 @@ public sealed class CardCuiWorkspace(
     public string Status => _status;
     public string SearchText => _search;
     public string ModeLabel => _editing ? "Switch to view" : "Switch to edit";
+    public string GroupModeLabel => _grouping switch
+    {
+        CardGroupingKind.Subject => "Grouping: subject",
+        CardGroupingKind.Topic => "Grouping: topic",
+        _ => "Grouping: set",
+    };
+    public IReadOnlyList<string> GroupNames => _set is null ? []
+        : CardSetOperations.Group(_set, _grouping).Keys.Order(StringComparer.Ordinal).ToArray();
+    public int SelectedGroupIndex => _selectedGroupIndex;
+    public bool CanGroup => !_busy && _set is not null;
+    public bool CanSelectGroup => CanGroup && GroupNames.Count > 0;
     public string SideLabel => _front ? "Front" : "Back";
     public bool CanOpen => !_busy;
     public bool CanChangeMode => !_busy && _set is not null;
@@ -71,11 +84,19 @@ public sealed class CardCuiWorkspace(
     public string ContentHint => Selected is null ? "No card selected"
         : "Structured rich content is owned by the shared productivity renderer.";
 
-    private IReadOnlyList<CardEntry> Visible => _set?.Cards
-        .Where(card => !card.IsDeleted && (_search.Length == 0
-            || card.Front.SearchText.Contains(_search, StringComparison.OrdinalIgnoreCase)
-            || card.Back.SearchText.Contains(_search, StringComparison.OrdinalIgnoreCase)))
-        .ToArray() ?? [];
+    private IReadOnlyList<CardEntry> Visible
+    {
+        get
+        {
+            if (_set is null || _selectedGroupIndex < 0
+                || _selectedGroupIndex >= GroupNames.Count) return [];
+            string selectedGroup = GroupNames[_selectedGroupIndex];
+            IReadOnlyList<CardEntry> group = CardSetOperations.Group(_set, _grouping)[selectedGroup];
+            return group.Where(card => _search.Length == 0
+                || card.Front.SearchText.Contains(_search, StringComparison.OrdinalIgnoreCase)
+                || card.Back.SearchText.Contains(_search, StringComparison.OrdinalIgnoreCase)).ToArray();
+        }
+    }
     private int SelectedIndex => _selected is { } id
         ? Visible.ToList().FindIndex(card => card.CardId == id) : -1;
     private CardEntry? Selected => SelectedIndex is var index && index >= 0 ? Visible[index] : null;
@@ -100,7 +121,10 @@ public sealed class CardCuiWorkspace(
         value = path switch
         {
             "SetTitle" => SetTitle, "Status" => Status, "SearchText" => SearchText,
-            "ModeLabel" => ModeLabel, "SideLabel" => SideLabel,
+            "ModeLabel" => ModeLabel, "GroupModeLabel" => GroupModeLabel,
+            "GroupNames" => GroupNames, "SelectedGroupIndex" => SelectedGroupIndex,
+            "CanGroup" => CanGroup, "CanSelectGroup" => CanSelectGroup,
+            "SideLabel" => SideLabel,
             "PreviousPreview" => PreviousPreview, "NextPreview" => NextPreview,
             "ContentHint" => ContentHint, "PositionLabel" => PositionLabel,
             "CanOpen" => CanOpen, "CanChangeMode" => CanChangeMode, "CanFlip" => CanFlip,
@@ -108,7 +132,9 @@ public sealed class CardCuiWorkspace(
             "CanNext" => CanNext,
             _ => null,
         };
-        return path is "SetTitle" or "Status" or "SearchText" or "ModeLabel" or "SideLabel"
+        return path is "SetTitle" or "Status" or "SearchText" or "ModeLabel"
+            or "GroupModeLabel" or "GroupNames" or "SelectedGroupIndex"
+            or "CanGroup" or "CanSelectGroup" or "SideLabel"
             or "PreviousPreview" or "NextPreview" or "ContentHint" or "PositionLabel"
             or "CanOpen" or "CanChangeMode" or "CanFlip" or "CanEdit" or "CanRate"
             or "CanPrevious" or "CanNext";
@@ -116,7 +142,16 @@ public sealed class CardCuiWorkspace(
 
     public bool TrySetValue(string path, object? value)
     {
-        if (path != "SearchText" || _busy || value is not string text || text.Length > 256)
+        if (_busy) return false;
+        if (path == "SelectedGroupIndex" && CanSelectGroup && value is int index
+            && index >= 0 && index < GroupNames.Count)
+        {
+            _selectedGroupIndex = index;
+            ReconcileSelection();
+            Changed();
+            return true;
+        }
+        if (path != "SearchText" || value is not string text || text.Length > 256)
             return false;
         _search = text;
         ReconcileSelection();
@@ -131,6 +166,7 @@ public sealed class CardCuiWorkspace(
         "9to1.Cards.Previous" => CanPrevious,
         "9to1.Cards.Flip" => CanFlip,
         "9to1.Cards.ToggleMode" => CanChangeMode,
+        "9to1.Cards.CycleGrouping" => CanGroup,
         "9to1.Cards.EditSide" => CanEdit,
         "9to1.Cards.RateRed" or "9to1.Cards.RateAmber" or "9to1.Cards.RateGreen" => CanRate,
         _ => false,
@@ -164,6 +200,17 @@ public sealed class CardCuiWorkspace(
                         break;
                     case "9to1.Cards.Flip":
                         _front = !_front;
+                        break;
+                    case "9to1.Cards.CycleGrouping":
+                        _grouping = _grouping switch
+                        {
+                            CardGroupingKind.Set => CardGroupingKind.Subject,
+                            CardGroupingKind.Subject => CardGroupingKind.Topic,
+                            _ => CardGroupingKind.Set,
+                        };
+                        _selectedGroupIndex = 0;
+                        ReconcileSelection();
+                        _status = GroupModeLabel + " (session only; settings persistence not connected)";
                         break;
                     case "9to1.Cards.ToggleMode":
                         _editing = !_editing;
@@ -199,6 +246,7 @@ public sealed class CardCuiWorkspace(
         }
         CardSetOperations.Validate(loaded);
         _set = loaded;
+        _selectedGroupIndex = 0;
         ReconcileSelection();
         _status = $"Opened {loaded.Title} at revision {loaded.Revision}";
     }
