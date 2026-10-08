@@ -256,6 +256,55 @@ public sealed class CardCuiWorkspaceTests
     }
 
     [Fact]
+    public async Task RecoverDeletedCardThroughAuthoredPickerAndCanonicalReceipt()
+    {
+        SceneState state = Build();
+        CardCuiWorkspace ui = state.Ui!;
+        await ui.DispatchAsync("9to1.Cards.Open", null);
+        await ui.DispatchAsync("9to1.Cards.ToggleMode", null);
+        Guid first = ui.SelectedCardId!.Value;
+
+        Assert.False(ui.CanRestore);
+        await ui.DispatchAsync("9to1.Cards.Delete", null);
+        Assert.True(ui.CanRestore);
+        Assert.Single(ui.RecoveryNames);
+        Assert.Contains("Mens rea", ui.RecoveryNames[0]);
+        Assert.True(ui.TrySetValue("SelectedRecoveryIndex", 0));
+        Assert.False(ui.TrySetValue("SelectedRecoveryIndex", 3));
+
+        await ui.DispatchAsync("9to1.Cards.Restore", null);
+
+        Assert.Equal(2, state.Commits);
+        Assert.Equal(4, state.Canonical.Revision);
+        Assert.Equal(first, state.Canonical.Cards[0].CardId);
+        Assert.False(state.Canonical.Cards[0].IsDeleted);
+        Assert.Empty(ui.RecoveryNames);
+        Assert.False(ui.CanRestore);
+        Assert.Contains("Card restored", ui.Status);
+        Assert.True(ui.CanDelete);
+    }
+
+    [Fact]
+    public async Task RestoreRespectsCanonicalPermissionAndRetainsDeletedCardOnDenial()
+    {
+        SceneState state = Build();
+        CardCuiWorkspace ui = state.Ui!;
+        await ui.DispatchAsync("9to1.Cards.Open", null);
+        await ui.DispatchAsync("9to1.Cards.ToggleMode", null);
+        Guid first = ui.SelectedCardId!.Value;
+        await ui.DispatchAsync("9to1.Cards.Delete", null);
+        Assert.True(ui.CanRestore);
+        state.CanApprove = false;
+
+        await ui.DispatchAsync("9to1.Cards.Restore", null);
+
+        Assert.Equal(1, state.Commits);
+        Assert.True(state.Canonical.Cards.Single(card => card.CardId == first).IsDeleted);
+        Assert.Single(ui.RecoveryNames);
+        Assert.Contains("No changes saved", ui.Status);
+    }
+
+    [Fact]
     public async Task PersonalReviewRequiresActualReceiptButDoesNotMutateSharedDeck()
     {
         SceneState state = Build();
