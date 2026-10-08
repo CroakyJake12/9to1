@@ -98,6 +98,32 @@ returned snapshot as saved. Review records must not be written into shared
 CardSet payloads. Downstream integration must not copy this engine into another
 independent application runtime.
 
+## First-party CUI scene — new source slice
+
+`Cards/CUI` now embeds an authored `.cui` scene and a scene-binding
+controller using the **existing** `CakeOS.Cui.Runtime` binding and action
+interfaces. It includes a subject/topic sidebar, search, focused vertical
+card navigation, explicit Flip, View/Edit switching, an injected
+Home/shared-productivity rich editor action, and red/amber/green personal
+review actions. The controller **does not directly save cards or ratings**.
+A Card write invokes `CardMutationGateway` and reloads the canonical
+acknowledged revision; a review is shown as saved only after the personal
+review owner confirms the write.
+
+The scene's actual rich content renderer is **not yet embedded**; the
+current content status explicitly reports that limitation rather than
+displaying derived search text as if it were a rich editor. Group choices
+currently live in session state: persistent horizontal navigation and
+custom-group settings require the owner-backed preferences API. Actual
+scroll geometry, shadowed neighbours, responsive/appearance checks,
+accessibility and keyboard/touch smoke acceptance remain unverified.
+
+New owning tests cover CUI parser acceptance, basic navigation/flip,
+search, grouped sidebar selection, edit-mode protection, actual returned
+commit receipts and personal review receipts using **test-only** owner
+fakes. A separate CI job exercises the real CUI project and test graph;
+it must pass before this CUI slice is labelled build-verified.
+
 ## Local focused checks
 
 From `9to1 Workspace` with .NET SDK 10 installed:
@@ -106,6 +132,7 @@ From `9to1 Workspace` with .NET SDK 10 installed:
 dotnet restore Cards/Tests/HavenOS.Cards.Tests.csproj
 dotnet test Cards/Tests/HavenOS.Cards.Tests.csproj -c Debug
 dotnet test Cards/Tests/HavenOS.Cards.Tests.csproj -c Release
+dotnet test Cards/CUI/Tests/HavenOS.Cards.CUI.Tests.csproj -c Release
 ```
 
 These commands have **not** been executed in the originating ChatGPT
