@@ -4,6 +4,8 @@
       <TextBlock text="{Binding SetTitle}" accessible-name="Current flashcard set" />
       <Button id="cards-open" action="9to1.Cards.Open" content="Open set" accessible-name="Open authorised flashcard set" is-enabled="{Binding CanOpen}" />
       <Button id="cards-mode" action="9to1.Cards.ToggleMode" content="{Binding ModeLabel}" accessible-name="Switch view and edit modes" is-enabled="{Binding CanChangeMode}" />
+      <Button id="cards-add" action="9to1.Cards.Add" content="New card" accessible-name="Create a real structured flashcard with front and back" is-enabled="{Binding CanCreate}" />
+      <Button id="cards-duplicate" action="9to1.Cards.Duplicate" content="Duplicate" accessible-name="Duplicate the selected flashcard" is-enabled="{Binding CanDuplicate}" />
     </WrapPanel>
     <Grid grid-row="1" columns="Auto,*" accessible-name="Cards workspace and navigation">
       <StackPanel grid-column="0" spacing="8" accessible-name="Subjects and topics">
