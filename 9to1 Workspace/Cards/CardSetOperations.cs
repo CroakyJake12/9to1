@@ -421,7 +421,7 @@ public static class CardSetOperations
         return index;
     }
 
-    internal static void Validate(CardSet? set)
+    public static void Validate(CardSet? set)
     {
         if (set is null || set.SetId == Guid.Empty || set.ArtifactId == Guid.Empty
             || string.IsNullOrWhiteSpace(set.Title) || string.IsNullOrWhiteSpace(set.OwnerScope)
