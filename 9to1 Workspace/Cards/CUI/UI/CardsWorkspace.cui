@@ -8,6 +8,7 @@
     <Grid grid-row="1" columns="Auto,*" accessible-name="Cards workspace and navigation">
       <StackPanel grid-column="0" spacing="8" accessible-name="Subjects and topics">
         <TextBox id="cards-search" text="{Binding SearchText, Mode=TwoWay}" accessible-name="Search flashcards" watermark="Search cards" />
+        <Button id="cards-orientation" action="9to1.Cards.ToggleOrientation" content="{Binding OrientationLabel}" accessible-name="Switch vertical or horizontal card navigation preferences" is-enabled="{Binding CanChangeOrientation}" />
         <Button id="cards-grouping" action="9to1.Cards.CycleGrouping" content="{Binding GroupModeLabel}" accessible-name="Switch between sets, subjects and topics" is-enabled="{Binding CanGroup}" />
         <ComboBox id="cards-groups" ItemsSource="{Binding GroupNames}" SelectedIndex="{Binding SelectedGroupIndex, mode=TwoWay, type=int}" accessible-name="Choose a subject or topic" is-enabled="{Binding CanSelectGroup}" />
         <TextBlock text="{Binding PositionLabel}" accessible-name="Current card position" />
