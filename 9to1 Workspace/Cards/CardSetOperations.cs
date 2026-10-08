@@ -342,7 +342,7 @@ public static class CardSetOperations
             using JsonDocument document = JsonDocument.Parse(json);
             if (document.RootElement.ValueKind != JsonValueKind.Object
                 || !document.RootElement.TryGetProperty(nameof(CardSet.SchemaVersion), out JsonElement version)
-                || !version.TryGetInt32(out _))
+                || version.ValueKind != JsonValueKind.Number || !version.TryGetInt32(out _))
                 throw Fail(CardFailureCode.InvalidContent,
                     "Import requires an explicit integer SchemaVersion and a Cards object.");
             CardSet? set = JsonSerializer.Deserialize<CardSet>(json);
