@@ -30,6 +30,14 @@ public interface ICardCuiReviewOwner
 
 public sealed record CardReviewWriteReceipt(bool Committed, string Code);
 
+/// <summary>Actual native UI owner must show a destructive impact preview and
+/// collect user approval; permission is checked separately by the canonical
+/// Home admission owner at dispatch and commit.</summary>
+public interface ICardCuiDeleteReviewer
+{
+    Task<bool> ApproveAsync(CardDeletePreview preview, CancellationToken cancellationToken);
+}
+
 /// <summary>Creates both real structured sides with the existing shared editor.
 /// A cancelled draft must not create an empty card or a saved artifact.</summary>
 public interface ICardCuiCardCreator
@@ -60,7 +68,8 @@ public sealed class CardCuiWorkspace(
     ICardCuiRichEditor? richEditor = null,
     ICardCuiReviewOwner? reviews = null,
     ICardCuiPreferencesOwner? preferences = null,
-    ICardCuiCardCreator? creator = null)
+    ICardCuiCardCreator? creator = null,
+    ICardCuiDeleteReviewer? deletion = null)
     : ICuiWritableBindingContext, ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged
 {
     private readonly SemaphoreSlim _operations = new(1, 1);
@@ -98,6 +107,8 @@ public sealed class CardCuiWorkspace(
         && _set is not null && creator is not null;
     public bool CanDuplicate => !_busy && _navigation.Mode == CardInteractionMode.Edit
         && _navigation.Current is not null;
+    public bool CanDelete => !_busy && _navigation.Mode == CardInteractionMode.Edit
+        && _navigation.Current is not null && deletion is not null;
     public bool CanRate => !_busy && reviews is not null && _navigation.Current is not null;
     public bool CanPrevious => !_busy && _navigation.Index > 0;
     public bool CanNext => !_busy && _navigation.Index >= 0
@@ -151,7 +162,8 @@ public sealed class CardCuiWorkspace(
             "ContentHint" => ContentHint, "PositionLabel" => PositionLabel,
             "CanOpen" => CanOpen, "CanChangeMode" => CanChangeMode, "CanFlip" => CanFlip,
             "CanEdit" => CanEdit, "CanCreate" => CanCreate,
-            "CanDuplicate" => CanDuplicate, "CanRate" => CanRate,
+            "CanDuplicate" => CanDuplicate, "CanDelete" => CanDelete,
+            "CanRate" => CanRate,
             "CanPrevious" => CanPrevious,
             "CanNext" => CanNext,
             _ => null,
@@ -162,7 +174,7 @@ public sealed class CardCuiWorkspace(
             or "CanGroup" or "CanSelectGroup" or "SideLabel"
             or "PreviousPreview" or "NextPreview" or "ContentHint" or "PositionLabel"
             or "CanOpen" or "CanChangeMode" or "CanFlip" or "CanEdit" or "CanRate"
-            or "CanPrevious" or "CanNext" or "CanCreate" or "CanDuplicate";
+            or "CanPrevious" or "CanNext" or "CanCreate" or "CanDuplicate" or "CanDelete";
     }
 
     public bool TrySetValue(string path, object? value)
@@ -194,6 +206,7 @@ public sealed class CardCuiWorkspace(
         "9to1.Cards.EditSide" => CanEdit,
         "9to1.Cards.Add" => CanCreate,
         "9to1.Cards.Duplicate" => CanDuplicate,
+        "9to1.Cards.Delete" => CanDelete,
         "9to1.Cards.RateRed" or "9to1.Cards.RateAmber" or "9to1.Cards.RateGreen" => CanRate,
         _ => false,
     });
@@ -253,6 +266,9 @@ public sealed class CardCuiWorkspace(
                         break;
                     case "9to1.Cards.Duplicate":
                         await DuplicateAsync(cancellationToken).ConfigureAwait(false);
+                        break;
+                    case "9to1.Cards.Delete":
+                        await DeleteAsync(cancellationToken).ConfigureAwait(false);
                         break;
                     case "9to1.Cards.RateRed":
                     case "9to1.Cards.RateAmber":
@@ -337,6 +353,26 @@ public sealed class CardCuiWorkspace(
             set.Revision, CardInteractionMode.Edit, card.CardId);
         CardMutationOutcome receipt = await mutations.ExecuteAsync(request, token).ConfigureAwait(false);
         await ReloadAfterCommitAsync(set, receipt, "Card duplicated", token).ConfigureAwait(false);
+    }
+
+    private async Task DeleteAsync(CancellationToken token)
+    {
+        CardSet set = _set ?? throw new InvalidOperationException("Open the set first.");
+        CardEntry card = Selected ?? throw new InvalidOperationException("Select a card first.");
+        CardDeletePreview preview = CardSetOperations.PreviewDelete(set, [card.CardId]);
+        bool approved = await deletion!.ApproveAsync(preview, token).ConfigureAwait(false);
+        if (!approved)
+        {
+            _status = "Deletion cancelled; no changes saved";
+            return;
+        }
+        // A UI confirmation alone grants nothing. Home authorisation and a
+        // compare-and-swap commit still run in the canonical mutation gateway.
+        var request = new CardMutation.Delete(Guid.NewGuid().ToString("D"), set.SetId,
+            preview.ExpectedSetRevision, CardInteractionMode.Edit, preview.CardIds);
+        CardMutationOutcome receipt = await mutations.ExecuteAsync(request, token).ConfigureAwait(false);
+        await ReloadAfterCommitAsync(set, receipt, "Card moved to recoverable deletion",
+            token).ConfigureAwait(false);
     }
 
     private async Task ReloadAfterCommitAsync(CardSet original, CardMutationOutcome receipt,
