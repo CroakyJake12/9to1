@@ -153,6 +153,37 @@ The full CUI action tests still require the repository's vendored Avalonia
 dependency graph, which currently fails independently of Cards source.
 Do not claim runtime/UI verification from a passing parser or core test.
 
+## Create, duplicate and delete — first-party CUI action slice
+
+The card-domain mutation gateway now accepts **bounded atomic new-card
+batches** and duplicate-card commands. Every write uses the same trusted
+caller, canonical Home admission, expected set revision, idempotency
+fingerprint and storage owner receipt as existing edits. The new-card
+draft must contain front and back **structured shared-editor content**;
+the gateway does not create fake rich-content documents.
+
+The Cards CUI presenter exposes **New card** (only when a genuine
+`ICardCuiCardCreator` is installed), **Duplicate** (Edit mode only)
+and **Delete card** (only with a native destructive-impact reviewer).
+It reloads the saved canonical source revision on an acknowledged write;
+cancelled creation and rejected deletion do not claim success. Soft
+deletion retains the CardID and tombstone so later recovery remains
+possible. The canonical admission service still decides actual
+permission; a UI preview never grants access.
+
+Additional focused xUnit tests cover the gateway's create/duplicate
+authorisation, exact revision/receipt, replay deduplication, view-mode
+denial and atomic rejection of invalid drafts. CUI interaction tests
+also cover acknowledged creation and duplication, cancelled creation,
+confirmed/declined deletion, denied canonical permission and recovery
+state using test-only owner fakes. These CUI runtime tests remain
+unexecuted/blocked by the vendored framework compiler until reported
+otherwise by a real CI run.
+
+Known product gaps: actual Shared Productivity Engine creation UI,
+identity/permission/storage providers, recovery picker, Study evidence,
+horizontal responsive layout, native CUI host and installed acceptance.
+
 ## Local focused checks
 
 From `9to1 Workspace` with .NET SDK 10 installed:
