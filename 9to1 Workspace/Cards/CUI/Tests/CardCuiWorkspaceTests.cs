@@ -23,7 +23,7 @@ public sealed class CardCuiWorkspaceTests
         var state = new SceneState(original);
         state.Ui = new CardCuiWorkspace(state,
             new CardMutationGateway(state, state, state),
-            state, state, creator: state);
+            state, state, creator: state, deletion: state);
         return state;
     }
 
@@ -202,6 +202,60 @@ public sealed class CardCuiWorkspaceTests
     }
 
     [Fact]
+    public async Task DeclinedDeletionDoesNotChangeCanonicalSetOrAskStoreToCommit()
+    {
+        SceneState state = Build();
+        CardCuiWorkspace ui = state.Ui!;
+        await ui.DispatchAsync("9to1.Cards.Open", null);
+        Assert.False(ui.CanDelete);
+        await ui.DispatchAsync("9to1.Cards.ToggleMode", null);
+        Assert.True(ui.CanDelete);
+        state.CanApproveDeletion = false;
+
+        await ui.DispatchAsync("9to1.Cards.Delete", null);
+
+        Assert.Equal(0, state.Commits);
+        Assert.Equal(3, state.Canonical.Cards.Count);
+        Assert.All(state.Canonical.Cards, card => Assert.False(card.IsDeleted));
+        Assert.Contains("cancelled", ui.Status);
+    }
+
+    [Fact]
+    public async Task ApprovedDeletionStaysRecoverableAndUsesCanonicalGateway()
+    {
+        SceneState state = Build();
+        CardCuiWorkspace ui = state.Ui!;
+        await ui.DispatchAsync("9to1.Cards.Open", null);
+        await ui.DispatchAsync("9to1.Cards.ToggleMode", null);
+        Guid selected = ui.SelectedCardId!.Value;
+
+        await ui.DispatchAsync("9to1.Cards.Delete", null);
+
+        Assert.Equal(1, state.Commits);
+        Assert.Equal(3, state.Canonical.Cards.Count);
+        Assert.True(state.Canonical.Cards.Single(card => card.CardId == selected).IsDeleted);
+        Assert.Equal(2, state.Canonical.Cards.Count(card => !card.IsDeleted));
+        Assert.NotEqual(selected, ui.SelectedCardId);
+        Assert.Contains("recoverable", ui.Status);
+    }
+
+    [Fact]
+    public async Task PreviewApprovalNeverOverridesDeniedCanonicalPermission()
+    {
+        SceneState state = Build();
+        CardCuiWorkspace ui = state.Ui!;
+        await ui.DispatchAsync("9to1.Cards.Open", null);
+        await ui.DispatchAsync("9to1.Cards.ToggleMode", null);
+        state.CanApprove = false;
+
+        await ui.DispatchAsync("9to1.Cards.Delete", null);
+
+        Assert.Equal(0, state.Commits);
+        Assert.All(state.Canonical.Cards, card => Assert.False(card.IsDeleted));
+        Assert.Contains("No changes saved", ui.Status);
+    }
+
+    [Fact]
     public async Task PersonalReviewRequiresActualReceiptButDoesNotMutateSharedDeck()
     {
         SceneState state = Build();
@@ -220,7 +274,7 @@ public sealed class CardCuiWorkspaceTests
 
     private sealed class SceneState(CardSet original) :
         ICardCuiSetSource, ICardCuiRichEditor, ICardCuiReviewOwner,
-        ICardCuiPreferencesOwner, ICardCuiCardCreator, ICardCanonicalMutationStore,
+        ICardCuiPreferencesOwner, ICardCuiCardCreator, ICardCuiDeleteReviewer, ICardCanonicalMutationStore,
         ICardTrustedCallerSource, ICardMutationAdmission
     {
         public CardCuiWorkspace? Ui { get; set; }
@@ -231,6 +285,7 @@ public sealed class CardCuiWorkspaceTests
         public bool CanWriteReview { get; set; } = true;
         public bool CanWritePreferences { get; set; } = true;
         public bool CancelCreation { get; set; }
+        public bool CanApproveDeletion { get; set; } = true;
         public CardViewPreferences? SavedPreferences { get; private set; }
         public CardReviewRating? PersonalReview { get; private set; }
 
@@ -244,6 +299,13 @@ public sealed class CardCuiWorkspaceTests
         public Task<CardDraft?> CreateAsync(Guid setId, CancellationToken token) =>
             Task.FromResult<CardDraft?>(CancelCreation ? null
                 : new CardDraft(Side("New question"), Side("New answer")));
+
+        public Task<bool> ApproveAsync(CardDeletePreview preview, CancellationToken token)
+        {
+            Assert.Equal(1, preview.Count);
+            Assert.Equal(Canonical.Revision, preview.ExpectedSetRevision);
+            return Task.FromResult(CanApproveDeletion);
+        }
 
         public Task<CardReviewWriteReceipt> RateCurrentAsync(Guid setId, Guid cardId,
             CardReviewRating rating, CancellationToken token)
