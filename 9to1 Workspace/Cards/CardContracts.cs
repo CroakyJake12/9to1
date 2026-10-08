@@ -118,6 +118,10 @@ public sealed record CardReviewRecord(
     string EvidenceType,
     DateTimeOffset ReviewedAt);
 
+// A new card must arrive from the canonical shared rich-content editor.
+// No empty placeholder, Markdown flattening or fabricated media objects.
+public sealed record CardDraft(CardSide Front, CardSide Back);
+
 // One atomic replacement of any selected side(s), checked against the specific
 // Card revision as well as the enclosing Set revision. Null means "unchanged".
 public sealed record CardSideEdit(
