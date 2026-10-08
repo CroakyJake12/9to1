@@ -20,10 +20,10 @@ public enum CardFailureCode
     RevisionConflict,
     ViewIsReadOnly,
     InvalidOrdering,
-    InvalidPage,
-    DuplicateAsset,
     DuplicateCard,
     UnsupportedSchema,
+    InvalidPage,
+    DuplicateAsset,
 }
 
 public sealed class CardOperationException : Exception
