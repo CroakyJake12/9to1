@@ -83,8 +83,25 @@ public static class CardSetOperations
             Revision = 1,
             Extensions = CloneExtensions(original.Extensions),
             CustomGroups = original.CustomGroups is null ? null
-                : new Dictionary<string, string>(original.CustomGroups, StringComparer.Ordinal),
+                : original.CustomGroups.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal),
         });
+        return Next(set, cards);
+    }
+
+    public static CardSet AssignGrouping(CardSet set, Guid cardId, string? subjectId, string? topicId,
+        IReadOnlyDictionary<string, string>? customGroups, long expectedRevision, CardInteractionMode mode)
+    {
+        EnsureWritable(set, expectedRevision, mode);
+        var cards = set.Cards.ToArray();
+        int index = ActiveCardIndex(cards, cardId);
+        CardEntry original = cards[index];
+        cards[index] = original with
+        {
+            SubjectId = subjectId,
+            TopicId = topicId,
+            CustomGroups = customGroups?.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal),
+            Revision = checked(original.Revision + 1),
+        };
         return Next(set, cards);
     }
 
