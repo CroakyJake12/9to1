@@ -13,6 +13,8 @@ public static class CardSetOperations
     {
         if (string.IsNullOrWhiteSpace(ownerScope) || string.IsNullOrWhiteSpace(title))
             throw Fail(CardFailureCode.InvalidState, "Owner/scope and title are required.");
+        if (setId == Guid.Empty || artifactId == Guid.Empty)
+            throw Fail(CardFailureCode.InvalidState, "Stable IDs must not be empty.");
         return new CardSet
         {
             SetId = setId ?? Guid.NewGuid(),
@@ -194,7 +196,7 @@ public static class CardSetOperations
                 CardGroupingKind.Topic => card.TopicId ?? "Unassigned",
                 CardGroupingKind.Custom => card.CustomGroups is not null
                     && card.CustomGroups.TryGetValue(customGroupKey!, out string? label)
-                        ? label : "Unassigned",
+                    && !string.IsNullOrWhiteSpace(label) ? label : "Unassigned",
                 _ => set.SetId.ToString("D"),
             }, StringComparer.Ordinal)
             .ToDictionary(group => group.Key,
