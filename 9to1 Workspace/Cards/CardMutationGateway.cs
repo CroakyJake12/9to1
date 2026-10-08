@@ -1,3 +1,6 @@
+using System.Security.Cryptography;
+using System.Text.Json;
+
 namespace HavenOS.Apps.Cards;
 
 /// <summary>A mutation request from an app or automation caller. Actor identity is deliberately
@@ -64,8 +67,14 @@ public interface ICardCanonicalMutationStore
     Task<CardSet?> ReadForPrincipalAsync(CardTrustedCaller caller, Guid setId,
         CancellationToken cancellationToken);
 
+    // The read is bound to the actual principal, operation ID and exact request
+    // fingerprint, and must fail closed if an ID was reused for another payload.
+    Task<CardCommitReceipt?> FindReceiptAsync(CardTrustedCaller caller, Guid setId,
+        string operationId, string requestFingerprint, CancellationToken cancellationToken);
+
     Task<CardCommitReceipt> CommitAsync(CardTrustedCaller caller, CardMutation request,
-        CardSet successor, Func<CancellationToken, ValueTask<CardAdmissionDecision>> recheckAdmission,
+        string requestFingerprint, CardSet successor,
+        Func<CancellationToken, ValueTask<CardAdmissionDecision>> recheckAdmission,
         CancellationToken cancellationToken);
 }
 
@@ -113,6 +122,15 @@ public sealed class CardMutationGateway(
         if (!permit.Allowed)
             return new(false, permit.Code, command.SetId, command.OperationId, null);
 
+        // Only the canonical owner can recognise a previously acknowledged
+        // mutation. A different payload with the same operation ID must refuse.
+        string fingerprint = Convert.ToHexString(SHA256.HashData(
+            JsonSerializer.SerializeToUtf8Bytes(command, command.GetType())));
+        CardCommitReceipt? prior = await store.FindReceiptAsync(caller,
+            command.SetId, command.OperationId, fingerprint, cancellationToken);
+        if (prior is not null)
+            return FromReceipt(command, prior, expectedReplay: true);
+
         // A replay is not presumed from the cached source. Only the owning
         // transaction service can recognise and return an acknowledged replay.
         CardSet successor = command switch
@@ -123,31 +141,41 @@ public sealed class CardMutationGateway(
                 current, edit.Edits, edit.ExpectedSetRevision, edit.Mode),
             CardMutation.Move move => CardSetOperations.MoveVisible(current,
                 move.CardId, move.VisibleDestination, move.ExpectedSetRevision, move.Mode),
-            CardMutation.Delete delete => CardSetOperations.SoftDelete(current,
-                CardSetOperations.PreviewDelete(current, delete.CardIds),
-                delete.Mode) is var deleted
-                ? deleted // expected revision explicitly checked below
-                : throw new InvalidOperationException("Delete returned no snapshot."),
+            CardMutation.Delete delete => DeleteCards(current, delete),
             CardMutation.Restore restore => CardSetOperations.Restore(
                 current, restore.CardId, restore.ExpectedSetRevision, restore.Mode),
             _ => throw new CardOperationException(CardFailureCode.InvalidState,
                 "Unsupported Cards command."),
         };
-        if (command is CardMutation.Delete && current.Revision != command.ExpectedSetRevision)
-            throw new CardOperationException(CardFailureCode.RevisionConflict,
-                "The deletion preview's revision has changed.");
-
         // Require a commit-boundary recheck with the SAME resolved principal and
         // request, not a caller-provided privilege flag.
-        CardCommitReceipt receipt = await store.CommitAsync(caller, command, successor,
+        CardCommitReceipt receipt = await store.CommitAsync(caller, command, fingerprint, successor,
             token => admission.CheckAsync(caller, command, current, token),
             cancellationToken);
 
+        return FromReceipt(command, receipt, expectedReplay: false);
+    }
+
+    private static CardSet DeleteCards(CardSet set, CardMutation.Delete delete)
+    {
+        if (delete.ExpectedSetRevision != set.Revision)
+            throw new CardOperationException(CardFailureCode.RevisionConflict,
+                "Delete was requested against a stale set revision.");
+        CardDeletePreview preview = CardSetOperations.PreviewDelete(set, delete.CardIds);
+        return CardSetOperations.SoftDelete(set, preview, delete.Mode);
+    }
+
+    private static CardMutationOutcome FromReceipt(
+        CardMutation command, CardCommitReceipt receipt, bool expectedReplay)
+    {
         if (receipt.SetId != command.SetId || receipt.OperationId != command.OperationId
             || (receipt.Status is CardCommitStatus.Committed or CardCommitStatus.AlreadyCommitted
                 && receipt.CommittedRevision is null))
             throw new CardOperationException(CardFailureCode.InvalidState,
                 "The storage owner returned a mismatched or incomplete commit receipt.");
+        if (expectedReplay && receipt.Status != CardCommitStatus.AlreadyCommitted)
+            throw new CardOperationException(CardFailureCode.InvalidState,
+                "A replay lookup must return an acknowledged prior operation, not a new commit.");
 
         return receipt.Status switch
         {
