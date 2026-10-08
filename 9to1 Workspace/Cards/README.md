@@ -36,6 +36,35 @@ mutation rules**, rather than each inventing a private flashcard model.
   external Files object or grant file permissions.
 - Focused xUnit regression cases covering these domain operations.
 
+## Typed mutation gateway (source-only)
+
+The Cards-owned `CardMutationGateway` now routes typed Rename, BulkEdit,
+Move, Delete and Restore actions through three **injected canonical-owner
+ports**: trusted caller evidence, live Home permission admission, and the
+canonical revision-aware commit store. Its response represents an **actual
+commit receipt**, not an optimistic UI mutation. The interface requires an
+atomic commit-boundary permission recheck and operation-ID replay deduplication;
+the gateway itself provides neither a competing file store nor local grants.
+
+An in-memory fake store exists only inside the unit tests. It exercises
+revocation between preview and commit, optimistic concurrency, exact
+operation-ID/payload reuse, deletion conflict and duplicate delivery. These
+tests do not prove a real Home or Files provider has implemented the ports.
+
+## Home shared-engine adapter (dependent verification)
+
+`HomeIntegration` references the actual `HavenOS.Home` assembly and
+`IHomeProductivityEngine`. Rich Home object bundles remain structured; an
+unsupported object or external format refuses compatibility instead of
+silently flattening content.
+
+The published integration branch currently causes a compiler collision in
+`Haven.Application.IWorkspaceOriginalTraversalService` during the
+Home-dependent build. That is outside this Cards-owned lane; the original
+failure evidence is retained in GitHub Actions. It requires receiving-source
+reconciliation by Astra's shared Application owner. No stub, copied assembly
+or suppressed error will be substituted to get a misleading green build.
+
 ## Integration required before any app-readiness claim
 
 These **remain open** and are intentionally not simulated:
