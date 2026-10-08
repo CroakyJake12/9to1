@@ -22,7 +22,14 @@ mutation rules**, rather than each inventing a private flashcard model.
 - Principal-specific review record **construction**, outside shared deck content.
 - JSON schema validation, explicit future-schema rejection and preservation of
   unknown extension fields across a JSON round trip.
-- Focused xUnit regression cases.
+- Atomic multi-card front/back edits with per-card and set revision checks.
+- Visible-position reordering that keeps recoverable tombstone positions stable.
+- Set title editing and revision-bound, filtered page queries (maximum 100
+  cards per page), providing a usable contract for a future virtualised UI.
+- Principal-scoped review queue projections with red/amber/green difficult-first
+  and difficult-only modes; mixed-owner data is ignored by the projection.
+- Versioned import validation that explicitly rejects malformed/unversioned JSON.
+- Focused xUnit regression cases covering these domain operations.
 
 ## Integration required before any app-readiness claim
 
@@ -44,7 +51,12 @@ These **remain open** and are intentionally not simulated:
    multi-user permission/conflict tests and full specification acceptance.
 
 The pure operations return successor snapshots; **they do not perform persistence
-or permission checks**. Callers must obtain canonical authority *before* calling
+or permission checks**. The review queries accept a principal ID only from a
+trusted caller; they cannot authenticate a user and do not persist ratings.
+Review-owner and per-user access checks must be enforced by canonical services.
+A filtered page carries its source revision so a UI can reject stale next-page
+requests. A 100-entry page cap is an internal provisional bound, not a product
+performance acceptance result. Callers must obtain canonical authority *before* calling
 them, then atomically commit against the expected revision. Do not treat a
 returned snapshot as saved. Review records must not be written into shared
 CardSet payloads. Downstream integration must not copy this engine into another
