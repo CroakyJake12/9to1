@@ -212,6 +212,66 @@ public sealed class CardMutationGatewayTests
         Assert.Equal(0, store.CommitCount);
     }
 
+    [Fact]
+    public async Task RestoreRevivesOriginalIdAndRichContentWithRealCommitReceipt()
+    {
+        CardSet baseSet = CardSetOperations.Create("personal:student-a", "Restore");
+        CardSet added = CardSetOperations.AddCards(baseSet,
+            [(NewSide(), NewSide())], baseSet.Revision, CardInteractionMode.Edit);
+        Guid originalId = added.Cards[0].CardId;
+        CardSet deleted = CardSetOperations.SoftDelete(added,
+            CardSetOperations.PreviewDelete(added, [originalId]), CardInteractionMode.Edit);
+        var store = new FakeStore(deleted);
+        var gateway = Build(store, new FakeAdmission());
+
+        var command = new CardMutation.Restore("restore-1", deleted.SetId,
+            deleted.Revision, CardInteractionMode.Edit, originalId);
+        CardMutationOutcome result = await gateway.ExecuteAsync(command);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(deleted.Revision + 1, result.CommittedRevision);
+        Assert.Equal(originalId, store.Current.Cards[0].CardId);
+        Assert.False(store.Current.Cards[0].IsDeleted);
+        Assert.True(System.Text.Json.JsonElement.DeepEquals(
+            deleted.Cards[0].Front.Document, store.Current.Cards[0].Front.Document));
+
+        CardMutationOutcome replay = await gateway.ExecuteAsync(command);
+        Assert.True(replay.Replayed);
+        Assert.Equal(1, store.CommitCount);
+    }
+
+    [Fact]
+    public async Task RestoreCannotBypassDeniedOrStaleAuthority()
+    {
+        CardSet empty = CardSetOperations.Create("personal:student-a", "Restore");
+        CardSet added = CardSetOperations.AddCards(empty,
+            [(NewSide(), NewSide())], empty.Revision, CardInteractionMode.Edit);
+        CardSet deleted = CardSetOperations.SoftDelete(added,
+            CardSetOperations.PreviewDelete(added, [added.Cards[0].CardId]),
+            CardInteractionMode.Edit);
+        var store = new FakeStore(deleted);
+        var denied = Build(store, new FakeAdmission { Allowed = false });
+        var command = new CardMutation.Restore("restore-denied", deleted.SetId,
+            deleted.Revision, CardInteractionMode.Edit, deleted.Cards[0].CardId);
+
+        CardMutationOutcome outcome = await denied.ExecuteAsync(command);
+        Assert.False(outcome.Succeeded);
+        Assert.True(store.Current.Cards[0].IsDeleted);
+        Assert.Equal(0, store.CommitCount);
+
+        var allowed = Build(store, new FakeAdmission());
+        var stale = command with
+        {
+            OperationId = "restore-stale",
+            ExpectedSetRevision = deleted.Revision - 1,
+        };
+        CardOperationException failure = await Assert.ThrowsAsync<CardOperationException>(
+            () => allowed.ExecuteAsync(stale));
+        Assert.Equal(CardFailureCode.RevisionConflict, failure.Code);
+        Assert.True(store.Current.Cards[0].IsDeleted);
+        Assert.Equal(0, store.CommitCount);
+    }
+
     private static CardSide NewSide() => new()
     {
         DocumentFormat = "9to1.shared-productivity/1",
