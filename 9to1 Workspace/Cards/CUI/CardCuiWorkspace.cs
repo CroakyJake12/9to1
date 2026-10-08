@@ -28,7 +28,9 @@ public interface ICardCuiReviewOwner
         CardReviewRating rating, CancellationToken cancellationToken);
 }
 
-public sealed record CardReviewWriteReceipt(bool Committed, string Code);
+public sealed record CardReviewWriteReceipt(
+    bool Committed, string Code,
+    CardStudyEvidenceState StudyState = CardStudyEvidenceState.StudyNotConfirmed);
 
 /// <summary>Actual native UI owner must show a destructive impact preview and
 /// collect user approval; permission is checked separately by the canonical
@@ -506,8 +508,15 @@ public sealed class CardCuiWorkspace(
                 ? CardReviewRating.Amber : CardReviewRating.Green;
         CardReviewWriteReceipt receipt = await reviews!.RateCurrentAsync(_set!.SetId,
             card.CardId, rating, token).ConfigureAwait(false);
-        _status = receipt.Committed ? $"Review saved: {rating}" :
-            $"Review not saved: {receipt.Code}";
+        _status = receipt.Committed
+            ? $"Review saved: {rating}; " + receipt.StudyState switch
+            {
+                CardStudyEvidenceState.StudySubmitted => "Study evidence submitted",
+                CardStudyEvidenceState.StudyQueued => "Study evidence queued, progress not confirmed",
+                CardStudyEvidenceState.Unlinked => "no linked Study topic",
+                _ => "Study progress not confirmed",
+            }
+            : $"Review not saved: {receipt.Code}";
     }
 
     private void Changed() => PropertyChanged?.Invoke(this,
