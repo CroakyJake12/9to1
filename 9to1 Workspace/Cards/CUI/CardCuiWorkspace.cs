@@ -508,14 +508,15 @@ public sealed class CardCuiWorkspace(
                 ? CardReviewRating.Amber : CardReviewRating.Green;
         CardReviewWriteReceipt receipt = await reviews!.RateCurrentAsync(_set!.SetId,
             card.CardId, rating, token).ConfigureAwait(false);
+        string studyStatus = receipt.StudyState switch
+        {
+            CardStudyEvidenceState.StudySubmitted => "Study evidence submitted",
+            CardStudyEvidenceState.StudyQueued => "Study evidence queued, progress not confirmed",
+            CardStudyEvidenceState.Unlinked => "no linked Study topic",
+            _ => "Study progress not confirmed",
+        };
         _status = receipt.Committed
-            ? $"Review saved: {rating}; " + receipt.StudyState switch
-            {
-                CardStudyEvidenceState.StudySubmitted => "Study evidence submitted",
-                CardStudyEvidenceState.StudyQueued => "Study evidence queued, progress not confirmed",
-                CardStudyEvidenceState.Unlinked => "no linked Study topic",
-                _ => "Study progress not confirmed",
-            }
+            ? $"Review saved: {rating}; {studyStatus}"
             : $"Review not saved: {receipt.Code}";
     }
 
