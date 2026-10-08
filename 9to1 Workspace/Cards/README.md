@@ -220,8 +220,11 @@ cannot silently reattribute historical evidence.
 
 Only the existing Study authority may confirm that a card's TopicID is
 valid for the current learner. The Study evidence owner may then return
-Submitted, QueuedDurably, Rejected or Unavailable; a durable queue is
-reported as queued and **never misreported as confirmed progress**.
+Submitted, QueuedDurably, Rejected or Unavailable. An accepted submission
+requires a real Study evidence ID; QueuedDurably requires an actual persisted
+outbox receipt ID. Missing identifiers report **StudyNotConfirmed** rather
+than an invented success. A durable queue is reported as queued and
+**never misreported as confirmed progress**.
 An unlinked card remains reviewable and never fabricates a topic.
 If Study I/O fails after the private review commits, the review stays
 saved and Study is reported as **not confirmed**.
@@ -231,6 +234,10 @@ this coordinator, and shared status presentation distinguishes private
 review saved from linked Study submission/queuing. Existing CUI hosts
 must inject real canonical owner instances; no test fake is valid for
 release deployment.
+
+New focused xUnit cases also refuse a provider's success label when
+the owning evidence or outbox receipt ID is absent, and verify that
+transport outages preserve previously committed personal reviews.
 
 New focused xUnit cases cover reviewed/unlinked topics, denied or
 unavailable Study links, queued/submitted/rejected delivery,
