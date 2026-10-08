@@ -88,3 +88,37 @@ jobs:
           path: |
             9to1 Workspace/Cards/HomeIntegration/Tests/TestResults/**/*.trx
           retention-days: 14
+
+  test-cui-scene:
+    name: Cards authored CUI interactions
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.401'
+
+      - name: Restore actual CUI runtime dependencies
+        run: dotnet restore "9to1 Workspace/Cards/CUI/Tests/HavenOS.Cards.CUI.Tests.csproj" --nologo
+
+      - name: Run CUI source and action workflow checks
+        run: |
+          dotnet test "9to1 Workspace/Cards/CUI/Tests/HavenOS.Cards.CUI.Tests.csproj" \
+            -c Release --no-restore --nologo \
+            --logger "trx;LogFileName=Cards-CUI-Release.trx"
+
+      - name: Preserve CUI test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cards-cui-${{ github.sha }}
+          if-no-files-found: warn
+          path: |
+            9to1 Workspace/Cards/CUI/Tests/TestResults/**/*.trx
+          retention-days: 14
