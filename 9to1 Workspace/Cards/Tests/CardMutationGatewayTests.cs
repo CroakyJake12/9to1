@@ -32,7 +32,7 @@ public sealed class CardMutationGatewayTests
         Assert.True(replay.Replayed);
         Assert.Equal(2, replay.CommittedRevision);
         Assert.Equal(1, store.CommitCount);
-        Assert.Equal(1, store.ReceiptFindCount);
+        Assert.Equal(2, store.ReceiptFindCount); // once before first commit, once on replay
     }
 
     [Fact]
