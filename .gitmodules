@@ -72,3 +72,8 @@
 [submodule "9to1 OS/compatibility/winboat/Source/WinBoat"]
 	path = 9to1 OS/compatibility/winboat/Source/WinBoat
 	url = https://github.com/CroakyJake12/winboat.git
+[submodule "9to1 Workspace/Browse/Source/Chromium/src"]
+	path = 9to1 Workspace/Browse/Source/Chromium/src
+	url = https://chromium.googlesource.com/chromium/src.git
+	branch = main
+	shallow = true

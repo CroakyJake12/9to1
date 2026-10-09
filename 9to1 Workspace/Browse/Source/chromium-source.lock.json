@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "path": "9to1 Workspace/Browse/Source/Chromium/src",
+  "url": "https://chromium.googlesource.com/chromium/src.git",
+  "upstream_mirror": "https://github.com/chromium/chromium",
+  "upstream_ref": "refs/heads/main",
+  "commit": "e23cdf4ab7b386d7e5fc58506b2d77f3f4a4817d",
+  "tree": "61f2a6863d0fe31d533421aca69a7937a13eed2b",
+  "scope": "Top-level src repository; DEPS dependencies need a separate gclient sync"
+}

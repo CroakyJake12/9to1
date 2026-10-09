@@ -36,23 +36,25 @@ def require(condition: bool, message: str) -> None:
         raise RuntimeError(message)
 
 
-def verify(root: Path, lock: dict) -> dict:
+def verify(root: Path, lock: dict, *, expected_path: str = SOURCE_PATH,
+           expected_url: str = SOURCE_URL, required_files: tuple = REQUIRED_FILES,
+           top_level_only: bool = False) -> dict:
     root = root.resolve()
     require(lock.get("schema") == 1, "Unsupported source lock schema")
-    require(lock.get("path") == SOURCE_PATH, "Unexpected donor path")
-    require(lock.get("url") == SOURCE_URL, "Unexpected donor repository")
+    require(lock.get("path") == expected_path, "Unexpected donor path")
+    require(lock.get("url") == expected_url, "Unexpected donor repository")
     for key in ("commit", "tree"):
         require(bool(re.fullmatch(r"[0-9a-f]{40}", str(lock.get(key, "")))),
                 f"Invalid locked {key}")
-    source = root / SOURCE_PATH
+    source = root / expected_path
     require(source.resolve().is_relative_to(root), "Donor path escapes the checkout")
-    entry = git(root, "ls-tree", "-z", "HEAD", "--", SOURCE_PATH).rstrip("\0")
-    expected = f"160000 commit {lock['commit']}\t{SOURCE_PATH}"
-    require(entry == expected, "Missing or mismatched pinned Firefox gitlink")
+    entry = git(root, "ls-tree", "-z", "HEAD", "--", expected_path).rstrip("\0")
+    expected = f"160000 commit {lock['commit']}\t{expected_path}"
+    require(entry == expected, "Missing or mismatched pinned donor gitlink")
     url = git(root, "config", "-f", ".gitmodules", "--get",
-              f"submodule.{SOURCE_PATH}.url").strip()
-    require(url == SOURCE_URL, "Submodule URL does not match the source lock")
-    require((source / ".git").exists(), "Firefox source has not been checked out")
+              f"submodule.{expected_path}.url").strip()
+    require(url == expected_url, "Submodule URL does not match the source lock")
+    require((source / ".git").exists(), "Donor source has not been checked out")
     actual_root = Path(git(source, "rev-parse", "--show-toplevel").strip()).resolve()
     require(actual_root == source.resolve(), "Donor is not an independent Git checkout")
     require(git(source, "rev-parse", "HEAD").strip() == lock["commit"],
@@ -66,22 +68,36 @@ def verify(root: Path, lock: dict) -> dict:
             "Assume-unchanged index entries can hide modifications")
     require(not git(source, "status", "--porcelain", "--untracked-files=no").strip(),
             "Donor has modified, staged, or missing tracked files")
-    tracked = [p for p in git(source, "ls-files", "-z").split("\0") if p]
+    index = [entry for entry in git(source, "ls-files", "--stage", "-z").split("\0") if entry]
+    tracked, nested = [], {}
+    for entry in index:
+        metadata, name = entry.split("\t", 1)
+        mode, sha, stage = metadata.split()
+        require(stage == "0", "Unmerged donor index entry")
+        if mode == "160000":
+            nested[name] = sha
+        else:
+            tracked.append(name)
+    require(top_level_only or not nested, "Nested donor dependencies have not been verified")
     require(bool(tracked), "Donor contains no tracked source files")
     missing = [p for p in tracked if not os.path.lexists(source / p)]
     require(not missing, f"Incomplete source checkout: {missing[:5]}")
     hashes = {}
     tracked_set = set(tracked)
-    for relative in REQUIRED_FILES:
+    for relative in required_files:
         require(relative in tracked_set, f"Native donor file is not tracked: {relative}")
         path = source / relative
         require(path.is_file(), f"Missing native donor file: {relative}")
         hashes[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
     return {
         "checked_at_utc": datetime.now(timezone.utc).isoformat(),
-        "source_url": SOURCE_URL, "source_commit": lock["commit"],
+        "source_url": expected_url, "source_commit": lock["commit"],
         "source_tree": lock["tree"], "parent_commit": git(root, "rev-parse", "HEAD").strip(),
-        "tracked_files_present": len(tracked), "full_source_checkout_verified": True,
+        "tracked_files_present": len(tracked),
+        "top_level_source_checkout_verified": True,
+        "full_source_checkout_verified": not top_level_only,
+        "dependency_checkout": "not run" if top_level_only else "no nested gitlinks",
+        "nested_dependency_gitlinks": nested,
         "native_source_sha256": hashes,
         "browser_build": "not assessed", "cakeui_runtime_integration": "not assessed",
     }

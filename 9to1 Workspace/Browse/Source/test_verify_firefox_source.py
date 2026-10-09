@@ -5,6 +5,7 @@ import tempfile
 import unittest
 
 from verify_firefox_source import REQUIRED_FILES, SOURCE_PATH, SOURCE_URL, git, verify
+from audit_donor_sources import audit
 
 
 class SourceVerificationTests(unittest.TestCase):
@@ -78,6 +79,45 @@ class SourceVerificationTests(unittest.TestCase):
         git(self.source, "update-index", "--assume-unchanged", "mach")
         with self.assertRaisesRegex(RuntimeError, "Assume-unchanged"):
             verify(self.root, self.lock)
+
+    def test_top_level_mode_does_not_claim_dependency_checkout(self):
+        result = verify(self.root, self.lock, top_level_only=True)
+        self.assertTrue(result["top_level_source_checkout_verified"])
+        self.assertFalse(result["full_source_checkout_verified"])
+        self.assertEqual("not run", result["dependency_checkout"])
+
+    def test_nested_dependencies_are_reported_not_counted_as_source_files(self):
+        original = self.lock["commit"]
+        (self.source / "third_party/synthetic_dependency").mkdir(parents=True)
+        git(self.source, "update-index", "--add", "--cacheinfo", "160000",
+            original, "third_party/synthetic_dependency")
+        git(self.source, "commit", "-qm", "Add unmaterialised fixture dependency")
+        self.lock["commit"] = git(self.source, "rev-parse", "HEAD").strip()
+        self.lock["tree"] = git(self.source, "rev-parse", "HEAD^{tree}").strip()
+        git(self.root, "update-index", "--cacheinfo", "160000", self.lock["commit"], SOURCE_PATH)
+        git(self.root, "commit", "-qm", "Update fixture pin")
+        with self.assertRaisesRegex(RuntimeError, "Nested"):
+            verify(self.root, self.lock)
+        result = verify(self.root, self.lock, top_level_only=True)
+        self.assertEqual(len(REQUIRED_FILES), result["tracked_files_present"])
+        self.assertEqual({"third_party/synthetic_dependency": original}, result["nested_dependency_gitlinks"])
+        self.assertFalse(result["full_source_checkout_verified"])
+
+    def test_inventory_distinguishes_declarations_from_actual_source(self):
+        missing = "9to1 Workspace/Other/Source/MissingDonor"
+        git(self.root, "config", "-f", ".gitmodules", f"submodule.{missing}.path", missing)
+        git(self.root, "config", "-f", ".gitmodules", f"submodule.{missing}.url", SOURCE_URL)
+        git(self.root, "add", ".gitmodules")
+        git(self.root, "commit", "-qm", "Declare absent fixture donor")
+        report = audit(self.root)
+        self.assertEqual(2, report["declared_count"])
+        self.assertEqual(1, report["pinned_gitlink_count"])
+        self.assertEqual(1, report["declared_but_untracked_count"])
+        self.assertEqual("not assessed", report["runtime_integration"])
+
+    def test_inventory_ignores_uncommitted_declarations(self):
+        (self.root / ".gitmodules").write_text("")
+        self.assertEqual(1, audit(self.root)["declared_count"])
 
     def test_wrong_url(self):
         git(self.root, "config", "-f", ".gitmodules", f"submodule.{SOURCE_PATH}.url",

@@ -1,4 +1,4 @@
-name: Browse - acquire and verify real Firefox donor
+name: Browse - acquire Firefox and Chromium donor sources
 
 on:
   push:
@@ -12,13 +12,47 @@ permissions:
   contents: read
 
 concurrency:
-  group: browse-firefox-source-${{ github.ref }}
+  group: browse-donor-source-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
+  donor-inventory:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 1
+          submodules: false
+          persist-credentials: false
+      - name: Inspect every declared donor path against the committed Git tree
+        run: python3 '9to1 Workspace/Browse/Source/audit_donor_sources.py' --evidence artifacts/donor-source-audit.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: donor-source-audit-${{ github.sha }}
+          path: artifacts/donor-source-audit.json
+          if-no-files-found: error
+          retention-days: 14
+
   acquire-source:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - donor: firefox
+            path: '9to1 Workspace/Browse/Source/FirefoxGecko'
+            verifier: verify_firefox_source.py
+            prefix: FirefoxGecko/
+          - donor: chromium
+            path: '9to1 Workspace/Browse/Source/Chromium/src'
+            verifier: verify_chromium_source.py
+            prefix: Chromium/src/
+    env:
+      DONOR_PATH: ${{ matrix.path }}
+      DONOR_NAME: ${{ matrix.donor }}
+      ARCHIVE_PREFIX: ${{ matrix.prefix }}
     steps:
       - name: Check out 9to1 without fetching unrelated donors
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -27,52 +61,228 @@ jobs:
           submodules: false
           persist-credentials: false
 
-      - name: Run verifier regression tests (synthetic fixtures, not browser tests)
+      - name: Run source-verifier regression tests (not browser tests)
         run: python3 -m unittest discover -s '9to1 Workspace/Browse/Source' -p 'test_verify_firefox_source.py' -v
 
-      - name: Fetch the complete pinned Firefox donor
+      - name: Fetch the actual pinned donor repository
         shell: bash
         run: |
           set -euo pipefail
-          donor='9to1 Workspace/Browse/Source/FirefoxGecko'
-          git submodule sync -- "$donor"
-          git submodule update --init --checkout --depth 1 -- "$donor"
+          df -h .
+          git submodule sync -- "$DONOR_PATH"
+          git submodule update --init --checkout --depth 1 -- "$DONOR_PATH"
 
-      - name: Verify actual native source, pin, tree, and complete checkout
-        run: python3 '9to1 Workspace/Browse/Source/verify_firefox_source.py' --evidence artifacts/firefox-source-evidence.json
+      - name: Verify the source and explicitly report dependency scope
+        env:
+          VERIFIER: ${{ matrix.verifier }}
+        run: python3 "9to1 Workspace/Browse/Source/$VERIFIER" --evidence artifacts/source-evidence.json
 
-      - name: Preserve the actual source for cross-session recovery
+      - name: Preserve source in connector-sized recovery parts
+        id: package
         shell: bash
         run: |
           set -euo pipefail
-          donor='9to1 Workspace/Browse/Source/FirefoxGecko'
-          sha="$(git -C "$donor" rev-parse HEAD)"
-          git -C "$donor" archive --format=tar --prefix=FirefoxGecko/ HEAD |
-            gzip -1n > "artifacts/firefox-gecko-${sha}.tar.gz"
-          (cd artifacts && sha256sum *.tar.gz > SHA256SUMS)
+          archive="artifacts/$DONOR_NAME-source.tar.gz"
+          git -C "$DONOR_PATH" archive --format=tar --prefix="$ARCHIVE_PREFIX" HEAD |
+            gzip -1n > "$archive"
+          (cd artifacts && sha256sum "$DONOR_NAME-source.tar.gz" > SHA256SUMS)
+          split -b 400M -d -a 2 "$archive" artifacts/source.part
+          parts=(artifacts/source.part*)
+          count="${#parts[@]}"
+          if (( count > 16 )); then
+            echo 'Source exceeds the 16-part recovery limit; no partial-success claim.' >&2
+            exit 1
+          fi
+          (cd artifacts && sha256sum source.part* >> SHA256SUMS)
+          printf '%s\n' "Concatenate source.part00, source.part01, ... in numeric order into $DONOR_NAME-source.tar.gz." 'Verify every part and the reconstructed archive against SHA256SUMS before extracting.' 'This is source, not an installable browser. Chromium DEPS dependencies are not included.' > artifacts/RECOVERY.txt
+          rm -- "$archive"
+          echo "parts=$count" >> "$GITHUB_OUTPUT"
 
-      - name: Publish source and verification evidence
-        if: always()
+      - name: Publish source part 00
+        if: ${{ success() && fromJSON(steps.package.outputs.parts) > 0 }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: browse-firefox-source-${{ github.sha }}
-          path: artifacts/
-          if-no-files-found: warn
+          name: browse-${{ matrix.donor }}-source-${{ github.sha }}-part00
+          path: artifacts/source.part00
+          if-no-files-found: error
           retention-days: 14
           compression-level: 0
 
-      - name: Record the exact scope of verification
+      - name: Publish source part 01
+        if: ${{ success() && fromJSON(steps.package.outputs.parts) > 1 }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browse-${{ matrix.donor }}-source-${{ github.sha }}-part01
+          path: artifacts/source.part01
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Publish source part 02
+        if: ${{ success() && fromJSON(steps.package.outputs.parts) > 2 }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browse-${{ matrix.donor }}-source-${{ github.sha }}-part02
+          path: artifacts/source.part02
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Publish source part 03
+        if: ${{ success() && fromJSON(steps.package.outputs.parts) > 3 }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browse-${{ matrix.donor }}-source-${{ github.sha }}-part03
+          path: artifacts/source.part03
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Publish source part 04
+        if: ${{ success() && fromJSON(steps.package.outputs.parts) > 4 }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browse-${{ matrix.donor }}-source-${{ github.sha }}-part04
+          path: artifacts/source.part04
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Publish source part 05
+        if: ${{ success() && fromJSON(steps.package.outputs.parts) > 5 }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browse-${{ matrix.donor }}-source-${{ github.sha }}-part05
+          path: artifacts/source.part05
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Publish source part 06
+        if: ${{ success() && fromJSON(steps.package.outputs.parts) > 6 }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browse-${{ matrix.donor }}-source-${{ github.sha }}-part06
+          path: artifacts/source.part06
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Publish source part 07
+        if: ${{ success() && fromJSON(steps.package.outputs.parts) > 7 }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browse-${{ matrix.donor }}-source-${{ github.sha }}-part07
+          path: artifacts/source.part07
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Publish source part 08
+        if: ${{ success() && fromJSON(steps.package.outputs.parts) > 8 }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browse-${{ matrix.donor }}-source-${{ github.sha }}-part08
+          path: artifacts/source.part08
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Publish source part 09
+        if: ${{ success() && fromJSON(steps.package.outputs.parts) > 9 }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browse-${{ matrix.donor }}-source-${{ github.sha }}-part09
+          path: artifacts/source.part09
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Publish source part 10
+        if: ${{ success() && fromJSON(steps.package.outputs.parts) > 10 }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browse-${{ matrix.donor }}-source-${{ github.sha }}-part10
+          path: artifacts/source.part10
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Publish source part 11
+        if: ${{ success() && fromJSON(steps.package.outputs.parts) > 11 }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browse-${{ matrix.donor }}-source-${{ github.sha }}-part11
+          path: artifacts/source.part11
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Publish source part 12
+        if: ${{ success() && fromJSON(steps.package.outputs.parts) > 12 }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browse-${{ matrix.donor }}-source-${{ github.sha }}-part12
+          path: artifacts/source.part12
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Publish source part 13
+        if: ${{ success() && fromJSON(steps.package.outputs.parts) > 13 }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browse-${{ matrix.donor }}-source-${{ github.sha }}-part13
+          path: artifacts/source.part13
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Publish source part 14
+        if: ${{ success() && fromJSON(steps.package.outputs.parts) > 14 }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browse-${{ matrix.donor }}-source-${{ github.sha }}-part14
+          path: artifacts/source.part14
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Publish source part 15
+        if: ${{ success() && fromJSON(steps.package.outputs.parts) > 15 }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browse-${{ matrix.donor }}-source-${{ github.sha }}-part15
+          path: artifacts/source.part15
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Publish verification evidence and recovery checksums
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browse-${{ matrix.donor }}-source-${{ github.sha }}-evidence
+          path: |
+            artifacts/source-evidence.json
+            artifacts/SHA256SUMS
+            artifacts/RECOVERY.txt
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Record verification scope
         if: always()
         shell: bash
         run: |
           {
-            echo '## Firefox donor source checkpoint'
-            echo 'This workflow acquires source; it does not build Firefox or verify CakeUI integration.'
-            if test -f artifacts/firefox-source-evidence.json; then
+            echo "## $DONOR_NAME donor source checkpoint"
+            echo 'This job acquires source. It does not build a browser or verify CakeUI integration.'
+            echo 'Chromium top-level source and DEPS/gclient dependencies are separate checkpoints.'
+            if test -f artifacts/source-evidence.json; then
               echo '```json'
-              cat artifacts/firefox-source-evidence.json
+              cat artifacts/source-evidence.json
               echo '```'
             else
-              echo 'Full source verification did not complete. Inspect the failed step.'
+              echo 'Source verification did not complete. Inspect the failed step.'
             fi
           } >> "$GITHUB_STEP_SUMMARY"
