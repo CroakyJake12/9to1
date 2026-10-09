@@ -11,8 +11,15 @@ concurrency:
   cancel-in-progress: false
 jobs:
   runtime-baseline:
-    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -23,8 +30,9 @@ jobs:
         with:
           dotnet-version: 10.0.301
       - name: Acquire exact-revision upstream Chromium binary (not a local donor build)
-        run: python3 '9to1 Workspace/Browse/Runtime/acquire_snapshot.py' --output "$RUNNER_TEMP/browse-chromium" --evidence artifacts/chromium-binary-acquisition.json
-      - name: Configure upstream sandbox helper on the isolated test runner
+        run: python '9to1 Workspace/Browse/Runtime/acquire_snapshot.py' --output "$RUNNER_TEMP/browse-chromium" --evidence artifacts/chromium-binary-acquisition.json
+      - name: Configure upstream sandbox helper on the isolated Linux test runner
+        if: runner.os == 'Linux'
         run: |
           set -euo pipefail
           helper="$(dirname "$BROWSE_CHROMIUM_EXE")/chrome_sandbox"
@@ -41,11 +49,39 @@ jobs:
           mkdir -p artifacts
           git rev-parse HEAD > artifacts/SOURCE_COMMIT
           dotnet test '9to1 Workspace/Browse/Tests/HavenOS.Apps.Browse.Tests.csproj' --configuration Release --logger 'trx;LogFileName=browse.trx' --results-directory "$GITHUB_WORKSPACE/artifacts" 2>&1 | tee artifacts/dotnet-tests.log
+      - name: Preserve compiled adapter and unchanged upstream runtime archive after passing tests
+        run: |
+          set -euo pipefail
+          dotnet publish '9to1 Workspace/Browse/HavenOS.Apps.Browse.csproj' -c Release -o "$GITHUB_WORKSPACE/runtime-checkpoint/managed"
+          python - <<'PY'
+          import hashlib, json, os, pathlib, shutil, subprocess
+          target = pathlib.Path('runtime-checkpoint')
+          source = pathlib.Path(os.environ['RUNNER_TEMP']) / 'browse-chromium'
+          for archive in source.glob('chrome-*.zip'):
+              shutil.copyfile(archive, target / archive.name)
+          shutil.copyfile('artifacts/chromium-binary-acquisition.json', target / 'UPSTREAM_PROVENANCE.json')
+          (target / 'SOURCE_COMMIT').write_text(subprocess.check_output(['git','rev-parse','HEAD'], text=True).strip() + '\n')
+          (target / 'SCOPE.txt').write_text('Integration checkpoint: compiled Browse adapter plus unchanged official upstream Chromium snapshot. This is NOT an installed Browse app, a native CUI-embedded browser, a local Chromium source build, Gecko integration, or complete donor-feature parity. Test evidence is in the companion evidence artifact.\n')
+          hashes = []
+          for path in sorted(target.rglob('*')):
+              if path.is_file():
+                  with path.open('rb') as stream:
+                      hashes.append(hashlib.file_digest(stream, 'sha256').hexdigest() + '  ' + path.relative_to(target).as_posix())
+          (target / 'SHA256SUMS').write_text('\n'.join(hashes) + '\n')
+          PY
+      - name: Publish runtime integration checkpoint (not a release app)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: browse-runtime-checkpoint-${{ matrix.os }}-${{ github.sha }}
+          path: runtime-checkpoint/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
       - name: Publish observed build, test and binary acquisition evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: browse-runtime-evidence-${{ github.sha }}
+          name: browse-runtime-evidence-${{ matrix.os }}-${{ github.sha }}
           path: artifacts/
           if-no-files-found: error
           retention-days: 14
