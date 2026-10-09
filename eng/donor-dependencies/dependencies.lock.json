@@ -1,0 +1,61 @@
+{
+  "libreoffice": {
+    "children": [
+      {
+        "path": "dictionaries",
+        "commit": "32b006a2c22a4ac7e8ed3f03346f7b3d85a970a4",
+        "url": "https://github.com/LibreOffice/dictionaries.git",
+        "declared_url": "../dictionaries"
+      },
+      {
+        "path": "helpcontent2",
+        "commit": "1cf4641d8f97ed728b8bc3b3cd87f279031c984a",
+        "url": "https://github.com/LibreOffice/help.git",
+        "declared_url": "../help"
+      },
+      {
+        "path": "translations",
+        "commit": "6f2222cc49bd201e38cbb2db14e04ec575b98ae4",
+        "url": "https://github.com/LibreOffice/translations.git",
+        "declared_url": "../translations"
+      }
+    ]
+  },
+  "vscode": {
+    "children": [],
+    "lfs_url": "https://github.com/microsoft/vscode.git",
+    "expected_lfs_paths": 98
+  },
+  "glycin": {
+    "children": [
+      {
+        "path": "libglycin-rebind/gir",
+        "commit": "b4ad84f7c5548fbab3972436e1a000fb5f829cdc",
+        "url": "https://github.com/gtk-rs/gir.git",
+        "declared_url": "https://github.com/gtk-rs/gir.git"
+      },
+      {
+        "path": "libglycin-rebind/gir-files",
+        "commit": "baa82dc06419577e33a86258a45bcff1bbfa3bf5",
+        "url": "https://github.com/gtk-rs/gir-files.git",
+        "declared_url": "https://github.com/gtk-rs/gir-files.git"
+      },
+      {
+        "path": "tests/test-images",
+        "commit": "75c95e4fe35d6d328a91f73d9225db9ee9e588d0",
+        "url": "https://gitlab.gnome.org/sophie-h/test-images.git",
+        "declared_url": "https://gitlab.gnome.org/sophie-h/test-images.git"
+      }
+    ]
+  },
+  "gstreamer": {
+    "children": [
+      {
+        "path": "subprojects/gst-integration-testsuites/media",
+        "commit": "6934d5a736a76cff60549e7d5de62fff39263620",
+        "url": "https://gitlab.freedesktop.org/gstreamer/gst-integration-testsuites.git",
+        "declared_url": "https://gitlab.freedesktop.org/gstreamer/gst-integration-testsuites.git"
+      }
+    ]
+  }
+}

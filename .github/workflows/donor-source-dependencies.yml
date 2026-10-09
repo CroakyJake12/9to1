@@ -1,0 +1,197 @@
+name: Donors - acquire nested source and LFS payloads
+on:
+  push:
+    branches: [feat/donor-source-completion]
+    paths:
+      - 'eng/donor-dependencies/**'
+      - '.github/workflows/donor-source-dependencies.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: donor-source-dependencies-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          submodules: false
+      - name: Run 22 synthetic source/dependency checks (not donor runtime tests)
+        run: |
+          python3 -m unittest discover -s eng/source-acquisition -p 'test_*.py' -v
+          python3 -m unittest discover -s eng/donor-dependencies -p 'test_*.py' -v
+  acquire:
+    needs: tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        donor: [libreoffice, glycin, gstreamer, vscode]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          submodules: false
+      - name: Verify Git LFS is installed
+        run: git lfs version
+      - name: Fetch exact nested pins and hydrate verified LFS assets
+        env:
+          DONOR_ID: ${{ matrix.donor }}
+          GIT_TERMINAL_PROMPT: '0'
+          GIT_LFS_SKIP_SMUDGE: '1'
+        run: python3 eng/donor-dependencies/acquire_dependencies.py --donor "$DONOR_ID" --output artifacts/dependencies
+      - name: Preserve dependency evidence (including failures)
+        if: always() && hashFiles('artifacts/dependencies/evidence.json') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: donor-dependency-evidence-${{ matrix.donor }}
+          path: |
+            artifacts/dependencies/evidence.json
+            artifacts/dependencies/recovery.json
+            artifacts/dependencies/*RECOVERY.txt
+            artifacts/dependencies/SHA256SUMS.*
+          if-no-files-found: error
+          retention-days: 14
+      - name: Preserve dependency source part 00
+        if: always() && hashFiles('artifacts/dependencies/source.part00') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: donor-dependencies-${{ matrix.donor }}-part00
+          path: artifacts/dependencies/source.part00
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Preserve dependency source part 01
+        if: always() && hashFiles('artifacts/dependencies/source.part01') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: donor-dependencies-${{ matrix.donor }}-part01
+          path: artifacts/dependencies/source.part01
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Preserve dependency source part 02
+        if: always() && hashFiles('artifacts/dependencies/source.part02') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: donor-dependencies-${{ matrix.donor }}-part02
+          path: artifacts/dependencies/source.part02
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Preserve dependency source part 03
+        if: always() && hashFiles('artifacts/dependencies/source.part03') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: donor-dependencies-${{ matrix.donor }}-part03
+          path: artifacts/dependencies/source.part03
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Preserve dependency source part 04
+        if: always() && hashFiles('artifacts/dependencies/source.part04') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: donor-dependencies-${{ matrix.donor }}-part04
+          path: artifacts/dependencies/source.part04
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Preserve dependency source part 05
+        if: always() && hashFiles('artifacts/dependencies/source.part05') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: donor-dependencies-${{ matrix.donor }}-part05
+          path: artifacts/dependencies/source.part05
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Preserve dependency source part 06
+        if: always() && hashFiles('artifacts/dependencies/source.part06') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: donor-dependencies-${{ matrix.donor }}-part06
+          path: artifacts/dependencies/source.part06
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Preserve dependency source part 07
+        if: always() && hashFiles('artifacts/dependencies/source.part07') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: donor-dependencies-${{ matrix.donor }}-part07
+          path: artifacts/dependencies/source.part07
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+  collect:
+    if: always() && needs.tests.result == 'success'
+    needs: [tests, acquire]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          submodules: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: donor-dependency-evidence-*
+          path: evidence
+      - name: Validate every planned dependency result and publication job
+        env:
+          PARENT_SHA: ${{ github.sha }}
+          MATRIX_RESULT: ${{ needs.acquire.result }}
+        run: |
+          python3 - <<'PYTHON'
+          import json, os, pathlib
+          plans = json.loads(pathlib.Path('eng/donor-dependencies/dependencies.lock.json').read_text())
+          results, errors = {}, []
+          for path in pathlib.Path('evidence').glob('*/evidence.json'):
+              result = json.loads(path.read_text())
+              name = result['donor']
+              if name in results:
+                  errors.append('Duplicate evidence: ' + name)
+              results[name] = result
+          if set(results) != set(plans):
+              errors.append('Missing or unexpected dependency job evidence')
+          if os.environ['MATRIX_RESULT'] != 'success':
+              errors.append('Acquisition/publication job failure')
+          for name, plan in plans.items():
+              result = results.get(name, {})
+              if result.get('status') != 'CHECKPOINT' or result.get('parent_commit') != os.environ['PARENT_SHA']:
+                  errors.append(name + ': incomplete or mismatched evidence')
+              if not result.get('recovery', {}).get('parts'):
+                  errors.append(name + ': missing recovery archive')
+              children = result.get('nested_dependencies', {})
+              if set(children) != {child['path'] for child in plan['children']}:
+                  errors.append(name + ': nested source set mismatch')
+              for child in plan['children']:
+                  actual = children.get(child['path'], {})
+                  if actual.get('commit') != child['commit'] or actual.get('every_blob_matches_git_object') is not True:
+                      errors.append(name + ': nested source pin/blob verification incomplete')
+                  if actual.get('nested_git_dependencies_not_fetched') or actual.get('lfs_payloads_not_fetched'):
+                      errors.append(name + ': nested source gaps remain')
+              if len(result.get('lfs_payloads_verified', [])) != plan.get('expected_lfs_paths', 0):
+                  errors.append(name + ': LFS payload count mismatch')
+          summary = {'status': 'CHECKPOINT' if not errors else 'STALLED',
+                     'parent_commit': os.environ['PARENT_SHA'], 'errors': errors, 'donors': results,
+                     'compiled_binary': 'not built', 'runtime_integration': 'not assessed'}
+          pathlib.Path('summary.json').write_text(json.dumps(summary, indent=2) + '\n')
+          print(json.dumps({k: v for k, v in summary.items() if k != 'donors'}, indent=2))
+          raise SystemExit(bool(errors))
+          PYTHON
+      - name: Publish actual dependency summary
+        if: always() && hashFiles('summary.json') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: donor-dependency-summary
+          path: summary.json
+          if-no-files-found: error
+          retention-days: 14
