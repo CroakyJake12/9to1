@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "path": "9to1 Workspace/Browse/Source/FirefoxGecko",
+  "url": "https://github.com/mozilla-firefox/firefox.git",
+  "upstream_ref": "refs/heads/release",
+  "commit": "3c71aeacdb296402e41fb2084b13e797d1770642",
+  "tree": "97cd3d3e9a2f94733f74f07a2c8f857f64950088"
+}

@@ -1,0 +1,78 @@
+name: Browse - acquire and verify real Firefox donor
+
+on:
+  push:
+    paths:
+      - '.gitmodules'
+      - '9to1 Workspace/Browse/Source/**'
+      - '.github/workflows/browse-firefox-source.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: browse-firefox-source-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  acquire-source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Check out 9to1 without fetching unrelated donors
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 1
+          submodules: false
+          persist-credentials: false
+
+      - name: Run verifier regression tests (synthetic fixtures, not browser tests)
+        run: python3 -m unittest discover -s '9to1 Workspace/Browse/Source' -p 'test_verify_firefox_source.py' -v
+
+      - name: Fetch the complete pinned Firefox donor
+        shell: bash
+        run: |
+          set -euo pipefail
+          donor='9to1 Workspace/Browse/Source/FirefoxGecko'
+          git submodule sync -- "$donor"
+          git submodule update --init --checkout --depth 1 -- "$donor"
+
+      - name: Verify actual native source, pin, tree, and complete checkout
+        run: python3 '9to1 Workspace/Browse/Source/verify_firefox_source.py' --evidence artifacts/firefox-source-evidence.json
+
+      - name: Preserve the actual source for cross-session recovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          donor='9to1 Workspace/Browse/Source/FirefoxGecko'
+          sha="$(git -C "$donor" rev-parse HEAD)"
+          git -C "$donor" archive --format=tar --prefix=FirefoxGecko/ HEAD |
+            gzip -1n > "artifacts/firefox-gecko-${sha}.tar.gz"
+          (cd artifacts && sha256sum *.tar.gz > SHA256SUMS)
+
+      - name: Publish source and verification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browse-firefox-source-${{ github.sha }}
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 14
+          compression-level: 0
+
+      - name: Record the exact scope of verification
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Firefox donor source checkpoint'
+            echo 'This workflow acquires source; it does not build Firefox or verify CakeUI integration.'
+            if test -f artifacts/firefox-source-evidence.json; then
+              echo '```json'
+              cat artifacts/firefox-source-evidence.json
+              echo '```'
+            else
+              echo 'Full source verification did not complete. Inspect the failed step.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
