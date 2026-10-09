@@ -10,7 +10,11 @@ public sealed record ChromiumRuntimeOptions(string ExecutablePath, string Source
     bool Headless = false, TimeSpan? StartupTimeout = null);
 
 public sealed record ChromiumRuntimeIdentity(string Product, string SourceCommit, string ExecutableSha256,
-    int ProcessId, bool Headless);
+    int ProcessId, bool Headless)
+{
+    public string ReportedRevision { get; init; } = string.Empty;
+    public string RevisionEvidence { get; init; } = string.Empty;
+}
 
 /// <summary>
 /// Runs the real Chromium donor and creates CDP-backed tabs in isolated engine profiles.
@@ -148,9 +152,12 @@ internal sealed class ChromiumProcess : IAsyncDisposable
             }
             var version = await runtime.Connection.CallAsync("Browser.getVersion", cancellationToken: timeout.Token).ConfigureAwait(false);
             var revision = version.GetProperty("revision").GetString()?.TrimStart('@');
-            if (!string.Equals(revision, options.SourceCommit, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException($"Running Chromium revision {revision} does not match donor {options.SourceCommit}.");
-            runtime.Identity = new(version.GetProperty("product").GetString()!, revision!, options.ExecutableSha256.ToLowerInvariant(), process.Id, options.Headless);
+            var evidence = ChromiumRuntimeProvenance.VerifyRevision(options.SourceCommit, options.ExecutableSha256, revision, OperatingSystem.IsLinux());
+            runtime.Identity = new(version.GetProperty("product").GetString()!, options.SourceCommit, options.ExecutableSha256.ToLowerInvariant(), process.Id, options.Headless)
+            {
+                ReportedRevision = revision ?? string.Empty,
+                RevisionEvidence = evidence
+            };
             // Downloads are denied until Browse's approved download broker is wired. No unmanaged writes are implied as supported.
             await runtime.Connection.CallAsync("Browser.setDownloadBehavior", new { behavior = "deny" }, cancellationToken: timeout.Token).ConfigureAwait(false);
             await runtime.Connection.CallAsync("Target.setDiscoverTargets", new { discover = true }, cancellationToken: timeout.Token).ConfigureAwait(false);
