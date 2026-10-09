@@ -45,6 +45,11 @@ public sealed class BrowseAppRoute
 
         ArgumentException.ThrowIfNullOrWhiteSpace(domainOrAddress);
 
+        // Browse must not present the HTTP-only background extraction fallback as an
+        // interactive browser. A native renderer must be attached before navigation.
+        if (!_browserSession.IsInteractiveAvailable)
+            throw new InvalidOperationException("Browse requires an attached native browser host. Firefox/Gecko integration is not available.");
+
         var status = await _browserSession
             .NavigateAsync(domainOrAddress.Trim(), cancellationToken)
             .ConfigureAwait(false);
