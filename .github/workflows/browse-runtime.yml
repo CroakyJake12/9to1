@@ -9,29 +9,32 @@ concurrency:
   group: browse-runtime-${{ github.ref }}
   cancel-in-progress: false
 jobs:
-  source-baseline:
+  runtime-baseline:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           fetch-depth: 1
           submodules: false
           persist-credentials: false
-      - name: Export exact parent source for isolated implementation
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        with:
+          dotnet-version: 10.0.301
+      - name: Acquire exact-revision upstream Chromium binary (not a local donor build)
+        run: python3 '9to1 Workspace/Browse/Runtime/acquire_snapshot.py' --output "$RUNNER_TEMP/browse-chromium" --evidence artifacts/chromium-binary-acquisition.json
+      - name: Compile and run Browse regression tests
+        if: always()
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p artifacts
-          git archive --format=tar --prefix=9to1/ HEAD | gzip -1n > artifacts/9to1-source.tar.gz
-          git rev-parse HEAD > artifacts/PARENT_COMMIT
-          git ls-tree -r HEAD > artifacts/TRACKED_TREE
-          (cd artifacts && sha256sum 9to1-source.tar.gz > SHA256SUMS)
-          printf '%s\n' 'This archive contains the parent repository. Donor gitlinks are NOT donor source files, compiled binaries or runtime integration.' > artifacts/SCOPE.txt
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+          dotnet test '9to1 Workspace/Browse/Tests/HavenOS.Apps.Browse.Tests.csproj' --configuration Release --logger 'trx;LogFileName=browse.trx' --results-directory "$GITHUB_WORKSPACE/artifacts" 2>&1 | tee artifacts/dotnet-tests.log
+      - name: Publish observed build, test and binary acquisition evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: browse-runtime-source-${{ github.sha }}
+          name: browse-runtime-evidence-${{ github.sha }}
           path: artifacts/
           if-no-files-found: error
           retention-days: 14
-          compression-level: 0
