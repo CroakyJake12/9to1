@@ -1,0 +1,37 @@
+name: Browse - donor runtime integration
+on:
+  push:
+    branches: [feat/browse-donor-runtime]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: browse-runtime-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  source-baseline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 1
+          submodules: false
+          persist-credentials: false
+      - name: Export exact parent source for isolated implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          git archive --format=tar --prefix=9to1/ HEAD | gzip -1n > artifacts/9to1-source.tar.gz
+          git rev-parse HEAD > artifacts/PARENT_COMMIT
+          git ls-tree -r HEAD > artifacts/TRACKED_TREE
+          (cd artifacts && sha256sum 9to1-source.tar.gz > SHA256SUMS)
+          printf '%s\n' 'This archive contains the parent repository. Donor gitlinks are NOT donor source files, compiled binaries or runtime integration.' > artifacts/SCOPE.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: browse-runtime-source-${{ github.sha }}
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
