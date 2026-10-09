@@ -21,6 +21,7 @@
     <ProjectReference Include="../Core/CakeOS.Cui.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="../../../9to1 Workspace/Home/UI/Home.cui" LogicalName="9T.W2.Home.cui" />
     <None Update="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
