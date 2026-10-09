@@ -33,6 +33,21 @@ public sealed class BrowseAppRouteTests
     }
 
     [Fact]
+    public async Task MissingNativeHostFailsClosedInsteadOfUsingBackgroundHttpFallback()
+    {
+        using var paths = new TestPaths();
+        using var session = new BrowserSessionService(paths);
+        var route = new BrowseAppRoute(session);
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            route.NavigateAsync("browse", "example.com"));
+
+        Assert.Contains("native browser host", error.Message);
+        Assert.False(route.IsInteractiveAvailable);
+        Assert.Null(route.State.Address);
+    }
+
+    [Fact]
     public async Task BareDomainUsesExistingBrowserSessionHttpsNormalization()
     {
         using var paths = new TestPaths();
