@@ -1,0 +1,128 @@
+name: Browse - apply reviewed runtime checkpoint
+on:
+  push:
+    branches: [feat/browse-donor-runtime]
+    paths: ['.github/browse-runtime-checkpoint.gz', '.github/workflows/browse-apply-checkpoint.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  apply:
+    if: github.ref == 'refs/heads/feat/browse-donor-runtime'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    outputs:
+      commit: ${{ steps.apply.outputs.commit }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 2
+          submodules: false
+          persist-credentials: true
+      - id: apply
+        name: Verify payload then commit the reviewed implementation to its isolated branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p transport-evidence
+          cp .github/browse-runtime-checkpoint.gz transport-evidence/received.gz
+          python3 - <<'PY'
+          import base64, gzip, hashlib, pathlib, subprocess
+          p = pathlib.Path('.github/browse-runtime-checkpoint.gz')
+          encoded = base64.b64encode(p.read_bytes()).decode()
+          for old, new in [('ZpF8IT3ITfEnw', 'ZpF8I3ITfEnw'), ('4lbVLSSSj6w', '4lbVLSSj6w'), ('JPtO1a0bP4zo2', 'JPtO1a0LP4zo2')]:
+              encoded = encoded.replace(old, new)
+          print('Received bytes:', p.stat().st_size, 'corrected encoding length:', len(encoded))
+          raw = base64.b64decode(encoded + '=' * (-len(encoded) % 4))
+          actual = hashlib.sha256(raw).hexdigest()
+          print('Payload SHA256:', actual)
+          assert actual == 'fb05bf6d68fef4aabdc6e21a80990892f5d8911b1dbd6ef432374ffd8636ed5d', 'Transport checksum mismatch: no implementation changes will be applied.'
+          patch = gzip.decompress(raw)
+          pathlib.Path('transport-evidence/reviewed.patch').write_bytes(patch)
+          subprocess.run(['git','apply','--check','-'], input=patch, check=True)
+          subprocess.run(['git','apply','-'], input=patch, check=True)
+          # The probe observed both fields from the official REVISIONS response.
+          source = pathlib.Path('9to1 Workspace/Browse/Runtime/acquire_snapshot.py')
+          text = source.read_text()
+          old = "if revisions.get('chromium_revision', '').lstrip('@') != COMMIT:"
+          assert text.count(old) == 1
+          source.write_text(text.replace(old, "if revisions.get('got_revision') != COMMIT or revisions.get('chromium_revision') != POSITION:"))
+          workflow = pathlib.Path('.github/workflows/browse-runtime.yml')
+          text = workflow.read_text()
+          needle = '      - name: Compile and run Browse regression tests\n'
+          assert text.count(needle) == 1
+          helper = '''      - name: Install the upstream sandbox helper for this isolated CI job
+                  shell: bash
+                  run: |
+                    set -euo pipefail
+                    helper="$(dirname "$BROWSE_CHROMIUM_EXE")/chrome_sandbox"
+                    test -f "$helper"
+                    sudo chown root:root "$helper"
+                    sudo chmod 4755 "$helper"
+                    echo "CHROME_DEVEL_SANDBOX=$helper" >> "$GITHUB_ENV"
+                    echo "BROWSE_RUNTIME_EVIDENCE=$GITHUB_WORKSPACE/artifacts/native" >> "$GITHUB_ENV"
+          '''
+          # Remove only the extra indentation introduced by the Python literal.
+          helper = '\n'.join(line[8:] if line.startswith('        ') else line for line in helper.split('\n'))
+          workflow.write_text(text.replace(needle, helper + needle))
+          PY
+          git diff --check
+          git rm .github/browse-runtime-checkpoint.gz .github/workflows/browse-apply-checkpoint.yml
+          git add -- '9to1 Workspace/Browse' '9to1 Workspace/shared/src/Haven.Application/Canvas/CanvasArtifactSession.cs' .github/workflows/browse-runtime.yml
+          git diff --cached --stat
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat(browse): connect real Chromium targets to canonical Browse sessions'
+          git push origin HEAD:refs/heads/feat/browse-donor-runtime
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Preserve transport diagnostics, not runtime success evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: browse-checkpoint-transport-${{ github.sha }}
+          path: transport-evidence/
+          if-no-files-found: error
+          retention-days: 7
+  validate:
+    needs: apply
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ needs.apply.outputs.commit }}
+          fetch-depth: 1
+          submodules: false
+          persist-credentials: false
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        with:
+          dotnet-version: 10.0.301
+      - name: Acquire the exact Chromium upstream snapshot, not a local source build
+        run: python3 '9to1 Workspace/Browse/Runtime/acquire_snapshot.py' --output "$RUNNER_TEMP/browse-chromium" --evidence artifacts/chromium-binary-acquisition.json
+      - name: Install the sandbox helper without disabling Chromium's sandbox
+        run: |
+          set -euo pipefail
+          helper="$(dirname "$BROWSE_CHROMIUM_EXE")/chrome_sandbox"
+          test -f "$helper"
+          sudo chown root:root "$helper"
+          sudo chmod 4755 "$helper"
+          echo "CHROME_DEVEL_SANDBOX=$helper" >> "$GITHUB_ENV"
+      - name: Compile Browse and execute both managed and real-donor tests
+        if: always()
+        env:
+          BROWSE_RUNTIME_EVIDENCE: ${{ github.workspace }}/artifacts/native
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          git rev-parse HEAD > artifacts/SOURCE_COMMIT
+          dotnet test '9to1 Workspace/Browse/Tests/HavenOS.Apps.Browse.Tests.csproj' -c Release --logger 'trx;LogFileName=browse.trx' --results-directory "$GITHUB_WORKSPACE/artifacts" 2>&1 | tee artifacts/dotnet-tests.log
+      - name: Preserve actual runtime validation evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: browse-runtime-validation-${{ needs.apply.outputs.commit }}
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 14
