@@ -1,10 +1,17 @@
 # Write standalone host
 
-`HavenOS.Write` starts the existing retained Write page. It uses the original
-Notes repository, document editor, structured import/export services, native
-`.9to1w` codec, attachment store, provider routing and local read-aloud services.
-Documents remain in the maintained `IAppPaths` data directory. The host owns and
-awaits the disposal of the services it acquires.
+`HavenOS.Write` starts the original Desktop App, OS-local Windows Home,
+provider and native shell. Its compiled initial route uses the existing document
+workspace factory to create the actual Write page with the maintained Notes
+repository, editor, import/export services, native `.9to1w` codec, attachment
+store, provider routing and local read-aloud services. Home readiness is checked
+before page construction and again before native tab publication.
+
+This is a bounded same-process candidate. The OS-profile Home runtime lease
+permits one owning process; separately launched product executables cannot share
+that lease or run together. Protected installed-peer admission and the unified
+trusted installer remain required for the distribution model. Publish checks
+supply no installed Home, signing, GUI, account or smoke certification.
 
 Start in the local library, create or open a document, edit it, then save or
 close. Close remains cancelled while initial loading, a document operation or a
@@ -18,7 +25,7 @@ From the repository root:
 ```powershell
 dotnet build "9to1 Workspace/Write/HavenOS.Write.csproj" -c Release
 dotnet test "9to1 Workspace/Write/Tests/HavenOS.Write.Tests.csproj" -c Release
-dotnet publish "9to1 Workspace/Write/HavenOS.Write.csproj" -c Release -r win-x64 --self-contained true --output <new-empty-write-publish-directory> -p:UseSharedCompilation=false -p:PublishReadyToRun=false
+dotnet publish "9to1 Workspace/Write/HavenOS.Write.csproj" -c Release -f net10.0-windows10.0.19041.0 -r win-x64 --self-contained true -p:EnableWindowsTargeting=true --output <new-empty-write-publish-directory> -m:1 -p:BuildInParallel=false -p:UseSharedCompilation=false -p:PublishReadyToRun=false
 ```
 
 The focused tests use actual local repository files and the mounted retained

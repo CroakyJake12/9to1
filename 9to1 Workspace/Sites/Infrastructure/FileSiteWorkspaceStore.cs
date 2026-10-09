@@ -162,6 +162,17 @@ public sealed class FileSiteWorkspaceStore
     {
         if (state.SchemaVersion != SiteProjectFormat.CurrentSchemaVersion)
             throw StoreFailure("Sites metadata schema version is unsupported; no data was changed.", "SitesSchemaUnsupported");
+        if (state.Projects is null || state.Deployments is null || state.Domains is null ||
+            state.NameVerifications is null || state.DomainChallenges is null || state.SlugReservations is null ||
+            state.Projects.Any(project => project is null) || state.Deployments.Any(deployment => deployment is null) ||
+            state.Domains.Any(domain => domain is null) || state.NameVerifications.Any(verification => verification is null) ||
+            state.DomainChallenges.Any(challenge => challenge is null) || state.SlugReservations.Any(reservation => reservation is null))
+            throw StoreFailure("Sites metadata contains missing or invalid records. The original file was preserved.", "SitesMetadataInvalid");
+        if (state.Projects.Any(project => project.SchemaVersion != SiteProjectFormat.CurrentSchemaVersion))
+            throw StoreFailure("A Sites project schema version is unsupported. The original file was preserved.", "SitesSchemaUnsupported");
+        if (state.Projects.Any(project => project.SiteId == Guid.Empty || project.ProjectId == Guid.Empty ||
+            project.Revision < 1 || project.Source is null || project.Source.FilesDirectoryId == Guid.Empty))
+            throw StoreFailure("Sites metadata contains invalid project identity or revision. The original file was preserved.", "SitesMetadataInvalid");
         EnsureUnique(state.Projects.Select(project => project.SiteId), "SiteID");
         EnsureUnique(state.Projects.Select(project => project.ProjectId), "ProjectID");
         EnsureUnique(state.Deployments.Select(deployment => deployment.DeploymentId), "DeploymentID");

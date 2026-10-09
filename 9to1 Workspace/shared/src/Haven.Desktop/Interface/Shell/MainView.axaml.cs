@@ -681,6 +681,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     public string ProductName => CurrentSurface switch
     {
         HavenSurface.Home => "Haven Home",
+        HavenSurface.Assistants => "Assistants",
         HavenSurface.Chat or HavenSurface.Study => "Haven Chat",
         HavenSurface.Tasks => "Haven Tasks",
         HavenSurface.Studio => "Haven Studio",
@@ -707,7 +708,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     public string ContainerHeading => CurrentMode switch { HavenMode.Chat => "Chat Groups", HavenMode.Study => "Subjects", HavenMode.Tasks => "Task Groups", _ => "Projects" };
     public string ProjectMenuHeader => CurrentMode switch { HavenMode.Chat => "Chat Group", HavenMode.Study => "Subject", HavenMode.Tasks => "Task Group", _ => "Project" };
 
-    public string WorkspaceEyebrow => CurrentMode switch
+    public string WorkspaceEyebrow => CurrentSurface == HavenSurface.Assistants ? "Your Assistants" : CurrentMode switch
     {
         HavenMode.Chat => CurrentChat?.SelectedContainer?.Name ?? "Chat",
         HavenMode.Study => "Lesson",
@@ -716,7 +717,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         _ => "Haven"
     };
 
-    public string WorkspaceTitle => CurrentMode == HavenMode.Chat
+    public string WorkspaceTitle => CurrentSurface == HavenSurface.Assistants ? "Assistants" : CurrentMode == HavenMode.Chat
         ? CurrentChat?.ConversationTitle ?? "Chat"
         : CurrentChat?.SelectedLesson?.Name ?? CurrentChat?.SelectedContainer?.Name ?? "Local workspace";
 
@@ -1676,6 +1677,14 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         else if (route.Kind == HavenAppRouteKind.Dev)
         {
             await OpenOriginalDevelopmentCatalogAsync(openInNewTab);
+        }
+        else if (route.Kind == HavenAppRouteKind.Assistants)
+        {
+#if !ANDROID
+            await OpenOriginalRegisteredAssistantsAsync();
+#else
+            _notifications.Show("Assistants setup required", "This host has no configured Assistant owner. Your existing data is preserved.", ToastKind.Warning, TimeSpan.FromSeconds(6));
+#endif
         }
         else if (route.Kind == HavenAppRouteKind.Plan)
         {
@@ -2957,6 +2966,10 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
                 new("New task group", "tasks", OpenNewContainer, Category: "Tasks", Description: "Create a group for related tasks and references."),
                 new("Automations", "automation", OpenAutomationsDashboard, Category: "Automations", Description: "Create or manage reusable, scheduled, recurring, and triggered workflows."),
                 new("Reusable workflows", "automation", OpenAutomationsDashboard, Category: "Automations", Description: "Create, test, run, or edit reusable workflows."),
+#if !ANDROID
+                new("Saved automation library", "automation", OpenSavedAutomationLibrary, Category: "Automations", Description: "Browse saved settings, search older automations, and review their recovery status."),
+                new("Installed apps", "apps", OpenInstalledHomeApps, Category: "Home", Description: "Read the installed Home catalogue and request an individual app launch."),
+#endif
                 new("Activity log", "clock", OpenActivityLog, Category: "Tasks", Description: "Review recent task and tool activity.")
             ]);
         }
@@ -3101,6 +3114,10 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
                 new("New task group", "tasks", OpenNewContainer, Category: "Tasks", Description: "Create a group for related tasks and references."),
                 new("Automations", "automation", OpenAutomationsDashboard, Category: "Automations", Description: "Create or manage reusable, scheduled, recurring, and triggered workflows."),
                 new("Reusable workflows", "automation", OpenAutomationsDashboard, Category: "Automations", Description: "Create, test, run, or edit reusable workflows."),
+#if !ANDROID
+                new("Saved automation library", "automation", OpenSavedAutomationLibrary, Category: "Automations", Description: "Browse saved settings, search older automations, and review their recovery status."),
+                new("Installed apps", "apps", OpenInstalledHomeApps, Category: "Home", Description: "Read the installed Home catalogue and request an individual app launch."),
+#endif
                 new("Activity log", "clock", OpenActivityLog, Category: "Tasks", Description: "Review recent task and tool activity.")
             ]);
         }

@@ -16,7 +16,7 @@ namespace Haven.Infrastructure;
 /// <summary>
 /// Represents conversation production repository and keeps its related state and behavior together.
 /// </summary>
-public sealed class ConversationProductionRepository(
+public sealed partial class ConversationProductionRepository(
     ISqliteConnectionFactory factory,
     IConversationRepository conversations) : IConversationProductionRepository
 {
@@ -751,7 +751,11 @@ public sealed class ConversationProductionRepository(
         var result = new List<MessageAttachment>();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-            result.Add(new MessageAttachment(
+            result.Add(ReadCanonicalAttachment(reader));
+        return result;
+    }
+
+    private static MessageAttachment ReadCanonicalAttachment(SqliteDataReader reader) => new(
                 Guid.Parse(reader.GetString(reader.GetOrdinal("id"))),
                 Guid.Parse(reader.GetString(reader.GetOrdinal("conversation_id"))),
                 ReadNullableGuid(reader, "message_id"),
@@ -767,9 +771,7 @@ public sealed class ConversationProductionRepository(
                 reader.GetString(reader.GetOrdinal("extracted_text")),
                 reader.GetString(reader.GetOrdinal("metadata_json")),
                 DateTimeOffset.Parse(reader.GetString(reader.GetOrdinal("created_at")), System.Globalization.CultureInfo.InvariantCulture),
-                DateTimeOffset.Parse(reader.GetString(reader.GetOrdinal("updated_at")), System.Globalization.CultureInfo.InvariantCulture)));
-        return result;
-    }
+                DateTimeOffset.Parse(reader.GetString(reader.GetOrdinal("updated_at")), System.Globalization.CultureInfo.InvariantCulture));
 
     /// <summary>
     /// Performs insert branch asynchronously so I/O does not block the caller's thread.

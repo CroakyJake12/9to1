@@ -1,0 +1,68 @@
+<Cui id="assistants.mini-computer" version="1">
+  <Actions><Action name="ChooseOriginalVirtualMachine" command="assistants.mini.choose" parameter="{Binding machine}" /></Actions>
+  <Page id="assistant-mini-computer-page" AccessibleName="Assistant Mini Computer">
+    <Container Type="Vertical Stack" Spacing="12" VerticalScrolling="True">
+      <Button action="assistants.mini.back" IsEnabled="{Binding CanMiniBack}">Back to Assistant</Button>
+      <Text Text="{Binding MiniHeading}" FontSize="26" FontWeight="SemiBold" />
+      <Text Text="Your Assistant’s virtual machine" FontSize="18" FontWeight="SemiBold" />
+      <Text Text="{Binding MiniSelected}" AccessibleName="Configured Assistant virtual machine" />
+      <Text Text="{Binding MiniStatus}" TextWrapping="Wrap" />
+      <Text Text="These controls target a virtual machine. They do not control the host desktop. Closing this view leaves the VM running." TextWrapping="Wrap" />
+      <Text Text="Catalogue identity setup" FontSize="18" FontWeight="SemiBold" />
+      <Text Text="An existing catalogue without an identity needs its own setup decision in Home. This keeps its saved VMs and other data intact." TextWrapping="Wrap" />
+      <Button action="assistants.mini.identity.prepare" IsEnabled="{Binding CanMiniIdentityPrepare}">Review catalogue identity setup</Button>
+      <Text Text="{Binding MiniIdentityStatus}" TextWrapping="Wrap" />
+      <Container Type="Vertical Stack" Spacing="6" IsVisible="{Binding HasMiniIdentityPreview}">
+        <Text Text="{Binding MiniIdentityCatalogue}" />
+        <Button action="assistants.mini.identity.request" IsEnabled="{Binding CanMiniIdentityRequest}">Request identity setup in Home</Button>
+        <Button action="assistants.mini.identity.discard" IsEnabled="{Binding CanMiniIdentityDiscard}">Close identity setup review</Button>
+      </Container>
+      <Text Text="{Binding MiniIdentityRequest}" IsVisible="{Binding HasMiniIdentityRequest}" AccessibleName="Actual catalogue identity setup request" />
+      <Text Text="Catalogue access" FontSize="18" FontWeight="SemiBold" />
+      <Text Text="{Binding MiniImportStatus}" TextWrapping="Wrap" />
+      <Container Type="Horizontal Stack" Spacing="8">
+        <Button id="assistant-mini-import-inspect" action="assistants.mini.import.inspect" IsEnabled="{Binding CanMiniImportInspect}">Review catalogue access</Button>
+        <Button id="assistant-mini-import-request" action="assistants.mini.import.request" IsEnabled="{Binding CanMiniImportRequest}">Request this catalogue in Home</Button>
+        <Button id="assistant-mini-import-refresh" action="assistants.mini.import.refresh" IsEnabled="{Binding CanMiniImportRefresh}">Refresh Home decision</Button>
+      </Container>
+      <Text Text="{Binding MiniImportRequest}" IsVisible="{Binding HasMiniImportRequest}" AccessibleName="Actual catalogue import request" />
+      <Button id="assistant-mini-import-complete" action="assistants.mini.import.complete" IsEnabled="{Binding CanMiniImportComplete}">Complete approved catalogue import</Button>
+      <Button id="assistant-mini-import-retry" action="assistants.mini.import.retry" IsEnabled="{Binding CanMiniImportRetry}">Retry original import audit</Button>
+      <Repeat Source="{Binding MiniMachines}" As="machine" Key="{Binding machine.Id}">
+        <Container Type="Vertical Stack" Spacing="4" Margin="0,0,0,8">
+          <Text Text="{Binding machine.Name}" FontWeight="SemiBold" />
+          <Text Text="{Binding machine.Guest}" />
+          <Text Text="{Binding machine.SavedState}" />
+          <Button action="ChooseOriginalVirtualMachine" IsEnabled="{Binding machine.CanChoose}">Use this VM for this Assistant</Button>
+        </Container>
+      </Repeat>
+      <Button action="assistants.mini.refresh" IsEnabled="{Binding CanMiniRefresh}">Refresh saved VM choices</Button>
+      <Text Text="Inspect and control the selected VM" FontSize="18" FontWeight="SemiBold" />
+      <Text Text="Every provider inspection or lifecycle action requests its own exact Home decision." TextWrapping="Wrap" />
+      <Container Type="Horizontal Stack" Spacing="8">
+        <Button action="assistants.mini.inspect" IsEnabled="{Binding CanMiniInspect}">Inspect current state</Button>
+        <Button action="assistants.mini.start" IsEnabled="{Binding CanMiniStart}">Start VM</Button>
+        <Button action="assistants.mini.pause" IsEnabled="{Binding CanMiniPause}">Pause VM</Button>
+        <Button action="assistants.mini.resume" IsEnabled="{Binding CanMiniResume}">Resume VM</Button>
+      </Container>
+      <Container Type="Horizontal Stack" Spacing="8">
+        <Button action="assistants.mini.save" IsEnabled="{Binding CanMiniSave}">Save VM state</Button>
+        <Button action="assistants.mini.shutdown" IsEnabled="{Binding CanMiniShutdown}">Request guest shutdown</Button>
+      </Container>
+      <Container Type="Vertical Stack" Spacing="6" IsVisible="{Binding HasMiniPreview}">
+        <Text Text="{Binding MiniPreview}" FontWeight="SemiBold" />
+        <Button action="assistants.mini.confirm" IsEnabled="{Binding CanMiniConfirm}">Request this exact action in Home</Button>
+        <Button action="assistants.mini.discard" IsEnabled="{Binding CanMiniDiscard}">Close action review</Button>
+      </Container>
+      <Container Type="Vertical Stack" Spacing="4" IsVisible="{Binding HasMiniRequest}">
+        <Text Text="Open Home to decide this request, then return to this same VM view." TextWrapping="Wrap" />
+        <Text Text="{Binding MiniRequest}" AccessibleName="Actual Mini Computer approval request" />
+      </Container>
+      <Text Text="{Binding MiniObservedState}" AccessibleName="Actual virtual machine observation" />
+      <Text Text="{Binding MiniObservedAt}" />
+      <Text Text="{Binding MiniOutcome}" TextWrapping="Wrap" />
+      <Text Text="VM inspection and controls require a verified virtualisation provider. This host currently has no bundled provider or interactive VM console." TextWrapping="Wrap" />
+      <Text Text="{Binding MiniError}" IsVisible="{Binding HasMiniError}" TextWrapping="Wrap" />
+    </Container>
+  </Page>
+</Cui>

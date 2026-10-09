@@ -6,7 +6,7 @@ namespace HavenOS.Home.Core;
 /// real provider, current actor and trusted paths. This owns the genuine lease acquisition,
 /// accepting host and Core shutdown; it does not install Home or create replacement identity,
 /// stores, publishers, brokers, models or permission policy.</summary>
-public sealed class HomeNativeWindowsBootstrap : IAsyncDisposable
+public sealed partial class HomeNativeWindowsBootstrap : IAsyncDisposable
 {
     private readonly HomeNativeServiceSession _original;
     private readonly IAppPaths _paths;
@@ -42,6 +42,17 @@ public sealed class HomeNativeWindowsBootstrap : IAsyncDisposable
         return new(originalCanonicalHome, originalTrustedHomePaths, configuredEndpoint.Capture(), originalProcessLifetime);
     }
     public Task OriginalStartTask => _start;
+    internal HomeNativeWindowsListeningLease CaptureOriginalListeningLease(HomeNativeServiceSession sameSession)
+    {
+        lock (_sync)
+        {
+            if (_closing || _close is not null || !_start.IsCompletedSuccessfully || _originalLifetime.IsCancellationRequested ||
+                !ReferenceEquals(_original.Services, sameSession.Services) || !ReferenceEquals(_original.Runtime, sameSession.Runtime) ||
+                !ReferenceEquals(_original.Actors, sameSession.Actors) || _owner is null || _lease is null || !_lease.IsHeld)
+                throw new UnauthorizedAccessException("The SAME actual Home bootstrap/listening owner and held process lease are required.");
+            return _owner.CaptureOriginalListeningLease(_original, _lease);
+        }
+    }
     private async Task StartOriginalAsync(Task gate)
     {
         await gate.ConfigureAwait(false);

@@ -173,13 +173,14 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable, IAsyncDispos
         _ = _originalWork.RunAsync(async original =>
         {
             BindOriginal(original, generation);
-            original.DemandPublication();
+            if (!original.IsAcceptedPublicationCurrent) return;
             var scope = CancellationTokenSource.CreateLinkedTokenSource(original.Token);
             _revealCancellation = scope;
             _revealScopes.Add(scope);
             try
             {
-                foreach (var control in controls) PublishOriginal(() => control.Opacity = 0.08);
+                foreach (var control in controls)
+                    original.RunAcceptedPublicationCallback(() => control.Opacity = 0.08);
                 await original.AwaitAsync(RevealProgressivelyAsync(original, controls, scope.Token));
             }
             finally
@@ -201,9 +202,10 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable, IAsyncDispos
         {
             foreach (var control in controls)
             {
-                cancellationToken.ThrowIfCancellationRequested(); original.DemandPublication();
+                if (cancellationToken.IsCancellationRequested || !original.IsAcceptedPublicationCurrent) break;
                 fades.Add(FadeInAsync(original, control, cancellationToken));
-                await original.AwaitAsync(Task.Delay(TimeSpan.FromMilliseconds(staggerMilliseconds), cancellationToken));
+                // Bounded local reveal timing settles normally when this producer stops.
+                await original.AwaitAsync(Task.Delay(TimeSpan.FromMilliseconds(staggerMilliseconds)));
             }
         }
         catch (Exception cause) { original.Retain(cause); }
@@ -219,14 +221,13 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable, IAsyncDispos
     {
         var started = Stopwatch.GetTimestamp();
         var duration = TimeSpan.FromMilliseconds(170);
-        while (!cancellationToken.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested && original.IsAcceptedPublicationCurrent)
         {
-            original.DemandPublication();
             var progress = Math.Clamp(Stopwatch.GetElapsedTime(started).TotalMilliseconds / duration.TotalMilliseconds, 0, 1);
             var eased = 1 - Math.Pow(1 - progress, 3);
-            await PublishOriginalAsync(original, () => PublishOriginal(() => control.Opacity = 0.08 + eased * 0.92));
+            await PublishOriginalAsync(original, () => control.Opacity = 0.08 + eased * 0.92);
             if (progress >= 1) break;
-            await original.AwaitAsync(Task.Delay(16, cancellationToken));
+            await original.AwaitAsync(Task.Delay(16));
         }
     }
     private Task AnimateFlashcardAsync(HavenCard card, GenUiComponent component)
@@ -816,12 +817,7 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable, IAsyncDispos
     { DemandOriginalPublication(); actualWrite(); DemandOriginalPublication(); }
     private async Task PublishOriginalAsync(DesktopOriginalWorkLifetime.Original original, Action callback)
     {
-        var actualDispatcher = Dispatcher.UIThread.InvokeAsync(() => _originalWork.RunSynchronous(callbackOriginal =>
-        {
-            callbackOriginal.BindPublicationGuard(() => original.IsPublicationCurrent);
-            callbackOriginal.DemandPublication(); original.DemandPublication(); callback();
-            original.DemandPublication(); callbackOriginal.DemandPublication();
-        })).GetTask();
+        var actualDispatcher = Dispatcher.UIThread.InvokeAsync(() => original.RunAcceptedPublicationCallback(callback)).GetTask();
         await original.AwaitAsync(actualDispatcher);
     }
     private void RunOriginalCallback(Action callback, Func<bool>? originalControlCurrent = null)

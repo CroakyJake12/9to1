@@ -2,6 +2,6 @@
   <PropertyGroup>
     <AssemblyName>HavenOS.Apps.Stacks</AssemblyName>
     <RootNamespace>HavenOS.Apps.Stacks</RootNamespace>
-    <DefaultItemExcludes>$(DefaultItemExcludes);Tests\**\*</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Tests\**\*;NativeUI\**\*</DefaultItemExcludes>
   </PropertyGroup>
 </Project>

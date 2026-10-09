@@ -25,9 +25,18 @@ internal sealed class SpacesHavenScene : IDisposable
     private SpaceDefinition? _selected;
     private bool _editWithHavenAvailable;
     private bool _disposed;
+    private long _draftRevision;
+    internal long DraftRevision => _draftRevision;
+    private long _selectionEpoch;
+    internal long SelectionEpoch => _selectionEpoch;
+    private readonly Action<Action>? _originalCallbackOwner;
+    private readonly Action? _demandOriginalPublication;
 
-    public SpacesHavenScene()
+    public SpacesHavenScene() : this(null) { }
+
+    internal SpacesHavenScene(Action<Action>? originalCallbackOwner, Action? demandOriginalPublication = null)
     {
+        _originalCallbackOwner = originalCallbackOwner;
         Root = BuildRoot();
         Header = Get<Container>("Header");
         HeaderTitle = Get<Container>("HeaderTitle");
@@ -83,7 +92,7 @@ internal sealed class SpacesHavenScene : IDisposable
         ShowArchived.Invoked += OnShowArchived;
         Save.Invoked += OnSave;
         Launch.Invoked += OnLaunch;
-        NewConversation.Invoked += (_, _) => { if (_selected is { } space) NewConversationRequested?.Invoke(this, space.Id); };
+        NewConversation.Invoked += OnNewConversation;
         Fork.Invoked += OnFork;
         Archive.Invoked += OnArchive;
         Delete.Invoked += OnDelete;
@@ -91,8 +100,12 @@ internal sealed class SpacesHavenScene : IDisposable
         AddFile.Invoked += OnAddFile;
         ManageLayout.Invoked += OnManageLayout;
         ApplySuggestedEdit.Invoked += OnApplySuggestedEdit;
+        foreach (var input in new[] { Name, Description, Model, Instructions, SurfaceInputs, EditInstruction }) input.TextChanged += OnDraftChanged;
+        Thinking.SelectionChanged += OnDraftChanged;
+        SurfaceTemplate.SelectionChanged += OnDraftChanged;
         SetEditWithHavenAvailable(false);
         SetLayoutEditorAvailable(false);
+        _demandOriginalPublication = demandOriginalPublication;
     }
 
     public Page Root { get; }
@@ -159,46 +172,46 @@ internal sealed class SpacesHavenScene : IDisposable
 
     public void SetCompactLayout(bool compact)
     {
-        IsCompactLayout = compact;
+        Write(() => IsCompactLayout = compact);
 
-        Header.Columns = compact ? "1fr 1fr" : "1fr Auto Auto";
-        Header.Rows = compact ? "Auto Auto" : "Auto";
-        HeaderTitle.SetValue(HavenProperties.Column, 0);
-        HeaderTitle.SetValue(HavenProperties.Row, 0);
-        HeaderTitle.SetValue(HavenProperties.ColumnSpan, compact ? 2 : 1);
-        ShowArchived.SetValue(HavenProperties.Column, compact ? 0 : 1);
-        ShowArchived.SetValue(HavenProperties.Row, compact ? 1 : 0);
-        CreateSpace.SetValue(HavenProperties.Column, compact ? 1 : 2);
-        CreateSpace.SetValue(HavenProperties.Row, compact ? 1 : 0);
+        Write(() => Header.Columns = compact ? "1fr 1fr" : "1fr Auto Auto");
+        Write(() => Header.Rows = compact ? "Auto Auto" : "Auto");
+        Write(() => HeaderTitle.SetValue(HavenProperties.Column, 0));
+        Write(() => HeaderTitle.SetValue(HavenProperties.Row, 0));
+        Write(() => HeaderTitle.SetValue(HavenProperties.ColumnSpan, compact ? 2 : 1));
+        Write(() => ShowArchived.SetValue(HavenProperties.Column, compact ? 0 : 1));
+        Write(() => ShowArchived.SetValue(HavenProperties.Row, compact ? 1 : 0));
+        Write(() => CreateSpace.SetValue(HavenProperties.Column, compact ? 1 : 2));
+        Write(() => CreateSpace.SetValue(HavenProperties.Row, compact ? 1 : 0));
 
-        Body.Columns = compact ? "1fr" : "280px 1fr";
-        Body.Rows = compact ? "220px 1fr" : "1fr";
-        PickerPanel.SetValue(HavenProperties.Column, 0);
-        PickerPanel.SetValue(HavenProperties.Row, 0);
-        EditorPanel.SetValue(HavenProperties.Column, compact ? 0 : 1);
-        EditorPanel.SetValue(HavenProperties.Row, compact ? 1 : 0);
+        Write(() => Body.Columns = compact ? "1fr" : "280px 1fr");
+        Write(() => Body.Rows = compact ? "220px 1fr" : "1fr");
+        Write(() => PickerPanel.SetValue(HavenProperties.Column, 0));
+        Write(() => PickerPanel.SetValue(HavenProperties.Row, 0));
+        Write(() => EditorPanel.SetValue(HavenProperties.Column, compact ? 0 : 1));
+        Write(() => EditorPanel.SetValue(HavenProperties.Row, compact ? 1 : 0));
 
-        EditorActions.Columns = compact ? "1fr 1fr" : "1fr Auto Auto Auto";
-        EditorActions.Rows = compact ? "Auto Auto Auto" : "Auto";
-        SelectedHeading.SetValue(HavenProperties.Column, 0);
-        SelectedHeading.SetValue(HavenProperties.Row, 0);
-        SelectedHeading.SetValue(HavenProperties.ColumnSpan, compact ? 2 : 1);
-        Launch.SetValue(HavenProperties.Column, compact ? 0 : 1);
-        Launch.SetValue(HavenProperties.Row, compact ? 1 : 0);
-        Fork.SetValue(HavenProperties.Column, compact ? 1 : 2);
-        Fork.SetValue(HavenProperties.Row, compact ? 1 : 0);
-        Archive.SetValue(HavenProperties.Column, compact ? 0 : 3);
-        Archive.SetValue(HavenProperties.Row, compact ? 2 : 0);
-        Archive.SetValue(HavenProperties.ColumnSpan, compact ? 2 : 1);
+        Write(() => EditorActions.Columns = compact ? "1fr 1fr" : "1fr Auto Auto Auto");
+        Write(() => EditorActions.Rows = compact ? "Auto Auto Auto" : "Auto");
+        Write(() => SelectedHeading.SetValue(HavenProperties.Column, 0));
+        Write(() => SelectedHeading.SetValue(HavenProperties.Row, 0));
+        Write(() => SelectedHeading.SetValue(HavenProperties.ColumnSpan, compact ? 2 : 1));
+        Write(() => Launch.SetValue(HavenProperties.Column, compact ? 0 : 1));
+        Write(() => Launch.SetValue(HavenProperties.Row, compact ? 1 : 0));
+        Write(() => Fork.SetValue(HavenProperties.Column, compact ? 1 : 2));
+        Write(() => Fork.SetValue(HavenProperties.Row, compact ? 1 : 0));
+        Write(() => Archive.SetValue(HavenProperties.Column, compact ? 0 : 3));
+        Write(() => Archive.SetValue(HavenProperties.Row, compact ? 2 : 0));
+        Write(() => Archive.SetValue(HavenProperties.ColumnSpan, compact ? 2 : 1));
     }
 
     public void SetSpaces(IReadOnlyList<SpaceDefinition> spaces, Guid? selectedId)
     {
-        foreach (var child in SpaceRows.Children.ToArray()) SpaceRows.Remove(child);
+        foreach (var child in SpaceRows.Children.ToArray()) Write(() => SpaceRows.Remove(child));
         if (spaces.Count == 0)
         {
             var empty = Muted("No Spaces yet. Create one to get started.");
-            SpaceRows.Add(empty);
+            Write(() => SpaceRows.Add(empty));
             return;
         }
 
@@ -206,13 +219,13 @@ internal sealed class SpacesHavenScene : IDisposable
         {
             var selected = space.Id == selectedId;
             var card = new Container { Layout = HavenLayout.Vertical };
-            card.SetValue(HavenProperties.Width, HavenLength.Percent(100));
-            card.SetValue(HavenProperties.Padding, HavenThickness.Uniform(HavenLength.Px(8)));
-            card.SetValue(HavenProperties.Gap, HavenLength.Px(3));
-            card.SetValue(HavenProperties.Background, selected ? "AccentSoft" : "SurfaceRaised");
-            card.SetValue(HavenProperties.BorderColor, selected ? "AccentSecondary" : "Border");
-            card.SetValue(HavenProperties.BorderWidth, HavenLength.Px(1));
-            card.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(14)));
+            Write(() => card.SetValue(HavenProperties.Width, HavenLength.Percent(100)));
+            Write(() => card.SetValue(HavenProperties.Padding, HavenThickness.Uniform(HavenLength.Px(8))));
+            Write(() => card.SetValue(HavenProperties.Gap, HavenLength.Px(3)));
+            Write(() => card.SetValue(HavenProperties.Background, selected ? "AccentSoft" : "SurfaceRaised"));
+            Write(() => card.SetValue(HavenProperties.BorderColor, selected ? "AccentSecondary" : "Border"));
+            Write(() => card.SetValue(HavenProperties.BorderWidth, HavenLength.Px(1)));
+            Write(() => card.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(14))));
 
             var open = new HavenButton
             {
@@ -220,186 +233,201 @@ internal sealed class SpacesHavenScene : IDisposable
                 IconKey = string.IsNullOrWhiteSpace(space.IconKey) ? "sparkles" : space.IconKey,
                 Variant = ButtonVariant.Navigation
             };
-            open.SetValue(HavenProperties.Width, HavenLength.Percent(100));
-            open.SetValue(HavenProperties.MinHeight, HavenLength.Px(38));
+            Write(() => open.SetValue(HavenProperties.Width, HavenLength.Percent(100)));
+            Write(() => open.SetValue(HavenProperties.MinHeight, HavenLength.Px(38)));
             open.Accessibility.AccessibleName = $"Open Space {space.Name}";
             var id = space.Id;
-            open.Invoked += (_, _) => SpaceSelected?.Invoke(this, id);
-            card.Add(open);
+            open.Invoked += (_, _) => OwnOriginalCallback(() => SpaceSelected?.Invoke(this, id));
+            Write(() => card.Add(open));
 
             var flags = new List<string>();
             if (space.IsBuiltIn) flags.Add("Built-in");
             if (space.IsArchived) flags.Add("Archived");
-            flags.Add(space.Kind.ToString());
-            card.Add(Muted(string.Join(" · ", flags)));
-            SpaceRows.Add(card);
+            Write(() => flags.Add(space.Kind.ToString()));
+            Write(() => card.Add(Muted(string.Join(" · ", flags))));
+            Write(() => SpaceRows.Add(card));
         }
     }
 
-    public void SetConversations(IReadOnlyList<Conversation> rows) { foreach (var child in Conversations.Children.ToArray()) Conversations.Remove(child); if (rows.Count == 0) { Conversations.Add(Muted("No chats in this Space yet.")); return; } foreach (var row in rows) { var id = row.Id; var open = new HavenButton { Content = row.Title, IconKey = "chat", Variant = ButtonVariant.Navigation }; open.SetValue(HavenProperties.Width, HavenLength.Percent(100)); open.SetValue(HavenProperties.MinHeight, HavenLength.Px(38)); open.Accessibility.AccessibleName = $"Open chat {row.Title}"; open.Invoked += (_, _) => ConversationSelected?.Invoke(this, id); Conversations.Add(open); } }
+    public void SetConversations(IReadOnlyList<Conversation> rows)
+    {
+        foreach (var child in Conversations.Children.ToArray()) Write(() => Conversations.Remove(child));
+        if (rows.Count == 0) { Write(() => Conversations.Add(Muted("No chats in this Space yet."))); return; }
+        foreach (var row in rows)
+        {
+            var id = row.Id;
+            var open = new HavenButton { Content = row.Title, IconKey = "chat", Variant = ButtonVariant.Navigation };
+            open.SetValue(HavenProperties.Width, HavenLength.Percent(100));
+            open.SetValue(HavenProperties.MinHeight, HavenLength.Px(38));
+            open.Accessibility.AccessibleName = $"Open chat {row.Title}";
+            open.Invoked += (_, _) => OwnOriginalCallback(() => ConversationSelected?.Invoke(this, id));
+            Write(() => Conversations.Add(open));
+        }
+    }
 
     public void SetSpace(SpaceDefinition? space)
     {
-        _selected = space;
+        Write(() => { ++_draftRevision; ++_selectionEpoch; });
+        Write(() => _selected = space);
         if (space is null)
         {
-            EmptyState.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
-            Editor.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
-            NewConversation.SetValue(HavenProperties.Enabled, false);
+            Write(() => EmptyState.SetValue(HavenProperties.Visibility, HavenVisibility.Visible));
+            Write(() => Editor.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed));
+            Write(() => NewConversation.SetValue(HavenProperties.Enabled, false));
             SetConversations([]);
             return;
         }
 
-        EmptyState.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
-        Editor.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
-        SelectedName.Content = space.Name;
-        SelectedMeta.Content = $"{space.Kind} Space{(space.IsBuiltIn ? " · Built-in" : string.Empty)}{(space.IsArchived ? " · Archived" : string.Empty)}";
-        Name.Text = space.Name;
-        Description.Text = space.Description;
-        Model.Text = space.ModelName ?? string.Empty;
-        Instructions.Text = space.Instructions;
-        Thinking.SelectedIndex = Math.Clamp((int)space.ThinkingMode, 0, ThinkingChoices.Count - 1);
-        _examples.Clear();
-        _examples.AddRange(space.ExamplePairs);
+        Write(() => EmptyState.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed));
+        Write(() => Editor.SetValue(HavenProperties.Visibility, HavenVisibility.Visible));
+        Write(() => SelectedName.Content = space.Name);
+        Write(() => SelectedMeta.Content = $"{space.Kind} Space{(space.IsBuiltIn ? " · Built-in" : string.Empty)}{(space.IsArchived ? " · Archived" : string.Empty)}");
+        Write(() => Name.Text = space.Name);
+        Write(() => Description.Text = space.Description);
+        Write(() => Model.Text = space.ModelName ?? string.Empty);
+        Write(() => Instructions.Text = space.Instructions);
+        Write(() => Thinking.SelectedIndex = Math.Clamp((int)space.ThinkingMode, 0, ThinkingChoices.Count - 1));
+        Write(() => _examples.Clear());
+        Write(() => _examples.AddRange(space.ExamplePairs));
         RenderExamples();
-        SurfaceTemplate.SelectedIndex = SurfaceIndex(space.GeneratedSurface?.TemplateKey);
-        SurfaceInputs.Text = space.GeneratedSurface?.InputsJson ?? "{}";
+        Write(() => SurfaceTemplate.SelectedIndex = SurfaceIndex(space.GeneratedSurface?.TemplateKey));
+        Write(() => SurfaceInputs.Text = space.GeneratedSurface?.InputsJson ?? "{}");
         RenderFiles(space.Files);
-        Launch.Content = space.Kind == SpaceKind.Study ? "Open Study" : "Open Space";
-        Archive.Content = space.IsArchived ? "Restore" : "Archive";
-        Delete.SetValue(HavenProperties.Enabled, !space.IsBuiltIn);
-        Delete.Content = space.IsBuiltIn ? "Built-in Space" : "Delete";
-        NewConversation.SetValue(HavenProperties.Enabled, !space.IsArchived);
+        Write(() => Launch.Content = space.Kind == SpaceKind.Study ? "Open Study" : "Open Space");
+        Write(() => Archive.Content = space.IsArchived ? "Restore" : "Archive");
+        Write(() => Delete.SetValue(HavenProperties.Enabled, !space.IsBuiltIn));
+        Write(() => Delete.Content = space.IsBuiltIn ? "Built-in Space" : "Delete");
+        Write(() => NewConversation.SetValue(HavenProperties.Enabled, !space.IsArchived));
         SetEditWithHavenAvailable(_editWithHavenAvailable);
     }
 
     public void SetGeneratedPreview(HavenElement? preview, string? status)
     {
-        foreach (var child in GeneratedPreview.Children.ToArray()) GeneratedPreview.Remove(child);
+        foreach (var child in GeneratedPreview.Children.ToArray()) Write(() => GeneratedPreview.Remove(child));
         if (preview is not null)
         {
-            preview.SetValue(HavenProperties.Width, HavenLength.Percent(100));
-            GeneratedPreview.Add(preview);
-            GeneratedPreview.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
+            Write(() => preview.SetValue(HavenProperties.Width, HavenLength.Percent(100)));
+            Write(() => GeneratedPreview.Add(preview));
+            Write(() => GeneratedPreview.SetValue(HavenProperties.Visibility, HavenVisibility.Visible));
         }
         else
         {
-            GeneratedPreview.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
+            Write(() => GeneratedPreview.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed));
         }
 
-        GeneratedPreviewState.Content = status ?? string.Empty;
-        GeneratedPreviewState.SetValue(HavenProperties.Visibility, string.IsNullOrWhiteSpace(status) ? HavenVisibility.Collapsed : HavenVisibility.Visible);
+        Write(() => GeneratedPreviewState.Content = status ?? string.Empty);
+        Write(() => GeneratedPreviewState.SetValue(HavenProperties.Visibility, string.IsNullOrWhiteSpace(status) ? HavenVisibility.Collapsed : HavenVisibility.Visible));
     }
 
     public void SetLaunchAvailable(bool available)
     {
-        Launch.SetValue(HavenProperties.Enabled, available);
-        if (!available) Launch.Content = "Opening will be available when Spaces is connected to the shell";
+        Write(() => Launch.SetValue(HavenProperties.Enabled, available));
+        if (!available) Write(() => Launch.Content = "Opening will be available when Spaces is connected to the shell");
     }
 
     public void SetLayoutEditorAvailable(bool available)
     {
-        ManageLayout.SetValue(HavenProperties.Enabled, available);
-        ManageLayout.Content = available ? "Manage Layout / Additional Logic" : "Manage Layout / Additional Logic · waiting for shared editor";
-        LayoutState.Content = available
+        Write(() => ManageLayout.SetValue(HavenProperties.Enabled, available));
+        Write(() => ManageLayout.Content = available ? "Manage Layout / Additional Logic" : "Manage Layout / Additional Logic · waiting for shared editor");
+        Write(() => LayoutState.Content = available
             ? "Uses Haven's shared node editor."
-            : "The canonical shared NodeEditor is still being landed by the Data/Automations workstream; Spaces will consume it rather than create a second graph editor.";
+            : "The canonical shared NodeEditor is still being landed by the Data/Automations workstream; Spaces will consume it rather than create a second graph editor.");
     }
 
     public void SetEditWithHavenAvailable(bool available)
     {
-        _editWithHavenAvailable = available;
-        ApplySuggestedEdit.SetValue(HavenProperties.Enabled, available && _selected is not null);
-        ApplySuggestedEdit.Content = available ? "Suggest changes" : "Suggest changes · model unavailable";
+        Write(() => _editWithHavenAvailable = available);
+        Write(() => ApplySuggestedEdit.SetValue(HavenProperties.Enabled, available && _selected is not null));
+        Write(() => ApplySuggestedEdit.Content = available ? "Suggest changes" : "Suggest changes · model unavailable");
     }
 
     internal void ApplyEditPatch(SpaceEditPatch patch)
     {
         ArgumentNullException.ThrowIfNull(patch);
-        if (patch.Name is not null) Name.Text = patch.Name;
-        if (patch.Description is not null) Description.Text = patch.Description;
-        if (patch.ModelName is not null) Model.Text = patch.ModelName;
-        if (patch.Instructions is not null) Instructions.Text = patch.Instructions;
-        if (patch.ThinkingMode is { } thinking) Thinking.SelectedIndex = Math.Clamp((int)thinking, 0, ThinkingChoices.Count - 1);
-        if (patch.SurfaceTemplate is not null) SurfaceTemplate.SelectedIndex = SurfaceIndex(patch.SurfaceTemplate == "standard" ? null : patch.SurfaceTemplate);
-        if (patch.SurfaceInputsJson is not null) SurfaceInputs.Text = patch.SurfaceInputsJson;
-        EditInstruction.Text = string.Empty;
+        if (patch.Name is not null) Write(() => Name.Text = patch.Name);
+        if (patch.Description is not null) Write(() => Description.Text = patch.Description);
+        if (patch.ModelName is not null) Write(() => Model.Text = patch.ModelName);
+        if (patch.Instructions is not null) Write(() => Instructions.Text = patch.Instructions);
+        if (patch.ThinkingMode is { } thinking) Write(() => Thinking.SelectedIndex = Math.Clamp((int)thinking, 0, ThinkingChoices.Count - 1));
+        if (patch.SurfaceTemplate is not null) Write(() => SurfaceTemplate.SelectedIndex = SurfaceIndex(patch.SurfaceTemplate == "standard" ? null : patch.SurfaceTemplate));
+        if (patch.SurfaceInputsJson is not null) Write(() => SurfaceInputs.Text = patch.SurfaceInputsJson);
+        Write(() => EditInstruction.Text = string.Empty);
         SetStatus("Suggested changes are in the draft. Review them, then choose Save Space to persist them.");
     }
 
     public void SetBusy(bool busy)
     {
-        CreateSpace.SetValue(HavenProperties.Enabled, !busy);
-        Save.SetValue(HavenProperties.Enabled, !busy && _selected is not null);
-        Fork.SetValue(HavenProperties.Enabled, !busy && _selected is not null);
-        Archive.SetValue(HavenProperties.Enabled, !busy && _selected is not null);
-        AddFile.SetValue(HavenProperties.Enabled, !busy && _selected is not null);
-        AddExample.SetValue(HavenProperties.Enabled, !busy && _selected is not null);
-        ApplySuggestedEdit.SetValue(HavenProperties.Enabled, !busy && _editWithHavenAvailable && _selected is not null);
-        if (_selected is { IsBuiltIn: false }) Delete.SetValue(HavenProperties.Enabled, !busy);
+        Write(() => CreateSpace.SetValue(HavenProperties.Enabled, !busy));
+        Write(() => Save.SetValue(HavenProperties.Enabled, !busy && _selected is not null));
+        Write(() => Fork.SetValue(HavenProperties.Enabled, !busy && _selected is not null));
+        Write(() => Archive.SetValue(HavenProperties.Enabled, !busy && _selected is not null));
+        Write(() => AddFile.SetValue(HavenProperties.Enabled, !busy && _selected is not null));
+        Write(() => AddExample.SetValue(HavenProperties.Enabled, !busy && _selected is not null));
+        Write(() => ApplySuggestedEdit.SetValue(HavenProperties.Enabled, !busy && _editWithHavenAvailable && _selected is not null));
+        if (_selected is { IsBuiltIn: false }) Write(() => Delete.SetValue(HavenProperties.Enabled, !busy));
     }
 
     public void SetStatus(string? value)
     {
-        Status.Content = value ?? string.Empty;
-        Status.SetValue(HavenProperties.Visibility, string.IsNullOrWhiteSpace(value) ? HavenVisibility.Collapsed : HavenVisibility.Visible);
+        Write(() => Status.Content = value ?? string.Empty);
+        Write(() => Status.SetValue(HavenProperties.Visibility, string.IsNullOrWhiteSpace(value) ? HavenVisibility.Collapsed : HavenVisibility.Visible));
     }
 
     private void RenderExamples()
     {
-        foreach (var child in Examples.Children.ToArray()) Examples.Remove(child);
-        if (_examples.Count == 0) Examples.Add(Muted("No example pairs yet."));
+        foreach (var child in Examples.Children.ToArray()) Write(() => Examples.Remove(child));
+        if (_examples.Count == 0) Write(() => Examples.Add(Muted("No example pairs yet.")));
         for (var index = 0; index < _examples.Count; index++)
         {
             var pair = _examples[index];
             var row = Card();
-            row.Add(new HavenText { Content = $"You: {pair.User}" });
-            row.Add(Muted($"Haven: {pair.Assistant}"));
+            Write(() => row.Add(new HavenText { Content = $"You: {pair.User}" }));
+            Write(() => row.Add(Muted($"Haven: {pair.Assistant}")));
             var remove = new HavenButton { Content = "Remove example", Variant = ButtonVariant.Text };
             remove.Accessibility.AccessibleName = $"Remove example {index + 1}";
             var removeIndex = index;
-            remove.Invoked += (_, _) =>
+            remove.Invoked += (_, _) => OwnOriginalCallback(() =>
             {
-                _examples.RemoveAt(removeIndex);
+                Write(() => { _examples.RemoveAt(removeIndex); ++_draftRevision; });
                 RenderExamples();
-            };
-            row.Add(remove);
-            Examples.Add(row);
+            });
+            Write(() => row.Add(remove));
+            Write(() => Examples.Add(row));
         }
     }
 
     private void RenderFiles(IReadOnlyList<SpaceFileReference> files)
     {
-        foreach (var child in Files.Children.ToArray()) Files.Remove(child);
+        foreach (var child in Files.Children.ToArray()) Write(() => Files.Remove(child));
         if (files.Count == 0)
         {
-            Files.Add(Muted("No files connected to this Space."));
+            Write(() => Files.Add(Muted("No files connected to this Space.")));
             return;
         }
         foreach (var file in files)
         {
             var row = Card();
-            row.Add(new HavenText { Content = file.DisplayName });
-            row.Add(Muted(file.Permission == SpaceFilePermission.ReadWrite ? "Read & write" : "Read-only"));
+            Write(() => row.Add(new HavenText { Content = file.DisplayName }));
+            Write(() => row.Add(Muted(file.Permission == SpaceFilePermission.ReadWrite ? "Read & write" : "Read-only")));
             var remove = new HavenButton { Content = "Remove", Variant = ButtonVariant.Text };
             remove.Accessibility.AccessibleName = $"Remove {file.DisplayName} from Space";
             var path = file.Path;
-            remove.Invoked += (_, _) => RemoveFileRequested?.Invoke(this, path);
-            row.Add(remove);
-            Files.Add(row);
+            remove.Invoked += (_, _) => OwnOriginalCallback(() => RemoveFileRequested?.Invoke(this, path));
+            Write(() => row.Add(remove));
+            Write(() => Files.Add(row));
         }
     }
 
-    private void OnCreate(object? sender, EventArgs e) => CreateRequested?.Invoke(this, EventArgs.Empty);
+    private void OnCreate(object? sender, EventArgs e) => OwnOriginalCallback(() => CreateRequested?.Invoke(this, EventArgs.Empty));
 
-    private void OnShowArchived(object? sender, EventArgs e)
+    private void OnShowArchived(object? sender, EventArgs e) => OwnOriginalCallback(() =>
     {
-        IncludeArchived = !IncludeArchived;
-        ShowArchived.Content = IncludeArchived ? "Hide archived" : "Show archived";
+        Write(() => IncludeArchived = !IncludeArchived);
+        Write(() => ShowArchived.Content = IncludeArchived ? "Hide archived" : "Show archived");
         ArchivedVisibilityChanged?.Invoke(this, IncludeArchived);
-    }
+    });
 
-    private void OnSave(object? sender, EventArgs e) => SaveCurrentDraft();
+    private void OnSave(object? sender, EventArgs e) => OwnOriginalCallback(SaveCurrentDraft);
 
     internal void SaveCurrentDraft()
     {
@@ -413,32 +441,37 @@ internal sealed class SpacesHavenScene : IDisposable
         SpaceGeneratedSurface? generated = templateKey is null
             ? null
             : new SpaceGeneratedSurface(templateKey, string.IsNullOrWhiteSpace(SurfaceInputs.Text) ? "{}" : SurfaceInputs.Text.Trim());
-        SaveRequested?.Invoke(this, new SpaceEditorDraft(
+        OwnOriginalCallback(() => SaveRequested?.Invoke(this, new SpaceEditorDraft(
             Name.Text.Trim(),
             Description.Text.Trim(),
             string.IsNullOrWhiteSpace(Model.Text) ? null : Model.Text.Trim(),
             Instructions.Text.Trim(),
             (SpaceThinkingMode)Math.Max(0, Thinking.SelectedIndex),
             _examples.ToArray(),
-            generated));
+            generated)));
+    }
+
+    private void OnNewConversation(object? sender, EventArgs e)
+    {
+        if (_selected is { } space) OwnOriginalCallback(() => NewConversationRequested?.Invoke(this, space.Id));
     }
 
     private void OnLaunch(object? sender, EventArgs e)
     {
-        if (_selected is not null) LaunchRequested?.Invoke(this, _selected.Id);
+        if (_selected is not null) OwnOriginalCallback(() => LaunchRequested?.Invoke(this, _selected.Id));
     }
 
     private void OnFork(object? sender, EventArgs e)
     {
-        if (_selected is not null) ForkRequested?.Invoke(this, _selected.Id);
+        if (_selected is not null) OwnOriginalCallback(() => ForkRequested?.Invoke(this, _selected.Id));
     }
 
     private void OnArchive(object? sender, EventArgs e)
     {
-        if (_selected is not null) ArchiveRequested?.Invoke(this, _selected.Id);
+        if (_selected is not null) OwnOriginalCallback(() => ArchiveRequested?.Invoke(this, _selected.Id));
     }
 
-    private void OnDelete(object? sender, EventArgs e) => ShowDeleteConfirmation();
+    private void OnDelete(object? sender, EventArgs e) => OwnOriginalCallback(ShowDeleteConfirmation);
 
     internal void ShowDeleteConfirmation()
     {
@@ -450,12 +483,12 @@ internal sealed class SpacesHavenScene : IDisposable
             new PopupMenuItem("Delete permanently", () => ConfirmDelete(id), true, "trash"),
             new PopupMenuItem("Cancel", () => { })
         ], 240d, $"Delete {_selected.Name}");
-        Root.Add(popup);
+        Write(() => Root.Add(popup));
     }
 
-    internal void ConfirmDelete(Guid id) => DeleteRequested?.Invoke(this, id);
+    internal void ConfirmDelete(Guid id) => OwnOriginalCallback(() => DeleteRequested?.Invoke(this, id));
 
-    private void OnAddExample(object? sender, EventArgs e) => AddExampleFromInputs();
+    private void OnAddExample(object? sender, EventArgs e) => OwnOriginalCallback(AddExampleFromInputs);
 
     internal void AddExampleFromInputs()
     {
@@ -466,9 +499,9 @@ internal sealed class SpacesHavenScene : IDisposable
             SetStatus("Example pairs need both a user message and a Haven response.");
             return;
         }
-        _examples.Add(new SpaceExamplePair(user, assistant));
-        ExampleUser.Text = string.Empty;
-        ExampleAssistant.Text = string.Empty;
+        Write(() => { _examples.Add(new SpaceExamplePair(user, assistant)); ++_draftRevision; });
+        Write(() => ExampleUser.Text = string.Empty);
+        Write(() => ExampleAssistant.Text = string.Empty);
         RenderExamples();
         SetStatus(null);
     }
@@ -476,7 +509,7 @@ internal sealed class SpacesHavenScene : IDisposable
     private void OnAddFile(object? sender, EventArgs e)
     {
         if (_selected is null) return;
-        AddFileRequested?.Invoke(this, FilePermission.SelectedIndex == 1 ? SpaceFilePermission.ReadWrite : SpaceFilePermission.ReadOnly);
+        OwnOriginalCallback(() => AddFileRequested?.Invoke(this, FilePermission.SelectedIndex == 1 ? SpaceFilePermission.ReadWrite : SpaceFilePermission.ReadOnly));
     }
 
     private void OnApplySuggestedEdit(object? sender, EventArgs e)
@@ -488,13 +521,29 @@ internal sealed class SpacesHavenScene : IDisposable
             SetStatus("Describe the Space change you want first.");
             return;
         }
-        EditWithHavenRequested?.Invoke(this, instruction);
+        OwnOriginalCallback(() => EditWithHavenRequested?.Invoke(this, instruction));
     }
 
     private void OnManageLayout(object? sender, EventArgs e)
     {
-        if (_selected is not null && ManageLayout.GetValue(HavenProperties.Enabled)) ManageLayoutRequested?.Invoke(this, _selected.Id);
+        if (_selected is not null && ManageLayout.GetValue(HavenProperties.Enabled)) OwnOriginalCallback(() => ManageLayoutRequested?.Invoke(this, _selected.Id));
     }
+
+    private void Write(Action effect)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        _demandOriginalPublication?.Invoke();
+        effect();
+    }
+
+    private void OwnOriginalCallback(Action callback)
+    {
+        if (_disposed) return;
+        if (_originalCallbackOwner is { } owner) owner(() => { if (!_disposed) callback(); });
+        else callback();
+    }
+
+    private void OnDraftChanged(object? sender, EventArgs e) => OwnOriginalCallback(() => ++_draftRevision);
 
     private static int SurfaceIndex(string? key) => key?.ToLowerInvariant() switch
     {
@@ -625,6 +674,7 @@ internal sealed class SpacesHavenScene : IDisposable
         ShowArchived.Invoked -= OnShowArchived;
         Save.Invoked -= OnSave;
         Launch.Invoked -= OnLaunch;
+        NewConversation.Invoked -= OnNewConversation;
         Fork.Invoked -= OnFork;
         Archive.Invoked -= OnArchive;
         Delete.Invoked -= OnDelete;
@@ -632,6 +682,9 @@ internal sealed class SpacesHavenScene : IDisposable
         AddFile.Invoked -= OnAddFile;
         ManageLayout.Invoked -= OnManageLayout;
         ApplySuggestedEdit.Invoked -= OnApplySuggestedEdit;
+        foreach (var input in new[] { Name, Description, Model, Instructions, SurfaceInputs, EditInstruction }) input.TextChanged -= OnDraftChanged;
+        Thinking.SelectionChanged -= OnDraftChanged;
+        SurfaceTemplate.SelectionChanged -= OnDraftChanged;
         foreach (var popup in Root.Children.OfType<PopupMenu>().ToArray()) popup.Dismiss();
     }
 }

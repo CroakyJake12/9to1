@@ -52,7 +52,7 @@ public sealed class LocalMediaToolLocator : ILocalMediaToolLocator
 /// <summary>
 /// Represents message attachment service and keeps its related state and behavior together.
 /// </summary>
-public sealed class MessageAttachmentService(
+public sealed partial class MessageAttachmentService(
     IAppPaths paths,
     IConversationProductionRepository repository,
     ILocalMediaToolLocator tools) : IMessageAttachmentService
@@ -236,12 +236,7 @@ public sealed class MessageAttachmentService(
                 }
             }
 
-            if (!string.IsNullOrWhiteSpace(attachment.ExtractedText))
-            {
-                text.Append("\n\n--- Attached ").Append(attachment.Kind).Append(": ").Append(attachment.OriginalName).Append(" ---\n")
-                    .Append("Analysis method: ").Append(attachment.AnalysisMethod).Append("\n")
-                    .Append(attachment.ExtractedText);
-            }
+            AppendAttachmentExtractedText(text, attachment);
         }
 
         return new AttachmentPromptContext(images, Truncate(text.ToString(), options.MaxExtractedCharacters), notices, selected);
@@ -427,13 +422,7 @@ public sealed class MessageAttachmentService(
     {
         await using var stream = File.OpenRead(path);
         using var archive = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: false);
-        var prefixes = kind switch
-        {
-            MessageAttachmentKind.Word => new[] { "word/document.xml", "word/header", "word/footer", "word/footnotes.xml", "word/endnotes.xml" },
-            MessageAttachmentKind.PowerPoint => new[] { "ppt/slides/slide", "ppt/notesSlides/notesSlide" },
-            MessageAttachmentKind.Spreadsheet => new[] { "xl/sharedStrings.xml", "xl/worksheets/sheet" },
-            _ => []
-        };
+        var prefixes = OpenXmlEntryPrefixes(kind);
         var builder = new StringBuilder();
         foreach (var entry in archive.Entries.Where(entry => prefixes.Any(prefix => entry.FullName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
                      .OrderBy(entry => entry.FullName, StringComparer.OrdinalIgnoreCase))
@@ -447,19 +436,34 @@ public sealed class MessageAttachmentService(
                 IgnoreComments = true,
                 IgnoreProcessingInstructions = true
             });
-            while (await reader.ReadAsync().ConfigureAwait(false))
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                if (reader.NodeType != XmlNodeType.Element || reader.IsEmptyElement) continue;
-                if (reader.LocalName is not ("t" or "v")) continue;
-                var value = await reader.ReadElementContentAsStringAsync().ConfigureAwait(false);
-                if (string.IsNullOrWhiteSpace(value)) continue;
-                builder.Append(value.Trim()).Append(' ');
-                if (builder.Length >= maxCharacters) return Truncate(builder.ToString(), maxCharacters);
-            }
-            builder.AppendLine();
+            if (await AppendOpenXmlEntryTextAsync(reader, builder, maxCharacters, cancellationToken,
+                    reader.ReadAsync, reader.ReadElementContentAsStringAsync).ConfigureAwait(false))
+                return Truncate(builder.ToString(), maxCharacters);
         }
         return Truncate(builder.ToString().Trim(), maxCharacters);
+    }
+
+    private static string[] OpenXmlEntryPrefixes(MessageAttachmentKind kind) => kind switch
+    {
+        MessageAttachmentKind.Word => ["word/document.xml", "word/header", "word/footer", "word/footnotes.xml", "word/endnotes.xml"],
+        MessageAttachmentKind.PowerPoint => ["ppt/slides/slide", "ppt/notesSlides/notesSlide"],
+        MessageAttachmentKind.Spreadsheet => ["xl/sharedStrings.xml", "xl/worksheets/sheet"],
+        _ => []
+    };
+    private static async Task<bool> AppendOpenXmlEntryTextAsync(XmlReader reader, StringBuilder builder,
+        int maxCharacters, CancellationToken cancellationToken, Func<Task<bool>> readNext, Func<Task<string>> readText)
+    {
+        while (await readNext().ConfigureAwait(false))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (reader.NodeType != XmlNodeType.Element || reader.IsEmptyElement) continue;
+            if (reader.LocalName is not ("t" or "v")) continue;
+            var value = await readText().ConfigureAwait(false);
+            if (string.IsNullOrWhiteSpace(value)) continue;
+            builder.Append(value.Trim()).Append(' ');
+            if (builder.Length >= maxCharacters) return true;
+        }
+        builder.AppendLine(); return false;
     }
 
     /// <summary>
@@ -469,11 +473,20 @@ public sealed class MessageAttachmentService(
     {
         await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 16 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan);
         using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 16 * 1024, leaveOpen: false);
+        return await ReadBoundedTextCoreAsync(reader, maxCharacters,
+            next => next().AsTask(), cancellationToken).ConfigureAwait(false);
+    }
+
+    // The same bounded text decoder serves the established path importer and an
+    // independently authorized held Files stream. Neither overload chooses authority.
+    private static async Task<string> ReadBoundedTextCoreAsync(StreamReader reader, int maxCharacters,
+        Func<Func<ValueTask<int>>, Task<int>> observeRead, CancellationToken cancellationToken)
+    {
         var buffer = new char[Math.Min(maxCharacters + 1, 32 * 1024)];
         var builder = new StringBuilder(Math.Min(maxCharacters, 128 * 1024));
         while (builder.Length <= maxCharacters)
         {
-            var read = await reader.ReadAsync(buffer.AsMemory(), cancellationToken).ConfigureAwait(false);
+            var read = await observeRead(() => reader.ReadAsync(buffer.AsMemory(), cancellationToken)).ConfigureAwait(false);
             if (read == 0) break;
             builder.Append(buffer, 0, read);
         }
@@ -526,6 +539,16 @@ public sealed class MessageAttachmentService(
     /// <summary>
     /// Performs the notice for step owned by this component.
     /// </summary>
+    private static void AppendAttachmentExtractedText(StringBuilder text, MessageAttachment attachment)
+    {
+        if (!string.IsNullOrWhiteSpace(attachment.ExtractedText))
+        {
+            text.Append("\n\n--- Attached ").Append(attachment.Kind).Append(": ").Append(attachment.OriginalName).Append(" ---\n")
+                .Append("Analysis method: ").Append(attachment.AnalysisMethod).Append("\n")
+                .Append(attachment.ExtractedText);
+        }
+    }
+
     private static string NoticeFor(MessageAttachment attachment)
     {
         try

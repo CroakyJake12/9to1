@@ -292,10 +292,10 @@ public sealed partial class ChatCloudPermissionCallerTests
             File.SetUnixFileMode(fixture.Paths.DatabasePath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
             return fixture;
         }
-        internal Task<TaskRunOriginalInitialChatObservationLease> StartAsync(CancellationToken token) =>
+        internal Task<TaskRunOriginalInitialChatObservationLease> StartAsync(CancellationToken token, GenerationOptions? generationOptions = null) =>
             Service.StartObservedOriginalTaskSendAsync(Conversation, "same initial hosted input",
                 Provider.Model.Model with { Name = Provider.Model.Key, Capabilities = new HashSet<ToolCapability> { ToolCapability.Text } },
-                EffortLevel.Medium, [], "controlled", "", DuoMode.Solo, null, null, null, null, token);
+                EffortLevel.Medium, [], "controlled", "", DuoMode.Solo, null, null, null, null, token, generationOptions: generationOptions);
         internal Task CaptureDriver(TaskRunOriginalInitialChatObservationLease lease)
         {
             var original = lease.GetType().GetField("Original", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(lease)!;

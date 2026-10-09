@@ -23,6 +23,10 @@ public sealed record ProductivitySnapshotHistory
     /// <summary>Lower bound of discarded earlier entries, saturating at Int64.MaxValue.
     /// Distinct from an empty original history; it is not a complete action count.</summary>
     [JsonRequired] public long DiscardedEarlierEntries { get; init; }
+    /// <summary>Actual source-issued operation metadata where retained. It is
+    /// descriptive provenance, not caller authentication or an access grant.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public DocumentOperationMetadata? LastOperation { get; init; }
 
     public static ProductivityHistorySnapshot Capture(ReadOnlySpan<byte> payload, string revision)
     {
@@ -40,12 +44,17 @@ public sealed record ProductivitySnapshotHistory
             CurrentSnapshotHash != Convert.ToHexString(SHA256.HashData(currentSnapshot)) ||
             DiscardedEarlierEntries < 0 || Undo is null || Redo is null || Undo.Count + (long)Redo.Count > MaximumEntries)
             throw new InvalidDataException("History schema, current document binding, or retention state is invalid.");
+        ValidateMetadata(LastOperation);
+        var operationIds = new HashSet<Guid>();
         long total = 0;
         foreach (var frame in Undo.Concat(Redo))
         {
             if (frame is null || string.IsNullOrWhiteSpace(frame.Revision) || frame.Revision.Length > 128 || frame.PayloadBase64 is null ||
                 frame.PayloadBase64.Length > (MaximumPayloadBytes + 2) / 3 * 4)
                 throw new InvalidDataException("History frame is invalid or exceeds supported limits.");
+            ValidateMetadata(frame.Operation);
+            if (frame.Operation is { } operation && !operationIds.Add(operation.Id))
+                throw new InvalidDataException("History operation identities must be distinct across retained entries.");
             byte[] bytes;
             try { bytes = Convert.FromBase64String(frame.PayloadBase64); }
             catch (FormatException exception) { throw new InvalidDataException("History snapshot encoding is invalid.", exception); }
@@ -58,10 +67,23 @@ public sealed record ProductivitySnapshotHistory
                 throw new InvalidDataException("History snapshot belongs to another artifact or revision.");
         }
     }
+
+    private static void ValidateMetadata(DocumentOperationMetadata? metadata)
+    {
+        if (metadata is not null && (metadata.Id == Guid.Empty || string.IsNullOrWhiteSpace(metadata.Name) ||
+            metadata.Name.Length > 4096 || !Enum.IsDefined(metadata.Origin) || metadata.Actor?.Length > 4096))
+            throw new InvalidDataException("Retained history operation metadata is invalid.");
+    }
 }
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed record ProductivityHistorySnapshot(
     [property: JsonRequired] string Revision,
     [property: JsonRequired] string ContentHash,
-    [property: JsonRequired] string PayloadBase64);
+    [property: JsonRequired] string PayloadBase64)
+{
+    /// <summary>Metadata of the original entry represented by this undo/redo
+    /// frame. Absent for older snapshots; never reconstructed as an original.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public DocumentOperationMetadata? Operation { get; init; }
+}

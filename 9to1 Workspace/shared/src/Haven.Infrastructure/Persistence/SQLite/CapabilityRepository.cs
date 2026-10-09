@@ -3,8 +3,10 @@ using Haven.Core;
 
 namespace Haven.Infrastructure;
 
-public sealed class CapabilityRepository(ISqliteConnectionFactory factory) : ICapabilityRepository
+public sealed partial class CapabilityRepository(ISqliteConnectionFactory factory) : ICapabilityRepository
 {
+    /// <summary>Pure SAME configured factory pairing, no path or content authority.</summary>
+    public bool HasOriginalSqliteFactory(ISqliteConnectionFactory actual) => ReferenceEquals(factory, actual);
     private readonly SemaphoreSlim _seedGate = new(1, 1);
     private bool _seeded;
 
@@ -110,6 +112,7 @@ public sealed class CapabilityRepository(ISqliteConnectionFactory factory) : ICa
           is_built_in=excluded.is_built_in,is_enabled=excluded.is_enabled,updated_at=excluded.updated_at;
         """;
 
+    internal static CapabilityDefinition MapOriginalDatabaseRow(Microsoft.Data.Sqlite.SqliteDataReader reader) => Read(reader);
     private static CapabilityDefinition Read(Microsoft.Data.Sqlite.SqliteDataReader reader) => new(
         reader.Guid("id"), reader.String("key"), reader.String("name"), reader.String("description"),
         reader.String("owner_app_key"), reader.String("icon_key"), reader.String("instructions"),

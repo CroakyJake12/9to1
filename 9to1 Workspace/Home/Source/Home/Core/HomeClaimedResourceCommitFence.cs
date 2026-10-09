@@ -162,19 +162,26 @@ public sealed partial class HomeClaimedResourceCommitFence : IAsyncDisposable
         FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles, HomeResourceStoreOwnershipAuthority ownership,
         string resourceKind, string originalStoreId, HomeResourceExecutionCapability originalCapability,
         AuthenticatedResourceActor originalActor, (string Id, byte[] Fingerprint)[] records,
-        Func<bool> isOriginalLifetimeCurrent, CancellationToken ct)
+        Func<bool> isOriginalLifetimeCurrent, CancellationToken ct, OriginalFenceSources? source = null)
     {
         // Canonical receipt is obtained from the SAME trusted composition before the owner transaction.
         // Public receipt fields and a different ownership provider cannot substitute for this issuer.
         var admission = broker.CaptureClaimedAttestation(originalCapability);
         if (admission is null || admission.Actor != originalActor || !profiles.IsBoundToStore(store)
             || !broker.IsBoundToLocalCommitStore(store) || !ownership.IsBoundTo(store, profiles)
-            || !LifetimeCurrent(isOriginalLifetimeCurrent) || await profiles.GetCurrentAsync(ct).ConfigureAwait(false) != originalActor) return null;
-        var receipt = await ownership.GetVerifiedAsync(resourceKind, originalStoreId, ct).ConfigureAwait(false);
+            || !LifetimeCurrent(isOriginalLifetimeCurrent) || await ReadActor().ConfigureAwait(false) != originalActor) return null;
+        var receipt = source is null
+            ? await ownership.GetVerifiedAsync(resourceKind, originalStoreId, ct).ConfigureAwait(false)
+            : await source.Read(() => ownership.GetVerifiedWithinOriginalSourceAsync(resourceKind, originalStoreId, source.Scope, source.Retain, ct).AsTask()).ConfigureAwait(false);
         return receipt?.Receipt is null || receipt.ProfileId != originalActor.ProfileId ||
             receipt.ResourceKind != resourceKind || receipt.StoreId != originalStoreId ||
-            !LifetimeCurrent(isOriginalLifetimeCurrent) || await profiles.GetCurrentAsync(ct).ConfigureAwait(false) != originalActor
-            ? null : new(broker, store, profiles, admission, receipt, records, isOriginalLifetimeCurrent);
+            !LifetimeCurrent(isOriginalLifetimeCurrent) || await ReadActor().ConfigureAwait(false) != originalActor
+            ? null : new HomeClaimedResourceCommitFence(broker, store, profiles, admission, receipt, records, isOriginalLifetimeCurrent)
+                { _originalFenceScoped = source is not null };
+
+        async Task<AuthenticatedResourceActor?> ReadActor() => source is null
+            ? await profiles.GetCurrentAsync(ct).ConfigureAwait(false)
+            : await source.Read(() => profiles.GetCurrentAsync(source.Scope, source.Retain, ct).AsTask()).ConfigureAwait(false);
     }
 
     private static bool LifetimeCurrent(Func<bool> lifetime)
@@ -186,29 +193,47 @@ public sealed partial class HomeClaimedResourceCommitFence : IAsyncDisposable
     /// <summary>Call only inside the already-held actual owner transaction. The first validation
     /// acquires the same Home state lease; later validations inspect that retained raw lease.
     /// Refusal/cancellation never retries acquisition or reconstructs an owner admission.</summary>
-    public async ValueTask<bool> ValidateAsync(CancellationToken ct = default)
+    public ValueTask<bool> ValidateAsync(CancellationToken ct = default) => ValidateCoreAsync(ct, null);
+
+    private async ValueTask<bool> ValidateCoreAsync(CancellationToken ct, OriginalFenceSources? source)
     {
-        await _gate.WaitAsync(ct).ConfigureAwait(false);
+        bool held = false;
         try
         {
+            if (source is null) { await _gate.WaitAsync(ct).ConfigureAwait(false); held = true; }
+            else await source.Capture(() => WaitGate(_gate, ct), _ => held = true).ConfigureAwait(false);
             if (_disposed || !LifetimeCurrent(_isOriginalLifetimeCurrent)) return false;
             if (!_attempted)
             {
                 _attempted = true;
                 // CompleteAsync reserves its in-memory outcome before writing Home. Serialize that
                 // reservation too: owner transaction -> exact capability completion gate -> raw Home.
-                _completionLease = await _admission.Capability.AcquireCommitCompletionLeaseAsync(_broker, ct).ConfigureAwait(false);
+                if (source is null) _completionLease = await _admission.Capability.AcquireCommitCompletionLeaseAsync(_broker, ct).ConfigureAwait(false);
+                else await source.Capture(() => _admission.Capability.AcquireCommitCompletionLeaseAsync(_broker, ct,
+                    new(source.Scope, source.Retain)).AsTask(), actual => _completionLease = actual).ConfigureAwait(false);
                 if (_completionLease is not null)
-                    _lease = await _store.AcquireLocalOperationLeaseCoreAsync(_profiles, _admission.Actor,
+                {
+                    if (source is null) _lease = await _store.AcquireLocalOperationLeaseCoreAsync(_profiles, _admission.Actor,
                         new Guard(this), ct).ConfigureAwait(false);
+                    else await source.Capture(() => _store.AcquireLocalOperationLeaseCoreAsync(_profiles, _admission.Actor,
+                        new Guard(this), source.Scope, source.Retain, ct).AsTask(), actual => _lease = actual).ConfigureAwait(false);
+                }
             }
             return _lease is not null && LifetimeCurrent(_isOriginalLifetimeCurrent) &&
-                await _lease.IsCurrentAsync(ct).ConfigureAwait(false) && LifetimeCurrent(_isOriginalLifetimeCurrent);
+                await Current().ConfigureAwait(false) && LifetimeCurrent(_isOriginalLifetimeCurrent);
+
+            async Task<bool> Current() => source is null ? await _lease!.IsCurrentAsync(ct).ConfigureAwait(false)
+                : await source.Read(() => (_lease as IHomeOriginalScopedLocalOperationLease
+                    ?? throw new InvalidOperationException("The SAME held Home lease lacks scoped currentness."))
+                    .IsCurrentAsync(source.Scope, source.Retain, ct).AsTask()).ConfigureAwait(false);
         }
-        finally { _gate.Release(); }
+        finally { if (held) _gate.Release(); }
     }
 
-    private sealed class Guard(HomeClaimedResourceCommitFence issuer) : IHomeStateCommitActorGuard
+    private static async Task<bool> WaitGate(SemaphoreSlim gate, CancellationToken token)
+    { await gate.WaitAsync(token).ConfigureAwait(false); return true; }
+
+    private sealed class Guard(HomeClaimedResourceCommitFence issuer) : IHomeOriginalScopedStateCommitActorGuard
     {
         public ValueTask<bool> CheckAsync(HomeCoreStoredState actualState, AuthenticatedResourceActor originalActor,
             HomeStateCommitPhase phase, CancellationToken ct)
@@ -225,9 +250,24 @@ public sealed partial class HomeClaimedResourceCommitFence : IAsyncDisposable
                 }) &&
                 issuer._broker.IsClaimedAttestationCurrentInState(issuer._admission, originalActor, actualState));
         }
+        public ValueTask<bool> CheckAsync(HomeCoreStoredState actualState, AuthenticatedResourceActor actor,
+            HomeStateCommitPhase phase, Action<Action> scope, Action<Task> retain, CancellationToken ct)
+        {
+            var source = new OriginalFenceSources(issuer, scope, retain);
+            return new(source.Read(() => CheckAsync(actualState, actor, phase, ct).AsTask()));
+        }
     }
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
+    {
+        Task? original; bool scoped;
+        lock (_originalFenceGate) { original = _originalFenceClose; scoped = _originalFenceScoped; }
+        if (scoped || original is not null) DemandExternalOriginalRetirementJoin();
+        return original is not null ? new(original) : scoped
+            ? DisposeWithinOriginalSourceAsync(body => body(), _ => { }) : DisposeLegacyAsync();
+    }
+
+    private async ValueTask DisposeLegacyAsync()
     {
         await _gate.WaitAsync().ConfigureAwait(false);
         try

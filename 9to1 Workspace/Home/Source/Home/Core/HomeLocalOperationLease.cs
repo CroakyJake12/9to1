@@ -59,16 +59,20 @@ public sealed partial class FileHomeCoreStateStore
     private sealed class LocalOperationLease(SemaphoreSlim storeGate, FileStream processLock,
         HomeCoreStoredState lockedState, Func<CancellationToken, Task<HomeStateReadResult>> readUnlocked,
         HomeLocalProfileIdentity profiles, AuthenticatedResourceActor originalActor, IHomeStateCommitActorGuard? issuerGuard)
-        : IHomeOriginalScopedLocalOperationLease
+        : IHomeOriginalScopedLocalOperationLeaseCleanup
     {
         private readonly byte[] _originalStateDigest = Fingerprint(lockedState);
         private readonly SemaphoreSlim _checks = new(1, 1);
         private static byte[] Fingerprint(HomeCoreStoredState state) => SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(state, JsonOptions));
         private bool Matches(HomeStateReadResult read) => read.IsSuccess && CryptographicOperations.FixedTimeEquals(_originalStateDigest, Fingerprint(read.State!));
         private readonly TaskCompletionSource _released = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly object _originalReleaseGate = new();
+        private Task? _originalRelease;
+        private HomeOwnershipOriginalSourceCallbacks? _originalReleaseSources;
         private int _revoked;
         public async ValueTask<bool> IsCurrentAsync(CancellationToken cancellationToken = default)
         {
+            using var executing = CloudflareOriginalExecutionGuard.EnterOriginal(this);
             if (Volatile.Read(ref _revoked) != 0) return false;
             await _checks.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
@@ -90,12 +94,21 @@ public sealed partial class FileHomeCoreStateStore
         public async ValueTask<bool> IsCurrentAsync(Action<Action> originalSynchronousScope, Action<Task> retainOriginalTask, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(originalSynchronousScope); ArgumentNullException.ThrowIfNull(retainOriginalTask);
+            using var executing = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+            var caller = originalSynchronousScope;
+            originalSynchronousScope = body => CloudflareOriginalExecutionGuard.InvokeOriginal(this,
+                () => { caller(body); return true; });
+            var retainer = retainOriginalTask;
+            retainOriginalTask = raw => CloudflareOriginalExecutionGuard.InvokeOriginal(this,
+                () => { retainer(raw); return true; });
             if (issuerGuard is not null && issuerGuard is not IHomeOriginalScopedStateCommitActorGuard)
                 throw new InvalidOperationException("The actual held Home issuer guard has no scoped original callback producer.");
             if (Volatile.Read(ref _revoked) != 0) return false;
-            await _checks.WaitAsync(cancellationToken).ConfigureAwait(false);
+            bool checksHeld = false;
             try
             {
+                await HomeOriginalScopedSourceCallbacks.AwaitAsync(() => _checks.WaitAsync(cancellationToken),
+                    originalSynchronousScope, retainOriginalTask, () => checksHeld = true).ConfigureAwait(false);
                 if (Volatile.Read(ref _revoked) != 0) return false;
                 // Uses the existing gate/process lease: never calls ReadAsync or another owner resolver.
                 var before = await HomeOriginalScopedSourceCallbacks.AwaitAsync(() => readUnlocked(cancellationToken), originalSynchronousScope, retainOriginalTask).ConfigureAwait(false);
@@ -108,20 +121,75 @@ public sealed partial class FileHomeCoreStateStore
                 var after = await HomeOriginalScopedSourceCallbacks.AwaitAsync(() => readUnlocked(cancellationToken), originalSynchronousScope, retainOriginalTask).ConfigureAwait(false);
                 return Matches(after) && Volatile.Read(ref _revoked) == 0;
             }
-            finally { _checks.Release(); }
+            finally { if (checksHeld) _checks.Release(); }
         }
-        public async ValueTask DisposeAsync()
+        public ValueTask DisposeAsync()
         {
-            if (Interlocked.Exchange(ref _revoked, 1) != 0)
-            { await _released.Task.ConfigureAwait(false); return; }
+            CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
+            Task? scoped; lock (_originalReleaseGate) scoped = _originalRelease;
+            return scoped is not null ? new(scoped) : DisposeLegacyAsync();
+        }
+        private async ValueTask DisposeLegacyAsync()
+        {
+            if (Interlocked.Exchange(ref _revoked, 1) != 0) { await _released.Task.ConfigureAwait(false); return; }
             await _checks.WaitAsync().ConfigureAwait(false);
             try { await processLock.DisposeAsync().ConfigureAwait(false); }
-            finally
+            finally { storeGate.Release(); _checks.Release(); _released.TrySetResult(); }
+        }
+        public ValueTask DisposeWithinOriginalSourceAsync(Action<Action> scope, Action<Task> retain)
+        {
+            ArgumentNullException.ThrowIfNull(scope); ArgumentNullException.ThrowIfNull(retain);
+            return CloseOriginal(new(scope, retain));
+        }
+        private ValueTask CloseOriginal(HomeOwnershipOriginalSourceCallbacks? source)
+        {
+            CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
+            Task actual; TaskCompletionSource? begin = null;
+            lock (_originalReleaseGate)
             {
-                storeGate.Release();
-                _checks.Release();
-                _released.TrySetResult();
+                if (_originalRelease is null)
+                {
+                    if (Interlocked.Exchange(ref _revoked, 1) != 0)
+                        throw new InvalidOperationException("The original lease was already retired through a legacy cleanup without a scoped receipt.");
+                    _originalReleaseSources = source;
+                    begin = new(TaskCreationOptions.RunContinuationsAsynchronously);
+                    _originalRelease = ReleaseOriginal(begin.Task);
+                }
+                actual = _originalRelease;
             }
+            begin?.SetResult(); return new(actual);
+        }
+        private async Task ReleaseOriginal(Task start)
+        {
+            await start.ConfigureAwait(false); var source = _originalReleaseSources; using var executing = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+            bool checksHeld = false, nativeClosed = false; Exception? primary = null;
+            try
+            {
+                if (source is null) { await _checks.WaitAsync().ConfigureAwait(false); checksHeld = true; }
+                else await HomeOriginalScopedSourceCallbacks.AwaitAsync(() => _checks.WaitAsync(),
+                    Run, source.Retain, () => checksHeld = true).ConfigureAwait(false);
+            }
+            catch (Exception cause) { primary = cause; }
+            if (checksHeld)
+            {
+                try
+                {
+                    if (source is null) { await processLock.DisposeAsync().ConfigureAwait(false); nativeClosed = true; }
+                    else await HomeOriginalScopedSourceCallbacks.AwaitAsync(() => processLock.DisposeAsync().AsTask(),
+                        Run, source.Retain, () => nativeClosed = true).ConfigureAwait(false);
+                }
+                catch (Exception cause) { primary = primary is null ? cause : new AggregateException(primary, cause); }
+                finally
+                {
+                    // A healthy raw close may release Home even if its callback failed.
+                    // Unknown/failed native close retains the store gate and actual handle.
+                    CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
+                    { if (nativeClosed) storeGate.Release(); _checks.Release(); return true; });
+                }
+            }
+            if (primary is not null) throw new AggregateException("The SAME Home process lease cleanup failed.", primary);
+            void Run(Action body) => CloudflareOriginalExecutionGuard.InvokeOriginal(this,
+                () => { source!.Run(body); return true; });
         }
     }
 }

@@ -233,6 +233,9 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
         await gate.ConfigureAwait(false);
         using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
         List<Exception> failures = [];
+        // All accepted finite Root listener reads are terminal before the SAME
+        // bootstrap/listener/lease they borrowed can be disposed.
+        await JoinOriginalRootListeningAsync(failures).ConfigureAwait(false);
         lock (_sync)
             try { if (_bootstrap is not null) _originalBootstrapClose = _bootstrap.CloseAndDrainAsync(); }
             catch (Exception error) { Add(error); }

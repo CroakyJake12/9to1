@@ -26,6 +26,7 @@ public sealed partial class HomeLocalStoreOwnership
         public UnauthorizedAccessException? PreEffectRefusal { get; set; }
         public HomeStoreImportAuditPendingException? PendingCause { get; set; }
         public ImportCompletion? Completion { get; set; }
+        public bool AuditGateReleased { get; set; }
         public HomeStoreImportAuditRecoveryObservation? RecoveryObservation { get; set; }
     }
     private readonly ConditionalWeakTable<Task<HomeLocalStoreBinding>, OriginalImportInvocation> _originalImportInvocations = new();

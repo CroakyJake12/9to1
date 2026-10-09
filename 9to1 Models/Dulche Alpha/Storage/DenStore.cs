@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace NineToOne.Dulche.Den;
 
-public sealed class DenStore : IAsyncDisposable
+public sealed partial class DenStore : IAsyncDisposable
 {
     private const string CurrentVersion = "1.0";
     private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(5);
@@ -931,11 +931,7 @@ public sealed class DenStore : IAsyncDisposable
         await WriteAtomicAsync(destination, bytes, cancellationToken);
     }
 
-    public ValueTask DisposeAsync()
-    {
-        _disposed = true;
-        return ValueTask.CompletedTask;
-    }
+    public ValueTask DisposeAsync() => new(CloseOriginalAuthorityReadersAsync());
 
     private sealed record OperationReceipt(string Fingerprint);
     private sealed record TransactionMetadata(string OperationId, string Fingerprint, string NamespaceId, string RecordId, bool HadPrevious);

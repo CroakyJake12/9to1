@@ -18,7 +18,7 @@ internal sealed partial class NativePersonalTaskRecoveryStore
     private static NativePersonalTaskRecoveryStore AcquireOriginalWindows(string directory, string database) =>
         new(new WindowsPersonalStore(directory, database));
 
-    private sealed class WindowsPersonalStore : IDisposable
+    private sealed partial class WindowsPersonalStore : IDisposable
     {
         private const string KeyLeaf = ".task-recovery-auth.v1";
         private readonly object _gate = new();

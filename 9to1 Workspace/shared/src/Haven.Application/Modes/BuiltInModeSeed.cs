@@ -216,6 +216,13 @@ public sealed class BuiltInModeSeed
             HavenMode.Chat, "[]", "[]", "[]", "[]", "Use the local Shelf library. Each change requires its own Home review; opening the library does not approve a change.",
             ModeSource.BuiltIn, ModeInstallState.BuiltIn, "Haven", "1.0.0", "[\"productivity\"]",
             DateTimeOffset.MinValue, DateTimeOffset.MinValue)
+        { InvocationOperability = new(AppOperabilityClassification.OrdinaryApplication, AppOperabilityPath.TypedApi) },
+        new ModeDefinition(
+            Guid.Parse("a0000000-0000-0000-0000-000000000029"),
+            "assistants", "Assistants", "Create personal Assistants and continue their conversations and work", "user",
+            HavenMode.Chat, "[\"Assistants\"]", "[]", "[]", "[]", "",
+            ModeSource.BuiltIn, ModeInstallState.BuiltIn, "Haven", "1.0.0", "[\"general\",\"productivity\"]",
+            DateTimeOffset.MinValue, DateTimeOffset.MinValue)
         { InvocationOperability = new(AppOperabilityClassification.OrdinaryApplication, AppOperabilityPath.TypedApi) }
     ];
 }

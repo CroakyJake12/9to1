@@ -83,6 +83,12 @@ The shared Montserrat-first interface font and code font stacks are exposed as
 to typography, spacing and control sizing without changing application state.
 Hosts can set one preferred font family through `InterfaceFontFamilyOverride`
 or `CodeFontFamilyOverride`; the CUI fallback stack is always retained.
+Native CUI chrome resolves Montserrat from the maintained bundled assets, linked
+into `CakeOS.Cui.Runtime` with their OFL notice. `CuiNativeHost.ConfigureFonts`
+configures that embedded family for standalone/headless hosts; embedded
+`CuiSceneHost` surfaces inherit the same family and Medium weight. Explicit
+content fonts remain local to their authored controls. No installed Montserrat
+or separate Desktop UI process is required.
 Reduced-motion and high-contrast preferences are framework resources and can be
 passed to the theme applier as `CuiAccessibilitySettings`.
 

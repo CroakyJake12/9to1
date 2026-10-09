@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>HavenOS.Assistants.Integration.Tests</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <OutputType>Exe</OutputType>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="AssistantsPersistentIdentityIntegrationTests.cs" />
+    <Compile Include="AssistantsPersistentIdentityIntegrationTests.MembershipSource.cs" />
+    <ProjectReference Include="../HavenOS.Assistants.Core.csproj" />
+    <ProjectReference Include="../../shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio"><PrivateAssets>all</PrivateAssets></PackageReference>
+  </ItemGroup>
+</Project>

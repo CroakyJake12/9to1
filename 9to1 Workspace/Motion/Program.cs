@@ -38,10 +38,20 @@ internal static class MotionSurface
             ExportAvailable: false,
             PersistenceAvailable: true,
             MediaInspectionAvailable: true,
-            Message: "Project persistence and basic insert/split timeline commands are available; playback, rendering, and export are unavailable.");
+            Message: "Revisioned timeline editing, captions and the CUI workspace are available; the native host must supply Home, Files and shared media services for source playback or rendering.");
 
     public static int SelfTest()
     {
+        var markerTest = MotionMarkerWorkflowTest.RunAsync().GetAwaiter().GetResult();
+        if (markerTest != 0) return markerTest;
+        var schemaTest = MotionSchemaWorkflowTest.Run();
+        if (schemaTest != 0) return schemaTest;
+        var advancedTest = MotionAdvancedWorkflowTest.Run();
+        if (advancedTest != 0) return advancedTest;
+        var editingTest = MotionEditingWorkflowTest.RunAsync().GetAwaiter().GetResult();
+        if (editingTest != 0) return editingTest;
+        var captionTest = MotionCaptionWorkflowTest.Run();
+        if (captionTest != 0) return captionTest;
         var projectTest = MotionProjectWorkflowTest.Run();
         if (projectTest != 0)
             return projectTest;
@@ -108,9 +118,7 @@ internal static class MotionSurface
         }
         finally
         {
-            foreach (var file in Directory.EnumerateFiles(fixtureDirectory.FullName))
-                File.Delete(file);
-            Directory.Delete(fixtureDirectory.FullName);
+            // Retain generated fixture evidence; the current implementation lane forbids cleanup.
         }
     }
 }
@@ -179,8 +187,15 @@ internal static class MotionMediaInspector
 
 internal static class Program
 {
+    [STAThread]
     private static int Main(string[] args)
     {
+        if (args.Length == 1 && string.Equals(args[0], "--ui-self-test", StringComparison.Ordinal))
+            return MotionNativeWorkflowTest.Run();
+
+        if (args.Length == 1 && string.Equals(args[0], "--native", StringComparison.Ordinal))
+            return MotionNativeSurface.RunSetupRequired([]);
+
         if (args.Length == 1 && string.Equals(args[0], "--self-test", StringComparison.Ordinal))
             return MotionSurface.SelfTest();
 

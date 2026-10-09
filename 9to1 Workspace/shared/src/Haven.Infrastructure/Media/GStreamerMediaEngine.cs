@@ -72,6 +72,7 @@ public sealed class GStreamerMediaEngine : IMediaEngine
         private readonly GstInit _init;
         private readonly GstParseLaunch _parseLaunch;
         private readonly GstElementSetState _setState;
+        private readonly GstElementGetState _getState;
         private readonly GstElementQueryPosition _queryPosition;
         private readonly GstElementSeekSimple _seekSimple;
         private readonly GstElementFactoryFind _factoryFind;
@@ -89,6 +90,7 @@ public sealed class GStreamerMediaEngine : IMediaEngine
             _init = Load<GstInit>("gst_init");
             _parseLaunch = Load<GstParseLaunch>("gst_parse_launch");
             _setState = Load<GstElementSetState>("gst_element_set_state");
+            _getState = Load<GstElementGetState>("gst_element_get_state");
             _queryPosition = Load<GstElementQueryPosition>("gst_element_query_position");
             _seekSimple = Load<GstElementSeekSimple>("gst_element_seek_simple");
             _factoryFind = Load<GstElementFactoryFind>("gst_element_factory_find");
@@ -112,7 +114,7 @@ public sealed class GStreamerMediaEngine : IMediaEngine
             return null;
         }
 
-        internal PlaybackSession Open(Uri uri)
+        internal GStreamerPlaybackSession Open(Uri uri)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
             var escaped = uri.AbsoluteUri.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal);
@@ -126,7 +128,12 @@ public sealed class GStreamerMediaEngine : IMediaEngine
                 throw new InvalidOperationException(message);
             }
             if (pipeline == 0) throw new InvalidOperationException("GStreamer returned an empty pipeline.");
-            return new PlaybackSession(this, pipeline);
+            return new GStreamerPlaybackSession(pipeline,
+                (element, state) => _setState(element, state),
+                (nint element, out int state, out int pending, ulong timeout) => _getState(element, out state, out pending, timeout),
+                (nint element, int format, out long position) => _queryPosition(element, format, out position),
+                (element, format, flags, position) => _seekSimple(element, format, flags, position),
+                element => _objectUnref(element));
         }
 
         internal bool HasFactory(string name)
@@ -140,62 +147,10 @@ public sealed class GStreamerMediaEngine : IMediaEngine
         private T Load<T>(string name) where T : Delegate => Marshal.GetDelegateForFunctionPointer<T>(NativeLibrary.GetExport(_library, name));
         public void Dispose() { if (!_disposed) { _disposed = true; NativeLibrary.Free(_library); } }
 
-        internal sealed class PlaybackSession(GStreamerNative native, nint pipeline) : IMediaPlaybackSession
-        {
-            private nint _pipeline = pipeline;
-            private MediaPlaybackState _state = MediaPlaybackState.Stopped;
-            public MediaPlaybackState State => _state;
-
-            public Task<MediaEngineResult<MediaPlaybackState>> SetStateAsync(MediaPlaybackState state, CancellationToken cancellationToken = default)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                if (_pipeline == 0) return Task.FromResult(Fail<MediaPlaybackState>("Playback session is disposed."));
-                if (state is not (MediaPlaybackState.Playing or MediaPlaybackState.Paused or MediaPlaybackState.Stopped))
-                    return Task.FromResult(Fail<MediaPlaybackState>("Requested playback state cannot be set directly."));
-                var gstState = state switch { MediaPlaybackState.Playing => 4, MediaPlaybackState.Paused => 3, _ => 1 };
-                var result = native._setState(_pipeline, gstState);
-                if (result == 0) return Task.FromResult(Fail<MediaPlaybackState>("GStreamer rejected the requested playback state."));
-                _state = state;
-                return Task.FromResult(MediaEngineResult<MediaPlaybackState>.Success(_state));
-            }
-
-            public Task<MediaEngineResult<MediaTime>> GetPositionAsync(CancellationToken cancellationToken = default)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                if (_pipeline == 0) return Task.FromResult(Fail<MediaTime>("Playback session is disposed."));
-                if (native._queryPosition(_pipeline, 3, out var position) == 0 || position < 0)
-                    return Task.FromResult(Fail<MediaTime>("GStreamer could not report the current position."));
-                return Task.FromResult(MediaEngineResult<MediaTime>.Success(MediaTimebase.Nanoseconds.At(position)));
-            }
-
-            public Task<MediaEngineResult<MediaTime>> SeekAsync(MediaTime position, CancellationToken cancellationToken = default)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                if (_pipeline == 0) return Task.FromResult(Fail<MediaTime>("Playback session is disposed."));
-                if (!position.IsValid || position.Ticks < 0) return Task.FromResult(Fail<MediaTime>("Seek position must be non-negative and valid."));
-                long nanoseconds;
-                try { nanoseconds = position.ConvertTo(MediaTimebase.Nanoseconds).Ticks; }
-                catch (OverflowException) { return Task.FromResult(Fail<MediaTime>("Seek position exceeds GStreamer limits.")); }
-                if (native._seekSimple(_pipeline, 3, 1, nanoseconds) == 0)
-                    return Task.FromResult(Fail<MediaTime>("GStreamer rejected the seek request."));
-                return Task.FromResult(MediaEngineResult<MediaTime>.Success(MediaTimebase.Nanoseconds.At(nanoseconds)));
-            }
-
-            public ValueTask DisposeAsync()
-            {
-                var current = Interlocked.Exchange(ref _pipeline, 0);
-                if (current != 0) { native._setState(current, 1); native._objectUnref(current); }
-                _state = MediaPlaybackState.Stopped;
-                return ValueTask.CompletedTask;
-            }
-
-            private static MediaEngineResult<T> Fail<T>(string message) => MediaEngineResult<T>.Failure(new(
-                MediaEngineErrorCode.PipelineFailed, message, "Reopen the media item and check GStreamer diagnostics.", null, true, true));
-        }
-
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate void GstInit(int argc, nint argv);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate nint GstParseLaunch([MarshalAs(UnmanagedType.LPUTF8Str)] string description, out nint error);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate int GstElementSetState(nint element, int state);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate int GstElementGetState(nint element, out int state, out int pending, ulong timeout);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate int GstElementQueryPosition(nint element, int format, out long position);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate int GstElementSeekSimple(nint element, int format, int flags, long position);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate nint GstElementFactoryFind([MarshalAs(UnmanagedType.LPUTF8Str)] string name);

@@ -16,7 +16,7 @@ namespace Haven.Infrastructure;
 /// <summary>
 /// Represents container repository and keeps its related state and behavior together.
 /// </summary>
-public sealed class ContainerRepository(ISqliteConnectionFactory factory, IAppPaths? paths = null) : IContainerRepository
+public sealed partial class ContainerRepository(ISqliteConnectionFactory factory, IAppPaths? paths = null) : IContainerRepository
 {
     /// <summary>
     /// Retrieves by mode async for the current operation.

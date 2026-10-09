@@ -76,6 +76,8 @@
             <WrapPanel id="app-cards" margin="0 10 0 18">
               <Button id="shortcut-write" action="OpenWrite" content="Write" width="148" height="58" margin="0 0 10 10" />
               <Button id="shortcut-present" action="OpenPresent" content="Present" width="148" height="58" margin="0 0 10 10" />
+              <Button id="shortcut-picture" action="OpenPicture" content="Picture" width="148" height="58" margin="0 0 10 10" />
+              <Button id="shortcut-wave" action="OpenWave" content="Wave" width="148" height="58" margin="0 0 10 10" />
               <Button id="shortcut-browse" action="OpenBrowse" content="Browse" width="148" height="58" margin="0 0 10 10" />
               <Button id="shortcut-data" action="OpenData" content="Data" width="148" height="58" margin="0 0 10 10" />
               <Button id="shortcut-boards" action="OpenBoards" content="Boards" width="148" height="58" margin="0 0 10 10" />

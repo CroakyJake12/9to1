@@ -40,68 +40,82 @@ public sealed partial class PresentPage
         DisposePresenterPlayback();
     }
 
-    private void OnThemePresetRequested(string preset) => _editor?.ApplyThemePreset(preset);
-    private void OnSlideSizePresetRequested(PresentSlideSizePreset preset) => _editor?.SetSlideSizePreset(preset);
+    private void OnThemePresetRequested(string preset) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.ApplyThemePreset(preset);
+    });
+    private void OnSlideSizePresetRequested(PresentSlideSizePreset preset) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.SetSlideSizePreset(preset);
+    });
 
-    private void OnSlideLayoutRequested(Guid layoutId)
+    private void OnSlideLayoutRequested(Guid layoutId) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null || CurrentSlide is not { } slide) return;
         _editor.SetSlideLayout(slide.Id, layoutId);
-    }
+    });
 
-    private void OnSlideBackgroundRequested(string color)
+    private void OnSlideBackgroundRequested(string color) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null || CurrentSlide is not { } slide) return;
         _editor.SetSlideBackgroundColor(slide.Id, color);
-    }
+    });
 
-    private void OnTransitionKindRequested(PresentTransitionKind kind)
+    private void OnTransitionKindRequested(PresentTransitionKind kind) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null || CurrentSlide is not { } slide) return;
         var transition = slide.Transition;
         _editor.SetSlideTransition(slide.Id, kind, EffectiveTransitionDuration(transition), transition.Easing, transition.Direction);
-    }
+    });
 
-    private void OnTransitionEasingRequested(PresentEasingKind easing)
+    private void OnTransitionEasingRequested(PresentEasingKind easing) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null || CurrentSlide is not { } slide) return;
         var transition = slide.Transition;
         _editor.SetSlideTransition(slide.Id, transition.Kind, EffectiveTransitionDuration(transition), easing, transition.Direction);
-    }
+    });
 
-    private void OnTransitionDirectionRequested(PresentMotionDirection direction)
+    private void OnTransitionDirectionRequested(PresentMotionDirection direction) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null || CurrentSlide is not { } slide) return;
         var transition = slide.Transition;
         _editor.SetSlideTransition(slide.Id, transition.Kind, EffectiveTransitionDuration(transition), transition.Easing, direction);
-    }
+    });
 
-    private void OnTransitionDurationRequested(double duration)
+    private void OnTransitionDurationRequested(double duration) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null || CurrentSlide is not { } slide) return;
         var transition = slide.Transition;
         _editor.SetSlideTransition(slide.Id, transition.Kind, duration, transition.Easing, transition.Direction);
-    }
+    });
 
-    private void OnAddAnimationRequested(PresentAnimationEffect effect, PresentAnimationTrigger trigger)
+    private void OnAddAnimationRequested(PresentAnimationEffect effect, PresentAnimationTrigger trigger) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null) return;
         var direction = effect == PresentAnimationEffect.Fly ? PresentMotionDirection.Up : PresentMotionDirection.None;
         _editor.AddAnimationToSelection(effect, trigger, .35, direction);
-    }
+    });
 
-    private void OnRemoveAnimationRequested(object? sender, EventArgs e) => _editor?.RemoveAnimationsFromSelection();
+    private void OnRemoveAnimationRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.RemoveAnimationsFromSelection();
+    });
 
-    private void OnSlideHiddenRequested(bool hidden)
+    private void OnSlideHiddenRequested(bool hidden) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null || CurrentSlide is not { } slide) return;
         _editor.SetSlideHidden(slide.Id, hidden);
-    }
+    });
 
-    private void OnMediaPlaybackRequested(bool autoPlay, bool loop, double start, double? end) =>
+    private void OnMediaPlaybackRequested(bool autoPlay, bool loop, double start, double? end) => RunOriginalPresentEvent(() =>
+    {
         _editor?.SetSelectedMediaPlayback(autoPlay, loop, start, end);
+    });
 
-    private void OnAlternativeTextRequested(string alternativeText) => _editor?.SetSelectedAlternativeText(alternativeText);
+    private void OnAlternativeTextRequested(string alternativeText) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.SetSelectedAlternativeText(alternativeText);
+    });
 
     private static double EffectiveTransitionDuration(PresentTransition transition) =>
         transition.DurationSeconds > 0 ? transition.DurationSeconds : .35;

@@ -121,7 +121,7 @@ public sealed partial class HomeColdProjectReadReconciliation : IDeveloperOrigin
         public TaskRunColdProjectIdentity OriginalIdentity => original.Identity;
         public Task OriginalPreparation => original.OriginalPreparation;
         public void DemandExternalOriginalJoin() { owner.DemandExternalOriginalJoin(); original.DemandExternalOriginalJoin(); }
-        public void RequestOriginalRetirement() { original.RequestOriginalRetirement(); original.CancelOriginalPending(); }
+        public void RequestOriginalRetirement() { original.RequestOriginalRetirement(); _ = original.CancelOriginalPendingAsync(); }
         public Task CloseAndDrainOriginalAsync() { DemandExternalOriginalJoin(); return original.CloseOwned(); }
         public ValueTask DisposeAsync() => new(CloseAndDrainOriginalAsync());
     }

@@ -17,7 +17,7 @@ public sealed class NativeAccountObservationFenceTests
         {
             calls.Add(action); reached.TrySetResult(); return raw.Task;
         }), write => { write(); return Task.CompletedTask; });
-        var original = view.DispatchAsync("Refresh", null).AsTask();
+        var original = view.DispatchAsync("Refresh", null, TestContext.Current.CancellationToken).AsTask();
         await reached.Task;
         view.ClearAccountObservations("The actual native session expired.");
         raw.SetResult(Current()); // Original backend ignored cancellation/generation retirement.
@@ -39,7 +39,7 @@ public sealed class NativeAccountObservationFenceTests
             if (first) { first = false; originalPublication = write; reached.TrySetResult(); return queued.Task; }
             write(); return Task.CompletedTask;
         });
-        var original = view.DispatchAsync("Refresh", null).AsTask();
+        var original = view.DispatchAsync("Refresh", null, TestContext.Current.CancellationToken).AsTask();
         await reached.Task;
         view.ClearAccountObservations("The actual native session changed.");
         Assert.NotNull(originalPublication); originalPublication(); queued.SetResult();
@@ -59,15 +59,15 @@ public sealed class NativeAccountObservationFenceTests
             "ListSessions" => Ok(new { sessions = new[] { new { accountId = AccountId, sessionId = SessionId, deviceName = "Synthetic" } } }),
             _ => throw new InvalidOperationException("An observation control must not perform an auth mutation.")
         })), write => { write(); return Task.CompletedTask; });
-        await view.DispatchAsync("Refresh", null);
+        await view.DispatchAsync("Refresh", null, TestContext.Current.CancellationToken);
         Assert.True(view.TrySetValue("Draft.name", "Unsaved synthetic draft"));
-        await view.DispatchAsync("SelectSession", JsonSerializer.SerializeToElement(new { sessionId = SessionId }));
+        await view.DispatchAsync("SelectSession", JsonSerializer.SerializeToElement(new { sessionId = SessionId }), TestContext.Current.CancellationToken);
         Assert.True(view.TryGetValue("HasConfirmation", out var confirmation)); Assert.Equal(true, confirmation);
         view.ClearAccountObservations("The genuine session changed.");
         foreach (var path in new[] { "HasAccount", "HasProfile", "HasChanges", "HasConfirmation", "CanSessionActions" })
         { Assert.True(view.TryGetValue(path, out var value)); Assert.Equal(false, value); }
         Assert.True(view.TryGetValue("Draft.name", out var draft)); Assert.Equal("", draft);
-        await view.DispatchAsync("Refresh", null); // New explicit command, rather than resuming old work.
+        await view.DispatchAsync("Refresh", null, TestContext.Current.CancellationToken); // New explicit command, rather than resuming old work.
         Assert.True(view.TryGetValue("HasAccount", out var current)); Assert.Equal(true, current);
     }
 

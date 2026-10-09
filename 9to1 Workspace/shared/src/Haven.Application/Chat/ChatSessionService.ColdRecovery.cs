@@ -151,7 +151,7 @@ public sealed partial class ChatSessionService : ITaskRunOriginalColdCaptureSour
     internal IAsyncEnumerable<ChatStreamEvent> CreateOriginalColdContinuation(
         TaskRunColdContinuationBinding binding, CancellationToken token)
     {
-        var input = binding.Entry.Capsule.OriginalInput;
+        var input = binding.CurrentOriginalInput;
         var custody = binding.Invocation;
         custody.OriginalColdContinuation = binding;
         custody.OriginalUserMessage = binding.Entry.Capsule.AcceptedUserMessage;
@@ -180,7 +180,7 @@ public sealed partial class ChatSessionService
     {
         var coordinator = taskCoordinator ?? throw new InvalidOperationException("The actual canonical owner is unavailable.");
         coordinator.DemandOriginalColdToolFactory(binding, this);
-        var input = binding.Entry.Capsule.OriginalInput;
+        var input = binding.CurrentOriginalInput;
         var custody = binding.Invocation;
         custody.OriginalColdContinuation = binding;
         custody.OriginalChatOwner = this;

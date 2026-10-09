@@ -42,6 +42,8 @@ public sealed partial class ResilientProviderRoutingModelClient
         {
             var failure = selection.Failure;
             var binding = selection.Binding;
+            if (((OllamaToolRequest)failure.Request).Options?.RequestedRoutingConstraints?.AllowFallback == false)
+                return null; // Original request restrictions survive same-run checkpoint recovery.
             if (taskCoordinator is null || routeCapture is null || catalogueEligibility is null
                 || !IsIssuedOriginalFinalRequestFailure(binding, failure.Request, binding.OriginalOutwardFailure)) return null;
             if (TryGetOriginalRequestFailure((OllamaToolRequest)failure.Request, binding.OriginalAdmission,

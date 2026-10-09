@@ -70,7 +70,7 @@ public interface IStackProjectStore
 /// <summary>
 /// A durable Files-backed Stack manifest store. Metadata is written atomically and the managed layout is validated on every open.
 /// </summary>
-public sealed class JsonFileStackProjectStore : IStackProjectStore
+public sealed partial class JsonFileStackProjectStore : IStackOriginalSourceProjectStore
 {
     public const string ManifestRelativePath = ".branches/stack.manifest.json";
     public const string RootsRelativePath = ".roots/roots.json";
@@ -140,13 +140,13 @@ public sealed class JsonFileStackProjectStore : IStackProjectStore
         }
     }
 
-    public async Task<StackManifest> LoadAsync(CancellationToken cancellationToken = default)
+    private async Task<StackManifest> LoadValidatedLegacyAsync(CancellationToken cancellationToken = default)
     {
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             ValidateManagedLayout();
-            byte[] bytes = await File.ReadAllBytesAsync(ManifestPath, cancellationToken).ConfigureAwait(false);
+            byte[] bytes = await ReadOriginalMetadataAsync(ManifestPath, cancellationToken).ConfigureAwait(false);
             StackManifest manifest;
             try
             {
@@ -184,39 +184,22 @@ public sealed class JsonFileStackProjectStore : IStackProjectStore
         }
     }
 
+    public async Task<StackManifest> LoadAsync(CancellationToken cancellationToken = default)
+        => (await LoadOriginalAsync(cancellationToken).ConfigureAwait(false)).Manifest;
+
     public async Task SaveAsync(StackManifest manifest, CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(manifest);
-        ValidateManifest(manifest);
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        IStackOriginalSourceRevision revision;
+        lock (_originalReceiptsGate)
         {
-            ValidateManagedLayout();
-            var roots = new StackRootsDocument
-            {
-                SchemaVersion = StackManifest.CurrentSchemaVersion,
-                Roots = manifest.Roots.ToList(),
-            };
-            await WriteAtomicallyAsync(RootsPath, JsonSerializer.SerializeToUtf8Bytes(roots, JsonOptions), cancellationToken).ConfigureAwait(false);
-            await WriteAtomicallyAsync(ManifestPath, Serialize(manifest), cancellationToken).ConfigureAwait(false);
+            if (!_legacyOriginalReceipts.TryGetValue(manifest, out var holder))
+                throw new StackFailureException(StackFailureCode.RevisionConflict,
+                    "Saving requires this store's original loaded source. Reopen the project before continuing.", ManifestRelativePath, recoverable: true, retryable: true);
+            revision = holder.Revision;
         }
-        catch (StackFailureException)
-        {
-            throw;
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            throw new StackFailureException(StackFailureCode.MaterialisationFailed,
-                "The Stack manifest could not be saved. The previous manifest remains recoverable.", ManifestRelativePath, recoverable: true, retryable: true, exception);
-        }
-        finally
-        {
-            _gate.Release();
-        }
+        var accepted = await SaveOriginalAsync(manifest, revision, cancellationToken).ConfigureAwait(false);
+        lock (_originalReceiptsGate) _legacyOriginalReceipts.GetValue(manifest, _ => new(accepted)).Revision = accepted;
     }
-
-    private string ManifestPath => Path.Combine(ProjectDirectory, ManifestRelativePath.Replace('/', Path.DirectorySeparatorChar));
-    private string RootsPath => Path.Combine(ProjectDirectory, RootsRelativePath.Replace('/', Path.DirectorySeparatorChar));
 
     private void ValidateManagedLayout()
     {
@@ -247,7 +230,7 @@ public sealed class JsonFileStackProjectStore : IStackProjectStore
     {
         try
         {
-            byte[] bytes = await File.ReadAllBytesAsync(RootsPath, cancellationToken).ConfigureAwait(false);
+            byte[] bytes = await ReadOriginalMetadataAsync(RootsPath, cancellationToken).ConfigureAwait(false);
             StackRootsDocument roots = JsonSerializer.Deserialize<StackRootsDocument>(bytes, JsonOptions)
                 ?? throw new JsonException("Root metadata was empty.");
             if (roots.SchemaVersion != StackManifest.CurrentSchemaVersion)

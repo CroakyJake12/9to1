@@ -15,7 +15,7 @@ namespace Haven.Infrastructure;
 /// <summary>
 /// Represents safe message attachment service and keeps its related state and behavior together.
 /// </summary>
-public sealed class SafeMessageAttachmentService(
+public sealed partial class SafeMessageAttachmentService(
     MessageAttachmentService inner,
     IAppPaths paths) : IMessageAttachmentService
 {

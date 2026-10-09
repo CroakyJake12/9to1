@@ -5,7 +5,7 @@ namespace HavenOS.Home.Core;
 
 /// <summary>Home-hosted observation of one actual Den lifetime. Creation is performed here, never asserted
 /// by a caller flag. Opening an existing store always requires its existing binding or explicit Home import.</summary>
-public sealed class HomeDenStoreEvidenceProvider : IHomeLocalStoreEvidenceProvider, IAsyncDisposable
+public sealed partial class HomeDenStoreEvidenceProvider : IHomeLocalStoreEvidenceProvider, IAsyncDisposable
 {
     private readonly IAuthenticatedResourceActorSource _actors;
     private readonly AuthenticatedResourceActor _actor;
@@ -45,12 +45,7 @@ public sealed class HomeDenStoreEvidenceProvider : IHomeLocalStoreEvidenceProvid
         return new(ResourceKind, observed.DenId, observed.ContentRevision, _created, observed.IsEmpty, true);
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        if (_disposed) return;
-        _disposed = true;
-        await Store.DisposeAsync();
-    }
+    public ValueTask DisposeAsync() => new(CloseAndDrainOriginalAsync());
 }
 
 public sealed record HomePersonalDenSession(AuthenticatedResourceActor Actor, string DenId, DulcheDen Den);
@@ -65,6 +60,7 @@ public sealed partial class HomePersonalDenFactory(HomeDenStoreEvidenceProvider 
         var invocation = new OriginalDenInvocation();
         var original = OpenOriginalCoreAsync(invocation, ct);
         _originalDenInvocations.Add(original, invocation);
+        RetainOriginalDenSessionTask(invocation, original);
         return original;
     }
 
@@ -78,7 +74,7 @@ public sealed partial class HomePersonalDenFactory(HomeDenStoreEvidenceProvider 
             binding.ProfileId != actor.ProfileId || !await ownership.IsCurrentAsync(binding, actor, ct))
             throw RetainOriginalPreEffectRefusal(invocation, "This Den requires a current verified Home ownership binding.");
         var policy = new PersonalPolicy(provider.Store, ownership, actor, binding);
-        return new(actor, current.DenId, new DulcheDen(provider.Store, policy, actor.ActorId));
+        return CaptureOriginalDenSession(invocation, actor, current.DenId, binding, new DulcheDen(provider.Store, policy, actor.ActorId));
     }
 
     private sealed class PersonalPolicy(DenStore store, IResourceStoreOwnershipReceiptAuthority ownership,

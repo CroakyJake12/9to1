@@ -95,7 +95,7 @@ public sealed record HomePackageOriginalRootOutcome(HomePackageActionResult Resu
 /// adapter's close proof before releasing channel/device-store resources.
 /// Missing WriteGuarded support refuses reservation before the actual root effect.
 /// </summary>
-public sealed class HomePackageOriginalDeviceOwner : IAsyncDisposable, IHomePackageOriginalPlatformOwner
+public sealed partial class HomePackageOriginalDeviceOwner : IAsyncDisposable, IHomePackageOriginalPlatformOwner
 {
     private const int MaximumOriginalTasks = 512;
     private readonly IHomeCoreStateStore _store;
@@ -417,7 +417,10 @@ public sealed class HomePackageOriginalDeviceOwner : IAsyncDisposable, IHomePack
             if (action == HomePackageAction.SelectChannel && captured.UpdateChannel != descriptor.Channel)
                 throw new InvalidDataException("Known channel outcome differs from the original selected channel.");
         }
-        return captured;
+        // Internal observation only, emitted by the SAME authenticated actual root result.
+        // It remains in the existing canonical package entry and its guarded transaction.
+        return HomePackageOriginalInstalledActivationRecord.CaptureFromOriginalRoot(record.Request,
+            record.RootOutcome!, captured, result);
     }
 
     private async Task ConfirmSameOriginalReservationAsync(OriginalOperation record, CancellationToken token)
@@ -640,6 +643,7 @@ public sealed class HomePackageOriginalDeviceOwner : IAsyncDisposable, IHomePack
 
     public Task CloseAndDrainAsync()
     {
+        CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously); Task close;
         lock (_gate)
         {
@@ -654,7 +658,7 @@ public sealed class HomePackageOriginalDeviceOwner : IAsyncDisposable, IHomePack
     private async Task CloseOriginalAsync(Task start, Task[] originals, OriginalOperation[] operations)
     {
         await start.ConfigureAwait(false); List<Exception> failures = [];
-        try { _lifetime.Cancel(); } catch (Exception error) { Add(failures, error, null); }
+        try { CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { _lifetime.Cancel(); return true; }); } catch (Exception error) { Add(failures, error, null); }
         foreach (var original in originals)
             try { await original.ConfigureAwait(false); } catch (Exception error) { Add(failures, error, null); }
         foreach (var record in operations)
@@ -670,6 +674,7 @@ public sealed class HomePackageOriginalDeviceOwner : IAsyncDisposable, IHomePack
             try { await CloseSameRootAsync(record).ConfigureAwait(false); }
             catch (Exception error) { Add(failures, error, null); }
         }
+        try { await JoinOriginalReadActivationsAsync().ConfigureAwait(false); } catch (Exception error) { Add(failures, error, null); }
         try { _originalMutationGate.Dispose(); } catch (Exception error) { Add(failures, error, null); }
         try { _lifetime.Dispose(); } catch (Exception error) { Add(failures, error, null); }
         Throw(null, failures);

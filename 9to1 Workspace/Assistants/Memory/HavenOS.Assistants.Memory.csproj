@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>HavenOS.Apps.Assistants.Memory</AssemblyName>
+    <RootNamespace>HavenOS.Apps.Assistants.Memory</RootNamespace>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Source/**/*.cs" />
+    <ProjectReference Include="../HavenOS.Assistants.Core.csproj" />
+    <ProjectReference Include="../../shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

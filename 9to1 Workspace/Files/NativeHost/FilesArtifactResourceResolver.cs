@@ -170,7 +170,7 @@ public sealed partial class FilesArtifactResourceResolver : IOriginalCanonicalRe
         var mediaRead = actionId == "media.asset.read" && scope.Access == ResourceAccess.Read;
         var folderRead = actionId == "files.folder.native-root.read" && scope.Access == ResourceAccess.Read;
         var browserRead = actionId == "files.browser.read" && scope.Access == ResourceAccess.Read;
-        var browserWrite = (actionId is "9to1.Files.CreateFolder" or "9to1.Files.Rename")
+        var browserWrite = (actionId is "9to1.Files.CreateFolder" or "9to1.Files.Rename" or "9to1.Files.RegisterBrowserDownload")
             && scope.Access == ResourceAccess.Write;
         var packageRead = actionId == "os.compatibility.package.read" && scope.Access == ResourceAccess.Read;
         var mailAttachmentRead = actionId == "mail.attachment.read" && scope.Access == ResourceAccess.Read
@@ -217,7 +217,7 @@ public sealed partial class FilesArtifactResourceResolver : IOriginalCanonicalRe
         if (folderRead) return item.Kind == HostedItemKind.Folder
             ? new(true, "Allowed", actor.ActorId, revision, null) : Deny("FilesNativeFolderInvalid");
         if (browserRead) return new(true, "Allowed", actor.ActorId, revision, null);
-        if (browserWrite) return actionId != "9to1.Files.CreateFolder" || item.Kind == HostedItemKind.Folder
+        if (browserWrite) return actionId == "9to1.Files.Rename" || item.Kind == HostedItemKind.Folder
             ? new(true, "Allowed", actor.ActorId, revision, null) : Deny("FilesDestinationInvalid");
         if (mediaRead || packageRead || mailAttachmentRead) return item.Kind == HostedItemKind.File
             ? new(true, "Allowed", actor.ActorId, revision, null) : Deny("FilesMediaSourceInvalid");

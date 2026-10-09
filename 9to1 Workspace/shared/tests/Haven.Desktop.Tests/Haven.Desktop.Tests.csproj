@@ -6,15 +6,20 @@
 -->
 <Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="PlatformTarget">
   <PropertyGroup>
-    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <!-- Clear the repository default single target before declaring both owning targets. -->
+    <TargetFramework />
+    <TargetFrameworks>net10.0-windows10.0.19041.0;net10.0</TargetFrameworks>
     <Platforms>x64</Platforms>
     <Platform>x64</Platform>
     <PlatformTarget>x64</PlatformTarget>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!-- The portable target owns maintained Avalonia headless and local Linux Home/Files controls. -->
+    <EnableDefaultCompileItems Condition="'$(TargetFramework)' == 'net10.0'">false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Haven.Desktop\Haven.Desktop.csproj" />
+    <ProjectReference Include="..\..\src\Haven.Desktop\Haven.Desktop.csproj"
+                      SetTargetFramework="TargetFramework=$(TargetFramework)" />
     <PackageReference Include="Avalonia.Headless.XUnit" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.v3" />
@@ -25,9 +30,82 @@
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
+    <!-- SAME maintained Memory owning rig; no Facts or alternate state/store graph. -->
+    <Compile Include="../../../Assistants/Memory/Tests/AssistantOriginalMemoryTests.Rig.cs" Link="Assistants/Memory/AssistantOriginalMemoryTests.Rig.cs" />
+    <!-- SAME maintained Migration owning rig; no Facts or alternate state/store graph. -->
+    <Compile Include="../../../Assistants/Migration/Tests/LegacySavedAgentMigrationTests.Rig.cs" Link="Assistants/Migration/LegacySavedAgentMigrationTests.Rig.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../../../Dev/HavenOS.Dev.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'">
     <Compile Include="../../../Dev/Tests/DeveloperTaskWorkspaceServiceTests.cs" Link="Dev/DeveloperTaskWorkspaceServiceTests.cs" />
     <Compile Include="../../../Dev/Tests/DeveloperOriginalPreparedConsentTests.cs" Link="Dev/DeveloperOriginalPreparedConsentTests.cs" />
     <Compile Include="../../../Dev/Tests/DeveloperSourceReviewSessionTests.cs" Link="Dev/DeveloperSourceReviewSessionTests.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <Compile Include="AssemblyInfo.cs;TestAppBuilder.cs" />
+    <Compile Include="WritePageOriginalLifetimeTests.cs;PresentPageOriginalLifetimeTests.cs;NativeSpacesPageLifecycleTests.cs;SpaceGeneratedSurfaceRendererTests.cs;OriginalInitialDocumentProductTests.cs;OriginalDocumentClosePreflightTests.cs" />
+    <Compile Include="HavenAppRoutePolicyTests.cs;NativeAssistantsSetupDesktopPageTests.cs" />
+    <!-- Actual native home/configuration/empty conversation captures over the already linked genuine Memory rig. -->
+    <Compile Include="NativeAssistantCanonicalVisualCaptureTests.cs" />
+    <!-- Actual original Files parent-page selection and finite caller/readiness custody. -->
+    <Compile Include="FilesNativeBrowserRegisteredDownloadTests.cs" />
+    <Compile Include="FilesOriginalBrowserCommitFencePublicationTests.cs" />
+    <!-- Genuine canonical Files registered-row lookup across issued metadata pages. -->
+    <Compile Include="FilesOriginalRegisteredDownloadSelectionTests.cs" />
+    <!-- Current Files-issued Data metadata selections; no content or worker consent. -->
+    <Compile Include="FilesOriginalDataSelectionTests.cs" />
+    <!-- Original Linux Home/Files/native controls use the SAME maintained graph and kernel boundaries. -->
+    <Compile Include="OriginalNativeColdProjectCompositionTests.cs;OriginalNativeColdProjectCompositionTests.Execution.cs;OriginalNativeColdProjectCompositionTests.ClosedInput.cs;OriginalNativeColdProjectCompositionTests.PreparedInputValidation.cs" />
+    <!-- The maintained LinuxDirectoryFact attribute is owned in this existing test source. -->
+    <Compile Include="FilesDeveloperOriginalDirectorySetupProducerTests.cs" />
+    <!-- Genuine separate manual Home WRITE + protected SQLite create-only composition, including its original rig. -->
+    <Compile Include="CanonicalCompatibleTaskContextCompositionTests.Rig.cs;CanonicalCompatibleTaskContextCompositionTests.Tests.cs" />
+    <Compile Include="OriginalAutomationLibraryDesktopTests.cs" />
+    <Compile Include="OriginalAutomationLibraryChangesTests.cs" />
+    <Compile Include="OriginalAutomationLibraryChangesTests.Decline.cs" />
+    <Compile Include="OriginalAutomationLibraryChangesTests.PreparationCustody.cs" />
+    <!-- Optional genuine Den pending/resume controls borrow the SAME Linux Home/Files/SQLite rig. -->
+    <Compile Include="CanonicalCompatibleTaskContextCompositionTests.Rig.OriginalDen.cs;CanonicalCompatibleTaskContextCompositionTests.DeclinedPending.cs" />
+    <!-- Actual personal Den finite-source/provider custody uses the SAME maintained Home/Den rig. -->
+    <Compile Include="OriginalAssistantPersonalDenHostSourceTests.cs" />
+    <!-- Rendered first-use controls over the SAME genuine Home/Den/SQLite/Memory rig. -->
+    <Compile Include="NativeAssistantMemoryFirstUseTests.cs" />
+    <!-- Actual rendered migration import/classification controls use the SAME genuine Migration owning rig. -->
+    <Compile Include="NativeAssistantLegacyImportFirstUseTests.cs" />
+    <!-- Actual migrated-memory continuation controls borrow the SAME maintained Memory owning rig. -->
+    <Compile Include="AssistantMigratedMemoryContinuationTests.cs" />
+    <Compile Include="NativeAssistantMemoryImportFirstUseTests.cs" />
+    <Compile Include="NativeAssistantAvatarFirstUseTests.cs" />
+    <!-- Rendered capability setup acceptance over the SAME genuine Home/Den/SQLite rig. -->
+    <Compile Include="NativeAssistantCapabilitySetupFirstUseTests.cs" />
+    <!-- Actual existing Mini catalogue import/selection controls use the SAME maintained Memory rig. -->
+    <Compile Include="NativeAssistantMiniComputerFirstUseTests.cs" />
+    <Compile Include="NativeAssistantProactivityConfigurationFirstUseTests.cs" />
+    <Compile Include="NativeAssistantConversationComposerFirstUseTests.cs" />
+    <Compile Include="NativeAssistantConfigurationModelsFirstUseTests.cs" />
+    <Compile Include="NativeAssistantRichMessageFirstUseTests.cs;ProductionMarkdownViewTests.cs" />
+    <Compile Include="NativeAssistantGeneratedUiFirstUseTests.cs" />
+    <Compile Include="NativeAssistantGeneratedUiInteractionFirstUseTests.cs" />
+    <Compile Include="GeneratedUiAcceptedPublicationTests.cs" />
+    <!-- Actual App/maintained registry original metadata and failed-startup custody. -->
+    <Compile Include="NativeAssistantGeneratedUiInteractionHistoryTests.cs" />
+    <Compile Include="OriginalAppModelCatalogueLifetimeTests.cs" />
+    <!-- Current canonical Task steering/progress controls over the maintained owning fixture. -->
+    <Compile Include="NativeAssistantTaskProgressFirstUseTests.cs" />
+    <Compile Include="NativeAssistantColdTaskRecoveryFirstUseTests.cs" />
+    <Compile Include="NativeAssistantTaskMemoryOwnerTests.cs" />
+    <Compile Include="NativeAssistantAttachmentFirstUseTests.cs" />
+    <Compile Include="NativeAssistantAttachmentAcceptedInputTests.cs" />
+    <Compile Include="NativeAssistantAttachmentTaskEgressTests.cs" />
+    <Compile Include="NativeAssistantIdentityAvailabilityFirstUseTests.cs" />
+    <Compile Include="NativeAssistantConversationBranchesFirstUseTests.cs" />
+    <Compile Include="NativeAssistantConversationSearchFirstUseTests.cs" />
+    <Compile Include="NativeAssistantAttachmentLateCallbackTests.cs" />
+    <Compile Include="OriginalInstalledHomeAppsConsumerTests.cs" />
+    <Compile Include="NativeAssistantGeneratedUiInteractionCallbackTests.cs" />
+    <Compile Include="NativeAssistantGeneratedUiInteractionFirstUseTests.HomeCallbackCustody.cs" />
+    <Compile Include="CanonicalCompatibleTaskContextCompositionTests.AssistantDevOwners.cs" />
   </ItemGroup>
 </Project>

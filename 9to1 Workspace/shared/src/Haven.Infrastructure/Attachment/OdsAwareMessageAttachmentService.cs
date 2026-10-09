@@ -18,7 +18,7 @@ namespace Haven.Infrastructure;
 /// <summary>
 /// Represents ods aware message attachment service and keeps its related state and behavior together.
 /// </summary>
-public sealed class OdsAwareMessageAttachmentService(
+public sealed partial class OdsAwareMessageAttachmentService(
     SafeMessageAttachmentService inner,
     IAppPaths paths,
     ISqliteConnectionFactory factory,

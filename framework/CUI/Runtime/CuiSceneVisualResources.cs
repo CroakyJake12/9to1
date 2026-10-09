@@ -24,8 +24,8 @@ public static class CuiSceneVisualResources
     private static readonly (string, string)[] Aliases =
     [
         ("ButtonBackground", "CuiButtonBrush"), ("ButtonBackgroundPointerOver", "CuiButtonHoverBrush"),
-        ("ButtonBackgroundPressed", "CuiButtonPressedBrush"), ("ButtonForeground", "CuiTextBrush"),
-        ("ButtonForegroundPointerOver", "CuiTextBrush"), ("ButtonForegroundPressed", "CuiTextBrush"),
+        ("ButtonBackgroundPressed", "CuiButtonPressedBrush"), ("ButtonForeground", "CuiButtonForegroundBrush"),
+        ("ButtonForegroundPointerOver", "CuiButtonHoverForegroundBrush"), ("ButtonForegroundPressed", "CuiButtonPressedForegroundBrush"),
         ("TextControlForeground", "CuiTextBrush"), ("TextControlBackground", "CuiPanelBrush")
     ];
 }

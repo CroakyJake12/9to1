@@ -5,7 +5,7 @@ using Haven.Core;
 namespace Haven.Application;
 
 /// <summary>Thread-scoped document state with idempotent incremental patch application.</summary>
-public sealed class GenUiInstanceStore
+public sealed partial class GenUiInstanceStore
 {
     private readonly ConcurrentDictionary<Guid, InstanceState> _instances = new();
 
@@ -14,12 +14,24 @@ public sealed class GenUiInstanceStore
     public void Register(GenUiDocument document)
     {
         GenerativeUiContractValidator.ValidateAndThrow(document);
-        _instances.AddOrUpdate(
-            document.Origin.InstanceId,
-            _ => new InstanceState(document),
-            (_, existing) => existing.Document.Origin.ThreadId == document.Origin.ThreadId
-                ? new InstanceState(document)
-                : throw new InvalidOperationException("An instance ID cannot move between threads."));
+        var id = document.Origin.InstanceId;
+        while (true)
+        {
+            if (!_instances.TryGetValue(id, out var existing))
+            {
+                if (_instances.TryAdd(id, new InstanceState(document))) break;
+                continue;
+            }
+            // Reserve the exact state used by original mutation commits. Public
+            // update callbacks already own this gate; no inverse namespace lock.
+            lock (existing.Gate)
+            {
+                if (!_instances.TryGetValue(id, out var current) || !ReferenceEquals(current, existing)) continue;
+                if (existing.Document.Origin.ThreadId != document.Origin.ThreadId)
+                    throw new InvalidOperationException("An instance ID cannot move between threads.");
+                if (_instances.TryUpdate(id, new InstanceState(document), existing)) break;
+            }
+        }
         DocumentChanged?.Invoke(this, document);
     }
 
@@ -144,7 +156,15 @@ public sealed class GenUiInstanceStore
         if (changed is not null) DocumentChanged?.Invoke(this, changed);
         return results;
     }
-    public bool Remove(Guid instanceId) => _instances.TryRemove(instanceId, out _);
+    public bool Remove(Guid instanceId)
+    {
+        while (_instances.TryGetValue(instanceId, out var existing))
+        {
+            lock (existing.Gate)
+                if (((ICollection<KeyValuePair<Guid, InstanceState>>)_instances).Remove(new(instanceId, existing))) return true;
+        }
+        return false;
+    }
 
     private static GenUiDocument PatchState(GenUiDocument document, GenUiStatePatch patch)
     {

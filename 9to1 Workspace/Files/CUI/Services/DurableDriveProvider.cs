@@ -19,6 +19,8 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
         public IReadOnlyList<FilesRevision> Revisions { get; init; } = [];
         public IReadOnlyDictionary<string, string?> RevisionContentReferences { get; init; } = new Dictionary<string, string?>();
         public IReadOnlyList<FilesUploadedContent> UploadedContents { get; init; } = [];
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+        public IReadOnlyList<FilesBrowserDownloadRegistration>? BrowserDownloads { get; init; }
     }
     private readonly VersionedJsonStateStore<State> _store;
     private readonly string _owner;

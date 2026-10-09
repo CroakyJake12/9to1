@@ -6,6 +6,10 @@ namespace Haven.Infrastructure;
 
 public sealed class ExternalConnectionRepository(ISqliteConnectionFactory factory) : IExternalConnectionRepository
 {
+    public bool HasOriginalSqliteFactory(ISqliteConnectionFactory sameActual) => ReferenceEquals(factory, sameActual);
+    internal static ExternalConnectionCapabilityMetadata ReadOriginalCapabilityMetadata(SqliteDataReader reader) => new(
+        reader.Guid("id"), reader.String("name"), (ExternalConnectionKind)reader.Int32("kind"),
+        reader.Boolean("is_enabled"), (ExternalConnectionState)reader.Int32("state"), reader.DateTimeOffset("updated_at"));
     public async Task<IReadOnlyList<ExternalConnection>> GetAllAsync(CancellationToken cancellationToken)
     {
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);

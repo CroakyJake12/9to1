@@ -75,15 +75,15 @@ public sealed partial class PresentPage
         _objectClipboard = string.Empty;
     }
 
-    private void OnEditorChanged(object? sender, EventArgs e)
+    private void OnEditorChanged(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null) return;
         Document = _editor.Document;
         _slideIndex = IndexOfSlide(_editor.Selection.SlideId);
         _dirty = true;
-        _route.SetStatus("Unsaved changes · autosave is on");
+        PublishOriginalPresentSource(() => _route.SetStatus("Unsaved changes · autosave is on"));
         RenderCurrent();
-    }
+    });
 
     private int IndexOfSlide(Guid slideId)
     {
@@ -138,7 +138,7 @@ public sealed partial class PresentPage
         if (_editor is null) { AttachEditor(Document); }
         var created = _editor!.AddSlide(CurrentSlide?.Id);
         _slideIndex = IndexOfSlide(created.Id);
-        _bus.Fire("Present.Slide.Added");
+        PublishOriginalPresentSource(() => _bus.Fire("Present.Slide.Added"));
     }
 
     private void DeleteSlideWithEditor()
@@ -146,59 +146,73 @@ public sealed partial class PresentPage
         var slide = CurrentSlide;
         if (slide is null) return;
         if (_editor is null) AttachEditor(Document!);
-        if (_editor!.DeleteSlide(slide.Id)) _bus.Fire("Present.Slide.Deleted");
+        if (_editor!.DeleteSlide(slide.Id)) PublishOriginalPresentSource(() => _bus.Fire("Present.Slide.Deleted"));
     }
 
     private void RenderPhase2()
     {
         if (Document is null) return;
         if (_editor is null || !ReferenceEquals(_editor.Document, Document)) AttachEditor(Document);
-        _route.SetPhase2Document(Document, _slideIndex, _editor!.Selection.ElementIds, _editor.CanUndo, _editor.CanRedo);
+        PublishOriginalPresentSource(() => _route.SetPhase2Document(Document, _slideIndex, _editor!.Selection.ElementIds, _editor.CanUndo, _editor.CanRedo));
     }
 
-    private async void OnImportRequested(object? sender, EventArgs e) =>
+    private void OnImportRequested(object? sender, EventArgs e) => ObserveOriginalPresentEvent(async () =>
+    {
         await RunBusyAsync(PickImportAsync, "import this PowerPoint presentation");
+    });
 
-    private void OnPresentRequested(object? sender, EventArgs e)
+    private void OnPresentRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
     {
         if (Document is null) return;
         _playback = new PresentPlaybackSession(Document);
         if (_slideIndex > 0) _playback.GoTo(_slideIndex);
         var frame = _playback.Frame;
-        _route.SetStatus($"Presentation ready · slide {frame.SlideNumber} of {frame.SlideCount} · speaker notes and animation timing loaded");
-        _bus.Fire("Present.Playback.Started");
-    }
+        PublishOriginalPresentSource(() => _route.SetStatus($"Presentation ready · slide {frame.SlideNumber} of {frame.SlideCount} · speaker notes and animation timing loaded"));
+        PublishOriginalPresentSource(() => _bus.Fire("Present.Playback.Started"));
+    });
 
-    internal bool AdvancePlayback()
+    internal bool AdvancePlayback() => RunOriginalPresentSynchronous(() =>
     {
         if (_playback is null || !_playback.Advance()) return false;
         var frame = _playback.Frame;
-        _route.SetStatus($"Presenting slide {frame.SlideNumber} of {frame.SlideCount} · {frame.Elapsed.ToString(@"mm\:ss")}");
+        PublishOriginalPresentSource(() => _route.SetStatus($"Presenting slide {frame.SlideNumber} of {frame.SlideCount} · {frame.Elapsed.ToString(@"mm\:ss")}"));
         return true;
-    }
+    });
 
-    internal bool PreviousPlayback()
+    internal bool PreviousPlayback() => RunOriginalPresentSynchronous(() =>
     {
         if (_playback is null || !_playback.Previous()) return false;
         var frame = _playback.Frame;
-        _route.SetStatus($"Presenting slide {frame.SlideNumber} of {frame.SlideCount} · {frame.Elapsed.ToString(@"mm\:ss")}");
+        PublishOriginalPresentSource(() => _route.SetStatus($"Presenting slide {frame.SlideNumber} of {frame.SlideCount} · {frame.Elapsed.ToString(@"mm\:ss")}"));
         return true;
-    }
+    });
 
-    private void OnUndoRequested(object? sender, EventArgs e) => _editor?.Undo();
-    private void OnRedoRequested(object? sender, EventArgs e) => _editor?.Redo();
+    private void OnUndoRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.Undo();
+    });
+    private void OnRedoRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.Redo();
+    });
 
-    private void OnDuplicateSlideRequested(object? sender, EventArgs e)
+    private void OnDuplicateSlideRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
     {
         var slide = CurrentSlide;
         if (slide is null || _editor is null) return;
         var duplicate = _editor.DuplicateSlide(slide.Id);
         _slideIndex = IndexOfSlide(duplicate.Id);
-        _bus.Fire("Present.Slide.Duplicated");
-    }
+        PublishOriginalPresentSource(() => _bus.Fire("Present.Slide.Duplicated"));
+    });
 
-    private void OnMoveSlideEarlierRequested(object? sender, EventArgs e) => MoveCurrentSlide(-1);
-    private void OnMoveSlideLaterRequested(object? sender, EventArgs e) => MoveCurrentSlide(1);
+    private void OnMoveSlideEarlierRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        MoveCurrentSlide(-1);
+    });
+    private void OnMoveSlideLaterRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        MoveCurrentSlide(1);
+    });
 
     private void MoveCurrentSlide(int offset)
     {
@@ -208,41 +222,62 @@ public sealed partial class PresentPage
         if (_editor.MoveSlide(slide.Id, target)) _slideIndex = target;
     }
 
-    private void OnAddTextRequested(object? sender, EventArgs e)
+    private void OnAddTextRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null) return;
         _editor.AddText(_editor.Selection.SlideId, "Text box");
-        _bus.Fire("Present.Object.Added");
-    }
+        PublishOriginalPresentSource(() => _bus.Fire("Present.Object.Added"));
+    });
 
-    private void OnAddShapeRequested(object? sender, EventArgs e)
+    private void OnAddShapeRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null) return;
         _editor.AddCustomShape(_editor.Selection.SlideId, DocumentVectorShapes.CreateEditableStarter());
-        _bus.Fire("Present.Object.Added");
-    }
+        PublishOriginalPresentSource(() => _bus.Fire("Present.Object.Added"));
+    });
 
-    private void OnCopyRequested(object? sender, EventArgs e)
+    private void OnCopyRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null) return;
         _objectClipboard = _editor.CopySelection();
-        _route.SetStatus(string.IsNullOrEmpty(_objectClipboard) ? "Select an object to copy." : "Copied selected presentation object(s).");
-    }
+        PublishOriginalPresentSource(() => _route.SetStatus(string.IsNullOrEmpty(_objectClipboard) ? "Select an object to copy." : "Copied selected presentation object(s)."));
+    });
 
-    private void OnPasteRequested(object? sender, EventArgs e)
+    private void OnPasteRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null || string.IsNullOrWhiteSpace(_objectClipboard)) return;
         _editor.Paste(_objectClipboard);
-        _bus.Fire("Present.Object.Pasted");
-    }
+        PublishOriginalPresentSource(() => _bus.Fire("Present.Object.Pasted"));
+    });
 
-    private void OnDeleteObjectRequested(object? sender, EventArgs e) => _editor?.RemoveSelectedElements();
-    private void OnGroupRequested(object? sender, EventArgs e) => _editor?.GroupSelection();
-    private void OnUngroupRequested(object? sender, EventArgs e) => _editor?.UngroupSelection();
-    private void OnBringFrontRequested(object? sender, EventArgs e) => _editor?.BringToFront();
-    private void OnSendBackRequested(object? sender, EventArgs e) => _editor?.SendToBack();
-    private void OnBoldRequested(object? sender, EventArgs e) => ToggleSelectedTextStyle(toggleBold: true);
-    private void OnItalicRequested(object? sender, EventArgs e) => ToggleSelectedTextStyle(toggleBold: false);
+    private void OnDeleteObjectRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.RemoveSelectedElements();
+    });
+    private void OnGroupRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.GroupSelection();
+    });
+    private void OnUngroupRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.UngroupSelection();
+    });
+    private void OnBringFrontRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.BringToFront();
+    });
+    private void OnSendBackRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.SendToBack();
+    });
+    private void OnBoldRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        ToggleSelectedTextStyle(toggleBold: true);
+    });
+    private void OnItalicRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        ToggleSelectedTextStyle(toggleBold: false);
+    });
 
     private void ToggleSelectedTextStyle(bool toggleBold)
     {
@@ -260,28 +295,64 @@ public sealed partial class PresentPage
         });
     }
 
-    private void OnMoveObjectLeftRequested(object? sender, EventArgs e) => _editor?.MoveSelection(-0.01, 0, snap: true);
-    private void OnMoveObjectRightRequested(object? sender, EventArgs e) => _editor?.MoveSelection(0.01, 0, snap: true);
-    private void OnMoveObjectUpRequested(object? sender, EventArgs e) => _editor?.MoveSelection(0, -0.01, snap: true);
-    private void OnMoveObjectDownRequested(object? sender, EventArgs e) => _editor?.MoveSelection(0, 0.01, snap: true);
-    private void OnGrowObjectRequested(object? sender, EventArgs e) => _editor?.ResizeSelection(0.02, 0.02);
-    private void OnShrinkObjectRequested(object? sender, EventArgs e) => _editor?.ResizeSelection(-0.02, -0.02);
-    private void OnRotateLeftRequested(object? sender, EventArgs e) => _editor?.RotateSelection(-15);
-    private void OnRotateRightRequested(object? sender, EventArgs e) => _editor?.RotateSelection(15);
-    private void OnAlignLeftRequested(object? sender, EventArgs e) => _editor?.AlignSelection(PresentAlignment.Left);
-    private void OnAlignCenterRequested(object? sender, EventArgs e) => _editor?.AlignSelection(PresentAlignment.HorizontalCenter);
-    private void OnAlignTopRequested(object? sender, EventArgs e) => _editor?.AlignSelection(PresentAlignment.Top);
-    private void OnAlignMiddleRequested(object? sender, EventArgs e) => _editor?.AlignSelection(PresentAlignment.VerticalCenter);
+    private void OnMoveObjectLeftRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.MoveSelection(-0.01, 0, snap: true);
+    });
+    private void OnMoveObjectRightRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.MoveSelection(0.01, 0, snap: true);
+    });
+    private void OnMoveObjectUpRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.MoveSelection(0, -0.01, snap: true);
+    });
+    private void OnMoveObjectDownRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.MoveSelection(0, 0.01, snap: true);
+    });
+    private void OnGrowObjectRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.ResizeSelection(0.02, 0.02);
+    });
+    private void OnShrinkObjectRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.ResizeSelection(-0.02, -0.02);
+    });
+    private void OnRotateLeftRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.RotateSelection(-15);
+    });
+    private void OnRotateRightRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.RotateSelection(15);
+    });
+    private void OnAlignLeftRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.AlignSelection(PresentAlignment.Left);
+    });
+    private void OnAlignCenterRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.AlignSelection(PresentAlignment.HorizontalCenter);
+    });
+    private void OnAlignTopRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.AlignSelection(PresentAlignment.Top);
+    });
+    private void OnAlignMiddleRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.AlignSelection(PresentAlignment.VerticalCenter);
+    });
 
-    private void OnSlideSelected(int index)
+    private void OnSlideSelected(int index) => RunOriginalPresentEvent(() =>
     {
         if (Document is null || _editor is null) return;
         _slideIndex = Math.Clamp(index, 0, Document.Slides.Count - 1);
         _editor.SelectSlide(Document.Slides[_slideIndex].Id);
         RenderCurrent();
-    }
+    });
 
-    private void OnSlideReorderRequested(int fromIndex, int toIndex)
+    private void OnSlideReorderRequested(int fromIndex, int toIndex) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null || Document is null || Document.Slides.Count < 2) return;
         fromIndex = Math.Clamp(fromIndex, 0, Document.Slides.Count - 1);
@@ -289,42 +360,42 @@ public sealed partial class PresentPage
         if (fromIndex == toIndex) return;
         var slide = Document.Slides[fromIndex];
         if (_editor.MoveSlide(slide.Id, toIndex)) _slideIndex = IndexOfSlide(slide.Id);
-    }
+    });
 
-    private void OnObjectSelectionToggled(Guid elementId)
+    private void OnObjectSelectionToggled(Guid elementId) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null) return;
         var selected = _editor.Selection.ElementIds.ToHashSet();
         if (!selected.Add(elementId)) selected.Remove(elementId);
         _editor.SelectElements(selected);
         RenderCurrent();
-    }
+    });
 
-    private void OnCanvasSelectionRequested(Guid? elementId)
+    private void OnCanvasSelectionRequested(Guid? elementId) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null) return; _editor.SelectElements(elementId is { } id ? [id] : []); RenderCurrent();
-    }
+    });
 
-    private void OnCanvasSelectionSetRequested(IReadOnlyCollection<Guid> elementIds)
+    private void OnCanvasSelectionSetRequested(IReadOnlyCollection<Guid> elementIds) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null) return;
         _editor.SelectElements(elementIds);
         RenderCurrent();
-    }
+    });
 
-    private void OnCanvasMoveSelectionRequested(double deltaX, double deltaY)
+    private void OnCanvasMoveSelectionRequested(double deltaX, double deltaY) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null) return;
         _editor.MoveSelection(deltaX, deltaY, snap: true);
-    }
+    });
 
-    private void OnCanvasTransformSelectionRequested(double deltaX, double deltaY, double deltaWidth, double deltaHeight, double deltaRotation)
+    private void OnCanvasTransformSelectionRequested(double deltaX, double deltaY, double deltaWidth, double deltaHeight, double deltaRotation) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null) return;
         _editor.TransformSelection(deltaX, deltaY, deltaWidth, deltaHeight, deltaRotation);
-    }
+    });
 
-    private void OnCanvasVectorHandleMoveRequested(Guid elementId, Guid nodeId, PresentVectorHandleKind kind, double x, double y)
+    private void OnCanvasVectorHandleMoveRequested(Guid elementId, Guid nodeId, PresentVectorHandleKind kind, double x, double y) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null) return;
         _editor.UpdateCustomShape(_editor.Selection.SlideId, elementId, vectorEditor =>
@@ -332,63 +403,69 @@ public sealed partial class PresentPage
             if (kind == PresentVectorHandleKind.Node) vectorEditor.MoveNode(nodeId, x, y);
             else vectorEditor.MoveControlPoint(nodeId, kind == PresentVectorHandleKind.Control1 ? 1 : 2, x, y);
         });
-    }
+    });
 
-    private void OnCanvasTitleTextPreviewRequested(string value)
+    private void OnCanvasTitleTextPreviewRequested(string value) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null || !_editor.PreviewSlideTitle(_editor.Selection.SlideId, value)) return;
         _dirty = true;
-        _route.SetStatus("Editing slide title · Ctrl+Enter to commit · Esc to cancel");
-    }
+        PublishOriginalPresentSource(() => _route.SetStatus("Editing slide title · Ctrl+Enter to commit · Esc to cancel"));
+    });
 
-    private void OnCanvasElementTextPreviewRequested(Guid elementId, string value)
+    private void OnCanvasElementTextPreviewRequested(Guid elementId, string value) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null || !_editor.PreviewElementText(_editor.Selection.SlideId, elementId, value)) return;
         _dirty = true;
-        _route.SetStatus("Editing text on slide · Ctrl+Enter to commit · Esc to cancel");
-    }
+        PublishOriginalPresentSource(() => _route.SetStatus("Editing text on slide · Ctrl+Enter to commit · Esc to cancel"));
+    });
 
-    private void OnCanvasTextEditCommitRequested(object? sender, EventArgs e) => _editor?.CommitLiveTextEdit();
-    private void OnCanvasTextEditCancelRequested(object? sender, EventArgs e) => _editor?.CancelLiveTextEdit();
+    private void OnCanvasTextEditCommitRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.CommitLiveTextEdit();
+    });
+    private void OnCanvasTextEditCancelRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _editor?.CancelLiveTextEdit();
+    });
 
-    internal async Task<bool> ImportFromPathAsync(string sourcePath, CancellationToken cancellationToken = default)
+    internal Task<bool> ImportFromPathAsync(string sourcePath, CancellationToken cancellationToken = default) => RunOriginalPresentAsync(async () =>
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sourcePath);
-        if (_importer is null) { _route.SetStatus("Presentation import service is unavailable."); return false; }
+        if (_importer is null) { PublishOriginalPresentSource(() => _route.SetStatus("Presentation import service is unavailable.")); return false; }
         if (Document is not null && _dirty && !await SaveAsync("Autosave before presentation import", cancellationToken)) return false;
         try
         {
-            var imported = await _importer.ImportAsync(sourcePath, cancellationToken);
-            var saved = await _repository.SaveAsync(imported, "Imported presentation", cancellationToken);
+            var imported = await AwaitOriginalPresentSource(() => _importer.ImportAsync(sourcePath, cancellationToken));
+            var saved = await AwaitOriginalPresentSource(() => _repository.SaveAsync(imported, "Imported presentation", cancellationToken));
             imported.Version = saved.Version;
             await RefreshDocumentsAsync(cancellationToken);
             Document = imported; _deckIndex = IndexOfDocument(imported.Id); _slideIndex = 0; _dirty = false;
             AttachEditor(imported); RenderCurrent();
             var nativePackage = Path.GetExtension(sourcePath).Equals(".9to1p", StringComparison.OrdinalIgnoreCase);
-            _route.SetStatus(nativePackage
+            PublishOriginalPresentSource(() => _route.SetStatus(nativePackage
                 ? "Imported " + Path.GetFileName(sourcePath) + " · native presentation content and embedded assets preserved"
-                : "Imported " + Path.GetFileName(sourcePath) + " · " + _importer.Support.Description);
-            _bus.Fire("Present.Document.Imported");
+                : "Imported " + Path.GetFileName(sourcePath) + " · " + _importer.Support.Description));
+            PublishOriginalPresentSource(() => _bus.Fire("Present.Document.Imported"));
             return true;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
-        catch (Exception ex) { _route.SetStatus("Couldn’t import this presentation: " + ex.Message); return false; }
-    }
+        catch (Exception ex) { RetainHandledOriginalPresentCause(ex); PublishOriginalPresentSource(() => _route.SetStatus("Couldn’t import this presentation: " + ex.Message)); return false; }
+    });
 
     private async Task PickImportAsync()
     {
         var top = TopLevel.GetTopLevel(this);
-        if (top?.StorageProvider is null) { _route.SetStatus("Import isn’t available from this platform surface."); return; }
-        var files = await top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        if (top?.StorageProvider is null) { PublishOriginalPresentSource(() => _route.SetStatus("Import isn’t available from this platform surface.")); return; }
+        var files = await AwaitOriginalPresentSource(() => top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = "Open or import presentation", AllowMultiple = false,
             FileTypeFilter =
             [
                 new FilePickerFileType("9to1 or PowerPoint presentation") { Patterns = ["*.9to1p", "*.pptx"] }
             ]
-        });
+        }));
         if (files.Count == 0) return;
-        var file = files[0]; var localPath = file.TryGetLocalPath();
+        var file = files[0]; var localPath = AcquireOriginalPresentSource(file.TryGetLocalPath);
         if (!string.IsNullOrWhiteSpace(localPath)) { await ImportFromPathAsync(localPath); return; }
         var temporaryExtension = Path.GetExtension(file.Name);
         if (!temporaryExtension.Equals(".pptx", StringComparison.OrdinalIgnoreCase) &&
@@ -397,11 +474,12 @@ public sealed partial class PresentPage
         var temporary = Path.Combine(Path.GetTempPath(), $"haven-present-import-{Guid.NewGuid():N}{temporaryExtension}");
         try
         {
-            await using var source = await file.OpenReadAsync();
-            await using (var destination = File.Create(temporary)) await source.CopyToAsync(destination);
+            await UseOriginalPresentStreamAsync(() => file.OpenReadAsync(), source =>
+                UseOriginalPresentStreamAsync(() => File.Create(temporary), destination =>
+                    AwaitOriginalPresentSource(() => source.CopyToAsync(destination))));
             await ImportFromPathAsync(temporary);
         }
-        finally { TryDeleteTemporary(temporary); }
+        finally { AcquireOriginalPresentSource(() => { TryDeleteTemporary(temporary); return true; }); }
     }
 
     private void DisposePhase2()

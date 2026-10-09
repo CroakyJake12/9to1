@@ -7,12 +7,15 @@ using Avalonia.Automation;
 using System.Runtime.InteropServices;
 using Avalonia;
 using System.Reflection;
+using Avalonia.LogicalTree;
+using CakeOS.Cui.Runtime;
 using Xunit;
 
 namespace HavenOS.Images.Tests;
 
 public sealed class ImageJourneyTests
 {
+    private static readonly List<(MainWindow Window, Exception Failure)> RetainedFailedUiOwners = [];
     [Theory]
     [InlineData("sample.png")]
     [InlineData("sample.JPG")]
@@ -330,7 +333,10 @@ public sealed class ImageJourneyTests
             }
             using (var privateFile = TagLib.File.Create(privatePath))
             {
-                Assert.Equal(TagLib.TagTypes.None, privateFile.TagTypesOnDisk);
+                var image = Assert.IsAssignableFrom<TagLib.Image.File>(privateFile);
+                Assert.Null(image.ImageTag.Latitude);
+                Assert.Null(image.ImageTag.Longitude);
+                Assert.Equal("Preserve this image title", image.ImageTag.Title);
             }
             using (var stripped = TagLib.File.Create(strippedPath))
                 Assert.Null(stripped.GetTag(TagLib.TagTypes.Png, create: false));
@@ -344,24 +350,27 @@ public sealed class ImageJourneyTests
     }
 
     [AvaloniaFact]
-    public void CropEditorRendersAtNormalAndMinimumWindowSizesWithAccessibleEmptyState()
+    public async Task CropEditorRendersAtNormalAndMinimumWindowSizesWithAccessibleEmptyState()
     {
-        var screenshotDirectory = Path.Combine(Path.GetTempPath(), "opencode", "picture-ui-qa");
+        var screenshotDirectory = Environment.GetEnvironmentVariable("HAVEN_VISUAL_CAPTURE_DIR")
+            ?? Path.Combine(Path.GetTempPath(), "picture-ui-qa-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(screenshotDirectory);
-        var window = new MainWindow();
+        var window = new MainWindow(new PictureFixtureReadiness());
         try
         {
+            Assert.Equal(CuiSceneAvailabilityState.Ready, (await window.InitializeAsync(TestContext.Current.CancellationToken).ObserveOriginalAsync(window, "Picture initialization")).State);
             window.Show();
-            var cropBounds = window.FindControl<TextBox>("CropBoundsBox")!;
-            var applyCrop = window.FindControl<Button>("ApplyCropButton")!;
-            var exportCrop = window.FindControl<Button>("ExportCropButton")!;
-            var info = window.FindControl<Button>("InfoButton")!;
+            window.UpdateLayout();
+            var cropBounds = FindScene<TextBox>(window, "CropBoundsBox")!;
+            var applyCrop = FindScene<Button>(window, "ApplyCropButton")!;
+            var exportCrop = FindScene<Button>(window, "ExportCropButton")!;
+            var info = FindScene<Button>(window, "InfoButton")!;
             Assert.Equal("Crop bounds in current image pixels", AutomationProperties.GetName(cropBounds));
             Assert.False(applyCrop.IsEnabled);
             Assert.False(exportCrop.IsEnabled);
             Assert.False(info.IsEnabled);
             Assert.Equal("View image metadata", AutomationProperties.GetName(info));
-            Assert.True(window.FindControl<StackPanel>("EmptyState")!.IsVisible);
+            Assert.True(FindScene<StackPanel>(window, "EmptyState")!.IsVisible);
             cropBounds.Focus();
             Assert.True(cropBounds.IsFocused);
 
@@ -382,11 +391,13 @@ public sealed class ImageJourneyTests
             typeof(MainWindow).GetMethod("LoadLocalPath", BindingFlags.Instance | BindingFlags.NonPublic)!
                 .Invoke(window, [sourcePath]);
             Assert.True(applyCrop.IsEnabled);
-            Assert.False(exportCrop.IsEnabled);
+            Assert.True(exportCrop.IsEnabled);
             Assert.True(info.IsEnabled);
             cropBounds.Text = "not crop bounds";
-            applyCrop.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
-            var status = window.FindControl<TextBlock>("StatusText")!;
+            var originalCrop = window.DispatchAsync("9to1.Picture.Crop", null, TestContext.Current.CancellationToken).AsTask();
+            await originalCrop.ObserveOriginalAsync(window, "Picture invalid-crop command");
+            Assert.Same(originalCrop, window.OriginalCommand);
+            var status = FindScene<TextBlock>(window, "StatusText")!;
             Assert.Contains("Enter crop bounds", status.Text);
             using var errorFrame = window.CaptureRenderedFrame();
             Assert.NotNull(errorFrame);
@@ -395,7 +406,11 @@ public sealed class ImageJourneyTests
         }
         finally
         {
-            window.Close();
+            if (!PictureOriginalSourceFixture.HasRetainedPendingSource(window))
+            {
+                window.Close();
+                if (window.OriginalClose is { } close) await close.ObserveOriginalAsync(window, "Picture original empty-state window retirement");
+            }
         }
     }
 
@@ -426,6 +441,117 @@ public sealed class ImageJourneyTests
             Directory.Delete(directory, recursive: true);
         }
     }
+
+    [AvaloniaFact]
+    public async Task EditorEditsUndoRedoSaveReopenAndCopyRetainTheSource()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"picture-editor-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        var sourcePath = Path.Combine(directory, "source.bmp");
+        var documentPath = Path.Combine(directory, "work.picture.json");
+        var copyPath = Path.Combine(directory, "copy.picture.json");
+        await File.WriteAllBytesAsync(sourcePath, CreateTwoPixelBmp());
+        var session = new PictureEditorSession(new PictureCropService().OpenSource(sourcePath));
+        using (var rotated = session.Apply("Rotate right", document => document.Rotate()))
+            Assert.Equal(new PixelSize(1, 2), rotated.PixelSize);
+        using (var flipped = session.Apply("Flip vertical", document => document.Flip(false)))
+        {
+            var pixel = ReadFirstPixel(flipped);
+            Assert.True(pixel.G > pixel.R);
+        }
+        using (var undone = session.Undo()) Assert.Equal(new PixelSize(1, 2), undone.PixelSize);
+        using (var redone = session.Redo()) Assert.True(ReadFirstPixel(redone).G > ReadFirstPixel(redone).R);
+        var revision = session.Document.Revision;
+        await session.SaveAsync(documentPath);
+        Assert.False(session.IsDirty);
+        var reopened = new PictureEditorSession(await PictureDocument.OpenAsync(documentPath), documentPath);
+        Assert.Equal(session.Document.DocumentId, reopened.Document.DocumentId);
+        Assert.Equal(revision, reopened.Document.Revision);
+        Assert.True(reopened.CanUndo);
+        using (var undone = reopened.Undo()) Assert.Equal(new PixelSize(1, 2), undone.PixelSize);
+        Assert.True(reopened.Document.Revision > revision);
+        await reopened.SaveAsync(copyPath, saveCopy: true);
+        var copy = await PictureDocument.OpenAsync(copyPath);
+        Assert.NotEqual(reopened.Document.DocumentId, copy.DocumentId);
+        Assert.Equal(sourcePath, copy.SourcePath);
+        Assert.Equal(CreateTwoPixelBmp(), await File.ReadAllBytesAsync(sourcePath));
+        Assert.Equal(2, (await PictureDocument.OpenAsync(documentPath)).Operations.Count);
+        await File.AppendAllTextAsync(documentPath, " ");
+        await Assert.ThrowsAsync<IOException>(() => reopened.SaveAsync(documentPath));
+    }
+
+    [AvaloniaFact]
+    public async Task NewCanvasEditsPersistWithoutInventingAFileIdentity()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"picture-new-{Guid.NewGuid():N}.picture.json");
+        var session = new PictureEditorSession(PictureDocument.Create(40, 30));
+        using (var resized = session.Apply("Resize", document => document.Resize(80, 60)))
+            Assert.Equal(new PixelSize(80, 60), resized.PixelSize);
+        await session.SaveAsync(path);
+        var reopened = new PictureEditorSession(await PictureDocument.OpenAsync(path), path);
+        using var original = reopened.Undo();
+        Assert.Equal(new PixelSize(40, 30), original.PixelSize);
+        Assert.Null(reopened.Document.FileId);
+        Assert.Null(reopened.Document.SourcePath);
+    }
+
+    [AvaloniaFact]
+    public async Task NativeTransformControlsUseSharedHistoryAndRenderedPixels()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"picture-native-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        var sourcePath = Path.Combine(directory, "source.bmp");
+        await File.WriteAllBytesAsync(sourcePath, CreateTwoPixelBmp(), TestContext.Current.CancellationToken);
+        var window = new MainWindow(new PictureFixtureReadiness());
+        Exception? firstBodyFailure = null;
+        try
+        {
+            Assert.Equal(CuiSceneAvailabilityState.Ready,
+                (await window.InitializeAsync(TestContext.Current.CancellationToken).ObserveOriginalAsync(window, "Picture initialization")).State);
+            window.Show();
+            typeof(MainWindow).GetMethod("LoadLocalPath", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(window, [sourcePath]);
+            var rotate = FindScene<Button>(window, "RotateRightButton")!;
+            await PictureCuiActionFixture.ClickAsync(window, rotate);
+            Assert.Contains("1 × 2", FindScene<TextBlock>(window, "MetadataText")!.Text);
+            var undo = FindScene<Button>(window, "UndoButton")!;
+            Assert.True(undo.IsEnabled);
+            await PictureCuiActionFixture.ClickAsync(window, undo);
+            Assert.Contains("2 × 1", FindScene<TextBlock>(window, "MetadataText")!.Text);
+            using var frame = window.CaptureRenderedFrame();
+            Assert.NotNull(frame);
+            using (var output = File.Create(Path.Combine(directory, "editor.png"))) frame!.Save(output);
+            var session = Assert.IsType<PictureEditorSession>(typeof(MainWindow)
+                .GetField("_session", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(window));
+            await session.SaveAsync(Path.Combine(directory, "editor.picture.json"),
+                cancellationToken: TestContext.Current.CancellationToken);
+            Assert.False(session.IsDirty);
+            Assert.Equal(CreateTwoPixelBmp(), await File.ReadAllBytesAsync(sourcePath, TestContext.Current.CancellationToken));
+        }
+        catch (Exception error)
+        {
+            firstBodyFailure = error;
+            RetainedFailedUiOwners.Add((window, error));
+            throw;
+        }
+        finally
+        {
+            // Keep an unfinished failed fixture and its first failure. Closing
+            // dirty state here would enter a save modal that no fixture can answer.
+            if (firstBodyFailure is null)
+            {
+                window.Close();
+                Assert.NotNull(window.OriginalClose);
+                var originalClose = window.OriginalClose!;
+                try { await originalClose.ObserveOriginalAsync(window, "Picture original window retirement"); }
+                catch (Exception error) { RetainedFailedUiOwners.Add((window, error)); throw; }
+                Assert.True(originalClose.IsCompletedSuccessfully);
+                Assert.Same(originalClose, window.OriginalClose);
+            }
+        }
+    }
+
+    private static T FindScene<T>(MainWindow window, string name) where T : Control =>
+        window.GetLogicalDescendants().OfType<T>().Single(control => control.Name == name);
 
     private static byte[] CreateTwoPixelBmp(bool alterPixels = false)
     {

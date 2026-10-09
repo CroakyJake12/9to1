@@ -1,0 +1,68 @@
+<Cui id="9to1.Stacks.Workspace" version="1">
+ <Actions>
+  <Action name="OpenProject" command="9to1.Stacks.OpenProject" parameter="{Binding project.Target}" />
+  <Action name="OpenTab" command="9to1.Stacks.OpenProject" parameter="{Binding tab.Target}" />
+  <Action name="SelectDomain" command="9to1.Stacks.SelectDomain" parameter="{Binding domain.Target}" />
+  <Action name="SelectFile" command="9to1.Stacks.SelectFile" parameter="{Binding file.Target}" />
+ </Actions>
+ <Grid rows="Auto,Auto,*,Auto" margin="12">
+  <ScrollViewer horizontal-scrollbar-visibility="Auto" vertical-scrollbar-visibility="Disabled">
+   <StackPanel orientation="Horizontal" spacing="8">
+    <Button name="StacksHome" action="9to1.Stacks.Home" content="Home" accessible-name="Stacks Home" />
+    <Repeat source="{Binding Tabs}" as="tab" key="{Binding tab.Key}"><Button action="OpenTab" content="{Binding tab.Label}" accessible-name="{Binding tab.Label}" /></Repeat>
+   </StackPanel>
+  </ScrollViewer>
+  <StackPanel grid-row="1" orientation="Horizontal" spacing="8" margin="0,8">
+   <Button name="StacksBack" action="9to1.Stacks.Back" content="Back" />
+   <Button name="StacksForward" action="9to1.Stacks.Forward" content="Forward" />
+   <Button name="StacksRefresh" action="9to1.Stacks.Refresh" content="Refresh" />
+   <TextBlock text="{Binding ProjectLabel}" />
+  </StackPanel>
+  <ScrollViewer grid-row="2">
+   <StackPanel spacing="10">
+    <StackPanel is-visible="{Binding IsHome}" spacing="8">
+     <StackPanel orientation="Horizontal" spacing="8"><Button action="9to1.Stacks.Home" content="Projects" /><Button action="9to1.Stacks.About" content="About" /></StackPanel>
+     <TextBlock text="{Binding HomePage}" font-size="20" />
+     <TextBlock is-visible="{Binding IsAboutPage}" text="Stacks connects a project's shared source with its Main, Branch, Twig and Leaf development domains. Open a project to inspect inherited source, save your own working changes and commit them." text-wrapping="Wrap" />
+     <TextBlock is-visible="{Binding NoProjects}" text="No authorised projects are connected. Open Stacks from Home to connect your projects." text-wrapping="Wrap" />
+     <StackPanel is-visible="{Binding IsProjectsPage}" spacing="6">
+      <TextBlock text="Open an authorised project to work with its source and domains." text-wrapping="Wrap" />
+      <Repeat source="{Binding Projects}" as="project" key="{Binding project.Key}"><Button action="OpenProject" content="{Binding project.Label}" accessible-name="{Binding project.Label}" /></Repeat>
+     </StackPanel>
+    </StackPanel>
+    <StackPanel is-visible="{Binding IsProject}" spacing="8">
+     <TextBlock text="{Binding DomainLabel}" font-size="18" />
+     <TextBlock name="StacksActiveDomain" text="{Binding ActiveDomainLabel}" text-wrapping="Wrap" />
+     <Button name="StacksSetActive" action="9to1.Stacks.SetActive" content="Set selected domain active" />
+     <TextBlock text="{Binding Counts}" text-wrapping="Wrap" />
+     <TextBlock text="{Binding Conflicts}" />
+     <TextBlock text="{Binding DomainPageLabel}" />
+     <ScrollViewer max-height="140"><StackPanel spacing="4"><Repeat source="{Binding Domains}" as="domain" key="{Binding domain.Key}"><Button action="SelectDomain" content="{Binding domain.Label}" accessible-name="{Binding domain.Label}" /></Repeat></StackPanel></ScrollViewer>
+     <StackPanel orientation="Horizontal" spacing="6"><Button action="9to1.Stacks.PreviousDomains" content="Previous domains" /><Button action="9to1.Stacks.NextDomains" content="Next domains" /></StackPanel>
+     <TextBox name="StacksDomainName" text="{Binding DomainName, mode=TwoWay}" accessible-name="Domain name" />
+     <StackPanel orientation="Horizontal" spacing="6"><Button name="StacksCreateDomain" action="9to1.Stacks.CreateDomain" content="Create child domain" /><Button name="StacksRenameDomain" action="9to1.Stacks.RenameDomain" content="Rename selected domain" /></StackPanel>
+     <TextBox name="StacksFileFilter" text="{Binding FileFilter, mode=TwoWay}" accessible-name="Filter source paths" />
+     <TextBlock text="{Binding FilePageLabel}" />
+     <ScrollViewer max-height="180"><StackPanel spacing="4"><Repeat source="{Binding Files}" as="file" key="{Binding file.Key}"><Button action="SelectFile" content="{Binding file.Label}" accessible-name="{Binding file.Label}" /></Repeat></StackPanel></ScrollViewer>
+     <StackPanel orientation="Horizontal" spacing="6"><Button action="9to1.Stacks.PreviousFiles" content="Previous files" /><Button action="9to1.Stacks.NextFiles" content="Next files" /><Button name="StacksNewTextFile" action="9to1.Stacks.NewTextFile" content="New text file" /></StackPanel>
+     <TextBox name="StacksSourcePath" text="{Binding SourcePath, mode=TwoWay}" accessible-name="Source path" />
+     <TextBlock text="{Binding SourceDescription}" text-wrapping="Wrap" />
+     <TextBox name="StacksSourceEditor" text="{Binding SourceText, mode=TwoWay}" accepts-return="True" min-height="160" is-enabled="{Binding CanEditText}" accessible-name="Effective source text" />
+     <StackPanel orientation="Horizontal" spacing="6"><Button name="StacksApplyText" action="9to1.Stacks.ApplyText" content="Save working change" /><Button name="StacksDiscardDraft" action="9to1.Stacks.DiscardDraft" content="Discard pending text" /></StackPanel>
+     <TextBlock text="{Binding DiffPageLabel}" />
+     <Grid columns="40,*,40,*"><TextBlock grid-column="1" text="Inherited base" /><TextBlock grid-column="3" text="Effective source" /></Grid>
+     <Repeat source="{Binding DiffLines}" as="line" key="{Binding line.Key}">
+      <Grid columns="40,*,40,*" margin="0,2">
+       <TextBlock text="{Binding line.BeforeNumber}" /><TextBlock grid-column="1" text="{Binding line.BeforeText}" text-wrapping="Wrap" />
+       <TextBlock grid-column="2" text="{Binding line.AfterNumber}" /><StackPanel grid-column="3" orientation="Horizontal" spacing="4"><TextBlock text="{Binding line.Change}" /><TextBlock text="{Binding line.AfterText}" text-wrapping="Wrap" /></StackPanel>
+      </Grid>
+     </Repeat>
+     <StackPanel orientation="Horizontal" spacing="6"><Button action="9to1.Stacks.PreviousDiff" content="Previous diff" /><Button action="9to1.Stacks.NextDiff" content="Next diff" /></StackPanel>
+     <TextBox name="StacksCommitMessage" text="{Binding CommitMessage, mode=TwoWay}" accessible-name="Commit message" />
+     <Button name="StacksCommit" action="9to1.Stacks.Commit" content="Commit working changes" />
+    </StackPanel>
+   </StackPanel>
+  </ScrollViewer>
+  <TextBlock grid-row="3" text="{Binding Status}" text-wrapping="Wrap" margin="0,8,0,0" />
+ </Grid>
+</Cui>

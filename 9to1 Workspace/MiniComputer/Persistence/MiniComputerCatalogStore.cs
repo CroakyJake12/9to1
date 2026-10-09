@@ -1,5 +1,7 @@
 using System.Collections.Immutable;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using Haven.Application;
 
 namespace HavenOS.Apps.MiniComputer;
 
@@ -9,7 +11,13 @@ public sealed record MiniComputerCatalogSnapshot(
     ImmutableArray<VirtualMachine> VirtualMachines,
     ImmutableArray<Snapshot> Snapshots,
     ImmutableArray<VirtualDisk> Disks,
-    ImmutableArray<InstallationMedia> Media);
+    ImmutableArray<InstallationMedia> Media)
+{
+    // Seeded only by the explicitly authorized owning setup/write workflow.
+    // Ordinary reads preserve absence; normal catalogue writes retain this identity.
+    public ResourceStoreIdentity? OriginalStoreIdentity { get; init; }
+    [JsonExtensionData] public Dictionary<string, JsonElement>? AdditionalMetadata { get; init; }
+}
 
 public interface IMiniComputerCatalogStore
 {
@@ -18,7 +26,7 @@ public interface IMiniComputerCatalogStore
 }
 
 /// <summary>Versioned metadata store. Hypervisor disk blocks and secrets are never stored here.</summary>
-public sealed class JsonMiniComputerCatalogStore : IMiniComputerCatalogStore
+public sealed partial class JsonMiniComputerCatalogStore : IMiniComputerCatalogStore
 {
     public const int CurrentSchemaVersion = 1;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web) { WriteIndented = true };

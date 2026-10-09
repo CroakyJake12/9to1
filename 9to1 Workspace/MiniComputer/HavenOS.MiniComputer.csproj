@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
+    <ProjectReference Include="..\shared\src\Haven.Application\Haven.Application.csproj" />
     <Content Include="MiniComputer.cui" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

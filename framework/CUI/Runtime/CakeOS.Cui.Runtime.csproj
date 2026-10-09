@@ -11,7 +11,6 @@
   <ItemGroup>
     <ProjectReference Include="../vendor/Avalonia/src/Avalonia.Desktop/Avalonia.Desktop.csproj" />
     <ProjectReference Include="../vendor/Avalonia/src/Avalonia.Themes.Fluent/Avalonia.Themes.Fluent.csproj" />
-    <ProjectReference Include="../vendor/Avalonia/src/Avalonia.Fonts.Inter/Avalonia.Fonts.Inter.csproj" />
     <ProjectReference Include="../Core/CakeOS.Cui.Core.csproj" />
     <ProjectReference Include="../Themes/CakeOS.Cui.Themes.csproj" />
     <ProjectReference Include="../../CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj" />
@@ -19,4 +18,12 @@
     <ProjectReference Include="../../CUI/vendor/Avalonia/src/Skia/Avalonia.Skia/Avalonia.Skia.csproj" />
     <ProjectReference Include="../../CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/Avalonia.Headless.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Use the maintained bundled family without depending on the Desktop UI process. -->
+    <AvaloniaResource Include="../../../9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/MontserratStatic/*.ttf"
+                      Link="Assets/Fonts/MontserratStatic/%(Filename)%(Extension)" />
+    <AvaloniaResource Include="../../../9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/OFL-Montserrat.txt"
+                      Link="Assets/Fonts/OFL-Montserrat.txt" />
+  </ItemGroup>
+  <Import Project="../vendor/Avalonia/build/BuildTargets.targets" />
 </Project>

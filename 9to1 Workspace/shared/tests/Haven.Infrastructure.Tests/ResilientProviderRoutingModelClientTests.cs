@@ -17,7 +17,7 @@ namespace Haven.Infrastructure.Tests;
 /// <summary>
 /// Represents resilient provider routing model client tests and keeps its related state and behavior together.
 /// </summary>
-public sealed class ResilientProviderRoutingModelClientTests
+public sealed partial class ResilientProviderRoutingModelClientTests
 {
     /// <summary>
     /// Performs the completion falls back after recoverable failure before output step owned by this component.
@@ -282,6 +282,7 @@ public sealed class ResilientProviderRoutingModelClientTests
         /// Gets or updates stream calls, the bindable or domain state represented by this property.
         /// </summary>
         public int StreamCalls { get; private set; }
+        public int ToolCalls { get; private set; }
         public int ModelDiscoveryCalls { get; private set; }
         /// <summary>
         /// Gets or updates id, the bindable or domain state represented by this property.
@@ -316,7 +317,7 @@ public sealed class ResilientProviderRoutingModelClientTests
         public Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken)
         {
             ModelDiscoveryCalls++;
-            var capabilities = new HashSet<ToolCapability> { ToolCapability.Text, ToolCapability.Streaming };
+            var capabilities = new HashSet<ToolCapability> { ToolCapability.Text, ToolCapability.Streaming, ToolCapability.Tools };
             var model = new ModelDescriptor(_model, 0, Id, string.Empty, string.Empty, capabilities, DateTimeOffset.UtcNow);
             return Task.FromResult<IReadOnlyList<ProviderModelDescriptor>>([new ProviderModelDescriptor(Id, IsLocal, model, 32_000, _model)]);
         }
@@ -348,7 +349,11 @@ public sealed class ResilientProviderRoutingModelClientTests
         /// <summary>
         /// Performs chat with tools asynchronously so I/O does not block the caller's thread.
         /// </summary>
-        public Task<OllamaToolResponse> ChatWithToolsAsync(OllamaToolRequest request, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
+        public Task<OllamaToolResponse> ChatWithToolsAsync(OllamaToolRequest request, CancellationToken cancellationToken)
+        {
+            ToolCalls++;
+            if (_fail) throw new HttpRequestException("temporary", null, HttpStatusCode.ServiceUnavailable);
+            return Task.FromResult(new OllamaToolResponse(_completion ?? string.Empty, []));
+        }
     }
 }

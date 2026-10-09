@@ -39,6 +39,10 @@ internal static class Program
         }
         try
         {
+#if !ANDROID
+            args = App.CaptureOriginalNativeHomeLaunchLocators(args);
+            args = App.CaptureOriginalHomeRootLaunchLocators(args);
+#endif
             ConfigureThreadPool();
             if (args.Length > 0 && args[0] == "--local-task-console")
             {

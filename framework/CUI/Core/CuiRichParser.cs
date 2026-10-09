@@ -208,18 +208,32 @@ public sealed class CuiRichParser
         foreach (var child in actionsElement.Elements())
         {
             if (!IsKeyword(child, "Action")) continue;
-            var name = child.Attribute("name")?.Value;
-            var command = child.Attribute("command")?.Value;
+            var name = ActionAttribute(child, "name", sourceName)?.Value;
+            var command = ActionAttribute(child, "command", sourceName)?.Value;
             if (name is null || command is null) continue;
 
             var span = SpanOf(child, sourceName);
-            var paramAttr = child.Attribute("parameter");
+            var paramAttr = ActionAttribute(child, "parameter", sourceName);
             var parameter = paramAttr is not null ? ParseMarkupValue(paramAttr.Value, span) : null;
 
             result[name] = new CuiActionDefinition(name, command, parameter, span);
         }
 
         return result;
+    }
+
+    // Recognized CUI attributes are case-insensitive. Keep their canonical keys
+    // and reject competing aliases rather than selecting a different command.
+    private XAttribute? ActionAttribute(XElement element, string key, string sourceName)
+    {
+        var matches = element.Attributes().Where(attribute => attribute.Name.Namespace == XNamespace.None &&
+            string.Equals(attribute.Name.LocalName, key, StringComparison.OrdinalIgnoreCase)).Take(2).ToArray();
+        if (matches.Length > 1)
+        {
+            _diagnostics.Error("CUI043", $"Action attribute '{key}' is repeated with different casing.", SpanOf(matches[1], sourceName));
+            return null;
+        }
+        return matches.FirstOrDefault();
     }
 
     #endregion
@@ -439,7 +453,9 @@ public sealed class CuiRichParser
                     break;
 
                 case "action":
-                    actions[attrName] = new CuiActionReference(rawValue, attrSpan);
+                    if (actions.ContainsKey("action"))
+                        _diagnostics.Error("CUI043", "Action attribute 'action' is repeated with different casing.", attrSpan);
+                    else actions["action"] = new CuiActionReference(rawValue, attrSpan);
                     break;
 
                 case "condition":

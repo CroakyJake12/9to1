@@ -9,7 +9,7 @@ public sealed class HavenAppRoutePolicyTests
     private static readonly string[] ExpectedBuiltInKeys =
     [
         "chat", "study", "automations", "terminal", "tasks", "studio", "dev", "browse", "plan", "training", "imagine", "canvas",
-        "present", "data", "vision", "play", "translate", "launcher", "go", "dashboard", "write", "mesh", "spaces", "boards", "maps", "motion", "forms"
+        "present", "data", "vision", "play", "translate", "launcher", "go", "dashboard", "write", "mesh", "spaces", "boards", "maps", "motion", "forms", "shelf", "assistants"
     ];
 
     public static TheoryData<string, HavenAppRouteKind, HavenSurface> BuiltInRoutes => new()
@@ -40,7 +40,9 @@ public sealed class HavenAppRoutePolicyTests
         { "boards", HavenAppRouteKind.ModeWorkspace, HavenSurface.Boards },
         { "maps", HavenAppRouteKind.Maps, HavenSurface.Maps },
         { "motion", HavenAppRouteKind.ModeWorkspace, HavenSurface.Motion },
-        { "forms", HavenAppRouteKind.Forms, HavenSurface.Forms }
+        { "forms", HavenAppRouteKind.Forms, HavenSurface.Forms },
+        { "shelf", HavenAppRouteKind.BaseMode, HavenSurface.Chat },
+        { "assistants", HavenAppRouteKind.Assistants, HavenSurface.Assistants }
     };
 
     [Theory]
@@ -64,6 +66,20 @@ public sealed class HavenAppRoutePolicyTests
         var registeredKeys = BuiltInModeSeed.Modes.Select(item => item.Key).Order().ToArray();
 
         Assert.Equal(ExpectedBuiltInKeys.Order(), registeredKeys);
+    }
+
+    [Fact]
+    public void AssistantsRetainsItsOwnStableRegisteredIdentityAndDedicatedRoute()
+    {
+        var app = Assert.Single(BuiltInModeSeed.Modes, item => item.Key == "assistants");
+        Assert.Equal(Guid.Parse("a0000000-0000-0000-0000-000000000029"), app.Id);
+        Assert.Equal("Assistants", app.Name);
+        Assert.Equal("user", app.IconKey);
+        Assert.Equal(string.Empty, app.SystemPromptSuffix);
+        Assert.Equal(20, (int)HavenAppRouteKind.Assistants);
+        Assert.Equal(31, (int)HavenSurface.Assistants);
+        Assert.Equal(new HavenAppRoute(HavenAppRouteKind.Assistants, HavenSurface.Assistants), HavenAppRoutePolicy.Resolve(app));
+        Assert.Equal(BuiltInModeSeed.Modes.Count, BuiltInModeSeed.Modes.Select(item => item.Id).Distinct().Count());
     }
 
     [Fact]

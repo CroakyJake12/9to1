@@ -219,8 +219,7 @@ public sealed partial class CanvasHostWindow : Window
                 }
                 finally { _busy = false; RefreshBindings(); }
             },captured.StoreId),CreateEraserContext(fileId,captured,files,original));
-        try { await surface.InitializeAsync(ct); }
-        catch { surface.Dispose(); throw; }
+        await InitializeOwnedSurfaceAsync(surface, ct);
         _opened = opened; _openedFile = fileId; await ShowViewAsync(surface, surface);
     }
     private async Task<string> RequestAsync(string action, IReadOnlyList<ResourceScope> scopes, JsonElement arguments, string preview,

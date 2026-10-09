@@ -4,8 +4,10 @@ using System.Security.Cryptography;
 namespace HavenOS.Apps.Wave;
 
 /// <summary>Canonical Files identity survives rename/restart; resolved paths exist only while leases are held.</summary>
-public sealed class WaveFilesProjectService(IMediaAssetSourceResolver sources, IMediaAudioDecoder? audioDecoder = null)
+public sealed partial class WaveFilesProjectService(IMediaAssetSourceResolver sources, IMediaAudioDecoder? audioDecoder = null)
 {
+    private readonly IMediaAssetSourceResolver _sources = sources;
+    private readonly IMediaAudioDecoder? _audioDecoder = audioDecoder;
     public async Task<MediaEngineResult<WaveProject>> ImportAsync(WaveProject project, long expectedRevision,
         Guid trackID, string fileID, string? expectedSourceRevision, double timelineStartSeconds,
         CancellationToken cancellationToken = default)
@@ -17,7 +19,7 @@ public sealed class WaveFilesProjectService(IMediaAssetSourceResolver sources, I
             project = project with { Tracks = project.Tracks.Select(track => track with { Clips = track.Clips.ToList() }).ToList() };
             WaveProjectStore.Validate(project);
             var assetID = MediaAssetId.New();
-            var resolved = await sources.ResolveAsync(fileID, assetID, expectedSourceRevision, cancellationToken).ConfigureAwait(false);
+            var resolved = await _sources.ResolveAsync(fileID, assetID, expectedSourceRevision, cancellationToken).ConfigureAwait(false);
             if (!resolved.IsSuccess) return MediaEngineResult<WaveProject>.Failure(resolved.Error!);
             await using var lease = resolved.Value!;
             if (!ValidLease(lease, assetID, fileID, expectedSourceRevision)) return Failure<WaveProject>(MediaEngineErrorCode.RevisionConflict);
@@ -26,9 +28,9 @@ public sealed class WaveFilesProjectService(IMediaAssetSourceResolver sources, I
             WaveProject imported;
             WaveAudioDerivation? derivation = null;
             try { imported = WaveProjectStore.AddWavClip(project, trackID, lease.Source.SourceUri.LocalPath, timelineStartSeconds); }
-            catch (Exception error) when (audioDecoder is not null && (error is InvalidDataException or NotSupportedException))
+            catch (Exception error) when (_audioDecoder is not null && (error is InvalidDataException or NotSupportedException))
             {
-                var decoded = await audioDecoder.DecodeAsync(lease, cancellationToken).ConfigureAwait(false);
+                var decoded = await _audioDecoder.DecodeAsync(lease, cancellationToken).ConfigureAwait(false);
                 if (!decoded.IsSuccess) return MediaEngineResult<WaveProject>.Failure(decoded.Error!);
                 await using var decodedLease = decoded.Value!;
                 if (!ValidDecoded(decodedLease, lease, sourceHash)) return Failure<WaveProject>(MediaEngineErrorCode.RevisionConflict);
@@ -75,7 +77,7 @@ public sealed class WaveFilesProjectService(IMediaAssetSourceResolver sources, I
                     return Failure<long>(MediaEngineErrorCode.SourceUnavailable); // Legacy paths require explicit Files relink.
                 if (group.Any(other => other.SourceFileID != clip.SourceFileID || other.SourceRevisionID != clip.SourceRevisionID
                     || other.SourceSha256 != clip.SourceSha256 || other.AudioDerivation != clip.AudioDerivation)) return Failure<long>(MediaEngineErrorCode.RevisionConflict);
-                var resolved = await sources.ResolveAsync(clip.SourceFileID, new(clip.SourceReferenceId), clip.SourceRevisionID,
+                var resolved = await _sources.ResolveAsync(clip.SourceFileID, new(clip.SourceReferenceId), clip.SourceRevisionID,
                     cancellationToken).ConfigureAwait(false);
                 if (!resolved.IsSuccess) return MediaEngineResult<long>.Failure(resolved.Error!);
                 var lease = resolved.Value!;
@@ -85,8 +87,8 @@ public sealed class WaveFilesProjectService(IMediaAssetSourceResolver sources, I
                     clip.SourceSha256, StringComparison.OrdinalIgnoreCase)) return Failure<long>(MediaEngineErrorCode.RevisionConflict);
                 if (clip.AudioDerivation is { } expectedDerivation)
                 {
-                    if (audioDecoder is null) return Failure<long>(MediaEngineErrorCode.BackendUnavailable);
-                    var decoded = await audioDecoder.DecodeAsync(lease, cancellationToken).ConfigureAwait(false);
+                    if (_audioDecoder is null) return Failure<long>(MediaEngineErrorCode.BackendUnavailable);
+                    var decoded = await _audioDecoder.DecodeAsync(lease, cancellationToken).ConfigureAwait(false);
                     if (!decoded.IsSuccess) return MediaEngineResult<long>.Failure(decoded.Error!);
                     var decodedLease = decoded.Value!;
                     decodedLeases.Add(clip.SourceReferenceId, decodedLease);

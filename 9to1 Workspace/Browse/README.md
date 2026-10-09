@@ -1,36 +1,32 @@
-# HavenOS Browse app surface
+# Browse
 
-This directory owns the bounded standalone Browse app slice for HavenOS.
+Browse owns its existing canonical tab/session, engine preference, history, bookmark, permission, private-profile, popup, recovery and completed-download state. `Core/HavenOS.Apps.Browse.Core.csproj` compiles those maintained source files once. The existing Haven.UI scene remains available in the legacy app assembly through type forwarding; the current native consumer uses canonical `framework/CUI/Runtime`, bundled Montserrat and authored `NativeUI/UI/BrowseWorkspace.cui`.
 
-## Functional boundary
+The native surface binds real actions to the same `BrowseChrome`: tab creation/selection/closure, private tabs, navigation, back/forward/reload/stop, engine choices, bookmarks/history, site popup permissions, find/zoom, recovery and developer tools. Repeat rows use explicit maintained item bindings and current source-issued tab targets. Inactive native views stay mounted so tab selection does not destroy live renderer state. Requested addresses do not become visits until an original native committed-page event arrives; private visits/tabs remain excluded from the shared store.
 
-`BrowseAppRoute` owns Browse route identity (`browse`, `browser`, and `web`) and delegates domain/URL/search navigation to the existing `Haven.Browser.BrowserSessionService`. It does not create another WebView host, URL normalizer, HTTP fallback, browser store, or automation policy.
+`NativeWindows` provides an actual Windows Chromium/Blink adapter through the maintained Avalonia.Controls.WebView 12.0.1 and WebView2 package. It preserves canonical tab IDs and engine/profile directories, sets typed Windows environment/profile/private properties, consumes real native navigation/script/security/permission events, and sends native page downloads through the existing approval service and transport rather than replaying URLs or inventing a ledger. Native retirement retains the same public asynchronous scope, its original disposal task and actual adapter destruction event. Metadata inspection verifies signatures only; Windows runtime, callback ordering and actual retirement still require owning qualification.
 
-The exercised journey is:
+Firefox/Gecko remains the default primary choice. Chromium availability never certifies Firefox. The receiving donor directory contains provenance but no usable Gecko runtime supplier; an unavailable Firefox tab keeps its identity and preference and offers an explicit Chromium choice. No HTML/text stub, external system browser or relabeled Blink instance substitutes for Gecko.
 
-`Browse route -> BrowseAppRoute.NavigateAsync -> BrowserSessionService.NavigateAsync -> existing IEmbeddedBrowserHost/native browser capability`
+The actual installed Home/root/profile bootstrap and launcher binding must supply `BrowseWindowsStartupAttempt` with original readiness, canonical paths and original policy/services. Constructor injection and local test readiness are not authority or production bootstrap completion. Until that producer exists, standalone installed startup remains unavailable. Full specification work—including Gecko, all internal namespace routes, split/group/workspace features, integrated pending-download controls, extensions, sync and broader browser product fit—remains open. This bounded slice does not mark Browse IMPLEMENTED, PACKAGEABLE, PACKAGED, SMOKE-PASSED or EXTENSIVELY VERIFIED.
 
-A bare domain such as `example.com` therefore keeps the existing browser behavior and is normalized to HTTPS by `BrowserSessionService` before it reaches the host.
+Owning checks from the recovered repository root (not yet run for this slice):
 
-## Provenance
-
-The authoritative starting point is `havenos-main` at `7b2acae6175e5c380a3812b531b90ca82dbf85c3`.
-
-The repository's HavenOS provenance ledger records the Browse route source commit as `ec48a80d4da14f80dbb4f578a17f170ae70ddd5b`, which added the `web` alias while retaining the existing `HavenAppRouteKind.Browse` / `HavenSurface.Browse` path. The reused browser capability remains under `src/Haven.Browser`, principally `Session/BrowserSessionService.cs` for this slice.
-
-The original migration slice introduced no external donor code. The later donor-source pass added the actual pinned Firefox/Gecko source under `Source/FirefoxGecko/` with MPL-2.0; see `Source/DONOR-PROVENANCE.md`. This does not wire a Gecko engine or prove browser rendering.
-
-## Visual boundary
-
-This slice contains no replacement Browse visuals and makes no visual-fidelity claim. Future UI work must be checked against the canonical Browse mockup asset before fidelity is claimed.
-
-## Focused validation
-
-From the repository root:
-
-```powershell
-dotnet build ".\HavenOS Apps\Browse\HavenOS.Apps.Browse.csproj" -c Release
-dotnet test ".\HavenOS Apps\Browse\Tests\HavenOS.Apps.Browse.Tests.csproj" -c Release
+```sh
+dotnet test "9to1 Workspace/Browse/Tests/HavenOS.Apps.Browse.Tests.csproj" -c Debug
+dotnet test "9to1 Workspace/Browse/NativeUI/Tests/HavenOS.Apps.Browse.NativeUI.Tests.csproj" -c Debug
+dotnet test "9to1 Workspace/Browse/NativeWindows/Tests/HavenOS.Apps.Browse.NativeWindows.Tests.csproj" -c Debug -p:EnableWindowsTargeting=true
+dotnet build "9to1 Workspace/Browse/NativeWindows/HavenOS.Apps.Browse.NativeWindows.csproj" -c Debug -p:EnableWindowsTargeting=true
 ```
 
-The tests cover the existing route aliases, reject unrelated routes before navigation, exercise bare-domain HTTPS normalization through the real `BrowserSessionService`, and verify cancellation reaches the existing embedded-browser host seam.
+The new six Core controls exercise actual shared persistence, tab/profile isolation, source-scoped permission observation and retained original failure/close identities with explicit deterministic engine fixtures. The two native UI controls raise real authored CUI button events, await the same loader pipeline and validate current row identity across same-key refresh. They do not qualify the real Windows WebView, installed authority or full browser acceptance.
+
+The entity-action additive replaces saved-entry display strings with typed current-source rows. Bookmark/history buttons navigate by canonical current record ID; removed/foreign/stale targets decline before command admission. Reset site engine preference uses the maintained policy API, removes only the site setting and preserves genuine explicit tab choices. The site-preference action no longer creates an unrelated tab override. Three additional declared controls cover both reset paths and real authored saved-row clicks.
+
+Completed download records now have typed rows, but their canonical Home/Files open/reveal producer remains unavailable: the shared download record contains a legacy StoredPath/hash, not a source-issued HostedItemId. Legacy Process.Start is not imported as authority. Files owner confirmed no maintained canonical mapping; an actual original Files import/descriptor/open producer is required from shared composition before that journey can qualify.
+
+`NativeWindows/HavenOS.Apps.Browse.NativeWindows.csproj` now produces the standalone `9to1.Browse` executable. Normal direct launch mounts a canonical CUI setup/recovery surface without creating a profile or browsing against a fabricated Home session. `BrowseExecutable.RunFromOriginalStartup` is the actual desktop consumer of the retained startup attempt supplied by the authentic Home/root launcher: it awaits the same Home/Chrome/window initialization sources, publishes the same native Browse window, and retires its original setup scene through guarded CUI lifetime. Startup failures remain retained and readable as recovery status. The installed enrolled Home/root/launcher supplier is still missing, so normal installed native activation remains unqualified.
+
+The normal Browse scene now opts into the canonical guarded publication lifetime with the same workspace-owned withdrawal predicate. That predicate observes lifetime only and does not replace actual Home readiness or permission checks. SDK/actual executable/Windows runtime tests remain UNRUN; neither an executable nor its setup branch marks the whole app complete.
+
+Two additional standalone controls exercise the actual canonical missing-Home screen and its original scene close, plus the real window close joining the same admitted startup driver and retaining a failed close on retry. Explicit fixture drivers do not provide production Home authority. The parent publication driver settles before the separately acquired handoff close, so setup retirement joins its original parent without a self-cycle. Logical and synchronous physical owner preflights remain in force during native/startup callbacks. All seventeen newly declared Browse controls remain compiler/discovery/runtime UNRUN.

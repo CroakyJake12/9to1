@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 
 namespace HavenOS.Apps.MiniComputer;
 
-public sealed class MiniComputerEngine : IMiniComputerEventSource
+public sealed partial class MiniComputerEngine : IMiniComputerEventSource
 {
     private readonly IVirtualisationProviderRegistry _providers;
     private readonly IMiniComputerCatalogStore _store;

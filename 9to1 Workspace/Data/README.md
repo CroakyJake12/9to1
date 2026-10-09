@@ -2,7 +2,31 @@
 
 Status: **implemented and runtime-proven in disposable Ubuntu CI, including a thin HUI contract integration against the accepted CakeOS HUI reference; not yet graphically hosted inside the accepted Linux host and not yet accepted inside the approved CakeOS VM**.
 
-This directory is the CakeOS-native Haven Data foundation. Latest default-branch LibreOffice and DuckDB upstream source is materialised beneath `Source/LibreOffice/` and `Source/DuckDB/`; see `Source/DONOR-PROVENANCE.md` and `eng/donor-sources.json` for exact commits and fork URLs. This source import does not replace the separately versioned Calc/UNO and DuckDB worker runtimes or prove their compatibility with the newest sources. HUI-facing code depends only on Haven-owned interfaces; LibreOffice Calc and DuckDB live behind separate worker processes.
+This directory is the CakeOS-native Haven Data foundation. The historical donor import selected LibreOffice and DuckDB upstream source for `Source/LibreOffice/` and `Source/DuckDB/`; see `Source/DONOR-PROVENANCE.md` and `eng/donor-sources.json` for exact commits and fork URLs. That source import does not replace the separately versioned Calc/UNO and DuckDB worker runtimes or prove their compatibility with the newest sources. HUI-facing code depends only on Haven-owned interfaces; LibreOffice Calc and DuckDB live behind separate worker processes.
+
+The C50 receiving checkout on 7 October 2026 retains that historical donor provenance,
+but the named LibreOffice and DuckDB source directories are absent. They must be
+materialised and their exact identities verified before dependent donor work. The
+available LibreOfficeDev executable alone does not supply the missing Python UNO
+bridge. The native managed `DataAppHost` remains a separate component; it does not
+host or certify the mandatory Calc/UNO/DuckDB CUI workflow.
+
+## Current CUI concurrency checks
+
+The CUI controller retains the cell named by a manual or typed edit while other
+edits wait, refuses a cell edit when its original workbook sheet changes during
+approval, and joins the active operation before retiring either session. The focused
+managed controls exercise those three cases with held engine operations; they do
+not establish donor, Home, graphical, Windows or package acceptance.
+
+From the repository root, use isolated artifacts when another build is running:
+
+```bash
+data_cui_artifacts=/tmp/9to1-data-cui-controls
+dotnet build "9to1 Workspace/Data/Tests/HavenOS.Data.Cui.Smoke.csproj" \
+  -c Release --artifacts-path "$data_cui_artifacts" -m:1 -p:BuildInParallel=false
+dotnet "$data_cui_artifacts/bin/HavenOS.Data.Cui.Smoke/release/HavenOS.Data.Cui.Smoke.dll"
+```
 
 ## Boundary
 

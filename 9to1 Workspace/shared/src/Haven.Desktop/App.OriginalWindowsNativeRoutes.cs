@@ -35,6 +35,7 @@ public sealed partial class App
             var route = NativeFilesDesktopRoute.BindOriginalSameProcess(provider, home, appLifetime, windowLifetime);
             _actualSameProcessFilesRoute = route; // Capture before any shell callback/publication.
             actualShell.AttachOriginalFilesRoute(route, provider);
+            RetainOriginalBrowserDownloadFilesNavigator(actualShell, provider.GetRequiredService<FilesNativeBrowserService>());
             original.DemandPublication();
             var spaces = provider.GetRequiredService<SpaceRegistry>();
             var canonical = provider.GetRequiredService<TaskExecutionCoordinator>();
@@ -58,6 +59,9 @@ public sealed partial class App
                     creator, capture, businessToken));
             original.DemandPublication();
             actualShell.ConfigureOriginalDevelopmentCatalog(route, taskAuthority, taskActors, appLifetime, windowLifetime);
+            original.DemandPublication();
+            actualShell.ConfigureOriginalInstalledHomeAppsFactory(() => _actualInstalledHomeAppsPort,
+                () => _actualNativeHomeStartupObservation, appLifetime, windowLifetime);
             original.DemandPublication();
             return true;
         }));

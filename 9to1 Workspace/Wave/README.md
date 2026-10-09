@@ -1,30 +1,30 @@
-# HavenOS Wave
+# Wave
 
-This is the bounded first standalone Wave app surface, with a versioned native project/timeline foundation.
+The standalone native entry uses the canonical CUI runtime, bundled Montserrat and the Imagine semantic palette. A normal launch checks the actual required Home attachment. This checkout still lacks a production installed Home/project-publisher supplier, so a direct launch explains setup/recovery and preserves projects. `WaveNativeSurface.CreateWindow` accepts the original readiness and a workspace composed with actual project/Files services; fixtures never manufacture product readiness.
 
-## Functional journey
+The native workspace projects the existing schema6 WaveProject into a multitrack clip timeline, track/clip selectors, mixer, clip inspector and marker/region controls. UI actions reuse WaveProjectEdits and WaveTimelineAnnotations: move, trim, split, join compatible adjacent clips, duplicate, lift/ripple delete, clip gain/fades, track gain/pan/mute/solo, add tracks and annotations, marker navigation and sample-frame playhead editing. Graphical clip selection and arrow keys complement keyboard selectors/fields. Compact windows stack the same panels vertically. Pending fields survive unrelated seek/actions; changing selection or undoing requires applying/discarding pending fields. Save commits the same identity through the host-supplied original revision-aware project publisher. A close panel offers save, explicit discard or continued editing.
 
-1. Launch Wave with a local `.wav` path.
-2. Wave validates the RIFF/WAVE structure and accepts only 16-bit PCM in this first slice.
-3. It reads real audio frames and produces 512 normalized waveform peaks using the same bounded sampling shape as the existing Imagine waveform reference.
-4. The standalone surface prints duration, sample rate, channel count, and a compact waveform preview.
-5. `--trim <input.wav> <start-seconds> <end-seconds> <new-output.wav>` exports the selected PCM frames to a new WAV file.
-6. Missing, unsupported, or corrupt input fails closed with no fabricated waveform. Trim uses a half-open time range and never overwrites the source or an existing output file.
-7. `--project-create` creates a persistent `.waveproject.json` with stable project/track IDs; `--project-import` adds a WAV as a non-destructive clip at a timeline time and advances the project revision.
-8. `--project-export` mixes project clips into a new PCM16 WAV, preserving timeline offsets and leaving project/source files unchanged. This bounded exporter requires source sample rate/channel layout to match the project and rejects RIFF outputs above the format size limit.
-9. Project save writes a temporary sibling file and replaces the project only after successful serialization. Open validates the schema and identities and rejects unknown schema versions rather than guessing.
+WaveEditSession uses the existing shared DocumentMutationHistory engine with detached canonical project snapshots. Undo/Redo preserve native clip/source identities while advancing the owner revision monotonically. The existing publisher and all actual queued save/action/scene/close tasks are retained through failed retirement; a canceled source is never silently waived. This slice retains session Undo/Redo, but does not yet persist this undo stack across restart.
 
-Trim writes a canonical PCM `fmt` and `data` WAV file; unrelated RIFF metadata chunks are not copied. The native project stores stable `ProjectID`, `TrackID`, `ClipID` and app-local `SourceReferenceID`, source-frame range, timeline-frame placement, project audio configuration and revision. `SourceReferenceID` is a Wave-local reference only; it is not a Files `FileID` or a claim of Files identity. This standalone slice records the absolute source path plus a SHA-256 content fingerprint; export fails explicitly if the path is missing or the bytes/format no longer match. There is no relink workflow yet. Files-backed `FileID` resolution and shared media/audio primitives remain required integration work. The slice remains app-local under `9to1 Workspace/Wave` and does not change shared HUI, shell routing, platform services, or the legacy Imagine journey.
+When the host supplies the existing WaveFilesProjectService and actual Files picker/export-target producers, native Add Audio and Export use their canonical FileID/revision/decoder paths. Ephemeral source paths are not minted as Files identity. Import is non-destructive; mix export follows existing mute/solo/gain/pan/fade processing and verifies source hashes. Source resolution/export authority remains the original shared services and producer. Playback, recording, waveform/spectrogram analysis, effects/automation, sequencer/SFX/TTS/AI and full native producer integration are still required work; no simulated transport, fabricated waveform or substitute audio engine is supplied.
 
-## Focused validation
+Existing console and workflow entries remain available: local WAV preview, `--trim`, `--project-create`, `--project-import`, `--project-export`, revision-aware `project` commands, `--self-test`, `--markers-regions-test`, `--pcm-formats-test` and `--files-workflow-test`. PCM accepts8/16/24/32-bit integer and32/64-bit floating-point WAV as supported by the maintained reader. The schema6 model retains Files references and decoding evidence alongside legacy local source/hash records. Shared media time/range primitives remain canonical.
+
+Owning quick checks (run through the coordinator's sole SDK ticket):
 
 ```text
 dotnet build "9to1 Workspace/Wave/HavenOS.Wave.csproj"
-dotnet run --project "9to1 Workspace/Wave/HavenOS.Wave.csproj" -- --self-test
-dotnet run --project "9to1 Workspace/Wave/HavenOS.Wave.csproj" -- --trim "input.wav" 0.25 0.75 "trimmed.wav"
-dotnet run --project "9to1 Workspace/Wave/HavenOS.Wave.csproj" -- --project-create "session.waveproject.json" "Voice"
-dotnet run --project "9to1 Workspace/Wave/HavenOS.Wave.csproj" -- --project-import "session.waveproject.json" "input.wav" 2.5
-dotnet run --project "9to1 Workspace/Wave/HavenOS.Wave.csproj" -- --project-export "session.waveproject.json" "mix.wav"
+dotnet "<actual owning output>/HavenOS.Wave.dll" --native-workflow-test
 ```
 
-The self-test writes a temporary one-second PCM tone, validates real bounded peaks and metadata, verifies a frame-exact half-second trim and source/output protection, confirms corrupt input and unknown project schema versions are rejected, then creates/imports/saves/reopens/exports a project. It verifies timeline silence and exact PCM frames in the mix, unchanged project revision/source bytes, and explicit failure after the imported source is removed or altered.
+The new native control performs actual queued CUI select/move/split/Undo/gain/mixer/marker/save/reopen, checks real PCM gain and lead-in silence, preserves original audio hashes, renders real desktop/compact window frames and joins the same actual retirement tasks. An explicit failed publisher check verifies exact failed save/close source retention and no retry replacement. Fixture local publishing/readiness grants no production Home/Files authority. It keeps source, evidence and failed owners; it deletes nothing. Prior console fixtures are retained unchanged.
+
+This is a bounded native editor integration checkpoint, not full Wave implementation, package qualification or Windows/web acceptance. New source and owning checks are UNRUN until the coordinator's integration/SDK stage. The external rapid lane's unpublished Wave edits remain absent and must be recovered separately; exact current-source preimages are retained for later merge.
+
+The waveform slice extracts the existing Wave WAV/parser/sample primitive into shared Infrastructure media. Existing importer/exporter calls forward to that same implementation. The new source-range min/max analysis examines every selected frame separately per channel, keeps memory bounded (up to 32 channels and 4,096 buckets), refuses out-of-range requests, and checks cancellation while streaming. It supplies read-only channel envelopes; no waveform is fabricated from clip length.
+
+The native timeline now paints those actual source envelopes. Wave uses the existing Files resolver/read lease and optional shared audio decoder, verifies the configured canonical asset/revision/hash and decoded provenance, analyses the exact clip source range, and validates source bytes again before publication. Lease/release failures remain original failed tasks and retain their original references. The same current clip/source fields guard publication after split/trim/move/history changes; stale analysis cannot replace a newer clip. At most two analyses perform source I/O concurrently, and task/cache custody is bounded. Ordinary direct path-only legacy clips require explicit Files relinking for this product path.
+
+The native scene now uses the workspace's actual lifetime predicate for guarded CUI publication/retirement. Two native workflow assertions check real source PCM/channel/range envelopes and split-range rebinding before existing Save/reopen/render/source-preservation checks. Four new shared controls cover independent channels, short transients, short ranges, bounds/channel limits/cancellation. Compiler/discovery/runtime/visual qualification remain UNRUN for this additive.
+
+Full Wave transport/multitrack playback, recording, spectral views/repair, effects/routing, sequencer/instruments, SFX, speech, AI and durable edit-history requirements remain open. This waveform slice is not whole-app IMPLEMENTED, PACKAGEABLE, PACKAGED, SMOKE-PASSED or EXTENSIVELY VERIFIED. Shared IMediaEngine/IMediaPlaybackSession and GStreamer remain the playback backend for the next slice; no private audio engine or fake audio output is introduced here.

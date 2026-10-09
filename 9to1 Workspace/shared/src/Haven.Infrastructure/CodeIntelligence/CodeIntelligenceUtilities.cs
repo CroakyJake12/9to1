@@ -85,7 +85,7 @@ internal static class LanguageServerTextEditApplicator
 /// <summary>
 /// Represents unified diff builder and keeps its related state and behavior together.
 /// </summary>
-internal static class UnifiedDiffBuilder
+internal static partial class UnifiedDiffBuilder
 {
     /// <summary>
     /// Builds this member from the currently available inputs.

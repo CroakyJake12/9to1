@@ -36,9 +36,11 @@ public sealed partial class HomePermissionTrustService
         _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
-    public async Task<HomePermissionAuthorization> AuthorizeAsync(
-        HomePermissionRequestSubmission submission,
-        CancellationToken cancellationToken = default)
+    public Task<HomePermissionAuthorization> AuthorizeAsync(HomePermissionRequestSubmission submission, CancellationToken cancellationToken = default) =>
+        AuthorizeOriginalImportCoreAsync(submission, cancellationToken);
+
+    private async Task<HomePermissionAuthorization> AuthorizeOriginalImportCoreAsync(HomePermissionRequestSubmission submission, CancellationToken cancellationToken = default,
+        HomeOwnershipOriginalSourceCallbacks? originalSource = null)
     {
         ArgumentNullException.ThrowIfNull(submission);
         HomePermissionCallerIdentity caller;
@@ -59,14 +61,18 @@ public sealed partial class HomePermissionTrustService
 
         HomePermissionActionPolicy? policy;
         var policyResolutionFailed = false;
-        try { policy = _resolvePolicy(scope.TargetAppId, scope.ActionName); }
-        catch { policy = null; policyResolutionFailed = true; }
+        if (originalSource is not null) policy = originalSource.Invoke(() => _resolvePolicy(scope.TargetAppId, scope.ActionName));
+        else
+        {
+            try { policy = _resolvePolicy(scope.TargetAppId, scope.ActionName); }
+            catch { policy = null; policyResolutionFailed = true; }
+        }
         var now = _timeProvider.GetUtcNow();
         var requestId = string.IsNullOrWhiteSpace(submission.RequestId) ? NewId() : submission.RequestId.Trim();
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await WaitOriginalImportPermissionGateAsync(originalSource, cancellationToken).ConfigureAwait(false);
         try
         {
-            var state = await LoadAsync(cancellationToken).ConfigureAwait(false);
+            var state = await LoadAsync(cancellationToken, originalSource).ConfigureAwait(false);
             if (state.Requests.Any(item => item.RequestId == requestId))
                 return new HomePermissionAuthorization(HomePermissionRequestState.Denied, "HOME_REQUEST_ID_CONFLICT",
                     "That request identity has already been used.", requestId, null);
@@ -84,7 +90,7 @@ public sealed partial class HomePermissionTrustService
                     policyResolutionFailed
                         ? "Home could not verify this action's trusted risk policy. The action remains blocked."
                         : "The target app has not registered this action with Home's trusted action catalogue.",
-                    now, cancellationToken).ConfigureAwait(false);
+                    now, cancellationToken, originalSource).ConfigureAwait(false);
 
             if (state.BlockedCallerIds.Contains(caller.CallerId, StringComparer.Ordinal))
             {
@@ -97,7 +103,7 @@ public sealed partial class HomePermissionTrustService
                 ReplaceRequest(state, request);
                 AddAudit(state, request, HomePermissionAuditKind.DecisionMade, HomePermissionRequestState.Blocked,
                     request.ResultCode, request.ResultMessage, now);
-                await SaveAsync(state, cancellationToken).ConfigureAwait(false);
+                await SaveAsync(state, cancellationToken, originalSource).ConfigureAwait(false);
                 return Authorization(request);
             }
 
@@ -118,7 +124,7 @@ public sealed partial class HomePermissionTrustService
                     ResultMessage = "An active trust grant covers this exact caller, action and scope.",
                 };
                 ReplaceRequest(state, request);
-                await SaveAsync(state, cancellationToken).ConfigureAwait(false);
+                await SaveAsync(state, cancellationToken, originalSource).ConfigureAwait(false);
                 return Authorization(request);
             }
 
@@ -138,7 +144,7 @@ public sealed partial class HomePermissionTrustService
                     ResultMessage = "This exact action and scope was approved for the current session.",
                 };
                 ReplaceRequest(state, request);
-                await SaveAsync(state, cancellationToken).ConfigureAwait(false);
+                await SaveAsync(state, cancellationToken, originalSource).ConfigureAwait(false);
                 return Authorization(request);
             }
 
@@ -148,22 +154,26 @@ public sealed partial class HomePermissionTrustService
                 ResultMessage = "Home approval is required before the target app action can execute.",
             };
             ReplaceRequest(state, request);
-            await SaveAsync(state, cancellationToken).ConfigureAwait(false);
+            await SaveAsync(state, cancellationToken, originalSource).ConfigureAwait(false);
             return Authorization(request);
         }
         finally
         {
-            _gate.Release();
+            if (originalSource is null) _gate.Release(); else originalSource.Run(() => _gate.Release());
         }
     }
 
     /// <summary>Owner transaction gate for an already consumed approval; this never starts or renews execution.</summary>
-    public async Task<bool> IsExecutionCurrentAsync(string requestId, CancellationToken cancellationToken = default)
+    public Task<bool> IsExecutionCurrentAsync(string requestId, CancellationToken cancellationToken = default) =>
+        IsExecutionCurrentOriginalSetupCoreAsync(requestId, cancellationToken);
+
+    private async Task<bool> IsExecutionCurrentOriginalSetupCoreAsync(string requestId, CancellationToken cancellationToken,
+        HomeOwnershipOriginalSourceCallbacks? originalSource = null)
     {
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await WaitOriginalImportPermissionGateAsync(originalSource, cancellationToken).ConfigureAwait(false);
         try
         {
-            var state = await LoadAsync(cancellationToken).ConfigureAwait(false);
+            var state = await LoadAsync(cancellationToken, originalSource).ConfigureAwait(false);
             var request = state.Requests.SingleOrDefault(item => item.RequestId == requestId);
             if (request is null || request.State != HomePermissionRequestState.Executing ||
                 state.BlockedCallerIds.Contains(request.Caller.CallerId, StringComparer.Ordinal)) return false;
@@ -173,17 +183,21 @@ public sealed partial class HomePermissionTrustService
                 ScopeEquals(grant.Scope, request.Scope) &&
                 (grant.ExpiresAt is null || grant.ExpiresAt > _timeProvider.GetUtcNow()));
         }
-        finally { _gate.Release(); }
+        finally { if (originalSource is null) _gate.Release(); else originalSource.Run(() => _gate.Release()); }
     }
 
     /// <summary>Actual durable request observation only. No creation, expiration write or approval grant.
     /// Collections are detached so callers cannot mutate the producer's loaded state.</summary>
-    public async Task<HomePermissionRequest?> ReadRequestObservationAsync(string requestId, CancellationToken cancellationToken = default)
+    public Task<HomePermissionRequest?> ReadRequestObservationAsync(string requestId, CancellationToken cancellationToken = default) =>
+        ReadRequestObservationOriginalImportCoreAsync(requestId, cancellationToken);
+
+    private async Task<HomePermissionRequest?> ReadRequestObservationOriginalImportCoreAsync(string requestId, CancellationToken cancellationToken = default,
+        HomeOwnershipOriginalSourceCallbacks? originalSource = null)
     {
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await WaitOriginalImportPermissionGateAsync(originalSource, cancellationToken).ConfigureAwait(false);
         try
         {
-            var state = await LoadAsync(cancellationToken).ConfigureAwait(false);
+            var state = await LoadAsync(cancellationToken, originalSource).ConfigureAwait(false);
             var request = state.Requests.SingleOrDefault(item => item.RequestId == requestId);
             return request is null ? null : request with
             {
@@ -197,22 +211,26 @@ public sealed partial class HomePermissionTrustService
                 }
             };
         }
-        finally { _gate.Release(); }
+        finally { if (originalSource is null) _gate.Release(); else originalSource.Run(() => _gate.Release()); }
     }
 
     /// <summary>Reads the decision for an existing request without creating a new action or reusing trust.</summary>
-    public async Task<HomePermissionAuthorization> GetAuthorizationAsync(string requestId, CancellationToken cancellationToken = default)
+    public Task<HomePermissionAuthorization> GetAuthorizationAsync(string requestId, CancellationToken cancellationToken = default) =>
+        GetAuthorizationOriginalImportCoreAsync(requestId, cancellationToken);
+
+    private async Task<HomePermissionAuthorization> GetAuthorizationOriginalImportCoreAsync(string requestId, CancellationToken cancellationToken = default,
+        HomeOwnershipOriginalSourceCallbacks? originalSource = null)
     {
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await WaitOriginalImportPermissionGateAsync(originalSource, cancellationToken).ConfigureAwait(false);
         try
         {
-            var state = await LoadAsync(cancellationToken).ConfigureAwait(false);
+            var state = await LoadAsync(cancellationToken, originalSource).ConfigureAwait(false);
             var request = state.Requests.SingleOrDefault(r => r.RequestId == requestId);
             return request is null
                 ? new(HomePermissionRequestState.Denied, "HOME_PERMISSION_REQUEST_NOT_FOUND", "The request was not found.", requestId, null)
                 : Authorization(request);
         }
-        finally { _gate.Release(); }
+        finally { if (originalSource is null) _gate.Release(); else originalSource.Run(() => _gate.Release()); }
     }
 
     /// <summary>Trusted Home UI observation only, after the exact native scene is mounted and visible.
@@ -366,20 +384,21 @@ public sealed partial class HomePermissionTrustService
         finally { _gate.Release(); }
     }
 
-    public async Task<HomePermissionOperationResult> RecordExecutionAsync(
-        string requestId,
-        HomeExecutionOutcome outcome,
-        CancellationToken cancellationToken = default)
+    public Task<HomePermissionOperationResult> RecordExecutionAsync(string requestId, HomeExecutionOutcome outcome, CancellationToken cancellationToken = default) =>
+        RecordExecutionOriginalImportCoreAsync(requestId, outcome, cancellationToken);
+
+    private async Task<HomePermissionOperationResult> RecordExecutionOriginalImportCoreAsync(string requestId, HomeExecutionOutcome outcome, CancellationToken cancellationToken = default,
+        HomeOwnershipOriginalSourceCallbacks? originalSource = null)
     {
         ArgumentNullException.ThrowIfNull(outcome);
         try { outcome.Validate(); }
         catch (ArgumentException exception) { return Failure("HOME_EXECUTION_OUTCOME_INVALID", exception.Message); }
         outcome = outcome with { AffectedObjects = Array.AsReadOnly(outcome.AffectedObjects.ToArray()) };
         var now = _timeProvider.GetUtcNow();
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await WaitOriginalImportPermissionGateAsync(originalSource, cancellationToken).ConfigureAwait(false);
         try
         {
-            var state = await LoadAsync(cancellationToken).ConfigureAwait(false);
+            var state = await LoadAsync(cancellationToken, originalSource).ConfigureAwait(false);
             var index = state.Requests.FindIndex(request => request.RequestId == requestId);
             if (index < 0) return Failure("HOME_PERMISSION_REQUEST_NOT_FOUND", "The audited permission request was not found.");
             var request = state.Requests[index];
@@ -417,25 +436,27 @@ public sealed partial class HomePermissionTrustService
                     state.Grants.FirstOrDefault(grant => grant.GrantId == request.AppliedGrantId) is { IsRevoked: false, RemainingActions: 0 } exhaustedGrant)
                     await ExpireTemporaryGrantAsync(state, exhaustedGrant, now, cancellationToken).ConfigureAwait(false);
             }
-            await SaveAsync(state, cancellationToken).ConfigureAwait(false);
+            await SaveAsync(state, cancellationToken, originalSource).ConfigureAwait(false);
             return Success("HOME_EXECUTION_AUDITED", "The target execution state was added to the Home audit trail.");
         }
-        finally { _gate.Release(); }
+        finally { if (originalSource is null) _gate.Release(); else originalSource.Run(() => _gate.Release()); }
     }
 
     /// <summary>Rechecks trust revocation and expiry at the dispatch boundary before the target runs.</summary>
-    public async Task<HomePermissionAuthorization> BeginExecutionAsync(
-        string requestId,
-        CancellationToken cancellationToken = default)
+    public Task<HomePermissionAuthorization> BeginExecutionAsync(string requestId, CancellationToken cancellationToken = default) =>
+        BeginExecutionOriginalImportCoreAsync(requestId, cancellationToken);
+
+    private async Task<HomePermissionAuthorization> BeginExecutionOriginalImportCoreAsync(string requestId, CancellationToken cancellationToken = default,
+        HomeOwnershipOriginalSourceCallbacks? originalSource = null)
     {
         if (string.IsNullOrWhiteSpace(requestId))
             return new HomePermissionAuthorization(HomePermissionRequestState.Denied, "HOME_REQUEST_ID_INVALID",
                 "A permission request ID is required.", string.Empty, null);
         var now = _timeProvider.GetUtcNow();
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await WaitOriginalImportPermissionGateAsync(originalSource, cancellationToken).ConfigureAwait(false);
         try
         {
-            var state = await LoadAsync(cancellationToken).ConfigureAwait(false);
+            var state = await LoadAsync(cancellationToken, originalSource).ConfigureAwait(false);
             await ExpireGrantsAsync(state, now, cancellationToken).ConfigureAwait(false);
             var requestIndex = state.Requests.FindLastIndex(item => item.RequestId == requestId);
             if (requestIndex < 0)
@@ -469,7 +490,7 @@ public sealed partial class HomePermissionTrustService
                     ReplaceRequest(state, pending);
                     AddAudit(state, pending, HomePermissionAuditKind.DecisionMade, pending.State,
                         pending.ResultCode, pending.ResultMessage, now);
-                    await SaveAsync(state, cancellationToken).ConfigureAwait(false);
+                    await SaveAsync(state, cancellationToken, originalSource).ConfigureAwait(false);
                     return Authorization(pending);
                 }
             }
@@ -483,10 +504,10 @@ public sealed partial class HomePermissionTrustService
             ReplaceRequest(state, executing);
             AddAudit(state, executing, HomePermissionAuditKind.ExecutionStarted, executing.State,
                 executing.ResultCode, executing.ResultMessage, now, executing.AppliedTrustLevel);
-            await SaveAsync(state, cancellationToken).ConfigureAwait(false);
+            await SaveAsync(state, cancellationToken, originalSource).ConfigureAwait(false);
             return Authorization(executing);
         }
-        finally { _gate.Release(); }
+        finally { if (originalSource is null) _gate.Release(); else originalSource.Run(() => _gate.Release()); }
     }
 
     public async Task<HomePermissionOperationResult> NarrowGrantAsync(
@@ -660,12 +681,12 @@ public sealed partial class HomePermissionTrustService
         string code,
         string message,
         DateTimeOffset now,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, HomeOwnershipOriginalSourceCallbacks? originalSource = null)
     {
         request = request with { State = HomePermissionRequestState.Denied, ResultCode = code, ResultMessage = message };
         ReplaceRequest(state, request);
         AddAudit(state, request, HomePermissionAuditKind.DecisionMade, request.State, code, message, now);
-        await SaveAsync(state, cancellationToken).ConfigureAwait(false);
+        await SaveAsync(state, cancellationToken, originalSource).ConfigureAwait(false);
         return Authorization(request);
     }
 
@@ -738,9 +759,12 @@ public sealed partial class HomePermissionTrustService
         DateTimeOffset now) => state.Audit.Add(new HomePermissionAuditEvent(
             NewId(), null, caller.CallerId, null, null, null, null, null, kind, null, now, [], code, message));
 
-    private async Task<PersistedState> LoadAsync(CancellationToken cancellationToken)
+    private async Task<PersistedState> LoadAsync(CancellationToken cancellationToken,
+        HomeOwnershipOriginalSourceCallbacks? originalSource = null)
     {
-        var read = await _stateStore.ReadAsync(cancellationToken).ConfigureAwait(false);
+        var read = originalSource is null
+            ? await _stateStore.ReadAsync(cancellationToken).ConfigureAwait(false)
+            : await originalSource.ReadAsync(() => _stateStore.ReadAsync(cancellationToken)).ConfigureAwait(false);
         if (!read.IsSuccess)
             throw new HomeFeatureStoreException(read.Failure!.Code.ToString(), read.Failure.Message);
         var record = read.State!.Records.SingleOrDefault(item => item.RecordId == StateRecordId);
@@ -764,13 +788,16 @@ public sealed partial class HomePermissionTrustService
         }
     }
 
-    private async Task SaveAsync(PersistedState state, CancellationToken cancellationToken)
+    private async Task SaveAsync(PersistedState state, CancellationToken cancellationToken,
+        HomeOwnershipOriginalSourceCallbacks? originalSource = null)
     {
         var record = new HomeCoreStateRecord(
             StateRecordId, StateRecordType, StateSchemaVersion, HomeDataScope.DeviceLocal,
             HomeRecordAuthority.LocalCanonical, state.RecordRevision,
             JsonSerializer.SerializeToElement(state));
-        var result = await _stateStore.WriteAsync(record, state.RecordRevision, cancellationToken).ConfigureAwait(false);
+        var result = originalSource is null
+            ? await _stateStore.WriteAsync(record, state.RecordRevision, cancellationToken).ConfigureAwait(false)
+            : await originalSource.ReadAsync(() => _stateStore.WriteAsync(record, state.RecordRevision, cancellationToken)).ConfigureAwait(false);
         if (!result.IsSuccess)
             throw new HomeFeatureStoreException(result.Failure!.Code.ToString(), result.Failure.Message);
         state.RecordRevision = result.State!.Records.Single(item => item.RecordId == StateRecordId).Revision;

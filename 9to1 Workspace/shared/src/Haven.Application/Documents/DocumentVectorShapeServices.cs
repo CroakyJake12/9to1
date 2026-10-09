@@ -251,10 +251,16 @@ public static class DocumentVectorShapes
 }
 
 public enum DocumentOperationOrigin { User = 0, Ai = 1, Import = 2, System = 3 }
-public sealed record DocumentOperationMetadata(Guid Id, string Name, DocumentOperationOrigin Origin, DateTimeOffset CreatedAt, string? Actor = null);
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+public sealed record DocumentOperationMetadata(
+    [property: JsonRequired] Guid Id,
+    [property: JsonRequired] string Name,
+    [property: JsonRequired] DocumentOperationOrigin Origin,
+    [property: JsonRequired] DateTimeOffset CreatedAt,
+    string? Actor = null);
 
 /// <summary>Shared atomic snapshot history used by document-suite native editors.</summary>
-public sealed class DocumentMutationHistory<T> where T : class
+public sealed partial class DocumentMutationHistory<T> where T : class
 {
     private readonly Func<T, T> _clone;
     private readonly int _limit;
@@ -284,7 +290,11 @@ public sealed class DocumentMutationHistory<T> where T : class
         Current = working;
         var metadata = new DocumentOperationMetadata(Guid.NewGuid(), string.IsNullOrWhiteSpace(name) ? "Document edit" : name.Trim(), origin, DateTimeOffset.UtcNow, actor);
         _undo.Add(new Entry(metadata, before, after));
-        if (_undo.Count > _limit) _undo.RemoveAt(0);
+        if (_undo.Count > _limit)
+        {
+            _undo.RemoveAt(0);
+            if (_discardedEarlierHistoryEntries < long.MaxValue) _discardedEarlierHistoryEntries++;
+        }
         _redo.Clear();
         LastOperation = metadata;
         Changed?.Invoke(this, EventArgs.Empty);
@@ -320,7 +330,7 @@ public sealed class DocumentMutationHistory<T> where T : class
     private sealed record Entry(DocumentOperationMetadata Metadata, T Before, T After);
 }
 
-public sealed class DocumentVectorShapeEditor
+public sealed partial class DocumentVectorShapeEditor
 {
     private readonly DocumentMutationHistory<DocumentVectorShape> _history;
 

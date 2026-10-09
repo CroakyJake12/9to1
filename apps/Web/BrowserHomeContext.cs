@@ -37,6 +37,8 @@ internal sealed class BrowserHomeContext : ICuiWritableBindingContext, ICuiLifet
         ["OpenStudio"] = "app.studio",
         ["OpenWrite"] = "app.write",
         ["OpenPresent"] = "app.present",
+        ["OpenPicture"] = "app.picture",
+        ["OpenWave"] = "app.wave",
         ["OpenBrowse"] = "app.browse",
         ["OpenData"] = "app.data",
         ["OpenBoards"] = "app.boards",

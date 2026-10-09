@@ -1,4 +1,4 @@
-﻿/*
+/*
  * FILE DOCUMENTATION
  * Where: src/Haven.Infrastructure/SqliteDatabase.cs, in the Infrastructure layer, where persistence, providers, Windows integration, and external I/O are implemented.
  * What: This file owns ISqliteConnectionFactory, SqliteDatabase, Migration, Migrations. Read the type and member comments below as a map of each responsibility.
@@ -23,15 +23,17 @@ public interface ISqliteConnectionFactory
 /// <summary>
 /// Represents sqlite database and keeps its related state and behavior together.
 /// </summary>
-public sealed class SqliteDatabase : IAppDatabase, ISqliteConnectionFactory
+public sealed partial class SqliteDatabase : IAppDatabase, ISqliteConnectionFactory
 {
     /// <summary>
     /// Stores connection string locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
     private readonly string _connectionString;
+    private readonly IAppPaths _originalPaths;
 
     public SqliteDatabase(IAppPaths paths)
     {
+        _originalPaths = paths;
         SqliteProviderBootstrap.EnsureInitialized();
         _connectionString = new SqliteConnectionStringBuilder
         {
@@ -77,6 +79,9 @@ public sealed class SqliteDatabase : IAppDatabase, ISqliteConnectionFactory
             await record.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
 
+        // Durable identity creation belongs ONLY to this SAME owning initialization/write
+        // transaction. Read-only catalogue/import observation never seeds or resets it.
+        await InitializeOriginalStoreIdentityAsync(connection, transaction, cancellationToken).ConfigureAwait(false);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
     }
 

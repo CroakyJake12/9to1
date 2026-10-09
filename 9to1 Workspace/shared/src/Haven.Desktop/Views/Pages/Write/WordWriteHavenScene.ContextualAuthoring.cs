@@ -62,21 +62,21 @@ internal sealed partial class WordWriteHavenScene
         var wrapItems = new[] { "Inline", "Square", "Tight", "Behind text", "In front of text" };
         var wrap = Choice("Write.Media.Wrap", "Text wrapping", wrapItems, Math.Max(0, Array.IndexOf(wrapItems, media.Wrapping)));
         wrap.SelectionChanged += (_, _) =>
-        {
+        OwnOriginalCallback(() => {
             if (_suppress || wrap.SelectedItem is null) return;
             editor.UpdateMedia(media.AltText, media.Caption, wrap.SelectedItem);
             DocumentSurface.InvalidateDocument();
-        };
+        });
         RibbonContent.Add(wrap);
 
         var alt = Field("Write.Media.Alt", "Image alternative text", "Describe image…");
         alt.Text = media.AltText; alt.SetValue(HavenProperties.Width, HavenLength.Px(180));
-        alt.Invalidated += (_, _) => { if (!_suppress && alt.Text != media.AltText) editor.UpdateMedia(alt.Text, media.Caption, media.Wrapping); };
+        alt.Invalidated += (_, _) => OwnOriginalCallback(() => { if (!_suppress && alt.Text != media.AltText) editor.UpdateMedia(alt.Text, media.Caption, media.Wrapping); });
         RibbonContent.Add(alt);
 
         var caption = Field("Write.Media.Caption", "Image caption", "Caption…");
         caption.Text = media.Caption; caption.SetValue(HavenProperties.Width, HavenLength.Px(160));
-        caption.Invalidated += (_, _) => { if (!_suppress && caption.Text != media.Caption) editor.UpdateMedia(media.AltText, caption.Text, media.Wrapping); };
+        caption.Invalidated += (_, _) => OwnOriginalCallback(() => { if (!_suppress && caption.Text != media.Caption) editor.UpdateMedia(media.AltText, caption.Text, media.Wrapping); });
         RibbonContent.Add(caption);
 
         AddContextButton("Write.Media.Smaller", "90%", () => editor.ResizeSelectedMedia(media.Width * .9, media.Height * .9));
@@ -105,11 +105,11 @@ internal sealed partial class WordWriteHavenScene
     {
         var button = Btn(name, label);
         button.Invoked += (_, _) =>
-        {
+        OwnOriginalCallback(() => {
             if (!mutate()) return;
             DocumentSurface.InvalidateDocument();
             RebuildRibbon();
-        };
+        });
         RibbonContent.Add(button);
     }
 
@@ -117,11 +117,11 @@ internal sealed partial class WordWriteHavenScene
     {
         var button = Btn(name, label);
         button.Invoked += (_, _) =>
-        {
+        OwnOriginalCallback(() => {
             mutate();
             DocumentSurface.InvalidateDocument();
             RebuildRibbon();
-        };
+        });
         RibbonContent.Add(button);
     }
 

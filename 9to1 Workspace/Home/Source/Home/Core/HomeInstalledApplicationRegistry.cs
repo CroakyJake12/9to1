@@ -7,8 +7,8 @@ using Haven.Core;
 namespace HavenOS.Home.Core;
 
 /// <summary>Profile-bound durable platform index. Inaccessible profiles retain identity but never expose launch authority.</summary>
-public sealed class HomeInstalledApplicationRegistry(IHomeCoreStateStore store, IAuthenticatedResourceActorSource actors,
-    IEnumerable<IInstalledApplicationObservationProvider> providers) : IInstalledApplicationRegistry, IInstalledApplicationOriginalActorRegistry
+public sealed partial class HomeInstalledApplicationRegistry(IHomeCoreStateStore store, IAuthenticatedResourceActorSource actors,
+    IEnumerable<IInstalledApplicationObservationProvider> providers) : IInstalledApplicationRegistry, IInstalledApplicationOriginalActorRegistry, IInstalledApplicationOriginalScopedActorRegistry
 {
     private readonly IInstalledApplicationObservationProvider[] _providers = providers.ToArray();
     private sealed record State(string ProfileId, IReadOnlyList<InstalledApplicationReference> Applications);
@@ -20,21 +20,25 @@ public sealed class HomeInstalledApplicationRegistry(IHomeCoreStateStore store, 
         ArgumentNullException.ThrowIfNull(expectedActor);
         return RefreshCoreAsync(expectedActor, ct);
     }
-    private async ValueTask<IReadOnlyList<InstalledApplicationReference>> RefreshCoreAsync(AuthenticatedResourceActor? expectedActor, CancellationToken ct)
+    private async ValueTask<IReadOnlyList<InstalledApplicationReference>> RefreshCoreAsync(AuthenticatedResourceActor? expectedActor, CancellationToken ct, HomeOwnershipOriginalSourceCallbacks? source = null)
     {
-        var actor = await actors.GetCurrentAsync(ct).ConfigureAwait(false);
+        var actor = await ReadOriginalRegistryActorAsync(source, ct).ConfigureAwait(false);
         if (expectedActor is not null && actor != expectedActor)
             throw new UnauthorizedAccessException("The originating installed application actor changed.");
         if (actor is null || !Text(actor.ActorId) || !Text(actor.ProfileId) || !Text(actor.AuthenticationRevision) || actor.AccountId == Guid.Empty || actor.OrganisationId is not null) throw new UnauthorizedAccessException("A verified personal Home profile is required.");
         if (actors is not IHomeStateCommitActorGuard commitGuard)
             throw new UnauthorizedAccessException("The current actor source cannot validate commit authority.");
-        if (_providers.Any(p => !Text(p.ProviderId)) || _providers.GroupBy(p => p.ProviderId, StringComparer.Ordinal).Any(g => g.Count() != 1))
+        var providerIds = source is null ? null : _providers.Select(provider => ReadOriginalRegistryProviderId(provider, source)).ToArray();
+        if (source is null
+            ? _providers.Any(provider => !Text(provider.ProviderId)) || _providers.GroupBy(provider => provider.ProviderId, StringComparer.Ordinal).Any(group => group.Count() != 1)
+            : providerIds!.Any(id => !Text(id)) || providerIds!.GroupBy(id => id, StringComparer.Ordinal).Any(group => group.Count() != 1))
             throw new InvalidOperationException("Installed application providers must have unique canonical identities.");
         var observed = new List<(string Provider, InstalledApplicationProfileObservation Profile)>();
-        foreach (var provider in _providers)
+        for (var providerIndex = 0; providerIndex < _providers.Length; providerIndex++)
         {
-            var observation = await provider.ObserveAsync(ct).ConfigureAwait(false);
-            if (actor != await actors.GetCurrentAsync(ct).ConfigureAwait(false))
+            var provider = _providers[providerIndex];
+            var observation = await ReadOriginalRegistryProviderAsync(provider, source, ct).ConfigureAwait(false);
+            if (actor != await ReadOriginalRegistryActorAsync(source, ct).ConfigureAwait(false))
                 throw new UnauthorizedAccessException("The originating installed application actor changed during observation.");
             var profiles = observation?.Take(257).ToArray();
             if (profiles is null || profiles.Length > 256 || profiles.Any(p => p is null || !Text(p.PlatformProfileId) || !Text(p.Label) || p.Applications is null) ||
@@ -47,16 +51,16 @@ public sealed class HomeInstalledApplicationRegistry(IHomeCoreStateStore store, 
                     applications.GroupBy(a => (a.OsApplicationId, a.Entrypoint)).Any(g => g.Count() != 1) ||
                     applications.Where(a => a.StableLaunchIdentity is not null).GroupBy(a => (a.OsApplicationId, a.StableLaunchIdentity)).Any(g => g.Count() != 1))
                     throw new InvalidDataException("Invalid platform application observations.");
-                observed.Add((provider.ProviderId, profile with { Applications = applications }));
+                observed.Add((source is null ? provider.ProviderId : providerIds![providerIndex], profile with { Applications = applications }));
                 if (observed.Sum(item => item.Profile.Applications.Count) > 100000) throw new InvalidDataException("Installed application observation exceeds the registry bound.");
             }
         }
-        if (actor != await actors.GetCurrentAsync(ct).ConfigureAwait(false)) throw new UnauthorizedAccessException("Home profile changed during platform discovery.");
+        if (actor != await ReadOriginalRegistryActorAsync(source, ct).ConfigureAwait(false)) throw new UnauthorizedAccessException("Home profile changed during platform discovery.");
         var id = "home.installed-apps." + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(actor.ProfileId)));
         for (var attempt = 0; attempt < 4; attempt++)
         {
-            var read = await store.ReadAsync(ct).ConfigureAwait(false);
-            if (actor != await actors.GetCurrentAsync(ct).ConfigureAwait(false))
+            var read = await ReadOriginalRegistryStoreAsync(source, ct).ConfigureAwait(false);
+            if (actor != await ReadOriginalRegistryActorAsync(source, ct).ConfigureAwait(false))
                 throw new UnauthorizedAccessException("The originating installed application actor changed during registry read.");
             if (!read.IsSuccess) throw new InvalidDataException("Installed application state requires recovery.");
             var record = read.State!.Records.SingleOrDefault(r => r.RecordId == id);
@@ -107,18 +111,18 @@ public sealed class HomeInstalledApplicationRegistry(IHomeCoreStateStore store, 
             if (next.Where(a => a.StableLaunchIdentity is not null).GroupBy(a =>
                 (a.ProviderId, a.PlatformProfileId, a.OsApplicationId, a.StableLaunchIdentity)).Any(g => g.Count() != 1))
                 throw new InvalidDataException("Conflicting stable launch identities; preserve the registry for recovery.");
-            if (actor != await actors.GetCurrentAsync(ct).ConfigureAwait(false)) throw new UnauthorizedAccessException("Home profile changed during registry reconciliation.");
+            if (actor != await ReadOriginalRegistryActorAsync(source, ct).ConfigureAwait(false)) throw new UnauthorizedAccessException("Home profile changed during registry reconciliation.");
             // Existing current-schema metadata is already canonical. Reconciliation and original
             // actor checks still ran; an unchanged inventory needs no new Home publication.
             // Missing records and historical schema still take the genuine guarded write path.
             if (record is { SchemaVersion: 2 } && next.SequenceEqual(previous.Applications))
                 return next.OrderBy(a => a.ProviderId, StringComparer.Ordinal).ThenBy(a => a.PlatformProfileId, StringComparer.Ordinal)
                     .ThenBy(a => a.ApplicationId).ToArray();
-            var write = await store.WriteGuardedAsync(new(id, "home.installed-apps", 2, HomeDataScope.DeviceLocal,
+            var write = await WriteOriginalRegistryStoreAsync(source, new(id, "home.installed-apps", 2, HomeDataScope.DeviceLocal,
                 HomeRecordAuthority.LocalCanonical, (record?.Revision ?? 0) + 1, JsonSerializer.SerializeToElement(new State(actor.ProfileId, next))), record?.Revision ?? 0, actor, commitGuard, ct).ConfigureAwait(false);
             if (write.IsSuccess)
             {
-                if (actor != await actors.GetCurrentAsync(ct).ConfigureAwait(false)) throw new UnauthorizedAccessException("Home profile changed during registry persistence.");
+                if (actor != await ReadOriginalRegistryActorAsync(source, ct).ConfigureAwait(false)) throw new UnauthorizedAccessException("Home profile changed during registry persistence.");
                 return next.OrderBy(a => a.ProviderId, StringComparer.Ordinal).ThenBy(a => a.PlatformProfileId, StringComparer.Ordinal).ThenBy(a => a.ApplicationId).ToArray();
             }
             if (write.Failure?.Code == HomeCoreErrorCode.PermissionDenied)

@@ -23,12 +23,15 @@ public sealed class UsageTrackingConversationRepository(
     IModelUsageRepository usageRepository,
     IProviderConfigurationStore configurations,
     IProviderPricingService pricingService,
-    ProviderUsageCaptureBuffer usageCapture) : IConversationRepository
+    ProviderUsageCaptureBuffer usageCapture) : IConversationRepository, IConversationCreateOnlyRepository
 {
     /// <summary>
     /// Stores turn started locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
     private readonly ConcurrentDictionary<Guid, long> _turnStarted = new();
+
+    /// <summary>Pure source identity for owning application composition; grants no store access.</summary>
+    public bool IsBoundToOriginalRepository(ConversationRepository sameRepository) => ReferenceEquals(inner, sameRepository);
 
     /// <summary>
     /// Retrieves recent async for the current operation.
@@ -68,6 +71,11 @@ public sealed class UsageTrackingConversationRepository(
     /// Performs upsert conversation asynchronously so I/O does not block the caller's thread.
     /// </summary>
     public Task UpsertConversationAsync(Conversation conversation, CancellationToken cancellationToken) => inner.UpsertConversationAsync(conversation, cancellationToken);
+
+    /// <summary>Forward the SAME maintained atomic create-only operation and its raw acknowledgment.
+    /// Empty conversation creation records no model usage; message usage accounting stays unchanged.</summary>
+    public Task<bool> TryCreateConversationAsync(Conversation original, CancellationToken cancellationToken) =>
+        inner.TryCreateConversationAsync(original, cancellationToken);
 
     /// <summary>
     /// Performs add message asynchronously so I/O does not block the caller's thread.

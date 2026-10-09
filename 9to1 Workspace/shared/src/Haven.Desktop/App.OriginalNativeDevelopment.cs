@@ -37,6 +37,8 @@ public sealed partial class App
                 if (configured != required.Length) return false;
                 original.DemandPublication();
                 actualCollection.AddFilesNativeHost();
+                actualCollection.AddSingleton<IFilesOriginalBrowserDownloadNavigator>(provider =>
+                    GetOriginalBrowserDownloadFilesNavigator(provider.GetRequiredService<FilesNativeBrowserService>()));
                 original.DemandPublication();
                 actualCollection.AddHavenOriginalNativeDevelopment();
                 original.DemandPublication();

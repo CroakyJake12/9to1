@@ -36,7 +36,9 @@ public sealed class CuiControlLoader : IDisposable
     private readonly Dictionary<Control, Dictionary<string, CuiObservedBinding>> _observedBindings = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, CuiActionInvocation> _actionInvocations = new(ReferenceEqualityComparer.Instance);
     private readonly HashSet<Control> _wiredActions = new(ReferenceEqualityComparer.Instance);
-    private readonly Dictionary<Button, EventHandler<RoutedEventArgs>> _actionHandlers = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<Control, EventHandler<RoutedEventArgs>> _actionHandlers = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<Control, ContextMenu> _ownedContextMenus = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<ContextMenu, Task> _contextMenuCloses = new(ReferenceEqualityComparer.Instance);
     private ICuiBindingContext? _bindingContext;
     private ICuiActionDispatcher? _actionDispatcher;
     private IReadOnlyDictionary<string, CuiActionDefinition> _documentActions =
@@ -66,7 +68,7 @@ public sealed class CuiControlLoader : IDisposable
     /// <summary>Set an action dispatcher for action= and on:click= attributes.</summary>
     public void SetActionDispatcher(ICuiActionDispatcher dispatcher) => _actionDispatcher = dispatcher;
 
-    /// <summary>Snapshot active dispatches and retained failed button dispatch pipelines already accepted by this loader.
+    /// <summary>Snapshot active dispatches and retained failed native control dispatch pipelines already accepted by this loader.
     /// Call after raising the click. This does not dispatch an action, attest success, or include future clicks.
     /// Captured tasks remain awaitable after disposal, including original dispatcher, observer and cleanup failures.
     /// An action must not await a snapshot containing itself; its owning caller joins outside the dispatch.</summary>
@@ -81,10 +83,15 @@ public sealed class CuiControlLoader : IDisposable
         }
     }
 
-    private void ObserveButtonDispatch(Button button)
+    private void ObserveActionDispatch(Control control, Control? contextMenuOwner)
     {
-        if (_disposed || !button.IsEnabled || !_wiredActions.Contains(button) ||
-            _actionDispatcher is not { } dispatcher || !TryGetActionInvocation(button, out var invocation)) return;
+        if (_disposed || !control.IsEnabled || !_wiredActions.Contains(control) ||
+            _actionDispatcher is not { } dispatcher || !TryGetActionInvocation(control, out var invocation)) return;
+
+        if (control is MenuItem && !control.IsEffectivelyEnabled) return;
+        if (contextMenuOwner is not null && (!contextMenuOwner.IsEffectivelyEnabled ||
+            !_ownedContextMenus.TryGetValue(contextMenuOwner, out var ownedMenu) ||
+            !ReferenceEquals(contextMenuOwner.ContextMenu, ownedMenu))) return;
 
         // The actual async pipeline waits at this gate. Publish it before releasing any
         // dispatcher/observer callback; the original UI context is retained by the await.
@@ -94,9 +101,9 @@ public sealed class CuiControlLoader : IDisposable
             if (_disposed || _admissionFailureTask is not null) return;
             _pendingActionTasks.RemoveWhere(static task => task.IsCompletedSuccessfully);
             if (_pendingActionTasks.Count >= MaximumRetainedActionTasks)
-                _admissionFailureTask = RejectButtonDispatchAsync(start.Task, button);
+                _admissionFailureTask = RejectActionDispatchAsync(start.Task, control);
             else
-                _pendingActionTasks.Add(DispatchButtonAsync(start.Task, button, dispatcher, invocation));
+                _pendingActionTasks.Add(DispatchActionAsync(start.Task, control, dispatcher, invocation));
         }
         start.SetResult();
     }
@@ -131,7 +138,8 @@ public sealed class CuiControlLoader : IDisposable
             foreach (var repeat in _repeats.ToArray()) Attempt(repeat.Dispose);
             foreach (var scope in _scopeChangedHandlers.Keys.ToArray()) Attempt(() => UnsubscribeScope(scope));
             _repeats.Clear();
-            foreach (var (button, handler) in _actionHandlers.ToArray()) Attempt(() => button.Click -= handler);
+            foreach (var (control, handler) in _actionHandlers.ToArray()) Attempt(() => UnwireAction(control, handler));
+            foreach (var owner in _ownedContextMenus.Keys.ToArray()) Attempt(() => CloseOwnedContextMenu(owner));
             _actionHandlers.Clear();
             _wiredActions.Clear();
             _actionInvocations.Clear();
@@ -148,7 +156,7 @@ public sealed class CuiControlLoader : IDisposable
         await start;
         // Copy only after all synchronous cleanup attempts have settled and opened the gate.
         var failures = new List<Exception>(cleanupFailures);
-        foreach (var action in actions)
+        foreach (var action in actions.Concat(_contextMenuCloses.Values).Distinct<Task>(ReferenceEqualityComparer.Instance))
         {
             try { await action; }
             catch (Exception error) { AddOriginalTaskFailure(failures, action, error); }
@@ -243,6 +251,9 @@ public sealed class CuiControlLoader : IDisposable
     public Control? Load(CuiDocument document)
     {
         ArgumentNullException.ThrowIfNull(document);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        // Close attached native menus before replacing their authored control lineage.
+        foreach (var owner in _ownedContextMenus.Keys.ToArray()) CloseOwnedContextMenu(owner);
         // Reusing a loader must not leak definitions or live controls from a prior document.
         _resourceScope.Clear();
         _liveBindings.Clear();
@@ -347,39 +358,43 @@ public sealed class CuiControlLoader : IDisposable
         WireBindingsRecursive(root);
     }
 
-    private async Task DispatchButtonAsync(Task start, Button button, ICuiActionDispatcher dispatcher,
+    private async Task DispatchActionAsync(Task start, Control control, ICuiActionDispatcher dispatcher,
         CuiActionInvocation invocation)
     {
         await start;
         Task? actualDispatcher = null;
         try
         {
+            // Resolve live bound parameters only after this actual pipeline has
+            // been retained, using the SAME configured context captured at load.
+            // App row owners still validate current selection and provenance.
+            var parameter = invocation.ResolveCurrentParameter();
             // Consume the returned ValueTask once and retain its actual Task before await.
             actualDispatcher = dispatcher is ICuiLifetimeAwareActionDispatcher aware
-                ? aware.DispatchWithLifetimeAsync(invocation.Command, invocation.Parameter,
+                ? aware.DispatchWithLifetimeAsync(invocation.Command, parameter,
                     new CuiActionDispatchLifetime(_lifetime.Token, CancellationToken.None)).AsTask()
-                : dispatcher.DispatchAsync(invocation.Command, invocation.Parameter, _lifetime.Token).AsTask();
+                : dispatcher.DispatchAsync(invocation.Command, parameter, _lifetime.Token).AsTask();
             await actualDispatcher;
         }
         catch (Exception error)
         {
             var failures = new List<Exception>();
             AddOriginalTaskFailure(failures, actualDispatcher, error);
-            RetainButtonFailure(button, error, failures);
+            RetainActionFailure(control, error, failures);
             ThrowRetainedFailures(failures);
         }
     }
 
-    private async Task RejectButtonDispatchAsync(Task start, Button button)
+    private async Task RejectActionDispatchAsync(Task start, Control control)
     {
         await start;
         var original = new InvalidOperationException("The loader retained-action limit was reached; further effects require owner drainage and a new loader.");
         var failures = new List<Exception> { original };
-        RetainButtonFailure(button, original, failures);
+        RetainActionFailure(control, original, failures);
         ThrowRetainedFailures(failures);
     }
 
-    private void RetainButtonFailure(Button button, Exception original, List<Exception> failures)
+    private void RetainActionFailure(Control control, Exception original, List<Exception> failures)
     {
         if (!_disposed)
         {
@@ -388,16 +403,16 @@ public sealed class CuiControlLoader : IDisposable
                 : new CuiActionFailure("CUIA_FAILED", "The action could not complete. Check the current state before trying again.", false);
             try
             {
-                if (ReportActionFailure(button, failure) is { } observerFailure)
+                if (ReportActionFailure(control, failure) is { } observerFailure)
                     AddDistinctFailure(failures, observerFailure);
             }
             catch (Exception error) { AddDistinctFailure(failures, error); }
         }
     }
 
-    private Exception? ReportActionFailure(Button button, CuiActionFailure failure)
+    private Exception? ReportActionFailure(Control control, CuiActionFailure failure)
     {
-        var span = _authoredControls.TryGetValue(button, out var authored) ? authored.Span : default;
+        var span = _authoredControls.TryGetValue(control, out var authored) ? authored.Span : default;
         _runtimeDiagnostics.Add(new(failure.Code, failure.Cancelled ? CuiDiagnosticSeverity.Info : CuiDiagnosticSeverity.Error, failure.Message, span));
         try { ActionFailed?.Invoke(this, failure); }
         catch (Exception error)
@@ -408,44 +423,92 @@ public sealed class CuiControlLoader : IDisposable
         return null;
     }
 
-    private void WireBindingsRecursive(Control control)
+    private void WireBindingsRecursive(Control control, Control? contextMenuOwner = null)
     {
-        // Wire button clicks to actions
-        if (control is Button button && _actionDispatcher is not null && !_wiredActions.Contains(button)
-            && TryGetActionInvocation(button, out var invocation))
+        // Native menu items use the same retained pipeline as native buttons.
+        if (control is Button or MenuItem && _actionDispatcher is not null && !_wiredActions.Contains(control)
+            && TryGetActionInvocation(control, out _))
         {
-            EventHandler<RoutedEventArgs> handler = (_, _) => ObserveButtonDispatch(button);
-            button.Click += handler;
-            _actionHandlers[button] = handler;
-            _wiredActions.Add(button);
+            EventHandler<RoutedEventArgs> handler = (_, args) =>
+            {
+                // A submenu click bubbles through its parent; dispatch only the clicked item.
+                if (control is not MenuItem || ReferenceEquals(args.Source, control)) ObserveActionDispatch(control, contextMenuOwner);
+            };
+            if (control is Button button) button.Click += handler;
+            else if (control is MenuItem item) item.Click += handler;
+            _actionHandlers[control] = handler;
+            _wiredActions.Add(control);
         }
+        // ContextMenu is outside the visual tree while closed. Recurse only the
+        // exact menu attached by this loader to the actual owning control.
+        if (_ownedContextMenus.TryGetValue(control, out var menu) && ReferenceEquals(control.ContextMenu, menu))
+            WireBindingsRecursive(menu, control);
 
         // Recurse into visual children
         if (control is Panel panel)
         {
             foreach (var child in panel.Children)
-                if (child is Control ctrl) WireBindingsRecursive(ctrl);
+                if (child is Control ctrl) WireBindingsRecursive(ctrl, contextMenuOwner);
         }
         else if (control is Decorator decorator && decorator.Child is Control decChild)
         {
-            WireBindingsRecursive(decChild);
+            WireBindingsRecursive(decChild, contextMenuOwner);
         }
         else if (control is ContentControl cc && cc.Content is Control ccChild)
         {
-            WireBindingsRecursive(ccChild);
+            WireBindingsRecursive(ccChild, contextMenuOwner);
         }
         else if (control is ItemsControl ic)
         {
             foreach (var item in ic.Items)
-                if (item is Control icChild) WireBindingsRecursive(icChild);
+                if (item is Control icChild) WireBindingsRecursive(icChild, contextMenuOwner);
         }
     }
 
     private void ClearActionHandlers()
     {
-        foreach (var (button, handler) in _actionHandlers) button.Click -= handler;
+        foreach (var (control, handler) in _actionHandlers) UnwireAction(control, handler);
         _actionHandlers.Clear();
         _wiredActions.Clear();
+    }
+
+    private static void UnwireAction(Control control, EventHandler<RoutedEventArgs> handler)
+    {
+        if (control is Button button) button.Click -= handler;
+        else if (control is MenuItem item) item.Click -= handler;
+    }
+
+    private void CloseOwnedContextMenu(Control owner)
+    {
+        if (!_ownedContextMenus.TryGetValue(owner, out var menu)) return;
+        if (_contextMenuCloses.TryGetValue(menu, out var originalClose))
+        {
+            if (!originalClose.IsCompleted)
+                throw new InvalidOperationException("A native context menu close cannot join its own active callback.");
+            if (originalClose.Exception is { InnerExceptions.Count: > 0 } failed)
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failed.InnerExceptions[0]).Throw();
+            return;
+        }
+        // Avalonia Close is synchronous. Publish its once-only receipt before
+        // entering native Closing callbacks; a failed close is never replayed.
+        var close = new TaskCompletionSource();
+        _contextMenuCloses.Add(menu, close.Task);
+        lock (_actionTasksGate) _pendingActionTasks.Add(close.Task);
+        try
+        {
+            menu.Close();
+            if (menu.IsOpen)
+                throw new InvalidOperationException("The owned native context menu did not close; its owner remains retained.");
+            if (ReferenceEquals(owner.ContextMenu, menu)) owner.ContextMenu = null;
+            _ownedContextMenus.Remove(owner);
+            close.SetResult();
+            _contextMenuCloses.Remove(menu);
+        }
+        catch (Exception error)
+        {
+            close.SetException(error);
+            throw;
+        }
     }
 
     private Control LoadComponent(CuiComponent component)
@@ -805,7 +868,8 @@ public sealed class CuiControlLoader : IDisposable
             _observedBindings.Remove(control);
             _actionInvocations.Remove(control);
             _wiredActions.Remove(control);
-            if (control is Button button && _actionHandlers.Remove(button, out var handler)) button.Click -= handler;
+            if (_actionHandlers.Remove(control, out var handler)) UnwireAction(control, handler);
+            CloseOwnedContextMenu(control);
         }
     }
 
@@ -1329,6 +1393,17 @@ public sealed class CuiControlLoader : IDisposable
                         tb.Text = resolved;
                     else if (control is TextBox tbx)
                         tbx.Text = resolved;
+                    else if (control is Button textButton)
+                        textButton.Content = resolved;
+                    else if (control is CuiMarkdownView markdown)
+                        markdown.Text = resolved;
+                    else if (control is ICuiTextBindingTarget textTarget &&
+                             _authoredControls.TryGetValue(control, out var textComponent) &&
+                             textComponent.Type.Equals("Object", StringComparison.OrdinalIgnoreCase))
+                        textTarget.Text = resolved;
+                    break;
+                case "header":
+                    if (control is MenuItem menuItem) menuItem.Header = resolved;
                     break;
                 case "value":
                     if (control is TextBox inputText)
@@ -1536,10 +1611,12 @@ public sealed class CuiControlLoader : IDisposable
         if (_documentActions.TryGetValue(reference, out var definition))
         {
             command = definition.Command;
-            if (definition.Parameter is not null)
+            if (definition.Parameter is not null && definition.Parameter is not CuiBindingValue)
                 parameter = ResolveObject(definition.Parameter);
         }
-        _actionInvocations[control] = new CuiActionInvocation(command, parameter);
+        var liveParameter = _documentActions.TryGetValue(reference, out var boundDefinition)
+            ? boundDefinition.Parameter as CuiBindingValue : null;
+        _actionInvocations[control] = new CuiActionInvocation(command, parameter, _bindingContext, liveParameter);
     }
 
     private bool TryGetActionInvocation(Control control, out CuiActionInvocation invocation)
@@ -1555,7 +1632,14 @@ public sealed class CuiControlLoader : IDisposable
         return false;
     }
 
-    private sealed record CuiActionInvocation(string Command, object? Parameter);
+    private sealed record CuiActionInvocation(string Command, object? Parameter,
+        ICuiBindingContext? ParameterContext = null, CuiBindingValue? LiveParameter = null)
+    {
+        internal object? ResolveCurrentParameter() => LiveParameter is not null
+            ? ParameterContext is not null && ParameterContext.TryGetValue(LiveParameter.Path, out var current)
+                ? current : LiveParameter.Fallback
+            : Parameter;
+    }
 
     private static bool TryParseFontStyle(string value, out Avalonia.Media.FontStyle result)
     {
@@ -1596,6 +1680,16 @@ public sealed class CuiControlLoader : IDisposable
 
     private void AddChild(Control parent, Control child)
     {
+        if (child is ContextMenu menu)
+        {
+            if (parent.ContextMenu is not null || _ownedContextMenus.ContainsKey(parent))
+                throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR013", CuiDiagnosticSeverity.Error,
+                    "A control can own only one authored ContextMenu.", _authoredControls[child].Span));
+            // Capture ownership before native attachment can enter any callback.
+            _ownedContextMenus.Add(parent, menu);
+            parent.ContextMenu = menu;
+            return;
+        }
         switch (parent)
         {
             case Panel panel:
@@ -1607,9 +1701,9 @@ public sealed class CuiControlLoader : IDisposable
             case ContentControl contentControl:
                 contentControl.Content = child;
                 break;
-            case Menu menu:
+            case Menu nativeMenu:
                 if (child is MenuItem menuItem)
-                    menu.Items.Add(menuItem);
+                    nativeMenu.Items.Add(menuItem);
                 break;
             case TabControl tabControl:
                 if (child is TabItem tabItem)
@@ -1639,7 +1733,7 @@ public sealed class CuiControlLoader : IDisposable
 
         var palette = CuiSurfacePaletteCatalog.For(
             _currentSurface,
-            CuiThemeScopeApplier.DetectAppearance(),
+            _appearance ?? CuiThemeScopeApplier.DetectAppearance(),
             _themeStack.Current);
         return key switch
         {
@@ -1954,7 +2048,7 @@ public sealed class CuiControlLoader : IDisposable
     /// </summary>
     private void ApplyThemeToControlIfContainer(Control control)
     {
-        if (control is Panel || control is Border || control is ContentControl || control is Decorator)
+        if (control is Panel || control is Border || control is ContentControl || control is Decorator || control is ContextMenu)
         {
             var currentTheme = _themeStack.Current;
             CuiThemeScopeApplier.ApplyThemeToControl(control, currentTheme, _currentSurface, appearanceOverride: _appearance);
@@ -1971,14 +2065,16 @@ public sealed class CuiControlLoader : IDisposable
         return path switch
         {
             "Theme" or "theme" => CuiThemeCatalog.Name(_themeStack.Current),
-            "Appearance" or "appearance" => CuiThemeScopeApplier.DetectAppearance().ToString(),
+            "Appearance" or "appearance" => (_appearance ?? CuiThemeScopeApplier.DetectAppearance()).ToString(),
             _ => null
         };
     }
 
-    private static IEnumerable<Control> EnumerateControls(Control root)
+    private IEnumerable<Control> EnumerateControls(Control root)
     {
         yield return root;
+        if (_ownedContextMenus.TryGetValue(root, out var menu))
+            foreach (var descendant in EnumerateControls(menu)) yield return descendant;
         switch (root)
         {
             case Panel panel:
@@ -1993,6 +2089,10 @@ public sealed class CuiControlLoader : IDisposable
             case ContentControl { Content: Control child }:
                 foreach (var descendant in EnumerateControls(child))
                     yield return descendant;
+                break;
+            case ItemsControl items:
+                foreach (var item in items.Items.OfType<Control>())
+                foreach (var descendant in EnumerateControls(item)) yield return descendant;
                 break;
         }
     }

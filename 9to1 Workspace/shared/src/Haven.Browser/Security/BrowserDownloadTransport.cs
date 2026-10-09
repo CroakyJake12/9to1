@@ -17,7 +17,7 @@ namespace Haven.Browser;
 /// <summary>
 /// Represents browser download transport and keeps its related state and behavior together.
 /// </summary>
-public sealed class BrowserDownloadTransport
+public sealed partial class BrowserDownloadTransport : IBrowserOriginalNativeDownloadTransportSource
 {
     /// <summary>
     /// Stores maximum download bytes locally so this component can preserve the dependency, cache, or state between member calls.
@@ -58,8 +58,13 @@ public sealed class BrowserDownloadTransport
         var assessment = await _policy.AssessAsync(policyAddress, cancellationToken).ConfigureAwait(false);
         if (!assessment.IsAllowed) throw new UnauthorizedAccessException("Download blocked: " + assessment.Reason);
 
-        Directory.CreateDirectory(_downloadDirectory);
-        BrowserDownloadFilePolicy.CleanupStalePartialFiles(_downloadDirectory, DateTimeOffset.UtcNow);
+        if (_originalPhysicalOwner is null)
+        {
+            Directory.CreateDirectory(_downloadDirectory);
+            BrowserDownloadFilePolicy.CleanupStalePartialFiles(_downloadDirectory, DateTimeOffset.UtcNow);
+        }
+        else if (!Directory.Exists(_downloadDirectory))
+            throw new NotSupportedException("Configure the existing original download directory before native transport preparation.");
         ContentDispositionHeaderValue? parsedDisposition = null;
         if (!string.IsNullOrWhiteSpace(contentDisposition))
             ContentDispositionHeaderValue.TryParse(contentDisposition, out parsedDisposition);
@@ -69,13 +74,15 @@ public sealed class BrowserDownloadTransport
                        ?? "download.bin";
         var finalPath = BrowserDownloadFilePolicy.AllocateUniquePath(_downloadDirectory, fileName);
         var partialPath = BrowserDownloadFilePolicy.CreatePartialPath(finalPath);
-        return new NativeDownloadPlan(
+        var originalPlan = new NativeDownloadPlan(
             actionId,
             RecordAddress(sourceAddress, initiatorAddress),
             Path.GetFileName(finalPath),
             finalPath,
             partialPath,
             DateTimeOffset.UtcNow);
+        await CaptureOriginalPreparedPlanAsync(originalPlan, cancellationToken).ConfigureAwait(false);
+        return originalPlan;
     }
 
     /// <summary>
@@ -191,16 +198,20 @@ public sealed class BrowserDownloadTransport
     /// </summary>
     private readonly string _downloadDirectory;
 
-    public BrowserDownloadTransport(IBrowserNavigationPolicy policy, IAppPaths paths)
-        : this(policy, ResolveDownloadDirectory(paths))
+    public BrowserDownloadTransport(IBrowserNavigationPolicy policy, IAppPaths paths,
+        IBrowserOriginalNativeDownloadPhysicalOwner? samePhysicalOwner = null)
+        : this(policy, ResolveDownloadDirectory(paths), samePhysicalOwner)
     {
     }
 
-    public BrowserDownloadTransport(IBrowserNavigationPolicy policy, string downloadDirectory)
+    public BrowserDownloadTransport(IBrowserNavigationPolicy policy, string downloadDirectory,
+        IBrowserOriginalNativeDownloadPhysicalOwner? samePhysicalOwner = null)
     {
         _policy = policy ?? throw new ArgumentNullException(nameof(policy));
         ArgumentException.ThrowIfNullOrWhiteSpace(downloadDirectory);
         _downloadDirectory = Path.GetFullPath(downloadDirectory);
+        _originalPhysicalOwner = samePhysicalOwner;
+        samePhysicalOwner?.BindOriginalTransportSource(this);
     }
 
     /// <summary>
@@ -211,6 +222,8 @@ public sealed class BrowserDownloadTransport
         ArgumentNullException.ThrowIfNull(action);
         if (action.Kind != BrowserActionKind.Download) throw new ArgumentException("The action is not a download.", nameof(action));
 
+        if (_originalPhysicalOwner is not null)
+            throw new NotSupportedException("The original pinned native transport requires its actual native execution/completion source.");
         Directory.CreateDirectory(_downloadDirectory);
         BrowserDownloadFilePolicy.CleanupStalePartialFiles(_downloadDirectory, DateTimeOffset.UtcNow);
 

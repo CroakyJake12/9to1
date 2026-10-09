@@ -1,0 +1,38 @@
+<Cui id="automations.saved-library" version="1">
+  <Actions>
+    <Action name="OpenSavedAutomation" command="select" parameter="{Binding automation.Target}" />
+  </Actions>
+  <Page id="saved-automation-library" AccessibleName="Saved automation library">
+    <Container Type="Vertical Stack" Spacing="16" Margin="24" VerticalScrolling="True">
+      <Text Text="Saved automation library" FontSize="28" FontWeight="Bold" />
+      <Text Text="Browse the saved settings for your automations. The automation dashboard remains available for creating and managing workflows." TextWrapping="Wrap" />
+      <Input id="automation-library-search" Type="Text" Text="{Binding Search, Mode=TwoWay}" IsEnabled="{Binding CanRefresh}" PlaceholderText="Search names and instructions" AccessibleName="Search saved automations" />
+      <Container Type="Vertical Stack" Spacing="8">
+        <Button id="automation-library-refresh" action="refresh" IsEnabled="{Binding CanRefresh}">Search and refresh</Button>
+        <Button id="automation-library-archives" action="archives" IsEnabled="{Binding CanRefresh}" Text="{Binding ArchiveLabel}" />
+        <Text Text="{Binding PageLabel}" FontWeight="SemiBold" />
+        <Text id="automation-library-status" Text="{Binding Status}" TextWrapping="Wrap" AccessibleName="Saved library status" />
+      </Container>
+      <Repeat Source="{Binding Rows}" As="automation" Key="{Binding automation.Key}">
+        <Container Type="Vertical Stack" Spacing="6" Margin="0,0,0,10">
+          <Text Text="{Binding automation.Name}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" />
+          <Text Text="{Binding automation.Status}" TextWrapping="Wrap" />
+          <Text Text="{Binding automation.Schedule}" />
+          <Button id="automation-library-open" action="OpenSavedAutomation" IsEnabled="{Binding automation.CanOpen}">View saved settings</Button>
+        </Container>
+      </Repeat>
+      <Button id="automation-library-older" action="older" IsEnabled="{Binding CanOlder}">Older saved automations</Button>
+      <Container Type="Vertical Stack" Spacing="8">
+        <Text id="automation-library-selected-name" Text="{Binding SelectedName}" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap" />
+        <Text Text="{Binding SelectedState}" TextWrapping="Wrap" />
+        <Text Text="{Binding SelectedSchedule}" TextWrapping="Wrap" />
+        <Text Text="{Binding Instruction}" TextWrapping="Wrap" />
+        <Text Text="{Binding Review}" TextWrapping="Wrap" />
+        <Text Text="Approving a review disables the saved automation and marks it for attention. Both changes require individual approval in Home. Running requires separate setup and approval." TextWrapping="Wrap" />
+        <Button id="automation-library-recover" action="recover" IsEnabled="{Binding CanRecover}">Review saved settings</Button>
+        <Button id="automation-library-disable" action="disable" IsEnabled="{Binding CanDisable}">Disable saved automation</Button>
+        <Text id="automation-library-change-status" Text="{Binding ChangeStatus}" TextWrapping="Wrap" AccessibleName="Saved automation change status" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

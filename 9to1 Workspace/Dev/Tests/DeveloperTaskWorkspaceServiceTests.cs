@@ -553,19 +553,26 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     [Fact]
     public async Task Direct_edit_held_original_checkpoint_save_refuses_early_effect_and_retirement_waits()
     {
-        var f = await Fixture.CreateAsync(); var save = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        f.CheckpointStore.ActualSave = save.Task;
-        var actual = f.Dev.ApplyEditAsync(f.Reference, f.Context(), ReviewedEdit(f, "changed source"), OriginalTestBodyToken); Task? close = null;
-        try
+        await WithPhysicalEditFixtureAsync(async f =>
         {
-            await f.CheckpointStore.SaveEntered.Task;
-            Assert.Same(save.Task, f.CheckpointStore.OriginalSave);
-            Assert.Equal(0, f.Tools.WriteCalls); Assert.Null(f.Current.CheckpointId);
-            close = f.Dev.CloseAndDrainAsync(); Assert.False(close.IsCompleted); Assert.False(actual.IsCompleted);
-            save.TrySetResult(); Assert.True((await actual).Succeeded); await close;
-            Assert.Equal(1, f.Tools.WriteCalls); Assert.Equal(1, f.CheckpointStore.SaveCalls);
-        }
-        finally { save.TrySetResult(); try { await actual; } catch { } if (close is not null) try { await close; } catch { } }
+            var save = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            f.CheckpointStore.ActualSave = save.Task;
+            var actual = f.Dev.ApplyEditAsync(f.Reference, f.Context(), ReviewedEdit(f, "changed source"), OriginalTestBodyToken); Task? close = null;
+            try
+            {
+                await f.CheckpointStore.SaveEntered.Task;
+                Assert.Same(save.Task, f.CheckpointStore.OriginalSave);
+                Assert.Equal(0, f.Tools.WriteCalls); Assert.Null(f.Current.CheckpointId);
+                Assert.Equal("original source", await File.ReadAllTextAsync(f.Tools.ResolveWorkspacePath(f.Document.WorkspaceRoot, f.Document.RelativePath), OriginalTestBodyToken));
+                close = f.Dev.CloseAndDrainAsync(); Assert.False(close.IsCompleted); Assert.False(actual.IsCompleted);
+                save.TrySetResult(); var result = await actual;
+                Assert.True(result.Succeeded); Assert.True(result.Value!.OriginalToolResult!.Activity.Succeeded); await close;
+                Assert.Equal(1, f.Tools.WriteCalls); Assert.Equal(1, f.CheckpointStore.SaveCalls);
+                Assert.Equal("changed source", await File.ReadAllTextAsync(f.Tools.ResolveWorkspacePath(f.Document.WorkspaceRoot, f.Document.RelativePath), OriginalTestBodyToken));
+                Assert.Single(f.CheckpointStore.Versions);
+            }
+            finally { save.TrySetResult(); try { await actual; } catch { } if (close is not null) try { await close; } catch { } }
+        });
     }
 
     [Theory]
@@ -653,12 +660,19 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     [Fact]
     public async Task Direct_edit_actual_policy_off_skips_checkpoint_and_preserves_actual_container_history()
     {
-        var f = await Fixture.CreateAsync(); f.Checkpoints.Mode = CheckpointMode.Off;
-        var context = f.Context(); var result = await f.Dev.ApplyEditAsync(f.Reference, context, ReviewedEdit(f, "changed source"), OriginalTestBodyToken);
-        Assert.True(result.Succeeded); Assert.Equal(1, f.Tools.WriteCalls); Assert.Equal(0, f.CheckpointStore.SaveCalls);
-        Assert.Null(f.Current.CheckpointId);
-        Assert.Equal(f.Conversation.ContainerId, Assert.Single(f.CheckpointStore.Versions).Version.ContainerId);
-        await f.Dev.CloseAndDrainAsync();
+        await WithPhysicalEditFixtureAsync(async f =>
+        {
+            f.Checkpoints.Mode = CheckpointMode.Off;
+            var context = f.Context(); var result = await f.Dev.ApplyEditAsync(f.Reference, context, ReviewedEdit(f, "changed source"), OriginalTestBodyToken);
+            Assert.True(result.Succeeded); Assert.True(result.Value!.OriginalToolResult!.Activity.Succeeded);
+            Assert.Equal(1, f.Tools.WriteCalls); Assert.Equal(0, f.CheckpointStore.SaveCalls);
+            Assert.Null(f.Current.CheckpointId);
+            var version = Assert.Single(f.CheckpointStore.Versions).Version;
+            Assert.Equal(f.Conversation.ContainerId, version.ContainerId); Assert.Equal(context.ContextId, version.ConversationId);
+            Assert.Equal("original source", version.BeforeContent); Assert.Equal("changed source", version.AfterContent);
+            Assert.Equal("changed source", await File.ReadAllTextAsync(f.Tools.ResolveWorkspacePath(f.Document.WorkspaceRoot, f.Document.RelativePath), OriginalTestBodyToken));
+            await f.Dev.CloseAndDrainAsync();
+        });
     }
 
     [Fact]
@@ -704,6 +718,38 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         Assert.True(Contains(failure, fault)); Assert.NotNull(f.Current.CheckpointId); Assert.Null(f.Current.LastCheckpointActionId);
         Assert.Equal(0, f.Tools.WriteCalls); Assert.Equal(1, f.CheckpointStore.SaveCalls);
         var drain = await Assert.ThrowsAnyAsync<Exception>(() => f.Dev.CloseAndDrainAsync()); Assert.True(Contains(drain, fault));
+    }
+
+    // These successful edit controls require the physical before-file observed by
+    // WorkspaceChangeSetService; fake text alone cannot satisfy its File.Exists/hash gate.
+    private static async Task WithPhysicalEditFixtureAsync(Func<Fixture, Task> body)
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "dev-physical-edit-control-" + Guid.NewGuid().ToString("N"));
+        Fixture? fixture = null; var failures = new List<Exception>();
+        try
+        {
+            fixture = await Fixture.CreateAsync(rootLocation: directory);
+            Directory.CreateDirectory(Path.Combine(directory, "src"));
+            await File.WriteAllTextAsync(fixture.Tools.ResolveWorkspacePath(directory, fixture.Document.RelativePath), fixture.Tools.TextValue, OriginalTestBodyToken);
+            await body(fixture);
+        }
+        catch (Exception error) { failures.Add(error); }
+        finally
+        {
+            // Join the SAME encompassing owner, including retained raw sources,
+            // independently of assertions before retiring physical fixture storage.
+            Task? close = null;
+            if (fixture is not null)
+                try { close = fixture.Dev.CloseAndDrainAsync(); await close; }
+                catch (Exception error) { failures.Add((Exception?)close?.Exception ?? error); }
+            // A synchronous retirement refusal returns no joinable Task: preserve
+            // its physical evidence. A completed faulted close still joined its sources.
+            if (fixture is null || close is { IsCompleted: true })
+                try { if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true); }
+                catch (Exception error) { failures.Add(error); }
+        }
+        if (failures.Count != 0)
+            throw new AggregateException($"Physical development edit control or original cleanup failed; source data: {directory}.", failures);
     }
 
     private static DeveloperReviewedTextEdit ReviewedEdit(Fixture f, string replacement) =>

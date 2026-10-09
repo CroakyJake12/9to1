@@ -1,0 +1,62 @@
+<Cui id="assistants.memory" version="1">
+  <Actions>
+    <Action name="CorrectSelectedMemory" command="assistants.memory.correct" parameter="{Binding memory}" />
+    <Action name="RejectSelectedMemory" command="assistants.memory.reject" parameter="{Binding memory}" />
+  </Actions>
+  <Page id="assistant-memory-page" AccessibleName="Assistant memory">
+    <Container Type="Vertical Stack" Spacing="12" VerticalScrolling="True">
+      <Button action="assistants.memory.back" IsEnabled="{Binding CanMemoryBack}">Back to Assistant</Button>
+      <Text Text="{Binding MemoryHeading}" FontSize="26" FontWeight="SemiBold" TextWrapping="Wrap" />
+      <Container Type="Vertical Stack" Spacing="8" IsVisible="{Binding HasMemoryImport}">
+        <Text Text="Review this configured memory store" FontSize="18" FontWeight="SemiBold" />
+        <Text Text="{Binding MemoryImportState}" AccessibleName="Memory store import state" />
+        <Text Text="{Binding MemoryImportReason}" TextWrapping="Wrap" />
+        <Text Text="{Binding MemoryImportStore}" AccessibleName="Configured memory store identity" TextWrapping="Wrap" />
+        <Button action="assistants.memory.import.request" IsEnabled="{Binding CanMemoryImportRequest}">Request memory store review</Button>
+        <Container Type="Vertical Stack" Spacing="4" IsVisible="{Binding HasMemoryImportRequest}">
+          <Text Text="Open Home to decide this exact store review, then return here. This approval is separate from saved-agent import and individual memory writes." TextWrapping="Wrap" />
+          <Text Text="{Binding MemoryImportRequest}" AccessibleName="Actual memory import request" TextWrapping="Wrap" />
+        </Container>
+        <Button action="assistants.memory.import.refresh" IsEnabled="{Binding CanMemoryImportRefresh}">Check memory store decision</Button>
+        <Button action="assistants.memory.import.complete" IsEnabled="{Binding CanMemoryImportComplete}">Complete approved memory import</Button>
+        <Button action="assistants.memory.import.audit" IsEnabled="{Binding CanMemoryImportAudit}">Retry memory import audit</Button>
+      </Container>
+      <Text Text="Saved memories for this Assistant" FontSize="18" FontWeight="SemiBold" />
+      <Text Text="Search current permitted active preferences. Conversation requests select a bounded subset independently." TextWrapping="Wrap" />
+      <Input id="assistant-memory-search" Type="Text" Text="{Binding MemorySearch, Mode=TwoWay}" IsEnabled="{Binding CanEditMemorySearch}" AccessibleName="Search this Assistant's memories" PlaceholderText="Search titles and preferences" />
+      <Button action="assistants.memory.search" IsEnabled="{Binding CanMemorySearch}">Search memories</Button>
+      <Repeat Source="{Binding MemoryRecords}" As="memory" Key="{Binding memory.Id}">
+        <Container Type="Vertical Stack" Spacing="4" Margin="0,0,0,10">
+          <Text Text="{Binding memory.Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+          <Text Text="{Binding memory.Summary}" TextWrapping="Wrap" />
+          <Text Text="{Binding memory.Privacy}" AccessibleName="Memory privacy" />
+          <Text Text="{Binding memory.Origin}" AccessibleName="Memory origin" TextWrapping="Wrap" />
+          <Button action="CorrectSelectedMemory" IsEnabled="{Binding memory.CanChange}">Correct this memory</Button>
+          <Button action="RejectSelectedMemory" IsEnabled="{Binding memory.CanChange}">Stop recalling this memory</Button>
+        </Container>
+      </Repeat>
+      <Button action="assistants.memory.older" IsEnabled="{Binding CanMemoryOlder}" IsVisible="{Binding HasMoreMemories}">Older memories</Button>
+      <Button action="assistants.memory.refresh" IsEnabled="{Binding CanMemoryRefresh}">Refresh memories</Button>
+      <Text Text="{Binding MemoryDraftHeading}" FontSize="18" FontWeight="SemiBold" />
+      <Input id="memory-title" Type="Text" Text="{Binding MemoryDraftTitle, Mode=TwoWay}" IsEnabled="{Binding CanEditMemoryDraft}" AccessibleName="Memory title" PlaceholderText="Preference title" />
+      <Input id="memory-summary" Type="Text" Text="{Binding MemoryDraftSummary, Mode=TwoWay}" AcceptsReturn="True" MinHeight="100" TextWrapping="Wrap" IsEnabled="{Binding CanEditMemoryDraft}" AccessibleName="Memory preference" PlaceholderText="What should this Assistant remember?" />
+      <Button action="assistants.memory.review" IsEnabled="{Binding CanMemoryReview}">Review preference</Button>
+      <Container Type="Vertical Stack" Spacing="8" IsVisible="{Binding HasMemoryPreview}">
+        <Text Text="Review this exact preference" FontSize="18" FontWeight="SemiBold" />
+        <Text Text="{Binding MemoryPreviewTitle}" FontWeight="SemiBold" TextWrapping="Wrap" />
+        <Text Text="{Binding MemoryPreviewSummary}" TextWrapping="Wrap" />
+        <Text Text="{Binding MemoryPreviewExplanation}" TextWrapping="Wrap" />
+        <Button action="assistants.memory.confirm" IsEnabled="{Binding CanMemoryConfirm}">Request Home approval</Button>
+        <Button action="assistants.memory.revise" IsEnabled="{Binding CanMemoryRevise}">Revise local draft</Button>
+      </Container>
+      <Text Text="{Binding MemoryStatus}" TextWrapping="Wrap" AccessibleName="Memory operation status" />
+      <Container Type="Vertical Stack" Spacing="4" IsVisible="{Binding HasMemoryApprovalRequest}">
+        <Text Text="Open Home to inspect or decide this review. Your draft stays here while Home is open." TextWrapping="Wrap" />
+        <Text Text="{Binding MemoryApprovalRequest}" TextWrapping="Wrap" AccessibleName="Actual Home review request" />
+      </Container>
+      <Button action="assistants.memory.status" IsEnabled="{Binding CanMemoryStatus}">Refresh operation status</Button>
+      <Text Text="{Binding MemoryError}" IsVisible="{Binding HasMemoryError}" TextWrapping="Wrap" AccessibleName="Memory operation error" />
+      <Button action="assistants.memory.discard" IsEnabled="{Binding CanMemoryDiscard}">Discard local draft</Button>
+    </Container>
+  </Page>
+</Cui>

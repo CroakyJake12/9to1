@@ -18,35 +18,35 @@ public sealed partial class PresentPage
         _route.PlaybackExitRequested -= OnPresenterExitRequested;
     }
 
-    private void OnPresenterStarted(object? sender, EventArgs e)
+    private void OnPresenterStarted(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
     {
         if (_playback is null || Document is null) return;
-        _route.SetPresenterFrame(Document, _playback.Frame);
-    }
+        PublishOriginalPresentSource(() => _route.SetPresenterFrame(Document, _playback.Frame));
+    });
 
-    private void OnPresenterAdvanceRequested(object? sender, EventArgs e)
+    private void OnPresenterAdvanceRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
     {
         if (_playback is null || Document is null) return;
         if (!AdvancePlayback())
         {
-            _route.SetStatus("End of presentation · Exit presenter to return to editing.");
-            _route.SetPresenterFrame(Document, _playback.Frame);
+            PublishOriginalPresentSource(() => _route.SetStatus("End of presentation · Exit presenter to return to editing."));
+            PublishOriginalPresentSource(() => _route.SetPresenterFrame(Document, _playback.Frame));
             return;
         }
-        _route.SetPresenterFrame(Document, _playback.Frame);
-    }
+        PublishOriginalPresentSource(() => _route.SetPresenterFrame(Document, _playback.Frame));
+    });
 
-    private void OnPresenterPreviousRequested(object? sender, EventArgs e)
+    private void OnPresenterPreviousRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
     {
         if (_playback is null || Document is null) return;
-        if (PreviousPlayback()) _route.SetPresenterFrame(Document, _playback.Frame);
-    }
+        if (PreviousPlayback()) PublishOriginalPresentSource(() => _route.SetPresenterFrame(Document, _playback.Frame));
+    });
 
-    private void OnPresenterExitRequested(object? sender, EventArgs e)
+    private void OnPresenterExitRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
     {
         _playback = null;
-        _route.SetPresenterVisible(false);
-        _route.SetStatus(_dirty ? "Unsaved changes · autosave is on" : "Presentation editor ready.");
+        PublishOriginalPresentSource(() => _route.SetPresenterVisible(false));
+        PublishOriginalPresentSource(() => _route.SetStatus(_dirty ? "Unsaved changes · autosave is on" : "Presentation editor ready."));
         RenderCurrent();
-    }
+    });
 }

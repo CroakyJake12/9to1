@@ -51,6 +51,19 @@ public sealed class HomeNativeWindowsHostOwner : IAsyncDisposable
         return new(originalCanonicalHome, sessions, originalHeldLease, configuredEndpoint.Capture(), originalProcessLifetime);
     }
     public Task OriginalStartTask => _start;
+    internal HomeNativeWindowsListeningLease CaptureOriginalListeningLease(HomeNativeServiceSession sameSession,
+        HomeNativeSessionLease sameLease)
+    {
+        lock (_sync)
+        {
+            if (_closing || _close is not null || !_start.IsCompletedSuccessfully || _host?.OriginalListeningTask.IsCompletedSuccessfully != true ||
+                _originalLifetime.IsCancellationRequested || _lifetime.IsCancellationRequested || !ReferenceEquals(_lease, sameLease) ||
+                !sameLease.IsHeld || !ReferenceEquals(_original.Services, sameSession.Services) ||
+                !ReferenceEquals(_original.Runtime, sameSession.Runtime) || !ReferenceEquals(_original.Actors, sameSession.Actors))
+                throw new UnauthorizedAccessException("The actual SAME Home accepting listener/held lease retired or did not start.");
+            return new(_lease.ProfileId, _lease.LeaseIdentity, _endpoint.PipeName);
+        }
+    }
     private async Task StartOriginalAsync(Task gate)
     {
         await gate.ConfigureAwait(false);

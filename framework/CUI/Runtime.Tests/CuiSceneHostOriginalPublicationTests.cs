@@ -194,9 +194,16 @@ public sealed class CuiSceneHostOriginalPublicationTests
             Assert.False(pipeline!.IsCompleted);
             var primary = new InvalidOperationException("Original action.");
             action.Fail(primary);
-            await pipeline;
             Assert.Same(primary, await Record.ExceptionAsync(() => action.Original));
             rig.Expect(primary);
+            var pipelineError = Assert.IsType<AggregateException>(await Record.ExceptionAsync(() => pipeline));
+            Assert.True(pipeline!.IsFaulted);
+            Assert.Same(pipelineError, Assert.Single(pipeline!.Exception!.InnerExceptions));
+            Assert.Equal(2, pipelineError.InnerExceptions.Count);
+            Assert.Same(primary, pipelineError.InnerExceptions[0]);
+            var withdrawal = Assert.IsType<OperationCanceledException>(pipelineError.InnerExceptions[1]);
+            AssertOriginalSourceWithdrawal(rig.Host, withdrawal);
+            rig.Expect(pipelineError);
             await rig.Ui(() =>
             {
                 Assert.Same(originalRoot, rig.Host.Content);
@@ -207,12 +214,13 @@ public sealed class CuiSceneHostOriginalPublicationTests
                 Assert.Contains(diagnostics, item => item.Code == "CUIA_OBSERVER_FAILED");
             });
             Assert.Equal(1, action.Calls);
-            // Existing loader handles the dispatcher and observer exceptions. A successful idle
-            // pipeline is settlement only; it is not action success or original-exception custody.
-            // The host now retains its OWN observer-refusal object; this does not recover the
-            // original dispatcher cause swallowed by the existing loader.
-            var closeError = await Record.ExceptionAsync(() => rig.Host.CloseOriginalAsync());
-            Assert.IsAssignableFrom<OperationCanceledException>(closeError);
+            // The real loader pipeline keeps the dispatcher failure and this exact source withdrawal.
+            Task? close = null;
+            await rig.Ui(() => close = rig.Track(rig.Host.CloseOriginalAsync()));
+            var closeError = await Record.ExceptionAsync(() => close!);
+            AssertOriginalCauses(closeError!, pipelineError, withdrawal);
+            Assert.Same(close, rig.Host.OriginalClose);
+            Assert.Same(close, rig.Host.CloseOriginalAsync());
             rig.Expect(closeError!);
         });
     }
@@ -247,9 +255,16 @@ public sealed class CuiSceneHostOriginalPublicationTests
             });
             var primary = new InvalidOperationException("Original action.");
             action.Fail(primary);
-            await pipeline!;
             Assert.Same(primary, await Record.ExceptionAsync(() => action.Original));
             rig.Expect(primary);
+            var pipelineError = Assert.IsType<AggregateException>(await Record.ExceptionAsync(() => pipeline!));
+            Assert.True(pipeline!.IsFaulted);
+            Assert.Same(pipelineError, Assert.Single(pipeline!.Exception!.InnerExceptions));
+            Assert.Equal(2, pipelineError.InnerExceptions.Count);
+            Assert.Same(primary, pipelineError.InnerExceptions[0]);
+            var withdrawal = Assert.IsType<OperationCanceledException>(pipelineError.InnerExceptions[1]);
+            AssertOriginalSourceWithdrawal(rig.Host, withdrawal);
+            rig.Expect(pipelineError);
             Assert.True(retired);
             await rig.Ui(() =>
             {
@@ -258,8 +273,12 @@ public sealed class CuiSceneHostOriginalPublicationTests
                 Assert.Null(OptionalField(rig.Host, "_failureModel"));
                 Assert.Equal("CUIA_FAILED", rig.Host.LastActionFailure!.Code);
             });
-            var closeError = await Record.ExceptionAsync(() => rig.Host.CloseOriginalAsync());
-            Assert.IsAssignableFrom<OperationCanceledException>(closeError);
+            Task? close = null;
+            await rig.Ui(() => close = rig.Track(rig.Host.CloseOriginalAsync()));
+            var closeError = await Record.ExceptionAsync(() => close!);
+            AssertOriginalCauses(closeError!, pipelineError, withdrawal);
+            Assert.Same(close, rig.Host.OriginalClose);
+            Assert.Same(close, rig.Host.CloseOriginalAsync());
             rig.Expect(closeError!);
         });
     }
@@ -276,20 +295,23 @@ public sealed class CuiSceneHostOriginalPublicationTests
             Assert.Null(scene.IsPublicationCurrent);
             Task<CuiSceneAvailability>? show = null;
             Task? pipeline = null;
+            CuiControlLoader? loader = null;
             await rig.Ui(() => show = rig.Track(rig.Host.ShowAsync(scene)));
             var availability = await show!;
             Assert.Equal(CuiSceneAvailabilityState.Ready, availability.State);
             await rig.Ui(() =>
             {
-                var loader = Field<CuiControlLoader>(rig.Host, "_loader");
+                loader = Field<CuiControlLoader>(rig.Host, "_loader");
                 Assert.IsType<Button>(rig.Host.Content).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 pipeline = rig.Track(loader.WhenActionsIdleAsync());
             });
             var primary = new InvalidOperationException("Original action.");
             action.Fail(primary);
-            await pipeline!;
             Assert.Same(primary, await Record.ExceptionAsync(() => action.Original));
             rig.Expect(primary);
+            Assert.Same(primary, await Record.ExceptionAsync(() => pipeline!));
+            Assert.True(pipeline!.IsFaulted);
+            Assert.Same(primary, Assert.Single(pipeline!.Exception!.InnerExceptions));
             await rig.Ui(() =>
             {
                 var layout = Assert.IsType<Grid>(rig.Host.Content);
@@ -297,6 +319,17 @@ public sealed class CuiSceneHostOriginalPublicationTests
                 Assert.Equal(rig.Host.LastActionFailure!.Message, Assert.IsType<TextBlock>(layout.Children[0]).Text);
                 Assert.Equal(availability, rig.Host.Availability);
             });
+            Task? disposal = null;
+            await rig.Ui(() =>
+            {
+                rig.Host.Dispose(); // The unchanged legacy contract, on its actual UI owner.
+                disposal = rig.Track(Field<Task>(loader!, "_disposalTask"));
+                Assert.True((bool)OptionalField(rig.Host, "_disposed")!);
+            });
+            Assert.Same(primary, await Record.ExceptionAsync(() => disposal!));
+            Assert.True(disposal!.IsFaulted);
+            Assert.Same(primary, Assert.Single(disposal.Exception!.InnerExceptions));
+            Assert.Same(disposal, Field<Task>(loader!, "_disposalTask"));
         });
     }
 
@@ -498,20 +531,15 @@ public sealed class CuiSceneHostOriginalPublicationTests
             action.Fail(primaryAction);
             Assert.Same(primaryAction, await Record.ExceptionAsync(() => action.Original));
             rig.Expect(primaryAction);
-            // Two actual Shows +126 accepted banner observations reach the documented128 bound.
-            // Every callback is the real loader pipeline, independently joined before the next click.
-            for (var index = 0; index < 127; index++)
-            {
-                Task? pipeline = null;
-                await rig.Ui(() =>
-                {
-                    actualButton!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                    pipeline = rig.Track(mountedLoader!.WhenActionsIdleAsync());
-                });
-                await pipeline!;
-            }
-            Assert.Equal(127, action.Calls);
+            // Two actual Shows +126 accepted banners fill the host's existing128 bound.
+            // Every admitted raw dispatch and every real snapshot is retained and joined.
+            var admitted = new List<Task>();
+            Task? admissionRefusal = null;
+            Exception? admissionRefusalError = null;
             Exception? laterRefusal = null;
+            for (var index = 0; index < 127; index++) await DispatchAndJoinOriginalAsync(index);
+            Assert.Equal(127, action.Calls);
+            Assert.Equal(127, admitted.Count);
             var hostDiagnosticsAfterRefusal = 0;
             await rig.Ui(() =>
             {
@@ -522,28 +550,23 @@ public sealed class CuiSceneHostOriginalPublicationTests
                         .GetValue(originalOwner));
                 Assert.Equal(2, errors.Count);
                 Assert.Same(previousClose, errors[0]);
-                laterRefusal = Assert.IsType<InvalidOperationException>(errors[1]);
+                Assert.Same(laterRefusal, errors[1]);
                 Assert.NotSame(previousClose, laterRefusal);
                 var diagnostics = Field<List<CuiDiagnostic>>(mountedLoader!, "_runtimeDiagnostics");
                 Assert.Contains(diagnostics, item => item.Code == "CUIA_OBSERVER_FAILED");
                 hostDiagnosticsAfterRefusal = rig.Host.Diagnostics.Count;
             });
 
-            // Repeated ACTUAL overflowing action pipelines must reuse the SAME explicit refusal
-            // without growing host Errors/Diagnostics or dropping any earlier original cause.
-            for (var index = 0; index < 4; index++)
-            {
-                Task? pipeline = null;
-                await rig.Ui(() =>
-                {
-                    actualButton!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                    pipeline = rig.Track(mountedLoader!.WhenActionsIdleAsync());
-                });
-                await pipeline!;
-            }
-            Assert.Equal(131, action.Calls);
+            // The next click is the128th actual dispatch. Click129 creates the loader's one
+            // cached admission refusal; clicks130/131 reuse it without another dispatcher effect.
+            for (var index = 127; index < 131; index++) await DispatchAndJoinOriginalAsync(index);
+            Assert.Equal(128, action.Calls);
+            Assert.Equal(128, admitted.Count);
+            Assert.NotNull(admissionRefusal);
+            Assert.NotNull(admissionRefusalError);
             await rig.Ui(() =>
             {
+                Assert.Same(admissionRefusal, OptionalField(mountedLoader!, "_admissionFailureTask"));
                 var records = Assert.IsAssignableFrom<System.Collections.IEnumerable>(OptionalField(rig.Host, "_originalPublications"));
                 var originalOwner = records.Cast<object>().Single(item => ReferenceEquals(OptionalField(item, "Loader"), mountedLoader));
                 var errors = Assert.IsType<List<Exception>>(
@@ -559,12 +582,74 @@ public sealed class CuiSceneHostOriginalPublicationTests
             Assert.Same(close, rig.Host.OriginalClose);
             Assert.Same(close, rig.Host.CloseOriginalAsync());
             var combined = Assert.IsType<AggregateException>(await Record.ExceptionAsync(() => close!));
-            Assert.Equal(2, combined.InnerExceptions.Count);
-            Assert.Same(previousClose, combined.InnerExceptions[0]);
-            Assert.Same(laterRefusal, combined.InnerExceptions[1]);
+            var dispatchCauses = admitted.SelectMany(task => task.Exception!.InnerExceptions)
+                .Concat(admissionRefusal!.Exception!.InnerExceptions).Distinct<Exception>(ReferenceEqualityComparer.Instance).ToArray();
+            var disposal = rig.Track(Field<Task>(mountedLoader!, "_disposalTask"));
+            var disposalError = Assert.IsType<AggregateException>(await Record.ExceptionAsync(() => disposal));
+            AssertOriginalCauses(disposalError, dispatchCauses);
+            Assert.Same(disposalError, Assert.Single(disposal.Exception!.InnerExceptions));
+            rig.Expect(disposalError);
+            AssertOriginalCauses(combined, dispatchCauses.Concat([disposalError, previousClose, laterRefusal!]).ToArray());
             rig.Expect(combined);
-            // Earlier Show failure stays the same original object. The later actual host refusal
-            // survives its loader's safe observer catch and is independently inspectable at close.
+
+            async Task DispatchAndJoinOriginalAsync(int index)
+            {
+                Task? snapshot = null;
+                Task? actualDispatch = null;
+                Task? actualAdmissionRefusal = null;
+                await rig.Ui(() =>
+                {
+                    var pending = Field<HashSet<Task>>(mountedLoader!, "_pendingActionTasks");
+                    var previous = pending.ToArray();
+                    actualButton!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    var additions = pending.Where(task => !previous.Any(prior => ReferenceEquals(prior, task))).ToArray();
+                    if (index < 128)
+                    {
+                        actualDispatch = rig.Track(Assert.Single(additions));
+                        admitted.Add(actualDispatch);
+                    }
+                    else Assert.Empty(additions);
+                    actualAdmissionRefusal = OptionalField(mountedLoader!, "_admissionFailureTask") as Task;
+                    if (index < 128) Assert.Null(actualAdmissionRefusal);
+                    else if (admissionRefusal is null) admissionRefusal = rig.Track(actualAdmissionRefusal!);
+                    else Assert.Same(admissionRefusal, actualAdmissionRefusal);
+                    snapshot = rig.Track(mountedLoader!.WhenActionsIdleAsync());
+                });
+                if (actualDispatch is not null)
+                {
+                    var actualError = await Record.ExceptionAsync(() => actualDispatch);
+                    Assert.True(actualDispatch.IsFaulted);
+                    Assert.Same(actualError, Assert.Single(actualDispatch.Exception!.InnerExceptions));
+                    if (index < 126) Assert.Same(primaryAction, actualError);
+                    else
+                    {
+                        var group = Assert.IsType<AggregateException>(actualError);
+                        Assert.Equal(2, group.InnerExceptions.Count);
+                        Assert.Same(primaryAction, group.InnerExceptions[0]);
+                        laterRefusal ??= Assert.IsType<InvalidOperationException>(OptionalField(rig.Host, "_capacityRefusal"));
+                        Assert.Same(laterRefusal, group.InnerExceptions[1]);
+                    }
+                    rig.Expect(actualError!);
+                }
+                if (index == 128)
+                {
+                    var group = Assert.IsType<AggregateException>(await Record.ExceptionAsync(() => actualAdmissionRefusal!));
+                    Assert.True(actualAdmissionRefusal!.IsFaulted);
+                    Assert.Same(group, Assert.Single(actualAdmissionRefusal.Exception!.InnerExceptions));
+                    Assert.Equal(2, group.InnerExceptions.Count);
+                    Assert.IsType<InvalidOperationException>(group.InnerExceptions[0]);
+                    Assert.NotSame(laterRefusal, group.InnerExceptions[0]);
+                    Assert.Same(laterRefusal, group.InnerExceptions[1]);
+                    admissionRefusalError = group;
+                    rig.Expect(group);
+                }
+                var snapshotError = await Record.ExceptionAsync(() => snapshot!);
+                Assert.Same(primaryAction, snapshotError);
+                Assert.True(snapshot!.IsFaulted);
+                var expected = admitted.SelectMany(task => task.Exception!.InnerExceptions)
+                    .Concat(actualAdmissionRefusal is null ? Enumerable.Empty<Exception>() : actualAdmissionRefusal.Exception!.InnerExceptions).ToArray();
+                AssertOriginalCauseOccurrences(snapshot.Exception!.InnerExceptions, expected);
+            }
         });
     }
 
@@ -600,14 +685,16 @@ public sealed class CuiSceneHostOriginalPublicationTests
             });
             Assert.Same(primary, await Record.ExceptionAsync(() => action.Original!));
             rig.Expect(primary);
-            await pipeline!;
-            // The accepted action only REQUESTED retirement. Its dependency is now settled, so
-            // the native owner can join the actual close outside that action chain.
-            await close!;
-            Assert.True(pipeline.IsCompletedSuccessfully);
-            Assert.True(close.IsCompletedSuccessfully);
-            // Existing loader handling still masks the raw dispatcher cause from the pipeline;
-            // its success is settlement only. The fixture separately retains that actual cause.
+            Assert.Same(primary, await Record.ExceptionAsync(() => pipeline!));
+            Assert.True(pipeline!.IsFaulted);
+            Assert.Same(primary, Assert.Single(pipeline!.Exception!.InnerExceptions));
+            // Request-only retirement seals publication before the native owner joins this
+            // independently settled action. Close must preserve its exact original failure.
+            Assert.Same(primary, await Record.ExceptionAsync(() => close!));
+            Assert.True(close!.IsFaulted);
+            Assert.Same(primary, Assert.Single(close.Exception!.InnerExceptions));
+            Assert.Same(close, rig.Host.OriginalClose);
+            Assert.Same(close, rig.Host.CloseOriginalAsync());
         });
     }
 
@@ -623,6 +710,35 @@ public sealed class CuiSceneHostOriginalPublicationTests
     private static object? OptionalField(object owner, string name) =>
         (owner.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)
             ?? throw new MissingFieldException(owner.GetType().FullName, name)).GetValue(owner);
+
+    private static void AssertOriginalSourceWithdrawal(CuiSceneHost host, OperationCanceledException withdrawal)
+    {
+        var records = Assert.IsAssignableFrom<System.Collections.IEnumerable>(OptionalField(host, "_originalPublications"));
+        var withdrawals = records.Cast<object>().SelectMany(record =>
+            Assert.IsType<List<OperationCanceledException>>(record.GetType()
+                .GetProperty("SourceWithdrawals", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(record))).ToArray();
+        Assert.Same(withdrawal, Assert.Single(withdrawals));
+    }
+
+    private static void AssertOriginalCauses(Exception ownerFailure, params Exception[] expected)
+    {
+        if (expected.Length == 1) Assert.Same(expected[0], ownerFailure);
+        else AssertOriginalCauseOccurrences(Assert.IsType<AggregateException>(ownerFailure).InnerExceptions, expected);
+    }
+
+    // Only inspect the supplied actual CLR Task wrapper or the specific owner-produced
+    // wrapper already asserted by this fixture. Foreign nested/empty groups stay opaque.
+    private static void AssertOriginalCauseOccurrences(IEnumerable<Exception> actual, IEnumerable<Exception> expected)
+    {
+        var remaining = expected.ToList();
+        foreach (var cause in actual)
+        {
+            var index = remaining.FindIndex(prior => ReferenceEquals(prior, cause));
+            Assert.True(index >= 0, "The actual source retained an unexpected original cause.");
+            remaining.RemoveAt(index);
+        }
+        Assert.Empty(remaining);
+    }
 
     private static async Task RunAsync(Func<OriginalRig, Task> body, CuiControlRegistry? registry = null)
     {

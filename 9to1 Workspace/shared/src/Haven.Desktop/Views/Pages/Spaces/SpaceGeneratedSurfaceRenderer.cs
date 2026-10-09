@@ -1,6 +1,8 @@
 using System.Text.Json;
 using Haven.Application;
 using Haven.Desktop.HavenUI.GenerativeUi;
+using Haven.Desktop.Services;
+using Avalonia.Threading;
 using Haven.UI.Components;
 
 namespace Haven.Desktop.Views.Pages.Spaces;
@@ -61,16 +63,18 @@ internal sealed class SpaceGeneratedSurfaceRenderer
         };
 
         var surface = new HavenGenUiSceneSurface(_router, _instances);
+        var mount = new SpaceGeneratedSurfaceMount(surface, _instances, document.Origin.InstanceId);
         try
         {
             surface.Present(document);
-            return new SpaceGeneratedSurfaceMount(surface, _instances, document.Origin.InstanceId);
+            return mount;
         }
-        catch
+        catch (Exception error)
         {
-            surface.Dispose();
-            _instances.Remove(document.Origin.InstanceId);
-            throw;
+            mount.RequestRetirement();
+            // The page must retain and join this actual partially acquired surface.
+            // Removing its instance before asynchronous drain loses live event custody.
+            throw new SpaceGeneratedSurfaceRenderException(mount, error);
         }
     }
 
@@ -96,28 +100,49 @@ internal sealed class SpaceGeneratedSurfaceRenderer
     }
 }
 
-internal sealed class SpaceGeneratedSurfaceMount : IDisposable
+internal sealed class SpaceGeneratedSurfaceMount : IDisposable, IAsyncDisposable,
+    IDesktopOriginalRetirementParticipant, IDesktopOriginalRetirementJoinGuard
 {
     private readonly HavenGenUiSceneSurface _surface;
     private readonly GenUiInstanceStore _instances;
     private readonly Guid _instanceId;
-    private bool _disposed;
+    private readonly DesktopOriginalWorkLifetime _work;
 
     public SpaceGeneratedSurfaceMount(HavenGenUiSceneSurface surface, GenUiInstanceStore instances, Guid instanceId)
     {
         _surface = surface;
         _instances = instances;
         _instanceId = instanceId;
+        _work = new(() => { _surface.RequestRetirement(); return Task.CompletedTask; }, CleanupOriginalAsync);
     }
 
     public Container Root => _surface.Root;
     public Guid InstanceId => _instanceId;
 
-    public void Dispose()
+    internal Task? OriginalClose => _work.OriginalClose;
+
+    public void DemandExternalOriginalRetirementJoin()
     {
-        if (_disposed) return;
-        _disposed = true;
-        _surface.Dispose();
-        _instances.Remove(_instanceId);
+        _work.DemandExternalClose();
+        _surface.DemandOriginalExternalClose();
     }
+
+    public void RequestRetirement() => _work.RequestRetirement();
+    public Task CloseAndDrainAsync() { DemandExternalOriginalRetirementJoin(); return _work.CloseAndDrainAsync(); }
+
+    private async Task CleanupOriginalAsync()
+    {
+        var actual = _surface.OriginalClose ?? throw new InvalidOperationException("No actual generated Space surface close was acquired.");
+        await actual.ConfigureAwait(false);
+        await Dispatcher.UIThread.InvokeAsync(() => _work.RunCloseCallback(() => _instances.Remove(_instanceId))).GetTask().ConfigureAwait(false);
+    }
+
+    public void Dispose() => RequestRetirement();
+    public ValueTask DisposeAsync() => new(CloseAndDrainAsync());
+}
+
+internal sealed class SpaceGeneratedSurfaceRenderException(SpaceGeneratedSurfaceMount actualMount, Exception cause)
+    : InvalidOperationException(cause.Message, cause)
+{
+    internal SpaceGeneratedSurfaceMount ActualMount { get; } = actualMount;
 }

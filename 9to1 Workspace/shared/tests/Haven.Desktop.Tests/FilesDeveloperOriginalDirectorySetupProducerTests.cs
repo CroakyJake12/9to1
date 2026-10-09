@@ -158,7 +158,7 @@ public sealed partial class FilesDeveloperOriginalDirectorySetupProducerTests
     private sealed class Permission(SetupSource issuer, DeveloperProjectSetupIntent intent, IDeveloperProjectOriginalSourceCapture capture) : IDeveloperProjectOriginalSetupPermission
     {
         internal DeveloperProjectSetupIntent Intent => intent; internal int Starts; private Entry? _last;
-        internal Func<DeveloperProjectSetupStep, Action<Action>, Action<Task>, CancellationToken, Task<bool>>? ScopedCheck;
+        internal Func<DeveloperProjectSetupStep, Action<Action>, Action<Task>, CancellationToken, Task<bool>>? ScopedCheck = null;
         public Task<IDeveloperProjectOriginalSetupStepEntry> EnterOriginalStepAsync(DeveloperProjectSetupStep step, CancellationToken token)
         { token.ThrowIfCancellationRequested(); if (!intent.Steps.Any(value => ReferenceEquals(value, step))) throw new UnauthorizedAccessException(); Starts++; return Task.FromResult<IDeveloperProjectOriginalSetupStepEntry>(_last = new(step, ScopedCheck)); }
         public bool IsIssuedOriginalStepEntry(DeveloperProjectSetupStep step, IDeveloperProjectOriginalSetupStepEntry entry) => ReferenceEquals(entry, _last) && _last?.Closed == false && ReferenceEquals(_last.Step, step);

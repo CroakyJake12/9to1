@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Skia;
+using CakeOS.Cui.Runtime;
 
 [assembly: AvaloniaTestApplication(typeof(HavenOS.Images.Tests.PictureTestAppBuilder))]
 
@@ -9,7 +10,7 @@ namespace HavenOS.Images.Tests;
 
 public static class PictureTestAppBuilder
 {
-    public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<App>()
+    public static AppBuilder BuildAvaloniaApp() => CuiNativeHost.ConfigureFonts(AppBuilder.Configure<App>()
         .UseSkia()
-        .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false });
+        .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false }));
 }

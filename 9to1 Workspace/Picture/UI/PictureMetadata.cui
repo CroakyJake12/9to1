@@ -1,0 +1,12 @@
+<Cui id="9to1.Picture.Metadata" version="1">
+  <Page AccessibleName="Image information">
+    <Container Type="Vertical Stack" Margin="20" Spacing="12" VerticalScrolling="True">
+      <Text FontSize="22" FontWeight="Bold">Image information</Text>
+      <Text Text="{Binding FileFacts}" TextWrapping="Wrap" AccessibleName="Image file facts" />
+      <Text FontSize="18" FontWeight="SemiBold">Embedded metadata</Text>
+      <Text Text="{Binding EmbeddedMetadata}" TextWrapping="Wrap" AccessibleName="Embedded image metadata" />
+      <Text Text="{Binding MetadataNotice}" TextWrapping="Wrap" />
+      <Button action="picture.metadata.close" AccessibleName="Close image information">Close</Button>
+    </Container>
+  </Page>
+</Cui>

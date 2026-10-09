@@ -24,6 +24,8 @@ public sealed class CanvasNativeCuiSurface(Func<CancellationToken, Task<CanvasRn
     private bool _initialized;
     private int _operations;
 
+    public Task? OriginalCloseTask => _originalWork.OriginalCloseTask;
+
     public Task InitializeAsync(CancellationToken cancellationToken = default)
         => _originalWork.RunOriginalAsync(InitializeOriginalAsync, cancellationToken);
     private async Task InitializeOriginalAsync(CancellationToken cancellationToken)

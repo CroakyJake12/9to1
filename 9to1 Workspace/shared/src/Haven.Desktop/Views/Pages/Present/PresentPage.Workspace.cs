@@ -32,7 +32,7 @@ public sealed partial class PresentPage
         _route.ShapeStrokeWidthRequested += OnShapeStrokeWidthRequested;
     }
 
-    public async Task<bool> OpenDocumentAsync(Guid documentId, CancellationToken cancellationToken = default)
+    public Task<bool> OpenDocumentAsync(Guid documentId, CancellationToken cancellationToken = default) => RunOriginalPresentAsync(async () =>
     {
         if (!_initialized) await InitializeAsync(cancellationToken);
         await RefreshDocumentsAsync(cancellationToken);
@@ -41,44 +41,58 @@ public sealed partial class PresentPage
             if (_documents[candidate].Id == documentId) { index = candidate; break; }
         if (index < 0)
         {
-            _route.SetLibrary(_documents);
-            _route.SetStatus("That presentation is no longer available locally.");
+            PublishOriginalPresentSource(() => _route.SetLibrary(_documents));
+            PublishOriginalPresentSource(() => _route.SetStatus("That presentation is no longer available locally."));
             return false;
         }
         await OpenDeckAtAsync(index, cancellationToken, saveBeforeSwitch: Document is not null);
         return Document?.Id == documentId;
-    }
+    });
 
-    public PresentEditApplyResult ApplyAiProposal(PresentEditProposal proposal)
+    public PresentEditApplyResult ApplyAiProposal(PresentEditProposal proposal) => RunOriginalPresentSynchronous(() =>
     {
         if (_editor is null) throw new InvalidOperationException("Open a presentation before applying an AI edit proposal.");
         var result = PresentAiEdits.Apply(_editor, proposal);
-        _route.SetStatus($"Applied {result.AppliedOperations} semantic AI edit{(result.AppliedOperations == 1 ? string.Empty : "s")}.");
-        _bus.Fire("Present.Ai.Applied");
+        PublishOriginalPresentSource(() => _route.SetStatus($"Applied {result.AppliedOperations} semantic AI edit{(result.AppliedOperations == 1 ? string.Empty : "s")}."));
+        PublishOriginalPresentSource(() => _bus.Fire("Present.Ai.Applied"));
         return result;
-    }
+    });
 
-    private async void OnOpenDocumentRequested(Guid documentId) =>
+    private void OnOpenDocumentRequested(Guid documentId) => ObserveOriginalPresentEvent(async () =>
+    {
         await RunBusyAsync(async () => { _ = await OpenDocumentAsync(documentId); }, "open this presentation");
+    });
 
-    private async void OnPinDocumentRequested(Guid documentId) =>
+    private void OnPinDocumentRequested(Guid documentId) => ObserveOriginalPresentEvent(async () =>
+    {
         await RunBusyAsync(() => TogglePinnedAsync(documentId), "update the pinned presentation");
+    });
 
     private async Task TogglePinnedAsync(Guid documentId)
     {
-        var document = Document?.Id == documentId ? Document : await _repository.LoadAsync(documentId, CancellationToken.None);
-        if (document is null) { await RefreshDocumentsAsync(CancellationToken.None); _route.SetLibrary(_documents); return; }
+        var document = Document?.Id == documentId ? Document : await AwaitOriginalPresentSource(() => _repository.LoadAsync(documentId, CancellationToken.None));
+        if (document is null) { await RefreshDocumentsAsync(CancellationToken.None); PublishOriginalPresentSource(() => _route.SetLibrary(_documents)); return; }
         var pinned = document.Metadata.TryGetValue("pinned", out var raw) && bool.TryParse(raw, out var parsed) && parsed;
         document.Metadata["pinned"] = (!pinned).ToString(CultureInfo.InvariantCulture);
-        var result = await _repository.SaveAsync(document, pinned ? "Presentation unpinned" : "Presentation pinned", CancellationToken.None);
+        if (ReferenceEquals(document, Document))
+        {
+            // The live pin intent belongs to the current draft until the SAME
+            // snapshot-save path acknowledges its exact edit generation.
+            ++_editGeneration; _dirty = true;
+            _ = await SaveAsync(pinned ? "Presentation unpinned" : "Presentation pinned");
+            return;
+        }
+        var result = await AwaitOriginalPresentSource(() => _repository.SaveAsync(document, pinned ? "Presentation unpinned" : "Presentation pinned", CancellationToken.None));
         document.Version = result.Version;
         await RefreshDocumentsAsync(CancellationToken.None);
         if (Document?.Id == documentId) { Document = document; RenderCurrent(); }
-        else _route.SetLibrary(_documents);
+        else PublishOriginalPresentSource(() => _route.SetLibrary(_documents));
     }
 
-    private async void OnTemplateRequested(string templateId) =>
+    private void OnTemplateRequested(string templateId) => ObserveOriginalPresentEvent(async () =>
+    {
         await RunBusyAsync(() => CreateTemplateAsync(templateId), "create this template");
+    });
 
     private async Task CreateTemplateAsync(string templateId)
     {
@@ -89,13 +103,13 @@ public sealed partial class PresentPage
             "pitch" => CreatePitchTemplate(),
             _ => PresentDocument.Create("Untitled presentation")
         };
-        var result = await _repository.SaveAsync(document, $"Created from {templateId} template", CancellationToken.None);
+        var result = await AwaitOriginalPresentSource(() => _repository.SaveAsync(document, $"Created from {templateId} template", CancellationToken.None));
         document.Version = result.Version;
         await RefreshDocumentsAsync(CancellationToken.None);
         Document = document; _deckIndex = IndexOfDocument(document.Id); _slideIndex = 0; _dirty = false;
         AttachEditor(document); RenderCurrent();
-        _route.SetStatus("Template created · autosave is on");
-        _bus.Fire("Present.Document.TemplateCreated");
+        PublishOriginalPresentSource(() => _route.SetStatus("Template created · autosave is on"));
+        PublishOriginalPresentSource(() => _bus.Fire("Present.Document.TemplateCreated"));
     }
 
     private static PresentDocument CreateLessonTemplate()
@@ -119,8 +133,10 @@ public sealed partial class PresentPage
         document.Normalize(); return document;
     }
 
-    private async void OnReturnToLibraryRequested(object? sender, EventArgs e) =>
+    private void OnReturnToLibraryRequested(object? sender, EventArgs e) => ObserveOriginalPresentEvent(async () =>
+    {
         await RunBusyAsync(ReturnToLibraryAsync, "return to the presentation library");
+    });
 
     private async Task ReturnToLibraryAsync()
     {
@@ -128,25 +144,25 @@ public sealed partial class PresentPage
         if (_editor is not null) _editor.Changed -= OnEditorChanged;
         Document = null; _editor = null; _playback = null; _slideIndex = 0; _dirty = false;
         await RefreshDocumentsAsync(CancellationToken.None);
-        _route.SetLibrary(_documents);
-        _bus.Fire("Present.Library.Opened");
+        PublishOriginalPresentSource(() => _route.SetLibrary(_documents));
+        PublishOriginalPresentSource(() => _bus.Fire("Present.Library.Opened"));
     }
 
-    private void OnAiCreateRequested(object? sender, EventArgs e)
+    private void OnAiCreateRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
     {
-        _bus.Fire("Present.Ai.CreateRequested");
-        _route.SetStatus("AI deck generation is not connected to a generator in this build; no presentation was fabricated.");
-    }
+        PublishOriginalPresentSource(() => _bus.Fire("Present.Ai.CreateRequested"));
+        PublishOriginalPresentSource(() => _route.SetStatus("AI deck generation is not connected to a generator in this build; no presentation was fabricated."));
+    });
 
-    private void OnAiEditRequested(object? sender, EventArgs e)
+    private void OnAiEditRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null) return;
         _ = PresentAiEdits.CaptureSelection(_editor);
-        _bus.Fire("Present.Ai.EditRequested");
-        _route.SetStatus("AI edit request exposed with the current semantic selection; edits apply only through a returned PresentEditProposal.");
-    }
+        PublishOriginalPresentSource(() => _bus.Fire("Present.Ai.EditRequested"));
+        PublishOriginalPresentSource(() => _route.SetStatus("AI edit request exposed with the current semantic selection; edits apply only through a returned PresentEditProposal."));
+    });
 
-    private void OnShapeFillRequested(string? color)
+    private void OnShapeFillRequested(string? color) => RunOriginalPresentEvent(() =>
     {
         if (_editor?.SelectedElements is not { Count: 1 } selected || selected[0].Kind != PresentElementKind.Shape) return;
         if (selected[0].VectorShape is not null)
@@ -163,9 +179,9 @@ public sealed partial class PresentPage
             CornerRadius = style.CornerRadius,
             Shadow = style.Shadow
         });
-    }
+    });
 
-    private void OnShapeStrokeRequested(string? color)
+    private void OnShapeStrokeRequested(string? color) => RunOriginalPresentEvent(() =>
     {
         if (_editor?.SelectedElements is not { Count: 1 } selected || selected[0].Kind != PresentElementKind.Shape) return;
         if (selected[0].VectorShape is not null)
@@ -182,9 +198,9 @@ public sealed partial class PresentPage
             CornerRadius = style.CornerRadius,
             Shadow = style.Shadow
         });
-    }
+    });
 
-    private void OnShapeStrokeWidthRequested(double width)
+    private void OnShapeStrokeWidthRequested(double width) => RunOriginalPresentEvent(() =>
     {
         if (_editor?.SelectedElements is not { Count: 1 } selected || selected[0].Kind != PresentElementKind.Shape) return;
         if (selected[0].VectorShape is not null)
@@ -201,43 +217,49 @@ public sealed partial class PresentPage
             CornerRadius = style.CornerRadius,
             Shadow = style.Shadow
         });
-    }
+    });
 
-    private void OnAddTableRequested(object? sender, EventArgs e)
+    private void OnAddTableRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
     {
-        if (_editor is null) return; _editor.AddTable(_editor.Selection.SlideId, 3, 3); _bus.Fire("Present.Object.TableAdded");
-    }
+        if (_editor is null) return; _editor.AddTable(_editor.Selection.SlideId, 3, 3); PublishOriginalPresentSource(() => _bus.Fire("Present.Object.TableAdded"));
+    });
 
-    private void OnAddChartRequested(object? sender, EventArgs e)
+    private void OnAddChartRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
     {
-        if (_editor is null) return; _editor.AddChart(_editor.Selection.SlideId); _bus.Fire("Present.Object.ChartAdded");
-    }
+        if (_editor is null) return; _editor.AddChart(_editor.Selection.SlideId); PublishOriginalPresentSource(() => _bus.Fire("Present.Object.ChartAdded"));
+    });
 
-    private async void OnAddImageRequested(object? sender, EventArgs e) => await PickAssetAsync(image: true);
-    private async void OnAddMediaRequested(object? sender, EventArgs e) => await PickAssetAsync(image: false);
+    private void OnAddImageRequested(object? sender, EventArgs e) => ObserveOriginalPresentEvent(async () =>
+    {
+        await PickAssetAsync(image: true);
+    });
+    private void OnAddMediaRequested(object? sender, EventArgs e) => ObserveOriginalPresentEvent(async () =>
+    {
+        await PickAssetAsync(image: false);
+    });
 
     private async Task PickAssetAsync(bool image)
     {
         if (_editor is null) return;
         var top = TopLevel.GetTopLevel(this);
-        if (top?.StorageProvider is null) { _route.SetStatus("File insertion is unavailable from this platform surface."); return; }
-        var files = await top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        if (top?.StorageProvider is null) { PublishOriginalPresentSource(() => _route.SetStatus("File insertion is unavailable from this platform surface.")); return; }
+        var files = await AwaitOriginalPresentSource(() => top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = image ? "Insert image" : "Insert media", AllowMultiple = false,
             FileTypeFilter = image
                 ? [new FilePickerFileType("Images") { Patterns = ["*.png", "*.jpg", "*.jpeg", "*.webp", "*.gif"] }]
                 : [new FilePickerFileType("Media") { Patterns = ["*.mp4", "*.webm", "*.mp3", "*.wav", "*.m4a"] }]
-        });
+        }));
         if (files.Count == 0) return;
-        var file = files[0]; var localPath = file.TryGetLocalPath();
+        var file = files[0]; var localPath = AcquireOriginalPresentSource(file.TryGetLocalPath);
         if (string.IsNullOrWhiteSpace(localPath))
         {
-            _route.SetStatus("This storage provider does not expose a durable local asset path yet, so the object was not inserted.");
+            PublishOriginalPresentSource(() => _route.SetStatus("This storage provider does not expose a durable local asset path yet, so the object was not inserted."));
             return;
         }
         if (image) _editor.AddImage(_editor.Selection.SlideId, localPath, file.Name);
         else _editor.AddMedia(_editor.Selection.SlideId, localPath, MediaType(localPath), file.Name);
-        _bus.Fire(image ? "Present.Object.ImageAdded" : "Present.Object.MediaAdded");
+        PublishOriginalPresentSource(() => _bus.Fire(image ? "Present.Object.ImageAdded" : "Present.Object.MediaAdded"));
     }
 
     private static string MediaType(string path) => Path.GetExtension(path).ToLowerInvariant() switch
@@ -245,18 +267,18 @@ public sealed partial class PresentPage
         ".mp4" => "video/mp4", ".webm" => "video/webm", ".mp3" => "audio/mpeg", ".wav" => "audio/wav", ".m4a" => "audio/mp4", _ => "application/octet-stream"
     };
 
-    private void OnInlineTextChanged(Guid elementId, string text)
+    private void OnInlineTextChanged(Guid elementId, string text) => RunOriginalPresentEvent(() =>
     {
         if (_editor is null) return; _editor.SetElementText(_editor.Selection.SlideId, elementId, text);
-    }
+    });
 
-    private void OnTableSizeRequested(int rows, int columns)
+    private void OnTableSizeRequested(int rows, int columns) => RunOriginalPresentEvent(() =>
     {
         if (_editor?.SelectedElements is not { Count: 1 } selected || selected[0].Kind != PresentElementKind.Table) return;
         _editor.ResizeTable(_editor.Selection.SlideId, selected[0].Id, rows, columns);
-    }
+    });
 
-    private void OnTableDataRequested(string text)
+    private void OnTableDataRequested(string text) => RunOriginalPresentEvent(() =>
     {
         if (_editor?.SelectedElements is not { Count: 1 } selected || selected[0].Kind != PresentElementKind.Table) return;
         var rows = (text ?? string.Empty).Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
@@ -269,16 +291,16 @@ public sealed partial class PresentPage
         for (var column = 0; column < columnCount; column++)
             _editor.SetTableCellText(_editor.Selection.SlideId, selected[0].Id, row, column,
                 column < parsed[row].Length ? parsed[row][column] : string.Empty);
-        _route.SetStatus($"Updated {rowCount} × {columnCount} table cells.");
-    }
+        PublishOriginalPresentSource(() => _route.SetStatus($"Updated {rowCount} × {columnCount} table cells."));
+    });
 
-    private void OnChartTypeRequested(PresentChartType type)
+    private void OnChartTypeRequested(PresentChartType type) => RunOriginalPresentEvent(() =>
     {
         if (_editor?.SelectedElements is not { Count: 1 } selected || selected[0].Kind != PresentElementKind.Chart) return;
         _editor.SetChartType(_editor.Selection.SlideId, selected[0].Id, type);
-    }
+    });
 
-    private void OnChartDataRequested(string text)
+    private void OnChartDataRequested(string text) => RunOriginalPresentEvent(() =>
     {
         if (_editor?.SelectedElements is not { Count: 1 } selected || selected[0].Kind != PresentElementKind.Chart) return;
         var categories = new List<string>(); var values = new List<double>();
@@ -288,27 +310,33 @@ public sealed partial class PresentPage
             if (!double.TryParse(line[(comma + 1)..].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var value)) continue;
             categories.Add(line[..comma].Trim()); values.Add(value);
         }
-        if (categories.Count == 0) { _route.SetStatus("Chart data needs lines in ‘Category, value’ format."); return; }
+        if (categories.Count == 0) { PublishOriginalPresentSource(() => _route.SetStatus("Chart data needs lines in ‘Category, value’ format.")); return; }
         _editor.SetChartData(_editor.Selection.SlideId, selected[0].Id, categories, [new PresentChartSeries { Name = "Series 1", Values = values }]);
-    }
+    });
 
-    private void OnDistributeHorizontalRequested(object? sender, EventArgs e) => _editor?.DistributeSelection(PresentDistribution.Horizontal);
-    private void OnDistributeVerticalRequested(object? sender, EventArgs e) => _editor?.DistributeSelection(PresentDistribution.Vertical);
-
-    private void OnPlaybackPreviousRequested(object? sender, EventArgs e)
+    private void OnDistributeHorizontalRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
     {
-        if (_playback is null || Document is null) return; _playback.Previous(); _route.SetPlayback(Document, _playback.Frame);
-    }
-
-    private void OnPlaybackNextRequested(object? sender, EventArgs e)
+        _editor?.DistributeSelection(PresentDistribution.Horizontal);
+    });
+    private void OnDistributeVerticalRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
     {
-        if (_playback is null || Document is null) return; _playback.Advance(); _route.SetPlayback(Document, _playback.Frame);
-    }
+        _editor?.DistributeSelection(PresentDistribution.Vertical);
+    });
 
-    private void OnPlaybackExitRequested(object? sender, EventArgs e)
+    private void OnPlaybackPreviousRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
     {
-        _playback = null; _route.HidePlayback(); _route.SetStatus("Presentation ended."); _bus.Fire("Present.Playback.Ended");
-    }
+        if (_playback is null || Document is null) return; _playback.Previous(); PublishOriginalPresentSource(() => _route.SetPlayback(Document, _playback.Frame));
+    });
+
+    private void OnPlaybackNextRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        if (_playback is null || Document is null) return; _playback.Advance(); PublishOriginalPresentSource(() => _route.SetPlayback(Document, _playback.Frame));
+    });
+
+    private void OnPlaybackExitRequested(object? sender, EventArgs e) => RunOriginalPresentEvent(() =>
+    {
+        _playback = null; PublishOriginalPresentSource(() => _route.HidePlayback()); PublishOriginalPresentSource(() => _route.SetStatus("Presentation ended.")); PublishOriginalPresentSource(() => _bus.Fire("Present.Playback.Ended"));
+    });
 
     private void DisposeWorkspace()
     {

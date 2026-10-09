@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup>
+  <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+  <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  <OutputType>WinExe</OutputType>
+  <AssemblyName>9to1.Browse</AssemblyName>
+  <AssemblyTitle>Browse</AssemblyTitle>
+  <RootNamespace>HavenOS.Apps.Browse</RootNamespace>
+ </PropertyGroup>
+ <ItemGroup>
+  <Compile Remove="Tests\**\*.cs" />
+  <ProjectReference Include="..\NativeUI\HavenOS.Apps.Browse.NativeUI.csproj" />
+  <PackageReference Include="Avalonia.Controls.WebView" />
+  <PackageReference Include="Avalonia.Desktop" />
+  <AssemblyMetadata Include="9to1.WindowsAppId" Value="Browse" />
+  <!-- Same maintained version as shared Desktop; Core COM wrapper only. -->
+  <PackageReference Include="Microsoft.Web.WebView2" VersionOverride="1.0.4078.44" GeneratePathProperty="true" ExcludeAssets="all" />
+  <Reference Include="Microsoft.Web.WebView2.Core"><HintPath>$(PkgMicrosoft_Web_WebView2)\lib\net462\Microsoft.Web.WebView2.Core.dll</HintPath></Reference>
+ </ItemGroup>
+</Project>

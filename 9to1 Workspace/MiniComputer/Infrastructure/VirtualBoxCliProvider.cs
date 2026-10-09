@@ -32,7 +32,7 @@ public sealed class LocalVirtualDiskLocationProvider : IVirtualDiskLocationProvi
 }
 
 /// <summary>External-host adapter. It never reports the separately installed CLI as a bundled fork.</summary>
-public sealed class VirtualBoxCliProvider : IVirtualisationProvider
+public sealed partial class VirtualBoxCliProvider : IVirtualisationProvider
 {
     public static ProviderId DefaultProviderID { get; } = new(Guid.Parse("df2f9a5a-60d3-4cf1-8d51-9ee128a040f4"));
     private readonly string? _executablePath;

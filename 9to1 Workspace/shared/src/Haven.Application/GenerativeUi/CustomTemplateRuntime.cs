@@ -9,7 +9,7 @@ namespace Haven.Application;
 /// declarative: actions may request bounded property/state patches but cannot
 /// supply executable code.
 /// </summary>
-public sealed class CustomTemplateRuntime
+public sealed partial class CustomTemplateRuntime
 {
     private readonly GenUiLocalActionRegistry _localActions;
     private readonly GenUiInstanceStore _instances;
@@ -48,10 +48,11 @@ public sealed class CustomTemplateRuntime
             root = root with { Children = children };
         }
 
-        RegisterActionHandlers(instanceId, root, statusId, actionDefinitions);
-
         var origin = new GenUiOrigin(threadId, appKey, null, instanceId);
-        return new GenUiDocument(
+        root = BindOriginalInstanceTargets(instanceId, root);
+        RegisterActionHandlers(origin, root, statusId, actionDefinitions);
+
+        return RememberOriginalInstanceActions(new GenUiDocument(
             Guid.NewGuid(),
             GenerativeUiContractValidator.CurrentContractVersion,
             origin,
@@ -59,15 +60,16 @@ public sealed class CustomTemplateRuntime
             appKey,
             root,
             new Dictionary<string, JsonElement>(StringComparer.Ordinal),
-            DateTimeOffset.UtcNow);
+            DateTimeOffset.UtcNow));
     }
 
     private void RegisterActionHandlers(
-        Guid instanceId,
+        GenUiOrigin origin,
         GenUiComponent root,
         string statusId,
         IReadOnlyDictionary<string, CustomActionDefinition> actionDefinitions)
     {
+        var instanceId = origin.InstanceId;
         var componentIds = CollectComponentIds(root);
         foreach (var actionId in CollectActionIds(root))
         {
@@ -78,7 +80,7 @@ public sealed class CustomTemplateRuntime
                 .Take(24)
                 .ToArray() ?? [];
 
-            _localActions.RegisterOrReplace(actionId, (evt, ct) =>
+            RegisterOriginalInstanceHandler(origin, actionId, (evt, ct) =>
             {
                 ct.ThrowIfCancellationRequested();
                 var now = DateTimeOffset.UtcNow;

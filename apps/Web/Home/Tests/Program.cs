@@ -130,34 +130,38 @@ var cases = new (string Name, Func<Task> Run)[]
         var service = new Service((_, _) => Task.FromResult(Fail("AuthenticationRequired")));
         await using var owner = Feature(service);
         var targets = new List<HomeFeatureNavigationRequest>();
-        var registered = new HashSet<string>(StringComparer.Ordinal) { "app.write", "app.boards" };
+        var registered = new HashSet<string>(StringComparer.Ordinal) { "app.write", "app.present", "app.picture", "app.wave", "app.boards" };
         using var home = new BrowserHomeContext(document, targets.Add, owner, registered.Contains);
         await home.ActivateAsync();
         Check(home.IsActionAvailable("OpenWrite") is true && home.IsActionAvailable("OpenBoards") is true, "registered local owner shortcut unavailable");
         Check(home.IsActionAvailable("OpenBrowse") is false && home.IsActionAvailable("OpenData") is false, "unregistered owner shortcut enabled");
         await home.DispatchAsync("OpenWrite", null);
+        await home.DispatchAsync("OpenPresent", null);
+        await home.DispatchAsync("OpenPicture", null);
+        await home.DispatchAsync("OpenWave", null);
         await home.DispatchAsync("OpenBoards", null);
-        Check(targets.Select(target => target.RouteId).SequenceEqual(new[] { "app.write", "app.boards" }), "shortcut changed owner route");
+        Check(targets.Select(target => target.RouteId).SequenceEqual(new[] { "app.write", "app.present", "app.picture", "app.wave", "app.boards" }), "shortcut changed owner route");
         Check(targets.All(target => target.EntityId is null && target.EntityType is null && target.Action is null), "shortcut fabricated an artifact or operation");
         Check(service.Actions.SequenceEqual(new[] { "GetCurrent" }), "local navigation performed account work");
         AssertUnavailable(home);
     }),
     ("a removed owner route is rechecked before shortcut dispatch", async () =>
     {
-        var registered = new HashSet<string>(StringComparer.Ordinal) { "app.write" };
+        var registered = new HashSet<string>(StringComparer.Ordinal) { "app.picture", "app.wave" };
         var targets = new List<HomeFeatureNavigationRequest>();
         using var home = new BrowserHomeContext(document, targets.Add, isRegisteredRoute: registered.Contains);
-        Check(home.IsActionAvailable("OpenWrite") is true, "initial registered route missing");
+        Check(home.IsActionAvailable("OpenPicture") is true && home.IsActionAvailable("OpenWave") is true, "initial registered route missing");
         registered.Clear();
-        await home.DispatchAsync("OpenWrite", null);
-        Check(home.IsActionAvailable("OpenWrite") is false && targets.Count == 0, "removed owner route dispatched");
+        await home.DispatchAsync("OpenPicture", null);
+        await home.DispatchAsync("OpenWave", null);
+        Check(home.IsActionAvailable("OpenPicture") is false && home.IsActionAvailable("OpenWave") is false && targets.Count == 0, "removed owner route dispatched");
         AssertUnavailable(home);
     }),
     ("missing route observation never enables or dispatches a feature shortcut", async () =>
     {
         var targets = new List<HomeFeatureNavigationRequest>();
         using var home = new BrowserHomeContext(document, targets.Add);
-        foreach (var command in new[] { "OpenStudio", "OpenWrite", "OpenBrowse", "OpenData", "OpenBoards", "NavigateApps", "NavigateDiscover", "NavigateMesh", "NavigatePermissions", "NavigateNotifications", "NavigateSpaces", "NavigateAutomations" })
+        foreach (var command in new[] { "OpenStudio", "OpenWrite", "OpenPresent", "OpenPicture", "OpenWave", "OpenBrowse", "OpenData", "OpenBoards", "NavigateApps", "NavigateDiscover", "NavigateMesh", "NavigatePermissions", "NavigateNotifications", "NavigateSpaces", "NavigateAutomations" })
         {
             Check(home.IsActionAvailable(command) is false, "missing registration enabled " + command);
             await home.DispatchAsync(command, null);

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>HavenOS.Stacks.NativeUI</AssemblyName>
+    <RootNamespace>HavenOS.Apps.Stacks.NativeUI</RootNamespace>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Tests\**\*</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../HavenOS.Stacks.csproj" />
+    <ProjectReference Include="../../shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj" />
+    <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+    <EmbeddedResource Include="UI/*.cui" LogicalName="HavenOS.Stacks.NativeUI.UI.%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

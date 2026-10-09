@@ -14,6 +14,9 @@ internal sealed class TaskRunColdContinuationBinding(TaskExecutionCoordinator ow
     internal readonly ITaskRunColdJournalAcknowledgment Acknowledgment = acknowledgment;
     internal readonly TaskRunInvocationCustody Invocation = invocation;
     internal bool BodyBound;
+    internal TaskRunColdChatInput? PreparedOriginalInput;
+    internal TaskRunColdOriginalSourceScope? OriginalMemorySourceScope;
+    internal TaskRunColdChatInput CurrentOriginalInput => PreparedOriginalInput ?? Entry.Capsule.OriginalInput;
     internal ITaskRunColdToolCheckpointSelection? Selection;
     internal TaskRunAttemptAdmission? NewAdmission;
     internal TaskExecutionSnapshot? PreparedTask;
@@ -156,6 +159,11 @@ public sealed partial class TaskExecutionCoordinator
                 _coldContinuationBindings.Add(invocation, owned);
             }
             binding = owned;
+            // Fresh memory admission precedes local provider discovery/attempt selection.
+            // Serialized observations cannot recover the previous live source input.
+            owned.OriginalMemorySourceScope = new TaskRunColdOriginalSourceScope(work);
+            await work.AwaitAsync(() => chat.PrepareOriginalColdMemoryWithinSourceAsync(owned,
+                owned.OriginalMemorySourceScope, work.RetainSource, token)).ConfigureAwait(false);
             if (entry.Capsule.Boundary == TaskRunColdBoundaryKind.SettledUnfinishedToolResponse)
                 await PrepareOriginalColdToolContinuationAsync(owned, work, outer, token).ConfigureAwait(false);
             return owned;

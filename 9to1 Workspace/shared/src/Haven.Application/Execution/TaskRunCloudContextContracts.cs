@@ -21,7 +21,15 @@ public sealed record TaskRunContextInventory(
     string? OriginalWorkspaceRoot,
     string? BackgroundAppId = null,
     string? BackgroundProjectId = null,
-    IReadOnlySet<string>? OriginalBackgroundScopes = null);
+    IReadOnlySet<string>? OriginalBackgroundScopes = null)
+{
+    // Selected by the trusted original Chat source after current protected READ.
+    // This durable observation cannot reconstruct the JsonIgnored live source.
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public ChatOriginalAttachmentLineage? OriginalAttachmentLineage { get; init; }
+    [System.Text.Json.Serialization.JsonIgnore]
+    public ChatOriginalAttachmentInvocation? OriginalAttachmentInvocation { get; init; }
+}
 
 /// <summary>
 /// Called ONLY by the trusted application producer, after actual context reads and existing

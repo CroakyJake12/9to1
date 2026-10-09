@@ -51,6 +51,21 @@ public sealed record CuiPalette(
     Color AttentionBorder,
     CuiTheme Theme = CuiTheme.Glow)
 {
+    /// <summary>Ink for an opaque primitive button, using existing palette roles only.</summary>
+    public Color ButtonForeground => ResolveButtonForeground(Button);
+    public Color ButtonHoverForeground => ResolveButtonForeground(ButtonHover);
+    public Color ButtonPressedForeground => ResolveButtonForeground(ButtonPressed);
+
+    private Color ResolveButtonForeground(Color background)
+    {
+        // Translucent states require their actual backing surface. Preserve the
+        // existing text role rather than treating alpha as an opaque colour.
+        if (background.A != 255 || CuiContrast.Ratio(Text, background) >= 4.5d)
+            return Text;
+        return CuiContrast.Ratio(AccentInk, background) > CuiContrast.Ratio(Text, background)
+            ? AccentInk : Text;
+    }
+
     /// <summary>The live three-tier gradient palette for the active page.</summary>
     public CuiAccentPalette AccentPalette => CuiAccentPalette.FromAnchors(
         Accent,

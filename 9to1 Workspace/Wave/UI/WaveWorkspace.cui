@@ -1,0 +1,97 @@
+<Cui id="9to1.Wave.Workspace" version="1">
+ <Page>
+  <ScrollViewer id="WaveScroll">
+   <Container Type="Vertical Stack" Margin="16" Spacing="10">
+    <Text Text="{Binding ProjectLabel}" FontSize="24" FontWeight="SemiBold" />
+    <Text Text="{Binding AudioConfiguration}" />
+    <Container Type="Grid" Columns="*,*,*" Rows="Auto,Auto">
+     <Button id="WaveSaveButton" action="9to1.Wave.Save" IsEnabled="{Binding CanSave}" Margin="0,0,4,4">Save</Button>
+     <Button id="WaveUndoButton" action="9to1.Wave.Undo" IsEnabled="{Binding CanUndo}" GridColumn="1" Margin="4,0,4,4">Undo</Button>
+     <Button id="WaveRedoButton" action="9to1.Wave.Redo" IsEnabled="{Binding CanRedo}" GridColumn="2" Margin="4,0,0,4">Redo</Button>
+     <Button id="WaveImportButton" action="9to1.Wave.Import" IsEnabled="{Binding CanImport}" GridRow="1" Margin="0,4,4,0">Add audio from Files</Button>
+     <Button id="WaveExportButton" action="9to1.Wave.Export" IsEnabled="{Binding CanExport}" GridRow="1" GridColumn="1" GridColumnSpan="2" Margin="4,4,0,0">Export rendered mix</Button>
+    </Container>
+    <Text Text="{Binding SourceStatus}" TextWrapping="Wrap" />
+    <Container Type="Grid" Columns="{Binding WorkspaceColumns}" Rows="{Binding WorkspaceRows}">
+     <Container Type="Vertical Stack" Spacing="6" Margin="0,8,10,8">
+      <Text FontSize="18" FontWeight="SemiBold">Tracks and mixer</Text>
+      <ComboBox id="WaveTrackSelector" ItemsSource="{Binding TrackNames}" SelectedIndex="{Binding TrackIndex, mode=TwoWay, type=int}" IsEnabled="{Binding CanEdit}" AccessibleName="Audio track" />
+      <Input Type="Text" id="WaveTrackNameBox" Text="{Binding TrackName, mode=TwoWay}" AccessibleName="New audio track name" />
+      <Button id="WaveAddTrackButton" action="9to1.Wave.AddTrack" IsEnabled="{Binding CanEdit}">Add track</Button>
+      <Text>Track gain</Text><Input Type="Text" id="WaveTrackGainBox" Text="{Binding TrackGain, mode=TwoWay}" AccessibleName="Track linear gain, zero to sixty-four" />
+      <Text>Pan</Text><Input Type="Text" id="WaveTrackPanBox" Text="{Binding TrackPan, mode=TwoWay}" AccessibleName="Track pan, minus one left to one right" />
+      <Input Type="Checkbox" id="WaveMuteCheck" IsChecked="{Binding TrackMute, mode=TwoWay, type=bool}" Content="Mute track" AccessibleName="Mute selected track" />
+      <Input Type="Checkbox" id="WaveSoloCheck" IsChecked="{Binding TrackSolo, mode=TwoWay, type=bool}" Content="Solo track" AccessibleName="Solo selected track" />
+      <Button id="WaveMixerButton" action="9to1.Wave.Mixer" IsEnabled="{Binding CanEdit}">Apply track mix</Button>
+     </Container>
+     <Container Type="Vertical Stack" GridColumn="{Binding TimelineColumn, type=int}" GridRow="{Binding TimelineRow, type=int}" Spacing="6" Margin="0,8,10,8">
+      <Text FontSize="18" FontWeight="SemiBold">Multitrack timeline</Text>
+      <Text Text="{Binding PlayheadText}" AccessibleName="Timeline position" />
+      <Input Type="Text" id="WavePlayheadBox" Text="{Binding PlayheadFrame, mode=TwoWay}" AccessibleName="Timeline playhead audio frame" />
+      <Container Type="Grid" Columns="*,*" Rows="Auto,Auto">
+       <Button id="WaveStartButton" action="9to1.Wave.Start">Start</Button>
+       <Button id="WaveEndButton" action="9to1.Wave.End" GridColumn="1">End</Button>
+       <Button id="WavePreviousMarkerButton" action="9to1.Wave.PreviousMarker" GridRow="1">Previous marker</Button>
+       <Button id="WaveNextMarkerButton" action="9to1.Wave.NextMarker" GridRow="1" GridColumn="1">Next marker</Button>
+      </Container>
+      <Object Type="wave.timeline" id="WaveTimeline" Height="{Binding TimelineHeight, type=double}" AccessibleName="Audio multitrack timeline. Select clips with the clip selector or pointer. Arrow keys move the playhead by one audio frame." />
+      <Text FontWeight="SemiBold">Original audio preview</Text>
+      <Text Text="{Binding SourcePreviewStatus}" TextWrapping="Wrap" />
+      <Text Text="{Binding SourcePreviewPosition}" AccessibleName="Original audio preview position" />
+      <Container Type="Grid" Columns="*,*,*" Rows="Auto,Auto">
+       <Button id="WaveSourcePlayButton" action="9to1.Wave.SourcePlay">Play source</Button>
+       <Button id="WaveSourcePauseButton" action="9to1.Wave.SourcePause" GridColumn="1">Pause</Button>
+       <Button id="WaveSourceStopButton" action="9to1.Wave.SourceStop" GridColumn="2">Stop</Button>
+       <Button id="WaveSourceSeekButton" action="9to1.Wave.SourceSeek" GridRow="1" GridColumnSpan="3">Seek source to playhead</Button>
+      </Container>
+      <Text>Marker at playhead</Text><Input Type="Text" id="WaveMarkerNameBox" Text="{Binding MarkerName, mode=TwoWay}" AccessibleName="Marker name" />
+      <Button id="WaveAddMarkerButton" action="9to1.Wave.AddMarker" IsEnabled="{Binding CanEdit}">Add marker</Button>
+      <ComboBox ItemsSource="{Binding MarkerNames}" AccessibleName="Current timeline markers" />
+      <Text>Region name / start frame / duration</Text>
+      <Input Type="Text" id="WaveRegionNameBox" Text="{Binding RegionName, mode=TwoWay}" AccessibleName="Region name" />
+      <Input Type="Text" id="WaveRegionStartBox" Text="{Binding RegionStart, mode=TwoWay}" AccessibleName="Region start audio frame" />
+      <Input Type="Text" id="WaveRegionDurationBox" Text="{Binding RegionDuration, mode=TwoWay}" AccessibleName="Region duration in audio frames" />
+      <Button id="WaveAddRegionButton" action="9to1.Wave.AddRegion" IsEnabled="{Binding CanEdit}">Add region</Button>
+      <ComboBox ItemsSource="{Binding RegionNames}" AccessibleName="Current timeline regions" />
+     </Container>
+     <Container Type="Vertical Stack" GridColumn="{Binding InspectorColumn, type=int}" GridRow="{Binding InspectorRow, type=int}" Spacing="6" Margin="0,8,0,8">
+      <Text FontSize="18" FontWeight="SemiBold">Clip inspector</Text>
+      <ComboBox id="WaveClipSelector" ItemsSource="{Binding ClipNames}" SelectedIndex="{Binding ClipIndex, mode=TwoWay, type=int}" IsEnabled="{Binding CanEdit}" AccessibleName="Selected audio clip" />
+      <Text Text="{Binding Selection}" TextWrapping="Wrap" />
+      <Text>Timeline start frame</Text><Input Type="Text" id="WaveClipStartBox" Text="{Binding ClipStart, mode=TwoWay}" AccessibleName="Clip timeline start audio frame" />
+      <Container Type="Grid" Columns="*,*">
+       <Button id="WaveMoveButton" action="9to1.Wave.Move" IsEnabled="{Binding CanEditClip}">Move</Button>
+       <Button id="WaveDuplicateButton" action="9to1.Wave.Duplicate" IsEnabled="{Binding CanEditClip}" GridColumn="1">Duplicate</Button>
+      </Container>
+      <Text>Frames to trim from start / end</Text>
+      <Input Type="Text" id="WaveTrimStartBox" Text="{Binding TrimStart, mode=TwoWay}" AccessibleName="Audio frames to trim from clip start" />
+      <Input Type="Text" id="WaveTrimEndBox" Text="{Binding TrimEnd, mode=TwoWay}" AccessibleName="Audio frames to trim from clip end" />
+      <Button id="WaveTrimButton" action="9to1.Wave.Trim" IsEnabled="{Binding CanEditClip}">Trim clip</Button>
+      <Container Type="Grid" Columns="*,*">
+       <Button id="WaveSplitButton" action="9to1.Wave.Split" IsEnabled="{Binding CanEditClip}">Split at playhead</Button>
+       <Button id="WaveJoinButton" action="9to1.Wave.Join" IsEnabled="{Binding CanEditClip}" GridColumn="1">Join adjacent clip</Button>
+      </Container>
+      <Text>Clip gain / fade-in frames / fade-out frames</Text>
+      <Input Type="Text" id="WaveClipGainBox" Text="{Binding ClipGain, mode=TwoWay}" AccessibleName="Clip linear gain, zero to sixty-four" />
+      <Input Type="Text" id="WaveFadeInBox" Text="{Binding FadeIn, mode=TwoWay}" AccessibleName="Fade in duration in audio frames" />
+      <Input Type="Text" id="WaveFadeOutBox" Text="{Binding FadeOut, mode=TwoWay}" AccessibleName="Fade out duration in audio frames" />
+      <Button id="WaveProcessingButton" action="9to1.Wave.Processing" IsEnabled="{Binding CanEditClip}">Apply gain and fades</Button>
+      <Container Type="Grid" Columns="*,*">
+       <Button id="WaveLiftButton" action="9to1.Wave.Delete" IsEnabled="{Binding CanEditClip}">Lift clip</Button>
+       <Button id="WaveRippleDeleteButton" action="9to1.Wave.RippleDelete" IsEnabled="{Binding CanEditClip}" GridColumn="1">Ripple delete</Button>
+      </Container>
+     </Container>
+    </Container>
+    <Text Text="{Binding DraftStatus}" TextWrapping="Wrap" />
+    <Button id="WaveDiscardDraftsButton" action="9to1.Wave.DiscardDrafts" IsEnabled="{Binding HasPendingDrafts}">Discard pending fields</Button>
+    <Container Type="Vertical Stack" IsVisible="{Binding CloseRequested}" Spacing="6" Background="{Resource CuiPanelBrush}" Margin="0,8">
+     <Text TextWrapping="Wrap">Keep your native project edits before closing. Apply or discard pending inspector fields before saving.</Text>
+     <Button id="WaveSaveCloseButton" action="9to1.Wave.SaveAndClose" IsEnabled="{Binding CanSave}">Save and close</Button>
+     <Button id="WaveDiscardCloseButton" action="9to1.Wave.DiscardAndClose">Discard changes and close</Button>
+     <Button id="WaveKeepEditingButton" action="9to1.Wave.KeepEditing">Keep editing</Button>
+    </Container>
+    <Text Text="{Binding Status}" TextWrapping="Wrap" AccessibleName="Wave operation status" />
+   </Container>
+  </ScrollViewer>
+ </Page>
+</Cui>
