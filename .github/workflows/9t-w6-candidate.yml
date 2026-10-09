@@ -1,0 +1,118 @@
+name: 9T W6 - recovery prerequisites
+on:
+  push:
+    branches: [w6/9t-int-001-20261009]
+    paths: [.github/workflows/9t-w6-candidate.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: 9t-w6-recovery-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  split-public-dependencies:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Receive exact already-produced public package transport
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: '11613494190'
+          run-id: 37926361975
+          github-token: ${{ github.token }}
+          path: incoming
+          merge-multiple: true
+      - name: Verify and split without rebuilding or changing source
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,pathlib,shutil
+          root=pathlib.Path('incoming');source=root/'nuget-packages.tar.gz'
+          original=json.loads((root/'dependency-provenance.json').read_text())
+          def digest(p):
+              h=hashlib.sha256()
+              with p.open('rb') as f:
+                  while chunk:=f.read(1024*1024):h.update(chunk)
+              return h.hexdigest()
+          sha=digest(source)
+          if sha!=original['archive_sha256']:raise RuntimeError('Original package archive hash mismatch')
+          rows=[];size=384*1024*1024
+          with source.open('rb') as f:
+              for number in (1,2):
+                  out=pathlib.Path('parts')/f'part{number:02}';out.mkdir(parents=True)
+                  dst=out/f'nuget-packages.tar.gz.part{number:02}'
+                  with dst.open('xb') as w:
+                      left=size
+                      while left and (chunk:=f.read(min(left,1024*1024))):w.write(chunk);left-=len(chunk)
+                  if not dst.stat().st_size:raise RuntimeError('Empty transport part')
+                  rows.append({'name':dst.name,'bytes':dst.stat().st_size,'sha256':digest(dst)})
+              if f.read(1):raise RuntimeError('Source exceeds the two bounded transport parts')
+          meta={'source_run':37926361975,'source_artifact':11613494190,'archive_bytes':source.stat().st_size,'archive_sha256':sha,'parts':rows,'qualification':'Public dependency transport only. Source64/current-source compatibility, owning builds and runtime acceptance remain separate.'}
+          for out in sorted(pathlib.Path('parts').iterdir()):
+              (out/'transport.json').write_text(json.dumps(meta,indent=2)+'\n')
+              shutil.copyfile(root/'dependency-provenance.json',out/'dependency-provenance.json')
+          print(json.dumps(meta,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: w6-public-dependencies-part01-${{ github.run_id }}
+          path: parts/part01/
+          retention-days: 3
+          compression-level: 0
+          if-no-files-found: error
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: w6-public-dependencies-part02-${{ github.run_id }}
+          path: parts/part02/
+          retention-days: 3
+          compression-level: 0
+          if-no-files-found: error
+  authorised-gui-prerequisite:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Prepare isolated runner-only browser check
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/gui
+          command -v Xvfb | tee artifacts/gui/xvfb-path.txt
+          command -v google-chrome | tee artifacts/gui/chrome-path.txt
+          python3 -m venv "$RUNNER_TEMP/w6-browser"
+          "$RUNNER_TEMP/w6-browser/bin/pip" install playwright==1.55.0 > artifacts/gui/python-install.log 2>&1
+          "$RUNNER_TEMP/w6-browser/bin/pip" freeze > artifacts/gui/python-packages.txt
+      - name: Exercise real headed browser with sandbox enabled
+        shell: bash
+        run: |
+          xvfb-run -a -s '-screen 0 1280x960x24' "$RUNNER_TEMP/w6-browser/bin/python" - <<'PY'
+          import json,pathlib,platform,shutil,time
+          from playwright.sync_api import sync_playwright
+          out=pathlib.Path('artifacts/gui');start=time.monotonic()
+          result={'qualification':'ENVIRONMENT PROBE ONLY; no 9to1 application, account, staging route or workflow is tested','product_smoke':'NOT RUN','sandbox_enabled':True,'headless':False,'os':platform.platform()}
+          try:
+              with sync_playwright() as p:
+                  browser=p.chromium.launch(executable_path=shutil.which('google-chrome'),headless=False,chromium_sandbox=True)
+                  result['browser_version']=browser.version
+                  page=browser.new_page(viewport={'width':1200,'height':900})
+                  page.goto('about:blank')
+                  page.screenshot(path=str(out/'runner-only-blank-page.png'))
+                  result['navigation']=page.url
+                  result['runner_probe']='PASS'
+                  browser.close()
+          except Exception as exc:
+              result['runner_probe']='FAIL';result['error']=str(exc)
+          finally:
+              result['elapsed_seconds']=time.monotonic()-start
+              (out/'runner-result.json').write_text(json.dumps(result,indent=2)+'\n')
+              print(json.dumps(result,indent=2))
+          if result['runner_probe']!='PASS':raise SystemExit(1)
+          PY
+      - name: Preserve runner evidence, never count as product acceptance
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: w6-gui-prerequisite-${{ github.run_id }}
+          path: artifacts/gui/
+          retention-days: 14
+          if-no-files-found: error
