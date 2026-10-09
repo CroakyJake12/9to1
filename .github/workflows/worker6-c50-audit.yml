@@ -1,0 +1,170 @@
+name: Worker 6 - immutable C50 build audit
+on:
+  push:
+    branches: [integration/worker6-c50-build-audit-20261009]
+    paths: [.github/workflows/worker6-c50-audit.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: worker6-c50-audit-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  BASELINE_SHA: 2fb3f9c317bd4a66b50009ed301513c4bf835a0c
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_NOLOGO: '1'
+jobs:
+  portable-baseline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact public source, not the workflow branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 2fb3f9c317bd4a66b50009ed301513c4bf835a0c
+          fetch-depth: 1
+          submodules: false
+          persist-credentials: false
+      - name: Materialise only the two owning-graph gitlinks
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$BASELINE_SHA"
+          git submodule update --init --depth 1 -- framework/CUI/vendor/Avalonia/external/XamlX framework/CUI/vendor/Avalonia/external/Avalonia.DBus
+          test "$(git -C framework/CUI/vendor/Avalonia/external/XamlX rev-parse HEAD)" = 009d4815470cf4bf71d1adbb633a5d81dcb2bb52
+          test "$(git -C framework/CUI/vendor/Avalonia/external/Avalonia.DBus rev-parse HEAD)" = 864a05282841bf04006890f04d11d60d1a046aa9
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        with:
+          dotnet-version: 10.0.401
+      - name: Preserve verified official SDK for offline receiving builds
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,pathlib,urllib.request
+          out=pathlib.Path('artifacts/sdk');out.mkdir(parents=True)
+          metadata_url='https://builds.dotnet.microsoft.com/dotnet/release-metadata/10.0/releases.json'
+          with urllib.request.urlopen(metadata_url,timeout=60) as r: metadata=json.load(r)
+          candidates={f['url']:f for release in metadata['releases'] for sdk in release.get('sdks',[release.get('sdk',{})]) if sdk.get('version')=='10.0.401' for f in sdk['files'] if f.get('rid')=='linux-x64' and f['url'].endswith('.tar.gz')}
+          if len(candidates)!=1: raise RuntimeError('Expected one exact official SDK archive')
+          url,entry=next(iter(candidates.items()))
+          if not url.startswith('https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.401/'): raise RuntimeError('Unexpected SDK origin')
+          dst=out/'dotnet-sdk-10.0.401-linux-x64.tar.gz'; sha512=hashlib.sha512();sha256=hashlib.sha256()
+          with urllib.request.urlopen(url,timeout=120) as response,dst.open('xb') as stream:
+              while chunk:=response.read(1024*1024): stream.write(chunk);sha512.update(chunk);sha256.update(chunk)
+          if sha512.hexdigest().lower()!=entry['hash'].lower(): raise RuntimeError('Official SDK SHA512 mismatch')
+          (out/'sdk-provenance.json').write_text(json.dumps({'version':'10.0.401','platform':'linux-x64','metadata_url':metadata_url,'url':url,'sha512':sha512.hexdigest(),'sha256':sha256.hexdigest(),'bytes':dst.stat().st_size,'qualification':'Toolchain only; not an application or acceptance evidence'},indent=2)+'\n')
+          PY
+      - name: Upload official SDK transport
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: worker6-official-sdk-10.0.401-linux-x64
+          path: artifacts/sdk/
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+      - name: Run unmodified owning portable projects and tests
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,os,pathlib,subprocess
+          out=pathlib.Path('artifacts/build');out.mkdir(parents=True)
+          (out/'source.txt').write_text(subprocess.check_output(['git','rev-parse','HEAD','HEAD^{tree}'],text=True))
+          (out/'dotnet-info.txt').write_text(subprocess.check_output(['dotnet','--info'],text=True))
+          commands=[
+            ('core-build',['build','9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj']),
+            ('home-tests',['test','9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj']),
+            ('spaces-tests',['test','9to1 Workspace/Spaces/Tests/HavenOS.Spaces.Tests.csproj']),
+            ('dev-tests',['test','9to1 Workspace/Dev/Tests/HavenOS.Dev.Tests.csproj']),
+            ('application-tests',['test','9to1 Workspace/shared/tests/Haven.Application.Tests/Haven.Application.Tests.csproj']),
+            ('desktop-build',['build','9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj','-f','net10.0'])]
+          results=[]
+          for name,args in commands:
+              cmd=['dotnet',*args,'-c','Debug','-p:EnableWindowsTargeting=true','-bl:'+str(out/(name+'.binlog'))]
+              if args[0]=='test':cmd+=['--logger','trx;LogFileName='+name+'.trx','--results-directory',str(out)]
+              with (out/(name+'.log')).open('w') as log:
+                  try: code=subprocess.run(cmd,stdout=log,stderr=subprocess.STDOUT,timeout=600).returncode
+                  except subprocess.TimeoutExpired:code=124
+              results.append({'name':name,'command':cmd,'exit_code':code})
+              print(name,code,flush=True)
+              (out/'results.json').write_text(json.dumps({'source_commit':os.environ['BASELINE_SHA'],'configuration':'Debug','platform':'linux-x64 portable graph','runtime_acceptance':'NOT RUN','results':results},indent=2)+'\n')
+          raise SystemExit(1 if any(r['exit_code'] for r in results) else 0)
+          PY
+      - name: Preserve resolved public package archives, never credentials
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,pathlib,tarfile
+          out=pathlib.Path('artifacts/dependencies');out.mkdir(parents=True,exist_ok=True)
+          root=pathlib.Path.home()/'.nuget/packages';rows=[]
+          with tarfile.open(out/'nuget-packages.tar.gz','w:gz') as archive:
+              for p in sorted(root.rglob('*.nupkg')):
+                  if not p.is_file() or p.is_symlink():continue
+                  rel=p.relative_to(root).as_posix();rows.append({'path':rel,'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'bytes':p.stat().st_size});archive.add(p,arcname=rel,recursive=False)
+          payload=out/'nuget-packages.tar.gz'
+          (out/'dependency-provenance.json').write_text(json.dumps({'source_commit':'2fb3f9c317bd4a66b50009ed301513c4bf835a0c','qualification':'Resolved public package transport only; receiving source compatibility and builds must be checked','archive_sha256':hashlib.sha256(payload.read_bytes()).hexdigest(),'packages':rows},indent=2)+'\n')
+          PY
+      - name: Upload actual build diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: worker6-c50-portable-build-evidence-${{ github.run_id }}
+          path: artifacts/build/
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Upload public dependency transport
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: worker6-c50-public-dependencies-${{ github.run_id }}
+          path: artifacts/dependencies/
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: warn
+  windows-baseline:
+    runs-on: windows-2025
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 2fb3f9c317bd4a66b50009ed301513c4bf835a0c
+          fetch-depth: 1
+          submodules: false
+          persist-credentials: false
+      - name: Materialise owning-graph gitlinks
+        shell: pwsh
+        run: |
+          git submodule update --init --depth 1 -- framework/CUI/vendor/Avalonia/external/XamlX framework/CUI/vendor/Avalonia/external/Avalonia.DBus
+          if ($LASTEXITCODE -ne 0) { throw 'Exact submodule checkout failed' }
+          if ((git rev-parse HEAD) -ne $env:BASELINE_SHA) { throw 'Source mismatch' }
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        with:
+          dotnet-version: 10.0.401
+      - name: Publish the genuine Windows owning application
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force artifacts/windows | Out-Null
+          git rev-parse HEAD 'HEAD^{tree}' | Set-Content artifacts/windows/source.txt
+          dotnet --info | Set-Content artifacts/windows/dotnet-info.txt
+          dotnet publish '9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj' -c Release -f net10.0-windows10.0.19041.0 -r win-x64 --self-contained true -o artifacts/windows/publish -bl:artifacts/windows/publish.binlog 2>&1 | Tee-Object artifacts/windows/publish.log
+          $code=$LASTEXITCODE
+          @{source_commit=$env:BASELINE_SHA;target='win-x64';configuration='Release';exit_code=$code;runtime_acceptance='NOT RUN';qualification='Unmodified C50 baseline, not whole-product acceptance'} | ConvertTo-Json | Set-Content artifacts/windows/result.json
+          if ($code -ne 0) { throw "Owning publish failed: $code" }
+          if (-not (Test-Path artifacts/windows/publish/Haven.exe)) { throw 'No real executable produced' }
+          Get-ChildItem artifacts/windows/publish -Recurse -File | ForEach-Object { @{path=$_.FullName.Substring((Resolve-Path artifacts/windows/publish).Path.Length+1);sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower();bytes=$_.Length} } | ConvertTo-Json -Depth 4 | Set-Content artifacts/windows/payload-manifest.json
+          Compress-Archive -Path artifacts/windows/publish/* -DestinationPath artifacts/windows/c50-unaccepted-win-x64.zip
+          Get-FileHash artifacts/windows/c50-unaccepted-win-x64.zip -Algorithm SHA256 | Format-List | Out-File artifacts/windows/package.sha256.txt
+      - name: Upload immutable Windows diagnostics and any successful candidate
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: worker6-c50-windows-evidence-${{ github.run_id }}
+          path: |
+            artifacts/windows/*.txt
+            artifacts/windows/*.json
+            artifacts/windows/*.log
+            artifacts/windows/*.binlog
+            artifacts/windows/*.zip
+          retention-days: 14
+          if-no-files-found: warn
