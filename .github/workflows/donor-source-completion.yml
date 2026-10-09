@@ -1,0 +1,172 @@
+name: Donors - acquire remaining pinned source
+on:
+  push:
+    branches: [feat/donor-source-completion]
+    paths:
+      - 'eng/source-acquisition/**'
+      - '.github/workflows/donor-source-completion.yml'
+      - '.gitmodules'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: donor-source-completion-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          submodules: false
+      - name: Run source-verifier fixture tests (not native runtime tests)
+        run: python3 -m unittest discover -s eng/source-acquisition -p 'test_*.py' -v
+      - id: plan
+        name: Validate all locked gitlinks and source URLs
+        shell: bash
+        run: |
+          set -euo pipefail
+          matrix="$(python3 eng/source-acquisition/acquire.py --matrix)"
+          printf 'matrix=%s\n' "$matrix" >> "$GITHUB_OUTPUT"
+  acquire:
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          submodules: false
+      - name: Fetch pinned native source and verify every blob at every target path
+        env:
+          DONOR_ID: ${{ matrix.donor }}
+          GIT_TERMINAL_PROMPT: '0'
+          GIT_LFS_SKIP_SMUDGE: '1'
+        run: python3 eng/source-acquisition/acquire.py --donor "$DONOR_ID" --output artifacts/donor
+      - name: Preserve source proof and recovery manifests
+        if: always() && hashFiles('artifacts/donor/evidence.json') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: donor-evidence-${{ matrix.donor }}
+          path: |
+            artifacts/donor/evidence.json
+            artifacts/donor/recovery.json
+            artifacts/donor/RECOVERY.txt
+            artifacts/donor/SHA256SUMS.*
+          if-no-files-found: error
+          retention-days: 14
+      - name: Preserve recoverable source part 00
+        if: success() && hashFiles('artifacts/donor/source.part00') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: donor-source-${{ matrix.donor }}-part00
+          path: artifacts/donor/source.part00
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Preserve recoverable source part 01
+        if: success() && hashFiles('artifacts/donor/source.part01') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: donor-source-${{ matrix.donor }}-part01
+          path: artifacts/donor/source.part01
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Preserve recoverable source part 02
+        if: success() && hashFiles('artifacts/donor/source.part02') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: donor-source-${{ matrix.donor }}-part02
+          path: artifacts/donor/source.part02
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Preserve recoverable source part 03
+        if: success() && hashFiles('artifacts/donor/source.part03') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: donor-source-${{ matrix.donor }}-part03
+          path: artifacts/donor/source.part03
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Preserve recoverable source part 04
+        if: success() && hashFiles('artifacts/donor/source.part04') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: donor-source-${{ matrix.donor }}-part04
+          path: artifacts/donor/source.part04
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Preserve recoverable source part 05
+        if: success() && hashFiles('artifacts/donor/source.part05') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: donor-source-${{ matrix.donor }}-part05
+          path: artifacts/donor/source.part05
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Preserve recoverable source part 06
+        if: success() && hashFiles('artifacts/donor/source.part06') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: donor-source-${{ matrix.donor }}-part06
+          path: artifacts/donor/source.part06
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Preserve recoverable source part 07
+        if: success() && hashFiles('artifacts/donor/source.part07') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: donor-source-${{ matrix.donor }}-part07
+          path: artifacts/donor/source.part07
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+  collect:
+    if: always() && needs.plan.result == 'success'
+    needs: [plan, acquire]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          submodules: false
+      - name: Download verification evidence only (not duplicate source archives)
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: donor-evidence-*
+          path: evidence
+      - name: Check all source paths and actual acquisition/publication outcomes
+        env:
+          PARENT_SHA: ${{ github.sha }}
+          MATRIX_RESULT: ${{ needs.acquire.result }}
+        run: python3 eng/source-acquisition/collect.py --directory evidence --parent "$PARENT_SHA" --jobs-result "$MATRIX_RESULT" --output results/summary.json
+      - name: Publish consolidated source checkpoint
+        if: always() && hashFiles('results/summary.json') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: remaining-donor-source-summary
+          path: results/summary.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Record real verification scope
+        if: always() && hashFiles('results/summary.json') != ''
+        run: |
+          echo '## Donor source acquisition (not a build/runtime test)' >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          cat results/summary.json >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
