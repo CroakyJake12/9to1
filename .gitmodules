@@ -15,7 +15,9 @@
 	url = https://github.com/CroakyJake12/rnote.git
 [submodule "9to1 Workspace/Browse/Source/FirefoxGecko"]
 	path = 9to1 Workspace/Browse/Source/FirefoxGecko
-	url = https://github.com/CroakyJake12/gecko-dev.git
+	url = https://github.com/mozilla-firefox/firefox.git
+	branch = release
+	shallow = true
 [submodule "9to1 Workspace/Write/Source/LibreOffice"]
 	path = 9to1 Workspace/Write/Source/LibreOffice
 	url = https://github.com/CroakyJake12/libreoffice.git
@@ -70,3 +72,8 @@
 [submodule "9to1 OS/compatibility/winboat/Source/WinBoat"]
 	path = 9to1 OS/compatibility/winboat/Source/WinBoat
 	url = https://github.com/CroakyJake12/winboat.git
+[submodule "9to1 Workspace/Browse/Source/Chromium/src"]
+	path = 9to1 Workspace/Browse/Source/Chromium/src
+	url = https://chromium.googlesource.com/chromium/src.git
+	branch = main
+	shallow = true
