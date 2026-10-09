@@ -28,7 +28,7 @@ def acquire(output: Path, evidence: Path) -> None:
         with urllib.request.urlopen(base + 'REVISIONS', timeout=60) as response:
             revisions = json.load(response)
         record['upstream_revisions'] = revisions
-        if revisions.get('chromium_revision', '').lstrip('@') != COMMIT:
+        if revisions.get('got_revision') != COMMIT or revisions.get('chromium_revision') != POSITION:
             raise RuntimeError('Snapshot metadata does not match the acquired Chromium donor revision.')
         archive_path = output / archive
         with urllib.request.urlopen(base + archive, timeout=120) as response, archive_path.open('wb') as target:
