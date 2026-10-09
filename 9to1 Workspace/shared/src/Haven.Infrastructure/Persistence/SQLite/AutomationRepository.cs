@@ -17,6 +17,9 @@ namespace Haven.Infrastructure;
 /// </summary>
 public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAutomationRepository
 {
+    /// <summary>Exact maintained factory observation only; no READ, WRITE or scheduler authority.</summary>
+    public bool HasOriginalSqliteFactory(ISqliteConnectionFactory sameActual) => ReferenceEquals(factory, sameActual);
+
     /// <summary>
     /// Retrieves all async for the current operation.
     /// </summary>

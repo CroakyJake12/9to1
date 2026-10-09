@@ -94,13 +94,13 @@ public sealed class WindowsHomeSameProcessCompositionTests
     {
         await using var control = new Control();
         await control.StartAsync();
-        var originalState = await File.ReadAllBytesAsync(control.ProfileStatePath);
+        var originalState = await File.ReadAllBytesAsync(control.ProfileStatePath, TestContext.Current.CancellationToken);
         control.Principal.OnRead = (call, principal) => call == 3 ? principal + ":foreign-negative" : principal;
         var actual = control.CheckAsync();
         var failure = await Record.ExceptionAsync(async () => await actual);
         Assert.NotNull(failure); Assert.True(actual.IsFaulted);
         Assert.True(HasCause<UnauthorizedAccessException>(failure));
-        Assert.Equal(originalState, await File.ReadAllBytesAsync(control.ProfileStatePath));
+        Assert.Equal(originalState, await File.ReadAllBytesAsync(control.ProfileStatePath, TestContext.Current.CancellationToken));
         Assert.Null(control.Home.OriginalCloseTask);
     }
 

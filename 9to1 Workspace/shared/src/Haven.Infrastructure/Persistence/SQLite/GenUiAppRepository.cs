@@ -4,6 +4,7 @@ using Haven.Core;
 namespace Haven.Infrastructure;
 public sealed class GenUiAppRepository(ISqliteConnectionFactory factory):IGenUiAppRepository
 {
+ public bool HasOriginalSqliteFactory(ISqliteConnectionFactory sameFactory) => ReferenceEquals(factory, sameFactory);
  public async Task UpsertAsync(GenUiAppDefinition definition,CancellationToken ct)
  {
   var checkedApp=GenUiSemanticValidator.ValidateAndRepair(definition);

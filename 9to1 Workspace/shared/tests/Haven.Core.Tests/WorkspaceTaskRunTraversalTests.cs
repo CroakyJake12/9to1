@@ -306,7 +306,7 @@ public sealed class WorkspaceTaskRunTraversalTests
             {
                 Task? close = null;
                 try { close = rig.DisposeAsync().AsTask(); await close; }
-                catch (Exception cleanup) { throw new AggregateException("Canonical traversal fixture acquisition and retirement failed.", error, (Exception?)close?.Exception ?? cleanup); }
+                catch (Exception cleanupError) { throw new AggregateException("Canonical traversal fixture acquisition and retirement failed.", error, (Exception?)close?.Exception ?? cleanupError); }
                 throw;
             }
         }

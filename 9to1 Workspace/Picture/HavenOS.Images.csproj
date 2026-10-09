@@ -4,13 +4,15 @@
     <OutputType>Exe</OutputType>
     <AssemblyName>HavenOS.Images</AssemblyName>
     <RootNamespace>HavenOS.Images</RootNamespace>
-    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
     <DefaultItemExcludes>$(DefaultItemExcludes);Tests/**;Source\**\*</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" />
-    <PackageReference Include="Avalonia.Desktop" />
-    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <ProjectReference Include="../shared/src/Haven.Application/Haven.Application.csproj" />
+    <ProjectReference Include="../shared/src/Haven.Productivity.NativeUI/Haven.Productivity.NativeUI.csproj" />
+    <ProjectReference Include="../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
     <PackageReference Include="TagLibSharp" VersionOverride="2.3.0" />
+    <EmbeddedResource Include="UI/*.cui" LogicalName="HavenOS.Images.UI.%(Filename)%(Extension)" />
+    <AvaloniaResource Remove="**/*.axaml" />
+    <AvaloniaXaml Remove="**/*.axaml" />
   </ItemGroup>
 </Project>

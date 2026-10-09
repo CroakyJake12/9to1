@@ -1,23 +1,57 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)][string]$OriginalKitRoot,
-    [Parameter(Mandatory = $true)][string]$OwningHomePublishDirectory
+    [Parameter(Mandatory = $true)][string]$OwningHomePublishDirectory,
+    [string]$OwningHomeExecutableName = 'AvaloniaHome.exe'
 )
 $ErrorActionPreference = 'Stop'
-if (-not $IsWindows -and $env:OS -ne 'Windows_NT') { throw 'The original Canvas runtime bundle requires Windows.' }
 $manifestPath = Join-Path $PSScriptRoot 'original-windows-native-kit.json'
 $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+if ($manifest.architecture -cne 'win-x64' -or $manifest.nativeAbi -ne 3) {
+    throw 'The original native staging recipe requires the exact Windows x64 ABI3 manifest.'
+}
+if ([IO.Path]::GetFileName($OwningHomeExecutableName) -cne $OwningHomeExecutableName -or
+    $OwningHomeExecutableName -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]*\.exe$') {
+    throw 'Supply the actual owning Windows executable file name, without a path.'
+}
+$ownerStem = [IO.Path]::GetFileNameWithoutExtension($OwningHomeExecutableName)
+$ownerDepsName = "$ownerStem.deps.json"
 $kit = (Resolve-Path -LiteralPath $OriginalKitRoot).Path
 $publish = (Resolve-Path -LiteralPath $OwningHomePublishDirectory).Path
 if ($kit -eq $publish) { throw 'The original native kit must remain separate from the owning published artifact.' }
-foreach ($required in @('AvaloniaHome.exe', 'AvaloniaHome.deps.json', 'HavenOS.Canvas.Host.dll', 'HavenOS.Canvas.NativeUI.dll', 'HavenOS.Canvas.dll')) {
+foreach ($required in @($OwningHomeExecutableName, $ownerDepsName, 'HavenOS.Canvas.Host.dll', 'HavenOS.Canvas.NativeUI.dll', 'HavenOS.Canvas.dll')) {
     if (-not (Test-Path -LiteralPath (Join-Path $publish $required) -PathType Leaf)) {
         throw "Supply the actual normal published Windows Home graph including Canvas: missing $required."
     }
 }
-if ((Get-Content -LiteralPath (Join-Path $publish 'AvaloniaHome.deps.json') -Raw) -notmatch 'HavenOS.Canvas.Host') {
+$ownerDependencies = Get-Content -LiteralPath (Join-Path $publish $ownerDepsName) -Raw | ConvertFrom-Json
+if ($ownerDependencies.runtimeTarget.name -notmatch '/win-x64$') {
+    throw 'The owning Home dependency manifest must identify an actual win-x64 publish.'
+}
+if (-not @($ownerDependencies.libraries.PSObject.Properties.Name | Where-Object { $_ -like 'HavenOS.Canvas.Host/*' }).Count) {
     throw 'The actual owning Home dependency manifest must include the Canvas host.'
 }
+# Staging validates/copies immutable Windows bytes and can run on the cloud host.
+# Real application launch, Home admission and native smoke still require Windows.
+$ownerStream = [IO.File]::OpenRead((Join-Path $publish $OwningHomeExecutableName))
+try {
+    $header = [byte[]]::new(64)
+    if ($ownerStream.Read($header, 0, $header.Length) -ne $header.Length -or $header[0] -ne 0x4d -or $header[1] -ne 0x5a) {
+        throw 'The owning Windows executable is not a PE artifact.'
+    }
+    $peOffset = [BitConverter]::ToInt32($header, 0x3c)
+    if ($peOffset -lt 64 -or $peOffset -gt $ownerStream.Length - 6) {
+        throw 'The owning Windows executable has an invalid PE header offset.'
+    }
+    $null = $ownerStream.Seek($peOffset, [IO.SeekOrigin]::Begin)
+    $peHeader = [byte[]]::new(6)
+    if ($ownerStream.Read($peHeader, 0, $peHeader.Length) -ne $peHeader.Length -or
+        [BitConverter]::ToUInt32($peHeader, 0) -ne 0x00004550 -or
+        [BitConverter]::ToUInt16($peHeader, 4) -ne 0x8664) {
+        throw 'The owning Windows executable must be an actual x64 PE artifact.'
+    }
+}
+finally { $ownerStream.Dispose() }
 $all = @(Get-ChildItem -LiteralPath $kit -File -Recurse)
 $sources = @()
 foreach ($file in $manifest.files) {
@@ -61,5 +95,7 @@ $actual = foreach ($file in Get-ChildItem -LiteralPath $publish -File -Recurse |
         sha256 = (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash.ToLowerInvariant() }
 }
 [ordered]@{ status = 'OWNING_HOME_PUBLISH_NATIVE_FILES_STAGED_APPLICATION_SMOKE_UNRUN';
+    ownerExecutable = $OwningHomeExecutableName; ownerDependencyManifest = $ownerDepsName;
+    target = 'win-x64'; stagingHost = [System.Runtime.InteropServices.RuntimeInformation]::OSDescription;
     archiveSha256 = $manifest.archiveSha256; files = @($actual); qualification = $manifest.qualification } |
     ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $publish 'CanvasOriginalNativeStageReceipt.json') -Encoding utf8NoBOM

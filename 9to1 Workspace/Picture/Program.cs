@@ -1,4 +1,5 @@
 using Avalonia;
+using CakeOS.Cui.Runtime;
 
 namespace HavenOS.Images;
 
@@ -12,8 +13,8 @@ internal static class Program
 
     public static AppBuilder BuildAvaloniaApp()
     {
-        return AppBuilder.Configure<App>()
+        return CuiNativeHost.ConfigureFonts(AppBuilder.Configure<App>()
             .UsePlatformDetect()
-            .LogToTrace();
+            .LogToTrace());
     }
 }

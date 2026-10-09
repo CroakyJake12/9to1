@@ -16,7 +16,7 @@ namespace HavenOS.Files.NativeUI;
 
 /// <summary>The native host supplies its same Home service graph and captures the original actor before awaiting.
 /// This surface owns no provider, storage root, Home graph or installation authority.</summary>
-public sealed class FilesNativeBrowserSurface : UserControl, IDisposable, IAsyncDisposable,
+public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable, IAsyncDisposable,
     ICuiBindingContext, ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged
 {
     private readonly FilesNativeBrowserService _browser;
@@ -106,12 +106,7 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable, IAsync
             await RequireReadyAsync(linked.Token);
             var page = await _browser.ListAsync(_originalActor, token: linked.Token);
             await _browser.RevalidateAsync(page, _originalActor, linked.Token);
-            var registry = new CuiControlRegistry();
-            registry.RegisterControlType("FilesCanonicalList", _ => _items);
-            registry.RegisterControlType("FilesSearchInput", _ => _search);
-            registry.RegisterControlType("FilesDisplayedSortInput", _ => _sort);
-            registry.RegisterControlType("FilesNameInput", _ => _editName);
-            _scene = new CuiSceneHost(registry);
+            _scene = CreateOriginalCanonicalSceneHost();
             var available = await _scene.ShowAsync(new("files", "Files", "Browser", LoadDocument(), this, this, _readiness), linked.Token);
             if (available.State != CuiSceneAvailabilityState.Ready) throw new UnauthorizedAccessException(available.Message);
             await _browser.RevalidateAsync(page, _originalActor, linked.Token);
@@ -549,6 +544,7 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable, IAsync
 
     public Task CloseAndDrainAsync()
     {
+        DemandExternalRegisteredRevealJoin();
         lock (_originalTasksSync)
         {
             if (_originalClose is not null) return _originalClose;

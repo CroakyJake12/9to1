@@ -1,0 +1,27 @@
+<!-- Dedicated Windows executable; startup remains the SAME original Desktop bootstrap. -->
+<Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="PlatformTarget">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AssemblyName>HavenOS.Assistants</AssemblyName>
+    <RootNamespace>HavenOS.Apps.Assistants.Host</RootNamespace>
+    <Platforms>x64</Platforms>
+    <Platform>x64</Platform>
+    <PlatformTarget>x64</PlatformTarget>
+    <ApplicationIcon>../shared/src/Haven.Desktop/Assets/haven.ico</ApplicationIcon>
+    <ApplicationManifest>../shared/src/Haven.Desktop/app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Host/Program.cs" />
+    <ProjectReference Include="HavenOS.Assistants.Core.csproj" />
+    <ProjectReference Include="NativeUI/HavenOS.Assistants.NativeUI.csproj" />
+    <ProjectReference Include="../shared/src/Haven.Desktop/Haven.Desktop.csproj"
+                      SetTargetFramework="TargetFramework=$(TargetFramework)"
+                      SkipGetTargetFrameworkProperties="true"
+                      AdditionalProperties="ProductInitialApp=assistants;ProductDisplayName=Assistants;ProductWindowsAppId=9to1.Assistants" />
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Desktop" />
+  </ItemGroup>
+</Project>

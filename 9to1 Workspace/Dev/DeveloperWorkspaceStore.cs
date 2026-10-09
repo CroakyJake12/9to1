@@ -86,30 +86,7 @@ public sealed partial class FileDeveloperWorkspaceStore : IDeveloperWorkspaceSto
             await using var input = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read,
                 16 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan);
             using var document = await JsonDocument.ParseAsync(input, cancellationToken: cancellationToken).ConfigureAwait(false);
-            var version = ReadSchemaVersion(document.RootElement);
-            if (version < 0)
-                return DeveloperOperationResult<DeveloperWorkspace>.Failure(
-                    DeveloperOperationErrorCode.InvalidStoredData,
-                    "The workspace document is missing a valid schema version and was left unchanged.", workspaceId.ToString("D"));
-            if (version != CurrentSchemaVersion)
-                return DeveloperOperationResult<DeveloperWorkspace>.Failure(
-                    DeveloperOperationErrorCode.UnsupportedSchemaVersion,
-                    $"Workspace schema version {version} is not supported by this Dev build.", workspaceId.ToString("D"));
-
-            var envelope = document.RootElement.Deserialize<WorkspaceDocument>(JsonOptions);
-            if (envelope?.Workspace is null)
-                return DeveloperOperationResult<DeveloperWorkspace>.Failure(
-                    DeveloperOperationErrorCode.InvalidStoredData,
-                    "The workspace document does not contain a workspace.", workspaceId.ToString("D"));
-            if (envelope.Workspace.WorkspaceId != workspaceId)
-                return DeveloperOperationResult<DeveloperWorkspace>.Failure(
-                    DeveloperOperationErrorCode.InvalidStoredData,
-                    "The stored workspace identity does not match its storage key.", workspaceId.ToString("D"));
-            if (envelope.Workspace.Validate() is { } error)
-                return DeveloperOperationResult<DeveloperWorkspace>.Failure(
-                    DeveloperOperationErrorCode.InvalidStoredData, error, workspaceId.ToString("D"));
-
-            return DeveloperOperationResult<DeveloperWorkspace>.Success(envelope.Workspace);
+            return DecodeOriginalDocument(document.RootElement, workspaceId);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (FileNotFoundException)
@@ -128,6 +105,36 @@ public sealed partial class FileDeveloperWorkspaceStore : IDeveloperWorkspaceSto
         {
             return StorageFailure<DeveloperWorkspace>(workspaceId, exception);
         }
+    }
+
+    /// <summary>Decode already observed metadata with this store's maintained schema.
+    /// This performs no IO and grants no READ, source-selection or execution authority.</summary>
+    public static DeveloperOperationResult<DeveloperWorkspace> DecodeOriginalDocument(JsonElement document, Guid workspaceId)
+    {
+        var version = ReadSchemaVersion(document);
+        if (version < 0)
+            return DeveloperOperationResult<DeveloperWorkspace>.Failure(
+                DeveloperOperationErrorCode.InvalidStoredData,
+                "The workspace document is missing a valid schema version and was left unchanged.", workspaceId.ToString("D"));
+        if (version != CurrentSchemaVersion)
+            return DeveloperOperationResult<DeveloperWorkspace>.Failure(
+                DeveloperOperationErrorCode.UnsupportedSchemaVersion,
+                $"Workspace schema version {version} is not supported by this Dev build.", workspaceId.ToString("D"));
+
+        var envelope = document.Deserialize<WorkspaceDocument>(JsonOptions);
+        if (envelope?.Workspace is null)
+            return DeveloperOperationResult<DeveloperWorkspace>.Failure(
+                DeveloperOperationErrorCode.InvalidStoredData,
+                "The workspace document does not contain a workspace.", workspaceId.ToString("D"));
+        if (envelope.Workspace.WorkspaceId != workspaceId)
+            return DeveloperOperationResult<DeveloperWorkspace>.Failure(
+                DeveloperOperationErrorCode.InvalidStoredData,
+                "The stored workspace identity does not match its storage key.", workspaceId.ToString("D"));
+        if (envelope.Workspace.Validate() is { } error)
+            return DeveloperOperationResult<DeveloperWorkspace>.Failure(
+                DeveloperOperationErrorCode.InvalidStoredData, error, workspaceId.ToString("D"));
+
+        return DeveloperOperationResult<DeveloperWorkspace>.Success(envelope.Workspace);
     }
 
     public async Task<DeveloperOperationResult<DeveloperWorkspace>> SaveAsync(

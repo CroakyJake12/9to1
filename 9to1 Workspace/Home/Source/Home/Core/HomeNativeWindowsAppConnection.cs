@@ -6,7 +6,7 @@ namespace HavenOS.Home.Core;
 
 /// <summary>The app owns one physical connection. The supplied host requirement and app/service
 /// descriptor must come from trusted composition; routing names or public reply fields confer no trust.</summary>
-public sealed class HomeNativeWindowsAppConnection : IAsyncDisposable
+public sealed partial class HomeNativeWindowsAppConnection : IAsyncDisposable
 {
     private readonly NamedPipeClientStream _pipe;
     private readonly CancellationTokenSource _lifetime;
@@ -87,6 +87,7 @@ public sealed class HomeNativeWindowsAppConnection : IAsyncDisposable
     public Task InitializeOriginalAsync(Func<CancellationToken, Task> originalInitializer,
         CancellationToken cancellationToken = default)
     {
+        if (_originalScoped) return InitializeWithinOriginalSourceAsync(originalInitializer, body => body(), _ => { }, cancellationToken);
         ArgumentNullException.ThrowIfNull(originalInitializer);
         cancellationToken.ThrowIfCancellationRequested();
         lock (_sync)
@@ -136,12 +137,13 @@ public sealed class HomeNativeWindowsAppConnection : IAsyncDisposable
 
     public Task CloseAndDrainAsync()
     {
+        if (_originalScoped) CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
         lock (_sync)
         {
             if (_close is not null) return _close;
             _closing = true;
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            _close = CloseOriginalAsync(start.Task, _initialization);
+            _close = _originalScoped ? CloseWithinOriginalSourceAsync(start.Task, _initialization) : CloseOriginalAsync(start.Task, _initialization);
             start.SetResult();
             return _close;
         }

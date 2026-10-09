@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>HavenOS.Apps.Assistants.Migration</AssemblyName>
+    <RootNamespace>HavenOS.Apps.Assistants.Migration</RootNamespace>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="*.cs" />
+    <ProjectReference Include="Contracts/HavenOS.Assistants.Migration.Contracts.csproj" />
+    <ProjectReference Include="../../shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

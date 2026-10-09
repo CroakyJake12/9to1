@@ -4,6 +4,39 @@ namespace HavenOS.Apps.Canvas;
 
 public sealed partial class CanvasHostWindow
 {
+    /// <summary>A failed acquired surface must finish its original child drain before the host
+    /// releases it. Dispose alone schedules that drain and cannot acknowledge completion.</summary>
+    internal static async Task InitializeOwnedSurfaceAsync(CanvasNativeCuiSurface surface, CancellationToken token)
+    {
+        Task? initialization = null;
+        try
+        {
+            initialization = surface.InitializeAsync(token);
+            await initialization;
+        }
+        catch (Exception initializationError)
+        {
+            var errors = new List<Exception>();
+            CaptureOriginalFailure(errors, initialization, initializationError);
+            Task? close = null;
+            try { close = surface.CloseAndDrainAsync(); await close; }
+            catch (Exception closeError) { CaptureOriginalFailure(errors, close, closeError); }
+            if (errors.Count == 1 && errors[0] is not OperationCanceledException)
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(errors[0]).Throw();
+            throw new AggregateException("Canvas initialization and acquired surface cleanup failed.", errors);
+        }
+    }
+    private static void CaptureOriginalFailure(List<Exception> errors, Task? actual, Exception caught)
+    {
+        if (actual?.Exception is { } group)
+            foreach (var direct in group.InnerExceptions) AddOriginalFailure(errors, direct);
+        else AddOriginalFailure(errors, caught);
+    }
+    private static void AddOriginalFailure(List<Exception> errors, Exception error)
+    {
+        // Deeper aggregates belong to the source. Even an empty group is a fault.
+        if (!errors.Any(previous => ReferenceEquals(previous, error))) errors.Add(error);
+    }
     public Task? OriginalCloseTask => _originalWork.OriginalCloseTask;
     public Task CloseAndDrainAsync()
     {

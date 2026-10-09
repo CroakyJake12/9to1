@@ -8,7 +8,7 @@ Terminal shell release calls the native revoke-only export before account cancel
 
 Supporting evidence includes fourteen strict native root checks, twelve native account lifetime checks, seventeen root ordering/failure controls, ten API controls, six configured-client controls and thirteen broker controls. These unit/native fixtures do not establish provider or browser acceptance. Original failures are preserved in the Team B continuation evidence.
 
-The actual CUI loader still passes its view lifetime as the dispatcher caller token. The real browser sign-in popup closes when private reset disposes that loader, before issuer dispatch. An optional maintained lifetime-aware dispatch contract has been requested from the canonical CUI owner; no shared source has been changed. Genuine sign-in/profile/session, elapsed provider token expiry, authenticated BFCache, and the new JSExport/JSImport composition require fresh exact-candidate validation.
+The historical browser sign-in failure passed the CUI view lifetime as caller cancellation, closing the popup when private reset disposed that loader before issuer dispatch. The current CUI loader supplies `CuiActionDispatchLifetime` to `ICuiLifetimeAwareActionDispatcher`, and the Account Settings and Home adapters consume its separate view and caller tokens. This preserves explicit caller cancellation while an acknowledged sign-in or confirmed session mutation outlives its own view cleanup. Genuine sign-in/profile/session, elapsed provider token expiry, authenticated BFCache, and the JSExport/JSImport composition still require fresh exact-candidate validation; the source contract does not establish those runtime results.
 
 
 ## Non-route private infrastructure lifetime

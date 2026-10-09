@@ -7,7 +7,7 @@ using Microsoft.Win32.SafeHandles;
 namespace HavenOS.Home.Core;
 
 /// <summary>Actual kernel observation of THIS connected Windows Home server. No configured principal is accepted as evidence.</summary>
-internal static class HomeNativeWindowsHostObservation
+internal static partial class HomeNativeWindowsHostObservation
 {
     internal static HomeNativeObservedPeer? FromConnectedPipe(NamedPipeClientStream original)
     {

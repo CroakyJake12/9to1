@@ -89,6 +89,11 @@ public sealed partial class App : Avalonia.Application
         ConfigureOriginalWindowsHomeRegistrations(collection);
         ConfigureOriginalNativeDevelopmentRegistrations(collection);
         ConfigureOriginalWindowsDeveloperRegistrations(collection);
+        ConfigureOriginalAssistantDevelopmentOwnerRegistrations(collection);
+        ConfigureOriginalAssistantMemoryOwnerRegistrations(collection);
+        ConfigureOriginalAssistantMiniComputerOwnerRegistrations(collection);
+        ConfigureOriginalAssistantCapabilityOwnerRegistrations(collection);
+        ConfigureOriginalAutomationLibraryReadRegistrations(collection);
         AddNativeCakeAccountServices(collection);
         ConfigureOriginalNativeHomeApprovalServices(collection);
 #endif
@@ -101,6 +106,7 @@ public sealed partial class App : Avalonia.Application
 #if !ANDROID
         CaptureOriginalCanonicalProcessOwner(_services);
         CaptureOriginalWindowsDeveloperBorrowers(_services);
+        CaptureOriginalAssistantDevelopmentOwners(_services);
 #endif
         _actualComputerUseOverlay = ResolveOriginalComputerUseOverlay(_services);
         Subscribe.EventBus = _services.GetRequiredService<HavenEventBus>();
@@ -122,6 +128,7 @@ public sealed partial class App : Avalonia.Application
             _services.GetRequiredService<WorkspaceSessionCoordinator>().Register(mainView, WorkspaceWindowKind.Main, queueSave: false);
             var window = new MainWindow(preferences) { DataContext = mainView, PreserveWorkspaceSessionOnClose = true };
             ConfigureOriginalWindowsNativeRoutes(window, mainView);
+            ConfigureOriginalAutomationLibraryShell(window, mainView);
             ConfigureOriginalDesktopShutdown(desktop, window, mainView);
             window.Opened += (_, _) => { _ = InitialiseHaven(mainView); };
             desktop.MainWindow = window;

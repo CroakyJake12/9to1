@@ -1,0 +1,12 @@
+<Cui id="assistants" version="1">
+  <Page id="assistants-shell" AccessibleName="Assistants">
+    <Container Type="Grid">
+      <Object id="assistants-home" Type="AssistantsHome" IsVisible="{Binding ShowHome}" />
+      <Object id="assistants-configuration" Type="AssistantConfiguration" IsVisible="{Binding ShowConfiguration}" />
+      <Object id="assistants-legacy-migration" Type="AssistantLegacyMigration" IsVisible="{Binding ShowLegacyMigration}" />
+      <Object id="assistants-memory" Type="AssistantMemory" IsVisible="{Binding ShowMemory}" />
+      <Object id="assistants-mini-computer" Type="AssistantMiniComputer" IsVisible="{Binding ShowMiniComputer}" />
+      <Object id="assistants-work" Type="AssistantWork" IsVisible="{Binding ShowWork}" />
+    </Container>
+  </Page>
+</Cui>

@@ -1,0 +1,75 @@
+<Cui id="assistants.home" version="1">
+  <Actions>
+    <Action name="OpenAssistant" command="assistants.open" parameter="{Binding assistant}" />
+    <Action name="OpenRecentConversation" command="assistants.conversation.open" parameter="{Binding conversation}" />
+    <Action name="OpenRecentWork" command="assistants.work.open" parameter="{Binding work}" />
+  </Actions>
+  <Page id="assistants-home-page" AccessibleName="Your Assistants">
+    <Container Type="Vertical Stack" VerticalScrolling="True" Margin="24" Spacing="18">
+      <Container Type="Vertical Stack" Spacing="8">
+        <Text FontSize="30" FontWeight="Bold">Assistants</Text>
+        <Text Text="Your personal assistants, ready to continue where you left off." TextWrapping="Wrap" />
+        <WrapPanel>
+          <Button id="assistant-create" action="assistants.create.start" IsEnabled="{Binding CanCreate}" AccessibleName="Create an Assistant">Create Assistant</Button>
+          <Button id="assistants-refresh" action="assistants.refresh" IsEnabled="{Binding CanRefresh}" Margin="12,0,0,0">Refresh</Button>
+        </WrapPanel>
+        <Text id="assistants-status" Text="{Binding Status}" TextWrapping="Wrap" AccessibleName="Assistants status" />
+        <Text id="assistants-error" Text="{Binding Error}" IsVisible="{Binding HasError}" TextWrapping="Wrap" AccessibleName="Assistants error" />
+      </Container>
+      <If Condition="{Binding HasAssistants}">
+        <Container Type="Vertical Stack" Spacing="12">
+          <Text FontSize="20" FontWeight="SemiBold">Your Assistants</Text>
+          <Repeat Source="{Binding Assistants}" As="assistant" Key="{Binding assistant.Id}">
+            <Container Type="Vertical Stack" Margin="0,0,0,12" Spacing="8">
+              <Object Type="AssistantAvatar" Text="{Binding assistant.AvatarKey}" Width="48" Height="48" HorizontalAlignment="Left" AccessibleName="{Binding assistant.AvatarLabel}" />
+              <Text Text="{Binding assistant.Name}" FontSize="19" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <Text Text="{Binding assistant.Description}" TextWrapping="Wrap" />
+              <Text Text="{Binding assistant.ActivityLabel}" TextWrapping="Wrap" AccessibleName="Assistant activity" />
+              <Button action="OpenAssistant" IsEnabled="{Binding assistant.CanOpen}" AccessibleName="Open this Assistant">Open Assistant</Button>
+            </Container>
+          </Repeat>
+        </Container>
+      </If>
+      <Else>
+        <Container Type="Vertical Stack" Spacing="8">
+          <Text FontSize="20" FontWeight="SemiBold">Make an Assistant your own</Text>
+          <Text Text="Give it a name and a purpose, then choose what it can access. Its conversations and work stay together." TextWrapping="Wrap" />
+        </Container>
+      </Else>
+      <Container Type="Vertical Stack" Spacing="10" IsVisible="{Binding HasRecentConversations}">
+        <Text FontSize="20" FontWeight="SemiBold">Recent conversations</Text>
+        <Repeat Source="{Binding RecentConversations}" As="conversation" Key="{Binding conversation.Id}">
+          <Container Type="Vertical Stack" Margin="0,0,0,10" Spacing="4">
+            <Text Text="{Binding conversation.AssistantName}" FontWeight="SemiBold" />
+            <Button action="OpenRecentConversation" Text="{Binding conversation.Title}" IsEnabled="{Binding conversation.CanOpen}" />
+            <Text Text="{Binding conversation.UpdatedLabel}" />
+          </Container>
+        </Repeat>
+      </Container>
+      <Container Type="Vertical Stack" Spacing="10" IsVisible="{Binding HasActiveWork}">
+        <Text FontSize="20" FontWeight="SemiBold">Work in progress</Text>
+        <Repeat Source="{Binding ActiveWork}" As="work" Key="{Binding work.Id}">
+          <Container Type="Vertical Stack" Margin="0,0,0,10" Spacing="4">
+            <Button action="OpenRecentWork" Text="{Binding work.Title}" IsEnabled="{Binding work.CanOpen}" />
+            <Text Text="{Binding work.StatusLabel}" TextWrapping="Wrap" />
+          </Container>
+        </Repeat>
+      </Container>
+      <Container Type="Vertical Stack" Spacing="8">
+        <Text FontSize="20" FontWeight="SemiBold">Bring your saved agents with you</Text>
+        <Text Text="Review each saved definition, keep its history, and choose whether it should become an Assistant or a Specialist." TextWrapping="Wrap" />
+        <Button id="assistants-review-legacy" action="assistants.legacy.open" IsEnabled="{Binding CanReviewLegacy}">Review saved agents</Button>
+      </Container>
+      <Container Type="Vertical Stack" Spacing="8" IsVisible="{Binding HasDependencyStatus}" AccessibleName="Assistant runtime availability">
+        <Text FontSize="20" FontWeight="SemiBold">Features on this device</Text>
+        <Text Text="Open an Assistant to review its settings and access. Some features need setup or approval; others are not available yet." TextWrapping="Wrap" />
+        <Repeat Source="{Binding HomeCapabilityReadinessRows}" As="readiness" Key="{Binding readiness.Id}">
+          <WrapPanel Margin="0,0,0,4">
+            <Text Text="{Binding readiness.Name}" FontWeight="SemiBold" TextWrapping="Wrap" />
+            <Text Text="{Binding readiness.StatusLabel}" Margin="12,0,0,0" TextWrapping="Wrap" />
+          </WrapPanel>
+        </Repeat>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

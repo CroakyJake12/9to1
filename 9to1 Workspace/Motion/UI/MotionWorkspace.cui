@@ -1,0 +1,89 @@
+<Cui id="9to1.Motion.Workspace" version="1">
+ <Actions>
+  <Action name="SelectMarker" command="9to1.Motion.SelectMarker" parameter="{Binding marker.Target}" />
+  <Action name="JumpMarker" command="9to1.Motion.JumpMarker" parameter="{Binding marker.Target}" />
+  <Action name="UpdateMarker" command="9to1.Motion.UpdateMarker" parameter="{Binding SelectedMarker}" />
+  <Action name="DeleteMarker" command="9to1.Motion.DeleteMarker" parameter="{Binding SelectedMarker}" />
+ </Actions>
+ <Grid rows="Auto,*,Auto,Auto" margin="12">
+  <StackPanel spacing="8">
+   <TextBlock text="{Binding ProjectLabel}" font-size="22" />
+   <WrapPanel>
+    <ComboBox id="MotionSequenceSelector" max-width="250" margin="0,0,8,8" ItemsSource="{Binding SequenceNames}" SelectedIndex="{Binding SequenceIndex, mode=TwoWay, type=int}" accessible-name="Sequence" />
+    <Button id="MotionUndoButton" margin="0,0,8,8" action="9to1.Motion.Undo" content="Undo" is-enabled="{Binding CanUndo}" />
+    <Button margin="0,0,8,8" action="9to1.Motion.Redo" content="Redo" is-enabled="{Binding CanRedo}" />
+    <Button margin="0,0,8,8" action="9to1.Motion.Reload" content="Reload saved project" />
+    <Button margin="0,0,8,8" action="9to1.Motion.ImportAsset" content="Add media from Files" is-enabled="{Binding CanImport}" />
+    <Button margin="0,0,8,8" action="9to1.Motion.Render" content="Render video only" is-enabled="{Binding CanRender}" />
+    <Button margin="0,0,8,8" action="9to1.Motion.Cancel" content="Cancel operation" is-enabled="{Binding CanCancel}" />
+   </WrapPanel>
+  </StackPanel>
+  <Grid grid-row="1" columns="*,*,*" margin="0,12">
+   <ScrollViewer id="MotionMediaViewport"><StackPanel spacing="6">
+    <TextBlock text="Media and tracks" font-size="18" />
+    <ComboBox ItemsSource="{Binding AssetNames}" SelectedIndex="{Binding AssetIndex, mode=TwoWay, type=int}" accessible-name="Source asset" />
+    <Button action="9to1.Motion.RelinkAsset" content="Relink selected asset in Files" />
+    <ComboBox ItemsSource="{Binding TrackNames}" SelectedIndex="{Binding TrackIndex, mode=TwoWay, type=int}" accessible-name="Video track" />
+    <Button action="9to1.Motion.AddTrack" content="Add video track" />
+    <Button action="9to1.Motion.ToggleLock" content="Lock / unlock track" />
+    <Button action="9to1.Motion.ToggleVisibility" content="Show / hide track" />
+    <TextBlock text="{Binding SequenceLabel}" />
+    <TextBlock text="Sequence markers" font-size="18" />
+    <TextBox id="MotionMarkerName" text="{Binding MarkerName, mode=TwoWay}" accessible-name="Marker name" />
+    <Button id="MotionAddMarker" action="9to1.Motion.AddMarker" content="Add marker at playhead" />
+    <TextBlock text="{Binding MarkerSelection}" text-wrapping="Wrap" />
+    <TextBox id="MotionMarkerFrame" text="{Binding MarkerFrame, mode=TwoWay}" accessible-name="Marker frame" />
+    <WrapPanel><Button margin="0,0,8,8" id="MotionUpdateMarker" action="UpdateMarker" content="Save marker" /><Button margin="0,0,8,8" id="MotionDeleteMarker" action="DeleteMarker" content="Delete marker" /></WrapPanel>
+    <Repeat Source="{Binding Markers}" As="marker" Key="{Binding marker.Key}">
+     <WrapPanel><Button margin="0,0,8,8" id="MotionSelectMarkerRow" action="SelectMarker" content="{Binding marker.Label}" /><Button margin="0,0,8,8" id="MotionJumpMarkerRow" action="JumpMarker" content="Go to marker" /></WrapPanel>
+    </Repeat>
+    <Button action="9to1.Motion.PlaySource" content="Play selected source" is-enabled="{Binding CanPlay}" />
+    <Button action="9to1.Motion.Pause" content="Pause source" />
+    <TextBlock text="{Binding PreviewStatus}" text-wrapping="Wrap" />
+    <TextBlock text="{Binding ExportStatus}" text-wrapping="Wrap" />
+   </StackPanel></ScrollViewer>
+   <ScrollViewer id="MotionInspectorViewport" grid-column="1"><StackPanel spacing="6" margin="12,0">
+    <TextBlock text="Clip inspector · frames" font-size="18" />
+    <ComboBox id="MotionClipSelector" ItemsSource="{Binding ClipNames}" SelectedIndex="{Binding ClipIndex, mode=TwoWay, type=int}" accessible-name="Timeline clip" />
+    <TextBlock text="{Binding Selection}" text-wrapping="Wrap" />
+    <TextBlock text="Timeline start frame" />
+    <TextBox text="{Binding Start, mode=TwoWay}" accessible-name="Timeline start frame" />
+    <TextBlock text="Source in frame" />
+    <TextBox text="{Binding SourceIn, mode=TwoWay}" accessible-name="Source in frame" />
+    <TextBlock text="Source out frame (exclusive)" />
+    <TextBox text="{Binding SourceOut, mode=TwoWay}" accessible-name="Source out frame" />
+    <WrapPanel><Button margin="0,0,8,8" action="9to1.Motion.Insert" content="Insert" /><Button margin="0,0,8,8" action="9to1.Motion.Overwrite" content="Overwrite" /><Button margin="0,0,8,8" action="9to1.Motion.Move" content="Move" /></WrapPanel>
+    <WrapPanel><Button margin="0,0,8,8" action="9to1.Motion.Trim" content="Trim" /><Button margin="0,0,8,8" action="9to1.Motion.Slip" content="Slip" /><Button margin="0,0,8,8" action="9to1.Motion.Duplicate" content="Duplicate" /></WrapPanel>
+    <WrapPanel><Button margin="0,0,8,8" action="9to1.Motion.RippleTrimStart" content="Ripple start" /><Button margin="0,0,8,8" action="9to1.Motion.RippleTrimEnd" content="Ripple end" /></WrapPanel>
+    <WrapPanel><Button margin="0,0,8,8" action="9to1.Motion.Roll" content="Roll cut to playhead" /><Button margin="0,0,8,8" action="9to1.Motion.Slide" content="Slide clip" /></WrapPanel>
+    <TextBlock text="Destination track" />
+    <ComboBox id="MotionDestinationTrack" ItemsSource="{Binding TrackNames}" SelectedIndex="{Binding DestinationTrackIndex, mode=TwoWay, type=int}" accessible-name="Move destination track" />
+    <Button id="MotionMoveToTrackButton" action="9to1.Motion.MoveToTrack" content="Move to track" />
+    <WrapPanel><Button margin="0,0,8,8" action="9to1.Motion.Delete" content="Lift clip" /><Button margin="0,0,8,8" action="9to1.Motion.RippleDelete" content="Extract clip" /></WrapPanel>
+    <TextBlock text="Range / caption start frame" />
+    <TextBox text="{Binding RangeStart, mode=TwoWay}" accessible-name="Range start frame" />
+    <TextBlock text="Range / caption end frame (exclusive)" />
+    <TextBox text="{Binding RangeEnd, mode=TwoWay}" accessible-name="Range end frame" />
+    <WrapPanel><Button margin="0,0,8,8" action="9to1.Motion.Lift" content="Lift range" /><Button margin="0,0,8,8" action="9to1.Motion.Extract" content="Extract range" /></WrapPanel>
+   </StackPanel></ScrollViewer>
+   <ScrollViewer id="MotionCaptionViewport" grid-column="2"><StackPanel spacing="6">
+    <TextBlock text="Captions" font-size="18" />
+    <ComboBox ItemsSource="{Binding CaptionTrackNames}" SelectedIndex="{Binding CaptionTrackIndex, mode=TwoWay, type=int}" accessible-name="Caption track and language" />
+    <ComboBox ItemsSource="{Binding CaptionNames}" SelectedIndex="{Binding CaptionIndex, mode=TwoWay, type=int}" accessible-name="Caption cue" />
+    <TextBox text="{Binding CaptionText, mode=TwoWay}" accepts-return="True" accessible-name="Caption text" />
+    <TextBlock text="Cue timing uses the range start and end frames." text-wrapping="Wrap" />
+    <WrapPanel><Button margin="0,0,8,8" action="9to1.Motion.AddCaption" content="Add cue" /><Button margin="0,0,8,8" action="9to1.Motion.SaveCaption" content="Save cue" /></WrapPanel>
+    <WrapPanel><Button margin="0,0,8,8" action="9to1.Motion.SplitCaption" content="Split at playhead" /><Button margin="0,0,8,8" action="9to1.Motion.MergeCaption" content="Merge next cue" /></WrapPanel>
+    <TextBox text="{Binding SubtitleText, mode=TwoWay}" accepts-return="True" min-height="100" accessible-name="Subtitle import and export text" />
+    <WrapPanel><Button margin="0,0,8,8" action="9to1.Motion.ImportSrt" content="Import SRT" /><Button margin="0,0,8,8" action="9to1.Motion.ImportWebVtt" content="Import VTT" /></WrapPanel>
+    <WrapPanel><Button margin="0,0,8,8" action="9to1.Motion.ExportSrt" content="Export SRT" /><Button margin="0,0,8,8" action="9to1.Motion.ExportWebVtt" content="Export VTT" /></WrapPanel>
+   </StackPanel></ScrollViewer>
+  </Grid>
+  <StackPanel grid-row="2" spacing="6">
+   <WrapPanel><Button margin="0,0,8,8" action="9to1.Motion.PreviousFrame" content="Previous frame" /><TextBox margin="0,0,8,8" text="{Binding Playhead, mode=TwoWay}" accessible-name="Playhead frame" /><Button margin="0,0,8,8" action="9to1.Motion.NextFrame" content="Next frame" /><Button margin="0,0,8,8" action="9to1.Motion.Split" content="Split clip at playhead" /></WrapPanel>
+   <WrapPanel><Button margin="0,0,8,8" id="MotionPreviousMarker" action="9to1.Motion.PreviousMarker" content="Previous marker" /><Button margin="0,0,8,8" id="MotionNextMarker" action="9to1.Motion.NextMarker" content="Next marker" /><Button margin="0,0,8,8" id="MotionToggleSnapping" action="9to1.Motion.ToggleSnapping" content="{Binding SnappingLabel}" /><Button margin="0,0,8,8" id="MotionSnapPlayhead" action="9to1.Motion.SnapPlayhead" content="Snap playhead" /><Button margin="0,0,8,8" id="MotionMarkIn" action="9to1.Motion.MarkIn" content="Mark in at frame" /><Button margin="0,0,8,8" id="MotionMarkOut" action="9to1.Motion.MarkOut" content="Mark out after frame" /></WrapPanel>
+   <Object Type="motion.timeline" height="180" accessible-name="Multitrack video timeline. Use the clip selector and frame controls for keyboard editing." />
+  </StackPanel>
+  <StackPanel grid-row="3" spacing="4"><TextBlock text="{Binding DraftStatus}" text-wrapping="Wrap" /><Button action="9to1.Motion.DiscardDrafts" content="Discard pending fields" is-enabled="{Binding CanDiscardDrafts}" /><TextBlock text="{Binding Status}" text-wrapping="Wrap" accessible-name="Motion operation status" /></StackPanel>
+ </Grid>
+</Cui>

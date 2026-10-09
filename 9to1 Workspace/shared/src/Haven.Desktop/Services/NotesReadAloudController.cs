@@ -12,6 +12,8 @@
  */
 
 using System.Text;
+using System.Runtime.ExceptionServices;
+using System.Runtime.CompilerServices;
 using Haven.Application;
 using Haven.Core;
 
@@ -49,6 +51,50 @@ public sealed class NotesReadAloudController(
     /// Stores active cancellation locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
     private CancellationTokenSource? _activeCancellation;
+    private OriginalSpeechSession? _activeOriginalSpeechSession;
+    private readonly ConditionalWeakTable<OriginalSpeechSource, IssuedOriginalSpeechSource> _originalSpeechSources = new();
+
+    // This opaque handle conveys only the provenance of one actual local Speak
+    // task. Constructing a handle cannot register it in the controller's private
+    // issuer table, and no caller can assign the stop or acknowledgement tasks.
+    internal sealed class OriginalSpeechSource(NotesReadAloudController issuer)
+    {
+        internal bool IsIssuedFor(Task actual) => issuer.IsIssuedOriginalSpeechSource(this, actual);
+        internal bool IsAcknowledgedFor(Task actual) => issuer.IsAcknowledgedOriginalSpeechSource(this, actual);
+    }
+
+    private sealed class OriginalSpeechSession(CancellationTokenSource cancellation)
+    {
+        internal CancellationTokenSource Cancellation { get; } = cancellation;
+        internal object Gate { get; } = new();
+        internal List<IssuedOriginalSpeechSource> Sources { get; } = [];
+        internal OriginalSpeechStop? Stop { get; set; }
+    }
+
+    private sealed class OriginalSpeechStop
+    {
+        internal Task Task { get; set; } = null!;
+        internal Task? NativeStop { get; set; }
+        internal bool Requested { get; set; }
+    }
+
+    private sealed class IssuedOriginalSpeechSource(Task actual, OriginalSpeechSession session)
+    {
+        internal Task Actual { get; } = actual;
+        internal OriginalSpeechSession Session { get; } = session;
+        internal OriginalSpeechStop? ExpectedStop { get; set; }
+    }
+
+    private bool IsIssuedOriginalSpeechSource(OriginalSpeechSource issued, Task actual) =>
+        _originalSpeechSources.TryGetValue(issued, out var source) && ReferenceEquals(source.Actual, actual);
+
+    private bool IsAcknowledgedOriginalSpeechSource(OriginalSpeechSource issued, Task actual)
+    {
+        if (!actual.IsCanceled || !_originalSpeechSources.TryGetValue(issued, out var source)
+            || !ReferenceEquals(source.Actual, actual)) return false;
+        lock (source.Session.Gate) return source.ExpectedStop is { Requested: true } stop
+            && stop.Task.IsCompletedSuccessfully && stop.NativeStop?.IsCompletedSuccessfully == true;
+    }
     /// <summary>
     /// Stores active locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
@@ -350,10 +396,19 @@ public sealed class NotesReadAloudController(
     /// beginning, and stop cancels the whole session. All state changes raise honest status,
     /// progress (0..1) and reading events.
     /// </summary>
-    public async Task SpeakLongFormAsync(
+    public Task SpeakLongFormAsync(
         IReadOnlyList<string> chunks,
         string? language,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken) =>
+        SpeakLongFormCoreAsync(chunks, language, cancellationToken, null);
+
+    internal Task SpeakOriginalLongFormAsync(string text, string? language, CancellationToken cancellationToken,
+        Func<Func<Task>, Task> observeOriginalSource, Action<Task, OriginalSpeechSource> qualifyOriginalSource) =>
+        SpeakLongFormCoreAsync(SplitIntoChunks(text), language, cancellationToken, observeOriginalSource, qualifyOriginalSource);
+
+    private async Task SpeakLongFormCoreAsync(IReadOnlyList<string> chunks, string? language,
+        CancellationToken cancellationToken, Func<Func<Task>, Task>? observeOriginalSource,
+        Action<Task, OriginalSpeechSource>? qualifyOriginalSource = null)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(chunks);
@@ -389,6 +444,7 @@ public sealed class NotesReadAloudController(
             _resumeSignal = null;
             linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             _activeCancellation = linked;
+            _activeOriginalSpeechSession = qualifyOriginalSource is null ? null : new OriginalSpeechSession(linked);
             Volatile.Write(ref _active, 1);
             Volatile.Write(ref _reading, 1);
             RaiseIsReadingChanged(true);
@@ -402,7 +458,7 @@ public sealed class NotesReadAloudController(
 
         try
         {
-            var finished = await RunChunksAsync(linked).ConfigureAwait(false);
+            var finished = await RunChunksAsync(linked, observeOriginalSource, qualifyOriginalSource).ConfigureAwait(false);
             if (finished && !linked.IsCancellationRequested)
             {
                 await diagnostics.WriteAsync(
@@ -436,7 +492,8 @@ public sealed class NotesReadAloudController(
     /// with the position retained, and reacts to skip interruptions by re-reading shared state.
     /// Returns true only when every chunk finished naturally.
     /// </summary>
-    private async Task<bool> RunChunksAsync(CancellationTokenSource session)
+    private async Task<bool> RunChunksAsync(CancellationTokenSource session, Func<Func<Task>, Task>? observeOriginalSource,
+        Action<Task, OriginalSpeechSource>? qualifyOriginalSource)
     {
         while (true)
         {
@@ -444,6 +501,7 @@ public sealed class NotesReadAloudController(
             string chunk = string.Empty;
             CancellationTokenSource? chunkCts = null;
             Task? resumeSignal = null;
+            OriginalSpeechSession? originalSpeechSession = null;
             await _gate.WaitAsync(CancellationToken.None).ConfigureAwait(false);
             try
             {
@@ -461,6 +519,7 @@ public sealed class NotesReadAloudController(
                     chunk = _chunks[index];
                     chunkCts = CancellationTokenSource.CreateLinkedTokenSource(session.Token);
                     _chunkCancellation = chunkCts;
+                    originalSpeechSession = _activeOriginalSpeechSession;
                 }
             }
             finally
@@ -478,7 +537,9 @@ public sealed class NotesReadAloudController(
             var utterance = chunkCts!;
             try
             {
-                await speech.SpeakAsync(chunk, _sessionVoice?.Id, _sessionOutputDeviceId, utterance.Token).ConfigureAwait(false);
+                await AwaitOriginalSpeechSourceAsync(() => speech.SpeakAsync(chunk, _sessionVoice?.Id,
+                    _sessionOutputDeviceId, utterance.Token), observeOriginalSource,
+                    originalSpeechSession, qualifyOriginalSource).ConfigureAwait(false);
             }
             catch (OperationCanceledException) when (!session.IsCancellationRequested && utterance.IsCancellationRequested)
             {
@@ -633,22 +694,52 @@ public sealed class NotesReadAloudController(
     /// <summary>
     /// Performs stop asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    public async Task StopAsync(CancellationToken cancellationToken)
+    public Task StopAsync(CancellationToken cancellationToken) => StopCoreAsync(cancellationToken, null);
+
+    internal Task StopOriginalAsync(CancellationToken cancellationToken, Func<Func<Task>, Task> observeOriginalSource)
     {
+        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var originalStop = new OriginalSpeechStop();
+        originalStop.Task = StopCoreAsync(cancellationToken, observeOriginalSource, originalStop, start.Task);
+        start.SetResult(); // SAME returned stop task exists before cancellation/native callbacks.
+        return originalStop.Task;
+    }
+
+    private async Task StopCoreAsync(CancellationToken cancellationToken, Func<Func<Task>, Task>? observeOriginalSource,
+        OriginalSpeechStop? originalStop = null, Task? start = null)
+    {
+        if (start is not null) await start.ConfigureAwait(false);
         CancellationTokenSource? interrupted;
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             var cancellation = Interlocked.Exchange(ref _activeCancellation, null);
             var wasActive = Interlocked.Exchange(ref _active, 0) == 1;
+            var originalSession = _activeOriginalSpeechSession;
+            _activeOriginalSpeechSession = null;
+            if (wasActive && originalStop is not null && originalSession is not null
+                && ReferenceEquals(originalSession.Cancellation, cancellation))
+                lock (originalSession.Gate)
+                {
+                    originalSession.Stop = originalStop;
+                    foreach (var issued in originalSession.Sources)
+                        if (!issued.Actual.IsCompleted) issued.ExpectedStop = originalStop;
+                    // Already-canceled playback and tasks acquired after this stop
+                    // request carry no acknowledgement qualification.
+                }
             interrupted = FinalizeLongFormStateLocked();
-            cancellation?.Cancel();
             try
             {
                 // ISpeechOutputService is shared with Call. Never interrupt it unless
                 // this controller actually owns an active Notes utterance.
-                if (wasActive)
-                    await speech.StopAsync(cancellationToken).ConfigureAwait(false);
+                await AwaitOriginalSpeechSourceAsync(() =>
+                {
+                    if (originalStop is not null) originalStop.Requested = wasActive;
+                    cancellation?.Cancel();
+                    var actual = wasActive ? speech.StopAsync(cancellationToken) : Task.CompletedTask;
+                    if (originalStop is not null && wasActive) originalStop.NativeStop = actual;
+                    return actual;
+                }, observeOriginalSource).ConfigureAwait(false);
             }
             finally
             {
@@ -662,6 +753,49 @@ public sealed class NotesReadAloudController(
         }
 
         CancelInterrupted(interrupted);
+    }
+
+    private async Task AwaitOriginalSpeechSourceAsync(Func<Task> source, Func<Func<Task>, Task>? observeOriginalSource,
+        OriginalSpeechSession? originalSession = null, Action<Task, OriginalSpeechSource>? qualifyOriginalSource = null)
+    {
+        Task? actualSource = null;
+        Exception? directSourceFailure = null;
+        Task AcquireOriginal()
+        {
+            try
+            {
+                actualSource = source() ?? throw new InvalidOperationException("Speech returned no original task.");
+                if (originalSession is not null && qualifyOriginalSource is not null)
+                {
+                    var issued = new OriginalSpeechSource(this);
+                    var provenance = new IssuedOriginalSpeechSource(actualSource, originalSession);
+                    lock (originalSession.Gate)
+                    {
+                        originalSession.Sources.RemoveAll(source => source.Actual.IsCompleted);
+                        originalSession.Sources.Add(provenance);
+                        _originalSpeechSources.Add(issued, provenance);
+                    }
+                    qualifyOriginalSource(actualSource, issued);
+                }
+                return actualSource;
+            }
+            catch (Exception error) { directSourceFailure = error; throw; }
+        }
+        try
+        {
+            var observed = observeOriginalSource is null ? AcquireOriginal() : observeOriginalSource(AcquireOriginal);
+            await observed.ConfigureAwait(false);
+        }
+        catch (Exception error) when (actualSource?.IsFaulted == true || directSourceFailure is not null)
+        {
+            var causes = actualSource?.Exception?.InnerExceptions.ToArray() ?? [directSourceFailure ?? error];
+            // A faulted OCE is a failure, even if stop concurrently canceled this session.
+            // Preserve raw sibling identities; the intentional-cancellation catches above
+            // remain reserved for actual canceled playback tasks.
+            if (causes.Length == 1 && causes[0] is not OperationCanceledException)
+                ExceptionDispatchInfo.Capture(causes[0]).Throw();
+            throw new AggregateException("Original local speech source failed.", causes);
+        }
     }
 
     /// <summary>
@@ -717,6 +851,7 @@ public sealed class NotesReadAloudController(
         {
             if (!ReferenceEquals(_activeCancellation, owner)) return;
             _activeCancellation = null;
+            _activeOriginalSpeechSession = null;
             Volatile.Write(ref _active, 0);
             interrupted = FinalizeLongFormStateLocked();
             owner.Dispose();

@@ -107,6 +107,14 @@ public sealed class ToolAvailabilityPlan
     /// </summary>
     public bool IsCapabilityAvailable(string capabilityKey) =>
         !ContextualCapabilityKeys.Contains(capabilityKey) || _availableContextualCapabilities.Contains(capabilityKey);
+    /// <summary>Observes keys registered by this SAME concrete runtime plan. This
+    /// does not grant execution, model support or resource authority. Consumers must
+    /// also intersect the current model-restricted definitions and actual source context.</summary>
+    public bool HasOriginalAvailableRuntimeCapability(string capabilityKey)
+    {
+        ArgumentNullException.ThrowIfNull(capabilityKey);
+        return _availableContextualCapabilities.Contains(capabilityKey);
+    }
     /// <summary>
     /// Removes registered capabilities whose concrete runtimes are unavailable.
     /// </summary>
@@ -175,6 +183,28 @@ public sealed class ToolAvailabilityPlanner
     /// Gets or updates default, the bindable or domain state represented by this property.
     /// </summary>
     public static ToolAvailabilityPlanner Default { get; } = new();
+
+    /// <summary>Observes the configured subset of this SAME current model-restricted
+    /// plan using the maintained workspace groups. Unknown extension/catalogue keys
+    /// yield no tool names. The result narrows dispatch; it grants no resource access.</summary>
+    public IReadOnlyList<OllamaToolDefinition> GetOriginalConfiguredDefinitions(
+        ToolAvailabilityPlan sameModelRestrictedPlan, IReadOnlyCollection<ActiveCapability> actualConfigured)
+    {
+        ArgumentNullException.ThrowIfNull(sameModelRestrictedPlan);
+        ArgumentNullException.ThrowIfNull(actualConfigured);
+        var keys = new HashSet<string>(actualConfigured.Select(value => value.Key), StringComparer.OrdinalIgnoreCase);
+        var selected = sameModelRestrictedPlan.Definitions.Where(definition =>
+        {
+            if (!sameModelRestrictedPlan.TryGetRuntime(definition.Name, out var runtime) ||
+                runtime != ToolRuntimeKind.Workspace) return false;
+            return WorkspaceReadTools.Contains(definition.Name) && keys.Contains("read-file") ||
+                WorkspaceMutationTools.Contains(definition.Name) && keys.Contains("write-file") ||
+                definition.Name == "run_tests" && keys.Contains("run-tests") ||
+                definition.Name == "run_command" &&
+                    (keys.Contains("run-command") || keys.Contains("run-script") || keys.Contains("powershell"));
+        }).ToArray();
+        return Array.AsReadOnly(selected);
+    }
 
     /// <summary>
     /// Creates this member with the invariants required by its callers.

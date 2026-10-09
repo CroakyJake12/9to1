@@ -140,7 +140,7 @@ public sealed record HomePackageDatabaseWriteResult(HomePackageDatabaseSnapshot?
 /// Versioned canonical Home package database backed by the Home Core state store. The store's
 /// compare-and-write revision provides cross-process conflict detection and atomic record saves.
 /// </summary>
-public sealed class HomePackageDatabase(IHomeCoreStateStore store)
+public sealed partial class HomePackageDatabase(IHomeCoreStateStore store)
 {
     public const int CurrentSchemaVersion = 1;
     public const string RecordId = "home.packages.registry";
@@ -158,9 +158,15 @@ public sealed class HomePackageDatabase(IHomeCoreStateStore store)
     // Object binding only; trusted device scope, ACL and root commit authority remain external prerequisites.
     internal bool IsBoundToStore(IHomeCoreStateStore original) => ReferenceEquals(_store, original);
 
-    public async Task<HomePackageDatabaseReadResult> ReadAsync(CancellationToken cancellationToken = default)
+    public Task<HomePackageDatabaseReadResult> ReadAsync(CancellationToken cancellationToken = default) =>
+        ReadOriginalBootstrapCoreAsync(cancellationToken);
+
+    private async Task<HomePackageDatabaseReadResult> ReadOriginalBootstrapCoreAsync(CancellationToken cancellationToken,
+        HomeOwnershipOriginalSourceCallbacks? originalSource = null)
     {
-        var read = await _store.ReadAsync(cancellationToken).ConfigureAwait(false);
+        var read = originalSource is null
+            ? await _store.ReadAsync(cancellationToken).ConfigureAwait(false)
+            : await originalSource.ReadAsync(() => _store.ReadAsync(cancellationToken)).ConfigureAwait(false);
         if (!read.IsSuccess)
             return ReadFailure(read.Failure!);
 
@@ -216,7 +222,7 @@ public sealed class HomePackageDatabase(IHomeCoreStateStore store)
 
     private async Task<HomePackageDatabaseWriteResult> SaveCoreAsync(HomePackageDatabaseSnapshot snapshot,
         long expectedRevision, AuthenticatedResourceActor? originalActor, IHomeStateCommitActorGuard? originalGuard,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, HomeOwnershipOriginalSourceCallbacks? originalSource = null)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         if (expectedRevision < 0)
@@ -230,7 +236,7 @@ public sealed class HomePackageDatabase(IHomeCoreStateStore store)
         if (snapshot.Revision != expectedRevision)
             return FailedWrite("HomePackages.StaleSnapshot", "The package database snapshot revision does not match the expected revision.", retryable: true);
 
-        await _writeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await WaitOriginalBootstrapPackageGateAsync(originalSource, cancellationToken).ConfigureAwait(false);
         try
         {
             var next = snapshot with
@@ -249,10 +255,11 @@ public sealed class HomePackageDatabase(IHomeCoreStateStore store)
                 HomeRecordAuthority.LocalCanonical,
                 next.Revision,
                 JsonSerializer.SerializeToElement(next, JsonOptions));
-            var written = originalGuard is null
-                ? await _store.WriteAsync(record, expectedRevision, cancellationToken).ConfigureAwait(false)
-                : await _store.WriteGuardedAsync(record, expectedRevision, originalActor!, originalGuard,
-                    cancellationToken).ConfigureAwait(false);
+            var written = originalSource is null
+                ? originalGuard is null
+                    ? await _store.WriteAsync(record, expectedRevision, cancellationToken).ConfigureAwait(false)
+                    : await _store.WriteGuardedAsync(record, expectedRevision, originalActor!, originalGuard, cancellationToken).ConfigureAwait(false)
+                : await originalSource.ReadAsync(() => _store.WriteGuardedAsync(record, expectedRevision, originalActor!, originalGuard!, cancellationToken)).ConfigureAwait(false);
             if (!written.IsSuccess)
                 return WriteFailure(written.Failure!);
 
@@ -263,7 +270,7 @@ public sealed class HomePackageDatabase(IHomeCoreStateStore store)
         }
         finally
         {
-            _writeGate.Release();
+            if (originalSource is null) _writeGate.Release(); else originalSource.Run(() => _writeGate.Release());
         }
     }
 

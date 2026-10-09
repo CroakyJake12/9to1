@@ -179,6 +179,7 @@ public sealed class CuiControlRegistry
             "combobox" => new ComboBox(),
             "treeview" => new TreeView(),
             "menu" => new Menu(),
+            "contextmenu" => new ContextMenu(),
             "menuitem" => new MenuItem(),
             "separator" => new Separator(),
             "contentcontrol" => new ContentControl(),
@@ -293,7 +294,7 @@ public sealed class CuiControlRegistry
             ("TextBox", false, []), ("CheckBox", false, []), ("RadioButton", false, []), ("Slider", false, []),
             ("ProgressBar", false, []), ("Canvas", false, []), ("TabControl", false, []), ("TabItem", false, []),
             ("ListBox", false, []), ("ComboBox", false, []), ("TreeView", false, []), ("Menu", false, []),
-            ("MenuItem", false, []), ("Separator", false, []), ("ContentControl", false, []),
+            ("ContextMenu", false, []), ("MenuItem", false, []), ("Separator", false, []), ("ContentControl", false, []),
             ("ItemsControl", false, []), ("UserControl", false, [])
         };
 
@@ -309,7 +310,8 @@ public sealed class CuiControlRegistry
                 "Button" => content.Concat(new[] { "Action" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
                 "Layer" => common.Concat(new[] { "Background", "Padding", "ZIndex", "Interactive", "ActiveIndependently" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
                 "Anchor" => common.Concat(new[] { "Target", "Placement", "Left", "Top", "Width", "Height" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
-                "Audio" or "Video" or "Object" => common.ToFrozenSet(StringComparer.OrdinalIgnoreCase),
+                "Audio" or "Video" => common.ToFrozenSet(StringComparer.OrdinalIgnoreCase),
+                "Object" => common.Concat(new[] { "Text" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
                 _ => legacy,
             };
             properties = properties.Where(property =>
@@ -326,7 +328,7 @@ public sealed class CuiControlRegistry
         "Panel", "ItemRow", "ItemColumn", "ItemRowSpan", "ItemColumnSpan", "Spacing", "Type", "Width", "Height", "MinWidth", "MinHeight", "MaxWidth", "MaxHeight", "Margin", "Padding",
         "Background", "Foreground", "Color", "BorderColor", "BorderWidth", "CornerRadius", "Opacity", "Active",
         "Hidden", "IsVisible", "IsEnabled", "Focusable", "TabIndex", "AccessibleName", "AccessibleDescription",
-        "Role", "Text", "Content", "ItemsSource", "SelectedIndex", "Orientation", "HorizontalScrolling", "VerticalScrolling",
+        "Role", "Text", "Header", "Content", "ItemsSource", "SelectedIndex", "Orientation", "HorizontalScrolling", "VerticalScrolling",
         "Rotate", "Scale", "ScaleX", "ScaleY", "Skew", "SkewX", "SkewY", "Translate", "TranslateX", "TranslateY",
         "Effect", "Shadow", "Clip", "Cursor", "TextAlignment", "VerticalTextAlignment", "IsHitTestVisible",
         "BorderBrush", "BorderThickness", "Value", "Checked", "IsChecked", "ColumnDefinitions", "RowDefinitions",
@@ -359,7 +361,7 @@ public sealed class CuiControlRegistry
             ("IsEnabled", "boolean", typeof(bool), true), ("Focusable", "boolean", typeof(bool), true),
             ("TabIndex", "integer", typeof(int), true), ("AccessibleName", "text", typeof(string), true),
             ("AccessibleDescription", "text", typeof(string), true), ("Role", "symbol", typeof(string), true),
-            ("Text", "text", typeof(string), true), ("Content", "content", typeof(object), true),
+            ("Header", "text", typeof(string), true), ("Text", "text", typeof(string), true), ("Content", "content", typeof(object), true),
             ("ItemsSource", "collection", typeof(System.Collections.IEnumerable), true), ("SelectedIndex", "integer", typeof(int), true),
             ("Value", "value", typeof(object), true), ("Checked", "boolean", typeof(bool), true),
             ("Orientation", "symbol", typeof(Orientation), true),

@@ -17,6 +17,11 @@ public sealed partial class App
     private Task? _actualStartupOriginal;
     private DesktopOriginalShutdownSequence? _actualShutdownSequence;
     private Task? _actualShutdownDelivery;
+    private Task? _actualDocumentClosePreflightAttempt;
+    private Task? _actualDocumentClosePreflightDelivery;
+    private Task? _actualDocumentClosePreflightPublication;
+    private readonly List<Task> _actualDocumentClosePreflightDeliveries = [];
+    private MainView? _actualDocumentClosePrimaryShell;
     private Task? _actualWindowClosure;
     private Exception? _actualShutdownFailure;
     private IClassicDesktopStyleApplicationLifetime? _actualDesktop;
@@ -29,6 +34,8 @@ public sealed partial class App
 
     internal Task? OriginalStartup => _actualStartupOriginal;
     internal Task? OriginalShutdownDelivery => _actualShutdownDelivery;
+    internal Task? OriginalDocumentClosePreflightAttempt => _actualDocumentClosePreflightAttempt;
+    internal Task? OriginalDocumentClosePreflightDelivery => _actualDocumentClosePreflightDelivery;
     internal Exception? OriginalShutdownFailure => _actualShutdownFailure;
 
     private T AcquireOriginalAppSynchronous<T>(DesktopOriginalWorkLifetime.Original original, Func<T> actualSource)
@@ -87,10 +94,17 @@ public sealed partial class App
         _originalAppWork.RunCloseCallback(DemandOriginalWindowsDeveloperRetirementJoin);
         _originalAppWork.RunCloseCallback(DemandOriginalNativeCakeAccountRetirementJoin);
         _originalAppWork.RunCloseCallback(DemandOriginalNativeHomeApprovalRetirementJoin);
+        _originalAppWork.RunCloseCallback(DemandOriginalAssistantRetirementJoin);
         Task? actualCanonicalProcessDrain = null;
         try { _originalAppWork.RunCloseCallback(() => actualCanonicalProcessDrain = JoinOriginalUntransferredCanonicalProcessBorrowersAsync()); }
         catch (Exception error) { AddAppCause(failures, error); }
         RequestOriginalWindowsDeveloperRetirement(failures);
+        Task? actualAssistantBusinessDrain = null;
+        try { _originalAppWork.RunCloseCallback(() => actualAssistantBusinessDrain = JoinOriginalUntransferredAssistantBusinessAsync()); }
+        catch (Exception error) { AddAppCause(failures, error); }
+        Task? actualAssistantScopeDrain = null;
+        try { _originalAppWork.RunCloseCallback(() => actualAssistantScopeDrain = JoinOriginalUntransferredAssistantScopesAsync()); }
+        catch (Exception error) { AddAppCause(failures, error); }
         Task? actualNativeHomeApprovalDrain = null;
         try { _originalAppWork.RunCloseCallback(() => actualNativeHomeApprovalDrain = JoinOriginalUntransferredNativeHomeApprovalsAsync()); }
         catch (Exception error) { AddAppCause(failures, error); }
@@ -108,6 +122,10 @@ public sealed partial class App
 #if !ANDROID
         if (actualCanonicalProcessDrain is not null)
             await JoinOriginalAppTaskAsync(actualCanonicalProcessDrain, failures);
+        if (actualAssistantBusinessDrain is not null)
+            await JoinOriginalAppTaskAsync(actualAssistantBusinessDrain, failures);
+        if (actualAssistantScopeDrain is not null)
+            await JoinOriginalAppTaskAsync(actualAssistantScopeDrain, failures);
         if (actualWindowsNativeRoutesDrain is not null)
             await JoinOriginalAppTaskAsync(actualWindowsNativeRoutesDrain, failures);
         if (actualNativeDevelopmentDrain is not null)
@@ -128,8 +146,23 @@ public sealed partial class App
         else AddAppCause(failures, new InvalidOperationException("Original Windows developer completion dependencies remain live because business/source retirement did not settle successfully."));
 #endif
 #if !ANDROID
-        // Do not retire Home while an unresolved borrower may still use its state/permission ports.
-        if ((actualCanonicalProcessDrain is null || actualCanonicalProcessDrain.IsCompletedSuccessfully) &&
+        // A failed actual business/source join keeps the SAME Den and Home alive.
+        // Null is absence only when no owner was acquired; acquisition failures remain in failures.
+        Task? actualAssistantDenDrain = null;
+        if (failures.Count == 0 &&
+            (actualAssistantBusinessDrain is null || actualAssistantBusinessDrain.IsCompletedSuccessfully) &&
+            (actualAssistantScopeDrain is null || actualAssistantScopeDrain.IsCompletedSuccessfully))
+        {
+            try { _originalAppWork.RunCloseCallback(() => actualAssistantDenDrain = JoinOriginalUntransferredAssistantPersonalDenAsync()); }
+            catch (Exception error) { AddAppCause(failures, error); }
+            if (actualAssistantDenDrain is not null) await JoinOriginalAppTaskAsync(actualAssistantDenDrain, failures);
+        }
+        // Do not retire Home while any acquired borrower or the Den lease remains unresolved.
+        if (failures.Count == 0 &&
+            (actualAssistantBusinessDrain is null || actualAssistantBusinessDrain.IsCompletedSuccessfully) &&
+            (actualAssistantScopeDrain is null || actualAssistantScopeDrain.IsCompletedSuccessfully) &&
+            (actualAssistantDenDrain is null || actualAssistantDenDrain.IsCompletedSuccessfully) &&
+            (actualCanonicalProcessDrain is null || actualCanonicalProcessDrain.IsCompletedSuccessfully) &&
             (actualNativeDevelopmentDrain is null || actualNativeDevelopmentDrain.IsCompletedSuccessfully) &&
             (actualWindowsNativeRoutesDrain is null || actualWindowsNativeRoutesDrain.IsCompletedSuccessfully) &&
             (actualWindowsDeveloperDrain is { IsCompletedSuccessfully: true }) &&
@@ -153,11 +186,15 @@ public sealed partial class App
         _originalAppWork.RunCloseCallback(() => UpdateOrchestrator.PendingUpdateDetectedOnStartup -= OnPendingStartupUpdateDetected);
         return Task.CompletedTask;
     }
-    private Task JoinOriginalAppProducersAsync()
+    private async Task JoinOriginalAppProducersAsync()
     {
         if (_synchronousAppSources?.Any(owner => ReferenceEquals(owner, this)) == true)
             throw new InvalidOperationException("An actual App callback must return before its external retirement join.");
-        return _originalAppWork.CloseAndDrainAsync();
+        var failures = new List<Exception>();
+        foreach (var actual in _actualDocumentClosePreflightDeliveries.ToArray())
+            await JoinOriginalAppTaskAsync(actual, failures);
+        await JoinOriginalAppTaskAsync(_originalAppWork.CloseAndDrainAsync(), failures);
+        ThrowAppCauses(failures);
     }
     private void ConfigureOriginalDesktopShutdown(IClassicDesktopStyleApplicationLifetime desktop, MainWindow window, MainView shell)
     {
@@ -172,6 +209,8 @@ public sealed partial class App
         // After whole-cohort pure preflight, seal canonical business admission
         // FIRST, before shell/window retirement callbacks can initiate more work.
         actualBorrowers.Add(CaptureOriginalCanonicalProcessBorrower());
+        if (_actualAssistantConversationProcess is { } actualAssistantProcess)
+            actualBorrowers.Add(actualAssistantProcess);
 #endif
         actualBorrowers.AddRange([shell, windows, notifications]);
 #if !ANDROID
@@ -191,6 +230,7 @@ public sealed partial class App
         actualBorrowers.Add(services.GetRequiredService<Haven.Desktop.Overlay.OverlayWorkspaceController>());
 #endif
         _actualDesktop = desktop; _actualPrimaryWindow = window;
+        _actualDocumentClosePrimaryShell = shell;
         _actualShutdownSequence = new(JoinOriginalAppProducersAsync,
             () => sessions.SaveFinalSnapshotAndSealAsync(CancellationToken.None),
             () => actualRecovery.PrepareFinalCleanWriterAsync(CancellationToken.None),
@@ -201,6 +241,7 @@ public sealed partial class App
         lock (_actualStartupAcquisitionGate)
         {
             _canonicalProcessBorrowersTransferred = true;
+            _assistantOwnersTransferred = true;
             _nativeDevelopmentBorrowersTransferred = true;
             _windowsHomeBorrowerTransferred = true;
             _windowsNativeRoutesTransferred = true;
@@ -217,26 +258,110 @@ public sealed partial class App
     {
         if (_actualWindowClosure is not null) return; // Privately issued native-close original AFTER resource owners joined, never a clean-authority boolean.
         args.Cancel = true;
-        RequestOriginalDesktopShutdown();
+        RequestOriginalDocumentClosePreflight();
     }
     private void OnOriginalDesktopShutdownRequested(object? sender, ShutdownRequestedEventArgs args)
     {
         if (_actualShutdownSequence?.OriginalShutdown is { IsCompletedSuccessfully: true } &&
             _actualWindowClosure is { IsCompletedSuccessfully: true }) return;
         args.Cancel = true;
-        RequestOriginalDesktopShutdown();
+        RequestOriginalDocumentClosePreflight();
     }
     private void OnOriginalUnexpectedPrimaryWindowClosed(object? sender, EventArgs args)
     {
         if (_actualWindowClosure is null)
             _actualShutdownFailure ??= new InvalidOperationException("The native primary window closed without the actual original host drain. Clean remains unacknowledged.");
     }
-    private void RequestOriginalDesktopShutdown()
+    private void RequestOriginalDocumentClosePreflight()
     {
-        if (_actualShutdownDelivery is not null) return;
+        if (_actualShutdownDelivery is not null || _actualDocumentClosePreflightPublication is { IsCompleted: false }) return;
+        var start = new TaskCompletionSource();
+        var attempt = new OriginalDocumentCloseAttempt();
+        _actualDocumentClosePreflightDelivery = DeliverOriginalDocumentClosePreflightAsync(start.Task, attempt);
+        _actualDocumentClosePreflightDeliveries.RemoveAll(actual => actual.IsCompletedSuccessfully);
+        _actualDocumentClosePreflightDeliveries.Add(_actualDocumentClosePreflightDelivery);
+        _actualDocumentClosePreflightPublication = PublishOriginalDocumentClosePreflightAsync(
+            _actualDocumentClosePreflightDelivery, attempt);
+        // This SAME App-owned attempt exists before any page/service callback. An
+        // ordinary declined save does not acquire or poison permanent shutdown.
+        try
+        {
+            _ = _originalAppWork.RunAsync(async original =>
+            {
+                Dispatcher.UIThread.VerifyAccess();
+                var desktop = _actualDesktop ?? throw new InvalidOperationException("The actual native desktop owner is unavailable.");
+                attempt.Desktop = desktop;
+                attempt.Windows = desktop.Windows.ToArray();
+                attempt.Shells = CaptureOriginalDocumentCloseShells(desktop);
+                attempt.Candidates = attempt.Shells.Select(shell => AcquireOriginalAppSynchronous(original,
+                    shell.CaptureOriginalDocumentClosePreflight)).ToArray();
+                foreach (var candidate in attempt.Candidates)
+                    if (!await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
+                        () => candidate.PrepareAsync(CancellationToken.None)))) return;
+                original.DemandPublication();
+                attempt.Prepared = true; // Candidate only; delivery still joins this SAME actual Task.
+            }, actual => attempt.Original = _actualDocumentClosePreflightAttempt = actual);
+        }
+        catch (Exception failure) { attempt.AcquisitionFailure = failure; throw; }
+        finally { start.SetResult(); }
+    }
+    private sealed class OriginalDocumentCloseAttempt
+    {
+        internal Task? Original;
+        internal Exception? AcquisitionFailure;
+        internal IClassicDesktopStyleApplicationLifetime? Desktop;
+        internal Avalonia.Controls.Window[] Windows = [];
+        internal MainView[] Shells = [];
+        internal OriginalDocumentClosePreflight[] Candidates = [];
+        internal bool Prepared;
+    }
+    private async Task DeliverOriginalDocumentClosePreflightAsync(Task start, OriginalDocumentCloseAttempt attempt)
+    {
+        await start;
+        if (attempt.AcquisitionFailure is { } acquisitionFailure) ExceptionDispatchInfo.Capture(acquisitionFailure).Throw();
+        var actual = attempt.Original ?? throw new InvalidOperationException("The original document preflight returned no Task.");
+        var failures = new List<Exception>();
+        await JoinOriginalAppTaskAsync(actual, failures);
+        ThrowAppCauses(failures); // Exact terminal task, including every raw fault sibling.
+    }
+    private async Task PublishOriginalDocumentClosePreflightAsync(Task actualHandoff, OriginalDocumentCloseAttempt attempt)
+    {
+        var failures = new List<Exception>();
+        await JoinOriginalAppTaskAsync(actualHandoff, failures);
+        ThrowAppCauses(failures); // Actual handoff is terminal before encompassing retirement can join it.
+        if (!attempt.Prepared) return;
+        Dispatcher.UIThread.VerifyAccess();
+        TaskCompletionSource? shutdownStart = null;
+        (_synchronousAppSources ??= []).Add(this);
+        try
+        {
+            var desktop = attempt.Desktop ?? throw new InvalidOperationException("The actual document desktop is unavailable.");
+            if (_originalAppWork.IsRetiring || !ReferenceEquals(desktop, _actualDesktop) ||
+                !attempt.Windows.SequenceEqual(desktop.Windows, ReferenceEqualityComparer.Instance) ||
+                !attempt.Shells.SequenceEqual(CaptureOriginalDocumentCloseShells(desktop), ReferenceEqualityComparer.Instance) ||
+                attempt.Candidates.Any(candidate => !candidate.IsCurrentAndPrepared)) return;
+            // The SAME App preflight Task is already terminal. No await intervenes
+            // between final revalidation and existing shutdown acquisition.
+            shutdownStart = AcquireOriginalDesktopShutdownDelivery();
+        }
+        finally { _synchronousAppSources.RemoveAt(_synchronousAppSources.Count - 1); }
+        // Release only after the real physical callback has returned. No source
+        // mutation or await occurs between guarded acquisition and this release.
+        // This publication driver uses no borrowed page/provider after release;
+        // the SAME acquired shutdown delivery owns all subsequent source stages.
+        shutdownStart?.TrySetResult();
+    }
+    private MainView[] CaptureOriginalDocumentCloseShells(IClassicDesktopStyleApplicationLifetime desktop) =>
+        (_actualDocumentClosePrimaryShell is { } primary ? new[] { primary } : Array.Empty<MainView>())
+            .Concat(desktop.Windows.OfType<MainWindow>().Select(window => window.DataContext).OfType<MainView>())
+            .Distinct<MainView>(ReferenceEqualityComparer.Instance).ToArray();
+
+    private TaskCompletionSource? AcquireOriginalDesktopShutdownDelivery()
+    {
+        if (_actualShutdownDelivery is not null) return null;
         var start = new TaskCompletionSource();
         _actualShutdownDelivery = DeliverOriginalDesktopShutdownAsync(start.Task);
-        start.SetResult(); // Actual delivery original exists before callbacks/sequence admission.
+        return start; // The SAME delivery exists; caller releases its gate outside physical sources.
     }
     private async Task DeliverOriginalDesktopShutdownAsync(Task start)
     {
@@ -283,6 +408,8 @@ public sealed partial class App
         catch (Exception error) { AddAppCause(preflightFailures, error); }
         try { DemandOriginalWindowsHomeRetirementJoin(); }
         catch (Exception error) { AddAppCause(preflightFailures, error); }
+        try { DemandOriginalAssistantRetirementJoin(); }
+        catch (Exception error) { AddAppCause(preflightFailures, error); }
 #endif
         foreach (var owner in actualOwners)
             if (owner is IDesktopOriginalRetirementJoinGuard guard)
@@ -297,6 +424,7 @@ public sealed partial class App
         }
 #if !ANDROID
         RequestOriginalWindowsDeveloperRetirement(failures);
+        RequestOriginalAssistantScopeRetirement(failures);
 #endif
         var actualTasks = new List<Task>();
         foreach (var owner in actualOwners)
@@ -305,6 +433,12 @@ public sealed partial class App
                 catch (Exception error) { AddAppCause(failures, error); }
         foreach (var actual in actualTasks.Distinct<Task>(ReferenceEqualityComparer.Instance))
             await JoinOriginalAppTaskAsync(actual, failures);
+#if !ANDROID
+        // Independently join actual late/unmounted page/controller/source siblings
+        // even if another borrower failed. None of their failures permits Den/Home closure.
+        try { await JoinOriginalAppTaskAsync(JoinOriginalAssistantScopesAfterPresentationsAsync(), failures); }
+        catch (Exception error) { AddAppCause(failures, error); }
+#endif
         ThrowAppCauses(failures); // Unknown borrowers still own/borrow the live diagnostics sink.
         // Originals admitted before the source seal may finish creating a native
         // window. Capture and join the genuine final cohort after those producers.
@@ -331,8 +465,12 @@ public sealed partial class App
         await JoinOriginalAppTaskAsync(_actualWindowClosure, failures);
         ThrowAppCauses(failures);
 #if !ANDROID
-        // Native resources and all original business borrowers have settled; only now
-        // may their SAME Home owner stop its listener/issuer and dispose its runtime.
+        // Actual ordinary Chat/canonical business, scoped presentation originals
+        // and native Closed callbacks settled. Den is retired before its Home dependency.
+        try { await JoinOriginalAppTaskAsync(JoinOriginalAssistantPersonalDenAfterBorrowersAsync(), failures); }
+        catch (Exception error) { AddAppCause(failures, error); }
+        ThrowAppCauses(failures);
+        // Only now may the SAME Home owner dispose its actual permission runtime.
         try { await JoinOriginalAppTaskAsync(JoinOriginalWindowsHomeAfterBorrowersAsync(), failures); }
         catch (Exception error) { AddAppCause(failures, error); }
         ThrowAppCauses(failures);

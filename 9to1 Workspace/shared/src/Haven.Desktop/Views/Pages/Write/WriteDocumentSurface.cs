@@ -14,8 +14,12 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
     private bool _pointerSelecting;
     private double _zoom = 1;
 
-    public WriteDocumentSurface()
+    private readonly Action<Action>? _originalCallbackOwner;
+    private bool _retiring;
+
+    public WriteDocumentSurface(Action<Action>? originalCallbackOwner = null)
     {
+        _originalCallbackOwner = originalCallbackOwner;
         Name = "Write.Document.Surface";
         Accessibility.Role = HavenAccessibleRole.Input;
         Accessibility.Focusable = true;
@@ -51,7 +55,8 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
         Invalidate();
     }
 
-    public bool PointerPressed(HavenPointerInput input)
+    public bool PointerPressed(HavenPointerInput input) => OwnOriginalInput(() => PointerPressedCore(input));
+    private bool PointerPressedCore(HavenPointerInput input)
     {
         if (_editor is null) return false;
         BuildLayout();
@@ -79,7 +84,8 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
         return false;
     }
 
-    public bool PointerMoved(HavenPointerInput input)
+    public bool PointerMoved(HavenPointerInput input) => OwnOriginalInput(() => PointerMovedCore(input));
+    private bool PointerMovedCore(HavenPointerInput input)
     {
         if (_editor is null) return false;
         if (TryPointerMoveSpecial(input)) return true;
@@ -92,7 +98,8 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
         return true;
     }
 
-    public bool PointerReleased(HavenPointerInput input)
+    public bool PointerReleased(HavenPointerInput input) => OwnOriginalInput(() => PointerReleasedCore(input));
+    private bool PointerReleasedCore(HavenPointerInput input)
     {
         if (TryPointerReleaseSpecial(input)) return true;
         if (!_pointerSelecting) return false;
@@ -104,7 +111,8 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
         return true;
     }
 
-    public bool TextInput(string? text)
+    public bool TextInput(string? text) => OwnOriginalInput(() => TextInputCore(text));
+    private bool TextInputCore(string? text)
     {
         if (TryTableTextInput(text)) return true;
         if (_editor?.InsertDocumentText(text) != true) return false;
@@ -112,7 +120,8 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
         return true;
     }
 
-    public bool KeyDown(HavenKey key, HavenInputModifiers modifiers)
+    public bool KeyDown(HavenKey key, HavenInputModifiers modifiers) => OwnOriginalInput(() => KeyDownCore(key, modifiers));
+    private bool KeyDownCore(HavenKey key, HavenInputModifiers modifiers)
     {
         if (_editor is null) return false;
         if (TryTableKeyDown(key, modifiers)) return true;
@@ -152,7 +161,8 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
 
     public string? Copy() => string.IsNullOrEmpty(SelectedText) ? null : SelectedText;
 
-    public string? Cut()
+    public string? Cut() => OwnOriginalInput(CutCore);
+    private string? CutCore()
     {
         var selected = Copy();
         if (selected is not null) DeleteSelection();
@@ -169,7 +179,8 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
         Alt: input.Alt,
         Meta: input.Meta);
 
-    public bool DeleteSelection()
+    public bool DeleteSelection() => OwnOriginalInput(DeleteSelectionCore);
+    private bool DeleteSelectionCore()
     {
         if (DeleteTableCellSelection()) return true;
         if (_editor?.DeleteDocumentSelection() != true) return false;
@@ -178,6 +189,21 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
     }
 
     public bool InsertText(string? text) => TextInput(text);
+
+    private T? OwnOriginalInput<T>(Func<T> callback)
+    {
+        if (_retiring) return default;
+        if (_originalCallbackOwner is not { } owner) return callback();
+        T? result = default;
+        owner(() => { if (!_retiring) result = callback(); });
+        return result;
+    }
+
+    internal void RequestOriginalRetirement()
+    {
+        _retiring = true;
+        _pointerSelecting = false;
+    }
 
     public void Draw(HavenDrawingContext context, double opacity)
     {

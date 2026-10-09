@@ -101,7 +101,8 @@ public sealed partial class ResilientProviderRoutingModelClient(
         var required = RequiredCapabilities(request);
         var state = new RoutingState(request.ExecutionContext);
         await CaptureOriginalAttemptAsync(state, cancellationToken).ConfigureAwait(false);
-        var candidates = await GetCandidatesAsync(request.Model, required, cancellationToken, context: state.Context, requireObservedLocalStreaming: true).ConfigureAwait(false);
+        var candidates = await GetCandidatesAsync(request.Model, required, cancellationToken, context: state.Context, requireObservedLocalStreaming: true,
+            constraints: request.Options?.RequestedRoutingConstraints).ConfigureAwait(false);
         Exception? firstFailure = null;
         var emitted = false;
         for (var index = 0; index < candidates.Count; index++)
@@ -132,7 +133,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
                 Exception? cleanupFailure = null;
                 try
                 {
-                    GuardSelectedProvider(selected);
+                    GuardSelectedProvider(selected, request.Options?.RequestedRoutingConstraints);
                     // Maintained provider streams are actual async iterators: their factory and
                     // enumerator creation defer provider work until the first MoveNext invocation.
                     // Gate that SAME finite original operation, never an async loop or its await.
@@ -252,7 +253,8 @@ public sealed partial class ResilientProviderRoutingModelClient(
         try
         {
             await CaptureOriginalAttemptAsync(state, cancellationToken).ConfigureAwait(false);
-            var candidates = await GetCandidatesAsync(request.Model, required, cancellationToken, context: state.Context).ConfigureAwait(false);
+            var candidates = await GetCandidatesAsync(request.Model, required, cancellationToken, context: state.Context,
+                constraints: request.Options?.RequestedRoutingConstraints).ConfigureAwait(false);
             Exception? firstFailure = null;
             for (var index = 0; index < candidates.Count; index++)
             {
@@ -274,7 +276,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
                 {
                     originalFrame = RunOriginalContextFrameAsync(state, request, routedRequest, (invocationFence, token) =>
                     {
-                        GuardSelectedProvider(selected);
+                        GuardSelectedProvider(selected, request.Options?.RequestedRoutingConstraints);
                         try { return originalProviderTask = StartRawInvocation(invocationFence, () => RawOriginalSelectedComplete(state, request, selected, routedRequest, token)); }
                         catch (Exception failure) { synchronousProviderFailure = failure; throw; }
                     }, cancellationToken);
@@ -303,7 +305,10 @@ public sealed partial class ResilientProviderRoutingModelClient(
         var hasPriorToolState = request.Messages.Any(message => !string.IsNullOrWhiteSpace(message.ToolName) || message.ToolCalls is { Count: > 0 });
         // Existing standalone tool conversations have no canonical settlement authority to resume.
         if (hasPriorToolState && request.ExecutionContext is null)
+        {
+            GuardRequestedProvider(request.Model, request.Options?.RequestedRoutingConstraints);
             return await primary.ChatWithToolsAsync(request, cancellationToken).ConfigureAwait(false);
+        }
         var required = RequiredCapabilities(request);
         var restrictions = request.Tools.Select(tool => ModelToolPermissionMap.Map(tool.Name))
             .Where(capability => capability.HasValue).Select(capability => capability!.Value).Distinct().ToArray();
@@ -311,7 +316,8 @@ public sealed partial class ResilientProviderRoutingModelClient(
         try
         {
             await CaptureOriginalAttemptAsync(state, cancellationToken).ConfigureAwait(false);
-            var candidates = await GetCandidatesAsync(request.Model, required, cancellationToken, restrictions, state.Context).ConfigureAwait(false);
+            var candidates = await GetCandidatesAsync(request.Model, required, cancellationToken, restrictions, state.Context,
+                constraints: request.Options?.RequestedRoutingConstraints).ConfigureAwait(false);
             Exception? firstFailure = null;
             for (var index = 0; index < candidates.Count; index++)
             {
@@ -333,7 +339,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
                 {
                     originalFrame = RunOriginalContextFrameAsync(state, request, routedRequest, (invocationFence, token) =>
                     {
-                        GuardSelectedProvider(selected);
+                        GuardSelectedProvider(selected, request.Options?.RequestedRoutingConstraints);
                         try { return originalProviderTask = StartRawInvocation(invocationFence, () => RawOriginalSelectedTools(state, request, selected, routedRequest, token)); }
                         catch (Exception failure) { synchronousProviderFailure = failure; throw; }
                     }, cancellationToken);
@@ -368,9 +374,12 @@ public sealed partial class ResilientProviderRoutingModelClient(
         IReadOnlySet<ToolCapability> required,
         CancellationToken cancellationToken,
         IReadOnlyCollection<RestrictedModelCapability>? restrictions = null,
-        ProviderExecutionContext? context = null, bool requireObservedLocalStreaming = false)
+        ProviderExecutionContext? context = null, bool requireObservedLocalStreaming = false,
+        ModelRequestRoutingConstraints? constraints = null)
     {
-        var availability = await GetEligibleModelsAsync(cancellationToken).ConfigureAwait(false);
+        GuardRequestedProvider(requestedModel, constraints);
+        var onlyProvider = constraints?.AllowFallback == false ? ResolveRequestedProviderId(requestedModel) : null;
+        var availability = await GetEligibleModelsAsync(cancellationToken, constraints, onlyProvider).ConfigureAwait(false);
         var descriptors = availability.Models;
         var requested = descriptors.FirstOrDefault(item => item.Matches(requestedModel));
         if (requested is null)
@@ -392,7 +401,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
         var firstKey = requested is null ? requestedModel : RequestKey(requested);
         var selectedProviderId = requested?.ProviderId ?? ProviderId(requestedModel);
         var selectedConfiguration = await configurations.GetAsync(selectedProviderId, cancellationToken).ConfigureAwait(false);
-        var allowCloud = !privacy.Current.LocalOnlyMode
+        var allowCloud = constraints?.AllowCloud != false && !privacy.Current.LocalOnlyMode
                          && (requested?.IsLocal == false || selectedConfiguration?.AllowCloudFallback == true);
         var compatible = new List<ProviderModelDescriptor>();
         foreach (var item in descriptors.Where(item => required.All(item.Supports) && (allowCloud || item.IsLocal)))
@@ -406,7 +415,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
         var result = new List<SelectedProvider> { new(firstKey, requested, firstCatalogueFailure) };
 
         // The user's ordered fallback preference always outranks per-provider chains and automatic ranking.
-        if (fallbackOrder is not null)
+        if (constraints?.AllowFallback != false && fallbackOrder is not null)
         {
             foreach (var key in await fallbackOrder.GetOrderAsync(cancellationToken).ConfigureAwait(false))
             {
@@ -415,7 +424,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
             }
         }
 
-        if (selectedConfiguration?.Metadata.TryGetValue("fallback-chain", out var chain) == true)
+        if (constraints?.AllowFallback != false && selectedConfiguration?.Metadata.TryGetValue("fallback-chain", out var chain) == true)
         {
             foreach (var key in chain.Split([',', ';', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
             {
@@ -424,7 +433,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
             }
         }
 
-        foreach (var descriptor in compatible
+        foreach (var descriptor in compatible.Where(_ => constraints?.AllowFallback != false)
                      .OrderByDescending(item => item.IsLocal)
                      .ThenByDescending(item => item.Capabilities.Count)
                      .ThenByDescending(item => item.ContextWindow ?? 0)
@@ -437,7 +446,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
         var originalDescriptors = ordered.Where(item => item.Descriptor is not null).Select(item => item.Descriptor!).ToArray();
         var observedEligible = catalogueEligibility.ObserveOriginalCatalogueEligibility(originalDescriptors, required,
             new ModelRoutingPolicy(ModelRoutingMode.ManualFallback, PreferLocal: true, AllowCloud: allowCloud,
-                PreferredModelKeys: ordered.Select(item => item.Key).ToArray(), AllowFallback: true));
+                PreferredModelKeys: ordered.Select(item => item.Key).ToArray(), AllowFallback: constraints?.AllowFallback != false));
         // Preserve unavailable original catalogue observations for the existing canonical failure
         // protocol. This metadata seam neither clones a selected descriptor nor adds a dispatch loop.
         return ordered.Where(item => item.Descriptor is null
@@ -769,8 +778,9 @@ public sealed partial class ResilientProviderRoutingModelClient(
         }
     }
 
-    private void GuardSelectedProvider(SelectedProvider selected)
+    private void GuardSelectedProvider(SelectedProvider selected, ModelRequestRoutingConstraints? constraints = null)
     {
+        GuardRequestedProvider(selected.Key, constraints);
         if (selected.Descriptor is not { } descriptor) return; // The established raw primary validates legacy unknown keys.
         var provider = providers.Find(descriptor.ProviderId)
             ?? throw new InvalidOperationException("The selected provider is no longer registered.");
@@ -810,11 +820,27 @@ public sealed partial class ResilientProviderRoutingModelClient(
             }));
     }
 
-    private async Task<ProviderCatalogueAvailability> GetEligibleModelsAsync(CancellationToken cancellationToken)
+    private string ResolveRequestedProviderId(string requestedModel)
+    {
+        var trimmed = requestedModel.Trim();
+        var separator = trimmed.IndexOf(':');
+        return separator > 0 && providers.Find(trimmed[..separator]) is { } provider ? provider.Id : "ollama";
+    }
+    private void GuardRequestedProvider(string requestedModel, ModelRequestRoutingConstraints? constraints)
+    {
+        if (constraints?.AllowCloud != false) return;
+        var actual = providers.Find(ResolveRequestedProviderId(requestedModel))
+            ?? throw new InvalidOperationException("The selected provider is unavailable under this request's local-only restriction.");
+        if (!actual.IsLocal) throw new UnauthorizedAccessException("This original request disallows cloud providers.");
+    }
+    private async Task<ProviderCatalogueAvailability> GetEligibleModelsAsync(CancellationToken cancellationToken,
+        ModelRequestRoutingConstraints? constraints = null, string? onlyProvider = null)
     {
         var models = new List<ProviderModelDescriptor>();
         var failures = new Dictionary<string, ProviderCatalogueFailure>(StringComparer.OrdinalIgnoreCase);
-        foreach (var provider in providers.Providers.Where(item => (!privacy.Current.LocalOnlyMode && !RuntimeSafetyState.IsSafeMode) || item.IsLocal))
+        foreach (var provider in providers.Providers.Where(item =>
+            (onlyProvider is null || item.Id.Equals(onlyProvider, StringComparison.OrdinalIgnoreCase)) &&
+            ((constraints?.AllowCloud != false && !privacy.Current.LocalOnlyMode && !RuntimeSafetyState.IsSafeMode) || item.IsLocal)))
         {
             cancellationToken.ThrowIfCancellationRequested();
             Task<IReadOnlyList<ProviderModelDescriptor>>? originalCatalogue = null;

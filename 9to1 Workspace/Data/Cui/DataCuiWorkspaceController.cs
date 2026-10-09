@@ -50,7 +50,9 @@ public sealed class DataCuiWorkspaceController : IAsyncDisposable
     private readonly SemaphoreSlim _operationGate = new(1, 1);
     private readonly object _stateLock = new();
     private DataCuiWorkspaceSnapshot? _state;
-    private bool _disposed;
+    private Task? _disposeTask;
+    private volatile bool _closing;
+    private volatile bool _disposed;
 
     public DataCuiWorkspaceController(
         DataGridSession grid,
@@ -125,26 +127,42 @@ public sealed class DataCuiWorkspaceController : IAsyncDisposable
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(text);
-        return await MutateGridAsync(async (state, token) =>
+        var original = Current;
+        return await CommitCellAsync(original.Selection.Row, original.Selection.Column, text,
+            original.Workbook, cancellationToken).ConfigureAwait(false);
+    }
+
+    private Task<DataCuiWorkspaceSnapshot> CommitCellAsync(int row, int column, string text,
+        DataGridSessionSnapshot originalWorkbook, CancellationToken cancellationToken)
+    {
+        ValidateCell(row, column);
+        ArgumentNullException.ThrowIfNull(text);
+        return MutateGridAsync((state, token) =>
         {
-            var formula = text.StartsWith('=') ? text : null;
-            var value = formula is null ? text : string.Empty;
-            var workbook = await _grid.EditCellAsync(
-                state.Selection.Row,
-                state.Selection.Column,
-                value,
-                formula,
-                token).ConfigureAwait(false);
-            return state with
-            {
-                Workbook = workbook,
-                FormulaBarText = text,
-                IsDirty = true,
-                Status = formula is null
-                    ? $"Updated {state.Selection.Address}."
-                    : $"Recalculated {state.Selection.Address} from {text}.",
-            };
-        }, cancellationToken).ConfigureAwait(false);
+            if (state.Workbook.Workbook.Id != originalWorkbook.Workbook.Id ||
+                state.Workbook.ActiveSheet.Name != originalWorkbook.ActiveSheet.Name)
+                throw new InvalidOperationException("The original workbook sheet changed before this cell edit. Review and submit a new edit.");
+            return CommitCellCoreAsync(state, row, column, text, token);
+        }, cancellationToken);
+    }
+
+    private async Task<DataCuiWorkspaceSnapshot> CommitCellCoreAsync(DataCuiWorkspaceSnapshot state,
+        int row, int column, string text, CancellationToken token)
+    {
+        var selection = Selection(row, column);
+        var formula = text.StartsWith('=') ? text : null;
+        var value = formula is null ? text : string.Empty;
+        var workbook = await _grid.EditCellAsync(row, column, value, formula, token).ConfigureAwait(false);
+        return state with
+        {
+            Workbook = workbook,
+            Selection = selection,
+            FormulaBarText = text,
+            IsDirty = true,
+            Status = formula is null
+                ? $"Updated {selection.Address}."
+                : $"Recalculated {selection.Address} from {text}.",
+        };
     }
 
     public async Task<DataCuiWorkspaceSnapshot> SelectSheetAsync(
@@ -179,6 +197,7 @@ public sealed class DataCuiWorkspaceController : IAsyncDisposable
             return state with
             {
                 Workbook = workbook,
+                FormulaBarText = workbook.Grid.Values[state.Selection.Row][state.Selection.Column],
                 Sort = new DataCuiSortState(keyColumn, ascending),
                 IsDirty = true,
                 Status = $"Sorted visible rows by column {ColumnName(keyColumn)} {(ascending ? "ascending" : "descending")}.",
@@ -200,6 +219,7 @@ public sealed class DataCuiWorkspaceController : IAsyncDisposable
             return state with
             {
                 Workbook = workbook,
+                FormulaBarText = workbook.Grid.Values[state.Selection.Row][state.Selection.Column],
                 Filter = new DataCuiFilterState(true, keyColumn, value),
                 IsDirty = true,
                 Status = $"Filtered column {ColumnName(keyColumn)} to literal value '{value}'.",
@@ -217,6 +237,7 @@ public sealed class DataCuiWorkspaceController : IAsyncDisposable
             return state with
             {
                 Workbook = workbook,
+                FormulaBarText = workbook.Grid.Values[state.Selection.Row][state.Selection.Column],
                 Filter = new DataCuiFilterState(false, state.Filter.KeyColumn, string.Empty),
                 IsDirty = true,
                 Status = "Cleared the visible-range filter.",
@@ -343,6 +364,8 @@ public sealed class DataCuiWorkspaceController : IAsyncDisposable
         ArgumentNullException.ThrowIfNull(request);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.InvocationId);
         ArgumentNullException.ThrowIfNull(request.Action);
+        ThrowIfDisposed();
+        var originalWorkbook = Current.Workbook;
 
         if (_actionAuthorizer is null)
         {
@@ -373,14 +396,12 @@ public sealed class DataCuiWorkspaceController : IAsyncDisposable
                     SelectCell(select.Row, select.Column);
                     break;
                 case DataEditCellAction edit:
-                    SelectCell(edit.Row, edit.Column);
-                    await CommitFormulaBarAsync(edit.Value, cancellationToken).ConfigureAwait(false);
+                    await CommitCellAsync(edit.Row, edit.Column, edit.Value, originalWorkbook, cancellationToken).ConfigureAwait(false);
                     break;
                 case DataSetFormulaAction formula:
                     if (!formula.Formula.StartsWith('='))
                         throw new ArgumentException("A typed formula action must start with '='.", nameof(request));
-                    SelectCell(formula.Row, formula.Column);
-                    await CommitFormulaBarAsync(formula.Formula, cancellationToken).ConfigureAwait(false);
+                    await CommitCellAsync(formula.Row, formula.Column, formula.Formula, originalWorkbook, cancellationToken).ConfigureAwait(false);
                     break;
                 case DataSortVisibleRangeAction sort:
                     await SortVisibleAsync(sort.KeyColumn, sort.Ascending, cancellationToken).ConfigureAwait(false);
@@ -423,14 +444,42 @@ public sealed class DataCuiWorkspaceController : IAsyncDisposable
         }
     }
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
-        if (_disposed)
-            return;
-        _disposed = true;
-        await _query.DisposeAsync().ConfigureAwait(false);
-        await _grid.DisposeAsync().ConfigureAwait(false);
-        _operationGate.Dispose();
+        lock (_stateLock)
+        {
+            if (_disposeTask is null)
+            {
+                _closing = true;
+                var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                _disposeTask = DisposeAfterPublicationAsync(start.Task);
+                start.SetResult();
+            }
+            return new(_disposeTask);
+        }
+    }
+
+    private async Task DisposeAfterPublicationAsync(Task start)
+    {
+        await start.ConfigureAwait(false);
+        await _operationGate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            _disposed = true;
+            var failures = new List<Exception>();
+            try { await _query.DisposeAsync().ConfigureAwait(false); }
+            catch (Exception error) { failures.Add(error); }
+            try { await _grid.DisposeAsync().ConfigureAwait(false); }
+            catch (Exception error) { failures.Add(error); }
+            if (failures.Count != 0)
+                throw new AggregateException("Data retained its session cleanup failures.", failures);
+        }
+        finally
+        {
+            // Existing queued callers still acquire and release this gate before refusing.
+            // No native wait handle is created; let the managed gate retire with this owner.
+            _operationGate.Release();
+        }
     }
 
     private async Task<DataCuiWorkspaceSnapshot> MutateGridAsync(
@@ -500,5 +549,5 @@ public sealed class DataCuiWorkspaceController : IAsyncDisposable
             throw new ArgumentOutOfRangeException(nameof(column));
     }
 
-    private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_disposed, this);
+    private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_closing || _disposed, this);
 }

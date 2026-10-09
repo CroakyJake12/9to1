@@ -1,0 +1,10 @@
+<Cui id="9to1.Picture.SaveConfirmation" version="1">
+  <Page AccessibleName="Save changes before leaving Picture">
+    <Container Type="Vertical Stack" Margin="20" Spacing="12" VerticalScrolling="True">
+      <Text TextWrapping="Wrap">Save your editable Picture document before leaving?</Text>
+      <Button action="picture.confirm.save">Save</Button>
+      <Button action="picture.confirm.discard">Discard changes</Button>
+      <Button action="picture.confirm.cancel" AccessibleName="Close save confirmation and continue editing">Cancel</Button>
+    </Container>
+  </Page>
+</Cui>

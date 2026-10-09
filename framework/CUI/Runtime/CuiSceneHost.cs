@@ -28,9 +28,18 @@ public sealed record CuiNativeScene(string AppId, string Title, string Surface, 
 }
 
 /// <summary>Retained canonical CUI scene adapter, shared by native app windows and embedded Desktop surfaces.</summary>
-public sealed class CuiSceneHost(CuiControlRegistry? registry = null) : ContentControl, IDisposable
+public sealed class CuiSceneHost : ContentControl, IDisposable
 {
-    private readonly CuiControlRegistry _registry = registry ?? new();
+    private readonly CuiControlRegistry _registry;
+
+    public CuiSceneHost(CuiControlRegistry? registry = null)
+    {
+        _registry = registry ?? new();
+        // Inherited chrome defaults also apply when an existing shell embeds this host.
+        // A content control with its own authored font retains that local value.
+        FontFamily = new Avalonia.Media.FontFamily(CuiNativeHost.BundledInterfaceFontFamily);
+        FontWeight = Avalonia.Media.FontWeight.Medium;
+    }
     private CuiControlLoader? _loader;
     private CuiControlLoader? _failureLoader;
     private CuiViewModel? _failureModel;

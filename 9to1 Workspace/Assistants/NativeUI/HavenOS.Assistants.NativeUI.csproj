@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>HavenOS.Assistants.NativeUI</AssemblyName>
+    <RootNamespace>HavenOS.Apps.Assistants.NativeUI</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../HavenOS.Assistants.Core.csproj" />
+    <!-- Canonical packaged icon geometry only; product scenes remain CUI. -->
+    <ProjectReference Include="../../shared/src/Haven.UI/Haven.UI.csproj" />
+    <ProjectReference Include="../Migration/Contracts/HavenOS.Assistants.Migration.Contracts.csproj" />
+    <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+    <EmbeddedResource Include="UI/*.cui" LogicalName="HavenOS.Assistants.NativeUI.UI.%(Filename)%(Extension)" />
+    <Compile Remove="Tests/**/*.cs" />
+  </ItemGroup>
+</Project>

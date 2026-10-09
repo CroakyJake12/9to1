@@ -60,8 +60,21 @@ public sealed partial class DurableDriveProvider
         FilesResult<FilesRevision>? result = null;
         try
         {
-        await _store.UpdateAsync(state =>
-        {
+        await _store.UpdateAsync(state => ApplyUploadedContentToState(state, content, captured,
+            expectedStoreId, out result), authority is null ? null : authority.ValidateAsync, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OriginalFilesStoreChangedException)
+        { return Fail<FilesRevision>(FilesErrorCode.RevisionConflict, "The original Files destination changed before publication.", "CommitFileContent", content.FileId); }
+        catch (FilesCommitAuthorityChangedException)
+        { return Fail<FilesRevision>(FilesErrorCode.PermissionDenied, "Commit authority changed before publication.", "CommitFileContent", content.FileId); }
+        if (result!.IsSuccess) foreach (var subscriber in _subscribers.Values) subscriber.Writer.TryWrite(true);
+        return result;
+    }
+    private State ApplyUploadedContentToState(State state, FilesUploadedContent content,
+        IReadOnlyList<FilesItemRevisionPrecondition> captured, Guid? expectedStoreId,
+        out FilesResult<FilesRevision>? result)
+    {
+        result = null;
             if (expectedStoreId is { } originalStore && state.StoreId != originalStore)
                 throw new OriginalFilesStoreChangedException();
             foreach (var condition in captured)
@@ -114,13 +127,5 @@ public sealed partial class DurableDriveProvider
                 RevisionContentReferences = new Dictionary<string, string?>(state.RevisionContentReferences) { [revision.Id.ToString()] = content.ProviderContentReference },
                 UploadedContents = [.. state.UploadedContents, content], Events = [.. state.Events, change]
             };
-        }, authority is null ? null : authority.ValidateAsync, cancellationToken).ConfigureAwait(false);
-        }
-        catch (OriginalFilesStoreChangedException)
-        { return Fail<FilesRevision>(FilesErrorCode.RevisionConflict, "The original Files destination changed before publication.", "CommitFileContent", content.FileId); }
-        catch (FilesCommitAuthorityChangedException)
-        { return Fail<FilesRevision>(FilesErrorCode.PermissionDenied, "Commit authority changed before publication.", "CommitFileContent", content.FileId); }
-        if (result!.IsSuccess) foreach (var subscriber in _subscribers.Values) subscriber.Writer.TryWrite(true);
-        return result;
     }
 }

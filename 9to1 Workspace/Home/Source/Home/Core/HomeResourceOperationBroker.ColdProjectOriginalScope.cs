@@ -7,7 +7,7 @@ namespace HavenOS.Home.Core;
 public sealed partial class HomeResourceOperationBroker
 {
     public Task<HomePreparedReviewObservation> AuthorizePreparedReviewWithinOriginalSourceAsync(
-        HomeResourcePreparedReview prepared, Action<Action> scope, Action<Task> retain, CancellationToken token)
+        HomeResourcePreparedReview prepared, Action<Action> scope, Action<Task> retain, CancellationToken token, bool originalPermissionSources = false, Action<Exception>? retainUnexpectedCallback = null)
         => RunColdProjectBrokerAsync(scope, retain, async sources =>
         {
             RequirePrepared(prepared); var first = prepared.Reserve();
@@ -15,7 +15,7 @@ public sealed partial class HomeResourceOperationBroker
             try
             {
                 RequirePrepared(prepared);
-                if (!first) return await ObserveColdProjectPreparedAsync(sources, prepared, token).ConfigureAwait(false);
+                if (!first) return await ObserveColdProjectPreparedAsync(sources, prepared, token, originalPermissionSources, retainUnexpectedCallback).ConfigureAwait(false);
                 var actor = await sources.ReadAsync(() => resources.AuthorizeForActorWithinOriginalSourceAsync(
                     prepared.Actor, prepared.Submission.Scope.ActionName, prepared.Scopes, sources.Run, sources.Retain, token)).ConfigureAwait(false);
                 if (actor != prepared.Actor)
@@ -24,27 +24,27 @@ public sealed partial class HomeResourceOperationBroker
                     return new(HomePreparedReviewState.AdmissionDenied, null, false, "HOME_PREPARED_RESOURCE_DENIED");
                 }
                 prepared.CanonicalAdmission = true;
-                var result = await sources.ReadAsync(() => permissions.AuthorizeAsync(prepared.Submission, token)).ConfigureAwait(false);
+                var result = await sources.ReadAsync(() => originalPermissionSources ? permissions.AuthorizeImportWithinOriginalSourceAsync(prepared.Submission, sources.Run, sources.Retain, token, sources.UnexpectedCallbackSink) : permissions.AuthorizeAsync(prepared.Submission, token)).ConfigureAwait(false);
                 prepared.Conflict = result.Code == "HOME_REQUEST_ID_CONFLICT";
-                return await ObserveColdProjectPreparedAsync(sources, prepared, token).ConfigureAwait(false);
+                return await ObserveColdProjectPreparedAsync(sources, prepared, token, originalPermissionSources, retainUnexpectedCallback).ConfigureAwait(false);
             }
             finally { prepared.Gate.Release(); }
-        });
+        }, retainUnexpectedCallback);
     public Task<HomePreparedReviewObservation> ObservePreparedReviewWithinOriginalSourceAsync(
-        HomeResourcePreparedReview prepared, Action<Action> scope, Action<Task> retain, CancellationToken token)
+        HomeResourcePreparedReview prepared, Action<Action> scope, Action<Task> retain, CancellationToken token, bool originalPermissionSources = false, Action<Exception>? retainUnexpectedCallback = null)
         => RunColdProjectBrokerAsync(scope, retain, async sources =>
         {
             RequirePrepared(prepared);
             await WaitColdProjectBrokerGateAsync(sources, prepared.Gate, token).ConfigureAwait(false);
-            try { RequirePrepared(prepared); return await ObserveColdProjectPreparedAsync(sources, prepared, token).ConfigureAwait(false); }
+            try { RequirePrepared(prepared); return await ObserveColdProjectPreparedAsync(sources, prepared, token, originalPermissionSources, retainUnexpectedCallback).ConfigureAwait(false); }
             finally { prepared.Gate.Release(); }
-        });
+        }, retainUnexpectedCallback);
     private async Task<HomePreparedReviewObservation> ObserveColdProjectPreparedAsync(
-        HomeOwnershipOriginalSourceCallbacks sources, HomeResourcePreparedReview prepared, CancellationToken token)
+        HomeOwnershipOriginalSourceCallbacks sources, HomeResourcePreparedReview prepared, CancellationToken token, bool originalPermissionSources = false, Action<Exception>? retainUnexpectedCallback = null)
     {
         if (!prepared.AttemptReserved) return new(HomePreparedReviewState.NotAttempted, null, false, "HOME_PREPARED_NOT_ATTEMPTED");
         if (prepared.KnownDenied || prepared.Conflict) return new(HomePreparedReviewState.AdmissionDenied, null, false, "HOME_PREPARED_ADMISSION_DENIED");
-        var request = await sources.ReadAsync(() => permissions.ReadRequestObservationAsync(prepared.RequestId, token)).ConfigureAwait(false);
+        var request = await sources.ReadAsync(() => originalPermissionSources ? permissions.ReadImportRequestWithinOriginalSourceAsync(prepared.RequestId, sources.Run, sources.Retain, token, sources.UnexpectedCallbackSink) : permissions.ReadRequestObservationAsync(prepared.RequestId, token)).ConfigureAwait(false);
         if (request is null || !prepared.CanonicalAdmission || !MatchesPrepared(prepared.Submission, request))
             return new(HomePreparedReviewState.OutcomeUnconfirmed, null, false, "HOME_PREPARED_REQUEST_UNCONFIRMED");
         if (!prepared.BoundOnce && request.State is HomePermissionRequestState.PendingApproval or HomePermissionRequestState.Approved)
@@ -64,20 +64,20 @@ public sealed partial class HomeResourceOperationBroker
     }
     public Task<HomeResourceExecutionCapability?> BeginExecutionCapabilityWithinOriginalSourceAsync(
         string requestId, JsonElement arguments, Action<Action> scope, Action<Task> retain,
-        Action<Action> cleanupScope, CancellationToken token)
+        Action<Action> cleanupScope, CancellationToken token, bool originalPermissionSources = false, Action<Exception>? retainUnexpectedCallback = null)
         => RunColdProjectBrokerAsync(scope, retain, async sources =>
         {
             if (_executions.Count >= 1024 || !_bindings.TryGetValue(requestId, out var binding) || binding.Digest != Digest(arguments)) return null;
             var current = await sources.ReadAsync(() => resources.AuthorizeForActorWithinOriginalSourceAsync(
                 binding.Actor, binding.ActionId, binding.Scopes, sources.Run, sources.Retain, token)).ConfigureAwait(false);
             if (current != binding.Actor) return null;
-            var approval = await sources.ReadAsync(() => permissions.GetAuthorizationAsync(requestId, token)).ConfigureAwait(false);
+            var approval = await sources.ReadAsync(() => originalPermissionSources ? permissions.GetImportAuthorizationWithinOriginalSourceAsync(requestId, sources.Run, sources.Retain, token, sources.UnexpectedCallbackSink) : permissions.GetAuthorizationAsync(requestId, token)).ConfigureAwait(false);
             if (!approval.IsAllowed || !_bindings.TryRemove(requestId, out var consumed) || consumed != binding) return null;
             var capability = new HomeResourceExecutionCapability(this, requestId, binding.TargetAppId,
                 binding.ActionId, Array.AsReadOnly(binding.Scopes.ToArray()));
             try
             {
-                if (!(await sources.ReadAsync(() => permissions.BeginExecutionAsync(requestId, token)).ConfigureAwait(false)).IsAllowed) return null;
+                if (!(await sources.ReadAsync(() => originalPermissionSources ? permissions.BeginImportExecutionWithinOriginalSourceAsync(requestId, sources.Run, sources.Retain, token, sources.UnexpectedCallbackSink) : permissions.BeginExecutionAsync(requestId, token)).ConfigureAwait(false)).IsAllowed) return null;
                 return _executions.TryAdd(capability, binding) ? capability : null;
             }
             catch (Exception primary)
@@ -86,17 +86,17 @@ public sealed partial class HomeResourceOperationBroker
                 try
                 {
                     var audit = await RunColdProjectBrokerAsync(cleanupScope, retain,
-                        cleanup => cleanup.ReadAsync(() => RetryRejectedBeginAuditAsync(requestId, CancellationToken.None))).ConfigureAwait(false);
+                        cleanup => cleanup.ReadAsync(() => originalPermissionSources ? RetryRejectedBeginOriginalSetupCoreAsync(requestId, CancellationToken.None, cleanup) : RetryRejectedBeginAuditAsync(requestId, CancellationToken.None)), retainUnexpectedCallback).ConfigureAwait(false);
                     if (!audit.Succeeded) throw new InvalidOperationException("The actual rejected begin audit is unfinished: " + audit.Code);
                 }
                 catch (Exception cleanup) { throw new AggregateException("Original begin and actual rejection audit failed.", primary, cleanup); }
                 ExceptionDispatchInfo.Capture(primary).Throw(); throw;
             }
-        });
+        }, retainUnexpectedCallback);
     public Task<HomeResourceClaimResult> ClaimExecutionWithinOriginalSourceAsync(
         HomeResourceExecutionCapability capability, string targetAppId, string actionId,
         IReadOnlyList<ResourceScope> scopes, JsonElement arguments, Action<Action> scope, Action<Task> retain,
-        Action<Action> cleanupScope, CancellationToken token)
+        Action<Action> cleanupScope, CancellationToken token, bool originalPermissionSources = false, Action<Exception>? retainUnexpectedCallback = null)
         => RunColdProjectBrokerAsync<HomeResourceClaimResult>(scope, retain, async sources =>
         {
             ArgumentNullException.ThrowIfNull(capability); ArgumentNullException.ThrowIfNull(scopes);
@@ -112,10 +112,10 @@ public sealed partial class HomeResourceOperationBroker
             {
                 var current = await sources.ReadAsync(() => resources.AuthorizeForActorWithinOriginalSourceAsync(
                     binding.Actor, binding.ActionId, binding.Scopes, sources.Run, sources.Retain, token)).ConfigureAwait(false);
-                if (current == binding.Actor && await sources.ReadAsync(() => permissions.IsExecutionCurrentAsync(capability.RequestId, token)).ConfigureAwait(false))
+                if (current == binding.Actor && await sources.ReadAsync(() => originalPermissionSources ? permissions.IsSetupExecutionCurrentWithinOriginalSourceAsync(capability.RequestId, sources.Run, sources.Retain, token, sources.UnexpectedCallbackSink) : permissions.IsExecutionCurrentAsync(capability.RequestId, token)).ConfigureAwait(false))
                 {
                     var observed = binding.OriginalSubmission is null || binding.OriginalPolicy is null ? null
-                        : await sources.ReadAsync(() => permissions.ReadRequestObservationAsync(capability.RequestId, token)).ConfigureAwait(false);
+                        : await sources.ReadAsync(() => originalPermissionSources ? permissions.ReadImportRequestWithinOriginalSourceAsync(capability.RequestId, sources.Run, sources.Retain, token, sources.UnexpectedCallbackSink) : permissions.ReadRequestObservationAsync(capability.RequestId, token)).ConfigureAwait(false);
                     if ((binding.OriginalSubmission is null || binding.OriginalPolicy is null || MatchesClaimedOriginal(binding, observed)) && capability.MarkClaimed(this))
                     {
                         if (observed is not null) RetainClaimedAttestation(capability, binding, observed);
@@ -126,22 +126,22 @@ public sealed partial class HomeResourceOperationBroker
             catch (Exception primary)
             {
                 capability.MarkRejected(this);
-                try { await AuditColdProjectRejectedClaimAsync(capability, cleanupScope, retain).ConfigureAwait(false); }
+                try { await AuditColdProjectRejectedClaimAsync(capability, cleanupScope, retain, originalPermissionSources, retainUnexpectedCallback).ConfigureAwait(false); }
                 catch (Exception cleanup) { throw new AggregateException("Original claim and actual rejection audit failed.", primary, cleanup); }
                 ExceptionDispatchInfo.Capture(primary).Throw(); throw;
             }
             capability.MarkRejected(this);
-            await AuditColdProjectRejectedClaimAsync(capability, cleanupScope, retain).ConfigureAwait(false);
+            await AuditColdProjectRejectedClaimAsync(capability, cleanupScope, retain, originalPermissionSources, retainUnexpectedCallback).ConfigureAwait(false);
             return new(HomeResourceClaimDisposition.ConsumedRejected, null);
-        });
+        }, retainUnexpectedCallback);
     private async Task AuditColdProjectRejectedClaimAsync(HomeResourceExecutionCapability capability,
-        Action<Action> cleanupScope, Action<Task> retain)
+        Action<Action> cleanupScope, Action<Task> retain, bool originalPermissionSources = false, Action<Exception>? retainUnexpectedCallback = null)
     {
         var audit = await RunColdProjectBrokerAsync(cleanupScope, retain,
-            sources => sources.ReadAsync(() => RetryRejectedClaimAuditAsync(capability, CancellationToken.None))).ConfigureAwait(false);
+            sources => sources.ReadAsync(() => originalPermissionSources ? RetryRejectedClaimOriginalSetupCoreAsync(capability, CancellationToken.None, sources) : RetryRejectedClaimAuditAsync(capability, CancellationToken.None)), retainUnexpectedCallback).ConfigureAwait(false);
         if (!audit.Succeeded) throw new InvalidOperationException("Actual original rejected claim audit is unfinished: " + audit.Code);
     }
-    private static async Task WaitColdProjectBrokerGateAsync(HomeOwnershipOriginalSourceCallbacks sources,
+    internal static async Task WaitColdProjectBrokerGateAsync(HomeOwnershipOriginalSourceCallbacks sources,
         SemaphoreSlim gate, CancellationToken token)
     {
         Task? raw = null; Exception? invocation = null, observed = null; var held = false;
@@ -162,19 +162,24 @@ public sealed partial class HomeResourceOperationBroker
     }
 
     private static async Task<T> RunColdProjectBrokerAsync<T>(Action<Action> scope, Action<Task> retain,
-        Func<HomeOwnershipOriginalSourceCallbacks, Task<T>> body)
+        Func<HomeOwnershipOriginalSourceCallbacks, Task<T>> body, Action<Exception>? retainUnexpectedCallback = null)
     {
         ArgumentNullException.ThrowIfNull(scope); ArgumentNullException.ThrowIfNull(retain);
         var originals = new CloudflareOriginalTaskLedger(); HomeOwnershipOriginalSourceCallbacks sources = null!;
-        sources = new(scope, raw => { _ = originals.Track(raw); sources.Run(() => retain(raw)); });
-        T result = default!; Exception? primary = null;
+        sources = new(scope, raw =>
+        {
+            _ = originals.Track(raw);
+            sources.Run(() =>
+            {
+                try { retain(raw); }
+                catch (Exception cause) { retainUnexpectedCallback?.Invoke(cause); throw; }
+            });
+        }, retainUnexpectedCallback);
+        T result = default!;
         try { result = await body(sources).ConfigureAwait(false); }
-        catch (Exception cause) { primary = cause; originals.Retain(cause); }
+        catch (Exception cause) { originals.Retain(cause); }
         await originals.ObserveAllOriginalTasksAsync().ConfigureAwait(false);
         foreach (var cause in sources.Errors) originals.Retain(cause);
-        if (primary is OperationCanceledException && originals.OriginalTasks.Any(raw => raw.IsCanceled) &&
-            originals.OriginalTasks.All(raw => !raw.IsFaulted) && originals.OriginalErrors.All(cause => cause is OperationCanceledException))
-            ExceptionDispatchInfo.Capture(primary).Throw();
         if (originals.OriginalErrors.Count != 0) throw new AggregateException("Actual scoped Home broker source failed.", originals.OriginalErrors);
         return result;
     }

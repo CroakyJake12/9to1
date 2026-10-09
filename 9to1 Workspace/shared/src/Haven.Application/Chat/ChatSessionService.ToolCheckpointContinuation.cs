@@ -128,7 +128,11 @@ public sealed partial class ChatSessionService
         internal OriginalToolContinuationState(TaskRunColdContinuationBinding cold)
         {
             Cold = cold; Next = cold.Invocation; var value = cold.Entry.Capsule.OriginalToolCheckpoint!;
-            OriginalRequest = value.OriginalNextRequest; OriginalInventory = value.OriginalInventory;
+            OriginalRequest = value.OriginalNextRequest with
+            {
+                Options = RebindOriginalColdMemoryOptions(cold, value.OriginalNextRequest.Options)
+            };
+            OriginalInventory = value.OriginalInventory;
             AssistantId = value.AssistantId; AssistantText = value.AssistantText; Activities = value.Activities;
             CallsUsed = value.CallsUsed; ToolLimit = value.ToolLimit; LastCall = value.LastCall; LastResult = value.LastResult;
             RuntimeByName = value.RuntimeByName; OriginalControlFingerprint = value.OriginalControlFingerprint;
@@ -323,6 +327,8 @@ public sealed partial class ChatSessionService
                 runtimeByName, current);
             request = nextBoundary.OriginalRequest;
             coordinator.CaptureOriginalResponseRequest(responseOriginal, request);
+            await ValidateOriginalPersistentMemoryAsync(request.Options, conversation, request.ExecutionContext,
+                null, original, token).ConfigureAwait(false);
             await AwaitOriginalCheckpointStage(original, "checkpoint.provider-context-capture", () =>
                 capture.CaptureOriginalAsync(current, request, boundary.OriginalInventory, token).AsTask()).ConfigureAwait(false);
             // Context capture can await arbitrary source reads. Re-observe the genuine

@@ -10,7 +10,7 @@ internal static class MotionProjectCommands
     public static int Run(string[] args, TextReader input, TextWriter output, TextWriter error)
     {
         if (args.Length < 2 || !string.Equals(args[0], "project", StringComparison.OrdinalIgnoreCase))
-            return Fail(error, "InvalidArguments", "Usage: project create|open|insert|split|move|slip|trim|save ...");
+            return Fail(error, "InvalidArguments", "Usage: project create|open|insert|overwrite|split|move|move-track|slip|slide|roll|trim|ripple-trim|add-track|delete|ripple-delete|duplicate|lift|extract|caption-import|save ...");
 
         try
         {
@@ -25,12 +25,13 @@ internal static class MotionProjectCommands
                 case "open" when args.Length == 3:
                     result = store.Load(args[2]);
                     break;
-                case "insert" when args.Length == 10:
+                case "insert" or "overwrite" when args.Length == 10:
                 {
                     var current = store.Load(args[2]);
                     var expectedRevision = ParseLong(args[3]);
-                    result = store.Insert(current, expectedRevision, ParseGuid(args[4]), ParseGuid(args[5]), ParseGuid(args[6]),
-                        ParseLong(args[7]), ParseLong(args[8]), ParseLong(args[9]));
+                    result = args[1].Equals("insert", StringComparison.OrdinalIgnoreCase)
+                        ? store.Insert(current, expectedRevision, ParseGuid(args[4]), ParseGuid(args[5]), ParseGuid(args[6]), ParseLong(args[7]), ParseLong(args[8]), ParseLong(args[9]))
+                        : store.Overwrite(current, expectedRevision, ParseGuid(args[4]), ParseGuid(args[5]), ParseGuid(args[6]), ParseLong(args[7]), ParseLong(args[8]), ParseLong(args[9]));
                     store.Save(args[2], result, expectedRevision);
                     break;
                 }
@@ -57,6 +58,65 @@ internal static class MotionProjectCommands
                     result = store.Trim(current, expected, ParseGuid(args[4]), ParseGuid(args[5]), ParseLong(args[6]), ParseLong(args[7]));
                     store.Save(args[2], result, expected); break;
                 }
+                case "roll" when args.Length == 8:
+                {
+                    var current = store.Load(args[2]); var expected = ParseLong(args[3]);
+                    result = store.Roll(current, expected, ParseGuid(args[4]), ParseGuid(args[5]), ParseGuid(args[6]), ParseLong(args[7]));
+                    store.Save(args[2], result, expected); break;
+                }
+                case "slide" when args.Length == 7:
+                {
+                    var current = store.Load(args[2]); var expected = ParseLong(args[3]);
+                    result = store.Slide(current, expected, ParseGuid(args[4]), ParseGuid(args[5]), ParseLong(args[6]));
+                    store.Save(args[2], result, expected); break;
+                }
+                case "move-track" when args.Length == 8:
+                {
+                    var current = store.Load(args[2]); var expected = ParseLong(args[3]);
+                    result = store.MoveToTrack(current, expected, ParseGuid(args[4]), ParseGuid(args[5]), ParseGuid(args[6]), ParseLong(args[7]));
+                    store.Save(args[2], result, expected); break;
+                }
+                case "ripple-trim" when args.Length == 8:
+                {
+                    var current = store.Load(args[2]); var expected = ParseLong(args[3]);
+                    var edge = args[6].ToLowerInvariant() switch { "start" => MotionTrimEdge.Start, "end" => MotionTrimEdge.End, _ => throw new ArgumentException("Use start or end as the ripple edge.") };
+                    result = store.RippleTrim(current, expected, ParseGuid(args[4]), ParseGuid(args[5]), edge, ParseLong(args[7]));
+                    store.Save(args[2], result, expected); break;
+                }
+                case "add-track" when args.Length == 6:
+                {
+                    var current = store.Load(args[2]); var expected = ParseLong(args[3]);
+                    result = store.AddTrack(current, expected, ParseGuid(args[4]), args[5]);
+                    store.Save(args[2], result, expected); break;
+                }
+                case "delete" or "ripple-delete" or "duplicate" when args.Length == 6:
+                {
+                    var current = store.Load(args[2]); var expected = ParseLong(args[3]);
+                    result = args[1].Equals("duplicate", StringComparison.OrdinalIgnoreCase)
+                        ? store.Duplicate(current, expected, ParseGuid(args[4]), ParseGuid(args[5]))
+                        : store.Delete(current, expected, ParseGuid(args[4]), ParseGuid(args[5]), args[1].Equals("ripple-delete", StringComparison.OrdinalIgnoreCase));
+                    store.Save(args[2], result, expected); break;
+                }
+                case "lift" or "extract" when args.Length == 7:
+                {
+                    var current = store.Load(args[2]); var expected = ParseLong(args[3]);
+                    result = store.RemoveRange(current, expected, ParseGuid(args[4]), ParseLong(args[5]), ParseLong(args[6]), args[1].Equals("extract", StringComparison.OrdinalIgnoreCase));
+                    store.Save(args[2], result, expected); break;
+                }
+                case "caption-import" when args.Length == 6:
+                {
+                    var current = store.Load(args[2]); var expected = ParseLong(args[3]);
+                    var sequence = current.Sequences.Single(item => item.SequenceId == ParseGuid(args[4]));
+                    var text = input.ReadToEnd();
+                    var captions = args[5].ToLowerInvariant() switch
+                    {
+                        "srt" => MotionCaptions.ImportSrt(text, "Captions", "und", sequence.FrameRateNumerator, sequence.FrameRateDenominator),
+                        "vtt" => MotionCaptions.ImportWebVtt(text, "Captions", "und", sequence.FrameRateNumerator, sequence.FrameRateDenominator),
+                        _ => throw new NotSupportedException("Use srt or vtt for subtitle import.")
+                    };
+                    result = store.SetCaptions(current, expected, sequence.SequenceId, captions);
+                    store.Save(args[2], result, expected); break;
+                }
                 case "save" when args.Length == 4:
                 {
                     var expectedRevision = ParseLong(args[3]);
@@ -66,7 +126,7 @@ internal static class MotionProjectCommands
                     break;
                 }
                 default:
-                    return Fail(error, "InvalidArguments", "Usage: project create <path> <file-id> <width> <height> <fps>; open <path>; insert <path> <revision> <sequence-id> <track-id> <asset-id> <start> <source-in> <source-out>; split <path> <revision> <sequence-id> <element-id> <time>; move|slip <path> <revision> <sequence-id> <element-id> <frame>; trim <path> <revision> <sequence-id> <element-id> <source-in> <source-out>; save <path> <expected-revision> (project JSON on stdin)");
+                    return Fail(error, "InvalidArguments", "Usage: project create <path> <file-id> <width> <height> <fps>; open <path>; insert <path> <revision> <sequence-id> <track-id> <asset-id> <start> <source-in> <source-out>; split <path> <revision> <sequence-id> <element-id> <time>; move|slip <path> <revision> <sequence-id> <element-id> <frame>; trim <path> <revision> <sequence-id> <element-id> <source-in> <source-out>; save <path> <expected-revision> (project JSON on stdin); add-track <path> <revision> <sequence-id> <name>; roll <path> <revision> <sequence-id> <left-id> <right-id> <cut-frame>; slide <path> <revision> <sequence-id> <element-id> <start-frame>; move-track <path> <revision> <sequence-id> <element-id> <track-id> <start-frame>; ripple-trim <path> <revision> <sequence-id> <element-id> start|end <source-frame>; lift|extract <path> <revision> <sequence-id> <start> <end>; delete|ripple-delete|duplicate <path> <revision> <sequence-id> <element-id>; caption-import <path> <revision> <sequence-id> srt|vtt (subtitle text on stdin)");
             }
 
             output.WriteLine(JsonSerializer.Serialize(new { ok = true, result }));

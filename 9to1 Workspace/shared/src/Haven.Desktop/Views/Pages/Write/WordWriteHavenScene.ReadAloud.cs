@@ -46,7 +46,7 @@ internal sealed partial class WordWriteHavenScene
         start.Accessibility.AccessibleName = _readAloudActive
             ? "Restart reading the document aloud"
             : "Read the document aloud";
-        start.Invoked += (_, _) => ReadAloudRequested?.Invoke(this, EventArgs.Empty);
+        start.Invoked += (_, _) => OwnOriginalCallback(() => { ReadAloudRequested?.Invoke(this, EventArgs.Empty); });
         RibbonContent.Add(start);
 
         if (!_readAloudActive)
@@ -54,7 +54,7 @@ internal sealed partial class WordWriteHavenScene
 
         var back = Btn("Write.Review.ReadAloud.Back", "|< Back");
         back.Accessibility.AccessibleName = "Skip back one spoken section";
-        back.Invoked += (_, _) => ReadAloudSkipBackRequested?.Invoke(this, EventArgs.Empty);
+        back.Invoked += (_, _) => OwnOriginalCallback(() => { ReadAloudSkipBackRequested?.Invoke(this, EventArgs.Empty); });
         RibbonContent.Add(back);
 
         var pauseResume = Btn(
@@ -63,17 +63,17 @@ internal sealed partial class WordWriteHavenScene
         pauseResume.Accessibility.AccessibleName = _readAloudPaused
             ? "Resume reading aloud from the current section"
             : "Pause reading aloud at the current section";
-        pauseResume.Invoked += (_, _) => ReadAloudPauseResumeRequested?.Invoke(this, EventArgs.Empty);
+        pauseResume.Invoked += (_, _) => OwnOriginalCallback(() => { ReadAloudPauseResumeRequested?.Invoke(this, EventArgs.Empty); });
         RibbonContent.Add(pauseResume);
 
         var forward = Btn("Write.Review.ReadAloud.Forward", "Forward >|");
         forward.Accessibility.AccessibleName = "Skip forward one spoken section";
-        forward.Invoked += (_, _) => ReadAloudSkipForwardRequested?.Invoke(this, EventArgs.Empty);
+        forward.Invoked += (_, _) => OwnOriginalCallback(() => { ReadAloudSkipForwardRequested?.Invoke(this, EventArgs.Empty); });
         RibbonContent.Add(forward);
 
         var stop = Btn("Write.Review.ReadAloud.Stop", "Stop", ButtonVariant.Danger);
         stop.Accessibility.AccessibleName = "Stop reading aloud";
-        stop.Invoked += (_, _) => ReadAloudStopRequested?.Invoke(this, EventArgs.Empty);
+        stop.Invoked += (_, _) => OwnOriginalCallback(() => { ReadAloudStopRequested?.Invoke(this, EventArgs.Empty); });
         RibbonContent.Add(stop);
 
         var status = Caption(string.IsNullOrWhiteSpace(_readAloudSectionLabel)

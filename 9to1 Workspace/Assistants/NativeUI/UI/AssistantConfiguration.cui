@@ -1,0 +1,142 @@
+<Cui id="assistants.configuration" version="1">
+  <Actions>
+    <Action name="ChooseAssistantAvatar" command="assistants.avatar.select" parameter="{Binding avatar}" />
+    <Action name="ReviewResource" command="assistants.resource.review" parameter="{Binding resource}" />
+    <Action name="ReviewConfiguredProject" command="assistants.configuration.project.review" parameter="{Binding project}" />
+    <Action name="ChooseCapabilityPreference" command="assistants.configuration.capability.choose" parameter="{Binding capability}" />
+    <Action name="ChooseSetting" command="assistants.setting.choose" parameter="{Binding setting}" />
+    <Action name="ChoosePreferredModel" command="assistants.configuration.model.choose" parameter="{Binding model}" />
+    <Action name="ChooseEffort" command="assistants.configuration.effort.choose" parameter="{Binding effort}" />
+  </Actions>
+  <Page id="assistant-configuration-page" AccessibleName="Configure Assistant">
+    <Container Type="Vertical Stack" VerticalScrolling="True" Margin="24" Spacing="16">
+      <Container Type="Vertical Stack" Spacing="12">
+        <Button id="configuration-back" action="assistants.configuration.back" IsEnabled="{Binding CanLeaveConfiguration}">Back</Button>
+        <Text Text="{Binding ConfigurationTitle}" FontSize="26" FontWeight="Bold" TextWrapping="Wrap" />
+      </Container>
+      <Text Text="{Binding ConfigurationIdentityLabel}" TextWrapping="Wrap" AccessibleName="Saved Assistant identity" />
+      <Text Text="{Binding ConfigurationStatus}" TextWrapping="Wrap" AccessibleName="Configuration status" />
+      <Text Text="{Binding ConfigurationError}" IsVisible="{Binding HasConfigurationError}" TextWrapping="Wrap" AccessibleName="Configuration error" />
+      <Container Type="Vertical Stack" Spacing="8">
+        <Text FontSize="20" FontWeight="SemiBold">Identity and purpose</Text>
+        <Text>Name</Text>
+        <Input id="assistant-name" Type="Text" Text="{Binding DraftName, Mode=TwoWay}" IsEnabled="{Binding CanEditConfiguration}" AccessibleName="Assistant name" PlaceholderText="For example, 9to1 Developer" />
+        <Text>Description</Text>
+        <Input id="assistant-description" Type="Text" Text="{Binding DraftDescription, Mode=TwoWay}" IsEnabled="{Binding CanEditConfiguration}" AccessibleName="Assistant description" PlaceholderText="What this Assistant helps you with" />
+        <Text>Purpose</Text>
+        <Input id="assistant-purpose" Type="Text" Text="{Binding DraftPurpose, Mode=TwoWay}" IsEnabled="{Binding CanEditConfiguration}" AccessibleName="Assistant purpose" />
+        <Text>Role</Text>
+        <Input id="assistant-role" Type="Text" Text="{Binding DraftRole, Mode=TwoWay}" IsEnabled="{Binding CanEditConfiguration}" AccessibleName="Assistant role" PlaceholderText="For example, developer or research partner" />
+        <Object Type="AssistantAvatar" Text="{Binding DraftAvatarKey}" Width="56" Height="56" AccessibleName="{Binding DraftAvatarLabel}" />
+        <Button action="assistants.avatar.choose" Text="{Binding AvatarChoiceLabel}" IsEnabled="{Binding CanChooseAvatar}" AccessibleName="Choose Assistant avatar" />
+        <Text Text="{Binding AvatarResourceStatus}" TextWrapping="Wrap" />
+        <Container Type="Vertical Stack" Spacing="8" IsVisible="{Binding ShowAvatarChooser}">
+          <Text FontSize="18" FontWeight="SemiBold">Make it recognisable</Text>
+          <Text Text="Choose an icon for this Assistant." TextWrapping="Wrap" />
+          <Repeat Source="{Binding AvatarChoices}" As="avatar" Key="{Binding avatar.Id}">
+            <Container Type="Horizontal Stack" Spacing="12" Margin="0,0,0,8">
+              <Object Type="AssistantAvatar" Text="{Binding avatar.IconKey}" Width="44" Height="44" AccessibleName="{Binding avatar.Label}" />
+              <Container Type="Vertical Stack" Spacing="4">
+                <Button action="ChooseAssistantAvatar" Text="{Binding avatar.Label}" IsEnabled="{Binding CanSelectAvatar}" />
+                <Text Text="{Binding avatar.Description}" TextWrapping="Wrap" />
+              </Container>
+            </Container>
+          </Repeat>
+          <Button action="assistants.avatar.cancel" IsEnabled="{Binding CanChooseAvatar}">Keep current icon</Button>
+        </Container>
+        <Text>Instructions</Text>
+        <Input id="assistant-instructions" Type="Text" Text="{Binding DraftInstructions, Mode=TwoWay}" AcceptsReturn="True" MinHeight="140" TextWrapping="Wrap" IsEnabled="{Binding CanEditConfiguration}" AccessibleName="Assistant instructions" PlaceholderText="Describe its role, preferences and how you would like it to work." />
+      </Container>
+      <Container Type="Vertical Stack" Spacing="8">
+        <Text FontSize="20" FontWeight="SemiBold">Models and capabilities</Text>
+        <Text Text="{Binding ConfiguredModelLabel}" TextWrapping="Wrap" AccessibleName="Preferred model" />
+        <Text Text="{Binding ConfigurationModelStatus}" TextWrapping="Wrap" />
+        <Button id="configuration-refresh-models" action="assistants.configuration.models.read" IsEnabled="{Binding CanReadConfigurationModels}">Refresh available models</Button>
+        <Repeat Source="{Binding ConfigurationModels}" As="model" Key="{Binding model.Id}">
+          <Button action="ChoosePreferredModel" Text="{Binding model.Label}" IsEnabled="{Binding CanChooseConfiguredModel}" Margin="0,0,0,4" />
+        </Repeat>
+        <Text FontWeight="SemiBold">Reasoning</Text>
+        <Repeat Source="{Binding EffortChoices}" As="effort" Key="{Binding effort.Id}">
+          <Button action="ChooseEffort" Text="{Binding effort.Label}" IsEnabled="{Binding effort.CanChoose}" Margin="0,0,0,4" />
+        </Repeat>
+        <Input id="assistant-allow-cloud" Type="Checkbox" IsChecked="{Binding DraftAllowCloud, Mode=TwoWay}" IsEnabled="{Binding CanEditConfiguration}" Content="Allow authorized cloud models" AccessibleName="Allow authorized cloud models" />
+        <Input id="assistant-allow-fallback" Type="Checkbox" IsChecked="{Binding DraftAllowFallback, Mode=TwoWay}" IsEnabled="{Binding CanEditConfiguration}" Content="Allow configured fallback routing" AccessibleName="Allow configured fallback routing" />
+        <Text Text="Model and routing preferences do not grant access to a provider or override its existing policy." TextWrapping="Wrap" />
+        <Text Text="{Binding EffectivePolicyLabel}" TextWrapping="Wrap" AccessibleName="Effective Assistant model and capability policy" />
+        <Text FontWeight="SemiBold">Tools and connected Apps</Text>
+        <Text Text="{Binding ConfigurationCapabilityStatus}" TextWrapping="Wrap" />
+        <Button action="assistants.configuration.capabilities.read" IsEnabled="{Binding CanReadConfigurationCapabilities}">Review current Tools and Apps</Button>
+        <Text Text="{Binding CapabilityInitializationStatus}" TextWrapping="Wrap" AccessibleName="Built-in Tools setup status" />
+        <Button id="assistant-tools-setup-review" action="assistants.configuration.capabilities.setup.review" IsEnabled="{Binding CanReviewCapabilityInitialization}">Review built-in Tools setup</Button>
+        <Button id="assistant-tools-setup-start" action="assistants.configuration.capabilities.setup.start" IsEnabled="{Binding CanStartCapabilityInitialization}">Request setup approval in Home</Button>
+        <Text Text="Setup adds missing built-in Tools and preserves your existing choices. Home asks for separate approval; this does not grant permission to use a Tool." TextWrapping="Wrap" />
+        <Container Type="Vertical Stack" IsEnabled="{Binding CanChooseConfigurationCapability}" Spacing="4">
+        <Repeat Source="{Binding ConfigurationCapabilityRows}" As="capability" Key="{Binding capability.Id}">
+          <Container Type="Vertical Stack" Margin="0,0,0,8" Spacing="4">
+            <Text Text="{Binding capability.Name}" FontWeight="SemiBold" />
+            <Text Text="{Binding capability.Description}" TextWrapping="Wrap" />
+            <Text Text="{Binding capability.AvailabilityLabel}" TextWrapping="Wrap" />
+            <Button action="ChooseCapabilityPreference" IsEnabled="{Binding capability.CanChoose}">Add this preference</Button>
+          </Container>
+        </Repeat>
+        </Container>
+        <Text Text="{Binding ConfiguredToolPreferences}" TextWrapping="Wrap" AccessibleName="Configured tool preferences" />
+        <Text Text="{Binding ConfiguredAppPreferences}" TextWrapping="Wrap" AccessibleName="Configured connected App preferences" />
+        <Text Text="Save configuration to keep these preferences. Each use still checks current model support, runtime availability and approval." TextWrapping="Wrap" />
+        <Repeat Source="{Binding ConfigurationSettings}" As="setting" Key="{Binding setting.Id}">
+          <Container Type="Vertical Stack" Margin="0,0,0,8" Spacing="4">
+            <Text Text="{Binding setting.Category}" FontWeight="SemiBold" />
+            <Button action="ChooseSetting" Text="{Binding setting.ChoiceLabel}" IsEnabled="{Binding setting.CanChoose}" />
+            <Text Text="{Binding setting.AvailabilityLabel}" TextWrapping="Wrap" />
+          </Container>
+        </Repeat>
+      </Container>
+      <Container Type="Vertical Stack" Spacing="8">
+        <Text FontSize="20" FontWeight="SemiBold">Memory</Text>
+        <Input id="assistant-memory-enabled" Type="Checkbox" IsChecked="{Binding DraftMemoryEnabled, Mode=TwoWay}" IsEnabled="{Binding CanEditMemoryPreferences}" Content="Use this Assistant's own saved memories" AccessibleName="Enable Assistant memory" />
+        <Input id="assistant-memory-project-context" Type="Checkbox" IsChecked="{Binding DraftMemoryIncludeProjectContext, Mode=TwoWay}" IsEnabled="{Binding CanEditMemoryPreferences}" Content="Request project context for memory" AccessibleName="Request project memory context" />
+        <Text Text="{Binding MemoryPreferenceStatus}" TextWrapping="Wrap" AccessibleName="Memory preference status" />
+        <Text Text="{Binding MemoryPreferenceAvailability}" TextWrapping="Wrap" AccessibleName="Memory availability" />
+        <Text Text="Save these preferences to apply them. Home still controls access; adding or changing memories needs a separate approval. Turning memory off keeps existing memories and conversation history." TextWrapping="Wrap" />
+      </Container>
+      <Container Type="Vertical Stack" Spacing="8">
+        <Text FontSize="20" FontWeight="SemiBold">Resources and access</Text>
+        <Text Text="Files, projects and services keep their existing permissions. Choose only the resources this Assistant needs." TextWrapping="Wrap" />
+        <Repeat Source="{Binding Resources}" As="resource" Key="{Binding resource.Id}">
+          <Container Type="Vertical Stack" Margin="0,0,0,8" Spacing="4">
+            <Text Text="{Binding resource.Name}" FontWeight="SemiBold" />
+            <Text Text="{Binding resource.AvailabilityLabel}" TextWrapping="Wrap" />
+            <Button action="ReviewResource" IsEnabled="{Binding resource.CanReview}">Review access</Button>
+          </Container>
+        </Repeat>
+        <Text Text="{Binding ConfigurationProjectStatus}" TextWrapping="Wrap" />
+        <Repeat Source="{Binding ConfiguredDevelopmentProjects}" As="project" Key="{Binding project.Id}">
+          <Container Type="Vertical Stack" Margin="0,0,0,8" Spacing="4">
+            <Text Text="{Binding project.Name}" FontWeight="SemiBold" />
+            <Text Text="{Binding project.AvailabilityLabel}" TextWrapping="Wrap" />
+            <Button action="ReviewConfiguredProject" IsEnabled="{Binding CanReviewConfiguredProject}">Review current project access</Button>
+          </Container>
+        </Repeat>
+        <Button action="assistants.resources.add" IsEnabled="{Binding CanAddResource}">Choose development project</Button>
+      </Container>
+      <Container Type="Vertical Stack" Spacing="8">
+        <Text FontSize="20" FontWeight="SemiBold">Check-ins and scheduled work</Text>
+        <Input id="assistant-proactivity-enabled" Type="Checkbox" IsChecked="{Binding DraftProactivityEnabled, Mode=TwoWay}" IsEnabled="{Binding CanEditProactivityPreferences}" Content="Opt in to proactive contact" AccessibleName="Opt in to proactive contact" />
+        <Input id="assistant-proactivity-check-ins" Type="Checkbox" IsChecked="{Binding DraftAllowCheckIns, Mode=TwoWay}" IsEnabled="{Binding CanEditProactivityPreferences}" Content="Allow supported check-ins" AccessibleName="Allow supported check-ins" />
+        <Input id="assistant-proactivity-contact" Type="Checkbox" IsChecked="{Binding DraftAllowUnsolicitedContact, Mode=TwoWay}" IsEnabled="{Binding CanEditProactivityPreferences}" Content="Allow supported triggers to start a conversation" AccessibleName="Allow proactive conversations" />
+        <Input id="assistant-proactivity-notifications" Type="Checkbox" IsChecked="{Binding DraftNotifyInApp, Mode=TwoWay}" IsEnabled="{Binding CanEditProactivityPreferences}" Content="Prefer notifications inside Haven" AccessibleName="Prefer in-app notifications" />
+        <Text FontWeight="SemiBold">Requested events</Text>
+        <Input id="assistant-proactivity-completed" Type="Checkbox" IsChecked="{Binding DraftEventTaskCompleted, Mode=TwoWay}" IsEnabled="{Binding CanEditProactivityPreferences}" Content="When a Task finishes" AccessibleName="Request Task completion check-ins" />
+        <Input id="assistant-proactivity-attention" Type="Checkbox" IsChecked="{Binding DraftEventTaskNeedsAttention, Mode=TwoWay}" IsEnabled="{Binding CanEditProactivityPreferences}" Content="When a Task needs your attention" AccessibleName="Request Task attention check-ins" />
+        <Text Text="{Binding ProactivityStatus}" TextWrapping="Wrap" AccessibleName="Proactivity availability" />
+        <Text Text="{Binding ProactivityResourceStatus}" TextWrapping="Wrap" />
+        <Button action="assistants.proactivity.configure" IsEnabled="{Binding CanConfigureProactivity}">Manage check-ins and schedules</Button>
+        <Text Text="Contact preferences do not grant additional file, account or computer access." TextWrapping="Wrap" />
+      </Container>
+      <Container Type="Vertical Stack" Spacing="12">
+        <Button id="assistant-save" action="assistants.configuration.save" IsEnabled="{Binding CanSaveConfiguration}" Text="{Binding SaveConfigurationLabel}" />
+        <Button id="assistant-discard-draft" action="assistants.configuration.discard" IsEnabled="{Binding CanDiscardConfiguration}">Discard changes</Button>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

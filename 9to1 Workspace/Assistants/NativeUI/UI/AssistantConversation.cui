@@ -1,0 +1,94 @@
+<Cui id="assistants.conversation" version="1">
+  <Actions>
+    <Action name="ShowSearchMessage" command="assistants.conversation.find.show" parameter="{Binding match}" />
+    <Action name="ContinueBranch" command="assistants.branch.create" parameter="{Binding message}" />
+    <Action name="OpenBranch" command="assistants.branch.switch" parameter="{Binding branch}" />
+    <Action name="ChooseModel" command="assistants.model.choose" parameter="{Binding model}" />
+    <Action name="DetachAttachment" command="assistants.attachment.detach" parameter="{Binding attachment}" />
+  </Actions>
+  <Page id="assistant-conversation-page" AccessibleName="Conversation">
+    <Container Type="Vertical Stack" Spacing="10">
+      <Text Text="{Binding ConversationTitle}" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap" />
+      <Text Text="{Binding ConversationAvailability}" TextWrapping="Wrap" AccessibleName="Conversation availability" />
+      <Container Type="Vertical Stack" Spacing="6" IsVisible="{Binding ShowConversationSearch}" AccessibleName="Find in this conversation branch">
+        <Input id="conversation-search-query" Type="Text" Text="{Binding ConversationSearchQuery, Mode=TwoWay}" IsEnabled="{Binding CanFindConversation}" AccessibleName="Find text in this branch" PlaceholderText="Find text in this branch" />
+        <WrapPanel Orientation="Horizontal">
+          <Button id="conversation-find" action="assistants.conversation.find" IsEnabled="{Binding CanRunConversationSearch}" Margin="0,0,8,8">Find</Button>
+          <Button id="conversation-find-clear" action="assistants.conversation.find.clear" IsEnabled="{Binding CanFindConversation}" Margin="0,0,8,8">Close search</Button>
+        </WrapPanel>
+        <Text Text="{Binding ConversationSearchStatus}" TextWrapping="Wrap" AccessibleName="Conversation search status" />
+        <Container Type="Vertical Stack" Spacing="8" VerticalScrolling="True" MaxHeight="180" IsVisible="{Binding HasConversationSearchResults}">
+          <Repeat Source="{Binding ConversationSearchResults}" As="match" Key="{Binding match.Id}">
+            <Container Type="Vertical Stack" Spacing="4">
+              <Text Text="{Binding match.Snippet}" TextWrapping="Wrap" />
+              <Button action="ShowSearchMessage" Text="{Binding match.Label}" IsEnabled="{Binding CanFindConversation}" />
+            </Container>
+          </Repeat>
+        </Container>
+      </Container>
+      <Container Type="Vertical Stack" Spacing="6" IsVisible="{Binding HasConversationBranches}" AccessibleName="Conversation branches">
+        <Text Text="Branches" FontWeight="SemiBold" />
+        <Text Text="{Binding ConversationBranchHelp}" TextWrapping="Wrap" />
+        <WrapPanel Orientation="Horizontal">
+          <Repeat Source="{Binding ConversationBranches}" As="branch" Key="{Binding branch.Id}">
+            <Button action="OpenBranch" Text="{Binding branch.Label}" IsEnabled="{Binding branch.CanOpen}" Margin="0,0,8,8" />
+          </Repeat>
+        </WrapPanel>
+      </Container>
+      <Container Type="Vertical Stack" VerticalScrolling="True" MinHeight="100" MaxHeight="440" Spacing="10" IsVisible="{Binding HasConversationMessages}">
+        <Repeat Source="{Binding Messages}" As="message" Key="{Binding message.Id}">
+          <Container Type="Vertical Stack" Margin="0,0,0,14" Spacing="6">
+            <Text Text="{Binding message.RoleLabel}" FontWeight="SemiBold" />
+            <Object Type="AssistantMessage" Text="{Binding message.Content}" AccessibleName="Message content" />
+            <Text Text="{Binding message.Thinking}" TextWrapping="Wrap" IsVisible="{Binding message.HasThinking}" />
+            <Text Text="{Binding message.Activity}" TextWrapping="Wrap" IsVisible="{Binding message.HasActivity}" />
+            <Button action="ContinueBranch" IsEnabled="{Binding message.CanContinue}" AccessibleName="Continue conversation from this message">Continue from here</Button>
+          </Container>
+        </Repeat>
+      </Container>
+      <Text Text="No messages yet. Write a message below, or save a draft for later." TextWrapping="Wrap" IsVisible="{Binding ShowEmptyConversation}" />
+      <Text Text="{Binding SelectedModelLabel}" TextWrapping="Wrap" AccessibleName="Selected model" />
+      <Text Text="{Binding ModelAvailabilityHelp}" IsVisible="{Binding ShowModelAvailabilityHelp}" TextWrapping="Wrap" AccessibleName="Model availability help" />
+      <WrapPanel Orientation="Horizontal" AccessibleName="Assistant actions">
+        <Button id="conversation-find-open" action="assistants.conversation.find.open" IsEnabled="{Binding CanFindConversation}" Margin="0,0,8,8">Find in this branch</Button>
+        <Button id="conversation-refresh-models" action="assistants.model.refresh" IsEnabled="{Binding CanRefreshConversationModels}" Margin="0,0,8,8">Refresh available models</Button>
+        <Button id="conversation-model-settings" action="assistants.configuration.open" IsEnabled="{Binding CanConfigure}" Margin="0,0,8,8">Model preferences</Button>
+      </WrapPanel>
+      <Container Type="Vertical Stack" Spacing="6" VerticalScrolling="True" MaxHeight="160" IsVisible="{Binding HasModels}">
+        <Repeat Source="{Binding Models}" As="model" Key="{Binding model.Id}">
+          <Button action="ChooseModel" Text="{Binding model.Label}" IsEnabled="{Binding CanChooseModel}" Margin="0,0,0,4" />
+        </Repeat>
+      </Container>
+      <Container Type="Vertical Stack" Spacing="6" AccessibleName="Draft attachments">
+        <Button id="conversation-attach-file" action="assistants.attachment.pick" IsEnabled="{Binding CanPickAttachment}">Attach a file from Files</Button>
+        <Text Text="{Binding AttachmentStatus}" TextWrapping="Wrap" AccessibleName="Attachment status" />
+        <Container Type="Vertical Stack" Spacing="8" VerticalScrolling="True" MaxHeight="220" IsVisible="{Binding HasDraftAttachments}">
+          <Repeat Source="{Binding DraftAttachments}" As="attachment" Key="{Binding attachment.Id}">
+            <Container Type="Vertical Stack" Spacing="4">
+              <Text Text="{Binding attachment.Name}" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <Text Text="{Binding attachment.Details}" TextWrapping="Wrap" />
+              <Text Text="{Binding attachment.Preview}" TextWrapping="Wrap" />
+              <Button action="DetachAttachment" IsEnabled="{Binding CanDetachAttachment}">Remove from draft</Button>
+            </Container>
+          </Repeat>
+        </Container>
+      </Container>
+      <Input id="conversation-draft" Type="Text" Text="{Binding Prompt, Mode=TwoWay}" AcceptsReturn="True" MinHeight="72" TextWrapping="Wrap" IsEnabled="{Binding CanEditPrompt}" AccessibleName="Message to your Assistant" PlaceholderText="What would you like to do?" />
+      <WrapPanel Orientation="Horizontal" AccessibleName="Assistant actions">
+        <Button id="assistant-send" action="assistants.send" IsEnabled="{Binding CanSend}" IsVisible="{Binding ShowChatComposer}" Text="{Binding SendLabel}" Margin="0,0,8,8" />
+        <Button id="assistant-save-draft" action="assistants.draft.save" IsEnabled="{Binding CanSaveDraft}" Margin="0,0,8,8">Save draft</Button>
+      </WrapPanel>
+      <Text Text="{Binding ComposerAvailability}" TextWrapping="Wrap" AccessibleName="Message availability" />
+      <WrapPanel Orientation="Horizontal" AccessibleName="Assistant actions">
+        <Button id="assistant-new-task" action="assistants.task.new" IsEnabled="{Binding CanNewConversation}" Margin="0,0,8,8">New task</Button>
+      </WrapPanel>
+      <WrapPanel Orientation="Horizontal" AccessibleName="Assistant actions" IsVisible="{Binding ShowTaskComposer}">
+        <Button id="assistant-start-task" action="assistants.task.start" IsEnabled="{Binding CanStartTask}" Margin="0,0,8,8">Start task</Button>
+        <Button id="assistant-steer" action="assistants.task.steer" IsEnabled="{Binding CanSteer}" Margin="0,0,8,8">Steer current task</Button>
+        <Button id="assistant-queue" action="assistants.task.queue" IsEnabled="{Binding CanSteer}" Margin="0,0,8,8">Queue follow-up</Button>
+        <Button id="assistant-stop" action="assistants.task.stop" IsEnabled="{Binding CanStop}" Margin="0,0,8,8">Stop current task</Button>
+      </WrapPanel>
+      <Text Text="{Binding ConversationStatus}" TextWrapping="Wrap" AccessibleName="Conversation work status" />
+    </Container>
+  </Page>
+</Cui>

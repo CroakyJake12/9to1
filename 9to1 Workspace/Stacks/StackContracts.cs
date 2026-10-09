@@ -256,7 +256,11 @@ public sealed record StackDomainSnapshot(
     bool IsActive,
     bool IsDeleted,
     IReadOnlyDictionary<string, StackResource?> BaseTree,
-    IReadOnlyList<StackMutation> LocalChanges);
+    IReadOnlyList<StackMutation> LocalChanges)
+{
+    // Optional read projection; existing positional callers and persisted manifest formats remain unchanged.
+    public IReadOnlyList<StackMutation> WorkingChanges { get; init; } = [];
+}
 
 public sealed record StackDomainChanges(int Added, int Deleted, int Modified, int Renamed, IReadOnlyList<StackMutation> Changes);
 

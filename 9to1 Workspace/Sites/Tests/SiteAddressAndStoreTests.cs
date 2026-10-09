@@ -1,4 +1,6 @@
 using System.Text;
+using System.Text.Json.Nodes;
+using HavenOS.Apps.Sites.Application;
 using HavenOS.Apps.Sites.Domain;
 using HavenOS.Apps.Sites.Infrastructure;
 using Xunit;
@@ -74,6 +76,55 @@ public sealed class SiteAddressAndStoreTests
 
         await Assert.ThrowsAsync<SiteOperationException>(() => store.ReadAsync(state => state));
 
+        Assert.Equal(original, await File.ReadAllBytesAsync(path));
+    }
+
+    [Theory]
+    [InlineData("projects")]
+    [InlineData("deployments")]
+    [InlineData("domains")]
+    [InlineData("nameVerifications")]
+    [InlineData("domainChallenges")]
+    [InlineData("slugReservations")]
+    public async Task Null_index_collection_is_rejected_without_rewriting_the_index(string collection)
+    {
+        using var directory = new TemporaryDirectory();
+        var path = Path.Combine(directory.Path, ".9to1-sites-index.json");
+        var index = JsonNode.Parse("{\"schemaVersion\":1,\"projects\":[],\"deployments\":[],\"domains\":[],\"nameVerifications\":[],\"domainChallenges\":[],\"slugReservations\":[]}")!;
+        index[collection] = null;
+        var original = Encoding.UTF8.GetBytes(index.ToJsonString());
+        await File.WriteAllBytesAsync(path, original);
+        var store = new FileSiteWorkspaceStore(directory.Path);
+
+        var failure = await Assert.ThrowsAsync<SiteOperationException>(() => store.ReadAsync(state => state));
+
+        Assert.Equal("SitesMetadataInvalid", failure.Error.Code);
+        Assert.Equal(original, await File.ReadAllBytesAsync(path));
+    }
+
+    [Fact]
+    public async Task Unsupported_project_schema_is_rejected_before_an_unrelated_mutation()
+    {
+        using var directory = new TemporaryDirectory();
+        var store = new FileSiteWorkspaceStore(directory.Path);
+        var created = await new SiteProjectService(store).CreateProjectAsync(new(Guid.NewGuid(), null, null,
+            "source-1", "Preserved project", "9to1-native", "preserved"));
+        Assert.True(created.IsSuccess);
+        var path = Path.Combine(directory.Path, ".9to1-sites-index.json");
+        var index = JsonNode.Parse(await File.ReadAllTextAsync(path))!;
+        index["projects"]![0]!["schemaVersion"] = 999;
+        var original = Encoding.UTF8.GetBytes(index.ToJsonString());
+        await File.WriteAllBytesAsync(path, original);
+        var mutationReached = false;
+
+        var failure = await Assert.ThrowsAsync<SiteOperationException>(() => store.MutateAsync(state =>
+        {
+            mutationReached = true;
+            return (state, true);
+        }));
+
+        Assert.Equal("SitesSchemaUnsupported", failure.Error.Code);
+        Assert.False(mutationReached);
         Assert.Equal(original, await File.ReadAllBytesAsync(path));
     }
 

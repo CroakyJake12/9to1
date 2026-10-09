@@ -1,0 +1,29 @@
+<!--
+  Where: Assistants product core, separate from its native renderer and executable host.
+  What: Builds the dedicated product controller and its canonical service bridge.
+  Why: Product state consumes the existing Home/Den, Conversation, Task and Dev owners
+  without depending on Desktop presentation or creating another runtime/store.
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>HavenOS.Apps.Assistants.Core</AssemblyName>
+    <RootNamespace>HavenOS.Apps.Assistants</RootNamespace>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Contracts/**/*.cs" />
+    <Compile Include="Core/**/*.cs" />
+    <!-- Actual memory contracts and scoped assembly access are owned by the canonical product source. -->
+    <Compile Include="Memory/Core/**/*.cs" />
+    <!-- Typed Mini Computer presentation contracts share the actual canonical product issuer. -->
+    <Compile Include="MiniComputer/Core/**/*.cs" />
+    <!-- Typed attachment picker and issuer contracts share the canonical product owner. -->
+    <Compile Include="Attachments/Core/**/*.cs" />
+    <Compile Include="Canonical/**/*.cs" Exclude="Canonical/**/Tests/**/*.cs" />
+    <ProjectReference Include="../shared/src/Haven.Core/Haven.Core.csproj" />
+    <ProjectReference Include="../shared/src/Haven.Application/Haven.Application.csproj" />
+    <ProjectReference Include="../Home/HavenOS.Home.csproj" />
+    <ProjectReference Include="../../9to1 Models/Dulche Alpha/Den.csproj" />
+    <ProjectReference Include="../Dev/HavenOS.Dev.csproj" />
+  </ItemGroup>
+</Project>

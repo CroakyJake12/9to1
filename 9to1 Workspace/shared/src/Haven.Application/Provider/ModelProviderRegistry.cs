@@ -14,18 +14,18 @@ namespace Haven.Application;
 /// <summary>
 /// Represents model provider registry and keeps its related state and behavior together.
 /// </summary>
-public sealed class ModelProviderRegistry(IEnumerable<IModelProvider> providers) : IModelProviderRegistry
+public sealed partial class ModelProviderRegistry(IEnumerable<IModelProvider> providers) : IModelProviderRegistry
 {
     /// <summary>
     /// Stores providers locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
-    private readonly IReadOnlyList<IModelProvider> _providers = providers
+    private readonly IReadOnlyList<IModelProvider> _providers = Array.AsReadOnly(providers
         .GroupBy(provider => provider.Id, StringComparer.OrdinalIgnoreCase)
         .Select(group => group.All(provider => ReferenceEquals(provider, group.First())) ? group.First()
             : throw new InvalidOperationException($"Provider identity '{group.Key}' has multiple competing registrations."))
         .OrderByDescending(provider => provider.IsLocal)
         .ThenBy(provider => provider.DisplayName, StringComparer.OrdinalIgnoreCase)
-        .ToArray();
+        .ToArray());
 
     /// <summary>
     /// Gets or updates providers, the bindable or domain state represented by this property.

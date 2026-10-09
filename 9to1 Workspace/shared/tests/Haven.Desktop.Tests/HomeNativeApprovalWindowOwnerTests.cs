@@ -87,7 +87,7 @@ public sealed class HomeNativeApprovalWindowOwnerTests
             await close;
             Assert.True(owner.OriginalRetirementCapturedAndSettled);
             Assert.Null(owner.OriginalWindow);
-            Assert.True(runtime.Current.Services.Any(service => service.IsAvailable));
+            Assert.Contains(runtime.Current.Services, service => service.IsAvailable);
         }
         catch (Exception error) { Add(errors, error); }
         finally
@@ -150,7 +150,7 @@ public sealed class HomeNativeApprovalWindowOwnerTests
             Assert.True(close.IsCompleted);
             Assert.True(owner.OriginalRetirementCapturedAndSettled);
             Assert.Null(owner.OriginalWindow);
-            Assert.True(runtime.Current.Services.Any(service => service.IsAvailable));
+            Assert.Contains(runtime.Current.Services, service => service.IsAvailable);
         }
         catch (Exception error) { Add(errors, error); }
         finally

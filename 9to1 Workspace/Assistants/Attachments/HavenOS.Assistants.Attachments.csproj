@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>HavenOS.Apps.Assistants.Attachments</AssemblyName>
+    <RootNamespace>HavenOS.Apps.Assistants.Attachments</RootNamespace>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Source/**/*.cs" />
+    <Compile Include="../Memory/Source/AssistantMemoryOriginals.cs" Link="OriginalCustody/AssistantMemoryOriginals.cs" />
+    <ProjectReference Include="../HavenOS.Assistants.Core.csproj" />
+    <ProjectReference Include="../../shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

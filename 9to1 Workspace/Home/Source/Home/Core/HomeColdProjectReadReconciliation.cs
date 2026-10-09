@@ -119,12 +119,28 @@ public sealed partial class HomeColdProjectReadReconciliation : ITaskRunColdProj
         Action<Action> scope, Action<Task> retain, CancellationToken token)
         => StartOperation(scope, retain, async sources =>
         {
-            var original = RequireInput(input, true); original.DemandExactInput(exact);
+            var original = RequireInput(input, false);
             if (terminal.TaskId == Guid.Empty || terminal.ExecutionId == Guid.Empty || terminal.OwnerBinding is null)
                 throw new UnauthorizedAccessException("Actual owned settled Task identity required; fields alone grant nothing.");
-            await sources.Await(original.StartValidation(scope, retain, current => original.ValidateFreshShortReadAsync(current, token))).ConfigureAwait(false);
-            await sources.Await(original.CloseOwned()).ConfigureAwait(false);
-            if (!original.IsSuccessfullyClosed) throw new UnauthorizedAccessException("Actual initial Home/native borrower cleanup must be healthy.");
+            if (original.IsLive)
+            {
+                original.DemandExactInput(exact);
+                var validation = sources.Invoke(() => original.StartValidation(sources.Scope, sources.Retain,
+                    current => original.ValidateFreshShortReadAsync(current, token)));
+                await sources.Await(validation).ConfigureAwait(false);
+                Task? close = null; var closes = new List<Task>();
+                sources.AcquireClose(() => { close = original.CloseOwned(); return close; }, closes);
+                if (close is null) throw new InvalidOperationException("The actual original input close was not acquired.");
+                await sources.Await(close).ConfigureAwait(false);
+            }
+            else
+            {
+                // Historical identity is recognized only through this private issuer's
+                // healthy SAME original close. The old input/leases are never reopened.
+                original.DemandExactHealthyClosedInput(exact);
+                await ValidateClosedInputThroughFreshOriginalReadAsync(original, sources, token).ConfigureAwait(false);
+            }
+            original.DemandExactHealthyClosedInput(exact);
             return original.Identity;
         });
     public Task ValidateOriginalProjectRestorationWithinSourceAsync(ITaskRunColdProjectRestorationLease lease,
@@ -211,8 +227,19 @@ public sealed partial class HomeColdProjectReadReconciliation : ITaskRunColdProj
         catch (Exception cause) { sources.Errors.Retain(cause); }
         try { sources.Invoke(() => { _actualNative?.RequestOriginalRetirement(); return true; }); }
         catch (Exception cause) { sources.Errors.Retain(cause); }
+        var cancellations = new List<Task>();
         foreach (var original in originals)
-            try { sources.Invoke(() => { original.CancelOriginalPending(); return true; }); }
+            try
+            {
+                sources.Invoke(() =>
+                {
+                    var actual = original.CancelOriginalPendingAsync();
+                    cancellations.Add(actual); sources.Retain(actual); return true;
+                });
+            }
+            catch (Exception cause) { sources.Errors.Retain(cause); }
+        foreach (var actual in cancellations)
+            try { await sources.Await(actual).ConfigureAwait(false); }
             catch (Exception cause) { sources.Errors.Retain(cause); }
         await sources.Settle().ConfigureAwait(false);
     }
@@ -321,9 +348,6 @@ public sealed partial class HomeColdProjectReadReconciliation : ITaskRunColdProj
         {
             await Errors.ObserveAllOriginalTasksAsync().ConfigureAwait(false);
             foreach (var cause in _protocol.Errors) Errors.Retain(cause);
-            if (primary is OperationCanceledException && Errors.OriginalTasks.Any(raw => raw.IsCanceled) &&
-                Errors.OriginalTasks.All(raw => !raw.IsFaulted) && Errors.OriginalErrors.All(cause => cause is OperationCanceledException))
-                ExceptionDispatchInfo.Capture(primary).Throw();
             if (Errors.OriginalErrors.Count != 0) throw new AggregateException("Actual Home project source/callback/raw custody failed.", Errors.OriginalErrors);
         }
     }
@@ -342,6 +366,8 @@ public sealed partial class HomeColdProjectReadReconciliation : ITaskRunColdProj
         private readonly List<(IDeveloperOriginalCurrentProjectNativeRead Read, Task Capture, Task Close)> _nativeClosed = [];
         private readonly List<Task> _finiteCalls = [];
         private CancellationTokenSource? _stop; private bool _retired; private bool _readReady; private Task? _close, _nativeValidation;
+        private readonly TaskCompletionSource<CancellationTokenSource?> _originalStopReady = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private Task? _originalStopCancellation;
         internal Task? Driver { get; private set; }
         internal IDeveloperOriginalCurrentProjectSelection Selection { get; private set; } = null!;
         private IDeveloperOriginalCurrentProjectDescriptor _descriptor = null!;
@@ -372,9 +398,36 @@ public sealed partial class HomeColdProjectReadReconciliation : ITaskRunColdProj
             owner._actualSelections?.DemandExternalOriginalCurrentProjectJoin(); owner._actualNative?.DemandExternalOriginalJoin();
         }
         public void RequestOriginalRetirement() { lock (_gate) _retired = true; }
-        internal void CancelOriginalPending()
-        { CancellationTokenSource? actual; lock (_gate) actual = _stop;
-            CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { actual?.Cancel(); return true; }); }
+        internal Task CancelOriginalPendingAsync()
+        {
+            Task actual; TaskCompletionSource? begin = null;
+            lock (_gate)
+            {
+                if (_originalStopCancellation is not null) return _originalStopCancellation;
+                // A reserved Work with no admitted preparation cannot later create a
+                // stop source after close. Accepted preparation publishes the actual
+                // source inside its acquisition callback, even if its postguard fails.
+                if (Driver is null) _originalStopReady.TrySetResult(null);
+                var sources = new Context(owner, this, body => body(), _ => { }, false);
+                begin = new(TaskCreationOptions.RunContinuationsAsynchronously);
+                actual = CancelPublishedAsync(begin.Task, sources);
+                _originalStopCancellation = actual; _finiteCalls.Add(actual); _contexts.Add(sources);
+            }
+            begin.SetResult(); return actual;
+        }
+        private async Task CancelPublishedAsync(Task begin, Context sources)
+        {
+            await begin.ConfigureAwait(false);
+            using var parent = CloudflareOriginalExecutionGuard.EnterOriginal(owner);
+            using var own = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+            try
+            {
+                var actual = await sources.Await(_originalStopReady.Task).ConfigureAwait(false);
+                sources.Physical(() => { actual?.Cancel(); return true; });
+            }
+            catch (Exception cause) { sources.Errors.Retain(cause); }
+            await sources.Settle().ConfigureAwait(false);
+        }
         internal Task<ITaskRunColdOriginalProjectInput> StartInput(Conversation conversation, ContainerDefinition container,
             string exactReference, Action<Action> scope, Action<Task> retain, CancellationToken token,
             string? expectedSha = null, string? expectedRoot = null)
@@ -434,7 +487,7 @@ public sealed partial class HomeColdProjectReadReconciliation : ITaskRunColdProj
             var sources = new Context(owner, this, scope, retain, true);
             var begin = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously); Task<T> actual;
             lock (_gate) { if (Driver is not null) throw new InvalidOperationException("One original project preparation only.");
-                if (_command is not null && (_retired || _close is not null)) throw new ObjectDisposedException("Original command READ");
+                if (_retired || _close is not null) throw new ObjectDisposedException("Original current project READ");
                 actual = RunPublishedAsync(begin.Task, sources, body, token, preparation: true); Driver = actual; _contexts.Add(sources); }
             try { sources.Publish(actual); } catch (Exception cause) { sources.Errors.Retain(cause); }
             finally { begin.SetResult(); } return actual;
@@ -468,7 +521,12 @@ public sealed partial class HomeColdProjectReadReconciliation : ITaskRunColdProj
                 {
                     DemandLive();
                     if (sources.Errors.OriginalErrors.Count != 0) throw new AggregateException(sources.Errors.OriginalErrors);
-                    if (preparation) _stop = sources.Invoke(() => CancellationTokenSource.CreateLinkedTokenSource(token));
+                    if (preparation) sources.Invoke(() =>
+                    {
+                        _stop = CancellationTokenSource.CreateLinkedTokenSource(token);
+                        _originalStopReady.TrySetResult(_stop); // Capture before a caller postguard can fail.
+                        return true;
+                    });
                     result = await body(sources).ConfigureAwait(false); DemandLive();
                 }
                 catch (Exception cause)
@@ -478,7 +536,11 @@ public sealed partial class HomeColdProjectReadReconciliation : ITaskRunColdProj
                 }
                 await sources.Settle(primary).ConfigureAwait(false); return result;
             }
-            finally { _current.Value = prior; }
+            finally
+            {
+                if (preparation) _originalStopReady.TrySetResult(null);
+                _current.Value = prior;
+            }
         }
         internal async Task<AuthenticatedResourceActor> ActorAsync(Context sources, CancellationToken token)
             => await sources.Await(sources.Invoke(() => owner._profiles.GetCurrentWithinOriginalSourceAsync(
@@ -636,7 +698,10 @@ public sealed partial class HomeColdProjectReadReconciliation : ITaskRunColdProj
             _facts.Reference, Container.Id, Hash(Container), Container.Instructions, _documentSha, _rootFingerprint, _actor);
         internal void DemandExactInput(TaskRunColdChatInput input)
         {
-            DemandLive();
+            DemandLive(); DemandExactOriginalInputValues(input);
+        }
+        private void DemandExactOriginalInputValues(TaskRunColdChatInput input)
+        {
             if (input.Conversation != Conversation || input.Conversation.ContainerId != Container.Id || input.WorkspaceRoot != Identity.CanonicalRoot ||
                 input.ProjectContext != Identity.OriginalProjectContextJson || input.ProjectInstructions != Identity.OriginalContainerInstructions ||
                 Hash(Container) != Identity.OriginalContainerSha256)
@@ -723,7 +788,8 @@ public sealed partial class HomeColdProjectReadReconciliation : ITaskRunColdProj
             await begin.ConfigureAwait(false); using var ownerPhase = CloudflareOriginalExecutionGuard.EnterOriginal(owner);
             using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
             var sources = new Context(owner, this, body => body(), _ => { }, false);
-            try { sources.Physical(() => { _stop?.Cancel(); return true; }); } catch (Exception cause) { sources.Errors.Retain(cause); }
+            try { await sources.Await(sources.Physical(CancelOriginalPendingAsync)).ConfigureAwait(false); }
+            catch (Exception cause) { sources.Errors.Retain(cause); }
             try { await ReleaseBorrowersAsync().ConfigureAwait(false); } catch (Exception cause) { sources.Errors.Retain(cause); }
             Task[] drivers; lock (_gate) drivers = (Driver is null ? Array.Empty<Task>() : [Driver]).Concat(_validations).Concat(_finiteCalls).ToArray();
             foreach (var driver in drivers) try { await sources.Await(driver).ConfigureAwait(false); } catch (Exception cause) { sources.Errors.Retain(cause); }

@@ -120,14 +120,17 @@ public sealed partial class HomeResourceOperationBroker(ResourceAuthorizationSer
 
     /// <summary>Originating host recovery for a failed dispatch admission. This request ID identifies
     /// only an already-consumed local negative outcome; it cannot reconstruct a capability or invoke an owner.</summary>
-    public async Task<HomePermissionOperationResult> RetryRejectedBeginAuditAsync(string requestId,
-        CancellationToken cancellationToken = default)
+    public Task<HomePermissionOperationResult> RetryRejectedBeginAuditAsync(string requestId,
+        CancellationToken cancellationToken = default) => RetryRejectedBeginOriginalSetupCoreAsync(requestId, cancellationToken);
+
+    private async Task<HomePermissionOperationResult> RetryRejectedBeginOriginalSetupCoreAsync(string requestId, CancellationToken cancellationToken,
+        HomeOwnershipOriginalSourceCallbacks? source = null)
     {
         if (string.IsNullOrWhiteSpace(requestId) || !_rejectedBegins.TryGetValue(requestId, out var capability))
             return new(false, "HOME_BEGIN_AUDIT_NOT_OWNED", "No failed dispatch admission is retained by this host.");
-        var result = await capability.AuditRejectedAsync(this, () => permissions.RecordExecutionAsync(requestId,
+        var result = await capability.AuditRejectedAsync(this, () => RecordOriginalSetupExecutionAsync(source, requestId,
             new(HomePermissionRequestState.Failed, "HOME_RESOURCE_BEGIN_REJECTED",
-                "Dispatch admission failed; no execution capability was issued to the owner.", []), cancellationToken), cancellationToken, HomeResourceRejectionKind.Begin).ConfigureAwait(false);
+                "Dispatch admission failed; no execution capability was issued to the owner.", []), cancellationToken), cancellationToken, HomeResourceRejectionKind.Begin, source).ConfigureAwait(false);
         if (result.Succeeded) _rejectedBegins.TryRemove(requestId, out _);
         return result;
     }
@@ -136,8 +139,11 @@ public sealed partial class HomeResourceOperationBroker(ResourceAuthorizationSer
     /// outcome. A concurrent owner claim wins or this abort wins, never both. Retry this same handle only
     /// to finish its abort audit. NOT_OWNED means no abort right; other false results or storage exceptions
     /// retain the negative handle for audit recovery and must not be treated as successful recording.</summary>
-    public async Task<HomePermissionOperationResult> AbortUnclaimedExecutionAsync(HomeResourceExecutionCapability capability,
-        CancellationToken cancellationToken = default)
+    public Task<HomePermissionOperationResult> AbortUnclaimedExecutionAsync(HomeResourceExecutionCapability capability,
+        CancellationToken cancellationToken = default) => AbortUnclaimedOriginalSetupCoreAsync(capability, cancellationToken);
+
+    private async Task<HomePermissionOperationResult> AbortUnclaimedOriginalSetupCoreAsync(HomeResourceExecutionCapability capability, CancellationToken cancellationToken,
+        HomeOwnershipOriginalSourceCallbacks? source = null)
     {
         ArgumentNullException.ThrowIfNull(capability);
         cancellationToken.ThrowIfCancellationRequested();
@@ -145,10 +151,10 @@ public sealed partial class HomeResourceOperationBroker(ResourceAuthorizationSer
             "This host cannot abort a foreign, already claimed, or differently rejected execution handle.");
         if (_executions.TryRemove(capability, out _) && !capability.MarkRejected(this, HomeResourceRejectionKind.UnclaimedAbort))
             return NotOwned();
-        var result = await capability.AuditRejectedAsync(this, () => permissions.RecordExecutionAsync(capability.RequestId,
+        var result = await capability.AuditRejectedAsync(this, () => RecordOriginalSetupExecutionAsync(source, capability.RequestId,
             new(HomePermissionRequestState.Failed, "HOME_RESOURCE_EXECUTION_ABORTED",
                 "The owning operation stopped before any resource execution claim was issued.", []), cancellationToken),
-            cancellationToken, HomeResourceRejectionKind.UnclaimedAbort).ConfigureAwait(false);
+            cancellationToken, HomeResourceRejectionKind.UnclaimedAbort, source).ConfigureAwait(false);
         return result.Code == "HOME_CLAIM_REJECTION_NOT_OWNED" ? NotOwned() : result;
     }
 
@@ -219,12 +225,18 @@ public sealed partial class HomeResourceOperationBroker(ResourceAuthorizationSer
     /// <summary>Audit-only recovery for this issuer's consumed, rejected claim. Cannot grant an owner
     /// claim, change the outcome, or overwrite an already revoked/terminal permission decision.</summary>
     public Task<HomePermissionOperationResult> RetryRejectedClaimAuditAsync(HomeResourceExecutionCapability capability,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) => RetryRejectedClaimOriginalSetupCoreAsync(capability, cancellationToken);
+
+    private Task<HomePermissionOperationResult> RetryRejectedClaimOriginalSetupCoreAsync(HomeResourceExecutionCapability capability,
+        CancellationToken cancellationToken, HomeOwnershipOriginalSourceCallbacks? source = null)
     {
         ArgumentNullException.ThrowIfNull(capability);
-        return capability.AuditRejectedAsync(this, () => permissions.RecordExecutionAsync(capability.RequestId,
-            new(HomePermissionRequestState.Failed, "HOME_RESOURCE_CLAIM_REJECTED",
-                "The resource authority could not confirm the owning operation; no owner claim was issued.", []), cancellationToken), cancellationToken);
+        var outcome = new HomeExecutionOutcome(HomePermissionRequestState.Failed, "HOME_RESOURCE_CLAIM_REJECTED",
+            "The resource authority could not confirm the owning operation; no owner claim was issued.", []);
+        return capability.AuditRejectedAsync(this, () => source is null
+            ? permissions.RecordExecutionAsync(capability.RequestId, outcome, cancellationToken)
+            : source.ReadAsync(() => permissions.RecordImportExecutionWithinOriginalSourceAsync(capability.RequestId,
+                outcome, source.Run, source.Retain, cancellationToken, source.UnexpectedCallbackSink)), cancellationToken, originalSource: source);
     }
 
     /// <summary>Records the canonical owner's observed terminal outcome after a successful claim, once.
@@ -233,8 +245,13 @@ public sealed partial class HomeResourceOperationBroker(ResourceAuthorizationSer
     /// from approval or claim. If recording fails, retain the owning result and surface audit recovery;
     /// do not repeat the owning mutation. The same exact outcome may retry audit recording idempotently.
     /// No serializable request ID can manufacture this completion right.</summary>
-    public async Task<HomePermissionOperationResult> CompleteExecutionAsync(HomeResourceExecutionCapability capability,
-        HomeExecutionOutcome outcome, CancellationToken cancellationToken = default)
+    public Task<HomePermissionOperationResult> CompleteExecutionAsync(HomeResourceExecutionCapability capability,
+        HomeExecutionOutcome outcome,
+        CancellationToken cancellationToken = default) => CompleteExecutionOriginalSetupCoreAsync(capability, outcome, cancellationToken);
+
+    private async Task<HomePermissionOperationResult> CompleteExecutionOriginalSetupCoreAsync(HomeResourceExecutionCapability capability,
+        HomeExecutionOutcome outcome, CancellationToken cancellationToken,
+        HomeOwnershipOriginalSourceCallbacks? source = null)
     {
         ArgumentNullException.ThrowIfNull(capability);
         ArgumentNullException.ThrowIfNull(outcome);
@@ -248,7 +265,7 @@ public sealed partial class HomeResourceOperationBroker(ResourceAuthorizationSer
             return new(false, "HOME_EXECUTION_OUTCOME_INVALID", "The owner outcome exceeds supported bounds.");
         cancellationToken.ThrowIfCancellationRequested();
         return await capability.CompleteAsync(this, outcome, Digest(JsonSerializer.SerializeToElement(outcome)),
-            () => permissions.RecordExecutionAsync(capability.RequestId, outcome, cancellationToken), cancellationToken).ConfigureAwait(false);
+            () => RecordOriginalSetupExecutionAsync(source, capability.RequestId, outcome, cancellationToken), cancellationToken, source).ConfigureAwait(false);
     }
 
     /// <summary>Retries only the first detached owner outcome retained by this host's claimed handle.
@@ -292,10 +309,12 @@ public sealed class HomeResourceExecutionCapability
         Volatile.Read(ref _claimState) == 1 && Volatile.Read(ref _outcome) is null;
     /// <summary>Retains this exact issuer's uncompleted claimed lifetime through an owning commit.
     /// Acquire before Home's raw lease and release after Home, before terminal audit.</summary>
-    internal async ValueTask<IAsyncDisposable?> AcquireCommitCompletionLeaseAsync(HomeResourceOperationBroker issuer, CancellationToken ct)
+    internal async ValueTask<IAsyncDisposable?> AcquireCommitCompletionLeaseAsync(HomeResourceOperationBroker issuer, CancellationToken ct,
+        HomeOwnershipOriginalSourceCallbacks? originalSource = null)
     {
         if (!IsUncompletedClaim(issuer)) return null;
-        await _completionGate.WaitAsync(ct).ConfigureAwait(false);
+        if (originalSource is null) await _completionGate.WaitAsync(ct).ConfigureAwait(false);
+        else await HomeResourceOperationBroker.WaitColdProjectBrokerGateAsync(originalSource, _completionGate, ct).ConfigureAwait(false);
         if (!IsUncompletedClaim(issuer)) { _completionGate.Release(); return null; }
         return new CommitCompletionLease(_completionGate);
     }
@@ -313,12 +332,13 @@ public sealed class HomeResourceExecutionCapability
     internal bool MarkRejected(HomeResourceOperationBroker issuer, HomeResourceRejectionKind kind = HomeResourceRejectionKind.Claim) =>
         ReferenceEquals(_issuer, issuer) && Enum.IsDefined(kind) && Interlocked.CompareExchange(ref _claimState, (int)kind, 0) == 0;
     internal async Task<HomePermissionOperationResult> AuditRejectedAsync(HomeResourceOperationBroker issuer,
-        Func<Task<HomePermissionOperationResult>> record, CancellationToken ct, HomeResourceRejectionKind kind = HomeResourceRejectionKind.Claim)
+        Func<Task<HomePermissionOperationResult>> record, CancellationToken ct, HomeResourceRejectionKind kind = HomeResourceRejectionKind.Claim, HomeOwnershipOriginalSourceCallbacks? originalSource = null)
     {
         var state = Volatile.Read(ref _claimState);
         if (!ReferenceEquals(_issuer, issuer) || !Enum.IsDefined(kind) || (state != (int)kind && state != (int)kind - 1))
             return new(false, "HOME_CLAIM_REJECTION_NOT_OWNED", "This issuer has no rejected claim to audit.");
-        await _completionGate.WaitAsync(ct).ConfigureAwait(false);
+        if (originalSource is null) await _completionGate.WaitAsync(ct).ConfigureAwait(false);
+        else await HomeResourceOperationBroker.WaitColdProjectBrokerGateAsync(originalSource, _completionGate, ct).ConfigureAwait(false);
         try
         {
             if (_completed is not null) return _completed;
@@ -326,14 +346,15 @@ public sealed class HomeResourceExecutionCapability
             if (result.Succeeded) { _completed = result; Interlocked.Exchange(ref _claimState, (int)kind - 1); }
             return result;
         }
-        finally { _completionGate.Release(); }
+        finally { if (originalSource is null) _completionGate.Release(); else originalSource.Run(() => _completionGate.Release()); }
     }
     internal async Task<HomePermissionOperationResult> CompleteAsync(HomeResourceOperationBroker issuer, HomeExecutionOutcome outcome, string outcomeDigest,
-        Func<Task<HomePermissionOperationResult>> record, CancellationToken ct)
+        Func<Task<HomePermissionOperationResult>> record, CancellationToken ct, HomeOwnershipOriginalSourceCallbacks? originalSource = null)
     {
         if (!ReferenceEquals(_issuer, issuer) || Volatile.Read(ref _claimState) <= 0)
             return new(false, "HOME_EXECUTION_COMPLETION_NOT_OWNED", "The completion requires this issuer's successfully claimed capability.");
-        await _completionGate.WaitAsync(ct).ConfigureAwait(false);
+        if (originalSource is null) await _completionGate.WaitAsync(ct).ConfigureAwait(false);
+        else await HomeResourceOperationBroker.WaitColdProjectBrokerGateAsync(originalSource, _completionGate, ct).ConfigureAwait(false);
         try
         {
             if (_outcomeDigest is not null && _outcomeDigest != outcomeDigest)
@@ -345,7 +366,7 @@ public sealed class HomeResourceExecutionCapability
             if (result.Succeeded) { _completed = result; Interlocked.Exchange(ref _claimState, 2); }
             return result;
         }
-        finally { _completionGate.Release(); }
+        finally { if (originalSource is null) _completionGate.Release(); else originalSource.Run(() => _completionGate.Release()); }
     }
     internal async Task<HomePermissionOperationResult> RetryCompletionAsync(HomeResourceOperationBroker issuer,
         Func<HomeExecutionOutcome, Task<HomePermissionOperationResult>> record, CancellationToken ct)

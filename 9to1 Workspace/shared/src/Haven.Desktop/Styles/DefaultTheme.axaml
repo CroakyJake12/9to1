@@ -109,6 +109,9 @@
     <SolidColorBrush x:Key="HavenButtonBrush" Color="#F5F5F5" />
     <SolidColorBrush x:Key="HavenButtonHoverBrush" Color="#EEEEEE" />
     <SolidColorBrush x:Key="HavenButtonPressedBrush" Color="#E0E0E0" />
+    <SolidColorBrush x:Key="HavenButtonForegroundBrush" Color="#1A1A1A" />
+    <SolidColorBrush x:Key="HavenButtonHoverForegroundBrush" Color="#1A1A1A" />
+    <SolidColorBrush x:Key="HavenButtonPressedForegroundBrush" Color="#1A1A1A" />
     <SolidColorBrush x:Key="HavenFocusBrush" Color="#8000BCD4" />
 
     <!-- Semantic error/danger borders -->
@@ -269,7 +272,7 @@
     <Setter Property="CornerRadius" Value="{DynamicResource HavenControlRadius}" />
     <Setter Property="Padding" Value="14,8" />
     <Setter Property="Background" Value="{DynamicResource HavenButtonBrush}" />
-    <Setter Property="Foreground" Value="{DynamicResource HavenTextBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource HavenButtonForegroundBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource HavenLineBrush}" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="FontSize" Value="13" />
@@ -297,6 +300,7 @@
   </Style>
   <Style Selector="Button:pressed /template/ ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource HavenButtonPressedBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource HavenButtonPressedForegroundBrush}" />
     <Setter Property="RenderTransform" Value="scale(0.98)" />
   </Style>
   <Style Selector="Button:disabled"><Setter Property="Opacity" Value="0.42" /></Style>
@@ -307,6 +311,7 @@
 
   <!-- Button variants -->
   <Style Selector="Button.chrome">
+    <Setter Property="Foreground" Value="{DynamicResource HavenTextBrush}" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="Padding" Value="8,4" />
@@ -347,12 +352,14 @@
     <Setter Property="Foreground" Value="#FFFFFFFF" />
   </Style>
   <Style Selector="Button.ghost">
+    <Setter Property="Foreground" Value="{DynamicResource HavenTextBrush}" />
     <Setter Property="MinHeight" Value="36" />
     <Setter Property="Padding" Value="12,6" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
   </Style>
   <Style Selector="Button.subtle">
+    <Setter Property="Foreground" Value="{DynamicResource HavenTextBrush}" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderBrush" Value="Transparent" />
     <Setter Property="BorderThickness" Value="1" />
@@ -362,12 +369,14 @@
     <Setter Property="BorderBrush" Value="{DynamicResource HavenLineStrongBrush}" />
   </Style>
   <Style Selector="Button.navigation">
+    <Setter Property="Foreground" Value="{DynamicResource HavenTextBrush}" />
     <Setter Property="HorizontalContentAlignment" Value="Left" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="CornerRadius" Value="10" />
   </Style>
   <Style Selector="Button.status">
+    <Setter Property="Foreground" Value="{DynamicResource HavenTextBrush}" />
     <Setter Property="MinHeight" Value="28" />
     <Setter Property="CornerRadius" Value="999" />
     <Setter Property="Padding" Value="12,4" />
@@ -376,6 +385,7 @@
     <Setter Property="FontSize" Value="11" />
   </Style>
   <Style Selector="Button.product">
+    <Setter Property="Foreground" Value="{DynamicResource HavenTextBrush}" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="FontWeight" Value="Bold" />
@@ -385,6 +395,7 @@
 
   <!-- Sidebar -->
   <Style Selector="Button.sidebar">
+    <Setter Property="Foreground" Value="{DynamicResource HavenTextBrush}" />
     <Setter Property="HorizontalContentAlignment" Value="Left" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
@@ -394,9 +405,11 @@
     <Setter Property="Margin" Value="0,1" />
   </Style>
   <Style Selector="Button.sidebarActive">
+    <Setter Property="Foreground" Value="{DynamicResource HavenTextBrush}" />
     <Setter Property="Background" Value="{DynamicResource HavenAccentSoftBrush}" />
   </Style>
   <Style Selector="Button.sidebarUtility">
+    <Setter Property="Foreground" Value="{DynamicResource HavenTextBrush}" />
     <Setter Property="HorizontalContentAlignment" Value="Left" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
@@ -406,6 +419,7 @@
     <Setter Property="CornerRadius" Value="6" />
   </Style>
   <Style Selector="Button.projectIdentity">
+    <Setter Property="Foreground" Value="{DynamicResource HavenTextBrush}" />
     <Setter Property="Background" Value="{DynamicResource HavenAccentSoftBrush}" />
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="Padding" Value="12,8" />
@@ -430,6 +444,7 @@
 
   <!-- Tabs -->
   <Style Selector="Button.workspaceTab">
+    <Setter Property="Foreground" Value="{DynamicResource HavenTextBrush}" />
     <Setter Property="Height" Value="32" />
     <Setter Property="MinHeight" Value="32" />
     <Setter Property="Padding" Value="14,5,32,5" />
@@ -442,6 +457,7 @@
     <Setter Property="Foreground" Value="{DynamicResource HavenTextBrush}" />
   </Style>
   <Style Selector="Button.tabClose">
+    <Setter Property="Foreground" Value="{DynamicResource HavenTextBrush}" />
     <Setter Property="Width" Value="24" /><Setter Property="Height" Value="24" /><Setter Property="MinHeight" Value="24" />
     <Setter Property="Margin" Value="-26,3,3,3" /><Setter Property="Padding" Value="0" /><Setter Property="CornerRadius" Value="6" />
     <Setter Property="Background" Value="Transparent" /><Setter Property="BorderThickness" Value="0" /><Setter Property="FontSize" Value="12" />
@@ -861,7 +877,7 @@
   </Style>
   <Style Selector=":is(Button).havenHeaderIcon.accent"><Setter Property="Background" Value="{DynamicResource HavenAccentPrimaryBrush}"/><Setter Property="Foreground" Value="{DynamicResource HavenAccentForegroundBrush}"/></Style>
   <Style Selector=":is(Button).havenHeaderIcon:pointerover"><Setter Property="Effect"><DropShadowEffect Color="{DynamicResource HavenAccentPrimaryGlowColor}" BlurRadius="17" Opacity="0.56"/></Setter></Style>
-  <Style Selector=":is(Button).havenLogo"><Setter Property="Width" Value="54"/><Setter Property="Height" Value="54"/><Setter Property="MinHeight" Value="54"/><Setter Property="Padding" Value="3"/><Setter Property="CornerRadius" Value="14"/><Setter Property="Background" Value="Transparent"/></Style>
+  <Style Selector=":is(Button).havenLogo"><Setter Property="Foreground" Value="{DynamicResource HavenTextBrush}"/><Setter Property="Width" Value="54"/><Setter Property="Height" Value="54"/><Setter Property="MinHeight" Value="54"/><Setter Property="Padding" Value="3"/><Setter Property="CornerRadius" Value="14"/><Setter Property="Background" Value="Transparent"/></Style>
   <Style Selector=":is(Button).havenHeaderPill">
     <Setter Property="Height" Value="42" /><Setter Property="MinHeight" Value="42" />
     <Setter Property="Padding" Value="17,0" /><Setter Property="CornerRadius" Value="21" />
@@ -1059,7 +1075,7 @@
   <Style Selector=":is(Button).havenDropdownItem.selected"><Setter Property="Background" Value="{DynamicResource HavenAccentTertiaryBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource HavenAccentSecondaryBrush}"/><Setter Property="BorderThickness" Value="1"/></Style>
   <Style Selector=":is(Button).havenDropdownItem.important"><Setter Property="Background" Value="{DynamicResource HavenAccentPrimaryBrush}"/><Setter Property="Foreground" Value="{DynamicResource HavenAccentForegroundBrush}"/></Style>
   <Style Selector=":is(Button).havenDropdownItem.negative"><Setter Property="Foreground" Value="{DynamicResource HavenDangerBrush}"/></Style>
-  <Style Selector=":is(Button).havenDropdownItem.invisible"><Setter Property="Background" Value="Transparent"/></Style>
+  <Style Selector=":is(Button).havenDropdownItem.invisible"><Setter Property="Foreground" Value="{DynamicResource HavenTextBrush}"/><Setter Property="Background" Value="Transparent"/></Style>
   <Style Selector="hui|HavenStickyDropdownHeader"><Setter Property="Background" Value="{DynamicResource HavenOverlaySurfaceBrush}"/><Setter Property="Padding" Value="14,12"/></Style>
   <Style Selector="hui|HavenContextMenu"><Setter Property="MinWidth" Value="220"/><Setter Property="Padding" Value="8"/><Setter Property="CornerRadius" Value="18"/><Setter Property="Background" Value="{DynamicResource HavenOverlaySurfaceBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource HavenBorderSubtleBrush}"/><Setter Property="BorderThickness" Value="1"/></Style>
   <Style Selector="hui|HavenMenuItem"><Setter Property="MinHeight" Value="42"/><Setter Property="Padding" Value="12,8"/><Setter Property="CornerRadius" Value="12"/><Setter Property="FontWeight" Value="SemiBold"/></Style>

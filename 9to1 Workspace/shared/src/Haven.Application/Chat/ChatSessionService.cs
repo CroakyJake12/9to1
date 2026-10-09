@@ -43,8 +43,44 @@ public sealed partial class ChatSessionService(
     TaskExecutionCoordinator? taskCoordinator = null,
     ITaskRunToolActionOwner? taskToolOwner = null,
     ITaskRunProviderContextCapture? taskProviderContextCapture = null,
-    TaskRunCloudPermissionRemediationOwner? taskCloudPermissionRemediation = null)
+    TaskRunCloudPermissionRemediationOwner? taskCloudPermissionRemediation = null,
+    IChatOriginalPersistentMemorySource? originalPersistentMemorySource = null)
 {
+    private IChatOriginalPersistentMemorySource? _originalPersistentMemorySource = originalPersistentMemorySource;
+
+    // Preserve the exact existing 26-argument CLR constructor while opting into
+    // the SAME configured scoped memory source in the new constructor.
+    public ChatSessionService(
+    IConversationRepository conversations,
+    IOllamaClient ollama,
+    CapabilityPreflightService preflight,
+    IConversationSafetyService safety,
+    WorkspaceToolRuntime workspaceTools,
+    ComputerToolRuntime computerTools,
+    BrowserToolRuntime? browserTools,
+    AutomationToolRuntime? automationTools,
+    ToolAvailabilityPlanner? toolAvailability,
+    ChatModelInventoryCache? modelInventory,
+    McpToolRuntime? mcpTools,
+    CalendarConnectionToolRuntime? calendarTools,
+    PluginToolRuntime? pluginTools,
+    IExecutionEventSink? executionEvents,
+    AutonomousRecoveryService? recovery,
+    RemediationCoordinator? remediations,
+    ModelPersonalityService? personalities,
+    ModelPermissionEvaluator? modelPermissions,
+    IDefaultProviderStore? defaultProviders,
+    CheckpointService? checkpoints,
+    IProjectInstructionSource? projectInstructionFiles,
+    IMemoryQuerySource? memorySource,
+    TaskExecutionCoordinator? taskCoordinator,
+    ITaskRunToolActionOwner? taskToolOwner,
+    ITaskRunProviderContextCapture? taskProviderContextCapture,
+    TaskRunCloudPermissionRemediationOwner? taskCloudPermissionRemediation)
+        : this(conversations, ollama, preflight, safety, workspaceTools, computerTools, browserTools, automationTools, toolAvailability, modelInventory, mcpTools, calendarTools, pluginTools, executionEvents, recovery, remediations, personalities, modelPermissions, defaultProviders, checkpoints, projectInstructionFiles, memorySource, taskCoordinator, taskToolOwner, taskProviderContextCapture, taskCloudPermissionRemediation, originalPersistentMemorySource: null)
+    { }
+
+
     // Preserve the selected 25-argument CLR constructor; adding the Ask owner is opt-in.
     public ChatSessionService(
         IConversationRepository conversations,
@@ -247,7 +283,8 @@ public sealed partial class ChatSessionService(
         IReadOnlyCollection<ToolCapability>? explicitCapabilities,
         IReadOnlyCollection<ActiveCapability>? availableCapabilities,
         ComputerUseRequest? computerUseRequest, ProviderExecutionContext? executionContext,
-        TaskRunExecutionIntent taskExecutionIntent, TaskRunInvocationCustody? originalCustody)
+        TaskRunExecutionIntent taskExecutionIntent, TaskRunInvocationCustody? originalCustody,
+        ChatOrdinaryOriginalInvocation? ordinaryOriginal = null)
     {
         if (originalCustody is not null)
         {
@@ -276,7 +313,7 @@ public sealed partial class ChatSessionService(
                 var original = SendOriginalAsync(conversation, prompt, model, effort, capabilities, agentName, agentInstructions,
                     duoMode, workspaceRoot, projectContext, projectInstructions, images, originalToken, prompts, registeredContext,
                     generationOptions, filePermission, commandPermission, browserPermission, explicitCapabilities,
-                    availableCapabilities, computerUseRequest, context, taskExecutionIntent, custody);
+                    availableCapabilities, computerUseRequest, context, taskExecutionIntent, custody, ordinaryOriginal);
                 return custody is null ? original : ObserveOriginalSendAsync(original, custody, originalToken);
             }
             return custody is null ? CreateBody(token)
@@ -391,7 +428,8 @@ public sealed partial class ChatSessionService(
         ComputerUseRequest? computerUseRequest = null,
         ProviderExecutionContext? executionContext = null,
         TaskRunExecutionIntent taskExecutionIntent = TaskRunExecutionIntent.OrdinaryConversation,
-        TaskRunInvocationCustody? originalCustody = null)
+        TaskRunInvocationCustody? originalCustody = null,
+        ChatOrdinaryOriginalInvocation? ordinaryOriginal = null)
     {
         if (!Enum.IsDefined(taskExecutionIntent)) throw new ArgumentOutOfRangeException(nameof(taskExecutionIntent));
         var canonicalIntent = taskExecutionIntent == TaskRunExecutionIntent.CanonicalAgenticTask;
@@ -399,8 +437,11 @@ public sealed partial class ChatSessionService(
             throw new InvalidOperationException("A canonical continuation requires explicit agentic-task intent.");
         if (canonicalIntent && (taskCoordinator is null || !taskCoordinator.HasAttemptAuthority || taskToolOwner is null || taskProviderContextCapture is null))
             throw new InvalidOperationException("The actual canonical task authority, typed tool owner and request context owner are unavailable.");
+        DemandOriginalPersistentMemoryRequest(generationOptions, ordinaryOriginal, originalCustody);
+        DemandOriginalAttachmentInput(generationOptions, ordinaryOriginal, originalCustody);
         CurrentCanonicalTask = null;
-        await safety.EnsureMayActAsync(conversation.Id, "chat.send", cancellationToken).ConfigureAwait(false);
+        await (ordinaryOriginal is null ? safety.EnsureMayActAsync(conversation.Id, "chat.send", cancellationToken)
+                    : ordinaryOriginal.Read(() => safety.EnsureMayActAsync(conversation.Id, "chat.send", cancellationToken), cancellationToken)).ConfigureAwait(false);
         ModelDescriptor etaModel = model;
 
         async Task<string?> EstimateEtaAsync(
@@ -417,13 +458,10 @@ public sealed partial class ChatSessionService(
                 "Return exactly one clear duration such as '8 minutes', '45 minutes', or '2 hours'. " +
                 "Do not return a range, explanation, uncertainty, or refusal.";
 
-            return await ollama.CompleteAsync(
-                new OllamaChatRequest(
-                    etaModel.Name,
-                    [new OllamaMessage("user", etaPrompt)],
-                    effort,
-                    "Return one concrete remaining-time duration and nothing else."),
-                token).ConfigureAwait(false);
+            var etaRequest = new OllamaChatRequest(etaModel.Name, [new OllamaMessage("user", etaPrompt)], effort,
+                "Return one concrete remaining-time duration and nothing else.", Options: generationOptions);
+            return await (ordinaryOriginal is null ? ollama.CompleteAsync(etaRequest, token)
+                : ordinaryOriginal.Read(() => ollama.CompleteAsync(etaRequest, token), token, eta: true)).ConfigureAwait(false);
         }
 
         var execution = new ChatExecutionTracker(
@@ -432,7 +470,8 @@ public sealed partial class ChatSessionService(
             // instead of starting an unowned provider call outside the actual attempt.
             canonicalIntent ? null : EstimateEtaAsync,
             executionContext?.ExecutionId);
-        await using var ordinaryExecution = canonicalIntent ? null : execution;
+        await using IAsyncDisposable? ordinaryExecution = canonicalIntent ? null
+            : ordinaryOriginal is null ? execution : ordinaryOriginal.OwnTracker(execution);
         if (originalCustody is not null) originalCustody.OriginalTracker = execution;
 
         TaskExecutionSnapshot? canonicalTask = null;
@@ -459,7 +498,10 @@ public sealed partial class ChatSessionService(
         async Task<ProviderExecutionContext?> ProviderContextAsync(Guid? actionId)
         {
             if (taskCoordinator is null || canonicalTask is null) return null;
-            var current = await taskCoordinator.GetAsync(canonicalTask.TaskId, cancellationToken).ConfigureAwait(false)
+            var current = (originalCustody?.OriginalProcessProducer is not null
+                ? await new OriginalMemorySourceScope(null, originalCustody).Read(
+                    () => taskCoordinator.GetAsync(canonicalTask.TaskId, cancellationToken)).ConfigureAwait(false)
+                : await taskCoordinator.GetAsync(canonicalTask.TaskId, cancellationToken).ConfigureAwait(false))
                 ?? throw new InvalidOperationException("The original canonical task was lost before dispatch.");
             if (current.ContextId != conversation.Id || current.ExecutionId != execution.OperationId)
                 throw new InvalidOperationException("A provider request cannot change the canonical task or run.");
@@ -478,8 +520,16 @@ public sealed partial class ChatSessionService(
             var bound = canonicalTask is null ? value : value with { ExecutionId = canonicalTask.ExecutionId, TaskId = canonicalTask.TaskId };
             if (originalCustody?.OriginalProcessProducer is { } producer)
                 producer.InvokeOriginalCallback(() => { executionEvents?.TryPublish(bound); });
+            else if (ordinaryOriginal is not null) ordinaryOriginal.InvokeOriginal(() => { executionEvents?.TryPublish(bound); });
             else executionEvents?.TryPublish(bound);
         }
+
+        var originalAttachmentRequest = CreateOriginalAttachmentRequest(generationOptions, conversation, prompt, ordinaryOriginal, originalCustody);
+        var originalAttachmentContext = UsesOriginalAttachmentInput(generationOptions)
+            ? await ReadOriginalAttachmentInputAsync(generationOptions, originalAttachmentRequest,
+                await ProviderContextAsync(null).ConfigureAwait(false), ordinaryOriginal, originalCustody, cancellationToken).ConfigureAwait(false)
+            : null;
+        var originalWirePrompt = OriginalAttachmentUserPrompt(prompt, originalAttachmentContext);
 
         var promptActionId = Guid.NewGuid();
         PublishBoundEvent(new ExecutionEvent(
@@ -512,6 +562,7 @@ public sealed partial class ChatSessionService(
             CurrentExecution = snapshot;
             if (originalCustody?.OriginalProcessProducer is { } producer)
                 producer.InvokeOriginalCallback(() => ExecutionChanged?.Invoke(snapshot));
+            else if (ordinaryOriginal is not null) ordinaryOriginal.InvokeOriginal(() => ExecutionChanged?.Invoke(snapshot));
             else ExecutionChanged?.Invoke(snapshot);
             if (executionEvents is null) return;
             for (; publishedLogCount < snapshot.Log.Count; publishedLogCount++)
@@ -581,7 +632,9 @@ public sealed partial class ChatSessionService(
             if (!conversation.IsTemporary)
             {
                 var acceptedConversation = conversation with { UpdatedAt = now };
-                var actualConversationWrite = conversations.UpsertConversationAsync(acceptedConversation, cancellationToken);
+                var actualConversationWrite = ordinaryOriginal is null
+                    ? conversations.UpsertConversationAsync(acceptedConversation, cancellationToken)
+                    : ordinaryOriginal.Write(() => conversations.UpsertConversationAsync(acceptedConversation, cancellationToken));
                 if (originalCustody is not null)
                 {
                     originalCustody.OriginalPersistedConversation = acceptedConversation;
@@ -591,7 +644,9 @@ public sealed partial class ChatSessionService(
                 try { await actualConversationWrite.ConfigureAwait(false); }
                 catch (Exception failure) when (originalCustody is not null)
                 { originalCustody.Retain(failure, actualConversationWrite); throw; }
-                var actualMessageWrite = conversations.AddMessageAsync(userMessage, cancellationToken);
+                var actualMessageWrite = ordinaryOriginal is null
+                    ? conversations.AddMessageAsync(userMessage, cancellationToken)
+                    : ordinaryOriginal.Write(() => conversations.AddMessageAsync(userMessage, cancellationToken));
                 if (originalCustody is not null)
                 {
                     originalCustody.OriginalUserMessageWrite = actualMessageWrite;
@@ -600,6 +655,7 @@ public sealed partial class ChatSessionService(
                 try { await actualMessageWrite.ConfigureAwait(false); }
                 catch (Exception failure) when (originalCustody is not null)
                 { originalCustody.Retain(failure, actualMessageWrite); throw; }
+                RecordOriginalAttachmentAcceptance(originalAttachmentRequest, userMessage, actualConversationWrite, actualMessageWrite);
             }
         }
 
@@ -622,7 +678,8 @@ public sealed partial class ChatSessionService(
                 null,
                 DateTimeOffset.UtcNow);
             if (!conversation.IsTemporary)
-                await conversations.AddMessageAsync(availabilityMessage, cancellationToken).ConfigureAwait(false);
+                await (ordinaryOriginal is null ? conversations.AddMessageAsync(availabilityMessage, cancellationToken)
+                    : ordinaryOriginal.Write(() => conversations.AddMessageAsync(availabilityMessage, cancellationToken))).ConfigureAwait(false);
             execution.Complete();
             execution.Changed -= PublishExecution;
             yield return ChatStreamEvent.AssistantCompleted(availabilityMessage);
@@ -630,10 +687,17 @@ public sealed partial class ChatSessionService(
         }
 
         execution.Update(ChatExecutionStage.LoadingModel, "Loading Model");
-        await safety.EnsureMayActAsync(conversation.Id, "chat.model-discovery", cancellationToken).ConfigureAwait(false);
-        var installed = await _modelInventory.GetAsync(
-            forceRefresh: false,
-            cancellationToken: cancellationToken).ConfigureAwait(false);
+        await (ordinaryOriginal is null ? safety.EnsureMayActAsync(conversation.Id, "chat.model-discovery", cancellationToken)
+                    : ordinaryOriginal.Read(() => safety.EnsureMayActAsync(conversation.Id, "chat.model-discovery", cancellationToken), cancellationToken)).ConfigureAwait(false);
+        // A constrained original request uses its SAME selected descriptor here. Global
+        // inventory and compatibility substitution would run outside its restrictions.
+        // The existing restricted provider router owns actual catalogue/dispatch/fallback
+        // admission; this descriptor is not an availability or authorization grant.
+        var constrainedSelection = generationOptions?.RequestedRoutingConstraints is not null;
+        IReadOnlyList<ModelDescriptor> installed = constrainedSelection
+            ? [model]
+            : await (ordinaryOriginal is null ? _modelInventory.GetAsync(forceRefresh: false, cancellationToken: cancellationToken)
+                : ordinaryOriginal.Read(() => _modelInventory.GetAsync(forceRefresh: false, cancellationToken: cancellationToken), cancellationToken)).ConfigureAwait(false);
 
         execution.Update(
             ChatExecutionStage.SelectingCapabilities,
@@ -661,11 +725,9 @@ public sealed partial class ChatSessionService(
             requiredCapabilities.Remove(ToolCapability.Streaming);
         }
 
-        var turnModel = ChatModelFallbackSelector.Select(
-                model,
-                installed,
-                requiredCapabilities)
-            ?? model;
+        var turnModel = constrainedSelection
+            ? model
+            : ChatModelFallbackSelector.Select(model, installed, requiredCapabilities) ?? model;
         etaModel = turnModel;
         ProviderModelDescriptor? effectivePermissionModel = null;
 
@@ -673,15 +735,21 @@ public sealed partial class ChatSessionService(
         var memoryReferences = PersonalityLevel.Moderate;
         if (personalities is not null)
         {
-            var effectivePersonality = await personalities.ResolveEffectiveAsync(turnModel.Name, cancellationToken).ConfigureAwait(false);
+            var effectivePersonality = await (ordinaryOriginal is null ? personalities.ResolveEffectiveAsync(turnModel.Name, cancellationToken)
+                : ordinaryOriginal.Read(() => personalities.ResolveEffectiveAsync(turnModel.Name, cancellationToken), cancellationToken)).ConfigureAwait(false);
             personalityDirective = ModelPersonalityPrompt.Describe(effectivePersonality);
             memoryReferences = effectivePersonality.MemoryReferences;
         }
 
         IReadOnlyList<KnowledgeRecord> selectedPersistentMemory = [];
-        if (memorySource is not null)
+        if (generationOptions?.RequestedContextConstraints?.AllowPersistentMemoryRead != false &&
+            (UsesOriginalPersistentMemory(generationOptions) || memorySource is not null))
         {
-            var remembered = await memorySource.GetActiveLearnMeAsync(MemoryInjection.MaximumRecords, cancellationToken).ConfigureAwait(false);
+            var remembered = UsesOriginalPersistentMemory(generationOptions)
+                ? await ReadOriginalPersistentMemoryAsync(generationOptions!, conversation,
+                    await ProviderContextAsync(null).ConfigureAwait(false), ordinaryOriginal, originalCustody, cancellationToken).ConfigureAwait(false)
+                : await (ordinaryOriginal is null ? memorySource!.GetActiveLearnMeAsync(MemoryInjection.MaximumRecords, cancellationToken)
+                    : ordinaryOriginal.Read(() => memorySource!.GetActiveLearnMeAsync(MemoryInjection.MaximumRecords, cancellationToken), cancellationToken)).ConfigureAwait(false);
             var selectedMemories = MemoryInjection.SelectForLevel(memoryReferences, remembered);
             if (MemoryInjection.ShouldInclude(memoryReferences, selectedMemories.Count))
             {
@@ -699,7 +767,8 @@ public sealed partial class ChatSessionService(
         string? providerDefaultsDirective = null;
         if (defaultProviders is not null)
         {
-            var assignments = await defaultProviders.GetAllAsync(cancellationToken).ConfigureAwait(false);
+            var assignments = await (ordinaryOriginal is null ? defaultProviders.GetAllAsync(cancellationToken)
+                : ordinaryOriginal.Read(() => defaultProviders.GetAllAsync(cancellationToken), cancellationToken)).ConfigureAwait(false);
             providerDefaultsDirective = DefaultProviderDirectives.Describe(assignments);
         }
 
@@ -723,8 +792,10 @@ public sealed partial class ChatSessionService(
         var effectiveProjectInstructions = string.Join("\n\n",
             new[] { projectInstructions, discoveredAgentInstructions }.Where(item => !string.IsNullOrWhiteSpace(item)));
 
-        var computerPassCandidate = computerTools.CreatePass(computerUseRequest);
-        using var ordinaryComputerPass = canonicalIntent ? null : computerPassCandidate;
+        var computerPassCandidate = ordinaryOriginal is null ? computerTools.CreatePass(computerUseRequest)
+            : ordinaryOriginal.CreateResource(() => computerTools.CreatePass(computerUseRequest));
+        using IDisposable? ordinaryComputerPass = canonicalIntent ? null
+            : ordinaryOriginal is null ? computerPassCandidate : ordinaryOriginal.OwnResource(computerPassCandidate);
         if (originalCustody is not null) originalCustody.OriginalResources.Add(computerPassCandidate);
         var selectedRegisteredCapabilities = FilterCapabilitiesForTurn(
                 availableCapabilities ?? capabilities,
@@ -734,7 +805,8 @@ public sealed partial class ChatSessionService(
             .ToArray();
         var mcpDefinitions = mcpTools is null
             ? []
-            : await mcpTools.GetDefinitionsAsync(selectedRegisteredCapabilities, cancellationToken).ConfigureAwait(false);
+            : await (ordinaryOriginal is null ? mcpTools.GetDefinitionsAsync(selectedRegisteredCapabilities, cancellationToken)
+                : ordinaryOriginal.Read(() => mcpTools.GetDefinitionsAsync(selectedRegisteredCapabilities, cancellationToken), cancellationToken)).ConfigureAwait(false);
         Action<Action>? originalCloudflareCallerCallback = null;
         if (canonicalIntent && taskToolOwner is CanonicalWorkspaceCloudflareToolActionOwner originalCloudflareCatalogueOwner)
         {
@@ -770,10 +842,12 @@ public sealed partial class ChatSessionService(
                 throw;
             }
         }
-        var pluginBindings = pluginTools?.GetBindings(selectedRegisteredCapabilities) ?? [];
+        var pluginBindings = ordinaryOriginal is null ? pluginTools?.GetBindings(selectedRegisteredCapabilities) ?? []
+            : ordinaryOriginal.InvokeOriginal(() => pluginTools?.GetBindings(selectedRegisteredCapabilities) ?? []);
         var calendarDefinitions = calendarTools is null
             ? []
-            : await calendarTools.GetDefinitionsAsync(selectedRegisteredCapabilities, cancellationToken).ConfigureAwait(false);
+            : await (ordinaryOriginal is null ? calendarTools.GetDefinitionsAsync(selectedRegisteredCapabilities, cancellationToken)
+                : ordinaryOriginal.Read(() => calendarTools.GetDefinitionsAsync(selectedRegisteredCapabilities, cancellationToken), cancellationToken)).ConfigureAwait(false);
         var availabilityPlan = CreateAvailabilityPlan(
             conversation.Mode,
             workspaceRoot,
@@ -805,7 +879,7 @@ public sealed partial class ChatSessionService(
             yield break;
         }
 
-        var toolDefinitions = needsTools
+        var toolDefinitions = RestrictOriginalRequestToolDefinitions(needsTools
             ? modelPlan.Definitions
                 .Where(definition => IsToolSelectedForTurn(
                     modelPlan,
@@ -814,7 +888,7 @@ public sealed partial class ChatSessionService(
                 .Where(definition => !canonicalIntent || modelPlan.TryGetRuntime(definition.Name, out var runtime)
                     && taskToolOwner!.SupportsCanonicalInvocation(runtime, definition.Name))
                 .ToArray()
-            : [];
+            : [], generationOptions);
 
         var computerPass = toolDefinitions.Any(definition =>
                 modelPlan.TryGetRuntime(definition.Name, out var runtime) &&
@@ -822,11 +896,12 @@ public sealed partial class ChatSessionService(
             ? computerPassCandidate
             : null;
         var canUseTools = toolDefinitions.Length > 0;
+        if (ordinaryOriginal is not null && canUseTools)
+            throw new InvalidOperationException("This plain ordinary source does not issue canonical tool authority.");
 
         execution.Update(ChatExecutionStage.LoadingContext, "Loading Context");
-        var history = await conversations.GetContextMessagesAsync(
-            conversation.Id,
-            cancellationToken).ConfigureAwait(false);
+        var history = await (ordinaryOriginal is null ? conversations.GetContextMessagesAsync(conversation.Id, cancellationToken)
+            : ordinaryOriginal.Read(() => conversations.GetContextMessagesAsync(conversation.Id, cancellationToken), cancellationToken)).ConfigureAwait(false);
 
         var contextBudget = (int)Math.Clamp(
             (long)(generationOptions?.ContextLimit ?? 32768) * 4L,
@@ -844,11 +919,11 @@ public sealed partial class ChatSessionService(
             requestMessages[^1].Role != "user" ||
             requestMessages[^1].Content != prompt)
         {
-            requestMessages.Add(new OllamaMessage("user", prompt, images));
+            requestMessages.Add(new OllamaMessage("user", originalWirePrompt, images));
         }
-        else if (images is { Count: > 0 })
+        else if (images is { Count: > 0 } || originalAttachmentContext is not null)
         {
-            requestMessages[^1] = new OllamaMessage("user", prompt, images);
+            requestMessages[^1] = new OllamaMessage("user", originalWirePrompt, images);
         }
 
         var system = BuildSystemPrompt(
@@ -869,10 +944,16 @@ public sealed partial class ChatSessionService(
             if (originalConversation.Id != conversation.Id)
                 throw new InvalidOperationException("The context source returned another conversation.");
             return new TaskRunContextInventory(originalConversation, originalSelectedHistory, selectedPersistentMemory,
-                [], projectContext, effectiveProjectInstructions, registeredContext, images, workspaceRoot);
+                [], projectContext, effectiveProjectInstructions, registeredContext, images, workspaceRoot)
+            { OriginalAttachmentLineage = generationOptions?.RequestedOriginalAttachmentLineage,
+              OriginalAttachmentInvocation = CaptureOriginalAttachmentInvocation(originalAttachmentRequest) };
         }
         async ValueTask CaptureOriginalChatAsync(OllamaChatRequest request, TaskRunContextInventory? inventory, CancellationToken token)
         {
+            await ValidateOriginalPersistentMemoryAsync(generationOptions, conversation, request.ExecutionContext,
+                ordinaryOriginal, originalCustody, token).ConfigureAwait(false);
+            await ValidateOriginalAttachmentInputAsync(generationOptions, originalAttachmentRequest, request.ExecutionContext,
+                ordinaryOriginal, originalCustody, token).ConfigureAwait(false);
             if (!canonicalIntent) return;
             var context = request.ExecutionContext ?? throw new InvalidOperationException("The original canonical request has no task observation.");
             var current = canonicalTask ?? throw new InvalidOperationException("The canonical task disappeared before context capture.");
@@ -884,6 +965,10 @@ public sealed partial class ChatSessionService(
                 originalCapture = taskProviderContextCapture!.CaptureOriginalAsync(current, request,
                     inventory ?? throw new InvalidOperationException("The actual context selection is unavailable."), token).AsTask();
                 await originalCapture.ConfigureAwait(false);
+                await ValidateOriginalPersistentMemoryAsync(generationOptions, conversation, request.ExecutionContext,
+                    ordinaryOriginal, originalCustody, token).ConfigureAwait(false);
+                await ValidateOriginalAttachmentInputAsync(generationOptions, originalAttachmentRequest, request.ExecutionContext,
+                    ordinaryOriginal, originalCustody, token).ConfigureAwait(false);
             }
             catch (Exception captureFailure)
             {
@@ -893,6 +978,10 @@ public sealed partial class ChatSessionService(
         }
         async ValueTask CaptureOriginalToolsAsync(OllamaToolRequest request, TaskRunContextInventory? inventory, CancellationToken token)
         {
+            await ValidateOriginalPersistentMemoryAsync(generationOptions, conversation, request.ExecutionContext,
+                ordinaryOriginal, originalCustody, token).ConfigureAwait(false);
+            await ValidateOriginalAttachmentInputAsync(generationOptions, originalAttachmentRequest, request.ExecutionContext,
+                ordinaryOriginal, originalCustody, token).ConfigureAwait(false);
             if (!canonicalIntent) return;
             var context = request.ExecutionContext ?? throw new InvalidOperationException("The original canonical request has no task observation.");
             var current = canonicalTask ?? throw new InvalidOperationException("The canonical task disappeared before context capture.");
@@ -904,6 +993,10 @@ public sealed partial class ChatSessionService(
                 originalCapture = taskProviderContextCapture!.CaptureOriginalAsync(current, request,
                     inventory ?? throw new InvalidOperationException("The actual context selection is unavailable."), token).AsTask();
                 await originalCapture.ConfigureAwait(false);
+                await ValidateOriginalPersistentMemoryAsync(generationOptions, conversation, request.ExecutionContext,
+                    ordinaryOriginal, originalCustody, token).ConfigureAwait(false);
+                await ValidateOriginalAttachmentInputAsync(generationOptions, originalAttachmentRequest, request.ExecutionContext,
+                    ordinaryOriginal, originalCustody, token).ConfigureAwait(false);
             }
             catch (Exception captureFailure)
             {
@@ -1027,7 +1120,23 @@ public sealed partial class ChatSessionService(
 
             async Task<WorkspaceToolResult> ExecuteToolAsync(OllamaToolCall call)
             {
-                await safety.EnsureMayActAsync(conversation.Id, $"chat.tool.{call.Name}", cancellationToken).ConfigureAwait(false);
+                // A constrained request offers only its fresh maintained intersection.
+                // A provider-returned name cannot bypass that selection through the
+                // broader runtime plan, including bridges/bootstrap/recovery paths.
+                if (generationOptions?.RequestedToolSelectionConstraints is { } requestedTools &&
+                    (!requestedTools.Allows(call.Name) || !toolDefinitions.Any(definition =>
+                        definition.Name.Equals(call.Name, StringComparison.Ordinal))))
+                {
+                    var deniedAt = DateTimeOffset.UtcNow;
+                    const string detail = "The original request did not select this currently offered tool.";
+                    return new WorkspaceToolResult(new ToolActivity(Guid.NewGuid(), call.Name.Replace('_', ' '),
+                        detail, false, TimeSpan.Zero, deniedAt)
+                        { InvocationEvidence = Array.AsReadOnly(new[] { new ToolInvocationEvidence(Guid.NewGuid(),
+                            call.Name, null, ToolInvocationObservationStatus.DeniedBeforeDispatch, null, deniedAt, deniedAt,
+                            ReportedFailureCode: "REQUEST_TOOL_NOT_SELECTED") }) }, "Tool error: " + detail);
+                }
+                await (ordinaryOriginal is null ? safety.EnsureMayActAsync(conversation.Id, $"chat.tool.{call.Name}", cancellationToken)
+                    : ordinaryOriginal.Read(() => safety.EnsureMayActAsync(conversation.Id, $"chat.tool.{call.Name}", cancellationToken), cancellationToken)).ConfigureAwait(false);
                 var toolActionId = Guid.NewGuid();
                 var toolStartedAt = DateTimeOffset.UtcNow;
                 var actionParentId = activeActionId ?? parentActionId;
@@ -1173,7 +1282,8 @@ public sealed partial class ChatSessionService(
                     {
                         automaticRetryActionId = Guid.NewGuid();
                         automaticRetryStartedAt = DateTimeOffset.UtcNow;
-                        await safety.EnsureMayActAsync(conversation.Id, $"chat.tool.retry.{call.Name}", cancellationToken).ConfigureAwait(false);
+                        await (ordinaryOriginal is null ? safety.EnsureMayActAsync(conversation.Id, $"chat.tool.retry.{call.Name}", cancellationToken)
+                    : ordinaryOriginal.Read(() => safety.EnsureMayActAsync(conversation.Id, $"chat.tool.retry.{call.Name}", cancellationToken), cancellationToken)).ConfigureAwait(false);
                         automaticRetryResult = await ObserveRuntimeAsync(retryRuntime, commandPermission, cancellationToken, automaticRetryActionId.Value, toolActionId).ConfigureAwait(false);
                         automaticRetryEndedAt = DateTimeOffset.UtcNow;
                         result = automaticRetryResult;
@@ -1207,7 +1317,8 @@ public sealed partial class ChatSessionService(
                         {
                             continuation = async (resolution, token) =>
                             {
-                                await safety.EnsureMayActAsync(conversation.Id, $"chat.tool.resume.{call.Name}", token).ConfigureAwait(false);
+                                await (ordinaryOriginal is null ? safety.EnsureMayActAsync(conversation.Id, $"chat.tool.resume.{call.Name}", token)
+                    : ordinaryOriginal.Read(() => safety.EnsureMayActAsync(conversation.Id, $"chat.tool.resume.{call.Name}", token), token)).ConfigureAwait(false);
                                 var retryPermission = resolution.Approved ? PermissionMode.FullAccess : commandPermission;
                                 var retryResult = await ObserveRuntimeAsync(resumableRuntime, retryPermission, token, Guid.NewGuid(), toolActionId).ConfigureAwait(false);
                                 return new RemediationContinuationResult(
@@ -1300,7 +1411,8 @@ public sealed partial class ChatSessionService(
                 TaskRunOriginalResponseOperation? originalResponse = null;
                 try
                 {
-                    await safety.EnsureMayActAsync(conversation.Id, "chat.model-tool-turn", cancellationToken).ConfigureAwait(false);
+                    await (ordinaryOriginal is null ? safety.EnsureMayActAsync(conversation.Id, "chat.model-tool-turn", cancellationToken)
+                    : ordinaryOriginal.Read(() => safety.EnsureMayActAsync(conversation.Id, "chat.model-tool-turn", cancellationToken), cancellationToken)).ConfigureAwait(false);
                     var actualInventory = canonicalIntent ? await CaptureInventoryAsync(cancellationToken).ConfigureAwait(false) : null;
                     originalResponse = canonicalIntent ? ReserveOriginalChatResponse(originalCustody!, parentActionId) : null;
                     var originalRequest = new OllamaToolRequest(
@@ -1467,7 +1579,8 @@ public sealed partial class ChatSessionService(
         {
             var firstChunk = true;
             var thinkingBuffer = new StringBuilder();
-            await safety.EnsureMayActAsync(conversation.Id, "chat.model-stream", cancellationToken).ConfigureAwait(false);
+            await (ordinaryOriginal is null ? safety.EnsureMayActAsync(conversation.Id, "chat.model-stream", cancellationToken)
+                    : ordinaryOriginal.Read(() => safety.EnsureMayActAsync(conversation.Id, "chat.model-stream", cancellationToken), cancellationToken)).ConfigureAwait(false);
             var actualInventory = canonicalIntent ? await CaptureInventoryAsync(cancellationToken).ConfigureAwait(false) : null;
             var originalResponse = canonicalIntent ? ReserveOriginalChatResponse(originalCustody!, parentActionId) : null;
             var originalRequest = new OllamaChatRequest(turnModel.Name, requestMessages, effort, system, Options: generationOptions)
@@ -1475,7 +1588,9 @@ public sealed partial class ChatSessionService(
             if (!canonicalIntent)
             {
                 await CaptureOriginalChatAsync(originalRequest, actualInventory, cancellationToken).ConfigureAwait(false);
-                await foreach (var chunk in ollama.StreamChatAsync(originalRequest, cancellationToken).ConfigureAwait(false))
+                var providerStream = ordinaryOriginal is null ? ollama.StreamChatAsync(originalRequest, cancellationToken)
+                    : ordinaryOriginal.ProviderStream(() => ollama.StreamChatAsync(originalRequest, cancellationToken));
+                await foreach (var chunk in providerStream.ConfigureAwait(false))
                 {
                     if (firstChunk)
                     {
@@ -1484,7 +1599,8 @@ public sealed partial class ChatSessionService(
                     }
 
                     // Detect thinking tokens (prefixed with \x00T:)
-                    await safety.EnsureMayActAsync(conversation.Id, "chat.model-stream-chunk", cancellationToken).ConfigureAwait(false);
+                    await (ordinaryOriginal is null ? safety.EnsureMayActAsync(conversation.Id, "chat.model-stream-chunk", cancellationToken)
+                    : ordinaryOriginal.Read(() => safety.EnsureMayActAsync(conversation.Id, "chat.model-stream-chunk", cancellationToken), cancellationToken)).ConfigureAwait(false);
                     if (chunk.StartsWith("\x00T:"))
                     {
                         var thinkingContent = chunk[3..];
@@ -1571,7 +1687,8 @@ public sealed partial class ChatSessionService(
                         }
 
                         // Detect thinking tokens (prefixed with \x00T:)
-                        await safety.EnsureMayActAsync(conversation.Id, "chat.model-stream-chunk", cancellationToken).ConfigureAwait(false);
+                        await (ordinaryOriginal is null ? safety.EnsureMayActAsync(conversation.Id, "chat.model-stream-chunk", cancellationToken)
+                    : ordinaryOriginal.Read(() => safety.EnsureMayActAsync(conversation.Id, "chat.model-stream-chunk", cancellationToken), cancellationToken)).ConfigureAwait(false);
                         if (chunk.StartsWith("\x00T:"))
                         {
                             var thinkingContent = chunk[3..];
@@ -1619,11 +1736,13 @@ public sealed partial class ChatSessionService(
             }
         }
 
-        await safety.EnsureMayActAsync(conversation.Id, "chat.complete", cancellationToken).ConfigureAwait(false);
+        await (ordinaryOriginal is null ? safety.EnsureMayActAsync(conversation.Id, "chat.complete", cancellationToken)
+                    : ordinaryOriginal.Read(() => safety.EnsureMayActAsync(conversation.Id, "chat.complete", cancellationToken), cancellationToken)).ConfigureAwait(false);
         var assistantMetadata = toolActivities.Count == 0 ? null : JsonSerializer.Serialize(new { toolActivities });
         var assistant = new ChatMessage(assistantId, conversation.Id, MessageRole.Assistant, buffer.ToString(), agentName, turnModel.Name, assistantMetadata, DateTimeOffset.UtcNow);
         if (!conversation.IsTemporary)
-            await conversations.AddMessageAsync(assistant, cancellationToken).ConfigureAwait(false);
+            await (ordinaryOriginal is null ? conversations.AddMessageAsync(assistant, cancellationToken)
+                    : ordinaryOriginal.Write(() => conversations.AddMessageAsync(assistant, cancellationToken))).ConfigureAwait(false);
         if (taskCoordinator is not null && canonicalTask?.OwnerBinding is not null)
         {
             var current = await taskCoordinator.GetAsync(canonicalTask.TaskId, cancellationToken).ConfigureAwait(false)

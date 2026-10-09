@@ -136,7 +136,7 @@ internal static class MotionProjectWorkflowTest
         }
         finally
         {
-            Directory.Delete(directory.FullName, recursive: true);
+            // Retain generated fixture evidence; the current implementation lane forbids cleanup.
         }
     }
 

@@ -131,15 +131,20 @@ public sealed partial class HomeResourceOperationBroker
 
     /// <summary>Retires only unsubmitted/known prepublication denial or exact observed terminal metadata.
     /// This acknowledges no audit and never cancels an unknown/pending/approved/executing request.</summary>
-    public async Task<bool> RetirePreparedReviewAsync(HomeResourcePreparedReview prepared,
-        CancellationToken cancellationToken = default)
+    public Task<bool> RetirePreparedReviewAsync(HomeResourcePreparedReview prepared,
+        CancellationToken cancellationToken = default) => RetirePreparedReviewOriginalSetupCoreAsync(prepared, cancellationToken);
+
+    private async Task<bool> RetirePreparedReviewOriginalSetupCoreAsync(HomeResourcePreparedReview prepared,
+        CancellationToken cancellationToken, HomeOwnershipOriginalSourceCallbacks? source = null)
     {
         RequirePrepared(prepared);
-        await prepared.Gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        if (source is null) await prepared.Gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        else await WaitColdProjectBrokerGateAsync(source, prepared.Gate, cancellationToken).ConfigureAwait(false);
         try
         {
             RequirePrepared(prepared);
-            var observed = await ObservePreparedCoreAsync(prepared, cancellationToken).ConfigureAwait(false);
+            var observed = source is null ? await ObservePreparedCoreAsync(prepared, cancellationToken).ConfigureAwait(false)
+                : await ObserveColdProjectPreparedAsync(source, prepared, cancellationToken, originalPermissionSources: true).ConfigureAwait(false);
             var terminal = observed.Request is { } request && Enum.IsDefined(request.State) &&
                 request.State is not (HomePermissionRequestState.PendingApproval or HomePermissionRequestState.Approved
                     or HomePermissionRequestState.Executing);
@@ -149,7 +154,7 @@ public sealed partial class HomeResourceOperationBroker
             if (prepared.BoundOnce) _bindings.TryRemove(prepared.RequestId, out _);
             return true;
         }
-        finally { prepared.Gate.Release(); }
+        finally { if (source is null) prepared.Gate.Release(); else source.Run(() => prepared.Gate.Release()); }
     }
 
     private async Task<HomePreparedReviewObservation> ObservePreparedCoreAsync(HomeResourcePreparedReview prepared, CancellationToken ct)

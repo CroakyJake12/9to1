@@ -16,7 +16,7 @@ internal static class FilesStatePathLocks
 /// Small crash-conscious state store for Files-owned durable metadata. The envelope is versioned;
 /// unknown versions are rejected instead of being interpreted as the current shape.
 /// </summary>
-public sealed class VersionedJsonStateStore<TState> where TState : class
+public sealed partial class VersionedJsonStateStore<TState> where TState : class
 {
 	private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
 	private readonly string _path;

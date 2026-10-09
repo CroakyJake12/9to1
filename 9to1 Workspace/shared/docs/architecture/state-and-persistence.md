@@ -25,6 +25,11 @@ Agentic recovery data is also durable SQLite (migration 23):
   `UndoLastActionAsync` separately reverses only the most recent mutation.
   Recovery works in non-Git directories. Owned by `CheckpointRepository`.
 
+Restore plans use the same platform path identity as the owning workspace tools:
+case-insensitive ordinal comparison on Windows and ordinal comparison elsewhere.
+Distinct Linux paths such as `src/a.cs` and `src/A.cs` retain separate original
+before-content; Windows case aliases retain one earliest mutation.
+
 ## 2. User preferences — JSON files
 
 | Store | File | Contents |

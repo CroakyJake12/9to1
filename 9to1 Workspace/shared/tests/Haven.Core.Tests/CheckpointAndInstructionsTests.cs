@@ -214,6 +214,74 @@ public sealed class CheckpointServiceTests
             throw new AggregateException("Checkpoint fixture assertion or owned cleanup failed.", new[] { primary }.OfType<Exception>().Concat(cleanup));
     }
 
+    [Fact]
+    public async Task FullCheckpointRestoreUsesPhysicalWorkspacePlatformPathIdentity()
+    {
+        var paths = new CheckpointTestPaths();
+        var database = new SqliteDatabase(paths);
+        Microsoft.Data.Sqlite.SqliteConnection? poolHandle = null;
+        OriginalFileSource? source = null;
+        Exception? primary = null; var cleanup = new List<Exception>();
+        try
+        {
+            poolHandle = await database.OpenAsync(CancellationToken.None);
+            await database.InitializeAsync(CancellationToken.None);
+            var root = Path.Combine(paths.DataDirectory, "workspace");
+            Directory.CreateDirectory(root);
+            var physical = new WorkspaceToolService();
+            await physical.WriteTextAtomicAsync(root, "src/a.cs", "original lower", CancellationToken.None);
+            if (!OperatingSystem.IsWindows())
+                await physical.WriteTextAtomicAsync(root, "src/A.cs", "original upper", CancellationToken.None);
+            var history = new WorkspaceStateRepository(database);
+            var repository = new SqliteCheckpointRepository(database);
+            source = new OriginalFileSource(physical);
+            var service = new CheckpointService(repository, new WorkspaceCheckpointRestorer(source));
+            var checkpoint = await service.EnsureBeforeMutationAsync(Guid.NewGuid(), null, null, root,
+                CheckpointMode.BeforeFileChanges, CancellationToken.None);
+            Assert.NotNull(checkpoint);
+            async Task Edit(string relativePath, string after)
+            {
+                var before = await physical.ReadTextAsync(root, relativePath, CancellationToken.None);
+                await history.AddVersionAsync(new(Guid.NewGuid(), null, null, root, relativePath,
+                    WorkspaceVersionKind.Edit, before, after, "case identity checkpoint mutation", 0, 0,
+                    DateTimeOffset.UtcNow), CancellationToken.None);
+                await physical.WriteTextAtomicAsync(root, relativePath, after, CancellationToken.None);
+            }
+            await Edit("src/a.cs", "edited lower");
+            await Edit("src/A.cs", "edited upper");
+            await Edit("src/a.cs", "edited lower again");
+
+            var plan = await service.PlanRestoreAsync(checkpoint!.Id, CancellationToken.None);
+            Assert.Equal(OperatingSystem.IsWindows() ? 1 : 2, plan.PathToBeforeContent.Count);
+            Assert.Equal("original lower", plan.PathToBeforeContent["src/a.cs"]);
+            Assert.Equal(OperatingSystem.IsWindows() ? "original lower" : "original upper",
+                plan.PathToBeforeContent["src/A.cs"]);
+            var restored = await service.RestoreCheckpointAsync(checkpoint.Id, CancellationToken.None);
+
+            Assert.Equal(OperatingSystem.IsWindows() ? 1 : 2, restored.Count);
+            Assert.Equal("original lower", await physical.ReadTextAsync(root, "src/a.cs", CancellationToken.None));
+            Assert.Equal(OperatingSystem.IsWindows() ? "original lower" : "original upper",
+                await physical.ReadTextAsync(root, "src/A.cs", CancellationToken.None));
+            Assert.Equal(restored.Count, source.OriginalWrites.Count);
+            Assert.All(source.OriginalWrites, actual => Assert.True(actual.IsCompletedSuccessfully));
+            Assert.False(Directory.Exists(Path.Combine(root, ".git")));
+        }
+        catch (Exception error) { primary = error; }
+        finally
+        {
+            foreach (var actual in source?.OriginalWrites.ToArray() ?? [])
+                try { await actual; } catch (Exception error) { cleanup.Add(actual.Exception ?? error); }
+            if (poolHandle is not null)
+            {
+                try { Microsoft.Data.Sqlite.SqliteConnection.ClearPool(poolHandle); } catch (Exception error) { cleanup.Add(error); }
+                try { await poolHandle.DisposeAsync(); } catch (Exception error) { cleanup.Add(error); }
+            }
+            try { Directory.Delete(paths.DataDirectory, recursive: true); } catch (Exception error) { cleanup.Add(error); }
+        }
+        if (primary is not null || cleanup.Count != 0)
+            throw new AggregateException("Checkpoint path identity or owned cleanup failed.", new[] { primary }.OfType<Exception>().Concat(cleanup));
+    }
+
     // Test-owned actual file source: return and retain the SAME production atomic-write
     // Task. Unsupported discovery/process capabilities fail rather than inventing Git.
     private sealed class OriginalFileSource(WorkspaceToolService physical) : IWorkspaceToolService

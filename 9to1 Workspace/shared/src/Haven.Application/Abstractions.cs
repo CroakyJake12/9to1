@@ -225,7 +225,45 @@ public sealed record ChatDelta(string? Content = null, string? Thinking = null);
 /// <summary>
 /// Represents generation options and keeps its related state and behavior together.
 /// </summary>
-public sealed record GenerationOptions(double Temperature = 0.7, int ContextLimit = 32768, int ActionLimit = 24);
+public sealed record GenerationOptions(double Temperature = 0.7, int ContextLimit = 32768, int ActionLimit = 24)
+{
+    /// <summary>Optional request restrictions intersect central routing policy. True grants nothing;
+    /// null preserves existing behavior. Captured in the original request for continuation/recovery.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public ModelRequestRoutingConstraints? RequestedRoutingConstraints { get; init; }
+    /// <summary>Optional context restrictions intersect the existing source policy. False skips
+    /// persistent-memory reads; true issues no source/actor permission; null preserves prior behavior.
+    /// Captured with the original request for continuation/recovery.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public ModelRequestContextConstraints? RequestedContextConstraints { get; init; }
+    /// <summary>Optional exact concrete tool selection only removes fresh maintained definitions.
+    /// Null preserves legacy behavior; names create no resource or action permission.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public ModelRequestToolSelectionConstraints? RequestedToolSelectionConstraints { get; init; }
+    /// <summary>Live source-issued input only. Durable requests keep their restrictive
+    /// requirement, never serialize a memory permission/resource object.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public IChatOriginalPersistentMemoryInput? OriginalPersistentMemoryInput { get; init; }
+    /// <summary>Live approved saved attachment selection; never restored from serialized metadata.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public IChatOriginalAttachmentInput? OriginalAttachmentInput { get; init; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public ChatOriginalAttachmentLineage? RequestedOriginalAttachmentLineage { get; init; }
+    // Durable source-selected observations only. A fresh live issuer is mandatory on recovery.
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public ChatOriginalPersistentMemoryLineage? RequestedPersistentMemoryLineage { get; init; }
+}
+
+public sealed record ModelRequestRoutingConstraints(bool? AllowCloud = null, bool? AllowFallback = null);
+
+public sealed record ModelRequestContextConstraints(bool? AllowPersistentMemoryRead = null)
+{
+    /// <summary>Require a SAME live scoped input before reading persistent memory.
+    /// False preserves legacy source policy; true grants nothing. Cold restore without
+    /// a fresh original input refuses rather than falling back to a global source.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool RequireOriginalPersistentMemoryInput { get; init; }
+}
 
 /// <summary>
 /// Represents ollama chat request and keeps its related state and behavior together.

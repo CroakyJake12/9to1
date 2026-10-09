@@ -13,12 +13,9 @@
   </Target>
 
   <ItemGroup>
-    <Compile Include="BrowseAppRoute.cs" />
-    <Compile Include="BrowseChrome.cs" />
     <Compile Include="BrowseCuiScene.cs" />
-    <Compile Include="BrowseEngineSelectionPolicy.cs" />
-    <Compile Include="BrowseEnginePreferencesStore.cs" />
-    <ProjectReference Include="..\shared\src\Haven.Browser\Haven.Browser.csproj" />
+    <Compile Include="BrowseCoreTypeForwarders.cs" />
+    <ProjectReference Include="Core\HavenOS.Apps.Browse.Core.csproj" />
     <ProjectReference Include="$(HavenUiProjectPath)" Condition="'$(HavenUiProjectPath)' != '' and Exists('$(HavenUiProjectPath)')" />
   </ItemGroup>
 </Project>

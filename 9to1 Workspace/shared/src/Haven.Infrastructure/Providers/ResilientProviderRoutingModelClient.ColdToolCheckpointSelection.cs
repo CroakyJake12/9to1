@@ -72,6 +72,8 @@ public sealed partial class ResilientProviderRoutingModelClient
                 return original;
             });
             var required = RequiredCapabilities(checkpoint.OriginalNextRequest);
+            if (checkpoint.OriginalNextRequest.Options?.RequestedRoutingConstraints?.AllowFallback == false)
+                return null; // A cold capsule cannot broaden its original selected-only request.
             var restrictions = checkpoint.OriginalNextRequest.Tools.Select(tool => ModelToolPermissionMap.Map(tool.Name))
                 .Where(capability => capability.HasValue).Select(capability => capability!.Value).Distinct().ToArray();
             var digest = SnapshotFingerprint(body.Expected);

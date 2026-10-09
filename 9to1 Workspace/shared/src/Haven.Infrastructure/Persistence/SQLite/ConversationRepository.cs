@@ -16,7 +16,7 @@ namespace Haven.Infrastructure;
 /// <summary>
 /// Represents conversation repository and keeps its related state and behavior together.
 /// </summary>
-public sealed class ConversationRepository(ISqliteConnectionFactory factory) : IConversationRepository
+public sealed partial class ConversationRepository(ISqliteConnectionFactory factory) : IConversationRepository, IConversationCreateOnlyRepository
 {
     /// <summary>
     /// Retrieves recent async for the current operation.
@@ -523,12 +523,7 @@ public sealed class ConversationRepository(ISqliteConnectionFactory factory) : I
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
-            result.Add(new Conversation(
-                reader.Guid("id"), (HavenMode)reader.Int32("mode"), (ConversationKind)reader.Int32("kind"), reader.String("title"),
-                reader.NullableGuid("container_id"), reader.NullableGuid("lesson_id"), reader.Boolean("is_pinned"), reader.Boolean("is_temporary"),
-                reader.DateTimeOffset("created_at"), reader.DateTimeOffset("updated_at"), reader.Boolean("is_archived"),
-                reader.NullableGuid("parent_conversation_id"), reader.NullableString("compacted_at") is { } compacted ? DateTimeOffset.Parse(compacted, System.Globalization.CultureInfo.InvariantCulture) : null,
-                reader.NullableGuid("space_id")));
+            result.Add(MapOriginalDatabaseRow(reader));
         }
         return result;
     }

@@ -107,10 +107,10 @@ public sealed class WindowsNativeDeveloperCompositionTests
         var reads = control.Provider.GetRequiredService<HomeDeveloperProjectReadAdmissionSource>();
         var before = ExecutionContext.Capture();
         using (CloudflareOriginalExecutionGuard.EnterOriginal(reads))
-            Assert.Throws<InvalidOperationException>(() => control.CloseDeveloper());
+            Assert.Throws<InvalidOperationException>(() => { _ = control.CloseDeveloper(); });
         CloudflareOriginalExecutionGuard.InvokeOriginal(reads, () =>
         {
-            ExecutionContext.Run(before!, _ => Assert.Throws<InvalidOperationException>(() => control.CloseDeveloper()), null);
+            ExecutionContext.Run(before!, _ => Assert.Throws<InvalidOperationException>(() => { _ = control.CloseDeveloper(); }), null);
             return true;
         });
         Assert.Null(control.Field("_actualWindowsDeveloperDrain"));
@@ -148,7 +148,7 @@ public sealed class WindowsNativeDeveloperCompositionTests
         Task? close = null;
         try
         {
-            await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             close = control.CloseDeveloper();
             var permissionClose = permissions.CloseAndDrainOriginalSetupsAsync();
             Assert.False(permissionClose.IsCompleted); Assert.False(close.IsCompleted);

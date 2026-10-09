@@ -1,0 +1,96 @@
+<Cui id="9to1.Browse.Workspace" version="1">
+ <Actions>
+  <Action name="SelectTab" command="9to1.Browse.SelectTab" parameter="{Binding tab.Target}" />
+  <Action name="OpenBookmark" command="9to1.Browse.OpenBookmark" parameter="{Binding bookmark.Target}" />
+  <Action name="OpenHistory" command="9to1.Browse.OpenHistory" parameter="{Binding visit.Target}" />
+  <Action name="ShowDownloadInFiles" command="9to1.Browse.ShowDownloadInFiles" parameter="{Binding download.Target}" />
+  <Action name="RegisterDownloadDestination" command="9to1.Browse.RegisterDownloadDestination" parameter="{Binding folder.Target}" />
+ </Actions>
+ <Page id="BrowseRoot" AccessibleName="Browse browser">
+  <Container Type="Grid" Rows="Auto,Auto,Auto,*,Auto" Columns="*" Margin="8" Spacing="6">
+   <Container Type="Vertical Stack" Spacing="4">
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+     <Container Type="Horizontal Stack" Spacing="4">
+      <Repeat Source="{Binding Tabs}" As="tab" Key="{Binding tab.Key}"><Button action="SelectTab" Text="{Binding tab.Label}" AccessibleName="{Binding tab.Label}" /></Repeat>
+     </Container>
+    </ScrollViewer>
+    <Container Type="Grid" Columns="*,*,*">
+     <Button id="BrowseNewTabButton" action="9to1.Browse.NewTab">New tab</Button>
+     <Button id="BrowsePrivateTabButton" action="9to1.Browse.NewPrivateTab" GridColumn="1">Private tab</Button>
+     <Button id="BrowseCloseTabButton" action="9to1.Browse.CloseTab" GridColumn="2">Close tab</Button>
+    </Container>
+   </Container>
+   <Container Type="Vertical Stack" GridRow="1" Spacing="4">
+    <Container Type="Grid" Columns="Auto,Auto,Auto,Auto,*">
+     <Button id="BrowseBackButton" action="9to1.Browse.Back" IsEnabled="{Binding CanBack}" AccessibleName="Go back">←</Button>
+     <Button id="BrowseForwardButton" action="9to1.Browse.Forward" IsEnabled="{Binding CanForward}" GridColumn="1" AccessibleName="Go forward">→</Button>
+     <Button id="BrowseReloadButton" action="9to1.Browse.Reload" GridColumn="2">Reload</Button>
+     <Button id="BrowseStopButton" action="9to1.Browse.Stop" GridColumn="3">Stop</Button>
+     <Input Type="Text" id="BrowseAddressBox" GridColumn="4" Text="{Binding Address, mode=TwoWay}" AccessibleName="Search or enter web address" />
+    </Container>
+    <Container Type="Grid" Columns="*,*,*">
+     <Button id="BrowseNavigateButton" action="9to1.Browse.Navigate">Go</Button>
+     <Button id="BrowseBookmarkButton" action="9to1.Browse.Bookmark" GridColumn="1">Bookmark</Button>
+     <Button id="BrowseDiscardAddressButton" action="9to1.Browse.DiscardAddress" GridColumn="2">Discard address draft</Button>
+    </Container>
+   </Container>
+   <Container Type="Vertical Stack" GridRow="2" Spacing="4">
+    <Text Text="{Binding Security}" TextWrapping="Wrap" />
+    <Text Text="{Binding Profile}" TextWrapping="Wrap" />
+    <Container Type="Grid" Columns="*,*,*">
+     <Button id="BrowseFirefoxTabButton" action="9to1.Browse.FirefoxTab">Use Firefox</Button>
+     <Button id="BrowseChromiumTabButton" action="9to1.Browse.ChromiumTab" GridColumn="1">Use Chromium</Button>
+     <Button id="BrowseRecoverButton" action="9to1.Browse.Recover" GridColumn="2">Recover tab</Button>
+    </Container>
+   </Container>
+   <Object Type="browse.engine" id="BrowseEngineView" GridRow="3" MinHeight="180" AccessibleName="Original native browser engine surface" />
+   <ScrollViewer GridRow="4" MaxHeight="220">
+    <Container Type="Vertical Stack" Spacing="4">
+     <Text Text="{Binding EngineStatus}" TextWrapping="Wrap" />
+     <Text Text="{Binding Status}" TextWrapping="Wrap" AccessibleName="Browse operation status" />
+     <Container Type="Grid" Columns="*,*,*">
+      <Input Type="Text" id="BrowseFindBox" Text="{Binding FindQuery, mode=TwoWay}" AccessibleName="Find on current page" />
+      <Button id="BrowseFindPreviousButton" action="9to1.Browse.FindPrevious" GridColumn="1">Previous</Button>
+      <Button id="BrowseFindNextButton" action="9to1.Browse.FindNext" GridColumn="2">Next</Button>
+     </Container>
+     <Container Type="Grid" Columns="*,*,*,*">
+      <Button id="BrowseZoomOutButton" action="9to1.Browse.ZoomOut">Zoom −</Button>
+      <Text Text="{Binding Zoom}" GridColumn="1" />
+      <Button id="BrowseZoomInButton" action="9to1.Browse.ZoomIn" GridColumn="2">Zoom +</Button>
+      <Button id="BrowseZoomResetButton" action="9to1.Browse.ZoomReset" GridColumn="3">Reset zoom</Button>
+     </Container>
+     <Container Type="Grid" Columns="*,*" Rows="Auto,Auto,Auto,Auto,Auto">
+      <Button id="BrowseFirefoxSiteButton" action="9to1.Browse.FirefoxSite">Prefer Firefox for site</Button>
+      <Button id="BrowseChromiumSiteButton" action="9to1.Browse.ChromiumSite" GridColumn="1">Prefer Chromium for site</Button>
+      <Button id="BrowseDefaultFirefoxButton" action="9to1.Browse.DefaultFirefox" GridRow="1">Default Firefox</Button>
+      <Button id="BrowseDefaultChromiumButton" action="9to1.Browse.DefaultChromium" GridRow="1" GridColumn="1">Default Chromium</Button>
+      <Button id="BrowseAllowPopupsButton" action="9to1.Browse.AllowPopups" GridRow="2">Allow site popups</Button>
+      <Button id="BrowseDenyPopupsButton" action="9to1.Browse.DenyPopups" GridRow="2" GridColumn="1">Block site popups</Button>
+      <Button id="BrowseDevToolsButton" action="9to1.Browse.DevTools" GridRow="3">Developer tools</Button>
+      <Button id="BrowseDownloadsButton" action="9to1.Browse.Downloads" GridRow="3" GridColumn="1">Refresh downloads</Button>
+      <Button id="BrowseResetSiteEngineButton" action="9to1.Browse.ResetSiteEngine" GridRow="4" GridColumnSpan="2">Reset site engine preference</Button>
+     </Container>
+     <Text Text="{Binding PopupStatus}" TextWrapping="Wrap" />
+     <Text>Bookmarks</Text>
+     <Repeat Source="{Binding Bookmarks}" As="bookmark" Key="{Binding bookmark.Key}">
+      <Container Type="Vertical Stack"><Button id="BrowseBookmarkRowButton" action="OpenBookmark" Text="{Binding bookmark.Label}" AccessibleName="{Binding bookmark.Label}" /><Text Text="{Binding bookmark.Detail}" TextWrapping="Wrap" /></Container>
+     </Repeat>
+     <Text>History</Text>
+     <Repeat Source="{Binding History}" As="visit" Key="{Binding visit.Key}">
+      <Container Type="Vertical Stack"><Button id="BrowseHistoryRowButton" action="OpenHistory" Text="{Binding visit.Label}" AccessibleName="{Binding visit.Label}" /><Text Text="{Binding visit.Detail}" TextWrapping="Wrap" /></Container>
+     </Repeat>
+     <Button id="BrowseClearHistoryButton" action="9to1.Browse.ClearHistory">Clear local history</Button>
+     <Text Text="{Binding DownloadStatus}" TextWrapping="Wrap" /><Text Text="{Binding DownloadOpenStatus}" TextWrapping="Wrap" />
+     <Repeat Source="{Binding Downloads}" As="download" Key="{Binding download.Key}">
+      <Container Type="Vertical Stack"><Text Text="{Binding download.Label}" /><Text Text="{Binding download.Detail}" TextWrapping="Wrap" /><Button id="BrowseDownloadFilesButton" action="ShowDownloadInFiles">Show in Files</Button></Container>
+     </Repeat>
+     <Text Text="{Binding DownloadDestinationPrompt}" TextWrapping="Wrap" />
+     <Repeat Source="{Binding DownloadDestinations}" As="folder" Key="{Binding folder.Key}">
+      <Button id="BrowseDownloadDestinationButton" action="RegisterDownloadDestination" Text="{Binding folder.Label}" />
+     </Repeat>
+     <Button id="BrowseRetryDownloadRegistrationButton" action="9to1.Browse.RetryDownloadRegistration">Continue Files approval</Button>
+    </Container>
+   </ScrollViewer>
+  </Container>
+ </Page>
+</Cui>

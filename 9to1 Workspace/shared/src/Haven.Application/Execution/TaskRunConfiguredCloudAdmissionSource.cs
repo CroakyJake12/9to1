@@ -33,7 +33,7 @@ public sealed partial class TaskRunConfiguredCloudAdmissionSource : ITaskRunClou
         string PayloadFingerprint, string ConversationFingerprint, string DomainContextFingerprint, bool TemporaryConversation,
         FrozenSet<string> UnsupportedRemoteContext, FrozenDictionary<Guid, string> History,
         KnowledgeSelection[] Knowledge, string? BackgroundAppId, string? BackgroundProjectId,
-        FrozenSet<string> BackgroundScopes);
+        FrozenSet<string> BackgroundScopes, ChatOriginalAttachmentInvocation? AttachmentInvocation);
 
     /// <param name="originalIssuedAttemptLookup">Lazy SAME canonical coordinator lookup. Do not
     /// construct a second coordinator or resolve it while constructing this source/authority.</param>
@@ -84,6 +84,8 @@ public sealed partial class TaskRunConfiguredCloudAdmissionSource : ITaskRunClou
         if (knowledge.Any(record => record.Id == Guid.Empty) || knowledge.Select(record => record.Id).Distinct().Count() != knowledge.Length)
             throw new UnauthorizedAccessException("Knowledge selection identities are incomplete or duplicated.");
         var unsupported = new HashSet<string>(StringComparer.Ordinal);
+        if (inventory.OriginalAttachmentLineage is not null && !HasCapturedOriginalAttachmentDomain(inventory))
+            unsupported.Add("attachment-context");
         if (!string.IsNullOrWhiteSpace(inventory.ProjectContext)) unsupported.Add("project-context");
         if (!string.IsNullOrWhiteSpace(inventory.ProjectInstructions)) unsupported.Add("project-instructions");
         if (!string.IsNullOrWhiteSpace(inventory.RegisteredContext) && !IsExactlyPublicGenUiInstruction(inventory.RegisteredContext))
@@ -105,11 +107,14 @@ public sealed partial class TaskRunConfiguredCloudAdmissionSource : ITaskRunClou
         if (hasToolOutput) unsupported.Add("tool-output-context");
         var domainFingerprint = Digest(new { inventory.ProjectContext, inventory.ProjectInstructions,
             inventory.RegisteredContext, inventory.OriginalImages, inventory.OriginalWorkspaceRoot });
+        if (inventory.OriginalAttachmentLineage is not null)
+            domainFingerprint = Digest(new { OriginalDomainFingerprint = domainFingerprint, inventory.OriginalAttachmentLineage });
         var capture = new Capture(owner, originalContext!, payload, Digest(inventory.OriginalConversation), domainFingerprint,
             inventory.OriginalConversation.IsTemporary, unsupported.ToFrozenSet(StringComparer.Ordinal),
             inventory.OriginalHistory.ToFrozenDictionary(message => message.Id, Digest), knowledge,
             inventory.BackgroundAppId, inventory.BackgroundProjectId,
-            (inventory.OriginalBackgroundScopes ?? new HashSet<string>()).ToFrozenSet(StringComparer.OrdinalIgnoreCase));
+            (inventory.OriginalBackgroundScopes ?? new HashSet<string>()).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
+            inventory.OriginalAttachmentInvocation);
         // Capture is allowed for local first attempts without authorizing later cloud egress.
         await RequireActorAsync(owner, token).ConfigureAwait(false);
         await DemandCurrentSelectionsAsync(capture, remote: false, token).ConfigureAwait(false);
@@ -125,6 +130,7 @@ public sealed partial class TaskRunConfiguredCloudAdmissionSource : ITaskRunClou
                     !earlier.History.OrderBy(pair => pair.Key).SequenceEqual(capture.History.OrderBy(pair => pair.Key)) ||
                     !earlier.Knowledge.SequenceEqual(capture.Knowledge) ||
                     earlier.TemporaryConversation != capture.TemporaryConversation ||
+                    !ReferenceEquals(earlier.AttachmentInvocation, capture.AttachmentInvocation) ||
                     !earlier.UnsupportedRemoteContext.SetEquals(capture.UnsupportedRemoteContext) ||
                     earlier.BackgroundAppId != capture.BackgroundAppId || earlier.BackgroundProjectId != capture.BackgroundProjectId ||
                     !earlier.BackgroundScopes.SetEquals(capture.BackgroundScopes))
@@ -448,6 +454,7 @@ public sealed partial class TaskRunConfiguredCloudAdmissionSource : ITaskRunClou
         private readonly object _gate = new();
         private bool _closed;
         private bool _invoked;
+        private AttachmentFrame? _attachments;
         private Task? _close;
         public ContextFrame(TaskRunConfiguredCloudAdmissionSource source, TaskRunAttemptAdmission admission,
             TaskExecutionSnapshot snapshot, Capture capture, ProviderExecutionContext context,
@@ -460,6 +467,17 @@ public sealed partial class TaskRunConfiguredCloudAdmissionSource : ITaskRunClou
             DemandPayload();
             await _source.DemandFrameAsync(_admission, _snapshot, _capture, _context, token).ConfigureAwait(false);
             await _permission.RevalidateAsync(token).ConfigureAwait(false);
+            if (_capture.AttachmentInvocation is not null && _admission.Lease.Candidate.UsesCloud)
+            {
+                Task actualValidation;
+                lock (_gate)
+                {
+                    ObjectDisposedException.ThrowIf(_closed, this);
+                    _attachments ??= _source.CreateOriginalAttachmentFrame(_admission, _snapshot, _context, _capture);
+                    actualValidation = _attachments.RevalidateAsync(token);
+                }
+                await actualValidation.ConfigureAwait(false);
+            }
             _source.DemandCurrentPrivacy(_capture, _admission.Lease.Candidate.UsesCloud);
             DemandPayload();
             lock (_gate) ObjectDisposedException.ThrowIf(_closed, this);
@@ -480,7 +498,8 @@ public sealed partial class TaskRunConfiguredCloudAdmissionSource : ITaskRunClou
                 if (_invoked) throw new InvalidOperationException("This finite request already admitted its original raw start; replay is refused.");
                 DemandPayload();
                 _invoked = true; // Seal even if Start throws: unknown admission may not be replayed.
-                return _permission.RunOriginalInvocation(originalRawStart);
+                return _attachments is null ? _permission.RunOriginalInvocation(originalRawStart)
+                    : _attachments.RunOriginalInvocation(() => _permission.RunOriginalInvocation(originalRawStart));
             }
         }
         public ValueTask DisposeAsync()
@@ -491,10 +510,21 @@ public sealed partial class TaskRunConfiguredCloudAdmissionSource : ITaskRunClou
                 if (_close is not null) return new ValueTask(_close);
                 _closed = true;
                 start = new(TaskCreationOptions.RunContinuationsAsynchronously);
-                close = _close = ClosePermissionAsync(_permission, start.Task);
+                close = _close = CloseContextAsync(start.Task);
             }
             start.SetResult();
             return new ValueTask(close);
+        }
+        private async Task CloseContextAsync(Task start)
+        {
+            await start.ConfigureAwait(false); var errors = new List<Exception>(); Task? actual = null;
+            if (_attachments is not null)
+                try { actual = _attachments.CloseAndDrainAsync(); await actual.ConfigureAwait(false); }
+                catch (Exception cause) { AddTask(errors, actual, cause); }
+            actual = null;
+            try { actual = ClosePermissionAsync(_permission, Task.CompletedTask); await actual.ConfigureAwait(false); }
+            catch (Exception cause) { AddTask(errors, actual, cause); }
+            Throw(errors);
         }
     }
 }

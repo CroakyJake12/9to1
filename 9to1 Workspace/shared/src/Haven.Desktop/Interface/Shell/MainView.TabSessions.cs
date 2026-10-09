@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
+using Avalonia.Threading;
 using System.Text.Json;
 using Haven.Application;
 using Haven.Core;
@@ -377,21 +378,55 @@ public sealed partial class MainView
         }
     }
 
-    private async Task<bool> TryCloseTabAsync(WorkspaceTabViewModel? tab)
+    private Task<bool> TryCloseTabAsync(WorkspaceTabViewModel? tab) =>
+        _originalShellWork.RunAsync(async original =>
     {
+        original.BindPublicationGuard(() => !IsDisposed);
         if (tab is null || !tab.IsCloseable || tab.IsPinned || tab.IsProtected || OpenTabs.Count <= 1) return false;
-        if (HasUnsavedWork(tab.Page) && !await ConfirmDiscardAsync(tab.Title)) return false;
-        if (ReferenceEquals(_secondaryTab, tab)) RemoveSplitView();
-        var index = OpenTabs.IndexOf(tab);
-        OpenTabs.Remove(tab);
-        tab.Dispose();
-        if (ReferenceEquals(SelectedTab, tab))
-            SelectedTab = OpenTabs.ElementAtOrDefault(Math.Clamp(index - 1, 0, Math.Max(0, OpenTabs.Count - 1))) ?? OpenTabs.FirstOrDefault();
-        RaisePropertyChanged(nameof(IsHorizontalTabsVisible));
-        RefreshTopRailTabs();
-        QueueWorkspaceSessionSave();
-        return true;
-    }
+        var documentPreflight = CaptureOriginalDocumentTabClosePreflight(tab);
+        if (documentPreflight.HasDocuments)
+        {
+            if (!await original.AwaitAsync(AcquireOriginalShellSynchronous(original,
+                () => documentPreflight.PrepareAsync(CancellationToken.None)))) return false;
+        }
+        else if (HasUnsavedWork(tab.Page) && !await original.AwaitAsync(AcquireOriginalShellSynchronous(original,
+            () => ConfirmDiscardAsync(tab.Title)))) return false;
+
+        Task? actualClose = null;
+        var acquired = AcquireOriginalShellSynchronous(original, () =>
+        {
+            Dispatcher.UIThread.VerifyAccess();
+            original.DemandPublication();
+            if (!OpenTabs.Contains(tab) || !tab.IsCloseable || tab.IsPinned || tab.IsProtected || OpenTabs.Count <= 1 ||
+                (documentPreflight.HasDocuments && !documentPreflight.IsCurrentAndPrepared)) return false;
+            if (ReferenceEquals(_secondaryTab, tab)) RemoveSplitView();
+            // Detachment callbacks can begin accepted work or change a retained draft.
+            // Revalidate after that real callback, before the permanent tab seal.
+            original.DemandPublication();
+            if (documentPreflight.HasDocuments && !documentPreflight.IsCurrentAndPrepared) return false;
+            actualClose = tab.CloseAndDrainAsync(); // SAME owner seals and publishes its actual full close.
+            return true;
+        });
+        if (!acquired) return false;
+        // Keep the actual tab in OpenTabs while its owning join is pending/faulted.
+        // The shell's original retains this raw Task and all original fault siblings.
+        await original.AwaitAsync(actualClose ?? throw new InvalidOperationException("The actual tab returned no original close Task."));
+        return AcquireOriginalShellSynchronous(original, () =>
+        {
+            Dispatcher.UIThread.VerifyAccess();
+            original.DemandPublication();
+            if (!OpenTabs.Contains(tab))
+                throw new InvalidOperationException("The actual tab changed while its original close was pending.");
+            var index = OpenTabs.IndexOf(tab);
+            OpenTabs.Remove(tab);
+            if (ReferenceEquals(SelectedTab, tab))
+                SelectedTab = OpenTabs.ElementAtOrDefault(Math.Clamp(index - 1, 0, Math.Max(0, OpenTabs.Count - 1))) ?? OpenTabs.FirstOrDefault();
+            RaisePropertyChanged(nameof(IsHorizontalTabsVisible));
+            RefreshTopRailTabs();
+            QueueWorkspaceSessionSave();
+            return true;
+        });
+    });
 
     private static bool HasUnsavedWork(object page) => page switch
     {

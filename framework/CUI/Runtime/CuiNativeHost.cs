@@ -21,8 +21,21 @@ public static class CuiNativeHost
         return ConfigureFonts(AppBuilder.Configure(() => new NativeApplication(scene)).UsePlatformDetect());
     }
 
-    public static AppBuilder ConfigureFonts(AppBuilder builder) => builder.WithInterFont()
-        .With(new FontManagerOptions { DefaultFamilyName = "fonts:Inter#Inter" });
+    public const string BundledInterfaceFontFamily =
+        "avares://CakeOS.Cui.Runtime/Assets/Fonts/MontserratStatic#Montserrat";
+
+    public static AppBuilder ConfigureFonts(AppBuilder builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        return builder.With(new FontManagerOptions
+        {
+            DefaultFamilyName = BundledInterfaceFontFamily,
+            FontFamilyMappings = new Dictionary<string, FontFamily>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Montserrat"] = new(BundledInterfaceFontFamily)
+            }
+        });
+    }
 
     public static void InitialisePrimitiveTheme(Application application, string surface = "Home", CuiAppearance? appearance = null)
     {

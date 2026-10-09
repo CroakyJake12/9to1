@@ -11,6 +11,8 @@ public sealed class StackEngine
     private readonly IStackProjectStore _store;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private StackManifest? _manifest;
+    private IStackOriginalSourceRevision? _originalSourceRevision;
+    private bool _originalSourceNeedsReopen;
 
     public StackEngine(IStackProjectStore store)
     {
@@ -59,6 +61,7 @@ public sealed class StackEngine
             AddAudit(manifest, actor, "ProjectCreated", projectId, mainId, null, revisionId, "Succeeded");
             await _store.CreateAsync(manifest, cancellationToken).ConfigureAwait(false);
             _manifest = manifest;
+            if (_store is IStackOriginalSourceProjectStore) _manifest = await LoadOriginalStateAsync(cancellationToken).ConfigureAwait(false);
             return ToSnapshot(main);
         }
         finally
@@ -72,7 +75,8 @@ public sealed class StackEngine
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            _manifest = await _store.LoadAsync(cancellationToken).ConfigureAwait(false);
+            _manifest = await LoadOriginalStateAsync(cancellationToken).ConfigureAwait(false);
+            _originalSourceNeedsReopen = false;
             ValidateProjectState(_manifest);
             StackDomainRecord active = FindDomain(_manifest, _manifest.ActiveDomainId ?? _manifest.MainDomainId);
             return ToSnapshot(active);
@@ -1080,17 +1084,44 @@ public sealed class StackEngine
 
     private async Task<StackManifest> GetStateAsync(CancellationToken cancellationToken)
     {
-        _manifest ??= await _store.LoadAsync(cancellationToken).ConfigureAwait(false);
+        if (_originalSourceNeedsReopen) throw new StackFailureException(StackFailureCode.RevisionConflict,
+            "Reopen the original project source before continuing.", JsonFileStackProjectStore.ManifestRelativePath, recoverable: true, retryable: true);
+        _manifest ??= await LoadOriginalStateAsync(cancellationToken).ConfigureAwait(false);
+        if (_store is IStackOriginalSourceProjectStore original && _originalSourceRevision is not null)
+            try { await original.ValidateOriginalRevisionAsync(_originalSourceRevision, cancellationToken).ConfigureAwait(false); }
+            catch { _originalSourceNeedsReopen = true; throw; }
         ValidateProjectState(_manifest);
         byte[] cloneBytes = JsonSerializer.SerializeToUtf8Bytes(_manifest);
         return JsonSerializer.Deserialize<StackManifest>(cloneBytes)
             ?? throw new StackFailureException(StackFailureCode.SourceCorrupt, "The in-memory Stack manifest could not be copied for an atomic operation.", JsonFileStackProjectStore.ManifestRelativePath, recoverable: true);
     }
 
+    private async Task<StackManifest> LoadOriginalStateAsync(CancellationToken cancellationToken)
+    {
+        if (_store is not IStackOriginalSourceProjectStore original) return await _store.LoadAsync(cancellationToken).ConfigureAwait(false);
+        var loaded = await original.LoadOriginalAsync(cancellationToken).ConfigureAwait(false);
+        _originalSourceRevision = loaded.Revision;
+        return loaded.Manifest;
+    }
+
     private async Task SaveAsync(StackManifest state, CancellationToken cancellationToken)
     {
-        await _store.SaveAsync(state, cancellationToken).ConfigureAwait(false);
-        _manifest = state;
+        try
+        {
+            if (_store is IStackOriginalSourceProjectStore original)
+            {
+                if (_originalSourceRevision is null) throw new StackFailureException(StackFailureCode.RevisionConflict,
+                    "The original project source must be reopened before saving.", JsonFileStackProjectStore.ManifestRelativePath, recoverable: true);
+                _originalSourceRevision = await original.SaveOriginalAsync(state, _originalSourceRevision, cancellationToken).ConfigureAwait(false);
+            }
+            else await _store.SaveAsync(state, cancellationToken).ConfigureAwait(false);
+            _manifest = state;
+        }
+        catch
+        {
+            // No retry or candidate adoption after stale/partial/unknown publication.
+            _originalSourceNeedsReopen = true; _manifest = null; _originalSourceRevision = null; throw;
+        }
     }
 
     private async Task CascadeAsync(StackManifest state, StackDomainRecord parent, StackActor actor, CancellationToken cancellationToken)
@@ -1349,7 +1380,12 @@ public sealed class StackEngine
 
     private static StackDomainSnapshot ToSnapshot(StackDomainRecord domain) => new(domain.Id, domain.ProjectId, domain.Name, domain.Kind,
         domain.ParentId, domain.BaseRevisionId, domain.HeadRevisionId, domain.IsActive, domain.IsDeleted,
-        CloneNullableTree(domain.BaseTree), domain.LocalChanges.Values.Concat(domain.WorkingChanges.Values).ToArray());
+        CloneNullableTree(domain.BaseTree), domain.LocalChanges.Values.Concat(domain.WorkingChanges.Values)
+            .Select(change => change with { Resource = change.Resource?.Copy() }).ToArray())
+    {
+        WorkingChanges = domain.WorkingChanges.Values.OrderBy(change => change.Path, StringComparer.OrdinalIgnoreCase)
+            .Select(change => change with { Resource = change.Resource?.Copy() }).ToArray(),
+    };
 
     private static IReadOnlyDictionary<string, StackResource?> CloneNullableTree(IReadOnlyDictionary<string, StackResource?> source) =>
         source.ToDictionary(static pair => pair.Key, static pair => pair.Value?.Copy(), StringComparer.OrdinalIgnoreCase);

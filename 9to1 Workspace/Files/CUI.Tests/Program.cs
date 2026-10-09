@@ -7,6 +7,9 @@ internal static class Program
 		try
 		{
 			await FilesDomainContractTests.RunAllAsync().ConfigureAwait(false);
+			await OriginalExistingStateStoreTests.RunAllAsync().ConfigureAwait(false);
+            await OriginalAttachmentStateReadTests.RunAllAsync().ConfigureAwait(false);
+            await BrowserDownloadRegistrationProviderTests.RunAllAsync().ConfigureAwait(false);
 			Console.WriteLine("Files CUI domain contract checks passed.");
 			return 0;
 		}

@@ -20,7 +20,7 @@ namespace Haven.Infrastructure;
 /// <summary>
 /// Represents retrieval schema and keeps its related state and behavior together.
 /// </summary>
-internal static class RetrievalSchema
+internal static partial class RetrievalSchema
 {
     /// <summary>
     /// Stores gate locally so this component can preserve the dependency, cache, or state between member calls.
@@ -40,35 +40,7 @@ internal static class RetrievalSchema
             await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
             await using var command = connection.CreateCommand();
             command.Transaction = transaction;
-            command.CommandText = """
-                CREATE TABLE IF NOT EXISTS retrieval_documents(
-                    id TEXT PRIMARY KEY,
-                    scope_kind INTEGER NOT NULL,
-                    scope_id TEXT NOT NULL,
-                    source_type TEXT NOT NULL,
-                    source_id TEXT NOT NULL,
-                    title TEXT NOT NULL,
-                    content_hash TEXT NOT NULL,
-                    created_at TEXT NOT NULL,
-                    updated_at TEXT NOT NULL
-                );
-                CREATE UNIQUE INDEX IF NOT EXISTS ix_retrieval_documents_source
-                    ON retrieval_documents(scope_kind,scope_id,source_type,source_id);
-                CREATE INDEX IF NOT EXISTS ix_retrieval_documents_scope
-                    ON retrieval_documents(scope_kind,scope_id,updated_at);
-
-                CREATE TABLE IF NOT EXISTS retrieval_chunks(
-                    id TEXT PRIMARY KEY,
-                    document_id TEXT NOT NULL REFERENCES retrieval_documents(id) ON DELETE CASCADE,
-                    ordinal INTEGER NOT NULL,
-                    text TEXT NOT NULL,
-                    start_character INTEGER NOT NULL,
-                    length INTEGER NOT NULL,
-                    embedding_json TEXT NOT NULL,
-                    terms_json TEXT NOT NULL
-                );
-                CREATE UNIQUE INDEX IF NOT EXISTS ix_retrieval_chunks_ordinal ON retrieval_chunks(document_id,ordinal);
-                """;
+            ConfigureCanonicalTables(command);
             await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             await using var migration = connection.CreateCommand();
             migration.Transaction = transaction;
@@ -139,7 +111,7 @@ public sealed class LocalHashEmbeddingService : ITextEmbeddingService
 /// <summary>
 /// Represents retrieval index service and keeps its related state and behavior together.
 /// </summary>
-public sealed class RetrievalIndexService(
+public sealed partial class RetrievalIndexService(
     ISqliteConnectionFactory factory,
     ITextEmbeddingService embeddings) : IRetrievalIndexService, IRetrievalSearchService
 {
@@ -221,14 +193,7 @@ public sealed class RetrievalIndexService(
                 INSERT INTO retrieval_chunks(id,document_id,ordinal,text,start_character,length,embedding_json,terms_json)
                 VALUES($id,$documentId,$ordinal,$text,$start,$length,$embedding,$terms);
                 """;
-            insert.Parameters.AddWithValue("$id", chunk.Id.ToString());
-            insert.Parameters.AddWithValue("$documentId", chunk.DocumentId.ToString());
-            insert.Parameters.AddWithValue("$ordinal", chunk.Ordinal);
-            insert.Parameters.AddWithValue("$text", chunk.Text);
-            insert.Parameters.AddWithValue("$start", chunk.StartCharacter);
-            insert.Parameters.AddWithValue("$length", chunk.Length);
-            insert.Parameters.AddWithValue("$embedding", JsonSerializer.Serialize(chunk.Embedding, JsonOptions));
-            insert.Parameters.AddWithValue("$terms", JsonSerializer.Serialize(chunk.Terms, JsonOptions));
+            AddCanonicalChunkParameters(insert, chunk);
             await insert.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
@@ -355,14 +320,18 @@ public sealed class RetrievalIndexService(
     private async Task<IReadOnlyList<CandidateChunk>> LoadCandidatesAsync(IReadOnlyList<RetrievalScope> scopes, CancellationToken cancellationToken)
     {
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var transaction = connection.BeginTransaction(deferred: true);
+        var eligibility = await RetrievalSchema.ReadSourceEligibilityPredicateAsync(connection, transaction, scopes, cancellationToken).ConfigureAwait(false);
         var result = new List<CandidateChunk>();
         foreach (var scope in scopes.Distinct())
         {
             await using var command = connection.CreateCommand();
-            command.CommandText = """
+            command.Transaction = transaction;
+            command.CommandText = $"""
                 SELECT d.*,c.id AS chunk_id,c.ordinal,c.text,c.start_character,c.length,c.embedding_json,c.terms_json
                   FROM retrieval_documents d JOIN retrieval_chunks c ON c.document_id=d.id
                  WHERE d.scope_kind=$scopeKind AND d.scope_id=$scopeId
+                   {eligibility}
                  ORDER BY d.updated_at DESC,c.ordinal LIMIT 4000;
                 """;
             command.Parameters.AddWithValue("$scopeKind", (int)scope.Kind);

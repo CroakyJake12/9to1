@@ -14,7 +14,7 @@ namespace Haven.Desktop.Services;
 
 /// <summary>Native host-only route over the SAME owning Home graph. This borrows the provider
 /// and original startup connection; it never creates/disposes either or installs/grants an app.</summary>
-internal sealed class NativeFilesDesktopRoute : IAsyncDisposable
+internal sealed partial class NativeFilesDesktopRoute : IAsyncDisposable
 {
     private readonly IServiceProvider _originalProvider;
     private readonly IHomeNativeStartupSession _originalStartup;
@@ -402,9 +402,12 @@ internal sealed class NativeFilesDesktopRoute : IAsyncDisposable
             throw new UnauthorizedAccessException(observed.Message);
     }
 
-    private sealed class OriginalReadiness(NativeFilesDesktopRoute owner) : ICuiSceneReadiness
+    private sealed class OriginalReadiness(NativeFilesDesktopRoute owner) : IFilesOriginalRegisteredRevealReadiness
     {
         public ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken token) => owner.CheckReadyAsync(token);
+        public ValueTask<CuiSceneAvailability> CheckRegisteredRevealWithinSourceAsync(
+            Action<Action> scope, Action<Task> retain, CancellationToken token)
+            => new(owner.CheckRegisteredRevealReadyWithinSourceAsync(scope, retain, token));
     }
 
     internal Task CloseAndDrainAsync()
@@ -438,6 +441,9 @@ internal sealed class NativeFilesDesktopRoute : IAsyncDisposable
             foreach (var error in _publicationFailures) Add(failures, error);
         try { if (originalSurfaceClose is not null) await originalSurfaceClose; }
         catch (Exception error) { Add(failures, error); }
+        // This final snapshot follows every opening/publication original; it includes
+        // late acquired views whose failed close must remain owner-retained.
+        await DrainOriginalRegisteredSurfacesAsync(failures);
         // Candidate opening cleanup is itself retained by originalOpen when no view was published.
         try { _windowLifetime.Dispose(); } catch (Exception error) { Add(failures, error); }
         Rethrow(null, failures, "Original native Files work and close failed.");

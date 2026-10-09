@@ -1,0 +1,114 @@
+<Cui id="assistants.legacy-review" version="1">
+  <Actions>
+    <Action name="ReviewLegacyDefinition" command="assistants.legacy.preview" parameter="{Binding legacy}" />
+  </Actions>
+  <Page id="assistant-legacy-review-page" AccessibleName="Review existing definitions">
+    <Container Type="Vertical Stack" VerticalScrolling="True" Margin="24" Spacing="16">
+      <Button id="legacy-home" action="assistants.legacy.back" IsEnabled="{Binding CanMigrationBack}">Back to Assistants</Button>
+      <Text Text="{Binding MigrationTitle}" FontSize="28" FontWeight="Bold" TextWrapping="Wrap" />
+      <Text Text="Keep your existing identity and history. Review each definition and decide how you want to use it." TextWrapping="Wrap" />
+      <Text id="legacy-status" Text="{Binding MigrationStatus}" TextWrapping="Wrap" AccessibleName="Migration status" />
+      <Text Text="{Binding MigrationError}" IsVisible="{Binding HasMigrationError}" TextWrapping="Wrap" AccessibleName="Migration action declined" />
+
+      <Container Type="Vertical Stack" Spacing="10" IsVisible="{Binding ShowLegacyImport}">
+        <Text FontSize="20" FontWeight="SemiBold">Review your configured source</Text>
+        <Text Text="{Binding LegacyImportSource}" FontWeight="SemiBold" />
+        <Text Text="{Binding LegacyImportStore}" AccessibleName="Original legacy store identity" TextWrapping="Wrap" />
+        <Text Text="Import makes this existing source available to your current Home profile for review. It does not classify definitions, copy the database, or start any work. Original records and history stay in their current store." TextWrapping="Wrap" />
+        <Text Text="{Binding LegacyImportReason}" TextWrapping="Wrap" AccessibleName="Legacy import review status" />
+        <Button action="assistants.legacy.import.inspect" IsEnabled="{Binding CanInspectLegacyImport}">Inspect configured source</Button>
+        <Button id="legacy-import-request" action="assistants.legacy.import.request" IsEnabled="{Binding CanRequestLegacyImport}">Request Home import review</Button>
+        <Container Type="Vertical Stack" Spacing="4" IsVisible="{Binding HasLegacyImportRequest}">
+          <Text Text="Open Home to review this exact request. Return here after your decision; the same request stays retained." TextWrapping="Wrap" />
+          <Text Text="{Binding LegacyImportRequest}" TextWrapping="Wrap" AccessibleName="Actual legacy import Home request" />
+        </Container>
+        <Button action="assistants.legacy.import.refresh" IsEnabled="{Binding CanRefreshLegacyImport}">Check Home decision</Button>
+        <Button id="legacy-import-complete" action="assistants.legacy.import.complete" IsEnabled="{Binding CanCompleteLegacyImport}">Complete approved import</Button>
+        <Button action="assistants.legacy.import.audit" IsEnabled="{Binding CanRetryLegacyImportAudit}">Finish import audit</Button>
+      </Container>
+
+      <Container Type="Vertical Stack" Spacing="12" IsVisible="{Binding ShowMigrationList}">
+        <Button id="legacy-refresh" action="assistants.legacy.list" IsEnabled="{Binding CanMigrationList}">Refresh existing definitions</Button>
+        <If Condition="{Binding HasMigrationRows}">
+          <Repeat Source="{Binding MigrationRows}" As="legacy" Key="{Binding legacy.Id}">
+            <Container Type="Vertical Stack" Spacing="6" Margin="0,0,0,12">
+              <Text Text="{Binding legacy.Name}" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <Text Text="{Binding legacy.Description}" TextWrapping="Wrap" />
+              <Text Text="{Binding legacy.State}" AccessibleName="Existing definition migration state" />
+              <Button action="ReviewLegacyDefinition" IsEnabled="{Binding CanMigrationList}">Review definition</Button>
+            </Container>
+          </Repeat>
+        </If>
+        <Else>
+          <Text Text="No imported definitions are available in this page. Review and import your existing saved Agents through Home before migration." TextWrapping="Wrap" />
+        </Else>
+        <Button action="assistants.legacy.next" IsEnabled="{Binding CanMigrationNext}">Next page</Button>
+      </Container>
+
+      <Container Type="Vertical Stack" Spacing="12" IsVisible="{Binding ShowMigrationReview}">
+        <Text Text="{Binding MigrationState}" AccessibleName="Current migration state" />
+        <Text Text="{Binding MigrationPreservation}" TextWrapping="Wrap" AccessibleName="Preserved source and history" />
+        <Repeat Source="{Binding MigrationNotes}" As="note" Key="{Binding note.Id}">
+          <Text Text="{Binding note.Text}" TextWrapping="Wrap" />
+        </Repeat>
+        <Text FontSize="20" FontWeight="SemiBold">Choose how this identity should work</Text>
+        <Text Text="An Assistant is a personal identity you return to for conversations and ongoing work. A Specialist has a focused role that can contribute to work led by other identities." TextWrapping="Wrap" />
+        <Text Text="{Binding MigrationKind}" FontWeight="SemiBold" AccessibleName="Explicitly selected configured identity type" />
+        <Button id="legacy-choose-assistant" action="assistants.legacy.kind.assistant" IsEnabled="{Binding CanMigrationChooseAssistant}">Choose Assistant</Button>
+        <Button id="legacy-choose-specialist" action="assistants.legacy.kind.specialist" IsEnabled="{Binding CanMigrationChooseSpecialist}">Choose Specialist</Button>
+        <Text Text="Nothing is selected for a new review. A continued migration keeps the choice already recorded." TextWrapping="Wrap" />
+
+        <Text FontSize="20" FontWeight="SemiBold">Identity and purpose</Text>
+        <Text>Name</Text>
+        <Input id="legacy-name" Type="Text" Text="{Binding MigrationName, Mode=TwoWay}" IsEnabled="{Binding CanEditMigration}" AccessibleName="Reviewed identity name" />
+        <Text>Description</Text>
+        <Input Type="Text" Text="{Binding MigrationDescription, Mode=TwoWay}" IsEnabled="{Binding CanEditMigration}" AccessibleName="Reviewed identity description" />
+        <Text>Purpose</Text>
+        <Input Type="Text" Text="{Binding MigrationPurpose, Mode=TwoWay}" IsEnabled="{Binding CanEditMigration}" AccessibleName="Reviewed identity purpose" />
+        <Text>Role</Text>
+        <Input Type="Text" Text="{Binding MigrationRole, Mode=TwoWay}" IsEnabled="{Binding CanEditMigration}" AccessibleName="Reviewed identity role" />
+        <Text>Instructions</Text>
+        <Input Type="Text" Text="{Binding MigrationInstructions, Mode=TwoWay}" AcceptsReturn="True" MinHeight="120" TextWrapping="Wrap" IsEnabled="{Binding CanEditMigration}" AccessibleName="Reviewed identity instructions" />
+        <Text Text="{Binding MigrationModel}" TextWrapping="Wrap" />
+        <Text Text="{Binding MigrationResources}" TextWrapping="Wrap" />
+        <Text Text="Your original source remains preserved. Saved resources and preferences keep their existing authorization checks." TextWrapping="Wrap" />
+        <Button action="assistants.legacy.recovery" IsVisible="{Binding HasClassifiedDestination}" IsEnabled="{Binding CanMigrationRecovery}">Review undo options</Button>
+        <Button action="assistants.legacy.result.open" IsVisible="{Binding HasClassifiedDestination}" IsEnabled="{Binding CanMigrationOpenResult}">Open Assistant</Button>
+        <Button id="legacy-confirm" action="assistants.legacy.confirm" Text="{Binding MigrationConfirmationLabel}" IsEnabled="{Binding CanMigrationConfirm}" />
+        <Button action="assistants.legacy.cancel" IsEnabled="{Binding CanMigrationCancel}">Cancel review</Button>
+
+        <Text FontSize="20" FontWeight="SemiBold">Preserved history</Text>
+        <Button action="assistants.legacy.links.runs" IsEnabled="{Binding CanMigrationLinks}">Review run history</Button>
+        <Button action="assistants.legacy.links.memories" IsEnabled="{Binding CanMigrationLinks}">Review memory records</Button>
+        <Button action="assistants.legacy.links.references" IsEnabled="{Binding CanMigrationLinks}">Review references</Button>
+        <Button action="assistants.legacy.links.conversations" IsEnabled="{Binding CanMigrationLinks}">Review conversation links</Button>
+        <Text Text="{Binding MigrationLinkHeading}" FontWeight="SemiBold" />
+        <Repeat Source="{Binding MigrationLinks}" As="link" Key="{Binding link.Id}">
+          <Container Type="Vertical Stack" Spacing="4" Margin="0,0,0,8">
+            <Text Text="{Binding link.Title}" TextWrapping="Wrap" />
+            <Text Text="{Binding link.Related}" TextWrapping="Wrap" />
+          </Container>
+        </Repeat>
+        <Button action="assistants.legacy.links.next" IsEnabled="{Binding CanMigrationNextLinks}">More history records</Button>
+      </Container>
+
+      <Container Type="Vertical Stack" Spacing="12" IsVisible="{Binding ShowMigrationResult}">
+        <Text Text="{Binding MigrationResultName}" FontSize="24" FontWeight="Bold" TextWrapping="Wrap" />
+        <Text Text="{Binding MigrationResultKind}" AccessibleName="Saved configured identity type" />
+        <Text Text="Your configuration is saved under the same persistent identity. The original source and its linked history are preserved." TextWrapping="Wrap" />
+        <Button action="assistants.legacy.result.open" IsEnabled="{Binding CanMigrationOpenResult}">Open Assistant</Button>
+        <Button action="assistants.legacy.recovery" IsEnabled="{Binding CanMigrationRecovery}">Review undo options</Button>
+        <Button action="assistants.legacy.cancel" IsEnabled="{Binding CanMigrationCancel}">Return to existing definitions</Button>
+      </Container>
+
+      <Container Type="Vertical Stack" Spacing="12" IsVisible="{Binding ShowMigrationRecovery}">
+        <Text FontSize="22" FontWeight="SemiBold">Undo this conversion?</Text>
+        <Text Text="{Binding MigrationRecoveryName}" FontWeight="SemiBold" />
+        <Text Text="{Binding MigrationRecoveryReason}" TextWrapping="Wrap" AccessibleName="Recovery availability" />
+        <Text Text="Undo is available only when the canonical owner confirms it is safe. Your original source remains preserved." TextWrapping="Wrap" />
+        <Button id="legacy-undo" action="assistants.legacy.undo" IsEnabled="{Binding CanMigrationUndo}">Confirm undo</Button>
+        <Button action="assistants.legacy.cancel" IsEnabled="{Binding CanMigrationCancel}">Close recovery review</Button>
+      </Container>
+    </Container>
+  </Page>
+</Cui>

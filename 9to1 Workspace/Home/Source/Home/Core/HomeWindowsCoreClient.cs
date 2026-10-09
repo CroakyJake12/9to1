@@ -6,7 +6,7 @@ using Haven.Application;
 namespace HavenOS.Home.Core;
 
 /// <summary>Borrowed original Windows pipe; one retained request/reader. No listener, lease, profile, provider or grant is created.</summary>
-public sealed class HomeWindowsCoreClient : IAsyncDisposable
+public sealed partial class HomeWindowsCoreClient : IAsyncDisposable
 {
     private readonly NamedPipeClientStream _pipe;
     private readonly IHomeNativeSessionHostVerifier _verifier;
@@ -86,6 +86,7 @@ public sealed class HomeWindowsCoreClient : IAsyncDisposable
     private Task<HomeNativeCoreApiResult<T>> RequestAsync<T>(string operation, string? serviceId,
         HomeCompatibilityRequest? compatibility, CancellationToken caller)
     {
+        if (_originalScoped) return RequestWithinOriginalSourceAsync<T>(operation, serviceId, compatibility, body => body(), _ => { }, caller);
         caller.ThrowIfCancellationRequested();
         var request = new HomeUnixCoreRequest(HomeUnixCoreProtocol.Version, Guid.NewGuid().ToString("N"),
             operation, serviceId, compatibility);
@@ -158,6 +159,7 @@ public sealed class HomeWindowsCoreClient : IAsyncDisposable
     /// <summary>Retains a fresh attestation check in the same one-operation slot; it performs no wire read or broker grant.</summary>
     internal Task DemandOriginalCurrentAsync(CancellationToken caller)
     {
+        if (_originalScoped) return DemandOriginalCurrentWithinSourceAsync(body => body(), _ => { }, caller);
         caller.ThrowIfCancellationRequested();
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         lock (_sync)
@@ -195,12 +197,13 @@ public sealed class HomeWindowsCoreClient : IAsyncDisposable
 
     public ValueTask DisposeAsync()
     {
+        if (_originalScoped) CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
         lock (_sync)
         {
             if (_close is not null) return new(_close);
             _closing = true;
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            _close = CloseOriginalAsync(start.Task, _pending);
+            _close = _originalScoped ? CloseWithinOriginalSourceAsync(start.Task) : CloseOriginalAsync(start.Task, _pending);
             start.SetResult();
             return new(_close);
         }

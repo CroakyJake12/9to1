@@ -12,6 +12,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../shared/src/Haven.Core/Haven.Core.csproj" />
+    <ProjectReference Include="../shared/src/Haven.Application/Haven.Application.csproj" />
+    <ProjectReference Include="../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+    <EmbeddedResource Include="UI/*.cui" LogicalName="HavenOS.Wave.UI.%(Filename)%(Extension)" />
     <ProjectReference Include="../shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

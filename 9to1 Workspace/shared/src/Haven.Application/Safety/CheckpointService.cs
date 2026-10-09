@@ -38,6 +38,10 @@ public sealed class CheckpointService(
     ICheckpointRestorer restorer,
     IExecutionEventSink? executionEvents = null) : ICheckpointExecutionObservationSource
 {
+    // Match the owning workspace tools: Linux paths differing only by case are distinct.
+    private static readonly StringComparer WorkspacePathComparer = OperatingSystem.IsWindows()
+        ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+
     private sealed class ExecutionCheckpointScope
     {
         private readonly object _publication = new();
@@ -247,7 +251,7 @@ public sealed class CheckpointService(
         var checkpoint = await repository.GetAsync(checkpointId, cancellationToken).ConfigureAwait(false)
                          ?? throw new InvalidOperationException("Checkpoint not found.");
         var versions = await repository.GetVersionsSinceAsync(checkpoint.WorkspaceRoot, checkpoint.StartSequence, cancellationToken).ConfigureAwait(false);
-        var plan = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var plan = new Dictionary<string, string>(WorkspacePathComparer);
         foreach (var entry in versions.OrderBy(item => item.Sequence))
         {
             // The first mutation after the checkpoint still records that path's checkpoint-time content.
@@ -279,7 +283,7 @@ public sealed class CheckpointService(
     {
         var latest = await repository.GetLatestVersionAsync(workspaceRoot, cancellationToken).ConfigureAwait(false);
         if (latest is null) return false;
-        var plan = new CheckpointRestorePlan(Guid.Empty, new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        var plan = new CheckpointRestorePlan(Guid.Empty, new Dictionary<string, string>(WorkspacePathComparer)
         {
             [latest.RelativePath] = latest.BeforeContent
         });

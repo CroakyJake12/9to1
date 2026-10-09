@@ -11,6 +11,7 @@ using Avalonia;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Skia;
+using CakeOS.Cui.Runtime;
 using Haven.Desktop;
 
 [assembly: AvaloniaTestApplication(typeof(Haven.Desktop.Tests.TestAppBuilder))]
@@ -33,11 +34,11 @@ public static class TestAppBuilder
         if (captureFrames)
             builder = builder.UseSkia();
 
-        return builder.UseHeadless(new AvaloniaHeadlessPlatformOptions
+        return CuiNativeHost.ConfigureFonts(builder.UseHeadless(new AvaloniaHeadlessPlatformOptions
         {
             // Pixel capture needs the Skia-backed renderer; normal behavioural
             // tests retain the faster headless drawing implementation.
             UseHeadlessDrawing = !captureFrames
-        });
+        }));
     }
 }

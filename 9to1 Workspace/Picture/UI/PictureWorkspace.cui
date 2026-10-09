@@ -1,0 +1,293 @@
+<Cui id="9to1.Picture.Workspace" version="1">
+  <Actions>
+    <Action name="CloseVectorSubpath" command="9to1.Picture.CloseVectorSubpath" parameter="{Binding OriginalVectorSubpathTarget}" />
+    <Action name="OpenVectorSubpath" command="9to1.Picture.OpenVectorSubpath" parameter="{Binding OriginalVectorSubpathTarget}" />
+    <Action name="SelectAddedVectorAnchor" command="9to1.Picture.SelectAddedVectorAnchor" parameter="{Binding AddedVectorAnchorTarget}" />
+    <Action name="TransferVectorLayer" command="9to1.Picture.TransferVectorLayer" parameter="{Binding OriginalVectorLayerTransferTarget}" />
+    <Action name="SelectLayer" command="9to1.Picture.SelectLayer" parameter="{Binding layer.Target}" />
+    <Action name="SelectVector" command="9to1.Picture.SelectVector" parameter="{Binding vector.Target}" />
+    <Action name="SelectVectorPath" command="9to1.Picture.SelectVectorPath" parameter="{Binding path.Target}" />
+    <Action name="SelectVectorNode" command="9to1.Picture.SelectVectorNode" parameter="{Binding node.Target}" />
+    <Action name="SelectEdit" command="9to1.Picture.SelectEdit" parameter="{Binding edit.Target}" />
+  </Actions>
+  <Page id="PictureEditor" AccessibleName="Picture image editor">
+    <Container Type="Vertical Stack" VerticalScrolling="True" Margin="18" Spacing="12">
+      <Text FontSize="28" FontWeight="Bold">Picture</Text>
+      <Text TextWrapping="Wrap">Create, edit and export. Your original stays intact.</Text>
+      <Container Type="Grid" Columns="*,*" Rows="Auto,Auto">
+        <Button id="NewButton" action="9to1.Picture.New" Margin="0,0,6,6">New</Button>
+        <Button id="OpenButton" action="9to1.Picture.Open" GridColumn="1" Margin="6,0,0,6">Open…</Button>
+        <Button id="SaveButton" action="9to1.Picture.Save" GridRow="1" Margin="0,0,6,0" IsEnabled="False">Save</Button>
+        <Button id="SaveCopyButton" action="9to1.Picture.SaveCopy" GridRow="1" GridColumn="1" Margin="6,0,0,0" IsEnabled="False">Save a Copy…</Button>
+      </Container>
+      <Container Type="Grid" Columns="*,*" Rows="Auto,Auto,Auto">
+        <Button id="UndoButton" action="9to1.Picture.Undo" Margin="0,0,6,6" IsEnabled="False">Undo</Button>
+        <Button id="RedoButton" action="9to1.Picture.Redo" GridColumn="1" Margin="6,0,0,6" IsEnabled="False">Redo</Button>
+        <WrapPanel id="ComparisonOptions" GridRow="1" GridColumnSpan="2">
+          <Input Type="Checkbox" id="CompareButton" Margin="0,0,8,0" IsEnabled="False" Content="Show original" AccessibleName="Show original image" />
+          <Input Type="Checkbox" id="SideBySideButton" IsEnabled="False" Content="Side by side" AccessibleName="Compare original and current side by side" />
+        </WrapPanel>
+        <Button id="PreviousButton" action="9to1.Picture.Previous" GridRow="2" Margin="0,6,6,0" IsEnabled="False">Previous image</Button>
+        <Button id="NextButton" action="9to1.Picture.Next" GridRow="2" GridColumn="1" Margin="6,6,0,0" IsEnabled="False">Next image</Button>
+      </Container>
+      <Container Type="Grid" Columns="Auto,*,Auto,Auto" Rows="Auto">
+        <Button id="ZoomOutButton" action="9to1.Picture.ZoomOut" IsEnabled="False" AccessibleName="Zoom out">−</Button>
+        <Text id="ZoomText" GridColumn="1" TextAlignment="Center" VerticalAlignment="Center">100%</Text>
+        <Button id="ZoomInButton" action="9to1.Picture.ZoomIn" GridColumn="2" IsEnabled="False" AccessibleName="Zoom in">+</Button>
+        <Button id="FitButton" action="9to1.Picture.Fit" GridColumn="3" Margin="6,0,0,0" IsEnabled="False">Fit</Button>
+      </Container>
+      <Container Type="Grid" id="PictureWorkspace" Columns="{Binding WorkspaceColumns}" Rows="{Binding WorkspaceRows}">
+        <Container Type="Grid" id="CanvasPanel" Columns="{Binding ComparisonColumns}" Rows="Auto,*" VerticalAlignment="Top" Height="{Binding CanvasHeight}" Background="{Resource CuiPanelBrush}" CornerRadius="12">
+          <Text id="ComparisonLeftLabel" IsVisible="{Binding HasComparisonPreview}" Text="{Binding ComparisonLeftLabel}" Margin="12,8" />
+          <Text id="ComparisonRightLabel" GridColumn="1" IsVisible="{Binding HasSideBySideComparison}" Text="{Binding ComparisonRightLabel}" Margin="12,8" />
+          <Object Type="picture.originalViewport" id="OriginalComparisonImage" GridRow="1" IsVisible="False" Margin="6" AccessibleName="Original image for side-by-side comparison. Use the zoom buttons or drag to pan." />
+          <Object Type="picture.viewport" id="PreviewImage" GridColumn="{Binding CurrentPreviewColumn, type=int}" GridRow="1" IsVisible="False" Margin="6" AccessibleName="Image preview. The label identifies original or current. Use the zoom buttons or drag to pan." />
+          <Container Type="Vertical Stack" id="EmptyState" GridRow="1" Margin="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Text FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap" TextAlignment="Center">Make room for your next image</Text>
+            <Text TextWrapping="Wrap" TextAlignment="Center">Open a photo or editable Picture document, or start a new canvas.</Text>
+          </Container>
+        </Container>
+        <Container Type="Vertical Stack" id="PictureInspector" VerticalAlignment="Top" GridColumn="{Binding InspectorColumn, type=int}" GridRow="{Binding InspectorRow, type=int}" Margin="{Binding InspectorMargin}" Spacing="8">
+          <Text FontSize="18" FontWeight="SemiBold">Transform</Text>
+          <Container Type="Grid" Columns="*,*" Rows="Auto,Auto">
+            <Button id="RotateLeftButton" action="9to1.Picture.RotateLeft" Margin="0,0,4,6" IsEnabled="False">Rotate left</Button>
+            <Button id="RotateRightButton" action="9to1.Picture.RotateRight" GridColumn="1" Margin="4,0,0,6" IsEnabled="False">Rotate right</Button>
+            <Button id="FlipHorizontalButton" action="9to1.Picture.FlipHorizontal" GridRow="1" Margin="0,0,4,0" IsEnabled="False">Flip horizontal</Button>
+            <Button id="FlipVerticalButton" action="9to1.Picture.FlipVertical" GridRow="1" GridColumn="1" Margin="4,0,0,0" IsEnabled="False">Flip vertical</Button>
+          </Container>
+          <Text>Straighten · clockwise angle</Text>
+          <Input Type="Number" id="StraightenAngleBox" Value="0" AccessibleName="Clockwise straighten angle in degrees; negative rotates left" />
+          <ComboBox id="StraightenCanvasModeBox" AccessibleName="Rotated image canvas fit" />
+          <Text TextWrapping="Wrap">Fit the entire rotated image, or keep the canvas and clip its edges. Added space is transparent; the original stays editable.</Text>
+          <Button id="ApplyStraightenButton" action="9to1.Picture.Straighten" IsEnabled="False">Apply angle</Button>
+          <Text>Crop · x, y, width, height</Text>
+          <Input Type="Text" id="CropBoundsBox" PlaceholderText="0, 0, 1200, 900" AccessibleName="Crop bounds in current image pixels" />
+          <ComboBox id="CropRatioBox" AccessibleName="Crop aspect ratio" />
+          <Container Type="Grid" Columns="*,*">
+            <Input Type="Number" id="CropRatioWidthBox" Value="1" AccessibleName="Custom crop ratio width; positive whole number" Margin="0,0,4,0" />
+            <Input Type="Number" id="CropRatioHeightBox" Value="1" AccessibleName="Custom crop ratio height; positive whole number" GridColumn="1" Margin="4,0,0,0" />
+          </Container>
+          <Text TextWrapping="Wrap">For a custom ratio, enter width and height above, such as 3 and 2.</Text>
+          <Button id="FitCropRatioButton" action="9to1.Picture.FitCropRatio" IsEnabled="False">Fit ratio inside crop bounds</Button>
+          <Text id="CropRatioNotice" TextWrapping="Wrap">Fit a ratio inside these bounds, or apply crop directly. Whole-pixel rounding may slightly change the ratio.</Text>
+          <Button id="ApplyCropButton" action="9to1.Picture.Crop" IsEnabled="False">Apply crop</Button>
+          <Text FontWeight="SemiBold">Pixelate these bounds</Text>
+          <Text TextWrapping="Wrap">Use the x, y, width and height above. Pixelation stays editable; the original image is preserved.</Text>
+          <Input Type="Number" id="PixelationBlockSizeBox" Value="8" AccessibleName="Pixelation block size in whole pixels, two to five hundred twelve" />
+          <Button id="ApplyPixelationButton" action="9to1.Picture.Pixelate" IsEnabled="False">Pixelate rectangle</Button>
+          <Text FontSize="18" FontWeight="SemiBold">Blur rectangle</Text>
+          <Text TextWrapping="Wrap">Soften this area while keeping the original and the pixels outside it. Enter x, y, width, height in image pixels.</Text>
+          <Input Type="Text" id="BlurBoundsBox" Text="0, 0, 1, 1" AccessibleName="Blur rectangle in pixels, x, y, width, height" />
+          <Text>Blur radius · pixels</Text>
+          <Input Type="Number" id="BlurRadiusBox" Value="2" AccessibleName="Blur radius in whole pixels, one to thirty-two" />
+          <Text id="BlurDraftNotice" Text="{Binding BlurDraftNotice}" TextWrapping="Wrap" />
+          <Button id="ApplyBlurButton" action="9to1.Picture.Blur" IsEnabled="False">Add blur to rectangle</Button>
+          <Button id="ResetBlurDraftButton" action="9to1.Picture.ResetBlurDraft" IsEnabled="False">Use current image or selected blur values</Button>
+          <Text TextWrapping="Wrap" IsVisible="{Binding SelectedIsBlur}">Change these values, then apply values to the selected edit.</Text>
+          <Text>Image size · width × height</Text>
+          <Container Type="Grid" Columns="*,*">
+            <Input Type="Number" id="WidthBox" Value="1200" AccessibleName="Image width in pixels" Margin="0,0,4,0" />
+            <Input Type="Number" id="HeightBox" Value="900" GridColumn="1" AccessibleName="Image height in pixels" Margin="4,0,0,0" />
+          </Container>
+          <Container Type="Grid" Columns="Auto,*">
+            <Input Type="Checkbox" id="AspectLockBox" IsChecked="True" AccessibleName="Keep aspect ratio" />
+            <Text GridColumn="1" VerticalAlignment="Center">Keep aspect ratio</Text>
+          </Container>
+          <Button id="ResizeButton" action="9to1.Picture.Resize" IsEnabled="False">Resize image</Button>
+          <Text FontSize="18" FontWeight="SemiBold">Canvas size</Text>
+          <Text TextWrapping="Wrap">Add transparent space or trim the canvas without resizing the image. The original remains editable.</Text>
+          <Text>Canvas width × height</Text>
+          <Container Type="Grid" Columns="*,*">
+            <Input Type="Number" id="CanvasWidthBox" Value="1200" AccessibleName="Canvas width in pixels" Margin="0,0,4,0" />
+            <Input Type="Number" id="CanvasHeightBox" Value="900" AccessibleName="Canvas height in pixels" GridColumn="1" Margin="4,0,0,0" />
+          </Container>
+          <Text>Image placement · x, y</Text>
+          <Container Type="Grid" Columns="*,*">
+            <Input Type="Number" id="CanvasOffsetXBox" Value="0" AccessibleName="Image x placement on the new canvas in pixels" Margin="0,0,4,0" />
+            <Input Type="Number" id="CanvasOffsetYBox" Value="0" AccessibleName="Image y placement on the new canvas in pixels" GridColumn="1" Margin="4,0,0,0" />
+          </Container>
+          <Button id="CenterCanvasContentButton" action="9to1.Picture.CenterCanvasContent" IsEnabled="False">Center image in new canvas</Button>
+          <Button id="ResizeCanvasButton" action="9to1.Picture.ResizeCanvas" IsEnabled="False">Apply canvas size</Button>
+          <Text TextWrapping="Wrap" IsVisible="{Binding SelectedIsCanvasResize}">Edit the canvas size and placement above, then apply values to the selected edit.</Text>
+          <Button id="RevertButton" action="9to1.Picture.Revert" IsEnabled="False">Revert to original</Button>
+          <Text FontSize="18" FontWeight="SemiBold">Light and colour</Text>
+          <Text TextWrapping="Wrap">Choose a working colour space for these adjustments. sRGB creates a standard-range image.</Text>
+          <ComboBox id="ColorWorkingSpaceBox" AccessibleName="Working colour space for raster adjustments" />
+          <Text>Exposure · EV</Text>
+          <Input Type="Number" id="ColorExposureBox" Value="0" AccessibleName="Exposure in stops from minus ten to ten" />
+          <Text>Brightness · −1 to 1</Text>
+          <Input Type="Number" id="ColorBrightnessBox" Value="0" AccessibleName="Linear brightness adjustment from minus one to one" />
+          <Text>Contrast · −1 to 1</Text>
+          <Input Type="Number" id="ColorContrastBox" Value="0" AccessibleName="Contrast adjustment from minus one to one" />
+          <Text>Saturation · −1 to 1</Text>
+          <Input Type="Number" id="ColorSaturationBox" Value="0" AccessibleName="Saturation adjustment; minus one is greyscale, zero preserves colour, one doubles saturation" />
+          <Text>Gamma · 0.1 to 10</Text>
+          <Input Type="Number" id="ColorGammaBox" Value="1" AccessibleName="Display gamma adjustment from zero point one to ten" />
+          <Button id="ApplyColorAdjustmentButton" action="9to1.Picture.ApplyColorAdjustment" IsEnabled="False">Apply light and colour</Button>
+          <Button id="ResetColorDraftButton" action="9to1.Picture.ResetColorDraft" IsEnabled="False">Reset adjustment values</Button>
+          <Text TextWrapping="Wrap" IsVisible="{Binding SelectedIsColorAdjustment}">Edit these values, then apply values to the selected edit.</Text>
+          <Text FontSize="18" FontWeight="SemiBold">Export</Text>
+          <Text id="MetadataExportModeText" TextWrapping="Wrap" AccessibleName="Export metadata privacy">Preserve supported metadata</Text>
+          <Button id="MetadataPreserveButton" action="9to1.Picture.MetadataPreserve">Preserve supported metadata</Button>
+          <Button id="MetadataRemoveLocationButton" action="9to1.Picture.MetadataRemoveLocation">Remove location metadata</Button>
+          <Button id="MetadataRemoveAllButton" action="9to1.Picture.MetadataRemoveAll">Remove all metadata</Button>
+          <Button id="ExportCropButton" action="9to1.Picture.Export" IsEnabled="False">Export PNG…</Button>
+          <Text TextWrapping="Wrap">Save keeps the editable document. Export creates a rendered copy.</Text>
+          <Text FontSize="18" FontWeight="SemiBold">Layers and shapes</Text>
+          <Container Type="Grid" Columns="*,*" Rows="Auto,Auto,Auto">
+            <Button id="AddRectangleButton" action="9to1.Picture.AddRectangle" IsEnabled="{Binding CanInsertShape}" Margin="0,0,4,4">Rectangle</Button>
+            <Button id="AddEllipseButton" action="9to1.Picture.AddEllipse" IsEnabled="{Binding CanInsertShape}" GridColumn="1" Margin="4,0,0,4">Ellipse</Button>
+            <Button id="AddPolygonButton" action="9to1.Picture.AddPolygon" IsEnabled="{Binding CanInsertShape}" GridRow="1" Margin="0,0,4,4">Polygon</Button>
+            <Button id="AddStarButton" action="9to1.Picture.AddStar" IsEnabled="{Binding CanInsertShape}" GridRow="1" GridColumn="1" Margin="4,0,0,4">Star</Button>
+            <Button id="AddLineButton" action="9to1.Picture.AddLine" IsEnabled="{Binding CanInsertShape}" GridRow="2" Margin="0,0,4,0">Line</Button>
+            <Button id="AddArrowButton" action="9to1.Picture.AddArrow" IsEnabled="{Binding CanInsertShape}" GridRow="2" GridColumn="1" Margin="4,0,0,0">Arrow</Button>
+          </Container>
+          <Text>Polygon sides / star points</Text>
+          <Input Type="Number" id="PrimitivePointCountBox" Value="5" AccessibleName="Polygon sides or star points, from three to sixty-four" />
+          <Button id="AddSharedVectorButton" action="9to1.Picture.AddSharedVector" IsEnabled="{Binding CanInsertShape}">Add custom shape</Button>
+          <Text id="CompositionStatusText" Text="{Binding CompositionStatus}" TextWrapping="Wrap" />
+          <Repeat Source="{Binding LayerRows}" As="layer" Key="{Binding layer.Key}">
+            <Button action="SelectLayer" Content="{Binding layer.Label}" IsEnabled="{Binding CanCompose}" />
+          </Repeat>
+          <Input Type="Text" id="LayerNameBox" Text="Objects" AccessibleName="Layer name" />
+          <Button id="CreateLayerButton" action="9to1.Picture.CreateLayer" IsEnabled="{Binding CanCompose}">Create layer</Button>
+          <Button id="RenameLayerButton" action="9to1.Picture.RenameLayer" IsEnabled="{Binding CanChangeLayer}">Rename selected layer</Button>
+          <Button id="ToggleLayerVisibilityButton" action="9to1.Picture.ToggleLayerVisibility" IsEnabled="{Binding CanChangeLayer}" Content="{Binding LayerVisibilityLabel}" />
+          <Button id="ToggleLayerLockButton" action="9to1.Picture.ToggleLayerLock" IsEnabled="{Binding CanChangeLayer}" Content="{Binding LayerLockLabel}" />
+          <Container Type="Grid" Columns="*,*">
+            <Button id="MoveLayerEarlierButton" action="9to1.Picture.MoveLayerEarlier" IsEnabled="{Binding CanMoveLayerEarlier}" Margin="0,0,4,0">Move layer earlier</Button>
+            <Button id="MoveLayerLaterButton" action="9to1.Picture.MoveLayerLater" IsEnabled="{Binding CanMoveLayerLater}" GridColumn="1" Margin="4,0,0,0">Move layer later</Button>
+          </Container>
+          <Repeat Source="{Binding VectorRows}" As="vector" Key="{Binding vector.Key}">
+            <Button action="SelectVector" Content="{Binding vector.Label}" IsEnabled="{Binding CanCompose}" />
+          </Repeat>
+          <Text Text="{Binding SelectedVectorLabel}" TextWrapping="Wrap" />
+          <Container Type="Grid" Columns="*,*" Rows="Auto,Auto">
+            <Input Type="Number" id="VectorXBox" Value="0" AccessibleName="Shape x in original image pixels" Margin="0,0,4,4" />
+            <Input Type="Number" id="VectorYBox" Value="0" AccessibleName="Shape y in original image pixels" GridColumn="1" Margin="4,0,0,4" />
+            <Input Type="Number" id="VectorWidthBox" Value="100" AccessibleName="Shape width in original image pixels" GridRow="1" Margin="0,4,4,0" />
+            <Input Type="Number" id="VectorHeightBox" Value="100" AccessibleName="Shape height in original image pixels" GridRow="1" GridColumn="1" Margin="4,4,0,0" />
+          </Container>
+          <Button id="ApplyVectorPlacementButton" action="9to1.Picture.ApplyVectorPlacement" IsEnabled="{Binding CanChangeVector}">Apply shape position and size</Button>
+          <Text FontWeight="SemiBold">Shape rotation and mirroring</Text>
+          <Input Type="Number" id="VectorRotationBox" Value="0" AccessibleName="Selected shape clockwise angle in degrees; negative rotates left" />
+          <Text id="VectorTransformNotice" Text="{Binding VectorTransformNotice}" TextWrapping="Wrap" />
+          <Button id="ApplyVectorRotationButton" action="9to1.Picture.RotateVector" IsEnabled="{Binding CanApplyVectorRotation}">Apply shape angle</Button>
+          <Button id="ResetVectorRotationButton" action="9to1.Picture.ResetVectorRotation" IsEnabled="{Binding CanResetVectorRotation}">Reset angle to selected shape</Button>
+          <Container Type="Grid" Columns="*,*">
+            <Button id="MirrorVectorHorizontalButton" action="9to1.Picture.MirrorVectorHorizontal" IsEnabled="{Binding CanMirrorVectorHorizontal}" Margin="0,0,4,0">Mirror shape horizontally</Button>
+            <Button id="MirrorVectorVerticalButton" action="9to1.Picture.MirrorVectorVertical" IsEnabled="{Binding CanMirrorVectorVertical}" GridColumn="1" Margin="4,0,0,0">Mirror shape vertically</Button>
+          </Container>
+          <Repeat Source="{Binding VectorPathRows}" As="path" Key="{Binding path.Key}">
+            <Button action="SelectVectorPath" Content="{Binding path.Label}" IsEnabled="{Binding CanChangeVector}" />
+          </Repeat>
+          <Text>Move selected shape to a layer</Text>
+          <ComboBox id="VectorDestinationLayerBox" IsEnabled="{Binding CanChooseVectorLayerDestination}" AccessibleName="Destination layer for selected shape" />
+          <Text id="VectorLayerTransferNotice" Text="{Binding VectorLayerTransferNotice}" TextWrapping="Wrap" />
+          <Button id="TransferVectorLayerButton" action="TransferVectorLayer" IsEnabled="{Binding CanTransferVectorLayer}">Move shape to chosen layer</Button>
+          <Button id="ResetVectorLayerDestinationButton" action="9to1.Picture.ResetVectorLayerDestination" IsEnabled="{Binding CanResetVectorLayerDestination}">Choose a destination for current shape</Button>
+          <TextBlock FontWeight="SemiBold">Path fill</TextBlock>
+          <ComboBox id="VectorFillKindBox" IsEnabled="{Binding CanChangeVectorPath}" AccessibleName="Selected path fill, solid or none" />
+          <Input Type="Text" id="VectorFillBox" Text="#006FB9" IsEnabled="{Binding CanChangeVectorPath}" AccessibleName="Selected path fill colour, hexadecimal RRGGBB or AARRGGBB" />
+          <TextBlock>Opacity</TextBlock>
+          <Input Type="Number" id="VectorFillOpacityBox" Value="1" IsEnabled="{Binding CanChangeVectorPath}" AccessibleName="Selected path fill opacity, zero to one" />
+          <TextBlock>Overlapping contours</TextBlock>
+          <ComboBox id="VectorFillRuleBox" IsEnabled="{Binding CanChangeVectorPath}" AccessibleName="Selected path contour fill rule" />
+          <TextBlock id="VectorFillNotice" Text="{Binding VectorFillNotice}" TextWrapping="Wrap" />
+          <Button id="ApplyVectorFillButton" action="9to1.Picture.ApplyVectorFill" IsEnabled="{Binding CanApplyVectorFill}">Apply path fill</Button>
+          <Button id="ResetVectorFillButton" action="9to1.Picture.ResetVectorFill" IsEnabled="{Binding CanResetVectorFill}">Reset fill to selected path</Button>
+          <Text FontWeight="SemiBold">Selected path stroke</Text>
+          <Input Type="Checkbox" id="VectorStrokeEnabledBox" Content="Show stroke" IsEnabled="{Binding CanChangeVectorPath}" AccessibleName="Show selected shape path stroke" />
+          <Input Type="Text" id="VectorStrokeColorBox" Text="#202020" IsEnabled="{Binding CanChangeVectorPath}" AccessibleName="Stroke colour, hexadecimal RRGGBB or AARRGGBB" />
+          <Text>Stroke width · opacity</Text>
+          <Container Type="Grid" Columns="*,*">
+            <Input Type="Number" id="VectorStrokeWidthBox" Value="1" IsEnabled="{Binding CanChangeVectorPath}" AccessibleName="Stroke width in shape view-box units" Margin="0,0,4,0" />
+            <Input Type="Number" id="VectorStrokeOpacityBox" Value="1" IsEnabled="{Binding CanChangeVectorPath}" AccessibleName="Stroke opacity, zero to one" GridColumn="1" Margin="4,0,0,0" />
+          </Container>
+          <Text>Line ends · corner joins</Text>
+          <Container Type="Grid" Columns="*,*">
+            <ComboBox id="VectorStrokeCapBox" IsEnabled="{Binding CanChangeVectorPath}" AccessibleName="Selected path stroke line cap" Margin="0,0,4,0" />
+            <ComboBox id="VectorStrokeJoinBox" IsEnabled="{Binding CanChangeVectorPath}" AccessibleName="Selected path stroke corner join" GridColumn="1" Margin="4,0,0,0" />
+          </Container>
+          <Text id="VectorStrokeNotice" Text="{Binding VectorStrokeNotice}" TextWrapping="Wrap" />
+          <Button id="ApplyVectorStrokeButton" action="9to1.Picture.ApplyVectorStroke" IsEnabled="{Binding CanApplyVectorStroke}">Apply path stroke</Button>
+          <Button id="ResetVectorStrokeButton" action="9to1.Picture.ResetVectorStroke" IsEnabled="{Binding CanResetVectorStroke}">Reset stroke to selected path</Button>
+          <Text Text="{Binding SelectedVectorNodeLabel}" TextWrapping="Wrap" />
+          <Text FontWeight="SemiBold">New anchor after this point</Text>
+          <Container Type="Grid" Columns="*,*">
+            <Input Type="Number" id="NewVectorAnchorXBox" Value="0" AccessibleName="New anchor local X coordinate" IsEnabled="{Binding CanChangeVectorNode}" Margin="0,0,4,0" />
+            <Input Type="Number" id="NewVectorAnchorYBox" Value="0" AccessibleName="New anchor local Y coordinate" IsEnabled="{Binding CanChangeVectorNode}" GridColumn="1" Margin="4,0,0,0" />
+          </Container>
+          <Text id="VectorAnchorNotice" Text="{Binding VectorAnchorNotice}" TextWrapping="Wrap" />
+          <Button id="AddVectorAnchorButton" action="9to1.Picture.AddVectorAnchor" IsEnabled="{Binding CanAddVectorAnchor}">Add anchor after selected point</Button>
+          <Button id="ResetVectorAnchorButton" action="9to1.Picture.ResetVectorAnchor" IsEnabled="{Binding CanResetVectorAnchor}">Reset new point to current anchor</Button>
+          <Button id="SelectAddedVectorAnchorButton" action="SelectAddedVectorAnchor" IsEnabled="{Binding CanSelectAddedVectorAnchor}">Select newly added anchor</Button>
+          <Button id="DeleteVectorAnchorButton" action="9to1.Picture.DeleteVectorAnchor" IsEnabled="{Binding CanDeleteVectorAnchor}">Remove selected anchor</Button>
+          <Text id="VectorSubpathLabel" Text="{Binding VectorSubpathLabel}" TextWrapping="Wrap" />
+          <Button id="CloseVectorSubpathButton" action="CloseVectorSubpath" IsEnabled="{Binding CanCloseVectorSubpath}">Close selected subpath</Button>
+          <Button id="OpenVectorSubpathButton" action="OpenVectorSubpath" IsEnabled="{Binding CanOpenVectorSubpath}">Open selected subpath</Button>
+          <Text FontWeight="SemiBold">Incoming segment</Text>
+          <Button id="VectorSegmentLineButton" action="9to1.Picture.VectorSegmentLine" IsEnabled="{Binding CanConvertVectorSegmentLine}">Make straight line</Button>
+          <Button id="VectorSegmentQuadraticButton" action="9to1.Picture.VectorSegmentQuadratic" IsEnabled="{Binding CanConvertVectorSegmentQuadratic}">Make quadratic curve</Button>
+          <Button id="VectorSegmentCubicButton" action="9to1.Picture.VectorSegmentCubic" IsEnabled="{Binding CanConvertVectorSegmentCubic}">Make cubic curve</Button>
+          <Text TextWrapping="Wrap">New curve controls start along the existing segment. Retained controls stay available when switching segment type.</Text>
+          <Repeat Source="{Binding VectorNodeRows}" As="node" Key="{Binding node.Key}">
+            <Button action="SelectVectorNode" Content="{Binding node.Label}" IsEnabled="{Binding node.CanChoose}" />
+          </Repeat>
+          <Text Text="{Binding VectorNodePageLabel}" />
+          <Container Type="Grid" Columns="*,*">
+            <Button id="PreviousVectorNodePageButton" action="9to1.Picture.PreviousVectorNodePage" IsEnabled="{Binding CanPreviousVectorNodePage}" Margin="0,0,4,0">Previous nodes</Button>
+            <Button id="NextVectorNodePageButton" action="9to1.Picture.NextVectorNodePage" IsEnabled="{Binding CanNextVectorNodePage}" GridColumn="1" Margin="4,0,0,0">Next nodes</Button>
+          </Container>
+          <Text>Node position · local x, y</Text>
+          <Container Type="Grid" Columns="*,*">
+            <Input Type="Number" id="VectorNodeXBox" Value="0" AccessibleName="Selected vector node local x" Margin="0,0,4,0" />
+            <Input Type="Number" id="VectorNodeYBox" Value="0" AccessibleName="Selected vector node local y" GridColumn="1" Margin="4,0,0,0" />
+          </Container>
+          <Button id="ApplyVectorNodeButton" action="9to1.Picture.ApplyVectorNode" IsEnabled="{Binding CanChangeVectorNode}">Apply node position</Button>
+          <Text>First curve control · local x, y</Text>
+          <Container Type="Grid" Columns="*,*">
+            <Input Type="Number" id="VectorControl1XBox" Value="0" AccessibleName="First curve control local x" Margin="0,0,4,0" />
+            <Input Type="Number" id="VectorControl1YBox" Value="0" AccessibleName="First curve control local y" GridColumn="1" Margin="4,0,0,0" />
+          </Container>
+          <Button id="ApplyVectorControl1Button" action="9to1.Picture.ApplyVectorControl1" IsEnabled="{Binding CanChangeVectorControl1}">Apply first curve control</Button>
+          <Text>Second curve control · local x, y</Text>
+          <Container Type="Grid" Columns="*,*">
+            <Input Type="Number" id="VectorControl2XBox" Value="0" AccessibleName="Second curve control local x" Margin="0,0,4,0" />
+            <Input Type="Number" id="VectorControl2YBox" Value="0" AccessibleName="Second curve control local y" GridColumn="1" Margin="4,0,0,0" />
+          </Container>
+          <Button id="ApplyVectorControl2Button" action="9to1.Picture.ApplyVectorControl2" IsEnabled="{Binding CanChangeVectorControl2}">Apply second curve control</Button>
+          <Text Text="{Binding CompositionRetainedProperties}" TextWrapping="Wrap" />
+          <Text FontSize="18" FontWeight="SemiBold">History</Text>
+          <Text id="HistoryStateText" Text="{Binding HistoryState}" TextWrapping="Wrap" />
+          <Text id="HistoryRetentionNoticeText" Text="{Binding HistoryRetentionNotice}" TextWrapping="Wrap" IsVisible="{Binding HasHistoryRetentionNotice}" />
+          <Text FontSize="18" FontWeight="SemiBold">Raster adjustments</Text>
+          <Text id="HistoryText" TextWrapping="Wrap">No edits yet</Text>
+          <Repeat Source="{Binding OperationRows}" As="edit" Key="{Binding edit.Key}">
+            <Button action="SelectEdit" Content="{Binding edit.Label}" IsEnabled="{Binding CanChooseOperation}" />
+          </Repeat>
+          <Text id="SelectedEditLabel" Text="{Binding SelectedEditLabel}" TextWrapping="Wrap" AccessibleName="Selected raster edit" />
+          <Text TextWrapping="Wrap" IsVisible="{Binding SelectedUsesTransformFields}">Change the crop or image size above, then apply those values to this selected edit.</Text>
+          <Text TextWrapping="Wrap" IsVisible="{Binding SelectedIsPixelation}">Change the bounds and block size above, then apply values to the selected edit.</Text>
+          <Text TextWrapping="Wrap" IsVisible="{Binding SelectedIsStraighten}">Change the angle and canvas fit above, then apply values to this selected edit.</Text>
+          <Text IsVisible="{Binding SelectedIsRotation}">Clockwise quarter turns · 1, 2 or 3</Text>
+          <Input Type="Number" id="SelectedRotationTurns" Value="1" IsVisible="{Binding SelectedIsRotation}" AccessibleName="Selected rotation in clockwise quarter turns" />
+          <Container Type="Grid" Columns="Auto,*" IsVisible="{Binding SelectedIsFlip}">
+            <Input Type="Checkbox" id="SelectedFlipHorizontal" AccessibleName="Selected flip is horizontal" />
+            <Text GridColumn="1" VerticalAlignment="Center">Horizontal flip; clear for vertical</Text>
+          </Container>
+          <Button id="ReplaceSelectedEditButton" action="9to1.Picture.ReplaceSelectedEdit" IsEnabled="{Binding CanChangeOperation}">Apply values to selected edit</Button>
+          <Container Type="Grid" Columns="*,*">
+            <Button id="MoveEditEarlierButton" action="9to1.Picture.MoveEditEarlier" IsEnabled="{Binding CanMoveOperationEarlier}" Margin="0,0,4,0">Move earlier</Button>
+            <Button id="MoveEditLaterButton" action="9to1.Picture.MoveEditLater" IsEnabled="{Binding CanMoveOperationLater}" GridColumn="1" Margin="4,0,0,0">Move later</Button>
+          </Container>
+          <Button id="RemoveSelectedEditButton" action="9to1.Picture.RemoveSelectedEdit" IsEnabled="{Binding CanChangeOperation}">Remove selected edit</Button>
+        </Container>
+      </Container>
+      <Text id="StatusText" TextWrapping="Wrap" AccessibleName="Picture operation status">Open an image or create a canvas to begin.</Text>
+      <Text id="FileNameText" FontWeight="SemiBold" TextWrapping="Wrap">Nothing selected</Text>
+      <Text id="MetadataText" TextWrapping="Wrap">—</Text>
+      <Button id="InfoButton" action="9to1.Picture.Info" IsEnabled="False" AccessibleName="View image metadata">Info</Button>
+    </Container>
+  </Page>
+</Cui>

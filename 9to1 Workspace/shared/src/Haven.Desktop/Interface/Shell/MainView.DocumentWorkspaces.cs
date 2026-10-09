@@ -24,7 +24,7 @@ public sealed partial class MainView
         || key.Equals("data-spreadsheet", StringComparison.OrdinalIgnoreCase)
         || key.Equals("boards", StringComparison.OrdinalIgnoreCase);
 
-    private Control CreateDocumentWorkspace(string key)
+    private Control CreateDocumentWorkspace(string key, Action<Control>? captureOriginalOwner = null)
     {
         var services = global::Haven.Desktop.App.Services
             ?? throw new InvalidOperationException("Haven services are unavailable.");
@@ -33,11 +33,13 @@ public sealed partial class MainView
             "write" => new WritePage(_bus, services.GetRequiredService<INotesRepository>(),
                 services.GetRequiredService<INotesImportExportService>(), services.GetService<INotesAttachmentStore>(),
                 ai: services.GetService<INotesAiService>(), aiModels: services.GetService<IOllamaClient>(),
-                readAloud: services.GetRequiredService<NotesReadAloudController>()),
+                readAloud: services.GetRequiredService<NotesReadAloudController>(),
+                captureOriginalOwner: page => captureOriginalOwner?.Invoke(page)),
             "canvas" => new global::Haven.Desktop.Views.Pages.Canvas.CanvasPage(_bus, services.GetRequiredService<INotesRepository>(),
                 services.GetRequiredService<INotesImportExportService>(), services.GetRequiredService<UserPreferencesService>()),
             "present" => new PresentPage(_bus, services.GetRequiredService<IPresentRepository>(),
-                services.GetRequiredService<IPresentExportService>(), services.GetRequiredService<IPresentImportService>()),
+                services.GetRequiredService<IPresentExportService>(), services.GetRequiredService<IPresentImportService>(),
+                captureOriginalOwner: page => captureOriginalOwner?.Invoke(page)),
             "data" or "data-database" or "data-spreadsheet" => new DataPage(_bus, services.GetRequiredService<IDataWorkbookRepository>(),
                 services.GetRequiredService<IDataWorkbookFormatService>(), services.GetRequiredService<IDataWorkbookQueryService>(),
                 services.GetRequiredService<GenUiLiveActivityTracker>(), services.GetRequiredService<GenUiInstanceStore>()),

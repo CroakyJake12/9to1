@@ -73,6 +73,42 @@ public sealed class CanvasOriginalWorkOwnerTests
         Assert.Equal(1, cleanupCalls); Assert.Same(close, owner.OriginalCloseTask);
         Assert.Throws<ObjectDisposedException>(() => { _ = owner.RunOriginalAsync(_ => Task.FromResult(9)); });
     }
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Foreign_empty_or_nested_aggregate_keeps_its_identity_and_close_faulted(bool nested)
+    {
+        var empty = new AggregateException("Foreign empty source fault.");
+        var source = nested ? new AggregateException("Foreign nested source fault.", empty, new IOException("Nested sibling.")) : empty;
+        var raw = Task.FromException(source);
+        var owner = new CanvasOriginalWorkOwner();
+        var original = owner.RunOriginalAsync(_ => raw);
+        var originalFailure = await Record.ExceptionAsync(() => original);
+        Assert.True(original.IsFaulted);
+        Assert.True(ContainsSameCause(originalFailure!, source));
+        var cleanupCalls = 0;
+        var close = owner.CloseAndDrainAsync(() => { ++cleanupCalls; return Task.CompletedTask; });
+        var closeFailure = await Record.ExceptionAsync(() => close);
+        Assert.True(close.IsFaulted);
+        Assert.Same(source, closeFailure);
+        Assert.Equal(1, cleanupCalls);
+        Assert.Same(close, owner.CloseAndDrainAsync());
+        Assert.Same(source, await Record.ExceptionAsync(() => close));
+    }
+
+    [Fact]
+    public async Task Foreign_empty_independent_cleanup_fault_cannot_become_a_successful_close()
+    {
+        var source = new AggregateException("Foreign empty independent cleanup fault.");
+        var owner = new CanvasOriginalWorkOwner();
+        await owner.RunOriginalAsync(_ => Task.CompletedTask);
+        var close = owner.CloseAndDrainAsync(() => Task.FromException(source));
+        Assert.Same(source, await Record.ExceptionAsync(() => close));
+        Assert.True(close.IsFaulted);
+        Assert.Same(close, owner.OriginalCloseTask);
+    }
+    private static bool ContainsSameCause(Exception actual, Exception sought)
+        => ReferenceEquals(actual, sought) || actual is AggregateException group && group.InnerExceptions.Any(child => ContainsSameCause(child, sought));
     private static TaskCompletionSource NewSignal() => new(TaskCreationOptions.RunContinuationsAsynchronously);
     private static IEnumerable<Exception> Leaves(Exception error)
         => error is AggregateException group ? group.InnerExceptions.SelectMany(Leaves) : [error];

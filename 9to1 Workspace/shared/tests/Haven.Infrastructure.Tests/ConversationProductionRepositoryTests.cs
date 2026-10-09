@@ -16,7 +16,7 @@ namespace Haven.Infrastructure.Tests;
 /// <summary>
 /// Represents conversation production repository tests and keeps its related state and behavior together.
 /// </summary>
-public sealed class ConversationProductionRepositoryTests : IDisposable
+public sealed partial class ConversationProductionRepositoryTests : IDisposable
 {
     /// <summary>
     /// Stores paths locally so this component can preserve the dependency, cache, or state between member calls.

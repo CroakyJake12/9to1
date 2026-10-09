@@ -29,6 +29,30 @@ internal static class FilesOriginalDeveloperTaskSource
         if (errors.Count != 0) throw new AggregateException("Actual developer source/enrollment failed; acquired raw Tasks were independently joined.", errors);
         return result;
     }
+    internal static async Task ObserveAsync(Func<Task> source, Action<Action> originalScope,
+        Action<Task> retainOriginalTask)
+    {
+        Task? actual = null; var errors = new List<Exception>();
+        try
+        {
+            Invoke(() =>
+            {
+                actual = source() ?? throw new InvalidOperationException("Original developer source returned no Task.");
+                retainOriginalTask(actual);
+            }, originalScope);
+        }
+        catch (Exception error) { Add(errors, error); }
+        if (actual is not null)
+            try { await actual.ConfigureAwait(false); }
+            catch (Exception error)
+            {
+                if (actual.IsCanceled && errors.Count == 0) throw;
+                foreach (var cause in actual.Exception?.InnerExceptions ?? new[] { error }.AsEnumerable()) Add(errors, cause);
+            }
+        if (errors.Count == 1 && errors[0] is not OperationCanceledException)
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(errors[0]).Throw();
+        if (errors.Count != 0) throw new AggregateException("Actual developer source/enrollment failed; acquired raw Tasks were independently joined.", errors);
+    }
     internal static void Invoke(Action callback, Action<Action> originalScope)
     {
         ArgumentNullException.ThrowIfNull(callback); ArgumentNullException.ThrowIfNull(originalScope);

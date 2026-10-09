@@ -146,6 +146,7 @@ public sealed partial class App
 
     private void DemandOriginalWindowsDeveloperRetirementJoin()
     {
+        DemandOriginalAssistantDevelopmentInputsJoin();
         _windowsDeveloperPermissions?.DemandExternalOriginalSetupJoin();
         _windowsDeveloperSteps?.DemandExternalOriginalSetupStepOutcomeJoin();
         _windowsDeveloperScopes?.DemandExternalOriginalSetupScopeJoin();
@@ -186,7 +187,8 @@ public sealed partial class App
     }
     private async Task JoinOriginalWindowsDeveloperBorrowersCoreAsync(Task start)
     {
-        await start; 
+        await start;
+        await JoinOriginalAssistantDevelopmentInputsAsync();
         var failures = new List<Exception>(); var completions = new List<Task>();
         var completionAcquisitionFailed = false;
         var completionPhase = true;
@@ -230,6 +232,7 @@ public sealed partial class App
         foreach (var original in dependencies.Distinct<Task>(ReferenceEqualityComparer.Instance))
             await JoinOriginalAppTaskAsync(original, failures);
         ThrowAppCauses(failures);
+        await JoinOriginalAssistantSqliteAfterBorrowersAsync();
     }
     private Task JoinOriginalUntransferredWindowsDeveloperBorrowersAsync()
     {

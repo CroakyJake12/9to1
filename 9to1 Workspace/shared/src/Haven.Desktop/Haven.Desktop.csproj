@@ -28,7 +28,7 @@
   <ItemGroup>
     <AssemblyMetadata Include="9to1.WindowsAppId" Value="$(ProductWindowsAppId)" />
     <AssemblyMetadata Include="9to1.InitialApp" Value="$(ProductInitialApp)" Condition="'$(ProductInitialApp)' != ''" />
-    <PackageReference Include="AvaloniaUI.DiagnosticsSupport" />
+    <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Condition="'$(Configuration)' == 'Debug'" />
     <ProjectReference Include="..\Haven.Core\Haven.Core.csproj" />
     <ProjectReference Include="..\Haven.Application\Haven.Application.csproj" />
     <ProjectReference Include="../../../Spaces/HavenOS.Spaces.csproj" />
@@ -36,6 +36,12 @@
     <ProjectReference Include="..\Haven.Infrastructure\Haven.Infrastructure.csproj" />
     <ProjectReference Include="../../../Accounts/Remote/NineToOne.Accounts.Remote.csproj" />
     <ProjectReference Include="../../../Home/NativeUI/HavenOS.Home.NativeUI.csproj" />
+    <ProjectReference Include="../../../Assistants/HavenOS.Assistants.Core.csproj" />
+    <ProjectReference Include="../../../Assistants/Migration/HavenOS.Assistants.Migration.csproj" />
+    <ProjectReference Include="../../../Assistants/Memory/HavenOS.Assistants.Memory.csproj" />
+    <ProjectReference Include="../../../Assistants/MiniComputer/HavenOS.Assistants.MiniComputer.csproj" />
+    <ProjectReference Include="../../../Assistants/Attachments/HavenOS.Assistants.Attachments.csproj" />
+    <ProjectReference Include="../../../Assistants/NativeUI/HavenOS.Assistants.NativeUI.csproj" />
     <ProjectReference Include="../../../Files/NativeUI/HavenOS.Files.NativeUI.csproj" />
     <ProjectReference Include="..\Haven.Browser\Haven.Browser.csproj" />
     <!-- During Phase 2 this desktop project is the Avalonia backend/host for platform-neutral Haven.UI. -->
@@ -65,6 +71,7 @@
     <AvaloniaResource Include="Assets\**" />
     <EmbeddedResource Include="Prefabs\**\*.hui" />
     <EmbeddedResource Include="DynamicUI\**\*.hui" />
+    <EmbeddedResource Include="Views/Pages/Automations/UI/OriginalAutomationLibrary.cui" LogicalName="Haven.Desktop.OriginalAutomationLibrary.cui" />
     <Compile Update="Prefabs\**\*.hui.cs"><DependentUpon>%(Filename)</DependentUpon></Compile>
   </ItemGroup>
   <ItemGroup>

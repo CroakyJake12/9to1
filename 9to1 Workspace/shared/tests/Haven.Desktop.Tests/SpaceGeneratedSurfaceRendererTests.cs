@@ -1,12 +1,13 @@
 using Haven.Application;
+using Avalonia.Headless.XUnit;
 using Haven.Desktop.Views.Pages.Spaces;
 
 namespace Haven.Desktop.Tests;
 
 public sealed class SpaceGeneratedSurfaceRendererTests
 {
-    [Fact]
-    public void Checklist_space_renders_through_trusted_genui_and_dispose_removes_instance()
+    [AvaloniaFact]
+    public async Task Checklist_space_renders_through_trusted_genui_and_close_removes_instance()
     {
         var instances = new GenUiInstanceStore();
         var localActions = new GenUiLocalActionRegistry();
@@ -29,6 +30,7 @@ public sealed class SpaceGeneratedSurfaceRendererTests
         Assert.NotEmpty(mount.Root.Children);
 
         mount.Dispose();
+        await mount.CloseAndDrainAsync();
         Assert.Null(instances.TryGet(instanceId));
     }
 

@@ -54,7 +54,9 @@ public sealed partial class ChatSessionService
         Array.AsReadOnly(input.Capabilities.ToArray()), input.AgentName, input.AgentInstructions,
         input.DuoMode, input.WorkspaceRoot, input.ProjectContext, input.ProjectInstructions,
         input.Images, input.Prompts is null ? null : Array.AsReadOnly(input.Prompts.ToArray()),
-        input.RegisteredContext, input.GenerationOptions, input.FilePermission, input.CommandPermission,
+        input.RegisteredContext, input.GenerationOptions is { } originalOptions
+            ? originalOptions with { OriginalPersistentMemoryInput = null, OriginalAttachmentInput = null } : null,
+        input.FilePermission, input.CommandPermission,
         input.BrowserPermission, input.ExplicitCapabilities is null ? null : Array.AsReadOnly(input.ExplicitCapabilities.ToArray()),
         input.AvailableCapabilities is null ? null : Array.AsReadOnly(input.AvailableCapabilities.ToArray()), input.ComputerUseRequest);
 

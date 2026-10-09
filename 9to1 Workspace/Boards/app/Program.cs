@@ -192,7 +192,10 @@ internal sealed class BoardsApp : Application
             if (handled is not null)
             {
                 e.Handled = true;
-                _ = _viewModel.DispatchAsync(handled, null);
+                // Keyboard commands share menu admission and original-task custody,
+                // so close joins an accepted save and refuses new work while draining.
+                var viewModel = _viewModel;
+                _ = ObserveMenuActionAsync(() => viewModel.DispatchAsync(handled, null).AsTask());
             }
             else if (e.Key == Key.Escape)
             {

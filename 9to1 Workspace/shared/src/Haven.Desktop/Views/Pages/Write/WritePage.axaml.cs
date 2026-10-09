@@ -15,7 +15,8 @@ namespace Haven.Desktop.Views.Pages.Write;
 /// <summary>
 /// Thin Avalonia backend host for the Haven.UI Write scene and the recovered local document services.
 /// </summary>
-public sealed partial class WritePage : UserControl, IDisposable
+public sealed partial class WritePage : UserControl, IDisposable, IAsyncDisposable,
+    IDesktopOriginalRetirementParticipant, IDesktopOriginalRetirementJoinGuard
 {
     private readonly HavenEventBus _bus;
     private readonly INotesRepository _repository;
@@ -35,6 +36,7 @@ public sealed partial class WritePage : UserControl, IDisposable
     private bool _closePreparing;
     private static readonly JsonSerializerOptions DocumentJson = new(JsonSerializerDefaults.Web);
     private bool _initialized;
+    private Exception? _originalInitializationFailure;
     private bool _busy;
     private bool _dirty;
     private bool _disposed;
@@ -48,7 +50,8 @@ public sealed partial class WritePage : UserControl, IDisposable
         INotesAiService? ai = null,
         IOllamaClient? aiModels = null,
         NotesReadAloudController? readAloud = null,
-        IWriteNativeDocumentPackageStore? nativePackageStore = null)
+        IWriteNativeDocumentPackageStore? nativePackageStore = null,
+        Action<WritePage>? captureOriginalOwner = null)
     {
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
@@ -59,9 +62,16 @@ public sealed partial class WritePage : UserControl, IDisposable
         _ai = ai;
         _aiModels = aiModels;
         _readAloud = readAloud;
+        _work = new(StopOriginalPresentationAsync, CleanupOriginalPresentationAsync);
 
+        var constructorSources = _physicalSources ??= [];
+        constructorSources.Add(this);
+        try
+        {
+        InvokePhysicalSource(() => { captureOriginalOwner?.Invoke(this); return true; });
+        _work.DemandAdmission();
         InitializeComponent();
-        _route = new WordWriteHavenScene();
+        _route = new WordWriteHavenScene(OwnOriginalSceneCallback, ScheduleOriginalStats);
         Scene.Root = _route.Root;
         _route.LibraryRequested += OnLibraryRequested;
         _route.DocumentOpenRequested += OnDocumentOpenRequested;
@@ -92,6 +102,18 @@ public sealed partial class WritePage : UserControl, IDisposable
         _autosaveTimer.Tick += OnAutosaveTick;
         Loaded += OnLoaded;
         DetachedFromVisualTree += OnDetachedFromVisualTree;
+        _work.DemandAdmission();
+        }
+        catch
+        {
+            _work.RequestRetirement();
+            throw;
+        }
+        finally
+        {
+            _constructionSettled.TrySetResult();
+            constructorSources.RemoveAt(constructorSources.Count - 1);
+        }
     }
 
     public NotesDocument? Document { get; private set; }
@@ -101,17 +123,23 @@ public sealed partial class WritePage : UserControl, IDisposable
     internal HavenSceneControl SceneHost => Scene;
     internal Haven.UI.Components.Page SceneRoot => _route.Root;
 
-    public async Task InitializeAsync(CancellationToken cancellationToken = default)
+    public Task InitializeAsync(CancellationToken cancellationToken = default) =>
+        RunOriginalAsync(() => InitializeCoreAsync(cancellationToken));
+
+    private async Task InitializeCoreAsync(CancellationToken cancellationToken)
     {
         if (_initialized || _disposed || _closePreparing)
             return;
 
         _initialized = true;
+        _originalInitializationFailure = null;
         SetBusy(true);
         try
         {
             await RefreshDocumentsAsync(cancellationToken);
+            if (!CanPublishOriginal) return;
             await RefreshAiModelsAsync(cancellationToken);
+            if (!CanPublishOriginal) return;
             if (_initialDocumentId is { } initialDocumentId)
             {
                 if (!await OpenDocumentByIdAsync(initialDocumentId, cancellationToken, saveBeforeSwitch: false))
@@ -122,8 +150,8 @@ public sealed partial class WritePage : UserControl, IDisposable
                 ShowLibrary();
             }
 
-            _autosaveTimer.Start();
-            _bus.Fire("Write.Opened");
+            Publish(_autosaveTimer.Start);
+            Publish(() => _bus.Fire("Write.Opened"));
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -132,8 +160,11 @@ public sealed partial class WritePage : UserControl, IDisposable
         }
         catch (Exception ex)
         {
+            _work.Executing?.Retain(ex);
             _initialized = false;
-            _route.SetStatus("Couldnâ€™t open local documents: " + ex.Message);
+            _originalInitializationFailure = ex;
+            _work.Executing!.Retain(ex);
+            Publish(() => _route.SetStatus("Couldnâ€™t open local documents: " + ex.Message));
         }
         finally
         {
@@ -143,15 +174,18 @@ public sealed partial class WritePage : UserControl, IDisposable
 
     private async Task RefreshAiModelsAsync(CancellationToken cancellationToken)
     {
-        if (_aiModels is null) { _route.SetAiModels([]); return; }
-        try { var models = await _aiModels.GetModelsAsync(cancellationToken); _route.SetAiModels(models.Select(model => model.Name).Where(name => !string.IsNullOrWhiteSpace(name)).ToArray()); }
+        if (_aiModels is null) { Publish(() => _route.SetAiModels([])); return; }
+        try { var models = await ObserveOriginalAsync(() => _aiModels.GetModelsAsync(cancellationToken)); Publish(() => _route.SetAiModels(models.Select(model => model.Name).Where(name => !string.IsNullOrWhiteSpace(name)).ToArray())); }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
-        catch { _route.SetAiModels([]); }
+        catch { Publish(() => _route.SetAiModels([])); }
     }
 
-    public async Task<bool> SaveAsync(
+    public Task<bool> SaveAsync(
         string reason = "Manual save",
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        RunOriginalAsync(() => SaveCoreAsync(reason, cancellationToken));
+
+    private async Task<bool> SaveCoreAsync(string reason, CancellationToken cancellationToken)
     {
         if (_disposed) return false;
         if (Document is null || (!_dirty && !Document.Recovery.HasUnsavedRecovery))
@@ -166,7 +200,7 @@ public sealed partial class WritePage : UserControl, IDisposable
             if (string.IsNullOrWhiteSpace(document.Title))
             {
                 document.Title = "Untitled document";
-                _route.SetTitleFromModel(document.Title);
+                Publish(() => _route.SetTitleFromModel(document.Title));
             }
 
             // The repository owns this submitted snapshot. Later retained edits
@@ -175,7 +209,7 @@ public sealed partial class WritePage : UserControl, IDisposable
             var snapshot = JsonSerializer.Deserialize<NotesDocument>(
                 JsonSerializer.Serialize(document, DocumentJson), DocumentJson)
                 ?? throw new InvalidDataException("The Write document could not be snapshotted.");
-            var result = await _repository.SaveAsync(snapshot, reason, cancellationToken);
+            var result = await ObserveOriginalAsync(() => _repository.SaveAsync(snapshot, reason, cancellationToken));
             if (Document is { } current && current.Id == document.Id)
             {
                 current.Version = result.Version;
@@ -184,15 +218,15 @@ public sealed partial class WritePage : UserControl, IDisposable
                 _dirty = generation != _editGeneration;
             }
 
-            await RefreshDocumentsAsync(cancellationToken);
+            if (CanPublishOriginal) await RefreshDocumentsAsync(cancellationToken);
             if (Document?.Id == document.Id)
             {
                 _documentIndex = IndexOfDocument(document.Id);
                 UpdatePosition();
-                _route.SetStatus(_dirty ? "Newer changes remain unsaved. Save them before closing."
-                    : $"Saved locally at {result.SavedAt.LocalDateTime:t} Â· v{result.Version}");
+                Publish(() => _route.SetStatus(_dirty ? "Newer changes remain unsaved. Save them before closing."
+                    : $"Saved locally at {result.SavedAt.LocalDateTime:t} Â· v{result.Version}"));
             }
-            _bus.Fire("Write.Saved");
+            Publish(() => _bus.Fire("Write.Saved"));
             return Document is { } remaining && remaining.Id == document.Id && !_dirty
                 && !remaining.Recovery.HasUnsavedRecovery;
         }
@@ -202,7 +236,8 @@ public sealed partial class WritePage : UserControl, IDisposable
         }
         catch (Exception ex)
         {
-            _route.SetStatus("Couldn't save this document: " + ex.Message);
+            _work.Executing?.Retain(ex);
+            Publish(() => _route.SetStatus("Couldn't save this document: " + ex.Message));
             return false;
         }
         finally
@@ -212,14 +247,22 @@ public sealed partial class WritePage : UserControl, IDisposable
     }
 
     /// <summary>Refuses close over active owner work or a draft not acknowledged by storage.</summary>
-    public async Task<bool> PrepareToCloseAsync(
-        string reason = "Autosave before closing Write", CancellationToken cancellationToken = default)
+    public Task<bool> PrepareToCloseAsync(
+        string reason = "Autosave before closing Write", CancellationToken cancellationToken = default) =>
+        RunOriginalAsync(() => PrepareToCloseCoreAsync(reason, cancellationToken));
+
+    private async Task<bool> PrepareToCloseCoreAsync(string reason, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (_disposed) return false;
+        if (!_initialized || _originalInitializationFailure is not null || (_initialDocumentId is not null && Document is null))
+        {
+            Publish(() => _route.SetStatus("Finish opening this Write workspace before closing."));
+            return false;
+        }
         if (_busy || _closePreparing || Volatile.Read(ref _saveRunning) != 0)
         {
-            _route.SetStatus("Finish the current Write operation before closing.");
+            Publish(() => _route.SetStatus("Finish the current Write operation before closing."));
             return false;
         }
 
@@ -228,11 +271,12 @@ public sealed partial class WritePage : UserControl, IDisposable
         try
         {
             await StopReadAloudForContextChangeAsync();
-            if (_readAloud?.IsActive == true) return false;
+            if (!CanPublishOriginal) return false;
+            if (_readAloudStopUnacknowledged || _readAloud?.IsActive == true) return false;
             if (!await SaveAsync(reason, cancellationToken)) return false;
             if (_dirty || Document?.Recovery.HasUnsavedRecovery == true)
             {
-                _route.SetStatus("Newer changes remain unsaved. Save them before closing.");
+                Publish(() => _route.SetStatus("Newer changes remain unsaved. Save them before closing."));
                 return false;
             }
             return true;
@@ -244,14 +288,19 @@ public sealed partial class WritePage : UserControl, IDisposable
         }
     }
 
-    private async void OnLoaded(object? sender, RoutedEventArgs e)
+    private void OnLoaded(object? sender, RoutedEventArgs e) => RunOriginalEvent(() => OnLoadedCoreAsync(sender, e));
+
+    private async Task OnLoadedCoreAsync(object? sender, RoutedEventArgs e)
     {
         await InitializeAsync();
-        if (!_disposed)
-            _autosaveTimer.Start();
+        Publish(_autosaveTimer.Start);
     }
 
-    private async void OnDetachedFromVisualTree(
+    private void OnDetachedFromVisualTree(
+        object? sender,
+        Avalonia.VisualTreeAttachmentEventArgs e) => RunOriginalEvent(() => OnDetachedFromVisualTreeCoreAsync(sender, e));
+
+    private async Task OnDetachedFromVisualTreeCoreAsync(
         object? sender,
         Avalonia.VisualTreeAttachmentEventArgs e)
     {
@@ -262,7 +311,9 @@ public sealed partial class WritePage : UserControl, IDisposable
             await SaveAsync("Autosave on leaving Write");
     }
 
-    private async void OnAutosaveTick(object? sender, EventArgs e)
+    private void OnAutosaveTick(object? sender, EventArgs e) => RunOriginalEvent(() => OnAutosaveTickCoreAsync(sender, e));
+
+    private async Task OnAutosaveTickCoreAsync(object? sender, EventArgs e)
     {
         if (_disposed || !_dirty || _busy || Document is null)
             return;
@@ -270,79 +321,96 @@ public sealed partial class WritePage : UserControl, IDisposable
         await SaveAsync("Autosave");
     }
 
-    private async void OnLibraryRequested(object? sender, EventArgs e) =>
+    private void OnLibraryRequested(object? sender, EventArgs e) => RunOriginalEvent(() => OnLibraryRequestedCoreAsync(sender, e));
+
+    private async Task OnLibraryRequestedCoreAsync(object? sender, EventArgs e) =>
         await RunBusyAsync(
             () => ShowLibraryAsync(saveBeforeSwitch: true, CancellationToken.None),
             "open the document library");
 
-    private async void OnDocumentOpenRequested(Guid documentId) =>
+    private void OnDocumentOpenRequested(Guid documentId) => RunOriginalEvent(() => OnDocumentOpenRequestedCoreAsync(documentId));
+
+    private async Task OnDocumentOpenRequestedCoreAsync(Guid documentId) =>
         await RunBusyAsync(
             async () => { await OpenDocumentByIdAsync(documentId, CancellationToken.None, saveBeforeSwitch: true); },
             "open this document");
 
-    private async void OnAiProposalRequested(string instruction, bool allowDocumentContext, string modelName) =>
+    private void OnAiProposalRequested(string instruction, bool allowDocumentContext, string modelName) => RunOriginalEvent(() => OnAiProposalRequestedCoreAsync(instruction, allowDocumentContext, modelName));
+
+    private async Task OnAiProposalRequestedCoreAsync(string instruction, bool allowDocumentContext, string modelName) =>
         await RunBusyAsync(() => ProposeAiAsync(instruction, allowDocumentContext, modelName, CancellationToken.None), "create an AI proposal");
 
     private async Task ProposeAiAsync(string instruction, bool allowDocumentContext, string modelName, CancellationToken cancellationToken)
     {
         if (Document is null) return;
-        if (_ai is null) { _route.SetStatus("AI proposals are unavailable because the Notes AI service is not registered."); return; }
+        if (_ai is null) { Publish(() => _route.SetStatus("AI proposals are unavailable because the Notes AI service is not registered.")); return; }
         var selectedText = _route.SelectedText;
-        if (!allowDocumentContext && string.IsNullOrWhiteSpace(selectedText)) { _route.SetStatus("Select text, or explicitly allow document context, before requesting an AI edit."); return; }
+        if (!allowDocumentContext && string.IsNullOrWhiteSpace(selectedText)) { Publish(() => _route.SetStatus("Select text, or explicitly allow document context, before requesting an AI edit.")); return; }
         var context = allowDocumentContext ? string.Join("\n", NotesTextStatistics.EnumerateText(Document)) : string.Empty;
-        var result = await _ai.ProposeAsync(new NotesAiProposalRequest(Document.Id, _route.SelectedBlockId, instruction, selectedText, context, modelName, allowDocumentContext, Document.Citations), cancellationToken);
+        var result = await ObserveOriginalAsync(() => _ai.ProposeAsync(new NotesAiProposalRequest(Document.Id, _route.SelectedBlockId, instruction, selectedText, context, modelName, allowDocumentContext, Document.Citations), cancellationToken));
+        if (!CanPublishOriginal) return;
         var change = new NotesAiChange { BlockId = _route.SelectedBlockId, Instruction = instruction.Trim(), OriginalContent = selectedText, ProposedContent = result.ProposedContent, Explanation = result.Explanation, CitationIds = result.CitationIds.ToList(), ProviderId = result.ProviderId, ModelName = result.ModelName, Status = NotesAiChangeStatus.Proposed, UserConsentRecorded = allowDocumentContext || !string.IsNullOrWhiteSpace(selectedText), SentDocumentContext = allowDocumentContext };
-        Document.AiChanges.Add(change); MarkDirty(); _route.SetPendingAiChange(change); _route.SetStatus("AI proposal ready for review. Nothing has been applied."); _bus.Fire("Write.Ai.Proposed");
+        Document.AiChanges.Add(change); MarkDirty(); Publish(() => _route.SetPendingAiChange(change)); Publish(() => _route.SetStatus("AI proposal ready for review. Nothing has been applied.")); Publish(() => _bus.Fire("Write.Ai.Proposed"));
     }
 
-    private async void OnAiApplyRequested(object? sender, EventArgs e)
+    private void OnAiApplyRequested(object? sender, EventArgs e) => RunOriginalEvent(() => OnAiApplyRequestedCoreAsync(sender, e));
+
+    private async Task OnAiApplyRequestedCoreAsync(object? sender, EventArgs e)
     {
-        if (await SaveAsync("Applied reviewed AI proposal")) { _route.SetStatus("Reviewed AI proposal applied and saved."); _bus.Fire("Write.Ai.Applied"); }
+        if (await SaveAsync("Applied reviewed AI proposal")) { Publish(() => _route.SetStatus("Reviewed AI proposal applied and saved.")); Publish(() => _bus.Fire("Write.Ai.Applied")); }
     }
 
-    private async void OnAiRejectRequested(object? sender, EventArgs e)
+    private void OnAiRejectRequested(object? sender, EventArgs e) => RunOriginalEvent(() => OnAiRejectRequestedCoreAsync(sender, e));
+
+    private async Task OnAiRejectRequestedCoreAsync(object? sender, EventArgs e)
     {
-        if (await SaveAsync("Rejected AI proposal")) { _route.SetStatus("AI proposal rejected. Document content was unchanged."); _bus.Fire("Write.Ai.Rejected"); }
+        if (await SaveAsync("Rejected AI proposal")) { Publish(() => _route.SetStatus("AI proposal rejected. Document content was unchanged.")); Publish(() => _bus.Fire("Write.Ai.Rejected")); }
     }
 
-    private async void OnReadAloudRequested(object? sender, EventArgs e)
+    private void OnReadAloudRequested(object? sender, EventArgs e) => RunOriginalEvent(() => OnReadAloudRequestedCoreAsync(sender, e));
+
+    private async Task OnReadAloudRequestedCoreAsync(object? sender, EventArgs e)
     {
         if (_disposed) return;
         if (_readAloud is null)
         {
-            _route.SetStatus("Read aloud is unavailable because the local speech service is not registered.");
+            Publish(() => _route.SetStatus("Read aloud is unavailable because the local speech service is not registered."));
             return;
         }
 
         if (Document is null)
         {
-            _route.SetStatus("Open a document before reading it aloud.");
+            Publish(() => _route.SetStatus("Open a document before reading it aloud."));
             return;
         }
 
         var plainText = string.Join("\n", NotesTextStatistics.EnumerateText(Document));
         if (string.IsNullOrWhiteSpace(plainText))
         {
-            _route.SetStatus("This document has no readable text yet.");
+            Publish(() => _route.SetStatus("This document has no readable text yet."));
             return;
         }
 
         try
         {
             if (_readAloud.IsActive)
-                await _readAloud.StopAsync(CancellationToken.None);
-            await _readAloudSessionCts.CancelAsync();
+                await StopReadAloudOriginalAsync();
+            await ObserveOriginalAsync(() => _readAloudSessionCts.CancelAsync());
+            if (!CanPublishOriginal) return;
             _readAloudSessionCts.Dispose();
             _readAloudSessionCts = new CancellationTokenSource();
-            await _readAloud.SpeakLongFormAsync(plainText, language: null, _readAloudSessionCts.Token);
+            await ObserveOriginalAsync(() => _readAloud.SpeakOriginalLongFormAsync(plainText, language: null,
+                _readAloudSessionCts.Token, ObserveOriginalAsync, QualifyOriginalSpeechSource));
         }
         catch (ArgumentException ex)
         {
-            _route.SetStatus(ex.Message);
+            _work.Executing?.Retain(ex);
+            Publish(() => _route.SetStatus(ex.Message));
         }
         catch (InvalidOperationException ex)
         {
-            _route.SetStatus(ex.Message);
+            _work.Executing?.Retain(ex);
+            Publish(() => _route.SetStatus(ex.Message));
         }
         catch (OperationCanceledException)
         {
@@ -350,74 +418,85 @@ public sealed partial class WritePage : UserControl, IDisposable
         }
     }
 
-    private async void OnReadAloudStopRequested(object? sender, EventArgs e)
+    private void OnReadAloudStopRequested(object? sender, EventArgs e) => RunOriginalEvent(() => OnReadAloudStopRequestedCoreAsync(sender, e));
+
+    private async Task OnReadAloudStopRequestedCoreAsync(object? sender, EventArgs e)
     {
         if (_disposed || _readAloud is null || !_readAloud.IsActive) return;
         try
         {
-            await _readAloud.StopAsync(CancellationToken.None);
+            await StopReadAloudOriginalAsync();
         }
         catch (Exception ex)
         {
-            _route.SetStatus("Couldn't stop read aloud: " + ex.Message);
+            _work.Executing?.Retain(ex);
+            Publish(() => _route.SetStatus("Couldn't stop read aloud: " + ex.Message));
         }
     }
 
-    private async void OnReadAloudSkipBackRequested(object? sender, EventArgs e)
+    private void OnReadAloudSkipBackRequested(object? sender, EventArgs e) => RunOriginalEvent(() => OnReadAloudSkipBackRequestedCoreAsync(sender, e));
+
+    private async Task OnReadAloudSkipBackRequestedCoreAsync(object? sender, EventArgs e)
     {
         if (_disposed || _readAloud is null || !_readAloud.IsReading) return;
         try
         {
-            await _readAloud.SkipBackwardAsync(CancellationToken.None);
+            await ObserveOriginalAsync(() => _readAloud.SkipBackwardAsync(CancellationToken.None));
         }
         catch (InvalidOperationException ex)
         {
-            _route.SetStatus(ex.Message);
+            _work.Executing?.Retain(ex);
+            Publish(() => _route.SetStatus(ex.Message));
         }
     }
 
-    private async void OnReadAloudSkipForwardRequested(object? sender, EventArgs e)
+    private void OnReadAloudSkipForwardRequested(object? sender, EventArgs e) => RunOriginalEvent(() => OnReadAloudSkipForwardRequestedCoreAsync(sender, e));
+
+    private async Task OnReadAloudSkipForwardRequestedCoreAsync(object? sender, EventArgs e)
     {
         if (_disposed || _readAloud is null || !_readAloud.IsReading) return;
         try
         {
-            await _readAloud.SkipForwardAsync(CancellationToken.None);
+            await ObserveOriginalAsync(() => _readAloud.SkipForwardAsync(CancellationToken.None));
         }
         catch (InvalidOperationException ex)
         {
-            _route.SetStatus(ex.Message);
+            _work.Executing?.Retain(ex);
+            Publish(() => _route.SetStatus(ex.Message));
         }
     }
 
-    private async void OnReadAloudPauseResumeRequested(object? sender, EventArgs e)
+    private void OnReadAloudPauseResumeRequested(object? sender, EventArgs e) => RunOriginalEvent(() => OnReadAloudPauseResumeRequestedCoreAsync(sender, e));
+
+    private async Task OnReadAloudPauseResumeRequestedCoreAsync(object? sender, EventArgs e)
     {
         if (_disposed || _readAloud is null || !_readAloud.IsReading) return;
         try
         {
             if (_readAloud.IsPaused)
-                await _readAloud.ResumeAsync(CancellationToken.None);
+                await ObserveOriginalAsync(() => _readAloud.ResumeAsync(CancellationToken.None));
             else
-                await _readAloud.PauseAsync(CancellationToken.None);
+                await ObserveOriginalAsync(() => _readAloud.PauseAsync(CancellationToken.None));
         }
         catch (InvalidOperationException ex)
         {
-            _route.SetStatus(ex.Message);
+            _work.Executing?.Retain(ex);
+            Publish(() => _route.SetStatus(ex.Message));
         }
     }
 
     private void OnReadAloudStatusChanged(object? sender, NotesReadAloudStatus status) =>
-        Dispatcher.UIThread.Post(() =>
+        QueueOriginalPublication(() =>
         {
-            if (_disposed) return;
-            _route.SetStatus(status.Message);
+            Publish(() => _route.SetStatus(status.Message));
             RefreshReadAloudRouteState();
         });
 
     private void OnReadAloudProgressChanged(double progress) =>
-        Dispatcher.UIThread.Post(() => { if (!_disposed) RefreshReadAloudRouteState(); });
+        QueueOriginalPublication(RefreshReadAloudRouteState);
 
     private void OnReadAloudIsReadingChanged(bool isReading) =>
-        Dispatcher.UIThread.Post(() => { if (!_disposed) RefreshReadAloudRouteState(); });
+        QueueOriginalPublication(RefreshReadAloudRouteState);
 
     private void RefreshReadAloudRouteState()
     {
@@ -429,7 +508,7 @@ public sealed partial class WritePage : UserControl, IDisposable
             : _readAloud.IsPaused
                 ? $"Paused · section {index + 1} of {count}"
                 : $"Reading locally · section {index + 1} of {count}";
-        _route.SetReadAloudState(_readAloud.IsReading, _readAloud.IsPaused, label);
+        Publish(() => _route.SetReadAloudState(_readAloud.IsReading, _readAloud.IsPaused, label));
     }
 
     private async Task StopReadAloudForContextChangeAsync()
@@ -437,37 +516,53 @@ public sealed partial class WritePage : UserControl, IDisposable
         if (_readAloud is null || !_readAloud.IsActive) return;
         try
         {
-            await _readAloudSessionCts.CancelAsync();
-            await _readAloud.StopAsync(CancellationToken.None);
+            await ObserveOriginalAsync(() => _readAloudSessionCts.CancelAsync());
+            await StopReadAloudOriginalAsync();
         }
         catch (Exception ex)
         {
-            _route.SetStatus("Couldn't stop read aloud during the switch: " + ex.Message);
+            _work.Executing?.Retain(ex);
+            Publish(() => _route.SetStatus("Couldn't stop read aloud during the switch: " + ex.Message));
         }
     }
 
-    private async void OnNewRequested(object? sender, EventArgs e) =>
+    private void OnNewRequested(object? sender, EventArgs e) => RunOriginalEvent(() => OnNewRequestedCoreAsync(sender, e));
+
+    private async Task OnNewRequestedCoreAsync(object? sender, EventArgs e) =>
         await RunBusyAsync(
             () => CreateDocumentAsync(CancellationToken.None),
             "create a document");
 
-    private async void OnSaveRequested(object? sender, EventArgs e) => await SaveAsync();
+    private void OnSaveRequested(object? sender, EventArgs e) => RunOriginalEvent(() => OnSaveRequestedCoreAsync(sender, e));
 
-    private async void OnPreviousRequested(object? sender, EventArgs e) =>
+    private async Task OnSaveRequestedCoreAsync(object? sender, EventArgs e) => await SaveAsync();
+
+    private void OnPreviousRequested(object? sender, EventArgs e) => RunOriginalEvent(() => OnPreviousRequestedCoreAsync(sender, e));
+
+    private async Task OnPreviousRequestedCoreAsync(object? sender, EventArgs e) =>
         await RunBusyAsync(() => MoveAsync(-1), "open the previous document");
 
-    private async void OnNextRequested(object? sender, EventArgs e) =>
+    private void OnNextRequested(object? sender, EventArgs e) => RunOriginalEvent(() => OnNextRequestedCoreAsync(sender, e));
+
+    private async Task OnNextRequestedCoreAsync(object? sender, EventArgs e) =>
         await RunBusyAsync(() => MoveAsync(1), "open the next document");
 
-    private async void OnImportRequested(object? sender, EventArgs e) =>
+    private void OnImportRequested(object? sender, EventArgs e) => RunOriginalEvent(() => OnImportRequestedCoreAsync(sender, e));
+
+    private async Task OnImportRequestedCoreAsync(object? sender, EventArgs e) =>
         await RunBusyAsync(PickImportAsync, "import a document");
 
-    private async void OnExportRequested(object? sender, EventArgs e) =>
+    private void OnExportRequested(object? sender, EventArgs e) => RunOriginalEvent(() => OnExportRequestedCoreAsync(sender, e));
+
+    private async Task OnExportRequestedCoreAsync(object? sender, EventArgs e) =>
         await RunBusyAsync(PickExportAsync, "export this document");
 
-    internal async Task<bool> ImportFromPathAsync(
+    internal Task<bool> ImportFromPathAsync(
         string sourcePath,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        RunOriginalAsync(() => ImportFromPathCoreAsync(sourcePath, cancellationToken));
+
+    private async Task<bool> ImportFromPathCoreAsync(string sourcePath, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sourcePath);
         if (Document is not null && _dirty
@@ -483,39 +578,40 @@ public sealed partial class WritePage : UserControl, IDisposable
             {
                 if (_nativePackageStore is null)
                 {
-                    _route.SetStatus("Native .9to1w import is unavailable because its package service is not registered.");
+                    Publish(() => _route.SetStatus("Native .9to1w import is unavailable because its package service is not registered."));
                     return false;
                 }
-                var package = await _nativePackageStore.OpenAsync(sourcePath, cancellationToken);
+                var package = await ObserveOriginalAsync(() => _nativePackageStore.OpenAsync(sourcePath, cancellationToken));
                 if (!package.IsSuccess)
                 {
                     var error = package.Error;
                     if (error is null)
                     {
-                        _route.SetStatus("Couldn’t import this document because the package service returned no document.");
+                        Publish(() => _route.SetStatus("Couldn’t import this document because the package service returned no document."));
                         return false;
                     }
-                    _route.SetStatus($"Couldn’t import this document ({error.Code}): {error.Message}");
+                    Publish(() => _route.SetStatus($"Couldn’t import this document ({error.Code}): {error.Message}"));
                     return false;
                 }
                 imported = package.Value ?? throw new InvalidDataException("The native package service returned no document.");
             }
             else
             {
-                imported = await _formats.ImportAsync(sourcePath, cancellationToken);
+                imported = await ObserveOriginalAsync(() => _formats.ImportAsync(sourcePath, cancellationToken));
             }
-            var save = await _repository.SaveAsync(
+            var save = await ObserveOriginalAsync(() => _repository.SaveAsync(
                 imported,
                 "Imported " + Path.GetFileName(sourcePath),
-                cancellationToken);
+                cancellationToken));
             imported.Version = save.Version;
             await RefreshDocumentsAsync(cancellationToken);
+            if (!CanPublishOriginal) return false;
             Document = imported;
             _documentIndex = IndexOfDocument(imported.Id);
             _dirty = false;
-            _route.SetDocument(imported, _documentIndex, _documents.Count);
-            _route.SetStatus("Imported " + Path.GetFileName(sourcePath));
-            _bus.Fire("Write.Document.Imported");
+            Publish(() => _route.SetDocument(imported, _documentIndex, _documents.Count));
+            Publish(() => _route.SetStatus("Imported " + Path.GetFileName(sourcePath)));
+            Publish(() => _bus.Fire("Write.Document.Imported"));
             return true;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -524,14 +620,18 @@ public sealed partial class WritePage : UserControl, IDisposable
         }
         catch (Exception ex)
         {
-            _route.SetStatus("Couldnâ€™t import this document: " + ex.Message);
+            _work.Executing?.Retain(ex);
+            Publish(() => _route.SetStatus("Couldnâ€™t import this document: " + ex.Message));
             return false;
         }
     }
 
-    internal async Task<bool> ExportToPathAsync(
+    internal Task<bool> ExportToPathAsync(
         string destinationPath,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        RunOriginalAsync(() => ExportToPathCoreAsync(destinationPath, cancellationToken));
+
+    private async Task<bool> ExportToPathCoreAsync(string destinationPath, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(destinationPath);
         if (Document is null)
@@ -546,28 +646,28 @@ public sealed partial class WritePage : UserControl, IDisposable
             {
                 if (_nativePackageStore is null)
                 {
-                    _route.SetStatus("Native .9to1w export is unavailable because its package service is not registered.");
+                    Publish(() => _route.SetStatus("Native .9to1w export is unavailable because its package service is not registered."));
                     return false;
                 }
-                var package = await _nativePackageStore.SaveAsync(Document, destinationPath, cancellationToken);
+                var package = await ObserveOriginalAsync(() => _nativePackageStore.SaveAsync(Document, destinationPath, cancellationToken));
                 if (!package.IsSuccess)
                 {
                     var error = package.Error;
                     if (error is null)
                     {
-                        _route.SetStatus("Couldn’t export this document because the package service returned no saved path.");
+                        Publish(() => _route.SetStatus("Couldn’t export this document because the package service returned no saved path."));
                         return false;
                     }
-                    _route.SetStatus($"Couldn’t export this document ({error.Code}): {error.Message}");
+                    Publish(() => _route.SetStatus($"Couldn’t export this document ({error.Code}): {error.Message}"));
                     return false;
                 }
             }
             else
             {
-                await _formats.ExportAsync(Document, destinationPath, cancellationToken);
+                await ObserveOriginalAsync(() => _formats.ExportAsync(Document, destinationPath, cancellationToken));
             }
-            _route.SetStatus(BuildExportStatus(destinationPath));
-            _bus.Fire("Write.Document.Exported");
+            Publish(() => _route.SetStatus(BuildExportStatus(destinationPath)));
+            Publish(() => _bus.Fire("Write.Document.Exported"));
             return true;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -576,7 +676,8 @@ public sealed partial class WritePage : UserControl, IDisposable
         }
         catch (Exception ex)
         {
-            _route.SetStatus("Couldnâ€™t export this document: " + ex.Message);
+            _work.Executing?.Retain(ex);
+            Publish(() => _route.SetStatus("Couldnâ€™t export this document: " + ex.Message));
             return false;
         }
     }
@@ -586,18 +687,18 @@ public sealed partial class WritePage : UserControl, IDisposable
         var top = TopLevel.GetTopLevel(this);
         if (top?.StorageProvider is null)
         {
-            _route.SetStatus("Import isnâ€™t available from this platform surface.");
+            Publish(() => _route.SetStatus("Import isnâ€™t available from this platform surface."));
             return;
         }
 
-        var files = await top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        var files = await ObserveOriginalAsync(() => top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = "Import a Write document",
             AllowMultiple = false,
             FileTypeFilter = BuildFileTypes(GetImportExtensions())
-        });
+        }));
         var file = files.FirstOrDefault();
-        if (file is null)
+        if (file is null || !CanPublishOriginal)
             return;
 
         var localPath = file.TryGetLocalPath();
@@ -613,9 +714,13 @@ public sealed partial class WritePage : UserControl, IDisposable
             $"haven-write-import-{Guid.NewGuid():N}{extension}");
         try
         {
-            await using (var source = await file.OpenReadAsync())
-            await using (var destination = File.Create(temporaryPath))
-                await source.CopyToAsync(destination);
+            {
+                var source = await ObserveOriginalAsync(() => file.OpenReadAsync());
+                await using var sourceDisposal = OwnOriginalStreamDisposal(source);
+                var destination = File.Create(temporaryPath);
+                await using var destinationDisposal = OwnOriginalStreamDisposal(destination);
+                await ObserveOriginalAsync(() => source.CopyToAsync(destination));
+            }
 
             await ImportFromPathAsync(temporaryPath);
         }
@@ -633,7 +738,7 @@ public sealed partial class WritePage : UserControl, IDisposable
         var top = TopLevel.GetTopLevel(this);
         if (top?.StorageProvider is null)
         {
-            _route.SetStatus("Export isnâ€™t available from this platform surface.");
+            Publish(() => _route.SetStatus("Export isnâ€™t available from this platform surface."));
             return;
         }
 
@@ -643,15 +748,15 @@ public sealed partial class WritePage : UserControl, IDisposable
             .FirstOrDefault(extension => extension.Equals(".docx", StringComparison.OrdinalIgnoreCase))
             ?? exportExtensions.FirstOrDefault()
             ?? ".haven-notes.json";
-        var file = await top.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        var file = await ObserveOriginalAsync(() => top.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = "Export Write document",
             SuggestedFileName = SanitizeFileName(Document.Title) + defaultExtension,
             DefaultExtension = defaultExtension.TrimStart('.'),
             FileTypeChoices = BuildFileTypes(exportExtensions),
             ShowOverwritePrompt = true
-        });
-        if (file is null)
+        }));
+        if (file is null || !CanPublishOriginal)
             return;
 
         var localPath = file.TryGetLocalPath();
@@ -672,12 +777,14 @@ public sealed partial class WritePage : UserControl, IDisposable
             if (!await ExportToPathAsync(temporaryPath))
                 return;
 
-            await using var source = File.OpenRead(temporaryPath);
-            await using var destination = await file.OpenWriteAsync();
+            var source = File.OpenRead(temporaryPath);
+            await using var sourceDisposal = OwnOriginalStreamDisposal(source);
+            var destination = await ObserveOriginalAsync(() => file.OpenWriteAsync());
+            await using var destinationDisposal = OwnOriginalStreamDisposal(destination);
             destination.SetLength(0);
-            await source.CopyToAsync(destination);
-            await destination.FlushAsync();
-            _route.SetStatus(BuildExportStatus(file.Name));
+            await ObserveOriginalAsync(() => source.CopyToAsync(destination));
+            await ObserveOriginalAsync(() => destination.FlushAsync());
+            Publish(() => _route.SetStatus(BuildExportStatus(file.Name)));
         }
         finally
         {
@@ -738,7 +845,8 @@ public sealed partial class WritePage : UserControl, IDisposable
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            _route.SetStatus(_route.StatusText.Content + " Temporary-file cleanup failed: " + ex.Message);
+            _work.Executing?.Retain(ex);
+            Publish(() => _route.SetStatus(_route.StatusText.Content + " Temporary-file cleanup failed: " + ex.Message));
         }
     }
 
@@ -896,13 +1004,13 @@ public sealed partial class WritePage : UserControl, IDisposable
 
     private void MarkDirty()
     {
-        if (Document is null)
+        if (!CanPublishOriginal || Document is null)
             return;
 
         Document.UpdatedAt = DateTimeOffset.UtcNow;
         ++_editGeneration;
         _dirty = true;
-        _route.SetStatus("Unsaved changes Â· autosave is on");
+        Publish(() => _route.SetStatus("Unsaved changes Â· autosave is on"));
     }
 
 
@@ -910,7 +1018,7 @@ public sealed partial class WritePage : UserControl, IDisposable
     {
         var index = -1;
         for (var i = 0; i < _documents.Count; i++) if (_documents[i].Id == documentId) { index = i; break; }
-        if (index < 0) { _route.SetStatus("That local document no longer exists."); return false; }
+        if (index < 0) { Publish(() => _route.SetStatus("That local document no longer exists.")); return false; }
         await OpenDocumentAtAsync(index, cancellationToken, saveBeforeSwitch);
         return Document?.Id == documentId;
     }
@@ -918,6 +1026,7 @@ public sealed partial class WritePage : UserControl, IDisposable
     private async Task ShowLibraryAsync(bool saveBeforeSwitch, CancellationToken cancellationToken)
     {
         await StopReadAloudForContextChangeAsync();
+        if (!CanPublishOriginal) return;
         if (saveBeforeSwitch && Document is not null && _dirty && !await SaveAsync("Autosave before opening document library", cancellationToken)) return;
         await RefreshDocumentsAsync(cancellationToken);
         ShowLibrary();
@@ -925,10 +1034,11 @@ public sealed partial class WritePage : UserControl, IDisposable
 
     private void ShowLibrary()
     {
+        if (!CanPublishOriginal) return;
         Document = null; _dirty = false; _documentIndex = 0;
-        _route.SetLibrary(_documents);
-        _route.SetStatus(_documents.Count == 0 ? "No local documents yet. Create one or import a supported file." : "Choose a local document to open.");
-        _bus.Fire("Write.Library.Opened");
+        Publish(() => _route.SetLibrary(_documents));
+        Publish(() => _route.SetStatus(_documents.Count == 0 ? "No local documents yet. Create one or import a supported file." : "Choose a local document to open."));
+        Publish(() => _bus.Fire("Write.Library.Opened"));
     }
 
     private async Task MoveAsync(int offset)
@@ -940,11 +1050,16 @@ public sealed partial class WritePage : UserControl, IDisposable
         await OpenDocumentAtAsync(next, CancellationToken.None, saveBeforeSwitch: true);
     }
 
-    public async Task<bool> OpenDocumentAsync(Guid documentId, CancellationToken cancellationToken = default)
+    public Task<bool> OpenDocumentAsync(Guid documentId, CancellationToken cancellationToken = default) =>
+        RunOriginalAsync(() => OpenDocumentCoreAsync(documentId, cancellationToken));
+
+    private async Task<bool> OpenDocumentCoreAsync(Guid documentId, CancellationToken cancellationToken)
     {
         if (_disposed || _closePreparing) return false;
         await InitializeAsync(cancellationToken);
+        if (!CanPublishOriginal) return false;
         await RefreshDocumentsAsync(cancellationToken);
+        if (!CanPublishOriginal) return false;
         var index = -1;
         for (var candidate = 0; candidate < _documents.Count; candidate++)
         {
@@ -955,7 +1070,7 @@ public sealed partial class WritePage : UserControl, IDisposable
 
         if (index < 0)
         {
-            _route.SetStatus("That local document no longer exists.");
+            Publish(() => _route.SetStatus("That local document no longer exists."));
             return false;
         }
 
@@ -966,6 +1081,7 @@ public sealed partial class WritePage : UserControl, IDisposable
     private async Task CreateDocumentAsync(CancellationToken cancellationToken)
     {
         await StopReadAloudForContextChangeAsync();
+        if (!CanPublishOriginal) return;
         if (Document is not null && _dirty
             && !await SaveAsync("Autosave before creating document", cancellationToken))
         {
@@ -973,16 +1089,17 @@ public sealed partial class WritePage : UserControl, IDisposable
         }
 
         var document = NotesDocument.Create("Untitled document");
-        var result = await _repository.SaveAsync(document, "Write document created", cancellationToken);
+        var result = await ObserveOriginalAsync(() => _repository.SaveAsync(document, "Write document created", cancellationToken));
         document.Version = result.Version;
 
         await RefreshDocumentsAsync(cancellationToken);
+        if (!CanPublishOriginal) return;
         Document = document;
         _documentIndex = IndexOfDocument(document.Id);
         _dirty = false;
-        _route.SetDocument(document, _documentIndex, _documents.Count);
-        _route.SetStatus("Created a new local Write document.");
-        _bus.Fire("Write.Document.Created");
+        Publish(() => _route.SetDocument(document, _documentIndex, _documents.Count));
+        Publish(() => _route.SetStatus("Created a new local Write document."));
+        Publish(() => _bus.Fire("Write.Document.Created"));
     }
 
     private async Task OpenDocumentAtAsync(
@@ -991,6 +1108,7 @@ public sealed partial class WritePage : UserControl, IDisposable
         bool saveBeforeSwitch)
     {
         await StopReadAloudForContextChangeAsync();
+        if (!CanPublishOriginal) return;
         if (_documents.Count == 0)
             return;
 
@@ -1003,27 +1121,31 @@ public sealed partial class WritePage : UserControl, IDisposable
         }
 
         index = Math.Clamp(index, 0, _documents.Count - 1);
-        var loaded = await _repository.LoadAsync(_documents[index].Id, cancellationToken);
+        var loaded = await ObserveOriginalAsync(() => _repository.LoadAsync(_documents[index].Id, cancellationToken));
+        if (!CanPublishOriginal) return;
         if (loaded is null)
         {
             await RefreshDocumentsAsync(cancellationToken);
-            _route.SetStatus("That local document no longer exists.");
+            Publish(() => _route.SetStatus("That local document no longer exists."));
             return;
         }
 
         Document = loaded;
         _documentIndex = index;
         _dirty = false;
-        _route.SetDocument(loaded, index, _documents.Count);
-        _route.SetStatus(
+        Publish(() => _route.SetDocument(loaded, index, _documents.Count));
+        Publish(() => _route.SetStatus(
             loaded.Recovery.HasUnsavedRecovery
                 ? "Recovered the last valid local version. Review it, then save to confirm recovery."
-                : "Saved locally Â· autosave is on");
-        _bus.Fire("Write.Document.Opened");
+                : "Saved locally Â· autosave is on"));
+        Publish(() => _bus.Fire("Write.Document.Opened"));
     }
 
-    private async Task RefreshDocumentsAsync(CancellationToken cancellationToken) =>
-        _documents = await _repository.ListAsync(cancellationToken);
+    private async Task RefreshDocumentsAsync(CancellationToken cancellationToken)
+    {
+        var documents = await ObserveOriginalAsync(() => _repository.ListAsync(cancellationToken));
+        if (CanPublishOriginal) _documents = documents;
+    }
 
     private int IndexOfDocument(Guid id)
     {
@@ -1041,12 +1163,15 @@ public sealed partial class WritePage : UserControl, IDisposable
         if (Document is null)
             return;
 
-        _route.DocumentPositionText.Content = _documents.Count == 0
+        Publish(() => _route.DocumentPositionText.Content = _documents.Count == 0
             ? "Local document"
-            : $"{_documentIndex + 1} of {_documents.Count} Â· v{Document.Version}";
+            : $"{_documentIndex + 1} of {_documents.Count} Â· v{Document.Version}");
     }
 
-    private async Task RunBusyAsync(Func<Task> action, string description)
+    private Task RunBusyAsync(Func<Task> action, string description) =>
+        RunOriginalAsync(() => RunBusyCoreAsync(action, description));
+
+    private async Task RunBusyCoreAsync(Func<Task> action, string description)
     {
         if (_busy || _disposed || _closePreparing)
             return;
@@ -1054,11 +1179,12 @@ public sealed partial class WritePage : UserControl, IDisposable
         SetBusy(true);
         try
         {
-            await action();
+            await ObserveOriginalAsync(action);
         }
         catch (Exception ex)
         {
-            _route.SetStatus($"Couldnâ€™t {description}: {ex.Message}");
+            _work.Executing?.Retain(ex);
+            Publish(() => _route.SetStatus($"Couldnâ€™t {description}: {ex.Message}"));
         }
         finally
         {
@@ -1069,19 +1195,23 @@ public sealed partial class WritePage : UserControl, IDisposable
     private void SetBusy(bool busy)
     {
         _busy = busy;
-        _route.SetBusy(busy);
+        Publish(() => _route.SetBusy(busy));
     }
 
-    public void Dispose()
+    private void DetachOriginalCallbacks()
     {
         if (_disposed)
             return;
 
         _disposed = true;
-        _autosaveTimer.Stop();
-        _autosaveTimer.Tick -= OnAutosaveTick;
+        if (_autosaveTimer is not null)
+        {
+            _autosaveTimer.Stop();
+            _autosaveTimer.Tick -= OnAutosaveTick;
+        }
         Loaded -= OnLoaded;
         DetachedFromVisualTree -= OnDetachedFromVisualTree;
+        if (_route is null) return;
         _route.LibraryRequested -= OnLibraryRequested;
         _route.DocumentOpenRequested -= OnDocumentOpenRequested;
         _route.AiProposalRequested -= OnAiProposalRequested;
@@ -1093,6 +1223,8 @@ public sealed partial class WritePage : UserControl, IDisposable
         _route.SaveRequested -= OnSaveRequested;
         _route.PreviousRequested -= OnPreviousRequested;
         _route.NextRequested -= OnNextRequested;
+        _route.DocumentChanged -= OnWordDocumentChanged;
+        _route.ImageRequested -= OnWordImageRequested;
         _route.ReadAloudRequested -= OnReadAloudRequested;
         _route.ReadAloudStopRequested -= OnReadAloudStopRequested;
         _route.ReadAloudSkipBackRequested -= OnReadAloudSkipBackRequested;
@@ -1106,6 +1238,5 @@ public sealed partial class WritePage : UserControl, IDisposable
         }
         _route.TitleChanged -= OnTitleChanged;
         _route.BlockTextChanged -= OnBlockTextChanged;
-        _route.Dispose();
     }
 }

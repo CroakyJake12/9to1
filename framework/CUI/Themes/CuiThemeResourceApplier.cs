@@ -105,6 +105,7 @@ public static class CuiThemeResourceApplier
         var resources = Application.Current?.Resources;
         if (resources is not null)
         {
+            ApplyButtonForegroundResources(resources, palette);
             var effectiveMotionScale = settings.EffectiveMotionScale(expression.MotionDurationScale);
             resources["CuiMotionDurationScale"] = effectiveMotionScale;
             resources["HavenMotionDurationScale"] = effectiveMotionScale;
@@ -175,6 +176,7 @@ public static class CuiThemeResourceApplier
         resources["CuiTextBrush"] = new SolidColorBrush(palette.Text);
         resources["CuiTextSoftBrush"] = new SolidColorBrush(palette.TextSoft);
         resources["CuiMutedBrush"] = new SolidColorBrush(palette.Muted);
+        resources["CuiMuted2Brush"] = new SolidColorBrush(palette.Muted2);
         resources["CuiPanelBrush"] = new SolidColorBrush(palette.Panel);
         resources["CuiPanel2Brush"] = new SolidColorBrush(palette.Panel2);
         resources["CuiPanel3Brush"] = new SolidColorBrush(palette.Panel3);
@@ -195,6 +197,50 @@ public static class CuiThemeResourceApplier
 
         var accents = palette.AccentPalette;
         ApplyAccentToResources(resources, accents);
+        ApplyButtonForegroundResources(resources, palette);
+        ApplyLegacyScopeAliases(resources);
+    }
+
+    private static void ApplyButtonForegroundResources(IResourceDictionary resources, CuiPalette palette)
+    {
+        // Alias the SAME text/accent brush, without introducing another colour
+        // or modifying the palette's button surfaces or accent components.
+        foreach (var (key, color) in new (string, Color)[]
+        {
+            ("CuiButtonForegroundBrush", palette.ButtonForeground),
+            ("CuiButtonHoverForegroundBrush", palette.ButtonHoverForeground),
+            ("CuiButtonPressedForegroundBrush", palette.ButtonPressedForeground)
+        })
+            resources[key] = resources[color == palette.Text ? "CuiTextBrush" : "CuiAccentInkBrush"];
+        resources["HavenButtonForegroundBrush"] = resources["CuiButtonForegroundBrush"];
+        resources["HavenButtonHoverForegroundBrush"] = resources["CuiButtonHoverForegroundBrush"];
+        resources["HavenButtonPressedForegroundBrush"] = resources["CuiButtonPressedForegroundBrush"];
+    }
+
+    // Existing Haven primitive styles must resolve this SAME scoped palette,
+    // rather than escaping to the application's bootstrap appearance.
+    private static void ApplyLegacyScopeAliases(ResourceDictionary resources)
+    {
+        foreach (var (legacy, semantic) in new (string, string)[]
+        {
+            ("HavenBackgroundBrush", "CuiBackgroundBrush"),
+            ("HavenTextBrush", "CuiTextBrush"), ("HavenTextSoftBrush", "CuiTextSoftBrush"),
+            ("HavenMutedBrush", "CuiMutedBrush"), ("HavenMuted2Brush", "CuiMuted2Brush"),
+            ("HavenPanelBrush", "CuiPanelBrush"), ("HavenElevatedBrush", "CuiPanelBrush"),
+            ("HavenPanel2Brush", "CuiPanel2Brush"), ("HavenPanel3Brush", "CuiPanel3Brush"),
+            ("HavenPanelHoverBrush", "CuiPanelHoverBrush"),
+            ("HavenLineBrush", "CuiLineBrush"), ("HavenLineStrongBrush", "CuiLineStrongBrush"),
+            ("HavenButtonBrush", "CuiButtonBrush"), ("HavenButtonHoverBrush", "CuiButtonHoverBrush"),
+            ("HavenButtonPressedBrush", "CuiButtonPressedBrush"), ("HavenFocusBrush", "CuiFocusBrush"),
+            ("HavenAccentBrush", "CuiAccentBrush"), ("HavenAccentPrimaryBrush", "CuiAccentPrimaryBrush"),
+            ("HavenAccentSecondaryBrush", "CuiAccentSecondaryBrush"),
+            ("HavenAccentTertiaryBrush", "CuiAccentTertiaryBrush"),
+            ("HavenAccentInkBrush", "CuiAccentInkBrush"),
+            ("HavenAccentSoftBrush", "CuiAccentSoftBrush"), ("HavenBlueSoftBrush", "CuiAccentSoftBrush"),
+            ("HavenControlRadius", "CuiControlRadius"), ("HavenCardRadius", "CuiCardRadius"),
+            ("HavenPopupRadius", "CuiPopupRadius"), ("HavenMotionDurationScale", "CuiMotionDurationScale")
+        })
+            resources[legacy] = resources[semantic];
     }
 
     private static void ApplyAccessibilityResources(

@@ -7,7 +7,7 @@ namespace HavenOS.Home.Core;
 /// <summary>Checks the actual connected Home host and canonical compatibility API. The platform
 /// owns the pipe; this object retains/drains its original client and never creates a Home host,
 /// lease, current actor, service provider or installation action.</summary>
-public sealed class HomeNativeWindowsStartupSession : IHomeNativeStartupSession, IAsyncDisposable
+public sealed partial class HomeNativeWindowsStartupSession : IHomeNativeStartupSession, IAsyncDisposable
 {
     private readonly HomeWindowsCoreClient _client;
     private readonly HomeCompatibilityRequest _request;
@@ -39,6 +39,7 @@ public sealed class HomeNativeWindowsStartupSession : IHomeNativeStartupSession,
     /// A later completed check always performs another attested compatibility request.</summary>
     public Task<HomeNativeStartupObservation> CheckAsync(CancellationToken cancellationToken = default)
     {
+        if (_originalScoped) return CheckWithinOriginalSourceAsync(body => body(), _ => { }, cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
         _originalConnectionLifetime.ThrowIfCancellationRequested();
         lock (_sync)
@@ -52,15 +53,21 @@ public sealed class HomeNativeWindowsStartupSession : IHomeNativeStartupSession,
         }
     }
 
-    private async Task<HomeNativeStartupObservation> CheckOriginalAsync(Task start, CancellationToken caller)
+    private async Task<HomeNativeStartupObservation> CheckOriginalAsync(Task start, CancellationToken caller, HomeNativeOriginalStartupScope? source = null)
     {
         await start.ConfigureAwait(false);
         try
         {
-        var original = await _client.GetCompatibilityAsync(_request, caller).ConfigureAwait(false);
+        var original = source is null ? await _client.GetCompatibilityAsync(_request, caller).ConfigureAwait(false) :
+            await source.Read(() => _client.GetCompatibilityWithinOriginalSourceAsync(_request, source.Run, source.Retain, caller)).ConfigureAwait(false);
         // Default-null owning-fixture checkpoint; normal composition never assigns it.
-        if (AfterOriginalClientResponse is { } after) await after().ConfigureAwait(false);
-        await _client.DemandOriginalCurrentAsync(caller).ConfigureAwait(false);
+        if (AfterOriginalClientResponse is { } after)
+        {
+            if (source is null) await after().ConfigureAwait(false);
+            else await source.Read(after).ConfigureAwait(false);
+        }
+        if (source is null) await _client.DemandOriginalCurrentAsync(caller).ConfigureAwait(false);
+        else await source.Read(() => _client.DemandOriginalCurrentWithinSourceAsync(source.Run, source.Retain, caller)).ConfigureAwait(false);
         caller.ThrowIfCancellationRequested();
         _originalConnectionLifetime.ThrowIfCancellationRequested();
         lock (_sync)
@@ -127,12 +134,13 @@ public sealed class HomeNativeWindowsStartupSession : IHomeNativeStartupSession,
 
     public Task CloseAndDrainAsync()
     {
+        if (_originalScoped) CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
         lock (_sync)
         {
             if (_close is not null) return _close;
             _closing = true;
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            _close = CloseOriginalAsync(start.Task, _check);
+            _close = _originalScoped ? CloseWithinOriginalSourceAsync(start.Task) : CloseOriginalAsync(start.Task, _check);
             start.SetResult();
             return _close;
         }

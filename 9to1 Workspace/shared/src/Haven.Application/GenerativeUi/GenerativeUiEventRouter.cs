@@ -47,7 +47,8 @@ public sealed class GenerativeUiEventRouter(
         if (!binding.ActionId.Equals(semanticEvent.ActionId, StringComparison.Ordinal))
             throw new InvalidOperationException("Event action ID does not match its registered binding.");
 
-        var document = instances.TryGet(semanticEvent.Origin.InstanceId);
+        var originalPredecessor = instances.ObserveOriginalPredecessor(semanticEvent.Origin.InstanceId);
+        var document = originalPredecessor?.Document;
         var component = document is null || document.Origin != semanticEvent.Origin
             ? null
             : FindComponent(document.Root, semanticEvent.ComponentId);
@@ -138,7 +139,9 @@ public sealed class GenerativeUiEventRouter(
             || JsonSerializer.SerializeToUtf8Bytes(result.StructuredResult).Length > GenerativeUiContractValidator.MaximumJsonBytes)
             throw new InvalidOperationException("Action result payload is missing or exceeds the generated UI contract limit.");
 
-        await instances.ApplyResultAsync(result, cancellationToken).ConfigureAwait(false);
+        await instances.ApplyOriginalResultAsync(result, originalPredecessor
+            ?? throw new InvalidOperationException("The generated UI predecessor is unavailable."), cancellationToken).ConfigureAwait(false);
+        instances.AcknowledgeOriginalResultJoin(result);
         await audit.RecordAsync(semanticEvent, result, cancellationToken).ConfigureAwait(false);
         return result;
     }
@@ -199,6 +202,14 @@ public sealed class GenUiLocalActionRegistry : IGenUiEventHandler
         ArgumentException.ThrowIfNullOrWhiteSpace(targetKey);
         ArgumentNullException.ThrowIfNull(handler);
         _handlers[targetKey] = handler;
+    }
+
+    public bool RemoveOriginalHandler(string targetKey,
+        Func<GenUiEvent, CancellationToken, Task<GenUiActionResult>> sameHandler)
+    {
+        ArgumentNullException.ThrowIfNull(sameHandler);
+        return ((ICollection<KeyValuePair<string, Func<GenUiEvent, CancellationToken, Task<GenUiActionResult>>>>)_handlers)
+            .Remove(new(targetKey, sameHandler));
     }
 
     public Task<GenUiActionResult> HandleAsync(

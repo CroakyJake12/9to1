@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Haven.Core.Media;
 using System.Text.Json.Serialization;
 
 namespace HavenOS.Apps.Motion;
@@ -16,7 +17,7 @@ public sealed record MotionElement(
     long SourceOut,
     Guid? ProxyAssetId = null);
 
-public sealed record MotionTrack(Guid TrackId, string Name, IReadOnlyList<MotionElement> Elements);
+public sealed record MotionTrack(Guid TrackId, string Name, IReadOnlyList<MotionElement> Elements, bool Locked = false, bool Visible = true);
 
 public sealed record MotionSequence(
     Guid SequenceId,
@@ -24,7 +25,8 @@ public sealed record MotionSequence(
     int Height,
     int FrameRateNumerator,
     int FrameRateDenominator,
-    IReadOnlyList<MotionTrack> VideoTracks);
+    IReadOnlyList<MotionTrack> VideoTracks, IReadOnlyList<MotionCaptionTrack>? CaptionTracks = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<MotionMarker>? Markers = null);
 
 public sealed record MotionProject(
     int SchemaVersion,
@@ -35,9 +37,9 @@ public sealed record MotionProject(
     DateTimeOffset ModifiedAt,
     long Revision);
 
-public sealed class MotionProjectStore
+public sealed partial class MotionProjectStore
 {
-    private const int CurrentSchemaVersion = 1;
+    private const int CurrentSchemaVersion = 2;
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true,
@@ -61,7 +63,7 @@ public sealed class MotionProjectStore
     public MotionProject Insert(MotionProject project, long expectedRevision, Guid sequenceId, Guid trackId,
         Guid assetId, long timelineStart, long sourceIn, long sourceOut)
     {
-        EnsureRevision(project, expectedRevision);
+        Validate(project); EnsureRevision(project, expectedRevision);
         if (timelineStart < 0 || sourceIn < 0 || sourceOut <= sourceIn || timelineStart > long.MaxValue - (sourceOut - sourceIn))
             throw new ArgumentOutOfRangeException(nameof(timelineStart), "Timeline and source ranges must be non-negative and have positive duration.");
         if (!project.AssetReferences.Any(asset => asset.AssetId == assetId))
@@ -72,7 +74,8 @@ public sealed class MotionProjectStore
         var trackIndex = IndexOf(sequence.VideoTracks, trackId, track => track.TrackId, "TrackNotFound");
         var track = sequence.VideoTracks[trackIndex];
         var element = new MotionElement(Guid.NewGuid(), trackId, assetId, timelineStart, sourceOut - sourceIn, sourceIn, sourceOut);
-        var updatedTrack = track with { Elements = track.Elements.Append(element).OrderBy(item => item.TimelineStart).ThenBy(item => item.ElementId).ToArray() };
+        EnsureEditable(track);
+        var updatedTrack = track with { Elements = InsertAt(sequence, track, element) };
         var tracks = sequence.VideoTracks.ToArray();
         tracks[trackIndex] = updatedTrack;
         var sequences = project.Sequences.ToArray();
@@ -82,7 +85,7 @@ public sealed class MotionProjectStore
 
     public MotionProject Split(MotionProject project, long expectedRevision, Guid sequenceId, Guid elementId, long timelineTime)
     {
-        EnsureRevision(project, expectedRevision);
+        Validate(project); EnsureRevision(project, expectedRevision);
         var sequenceIndex = IndexOf(project.Sequences, sequenceId, sequence => sequence.SequenceId, "SequenceNotFound");
         var sequence = project.Sequences[sequenceIndex];
         for (var trackIndex = 0; trackIndex < sequence.VideoTracks.Count; trackIndex++)
@@ -90,17 +93,15 @@ public sealed class MotionProjectStore
             var track = sequence.VideoTracks[trackIndex];
             var elementIndex = IndexOfOrDefault(track.Elements, elementId, element => element.ElementId);
             if (elementIndex < 0) continue;
+            EnsureEditable(track);
             var original = track.Elements[elementIndex];
             var offset = timelineTime - original.TimelineStart;
             if (offset <= 0 || offset >= original.Duration)
                 throw new ArgumentOutOfRangeException(nameof(timelineTime), "Split must be strictly inside the element.");
 
-            var left = original with { Duration = offset, SourceOut = original.SourceIn + offset };
-            var right = original with
-            {
-                ElementId = Guid.NewGuid(), TimelineStart = timelineTime, Duration = original.Duration - offset,
-                SourceIn = original.SourceIn + offset
-            };
+            var split = MediaTimelineEdits.Split(ToShared(sequence, original), Timebase(sequence).At(timelineTime));
+            var left = FromShared(original, split.Left);
+            var right = FromShared(original, split.Right);
             var elements = track.Elements.ToArray();
             elements[elementIndex] = left;
             var updatedTrack = track with { Elements = elements.Append(right).OrderBy(item => item.TimelineStart).ToArray() };
@@ -153,6 +154,7 @@ public sealed class MotionProjectStore
             var track = sequence.VideoTracks[i];
             var index = IndexOfOrDefault(track.Elements, elementId, item => item.ElementId);
             if (index < 0) continue;
+            EnsureEditable(track);
             var elements = track.Elements.ToArray(); elements[index] = edit(elements[index]);
             var tracks = sequence.VideoTracks.ToArray();
             tracks[i] = track with { Elements = elements.OrderBy(item => item.TimelineStart).ThenBy(item => item.ElementId).ToArray() };
@@ -184,6 +186,14 @@ public sealed class MotionProjectStore
                         || project.SchemaVersion != storedProject.SchemaVersion
                         || project.Revision != checked(expectedStoredRevision + 1))))
                 throw new InvalidOperationException("RevisionConflict");
+            // A legacy document is migrated only on an explicit successful edit/save. Keep its exact
+            // original bytes beside the project before replacing it; loading alone never writes.
+            if (storedProject is not null)
+            {
+                using var original = JsonDocument.Parse(File.ReadAllBytes(fullPath));
+                if (original.RootElement.GetProperty("SchemaVersion").GetInt32() == 1)
+                    File.Copy(fullPath, fullPath + ".schema1." + Guid.NewGuid().ToString("N") + ".backup", overwrite: false);
+            }
             using (var stream = new FileStream(temporaryPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.WriteThrough))
             {
                 JsonSerializer.Serialize(stream, project, JsonOptions);
@@ -202,8 +212,12 @@ public sealed class MotionProjectStore
         using var stream = File.OpenRead(path);
         var project = JsonSerializer.Deserialize<MotionProject>(stream, JsonOptions)
             ?? throw new InvalidDataException("Project document is empty.");
-        if (project.SchemaVersion != CurrentSchemaVersion)
-            throw new InvalidDataException($"Unsupported Motion project schema version {project.SchemaVersion}.");
+        project = project.SchemaVersion switch
+        {
+            1 => project with { SchemaVersion = CurrentSchemaVersion },
+            CurrentSchemaVersion => project,
+            _ => throw new InvalidDataException($"Unsupported Motion project schema version {project.SchemaVersion}.")
+        };
         Validate(project);
         return project;
     }
@@ -223,9 +237,24 @@ public sealed class MotionProjectStore
         var sequenceIds = new HashSet<Guid>();
         var trackIds = new HashSet<Guid>();
         var elementIds = new HashSet<Guid>();
+        var captionIds = new HashSet<Guid>();
+        var markerIds = new HashSet<Guid>();
         foreach (var sequence in project.Sequences)
         {
             if (!sequenceIds.Add(sequence.SequenceId)) throw new InvalidDataException("Sequence IDs must be unique.");
+            foreach (var marker in sequence.Markers ?? [])
+            {
+                MotionMarkers.Validate(marker);
+                if (!markerIds.Add(marker.MarkerId)) throw new InvalidDataException("Marker IDs must be globally unique.");
+            }
+            if ((sequence.Markers?.Count ?? 0) > MotionMarkers.MaximumMarkersPerSequence)
+                throw new InvalidDataException("The sequence marker limit was exceeded.");
+            foreach (var caption in sequence.CaptionTracks ?? [])
+            {
+                MotionCaptions.Validate(caption);
+                if (!trackIds.Add(caption.TrackId) || caption.Cues.Any(c => !captionIds.Add(c.CueId)))
+                    throw new InvalidDataException("Caption track and cue identities must be globally unique.");
+            }
             foreach (var track in sequence.VideoTracks)
             {
                 if (track is null || track.Elements is null || track.TrackId == Guid.Empty || !trackIds.Add(track.TrackId)) throw new InvalidDataException("Track IDs and element lists must be valid and unique.");

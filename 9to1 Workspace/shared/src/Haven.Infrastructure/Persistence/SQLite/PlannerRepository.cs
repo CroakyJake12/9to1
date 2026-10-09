@@ -22,6 +22,10 @@ namespace Haven.Infrastructure;
 /// </summary>
 public sealed class PlannerRepository(ISqliteConnectionFactory factory) : IPlannerRepository, ICalendarSyncStore, IPlannerStructuredEntityRepository
 {
+    public bool HasOriginalSqliteFactory(ISqliteConnectionFactory sameActual) => ReferenceEquals(factory, sameActual);
+    internal static CalendarConnectionCapabilityMetadata ReadOriginalCapabilityMetadata(SqliteDataReader reader) => new(
+        reader.Guid("id"), (CalendarProviderKind)reader.Int32("provider"), (CalendarSyncStatus)reader.Int32("status"),
+        reader.NullableDateTimeOffset("last_synced_at"), reader.DateTimeOffset("updated_at"));
     /// <summary>
     /// Performs ensure defaults asynchronously so I/O does not block the caller's thread.
     /// </summary>

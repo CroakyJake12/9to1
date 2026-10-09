@@ -8,7 +8,7 @@ namespace Haven.Browser;
 /// Decorates the existing browser automation service with approval-gated native WebView downloads.
 /// Normal automation remains owned by the wrapped service; only native download actions are intercepted here.
 /// </summary>
-public sealed class BrowserNativeDownloadAutomationService : IBrowserAutomationService, IBrowserNativeDownloadService, IAsyncDisposable
+public sealed partial class BrowserNativeDownloadAutomationService : IBrowserAutomationService, IBrowserNativeDownloadService, IBrowserOriginalNativeDownloadApprovalSource, IAsyncDisposable
 {
     private readonly IBrowserAutomationService _inner;
     private readonly IBrowserNavigationPolicy _policy;
@@ -49,10 +49,12 @@ public sealed class BrowserNativeDownloadAutomationService : IBrowserAutomationS
     public Task<IReadOnlyList<BrowserDownloadRecord>> GetDownloadsAsync(int limit, CancellationToken cancellationToken) =>
         _inner.GetDownloadsAsync(limit, cancellationToken);
 
-    public async Task<BrowserPendingAction> RequestNativeDownloadAsync(
-        BrowserNativeDownloadRequest request,
-        IBrowserNativeDownloadExecution execution,
-        CancellationToken cancellationToken)
+    public Task<BrowserPendingAction> RequestNativeDownloadAsync(
+        BrowserNativeDownloadRequest request, IBrowserNativeDownloadExecution execution, CancellationToken cancellationToken) =>
+        RunOriginalCommandAsync(execution, () => RequestNativeDownloadCoreAsync(request, execution, cancellationToken));
+
+    private async Task<BrowserPendingAction> RequestNativeDownloadCoreAsync(
+        BrowserNativeDownloadRequest request, IBrowserNativeDownloadExecution execution, CancellationToken cancellationToken)
     {
         ThrowIfDisposed();
         EnsureNativeAutomationAllowed();
@@ -65,7 +67,8 @@ public sealed class BrowserNativeDownloadAutomationService : IBrowserAutomationS
             || !string.IsNullOrEmpty(request.ApprovalAddress.UserInfo))
             throw new UnauthorizedAccessException("Native downloads require an HTTP or HTTPS page origin without embedded credentials.");
 
-        var assessment = await _policy.AssessAsync(request.ApprovalAddress, cancellationToken).ConfigureAwait(false);
+        var assessment = await ReadOriginalCommandSourceAsync(() => _policy.AssessAsync(request.ApprovalAddress, cancellationToken)).ConfigureAwait(false);
+        ThrowIfDisposed();
         if (!assessment.IsAllowed)
             throw new UnauthorizedAccessException("Download blocked: " + assessment.Reason);
 
@@ -96,7 +99,7 @@ public sealed class BrowserNativeDownloadAutomationService : IBrowserAutomationS
             }
             else
             {
-                await _store.AddPendingAsync(action, cancellationToken).ConfigureAwait(false);
+                await ReadOriginalCommandSourceAsync(() => _store.AddPendingAsync(action, cancellationToken)).ConfigureAwait(false);
                 await TryAuditAsync(action.Kind, "approval-requested", action.Origin, action.Summary, true).ConfigureAwait(false);
             }
             return action;
@@ -105,26 +108,30 @@ public sealed class BrowserNativeDownloadAutomationService : IBrowserAutomationS
         {
             _executions.TryRemove(action.Id, out _);
             _privatePending.TryRemove(action.Id, out _);
-            try { await execution.CancelAsync(CancellationToken.None).ConfigureAwait(false); } catch { }
+            try { await CancelOriginalExecutionAsync(request.ActionId, execution).ConfigureAwait(false); } catch { /* SAME cancellation originals remain owned */ }
             throw;
         }
     }
 
-    public async Task<BrowserActionExecutionResult> ApproveAsync(Guid actionId, CancellationToken cancellationToken)
+    public Task<BrowserActionExecutionResult> ApproveAsync(Guid actionId, CancellationToken cancellationToken) =>
+        RunOriginalCommandAsync(_executions.TryGetValue(actionId, out var execution) ? execution : null,
+            () => ApproveCoreAsync(actionId, cancellationToken));
+
+    private async Task<BrowserActionExecutionResult> ApproveCoreAsync(Guid actionId, CancellationToken cancellationToken)
     {
         ThrowIfDisposed();
         if (!_executions.ContainsKey(actionId))
             return await _inner.ApproveAsync(actionId, cancellationToken).ConfigureAwait(false);
 
         EnsureNativeAutomationAllowed();
-        await _nativeActionGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await ReadOriginalCommandSourceAsync(() => _nativeActionGate.WaitAsync(cancellationToken)).ConfigureAwait(false);
         try
         {
             if (!_executions.TryGetValue(actionId, out var execution))
                 return await _inner.ApproveAsync(actionId, cancellationToken).ConfigureAwait(false);
 
             var isPrivate = _privatePending.TryGetValue(actionId, out var action);
-            action ??= await _store.GetActionAsync(actionId, cancellationToken).ConfigureAwait(false);
+            action ??= await ReadOriginalCommandSourceAsync(() => _store.GetActionAsync(actionId, cancellationToken)).ConfigureAwait(false);
             if (action is null)
             {
                 await CancelAndForgetAsync(actionId, execution).ConfigureAwait(false);
@@ -136,31 +143,45 @@ public sealed class BrowserNativeDownloadAutomationService : IBrowserAutomationS
             {
                 await CancelAndForgetAsync(actionId, execution).ConfigureAwait(false);
                 var expired = action with { State = BrowserActionState.Expired, UpdatedAt = DateTimeOffset.UtcNow, Failure = "The approval expired." };
-                if (!isPrivate) await _store.UpdateActionAsync(expired, CancellationToken.None).ConfigureAwait(false);
+                if (!isPrivate) await ReadOriginalCommandSourceAsync(() => _store.UpdateActionAsync(expired, CancellationToken.None)).ConfigureAwait(false);
                 return new BrowserActionExecutionResult(action.Id, expired.State, "The approval expired; request the download again.");
             }
 
             var approved = action with { State = BrowserActionState.Approved, UpdatedAt = DateTimeOffset.UtcNow, Failure = null };
             if (isPrivate) _privatePending[actionId] = approved;
-            else await _store.UpdateActionAsync(approved, cancellationToken).ConfigureAwait(false);
+            else await ReadOriginalCommandSourceAsync(() => _store.UpdateActionAsync(approved, cancellationToken)).ConfigureAwait(false);
+            ThrowIfDisposed();
 
             BrowserDownloadRecord? download = null;
+            OriginalApproval? originalApproval = null;
+            var previousOriginal = _originalExecuting.Value;
             try
             {
-                download = await execution.ExecuteAsync(cancellationToken).ConfigureAwait(false);
+                if (execution is IBrowserOriginalApprovedNativeDownloadExecution originalExecution)
+                {
+                    originalApproval = CaptureOriginalApproval(approved, isPrivate, originalExecution);
+                    _originalExecuting.Value = originalApproval;
+                    InvokeOriginalApproval(originalApproval, () => originalExecution.BindOriginalDownloadApproval(this, originalApproval));
+                    InvokeOriginalApproval(originalApproval, () => originalApproval.Execute = execution.ExecuteAsync(cancellationToken)
+                        ?? throw new InvalidOperationException("The original native execution returned no Task."));
+                    download = await originalApproval.Execute!.ConfigureAwait(false);
+                }
+                else download = await ReadOriginalCommandSourceAsync(() => execution.ExecuteAsync(cancellationToken)).ConfigureAwait(false);
                 if (!isPrivate)
                 {
-                    await _store.AddDownloadAsync(download, CancellationToken.None).ConfigureAwait(false);
+                    await ReadOriginalCommandSourceAsync(() => _store.AddDownloadAsync(download, CancellationToken.None)).ConfigureAwait(false);
                     var executed = approved with { State = BrowserActionState.Executed, UpdatedAt = DateTimeOffset.UtcNow, Failure = null };
-                    await _store.UpdateActionAsync(executed, CancellationToken.None).ConfigureAwait(false);
+                    await ReadOriginalCommandSourceAsync(() => _store.UpdateActionAsync(executed, CancellationToken.None)).ConfigureAwait(false);
                     await TryAuditAsync(action.Kind, "executed", action.Origin, $"Downloaded {download.FileName} ({download.SizeBytes:N0} bytes).", true).ConfigureAwait(false);
                 }
+                if (originalApproval is not null) CompleteOriginalApproval(originalApproval, download);
                 Forget(actionId);
                 return new BrowserActionExecutionResult(action.Id, BrowserActionState.Executed,
                     $"Downloaded {download.FileName} ({download.SizeBytes:N0} bytes) to Haven's Downloads folder.", download);
             }
             catch (Exception exception)
             {
+                if (originalApproval is not null) CaptureOriginalApprovalFailure(originalApproval, exception);
                 Forget(actionId);
                 var failure = Bound(exception.Message, 1_000);
                 if (!isPrivate)
@@ -171,6 +192,11 @@ public sealed class BrowserNativeDownloadAutomationService : IBrowserAutomationS
                 }
                 return new BrowserActionExecutionResult(action.Id, BrowserActionState.Failed, "Browser download failed: " + exception.Message, download);
             }
+            finally
+            {
+                _originalExecuting.Value = previousOriginal;
+                if (originalApproval is not null) SettleOriginalApproval(originalApproval);
+            }
         }
         finally
         {
@@ -178,32 +204,36 @@ public sealed class BrowserNativeDownloadAutomationService : IBrowserAutomationS
         }
     }
 
-    public async Task<BrowserActionExecutionResult> RejectAsync(Guid actionId, CancellationToken cancellationToken)
+    public Task<BrowserActionExecutionResult> RejectAsync(Guid actionId, CancellationToken cancellationToken) =>
+        RunOriginalCommandAsync(_executions.TryGetValue(actionId, out var execution) ? execution : null,
+            () => RejectCoreAsync(actionId, cancellationToken));
+
+    private async Task<BrowserActionExecutionResult> RejectCoreAsync(Guid actionId, CancellationToken cancellationToken)
     {
         ThrowIfDisposed();
         if (!_executions.ContainsKey(actionId))
             return await _inner.RejectAsync(actionId, cancellationToken).ConfigureAwait(false);
 
-        await _nativeActionGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await ReadOriginalCommandSourceAsync(() => _nativeActionGate.WaitAsync(cancellationToken)).ConfigureAwait(false);
         try
         {
             if (!_executions.TryGetValue(actionId, out var execution))
                 return await _inner.RejectAsync(actionId, cancellationToken).ConfigureAwait(false);
 
             var isPrivate = _privatePending.TryGetValue(actionId, out var action);
-            action ??= await _store.GetActionAsync(actionId, cancellationToken).ConfigureAwait(false);
+            action ??= await ReadOriginalCommandSourceAsync(() => _store.GetActionAsync(actionId, cancellationToken)).ConfigureAwait(false);
             if (action is null)
             {
                 await CancelAndForgetAsync(actionId, execution).ConfigureAwait(false);
                 throw new KeyNotFoundException("The native browser download approval no longer exists.");
             }
 
-            await execution.CancelAsync(CancellationToken.None).ConfigureAwait(false);
+            await CancelOriginalExecutionAsync(actionId, execution).ConfigureAwait(false);
             Forget(actionId);
             var rejected = action with { State = BrowserActionState.Rejected, UpdatedAt = DateTimeOffset.UtcNow, Failure = "Rejected by the user." };
             if (!isPrivate)
             {
-                await _store.UpdateActionAsync(rejected, CancellationToken.None).ConfigureAwait(false);
+                await ReadOriginalCommandSourceAsync(() => _store.UpdateActionAsync(rejected, CancellationToken.None)).ConfigureAwait(false);
                 await TryAuditAsync(action.Kind, "rejected", action.Origin, action.Summary, true).ConfigureAwait(false);
             }
             return new BrowserActionExecutionResult(action.Id, rejected.State, "Browser download rejected.");
@@ -234,7 +264,7 @@ public sealed class BrowserNativeDownloadAutomationService : IBrowserAutomationS
 
     private async Task CancelAndForgetAsync(Guid actionId, IBrowserNativeDownloadExecution execution)
     {
-        try { await execution.CancelAsync(CancellationToken.None).ConfigureAwait(false); } catch { }
+        try { await CancelOriginalExecutionAsync(actionId, execution).ConfigureAwait(false); } catch { }
         Forget(actionId);
     }
 
@@ -246,7 +276,7 @@ public sealed class BrowserNativeDownloadAutomationService : IBrowserAutomationS
 
     private async Task TryUpdateActionAsync(BrowserPendingAction action)
     {
-        try { await _store.UpdateActionAsync(action, CancellationToken.None).ConfigureAwait(false); }
+        try { await ReadOriginalCommandSourceAsync(() => _store.UpdateActionAsync(action, CancellationToken.None)).ConfigureAwait(false); }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException or KeyNotFoundException)
         {
             System.Diagnostics.Debug.WriteLine("Native browser action state persistence failed: " + exception.Message);
@@ -257,8 +287,8 @@ public sealed class BrowserNativeDownloadAutomationService : IBrowserAutomationS
     {
         try
         {
-            await _store.AddAuditAsync(new BrowserAuditEntry(
-                Guid.NewGuid(), kind, operation, origin, Bound(detail, 2_000), succeeded, DateTimeOffset.UtcNow), CancellationToken.None).ConfigureAwait(false);
+            await ReadOriginalCommandSourceAsync(() => _store.AddAuditAsync(new BrowserAuditEntry(
+                Guid.NewGuid(), kind, operation, origin, Bound(detail, 2_000), succeeded, DateTimeOffset.UtcNow), CancellationToken.None)).ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
@@ -271,16 +301,23 @@ public sealed class BrowserNativeDownloadAutomationService : IBrowserAutomationS
     private void ThrowIfDisposed() =>
         ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) == 1, this);
 
-    public async ValueTask DisposeAsync()
+    private async Task DisposeOriginalDriverAsync(Task start)
     {
-        if (Interlocked.Exchange(ref _disposed, 1) == 1) return;
-        var executions = _executions.ToArray();
-        _executions.Clear();
-        _privatePending.Clear();
-        foreach (var pair in executions)
-        {
-            try { await pair.Value.CancelAsync(CancellationToken.None).ConfigureAwait(false); } catch { }
-        }
+        await start.ConfigureAwait(false);
+        Interlocked.Exchange(ref _disposed, 1);
+        // Cancel accepted native owners before joining a driver waiting for native
+        // completion or the action gate. Admission was sealed before this snapshot.
+        OriginalCommand[] commands; lock (_originalGate) commands = _originalCommands.ToArray();
+        var executions = _executions.Values.Concat(commands.Select(command => command.Execution).OfType<IBrowserNativeDownloadExecution>())
+            .Distinct<IBrowserNativeDownloadExecution>(ReferenceEqualityComparer.Instance).ToArray();
+        var failures = new List<Exception>();
+        foreach (var execution in executions)
+            try { await CancelOriginalExecutionAsync(Guid.Empty, execution).ConfigureAwait(false); } catch (Exception cause) { failures.Add(cause); }
+        try { await JoinOriginalCommandsAsync(commands).ConfigureAwait(false); } catch (Exception cause) { failures.Add(cause); }
+        try { await JoinOriginalApprovalsAsync().ConfigureAwait(false); } catch (Exception cause) { failures.Add(cause); }
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count != 0) throw new AggregateException("Original native download command and transfer custody did not settle.", failures);
+        _executions.Clear(); _privatePending.Clear();
         // App-lifetime service: do not dispose the semaphore while an in-flight approval may still release it.
     }
 }

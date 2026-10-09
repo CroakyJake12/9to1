@@ -55,7 +55,8 @@ public sealed partial class OriginalNativeColdProjectCompositionTests
             Assert.False(File.Exists(paths.DatabasePath)); return Task.CompletedTask;
         });
     private static async Task WithGraph(string selector, Func<ServiceCollection, CloudflareLocalDomainRegistration, Paths, Action<HomeColdProjectReadReconciliation>, Task> body,
-        IReadOnlyList<ICanonicalResourceAccessResolver>? additionalOriginalResolvers = null, IReadOnlyList<IHomeActionPolicySource>? additionalOriginalPolicies = null)
+        IReadOnlyList<ICanonicalResourceAccessResolver>? additionalOriginalResolvers = null, IReadOnlyList<IHomeActionPolicySource>? additionalOriginalPolicies = null,
+        Func<bool>? retainStorageOnFailure = null)
     {
         if (!OperatingSystem.IsLinux()) return;
         var directory = Directory.CreateTempSubdirectory("original-project-di-").FullName;
@@ -93,7 +94,8 @@ public sealed partial class OriginalNativeColdProjectCompositionTests
             Task? homeClose = null;
             try { if (registration is not null) { registration.OriginalHome.RequestOriginalProcessRetirement(); homeClose = registration.OriginalHome.CloseAndDrainAsync(); } } catch (Exception cause) { errors.Add(cause); }
             if (homeClose is not null) try { await homeClose; } catch (Exception cause) { errors.Add(homeClose.Exception ?? cause); }
-            try { Directory.Delete(directory, true); } catch (Exception cause) { errors.Add(cause); }
+            if (retainStorageOnFailure is null || primary is null && errors.Count == 0 && !retainStorageOnFailure())
+                try { Directory.Delete(directory, true); } catch (Exception cause) { errors.Add(cause); }
         }
         Throw(primary, errors);
     }
