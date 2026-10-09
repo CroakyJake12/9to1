@@ -2,6 +2,7 @@ name: Browse - donor runtime integration
 on:
   push:
     branches: [feat/browse-donor-runtime]
+    paths: ['9to1 Workspace/Browse/**', '9to1 Workspace/shared/**', '.github/workflows/browse-runtime.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -23,12 +24,22 @@ jobs:
           dotnet-version: 10.0.301
       - name: Acquire exact-revision upstream Chromium binary (not a local donor build)
         run: python3 '9to1 Workspace/Browse/Runtime/acquire_snapshot.py' --output "$RUNNER_TEMP/browse-chromium" --evidence artifacts/chromium-binary-acquisition.json
-      - name: Compile and run Browse regression tests
+      - name: Configure upstream sandbox helper on the isolated test runner
+        run: |
+          set -euo pipefail
+          helper="$(dirname "$BROWSE_CHROMIUM_EXE")/chrome_sandbox"
+          test -f "$helper"
+          sudo chown root:root "$helper"
+          sudo chmod 4755 "$helper"
+          echo "CHROME_DEVEL_SANDBOX=$helper" >> "$GITHUB_ENV"
+      - name: Compile and run Browse regression and real native tests
         if: always()
-        shell: bash
+        env:
+          BROWSE_RUNTIME_EVIDENCE: ${{ github.workspace }}/artifacts/native
         run: |
           set -euo pipefail
           mkdir -p artifacts
+          git rev-parse HEAD > artifacts/SOURCE_COMMIT
           dotnet test '9to1 Workspace/Browse/Tests/HavenOS.Apps.Browse.Tests.csproj' --configuration Release --logger 'trx;LogFileName=browse.trx' --results-directory "$GITHUB_WORKSPACE/artifacts" 2>&1 | tee artifacts/dotnet-tests.log
       - name: Publish observed build, test and binary acquisition evidence
         if: always()
