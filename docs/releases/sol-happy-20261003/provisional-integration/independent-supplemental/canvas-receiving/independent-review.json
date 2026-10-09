@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "7c63ebab369f690e8b1033e535209fce23f75eea",
+  "sourceInputsAfterTest": "UNCHANGED",
+  "tests": {
+    "total": "12",
+    "executed": "12",
+    "passed": "12",
+    "failed": "0",
+    "error": "0",
+    "timeout": "0",
+    "aborted": "0",
+    "inconclusive": "0",
+    "passedButRunAborted": "0",
+    "notRunnable": "0",
+    "notExecuted": "0",
+    "disconnected": "0",
+    "warning": "0",
+    "completed": "0",
+    "inProgress": "0",
+    "pending": "0"
+  },
+  "configuration": "Debug",
+  "ordinaryNormalSuite": "COMPILE_BLOCKED_UNRELATED_TEST_ERRORS_0DISCOVERED",
+  "scope": "Actual receivingCanvas one-line compiler repair +realApplication boundary semantics only; ownerEEC composition supersedes productionhunk; no lifetime-retention/full-suite/nativeacceptance claim",
+  "sourceSha256": {
+    "9to1 Workspace/shared/src/Haven.Application/Canvas/CanvasArtifactSession.cs": {
+      "bytes": 37254,
+      "sha256": "d35799841c6b5b40cba234591b1191e1e6ccef0976639a114a7f457a6fd95051"
+    },
+    "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CanvasChangePaginationTests.cs": {
+      "bytes": 4011,
+      "sha256": "1658795f8299d038ef67785e791c3de180b5b9011e79f6eaa83cb80e3431a2e2"
+    },
+    "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/GlobalUsings.cs": {
+      "bytes": 778,
+      "sha256": "cb9f7ad27005a8f5b0a00bb6d21ee1842f743352a47d4b2b16537ecaf84072d5"
+    }
+  },
+  "artifacts": {
+    "run.log": {
+      "bytes": 1758,
+      "sha256": "556252f1e9edf0cb515e714f0379afd4318253e34d2c1d4e239390bef13f3b1c"
+    },
+    "results/tests.trx": {
+      "bytes": 20745,
+      "sha256": "5c0d9676e1ff6993fefad6702fa1b78c42326b30230e029e2cd9c0568e676efd"
+    },
+    "artifacts/bin/Haven.Application/debug/Haven.Application.dll": {
+      "bytes": 3455488,
+      "sha256": "efabb0956dd1362a42ff903c504ee6dc05ed8d02cca2259db536568dfc3618f0"
+    },
+    "artifacts/bin/C6.Canvas.Tests/debug/C6.Canvas.Tests.dll": {
+      "bytes": 8704,
+      "sha256": "719bc413950c2291dbe012b0cf4f8523385aef4a599367aa6b826bec2b34d4fe"
+    }
+  }
+}

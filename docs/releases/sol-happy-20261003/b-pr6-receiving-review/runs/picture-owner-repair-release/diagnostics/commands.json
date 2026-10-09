@@ -1,0 +1,496 @@
+[
+  {
+    "name": "head-before",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 89278,
+        "birth": 1258788,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.037,
+    "bytes": 41,
+    "familyClosed": true
+  },
+  {
+    "name": "clean-before",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 89279,
+        "birth": 1258791,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.047,
+    "bytes": 0,
+    "familyClosed": true
+  },
+  {
+    "name": "sdk-version",
+    "argv": [
+      "dotnet",
+      "--version"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 89302,
+        "birth": 1258796,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.154,
+    "bytes": 9,
+    "familyClosed": true
+  },
+  {
+    "name": "picture15-restore",
+    "argv": [
+      "dotnet",
+      "restore",
+      "apps/Web/Tests/PictureAdmission/PictureAdmission.Tests.csproj",
+      "--configfile",
+      "/workspace/team-c-c5-approved-writeback-picture-owner-repair/NuGet.Config",
+      "-p:Configuration=Release",
+      "--disable-parallel",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-eec-closure-release/artifacts",
+      "-r",
+      "linux-x64",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:NuGetAudit=false",
+      "-p:AvaloniaBuildTasksLocation=/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-eec-closure-release/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 89310,
+        "birth": 1258811,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 6.49,
+    "bytes": 6978,
+    "familyClosed": true
+  },
+  {
+    "name": "picture15-build",
+    "argv": [
+      "dotnet",
+      "build",
+      "apps/Web/Tests/PictureAdmission/PictureAdmission.Tests.csproj",
+      "--no-restore",
+      "-c",
+      "Release",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-eec-closure-release/artifacts",
+      "-r",
+      "linux-x64",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:NuGetAudit=false",
+      "-p:AvaloniaBuildTasksLocation=/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-eec-closure-release/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 89432,
+        "birth": 1259460,
+        "gone": true
+      },
+      {
+        "pid": 89456,
+        "birth": 1259786,
+        "gone": true
+      },
+      {
+        "pid": 89473,
+        "birth": 1259891,
+        "gone": true
+      },
+      {
+        "pid": 89502,
+        "birth": 1260020,
+        "gone": true
+      },
+      {
+        "pid": 89520,
+        "birth": 1260133,
+        "gone": true
+      },
+      {
+        "pid": 89553,
+        "birth": 1260282,
+        "gone": true
+      },
+      {
+        "pid": 89571,
+        "birth": 1260411,
+        "gone": true
+      },
+      {
+        "pid": 89665,
+        "birth": 1262448,
+        "gone": true
+      },
+      {
+        "pid": 89684,
+        "birth": 1262634,
+        "gone": true
+      },
+      {
+        "pid": 89747,
+        "birth": 1264033,
+        "gone": true
+      },
+      {
+        "pid": 89765,
+        "birth": 1264288,
+        "gone": true
+      },
+      {
+        "pid": 89783,
+        "birth": 1264545,
+        "gone": true
+      },
+      {
+        "pid": 89801,
+        "birth": 1264700,
+        "gone": true
+      },
+      {
+        "pid": 89825,
+        "birth": 1264976,
+        "gone": true
+      },
+      {
+        "pid": 89854,
+        "birth": 1265148,
+        "gone": true
+      },
+      {
+        "pid": 89906,
+        "birth": 1265378,
+        "gone": true
+      },
+      {
+        "pid": 89945,
+        "birth": 1265526,
+        "gone": true
+      },
+      {
+        "pid": 89964,
+        "birth": 1266280,
+        "gone": true
+      },
+      {
+        "pid": 90055,
+        "birth": 1267383,
+        "gone": true
+      },
+      {
+        "pid": 90091,
+        "birth": 1267624,
+        "gone": true
+      },
+      {
+        "pid": 90113,
+        "birth": 1267845,
+        "gone": true
+      },
+      {
+        "pid": 90131,
+        "birth": 1267997,
+        "gone": true
+      },
+      {
+        "pid": 90146,
+        "birth": 1268011,
+        "gone": true
+      },
+      {
+        "pid": 90165,
+        "birth": 1268274,
+        "gone": true
+      },
+      {
+        "pid": 90188,
+        "birth": 1268456,
+        "gone": true
+      },
+      {
+        "pid": 90205,
+        "birth": 1268692,
+        "gone": true
+      },
+      {
+        "pid": 90334,
+        "birth": 1269086,
+        "gone": true
+      },
+      {
+        "pid": 90353,
+        "birth": 1269335,
+        "gone": true
+      },
+      {
+        "pid": 90371,
+        "birth": 1269464,
+        "gone": true
+      },
+      {
+        "pid": 90439,
+        "birth": 1269927,
+        "gone": true
+      },
+      {
+        "pid": 90573,
+        "birth": 1270341,
+        "gone": true
+      },
+      {
+        "pid": 90591,
+        "birth": 1270512,
+        "gone": true
+      },
+      {
+        "pid": 90614,
+        "birth": 1270648,
+        "gone": true
+      },
+      {
+        "pid": 90635,
+        "birth": 1271195,
+        "gone": true
+      },
+      {
+        "pid": 90654,
+        "birth": 1271326,
+        "gone": true
+      },
+      {
+        "pid": 90682,
+        "birth": 1271535,
+        "gone": true
+      },
+      {
+        "pid": 90700,
+        "birth": 1271675,
+        "gone": true
+      },
+      {
+        "pid": 90767,
+        "birth": 1271842,
+        "gone": true
+      },
+      {
+        "pid": 90826,
+        "birth": 1272000,
+        "gone": true
+      },
+      {
+        "pid": 90844,
+        "birth": 1272194,
+        "gone": true
+      },
+      {
+        "pid": 90875,
+        "birth": 1272549,
+        "gone": true
+      },
+      {
+        "pid": 90893,
+        "birth": 1272718,
+        "gone": true
+      },
+      {
+        "pid": 90971,
+        "birth": 1273569,
+        "gone": true
+      },
+      {
+        "pid": 90989,
+        "birth": 1273826,
+        "gone": true
+      },
+      {
+        "pid": 91007,
+        "birth": 1274025,
+        "gone": true
+      },
+      {
+        "pid": 91034,
+        "birth": 1274426,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 151.699,
+    "bytes": 9638,
+    "familyClosed": true
+  },
+  {
+    "name": "picture15-target",
+    "argv": [
+      "dotnet",
+      "msbuild",
+      "apps/Web/Tests/PictureAdmission/PictureAdmission.Tests.csproj",
+      "-p:Configuration=Release",
+      "-p:RuntimeIdentifier=linux-x64",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-eec-closure-release/artifacts",
+      "-nodeReuse:false",
+      "-getProperty:TargetPath,TargetFramework,RuntimeIdentifier,UseAppHost",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:NuGetAudit=false",
+      "-p:AvaloniaBuildTasksLocation=/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-eec-closure-release/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 91055,
+        "birth": 1274630,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.567,
+    "bytes": 318,
+    "familyClosed": true
+  },
+  {
+    "name": "picture15-native",
+    "argv": [
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-eec-closure-release/artifacts/bin/PictureAdmission.Tests/release_linux-x64/NineToOne.Picture.Admission.Tests",
+      "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owner-repair-release/fixture-data/picture15"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 91066,
+        "birth": 1274687,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 1.152,
+    "bytes": 1907,
+    "familyClosed": true
+  },
+  {
+    "name": "head-after",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 91079,
+        "birth": 1274851,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.031,
+    "bytes": 41,
+    "familyClosed": true
+  },
+  {
+    "name": "clean-after",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 91080,
+        "birth": 1274854,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.03,
+    "bytes": 0,
+    "familyClosed": true
+  }
+]

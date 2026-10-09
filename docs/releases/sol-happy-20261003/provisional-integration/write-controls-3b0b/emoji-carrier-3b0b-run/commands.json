@@ -1,0 +1,604 @@
+[
+  {
+    "name": "git-head",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 64062,
+        "birth": 941424,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.021,
+    "bytes": 41,
+    "familyClosed": true
+  },
+  {
+    "name": "git-clean-before",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 64063,
+        "birth": 941426,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.048,
+    "bytes": 0,
+    "familyClosed": true
+  },
+  {
+    "name": "source-tree-pins",
+    "argv": [
+      "git",
+      "ls-tree",
+      "-r",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 64086,
+        "birth": 941431,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.101,
+    "bytes": 2459544,
+    "familyClosed": true
+  },
+  {
+    "name": "native-submodule-pins",
+    "argv": [
+      "git",
+      "submodule",
+      "status",
+      "--recursive",
+      "--",
+      "framework/CUI/vendor/Avalonia/external/XamlX",
+      "framework/CUI/vendor/Avalonia/external/Avalonia.DBus"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 64087,
+        "birth": 941442,
+        "gone": true
+      },
+      {
+        "pid": 64088,
+        "birth": 941442,
+        "gone": true
+      },
+      {
+        "pid": 64097,
+        "birth": 941443,
+        "gone": true
+      },
+      {
+        "pid": 64113,
+        "birth": 941445,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.076,
+    "bytes": 319,
+    "familyClosed": true
+  },
+  {
+    "name": "dotnet-version",
+    "argv": [
+      "dotnet",
+      "--version"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 64124,
+        "birth": 941449,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.142,
+    "bytes": 9,
+    "familyClosed": true
+  },
+  {
+    "name": "dotnet-info",
+    "argv": [
+      "dotnet",
+      "--info"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 64132,
+        "birth": 941464,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.18,
+    "bytes": 1450,
+    "familyClosed": true
+  },
+  {
+    "name": "restore",
+    "argv": [
+      "dotnet",
+      "restore",
+      "/workspace/team-c-resume-evidence/c4-browser-receiving/emoji-carrier-3b0b/CanonicalEmojiCarrier.csproj",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c4-browser-receiving/emoji-carrier-3b0b-run/artifacts",
+      "-r",
+      "linux-x64",
+      "--configfile",
+      "/workspace/team-c-c4-write-scene-3b0b/NuGet.Config",
+      "--disable-build-servers",
+      "-p:Configuration=Release",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:AvaloniaBuildTasksLocation=/workspace/team-c-resume-evidence/c4-browser-receiving/emoji-carrier-3b0b-run/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 64140,
+        "birth": 941482,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 24.568,
+    "bytes": 5805,
+    "familyClosed": true
+  },
+  {
+    "name": "build",
+    "argv": [
+      "dotnet",
+      "build",
+      "/workspace/team-c-resume-evidence/c4-browser-receiving/emoji-carrier-3b0b/CanonicalEmojiCarrier.csproj",
+      "--no-restore",
+      "-c",
+      "Release",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c4-browser-receiving/emoji-carrier-3b0b-run/artifacts",
+      "-r",
+      "linux-x64",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:AvaloniaBuildTasksLocation=/workspace/team-c-resume-evidence/c4-browser-receiving/emoji-carrier-3b0b-run/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 64342,
+        "birth": 943939,
+        "gone": true
+      },
+      {
+        "pid": 64404,
+        "birth": 944780,
+        "gone": true
+      },
+      {
+        "pid": 64494,
+        "birth": 945282,
+        "gone": true
+      },
+      {
+        "pid": 64530,
+        "birth": 945465,
+        "gone": true
+      },
+      {
+        "pid": 64646,
+        "birth": 946447,
+        "gone": true
+      },
+      {
+        "pid": 64720,
+        "birth": 946727,
+        "gone": true
+      },
+      {
+        "pid": 64746,
+        "birth": 946829,
+        "gone": true
+      },
+      {
+        "pid": 64764,
+        "birth": 946955,
+        "gone": true
+      },
+      {
+        "pid": 64782,
+        "birth": 947059,
+        "gone": true
+      },
+      {
+        "pid": 64800,
+        "birth": 947169,
+        "gone": true
+      },
+      {
+        "pid": 64829,
+        "birth": 947281,
+        "gone": true
+      },
+      {
+        "pid": 64883,
+        "birth": 948891,
+        "gone": true
+      },
+      {
+        "pid": 64901,
+        "birth": 949064,
+        "gone": true
+      },
+      {
+        "pid": 64970,
+        "birth": 950468,
+        "gone": true
+      },
+      {
+        "pid": 65003,
+        "birth": 950709,
+        "gone": true
+      },
+      {
+        "pid": 65021,
+        "birth": 950846,
+        "gone": true
+      },
+      {
+        "pid": 65041,
+        "birth": 951080,
+        "gone": true
+      },
+      {
+        "pid": 65059,
+        "birth": 951331,
+        "gone": true
+      },
+      {
+        "pid": 65082,
+        "birth": 951489,
+        "gone": true
+      },
+      {
+        "pid": 65155,
+        "birth": 951749,
+        "gone": true
+      },
+      {
+        "pid": 65245,
+        "birth": 952070,
+        "gone": true
+      },
+      {
+        "pid": 65288,
+        "birth": 952914,
+        "gone": true
+      },
+      {
+        "pid": 65322,
+        "birth": 953135,
+        "gone": true
+      },
+      {
+        "pid": 65344,
+        "birth": 953353,
+        "gone": true
+      },
+      {
+        "pid": 65504,
+        "birth": 953515,
+        "gone": true
+      },
+      {
+        "pid": 65519,
+        "birth": 953530,
+        "gone": true
+      },
+      {
+        "pid": 65539,
+        "birth": 953785,
+        "gone": true
+      },
+      {
+        "pid": 65559,
+        "birth": 953982,
+        "gone": true
+      },
+      {
+        "pid": 65592,
+        "birth": 954142,
+        "gone": true
+      },
+      {
+        "pid": 65621,
+        "birth": 954482,
+        "gone": true
+      },
+      {
+        "pid": 65671,
+        "birth": 954749,
+        "gone": true
+      },
+      {
+        "pid": 65689,
+        "birth": 954885,
+        "gone": true
+      },
+      {
+        "pid": 65727,
+        "birth": 955320,
+        "gone": true
+      },
+      {
+        "pid": 65769,
+        "birth": 955748,
+        "gone": true
+      },
+      {
+        "pid": 65811,
+        "birth": 955927,
+        "gone": true
+      },
+      {
+        "pid": 65835,
+        "birth": 956068,
+        "gone": true
+      },
+      {
+        "pid": 65869,
+        "birth": 956624,
+        "gone": true
+      },
+      {
+        "pid": 65888,
+        "birth": 956762,
+        "gone": true
+      },
+      {
+        "pid": 65912,
+        "birth": 956970,
+        "gone": true
+      },
+      {
+        "pid": 65950,
+        "birth": 957113,
+        "gone": true
+      },
+      {
+        "pid": 65968,
+        "birth": 957274,
+        "gone": true
+      },
+      {
+        "pid": 65986,
+        "birth": 957437,
+        "gone": true
+      },
+      {
+        "pid": 66006,
+        "birth": 957631,
+        "gone": true
+      },
+      {
+        "pid": 66024,
+        "birth": 957703,
+        "gone": true
+      },
+      {
+        "pid": 66093,
+        "birth": 957956,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 141.801,
+    "bytes": 7237,
+    "familyClosed": true
+  },
+  {
+    "name": "target-properties",
+    "argv": [
+      "dotnet",
+      "msbuild",
+      "/workspace/team-c-resume-evidence/c4-browser-receiving/emoji-carrier-3b0b/CanonicalEmojiCarrier.csproj",
+      "-p:Configuration=Release",
+      "-p:RuntimeIdentifier=linux-x64",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=/workspace/team-c-resume-evidence/c4-browser-receiving/emoji-carrier-3b0b-run/artifacts",
+      "-nodeReuse:false",
+      "-getProperty:TargetPath,TargetDir,TargetFramework,RuntimeIdentifier,UseAppHost,AvaloniaBuildTasksLocation",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:AvaloniaBuildTasksLocation=/workspace/team-c-resume-evidence/c4-browser-receiving/emoji-carrier-3b0b-run/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 66209,
+        "birth": 958119,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.551,
+    "bytes": 638,
+    "familyClosed": true
+  },
+  {
+    "name": "canonical-emoji-control",
+    "argv": [
+      "dotnet",
+      "test",
+      "/workspace/team-c-resume-evidence/c4-browser-receiving/emoji-carrier-3b0b/CanonicalEmojiCarrier.csproj",
+      "--no-build",
+      "--no-restore",
+      "-c",
+      "Release",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c4-browser-receiving/emoji-carrier-3b0b-run/artifacts",
+      "-r",
+      "linux-x64",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false",
+      "--filter",
+      "FullyQualifiedName=Haven.Desktop.Tests.ChatComposerControllerTests.Bundled_catalogue_includes_joined_sequences_modifiers_and_accessible_names",
+      "--logger",
+      "trx;LogFileName=canonical-emoji-control.trx",
+      "--results-directory",
+      "/workspace/team-c-resume-evidence/c4-browser-receiving/emoji-carrier-3b0b-run/diagnostics/test-results",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:AvaloniaBuildTasksLocation=/workspace/team-c-resume-evidence/c4-browser-receiving/emoji-carrier-3b0b-run/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 66220,
+        "birth": 958174,
+        "gone": true
+      },
+      {
+        "pid": 66235,
+        "birth": 958228,
+        "gone": true
+      },
+      {
+        "pid": 66248,
+        "birth": 958244,
+        "gone": true
+      },
+      {
+        "pid": 66268,
+        "birth": 958283,
+        "gone": true
+      },
+      {
+        "pid": 66280,
+        "birth": 958292,
+        "gone": true
+      },
+      {
+        "pid": 66292,
+        "birth": 958310,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 1.87,
+    "bytes": 525,
+    "familyClosed": true
+  },
+  {
+    "name": "git-clean-after",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 66307,
+        "birth": 958362,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.03,
+    "bytes": 0,
+    "familyClosed": true
+  }
+]

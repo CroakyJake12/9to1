@@ -1,0 +1,64 @@
+{
+  "Properties": {
+    "TargetPath": "/home/runner/work/_temp/team-c-mail72-37229860186-1/artifacts/bin/CakeOS.Cui.Language/release_linux-x64/CakeOS.Cui.Language.dll",
+    "TargetFramework": "net10.0"
+  },
+  "Items": {
+    "Compile": [
+      {
+        "Identity": "CuiDiagnostics.cs",
+        "FullPath": "/home/runner/work/9to1/9to1/framework/CUI/Language/CuiDiagnostics.cs",
+        "RootDir": "/",
+        "Filename": "CuiDiagnostics",
+        "Extension": ".cs",
+        "RelativeDir": "",
+        "Directory": "home/runner/work/9to1/9to1/framework/CUI/Language/",
+        "RecursiveDir": "",
+        "ModifiedTime": "",
+        "CreatedTime": "",
+        "AccessedTime": "",
+        "DefiningProjectFullPath": "/usr/share/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.DefaultItems.props",
+        "DefiningProjectDirectory": "/usr/share/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/",
+        "DefiningProjectName": "Microsoft.NET.Sdk.DefaultItems",
+        "DefiningProjectExtension": ".props"
+      },
+      {
+        "Identity": "CuiProjectItems.cs",
+        "FullPath": "/home/runner/work/9to1/9to1/framework/CUI/Language/CuiProjectItems.cs",
+        "RootDir": "/",
+        "Filename": "CuiProjectItems",
+        "Extension": ".cs",
+        "RelativeDir": "",
+        "Directory": "home/runner/work/9to1/9to1/framework/CUI/Language/",
+        "RecursiveDir": "",
+        "ModifiedTime": "",
+        "CreatedTime": "",
+        "AccessedTime": "",
+        "DefiningProjectFullPath": "/usr/share/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.DefaultItems.props",
+        "DefiningProjectDirectory": "/usr/share/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/",
+        "DefiningProjectName": "Microsoft.NET.Sdk.DefaultItems",
+        "DefiningProjectExtension": ".props"
+      },
+      {
+        "Identity": "CuiSource.cs",
+        "FullPath": "/home/runner/work/9to1/9to1/framework/CUI/Language/CuiSource.cs",
+        "RootDir": "/",
+        "Filename": "CuiSource",
+        "Extension": ".cs",
+        "RelativeDir": "",
+        "Directory": "home/runner/work/9to1/9to1/framework/CUI/Language/",
+        "RecursiveDir": "",
+        "ModifiedTime": "",
+        "CreatedTime": "",
+        "AccessedTime": "",
+        "DefiningProjectFullPath": "/usr/share/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.DefaultItems.props",
+        "DefiningProjectDirectory": "/usr/share/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/",
+        "DefiningProjectName": "Microsoft.NET.Sdk.DefaultItems",
+        "DefiningProjectExtension": ".props"
+      }
+    ],
+    "EmbeddedResource": [],
+    "Content": [],
+    "AdditionalFiles": []
+  }
+}

@@ -13,9 +13,15 @@ internal sealed record TasksSpaceRecentItem(Guid Id, string Title, string Subtit
 internal sealed class TasksSpaceHavenScene : IDisposable
 {
     private bool _disposed;
+    private readonly Action<Action>? _originalCallbackOwner;
+    private readonly Action? _demandOriginalPublication;
 
-    public TasksSpaceHavenScene()
+    public TasksSpaceHavenScene() : this(null, null) { }
+
+    internal TasksSpaceHavenScene(Action<Action>? originalCallbackOwner, Action? demandOriginalPublication)
     {
+        _originalCallbackOwner = originalCallbackOwner;
+        _demandOriginalPublication = demandOriginalPublication;
         Root = BuildRoot();
         Instruction = Get<Input>("Instruction");
         DelegateTask = Get<HavenButton>("DelegateTask");
@@ -37,60 +43,71 @@ internal sealed class TasksSpaceHavenScene : IDisposable
     public event EventHandler? NewBlankTaskRequested;
     public event EventHandler<Guid>? RecentTaskRequested;
 
-    public void SetRecent(IReadOnlyList<TasksSpaceRecentItem> items)
+    public void SetRecent(IReadOnlyList<TasksSpaceRecentItem> items) => SetRecent(items, null);
+
+    internal void SetRecent(IReadOnlyList<TasksSpaceRecentItem> items, Action? demandOriginalPublication)
     {
-        foreach (var child in RecentRows.Children.ToArray()) RecentRows.Remove(child);
+        void Write(Action effect) => OriginalWrite(effect, demandOriginalPublication);
+        foreach (var child in RecentRows.Children.ToArray()) Write(() => RecentRows.Remove(child));
         if (items.Count == 0)
         {
             var empty = new HavenText { Content = "No delegated tasks yet. Start a one-off task above." };
-            empty.SetValue(HavenProperties.Foreground, "TextSecondary");
-            empty.SetValue(HavenProperties.FontSize, 12d);
-            RecentRows.Add(empty);
+            Write(() => empty.SetValue(HavenProperties.Foreground, "TextSecondary"));
+            Write(() => empty.SetValue(HavenProperties.FontSize, 12d));
+            Write(() => RecentRows.Add(empty));
             return;
         }
 
         foreach (var item in items)
         {
             var card = new Container { Layout = HavenLayout.Vertical };
-            card.SetValue(HavenProperties.Width, HavenLength.Percent(100));
-            card.SetValue(HavenProperties.Padding, HavenThickness.Uniform(HavenLength.Px(10)));
-            card.SetValue(HavenProperties.Gap, HavenLength.Px(2));
-            card.SetValue(HavenProperties.Background, "SurfaceRaised");
-            card.SetValue(HavenProperties.BorderColor, "Border");
-            card.SetValue(HavenProperties.BorderWidth, HavenLength.Px(1));
-            card.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(12)));
+            Write(() => card.SetValue(HavenProperties.Width, HavenLength.Percent(100)));
+            Write(() => card.SetValue(HavenProperties.Padding, HavenThickness.Uniform(HavenLength.Px(10))));
+            Write(() => card.SetValue(HavenProperties.Gap, HavenLength.Px(2)));
+            Write(() => card.SetValue(HavenProperties.Background, "SurfaceRaised"));
+            Write(() => card.SetValue(HavenProperties.BorderColor, "Border"));
+            Write(() => card.SetValue(HavenProperties.BorderWidth, HavenLength.Px(1)));
+            Write(() => card.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(12))));
 
             var open = new HavenButton { Content = item.Title, Variant = ButtonVariant.Navigation };
-            open.SetValue(HavenProperties.Width, HavenLength.Percent(100));
-            open.SetValue(HavenProperties.MinHeight, HavenLength.Px(36));
+            Write(() => open.SetValue(HavenProperties.Width, HavenLength.Percent(100)));
+            Write(() => open.SetValue(HavenProperties.MinHeight, HavenLength.Px(36)));
             open.Accessibility.AccessibleName = $"Open delegated task {item.Title}";
             var id = item.Id;
-            open.Invoked += (_, _) => RecentTaskRequested?.Invoke(this, id);
-            card.Add(open);
+            Write(() => open.Invoked += (_, _) => OwnOriginalCallback(() => RecentTaskRequested?.Invoke(this, id)));
+            Write(() => card.Add(open));
 
             var subtitle = new HavenText { Content = item.Subtitle };
-            subtitle.SetValue(HavenProperties.Foreground, "TextSecondary");
-            subtitle.SetValue(HavenProperties.FontSize, 11d);
-            card.Add(subtitle);
-            RecentRows.Add(card);
+            Write(() => subtitle.SetValue(HavenProperties.Foreground, "TextSecondary"));
+            Write(() => subtitle.SetValue(HavenProperties.FontSize, 11d));
+            Write(() => card.Add(subtitle));
+            Write(() => RecentRows.Add(card));
         }
     }
 
-    public void SetBusy(bool busy)
+    public void SetBusy(bool busy) => SetBusy(busy, null);
+
+    internal void SetBusy(bool busy, Action? demandOriginalPublication)
     {
-        Instruction.SetValue(HavenProperties.Enabled, !busy);
-        DelegateTask.SetValue(HavenProperties.Enabled, !busy);
-        NewBlankTask.SetValue(HavenProperties.Enabled, !busy);
-        DelegateTask.Content = busy ? "Starting task…" : "Delegate task";
+        void Write(Action effect) => OriginalWrite(effect, demandOriginalPublication);
+        Write(() => Instruction.SetValue(HavenProperties.Enabled, !busy));
+        Write(() => DelegateTask.SetValue(HavenProperties.Enabled, !busy));
+        Write(() => NewBlankTask.SetValue(HavenProperties.Enabled, !busy));
+        Write(() => DelegateTask.Content = busy ? "Starting task…" : "Delegate task");
     }
 
-    public void SetStatus(string? value)
+    public void SetStatus(string? value) => SetStatus(value, null);
+
+    internal void SetStatus(string? value, Action? demandOriginalPublication)
     {
-        Status.Content = value ?? string.Empty;
-        Status.SetValue(HavenProperties.Visibility, string.IsNullOrWhiteSpace(value) ? HavenVisibility.Collapsed : HavenVisibility.Visible);
+        void Write(Action effect) => OriginalWrite(effect, demandOriginalPublication);
+        Write(() => Status.Content = value ?? string.Empty);
+        Write(() => Status.SetValue(HavenProperties.Visibility, string.IsNullOrWhiteSpace(value) ? HavenVisibility.Collapsed : HavenVisibility.Visible));
     }
 
-    private void OnDelegateTaskInvoked(object? sender, EventArgs e)
+    private void OnDelegateTaskInvoked(object? sender, EventArgs e) => OwnOriginalCallback(OnDelegateTaskOriginal);
+
+    private void OnDelegateTaskOriginal()
     {
         var instruction = Instruction.Text.Trim();
         if (instruction.Length == 0)
@@ -101,7 +118,26 @@ internal sealed class TasksSpaceHavenScene : IDisposable
         DelegateRequested?.Invoke(this, instruction);
     }
 
-    private void OnNewBlankTaskInvoked(object? sender, EventArgs e) => NewBlankTaskRequested?.Invoke(this, EventArgs.Empty);
+    private void OnNewBlankTaskInvoked(object? sender, EventArgs e) => OwnOriginalCallback(() => NewBlankTaskRequested?.Invoke(this, EventArgs.Empty));
+
+    private void OwnOriginalCallback(Action callback)
+    {
+        if (_originalCallbackOwner is null) callback();
+        else _originalCallbackOwner(callback);
+    }
+    private void OriginalWrite(Action effect, Action? additionalGuard = null)
+    {
+        _demandOriginalPublication?.Invoke(); additionalGuard?.Invoke();
+        effect();
+        _demandOriginalPublication?.Invoke(); additionalGuard?.Invoke();
+    }
+    internal void SetStartAvailability(bool delegateAvailable, bool blankAvailable, Action? demandOriginalPublication = null)
+    {
+        OriginalWrite(() => Instruction.SetValue(HavenProperties.Enabled, delegateAvailable), demandOriginalPublication);
+        OriginalWrite(() => DelegateTask.SetValue(HavenProperties.Enabled, delegateAvailable), demandOriginalPublication);
+        OriginalWrite(() => NewBlankTask.SetValue(HavenProperties.Enabled, blankAvailable), demandOriginalPublication);
+    }
+    internal void ClearInstruction() => OriginalWrite(() => Instruction.Text = string.Empty);
 
     private T Get<T>(string name) where T : HavenElement =>
         (T)Root.DescendantsAndSelf().Single(element => element.Name == name);

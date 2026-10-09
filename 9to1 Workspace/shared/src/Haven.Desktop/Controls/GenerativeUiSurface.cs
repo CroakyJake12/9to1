@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.ExceptionServices;
 using System.Text.Json;
 using Avalonia;
 using Avalonia.Automation;
@@ -22,7 +23,7 @@ namespace Haven.Desktop.Controls;
 /// to known controls, emits semantic events, and applies store patches without
 /// replacing the whole surface when document structure is unchanged.
 /// </summary>
-public sealed class GenerativeUiSurface : UserControl, IDisposable
+public sealed class GenerativeUiSurface : UserControl, IDisposable, IAsyncDisposable
 {
     private readonly GenerativeUiEventRouter _router;
     private readonly GenUiInstanceStore _instances;
@@ -38,9 +39,22 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable
     private CancellationTokenSource? _revealCancellation;
     private bool _suppressStoreNotification;
     private bool _disposed;
+    private readonly DesktopOriginalWorkLifetime _originalWork;
+    private readonly Func<bool>? _originalPresentationCurrent;
+    private readonly List<CancellationTokenSource> _revealScopes = [];
+    private readonly List<Task> _revealOriginals = [];
+    private readonly List<GeneratedWhiteboardControl> _acquiredWhiteboards = [];
+    private readonly List<(Grid Grid, EventHandler<SizeChangedEventArgs> Handler)> _originalGridCallbacks = [];
+    private Task? _pendingRebuild;
+    private long _generation;
+    public Task? OriginalClose => _originalWork.OriginalClose;
 
     public GenerativeUiSurface(GenerativeUiEventRouter router, GenUiInstanceStore instances)
+        : this(router, instances, null) { }
+    internal GenerativeUiSurface(GenerativeUiEventRouter router, GenUiInstanceStore instances, Func<bool>? originalPresentationCurrent)
     {
+        _originalPresentationCurrent = originalPresentationCurrent;
+        _originalWork = new DesktopOriginalWorkLifetime(StopOriginalChildrenAsync, CleanupOriginalAsync);
         _router = router;
         _instances = instances;
         _instances.DocumentChanged += OnDocumentChanged;
@@ -51,8 +65,10 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable
 
     public GenUiDocument? Document => _document;
 
-    public void Present(GenUiDocument document)
+    public void Present(GenUiDocument document) => _originalWork.RunSynchronous(original =>
     {
+        BindOriginal(original, ++_generation);
+        original.DemandPublication();
         GenerativeUiContractValidator.ValidateAndThrow(document);
         _document = document;
         _suppressStoreNotification = true;
@@ -64,11 +80,15 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable
         {
             _suppressStoreNotification = false;
         }
+        original.DemandPublication();
         Rebuild(document, progressively: true);
-    }
+        original.DemandPublication();
+    });
 
-    public void PresentExisting(GenUiDocument document)
+    public void PresentExisting(GenUiDocument document) => _originalWork.RunSynchronous(original =>
     {
+        BindOriginal(original, ++_generation);
+        original.DemandPublication();
         GenerativeUiContractValidator.ValidateAndThrow(document);
         var registered = _instances.TryGet(document.Origin.InstanceId)
             ?? throw new InvalidOperationException("The generated UI instance is no longer registered.");
@@ -76,24 +96,41 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable
             throw new InvalidOperationException("A generated UI instance cannot move between threads.");
         _document = registered;
         Rebuild(registered, progressively: false);
-    }
+        original.DemandPublication();
+    });
 
     private void OnDocumentChanged(object? sender, GenUiDocument document)
     {
-        if (_disposed || _suppressStoreNotification || _document?.Origin.InstanceId != document.Origin.InstanceId) return;
-        Dispatcher.UIThread.Post(() =>
+        if (_disposed || _originalWork.IsRetiring || _suppressStoreNotification || _document?.Origin.InstanceId != document.Origin.InstanceId) return;
+        var generation = _generation;
+        _ = _originalWork.RunAsync(async original =>
         {
-            if (_document is null) return;
-            if (StructureKey(_document.Root) == StructureKey(document.Root)) UpdateTree(document.Root);
-            else Rebuild(document, progressively: true);
-            _document = document;
+            BindOriginal(original, generation);
+            await PublishOriginalAsync(original, () =>
+            {
+                if (_document is null || _document.Origin.InstanceId != document.Origin.InstanceId) return;
+                var compatible = _pendingRebuild is null && StructureKey(_document.Root) == StructureKey(document.Root);
+                original.DemandPublication();
+                _document = document; // SAME captured store observation before a child close can complete synchronously.
+                if (compatible) UpdateTree(document.Root);
+                else Rebuild(document, progressively: true);
+                original.DemandPublication();
+            });
         });
     }
 
     private void Rebuild(GenUiDocument document, bool progressively)
     {
-        _revealCancellation?.Cancel();
-        _revealCancellation?.Dispose();
+        if (_pendingRebuild is not null || _controls.Count != 0)
+        { QueueRebuildOriginal(document, progressively); return; }
+        RebuildOriginalCore(document, progressively);
+    }
+    private void RebuildOriginalCore(GenUiDocument document, bool progressively)
+    {
+        var callbackFailures = new List<Exception>();
+        RetireOriginalGridCallbacks(callbackFailures);
+        Throw(callbackFailures); // Actual subscription cleanup before old-tree destruction.
+        DemandOriginalPublication();
         _revealCancellation = null;
         _controls.Clear();
         _inputValues.Clear();
@@ -109,15 +146,15 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable
         var accentSurface = ResolveAccentSurface(document.AccentKey);
         if (accentSurface.HasValue)
         {
-            Content = new HavenAccentScope
+            PublishOriginal(() => Content = new HavenAccentScope
             {
                 AccentSurface = accentSurface.Value,
                 Content = content
-            };
+            });
         }
         else
         {
-            Content = content;
+            PublishOriginal(() => Content = content);
         }
 
         if (progressively && !MotionPreferencesService.Current.ReduceAnimations)
@@ -129,17 +166,34 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable
         var controls = EnumerateComponents(root)
             .Where(component => IsRevealable(component.ComponentType))
             .Select(component => _controls.GetValueOrDefault(component.ComponentId))
-            .OfType<Control>()
-            .Distinct()
-            .ToArray();
+            .OfType<Control>().Distinct().ToArray();
         if (controls.Length == 0) return;
-
-        foreach (var control in controls) control.Opacity = 0.08;
-        _revealCancellation = new CancellationTokenSource();
-        _ = RevealProgressivelyAsync(controls, _revealCancellation.Token);
+        var generation = _generation;
+        _revealOriginals.RemoveAll(static actual => actual.IsCompletedSuccessfully);
+        _ = _originalWork.RunAsync(async original =>
+        {
+            BindOriginal(original, generation);
+            original.DemandPublication();
+            var scope = CancellationTokenSource.CreateLinkedTokenSource(original.Token);
+            _revealCancellation = scope;
+            _revealScopes.Add(scope);
+            try
+            {
+                foreach (var control in controls) PublishOriginal(() => control.Opacity = 0.08);
+                await original.AwaitAsync(RevealProgressivelyAsync(original, controls, scope.Token));
+            }
+            finally
+            {
+                // All actual fade/delay/dispatcher tasks are terminal before this
+                // scope leaves the live stop cohort. Failed originals remain retained.
+                _revealScopes.Remove(scope);
+                if (ReferenceEquals(_revealCancellation, scope)) _revealCancellation = null;
+                try { scope.Dispose(); } catch (Exception cause) { original.Retain(cause); throw; }
+            }
+        }, actual => _revealOriginals.Add(actual));
     }
-
-    private static async Task RevealProgressivelyAsync(IReadOnlyList<Control> controls, CancellationToken cancellationToken)
+    private async Task RevealProgressivelyAsync(DesktopOriginalWorkLifetime.Original original,
+        IReadOnlyList<Control> controls, CancellationToken cancellationToken)
     {
         var fades = new List<Task>();
         var staggerMilliseconds = Math.Clamp(680d / Math.Max(1, controls.Count), 18, 58);
@@ -147,72 +201,82 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable
         {
             foreach (var control in controls)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                fades.Add(FadeInAsync(control, cancellationToken));
-                await Task.Delay(TimeSpan.FromMilliseconds(staggerMilliseconds), cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested(); original.DemandPublication();
+                fades.Add(FadeInAsync(original, control, cancellationToken));
+                await original.AwaitAsync(Task.Delay(TimeSpan.FromMilliseconds(staggerMilliseconds), cancellationToken));
             }
-            await Task.WhenAll(fades);
         }
-        catch (OperationCanceledException) { }
+        catch (Exception cause) { original.Retain(cause); }
+        finally
+        {
+            // Every actual fade settles independently even when stagger/cancellation fails.
+            foreach (var fade in fades)
+                try { await original.AwaitAsync(fade); } catch (Exception cause) { original.Capture(fade, cause); }
+        }
+        original.ThrowRetained();
     }
-
-    private static async Task FadeInAsync(Control control, CancellationToken cancellationToken)
+    private async Task FadeInAsync(DesktopOriginalWorkLifetime.Original original, Control control, CancellationToken cancellationToken)
     {
         var started = Stopwatch.GetTimestamp();
         var duration = TimeSpan.FromMilliseconds(170);
         while (!cancellationToken.IsCancellationRequested)
         {
+            original.DemandPublication();
             var progress = Math.Clamp(Stopwatch.GetElapsedTime(started).TotalMilliseconds / duration.TotalMilliseconds, 0, 1);
             var eased = 1 - Math.Pow(1 - progress, 3);
-            control.Opacity = 0.08 + eased * 0.92;
+            await PublishOriginalAsync(original, () => PublishOriginal(() => control.Opacity = 0.08 + eased * 0.92));
             if (progress >= 1) break;
-            await Task.Delay(16, cancellationToken);
+            await original.AwaitAsync(Task.Delay(16, cancellationToken));
         }
     }
-
-    private async Task AnimateFlashcardAsync(HavenCard card, GenUiComponent component)
+    private Task AnimateFlashcardAsync(HavenCard card, GenUiComponent component)
     {
-        if (MotionPreferencesService.Current.ReduceAnimations)
+        var generation = _generation;
+        return _originalWork.RunAsync(async original =>
         {
-            await EmitAsync(component, GenUiEventType.ActionInvoked, null);
-            return;
-        }
-
-        card.IsHitTestVisible = false;
-        var transform = card.RenderTransform as ScaleTransform ?? new ScaleTransform(1, 1);
-        card.RenderTransform = transform;
-        try
-        {
-            await AnimateFlipHalfAsync(transform, 1, 0.035);
-            await EmitAsync(component, GenUiEventType.ActionInvoked, null);
-
-            // State patches are posted by the instance store. Yielding here
-            // lets the answer replace the question while the card is edge-on.
-            await Task.Yield();
-            await AnimateFlipHalfAsync(transform, 0.035, 1);
-        }
-        finally
-        {
-            transform.ScaleX = 1;
-            transform.ScaleY = 1;
-            card.IsHitTestVisible = true;
-        }
+            original.BindPublicationGuard(() => !_disposed && _generation == generation && IsOriginalControlCurrent(component, card) && (_originalPresentationCurrent?.Invoke() ?? true));
+            original.DemandPublication();
+            if (MotionPreferencesService.Current.ReduceAnimations)
+            { await original.AwaitAsync(EmitAsync(component, GenUiEventType.ActionInvoked, null, card)); return; }
+            PublishOriginal(() => card.IsHitTestVisible = false);
+            var transform = card.RenderTransform as ScaleTransform ?? new ScaleTransform(1, 1);
+            PublishOriginal(() => card.RenderTransform = transform);
+            try
+            {
+                await original.AwaitAsync(AnimateFlipHalfAsync(original, transform, 1, 0.035));
+                await original.AwaitAsync(EmitAsync(component, GenUiEventType.ActionInvoked, null, card));
+                await Task.Yield(); // Same original scheduling point, no retirement witness.
+                original.DemandPublication();
+                await original.AwaitAsync(AnimateFlipHalfAsync(original, transform, 0.035, 1));
+            }
+            finally
+            {
+                if (original.IsPublicationCurrent)
+                    await PublishOriginalAsync(original, () =>
+                    {
+                        PublishOriginal(() => transform.ScaleX = 1);
+                        PublishOriginal(() => transform.ScaleY = 1);
+                        PublishOriginal(() => card.IsHitTestVisible = true);
+                    });
+            }
+        });
     }
-
-    private static async Task AnimateFlipHalfAsync(ScaleTransform transform, double from, double to)
+    private async Task AnimateFlipHalfAsync(DesktopOriginalWorkLifetime.Original original, ScaleTransform transform, double from, double to)
     {
         var started = Stopwatch.GetTimestamp();
         const double durationMilliseconds = 155;
         while (true)
         {
+            original.DemandPublication();
             var progress = Math.Clamp(Stopwatch.GetElapsedTime(started).TotalMilliseconds / durationMilliseconds, 0, 1);
-            var eased = progress < 0.5
-                ? 4 * progress * progress * progress
-                : 1 - Math.Pow(-2 * progress + 2, 3) / 2;
-            transform.ScaleX = from + (to - from) * eased;
-            transform.ScaleY = 1 - Math.Sin(progress * Math.PI) * 0.055;
+            var eased = progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.Pow(-2 * progress + 2, 3) / 2;
+            await PublishOriginalAsync(original, () =>
+            {
+                PublishOriginal(() => transform.ScaleX = from + (to - from) * eased);
+                PublishOriginal(() => transform.ScaleY = 1 - Math.Sin(progress * Math.PI) * 0.055);
+            });
             if (progress >= 1) break;
-            await Task.Delay(16);
+            await original.AwaitAsync(Task.Delay(16, original.Token));
         }
     }
 
@@ -319,8 +383,18 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable
             HorizontalAlignment = HorizontalAlignment.Stretch
         };
 
-        void ApplyLayout(double availableWidth)
+        void ApplyLayout(double availableWidth, bool requireCapturedGrid)
         {
+            void PublishLayout(Action actualWrite)
+            {
+                DemandOriginalPublication();
+                if (requireCapturedGrid && !IsCapturedGridCurrent())
+                    throw new OperationCanceledException("The original responsive grid was replaced.");
+                actualWrite();
+                DemandOriginalPublication();
+                if (requireCapturedGrid && !IsCapturedGridCurrent())
+                    throw new OperationCanceledException("The original responsive grid was replaced.");
+            }
             var columns = maxColumns;
             if (responsive && availableWidth > 0)
             {
@@ -328,19 +402,28 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable
                 columns = Math.Min(maxColumns, widthBoundColumns);
             }
 
-            grid.ColumnDefinitions = new ColumnDefinitions(string.Join(',', Enumerable.Repeat("*", columns)));
+            PublishLayout(() => grid.ColumnDefinitions = new ColumnDefinitions(string.Join(',', Enumerable.Repeat("*", columns))));
             var rows = (int)Math.Ceiling(controls.Length / (double)columns);
-            grid.RowDefinitions = new RowDefinitions(string.Join(',', Enumerable.Repeat("Auto", Math.Max(1, rows))));
+            PublishLayout(() => grid.RowDefinitions = new RowDefinitions(string.Join(',', Enumerable.Repeat("Auto", Math.Max(1, rows)))));
             for (var index = 0; index < controls.Length; index++)
             {
-                Grid.SetColumn(controls[index], index % columns);
-                Grid.SetRow(controls[index], index / columns);
+                PublishLayout(() => Grid.SetColumn(controls[index], index % columns));
+                PublishLayout(() => Grid.SetRow(controls[index], index / columns));
             }
         }
 
-        ApplyLayout(Bounds.Width);
-        foreach (var child in controls) grid.Children.Add(child);
-        grid.SizeChanged += (_, args) => ApplyLayout(args.NewSize.Width);
+        bool IsCapturedGridCurrent() => IsOriginalControlCurrent(component, grid) &&
+            component.Children.Select((child, index) => _controls.TryGetValue(child.ComponentId, out var current) &&
+                ReferenceEquals(current, controls[index])).All(current => current);
+        ApplyLayout(Bounds.Width, requireCapturedGrid: false); // SAME admitted construction, before registration.
+        foreach (var child in controls) PublishOriginal(() => grid.Children.Add(child));
+        EventHandler<SizeChangedEventArgs> actualHandler = (_, args) =>
+        {
+            if (_originalWork.IsRetiring || !IsCapturedGridCurrent()) return; // Exact old/retired no-effect event.
+            RunOriginalCallback(() => ApplyLayout(args.NewSize.Width, requireCapturedGrid: true), IsCapturedGridCurrent);
+        };
+        _originalGridCallbacks.Add((grid, actualHandler)); // Before installing the actual producer.
+        PublishOriginal(() => grid.SizeChanged += actualHandler);
         return grid;
     }
 
@@ -383,9 +466,12 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable
             card.PointerPressed += async (_, args) =>
             {
                 if (!args.GetCurrentPoint(card).Properties.IsLeftButtonPressed) return;
-                args.Handled = true;
-                if (isFlashcard) await AnimateFlashcardAsync(card, component);
-                else await EmitAsync(component, GenUiEventType.ActionInvoked, null);
+                await RunOriginalInputAsync(component, card, async original =>
+                {
+                    PublishOriginal(() => args.Handled = true);
+                    if (isFlashcard) await original.AwaitAsync(AnimateFlashcardAsync(card, component));
+                    else await original.AwaitAsync(EmitAsync(component, GenUiEventType.ActionInvoked, null, card));
+                });
             };
         }
         return card;
@@ -402,7 +488,7 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable
             _ => new HavenSecondaryButton()
         };
         button.HorizontalContentAlignment = HorizontalAlignment.Center;
-        button.Click += async (_, _) => await EmitAsync(component, GenUiEventType.ActionInvoked, GetValue(component, "value"));
+        button.Click += async (_, _) => await EmitAsync(component, GenUiEventType.ActionInvoked, GetValue(component, "value"), button);
         return button;
     }
 
@@ -412,12 +498,16 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable
             ? new HavenMultilineInput()
             : new HavenTextInput();
         input.TextWrapping = TextWrapping.Wrap;
-        input.TextChanged += (_, _) => _inputValues[component.ComponentId] = input.Text ?? string.Empty;
+        input.TextChanged += (_, _) => RunOriginalCallback(() => _inputValues[component.ComponentId] = input.Text ?? string.Empty, () => IsOriginalControlCurrent(component, input));
         input.KeyDown += async (_, args) =>
         {
             if (args.Key != Key.Enter || args.KeyModifiers.HasFlag(KeyModifiers.Shift) || component.Actions.Count == 0) return;
-            args.Handled = true;
-            await EmitAsync(component, GenUiEventType.TextSubmitted, JsonSerializer.SerializeToElement(input.Text ?? string.Empty));
+            await RunOriginalInputAsync(component, input, async original =>
+            {
+                PublishOriginal(() => args.Handled = true);
+                await original.AwaitAsync(EmitAsync(component, GenUiEventType.TextSubmitted,
+                    JsonSerializer.SerializeToElement(input.Text ?? string.Empty), input));
+            });
         };
         return input;
     }
@@ -427,9 +517,13 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable
         var select = new HavenSelect();
         select.SelectionChanged += async (_, _) =>
         {
-            _inputValues[component.ComponentId] = select.SelectedItem;
-            if (component.Actions.Count > 0 && select.IsAttachedToVisualTree())
-                await EmitAsync(component, GenUiEventType.OptionSelected, JsonSerializer.SerializeToElement(select.SelectedItem));
+            await RunOriginalInputAsync(component, select, async original =>
+            {
+                PublishOriginal(() => _inputValues[component.ComponentId] = select.SelectedItem);
+                if (component.Actions.Count > 0 && select.IsAttachedToVisualTree())
+                    await original.AwaitAsync(EmitAsync(component, GenUiEventType.OptionSelected,
+                        JsonSerializer.SerializeToElement(select.SelectedItem), select));
+            });
         };
         return select;
     }
@@ -439,9 +533,13 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable
         var toggle = new HavenSwitch();
         toggle.IsCheckedChanged += async (_, _) =>
         {
-            _inputValues[component.ComponentId] = toggle.IsChecked;
-            if (component.Actions.Count > 0)
-                await EmitAsync(component, GenUiEventType.ToggleChanged, JsonSerializer.SerializeToElement(toggle.IsChecked));
+            await RunOriginalInputAsync(component, toggle, async original =>
+            {
+                PublishOriginal(() => _inputValues[component.ComponentId] = toggle.IsChecked);
+                if (component.Actions.Count > 0)
+                    await original.AwaitAsync(EmitAsync(component, GenUiEventType.ToggleChanged,
+                        JsonSerializer.SerializeToElement(toggle.IsChecked), toggle));
+            });
         };
         return toggle;
     }
@@ -449,11 +547,11 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable
     private Slider BuildSlider(GenUiComponent component)
     {
         var slider = new HavenSlider { MinWidth = 180 };
-        slider.ValueChanged += (_, _) => _inputValues[component.ComponentId] = slider.Value;
+        slider.ValueChanged += (_, _) => RunOriginalCallback(() => _inputValues[component.ComponentId] = slider.Value, () => IsOriginalControlCurrent(component, slider));
         slider.PointerCaptureLost += async (_, _) =>
         {
             if (component.Actions.Count > 0)
-                await EmitAsync(component, GenUiEventType.SliderChanged, JsonSerializer.SerializeToElement(slider.Value));
+                await EmitAsync(component, GenUiEventType.SliderChanged, JsonSerializer.SerializeToElement(slider.Value), slider);
         };
         return slider;
     }
@@ -478,7 +576,7 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable
             if (_document?.State.TryGetValue(stateKey, out var existingState) == true)
                 persisted = existingState;
 
-            return new GeneratedWhiteboardControl(
+            var whiteboard = new GeneratedWhiteboardControl(
                 GetString(component, "title") ?? "Whiteboard",
                 GetString(component, "prompt") ?? GetString(component, "emptyText") ?? string.Empty,
                 GetDouble(component, "minHeight", 420),
@@ -498,7 +596,13 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable
                 },
                 component.Actions.Count == 0
                     ? null
-                    : request => EmitAsync(component, GenUiEventType.ActionInvoked, request));
+                    : request => EmitAsync(component, GenUiEventType.ActionInvoked, request),
+                () => !_disposed && !_originalWork.IsRetiring && _pendingRebuild is null &&
+                    (_originalPresentationCurrent?.Invoke() ?? true));
+            _acquiredWhiteboards.Add(whiteboard);
+            if (_originalWork.IsRetiring) whiteboard.RequestRetirement();
+            DemandOriginalPublication();
+            return whiteboard;
         }
 
         return new HavenPanel
@@ -528,108 +632,135 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable
         switch (control)
         {
             case HavenStatusChip status:
-                status.Content = GetString(component, "text") ?? GetString(component, "label") ?? string.Empty;
+                PublishOriginal(() => status.Content = GetString(component, "text") ?? GetString(component, "label") ?? string.Empty);
                 break;
             case ToggleSwitch toggle:
-                toggle.OnContent = GetString(component, "onLabel") ?? "On";
-                toggle.OffContent = GetString(component, "offLabel") ?? "Off";
-                toggle.IsChecked = GetBool(component, "value");
+                PublishOriginal(() => toggle.OnContent = GetString(component, "onLabel") ?? "On");
+                PublishOriginal(() => toggle.OffContent = GetString(component, "offLabel") ?? "Off");
+                PublishOriginal(() => toggle.IsChecked = GetBool(component, "value"));
                 break;
             case HavenSelect select:
                 var options = GetStringArray(component, "options");
-                select.ItemsSource = options;
+                PublishOriginal(() => select.ItemsSource = options);
                 var requested = GetString(component, "value");
-                select.SelectedIndex = requested is null
+                PublishOriginal(() => select.SelectedIndex = requested is null
                     ? (options.Count > 0 ? 0 : -1)
-                    : options.ToList().FindIndex(item => item.Equals(requested, StringComparison.Ordinal));
+                    : options.ToList().FindIndex(item => item.Equals(requested, StringComparison.Ordinal)));
                 _inputValues[component.ComponentId] = select.SelectedItem;
                 break;
             case Button button:
-                button.Content = GetString(component, "label") ?? component.ComponentId;
-                button.IsEnabled = !GetBool(component, "disabled");
+                PublishOriginal(() => button.Content = GetString(component, "label") ?? component.ComponentId);
+                PublishOriginal(() => button.IsEnabled = !GetBool(component, "disabled"));
                 break;
             case TextBox input:
-                input.PlaceholderText = GetString(component, "placeholder") ?? string.Empty;
+                PublishOriginal(() => input.PlaceholderText = GetString(component, "placeholder") ?? string.Empty);
                 var next = GetString(component, "value") ?? string.Empty;
-                if (!input.IsFocused && input.Text != next) input.Text = next;
+                if (!input.IsFocused && input.Text != next) PublishOriginal(() => input.Text = next);
                 _inputValues[component.ComponentId] = input.Text ?? next;
                 break;
             case Slider slider:
-                slider.Minimum = GetDouble(component, "minimum", 0);
-                slider.Maximum = GetDouble(component, "maximum", 100);
-                slider.Value = GetDouble(component, "value", slider.Minimum);
+                PublishOriginal(() => slider.Minimum = GetDouble(component, "minimum", 0));
+                PublishOriginal(() => slider.Maximum = GetDouble(component, "maximum", 100));
+                PublishOriginal(() => slider.Value = GetDouble(component, "value", slider.Minimum));
                 break;
             case ProgressBar progress:
-                progress.Value = GetDouble(component, "value", 0);
+                PublishOriginal(() => progress.Value = GetDouble(component, "value", 0));
                 break;
             case TextBlock text:
-                text.Text = GetString(component, "text") ?? GetString(component, "label") ?? string.Empty;
+                PublishOriginal(() => text.Text = GetString(component, "text") ?? GetString(component, "label") ?? string.Empty);
                 var fontSize = GetDouble(component, "fontSize", 0);
-                if (fontSize > 0) text.FontSize = fontSize;
-                text.TextAlignment = GetString(component, "textAlignment")?.ToLowerInvariant() switch
+                if (fontSize > 0) PublishOriginal(() => text.FontSize = fontSize);
+                PublishOriginal(() => text.TextAlignment = GetString(component, "textAlignment")?.ToLowerInvariant() switch
                 {
                     "center" => TextAlignment.Center,
                     "right" => TextAlignment.Right,
                     _ => TextAlignment.Left
-                };
+                });
                 if (string.Equals(GetString(component, "tone"), "onAccent", StringComparison.OrdinalIgnoreCase))
-                    text.Foreground = Brushes.White;
-                text.Opacity = Math.Clamp(GetDouble(component, "opacity", 1), 0, 1);
+                    PublishOriginal(() => text.Foreground = Brushes.White);
+                PublishOriginal(() => text.Opacity = Math.Clamp(GetDouble(component, "opacity", 1), 0, 1));
                 break;
             case StackPanel list when component.ComponentType is "HavenList" or "HavenTable":
-                list.Children.Clear();
+                PublishOriginal(list.Children.Clear);
                 foreach (var item in GetStringArray(component, "items"))
-                    list.Children.Add(new TextBlock { Text = item, TextWrapping = TextWrapping.Wrap, FontWeight = FontWeight.Medium });
+                    PublishOriginal(() => list.Children.Add(new TextBlock { Text = item, TextWrapping = TextWrapping.Wrap, FontWeight = FontWeight.Medium }));
                 break;
         }
 
         var minWidth = GetDouble(component, "minWidth", 0);
-        if (minWidth > 0) control.MinWidth = minWidth;
+        if (minWidth > 0) PublishOriginal(() => control.MinWidth = minWidth);
         var minHeight = GetDouble(component, "minHeight", 0);
-        if (minHeight > 0) control.MinHeight = minHeight;
+        if (minHeight > 0) PublishOriginal(() => control.MinHeight = minHeight);
         var width = GetDouble(component, "width", 0);
-        if (width > 0) control.Width = width;
+        if (width > 0) PublishOriginal(() => control.Width = width);
         var height = GetDouble(component, "height", 0);
-        if (height > 0) control.Height = height;
-        control.HorizontalAlignment = GetString(component, "horizontalAlignment")?.ToLowerInvariant() switch
+        if (height > 0) PublishOriginal(() => control.Height = height);
+        PublishOriginal(() => control.HorizontalAlignment = GetString(component, "horizontalAlignment")?.ToLowerInvariant() switch
         {
             "left" => HorizontalAlignment.Left,
             "center" => HorizontalAlignment.Center,
             "right" => HorizontalAlignment.Right,
             "stretch" => HorizontalAlignment.Stretch,
             _ => control.HorizontalAlignment
-        };
-    }
-
-    private async Task EmitAsync(GenUiComponent component, GenUiEventType eventType, JsonElement? value)
-    {
-        if (_document is null) return;
-        var binding = GenerativeUiContractValidator.SelectActionBinding(component);
-        if (binding is null) return;
-        CaptureCurrentInputValues();
-        var payload = JsonSerializer.SerializeToElement(new
-        {
-            values = _inputValues,
-            component = component.ComponentId
         });
-        var semanticEvent = new GenUiEvent(
-            Guid.NewGuid(), eventType, DateTimeOffset.UtcNow, _document.Origin,
-            component.ComponentId, binding.ActionId, null, null, value,
-            payload, GenUiEventSource.User, $"User interacted with {component.ComponentId}.");
-        SemanticEventEmitted?.Invoke(this, semanticEvent);
-        _activity.Text = binding.Route == GenUiRouteKind.Local ? "Updating…" : "Haven is working…";
-        try
-        {
-            var result = await _router.RouteAsync(semanticEvent, binding, CancellationToken.None);
-            _activity.Text = result.Summary;
-            ActionCompleted?.Invoke(this, result);
-        }
-        catch (Exception exception) when (exception is InvalidOperationException or IOException)
-        {
-            _activity.Text = "The generated action failed: " + exception.Message;
-        }
     }
 
+    private Task EmitAsync(GenUiComponent component, GenUiEventType eventType, JsonElement? value, Control? originalControl = null)
+    {
+        var generation = _generation;
+        var document = _document;
+        return _originalWork.RunAsync(async original =>
+        {
+            BindOriginal(original, generation);
+            if (originalControl is not null)
+                original.BindPublicationGuard(() => !_disposed && _generation == generation &&
+                    IsOriginalControlCurrent(component, originalControl) && (_originalPresentationCurrent?.Invoke() ?? true));
+            original.DemandPublication();
+            if (document is null || _pendingRebuild is not null) return;
+            var binding = GenerativeUiContractValidator.SelectActionBinding(component);
+            if (binding is null) return;
+            CaptureCurrentInputValues();
+            var payload = JsonSerializer.SerializeToElement(new { values = _inputValues, component = component.ComponentId });
+            var semanticEvent = new GenUiEvent(Guid.NewGuid(), eventType, DateTimeOffset.UtcNow, document.Origin,
+                component.ComponentId, binding.ActionId, null, null, value,
+                payload, GenUiEventSource.User, $"User interacted with {component.ComponentId}.");
+            original.DemandPublication(); SemanticEventEmitted?.Invoke(this, semanticEvent); original.DemandPublication();
+            PublishOriginal(() => _activity.Text = binding.Route == GenUiRouteKind.Local ? "Updating…" : "Haven is working…");
+            Task<GenUiActionResult>? actualRoute = null;
+            try
+            {
+                original.DemandPublication();
+                actualRoute = _router.RouteAsync(semanticEvent, binding, original.Token);
+                var result = await original.AwaitAsync(actualRoute);
+                await PublishOriginalAsync(original, () =>
+                {
+                    PublishOriginal(() => _activity.Text = result.Summary);
+                    original.DemandPublication(); ActionCompleted?.Invoke(this, result); original.DemandPublication();
+                });
+            }
+            catch (Exception exception) when (exception is InvalidOperationException or IOException)
+            {
+                original.Capture(actualRoute, exception);
+                if (original.IsPublicationCurrent)
+                    await PublishOriginalAsync(original, () => PublishOriginal(() => _activity.Text = "The generated action failed: " + exception.Message));
+            }
+        });
+    }
+
+    private bool IsOriginalControlCurrent(GenUiComponent component, Control control) =>
+        _controls.TryGetValue(component.ComponentId, out var current) && ReferenceEquals(current, control);
+    private Task RunOriginalInputAsync(GenUiComponent component, Control control,
+        Func<DesktopOriginalWorkLifetime.Original, Task> callback)
+    {
+        var generation = _generation;
+        return _originalWork.RunAsync(async original =>
+        {
+            original.BindPublicationGuard(() => !_disposed && _generation == generation &&
+                IsOriginalControlCurrent(component, control) && (_originalPresentationCurrent?.Invoke() ?? true));
+            original.DemandPublication();
+            await original.AwaitAsync(callback(original));
+        });
+    }
     private void CaptureCurrentInputValues()
     {
         foreach (var (componentId, control) in _controls)
@@ -677,15 +808,138 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable
             ? brush
             : new SolidColorBrush(fallback);
 
-    public void Dispose()
+    private void BindOriginal(DesktopOriginalWorkLifetime.Original original, long generation) =>
+        original.BindPublicationGuard(() => !_disposed && _generation == generation && (_originalPresentationCurrent?.Invoke() ?? true));
+    private void DemandOriginalPublication()
+    { if (_originalWork.Executing is { } original) original.DemandPublication(); else _originalWork.DemandAdmission(); }
+    private void PublishOriginal(Action actualWrite)
+    { DemandOriginalPublication(); actualWrite(); DemandOriginalPublication(); }
+    private async Task PublishOriginalAsync(DesktopOriginalWorkLifetime.Original original, Action callback)
     {
-        if (_disposed) return;
-        _disposed = true;
-        _revealCancellation?.Cancel();
-        _revealCancellation?.Dispose();
-        _revealCancellation = null;
-        _instances.DocumentChanged -= OnDocumentChanged;
-        Content = null;
-        _controls.Clear();
+        var actualDispatcher = Dispatcher.UIThread.InvokeAsync(() => _originalWork.RunSynchronous(callbackOriginal =>
+        {
+            callbackOriginal.BindPublicationGuard(() => original.IsPublicationCurrent);
+            callbackOriginal.DemandPublication(); original.DemandPublication(); callback();
+            original.DemandPublication(); callbackOriginal.DemandPublication();
+        })).GetTask();
+        await original.AwaitAsync(actualDispatcher);
     }
+    private void RunOriginalCallback(Action callback, Func<bool>? originalControlCurrent = null)
+    {
+        if (_originalWork.IsRetiring) return;
+        if (_originalWork.Executing is { } original)
+        {
+            original.DemandPublication();
+            if (originalControlCurrent?.Invoke() == false) return;
+            original.DemandPublication(); callback(); original.DemandPublication(); return;
+        }
+        var generation = _generation;
+        _originalWork.RunSynchronous(admitted =>
+        {
+            admitted.BindPublicationGuard(() => !_disposed && _generation == generation &&
+                (originalControlCurrent?.Invoke() ?? true) && (_originalPresentationCurrent?.Invoke() ?? true));
+            admitted.DemandPublication(); callback(); admitted.DemandPublication();
+        });
+    }
+    private void QueueRebuildOriginal(GenUiDocument document, bool progressively)
+    {
+        var generation = _generation; var preceding = _pendingRebuild;
+        var children = _acquiredWhiteboards.ToArray(); var reveals = _revealOriginals.ToArray();
+        _ = _originalWork.RunAsync(async original =>
+        {
+            BindOriginal(original, generation);
+            var childFailures = new List<Exception>();
+            foreach (var child in children)
+                try { child.RequestRetirement(); } catch (Exception cause) { Add(childFailures, cause); original.Retain(cause); }
+            try
+            {
+                if (preceding is not null)
+                    try { await original.AwaitAsync(preceding); } catch (Exception cause) { original.Capture(preceding, cause); }
+                // Earlier reveal work cannot mutate a replacement generation. Its
+                // real terminal task is joined; failure evidence is retained independently.
+                foreach (var reveal in reveals)
+                    try { await original.AwaitAsync(reveal); } catch (Exception cause) { original.Capture(reveal, cause); }
+                foreach (var child in children)
+                {
+                    Task? close = null;
+                    try
+                    { close = child.OriginalClose ?? throw new InvalidOperationException("The native whiteboard close was not published."); await original.AwaitAsync(close); }
+                    catch (Exception cause) { Capture(childFailures, close, cause); original.Capture(close, cause); }
+                }
+                Throw(childFailures);
+                await PublishOriginalAsync(original, () =>
+                {
+                    if (!ReferenceEquals(_document, document)) return;
+                    RebuildOriginalCore(document, progressively);
+                    foreach (var child in children) _acquiredWhiteboards.Remove(child);
+                    foreach (var reveal in reveals) if (reveal.IsCompletedSuccessfully) _revealOriginals.Remove(reveal);
+                });
+            }
+            finally { _ = Interlocked.CompareExchange(ref _pendingRebuild, null, original.Task); }
+        }, actual => _pendingRebuild = actual);
+    }
+    public void RequestRetirement() => _originalWork.RequestRetirement();
+    internal void DemandOriginalExternalClose()
+    {
+        _originalWork.DemandExternalClose();
+        foreach (var child in _acquiredWhiteboards.ToArray()) child.DemandOriginalExternalClose();
+    }
+    public Task CloseAndDrainAsync()
+    { DemandOriginalExternalClose(); return _originalWork.CloseAndDrainAsync(); }
+    public void Dispose() => RequestRetirement();
+    public ValueTask DisposeAsync() => new(CloseAndDrainAsync());
+    private void RetireOriginalGridCallbacks(List<Exception> failures)
+    {
+        foreach (var item in _originalGridCallbacks.ToArray())
+        {
+            try { item.Grid.SizeChanged -= item.Handler; _originalGridCallbacks.Remove(item); }
+            catch (Exception cause) { Add(failures, cause); }
+        }
+    }
+    private Task StopOriginalChildrenAsync() => Dispatcher.UIThread.InvokeAsync(() => _originalWork.RunCloseCallback(() =>
+    {
+        var failures = new List<Exception>();
+        try { _instances.DocumentChanged -= OnDocumentChanged; } catch (Exception cause) { Add(failures, cause); }
+        foreach (var scope in _revealScopes.ToArray())
+            try { scope.Cancel(); } catch (Exception cause) { Add(failures, cause); }
+        foreach (var child in _acquiredWhiteboards.ToArray())
+            try { child.RequestRetirement(); } catch (Exception cause) { Add(failures, cause); }
+        RetireOriginalGridCallbacks(failures); // Independent stop even when another producer fails.
+        Throw(failures);
+    })).GetTask();
+    private async Task CleanupOriginalAsync()
+    {
+        var failures = new List<Exception>();
+        foreach (var child in _acquiredWhiteboards.ToArray())
+        {
+            try { child.RequestRetirement(); } catch (Exception cause) { Add(failures, cause); }
+            Task? close = null;
+            try { close = child.OriginalClose ?? throw new InvalidOperationException("Original native whiteboard close is unavailable."); await close; }
+            catch (Exception cause) { Capture(failures, close, cause); }
+        }
+        if (failures.Count != 0) Throw(failures); // Keep physical controls if any actual child close failed.
+        var actualCleanup = Dispatcher.UIThread.InvokeAsync(() => _originalWork.RunCloseCallback(() =>
+        {
+            _disposed = true;
+            RetireOriginalGridCallbacks(failures); // Retained failed subscription attempts remain explicit.
+            foreach (var scope in _revealScopes.ToArray())
+                try { scope.Dispose(); } catch (Exception cause) { Add(failures, cause); }
+            try { Content = null; } catch (Exception cause) { Add(failures, cause); }
+            _controls.Clear(); _inputValues.Clear(); _acquiredWhiteboards.Clear(); _revealScopes.Clear(); _revealOriginals.Clear();
+            _revealCancellation = null;
+        })).GetTask();
+        try { await actualCleanup; } catch (Exception cause) { Capture(failures, actualCleanup, cause); }
+        Throw(failures);
+    }
+    private static void Add(List<Exception> failures, Exception cause)
+    { if (!failures.Any(error => ReferenceEquals(error, cause))) failures.Add(cause); }
+    private static void Capture(List<Exception> failures, Task? actual, Exception cause)
+    { if (actual?.Exception is { InnerExceptions.Count: > 0 } group) foreach (var direct in group.InnerExceptions) Add(failures, direct); else Add(failures, cause); }
+    private static void Throw(List<Exception> failures)
+    {
+        if (failures.Count == 0) return;
+        if (failures.Count > 1 || failures[0] is OperationCanceledException) throw new AggregateException("Original native generated work or cleanup failed.", failures);
+        ExceptionDispatchInfo.Capture(failures[0]).Throw();
+    }
+
 }

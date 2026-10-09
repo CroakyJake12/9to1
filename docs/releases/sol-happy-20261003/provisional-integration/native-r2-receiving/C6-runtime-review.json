@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "ce7f7ce15cc75b5fac40bae2bce20f232a3d6f38",
+  "review": "ACK normal whole maintained receiving Sites.Tests Release76/76/0fail/0skip; all21 historical unchanged native R2 cases execute/pass with actual canonical pipeline/manifest/contract types. Actual source-built entry/productionSites hashes, exact frozen whole-tree pins and clean before/after; all10command families0exit/normalEOF/ECHILD/familyClosed/zero signals/births gone.",
+  "counts": {
+    "total": "76",
+    "executed": "76",
+    "passed": "76",
+    "failed": "0",
+    "error": "0",
+    "timeout": "0",
+    "aborted": "0",
+    "inconclusive": "0",
+    "passedButRunAborted": "0",
+    "notRunnable": "0",
+    "notExecuted": "0",
+    "disconnected": "0",
+    "warning": "0",
+    "completed": "0",
+    "inProgress": "0",
+    "pending": "0"
+  },
+  "nativeR2OriginalCasesPassed": [
+    "HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: \"blank-source\")",
+    "HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: \"corrupt-output\")",
+    "HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: \"blank-config\")",
+    "HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.RefusesUnsafeTransportOrInvalidAdmission(mode: \"extra\")",
+    "HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: \"wrong-source\")",
+    "HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: \"wrong-total\")",
+    "HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.RefusesUnsafeTransportOrInvalidAdmission(mode: \"encoding\")",
+    "HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: \"corrupt-manifest\")",
+    "HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: \"wrong-project\")",
+    "HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: \"missing-output\")",
+    "HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.RefusesUnsafeTransportOrInvalidAdmission(mode: \"cancel\")",
+    "HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: \"unsafe\")",
+    "HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.RefusesUnsafeTransportOrInvalidAdmission(mode: \"redirect\")",
+    "HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: \"unmapped\")",
+    "HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.RefusesUnsafeTransportOrInvalidAdmission(mode: \"null\")",
+    "HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.RefusesUnsafeTransportOrInvalidAdmission(mode: \"foreign-uri\")",
+    "HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.RefusesUnsafeTransportOrInvalidAdmission(mode: \"truncated\")",
+    "HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: \"duplicate\")",
+    "HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: \"wrong-revision\")",
+    "HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: \"valid\")",
+    "HavenOS.Apps.Sites.Tests.R2NativeSiteArtifactReaderTests.VerifiesNativeManifestSemanticsAndRefusesChangedObjects(mode: \"unscanned\")"
+  ],
+  "compiledArtifactIdentities": {
+    "entryDLL": {
+      "path": "/workspace/team-c-c4-native-r2-receiving-attempt02/9to1 Workspace/Sites/bin/HavenOS.Sites.Tests/release_linux-x64/HavenOS.Sites.Tests.dll",
+      "sha256": "d9db1ef171c718481df869528e9ac66428aeb202841ad95ff4684c1b0dfa8f61",
+      "bytes": 89088
+    },
+    "actualProductionSites": {
+      "path": "/workspace/team-c-c4-native-r2-receiving-attempt02/9to1 Workspace/Sites/bin/HavenOS.Sites.Tests/release_linux-x64/HavenOS.Sites.dll",
+      "sha256": "037adf8fc87c8bc7e20001babf09ec2cf2ddb4c401a1bf280850fa88c6aa5675"
+    }
+  },
+  "diagnosticHashes": {
+    "build.log": "b5d784731888990480098bd55527b3be8a3f6aa10a285ff4f541d66362599574",
+    "artifact-identities.json": "1e981fde4890a6f8fe76318503e57f93bde3dffcdeea195e623e948375661f5e",
+    "git-clean-after.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "restore.log": "9f9a0db2aa6af090159a91e2a3ba4fb11a4acb50104a07cdaeaa5ec37f3432fa",
+    "git-head.log": "5b9cc3629e69e71d2e07639b851e39527bfc64227e7a089523583e0a44708ce1",
+    "dotnet-info.log": "8e01d29f74632972a6f350214db055a424a91f6335dfd2ad63f688a8bce517ae",
+    "target-properties.json": "239efe1e7640520b0c1785f0ea5a04fd511e26313c6311d8a3599e483040ace4",
+    "commands.json": "8725064238da672a3e88dbcd6020d9fcfe4c683a0541683b1e0c9a9c26773516",
+    "dotnet-version.log": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da",
+    "source-tree-pins.log": "1166ed122aa74800edb43f6ad26a0ca862d1ab62beae62652c385b7af003a5d0",
+    "git-clean-before.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "target-properties.log": "eca1f61194458d71b42f3da241d1141c850e275407e90be6f8dfacbd77ed3bc1",
+    "normal-owner-tests.log": "c33fe28abbebb47403e35cac4743a4aee7f67eb9cf45b5c54a34ad6059c277f5",
+    "result.json": "854f3b8ddf14ae3169bb20e988130f1009b3df1a4f16d8c503d1e1c856a31c27",
+    "test-results/normal-sites.trx": "81a39968e10830996da3090c5ad589fb37a5fc8a6dff61c74d6fa6515bbe67de"
+  },
+  "payloadRerun": false,
+  "qualification": "Local original fake-HTTP controls/owning-project source acceptance only. First query-helper/path mismatch stopped before tests remains retained. No real R2/binding/session/scanner/import/publication/FilesHTTP/provider activation or fullrelease acceptance."
+}

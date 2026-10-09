@@ -1,0 +1,1 @@
+{"strictReaped": true, "originalsDisappeared": true, "reaped": [{"pid": 137148, "birth": 5618589, "code": 2, "status": 15}, {"pid": 137156, "birth": 5618618, "code": 2, "status": 15}], "signals": [{"pid": 137148, "birth": 5618589, "signal": 15}, {"pid": 137156, "birth": 5618618, "signal": 15}]}

@@ -1,0 +1,17 @@
+{
+  "sourceCommit": "9cd3e846fdebf6d6f42262407ceeee5cd8973cb1",
+  "currentMaintainedSourceGuardPass": true,
+  "inputs": 4537,
+  "linkedCuts": [
+    "9to1 Workspace/Wave/WaveProject.cs",
+    "9to1 Workspace/Wave/WaveProjectEdits.cs",
+    "9to1 Workspace/Wave/WaveTimelineAnnotations.cs",
+    "9to1 Workspace/Wave/WaveMediaAssetReferences.cs",
+    "9to1 Workspace/Wave/Program.cs",
+    "apps/Web/Wave/Engine/generate-owner-decoder.py",
+    "9to1 Workspace/Picture/PictureDocument.cs",
+    "9to1 Workspace/Picture/PictureCropService.cs",
+    "9to1 Workspace/Picture/ImageViewportState.cs"
+  ],
+  "scope": "sameoriginalsource-custodyfunctiononly; NOTactualWebbuild/publish/runtime"
+}

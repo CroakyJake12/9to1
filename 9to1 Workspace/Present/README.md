@@ -13,6 +13,6 @@ No presentation/document engine is duplicated in this app surface.
 ## Focused validation
 
 ```powershell
-dotnet build "HavenOS Apps/Present/HavenOS.Present.csproj" -c Debug
-dotnet test "HavenOS Apps/Present/Tests/HavenOS.Present.Tests.csproj" -c Debug
+dotnet build "9to1 Workspace/Present/HavenOS.Present.csproj" -c Debug
+dotnet test "9to1 Workspace/Present/Tests/HavenOS.Present.Tests.csproj" -c Debug
 ```

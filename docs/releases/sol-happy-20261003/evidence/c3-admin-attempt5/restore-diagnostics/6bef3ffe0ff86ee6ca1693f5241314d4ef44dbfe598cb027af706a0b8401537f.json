@@ -1,0 +1,33 @@
+{
+  "project": "framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+  "argv": [
+    "dotnet",
+    "msbuild",
+    "/workspace/team-c/c3-admin-compile-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+    "-nologo",
+    "-m:1",
+    "-nr:false",
+    "-p:Configuration=Release",
+    "-p:TargetFramework=netstandard2.0",
+    "-p:EnableWindowsTargeting=true",
+    "-p:AvsSkipBuildingLegacyTargetFrameworks=True",
+    "-p:UseSharedCompilation=false",
+    "-p:UseArtifactsOutput=true",
+    "-p:ArtifactsPath=/workspace/team-c/c3-admin-compile-validation/artifacts/root14-host-build-tasks",
+    "-p:IncludeProjectNameInArtifactsPaths=true",
+    "-p:AvaloniaBuildTasksLocation=/workspace/team-c/c3-admin-compile-validation/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/Avalonia.Build.Tasks.dll",
+    "-getProperty:MSBuildProjectFullPath,MSBuildProjectName,MSBuildProjectFile,Configuration,Platform,TargetFramework,RuntimeIdentifier,MSBuildProjectExtensionsPath,ProjectAssetsFile,RestoreOutputPath"
+  ],
+  "cwd": "/workspace/team-c/c3-admin-compile-validation",
+  "exitCode": 0,
+  "stdout": "{\n  \"Properties\": {\n    \"MSBuildProjectFullPath\": \"/workspace/team-c/c3-admin-compile-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj\",\n    \"MSBuildProjectName\": \"Avalonia.Build.Tasks\",\n    \"MSBuildProjectFile\": \"Avalonia.Build.Tasks.csproj\",\n    \"Configuration\": \"Debug\",\n    \"Platform\": \"AnyCPU\",\n    \"TargetFramework\": \"netstandard2.0\",\n    \"RuntimeIdentifier\": \"\",\n    \"MSBuildProjectExtensionsPath\": \"/workspace/team-c/c3-admin-compile-validation/artifacts/root14-host-build-tasks/obj/Avalonia.Build.Tasks/\",\n    \"ProjectAssetsFile\": \"/workspace/team-c/c3-admin-compile-validation/artifacts/root14-host-build-tasks/obj/Avalonia.Build.Tasks/project.assets.json\",\n    \"RestoreOutputPath\": \"/workspace/team-c/c3-admin-compile-validation/artifacts/root14-host-build-tasks/obj/Avalonia.Build.Tasks/\"\n  }\n}\n",
+  "stderr": "",
+  "resolved": {
+    "extensions": "/workspace/team-c/c3-admin-compile-validation/artifacts/root14-host-build-tasks/obj/Avalonia.Build.Tasks",
+    "assets": "/workspace/team-c/c3-admin-compile-validation/artifacts/root14-host-build-tasks/obj/Avalonia.Build.Tasks/project.assets.json",
+    "dgspec": "/workspace/team-c/c3-admin-compile-validation/artifacts/root14-host-build-tasks/obj/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj.nuget.dgspec.json",
+    "assetsExists": true,
+    "dgspecExists": true,
+    "authoritativeRestoredSpec": null
+  }
+}

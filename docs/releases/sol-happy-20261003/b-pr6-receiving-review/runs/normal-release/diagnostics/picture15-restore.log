@@ -1,0 +1,4 @@
+  Determining projects to restore...
+  Restored /workspace/team-c-c5-b-pr6-receiving/apps/Web/Tests/PictureAdmission/PictureAdmission.Tests.csproj (in 294 ms).
+  Restored /workspace/team-c-c5-b-pr6-receiving/apps/Web/Picture/Engine/NineToOne.Picture.BrowserEngine.csproj (in 22 ms).
+  42 of 44 projects are up-to-date for restore.

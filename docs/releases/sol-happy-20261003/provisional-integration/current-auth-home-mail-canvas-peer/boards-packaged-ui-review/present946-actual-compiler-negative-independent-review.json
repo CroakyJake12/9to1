@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "C6 independent non-author",
+  "scope": "Actual current-source Present946 Windows compiler negative; no rebuild or replay",
+  "source": "946fe6c038eaf926fbcfec1888f2f864ef8ba160",
+  "runId": 37227144107,
+  "jobId": 111509046741,
+  "providerConclusion": "failure",
+  "originalArtifacts": [
+    {
+      "id": 11312049654,
+      "bytes": 2012,
+      "sha256": "120b86eeb13b4c2984f061e1185408d3407d9a6d3656f56a69d9fa4989f3d69c",
+      "members": 1
+    },
+    {
+      "id": 11312258846,
+      "bytes": 2494176,
+      "sha256": "04cbe4e2d9160737c4be737f52575f1f6d0a79df5444af7213b2ce52b55897a5",
+      "members": 13
+    }
+  ],
+  "independentReadback": {
+    "providerTuple": true,
+    "archiveCRC": true,
+    "originalMembersExact": true,
+    "sourceBeforeAfterEqual": true,
+    "sourceCatalogBytes": 5970613,
+    "sourceCatalogSha256": "2beb03ae36ef8ae2dbbe788def891036c5bb9dbff569eeda10189e0f1b06a844",
+    "cuiAndAvaloniaOwnedBuildTasks": "ACTUAL_RELEASE_BUILD_PASS_0_WARNINGS_0_ERRORS",
+    "owningRestore": "PASS",
+    "sharedRestore": "PASS",
+    "owning15CasesExecuted": 0,
+    "shared7CasesExecuted": 0,
+    "owningAndSharedAndNativeBuild": "FAIL_FOUR_CS0246_IN_HAVEN_DESKTOP_NET10",
+    "failedSource": "9to1 Workspace/shared/src/Haven.Desktop/Services/SitesNativeWorkspaceAuthority.cs",
+    "missingTypeDependencies": [
+      "HavenOS.Apps.Sites.Application",
+      "ISiteNativeWorkspaceAuthority",
+      "NativeFilesWorkspaceAuthority",
+      "SiteNativeWorkspaceBinding"
+    ],
+    "package": "NOT_PRODUCED",
+    "nativeUi": "NOT_RUN"
+  },
+  "qualification": "This is a real missing project dependency at ordinary compilation, not a test assertion or UI failure. Original test identities/expectations remain retained. Prior fd5 and137 isolated Windows results do not establish the current946 graph. No current package, native route, installed Home, signing, clean-PC or full release acceptance inferred.",
+  "status": "ORIGINAL_COMPILER_NEGATIVE_ACK"
+}

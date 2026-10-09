@@ -1,0 +1,15 @@
+{
+  "sourceCommit": "a0de5ad5c2975c98140be79dfcac884dea0ef76a",
+  "scope": "Exact original8 unchanged and already compiled from actualfullcurrentRuntime/Headless project. Corrected SDK one-property JSON orchestration only; original failedquery beforetest NOT_RUN retained. No source/oracle edit or test retry.",
+  "targetProperties": {
+    "TargetPath": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-eec-closure-release/artifacts/bin/CuiSameTurn.Current/release_linux-x64/CuiSameTurn.Current.dll",
+    "TargetFramework": "net10.0",
+    "RuntimeIdentifier": "linux-x64",
+    "UseAppHost": "true"
+  },
+  "original8passed": 8,
+  "failed": 0,
+  "nativeExit": 0,
+  "entrySHA256": "d48408f2b1e5510b765de9ce9aba6a7c26967bb887c576bb4e7c6c546b3398bf",
+  "sourceAfter": "a0de5ad5c2975c98140be79dfcac884dea0ef76a"
+}

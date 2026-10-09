@@ -1,0 +1,72 @@
+[
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj",
+    "bytes": 700,
+    "sha256": "fcba0a48d92e30675650fca3b9b36e6e7d0ad942efa8f5d7d4395e10a3baee9d"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/ProductionReliabilityServices.cs",
+    "bytes": 24341,
+    "sha256": "a46ad14f586f24501591637275717db4698bd3c3f9c5fc9019c3847c64717f80"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/NotesDocxFormatService.cs",
+    "bytes": 46744,
+    "sha256": "2f9d21ac834ae90bdf51d105ce7906a03de05fa70c722cacc3962681a698d863"
+  },
+  {
+    "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/NotesImportExportService.cs",
+    "bytes": 58647,
+    "sha256": "e02dd020b697e6ba5932a1193787a5be04500ef509c0ebe2a514724095a26499"
+  },
+  {
+    "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/AssemblyInfo.cs",
+    "bytes": 292,
+    "sha256": "8285427fb7535ccbafebfa3fb58e724495859fd711d40df82a877e0f33fb9640"
+  },
+  {
+    "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/WriteDocxFidelityTests.cs",
+    "bytes": 13783,
+    "sha256": "0ff96df4fd4068bf9f4512d51b302e9fcad93699eb85d193bd8980f0fa3c4259"
+  },
+  {
+    "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/WriteNativeDocumentPackageStoreTests.cs",
+    "bytes": 6589,
+    "sha256": "f1baa6a612ee8a7dbf77e94c18d528a5ed1b403fd13d8f9c4f2c3647bb281303"
+  },
+  {
+    "path": "NuGet.Config",
+    "bytes": 579,
+    "sha256": "6343458c92e08cdf00e557786aa43b59514ce7b6131bad9b678f77e6c461254e"
+  },
+  {
+    "path": "apps/Web/Tests/ci/run-ordinary-native.py",
+    "bytes": 19584,
+    "sha256": "a57aa33f71714c2add7a7ad7999e238d52177da2a483fe49e1c0405319f4be38"
+  },
+  {
+    "path": "apps/Web/Write/Packages/NineToOne.Write.Packages.csproj",
+    "bytes": 718,
+    "sha256": "cdcead31de80b2fc6f981c949d1a2887be508b57d6242e02a11a4a3668b93a48"
+  },
+  {
+    "path": "apps/Web/Write/Tests/Write.OriginalFormats.Tests.csproj",
+    "bytes": 2005,
+    "sha256": "5f94476bb0c82bfbd4833290d3b0e884fa2ef5e0500b4a186295b9a342242410"
+  },
+  {
+    "path": "apps/Web/Write/Tests/ci/original-format-acceptance.py",
+    "bytes": 6106,
+    "sha256": "659451490c8728dff25264781c55fe43b7cfe780ca71da17d21157438d760fbd"
+  },
+  {
+    "path": "apps/Web/Write/Tests/ci/run-original-write-formats.py",
+    "bytes": 10728,
+    "sha256": "f8357549d92063988509812ce089a2107feb63b52b99cf22dfd52f95fc1c2f73"
+  },
+  {
+    "path": "global.json",
+    "bytes": 111,
+    "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b"
+  }
+]

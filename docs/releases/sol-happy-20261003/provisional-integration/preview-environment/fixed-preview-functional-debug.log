@@ -1,0 +1,14 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Haven.PluginFixture -> /workspace/team-c-resume-evidence/c3-preview-environment-20261004/artifacts/bin/Haven.PluginFixture/debug/Haven.PluginFixture.dll
+  NineToOne.Cui.AI -> /workspace/team-c-resume-evidence/c3-preview-environment-20261004/artifacts/bin/NineToOne.Cui.AI/debug/NineToOne.Cui.AI.dll
+  Haven.Core -> /workspace/team-c-resume-evidence/c3-preview-environment-20261004/artifacts/bin/Haven.Core/debug/Haven.Core.dll
+  Haven.Application -> /workspace/team-c-resume-evidence/c3-preview-environment-20261004/artifacts/bin/Haven.Application/debug/Haven.Application.dll
+  Haven.Browser -> /workspace/team-c-resume-evidence/c3-preview-environment-20261004/artifacts/bin/Haven.Browser/debug/Haven.Browser.dll
+  Haven.Infrastructure -> /workspace/team-c-resume-evidence/c3-preview-environment-20261004/artifacts/bin/Haven.Infrastructure/debug/Haven.Infrastructure.dll
+  Haven.Infrastructure.Tests -> /workspace/team-c-resume-evidence/c3-preview-environment-20261004/artifacts/bin/Haven.Infrastructure.Tests/debug/Haven.Infrastructure.Tests.dll
+Test run for /workspace/team-c-resume-evidence/c3-preview-environment-20261004/artifacts/bin/Haven.Infrastructure.Tests/debug/Haven.Infrastructure.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Results File: /workspace/team-c-resume-evidence/c3-preview-environment-20261004/focused-debug-results/fixed-preview-functional-debug.trx
+
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 3 s - Haven.Infrastructure.Tests.dll (net10.0)

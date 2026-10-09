@@ -1,0 +1,16 @@
+  CakeOS.Cui.Language -> /workspace/team-c-resume-evidence/c4-native-r2-receiving/normal-sites/artifacts/bin/CakeOS.Cui.Language/release/CakeOS.Cui.Language.dll
+  CakeOS.Cui.Core -> /workspace/team-c-resume-evidence/c4-native-r2-receiving/normal-sites/artifacts/bin/CakeOS.Cui.Core/release/CakeOS.Cui.Core.dll
+  Haven.Core -> /workspace/team-c-resume-evidence/c4-native-r2-receiving/normal-sites/artifacts/bin/Haven.Core/release/Haven.Core.dll
+  NineToOne.Cui.AI -> /workspace/team-c-resume-evidence/c4-native-r2-receiving/normal-sites/artifacts/bin/NineToOne.Cui.AI/release/NineToOne.Cui.AI.dll
+  Haven.Application -> /workspace/team-c-resume-evidence/c4-native-r2-receiving/normal-sites/artifacts/bin/Haven.Application/release/Haven.Application.dll
+  Dulche.Runtime -> /workspace/team-c-resume-evidence/c4-native-r2-receiving/normal-sites/artifacts/bin/Dulche.Runtime/release/Dulche.Runtime.dll
+  Den -> /workspace/team-c-resume-evidence/c4-native-r2-receiving/normal-sites/artifacts/bin/Den/release/Den.dll
+  HavenOS.Home -> /workspace/team-c-resume-evidence/c4-native-r2-receiving/normal-sites/artifacts/bin/HavenOS.Home/release/HavenOS.Home.dll
+  HavenOS.Sites -> /workspace/team-c-c4-native-r2-receiving/9to1 Workspace/Sites/bin/HavenOS.Sites/release/HavenOS.Sites.dll
+  HavenOS.Sites.Tests -> /workspace/team-c-c4-native-r2-receiving/9to1 Workspace/Sites/bin/HavenOS.Sites.Tests/release_linux-x64/HavenOS.Sites.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:33.34

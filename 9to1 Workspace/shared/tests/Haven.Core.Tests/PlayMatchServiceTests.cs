@@ -54,7 +54,7 @@ public sealed class PlayMatchServiceTests
             new PlayMatchConfiguration(ManualContestants: [new(PlayContestantKind.DulcheAgent, "Canonical Agent", agentId, 4)]), CancellationToken.None);
 
         Assert.True(started.Succeeded, started.Error?.Message);
-        var agent = Assert.Single(started.Value!.Contestants.Where(item => item.Kind == PlayContestantKind.DulcheAgent));
+        var agent = Assert.Single(started.Value!.Contestants, item => item.Kind == PlayContestantKind.DulcheAgent);
         Assert.Equal(agentId, agent.AgentId);
         Assert.Equal(4, agent.AgentDefinitionRevision);
         Assert.Null(agent.SessionProfile);
@@ -69,8 +69,8 @@ public sealed class PlayMatchServiceTests
             new PlayMatchConfiguration(ManualContestants: [new(PlayContestantKind.SessionAgent, "Opponent")]), CancellationToken.None);
         Assert.True(started.Succeeded, started.Error?.Message);
         var match = started.Value!;
-        var human = Assert.Single(match.Contestants.Where(item => item.Kind == PlayContestantKind.Human));
-        var opponent = Assert.Single(match.Contestants.Where(item => item.Kind == PlayContestantKind.SessionAgent));
+        var human = Assert.Single(match.Contestants, item => item.Kind == PlayContestantKind.Human);
+        var opponent = Assert.Single(match.Contestants, item => item.Kind == PlayContestantKind.SessionAgent);
 
         var first = await service.SubmitAnswerAsync(match.MatchId, human.ContestantId, 1, CancellationToken.None);
         Assert.True(first.Succeeded, first.Error?.Message);
@@ -126,7 +126,7 @@ public sealed class PlayMatchServiceTests
         var recovered = await reloaded.GetMatchAsync(match.MatchId, CancellationToken.None);
         Assert.True(recovered.Succeeded);
         Assert.Equal(PlayMatchStatus.Completed, recovered.Value!.Status);
-        Assert.Equal(1, recovered.Value.MatchState.Reveals.Count);
+        Assert.Single(recovered.Value.MatchState.Reveals);
         var replay = await reloaded.GetReplayAsync(match.MatchId, CancellationToken.None);
         Assert.True(replay.Succeeded);
         Assert.Contains(replay.Value!, item => item.EventType == "MatchStarted");
@@ -145,8 +145,8 @@ public sealed class PlayMatchServiceTests
             new PlayMatchConfiguration(SessionAgentCount: 1, TeamIds: [homeTeam, otherTeam]), CancellationToken.None);
         Assert.True(started.Succeeded);
         var match = started.Value!;
-        var home = Assert.Single(match.Contestants.Where(item => item.TeamId == homeTeam));
-        var opponent = Assert.Single(match.Contestants.Where(item => item.TeamId == otherTeam));
+        var home = Assert.Single(match.Contestants, item => item.TeamId == homeTeam);
+        var opponent = Assert.Single(match.Contestants, item => item.TeamId == otherTeam);
         var saved = await service.SetTeamPrivateStateAsync(match.MatchId, home.ContestantId, "private clue", CancellationToken.None);
         Assert.True(saved.Succeeded);
 

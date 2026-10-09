@@ -1,0 +1,9 @@
+{
+  "scenario": "live",
+  "launcherReleased": true,
+  "creatorWaitProven": true,
+  "primary": "None",
+  "cleanup": [],
+  "retainedData": "/tmp/original-custody-osdfnnnn",
+  "sessionInitialized": true
+}

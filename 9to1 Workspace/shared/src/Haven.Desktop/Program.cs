@@ -30,15 +30,33 @@ internal static class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        // Explicit create-new setup owns all its refusals BEFORE generic bootstrap
+        // reporting can construct a default Haven/Logs directory.
+        if (Services.WindowsNativePersonalTaskStoreSetupCommand.IsInvocation(args))
+        {
+            if (!Services.WindowsNativePersonalTaskStoreSetupCommand.Run(args, Console.Out, Console.Error)) return;
+            args = [];
+        }
         try
         {
             ConfigureThreadPool();
+            if (args.Length > 0 && args[0] == "--local-task-console")
+            {
+                Environment.ExitCode = Services.OriginalLocalTaskConsole.RunAsync(args[1..]).GetAwaiter().GetResult();
+                return;
+            }
             if (OperatingSystem.IsWindows())
                 SetCurrentProcessExplicitAppUserModelID(DesktopProductIdentity.WindowsAppId);
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
         catch (Exception ex)
         {
+            if (Services.WindowsNativePersonalTaskStoreSetupCommand.HasActualSetupObservation)
+            {
+                Services.WindowsNativePersonalTaskStoreSetupCommand.ReportFailure(ex, Console.Error);
+                Environment.ExitCode = 1;
+                return;
+            }
             ReportBootstrapFailure(ex);
             Environment.ExitCode = 1;
         }

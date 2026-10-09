@@ -18,7 +18,7 @@ namespace Haven.Infrastructure;
 /// </summary>
 public sealed class CleanResetStartupRecoveryCoordinator(
     StartupRecoveryCoordinator inner,
-    IAppPaths paths) : IStartupRecoveryCoordinator
+    IAppPaths paths) : IStartupRecoveryCoordinator, IStartupRecoveryFinalCleanWriterSource
 {
     /// <summary>
     /// Gets or updates current, the bindable or domain state represented by this property.
@@ -38,19 +38,26 @@ public sealed class CleanResetStartupRecoveryCoordinator(
         inner.MarkStartupCompletedAsync(cancellationToken);
 
     /// <summary>
+    /// Forwards preparation to the same original owner before its diagnostics retire.
+    /// The returned writer retains that owner's acknowledged startup and drain guards.
+    /// </summary>
+    public Task<IStartupRecoveryFinalCleanWriter> PrepareFinalCleanWriterAsync(CancellationToken cancellationToken) =>
+        inner.PrepareFinalCleanWriterAsync(cancellationToken);
+
+    /// <summary>
     /// Performs mark clean shutdown asynchronously so I/O does not block the caller's thread.
     /// </summary>
     public Task MarkCleanShutdownAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var statePath = Path.Combine(paths.DataDirectory, "startup-recovery.json");
-        var backupPath = statePath + ".bak";
+        return ResetOriginalAsync(cancellationToken);
+    }
+
+    private async Task ResetOriginalAsync(CancellationToken cancellationToken)
+    {
         try
         {
-            if (File.Exists(statePath)) File.Delete(statePath);
-            if (File.Exists(backupPath)) File.Delete(backupPath);
-            RuntimeSafetyState.DisableSafeMode();
-            return Task.CompletedTask;
+            await inner.ClearLegacyCleanShutdownAsync(Path.Combine(paths.DataDirectory, "startup-recovery.json"), cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {

@@ -1,0 +1,34 @@
+{
+  "candidate": "1f8a75a0c2a522625d3473507f02ed81a84064e4",
+  "producer": "d643d723d15ec20d70263a408b0cfefbd5be69ae",
+  "sha256": {
+    "deployment/https/prepare-fixture.mjs": "4c410a07f34a9d77d5e93f217ac0ed6c172335118f210a3d37d8b5522a21e343",
+    "deployment/https/authenticated.mjs": "a7ac20b568df6655de57491d59ba06cd378d6f52f3e10f7981a226c179c235b1",
+    "deployment/https/authenticated.test.mjs": "e726681fca645b881bd3552f8a043a51cae502bf581c7c0cc637923a7ceafd56",
+    "deployment/https/AUTHENTICATED.md": "7f8823023807c33d01532cf584686872854b6a24e0ba33bb05b7feff5881b204",
+    "src/index.ts": "7f67052f2c3dd7a269b6457bb43c316623122232743a7944462e8225c756ab3b",
+    "src/auth.ts": "ece2f8f497233d7dcd5d98dcff516c82f7de6e36871871331e58be9c59c46113",
+    "src/resource-api.ts": "fb1f07df39e95094accf4bfef906ce0476efd099600fe64367f9a74d50ce0bb7",
+    "src/email.ts": "ed288123118c4a65ecb6037cfa4d66b5c875a24268906e575354ce14ab940cec",
+    "migrations/0000_cake_guardrails.sql": "8cd4b84109d4deab88d531b125d59a8a3cf1d87c0cb1abd766bc7ff4cdf5245b",
+    "migrations/0001_better_auth.sql": "7145e80b0d4887c785b7e9897ebe36f8b505777ff06df811781faead6f89631c",
+    "package.json": "de44bbd090895a6589e4e1895cfede265f8ad83ccad897856fb412d3b8fc5228",
+    "package-lock.json": "0afc67b7fd504d62df49adc8075792952ad5b3cb2fccc940b3e9e7fe0cbaa098"
+  },
+  "producerSchemaPackageUnchanged": true,
+  "offlineCommands": [
+    "node --check deployment/https/authenticated.mjs",
+    "node --check deployment/https/prepare-fixture.mjs",
+    "node deployment/https/authenticated.test.mjs"
+  ],
+  "cwd": "/workspace/team-c/c2-https-validation/cloud/cake-id-auth",
+  "offlineExitCode": 0,
+  "actualRemoteMutationOrJourney": "NOT_RUN",
+  "lifecycleCorrection": "Exclusive result acquisition before requests; original+close exception objects preserved; fresh private diagnostic filenames",
+  "SQLControl": "All canonical rows equal between generated parameter batch and private SQL script on actual pinned local SQLite schema",
+  "rootRunNodeFlags": [
+    "--use-env-proxy",
+    "--use-system-ca"
+  ],
+  "qualification": "Source-only handoff; no hosted execution. Inherited proxy/CA are honored; no TLS fallback or overrides."
+}

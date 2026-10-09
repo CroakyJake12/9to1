@@ -1,0 +1,36 @@
+{
+  "status": "EXPECTED_RED_CONTROL",
+  "sourceCommit": "1a0a824ad06905467c280730a85429f37feabce1",
+  "suite": "lifecycle-original01",
+  "criteriaExpected": 14,
+  "criteriaExecuted": 14,
+  "criteriaPassed": 6,
+  "criteriaFailed": 8,
+  "failedCases": [
+    "actual-files-reentrant-negative-owner-drain-issued-once",
+    "actual-sites-reentrant-negative-owner-drain-issued-once",
+    "actual-files-held-preparation-opening-remains-issued",
+    "actual-sites-held-preparation-opening-remains-issued",
+    "actual-files-repeated-missing-fence-stays-failed",
+    "actual-sites-repeated-missing-fence-stays-failed",
+    "actual-files-owner-action-reentry-joins-fence-settlement",
+    "actual-sites-owner-action-reentry-joins-fence-settlement"
+  ],
+  "intendedFirstFailureLinesMatched": true,
+  "actualFirstFailureLines": {
+    "actual-files-reentrant-negative-owner-drain-issued-once": "System.Exception: Reentrant disposal issued another owner drain instead of returning the published task.",
+    "actual-sites-reentrant-negative-owner-drain-issued-once": "System.Exception: Reentrant Sites disposal issued another owner drain instead of returning the published task.",
+    "actual-files-held-preparation-opening-remains-issued": "System.Exception: Drain completed while the actual outward opening's preparation continuation was still issued.",
+    "actual-sites-held-preparation-opening-remains-issued": "System.Exception: Drain completed while the actual outward opening's preparation continuation was still issued.",
+    "actual-files-repeated-missing-fence-stays-failed": "System.Exception: Repeated failed fence appeared successful.",
+    "actual-sites-repeated-missing-fence-stays-failed": "System.Exception: Repeated failed Sites fence appeared successful.",
+    "actual-files-owner-action-reentry-joins-fence-settlement": "System.Exception: Owner-action reentry completed/reissued disposal or appeared revoked before the actual fence settled.",
+    "actual-sites-owner-action-reentry-joins-fence-settlement": "System.Exception: Native owner-action reentry completed/reissued disposal or appeared revoked before the actual fence settled."
+  },
+  "actualNativeExit": 1,
+  "actualDriverExit": 1,
+  "notProductPass": true,
+  "realOwnerGroupAuthority": "BLOCKED",
+  "browser": "NOT_RUN",
+  "nativeLogSHA256": "4d08716262412dd610d7c8e1f75bce3c8810f6e3d35f7aff59d8e9e5d7b9211c"
+}

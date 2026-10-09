@@ -1,0 +1,26 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    ".github/scripts/astra-joint-native-sdk01-owning.py",
+    "--expected-commit",
+    "3a52c431368fee3aa03b2a0f8303fb6cfbb49224",
+    "--manifest",
+    ".github/validation/astra-desktop-visible-cut.json",
+    "--manifest-sha",
+    "83e22d5ed7ca560e059e914e05b722023b4eae0961528c6e6e41da4658ce9cfb"
+  ],
+  "cleanupTypes": [],
+  "exitCode": 1,
+  "expectedCommit": "3a52c431368fee3aa03b2a0f8303fb6cfbb49224",
+  "issuedCutSha256": "83e22d5ed7ca560e059e914e05b722023b4eae0961528c6e6e41da4658ce9cfb",
+  "originalPidfdCaptured": true,
+  "originalSessionCaptured": true,
+  "primaryType": "RuntimeError",
+  "qualification": "Observed exact original caller/inner birth, tuple and disappearance seals; no atomic/unobserved-escape or partial-matrix/native acceptance.",
+  "seal": {
+    "drained": true,
+    "expectedManagedLaunch": true,
+    "launcherPid": 6106,
+    "launcherStartTicks": "26754"
+  }
+}

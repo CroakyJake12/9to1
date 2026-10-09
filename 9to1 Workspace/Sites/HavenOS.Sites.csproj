@@ -2,9 +2,11 @@
   <PropertyGroup>
     <AssemblyName>HavenOS.Sites</AssemblyName>
     <RootNamespace>HavenOS.Apps.Sites</RootNamespace>
-    <DefaultItemExcludes>$(DefaultItemExcludes);Tests\**\*</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Tests\**\*;NativeUI\**\*</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../Home/HavenOS.Home.csproj" />
+    <PackageReference Include="AngleSharp" VersionOverride="1.5.0" />
     <ProjectReference Include="..\shared\src\Haven.Application\Haven.Application.csproj" />
     <ProjectReference Include="..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
   </ItemGroup>

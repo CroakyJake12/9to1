@@ -1,0 +1,37 @@
+{
+  "properties": {
+    "MSBuildProjectFullPath": "/home/runner/work/9to1/9to1/.github/validation/canvas-sdk-reader/ProviderMetadata.csproj",
+    "TargetFramework": "net10.0",
+    "ProjectAssetsFile": "/home/runner/work/9to1/9to1/artifacts/canvas-sdk-reader-build/obj/ProviderMetadata/project.assets.json",
+    "MSBuildProjectExtensionsPath": "/home/runner/work/9to1/9to1/artifacts/canvas-sdk-reader-build/obj/ProviderMetadata/"
+  },
+  "metadata": [
+    {
+      "path": "/home/runner/work/9to1/9to1/artifacts/canvas-sdk-reader-build/obj/ProviderMetadata/ProviderMetadata.csproj.nuget.dgspec.json",
+      "sha256": "bf686e0ab555443cbb2534620c3ef9203a694ed2f0bfec2647f6a5552553b768",
+      "bytes": 21735
+    },
+    {
+      "path": "/home/runner/work/9to1/9to1/artifacts/canvas-sdk-reader-build/obj/ProviderMetadata/ProviderMetadata.csproj.nuget.g.props",
+      "sha256": "f830241d56206fb3353dc322b6733272428114082923772cd5878a9cfc6919df",
+      "bytes": 1115
+    },
+    {
+      "path": "/home/runner/work/9to1/9to1/artifacts/canvas-sdk-reader-build/obj/ProviderMetadata/ProviderMetadata.csproj.nuget.g.targets",
+      "sha256": "b14461e0cb1be3f77fcf9fe2fdd62889325ca92523d0f606980ed59eb5c4aa1c",
+      "bytes": 149
+    },
+    {
+      "path": "/home/runner/work/9to1/9to1/artifacts/canvas-sdk-reader-build/obj/ProviderMetadata/project.assets.json",
+      "sha256": "c42fec490921a6471666e8ae3b57a1377f7bc1249279cfc545adf12196d320cd",
+      "bytes": 21023
+    },
+    {
+      "path": "/home/runner/work/9to1/9to1/artifacts/canvas-sdk-reader-build/obj/ProviderMetadata/project.nuget.cache",
+      "sha256": "0f652f8f20029f6eb7b45e948f7e85be0db028be2fe20d3c2fa6df9916e9a453",
+      "bytes": 520
+    }
+  ],
+  "projectSha256": "cbda77be076f6ff67d1a510c950892ab127591d8dec1e78eb4f9a23d48b41661",
+  "sourceSha256": "02e4299e0bd652a6b6a92afb0d4cb53c5f48fc02fe07780965ca34f3e8ca013c"
+}

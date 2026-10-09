@@ -8,7 +8,7 @@ public sealed class FilesMaterializationRegistryState
 }
 
 /// <summary>Persists explicit links between local materialisations and canonical hosted item/revision identities.</summary>
-public sealed class FilesMaterializationRegistry
+public sealed partial class FilesMaterializationRegistry
 {
 	private readonly string _syncRoot;
 	private readonly VersionedJsonStateStore<FilesMaterializationRegistryState> _store;
@@ -77,6 +77,15 @@ public sealed class FilesMaterializationRegistry
 		ValidateLocalPath(item.LocalPath);
 		if (!string.Equals(PathKey(item.LocalPath), PathKey(fullPath), StringComparison.Ordinal))
 			throw new InvalidDataException("Files materialisation path index does not match its stored canonical path.");
+		return item;
+	}
+
+	/// <summary>Read an existing registry only; absence never creates a materialization or registry.</summary>
+	public async Task<FilesMaterializedFile?> GetExistingByItemIdAsync(HostedItemId itemId, CancellationToken cancellationToken = default)
+	{
+		var state = await _store.ReadExistingAsync(cancellationToken).ConfigureAwait(false);
+		var item = state.ItemsByPath.Values.SingleOrDefault(entry => entry.ItemId == itemId);
+		if (item is not null) ValidateLocalPath(item.LocalPath);
 		return item;
 	}
 

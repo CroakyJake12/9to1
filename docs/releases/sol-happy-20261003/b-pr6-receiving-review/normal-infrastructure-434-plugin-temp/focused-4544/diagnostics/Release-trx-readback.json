@@ -1,0 +1,30 @@
+{
+  "counters": {
+    "total": 4,
+    "executed": 4,
+    "passed": 4,
+    "failed": 0,
+    "error": 0,
+    "timeout": 0,
+    "aborted": 0,
+    "inconclusive": 0,
+    "passedButRunAborted": 0,
+    "notRunnable": 0,
+    "notExecuted": 0,
+    "disconnected": 0,
+    "warning": 0,
+    "completed": 0,
+    "inProgress": 0,
+    "pending": 0
+  },
+  "names": [
+    "Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.GitHub_style_discovery_and_permission_review_are_atomic",
+    "Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Invalid_and_underdeclared_manifests_are_rejected_before_installation",
+    "Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Native_plugin_runs_through_registry_authorization_provenance_failure_recovery_and_teardown",
+    "Haven.Infrastructure.Tests.ExtensionPluginEndToEndTests.Tampered_installed_content_is_blocked_before_the_plugin_process_can_run"
+  ],
+  "failures": [],
+  "bytes": 7705,
+  "sha256": "4f009e9379f3661ec1d495e4e4a925c5a3ab0416402745c61a425681d2ac2965",
+  "fresh": true
+}

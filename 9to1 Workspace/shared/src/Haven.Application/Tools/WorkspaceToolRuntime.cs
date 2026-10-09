@@ -8,6 +8,7 @@
  */
 
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using Haven.Core;
@@ -17,7 +18,19 @@ namespace Haven.Application;
 /// <summary>
 /// Represents workspace tool result and keeps its related state and behavior together.
 /// </summary>
-public sealed record WorkspaceToolResult(ToolActivity Activity, string Output, ToolFailureDescriptor? Failure = null);
+public sealed record WorkspaceToolResult(ToolActivity Activity, string Output, ToolFailureDescriptor? Failure = null)
+{
+    // Source-only owner evidence. The task owner validates SAME preparation/result/physical receipt;
+    // caller-written fields, Activity.Succeeded and output prose never become accepted mutation.
+    public bool OriginalEffectBodyCompleted { get; init; }
+    public Exception? OriginalRuntimeError { get; init; }
+    // SAME returned process outcome; observation only, never permission or accepted-effect evidence.
+    [System.Text.Json.Serialization.JsonIgnore]
+    public ProcessResult? OriginalProcessResult { get; init; }
+    // Full SAME original read result for local Dev/editor consumers; agent output remains bounded.
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string? OriginalReadText { get; init; }
+}
 
 /// <summary>
 /// Represents workspace tool runtime and keeps its related state and behavior together.
@@ -39,6 +52,12 @@ public sealed class WorkspaceToolRuntime(
     /// Stores change sets locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
     private readonly WorkspaceChangeSetService _changeSets = new(tools);
+    private sealed record OriginalResultBinding(IWorkspaceToolActionPreparation Preparation, string Root, string CallDigest);
+    private static readonly ConditionalWeakTable<WorkspaceToolResult, OriginalResultBinding> OriginalResults = new();
+    public static bool IsIssuedOriginalResult(IWorkspaceToolActionPreparation preparation, WorkspaceToolResult result) =>
+        OriginalResults.TryGetValue(result, out var recorded) && ReferenceEquals(recorded.Preparation, preparation) &&
+        recorded.Root == preparation.CanonicalWorkspaceRoot && recorded.CallDigest == WorkspaceToolOriginalDigest.Call(preparation.OriginalCall);
+
     /// <summary>
     /// Stores ignored directories locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
@@ -66,18 +85,50 @@ public sealed class WorkspaceToolRuntime(
             new() { ["changes_json"] = StringProperty("JSON array of objects with path, content, and optional expectedSha256.") }, "changes_json"),
         Definition("apply_change_set", "Apply a preflightable multi-file change set transactionally. If any write fails, earlier writes are rolled back.",
             new() { ["changes_json"] = StringProperty("JSON array of objects with path, content, and optional expectedSha256.") }, "changes_json"),
-        Definition("run_command", "Run a PowerShell command in the selected workspace and return its exit code, output, and errors.",
-            new() { ["command"] = StringProperty("PowerShell command."), ["timeout_seconds"] = IntegerProperty("Timeout from 1 to 900 seconds.") }, "command"),
+        Definition("run_command", "Run a command in the selected workspace using PowerShell on Windows or /bin/sh on POSIX, returning its exit code, output, and errors.",
+            new() { ["command"] = StringProperty("Original command in the host shell: PowerShell on Windows, /bin/sh on POSIX."), ["timeout_seconds"] = IntegerProperty("Timeout from 1 to 900 seconds.") }, "command"),
         Definition("run_tests", "Detect and run this workspace's tests, or run a supplied test command.",
-            new() { ["command"] = StringProperty("Optional explicit PowerShell test command."), ["timeout_seconds"] = IntegerProperty("Timeout from 1 to 1800 seconds.") })
+            new() { ["command"] = StringProperty("Optional explicit command in the same host shell (PowerShell on Windows, /bin/sh on POSIX)."), ["timeout_seconds"] = IntegerProperty("Timeout from 1 to 1800 seconds.") })
     ];
 
     /// <summary>
     /// Runs execute async while preserving the surrounding cancellation and error-handling contract.
     /// </summary>
-    public async Task<WorkspaceToolResult> ExecuteAsync(string workspaceRoot, OllamaToolCall call, CancellationToken cancellationToken, Guid? conversationId = null, Guid? containerId = null)
+    public Task<WorkspaceToolResult> ExecuteAsync(string workspaceRoot, OllamaToolCall call, CancellationToken cancellationToken, Guid? conversationId = null, Guid? containerId = null)
+        => ExecuteCoreAsync(workspaceRoot, call, cancellationToken, conversationId, containerId, originalOwned: false);
+
+    public Task<WorkspaceToolResult> ExecuteOriginalAsync(string workspaceRoot, OllamaToolCall call,
+        ITaskRunToolActionPreparation originalPreparation, CancellationToken cancellationToken,
+        Guid? conversationId = null, Guid? containerId = null)
+    {
+        if (originalPreparation is not IWorkspaceToolActionPreparation original ||
+            !original.IsIssuedOriginalRuntime(tools, workspaceRoot, call))
+            throw new UnauthorizedAccessException("Actual original workspace preparation/service/call pairing required.");
+        // SAME executor body and change-set engine; only the native service is per-invocation fenced.
+        // The external action owner, not this runtime, owns physical invocation Complete/Close.
+        var owning = original.OriginalInvocation is { } physical
+            ? new WorkspaceToolRuntime(physical.Tools, history, commandActivity) : this;
+        return original.RunOriginalRuntimeAsync(tools, workspaceRoot, call,
+            ct => owning.RecordOriginalRuntimeAsync(original, workspaceRoot, call, ct, conversationId, containerId), cancellationToken);
+    }
+
+    private async Task<WorkspaceToolResult> RecordOriginalRuntimeAsync(IWorkspaceToolActionPreparation preparation,
+        string root, OllamaToolCall call, CancellationToken token, Guid? conversationId, Guid? containerId)
+    {
+        var result = await ExecuteCoreAsync(root, call, token, conversationId, containerId, originalOwned: true).ConfigureAwait(false);
+        OriginalResults.Add(result, new(preparation, root, WorkspaceToolOriginalDigest.Call(call)));
+        return result;
+    }
+
+    private async Task<WorkspaceToolResult> ExecuteCoreAsync(string workspaceRoot, OllamaToolCall call,
+        CancellationToken cancellationToken, Guid? conversationId, Guid? containerId, bool originalOwned)
     {
         var started = Stopwatch.GetTimestamp();
+        var originalEffectBodyCompleted = false;
+        Task? originalHistoryTask = null;
+        var originalProcess = new ProcessObservation();
+        var originalRead = new ReadObservation();
+        var originalTraversal = new TraversalObservation();
         try
         {
             IReadOnlyList<WorkspaceMutation> mutations = [];
@@ -104,23 +155,29 @@ public sealed class WorkspaceToolRuntime(
                 default:
                     output = call.Name switch
                     {
-                        "list_files" => await ListFilesAsync(workspaceRoot, Text(call, "path", "."), Integer(call, "max_depth", 5), cancellationToken).ConfigureAwait(false),
-                        "read_file" => await ReadFileAsync(workspaceRoot, RequiredText(call, "path"), cancellationToken).ConfigureAwait(false),
-                        "search_files" => await SearchFilesAsync(workspaceRoot, Text(call, "path", "."), RequiredText(call, "query"), Integer(call, "max_results", 100), cancellationToken).ConfigureAwait(false),
-                        "run_command" => await RunCommandAsync(workspaceRoot, RequiredText(call, "command"), Integer(call, "timeout_seconds", 120), cancellationToken).ConfigureAwait(false),
-                        "run_tests" => await RunTestsAsync(workspaceRoot, Text(call, "command"), Integer(call, "timeout_seconds", 600), cancellationToken).ConfigureAwait(false),
+                        "list_files" => originalOwned
+                            ? await TraverseOriginalAsync(workspaceRoot, Text(call, "path", "."), Integer(call, "max_depth", 5), null, cancellationToken, originalTraversal).ConfigureAwait(false)
+                            : await ListFilesAsync(workspaceRoot, Text(call, "path", "."), Integer(call, "max_depth", 5), cancellationToken).ConfigureAwait(false),
+                        "read_file" => await ReadFileAsync(workspaceRoot, RequiredText(call, "path"), cancellationToken, originalOwned, originalRead).ConfigureAwait(false),
+                        "search_files" => originalOwned
+                            ? await TraverseOriginalAsync(workspaceRoot, Text(call, "path", "."), Integer(call, "max_results", 100), RequiredText(call, "query"), cancellationToken, originalTraversal).ConfigureAwait(false)
+                            : await SearchFilesAsync(workspaceRoot, Text(call, "path", "."), RequiredText(call, "query"), Integer(call, "max_results", 100), cancellationToken).ConfigureAwait(false),
+                        "run_command" => await RunCommandAsync(workspaceRoot, RequiredText(call, "command"), Integer(call, "timeout_seconds", 120), cancellationToken, originalProcess).ConfigureAwait(false),
+                        "run_tests" => await RunTestsAsync(workspaceRoot, Text(call, "command"), Integer(call, "timeout_seconds", 600), cancellationToken, originalProcess).ConfigureAwait(false),
                         _ => throw new InvalidOperationException($"Unknown workspace tool '{call.Name}'.")
                     };
                     break;
             }
 
+            originalEffectBodyCompleted = true; // Physical body settled before optional history/observers.
             if (history is not null)
             {
                 foreach (var mutation in mutations)
                 {
-                    await history.AddVersionAsync(new WorkspaceVersion(Guid.NewGuid(), conversationId, containerId, Path.GetFullPath(workspaceRoot),
+                    originalHistoryTask = history.AddVersionAsync(new WorkspaceVersion(Guid.NewGuid(), conversationId, containerId, Path.GetFullPath(workspaceRoot),
                         mutation.Path, WorkspaceVersionKind.Edit, mutation.Before, mutation.After, mutation.Output,
-                        mutation.LinesAdded, mutation.LinesRemoved, DateTimeOffset.UtcNow), cancellationToken).ConfigureAwait(false);
+                        mutation.LinesAdded, mutation.LinesRemoved, DateTimeOffset.UtcNow), cancellationToken);
+                    await originalHistoryTask.ConfigureAwait(false);
                 }
             }
 
@@ -129,15 +186,55 @@ public sealed class WorkspaceToolRuntime(
             var removed = mutations.Sum(item => item.LinesRemoved);
             return new WorkspaceToolResult(
                 new ToolActivity(Guid.NewGuid(), HumanLabel(call.Name), FirstLine(output), true, Stopwatch.GetElapsedTime(started), DateTimeOffset.UtcNow, added, removed),
-                output);
+                output) { OriginalEffectBodyCompleted = originalOwned && originalEffectBodyCompleted,
+                    OriginalProcessResult = originalProcess.Result, OriginalReadText = originalOwned ? originalRead.Text : null };
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex) when (ex is not OperationCanceledException || originalOwned &&
+            (originalHistoryTask?.IsFaulted == true || originalProcess.Task?.IsFaulted == true || originalTraversal.Task?.IsFaulted == true))
         {
             var output = $"Tool error: {ex.Message}";
             return new WorkspaceToolResult(
                 new ToolActivity(Guid.NewGuid(), HumanLabel(call.Name), ex.Message, false, Stopwatch.GetElapsedTime(started), DateTimeOffset.UtcNow),
-                output);
+                output)
+            {
+                OriginalEffectBodyCompleted = originalOwned && originalEffectBodyCompleted,
+                // One actual Task.Exception capture preserves every direct original history cause.
+                // A sole cause keeps its exact object; nested groups remain exact, never Flattened.
+                OriginalRuntimeError = originalOwned ? OriginalHistoryCause(originalHistoryTask?.IsFaulted == true
+                    ? originalHistoryTask : originalProcess.Task?.IsFaulted == true ? originalProcess.Task : originalTraversal.Task, ex) : null,
+                OriginalProcessResult = originalProcess.Result,
+                OriginalReadText = originalOwned ? originalRead.Text : null
+            };
         }
+    }
+
+    private sealed class TraversalObservation { internal Task<WorkspaceOriginalTraversalResult>? Task; }
+    private async Task<string> TraverseOriginalAsync(string root, string path, int limit, string? query,
+        CancellationToken token, TraversalObservation observation)
+    {
+        if (tools is not IWorkspaceOriginalTraversalService traversal)
+            throw new PlatformNotSupportedException("The original invocation has no retained per-child traversal owner.");
+        observation.Task = query is null ? traversal.ListOriginalFilesAsync(root, path, limit, token)
+            : traversal.SearchOriginalFilesAsync(root, path, query, limit, token);
+        var result = await observation.Task.ConfigureAwait(false);
+        var lines = query is null
+            ? result.Entries.Select(entry => entry.IsDirectory ? entry.RelativePath + "/" : $"{entry.RelativePath} ({entry.Size} bytes)")
+            : result.Matches.Select(match => $"{match.RelativePath}:{match.Line}: {match.Text}");
+        var body = string.Join('\n', lines);
+        // Keep the coverage footer inside the existing presentation bound. The outer
+        // runtime truncation must never erase a reached limit or exclusion report.
+        const string marker = "\n[output character limit reached]";
+        var outputLimited = body.Length > MaxToolOutputCharacters - 512;
+        if (outputLimited) body = body[..(MaxToolOutputCharacters - 512 - marker.Length)] + marker;
+        var bounded = outputLimited || result.EntryLimitReached || result.DepthLimitReached || result.ResultLimitReached || result.ByteLimitReached || result.ValidationLimitReached;
+        if (body.Length == 0) body = query is null ? "No entries observed." : "No matches observed.";
+        return body + $"\n[read coverage: {(bounded ? "bounded" : "declared folder scanned")}; output-limit={outputLimited}; entry-limit={result.EntryLimitReached}; depth-limit={result.DepthLimitReached}; match-limit={result.ResultLimitReached}; byte-limit={result.ByteLimitReached}; validation-limit={result.ValidationLimitReached}; ignored-folders={result.IgnoredDirectoryCount}; large-files={result.LargeFileCount}; binary-files={result.BinaryFileCount}]";
+    }
+
+    private static Exception OriginalHistoryCause(Task? actualHistory, Exception observed)
+    {
+        var original = actualHistory?.Exception;
+        return original is null ? observed : original.InnerExceptions.Count == 1 ? original.InnerExceptions[0] : original;
     }
 
     /// <summary>
@@ -198,14 +295,22 @@ public sealed class WorkspaceToolRuntime(
     /// <summary>
     /// Performs read file asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    private async Task<string> ReadFileAsync(string root, string path, CancellationToken cancellationToken)
+    private sealed class ReadObservation { internal string? Text; }
+
+    private async Task<string> ReadFileAsync(string root, string path, CancellationToken cancellationToken, bool originalOwned, ReadObservation observation)
     {
         var resolved = tools.ResolveWorkspacePath(root, path);
-        var info = new FileInfo(resolved);
-        if (!info.Exists) throw new FileNotFoundException("Workspace file was not found.", path);
-        if (info.Length > 4 * 1024 * 1024) throw new InvalidOperationException("File is larger than Haven's 4 MB text-read limit.");
+        if (!originalOwned)
+        {
+            var info = new FileInfo(resolved);
+            if (!info.Exists) throw new FileNotFoundException("Workspace file was not found.", path);
+            if (info.Length > 4 * 1024 * 1024) throw new InvalidOperationException("File is larger than Haven's 4 MB text-read limit.");
+        }
+        // The original physical source checks the SAME held read handle and existing 4 MB
+        // limit. Do not follow a mutable filename again outside that owning read port.
         var content = await tools.ReadTextAsync(root, path, cancellationToken).ConfigureAwait(false);
         if (content.IndexOf('\0') >= 0) throw new InvalidOperationException("File appears to be binary.");
+        if (originalOwned) observation.Text = content; // SAME returned read string, before presentation truncation.
         return Truncate(content, MaxFileCharacters);
     }
 
@@ -281,7 +386,14 @@ public sealed class WorkspaceToolRuntime(
     /// <summary>
     /// Runs run command async while preserving the surrounding cancellation and error-handling contract.
     /// </summary>
-    private async Task<string> RunCommandAsync(string root, string command, int timeoutSeconds, CancellationToken cancellationToken)
+    private sealed class ProcessObservation
+    {
+        internal Task<ProcessResult>? Task;
+        internal ProcessResult? Result;
+    }
+
+    private async Task<string> RunCommandAsync(string root, string command, int timeoutSeconds, CancellationToken cancellationToken,
+        ProcessObservation observation)
     {
         timeoutSeconds = Math.Clamp(timeoutSeconds, 1, 900);
         var executionId = Guid.NewGuid();
@@ -289,9 +401,10 @@ public sealed class WorkspaceToolRuntime(
         commandActivity?.Publish(new TerminalCommandActivity(executionId, TerminalCommandOrigin.Agent, TerminalExecutionState.Running, command, root, null, null, DateTimeOffset.UtcNow));
         try
         {
-            var encoded = Convert.ToBase64String(Encoding.Unicode.GetBytes(command));
-            var result = await tools.RunProcessAsync(new ProcessRequest(
-                "powershell.exe", $"-NoProfile -NonInteractive -EncodedCommand {encoded}", root, TimeSpan.FromSeconds(timeoutSeconds)), cancellationToken).ConfigureAwait(false);
+            var originalRequest = WorkspaceToolProcessRequestFactory.CreateOriginal(root, command, timeoutSeconds);
+            observation.Task = tools.RunProcessAsync(originalRequest, cancellationToken);
+            var result = await observation.Task.ConfigureAwait(false);
+            observation.Result = result; // Retain known process outcome before observer/formatting work.
             var state = result.TimedOut ? TerminalExecutionState.Cancelled : result.ExitCode == 0 ? TerminalExecutionState.Succeeded : TerminalExecutionState.Failed;
             commandActivity?.Publish(new TerminalCommandActivity(executionId, TerminalCommandOrigin.Agent, state, command, root, result, result.TimedOut ? "Command timed out." : null, DateTimeOffset.UtcNow));
             return FormatProcess(result);
@@ -311,7 +424,8 @@ public sealed class WorkspaceToolRuntime(
     /// <summary>
     /// Runs run tests async while preserving the surrounding cancellation and error-handling contract.
     /// </summary>
-    private async Task<string> RunTestsAsync(string root, string command, int timeoutSeconds, CancellationToken cancellationToken)
+    private async Task<string> RunTestsAsync(string root, string command, int timeoutSeconds, CancellationToken cancellationToken,
+        ProcessObservation observation)
     {
         if (string.IsNullOrWhiteSpace(command))
         {
@@ -320,7 +434,7 @@ public sealed class WorkspaceToolRuntime(
                 : File.Exists(Path.Combine(root, "go.mod")) ? "go test ./..."
                 : throw new InvalidOperationException("No supported test project was detected. Supply a test command.");
         }
-        return await RunCommandAsync(root, command, Math.Clamp(timeoutSeconds, 1, 1800), cancellationToken).ConfigureAwait(false);
+        return await RunCommandAsync(root, command, Math.Clamp(timeoutSeconds, 1, 1800), cancellationToken, observation).ConfigureAwait(false);
     }
 
     /// <summary>

@@ -1,0 +1,63 @@
+{
+  "recordedUTC": "2026-10-04T16:02:48.121019+00:00",
+  "state": "ACK_PRE_INVOCATION_FROZEN_STORAGE_RETRY_HARNESS",
+  "candidateCommit": "88bbc69d8c22cbf9095ddfc8282460dfc7841d07",
+  "parent": "7bd9a4b49d5ca6c0cfd972072576c9cf21e198cc",
+  "immutablePackageSource": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
+  "changedPaths": [
+    ".github/scripts/boards-packaged-ui-controls.ps1",
+    ".github/validation/boards-packaged-ui-controls.json",
+    ".github/workflows/team-c-boards-packaged-ui-controls.yml",
+    "eng/release-validation/boards-packaged-ui/README.md"
+  ],
+  "allNativeAndOtherPathsUnchanged": true,
+  "packageCatalogueAndOriginalArtifactManifestUnchanged": true,
+  "sourcePinsWholeFd5BodiesVerified": 20,
+  "actualPs7AstControl": {
+    "exitCode": 0,
+    "parserErrors": 0,
+    "shared20FunctionBodiesByteExact": true,
+    "new4Helpers": [
+      "Find-SaveLabel",
+      "Observe-SaveLabel",
+      "Position-OwnedWindow",
+      "Restore-OwnedPrimaryAttributes"
+    ],
+    "logSha256": "08a6d77adcdf7d1d45d8331680d1d1ba8631888ddf4b02cda242ce7d8d99f7a9"
+  },
+  "wholeOld67And85ScenarioBodiesByteExact": true,
+  "workflow": "Windows2022 standardpowershell, contents/actionsread only, runner.temp exclusively stepcontext; newstorage scenario only; original immutable package/observation artifact IDs retrieved;10minute bound.",
+  "inputAndProcessBounds": "Exact ownedPID/foreground/currenteditorfocus before actualSendInput; only ownprocessnormalclose with boundedstreamdrain; no appmodel/authority/native mutation.",
+  "newFixtureBounds": "Only fresh actual app-created explicitNTFS primary ReadOnly attribute; original exactattributes captured first, nonreparse/writable check, finallyrestoration before unchangedcleanup; restoration/cleanup/forced/drain failure blocks success.",
+  "criteria": [
+    "Actual native Saved baseline before fault; focused nativependingedit andCtrlS whileReadOnly; exactvisible Savefailed Text peer in ownedPID canonicalTopBarRight/FooterBar wholly within actualWorkArea.",
+    "OriginalsavedprimarySHA remains exact whileReadOnlyasserted; actualnativependingtext+canonicalID preserved.",
+    "Restoreexactattributes; focusedrealCtrlSretry followedby actualdurable expectedtext/sameblock+documentIDs, visibleSaved andchangedprimarySHA.",
+    "Two actualnormalclose0/reopen sameparagraphvalue/identity/pre-reopenbytes; preserveallfailureobservations/screenshots/streamlogs."
+  ],
+  "observability": "Native pinnedTextBlockAutomationPeer exposes actualText asName; topbar/footer sourcebinds realSaveStatus. OSWinUp is guarded actualinput then requires95percentactualwindowgeometry and fullstatusrectangle insideWorkArea; no assumedUIAWindow/Transform provider.",
+  "nativeObservationSourcePins": [
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/TextBlockAutomationPeer.cs",
+      "sha256": "be0f1e249ec2f12a8174fce36fd970f1d7f9f0ff99ebd5d7208861e4f52ba090"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BoardsViewModel.cs",
+      "sha256": "c4097e551df7b5b6e2da7060ec6085ef9a3482a54e28436abd5f04a49f8bd75f"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/ShellChrome.cs",
+      "sha256": "f884ba8bd33277a3eacc1783c3ce1cc71d0abfe3fe7f577cb59fa6c6247e4f2a"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/Boards.cui",
+      "sha256": "020251371d308676b475420d93ed1246be6159342720f5af6fa141aa9c463f84"
+    }
+  ],
+  "qualification": [
+    "RealWindows newstorage behavior NOT_RUN at peer review; NTFSreadonly File.Replace obstruction/actualstatuspeer/OSgeometry must be observed and unsupported behavior remains originalfailure.",
+    "Autosave may contribute; no exclusiveCtrlS causality claim. Fault tests OSstorage, not accountACL/permissionauthority.",
+    "SDK-present actualfd5package; installedHome/cleanPC/fullapp/nativeadoption/29 acceptance remain open.",
+    "Original67 and85 proof/index unchanged; no duplicate priorpayload/54unit-suite execution."
+  ]
+}

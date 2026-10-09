@@ -439,6 +439,105 @@ public sealed class HavenRichBoardTests
         });
     }
 
+    [Fact]
+    public async Task Rejected_SaveAs_keeps_the_acknowledged_path_and_normal_save_reopens_the_original_board()
+    {
+        await WithStoreAsync(async (store, root) =>
+        {
+            var originalPath = Path.Combine(root, "original.9to1board");
+            var occupiedPath = Path.Combine(root, "other-board.9to1board");
+            Guid otherId;
+            await using (var other = await RichBoardSession.CreateNewAsync(store, "Other board"))
+            {
+                await other.SaveAsAsync(occupiedPath);
+                otherId = other.Document.DocumentId;
+            }
+            var otherBytes = await File.ReadAllBytesAsync(occupiedPath);
+            await using var session = await RichBoardSession.CreateNewAsync(store, "Original board");
+            await session.SaveAsAsync(originalPath);
+            var originalId = session.Document.DocumentId;
+            var acknowledgement = session.LastSavedUtc;
+            await session.MutateAsync(rich => rich.Title = "Continued original board");
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() => session.SaveAsAsync(occupiedPath));
+
+            Assert.Equal(originalPath, session.FilePath);
+            Assert.Equal(acknowledgement, session.LastSavedUtc);
+            Assert.True(session.HasUnsavedChanges);
+            Assert.Equal(otherBytes, await File.ReadAllBytesAsync(occupiedPath));
+            await session.SaveAsync();
+            await using var reopened = await RichBoardSession.OpenAtPathAsync(store, originalPath);
+            Assert.Equal(originalId, reopened.Document.DocumentId);
+            Assert.Equal("Continued original board", reopened.Rich.Title);
+            await using var untouched = await RichBoardSession.OpenAtPathAsync(store, occupiedPath);
+            Assert.Equal(otherId, untouched.Document.DocumentId);
+            Assert.Equal("Other board", untouched.Rich.Title);
+        });
+    }
+
+    [Fact]
+    public async Task First_rejected_SaveAs_cannot_invent_a_saved_path_or_redirect_close_to_another_board()
+    {
+        await WithStoreAsync(async (store, root) =>
+        {
+            var occupiedPath = Path.Combine(root, "occupied.9to1board");
+            await using (var other = await RichBoardSession.CreateNewAsync(store, "Existing board"))
+                await other.SaveAsAsync(occupiedPath);
+            var existingBytes = await File.ReadAllBytesAsync(occupiedPath);
+            await using (var draft = await RichBoardSession.CreateNewAsync(store, "New draft"))
+            {
+                await draft.MutateAsync(rich => rich.Title = "Unsaved draft");
+                await Assert.ThrowsAsync<InvalidOperationException>(() => draft.SaveAsAsync(occupiedPath));
+                Assert.Null(draft.FilePath);
+                Assert.Null(draft.LastSavedUtc);
+                Assert.True(draft.HasUnsavedChanges);
+                var failure = await Assert.ThrowsAsync<InvalidOperationException>(() => draft.SaveAsync());
+                Assert.Contains("no file path", failure.Message);
+            }
+            Assert.Equal(existingBytes, await File.ReadAllBytesAsync(occupiedPath));
+        });
+    }
+
+    [Fact]
+    public async Task Failed_SaveAs_file_promotion_preserves_old_identity_and_successful_SaveAs_publishes_only_after_acknowledgement()
+    {
+        await WithStoreAsync(async (store, root) =>
+        {
+            var originalPath = Path.Combine(root, "original.9to1board");
+            var failedTarget = Path.Combine(root, "directory.9to1board");
+            Directory.CreateDirectory(failedTarget);
+            var sentinel = Path.Combine(failedTarget, "unrelated.txt");
+            await File.WriteAllTextAsync(sentinel, "keep this directory");
+            await using var session = await RichBoardSession.CreateNewAsync(store, "Original");
+            await session.SaveAsAsync(originalPath);
+            var originalId = session.Document.DocumentId;
+            await session.MutateAsync(rich => rich.Title = "Continued draft");
+
+            var failure = await Assert.ThrowsAnyAsync<Exception>(() => session.SaveAsAsync(failedTarget));
+            Assert.True(failure is IOException or UnauthorizedAccessException);
+
+            Assert.Equal(originalPath, session.FilePath);
+            Assert.True(session.HasUnsavedChanges);
+            Assert.Equal("keep this directory", await File.ReadAllTextAsync(sentinel));
+            Assert.Empty(Directory.GetFiles(root, "*.tmp"));
+            var savedTarget = Path.Combine(root, "acknowledged-copy.9to1board");
+            var observed = false;
+            session.StatusChanged += (_, status) =>
+            {
+                if (!status.StartsWith("Saved ", StringComparison.Ordinal)) return;
+                observed = true;
+                Assert.Equal(savedTarget, session.FilePath);
+                Assert.True(File.Exists(savedTarget));
+                Assert.NotNull(session.LastSavedUtc);
+            };
+            await session.SaveAsAsync(savedTarget);
+            Assert.True(observed);
+            await using var reopened = await RichBoardSession.OpenAtPathAsync(store, savedTarget);
+            Assert.Equal(originalId, reopened.Document.DocumentId);
+            Assert.Equal("Continued draft", reopened.Rich.Title);
+        });
+    }
+
     private static async Task WithStoreAsync(Func<JsonFileHavenBoardStore, string, Task> test)
     {
         var root = Path.Combine(Path.GetTempPath(), "cakeos-rich-tests", Guid.NewGuid().ToString("N"));

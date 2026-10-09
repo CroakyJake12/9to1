@@ -1,0 +1,432 @@
+{
+  "documentId": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+  "revisionId": "AHj4eMQsTIT4NLLbffjytUtKvQ-c1NMJ6tAnLf2xD7xcs-AQ188ZHRg49KZ1J4b6z3M3jKMEB_V2tUwEQH26Gd4GBo8MmIUircsD02y-a_0",
+  "canonicalScope": "Pass1 Astra la Vista Windows app product groups, paragraph1181..6895",
+  "count": 29,
+  "listedGroups": 30,
+  "excludedWindowsOnly": [
+    {
+      "name": "Launcher",
+      "criterionParagraphs": [
+        6816,
+        6853
+      ],
+      "reason": "Android/9to1-OS home launcher only; remains required on those platforms"
+    }
+  ],
+  "denominatorBasis": "All top-level Pass1 Apps product headings; Vision & Voice is one product group whose both surfaces/modes must pass. Shared services and embedded destinations remain required dependencies rather than guessed separate installers. Not a full semantic acceptance denominator.",
+  "rows": [
+    {
+      "name": "Home",
+      "category": "Workspace",
+      "canonicalParagraphStart": 1181,
+      "canonicalParagraphEnd": 1461,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": "apps/Home/src/AvaloniaHome/AvaloniaHome.csproj",
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "9to1 Admin",
+      "category": "Workspace",
+      "canonicalParagraphStart": 1462,
+      "canonicalParagraphEnd": 1507,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Files",
+      "category": "Workspace",
+      "canonicalParagraphStart": 1508,
+      "canonicalParagraphEnd": 1672,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": "9to1 Workspace/Files/CUI/HavenOS.Files.CUI.csproj",
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Connect",
+      "category": "Workspace",
+      "canonicalParagraphStart": 1673,
+      "canonicalParagraphEnd": 1768,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Mail",
+      "category": "Workspace",
+      "canonicalParagraphStart": 1769,
+      "canonicalParagraphEnd": 1904,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": "9to1 Workspace/Mail/HavenOS.Mail.csproj",
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Games",
+      "category": "Workspace",
+      "canonicalParagraphStart": 1905,
+      "canonicalParagraphEnd": 2034,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Spaces",
+      "category": "AI",
+      "canonicalParagraphStart": 2035,
+      "canonicalParagraphEnd": 2225,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": "9to1 Workspace/Spaces/HavenOS.Spaces.csproj",
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Vision & Voice",
+      "category": "AI",
+      "canonicalParagraphStart": 2226,
+      "canonicalParagraphEnd": 2391,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "AI Studio",
+      "category": "AI",
+      "canonicalParagraphStart": 2392,
+      "canonicalParagraphEnd": 2570,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": "9to1 Workspace/Studio/HavenOS.Studio/HavenOS.Studio.csproj",
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Play",
+      "category": "AI",
+      "canonicalParagraphStart": 2571,
+      "canonicalParagraphEnd": 2679,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Write",
+      "category": "Productivity",
+      "canonicalParagraphStart": 2680,
+      "canonicalParagraphEnd": 2843,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Present",
+      "category": "Productivity",
+      "canonicalParagraphStart": 2844,
+      "canonicalParagraphEnd": 3192,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": "9to1 Workspace/Present/HavenOS.Present.csproj",
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Canvas",
+      "category": "Productivity",
+      "canonicalParagraphStart": 3193,
+      "canonicalParagraphEnd": 3555,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": "9to1 Workspace/Canvas/HavenOS.Canvas.csproj",
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Boards",
+      "category": "Productivity",
+      "canonicalParagraphStart": 3556,
+      "canonicalParagraphEnd": 3722,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": "9to1 Workspace/Boards/app/CakeOS.Apps.Boards.App.csproj",
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Planner",
+      "category": "Productivity",
+      "canonicalParagraphStart": 3723,
+      "canonicalParagraphEnd": 3887,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Automations",
+      "category": "Productivity",
+      "canonicalParagraphStart": 3888,
+      "canonicalParagraphEnd": 4055,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Picture",
+      "category": "Creativity",
+      "canonicalParagraphStart": 4056,
+      "canonicalParagraphEnd": 4252,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": "9to1 Workspace/Picture/HavenOS.Images.csproj",
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Wave",
+      "category": "Creativity",
+      "canonicalParagraphStart": 4253,
+      "canonicalParagraphEnd": 4457,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": "9to1 Workspace/Wave/HavenOS.Wave.csproj",
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Motion",
+      "category": "Creativity",
+      "canonicalParagraphStart": 4458,
+      "canonicalParagraphEnd": 4631,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": "9to1 Workspace/Motion/HavenOS.Motion.csproj",
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Data",
+      "category": "Data",
+      "canonicalParagraphStart": 4632,
+      "canonicalParagraphEnd": 4893,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": "9to1 Workspace/Data/App/HavenOS.Data.App.csproj",
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Forms",
+      "category": "Data",
+      "canonicalParagraphStart": 4894,
+      "canonicalParagraphEnd": 5120,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Dev",
+      "category": "Developer",
+      "canonicalParagraphStart": 5121,
+      "canonicalParagraphEnd": 5390,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": "9to1 Workspace/Dev/HavenOS.Dev.csproj",
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Stacks",
+      "category": "Developer",
+      "canonicalParagraphStart": 5391,
+      "canonicalParagraphEnd": 5788,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": "9to1 Workspace/Stacks/HavenOS.Stacks.csproj",
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Sites",
+      "category": "Developer",
+      "canonicalParagraphStart": 5789,
+      "canonicalParagraphEnd": 6109,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": "9to1 Workspace/Sites/HavenOS.Sites.csproj",
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Terminal",
+      "category": "Developer",
+      "canonicalParagraphStart": 6110,
+      "canonicalParagraphEnd": 6339,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": "9to1 Workspace/Terminal/HavenOS.Terminal.csproj",
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Mini Computer",
+      "category": "Developer",
+      "canonicalParagraphStart": 6340,
+      "canonicalParagraphEnd": 6627,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": "9to1 Workspace/MiniComputer/HavenOS.MiniComputer.csproj",
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Browse",
+      "category": "Utilities",
+      "canonicalParagraphStart": 6628,
+      "canonicalParagraphEnd": 6723,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": "9to1 Workspace/Browse/HavenOS.Apps.Browse.csproj",
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Maps",
+      "category": "Utilities",
+      "canonicalParagraphStart": 6724,
+      "canonicalParagraphEnd": 6814,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Launcher",
+      "category": "Utilities",
+      "canonicalParagraphStart": 6815,
+      "canonicalParagraphEnd": 6857,
+      "windowsRequired": false,
+      "windowsApplicability": "Explicit Android/9to1-OS home launcher only at paragraphs6816+6853",
+      "currentReceivingProjectCandidate": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    },
+    {
+      "name": "Shelf",
+      "category": "Utilities",
+      "canonicalParagraphStart": 6858,
+      "canonicalParagraphEnd": 6895,
+      "windowsRequired": true,
+      "windowsApplicability": "Pass1 native app; no Windows exemption found in app heading/section",
+      "currentReceivingProjectCandidate": null,
+      "packageEntryPointStatus": "OWNER_CLOSURE_AND_ACTUAL_WINDOWS_PACKAGE_ROUTE_REQUIRED",
+      "acceptanceVerified": false,
+      "packageDelivered": false
+    }
+  ],
+  "sharedRequiredDependencies": [
+    {
+      "name": "Home installation/Home Core service plus CUI shell",
+      "canonicalParagraphs": [
+        985,
+        987,
+        988,
+        989,
+        991,
+        1183,
+        1185,
+        1206,
+        1209
+      ],
+      "contracts": "Pre-UI Home availability/version/service handshake; trusted Home install/update/repair; no app artifact mutation before readiness; source-signed package/dependency atomic activation; background service remains available with Home window closed."
+    },
+    {
+      "name": "Home CUI/shared composition",
+      "canonicalParagraphs": [
+        564,
+        565,
+        566,
+        986,
+        1010
+      ],
+      "contracts": "Actual .cui donor/runtime; same compose dispatcher, typed permissions/actions and normal registered app routes."
+    },
+    {
+      "name": "Dulche / Den / Translate / Go / Mesh / notifications / integrations / account state",
+      "canonicalParagraphs": [
+        1183,
+        1230,
+        6899,
+        6917,
+        7131,
+        7449,
+        7680,
+        7884
+      ],
+      "contracts": "Single Home-managed service state; capability/currentness/shared artifact semantics. Do not count framework services as independently verified product groups or package private substitutes."
+    }
+  ],
+  "requiredPackageAcceptance": [
+    "Release package installation and retained source/package/ABI/service/dependency identities",
+    "Home missing/incompatible/repair refusals and authentic bootstrap",
+    "Normal installed launch via actual owner app entry point and canonical state",
+    "Editing/save/close/reopen and permissions/recovery",
+    "Accessibility, donor functionality, prescribed cross-app/provider flows"
+  ],
+  "currentCandidateQualification": "Receiving candidate source/project paths are discovery hints, not endorsed owner-selected executable Windows entry points or delivery identities.",
+  "currentLiveContentSHA256": "b378001b1b2e503771f8bef94c4f1cc4d3b91bc60c71f8583460065c4ccff9c9",
+  "liveSpecificationDelta": "Only paragraph8531 deferred out-of-scope title Choo Choo -> Dulche Decorum; no Pass1/Files/Sites/recovery acceptance change."
+}

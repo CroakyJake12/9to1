@@ -1,0 +1,38 @@
+  Determining projects to restore...
+  Restored /workspace/team-c/c5-durable-cancel-probe/framework/CUI/Core/CakeOS.Cui.Core.csproj (in 107 ms).
+  Restored /workspace/team-c/c5-durable-cancel-probe/framework/CUI/AI/NineToOne.Cui.AI.csproj (in 106 ms).
+  Restored /workspace/team-c/c5-durable-cancel-probe/framework/CUI/Language/CakeOS.Cui.Language.csproj (in 105 ms).
+  Restored /workspace/team-c/c5-durable-cancel-probe/9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj (in 0.7 ms).
+  Restored /workspace/team-c/c5-durable-cancel-probe/9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj (in 3 ms).
+  Restored /workspace/team-c/c5-durable-cancel-probe/9to1 Models/Dulche Alpha/Dulche.Runtime.csproj (in 2 ms).
+  Restored /workspace/team-c/c5-durable-cancel-probe/9to1 Workspace/Home/HavenOS.Home.csproj (in 3 ms).
+  Restored /workspace/team-c/c5-durable-cancel-probe/9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj (in 557 ms).
+  Restored /workspace/team-c/evidence/c5/durable-cancel/C5.DurableJob.Tests.csproj (in 707 ms).
+  CakeOS.Cui.Language -> /workspace/team-c/c5-durable-cancel-probe/framework/CUI/Language/bin/Debug/net10.0/CakeOS.Cui.Language.dll
+  NineToOne.Cui.AI -> /workspace/team-c/c5-durable-cancel-probe/framework/CUI/AI/bin/Debug/net10.0/NineToOne.Cui.AI.dll
+  CakeOS.Cui.Core -> /workspace/team-c/c5-durable-cancel-probe/framework/CUI/Core/bin/Debug/net10.0/CakeOS.Cui.Core.dll
+  Haven.Core -> /workspace/team-c/c5-durable-cancel-probe/9to1 Workspace/shared/src/Haven.Core/bin/Debug/net10.0/Haven.Core.dll
+  Den -> /workspace/team-c/c5-durable-cancel-probe/9to1 Models/Dulche Alpha/bin/Debug/net10.0/Den.dll
+  Haven.Application -> /workspace/team-c/c5-durable-cancel-probe/9to1 Workspace/shared/src/Haven.Application/bin/Debug/net10.0/Haven.Application.dll
+  Dulche.Runtime -> /workspace/team-c/c5-durable-cancel-probe/9to1 Models/Dulche Alpha/bin/Debug/net10.0/Dulche.Runtime.dll
+  HavenOS.Home -> /workspace/team-c/c5-durable-cancel-probe/9to1 Workspace/Home/bin/Debug/net10.0/HavenOS.Home.dll
+  Haven.Infrastructure -> /workspace/team-c/c5-durable-cancel-probe/9to1 Workspace/shared/src/Haven.Infrastructure/bin/x64/Debug/net10.0/Haven.Infrastructure.dll
+  C5.DurableJob.Tests -> /workspace/team-c/evidence/c5/durable-cancel/bin/x64/Debug/net10.0/Haven.Infrastructure.Tests.dll
+Test run for /workspace/team-c/evidence/c5/durable-cancel/bin/x64/Debug/net10.0/Haven.Infrastructure.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.51]     Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Completion_committed_after_cancel_read_cannot_be_overwritten_by_stale_cancel [FAIL]
+  Failed Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Completion_committed_after_cancel_read_cannot_be_overwritten_by_stale_cancel [61 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Completed
+Actual:   Cancelled
+  Stack Trace:
+     at Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Completion_committed_after_cancel_read_cannot_be_overwritten_by_stale_cancel() in /workspace/team-c/c5-durable-cancel-probe/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExternalAgentDurableCancellationTests.cs:line 47
+--- End of stack trace from previous location ---
+  Standard Output Messages:
+ Actual retained database=/workspace/team-c/evidence/c5/durable-cancel/actual-task-fe373323dd42431c9f4da002ef4a393a/tasks.db; cancelReturned=True; restoredStatus=Cancelled; result=<null>; idempotency=<null>
+
+
+Results File: /workspace/team-c/evidence/c5/durable-cancel/results/durable-cancel.trx
+
+Failed!  - Failed:     1, Passed:     2, Skipped:     0, Total:     3, Duration: 381 ms - Haven.Infrastructure.Tests.dll (net10.0)

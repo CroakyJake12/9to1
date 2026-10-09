@@ -10,7 +10,7 @@ using ModelContextProtocol.Protocol;
 namespace Haven.Infrastructure;
 
 /// <summary>Adapter over the maintained MCP C# SDK; SDK types do not escape Infrastructure.</summary>
-public sealed class McpConnectionClient(IProviderSecretStore secrets) : IMcpConnectionClient
+public sealed partial class McpConnectionClient(IProviderSecretStore secrets) : IMcpConnectionClient, ICloudflareMcpInvocationClient
 {
     private const int MaxSchemaCharacters = 256_000;
     private const int MaxResultCharacters = 2_000_000;
@@ -134,7 +134,8 @@ public sealed class McpConnectionClient(IProviderSecretStore secrets) : IMcpConn
         if (missing is not null) throw new ArgumentException($"Required MCP prompt argument '{missing.Name}' is missing.", nameof(arguments));
     }
 
-    private async Task<McpClient> CreateClientAsync(ExternalConnection connection, McpConnectionConfiguration configuration, CancellationToken cancellationToken)
+    private async Task<McpClient> CreateClientAsync(ExternalConnection connection, McpConnectionConfiguration configuration, CancellationToken cancellationToken,
+        CloudflareOriginalTaskLedger? originalStages = null, Action<McpClient>? retainActualClient = null)
     {
         ExternalConnectionRegistryService.ValidateMcpConfiguration(configuration, connection.PresetKey.Equals("uefn", StringComparison.OrdinalIgnoreCase));
         IClientTransport transport;
@@ -176,7 +177,9 @@ public sealed class McpConnectionClient(IProviderSecretStore secrets) : IMcpConn
         timeout.CancelAfter(configuration.UseOAuth
             ? TimeSpan.FromMinutes(5)
             : TimeSpan.FromSeconds(configuration.TimeoutSeconds));
-        return await McpClient.CreateAsync(transport, cancellationToken: timeout.Token).ConfigureAwait(false);
+        if (originalStages is null) return await McpClient.CreateAsync(transport, cancellationToken: timeout.Token).ConfigureAwait(false);
+        return await originalStages.CaptureOriginalAcquisitionAsync(() => McpClient.CreateAsync(transport, cancellationToken: timeout.Token),
+            actual => retainActualClient?.Invoke(actual)).ConfigureAwait(false);
     }
 
     private static McpConnectionConfiguration ReadConfiguration(ExternalConnection connection) =>

@@ -1,0 +1,9 @@
+{
+  "status": "FAIL",
+  "defect": "Restore returns LOCAL_RESTORED after same-count published image changed before final readback",
+  "returnedStatus": "LOCAL_RESTORED",
+  "sameCounts": true,
+  "receiptHashStillMatches": false,
+  "sourceAndBackupIntact": true,
+  "privateDataPrinted": false
+}

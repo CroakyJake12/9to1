@@ -4,7 +4,7 @@ using Haven.Core;
 namespace Dulche.Runtime;
 
 /// <summary>Eligibility-first routing over the canonical shared provider catalogue.</summary>
-public sealed class ModelRouteResolver(IModelProviderRegistry providers)
+public sealed partial class ModelRouteResolver(IModelProviderRegistry providers) : IProviderCatalogueEligibility
 {
     public async Task<OperationResult<RouteSelection>> ResolveAsync(ModelRoute route, ModelIdentity? explicitModel, bool containsPrivateContext = false, CancellationToken cancellationToken = default)
     {
@@ -12,7 +12,22 @@ public sealed class ModelRouteResolver(IModelProviderRegistry providers)
         if (route.Version <= 0 || string.IsNullOrWhiteSpace(route.RouteId))
             return Fail<RouteSelection>(DulcheErrorCode.InvalidArgument, "A route must have a stable identity and positive version.", "route");
         var policy = route.Policy ?? new ProviderPolicy();
-        var catalogue = await providers.GetModelsAsync(cancellationToken).ConfigureAwait(false);
+        var catalogue = await providers.GetModelsAsync(new ModelCataloguePolicy(policy.AllowLocal, policy.AllowRemote && policy.AllowCloud, policy.AllowedProviders), cancellationToken).ConfigureAwait(false);
+        return ResolveObservedCatalogue(route, explicitModel, catalogue, containsPrivateContext, cancellationToken);
+    }
+
+    /// <summary>Same route-policy/capability rules applied to original captured catalogue bytes;
+    /// no additional provider callbacks or fallback execution. Private-context eligibility is not
+    /// a dispatch grant: the caller still needs its genuine context/attempt authority.</summary>
+    public OperationResult<RouteSelection> ResolveObservedCatalogue(ModelRoute route, ModelIdentity? explicitModel,
+        IReadOnlyList<ProviderModelDescriptor> catalogue, bool containsPrivateContext = false,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(route); ArgumentNullException.ThrowIfNull(catalogue);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (route.Version <= 0 || string.IsNullOrWhiteSpace(route.RouteId))
+            return Fail<RouteSelection>(DulcheErrorCode.InvalidArgument, "A route must have a stable identity and positive version.", "route");
+        var policy = route.Policy ?? new ProviderPolicy();
         var all = catalogue.Select(model => (Descriptor: model, Identity: new ModelIdentity(model.ProviderId, model.Name))).ToArray();
         var skipped = new List<string>();
         var configured = route.Candidates;

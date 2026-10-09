@@ -1,0 +1,43 @@
+{
+  "mutation": {
+    "success": true,
+    "status": 200,
+    "result": {
+      "enabled": false,
+      "previews_enabled": false
+    }
+  },
+  "subdomain": {
+    "success": true,
+    "status": 200,
+    "result": {
+      "enabled": false,
+      "previews_enabled": false
+    }
+  },
+  "deployments": {
+    "success": true,
+    "status": 200,
+    "result": {
+      "deployments": [
+        {
+          "id": "80ee7781-9fb0-4d76-b71f-ac87be55a07c",
+          "source": "api",
+          "strategy": "percentage",
+          "annotations": {
+            "workers/message": "Reviewed closed 503 baseline; no identity bindi...",
+            "workers/triggered_by": "upload"
+          },
+          "versions": [
+            {
+              "version_id": "5f1e7db8-f098-429d-adb0-0bac1566a86a",
+              "percentage": 100
+            }
+          ],
+          "created_on": "2026-10-04T08:29:57.048128Z"
+        }
+      ]
+    }
+  },
+  "errors": []
+}

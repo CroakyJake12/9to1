@@ -1,0 +1,135 @@
+{
+  "checkpoint": "18:19 Europe/London",
+  "documentId": "1rdxd_icOVUpeu19PI-IJk-7oWYs99tVrtc7ITJV4_8s",
+  "revisionId": "ANLCKQnOYL7PQ157A0IO-VjqDmMeq5y5n516dgvff5CbbuMoR_G8TNN9u7_lid9KdCW20MKWAM8u8XMC5EiDYVsGF7vx7v6TVRJD-WM-Xv8",
+  "status": "THREE_PASS_TEXT_STYLE_READBACK_PASS",
+  "reportingCorrection": "Discovery/JWKS zero counters indicate no successful responses; they do not establish no attempted requests.",
+  "entries": [
+    {
+      "pass": 1,
+      "text": [
+        "Checkpoint 18:19",
+        "% Progress:",
+        "    Implementation - About 65% of inspected Windows inventory, build, launch and delivery-preparation groups; low confidence for wider Astra scope ;",
+        "    Acceptance Verified - Windows apps 0/29 verified; packages 0/29 delivered ;",
+        "Change Summary: The original Canvas package opened its real native Files folder picker, but the harness could not locate it within the unchanged twenty-second gate. Forty-eight earlier checks passed; no folder choice, Home request or stroke ran. Its forced cleanup remains a failed observation. Boards storage obstruction, retry and reopen remain independently verified.",
+        "Evidence: Canvas1541 Windows37219806215; compact original11310092051 and screenshot retained. Boards70a8 real83/83, two normal exits, C6e60852e2/a04f35d2. Separate Present package edit/save/reopen harness preparation continues.",
+        "Next Action: BLOCKED — full all-app delivery requires Team A’s installed entrypoint/Home/ABI/signing declarations and authorized clean-PC/local delivery access. Independent Canvas picker diagnostics and original Present package workflows continue."
+      ],
+      "paragraphRanges": [
+        {
+          "start": 11689,
+          "end": 11706
+        },
+        {
+          "start": 11706,
+          "end": 11718
+        },
+        {
+          "start": 11718,
+          "end": 11867
+        },
+        {
+          "start": 11867,
+          "end": 11947
+        },
+        {
+          "start": 11947,
+          "end": 12318
+        },
+        {
+          "start": 12318,
+          "end": 12546
+        },
+        {
+          "start": 12546,
+          "end": 12794
+        }
+      ]
+    },
+    {
+      "pass": 2,
+      "text": [
+        "Checkpoint 18:19",
+        "% Progress:",
+        "    Implementation - About 60% of inspected shared-source, browser and integration groups; low confidence for wider Terra scope ;",
+        "    Acceptance Verified - Full Terra and platform acceptance open; Windows apps 0/29 verified, packages 0/29 delivered ;",
+        "Change Summary: Final normal persistence found a genuine plugin child temporary-directory boundary failure: 433/434 passed. A reviewed one-line provisional TMPDIR correction now passes the original plugin class in Debug and Release; the necessary full suite is rerunning. The new Web publication and all nine browser checks are independently verified. Motion’s original workflow and native Release build passed.",
+        "Evidence: Original27dd434 failure retained; revised stable5ec2965e, source C6e5c503d5, affected4/4 per configuration. Actualdf285 assets/original archive443ff207/Web9 C631f86da9. Mail and Maps controls unchanged; Motion Engine/Render/Export remain false.",
+        "Next Action: BLOCKED — full integration needs Team A’s native authority, Studio decoder/bootstrap, Write measurement and metadata contracts. Independent final434 validation, package workflows and account-browser diagnosis continue."
+      ],
+      "paragraphRanges": [
+        {
+          "start": 21929,
+          "end": 21946
+        },
+        {
+          "start": 21946,
+          "end": 21958
+        },
+        {
+          "start": 21958,
+          "end": 22088
+        },
+        {
+          "start": 22088,
+          "end": 22209
+        },
+        {
+          "start": 22209,
+          "end": 22621
+        },
+        {
+          "start": 22621,
+          "end": 22876
+        },
+        {
+          "start": 22876,
+          "end": 23108
+        }
+      ]
+    },
+    {
+      "pass": 3,
+      "text": [
+        "Checkpoint 18:19",
+        "% Progress:",
+        "    Implementation - About 70% of inspected Sol Happy service foundations and regression groups; low confidence for wider Pass 3 ;",
+        "    Acceptance Verified - Full service and pass acceptance open; Windows apps 0/29 verified, packages 0/29 delivered ;",
+        "Change Summary: The first actual local account run passed native anonymous readiness and immutable assets/normal browser closure, then failed at issuer-form readiness. Four dependent cases remain unrun. Zero successful discovery/JWKS counters do not exclude rejected requests; initial protocol and subject flags prove nothing. The owned issuer stopped through its original session with strict reaping and exit zero.",
+        "Evidence: Actualdf/73 driver:2PASS,1FAIL,4NOT_RUN; browser final ECHILD, pins unchanged and no forced cleanup. Issuer88463 stop receipt preserves its maintained shutdown signals separately. Hosted identity138/165 remains0f6 with endpoints closed; no repeat or browser/native relabeling.",
+        "Next Action: BLOCKED — live effects need canonical actor/session/Files/import/scanner and settlement ports plus approved commercial policy. Independent public-source account diagnosis, repaired normal434 and Windows package work continue; full20:00 completion remains not credible."
+      ],
+      "paragraphRanges": [
+        {
+          "start": 32379,
+          "end": 32396
+        },
+        {
+          "start": 32396,
+          "end": 32408
+        },
+        {
+          "start": 32408,
+          "end": 32539
+        },
+        {
+          "start": 32539,
+          "end": 32658
+        },
+        {
+          "start": 32658,
+          "end": 33074
+        },
+        {
+          "start": 33074,
+          "end": 33361
+        },
+        {
+          "start": 33361,
+          "end": 33643
+        }
+      ]
+    }
+  ]
+}

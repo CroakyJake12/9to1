@@ -253,7 +253,7 @@ public sealed class FormsSubmissionStoreTests : IDisposable
         });
         await repository.SaveAsync(workbook, "paged Forms fixture", CancellationToken.None);
 
-        var store = new DataWorkbookFormsSubmissionStore(repository);
+        IFormsSubmissionStore store = new DataWorkbookFormsSubmissionStore(repository);
         var all = await store.GetLatestAsync(CancellationToken.None);
         var paged = new List<FormsSubmission>();
         FormsSubmissionCursor? cursor = null;

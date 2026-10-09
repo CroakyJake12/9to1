@@ -1,0 +1,47 @@
+{
+  "result": {
+    "created_on": "2026-10-04T08:29:57.048128Z",
+    "modified_on": "2026-10-04T08:38:01.687408Z",
+    "id": "cake-id-release-validation",
+    "tag": "179e1e4eb8094aa88f026a592cb1c641",
+    "entry_point": "index.js",
+    "tags": [
+      "sol-happy-isolated-validation"
+    ],
+    "deployment_id": "713c16957e21489bbc97906450972cfa",
+    "tail_consumers": null,
+    "logpush": false,
+    "observability": {
+      "enabled": false,
+      "head_sampling_rate": null
+    },
+    "has_assets": false,
+    "has_modules": true,
+    "etag": "c51d374c31259a83d0196ebf4da57e392df9b855188e65b5ba928c9b35f6b69f",
+    "handlers": [
+      "fetch"
+    ],
+    "named_handlers": [
+      {
+        "name": "fetchRequest",
+        "handlers": [
+          "class"
+        ]
+      }
+    ],
+    "last_deployed_from": "api",
+    "compatibility_date": "2026-10-01",
+    "compatibility_flags": [
+      "nodejs_compat"
+    ],
+    "usage_model": "standard",
+    "limits": {
+      "cpu_ms": 1000
+    },
+    "startup_time_ms": 62
+  },
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "status": 200
+}

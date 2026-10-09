@@ -14,7 +14,7 @@ public interface IDeveloperWorkspaceStore
 /// Versioned, atomic Dev workspace persistence. The host supplies its application-data root; the store never
 /// writes workspace metadata into source folders and does not persist secrets or mutable display-name identity.
 /// </summary>
-public sealed class FileDeveloperWorkspaceStore : IDeveloperWorkspaceStore
+public sealed partial class FileDeveloperWorkspaceStore : IDeveloperWorkspaceStore, IDeveloperOriginalWorkspaceSetupStore
 {
     private const int CurrentSchemaVersion = 1;
     private static readonly JsonSerializerOptions JsonOptions = new()

@@ -1,0 +1,230 @@
+{
+  "candidateCommit": "9d0642d0e543f4dc274b0c24c8a609de9093b752",
+  "candidateBranch": "team-c/sol-happy-c3-boards-startup",
+  "basis": "e2effba426353978b11fc1c0f2fc8e3e533318e4",
+  "ownerBasis": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+  "dirtyStatus": "",
+  "changedPaths": [
+    "9to1 Workspace/Boards/app/ContractSessionAdapter.cs",
+    "eng/release-validation/boards-startup/BoardsStartupControls.csproj",
+    "eng/release-validation/boards-startup/Program.cs",
+    "eng/release-validation/boards-startup/README.md"
+  ],
+  "scope": "Entire exact frozen Git source; selective tracked Boards app/contract/control input inventory with content hashes. Actual UI source is unchanged from probe basis.",
+  "files": [
+    {
+      "path": "9to1 Workspace/Boards/app/BlockRenderer.cs",
+      "gitBlob": "58ae3026944b03ed9c5d11ba8b38631f2c5371b8",
+      "bytes": 50495,
+      "sha256": "f33c0979ff4a47469bb0ad11684799c5469311d5ada826f043bb04fe0562731a"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BoardProjection.cs",
+      "gitBlob": "8be2203345602c909c6c06bedd784914dc9fde06",
+      "bytes": 50365,
+      "sha256": "4d74ddce861b602e3cd84209615a83a1f1c5f0077432cc4abbf01650404f3614"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/Boards.cui",
+      "gitBlob": "4f2824ace49591e056de699eb9f4581c3acebfdf",
+      "bytes": 2863,
+      "sha256": "020251371d308676b475420d93ed1246be6159342720f5af6fa141aa9c463f84"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BoardsCreationMenu.cs",
+      "gitBlob": "0b902aa4282c31e8f0a56c4113927c3351f275cb",
+      "bytes": 1365,
+      "sha256": "2c5822619c274450222d3b66a15ee5cd5728c839d8297ea72d57bdddaa236343"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BoardsIcons.cs",
+      "gitBlob": "e31eee33c689a778861846a4a01b2374013e5376",
+      "bytes": 3108,
+      "sha256": "1fd6f0d869be41844dacc7a51346b253b827d76b1bccc997f2a497f793231aa3"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BoardsTheme.cs",
+      "gitBlob": "e157da878e92e9cbdd7f0f8b8aa98ed7f1160031",
+      "bytes": 5228,
+      "sha256": "896e5a6fe745d7e5285ec2a145ca5b695182f9b1ff386bdc7d3013a7825d35b0"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BoardsViewModel.cs",
+      "gitBlob": "77424a20225a5c4ad66f9a6f2438d3caa34071dc",
+      "bytes": 83265,
+      "sha256": "c4097e551df7b5b6e2da7060ec6085ef9a3482a54e28436abd5f04a49f8bd75f"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/CakeOS.Apps.Boards.App.csproj",
+      "gitBlob": "b0d7475a54fa5632547f86496b4003017d2b2e4c",
+      "bytes": 2290,
+      "sha256": "ff6d497c337d5ce440d95814b360505206a7d7138bb447b3a1cd5498f59c98fa"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/ContextPanels.cs",
+      "gitBlob": "ce35f2f680b3ee65aef138b51a454e875b4e7e29",
+      "bytes": 11794,
+      "sha256": "30a3a7cfdf217120b558e2c09e3465a2be2d28e49b3c8e07213b8c06a5ca0dc8"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/ContractSessionAdapter.cs",
+      "gitBlob": "5068f35d120c528c90671804f34b9f2a61075067",
+      "bytes": 41060,
+      "sha256": "e26d6b59461d5a3ad6e68fc13231f2e585014bfc2bd89de5fb1693828fae3145"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/IRichBoardSession.cs",
+      "gitBlob": "e8ab2d3c37a9e3fbb8591d71337c84bcedaf5081",
+      "bytes": 8445,
+      "sha256": "ee7ccbe568abcbf4f33295278c5cdb49b5fcca1c72a18015c2c342648ba05a3b"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/InMemoryRichBoardSession.cs",
+      "gitBlob": "1d0a6ab218e87578f4cd89f27c2b58d52af1a06b",
+      "bytes": 9362,
+      "sha256": "770ed3bd1f10b74a6c263cfe3b2c3ec8c607edc2d712484a569dd5582517efb1"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/NavBuilder.cs",
+      "gitBlob": "90bc48acb4139f65a952c669ceb8d3b1b612e4ac",
+      "bytes": 10788,
+      "sha256": "29c92d3f8dee9f37435501f80bcb0aa65b591b933183c02d1ce49692102322bc"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/Program.cs",
+      "gitBlob": "706f36e47d9ddf9f30c36b3411f81c72aecb7adc",
+      "bytes": 44045,
+      "sha256": "71aedab64dda619fd9e63910fe80f233f5499be20c8fda12347ab7daa1c03740"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/ShellChrome.cs",
+      "gitBlob": "7ee3dddae36945a104b3b2be08ea4281c0d2dbda",
+      "bytes": 2457,
+      "sha256": "f884ba8bd33277a3eacc1783c3ce1cc71d0abfe3fe7f577cb59fa6c6247e4f2a"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/StyleEditor.cs",
+      "gitBlob": "b82272569f11376bd7d2bbd46fc4ec0faf4072f1",
+      "bytes": 13973,
+      "sha256": "41490574b5d193a8ae18a08583f80829e6f3e9f4d800525a461e45b70d5fd37a"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/ThemeApplier.cs",
+      "gitBlob": "eb65bc15dd0eb856f2595f112bdd532743165467",
+      "bytes": 4308,
+      "sha256": "e06235cc030875380acc430f7372bafefeafb6088afab997c007d469a8d863c4"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/ToolbarBuilder.cs",
+      "gitBlob": "977a6140fbe84219cf731e9f626af4124bee1a96",
+      "bytes": 22295,
+      "sha256": "c300c676948cbf6d29d50eaf830159886f4159f4494fac022906b40f16b086ed"
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/AppFlowyBoardEventAdapter.cs",
+      "gitBlob": "d02f32f291ba3df5ed073d4eb929e072da32a6b3",
+      "bytes": 2999,
+      "sha256": "de9d39cc81310a9a1823250ed2a15f2d2df5b8d86fced870d9fd296f88c5450b"
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/CakeOS.Apps.Boards.Contract.csproj",
+      "gitBlob": "b10400bbabbd412a106c740548b290cec236991d",
+      "bytes": 304,
+      "sha256": "bbe18dcf683917821c98ac442cf9a666ae26dd194ebe96896e3c8e161c8ff719"
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/ContentAddressedHavenBoardAttachmentStore.cs",
+      "gitBlob": "bc82f7647481b354fa57a0fee66a4562a06f8166",
+      "bytes": 10238,
+      "sha256": "3e1c6bea3d5b0948ffa65e7f9017e7109afed75ac99bc6e29bde1d9c9ea50a7b"
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/HavenBoardCollaboration.cs",
+      "gitBlob": "c315208d132160b8e8aa061fc88199dc6d7a2054",
+      "bytes": 7521,
+      "sha256": "4eff19cc1cada3ab9dee03e9aaea97a5635490cfb2d72de055c42eb7c84ce91b"
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/HavenBoardContract.cs",
+      "gitBlob": "fb6cababfbec91dc60f4f983556b4cc8e30381dc",
+      "bytes": 19645,
+      "sha256": "1bf191ab721251a6ab049f2da48b0ecfa1fab4df04d235e04fb87f9878471381"
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/HavenBoardGenerativePlan.cs",
+      "gitBlob": "b20e60c7b21e1bc5dea333052def6af07807dfc5",
+      "bytes": 5180,
+      "sha256": "46fd8982cd424ebb8a53edcac98eb699fb21149d5dff4b7aa56e8eb8c066f8bd"
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/HavenRichBoardContract.cs",
+      "gitBlob": "5a3e162baaf236a91794696f1de09de97397b068",
+      "bytes": 33696,
+      "sha256": "aeec3484ac7a75156a14a305145851afebdffb66d4a20cf8e75ecc643381d674"
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/HavenRichBoardV3.cs",
+      "gitBlob": "92cdac4dc7f5105d88b4d660cf6adbf7cfa1fa36",
+      "bytes": 47348,
+      "sha256": "74b00f1560ece1aa7ff6887171ed4f3ab40e0be4e01b74ba528802a7f10e6e49"
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/JsonFileHavenBoardStore.cs",
+      "gitBlob": "d6d8c0fc6bfe938920f5561bf21df112d9944bc2",
+      "bytes": 28237,
+      "sha256": "273c85eb831388550b567f8d0769426d6ddbedfad7fc5f3dd0b96723d40a015c"
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/RichBoardSession.cs",
+      "gitBlob": "61f9f44e1de0bc92db495ba7c0a6a53c9a903036",
+      "bytes": 19529,
+      "sha256": "e5406be4fd78dc7a7828f9b9646a8f8b0e9896a634753cb920d26b03c5a86134"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Build.props",
+      "gitBlob": "76a5b6e697b64fec33efc1a7319d2d723163de83",
+      "bytes": 781,
+      "sha256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Build.targets",
+      "gitBlob": "1a7ce6a893563ab80fd3406a9e7058cc3b9b11fc",
+      "bytes": 262,
+      "sha256": "664b5d56d3bb11e4a460bb6c2aeca9c8712476a30faa31ef2bd914bfc7be3374"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Packages.props",
+      "gitBlob": "10c3be91da5507a7e1d945561ec11f2264c12c8b",
+      "bytes": 2581,
+      "sha256": "9a7a73030788b96d6827cd8d01348866f15b687654b468a931723ed8efe3d039"
+    },
+    {
+      "path": "eng/release-validation/boards-startup/BoardsStartupControls.csproj",
+      "gitBlob": "b9a77117d08bcb8bcac41fd46ce5d5c1c53adff7",
+      "bytes": 835,
+      "sha256": "5c516cf8d8a197823bae8213ab3676b445b4a8096f614019969af8c446cf0dba"
+    },
+    {
+      "path": "eng/release-validation/boards-startup/Program.cs",
+      "gitBlob": "c0fd2b7e6173b8029d92e5379c26b03702410fdd",
+      "bytes": 11140,
+      "sha256": "ade449b48deec78348591c1080452574e46fd23b453f450c9f5780ffccb13e03"
+    },
+    {
+      "path": "eng/release-validation/boards-startup/README.md",
+      "gitBlob": "3e165a7531d1fc23174ebfddc43e491d09c161d0",
+      "bytes": 2609,
+      "sha256": "9d60a9e406a43c8b3179e67e8544ab9e893272fb88b29c397ee4d3e1f50a0053"
+    },
+    {
+      "path": "global.json",
+      "gitBlob": "7c8e277cf07fce40a61edef6283ffc6d1ce13c89",
+      "bytes": 111,
+      "sha256": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b"
+    }
+  ],
+  "uiSubmodules": {
+    "XamlX": "009d4815470cf4bf71d1adbb633a5d81dcb2bb52",
+    "Avalonia.DBus": "864a05282841bf04006890f04d11d60d1a046aa9"
+  }
+}

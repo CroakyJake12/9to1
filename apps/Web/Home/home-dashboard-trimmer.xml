@@ -1,0 +1,15 @@
+<linker>
+  <assembly fullname="HavenOS.Home">
+    <!-- The existing Home store uses System.Text.Json reflection for these
+         immutable records. Keep constructors, parameters, properties and their
+         accessors so a Release publication can reopen its complete saved JSON. -->
+    <type fullname="HavenOS.Home.HomeDashboardLayout" preserve="all" />
+    <type fullname="HavenOS.Home.HomeTileInstance" preserve="all" />
+    <!-- The complete layout contains these numeric enum values, validated by
+         Enum.IsDefined. Keep their exact named constants, including zero. -->
+    <type fullname="HavenOS.Home.HomeTileSize" preserve="fields" />
+    <type fullname="HavenOS.Home.HomeTileVisibility" preserve="fields" />
+    <type fullname="HavenOS.Home.HomeTileLifetime" preserve="fields" />
+    <type fullname="HavenOS.Home.HomeTileChangeKind" preserve="fields" />
+  </assembly>
+</linker>

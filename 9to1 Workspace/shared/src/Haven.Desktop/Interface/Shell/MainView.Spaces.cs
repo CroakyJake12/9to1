@@ -40,6 +40,11 @@ public sealed partial class MainView
 
     private async Task LaunchSpaceAsync(SpaceDefinition space)
     {
+        if (space.Kind == SpaceKind.Tasks)
+        {
+            await OpenOriginalCanonicalTaskSpaceAsync(space.Id);
+            return;
+        }
         var plan = SpaceLaunchPolicy.Resolve(space);
         if (plan.Destination == SpaceLaunchDestination.StudyProduct)
         {
@@ -110,6 +115,11 @@ public sealed partial class MainView
 
     private async Task OpenSpaceConversationAsync(Conversation conversation)
     {
+        if (conversation.Mode == HavenMode.Tasks && conversation.SpaceId is not null)
+        {
+            await OpenOriginalSpaceTaskConversationAsync(conversation);
+            return;
+        }
         var page = CreateNewChatPage();
         await ConfigureAddMenuAsync(page);
         await page.LoadConversationAsync(conversation);

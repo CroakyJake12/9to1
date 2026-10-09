@@ -1,0 +1,60 @@
+{
+  "release": "98034cc2f66a54363a67902edbc188971f31321f",
+  "hashIndexCounts": {
+    "evidence/c3-admin-sdk03/artifact-index.json": 151,
+    "evidence/c3-admin-subreaper/artifact-index.json": 24,
+    "evidence/c3-admin-attempt3/artifact-index.json": 116,
+    "final/summary.json": 19,
+    "browser-review-update/manifest.json": 7,
+    "shared-source-proposals/manifest.json": 44,
+    "browser-pointer-review/manifest.json": 7,
+    "specification-update/manifest.json": 4,
+    "c6/browser83-runtime/review.json": 17,
+    "c6/home-proposal-review/review.json": 20,
+    "c6/home-layout-followup/review.json": 12
+  },
+  "hashErrors": [],
+  "untracked": [],
+  "serviceUnchanged": 51,
+  "historicalDocumentationDifference": [
+    "cloud/cake-id-auth/README.md"
+  ],
+  "excludedCompiledFiles": 9,
+  "attempt3DllPdbFiles": [],
+  "deltaFrom8e0OutsideDocs": [
+    "handoff/team-c/browser-fixture/.gitattributes",
+    "handoff/team-c/browser-fixture/README.md",
+    "handoff/team-c/browser-fixture/c1-exact-aedc-controls.log",
+    "handoff/team-c/browser-fixture/c1-exact-aedc-worker-smoke.log",
+    "handoff/team-c/browser-fixture/c2-fork-worker-smoke.log",
+    "handoff/team-c/browser-fixture/c2-nine-controls.log",
+    "handoff/team-c/browser-fixture/evidence.json",
+    "handoff/team-c/browser-fixture/historical-c1-posix-spawn-failure.log",
+    "handoff/team-c/browser-fixture/historical-c2-invalid-web-loopback.log",
+    "handoff/team-c/browser-fixture/historical-c2-unwritable-home.log",
+    "handoff/team-c/browser-fixture/historical-c2-zombie-held.log",
+    "handoff/team-c/browser-fixture/historical-posix-failure-cleanup.json",
+    "handoff/team-c/browser-fixture/historical-zombie-manual-custody.json"
+  ],
+  "runtimeTestsRun": false,
+  "acceptance": "Sourceproposal/evidenceonly; no wholeSDK/fullbrowser acceptance. Originalattempt3 index historical, correctedindex onlypublicationauthority. Embedded symbol219/221 leaves2missing. Newgeneratedoutputproposal not incorporated or presumedpass.",
+  "fixturePublicLogsChecked": 10,
+  "fixtureEvidenceDocuments": 2,
+  "fixtureSourceHashesChecked": 4,
+  "fixtureCandidate": "aedc29ec3a0a960e1ded36c0443f1efda4fcf36d",
+  "fixtureHashErrors": [],
+  "sourceProposalChecks": [
+    {
+      "proposal": "fe96d5004a8a608967186000da1f5deda31df470",
+      "sourceFiles": 4
+    },
+    {
+      "proposal": "8d51ead744baabe33949987f55d0b474f62aa9f1",
+      "sourceFiles": 4
+    }
+  ],
+  "proposalSourceHashErrors": [],
+  "attempt3PublicationCorrection": "Exactly9originalDLLpaths excluded;2newmetadatarecords original-publication-index and correction, no raw runtime result edits.",
+  "C4ConditionalWireAck": "PROPOSED_NOT_ADOPTED; runtimeTestsRunfalse, technical owner ACK required; future tests not executed.",
+  "nonDocsDeltaQualification": "Only handoff/team-c/browser-fixture public evidence/.gitattributes/README/JSON/logs; no executable service/source changes."
+}

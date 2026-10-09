@@ -1,0 +1,72 @@
+{
+  "candidate": "c21878b0de2f84134680f706c6bc0feb12969463",
+  "status": "HELD_PROVENANCE_GUARD_CORRECTION",
+  "sourceBindings": [
+    {
+      "path": "9to1 Workspace/Sites/Hosting/R2NativeSiteArtifactReader.cs",
+      "sha256": "ce7b6481e79d30e6a7b1da98562db84c08a91431a8419f1a312b9759ddf45373"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Tests/R2NativeSiteArtifactReaderTests.cs",
+      "sha256": "72654fae37bbcabffae63500a557e909f3c9d46fded87c3712b3faf67dc5df98"
+    }
+  ],
+  "review": "Every added reader/test/evidence/doc line reviewed. Read complete e0c native pipeline,hostingcontracts,models and route rules. Manifest ContentHash includes manifest bytes; artifact SizeBytes counts outputonly; no public model change.",
+  "independentVerification": {
+    "positive": {
+      "exit": 0,
+      "pass": 12,
+      "fail": 0
+    },
+    "hashOmissionFault": {
+      "exit": 1,
+      "pass": 10,
+      "fail": 2,
+      "mutation": "Isolated reader copy RequireHash predicate replacedfalse; testsource unchanged"
+    },
+    "blankBothProvenance": {
+      "exit": 1,
+      "pass": 12,
+      "fail": 2,
+      "mutation": "Additive localtheory cases blankboth artifact and manifest source/config respectively, sameexactc218reader",
+      "failure": "No exception thrown; invalid provenance accepted"
+    }
+  },
+  "command": "DOTNET_CLI_HOME=/workspace/team-c/evidence/c5/dotnet-home NUGET_PACKAGES=/workspace/.tools/nuget /workspace/.tools/dotnet/dotnet test PROJECT --logger trx --results-directory RESULTS",
+  "harness": "Complete8 e0c sourcefiles+actualc218 reader/tests in isolatedproject; fakeHTTP only; not fullSites build or realR2 acceptance",
+  "finding": "Explicit nonnullartifact and nonblanksource/config guards needed beforeHTTP; root/C4 correcting.",
+  "pathCompatibility": "Currente0c producer emits lowercaseletter/internalhyphen route segments then/index.html, supported by SafeASCII. Generic/futureassets notcertified.",
+  "limits": [
+    "Onlylisted manifest/output verified; absenceofunlistedobjects notproved; servingmustconfine verifiedpaths.",
+    "Trustedexplicitprefixmapping is not currentaccount/session/source/CAS/quota authority.",
+    "Defaulttransport forbidsredirect beforehop; injectedtransport owner must preserve.",
+    "Cancellation, redirect, contentencoding/headerbody mismatch independently notyettested by original12case suite; await expanded owner successor.",
+    "No remote activation/adoption or canonicalbuild/secret scanner/serving acceptance."
+  ],
+  "evidence": [
+    {
+      "path": "/workspace/team-c/evidence/c5/native-r2-peer/positive.log",
+      "sha256": "66eb3a46d86e99f88358356fb8a79f0b05b8f8a421587010674cb370a88a7c7c"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/native-r2-peer/negative.log",
+      "sha256": "164870afa150056b768f01da77f67090bc8fdfb7b5829e15f7f6af2425dff099"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/native-r2-peer/blank-provenance.log",
+      "sha256": "39217a279e7bbe5c76f270d7b8c119a5195b1dd84dfa0e87ed5861d5312610fc"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/native-r2-peer/positive/results/positive.trx",
+      "sha256": "df98f8dfe2974bcc4e9ec0f7ba151722aec8aea5829bb90acc86317668b0a192"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/native-r2-peer/negative/results/negative.trx",
+      "sha256": "4c8c55d73a9d5fc6aba62540bbf1c944260d25cd4a5ff3da2cf62974bca5e83b"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/native-r2-peer/positive/results/blank-provenance.trx",
+      "sha256": "2942718ffab51e6e3fd641404eebd6b1ceb45a3a3424e4b35b9fa421e88a78c7"
+    }
+  ]
+}

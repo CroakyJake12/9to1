@@ -1,0 +1,236 @@
+{
+  "schemaVersion": 1,
+  "createdUtc": "2026-10-04T19:58:32.544005+00:00",
+  "status": "ACTUAL_NORMAL_MAIL72_STRICT_TLS_AND_ORIGINAL_CUSTODY_PRIMARY_READBACK_PASS_UNACCEPTED",
+  "sourceCommit": "a0c8748196b90e2c43885e174b5835a7fe2c33e3",
+  "sourceBasis": "9af8960051abc3bbb01340761fdf12d2f69b1679",
+  "runId": 37229860186,
+  "jobId": 111517069361,
+  "runAttempt": 1,
+  "officialArtifactId": 11312354741,
+  "officialArtifactBytes": 68736,
+  "officialArtifactSHA256": "d8ba2ba5b62a432003903e93784ec11edb7873fa0610ec3807037f1409b3e6df",
+  "officialPublicFiles": 44,
+  "originalIndexedFiles": 42,
+  "uncompressedPublicBytes": 317497,
+  "allOriginalPublicSizeSHAReadback": true,
+  "normalTestOutcome": {
+    "total": 72,
+    "executed": 72,
+    "passed": 72,
+    "failed": 0,
+    "notExecuted": 0,
+    "filter": null,
+    "assertionCount": null,
+    "strictOriginalTRXSHA256": "401704e012d43920daff460c1f8460f2300df4100d92f6dde3d2e7d8438bc51b",
+    "all72OriginalIdentityEquality": true,
+    "originalTLS3": [
+      {
+        "name": "HavenOS.Mail.Tests.MailKitRealTransportTests.Actual_TLS_SMTP_submission_is_retrieved_by_actual_IMAP_with_identity_body_and_incremental_cursor",
+        "outcome": "Passed"
+      },
+      {
+        "name": "HavenOS.Mail.Tests.MailKitInboxReconciliationTests.Actual_TLS_warm_cursor_recovers_removed_cache_and_held_original_batch_refuses_intervening_canonical_edit",
+        "outcome": "Passed"
+      },
+      {
+        "name": "HavenOS.Mail.Tests.MailKitInboxReconciliationTests.Actual_TLS_existing_flags_and_expunge_reconcile_without_rehydrating_cached_body_or_overwriting_pending_local_edit",
+        "outcome": "Passed"
+      }
+    ]
+  },
+  "source54BeforeAfterExactlyFrozenGitPins": true,
+  "ordinaryProjects": [
+    "9to1 Workspace/Mail/HavenOS.Mail.csproj",
+    "9to1 Workspace/Mail/Tests/HavenOS.Mail.Tests.csproj",
+    "framework/CUI/AI/NineToOne.Cui.AI.csproj",
+    "framework/CUI/Core/CakeOS.Cui.Core.csproj",
+    "framework/CUI/Language/CakeOS.Cui.Language.csproj"
+  ],
+  "evaluatedInputRows": 32,
+  "evaluatedOriginalSourceRowsGitValidated": 32,
+  "evaluatedGeneratedOwnedRows": 0,
+  "normalRestoreAssets": 5,
+  "mailKitVersion": "4.18.0",
+  "taskPrivatePackageFolders": true,
+  "compiledRuntime102BeforeAfterEqual": true,
+  "actualSourceBuildDLLCatalog": [
+    {
+      "path": "CakeOS.Cui.Core.dll",
+      "bytes": 78336,
+      "sha256": "05a1b4202e8235a4a91ec480cdf7cb0a885c541416958f88afba31555247cd4d"
+    },
+    {
+      "path": "CakeOS.Cui.Language.dll",
+      "bytes": 11776,
+      "sha256": "428b96ea8e9d4ca56fa1268d41084ce09a51fc6296e0dbc08a0bc6159b27874d"
+    },
+    {
+      "path": "HavenOS.Mail.Tests.dll",
+      "bytes": 143360,
+      "sha256": "5884fdc58176f70aa6b5914bf0d5c395741a05cb69fe1e0ecc3ece968ebe933f"
+    },
+    {
+      "path": "HavenOS.Mail.dll",
+      "bytes": 253952,
+      "sha256": "8e1dc7fdcc17334629dbda897daa71f7a00c70eddac7a616e87fdf3dee71aa1a"
+    },
+    {
+      "path": "NineToOne.Cui.AI.dll",
+      "bytes": 122368,
+      "sha256": "1d0d74ce0250df23c864b73b492c50e439f1943c397673694150484e08323a4f"
+    }
+  ],
+  "runtimeQualification": "Original retained physical hash catalogs, evaluated TargetPaths and genuine source-build/test logs bind compiled inputs; compiled DLL bytes are not included in this diagnostics-only artifact.",
+  "normalOriginalCallerCommandFamilies": {
+    "commands": 10,
+    "allNaturalZeroExit": true,
+    "noFilter": true,
+    "sameOriginalSession": true,
+    "actualCommandPIDs": [
+      3638,
+      3646,
+      3682,
+      3823,
+      3834,
+      3842,
+      3853,
+      3861,
+      3869,
+      3921
+    ]
+  },
+  "originalSampledFamilies": [
+    {
+      "kind": "java",
+      "launcherPid": 3558,
+      "startTicks": "7391",
+      "observedMembers": 1,
+      "originalDrainedReceipt": true,
+      "pendingRecordSHA256": "dc6df725386ae6e1e69629dd495090689066be4877315a58afd7d332d89dbe7f"
+    },
+    {
+      "kind": "crl",
+      "launcherPid": 3557,
+      "startTicks": "7391",
+      "observedMembers": 1,
+      "originalDrainedReceipt": true,
+      "pendingRecordSHA256": "12bbd7eebef326f9575388ba54ae5cb7614cdff590a9f8129bb7e678d00405fa"
+    },
+    {
+      "kind": "caller",
+      "launcherPid": 3612,
+      "startTicks": "7515",
+      "observedMembers": 21,
+      "originalDrainedReceipt": true,
+      "pendingRecordSHA256": "aeb65b8516e0cf5c5e93c728e16419f67d7296d5bc9227ae1ba45e92354e30fa"
+    }
+  ],
+  "knownInnerAttempts": 0,
+  "familyCustodyQualification": "Original sampled Linux session/birth-identity and pidfd drain receipts, not atomic unobserved-escape proof; no ECHILD/nonsignal/no-forced assertion substituted.",
+  "tlsReadiness": {
+    "smtps": {
+      "port": 35245,
+      "tlsVersion": "TLSv1.3",
+      "peerCertificateSHA256": "fc1493fcc3e51dd85b21c4da13a877d567180fc74f12509aa2b599846161c3fd",
+      "expectedOriginalCertificateMatched": true,
+      "originalJavaListeners": [
+        {
+          "table": "tcp6",
+          "local": "0000000000000000FFFF00000100007F:89AD",
+          "inode": "16796"
+        }
+      ],
+      "javaPID": 3558,
+      "javaStartTicks": "7391",
+      "normalOSCertificateValidation": true,
+      "originalSignedChainCrlValidation": true,
+      "publicCrlSha256": "a9b026b90ab9c062bc059b55ba3c74d04c2864416972bb8df50b82b12f15e789"
+    },
+    "imaps": {
+      "port": 38887,
+      "tlsVersion": "TLSv1.3",
+      "peerCertificateSHA256": "fc1493fcc3e51dd85b21c4da13a877d567180fc74f12509aa2b599846161c3fd",
+      "expectedOriginalCertificateMatched": true,
+      "originalJavaListeners": [
+        {
+          "table": "tcp6",
+          "local": "0000000000000000FFFF00000100007F:97E7",
+          "inode": "14648"
+        }
+      ],
+      "javaPID": 3558,
+      "javaStartTicks": "7391",
+      "normalOSCertificateValidation": true,
+      "originalSignedChainCrlValidation": true,
+      "publicCrlSha256": "a9b026b90ab9c062bc059b55ba3c74d04c2864416972bb8df50b82b12f15e789"
+    }
+  },
+  "signedCRLDistribution": {
+    "crlURL": "http://127.0.0.1:42959/astra-crl-80a8abb17bb34679454ef8e1cc145a95.der",
+    "originalDerSha256": "a9b026b90ab9c062bc059b55ba3c74d04c2864416972bb8df50b82b12f15e789",
+    "originalPemSha256": "4c8d40d5467bb9a58a977932cd1cb509a19ae69692569bf951cc5f6099c5ae91",
+    "originalHelperSha256": "d63a7e15fad8a386b88bc45f753c1c0f3a3bebe8c3e5fadcd27d7f959d552211",
+    "pythonPath": "/usr/bin/python3.12",
+    "pythonSha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+    "originalCrlPID": 3557,
+    "originalCrlStartTicks": "7391",
+    "originalCrlListeners": [
+      {
+        "table": "tcp",
+        "local": "0100007F:A7CF",
+        "inode": "17518"
+      }
+    ],
+    "fullChainOpenSslCrlCheckPassed": true,
+    "qualification": "Synthetic local signed CRL. Production MailKit and .NET online revocation remain enabled; readiness GETs are not attributed to the owning .NET caller.",
+    "readinessGetRequests": 2,
+    "getRequestsAtCallerExit": 3,
+    "additionalGetRequestsDuringCaller": 1
+  },
+  "independentPublicCryptographicChecks": [
+    "Public original CA/leaf full-chain signature, validity and CRL validation PASS",
+    "Public original PEM CRL signature verifies under original CA",
+    "Original public DER and PEM CRL bodies decode identically",
+    "Original peer leaf SHA exactly matches both real TLSv1.3 readiness observations"
+  ],
+  "opensslToolVersion": "OpenSSL 3.5.7 9 Jun 2026 (Library: OpenSSL 3.5.7 9 Jun 2026)",
+  "actualPeerCertificateDER_SHA256": "fc1493fcc3e51dd85b21c4da13a877d567180fc74f12509aa2b599846161c3fd",
+  "allFourPublicSignatureOriginalBodiesPreserved": true,
+  "introducedUniqueDisposableRunnerTrustRemoval": true,
+  "trustQualification": "Original approved launcher removes only its introduced unique disposable-runner CA after all three original drains; final summary and successful source-bound caller support cleanup. No local/Windows/user-host trust modification performed by this readback.",
+  "finalSummary": {
+    "sourceCommit": "a0c8748196b90e2c43885e174b5835a7fe2c33e3",
+    "runId": "37229860186",
+    "runAttempt": "1",
+    "normalMailStatus": "PASS_FULL_NORMAL_MAIL72_WITH_REAL_LOOPBACK_TRUSTED_TLS_UNACCEPTED",
+    "javaAttempted": true,
+    "callerAttempted": true,
+    "crlAttempted": true,
+    "javaFamilyDrained": true,
+    "callerFamilyDrained": true,
+    "crlFamilyDrained": true,
+    "introducedRunnerTrustRemoved": true,
+    "primaryFailureType": null,
+    "cleanupFailureTypes": [],
+    "qualification": "Sampled original Linux family custody; synthetic loopback real TLS and normal managed72 only, no native GUI/Home/provider/Windows/full release acceptance.",
+    "fullScopedPass": true
+  },
+  "privacy": "Original explicit44 public files/42 indexed copies only; private server logs/JAR/cache/keys/keystore/mailbox bodies absent. Prepublication actual generated-password+keystore-password/private-key-byte refusal passed. No signed download URLs retained in receipt.",
+  "historical69Pass3MissingFixtureFailureStillPreserved": {
+    "source": "1c78a6107264baf5f7da92a5b6abbde7eac10e40",
+    "passed": 69,
+    "failed": 3,
+    "skipped": 0,
+    "cause": "Missing unchanged required real TLS fixture environment; original TRX retained separately."
+  },
+  "unchangedInfrastructure444NotRepeated": true,
+  "pendingIndependentPeer": "C6 actual-runtime/original-artifact peer pending",
+  "fullNativeMailGUIHomeWindowsProviderPackageAcceptance": "NOT_RUN",
+  "canonicalReleaseScope": {
+    "groups": 30,
+    "verified": 0,
+    "delivered": 0,
+    "original29InventoryHistorical": true
+  }
+}

@@ -1,0 +1,31 @@
+  Determining projects to restore...
+  Restored /workspace/team-c/c2-home-reconciled/9to1 Workspace/Browse/HavenOS.Apps.Browse.csproj (in 112 ms).
+  Restored /workspace/team-c/c2-home-reconciled/9to1 Models/Dulche Alpha/Dulche.Runtime.csproj (in 112 ms).
+  Restored /workspace/team-c/c2-home-reconciled/framework/CUI/Core/CakeOS.Cui.Core.csproj (in 112 ms).
+  Restored /workspace/team-c/c2-home-reconciled/framework/CUI/Language/CakeOS.Cui.Language.csproj (in 112 ms).
+  Restored /workspace/team-c/c2-home-reconciled/framework/CUI/AI/NineToOne.Cui.AI.csproj (in 1 ms).
+  Restored /workspace/team-c/c2-home-reconciled/9to1 Workspace/shared/src/Haven.UI/Haven.UI.csproj (in 0.6 ms).
+  Restored /workspace/team-c/c2-home-reconciled/9to1 Workspace/Home/HavenOS.Home.csproj (in 3 ms).
+  Restored /workspace/team-c/c2-home-reconciled/9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj (in 0.9 ms).
+  Restored /workspace/team-c/c2-home-reconciled/9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj (in 1 ms).
+  Restored /workspace/team-c/c2-home-reconciled/9to1 Workspace/shared/src/Haven.Browser/Haven.Browser.csproj (in 2 ms).
+  Restored /workspace/team-c/c2-home-reconciled/9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj (in 496 ms).
+  NineToOne.Cui.AI -> /workspace/team-c/c2-home-reconciled/framework/CUI/AI/bin/Release/net10.0/NineToOne.Cui.AI.dll
+  CakeOS.Cui.Language -> /workspace/team-c/c2-home-reconciled/framework/CUI/Language/bin/Release/net10.0/CakeOS.Cui.Language.dll
+  Den -> /workspace/team-c/c2-home-reconciled/9to1 Models/Dulche Alpha/bin/Release/net10.0/Den.dll
+  Haven.UI -> /workspace/team-c/c2-home-reconciled/9to1 Workspace/shared/src/Haven.UI/bin/Release/net10.0/Haven.UI.dll
+  Haven.Core -> /workspace/team-c/c2-home-reconciled/9to1 Workspace/shared/src/Haven.Core/bin/Release/net10.0/Haven.Core.dll
+  CakeOS.Cui.Core -> /workspace/team-c/c2-home-reconciled/framework/CUI/Core/bin/Release/net10.0/CakeOS.Cui.Core.dll
+  Haven.Application -> /workspace/team-c/c2-home-reconciled/9to1 Workspace/shared/src/Haven.Application/bin/Release/net10.0/Haven.Application.dll
+  Haven.Browser -> /workspace/team-c/c2-home-reconciled/9to1 Workspace/shared/src/Haven.Browser/bin/Release/net10.0/Haven.Browser.dll
+  HavenOS.Apps.Browse -> /workspace/team-c/c2-home-reconciled/9to1 Workspace/Browse/bin/Release/net10.0/HavenOS.Apps.Browse.dll
+  Dulche.Runtime -> /workspace/team-c/c2-home-reconciled/9to1 Models/Dulche Alpha/bin/Release/net10.0/Dulche.Runtime.dll
+  HavenOS.Home -> /workspace/team-c/c2-home-reconciled/9to1 Workspace/Home/bin/Release/net10.0/HavenOS.Home.dll
+  HavenOS.Home.Tests -> /workspace/team-c/c2-home-reconciled/9to1 Workspace/Home/Tests/bin/Release/net10.0/HavenOS.Home.Tests.dll
+Test run for /workspace/team-c/c2-home-reconciled/9to1 Workspace/Home/Tests/bin/Release/net10.0/HavenOS.Home.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Results File: /workspace/team-c/evidence/c2/home-reconciled-results/home-reconciled-release.trx
+
+Passed!  - Failed:     0, Passed:   331, Skipped:     0, Total:   331, Duration: 1 s - HavenOS.Home.Tests.dll (net10.0)
+
+EXIT_CODE=0

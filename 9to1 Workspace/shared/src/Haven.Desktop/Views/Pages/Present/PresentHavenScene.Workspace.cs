@@ -10,6 +10,8 @@ namespace Haven.Desktop.Views.Pages.Present;
 internal sealed partial class PresentHavenScene
 {
     private PopupMenu? _workspacePopup;
+    private PresentDocumentSummary[] _libraryDocuments = [];
+    private string _libraryFilter = string.Empty;
     private bool _suppressInlineText;
     private Guid? _inlineTextElementId;
     private Guid? _activeVectorElementId;
@@ -46,6 +48,8 @@ internal sealed partial class PresentHavenScene
 
     public Container MenuBar { get; private set; } = null!;
     public Container LibraryHost { get; private set; } = null!;
+    public Input LibrarySearch { get; private set; } = null!;
+    public HavenText LibrarySearchSummary { get; private set; } = null!;
     public Container RecentDecks { get; private set; } = null!;
     public Container PinnedDecks { get; private set; } = null!;
     public Container WorkspaceHost { get; private set; } = null!;
@@ -113,6 +117,19 @@ internal sealed partial class PresentHavenScene
         var librarySubtitle = new HavenText("Create, import or reopen a presentation. Your decks stay editable and local.") { Level = TextLevel.Paragraph };
         librarySubtitle.SetValue(HavenProperties.Foreground, "TextSecondary");
         LibraryHost.Add(librarySubtitle);
+        LibrarySearch = new Input { Name = "Present.Library.Search", Placeholder = "Search presentation titles" };
+        LibrarySearch.Accessibility.AccessibleName = "Search local presentation titles";
+        LibrarySearch.Invalidated += (_, _) =>
+        {
+            if (_disposed) return;
+            var filter = LibrarySearch.Text?.Trim() ?? string.Empty;
+            if (string.Equals(filter, _libraryFilter, StringComparison.Ordinal)) return;
+            _libraryFilter = filter;
+            RenderFilteredLibrary();
+        };
+        LibraryHost.Add(LibrarySearch);
+        LibrarySearchSummary = new HavenText(string.Empty) { Name = "Present.Library.SearchSummary", Level = TextLevel.Caption };
+        LibraryHost.Add(LibrarySearchSummary);
 
         var createRow = new Container { Name = "Present.Library.Create", Layout = HavenLayout.Wrap };
         createRow.SetValue(HavenProperties.Gap, HavenLength.Px(10));
@@ -142,7 +159,7 @@ internal sealed partial class PresentHavenScene
         WorkspaceHost.SetValue(HavenProperties.Gap, HavenLength.Px(12));
         WorkspaceHost.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
 
-        SlideRail = new Container { Name = "Present.SlideRail", Layout = HavenLayout.Vertical };
+        SlideRail = new Container { Name = "Present.SlideRail", Layout = HavenLayout.Grid, Columns = "1fr", Rows = "1fr Auto Auto" };
         SlideRail.SetValue(HavenProperties.Column, 0);
         SlideRail.SetValue(HavenProperties.Background, "SurfaceRaised");
         SlideRail.SetValue(HavenProperties.BorderColor, "Border");
@@ -150,10 +167,24 @@ internal sealed partial class PresentHavenScene
         SlideRail.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(16)));
         SlideRail.SetValue(HavenProperties.Padding, HavenThickness.Parse("10px"));
         SlideRail.SetValue(HavenProperties.Gap, HavenLength.Px(8));
-        SlideRail.SetValue(HavenProperties.Overflow, HavenOverflow.Scroll);
+        SlideRail.SetValue(HavenProperties.Height, HavenLength.Percent(100));
+        SlideRail.SetValue(HavenProperties.Overflow, HavenOverflow.Clip);
+        SlidePane.Remove(SlideNavigator);
+        SlideNavigator.SetValue(HavenProperties.Row, 0);
+        SlideRail.Add(SlideNavigator);
+        SlideToolbar.Remove(AddSlideButton);
+        AddSlideButton.SetValue(HavenProperties.Row, 1);
+        AddSlideButton.Content = "+ Add slide";
+        AddSlideButton.Variant = ButtonVariant.Tertiary;
+        SlideRail.Add(AddSlideButton);
+        SlideToolbar.Remove(DeleteSlideButton);
+        DeleteSlideButton.SetValue(HavenProperties.Row, 2);
+        DeleteSlideButton.Variant = ButtonVariant.Ghost;
+        SlideRail.Add(DeleteSlideButton);
+        PolishSlideRail();
         WorkspaceHost.Add(SlideRail);
 
-        StageHost = new Container { Name = "Present.Stage", Layout = HavenLayout.Grid, Columns = "1fr", Rows = "1fr Auto" };
+        StageHost = new Container { Name = "Present.Stage", Layout = HavenLayout.Grid, Columns = "1fr", Rows = "1fr Auto Auto" };
         StageHost.SetValue(HavenProperties.Column, 1);
         StageHost.SetValue(HavenProperties.Gap, HavenLength.Px(8));
         CanvasOverlay = new Container { Name = "Present.Stage.CanvasOverlay", Layout = HavenLayout.Overlay };
@@ -316,6 +347,9 @@ internal sealed partial class PresentHavenScene
         PositionText.SetValue(HavenProperties.VerticalAlignment, HavenVerticalAlignment.Center);
         notesBar.Add(PositionText);
         StageHost.Add(notesBar);
+        InspectorPane.Remove(ObjectToolbar);
+        ObjectToolbar.SetValue(HavenProperties.Row, 2);
+        StageHost.Add(ObjectToolbar);
         WorkspaceHost.Add(StageHost);
         Root.Add(WorkspaceHost);
 
@@ -351,14 +385,29 @@ internal sealed partial class PresentHavenScene
     public void SetLibrary(IReadOnlyList<PresentDocumentSummary> documents)
     {
         documents ??= Array.Empty<PresentDocumentSummary>();
-        LibraryHost.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
+        if (LibraryHost is null) BuildWorkspaceControls();
+        var libraryHost = LibraryHost ?? throw new InvalidOperationException("Presentation library controls are unavailable.");
+        libraryHost.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
         WorkspaceHost.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         MenuBar.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         PlaybackOverlay.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
-        FillDeckGalleryPolished(PinnedDecks, documents.Where(document => document.Pinned));
-        FillDeckGalleryPolished(RecentDecks, documents);
+        _libraryDocuments = documents.ToArray();
+        RenderFilteredLibrary();
         StatusText.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         SetStatus(documents.Count == 0 ? "No presentations yet. Create one or import a PowerPoint file." : $"{documents.Count} presentation{(documents.Count == 1 ? string.Empty : "s")} available locally.");
+    }
+
+    private void RenderFilteredLibrary()
+    {
+        if (_disposed) return;
+        var matches = _libraryDocuments.Where(document => _libraryFilter.Length == 0 ||
+            document.Title.Contains(_libraryFilter, StringComparison.CurrentCultureIgnoreCase)).ToArray();
+        FillDeckGalleryPolished(PinnedDecks, matches.Where(document => document.Pinned));
+        FillDeckGalleryPolished(RecentDecks, matches);
+        LibrarySearchSummary.Content = _libraryFilter.Length == 0
+            ? $"{matches.Length} local presentation{(matches.Length == 1 ? string.Empty : "s")}."
+            : matches.Length == 0 ? "No local presentation titles match your search."
+                : $"{matches.Length} of {_libraryDocuments.Length} local presentations match.";
     }
 
     public void SetWorkspaceDocument(PresentDocument document, int slideIndex)
@@ -368,24 +417,7 @@ internal sealed partial class PresentHavenScene
         WorkspaceHost.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
         MenuBar.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
         PlaybackOverlay.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
-        ClearChildren(SlideRail);
-        for (var index = 0; index < document.Slides.Count; index++)
-        {
-            var captured = index;
-            var slide = document.Slides[index];
-            var button = ActionButton($"Present.Rail.{slide.Id:N}", $"{index + 1}  {DisplayTitle(slide.Title)}", ButtonVariant.Navigation, () => SlideSelected?.Invoke(captured));
-            button.SetState(HavenElementState.Selected, index == slideIndex);
-            button.Accessibility.AccessibleName = $"Slide {index + 1}: {DisplayTitle(slide.Title)}";
-            SlideRail.Add(button);
-        }
-        SlideToolbar.Remove(AddSlideButton);
-        AddSlideButton.Content = "+ Add slide";
-        AddSlideButton.Variant = ButtonVariant.Tertiary;
-        SlideRail.Add(AddSlideButton);
-        SlideToolbar.Remove(DeleteSlideButton);
-        DeleteSlideButton.Variant = ButtonVariant.Ghost;
-        SlideRail.Add(DeleteSlideButton);
-        PolishSlideRail();
+        SlideNavigator.SetDocument(document, slideIndex);
         StatusText.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
     }
 

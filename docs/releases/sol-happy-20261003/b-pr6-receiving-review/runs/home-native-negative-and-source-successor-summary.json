@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "status": "RETAINED_FIRST_NATIVE_CONTROL_NEGATIVE_REVIEWED_SOURCE_SUCCESSOR",
+  "originalRun": 37228835003,
+  "originalSource": "4dd3128bf9ec4d35523e5997d9ce6cedc392a003",
+  "managedSix": "ACTUAL_PASS_SCOPED",
+  "nativeBuildAndSealedPackage": "ACTUAL_PASS299_BYTE_VERIFIED_SCOPED",
+  "nativeFirstProcess": "ORIGINAL_FAIL_ALIVE_CONSOLE_TITLE_NOT_ACTUAL_GUI",
+  "nativeSecondProcess": "NOT_RUN",
+  "sourceSuccessor": "e5305818cb70459610f7957ae58255cff85d07ea",
+  "sourceSuccessorScope": "C-owned harness/catalog ONLY, actual unique canonical process-owned GUI selection; product/currentowningsix/all80pins unchanged. Independent C1/C6 source/preinvoke ACK; actual new native result pending.",
+  "archiveRecovery": "Five original official bounded producer parts fully verified/reassembled81,553,586B/all299 fileCRC/hash. Original whole providercontainer exceeds32MiB connectorcap. No rebuilt/substitute or compiled package/part payload copied into public evidence.",
+  "nativeOutcomeQualification": "Original package first launched PID6200 remained alive at45s; no forced/harness kill. Later Actions orphan cleanup is not original natural shutdown/drain proof. Canonical CUI root printed with observed ASCII hyphen, strict metadata marker correction source scoped; no native success claim.",
+  "newPayloadsInThisSuccessor": 17,
+  "previousImmutableEvidenceCommit": "2d76cd3aa0c8f2cdffe43639c6220234c7064bf5",
+  "previousImmutablePayloadCount": 609
+}

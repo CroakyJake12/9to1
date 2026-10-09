@@ -232,7 +232,7 @@ public sealed class ProductionDiagnostics(IAppPaths paths) : IProductionDiagnost
 /// <summary>
 /// Represents startup recovery coordinator and keeps its related state and behavior together.
 /// </summary>
-public sealed class StartupRecoveryCoordinator(IAppPaths paths, IProductionDiagnostics diagnostics) : IStartupRecoveryCoordinator
+public sealed partial class StartupRecoveryCoordinator(IAppPaths paths, IProductionDiagnostics diagnostics) : IStartupRecoveryCoordinator
 {
     /// <summary>
     /// Stores json options locally so this component can preserve the dependency, cache, or state between member calls.
@@ -268,40 +268,56 @@ public sealed class StartupRecoveryCoordinator(IAppPaths paths, IProductionDiagn
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            var now = DateTimeOffset.UtcNow;
-            var persisted = await ReadAsync(cancellationToken).ConfigureAwait(false);
-            var failures = persisted.RecentUncleanStarts
-                .Where(value => now - value <= CrashWindow && value <= now)
-                .OrderBy(value => value)
-                .ToList();
-            if (persisted.CurrentRun is { CleanShutdown: false } previous && !failures.Contains(previous.StartedAt))
-                failures.Add(previous.StartedAt);
-            failures = failures.Where(value => now - value <= CrashWindow).Distinct().OrderBy(value => value).ToList();
+            _lastStoreMutationAcknowledged = false;
+            var state = await WithRecoveryStoreLeaseAsync(async () =>
+            {
+                _startupBegan = false;
+                _startupCompleted = false;
+                _finalWriterPreparationAttempted = false;
+                _originalStartupWrite = null;
+                _originalStartupState = null;
+                _latestStateWrite = null;
+                _acknowledgedStateWrite = null;
+                _acknowledgedState = null;
+                var now = DateTimeOffset.UtcNow;
+                var persisted = await ReadAsync(cancellationToken).ConfigureAwait(false);
+                var failures = persisted.RecentUncleanStarts
+                    .Where(value => now - value <= CrashWindow && value <= now)
+                    .OrderBy(value => value)
+                    .ToList();
+                if (persisted.CurrentRun is { CleanShutdown: false } previous && !failures.Contains(previous.StartedAt))
+                    failures.Add(previous.StartedAt);
+                failures = failures.Where(value => now - value <= CrashWindow).Distinct().OrderBy(value => value).ToList();
 
-            var safeMode = failures.Count >= SafeModeThreshold;
-            var reason = safeMode
-                ? $"Haven detected {failures.Count} unclean starts within {CrashWindow.TotalMinutes:0} minutes. External tools, browser automation, cloud providers and workspace mutations are disabled for this run."
-                : failures.Count == 0
-                    ? "Normal startup."
-                    : $"Recovered after {failures.Count} recent unclean start{(failures.Count == 1 ? string.Empty : "s")}.";
-            var run = new StartupRun(Guid.NewGuid().ToString("N"), now, StartupCompleted: false, CleanShutdown: false);
-            await WriteAsync(new StartupState(1, run, failures), cancellationToken).ConfigureAwait(false);
-            Current = new StartupRecoveryState(safeMode, failures.Count, run.Id, reason, now);
-            if (safeMode) RuntimeSafetyState.EnableSafeMode(reason); else RuntimeSafetyState.DisableSafeMode();
-            await diagnostics.WriteAsync(
-                safeMode ? ReliabilitySeverity.Warning : ReliabilitySeverity.Information,
-                "startup",
-                "begin",
-                reason,
-                new Dictionary<string, string>
-                {
-                    ["runId"] = run.Id,
-                    ["recentUncleanStarts"] = failures.Count.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                    ["safeMode"] = safeMode.ToString(System.Globalization.CultureInfo.InvariantCulture)
-                },
-                run.Id,
-                cancellationToken).ConfigureAwait(false);
-            return Current;
+                var safeMode = failures.Count >= SafeModeThreshold;
+                var reason = safeMode
+                    ? $"Haven detected {failures.Count} unclean starts within {CrashWindow.TotalMinutes:0} minutes. External tools, browser automation, cloud providers and workspace mutations are disabled for this run."
+                    : failures.Count == 0
+                        ? "Normal startup."
+                        : $"Recovered after {failures.Count} recent unclean start{(failures.Count == 1 ? string.Empty : "s")}.";
+                var run = new StartupRun(Guid.NewGuid().ToString("N"), now, StartupCompleted: false, CleanShutdown: false);
+                await WriteAcknowledgedStateAsync(new StartupState(1, run, failures), startupOriginal: true, cancellationToken).ConfigureAwait(false);
+                Current = new StartupRecoveryState(safeMode, failures.Count, run.Id, reason, now);
+                if (safeMode) RuntimeSafetyState.EnableSafeMode(reason); else RuntimeSafetyState.DisableSafeMode();
+                var originalAudit = AcquireRecoveryAuditOriginal(() => diagnostics.WriteAsync(
+                    safeMode ? ReliabilitySeverity.Warning : ReliabilitySeverity.Information,
+                    "startup",
+                    "begin",
+                    reason,
+                    new Dictionary<string, string>
+                    {
+                        ["runId"] = run.Id,
+                        ["recentUncleanStarts"] = failures.Count.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        ["safeMode"] = safeMode.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                    },
+                    run.Id,
+                    cancellationToken));
+                await AwaitRecoveryOriginalAsync(originalAudit).ConfigureAwait(false);
+                return Current;
+            }, cancellationToken).ConfigureAwait(false);
+            _startupBegan = true;
+            _lastStoreMutationAcknowledged = true;
+            return state;
         }
         finally
         {
@@ -334,18 +350,35 @@ public sealed class StartupRecoveryCoordinator(IAppPaths paths, IProductionDiagn
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            var persisted = await ReadAsync(cancellationToken).ConfigureAwait(false);
-            if (persisted.CurrentRun is null) return;
-            var updated = update(persisted.CurrentRun);
-            await WriteAsync(persisted with { CurrentRun = updated }, cancellationToken).ConfigureAwait(false);
-            await diagnostics.WriteAsync(
-                ReliabilitySeverity.Information,
-                "startup",
-                eventName,
-                eventName == "clean-shutdown" ? "Haven recorded a clean shutdown." : "Haven completed startup.",
-                new Dictionary<string, string> { ["runId"] = updated.Id },
-                updated.Id,
-                cancellationToken).ConfigureAwait(false);
+            _lastStoreMutationAcknowledged = false;
+            var updatedOriginal = await WithRecoveryStoreLeaseAsync(async () =>
+            {
+                var persisted = await ReadAsync(cancellationToken).ConfigureAwait(false);
+                if (_originalStartupWrite is not null && (_acknowledgedState is null
+                    || !StateEquals(persisted, _acknowledgedState) || !BelongsToOriginalStartup(persisted)))
+                    throw new InvalidOperationException("The startup update does not belong to this original acknowledged run.");
+                if (persisted.CurrentRun is null) return false;
+                var updated = update(persisted.CurrentRun);
+                async Task AuditOriginalAsync()
+                {
+                    var originalAudit = AcquireRecoveryAuditOriginal(() => diagnostics.WriteAsync(
+                        ReliabilitySeverity.Information,
+                        "startup",
+                        eventName,
+                        eventName == "clean-shutdown" ? "Haven recorded a clean shutdown." : "Haven completed startup.",
+                        new Dictionary<string, string> { ["runId"] = updated.Id },
+                        updated.Id,
+                        cancellationToken));
+                    await AwaitRecoveryOriginalAsync(originalAudit).ConfigureAwait(false);
+                }
+                // Legacy callers must not persist clean before the required diagnostic succeeds.
+                if (eventName == "clean-shutdown") await AuditOriginalAsync().ConfigureAwait(false);
+                await WriteAcknowledgedStateAsync(persisted with { CurrentRun = updated }, startupOriginal: false, cancellationToken).ConfigureAwait(false);
+                if (eventName != "clean-shutdown") await AuditOriginalAsync().ConfigureAwait(false);
+                return true;
+            }, cancellationToken).ConfigureAwait(false);
+            _lastStoreMutationAcknowledged = updatedOriginal;
+            if (updatedOriginal && eventName == "startup-complete") _startupCompleted = true;
         }
         finally
         {
@@ -378,28 +411,8 @@ public sealed class StartupRecoveryCoordinator(IAppPaths paths, IProductionDiagn
     /// <summary>
     /// Performs write asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    private async Task WriteAsync(StartupState state, CancellationToken cancellationToken)
-    {
-        Directory.CreateDirectory(paths.DataDirectory);
-        var temp = _statePath + ".tmp-" + Guid.NewGuid().ToString("N");
-        var backup = _statePath + ".bak";
-        try
-        {
-            await using (var stream = new FileStream(temp, FileMode.CreateNew, FileAccess.Write, FileShare.None, 16 * 1024, FileOptions.Asynchronous | FileOptions.WriteThrough))
-            {
-                await JsonSerializer.SerializeAsync(stream, state, JsonOptions, cancellationToken).ConfigureAwait(false);
-                await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
-                stream.Flush(flushToDisk: true);
-            }
-            if (File.Exists(_statePath)) File.Replace(temp, _statePath, backup, ignoreMetadataErrors: true);
-            else File.Move(temp, _statePath);
-        }
-        finally
-        {
-            try { if (File.Exists(temp)) File.Delete(temp); }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
-        }
-    }
+    private Task WriteAsync(StartupState state, CancellationToken cancellationToken) =>
+        WriteRecoveryStateOwnedAsync(state, requireExisting: false, cancellationToken);
 
     /// <summary>
     /// Represents startup state and keeps its related state and behavior together.

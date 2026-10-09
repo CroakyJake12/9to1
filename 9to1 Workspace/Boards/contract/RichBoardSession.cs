@@ -274,8 +274,9 @@ public sealed class RichBoardSession : IAsyncDisposable
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            FilePath = Path.GetFullPath(path);
-            await SaveCoreAsync(cancellationToken).ConfigureAwait(false);
+            // A rejected/canceled Save As must leave normal Save and close pointed
+            // at the last acknowledged file, rather than the attempted target.
+            await SaveCoreAsync(cancellationToken, Path.GetFullPath(path)).ConfigureAwait(false);
         }
         finally
         {
@@ -430,9 +431,10 @@ public sealed class RichBoardSession : IAsyncDisposable
         }
     }
 
-    private async Task SaveCoreAsync(CancellationToken cancellationToken)
+    private async Task SaveCoreAsync(CancellationToken cancellationToken, string? destination = null)
     {
-        if (FilePath is null)
+        var targetPath = destination ?? FilePath;
+        if (targetPath is null)
             throw new InvalidOperationException("This board has no file path yet; use Save As first.");
         if (Document.RichNotes is null)
             throw new InvalidOperationException("This board has no rich notes to save.");
@@ -441,8 +443,9 @@ public sealed class RichBoardSession : IAsyncDisposable
         HavenRichNotesValidator.Validate(Document.RichNotes);
         var now = DateTimeOffset.UtcNow;
         var toSave = Document with { ModifiedUtc = now };
-        await _store.SaveDocumentAtPathAsync(toSave, FilePath, cancellationToken).ConfigureAwait(false);
+        await _store.SaveDocumentAtPathAsync(toSave, targetPath, cancellationToken).ConfigureAwait(false);
 
+        FilePath = targetPath; // Publish the destination only after the actual store acknowledgement.
         Document = toSave;
         _lastSavedRichVersion = capturedVersion;
         LastSavedUtc = now;

@@ -127,9 +127,10 @@ public static class CuiThemeScopeApplier
         CuiTheme theme,
         string surface = "Home",
         CuiAccessibilitySettings? accessibility = null,
-        CuiLocalizationContext? localization = null)
+        CuiLocalizationContext? localization = null,
+        CuiAppearance? appearanceOverride = null)
     {
-        var appearance = DetectAppearance();
+        var appearance = appearanceOverride ?? DetectAppearance();
         var palette = CuiSurfacePaletteCatalog.For(surface, appearance, theme);
 
         // Create a new ResourceDictionary with the theme resources

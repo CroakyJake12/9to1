@@ -12,7 +12,7 @@ using Haven.Desktop.HavenUI.Floating;
 
 namespace Haven.Desktop.Services;
 
-public sealed class DesktopFloatingActivityHost(FloatingActivityStateStore stateStore) : IFloatingActivityHost
+public sealed partial class DesktopFloatingActivityHost(FloatingActivityStateStore stateStore) : IFloatingActivityHost, IDesktopOriginalRetirementParticipant, IDesktopOriginalRetirementJoinGuard
 {
     private readonly Dictionary<Guid, Window> _windows = [];
     private bool _disposed;
@@ -25,30 +25,25 @@ public sealed class DesktopFloatingActivityHost(FloatingActivityStateStore state
     public Task<FloatingActivitySnapshot> PresentAsync(
         FloatingActivityDefinition definition,
         IFloatingActivityContent content,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken) => RunOriginalFloatingSynchronous(() => PresentOriginalAsync(definition, content, cancellationToken));
+
+    private Task<FloatingActivitySnapshot> PresentOriginalAsync(
+        FloatingActivityDefinition definition, IFloatingActivityContent content, CancellationToken cancellationToken)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         cancellationToken.ThrowIfCancellationRequested();
         if (!IsAvailable) throw new PlatformNotSupportedException(UnavailableReason);
 
-        var activityContent = content.Content as Control
-                              ?? new ContentControl { Content = content.Content };
-        var window = new Window
-        {
-            Title = definition.Title,
-            Width = 420,
-            Height = 280,
-            MinWidth = 240,
-            MinHeight = 160,
-            CanResize = true,
-            ShowInTaskbar = false,
-            Topmost = definition.AlwaysOnTop,
-            WindowDecorations = WindowDecorations.None,
-            Background = Brushes.Transparent,
-            TransparencyBackgroundFallback = Brushes.Transparent,
-            TransparencyLevelHint = [WindowTransparencyLevel.Transparent],
-        };
-
+        var originalCurrent = CaptureCurrentFloatingWindow(definition.Id);
+        DemandOriginalFloatingCurrent(definition.Id, originalCurrent);
+        RetainOriginalFloatingWrapper(content); // Retain SAME wrapper before its actual getter/source callback.
+        var actualContent = AcquireOriginalFloatingSource(() => content.Content);
+        RetainOriginalFloatingContent(actualContent);
+        DemandOriginalFloatingCurrent(definition.Id, originalCurrent); // No late or replaced original after getter reentry.
+        var activityContent = actualContent as Control
+                              ?? new ContentControl { Content = actualContent };
+        var window = CreateOriginalFloatingWindow(definition.Id, originalCurrent);
+        ConfigureOriginalFloatingWindow(window, definition, originalCurrent);
         var close = new HavenIconButton
         {
             Width = 34,
@@ -63,7 +58,9 @@ public sealed class DesktopFloatingActivityHost(FloatingActivityStateStore state
             }
         };
         AutomationProperties.SetName(close, "Close " + definition.Title);
-        close.Click += (_, _) => window.Close();
+        EventHandler<Avalonia.Interactivity.RoutedEventArgs> closeClick = (_, _) => RunOriginalFloatingEvent(window.Close);
+        close.Click += closeClick;
+        AttachOriginalFloatingDetach(() => close.Click -= closeClick);
 
         var dragBar = new HavenToolbar
         {
@@ -86,14 +83,16 @@ public sealed class DesktopFloatingActivityHost(FloatingActivityStateStore state
             }
         };
         AutomationProperties.SetName(dragBar, "Drag " + definition.Title);
-        dragBar.PointerPressed += (_, args) =>
+        EventHandler<PointerPressedEventArgs> drag = (_, args) => RunOriginalFloatingEvent(() =>
         {
             if (!args.GetCurrentPoint(dragBar).Properties.IsLeftButtonPressed
                 || args.Source is Control source
                 && (source is Button || source.FindAncestorOfType<Button>() is not null)) return;
             window.BeginMoveDrag(args);
             args.Handled = true;
-        };
+        });
+        dragBar.PointerPressed += drag;
+        AttachOriginalFloatingDetach(() => dragBar.PointerPressed -= drag);
 
         var surface = new HavenFloatingSurface
         {
@@ -104,14 +103,14 @@ public sealed class DesktopFloatingActivityHost(FloatingActivityStateStore state
                 Children = { dragBar, Row(activityContent, 1) }
             }
         };
-        window.Content = surface;
+        PublishOriginalFloatingEffect(definition.Id, originalCurrent, () => window.Content = surface);
 
         if (stateStore.Get(definition.Id) is { } previous)
         {
-            window.WindowStartupLocation = WindowStartupLocation.Manual;
-            window.Width = Math.Max(window.MinWidth, previous.Width);
-            window.Height = Math.Max(window.MinHeight, previous.Height);
-            window.Position = new PixelPoint((int)Math.Round(previous.X), (int)Math.Round(previous.Y));
+            PublishOriginalFloatingEffect(definition.Id, originalCurrent, () => window.WindowStartupLocation = WindowStartupLocation.Manual);
+            PublishOriginalFloatingEffect(definition.Id, originalCurrent, () => window.Width = Math.Max(window.MinWidth, previous.Width));
+            PublishOriginalFloatingEffect(definition.Id, originalCurrent, () => window.Height = Math.Max(window.MinHeight, previous.Height));
+            PublishOriginalFloatingEffect(definition.Id, originalCurrent, () => window.Position = new PixelPoint((int)Math.Round(previous.X), (int)Math.Round(previous.Y)));
         }
 
         void PublishState(FloatingActivityState state)
@@ -123,53 +122,71 @@ public sealed class DesktopFloatingActivityHost(FloatingActivityStateStore state
                 Math.Max(window.MinHeight, window.Height),
                 window.Position.X,
                 window.Position.Y);
+            var actualClosedObservation = state == FloatingActivityState.Dismissed && IsActualFloatingClosedObservation(window);
+            DemandOriginalFloatingCurrent(definition.Id, originalCurrent, actualClosedObservation);
             stateStore.Set(snapshot);
-            StateChanged?.Invoke(this, snapshot);
+            DemandOriginalFloatingCurrent(definition.Id, originalCurrent, actualClosedObservation);
+            StateChanged?.Invoke(this, snapshot); // Last actual notification may request retirement and return.
         }
 
-        window.PositionChanged += (_, _) => PublishState(FloatingActivityState.Presented);
-        window.SizeChanged += (_, _) => PublishState(FloatingActivityState.Presented);
-        window.Closed += (_, _) =>
+        EventHandler<PixelPointEventArgs> position = (_, _) => RunOriginalFloatingEvent(() => PublishState(FloatingActivityState.Presented));
+        EventHandler<SizeChangedEventArgs> size = (_, _) => RunOriginalFloatingEvent(() => PublishState(FloatingActivityState.Presented));
+        window.PositionChanged += position; window.SizeChanged += size;
+        AttachOriginalFloatingDetach(() => window.PositionChanged -= position);
+        AttachOriginalFloatingDetach(() => window.SizeChanged -= size);
+        AttachOriginalFloatingClosed(window, () =>
         {
+            if (!ReferenceEquals(CaptureCurrentFloatingWindow(definition.Id), window)) return;
             _windows.Remove(definition.Id);
+            originalCurrent = null;
             PublishState(FloatingActivityState.Dismissed);
-        };
+        });
+        DemandOriginalFloatingCurrent(definition.Id, originalCurrent);
         _windows[definition.Id] = window;
-        window.Show();
+        originalCurrent = window;
+        PublishOriginalFloatingEffect(definition.Id, originalCurrent, window.Show);
         PublishState(FloatingActivityState.Presented);
         return Task.FromResult(stateStore.Get(definition.Id)!);
     }
 
-    public Task<FloatingActivitySnapshot> UpdateAsync(FloatingActivitySnapshot snapshot, CancellationToken cancellationToken)
+    public Task<FloatingActivitySnapshot> UpdateAsync(FloatingActivitySnapshot snapshot, CancellationToken cancellationToken) =>
+        RunOriginalFloatingSynchronous(() => UpdateOriginalAsync(snapshot, cancellationToken));
+    private Task<FloatingActivitySnapshot> UpdateOriginalAsync(FloatingActivitySnapshot snapshot, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (_windows.TryGetValue(snapshot.Id, out var window))
+        var originalCurrent = CaptureCurrentFloatingWindow(snapshot.Id);
+        if (originalCurrent is { } window)
         {
-            window.Width = Math.Max(240, snapshot.Width);
-            window.Height = Math.Max(160, snapshot.Height);
-            window.Position = new PixelPoint((int)Math.Round(snapshot.X), (int)Math.Round(snapshot.Y));
+            PublishOriginalFloatingEffect(snapshot.Id, originalCurrent, () => window.Width = Math.Max(240, snapshot.Width));
+            PublishOriginalFloatingEffect(snapshot.Id, originalCurrent, () => window.Height = Math.Max(160, snapshot.Height));
+            PublishOriginalFloatingEffect(snapshot.Id, originalCurrent, () => window.Position = new PixelPoint((int)Math.Round(snapshot.X), (int)Math.Round(snapshot.Y)));
         }
+        DemandOriginalFloatingCurrent(snapshot.Id, originalCurrent);
         stateStore.Set(snapshot);
-        StateChanged?.Invoke(this, snapshot);
+        DemandOriginalFloatingCurrent(snapshot.Id, originalCurrent);
+        StateChanged?.Invoke(this, snapshot); // Last notification completes its already-admitted original.
         return Task.FromResult(snapshot);
     }
 
-    public Task DismissAsync(Guid activityId, CancellationToken cancellationToken)
+    public Task DismissAsync(Guid activityId, CancellationToken cancellationToken) =>
+        RunOriginalFloatingSynchronous(() => DismissOriginalAsync(activityId, cancellationToken));
+    private Task DismissOriginalAsync(Guid activityId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (_windows.Remove(activityId, out var window)) window.Close();
+        var originalCurrent = CaptureCurrentFloatingWindow(activityId);
+        DemandOriginalFloatingCurrent(activityId, originalCurrent);
+        if (originalCurrent is { } window)
+        {
+            window.Close(); // SAME actual Closed callback may remove only its owning current Window.
+            if (ReferenceEquals(CaptureCurrentFloatingWindow(activityId), window))
+                throw new InvalidOperationException("The actual floating native close did not settle its current owning record.");
+        }
+        DemandOriginalFloatingCurrent(activityId, null); // A reentrant replacement is not this dismissal's record.
         stateStore.Remove(activityId);
         return Task.CompletedTask;
     }
 
-    public ValueTask DisposeAsync()
-    {
-        if (_disposed) return ValueTask.CompletedTask;
-        _disposed = true;
-        foreach (var window in _windows.Values.ToArray()) window.Close();
-        _windows.Clear();
-        return ValueTask.CompletedTask;
-    }
+    public ValueTask DisposeAsync() => new(CloseAndDrainAsync());
 
     private static T Column<T>(T control, int column) where T : Control
     {

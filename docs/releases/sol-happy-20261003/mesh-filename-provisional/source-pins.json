@@ -1,0 +1,140 @@
+{
+  "sourceCommit": "c996db6dbdd6f4e04d528b11f5ddbb252fad8517",
+  "basisCommit": "3b0bdf4da0e3ced93626f815679632f369ee4972",
+  "sourceTree": "d565d13abb7b9bd91eecdb8cbd94b42680cf62a6",
+  "sourceStatusAfterActualRuns": "CLEAN",
+  "pins": [
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Mesh/MeshFileTransferStore.cs",
+      "beforeBytes": 8354,
+      "beforeSHA256": "82bd0254201ec393a4769683235a9e7429cad7d2915a14558a3817b32c0ee785",
+      "beforeBlob": "9b174ae944ca90477a115cae822d9d383a322e65",
+      "afterBytes": 8458,
+      "afterSHA256": "bed2d0733cddceaa627451f877de7e50874b25f90c9a54fb9831c54b1ef23e2c",
+      "afterBlob": "28a2cd5b8d76e25c821b6ad3a7fc87fa9d8d6018",
+      "unchanged": false,
+      "workingEqualsFrozenSource": true
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/MeshFileTransferStoreTests.cs",
+      "beforeBytes": 3906,
+      "beforeSHA256": "5bd9184ba41052fadb5e04f956375e05b132e5753661f90900fdf49aa91dfe00",
+      "beforeBlob": "0f5c9850f9f14afb81d9968419a8a0631af11b2a",
+      "afterBytes": 6941,
+      "afterSHA256": "3abb240d716e025afeb92b9e68231b82fa87ffad7e141321f7e092c6265b2dbb",
+      "afterBlob": "9bfaf6974bd43ffac1b3711a8223ca7e1481b363",
+      "unchanged": false,
+      "workingEqualsFrozenSource": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Mesh/MeshTransferAbstractions.cs",
+      "beforeBytes": 1667,
+      "beforeSHA256": "7034d593090193c6d588adb54571d69786e90692e459d176cef85843c44732bc",
+      "beforeBlob": "371461d1acd448459f75dbdbd46e57cb175e0c3e",
+      "afterBytes": 1667,
+      "afterSHA256": "7034d593090193c6d588adb54571d69786e90692e459d176cef85843c44732bc",
+      "afterBlob": "371461d1acd448459f75dbdbd46e57cb175e0c3e",
+      "unchanged": true,
+      "workingEqualsFrozenSource": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Mesh/MeshCoordinator.Transfers.cs",
+      "beforeBytes": 19525,
+      "beforeSHA256": "a4e4884ffab0ca47446c912556d8be58e068a14af94ffa0dd4a2dc77d730194f",
+      "beforeBlob": "7415e268e2843b8f05c63cc16e17113f812c5158",
+      "afterBytes": 19525,
+      "afterSHA256": "a4e4884ffab0ca47446c912556d8be58e068a14af94ffa0dd4a2dc77d730194f",
+      "afterBlob": "7415e268e2843b8f05c63cc16e17113f812c5158",
+      "unchanged": true,
+      "workingEqualsFrozenSource": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Mesh/MeshServiceCollectionExtensions.cs",
+      "beforeBytes": 1594,
+      "beforeSHA256": "95d9a9014d943694c2d5c57fdd70d39043d395eb457c8fb70d912344ff7c9a4d",
+      "beforeBlob": "b0c3c24a5fc05a561da8803dfcfc1a12c1fdd228",
+      "afterBytes": 1594,
+      "afterSHA256": "95d9a9014d943694c2d5c57fdd70d39043d395eb457c8fb70d912344ff7c9a4d",
+      "afterBlob": "b0c3c24a5fc05a561da8803dfcfc1a12c1fdd228",
+      "unchanged": true,
+      "workingEqualsFrozenSource": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/UnifiedExecutionRepositories.cs",
+      "beforeBytes": 23371,
+      "beforeSHA256": "18391188f0652003b80aa594733d88deaf576481f8fcb6b4be350eff72b76317",
+      "beforeBlob": "3fa2e925387fe5d30aa43ce4bace1b4b43e4ea60",
+      "afterBytes": 23371,
+      "afterSHA256": "18391188f0652003b80aa594733d88deaf576481f8fcb6b4be350eff72b76317",
+      "afterBlob": "3fa2e925387fe5d30aa43ce4bace1b4b43e4ea60",
+      "unchanged": true,
+      "workingEqualsFrozenSource": true
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Worker02BackgroundLearningTests.cs",
+      "beforeBytes": 31204,
+      "beforeSHA256": "824b3bf7cbb13fb5c1a1d604f0d518f3c4dc1de8ad94aeae818a7e27ffbd6c74",
+      "beforeBlob": "ef355ecb7765d6d975ba6b570df190c5c1b578ef",
+      "afterBytes": 31204,
+      "afterSHA256": "824b3bf7cbb13fb5c1a1d604f0d518f3c4dc1de8ad94aeae818a7e27ffbd6c74",
+      "afterBlob": "ef355ecb7765d6d975ba6b570df190c5c1b578ef",
+      "unchanged": true,
+      "workingEqualsFrozenSource": true
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+      "beforeBytes": 1115,
+      "beforeSHA256": "967c5763d7d0f1423ab21b51368a07f6038a886c4a56ff501de7361407b1f4c2",
+      "beforeBlob": "5d4ae9ca85e64ad0c8cd27f07842db6efa6d3ffe",
+      "afterBytes": 1115,
+      "afterSHA256": "967c5763d7d0f1423ab21b51368a07f6038a886c4a56ff501de7361407b1f4c2",
+      "afterBlob": "5d4ae9ca85e64ad0c8cd27f07842db6efa6d3ffe",
+      "unchanged": true,
+      "workingEqualsFrozenSource": true
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExternalAgentDurableCancellationTests.cs",
+      "beforeBytes": 8325,
+      "beforeSHA256": "552b11de5ce0d30d3f0266c9c8b10e56eaeafdd5497e37ebb9a798c1019f7825",
+      "beforeBlob": "210feeca3abbfb725a2be8c6b16bfaf67d515f61",
+      "afterBytes": 8325,
+      "afterSHA256": "552b11de5ce0d30d3f0266c9c8b10e56eaeafdd5497e37ebb9a798c1019f7825",
+      "afterBlob": "210feeca3abbfb725a2be8c6b16bfaf67d515f61",
+      "unchanged": true,
+      "workingEqualsFrozenSource": true
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ExternalAgentCancellationConcurrencyTests.cs",
+      "beforeBytes": 14397,
+      "beforeSHA256": "1a26bcbbc10aae50b2b307a6d4a25c7c29f4b7405192f2c70dab28e608bad75c",
+      "beforeBlob": "a86bff0d7ca288591a7f301ac6c015d74424c3d4",
+      "afterBytes": 14397,
+      "afterSHA256": "1a26bcbbc10aae50b2b307a6d4a25c7c29f4b7405192f2c70dab28e608bad75c",
+      "afterBlob": "a86bff0d7ca288591a7f301ac6c015d74424c3d4",
+      "unchanged": true,
+      "workingEqualsFrozenSource": true
+    },
+    {
+      "path": "9to1 Workspace/Directory.Build.props",
+      "beforeBytes": 781,
+      "beforeSHA256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58",
+      "beforeBlob": "76a5b6e697b64fec33efc1a7319d2d723163de83",
+      "afterBytes": 781,
+      "afterSHA256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58",
+      "afterBlob": "76a5b6e697b64fec33efc1a7319d2d723163de83",
+      "unchanged": true,
+      "workingEqualsFrozenSource": true
+    },
+    {
+      "path": "9to1 Workspace/Directory.Packages.props",
+      "beforeBytes": 2581,
+      "beforeSHA256": "9a7a73030788b96d6827cd8d01348866f15b687654b468a931723ed8efe3d039",
+      "beforeBlob": "10c3be91da5507a7e1d945561ec11f2264c12c8b",
+      "afterBytes": 2581,
+      "afterSHA256": "9a7a73030788b96d6827cd8d01348866f15b687654b468a931723ed8efe3d039",
+      "afterBlob": "10c3be91da5507a7e1d945561ec11f2264c12c8b",
+      "unchanged": true,
+      "workingEqualsFrozenSource": true
+    }
+  ]
+}

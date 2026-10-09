@@ -345,30 +345,16 @@ internal sealed partial class WriteDocumentSurface
 
     private IReadOnlyList<TableCellLayout> BuildTableCellLayouts(BlockLayout layout)
     {
-        if (layout.Block.Table is not { Rows.Count: > 0 } table) return Array.Empty<TableCellLayout>();
-        var columns = Math.Max(1, table.Rows.Max(row => row.Cells.Sum(cell => Math.Max(1, cell.ColumnSpan))));
-        var unit = layout.ContentRect.Width / columns;
-        var rowHeight = 42 * _zoom;
-        var result = new List<TableCellLayout>();
-        for (var rowIndex = 0; rowIndex < table.Rows.Count; rowIndex++)
-        {
-            var column = 0;
-            foreach (var cell in table.Rows[rowIndex].Cells)
-            {
-                var span = Math.Clamp(cell.ColumnSpan, 1, columns - Math.Min(column, columns - 1));
-                var rect = new HavenRect(layout.ContentRect.X + column * unit, layout.ContentRect.Y + rowIndex * rowHeight, unit * span, rowHeight * Math.Max(1, cell.RowSpan));
-                result.Add(new TableCellLayout(layout.Block, cell, rowIndex, column, rect));
-                column += span;
-            }
-        }
-        return result;
+        return layout.Table?.Cells.Select(cell => cell with { Rect = new HavenRect(
+            layout.ContentRect.X + cell.Rect.X, layout.ContentRect.Y + cell.Rect.Y,
+            cell.Rect.Width, cell.Rect.Height) }).ToArray() ?? [];
     }
 
     private int CaretForCellPoint(TableCellLayout hit, HavenPoint point)
     {
-        var relative = Math.Max(0, point.X - hit.Rect.X - 6);
-        var charWidth = Math.Max(5, 6.2 * _zoom);
-        return Math.Clamp((int)Math.Round(relative / charWidth), 0, hit.Cell.Text.Length);
+        var paragraph = ShapeTableCell(hit);
+        var top = hit.Rect.Y + 4 + Math.Max(0, (hit.Rect.Height - 8 - paragraph.Size.Height) / 2);
+        return paragraph.HitTest(new HavenPoint(point.X - hit.Rect.X - 6, point.Y - top));
     }
 
     private HavenRect DisplayRectLocal(BlockLayout layout)
@@ -424,5 +410,5 @@ internal sealed partial class WriteDocumentSurface
         return sign * Math.Clamp(Math.Abs(value), .1, 10);
     }
 
-    private sealed record TableCellLayout(NotesBlock Block, NotesTableCell Cell, int Row, int Column, HavenRect Rect);
+    private sealed record TableCellLayout(NotesBlock Block, NotesTableCell Cell, int Row, int Column, HavenRect Rect, HavenParagraphLayout Paragraph);
 }

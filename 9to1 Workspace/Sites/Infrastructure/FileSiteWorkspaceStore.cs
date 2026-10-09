@@ -15,13 +15,15 @@ public sealed class FileSiteWorkspaceStore
     private const int LockWaitLimitSeconds = 20;
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> ProcessLocks = new(StringComparer.OrdinalIgnoreCase);
     private static readonly JsonSerializerOptions JsonOptions = CreateJsonOptions();
+    private readonly Func<CancellationToken, Task>? _beforeCommit;
     private readonly string _indexPath;
     private readonly string _lockPath;
     private readonly SemaphoreSlim _processLock;
 
-    public FileSiteWorkspaceStore(string canonicalSitesDirectory)
+    public FileSiteWorkspaceStore(string canonicalSitesDirectory, Func<CancellationToken, Task>? beforeCommit = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(canonicalSitesDirectory);
+        _beforeCommit = beforeCommit;
         var root = Path.GetFullPath(canonicalSitesDirectory);
         if (File.Exists(root))
             throw new ArgumentException("The Files Sites location must be a directory.", nameof(canonicalSitesDirectory));
@@ -44,6 +46,7 @@ public sealed class FileSiteWorkspaceStore
             var current = await ReadStateAsync(cancellationToken).ConfigureAwait(false);
             var (next, result) = mutation(current);
             ValidateState(next);
+            if (_beforeCommit is not null) await _beforeCommit(cancellationToken).ConfigureAwait(false);
             await WriteStateAsync(next, cancellationToken).ConfigureAwait(false);
             return result;
         }, cancellationToken);
@@ -125,6 +128,10 @@ public sealed class FileSiteWorkspaceStore
                 await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
                 stream.Flush(flushToDisk: true);
             }
+            // Serialization and durable flush may outlive the authority checked under the lease.
+            // Revalidate the same captured binding at the actual publication boundary.
+            if (_beforeCommit is not null) await _beforeCommit(cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
             File.Move(temporaryPath, _indexPath, overwrite: true);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)

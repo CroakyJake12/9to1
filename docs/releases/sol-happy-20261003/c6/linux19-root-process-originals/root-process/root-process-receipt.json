@@ -1,0 +1,41 @@
+{
+  "argv": [
+    "dotnet",
+    "test",
+    "/home/runner/work/9to1/9to1/9to1 OS/tests/NineToOne.Os.Supervisor.Root.Tests/NineToOne.Os.Supervisor.Root.Tests.csproj",
+    "-c",
+    "Release",
+    "-r",
+    "linux-x64",
+    "-f",
+    "net10.0",
+    "--no-build",
+    "--no-restore",
+    "--disable-build-servers",
+    "-m:1",
+    "-nr:false",
+    "-p:UseSharedCompilation=false",
+    "-p:RuntimeIdentifiers=linux-x64",
+    "-p:SelfContained=false",
+    "-p:UseArtifactsOutput=true",
+    "-p:ArtifactsPath=/home/runner/work/9to1/9to1/artifacts/root14-managed-build",
+    "-p:IncludeProjectNameInArtifactsPaths=true",
+    "-p:AvaloniaBuildTasksLocation=/home/runner/work/9to1/9to1/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+    "--logger",
+    "trx;LogFileName=root.trx",
+    "--results-directory",
+    "/home/runner/work/9to1/9to1/artifacts/desktop-visible-owning/root-process/trx"
+  ],
+  "administratorUid": 0,
+  "syntheticIssuerOnly": true,
+  "releasePublisherAccepted": false,
+  "installedUserAccepted": false,
+  "nativeHelper": {
+    "path": "/home/runner/work/9to1/9to1/artifacts/supervised-native-helper/atomic-spawn",
+    "sha256": "32aa1b04efe362142a77d280b06026f0f01aea2d52f98d581815efd66f800ceb"
+  },
+  "targetUid": 1002,
+  "targetGid": 1002,
+  "targetUserHome": "/home/astra-home-37153041051-1",
+  "exitCode": 1
+}

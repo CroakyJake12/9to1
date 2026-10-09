@@ -1,0 +1,18 @@
+test_actual_symbols_fresh_exclusive_durable_and_identical (__main__.Persistence.test_actual_symbols_fresh_exclusive_durable_and_identical) ... ok
+test_close_only_native_failure_is_not_success (__main__.Persistence.test_close_only_native_failure_is_not_success) ... ok
+test_fsync_only_failure_retains_exact_original (__main__.Persistence.test_fsync_only_failure_retains_exact_original) ... ok
+test_native_fsync_and_same_handle_close_failures_preserved (__main__.Persistence.test_native_fsync_and_same_handle_close_failures_preserved) ... FAIL
+
+======================================================================
+FAIL: test_native_fsync_and_same_handle_close_failures_preserved (__main__.Persistence.test_native_fsync_and_same_handle_close_failures_preserved)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/team-c/c3-admin-symbol-errors-proposal/.github/scripts/astra-symbol-persistence-error-tests.py", line 32, in test_native_fsync_and_same_handle_close_failures_preserved
+    leaves=errors(caught.exception);self.assertEqual(len(body),1);self.assertTrue(any(error is body[0] for error in leaves),'Original native fsync error must retain exact object');self.assertEqual(len(leaves),2);self.assertTrue(all(isinstance(error,OSError) and error.errno==errno.EBADF for error in leaves));self.assertIsNot(leaves[0],leaves[1]);self.assertEqual(path.read_bytes(),self.symbols)
+                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : Original native fsync error must retain exact object
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.005s
+
+FAILED (failures=1)

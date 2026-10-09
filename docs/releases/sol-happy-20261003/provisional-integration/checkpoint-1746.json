@@ -1,0 +1,134 @@
+{
+  "checkpoint": "17:46 Europe/London",
+  "documentId": "1rdxd_icOVUpeu19PI-IJk-7oWYs99tVrtc7ITJV4_8s",
+  "revisionId": "ANLCKQnaYM8HkMKUTdakcn__DI_TN8kk7T3IX45hSQZ5uughMzNvWFc9HegZHgO1uJsnZR7vzdXFHXTfR-OMIG1blla_X6crA_2ltLdVpYY",
+  "status": "THREE_PASS_TEXT_STYLE_READBACK_PASS",
+  "entries": [
+    {
+      "pass": 1,
+      "paragraphRanges": [
+        {
+          "start": 10530,
+          "end": 10547
+        },
+        {
+          "start": 10547,
+          "end": 10559
+        },
+        {
+          "start": 10559,
+          "end": 10708
+        },
+        {
+          "start": 10708,
+          "end": 10788
+        },
+        {
+          "start": 10788,
+          "end": 11176
+        },
+        {
+          "start": 11176,
+          "end": 11447
+        },
+        {
+          "start": 11447,
+          "end": 11688
+        }
+      ],
+      "text": [
+        "Checkpoint 17:46",
+        "% Progress:",
+        "    Implementation - About 65% of inspected Windows inventory, build, launch and delivery-preparation groups; low confidence for wider Astra scope ;",
+        "    Acceptance Verified - Windows apps 0/29 verified; packages 0/29 delivered ;",
+        "Change Summary: Boards now passes real packaged storage failure and recovery: read-only obstruction displays Save failed, pending edits and primary bytes survive, retry saves, and close/reopen restores the result. Independent review confirms it. Both initial status-lookup failures remain retained. Canvas’s existing local Files setup and native Home approval workflow is being prepared.",
+        "Evidence: Immutable fd5 package135a0db5; Windows37217380035/70a8,83/83 checks, two graceful zero exits, four drains; C6e60852e2. Earlier67/85 passes unchanged. SDK-present runner only; installed Home, trust/signing, clean-PC and full donor/provider criteria remain open.",
+        "Next Action: BLOCKED — complete all-app delivery needs Team A’s installed package/Home/ABI/signing declarations and authorized clean-PC/local delivery access. Independent original Canvas package setup/approval/edit/reopen testing continues."
+      ]
+    },
+    {
+      "pass": 2,
+      "paragraphRanges": [
+        {
+          "start": 19586,
+          "end": 19603
+        },
+        {
+          "start": 19603,
+          "end": 19615
+        },
+        {
+          "start": 19615,
+          "end": 19745
+        },
+        {
+          "start": 19745,
+          "end": 19866
+        },
+        {
+          "start": 19866,
+          "end": 20249
+        },
+        {
+          "start": 20249,
+          "end": 20557
+        },
+        {
+          "start": 20557,
+          "end": 20823
+        }
+      ],
+      "text": [
+        "Checkpoint 17:46",
+        "% Progress:",
+        "    Implementation - About 60% of inspected shared-source, browser and integration groups; low confidence for wider Terra scope ;",
+        "    Acceptance Verified - Full Terra and platform acceptance open; Windows apps 0/29 verified, packages 0/29 delivered ;",
+        "Change Summary: Current-source Web/Picture nine and original Mail/Maps local persistence controls now have independent artifact review. Motion’s bounded canonical source closure is composed provisionally and awaits its one original workflow and native build. A necessary Web build is running with exact sealed-asset retention and bounded original-byte transport for account testing.",
+        "Evidence: Actual7ded Web9 C684f428f8; Mail89cd originalFact1 plus three seed/fresh scenarios C652f93089; Mapsef1 normal6/6 C69266d695. Current remote df547b5c/PR5; retention run37217686116 publisher in progress. Local27dd12f7 adds reviewed Motion8; no measured assertion total or native acceptance inferred.",
+        "Next Action: BLOCKED — full integration needs Team A’s native authority, Studio bootstrap/decoder, Write measurement and metadata contracts. Independent Motion original workflow/native build, final normal434 suite and actual retained-Web account execution continue."
+      ]
+    },
+    {
+      "pass": 3,
+      "paragraphRanges": [
+        {
+          "start": 28860,
+          "end": 28877
+        },
+        {
+          "start": 28877,
+          "end": 28889
+        },
+        {
+          "start": 28889,
+          "end": 29020
+        },
+        {
+          "start": 29020,
+          "end": 29139
+        },
+        {
+          "start": 29139,
+          "end": 29531
+        },
+        {
+          "start": 29531,
+          "end": 29818
+        },
+        {
+          "start": 29818,
+          "end": 30094
+        }
+      ],
+      "text": [
+        "Checkpoint 17:46",
+        "% Progress:",
+        "    Implementation - About 70% of inspected Sol Happy service foundations and regression groups; low confidence for wider Pass 3 ;",
+        "    Acceptance Verified - Full service and pass acceptance open; Windows apps 0/29 verified, packages 0/29 delivered ;",
+        "Change Summary: Durable cancellation and affected persistence tests retain their normal verified scope. Caller/view lifetime evidence is now independently checked as a public packet. The new current-public-API browser account driver is reviewed and composed, with diagnostic privacy guards. Its seven physical cases await actual retained Web bytes and a fresh privately owned issuer fixture.",
+        "Evidence: Actual5110 Infrastructure428/428 and native Sites76/76 unchanged. Lifetime fe64 Debug/Release3/90/15/6/5; public77-member packet ea4fb441, C6680656c9. Auth73b0 preflight15Node+7Python PASS, C6ede9791e; physical7 NOT_RUN. Hosted identity138/165 remains0f6 and endpoints closed.",
+        "Next Action: BLOCKED — live effects require Team A’s actor/session/Files/import/scanner and settlement ports, plus approved commercial policy. Independent physical package work and bounded local PKCE/JOSE browser execution continue; full20:00 completion remains not credible."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,600 @@
+[
+  {
+    "name": "git-head",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 163441,
+        "birth": 2510351,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.04,
+    "bytes": 41,
+    "familyClosed": true
+  },
+  {
+    "name": "git-clean-before",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 163442,
+        "birth": 2510355,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.034,
+    "bytes": 0,
+    "familyClosed": true
+  },
+  {
+    "name": "dotnet-version",
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "--version"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 163463,
+        "birth": 2510359,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.129,
+    "bytes": 9,
+    "familyClosed": true
+  },
+  {
+    "name": "restore",
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "restore",
+      "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+      "--configfile",
+      "/workspace/team-c-c4-public-mail-nine-provisional/NuGet.Config",
+      "--disable-parallel",
+      "-p:Configuration=Release",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/infrastructure444/artifacts",
+      "-r",
+      "linux-x64",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 163470,
+        "birth": 2510372,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 2.511,
+    "bytes": 1013,
+    "familyClosed": true
+  },
+  {
+    "name": "build",
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "build",
+      "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+      "--no-restore",
+      "-c",
+      "Release",
+      "-f",
+      "net10.0",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/infrastructure444/artifacts",
+      "-r",
+      "linux-x64",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 163492,
+        "birth": 2510624,
+        "gone": true
+      },
+      {
+        "pid": 163514,
+        "birth": 2510726,
+        "gone": true
+      },
+      {
+        "pid": 163544,
+        "birth": 2511070,
+        "gone": true
+      },
+      {
+        "pid": 163682,
+        "birth": 2511255,
+        "gone": true
+      },
+      {
+        "pid": 163725,
+        "birth": 2512227,
+        "gone": true
+      },
+      {
+        "pid": 163777,
+        "birth": 2512957,
+        "gone": true
+      },
+      {
+        "pid": 163794,
+        "birth": 2513140,
+        "gone": true
+      },
+      {
+        "pid": 163812,
+        "birth": 2513286,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 30.509,
+    "bytes": 1523,
+    "familyClosed": true
+  },
+  {
+    "name": "evaluated-project-0",
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "msbuild",
+      "/workspace/team-c-c4-public-mail-nine-provisional/9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj",
+      "-p:Configuration=Release",
+      "-p:RuntimeIdentifier=linux-x64",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/infrastructure444/artifacts",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-nodeReuse:false",
+      "-getProperty:TargetPath,TargetDir,TargetFramework,RuntimeIdentifier,IsTestProject",
+      "-getItem:Compile,EmbeddedResource,Content,AdditionalFiles"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 163874,
+        "birth": 2513676,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.633,
+    "bytes": 326885,
+    "familyClosed": true
+  },
+  {
+    "name": "evaluated-project-1",
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "msbuild",
+      "/workspace/team-c-c4-public-mail-nine-provisional/9to1 Workspace/shared/src/Haven.Browser/Haven.Browser.csproj",
+      "-p:Configuration=Release",
+      "-p:RuntimeIdentifier=linux-x64",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/infrastructure444/artifacts",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-nodeReuse:false",
+      "-getProperty:TargetPath,TargetDir,TargetFramework,RuntimeIdentifier,IsTestProject",
+      "-getItem:Compile,EmbeddedResource,Content,AdditionalFiles"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 163901,
+        "birth": 2513744,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.608,
+    "bytes": 17086,
+    "familyClosed": true
+  },
+  {
+    "name": "evaluated-project-2",
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "msbuild",
+      "/workspace/team-c-c4-public-mail-nine-provisional/9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj",
+      "-p:Configuration=Release",
+      "-p:RuntimeIdentifier=linux-x64",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/infrastructure444/artifacts",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-nodeReuse:false",
+      "-getProperty:TargetPath,TargetDir,TargetFramework,RuntimeIdentifier,IsTestProject",
+      "-getItem:Compile,EmbeddedResource,Content,AdditionalFiles"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 163911,
+        "birth": 2513805,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.503,
+    "bytes": 117831,
+    "familyClosed": true
+  },
+  {
+    "name": "evaluated-project-3",
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "msbuild",
+      "/workspace/team-c-c4-public-mail-nine-provisional/9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj",
+      "-p:Configuration=Release",
+      "-p:RuntimeIdentifier=linux-x64",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/infrastructure444/artifacts",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-nodeReuse:false",
+      "-getProperty:TargetPath,TargetDir,TargetFramework,RuntimeIdentifier,IsTestProject",
+      "-getItem:Compile,EmbeddedResource,Content,AdditionalFiles"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 163921,
+        "birth": 2513857,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.533,
+    "bytes": 167861,
+    "familyClosed": true
+  },
+  {
+    "name": "evaluated-project-4",
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "msbuild",
+      "/workspace/team-c-c4-public-mail-nine-provisional/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+      "-p:Configuration=Release",
+      "-p:RuntimeIdentifier=linux-x64",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/infrastructure444/artifacts",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-nodeReuse:false",
+      "-getProperty:TargetPath,TargetDir,TargetFramework,RuntimeIdentifier,IsTestProject",
+      "-getItem:Compile,EmbeddedResource,Content,AdditionalFiles"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 163931,
+        "birth": 2513914,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.554,
+    "bytes": 89503,
+    "familyClosed": true
+  },
+  {
+    "name": "evaluated-project-5",
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "msbuild",
+      "/workspace/team-c-c4-public-mail-nine-provisional/9to1 Workspace/shared/tests/Haven.PluginFixture/Haven.PluginFixture.csproj",
+      "-p:Configuration=Release",
+      "-p:RuntimeIdentifier=linux-x64",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/infrastructure444/artifacts",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-nodeReuse:false",
+      "-getProperty:TargetPath,TargetDir,TargetFramework,RuntimeIdentifier,IsTestProject",
+      "-getItem:Compile,EmbeddedResource,Content,AdditionalFiles"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 163938,
+        "birth": 2513971,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.608,
+    "bytes": 1531,
+    "familyClosed": true
+  },
+  {
+    "name": "evaluated-project-6",
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "msbuild",
+      "/workspace/team-c-c4-public-mail-nine-provisional/framework/CUI/AI/NineToOne.Cui.AI.csproj",
+      "-p:Configuration=Release",
+      "-p:RuntimeIdentifier=linux-x64",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/infrastructure444/artifacts",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-nodeReuse:false",
+      "-getProperty:TargetPath,TargetDir,TargetFramework,RuntimeIdentifier,IsTestProject",
+      "-getItem:Compile,EmbeddedResource,Content,AdditionalFiles"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 163945,
+        "birth": 2514032,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.604,
+    "bytes": 7502,
+    "familyClosed": true
+  },
+  {
+    "name": "whole-discovery",
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "test",
+      "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+      "--no-build",
+      "--no-restore",
+      "-c",
+      "Release",
+      "-f",
+      "net10.0",
+      "--list-tests",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/infrastructure444/artifacts",
+      "-r",
+      "linux-x64",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 163955,
+        "birth": 2514097,
+        "gone": true
+      },
+      {
+        "pid": 163968,
+        "birth": 2514156,
+        "gone": true
+      },
+      {
+        "pid": 163980,
+        "birth": 2514175,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 1.575,
+    "bytes": 54774,
+    "familyClosed": true
+  },
+  {
+    "name": "whole-unfiltered-owning-tests",
+    "argv": [
+      "/workspace/.tools/dotnet/dotnet",
+      "test",
+      "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+      "--no-build",
+      "--no-restore",
+      "-c",
+      "Release",
+      "-f",
+      "net10.0",
+      "--logger",
+      "trx;LogFileName=infrastructure444.trx",
+      "--results-directory",
+      "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/infrastructure444/test-results",
+      "--artifacts-path",
+      "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-attempt03/infrastructure444/artifacts",
+      "-r",
+      "linux-x64",
+      "--disable-build-servers",
+      "-m:1",
+      "-nodeReuse:false",
+      "-p:SelfContained=false",
+      "-p:UseSharedCompilation=false",
+      "-p:CreateHardLinksForCopyAdditionalFilesIfPossible=false",
+      "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+      "-p:CreateHardLinksForCopyLocalIfPossible=false",
+      "-p:CreateHardLinksForPublishFilesIfPossible=false"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 164003,
+        "birth": 2514255,
+        "gone": true
+      },
+      {
+        "pid": 164016,
+        "birth": 2514316,
+        "gone": true
+      },
+      {
+        "pid": 164028,
+        "birth": 2514336,
+        "gone": true
+      },
+      {
+        "pid": 164578,
+        "birth": 2514992,
+        "gone": true
+      },
+      {
+        "pid": 164610,
+        "birth": 2515138,
+        "gone": true
+      },
+      {
+        "pid": 164665,
+        "birth": 2515423,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 18.758,
+    "bytes": 601,
+    "familyClosed": true
+  },
+  {
+    "name": "git-clean-after",
+    "argv": [
+      "git",
+      "diff",
+      "--exit-code",
+      "HEAD",
+      "--"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 165835,
+        "birth": 2516139,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.039,
+    "bytes": 0,
+    "familyClosed": true
+  },
+  {
+    "name": "git-head-after",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "normalEOF": true,
+    "signals": [],
+    "error": null,
+    "births": [
+      {
+        "pid": 165856,
+        "birth": 2516142,
+        "gone": true
+      }
+    ],
+    "finalECHILD": true,
+    "exitAfterDrain": 0,
+    "seconds": 0.038,
+    "bytes": 41,
+    "familyClosed": true
+  }
+]

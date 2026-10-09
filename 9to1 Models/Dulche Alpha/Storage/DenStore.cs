@@ -10,7 +10,9 @@ public sealed class DenStore : IAsyncDisposable
     private const string CurrentVersion = "1.0";
     private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(5);
     private static readonly Regex SafeSegment = new("^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", RegexOptions.CultureInvariant | RegexOptions.Compiled);
-    private static readonly SemaphoreSlim ProcessGate = new(1, 1);
+    // Serialize this instance's held lease; the file lock excludes other instances
+    // and processes for this root without blocking independent Dens.
+    private readonly SemaphoreSlim _processGate = new(1, 1);
     private readonly string _root;
     private readonly string _manifestPath;
     private readonly string _lockPath;
@@ -35,7 +37,7 @@ public sealed class DenStore : IAsyncDisposable
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(root);
         var fullRoot = Path.GetFullPath(root);
-        Directory.CreateDirectory(fullRoot);
+        CreatePrivateDirectory(fullRoot);
         var manifestPath = Path.Combine(fullRoot, "den.json");
         if (File.Exists(manifestPath)) throw new DenException(DenErrorCode.Conflict, "A Den already exists at this location.", recoverable: true);
         var manifest = new DenManifest
@@ -50,8 +52,14 @@ public sealed class DenStore : IAsyncDisposable
         };
         var store = new DenStore(fullRoot, manifest, false);
         store.CreateDirectories();
-        await WriteAtomicAsync(manifestPath, JsonSerializer.SerializeToUtf8Bytes(manifest, DenJson.Options), cancellationToken);
-        return store;
+        await store.EnterLockAsync(cancellationToken);
+        try
+        {
+            if (File.Exists(manifestPath)) throw new DenException(DenErrorCode.Conflict, "A Den already exists at this location.", recoverable: true);
+            await WriteAtomicAsync(manifestPath, JsonSerializer.SerializeToUtf8Bytes(manifest, DenJson.Options), cancellationToken, overwrite: false);
+            return store;
+        }
+        finally { store.ExitLock(); }
     }
 
     public static async Task<DenStore> OpenAsync(string root, CancellationToken cancellationToken = default)
@@ -93,6 +101,10 @@ public sealed class DenStore : IAsyncDisposable
         if (!File.Exists(path)) return null;
         var record = await ReadRecordAsync(path, cancellationToken);
         if (record is not T typed) throw new DenException(DenErrorCode.InvalidRecord, "The record has a different type than requested.");
+        if (record.Id != id || record.NamespaceId != namespaceId)
+            throw new DenException(DenErrorCode.InvalidRecord, "The record failed its requested identity check.", recoverable: true);
+        if (!await access.IsAllowedAsync(principalId, namespaceId, id, DenPermission.Read, cancellationToken))
+            throw new DenException(DenErrorCode.Forbidden, "Read permission changed while materializing this Den object.");
         return typed;
     }
 
@@ -115,33 +127,22 @@ public sealed class DenStore : IAsyncDisposable
         catch (JsonException ex) { throw new DenException(DenErrorCode.InvalidRecord, $"A historical revision is malformed: {ex.Message}", recoverable: true); }
         if (record.Id != id || record.NamespaceId != namespaceId || record.Revision != revision)
             throw new DenException(DenErrorCode.InvalidRecord, "A historical revision failed its identity check.", recoverable: true);
+        if (!await access.IsAllowedAsync(principalId, namespaceId, id, DenPermission.Read, cancellationToken))
+            throw new DenException(DenErrorCode.Forbidden, "Read permission changed while materializing this Den revision.");
         return record;
     }
 
     public async Task<IReadOnlyList<T>> ListAsync<T>(string namespaceId, IDenAccessPolicy access,
-        string principalId, CancellationToken cancellationToken = default) where T : DenRecord
-    {
-        ValidateSegment(namespaceId, "namespace");
-        var allowed = Manifest.Namespaces.Any(ns => ns.Id == namespaceId);
-        if (!allowed) throw new DenException(DenErrorCode.NotFound, "The namespace does not exist.");
-        var directory = Path.Combine(_root, "records", namespaceId);
-        if (!Directory.Exists(directory)) return [];
-        var results = new List<T>();
-        foreach (var file in Directory.EnumerateFiles(directory, "*.json", SearchOption.AllDirectories).Order(StringComparer.Ordinal))
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var record = await ReadRecordAsync(file, cancellationToken);
-            if (record is T typed && await access.IsAllowedAsync(principalId, namespaceId, typed.Id, DenPermission.Read, cancellationToken))
-                results.Add(typed);
-        }
-        return results;
-    }
+        string principalId, CancellationToken cancellationToken = default) where T : DenRecord =>
+        (await ListAllPermittedAsync(namespaceId, access, principalId, cancellationToken)).OfType<T>().ToArray();
 
     internal async Task<T> SaveAsync<T>(T proposed, long expectedRevision, string operationId,
         IDenAccessPolicy access, string principalId, CancellationToken cancellationToken = default,
         bool preserveOrigin = false) where T : DenRecord
     {
         ThrowIfUnavailableForWrite();
+        proposed = JsonSerializer.Deserialize<DenRecord>(JsonSerializer.SerializeToUtf8Bytes<DenRecord>(proposed, DenJson.Options), DenJson.Options) as T
+            ?? throw new DenException(DenErrorCode.InvalidRecord, "The submitted record could not retain its canonical type.");
         ValidateRecord(proposed);
         ValidateSegment(operationId, "operation ID");
         if (!await access.IsAllowedAsync(principalId, proposed.NamespaceId, proposed.Id, DenPermission.Write, cancellationToken))
@@ -151,6 +152,10 @@ public sealed class DenStore : IAsyncDisposable
         await EnterLockAsync(cancellationToken);
         try
         {
+            if (!await access.IsAllowedAsync(principalId, proposed.NamespaceId, proposed.Id, DenPermission.Write, cancellationToken))
+                throw new DenException(DenErrorCode.Forbidden, "Permission changed while waiting to modify this Den object.");
+            if (Directory.EnumerateDirectories(Path.Combine(_root, "transactions")).Any())
+                throw new DenException(DenErrorCode.StorageFailure, "An interrupted Den transaction requires reopening for recovery before another write.", recoverable: true);
             var idempotencyPath = Path.Combine(_root, "journal", operationId + ".json");
             if (File.Exists(idempotencyPath))
             {
@@ -161,7 +166,7 @@ public sealed class DenStore : IAsyncDisposable
             }
 
             var destination = RecordPath(proposed.NamespaceId, proposed.Id);
-            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+            CreatePrivateDirectory(Path.GetDirectoryName(destination)!);
             var exists = File.Exists(destination);
             DenRecord? previous = exists ? await ReadRecordAsync(destination, cancellationToken) : null;
             if ((!exists && expectedRevision != 0) || (exists && previous!.Revision != expectedRevision))
@@ -182,16 +187,35 @@ public sealed class DenStore : IAsyncDisposable
             ValidateRecord(committed);
             var transactionId = Guid.NewGuid().ToString("N");
             var transactionDir = Path.Combine(_root, "transactions", transactionId);
-            Directory.CreateDirectory(transactionDir);
+            CreatePrivateDirectory(transactionDir);
             var metadata = new TransactionMetadata(operationId, fingerprint, proposed.NamespaceId, proposed.Id, exists);
             await WriteAtomicAsync(Path.Combine(transactionDir, "prepared.json"), JsonSerializer.SerializeToUtf8Bytes(metadata, DenJson.Options), cancellationToken);
             if (exists) await CopyDurableAsync(destination, Path.Combine(transactionDir, "previous.json"), cancellationToken);
             var staged = Path.Combine(transactionDir, "next.json");
             await WriteAtomicAsync(staged, JsonSerializer.SerializeToUtf8Bytes<DenRecord>(committed, DenJson.Options), cancellationToken);
+            string? createdHistory = null;
             if (previous is not null)
             {
                 var history = Path.Combine(_root, "history", proposed.NamespaceId, proposed.Id, previous.Revision.ToString("D20", System.Globalization.CultureInfo.InvariantCulture) + ".json");
-                if (!File.Exists(history)) await CopyDurableAsync(destination, history, cancellationToken);
+                if (!File.Exists(history))
+                {
+                    await CopyDurableAsync(destination, history, cancellationToken);
+                    createdHistory = history;
+                }
+            }
+            try
+            {
+                if (!await access.IsAllowedAsync(principalId, proposed.NamespaceId, proposed.Id, DenPermission.Write, cancellationToken))
+                    throw new DenException(DenErrorCode.Forbidden, "Permission changed before publishing this Den object.");
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+            catch
+            {
+                // Publication has not started. Remove only this transaction's private staging and history copy,
+                // so reopening cannot interpret a deliberately denied operation as an interrupted commit.
+                if (createdHistory is not null) File.Delete(createdHistory);
+                Directory.Delete(transactionDir, recursive: true);
+                throw;
             }
             File.Move(staged, destination, overwrite: true);
             await WriteAtomicAsync(Path.Combine(transactionDir, "committed.json"), "{}"u8.ToArray(), cancellationToken);
@@ -206,14 +230,16 @@ public sealed class DenStore : IAsyncDisposable
     public async Task<byte[]> ReadPortableSnapshotAsync(IEnumerable<string> namespaceIds, IDenAccessPolicy access,
         string principalId, IReadOnlySet<string>? includeBlobIds = null, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(namespaceIds);
+        var requested = namespaceIds.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
+        var selectedBlobs = (includeBlobIds ?? new HashSet<string>()).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
         await EnterLockAsync(cancellationToken);
         try
         {
-        var requested = namespaceIds.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
         foreach (var ns in requested) EnsureNamespace(ns);
         var records = new List<DenRecord>();
         foreach (var ns in requested) records.AddRange(await ListAllPermittedAsync(ns, access, principalId, cancellationToken));
-        var selectedBlobs = (includeBlobIds ?? new HashSet<string>()).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
+
         var blobs = new List<PortableBlob>();
         foreach (var blobId in selectedBlobs)
         {
@@ -222,11 +248,15 @@ public sealed class DenStore : IAsyncDisposable
             if (references.Length == 0) throw new DenException(DenErrorCode.Forbidden, "A selected attachment is not referenced by an authorised exported object.");
             var path = BlobPath(blobId);
             if (!File.Exists(path)) throw new DenException(DenErrorCode.InvalidRecord, "A selected content-addressed attachment is missing.", recoverable: true);
-            var blobBytes = await File.ReadAllBytesAsync(path, cancellationToken);
-            var first = references[0];
-            if (blobBytes.LongLength != first.Length || Hash(blobBytes) != first.Sha256) throw new DenException(DenErrorCode.InvalidRecord, "A selected attachment failed length or hash validation.", recoverable: true);
-            _ = DulcheDen.RejectSecrets(Encoding.Latin1.GetString(blobBytes));
-            blobs.Add(new PortableBlob(blobId, first.Sha256, first.MediaType, blobBytes.LongLength, Convert.ToBase64String(blobBytes)));
+            var blobBytes = await ReadBlobAsync(blobId, cancellationToken);
+            try
+            {
+                var first = references[0];
+                if (blobBytes.LongLength != first.Length || Hash(blobBytes) != first.Sha256) throw new DenException(DenErrorCode.InvalidRecord, "A selected attachment failed length or hash validation.", recoverable: true);
+                _ = DulcheDen.RejectSecrets(Encoding.Latin1.GetString(blobBytes));
+                blobs.Add(new PortableBlob(blobId, first.Sha256, first.MediaType, blobBytes.LongLength, Convert.ToBase64String(blobBytes)));
+            }
+            finally { CryptographicOperations.ZeroMemory(blobBytes); }
         }
         var payload = new PortableDenArchive(1, Manifest with
         {
@@ -235,11 +265,22 @@ public sealed class DenStore : IAsyncDisposable
         },
             records.OrderBy(r => r.NamespaceId, StringComparer.Ordinal).ThenBy(r => r.Id, StringComparer.Ordinal).ToArray(),
             selectedBlobs, blobs, "");
-        var digest = Hash(JsonSerializer.SerializeToUtf8Bytes(payload, DenJson.Options));
+        var unsignedBytes = JsonSerializer.SerializeToUtf8Bytes(payload, DenJson.Options);
+        string digest;
+        try { digest = Hash(unsignedBytes); }
+        finally { CryptographicOperations.ZeroMemory(unsignedBytes); }
         payload = payload with { ArchiveSha256 = digest };
         var bytes = JsonSerializer.SerializeToUtf8Bytes(payload, DenJson.Options);
-        if (bytes.Length > 64 * 1024 * 1024) throw new DenException(DenErrorCode.InvalidArchive, "The portable snapshot exceeds 64 MiB.");
-        return bytes;
+        try
+        {
+            if (bytes.Length > 64 * 1024 * 1024) throw new DenException(DenErrorCode.InvalidArchive, "The portable snapshot exceeds 64 MiB.");
+            foreach (var record in records)
+                if (!await access.IsAllowedAsync(principalId, record.NamespaceId, record.Id, DenPermission.Read, cancellationToken))
+                    throw new DenException(DenErrorCode.Forbidden, "Read permission changed before delivering the Den export.");
+            cancellationToken.ThrowIfCancellationRequested();
+            return bytes;
+        }
+        catch { CryptographicOperations.ZeroMemory(bytes); throw; }
         }
         finally { ExitLock(); }
     }
@@ -258,6 +299,9 @@ public sealed class DenStore : IAsyncDisposable
         await EnterLockAsync(cancellationToken);
         try
         {
+            await RefreshManifestUnderLeaseAsync(cancellationToken);
+            if (!await access.IsAllowedAsync(principalId, Manifest.DenId, Manifest.DenId, DenPermission.Administer, cancellationToken))
+                throw new DenException(DenErrorCode.Forbidden, "Namespace administration permission changed while waiting.");
             var fingerprint = Hash(JsonSerializer.SerializeToUtf8Bytes(new { value, expectedManifestRevision }, DenJson.Options));
             if (Manifest.OperationReceipts.TryGetValue(operationId, out var previousFingerprint))
             {
@@ -269,9 +313,8 @@ public sealed class DenStore : IAsyncDisposable
             if (Manifest.Namespaces.Any(ns => ns.Id == value.Id)) throw new DenException(DenErrorCode.Conflict, "The namespace ID already exists.", recoverable: true);
             var updated = Manifest with { Revision = checked(Manifest.Revision + 1), Namespaces = Manifest.Namespaces.Append(value).ToArray() };
             updated = updated with { OperationReceipts = WithReceipt(updated.OperationReceipts, operationId, fingerprint) };
-            var nextPath = Path.Combine(_root, "den.json.next");
-            await WriteAtomicAsync(nextPath, JsonSerializer.SerializeToUtf8Bytes(updated, DenJson.Options), cancellationToken);
-            File.Move(nextPath, _manifestPath, overwrite: true);
+            await WriteAtomicAsync(_manifestPath, JsonSerializer.SerializeToUtf8Bytes(updated, DenJson.Options), cancellationToken,
+                ct => access.IsAllowedAsync(principalId, Manifest.DenId, Manifest.DenId, DenPermission.Administer, ct));
             Manifest = updated;
             CreateDirectories();
             return updated;
@@ -291,6 +334,9 @@ public sealed class DenStore : IAsyncDisposable
         await EnterLockAsync(cancellationToken);
         try
         {
+            await RefreshManifestUnderLeaseAsync(cancellationToken);
+            if (!await access.IsAllowedAsync(principalId, Manifest.DenId, namespaceId, DenPermission.Administer, cancellationToken))
+                throw new DenException(DenErrorCode.Forbidden, "Namespace sharing permission changed while waiting.");
             var fingerprint = Hash(JsonSerializer.SerializeToUtf8Bytes(new { namespaceId, shared, expectedManifestRevision }, DenJson.Options));
             if (Manifest.OperationReceipts.TryGetValue(operationId, out var previousFingerprint))
             {
@@ -307,7 +353,8 @@ public sealed class DenStore : IAsyncDisposable
                 Namespaces = Manifest.Namespaces.Select(ns => ns.Id == namespaceId ? ns with { Shared = shared } : ns).ToArray()
             };
             updated = updated with { OperationReceipts = WithReceipt(updated.OperationReceipts, operationId, fingerprint) };
-            await WriteAtomicAsync(_manifestPath, JsonSerializer.SerializeToUtf8Bytes(updated, DenJson.Options), cancellationToken);
+            await WriteAtomicAsync(_manifestPath, JsonSerializer.SerializeToUtf8Bytes(updated, DenJson.Options), cancellationToken,
+                ct => access.IsAllowedAsync(principalId, Manifest.DenId, namespaceId, DenPermission.Administer, ct));
             Manifest = updated;
             return updated;
         }
@@ -316,13 +363,15 @@ public sealed class DenStore : IAsyncDisposable
     }
 
     internal async Task PurgeAsync<T>(string namespaceId, string id, string operationId,
-        CancellationToken cancellationToken = default) where T : DenRecord
+        IDenAccessPolicy access, string principalId, CancellationToken cancellationToken = default) where T : DenRecord
     {
         ThrowIfUnavailableForWrite();
         ValidateSegment(namespaceId, "namespace"); ValidateSegment(id, "record ID"); ValidateSegment(operationId, "operation ID");
-            await EnterLockAsync(cancellationToken);
+        await EnterLockAsync(cancellationToken);
         try
         {
+            if (!await access.IsAllowedAsync(principalId, namespaceId, id, DenPermission.Administer, cancellationToken))
+                throw new DenException(DenErrorCode.Forbidden, "Purge permission changed while waiting.");
             var receiptPath = Path.Combine(_root, "journal", operationId + ".json");
             var fingerprint = Hash(Encoding.UTF8.GetBytes("purge|" + namespaceId + "|" + id));
             if (File.Exists(receiptPath))
@@ -338,8 +387,11 @@ public sealed class DenStore : IAsyncDisposable
                 if (record is not T) throw new DenException(DenErrorCode.InvalidRecord, "The purge target has an unexpected record type.");
                 if (record is MemoryEntry memory && memory.Retention is not (MemoryRetentionState.SoftDeleted or MemoryRetentionState.Expired))
                     throw new DenException(DenErrorCode.RetentionBlocked, "Only a soft-deleted or expired memory can be permanently purged.");
-                File.Delete(path);
             }
+            if (!await access.IsAllowedAsync(principalId, namespaceId, id, DenPermission.Administer, cancellationToken))
+                throw new DenException(DenErrorCode.Forbidden, "Purge permission changed before deletion.");
+            cancellationToken.ThrowIfCancellationRequested();
+            if (File.Exists(path)) File.Delete(path);
             var history = Path.Combine(_root, "history", namespaceId, id);
             if (Directory.Exists(history)) Directory.Delete(history, recursive: true);
             await WriteAtomicAsync(receiptPath, JsonSerializer.SerializeToUtf8Bytes(new OperationReceipt(fingerprint), DenJson.Options), cancellationToken);
@@ -351,17 +403,29 @@ public sealed class DenStore : IAsyncDisposable
     public async Task<IReadOnlyList<DenRecord>> ListAllPermittedAsync(string namespaceId, IDenAccessPolicy access,
         string principalId, CancellationToken cancellationToken = default)
     {
+        ObjectDisposedException.ThrowIf(_disposed, this);
         ValidateSegment(namespaceId, "namespace");
+        EnsureNamespace(namespaceId);
         var directory = Path.Combine(_root, "records", namespaceId);
         if (!Directory.Exists(directory)) return [];
         var result = new List<DenRecord>();
-        foreach (var file in Directory.EnumerateFiles(directory, "*.json", SearchOption.AllDirectories))
+        foreach (var file in Directory.EnumerateFiles(directory, "*.json", SearchOption.AllDirectories).Order(StringComparer.Ordinal))
         {
             cancellationToken.ThrowIfCancellationRequested();
+            var id = Path.GetFileNameWithoutExtension(file);
+            ValidateSegment(id, "record ID");
+            if (!await access.IsAllowedAsync(principalId, namespaceId, id, DenPermission.Read, cancellationToken)) continue;
             var record = await ReadRecordAsync(file, cancellationToken);
-            if (await access.IsAllowedAsync(principalId, namespaceId, record.Id, DenPermission.Read, cancellationToken)) result.Add(record);
+            if (record.Id != id || record.NamespaceId != namespaceId ||
+                !string.Equals(Path.GetFullPath(file), RecordPath(namespaceId, id), OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
+                throw new DenException(DenErrorCode.InvalidRecord, "A listed record failed its requested identity check.", recoverable: true);
+            if (await access.IsAllowedAsync(principalId, namespaceId, id, DenPermission.Read, cancellationToken)) result.Add(record);
         }
-        return result;
+        var current = new List<DenRecord>();
+        foreach (var record in result)
+            if (await access.IsAllowedAsync(principalId, namespaceId, record.Id, DenPermission.Read, cancellationToken)) current.Add(record);
+        cancellationToken.ThrowIfCancellationRequested();
+        return current;
     }
 
     internal string RecordPath(string namespaceId, string id)
@@ -373,49 +437,85 @@ public sealed class DenStore : IAsyncDisposable
         return path;
     }
 
-    internal async Task WriteBlobAsync(string id, ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken)
+    internal async Task WriteBlobAsync(string id, ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken,
+        Func<CancellationToken, ValueTask<bool>> currentAuthorization)
     {
+        ArgumentNullException.ThrowIfNull(currentAuthorization);
         ThrowIfUnavailableForWrite();
         if (bytes.Length is 0 or > 32 * 1024 * 1024) throw new DenException(DenErrorCode.InvalidRecord, "An attachment must be from 1 byte to 32 MiB.");
         ValidateSegment(id, "blob ID");
-        var digest = Hash(bytes.Span);
-        if (!string.Equals(id, digest, StringComparison.OrdinalIgnoreCase)) throw new DenException(DenErrorCode.InvalidRecord, "A blob ID must equal the content SHA-256.");
-        _ = DulcheDen.RejectSecrets(Encoding.Latin1.GetString(bytes.Span));
-        await EnterLockAsync(cancellationToken);
+        var captured = bytes.ToArray();
         try
         {
-            var path = BlobPath(id);
-            if (File.Exists(path))
+            var digest = Hash(captured);
+            if (!string.Equals(id, digest, StringComparison.OrdinalIgnoreCase)) throw new DenException(DenErrorCode.InvalidRecord, "A blob ID must equal the content SHA-256.");
+            _ = DulcheDen.RejectSecrets(Encoding.Latin1.GetString(captured));
+            await EnterLockAsync(cancellationToken);
+            try
             {
-                var existing = await File.ReadAllBytesAsync(path, cancellationToken);
-                if (Hash(existing) != digest) throw new DenException(DenErrorCode.InvalidRecord, "The content-addressed blob path contains invalid data.");
-                return;
+                if (!await currentAuthorization(cancellationToken))
+                    throw new DenException(DenErrorCode.Forbidden, "Attachment ownership changed while waiting for storage.");
+                var path = BlobPath(id);
+                if (File.Exists(path))
+                {
+                    var existing = await ReadBlobAsync(id, 32 * 1024 * 1024, cancellationToken);
+                    try
+                    {
+                        if (Hash(existing) != digest) throw new DenException(DenErrorCode.InvalidRecord, "The content-addressed blob path contains invalid data.");
+                        if (!await currentAuthorization(cancellationToken))
+                            throw new DenException(DenErrorCode.Forbidden, "Attachment ownership changed while validating stored content.");
+                        return;
+                    }
+                    finally { CryptographicOperations.ZeroMemory(existing); }
+                }
+                var currentBytes = Directory.EnumerateFiles(Path.Combine(_root, "blobs"), "*.blob").Sum(file => new FileInfo(file).Length);
+                var globalQuota = Manifest.Namespaces.Sum(GetAttachmentQuota);
+                if (currentBytes + captured.Length > globalQuota)
+                    throw new DenException(DenErrorCode.RetentionBlocked, "The Den attachment storage quota would be exceeded.", recoverable: true);
+                await WriteAtomicAsync(path, captured, cancellationToken, currentAuthorization);
             }
-            var currentBytes = Directory.EnumerateFiles(Path.Combine(_root, "blobs"), "*.blob").Sum(file => new FileInfo(file).Length);
-            var globalQuota = Manifest.Namespaces.Sum(GetAttachmentQuota);
-            if (currentBytes + bytes.Length > globalQuota)
-                throw new DenException(DenErrorCode.RetentionBlocked, "The Den attachment storage quota would be exceeded.", recoverable: true);
-            await WriteAtomicAsync(path, bytes.ToArray(), cancellationToken);
+            finally { ExitLock(); }
         }
-        finally { ExitLock(); }
+        finally { CryptographicOperations.ZeroMemory(captured); }
     }
 
-    internal async Task<byte[]> ReadBlobAsync(string id, CancellationToken cancellationToken)
+    internal Task<byte[]> ReadBlobAsync(string id, CancellationToken cancellationToken) =>
+        ReadBlobAsync(id, 32 * 1024 * 1024, cancellationToken);
+
+    internal async Task<byte[]> ReadBlobAsync(string id, int maximumBytes, CancellationToken cancellationToken)
     {
+        if (maximumBytes < 1) throw new ArgumentOutOfRangeException(nameof(maximumBytes));
         ValidateSegment(id, "blob ID");
         var path = BlobPath(id);
         if (!File.Exists(path)) throw new DenException(DenErrorCode.NotFound, "The attachment blob does not exist.");
-        var bytes = await File.ReadAllBytesAsync(path, cancellationToken);
-        if (Hash(bytes) != id) throw new DenException(DenErrorCode.InvalidRecord, "The attachment blob failed its content hash check.", recoverable: true);
-        return bytes;
+        await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read,
+            4096, FileOptions.Asynchronous | FileOptions.SequentialScan);
+        var length = stream.Length;
+        if (length > maximumBytes)
+            throw new DenException(DenErrorCode.InvalidRecord, "The attachment exceeds the requested byte limit.");
+        var bytes = new byte[checked((int)length)];
+        try
+        {
+            await stream.ReadExactlyAsync(bytes.AsMemory(), cancellationToken);
+            var extra = new byte[1];
+            if (await stream.ReadAsync(extra.AsMemory(), cancellationToken) != 0 || Hash(bytes) != id)
+                throw new DenException(DenErrorCode.InvalidRecord, "The attachment changed or failed its content hash check.", recoverable: true);
+            cancellationToken.ThrowIfCancellationRequested();
+            return bytes;
+        }
+        catch { Array.Clear(bytes); throw; }
     }
 
     internal async Task<IReadOnlyList<BlobReferenceRecord>> ListBlobReferencesAsync(string namespaceId,
         IDenAccessPolicy access, string principalId, CancellationToken cancellationToken) =>
         (await ListAsync<BlobReferenceRecord>(namespaceId, access, principalId, cancellationToken)).ToArray();
 
-    internal async Task<long> GetBlobLengthAsync(string id, CancellationToken cancellationToken) =>
-        (await ReadBlobAsync(id, cancellationToken)).LongLength;
+    internal async Task<long> GetBlobLengthAsync(string id, CancellationToken cancellationToken)
+    {
+        var bytes = await ReadBlobAsync(id, cancellationToken);
+        try { return bytes.LongLength; }
+        finally { CryptographicOperations.ZeroMemory(bytes); }
+    }
 
     internal async Task<HashSet<string>> GetAllActiveBlobIdsAsync(CancellationToken cancellationToken)
     {
@@ -447,21 +547,26 @@ public sealed class DenStore : IAsyncDisposable
         return result;
     }
 
-    internal async Task<long> DeleteUnreferencedBlobsAsync(IReadOnlySet<string> requestedKeep,
-        CancellationToken cancellationToken)
+    internal async Task<long> DeleteUnreferencedBlobsAsync(CancellationToken cancellationToken,
+        Func<CancellationToken, ValueTask<bool>> currentAuthorization)
     {
         ThrowIfUnavailableForWrite();
         await EnterLockAsync(cancellationToken);
         try
         {
+            if (!await currentAuthorization(cancellationToken))
+                throw new DenException(DenErrorCode.Forbidden, "Den administration changed while waiting for collection.");
+            await RefreshManifestUnderLeaseAsync(cancellationToken);
             var keep = await GetAllActiveBlobIdsAsync(cancellationToken);
-            keep.UnionWith(requestedKeep);
+            var candidates = Directory.EnumerateFiles(Path.Combine(_root, "blobs"), "*.blob")
+                .Where(path => !keep.Contains(Path.GetFileNameWithoutExtension(path))).ToArray();
+            if (!await currentAuthorization(cancellationToken))
+                throw new DenException(DenErrorCode.Forbidden, "Den administration changed before blob collection.");
+            cancellationToken.ThrowIfCancellationRequested();
             long deleted = 0;
-            foreach (var path in Directory.EnumerateFiles(Path.Combine(_root, "blobs"), "*.blob"))
+            foreach (var path in candidates)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var id = Path.GetFileNameWithoutExtension(path);
-                if (keep.Contains(id)) continue;
                 deleted = checked(deleted + new FileInfo(path).Length);
                 File.Delete(path);
             }
@@ -529,29 +634,39 @@ public sealed class DenStore : IAsyncDisposable
 
     private async Task EnterLockAsync(CancellationToken cancellationToken)
     {
-        await ProcessGate.WaitAsync(cancellationToken);
-        var until = DateTime.UtcNow + LockTimeout;
-        while (true)
+        await _processGate.WaitAsync(cancellationToken);
+        try
         {
-            if (cancellationToken.IsCancellationRequested) { ProcessGate.Release(); cancellationToken.ThrowIfCancellationRequested(); }
-            try { _heldFileLock = new FileStream(_lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None); return; }
-            catch (IOException) when (DateTime.UtcNow < until) { await Task.Delay(40, cancellationToken); }
-            catch (IOException) { ProcessGate.Release(); throw new DenException(DenErrorCode.StorageFailure, "Timed out waiting for the Den writer lock.", recoverable: true, retryable: true); }
+            var until = DateTime.UtcNow + LockTimeout;
+            while (true)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                try { _heldFileLock = new FileStream(_lockPath, PrivateFileOptions(FileMode.OpenOrCreate, FileAccess.ReadWrite, FileOptions.None)); return; }
+                catch (IOException) when (DateTime.UtcNow < until) { await Task.Delay(40, cancellationToken); }
+                catch (IOException) { throw new DenException(DenErrorCode.StorageFailure, "Timed out waiting for the Den writer lock.", recoverable: true, retryable: true); }
+            }
+        }
+        catch
+        {
+            // A cancellation during the retry delay, or a non-IO open failure, also owns
+            // this process gate. Never strand unrelated Den writers behind a failed lease.
+            _processGate.Release();
+            throw;
         }
     }
 
     private FileStream? _heldFileLock;
-    private void ExitLock() { _heldFileLock?.Dispose(); _heldFileLock = null; ProcessGate.Release(); }
+    private void ExitLock() { _heldFileLock?.Dispose(); _heldFileLock = null; _processGate.Release(); }
 
     private void ThrowIfUnavailableForWrite()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        if (_readOnly) throw new DenException(DenErrorCode.UnsupportedSchema, "This Den is newer than this reader and is open read-only.", recoverable: true);
+        if (_readOnly || CompareVersion(Manifest.MinimumWriterVersion, CurrentVersion) > 0) throw new DenException(DenErrorCode.UnsupportedSchema, "This Den is newer than this reader and is open read-only.", recoverable: true);
     }
 
     private void CreateDirectories()
     {
-        foreach (var name in new[] { "records", "journal", "transactions", "blobs", "history", "backups" }) Directory.CreateDirectory(Path.Combine(_root, name));
+        foreach (var name in new[] { "records", "journal", "transactions", "blobs", "history", "backups" }) CreatePrivateDirectory(Path.Combine(_root, name));
     }
 
     private void EnsureNamespace(string namespaceId)
@@ -636,7 +751,7 @@ public sealed class DenStore : IAsyncDisposable
         {
             if (Manifest.SchemaVersion != 0) return;
             var backupDirectory = Path.Combine(_root, "backups", "pre-migration-0-to-1-" + DateTimeOffset.UtcNow.ToString("yyyyMMddTHHmmssfffZ", System.Globalization.CultureInfo.InvariantCulture) + "-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(backupDirectory);
+            CreatePrivateDirectory(backupDirectory);
             CopyDirectory(_root, backupDirectory, _root);
             var migrated = Manifest with { SchemaVersion = 1, DeviceId = Guid.TryParse(Manifest.DeviceId, out _) ? Manifest.DeviceId : Guid.NewGuid().ToString("D") };
             await WriteAtomicAsync(_manifestPath, JsonSerializer.SerializeToUtf8Bytes(migrated, DenJson.Options), cancellationToken);
@@ -655,7 +770,7 @@ public sealed class DenStore : IAsyncDisposable
             var name = info.Name;
             if (Path.GetFullPath(directory) == Path.GetFullPath(destination) || name is "backups" or ".den-write-lock") continue;
             var target = Path.Combine(destination, name);
-            Directory.CreateDirectory(target);
+            CreatePrivateDirectory(target);
             CopyDirectory(directory, target, root);
         }
         foreach (var file in Directory.EnumerateFiles(source))
@@ -693,17 +808,121 @@ public sealed class DenStore : IAsyncDisposable
     }
     private static string Hash(ReadOnlySpan<byte> value) => Convert.ToHexString(SHA256.HashData(value));
 
-    private static async Task WriteAtomicAsync(string path, byte[] bytes, CancellationToken cancellationToken)
+    private async Task RefreshManifestUnderLeaseAsync(CancellationToken cancellationToken) =>
+        Manifest = await ReadCurrentManifestAsync(cancellationToken);
+
+    /// <summary>Fresh namespace metadata without reacquiring the writer lease. Intended for trusted
+    /// authorization policies which may already execute inside that lease; this is not an access grant.</summary>
+    public async Task<DenAuthoritySnapshot> ReadAuthoritySnapshotAsync(CancellationToken cancellationToken = default)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        var temp = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
-        await using (var stream = new FileStream(temp, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.WriteThrough | FileOptions.Asynchronous))
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        var current = await ReadCurrentManifestAsync(cancellationToken);
+        return new(current.DenId, current.Revision, Array.AsReadOnly(current.Namespaces.ToArray()));
+    }
+
+    /// <summary>Actual local-store evidence, observed under the canonical writer lease. This method must
+    /// never be called by a commit-policy callback. It grants no principal ownership or object access.</summary>
+    public async Task<DenOwnershipObservation> ObserveOwnershipAsync(CancellationToken cancellationToken = default)
+    {
+        ThrowIfUnavailableForWrite();
+        await EnterLockAsync(cancellationToken);
+        try
         {
-            await stream.WriteAsync(bytes, cancellationToken);
-            await stream.FlushAsync(cancellationToken);
-            stream.Flush(flushToDisk: true);
+            await RefreshManifestUnderLeaseAsync(cancellationToken);
+            if (Directory.EnumerateDirectories(Path.Combine(_root, "transactions")).Any())
+                throw new DenException(DenErrorCode.StorageFailure, "Reopen interrupted transactions before observing ownership.", recoverable: true);
+            using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+            var pending = new Stack<string>(); pending.Push(_root);
+            var files = new List<string>();
+            var observedEntries = 0;
+            while (pending.TryPop(out var directory))
+            {
+                if ((File.GetAttributes(directory) & FileAttributes.ReparsePoint) != 0)
+                    throw new DenException(DenErrorCode.InvalidManifest, "Den ownership evidence cannot follow linked storage.");
+                foreach (var entry in Directory.EnumerateFileSystemEntries(directory).Order(StringComparer.Ordinal))
+                {
+                    var attributes = File.GetAttributes(entry);
+                    if ((attributes & FileAttributes.ReparsePoint) != 0)
+                        throw new DenException(DenErrorCode.InvalidManifest, "Den ownership evidence cannot follow linked storage.");
+                    if ((attributes & FileAttributes.Directory) != 0) pending.Push(entry);
+                    else if (entry != _lockPath) files.Add(entry);
+                    if (++observedEntries > 100000)
+                        throw new DenException(DenErrorCode.CapabilityUnavailable, "The Den exceeds the supported ownership observation entry limit.");
+                }
+            }
+            long total = 0;
+            foreach (var path in files.Order(StringComparer.Ordinal))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read,
+                    4096, FileOptions.Asynchronous | FileOptions.SequentialScan);
+                total = checked(total + stream.Length);
+                if (total > 1024L * 1024 * 1024)
+                    throw new DenException(DenErrorCode.CapabilityUnavailable, "The Den exceeds the supported ownership observation byte limit.");
+                hash.AppendData(Encoding.UTF8.GetBytes(Path.GetRelativePath(_root, path).Replace(Path.DirectorySeparatorChar, '/') + "\0" + stream.Length.ToString(System.Globalization.CultureInfo.InvariantCulture) + "\0"));
+                hash.AppendData(await SHA256.HashDataAsync(stream, cancellationToken));
+            }
+            return new(Manifest.DenId, Convert.ToHexString(hash.GetHashAndReset()),
+                files.Count == 1 && files[0] == _manifestPath);
         }
-        File.Move(temp, path, overwrite: true);
+        finally { ExitLock(); }
+    }
+
+    private async Task<DenManifest> ReadCurrentManifestAsync(CancellationToken cancellationToken)
+    {
+        await using var stream = new FileStream(_manifestPath, FileMode.Open, FileAccess.Read, FileShare.Read,
+            4096, FileOptions.Asynchronous | FileOptions.SequentialScan);
+        if (stream.Length > 2 * 1024 * 1024)
+            throw new DenException(DenErrorCode.InvalidManifest, "The Den manifest exceeds the supported size.");
+        DenManifest current;
+        try { current = await JsonSerializer.DeserializeAsync<DenManifest>(stream, DenJson.Options, cancellationToken)
+            ?? throw new DenException(DenErrorCode.InvalidManifest, "The Den manifest is empty."); }
+        catch (JsonException ex) { throw new DenException(DenErrorCode.InvalidManifest, "The Den manifest is invalid: " + ex.Message); }
+        ValidateManifest(current, _root);
+        if (current.DenId != Manifest.DenId || current.SchemaVersion != Manifest.SchemaVersion ||
+            CompareVersion(current.MinimumReaderVersion, CurrentVersion) > 0 ||
+            CompareVersion(current.MinimumWriterVersion, CurrentVersion) > 0)
+            throw new DenException(DenErrorCode.Conflict, "The canonical Den identity or schema changed; reopen for recovery.", recoverable: true);
+        return current;
+    }
+
+    private static void CreatePrivateDirectory(string path)
+    {
+        if (OperatingSystem.IsWindows()) Directory.CreateDirectory(path);
+        else Directory.CreateDirectory(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+    }
+
+    private static FileStreamOptions PrivateFileOptions(FileMode mode, FileAccess access, FileOptions options)
+    {
+        var result = new FileStreamOptions { Mode = mode, Access = access, Share = FileShare.None, BufferSize = 4096, Options = options };
+        if (!OperatingSystem.IsWindows()) result.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+        return result;
+    }
+
+    private static async Task WriteAtomicAsync(string path, byte[] bytes, CancellationToken cancellationToken,
+        Func<CancellationToken, ValueTask<bool>>? finalAuthorization = null, bool overwrite = true)
+    {
+        CreatePrivateDirectory(Path.GetDirectoryName(path)!);
+        var temp = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            await using (var stream = new FileStream(temp, PrivateFileOptions(FileMode.CreateNew, FileAccess.Write, FileOptions.WriteThrough | FileOptions.Asynchronous)))
+            {
+                await stream.WriteAsync(bytes, cancellationToken);
+                await stream.FlushAsync(cancellationToken);
+                stream.Flush(flushToDisk: true);
+            }
+            if (finalAuthorization is not null && !await finalAuthorization(cancellationToken))
+                throw new DenException(DenErrorCode.Forbidden, "Permission changed before publishing Den state.");
+            cancellationToken.ThrowIfCancellationRequested();
+            File.Move(temp, path, overwrite: overwrite);
+        }
+        finally
+        {
+            try { if (File.Exists(temp)) File.Delete(temp); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
     }
 
     private static async Task CopyDurableAsync(string source, string destination, CancellationToken cancellationToken)
@@ -726,3 +945,6 @@ public sealed record PortableBlob(string Id, string Sha256, string MediaType, lo
 public sealed record PortableDenArchive(int FormatVersion, DenManifest Manifest,
     IReadOnlyList<DenRecord> Records, IReadOnlyList<string> IncludedBlobIds, IReadOnlyList<PortableBlob> Blobs,
     string ArchiveSha256);
+
+public sealed record DenAuthoritySnapshot(string DenId, long ManifestRevision, IReadOnlyList<DenNamespace> Namespaces);
+public sealed record DenOwnershipObservation(string DenId, string ContentRevision, bool IsEmpty);

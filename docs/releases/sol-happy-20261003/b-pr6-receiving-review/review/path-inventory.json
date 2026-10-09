@@ -1,0 +1,603 @@
+{
+  "pr": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+  "prDiffBase": "aef50b9bb053df68927fdf99ead9829b0fd7fd8b",
+  "receivingBase": "43c5b0ebf7d26f46ee9a29ad009e9dd0e68b835a",
+  "pathCount": 66,
+  "scope": "Provisional exact PR delta; not whole PR-tree adoption, not acceptance",
+  "paths": [
+    {
+      "path": ".github/workflows/team-b-chat-native.yml",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 1763,
+      "prSHA256": "b03f2f83566e469ee6ab71e22059a78dc544bc2705497c7b114e04fcc2393a3b",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 371d239bb471f988244e8eeab8e44cc4d249bce5\t.github/workflows/team-b-chat-native.yml"
+    },
+    {
+      "path": ".github/workflows/team-b-existing-write.yml",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 2735,
+      "prSHA256": "51c491d4b5a6f0e86c2b3bbd107767ff1854a60ecbafc3e47936d7f3c4681ba6",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 92fc66f167618173b69c632a0d3b316e214ac54b\t.github/workflows/team-b-existing-write.yml"
+    },
+    {
+      "path": ".github/workflows/team-b-files-sites-lifecycle.yml",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 2315,
+      "prSHA256": "39b0dffe429bcf7d3aaba64bdd6756e7eb1d9c424b41840aedbccd7c64c3c4e2",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 80e1d485f25cdd8f4e625789a2a491cab48a7b74\t.github/workflows/team-b-files-sites-lifecycle.yml"
+    },
+    {
+      "path": ".github/workflows/team-b-original-planner.yml",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 1508,
+      "prSHA256": "68c42de816ec9de8c5547311c9e209880cc8ee0f397bb8a1da39280d9af5cfd5",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 658995a8c21a5b188b5635396a5a0dae476ed419\t.github/workflows/team-b-original-planner.yml"
+    },
+    {
+      "path": ".github/workflows/team-b-picture-browser.yml",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 3162,
+      "prSHA256": "e9276c64eae9d2749e18be481e7972303d0dc26aeb2f5e83d9b6d8377e6faad4",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 633a6036220abd222cc1198e7cec566f01660004\t.github/workflows/team-b-picture-browser.yml"
+    },
+    {
+      "path": ".github/workflows/team-b-picture-native.yml",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 6350,
+      "prSHA256": "8e8f38e00b06643298cd53942bcf8e7983c9a2ec577deee45badfe45212db468",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 492ec8e665efc4b565a86d2c845a01944a20be10\t.github/workflows/team-b-picture-native.yml"
+    },
+    {
+      "path": ".github/workflows/team-b-web-publish.yml",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 1841,
+      "prSHA256": "e709c21f45b9da4fb62fa63b014bc9c7d168d8b70578e068de54e54e6c1b606a",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 547032a5f563a68aab87c373267a0300d13cfb0f\t.github/workflows/team-b-web-publish.yml"
+    },
+    {
+      "path": "apps/Web/AI/Chat/ChatSpaceBrowserReadAdapter.cs",
+      "baseBytes": 4736,
+      "baseSHA256": "5262d6add2e0ee763b4bce2d4001c912f99a904440b7908c239009c58fa51689",
+      "prBytes": 5211,
+      "prSHA256": "b34569d40a3596d3e40200ab2a7996a5d7b34e58b2c883ddd13f0e86a5c84369",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 7569b708d4d03ff1b74703fd919714631fb507bc\tapps/Web/AI/Chat/ChatSpaceBrowserReadAdapter.cs"
+    },
+    {
+      "path": "apps/Web/AI/Tests/ChatRead.Tests.csproj",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 840,
+      "prSHA256": "7e66a8f6bcdf9702668d7dbba09d7f87881f00679ccd4aa464bee54941587736",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob a7d4bdb86f9e6e89f36fb46af2a106b751c10844\tapps/Web/AI/Tests/ChatRead.Tests.csproj"
+    },
+    {
+      "path": "apps/Web/AI/Tests/ChatReadControls10.cs",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 12457,
+      "prSHA256": "ad2d3bf1e9d6170f0afce55051059dce8e930e90e3ed39987be33dddebcd6989",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 6e948df4ebbc3668c2a9712f0b6064f12c489fab\tapps/Web/AI/Tests/ChatReadControls10.cs"
+    },
+    {
+      "path": "apps/Web/AI/Tests/Fixtures/Original/ChatSpaceBrowserReadAdapter.cs",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 4736,
+      "prSHA256": "5262d6add2e0ee763b4bce2d4001c912f99a904440b7908c239009c58fa51689",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob e13d29b667034d3a7f62293d5a89289eb2a4b03f\tapps/Web/AI/Tests/Fixtures/Original/ChatSpaceBrowserReadAdapter.cs"
+    },
+    {
+      "path": "apps/Web/AI/Tests/README.md",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 3885,
+      "prSHA256": "19c2423f49ee938de1b3d84acb0200ab5d06d503050b27a08de020324c07a687",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 7f081771ae9726a60f209a08ebe4105b7e49736f\tapps/Web/AI/Tests/README.md"
+    },
+    {
+      "path": "apps/Web/AI/Tests/source-pins.json",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 3105,
+      "prSHA256": "4a0f83ab34769687da1534f154056645008d6f1c04e69a80c186bb9ad419705c",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob cc0fbf490b6500ea041a9992b01255ed0977339e\tapps/Web/AI/Tests/source-pins.json"
+    },
+    {
+      "path": "apps/Web/BrowserFeatureComposition.cs",
+      "baseBytes": 1696,
+      "baseSHA256": "d49cdf7d109eacb511299a678938dc3271c5ec6d28d382d831ef1bacb05d9b3f",
+      "prBytes": 1875,
+      "prSHA256": "f782aef40e605c07d76a7a3218b12e0b8cc0980d1b10b8056a60ef41ca32f671",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 6fe9839c128306b396c6d1602743960e9c4f0edc\tapps/Web/BrowserFeatureComposition.cs"
+    },
+    {
+      "path": "apps/Web/Files/FilesBrowserController.cs",
+      "baseBytes": 15125,
+      "baseSHA256": "86ce9c10e7a1b9be93005d2e9c317512e97c322f936cac2ebd4d7f80f90fbc63",
+      "prBytes": 16614,
+      "prSHA256": "6035babc8a11bfea5793c56a7e73370013477fb0cfcdea40dee92da32c93fc32",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 54cffe58836ff9c6e4cd9a3d2fe0067c2da8a553\tapps/Web/Files/FilesBrowserController.cs"
+    },
+    {
+      "path": "apps/Web/Files/FilesBrowserRoute.cs",
+      "baseBytes": 4631,
+      "baseSHA256": "c188eae2a4daaf3f59ee6b737b289a3cfc518b8e34dae63cce75951a3f4aa81b",
+      "prBytes": 13177,
+      "prSHA256": "b06ad407e351733aa7b6e8022256d24d81feaf9ffa809223c6ac711aace9f8d5",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob e7df42a633cda0d7c10a9f6f949b5a45d5589393\tapps/Web/Files/FilesBrowserRoute.cs"
+    },
+    {
+      "path": "apps/Web/Files/Tests/Lifecycle/FilesSites.PrivateLifecycle.Tests.csproj",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 1871,
+      "prSHA256": "4a5dd2cc47f2d07ac9a53eb321b02597362290b90e366be4f099eb7da3d492e4",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 9a8eef6ac1f614cf6632b9dc6339d0887ebfda90\tapps/Web/Files/Tests/Lifecycle/FilesSites.PrivateLifecycle.Tests.csproj"
+    },
+    {
+      "path": "apps/Web/Files/Tests/Lifecycle/Program.cs",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 30191,
+      "prSHA256": "94eba9b9970af68a81e1b49fb890fcebb022dd08d59349b3516484189e850b57",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 01fb3f7843d2101bf72060d522aec62329f4d42a\tapps/Web/Files/Tests/Lifecycle/Program.cs"
+    },
+    {
+      "path": "apps/Web/Files/Tests/Lifecycle/SourceControls/FilesSites.PrivateLifecycle.Original01.Tests.csproj",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 2017,
+      "prSHA256": "ff80c5eab317b1e7ca004dbc416b4a491586dd8dd743a82ef1499fc1995416d5",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob adc47a389938cbe799f4270d2e48696c682d81aa\tapps/Web/Files/Tests/Lifecycle/SourceControls/FilesSites.PrivateLifecycle.Original01.Tests.csproj"
+    },
+    {
+      "path": "apps/Web/Files/Tests/Lifecycle/SourceControls/FilesSites.PrivateLifecycle.Original02.Tests.csproj",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 2017,
+      "prSHA256": "eae72e29a2daca71482c68b72fd29eb894e6de99edc5c98f85d383d8f0d2cfe4",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 964fbfd9c026c307ed13e5241eb49224e940126f\tapps/Web/Files/Tests/Lifecycle/SourceControls/FilesSites.PrivateLifecycle.Original02.Tests.csproj"
+    },
+    {
+      "path": "apps/Web/Files/Tests/Lifecycle/SourceControls/Original01/FilesBrowserRoute.cs",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 11340,
+      "prSHA256": "b7968028dba03041f90b4515acb9c227d0bf61ba2da894b8b24c29b76aa1bb86",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 80269f4f9ddf55144d715e704eed6ab11075e14b\tapps/Web/Files/Tests/Lifecycle/SourceControls/Original01/FilesBrowserRoute.cs"
+    },
+    {
+      "path": "apps/Web/Files/Tests/Lifecycle/SourceControls/Original01/SitesBrowserRoute.cs",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 10893,
+      "prSHA256": "bce396bc4f18060debdc3a7633053eb9df662a4e8da4ebee64b9502f46e4e9bc",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 61c642449bc28185c49b4e40eedac730c61ec65f\tapps/Web/Files/Tests/Lifecycle/SourceControls/Original01/SitesBrowserRoute.cs"
+    },
+    {
+      "path": "apps/Web/Files/Tests/Lifecycle/SourceControls/Original02/FilesBrowserRoute.cs",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 12329,
+      "prSHA256": "62e874fb5065fbbfc30c81ec06556ddb13c7c97333807113a56e9aa4d3f64a98",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob abcf9a03bed4dfe9a9c58a37069f7b79e8a957c6\tapps/Web/Files/Tests/Lifecycle/SourceControls/Original02/FilesBrowserRoute.cs"
+    },
+    {
+      "path": "apps/Web/Files/Tests/Lifecycle/SourceControls/Original02/SitesBrowserRoute.cs",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 11882,
+      "prSHA256": "ff27b52f800c246bb52767d21fb0008b0dee0cc09453c07d0eb923a22107c207",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 8cf1bf89876a1bba4ef233aaded67c4591d474ea\tapps/Web/Files/Tests/Lifecycle/SourceControls/Original02/SitesBrowserRoute.cs"
+    },
+    {
+      "path": "apps/Web/Files/Tests/Program.cs",
+      "baseBytes": 29079,
+      "baseSHA256": "5c96788a9398257efcfd56e7e72fdcda26acde8da760f70fb701849552b86423",
+      "prBytes": 30021,
+      "prSHA256": "85d1b0347d93d64c9af478c3a3c4d5deedba3cbed02bd26b65f74443dda5a641",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob cd07ef5a6a4afb07fdab4da4e1dfd8a583dc1b45\tapps/Web/Files/Tests/Program.cs"
+    },
+    {
+      "path": "apps/Web/Files/Tests/ci/CONTROL-PLAN07.json",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 8994,
+      "prSHA256": "8fab4bf3283e2f2f7342dec20f38a2dab1d46c9fa0aa3de4c29bcb76c842af2e",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 9aa3a81f373ade12cf67c722bd6fb243c3ab5f34\tapps/Web/Files/Tests/ci/CONTROL-PLAN07.json"
+    },
+    {
+      "path": "apps/Web/Files/Tests/ci/run-files-sites-lifecycle.py",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 10866,
+      "prSHA256": "8ed8c050990af42591d0087e43772580d42ceb222d6a3299bfe5455455970a64",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob e787c5bb354706166080de88c5f39e599a1f2c13\tapps/Web/Files/Tests/ci/run-files-sites-lifecycle.py"
+    },
+    {
+      "path": "apps/Web/Files/Tests/ci/validate-lifecycle-negative-control.py",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 3999,
+      "prSHA256": "c10091a591da26ef0876a12730b3603e791673bac10a642cd474d26c9b7a5e47",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 22637d40644ee7d09f5cbaa773720a4fafeb4bf8\tapps/Web/Files/Tests/ci/validate-lifecycle-negative-control.py"
+    },
+    {
+      "path": "apps/Web/Media/BrowserPictureMedia.cs",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 931,
+      "prSHA256": "d924d5d95798217bc044324e42988f2426738c7e4e1acf690cf138fcb877a8a9",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 737fc20c7290c8606183f54e5608cb417bfc1468\tapps/Web/Media/BrowserPictureMedia.cs"
+    },
+    {
+      "path": "apps/Web/Media/IPictureBrowserMedia.cs",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 353,
+      "prSHA256": "68c8b4a1131ce91bfc3babe74b6d826a6176d13787beacaba945ad45e6bf7690",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob dd15b0425941af30de6dd3d1ed9256f02180d5b0\tapps/Web/Media/IPictureBrowserMedia.cs"
+    },
+    {
+      "path": "apps/Web/Media/picture-browser.js",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 7897,
+      "prSHA256": "2e3f39261df532c5007380fef4027d6e1de3a99f0ff1ade1205d692705b24fe5",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 38c9363186db6edcd190b894025dd2c584dae302\tapps/Web/Media/picture-browser.js"
+    },
+    {
+      "path": "apps/Web/NineToOne.Web.csproj",
+      "baseBytes": 4602,
+      "baseSHA256": "7fa36055b3df61c8062f68667e155cad83501b27064374b6c6187fe766839ab9",
+      "prBytes": 4978,
+      "prSHA256": "0152d45e23a0ef467fe32ab1be1c9cfb0772b628ad69afec426746ac364e0803",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 7740a66aa1e492bdb60009148df78c8c1ddae942\tapps/Web/NineToOne.Web.csproj"
+    },
+    {
+      "path": "apps/Web/Picture/Engine/NineToOne.Picture.BrowserEngine.csproj",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 2034,
+      "prSHA256": "9d4bf6fc0d7c2698f171d3b8e45b7f1aed15d943eab6b637befc86b54cd8e4d3",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 0aae8e9078ba7762e2fa1b05264ab77290821bb6\tapps/Web/Picture/Engine/NineToOne.Picture.BrowserEngine.csproj"
+    },
+    {
+      "path": "apps/Web/Picture/Picture.cui",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 5441,
+      "prSHA256": "2d408a38d204e9704a4f39491bf457355c38162d71a3f28fc9b9a83dc7a18402",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob a1e871a76714fa24dda02e511f3b086a899e6001\tapps/Web/Picture/Picture.cui"
+    },
+    {
+      "path": "apps/Web/Picture/PictureBrowserFeature.cs",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 13101,
+      "prSHA256": "c121a52e322dc589ebe6cc9ecd0bf8738fa13b99085704eb9f629a46a6610f4c",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob c85d3d7c95f66d36ebaa95c7ad9b67c61207a2b3\tapps/Web/Picture/PictureBrowserFeature.cs"
+    },
+    {
+      "path": "apps/Web/Picture/PictureBrowserSession.cs",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 31704,
+      "prSHA256": "8f12c9b03cbda50ba1a9b0c65aa26649f07a8a9291d4920baaa5e83a44969a07",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob fd53d1ee160e082d75355404e85097956f04921e\tapps/Web/Picture/PictureBrowserSession.cs"
+    },
+    {
+      "path": "apps/Web/Productivity/Planner/Tests/Planner.OriginalSQLite.Tests.csproj",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 3194,
+      "prSHA256": "25c9c0fc1b2b5fa3bc342cb5048f44ce1989d494557c32166c9b93059a0cde7d",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 4e0664dafbe8e0b15b599148672503124bf0f127\tapps/Web/Productivity/Planner/Tests/Planner.OriginalSQLite.Tests.csproj"
+    },
+    {
+      "path": "apps/Web/Productivity/Planner/Tests/README.md",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 1729,
+      "prSHA256": "d2c10715d00eff5fbdfedd9797aceccbc5ebada3c154f56b7e4b7cf73656c8cb",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob e640d8a2278f76e2dc777127e969dd86e94cabd7\tapps/Web/Productivity/Planner/Tests/README.md"
+    },
+    {
+      "path": "apps/Web/Productivity/Planner/Tests/ci/original-test-acceptance.py",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 3918,
+      "prSHA256": "451031f9f331eec1334bc3eb9be4f66b260e7ce407f72743f06ce08bf064ce96",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 8f15d93ff769aa87962b8bd8b18ef2ff0e2bc568\tapps/Web/Productivity/Planner/Tests/ci/original-test-acceptance.py"
+    },
+    {
+      "path": "apps/Web/Productivity/Planner/Tests/ci/run-original-planner.py",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 9714,
+      "prSHA256": "14eb26873b76c8edff98990162b156cfdddad1479f4a271866e06fc4c0d1e112",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 7f5be5ce1f4c3684b7f32d9b00682c7e86564635\tapps/Web/Productivity/Planner/Tests/ci/run-original-planner.py"
+    },
+    {
+      "path": "apps/Web/Sites/SitesBrowserController.cs",
+      "baseBytes": 15487,
+      "baseSHA256": "80c61a8e34ba0d819d29fc7a0e6a66f099fa6adde17a02bb5eb33bc5d8cea8a6",
+      "prBytes": 16976,
+      "prSHA256": "3c56b32f8eb733ebeecdeb72b77cc7bc045c8cc5583fadaf13c2b65604c66f2d",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob ad81a5147a3cfdc6bdb90a86fa9413e709c37159\tapps/Web/Sites/SitesBrowserController.cs"
+    },
+    {
+      "path": "apps/Web/Sites/SitesBrowserRoute.cs",
+      "baseBytes": 4208,
+      "baseSHA256": "b0f1a28eee9a91546dd0001368369cbd3a76e2738d78fc25a5d42f648e30f61c",
+      "prBytes": 12730,
+      "prSHA256": "e710366ec68439523a225d66e0209cd082ededde235fd986c099831d4f82e7ad",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 19c392c1d1ed6ac0b291c71181c234ba55e40d7e\tapps/Web/Sites/SitesBrowserRoute.cs"
+    },
+    {
+      "path": "apps/Web/Sites/Tests/Program.cs",
+      "baseBytes": 33431,
+      "baseSHA256": "c2e130a6f126884b0ce086c24c1fec9abc0bf84384473e80b802ef128a354b46",
+      "prBytes": 33745,
+      "prSHA256": "8b0d59756116c04547c5476fbad0f26731bfe3d98e19afd3f5342d5f9ffa5948",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob f3772eb2d35e72c0fcea33e49de861f453ad16b9\tapps/Web/Sites/Tests/Program.cs"
+    },
+    {
+      "path": "apps/Web/Tests/BrowserWriteSpace.Tests.csproj",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 850,
+      "prSHA256": "02448d481ff10e13073d4035013d95bee0a8ad9142fb145f8a128153db785f7d",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 2f4ad24deea51207d398165077a711cc26ebf02a\tapps/Web/Tests/BrowserWriteSpace.Tests.csproj"
+    },
+    {
+      "path": "apps/Web/Tests/BrowserWriteSpaceRegression.cs",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 8972,
+      "prSHA256": "3f72a2b4310db50ca7e70a5b622837367d0c40de2d379a0ab8e0fa478bbd15ee",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 2b61a7b559d464d4bc742233ea12b7d10fdd0b51\tapps/Web/Tests/BrowserWriteSpaceRegression.cs"
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/Fixtures/Admission01/Picture.cui",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 5315,
+      "prSHA256": "d69c1d15a5aed28590b94e9e8caa9d9f89a8c9e06ca4a8d536b4af0edefb7fb3",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob b7cda97fbb1f9dbc080d9101aac7d9abb641deaa\tapps/Web/Tests/PictureAdmission/Fixtures/Admission01/Picture.cui"
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/Fixtures/Admission01/PictureBrowserFeature.cs",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 12715,
+      "prSHA256": "ac250d1a63bb70fee012b383d67a9427d2868af26e976a62a1958e0015144973",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 081c37818164c5d05d98732c848018a47d8cdb5b\tapps/Web/Tests/PictureAdmission/Fixtures/Admission01/PictureBrowserFeature.cs"
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/Fixtures/Admission01/PictureBrowserSession.cs",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 31541,
+      "prSHA256": "b51a31b476755d0364084b1045b8d16f101ab9e2d00658a04a592b103ed7b8cf",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 822019093170413c206b47757305ffe5784db1bd\tapps/Web/Tests/PictureAdmission/Fixtures/Admission01/PictureBrowserSession.cs"
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/Fixtures/Picture8x6.png",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 667,
+      "prSHA256": "a17e304d0a333065202cf77c656d7bc86abdd37237b407a0a5cb870d33870297",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 0dafbc0434c4fb3441b2be2895a597ca4181d0c7\tapps/Web/Tests/PictureAdmission/Fixtures/Picture8x6.png"
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/Fixtures/ProductionOriginal/Picture.cui",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 5315,
+      "prSHA256": "d69c1d15a5aed28590b94e9e8caa9d9f89a8c9e06ca4a8d536b4af0edefb7fb3",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob b7cda97fbb1f9dbc080d9101aac7d9abb641deaa\tapps/Web/Tests/PictureAdmission/Fixtures/ProductionOriginal/Picture.cui"
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/Fixtures/ProductionOriginal/PictureBrowserFeature.cs",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 5561,
+      "prSHA256": "4709aafa462df1127ecdeb3aac9c61efafeabde2f107501d4873898f4b973451",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 8e52ead578bb0c9585041e9c678672b32677dec9\tapps/Web/Tests/PictureAdmission/Fixtures/ProductionOriginal/PictureBrowserFeature.cs"
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/Fixtures/ProductionOriginal/PictureBrowserSession.cs",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 25801,
+      "prSHA256": "24933899f9ea2f05ff0266588a4f87be183cb4441bce1587c7925cab1de63edb",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob e91c4071ebbf85f3a94ee16aba0d26fb8793fd12\tapps/Web/Tests/PictureAdmission/Fixtures/ProductionOriginal/PictureBrowserSession.cs"
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/PictureAdmission.Tests.csproj",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 3763,
+      "prSHA256": "b0ee0bbb5afee7d54b0e48b4bfca47ff75704ffb556f1357bd7a6db78ff8cf20",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob d55a2ee81c4c470621c2155479d966d6c72de3da\tapps/Web/Tests/PictureAdmission/PictureAdmission.Tests.csproj"
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/PictureAdmissionRegression.cs",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 29093,
+      "prSHA256": "f8a58d8d464beb57fa6fa044cd8cc2bb3e47d06f1ae91d2a9760ad8e6dac3159",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 60d14171de69d9a504b1947856f55b8a8947ac50\tapps/Web/Tests/PictureAdmission/PictureAdmissionRegression.cs"
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/PictureProductionOriginalRegression.cs",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 26207,
+      "prSHA256": "b1d7b08ff840a8d5beb9c073fee6e3f724fb5eaf3c481fea00fa5cec480e94b7",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 51f9dc596f9e81f22840cb4f24dc8e50ee98b061\tapps/Web/Tests/PictureAdmission/PictureProductionOriginalRegression.cs"
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/PictureRawPngMetadata.cs",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 5915,
+      "prSHA256": "9730a636de4a902d4ca554b02f953a96502efe6cf65224b703501cf93107c337",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 6f81d0ff6f443f139985ee4371342216f2a0be9d\tapps/Web/Tests/PictureAdmission/PictureRawPngMetadata.cs"
+    },
+    {
+      "path": "apps/Web/Tests/PictureAdmission/fixture-source-pins.json",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 2056,
+      "prSHA256": "c3773ffaa34dd335afaef7c7f9f5284a062727c85cf4c2302d01bb0cbd9b58f7",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob f99410d048bfab5b26ab6cb37e3476e8e15bbe7a\tapps/Web/Tests/PictureAdmission/fixture-source-pins.json"
+    },
+    {
+      "path": "apps/Web/Tests/PictureBrowser/png-oracle.cjs",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 3573,
+      "prSHA256": "9c78229fc21b55e68c32a0f77fd9b8431866e5895a258906ac895d0059552909",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 228471812c4ba9dca4a016edd6b5bb9348058f28\tapps/Web/Tests/PictureBrowser/png-oracle.cjs"
+    },
+    {
+      "path": "apps/Web/Tests/PictureBrowser/run-picture-browser.cjs",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 34251,
+      "prSHA256": "9d9547e8df62b78dfb0646c50a1c8bde986fa79743c73f4269b65b3ad2f535f3",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 02dbaf6aca9e034d3346ae141f56e2470f2f1965\tapps/Web/Tests/PictureBrowser/run-picture-browser.cjs"
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-chat-native.py",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 12468,
+      "prSHA256": "9e30c9bd87395af1e266a7b05af168e68ec302f9f923ca1d3a211a8339ae1632",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 549ed9154e23eab75785001b54d411de67560027\tapps/Web/Tests/ci/run-chat-native.py"
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-ordinary-web-publish.py",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 17775,
+      "prSHA256": "ced8679e0c587a3e0077d84db084ec171af12fc40b63ffd1ff5fa7303241dabb",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob f3564bbebb71c99bec1578274d251437743a3fb4\tapps/Web/Tests/ci/run-ordinary-web-publish.py"
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-picture-browser.py",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 10119,
+      "prSHA256": "bbba1f206c4441fce0660192277e196b8903a32cbac29a8a65ddb1147618c0c3",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 54ecb9f586c9c4154d558f0ff94506c1fafffd1c\tapps/Web/Tests/ci/run-picture-browser.py"
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-picture-native.py",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 17952,
+      "prSHA256": "664adfb0a649b430d634caf1c38b243cd4ca19113de2537bd05b936ea56a1147",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 38b4de954ad9a73749028b56d067884c1d1bcc86\tapps/Web/Tests/ci/run-picture-native.py"
+    },
+    {
+      "path": "apps/Web/Tests/picture-browser-failure.test.cjs",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 5899,
+      "prSHA256": "88cb0cf6693a859052fa94f76a6a06ebba1727c45e1970a34c86d6ec9d397f85",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 85a6c812cb0bdcf4989268e337d543158de7303f\tapps/Web/Tests/picture-browser-failure.test.cjs"
+    },
+    {
+      "path": "apps/Web/Write/Tests/ci/run-existing-write.py",
+      "baseBytes": null,
+      "baseSHA256": null,
+      "prBytes": 11703,
+      "prSHA256": "7238749ef9254bb30b97dba7cd1b18ab5b49415356f6696d9eb5ac9396e5073c",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 61bcedc682c76132dea5ed0be0c9e0f4fba33465\tapps/Web/Write/Tests/ci/run-existing-write.py"
+    },
+    {
+      "path": "apps/Web/wwwroot/main.js",
+      "baseBytes": 6186,
+      "baseSHA256": "d10018571a6d4399ea2c225763080a512ee1f159a41bfb7438e5d6a94327d09d",
+      "prBytes": 6312,
+      "prSHA256": "f1811d2d58f97583c5ec92514cf898549a09040453cb886f384d2bbc0d710847",
+      "receivingBaseEqualsPRBase": true,
+      "prTreeMode": "100644 blob 01a757bcc1f287d7a9973a54d3a27bea15365610\tapps/Web/wwwroot/main.js"
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "recordedUtc": "2026-10-04T21:02:44.315215+00:00",
+  "scope": "C6 independent review checkpoint; Root sole integration, provider and fixture executor.",
+  "observedIntegrationHead": "dd1173dd9afa7b67efc1cd5b22a5db6be50f4659",
+  "c6ActiveLocalExecutionHandles": [],
+  "c6OwnedCloudJobs": [],
+  "freshSourceAndGeneratedAcknowledgments": [
+    {
+      "component": "Canvas actual focus acquisition",
+      "sourceCommit": "9534c5a0fbff85a64a763e4564deca67f0aa04c9",
+      "offlineControls": "Independent46PASS",
+      "status": "SOURCE_ACK; actual Windows successor NOT_RUN at review"
+    },
+    {
+      "component": "Present retained active navigator/toolbar",
+      "sourceCommit": "4750ca69796fb0fd1b97e84a08bbc01d4662a428",
+      "status": "SOURCE_ACK; actual own15/shared7/native successor NOT_RUN at review"
+    },
+    {
+      "component": "LocalAuth R6 authored label diagnostic",
+      "sourceCommit": "139cc140227391ba79292f285d836c63ebb7f626",
+      "offlineControls": "IndependentNode39/Python11PASS",
+      "status": "SOURCE_ACK; generated exact9af/139/ff plan ACK, Root owns once execution and original issuer71539 closure"
+    },
+    {
+      "component": "PR12 original Windows compiler producer",
+      "sourceCommit": "d2109960d69d091ec6e1af84843c09e72698f27f",
+      "offlineControls": "Independent9PASS",
+      "status": "SOURCE_ACK to exact d210; external old-test compiler/contract successor remains a separate source/case gate"
+    },
+    {
+      "component": "C5 Homee530 new20 public continuation",
+      "sourceCommit": "44ced0a3945d5a542f24210b2247d06e1093ce8e",
+      "status": "PUBLICATION_ACK; old633 immutable, current653 indexeeaf92c1"
+    }
+  ],
+  "latestActualScopedResults": [
+    "Homee530 original6PASS and two real GUI CtrlShiftQ naturalzero exits; same-profile only unchangedzero-byte lock, durableJSONabsent.",
+    "Maila0 originalwhole72PASS incl three trustedTLS controls, actual public certificate chain+signedCRL verified.",
+    "R5 physicalPKCEPASS callback1/profile1/sessions1; originalAX15s projection failure and consoleResource404 compoundfailure remain, twoPASS/twoFAIL/threeNOTRUN.",
+    "Canvas3cf original71PASS then20s timeout, distinct retainedlowerFolder vs actualfocusedupperaddress nativepeers proven; no privateValue/choice/request/Canvasstate."
+  ],
+  "pendingRuntimeReadbacks": [
+    "Root-owned R6 once original browser results and strict same-session issuer closure",
+    "Canvas9534 actual sameoneCtrlL changed-focus/value/private-folder/default/approval/stroke/save/reopen",
+    "Present4750 actual owning15/shared7 and current native UI after same-instance active composition",
+    "PR12 owner-published legacy-test correction and strict original12/full66"
+  ],
+  "conservation": "All eleven prior index bodies and308 unique exact selected payloads reverified; new twelfth index is additive.",
+  "privateInputsRead": "NONE; no issuer READY body/TLS key/profile/model/state/credentials read.",
+  "releaseQualification": "Scoped successes and concrete source repairs do not establish full29/installedHome/SDK-free/signing/provider/hardware/accessibility/Android/auth_revision acceptance.",
+  "routing": "Engineering questions and original process shutdown/drain belong to Root; no new user confirmation request. C6 owns no live process requiring shutdown."
+}

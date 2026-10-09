@@ -1,0 +1,57 @@
+{
+  "candidateCommit": "9c3aa3d17006f7818fabc5e049a77e39ddfdc209",
+  "branch": "team-c/sol-happy-c3-boards-rich-history-20261004",
+  "immutableProducer": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
+  "priorReviewedHarness": "099d7ee01ca2f530c5c16acde7fc10e7f2e8ecd9",
+  "old67ActualRun": 37210601635,
+  "old67Evidence": "Preserved unchanged in c3-boards-packaged-ui-20261004/public-copyset/index.json",
+  "changedPaths": [
+    {
+      "path": ".github/scripts/boards-packaged-ui-controls.ps1",
+      "bytes": 27741,
+      "sha256": "fc32bf8cea68396ce94fca0d6d89f60aec565cd7a7beee3792779c6e169e7e7c",
+      "gitBlob": "e8917d1a6661981cc03850caaa52d98765bc6daf"
+    },
+    {
+      "path": ".github/validation/boards-packaged-ui-controls.json",
+      "bytes": 3776,
+      "sha256": "afddc900bb8fcb2ddac74d3f5ba5755df1156007c4deadafe69209c9216faf4b",
+      "gitBlob": "746f928d2920b09fa079e7609041a4ce52140dae"
+    },
+    {
+      "path": ".github/workflows/team-c-boards-packaged-ui-controls.yml",
+      "bytes": 3714,
+      "sha256": "e0fd4d825a398664d9411e11c17dcf8733dc9476a9cbc9d0f2f0ca01be9b9cb9",
+      "gitBlob": "e85e05351a47e88df65357db309958f2cabb9a9b"
+    },
+    {
+      "path": "eng/release-validation/boards-packaged-ui/README.md",
+      "bytes": 3557,
+      "sha256": "05d8602f93932ee60ae253ed8faabcc151d376256dc897776e2c2530f9bb42cc",
+      "gitBlob": "6d336ae83f97138d913c9b1935393e7dbe8a1c7a"
+    }
+  ],
+  "allNativeOwnerSourceTrees": [
+    {
+      "path": "9to1 Workspace",
+      "basisGitTree": "5674e4b1f5120a7cafc82ab7471fc42f53d1a353",
+      "candidateGitTree": "5674e4b1f5120a7cafc82ab7471fc42f53d1a353",
+      "unchanged": true
+    },
+    {
+      "path": "framework",
+      "basisGitTree": "4906b174a03c260011beed2951f1d8d2964e89b9",
+      "candidateGitTree": "4906b174a03c260011beed2951f1d8d2964e89b9",
+      "unchanged": true
+    },
+    {
+      "path": "apps",
+      "basisGitTree": "bd1a6b870182275bc1ff05a5949ed5d1b829f018",
+      "candidateGitTree": "bd1a6b870182275bc1ff05a5949ed5d1b829f018",
+      "unchanged": true
+    }
+  ],
+  "sourceStatus": "CLEAN",
+  "actualNewScenarioRuntime": "NOT_RUN_PENDING_C6_AND_ROOT",
+  "qualification": "New rich-history scenario only; no native source or app test changes. All14 shared original function bodies, input helper, custody/extraction and original edit-save scenario exact unchanged."
+}

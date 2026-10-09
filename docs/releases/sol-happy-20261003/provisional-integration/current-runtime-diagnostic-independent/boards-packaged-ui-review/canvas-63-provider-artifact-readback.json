@@ -1,0 +1,23 @@
+{
+  "artifacts": [
+    {
+      "id": 11310024766,
+      "name": "canvas-native-workflow-unaccepted-63f999605f696e6be7dd44f50c487fbc9cf2e796-1",
+      "size_in_bytes": 42853,
+      "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11310024766",
+      "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11310024766/zip",
+      "expired": false,
+      "created_at": "2026-10-04T17:40:39Z",
+      "expires_at": "2026-10-11T17:40:38Z",
+      "updated_at": "2026-10-04T17:40:39Z",
+      "digest": "sha256:9398fbff6aaf81c5aeeaf3d0891f151121d741674b99915c7daa081f74f81101",
+      "workflow_run": {
+        "id": 37221336623,
+        "repository_id": 1378313608,
+        "head_repository_id": 1378313608,
+        "head_branch": "team-c/sol-happy-c3-canvas-picker-observation-20261004",
+        "head_sha": "63f999605f696e6be7dd44f50c487fbc9cf2e796"
+      }
+    }
+  ]
+}

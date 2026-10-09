@@ -1,0 +1,98 @@
+{
+  "state": "FOCUSED_LOCAL_OWNER_TESTS_EXECUTED_BROWSER_OWNER_SEAMS_PENDING_NO_PARENT_REGISTRATION",
+  "owners": [
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/PresentAbstractions.cs",
+      "sha256": "1563010284f20598c295b76c4b16061c1a57c765098fbe727ee1446100aec216"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/PresentRepository.cs",
+      "sha256": "f5c56fc195126c9eadcca468c44123c0f1409acc649d5cce3051060a245085d5"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/PresentPackageCodec.cs",
+      "sha256": "756a022e140c0d2f7c4bd7d0957a9feab04e7fdc8d95f40f34302f7912b36ed5"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentSlideCanvas.cs",
+      "sha256": "5c2f4098e42ccae9e4a161a52a742cc733447297d9c8322129e987b52da580a0"
+    }
+  ],
+  "browserAdapterBasis": "Actual IPresentRepository4, PresentEditor and original retained PresentSlideCanvas; no parallel presentation model",
+  "requests": [
+    {
+      "seam": "Owner-approved portable save-validation authority",
+      "exactSource": "PresentRepository.cs:232 private ValidateForSave",
+      "currentBehavior": "Reject empty canonical GUID, invalid schema range and null Slides before Normalize/CAS; public PresentDocument.Normalize is mutation/normalization, not equivalent validation authority",
+      "requested": "Expose owner-owned unchanged validation through a public application contract or approve exact mechanically source-derived reusable validation leaf; keep shared edits owner-only."
+    },
+    {
+      "seam": "Owner-approved canonical asset resolution for native .9to1p browser brokerage",
+      "exactSource": "PresentPackageCodec.cs:175 CollectAssets, 190 CollectAssetReferences, 211 RewriteAssetReferences, 234 ResolveLocalPath",
+      "currentBehavior": "AssetId is interpreted as absolute/file URI, all media/image bytes local; import rewrites references into extracted filesystem paths; ephemeral WASM staging cannot be canonical durable asset locator",
+      "requested": "Existing authorized Files/resource contract or owner portable resolver/broker permitting durable browser asset identity and codec staging without fabricated FileID; original asset bytes/digests/IDs preserved."
+    },
+    {
+      "seam": "Actual media rendering and accessibility owner scope",
+      "exactSource": "PresentSlideCanvas.cs:202 Image/Media draw case",
+      "currentBehavior": "Original inspected native canvas draws image/media alternative text placeholder and role Image; no supported rich accessibility editing oracle yet",
+      "requested": "Owner portable real asset rendering/action/accessibility contract; focused title/text/shape test cannot count all donor/native format requirements."
+    }
+  ],
+  "authoredTests": "Productivity/Present/Tests/Program.cs normal retained workflow and new admission mode: actual durable full model/revision, native input, CAS conflict and candidate rejection; NOT_RUN; SDK exclusively root after Write6 release",
+  "fullRequirements": "Every canonical mandatory/should/donor requirement stays required and unverified outside focused actual path.",
+  "requestedAt": "2026-10-03T22:49:29.875654+00:00",
+  "baselineScope": {
+    "tree": "/workspace/team-b-astra-browser-validation",
+    "HEAD": "f8de954396326ca4630202fc0daededb6023f28d",
+    "kind": "Inspected existing source identity; not assertion that this is the newest maintained owner delivery"
+  },
+  "deliveryRequested": {
+    "preferred": "If a newer maintained owner delivery already supplies these seams, provide exact repository/ref/commit, source paths, public API, browser-supported dependency closure, and actual tests/procedures. Prefer that delivery over changes to the inspected legacy implementations.",
+    "authority": "Shared validator, codec, schema and renderer changes remain owner-owned; Team B will consume approved public contracts in its platform adapter.",
+    "canonicalPersistence": "Public maintained canonical Present schema/codec/validator and expected-revision CAS/commit receipt usable by durable browser IPresentRepository, including corruption recovery and known/unknown commit settlement. No private validation fork or browser counter authority.",
+    "assetResolution": "Public maintained actual FileID/MediaAssetID resolution and exact bytes/mime/digest/lifecycle permission contract, together with .9to1p import/export asset resolution that preserves canonical identity rather than persisting temporary extraction paths. No guessed identifier conversion.",
+    "renderer": "Real portable image/media semantic rendering and accessibility closure for the original Present canvas or newer maintained owner surface; supply full existing source/dependency resources and tests. Alternative-text placeholder rendering is insufficient for required image/media behavior."
+  },
+  "currentAPIs": [
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/PresentAbstractions.cs",
+      "symbols": [
+        "IPresentRepository.ListAsync(CancellationToken)",
+        "IPresentRepository.LoadAsync(Guid,CancellationToken)",
+        "IPresentRepository.SaveAsync(PresentDocument,string,CancellationToken) -> PresentSaveResult",
+        "IPresentRepository.DeleteAsync(Guid,CancellationToken)",
+        "PresentRevisionConflictException(DocumentId,ExpectedVersion,ActualVersion)"
+      ]
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/PresentRepository.cs",
+      "symbols": [
+        "private ValidateForSave(PresentDocument)",
+        "SaveAsync validates schema/ID/Slides then same-process per-path gate, canonical revision CAS, Normalize, durable current/previous publication and recovery quarantine"
+      ]
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/PresentPackageCodec.cs",
+      "symbols": [
+        "internal PresentPackageCodec.ExportAsync(PresentDocument,string,CancellationToken)",
+        "ImportAsync native independent-copy identity and exact digest-checked asset extraction",
+        "CollectAssets/CollectAssetReferences/RewriteAssetReferences/ResolveLocalPath"
+      ]
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentSlideCanvas.cs",
+      "symbols": [
+        "internal PresentSlideCanvas : HavenElement, IHavenDrawCommandSource, IHavenPointerInputTarget, IHavenKeyboardInputTarget, IHavenTextInputTarget, IHavenClipboardInputTarget",
+        "Image/Media case currently alternative-text HavenTextCommand; role Image"
+      ]
+    }
+  ],
+  "platformBoundary": "Ephemeral WASM filesystem may stage exact codec bytes only; it is not durable storage or canonical FileID/MediaAssetID authority. IPresentRepository durable browser implementation needs actual acknowledged canonical revisions and atomic expected-version admission.",
+  "focusedExecution": {
+    "evidence": "continuation/b2/productivity-gates/handoff.json",
+    "scope": "Actual existing local owner path only; no durable browser repository, real referenced-assets renderer, full requirements or ACL acceptance",
+    "assertions": 54,
+    "assertionCountMeaning": "Executed focused oracles; not requirements total or completion ratio"
+  }
+}

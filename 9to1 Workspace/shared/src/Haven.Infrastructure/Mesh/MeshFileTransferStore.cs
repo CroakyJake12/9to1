@@ -115,7 +115,8 @@ public sealed class MeshFileTransferStore(IAppPaths paths) : IMeshFileTransferSt
 
     private static string SafeFileName(string fileName)
     {
-        var leaf = Path.GetFileName(fileName?.Trim());
+        // A sender's path separators can differ from those of the receiving device.
+        var leaf = Path.GetFileName(fileName?.Trim().Replace('\\', '/'));
         if (string.IsNullOrWhiteSpace(leaf)) leaf = "received-file";
         var invalid = Path.GetInvalidFileNameChars().ToHashSet();
         var safe = new string(leaf.Select(character => invalid.Contains(character) ? '_' : character).ToArray()).Trim();

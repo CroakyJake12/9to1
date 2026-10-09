@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "C6 independent validation",
+  "scope": "Correction of publication dependency interpretation only; original review and artifact bytes preserved",
+  "supersedesStatementIn": "issuer-standard-single-redirect-source-and-own8-independent-review.json sourceContractQualification requiring a new Web publication unconditionally",
+  "reason": "Issuer ff453 changes only browser.ts/auth-ui.txt in the independently gated local issuer fixture; all13 sealed browser consumers remain exact9af.",
+  "actualCodeBoundaries": {
+    "prepareHelper": "Reviewed prepare binds candidate producer/manifest/seal/archive/catalog unchanged; independently binds required test Git HEAD and fixture Git HEAD/source rows. It invokes actual verifyPublicBinding before executable plan.",
+    "driverVerifyPublicBinding": "Exact sealed producer source/ZIP/seal/catalog tuple and13 requiredSource rows; independent19 test+harness consumer pins and92 requiredFixtureSource rows with actual respective Git HEADs.",
+    "allThirteenConsumerPinsIndependentlyEqualActual9afCatalogAndffGitBodies": true,
+    "twoChangedIssuerBodies": "Require separately reviewed explicit fixture source-contract successor; old fixture contract must refuse."
+  },
+  "correctGate": "Existing actual sealed9af payload may be reused truthfully as9af with separately reviewed new test+fixture HEADs and exact updated issuer2 pins. All92 fixture/full13consumer/archive/catalog/checkout/custodian gates remain enabled; no relabel, modified original tuple, public asset overlay or omitted checks.",
+  "requiredNewPublicationIf": "Any selected browser consumer or compiled/public payload changes; not implied by issuer-only two-body change.",
+  "originalReviewPreserved": true,
+  "status": "PUBLICATION_SCOPE_CORRECTED",
+  "actualAuthAcceptance": false
+}

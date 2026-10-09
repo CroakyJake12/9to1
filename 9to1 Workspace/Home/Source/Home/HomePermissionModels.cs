@@ -109,11 +109,20 @@ public sealed record HomePermissionScope(
     }
 }
 
+/// <summary>Descriptive original resource tuple only. Public metadata cannot mint resource/execution authority.</summary>
+public sealed record HomeCanonicalResourceBinding(int SchemaVersion,
+    Haven.Application.AuthenticatedResourceActor OriginalActor,
+    IReadOnlyList<Haven.Application.ResourceScope> Scopes);
+
 public sealed record HomePermissionImpactPreview(
     IReadOnlyList<string> AffectedObjectTypes,
     int? AffectedObjectCount,
     IReadOnlyList<HomeObjectReference> KnownObjects,
-    bool IsUnknown)
+    bool IsUnknown,
+    string? ChangePreview = null,
+    string? BackupId = null,
+    string? ArgumentsDigest = null,
+    HomeCanonicalResourceBinding? ResourceBinding = null)
 {
     public static HomePermissionImpactPreview Unknown { get; } = new([], null, [], true);
 }
@@ -182,7 +191,10 @@ public sealed record HomePermissionAuthorization(
     string RequestId,
     HomeTrustLevel? TrustLevel)
 {
-    public bool IsAllowed => State is HomePermissionRequestState.Approved or HomePermissionRequestState.Executing;
+    public bool IsAllowed => (State is HomePermissionRequestState.Approved or HomePermissionRequestState.Executing) &&
+        Code is "HOME_PERMISSION_GRANTED_BY_TRUST" or "HOME_PERMISSION_GRANTED_FOR_SESSION" or "HOME_PERMISSION_ACCEPTED"
+            or "HOME_ACCEPT_AND_TRUST_GRANTED" or "HOME_ALWAYS_TRUST_GRANTED" or "HOME_TEMPORARY_TRUST_GRANTED"
+            or "HOME_EXECUTION_STARTED";
 }
 
 public sealed record HomeTrustGrantOptions(

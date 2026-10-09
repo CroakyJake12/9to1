@@ -1,0 +1,26 @@
+{
+  "command": [
+    "/workspace/.tools/dotnet/dotnet",
+    "test",
+    "/workspace/team-c-c5-runtime/C5.DurableJob.Tests.csproj",
+    "-c",
+    "Debug",
+    "--artifacts-path",
+    "/workspace/team-c-c5-runtime/artifacts",
+    "-p:NuGetAudit=false",
+    "--logger",
+    "trx;LogFileName=durable-cancel.trx",
+    "--results-directory",
+    "/workspace/team-c-c5-runtime/Debug/results"
+  ],
+  "environmentOverrides": {
+    "C5_DURABLE_JOB_EVIDENCE": "/workspace/team-c-c5-runtime/Debug/databases",
+    "DOTNET_CLI_HOME": "/workspace/team-c-c5-runtime/dotnet-home",
+    "NUGET_PACKAGES": "/workspace/.tools/nuget/packages",
+    "AVALONIA_TELEMETRY_OPTOUT": "1",
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1"
+  },
+  "status": "COMPLETE",
+  "exit": 1,
+  "seconds": 29.701
+}

@@ -1,0 +1,13 @@
+{
+  "sourceCommit": "680f1301c3ae255a645822adb55be36ec11bb146",
+  "productionUnchanged": true,
+  "originalTestSHA256": "f8a58d8d464beb57fa6fa044cd8cc2bb3e47d06f1ae91d2a9760ad8e6dac3159",
+  "originalAssertionsUnchanged": true,
+  "instrumentation": "Sole synchronous JSON observation immediately before existing crop conjunction; no waits, field writes, condition/oracle changes. Diagnostic copy only, no maintained test edit. Full original15 program still executes with same actual owner native/CUI graph and controlled approved PNG.",
+  "originalProjectSHA256": "b0ee0bbb5afee7d54b0e48b4bfca47ff75704ffb556f1357bd7a6db78ff8cf20",
+  "diagnosticProgramSHA256": "c6c45a6d79ca7e32c79dae55c3013f8b95c6bf04038db6ad8226535cc04a7176",
+  "diagnosticProjectSHA256": "d8e6e8881532ff85a33d75eb2c42105dffaadb8f3450c6ff46e45d6e32626606",
+  "acceptance": "DIAGNOSTIC_ONLY_NOT_NATIVE_ACCEPTANCE",
+  "initialDiagnosticProjectSHA256": "a6e3d03015dce1505c58a164f57cfd7ab5e8e5eed34677974b0253d2b1627b38",
+  "orchestrationCorrection": "RepositoryRoot set before dependent MSBuild property evaluation; initial CS2001 and project retained. No production/testprogram/assertion modification."
+}

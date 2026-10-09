@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/tmp/c4-run-mail72-infra444-1c78.py", line 54, in <module>
+    p=out/name;p.mkdir();env[var]=str(p)
+               ^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+FileExistsError: [Errno 17] File exists: '/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78/mail72/tmp'

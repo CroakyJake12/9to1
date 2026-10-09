@@ -1,13 +1,13 @@
 <Cui id="home" product="9-1" version="1">
   <DefaultTheme value="Default">
-    <StackPanel id="home-root" orientation="Vertical" background="{Resource CuiBackgroundBrush}">
+    <StackPanel id="home-root" orientation="Vertical" background="{Resource CuiBackgroundBrush}"><If Condition="{Binding IsNativeHomeShell, fallback=true}">
       <StackPanel id="top-bar" orientation="Horizontal" padding="24 16" background="{Resource CuiPanelBrush}">
         <TextBlock id="brand" text="9-1" font-size="22" font-weight="Bold" foreground="{Resource CuiTextBrush}" margin="0 0 24 0" />
         <TextBox id="global-search" placeholder-text="Search 9-1" accessible-name="Search 9-1" width="360" margin="0 0 16 0" />
         <Button id="open-studio" action="OpenStudio" content="Open Studio" margin="0 0 8 0" />
         <Button id="install-all" action="InstallAllUpdates" content="Install apps" />
       </StackPanel>
-      <StackPanel id="home-body" orientation="Horizontal" margin="24">
+      <ScrollViewer id="home-workspace-scroll" height="700" horizontal-scrolling="true" vertical-scrolling="true"><StackPanel id="home-body" orientation="Horizontal" margin="24">
         <Border id="navigation-rail" background="{Resource CuiPanelBrush}" border-brush="{Resource CuiLineBrush}" border-thickness="1" padding="14" width="176" margin="0 0 20 0">
           <StackPanel orientation="Vertical">
             <Button id="nav-home" action="NavigateDashboard" content="Home" />
@@ -25,12 +25,17 @@
         </Border>
         <StackPanel id="home-content" orientation="Vertical">
           <If Condition="{Binding IsDashboard}">
+          <StackPanel id="dashboard-page" orientation="Vertical">
           <TextBlock id="welcome-heading" text="Welcome to 9-1" font-size="32" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <StackPanel id="home-cake-account-entry" orientation="Vertical" margin="0 8 0 12">
+            <Button id="home-open-cake-account" action="OpenHomeCakeAccount" content="CAKE ID account" accessible-name="Open CAKE ID account" />
+            <TextBlock text="{Binding CakeAccountStatus, fallback=Account connection requires the native Home client}" foreground="{Resource CuiTextSoftBrush}" />
+          </StackPanel>
           <TextBlock id="welcome-copy" text="Your day across 9-1" font-size="15" foreground="{Resource CuiTextSoftBrush}" margin="0 6 0 18" />
           <StackPanel id="dashboard-brief" orientation="Vertical" margin="0 0 0 18">
             <TextBlock text="Your briefing" font-size="20" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" />
             <TextBlock id="dashboard-brief-status" text="{Binding BriefSummary, fallback=Your authorised activity will appear here}" foreground="{Resource CuiTextSoftBrush}" margin="0 6 0 12" />
-            <WrapPanel id="dashboard-tiles" margin="0 0 0 8" />
+             <ListBox id="dashboard-tiles" height="140" margin="0 0 0 8" />
           </StackPanel>
           <Border id="home-hero" background="{Resource CuiPanel2Brush}" border-brush="{Resource CuiLineBrush}" border-thickness="1" corner-radius="14" padding="24" margin="0 0 18 0">
             <StackPanel orientation="Horizontal">
@@ -86,9 +91,12 @@
                 <Button id="remove-dashboard-tile" action="RemoveSelectedDashboardTile" content="Remove selected" margin="0 0 8 0" />
                 <Button id="move-dashboard-tile-up" action="MoveSelectedDashboardTileUp" content="Move up" margin="0 0 8 0" />
                 <Button id="move-dashboard-tile-down" action="MoveSelectedDashboardTileDown" content="Move down" margin="0 0 8 0" />
-                <Button id="pin-dashboard-tile" action="PinSelectedDashboardTile" content="Pin" margin="0 0 8 0" />
-                <Button id="lock-dashboard-tile" action="LockSelectedDashboardTile" content="Lock" margin="0 0 8 0" />
-                <Button id="hide-dashboard-tile" action="HideSelectedDashboardTile" content="Hide" margin="0 0 8 0" />
+                 <Button id="pin-dashboard-tile" action="PinSelectedDashboardTile" content="Pin" margin="0 0 8 0" />
+                 <Button id="unpin-dashboard-tile" action="UnpinSelectedDashboardTile" content="Unpin" margin="0 0 8 0" />
+                 <Button id="lock-dashboard-tile" action="LockSelectedDashboardTile" content="Lock" margin="0 0 8 0" />
+                 <Button id="unlock-dashboard-tile" action="UnlockSelectedDashboardTile" content="Unlock" margin="0 0 8 0" />
+                 <Button id="hide-dashboard-tile" action="HideSelectedDashboardTile" content="Hide" margin="0 0 8 0" />
+                 <Button id="show-dashboard-tile" action="ShowSelectedDashboardTile" content="Show" margin="0 0 8 0" />
                 <Button id="refresh-dashboard-tile" action="RefreshSelectedDashboardTile" content="Refresh selected" />
               </StackPanel>
               <StackPanel orientation="Horizontal" margin="0 8 0 0">
@@ -99,6 +107,7 @@
               </StackPanel>
             </StackPanel>
           </Border>
+          </StackPanel>
           </If>
           <If Condition="{Binding IsLibrary}">
             <StackPanel id="library-page" orientation="Vertical">
@@ -126,9 +135,68 @@
               <TextBlock id="events-page-items" text="{Binding EventItemsSummary}" foreground="{Resource CuiTextBrush}" />
               <Button id="events-open-selected" action="OpenEventObject" content="Open selected activity item" margin="0 12 0 0" />
             </StackPanel>
+           </If>
+           <If Condition="{Binding IsSettings}">
+             <StackPanel id="home-settings-page" orientation="Vertical">
+               <TextBlock text="Home settings" font-size="28" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+               <Button id="settings-open-cake-account" action="OpenHomeCakeAccount" content="CAKE ID account" accessible-name="Open CAKE ID account settings" />
+               <TextBlock id="home-profile-status" text="{Binding HomeProfileSummary}" foreground="{Resource CuiTextSoftBrush}" margin="0 12 0 12" />
+               <TextBlock id="home-layout-status" text="{Binding HomeLayoutSummary}" foreground="{Resource CuiTextBrush}" margin="0 0 0 12" />
+               <StackPanel orientation="Horizontal">
+                 <Button id="settings-allow-ai-tiles" action="EnableAIGeneratedTiles" content="Allow AI tiles" margin="0 0 8 0" />
+                 <Button action="DisableAIGeneratedTiles" content="Keep AI tiles off" margin="0 0 8 0" />
+                 <Button action="EnableAIReorder" content="Allow AI rearrangement" margin="0 0 8 0" />
+                 <Button action="DisableAIReorder" content="Keep layout fixed" />
+               </StackPanel>
+               <Button action="RefreshHomeWorkspace" content="Reload saved preferences" margin="0 12 0 0" />
+               <TextBlock text="{Binding NavigationStatus}" foreground="{Resource CuiTextSoftBrush}" margin="0 12 0 0" />
+             </StackPanel>
+           </If>
+           <If Condition="{Binding IsPermissions}">
+             <StackPanel id="home-permissions-page" orientation="Vertical">
+               <TextBlock text="Permissions" font-size="28" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+               <TextBlock text="{Binding HomePermissionSummary}" foreground="{Resource CuiTextSoftBrush}" margin="0 12 0 12" />
+               <Button action="RefreshHomePermissions" content="Refresh requests" margin="0 0 0 12" />
+               <ListBox id="home-permission-requests" height="200" />
+               <TextBlock text="{Binding SelectedHomePermission}" foreground="{Resource CuiTextBrush}" margin="0 12 0 12" />
+               <StackPanel orientation="Horizontal">
+                 <Button id="home-permission-accept" content="Allow once" margin="0 0 12 0" />
+                 <Button id="home-permission-decline" content="Decline" />
+               </StackPanel>
+               <TextBlock text="{Binding NavigationStatus}" foreground="{Resource CuiTextSoftBrush}" margin="0 12 0 0" />
+             </StackPanel>
+           </If>
+         </StackPanel>
+      </StackPanel></ScrollViewer>
+    </If>
+    <If Condition="{Binding IsNativeCakeAccountWindow, fallback=false}">
+      <ScrollViewer id="home-cake-account-scroll" vertical-scrolling="true" horizontal-scrolling="false">
+        <StackPanel id="home-cake-account-page" orientation="Vertical" margin="24">
+          <TextBlock text="{Binding CakeAccountHeading}" font-size="28" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <TextBlock text="{Binding CakeAccountStatus}" foreground="{Resource CuiTextSoftBrush}" margin="0 12 0 12" />
+          <WrapPanel margin="0 0 0 12">
+            <Button id="home-cake-sign-in" action="SignInCakeAccount" content="Sign in to CAKE ID" margin="0 0 8 8" />
+            <Button id="home-cake-refresh" action="RefreshCakeAccount" content="Refresh account" margin="0 0 8 8" />
+            <Button id="home-cake-sign-out" action="RequestCakeSignOut" content="Sign out" margin="0 0 8 8" />
+            <Button id="home-cake-close" action="CloseCakeAccount" content="Close" margin="0 0 8 8" />
+          </WrapPanel>
+          <TextBlock text="{Binding CakeAccountId}" foreground="{Resource CuiTextBrush}" />
+          <TextBlock text="{Binding CakeProfileSummary}" foreground="{Resource CuiTextBrush}" margin="0 12 0 12" />
+          <TextBlock text="Sessions" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" />
+          <TextBlock text="{Binding CakeSessionsSummary}" foreground="{Resource CuiTextSoftBrush}" margin="0 8 0 12" />
+          <If Condition="{Binding CakeHasSignOutConfirmation}">
+            <StackPanel id="home-cake-confirmation" orientation="Vertical">
+              <TextBlock text="Sign out of this CAKE ID session? Your local dashboard stays available." foreground="{Resource CuiTextBrush}" />
+              <WrapPanel margin="0 8 0 12">
+                <Button id="home-cake-confirm-sign-out" action="ConfirmCakeSignOut" content="Confirm sign-out" margin="0 0 8 0" />
+                <Button action="CancelCakeSignOut" content="Keep signed in" />
+              </WrapPanel>
+            </StackPanel>
           </If>
+          <TextBlock text="{Binding CakeUnsupportedServices}" foreground="{Resource CuiTextSoftBrush}" margin="0 12 0 0" />
         </StackPanel>
-      </StackPanel>
+      </ScrollViewer>
+    </If>
     </StackPanel>
   </DefaultTheme>
 </Cui>

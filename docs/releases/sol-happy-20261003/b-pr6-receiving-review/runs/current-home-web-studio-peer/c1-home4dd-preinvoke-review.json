@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "C1 independent preinvocation source peer",
+  "frozenCommit": "4dd3128bf9ec4d35523e5997d9ce6cedc392a003",
+  "parent": "01d847a3b15ae58329fa6e4b4fe66812e9bc895f",
+  "triggerBranch": "team-c/sol-happy-home-current-original-shutdown-20261004",
+  "onlyThreeAdditiveCiPaths": [
+    ".github/scripts/home-windows-original-shutdown.ps1",
+    ".github/validation/home-windows-original-shutdown.json",
+    ".github/workflows/team-c-home-windows-original-shutdown.yml"
+  ],
+  "all16688OutsideEntriesConserved": true,
+  "actualOutsideEntriesConserved": 16688,
+  "scriptWholeByteEqualPrior0d": true,
+  "workflowInverseExactAfterSoleTriggerLiteral": true,
+  "catalogAll80WholeActualCurrentBodiesSizeSHA": "PASS",
+  "previous79PinsChangedOnlyThreeExactPR9Bodies": [
+    "apps/Home/src/AvaloniaHome/Program.cs",
+    "apps/Home/tests/AvaloniaHome.Tests/HomeHostOriginalLifetimeTests.cs",
+    "apps/Home/tests/AvaloniaHome.Tests/HomeHostRenderTests.cs"
+  ],
+  "newCanonicalUiBodyPin": [
+    "9to1 Workspace/Home/UI/Home.cui"
+  ],
+  "allFiveUniqueHomeProductionControlBodiesExactlyOwnerB9OrPR9": {
+    "apps/Home/src/AvaloniaHome/Program.cs": "feb345664597e76b1fbc86a66f9a861a92c3c0ae",
+    "apps/Home/tests/AvaloniaHome.Tests/HomeHostOriginalLifetimeTests.cs": "feb345664597e76b1fbc86a66f9a861a92c3c0ae",
+    "apps/Home/tests/AvaloniaHome.Tests/HomeHostRenderTests.cs": "feb345664597e76b1fbc86a66f9a861a92c3c0ae",
+    "apps/Home/src/AvaloniaHome/HomeHostOriginalLifetime.cs": "b9f30f68aa62f257e1236c3837153b3d3423fdee",
+    "9to1 Workspace/Home/Source/Home/Core/HomeCoreRuntime.cs": "b9f30f68aa62f257e1236c3837153b3d3423fdee"
+  },
+  "originalSixIdentitiesAllAssertionsAndDeclaredNaturalQuitRuntimeCriteria": "CONSERVE_PREVIOUSLY_REVIEWED_WHOLE_SCRIPT",
+  "sourceGraph": "43 same current owning project refs available; not a native build/runtime claim",
+  "priorSourcePeers": [
+    {
+      "path": "/workspace/team-c-resume-evidence/c1-home-windows-harness-review-20261004/avalonia-task-successor-independent-source-review.json",
+      "bytes": 1376,
+      "sha256": "0d315e00aac53a2675206f8b8382c12e5f7bfea47269fde051f8f30774255142"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c1-home-pr9-independent-source-review-20261004/independent-source-review.json",
+      "bytes": 27493,
+      "sha256": "92a7d4bba92ac357b1ebf76f2a0f3b79585e63eb196d2092fbb68375de710ce2"
+    }
+  ],
+  "retainedFailures": "7e forced-1; first MSB4062 recipe and owner Action/CUIR011 original compiler/render negatives retained",
+  "qualification": "Actual fresh current Windows six/Release package/explicit native CtrlShiftQ not yet executed; external PR9 six-pass remains distinct, SDK-present/installedHome/normalCloseReopen/signing/donor/full acceptance pending",
+  "findings": [],
+  "preinvokeSourceScope": "ACK",
+  "localNativeBuildOrRuntime": "NOT_RUN"
+}

@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Immutable88bbc storage probe originalfailure, preinvoke source and independent C6 review; readonly mutation/retry/reopen NOT_REACHED",
+  "sourceCommit": "88bbc69d8c22cbf9095ddfc8282460dfc7841d07",
+  "actualRunId": 37215349177,
+  "fileCount": 25,
+  "totalBytes": 160249,
+  "files": [
+    {
+      "path": "pre-invocation/read-only-scope-assessment.json",
+      "bytes": 6938,
+      "sha256": "515264c8718fbad5c7faacac0767962a63eea14679776f0868058ea5560461f2"
+    },
+    {
+      "path": "pre-invocation/frozen-source-conservation.json",
+      "bytes": 5804,
+      "sha256": "2db1149f3ffd4e71d15984cf69a0e86131055cbcaf10389da2a044c583046be6"
+    },
+    {
+      "path": "pre-invocation/powershell-parser-receipt.json",
+      "bytes": 378,
+      "sha256": "5fcd98d58cc35ad61ec3f7624922568dff3c3a1bfed416bfaf862a430a56a607"
+    },
+    {
+      "path": "pre-invocation/powershell-parser.log",
+      "bytes": 38,
+      "sha256": "49a37f4d87da68c82665f8ff02beb616afd6181cc60aa3f9cede42401a8adbe0"
+    },
+    {
+      "path": "pre-invocation/parser-launch-path-refusal.log",
+      "bytes": 43,
+      "sha256": "8d844c95a2823dc5d80f391b9a84677795fa9ccf6524ef3080dfe436bd981b4a"
+    },
+    {
+      "path": "pre-invocation/local-conservation-controls.json",
+      "bytes": 862,
+      "sha256": "ddb0b1d444e15abd03d608617e2f6ca2c12c78728f6fe67964a9b8abd31dee92"
+    },
+    {
+      "path": "pre-invocation/linux-platform-refusal.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "pre-invocation/linux-platform-refusal/result.json",
+      "bytes": 1770,
+      "sha256": "2e2adb3426f8ed9dcbfb1502de0e77aeb9e565c33f2bf8077388f01dd38d349d"
+    },
+    {
+      "path": "pre-invocation/probe-actual-finally-guards.ps1",
+      "bytes": 2259,
+      "sha256": "48bf40755398a2a843c86a5dd71592226f7b701554c25773a49baed7a4471152"
+    },
+    {
+      "path": "pre-invocation/actual-finally-guards-receipt.json",
+      "bytes": 1188,
+      "sha256": "ec5661ef61e2e3e29b7a423b126f4dc10bcdd44cca23192f3e7f9d2e1c42146a"
+    },
+    {
+      "path": "pre-invocation/actual-finally-guards.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "pre-invocation/frozen-source/.github/scripts/boards-packaged-ui-controls.ps1",
+      "bytes": 37123,
+      "sha256": "cf117539f495d9c13b4152cb75dbea5c81490cc9be50dd911f3a08244639772b"
+    },
+    {
+      "path": "pre-invocation/frozen-source/.github/validation/boards-packaged-ui-controls.json",
+      "bytes": 4800,
+      "sha256": "2cfa034436e902e6c84e379c6ac05a5f4102f3b6b09949914b5a4757749bcf8b"
+    },
+    {
+      "path": "pre-invocation/frozen-source/.github/workflows/team-c-boards-packaged-ui-controls.yml",
+      "bytes": 3718,
+      "sha256": "cc6f51b745b604f99d84c9defaf62d0d4f405eacf70494ff94b31d5fd03e416a"
+    },
+    {
+      "path": "pre-invocation/frozen-source/eng/release-validation/boards-packaged-ui/README.md",
+      "bytes": 5189,
+      "sha256": "1eaccefc59d8903bc147781f2626b6dcc6a9a2efd2c776a172258159abc811c3"
+    },
+    {
+      "path": "pre-invocation/index.json",
+      "bytes": 3070,
+      "sha256": "544b94b5f4a7b7f81e54dc0164769ce5955d73817106db9ef79f584891431d89"
+    },
+    {
+      "path": "c6/storage-retry-pre-invocation-independent-review.json",
+      "bytes": 3967,
+      "sha256": "6a10c8b0eb053b00f5b1c81bfd7e2dfa72ae4f06881bfbe07cbf5a80efa451ed"
+    },
+    {
+      "path": "original-failure-88bbc/actual-failure-assessment.json",
+      "bytes": 1719,
+      "sha256": "9efe36766bd90206fe861be634021ae9ad5583a22e613f23172288a1cbb57700"
+    },
+    {
+      "path": "original-failure-88bbc/boards-storage-retry-original-88bbc.zip",
+      "bytes": 3220,
+      "sha256": "2d9b85415e6b2f6ef08da0105ad57c2fd62079dd7eb425e269a523802df43a3f"
+    },
+    {
+      "path": "original-failure-88bbc/first-launch.stderr.log",
+      "bytes": 5,
+      "sha256": "f01a374e9c81e3db89b3a42940c4d6a5447684986a1296e42bf13f196eed6295"
+    },
+    {
+      "path": "original-failure-88bbc/first-launch.stdout.log",
+      "bytes": 430,
+      "sha256": "17beb753d4a232fe96723bec163034b5a4d8daea8fffaa7e481b9d5b8052a9b0"
+    },
+    {
+      "path": "original-failure-88bbc/local-original-custody-receipt.json",
+      "bytes": 1011,
+      "sha256": "c518e4d562840db8b4f7e9d222538613d1a23bfae68d630d9fa0ea6e44279853"
+    },
+    {
+      "path": "original-failure-88bbc/official-artifact-metadata.json",
+      "bytes": 914,
+      "sha256": "7ee591629057cef92633c42fba730eb03d920a1d99b0252f746bffc227142fa0"
+    },
+    {
+      "path": "original-failure-88bbc/original-job.log",
+      "bytes": 59751,
+      "sha256": "485288be3225a0ad0f029785535496bb5deda9a349c327cd83eda8cfdfe74da7"
+    },
+    {
+      "path": "original-failure-88bbc/result.json",
+      "bytes": 16052,
+      "sha256": "fe0ffdbef3167b28329f271e1ea8e07bf74ee9d725628f725d46f1cd023c1cf0"
+    }
+  ],
+  "qualification": "41of41 admitted checks passed, initial Saved label timeout beforefault; exactfailure retained, no storage success claim. Prior67/85/preinvokeindices unchanged.",
+  "excluded": "Package binaries/runtime fixture/model, signedURLs, credentials/caches"
+}

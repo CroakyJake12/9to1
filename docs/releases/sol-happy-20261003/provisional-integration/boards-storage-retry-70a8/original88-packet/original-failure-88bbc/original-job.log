@@ -1,0 +1,512 @@
+﻿2026-10-04T16:03:38.7738169Z Current runner version: '2.337.0'
+2026-10-04T16:03:38.7761628Z ##[group]Runner Image Provisioner
+2026-10-04T16:03:38.7762420Z Hosted Compute Agent
+2026-10-04T16:03:38.7762967Z Version: 20260901.588
+2026-10-04T16:03:38.7763538Z Commit: f88ec8081b781fac6c440065ac7ff9e710ce3d0b
+2026-10-04T16:03:38.7764207Z Build Date: 2026-09-01T19:56:44Z
+2026-10-04T16:03:38.7764808Z Worker ID: {b18b7bb8-8a88-452d-a983-72c7141239d0}
+2026-10-04T16:03:38.7765486Z Azure Region: westus
+2026-10-04T16:03:38.7766013Z ##[endgroup]
+2026-10-04T16:03:38.7767350Z ##[group]Operating System
+2026-10-04T16:03:38.7768020Z Microsoft Windows Server 2022
+2026-10-04T16:03:38.7768590Z 10.0.20348
+2026-10-04T16:03:38.7769086Z Datacenter
+2026-10-04T16:03:38.7769579Z ##[endgroup]
+2026-10-04T16:03:38.7770043Z ##[group]Runner Image
+2026-10-04T16:03:38.7770581Z Image: windows-2022
+2026-10-04T16:03:38.7771085Z Version: 20260927.320.1
+2026-10-04T16:03:38.7772432Z Included Software: https://github.com/actions/runner-images/blob/win22/20260927.320/images/windows/Windows2022-Readme.md
+2026-10-04T16:03:38.7773876Z Image Release: https://github.com/actions/runner-images/releases/tag/win22%2F20260927.320
+2026-10-04T16:03:38.7774769Z ##[endgroup]
+2026-10-04T16:03:38.7775817Z ##[group]GITHUB_TOKEN Permissions
+2026-10-04T16:03:38.7777583Z Actions: read
+2026-10-04T16:03:38.7778125Z Contents: read
+2026-10-04T16:03:38.7778632Z Metadata: read
+2026-10-04T16:03:38.7779137Z ##[endgroup]
+2026-10-04T16:03:38.7781078Z Secret source: Actions
+2026-10-04T16:03:38.7781951Z Cache mode: write
+2026-10-04T16:03:38.7782605Z Prepare workflow directory
+2026-10-04T16:03:38.8212558Z Prepare all required actions
+2026-10-04T16:03:38.8259240Z Getting action download info
+2026-10-04T16:03:39.2503033Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-10-04T16:03:39.3620076Z Download action repository 'actions/download-artifact@v4' (SHA:d3f86a106a0bac45b974a628896c90dbdf5c8093)
+2026-10-04T16:03:39.8260106Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-10-04T16:03:40.1766558Z Complete job name: packaged-ui
+2026-10-04T16:03:40.3484636Z ##[group]Run git config --global core.autocrlf false
+2026-10-04T16:03:40.3485843Z [36;1mgit config --global core.autocrlf false[0m
+2026-10-04T16:03:40.3576181Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+2026-10-04T16:03:40.3577598Z env:
+2026-10-04T16:03:40.3578265Z   GIT_OPTIONAL_LOCKS: 0
+2026-10-04T16:03:40.3578986Z ##[endgroup]
+2026-10-04T16:03:44.3277433Z ##[group]Run actions/checkout@v4
+2026-10-04T16:03:44.3278189Z with:
+2026-10-04T16:03:44.3278587Z   fetch-depth: 0
+2026-10-04T16:03:44.3279090Z   persist-credentials: false
+2026-10-04T16:03:44.3279732Z   repository: CroakyJake12/9to1
+2026-10-04T16:03:44.3287631Z   token: ***
+2026-10-04T16:03:44.3288114Z   ssh-strict: true
+2026-10-04T16:03:44.3288575Z   ssh-user: git
+2026-10-04T16:03:44.3289018Z   clean: true
+2026-10-04T16:03:44.3289523Z   sparse-checkout-cone-mode: true
+2026-10-04T16:03:44.3290170Z   fetch-tags: false
+2026-10-04T16:03:44.3290656Z   show-progress: true
+2026-10-04T16:03:44.3291137Z   lfs: false
+2026-10-04T16:03:44.3291555Z   submodules: false
+2026-10-04T16:03:44.3292048Z   set-safe-directory: true
+2026-10-04T16:03:44.3292653Z   allow-unsafe-pr-checkout: false
+2026-10-04T16:03:44.3293259Z env:
+2026-10-04T16:03:44.3293657Z   GIT_OPTIONAL_LOCKS: 0
+2026-10-04T16:03:44.3294159Z ##[endgroup]
+2026-10-04T16:03:44.6896900Z Syncing repository: CroakyJake12/9to1
+2026-10-04T16:03:44.6898280Z ##[group]Getting Git version info
+2026-10-04T16:03:44.6898613Z Working directory is 'D:\a\9to1\9to1'
+2026-10-04T16:03:44.9369530Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-04T16:03:44.9651975Z git version 2.55.0.windows.5
+2026-10-04T16:03:44.9786064Z ##[endgroup]
+2026-10-04T16:03:44.9791597Z Copying 'C:\Users\runneradmin\.gitconfig' to 'D:\a\_temp\97735d45-122e-4947-8995-73f0c05cbb53\.gitconfig'
+2026-10-04T16:03:44.9795175Z Temporarily overriding HOME='D:\a\_temp\97735d45-122e-4947-8995-73f0c05cbb53' before making global git config changes
+2026-10-04T16:03:44.9796845Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-04T16:03:44.9798778Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\9to1\9to1
+2026-10-04T16:03:45.0034467Z Deleting the contents of 'D:\a\9to1\9to1'
+2026-10-04T16:03:45.0040649Z ##[group]Initializing the repository
+2026-10-04T16:03:45.0054583Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\9to1\9to1
+2026-10-04T16:03:45.7065054Z Initialized empty Git repository in D:/a/9to1/9to1/.git/
+2026-10-04T16:03:45.7108607Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/CroakyJake12/9to1
+2026-10-04T16:03:46.0761925Z ##[endgroup]
+2026-10-04T16:03:46.0762605Z ##[group]Disabling automatic garbage collection
+2026-10-04T16:03:46.0771694Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2026-10-04T16:03:46.0997284Z ##[endgroup]
+2026-10-04T16:03:46.0997941Z ##[group]Setting up auth
+2026-10-04T16:03:46.1014961Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-04T16:03:46.1230762Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-04T16:03:54.3546092Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-04T16:03:54.3776004Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-04T16:03:54.7485954Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-04T16:03:54.7704974Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-04T16:03:55.1358521Z [command]"C:\Program Files\Git\bin\git.exe" config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-10-04T16:03:55.1592300Z ##[endgroup]
+2026-10-04T16:03:55.1593427Z ##[group]Fetching the repository
+2026-10-04T16:03:55.1608816Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+2026-10-04T16:04:07.7645451Z From https://github.com/CroakyJake12/9to1
+2026-10-04T16:04:07.7646063Z  * [new branch]        artifact/team-b-browser-83c24b2 -> origin/artifact/team-b-browser-83c24b2
+2026-10-04T16:04:07.7647416Z  * [new branch]        artifact/team-b-normal22d-original-transport-20261004 -> origin/artifact/team-b-normal22d-original-transport-20261004
+2026-10-04T16:04:07.7650089Z  * [new branch]        artifact/team-b-wave22d-independent-member-transport-20261004 -> origin/artifact/team-b-wave22d-independent-member-transport-20261004
+2026-10-04T16:04:07.7652061Z  * [new branch]        artifact/team-b-wave22d-member-transport-20261004 -> origin/artifact/team-b-wave22d-member-transport-20261004
+2026-10-04T16:04:07.7652913Z  * [new branch]        astra/launch-integration-20260930 -> origin/astra/launch-integration-20260930
+2026-10-04T16:04:07.7653988Z  * [new branch]        codex/cake-id-auth-backup-20261002 -> origin/codex/cake-id-auth-backup-20261002
+2026-10-04T16:04:07.7654946Z  * [new branch]        coord/sol-happy-20261003 -> origin/coord/sol-happy-20261003
+2026-10-04T16:04:07.7655540Z  * [new branch]        handoff/team-a-admin-sdk03-20261003 -> origin/handoff/team-a-admin-sdk03-20261003
+2026-10-04T16:04:07.7656230Z  * [new branch]        integration/team-c-unaccepted-20261004 -> origin/integration/team-c-unaccepted-20261004
+2026-10-04T16:04:07.7657705Z  * [new branch]        main                -> origin/main
+2026-10-04T16:04:07.7658288Z  * [new branch]        release/sol-happy-20261003 -> origin/release/sol-happy-20261003
+2026-10-04T16:04:07.7659039Z  * [new branch]        review/team-b-browser-aef50 -> origin/review/team-b-browser-aef50
+2026-10-04T16:04:07.7660376Z  * [new branch]        review/team-b-browser-baseline-8041 -> origin/review/team-b-browser-baseline-8041
+2026-10-04T16:04:07.7661073Z  * [new branch]        review/team-b-local-apps-20261004 -> origin/review/team-b-local-apps-20261004
+2026-10-04T16:04:07.7662349Z  * [new branch]        review/team-b-picture-fixed-7f-20261004 -> origin/review/team-b-picture-fixed-7f-20261004
+2026-10-04T16:04:07.7663102Z  * [new branch]        team-b/astra-browser-validation-20261003 -> origin/team-b/astra-browser-validation-20261003
+2026-10-04T16:04:07.7663847Z  * [new branch]        team-b/browser-receipt-fixes-20261004 -> origin/team-b/browser-receipt-fixes-20261004
+2026-10-04T16:04:07.7664622Z  * [new branch]        team-b/picture-fixed-7f-independent-20261004 -> origin/team-b/picture-fixed-7f-independent-20261004
+2026-10-04T16:04:07.7665345Z  * [new branch]        team-b/sol-happy-browser-20261003 -> origin/team-b/sol-happy-browser-20261003
+2026-10-04T16:04:07.7665881Z  * [new branch]        team-c/sol-happy-c1 -> origin/team-c/sol-happy-c1
+2026-10-04T16:04:07.7666514Z  * [new branch]        team-c/sol-happy-c1-home-window-probe-20261004 -> origin/team-c/sol-happy-c1-home-window-probe-20261004
+2026-10-04T16:04:07.7667437Z  * [new branch]        team-c/sol-happy-c1-windows-affected-three-20261004 -> origin/team-c/sol-happy-c1-windows-affected-three-20261004
+2026-10-04T16:04:07.7668407Z  * [new branch]        team-c/sol-happy-c1-windows-artifact-inspection-20261004 -> origin/team-c/sol-happy-c1-windows-artifact-inspection-20261004
+2026-10-04T16:04:07.7669382Z  * [new branch]        team-c/sol-happy-c1-windows-build-proposal-20261004 -> origin/team-c/sol-happy-c1-windows-build-proposal-20261004
+2026-10-04T16:04:07.7670058Z  * [new branch]        team-c/sol-happy-c2 -> origin/team-c/sol-happy-c2
+2026-10-04T16:04:07.7670694Z  * [new branch]        team-c/sol-happy-c2-browser-account-review -> origin/team-c/sol-happy-c2-browser-account-review
+2026-10-04T16:04:07.7672163Z  * [new branch]        team-c/sol-happy-c2-browser-fixture -> origin/team-c/sol-happy-c2-browser-fixture
+2026-10-04T16:04:07.7672879Z  * [new branch]        team-c/sol-happy-c2-fixture-recovery -> origin/team-c/sol-happy-c2-fixture-recovery
+2026-10-04T16:04:07.7674346Z  * [new branch]        team-c/sol-happy-c2-home-reconciled -> origin/team-c/sol-happy-c2-home-reconciled
+2026-10-04T16:04:07.7675237Z  * [new branch]        team-c/sol-happy-c2-https-validation -> origin/team-c/sol-happy-c2-https-validation
+2026-10-04T16:04:07.7676216Z  * [new branch]        team-c/sol-happy-c2-public-cors -> origin/team-c/sol-happy-c2-public-cors
+2026-10-04T16:04:07.7677012Z  * [new branch]        team-c/sol-happy-c3 -> origin/team-c/sol-happy-c3
+2026-10-04T16:04:07.7677661Z  * [new branch]        team-c/sol-happy-c3-accounts-cancellation -> origin/team-c/sol-happy-c3-accounts-cancellation
+2026-10-04T16:04:07.7678704Z  * [new branch]        team-c/sol-happy-c3-accounts-integration -> origin/team-c/sol-happy-c3-accounts-integration
+2026-10-04T16:04:07.7679647Z  * [new branch]        team-c/sol-happy-c3-admin-attempt3-evidence -> origin/team-c/sol-happy-c3-admin-attempt3-evidence
+2026-10-04T16:04:07.7680529Z  * [new branch]        team-c/sol-happy-c3-admin-compile-metadata-proposal -> origin/team-c/sol-happy-c3-admin-compile-metadata-proposal
+2026-10-04T16:04:07.7681405Z  * [new branch]        team-c/sol-happy-c3-admin-compile-validation -> origin/team-c/sol-happy-c3-admin-compile-validation
+2026-10-04T16:04:07.7682247Z  * [new branch]        team-c/sol-happy-c3-admin-context-validation -> origin/team-c/sol-happy-c3-admin-context-validation
+2026-10-04T16:04:07.7683294Z  * [new branch]        team-c/sol-happy-c3-admin-custody-errors-proposal -> origin/team-c/sol-happy-c3-admin-custody-errors-proposal
+2026-10-04T16:04:07.7684322Z  * [new branch]        team-c/sol-happy-c3-admin-custody-validation -> origin/team-c/sol-happy-c3-admin-custody-validation
+2026-10-04T16:04:07.7685471Z  * [new branch]        team-c/sol-happy-c3-admin-driver-proposal -> origin/team-c/sol-happy-c3-admin-driver-proposal
+2026-10-04T16:04:07.7686434Z  * [new branch]        team-c/sol-happy-c3-admin-driver-validation -> origin/team-c/sol-happy-c3-admin-driver-validation
+2026-10-04T16:04:07.7687302Z  * [new branch]        team-c/sol-happy-c3-admin-embedded-symbol-proposal -> origin/team-c/sol-happy-c3-admin-embedded-symbol-proposal
+2026-10-04T16:04:07.7688117Z  * [new branch]        team-c/sol-happy-c3-admin-evidence -> origin/team-c/sol-happy-c3-admin-evidence
+2026-10-04T16:04:07.7688915Z  * [new branch]        team-c/sol-happy-c3-admin-generated-context-proposal -> origin/team-c/sol-happy-c3-admin-generated-context-proposal
+2026-10-04T16:04:07.7689886Z  * [new branch]        team-c/sol-happy-c3-admin-generated-producer-proposal -> origin/team-c/sol-happy-c3-admin-generated-producer-proposal
+2026-10-04T16:04:07.7690796Z  * [new branch]        team-c/sol-happy-c3-admin-generated-validation -> origin/team-c/sol-happy-c3-admin-generated-validation
+2026-10-04T16:04:07.7691587Z  * [new branch]        team-c/sol-happy-c3-admin-key-proposal -> origin/team-c/sol-happy-c3-admin-key-proposal
+2026-10-04T16:04:07.7692418Z  * [new branch]        team-c/sol-happy-c3-admin-source-owner-proposal -> origin/team-c/sol-happy-c3-admin-source-owner-proposal
+2026-10-04T16:04:07.7693317Z  * [new branch]        team-c/sol-happy-c3-admin-source-owner-validation -> origin/team-c/sol-happy-c3-admin-source-owner-validation
+2026-10-04T16:04:07.7694171Z  * [new branch]        team-c/sol-happy-c3-admin-subreaper-proposal -> origin/team-c/sol-happy-c3-admin-subreaper-proposal
+2026-10-04T16:04:07.7694992Z  * [new branch]        team-c/sol-happy-c3-admin-subreaper-validation -> origin/team-c/sol-happy-c3-admin-subreaper-validation
+2026-10-04T16:04:07.7695866Z  * [new branch]        team-c/sol-happy-c3-admin-symbol-errors-proposal -> origin/team-c/sol-happy-c3-admin-symbol-errors-proposal
+2026-10-04T16:04:07.7696761Z  * [new branch]        team-c/sol-happy-c3-admin-symbol-errors-validation -> origin/team-c/sol-happy-c3-admin-symbol-errors-validation
+2026-10-04T16:04:07.7697568Z  * [new branch]        team-c/sol-happy-c3-billing-discovery -> origin/team-c/sol-happy-c3-billing-discovery
+2026-10-04T16:04:07.7698368Z  * [new branch]        team-c/sol-happy-c3-billing-hosted -> origin/team-c/sol-happy-c3-billing-hosted
+2026-10-04T16:04:07.7699142Z  * [new branch]        team-c/sol-happy-c3-boards-packaged-ui-20261004 -> origin/team-c/sol-happy-c3-boards-packaged-ui-20261004
+2026-10-04T16:04:07.7700025Z  * [new branch]        team-c/sol-happy-c3-boards-rich-history-20261004 -> origin/team-c/sol-happy-c3-boards-rich-history-20261004
+2026-10-04T16:04:07.7700914Z  * [new branch]        team-c/sol-happy-c3-boards-storage-retry-20261004 -> origin/team-c/sol-happy-c3-boards-storage-retry-20261004
+2026-10-04T16:04:07.7701686Z  * [new branch]        team-c/sol-happy-c3-oidc-proposal -> origin/team-c/sol-happy-c3-oidc-proposal
+2026-10-04T16:04:07.7702216Z  * [new branch]        team-c/sol-happy-c4 -> origin/team-c/sol-happy-c4
+2026-10-04T16:04:07.7702704Z  * [new branch]        team-c/sol-happy-c4-recovery -> origin/team-c/sol-happy-c4-recovery
+2026-10-04T16:04:07.7703189Z  * [new branch]        team-c/sol-happy-c5 -> origin/team-c/sol-happy-c5
+2026-10-04T16:04:07.7703778Z  * [new branch]        team-c/sol-happy-c5-durable-cancel-probe -> origin/team-c/sol-happy-c5-durable-cancel-probe
+2026-10-04T16:04:07.7704519Z  * [new branch]        team-c/sol-happy-c5-provider-reconciled -> origin/team-c/sol-happy-c5-provider-reconciled
+2026-10-04T16:04:07.7705243Z  * [new branch]        team-c/sol-happy-c5-workers-ai-metadata -> origin/team-c/sol-happy-c5-workers-ai-metadata
+2026-10-04T16:04:07.7706099Z  * [new branch]        team-c/sol-happy-c5-workers-ai-owner-rebase -> origin/team-c/sol-happy-c5-workers-ai-owner-rebase
+2026-10-04T16:04:07.7706990Z  * [new branch]        team-c/sol-happy-c6-handoff -> origin/team-c/sol-happy-c6-handoff
+2026-10-04T16:04:07.7707833Z  * [new branch]        team-c/sol-happy-global-web-picture-20261004 -> origin/team-c/sol-happy-global-web-picture-20261004
+2026-10-04T16:04:07.7708652Z  * [new branch]        validation/astra-accountapi-root13-cohort01 -> origin/validation/astra-accountapi-root13-cohort01
+2026-10-04T16:04:07.7709442Z  * [new branch]        validation/astra-accounts-library-cohort01 -> origin/validation/astra-accounts-library-cohort01
+2026-10-04T16:04:07.7710387Z  * [new branch]        validation/astra-agents-compiler09-isolated-original-20261004 -> origin/validation/astra-agents-compiler09-isolated-original-20261004
+2026-10-04T16:04:07.7711715Z  * [new branch]        validation/astra-agents-physical-documents-20261004 -> origin/validation/astra-agents-physical-documents-20261004
+2026-10-04T16:04:07.7713453Z  * [new branch]        validation/astra-android14-root18-managed-owning02 -> origin/validation/astra-android14-root18-managed-owning02
+2026-10-04T16:04:07.7715106Z  * [new branch]        validation/astra-android14-root19-managed-owning04 -> origin/validation/astra-android14-root19-managed-owning04
+2026-10-04T16:04:07.7716778Z  * [new branch]        validation/astra-android14-root19-managed-owning05 -> origin/validation/astra-android14-root19-managed-owning05
+2026-10-04T16:04:07.7718665Z  * [new branch]        validation/astra-android14-root20-picker-operation-owning13 -> origin/validation/astra-android14-root20-picker-operation-owning13
+2026-10-04T16:04:07.7720628Z  * [new branch]        validation/astra-android14-root20-widget-phase-owning10 -> origin/validation/astra-android14-root20-widget-phase-owning10
+2026-10-04T16:04:07.7722506Z  * [new branch]        validation/astra-android14-root20-widget-phase-owning11 -> origin/validation/astra-android14-root20-widget-phase-owning11
+2026-10-04T16:04:07.7724415Z  * [new branch]        validation/astra-android14-root21-original-speech-owning17 -> origin/validation/astra-android14-root21-original-speech-owning17
+2026-10-04T16:04:07.7725476Z  * [new branch]        validation/astra-android14-ui-tool-preconditions01 -> origin/validation/astra-android14-ui-tool-preconditions01
+2026-10-04T16:04:07.7726387Z  * [new branch]        validation/astra-android29-frozen91-20261001-1310 -> origin/validation/astra-android29-frozen91-20261001-1310
+2026-10-04T16:04:07.7727427Z  * [new branch]        validation/astra-apps17-root13-cohort01 -> origin/validation/astra-apps17-root13-cohort01
+2026-10-04T16:04:07.7728263Z  * [new branch]        validation/astra-auth-managed-20261001-2110 -> origin/validation/astra-auth-managed-20261001-2110
+2026-10-04T16:04:07.7729249Z  * [new branch]        validation/astra-auth29-original-artifact-transport-current25-01 -> origin/validation/astra-auth29-original-artifact-transport-current25-01
+2026-10-04T16:04:07.7730265Z  * [new branch]        validation/astra-automation-original-owning02 -> origin/validation/astra-automation-original-owning02
+2026-10-04T16:04:07.7731155Z  * [new branch]        validation/astra-automation-original-root18-union08 -> origin/validation/astra-automation-original-root18-union08
+2026-10-04T16:04:07.7732033Z  * [new branch]        validation/astra-automation28-root13-cohort01 -> origin/validation/astra-automation28-root13-cohort01
+2026-10-04T16:04:07.7732830Z  * [new branch]        validation/astra-cake-id-local-runtime08 -> origin/validation/astra-cake-id-local-runtime08
+2026-10-04T16:04:07.7733575Z  * [new branch]        validation/astra-cake-id-local-runtime09 -> origin/validation/astra-cake-id-local-runtime09
+2026-10-04T16:04:07.7734308Z  * [new branch]        validation/astra-cake-id-local-runtime11 -> origin/validation/astra-cake-id-local-runtime11
+2026-10-04T16:04:07.7735036Z  * [new branch]        validation/astra-cake-id-local-runtime12 -> origin/validation/astra-cake-id-local-runtime12
+2026-10-04T16:04:07.7736861Z  * [new branch]        validation/astra-cake-id-local-runtime13 -> origin/validation/astra-cake-id-local-runtime13
+2026-10-04T16:04:07.7737612Z  * [new branch]        validation/astra-cake-id-local-runtime14 -> origin/validation/astra-cake-id-local-runtime14
+2026-10-04T16:04:07.7738345Z  * [new branch]        validation/astra-cake-id-local-runtime15 -> origin/validation/astra-cake-id-local-runtime15
+2026-10-04T16:04:07.7739085Z  * [new branch]        validation/astra-cake-id-local-runtime17 -> origin/validation/astra-cake-id-local-runtime17
+2026-10-04T16:04:07.7740433Z  * [new branch]        validation/astra-cake-id-local-runtime19 -> origin/validation/astra-cake-id-local-runtime19
+2026-10-04T16:04:07.7741805Z  * [new branch]        validation/astra-cake-id-local-runtime21 -> origin/validation/astra-cake-id-local-runtime21
+2026-10-04T16:04:07.7742962Z  * [new branch]        validation/astra-cake-id-local-runtime25-independent-auth -> origin/validation/astra-cake-id-local-runtime25-independent-auth
+2026-10-04T16:04:07.7744122Z  * [new branch]        validation/astra-cake-id-local-runtime25-independent-auth-traffic26 -> origin/validation/astra-cake-id-local-runtime25-independent-auth-traffic26
+2026-10-04T16:04:07.7745061Z  * [new branch]        validation/astra-canvas65-cohort01 -> origin/validation/astra-canvas65-cohort01
+2026-10-04T16:04:07.7745795Z  * [new branch]        validation/astra-canvas65-current22-full49-03 -> origin/validation/astra-canvas65-current22-full49-03
+2026-10-04T16:04:07.7746647Z  * [new branch]        validation/astra-canvas65-root18-complete-union11 -> origin/validation/astra-canvas65-root18-complete-union11
+2026-10-04T16:04:07.7747477Z  * [new branch]        validation/astra-compatibility53-cohort01 -> origin/validation/astra-compatibility53-cohort01
+2026-10-04T16:04:07.7748296Z  * [new branch]        validation/astra-compatibility54-root15-owning01 -> origin/validation/astra-compatibility54-root15-owning01
+2026-10-04T16:04:07.7749191Z  * [new branch]        validation/astra-compatibility54-root16-combined02 -> origin/validation/astra-compatibility54-root16-combined02
+2026-10-04T16:04:07.7750145Z  * [new branch]        validation/astra-compiler05-original-custody-20261004 -> origin/validation/astra-compiler05-original-custody-20261004
+2026-10-04T16:04:07.7751101Z  * [new branch]        validation/astra-compiler07-original-custody-20261004 -> origin/validation/astra-compiler07-original-custody-20261004
+2026-10-04T16:04:07.7752651Z  * [new branch]        validation/astra-data-automation-root18-owning03 -> origin/validation/astra-data-automation-root18-owning03
+2026-10-04T16:04:07.7753492Z  * [new branch]        validation/astra-data-browse-owning01 -> origin/validation/astra-data-browse-owning01
+2026-10-04T16:04:07.7754189Z  * [new branch]        validation/astra-data-browse-owning04 -> origin/validation/astra-data-browse-owning04
+2026-10-04T16:04:07.7754956Z  * [new branch]        validation/astra-data-browse-root18-combined01 -> origin/validation/astra-data-browse-root18-combined01
+2026-10-04T16:04:07.7755782Z  * [new branch]        validation/astra-data21-managed-20261001-1720 -> origin/validation/astra-data21-managed-20261001-1720
+2026-10-04T16:04:07.7756644Z  * [new branch]        validation/astra-desktop-visible-26-root18-owning10 -> origin/validation/astra-desktop-visible-26-root18-owning10
+2026-10-04T16:04:07.7757663Z  * [new branch]        validation/astra-desktop-visible-desktop-mail-root19-owning15 -> origin/validation/astra-desktop-visible-desktop-mail-root19-owning15
+2026-10-04T16:04:07.7758752Z  * [new branch]        validation/astra-desktop-visible-files-root19-corrector14 -> origin/validation/astra-desktop-visible-files-root19-corrector14
+2026-10-04T16:04:07.7759767Z  * [new branch]        validation/astra-desktop-visible-files-root19-owning13 -> origin/validation/astra-desktop-visible-files-root19-owning13
+2026-10-04T16:04:07.7760742Z  * [new branch]        validation/astra-desktop-visible-forms-root18-owning02 -> origin/validation/astra-desktop-visible-forms-root18-owning02
+2026-10-04T16:04:07.7761817Z  * [new branch]        validation/astra-desktop-visible-forms-root19-owning07 -> origin/validation/astra-desktop-visible-forms-root19-owning07
+2026-10-04T16:04:07.7762812Z  * [new branch]        validation/astra-desktop-visible-joint05-root30-native01 -> origin/validation/astra-desktop-visible-joint05-root30-native01
+2026-10-04T16:04:07.7763841Z  * [new branch]        validation/astra-desktop-visible-mail-root19-corrective04 -> origin/validation/astra-desktop-visible-mail-root19-corrective04
+2026-10-04T16:04:07.7764834Z  * [new branch]        validation/astra-desktop-visible-mail-root19-owning03 -> origin/validation/astra-desktop-visible-mail-root19-owning03
+2026-10-04T16:04:07.7765860Z  * [new branch]        validation/astra-desktop-visible-mail30-root22-home-native06 -> origin/validation/astra-desktop-visible-mail30-root22-home-native06
+2026-10-04T16:04:07.7766943Z  * [new branch]        validation/astra-desktop-visible-mail30-root22-home-native08 -> origin/validation/astra-desktop-visible-mail30-root22-home-native08
+2026-10-04T16:04:07.7768022Z  * [new branch]        validation/astra-desktop-visible-mail30-root22-home-native09 -> origin/validation/astra-desktop-visible-mail30-root22-home-native09
+2026-10-04T16:04:07.7769282Z  * [new branch]        validation/astra-desktop-visible-mail30-root22-private04 -> origin/validation/astra-desktop-visible-mail30-root22-private04
+2026-10-04T16:04:07.7770345Z  * [new branch]        validation/astra-desktop-visible-mail30-root22-sites-home01 -> origin/validation/astra-desktop-visible-mail30-root22-sites-home01
+2026-10-04T16:04:07.7771313Z  * [new branch]        validation/astra-desktop-visible-root15-owning01 -> origin/validation/astra-desktop-visible-root15-owning01
+2026-10-04T16:04:07.7772221Z  * [new branch]        validation/astra-desktop-visible-shelf37-e1644a16-07 -> origin/validation/astra-desktop-visible-shelf37-e1644a16-07
+2026-10-04T16:04:07.7773225Z  * [new branch]        validation/astra-desktop-visible-spaces2-root22-private02 -> origin/validation/astra-desktop-visible-spaces2-root22-private02
+2026-10-04T16:04:07.7774316Z  * [new branch]        validation/astra-desktop26-root18-owning09 -> origin/validation/astra-desktop26-root18-owning09
+2026-10-04T16:04:07.7775392Z  * [new branch]        validation/astra-files16-data22-forms25-managed-20261001-1830 -> origin/validation/astra-files16-data22-forms25-managed-20261001-1830
+2026-10-04T16:04:07.7776386Z  * [new branch]        validation/astra-forms-math01-24531d46 -> origin/validation/astra-forms-math01-24531d46
+2026-10-04T16:04:07.7777138Z  * [new branch]        validation/astra-games-artifact-recovery02 -> origin/validation/astra-games-artifact-recovery02
+2026-10-04T16:04:07.7777942Z  * [new branch]        validation/astra-games-normals-root15-owning01 -> origin/validation/astra-games-normals-root15-owning01
+2026-10-04T16:04:07.7778859Z  * [new branch]        validation/astra-games-normals-root18-restore-helper15 -> origin/validation/astra-games-normals-root18-restore-helper15
+2026-10-04T16:04:07.7779768Z  * [new branch]        validation/astra-games-normals-root18-union11 -> origin/validation/astra-games-normals-root18-union11
+2026-10-04T16:04:07.7780602Z  * [new branch]        validation/astra-games-root18-restore-helper14 -> origin/validation/astra-games-root18-restore-helper14
+2026-10-04T16:04:07.7781422Z  * [new branch]        validation/astra-go28-managed-20261001-1810 -> origin/validation/astra-go28-managed-20261001-1810
+2026-10-04T16:04:07.7782214Z  * [new branch]        validation/astra-go39-managed-20261001-cohort01 -> origin/validation/astra-go39-managed-20261001-cohort01
+2026-10-04T16:04:07.7783072Z  * [new branch]        validation/astra-home437-original-custody-20261004 -> origin/validation/astra-home437-original-custody-20261004
+2026-10-04T16:04:07.7783957Z  * [new branch]        validation/astra-home437-original-owning-20261004 -> origin/validation/astra-home437-original-owning-20261004
+2026-10-04T16:04:07.7784964Z  * [new branch]        validation/astra-linux-native-signed-current22-full-06 -> origin/validation/astra-linux-native-signed-current22-full-06
+2026-10-04T16:04:07.7785946Z  * [new branch]        validation/astra-linux-native-signed-current22-full-09 -> origin/validation/astra-linux-native-signed-current22-full-09
+2026-10-04T16:04:07.7786915Z  * [new branch]        validation/astra-linux-native-signed-current22-full-11 -> origin/validation/astra-linux-native-signed-current22-full-11
+2026-10-04T16:04:07.7787885Z  * [new branch]        validation/astra-linux-native-signed-current22-full-12 -> origin/validation/astra-linux-native-signed-current22-full-12
+2026-10-04T16:04:07.7788848Z  * [new branch]        validation/astra-linux-native-signed-current22-full-13 -> origin/validation/astra-linux-native-signed-current22-full-13
+2026-10-04T16:04:07.7789819Z  * [new branch]        validation/astra-linux-native-signed-current22-full-14 -> origin/validation/astra-linux-native-signed-current22-full-14
+2026-10-04T16:04:07.7790786Z  * [new branch]        validation/astra-linux-native-signed-current22-full-15 -> origin/validation/astra-linux-native-signed-current22-full-15
+2026-10-04T16:04:07.7791754Z  * [new branch]        validation/astra-linux-native-signed-current22-full-16 -> origin/validation/astra-linux-native-signed-current22-full-16
+2026-10-04T16:04:07.7792721Z  * [new branch]        validation/astra-linux-native-signed-current22-full-17 -> origin/validation/astra-linux-native-signed-current22-full-17
+2026-10-04T16:04:07.7793687Z  * [new branch]        validation/astra-linux-native-signed-current22-full-18 -> origin/validation/astra-linux-native-signed-current22-full-18
+2026-10-04T16:04:07.7794657Z  * [new branch]        validation/astra-linux-native-signed-current22-full-19 -> origin/validation/astra-linux-native-signed-current22-full-19
+2026-10-04T16:04:07.7795625Z  * [new branch]        validation/astra-linux-native-signed-current22-full-20 -> origin/validation/astra-linux-native-signed-current22-full-20
+2026-10-04T16:04:07.7796590Z  * [new branch]        validation/astra-linux-native-signed-current22-full-21 -> origin/validation/astra-linux-native-signed-current22-full-21
+2026-10-04T16:04:07.7797554Z  * [new branch]        validation/astra-linux-native-signed-current22-full-22 -> origin/validation/astra-linux-native-signed-current22-full-22
+2026-10-04T16:04:07.7798455Z  * [new branch]        validation/astra-maps-shelf-current20-owning21 -> origin/validation/astra-maps-shelf-current20-owning21
+2026-10-04T16:04:07.7799972Z  * [new branch]        validation/astra-maps-shelf-full-hang-diagnostic11 -> origin/validation/astra-maps-shelf-full-hang-diagnostic11
+2026-10-04T16:04:07.7801735Z  * [new branch]        validation/astra-maps-shelf-home-browse-corrector18 -> origin/validation/astra-maps-shelf-home-browse-corrector18
+2026-10-04T16:04:07.7803693Z  * [new branch]        validation/astra-maps-shelf-observable-corrector17 -> origin/validation/astra-maps-shelf-observable-corrector17
+2026-10-04T16:04:07.7805374Z  * [new branch]        validation/astra-maps-shelf-owning03 -> origin/validation/astra-maps-shelf-owning03
+2026-10-04T16:04:07.7806688Z  * [new branch]        validation/astra-maps-shelf-two-fixture-corrective15 -> origin/validation/astra-maps-shelf-two-fixture-corrective15
+2026-10-04T16:04:07.7808350Z  * [new branch]        validation/astra-maps-shelf-two-way-input-corrective16 -> origin/validation/astra-maps-shelf-two-way-input-corrective16
+2026-10-04T16:04:07.7810016Z  * [new branch]        validation/astra-maps13-artifact-recovery01 -> origin/validation/astra-maps13-artifact-recovery01
+2026-10-04T16:04:07.7810824Z  * [new branch]        validation/astra-media11-root15-owning01 -> origin/validation/astra-media11-root15-owning01
+2026-10-04T16:04:07.7812219Z  * [new branch]        validation/astra-media11-root17-combined02 -> origin/validation/astra-media11-root17-combined02
+2026-10-04T16:04:07.7814018Z  * [new branch]        validation/astra-models-vision-monologue-call-current20-owning04 -> origin/validation/astra-models-vision-monologue-call-current20-owning04
+2026-10-04T16:04:07.7816586Z  * [new branch]        validation/astra-models-vision-monologue-call-positive-plan-owning07 -> origin/validation/astra-models-vision-monologue-call-positive-plan-owning07
+2026-10-04T16:04:07.7819406Z  * [new branch]        validation/astra-models-vision-monologue-call-receipt-owning05 -> origin/validation/astra-models-vision-monologue-call-receipt-owning05
+2026-10-04T16:04:07.7821236Z  * [new branch]        validation/astra-models-vision-monologue-call-startup-owning06 -> origin/validation/astra-models-vision-monologue-call-startup-owning06
+2026-10-04T16:04:07.7822403Z  * [new branch]        validation/astra-models-vision-monologue-root18-owning02 -> origin/validation/astra-models-vision-monologue-root18-owning02
+2026-10-04T16:04:07.7823343Z  * [new branch]        validation/astra-models-vision-root17-owning01 -> origin/validation/astra-models-vision-root17-owning01
+2026-10-04T16:04:07.7824228Z  * [new branch]        validation/astra-models8-managed-20261001-cohort01 -> origin/validation/astra-models8-managed-20261001-cohort01
+2026-10-04T16:04:07.7825056Z  * [new branch]        validation/astra-monologue-root18-owning01 -> origin/validation/astra-monologue-root18-owning01
+2026-10-04T16:04:07.7826001Z  * [new branch]        validation/astra-monologue-windows-media-failure-diagnostic12 -> origin/validation/astra-monologue-windows-media-failure-diagnostic12
+2026-10-04T16:04:07.7827052Z  * [new branch]        validation/astra-monologue-windows-native-producer09 -> origin/validation/astra-monologue-windows-native-producer09
+2026-10-04T16:04:07.7827937Z  * [new branch]        validation/astra-monologue-windows-owning02 -> origin/validation/astra-monologue-windows-owning02
+2026-10-04T16:04:07.7828720Z  * [new branch]        validation/astra-monologue-windows-owning04 -> origin/validation/astra-monologue-windows-owning04
+2026-10-04T16:04:07.7829491Z  * [new branch]        validation/astra-monologue-windows-owning05 -> origin/validation/astra-monologue-windows-owning05
+2026-10-04T16:04:07.7830266Z  * [new branch]        validation/astra-monologue-windows-owning06 -> origin/validation/astra-monologue-windows-owning06
+2026-10-04T16:04:07.7831044Z  * [new branch]        validation/astra-monologue-windows-owning08 -> origin/validation/astra-monologue-windows-owning08
+2026-10-04T16:04:07.7832100Z  * [new branch]        validation/astra-monologue-windows-terminal-diagnostic11 -> origin/validation/astra-monologue-windows-terminal-diagnostic11
+2026-10-04T16:04:07.7833100Z  * [new branch]        validation/astra-picture-preconditions-readonly03 -> origin/validation/astra-picture-preconditions-readonly03
+2026-10-04T16:04:07.7834038Z  * [new branch]        validation/astra-picture-preconditions-readonly04 -> origin/validation/astra-picture-preconditions-readonly04
+2026-10-04T16:04:07.7834825Z  * [new branch]        validation/astra-picture19-cohort01 -> origin/validation/astra-picture19-cohort01
+2026-10-04T16:04:07.7835625Z  * [new branch]        validation/astra-picture19-root18-copy-admission11 -> origin/validation/astra-picture19-root18-copy-admission11
+2026-10-04T16:04:07.7836532Z  * [new branch]        validation/astra-picture19-root19-current-owning20 -> origin/validation/astra-picture19-root19-current-owning20
+2026-10-04T16:04:07.7837383Z  * [new branch]        validation/astra-prepared-graph01-a63d77fe -> origin/validation/astra-prepared-graph01-a63d77fe
+2026-10-04T16:04:07.7838160Z  * [new branch]        validation/astra-rational-math01-a63d77fe -> origin/validation/astra-rational-math01-a63d77fe
+2026-10-04T16:04:07.7838925Z  * [new branch]        validation/astra-rendered4-root13-cohort01 -> origin/validation/astra-rendered4-root13-cohort01
+2026-10-04T16:04:07.7839709Z  * [new branch]        validation/astra-root12-managed-20261001-1655 -> origin/validation/astra-root12-managed-20261001-1655
+2026-10-04T16:04:07.7840495Z  * [new branch]        validation/astra-root13-android-cohort01 -> origin/validation/astra-root13-android-cohort01
+2026-10-04T16:04:07.7842057Z  * [new branch]        validation/astra-root13-android-startup4-cohort01 -> origin/validation/astra-root13-android-startup4-cohort01
+2026-10-04T16:04:07.7842963Z  * [new branch]        validation/astra-root13-android-startup5-cohort01 -> origin/validation/astra-root13-android-startup5-cohort01
+2026-10-04T16:04:07.7843839Z  * [new branch]        validation/astra-root13-managed-20261001-2130 -> origin/validation/astra-root13-managed-20261001-2130
+2026-10-04T16:04:07.7844690Z  * [new branch]        validation/astra-root14-android-startup5-cohort01 -> origin/validation/astra-root14-android-startup5-cohort01
+2026-10-04T16:04:07.7845522Z  * [new branch]        validation/astra-root14-coherent-cohort01 -> origin/validation/astra-root14-coherent-cohort01
+2026-10-04T16:04:07.7846263Z  * [new branch]        validation/astra-shared-math01-2f7759a6 -> origin/validation/astra-shared-math01-2f7759a6
+2026-10-04T16:04:07.7846986Z  * [new branch]        validation/astra-shared-math01-3441a6b9 -> origin/validation/astra-shared-math01-3441a6b9
+2026-10-04T16:04:07.7847737Z  * [new branch]        validation/astra-sites-wpe-prerequisites01 -> origin/validation/astra-sites-wpe-prerequisites01
+2026-10-04T16:04:07.7848497Z  * [new branch]        validation/astra-stacks-root16-whole01 -> origin/validation/astra-stacks-root16-whole01
+2026-10-04T16:04:07.7849236Z  * [new branch]        validation/astra-stacks-root17-combined02 -> origin/validation/astra-stacks-root17-combined02
+2026-10-04T16:04:07.7850106Z  * [new branch]        validation/astra-stacks-root18-canonical-inspection03 -> origin/validation/astra-stacks-root18-canonical-inspection03
+2026-10-04T16:04:07.7851072Z  * [new branch]        validation/astra-stacks-root19-canonical-inspection04 -> origin/validation/astra-stacks-root19-canonical-inspection04
+2026-10-04T16:04:07.7851939Z  * [new branch]        validation/astra-web-signed-owning03 -> origin/validation/astra-web-signed-owning03
+2026-10-04T16:04:07.7852699Z  * [new branch]        validation/astra-web-signed-root15-coherent01 -> origin/validation/astra-web-signed-root15-coherent01
+2026-10-04T16:04:07.7853676Z  * [new branch]        validation/sol-happy-forms16-owning-original-custody-20261004 -> origin/validation/sol-happy-forms16-owning-original-custody-20261004
+2026-10-04T16:04:07.7854793Z  * [new branch]        validation/sol-happy-forms17-dual-original-custody-20261004 -> origin/validation/sol-happy-forms17-dual-original-custody-20261004
+2026-10-04T16:04:07.7856295Z  * [new branch]        validation/sol-happy-linux20-original-custody-20261004 -> origin/validation/sol-happy-linux20-original-custody-20261004
+2026-10-04T16:04:07.7857327Z  * [new branch]        validation/sol-happy-linux21-original-custody-20261004 -> origin/validation/sol-happy-linux21-original-custody-20261004
+2026-10-04T16:04:07.7858296Z  * [new branch]        validation/sol-happy-linux23-original-custody-20261004 -> origin/validation/sol-happy-linux23-original-custody-20261004
+2026-10-04T16:04:07.7859249Z  * [new branch]        validation/sol-happy-sdk07-original-custody-20261004 -> origin/validation/sol-happy-sdk07-original-custody-20261004
+2026-10-04T16:04:07.7860174Z  * [new branch]        validation/sol-happy-sdk08-original-custody-20261004 -> origin/validation/sol-happy-sdk08-original-custody-20261004
+2026-10-04T16:04:07.7861177Z  * [new branch]        validation/sol-happy-sdk08-owning-original-custody-20261004 -> origin/validation/sol-happy-sdk08-owning-original-custody-20261004
+2026-10-04T16:04:07.7862285Z  * [new branch]        validation/sol-happy-sdk08-regression-original-custody-20261004 -> origin/validation/sol-happy-sdk08-regression-original-custody-20261004
+2026-10-04T16:04:07.7863710Z [command]"C:\Program Files\Git\bin\git.exe" branch --list --remote origin/team-c/sol-happy-c3-boards-storage-retry-20261004
+2026-10-04T16:04:07.8084613Z   origin/team-c/sol-happy-c3-boards-storage-retry-20261004
+2026-10-04T16:04:07.8113358Z [command]"C:\Program Files\Git\bin\git.exe" rev-parse refs/remotes/origin/team-c/sol-happy-c3-boards-storage-retry-20261004
+2026-10-04T16:04:07.8432875Z 88bbc69d8c22cbf9095ddfc8282460dfc7841d07
+2026-10-04T16:04:07.8453138Z ##[endgroup]
+2026-10-04T16:04:07.8454726Z ##[group]Determining the checkout info
+2026-10-04T16:04:07.8455233Z ##[endgroup]
+2026-10-04T16:04:07.8462080Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2026-10-04T16:04:07.8746483Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2026-10-04T16:04:07.8952153Z ##[group]Checking out the ref
+2026-10-04T16:04:07.8964150Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force -B team-c/sol-happy-c3-boards-storage-retry-20261004 refs/remotes/origin/team-c/sol-happy-c3-boards-storage-retry-20261004
+2026-10-04T16:04:08.9757350Z Updating files:  47% (4472/9486)
+2026-10-04T16:04:08.9947120Z Updating files:  48% (4554/9486)
+2026-10-04T16:04:09.0153770Z Updating files:  49% (4649/9486)
+2026-10-04T16:04:09.0359694Z Updating files:  50% (4743/9486)
+2026-10-04T16:04:09.0579918Z Updating files:  51% (4838/9486)
+2026-10-04T16:04:09.0793716Z Updating files:  52% (4933/9486)
+2026-10-04T16:04:09.1005940Z Updating files:  53% (5028/9486)
+2026-10-04T16:04:09.1227526Z Updating files:  54% (5123/9486)
+2026-10-04T16:04:09.1447141Z Updating files:  55% (5218/9486)
+2026-10-04T16:04:09.1660726Z Updating files:  56% (5313/9486)
+2026-10-04T16:04:09.1881223Z Updating files:  57% (5408/9486)
+2026-10-04T16:04:09.2072105Z Updating files:  58% (5502/9486)
+2026-10-04T16:04:09.2269715Z Updating files:  59% (5597/9486)
+2026-10-04T16:04:09.2452047Z Updating files:  60% (5692/9486)
+2026-10-04T16:04:09.2633074Z Updating files:  61% (5787/9486)
+2026-10-04T16:04:09.2818421Z Updating files:  62% (5882/9486)
+2026-10-04T16:04:09.3006094Z Updating files:  63% (5977/9486)
+2026-10-04T16:04:09.3221031Z Updating files:  64% (6072/9486)
+2026-10-04T16:04:09.3405795Z Updating files:  65% (6166/9486)
+2026-10-04T16:04:09.3581717Z Updating files:  66% (6261/9486)
+2026-10-04T16:04:09.3755579Z Updating files:  67% (6356/9486)
+2026-10-04T16:04:09.3904165Z Updating files:  68% (6451/9486)
+2026-10-04T16:04:09.4084157Z Updating files:  69% (6546/9486)
+2026-10-04T16:04:09.4256975Z Updating files:  70% (6641/9486)
+2026-10-04T16:04:09.4448743Z Updating files:  71% (6736/9486)
+2026-10-04T16:04:09.4625994Z Updating files:  72% (6830/9486)
+2026-10-04T16:04:09.4801626Z Updating files:  73% (6925/9486)
+2026-10-04T16:04:09.4980388Z Updating files:  74% (7020/9486)
+2026-10-04T16:04:09.5164798Z Updating files:  75% (7115/9486)
+2026-10-04T16:04:09.5326158Z Updating files:  76% (7210/9486)
+2026-10-04T16:04:09.5536848Z Updating files:  77% (7305/9486)
+2026-10-04T16:04:09.5706611Z Updating files:  78% (7400/9486)
+2026-10-04T16:04:09.5876545Z Updating files:  79% (7494/9486)
+2026-10-04T16:04:09.6061611Z Updating files:  80% (7589/9486)
+2026-10-04T16:04:09.6248843Z Updating files:  81% (7684/9486)
+2026-10-04T16:04:09.6434798Z Updating files:  82% (7779/9486)
+2026-10-04T16:04:09.6627825Z Updating files:  83% (7874/9486)
+2026-10-04T16:04:09.6805384Z Updating files:  84% (7969/9486)
+2026-10-04T16:04:09.6992667Z Updating files:  85% (8064/9486)
+2026-10-04T16:04:09.7185852Z Updating files:  86% (8158/9486)
+2026-10-04T16:04:09.7461426Z Updating files:  87% (8253/9486)
+2026-10-04T16:04:09.7636065Z Updating files:  88% (8348/9486)
+2026-10-04T16:04:09.7834557Z Updating files:  89% (8443/9486)
+2026-10-04T16:04:09.8004566Z Updating files:  90% (8538/9486)
+2026-10-04T16:04:09.8200144Z Updating files:  91% (8633/9486)
+2026-10-04T16:04:09.9184321Z Updating files:  92% (8728/9486)
+2026-10-04T16:04:09.9264790Z Updating files:  93% (8822/9486)
+2026-10-04T16:04:09.9373947Z Updating files:  93% (8865/9486)
+2026-10-04T16:04:09.9563836Z Updating files:  94% (8917/9486)
+2026-10-04T16:04:09.9729993Z Updating files:  95% (9012/9486)
+2026-10-04T16:04:09.9929104Z Updating files:  96% (9107/9486)
+2026-10-04T16:04:10.0109305Z Updating files:  97% (9202/9486)
+2026-10-04T16:04:10.0328347Z Updating files:  98% (9297/9486)
+2026-10-04T16:04:10.0521628Z Updating files:  99% (9392/9486)
+2026-10-04T16:04:10.0522263Z Updating files: 100% (9486/9486)
+2026-10-04T16:04:10.0522706Z Updating files: 100% (9486/9486), done.
+2026-10-04T16:04:10.0767245Z Switched to a new branch 'team-c/sol-happy-c3-boards-storage-retry-20261004'
+2026-10-04T16:04:10.0840046Z branch 'team-c/sol-happy-c3-boards-storage-retry-20261004' set up to track 'origin/team-c/sol-happy-c3-boards-storage-retry-20261004'.
+2026-10-04T16:04:10.0911278Z ##[endgroup]
+2026-10-04T16:04:10.1212691Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2026-10-04T16:04:10.1406270Z 88bbc69d8c22cbf9095ddfc8282460dfc7841d07
+2026-10-04T16:04:10.1432816Z ##[group]Removing auth
+2026-10-04T16:04:10.1443603Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-04T16:04:10.1663297Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-04T16:04:10.6094196Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-04T16:04:10.6284350Z http.https://github.com/.extraheader
+2026-10-04T16:04:10.6312967Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all http.https://github.com/.extraheader
+2026-10-04T16:04:10.6529072Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-04T16:04:11.0751997Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-04T16:04:11.0963864Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-04T16:04:11.5234990Z ##[endgroup]
+2026-10-04T16:04:11.5463407Z ##[group]Run $ErrorActionPreference = 'Stop'
+2026-10-04T16:04:11.5463830Z [36;1m$ErrorActionPreference = 'Stop'[0m
+2026-10-04T16:04:11.5464362Z [36;1m$c = Get-Content -Raw .github/validation/boards-packaged-ui-controls.json | ConvertFrom-Json[0m
+2026-10-04T16:04:11.5464994Z [36;1mif ($env:GITHUB_REPOSITORY -cne $c.repository) { throw 'Wrong repository.' }[0m
+2026-10-04T16:04:11.5466159Z [36;1m$headers = @{ Authorization = "***"; Accept = 'application/vnd.github+json'; 'X-GitHub-Api-Version' = '2022-11-28' }[0m
+2026-10-04T16:04:11.5466807Z [36;1m$base = "https://api.github.com/repos/$($c.repository)/actions"[0m
+2026-10-04T16:04:11.5467335Z [36;1m$run = Invoke-RestMethod -Headers $headers -Uri "$base/runs/$($c.producerRunId)"[0m
+2026-10-04T16:04:11.5467893Z [36;1mif ($run.head_sha -cne $c.sourceBasis) { throw 'Producer run source mismatch.' }[0m
+2026-10-04T16:04:11.5468344Z [36;1mforeach ($expected in $c.artifacts) {[0m
+2026-10-04T16:04:11.5468805Z [36;1m  $a = Invoke-RestMethod -Headers $headers -Uri "$base/artifacts/$($expected.id)"[0m
+2026-10-04T16:04:11.5470078Z [36;1m  if ($a.id -ne $expected.id -or $a.name -cne $expected.name -or $a.size_in_bytes -ne $expected.bytes -or $a.digest -cne $expected.digest -or $a.expired -or $a.workflow_run.id -ne $c.producerRunId -or $a.workflow_run.head_sha -cne $c.sourceBasis) { throw 'Immutable artifact metadata mismatch or expiry.' }[0m
+2026-10-04T16:04:11.5471189Z [36;1m}[0m
+2026-10-04T16:04:11.5506921Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+2026-10-04T16:04:11.5507340Z env:
+2026-10-04T16:04:11.5507510Z   GIT_OPTIONAL_LOCKS: 0
+2026-10-04T16:04:11.5509850Z   GITHUB_TOKEN: ***
+2026-10-04T16:04:11.5510044Z ##[endgroup]
+2026-10-04T16:04:13.8567641Z ##[group]Run actions/download-artifact@v4
+2026-10-04T16:04:13.8568177Z with:
+2026-10-04T16:04:13.8570552Z   github-token: ***
+2026-10-04T16:04:13.8570764Z   run-id: 37208129079
+2026-10-04T16:04:13.8570959Z   artifact-ids: 11305252552
+2026-10-04T16:04:13.8571186Z   path: D:\a\_temp/boards-package-input
+2026-10-04T16:04:13.8571454Z   merge-multiple: false
+2026-10-04T16:04:13.8571666Z   repository: CroakyJake12/9to1
+2026-10-04T16:04:13.8571875Z env:
+2026-10-04T16:04:13.8572038Z   GIT_OPTIONAL_LOCKS: 0
+2026-10-04T16:04:13.8572226Z ##[endgroup]
+2026-10-04T16:04:14.0440758Z Downloading artifacts by ID
+2026-10-04T16:04:14.0442587Z Fetching artifact list for workflow run 37208129079 in repository CroakyJake12/9to1
+2026-10-04T16:04:14.0515584Z (node:6776) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-04T16:04:14.0516307Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-04T16:04:14.0907207Z (node:6776) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-10-04T16:04:14.3388675Z Found 6 artifact(s)
+2026-10-04T16:04:14.3389934Z Preparing to download the following artifacts:
+2026-10-04T16:04:14.3391807Z - windows-unaccepted-boards-fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8-1 (ID: 11305252552, Size: 78087570, Expected Digest: sha256:97012e4592d4c0f5da14bedd1ac13b5a6b1988bd292b2e990bccd3cdec30d68f)
+2026-10-04T16:04:14.3433658Z Downloading artifact '11305252552' from 'CroakyJake12/9to1'
+2026-10-04T16:04:14.6552628Z Redirecting to blob download url: https://productionresultssa13.blob.core.windows.net/actions-results/791a6780-42cb-8a3f-aba7-53846eb434fa/workflow-job-run-5608a456-1755-5b1a-9376-aea456a1fc6c/artifacts/35a1b0b807c8336d12a4df2ba0aec1fe8b8f0d2ae87bfcf920b604f103340a84.zip
+2026-10-04T16:04:14.6554946Z Starting download of artifact to: D:\a\_temp\boards-package-input\windows-unaccepted-boards-fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8-1
+2026-10-04T16:04:15.0086533Z (node:6776) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+2026-10-04T16:04:17.8139045Z SHA256 digest of downloaded artifact is 97012e4592d4c0f5da14bedd1ac13b5a6b1988bd292b2e990bccd3cdec30d68f
+2026-10-04T16:04:17.8139934Z Artifact download completed successfully.
+2026-10-04T16:04:17.8140236Z Total of 1 artifact(s) downloaded
+2026-10-04T16:04:17.8151098Z Download artifact has finished successfully
+2026-10-04T16:04:17.8386806Z ##[group]Run actions/download-artifact@v4
+2026-10-04T16:04:17.8387146Z with:
+2026-10-04T16:04:17.8389522Z   github-token: ***
+2026-10-04T16:04:17.8389727Z   run-id: 37208129079
+2026-10-04T16:04:17.8389925Z   artifact-ids: 11305292433
+2026-10-04T16:04:17.8390174Z   path: D:\a\_temp/boards-observation-input
+2026-10-04T16:04:17.8390449Z   merge-multiple: false
+2026-10-04T16:04:17.8390690Z   repository: CroakyJake12/9to1
+2026-10-04T16:04:17.8390915Z env:
+2026-10-04T16:04:17.8391085Z   GIT_OPTIONAL_LOCKS: 0
+2026-10-04T16:04:17.8391278Z ##[endgroup]
+2026-10-04T16:04:18.0098696Z Downloading artifacts by ID
+2026-10-04T16:04:18.0104872Z Fetching artifact list for workflow run 37208129079 in repository CroakyJake12/9to1
+2026-10-04T16:04:18.0190018Z (node:772) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-04T16:04:18.0191082Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-04T16:04:18.0623776Z (node:772) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-10-04T16:04:18.2803500Z Found 6 artifact(s)
+2026-10-04T16:04:18.2804414Z Preparing to download the following artifacts:
+2026-10-04T16:04:18.2806228Z - windows-observation-boards-fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8-1 (ID: 11305292433, Size: 34079, Expected Digest: sha256:7645fdba070177fd1319112030a11242eacfc5000b8cabb553b0e9f16938b234)
+2026-10-04T16:04:18.2853534Z Downloading artifact '11305292433' from 'CroakyJake12/9to1'
+2026-10-04T16:04:18.4895240Z Redirecting to blob download url: https://productionresultssa13.blob.core.windows.net/actions-results/791a6780-42cb-8a3f-aba7-53846eb434fa/workflow-job-run-5608a456-1755-5b1a-9376-aea456a1fc6c/artifacts/484e68a0bc2e124f9403cc73c9065c1c09537634cb2f27ad27ec9ea0d7b985e4.zip
+2026-10-04T16:04:18.4896838Z Starting download of artifact to: D:\a\_temp\boards-observation-input\windows-observation-boards-fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8-1
+2026-10-04T16:04:18.7705483Z (node:772) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+2026-10-04T16:04:18.8346322Z SHA256 digest of downloaded artifact is 7645fdba070177fd1319112030a11242eacfc5000b8cabb553b0e9f16938b234
+2026-10-04T16:04:18.8347202Z Artifact download completed successfully.
+2026-10-04T16:04:18.8347518Z Total of 1 artifact(s) downloaded
+2026-10-04T16:04:18.8354266Z Download artifact has finished successfully
+2026-10-04T16:04:18.8570390Z ##[group]Run & .github/scripts/boards-packaged-ui-controls.ps1 -PackageInput 'D:\a\_temp/boards-package-input' -ObservationInput 'D:\a\_temp/boards-observation-input' -OutputDirectory $env:PROBE_OUTPUT -Scenario storage-retry
+2026-10-04T16:04:18.8572152Z [36;1m& .github/scripts/boards-packaged-ui-controls.ps1 -PackageInput 'D:\a\_temp/boards-package-input' -ObservationInput 'D:\a\_temp/boards-observation-input' -OutputDirectory $env:PROBE_OUTPUT -Scenario storage-retry[0m
+2026-10-04T16:04:18.8573096Z [36;1mexit $LASTEXITCODE[0m
+2026-10-04T16:04:18.8610896Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+2026-10-04T16:04:18.8611303Z env:
+2026-10-04T16:04:18.8611491Z   GIT_OPTIONAL_LOCKS: 0
+2026-10-04T16:04:18.8611787Z   PROBE_OUTPUT: D:\a\_temp/boards-storage-retry-37215349177-1
+2026-10-04T16:04:18.8612111Z ##[endgroup]
+2026-10-04T16:04:47.3729660Z ##[error]Process completed with exit code 1.
+2026-10-04T16:04:47.3888333Z ##[group]Run actions/upload-artifact@v4
+2026-10-04T16:04:47.3888701Z with:
+2026-10-04T16:04:47.3889125Z   name: boards-storage-retry-unaccepted-88bbc69d8c22cbf9095ddfc8282460dfc7841d07-1
+2026-10-04T16:04:47.3890080Z   path: D:\a\_temp/boards-storage-retry-37215349177-1/result.json
+D:\a\_temp/boards-storage-retry-37215349177-1/*.log
+D:\a\_temp/boards-storage-retry-37215349177-1/*.png
+
+2026-10-04T16:04:47.3890815Z   if-no-files-found: warn
+2026-10-04T16:04:47.3891027Z   retention-days: 7
+2026-10-04T16:04:47.3891219Z   compression-level: 6
+2026-10-04T16:04:47.3891417Z   overwrite: false
+2026-10-04T16:04:47.3891613Z   include-hidden-files: false
+2026-10-04T16:04:47.3891832Z env:
+2026-10-04T16:04:47.3891995Z   GIT_OPTIONAL_LOCKS: 0
+2026-10-04T16:04:47.3892204Z ##[endgroup]
+2026-10-04T16:04:47.5707295Z (node:7336) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-04T16:04:47.5708095Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-04T16:04:47.5781019Z With the provided path, there will be 3 files uploaded
+2026-10-04T16:04:47.5786695Z Artifact name is valid!
+2026-10-04T16:04:47.5788781Z Root directory input is valid!
+2026-10-04T16:04:47.9691081Z Beginning upload of artifact content to blob storage
+2026-10-04T16:04:47.9958029Z (node:7336) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-10-04T16:04:48.2834801Z Uploaded bytes 3220
+2026-10-04T16:04:48.3611256Z Finished uploading artifact content to blob storage!
+2026-10-04T16:04:48.3612005Z SHA256 digest of uploaded artifact zip is 2d9b85415e6b2f6ef08da0105ad57c2fd62079dd7eb425e269a523802df43a3f
+2026-10-04T16:04:48.3614219Z Finalizing artifact upload
+2026-10-04T16:04:48.6261060Z Artifact boards-storage-retry-unaccepted-88bbc69d8c22cbf9095ddfc8282460dfc7841d07-1.zip successfully finalized. Artifact ID 11307674844
+2026-10-04T16:04:48.6262455Z Artifact boards-storage-retry-unaccepted-88bbc69d8c22cbf9095ddfc8282460dfc7841d07-1 has been successfully uploaded! Final size is 3220 bytes. Artifact ID is 11307674844
+2026-10-04T16:04:48.6269157Z Artifact download URL: https://github.com/CroakyJake12/9to1/actions/runs/37215349177/artifacts/11307674844
+2026-10-04T16:04:48.6542267Z Post job cleanup.
+2026-10-04T16:04:48.8329778Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-04T16:04:48.8534518Z git version 2.55.0.windows.5
+2026-10-04T16:04:48.8599976Z Copying 'C:\Users\runneradmin\.gitconfig' to 'D:\a\_temp\bd1d8566-8e54-43ab-8998-0c052ce6e266\.gitconfig'
+2026-10-04T16:04:48.8621216Z Temporarily overriding HOME='D:\a\_temp\bd1d8566-8e54-43ab-8998-0c052ce6e266' before making global git config changes
+2026-10-04T16:04:48.8622688Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-04T16:04:48.8636024Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\9to1\9to1
+2026-10-04T16:04:48.8912397Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-04T16:04:48.9164427Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-04T16:04:49.3487357Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-04T16:04:49.3710909Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-04T16:04:49.8015370Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-04T16:04:49.8228363Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-04T16:04:50.2697970Z Cleaning up orphan processes
+2026-10-04T16:04:50.2955639Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/download-artifact@v4, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+

@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "candidate": "3b0bdf4da0e3ced93626f815679632f369ee4972",
+  "parent": "2f8c586e4441c844795d8cee9248688dfcac38bd",
+  "owner": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+  "sourceReview": "ACK exact4 additive canonical EEC bodies + one precise EmbeddedResource declaration",
+  "sourcePins": [
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Prefabs/ChatComposerController.cs",
+      "bytes": 8129,
+      "sha256": "b4bf7954d1a7a16fd0add1dd6811a5b1d1b806da8120920cb78d5dd204f63612",
+      "gitBlob": "85a53e4d93a64c1388222a6a8fab37e38248385a"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Prefabs/ComposerEmojiCatalogue.cs",
+      "bytes": 1967,
+      "sha256": "5b749c15a76da1d5fa7f871362962dcf4b6927b954f832a562188a9cb6beb436",
+      "gitBlob": "0f9c9a428058fa45df66b99ae0f5e84d2d41a5b5"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Preferences/LocalMotionPreferencesService.cs",
+      "bytes": 6820,
+      "sha256": "80eb1fad1628e0ecd7e13fb2a9133bb51e1146d893e5eda4aeef4075294abb28",
+      "gitBlob": "37c9aee3ae6a2a4410862d8ddfa3ac1f9124bb74"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Resources/emoji-test-17.0.txt",
+      "bytes": 669326,
+      "sha256": "1d8a944f88d7952f7ef7c5167fef3c67995bcae24543949710231b03a201acda",
+      "gitBlob": "e42fdef494399d2a05b9b75930a3231fe81b2436"
+    }
+  ],
+  "resourceSemantics": "Linked ComposerEmojiCatalogue type compiles into actual scene assembly named Haven (project Haven.WriteBrowser.Scene.csproj); typeof(...).Assembly reads that same assembly manifest. Explicit LogicalName exactly matches GetManifestResourceStream(Haven.Desktop.Resources.emoji-test-17.0.txt), independent of project name and RootNamespace NineToOne.Web.Write. Existing original Haven font-resource URI/assembly constraint remains unchanged. No filesystem donor fallback or fake table; original Unicode17 full resource body/license comments retained.",
+  "protectedSourceAreasUnchanged": [
+    "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenSceneControl.cs",
+    "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenAvaloniaThemeResolver.cs",
+    "9to1 Workspace/shared/src/Haven.Desktop/Services/MotionPreferencesService.cs",
+    "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/UnifiedExecutionRepositories.cs",
+    "9to1 Workspace/Sites"
+  ],
+  "onlyFiveProductionPaths": [
+    "9to1 Workspace/shared/src/Haven.Desktop/Prefabs/ChatComposerController.cs",
+    "9to1 Workspace/shared/src/Haven.Desktop/Prefabs/ComposerEmojiCatalogue.cs",
+    "9to1 Workspace/shared/src/Haven.Desktop/Resources/emoji-test-17.0.txt",
+    "9to1 Workspace/shared/src/Haven.Infrastructure/Preferences/LocalMotionPreferencesService.cs",
+    "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj"
+  ],
+  "functionalAcceptance": "NOT_RUN source review only; C4 unchanged normalNav5 and meaningful existing emoji controls required; prior c87893pass/5notrun preserved"
+}

@@ -1,0 +1,12 @@
+{
+  "candidateCommit": "099d7ee01ca2f530c5c16acde7fc10e7f2e8ecd9",
+  "workflowParse": "YAML BaseLoader structural parse PASS",
+  "jobRunnerTempContext": "ABSENT",
+  "invocationStepRunnerTempContext": "PRESENT",
+  "declaredReadOnlyPermissions": "PASS",
+  "exactNativeSourcePins": "8/8 PASS",
+  "unchangedActuallyCompiledCSharp5HelperSha256": "617b4185968014bfd3cc90d56464aae79e272aa6d8888dc4696fa6f327fce2d5",
+  "PowerShellParser": "actual PS7 parse zero errors; Windows PS5.1 runtime NOT_RUN",
+  "actualLinuxAdmission": "expected structured Windows platform refusal; no app launches",
+  "nativeWindowsUI": "NOT_RUN_PENDING_C6_AND_ROOT"
+}

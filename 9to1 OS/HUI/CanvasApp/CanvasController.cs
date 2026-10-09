@@ -188,11 +188,21 @@ public sealed partial class CanvasController : IDisposable
     {
         ThrowIfDisposed();
         var old = _session;
-        _session = _createSession();
-        old.Dispose();
-        ApplyAllStyles();
-        _session.SetTool(Tool);
-        _session.SetShape(Shape);
+        var created = _createSession();
+        try
+        {
+            ApplyAllStyles(created);
+            created.SetTool(Tool);
+            created.SetShape(Shape);
+            if (!ReferenceEquals(old, created)) old.Dispose();
+        }
+        catch (Exception error)
+        {
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(
+                RetireRejectedSession(created, old, error)).Throw();
+            throw;
+        }
+        _session = created;
         DocumentPath = null;
         DocumentName = "Untitled";
         IsDirty = false;
@@ -205,20 +215,32 @@ public sealed partial class CanvasController : IDisposable
         ThrowIfDisposed();
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         ArgumentNullException.ThrowIfNull(bytes);
+        var fullPath = Path.GetFullPath(path);
         var restored = _restoreSession(bytes);
-        var frame = restored.RenderSvg();
-        if (frame.Bounds.Width <= 0 || frame.Bounds.Height <= 0)
-        {
-            restored.Dispose();
-            throw new InvalidDataException("Document produced invalid render bounds.");
-        }
         var old = _session;
+        try
+        {
+            var frame = restored.RenderSvg();
+            if (!double.IsFinite(frame.Bounds.X) || !double.IsFinite(frame.Bounds.Y) ||
+                !double.IsFinite(frame.Bounds.Width) || !double.IsFinite(frame.Bounds.Height) ||
+                frame.Bounds.Width <= 0 || frame.Bounds.Height <= 0)
+                throw new InvalidDataException("Document produced invalid render bounds.");
+            // The replacement is still owned locally until rendering/style setup
+            // succeeds. A failed candidate cannot retire the current document.
+            ApplyAllStyles(restored);
+            restored.SetTool(Tool);
+            restored.SetShape(Shape);
+            if (!ReferenceEquals(old, restored)) old.Dispose();
+        }
+        catch (Exception error)
+        {
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(
+                RetireRejectedSession(restored, old, error)).Throw();
+            throw;
+        }
         _session = restored;
-        old.Dispose();
-        ApplyAllStyles();
-        _session.SetTool(Tool);
-        DocumentPath = Path.GetFullPath(path);
-        DocumentName = Path.GetFileNameWithoutExtension(path);
+        DocumentPath = fullPath;
+        DocumentName = Path.GetFileNameWithoutExtension(fullPath);
         IsDirty = false;
         SetStatus($"Opened {DocumentName}");
         Console.WriteLine($"CANVAS_RNOTE_DOCUMENT_REOPENED bytes={bytes.Length} path={path}");
@@ -249,14 +271,24 @@ public sealed partial class CanvasController : IDisposable
     {
         ThrowIfDisposed();
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        string? temporary = null;
+        var ownsTemporary = false;
+        var failures = new List<Exception>();
+        var acknowledged = false;
+        var savedBytes = 0;
+        string? acknowledgedPath = null;
+        string? acknowledgedName = null;
         try
         {
             var payload = _session.SaveRnote();
             var full = Path.GetFullPath(path);
             Directory.CreateDirectory(Path.GetDirectoryName(full)!);
-            var temporary = full + ".tmp";
-            using (var stream = new FileStream(temporary, FileMode.Create, FileAccess.Write, FileShare.None))
+            // Stage only a new path owned by this save. A user-owned '<file>.tmp'
+            // sibling must never be truncated or promoted as this document.
+            temporary = full + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             {
+                ownsTemporary = true;
                 stream.Write(payload, 0, payload.Length);
                 stream.Flush(true);
             }
@@ -266,18 +298,47 @@ public sealed partial class CanvasController : IDisposable
             DocumentPath = full;
             DocumentName = Path.GetFileNameWithoutExtension(full);
             IsDirty = false;
-            SetStatus($"Saved {DocumentName}");
-            Console.WriteLine($"CANVAS_RNOTE_DOCUMENT_SAVED bytes={payload.Length} path={full}");
+            savedBytes = payload.Length;
+            acknowledgedPath = full;
+            acknowledgedName = DocumentName;
+            acknowledged = true;
         }
         catch (Exception exception)
         {
-            SetStatus($"Save failed: {exception.Message}");
-            Console.WriteLine($"CANVAS_RNOTE_DOCUMENT_SAVE_FAILED reason={exception.Message}");
-            throw;
+            failures.Add(exception);
         }
         finally
         {
-            RaiseChanged();
+            if (ownsTemporary && temporary is not null)
+            {
+                try { File.Delete(temporary); }
+                catch (Exception cleanup) when (cleanup is IOException or UnauthorizedAccessException)
+                {
+                    failures.Add(cleanup);
+                }
+            }
+        }
+        // A notification fault cannot erase an actual file acknowledgement or
+        // replace the original write/cleanup cause. Publish its truthful state
+        // and conserve all failures independently of the storage result.
+        var status = acknowledged ? $"Saved {acknowledgedName}" : $"Save failed: {failures[0].Message}";
+        ObserveSaveNotification(() => SetStatus(status));
+        ObserveSaveNotification(() => Console.WriteLine(acknowledged
+            ? $"CANVAS_RNOTE_DOCUMENT_SAVED bytes={savedBytes} path={acknowledgedPath}"
+            : $"CANVAS_RNOTE_DOCUMENT_SAVE_FAILED reason={failures[0].Message}"));
+        ObserveSaveNotification(RaiseChanged);
+        if (failures.Count == 1)
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count != 0)
+            throw new AggregateException("Canvas save, owned staging cleanup or observation failed.", failures);
+
+        void ObserveSaveNotification(Action notification)
+        {
+            try { notification(); }
+            catch (Exception error)
+            {
+                if (!failures.Any(value => ReferenceEquals(value, error))) failures.Add(error);
+            }
         }
     }
 
@@ -289,11 +350,21 @@ public sealed partial class CanvasController : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private void ApplyAllStyles()
+    private static Exception RetireRejectedSession(ICanvasSession rejected, ICanvasSession original, Exception failure)
     {
+        if (ReferenceEquals(rejected, original)) return failure;
+        try { rejected.Dispose(); }
+        catch (Exception cleanup) { return new AggregateException("Canvas replacement preparation and cleanup failed.", failure, cleanup); }
+        return failure;
+    }
+
+    private void ApplyAllStyles(ICanvasSession? target = null)
+    {
+        target ??= _session;
         foreach (var tool in new[] { CanvasTool.Pen, CanvasTool.Highlighter, CanvasTool.Shape })
-            ApplyStyleFor(tool);
-        _session.SetEraser(_eraserWidth, _eraserStyle);
+            if (_styles.TryGetValue(tool, out var style))
+                target.SetPenStyle(tool, style.Color, style.Width);
+        target.SetEraser(_eraserWidth, _eraserStyle);
     }
 
     private void ApplyStyleFor(CanvasTool tool)

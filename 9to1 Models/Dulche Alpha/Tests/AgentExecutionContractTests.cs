@@ -1,3 +1,5 @@
+using Xunit;
+
 namespace Dulche.Runtime.Agents.Tests;
 
 public sealed class AgentExecutionContractTests

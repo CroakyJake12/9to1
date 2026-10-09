@@ -1,0 +1,40 @@
+{
+  "sourceCommit": "c996db6dbdd6f4e04d528b11f5ddbb252fad8517",
+  "basisCommit": "3b0bdf4da0e3ced93626f815679632f369ee4972",
+  "command": [
+    "/workspace/.tools/dotnet/dotnet",
+    "test",
+    "/workspace/team-c-c5-mesh-filename-provisional/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+    "-c",
+    "Debug",
+    "--artifacts-path",
+    "/workspace/team-c-resume-evidence/c5-mesh-filename-provisional/artifacts",
+    "-p:NuGetAudit=false",
+    "--filter",
+    "FullyQualifiedName~Mesh",
+    "--logger",
+    "trx;LogFileName=owning-mesh.trx",
+    "--results-directory",
+    "/workspace/team-c-resume-evidence/c5-mesh-filename-provisional/focused-Debug/results"
+  ],
+  "cwd": "/workspace/team-c-c5-mesh-filename-provisional",
+  "normalProjectCompilation": true,
+  "focusedActualOwningControls": true,
+  "environmentOverrides": {
+    "DOTNET_CLI_HOME": "/workspace/team-c-resume-evidence/c5-mesh-filename-provisional/dotnet-home",
+    "NUGET_PACKAGES": "/workspace/.tools/nuget/packages",
+    "XDG_CONFIG_HOME": "/workspace/team-c-resume-evidence/c5-mesh-filename-provisional/xdg-config",
+    "AVALONIA_TELEMETRY_OPTOUT": "1",
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+    "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1",
+    "DOTNET_GENERATE_ASPNET_CERTIFICATE": "false",
+    "C5_DURABLE_JOB_EVIDENCE": "/workspace/team-c-resume-evidence/c5-mesh-filename-provisional/focused-Debug/databases",
+    "PATH": "/workspace/.tools/dotnet:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/opt/codex/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback"
+  },
+  "startedUTC": "2026-10-04T13:51:29.804848+00:00",
+  "timeoutSeconds": 300,
+  "exit": 0,
+  "status": "COMPLETE",
+  "finishedUTC": "2026-10-04T13:51:55.323054+00:00",
+  "seconds": 25.518
+}

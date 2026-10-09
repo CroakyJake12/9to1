@@ -1,0 +1,38 @@
+{
+  "schema": "root-owned-local-auth-diagnostic-original-session-close/v1",
+  "originalToolSessionId": 7148,
+  "producerCommit": "df547b5c7492050dc2ad2bdd99e250358cf444fc",
+  "testCommit": "dde012fa7c73b966bbc204aff2570566c890261e",
+  "fixtureCommit": "df547b5c7492050dc2ad2bdd99e250358cf444fc",
+  "manifestContentsReadByRoot": false,
+  "launchActualToolReceipt": {
+    "chunk_id": "8a7c74",
+    "wall_time_seconds": 1.000416019,
+    "session_id": 7148,
+    "original_token_count": 0,
+    "output": ""
+  },
+  "exactStopInput": "stop\n",
+  "stopOriginalToolReceipt": {
+    "chunk_id": "59fa51",
+    "wall_time_seconds": 1.000717426,
+    "session_id": 7148,
+    "original_token_count": 157,
+    "output": "stop\r\n{\"status\":\"drained\",\"custody\":{\"strictReaped\":true,\"originalsDisappeared\":true,\"reaped\":[{\"pid\":153244,\"birth\":2335614,\"code\":1,\"status\":143},{\"pid\":153270,\"birth\":2335724,\"code\":2,\"status\":15},{\"pid\":153280,\"birth\":2335741,\"code\":2,\"status\":15},{\"pid\":153286,\"birth\":2335749,\"code\":2,\"status\":9},{\"pid\":153299,\"birth\":2335853,\"code\":2,\"status\":9}],\"signals\":[{\"pid\":153244,\"birth\":2335614,\"signal\":15},{\"pid\":153251,\"birth\":2335618,\"signal\":15},{\"pid\":153270,\"birth\":2335724,\"signal\":15},{\"pid\":153280,\"birth\":2335741,\"signal\":15},{\"pid\":153286,\"birth\":2335749,\"signal\":15},{\"pid\":153299,\"birth\":2335853,\"signal\":15}]}}\r\n"
+  },
+  "finalOriginalToolReceipt": {
+    "chunk_id": "68e8ea",
+    "wall_time_seconds": 0.000027323,
+    "exit_code": 0,
+    "original_token_count": 0,
+    "output": ""
+  },
+  "browserResult": {
+    "passed": 0,
+    "failed": 1,
+    "notRun": 6,
+    "stage": "owned-fixture-preflight",
+    "qualification": "After owned fixture read and sealed-server creation but before Chromium launch resolved; popup/fetch/status diagnostics not observed. No issuer or broker cause inferred."
+  },
+  "issuerSignals": "Exact maintained issuer stop signals/reaps retained separately from no-signal browser-family closure."
+}

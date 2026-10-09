@@ -1,0 +1,47 @@
+  Determining projects to restore...
+  Restored D:\a\9to1\9to1\framework\CUI\DevTools\src\Haven.CUI.DevTools.csproj (in 7.94 sec).
+  Restored D:\a\9to1\9to1\framework\CUI\Core\CakeOS.Cui.Core.csproj (in 2 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\Compiler\CakeOS.Cui.Compiler.csproj (in 15 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\AI\NineToOne.Cui.AI.csproj (in 1 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Windows\Avalonia.Win32\Avalonia.Win32.csproj (in 2.86 sec).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Windows\Avalonia.Win32.Automation\Avalonia.Win32.Automation.csproj (in 4 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\tools\DevGenerators\DevGenerators.csproj (in 1.6 sec).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\tools\DevAnalyzers\DevAnalyzers.csproj (in 1 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\tools\Avalonia.Generators\Avalonia.Generators.csproj (in 0.7 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\tools\Avalonia.DBus.Generators\Avalonia.DBus.Generators.csproj (in 0.6 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\tools\Avalonia.Analyzers.VisualBasic\Avalonia.Analyzers.VisualBasic.csproj (in 241 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\tools\Avalonia.Analyzers.CSharp\Avalonia.Analyzers.CSharp.csproj (in 0.9 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\tools\Avalonia.Analyzers.CodeFixes.CSharp\Avalonia.Analyzers.CodeFixes.CSharp.csproj (in 1.28 sec).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Skia\Avalonia.Skia\Avalonia.Skia.csproj (in 5 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Markup\Avalonia.Markup\Avalonia.Markup.csproj (in 0.9 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Markup\Avalonia.Markup.Xaml\Avalonia.Markup.Xaml.csproj (in 1 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Headless\Avalonia.Headless\Avalonia.Headless.csproj (in 2 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\HarfBuzz\Avalonia.HarfBuzz\Avalonia.HarfBuzz.csproj (in 1 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Avalonia.X11\Avalonia.X11.csproj (in 36 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Avalonia.Vulkan\Avalonia.Vulkan.csproj (in 1 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Avalonia.Themes.Fluent\Avalonia.Themes.Fluent.csproj (in 2 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Avalonia.Remote.Protocol\Avalonia.Remote.Protocol.csproj (in 0.7 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Avalonia.OpenGL\Avalonia.OpenGL.csproj (in 1 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Avalonia.Native\Avalonia.Native.csproj (in 3 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Avalonia.MicroCom\Avalonia.MicroCom.csproj (in 0.6 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Avalonia.Metal\Avalonia.Metal.csproj (in 3 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Avalonia.FreeDesktop\Avalonia.FreeDesktop.csproj (in 67 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Avalonia.FreeDesktop.AtSpi\Avalonia.FreeDesktop.AtSpi.csproj (in 3 ms).
+  Restored D:\a\9to1\9to1\apps\Home\tests\AvaloniaHome.Tests\AvaloniaHome.Tests.csproj (in 1.17 sec).
+  Restored D:\a\9to1\9to1\apps\Home\src\AvaloniaHome\AvaloniaHome.csproj (in 6 ms).
+  Restored D:\a\9to1\9to1\9to1 Workspace\shared\src\Haven.Core\Haven.Core.csproj (in 0.5 ms).
+  Restored D:\a\9to1\9to1\9to1 Workspace\shared\src\Haven.Application\Haven.Application.csproj (in 0.5 ms).
+  Restored D:\a\9to1\9to1\9to1 Workspace\Home\HavenOS.Home.csproj (in 1 ms).
+  Restored D:\a\9to1\9to1\9to1 Models\Dulche Alpha\Dulche.Runtime.csproj (in 0.6 ms).
+  Restored D:\a\9to1\9to1\9to1 Models\Dulche Alpha\Den.csproj (in 0.3 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Avalonia.Fonts.Inter\Avalonia.Fonts.Inter.csproj (in 1 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Avalonia.Dialogs\Avalonia.Dialogs.csproj (in 1 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Avalonia.Desktop\Avalonia.Desktop.csproj (in 5 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Avalonia.DesignerSupport\Avalonia.DesignerSupport.csproj (in 1 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Avalonia.Controls\Avalonia.Controls.csproj (in 0.9 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Avalonia.Build.Tasks\Avalonia.Build.Tasks.csproj (in 81 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\src\Avalonia.Base\Avalonia.Base.csproj (in 0.8 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\vendor\Avalonia\packages\Avalonia\Avalonia.csproj (in 3 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\Themes\CakeOS.Cui.Themes.csproj (in 1 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\Runtime\CakeOS.Cui.Runtime.csproj (in 5 ms).
+  Restored D:\a\9to1\9to1\framework\CUI\Language\CakeOS.Cui.Language.csproj (in 0.3 ms).

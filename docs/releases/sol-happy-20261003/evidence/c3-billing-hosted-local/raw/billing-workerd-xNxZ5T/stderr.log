@@ -1,0 +1,18 @@
+MiniflareCoreError [ERR_VALIDATION]: Unexpected options passed to `new Miniflare()` constructor:
+✖ Unrecognized key: "d1Persist"
+✖ Unrecognized keys: "modules", "compatibilityDate", "d1Databases", "name", "scriptPath", "bindings"
+  → at workers[0]
+✖ Unrecognized keys: "modules", "compatibilityDate", "d1Databases", "name", "scriptPath"
+  → at workers[1]
+✖ Invalid input: expected object, received undefined
+  → at workers[0].config
+✖ Invalid input: expected object, received undefined
+  → at workers[1].config
+    at validateOptions (/workspace/team-c/c2-auth/cloud/cake-id-auth/node_modules/miniflare/dist/src/index.js:123064:24)
+    at new _Miniflare (/workspace/team-c/c2-auth/cloud/cake-id-auth/node_modules/miniflare/dist/src/index.js:123455:38)
+    ... 4 lines matching cause stack trace ...
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  code: 'ERR_VALIDATION',
+  cause: [Getter]
+}
+undefined

@@ -1,0 +1,31 @@
+{
+  "head": "9991da2432ddc9d1b2d878c5ea87694c84b5f7f0",
+  "cwd": "/workspace/team-c/c3-accounts-cancellation",
+  "argv": [
+    "/workspace/.tools/dotnet/dotnet",
+    "/workspace/team-c/evidence/c3/accounts-integration/cancel-fixed-artifacts/bin/Accounts.Specs/debug/Accounts.Specs.dll"
+  ],
+  "helperSha256": "02aba2723be8405a3af1272d5f9f77ccfd86ac7558201a719a2f950d5f3a19ca",
+  "originalPid": 151493,
+  "originalOutcome": {
+    "pid": 151493,
+    "birth": 6079520,
+    "code": 1,
+    "status": 0
+  },
+  "strictReceipt": {
+    "strictReaped": true,
+    "originalsDisappeared": true,
+    "reaped": [
+      {
+        "pid": 151493,
+        "birth": 6079520,
+        "code": 1,
+        "status": 0
+      }
+    ],
+    "signals": []
+  },
+  "primary": null,
+  "cleanup": []
+}

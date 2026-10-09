@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>HavenOS.Canvas.NativeUI</AssemblyName>
+    <RootNamespace>HavenOS.Apps.Canvas</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../HavenOS.Canvas.csproj" />
+    <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+    <Compile Include="../CanvasNativeViewport.cs" Link="CanvasNativeViewport.cs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,76 @@
+{
+  "runId": 37210601635,
+  "jobId": 111460831796,
+  "head": "099d7ee01ca2f530c5c16acde7fc10e7f2e8ecd9",
+  "artifactId": 11306820670,
+  "artifactArchiveBytes": 75321,
+  "artifactArchiveSha256": "ade12be5b63c5b9d893a4a4d1949b8aced7583bd99e85944f05f31207da0d971",
+  "download": "Official GitHub connector download + authorized file_id download_file",
+  "archiveMetadataHashVerified": true,
+  "checksPassed": 67,
+  "checksFailed": 0,
+  "actualAppLaunches": 2,
+  "normalCloseZeroExit": true,
+  "forcedCleanup": false,
+  "streamDrains": "4/4 completed within bounded waits",
+  "screenshots": "2/2 exact bytes/SHA256 verified",
+  "status": "BOUNDED_PACKAGED_NATIVE_UI_CONTROLS_PASS_UNACCEPTED",
+  "qualification": "Actual immutable packaged executable on a disposable SDK-present hosted Windows runner. Bounded native UI, keyboard and persistence controls only; no Home installed tuple, signing, donor matrix, Android, clean-PC or full-app acceptance.",
+  "files": [
+    {
+      "path": "decoded-original-job.log",
+      "bytes": 57477,
+      "sha256": "735d8fb08cd5d83cc2d465cbf8a0d936613efdefeb2d036e6ed356790fe7c777"
+    },
+    {
+      "path": "edited-window.png",
+      "bytes": 40790,
+      "sha256": "cda2f18016536378408457d8b05b3d052cd22cf63c1a1d76453f5ef3e420b89f"
+    },
+    {
+      "path": "first-launch.stderr.log",
+      "bytes": 5,
+      "sha256": "f01a374e9c81e3db89b3a42940c4d6a5447684986a1296e42bf13f196eed6295"
+    },
+    {
+      "path": "first-launch.stdout.log",
+      "bytes": 424,
+      "sha256": "ce3b1e5a03db5fcc3001a8716776608e3124b1c7a331d384c8774eff8237d784"
+    },
+    {
+      "path": "official-artifact-metadata.json",
+      "bytes": 911,
+      "sha256": "3a11cddde8579a84192a58d4a462f3022d580443e2a9ea17a3345068c9ca1d70"
+    },
+    {
+      "path": "official-job-metadata.json",
+      "bytes": 1947,
+      "sha256": "5cad3c61812c0b3fb4e068f9fd38758a4140872beac3de5d3bb0b3a5185de300"
+    },
+    {
+      "path": "original-artifact-11306820670.zip",
+      "bytes": 75321,
+      "sha256": "ade12be5b63c5b9d893a4a4d1949b8aced7583bd99e85944f05f31207da0d971"
+    },
+    {
+      "path": "reopen.stderr.log",
+      "bytes": 5,
+      "sha256": "f01a374e9c81e3db89b3a42940c4d6a5447684986a1296e42bf13f196eed6295"
+    },
+    {
+      "path": "reopen.stdout.log",
+      "bytes": 424,
+      "sha256": "ce3b1e5a03db5fcc3001a8716776608e3124b1c7a331d384c8774eff8237d784"
+    },
+    {
+      "path": "reopened-window.png",
+      "bytes": 40830,
+      "sha256": "c8bf40b17dd77e9de587a7f08fb1779223fa41d1ef2858bc44112e03a8f9d5a2"
+    },
+    {
+      "path": "result.json",
+      "bytes": 23665,
+      "sha256": "dbc214a0980166d770ea195d9451132add56a7eac9bf5885aaff512153d007e0"
+    }
+  ]
+}

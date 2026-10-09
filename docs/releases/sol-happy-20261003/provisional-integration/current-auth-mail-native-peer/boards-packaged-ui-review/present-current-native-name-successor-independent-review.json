@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "status": "ACK_NARROW_SOURCE_GROUNDED_NATIVE_NAME_SUCCESSOR_PREINVOCATION",
+  "sourceCommit": "946fe6c038eaf926fbcfec1888f2f864ef8ba160",
+  "reviewedParent": "ebdcf7644849acf01be7f64c7ac818bdb195d3e3",
+  "changedPaths": 3,
+  "nativeUiOnlyThreeNameLiteralsChanged": true,
+  "wholeUiInverseToParentExact": true,
+  "all114CurrentPinsWholeBytesShaExact": true,
+  "review": "Mounted canonical SetWorkspaceDocument assigns AddSlideButton.Content=+ Add slide; actual Button.Content setter updates AccessibleName and genuine HavenSceneAutomationPeer reads it. Actual PresentEditor.AddSlide assigns Slide 2 as the second title; canonical rail assigns Slide 2: Slide 2. The three expectations therefore match current post-action native names.",
+  "criteriaConservation": "Exact owned process/Button/AutomationId/visibility/enabled/InvokePattern,actual added slide count and unique durable IDs,title and notes keyboard edits,save,picker cancellation,normal close/reopen,library search/Open and exact bytes unchanged. Replacing only those three literals recovers entire reviewed ebd native script. Producer,workflow,four native product bodies,new own15 and original shared7 unchanged.",
+  "originalEvidence": "Original1e and ebd expectation identities remain retained,including first44-check menu timeout. No old fd5 package relabel or product rename/fallback.",
+  "execution": "Source-only ACK. Root may run exact corrected candidate after C4 graph peer already completed. Actual normal own15/shared7 and new sealed same-run Windows native UI remain NOT_RUN; failures must be retained.",
+  "priorScopeAndSafety": "All ebd C6 review safety,custody,privacy,resource,wholeZIP readiness/parts and final cleanup/evidence failure criteria apply."
+}

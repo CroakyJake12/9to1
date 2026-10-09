@@ -1,0 +1,218 @@
+{
+  "recordedUTC": "2026-10-04T15:42:14.110239+00:00",
+  "state": "ACK_BOUNDED_ACTUAL_WAVE_NATIVE_AND_ENGINE_READBACK",
+  "sourceCommit": "9cd3e846fdebf6d6f42262407ceeee5cd8973cb1",
+  "sourceReview": {
+    "path": "/workspace/team-c-c6-durable-validation-20261004/dependency-closure/wave10-canonical-source-independent-review.json",
+    "sha256": "81cdf869a44cf4fb5cfab7c5262ce3286ff4ad5a91a32f2962e9a805c5f1cd52"
+  },
+  "maintainedNativeProject": "9to1 Workspace/Wave/HavenOS.Wave.csproj",
+  "actualBuilds": {
+    "nativeRelease": "PASS0warnings0errors",
+    "originalBrowserEngineRelease": "PASS0warnings0errors",
+    "sdk": "10.0.401",
+    "runtimeIdentifier": "linux-x64"
+  },
+  "sourceBuiltEntry": {
+    "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/artifacts/bin/HavenOS.Wave/release_linux-x64/HavenOS.Wave.dll",
+    "bytes": 137728,
+    "sha256": "37dd3f68f0115f54a8ce8b934d8cdfda38b3de6020814251380700b85d77592a"
+  },
+  "controls": {
+    "originalSelftest": "PASS actual native process exit0; canonical self-test source has42 Require call sites including28 preserved original call bodies. Call-site counts do not establish runtime assertion invocation count.",
+    "markersRegions": "PASS physical canonical persistence, identities, bounds/CAS/navigation/legacy migrations",
+    "pcmFormats": "PASS six PCM/float representations plus extensible variants, exactPCM16/source preservation/frame/nonfinite controls",
+    "filesWorkflow": "PASS first actual assertions after explicitly configured standard literal physical PCM fixture; actual controlled source-lease/revision/moved-file/physical export implementation, no production resolver registration",
+    "cli": "PASS actual create/open/add-track/reopen identity/revision/content; stale revision realexit2/RevisionConflict/latest bytes retained"
+  },
+  "cliReadback": {
+    "sameProjectIdentityAndExistingTrackPreserved": true,
+    "openedRevision": 0,
+    "reopenedRevision": 1,
+    "reopenedTracks": 2,
+    "currentPhysicalFileEqualsReopenObservation": true,
+    "currentPhysicalFileSha256": "24a701b60ff9f7807d728fa1545d97258dfcaa287533b4e2548a5c5becbb9013",
+    "staleRevisionActualExit": 2,
+    "staleLatestBytesPreservedByDriverAssertion": true
+  },
+  "originalPrerequisiteFailure": {
+    "exit": -6,
+    "classification": "NOT_RUN_BEFORE_FILES_WORKFLOW_ASSERTIONS_REQUIRED_FIXTURE_ABSENT",
+    "message": "Configure the real WAV fixture before running this explicit validation.",
+    "retained": true
+  },
+  "decoderCustody": {
+    "programSourceSha256": "4cabd81a662c87df0cc8f70326099b5b358c182c184a6f0c0b60344bdaf77b6f",
+    "prefixSha256": "5426f61c5568b4728d3409d3dd3722dd4a70b23867b86168f0967da4b6a7125a",
+    "prefixBytes": 8934,
+    "generatedSha256": "e42695d5f3cd8cfa4bcb80fde8b462591d340ec1bc25d3cb6ad9f5416f9ad969",
+    "generatedCurrentFileExact": true,
+    "originalGeneratorAndSourceGuardsUnchanged": true
+  },
+  "sourceBeforeAfterCleanExactHead": true,
+  "commandCustody": {
+    "actualFamilies": 23,
+    "allNormalEOF": true,
+    "allFinalECHILDAndFamilyClosed": true,
+    "forcedSignals": 0,
+    "failureAndStaleRevisionExitRetained": true
+  },
+  "inputs": [
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/diagnostics/clean-after.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/diagnostics/clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/diagnostics/commands.json",
+      "bytes": 8140,
+      "sha256": "9b72ea9d0192845fc17e779b9e2592c1f155480eae965f242fdaf5be132f0ce4"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/diagnostics/files-workflow.log",
+      "bytes": 447,
+      "sha256": "1cd589fd46f4dee487884b52f2327a38ff5b7fcb3fb5c0ed98f91149530e1246"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/diagnostics/head-after.log",
+      "bytes": 41,
+      "sha256": "74a91909f133373b991b85c44dacb68fbb41ba97f97b0a7efe126a06567b564c"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/diagnostics/head-before.log",
+      "bytes": 41,
+      "sha256": "74a91909f133373b991b85c44dacb68fbb41ba97f97b0a7efe126a06567b564c"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/diagnostics/markers-regions.log",
+      "bytes": 174,
+      "sha256": "5150f006d127f9e82cff6f41370adb3ce043d5aea502f2bd277d3712eabf329d"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/diagnostics/native-build.log",
+      "bytes": 866,
+      "sha256": "86d1a619305bab5d882f8b68f5704ea62ecee09063aed3b114955f97f079c129"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/diagnostics/native-restore.log",
+      "bytes": 675,
+      "sha256": "89aaf06b583ba9ee9f681f75a4d7368f07a5c00245fb81a5e2efda030af55562"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/diagnostics/native-target.log",
+      "bytes": 283,
+      "sha256": "153f54291bdf22ec6bcf9edaf8e8e8c148f27be6f9c664906bc80d4456f9fb76"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/diagnostics/original-selftest.log",
+      "bytes": 229,
+      "sha256": "e99ce91222dfb9c4035763399b2a7ff25f3fd9cc45d806f0ea0450040cd65d86"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/diagnostics/pcm-formats.log",
+      "bytes": 179,
+      "sha256": "1dedcbb6f1963a2e2fe1e6233d487871c5f278789f5d5dc5f2be4d2558eacebd"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-release/diagnostics/result.json",
+      "bytes": 2259,
+      "sha256": "715ffcb0d9c6615a7d956f4cc7f7d570025c52fe61830b9c4a81bd9612277e60"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-corrected-controls/diagnostics/actual-owner-decoder-manifest.json",
+      "bytes": 860,
+      "sha256": "0cd5c8fca76743f94d7fcc6c71247b0b584470d04d0a5cfd7e919d52ce01ffe7"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-corrected-controls/diagnostics/browser-engine-build.log",
+      "bytes": 422,
+      "sha256": "b1d85b491ac5265218523080bf59b15d4ece56e8b243b158717a04dbb2db6969"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-corrected-controls/diagnostics/browser-engine-restore.log",
+      "bytes": 213,
+      "sha256": "039acb0e9fd6d17e6343d6a3b9a95e373112b29a7965396b4c233b864be70d97"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-corrected-controls/diagnostics/clean-after.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-corrected-controls/diagnostics/clean-before.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-corrected-controls/diagnostics/cli-add-track.log",
+      "bytes": 587,
+      "sha256": "c181d325588a92e35e243b743f1059c711850354f31d85207d2357aecb77f1c3"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-corrected-controls/diagnostics/cli-create.log",
+      "bytes": 243,
+      "sha256": "d8402302bca088d7193423a75482524cf8d6c86d2a99b37543c662704529ebaa"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-corrected-controls/diagnostics/cli-open.log",
+      "bytes": 428,
+      "sha256": "e9acebd0e1bab75d018579fc9aa94c442bd03bb09183d020938efc560314e890"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-corrected-controls/diagnostics/cli-reopen.log",
+      "bytes": 587,
+      "sha256": "c181d325588a92e35e243b743f1059c711850354f31d85207d2357aecb77f1c3"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-corrected-controls/diagnostics/cli-stale-revision.log",
+      "bytes": 107,
+      "sha256": "fe3b296fa1a8e5417e574f420d8a766b1b3ac3cb3c6514e1cae037359a109d0a"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-corrected-controls/diagnostics/commands.json",
+      "bytes": 8549,
+      "sha256": "dcbc56fdf0e1044f3ec213c959632aacbd4a97adb534de2411c57df9766ad6d7"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-corrected-controls/diagnostics/current-publisher-source-presence.json",
+      "bytes": 680,
+      "sha256": "b6cbd5cc82f1c45902484604ac3cdeb95f0678ef93b8703899b862a54d3643a5"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-corrected-controls/diagnostics/files-workflow-configured.log",
+      "bytes": 97,
+      "sha256": "d889cca6333fb65cf03aff7c729b51240f54f79832cceff6bf04c00303ef8472"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-corrected-controls/diagnostics/head-after.log",
+      "bytes": 41,
+      "sha256": "74a91909f133373b991b85c44dacb68fbb41ba97f97b0a7efe126a06567b564c"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-corrected-controls/diagnostics/head-before.log",
+      "bytes": 41,
+      "sha256": "74a91909f133373b991b85c44dacb68fbb41ba97f97b0a7efe126a06567b564c"
+    },
+    {
+      "path": "/workspace/team-c-resume-evidence/c5-b-pr6-receiving/wave-ten-native-corrected-controls/diagnostics/result.json",
+      "bytes": 980,
+      "sha256": "3d4d11fcda71f52d542020f8c006cabd36d832cd5299171663328c2d63d76538"
+    }
+  ],
+  "qualification": [
+    "Readback of actual C5 source-built maintained projects and unchanged controls; no duplicate payload execution by C6.",
+    "Configured PCM file is controlled literal native fixture and constructor-bound resolver; no provider/file issuer permission authority or device audio decoder registration established.",
+    "Maintained publisher source-presence function alone is not Web build/publish/runtime PASS; current browser9/combined global gate still required.",
+    "Owner adoption and full native/browser/device/29 app/donor/install acceptance remain open."
+  ],
+  "supersedesQualification": {
+    "path": "/workspace/team-c-c6-durable-validation-20261004/dependency-closure/wave10-actual-native-independent-readback.json",
+    "sha256": "aaf0d05db7a967f7d73198b788434a26dfcdf1822707f75e2569803a8752e67a",
+    "reason": "Clarify28/42 are preserved source call-site counts, not measured runtime assertion invocation totals; actual native self-test exit0 and outcomes unchanged."
+  }
+}

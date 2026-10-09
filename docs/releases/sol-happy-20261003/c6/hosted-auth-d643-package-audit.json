@@ -1,0 +1,115 @@
+{
+  "sourceCommit": "d643d723d15ec20d70263a408b0cfefbd5be69ae",
+  "runtimeEvidenceSource": "4c29fd3b",
+  "runtimePublication": "d2678ca7",
+  "review": "Complete generator/mail adapter/config/rollback/upload manifests/config+mail controls/readme read independently. Eight external compiled artifacts and eleven source rows verified size/SHA; all eleven source rows identical 4c29 runtime source. Compiled index imports named auth-ui module; two multipart modules required, rollback separate closed503 module. No runtime reruns.",
+  "integrityIssues": [],
+  "publishedPayloads": [
+    {
+      "path": "cloud/cake-id-auth/deployment/README.md",
+      "bytes": 4754,
+      "sha256": "55578fa243185643d4a51bac9be4a9140362c0f34f2c62dddda7d27374458b73"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/artifact-manifest.json",
+      "bytes": 3233,
+      "sha256": "3a8c3614a8f24e71b1ea8bae36153f00f3f3fbf31f2fb957a34234984557c3d9"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/evidence/hosted-build-final.log",
+      "bytes": 538,
+      "sha256": "ff2c44bf22e6a5adc54aa5594f0701ffc2e43a40400f082ee949d03446fdf40f"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/evidence/hosted-build.log",
+      "bytes": 538,
+      "sha256": "ff2c44bf22e6a5adc54aa5594f0701ffc2e43a40400f082ee949d03446fdf40f"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/evidence/hosted-config-controls-final.log",
+      "bytes": 86,
+      "sha256": "cc5e2306554ddf821c568b677da00c51477ac41a4fc525f239782014d55e557f"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/evidence/hosted-config-controls.log",
+      "bytes": 86,
+      "sha256": "caa97d045073ccdc0832b04caa216df233a5d73719a31ad62a58146263251a7d"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/evidence/hosted-full-regression.log",
+      "bytes": 1339,
+      "sha256": "029c9a63b53d929787a59ec66ac9691e6de4c12d1e74dc44f62b482799839753"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/evidence/hosted-mail-controls.log",
+      "bytes": 110,
+      "sha256": "9f12aa012287d04b4c1a9ccdef47eb28fe88a022abe9b37d75558effb38efe4a"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/evidence/hosted-rollback-build.log",
+      "bytes": 306,
+      "sha256": "426aa288cde784a48423922cb4858dc69917acd3a932fb59550bda18371e83f6"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/evidence/hosted-schema.log",
+      "bytes": 206,
+      "sha256": "d6a9b2ae361185972cd0ba6d06116dcd5ba4133a2dae78111bb0ccb01c818945"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/evidence/hosted-typecheck.log",
+      "bytes": 264,
+      "sha256": "361020da676192c9b0f13a944334995c3356720b8359af6ff3a21209ca972010"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/evidence/runtime.json",
+      "bytes": 710,
+      "sha256": "7dfdfa68a0c86c8e39d08fa096f5dbb4fdc9611728d1a0bf85c6383fdb68742d"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/prepare.mjs",
+      "bytes": 1956,
+      "sha256": "beba374ae9d4e4a7b53e7a096bc5f9495b5996d81582d3acd21d909285f05c40"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/rollback.ts",
+      "bytes": 411,
+      "sha256": "aeb2436edf3a8172f3c2e54f74f185b13b8b2600e72423272642fdbd37029060"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/upload-manifest.json",
+      "bytes": 1473,
+      "sha256": "47f6c7dd64ed3ad196151ec17dc05596dd546f43f4d0902e33c6eb5c9b486a63"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/wrangler.build.json",
+      "bytes": 391,
+      "sha256": "c8584f4f9712fb90ebe87f4919416604fc4fcff956952f16da2e77f563524eeb"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/wrangler.rollback-build.json",
+      "bytes": 215,
+      "sha256": "89c53df7366181df3de371fa90e6b6e5393acaa7b138d27d74df954ada1c3191"
+    }
+  ],
+  "runtimeObserved": {
+    "assertionsExecuted": 222,
+    "strictReaped": true,
+    "originalsDisappeared": true,
+    "kernelReaps": 5,
+    "scope": "Actual local Workerd/D1 only, unchanged maintained assertions through custody adapter; no HTTPS/mail/provider acceptance."
+  },
+  "sourceACK": "Bounded package/config/mail fail-closed source ACK; eligible for root-authorized isolated provider preparation, not public activation acceptance.",
+  "requiredBeforeUpload": [
+    "Actual selected account and isolated D1 receipt independently bound by operator (generator validates structure, not provider authenticity)",
+    "Actual AUTH_SECRET and independent LOGIN_LIMITER_KEY private bindings",
+    "Approved explicit CPU limit/budget and network/exposure configuration",
+    "Actual migrations and closed503 rollback version receipt; D1 recovery point and data preservation"
+  ],
+  "remainingHolds": [
+    "workers_dev/preview_urls false and observability off initially; endpoint enabling requires root issued action",
+    "Mail disabled until sender/domain/provider authorization; 18 transport-double assertions are not email delivery",
+    "No production client/admin bootstrap or Turnstile; reserved owner NULL",
+    "Native RSA/auth_revision, OAuth browser/client journeys and full release acceptance unverified"
+  ],
+  "privacy": "No secret/private key/signed URL pattern or binary magic in published deployment subtree; auth artifacts kept outside Git. Source references/secret names are not values."
+}

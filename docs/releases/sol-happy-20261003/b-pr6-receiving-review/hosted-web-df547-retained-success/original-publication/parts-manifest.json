@@ -1,0 +1,24 @@
+{
+  "sourceCommit": "df547b5c7492050dc2ad2bdd99e250358cf444fc",
+  "archiveBytes": 36039134,
+  "archiveSha256": "443ff20704e09f0cf74796976c25f49b70ef5ed68637ea3f5248bf54178cde10",
+  "originalReceiptSha256": "ac699323c934bf8edfb40a5023dc40db6b1fb48d63eaa1021886c6501f75fb5d",
+  "originalSealSha256": "7a109f44f92cc21625ba55c25a775d1fcbb89ee77e0acd35a831f6f6da7ac520",
+  "partBytesLimit": 19922944,
+  "parts": [
+    {
+      "part": 1,
+      "path": "part01/wwwroot.zip.part",
+      "bytes": 19922944,
+      "sha256": "fb5508037ea3183bf6545f13f05d15336578b5605ee12bace1c9984a8344b0d0"
+    },
+    {
+      "part": 2,
+      "path": "part02/wwwroot.zip.part",
+      "bytes": 16116190,
+      "sha256": "08edc8a266ba1288daee9b85f18a52ec88fc08324f3636f0f201df9d4fc03aca"
+    }
+  ],
+  "reassembly": "Concatenate parts in numeric order; require declared whole size/SHA before ZIP use.",
+  "scope": "Exact original public archive transport only; no rebuilt assets or runtime acceptance."
+}

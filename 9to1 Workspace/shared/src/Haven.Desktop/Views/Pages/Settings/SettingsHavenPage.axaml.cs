@@ -75,6 +75,10 @@ public sealed partial class SettingsHavenPage : UserControl, IDisposable
         _route.LoadPrivacyPreferences(_privacy.Current);
         WireEvents();
         InitializeConnections();
+#if !ANDROID
+        InitializeNativeCakeAccount();
+        InitializeNativeHomePermissions();
+#endif
         InitializeGovernance();
         InitializeUpdates();
         _ = RefreshModelsAsync();
@@ -899,6 +903,10 @@ public sealed partial class SettingsHavenPage : UserControl, IDisposable
         _installCancellation?.Cancel();
         _lifetime.Cancel();
         DetachUpdates();
+#if !ANDROID
+        DetachNativeCakeAccount();
+        DetachNativeHomePermissions();
+#endif
         _installCancellation?.Dispose();
         _lifetime.Dispose();
         _route.Dispose();

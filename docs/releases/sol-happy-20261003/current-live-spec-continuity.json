@@ -1,0 +1,13 @@
+{
+  "documentId": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+  "revisionId": "ANLCKQlju2xYru3IWbvhIYjNqbtxlXaP3re8A7A-mIo5-Xcr_mXL5FB8Lp56IBka-MT2j0G9hNXr9QFhO8w-YLNfRb05-dsBBa1bUiAA8ZI",
+  "previousReadRevisionId": "AHj4eMRlJQKiuc-c9PE2iy5Ef4mCKdyedYC1ztwlD4EgT_JxTSbeQAbVokwk0F-OqzTH9xvLygcjKhDRAuLvjKfuDAUPmN44bQSAJSNnFNI",
+  "paragraphs": 8534,
+  "paragraphsAndIndexesUnchanged": true,
+  "textSnapshot": "specification-update-2104/native-text.txt",
+  "snapshotBytes": 1383780,
+  "snapshotSHA256": "a48cf720b257d16aca1feed8d8a95915759b78cf8a2d2d91fd82b0d31977914c",
+  "qualification": "Fresh atomic live document read. Text and all paragraph/index metadata equal the previous live read; no product requirements or gates removed. Revision labels differ; unchanged content does not establish release acceptance.",
+  "lastAtomicRecheckUTC": "2026-10-04T10:11:08.896142+00:00",
+  "lastAtomicRecheckEntireStructuredContentUnchanged": true
+}

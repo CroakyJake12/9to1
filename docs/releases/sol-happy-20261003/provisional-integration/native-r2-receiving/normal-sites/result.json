@@ -1,0 +1,8 @@
+{
+  "sourceCommit": "ce7f7ce15cc75b5fac40bae2bce20f232a3d6f38",
+  "project": "9to1 Workspace/Sites/Tests/HavenOS.Sites.Tests.csproj",
+  "status": "FAIL",
+  "testsStarted": false,
+  "scope": "Actual normal whole receiving owning Sites project; local fake HTTP reader fixtures, no real provider/current-session/import/scanner/publication acceptance",
+  "error": "AssertionError()"
+}

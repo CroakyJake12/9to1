@@ -1,0 +1,44 @@
+[
+  {
+    "path": "/workspace/team-c/evidence/c5/durable-cancel/actual-task-70ab102c70434d15ba54563af16590d9/tasks.db",
+    "bytes": 942080,
+    "sha256": "0eed74126ce8891f3e3fd62d3d8440c0142cfc082854598e85f79deefb39d384",
+    "schemaVersion": 28,
+    "rowObservations": [
+      {
+        "status": 8,
+        "resultPresent": false,
+        "idempotencyPresent": false,
+        "payloadSHA256": "588ab3cb8e4794c958052ab97a07fb95d0173e8e2eb9734f0b6be5ec105ae255"
+      }
+    ]
+  },
+  {
+    "path": "/workspace/team-c/evidence/c5/durable-cancel/actual-task-d26e749ae96c49e2a97cf11f02104320/tasks.db",
+    "bytes": 942080,
+    "sha256": "2e2c421192a8ee63a8f6eee4f1600d6c022e041c9280882e3e42aa719463a7ef",
+    "schemaVersion": 28,
+    "rowObservations": [
+      {
+        "status": 6,
+        "resultPresent": true,
+        "idempotencyPresent": true,
+        "payloadSHA256": "2d778590e68a62e0f769994d84ddc5453fce077d660306f6c648f845f3f8ecfd"
+      }
+    ]
+  },
+  {
+    "path": "/workspace/team-c/evidence/c5/durable-cancel/actual-task-fe373323dd42431c9f4da002ef4a393a/tasks.db",
+    "bytes": 942080,
+    "sha256": "e590ee21ae31aeee350d34f1ee204b8abb7b5a3e85a0ed30b0c851aa34685ea2",
+    "schemaVersion": 28,
+    "rowObservations": [
+      {
+        "status": 8,
+        "resultPresent": false,
+        "idempotencyPresent": false,
+        "payloadSHA256": "821dac425fae0f469e76c65ff9a696710c3b73c37aad1535d5a8e75cc32114aa"
+      }
+    ]
+  }
+]

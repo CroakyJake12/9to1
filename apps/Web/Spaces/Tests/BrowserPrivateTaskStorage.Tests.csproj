@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="BrowserPrivateTaskStorageControls.cs" />
+    <Compile Include="../../BrowserRouteCodec.cs" Link="Production/BrowserRouteCodec.cs" />
+    <Compile Include="../../BrowserSurfaceRegistry.cs" Link="Production/BrowserSurfaceRegistry.cs" />
+    <Compile Include="../../BrowserRouteDispatcher.cs" Link="Production/BrowserRouteDispatcher.cs" />
+    <Compile Include="../../Services/BrowserTaskActorSource.cs" Link="Production/BrowserTaskActorSource.cs" />
+    <Compile Include="../../Services/BrowserTaskIdentityReadOperation.cs" Link="Production/BrowserTaskIdentityReadOperation.cs" />
+    <Compile Include="../Storage/BrowserPrivateTaskStorage.cs" Link="Production/BrowserPrivateTaskStorage.cs" />
+    <Compile Include="../Storage/BrowserStoredTaskReadOwner.cs" Link="Production/BrowserStoredTaskReadOwner.cs" />
+    <Compile Include="../Storage/BrowserPrivateTaskStorageEnrollment.cs" Link="Production/BrowserPrivateTaskStorageEnrollment.cs" />
+    <Compile Include="../Storage/BrowserTaskExecutionTransport.cs" Link="Production/BrowserTaskExecutionTransport.cs" />
+    <Compile Include="../Storage/IndexedDbTaskExecutionRepository.cs" Link="Production/IndexedDbTaskExecutionRepository.cs" />
+    <Compile Include="../Storage/IndexedDbExecutionEventRepository.cs" Link="Production/IndexedDbExecutionEventRepository.cs" />
+    <Compile Include="../Storage/IndexedDbProfileTaskExecutionRepository.cs" Link="Production/IndexedDbProfileTaskExecutionRepository.cs" />
+    <Compile Include="../Storage/IndexedDbConversationRepository.cs" Link="Production/IndexedDbConversationRepository.cs" />
+    <Compile Include="../Storage/BrowserTaskContextIssuer.cs" Link="Production/BrowserTaskContextIssuer.cs" />
+    <Compile Include="../../../../9to1 Workspace/Home/Source/Home/Core/HomeCoreContracts.cs" Link="Owner/HomeCoreContracts.cs" />
+    <Compile Include="../../../../9to1 Workspace/Home/Source/Home/Core/HomeFeatureContracts.cs" Link="Owner/HomeFeatureContracts.cs" />
+    <Compile Include="../../../../9to1 Workspace/Home/Source/Home/HomeDashboard.cs" Link="Owner/HomeDashboard.cs" />
+    <ProjectReference Include="../../../../framework/CUI/Core/CakeOS.Cui.Core.csproj" />
+    <ProjectReference Include="../../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+    <ProjectReference Include="../../../../9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj" />
+    <ProjectReference Include="../../../../9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="Exists('../../../../9to1 Workspace/Home/Source/Home/Core/HomeStateCommitActorGuard.cs')">
+    <Compile Include="../../../../9to1 Workspace/Home/Source/Home/Core/HomeStateCommitActorGuard.cs" Link="Owner/HomeStateCommitActorGuard.cs" />
+  </ItemGroup>
+</Project>

@@ -9,7 +9,7 @@ public sealed class CapabilityRegistryService(ICapabilityRepository repository, 
         CapabilityPlatform platform,
         CancellationToken cancellationToken)
     {
-        if (platform is CapabilityPlatform.None or CapabilityPlatform.All)
+        if (platform is not (CapabilityPlatform.Windows or CapabilityPlatform.Android or CapabilityPlatform.Linux))
             throw new ArgumentOutOfRangeException(nameof(platform), platform, "Select one current host platform.");
 
         var items = new List<CapabilityDefinition>(await repository.GetCapabilitiesAsync(cancellationToken).ConfigureAwait(false));

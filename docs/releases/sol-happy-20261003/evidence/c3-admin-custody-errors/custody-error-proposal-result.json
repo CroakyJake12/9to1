@@ -1,0 +1,56 @@
+{
+  "head": "a56c7d48e2c02a7ed3d9d03612d5bfc4b4776a04",
+  "parent": "4472a4fd9730c4f432570e12a2d86b6b16fc7cb1",
+  "scope": "source tooling proposal only; A-held original-error findings; no SDK6 execution or helper adoption",
+  "files": [
+    {
+      "path": ".github/scripts/astra-original-native-session-drain.py",
+      "bytes": 6932,
+      "sha256": "b64955841ac1c1cdaa7e8e3ed2d9d487c6b7faae7bd581fae626e37cae964329"
+    },
+    {
+      "path": ".github/scripts/astra-original-session-subreaper-tests.py",
+      "bytes": 13961,
+      "sha256": "052b86bed577165e70bf12a5fdeb12c635da89c98332dc93c8dc58de8b1aeb0c"
+    },
+    {
+      "path": ".github/validation/astra-organisation-owning-sources.json",
+      "bytes": 6807,
+      "sha256": "5fe36890cf410cdb0557dcaf95b7ab1174c7cafde7a46f61c2a83d6363240fb7"
+    }
+  ],
+  "controls": {
+    "discovered": 13,
+    "passed": 13,
+    "exitCode": 0,
+    "command": "ASTRA_SUBREAPER_TEST_EVIDENCE=/workspace/team-c/evidence/c3/admin-sdk03/custody-error-controls-attempt3 python3 .github/scripts/astra-original-session-subreaper-tests.py"
+  },
+  "exactOldHelperNegatives": [
+    {
+      "scenario": "send-close",
+      "exitCode": 1,
+      "log": "custody-error-before-final-send.log",
+      "cause": "original body exception not independently retained; native close EBADF replaces it"
+    },
+    {
+      "scenario": "wait-close",
+      "exitCode": 1,
+      "log": "custody-error-before-final-wait.log",
+      "cause": "original body exception not independently retained; native close EBADF replaces it"
+    },
+    {
+      "scenario": "write-close",
+      "exitCode": 1,
+      "log": "custody-error-before-final-write.log",
+      "cause": "original body exception not independently retained; native close EBADF replaces it"
+    }
+  ],
+  "heldOwnerReceipt": "team-a-fe96-owner-held-peer.json",
+  "qualifications": [
+    "original8kernel controls retained",
+    "5new failure preservation/created-child setup controls",
+    "strict kernel-owned pidfd wait/birth/session/owner and false-seal refusals unchanged",
+    "ambiguous/refused fixture data retained; no oldPID1 action",
+    "C5/source-owner review required; SDK6 NOT_RUN"
+  ]
+}

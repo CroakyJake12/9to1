@@ -1,0 +1,6 @@
+apps/Web/Productivity/Mail/Tests/Mail.LocalDurable.Tests.csproj
+apps/Web/Productivity/Mail/Tests/Mail.OriginalDraft.Tests.csproj
+apps/Web/Productivity/Mail/Tests/MailLocalDurableControls.cs
+apps/Web/Productivity/Mail/Tests/ci/original-mail-acceptance.py
+apps/Web/Productivity/Mail/Tests/ci/run-mail-original-durable.py
+apps/Web/Tests/ci/run-ordinary-native.py

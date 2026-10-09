@@ -1,0 +1,21 @@
+{"candidate": "a44ca3a10a538afd0715f3ad3dcd8d83931c2f70", "tree": "c1e9df46618f14985aff5f222706b448a34c65da", "cwd": "/workspace/team-c/integration", "command": ["node", "--test", "cloud/billing/test/stripe-webhook.test.mjs"], "startUTC": "2026-10-03T17:41:49.585513+00:00"}
+✔ C3-WH-01: verified receipt survives restart; replay does not duplicate receipt (no allocation consumer exists) (37.288427ms)
+✔ C3-WH-02: byte tampering, stale/future signatures and duplicate timestamps cannot persist (2.907359ms)
+✔ C3-WH-03: rotation accepts a matching v1 without JSON normalisation (1.578769ms)
+✔ C3-WH-04: test/live separation fails closed, configuration required (1.713813ms)
+✔ C3-WH-05: conflicting event identity cannot replace durable accepted facts (2.528486ms)
+✔ C3-WH-06: database failure does not acknowledge delivery; retry recovers (2.773547ms)
+✔ C3-WH-07: old events are receipts only and cannot overwrite newer subscription facts (2.738654ms)
+✔ C3-WH-08: bounded body and malformed verified events leave no receipt (2.524049ms)
+✔ C3-WH-09: concurrent claims have one owner; stale claim cannot complete after restart/recovery (3.987344ms)
+✔ C3-WH-10: failed consumer becomes reconciliation-required, mode/token cannot steal ownership (2.171176ms)
+✔ C3-WH-11: actual Worker fetch ignores execution context and durably accepts valid receipt (1.313377ms)
+✔ C3-WH-12: lost acknowledgement after commit is safely retried against existing receipt (1.933486ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 120.226316

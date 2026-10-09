@@ -1,0 +1,55 @@
+{
+  "state": "ACTUAL_ORIGINAL_MAIL_LOCAL_DURABLE_GATE_PASS_SCOPED",
+  "sourceCommit": "89cd4e4641e482658a0e24be9b90e0a8324fd4a7",
+  "driver": "apps/Web/Productivity/Mail/Tests/ci/run-mail-original-durable.py",
+  "driverExitCode": 0,
+  "originalFact": {
+    "discovered": 1,
+    "executed": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0
+  },
+  "distinctNativeScenarios": 3,
+  "nativePhaseExecutions": 6,
+  "phases": {
+    "seed": {
+      "executed": 3,
+      "passed": 3,
+      "failed": 0,
+      "notRun": 0,
+      "assertions": 16
+    },
+    "verify": {
+      "executed": 3,
+      "passed": 3,
+      "failed": 0,
+      "notRun": 0,
+      "assertions": 18
+    }
+  },
+  "freshNativeVerifyProcess": true,
+  "sourceInputs": 489,
+  "sourceBeforeAfterActualGitEqual": true,
+  "runtimeMetadataFiles": 11,
+  "runtimeBeforeAfterActualTaskBytesEqual": true,
+  "ordinaryManagedSourceBuilds": 2,
+  "warnings": 0,
+  "errors": 0,
+  "commandFamilies": 16,
+  "allNormalEOF_ECHILD_FamilyClosed_NoSignals": true,
+  "preservedPreviousPublicPayloads": 285,
+  "publishedScope": "Original driver command/result/TRX/logs and source/runtime hash metadata only",
+  "excludedPrivateTaskOutputs": [
+    "fixture-data draft/attachment/identity bytes",
+    "native runtime binaries",
+    "NuGet/CLI/cache/build/temp files"
+  ],
+  "qualifications": [
+    "Actual unchanged FileMailDraftStore and original Fact compiled against whole current Haven.Application/Core/CUI.AI; no reconstructed or replacement backend, assertion, policy or helper.",
+    "Three distinct local owner scenarios execute once during seed then in a separate native process verify. The six phase executions are not six distinct scenarios.",
+    "This is actual local draft persistence update/delete/unreadable/denied-input/restart evidence only, not provider sending, Windows, browser, revision-CAS, backend authority or full Mail acceptance.",
+    "Original Space-key failure and held styled-renderer/owner-factory gates remain preserved separately.",
+    "Source-only C6 pre-invocation ACK is included; independent actual-result readback is requested separately."
+  ]
+}

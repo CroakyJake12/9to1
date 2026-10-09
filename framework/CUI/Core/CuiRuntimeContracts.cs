@@ -12,6 +12,25 @@ public interface ICuiActionDispatcher
     ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default);
 }
 
+/// <summary>
+/// Distinguishes retirement of the CUI view from explicit cancellation by an external caller.
+/// Neither token grants authority, establishes a trusted identity, or attests action success.
+/// </summary>
+public readonly record struct CuiActionDispatchLifetime(
+    CancellationToken ViewCancellation,
+    CancellationToken CallerCancellation);
+
+/// <summary>
+/// Optional host-owned lifetime-aware action dispatch. The host retains its own admission and
+/// command ownership policy; shared CUI supplies lifetime roles without choosing commands.
+/// Existing direct ICuiActionDispatcher callers retain their supplied cancellation unchanged.
+/// </summary>
+public interface ICuiLifetimeAwareActionDispatcher : ICuiActionDispatcher
+{
+    ValueTask DispatchWithLifetimeAsync(string command, object? parameter,
+        CuiActionDispatchLifetime lifetime);
+}
+
 /// <summary>Optional read-only host signal; null means availability is not known.</summary>
 public interface ICuiActionAvailability
 {

@@ -118,8 +118,12 @@ public sealed class VersionedModelPermissionStore : IModelPermissionStore
 
     public async Task<ModelPermissionPolicy> GetPolicyAsync(CancellationToken cancellationToken)
     {
-        var policy = await _settings.GetAsync<ModelPermissionPolicy>(Key, cancellationToken).ConfigureAwait(false);
-        return policy ?? ModelPermissionPolicy.Empty;
+        Task<ModelPermissionPolicy?> original;
+        try { original = _settings.GetAsync<ModelPermissionPolicy>(Key, cancellationToken); }
+        catch (OperationCanceledException source) { throw new AggregateException("Synchronous model-policy source fault.", source); }
+        try { return await original.ConfigureAwait(false) ?? ModelPermissionPolicy.Empty; }
+        catch (Exception) when (original.IsFaulted)
+        { System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(original.Exception!).Throw(); throw; }
     }
 
     public Task SavePolicyAsync(ModelPermissionPolicy policy, CancellationToken cancellationToken)

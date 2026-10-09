@@ -1,0 +1,56 @@
+{
+  "status": "EXACT_APPROVED_SOURCE_AND_OWNER_REPAIR_ACK_RUNTIME_PENDING",
+  "base": "680f1301c3ae255a645822adb55be36ec11bb146",
+  "approvedLoaderCommit": "125e8a9f6cc569374e028e7e68407200b7e9ba88",
+  "pictureOwnerRepairCommit": "a0de5ad5c2975c98140be79dfcac884dea0ef76a",
+  "actualOwnerAvailableSource": "7f69563623c7a9c9f55de2c50a418c38ab0e889b",
+  "currentBHead": "f7c0473cea59fa173b79e0ecc184725db7a29fb6",
+  "wholeOneLineInversesExact": true,
+  "onlyTwoExpectedBodiesChanged": true,
+  "allOtherTrackedBodiesModesAndOriginal15OraclesUnchanged": true,
+  "sources": [
+    {
+      "path": "framework/CUI/Runtime/CuiControlLoader.cs",
+      "bytes": 90323,
+      "sha256": "ccfe9d900b1e0c5fa8664990f26474f6ee57a02af99dd746a60dca3b868dcfb8",
+      "treeEntry": "100644 blob 0af4ee1802cc4ba10dafacacc4ed9c92bb9027a4"
+    },
+    {
+      "path": "apps/Web/Picture/PictureBrowserFeature.cs",
+      "bytes": 13171,
+      "sha256": "86cc1c751e0217daa204c05fa57a1b7f7865a9b412e23c217b67373ec1726eec",
+      "treeEntry": "100644 blob 63e4bc91078a0b3d680d414a8d67b2217b6d4763"
+    }
+  ],
+  "existingNarrowApproval": {
+    "path": "docs/releases/sol-happy-20261003/semantic/c4-cui-textchanging-owner-receipt.json",
+    "sha256": "2a78bf734b88efd2c5b600734cf9930963b7768a0a03fd2ddc17adcfd0f1809b",
+    "owner": "Team A A1 Home/Core/CUI",
+    "qualification": "Existing exact source-only owner ACK preserved; not new compiler/runtime/browser or whole-framework acceptance."
+  },
+  "canonicalApiReadback": [
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/TextBox.cs",
+      "bytes": 94680,
+      "sha256": "5c6a1c13e45e9b88000e55e5b3da8a6f8e1ab30d00a8130c89de15424ad15f8e",
+      "treeEntry": "100644 blob dbf56834fc4aeaa03e8086664c83a80e053d78c1"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/TextBoxAutomationPeer.cs",
+      "bytes": 1119,
+      "sha256": "3dadf7248a71c3c273428ec0b18c0089fb9ba5706f1f57269ae68f717c6a9a62",
+      "treeEntry": "100644 blob 4f41e088c683e9259a51cb6e11c6d52c8e88c7dd"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/ButtonAutomationPeer.cs",
+      "bytes": 1061,
+      "sha256": "2cf3aa4d9b42dcefac0a033b71b055daa79811b2ae8b675ea4a4e58e26e32f5b",
+      "treeEntry": "100644 blob 4ac07717da7b70bea4456f5c37f82192631e9366"
+    }
+  ],
+  "semanticReview": [
+    "TextChanging is raised synchronously after Text assignment; TextChanged is posted asynchronously by canonical TextBox. Same retained-current binding/context, conversion/refusal, host-value suppression and disposal guards remain byte-identical. This restores already approved native same-turn input writeback; broader reentrant timing remains test-dependent.",
+    "Picture app-root previous/candidate identity skips a retirement task that has no prior session to dispose, avoiding a false pending-retirement busy state. Real transfers still await Yield and check actual Accepted flag afterward, preserving reversible handoff/rejection and unchanged coherent candidate publication/retirement fencing."
+  ],
+  "runtimeQualification": "C6 source-only review. Actual unchanged15 Picture/native input and original owner CUI controls required on emitted fixed candidate; historical14PASS1cropFAIL and original native GPS/font/layout failures retained. No full browser/native/provider acceptance or owner adoption inferred."
+}

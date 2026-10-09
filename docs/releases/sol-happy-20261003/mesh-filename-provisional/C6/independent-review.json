@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "c996db6dbdd6f4e04d528b11f5ddbb252fad8517",
+  "parent": "3b0bdf4da0e3ced93626f815679632f369ee4972",
+  "sourcePinsVerifiedUnchanged": {
+    "9to1 Workspace/shared/src/Haven.Infrastructure/Mesh/MeshFileTransferStore.cs": {
+      "bytes": 8458,
+      "sha256": "bed2d0733cddceaa627451f877de7e50874b25f90c9a54fb9831c54b1ef23e2c"
+    },
+    "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/MeshFileTransferStoreTests.cs": {
+      "bytes": 6941,
+      "sha256": "3abb240d716e025afeb92b9e68231b82fa87ffad7e141321f7e092c6265b2dbb"
+    }
+  },
+  "review": "ACK existing sender filename separator normalization and canonical inbox/permission/hash/quota confinement preserved",
+  "actualIndependentExecution": {
+    "project": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+    "configuration": "Release",
+    "filter": "FullyQualifiedName~MeshFileTransferStoreTests",
+    "exitCode": 0,
+    "total": 16,
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0,
+    "sourceBuilt": true,
+    "trxSha256": "8c08fcfa78bf8911f47013e143629c28ad629f29aa2a3a19c62032289cee6fe2",
+    "logSha256": "032c95b735d875b8a5f24bc4da0ad17db7bad67bc88d43091be1611193c9404e"
+  },
+  "qualification": "Original three controls plus twelve sender-name cases and wrong-hash negative pass. No whole-suite/native/Windows/full-release acceptance; original failure retained."
+}

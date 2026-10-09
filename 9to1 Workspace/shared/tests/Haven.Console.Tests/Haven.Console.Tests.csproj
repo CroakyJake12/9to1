@@ -1,0 +1,31 @@
+<!-- Genuine Linux CLI test host. Original Windows Desktop.Tests remains unchanged.
+     Link the exact owning bodies; no copied fixture or framework retargeting. -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Haven.Desktop.Tests</RootNamespace>
+    <Platform>x64</Platform>
+    <PlatformTarget>x64</PlatformTarget>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Haven.Desktop/Haven.Desktop.csproj" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio"><PrivateAssets>all</PrivateAssets></PackageReference>
+    <Using Include="Xunit" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Haven.Desktop.Tests/OriginalLocalTaskConsoleSmokeTests.cs" Link="OriginalLocalTaskConsoleSmokeTests.cs" />
+    <Compile Include="../Haven.Desktop.Tests/OriginalLocalTaskConsoleSmokeTests.FreshHome.cs" Link="OriginalLocalTaskConsoleSmokeTests.FreshHome.cs" />
+    <Compile Include="../Haven.Desktop.Tests/OriginalLocalTaskConsoleSmokeTests.Selection.cs" Link="OriginalLocalTaskConsoleSmokeTests.Selection.cs" />
+    <Compile Include="../Haven.Desktop.Tests/OriginalLocalTaskConsoleSmokeTests.ProviderConfiguration.cs" Link="OriginalLocalTaskConsoleSmokeTests.ProviderConfiguration.cs" />
+    <Compile Include="../Haven.Desktop.Tests/OriginalLocalTaskConsoleSmokeTests.Cloudflare.cs" Link="OriginalLocalTaskConsoleSmokeTests.Cloudflare.cs" />
+    <Compile Include="../Haven.Desktop.Tests/OriginalLocalTaskConsoleSmokeTests.ProjectResources.cs" Link="OriginalLocalTaskConsoleSmokeTests.ProjectResources.cs" />
+    <Compile Include="../Haven.Desktop.Tests/OriginalLocalTaskConsoleSmokeTests.DeveloperSetup.cs" Link="OriginalLocalTaskConsoleSmokeTests.DeveloperSetup.cs" />
+    <Compile Include="../Haven.Desktop.Tests/OriginalLocalTaskConsoleSmokeTests.CommandRead.cs" Link="OriginalLocalTaskConsoleSmokeTests.CommandRead.cs" />
+    <Compile Include="../Haven.Desktop.Tests/OriginalLocalTaskConsoleSmokeTests.DeveloperSetupCompletion.cs" Link="OriginalLocalTaskConsoleSmokeTests.DeveloperSetupCompletion.cs" />
+  </ItemGroup>
+</Project>

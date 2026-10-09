@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><AssemblyName>NineToOne.Mail.LocalDurable.Tests</AssemblyName><EnableDefaultCompileItems>false</EnableDefaultCompileItems><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><TreatWarningsAsErrors>true</TreatWarningsAsErrors><UseAppHost>true</UseAppHost></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="MailLocalDurableControls.cs" />
+    <Compile Include="../../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Mail/FileMailDraftStore.cs" Link="Owner/FileMailDraftStore.cs" />
+    <ProjectReference Include="../../../../../9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj" />
+  </ItemGroup>
+</Project>

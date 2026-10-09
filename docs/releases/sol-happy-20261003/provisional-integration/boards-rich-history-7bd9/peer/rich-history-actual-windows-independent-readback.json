@@ -1,0 +1,252 @@
+{
+  "status": "ACTUAL_PACKAGED_WINDOWS_RICH_HISTORY_PASS_INDEPENDENT_READBACK_SCOPED_UNACCEPTED",
+  "sourceCommit": "7bd9a4b49d5ca6c0cfd972072576c9cf21e198cc",
+  "runId": 37212180165,
+  "jobId": 111465428151,
+  "officialArtifact": {
+    "id": 11307255959,
+    "name": "boards-rich-history-unaccepted-7bd9a4b49d5ca6c0cfd972072576c9cf21e198cc-1",
+    "size_in_bytes": 75444,
+    "url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11307255959",
+    "archive_download_url": "https://api.github.com/repos/CroakyJake12/9to1/actions/artifacts/11307255959/zip",
+    "expired": false,
+    "created_at": "2026-10-04T15:14:01Z",
+    "expires_at": "2026-10-11T15:14:00Z",
+    "updated_at": "2026-10-04T15:14:01Z",
+    "digest": "sha256:29f265842b99044faabb4a78149a9f7d4b76a98614fed387a1819e4b0d8cce7e",
+    "workflow_run": {
+      "id": 37212180165,
+      "repository_id": 1378313608,
+      "head_repository_id": 1378313608,
+      "head_branch": "team-c/sol-happy-c3-boards-rich-history-20261004",
+      "head_sha": "7bd9a4b49d5ca6c0cfd972072576c9cf21e198cc"
+    }
+  },
+  "wholeCompactArchivesIndependentlyChecked": [
+    {
+      "artifactId": 11307255959,
+      "bytes": 75444,
+      "sha256": "29f265842b99044faabb4a78149a9f7d4b76a98614fed387a1819e4b0d8cce7e",
+      "completeCrcOriginalMemberEquality": [
+        {
+          "path": "first-launch.stderr.log",
+          "bytes": 5,
+          "sha256": "f01a374e9c81e3db89b3a42940c4d6a5447684986a1296e42bf13f196eed6295",
+          "crc32": "3dac40f6"
+        },
+        {
+          "path": "first-launch.stdout.log",
+          "bytes": 427,
+          "sha256": "37e7b721aa0e7ccd2b5f5c11fb01688227cd0eb21d15bb57b87cb864933abbaf",
+          "crc32": "c51fd739"
+        },
+        {
+          "path": "reopen.stderr.log",
+          "bytes": 5,
+          "sha256": "f01a374e9c81e3db89b3a42940c4d6a5447684986a1296e42bf13f196eed6295",
+          "crc32": "3dac40f6"
+        },
+        {
+          "path": "reopen.stdout.log",
+          "bytes": 427,
+          "sha256": "37e7b721aa0e7ccd2b5f5c11fb01688227cd0eb21d15bb57b87cb864933abbaf",
+          "crc32": "c51fd739"
+        },
+        {
+          "path": "result.json",
+          "bytes": 31464,
+          "sha256": "9ad45961e19150617e0478a8e9a35b80ca125b6183c01a3fd2912d56a16228da",
+          "crc32": "25953860"
+        },
+        {
+          "path": "rich-history-edited-window.png",
+          "bytes": 42021,
+          "sha256": "5333c897f92b1a6c6e675638e63d6097ba49c87c59051e88027ad069393aec7b",
+          "crc32": "5d32bda7"
+        },
+        {
+          "path": "rich-history-reopened-window.png",
+          "bytes": 37299,
+          "sha256": "e49d07603c5dc7a97386b24539386d764682db8a57f99b7d7d48f8356917d446",
+          "crc32": "15be71fc"
+        }
+      ]
+    },
+    {
+      "artifactId": 11306199466,
+      "bytes": 3049,
+      "sha256": "d06bae7f8b612bce16f9b6350c4892ae58b001517aef3e1a208fce5744afdad7",
+      "completeCrcOriginalMemberEquality": [
+        {
+          "path": "first-launch.stderr.log",
+          "bytes": 5,
+          "sha256": "f01a374e9c81e3db89b3a42940c4d6a5447684986a1296e42bf13f196eed6295",
+          "crc32": "3dac40f6"
+        },
+        {
+          "path": "first-launch.stdout.log",
+          "bytes": 427,
+          "sha256": "1dd5b5f894eb7b24938db897bd7f891a7007b629c3c02d0aff774c533c8c43eb",
+          "crc32": "d88ce5b8"
+        },
+        {
+          "path": "result.json",
+          "bytes": 14096,
+          "sha256": "fbb2b75d453b7abbd09025f2d410638ff61f3820d1575c45ac6610e4d8936f24",
+          "crc32": "83f4da91"
+        }
+      ]
+    }
+  ],
+  "checks": {
+    "passed": 85,
+    "failed": 0
+  },
+  "nativeHistoryAndDurableStates": [
+    {
+      "label": "plain-baseline",
+      "bold": false,
+      "nativeToggleState": "Off",
+      "documentId": "3580d5cf-5895-4bf1-b6af-f6413986a249",
+      "paragraphId": "block-01d7b2107045",
+      "canonicalVersion": 103,
+      "fileSha256": "594b4a2c10f0ea7371426374b2574388199380f1b4d607a0ff5189dc6c72103e"
+    },
+    {
+      "label": "formatted",
+      "bold": true,
+      "nativeToggleState": "On",
+      "documentId": "3580d5cf-5895-4bf1-b6af-f6413986a249",
+      "paragraphId": "block-01d7b2107045",
+      "canonicalVersion": 105,
+      "fileSha256": "0f2b1dc1e1be8f2723093946606ef0f693944562ba2b66546420c0a905e98b95"
+    },
+    {
+      "label": "undone",
+      "bold": false,
+      "nativeToggleState": "Off",
+      "documentId": "3580d5cf-5895-4bf1-b6af-f6413986a249",
+      "paragraphId": "block-01d7b2107045",
+      "canonicalVersion": 103,
+      "fileSha256": "ec179c8f2ce3d6a98d6335c4dd0b51a9114b23f22a90cccd3cefd8ff898d6e6c"
+    },
+    {
+      "label": "redone",
+      "bold": true,
+      "nativeToggleState": "On",
+      "documentId": "3580d5cf-5895-4bf1-b6af-f6413986a249",
+      "paragraphId": "block-01d7b2107045",
+      "canonicalVersion": 105,
+      "fileSha256": "dd7dcf8a294c511066235df6db04cf55e500714d9258979f551e594519d1e9c7"
+    },
+    {
+      "label": "reopened-formatted",
+      "bold": true,
+      "nativeToggleState": "On",
+      "documentId": "3580d5cf-5895-4bf1-b6af-f6413986a249",
+      "paragraphId": "block-01d7b2107045",
+      "canonicalVersion": 105,
+      "fileSha256": "bfaa0b0ff15501cabbd16df47032de636b62ed56608993070208da9d839f2324"
+    }
+  ],
+  "launches": [
+    {
+      "label": "first-launch",
+      "processId": 6924,
+      "windowObserved": true,
+      "closeRequested": true,
+      "exited": true,
+      "exitCode": 0,
+      "windowTitle": "Packaged UI board \u2014 Boards"
+    },
+    {
+      "label": "reopen",
+      "processId": 6388,
+      "windowObserved": true,
+      "closeRequested": true,
+      "exited": true,
+      "exitCode": 0,
+      "windowTitle": "Packaged UI board \u2014 Boards"
+    }
+  ],
+  "streamDrains": [
+    {
+      "launch": "first-launch",
+      "stream": "stdout",
+      "timeoutMilliseconds": 5000,
+      "completed": true,
+      "failureType": null
+    },
+    {
+      "launch": "first-launch",
+      "stream": "stderr",
+      "timeoutMilliseconds": 5000,
+      "completed": true,
+      "failureType": null
+    },
+    {
+      "launch": "reopen",
+      "stream": "stdout",
+      "timeoutMilliseconds": 5000,
+      "completed": true,
+      "failureType": null
+    },
+    {
+      "launch": "reopen",
+      "stream": "stderr",
+      "timeoutMilliseconds": 5000,
+      "completed": true,
+      "failureType": null
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "rich-history-edited-window.png",
+      "bytes": 42021,
+      "sha256": "5333c897f92b1a6c6e675638e63d6097ba49c87c59051e88027ad069393aec7b",
+      "visibleWidth": 938,
+      "visibleHeight": 659
+    },
+    {
+      "file": "rich-history-reopened-window.png",
+      "bytes": 37299,
+      "sha256": "e49d07603c5dc7a97386b24539386d764682db8a57f99b7d7d48f8356917d446",
+      "visibleWidth": 860,
+      "visibleHeight": 581
+    }
+  ],
+  "independentVisualReview": "Both originalimages visibly show actualtypedparagraph inbold andnativeBoldhighlight beforeclose/afterreopen. Windowregioncaptures include taskbar overlap/clipping; no donor/unoccludedapp-only or visualparity claim.",
+  "originalResult": {
+    "bytes": 31464,
+    "sha256": "9ad45961e19150617e0478a8e9a35b80ca125b6183c01a3fd2912d56a16228da"
+  },
+  "originalCustody": {
+    "bytes": 4294,
+    "sha256": "1f25c198ab79cf04559e07baaeb5eef2272dff9b0937788e230bf337f8c2fa1b"
+  },
+  "originalJobLog": {
+    "bytes": 59656,
+    "sha256": "8e1db6e9b6d564ec5e688f352d3e172fda06212972b3aee2918810e26ab31f67"
+  },
+  "retainedInitialFailure": {
+    "sourceCommit": "9c3aa3d17006f7818fabc5e049a77e39ddfdc209",
+    "runId": 37211762149,
+    "jobId": 111464204495,
+    "artifactId": 11306199466,
+    "checksPassed": 35,
+    "historyStates": [],
+    "failure": {
+      "type": "System.Management.Automation.RuntimeException",
+      "message": "Timed out observing: Actual named native button: Bold"
+    },
+    "independentCause": "PowerShell dynamicName collision independentlyreproduced; 7bd onlynewlookupvariable renamed. No nativeabsence inferred."
+  },
+  "reviewedBehavior": "Actualfocused CtrlB, currentuniquenativeBold TogglePattern anddurablecanonical runs/text/identities, realtopbarUndo/Redo InvokePattern reversibleexpectedstates, actualsave/twozeroexitnormalclose/reopen unchangedfilebeforeclose. Sameexactfd5package/custody; full282fileverification observedbyactualWindows harness.",
+  "packageQualification": "C6 hasheswhole75KB/3KB originalcompact archives andmembers; original78MBpackage hashes/extraction remain actualWindows producer/harness observations, not C6fullpackagebytes readback.",
+  "previousActual67RunRetained": 37210601635,
+  "runtimeQualification": "ActualWindows5.1 SDK-present hostedrunner; newrichmode only, old67 notrerun. Wholeparagraph format/history, no substring/multirun/editor/donor breadth.",
+  "acceptanceVerified": false,
+  "fullAppAcceptance": "NOT_RUN",
+  "installedHomeTuple": "NOT_RUN",
+  "cleanPcDelivery": "NOT_RUN"
+}

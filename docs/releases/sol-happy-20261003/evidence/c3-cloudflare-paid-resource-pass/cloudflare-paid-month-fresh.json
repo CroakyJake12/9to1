@@ -1,0 +1,22 @@
+{
+  "observedAt": "2026-10-04T08:34:48Z",
+  "planBasis": "User confirmed Workers Paid; no upgrade",
+  "window": {
+    "start": "2026-10-01T00:00:00Z",
+    "end": "2026-10-04T08:34:48Z",
+    "basis": "Calendar month; billing renewal period unverified"
+  },
+  "readOnlyGraphQL": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Error: Unexpected token ')'"
+      }
+    ],
+    "structuredContent": {
+      "error_code": "INVALID_ARGUMENT"
+    },
+    "isError": true
+  },
+  "qualification": "Empty analytics rows do not establish zero invoice charges or strict remaining billing allowance."
+}

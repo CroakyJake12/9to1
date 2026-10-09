@@ -1,0 +1,1617 @@
+[
+  {
+    "path": ".gitattributes",
+    "bytes": 481,
+    "sha256": "e78a714bbf288c73e61a8934c714a3deceb5924a3e9ad7fbf535826e9cd91708"
+  },
+  {
+    "path": "README.md",
+    "bytes": 2254,
+    "sha256": "ead452012a297d36ede4b99e668da4a5ef576821e7beb7348e3852cc66f29c9f"
+  },
+  {
+    "path": "causal-review.json",
+    "bytes": 41695,
+    "sha256": "4a057662d6024a4586e195a328cfbb8ac50eda1e4abc79360c7a0b9fcf8a858a"
+  },
+  {
+    "path": "custody-report.json",
+    "bytes": 4559,
+    "sha256": "94a84dade6925556ee659702c8997f793b2484049b51729632afc19bcee5d365"
+  },
+  {
+    "path": "excluded-original-binaries.json",
+    "bytes": 14625,
+    "sha256": "8b66a2f142761514d8dc97d09c49aa2c3a17107fd9dbb98552f00a8788979242"
+  },
+  {
+    "path": "forms12/desktop-restore-after.json",
+    "bytes": 1477101,
+    "sha256": "6ad6d4db0098c23531ddea1dfab4fe2b1325b52ecc70bdf64cd64e2bc8829023"
+  },
+  {
+    "path": "forms12/desktop-restore-before.json",
+    "bytes": 1477101,
+    "sha256": "47a01d6ac747d2cec4758a2b1883ab165e9aaae21d84e7fb24a370b3a2fa06a8"
+  },
+  {
+    "path": "forms12/forms-original-native-restore.log",
+    "bytes": 7371,
+    "sha256": "43190d777426eca10a70574a57141d924db4565b8f1c72c4aaeeac0f738298d8"
+  },
+  {
+    "path": "forms12/main-restore-Haven.Desktop.Tests.log",
+    "bytes": 1673,
+    "sha256": "9e3e0d7cec6f788e521c67be1729c250027588bae10a4b0056f63a044ba2a3b2"
+  },
+  {
+    "path": "forms12/source/astra-forms-math01-owning.py",
+    "bytes": 28227,
+    "sha256": "b5b6760dcade2a7d0eab0eb0d27b30b70f5838c42135c653605ac8f2eb906be5"
+  },
+  {
+    "path": "forms12/source/astra-forms-original-native-probe.py",
+    "bytes": 21137,
+    "sha256": "b973ba507f978220eddc428e441cec461223aa5df9256bb5768f3bc31cf38238"
+  },
+  {
+    "path": "forms12/structural-delta.json",
+    "bytes": 542,
+    "sha256": "078fe468bc5b7149365cef92af4e264e1e087940910d07957282e0410c77986c"
+  },
+  {
+    "path": "joint/joint-sdk/commands.json",
+    "bytes": 79415,
+    "sha256": "6fccb6d07f9d95e83d93339331910a4f2ddab46666f34ba64506fad91d2c5156"
+  },
+  {
+    "path": "joint/joint-sdk/logs/debug-build-entry-00.log",
+    "bytes": 4257,
+    "sha256": "e2829bb463ec43939b9eb606d4b8d106bae47cae0b57cba446c4029e479e498b"
+  },
+  {
+    "path": "joint/joint-sdk/logs/debug-build-source-tasks.log",
+    "bytes": 343,
+    "sha256": "1a6d37e4f90cec8529cec250568d52427897ec0bc01bc5c143bc59a03c304fcf"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/before-dependency-0/6109-pending.json",
+    "bytes": 153,
+    "sha256": "478c34b3b037b2161fbe3606692302c8269b1eaf6f4a18ae6d1435774cff5427"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/before-dependency-0/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "0b26a636930f2823b72bec025466547ff28d35dd2202d4ca3110a36a285031a3"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/before-dependency-1/6111-pending.json",
+    "bytes": 153,
+    "sha256": "b92001f62e4501f1949ff24beee483d1790bc056ed8fc90f9573de567cc7620c"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/before-dependency-1/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "5b256fbbdd796ff172bbea478b55ce466ba7f9a42a725b1972ef38cc09c7c6ab"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/before-dependency-2/6113-pending.json",
+    "bytes": 153,
+    "sha256": "043d70500134f49a8a28f9048cbfcd0a96eca6de408a52b8db6268138d164cb7"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/before-dependency-2/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "78f79d4826e7b4a592775333c35ec1eee6a7ec7d9deef14aac46fb5c9914976f"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/before-dependency-clean-0/6110-pending.json",
+    "bytes": 153,
+    "sha256": "4cc89e6125c34c63d0686b2d7be2c7b9fe0f303654c8433e537d6c51516d8fc1"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/before-dependency-clean-0/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "f25c895a27b1ed82f99e5e8697a0f8bc72aea532f6fcfd281682b1599c287bd9"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/before-dependency-clean-1/6112-pending.json",
+    "bytes": 153,
+    "sha256": "651a9e76485c558d65fb3a572b3b338f7fb266bf9e07c08ad6a25039c89ff221"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/before-dependency-clean-1/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "fbf1dfb5ec8c67e3379f7a915d325eab44496bca5d93bd50b63b7aba5847b388"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/before-dependency-clean-2/6114-pending.json",
+    "bytes": 153,
+    "sha256": "9fb326c5ab4de4ffdbf568878efd38ace0cd8575186d940ff64d1c88d79cc9e6"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/before-dependency-clean-2/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "6cd46687cb9df32d1204f5df9f94700e255f921d3103c5336c6bae4c7ffe5e1b"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/before-head/6107-pending.json",
+    "bytes": 153,
+    "sha256": "2b9004e3fffc5eb0cad6a6e2db953de37a11d3a80489580c381011a417f083c1"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/before-head/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "ec791bbce6be3ba0df85ae0b6dd8c2d270e2972811ff9420b87013f8cbcd9a07"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/before-source-preparation-check/6115-pending.json",
+    "bytes": 153,
+    "sha256": "8b61e09640079fca3010b41673d6542ef428214b6a7598d146bbb0bdb7ce028f"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/before-source-preparation-check/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "3e578ad7daccd0b55c82e4858dbe6a3434d2d669e0a1aa4ac92535fe1914d1b2"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/before-tree/6108-pending.json",
+    "bytes": 153,
+    "sha256": "27e668de67e122bc832f9bfcf0be7c53ffc022c846481f3a3edea65a47c6f4b8"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/before-tree/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "4327381ea8e888ef62c54138c01ff2ff8bb3cfd99f6054861f1972dad0861bfa"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-build-entry-00/15769-pending.json",
+    "bytes": 711,
+    "sha256": "77ff98dc23936717dabe38bc3efdb555e3d6b08af2cc6d2cb209ba8fdafce0af"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-build-entry-00/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "f4553324799730688eaa4c01429f23c9b23df8754027661abf375d6a6c923921"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-build-source-tasks/15679-pending.json",
+    "bytes": 251,
+    "sha256": "34357dba36f5770b6d872790e8754362b8b821e549e7d843beb17c28066193f2"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-build-source-tasks/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "2a7028d58dbd14f026e3efc2ca5a36823db4f5b06689c1052580e435cf947ea1"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-evaluate-source-tasks/15758-pending.json",
+    "bytes": 159,
+    "sha256": "9b019b76bd561dc4eb8c046907b517404bc25ac25cff69e976f252a9efebc7c0"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-evaluate-source-tasks/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "a9867560edf2614e7ac0502aa7a9b7d52606e6a6fb14abacb9c56a5695857fd5"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-analyzer-0/15535-pending.json",
+    "bytes": 159,
+    "sha256": "99d32d6086498bf204727a1060da56037e0472d1d185c846ebe82b12bc196e30"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-analyzer-0/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "e44de85aaa632164fb4ceeec4417c3fb2d81344c7679563afc6fbb91d4136da3"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-analyzer-1/15555-pending.json",
+    "bytes": 159,
+    "sha256": "18b46fae288cd918b359d2e289c065e563459e8fa265915c970e1da12ebdb826"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-analyzer-1/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "9166bbf2a8cbb6360e62e61cccaf70fe88178da7a031d8b4750914ba0c37a4a5"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-analyzer-2/15575-pending.json",
+    "bytes": 159,
+    "sha256": "fb3d6f001dcc693c2b50d5d68beb94c0d2a4b42a97c399ce50997c9e3c2c9636"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-analyzer-2/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "5e038cd079369a23e3e8b60991cdb5f132bc0e0b2921224e90f94e4341890bcf"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-analyzer-3/15597-pending.json",
+    "bytes": 159,
+    "sha256": "4e795ab9378d11f4d29e6db3b6401fa87f3fe33d5a561c7e71561bc6d6faa912"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-analyzer-3/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "899545626dc4b0a9a0f35b063652773b3c78cfe64a2fca20ad47fbe8c609f2d7"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-analyzer-4/15617-pending.json",
+    "bytes": 159,
+    "sha256": "4dc26ec6372663153bf507614cff708aa0d3e659d3c2be1379365f387d160084"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-analyzer-4/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "8d3abda7462dfb67ad94ec555ce2435b1ab44ba1f6e6e92df56bc81efb153045"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-analyzer-5/15637-pending.json",
+    "bytes": 159,
+    "sha256": "4afb510c9897ffa714ab859ea29829dd02cafa7e7b782a737102f1bd0382bd05"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-analyzer-5/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "6777cef857bb62e68d97bc334753789c45052bf0658e529b1c5ad147d9a92105"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-analyzer-6/15657-pending.json",
+    "bytes": 159,
+    "sha256": "8dd0e59f4132047271c9c785d25dadb4ec6813dd0fc27a38165aaa90e3dfecbc"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-analyzer-6/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "ec36eea7e38b73d73f33bcd3097c76be5b9dbee380fdd579b24d935ae437e4bb"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-entry-00/15227-pending.json",
+    "bytes": 159,
+    "sha256": "7a70df62ecca191cc352fc2153ff689d9521e7cb57efce701a2f1d307f6e0914"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-entry-00/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "84ea03551dd53baad909ef3655eac9c90511ec86c69816a4511d52be7421ce93"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-entry-01/15260-pending.json",
+    "bytes": 159,
+    "sha256": "4b44ebe2fb686d7104a5683905e5053756acf2f5de3dfa2554b8d143f8ff0f8e"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-entry-01/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "8ddcb9abba7ba1be99c7889b9ad24ef32d6200c587bd27ebdde357028b1ac583"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-entry-02/15280-pending.json",
+    "bytes": 159,
+    "sha256": "382e70175b85fd38e4d44d1cdc0b0f737fd50dc43325e94ab19c9745347ea86d"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-entry-02/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "3d4fbb1da842b08aa2c066af431910737541badb38b0a94a69b380dd322071fa"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-entry-03/15303-pending.json",
+    "bytes": 159,
+    "sha256": "3984adc75973cd49aafd65437ba2696464fc72b63f7b4da7607cb4b8578b4ef6"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-entry-03/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "ccb369ec81c382272e5033f49a5b9a8670ae16c9e7a9f71fd8310b91d45294ca"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-entry-04/15336-pending.json",
+    "bytes": 159,
+    "sha256": "02900cc530fbe4f507ce56a6afa1302f4b109ee6b297d6fb48d6c0eef8291ea8"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-entry-04/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "fee256530cd622b4a13560037aea2857c7c14188d8c4d364c99e1d1c1ffa0331"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-entry-05/15368-pending.json",
+    "bytes": 159,
+    "sha256": "4149691d988972f9434f7ff7a6a820f6d9774cb4f008428912d84bb9e8c47e6c"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-entry-05/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "694c00314c80af58aea3d823c11aecba7804ceda6aeca367eb48a5e1c87dc499"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-entry-06/15388-pending.json",
+    "bytes": 159,
+    "sha256": "6d41b9ae618a08a9ec1c35a6beadc888f52b5f4cbc9563d34a0685e1eb156b64"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-entry-06/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "644f7492b1ce619051fdb9ae12dca87fbe8e4e8d7268da88726d5b8bf8f04801"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-entry-07/15416-pending.json",
+    "bytes": 159,
+    "sha256": "efdb7fdfe9641e7387c0bde173d5f16cb292a9cb19771365433f8f55154137ca"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-entry-07/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "fa1645d1e01e5e4408503168ab49960fa5babc4594d19ef334511cad44a511c8"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-entry-08/15439-pending.json",
+    "bytes": 159,
+    "sha256": "878d379635f604726237e2f8643ec9d42801c31f5ecbfe6a608a12a2c691770e"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-entry-08/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "13f6871aae927704896644b9a356f98fd194712a0156f3c7c0cf750bf1e2e273"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-entry-09/15463-pending.json",
+    "bytes": 159,
+    "sha256": "bbe7f9cd7448044074ee7e95c4f877215b6b8ea64f38d21ed08d101ce8a800ef"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-entry-09/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "f6e467b5fe0922a1e34326050ce2a2f0b1641165fe19cdd6d0332a0db75182c9"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-entry-10/15490-pending.json",
+    "bytes": 159,
+    "sha256": "ba5a73a18f9db615a5c1812e211ec63d2b5d1680aa243e59a0a9b143b0485a24"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-entry-10/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "29d4d4fe1729e64c71ed71f63f0db692a54db2276df509b80d85c09aaa53aac0"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-source-tasks/15510-pending.json",
+    "bytes": 159,
+    "sha256": "63ab6bba92b533eeffebfdeb16893a2d21130e22df7e6c834e9ce8f67abb9bf3"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/debug-restore-source-tasks/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "4c8121e936dee0a7a254fd9ad4e7414ab970226ba92066770822a1c716006f14"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-actual-native-loaded/15222-pending.json",
+    "bytes": 159,
+    "sha256": "a6b8e2a710f3752b6614c2397230bce725f0a42b097ef18e202fe4245c489f15"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-actual-native-loaded/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "bf160a0583d17544c93333fa1f1c462748ec91fff2f92d47ccea36c31cd6c379"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-1-dependency-0/6188-pending.json",
+    "bytes": 153,
+    "sha256": "1cfe981d9fb2600fa013269994bd3b61d4a0df08382eb9af7f41aacd248b0a6e"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-1-dependency-0/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "c16d07292add2e92463ee9759d2851a3f9b412ce20b28e35e06ba1e5a299c467"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-1-dependency-1/6190-pending.json",
+    "bytes": 153,
+    "sha256": "a0c6479fc2f7083ff841ecf2c215d6c644f895aefc66f396d3647c24b66966b2"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-1-dependency-1/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "5a2e5d0dc5fd846973eb736b22cedf0d7eefe532c61768a280e36f96343e134b"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-1-dependency-2/6192-pending.json",
+    "bytes": 153,
+    "sha256": "8a9129338f460895a3fe79c12b7d4e10cc7f96894e4938d9099a6515689ca40c"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-1-dependency-2/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "fdb4da1341e0d11d13c8679312dc4f2660bfde5982fe5a6568127d2eb6cfac77"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-1-dependency-clean-0/6189-pending.json",
+    "bytes": 153,
+    "sha256": "8c9727388ed5395057f08ac05aeae534fbd013b2bc93384dbb0d99396dd8dea8"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-1-dependency-clean-0/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "aadf6648f8b51a913dd89619d6e13ff1f5a378e6eee53b43142101acf1b33c12"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-1-dependency-clean-1/6191-pending.json",
+    "bytes": 153,
+    "sha256": "71f898be0bafd93fdda795aad80ea879c778aaee80213dd5384c31841b1f004d"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-1-dependency-clean-1/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "4e9608b3cf13eaf88eb52697c244e0925e21600228326776566b7c0a013af08e"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-1-dependency-clean-2/6193-pending.json",
+    "bytes": 153,
+    "sha256": "850e78c47ee0b88ae928c30ce424da0c84676036d0bde515efb59cd710bc4d6c"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-1-dependency-clean-2/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "2cb7bdc346941ecde9566fee9a922fc97662a8fc95af2b8d4559d986c82fda34"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-1-head/6186-pending.json",
+    "bytes": 153,
+    "sha256": "08a91492394f9a64fc4de813f7e406c43862ee730a9c610712d7ca4cfdd80507"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-1-head/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "d71633c3af88372f9ece8104393d7696ee4633e61442b80c13912c9702273877"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-1-source-preparation-check/6194-pending.json",
+    "bytes": 153,
+    "sha256": "77fe1c3f0dbd66d0b1b6c6538314a70ea3eca7d6d787de1a70d70ced96518c39"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-1-source-preparation-check/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "949a4a6c2cfd2ba8d11b8a3d549893dae7d19ae6b8b1bb3f5817915fa3ef3b33"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-1-tree/6187-pending.json",
+    "bytes": 153,
+    "sha256": "45618ace675b270f50297a76789950b2c3433d096658ca574ee337361922764c"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-1-tree/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "b416e9683f3554487c7b68a5a05f6f3a48beb4da2f04a3914440648399f33bbd"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-2-dependency-0/12353-pending.json",
+    "bytes": 159,
+    "sha256": "f9cbc35b66ee66b207dcb820324964b58924cc9056e9de97492530138114f666"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-2-dependency-0/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "c3d10991d21a9ce0a8ba11b4c688a7ee419243b22a237dfbcbcd3393487a0db0"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-2-dependency-1/12355-pending.json",
+    "bytes": 159,
+    "sha256": "1df4f4bce53d9bbb5447ae84578edd05e34e67caafcbe565e33c6f003ebd5846"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-2-dependency-1/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "0b16cb4412a3539c69830dbaf541b5d2f75fd9c1c6fd8248f92b456416f16baf"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-2-dependency-2/12357-pending.json",
+    "bytes": 159,
+    "sha256": "650afca8748b8c85e79f0bbd4c5d50f880b5586dd98d723a531b4d16e2843552"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-2-dependency-2/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "67394188c1f632826fded8e009dfb1ea3f39164148a62a8bb7e0504e623b9070"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-2-dependency-clean-0/12354-pending.json",
+    "bytes": 159,
+    "sha256": "4fefb054e299b5e248c40f2e1086c258c1d429a012e3c5c4a9f000458667aaae"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-2-dependency-clean-0/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "2e43bd2d99fb59766f57514afbea9ef00bb1464201a3bde7b99d50a8a0894fb3"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-2-dependency-clean-1/12356-pending.json",
+    "bytes": 159,
+    "sha256": "77fcadaedbf1b4d312322b823380727d125d2be5cb936cd4f4157bcbb831b38a"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-2-dependency-clean-1/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "5f097ce6ef2c5677de0c7c71ede7efe11faea143a908c600ea3ccc4740c50bec"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-2-dependency-clean-2/12358-pending.json",
+    "bytes": 159,
+    "sha256": "864577abd89526e6f1dfedff35db10c435fda420be37eb37b2da4e42aeba0bd0"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-2-dependency-clean-2/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "7d67d2358c2013de179fa86f94c2eaa53e8daf5781499a5c1964e239e0fe9dce"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-2-head/12351-pending.json",
+    "bytes": 159,
+    "sha256": "b4802892076bd028693aa088677ea6ee8f0772ad0698e7904d32b87c0f588bcb"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-2-head/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "54e6bd5bf4a0fdc749380d03da893460aa8ce4c6fff38776674b5344168eb7e3"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-2-source-preparation-check/12359-pending.json",
+    "bytes": 159,
+    "sha256": "08322c452dd6905be56fd1bebf6266b1cb3e123395686b9fc0211ccb646ec378"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-2-source-preparation-check/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "69a15cdd5c7d2f2dc071d3412b360fe8d295649ba8a9c07567a520bc1d45a364"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-2-tree/12352-pending.json",
+    "bytes": 159,
+    "sha256": "db30d803961222644b45fe9f4db2014f27bc804394260f7fdfb98ba197851e0d"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-2-tree/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "a6fcae4696fefdfefe63199a7335bdbb74f0746d76dda8acec20ead202d3921e"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-3-dependency-0/12470-pending.json",
+    "bytes": 159,
+    "sha256": "2dfd69a83a47c570bf6e345f7594f540152241c806006d6493ae1609b3e98cb0"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-3-dependency-0/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "f94ecb1267c71ba5791c3e77a224cd587d31ad6c39775b49b22a5a2df44c1204"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-3-dependency-1/12472-pending.json",
+    "bytes": 159,
+    "sha256": "7dec37dd8de289ecdab4c044b4037683c2c4b01dfe47a071b89f24ba399d69e7"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-3-dependency-1/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "9e7ff82ab7f0e10426aaa4fad2cd0fd7552c24331e520a2c59cca6d488f2b106"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-3-dependency-2/12474-pending.json",
+    "bytes": 159,
+    "sha256": "7d03f893aceda1a7a99139a6f64197455113cb8c0f673a46667076ef82585a33"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-3-dependency-2/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "13ff27ffa049f350116be3baf772049e0df01b43ffbca85d5beff503584b2b9f"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-3-dependency-clean-0/12471-pending.json",
+    "bytes": 159,
+    "sha256": "fc4a8828765088c650326d18cb111ca75b8fb3cae6f387dd289500a503ae8098"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-3-dependency-clean-0/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "c179cbeb277dfc392cde1e125f7053d2958377b3a506db8c5072563f216c8da8"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-3-dependency-clean-1/12473-pending.json",
+    "bytes": 159,
+    "sha256": "7e9abb563490acfe27dae1ee43ae5361f2f964dae793e69f668a7afa365aaada"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-3-dependency-clean-1/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "11e99aa2cb9567942578f8991342be903a1341c1d31f0d5d365064da7ef0baa0"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-3-dependency-clean-2/12475-pending.json",
+    "bytes": 159,
+    "sha256": "98a243b703cde909cf1c9ddc3dc18a11bdb888d6b4236f61e9d27d214a7d15eb"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-3-dependency-clean-2/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "c0f393a6f87eba499f08a465899088832133ae452011dc9e5080c05fab70d4a0"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-3-head/12468-pending.json",
+    "bytes": 159,
+    "sha256": "cd71a7272008e8955c2b80eca63808d697f34368fd9c6d973353d403aeb218b4"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-3-head/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "f1e0f5e7b55a072b000a92d2363b33e0b23217157f3225271a366e9ce0ce8ceb"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-3-source-preparation-check/12476-pending.json",
+    "bytes": 159,
+    "sha256": "b40bf42e739bc1a9d70ff7bbf39b54e45894d5b545bdae83d2799eecb8a9c849"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-3-source-preparation-check/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "60da6cc0efe72645ae650bfccecbbacb6a5cb1b491773cc8e9e102d02c099ca6"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-3-tree/12469-pending.json",
+    "bytes": 159,
+    "sha256": "fb0233ffd3736ce79fb31c477d79437f3cd0f8dd4d66e4140a90cc8b1afb4e96"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-3-tree/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "2cef8574933f8948519411d10a4a9bacc5833cd6c6974b6df0ba44f10cac99b6"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-4-dependency-0/15181-pending.json",
+    "bytes": 159,
+    "sha256": "327cb6ca93776ab8fa923cfa58e78aa0e9b57bed4586589d77dcf2cb3548c11b"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-4-dependency-0/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "66c39bf18155aba2dc68a1cf6181a782e5bae24486d5493006991156e757547c"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-4-dependency-1/15183-pending.json",
+    "bytes": 159,
+    "sha256": "8551a7108b921bc34a259a9e89274718aaa08a55324391a623beb3c513ca28cb"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-4-dependency-1/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "1fb29935eef2485527b737cfc4f9ab50c487295046c2ff3b4613dd335d15510c"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-4-dependency-2/15185-pending.json",
+    "bytes": 159,
+    "sha256": "d2e68c14eccc1aab4ae234498bd6ab3d4505060a7ec68453ccdfd0f15caf36ec"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-4-dependency-2/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "905a5e2f22bd9c3873fa9e2b1a3dd3e74a70f15515f1f27b0d94ed6e98b89a4d"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-4-dependency-clean-0/15182-pending.json",
+    "bytes": 159,
+    "sha256": "42e3c5960db54ce2c5a20ef992ab359cc3d6447ca759ff180a4c26c553efb2bc"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-4-dependency-clean-0/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "283950b88eb5e08fdd0469a776cc4ba0e2b62ecbe2fc5eb588e5ae405b00ee15"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-4-dependency-clean-1/15184-pending.json",
+    "bytes": 159,
+    "sha256": "f039d874d5e84e108e428d3b2a52a0ca905ccfbd4e6c18ea5e5c9e241846ecc8"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-4-dependency-clean-1/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "87ed7bde076612989c4b7c6f77875a31bf5f6f30b2dacceafd3a572f99915c7d"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-4-dependency-clean-2/15186-pending.json",
+    "bytes": 159,
+    "sha256": "dfae1b6fe75a640d7054951fa232f6b42d8bb14f21f2d00242567e8d473d8b5e"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-4-dependency-clean-2/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "700bcefbd0a371b23879223cb46d2d84e63b6bac7a2de61207f2c5ace7002966"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-4-head/15179-pending.json",
+    "bytes": 159,
+    "sha256": "e88339aa8f18563c92c7a0d935e0fe4ecb3623c3f3b9168f21d601c755e00d34"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-4-head/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "c8c9e890766267da431d06311fc446993a68a54495f94a18b9601bf4a9d8871a"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-4-source-preparation-check/15187-pending.json",
+    "bytes": 159,
+    "sha256": "7239d4b3f2bebe9aafe4d2488e158240e9189d7b67be2b6e72b3a879409772e4"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-4-source-preparation-check/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "a7a035873baec9875e714c4d1fa736384c2cbf1bf90b795c68f46c77aedebd41"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-4-tree/15180-pending.json",
+    "bytes": 159,
+    "sha256": "1f0656e83c3fe41b1f1da34b2f8992fd9381a3935750c42d1e04ace93f083282"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-after-4-tree/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "f29d2218dd2b00d932b5662254ccc663ac120c6aaa084235ca5a15053f550f0b"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-cargo-build/6205-pending.json",
+    "bytes": 20936,
+    "sha256": "e3e359ad23a6c3b5ee6fbb5d81e2f30e77c44e085496c0579874ea885baf5ee2"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-cargo-build/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "86dde3ecffa2ad135bfa77672912d279d22873d6ba09b7d17caf1058cdf87c48"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-cargo-test/12370-pending.json",
+    "bytes": 389,
+    "sha256": "93ea4c28759b52d03478dbeec87bc107261465a521bf23a34e955ab99b0a2967"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-cargo-test/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "38442b4b19f2924dd9e35bb64e86e5583fbf67e7896440027422bf1d9b849ff4"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-cargo-tree/6168-pending.json",
+    "bytes": 153,
+    "sha256": "bc6465ce3b6dd0dadee37249b694e9461d47a57dea6457133fcaa184c5ceb857"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-cargo-tree/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "dc67c97da051329e6ee6da3cade9e23d7c244bcdc978cddb0f1d8253c12094c3"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-glycin-build/12513-pending.json",
+    "bytes": 14097,
+    "sha256": "5711ceba63a9a149ded9b1c12ceedc57a62ad702eb4b3c9440a7b865654326c3"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-glycin-build/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "96a77bb93af92485c3ee405fd9328d2eece32a55aa667f49925919f5912ff0a2"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-ldd-glycin-image-rs/15212-pending.json",
+    "bytes": 159,
+    "sha256": "74939b3f9c45928551010565330a362eaab597364af59c01cf05042ee3499a8b"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-ldd-glycin-image-rs/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "6d5d9d4d3a8002f1d08636286422775ba3bd993597cc45aacabeeef126e89525"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-ldd-libglycin.so/15200-pending.json",
+    "bytes": 159,
+    "sha256": "70a30fb43464ad1b2495820f6f62e485a6af32d1cf142d3527475fc7b58423a7"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-ldd-libglycin.so/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "a2551e5f7ad0663095998cd7cba2076a5e7ff156653c308ef353a55229a96446"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-native-loaded-identity/12499-pending.json",
+    "bytes": 159,
+    "sha256": "880f7320daff03c5f4a32b63a650c96f6f44fc60bb835e8b3853481ab17a5725"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-native-loaded-identity/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "3417ac38abadaef1cd5079a84814f21cc27fdb89dce079ae927a01b57e744054"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-native-needed/12489-pending.json",
+    "bytes": 159,
+    "sha256": "9b07d23286135dd35368ae25cf04af8244c6e71c8f932f461f7536e2609a1063"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-native-needed/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "d558570f051a7ca1d6ffa63b99de29b871b5cb68fd89a43de7f50922a7e1ab60"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-nm-glycin-image-rs/15211-pending.json",
+    "bytes": 159,
+    "sha256": "4437a7152e511d40badb53a55ef05efb80263aefc541466926c405b203d10fde"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-nm-glycin-image-rs/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "88e539981ac137b51d10906fd5b059af4ac9a6b447a091241ba29108f1ac8318"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-nm-libglycin.so/15199-pending.json",
+    "bytes": 159,
+    "sha256": "363cd33a3cf3142eccc3f35b75cd084b3c0e5db48b85f61da2f24f5b597afbb6"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-nm-libglycin.so/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "b63ab2497f70a8dea80ef60d23bbbbd3c86f57c00a10bcc055b4a6aafeda84ef"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-original-metadata-1/6155-pending.json",
+    "bytes": 153,
+    "sha256": "fb006cd9d62f5db18044deb83b9f362924a9b38fd6c64cbec3e3e03e1b597d9c"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-original-metadata-1/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "00f9367ad9e05de1fd2a60568faa8cf3b08cb63471baf9360c09a9e5a1405758"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-original-metadata-2/6156-pending.json",
+    "bytes": 153,
+    "sha256": "da406d0a147f6a0d3065939785d13f60fd56324a79367eaed29b42c46532d4be"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-original-metadata-2/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "faac15694f131bbedb2c44cc48292b58f14515e8eb1a2d190142da6134271d98"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-original-metadata-3/6157-pending.json",
+    "bytes": 153,
+    "sha256": "39cf4045ae6697226c574a835a6367c2ea110082e7dd4710b97b1a5e031acf94"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-original-metadata-3/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "25916c78e014972588a510e0806d55cd7e0a6967f96b84085c08f2a0ca3100fd"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-original-metadata-4/6163-pending.json",
+    "bytes": 153,
+    "sha256": "9f146c38ef6ec0e8358078427a39cc8141a2ade5c22b0bc2e2325b5b02a17f4e"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-original-metadata-4/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "f6bd3677e7e2dd8766307cb82044a091f3c8b4436b73081981773725967f91ec"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-original-metadata-5/12500-pending.json",
+    "bytes": 159,
+    "sha256": "ee27be8b4e3330d315fcecbfd805863f967bdb4d55b6dd7013224fb5a37ce20e"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-original-metadata-5/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "d902138da78d411923340237fd807e12c3fb96e0efb616eab0a952d08efd47e8"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-original-metadata-6/12501-pending.json",
+    "bytes": 159,
+    "sha256": "108afedd96e098cc94fddd7553e5202483fe998d907c6d6d2ccf17e1396e449b"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-original-metadata-6/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "c9e0bac4f53a3b7ae99135495e65660aeaae37f40b3b672f7455345746786ff4"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-original-metadata-7/12502-pending.json",
+    "bytes": 159,
+    "sha256": "ab787b09189c62a1ed00d60e3039b1906af73b688439de3d52471b27ee75b81c"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-original-metadata-7/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "61b150d68efce8e710b8174ef6d40e1e31d07f7a424440db8508823fa879923e"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-original-metadata-8/12508-pending.json",
+    "bytes": 159,
+    "sha256": "724caa25f92f195dcade8106d206b66e1dd77be93e4220fecef05dcaafe84c2b"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-original-metadata-8/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "0e07640701bfb42623691cef29e21a1c419513826ec649e5256ca1a3ba9394ec"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-readelf-dynamic/12487-pending.json",
+    "bytes": 159,
+    "sha256": "2f577bd7ece32b7354bad4d8db750da5ad89e38a75f4c7cd7723ddad24c8ebbd"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-readelf-dynamic/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "30b930b4842aa28d438e637234f4750a73397ae22bc9f93f4833c9ff500d25bd"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-readelf-glycin-image-rs/15210-pending.json",
+    "bytes": 159,
+    "sha256": "c66c3e06e71f7e4bb8a1cb74fa42a3179b0ee4be5dc12752b495d726a3f652cd"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-readelf-glycin-image-rs/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "d538eb07deb135543ddc8a4c29880646453708895f4e4db4088865c19586a5c4"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-readelf-libglycin.so/15198-pending.json",
+    "bytes": 159,
+    "sha256": "21b0b7368ee29a62bf019d0f49e90dd83099045b82a9465b153bb53b21ccce6c"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-readelf-libglycin.so/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "eb318dca51f989a816548070929f8eafad52b6d3ab9b7907628a2e66b9075463"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-readelf-symbols/12488-pending.json",
+    "bytes": 159,
+    "sha256": "a8523e8ca7eba42b2db09d67ab885fc39fb80b33b64445ecf2cc2b7df9a719c2"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-readelf-symbols/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "128794c6e6812874599b6b6e4554cf9e46f1d614c2024c75817b9fe11d217f39"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-state-clean-1/15224-pending.json",
+    "bytes": 159,
+    "sha256": "9596bf79c02d254e922aab333b026b1f5287d1dcd12ba74949a3885c8c47beed"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-state-clean-1/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "5a9e34cd2ecad169e208ee044501e0ab4632539fc4d831de69f631f2504167ee"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-state-clean-2/15226-pending.json",
+    "bytes": 159,
+    "sha256": "f310803d0840403a6ff2fc9472b6e37129a17aadde5a97d99896cf87fe45ade9"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-state-clean-2/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "884b3712dcdb1e3b8a654f9f916e11e2d6037b1a1c222d667ced852d05765cde"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-state-head-1/15223-pending.json",
+    "bytes": 159,
+    "sha256": "d82904ea052bd64e1f70062bca9e08380a684b0cf4c15e761b7ce6aa585de887"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-state-head-1/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "f0b88b95fba7f3e83e9940482c852cfe1364a1a6dd8e7cba1a8c0aef0bff3b50"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-state-head-2/15225-pending.json",
+    "bytes": 159,
+    "sha256": "a38c33fe1a1e89a064a3255dc0e12e556e0bbe89a7505be312447597ac577986"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/native-state-head-2/expected-managed-launch.json",
+    "bytes": 102,
+    "sha256": "d1307133241430d3c17696580a73b4a8dc446980e0787ccb3d819dbbbdce161b"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/original-font-packages/6154-pending.json",
+    "bytes": 153,
+    "sha256": "b0cf3bc92ba50daa76ed4ed635dcecf1887789245879e15269af9bfe8c8d2c18"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/original-font-packages/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "e1d07fb12becc5b9d49a3d4339bcf9c8a8519f7de9ae2adfa676dbb8e79045d8"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/original-fontconfig/6153-pending.json",
+    "bytes": 153,
+    "sha256": "cd0cd6e2f788bc105dc00f6db0cc648b653b31999a873e97aef911d87db6736c"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/original-fontconfig/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "b9e2210c150e6b0afecce18e2f6a3e34dc325d49a56cbd9d741d00d99e887da2"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/toolchain/6126-pending.json",
+    "bytes": 153,
+    "sha256": "6a3a67f88e88edb9d022ce188ae3eb97274876d56cfae2b68223415a10431429"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/toolchain/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "c41ea3edc9c35c0ad615d23d2bfdb7dfbc1ec188a2db5f7b1a7af85e2f204e31"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/workloads/6136-pending.json",
+    "bytes": 153,
+    "sha256": "f026528ec6c2ae4ff2503562dfcd60aef944df40e6c8cc12c9f967a1e5bc4fe8"
+  },
+  {
+    "path": "joint/joint-sdk/original-process-drains/workloads/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "c23b1865d282a290f7efc0f16e93a7bb65d75f596e3654a7c296024b2e333799"
+  },
+  {
+    "path": "joint/joint-sdk/receipt.json",
+    "bytes": 85442,
+    "sha256": "faf5f42ee056c008e8434c1d94a97a3decf32c7b2c414ee4783d6d8217105ff5"
+  },
+  {
+    "path": "joint/profile-correction/actual-bwrap-version.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "joint/profile-correction/actual-bwrap-version.stdout",
+    "bytes": 17,
+    "sha256": "3a0618bed56bc5ced74eea5965def37047e2b879a25ceb85bbc964efbe00489e"
+  },
+  {
+    "path": "joint/profile-correction/actual-kernel.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "joint/profile-correction/actual-kernel.stdout",
+    "bytes": 113,
+    "sha256": "6ecb75ce9d770bd2cfb6898b267dd8f29398821b25cb233675e182e0323ba0d2"
+  },
+  {
+    "path": "joint/profile-correction/actual-packages.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "joint/profile-correction/actual-packages.stdout",
+    "bytes": 83,
+    "sha256": "92e4aa521bd6334d6ea40145d93997ba7e9b763a325b5bf71b93d8cbc9f745ef"
+  },
+  {
+    "path": "joint/profile-correction/actual-parser-version.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "joint/profile-correction/actual-parser-version.stdout",
+    "bytes": 101,
+    "sha256": "6276efb97a7dd291906a56b72319f1932d883167bb55d922aae9f9c56fa685f9"
+  },
+  {
+    "path": "joint/profile-correction/actual-restricted-child.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "joint/profile-correction/actual-restricted-child.stdout",
+    "bytes": 1517,
+    "sha256": "24c839d7187ceb2e398d6ddb62232e2fb6b26077fd69ae4659bbbd817c79c27c"
+  },
+  {
+    "path": "joint/profile-correction/cleanup-refused-live-original-session.json",
+    "bytes": 6511,
+    "sha256": "9d21e4bcc743d6994d6be14a918899fd552b164dfff3fa4da0f6c4ecc0d0939e"
+  },
+  {
+    "path": "joint/profile-correction/commands.json",
+    "bytes": 6328,
+    "sha256": "fe9eae94fb19ea1534cf32bc5843a4b9715f9f3db9ca3f104cca290b173f1afe"
+  },
+  {
+    "path": "joint/profile-correction/exact-abi4-dry-parse.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "joint/profile-correction/exact-abi4-dry-parse.stdout",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "joint/profile-correction/exact-profile-preprocessed.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "joint/profile-correction/exact-profile-preprocessed.stdout",
+    "bytes": 17979,
+    "sha256": "f6baf29fa5dfd7fb1d4d717fea9cfdfe5a78303494dd0cafb69c23c1533b01fa"
+  },
+  {
+    "path": "joint/profile-correction/load-exact-two-profiles.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "joint/profile-correction/load-exact-two-profiles.stdout",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "joint/profile-correction/original-native-session-drain/6106-pending.json",
+    "bytes": 153,
+    "sha256": "4bf3ae2e7d1619ba8a118af80c0ac84072daf909863d86336d69a0f1880eda53"
+  },
+  {
+    "path": "joint/profile-correction/original-native-session-drain/expected-managed-launch.json",
+    "bytes": 101,
+    "sha256": "6e8aeb00276cbf94cc94acddc5161b40c553b4e64fea3d7ac859f55831d4e486"
+  },
+  {
+    "path": "joint/profile-correction/original-native-session-drain/inner-native-delegation.json",
+    "bytes": 2847,
+    "sha256": "5660d19d4c79fa09da4243d1862c409effbc47d729ceaa02c468953829e64094"
+  },
+  {
+    "path": "joint/profile-correction/original-sdk-caller-custody.json",
+    "bytes": 930,
+    "sha256": "54cf8a3034cdb86de0649ea38bfc8e9a12211b1c3ddcc393a3d2fd841cced288"
+  },
+  {
+    "path": "joint/profile-correction/original-sdk-caller.log",
+    "bytes": 1497,
+    "sha256": "ebbd6b1e61d2a43de2dcf1a9fce61ec43fd24f21919f8d8ce644220aa99d9ed5"
+  },
+  {
+    "path": "joint/profile-correction/policy-precondition-receipt.json",
+    "bytes": 2301,
+    "sha256": "bf3a65a0a7f27044f7f29b69a946d5fbe354120d13fbd37a45ac3a110b0b9588"
+  },
+  {
+    "path": "joint/profile-correction/profiles-after-load.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "joint/profile-correction/profiles-after-load.stdout",
+    "bytes": 3173,
+    "sha256": "67e4168d02811291f617332cf3f811879c98e8b2cfa86edcc5b795d84a05b82d"
+  },
+  {
+    "path": "joint/profile-correction/profiles-before.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "joint/profile-correction/profiles-before.stdout",
+    "bytes": 3134,
+    "sha256": "38c840fbdcbef4cbb196d4c8ea317faabf76038095d6e89759762de2b9f04981"
+  },
+  {
+    "path": "joint/profile-correction/same-genuine-true-probe.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "joint/profile-correction/same-genuine-true-probe.stdout",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "joint-manifest.json",
+    "bytes": 186125,
+    "sha256": "e88c683bf35f1d9cb2bb5433911783c7ab194eaeec50442b274d23d880db580e"
+  },
+  {
+    "path": "linux19/atomic-spawn.c",
+    "bytes": 7125,
+    "sha256": "7b0568a2217319bf9dc9988af94b3c7795db5be2bbe4491dcffdab84c9ca697a"
+  },
+  {
+    "path": "linux19/home-build.log",
+    "bytes": 1684,
+    "sha256": "93851fefb21af6fc90982d380f266da706c9da5ebfad26646dbb0923573ff1fe"
+  },
+  {
+    "path": "linux19/native-compile-receipt.json",
+    "bytes": 765,
+    "sha256": "9f398663bd02db64d25477fc1950d2451a619eefda00f3d6d4d68acebe071c70"
+  },
+  {
+    "path": "linux19/native-required16/result.json",
+    "bytes": 6817,
+    "sha256": "a178660b8bb220e3b68f9469e8726e8b96f86b6f3b5309b88a33fe4b4be093c7"
+  },
+  {
+    "path": "linux19/ordinary-process-drain/home/19080-pending.json",
+    "bytes": 255,
+    "sha256": "72cb79afd2c062edac9ac5dfde5d9dd126d6aec4cdd33bdb0bd1246cc17fc29e"
+  },
+  {
+    "path": "linux19/ordinary-process-drain/home/expected-managed-launch.json",
+    "bytes": 103,
+    "sha256": "ec4d72312c0e7707f6eacef64d8ec2c5cc7d7fea927449ade074cd1dd0c65db2"
+  },
+  {
+    "path": "linux19/ordinary-process-drain/os/15035-pending.json",
+    "bytes": 490,
+    "sha256": "c4925693392f9f1f45e7f69fa2e01940d797ca1104908b8448343df518e4df6c"
+  },
+  {
+    "path": "linux19/ordinary-process-drain/os/expected-managed-launch.json",
+    "bytes": 103,
+    "sha256": "fa2755c9ee1b61e65b7952d14f3a689fe2d4391b8f2c6b279e0dd7c4b8dd5682"
+  },
+  {
+    "path": "linux19/os-build.log",
+    "bytes": 7955,
+    "sha256": "24b78f3dbce13ef0a703be08bee8a633aa3b897fdae99cbf3556aa632361ec08"
+  },
+  {
+    "path": "linux19/receipt.json",
+    "bytes": 5227,
+    "sha256": "fa79632566303fe17ca3890d525df4d475e88a0387053611d2c3d70cfc21d1e1"
+  },
+  {
+    "path": "linux19/root-build.log",
+    "bytes": 7985,
+    "sha256": "67f5233e94afa83f68f994fb8830bef5bf4bd9b9bfdd4098046c48313e3c9fa3"
+  },
+  {
+    "path": "linux19/root-process/root-process-receipt.json",
+    "bytes": 1373,
+    "sha256": "63abd28cc64cb081b3ffe77215aa94545d98ddf4ff1a2cdd00537417a39b06a0"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/caller-drain-authorized.json",
+    "bytes": 94,
+    "sha256": "ae1ee1a9fe24b55c034d51f51af19b6781f6caa5eea113ecfcac5c027175afe2"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/commands.json",
+    "bytes": 206,
+    "sha256": "d4cecb87b2d6309eb7a7a74264f735ad2c0d38ccdee016b1d5b8d8a2001985e9"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/actual-target-user-home-path/22460-pending.json",
+    "bytes": 163,
+    "sha256": "89df56f2bb87b8463597c89088f3bca8a4aa13af4600f095a65c2b67a8f9cff9"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/actual-target-user-home-path/expected-managed-launch.json",
+    "bytes": 103,
+    "sha256": "26ad83ddf0b24b9aa48f868fe03cf0dcc954895088653e862e88c7be548e0c44"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/cleanup-exact-user/25734-pending.json",
+    "bytes": 163,
+    "sha256": "eed5609adf6003c98934287a32d657657f19d52be797a7e619d07eceedb92a2e"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/cleanup-exact-user/expected-managed-launch.json",
+    "bytes": 103,
+    "sha256": "d208ecdcd873e5fdd55869e22818c677b008e1df7b1c533503fee720cf091435"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/fresh-target-user/22447-pending.json",
+    "bytes": 163,
+    "sha256": "e686a473ec3cf265cb900d4aae850dc5e82afb3afc0ae945c67416263d0b574b"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/fresh-target-user/expected-managed-launch.json",
+    "bytes": 103,
+    "sha256": "cb11fd6bcbb020ceac46cb64a0159cf817fc5e38bfa75f9d27da83c36382bb93"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/maintained-first-install-helper/22437-pending.json",
+    "bytes": 163,
+    "sha256": "fdf23a144d8c8983e9ce7052ad57f7b618d054fcbdf8b79be1d15f65b9bf0a40"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/maintained-first-install-helper/expected-managed-launch.json",
+    "bytes": 103,
+    "sha256": "1f98955988ed941019050f7d0b5fb1f15fe51e3e469329e895548ba693977228"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/maintained-first-install-home/22415-pending.json",
+    "bytes": 163,
+    "sha256": "ac924b1d6a880a2d2478ec4d480df3a060bab0d17e692a0dd301922cac920587"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/maintained-first-install-home/expected-managed-launch.json",
+    "bytes": 103,
+    "sha256": "a2d70c018dc38e059521beeafae9ee2b4f1f3243010c8f634c6c4eb7fe1341fc"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/maintained-first-install-owner/22426-pending.json",
+    "bytes": 163,
+    "sha256": "d1b33fe4c1deba03a10bcaee67c0c811ff8a96aa106ec81346e087a0eba81f83"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/maintained-first-install-owner/expected-managed-launch.json",
+    "bytes": 103,
+    "sha256": "928bfeb47aecdc24c001e1269254a0ca131a7777239c90a00665ae9ca05bcd5b"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/public-all-three-test-policies-before-preparation/22414-pending.json",
+    "bytes": 163,
+    "sha256": "16ad2499926b1e4a630f0f261979d573d7883fc59e3ef8ed551b877114fa288c"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/public-all-three-test-policies-before-preparation/expected-managed-launch.json",
+    "bytes": 103,
+    "sha256": "deed7a3d6e2064d1d35f0c1dd194736325b27dd920bd2edfe859540fdb7e8c8f"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/public-test-policy-directory/22413-pending.json",
+    "bytes": 163,
+    "sha256": "85f9ffd954d6baec9895d1db93fe59f0ae7c74e5e73f30d8e28c4356505164ed"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/public-test-policy-directory/expected-managed-launch.json",
+    "bytes": 103,
+    "sha256": "137f29e3bdd0e867e0198672ee0e8ebfd1d176e9c7d3f72f2fcc717fb656a1c0"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/root-immutable-runtime-directory/22465-pending.json",
+    "bytes": 163,
+    "sha256": "91381e6e4588bbbd4ae294270300b8aba6b56b1dabe1d584af7d9465b63d6d47"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/root-immutable-runtime-directory/expected-managed-launch.json",
+    "bytes": 103,
+    "sha256": "7462cfece43b1a63df33fecf5a6936e68e11e42b87c63e3a5f052fc6ba64e607"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/synthetic-sign-helper/22405-pending.json",
+    "bytes": 163,
+    "sha256": "d332470414426abf1d3fbf4cd17979678fbe02478de4ffe0f63d7c3bd9d4adf6"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/synthetic-sign-helper/expected-managed-launch.json",
+    "bytes": 103,
+    "sha256": "ad529096cbcfa29130db3d1fa0f29e9ae135c2da377ea4a9339337175a448aa3"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/synthetic-sign-home/22387-pending.json",
+    "bytes": 163,
+    "sha256": "4919389b8809601dc9143ecb6fd29d026d2cf2aef0e77bcdb6fc0a32499d90b2"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/synthetic-sign-home/expected-managed-launch.json",
+    "bytes": 103,
+    "sha256": "4d1184f145f7fa497b3ac3e25d82aa1e8afb3d087c7357def3df0e5e5331b7a5"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/synthetic-sign-owner/22396-pending.json",
+    "bytes": 163,
+    "sha256": "42a7bc1d1ec4c56485152efa873435fa08229c137f5ae1227f5440a4ff2634c5"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/synthetic-sign-owner/expected-managed-launch.json",
+    "bytes": 103,
+    "sha256": "50577045c689fd9b4d814399752331f5b0ca5edcbdcba5c0f5b03909b5a69a5c"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/target-user-xdg-directories/22459-pending.json",
+    "bytes": 163,
+    "sha256": "d91eef0d41cf18435d61457a253064e6d0a521252fa2d096f1164c98ea623a8f"
+  },
+  {
+    "path": "linux19/synthetic-setup-public-proof/owned-session-drain/target-user-xdg-directories/expected-managed-launch.json",
+    "bytes": 103,
+    "sha256": "fa628d18e543f19bc00f3292222ac918798d3f80e9add5196218b1ebf7f9f112"
+  },
+  {
+    "path": "linux19/trx/home.trx",
+    "bytes": 518181,
+    "sha256": "705da1219e97731227f76776078f99ac36685715f0b1cce135d7e35b357a6a9b"
+  },
+  {
+    "path": "linux19/trx/os.trx",
+    "bytes": 307162,
+    "sha256": "803433033b6787ebcf2591565b03f20baf574551917dd8086f9766b177bc1226"
+  },
+  {
+    "path": "linux19/trx/root.trx",
+    "bytes": 122870,
+    "sha256": "9e373d26f7f51dc2e249a8eee8aac7474994f6eed6b552f2f2b0234d56eda482"
+  },
+  {
+    "path": "linux19/whole-caller-receipt.json",
+    "bytes": 393,
+    "sha256": "81feab0ed39a5077a78f3e159b5c0bf6a7915473255862a3929e181f8788dd81"
+  },
+  {
+    "path": "linux19/whole-caller.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "linux19-manifest.json",
+    "bytes": 273274,
+    "sha256": "3e0fe58922abbebc1c11dfbf92752ca6865e92b4b4f162db0aa66027fde163e1"
+  },
+  {
+    "path": "original-evidence-aliases.json",
+    "bytes": 111776,
+    "sha256": "02fdf9fd3bd79be0f74010efa42b157630a60c35ab4f92e43dba89ddba8288c5"
+  },
+  {
+    "path": "owning/console-receipt.json",
+    "bytes": 284,
+    "sha256": "ed69c9801bed5275c1dc35176f0ce029684c9645bc506f2a22f6164d37f3dd0f"
+  },
+  {
+    "path": "owning/core-build.log",
+    "bytes": 4271,
+    "sha256": "83e55d4328437488e220a7e25469a911396df5c7e9d37b014a6957ad715aaab6"
+  },
+  {
+    "path": "owning/profile-correction/actual-bwrap-version.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "owning/profile-correction/actual-bwrap-version.stdout",
+    "bytes": 17,
+    "sha256": "3a0618bed56bc5ced74eea5965def37047e2b879a25ceb85bbc964efbe00489e"
+  },
+  {
+    "path": "owning/profile-correction/actual-kernel.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "owning/profile-correction/actual-kernel.stdout",
+    "bytes": 113,
+    "sha256": "6ecb75ce9d770bd2cfb6898b267dd8f29398821b25cb233675e182e0323ba0d2"
+  },
+  {
+    "path": "owning/profile-correction/actual-packages.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "owning/profile-correction/actual-packages.stdout",
+    "bytes": 83,
+    "sha256": "92e4aa521bd6334d6ea40145d93997ba7e9b763a325b5bf71b93d8cbc9f745ef"
+  },
+  {
+    "path": "owning/profile-correction/actual-parser-version.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "owning/profile-correction/actual-parser-version.stdout",
+    "bytes": 101,
+    "sha256": "6276efb97a7dd291906a56b72319f1932d883167bb55d922aae9f9c56fa685f9"
+  },
+  {
+    "path": "owning/profile-correction/actual-restricted-child.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "owning/profile-correction/actual-restricted-child.stdout",
+    "bytes": 1517,
+    "sha256": "fc7bb70d31d53569c61f96789360914cff687f740b125c586a6051d07947e7b3"
+  },
+  {
+    "path": "owning/profile-correction/cleanup-refused-live-original-session.json",
+    "bytes": 68,
+    "sha256": "747ce59a1c90940677e7e322eeee1b81c0d42a24522d448acb1c4f831560452c"
+  },
+  {
+    "path": "owning/profile-correction/commands.json",
+    "bytes": 6328,
+    "sha256": "d4f9deac627f6102cccb86ddbc946bb9e55c08064900db9292f6890aee52a110"
+  },
+  {
+    "path": "owning/profile-correction/exact-abi4-dry-parse.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "owning/profile-correction/exact-abi4-dry-parse.stdout",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "owning/profile-correction/exact-profile-preprocessed.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "owning/profile-correction/exact-profile-preprocessed.stdout",
+    "bytes": 17979,
+    "sha256": "f6baf29fa5dfd7fb1d4d717fea9cfdfe5a78303494dd0cafb69c23c1533b01fa"
+  },
+  {
+    "path": "owning/profile-correction/load-exact-two-profiles.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "owning/profile-correction/load-exact-two-profiles.stdout",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "owning/profile-correction/original-native-session-drain/expected-managed-launch.json",
+    "bytes": 50,
+    "sha256": "973d597da32e9bec1377c0e507a709780ad95ea299fd80b37c5ed6a91ff3bb8d"
+  },
+  {
+    "path": "owning/profile-correction/policy-precondition-receipt.json",
+    "bytes": 2301,
+    "sha256": "e02f3b46a5e1e7278caaea169364048f67e016f50da3547b429493818eb5793e"
+  },
+  {
+    "path": "owning/profile-correction/profiles-after-load.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "owning/profile-correction/profiles-after-load.stdout",
+    "bytes": 3173,
+    "sha256": "1b50acaaee939c0d62c9e979969661ec183a0a25aa15a85a94ef6273a457d514"
+  },
+  {
+    "path": "owning/profile-correction/profiles-before.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "owning/profile-correction/profiles-before.stdout",
+    "bytes": 3134,
+    "sha256": "ef2454359440858f5fa6603ba0c9d7c1ac72bd19f1d5a5b1434c45110e12c0d9"
+  },
+  {
+    "path": "owning/profile-correction/same-genuine-true-probe.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "owning/profile-correction/same-genuine-true-probe.stdout",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "owning/receipt.json",
+    "bytes": 1925,
+    "sha256": "da9798285b6be1dab54e1ade0718533111d8c919c35e3e5899e46388e1755cce"
+  },
+  {
+    "path": "owning/trx/mail-full.trx",
+    "bytes": 25131,
+    "sha256": "e483a89df1742a020123a57233c3c9db3f65fb82679ca7647b518c52c8c2555d"
+  },
+  {
+    "path": "owning-manifest.json",
+    "bytes": 75455,
+    "sha256": "24c39f3aad2f5544e6d43174c2b7c66c9454542adaf8d65a9a17c1182eee39e5"
+  },
+  {
+    "path": "replay-result.json",
+    "bytes": 239,
+    "sha256": "7d0d4206c8c2b5b3acf87772a25c3601c6f47473d0421456d1e27aed3470f725"
+  },
+  {
+    "path": "replay.py",
+    "bytes": 3871,
+    "sha256": "6ccf078a732df76542300fe99f7c3004d55e984edfe13e16d31a0c3741251dcd"
+  }
+]

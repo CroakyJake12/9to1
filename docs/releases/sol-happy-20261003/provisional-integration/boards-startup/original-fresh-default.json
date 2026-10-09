@@ -1,0 +1,10 @@
+{
+  "basis": "e2effba426353978b11fc1c0f2fc8e3e533318e4",
+  "sourceOwnerBasis": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+  "command": "dotnet BoardsStartupControls.dll fresh-default CONTROLLED_PROFILE",
+  "configuration": "Debug",
+  "exit": 1,
+  "stdout": "original-fresh-default.stdout.log",
+  "stderr": "original-fresh-default.stderr.log",
+  "scope": "Actual original default adapter invocation and canonical store/session on isolated Linux local profile; no CUI/Win32 route or global app acceptance."
+}

@@ -1,0 +1,33 @@
+<Cui id="files.browser" version="1">
+  <Actions><Action name="SelectItem" command="Select" parameter="{Binding item}" /></Actions>
+  <StackPanel margin="16">
+    <TextBlock text="Files" font-size="28" />
+    <TextBlock text="{Binding FolderName}" font-size="20" margin="0,8" />
+    <TextBlock text="{Binding Status}" text-wrapping="Wrap" accessible-name="Files status" margin="0,8" />
+    <WrapPanel>
+      <Button content="Up" action="Up" is-enabled="{Binding CanUp}" />
+      <Button content="Refresh" action="Refresh" is-enabled="{Binding CanBrowse}" />
+      <Button content="New folder" action="NewFolder" is-enabled="{Binding CanCreate}" />
+      <Button content="Open selected folder" action="Open" is-enabled="{Binding CanOpen}" />
+      <Button content="Rename" action="Rename" is-enabled="{Binding CanRename}" />
+    </WrapPanel>
+    <If Condition="{Binding Editing}">
+      <StackPanel margin="0,12">
+        <TextBlock text="{Binding EditTitle}" font-size="18" />
+        <TextBox id="files-name" text="{Binding Name, Mode=TwoWay}" is-enabled="{Binding CanEditName}" accessible-name="Folder or item name" />
+        <WrapPanel><Button content="Save" action="Save" is-enabled="{Binding CanSave}" /><Button content="Cancel" action="Cancel" is-enabled="{Binding CanCancel}" /></WrapPanel>
+      </StackPanel>
+    </If>
+    <If Condition="{Binding Empty}"><TextBlock text="This folder is empty." margin="0,12" /></If>
+    <Repeat Source="{Binding Items}" As="item" Key="{Binding item.Id}">
+      <StackPanel margin="0,8">
+        <Button content="{Binding item.Name}" action="SelectItem" is-enabled="{Binding CanBrowse}" horizontal-alignment="Stretch" />
+        <TextBlock text="{Binding item.Details}" text-wrapping="Wrap" />
+      </StackPanel>
+    </Repeat>
+    <Button content="Load more items" action="More" is-enabled="{Binding CanMore}" />
+    <TextBlock text="Selection" font-size="18" margin="0,16,0,4" />
+    <TextBlock text="{Binding SelectedName}" text-wrapping="Wrap" />
+    <TextBlock text="{Binding SelectedDetails}" text-wrapping="Wrap" />
+  </StackPanel>
+</Cui>

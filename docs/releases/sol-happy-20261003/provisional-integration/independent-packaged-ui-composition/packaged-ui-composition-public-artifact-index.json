@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "scope": "Selected new C6 actual packaged Boards UI original archive/screenshots/provider evidence review plus pre-invocation corrections and exact68-path browser/Picture composition and3-file available canonical browser build contract review. Prior frozen results and indexes retained; full release acceptance unverified.",
+  "previousFrozenIndex": {
+    "path": "actual-results-public-artifact-index.json",
+    "sha256": "e9f8787a4a6d0096af7e1dddb6200f8082150c7314e7646a3612820b463104d1"
+  },
+  "selectedFiles": [
+    {
+      "path": "boards-packaged-ui-review/independent-source-review.json",
+      "bytes": 6723,
+      "sha256": "20cb3176d437dfb4c15950c32283d95594c9199cb581cbafcc94dd7588a04ce3"
+    },
+    {
+      "path": "boards-packaged-ui-review/actual-windows-ui-independent-readback.json",
+      "bytes": 6859,
+      "sha256": "8b8aeb7d6f60a9ced96aff221262b3ac9ebd4dca61f896dea5591c1fcd896ed2"
+    },
+    {
+      "path": "boards-packaged-ui-review/provider-job-readback.json",
+      "bytes": 1947,
+      "sha256": "5cad3c61812c0b3fb4e068f9fd38758a4140872beac3de5d3bb0b3a5185de300"
+    },
+    {
+      "path": "boards-packaged-ui-review/provider-artifact-readback.json",
+      "bytes": 911,
+      "sha256": "3a11cddde8579a84192a58d4a462f3022d580443e2a9ea17a3345068c9ca1d70"
+    },
+    {
+      "path": "dependency-closure/pr6-composition-conservation-review.json",
+      "bytes": 16580,
+      "sha256": "26916bd83eaee325e921ea6a2c3be39146b30208899d9d673a8ef41347b429fa"
+    },
+    {
+      "path": "dependency-closure/browser-build-contract-source-review.json",
+      "bytes": 2730,
+      "sha256": "49cf84afc584c12984644d1238591088046db44f1a4f25d43f76d155328e8aa3"
+    }
+  ],
+  "selectedFileCount": 6,
+  "selectedBytes": 35750,
+  "privateOutputsExcluded": true,
+  "originalPayloadsNotReplayed": true,
+  "acceptanceVerified": false
+}

@@ -1,0 +1,523 @@
+{
+  "state": "READY_SOURCE_PLAN_RUNTIME_NOT_RUN_RESOURCE_HOLD",
+  "candidate": "1c78a6107264baf5f7da92a5b6abbde7eac10e40",
+  "base": "5ec2965e57d5fa4156ed6c6b4f1472835c9724b2",
+  "sdk": {
+    "path": "/workspace/.tools/dotnet/dotnet",
+    "version": "10.0.401",
+    "sha256": "01d89e0a0191052bfea616cd4ce624c8faf13b05bbddf7f64499c23e2a9d9269"
+  },
+  "actualCurrentProjectClosures": {
+    "mail72": {
+      "projects": [
+        {
+          "path": "9to1 Workspace/Mail/HavenOS.Mail.csproj",
+          "mode": "100644",
+          "kind": "blob",
+          "blob": "7d9bb226578a844da620d0985af15a260a6e6b8c",
+          "bytes": 925,
+          "sha256": "a81002c51c9716e6208c805d57ed3a73df68157fbf6d108b79266e01ec8ba245",
+          "unchangedFromBase": true
+        },
+        {
+          "path": "9to1 Workspace/Mail/Tests/HavenOS.Mail.Tests.csproj",
+          "mode": "100644",
+          "kind": "blob",
+          "blob": "74e63c917183e01ba07ddc4c49c916364ed9e546",
+          "bytes": 754,
+          "sha256": "7bf29a04a95494359ae7e1fa515eaa30190ca7cf96f2b17d79c630ba7294c0e6",
+          "unchangedFromBase": true
+        },
+        {
+          "path": "framework/CUI/AI/NineToOne.Cui.AI.csproj",
+          "mode": "100644",
+          "kind": "blob",
+          "blob": "8a7bef631e2cbc38ad730fe92600492b95846e64",
+          "bytes": 453,
+          "sha256": "34f42e4da3a03ecb33b741b7f61ded21615198391fdbf933d9be941f7cbd3504",
+          "unchangedFromBase": true
+        },
+        {
+          "path": "framework/CUI/Core/CakeOS.Cui.Core.csproj",
+          "mode": "100644",
+          "kind": "blob",
+          "blob": "a0b53e0143e96dba6ebc5c9557fa1b91e77d7eb3",
+          "bytes": 495,
+          "sha256": "6d3801be3eaef00e925ed7901de83b452486f4e51832cbdba796f1cb65b1d3b0",
+          "unchangedFromBase": true
+        },
+        {
+          "path": "framework/CUI/Language/CakeOS.Cui.Language.csproj",
+          "mode": "100644",
+          "kind": "blob",
+          "blob": "49da9412e0df67e6b541ffcca37afe41d997fdd4",
+          "bytes": 405,
+          "sha256": "38bb6257791a2ca650635f1b75b0ab186c70c99504220d7ef49223dd14dfdd36",
+          "unchangedFromBase": true
+        }
+      ],
+      "references": [
+        {
+          "project": "9to1 Workspace/Mail/Tests/HavenOS.Mail.Tests.csproj",
+          "include": "..\\HavenOS.Mail.csproj",
+          "resolved": "9to1 Workspace/Mail/HavenOS.Mail.csproj"
+        },
+        {
+          "project": "9to1 Workspace/Mail/HavenOS.Mail.csproj",
+          "include": "..\\..\\framework\\CUI\\Core\\CakeOS.Cui.Core.csproj",
+          "resolved": "framework/CUI/Core/CakeOS.Cui.Core.csproj"
+        },
+        {
+          "project": "9to1 Workspace/Mail/HavenOS.Mail.csproj",
+          "include": "..\\..\\framework\\CUI\\AI\\NineToOne.Cui.AI.csproj",
+          "resolved": "framework/CUI/AI/NineToOne.Cui.AI.csproj"
+        },
+        {
+          "project": "framework/CUI/Core/CakeOS.Cui.Core.csproj",
+          "include": "../Language/CakeOS.Cui.Language.csproj",
+          "resolved": "framework/CUI/Language/CakeOS.Cui.Language.csproj"
+        }
+      ],
+      "ancestorInputs": [
+        {
+          "path": "9to1 Workspace/Directory.Build.props",
+          "mode": "100644",
+          "kind": "blob",
+          "blob": "76a5b6e697b64fec33efc1a7319d2d723163de83",
+          "bytes": 781,
+          "sha256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58"
+        },
+        {
+          "path": "9to1 Workspace/Directory.Build.targets",
+          "mode": "100644",
+          "kind": "blob",
+          "blob": "1a7ce6a893563ab80fd3406a9e7058cc3b9b11fc",
+          "bytes": 262,
+          "sha256": "664b5d56d3bb11e4a460bb6c2aeca9c8712476a30faa31ef2bd914bfc7be3374"
+        },
+        {
+          "path": "9to1 Workspace/Directory.Packages.props",
+          "mode": "100644",
+          "kind": "blob",
+          "blob": "10c3be91da5507a7e1d945561ec11f2264c12c8b",
+          "bytes": 2581,
+          "sha256": "9a7a73030788b96d6827cd8d01348866f15b687654b468a931723ed8efe3d039"
+        },
+        {
+          "path": "framework/CUI/Directory.Packages.props",
+          "mode": "100644",
+          "kind": "blob",
+          "blob": "016ac27619beda53b745721030cc89a9c71da843",
+          "bytes": 429,
+          "sha256": "1e341fe4f7012e5a560493ddb231c1a1d62f558d105d9086f6d4a482a15f6f22"
+        }
+      ],
+      "qualification": "Actual current candidate references and tracked ancestor inputs. Static closure, not evaluated MSBuild Compile or runtime acceptance."
+    },
+    "graph10": {
+      "projects": [
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj",
+          "mode": "100644",
+          "kind": "blob",
+          "blob": "cc85c272caa8e95166986e1294cd827f7527e354",
+          "bytes": 700,
+          "sha256": "fcba0a48d92e30675650fca3b9b36e6e7d0ad942efa8f5d7d4395e10a3baee9d",
+          "unchangedFromBase": true
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Browser/Haven.Browser.csproj",
+          "mode": "100644",
+          "kind": "blob",
+          "blob": "c560c6400ba8524b0270decfe5015470bd1060e6",
+          "bytes": 583,
+          "sha256": "e78cf45de8200eb4651263d872268d9fe21274919ac4acfbe9fdb126841736c6",
+          "unchangedFromBase": true
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj",
+          "mode": "100644",
+          "kind": "blob",
+          "blob": "a6996aa2c75031e77bf1c4d60861ff365ed1e386",
+          "bytes": 375,
+          "sha256": "9b108a71f608a656a2c82ac8855eca0ef6e4df31d62ffb72a70f351e19018121",
+          "unchangedFromBase": true
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj",
+          "mode": "100644",
+          "kind": "blob",
+          "blob": "9809bd4d4c9f8f089974fb80c101b05b47445081",
+          "bytes": 1685,
+          "sha256": "f813b0861f9f9ce00895f178d96e7f7711cb73b611be7f6a8fc9eac0690fd81b",
+          "unchangedFromBase": true
+        },
+        {
+          "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+          "mode": "100644",
+          "kind": "blob",
+          "blob": "5d4ae9ca85e64ad0c8cd27f07842db6efa6d3ffe",
+          "bytes": 1115,
+          "sha256": "967c5763d7d0f1423ab21b51368a07f6038a886c4a56ff501de7361407b1f4c2",
+          "unchangedFromBase": true
+        },
+        {
+          "path": "9to1 Workspace/shared/tests/Haven.PluginFixture/Haven.PluginFixture.csproj",
+          "mode": "100644",
+          "kind": "blob",
+          "blob": "26cabb69a54f26e08f8a9da10a6ca2b3d1258517",
+          "bytes": 306,
+          "sha256": "e159c87d4b8936dd41e2654869b56527aae1461712215226c7d793706fbc65fb",
+          "unchangedFromBase": true
+        },
+        {
+          "path": "framework/CUI/AI/NineToOne.Cui.AI.csproj",
+          "mode": "100644",
+          "kind": "blob",
+          "blob": "8a7bef631e2cbc38ad730fe92600492b95846e64",
+          "bytes": 453,
+          "sha256": "34f42e4da3a03ecb33b741b7f61ded21615198391fdbf933d9be941f7cbd3504",
+          "unchangedFromBase": true
+        }
+      ],
+      "references": [
+        {
+          "project": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+          "include": "..\\..\\src\\Haven.Infrastructure\\Haven.Infrastructure.csproj",
+          "resolved": "9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj"
+        },
+        {
+          "project": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+          "include": "..\\..\\src\\Haven.Browser\\Haven.Browser.csproj",
+          "resolved": "9to1 Workspace/shared/src/Haven.Browser/Haven.Browser.csproj"
+        },
+        {
+          "project": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+          "include": "../Haven.PluginFixture/Haven.PluginFixture.csproj",
+          "resolved": "9to1 Workspace/shared/tests/Haven.PluginFixture/Haven.PluginFixture.csproj"
+        },
+        {
+          "project": "9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj",
+          "include": "..\\Haven.Core\\Haven.Core.csproj",
+          "resolved": "9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj"
+        },
+        {
+          "project": "9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj",
+          "include": "..\\Haven.Application\\Haven.Application.csproj",
+          "resolved": "9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj"
+        },
+        {
+          "project": "9to1 Workspace/shared/src/Haven.Browser/Haven.Browser.csproj",
+          "include": "..\\Haven.Core\\Haven.Core.csproj",
+          "resolved": "9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj"
+        },
+        {
+          "project": "9to1 Workspace/shared/src/Haven.Browser/Haven.Browser.csproj",
+          "include": "..\\Haven.Application\\Haven.Application.csproj",
+          "resolved": "9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj"
+        },
+        {
+          "project": "9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj",
+          "include": "..\\Haven.Core\\Haven.Core.csproj",
+          "resolved": "9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj"
+        },
+        {
+          "project": "9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj",
+          "include": "../../../../framework/CUI/AI/NineToOne.Cui.AI.csproj",
+          "resolved": "framework/CUI/AI/NineToOne.Cui.AI.csproj"
+        }
+      ],
+      "ancestorInputs": [
+        {
+          "path": "9to1 Workspace/Directory.Build.props",
+          "mode": "100644",
+          "kind": "blob",
+          "blob": "76a5b6e697b64fec33efc1a7319d2d723163de83",
+          "bytes": 781,
+          "sha256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58"
+        },
+        {
+          "path": "9to1 Workspace/Directory.Build.targets",
+          "mode": "100644",
+          "kind": "blob",
+          "blob": "1a7ce6a893563ab80fd3406a9e7058cc3b9b11fc",
+          "bytes": 262,
+          "sha256": "664b5d56d3bb11e4a460bb6c2aeca9c8712476a30faa31ef2bd914bfc7be3374"
+        },
+        {
+          "path": "9to1 Workspace/Directory.Packages.props",
+          "mode": "100644",
+          "kind": "blob",
+          "blob": "10c3be91da5507a7e1d945561ec11f2264c12c8b",
+          "bytes": 2581,
+          "sha256": "9a7a73030788b96d6827cd8d01348866f15b687654b468a931723ed8efe3d039"
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Directory.Packages.props",
+          "mode": "100644",
+          "kind": "blob",
+          "blob": "eafccb98196ed8ef72286845276487ece2fc7180",
+          "bytes": 1922,
+          "sha256": "2fb11d6fff2871d82f39ae1e3b74449e23d0c5b2854af379abfec8c546432e3c"
+        },
+        {
+          "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Directory.Build.props",
+          "mode": "100644",
+          "kind": "blob",
+          "blob": "4277c0a7a01ed0f9a571f206bb570977d789d31f",
+          "bytes": 452,
+          "sha256": "16bad3b454b9c6fabe8366ba68cde17ea72463693e10b831158fa4ccd4543179"
+        },
+        {
+          "path": "framework/CUI/Directory.Packages.props",
+          "mode": "100644",
+          "kind": "blob",
+          "blob": "016ac27619beda53b745721030cc89a9c71da843",
+          "bytes": 429,
+          "sha256": "1e341fe4f7012e5a560493ddb231c1a1d62f558d105d9086f6d4a482a15f6f22"
+        }
+      ],
+      "qualification": "Actual current candidate references and tracked ancestor inputs. Static closure, not evaluated MSBuild Compile or runtime acceptance."
+    }
+  },
+  "environment": {
+    "PATH": "/workspace/.tools/dotnet:<preserved PATH>",
+    "DOTNET_ROOT": "/workspace/.tools/dotnet",
+    "NUGET_FALLBACK_PACKAGES": "/workspace/.tools/nuget/packages",
+    "DOTNET_CLI_HOME": "<owned>/cli",
+    "NUGET_PACKAGES": "<owned>/nuget",
+    "NUGET_HTTP_CACHE_PATH": "<owned>/http",
+    "NUGET_PLUGINS_CACHE_PATH": "<owned>/plugins",
+    "XDG_CACHE_HOME": "<owned>/cache",
+    "XDG_CONFIG_HOME": "<owned>/config",
+    "TMPDIR": "<owned>/tmp",
+    "TMP": "<owned>/tmp",
+    "TEMP": "<owned>/tmp",
+    "DOTNET_GENERATE_ASPNET_CERTIFICATE": "false",
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+    "DOTNET_NOLOGO": "1",
+    "MSBUILDDISABLENODEREUSE": "1"
+  },
+  "fallbackPublicPackages": {
+    "mailkit": [
+      "4.18.0"
+    ],
+    "htmlsanitizer": [
+      "9.2.1039"
+    ],
+    "microsoft.net.test.sdk": [
+      "17.14.1",
+      "18.0.1"
+    ],
+    "xunit": [
+      "2.9.3"
+    ],
+    "xunit.runner.visualstudio": [
+      "3.1.5"
+    ]
+  },
+  "fallbackProvenance": "Existing official task SDK package cache used read-only by C5 normal5ec434; shared fallback remains immutable, private owned NuGet/http/plugins output only. Normal NuGet.Config mappings/audit stay unchanged.",
+  "commands": {
+    "mail72": [
+      {
+        "stage": "restore",
+        "seconds": 600,
+        "argv": [
+          "/workspace/.tools/dotnet/dotnet",
+          "restore",
+          "9to1 Workspace/Mail/Tests/HavenOS.Mail.Tests.csproj",
+          "--artifacts-path",
+          "<owned>/artifacts",
+          "-r",
+          "linux-x64",
+          "--configfile",
+          "<complete-checkout>/NuGet.Config",
+          "--disable-build-servers",
+          "-p:Configuration=Release",
+          "-p:SelfContained=false",
+          "-p:UseSharedCompilation=false",
+          "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+          "-p:CreateHardLinksForCopyLocalIfPossible=false",
+          "-p:CreateHardLinksForPublishFilesIfPossible=false",
+          "-m:1",
+          "-nodeReuse:false"
+        ]
+      },
+      {
+        "stage": "build",
+        "seconds": 600,
+        "argv": [
+          "/workspace/.tools/dotnet/dotnet",
+          "build",
+          "9to1 Workspace/Mail/Tests/HavenOS.Mail.Tests.csproj",
+          "--no-restore",
+          "-c",
+          "Release",
+          "-f",
+          "net10.0",
+          "--artifacts-path",
+          "<owned>/artifacts",
+          "-r",
+          "linux-x64",
+          "--disable-build-servers",
+          "-p:SelfContained=false",
+          "-p:UseSharedCompilation=false",
+          "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+          "-p:CreateHardLinksForCopyLocalIfPossible=false",
+          "-p:CreateHardLinksForPublishFilesIfPossible=false",
+          "-m:1",
+          "-nodeReuse:false"
+        ]
+      },
+      {
+        "stage": "test",
+        "seconds": 600,
+        "argv": [
+          "/workspace/.tools/dotnet/dotnet",
+          "test",
+          "9to1 Workspace/Mail/Tests/HavenOS.Mail.Tests.csproj",
+          "--no-restore",
+          "--no-build",
+          "-c",
+          "Release",
+          "-f",
+          "net10.0",
+          "--artifacts-path",
+          "<owned>/artifacts",
+          "-r",
+          "linux-x64",
+          "--logger",
+          "trx;LogFileName=mail72.trx",
+          "--results-directory",
+          "<owned>/results",
+          "-p:SelfContained=false",
+          "-p:UseSharedCompilation=false",
+          "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+          "-p:CreateHardLinksForCopyLocalIfPossible=false",
+          "-p:CreateHardLinksForPublishFilesIfPossible=false",
+          "-m:1",
+          "-nodeReuse:false"
+        ]
+      }
+    ],
+    "graph10": [
+      {
+        "stage": "restore",
+        "seconds": 600,
+        "argv": [
+          "/workspace/.tools/dotnet/dotnet",
+          "restore",
+          "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+          "--artifacts-path",
+          "<owned>/artifacts",
+          "-r",
+          "linux-x64",
+          "--configfile",
+          "<complete-checkout>/NuGet.Config",
+          "--disable-build-servers",
+          "-p:Configuration=Release",
+          "-p:SelfContained=false",
+          "-p:UseSharedCompilation=false",
+          "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+          "-p:CreateHardLinksForCopyLocalIfPossible=false",
+          "-p:CreateHardLinksForPublishFilesIfPossible=false",
+          "-m:1",
+          "-nodeReuse:false"
+        ]
+      },
+      {
+        "stage": "build",
+        "seconds": 600,
+        "argv": [
+          "/workspace/.tools/dotnet/dotnet",
+          "build",
+          "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+          "--no-restore",
+          "-c",
+          "Release",
+          "-f",
+          "net10.0",
+          "--artifacts-path",
+          "<owned>/artifacts",
+          "-r",
+          "linux-x64",
+          "--disable-build-servers",
+          "-p:SelfContained=false",
+          "-p:UseSharedCompilation=false",
+          "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+          "-p:CreateHardLinksForCopyLocalIfPossible=false",
+          "-p:CreateHardLinksForPublishFilesIfPossible=false",
+          "-m:1",
+          "-nodeReuse:false"
+        ]
+      },
+      {
+        "stage": "test",
+        "seconds": 600,
+        "argv": [
+          "/workspace/.tools/dotnet/dotnet",
+          "test",
+          "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+          "--no-restore",
+          "--no-build",
+          "-c",
+          "Release",
+          "-f",
+          "net10.0",
+          "--artifacts-path",
+          "<owned>/artifacts",
+          "-r",
+          "linux-x64",
+          "--logger",
+          "trx;LogFileName=graph10.trx",
+          "--results-directory",
+          "<owned>/results",
+          "--filter",
+          "FullyQualifiedName~Haven.Infrastructure.Tests.MicrosoftMailContinuationBoundaryTests",
+          "-p:SelfContained=false",
+          "-p:UseSharedCompilation=false",
+          "-p:CreateHardLinksForCopyFilesToOutputDirectoryIfPossible=false",
+          "-p:CreateHardLinksForCopyLocalIfPossible=false",
+          "-p:CreateHardLinksForPublishFilesIfPossible=false",
+          "-m:1",
+          "-nodeReuse:false"
+        ]
+      }
+    ]
+  },
+  "executionOwner": "Root selects capacity and executor after C6 frozen scope peer; C4 has not invoked builds/tests.",
+  "sourceCheckoutPrecondition": "This source-proposal worktree is sparse nine paths. It is not execution-ready. Before invocation materialize genuine complete five/seven project sources plus actual ancestor config/import/content inputs from this exact candidate, bind source/compile catalogs before/after and independently review source custody. Do not compile missing-source/stub/old-DLL carriers.",
+  "resourceHold": {
+    "workspaceAvailableBytes": 532402176,
+    "noHeavyConcurrentBuild": true,
+    "rootOwnsCompletedCacheRetirement": true,
+    "sharedFallbackMayNeverBeMutated": true
+  },
+  "originalDenominators": {
+    "mail72": 72,
+    "newDomain23": 23,
+    "newStore33": 33,
+    "originalFoundation12": 12,
+    "originalInbox2": 2,
+    "originalTransport2": 2,
+    "Graph10": 10
+  },
+  "MailRequiredTLS": {
+    "currentPresenceOnly": {
+      "HAVEN_MAIL_FIXTURE_HOST": false,
+      "HAVEN_MAIL_FIXTURE_IMAP_TLS_PORT": false,
+      "HAVEN_MAIL_FIXTURE_SMTP_TLS_PORT": false,
+      "HAVEN_MAIL_FIXTURE_ADDRESS": false,
+      "HAVEN_MAIL_FIXTURE_PASSWORD": false
+    },
+    "caseCount": 3,
+    "qualification": "Three unchanged normally trusted loopback real SMTP/IMAP tests require existing authorized fixture. No fixture provisioning, credential read/write or certificate weakening in this scope. Missing ENV failures remain real full72 failures and are not skipped/filtered or relabeled full PASS."
+  },
+  "acceptanceCriteria": [
+    "All72 Mail case identities/discovery/execution/full counters and original failures retained; new56 may be described separately from realTLS3 failures.",
+    "Graph10 exact original case identities/TRX10/0failed/skipped; controlled HTTP and synthetic token only, zero real identity/provider requests.",
+    "Use source-built normal owning projects and unchanged maintained Commandsa57 custody; actual target/runtime SHA before/after, normal EOF, all births gone, finalECHILD and no signals. No importedDLL/override/sourceguard repin/provider installation.",
+    "Keep result/log/TRX/source/runtime hash metadata only public; exclude actual fixture state, generated encryption keys, user/provider data, binaries and package/cache trees.",
+    "No graphical app/package/installedHome/TLS provider/Windows/signing/clean-PC/donor/release acceptance from library or component tests."
+  ]
+}

@@ -294,9 +294,7 @@ public sealed class PersonalisationTests
         var store = new AvatarStore(paths);
 
         // Use a real bundled PNG the way a user's picked file would arrive.
-        var assetSource = Path.Combine(AppContext.BaseDirectory, "Assets", "Fonts");
-        _ = assetSource;
-        var source = FindBundledImage();
+        var source = FindBundledImage(paths.DataDirectory);
         Assert.True(File.Exists(source), "A packaged image asset is required for this test.");
 
         Assert.False(store.Has(HavenAvatarKind.User));
@@ -343,12 +341,19 @@ public sealed class PersonalisationTests
         Assert.NotNull(scene.HavenAvatarRemoveButton);
     }
 
-    private static string FindBundledImage()
+    private static string FindBundledImage(string fixtureDirectory)
     {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "src", "Haven.Desktop", "Assets", "haven-1024.png")))
-            directory = directory.Parent;
-        return directory is null ? string.Empty : Path.Combine(directory.FullName, "src", "Haven.Desktop", "Assets", "haven-1024.png");
+        var asset = new Uri("avares://Haven/Assets/haven-1024.png");
+        Assert.True(Avalonia.Platform.AssetLoader.Exists(asset), "The canonical packaged image asset is required for this test.");
+        using var packaged = Avalonia.Platform.AssetLoader.Open(asset);
+        using var bytes = new MemoryStream();
+        packaged.CopyTo(bytes);
+        var content = bytes.ToArray();
+        Assert.Equal("7A0C04CC40DCACEC497C9A5CFDAA6598EA8325D062A5F45E8EF49D077AE95F9D",
+            Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(content)));
+        var source = Path.Combine(fixtureDirectory, "avatar-picked-source.png");
+        File.WriteAllBytes(source, content);
+        return source;
     }
 
     private static (byte R, byte G, byte B) ExtractRgb(string hex)

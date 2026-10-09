@@ -81,9 +81,15 @@ public sealed class WorkspaceChangeSetService(IWorkspaceToolService tools)
                 applied.Add(item);
             }
         }
-        catch
+        catch (Exception original)
         {
-            await RollBackAsync(workspaceRoot, applied).ConfigureAwait(false);
+            try { await RollBackAsync(workspaceRoot, applied).ConfigureAwait(false); }
+            catch (Exception rollback)
+            {
+                // Keep the actual apply cause and the rollback's actual compound group independently.
+                if (!ReferenceEquals(original, rollback))
+                    throw new AggregateException("Original change-set apply and independent rollback failed.", original, rollback);
+            }
             throw;
         }
 
@@ -156,6 +162,8 @@ public sealed class WorkspaceChangeSetService(IWorkspaceToolService tools)
             {
                 if (item.Existed)
                     await tools.WriteTextAtomicAsync(workspaceRoot, item.Entry.Path, item.Before, CancellationToken.None).ConfigureAwait(false);
+                else if (tools is IWorkspaceOriginalRollbackService original)
+                    await original.DeleteOriginalCreatedFileAsync(workspaceRoot, item.Entry.Path, CancellationToken.None).ConfigureAwait(false);
                 else if (File.Exists(item.ResolvedPath))
                     File.Delete(item.ResolvedPath);
             }

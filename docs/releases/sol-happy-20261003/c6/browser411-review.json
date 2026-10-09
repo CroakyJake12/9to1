@@ -1,0 +1,37 @@
+{
+  "sealedEvidenceCommit": "1356a1346f9d6ea948c202b2dd920b3b29869b77",
+  "sourceCommit": "83c24b2f0033fb2828169921fc905a327120143b",
+  "changedFiles": 411,
+  "manifestEvidenceFiles": 405,
+  "evidenceBytes": 99633057,
+  "rootDocuments": 2,
+  "selfManifest": 1,
+  "gitSealedReviewSidecars": [
+    "docs/releases/sol-happy-20261003/team-b/independent-review.corrections-required.json",
+    "docs/releases/sol-happy-20261003/team-b/independent-review.initial.json",
+    "docs/releases/sol-happy-20261003/team-b/independent-review.json"
+  ],
+  "evidenceHashErrors": [],
+  "sourceChecks": [
+    {
+      "commit": "83c24b2f0033fb2828169921fc905a327120143b",
+      "files": 25
+    },
+    {
+      "commit": "4b6413a9d8b17b394daa7db74b05931cba8269f4",
+      "files": 23
+    }
+  ],
+  "sourceOrRootHashErrors": [],
+  "runnerSha256": "ff152d4f0547a133b938c5021643edcf1933d8835af5eea4a609626538569dbf",
+  "runnerReview": "Full unchanged pointer runner read. Real page.mouse input at1440x1000, isolated Chromium profile/trace/screenshots, disabled Studio and enabled Library/Events routes, startup/no-page-managed-error checks. Visible content inspection separately pending; these five cases cannot establish layout/control ARIA/services/privateauth/platform matrix. Shared Home overlap/controlARIA remain blocked.",
+  "runtime": "BLOCKED immutable published archive/wwwroot absent TeamC; Chromium+Playwright available. No delivered artifact download ID observed, no vendor rebuild or fake replay performed.",
+  "artifactExpected": {
+    "files": 180,
+    "uncompressedBytes": 35339902,
+    "zipBytes": 21686097,
+    "zipSha256": "0d4bd734f71e9f4273d27483742211ad70d3011661eeab9ae7f0013d9551e72b"
+  },
+  "acceptance": "0completeapp/deployed/provider workflows; semantic denominator incomplete, native/donor/applicability acceptance not inferred",
+  "scopeLimitation": "Byte inventory and bounded runner/raw proof reviewed; not substantive full review of every411file or all archive content."
+}

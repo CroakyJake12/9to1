@@ -9,6 +9,11 @@ public sealed partial class MainView
 {
     public void OpenTasksDashboard()
     {
+        if (_canonicalSpaceRoutes is not null)
+        {
+            OpenOriginalCanonicalTaskDashboard();
+            return;
+        }
         var containerId = CurrentChat.SelectedContainer?.Id;
         var key = "haven-tasks-" + (containerId?.ToString("N") ?? "global");
         var existing = OpenTabs.FirstOrDefault(item =>

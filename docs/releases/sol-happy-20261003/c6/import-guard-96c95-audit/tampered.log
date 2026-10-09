@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/workspace/team-c/evidence/c6/packager-successor-1xkdj8hm/packager.py", line 22, in <module>
+    raise ValueError('HTML integrity mismatch')
+ValueError: HTML integrity mismatch

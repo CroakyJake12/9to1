@@ -1,0 +1,36 @@
+{
+  "ref": {
+    "ref": "refs/tags/release-2.1.14",
+    "node_id": "MDM6UmVmMjQ0OTkwNDY6cmVmcy90YWdzL3JlbGVhc2UtMi4xLjE0",
+    "url": "https://api.github.com/repos/greenmail-mail-test/greenmail/git/refs/tags/release-2.1.14",
+    "object": {
+      "sha": "fddd2b1e45c01008cf737268a3f44a426642e442",
+      "type": "tag",
+      "url": "https://api.github.com/repos/greenmail-mail-test/greenmail/git/tags/fddd2b1e45c01008cf737268a3f44a426642e442"
+    }
+  },
+  "annotated": {
+    "node_id": "TA_kwDOAXXTZtoAKGZkZGQyYjFlNDVjMDEwMDhjZjczNzI2OGEzZjQ0YTQyNjY0MmU0NDI",
+    "sha": "fddd2b1e45c01008cf737268a3f44a426642e442",
+    "url": "https://api.github.com/repos/greenmail-mail-test/greenmail/git/tags/fddd2b1e45c01008cf737268a3f44a426642e442",
+    "tagger": {
+      "name": "Marcel May",
+      "email": "marcel.may.de@gmail.com",
+      "date": "2026-09-19T13:18:13Z"
+    },
+    "object": {
+      "sha": "cdde8bb9488f11763df0737d69a892cf131b9445",
+      "type": "commit",
+      "url": "https://api.github.com/repos/greenmail-mail-test/greenmail/git/commits/cdde8bb9488f11763df0737d69a892cf131b9445"
+    },
+    "tag": "release-2.1.14",
+    "message": "[maven-release-plugin] copy for tag release-2.1.14\n-----BEGIN PGP SIGNATURE-----\n\niQJPBAABCAA5FiEEPI2bCA0xtfH2yBa4JM34cLKNeskFAmqui5UbFIAAAAAABAAO\nbWFudTIsMi41KzEuMTIsMCwzAAoJECTN+HCyjXrJT6QP/i1zUbpPUfdolv62K+wy\nxWlzIlpGBTFvfyuLh0IYrXd5L3XTUFmGPb5DlIx807YLT4rSIb7B7irINZ/1fj+H\n4svsk02jqoGQMaaRgpf6CJMLC1lfGvtRVjoZFbG7irxU+kAbELDBRMlIlZ2HNRFe\n0kRGKt/+IJrJW+j0DF+0WHWWfNsil1qogD8wNp8J24GYSHENzntyqE5wR4puf6yx\noNISl5RF82gQScGxopDcAMCjzXHUnmREMW/CvIjJqcIzWZrh2LNKGp0/4GfD1zTS\nHEzPFnmT9wbhb5lyN3xr7D2iNzAm+siTOcsm1J0dWEiFdfJBqqZOAk7s0bwpCG3T\nYkupXOmOdvuqebLWG09J68OV+sGBAKfUVbFjasFopoq21JiTkGmiHgbzzmQ37cha\ngYv9whHIJo/iQoH6oiMoFmOdeO7BJSPi0fExBtTec2gfU8n6bvk3vC8FVEqqKIh9\ndLAWiGbfx9hKTOxYZq2Gm5/HKirhgapGLE89hb/OeoxpRYNvyEhPLYWMKIizZ06S\n6u/Xj8bkjAxVk/BDtfXr3ILfHgy1/ncPP64geDvrA7eST5cwUl5Xd48Lu9yOky7D\n2ITD+k8z5Nt9QwaJfgSjD59MZGLxIRz07gCAx7u9AMr4b3qUhIcBhPHOchn1O+Bl\nSLroJJ8UFSclaLGCObuRnP5b\n=YBom\n-----END PGP SIGNATURE-----\n",
+    "verification": {
+      "verified": true,
+      "reason": "valid",
+      "signature": "-----BEGIN PGP SIGNATURE-----\n\niQJPBAABCAA5FiEEPI2bCA0xtfH2yBa4JM34cLKNeskFAmqui5UbFIAAAAAABAAO\nbWFudTIsMi41KzEuMTIsMCwzAAoJECTN+HCyjXrJT6QP/i1zUbpPUfdolv62K+wy\nxWlzIlpGBTFvfyuLh0IYrXd5L3XTUFmGPb5DlIx807YLT4rSIb7B7irINZ/1fj+H\n4svsk02jqoGQMaaRgpf6CJMLC1lfGvtRVjoZFbG7irxU+kAbELDBRMlIlZ2HNRFe\n0kRGKt/+IJrJW+j0DF+0WHWWfNsil1qogD8wNp8J24GYSHENzntyqE5wR4puf6yx\noNISl5RF82gQScGxopDcAMCjzXHUnmREMW/CvIjJqcIzWZrh2LNKGp0/4GfD1zTS\nHEzPFnmT9wbhb5lyN3xr7D2iNzAm+siTOcsm1J0dWEiFdfJBqqZOAk7s0bwpCG3T\nYkupXOmOdvuqebLWG09J68OV+sGBAKfUVbFjasFopoq21JiTkGmiHgbzzmQ37cha\ngYv9whHIJo/iQoH6oiMoFmOdeO7BJSPi0fExBtTec2gfU8n6bvk3vC8FVEqqKIh9\ndLAWiGbfx9hKTOxYZq2Gm5/HKirhgapGLE89hb/OeoxpRYNvyEhPLYWMKIizZ06S\n6u/Xj8bkjAxVk/BDtfXr3ILfHgy1/ncPP64geDvrA7eST5cwUl5Xd48Lu9yOky7D\n2ITD+k8z5Nt9QwaJfgSjD59MZGLxIRz07gCAx7u9AMr4b3qUhIcBhPHOchn1O+Bl\nSLroJJ8UFSclaLGCObuRnP5b\n=YBom\n-----END PGP SIGNATURE-----\n",
+      "payload": "object cdde8bb9488f11763df0737d69a892cf131b9445\ntype commit\ntag release-2.1.14\ntagger Marcel May <marcel.may.de@gmail.com> 1789823893 +0200\n\n[maven-release-plugin] copy for tag release-2.1.14\n",
+      "verified_at": "2026-09-19T13:22:40Z"
+    }
+  }
+}

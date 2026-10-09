@@ -1,0 +1,11 @@
+{"id": "c4-exact-f08c218", "tested_commit": "f08c218cdd23767e81e0b58cb45d021368182a0f", "worktree_status": "", "command": ["/workspace/.tools/dotnet/dotnet", "test", "/tmp/c6-c4-harness/ActualSites.Tests.csproj", "--logger", "trx", "--results-directory", "/tmp/c6-c4-results"], "cwd": "/workspace/team-c/c4", "expected": "9 local domain challenge tests pass; real DNS/provider gates excluded from claims", "started": "2026-10-03T17:06:47.316101+00:00"}
+  Determining projects to restore...
+  Restored /workspace/team-c/c4/9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj (in 72 ms).
+  Restored /tmp/c6-c4-harness/ActualSites.Tests.csproj (in 171 ms).
+  Haven.Core -> /workspace/team-c/c4/9to1 Workspace/shared/src/Haven.Core/bin/Debug/net10.0/Haven.Core.dll
+  ActualSites.Tests -> /tmp/c6-c4-harness/bin/Debug/net10.0/ActualSites.Tests.dll
+Test run for /tmp/c6-c4-harness/bin/Debug/net10.0/ActualSites.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Results File: /tmp/c6-c4-results/_5f26f397bc73_2026-10-03_17_06_49_net10.0.trx
+
+Passed!  - Failed:     0, Passed:     9, Skipped:     0, Total:     9, Duration: 249 ms - ActualSites.Tests.dll (net10.0)

@@ -1,0 +1,6 @@
+{
+  "failedSource": "843a60e857dbe9ee19ffd50505215d08d7c085da",
+  "proof": "C1 raw NotImplementedError from os.posix_spawn before any child creation",
+  "removedOnlyOwnedRun": "23abc4745ec000a8",
+  "originalFailureRetained": "/workspace/team-c/evidence/c1/browser-fixture-review/smoke.log"
+}

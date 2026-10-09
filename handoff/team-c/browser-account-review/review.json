@@ -1,0 +1,95 @@
+{
+  "reviewedCommit": "8b4f2a0c071b91be357e48a603e25fff3c6f14ff",
+  "baseCompositionCommit": "43669e20a267a2447458aaa5f081987f97d29b05",
+  "maintainedFixtureCommit": "aedc29ec3a0a960e1ded36c0443f1efda4fcf36d",
+  "ownerProtocolPublication": "1fcf237e1ae28a7adf2261ee0caab00931c93a46",
+  "sourceReadHashes": {
+    "apps/Web/Accounts/AccountSettingsFeature.cs": "88544b25138f211a73e5f6b3fe7741ac25f7b4ca98246bd47e2fe89e8ab03a31",
+    "apps/Web/Accounts/AccountBrowserBindings.cs": "5a1d706663b365816354274eb17c10013b52e91020d56c79ab8929d15125f3fa",
+    "apps/Web/Services/BrowserAccountTransport.cs": "d8bca95c7000819c42284949a8cc92f145427fb648c222c969bf0590b50656f4",
+    "apps/Web/Services/IAccountBrowserTransport.cs": "e1c872e4f64996a9d366cd2aae7fd1399f5301b347eb892cbfee7d96cd12bfce",
+    "apps/Web/Services/account-service.js": "3cae40d5cc72ee7a3efea090e44f575fd5aacc406f7cd973e811bc1522afe360",
+    "apps/Web/Auth/account-api-client.js": "1269f332a4a5f833d934189c8396ecafce53c9cfba04801f0c843b4d6fe6ff58",
+    "apps/Web/BrowserFeatureComposition.cs": "e22fa5bdd436f7e258a1cdd4e420a129aa9271ce8f0ae9b28b6d793adc67ae95",
+    "apps/Web/wwwroot/main.js": "4d9feec71302adf55638c66387fd3d9ce6a312800be8e6e47e09eecde5684680",
+    "apps/Web/NineToOne.Web.csproj": "8d64a536c886743c1ccd83f9e0074acc5444a1530049badc7330f6c4272b18f9"
+  },
+  "configuredArtifact": "NOT_DELIVERED: main.js calls createAccountModule() without a client; BrowserFeatureComposition supplies no trusted sign-in callback",
+  "browserWireReview": "Reviewed AccountApiClient matches actual Worker current direct object/profile and sessions envelopes, scoped bearer routes/methods, exact successor CAS and 204 mutations. It does not require .NET RSA/auth_revision consumer contracts. Real configured callback/cleanup integration still untested.",
+  "nodeControls": {
+    "total": 33,
+    "passed": 33,
+    "failed": 0,
+    "skipped": 0,
+    "exit": 0,
+    "command": "node --test apps/Web/Auth/account-api-client.test.js apps/Web/Auth/account-api-client.profile-review.test.js apps/Web/Services/account-service.test.js",
+    "cwd": "/workspace/team-c/c2-browser-account-review"
+  },
+  "finding": {
+    "severity": "P2",
+    "file": "apps/Web/Accounts/AccountBrowserBindings.cs",
+    "line": 263,
+    "trigger": "A registered cancellation callback throws during lifetime cancellation in Dispose",
+    "observed": "Disposed view retains canonical account/profile and private draft because ClearPrivate executes after throwing Cancel",
+    "negativeExit": 1,
+    "scriptedTransportOnly": true,
+    "requiredOwnerFix": "Set disposed first, clear private records/drafts/selections/status before outward cancellation, then guarantee lifetime-token disposal and notification even if callbacks throw. Preserve original cancellation exception and any cleanup failures rather than masking/swallowing them; add throwing callback regression retaining existing mutation/cancellation semantics.",
+    "impact": "Disposed instance retains previously loaded private data through its value bindings; no cross-account disclosure proven."
+  },
+  "negativeCommand": "DOTNET_CLI_HOME=/workspace/team-c/evidence/c2/dotnet-home NUGET_PACKAGES=/workspace/.nuget/packages AVALONIA_TELEMETRY_OPTOUT=1 /workspace/.tools/dotnet/dotnet run --project /workspace/team-c/evidence/c2/b-account-dispose-negative/Negative.csproj -c Release",
+  "negativeLinkedSources": "Unmodified exact B AccountBrowserBindings and IAccountBrowserTransport plus maintained actual ICuiWritableBindingContext/ICuiRepeatItemBindingContext and Core project; no implementation stubs",
+  "rawEvidence": {
+    "/workspace/team-c/evidence/c2/b-account-8b4-dispose-negative.log": {
+      "sha256": "84b18631976acb7ba4716cce709939f0ca1364c8b1a2623b06ba48e794cc4bb5",
+      "qualification": "Original full project build failed, zero controls executed"
+    },
+    "/workspace/team-c/evidence/c2/b-account-8b4-dispose-linked-negative.log": {
+      "sha256": "ec6d99c186f8db5e2befe5cb489a7956e8797b9b4063280e5b595564389eff16",
+      "qualification": "Executed local partial verification"
+    },
+    "/workspace/team-c/evidence/c2/b-account-8b4-exact-tests.log": {
+      "sha256": "8be896dbf8f0dd7f08b58f9a673efb575bb598801e3eec8de807f006c9a244c4",
+      "qualification": "Executed local partial verification"
+    },
+    "/workspace/team-c/evidence/c2/b-account-8b4-readonly-tests.log": {
+      "sha256": "2cc0c3b4afaa58fe61c39e3d7c967f8e18440c5ac2287119c28bbaf43de9c996",
+      "qualification": "Wrong initial cwd/missing source test paths, preserved"
+    },
+    "originalRuntimeAttempt": {
+      "argv": "DOTNET_CLI_HOME=/workspace/team-c/evidence/c2/dotnet-home NUGET_PACKAGES=/workspace/.nuget/packages AVALONIA_TELEMETRY_OPTOUT=1 /workspace/.tools/dotnet/dotnet run --project /workspace/team-c/evidence/c2/b-account-dispose-negative/Negative.csproj -c Release",
+      "cwd": "/workspace/team-c/c2-browser-account-review",
+      "projectDependency": "First attempt referenced actual framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj plus original exact B bindings/Itransport. Build failed before control execution; later harness linked unchanged actual runtime interfaces and Core project.",
+      "exit": 1,
+      "controlsExecuted": 0
+    }
+  },
+  "limitations": [
+    "Source-linked scripted cancellation probe and Node transport doubles only",
+    "No configured actual browser artifact/OAuth callback/profile/session journey executed",
+    "No real Jacob, provider credentials, external email, deployment or global trust changes",
+    "Strict .NET RSA/auth_revision and Files actor adapter remain separate owner seams"
+  ],
+  "readOnlyProduction": true,
+  "reproductionSourceHashes": {
+    "handoff/team-c/browser-account-review/negative/Negative.csproj": "66d5fd084f5a73d7d4d7daf3826ca457b0c3b3ebece35766927c1216f3b0f7e5",
+    "handoff/team-c/browser-account-review/negative/Program.cs": "c2c196ecf1e07c11411fc122d00be194dc71098bbff85df0c6d7d785947c2506"
+  },
+  "reproductionCommand": "DOTNET_CLI_HOME=/workspace/team-c/evidence/c2/dotnet-home NUGET_PACKAGES=/workspace/.nuget/packages AVALONIA_TELEMETRY_OPTOUT=1 /workspace/.tools/dotnet/dotnet run --project handoff/team-c/browser-account-review/negative/Negative.csproj -c Release",
+  "sourceBindings": {
+    "apps/Web/Accounts/AccountBrowserBindings.cs": "5a1d706663b365816354274eb17c10013b52e91020d56c79ab8929d15125f3fa",
+    "apps/Web/Services/IAccountBrowserTransport.cs": "e1c872e4f64996a9d366cd2aae7fd1399f5301b347eb892cbfee7d96cd12bfce",
+    "framework/CUI/Runtime/ICuiWritableBindingContext.cs": "792aaed32f7d12a896bd6d1e7b505489d34d63e9be5ef3b7526489c37850cc3d",
+    "framework/CUI/Runtime/ICuiRepeatItemBindingContext.cs": "9974b6bc624e9f7941c9bb3289b1ebb41b0f2c0801d30a03ebe5401226d06f1a",
+    "framework/CUI/Core/CuiRuntimeContracts.cs": "3fc6935ae8e607cfd5637b5f0ad766906aaa4a7a328ae368fdbf328a5a9fd8b4"
+  },
+  "publishedRelativeHarnessReplay": {
+    "commit": "72381a186d75971f63213aa2f583b29befcd3a7f",
+    "exit": 1,
+    "discovered": 1,
+    "executed": 1,
+    "failed": 1,
+    "qualification": "Expected unchanged production failure; no source edits or assertion weakening",
+    "command": "DOTNET_CLI_HOME=/workspace/team-c/evidence/c2/dotnet-home NUGET_PACKAGES=/workspace/.nuget/packages AVALONIA_TELEMETRY_OPTOUT=1 /workspace/.tools/dotnet/dotnet run --project handoff/team-c/browser-account-review/negative/Negative.csproj -c Release",
+    "rawSha256": "ec6d99c186f8db5e2befe5cb489a7956e8797b9b4063280e5b595564389eff16"
+  }
+}

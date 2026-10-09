@@ -203,6 +203,10 @@ public interface ITrainingRepository
 /// </summary>
 public interface IOllamaClient
 {
+    /// <summary>The actual transport endpoint; unknown endpoints never establish device locality.</summary>
+    Uri? TransportEndpoint => null;
+    /// <summary>Trusted transport rejects redirects and bypasses proxies for local endpoints.</summary>
+    bool IsDeviceLocalTransportVerified => false;
     Task<bool> IsAvailableAsync(CancellationToken cancellationToken);
     Task<IReadOnlyList<ModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken);
     IAsyncEnumerable<string> StreamChatAsync(OllamaChatRequest request, CancellationToken cancellationToken);
@@ -232,7 +236,11 @@ public sealed record OllamaChatRequest(
     EffortLevel Effort,
     string? SystemPrompt = null,
     bool EnableTools = false,
-    GenerationOptions? Options = null);
+    GenerationOptions? Options = null)
+{
+    /// <summary>Original canonical Task/Run observation; this does not issue authority.</summary>
+    public ProviderExecutionContext? ExecutionContext { get; init; }
+}
 
 /// <summary>
 /// Represents ollama message and keeps its related state and behavior together.
@@ -276,12 +284,22 @@ public sealed record OllamaToolRequest(
     IReadOnlyList<OllamaToolDefinition> Tools,
     EffortLevel Effort,
     string? SystemPrompt = null,
-    GenerationOptions? Options = null);
+    GenerationOptions? Options = null)
+{
+    /// <summary>Original canonical Task/Run observation; this does not issue authority.</summary>
+    public ProviderExecutionContext? ExecutionContext { get; init; }
+}
 
 /// <summary>
 /// Represents ollama tool response and keeps its related state and behavior together.
 /// </summary>
-public sealed record OllamaToolResponse(string Content, IReadOnlyList<OllamaToolCall> ToolCalls);
+public sealed record OllamaToolResponse(string Content, IReadOnlyList<OllamaToolCall> ToolCalls)
+{
+    /// <summary>The actual selected catalogue model, for fresh downstream tool governance.</summary>
+    public ProviderModelDescriptor? EffectiveModel { get; init; }
+    /// <summary>The same canonical Task/Run after any acknowledged provider-attempt transition.</summary>
+    public ProviderExecutionContext? ExecutionContext { get; init; }
+}
 
 /// <summary>
 /// Defines the workspace tool service contract so callers depend on a capability rather than one implementation.
@@ -309,6 +327,11 @@ public sealed record ComputerSelectionSnapshot(
 /// </summary>
 public interface IComputerToolService
 {
+    /// <summary>Trusted installed backend capability; request payloads cannot override this platform boundary.</summary>
+    bool IsSupported => OperatingSystem.IsWindows();
+    /// <summary>Resolve a canonical installed app to the actual process/window or launch target. Unknown targets fail closed.</summary>
+    ValueTask<bool> VerifyTargetAsync(string canonicalAppId, string toolName, System.Text.Json.JsonElement arguments,
+        CancellationToken cancellationToken) => ValueTask.FromResult(false);
     Task<ComputerSelectionSnapshot?> GetSelectionSnapshotAsync(CancellationToken cancellationToken) =>
         Task.FromResult<ComputerSelectionSnapshot?>(null);
     Task<string> SnapshotAsync(CancellationToken cancellationToken);
@@ -342,7 +365,12 @@ public interface IBrowserToolService
 /// <summary>
 /// Represents process request and keeps its related state and behavior together.
 /// </summary>
-public sealed record ProcessRequest(string FileName, string Arguments, string WorkingDirectory, TimeSpan Timeout, IReadOnlyDictionary<string, string>? Environment = null, bool DetachGui = false);
+public sealed record ProcessRequest(string FileName, string Arguments, string WorkingDirectory, TimeSpan Timeout, IReadOnlyDictionary<string, string>? Environment = null, bool DetachGui = false)
+{
+    // Exact host argument vector. Positional constructor/legacy Arguments remain unchanged.
+    // Maintained process owners copy it and refuse simultaneous nonempty Arguments.
+    public IReadOnlyList<string>? ArgumentList { get; init; }
+}
 /// <summary>
 /// Represents process result and keeps its related state and behavior together.
 /// </summary>

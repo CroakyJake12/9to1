@@ -1,0 +1,10 @@
+  Determining projects to restore...
+  Restored /workspace/team-c/evidence/c6/r2-reader-review/Challenge.csproj (in 198 ms).
+  1 of 2 projects are up-to-date for restore.
+  Haven.Core -> /workspace/team-c/c4/9to1 Workspace/shared/src/Haven.Core/bin/Debug/net10.0/Haven.Core.dll
+  Challenge -> /workspace/team-c/evidence/c6/r2-reader-review/bin/Debug/net10.0/Challenge.dll
+Test run for /workspace/team-c/evidence/c6/r2-reader-review/bin/Debug/net10.0/Challenge.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Results File: /workspace/team-c/evidence/c6/r2-reader-review/TestResults/challenge.trx
+
+Passed!  - Failed:     0, Passed:    19, Skipped:     0, Total:    19, Duration: 65 ms - Challenge.dll (net10.0)

@@ -1,0 +1,7 @@
+{
+  "label": "infrastructure444-after-restore",
+  "outputAllocatedBytes": 21872640,
+  "outputLimitBytes": 536870912,
+  "workspaceAvailable": 819990528,
+  "requiredFreeFloor": 268435456
+}

@@ -1,0 +1,131 @@
+{
+  "scope": "Fifth original Root-owned account execution and issuer closure; parsed observed tool results, not byte-identical rawTTY transcript",
+  "producer": "9af8960051abc3bbb01340761fdf12d2f69b1679",
+  "testSource": "3f83d8e21b424ba96bf91654412b24065053c975",
+  "fixtureSource": "ff453ff9d294d5c4812c9308217cd04be0a88e4d",
+  "executionRoot": "/workspace/c-auth-r5",
+  "browserOriginalSession": 42277,
+  "browserFinalExitCode": 1,
+  "browserToolResult": {
+    "state": "CLOSED",
+    "runnerExitCode": 1,
+    "custodyClean": true,
+    "deadlineFailure": false,
+    "budgetFailure": false,
+    "forcedCleanup": false,
+    "allOwnedKernelIdentitiesExited": true,
+    "allOwnedBirthsDisappeared": true,
+    "setupOrControlFailureType": null
+  },
+  "issuerOriginalSession": 75831,
+  "issuerInputSentThroughOriginalSession": "stop\n",
+  "issuerFinalExitCode": 0,
+  "observedIssuerDrain": {
+    "status": "drained",
+    "custody": {
+      "strictReaped": true,
+      "originalsDisappeared": true,
+      "reaped": [
+        {
+          "pid": 203808,
+          "birth": 3169736,
+          "code": 1,
+          "status": 143
+        },
+        {
+          "pid": 203824,
+          "birth": 3169814,
+          "code": 2,
+          "status": 15
+        },
+        {
+          "pid": 203833,
+          "birth": 3169831,
+          "code": 2,
+          "status": 15
+        },
+        {
+          "pid": 203839,
+          "birth": 3169838,
+          "code": 2,
+          "status": 9
+        },
+        {
+          "pid": 203847,
+          "birth": 3169883,
+          "code": 1,
+          "status": 0
+        }
+      ],
+      "signals": [
+        {
+          "pid": 203808,
+          "birth": 3169736,
+          "signal": 15
+        },
+        {
+          "pid": 203815,
+          "birth": 3169740,
+          "signal": 15
+        },
+        {
+          "pid": 203824,
+          "birth": 3169814,
+          "signal": 15
+        },
+        {
+          "pid": 203833,
+          "birth": 3169831,
+          "signal": 15
+        },
+        {
+          "pid": 203839,
+          "birth": 3169838,
+          "signal": 15
+        },
+        {
+          "pid": 203847,
+          "birth": 3169883,
+          "signal": 15
+        }
+      ]
+    }
+  },
+  "actualCounts": {
+    "discovered": 7,
+    "executed": 4,
+    "passed": 2,
+    "failed": 2,
+    "notRun": 3
+  },
+  "unexpected": {
+    "pageError": 0,
+    "consoleError": 1,
+    "requestFailed": 0,
+    "foreignRequest": 0,
+    "observationFailure": 0
+  },
+  "cleanupFailures": [],
+  "protocol": {
+    "discovery": 1,
+    "jwks": 1,
+    "authorize": 1,
+    "callback": 1,
+    "token": 1,
+    "current": 2,
+    "profile": 1,
+    "sessions": 1,
+    "signout": 0,
+    "apiRequests": 4,
+    "protocolValid": true,
+    "sameSubject": true
+  },
+  "actualFailure": "Original profile/session native projection wait timed out at15001ms although original API current/profile/sessions returned200 and sameSubjecttrue. Physical PKCE/consent/selfverification passes with callback1. Finalcompoundfails onlyunexpectedconsole1 RESOURCE_LOAD_FAILED atISSUER_OTHER; original source/assets and separateclosure unchanged, nofailureofphysicalclose inferred.",
+  "portRebindClosed": [
+    8799,
+    5096
+  ],
+  "devVarsAbsent": true,
+  "issuerRunDirectoriesAbsent": true,
+  "qualification": "Originalfive negatives retained. No rawprivateREADY/path/TLSkey/token/IDs/profile/errorURL here; configureddomain/grants/hosted.NET/installed/fullapp acceptance remainsopen."
+}

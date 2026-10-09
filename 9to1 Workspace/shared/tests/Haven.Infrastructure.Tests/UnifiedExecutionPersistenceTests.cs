@@ -137,45 +137,90 @@ public sealed class UnifiedExecutionPersistenceTests : IDisposable
     [Fact]
     public async Task Project_preview_provider_starts_serves_and_stops_a_real_loopback_site()
     {
-        var sink = new RecordingSink();
-        var provider = new WebProjectPreviewProvider(sink);
-        var root = Path.Combine(_paths.DataDirectory, "running-preview");
-        Directory.CreateDirectory(root);
-        File.WriteAllText(Path.Combine(root, "RunningPreview.csproj"),
-            "<Project Sdk=\"Microsoft.NET.Sdk.Web\"><PropertyGroup><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings></PropertyGroup></Project>");
-        File.WriteAllText(Path.Combine(root, "Program.cs"),
-            "var app = WebApplication.CreateBuilder(args).Build(); app.MapGet(\"/\", () => \"haven-preview-ok\"); app.Run();");
-
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(45));
-        var session = await provider.StartAsync(root, timeout.Token);
-        var uri = session.PreviewUri;
+        var profileNames = new[] { "HOME", "USERPROFILE", "DOTNET_CLI_HOME" };
+        var callerProfiles = profileNames.ToDictionary(name => name, Environment.GetEnvironmentVariable);
+        var privateName = "HAVEN_PREVIEW_PRIVATE_" + Guid.NewGuid().ToString("N");
+        var privateValue = "controlled-private-preview-" + Guid.NewGuid().ToString("N");
+        Assert.Null(Environment.GetEnvironmentVariable(privateName));
+        Environment.SetEnvironmentVariable(privateName, privateValue);
         try
         {
-            Assert.True(uri.IsLoopback);
-            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
-            Assert.Equal("haven-preview-ok", await client.GetStringAsync(uri, timeout.Token));
-            Assert.Contains(sink.Events, item => item.ActionType == ExecutionActionType.Preview && item.Status == ExecutionActionStatus.Completed);
+            await StartsAndStopsAsync();
         }
         finally
         {
-            await session.DisposeAsync();
+            // This uniquely named test variable cannot alter another test's
+            // settings. Never repurpose the caller's HOME or USERPROFILE.
+            Environment.SetEnvironmentVariable(privateName, null);
         }
 
-        var stopped = false;
-        using (var client = new HttpClient { Timeout = TimeSpan.FromMilliseconds(500) })
+        async Task StartsAndStopsAsync()
         {
-            for (var attempt = 0; attempt < 10 && !stopped; attempt++)
-            {
-                try
+            var sink = new RecordingSink();
+            var provider = new WebProjectPreviewProvider(sink);
+            var root = Path.Combine(_paths.DataDirectory, "running-preview");
+            Directory.CreateDirectory(root);
+            File.WriteAllText(Path.Combine(root, "RunningPreview.csproj"),
+                "<Project Sdk=\"Microsoft.NET.Sdk.Web\"><PropertyGroup><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings></PropertyGroup></Project>");
+            File.WriteAllText(Path.Combine(root, "Program.cs"),
+                $$"""
+                var app = WebApplication.CreateBuilder(args).Build();
+                app.MapGet("/", () => "haven-preview-ok");
+                app.MapGet("/environment", () => new
                 {
-                    using var response = await client.GetAsync(uri);
-                    await Task.Delay(100);
+                    locations = new[] { "HOME", "USERPROFILE", "DOTNET_CLI_HOME" }
+                        .ToDictionary(name => name, Environment.GetEnvironmentVariable),
+                    privatePresent = Environment.GetEnvironmentVariable("{{privateName}}") is not null,
+                    browser = Environment.GetEnvironmentVariable("BROWSER"),
+                    hostingEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+                });
+                app.Run();
+                """);
+
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(45));
+            var session = await provider.StartAsync(root, timeout.Token);
+            var uri = session.PreviewUri;
+            try
+            {
+                Assert.True(uri.IsLoopback);
+                Assert.Equal("127.0.0.1", uri.Host);
+                using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+                Assert.Equal("haven-preview-ok", await client.GetStringAsync(uri, timeout.Token));
+                using var environment = System.Text.Json.JsonDocument.Parse(
+                    await client.GetStringAsync(new Uri(uri, "environment"), timeout.Token));
+                foreach (var name in profileNames)
+                {
+                    var actual = environment.RootElement.GetProperty("locations").GetProperty(name).GetString();
+                    Assert.True(string.Equals(callerProfiles[name], actual, StringComparison.Ordinal),
+                        "The real preview child must preserve the caller's " + name + " verbatim, including absence.");
                 }
-                catch (HttpRequestException) { stopped = true; }
-                catch (TaskCanceledException) { stopped = true; }
+                Assert.False(environment.RootElement.GetProperty("privatePresent").GetBoolean());
+                Assert.Equal("none", environment.RootElement.GetProperty("browser").GetString());
+                Assert.Equal("Development", environment.RootElement.GetProperty("hostingEnvironment").GetString());
+                Assert.DoesNotContain(privateValue, session.SafeLogTail, StringComparison.Ordinal);
+                Assert.Contains(sink.Events, item => item.ActionType == ExecutionActionType.Preview && item.Status == ExecutionActionStatus.Completed);
             }
+            finally
+            {
+                await session.DisposeAsync();
+            }
+
+            var stopped = false;
+            using (var client = new HttpClient { Timeout = TimeSpan.FromMilliseconds(500) })
+            {
+                for (var attempt = 0; attempt < 10 && !stopped; attempt++)
+                {
+                    try
+                    {
+                        using var response = await client.GetAsync(uri);
+                        await Task.Delay(100);
+                    }
+                    catch (HttpRequestException) { stopped = true; }
+                    catch (TaskCanceledException) { stopped = true; }
+                }
+            }
+            Assert.True(stopped);
         }
-        Assert.True(stopped);
     }
 
     public void Dispose() => _paths.Dispose();

@@ -1,0 +1,13 @@
+{
+  "scope": "Additive safe source/recipe/metadata and original first Windows failure only; no actual Home6/native/package success, no latestglobal relabel, no new runtime acceptance",
+  "originalHomeRun": 37224785297,
+  "source": "e1fdffc2488d90c68560a7f72b0820bd54aa6b40",
+  "actualOutcome": "sourcebuiltCUI Tasks0warnings0errors and ordinaryrestorePASS; owningbuildMSB4062 0warnings2errors; tests/package/nativeNOT_RUN; allphysicalsourcesunchanged",
+  "sourceRecipeSuccessor": "0d1d64a5ed59e54a915ba3672fd734c0cff0ff40",
+  "separateHomeTestCompilerBlocker": "Userdelegatedowner preparing exact onefile originalAction-overload correction afteractualWindowsfa7 CS0619/xUnit2014; no duplicatefix or knownfailed rerun. Exactsource/peer/currentpin required before nextinvocation.",
+  "studioMetadata": "137fd22e4cf0379d04adcd6da4c82a1443f5c911 exactc22parent sourceonly;36pins/14authoredcases/oldnegative372218/all3matrix unchanged; ownerApublicsourceproposal/C6sourceACK, runtimeNOT_RUN",
+  "separateWebObservation": "Official run37224785207 SUCCESSsamee1; compiledWebassets/browserdiagnostics notincludedhere and no olddf/latestfa7 tuple substitution",
+  "privacy": "Only officialoriginal diagnostics8members/sourcehashes/logs and metadata/diffs/peerreceipts. NOcompiled native/publicWebassets, actualprofile bodies, signedURLs, credentials, actor/config/model/runtimebinaries or sourceoutsideGit; originaldynamicnative process neverlaunched.",
+  "frozenPriorPayloads": 549,
+  "newPayloads": 30
+}

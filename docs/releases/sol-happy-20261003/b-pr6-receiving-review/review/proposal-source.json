@@ -1,0 +1,11 @@
+{
+  "sourceCommit": "1a0a824ad06905467c280730a85429f37feabce1",
+  "parent": "43c5b0ebf7d26f46ee9a29ad009e9dd0e68b835a",
+  "originalPR": "22d2e2dd35c934f190d28efdef0190cbd8c4c957",
+  "originalDiffBase": "aef50b9bb053df68927fdf99ead9829b0fd7fd8b",
+  "sourcePathCount": 66,
+  "sourceBodiesExactPR": true,
+  "outside66AllReceivingParentUnchanged": true,
+  "acceptedGlobalHead": null,
+  "scope": "Isolated receiving proposal, root integration review required"
+}

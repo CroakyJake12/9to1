@@ -1,0 +1,1791 @@
+{
+  "phase": "before",
+  "actualMetadata": {
+    "TargetPath": "/workspace/team-c/c3-admin-embedded-symbol-proposal/artifacts/task-producer-before/bin/Avalonia.Build.Tasks/debug/Avalonia.Build.Tasks.dll",
+    "TargetFramework": "netstandard2.0",
+    "Configuration": "Debug",
+    "DebugType": "embedded",
+    "EmitCompilerGeneratedFiles": "false",
+    "IntermediateOutputPath": "/workspace/team-c/c3-admin-embedded-symbol-proposal/artifacts/task-producer-before/obj/Avalonia.Build.Tasks/debug/",
+    "CompilerGeneratedFilesOutputPath": ""
+  },
+  "actualSymbolIdentity": {
+    "kind": "embedded-portable-pdb",
+    "origin": {
+      "physicalPeSha256": "a5a5ec3d920b1c342462100cb9c79edc6870f7645aabf4df5b4a4d648f7e607e",
+      "debugRecordOffset": 687268,
+      "debugRecordBytes": 137271,
+      "debugRecordSha256": "2c57f5f9cdb844aebc374e2dde1a70e5ec217df83adfcd6609431d9641daa3aa",
+      "declaredSymbolBytes": 293896
+    },
+    "bytes": 293896,
+    "sha256": "c4788df646ff8445a77dc37efa0e45c0c97a3749047a3d5b0f7e47d02ea75e05",
+    "identity": {
+      "portablePdbId": "f56490e72bf1a943b81ec4b2319b58bb4eeb3ef9",
+      "codeViewGuid": "e79064f5-f12b-43a9-b81e-c4b2319b58bb",
+      "codeViewStamp": 4181650254
+    }
+  },
+  "documents": 221,
+  "verifiedDocuments": 219,
+  "missingDocuments": [
+    "/workspace/team-c/c3-admin-embedded-symbol-proposal/artifacts/task-producer-before/obj/Avalonia.Build.Tasks/debug/DevGenerators/DevGenerators.CompilerDynamicDependenciesGenerator/CompilerDynamicDependenciesAttribute.generated.cs",
+    "/workspace/team-c/c3-admin-embedded-symbol-proposal/artifacts/task-producer-before/obj/Avalonia.Build.Tasks/debug/DevGenerators/DevGenerators.EnumMemberDictionaryGenerator/globalAvalonia.Media.KnownColors.cs"
+  ],
+  "allSourceHashesVerified": false,
+  "rows": [
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/ComInteropHelper.cs",
+      "bytes": 5449,
+      "sha256": "4c72af084279f05258bf0d3bcfad0e0ea21992f7249c0498a987d6d0cdf7f875",
+      "digest": "4c72af084279f05258bf0d3bcfad0e0ea21992f7249c0498a987d6d0cdf7f875",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/CompileAvaloniaXamlTask.cs",
+      "bytes": 4078,
+      "sha256": "127c23e88c33bbeb8e1cbe0147e7e58410674b5af81baa68c98094acbc0d041f",
+      "digest": "127c23e88c33bbeb8e1cbe0147e7e58410674b5af81baa68c98094acbc0d041f",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/DeterministicIdGenerator.cs",
+      "bytes": 270,
+      "sha256": "cc1133486b86d6d750948f3c838090e1db4b111c0b01b77f4cf2641f9cf63719",
+      "digest": "cc1133486b86d6d750948f3c838090e1db4b111c0b01b77f4cf2641f9cf63719",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Extensions.cs",
+      "bytes": 3844,
+      "sha256": "43287dc3a1b1db88be140777803f6ffb11f29755fc599689a541386f342a0596",
+      "digest": "43287dc3a1b1db88be140777803f6ffb11f29755fc599689a541386f342a0596",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/GenerateAvaloniaResourcesTask.cs",
+      "bytes": 5739,
+      "sha256": "7c4b1a8d4ed237d95fb68bd46bfc2b575448dce741391a958bce7f6febf94294",
+      "digest": "7c4b1a8d4ed237d95fb68bd46bfc2b575448dce741391a958bce7f6febf94294",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/SpanCompat.cs",
+      "bytes": 3425,
+      "sha256": "6183ac2461fd0fcc1100470123323e9e8f479218fda6737315fd29189c6b953e",
+      "digest": "6183ac2461fd0fcc1100470123323e9e8f479218fda6737315fd29189c6b953e",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/XamlCompilerDiagnosticsFilter.cs",
+      "bytes": 2505,
+      "sha256": "a7ab534db3e6dc39eca7427398bc986ae34c764c8a4cc1ffa0741c6818fbadb5",
+      "digest": "a7ab534db3e6dc39eca7427398bc986ae34c764c8a4cc1ffa0741c6818fbadb5",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/XamlCompilerTaskExecutor.cs",
+      "bytes": 39676,
+      "sha256": "7baa2326e18153beeeafebf52797c1f752e5678ce61abf79f658bfe6643bc1dd",
+      "digest": "7baa2326e18153beeeafebf52797c1f752e5678ce61abf79f658bfe6643bc1dd",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/XamlCompilerTaskExecutor.Helpers.cs",
+      "bytes": 6433,
+      "sha256": "02a9e95e316c3adf037513504c98fc9295dbb07606c67f7ce431bbe53e579ea1",
+      "digest": "02a9e95e316c3adf037513504c98fc9295dbb07606c67f7ce431bbe53e579ea1",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/XamlFileInfo.cs",
+      "bytes": 496,
+      "sha256": "51aeff426998505df689f7b11a61b495cb44e94fd75ce5ab08787b8f2b357b15",
+      "digest": "51aeff426998505df689f7b11a61b495cb44e94fd75ce5ab08787b8f2b357b15",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Utilities/AvaloniaResourcesIndex.cs",
+      "bytes": 4866,
+      "sha256": "26f1772fdc3f09bda980fc658944eaf7c7b550d0de4ea4ab56b125ecc2a0d236",
+      "digest": "26f1772fdc3f09bda980fc658944eaf7c7b550d0de4ea4ab56b125ecc2a0d236",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Utilities/SpanStringTokenizer.cs",
+      "bytes": 7162,
+      "sha256": "c41378ae61f26a74a8d9039f32781447d4e1f1b73ceb8ced2a9f8f57b748d2b3",
+      "digest": "c41378ae61f26a74a8d9039f32781447d4e1f1b73ceb8ced2a9f8f57b748d2b3",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Platform/Internal/Constants.cs",
+      "bytes": 149,
+      "sha256": "f5e896fd81d1158735196d580475558584c70f77e1f58938f97866299c680478",
+      "digest": "f5e896fd81d1158735196d580475558584c70f77e1f58938f97866299c680478",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml/PortableXaml/AvaloniaResourceXamlInfo.cs",
+      "bytes": 323,
+      "sha256": "dbbc8ef310e23a0d5d598d68fef5975a44d0629afd29e98f14f41ba7eea9d80c",
+      "digest": "dbbc8ef310e23a0d5d598d68fef5975a44d0629afd29e98f14f41ba7eea9d80c",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/AstNodes/AvaloniaXamlIlArrayConstantAstNode.cs",
+      "bytes": 2180,
+      "sha256": "da291ddce12c6861e2d6052e07fdf3119d763e1e9ca88e3a0da8606a6ace26c7",
+      "digest": "da291ddce12c6861e2d6052e07fdf3119d763e1e9ca88e3a0da8606a6ace26c7",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/AstNodes/AvaloniaXamlIlAvaloniaListConstantAstNode.cs",
+      "bytes": 2106,
+      "sha256": "d2e52027c87424e91a278122da54be8ddaaf175d87f1bb5c089c1fea76ae4e38",
+      "digest": "d2e52027c87424e91a278122da54be8ddaaf175d87f1bb5c089c1fea76ae4e38",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/AstNodes/AvaloniaXamlIlFontFamilyAstNode.cs",
+      "bytes": 1463,
+      "sha256": "37c2af8bfe074a1da1d7a1e5fcb1c8f1e6d1fd8876113204533c8d740ce4f00b",
+      "digest": "37c2af8bfe074a1da1d7a1e5fcb1c8f1e6d1fd8876113204533c8d740ce4f00b",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/AstNodes/AvaloniaXamlIlGridLengthAstNode.cs",
+      "bytes": 1237,
+      "sha256": "face8a0836b8c400147ee160dad70e2dd27711c6e4d5c611a0a770fd0e97ea30",
+      "digest": "face8a0836b8c400147ee160dad70e2dd27711c6e4d5c611a0a770fd0e97ea30",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/AstNodes/AvaloniaXamlIlVectorLikeConstantAstNode.cs",
+      "bytes": 1920,
+      "sha256": "388fcdd4bf1461db9fda28fe4b1124bf4550a20e67959fa8a8f3adc791403284",
+      "digest": "388fcdd4bf1461db9fda28fe4b1124bf4550a20e67959fa8a8f3adc791403284",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/AvaloniaXamlDiagnosticCodes.cs",
+      "bytes": 2742,
+      "sha256": "fee99a3d992f3ec4d6fdedf7dcf30252fc8c31b90fcb2234775ade89b9662faa",
+      "digest": "fee99a3d992f3ec4d6fdedf7dcf30252fc8c31b90fcb2234775ade89b9662faa",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/AvaloniaXamlIlCompiler.cs",
+      "bytes": 11316,
+      "sha256": "b157190403839869ec681ba92dd5b6d37802967a492c589a4724ad94fa22e5be",
+      "digest": "b157190403839869ec681ba92dd5b6d37802967a492c589a4724ad94fa22e5be",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/AvaloniaXamlIlCompilerConfiguration.cs",
+      "bytes": 1470,
+      "sha256": "bbd36d2504304f92cec016b0d925c5bb28243a6c35915c8ab290216e1ee0adb2",
+      "digest": "bbd36d2504304f92cec016b0d925c5bb28243a6c35915c8ab290216e1ee0adb2",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/AvaloniaXamlIlLanguage.cs",
+      "bytes": 15214,
+      "sha256": "36d475eeb5fb8d9ef6932bc4b338ac14567f1816e31303f2b8acfe80b2178fd4",
+      "digest": "36d475eeb5fb8d9ef6932bc4b338ac14567f1816e31303f2b8acfe80b2178fd4",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/AvaloniaXamlIlLanguageParseIntrinsics.cs",
+      "bytes": 18844,
+      "sha256": "3f1ec8dd5430f9690712e1b0a6fa4b44501b86366f6ab2ca93f1056892b425ce",
+      "digest": "3f1ec8dd5430f9690712e1b0a6fa4b44501b86366f6ab2ca93f1056892b425ce",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/GroupTransformers/IXamlAstGroupTransformer.cs",
+      "bytes": 1753,
+      "sha256": "836f1816d16a12d0dde2079715924522b974155227edc6ead8bb89ca1d1d8b9a",
+      "digest": "836f1816d16a12d0dde2079715924522b974155227edc6ead8bb89ca1d1d8b9a",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/GroupTransformers/XamlIncludeGroupTransformer.cs",
+      "bytes": 11524,
+      "sha256": "ee298e2049825f1943335de1e73cb7c8f5d39e4fc4f764ee6c3464a876bba97d",
+      "digest": "ee298e2049825f1943335de1e73cb7c8f5d39e4fc4f764ee6c3464a876bba97d",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/GroupTransformers/XamlMergeResourceGroupTransformer.cs",
+      "bytes": 9995,
+      "sha256": "c1b0fb5e66e38f6bad249c755a2717ba6c18a26573eede680e96d1db7726ef49",
+      "digest": "c1b0fb5e66e38f6bad249c755a2717ba6c18a26573eede680e96d1db7726ef49",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/IXamlDocumentResource.cs",
+      "bytes": 422,
+      "sha256": "29b7b56eb27f35e82cec13108be69d22e8141f12a0e8a8643a2d4a7f9718445a",
+      "digest": "29b7b56eb27f35e82cec13108be69d22e8141f12a0e8a8643a2d4a7f9718445a",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AddNameScopeRegistration.cs",
+      "bytes": 4762,
+      "sha256": "346c4d817fa5e111e2d3df639976d0b2a5fb1001065a605448b8662e18f99931",
+      "digest": "346c4d817fa5e111e2d3df639976d0b2a5fb1001065a605448b8662e18f99931",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaBindingExtensionTransformer.cs",
+      "bytes": 2934,
+      "sha256": "2c1cba178d5000ad1d978e379ff6e49353e9b6deb3b62ca1746c85ba7c58f298",
+      "digest": "2c1cba178d5000ad1d978e379ff6e49353e9b6deb3b62ca1746c85ba7c58f298",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlAddSourceInfoTransformer.cs",
+      "bytes": 3002,
+      "sha256": "30c2660b7eaa82bda4c98a18785fbf47344dc653196823210488c935322de572",
+      "digest": "30c2660b7eaa82bda4c98a18785fbf47344dc653196823210488c935322de572",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlAvaloniaPropertyResolver.cs",
+      "bytes": 739,
+      "sha256": "5c0c74cc4fc2714628c26f14e5f7e1c7db5f03b08d5680a1810a67b1904d897a",
+      "digest": "5c0c74cc4fc2714628c26f14e5f7e1c7db5f03b08d5680a1810a67b1904d897a",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlBindingPathParser.cs",
+      "bytes": 15174,
+      "sha256": "dc48b85f981d1ec915491eeddf0da1f95a97744717d421c7893a62edb1d838d7",
+      "digest": "dc48b85f981d1ec915491eeddf0da1f95a97744717d421c7893a62edb1d838d7",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlBindingPathTransformer.cs",
+      "bytes": 8159,
+      "sha256": "1805fc75ff92db61256d1c6fb9ee532f08df6a1944289e08529cf1445a0db752",
+      "digest": "1805fc75ff92db61256d1c6fb9ee532f08df6a1944289e08529cf1445a0db752",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlClassesPropertyResolver.cs",
+      "bytes": 4084,
+      "sha256": "713cd21ecf9d63d8c491b4c0ea53eb0be9c8b7e953f729bddcfe3faeee71bb0c",
+      "digest": "713cd21ecf9d63d8c491b4c0ea53eb0be9c8b7e953f729bddcfe3faeee71bb0c",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXAmlIlClassesTransformer.cs",
+      "bytes": 1642,
+      "sha256": "ba1a78179d76641c77b950d667b8527c0824bf27032691512768e66ee6c6fb67",
+      "digest": "ba1a78179d76641c77b950d667b8527c0824bf27032691512768e66ee6c6fb67",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlCompiledBindingsMetadataRemover.cs",
+      "bytes": 829,
+      "sha256": "74a1ac599d6ed163bf9fdcab2039123f3d2bd314e2bf1bf7e283a2990da24bba",
+      "digest": "74a1ac599d6ed163bf9fdcab2039123f3d2bd314e2bf1bf7e283a2990da24bba",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlConstructorServiceProviderTransformer.cs",
+      "bytes": 1890,
+      "sha256": "48a8fc0f71b3bfd7f874bcb8eaa93567a21ebcc0a8f2be7acb1c8d420fa82fc8",
+      "digest": "48a8fc0f71b3bfd7f874bcb8eaa93567a21ebcc0a8f2be7acb1c8d420fa82fc8",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlControlTemplatePartsChecker.cs",
+      "bytes": 3996,
+      "sha256": "352b92102f9d3c7a35ea805a86bbfbef7f722a0721220377c8fd8a52602169ec",
+      "digest": "352b92102f9d3c7a35ea805a86bbfbef7f722a0721220377c8fd8a52602169ec",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlControlTemplatePriorityTransformer.cs",
+      "bytes": 2341,
+      "sha256": "af3581d8ae39afa6b0927a4d65c6654a6d0f7fb71daabdd7a29842367bbdca7e",
+      "digest": "af3581d8ae39afa6b0927a4d65c6654a6d0f7fb71daabdd7a29842367bbdca7e",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlControlTemplateTargetTypeMetadataTransformer.cs",
+      "bytes": 4636,
+      "sha256": "e5b244fc075f07c21fd05cf9ef42fb4438b8cc3f0feb80a5606a84f66bcacd22",
+      "digest": "e5b244fc075f07c21fd05cf9ef42fb4438b8cc3f0feb80a5606a84f66bcacd22",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlControlThemeTransformer.cs",
+      "bytes": 1747,
+      "sha256": "d48c27fb67a0ef84ce959cf04c23b51420f701f36035539053d107dee5a67295",
+      "digest": "d48c27fb67a0ef84ce959cf04c23b51420f701f36035539053d107dee5a67295",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlDataContextTypeTransformer.cs",
+      "bytes": 12142,
+      "sha256": "6677ca2b91d24fb845499127758e4487c24088370920a8350079d2c69671c18d",
+      "digest": "6677ca2b91d24fb845499127758e4487c24088370920a8350079d2c69671c18d",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlDataTemplateWarningsTransformer.cs",
+      "bytes": 3664,
+      "sha256": "b774ebe7a23a8ce2e0af5bd81ac5f535af96fc8831014b7964ca302744a85d8c",
+      "digest": "b774ebe7a23a8ce2e0af5bd81ac5f535af96fc8831014b7964ca302744a85d8c",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlDesignPropertiesTransformer.cs",
+      "bytes": 2571,
+      "sha256": "af0d9946e104afc875d4d5c8d185d3e2ccfa95ccf03073493735d096a1fb90ee",
+      "digest": "af0d9946e104afc875d4d5c8d185d3e2ccfa95ccf03073493735d096a1fb90ee",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlDuplicateSettersChecker.cs",
+      "bytes": 1615,
+      "sha256": "2e763b211b47b5f74240726b5d5071b6c7297a851aef6346f018b961214ab544",
+      "digest": "2e763b211b47b5f74240726b5d5071b6c7297a851aef6346f018b961214ab544",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlEnsureResourceDictionaryCapacityTransformer.cs",
+      "bytes": 4931,
+      "sha256": "f07cb9290fcb7e19ad0e5157a68e4fe33250266f39c5df1cfff8b2aee4446c78",
+      "digest": "f07cb9290fcb7e19ad0e5157a68e4fe33250266f39c5df1cfff8b2aee4446c78",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlMetadataRemover.cs",
+      "bytes": 443,
+      "sha256": "670e5a46d861ca3b187449e3fab16bba650082c02e72018df330d2bb931d67fd",
+      "digest": "670e5a46d861ca3b187449e3fab16bba650082c02e72018df330d2bb931d67fd",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlOptionMarkupExtensionTransformer.cs",
+      "bytes": 17827,
+      "sha256": "5ce966a224d8c4e08ac997ddbb176e9aee380a2de8228e0c806cfbcb395cfbc5",
+      "digest": "5ce966a224d8c4e08ac997ddbb176e9aee380a2de8228e0c806cfbcb395cfbc5",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlQueryTransformer.cs",
+      "bytes": 15898,
+      "sha256": "48266799f4dacfd0052416af06ab12e31dc8fcb2d6732e7db950e025ef558771",
+      "digest": "48266799f4dacfd0052416af06ab12e31dc8fcb2d6732e7db950e025ef558771",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlReorderClassesPropertiesTransformer.cs",
+      "bytes": 1528,
+      "sha256": "99845233be5d00121e20d60b1354b6d848321204e29e8c5cd427c4e56b4ed745",
+      "digest": "99845233be5d00121e20d60b1354b6d848321204e29e8c5cd427c4e56b4ed745",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlResolveByNameMarkupExtensionReplacer.cs",
+      "bytes": 1877,
+      "sha256": "6f6d20fda1e715a11e99e8f2646f815b2c35e01588de5789d5802aa35ea98f7d",
+      "digest": "6f6d20fda1e715a11e99e8f2646f815b2c35e01588de5789d5802aa35ea98f7d",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlResourceTransformer.cs",
+      "bytes": 14085,
+      "sha256": "42f9fa9743318f23630603fb56b28cccc66496836bf41c243050adcde4f0b2c0",
+      "digest": "42f9fa9743318f23630603fb56b28cccc66496836bf41c243050adcde4f0b2c0",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlRootObjectScopeTransformer.cs",
+      "bytes": 2669,
+      "sha256": "2c4108e886c9c020988392780e1e7f927f98f281c0d60f38101ec9c8211981f3",
+      "digest": "2c4108e886c9c020988392780e1e7f927f98f281c0d60f38101ec9c8211981f3",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlSelectorTransformer.cs",
+      "bytes": 25664,
+      "sha256": "a8cdb1ae49f15c6e04fa4bc1375ff578763acfa2d3d903971309a47dd0f3f996",
+      "digest": "a8cdb1ae49f15c6e04fa4bc1375ff578763acfa2d3d903971309a47dd0f3f996",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlSetterTargetTypeMetadataTransformer.cs",
+      "bytes": 1311,
+      "sha256": "2f59f0d49b242cf82a3a579f3091297c5433f48ee325b84a6b089110d1926941",
+      "digest": "2f59f0d49b242cf82a3a579f3091297c5433f48ee325b84a6b089110d1926941",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlSetterTransformer.cs",
+      "bytes": 10023,
+      "sha256": "8ae460c328ae7b463b8fa5aa7478005da84b8e658ff22498bfa384ab1e10230e",
+      "digest": "8ae460c328ae7b463b8fa5aa7478005da84b8e658ff22498bfa384ab1e10230e",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlStyleValidatorTransformer.cs",
+      "bytes": 1493,
+      "sha256": "939a4fb63fb2e60a3918acffb21b28f7eae4197e0910071074995bab9f5803a9",
+      "digest": "939a4fb63fb2e60a3918acffb21b28f7eae4197e0910071074995bab9f5803a9",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlThemeVariantProviderTransformer.cs",
+      "bytes": 1668,
+      "sha256": "f52cbda98d5f811302a7221270022fbfe45a67499b5fddfdd50de7e2706998f3",
+      "digest": "f52cbda98d5f811302a7221270022fbfe45a67499b5fddfdd50de7e2706998f3",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlTransformInstanceAttachedProperties.cs",
+      "bytes": 10045,
+      "sha256": "d76470853d139592e2197ff4b81600e75ee6d91e5b5666e6da3a3863f07ed021",
+      "digest": "d76470853d139592e2197ff4b81600e75ee6d91e5b5666e6da3a3863f07ed021",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlTransformRoutedEvent.cs",
+      "bytes": 4779,
+      "sha256": "9e072b22abcc8df70bb2d9a2c60e8e4239a3251a86aee5c100706f05a3661a02",
+      "digest": "9e072b22abcc8df70bb2d9a2c60e8e4239a3251a86aee5c100706f05a3661a02",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlTransformSyntheticCompiledBindingMembers.cs",
+      "bytes": 1675,
+      "sha256": "4070e4659c148384db2716786ca75eb237acd3a42ad30d3a79d81e5e7e0df51d",
+      "digest": "4070e4659c148384db2716786ca75eb237acd3a42ad30d3a79d81e5e7e0df51d",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlTransitionsTypeMetadataTransformer.cs",
+      "bytes": 1058,
+      "sha256": "27fb84801b9bf15bdd5a9065549e28f2bb288ec96118b34b6c254c59f13ddb36",
+      "digest": "27fb84801b9bf15bdd5a9065549e28f2bb288ec96118b34b6c254c59f13ddb36",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlWellKnownTypes.cs",
+      "bytes": 24016,
+      "sha256": "cbbf149e55a95daa566919aef25fd302989ac9996c568c3f91ed961e418c824d",
+      "digest": "cbbf149e55a95daa566919aef25fd302989ac9996c568c3f91ed961e418c824d",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/IgnoredDirectivesTransformer.cs",
+      "bytes": 927,
+      "sha256": "2ba13144a6f950e29baf097307696b6f328e996c9f746b52c378b907603bcd12",
+      "digest": "2ba13144a6f950e29baf097307696b6f328e996c9f746b52c378b907603bcd12",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/XamlPropertyPathException.cs",
+      "bytes": 390,
+      "sha256": "5a330c385ac5b2ad8ffc06bbb136309678d40059c1b2473a6689879887a49969",
+      "digest": "5a330c385ac5b2ad8ffc06bbb136309678d40059c1b2473a6689879887a49969",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/XDataTypeTransformer.cs",
+      "bytes": 3248,
+      "sha256": "8b71eb43e9970e8fc22de08619ba54ae6a775e9220bc2e543e50059045c7581f",
+      "digest": "8b71eb43e9970e8fc22de08619ba54ae6a775e9220bc2e543e50059045c7581f",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/XNameTransformer.cs",
+      "bytes": 1073,
+      "sha256": "20325c4dd77e4ae314c390deb7dda58804d9285003d94edf1245a2b214165950",
+      "digest": "20325c4dd77e4ae314c390deb7dda58804d9285003d94edf1245a2b214165950",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Visitors/NameScopeRegistrationVisitor.cs",
+      "bytes": 1561,
+      "sha256": "43897b7a4eff1600955712943e107d03a4c1206e497b45de43472fe7becea033",
+      "digest": "43897b7a4eff1600955712943e107d03a4c1206e497b45de43472fe7becea033",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/XamlAstNewClrObjectHelper.cs",
+      "bytes": 877,
+      "sha256": "3e383f4957fb7555ced2b10b337af127b9f68ea9ecf93f9003ce08d41c4d33be",
+      "digest": "3e383f4957fb7555ced2b10b337af127b9f68ea9ecf93f9003ce08d41c4d33be",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/XamlDocumentResource.cs",
+      "bytes": 1596,
+      "sha256": "38ef26311a26a4eee72578487c17be27c8f77d6bdb4d7e03ac6098473e908a9f",
+      "digest": "38ef26311a26a4eee72578487c17be27c8f77d6bdb4d7e03ac6098473e908a9f",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/XamlDocumentTypeBuilderProvider.cs",
+      "bytes": 944,
+      "sha256": "b3ff794953968815b0b036ed5f2e508a485edd1eb0dd449b439166486bd65283",
+      "digest": "b3ff794953968815b0b036ed5f2e508a485edd1eb0dd449b439166486bd65283",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/XamlDocumentUsage.cs",
+      "bytes": 132,
+      "sha256": "a12d2519ae60232ab165a323a33d359709148f65cc40c31d077b6c0824031a3e",
+      "digest": "a12d2519ae60232ab165a323a33d359709148f65cc40c31d077b6c0824031a3e",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/XamlIlAvaloniaPropertyHelper.cs",
+      "bytes": 19927,
+      "sha256": "af0f42ceeb60f076000d80c266dfd39e435eb14f0bcde559b0c8275eb9848c8c",
+      "digest": "af0f42ceeb60f076000d80c266dfd39e435eb14f0bcde559b0c8275eb9848c8c",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/XamlIlBindingPathHelper.cs",
+      "bytes": 48949,
+      "sha256": "ed28019f622169bf93b71c9a24e6db3d999bb2a8424e456f9a4c6dc65fe19314",
+      "digest": "ed28019f622169bf93b71c9a24e6db3d999bb2a8424e456f9a4c6dc65fe19314",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/XamlIlClrPropertyInfoHelper.cs",
+      "bytes": 6830,
+      "sha256": "60f4c92da897d454a7dc49662c872f8ca812d1f10177f5d5a5ecf661722cb580",
+      "digest": "60f4c92da897d454a7dc49662c872f8ca812d1f10177f5d5a5ecf661722cb580",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/XamlIlPropertyInfoAccessorFactoryEmitter.cs",
+      "bytes": 6325,
+      "sha256": "52c5955c1e44ec02e1b7865676aad2998efbcdf64eec2691add3c6264f0790b4",
+      "digest": "52c5955c1e44ec02e1b7865676aad2998efbcdf64eec2691add3c6264f0790b4",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/XamlIlTrampolineBuilder.cs",
+      "bytes": 4691,
+      "sha256": "3ca66fdadc2dc11e2fd34c3b540dd22f70fa74a43582bbd91c05c32e1ff59bb4",
+      "digest": "3ca66fdadc2dc11e2fd34c3b540dd22f70fa74a43582bbd91c05c32e1ff59bb4",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Ast/Clr.cs",
+      "bytes": 34054,
+      "sha256": "7adfae6ddffa271ddb59ff412b39609cb8a9532df66e747d4371175ea5a5d526",
+      "digest": "7adfae6ddffa271ddb59ff412b39609cb8a9532df66e747d4371175ea5a5d526",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Ast/Common.cs",
+      "bytes": 4659,
+      "sha256": "fe33647c952a7568485e6a83d999957195c6149014728e5fabc050f465024918",
+      "digest": "fe33647c952a7568485e6a83d999957195c6149014728e5fabc050f465024918",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Ast/CompilerHelpers.cs",
+      "bytes": 7904,
+      "sha256": "3482a1d44c062cf580bd003d3551e172463534b6668ef3f370628953bdfbccde",
+      "digest": "3482a1d44c062cf580bd003d3551e172463534b6668ef3f370628953bdfbccde",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Ast/Intrinsics.cs",
+      "bytes": 10369,
+      "sha256": "1c0415f9fc90f345d23e2e7dce9b642858da894a4ea578a6c3f17e013d6f64d9",
+      "digest": "1c0415f9fc90f345d23e2e7dce9b642858da894a4ea578a6c3f17e013d6f64d9",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Ast/Xaml.cs",
+      "bytes": 5294,
+      "sha256": "63ce98f1f212fe44cc55ea42f4aef54eb31d357085ad5c8128b940819f32d981",
+      "digest": "63ce98f1f212fe44cc55ea42f4aef54eb31d357085ad5c8128b940819f32d981",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Ast/XamlDocument.cs",
+      "bytes": 527,
+      "sha256": "eb52ba1a66cf69cf9857a8030a8ca90cfd1f12e0c71a4ee3af52b08a53c8403a",
+      "digest": "eb52ba1a66cf69cf9857a8030a8ca90cfd1f12e0c71a4ee3af52b08a53c8403a",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Ast/Xml.cs",
+      "bytes": 1276,
+      "sha256": "5f936a5b0a94711861b02b5bdaa111c84b6b1934948caf5edb00bf1fa8ae910c",
+      "digest": "5f936a5b0a94711861b02b5bdaa111c84b6b1934948caf5edb00bf1fa8ae910c",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Compiler/XamlCompiler.cs",
+      "bytes": 3540,
+      "sha256": "df207a0a9829c698dc6d855a9b6bdf965d1e900a79840ab72d9b97bcf05bad30",
+      "digest": "df207a0a9829c698dc6d855a9b6bdf965d1e900a79840ab72d9b97bcf05bad30",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Compiler/XamlImperativeCompiler.cs",
+      "bytes": 5341,
+      "sha256": "9796557a3f4340d00073541a441ec0bf72c3dee88dff7393e1f9b6633b516509",
+      "digest": "9796557a3f4340d00073541a441ec0bf72c3dee88dff7393e1f9b6633b516509",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Diagnostics/ContextDiagnosticExtensions.cs",
+      "bytes": 3217,
+      "sha256": "a84b453092d9a3776b71755ed7e4665db359a68dbcafde9931c37ea9856dd79a",
+      "digest": "a84b453092d9a3776b71755ed7e4665db359a68dbcafde9931c37ea9856dd79a",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Diagnostics/TrimmingMessages.cs",
+      "bytes": 955,
+      "sha256": "f9a8a70615deb2ad559493064ed2bc079036a94b58aad630cd169edad3955596",
+      "digest": "f9a8a70615deb2ad559493064ed2bc079036a94b58aad630cd169edad3955596",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Diagnostics/XamlDiagnostic.cs",
+      "bytes": 760,
+      "sha256": "9e557a28a49d5d0247bcbd1fe3cb4ebc976c96b57e4fcfddc6764d0b75b788ec",
+      "digest": "9e557a28a49d5d0247bcbd1fe3cb4ebc976c96b57e4fcfddc6764d0b75b788ec",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Diagnostics/XamlDiagnosticSeverity.cs",
+      "bytes": 139,
+      "sha256": "b6e1c03d4473f719a277bf9d6d7a912e20234fa21b715f4ae6be470ce4d885ae",
+      "digest": "b6e1c03d4473f719a277bf9d6d7a912e20234fa21b715f4ae6be470ce4d885ae",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Diagnostics/XamlXWellKnownDiagnosticCodes.cs",
+      "bytes": 110,
+      "sha256": "360eef4e6a048bd313f23eb9a4592f2b6d770fc5bea1cdb54569a53aa102c8cf",
+      "digest": "360eef4e6a048bd313f23eb9a4592f2b6d770fc5bea1cdb54569a53aa102c8cf",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Emit/XamlEmitContext.cs",
+      "bytes": 10179,
+      "sha256": "7c644c4658066bf18c759a478db59a5c01c73471dd2625ef5083f329801f7f9e",
+      "digest": "7c644c4658066bf18c759a478db59a5c01c73471dd2625ef5083f329801f7f9e",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Emit/XamlEmitContextWithLocals.cs",
+      "bytes": 5625,
+      "sha256": "d97629bc72a479e2983d84b3ae8e8b6b20b9312f77fc0497b4d9727107921779",
+      "digest": "d97629bc72a479e2983d84b3ae8e8b6b20b9312f77fc0497b4d9727107921779",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Emit/XamlLanguageEmitMappings.cs",
+      "bytes": 1018,
+      "sha256": "c6d6d856a166ecca17f168041dac1a4b296c695fc9e8ef901be074d53ab175ea",
+      "digest": "c6d6d856a166ecca17f168041dac1a4b296c695fc9e8ef901be074d53ab175ea",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Emit/XamlRuntimeContext.cs",
+      "bytes": 3040,
+      "sha256": "bae06aa50eccf83d7ab04820818aa70d1d2a306a0f1a51abda5d1e57c08daa03",
+      "digest": "bae06aa50eccf83d7ab04820818aa70d1d2a306a0f1a51abda5d1e57c08daa03",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Exceptions.cs",
+      "bytes": 1447,
+      "sha256": "1597b1316672c3b9d05be360a3af3164643c1faa8c49248ad34b2bb16bcc35d4",
+      "digest": "1597b1316672c3b9d05be360a3af3164643c1faa8c49248ad34b2bb16bcc35d4",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Extensions/TypeExtensions.cs",
+      "bytes": 669,
+      "sha256": "057a3c86b21c53f9cfa625d303431737ca55b82bcb9d26eb3b961777a3917151",
+      "digest": "057a3c86b21c53f9cfa625d303431737ca55b82bcb9d26eb3b961777a3917151",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/CheckingIlEmitter.cs",
+      "bytes": 14557,
+      "sha256": "f176657773f1acfedf2db029b823b94c7fd2c5294781381be761eb463ad8f3ad",
+      "digest": "f176657773f1acfedf2db029b823b94c7fd2c5294781381be761eb463ad8f3ad",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/Emitters/ManipulationGroupEmitter.cs",
+      "bytes": 942,
+      "sha256": "366fc5f797b6d50cba90d668f1184dd263fe1b5afcc532b03660924922a9dded",
+      "digest": "366fc5f797b6d50cba90d668f1184dd263fe1b5afcc532b03660924922a9dded",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/Emitters/MarkupExtensionEmitter.cs",
+      "bytes": 2046,
+      "sha256": "5bd405a2f285cb3b21cd23b0891d9c68a09c8b73f21a087d3c04653c48c08449",
+      "digest": "5bd405a2f285cb3b21cd23b0891d9c68a09c8b73f21a087d3c04653c48c08449",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/Emitters/MethodCallEmitter.cs",
+      "bytes": 1486,
+      "sha256": "e8c90b29a44dc2fe911cc6256e9e6c05416a02b07f69cdc1aa95148bdd465613",
+      "digest": "e8c90b29a44dc2fe911cc6256e9e6c05416a02b07f69cdc1aa95148bdd465613",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/Emitters/NewObjectEmitter.cs",
+      "bytes": 874,
+      "sha256": "6edfa37f578168e037d2ef19e4e29dadd60a5f2743f70341a620ecdf79471599",
+      "digest": "6edfa37f578168e037d2ef19e4e29dadd60a5f2743f70341a620ecdf79471599",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/Emitters/ObjectInitializationNodeEmitter.cs",
+      "bytes": 4048,
+      "sha256": "fa847851453a544caf2a09a017ac78f5b98bf2c10c1599628b9423e9a962e7b1",
+      "digest": "fa847851453a544caf2a09a017ac78f5b98bf2c10c1599628b9423e9a962e7b1",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/Emitters/PropertyAssignmentEmitter.cs",
+      "bytes": 13121,
+      "sha256": "347a3c5b34b147c8242379a459d442f449fa230d97dc1a57b7a09207173c0042",
+      "digest": "347a3c5b34b147c8242379a459d442f449fa230d97dc1a57b7a09207173c0042",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/Emitters/PropertyValueManipulationEmitter.cs",
+      "bytes": 810,
+      "sha256": "295d1bd1516cc826d186c56d99df0dc9672d4f68d732eacf6aa6706cef219598",
+      "digest": "295d1bd1516cc826d186c56d99df0dc9672d4f68d732eacf6aa6706cef219598",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/Emitters/TextNodeEmitter.cs",
+      "bytes": 858,
+      "sha256": "c3e8bb172972271a29f8a77902d9504b1c878a4cbd35cb88942520c0ecf069ce",
+      "digest": "c3e8bb172972271a29f8a77902d9504b1c878a4cbd35cb88942520c0ecf069ce",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/Emitters/ValueWithManipulationsEmitter.cs",
+      "bytes": 935,
+      "sha256": "4396874f7ce1be4a41458285c36e6e1e876fb7b0f7a39f5be04a82631c8b00eb",
+      "digest": "4396874f7ce1be4a41458285c36e6e1e876fb7b0f7a39f5be04a82631c8b00eb",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/Emitters/XamlDynamicSetterContainerProvider.cs",
+      "bytes": 3153,
+      "sha256": "dc3824f9fb8c93a75c4f23296ac7a705bb41260993be1f813df3c143f90f0846",
+      "digest": "dc3824f9fb8c93a75c4f23296ac7a705bb41260993be1f813df3c143f90f0846",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/ILEmitContext.cs",
+      "bytes": 4397,
+      "sha256": "d1bd2ff4d1e3552f5ed6ac7a668017c1d8db6ee73b55a9a8e482850205ac404e",
+      "digest": "d1bd2ff4d1e3552f5ed6ac7a668017c1d8db6ee73b55a9a8e482850205ac404e",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/ILEmitHelpers.cs",
+      "bytes": 5420,
+      "sha256": "6e65cd39edb830f7bb1168119a77b429160fe9b2c7d2b68ee4479b0267f124b6",
+      "digest": "6e65cd39edb830f7bb1168119a77b429160fe9b2c7d2b68ee4479b0267f124b6",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/IXamlILEmitter.cs",
+      "bytes": 1267,
+      "sha256": "809e78c76d7870dbb5f87ed97beab252cd5639d57de484a20d62f4b9bc0c8350",
+      "digest": "809e78c76d7870dbb5f87ed97beab252cd5639d57de484a20d62f4b9bc0c8350",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/IXamlILLocal.cs",
+      "bytes": 168,
+      "sha256": "535a5c3bf20cd1974f6bf5511fe897f9a05ebf0a33791a85f37823153a817a7c",
+      "digest": "535a5c3bf20cd1974f6bf5511fe897f9a05ebf0a33791a85f37823153a817a7c",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/NamespaceInfoProvider.cs",
+      "bytes": 7619,
+      "sha256": "d0d17717d7038da8a22739983349c6ed4c275673229a9640c07c69ec57f05b5e",
+      "digest": "d0d17717d7038da8a22739983349c6ed4c275673229a9640c07c69ec57f05b5e",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/RecordingIlEmitter.cs",
+      "bytes": 5878,
+      "sha256": "4042c60998d58327078429bfb7b46d24ef9963bae33fc201f6ee27e6ccf02862",
+      "digest": "4042c60998d58327078429bfb7b46d24ef9963bae33fc201f6ee27e6ccf02862",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/RuntimeContext.cs",
+      "bytes": 34551,
+      "sha256": "9d653ebe05136ccc3ad2eb74a652c46f80ad2faf08a48af32e44fa12c5e5f3fb",
+      "digest": "9d653ebe05136ccc3ad2eb74a652c46f80ad2faf08a48af32e44fa12c5e5f3fb",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/XamlIlCompiler.cs",
+      "bytes": 7939,
+      "sha256": "8a0840b85e99afc0a9ed91f3f8aad666ffadab6ddee556864c30dfc9a1a3b444",
+      "digest": "8a0840b85e99afc0a9ed91f3f8aad666ffadab6ddee556864c30dfc9a1a3b444",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/XamlILEmitterExtensions.cs",
+      "bytes": 11849,
+      "sha256": "9446a39340fefb29d64bbef847bd70afb2b26c564803fcaad721e66bcac979ad",
+      "digest": "9446a39340fefb29d64bbef847bd70afb2b26c564803fcaad721e66bcac979ad",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Parsers/CommaSeparatedParenthesesTreeParser.cs",
+      "bytes": 2050,
+      "sha256": "f78b0818c2af357eff0d512e943f916fc4067251f7fef3f13392c0d5849bd41d",
+      "digest": "f78b0818c2af357eff0d512e943f916fc4067251f7fef3f13392c0d5849bd41d",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Parsers/CompatibleXmlReader.cs",
+      "bytes": 7542,
+      "sha256": "b542a32c1899490b579e37644389a6a6b0d59911d9f7af0408ee4ec150f15706",
+      "digest": "b542a32c1899490b579e37644389a6a6b0d59911d9f7af0408ee4ec150f15706",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Parsers/SystemXamlMarkupExtensionParser/KnownStrings.cs",
+      "bytes": 3147,
+      "sha256": "623fe214f8660bd650af8f3bbe835ac8ab54f3a84de814cf6587326efb1f1d1d",
+      "digest": "623fe214f8660bd650af8f3bbe835ac8ab54f3a84de814cf6587326efb1f1d1d",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Parsers/SystemXamlMarkupExtensionParser/MeScanner.cs",
+      "bytes": 22917,
+      "sha256": "a7f09c0fc7a160de6c269603e006a7579eb19c300d9630e56d2aef18eb8503eb",
+      "digest": "a7f09c0fc7a160de6c269603e006a7579eb19c300d9630e56d2aef18eb8503eb",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Parsers/SystemXamlMarkupExtensionParser/MeScanner.Shims.cs",
+      "bytes": 3874,
+      "sha256": "97e69048beb6d8962e046b78a31d5dbba9c47d5281d6881612782cd30e1a5ad2",
+      "digest": "97e69048beb6d8962e046b78a31d5dbba9c47d5281d6881612782cd30e1a5ad2",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Parsers/SystemXamlMarkupExtensionParser/SystemXamlMarkupExtensionParser.cs",
+      "bytes": 3626,
+      "sha256": "8068915c294795c0b34d4d0335f99d835fc112b8805e838e015af0e8352d00fd",
+      "digest": "8068915c294795c0b34d4d0335f99d835fc112b8805e838e015af0e8352d00fd",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Parsers/XDocumentXamlParser.cs",
+      "bytes": 14705,
+      "sha256": "65dbf9d81d53f92c0c53f0bc8711a900783234e9ce07679709b7db2647698121",
+      "digest": "65dbf9d81d53f92c0c53f0bc8711a900783234e9ce07679709b7db2647698121",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/AstTransformationContext.cs",
+      "bytes": 4945,
+      "sha256": "f695ba49c4532bc7253ecdb5014bb8c91b220e0f763c406760b0e1525c00052b",
+      "digest": "f695ba49c4532bc7253ecdb5014bb8c91b220e0f763c406760b0e1525c00052b",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/IXamlAstTransformer.cs",
+      "bytes": 243,
+      "sha256": "d13cc183fd00b2d376888f6ffee68690adeb74bf82a554b95590de4cf8fa6660",
+      "digest": "d13cc183fd00b2d376888f6ffee68690adeb74bf82a554b95590de4cf8fa6660",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/IXamlIdentifierGenerator.cs",
+      "bytes": 397,
+      "sha256": "c77b6a8f2344dcdc802577541757e0c124f2689f5403440ea0f81e7a97717e3a",
+      "digest": "c77b6a8f2344dcdc802577541757e0c124f2689f5403440ea0f81e7a97717e3a",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/NamespaceInfoHelper.cs",
+      "bytes": 2339,
+      "sha256": "6299b3feead9c4e38632963fc2222ca8aa446b889c3fb2dd4b986553f22bd621",
+      "digest": "6299b3feead9c4e38632963fc2222ca8aa446b889c3fb2dd4b986553f22bd621",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/TransformerConfiguration.cs",
+      "bytes": 10929,
+      "sha256": "1cc6c157587f3bc11b53d2e1eed0b42d1e197036a3aed4772e3f30f31f27cb83",
+      "digest": "1cc6c157587f3bc11b53d2e1eed0b42d1e197036a3aed4772e3f30f31f27cb83",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/ApplyWhitespaceNormalization.cs",
+      "bytes": 2657,
+      "sha256": "8f2b2c7c79304ee56ec01a2c3d48c6da22234f049b6e084e1c27ad72d1e77331",
+      "digest": "8f2b2c7c79304ee56ec01a2c3d48c6da22234f049b6e084e1c27ad72d1e77331",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/ConstructableObjectTransformer.cs",
+      "bytes": 3331,
+      "sha256": "34d300037a5ebb576e6fb4093680ecc3d5800afbec791d1ffee70e6962edfe4d",
+      "digest": "34d300037a5ebb576e6fb4093680ecc3d5800afbec791d1ffee70e6962edfe4d",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/ContentConvertTransformer.cs",
+      "bytes": 1538,
+      "sha256": "cac2f47fc8651e182915ed561da070551dca4f768c2e5d3bfe4d690c75ee6cec",
+      "digest": "cac2f47fc8651e182915ed561da070551dca4f768c2e5d3bfe4d690c75ee6cec",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/ConvertPropertyValuesToAssignmentsTransformer.cs",
+      "bytes": 10549,
+      "sha256": "ea37a10d517e033fe7e1c8ea82bdb58788114d8b78fc3a32083277c41a73efba",
+      "digest": "ea37a10d517e033fe7e1c8ea82bdb58788114d8b78fc3a32083277c41a73efba",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/DeferredContentTransformer.cs",
+      "bytes": 2725,
+      "sha256": "a9a09a3cafb85b740451864f9ac4f42c6ae05af45708ac180898770434d48fce",
+      "digest": "a9a09a3cafb85b740451864f9ac4f42c6ae05af45708ac180898770434d48fce",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/FlattenAstTransformer.cs",
+      "bytes": 429,
+      "sha256": "b08a42c5e0af472a98f45ab2de6800df002cbb45553a306577d4d2ec4ea90c16",
+      "digest": "b08a42c5e0af472a98f45ab2de6800df002cbb45553a306577d4d2ec4ea90c16",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/KnownDirectivesTransformer.cs",
+      "bytes": 1215,
+      "sha256": "b983620763f62de0c6ea6eafea715a217e40a040524fb68ef5c178e0c345aabc",
+      "digest": "b983620763f62de0c6ea6eafea715a217e40a040524fb68ef5c178e0c345aabc",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/MarkupExtensionTransformer.cs",
+      "bytes": 661,
+      "sha256": "30e1359f1e687843d8394560e8558a55b0adfa26b6b41367fafc1e7dcdb56fb2",
+      "digest": "30e1359f1e687843d8394560e8558a55b0adfa26b6b41367fafc1e7dcdb56fb2",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/NewObjectTransformer.cs",
+      "bytes": 960,
+      "sha256": "ae39526dffdbd7274146a445ff7b67229656f02c2cbd3224d816c83cf8e0b82d",
+      "digest": "ae39526dffdbd7274146a445ff7b67229656f02c2cbd3224d816c83cf8e0b82d",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/ObsoleteWarningsTransformer.cs",
+      "bytes": 4553,
+      "sha256": "110abd11c166c31891af857af1c41e74fab2846a4515eda3086bfb68555c4032",
+      "digest": "110abd11c166c31891af857af1c41e74fab2846a4515eda3086bfb68555c4032",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/PropertyReferenceResolver.cs",
+      "bytes": 3965,
+      "sha256": "419220cd262f863c4ec270be4ecd0415797c47c7719f39c1d316feaeb2d7063b",
+      "digest": "419220cd262f863c4ec270be4ecd0415797c47c7719f39c1d316feaeb2d7063b",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/RemoveWhitespaceBetweenPropertyValuesTransformer.cs",
+      "bytes": 1326,
+      "sha256": "d97f660a474878717526ea0dc64fbe42d00eea152f4ca536b69947d56aba6c1a",
+      "digest": "d97f660a474878717526ea0dc64fbe42d00eea152f4ca536b69947d56aba6c1a",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/ResolveContentPropertyTransformer.cs",
+      "bytes": 3643,
+      "sha256": "bade7fc4023db89b3aa84974c1cbf7145432fea850735d11c77aba36c9bbec58",
+      "digest": "bade7fc4023db89b3aa84974c1cbf7145432fea850735d11c77aba36c9bbec58",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/ResolvePropertyValueAddersTransformer.cs",
+      "bytes": 3647,
+      "sha256": "bd596fef78f44c7752de26e06e887235af0f8f01956a668c8cad76842f86b606",
+      "digest": "bd596fef78f44c7752de26e06e887235af0f8f01956a668c8cad76842f86b606",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/StaticIntrinsicsPostProcessTransformer.cs",
+      "bytes": 551,
+      "sha256": "3ea820900d5240c78cdc0bc2ed6b6b5e309fd7828560f794ffa38140839ac079",
+      "digest": "3ea820900d5240c78cdc0bc2ed6b6b5e309fd7828560f794ffa38140839ac079",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/TextNodeMerger.cs",
+      "bytes": 1727,
+      "sha256": "0eb5178e203e28b30014be3e0894f752aa928af1cf8d6e39eeb08ea669eb5e62",
+      "digest": "0eb5178e203e28b30014be3e0894f752aa928af1cf8d6e39eeb08ea669eb5e62",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/TopDownInitializationTransformer.cs",
+      "bytes": 3691,
+      "sha256": "ce218d327dcd2b6983fbd8bfa2c8e5c057e91184070bde8990dbcc2a99208711",
+      "digest": "ce218d327dcd2b6983fbd8bfa2c8e5c057e91184070bde8990dbcc2a99208711",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/TypeReferenceResolver.cs",
+      "bytes": 6047,
+      "sha256": "fa3dec7480e5596512e3006eddf7d2a1ebd098d72a811e54795f1e4d1ef61927",
+      "digest": "fa3dec7480e5596512e3006eddf7d2a1ebd098d72a811e54795f1e4d1ef61927",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/XamlIntrinsicsTransformer.cs",
+      "bytes": 4480,
+      "sha256": "c8d7bfde8c3138891f74d2d702c52913755c7bd3cdc1f90dc5d0b5bbdb1434db",
+      "digest": "c8d7bfde8c3138891f74d2d702c52913755c7bd3cdc1f90dc5d0b5bbdb1434db",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/XArgumentsTransformer.cs",
+      "bytes": 1333,
+      "sha256": "0d74f5b57e24e5941a592b0b3e4b3c901ac65e313728811df0fd06738f42ae45",
+      "digest": "0d74f5b57e24e5941a592b0b3e4b3c901ac65e313728811df0fd06738f42ae45",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/WhitespaceNormalization.cs",
+      "bytes": 5336,
+      "sha256": "77b45c5c6cd5fcc7ba0b25e8aab2b22344700009d23ec27243e8870940cb7343",
+      "digest": "77b45c5c6cd5fcc7ba0b25e8aab2b22344700009d23ec27243e8870940cb7343",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/XamlContextBase.cs",
+      "bytes": 1431,
+      "sha256": "c8090f18429f201e9fe33d8df5e10dc8d575fe207e4a151b60d9b379979c6075",
+      "digest": "c8090f18429f201e9fe33d8df5e10dc8d575fe207e4a151b60d9b379979c6075",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/XamlDiagnosticsHandler.cs",
+      "bytes": 662,
+      "sha256": "62140bd4eadf45df00e3c48a2f0105908e809816c37fccc6f75538cf7209055d",
+      "digest": "62140bd4eadf45df00e3c48a2f0105908e809816c37fccc6f75538cf7209055d",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/XamlLanguageTypeMappings.cs",
+      "bytes": 3788,
+      "sha256": "8e530084e42b74419153bd0581952534b29a5dd85d6e8815e325848dc70dda7e",
+      "digest": "8e530084e42b74419153bd0581952534b29a5dd85d6e8815e325848dc70dda7e",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/XamlTransformHelpers.cs",
+      "bytes": 16014,
+      "sha256": "a798c6eaab46c6dc889f085fefe7a58f63d99d23c6f8ff9623ffbc407e7479f2",
+      "digest": "a798c6eaab46c6dc889f085fefe7a58f63d99d23c6f8ff9623ffbc407e7479f2",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/XamlXmlnsMappings.cs",
+      "bytes": 1577,
+      "sha256": "e1137b0ffb6ab1ba1452fd86dbe735ad3630be04252b3057e3068e8899badde1",
+      "digest": "e1137b0ffb6ab1ba1452fd86dbe735ad3630be04252b3057e3068e8899badde1",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/TypeSystem/TypeSystem.cs",
+      "bytes": 21229,
+      "sha256": "2f2799381d66cd3f514199d7bfca5387a7289056887b60b28a487f8f6b340a3f",
+      "digest": "2f2799381d66cd3f514199d7bfca5387a7289056887b60b28a487f8f6b340a3f",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/TypeSystem/TypeSystemHelpers.cs",
+      "bytes": 6229,
+      "sha256": "2989f1237f0bc162b7e31f7837cb17f9e38261e257eb38098e56cc251869ac04",
+      "digest": "2989f1237f0bc162b7e31f7837cb17f9e38261e257eb38098e56cc251869ac04",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/TypeSystem/XamlLocalsPool.cs",
+      "bytes": 1743,
+      "sha256": "9114add77d8898f5912a9166311b72f8548fb01f682624f81c30c68fe0bc718a",
+      "digest": "9114add77d8898f5912a9166311b72f8548fb01f682624f81c30c68fe0bc718a",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/XamlNamespaces.cs",
+      "bytes": 276,
+      "sha256": "6c68d498e3fa16211aa3da300a96a289afe8fafa02c5d9a57cd6449f7f1d24ea",
+      "digest": "6c68d498e3fa16211aa3da300a96a289afe8fafa02c5d9a57cd6449f7f1d24ea",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilAssembly.cs",
+      "bytes": 2550,
+      "sha256": "82eb10cf65c621d95c0ea0b8c7ce0db611ebb020a63d614a5fe459b2ee7bff35",
+      "digest": "82eb10cf65c621d95c0ea0b8c7ce0db611ebb020a63d614a5fe459b2ee7bff35",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilCustomAttribute.cs",
+      "bytes": 2361,
+      "sha256": "804b70b15c34a4de498c6e3b5f3b3db589c0017dbb5bc35270c49b9bd41af81b",
+      "digest": "804b70b15c34a4de498c6e3b5f3b3db589c0017dbb5bc35270c49b9bd41af81b",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilEmitter.cs",
+      "bytes": 13807,
+      "sha256": "85df2511a37bcf67e04a40a1c850c9ab7924abf908a090715851eab28ba8d4da",
+      "digest": "85df2511a37bcf67e04a40a1c850c9ab7924abf908a090715851eab28ba8d4da",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilEvent.cs",
+      "bytes": 1569,
+      "sha256": "6e1d0bbb225baf89971ea75ee0fd2ebf93746d890b2bb24d6396db8be3be93b3",
+      "digest": "6e1d0bbb225baf89971ea75ee0fd2ebf93746d890b2bb24d6396db8be3be93b3",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilField.cs",
+      "bytes": 2444,
+      "sha256": "aebb6a8bf23d7631c54fd40cbc18ec88242046be33be8429be19bdb06e21cabe",
+      "digest": "aebb6a8bf23d7631c54fd40cbc18ec88242046be33be8429be19bdb06e21cabe",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilFunctionPointer.cs",
+      "bytes": 2840,
+      "sha256": "42a9230dfb39a5933a70eabc25f12b7fb281c32042b46cfe5181a42aa2263771",
+      "digest": "42a9230dfb39a5933a70eabc25f12b7fb281c32042b46cfe5181a42aa2263771",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilMetadataImporterProvider.cs",
+      "bytes": 1034,
+      "sha256": "c54a33c2f3a85352e0ec76f1f21f2d4048fd5c9709819fd0979908730afbe37b",
+      "digest": "c54a33c2f3a85352e0ec76f1f21f2d4048fd5c9709819fd0979908730afbe37b",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilMethod.cs",
+      "bytes": 6953,
+      "sha256": "cf59aa0e53f964bb736064c3e959c29dfff027a44587dd7c087c87b4a83a1636",
+      "digest": "cf59aa0e53f964bb736064c3e959c29dfff027a44587dd7c087c87b4a83a1636",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilProperty.cs",
+      "bytes": 2649,
+      "sha256": "503c92600f7208dbf396834dbd501a4c1711ad3b791eaa9cec9736543ef68476",
+      "digest": "503c92600f7208dbf396834dbd501a4c1711ad3b791eaa9cec9736543ef68476",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilReflectionImporterProvider.cs",
+      "bytes": 1534,
+      "sha256": "7b81aa832146cc1426d407069c8678c1f1d0f043de40321b50fbb170b7162c89",
+      "digest": "7b81aa832146cc1426d407069c8678c1f1d0f043de40321b50fbb170b7162c89",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilType.cs",
+      "bytes": 8660,
+      "sha256": "518957c7e1d117d1ea25013ec598809e37a1217d058eb10d75e924cc2bf801a9",
+      "digest": "518957c7e1d117d1ea25013ec598809e37a1217d058eb10d75e924cc2bf801a9",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilTypeBuilder.cs",
+      "bytes": 9547,
+      "sha256": "1fd26f468d01f8c26f70865d701b8626d6416c34b5b9a8402da1e22b8503bf7a",
+      "digest": "1fd26f468d01f8c26f70865d701b8626d6416c34b5b9a8402da1e22b8503bf7a",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilTypeCache.cs",
+      "bytes": 3114,
+      "sha256": "f1fac53fb40e95c5b72c4cf5ce73efb14b54fe617df8a634b514bcc9b7deae5a",
+      "digest": "f1fac53fb40e95c5b72c4cf5ce73efb14b54fe617df8a634b514bcc9b7deae5a",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilTypeSystem.cs",
+      "bytes": 7516,
+      "sha256": "5f7af7afd1c3bcb7f3fc11b3c0105b0599a6a61ae6107d74dea29d089d60dee8",
+      "digest": "5f7af7afd1c3bcb7f3fc11b3c0105b0599a6a61ae6107d74dea29d089d60dee8",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/Comparers/CecilTypeComparisonMode.cs",
+      "bytes": 292,
+      "sha256": "13819061bd5c9493c7f22393d4e9b10712a83fd736f6a622f917095f250646de",
+      "digest": "13819061bd5c9493c7f22393d4e9b10712a83fd736f6a622f917095f250646de",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/Comparers/MethodReferenceEqualityComparer.cs",
+      "bytes": 5285,
+      "sha256": "26fc75fd16085123c570d72435b890ef7a1ffb81b52366a7ffc042458e256e57",
+      "digest": "26fc75fd16085123c570d72435b890ef7a1ffb81b52366a7ffc042458e256e57",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/Comparers/TypeReferenceEqualityComparer.cs",
+      "bytes": 10270,
+      "sha256": "373b5776e581534609f3b419ac53b79ffe8c42f8ad33b19a4c09d9d7ea1fae9b",
+      "digest": "373b5776e581534609f3b419ac53b79ffe8c42f8ad33b19a4c09d9d7ea1fae9b",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CustomMetadataResolver.cs",
+      "bytes": 637,
+      "sha256": "30b0fcaad64d60e86485030934b7f82949cea0a551c557baadfbedca08ea0692",
+      "digest": "30b0fcaad64d60e86485030934b7f82949cea0a551c557baadfbedca08ea0692",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/Resolvers/CecilTypeResolveContext.cs",
+      "bytes": 3354,
+      "sha256": "3c5a19fe1059dd8e6e8a7b045528268ec5988e1935cbf0caaa9da7c42a0a90c6",
+      "digest": "3c5a19fe1059dd8e6e8a7b045528268ec5988e1935cbf0caaa9da7c42a0a90c6",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/Resolvers/GenericParameterResolver.cs",
+      "bytes": 7867,
+      "sha256": "e1ec6a7a34573e610a09788bc3ce43a226fa76f22412c99583272e60db251cc6",
+      "digest": "e1ec6a7a34573e610a09788bc3ce43a226fa76f22412c99583272e60db251cc6",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/Resolvers/GenericTypeResolver.cs",
+      "bytes": 7449,
+      "sha256": "36cf362be904719c6e4209ef724dca4312036145acbdb6deaf187fb9e41647a5",
+      "digest": "36cf362be904719c6e4209ef724dca4312036145acbdb6deaf187fb9e41647a5",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/UnresolvedCecilType.cs",
+      "bytes": 403,
+      "sha256": "cf09d3f96c00071e34387f3a24c99bf9517662123753eae3b941c7be66ba00ae",
+      "digest": "cf09d3f96c00071e34387f3a24c99bf9517662123753eae3b941c7be66ba00ae",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup/Markup/Parsers/SelectorGrammar.cs",
+      "bytes": 22005,
+      "sha256": "402a522b4591e428fc65667885d59bcf99e3629b32ae2ca03162bf1739c1b5e3",
+      "digest": "402a522b4591e428fc65667885d59bcf99e3629b32ae2ca03162bf1739c1b5e3",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup/Markup/Parsers/ContainerQueryGrammar.cs",
+      "bytes": 7251,
+      "sha256": "05b7725229d6294fb15aabc54b55f478752ae1277fdb10380faa7179f25a8c2c",
+      "digest": "05b7725229d6294fb15aabc54b55f478752ae1277fdb10380faa7179f25a8c2c",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup/Markup/Parsers/PropertyPathGrammar.cs",
+      "bytes": 8293,
+      "sha256": "701cb0befef93fba86420592e62e6a43223510efad1f044fb3eabc32b0421365",
+      "digest": "701cb0befef93fba86420592e62e6a43223510efad1f044fb3eabc32b0421365",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml/Parsers/PropertyParser.cs",
+      "bytes": 2861,
+      "sha256": "fa05edfd92e83838e0b94ef31c32e1cbc538ab1fec00592b30ce49926fe3f027",
+      "digest": "fa05edfd92e83838e0b94ef31c32e1cbc538ab1fec00592b30ce49926fe3f027",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Data/Core/ExpressionParseException.cs",
+      "bytes": 982,
+      "sha256": "e4bbc143b381085aba47756c8ced8de9304d1a5293440990cb867fed5dda9528",
+      "digest": "e4bbc143b381085aba47756c8ced8de9304d1a5293440990cb867fed5dda9528",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Utilities/CharacterReader.cs",
+      "bytes": 2685,
+      "sha256": "e1a1e11f8ff9c3e4f9afb6f5425d8336c1c67e3dc76f80ff2993ad4c7135c231",
+      "digest": "e1a1e11f8ff9c3e4f9afb6f5425d8336c1c67e3dc76f80ff2993ad4c7135c231",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Utilities/IdentifierParser.cs",
+      "bytes": 1631,
+      "sha256": "8407ec293a8de3705349b2ecca147c253fb9cc1c3c3d5e50bd0dfa9da6b37b91",
+      "digest": "8407ec293a8de3705349b2ecca147c253fb9cc1c3c3d5e50bd0dfa9da6b37b91",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Utilities/MathUtilities.cs",
+      "bytes": 17927,
+      "sha256": "63e171f3d8e7ee634b0e36e4fd66fa3a23c1ccebb08413ee73ece4107026d570",
+      "digest": "63e171f3d8e7ee634b0e36e4fd66fa3a23c1ccebb08413ee73ece4107026d570",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Platform/AssetLoader.cs",
+      "bytes": 2208,
+      "sha256": "b7f8304712a5a63e5a4b637a82776fd00930b2eac6e58745cbd8641016ecdabd",
+      "digest": "b7f8304712a5a63e5a4b637a82776fd00930b2eac6e58745cbd8641016ecdabd",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Utilities/StringBuilderCache.cs",
+      "bytes": 2951,
+      "sha256": "9027de329c55384682e62acc5756cb8abf173d4fe078e134058ffcb1feb55425",
+      "digest": "9027de329c55384682e62acc5756cb8abf173d4fe078e134058ffcb1feb55425",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Data/Core/Parsers/ArgumentListParser.cs",
+      "bytes": 1697,
+      "sha256": "dbc4fb6fe16ecd021f0b89b728d88ab3d6f5613f446941fea1aec5db34520bd5",
+      "digest": "dbc4fb6fe16ecd021f0b89b728d88ab3d6f5613f446941fea1aec5db34520bd5",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Utilities/KeywordParser.cs",
+      "bytes": 1261,
+      "sha256": "9bd78e21f3de1c86989096df203ec5025b9789a1ab471d76e168edece5ea808e",
+      "digest": "9bd78e21f3de1c86989096df203ec5025b9789a1ab471d76e168edece5ea808e",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Data/Core/Parsers/BindingExpressionGrammar.cs",
+      "bytes": 16420,
+      "sha256": "70888a52d060a74479cb0527e71ad231ea28ef86b85dc9d6780891e14aedd9aa",
+      "digest": "70888a52d060a74479cb0527e71ad231ea28ef86b85dc9d6780891e14aedd9aa",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Utilities/StyleClassParser.cs",
+      "bytes": 1232,
+      "sha256": "75b8ae8c5dfcf95af588265ffbb8da4ca0175f1585a594427e55e6e04655b7de",
+      "digest": "75b8ae8c5dfcf95af588265ffbb8da4ca0175f1585a594427e55e6e04655b7de",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Thickness.cs",
+      "bytes": 9823,
+      "sha256": "45a0111f86f73d0a8dac92f291cfdd01d24ab5d944ce8ebebe83e1522c78d08e",
+      "digest": "45a0111f86f73d0a8dac92f291cfdd01d24ab5d944ce8ebebe83e1522c78d08e",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Styling/StyleQueryComparisonOperator.cs",
+      "bytes": 215,
+      "sha256": "7a22d46f05bca03867033a314cc425ceb7cd3fa401539a84b1f1be4f99002028",
+      "digest": "7a22d46f05bca03867033a314cc425ceb7cd3fa401539a84b1f1be4f99002028",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Size.cs",
+      "bytes": 10507,
+      "sha256": "d4e4074352ce7df71664a82e7661b7c39e033f22a6035d65074d08bdffb0c53a",
+      "digest": "d4e4074352ce7df71664a82e7661b7c39e033f22a6035d65074d08bdffb0c53a",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Vector.cs",
+      "bytes": 14047,
+      "sha256": "6c97b5049802696b329c1e16ccd7ea8e3a4abaaafd97bf0578a5ab10135fc01a",
+      "digest": "6c97b5049802696b329c1e16ccd7ea8e3a4abaaafd97bf0578a5ab10135fc01a",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Point.cs",
+      "bytes": 10352,
+      "sha256": "6148005a46ed7bd683fb1528505adf3f8610a36a9577cfaef99daee1bb55cf97",
+      "digest": "6148005a46ed7bd683fb1528505adf3f8610a36a9577cfaef99daee1bb55cf97",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Matrix.cs",
+      "bytes": 22434,
+      "sha256": "1154e167efad2d6f3df5e8172ff8c4fa0f13685184e1a1898f1c1703b921fd75",
+      "digest": "1154e167efad2d6f3df5e8172ff8c4fa0f13685184e1a1898f1c1703b921fd75",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/CornerRadius.cs",
+      "bytes": 4312,
+      "sha256": "3e9c3a72623660f27a71591a5145af9f40dee901b27481b033898351716f6a5f",
+      "digest": "3e9c3a72623660f27a71591a5145af9f40dee901b27481b033898351716f6a5f",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Media/Color.cs",
+      "bytes": 29118,
+      "sha256": "456f0dc47ce6dad8592144921092e2521f749d63333d26e29abddd82d3d7ed8d",
+      "digest": "456f0dc47ce6dad8592144921092e2521f749d63333d26e29abddd82d3d7ed8d",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Media/HslColor.cs",
+      "bytes": 20210,
+      "sha256": "236bbf3669c30964a6981053a209458b2b69a4c705aae8fa3458bc0ad3f782bc",
+      "digest": "236bbf3669c30964a6981053a209458b2b69a4c705aae8fa3458bc0ad3f782bc",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Media/HsvColor.cs",
+      "bytes": 25381,
+      "sha256": "6c38b91f866535053bdc98f6b13a938df6353e28df03365008c96f8ae248bd7a",
+      "digest": "6c38b91f866535053bdc98f6b13a938df6353e28df03365008c96f8ae248bd7a",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Media/KnownColors.cs",
+      "bytes": 9703,
+      "sha256": "b47cc76e60bfe8ca5e61dea53619f158f02cc728c840176d656a546577f6ed5c",
+      "digest": "b47cc76e60bfe8ca5e61dea53619f158f02cc728c840176d656a546577f6ed5c",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/GridLength.cs",
+      "bytes": 7741,
+      "sha256": "efe3ab43ea6a2a3dfa5685485702e4b7dfa9d3aab4eaca96cf15e97dd858e2b3",
+      "digest": "efe3ab43ea6a2a3dfa5685485702e4b7dfa9d3aab4eaca96cf15e97dd858e2b3",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Data/BindingPriority.cs",
+      "bytes": 1270,
+      "sha256": "0589a88b0a1c55672a03c62b6f3c2b3ea76e5825e9ce6828fb08eb29308c4f41",
+      "digest": "0589a88b0a1c55672a03c62b6f3c2b3ea76e5825e9ce6828fb08eb29308c4f41",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/RelativePoint.cs",
+      "bytes": 7217,
+      "sha256": "15db4c737947ece5c3d3c094c0e021fa5bb8ad6ad13810c67ee5f59839509750",
+      "digest": "15db4c737947ece5c3d3c094c0e021fa5bb8ad6ad13810c67ee5f59839509750",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Compatibility/NullableAttributes.cs",
+      "bytes": 8049,
+      "sha256": "18e44a2879021d930306933142fa6053092212e7bd41bc0bf2febcfef0a41897",
+      "digest": "18e44a2879021d930306933142fa6053092212e7bd41bc0bf2febcfef0a41897",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Compatibility/TrimmingAttributes.cs",
+      "bytes": 4301,
+      "sha256": "a5a1fb8e8f1953086ebdebe380dcad49220c98661484d2bedbfd376362bff061",
+      "digest": "a5a1fb8e8f1953086ebdebe380dcad49220c98661484d2bedbfd376362bff061",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Utilities/SpanHelpers.cs",
+      "bytes": 2789,
+      "sha256": "4fdca9a407535044f53874b60e41c5115cb0a1669a4c7718c4a7d0a86dd25758",
+      "digest": "4fdca9a407535044f53874b60e41c5115cb0a1669a4c7718c4a7d0a86dd25758",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Diagnostics/TrimmingMessages.cs",
+      "bytes": 3477,
+      "sha256": "d9d094e81397cd89c995a31106b480515c86e7bcbcbc548e2740a1ce4141e263",
+      "digest": "d9d094e81397cd89c995a31106b480515c86e7bcbcbc548e2740a1ce4141e263",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Shared/StringCompatibilityExtensions.cs",
+      "bytes": 480,
+      "sha256": "3b3242a384cca353bf353f9de1e90cce4cbe228e1811b8ff067598c778897bdf",
+      "digest": "3b3242a384cca353bf353f9de1e90cce4cbe228e1811b8ff067598c778897bdf",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Shared/IsExternalInit.cs",
+      "bytes": 399,
+      "sha256": "41b3a570a8cce3c7dc58c901973713d40867e1fcf0a0dd5a13a590c6f8a31f66",
+      "digest": "41b3a570a8cce3c7dc58c901973713d40867e1fcf0a0dd5a13a590c6f8a31f66",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/framework/CUI/vendor/Avalonia/src/Shared/SourceGeneratorAttributes.cs",
+      "bytes": 1189,
+      "sha256": "55e2dd316a8db751c528205e4ebb11cf1f14cc7312a6f2264bce30c9996030cd",
+      "digest": "55e2dd316a8db751c528205e4ebb11cf1f14cc7312a6f2264bce30c9996030cd",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/artifacts/task-producer-before/obj/Avalonia.Build.Tasks/debug/.NETStandard,Version=v2.0.AssemblyAttributes.cs",
+      "bytes": 204,
+      "sha256": "7300a46b63ecd250f168f446b4864848453c4b655fb6f317d1530d7ca963ebc5",
+      "digest": "7300a46b63ecd250f168f446b4864848453c4b655fb6f317d1530d7ca963ebc5",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    {
+      "source": "/workspace/team-c/c3-admin-embedded-symbol-proposal/artifacts/task-producer-before/obj/Avalonia.Build.Tasks/debug/Avalonia.Build.Tasks.AssemblyInfo.cs",
+      "bytes": 11467,
+      "sha256": "72bc556b16e6f1c9302757fd172918a21f27a6c995c34da02be30d1930ed0022",
+      "digest": "72bc556b16e6f1c9302757fd172918a21f27a6c995c34da02be30d1930ed0022",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    }
+  ],
+  "scope": "actual entire original task producer only; no Accounts/OrgPools/Web suite acceptance"
+}

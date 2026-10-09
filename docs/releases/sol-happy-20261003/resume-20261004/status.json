@@ -1,0 +1,124 @@
+{
+  "recordedUTC": "2026-10-04T12:08:37.445Z",
+  "releaseStatus": "BLOCKED_PENDING_FULL_REQUIRED_ACCEPTANCE",
+  "acceptedHead": null,
+  "mainMerged": false,
+  "pullRequestState": "OPEN_DRAFT",
+  "sourceIntegrationCommit": "33dc89b1b2367d3cc5f712f58f9d32748229e16c",
+  "configurationProposalCommit": "ab0f9978f7cc6e63ede2a925d26702acd9114e0c",
+  "originalFailureEvidenceCommit": "ad3a726c529075eeb0fe3731533d78f045655dc0",
+  "latestCoordinationRead": "a88c272f75d12027958a9b9b50fafe97658541d2",
+  "provider": {
+    "worker": "cake-id-release-validation",
+    "databaseId": "fb094287-efab-4d3c-b9d5-c588a83d6f42",
+    "versionId": "0f6ad115-42f8-4137-808f-997a80b4c97b",
+    "deploymentId": "e9774b5d-c858-4988-866a-7c15d8e71030",
+    "workersDevEnabled": false,
+    "previewsEnabled": false,
+    "cpuMs": 1000,
+    "compatibilityFlags": [
+      "nodejs_compat",
+      "global_fetch_strictly_public"
+    ],
+    "moduleBytesUnchanged": true
+  },
+  "actualHostedPhases": [
+    {
+      "version": "713c1695-7e21-489b-bc97-906450972cfa",
+      "phase": "anonymous",
+      "result": "PASS",
+      "assertions": 138,
+      "requests": 22,
+      "exitCode": 0
+    },
+    {
+      "version": "713c1695-7e21-489b-bc97-906450972cfa",
+      "phase": "authenticated",
+      "result": "FAIL",
+      "failure": "GET /api/account/current genuine bearer token returned 401; expected 200",
+      "exitCode": 1,
+      "counts": "No complete assertion/request total inferred; zero-byte acquired result retained."
+    },
+    {
+      "version": "0f6ad115-42f8-4137-808f-997a80b4c97b",
+      "phase": "immediate anonymous before observed readiness",
+      "result": "FAIL",
+      "assertions": 2,
+      "requests": 1,
+      "exitCode": 1,
+      "failure": "Discovery returned 404; exact cause unestablished."
+    },
+    {
+      "version": "0f6ad115-42f8-4137-808f-997a80b4c97b",
+      "phase": "fresh anonymous after actual readiness 200",
+      "result": "PASS",
+      "assertions": 138,
+      "requests": 22,
+      "exitCode": 0
+    },
+    {
+      "version": "0f6ad115-42f8-4137-808f-997a80b4c97b",
+      "phase": "fresh authenticated with new exact fictional fixture",
+      "result": "PASS",
+      "assertions": 165,
+      "requests": 39,
+      "passwordLogins": 3,
+      "exitCode": 0
+    }
+  ],
+  "change": "Metadata-only existing Worker settings patch enables official public-front-door self-fetch routing; repository generator/build config carries same flag and existing CPU ceiling; drivers record validated explicit deployment pin. Maintained producer/verifier/schema/package source and deployed module bytes remain unchanged.",
+  "causalityQualification": "Original verifier self-JWKS public-fetch configuration was incompatible with hosted flow; fixed configuration passes same real authenticated assertions. No production verifier weakening, date/UUID/session workaround, exact immediate-404 cause claim or proof of every internal network hop.",
+  "fixtureCleanup": {
+    "users": 0,
+    "accounts": 0,
+    "sessions": 0,
+    "clients": 0,
+    "clientLinks": 0,
+    "consents": 0,
+    "accessTokens": 0,
+    "refreshTokens": 0,
+    "verifications": 0,
+    "resources": 1,
+    "jwks": 1,
+    "limiterBuckets": 3,
+    "reservedOwner": null,
+    "standaloneFixtureAuthorizationCodesBeforeCleanup": 0
+  },
+  "canonicalSpecification": {
+    "liveRechecked": true,
+    "paragraphs": 8534,
+    "bytes": 1383780,
+    "sha256": "a48cf720b257d16aca1feed8d8a95915759b78cf8a2d2d91fd82b0d31977914c",
+    "evidence": "spec-continuity.json"
+  },
+  "currentOwnerGates": [
+    "Team A current exact durable cancellation source/claim ACK: stale cancellation still overwrites committed completion/result/idempotency after SQLite restart; untouched Debug and Release each 2PASS/1FAIL.",
+    "Team A current Accounts proposal adoption and authenticated actor/client/session/auth_revision bridge; trusted billing settlement/business verifier and approved effective policy.",
+    "Team A exact Sites authoring/build/native import/secret scanner authority and Files original session/read/publication/transfer/quota ports; 12 Files HTTP journeys NOT_RUN.",
+    "Team A exact current 1665-byte Infrastructure test-project body and Workers AI integrated/provider acceptance; no inference or funding activation.",
+    "Applicable browser/native/installed/cross-app/donor/platform/security/recovery acceptance and verified Windows/PC package delivery; main remains untouched."
+  ],
+  "authorizationPreserved": "Named isolated Worker/D1 and bounded fictional tests only; existing Workers Paid allowance, no upgrade/payment/new billable activation/AI/mail/Stripe/production DNS/WP retirement.",
+  "qualification": "Actual maintained Node HTTPS transport and real library tokens; fixture users and client are preconditions. No browser UI/native/signing/auth_revision/registration/mail/admin provisioning/full service/global release or PC delivery acceptance.",
+  "successor": {
+    "threadId": "01a106a9-b836-76d2-9311-6df01774f059",
+    "soleTeamCIntegrator": true,
+    "goalStarted": false,
+    "backgroundExecutionClaimed": false,
+    "state": "BOUNDED_AUTHORIZED_WORK_COMPLETE_GENUINE_OWNER_AND_ACCEPTANCE_BLOCKERS_REMAIN"
+  },
+  "independentFinalReview": "c6/final-review.json",
+  "independentFinalObservedUTC": "2026-10-04T12:09:30.977Z",
+  "windowsDeliveryContext": {
+    "directive": "coord a88c272f:coordination/sol-happy-20261003/user-delivery-priority-20261004-2000.md",
+    "targetUTC": "2026-10-04T19:00:00Z",
+    "provisionalGlobalSource": "33dc89b1b2367d3cc5f712f58f9d32748229e16c",
+    "nativeOwnerSource": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+    "reviewedOwnerDelivery": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+    "globalCandidateAccepted": false,
+    "windowsPackageBaseline": "UNSELECTED_BY_NATIVE_OWNER",
+    "windowsExecutionAndPCDelivery": "NOT_VERIFIED",
+    "request": "Team A nominate actual all-Pass1 Windows inventory, package/source/runtime baseline, real Windows runner and authorized deliveryroute. Unrelated Linux/Android gates do not block independently testable Windows scope. Repository directive does not grant PC mutations or spending.",
+    "evidence": "windows-continuation.json"
+  }
+}

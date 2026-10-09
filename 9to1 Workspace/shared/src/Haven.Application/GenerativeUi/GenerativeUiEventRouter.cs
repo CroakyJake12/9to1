@@ -128,7 +128,7 @@ public sealed class GenerativeUiEventRouter(
             throw new InvalidOperationException("Action result changed the originating component or action identity.");
         if (!Enum.IsDefined(result.Status) || result.Patches is null || result.Summary is null)
             throw new InvalidOperationException("Action result status, patches, and summary must be valid.");
-        if (result.Status != GenUiActionStatus.Completed && result.Patches.Count > 0)
+        if (result.Status != GenUiActionStatus.Completed && result.Patches.Count > 0 && !instances.IsFailureDisplayOnly(result))
             throw new InvalidOperationException("A non-completed action cannot mutate generated UI state.");
         if (result.Patches.Count > 100)
             throw new InvalidOperationException("An action result exceeds the patch batch limit.");

@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "C6 independent validation",
+  "scope": "Actual Windows PowerShell5.1 controlled CLR signatures setup witness only",
+  "sourceCommit": "8c379a7e1e12267955936c1d1223969a1d9b95ab",
+  "runId": 37231042749,
+  "jobId": 111520536499,
+  "officialArtifact": {
+    "id": 11312784735,
+    "bytes": 1269,
+    "sha256": "4932e8e70873a8f94b2d0e8aff13dc031e95f3403d3bbfb9ea899d2ee15a43aa",
+    "originalSingleMemberCRCAndCopy": true,
+    "independentProviderReadback": true
+  },
+  "checks": {
+    "executed": 25,
+    "passed": 25,
+    "failed": 0
+  },
+  "actualPowerShell": "5.1.20348.5622 Desktop",
+  "observedControlledCases": [
+    {
+      "case": "same-clr-reference-untyped-function",
+      "instanceEquals": true,
+      "typedCompare": true,
+      "argumentIsExactControlledElement": true,
+      "argumentIsPowerShellWrapper": false,
+      "expectedControlledEquality": true,
+      "objectCallCountDelta": 1,
+      "typedCallCountDelta": 1
+    },
+    {
+      "case": "distinct-clr-instances-same-controlled-identity",
+      "instanceEquals": true,
+      "typedCompare": true,
+      "argumentIsExactControlledElement": true,
+      "argumentIsPowerShellWrapper": false,
+      "expectedControlledEquality": true,
+      "objectCallCountDelta": 1,
+      "typedCallCountDelta": 1
+    },
+    {
+      "case": "distinct-controlled-identity",
+      "instanceEquals": false,
+      "typedCompare": false,
+      "argumentIsExactControlledElement": true,
+      "argumentIsPowerShellWrapper": false,
+      "expectedControlledEquality": false,
+      "objectCallCountDelta": 1,
+      "typedCallCountDelta": 1
+    },
+    {
+      "case": "note-property-function-argument",
+      "instanceEquals": true,
+      "typedCompare": true,
+      "argumentIsExactControlledElement": true,
+      "argumentIsPowerShellWrapper": false,
+      "expectedControlledEquality": true,
+      "objectCallCountDelta": 1,
+      "typedCallCountDelta": 1
+    },
+    {
+      "case": "pipeline-returned-function-argument",
+      "instanceEquals": true,
+      "typedCompare": true,
+      "argumentIsExactControlledElement": true,
+      "argumentIsPowerShellWrapper": false,
+      "expectedControlledEquality": true,
+      "objectCallCountDelta": 1,
+      "typedCallCountDelta": 1
+    },
+    {
+      "case": "explicit-object-function-argument",
+      "instanceEquals": true,
+      "typedCompare": true,
+      "argumentIsExactControlledElement": true,
+      "argumentIsPowerShellWrapper": false,
+      "expectedControlledEquality": true,
+      "objectCallCountDelta": 1,
+      "typedCallCountDelta": 1
+    },
+    {
+      "case": "explicit-psobject-function-argument",
+      "instanceEquals": true,
+      "typedCompare": true,
+      "argumentIsExactControlledElement": true,
+      "argumentIsPowerShellWrapper": false,
+      "expectedControlledEquality": true,
+      "objectCallCountDelta": 1,
+      "typedCallCountDelta": 1
+    }
+  ],
+  "originalShapeWrappingRefusals": 0,
+  "allWrappingRefusals": 0,
+  "causalConclusion": "Actual PS5 public-signature argument boundary did not reproduce wrapper-induced instance equality refusal. A simple Equals->Compare repair is not evidenced. Actual installed AutomationElement identity remains UNOBSERVED; failure-only original versus current peer metadata is the grounded next diagnostic.",
+  "nativeAndPrivateBoundaries": "No package download/extraction, application, profile, UIA registration, native input, value or state. Controlled CLR copies are not real UIA substitutes/acceptance.",
+  "originalC434NegativePreserved": true,
+  "status": "ACTUAL_SETUP_ONLY_SIGNATURE_WITNESS_PASS",
+  "canvasActualValueOrFullAcceptance": false
+}

@@ -1,0 +1,21 @@
+This additive anonymous HTTPS driver targets ONLY the actual isolated `cake-id-release-validation.jcbailey008.workers.dev` issuer, expected Worker version713c1695-7e21-489b-bc97-906450972cfa, maintained producer source d643d723. It changes no producer, binding, secret, migration or deployment. Root remains the provider writer. Run only after the exact hostname is permitted and the root operator deliberately enables the isolated endpoint.
+
+From `cloud/cake-id-auth`:
+
+```
+node --check deployment/https/validate.mjs
+node deployment/https/validate.test.mjs
+node --use-env-proxy --use-system-ca deployment/https/validate.mjs /workspace/team-c/evidence/c2/https-anonymous-NEW.json
+```
+
+Use the inherited managed proxy and CA trust for remote execution; the Node24 flags above preserve that supported route. The output path must be new. Transport/assertion failures and independent evidence-write failures remain separately observable; existing evidence is never overwritten. Requests omit credentials, never follow redirects and have15-second abort signals. Output retains status/CORS/path metadata, not response bodies, cookies or tokens. No secrets are required.
+
+After a reviewed configuration change creates a new provider version, append its exact same-time provider UUID as an optional final argument: `node --use-env-proxy --use-system-ca deployment/https/validate.mjs NEW_PUBLIC_RESULT.json PROVIDER_VERSION_UUID`. The original713 version remains the default for historical invocation compatibility. Malformed pins refuse before requests; explicit pins propagate to new success/failure evidence. A valid UUID is only an operator pin and does not itself prove a deployment. Preserve original manifests/results and bind each new result to actual provider readback.
+
+Assertions follow maintained integration/public-cors semantics: exact issuer/discovery endpoints/S256/code, public-only JWKS, exact-path public CORS without credential grant, foreign/opaque origin denial, public page security headers, unauthenticated account denial, malformed reset rejection and unknown-client/invalid-code token rejection. The malformed reset has no password/token and is rejected by pinned library body validation before consuming recovery tokens. No verification/recovery request, registration, login or administrative request is sent. Discovery/JWKS may initialise the library's own issuer signing key if none exists; this is maintained server GET behaviour, not a credential or account fixture.
+
+Offline controls deliberately reject controlled transport loss, redirects, wildcard CORS, foreign discovery issuer and output overwrite while retaining both original and write exceptions. They are driver validation only. The actual HTTPS phase does not demonstrate registration, delivery, valid PKCE token exchange, account switching, profile/session mutation, organisation membership, browser/native continuity or production readiness.
+
+The authenticated fixture package and root procedure are in `AUTHENTICATED.md`. Existing user authorization covers bounded isolated tests and fictional nonadmin fixtures; seeding verified fictional users and a public client is a test precondition, not registration, email verification or administrator provisioning evidence. Root must verify the actual configured resource before seeding, retain private credentials and reconcile exact fixture rows after known outcomes. Production source has no local-test bootstrap endpoints. Never insert local issuer keys, fabricate auth_revision, promote a real identity, bind CroakyJake, turn on outbox capture or invent a native consumer fallback.
+
+The result labels the expected version as `operatorPinnedDeploymentVersion`. HTTP does not verify the provider version; root must retain same-time provider readback to bind deployment provenance.

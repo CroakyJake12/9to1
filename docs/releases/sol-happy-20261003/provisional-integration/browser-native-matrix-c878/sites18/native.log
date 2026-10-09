@@ -1,0 +1,25 @@
+EXPECTED=18; actual native OS/Home/Files/Sites; browser=NOT_RUN; HTTP=NOT_RUN; publishing=NOT_RUN
+PASS actual-native-create-page-edit-close-reopen
+PASS actual-stale-revision-keeps-text-draft
+PASS duplicate-page-route-preserves-index-and-draft
+PASS lost-native-reply-does-not-repeat-mutation
+PASS foreign-owner-receipt-does-not-acknowledge-edit
+PASS actual-text-commit-rejects-text-receipt
+PASS actual-text-commit-rejects-missing-receipt
+PASS actual-text-commit-rejects-revision-receipt
+PASS actual-text-commit-rejects-type-receipt
+PASS actual-text-commit-rejects-duplicate-receipt
+PASS actual-files-binding-revocation-clears-private-draft
+PASS canonical-html-import-json-roundtrip-render-build
+PASS unknown-owner-schema-preserves-source-bytes
+PASS actual-cui-owner-route-cancel-type-and-dispose
+PASS real-owner-denies-foreign-id-and-stale-scope
+PASS presentation-listener-failure-does-not-lock-owner-actions
+INJECTED_OWNER_CANCEL_FAILURE actual owner commit retained; private teardown completed.
+PASS throwing-owner-cancellation-still-clears-private-view
+EXPECTED=1 mode=seed; actual native OS/Home/Files/Sites; browser=NOT_RUN; publishing=NOT_RUN
+RESULT mode=seed expected=1 executed=1 passed=1 failed=0 assertions=17
+EXPECTED=1 mode=verify; actual native OS/Home/Files/Sites; browser=NOT_RUN; publishing=NOT_RUN
+RESULT mode=verify expected=1 executed=1 passed=1 failed=0 assertions=6
+PASS independent-native-seed-and-verify-processes
+RESULT expected=18 executed=18 passed=18 failed=0 assertions=279

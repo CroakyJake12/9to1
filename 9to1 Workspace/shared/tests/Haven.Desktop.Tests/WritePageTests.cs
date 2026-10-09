@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Haven.Application;
@@ -91,12 +92,18 @@ public sealed class WritePageTests
             Assert.True(paragraph.Runs[1].Italic);
             Assert.Same(table, writePage.Document?.Sections[0].Pages[0].Blocks[1]);
 
+            var submittedTableSnapshot = JsonSerializer.Serialize(table);
             Assert.True(await writePage.SaveAsync("Focused test"));
             Assert.False(writePage.IsDirty);
             Assert.Equal(1, repository.SaveCalls);
             Assert.Equal("Results Day brief", repository.LastSaved?.Title);
             Assert.Equal("Bold stronger italic", repository.LastSaved?.Sections[0].Pages[0].Blocks[0].PlainText);
-            Assert.Same(table, repository.LastSaved?.Sections[0].Pages[0].Blocks[1]);
+            var savedTable = Assert.IsType<NotesBlock>(repository.LastSaved?.Sections[0].Pages[0].Blocks[1]);
+            Assert.Equal(table.Id, savedTable.Id);
+            Assert.Equal(submittedTableSnapshot, JsonSerializer.Serialize(savedTable));
+            Assert.NotSame(table, savedTable);
+            Assert.NotSame(table.Table, savedTable.Table);
+            Assert.Same(table, writePage.Document?.Sections[0].Pages[0].Blocks[1]);
         }
         finally
         {

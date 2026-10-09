@@ -1,0 +1,77 @@
+{
+  "recordedUTC": "2026-10-04T11:52:33.147876+00:00",
+  "reviewer": "C6 independent validation",
+  "proposalCommit": "ab0f9978f7cc6e63ede2a925d26702acd9114e0c",
+  "state": "ACK_FINAL_NARROW_CONFIG_AND_VERSION_PIN_PROPOSAL",
+  "priorWholeReview": "config-proposal-review.json",
+  "finalDelta": "Exactlyvalue.length36 priorUUIDv4regex + trailingnewline negative controls in bothdrivers; all7otherchangedfiles and11protectedbodies byteequalto priorwholeC6review. Finalnegative validation/authcontrols rerunexit0 on copiedexactfinal3files; configcontrols carry unchangedbodypass.",
+  "changedFiles": [
+    {
+      "path": "cloud/cake-id-auth/deployment/README.md",
+      "bytes": 5761,
+      "sha256": "22491eb7d1f84ea561f5d8ed9f9c0f14c02843b989c69c36f67e0d3a70e096bb"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/https/AUTHENTICATED.md",
+      "bytes": 6669,
+      "sha256": "dd332902aff9e64f60489276d45e487584f7c65af5c358e6342e3942961d2a76"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/https/README.md",
+      "bytes": 3813,
+      "sha256": "e8ab6518bb89d5ee152eaae7b51cccb8db992a21df77be104deb0d771f1a3871"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/https/authenticated.mjs",
+      "bytes": 15330,
+      "sha256": "35c87fa474a051b479301dd11e8477a13f8faa720d2e7d0fe042482a8e737a66"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/https/authenticated.test.mjs",
+      "bytes": 7413,
+      "sha256": "5c6f3f383b657eb6f51539d395ee87f6f8238a7fde5be96d6fdf8f0d5658ffa2"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/https/validate.mjs",
+      "bytes": 7203,
+      "sha256": "532b9c9a3c8644eb9dec7fed5566ef9b0336c1fa456f7c485b53d78a077a6ab9"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/https/validate.test.mjs",
+      "bytes": 2879,
+      "sha256": "a0f383b66877d647f4d73d858dd026b5626b6b48b743133eeea0f093f612fafe"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/prepare.mjs",
+      "bytes": 2008,
+      "sha256": "b48f33c8c3ec3a2e082d334787259f6afeca2f06bed6edb622c4aac7ccd2f051"
+    },
+    {
+      "path": "cloud/cake-id-auth/deployment/wrangler.build.json",
+      "bytes": 465,
+      "sha256": "307b7048387c4482efe4217d20e3db45d6f741f5bf10fb8036610bc44964807c"
+    },
+    {
+      "path": "cloud/cake-id-auth/tests/deployment-config.mjs",
+      "bytes": 2218,
+      "sha256": "0df31e766bf803e39bcac63e8e4c3210377fd49cc038f3362302c4b21740a82c"
+    }
+  ],
+  "tests": [
+    {
+      "path": "/tmp/team-c-c6-20261004/final-proposal-anonymous.log",
+      "exitCode": 0,
+      "bytes": 129,
+      "sha256": "c730fcb97931647bceea6974a246ba37f194d0922250901684b4028c6613022f",
+      "stdout": "PASS: original 7 refusal/failure-preservation controls plus deployment pin preflight/propagation; no deployed-service acceptance"
+    },
+    {
+      "path": "/tmp/team-c-c6-20261004/final-proposal-authenticated.log",
+      "exitCode": 0,
+      "bytes": 243,
+      "sha256": "8b21aac3fa77324c23d96720680ff92997f665be740f0fce3cd3d970ac4f01f8",
+      "stdout": "PASS: actual pinned SQLite schema seed/duplicate/rollback and reserved owner controls; local only\nPASS: offline real library password hashing, private custody and driver transport/authority refusal controls; no remote seeding/HTTPS acceptance"
+    }
+  ],
+  "qualification": "No providerwrite, actualrevisedhostedacceptance orcauseclaim. Rootalone applies reviewedmetadataflag preservingcpu1000 and real readback/pinnednewresults/cleanup/reclosure. Globalreleaseblocked/acceptedHeadNULL."
+}

@@ -106,6 +106,12 @@ internal sealed class BoardsApp : Application
     private ComboBox? _styleBox;
     private ComboBox? _addKindBox;
     private bool _syncingCombos;
+    private BoardsCloseSaveOwner? _closeSaveOwner;
+    private Task? _closeAttempt;
+    private Task? _closeActionDrain;
+    private Task? _closeDrain;
+    private bool _closeAccepted;
+    private readonly List<Task> _menuActionTasks = [];
 
     public override void OnFrameworkInitializationCompleted()
     {
@@ -194,16 +200,15 @@ internal sealed class BoardsApp : Application
             }
         };
 
-        // Flush pending edits before the window closes so close never loses notes.
-        window.Closing += (_, _) =>
+        // Native close is canceled until the actual save acknowledges this draft.
+        // Keep the UI loop free for storage completion and visible retry feedback.
+        window.Closing += (_, args) =>
         {
-            try { _session?.SaveAsync().AsTask().GetAwaiter().GetResult(); }
-            catch (Exception error) { Console.WriteLine($"[CUI Boards] Save on close failed: {error.Message}"); }
-        };
-        window.Closed += (_, _) =>
-        {
-            try { _session?.DisposeAsync().AsTask().GetAwaiter().GetResult(); }
-            catch (Exception error) { Console.WriteLine($"[CUI Boards] Dispose failed: {error.Message}"); }
+            if (_closeAccepted) return;
+            args.Cancel = true;
+            if (_closeAttempt is { IsCompleted: false }) return;
+            if (window.Content is Control content) content.IsEnabled = false;
+            _closeAttempt = PrepareWindowCloseAsync(window);
         };
 
         var cuiPath = Program.FindCuiFile();
@@ -247,6 +252,51 @@ internal sealed class BoardsApp : Application
 
     private StackPanel? _navHost;
     private TextBlock? _saveStateText;
+
+    private async Task PrepareWindowCloseAsync(Window window)
+    {
+        // Publish the observer before any save/status callback can reenter close.
+        await Task.Yield();
+        // Complete already accepted CUI actions before selecting the current
+        // session to save. Preserve failed action tasks; their failure is not a
+        // reason to discard the user's current draft or forbid a physical retry.
+        try
+        {
+            _closeActionDrain = Task.WhenAll(_menuActionTasks.Append(
+                _loader?.WhenActionsIdleAsync() ?? Task.CompletedTask));
+            await _closeActionDrain;
+        }
+        catch (Exception error)
+        {
+            Console.WriteLine($"[CUI Boards] Earlier action failed before close save: {_closeActionDrain?.Exception ?? error}");
+        }
+        _closeSaveOwner ??= new BoardsCloseSaveOwner(() => _session
+            ?? throw new InvalidOperationException("The Boards session is unavailable."));
+        try { await _closeSaveOwner.SaveBeforeCloseAsync(); }
+        catch (Exception error)
+        {
+            Console.WriteLine($"[CUI Boards] Save on close failed: {error.Message}");
+            _viewModel?.Set("StatusText", "Close canceled; save failed: " + error.Message.Split('\n')[0]);
+            if (window.Content is Control content) content.IsEnabled = true;
+            return;
+        }
+        try
+        {
+            _closeDrain = _closeSaveOwner.DrainAfterSaveAsync(
+                () => _loader?.Dispose(),
+                () => _loader?.WhenActionsIdleAsync() ?? Task.CompletedTask);
+            await _closeDrain;
+        }
+        catch (Exception error)
+        {
+            // The original drain tasks remain owned and terminal. The draft was
+            // physically saved, but cleanup failure is an unsuccessful exit.
+            Console.WriteLine($"[CUI Boards] Close cleanup failed: {error}");
+            Environment.ExitCode = 1;
+        }
+        _closeAccepted = true;
+        window.Close();
+    }
 
     private void WireDynamicSurface(Control root)
     {
@@ -535,12 +585,37 @@ internal sealed class BoardsApp : Application
         }
     }
 
-    private static MenuItem MenuAction(string header, Func<Task> tapped, string? gesture = null)
+    private MenuItem MenuAction(string header, Func<Task> tapped, string? gesture = null)
     {
         var item = new MenuItem { Header = gesture is null ? header : $"{header}    {gesture}" };
         AutomationProperties.SetName(item, header);
-        item.Click += async (_, _) => await tapped();
+        item.Click += (_, _) => _ = ObserveMenuActionAsync(tapped);
         return item;
+    }
+
+    private async Task ObserveMenuActionAsync(Func<Task> tapped)
+    {
+        if (_closeAttempt is { IsCompleted: false }) return;
+        _menuActionTasks.RemoveAll(task => task.IsCompletedSuccessfully);
+        if (_menuActionTasks.Count >= 128)
+        {
+            _viewModel?.Set("StatusText", "Close and reopen the saved board before retrying more menu actions.");
+            return;
+        }
+        Task? original = null;
+        try
+        {
+            original = tapped();
+            _menuActionTasks.Add(original);
+            await original;
+        }
+        catch (Exception error)
+        {
+            // Failed Save/Save As must remain a visible, retained task failure,
+            // rather than escaping an async-void native menu handler.
+            Console.WriteLine($"[CUI Boards] Menu action failed: {original?.Exception ?? error}");
+            _viewModel?.Set("StatusText", "Action failed: " + error.Message.Split('\n')[0]);
+        }
     }
 
     private static MenuItem MenuAction(string header, Action tapped)

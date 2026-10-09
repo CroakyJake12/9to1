@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "status": "ORIGINAL_HOME_MANAGED6_AND_PACKAGE_PASS_NATIVE_FIRST_CONTROL_FAILURE_RETAINED",
+  "sourceCommit": "4dd3128bf9ec4d35523e5997d9ce6cedc392a003",
+  "officialRun": 37228835003,
+  "officialJob": 111514012449,
+  "originalManaged": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "names": [
+      "AvaloniaHome.Tests.HomeHostRenderTests.Native_home_host_loads_canonical_cui_into_a_measured_window",
+      "AvaloniaHome.Tests.HomeHostOriginalLifetimeTests.Work_Core_and_exit_faults_keep_exact_causes_and_stop_remaining_actual_services(foreignCancellation: False)",
+      "AvaloniaHome.Tests.HomeHostOriginalLifetimeTests.Held_original_work_and_actual_Core_stop_settle_before_desktop_exit",
+      "AvaloniaHome.Tests.HomeHostOriginalLifetimeTests.Work_Core_and_exit_faults_keep_exact_causes_and_stop_remaining_actual_services(foreignCancellation: True)",
+      "AvaloniaHome.Tests.HomeHostOriginalLifetimeTests.Successful_originals_prune_but_all_128_faults_block_further_admission_and_remain_on_close",
+      "AvaloniaHome.Tests.HomeHostOriginalLifetimeTests.Original_close_is_published_before_Core_callback_reentry"
+    ],
+    "normalCommandsAllExit0": true,
+    "filtersOrSkips": null,
+    "assertions": null
+  },
+  "sourceCustody": {
+    "count": 17293,
+    "rootWholeBodies": 16689,
+    "dependencyWholeBodies": 602,
+    "exactGitlinks": 2,
+    "beforeAfterByteEqual": true,
+    "sourceCatalogSha256": "6b67a00c70736d320d719bad369b3a28426cd6e8f6c0d48bfc37f49b9143345f",
+    "allWholeCanonicalGitBodiesVerified": true
+  },
+  "owningRuntime": {
+    "files": 232,
+    "beforeAfterByteEqual": true
+  },
+  "package": {
+    "manifest": "/tmp/team-c-c5-home-current-windows-4dd-20261004/original-publication/publish-manifest.json",
+    "manifestSha256": "7e6442b70eec7f061c54257b890050404f7ad97b2d3dff4aa537a51828d9b5b1",
+    "seal": "/tmp/team-c-c5-home-current-windows-4dd-20261004/original-publication/seal.json",
+    "sealSha256": "23b830b6158f1dbc64653749f206e03830c7205e7d3493125ad10fdc4bb03d25",
+    "originalReassembledZip": "/tmp/team-c-c5-home-current-windows-4dd-20261004/original-publication/home-win-x64.zip",
+    "zipBytes": 81553586,
+    "zipSha256": "0033a7c7161ac28a14b7c8c34d7d3c64c0b985b95cc480cfc0f45273134aae42",
+    "files": 299,
+    "fileBytes": 232282618,
+    "allMemberCrcAndExactShaVerified": true,
+    "parts": [
+      {
+        "part": 1,
+        "path": "/tmp/team-c-c5-home-current-windows-4dd-20261004/containers/home-4dd-original-part01.zip",
+        "bytes": 19975319,
+        "sha256": "6660c50cc4827f07c6eec59542f08afb3be4dcb35ff1e3343a69c95cb09a4306",
+        "rawPartBytes": 19922944,
+        "rawPartSha256": "9c46fdf06c3f9c879fbcdc914070303a95aeba9c3436ded18408ab49657b8dd5"
+      },
+      {
+        "part": 2,
+        "path": "/tmp/team-c-c5-home-current-windows-4dd-20261004/containers/home-4dd-original-part02.zip",
+        "bytes": 19975319,
+        "sha256": "bdb22bb1268a157676fad2910bcb928c49ca2b96e1b6eb910523eb97a861ddfe",
+        "rawPartBytes": 19922944,
+        "rawPartSha256": "7f607c107b8c888075a42cfb443881029572af2618e24796eda1dc9f943ce918"
+      },
+      {
+        "part": 3,
+        "path": "/tmp/team-c-c5-home-current-windows-4dd-20261004/containers/home-4dd-original-part03.zip",
+        "bytes": 19975319,
+        "sha256": "b3aadd7b39783dc18695b8684e0c8bb7227435028a9ae015f7480f6f55e17ce1",
+        "rawPartBytes": 19922944,
+        "rawPartSha256": "a7f1f95faaeacf8ba938d51a36e6b9d5c5667947db82cea1df2f21c423c8c2e3"
+      },
+      {
+        "part": 4,
+        "path": "/tmp/team-c-c5-home-current-windows-4dd-20261004/containers/home-4dd-original-part04.zip",
+        "bytes": 19975319,
+        "sha256": "eb3274df2e55049c0d05eb6d2a4c8a98be7e82b4d9fda80bb7e18de803740618",
+        "rawPartBytes": 19922944,
+        "rawPartSha256": "74e9a2eed36853e39c8229dd0fd2364764f3eb97c9e4e1e2174e2f21136e66b3"
+      },
+      {
+        "part": 5,
+        "path": "/tmp/team-c-c5-home-current-windows-4dd-20261004/containers/home-4dd-original-part05.zip",
+        "bytes": 1914185,
+        "sha256": "e427fa2c16b80ec9fb327de6428167af271c068b3c19cc68b0ea7034b2f11c83",
+        "rawPartBytes": 1861810,
+        "rawPartSha256": "9ed39e6427f33a19ced9991b72c23b7c29411baa193b99da7d6ca24949a1ede8"
+      }
+    ],
+    "originalWholeContainer": {
+      "id": 11312789339,
+      "bytes": 81272829,
+      "sha256": "93633d862e1d97b93af3a27e556528a0794ab40a8054fa7235dbe47805b49e01",
+      "acquisition": "METADATA_ONLY_OVER32MiB; every original payload byte independently verified through five official retained raw parts"
+    }
+  },
+  "nativeFirstOriginal": {
+    "cohort": "native-first",
+    "pid": 6200,
+    "sessionId": 2,
+    "windowVisible": true,
+    "ownHWND": true,
+    "foregroundVerified": true,
+    "inputEventsSent": 6,
+    "exited": false,
+    "exitCode": null,
+    "forcedCleanup": false,
+    "processSignals": [],
+    "outputDrained": false,
+    "originalCuiRootReported": false,
+    "phase": "original-process-exit",
+    "errorType": "RuntimeException",
+    "startedUTC": "2026-10-04T19:42:53.4367400Z",
+    "windowTitle": "D:\\a\\_temp\\home-original-37228835003-1\\extracted\\AvaloniaHome.exe",
+    "releaseEventsSent": 3
+  },
+  "mechanism": "Observed first owned visible HWND title was executable path, not exact source-defined 9-1 Home GUI; unchanged harness accepted Process.MainWindowHandle before canonical GUI identity. CUI root actually loaded in stdout. This is a native harness control selection failure, not evidence that product GUI CtrlShiftQ failed.",
+  "stdoutWitness": {
+    "bytes": 312,
+    "sha256": "d22f591672b95af2cbe304121a120fed002f3022f0c85520b83cd7af00c8e03c",
+    "actualCanonicalRootPrinted": true,
+    "actualMarkerTransport": "ASCII hyphen for authored em-dash"
+  },
+  "qualifications": [
+    "Native first process did not settle inside45s and remained open at harness result; no harness kill/signal/forced cleanup or success inferred. Subsequent GitHub job orphan cleanup is not natural process settlement proof.",
+    "Second native process/default-profile read-only reopening NOT_RUN.",
+    "Root-owned exact current GUI selection successor/source peer and necessary new Windows control remain separate.",
+    "299 package files retained byte-exact locally, no installed identity/signing/cleanPC/donor/fullHome acceptance."
+  ]
+}

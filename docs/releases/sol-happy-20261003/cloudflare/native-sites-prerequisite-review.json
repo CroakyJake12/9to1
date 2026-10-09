@@ -1,0 +1,86 @@
+{
+  "status": "SOURCE_CUSTODY_ONLY_OWNER_ADOPTION_REQUIRED",
+  "selectedNormalSource": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "referenceSource": "e0c0310e5ed281b5e70a0cfd56a2615d93d022ef",
+  "closure": [
+    {
+      "path": "9to1 Workspace/Sites/Domain/SiteModels.cs",
+      "A63sha256": "109ef4bcf9912aac6ff4fa07b53bde2e32e7ec2e110a0ca8a1a8aab2dc2e2a6c",
+      "bytes": 8654,
+      "e0cByteEqual": true,
+      "root0bfByteEqual": true,
+      "A63gitBlob": "8fb19b0e167ad0d6aed50c7583796c477add84f2"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Domain/SiteSlug.cs",
+      "A63sha256": "dd8f404e2871f40bccbe08071d16e2939607d26a0557479ac467cf6817810641",
+      "bytes": 5341,
+      "e0cByteEqual": true,
+      "root0bfByteEqual": true,
+      "A63gitBlob": "5975f0236103ebc9d7bfae791207d249bfab1a0f"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Runtime/SiteDocumentRenderer.cs",
+      "A63sha256": "fb8c52cb0798ac28f68cb3a1f054dd7d5af51bd16c1eb5ba9e5f62c83ab862e8",
+      "bytes": 13403,
+      "e0cByteEqual": true,
+      "root0bfByteEqual": false,
+      "A63gitBlob": "b9632443e1a6a55fb510f80d4fc85d8162ff4bb7"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteAuthoringService.cs",
+      "A63sha256": "61b33ac84e4b6cb73782e9c25164b2101bd0b890e9408d0494a5686eef3fba1f",
+      "bytes": 9127,
+      "e0cByteEqual": false,
+      "root0bfByteEqual": false,
+      "A63gitBlob": "298647be5d33c32268b6ef20c494f17c6d56fd46"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SiteProjectService.cs",
+      "A63sha256": "dfd3af09e3027fe6ca8816f695b353de741ad35a618867f7c54bbe1420cfa2c9",
+      "bytes": 9018,
+      "e0cByteEqual": true,
+      "root0bfByteEqual": true,
+      "A63gitBlob": "42809ca25f0a6004549085e4644fa88c34cd2e4d"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Infrastructure/FileSiteWorkspaceStore.cs",
+      "A63sha256": "e3ec22beb78ca0240c317b9e30db2fceeb2a3cd928ff27a051a2a666a1dc876c",
+      "bytes": 10005,
+      "e0cByteEqual": true,
+      "root0bfByteEqual": false,
+      "A63gitBlob": "46f15766cbde37fa05582eecb960623392c03ec4"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Hosting/SiteHostingContracts.cs",
+      "A63sha256": "c73dae05f5714f9ec680214e7cb83a216d6d147941d049abd263629432c8d5e1",
+      "bytes": 4280,
+      "e0cByteEqual": true,
+      "root0bfByteEqual": true,
+      "A63gitBlob": "3dc6b98fc72b2d7c5deb78b566993b7e461289eb"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Hosting/NativeSiteBuildPipeline.cs",
+      "A63sha256": "018911b7132747bed3b3b04ad69191527205725beca9a294ab901831f1ccbf69",
+      "bytes": 7715,
+      "e0cByteEqual": true,
+      "root0bfByteEqual": false,
+      "A63gitBlob": "90de2fd3bc79a3543d8dd57eb4c5d748281e2c29"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Tests/SiteAuthoringBuildTests.cs",
+      "A63sha256": "4c851081ac7a1f970f4918318fe47145a68cd92d9773c105391d59587d851a97",
+      "bytes": 4074,
+      "e0cByteEqual": true,
+      "root0bfByteEqual": false,
+      "A63gitBlob": "b6a2c6a9a0e6b224bd35f35ddf551b7a933651c6"
+    }
+  ],
+  "request": "Team A explicitly acknowledge exact normal A63 pipeline/renderer/authoring closure adoption and original tests. Preserve receiving guarded workspace store; do not replace it with old unguarded constructor. Public Reachable modifier is sole e0c authoring difference, unnecessary for same-assembly native pipeline compilation; must not silently select e0c shared API change.",
+  "tests": "Existing full SiteAuthoringBuildTests: actual preview/build equality, real manifest validation, output tampering denial, authoring source revision/CAS. No tests executed in this source review.",
+  "limitations": [
+    "No private manifest record copy/extraction or duplicate declarations.",
+    "eec reviewed-source delivery contains no Sites owner entries; possession is not source-owner adoption.",
+    "No canonical Files directory/session/current-project selection or parity is supplied by pipeline adoption."
+  ]
+}

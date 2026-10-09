@@ -1,0 +1,104 @@
+{
+  "recordedUTC": "2026-10-04T12:10:48.161475+00:00",
+  "reviewer": "C6 independent validation",
+  "state": "PASS_AUTHORIZED_ISOLATED_IDENTITY_PHASE_GLOBAL_RELEASE_BLOCKED",
+  "sameTestedProviderVersion": "0f6ad115-42f8-4137-808f-997a80b4c97b",
+  "deploymentId": "e9774b5d-c858-4988-866a-7c15d8e71030",
+  "sourceConfigProposal": "ab0f9978f7cc6e63ede2a925d26702acd9114e0c",
+  "rootIntegratedSource": "33dc89b1b2367d3cc5f712f58f9d32748229e16c",
+  "maintainedProducer": "d643d723d15ec20d70263a408b0cfefbd5be69ae",
+  "scopedResults": {
+    "anonymous": {
+      "assertions": 138,
+      "requests": 22,
+      "result": "PASS"
+    },
+    "authenticated": {
+      "assertions": 165,
+      "requests": 39,
+      "passwordLogins": 3,
+      "result": "PASS"
+    },
+    "cleanupAndExposure": "PASS_INDEPENDENT_LIVE_READBACK"
+  },
+  "preservedFailures": [
+    "Original713authenticated realaccess current401 after actualPKCE+JWTchecks; laterjourneys unrun inthatfailedphase",
+    "Immediate0f6anonymous discovery404; subsequentactualready+pass separate, exactcause notasserted",
+    "InitialC6authoffline prerequisite missingbetter-auth; installedrootdeps thenexactofflinepass separate",
+    "C6readonly10term compoundSELECT refused; corrected scalarcountbatch separatelysuccessful"
+  ],
+  "sourceAndModuleCustody": "All10finalreviewedconfig/driver paths match root33dc;11protectedissuer/verifier/migrations/package/historicalmanifests unchanged. APIactualdownload module3109063/39127 hashes exactlyoriginal, not inferredfromchangedaggregateETag. Safe metadataflags changepreserves1000cpu, actualselectedD1,secrets,productionmailfailclosed.",
+  "finalProviderCounts": {
+    "users": 0,
+    "accounts": 0,
+    "sessions": 0,
+    "clients": 0,
+    "client_resource_links": 0,
+    "resources": 1,
+    "jwks": 1,
+    "access_tokens": 0,
+    "refresh_tokens": 0,
+    "consents": 0,
+    "verifications": 0,
+    "limiter_rows": 3,
+    "reserved_owner": null
+  },
+  "exposure": {
+    "enabled": false,
+    "previews_enabled": false
+  },
+  "finalObservedUTC": "2026-10-04T12:09:30.977Z",
+  "C6ProviderMutations": false,
+  "C6PrivateFixtureOrDiagnosticBodiesRead": false,
+  "qualification": "Actual NodeHTTPS maintained OAuth transport on isolatedfictionalpreconditions only. No realregistration/email/adminprovisioning, browsercallbackroundtrip/UI/native/organisation/RSAauth_revision/fullSH12 acceptance. Cleanup removes exactfixturedata; retainedcanonicalJWKS/resources/limiterstate means no providerdatarestorationclaim.",
+  "globalReleaseStatus": "BLOCKED_PENDING_FULL_REQUIRED_ACCEPTANCE",
+  "acceptedHead": null,
+  "genuineRemainingBlockers": [
+    "Active durable cancellation race1FAIL/2PASS on currentowner source; no exactowner repairACK",
+    "CurrentAccounts sourceadoption and authenticatednative/remoteaccountclient/session/auth_revision authoritybridge",
+    "ExactSites nativeclosure/import/coordinator/buildroot/scanner/theme/editor/media/runtimehandover",
+    "Files async authenticatedsession/read/publication/transfer/quota/resume/sourceports; all12HTTPjourneysNOT_RUN",
+    "WorkersAI missingexact1665B/c04a testproject; no approvedpricing/funding/inference/entitlementpolicy",
+    "Productionbillingtrustedverifier/providerbindings/canonicaleffecttransport and approvedSH13policies",
+    "Fullbrowser/native/installed/accessibility/input/audio/crossapp/security/recovery semanticacceptance incomplete",
+    "VerifiedexacttestedlocalPCartifactdestination/delivery incomplete"
+  ],
+  "ownershipQualification": "Latestrootfetch a88c updates A deliverypriority only per root; no new sourceadoptionACK reported. PreserveA/Brecords and failed/notrun gates, draftPR/main untouched.",
+  "reviewEvidence": [
+    {
+      "path": "/tmp/team-c-c6-20261004/anonymous-review.json",
+      "bytes": 2611,
+      "sha256": "fdf91cfb1c731d43d793ec4303052b249f955c84957ca83c35ad4b8d4d90a92d"
+    },
+    {
+      "path": "/tmp/team-c-c6-20261004/fixture-and-original-failure-review.json",
+      "bytes": 2928,
+      "sha256": "9560f9db4d7428b509e977f821d11c1c467acd6be39b43eef47a51ea1c57560d"
+    },
+    {
+      "path": "/tmp/team-c-c6-20261004/original-closure-independent.json",
+      "bytes": 2548,
+      "sha256": "72d73bc0d5f7f6ca24001ec24a5f455c52bd2947c5242c12adb7ad3886a2ca99"
+    },
+    {
+      "path": "/tmp/team-c-c6-20261004/final-config-proposal-review.json",
+      "bytes": 3518,
+      "sha256": "549ddbf29ff79f0b59ea3a146c36be1a3fcef51b1934c8a48dcb9b20c26701d5"
+    },
+    {
+      "path": "/tmp/team-c-c6-20261004/root-integration-proposal-hashes.json",
+      "bytes": 273,
+      "sha256": "d180945e77cb6083a7535df0fa31a6709e0283a56620e7fc5f9f749ee563b4be"
+    },
+    {
+      "path": "/tmp/team-c-c6-20261004/fixed-fixture-and-authenticated-review.json",
+      "bytes": 3249,
+      "sha256": "a2b2a807bffe9c6470831d1377a2f8de0285e16218e6f26e301faadaad4bc814"
+    },
+    {
+      "path": "/tmp/team-c-c6-20261004/fixed-final-closure-independent.json",
+      "bytes": 4863,
+      "sha256": "4ce6e966a0c0039adbd528b9055a8c20473cf9b5de16a9a5bdbce280f4c48d4c"
+    }
+  ]
+}

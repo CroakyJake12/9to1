@@ -1,0 +1,32 @@
+<Cui id="spaces.task-development" version="1">
+  <StackPanel id="space-task-widget" spacing="12" margin="16" accessible-name="Space task and development workspace">
+    <TextBlock id="space-task-title" text="{Binding Title}" font-size="24" text-wrapping="Wrap" />
+    <TextBlock text="{Binding Identities}" text-wrapping="Wrap" accessible-name="Canonical task and run identities" />
+    <TextBlock text="{Binding Objective}" text-wrapping="Wrap" accessible-name="Saved task objective" />
+    <TextBlock text="{Binding Observation}" text-wrapping="Wrap" accessible-name="Execution observation" />
+    <Button id="space-task-refresh" action="task.refresh" content="Refresh task" accessible-name="Refresh this canonical task" />
+    <TextBlock text="Plan and accepted work" font-size="18" />
+    <TextBlock text="{Binding Plan}" text-wrapping="Wrap" accessible-name="Canonical action graph" />
+    <TextBlock text="{Binding Checkpoint}" text-wrapping="Wrap" accessible-name="Acknowledged checkpoint" />
+    <TextBlock text="Attempts and recovery" font-size="18" />
+    <TextBlock text="{Binding Attempts}" text-wrapping="Wrap" accessible-name="Provider attempts" />
+    <TextBlock text="{Binding Recovery}" text-wrapping="Wrap" accessible-name="Recovery observation" />
+    <TextBlock text="{Binding Continuation}" text-wrapping="Wrap" accessible-name="Continuation availability" />
+    <WrapPanel>
+      <Button id="space-task-pause" action="task.pause" content="Pause original run" enabled="{Binding CanPauseOriginal}" accessible-name="Request and join this same original run pause" />
+      <Button id="space-task-stop" action="task.stop" content="Stop original run" enabled="{Binding CanStopOriginal}" accessible-name="Request and join this same original run stop" />
+      <Button id="space-task-resume-original" action="task.resume-original" content="Resume approved original input" enabled="{Binding CanResumeOriginal}" accessible-name="Observe the owning service resume this same approved unstarted input" />
+    </WrapPanel>
+    <TextBlock text="Steer or queue work" font-size="18" />
+    <TextBox id="space-task-instruction" text="{Binding Instruction}" accepts-return="true" placeholdertext="Describe a follow-up" accessible-name="Task follow-up instruction" />
+    <WrapPanel>
+      <Button id="space-task-steer" action="task.steer" content="Steer task" enabled="{Binding CanSubmit}" accessible-name="Steer this same task" />
+      <Button id="space-task-queue" action="task.queue" content="Queue follow-up" enabled="{Binding CanSubmit}" accessible-name="Queue a follow-up on this same task" />
+    </WrapPanel>
+    <TextBlock text="{Binding FollowUps}" text-wrapping="Wrap" accessible-name="Steering and queued work" />
+    <TextBlock text="Development workspace" font-size="18" />
+    <TextBlock text="{Binding Project}" text-wrapping="Wrap" accessible-name="Canonical Dev project" />
+    <Button id="space-task-open-dev" action="dev.open" content="Open in Dev" enabled="{Binding CanOpenDev}" accessible-name="Open this same project and task in Dev" />
+    <TextBlock text="{Binding Status}" text-wrapping="Wrap" accessible-name="Task workspace result" />
+  </StackPanel>
+</Cui>

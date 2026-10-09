@@ -7,6 +7,7 @@
  * Maintenance: Preserve the layer boundary, nullability annotations, cancellation flow, and existing public signatures when changing this file.
  */
 
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -39,6 +40,7 @@ public sealed class NotesRepository(
     /// Stores gate locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
     private readonly SemaphoreSlim _gate = new(1, 1);
+    private Transaction? _currentTransaction;
     /// <summary>
     /// Stores root locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
@@ -48,13 +50,17 @@ public sealed class NotesRepository(
     /// </summary>
     private readonly string _trash = Path.Combine(paths.DataDirectory, "Notes", "Trash");
 
+    // Never replace or delete this file: all instances and processes must lock the same
+    // physical object, including while a document directory is moved to recoverable trash.
+    private readonly string _repositoryLock = Path.Combine(paths.DataDirectory, "Notes", ".repository.lock");
+    private static readonly TimeSpan RepositoryLockTimeout = TimeSpan.FromSeconds(30);
+
     /// <summary>
     /// Performs list asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    public async Task<IReadOnlyList<NotesDocumentSummary>> ListAsync(CancellationToken cancellationToken)
+    public Task<IReadOnlyList<NotesDocumentSummary>> ListAsync(CancellationToken cancellationToken)
     {
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return WithTransactionAsync<IReadOnlyList<NotesDocumentSummary>>(async transaction =>
         {
             if (!Directory.Exists(_root)) return [];
             var result = new List<NotesDocumentSummary>();
@@ -64,12 +70,12 @@ public sealed class NotesRepository(
                 if (!Guid.TryParse(Path.GetFileName(directory), out var id)) continue;
                 try
                 {
-                    var document = await LoadCoreAsync(id, allowRecovery: true, cancellationToken).ConfigureAwait(false);
+                    var document = await LoadCoreAsync(transaction, id, allowRecovery: true, cancellationToken).ConfigureAwait(false);
                     if (document is not null) result.Add(Summarize(document));
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or InvalidDataException)
                 {
-                    await diagnostics.WriteAsync(
+                    await transaction.WriteDiagnosticAsync(diagnostics,
                         ReliabilitySeverity.Warning,
                         "notes",
                         "document-list-skip",
@@ -83,192 +89,257 @@ public sealed class NotesRepository(
                 }
             }
             return result.OrderByDescending(item => item.UpdatedAt).ToArray();
-        }
-        finally
-        {
-            _gate.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <summary>
     /// Performs load asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    public async Task<NotesDocument?> LoadAsync(Guid documentId, CancellationToken cancellationToken)
+    public Task<NotesDocument?> LoadAsync(Guid documentId, CancellationToken cancellationToken)
     {
         if (documentId == Guid.Empty) throw new ArgumentException("Document ID cannot be empty.", nameof(documentId));
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try { return await LoadCoreAsync(documentId, allowRecovery: true, cancellationToken).ConfigureAwait(false); }
-        finally { _gate.Release(); }
+        return WithTransactionAsync(transaction => transaction.LoadAsync(documentId, cancellationToken), cancellationToken);
     }
 
     /// <summary>
     /// Performs save asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    public async Task<NotesSaveResult> SaveAsync(NotesDocument document, string reason, CancellationToken cancellationToken)
+    public Task<NotesSaveResult> SaveAsync(NotesDocument document, string reason, CancellationToken cancellationToken)
+    {
+        ValidateSaveCandidate(document);
+        var id = document.Id;
+        var version = document.Version;
+        return WithTransactionAsync(transaction => transaction.SaveAsync(document, reason, id, version,
+            cancellationToken), cancellationToken);
+    }
+
+    internal void ValidateSaveCandidate(NotesDocument document)
     {
         ArgumentNullException.ThrowIfNull(document);
         var validation = validator.Validate(document);
         if (!validation.IsValid)
             throw new InvalidDataException("Notes document validation failed: " + string.Join(" | ", validation.Issues.Where(issue => issue.IsError).Take(12).Select(issue => issue.Path + ": " + issue.Message)));
+    }
 
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+    internal string VerifyOwningRoot(IAppPaths claimedPaths)
+    {
+        ArgumentNullException.ThrowIfNull(claimedPaths);
+        var owned = Path.GetFullPath(_root).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        var claimed = Path.GetFullPath(Path.Combine(claimedPaths.DataDirectory, "Notes", "Documents"))
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        if (!string.Equals(owned, claimed, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
+            throw new ArgumentException("The verified Notes paths must belong to the inner repository's exact storage root.", nameof(claimedPaths));
+        return owned;
+    }
+
+    private async Task<NotesSaveResult> SaveCoreAsync(Transaction transaction, NotesDocument document, string reason,
+        Guid expectedId, long expectedVersion, CancellationToken cancellationToken, bool integrityRequired)
+    {
+        if (document.Id != expectedId || document.Version != expectedVersion)
+            throw new InvalidOperationException("The pending Notes document identity or revision changed while waiting to save.");
+        await GuardPendingWriteAsync(expectedId, cancellationToken).ConfigureAwait(false);
+        var prior = await InspectCurrentCoreAsync(expectedId, cancellationToken, applyPendingRecovery: true).ConfigureAwait(false);
+        if (prior.Document is null && await ReadPendingRecoveryAsync(expectedId, cancellationToken).ConfigureAwait(false) is not null)
+            throw new PendingRecoveryException("An existing Notes recovery must be inspected before creating this canonical identity.");
+        if (prior.Version != expectedVersion)
+            throw new NotesRevisionConflictException(expectedId, expectedVersion, prior.Version);
+
+        var currentPath = CurrentPath(expectedId);
+        var versions = VersionsDirectory(expectedId);
+        Directory.CreateDirectory(DocumentDirectory(expectedId));
+        Directory.CreateDirectory(versions);
+        var previousUpdatedAt = document.UpdatedAt;
+        var previousAutosaveAt = document.Recovery.LastAutosaveAt;
+        var previousHash = document.Recovery.LastValidSha256;
+        var previousHasRecovery = document.Recovery.HasUnsavedRecovery;
+        var previousRecoveryReason = document.Recovery.RecoveryReason;
+        var now = DateTimeOffset.UtcNow;
+        document.Version = checked(expectedVersion + 1);
+        document.UpdatedAt = now;
+        document.Recovery.LastAutosaveAt = now;
+        document.Recovery.HasUnsavedRecovery = false;
+        document.Recovery.RecoveryReason = string.Empty;
+
+        var operationId = Guid.NewGuid();
+        var temporary = currentPath + ".tmp-" + operationId.ToString("N");
+        var backup = BackupPath(expectedId);
+        var versionId = VersionFileName(document.Version, now);
+        var versionPath = Path.Combine(versions, versionId + ".haven-notes.json");
+        var committed = false;
+        var attempted = false;
+        var unresolved = false;
+        var ownsIntent = false;
+        var historyComplete = false;
+        var hash = string.Empty;
+        string? warning = null;
         try
         {
-            var directory = DocumentDirectory(document.Id);
-            var versions = VersionsDirectory(document.Id);
-            Directory.CreateDirectory(directory);
-            Directory.CreateDirectory(versions);
-            var currentPath = CurrentPath(document.Id);
-            var backupPath = BackupPath(document.Id);
-            var previousVersion = document.Version;
-            var now = DateTimeOffset.UtcNow;
-            document.Version = checked(document.Version + 1);
-            document.UpdatedAt = now;
-            document.Recovery.LastAutosaveAt = now;
-            document.Recovery.HasUnsavedRecovery = false;
-            document.Recovery.RecoveryReason = string.Empty;
-
-            var temporary = currentPath + ".tmp-" + Guid.NewGuid().ToString("N");
+            await WriteJsonDurablyAsync(temporary, document, cancellationToken).ConfigureAwait(false);
+            document.Recovery.LastValidSha256 = await ComputeSha256Async(temporary, cancellationToken).ConfigureAwait(false);
+            await WriteJsonDurablyAsync(temporary, document, cancellationToken, overwrite: true).ConfigureAwait(false);
+            var intended = await InspectFileCoreAsync(temporary, expectedId, cancellationToken).ConfigureAwait(false);
+            hash = intended.Sha256;
+            var intent = new NotesPublicationIntent(1, operationId, expectedId, prior.Binding, intended.Binding,
+                Path.GetFileName(temporary), Path.GetFileName(backup), now, false, integrityRequired);
+            await WriteJsonDurablyAsync(PublicationPath(expectedId), intent, cancellationToken).ConfigureAwait(false);
+            ownsIntent = true;
+            if (integrityRequired)
+                await WriteJsonDurablyAsync(PendingIntegrityPath(expectedId), new PendingNotesIntegrity(1, operationId,
+                    new NotesIntegrityReceipt(1, expectedId, intended.Version, hash, intended.SizeBytes, now)), cancellationToken).ConfigureAwait(false);
+            if (!prior.Absent)
+                await PreservePreviousVersionAsync(expectedId, currentPath, expectedVersion, reason, cancellationToken).ConfigureAwait(false);
+            // The prepared file is an externally visible filesystem artifact.
+            // Recheck its exact durable binding after journal/history work and
+            // immediately before admitting the publication effect.
+            var prepared = await InspectFileCoreAsync(temporary, expectedId, cancellationToken).ConfigureAwait(false);
+            if (prepared.Binding != intent.Intended)
+                throw new IOException("The prepared Notes bytes changed after their durable publication intent was staged.");
+            await MarkPublicationAttemptedAsync(intent, cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            attempted = true;
             try
             {
-                await WriteJsonDurablyAsync(temporary, document, cancellationToken).ConfigureAwait(false);
-                var hash = await ComputeSha256Async(temporary, cancellationToken).ConfigureAwait(false);
-                document.Recovery.LastValidSha256 = hash;
-                await WriteJsonDurablyAsync(temporary, document, cancellationToken, overwrite: true).ConfigureAwait(false);
-                hash = await ComputeSha256Async(temporary, cancellationToken).ConfigureAwait(false);
-
-                if (File.Exists(currentPath))
+                if (!prior.Absent) File.Replace(temporary, currentPath, backup, ignoreMetadataErrors: true);
+                else File.Move(temporary, currentPath);
+                committed = true;
+            }
+            catch (Exception publicationError)
+            {
+                // A platform rename may publish and then throw. Never infer failure
+                // from its exception, and never cancel the bounded observation.
+                NotesCurrentSnapshot? observed = null;
+                using var observation = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+                try { observed = await InspectCurrentCoreAsync(expectedId, observation.Token).ConfigureAwait(false); }
+                catch (Exception observationError) when (observationError is IOException or UnauthorizedAccessException or JsonException or InvalidDataException or OperationCanceledException) { }
+                if (observed is not null && observed.Binding == intent.Intended)
                 {
-                    await PreservePreviousVersionAsync(document.Id, currentPath, previousVersion, reason, cancellationToken).ConfigureAwait(false);
-                    File.Replace(temporary, currentPath, backupPath, ignoreMetadataErrors: true);
+                    committed = true;
+                    warning = "The intended document was observed committed after publication reported " + publicationError.GetType().Name + ".";
+                }
+                else if (observed is not null && observed.Binding == intent.Prior)
+                {
+                    attempted = false; // exact prior-state observation justifies rollback
+                    throw;
                 }
                 else
                 {
-                    File.Move(temporary, currentPath);
+                    unresolved = true;
+                    throw new IOException("Notes publication outcome could not be established; its intent, prepared bytes and backup were preserved. Inspect recovery before retrying.", publicationError);
                 }
-
-                var versionId = VersionFileName(document.Version, now);
-                var versionPath = Path.Combine(versions, versionId + ".haven-notes.json");
-                await CopyDurablyAsync(currentPath, versionPath, cancellationToken).ConfigureAwait(false);
-                await WriteJsonDurablyAsync(
-                    Path.Combine(versions, versionId + ".meta.json"),
-                    new NotesVersionManifest(document.Version, now, NormalizeReason(reason), new FileInfo(versionPath).Length, hash),
-                    cancellationToken).ConfigureAwait(false);
-                ApplyRetention(versions);
-
-                await diagnostics.WriteAsync(
-                    ReliabilitySeverity.Information,
-                    "notes",
-                    "document-saved",
-                    "A Haven Notes document was written atomically and versioned.",
-                    new Dictionary<string, string>
-                    {
-                        ["documentId"] = document.Id.ToString("D"),
-                        ["version"] = document.Version.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                        ["sha256"] = hash,
-                        ["reason"] = NormalizeReason(reason)
-                    },
-                    cancellationToken: cancellationToken).ConfigureAwait(false);
-                return new NotesSaveResult(document.Id, document.Version, now, hash, currentPath, versionPath);
             }
-            catch
+            File.Delete(PendingRecoveryPath(expectedId));
+            await CopyDurablyAsync(currentPath, versionPath, cancellationToken).ConfigureAwait(false);
+            await WriteJsonDurablyAsync(Path.Combine(versions, versionId + ".meta.json"),
+                new NotesVersionManifest(document.Version, now, NormalizeReason(reason), new FileInfo(versionPath).Length, hash), cancellationToken).ConfigureAwait(false);
+            ApplyRetention(versions);
+            historyComplete = true;
+            await transaction.WriteDiagnosticAsync(diagnostics, ReliabilitySeverity.Information, "notes", "document-saved",
+                "A Haven Notes document was written atomically and versioned.",
+                new Dictionary<string, string> { ["documentId"] = expectedId.ToString("D"),
+                    ["version"] = document.Version.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    ["sha256"] = hash, ["reason"] = NormalizeReason(reason) }, cancellationToken: cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception error) when (committed)
+        {
+            warning = JoinWarning(warning, "The document was committed, but " + (historyComplete ? "save diagnostics" : "version history") + " did not complete (" + error.GetType().Name + ").");
+        }
+        catch
+        {
+            if (!unresolved && !attempted)
             {
-                document.Version = previousVersion;
-                document.UpdatedAt = now;
-                document.Recovery.HasUnsavedRecovery = true;
-                document.Recovery.RecoveryReason = "The most recent save did not complete.";
-                throw;
+                document.Version = expectedVersion;
+                document.UpdatedAt = previousUpdatedAt;
+                document.Recovery.LastAutosaveAt = previousAutosaveAt;
+                document.Recovery.LastValidSha256 = previousHash;
+                document.Recovery.HasUnsavedRecovery = previousHasRecovery;
+                document.Recovery.RecoveryReason = previousRecoveryReason;
+                if (ownsIntent) { File.Delete(PendingIntegrityPath(expectedId)); File.Delete(PublicationPath(expectedId)); }
             }
-            finally
-            {
-                TryDelete(temporary);
-            }
+            throw;
         }
         finally
         {
-            _gate.Release();
+            if (!unresolved && (!attempted || committed)) TryDelete(temporary);
         }
+        // Verified saves retain the receipt journal until the matching sidecar is
+        // durable. Raw successful saves have no sidecar tail to reconcile.
+        if (!integrityRequired)
+        {
+            try { File.Delete(PublicationPath(expectedId)); }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+            { warning = JoinWarning(warning, "The committed publication intent could not be acknowledged (" + error.GetType().Name + ")."); }
+        }
+        return new NotesSaveResult(expectedId, document.Version, now, hash, currentPath, versionPath)
+        { VersionHistoryComplete = historyComplete, PostCommitWarning = warning };
     }
 
     /// <summary>
     /// Performs delete asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    public async Task DeleteAsync(Guid documentId, CancellationToken cancellationToken)
+    public Task DeleteAsync(Guid documentId, CancellationToken cancellationToken)
     {
         if (documentId == Guid.Empty) throw new ArgumentException("Document ID cannot be empty.", nameof(documentId));
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return WithTransactionAsync<bool>(async transaction =>
         {
+            await GuardPendingWriteAsync(documentId, cancellationToken).ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
             var directory = DocumentDirectory(documentId);
-            if (!Directory.Exists(directory)) return;
+            if (!Directory.Exists(directory)) return true;
             Directory.CreateDirectory(_trash);
             var destination = Path.Combine(_trash, documentId + "-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss", System.Globalization.CultureInfo.InvariantCulture));
             Directory.Move(directory, destination);
-            await diagnostics.WriteAsync(
+            await transaction.WriteDiagnosticAsync(diagnostics,
                 ReliabilitySeverity.Information,
                 "notes",
                 "document-trashed",
                 "A Haven Notes document was moved to recoverable trash.",
                 new Dictionary<string, string> { ["documentId"] = documentId.ToString("D") },
                 cancellationToken: cancellationToken).ConfigureAwait(false);
-        }
-        finally
-        {
-            _gate.Release();
-        }
+            return true;
+        }, cancellationToken);
     }
 
     /// <summary>
     /// Retrieves versions async for the current operation.
     /// </summary>
-    public async Task<IReadOnlyList<NotesVersionInfo>> GetVersionsAsync(Guid documentId, CancellationToken cancellationToken)
+    public Task<IReadOnlyList<NotesVersionInfo>> GetVersionsAsync(Guid documentId, CancellationToken cancellationToken)
     {
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try { return await GetVersionsCoreAsync(documentId, cancellationToken).ConfigureAwait(false); }
-        finally { _gate.Release(); }
+        return WithTransactionAsync<IReadOnlyList<NotesVersionInfo>>(async transaction =>
+        {
+            return await GetVersionsCoreAsync(documentId, cancellationToken).ConfigureAwait(false);
+        }, cancellationToken);
     }
 
     /// <summary>
     /// Performs load version asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    public async Task<NotesDocument?> LoadVersionAsync(Guid documentId, string versionId, CancellationToken cancellationToken)
+    public Task<NotesDocument?> LoadVersionAsync(Guid documentId, string versionId, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(versionId) || versionId.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || versionId.Contains("..", StringComparison.Ordinal))
             throw new ArgumentException("A managed Notes version ID is required.", nameof(versionId));
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return WithTransactionAsync<NotesDocument?>(async transaction =>
         {
             var root = Path.GetFullPath(VersionsDirectory(documentId)).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
             var path = Path.GetFullPath(Path.Combine(root, versionId + ".haven-notes.json"));
             if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase) || !File.Exists(path)) return null;
-            return await ReadAndValidateAsync(path, cancellationToken).ConfigureAwait(false);
-        }
-        finally
-        {
-            _gate.Release();
-        }
+            return await ReadAndValidateAsync(path, documentId, cancellationToken).ConfigureAwait(false);
+        }, cancellationToken);
     }
 
     /// <summary>
     /// Performs recover latest asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    public async Task<NotesDocument?> RecoverLatestAsync(Guid documentId, CancellationToken cancellationToken)
-    {
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try { return await RecoverCoreAsync(documentId, cancellationToken).ConfigureAwait(false); }
-        finally { _gate.Release(); }
-    }
+    public Task<NotesDocument?> RecoverLatestAsync(Guid documentId, CancellationToken cancellationToken) =>
+        WithTransactionAsync(transaction => transaction.RecoverAsync(documentId, cancellationToken), cancellationToken);
 
     /// <summary>
     /// Performs search asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    public async Task<IReadOnlyList<NotesSearchHit>> SearchAsync(string query, CancellationToken cancellationToken)
+    public Task<IReadOnlyList<NotesSearchHit>> SearchAsync(string query, CancellationToken cancellationToken)
     {
         var normalized = string.IsNullOrWhiteSpace(query) ? string.Empty : query.Trim();
-        if (normalized.Length < 2) return [];
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        if (normalized.Length < 2) return Task.FromResult<IReadOnlyList<NotesSearchHit>>([]);
+        return WithTransactionAsync<IReadOnlyList<NotesSearchHit>>(async transaction =>
         {
             if (!Directory.Exists(_root)) return [];
             var result = new List<NotesSearchHit>();
@@ -277,7 +348,7 @@ public sealed class NotesRepository(
                 cancellationToken.ThrowIfCancellationRequested();
                 if (!Guid.TryParse(Path.GetFileName(directory), out var id)) continue;
                 NotesDocument? document;
-                try { document = await LoadCoreAsync(id, allowRecovery: false, cancellationToken).ConfigureAwait(false); }
+                try { document = await LoadCoreAsync(transaction, id, allowRecovery: false, cancellationToken).ConfigureAwait(false); }
                 catch (Exception ex) when (ex is IOException or JsonException or InvalidDataException or UnauthorizedAccessException) { continue; }
                 if (document is null) continue;
                 foreach (var section in document.Sections)
@@ -300,26 +371,33 @@ public sealed class NotesRepository(
                 }
             }
             return result;
-        }
-        finally
-        {
-            _gate.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <summary>
     /// Performs load core asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    private async Task<NotesDocument?> LoadCoreAsync(Guid documentId, bool allowRecovery, CancellationToken cancellationToken)
+    private async Task<NotesDocument?> LoadCoreAsync(Transaction transaction, Guid documentId, bool allowRecovery, CancellationToken cancellationToken)
     {
+        var intent = await ReadPublicationIntentAsync(documentId, cancellationToken).ConfigureAwait(false);
+        await ReadPendingIntegrityAsync(documentId, intent, cancellationToken).ConfigureAwait(false);
         var path = CurrentPath(documentId);
-        if (!File.Exists(path)) return allowRecovery ? await RecoverCoreAsync(documentId, cancellationToken).ConfigureAwait(false) : null;
-        try { return await ReadAndValidateAsync(path, cancellationToken).ConfigureAwait(false); }
-        catch (Exception ex) when (allowRecovery && ex is IOException or UnauthorizedAccessException or JsonException or InvalidDataException)
+        if (intent is not null && !File.Exists(path))
+            throw new PendingRecoveryException("A pending Notes publication must be inspected before recovery.");
+        if (intent is not null)
+        {
+            var observed = await InspectCurrentCoreAsync(documentId, cancellationToken).ConfigureAwait(false);
+            if (observed.Binding != intent.Prior && observed.Binding != intent.Intended)
+                throw new PendingRecoveryException("The pending Notes publication does not match either exact observed state and was preserved.");
+        }
+        if (!File.Exists(path)) return allowRecovery ? await RecoverCoreAsync(transaction, documentId, cancellationToken).ConfigureAwait(false) : null;
+        try { return await ReadAndValidateAsync(path, documentId, cancellationToken, applyPendingRecovery: true).ConfigureAwait(false); }
+        catch (Exception ex) when (allowRecovery && intent is null && ex is not PendingRecoveryException &&
+                                   ex is IOException or UnauthorizedAccessException or JsonException or InvalidDataException)
         {
             Quarantine(path, "corrupt-current");
-            var recovered = await RecoverCoreAsync(documentId, cancellationToken).ConfigureAwait(false);
-            await diagnostics.WriteAsync(
+            var recovered = await RecoverCoreAsync(transaction, documentId, cancellationToken).ConfigureAwait(false);
+            await transaction.WriteDiagnosticAsync(diagnostics,
                 recovered is null ? ReliabilitySeverity.Critical : ReliabilitySeverity.Warning,
                 "notes",
                 recovered is null ? "recovery-failed" : "document-recovered",
@@ -337,8 +415,16 @@ public sealed class NotesRepository(
     /// <summary>
     /// Performs recover core asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    private async Task<NotesDocument?> RecoverCoreAsync(Guid documentId, CancellationToken cancellationToken)
+    private async Task<NotesDocument?> RecoverCoreAsync(Transaction transaction, Guid documentId, CancellationToken cancellationToken)
     {
+        var current = CurrentPath(documentId);
+        var intent = await ReadPublicationIntentAsync(documentId, cancellationToken).ConfigureAwait(false);
+        await ReadPendingIntegrityAsync(documentId, intent, cancellationToken).ConfigureAwait(false);
+        if (intent is not null)
+            throw new PendingRecoveryException("A pending Notes publication must be inspected before recovery.");
+        var pending = !File.Exists(current)
+            ? await ReadPendingRecoveryAsync(documentId, cancellationToken).ConfigureAwait(false)
+            : null;
         var candidates = new List<string>();
         var backup = BackupPath(documentId);
         if (File.Exists(backup)) candidates.Add(backup);
@@ -349,38 +435,479 @@ public sealed class NotesRepository(
         foreach (var candidate in candidates)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            var validatedCandidate = false;
             try
             {
-                var document = await ReadAndValidateAsync(candidate, cancellationToken).ConfigureAwait(false);
-                document.Recovery.HasUnsavedRecovery = true;
-                document.Recovery.LastRecoveredAt = DateTimeOffset.UtcNow;
-                document.Recovery.RecoveryReason = "Recovered after the current file failed validation.";
-                document.Revisions.Add(new NotesRevision
+                var document = await ReadAndValidateAsync(candidate, documentId, cancellationToken).ConfigureAwait(false);
+                validatedCandidate = true;
+                var recoveredAt = DateTimeOffset.UtcNow;
+                var recoveryId = Guid.NewGuid();
+                if (!File.Exists(current))
                 {
-                    Kind = NotesRevisionKind.Restored,
-                    Summary = "Recovered the last valid Notes version",
-                    CreatedAt = DateTimeOffset.UtcNow,
-                    Author = "Haven recovery"
-                });
+                    var temporary = current + ".tmp-recovery-" + Guid.NewGuid().ToString("N");
+                    try
+                    {
+                        await CopyDurablyAsync(candidate, temporary, cancellationToken).ConfigureAwait(false);
+                        var copied = await ReadAndValidateAsync(temporary, documentId, cancellationToken).ConfigureAwait(false);
+                        var hash = await ComputeSha256Async(temporary, cancellationToken).ConfigureAwait(false);
+                        if (copied.Version != document.Version)
+                            throw new InvalidDataException("The recovery candidate changed while it was copied.");
+                        if (pending is not null && (pending.Version != copied.Version || pending.Sha256 != hash))
+                            continue;
+                        pending ??= new PendingNotesRecovery(1, documentId, copied.Version, hash, recoveredAt, recoveryId);
+                        recoveredAt = pending.RecoveredAt;
+                        recoveryId = pending.RecoveryRevisionId;
+                        if (!File.Exists(PendingRecoveryPath(documentId)))
+                            await WritePendingRecoveryAsync(pending, cancellationToken).ConfigureAwait(false);
+                        cancellationToken.ThrowIfCancellationRequested();
+                        // Never replace a current file that appeared outside this owned recovery.
+                        File.Move(temporary, current);
+                        document = copied;
+                    }
+                    finally { TryDelete(temporary); }
+                }
+                MarkPendingRecovery(document, recoveredAt, recoveryId);
                 return document;
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or InvalidDataException) { }
+            catch (Exception ex) when (!validatedCandidate && ex is not PendingRecoveryException &&
+                                       ex is IOException or UnauthorizedAccessException or JsonException or InvalidDataException) { }
         }
+        if (pending is not null)
+            throw new PendingRecoveryException("The pending Notes recovery has no matching validated copy.");
         return null;
     }
 
     /// <summary>
     /// Performs read and validate asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    private async Task<NotesDocument> ReadAndValidateAsync(string path, CancellationToken cancellationToken)
+    private async Task<NotesDocument> ReadAndValidateAsync(string path, Guid expectedId, CancellationToken cancellationToken,
+        bool applyPendingRecovery = false)
     {
         await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan);
         var document = await JsonSerializer.DeserializeAsync<NotesDocument>(stream, JsonOptions, cancellationToken).ConfigureAwait(false)
                        ?? throw new InvalidDataException("The Notes document was empty.");
+        if (document.Id != expectedId)
+            throw new InvalidDataException("The Notes file does not belong to its canonical document identity.");
         var validation = validator.Validate(document);
         if (!validation.IsValid)
             throw new InvalidDataException("The Notes document failed validation: " + string.Join(" | ", validation.Issues.Where(issue => issue.IsError).Take(8).Select(issue => issue.Path + ": " + issue.Message)));
+        if (applyPendingRecovery)
+        {
+            var pending = await ReadPendingRecoveryAsync(expectedId, cancellationToken).ConfigureAwait(false);
+            if (pending is not null && pending.Version >= document.Version)
+            {
+                stream.Position = 0;
+                var hash = Convert.ToHexString(await SHA256.HashDataAsync(stream, cancellationToken).ConfigureAwait(false)).ToLowerInvariant();
+                if (pending.Version != document.Version || pending.Sha256 != hash)
+                    throw new PendingRecoveryException("The pending Notes recovery does not match the observed current bytes.");
+                MarkPendingRecovery(document, pending.RecoveredAt, pending.RecoveryRevisionId);
+            }
+        }
         return document;
+    }
+
+    private string PendingRecoveryPath(Guid id) => Path.Combine(DocumentDirectory(id), "current.recovery.json");
+
+    private async Task<PendingNotesRecovery?> ReadPendingRecoveryAsync(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var stream = new FileStream(PendingRecoveryPath(id), FileMode.Open, FileAccess.Read,
+                FileShare.Read, 4096, FileOptions.Asynchronous | FileOptions.SequentialScan);
+            var pending = await JsonSerializer.DeserializeAsync<PendingNotesRecovery>(stream, JsonOptions, cancellationToken).ConfigureAwait(false);
+            if (pending is null || pending.SchemaVersion != 1 || pending.DocumentId != id || id == Guid.Empty ||
+                pending.Version <= 0 || pending.RecoveryRevisionId == Guid.Empty || pending.RecoveredAt == default ||
+                pending.Sha256 is not { Length: 64 } || pending.Sha256.Any(value => value is not (>= '0' and <= '9' or >= 'a' and <= 'f')))
+                throw new PendingRecoveryException("The pending Notes recovery marker is invalid and was preserved.");
+            return pending;
+        }
+        catch (FileNotFoundException) { return null; }
+        catch (DirectoryNotFoundException) { return null; }
+        catch (Exception error) when (error is not PendingRecoveryException &&
+                                      error is IOException or UnauthorizedAccessException or JsonException or InvalidDataException)
+        {
+            throw new PendingRecoveryException("The pending Notes recovery marker could not be verified and was preserved.", error);
+        }
+    }
+
+    private async Task WritePendingRecoveryAsync(PendingNotesRecovery pending, CancellationToken cancellationToken)
+    {
+        var target = PendingRecoveryPath(pending.DocumentId);
+        var temporary = target + ".tmp-" + Guid.NewGuid().ToString("N");
+        try
+        {
+            await WriteJsonDurablyAsync(temporary, pending, cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            File.Move(temporary, target);
+        }
+        finally { TryDelete(temporary); }
+    }
+
+    private static void MarkPendingRecovery(NotesDocument document, DateTimeOffset recoveredAt, Guid recoveryId)
+    {
+        document.Recovery.HasUnsavedRecovery = true;
+        document.Recovery.LastRecoveredAt = recoveredAt;
+        document.Recovery.RecoveryReason = "Recovered after the current file failed validation.";
+        if (document.Revisions.All(revision => revision.Id != recoveryId))
+            document.Revisions.Add(new NotesRevision
+            {
+                Id = recoveryId,
+                Kind = NotesRevisionKind.Restored,
+                Summary = "Recovered the last valid Notes version",
+                CreatedAt = recoveredAt,
+                Author = "Haven recovery"
+            });
+    }
+
+    private sealed record PendingNotesRecovery(int SchemaVersion, Guid DocumentId, long Version, string Sha256,
+        DateTimeOffset RecoveredAt, Guid RecoveryRevisionId);
+
+    internal sealed class PendingRecoveryException(string message, Exception? inner = null) : IOException(message, inner);
+
+    // An issuer-bound capability: construction and admission belong exclusively
+    // to WithTransactionAsync. Every original task is retained and settled.
+    internal sealed class Transaction
+    {
+        private readonly NotesRepository _owner;
+        private readonly object _admission = new();
+        private readonly List<Task> _tasks = [];
+        private readonly List<Func<ValueTask>> _diagnostics = [];
+        private Task _tail = Task.CompletedTask;
+        private bool _active = true;
+        private bool _diagnosticsClosed;
+        internal NotesSaveResult? CommittedReceipt { get; private set; }
+        private Transaction(NotesRepository owner) => _owner = owner;
+        // Issued instances are inert until their owner registers the exact
+        // instance while holding its gate and physical lease.
+        internal static Transaction Issue(NotesRepository owner) => new(owner);
+
+        private Task<T> Admit<T>(Func<Task<T>> operation)
+        {
+            lock (_admission)
+            {
+                EnsureActive(_owner);
+                var predecessor = _tail;
+                var task = ExecuteAsync(predecessor, operation);
+                _tasks.Add(task);
+                _tail = task;
+                return task;
+            }
+        }
+        private static async Task<T> ExecuteAsync<T>(Task predecessor, Func<Task<T>> operation)
+        {
+            try { await predecessor.ConfigureAwait(false); } catch (Exception) { /* retained by drain */ }
+            Task<T>? original = null;
+            try
+            {
+                original = operation() ?? throw new InvalidOperationException("The original Notes operation returned no task.");
+                return await original.ConfigureAwait(false);
+            }
+            catch (Exception error)
+            {
+                // Await exposes one member of a multiply-faulted Task. Retain its
+                // original compound before this admitted wrapper can replace it.
+                if (original?.Exception is { InnerExceptions.Count: > 1 } compound)
+                    throw new AggregateException("The original Notes operation failed.", compound.InnerExceptions);
+                // A faulted or synchronous OCE is an original fault, not evidence of
+                // an actually canceled Task. Preserve its cause and faulted status.
+                if (error is OperationCanceledException && original?.IsCanceled != true)
+                    throw new AggregateException("The original Notes operation faulted with a cancellation exception.", error);
+                throw;
+            }
+        }
+        private void EnsureActive(NotesRepository issuer)
+        {
+            if (!_active || !ReferenceEquals(issuer, _owner) || !ReferenceEquals(_owner._currentTransaction, this))
+                throw new InvalidOperationException("The Notes transaction is no longer owned and active.");
+        }
+        internal Task<NotesSaveResult> SaveAsync(NotesDocument document, string reason, Guid expectedId,
+            long expectedVersion, CancellationToken token, bool integrityRequired = false) =>
+            Admit(async () => CommittedReceipt = await _owner.SaveCoreAsync(this, document, reason, expectedId, expectedVersion, token, integrityRequired).ConfigureAwait(false));
+        internal Task<NotesDocument?> LoadAsync(Guid id, CancellationToken token) =>
+            Admit(() => _owner.LoadCoreAsync(this, id, allowRecovery: true, token));
+        internal Task<NotesCurrentSnapshot> InspectCurrentAsync(Guid id, CancellationToken token) =>
+            Admit(() => _owner.InspectCurrentCoreAsync(id, token));
+        internal Task<NotesDocument?> RecoverAsync(Guid id, CancellationToken token, NotesCurrentSnapshot? invalidCurrent = null) =>
+            Admit(async () =>
+            {
+                if (invalidCurrent is not null)
+                {
+                    // An exact prior under an unresolved publication is valid
+                    // recovery evidence. Refuse every pending write state before
+                    // quarantine can move that canonical prior out of place.
+                    await _owner.GuardPendingWriteAsync(id, token).ConfigureAwait(false);
+                    var actual = await _owner.InspectCurrentCoreAsync(id, token).ConfigureAwait(false);
+                    if (actual.Binding != invalidCurrent.Binding || actual.Absent)
+                        throw new IOException("The invalid Notes current changed before quarantine.");
+                    Quarantine(_owner.CurrentPath(id), "integrity-mismatch");
+                }
+                return await _owner.RecoverCoreAsync(this, id, token).ConfigureAwait(false);
+            });
+        internal ValueTask WriteDiagnosticAsync(IProductionDiagnostics target, ReliabilitySeverity severity,
+            string component, string eventName, string message, IReadOnlyDictionary<string, string>? data = null,
+            string? correlationId = null, CancellationToken cancellationToken = default)
+        {
+            lock (_admission)
+            {
+                // Core work admitted before sealing may still buffer its diagnostics.
+                if (_diagnosticsClosed || !ReferenceEquals(_owner._currentTransaction, this))
+                    throw new InvalidOperationException("The Notes transaction diagnostic buffer is no longer active.");
+                var values = data is null ? null : new Dictionary<string, string>(data);
+                _diagnostics.Add(() => target.WriteAsync(severity, component, eventName, message, values, correlationId, cancellationToken));
+            }
+            return ValueTask.CompletedTask;
+        }
+        internal async Task<List<Exception>> SealAndDrainAsync()
+        {
+            Task[] tasks;
+            lock (_admission) { _active = false; tasks = _tasks.ToArray(); }
+            var errors = new List<Exception>();
+            foreach (var task in tasks)
+                try { await task.ConfigureAwait(false); }
+                catch (Exception error) { AddOriginalTaskFailures(errors, task, error); }
+            lock (_admission) { _diagnosticsClosed = true; }
+            return errors;
+        }
+        internal async Task<List<Exception>> ReplayDiagnosticsAsync()
+        {
+            var errors = new List<Exception>();
+            foreach (var diagnostic in _diagnostics)
+            {
+                Task? original = null;
+                try
+                {
+                    // Consume each ValueTask once; retain the same wrapped Task,
+                    // including all original faults supplied by the diagnostics owner.
+                    original = diagnostic().AsTask();
+                    await original.ConfigureAwait(false);
+                }
+                catch (Exception error) { AddOriginalTaskFailures(errors, original, error); }
+            }
+            return errors;
+        }
+    }
+
+    internal async Task<T> WithTransactionAsync<T>(Func<Transaction, Task<T>> operation, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        Transaction? transaction = null;
+        FileStream? lease = null;
+        T? result = default;
+        var errors = new List<Exception>();
+        try
+        {
+            lease = await AcquireRepositoryLeaseAsync(cancellationToken).ConfigureAwait(false);
+            transaction = Transaction.Issue(this);
+            _currentTransaction = transaction;
+            Task<T>? original = null;
+            try
+            {
+                original = operation(transaction) ?? throw new InvalidOperationException("The original Notes transaction returned no task.");
+                result = await original.ConfigureAwait(false);
+            }
+            catch (Exception error) { AddOriginalTaskFailures(errors, original, error); }
+            errors.AddRange(await transaction.SealAndDrainAsync().ConfigureAwait(false));
+        }
+        finally
+        {
+            _currentTransaction = null;
+            Task? originalDispose = null;
+            try
+            {
+                if (lease is not null)
+                {
+                    originalDispose = lease.DisposeAsync().AsTask();
+                    await originalDispose.ConfigureAwait(false);
+                }
+            }
+            catch (Exception error) { AddOriginalTaskFailures(errors, originalDispose, error); }
+            finally { _gate.Release(); }
+        }
+        if (transaction is not null) errors.AddRange(await transaction.ReplayDiagnosticsAsync().ConfigureAwait(false));
+        errors = errors.Distinct<Exception>(ReferenceEqualityComparer.Instance).ToList();
+        if (errors.Count > 0)
+        {
+            if (typeof(T) == typeof(NotesSaveResult) && (result as NotesSaveResult ?? transaction?.CommittedReceipt) is { } receipt)
+                return (T)(object)(receipt with { PostCommitWarning = JoinWarning(receipt.PostCommitWarning,
+                    "The committed document has transaction or diagnostic warnings (" + string.Join(", ", errors.Select(error => error.GetType().Name)) + ").") });
+            if (errors.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(errors[0]).Throw();
+            throw new AggregateException("Notes transaction operations or diagnostics failed.", errors);
+        }
+        return result!;
+    }
+
+    private static void AddOriginalTaskFailures(List<Exception> errors, Task? original, Exception observed)
+    {
+        if (original?.Exception is { } compound)
+        {
+            // Keep opaque empty aggregates as original objects. A sole faulted OCE
+            // needs a nonempty envelope so our async owner does not reclassify it.
+            foreach (var failure in compound.InnerExceptions)
+                errors.Add(failure is OperationCanceledException
+                    ? new AggregateException("The original Notes task faulted with a cancellation exception.", failure)
+                    : failure);
+        }
+        else if (original is null && observed is OperationCanceledException)
+            errors.Add(new AggregateException("The original Notes callback synchronously faulted with a cancellation exception.", observed));
+        else errors.Add(observed); // Actual canceled tasks remain canceled; no token-flag inference.
+    }
+
+    internal static string JoinWarning(string? first, string next) => string.IsNullOrWhiteSpace(first) ? next : first + " " + next;
+    internal sealed record NotesStateBinding(Guid DocumentId, long DocumentVersion, string Sha256, long SizeBytes, bool Absent);
+    internal sealed record NotesCurrentSnapshot(NotesDocument? Document, string Sha256, long SizeBytes)
+    {
+        internal bool Absent => Document is null;
+        internal long Version => Document?.Version ?? 0;
+        internal NotesStateBinding Binding => new(Document?.Id ?? Guid.Empty, Version, Sha256, SizeBytes, Absent);
+    }
+    internal sealed record NotesPublicationIntent(int SchemaVersion, Guid OperationId, Guid DocumentId,
+        NotesStateBinding Prior, NotesStateBinding Intended, string TemporaryFile, string BackupFile,
+        DateTimeOffset SavedAt, bool Attempted, bool IntegrityRequired);
+    internal sealed record NotesIntegrityReceipt(int Version, Guid DocumentId, long DocumentVersion,
+        string Sha256, long SizeBytes, DateTimeOffset CreatedAt)
+    {
+        public long VersionNumber => DocumentVersion;
+    }
+    internal sealed record PendingNotesIntegrity(int SchemaVersion, Guid OperationId, NotesIntegrityReceipt Manifest);
+    private string PublicationPath(Guid id) => Path.Combine(DocumentDirectory(id), "current.publication.json");
+    private string PendingIntegrityPath(Guid id) => Path.Combine(DocumentDirectory(id), "current.integrity.pending.json");
+    private async Task GuardPendingWriteAsync(Guid id, CancellationToken token)
+    {
+        if (await ReadPublicationIntentAsync(id, token).ConfigureAwait(false) is not null ||
+            File.Exists(PendingIntegrityPath(id)) || Directory.Exists(PendingIntegrityPath(id)))
+            throw new PendingRecoveryException("An unresolved Notes publication or integrity intent was preserved; inspect recovery before writing.");
+        await ReadPendingRecoveryAsync(id, token).ConfigureAwait(false);
+    }
+    internal async Task<NotesPublicationIntent?> ReadPublicationIntentAsync(Guid id, CancellationToken token)
+    {
+        try
+        {
+            await using var stream = new FileStream(PublicationPath(id), FileMode.Open, FileAccess.Read, FileShare.Read,
+                4096, FileOptions.Asynchronous | FileOptions.SequentialScan);
+            var intent = await JsonSerializer.DeserializeAsync<NotesPublicationIntent>(stream, JsonOptions, token).ConfigureAwait(false);
+            if (intent is null || intent.SchemaVersion != 1 || intent.OperationId == Guid.Empty || intent.DocumentId != id ||
+                id == Guid.Empty || intent.SavedAt == default || intent.Intended is null || intent.Prior is null ||
+                !ValidBinding(intent.Intended, id, allowAbsent: false) || !ValidBinding(intent.Prior, id, allowAbsent: true) ||
+                intent.Intended.DocumentVersion != checked(intent.Prior.DocumentVersion + 1) ||
+                intent.TemporaryFile != "current.haven-notes.json.tmp-" + intent.OperationId.ToString("N") ||
+                intent.BackupFile != "backup.haven-notes.json")
+                throw new PendingRecoveryException("The pending Notes publication intent is invalid and was preserved.");
+            return intent;
+        }
+        catch (FileNotFoundException) { return null; }
+        catch (DirectoryNotFoundException) { return null; }
+        catch (Exception error) when (error is not PendingRecoveryException && error is IOException or UnauthorizedAccessException or JsonException or InvalidDataException or OverflowException)
+        { throw new PendingRecoveryException("The pending Notes publication intent could not be verified and was preserved.", error); }
+    }
+    private static bool ValidBinding(NotesStateBinding binding, Guid id, bool allowAbsent) => binding.Absent
+        ? allowAbsent && binding.DocumentId == Guid.Empty && binding.DocumentVersion == 0 && binding.SizeBytes == 0 && binding.Sha256 == string.Empty
+        : binding.DocumentId == id && binding.DocumentVersion > 0 && binding.SizeBytes > 0 && binding.Sha256 is { Length: 64 } &&
+            binding.Sha256.All(value => value is >= '0' and <= '9' or >= 'a' and <= 'f');
+    internal async Task<PendingNotesIntegrity?> ReadPendingIntegrityAsync(Guid id, NotesPublicationIntent? intent, CancellationToken token)
+    {
+        try
+        {
+            await using var stream = new FileStream(PendingIntegrityPath(id), FileMode.Open, FileAccess.Read, FileShare.Read,
+                4096, FileOptions.Asynchronous | FileOptions.SequentialScan);
+            var pending = await JsonSerializer.DeserializeAsync<PendingNotesIntegrity>(stream, JsonOptions, token).ConfigureAwait(false);
+            if (intent is null || !intent.IntegrityRequired || pending is null || pending.SchemaVersion != 1 ||
+                pending.OperationId != intent.OperationId || pending.Manifest is null || pending.Manifest.Version != 1 ||
+                pending.Manifest.DocumentId != id || pending.Manifest.DocumentVersion != intent.Intended.DocumentVersion ||
+                pending.Manifest.SizeBytes != intent.Intended.SizeBytes || pending.Manifest.Sha256 != intent.Intended.Sha256 ||
+                pending.Manifest.CreatedAt != intent.SavedAt)
+                throw new PendingRecoveryException("The pending Notes integrity intent is invalid or mismatched and was preserved.");
+            return pending;
+        }
+        catch (FileNotFoundException) { return null; }
+        catch (DirectoryNotFoundException) { return null; }
+        catch (Exception error) when (error is not PendingRecoveryException && error is IOException or UnauthorizedAccessException or JsonException or InvalidDataException)
+        { throw new PendingRecoveryException("The pending Notes integrity intent could not be verified and was preserved.", error); }
+    }
+    private async Task MarkPublicationAttemptedAsync(NotesPublicationIntent intent, CancellationToken token)
+    {
+        var path = PublicationPath(intent.DocumentId);
+        var temporary = path + ".tmp-" + intent.OperationId.ToString("N");
+        try
+        {
+            await WriteJsonDurablyAsync(temporary, intent with { Attempted = true }, token).ConfigureAwait(false);
+            token.ThrowIfCancellationRequested();
+            File.Replace(temporary, path, null, ignoreMetadataErrors: true);
+        }
+        finally { TryDelete(temporary); }
+    }
+    private async Task<NotesCurrentSnapshot> InspectCurrentCoreAsync(Guid id, CancellationToken token, bool applyPendingRecovery = false)
+    {
+        try
+        {
+            var result = await InspectFileCoreAsync(CurrentPath(id), id, token).ConfigureAwait(false);
+            if (applyPendingRecovery)
+                await ReadAndValidateAsync(CurrentPath(id), id, token, applyPendingRecovery: true).ConfigureAwait(false);
+            return result;
+        }
+        catch (FileNotFoundException) { return new(null, string.Empty, 0); }
+        catch (DirectoryNotFoundException) { return new(null, string.Empty, 0); }
+    }
+    private async Task<NotesCurrentSnapshot> InspectFileCoreAsync(string path, Guid id, CancellationToken token)
+    {
+        await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024,
+            FileOptions.Asynchronous | FileOptions.SequentialScan);
+        var document = await JsonSerializer.DeserializeAsync<NotesDocument>(stream, JsonOptions, token).ConfigureAwait(false)
+            ?? throw new InvalidDataException("The Notes document was empty.");
+        if (document.Id != id) throw new InvalidDataException("The Notes file does not belong to its canonical document identity.");
+        var validation = validator.Validate(document);
+        if (!validation.IsValid) throw new InvalidDataException("The observed Notes document failed validation.");
+        stream.Position = 0;
+        var hash = Convert.ToHexString(await SHA256.HashDataAsync(stream, token).ConfigureAwait(false)).ToLowerInvariant();
+        return new(document, hash, stream.Length);
+    }
+
+    private async Task<FileStream> AcquireRepositoryLeaseAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        Directory.CreateDirectory(Path.GetDirectoryName(_repositoryLock)!);
+        var elapsed = Stopwatch.StartNew();
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            FileStream? lease = null;
+            try
+            {
+                lease = new FileStream(_repositoryLock, FileMode.OpenOrCreate, FileAccess.ReadWrite,
+                    FileShare.None, 1, FileOptions.Asynchronous);
+                // Some Unix/network filesystems can accept an open without enforcing flock.
+                // Refuse them rather than treating an unenforced handle as a transaction fence.
+                try
+                {
+                    using var unenforced = new FileStream(_repositoryLock, FileMode.Open, FileAccess.ReadWrite,
+                        FileShare.None, 1, FileOptions.Asynchronous);
+                    throw new IOException("Notes storage cannot enforce its exclusive repository lock.");
+                }
+                catch (IOException error) when (IsRepositoryLockContention(error)) { }
+                cancellationToken.ThrowIfCancellationRequested();
+                return lease;
+            }
+            catch (IOException error) when (IsRepositoryLockContention(error))
+            {
+                lease?.Dispose();
+                if (elapsed.Elapsed >= RepositoryLockTimeout)
+                    throw new IOException("Notes storage is busy in another repository operation.", new TimeoutException("The bounded repository lock wait expired.", error));
+                await Task.Delay(TimeSpan.FromMilliseconds(25), cancellationToken).ConfigureAwait(false);
+            }
+            catch
+            {
+                lease?.Dispose();
+                throw;
+            }
+        }
+    }
+
+    private static bool IsRepositoryLockContention(IOException error)
+    {
+        var code = error.HResult & 0xffff;
+        return OperatingSystem.IsWindows() ? code is 32 or 33
+            : OperatingSystem.IsMacOS() ? code == 35
+            : (OperatingSystem.IsLinux() || OperatingSystem.IsAndroid()) && code == 11;
     }
 
     /// <summary>
@@ -543,8 +1070,7 @@ public sealed class NotesRepository(
     {
         if (!File.Exists(path)) return;
         var destination = path + "." + reason + "-" + DateTime.UtcNow.ToString("yyyyMMddHHmmss", System.Globalization.CultureInfo.InvariantCulture) + "-" + Guid.NewGuid().ToString("N");
-        try { File.Move(path, destination); }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+        File.Move(path, destination);
     }
 
     /// <summary>

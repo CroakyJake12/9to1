@@ -1,0 +1,12 @@
+{
+  "Properties": {
+    "UseArtifactsOutput": "true",
+    "BaseIntermediateOutputPath": "/workspace/team-c/evidence/c6/sites-props-cb2/output/obj/HavenOS.Sites/",
+    "MSBuildProjectExtensionsPath": "/workspace/team-c/evidence/c6/sites-props-cb2/output/obj/HavenOS.Sites/",
+    "BaseOutputPath": "/workspace/team-c/evidence/c6/sites-props-cb2/output/bin/HavenOS.Sites/",
+    "ArtifactsPath": "/workspace/team-c/evidence/c6/sites-props-cb2/output",
+    "TargetFramework": "net10.0",
+    "TreatWarningsAsErrors": "true",
+    "Deterministic": "true"
+  }
+}

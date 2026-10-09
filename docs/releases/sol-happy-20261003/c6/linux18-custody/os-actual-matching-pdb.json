@@ -1,0 +1,328 @@
+{
+  "identity": {
+    "portablePdbId": "5e29e2faeab9204fab95008a4807664d14b44ac4",
+    "codeViewGuid": "fae2295e-b9ea-4f20-ab95-008a4807664d",
+    "codeViewStamp": 3293230100
+  },
+  "dllSha256": "c268f9d84c16cb38da7a3ea91a68b0ae8ac65da41e295403404ba77f71394d4a",
+  "pdbSha256": "d08510afbf95a45b444d1b4de5c566f5dded6689d94f80d14fba70c8b8611d42",
+  "trackedDocuments": {
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityOriginalFrameworkChoiceTests.cs": {
+      "digest": "99ca7b90ecbcce7e184c4e930f58e5329a60dcea1ed3241e2b01afd0d5015d26",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "99ca7b90ecbcce7e184c4e930f58e5329a60dcea1ed3241e2b01afd0d5015d26"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageFormatTests.cs": {
+      "digest": "6ae36418075cda03999a00e48389fd0d4a0c09f839da9ad9d2af8007b1f4bc03",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "6ae36418075cda03999a00e48389fd0d4a0c09f839da9ad9d2af8007b1f4bc03"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageHealthNativeTests.cs": {
+      "digest": "926b4323aa17fa03169940626d252608e3d15e2bd7943fa58f311a27f4b4bc44",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "926b4323aa17fa03169940626d252608e3d15e2bd7943fa58f311a27f4b4bc44"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageInspectorTests.cs": {
+      "digest": "7fe86989b79785b183a11ac6d794de1b545e63354e90e161fa3b9ab9872db381",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "7fe86989b79785b183a11ac6d794de1b545e63354e90e161fa3b9ab9872db381"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityRoutingTests.cs": {
+      "digest": "a30ab4945b7d57e6997947bae066db33352e8cec4dfea297b637349ba8e91b55",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "a30ab4945b7d57e6997947bae066db33352e8cec4dfea297b637349ba8e91b55"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/DesktopPagesTests.cs": {
+      "digest": "8ea1801dfebe1060af9c589fa4306876dab416c7634a49e6646883bfb7dd7492",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "8ea1801dfebe1060af9c589fa4306876dab416c7634a49e6646883bfb7dd7492"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoAndCuiTests.cs": {
+      "digest": "ad57556e8b0f5331c30879538ea20f17e2f5e18c13fb4f05123bfc117f9ae12d",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "ad57556e8b0f5331c30879538ea20f17e2f5e18c13fb4f05123bfc117f9ae12d"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoDisplayKeyTests.cs": {
+      "digest": "df61234ede087f13e9dc2fa84d83d7ad1ef1b79f75fad55b4c73374d2b0c6380",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "df61234ede087f13e9dc2fa84d83d7ad1ef1b79f75fad55b4c73374d2b0c6380"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoDisplayNativeTests.cs": {
+      "digest": "86bffc7aeb8445f03d0b54a4e858ffbde612ad4a6b1601293cdbb0e84c3f7374",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "86bffc7aeb8445f03d0b54a4e858ffbde612ad4a6b1601293cdbb0e84c3f7374"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeCustomizationNativeTests.cs": {
+      "digest": "b5e23c2f09aa31b8d0ca6b5e29699b10453031e4d4aad5526a0b025ed6780c38",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "b5e23c2f09aa31b8d0ca6b5e29699b10453031e4d4aad5526a0b025ed6780c38"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeCustomizationTests.cs": {
+      "digest": "5628b8cdee6bdd1da9839c90260faed1afbe0278135316cf2c88a6158ccf1291",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "5628b8cdee6bdd1da9839c90260faed1afbe0278135316cf2c88a6158ccf1291"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeLayoutNativeTests.cs": {
+      "digest": "692cc4019bb2066aac0bb94c97cbcdb9125bb9a434864f9e95bdf420b11abef3",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "692cc4019bb2066aac0bb94c97cbcdb9125bb9a434864f9e95bdf420b11abef3"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeNativeTests.cs": {
+      "digest": "0a20ef826e8ed16ec5555e2947a99c2a6f338e8b562cec2f75d7007aeee7f7c2",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "0a20ef826e8ed16ec5555e2947a99c2a6f338e8b562cec2f75d7007aeee7f7c2"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoKeyboardTests.cs": {
+      "digest": "2b098b0fbe61e73cf23721296f4ee7ee31db623c510834710b0e35ec6174d8df",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "2b098b0fbe61e73cf23721296f4ee7ee31db623c510834710b0e35ec6174d8df"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoNativeSessionTests.cs": {
+      "digest": "a1b0fab5aa6b61df970449bb508de2a710abd144276f78a66cf63c1be64a9062",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "a1b0fab5aa6b61df970449bb508de2a710abd144276f78a66cf63c1be64a9062"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoPrivateOriginalReadNativeTests.cs": {
+      "digest": "499f3f79f62c03ade849df51fae016164738d722a25fe6c7e3add08a982ad3bc",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "499f3f79f62c03ade849df51fae016164738d722a25fe6c7e3add08a982ad3bc"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoQueryStateNativeTests.cs": {
+      "digest": "bfdf5030cd801f57a2a343c21b293583392ad340acef5e977fe4220c619e26b8",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "bfdf5030cd801f57a2a343c21b293583392ad340acef5e977fe4220c619e26b8"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoScopeTests.cs": {
+      "digest": "087e088349b86c601d2c45221e62fdd2631a3221d984bd08cbddb0bb9bc8e373",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "087e088349b86c601d2c45221e62fdd2631a3221d984bd08cbddb0bb9bc8e373"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/InstallationReceiptInteropTests.cs": {
+      "digest": "e35e644a9b6a1229053f2559f33c8a16b62c711a69066560e22de7ae7e046f4b",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "e35e644a9b6a1229053f2559f33c8a16b62c711a69066560e22de7ae7e046f4b"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/InstallationReceiptTests.cs": {
+      "digest": "f87b9bf5b6f858a7c13060f2a967e75a9dbb46834405f16c384331b5b9929697",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "f87b9bf5b6f858a7c13060f2a967e75a9dbb46834405f16c384331b5b9929697"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/InstalledApplicationsOriginalActorReadTests.cs": {
+      "digest": "347635bcc3642d099e4545d7c73803ae7368c1b812086bdc704478da130d156d",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "347635bcc3642d099e4545d7c73803ae7368c1b812086bdc704478da130d156d"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LeaseBlockingHomeStore.cs": {
+      "digest": "d482a3636b70067d0e806322fc1d61372579f78c1e3391c7fa5b346905f5fc48",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "d482a3636b70067d0e806322fc1d61372579f78c1e3391c7fa5b346905f5fc48"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxControlledLaunchRemoteSessionTests.cs": {
+      "digest": "bb467f6e149d78a4ef24938d1fa08838f17f7c3d56257a744d8ea019e66275ea",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "bb467f6e149d78a4ef24938d1fa08838f17f7c3d56257a744d8ea019e66275ea"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxControlledLaunchTests.cs": {
+      "digest": "81f9ccde208088c0342ecf38cf6a58951770d70f2174982c7554a5208546c48f",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "81f9ccde208088c0342ecf38cf6a58951770d70f2174982c7554a5208546c48f"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxDiscoveryServerTests.cs": {
+      "digest": "6373c6991b9119afa7b1a223946c590b55003bf78fd627958f65962a2b368719",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "6373c6991b9119afa7b1a223946c590b55003bf78fd627958f65962a2b368719"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxHomeLeaseKernelWitnessTests.cs": {
+      "digest": "99c019edff9ba3f7439a3e16c2f85d533fd42007ef5f605b3c980ed13c2a7eec",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "99c019edff9ba3f7439a3e16c2f85d533fd42007ef5f605b3c980ed13c2a7eec"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxInstallationOriginalActorTests.cs": {
+      "digest": "8a2f2eeab2e852cd9a6733f3bafa61e68f16548fec26c44c0a24bce278686081",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "8a2f2eeab2e852cd9a6733f3bafa61e68f16548fec26c44c0a24bce278686081"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxInstalledApplicationWidgetBackendTests.cs": {
+      "digest": "31babafef092f7f4e43b01ca6cf58ec904d19ed999106ed729a4605faccfd5e3",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "31babafef092f7f4e43b01ca6cf58ec904d19ed999106ed729a4605faccfd5e3"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxInstalledPackageEnrollmentTests.cs": {
+      "digest": "52b86073c1ff4b754936195f78f96934c64d082fece319e39e1c9606f1b1273d",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "52b86073c1ff4b754936195f78f96934c64d082fece319e39e1c9606f1b1273d"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxNativeWidgetAcceptedTransportTests.cs": {
+      "digest": "309f36b9b845db61700b4c1d63eafc7349d424af6d91497649549c714b71ef0b",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "309f36b9b845db61700b4c1d63eafc7349d424af6d91497649549c714b71ef0b"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxNativeWidgetRegistrationServerTests.cs": {
+      "digest": "538764979df9863569933f00cef2a7ea861ceed00589acb7639df0f0de0f1835",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "538764979df9863569933f00cef2a7ea861ceed00589acb7639df0f0de0f1835"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxOriginalInstalledOwnerRuntimeTests.cs": {
+      "digest": "dad9f899b61836f213550225dda5db51b0dc7a8957b1ee31b5433e7204e7a8cd",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "dad9f899b61836f213550225dda5db51b0dc7a8957b1ee31b5433e7204e7a8cd"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxOriginalInstalledOwnerStartupTests.cs": {
+      "digest": "a7832f5bc8bbbbf3695dde0c64f6868eb94923ec1893e3e22a38caf9202cb9a7",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "a7832f5bc8bbbbf3695dde0c64f6868eb94923ec1893e3e22a38caf9202cb9a7"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxProcBoundedObservationTests.cs": {
+      "digest": "b59b1a6bdff9d8074bdfbc9a8806359d752afcc80be16878710c70e6bab9d478",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "b59b1a6bdff9d8074bdfbc9a8806359d752afcc80be16878710c70e6bab9d478"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxRuntimeEvidenceTests.cs": {
+      "digest": "8078a14532971bb602337a787925d3482dbc029dd3652e87b3464c0e8ef90501",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "8078a14532971bb602337a787925d3482dbc029dd3652e87b3464c0e8ef90501"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxSupervisedWidgetOwnerConnectionTests.cs": {
+      "digest": "99231e3286d3b8c6b42df831b93f99cc5ea9de541b71142708f5043884616398",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "99231e3286d3b8c6b42df831b93f99cc5ea9de541b71142708f5043884616398"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/ModelPickerTests.cs": {
+      "digest": "3dc14fd3317fd555961ec5aa007e510f195fb7a0a33d3207b106fe9db0458e4c",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "3dc14fd3317fd555961ec5aa007e510f195fb7a0a33d3207b106fe9db0458e4c"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellConfigurationTests.cs": {
+      "digest": "02bcdb42d1c917f20fc7512e9bf2ed37bd6054b7f644d272089c67a013233994",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "02bcdb42d1c917f20fc7512e9bf2ed37bd6054b7f644d272089c67a013233994"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellGoAllAppsHomeTests.cs": {
+      "digest": "c7e9e6ecc8c4b45f3b2076add2703342ae6bfbdf39c836ba90deb9fd1b1050f0",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "c7e9e6ecc8c4b45f3b2076add2703342ae6bfbdf39c836ba90deb9fd1b1050f0"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellGoPinnedHomeTests.cs": {
+      "digest": "20befde0dd3c8284489d9328a4134461c53a84aaa55ff8a4574ccd60240a6b15",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "20befde0dd3c8284489d9328a4134461c53a84aaa55ff8a4574ccd60240a6b15"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellNavigationGoTests.cs": {
+      "digest": "bda839a535376a2ca1075f4f16807c324469072919f8517986da324c46b3901a",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "bda839a535376a2ca1075f4f16807c324469072919f8517986da324c46b3901a"
+    },
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellSemanticTests.cs": {
+      "digest": "8e85745e6acba3453e012476d6e9b64914ec42926d3d860b385f0aaf589610de",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256",
+      "sourceSha256": "8e85745e6acba3453e012476d6e9b64914ec42926d3d860b385f0aaf589610de"
+    }
+  },
+  "untrackedDocumentIdentitiesOnly": {
+    "/home/runner/.nuget/packages/microsoft.net.test.sdk/17.14.1/build/net8.0/Microsoft.NET.Test.Sdk.Program.cs": {
+      "digest": "d66f12f9433816a8c7dc1b2acb9e1010f5418f5eeb51e80f1df57aa1dcab8d8a",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    "/home/runner/work/9to1/9to1/artifacts/root14-managed-build/obj/NineToOne.Os.Shell.Tests/release_linux-x64/NineToOne.Os.Shell.Tests.GlobalUsings.g.cs": {
+      "digest": "303e9cd7ab294ddd335cd7bba5ab391da9053502115a0a650433a369b543873f",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    "/home/runner/work/9to1/9to1/artifacts/root14-managed-build/obj/NineToOne.Os.Shell.Tests/release_linux-x64/.NETCoreApp,Version=v10.0.AssemblyAttributes.cs": {
+      "digest": "f79c1ad9a9fc76110b3655f5bfb5ff4e3168e9addceff05b937c0796f0ec34eb",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    },
+    "/home/runner/work/9to1/9to1/artifacts/root14-managed-build/obj/NineToOne.Os.Shell.Tests/release_linux-x64/NineToOne.Os.Shell.Tests.AssemblyInfo.cs": {
+      "digest": "7de8f80ae65a72c543c08a66c1105c28663f7325e6822044f1128074233a9b90",
+      "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+      "hashName": "sha256"
+    }
+  },
+  "requiredWholeSources": [
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityOriginalFrameworkChoiceTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageFormatTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageHealthNativeTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageInspectorTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityRoutingTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/DesktopPagesTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoAndCuiTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoDisplayKeyTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoDisplayNativeTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeCustomizationNativeTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeCustomizationTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeLayoutNativeTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeNativeTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoKeyboardTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoNativeSessionTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoPrivateOriginalReadNativeTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoQueryStateNativeTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoScopeTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/InstallationReceiptInteropTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/InstallationReceiptTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/InstalledApplicationsOriginalActorReadTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxControlledLaunchRemoteSessionTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxControlledLaunchTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxDiscoveryServerTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxHomeLeaseKernelWitnessTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxInstallationOriginalActorTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxInstalledApplicationWidgetBackendTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxInstalledPackageEnrollmentTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxNativeWidgetAcceptedTransportTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxNativeWidgetRegistrationServerTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxOriginalInstalledOwnerRuntimeTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxOriginalInstalledOwnerStartupTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxProcBoundedObservationTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxRuntimeEvidenceTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxSupervisedWidgetOwnerConnectionTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/ModelPickerTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellConfigurationTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellGoAllAppsHomeTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellGoPinnedHomeTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellNavigationGoTests.cs",
+    "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellSemanticTests.cs"
+  ]
+}

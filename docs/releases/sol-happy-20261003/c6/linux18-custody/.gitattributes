@@ -1,0 +1,2 @@
+# Preserve the exact original compiler output and recorded hash.
+actual-native-compiler-version.log whitespace=-blank-at-eof

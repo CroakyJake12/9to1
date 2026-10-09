@@ -1,0 +1,108 @@
+{
+  "status": "READ_ONLY_SCOPE_ASSESSMENT_NO_SOURCE_EDITS",
+  "producer": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
+  "currentHarness": "099d7ee01ca2f530c5c16acde7fc10e7f2e8ecd9",
+  "priorActualRun": 37210601635,
+  "priorActualControls": "67/67 bounded native edit/save/reopen PASS; original receipts untouched",
+  "proposedScenario": "rich-history",
+  "actualExistingCapabilities": {
+    "selection": "Paragraph native GotFocus calls VM.FocusBlock; toolbar uses actual selected block.",
+    "format": "Native Ctrl+B window command\u2192ToggleBold; Bold UIA Button TogglePattern\u2192PerformClick.",
+    "history": "Named native Undo and Redo buttons InvokePattern\u2192PerformClick\u2192canonical Dispatch/adapter/rich session.",
+    "durability": "Actual BoardProjection merge serializes changed whole-paragraph format to canonical runs[].bold; actual store readback only.",
+    "reopen": "Real packaged executable canonical explicit CLI file opens persisted rich data."
+  },
+  "proposedControls": [
+    "App-created fresh canonical identity and target, keyboard baseline paragraph, focus selects existing target.",
+    "Focus-guarded native Ctrl+B makes actual Bold UIA state On and durable canonical run bold true while text/block/document identities remain.",
+    "Process-bound actual Undo Invoke restores unformatted state, actual Redo Invoke restores bold state; reacquire current peers after each native rebuild.",
+    "Actual save/normal close/reopen restores native Bold state and canonical paragraph/identity."
+  ],
+  "scopeLimits": [
+    "No model/session/API effects, invented IDs, Home bootstrap, native app edits or provider resources.",
+    "Use UIA app history buttons to distinguish canonical document undo from TextBox local keyboard undo.",
+    "Original completed67 controls stay preserved; new dispatch requires new scenario and C6 review.",
+    "SDK-present runner only; Home/clean-PC/fullApp owner acceptance remains unverified."
+  ],
+  "nextAction": "Root scope decision; no runtime scheduled or implementation yet",
+  "sourceInputs": [
+    {
+      "path": "9to1 Workspace/Boards/app/Program.cs",
+      "bytes": 44045,
+      "sha256": "71aedab64dda619fd9e63910fe80f233f5499be20c8fda12347ab7daa1c03740",
+      "exactProducerBytes": true
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BlockRenderer.cs",
+      "bytes": 50495,
+      "sha256": "f33c0979ff4a47469bb0ad11684799c5469311d5ada826f043bb04fe0562731a",
+      "exactProducerBytes": true
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BoardsViewModel.cs",
+      "bytes": 83265,
+      "sha256": "c4097e551df7b5b6e2da7060ec6085ef9a3482a54e28436abd5f04a49f8bd75f",
+      "exactProducerBytes": true
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/ToolbarBuilder.cs",
+      "bytes": 22295,
+      "sha256": "c300c676948cbf6d29d50eaf830159886f4159f4494fac022906b40f16b086ed",
+      "exactProducerBytes": true
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/ShellChrome.cs",
+      "bytes": 2457,
+      "sha256": "f884ba8bd33277a3eacc1783c3ce1cc71d0abfe3fe7f577cb59fa6c6247e4f2a",
+      "exactProducerBytes": true
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BoardsIcons.cs",
+      "bytes": 3108,
+      "sha256": "1fd6f0d869be41844dacc7a51346b253b827d76b1bccc997f2a497f793231aa3",
+      "exactProducerBytes": true
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BoardProjection.cs",
+      "bytes": 50365,
+      "sha256": "4d74ddce861b602e3cd84209615a83a1f1c5f0077432cc4abbf01650404f3614",
+      "exactProducerBytes": true
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/ContractSessionAdapter.cs",
+      "bytes": 41060,
+      "sha256": "e26d6b59461d5a3ad6e68fc13231f2e585014bfc2bd89de5fb1693828fae3145",
+      "exactProducerBytes": true
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/RichBoardSession.cs",
+      "bytes": 19529,
+      "sha256": "e5406be4fd78dc7a7828f9b9646a8f8b0e9896a634753cb920d26b03c5a86134",
+      "exactProducerBytes": true
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/HavenRichBoardContract.cs",
+      "bytes": 33696,
+      "sha256": "aeec3484ac7a75156a14a305145851afebdffb66d4a20cf8e75ecc643381d674",
+      "exactProducerBytes": true
+    },
+    {
+      "path": "9to1 Workspace/Boards/app.tests/BoardsEditorTests.cs",
+      "bytes": 16971,
+      "sha256": "8c4c196af0ac7088e9780dd4effb2139426795503353fc4d49a8d2ab8529989f",
+      "exactProducerBytes": true
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/ToggleButtonAutomationPeer.cs",
+      "bytes": 1519,
+      "sha256": "cad98e633cbf6872a9c564c75fb9793d6a43d62fcbcb1275a0f2ca692d9cdda6",
+      "exactProducerBytes": true
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/ButtonAutomationPeer.cs",
+      "bytes": 1061,
+      "sha256": "2cf3aa4d9b42dcefac0a033b71b055daa79811b2ae8b675ea4a4e58e26e32f5b",
+      "exactProducerBytes": true
+    }
+  ]
+}

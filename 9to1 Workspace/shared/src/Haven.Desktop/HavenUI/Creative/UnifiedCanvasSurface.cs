@@ -13,6 +13,9 @@ internal enum UnifiedCanvasTool
 
 internal enum UnifiedCanvasHandle { None, NorthWest, NorthEast, SouthWest, SouthEast, Rotate }
 
+internal enum UnifiedCanvasInputOperation
+{ ReleaseInputState, PointerPressed, PointerMoved, PointerReleased, PointerWheel, TextInput, KeyDown, KeyUp }
+
 /// <summary>Shared retained canvas presentation used by standalone Canvas and embedded whiteboards.</summary>
 internal sealed class UnifiedCanvasSurface : HavenElement, IHavenDrawCommandSource, IHavenPointerInputTarget, IHavenScrollInputTarget, IHavenKeyboardInputTarget, IHavenTextInputTarget
 {
@@ -50,6 +53,39 @@ internal sealed class UnifiedCanvasSurface : HavenElement, IHavenDrawCommandSour
         SetValue(HavenProperties.Clip, true);
     }
 
+    // Opt-in producer custody. Null keeps the original standalone input cores.
+    internal Func<UnifiedCanvasInputOperation, Func<bool>, bool>? OriginalInputOwner { get; init; }
+    internal Action? DemandOriginalInputCurrent { get; init; }
+
+    private bool RunOriginalInput(UnifiedCanvasInputOperation operation, Func<bool> actualCore) =>
+        OriginalInputOwner is { } owner ? owner(operation, actualCore) : actualCore();
+
+    private void InvalidateOriginalInput()
+    {
+        DemandOriginalInputCurrent?.Invoke();
+        Invalidate();
+        DemandOriginalInputCurrent?.Invoke();
+    }
+    private void NotifyOriginalChanged()
+    {
+        DemandOriginalInputCurrent?.Invoke();
+        Changed?.Invoke(this, EventArgs.Empty);
+        DemandOriginalInputCurrent?.Invoke();
+    }
+    private void NotifyOriginalSelectionChanged()
+    {
+        DemandOriginalInputCurrent?.Invoke();
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+        DemandOriginalInputCurrent?.Invoke();
+    }
+    private string ReadOriginalText()
+    {
+        DemandOriginalInputCurrent?.Invoke();
+        var text = _textProvider();
+        DemandOriginalInputCurrent?.Invoke();
+        return text;
+    }
+
     public event EventHandler? Changed;
     public event EventHandler? SelectionChanged;
     public CanvasInteractionController Controller => _controller;
@@ -57,9 +93,12 @@ internal sealed class UnifiedCanvasSurface : HavenElement, IHavenDrawCommandSour
     public double Zoom => _controller.Board.Zoom;
     public bool ShowGrid { get; set; } = true;
     public bool ShowGuides { get; set; } = true;
-    public void RefreshSurface() => Invalidate();
+    public void RefreshSurface() => InvalidateOriginalInput();
 
-    public bool ReleaseInputState()
+    public bool ReleaseInputState() =>
+        RunOriginalInput(UnifiedCanvasInputOperation.ReleaseInputState, () => ReleaseInputStateOriginalCore());
+
+    private bool ReleaseInputStateOriginalCore()
     {
         if (_moving || _handle != UnifiedCanvasHandle.None) RestorePreviewOriginals();
         _connectorSource = null;
@@ -67,7 +106,7 @@ internal sealed class UnifiedCanvasSurface : HavenElement, IHavenDrawCommandSour
         _pointerPath.Clear();
         ResetGesture();
         var committedMutation = _controller.ReleaseInteraction();
-        Invalidate();
+        InvalidateOriginalInput();
         return committedMutation;
     }
 
@@ -77,7 +116,7 @@ internal sealed class UnifiedCanvasSurface : HavenElement, IHavenDrawCommandSour
         _pointerPathDrawing = false;
         _pointerPath.Clear();
         ResetGesture();
-        Invalidate();
+        InvalidateOriginalInput();
     }
 
     public void SetTool(UnifiedCanvasTool tool)
@@ -98,10 +137,13 @@ internal sealed class UnifiedCanvasSurface : HavenElement, IHavenDrawCommandSour
         };
         _connectorSource = null;
         ResetGesture();
-        Invalidate();
+        InvalidateOriginalInput();
     }
 
-    public bool PointerPressed(HavenPointerInput input)
+    public bool PointerPressed(HavenPointerInput input) =>
+        RunOriginalInput(UnifiedCanvasInputOperation.PointerPressed, () => PointerPressedOriginalCore(input));
+
+    private bool PointerPressedOriginalCore(HavenPointerInput input)
     {
         _pointerStart = _pointerCurrent = input.LocalPosition;
         ResetGesture(keepPointer: true);
@@ -112,7 +154,7 @@ internal sealed class UnifiedCanvasSurface : HavenElement, IHavenDrawCommandSour
             case UnifiedCanvasTool.Eraser:
             case UnifiedCanvasTool.Pan:
                 _controller.Begin(Sample(input));
-                Invalidate();
+                InvalidateOriginalInput();
                 return true;
             case UnifiedCanvasTool.Lasso:
             case UnifiedCanvasTool.LaserPointer:
@@ -120,10 +162,10 @@ internal sealed class UnifiedCanvasSurface : HavenElement, IHavenDrawCommandSour
                 _pointerPath.Clear();
                 _pointerPath.Add(input.LocalPosition);
                 _pointerPathDrawing = true;
-                Invalidate();
+                InvalidateOriginalInput();
                 return true;
             case UnifiedCanvasTool.Text:
-                AddObjectAtPointer(NotesCanvasObjectKind.Text, 220, 72, _textProvider(), "{\"shape\":\"text\"}");
+                AddObjectAtPointer(NotesCanvasObjectKind.Text, 220, 72, ReadOriginalText(), "{\"shape\":\"text\"}");
                 SetTool(UnifiedCanvasTool.Select);
                 return true;
             case UnifiedCanvasTool.Rectangle:
@@ -131,7 +173,7 @@ internal sealed class UnifiedCanvasSurface : HavenElement, IHavenDrawCommandSour
             case UnifiedCanvasTool.Line:
             case UnifiedCanvasTool.Frame:
                 _drawingObject = true;
-                Invalidate();
+                InvalidateOriginalInput();
                 return true;
             case UnifiedCanvasTool.Connector:
                 HandleConnectorClick(input);
@@ -141,29 +183,35 @@ internal sealed class UnifiedCanvasSurface : HavenElement, IHavenDrawCommandSour
         }
     }
 
-    public bool PointerMoved(HavenPointerInput input)
+    public bool PointerMoved(HavenPointerInput input) =>
+        RunOriginalInput(UnifiedCanvasInputOperation.PointerMoved, () => PointerMovedOriginalCore(input));
+
+    private bool PointerMovedOriginalCore(HavenPointerInput input)
     {
         _pointerCurrent = input.LocalPosition;
         if (_pointerPathDrawing)
         {
             if (_pointerPath.Count == 0 || DistanceSquared(_pointerPath[^1], input.LocalPosition) >= 4)
                 _pointerPath.Add(input.LocalPosition);
-            Invalidate();
+            InvalidateOriginalInput();
             return true;
         }
         if (_tool is UnifiedCanvasTool.Pen or UnifiedCanvasTool.Highlighter or UnifiedCanvasTool.Eraser or UnifiedCanvasTool.Pan)
         {
             var changed = _controller.Move(Sample(input));
-            if (changed) Invalidate();
+            if (changed) InvalidateOriginalInput();
             return true;
         }
         if (_moving) PreviewMove();
         else if (_handle != UnifiedCanvasHandle.None) PreviewTransform();
-        else if (_marquee || _drawingObject) Invalidate();
+        else if (_marquee || _drawingObject) InvalidateOriginalInput();
         return _moving || _handle != UnifiedCanvasHandle.None || _marquee || _drawingObject;
     }
 
-    public bool PointerReleased(HavenPointerInput input)
+    public bool PointerReleased(HavenPointerInput input) =>
+        RunOriginalInput(UnifiedCanvasInputOperation.PointerReleased, () => PointerReleasedOriginalCore(input));
+
+    private bool PointerReleasedOriginalCore(HavenPointerInput input)
     {
         _pointerCurrent = input.LocalPosition;
         if (_pointerPathDrawing)
@@ -175,17 +223,17 @@ internal sealed class UnifiedCanvasSurface : HavenElement, IHavenDrawCommandSour
             {
                 var samples = _pointerPath.Select(point => new CanvasPointerSample(point.X, point.Y)).ToArray();
                 _controller.SelectViewportPolygon(samples, input.Modifiers.HasFlag(HavenKeyModifiers.Shift));
-                SelectionChanged?.Invoke(this, EventArgs.Empty);
+                NotifyOriginalSelectionChanged();
             }
             if (_tool is UnifiedCanvasTool.Lasso or UnifiedCanvasTool.LaserPointer) _pointerPath.Clear();
-            Invalidate();
+            InvalidateOriginalInput();
             return true;
         }
         if (_tool is UnifiedCanvasTool.Pen or UnifiedCanvasTool.Highlighter or UnifiedCanvasTool.Eraser or UnifiedCanvasTool.Pan)
         {
             var changed = _controller.End(Sample(input));
-            Changed?.Invoke(this, EventArgs.Empty);
-            Invalidate();
+            NotifyOriginalChanged();
+            InvalidateOriginalInput();
             return changed || true;
         }
         if (_drawingObject) CommitCreatedObject();
@@ -195,14 +243,17 @@ internal sealed class UnifiedCanvasSurface : HavenElement, IHavenDrawCommandSour
         {
             var rect = Normalize(_pointerStart, _pointerCurrent);
             _controller.SelectViewportRectangle(rect.X, rect.Y, rect.Width, rect.Height, input.Modifiers.HasFlag(HavenKeyModifiers.Shift));
-            SelectionChanged?.Invoke(this, EventArgs.Empty);
+            NotifyOriginalSelectionChanged();
         }
         ResetGesture();
-        Invalidate();
+        InvalidateOriginalInput();
         return true;
     }
 
-    public bool PointerWheel(HavenPoint localPosition, double deltaX, double deltaY)
+    public bool PointerWheel(HavenPoint localPosition, double deltaX, double deltaY) =>
+        RunOriginalInput(UnifiedCanvasInputOperation.PointerWheel, () => PointerWheelOriginalCore(localPosition, deltaX, deltaY));
+
+    private bool PointerWheelOriginalCore(HavenPoint localPosition, double deltaX, double deltaY)
     {
         if (Math.Abs(deltaY) < .001) return false;
         var boardBefore = _controller.ViewportToCanvas(localPosition.X, localPosition.Y);
@@ -210,12 +261,14 @@ internal sealed class UnifiedCanvasSurface : HavenElement, IHavenDrawCommandSour
         _controller.SetZoom(next);
         _controller.Board.OffsetX = localPosition.X - boardBefore.X * next;
         _controller.Board.OffsetY = localPosition.Y - boardBefore.Y * next;
-        Changed?.Invoke(this, EventArgs.Empty);
-        Invalidate();
+        NotifyOriginalChanged();
+        InvalidateOriginalInput();
         return true;
     }
 
-    public bool TextInput(string? text) => false;
+    public bool TextInput(string? text) =>
+        RunOriginalInput(UnifiedCanvasInputOperation.TextInput, () => TextInputOriginalCore(text));
+    private bool TextInputOriginalCore(string? text) => false;
 
     bool IHavenKeyboardInputTarget.KeyDown(HavenKeyInput input) => KeyDown(input.Key, new HavenInputModifiers(
         Shift: input.Shift,
@@ -225,7 +278,10 @@ internal sealed class UnifiedCanvasSurface : HavenElement, IHavenDrawCommandSour
 
     bool IHavenKeyboardInputTarget.KeyUp(HavenKeyInput input) => KeyUp(input.Key);
 
-    public bool KeyDown(HavenKey key, HavenInputModifiers modifiers)
+    public bool KeyDown(HavenKey key, HavenInputModifiers modifiers) =>
+        RunOriginalInput(UnifiedCanvasInputOperation.KeyDown, () => KeyDownOriginalCore(key, modifiers));
+
+    private bool KeyDownOriginalCore(HavenKey key, HavenInputModifiers modifiers)
     {
         if (modifiers.Control)
         {
@@ -233,7 +289,7 @@ internal sealed class UnifiedCanvasSurface : HavenElement, IHavenDrawCommandSour
             if (key == HavenKey.V) { var changed = _controller.PasteSelection(); AfterMutation(changed); return changed; }
             if (key == HavenKey.Z) { var changed = _controller.Undo(); AfterMutation(changed); return changed; }
             if (key == HavenKey.Y) { var changed = _controller.Redo(); AfterMutation(changed); return changed; }
-            if (key == HavenKey.A) { _controller.SetSelection(_controller.Board.Objects.Where(value => value.Kind != NotesCanvasObjectKind.Connector).Select(value => value.Id)); SelectionChanged?.Invoke(this, EventArgs.Empty); Invalidate(); return true; }
+            if (key == HavenKey.A) { _controller.SetSelection(_controller.Board.Objects.Where(value => value.Kind != NotesCanvasObjectKind.Connector).Select(value => value.Id)); NotifyOriginalSelectionChanged(); InvalidateOriginalInput(); return true; }
         }
         switch (key)
         {
@@ -244,12 +300,14 @@ internal sealed class UnifiedCanvasSurface : HavenElement, IHavenDrawCommandSour
             case HavenKey.Right: return Nudge(1, 0, modifiers.Shift);
             case HavenKey.Up: return Nudge(0, -1, modifiers.Shift);
             case HavenKey.Down: return Nudge(0, 1, modifiers.Shift);
-            case HavenKey.Escape: _controller.ClearSelection(); _connectorSource = null; _pointerPathDrawing = false; _pointerPath.Clear(); SelectionChanged?.Invoke(this, EventArgs.Empty); Invalidate(); return true;
+            case HavenKey.Escape: _controller.ClearSelection(); _connectorSource = null; _pointerPathDrawing = false; _pointerPath.Clear(); NotifyOriginalSelectionChanged(); InvalidateOriginalInput(); return true;
         }
         return false;
     }
 
-    public bool KeyUp(HavenKey key) => key is HavenKey.Left or HavenKey.Right or HavenKey.Up or HavenKey.Down or HavenKey.Delete or HavenKey.Backspace or HavenKey.Escape or HavenKey.A or HavenKey.C or HavenKey.V or HavenKey.Z or HavenKey.Y;
+    public bool KeyUp(HavenKey key) =>
+        RunOriginalInput(UnifiedCanvasInputOperation.KeyUp, () => KeyUpOriginalCore(key));
+    private bool KeyUpOriginalCore(HavenKey key) => key is HavenKey.Left or HavenKey.Right or HavenKey.Up or HavenKey.Down or HavenKey.Delete or HavenKey.Backspace or HavenKey.Escape or HavenKey.A or HavenKey.C or HavenKey.V or HavenKey.Z or HavenKey.Y;
 
     public void Draw(HavenDrawingContext context, double opacity)
     {
@@ -279,15 +337,15 @@ internal sealed class UnifiedCanvasSurface : HavenElement, IHavenDrawCommandSour
         {
             if (!input.Modifiers.HasFlag(HavenKeyModifiers.Shift)) _controller.ClearSelection();
             _marquee = true;
-            SelectionChanged?.Invoke(this, EventArgs.Empty);
-            Invalidate();
+            NotifyOriginalSelectionChanged();
+            InvalidateOriginalInput();
             return true;
         }
         if (input.Modifiers.HasFlag(HavenKeyModifiers.Shift)) _controller.ToggleSelection(hit.Id);
         else if (!_controller.SelectedObjectIds.Contains(hit.Id)) _controller.SetSelection([hit.Id]);
         if (!hit.Locked) { _moving = true; CapturePreviewOriginals(); }
-        SelectionChanged?.Invoke(this, EventArgs.Empty);
-        Invalidate();
+        NotifyOriginalSelectionChanged();
+        InvalidateOriginalInput();
         return true;
     }
 
@@ -300,7 +358,7 @@ internal sealed class UnifiedCanvasSurface : HavenElement, IHavenDrawCommandSour
         var dx = current.X - start.X; var dy = current.Y - start.Y;
         foreach (var value in _controller.SelectedObjects)
             if (_previewOriginals.TryGetValue(value.Id, out var original)) { value.X = Snap(original.X + dx); value.Y = Snap(original.Y + dy); }
-        Invalidate();
+        InvalidateOriginalInput();
     }
 
     private void CommitMove()
@@ -326,13 +384,13 @@ internal sealed class UnifiedCanvasSurface : HavenElement, IHavenDrawCommandSour
             var a = Math.Atan2(start.Y - cy, start.X - cx); var b = Math.Atan2(current.Y - cy, current.X - cx);
             var degrees = (b - a) * 180 / Math.PI;
             foreach (var value in _controller.SelectedObjects) if (_previewOriginals.TryGetValue(value.Id, out var original)) value.Rotation = NormalizeDegrees(original.Rotation + degrees);
-            Invalidate();
+            InvalidateOriginalInput();
             return;
         }
         var dx = current.X - start.X; var dy = current.Y - start.Y;
         var transform = ResizeDelta(_handle, dx, dy);
         PreviewScale(bounds, transform);
-        Invalidate();
+        InvalidateOriginalInput();
     }
 
     private void CommitTransform()
@@ -384,7 +442,7 @@ internal sealed class UnifiedCanvasSurface : HavenElement, IHavenDrawCommandSour
     {
         var point = _controller.ViewportToCanvas(_pointerStart.X, _pointerStart.Y);
         _controller.AddObjectAt(kind, point.X, point.Y, width, height, text, styleJson);
-        SelectionChanged?.Invoke(this, EventArgs.Empty); Changed?.Invoke(this, EventArgs.Empty); Invalidate();
+        NotifyOriginalSelectionChanged(); NotifyOriginalChanged(); InvalidateOriginalInput();
     }
 
     public void AddImage(string path, double width = 420, double height = 300)
@@ -398,8 +456,8 @@ internal sealed class UnifiedCanvasSurface : HavenElement, IHavenDrawCommandSour
     private void HandleConnectorClick(HavenPointerInput input)
     {
         var hit = _controller.HitObjectAtViewport(input.LocalPosition.X, input.LocalPosition.Y);
-        if (hit is null) { _connectorSource = null; Invalidate(); return; }
-        if (_connectorSource is null) { _connectorSource = hit.Id; _controller.SetSelection([hit.Id]); SelectionChanged?.Invoke(this, EventArgs.Empty); Invalidate(); return; }
+        if (hit is null) { _connectorSource = null; InvalidateOriginalInput(); return; }
+        if (_connectorSource is null) { _connectorSource = hit.Id; _controller.SetSelection([hit.Id]); NotifyOriginalSelectionChanged(); InvalidateOriginalInput(); return; }
         if (_connectorSource.Value != hit.Id) { _controller.Connect(_connectorSource.Value, hit.Id); AfterMutation(true); }
         _connectorSource = null; SetTool(UnifiedCanvasTool.Select);
     }
@@ -558,7 +616,7 @@ internal sealed class UnifiedCanvasSurface : HavenElement, IHavenDrawCommandSour
 
     private void AfterMutation(bool changed)
     {
-        if (!changed) return; Changed?.Invoke(this, EventArgs.Empty); SelectionChanged?.Invoke(this, EventArgs.Empty); Invalidate();
+        if (!changed) return; NotifyOriginalChanged(); NotifyOriginalSelectionChanged(); InvalidateOriginalInput();
     }
 
     private void ResetGesture(bool keepPointer = false)

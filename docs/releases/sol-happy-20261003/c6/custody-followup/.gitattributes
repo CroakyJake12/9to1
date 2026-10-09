@@ -1,0 +1,6 @@
+# Preserve immutable original output bytes; exceptions apply only to these raw records.
+canvas0/cargo-test.log whitespace=-blank-at-eof
+forms/workloads.log whitespace=-blank-at-eof
+graph/workloads.log whitespace=-blank-at-eof
+home5/profile-correction/actual-restricted-child.stdout whitespace=-blank-at-eol
+home5/profile-correction/exact-profile-preprocessed.stdout whitespace=-blank-at-eol

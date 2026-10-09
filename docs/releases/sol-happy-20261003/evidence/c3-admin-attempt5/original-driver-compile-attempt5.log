@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/workspace/team-c/c3-admin-compile-validation/.github/scripts/astra-organisation-full-owning.py", line 429, in <module>
+    if __name__ == '__main__': main()
+                               ^^^^^^
+  File "/workspace/team-c/c3-admin-compile-validation/.github/scripts/astra-organisation-full-owning.py", line 426, in main
+    fail(primary, cleanup)
+  File "/workspace/team-c/c3-admin-compile-validation/.github/scripts/astra-organisation-full-owning.py", line 40, in fail
+    if all_errors: raise all_errors[0]
+                   ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/team-c/c3-admin-compile-validation/.github/scripts/astra-organisation-full-owning.py", line 344, in main
+    raise RuntimeError('Actual original compiler-generated output context invalid')
+RuntimeError: Actual original compiler-generated output context invalid

@@ -1,0 +1,8 @@
+{
+  "coordCommit": "ef1a11f7",
+  "receipt": "a1-home-layout-and-capability-owner-receipt.json",
+  "bytes": 4834,
+  "sha256": "6a03eb168c2dca321c7307ab46f9fec8161c8d35874b43d633cf8c11aeeec448",
+  "exactSourcePinsVerified": 9,
+  "qualification": "Qualified exact two-line Home authoring/source-owner ACK clear; root adoption and mounted browser/runtime/native installed acceptance remain pending. Five availability/API guards preserved; no enabled-by-default or anonymous authority inferred. Native lifetime qualifications in original peer remain."
+}

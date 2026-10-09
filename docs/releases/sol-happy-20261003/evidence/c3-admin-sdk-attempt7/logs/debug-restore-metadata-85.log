@@ -1,0 +1,14 @@
+{
+  "Properties": {
+    "MSBuildProjectFullPath": "/workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/Themes/CakeOS.Cui.Themes.csproj",
+    "MSBuildProjectName": "CakeOS.Cui.Themes",
+    "MSBuildProjectFile": "CakeOS.Cui.Themes.csproj",
+    "Configuration": "Debug",
+    "Platform": "AnyCPU",
+    "TargetFramework": "net10.0",
+    "RuntimeIdentifier": "linux-x64",
+    "MSBuildProjectExtensionsPath": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/CakeOS.Cui.Themes/",
+    "ProjectAssetsFile": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/CakeOS.Cui.Themes/project.assets.json",
+    "RestoreOutputPath": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/CakeOS.Cui.Themes/"
+  }
+}

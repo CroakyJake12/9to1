@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\n  \"recordedUTC\": \"2026-10-04T11:55:48.195Z\",\n  \"status\": 200,\n  \"success\": true,\n  \"version\": \"0f6ad115-42f8-4137-808f-997a80b4c97b\",\n  \"modules\": [\n    {\n      \"name\": \"c38a9b6078aaf2c8cdfc1a4fbef6c1503335e663-auth-ui.txt\",\n      \"bytes\": 39127,\n      \"sha256\": \"b1020ed3885817d23b95090892fa380eedbc27120531a049f097771c45f5421e\"\n    },\n    {\n      \"name\": \"index.js\",\n      \"bytes\": 3109063,\n      \"sha256\": \"9d859012015fd20b67500d07646fd5e09dea3d08e8b89229494907adf37e54a2\"\n    }\n  ],\n  \"qualification\": \"Actual authorized Worker module download, multipart body bytes hashed with WebCrypto; no module body or secret exported\"\n}"
+    }
+  ],
+  "isError": false
+}

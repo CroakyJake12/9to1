@@ -1,0 +1,15 @@
+{
+  "status": "SETUP_FAILED_BEFORE_ANY_RESTORE_BUILD_TEST",
+  "source": "1c78a6107264baf5f7da92a5b6abbde7eac10e40",
+  "cause": "TMPDIR/TMP/TEMP map to same private tmp directory; second mkdir lacked exist_ok=True.",
+  "originalScript": {
+    "path": "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/capacity/first-setup-driver.py",
+    "sha256": "87be6c3ebc32783f7210c4ccf33d29e1b4a100a9035d30776c8db49bbd3c1c0f"
+  },
+  "originalOutputLog": {
+    "path": "/workspace/team-c-resume-evidence/c4-public-mail-pr8-review/ordinary-mail72-infra444-1c78-driver.log",
+    "sha256": "24c5022287adaaf4be4795080dd8350bd08caa2fa7a6d17a43a475a122103881"
+  },
+  "noFunctionalPayloadStarted": true,
+  "correction": "Only orchestration directory creation made idempotent; fresh attempt02 output, source/test/project/oracle/helper unchanged."
+}

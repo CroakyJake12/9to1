@@ -1,0 +1,136 @@
+{
+  "schema": "ASTRA_MIGRATION_ORIGINAL_SOURCE_PATH_TO_REPO_PATH01",
+  "sourceOnly": true,
+  "sourceRuntimeOrModelAcceptanceClaimed": false,
+  "relocationDoesNotRewriteAnySourceOrImmutableEvidencePin": true,
+  "materializeOriginalLogicalPathOnlyAfterExactByteVerificationAndRootScheduling": true,
+  "sourceMappings": [
+    {
+      "originalPath": "/workspace/astra-source/friday-write-present-sol61u62/driver63/run-write-present-current-windows-publish63i.py",
+      "repoPath": "tools/astra-migration/current/publish/run-write-present-current-windows-publish63i.py",
+      "bytes": 85082,
+      "sha256": "a142f436e405495ddfaa389a6d2703d00b50c6bf22f14193a2e1a014b7a4aad5",
+      "sourceStatus": "INDEPENDENT_SOURCE_PASS_RUNTIME_UNRUN"
+    },
+    {
+      "originalPath": "/workspace/astra-source/friday-write-present-sol61u62/driver63/prepare-write-present-receiving-bind63g.py",
+      "repoPath": "tools/astra-migration/current/publish/prepare-write-present-receiving-bind63g.py",
+      "bytes": 28244,
+      "sha256": "1f974797bbd3927017f651fb116f68bbdc6189b72683ad05cc91c317c5c85025",
+      "sourceStatus": "INDEPENDENT_SOURCE_PASS_MAIN_UNRUN"
+    },
+    {
+      "originalPath": "/workspace/astra-source/friday-write-present-sol61u62/driver63/prepare-current-private-source-companion67d.py",
+      "repoPath": "tools/astra-migration/current/source-companion/prepare-current-private-source-companion67d.py",
+      "bytes": 34674,
+      "sha256": "302ca2e45ca38c0aa0bb083978593dadafca1b74fd582351f9ca2b91964ed535",
+      "sourceStatus": "SOURCE_CANDIDATE_INDEPENDENT_REVIEW_PENDING_MAIN_UNRUN"
+    },
+    {
+      "originalPath": "/workspace/astra-source/friday-write-present-sol61u62/package/seal-write-present-win62.py",
+      "repoPath": "tools/astra-migration/current/publish/seal-write-present-win62.py",
+      "bytes": 13501,
+      "sha256": "df45dbdcf8f7c9a91bab1628e21374c61e655a344129c51f03ab76ee1c6bec26",
+      "sourceStatus": "MAINTAINED_SOURCE_ONLY_SEALER_MAIN_UNRUN_FOR_CURRENT_PUBLICATION"
+    },
+    {
+      "originalPath": "/workspace/astra-source/lifecycle-peer-sol61u51/normal-recovery66/run-current-root-normal-closure-recovery66b.py",
+      "repoPath": "tools/astra-migration/current/recovery/run-current-root-normal-closure-recovery66b.py",
+      "bytes": 194693,
+      "sha256": "08133af2be944d46e4086fbd2e1e5e1882642f270cba261e670f3c0833b58c80",
+      "sourceStatus": "ACTUAL_EXECUTED_AGGREGATE_NATURAL1_DESKTOP_COMPONENT_ONLY_QUALIFIED"
+    },
+    {
+      "originalPath": "/workspace/astra-source/a4-resource-subrange-output-custody01-20261006/exact-resource-subrange-custody02.py",
+      "repoPath": "tools/astra-migration/current/helpers/exact-resource-subrange-custody02.py",
+      "bytes": 10117,
+      "sha256": "0d650d3f4be643adbaa60e1ee748389be7c869deb67feb959700f3c80fd732b2",
+      "sourceStatus": "MAINTAINED_EXACT_RESOURCE_CUSTODY_SOURCE"
+    },
+    {
+      "originalPath": "/workspace/astra-source/a4-c45-fixture-audit58-source-helper/fixture-exec-audit58c.py",
+      "repoPath": "tools/astra-migration/current/helpers/fixture-exec-audit58c.py",
+      "bytes": 27135,
+      "sha256": "8c1dc104eb0a56f844458d6b78f5a85af5ec557093503c3975d7e02641dea039",
+      "sourceStatus": "MAINTAINED_EXACT_FIXTURE_OBSERVER_SOURCE"
+    },
+    {
+      "originalPath": "/tmp/astra-a4-coherent-owning-compiler-preparation11-20261006/restore-exact-desktop-runtime-closure12.py",
+      "repoPath": "tools/astra-migration/current/helpers/restore-exact-desktop-runtime-closure12.py",
+      "bytes": 3179,
+      "sha256": "5c711acd6ac1a0f11b0dacccf5258a44d057a4b9d7fef7f1a6711426242af29c",
+      "sourceStatus": "MAINTAINED_EXACT_DESKTOP_RESTORER_SOURCE"
+    },
+    {
+      "originalPath": "/tmp/astra-a4-coherent-owning-compiler-preparation14-20261006/restore-exact-owning-test-runtime-closure14.py",
+      "repoPath": "tools/astra-migration/current/helpers/restore-exact-owning-test-runtime-closure14.py",
+      "bytes": 4339,
+      "sha256": "33f4fbe3cd15fd5fc6c77e0b547e87095007793d2474fbdf7588c3fb91906fb3",
+      "sourceStatus": "MAINTAINED_EXACT_TEST_RESTORER_SOURCE"
+    },
+    {
+      "originalPath": "/workspace/astra-source/lifecycle-peer-sol61u51/c49-compiler65/run-current-root-selective-component-compiler65.py",
+      "repoPath": "tools/astra-migration/current/compiler/run-current-root-selective-component-compiler65.py",
+      "bytes": 186899,
+      "sha256": "d9111dff14afabaaaab43c87fd2e4ab8f86733600b3b1e5097814b738d434536",
+      "sourceStatus": "ACTUAL_EXECUTED_AGGREGATE_NATURAL1_20_FRESH_CSC_PLUS_2_QUALIFIED_REUSES"
+    },
+    {
+      "originalPath": "/workspace/astra-source/lifecycle-peer-sol61u51/failed65-components66/verify-failed65-individual-components66d.py",
+      "repoPath": "tools/astra-migration/current/custody/verify-failed65-individual-components66d.py",
+      "bytes": 107525,
+      "sha256": "143b1c96147e4d35634c38b9d5ba88f7986d91645b80b681a18d1dabc99c2c54",
+      "sourceStatus": "ACTUAL_COMPONENT_CUSTODY_NATURAL0_NO_FULL_INTERVAL_OR_NORMAL_ACCEPTANCE"
+    },
+    {
+      "originalPath": "/workspace/astra-source/lifecycle-peer-sol61u51/desktop-component67/verify-failed66-desktop-normal-component67.py",
+      "repoPath": "tools/astra-migration/current/custody/verify-failed66-desktop-normal-component67.py",
+      "bytes": 24790,
+      "sha256": "761f0ce10edc7d7757ad1b5e0b92200916a053468851e3f19f519a68404780a0",
+      "sourceStatus": "ACTUAL_DESKTOP_COMPONENT_CUSTODY_NATURAL0_NO_FULL_INTERVAL_ACCEPTANCE"
+    }
+  ],
+  "privateArtifactCustodyAndRegistryFilesNotInRepo": [
+    {
+      "originalPath": "/workspace/astra-source/a4-resource-subrange-output-custody01-20261006/CLOSED-DLL-AND-RESOURCE-LAYER-REGISTRY02.json",
+      "bytes": 1163,
+      "sha256": "d7b117d1d919bcdd9dbc95cefd9e241f02ab4194a3b2bbf7c4793c32ccc2bfa4",
+      "receiving": "SEPARATE_AUTHORIZED_PRIVATE_COMPILED_ARTIFACT_INVENTORY"
+    },
+    {
+      "originalPath": "/workspace/astra-source/a4-resource-subrange-output-custody01-20261006/CORRECTED-C23-C24-DESKTOP-EXACT-CUSTODY01.json",
+      "bytes": 6491,
+      "sha256": "10aa36b6f303803abf9d27cc2e42555bb27a1df4244e4ab710716e7e2dd57477",
+      "receiving": "SEPARATE_AUTHORIZED_PRIVATE_COMPILED_ARTIFACT_INVENTORY"
+    },
+    {
+      "originalPath": "/workspace/astra-source/a4-resource-subrange-output-custody01-20261006/FAILED-C23-INTERMEDIATE-DESKTOP-EXACT-CUSTODY01.json",
+      "bytes": 6478,
+      "sha256": "67550289f087c2ba0332b3d7bc3af3885b55c20e3cef862d3e20bf4cd1fcc5b5",
+      "receiving": "SEPARATE_AUTHORIZED_PRIVATE_COMPILED_ARTIFACT_INVENTORY"
+    },
+    {
+      "originalPath": "/workspace/astra-source/a4-resource-subrange-output-custody01-20261006/RESOURCE-ANCHOR-IMMUTABLE-GIT-EXACT-CUSTODY02.json",
+      "bytes": 8744,
+      "sha256": "facf0b5c49a79b21430d58e439b5199e11e8427e97dca9c64f3ec857446ddad1",
+      "receiving": "SEPARATE_AUTHORIZED_PRIVATE_COMPILED_ARTIFACT_INVENTORY"
+    }
+  ],
+  "externalInputsNotCopied": [
+    "SDK10.0.401/runtime packs10.0.12",
+    "NuGet package/cache containers",
+    "compiler stdout/receipts/custody archives and source-peer evidence",
+    "existing private fullC29 and C45/C48/C49 source transports",
+    "model weights, provider credentials, OAuth token caches or private profiles"
+  ],
+  "currentKnownExecution": {
+    "failed65AggregateNaturalExitCode": 1,
+    "failed66AggregateNaturalExitCode": 1,
+    "DesktopNormal66SdkStageNaturalExitCode": 0,
+    "DesktopComponent67QualificationNaturalExitCode": 0,
+    "driver63HFailedBeforeSDKAndOutputRoot": true,
+    "driver63IAndBinder63GMain": "UNRUN",
+    "sourceCompanion67DIndependentReviewAndMain": "PENDING_UNRUN",
+    "WritePresentOwningBuildPublishTestsWindowsCloudModelMcp": "UNRUN"
+  }
+}

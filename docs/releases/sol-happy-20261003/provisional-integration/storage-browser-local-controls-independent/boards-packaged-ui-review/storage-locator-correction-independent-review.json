@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "C6 independent actual negative and corrected-locator source reviewer",
+  "frozenCorrectionCommit": "70a8a556487d801c005020cbd732fb32ec83685c",
+  "actualPreviousRun": {
+    "sourceCommit": "f46cfcd8da1ddee62987645092475a80a1da5738",
+    "runId": 37216711750,
+    "jobId": 111478583568,
+    "artifactId": 11308388717,
+    "archiveBytes": 33891,
+    "archiveSha256": "9fe733ccce39ae47a50a09db642e6a8ad162cf9288e461d70b57dfdb78a10e2c",
+    "officialProviderHeadDigestSize": "PASS",
+    "allOriginalZIPMembersCRCBytes": "PASS",
+    "status": "FAIL initial visible Saved lookup before any ReadOnly fault or pending native edit",
+    "passedChecks": 43,
+    "layoutPanelUIARegionsFound": [
+      false,
+      false
+    ],
+    "actualScreenshot": "Independently viewed; actual Saved16:26:01 visible at top-right and footer within bounded current app screenshot",
+    "storageAttributeMutation": "NOT_RUN",
+    "noForcedCleanup": true,
+    "qualification": "Two streams drained; original launch record lacks measured graceful-exit outcome, no normalcloseexit0 inferred"
+  },
+  "sourceCorrection": {
+    "entireScriptOutsideFindAndObserveSaveLabel": "BYTE_EXACT_f46",
+    "workflowCatalogue20NativePinsCustodyFileMutationFinallyDrainOld67And85": "UNCHANGED",
+    "actualLookup": "Actual current window descendants filtered exactownedPID and nativeText role; preserves exactSavefailed/prefixSaved names, enabled/notOffscreen/nonzero geometry/completeWorkArea checks",
+    "provenance": "OwnedWindowText actualscope; no invented layoutgroupID; sameactualnativeTextBlock GetName and status source retained",
+    "diagnosticBounds": "Prior two absentregions plus actual window text max32peers/256chars per scope; existing foreground screenshot; original timeout ErrorRecord preserved including secondary diagnostic/output refusal",
+    "successCriteria": "Original failed saved-bytes unchanged/pendingedit retained/NTFSReadOnly restored/retry durableIDs/same native values/save status/normal close-reopen criteria unchanged"
+  },
+  "independentOfflineBoundary": {
+    "actualFunctionParseAndRefusals": 2,
+    "passed": 2,
+    "runtimeTypeOriginalTimeout": "PASS",
+    "resultSha256": "02f7f9267b64fe42fc072bb26722cc68f0651fa0fb53972daa558d367d19ccbd",
+    "qualification": "Controlled diagnostic boundary only, no Windows UI acceptance"
+  },
+  "verdict": "ACK bounded locator correction for root sole actual Windows invocation",
+  "qualification": "New actual native Text lookup and actual ReadOnly/retry still genuine runtime gates; no storage-recovery or full-app PASS inferred."
+}

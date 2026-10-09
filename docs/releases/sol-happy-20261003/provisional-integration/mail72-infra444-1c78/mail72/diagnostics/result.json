@@ -1,0 +1,66 @@
+{
+  "state": "FAIL_OR_INCOMPLETE",
+  "sourceCommit": "1c78a6107264baf5f7da92a5b6abbde7eac10e40",
+  "actualReceivingRootBodyObservation": "3cad94393f3039c9b39b91df631cd986aff13ca6",
+  "project": "9to1 Workspace/Mail/Tests/HavenOS.Mail.Tests.csproj",
+  "expected": 72,
+  "ordinaryProjects": 5,
+  "configuration": "Release",
+  "runtimeIdentifier": "linux-x64",
+  "testFilter": null,
+  "originalSourceAssertionsPoliciesProjectsUnchanged": true,
+  "scope": "Actual unchanged normal source-built owning project; provisional Linux component scope, no graphical package/Windows/Home/provider/fullrelease acceptance.",
+  "actualCounters": {
+    "total": 72,
+    "executed": 72,
+    "passed": 69,
+    "failed": 3,
+    "error": 0,
+    "timeout": 0,
+    "aborted": 0,
+    "inconclusive": 0,
+    "passedButRunAborted": 0,
+    "notRunnable": 0,
+    "notExecuted": 0,
+    "disconnected": 0,
+    "warning": 0,
+    "completed": 0,
+    "inProgress": 0,
+    "pending": 0
+  },
+  "failures": [
+    {
+      "name": "HavenOS.Mail.Tests.MailKitInboxReconciliationTests.Actual_TLS_warm_cursor_recovers_removed_cache_and_held_original_batch_refuses_intervening_canonical_edit",
+      "outcome": "Failed",
+      "message": "System.InvalidOperationException : The required real transport fixture is not configured: HAVEN_MAIL_FIXTURE_HOST",
+      "stack": "   at HavenOS.Mail.Tests.MailKitInboxReconciliationTests.Required(String name) in /_/9to1 Workspace/Mail/Tests/MailKitInboxReconciliationTests.cs:line 359\n   at HavenOS.Mail.Tests.MailKitInboxReconciliationTests.Actual_TLS_warm_cursor_recovers_removed_cache_and_held_original_batch_refuses_intervening_canonical_edit() in /_/9to1 Workspace/Mail/Tests/MailKitInboxReconciliationTests.cs:line 234\n--- End of stack trace from previous location ---"
+    },
+    {
+      "name": "HavenOS.Mail.Tests.MailKitInboxReconciliationTests.Actual_TLS_existing_flags_and_expunge_reconcile_without_rehydrating_cached_body_or_overwriting_pending_local_edit",
+      "outcome": "Failed",
+      "message": "System.InvalidOperationException : The required real transport fixture is not configured: HAVEN_MAIL_FIXTURE_HOST",
+      "stack": "   at HavenOS.Mail.Tests.MailKitInboxReconciliationTests.Required(String name) in /_/9to1 Workspace/Mail/Tests/MailKitInboxReconciliationTests.cs:line 359\n   at HavenOS.Mail.Tests.MailKitInboxReconciliationTests.Actual_TLS_existing_flags_and_expunge_reconcile_without_rehydrating_cached_body_or_overwriting_pending_local_edit() in /_/9to1 Workspace/Mail/Tests/MailKitInboxReconciliationTests.cs:line 20\n--- End of stack trace from previous location ---"
+    },
+    {
+      "name": "HavenOS.Mail.Tests.MailKitRealTransportTests.Actual_TLS_SMTP_submission_is_retrieved_by_actual_IMAP_with_identity_body_and_incremental_cursor",
+      "outcome": "Failed",
+      "message": "System.InvalidOperationException : The required real transport fixture is not configured: HAVEN_MAIL_FIXTURE_HOST",
+      "stack": "   at HavenOS.Mail.Tests.MailKitRealTransportTests.Required(String name) in /_/9to1 Workspace/Mail/Tests/MailKitTransportTests.cs:line 87\n   at HavenOS.Mail.Tests.MailKitRealTransportTests.Actual_TLS_SMTP_submission_is_retrieved_by_actual_IMAP_with_identity_body_and_incremental_cursor() in /_/9to1 Workspace/Mail/Tests/MailKitTransportTests.cs:line 45\n--- End of stack trace from previous location ---"
+    }
+  ],
+  "testCommandException": "RuntimeError('whole-unfiltered-owning-tests exit 1')",
+  "trxSha256": "b9984eec45a6c0bc55b6610ce1fef8b3aa5544b381f809293335e2c0d5bfcb59",
+  "runtimeFiles": 102,
+  "evaluatedInputRows": 32,
+  "discovered": 72,
+  "error": "AssertionError({'MailFoundationTests': 12, 'MailKitInboxReconciliationTests': 2, 'MailKitTransportTests': 0, 'MailDomainRegressionTests': 23, 'MailStoreRegressionTests': 33})",
+  "commandFamilies": 14,
+  "allCommandFamiliesNormalClosedNoSignals": true,
+  "actualNonzeroExitCommands": [
+    {
+      "name": "whole-unfiltered-owning-tests",
+      "exit": 1,
+      "exitAfterDrain": 1
+    }
+  ]
+}

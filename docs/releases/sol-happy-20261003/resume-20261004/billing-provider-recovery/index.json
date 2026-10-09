@@ -1,0 +1,206 @@
+{
+  "status": "PUBLIC_SAFE_BOUNDED_BILLING_EVIDENCE_COPYSET",
+  "createdUTC": "2026-10-04T13:09:30.051702+00:00",
+  "receivingCandidate": "a0954832e61c95c71777c749d7464ea8dcc699e9",
+  "originalCandidate": "88c4c2d25abf41db77b36f0552a201c33f121cef",
+  "fixedCandidate": "f3529fd228489d10a947985b6a7bfd1187c9d3d9",
+  "destinationRoot": "docs/releases/sol-happy-20261003/resume-20261004/billing-provider-recovery",
+  "rootOnlyCopyAndPublication": true,
+  "actualResults": {
+    "receivingNpm": {
+      "tests": 37,
+      "pass": 37,
+      "fail": 0,
+      "skip": 0,
+      "exit": 0
+    },
+    "implementerFixed": {
+      "tests": 21,
+      "pass": 21,
+      "fail": 0,
+      "exit": 0
+    },
+    "peerFixed": {
+      "tests": 21,
+      "pass": 21,
+      "fail": 0,
+      "exit": 0
+    },
+    "peerOriginalFaultReplay": {
+      "cases": 4,
+      "sanitized": 4,
+      "exit": 0
+    },
+    "originalTypedFailures": {
+      "tests": 19,
+      "pass": 15,
+      "fail": 4,
+      "exit": 1
+    },
+    "originalGetterFailure": {
+      "tests": 1,
+      "pass": 0,
+      "fail": 1,
+      "exit": 1
+    },
+    "guardOmissionExpectedFailure": {
+      "tests": 15,
+      "pass": 13,
+      "fail": 2,
+      "exit": 1
+    }
+  },
+  "qualification": "Scoped local billing component recovery/receipt regression only. No live provider transport, D1/provider/deployment/commercial/canonical business effect or global acceptance. All original failures/expected negative controls retained.",
+  "artifacts": [
+    {
+      "path": "implementer/original-typed-errors-failure.log",
+      "sourcePath": "/workspace/scratch/team-c-continuation-c3/public-evidence-a0954832/implementer/original-typed-errors-failure.log",
+      "bytes": 10067,
+      "sha256": "9a64f561ba2e5cd407c7b3c1fce6113e7121fca5cc622f8f06843ced7e220efc",
+      "role": "Original source defect regression:19tests,15PASS/4FAIL,exit1; four typed external errors leak fictional diagnostic sentinel."
+    },
+    {
+      "path": "implementer/original-configuration-error-failure.log",
+      "sourcePath": "/workspace/scratch/team-c-continuation-c3/public-evidence-a0954832/implementer/original-configuration-error-failure.log",
+      "bytes": 2336,
+      "sha256": "270b0a32d38eb2d4dc9399c52fcf1db8efc09fd69fb446a0bf9a7e9e99e06b5e",
+      "role": "Original source configuration-getter defect:1test,0PASS/1FAIL,exit1."
+    },
+    {
+      "path": "implementer/original-failure-receipt.json",
+      "sourcePath": "/workspace/scratch/team-c-continuation-c3/public-evidence-a0954832/implementer/original-failure-receipt.json",
+      "bytes": 890,
+      "sha256": "62dca9587e779edd71e27535f1d07d5a5deba7760a4c4717361f19e36768211c",
+      "role": "Original failure qualification and retained later regression controls."
+    },
+    {
+      "path": "implementer/final-lease-guard-omission-control.log",
+      "sourcePath": "/workspace/scratch/team-c-continuation-c3/public-evidence-a0954832/implementer/final-lease-guard-omission-control.log",
+      "bytes": 3532,
+      "sha256": "43b3a66789f2f0c606ae4ab16cf2f6f7cc2f21543a57318c00f3b16cb50d1db2",
+      "role": "Expected negative control: final lease reread omitted outside Git;13PASS/2FAIL,exit1."
+    },
+    {
+      "path": "implementer/final-lease-guard-omission-control.json",
+      "sourcePath": "/workspace/scratch/team-c-continuation-c3/public-evidence-a0954832/implementer/final-lease-guard-omission-control.json",
+      "bytes": 981,
+      "sha256": "474cf0e9d69d988bae49ab790c93765be135e10558638b005240b63bf67672dd",
+      "role": "Exact single-span mutation, original/control hashes and expected lost-lease/changed-receipt failures; candidate unchanged."
+    },
+    {
+      "path": "implementer/recovery-21.log",
+      "sourcePath": "/workspace/scratch/team-c-continuation-c3/public-evidence-a0954832/implementer/recovery-21.log",
+      "bytes": 2447,
+      "sha256": "6cfc4e7d2ea525d87bf5bcead1065ee8ef5e20b0f08662f8606d72401ac857ed",
+      "role": "Implementer corrected exact frozen source21/21 controls PASS,exit0."
+    },
+    {
+      "path": "implementer/recovery-21.json",
+      "sourcePath": "/workspace/scratch/team-c-continuation-c3/public-evidence-a0954832/implementer/recovery-21.json",
+      "bytes": 459,
+      "sha256": "b56be5ef1e8de36e47fe80ffab4dc93a6faecd9bffea27267cd321152126cba8",
+      "role": "Corrected implementer functional test receipt."
+    },
+    {
+      "path": "peer/original-review.json",
+      "sourcePath": "/workspace/scratch/team-c-continuation-c3/public-evidence-a0954832/peer/original-review.json",
+      "bytes": 1198,
+      "sha256": "08156f19f9a5aa9c7882d24b1c2985cf104635a5b2d0ab9492bf18c00a1c272a",
+      "role": "C2 independently identified original public-error-class trust defect; original15 controls did not cover it."
+    },
+    {
+      "path": "peer/original-external-diagnostic-control.log",
+      "sourcePath": "/workspace/scratch/team-c-continuation-c3/public-evidence-a0954832/peer/original-external-diagnostic-control.log",
+      "bytes": 886,
+      "sha256": "c066acfd9c0ad16ea18f3d337680467ab0e07e690d95f83b06741c7ab38bddb4",
+      "role": "C2 four original offline fault probes:transport/stream/database/clock all retained fictional sentinel; fault discovery, not acceptance."
+    },
+    {
+      "path": "peer/fixed-independent-21-controls.json",
+      "sourcePath": "/workspace/scratch/team-c-continuation-c3/public-evidence-a0954832/peer/fixed-independent-21-controls.json",
+      "bytes": 491,
+      "sha256": "fee54c3a3a5b6f0b4d112308c76e3698922aa5b1aa43375cdfc132d7199a0814",
+      "role": "C2 exact copied Git-source independent21-control execution receipt."
+    },
+    {
+      "path": "peer/fixed-independent-21-controls.log",
+      "sourcePath": "/workspace/scratch/team-c-continuation-c3/public-evidence-a0954832/peer/fixed-independent-21-controls.log",
+      "bytes": 2448,
+      "sha256": "948b8827f9875c98285f4c1bbce3c41492b7dc4d50b8becf27fa9e1d8d07bb52",
+      "role": "C2 independent21/21 corrected controls PASS,exit0."
+    },
+    {
+      "path": "peer/fixed-external-diagnostic-control.json",
+      "sourcePath": "/workspace/scratch/team-c-continuation-c3/public-evidence-a0954832/peer/fixed-external-diagnostic-control.json",
+      "bytes": 391,
+      "sha256": "e3c9eca12006da29ecb723aea86b7841351228152dd8b60891004e08e34dce93",
+      "role": "C2 same four original typed error probes on repaired source execution receipt."
+    },
+    {
+      "path": "peer/fixed-external-diagnostic-control.log",
+      "sourcePath": "/workspace/scratch/team-c-continuation-c3/public-evidence-a0954832/peer/fixed-external-diagnostic-control.log",
+      "bytes": 1005,
+      "sha256": "982718b297302e66c488c2303040800d7b8818ad19173463b19df4b107d4882a",
+      "role": "C2 all four original typed-error probes redact code/message with expected retryability;exit0."
+    },
+    {
+      "path": "peer/fixed-source-inventory.json",
+      "sourcePath": "/workspace/scratch/team-c-continuation-c3/public-evidence-a0954832/peer/fixed-source-inventory.json",
+      "bytes": 2164,
+      "sha256": "542639e5e97ed9e10ffa397b1f41f14d66b88a6e83826eb6977785a04860c585",
+      "role": "C2 exact four-file frozen source hashes checked before and after independent tests."
+    },
+    {
+      "path": "peer/canonical-boundary-review.json",
+      "sourcePath": "/workspace/scratch/team-c-continuation-c3/public-evidence-a0954832/peer/canonical-boundary-review.json",
+      "bytes": 1643,
+      "sha256": "bcf0ef9dbeb862ba9953663b5eabb4d2e9fefa0367a4bd3d9bebae1f699c1d82",
+      "role": "C2 review of unchanged canonical billing verification/effect boundaries and unaccepted Accounts source pins."
+    },
+    {
+      "path": "peer/peer-ack.json",
+      "sourcePath": "/workspace/scratch/team-c-continuation-c3/public-evidence-a0954832/peer/peer-ack.json",
+      "bytes": 2958,
+      "sha256": "babf4ab427cbfe5e07dc7b3e9238249dfacf7152eab2f7a9843cddb2b6ce707e",
+      "role": "C2 CLEAR qualified local-only peer acknowledgement; retained original defect, required provider/policy/effect gates."
+    },
+    {
+      "path": "receiving/npm-test.log",
+      "sourcePath": "/workspace/scratch/team-c-continuation-c3/public-evidence-a0954832/receiving/npm-test.log",
+      "bytes": 4107,
+      "sha256": "05c587b12211288b70ac5b04bc2264d4d1d14fb4d1c89f783070b325cd905dcb",
+      "role": "Actual unchanged whole package npm test on exact receiving billing snapshot:37/37 PASS,exit0."
+    },
+    {
+      "path": "receiving/npm-test.json",
+      "sourcePath": "/workspace/scratch/team-c-continuation-c3/public-evidence-a0954832/receiving/npm-test.json",
+      "bytes": 5234,
+      "sha256": "a1421ddcedbb39717750f31b02904ab086e9f870ad45dc60b55a2de9f14b26ec",
+      "role": "Exact archive Git-byte inventory, source candidate, Node/npm identity and receiving37-test receipt."
+    },
+    {
+      "path": "protocol/stripe-reconciliation-contract.json",
+      "sourcePath": "/workspace/scratch/team-c-continuation-c3/public-evidence-a0954832/protocol/stripe-reconciliation-contract.json",
+      "bytes": 6041,
+      "sha256": "3235605a6bb3ab9b7615424718de23bd621e95d4677a4af29f23ff4a5ab90333",
+      "role": "Selected public official Stripe OpenAPI GET contracts, immutable source commit/hash/version; excludes whole raw API spec."
+    },
+    {
+      "path": "source-metadata.json",
+      "sourcePath": "/workspace/scratch/team-c-continuation-c3/public-evidence-a0954832/source-metadata.json",
+      "bytes": 2432,
+      "sha256": "3dcd4a86db348b74ec0c940870e4d541fbdbfa9e802548c4657162bab4955152",
+      "role": "Exact source continuity and scope at original/fixed/receiving commits."
+    },
+    {
+      "path": "README.md",
+      "sourcePath": "/workspace/scratch/team-c-continuation-c3/public-evidence-a0954832/README.md",
+      "bytes": 1281,
+      "sha256": "91652e6cf05a1e068129dbc4d042d73e923175588e2e3fe0bcdc0f170c6fa7b1",
+      "role": "Portable evidence scope, original failures and public-safe boundaries."
+    }
+  ],
+  "artifactCount": 21,
+  "artifactBytes": 52991,
+  "excluded": "No SQLite/database files, private provider/account data, secrets/fixture credentials, cache/node_modules, full raw Stripe or canonical specification, redundant historical pass logs or build outputs."
+}

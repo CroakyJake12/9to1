@@ -11,6 +11,7 @@ using System.Reflection;
 using Haven.Application;
 using Haven.Core;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Haven.Infrastructure;
 
@@ -109,7 +110,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IAgentRunRepository, AgentRunRepository>();
         services.AddSingleton<ICapabilityRepository, CapabilityRepository>();
         services.AddSingleton<IExternalConnectionRepository, ExternalConnectionRepository>();
-        services.AddSingleton<IMcpConnectionClient, McpConnectionClient>();
+        services.AddSingleton<McpConnectionClient>();
+        services.AddSingleton<IMcpConnectionClient>(provider => provider.GetRequiredService<McpConnectionClient>());
         services.AddSingleton<ExternalConnectionRegistryService>();
         services.AddSingleton<McpToolRuntime>();
         services.AddSingleton<CapabilityRegistryService>();
@@ -160,7 +162,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IKnowledgeMaintenanceService, KnowledgeMaintenanceService>();
         services.AddSingleton<BackgroundLearningScheduler>();
         services.AddSingleton<IBackgroundLearningScheduler>(provider => provider.GetRequiredService<BackgroundLearningScheduler>());
-        services.AddSingleton<IPermissionDecisionEngine, PermissionDecisionEngine>();
+        services.AddSingleton<PermissionDecisionEngine>();
+        services.AddSingleton<IPermissionDecisionEngine>(provider => provider.GetRequiredService<PermissionDecisionEngine>());
+        services.AddSingleton<IPermissionOriginalEffectFence>(provider => provider.GetRequiredService<PermissionDecisionEngine>());
         services.AddSingleton<ICallCoordinator>(provider => provider.GetRequiredService<ResponsiveCallCoordinator>());
         services.AddSingleton<ILegacyStateMigrator, LegacyStateMigrator>();
         services.AddSingleton<IWorkspaceToolService, WorkspaceToolService>();
@@ -203,13 +207,145 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ModelPermissionEvaluator>();
         services.AddSingleton<IDefaultProviderStore, VersionedDefaultProviderStore>();
         services.AddSingleton<CheckpointService>();
+        services.AddSingleton<ICheckpointExecutionObservationSource>(provider => provider.GetRequiredService<CheckpointService>());
         services.AddSingleton<ICheckpointRepository, SqliteCheckpointRepository>();
         services.AddSingleton<ICheckpointRestorer, WorkspaceCheckpointRestorer>();
         services.AddSingleton<IProjectInstructionSource, ProjectInstructionFileSource>();
         services.AddSingleton<IImagineGenerationService, OpenAiImagineGenerationService>();
         services.AddSingleton<ImagineGenerationCommand>();
         services.AddSingleton<RemediationCoordinator>();
-        services.AddSingleton<TaskExecutionCoordinator>();
+        // Task identity is scoped to the local execution host, separate from Home/resource grants.
+        services.AddSingleton<HostLocalTaskActorSource>();
+        services.AddSingleton<WorkspaceTaskRunReceiptAuthority>();
+        services.AddSingleton<ITaskRunActionReceiptAuthority>(provider => provider.GetRequiredService<WorkspaceTaskRunReceiptAuthority>());
+        services.AddSingleton<TaskRunCentralCloudUsePermissionSource>(provider => new TaskRunCentralCloudUsePermissionSource(
+            provider.GetRequiredService<HostLocalTaskActorSource>(),
+            provider.GetRequiredService<PermissionDecisionEngine>()));
+        services.AddSingleton<ITaskRunCloudUsePermissionSource>(provider => provider.GetRequiredService<TaskRunCentralCloudUsePermissionSource>());
+        services.AddSingleton<TaskRunConfiguredCloudAdmissionSource>(provider => new TaskRunConfiguredCloudAdmissionSource(
+            provider.GetRequiredService<HostLocalTaskActorSource>(),
+            provider.GetRequiredService<IProviderConfigurationStore>(),
+            provider.GetRequiredService<IProviderSecretStore>(),
+            provider.GetRequiredService<IPrivacyPreferenceStore>(),
+            provider.GetRequiredService<IConversationRepository>(),
+            (task, run, attempt, token) => provider.GetRequiredService<TaskExecutionCoordinator>()
+                .TryGetIssuedAttemptAsync(task, run, attempt, token),
+            knowledge: provider.GetService<IKnowledgeLibrary>(),
+            cloudUsePermission: provider.GetRequiredService<ITaskRunCloudUsePermissionSource>()));
+        services.AddSingleton<ITaskRunCloudAdmissionSource>(provider => provider.GetRequiredService<TaskRunConfiguredCloudAdmissionSource>());
+        services.AddSingleton<ITaskRunProviderContextCapture>(provider => provider.GetRequiredService<TaskRunConfiguredCloudAdmissionSource>());
+        services.AddSingleton<ITaskRunProviderContextAuthority>(provider => provider.GetRequiredService<TaskRunConfiguredCloudAdmissionSource>());
+        services.AddSingleton<TaskRunPermissionAuthority>(provider =>
+        {
+            var originalAuthority = new TaskRunPermissionAuthority(
+            provider.GetRequiredService<HostLocalTaskActorSource>(),
+            provider.GetRequiredService<IModelProviderRegistry>(),
+            provider.GetRequiredService<IProviderConfigurationStore>(),
+            provider.GetRequiredService<IPrivacyPreferenceStore>(),
+            provider.GetRequiredService<ModelPermissionEvaluator>(),
+            cloud: provider.GetRequiredService<ITaskRunCloudAdmissionSource>(),
+            receipts: provider.GetRequiredService<ITaskRunActionReceiptAuthority>(),
+            routes: provider.GetService<ITaskRunRouteObservationSource>());
+            provider.GetService<NativePersonalTaskColdRecoveryHost>()?.ConfigureOriginalAuthority(provider, originalAuthority);
+            return originalAuthority;
+        });
+        services.AddSingleton<ITaskRunAdmissionAuthority>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
+        services.AddSingleton<ITaskRunCommandAuthority>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
+        services.AddSingleton<ITaskRunSelectedRouteCapture>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
+        services.AddSingleton<ITaskRunOriginalSelectedRouteCaptureSource>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
+        services.AddSingleton<ITaskRunOriginalIssuedRouteConfigurationSource>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
+        services.AddSingleton<ITaskRunOriginalInferenceAdmissionSource>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
+        services.AddSingleton<ITaskRunOriginalResponseAdmissionSource>(provider => provider.GetRequiredService<TaskRunPermissionAuthority>());
+        services.AddSingleton<TaskRunCloudPermissionRemediationOwner>(provider => new TaskRunCloudPermissionRemediationOwner(
+            provider.GetRequiredService<TaskRunCentralCloudUsePermissionSource>(),
+            provider.GetRequiredService<TaskRunPermissionAuthority>(),
+            () => provider.GetRequiredService<TaskExecutionCoordinator>(),
+            provider.GetRequiredService<RemediationCoordinator>(),
+            provider.GetRequiredService<IRemediationRepository>(),
+            provider.GetRequiredService<RemediationContinuationRegistry>(),
+            provider.GetRequiredService<IExecutionEventSink>()));
+        services.AddSingleton<TaskRunOriginalFrameOwner>(provider => new TaskRunOriginalFrameOwner(
+            (task, run, attempt, token) => provider.GetRequiredService<TaskExecutionCoordinator>()
+                .TryGetIssuedAttemptAsync(task, run, attempt, token)));
+        services.AddSingleton<ITaskRunOriginalFrameOwner>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
+        services.AddSingleton<ITaskRunOriginalFrameProcessJoinGuard>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
+        services.AddSingleton<ITaskRunOriginalAttemptRegistrationSource>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
+        services.AddSingleton<ITaskRunRuntimeSettlement>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
+        services.AddSingleton<ITaskRunProviderFailureSettlement>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
+        services.AddSingleton<ITaskRunOriginalAttemptRetirement>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
+        services.AddSingleton<ITaskRunOriginalFailedAttemptSettlementSource>(provider => provider.GetRequiredService<TaskRunOriginalFrameOwner>());
+        // Lazy descriptors only. A genuine installed-package source is independently required;
+        // the global observer is unbound and no Taskless model initialization is authorized.
+        services.TryAddSingleton<StrataNativeArtifactSource>(provider => new StrataNativeArtifactSource(
+            provider.GetRequiredService<TaskExecutionCoordinator>(),
+            provider.GetRequiredService<TaskRunPermissionAuthority>(),
+            provider.GetService<IStrataVerifiedInstallationSource>()));
+        services.TryAddSingleton<Dulche.Runtime.IOriginalStrataModelSource>(provider => provider.GetRequiredService<StrataNativeArtifactSource>());
+        services.TryAddSingleton<Dulche.Runtime.IOriginalStrataWorkerSource>(provider => provider.GetRequiredService<StrataNativeArtifactSource>());
+        services.TryAddSingleton<StrataRuntimeObservationSource>(provider => new StrataRuntimeObservationSource(
+            provider.GetRequiredService<StrataNativeArtifactSource>()));
+        services.TryAddSingleton<LlamaCppRuntimeObservationSource>(provider => new LlamaCppRuntimeObservationSource(
+            provider.GetRequiredService<LlamaCppModelProvider>(), provider.GetRequiredService<TaskExecutionCoordinator>(),
+            provider.GetService<StrataRuntimeObservationSource>()));
+        services.TryAddSingleton<Dulche.Runtime.IInferenceRuntimeObservationSource>(provider => provider.GetRequiredService<LlamaCppRuntimeObservationSource>());
+        services.TryAddSingleton<IManagedOriginalRequestRuntimeObservationSource>(provider => provider.GetRequiredService<LlamaCppRuntimeObservationSource>());
+        services.TryAddSingleton<IStrataOriginalRequestObservationSource>(provider => provider.GetRequiredService<StrataRuntimeObservationSource>());
+        services.TryAddSingleton<ManagedDulcheInferenceComposition>(provider => new ManagedDulcheInferenceComposition(
+            provider.GetRequiredService<Dulche.Runtime.IInferenceRuntimeObservationSource>(),
+            provider.GetRequiredService<Dulche.Runtime.IOriginalStrataModelSource>(),
+            provider.GetRequiredService<Dulche.Runtime.IOriginalStrataWorkerSource>()));
+        services.TryAddSingleton<IManagedDulcheInferenceCompositionSource>(provider => provider.GetRequiredService<ManagedDulcheInferenceComposition>());
+        services.TryAddSingleton<Dulche.Runtime.ConfiguredInferenceEnginePreferences>();
+        services.TryAddSingleton<Dulche.Runtime.IInferenceEnginePreferenceSource>(provider => provider.GetRequiredService<Dulche.Runtime.ConfiguredInferenceEnginePreferences>());
+        services.AddSingleton<ManagedDulcheRuntimeService>(provider => new ManagedDulcheRuntimeService(
+            provider.GetRequiredService<IModelProviderRegistry>(),
+            provider.GetRequiredService<IProviderConfigurationStore>(),
+            provider.GetRequiredService<TaskExecutionCoordinator>(),
+            provider.GetRequiredService<ITaskRunOriginalFrameOwner>(),
+            tools: provider.GetService<Dulche.Runtime.IOriginalDulcheProviderToolSource>(),
+            contextSource: provider.GetService<Dulche.Runtime.IOriginalDulcheProviderContextSource>(),
+            contextAuthority: provider.GetRequiredService<ITaskRunProviderContextAuthority>(),
+            toolCoordinator: provider.GetService<Dulche.Runtime.IDulcheToolCoordinator>(),
+            inferenceComposition: provider.GetService<IManagedDulcheInferenceCompositionSource>(),
+            inferencePreferences: provider.GetService<Dulche.Runtime.IInferenceEnginePreferenceSource>()));
+        services.AddSingleton<IManagedDulcheOriginalModelRequestConsumer>(provider => provider.GetRequiredService<ManagedDulcheRuntimeService>());
+        services.AddSingleton<IManagedDulcheOriginalInferenceSettingsSource>(provider => provider.GetRequiredService<ManagedDulcheRuntimeService>());
+        services.AddSingleton<WorkspaceTaskRunEffectAuthority>();
+        services.AddSingleton<IWorkspaceToolFinalFenceAuthority>(provider => provider.GetRequiredService<WorkspaceTaskRunEffectAuthority>());
+        services.AddSingleton<WorkspaceTaskRunToolActionOwner>(provider => new WorkspaceTaskRunToolActionOwner(
+            () => provider.GetRequiredService<TaskExecutionCoordinator>(),
+            provider.GetRequiredService<ITaskRunOriginalFrameOwner>(),
+            provider.GetRequiredService<IWorkspaceToolService>(),
+            provider.GetRequiredService<CapabilityRegistryService>(),
+            provider.GetRequiredService<WorkspaceTaskRunEffectAuthority>(),
+            OperatingSystem.IsWindows() ? CapabilityPlatform.Windows :
+                OperatingSystem.IsAndroid() ? CapabilityPlatform.Android :
+                OperatingSystem.IsLinux() ? CapabilityPlatform.Linux : CapabilityPlatform.None,
+            provider.GetRequiredService<WorkspaceTaskRunReceiptAuthority>()));
+        services.AddSingleton<ITaskRunToolActionOwner>(provider => provider.GetRequiredService<WorkspaceTaskRunToolActionOwner>());
+        services.AddSingleton<TaskExecutionCoordinator>(provider =>
+        {
+            var originalCoordinator = new TaskExecutionCoordinator(
+            provider.GetRequiredService<ITaskExecutionRepository>(),
+            provider.GetRequiredService<IExecutionEventSink>(),
+            provider.GetService<TimeProvider>(),
+            provider.GetRequiredService<ITaskRunAdmissionAuthority>(),
+            provider.GetRequiredService<ITaskRunRuntimeSettlement>(),
+            provider.GetRequiredService<ICheckpointRepository>(),
+            provider.GetRequiredService<ITaskRunToolActionOwner>(),
+            provider.GetRequiredService<ICheckpointExecutionObservationSource>(),
+            unstartedPermissionSource: provider.GetRequiredService<TaskRunCloudPermissionRemediationOwner>());
+            provider.GetService<NativePersonalTaskColdRecoveryHost>()?.ConfigureOriginalCoordinator(provider, originalCoordinator);
+            return originalCoordinator;
+        });
+        services.AddSingleton<ITaskRunOriginalActionAdmissionSource>(provider => provider.GetRequiredService<TaskExecutionCoordinator>());
+        services.AddSingleton<ITaskRunOriginalInferenceAttemptSource>(provider => provider.GetRequiredService<TaskExecutionCoordinator>());
+        services.AddSingleton<ITaskRunProcessRetirementParticipant>(provider => provider.GetRequiredService<TaskExecutionCoordinator>());
+        services.AddSingleton<TaskRunCanonicalProcessRetirementOwner>(provider => new TaskRunCanonicalProcessRetirementOwner(
+            provider.GetRequiredService<TaskExecutionCoordinator>(),
+            provider.GetRequiredService<AgentTaskRuntimeService>(),
+            provider.GetRequiredService<TaskRunPermissionAuthority>(),
+            provider.GetRequiredService<TaskRunOriginalFrameOwner>()));
         services.AddSingleton<IProjectPreviewProvider, WebProjectPreviewProvider>();
         services.AddSingleton<IModelProvider>(provider => new OllamaModelProvider(
             provider.GetRequiredService<ILocalOllamaClient>(),
@@ -219,14 +355,33 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IModelProvider, CustomOpenAiCompatibleModelProvider>();
         services.AddSingleton<IModelProvider, AnthropicModelProvider>();
         services.AddSingleton<IModelProvider, GeminiModelProvider>();
+        services.AddHavenObservedLocalLlamaCpp(LocalLlamaCppRegistration.ReadExplicitEnvironment());
         services.AddSingleton<IModelProviderRegistry, ModelProviderRegistry>();
         services.AddSingleton<IModelRouter, ModelRouter>();
         services.AddSingleton<ProviderRoutingModelClient>(provider => new ProviderRoutingModelClient(
             provider.GetRequiredService<ILocalOllamaClient>(),
             provider.GetRequiredService<IModelProviderRegistry>(),
             provider.GetRequiredService<IPrivacyPreferenceStore>()));
-        services.AddSingleton<ResilientProviderRoutingModelClient>();
+        services.AddSingleton<ResilientProviderRoutingModelClient>(provider => new ResilientProviderRoutingModelClient(
+            provider.GetRequiredService<ProviderRoutingModelClient>(),
+            provider.GetRequiredService<IModelProviderRegistry>(),
+            provider.GetRequiredService<IProviderConfigurationStore>(),
+            provider.GetRequiredService<IPrivacyPreferenceStore>(),
+            fallbackOrder: provider.GetService<IModelFallbackOrderStore>(),
+            executionEvents: provider.GetService<IExecutionEventSink>(),
+            taskCoordinator: provider.GetService<TaskExecutionCoordinator>(),
+            routeCapture: provider.GetService<ITaskRunSelectedRouteCapture>(),
+            originalFrames: provider.GetService<ITaskRunOriginalFrameOwner>(),
+            modelPermissions: provider.GetService<ModelPermissionEvaluator>(),
+            taskContextAuthority: provider.GetService<ITaskRunProviderContextAuthority>(),
+            catalogueEligibility: provider.GetService<IProviderCatalogueEligibility>(),
+            originalModelRequests: provider.GetService<IManagedDulcheOriginalModelRequestConsumer>(),
+            coldRecoveryJournal: provider.GetService<ITaskRunColdRecoveryJournal>()));
         services.AddSingleton<IProviderModelClient>(provider => provider.GetRequiredService<ResilientProviderRoutingModelClient>());
+        services.AddSingleton<ITaskRunOriginalRequestFailureSource>(provider => provider.GetRequiredService<ResilientProviderRoutingModelClient>());
+        services.AddSingleton<ITaskRunOriginalToolCheckpointSelectionSource>(provider => provider.GetRequiredService<ResilientProviderRoutingModelClient>());
+        services.AddSingleton<ITaskRunColdToolCheckpointSelectionSource>(provider => provider.GetRequiredService<ResilientProviderRoutingModelClient>());
+        services.AddSingleton<ITaskRunOriginalToolResponseDispatchWitnessSource>(provider => provider.GetRequiredService<ResilientProviderRoutingModelClient>());
         services.AddSingleton<INotesAiService>(provider => new NotesAiService(
             provider.GetRequiredService<IProviderModelClient>(),
             provider.GetRequiredService<IProductionDiagnostics>()));
@@ -263,6 +418,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ExtensionManager>();
         services.AddSingleton<PluginToolRuntime>();
         services.AddSingleton<IVersionedSettingsStore, VersionedAtomicSettingsStore>();
+        services.AddSingleton<SpaceRegistry>(provider => new SpaceRegistry(provider.GetRequiredService<IVersionedSettingsStore>()));
         services.AddSingleton<IUpdatePreferenceStore, VersionedUpdatePreferenceStore>();
         services.AddSingleton(new Func<InstallationInfo>(WindowsInstallationDetector.DetectInstallationSource));
         services.AddSingleton(new Func<string>(CurrentExecutableVersion));

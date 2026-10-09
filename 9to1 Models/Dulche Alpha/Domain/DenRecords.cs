@@ -17,7 +17,28 @@ public static class DenJson
         };
         options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
         options.Converters.Add(new PortableMetricConverter());
+        options.Converters.Add(new DenStringSetConverter());
         return options;
+    }
+}
+
+internal sealed class DenStringSetConverter : JsonConverter<IReadOnlySet<string>>
+{
+    public override bool HandleNull => true;
+    public override IReadOnlySet<string> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var values = JsonSerializer.Deserialize<HashSet<string>>(ref reader, options)
+            ?? throw new JsonException("A Den capability set cannot be null.");
+        if (values.Any(value => value is null)) throw new JsonException("A Den capability cannot be null.");
+        return new HashSet<string>(values, StringComparer.Ordinal);
+    }
+
+    public override void Write(Utf8JsonWriter writer, IReadOnlySet<string> value, JsonSerializerOptions options)
+    {
+        if (value is null) throw new JsonException("A Den capability set cannot be null.");
+        writer.WriteStartArray();
+        foreach (var item in value.Order(StringComparer.Ordinal)) writer.WriteStringValue(item);
+        writer.WriteEndArray();
     }
 }
 
@@ -224,6 +245,7 @@ public sealed record ApprovalRecord : DenRecord
 
 public sealed record AgentDefinitionRecord : DenRecord
 {
+    public AgentPresentationDefinition? Presentation { get; init; }
     public required string DisplayName { get; init; }
     public required string Version { get; init; }
     public string? Instructions { get; init; }
@@ -358,6 +380,9 @@ public enum DenPermission { Read, Write, Execute, Administer }
 public sealed record DenAccessRule(string PrincipalId, string NamespaceId, DenPermission Permission,
     IReadOnlySet<string>? ObjectIds = null);
 
+/// <summary>Current authorization observation. Write checks can run under the Den commit lease;
+/// implementations must not re-enter the same Den store. Independently stored ACLs are rechecked,
+/// but are not part of a distributed atomic transaction with the record publication.</summary>
 public interface IDenAccessPolicy
 {
     ValueTask<bool> IsAllowedAsync(string principalId, string namespaceId, string objectId,

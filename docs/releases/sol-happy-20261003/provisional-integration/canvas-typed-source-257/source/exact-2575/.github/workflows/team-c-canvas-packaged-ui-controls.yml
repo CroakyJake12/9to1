@@ -1,0 +1,64 @@
+name: Team C installed UI Automation setup diagnostic (unaccepted)
+on:
+  push:
+    branches: [team-c/sol-happy-c3-canvas-uia-typed-client-20261004]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: team-c-canvas-uia-provider-diagnostic-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  provider-setup-only:
+    runs-on: windows-2022
+    timeout-minutes: 3
+    env:
+      GIT_OPTIONAL_LOCKS: '0'
+    steps:
+      - name: Preserve exact source line endings
+        shell: powershell
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Observe exact installed framework public provider setup refusal only
+        shell: powershell
+        env:
+          PROBE_OUTPUT: ${{ runner.temp }}/canvas-uia-provider-diagnostic-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference='Stop'
+          Set-StrictMode -Version Latest
+          $output=[IO.Path]::GetFullPath($env:PROBE_OUTPUT)
+          if(Test-Path -LiteralPath $output){throw 'Evidence directory must be new.'}
+          [void][IO.Directory]::CreateDirectory($output)
+          $source='.github/scripts/canvas-packaged-ui-controls.ps1'
+          $result=[ordered]@{schemaVersion=1;status='NOT_RUN';stage='installed-standard-uia-provider-diagnostic';workflowCommit='${{ github.sha }}';sourceSha256=(Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash.ToLowerInvariant();checks=@();launches=@();requests=@();canvasStates=@();forcedCleanup=$false;acceptanceVerified=$false;fullAppAcceptance='NOT_RUN';installedHomeTuple='NOT_RUN';cleanPcDelivery='NOT_RUN';failure=$null;qualification='Setup-only SDK-present hosted Windows client diagnostic. Exact genuine installed Microsoft GAC provider/public API; bounded exception type/HRESULT and canonical public type/table capability only. No package download/extraction, native app/process/input/picker/profile/fixture/provider resource/model/approval state.'}
+          $tokens=$null;$errors=$null
+          $ast=[System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $source).Path,[ref]$tokens,[ref]$errors)
+          if($errors.Count){throw 'Actual source parser errors.'}
+          foreach($name in @('Write-Result','Check','Test-GenuineUiAutomationAssembly','Read-UiAutomationAssembly','Read-BoundedProviderExceptionTypes','Read-KnownProviderThrowFrames','Record-StandardProviderRefusalWitness','Initialize-StandardUiAutomationProviders')){
+            $definitions=@($ast.FindAll({param($node)$node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq $name},$true))
+            if($definitions.Count -ne 1){throw 'Exact source function is absent or ambiguous.'}
+            Invoke-Expression $definitions[0].Extent.Text
+          }
+          $exitCode=1
+          try{
+            $catalog=Get-Content -Raw .github/validation/canvas-packaged-ui-controls.json|ConvertFrom-Json
+            foreach($pin in $catalog.sourcePins){Check ((Get-FileHash -LiteralPath $pin.path -Algorithm SHA256).Hash.ToLowerInvariant() -ceq $pin.sha256) "Exact unchanged native source pin: $($pin.path)"}
+            Add-Type -AssemblyName UIAutomationClient,UIAutomationTypes
+            Initialize-StandardUiAutomationProviders
+            $result.status='SETUP_ONLY_COMPLETED_NATIVE_WORKFLOW_NOT_RUN';$exitCode=0
+          }catch{
+            $result.status='ORIGINAL_PROVIDER_SETUP_REFUSAL_RETAINED'
+            $result.failure=Read-BoundedProviderExceptionTypes $_.Exception
+          }finally{Write-Result}
+          exit $exitCode
+      - name: Retain original bounded setup metadata and refusal only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: canvas-uia-provider-diagnostic-unaccepted-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/canvas-uia-provider-diagnostic-${{ github.run_id }}-${{ github.run_attempt }}/result.json
+          if-no-files-found: warn
+          retention-days: 7

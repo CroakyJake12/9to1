@@ -20,4 +20,7 @@
     <ProjectReference Include="../Runtime/CakeOS.Cui.Runtime.csproj" />
     <ProjectReference Include="../Core/CakeOS.Cui.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

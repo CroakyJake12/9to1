@@ -1,0 +1,64 @@
+{
+  "status": "BYTE_IDENTICAL_FOCUSED68_ADDITIVE_INTAKE_NO_CANONICAL_WRITE",
+  "sourceFiles": [
+    {
+      "original": {
+        "path": "/workspace/astra-source/lifecycle-peer-sol61u51/focused-normal68/run-current-root-focused-normal68.py",
+        "bytes": 203536,
+        "sha256": "d4c32093bde7737b2bd32b60ecb3924770283f7c413f7133c5cf361e721354f2"
+      },
+      "staged": {
+        "path": "/workspace/astra-migration-20261007/build-script-intake/tools/astra-migration/current/focused-normal68/run-current-root-focused-normal68.py",
+        "bytes": 203536,
+        "sha256": "d4c32093bde7737b2bd32b60ecb3924770283f7c413f7133c5cf361e721354f2"
+      },
+      "repositoryRelativePath": "tools/astra-migration/current/focused-normal68/run-current-root-focused-normal68.py",
+      "sourceStatus": "Focused68source-only UNRUN and not independently received; original C24 reader dependency unchanged"
+    },
+    {
+      "original": {
+        "path": "/workspace/astra-source/lifecycle-peer-sol61u51/focused-normal68/selfcheck-current-root-focused-normal68c.py",
+        "bytes": 19552,
+        "sha256": "227f871eb525cc24a440f249673c3d4872fabbb2f1dc2fc81f3e3389c86ed7c2"
+      },
+      "staged": {
+        "path": "/workspace/astra-migration-20261007/build-script-intake/tools/astra-migration/current/focused-normal68/selfcheck-current-root-focused-normal68c.py",
+        "bytes": 19552,
+        "sha256": "227f871eb525cc24a440f249673c3d4872fabbb2f1dc2fc81f3e3389c86ed7c2"
+      },
+      "repositoryRelativePath": "tools/astra-migration/current/focused-normal68/selfcheck-current-root-focused-normal68c.py",
+      "sourceStatus": "Focused68source-only UNRUN and not independently received; original C24 reader dependency unchanged"
+    },
+    {
+      "original": {
+        "path": "/workspace/astra-source/lifecycle-peer-sol61u51/focused-normal68/launch-exact-current-root-focused-normal68.py",
+        "bytes": 23147,
+        "sha256": "3801838878075ab72dd8994cb1031e439b1cd5f35ddf4e1f48fae8fa9c422aad"
+      },
+      "staged": {
+        "path": "/workspace/astra-migration-20261007/build-script-intake/tools/astra-migration/current/focused-normal68/launch-exact-current-root-focused-normal68.py",
+        "bytes": 23147,
+        "sha256": "3801838878075ab72dd8994cb1031e439b1cd5f35ddf4e1f48fae8fa9c422aad"
+      },
+      "repositoryRelativePath": "tools/astra-migration/current/focused-normal68/launch-exact-current-root-focused-normal68.py",
+      "sourceStatus": "Focused68source-only UNRUN and not independently received; original C24 reader dependency unchanged"
+    },
+    {
+      "original": {
+        "path": "/tmp/astra-a4-strata-request-consumer05-20261006/read-c24-receipt-exact-custody.py",
+        "bytes": 2120,
+        "sha256": "f9be612feadad483c4c3f77e2726ad8595157899e737150955368633a3ce3fee"
+      },
+      "staged": {
+        "path": "/workspace/astra-migration-20261007/build-script-intake/tools/astra-migration/current/focused-normal68/read-c24-receipt-exact-custody.py",
+        "bytes": 2120,
+        "sha256": "f9be612feadad483c4c3f77e2726ad8595157899e737150955368633a3ce3fee"
+      },
+      "repositoryRelativePath": "tools/astra-migration/current/focused-normal68/read-c24-receipt-exact-custody.py",
+      "sourceStatus": "Focused68source-only UNRUN and not independently received; original C24 reader dependency unchanged"
+    }
+  ],
+  "noOverlapWithPublisherTwelvePaths": true,
+  "sdkRuntimeExecuted": false,
+  "writerPaused": true
+}

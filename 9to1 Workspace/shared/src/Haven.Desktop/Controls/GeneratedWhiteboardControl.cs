@@ -1,4 +1,7 @@
 using System.Globalization;
+using System.Runtime.ExceptionServices;
+using Avalonia.Threading;
+using Haven.Desktop.Services;
 using System.Text.Json;
 using Avalonia;
 using Avalonia.Automation;
@@ -18,7 +21,7 @@ namespace Haven.Desktop.Controls;
 /// Inline and fullscreen presentations share one session, so every user or
 /// agent edit has the same semantic element IDs, history, and persisted state.
 /// </summary>
-public sealed class GeneratedWhiteboardControl : UserControl
+public sealed class GeneratedWhiteboardControl : UserControl, IDisposable, IAsyncDisposable
 {
     private static readonly (string Name, string Value)[] Palette =
     [
@@ -35,6 +38,13 @@ public sealed class GeneratedWhiteboardControl : UserControl
     private readonly Func<JsonElement, Task>? _requestAgent;
     private readonly string _title;
     private readonly string _prompt;
+    private readonly DesktopOriginalWorkLifetime _originalWork;
+    private readonly Func<bool>? _originalPresentationCurrent;
+    private readonly List<OriginalFullscreen> _originalWindows = [];
+    private readonly List<(WhiteboardDrawingSurface Surface, DesktopOriginalWorkLifetime Owner)> _originalDrawings = [];
+    private DesktopOriginalWorkLifetime? _buildingOriginalWork;
+    private bool _disposed;
+    public Task? OriginalClose => _originalWork.OriginalClose;
 
     public GeneratedWhiteboardControl(
         string title,
@@ -43,7 +53,13 @@ public sealed class GeneratedWhiteboardControl : UserControl
         JsonElement? persistedState,
         Action<JsonElement> persist,
         Func<JsonElement, Task>? requestAgent = null)
+        : this(title, prompt, minHeight, persistedState, persist, requestAgent, null) { }
+    internal GeneratedWhiteboardControl(string title, string prompt, double minHeight,
+        JsonElement? persistedState, Action<JsonElement> persist,
+        Func<JsonElement, Task>? requestAgent, Func<bool>? originalPresentationCurrent)
     {
+        _originalPresentationCurrent = originalPresentationCurrent;
+        _originalWork = new DesktopOriginalWorkLifetime(StopOriginalAsync, CleanupOriginalAsync);
         _title = string.IsNullOrWhiteSpace(title) ? "Whiteboard" : title;
         _prompt = prompt ?? string.Empty;
         _persist = persist ?? throw new ArgumentNullException(nameof(persist));
@@ -54,7 +70,8 @@ public sealed class GeneratedWhiteboardControl : UserControl
         MinHeight = Math.Max(320, minHeight);
         AutomationProperties.SetName(this, _title);
         Content = BuildEmbeddedContent();
-        DetachedFromVisualTree += (_, _) => _session.Changed -= PersistSession;
+        // Visual detachment can be reversible while the fullscreen owner remains
+        // live. The original subscription belongs to explicit permanent retirement.
     }
 
     private Control BuildEmbeddedContent()
@@ -95,26 +112,29 @@ public sealed class GeneratedWhiteboardControl : UserControl
     private HavenTextButton ToolButton(string label, WhiteboardTool tool)
     {
         var button = new HavenTextButton { Content = label, MinHeight = 38 };
-        button.Click += (_, _) => _session.Tool = tool;
+        var originalOwner = _buildingOriginalWork ?? _originalWork;
+        button.Click += (_, _) => RunOwnedCallback(originalOwner, () => _session.Tool = tool);
         AutomationProperties.SetName(button, $"Use {label} tool");
         return button;
     }
 
-    private static HavenTextButton ActionButton(string label, Action action)
+    private HavenTextButton ActionButton(string label, Action action)
     {
         var button = new HavenTextButton { Content = label, MinHeight = 38 };
-        button.Click += (_, _) => action();
+        var originalOwner = _buildingOriginalWork ?? _originalWork;
+        button.Click += (_, _) => RunOwnedCallback(originalOwner, action);
         AutomationProperties.SetName(button, label);
         return button;
     }
 
     private HavenCard CreateDrawingSurface(double minHeight)
     {
-        var surface = new WhiteboardDrawingSurface(_session)
-        {
-            MinHeight = minHeight,
-            HorizontalAlignment = HorizontalAlignment.Stretch
-        };
+        var originalOwner = _buildingOriginalWork ?? _originalWork;
+        var surface = new WhiteboardDrawingSurface(_session,
+            callback => RunOwnedCallback(originalOwner, callback), () => DemandOwnedCurrent(originalOwner));
+        _originalDrawings.Add((surface, originalOwner)); // Capture before setters/notifications.
+        PublishOwned(originalOwner, () => surface.MinHeight = minHeight);
+        PublishOwned(originalOwner, () => surface.HorizontalAlignment = HorizontalAlignment.Stretch);
         AutomationProperties.SetName(surface, "Interactive whiteboard canvas");
 
         var overlay = new StackPanel
@@ -152,20 +172,34 @@ public sealed class GeneratedWhiteboardControl : UserControl
         };
     }
 
-    private async Task OpenFullscreenAsync()
+    private Task OpenFullscreenAsync() => _originalWork.RunAsync(async original =>
+    {
+        BindOwnedOriginal(_originalWork, original);
+        original.DemandPublication();
+        await original.AwaitAsync(OpenFullscreenOriginalCoreAsync(original));
+    });
+    private async Task OpenFullscreenOriginalCoreAsync(DesktopOriginalWorkLifetime.Original original)
     {
         if (TopLevel.GetTopLevel(this) is not Window owner) return;
 
-        var window = new Window
+        original.DemandPublication();
+        var window = new Window();
+        var windowOriginal = new OriginalFullscreen(this, window);
+        _originalWindows.Add(windowOriginal); // SAME acquired Window before any native setters.
+        var windowWork = windowOriginal.Work;
+        var previousBuilding = _buildingOriginalWork;
+        _buildingOriginalWork = windowWork;
+        try
         {
-            Title = _title,
-            Width = 1320,
-            Height = 860,
-            MinWidth = 760,
-            MinHeight = 580,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Background = ResourceBrush("HavenWindowBrush", Color.FromRgb(22, 24, 30))
-        };
+        if (_originalWork.IsRetiring) windowOriginal.RequestRetirement();
+        original.DemandPublication();
+        PublishOwned(windowWork, () => window.Title = _title);
+        PublishOwned(windowWork, () => window.Width = 1320);
+        PublishOwned(windowWork, () => window.Height = 860);
+        PublishOwned(windowWork, () => window.MinWidth = 760);
+        PublishOwned(windowWork, () => window.MinHeight = 580);
+        PublishOwned(windowWork, () => window.WindowStartupLocation = WindowStartupLocation.CenterOwner);
+        PublishOwned(windowWork, () => window.Background = ResourceBrush("HavenWindowBrush", Color.FromRgb(22, 24, 30)));
         var surface = CreateDrawingSurface(620);
         var status = new TextBlock
         {
@@ -193,7 +227,7 @@ public sealed class GeneratedWhiteboardControl : UserControl
             Value = _session.Thickness,
             MinWidth = 190
         };
-        thickness.ValueChanged += (_, _) => _session.Thickness = thickness.Value;
+        thickness.ValueChanged += (_, _) => RunOwnedCallback(windowWork, () => _session.Thickness = thickness.Value);
         AutomationProperties.SetName(thickness, "Pen thickness");
 
         var palette = new WrapPanel { Orientation = Orientation.Horizontal };
@@ -209,28 +243,28 @@ public sealed class GeneratedWhiteboardControl : UserControl
         };
         var applyColour = new HavenSecondaryButton { Content = "Color Picker" };
         applyColour.Click += (_, _) =>
-        {
+        RunOwnedCallback(windowWork, () => {
             if (TryNormaliseColor(customColour.Text, out var colour))
             {
                 _session.Color = colour;
-                customColour.Text = colour;
-                status.Text = $"Colour set to {colour}.";
+                PublishOwned(windowWork, () => customColour.Text = colour);
+                PublishOwned(windowWork, () => status.Text = $"Colour set to {colour}.");
             }
-            else status.Text = "Enter a colour in #RRGGBB format.";
-        };
+            else PublishOwned(windowWork, () => status.Text = "Enter a colour in #RRGGBB format.");
+        });
 
         var effect = new HavenSecondaryButton { Content = $"Pen Effect: {_session.Effect}" };
         effect.Click += (_, _) =>
-        {
+        RunOwnedCallback(windowWork, () => {
             _session.Effect = _session.Effect switch
             {
                 WhiteboardPenEffect.Solid => WhiteboardPenEffect.Glow,
                 WhiteboardPenEffect.Glow => WhiteboardPenEffect.Dotted,
                 _ => WhiteboardPenEffect.Solid
             };
-            effect.Content = $"Pen Effect: {_session.Effect}";
-            status.Text = $"{_session.Effect} pen effect selected.";
-        };
+            PublishOwned(windowWork, () => effect.Content = $"Pen Effect: {_session.Effect}");
+            PublishOwned(windowWork, () => status.Text = $"{_session.Effect} pen effect selected.");
+        });
         AutomationProperties.SetName(effect, "Generate Fancy Pen Texture or Effect");
 
         var textEditor = new HavenTextInput
@@ -240,19 +274,20 @@ public sealed class GeneratedWhiteboardControl : UserControl
         };
         var addText = new HavenSecondaryButton { Content = "Add / Update Text" };
         addText.Click += (_, _) =>
-        {
+        RunOwnedCallback(windowWork, () => {
             var value = textEditor.Text?.Trim();
             if (string.IsNullOrWhiteSpace(value)) return;
             if (!_session.UpdateSelectedText(value))
                 _session.CommitText(new Point(90, 130), value);
             _session.Tool = WhiteboardTool.Select;
-            status.Text = "Text added to the canvas.";
-        };
+            PublishOwned(windowWork, () => status.Text = "Text added to the canvas.");
+        });
 
         var insertImage = new HavenSecondaryButton { Content = "Insert Image" };
-        insertImage.Click += async (_, _) =>
+        insertImage.Click += async (_, _) => await RunOwnedAsync(windowWork, async operation =>
         {
-            var files = await window.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            operation.DemandPublication();
+            var actualPicker = window.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
                 Title = "Insert an image",
                 AllowMultiple = false,
@@ -264,29 +299,31 @@ public sealed class GeneratedWhiteboardControl : UserControl
                     }
                 ]
             });
+            var files = await operation.AwaitAsync(actualPicker);
+            operation.DemandPublication();
             var path = files.FirstOrDefault()?.TryGetLocalPath();
             if (path is null) return;
             _session.CommitImage(new Point(100, 150), path);
-            status.Text = $"Inserted {Path.GetFileName(path)}.";
-        };
+            PublishOwned(windowWork, () => status.Text = $"Inserted {Path.GetFileName(path)}.");
+        });
 
         var gridToggle = new HavenSecondaryButton { Content = _session.ShowGrid ? "Hide Grid / Ruler" : "Show Grid / Ruler" };
         gridToggle.Click += (_, _) =>
-        {
+        RunOwnedCallback(windowWork, () => {
             _session.ShowGrid = !_session.ShowGrid;
-            gridToggle.Content = _session.ShowGrid ? "Hide Grid / Ruler" : "Show Grid / Ruler";
-        };
+            PublishOwned(windowWork, () => gridToggle.Content = _session.ShowGrid ? "Hide Grid / Ruler" : "Show Grid / Ruler");
+        });
         var fit = new HavenSecondaryButton { Content = "Fit Canvas" };
-        fit.Click += (_, _) => _session.ResetViewport();
+        fit.Click += (_, _) => RunOwnedCallback(windowWork, _session.ResetViewport);
 
         var undo = ActionButton("Undo", _session.Undo);
         var redo = ActionButton("Redo", _session.Redo);
         var copy = ActionButton("Copy", _session.CopySelected);
         var paste = ActionButton("Paste", _session.Paste);
         var delete = new HavenNegativeButton { Content = "Delete Selected" };
-        delete.Click += (_, _) => _session.DeleteSelected();
+        delete.Click += (_, _) => RunOwnedCallback(windowWork, _session.DeleteSelected);
         var clear = new HavenNegativeButton { Content = "Clear Canvas" };
-        clear.Click += (_, _) => _session.Clear();
+        clear.Click += (_, _) => RunOwnedCallback(windowWork, _session.Clear);
 
         var askText = new HavenTextInput
         {
@@ -294,21 +331,23 @@ public sealed class GeneratedWhiteboardControl : UserControl
             MinWidth = 300
         };
         var ask = new HavenPrimaryButton { Content = "Ask Haven", MinWidth = 112 };
-        ask.Click += async (_, _) =>
+        ask.Click += async (_, _) => await RunOwnedAsync(windowWork, async operation =>
         {
+            operation.DemandPublication();
             var instruction = askText.Text?.Trim();
             if (string.IsNullOrWhiteSpace(instruction)) return;
             if (_requestAgent is null)
             {
-                status.Text = "This generated canvas has no agent action attached.";
+                PublishOwned(windowWork, () => status.Text = "This generated canvas has no agent action attached.");
                 return;
             }
 
-            ask.IsEnabled = false;
-            status.Text = "Sending the selected canvas context to Haven…";
+            PublishOwned(windowWork, () => ask.IsEnabled = false);
+            PublishOwned(windowWork, () => status.Text = "Sending the selected canvas context to Haven…");
             try
             {
-                await _requestAgent(JsonSerializer.SerializeToElement(new
+                operation.DemandPublication();
+                var actualAgent = _requestAgent(JsonSerializer.SerializeToElement(new
                 {
                     instruction,
                     title = _title,
@@ -316,19 +355,28 @@ public sealed class GeneratedWhiteboardControl : UserControl
                     selectedElementIds = _session.SelectedId is null ? Array.Empty<string>() : new[] { _session.SelectedId },
                     canvasState = _session.ToJson()
                 }));
-                status.Text = "Haven received the whiteboard request.";
-                askText.Text = string.Empty;
+                await operation.AwaitAsync(actualAgent);
+                operation.DemandPublication();
+                PublishOwned(windowWork, () => status.Text = "Haven received the whiteboard request.");
+                PublishOwned(windowWork, () => askText.Text = string.Empty);
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
-                status.Text = "Haven could not process the whiteboard request: " + exception.Message;
+                operation.Retain(exception);
+                if (operation.IsPublicationCurrent)
+                    PublishOwned(windowWork, () => status.Text = "Haven could not process the whiteboard request: " + exception.Message);
             }
-            finally { ask.IsEnabled = true; }
-        };
+            finally { if (operation.IsPublicationCurrent) PublishOwned(windowWork, () => ask.IsEnabled = true); }
+        });
         AutomationProperties.SetName(ask, "Ask Haven about the whiteboard selection");
 
         var close = new HavenPrimaryButton { Content = "Close", MinWidth = 110 };
-        close.Click += (_, _) => window.Close();
+        close.Click += (_, _) => windowWork.RunSynchronous(operation =>
+        {
+            BindOwnedOriginal(windowWork, operation);
+            operation.DemandPublication();
+            windowOriginal.RequestRetirement(); // Request and return; no post-request publication or self-join.
+        });
 
         var controls = new HavenPanel
         {
@@ -376,7 +424,7 @@ public sealed class GeneratedWhiteboardControl : UserControl
             }
         };
 
-        window.Content = new Grid
+        PublishOwned(windowWork, () => window.Content = new Grid
         {
             Margin = new Thickness(14),
             RowDefinitions = new RowDefinitions("*,Auto,Auto"),
@@ -398,9 +446,41 @@ public sealed class GeneratedWhiteboardControl : UserControl
                     Children = { close }
                 }, 2)
             }
-        };
+        });
 
-        await window.ShowDialog(owner);
+        original.DemandPublication();
+        _buildingOriginalWork = previousBuilding;
+        var actualDialog = window.ShowDialog(owner);
+        await original.AwaitAsync(actualDialog);
+        }
+        catch (Exception cause)
+        {
+            original.Retain(cause);
+            throw;
+        }
+        finally
+        {
+            _buildingOriginalWork = previousBuilding;
+            var failures = new List<Exception>();
+            try { windowOriginal.RequestRetirement(); } catch (Exception cause) { Add(failures, cause); }
+            Task? actualWindowClose = null;
+            try
+            {
+                actualWindowClose = windowOriginal.Work.OriginalClose
+                    ?? throw new InvalidOperationException("The acquired fullscreen window did not publish its original close.");
+                await original.AwaitAsync(actualWindowClose);
+                if (actualWindowClose.IsCompletedSuccessfully)
+                {
+                    // The actual dialog and callback close are both terminal here.
+                    // Healthy physical children can retire; failures retain custody.
+                    _originalDrawings.RemoveAll(item => ReferenceEquals(item.Owner, windowOriginal.Work));
+                    _originalWindows.Remove(windowOriginal);
+                }
+            }
+            catch (Exception cause) { Capture(failures, actualWindowClose, cause); }
+            foreach (var cause in failures) original.Retain(cause);
+            Throw(failures);
+        }
     }
 
     private void AddTool(Panel panel, string label, WhiteboardTool tool)
@@ -426,11 +506,11 @@ public sealed class GeneratedWhiteboardControl : UserControl
                 Background = new SolidColorBrush(Color.Parse(color))
             }
         };
-        button.Click += (_, _) =>
-        {
+        var originalOwner = _buildingOriginalWork ?? _originalWork;
+        button.Click += (_, _) => RunOwnedCallback(originalOwner, () => {
             _session.Color = color;
             _session.Tool = WhiteboardTool.Pen;
-        };
+        });
         AutomationProperties.SetName(button, label);
         ToolTip.SetTip(button, label);
         return button;
@@ -464,12 +544,12 @@ public sealed class GeneratedWhiteboardControl : UserControl
                 }
             }
         };
-        button.Click += (_, _) =>
-        {
+        var originalOwner = _buildingOriginalWork ?? _originalWork;
+        button.Click += (_, _) => RunOwnedCallback(originalOwner, () => {
             _session.Color = "#8E24AA";
             _session.Effect = WhiteboardPenEffect.Glow;
             _session.Tool = WhiteboardTool.Pen;
-        };
+        });
         AutomationProperties.SetName(button, "Rainbow pen");
         ToolTip.SetTip(button, "Rainbow / glow pen");
         return button;
@@ -491,7 +571,8 @@ public sealed class GeneratedWhiteboardControl : UserControl
         catch (FormatException) { return false; }
     }
 
-    private void PersistSession() => _persist(_session.ToJson());
+    private void PersistSession() => RunOwnedCallback(_originalWork, () =>
+    { DemandOwnedCurrent(_originalWork); _persist(_session.ToJson()); DemandOwnedCurrent(_originalWork); });
 
     private static T Column<T>(T control, int column) where T : Control
     {
@@ -507,6 +588,132 @@ public sealed class GeneratedWhiteboardControl : UserControl
 
     private static IBrush ResourceBrush(string key, Color fallback) =>
         Avalonia.Application.Current?.Resources[key] as IBrush ?? new SolidColorBrush(fallback);
+
+    private void BindOwnedOriginal(DesktopOriginalWorkLifetime work, DesktopOriginalWorkLifetime.Original original) =>
+        original.BindPublicationGuard(() => !_disposed && !_originalWork.IsRetiring && !work.IsRetiring && (_originalPresentationCurrent?.Invoke() ?? true));
+    private void DemandOwnedCurrent(DesktopOriginalWorkLifetime work)
+    {
+        if (work.Executing is { } original) original.DemandPublication();
+        else
+        {
+            _originalWork.DemandAdmission(); work.DemandAdmission();
+            if (_originalPresentationCurrent?.Invoke() == false)
+                throw new InvalidOperationException("The original whiteboard presentation was withdrawn.");
+            _originalWork.DemandAdmission(); work.DemandAdmission();
+        }
+    }
+    private void PublishOwned(DesktopOriginalWorkLifetime work, Action write)
+    { DemandOwnedCurrent(work); write(); DemandOwnedCurrent(work); }
+    private void RunOwnedCallback(DesktopOriginalWorkLifetime work, Action callback)
+    {
+        if (work.IsRetiring || _originalWork.IsRetiring) return; // Sealed ambient event: no new business/UI original is admitted.
+        if (work.Executing is { } original)
+        { original.DemandPublication(); callback(); original.DemandPublication(); return; }
+        work.RunSynchronous(admitted =>
+        { BindOwnedOriginal(work, admitted); admitted.DemandPublication(); callback(); admitted.DemandPublication(); });
+    }
+    private Task RunOwnedAsync(DesktopOriginalWorkLifetime work, Func<DesktopOriginalWorkLifetime.Original, Task> callback) =>
+        work.RunAsync(async original =>
+        { BindOwnedOriginal(work, original); original.DemandPublication(); await original.AwaitAsync(callback(original)); });
+    public void RequestRetirement() => _originalWork.RequestRetirement();
+    internal void DemandOriginalExternalClose()
+    {
+        _originalWork.DemandExternalClose();
+        foreach (var window in _originalWindows.ToArray()) window.Work.DemandExternalClose();
+    }
+    public Task CloseAndDrainAsync()
+    { DemandOriginalExternalClose(); return _originalWork.CloseAndDrainAsync(); }
+    public void Dispose() => RequestRetirement();
+    public ValueTask DisposeAsync() => new(CloseAndDrainAsync());
+    private Task StopOriginalAsync() => Dispatcher.UIThread.InvokeAsync(() => _originalWork.RunCloseCallback(() =>
+    {
+        var failures = new List<Exception>();
+        foreach (var window in _originalWindows.ToArray())
+            try { window.RequestRetirement(); } catch (Exception cause) { Add(failures, cause); }
+        foreach (var drawing in _originalDrawings.Where(item => ReferenceEquals(item.Owner, _originalWork)).ToArray())
+            try { drawing.Surface.ReleaseOriginalInputState(); } catch (Exception cause) { Add(failures, cause); }
+        Throw(failures);
+    })).GetTask();
+    private async Task CleanupOriginalAsync()
+    {
+        var failures = new List<Exception>();
+        foreach (var window in _originalWindows.ToArray())
+        {
+            try { window.RequestRetirement(); } catch (Exception cause) { Add(failures, cause); }
+            Task? close = null;
+            try { close = window.Work.OriginalClose ?? throw new InvalidOperationException("Actual fullscreen close was not published."); await close; }
+            catch (Exception cause) { Capture(failures, close, cause); }
+        }
+        var actualCleanup = Dispatcher.UIThread.InvokeAsync(() => _originalWork.RunCloseCallback(() =>
+        {
+            _disposed = true;
+            try { _session.Changed -= PersistSession; } catch (Exception cause) { Add(failures, cause); }
+            foreach (var drawing in _originalDrawings.Where(item => ReferenceEquals(item.Owner, _originalWork)).ToArray())
+                try { drawing.Surface.CleanupOriginalAssets(); } catch (Exception cause) { Add(failures, cause); }
+            if (failures.Count == 0) try { Content = null; } catch (Exception cause) { Add(failures, cause); }
+        })).GetTask();
+        try { await actualCleanup; } catch (Exception cause) { Capture(failures, actualCleanup, cause); }
+        Throw(failures);
+    }
+    private sealed class OriginalFullscreen
+    {
+        private readonly GeneratedWhiteboardControl _owner;
+        private readonly Window _window;
+        private bool _allowClose;
+        internal DesktopOriginalWorkLifetime Work { get; }
+        internal OriginalFullscreen(GeneratedWhiteboardControl owner, Window window)
+        {
+            _owner = owner; _window = window;
+            Work = new DesktopOriginalWorkLifetime(StopAsync, CleanupAsync);
+            _window.Closing += OnClosing; // Before native setters or Show can notify.
+        }
+        private void OnClosing(object? sender, WindowClosingEventArgs args)
+        {
+            if (_allowClose) return;
+            if (Work.IsRetiring)
+            {
+                Work.RunCloseCallback(() => args.Cancel = true);
+                return;
+            }
+            Work.RunSynchronous(operation =>
+            {
+                _owner.BindOwnedOriginal(Work, operation);
+                operation.DemandPublication();
+                args.Cancel = true;
+                RequestRetirement(); // Return before dialog-ending cleanup; never self-join.
+            });
+        }
+        internal void RequestRetirement() => Work.RequestRetirement();
+        private Task StopAsync() => Dispatcher.UIThread.InvokeAsync(() => Work.RunCloseCallback(() =>
+        {
+            var failures = new List<Exception>();
+            foreach (var drawing in _owner._originalDrawings.Where(item => ReferenceEquals(item.Owner, Work)).ToArray())
+                try { drawing.Surface.ReleaseOriginalInputState(); } catch (Exception cause) { Add(failures, cause); }
+            Throw(failures);
+        })).GetTask();
+        private Task CleanupAsync() => Dispatcher.UIThread.InvokeAsync(() => Work.RunCloseCallback(() =>
+        {
+            var failures = new List<Exception>();
+            foreach (var drawing in _owner._originalDrawings.Where(item => ReferenceEquals(item.Owner, Work)).ToArray())
+                try { drawing.Surface.CleanupOriginalAssets(); } catch (Exception cause) { Add(failures, cause); }
+            // Dialog task belongs to the parent opening original, not this child
+            // callback owner: close after child originals settle, then parent joins it.
+            _allowClose = true;
+            try { _window.Close(); } catch (Exception cause) { Add(failures, cause); }
+            try { _window.Closing -= OnClosing; } catch (Exception cause) { Add(failures, cause); }
+            Throw(failures);
+        })).GetTask();
+    }
+    private static void Add(List<Exception> failures, Exception cause)
+    { if (!failures.Any(error => ReferenceEquals(error, cause))) failures.Add(cause); }
+    private static void Capture(List<Exception> failures, Task? actual, Exception cause)
+    { if (actual?.Exception is { InnerExceptions.Count: > 0 } group) foreach (var direct in group.InnerExceptions) Add(failures, direct); else Add(failures, cause); }
+    private static void Throw(List<Exception> failures)
+    {
+        if (failures.Count == 0) return;
+        if (failures.Count > 1 || failures[0] is OperationCanceledException) throw new AggregateException("Original whiteboard task or independent cleanup failed.", failures);
+        ExceptionDispatchInfo.Capture(failures[0]).Throw();
+    }
 
     internal enum WhiteboardTool
     {
@@ -969,21 +1176,21 @@ public sealed class GeneratedWhiteboardControl : UserControl
         private bool _panning;
         private long _strokeStart;
 
-        public WhiteboardDrawingSurface(WhiteboardSession session)
+        private readonly Action<Action> _runOriginalInput;
+        private readonly Action _demandOriginalCurrent;
+        private IPointer? _originalCapturedPointer;
+        public WhiteboardDrawingSurface(WhiteboardSession session, Action<Action> runOriginalInput, Action demandOriginalCurrent)
         {
+            _runOriginalInput = runOriginalInput;
+            _demandOriginalCurrent = demandOriginalCurrent;
             _session = session;
             _session.Changed += OnSessionChanged;
             _session.Invalidated += OnSessionChanged;
             ClipToBounds = true;
             Focusable = true;
             Cursor = new Cursor(StandardCursorType.Cross);
-            DetachedFromVisualTree += (_, _) =>
-            {
-                _session.Changed -= OnSessionChanged;
-                _session.Invalidated -= OnSessionChanged;
-                foreach (var image in _images.Values) image.Dispose();
-                _images.Clear();
-            };
+            // Reversible visual detachment does not destroy assets/subscriptions
+            // while the SAME original window/callback owner remains live.
         }
 
         public override void Render(DrawingContext context)
@@ -1001,25 +1208,34 @@ public sealed class GeneratedWhiteboardControl : UserControl
             }
         }
 
-        protected override void OnPointerPressed(PointerPressedEventArgs e)
+        protected override void OnPointerPressed(PointerPressedEventArgs e) => _runOriginalInput(() => OnPointerPressedOriginalCore(e));
+        private void OnPointerPressedOriginalCore(PointerPressedEventArgs e)
         {
+            _demandOriginalCurrent();
+            _demandOriginalCurrent();
             base.OnPointerPressed(e);
+            _demandOriginalCurrent();
             var pointer = e.GetCurrentPoint(this);
             if (!pointer.Properties.IsLeftButtonPressed) return;
+            _demandOriginalCurrent();
             Focus();
+            _demandOriginalCurrent();
             _pointerStart = pointer.Position;
             _lastBoardPoint = _session.ToBoard(pointer.Position);
 
             switch (_session.Tool)
             {
                 case WhiteboardTool.Select:
-                    if (_session.SelectAt(_lastBoardPoint)) _movingOriginal = _session.SelectedElement();
+                    var selected = _session.SelectAt(_lastBoardPoint);
+                    _demandOriginalCurrent();
+                    if (selected) _movingOriginal = _session.SelectedElement();
                     break;
                 case WhiteboardTool.Eraser:
                     _session.EraseAt(_lastBoardPoint);
                     break;
                 case WhiteboardTool.Text:
                     _session.CommitText(_lastBoardPoint, "Text");
+                    _demandOriginalCurrent();
                     _session.Tool = WhiteboardTool.Select;
                     break;
                 case WhiteboardTool.Rectangle:
@@ -1037,14 +1253,25 @@ public sealed class GeneratedWhiteboardControl : UserControl
                     break;
             }
 
+            _demandOriginalCurrent();
+            _originalCapturedPointer = e.Pointer;
             e.Pointer.Capture(this);
+            _demandOriginalCurrent();
+            _demandOriginalCurrent();
             InvalidateVisual();
+            _demandOriginalCurrent();
+            _demandOriginalCurrent();
             e.Handled = true;
+            _demandOriginalCurrent();
         }
 
-        protected override void OnPointerMoved(PointerEventArgs e)
+        protected override void OnPointerMoved(PointerEventArgs e) => _runOriginalInput(() => OnPointerMovedOriginalCore(e));
+        private void OnPointerMovedOriginalCore(PointerEventArgs e)
         {
+            _demandOriginalCurrent();
+            _demandOriginalCurrent();
             base.OnPointerMoved(e);
+            _demandOriginalCurrent();
             var pointer = e.GetCurrentPoint(this);
             if (!pointer.Properties.IsLeftButtonPressed) return;
             var boardPoint = _session.ToBoard(pointer.Position);
@@ -1061,17 +1288,26 @@ public sealed class GeneratedWhiteboardControl : UserControl
             {
                 var delta = pointer.Position - _pointerStart;
                 _session.PanBy(delta);
+                _demandOriginalCurrent();
                 _pointerStart = pointer.Position;
             }
             else if (_session.Tool == WhiteboardTool.Eraser) _session.EraseAt(boardPoint);
 
+            _demandOriginalCurrent();
             InvalidateVisual();
+            _demandOriginalCurrent();
+            _demandOriginalCurrent();
             e.Handled = true;
+            _demandOriginalCurrent();
         }
 
-        protected override void OnPointerReleased(PointerReleasedEventArgs e)
+        protected override void OnPointerReleased(PointerReleasedEventArgs e) => _runOriginalInput(() => OnPointerReleasedOriginalCore(e));
+        private void OnPointerReleasedOriginalCore(PointerReleasedEventArgs e)
         {
+            _demandOriginalCurrent();
+            _demandOriginalCurrent();
             base.OnPointerReleased(e);
+            _demandOriginalCurrent();
             if (_pending is not null)
             {
                 var pointer = e.GetCurrentPoint(this);
@@ -1092,25 +1328,43 @@ public sealed class GeneratedWhiteboardControl : UserControl
             }
             else if (_movingOriginal is not null) _session.CommitPreview(_movingOriginal);
 
+            _demandOriginalCurrent();
             _pending = null;
             _shapeStart = null;
             _movingOriginal = null;
             _panning = false;
+            _demandOriginalCurrent();
             e.Pointer.Capture(null);
+            _originalCapturedPointer = null;
+            _demandOriginalCurrent();
+            _demandOriginalCurrent();
             InvalidateVisual();
+            _demandOriginalCurrent();
+            _demandOriginalCurrent();
             e.Handled = true;
+            _demandOriginalCurrent();
         }
 
-        protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
+        protected override void OnPointerWheelChanged(PointerWheelEventArgs e) => _runOriginalInput(() => OnPointerWheelChangedOriginalCore(e));
+        private void OnPointerWheelChangedOriginalCore(PointerWheelEventArgs e)
         {
+            _demandOriginalCurrent();
+            _demandOriginalCurrent();
             base.OnPointerWheelChanged(e);
+            _demandOriginalCurrent();
             _session.ZoomAt(e.GetPosition(this), e.Delta.Y > 0 ? 1.1 : 0.9);
+            _demandOriginalCurrent();
             e.Handled = true;
+            _demandOriginalCurrent();
         }
 
-        protected override void OnKeyDown(KeyEventArgs e)
+        protected override void OnKeyDown(KeyEventArgs e) => _runOriginalInput(() => OnKeyDownOriginalCore(e));
+        private void OnKeyDownOriginalCore(KeyEventArgs e)
         {
+            _demandOriginalCurrent();
+            _demandOriginalCurrent();
             base.OnKeyDown(e);
+            _demandOriginalCurrent();
             var control = e.KeyModifiers.HasFlag(KeyModifiers.Control);
             if (e.Key is Key.Delete or Key.Back) _session.DeleteSelected();
             else if (control && e.Key == Key.Z) _session.Undo();
@@ -1119,7 +1373,9 @@ public sealed class GeneratedWhiteboardControl : UserControl
             else if (control && e.Key == Key.X) _session.CutSelected();
             else if (control && e.Key == Key.V) _session.Paste();
             else return;
+            _demandOriginalCurrent();
             e.Handled = true;
+            _demandOriginalCurrent();
         }
 
         private WhiteboardInkPoint ToInkPoint(PointerPoint pointer, Point point)
@@ -1255,7 +1511,32 @@ public sealed class GeneratedWhiteboardControl : UserControl
             }
         }
 
-        private void OnSessionChanged() => InvalidateVisual();
+        private void OnSessionChanged() => _runOriginalInput(() =>
+        { _demandOriginalCurrent(); InvalidateVisual(); _demandOriginalCurrent(); });
+
+        internal void ReleaseOriginalInputState()
+        {
+            // Withdraw only uncommitted previews. Existing normal PointerReleased
+            // still performs its exact stroke/shape/history commit with real samples.
+            _pending = null; _shapeStart = null; _panning = false;
+            var moving = _movingOriginal; _movingOriginal = null;
+            var failures = new List<Exception>();
+            if (moving is not null)
+                try { _session.PreviewMove(moving, default); } catch (Exception cause) { Add(failures, cause); }
+            var pointer = _originalCapturedPointer; _originalCapturedPointer = null;
+            try { pointer?.Capture(null); } catch (Exception cause) { Add(failures, cause); }
+            Throw(failures);
+        }
+        internal void CleanupOriginalAssets()
+        {
+            var failures = new List<Exception>();
+            try { _session.Changed -= OnSessionChanged; } catch (Exception cause) { failures.Add(cause); }
+            try { _session.Invalidated -= OnSessionChanged; } catch (Exception cause) { failures.Add(cause); }
+            foreach (var image in _images.Values)
+                try { image.Dispose(); } catch (Exception cause) { failures.Add(cause); }
+            _images.Clear();
+            if (failures.Count != 0) throw new AggregateException("Original whiteboard drawing asset cleanup failed.", failures);
+        }
 
         private static double DistanceSquared(Point first, Point second)
         {

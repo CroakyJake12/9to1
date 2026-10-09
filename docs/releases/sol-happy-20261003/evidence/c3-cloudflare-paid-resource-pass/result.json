@@ -1,0 +1,21 @@
+{
+  "state": "READ_ONLY_RESOURCE_BOUNDARY_VERIFIED_WITH_QUALIFICATIONS",
+  "planBasis": "User explicitly confirmed Workers Paid; no plan upgrade performed",
+  "includedMonthly": {
+    "workerRequests": 10000000,
+    "workerCpuMs": 30000000,
+    "d1RowsRead": 25000000000,
+    "d1RowsWritten": 50000000,
+    "d1StorageGB": 5
+  },
+  "testEnvelope": {
+    "controlledRequests": 200,
+    "selectedCpuMs": 1000,
+    "nominalCpuMs": 200000,
+    "qualification": "Nominal configured envelope, not a strict account spending cap. Documented isolate flexibility and other traffic remain outside this arithmetic."
+  },
+  "analytics": "Successful current-calendar-month queries returned empty rows. Not invoice, subscription-period or strict remaining allowance proof. Fresh query construction failure retained independently.",
+  "databaseInventory": "Earlier successful D1 inventory total0; historical observation, not a prohibition on subsequent authorized root creation or proof of no deleted-database usage.",
+  "authorization": "Root selects a closed Worker and isolated D1 with a small controlled test window. No $1 budget, plan upgrade, purchases, AI/mail activation or unbounded public service authorized by this evidence.",
+  "billingProduct": "Provider public prices and plan inclusions do not define product quotes, Dust values, entitlement balances or lifecycle policy."
+}

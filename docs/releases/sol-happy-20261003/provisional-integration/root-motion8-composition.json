@@ -1,0 +1,60 @@
+{
+  "status": "REVIEWED_PROVISIONAL_CANONICAL_MOTION_THREE_SOURCE_AND_FIVE_TEST_FILES_COMPOSED",
+  "receivingParent": "df547b5c7492050dc2ad2bdd99e250358cf444fc",
+  "selectedSnapshot": "a975e539fa5e8bf045104e6931f5e5e15d3c8695",
+  "selectedBase": "6ce4ce88b60e0f97e939c500affcee4322ab1544",
+  "outsideSelectionConserved": true,
+  "files": [
+    {
+      "path": ".github/workflows/team-b-motion-original-project.yml",
+      "entry": "100644 blob 579f200bc08de3827de3fd8335f6deec3d1a9905",
+      "bytes": 1147,
+      "sha256": "55273d26bdd31d9edcb055a8d8d922ffbb711a39d6aafa9c6f18a021d5e41524"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionProject.cs",
+      "entry": "100644 blob 95c9144e5956503250a74ae3c683471a942cb6aa",
+      "bytes": 14526,
+      "sha256": "28c8530c5cde7f30a973567875456bb3c45e44d5f0dc4693b79091f3fea0879d"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionProjectCommands.cs",
+      "entry": "100644 blob e5bda9e1f849206d3f9e70d6f2c854d696d9ae59",
+      "bytes": 5674,
+      "sha256": "963443e4606886ecf81f4f68bc227b8f6407b1303fa9bf6642bec5691097eed6"
+    },
+    {
+      "path": "9to1 Workspace/Motion/MotionProjectWorkflowTest.cs",
+      "entry": "100644 blob 08ced0ab07a187b241463ac43cf6c640b15410ee",
+      "bytes": 12012,
+      "sha256": "27ae219627ae139606b7bae7af349d9d06d7378b0909a6fe3da74aeaaff7e143"
+    },
+    {
+      "path": "apps/Web/Tests/MotionProject/MotionProjectWorkflow.Tests.csproj",
+      "entry": "100644 blob a61facfb0e28d34d46be48cdefef31e419eea4cb",
+      "bytes": 935,
+      "sha256": "3198566cad5bf79eabd43ae43f9a966f52ce7d05bad37ce962c297135698dc21"
+    },
+    {
+      "path": "apps/Web/Tests/MotionProject/OriginalWorkflowEntry.cs",
+      "entry": "100644 blob dc6f9ac93be8908282bdbe66ac1492cd4a418b11",
+      "bytes": 1635,
+      "sha256": "969e807327a58ca8a5013361060e836ab9f830ac4be8a22f98094f50a54b3c38"
+    },
+    {
+      "path": "apps/Web/Tests/MotionProject/source-pins.json",
+      "entry": "100644 blob 0170fb8cd5bbe70415da20b9211a499623846688",
+      "bytes": 1463,
+      "sha256": "8a9c70cf3b95392a083c71d5656fae99897c9b96be115f4612e3862142f68659"
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-motion-original-project.py",
+      "entry": "100644 blob e15e6a9c1c5ef61dcf5940cc5ef461ca0f411209",
+      "bytes": 9130,
+      "sha256": "001972e12dc45765eb01dfd8afeee220ed65403cf954007d64e88b20dec96857"
+    }
+  ],
+  "C4SourceScopeSha256": "e6fbc4291b3d66bcab093e30dd25840637bacb0e9317dc0752624ad83d616771",
+  "C6SourceSha256": "50afb46f2494583742a6a6a964b5865f372d8b6a9b196bdd6f78353053e94ab2",
+  "qualification": "Three actual EEC+B canonical production bodies; originalfixed8 ledger unchanged. One unchanged original workflow, no measured assertion count. NativeProgram/project/preferences/media/Home/Web/CUI unchanged. Actual native/managedruntime not yet verified; no render/decoder/donor/Files/provider/package acceptance."
+}

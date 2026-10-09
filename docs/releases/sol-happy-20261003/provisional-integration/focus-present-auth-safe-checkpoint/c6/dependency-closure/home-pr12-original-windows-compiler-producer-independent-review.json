@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "C6 independent non-author",
+  "scope": "Frozen four additive original Windows Home compiler/control producer source only; no build/Windows/fixture invocation",
+  "sourceCommit": "d2109960d69d091ec6e1af84843c09e72698f27f",
+  "sourceBasis": "7361f41e1b08916903cdcef48bf2902b2fd4d75c",
+  "publicOwnerCommit": "0c014b5a0f552911ebd834c3fac78e0f3966bdc0",
+  "status": "SOURCE_AND_OWN9_IDENTITY_GUARDS_PREINVOCATION_ACK",
+  "conservation": {
+    "fourNewHarnessPathsOnly": true,
+    "all16943ExistingModeBlobEntriesConserved": true,
+    "710WholeSourceSizeShaActualGitPins": true,
+    "elevenStaticProjectNodes": true,
+    "twoExactMaintainedGitlinks": true,
+    "SDK": "10.0.401"
+  },
+  "originalControlCriteria": "Focused original12 Windows transport cases and unfiltered whole66=old54+12 each Debug/Release; strict discovery/unique names/groups/TRX identity set, all required executedPassed/zero skip and actualprocess0; no test-body/oracle edits/exclusions.",
+  "sourceBuiltTasks": "Existing reviewed two-task producer route; evaluated actual owned CUI/Avalonia Task outputs/hash overrides separate. No copied task DLLs. Whole physical source-before/after and evaluated graph/runtime catalogs preserved.",
+  "independentOfflineControls": {
+    "actualASTSelectedIdentityGuard": 9,
+    "allPass": true,
+    "parserErrors": 0,
+    "receiptSha256": "509f5c760153d9343d0d0941d32fd957dcf474f7b34a576a23050bf336947c0a",
+    "qualification": "Synthetic identity metadata only; no actual kernel/pipe/authority/runtime acceptance."
+  },
+  "workflowBoundsPrivacy": "Windows2022/pwsh,contents:read,persistcredentialsfalse/exactHEAD/two sourcegitlinks/SDK.45min wholejob/8GiB initialownedoutput floor. Log8MiB bound is explicitly post-completion; command stream/aggregate peak is not independentlybounded. Only diagnostics/sourcehashes/argv/logs/discovery/TRX/runtime metadata uploaded; taskcache/tempfixture/DLLbytes excluded. Type/stage/line-only caught errors; final evidence write/sourcecustody/refusal cannot exit0.",
+  "qualification": "New Windows fixtures use actual pipe/PID/SID/manualbroker/File/lease/Core with explicitly synthetic installed verifier. No protected installed authority/nativeGUI/bootstrap/package/signing/ABI/fullrelease acceptance. Normal first compiler error is a genuine retained blocker, not empty-suitePASS.",
+  "pendingExternalSourceCorrection": "Three old owning testfiles currently reported compiler import/typealias/explicitset errors. External owner solely prepares bounded test-only correction; separate whole source/pin/catalog review needed for that successor. This ACK applies only frozen d210, not future changed tests.",
+  "actualRuntime": "NOT_RUN",
+  "rootAuthorization": "Root sole exact source push/invocation, no C6 test/source/private/provider operation."
+}

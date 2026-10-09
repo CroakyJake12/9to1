@@ -1,0 +1,38 @@
+name: Team B original Motion durable project workflow
+
+on:
+  push:
+    branches: ["team-b/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  original-motion-project:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out exact source commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Set up maintained SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.401"
+      - name: Execute original source-linked local project workflow
+        run: >-
+          python3 apps/Web/Tests/ci/run-motion-original-project.py
+          --expected-commit '${{ github.sha }}'
+          --output "$RUNNER_TEMP/team-b-motion-original-project"
+      - name: Upload bounded public diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: team-b-motion-original-project-${{ github.sha }}
+          path: ${{ runner.temp }}/team-b-motion-original-project/diagnostics
+          if-no-files-found: warn
+          retention-days: 7

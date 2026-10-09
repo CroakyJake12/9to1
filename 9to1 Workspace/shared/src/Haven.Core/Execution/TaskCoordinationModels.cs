@@ -81,7 +81,13 @@ public sealed record TaskPlanNode(
     int PlanVersion,
     Guid? SupersedesActionId = null,
     Guid? RemediationId = null,
-    IReadOnlyList<string>? RequiredPermissionScopes = null);
+    IReadOnlyList<string>? RequiredPermissionScopes = null)
+{
+    public TaskActionAcceptance? Acceptance { get; init; }
+    public TaskOriginalToolIntent? OriginalToolIntent { get; init; }
+    /// <summary>Owning original result observation, not receipt authority. Legacy/unknown results remain null.</summary>
+    public TaskActionOperationOutcome? OriginalOperationOutcome { get; init; }
+}
 
 public sealed record SteerInstruction(
     Guid Id,
@@ -123,7 +129,20 @@ public sealed record TaskExecutionSnapshot(
     IReadOnlyList<string> ApprovedPermissionScopes,
     Guid? LastCheckpointActionId,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt)
+{
+    /// <summary>Only acknowledged owner CAS advances this revision. Legacy persisted rows begin at zero.</summary>
+    public long PersistenceRevision { get; init; }
+    public TaskExecutionOwnerBinding? OwnerBinding { get; init; }
+    public IReadOnlyList<TaskRunAttempt> Attempts { get; init; } = [];
+    public Guid? CheckpointId { get; init; }
+    public TaskRunRecoveryObservation? RecoveryObservation { get; init; }
+    /// <summary>Conserved original observations resolved by an owning live continuation; history supplies no authority.</summary>
+    public IReadOnlyList<TaskRunRecoveryObservation> RecoveryHistory { get; init; } = [];
+    /// <summary>Fixed canonical child observations. Persisted links and scopes never issue authority.</summary>
+    public IReadOnlyList<TaskRunDelegationIntent> Delegations { get; init; } = [];
+    public TaskRunParentDelegation? ParentDelegation { get; init; }
+}
 
 public sealed record FollowUpDecision(
     TaskFollowUpMode Mode,
@@ -138,3 +157,12 @@ public sealed record FollowUpDecision(
 public sealed record QueueCheckpointResult(
     TaskExecutionSnapshot Snapshot,
     QueuedFollowUpTask? ReadyTask);
+
+/// <summary>Completion of a once-requested operation is distinct from business success.
+/// These persisted fields supply no execution or replay authority.</summary>
+public sealed record TaskActionOperationOutcome(
+    bool? RequestedOperationCompleted,
+    bool? BusinessSucceeded,
+    int? ProcessExitCode,
+    bool? ProcessTimedOut,
+    DateTimeOffset ObservedAt);

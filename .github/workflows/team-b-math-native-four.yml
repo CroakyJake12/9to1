@@ -1,0 +1,65 @@
+name: Math owner native input and geometry four
+on:
+  workflow_dispatch:
+  push:
+    branches: [team-b/astra-browser-validation-20261003]
+    paths:
+      - .github/workflows/team-b-math-native-four.yml
+      - apps/Web/Mathematics/Tests/**
+      - apps/Web/Productivity/Mathematics/Tests/NativePixelHost.cs
+      - 9to1 Workspace/shared/src/Haven.Core/Mathematics/**
+      - 9to1 Workspace/shared/src/Haven.Application/Mathematics/**
+      - 9to1 Workspace/shared/src/Haven.Desktop/Mathematics/**
+      - 9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/**
+      - 9to1 Workspace/shared/tests/Haven.Desktop.Tests/AssemblyInfo.cs
+      - 9to1 Workspace/Home/**
+      - framework/CUI/**
+      - NuGet.Config
+      - global.json
+      - apps/Web/Tests/ci/run-ordinary-native.py
+permissions:
+  contents: read
+jobs:
+  native-four:
+    if: github.ref == 'refs/heads/team-b/astra-browser-validation-20261003'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Verify the exact maintained native gitlinks
+        run: |
+          set -euo pipefail
+          test "$(git ls-tree HEAD -- framework/CUI/vendor/Avalonia/external/XamlX)" = "$(printf '160000 commit 009d4815470cf4bf71d1adbb633a5d81dcb2bb52\tframework/CUI/vendor/Avalonia/external/XamlX')"
+          test "$(git ls-tree HEAD -- framework/CUI/vendor/Avalonia/external/Avalonia.DBus)" = "$(printf '160000 commit 864a05282841bf04006890f04d11d60d1a046aa9\tframework/CUI/vendor/Avalonia/external/Avalonia.DBus')"
+      - name: Initialize only the pinned native build submodules
+        run: |
+          git submodule update --init --recursive --depth 1 -- \
+            framework/CUI/vendor/Avalonia/external/XamlX \
+            framework/CUI/vendor/Avalonia/external/Avalonia.DBus
+
+      - name: Verify initialized native source commits
+        run: |
+          set -euo pipefail
+          test "$(git -C framework/CUI/vendor/Avalonia/external/XamlX rev-parse HEAD)" = "009d4815470cf4bf71d1adbb633a5d81dcb2bb52"
+          test "$(git -C framework/CUI/vendor/Avalonia/external/Avalonia.DBus rev-parse HEAD)" = "864a05282841bf04006890f04d11d60d1a046aa9"
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.401'
+      - name: Source-build genuine owner graph and require the exact four TRX cases
+        env:
+          MATH_COMMIT: ${{ github.sha }}
+        run: >-
+          python3 apps/Web/Mathematics/Tests/ci/run-math-native-four.py
+          --expected-commit "$MATH_COMMIT"
+          --output "$RUNNER_TEMP/math-native-four"
+      - name: Preserve bounded diagnostics and first failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: math-native-four-${{ github.sha }}
+          if-no-files-found: error
+          path: ${{ runner.temp }}/math-native-four/diagnostics/
+          retention-days: 14

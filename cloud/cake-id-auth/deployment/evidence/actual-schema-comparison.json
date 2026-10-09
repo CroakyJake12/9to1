@@ -1,0 +1,187 @@
+{
+  "result": "passed",
+  "actualProviderSchemaObjects": 36,
+  "maintainedSchemaObjects": 35,
+  "providerOnlyObjects": [
+    "_cf_KV"
+  ],
+  "normalization": "lowercase and whitespace only; preserved identifiers, clauses, types and constraints",
+  "foreignKeys": {
+    "account": [
+      [
+        0,
+        0,
+        "user",
+        "userId",
+        "id",
+        "NO ACTION",
+        "CASCADE",
+        "NONE"
+      ]
+    ],
+    "oauthAccessToken": [
+      [
+        0,
+        0,
+        "oauthRefreshToken",
+        "refreshId",
+        "id",
+        "NO ACTION",
+        "CASCADE",
+        "NONE"
+      ],
+      [
+        1,
+        0,
+        "user",
+        "userId",
+        "id",
+        "NO ACTION",
+        "CASCADE",
+        "NONE"
+      ],
+      [
+        2,
+        0,
+        "session",
+        "sessionId",
+        "id",
+        "NO ACTION",
+        "SET NULL",
+        "NONE"
+      ],
+      [
+        3,
+        0,
+        "oauthClient",
+        "clientId",
+        "clientId",
+        "NO ACTION",
+        "CASCADE",
+        "NONE"
+      ]
+    ],
+    "oauthClient": [
+      [
+        0,
+        0,
+        "user",
+        "userId",
+        "id",
+        "NO ACTION",
+        "CASCADE",
+        "NONE"
+      ]
+    ],
+    "oauthClientResource": [
+      [
+        0,
+        0,
+        "oauthResource",
+        "resourceId",
+        "identifier",
+        "NO ACTION",
+        "CASCADE",
+        "NONE"
+      ],
+      [
+        1,
+        0,
+        "oauthClient",
+        "clientId",
+        "clientId",
+        "NO ACTION",
+        "CASCADE",
+        "NONE"
+      ]
+    ],
+    "oauthConsent": [
+      [
+        0,
+        0,
+        "user",
+        "userId",
+        "id",
+        "NO ACTION",
+        "CASCADE",
+        "NONE"
+      ],
+      [
+        1,
+        0,
+        "oauthClient",
+        "clientId",
+        "clientId",
+        "NO ACTION",
+        "CASCADE",
+        "NONE"
+      ]
+    ],
+    "oauthRefreshToken": [
+      [
+        0,
+        0,
+        "user",
+        "userId",
+        "id",
+        "NO ACTION",
+        "CASCADE",
+        "NONE"
+      ],
+      [
+        1,
+        0,
+        "session",
+        "sessionId",
+        "id",
+        "NO ACTION",
+        "SET NULL",
+        "NONE"
+      ],
+      [
+        2,
+        0,
+        "oauthClient",
+        "clientId",
+        "clientId",
+        "NO ACTION",
+        "CASCADE",
+        "NONE"
+      ]
+    ],
+    "session": [
+      [
+        0,
+        0,
+        "user",
+        "userId",
+        "id",
+        "NO ACTION",
+        "CASCADE",
+        "NONE"
+      ]
+    ]
+  },
+  "settings": "production vars + D1 identity + secret names/types matched; secret values not retrieved",
+  "limits": {
+    "cpu_ms": 1000
+  },
+  "providerQueryReadOnly": {
+    "served_by": "v3-prod",
+    "served_by_region": "WEUR",
+    "served_by_colo": "CDG",
+    "served_by_primary": true,
+    "timings": {
+      "sql_duration_ms": 0.2801
+    },
+    "duration": 0.2801,
+    "changes": 0,
+    "last_row_id": 0,
+    "changed_db": false,
+    "size_after": 253952,
+    "rows_read": 93,
+    "rows_written": 0,
+    "total_attempts": 1
+  },
+  "qualification": "Metadata/schema equivalence only, not HTTPS/runtime/provider login or key validation"
+}

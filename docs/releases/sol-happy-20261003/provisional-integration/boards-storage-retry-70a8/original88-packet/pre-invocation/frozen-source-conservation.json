@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "branch": "team-c/sol-happy-c3-boards-storage-retry-20261004",
+  "frozenCommit": "88bbc69d8c22cbf9095ddfc8282460dfc7841d07",
+  "immutablePackageSource": "fd5b989bcaebbd44261f0d5e4d02f72d7381b4b8",
+  "previousRichHarness": "7bd9a4b49d5ca6c0cfd972072576c9cf21e198cc",
+  "worktreeClean": true,
+  "scope": "Four harness-only files; no product source/test changes",
+  "files": [
+    {
+      "path": ".github/scripts/boards-packaged-ui-controls.ps1",
+      "gitBlob": "f9456b3e7e49b353a8c16ea38618ee3ff946dc8c",
+      "bytes": 37123,
+      "sha256": "cf117539f495d9c13b4152cb75dbea5c81490cc9be50dd911f3a08244639772b"
+    },
+    {
+      "path": ".github/validation/boards-packaged-ui-controls.json",
+      "gitBlob": "9c7fdda15f42e8f5af886740b978656864a7c9f1",
+      "bytes": 4800,
+      "sha256": "2cfa034436e902e6c84e379c6ac05a5f4102f3b6b09949914b5a4757749bcf8b"
+    },
+    {
+      "path": ".github/workflows/team-c-boards-packaged-ui-controls.yml",
+      "gitBlob": "670dae7b50334aecf842eb69eb25e81dae3a9e7b",
+      "bytes": 3718,
+      "sha256": "cc6f51b745b604f99d84c9defaf62d0d4f405eacf70494ff94b31d5fd03e416a"
+    },
+    {
+      "path": "eng/release-validation/boards-packaged-ui/README.md",
+      "gitBlob": "5de30a708c1730150d0381750e8ab87c43fc3777",
+      "bytes": 5189,
+      "sha256": "1eaccefc59d8903bc147781f2626b6dcc6a9a2efd2c776a172258159abc811c3"
+    }
+  ],
+  "nativeSourcePins": [
+    {
+      "path": "9to1 Workspace/Boards/app/Program.cs",
+      "sha256": "71aedab64dda619fd9e63910fe80f233f5499be20c8fda12347ab7daa1c03740"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/Boards.cui",
+      "sha256": "020251371d308676b475420d93ed1246be6159342720f5af6fa141aa9c463f84"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BlockRenderer.cs",
+      "sha256": "f33c0979ff4a47469bb0ad11684799c5469311d5ada826f043bb04fe0562731a"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BoardsViewModel.cs",
+      "sha256": "c4097e551df7b5b6e2da7060ec6085ef9a3482a54e28436abd5f04a49f8bd75f"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/ContractSessionAdapter.cs",
+      "sha256": "e26d6b59461d5a3ad6e68fc13231f2e585014bfc2bd89de5fb1693828fae3145"
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/HavenRichBoardContract.cs",
+      "sha256": "aeec3484ac7a75156a14a305145851afebdffb66d4a20cf8e75ecc643381d674"
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/JsonFileHavenBoardStore.cs",
+      "sha256": "273c85eb831388550b567f8d0769426d6ddbedfad7fc5f3dd0b96723d40a015c"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/ControlAutomationPeer.cs",
+      "sha256": "abc2ee12e374261fc21f685e921a22468e020d78a45b708fbc70d92364b30b5f"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BoardProjection.cs",
+      "sha256": "4d74ddce861b602e3cd84209615a83a1f1c5f0077432cc4abbf01650404f3614"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/ShellChrome.cs",
+      "sha256": "f884ba8bd33277a3eacc1783c3ce1cc71d0abfe3fe7f577cb59fa6c6247e4f2a"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/ToolbarBuilder.cs",
+      "sha256": "c300c676948cbf6d29d50eaf830159886f4159f4494fac022906b40f16b086ed"
+    },
+    {
+      "path": "9to1 Workspace/Boards/app/BoardsIcons.cs",
+      "sha256": "1fd6f0d869be41844dacc7a51346b253b827d76b1bccc997f2a497f793231aa3"
+    },
+    {
+      "path": "9to1 Workspace/Boards/contract/RichBoardSession.cs",
+      "sha256": "e5406be4fd78dc7a7828f9b9646a8f8b0e9896a634753cb920d26b03c5a86134"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/ToggleButtonAutomationPeer.cs",
+      "sha256": "cad98e633cbf6872a9c564c75fb9793d6a43d62fcbcb1275a0f2ca692d9cdda6"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/ButtonAutomationPeer.cs",
+      "sha256": "2cf3aa4d9b42dcefac0a033b71b055daa79811b2ae8b675ea4a4e58e26e32f5b"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/TextBlockAutomationPeer.cs",
+      "sha256": "be0f1e249ec2f12a8174fce36fd970f1d7f9f0ff99ebd5d7208861e4f52ba090"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/AutomationPeer.cs",
+      "sha256": "23df5c0d8e5c20d137e17202f78361bc4a210cbe1e4f3e51412c7d9ffc3078ca"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32.Automation/AutomationNode.cs",
+      "sha256": "8aa197686196f37e538e4ac08f887f2a31dce838ce6bd8083029532d6c9a3405"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/WindowAutomationPeer.cs",
+      "sha256": "96161e0ce0e01b7176bbccb881155b32885a94e739c54e32f2474d0355a3d500"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Automation/Peers/WindowBaseAutomationPeer.cs",
+      "sha256": "39406bd281c8b98ebe8f0d36352d4c706dc731782f7fb5518962893b88a9d2ea"
+    }
+  ],
+  "unchangedNativeTrees": {
+    "9to1 Workspace": "5674e4b1f5120a7cafc82ab7471fc42f53d1a353",
+    "framework": "4906b174a03c260011beed2951f1d8d2964e89b9",
+    "apps": "bd1a6b870182275bc1ff05a5949ed5d1b829f018"
+  },
+  "earlierPublicIndices": [
+    {
+      "lane": "c3-boards-packaged-ui-20261004",
+      "sha256": "3443297bd208a7f8b7df49e888476574711ed2b0996bbc988e2c51b00cf347c5",
+      "status": "EXACT_UNCHANGED"
+    },
+    {
+      "lane": "c3-boards-rich-history-20261004",
+      "sha256": "52869505acaaeefb809991d97b26259863805032c1b0dc74892a37b98a84d37c",
+      "status": "EXACT_UNCHANGED"
+    }
+  ],
+  "diffCheck": "PASS",
+  "runtimeQualification": "New storage-retry actual Windows runtime NOT_RUN pending C6 source review and root invocation; local Linux/parser/refusal controls do not establish native acceptance."
+}

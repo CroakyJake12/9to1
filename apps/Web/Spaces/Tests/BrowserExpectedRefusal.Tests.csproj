@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors><EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="BrowserExpectedRefusalControls.cs" />
+    <Compile Include="../../Services/BrowserTaskActorSource.cs" Link="Production/BrowserTaskActorSource.cs" />
+    <Compile Include="../../Services/BrowserTaskIdentityReadOperation.cs" Link="Production/BrowserTaskIdentityReadOperation.cs" />
+    <Compile Include="../Storage/BrowserTaskExecutionTransport.cs" Link="Production/BrowserTaskExecutionTransport.cs" />
+    <Compile Include="../Storage/IndexedDbTaskExecutionRepository.cs" Link="Production/IndexedDbTaskExecutionRepository.cs" />
+    <Compile Include="../Storage/IndexedDbExecutionEventRepository.cs" Link="Production/IndexedDbExecutionEventRepository.cs" />
+    <ProjectReference Include="../../../../9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj" />
+    <ProjectReference Include="../../../../9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj" />
+  </ItemGroup>
+</Project>

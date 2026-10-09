@@ -41,7 +41,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Desktop.Views.Shell;
 
-public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDisposable
+public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDisposable, IDesktopOriginalRetirementParticipant, IDesktopOriginalRetirementJoinGuard
 {
 #pragma warning disable CS8618
     private readonly IConversationRepository _conversations;
@@ -130,7 +130,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     private WorkspaceTabViewModel? _selectedTab;
     private string _startupStatus = "Starting Haven\u2026";
     private string _searchQuery = string.Empty;
-    private readonly Haven.Desktop.HavenUI.Runtime.TrailingDebouncer _sidebarSearchDebouncer = new(TimeSpan.FromMilliseconds(200));
+    private readonly DesktopOriginalTrailingRefresh _originalSidebarSearch;
     private readonly Haven.Desktop.HavenUI.Runtime.LatestOperationGate _sidebarSearchGate = new();
     private string _commandSearch = string.Empty;
     private bool _isSidebarOpen = true;
@@ -285,7 +285,9 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         _pins = pins;
         _companionDockVm = new CompanionDockViewModel(new Haven.Infrastructure.CompanionDockService(), _conversations);
         _reminderTimer = new DispatcherTimer(TimeSpan.FromMinutes(1), DispatcherPriority.Background,
-            async (_, _) => await PollPlannerRemindersAsync());
+            (_, _) => { if (!IsDisposed) _ = PollPlannerRemindersAsync(); });
+        _originalShellWork = new(StopOriginalShellProducersAsync, CloseOriginalShellChildrenAsync);
+        _originalSidebarSearch = new(_originalShellWork, TimeSpan.FromMilliseconds(200), RunSidebarSearchRefreshAsync);
 
         NavigateChatCommand = new AsyncRelayCommand(() => NavigateModeAsync(HavenMode.Chat, false));
         NavigateStudyCommand = new AsyncRelayCommand(() => SwitchNativeChatModeAsync(HavenMode.Study));
@@ -460,18 +462,30 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         get => _currentPage;
         private set
         {
+            CheckPendingOriginalFilesPublication();
             if (!SetProperty(ref _currentPage, value)) return;
+            CheckPendingOriginalFilesPublication();
             if (PageContent is not null)
                 PageContent.Content = value;
+            CheckPendingOriginalFilesPublication();
             RaisePropertyChanged(nameof(IsChatVisible));
+            CheckPendingOriginalFilesPublication();
             RaisePropertyChanged(nameof(IsPageVisible));
+            CheckPendingOriginalFilesPublication();
             RaisePropertyChanged(nameof(IsBrowseMode));
+            CheckPendingOriginalFilesPublication();
             RaisePropertyChanged(nameof(IsTrainingMode));
+            CheckPendingOriginalFilesPublication();
             RaisePropertyChanged(nameof(IsSidebarVisible));
+            CheckPendingOriginalFilesPublication();
             RaisePropertyChanged(nameof(HasFullSidebar));
+            CheckPendingOriginalFilesPublication();
             RaisePropertyChanged(nameof(HasCompactSidebar));
+            CheckPendingOriginalFilesPublication();
             RaisePropertyChanged(nameof(IsWorkspaceHeaderVisible));
+            CheckPendingOriginalFilesPublication();
             RaisePropertyChanged(nameof(ProductName));
+            CheckPendingOriginalFilesPublication();
         }
     }
 
@@ -480,6 +494,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         get => _selectedTab;
         set
         {
+            CheckPendingOriginalFilesPublication();
             if (ReferenceEquals(_selectedTab, value) || value is null) return;
             if (ReferenceEquals(_secondaryTab, value))
             {
@@ -489,18 +504,25 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             if (_selectedTab is not null)
             {
                 _selectedTab.IsSelected = false;
+                CheckPendingOriginalFilesPublication();
                 if (_selectedTab.Page is IActivatablePage previous) previous.Deactivate();
+                CheckPendingOriginalFilesPublication();
             }
             if (!SetProperty(ref _selectedTab, value)) return;
+            CheckPendingOriginalFilesPublication();
             value.IsSelected = true;
+            CheckPendingOriginalFilesPublication();
             ApplySelectedTab(value);
+            CheckPendingOriginalFilesPublication();
             RefreshTopRailTabs();
+            CheckPendingOriginalFilesPublication();
             QueueWorkspaceSessionSave();
         }
     }
 
     private void ApplySelectedTab(WorkspaceTabViewModel value)
     {
+        CheckPendingOriginalFilesPublication();
         if (value.Page is ChatPage chat)
         {
             CurrentChat = chat;
@@ -521,9 +543,13 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         }
 
         CurrentPage = value.Page;
+        CheckPendingOriginalFilesPublication();
         NavigateBackCommand.RaiseCanExecuteChanged();
+        CheckPendingOriginalFilesPublication();
         NavigateForwardCommand.RaiseCanExecuteChanged();
+        CheckPendingOriginalFilesPublication();
         RaiseShellProperties();
+        CheckPendingOriginalFilesPublication();
         if (value.Page is IActivatablePage activatable)
             _ = activatable.ActivateAsync(CancellationToken.None);
     }
@@ -586,22 +612,21 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             // debounced so "hello" triggers roughly one refresh, and a stale
             // completion can never overwrite a newer one.
             var generation = _sidebarSearchGate.Begin();
-            _sidebarSearchDebouncer.Schedule(() =>
-            {
-                if (!_sidebarSearchGate.IsActive(generation)) return;
-                _ = RunSidebarSearchRefreshAsync(generation);
-            });
+            if (!IsDisposed) _originalSidebarSearch.Schedule(generation);
         }
     }
 
-    private async Task RunSidebarSearchRefreshAsync(int generation)
+    private async Task RunSidebarSearchRefreshAsync(DesktopOriginalWorkLifetime.Original original, int generation)
     {
+        if (IsDisposed || !_sidebarSearchGate.IsActive(generation)) return;
         try
         {
-            await RefreshRecentsAsync(CancellationToken.None);
+            await original.AwaitAsync(AcquireOriginalShellSynchronous(original,
+                () => RefreshRecentsAsync(CancellationToken.None)));
         }
         catch (Exception ex)
         {
+            original.Retain(ex); // Existing debug tolerance is not a successful external drain.
             System.Diagnostics.Debug.WriteLine($"[Sidebar search] {ex}");
         }
     }
@@ -801,19 +826,22 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
 
     public void SetStartupError(string message) => StartupStatus = $"Startup problem: {message}";
 
-    private async Task PollPlannerRemindersAsync()
+    private Task PollPlannerRemindersAsync() => _originalShellWork.RunAsync(PollOriginalPlannerRemindersAsync);
+
+    private async Task PollOriginalPlannerRemindersAsync(DesktopOriginalWorkLifetime.Original original)
     {
         if (Interlocked.Exchange(ref _isPollingReminders, 1) != 0) return;
         try
         {
-            foreach (var reminder in await _planner.GetDueRemindersAsync(DateTimeOffset.UtcNow, 20, CancellationToken.None))
+            foreach (var reminder in await original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => _planner.GetDueRemindersAsync(DateTimeOffset.UtcNow, 20, original.Token))))
             {
                 _notifications.Show("Planner reminder", reminder.Title, ToastKind.Info, TimeSpan.FromSeconds(12));
-                await _planner.MarkReminderDeliveredAsync(reminder, DateTimeOffset.UtcNow, CancellationToken.None);
+                await original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => _planner.MarkReminderDeliveredAsync(reminder, DateTimeOffset.UtcNow, CancellationToken.None)));
             }
         }
         catch (Exception ex)
         {
+            original.Retain(ex);
             System.Diagnostics.Debug.WriteLine($"[Planner reminders] {ex.Message}");
         }
         finally
@@ -1049,7 +1077,8 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     private PlayPage CreatePlayPage()
     {
         var page = new PlayPage(_playSessions, _genUiRouter);
-        page.CreateRequested += async (_, _) => await OpenNewChatAsync("Help me create an interactive Play experience. Ask what I want to play, then design it with Haven interactive UI and deterministic local state where possible.");
+        page.CreateRequested += (_, _) => StartOriginalShellEvent(original =>
+            original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => OpenNewChatAsync("Help me create an interactive Play experience. Ask what I want to play, then design it with Haven interactive UI and deterministic local state where possible."))));
         return page;
     }
 
@@ -1640,6 +1669,14 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             if (openInNewTab) AddFallbackTab();
             OpenBrowser();
         }
+        else if (route.Kind == HavenAppRouteKind.Files)
+        {
+            await OpenFilesAsync(openInNewTab);
+        }
+        else if (route.Kind == HavenAppRouteKind.Dev)
+        {
+            await OpenOriginalDevelopmentCatalogAsync(openInNewTab);
+        }
         else if (route.Kind == HavenAppRouteKind.Plan)
         {
             if (openInNewTab) AddFallbackTab();
@@ -1764,6 +1801,9 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
                     break;
                 case HavenSurface.Browse:
                     OpenBrowser();
+                    break;
+                case HavenSurface.Files:
+                    await OpenFilesAsync();
                     break;
                 case HavenSurface.Plan:
                     OpenPlan();
@@ -1914,15 +1954,23 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     private GoPage CreateGoPage()
     {
         var page = new GoPage(_bus);
-        page.SubmitRequested += async (_, instruction) =>
-            await RouteGoSubmissionAsync(page, instruction);
+        page.SubmitRequested += (_, instruction) => StartOriginalShellEvent(original =>
+        {
+            page.RetainOriginalParentBorrower(original.Task, DemandOriginalShellProducerJoin);
+            return original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => RouteGoSubmissionAsync(page, instruction)));
+        });
         page.RefreshSuggestionsRequested += (_, _) =>
             QueueGoSuggestionRefresh(page, "The user asked Haven for another set of useful next actions.", TimeSpan.Zero, true);
         page.Disposed += OnGoPageDisposed;
         page.AddRequested += OnGoAddRequested;
         page.AddCatalogItemSelected += OnGoCatalogItemSelected;
-        page.AppShortcutInvoked += async (_, app) => await LaunchAppAsync(app, false);
-        _ = ConfigureAddMenuAsync(page);
+        page.AppShortcutInvoked += (_, app) => StartOriginalShellEvent(original =>
+            original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => LaunchAppAsync(app, false))));
+        StartOriginalShellEvent(original =>
+        {
+            page.RetainOriginalParentBorrower(original.Task, DemandOriginalShellProducerJoin);
+            return original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => ConfigureAddMenuAsync(page)));
+        });
         QueueGoSuggestionRefresh(
             page,
             "The user is viewing the Go workspace and has not entered a new instruction yet.",
@@ -1937,25 +1985,28 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             _bus, _modeRegistry, _modeUsage, _pins, _conversations, _versionedSettings,
             _dashboard, _dashboardLayout, _dashboardProviders);
         page.EnableDashboardAssistant(new DashboardEditPlanner(_ollama, () => _preferences.DefaultModel));
-        page.DashboardActionRequested += async (_, actionKey) =>
+        page.DashboardActionRequested += (_, actionKey) => StartOriginalShellEvent(async original =>
         {
             switch (actionKey.Trim().ToLowerInvariant())
             {
-                case "new-chat": await OpenNewChatAsync(); break;
-                case "call": await OpenVoiceSessionFromActionAsync(); break;
-                case "plan": OpenPlan(); break;
-                case "browse": OpenBrowser(); break;
-                case "automations": OpenAutomations(); break;
-                default: await LaunchAppByKeyAsync(actionKey); break;
+                case "new-chat": await original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => OpenNewChatAsync())); break;
+                case "call": await original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => OpenVoiceSessionFromActionAsync())); break;
+                case "plan": AcquireOriginalShellSynchronous(original, () => { OpenPlan(); return true; }); break;
+                case "browse": AcquireOriginalShellSynchronous(original, () => { OpenBrowser(); return true; }); break;
+                case "automations": AcquireOriginalShellSynchronous(original, () => { OpenAutomations(); return true; }); break;
+                default: await original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => LaunchAppByKeyAsync(actionKey))); break;
             }
-        };
-        page.ModeRequested += async (_, mode) => await LaunchAppAsync(mode, false);
-        page.ConversationRequested += async (_, conversation) =>
+        });
+        page.ModeRequested += (_, mode) => StartOriginalShellEvent(original =>
+            original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => LaunchAppAsync(mode, false))));
+        page.ConversationRequested += (_, conversation) => StartOriginalShellEvent(async original =>
         {
-            await OpenNewChatAsync();
-            if (_newChatPage is not null) await _newChatPage.LoadConversationAsync(conversation);
-        };
-        page.ManageAppsRequested += async (_, _) => await ShowAppLauncherAsync(false);
+            await original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => OpenNewChatAsync()));
+            if (_newChatPage is not null) await original.AwaitAsync(AcquireOriginalShellSynchronous(original,
+                () => _newChatPage.LoadConversationAsync(conversation)));
+        });
+        page.ManageAppsRequested += (_, _) => StartOriginalShellEvent(original =>
+            original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => ShowAppLauncherAsync(false))));
         return page;
     }
 
@@ -2132,55 +2183,56 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
 
     private void QueueGoSuggestionRefresh(GoPage page, string activity, TimeSpan delay, bool showProgress)
     {
-        CancellationTokenSource cancellation;
-        lock (_goSuggestionRefreshes)
+        _ = _originalShellWork.RunAsync(original =>
         {
-            if (_goSuggestionRefreshes.Remove(page, out var previous))
-            {
-                previous.Cancel();
-                previous.Dispose();
-            }
-
-            cancellation = new CancellationTokenSource();
-            _goSuggestionRefreshes[page] = cancellation;
-        }
-
-        if (showProgress) page.SetRefreshInProgress(true);
-        _ = RefreshGoSuggestionsAsync(page, activity, delay, showProgress, cancellation);
+            page.RetainOriginalParentBorrower(original.Task, DemandOriginalShellProducerJoin);
+            return QueueOriginalGoSuggestionRefreshAsync(original, page, activity, delay, showProgress);
+        });
     }
 
-    private async Task RefreshGoSuggestionsAsync(
-        GoPage page,
-        string activity,
-        TimeSpan delay,
-        bool showProgress,
-        CancellationTokenSource cancellation)
+    private async Task QueueOriginalGoSuggestionRefreshAsync(DesktopOriginalWorkLifetime.Original original,
+        GoPage page, string activity, TimeSpan delay, bool showProgress)
     {
+        var cancellation = new CancellationTokenSource();
+        CancellationTokenSource? previous;
+        lock (_goSuggestionRefreshes)
+        {
+            _goSuggestionRefreshes.Remove(page, out previous);
+            _goSuggestionRefreshes[page] = cancellation;
+        }
         try
         {
+            // Native cancellation callbacks execute OUTSIDE the dictionary lock.
+            // The previous original retains/disposes its own CTS only after its Tasks settle.
+            AcquireOriginalShellSynchronous(original, () => { previous?.Cancel(); return true; });
+            if (showProgress) page.SetRefreshInProgress(true);
             if (delay > TimeSpan.Zero)
-                await Task.Delay(delay, cancellation.Token).ConfigureAwait(false);
-
-            var suggestions = await _goSuggestions.GenerateAsync(activity, cancellation.Token).ConfigureAwait(false);
-            await Dispatcher.UIThread.InvokeAsync(() => page.SetSuggestions(suggestions));
+                await original.AwaitAsync(Task.Delay(delay, cancellation.Token)).ConfigureAwait(false);
+            var suggestions = await original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => _goSuggestions.GenerateAsync(activity, cancellation.Token))).ConfigureAwait(false);
+            await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (original.IsPublicationCurrent) page.SetSuggestions(suggestions);
+            }).GetTask()).ConfigureAwait(false);
         }
-        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
-        {
-        }
+        catch (OperationCanceledException error) when (cancellation.IsCancellationRequested) { original.Retain(error); }
+        catch (Exception error) { original.Retain(error); throw; }
         finally
         {
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            try
             {
-                if (showProgress) page.SetRefreshInProgress(false);
-                lock (_goSuggestionRefreshes)
+                await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    if (_goSuggestionRefreshes.TryGetValue(page, out var current) && ReferenceEquals(current, cancellation))
-                    {
-                        _goSuggestionRefreshes.Remove(page);
-                        cancellation.Dispose();
-                    }
-                }
-            });
+                    if (showProgress) page.SetRefreshInProgress(false);
+                    lock (_goSuggestionRefreshes)
+                        if (_goSuggestionRefreshes.TryGetValue(page, out var current) && ReferenceEquals(current, cancellation))
+                            _goSuggestionRefreshes.Remove(page);
+                }).GetTask()).ConfigureAwait(false);
+            }
+            finally
+            {
+                try { cancellation.Dispose(); }
+                catch (Exception error) { original.Retain(error); throw; }
+            }
         }
     }
 
@@ -2188,12 +2240,11 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     {
         if (sender is not GoPage page) return;
         page.Disposed -= OnGoPageDisposed;
-        lock (_goSuggestionRefreshes)
-        {
-            if (!_goSuggestionRefreshes.Remove(page, out var cancellation)) return;
-            cancellation.Cancel();
-            cancellation.Dispose();
-        }
+        CancellationTokenSource? cancellation;
+        lock (_goSuggestionRefreshes) _goSuggestionRefreshes.Remove(page, out cancellation);
+        // No premature CTS.Dispose while the actual Generate/dispatcher originals are running.
+        if (cancellation is not null)
+            _originalShellWork.RunSynchronous(_ => cancellation.Cancel());
     }
 
     private HomePage CreateHomePage() => new(
@@ -2676,16 +2727,22 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         HavenSurface? surface = null,
         bool forceNewTab = false)
     {
+        CheckPendingOriginalFilesPublication();
         var resolvedSurface = surface ?? InferSurface(page);
         var existing = OpenTabs.FirstOrDefault(item => item.Key.Equals(key, StringComparison.OrdinalIgnoreCase));
         if (existing is not null)
         {
             if (!ReferenceEquals(existing.Page, page)) existing.ReplacePage(page);
+            CheckPendingOriginalFilesPublication();
             existing.Title = title;
+            CheckPendingOriginalFilesPublication();
             existing.SetSurface(resolvedSurface);
+            CheckPendingOriginalFilesPublication();
             if (ReferenceEquals(SelectedTab, existing)) ApplySelectedTab(existing);
             else SelectedTab = existing;
+            CheckPendingOriginalFilesPublication();
             RefreshTopRailTabs();
+            CheckPendingOriginalFilesPublication();
             return;
         }
 
@@ -2695,14 +2752,19 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             SelectedTab.NavigateTo(key, title, page, closeable, resolvedSurface);
             ApplySelectedTab(SelectedTab);
             RefreshTopRailTabs();
+            CheckPendingOriginalFilesPublication();
             return;
         }
 
         var tab = new WorkspaceTabViewModel(key, title, page, closeable, resolvedSurface);
         OpenTabs.Add(tab);
+        CheckPendingOriginalFilesPublication();
         SelectedTab = tab;
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(IsHorizontalTabsVisible));
+        CheckPendingOriginalFilesPublication();
         RefreshTopRailTabs();
+        CheckPendingOriginalFilesPublication();
         QueueWorkspaceSessionSave();
     }
 
@@ -3515,6 +3577,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
 
     private void RefreshTopRailTabs()
     {
+        CheckPendingOriginalFilesPublication();
         if (TopRail is null) return;
         var visibleTabs = OpenTabs.Where(tab => !tab.IsGroupCollapsed || ReferenceEquals(tab, SelectedTab) ||
             (tab.GroupId is { } groupId && ReferenceEquals(tab, OpenTabs.First(item => item.GroupId == groupId))));
@@ -3529,9 +3592,11 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             tab.GroupId,
             tab.GroupName,
             tab.IsGroupCollapsed)).ToArray());
+        CheckPendingOriginalFilesPublication();
         TopRail.SetNavigationAvailability(
             SelectedTab?.CanGoBack == true,
             SelectedTab?.CanGoForward == true);
+        CheckPendingOriginalFilesPublication();
         if (AllCommandItems.Count > 0) RefreshContextualActions();
     }
 
@@ -3550,18 +3615,25 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
 
     private void ApplyShellVisualState()
     {
+        CheckPendingOriginalFilesPublication();
         if (PageContent is null) return;
         PageContent.Content = CurrentPage;
+        CheckPendingOriginalFilesPublication();
         SidebarControl.IsVisible = _edition == HavenShellEdition.Classic && HasFullSidebar && !IsSplitView;
+        CheckPendingOriginalFilesPublication();
         NativeSidebarHost.IsVisible = _edition == HavenShellEdition.New
                                       && CurrentSurface == HavenSurface.Chat
                                       && IsSidebarOpen
                                       && !IsSplitView;
+        CheckPendingOriginalFilesPublication();
         ShellContextBar.IsVisible = false;
+        CheckPendingOriginalFilesPublication();
         StoredChatDropdown.IsVisible = _edition == HavenShellEdition.New
                                        && CurrentPage is NewChatPage newChatPage
                                        && !newChatPage.HasStarted;
+        CheckPendingOriginalFilesPublication();
         GoModeLabel.Text = CurrentPage is NewDashboardPage ? "Dashboard" : CurrentPage is NewChatPage ? "Chat" : "Go";
+        CheckPendingOriginalFilesPublication();
         TopRail.SetModelSummary(
             CurrentPage switch
             {
@@ -3570,48 +3642,87 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
                 _ => CurrentChat?.SelectedModel?.Name ?? _preferences.DefaultModel
             },
             EffortPercentage(_preferences.DefaultEffort));
+        CheckPendingOriginalFilesPublication();
         RefreshTopRailTabs();
     }
 
     private void RaiseShellProperties()
     {
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(CurrentSurface));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(CurrentMode));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(IsStudy));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(IsChatProduct));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(HasContainers));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(HasAnyContainers));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(SupportsDuo));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ProductName));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(NewItemLabel));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(FileNewLabel));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(FileNewContainerLabel));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ContainerHeading));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ProjectMenuHeader));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(WorkspaceEyebrow));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(WorkspaceTitle));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ShowTemporaryHeaderAction));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ShowContextHeaderWidget));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(TemporaryHeaderActionLabel));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ContextPercent));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ContextRemainingPercent));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ContextLabel));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ContextRemainingLabel));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(RecentHeading));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ContainerSettingsLabel));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(OllamaStatus));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(DuoLabel));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ChatTypeLabel));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(IsProjectOpen));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(ShowNoProjectChats));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(SupportsConversationSidebar));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(SupportsConversationCommands));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(SupportsEditingCommands));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(IsSidebarVisible));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(HasFullSidebar));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(HasCompactSidebar));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(IsBrowseMode));
+        CheckPendingOriginalFilesPublication();
         RaisePropertyChanged(nameof(IsTrainingMode));
+        CheckPendingOriginalFilesPublication();
         ApplyShellVisualState();
     }
 
@@ -3667,35 +3778,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         }
     }
 
-    public void Dispose()
-    {
-        if (IsDisposed) return;
-        IsDisposed = true;
-        _reminderTimer.Stop();
-        StopAutomationScheduler();
-        lock (_goSuggestionRefreshes)
-        {
-            foreach (var cancellation in _goSuggestionRefreshes.Values)
-            {
-                cancellation.Cancel();
-                cancellation.Dispose();
-            }
-            _goSuggestionRefreshes.Clear();
-        }
-        _callCoordinator.StateChanged -= OnCallStateChanged;
-        _homePage?.Deactivate();
-        _newDashboardPage?.Deactivate();
-        _newDashboardPage?.Dispose();
-        _newChatPage?.Dispose();
-        _studyAssignmentsSidebar?.Dispose();
-        _nativeChatSidebar?.Dispose();
-        _planPage?.Dispose();
-        _companionDockVm.Dispose();
-        RemoveSplitView();
-        foreach (var tab in OpenTabs.ToArray()) tab.Dispose();
-        OpenTabs.Clear();
-        TopRail.Dispose();
-    }
+    public void Dispose() => RequestRetirement();
 
     [DllImport("user32.dll")]
     private static extern void keybd_event(byte virtualKey, byte scanCode, uint flags, UIntPtr extraInfo);

@@ -1,4 +1,6 @@
 using System.Text.Json;
+using Haven.Desktop.Services;
+using System.Runtime.ExceptionServices;
 using Avalonia.Threading;
 using Haven.Application;
 using Haven.Core;
@@ -13,7 +15,7 @@ namespace Haven.Desktop.HavenUI.GenerativeUi;
 /// Trusted GenUI adapter for the Haven scene tree. It preserves instance identity, updates compatible
 /// component trees in place on store patches, and routes semantic actions through the shared router.
 /// </summary>
-internal sealed class HavenGenUiSceneSurface : IDisposable
+internal sealed class HavenGenUiSceneSurface : IDisposable, IAsyncDisposable
 {
     private readonly GenerativeUiEventRouter _router;
     private readonly GenUiInstanceStore _instances;
@@ -25,18 +27,29 @@ internal sealed class HavenGenUiSceneSurface : IDisposable
     private GenUiDocument? _document;
     private string? _structureSignature;
     private bool _disposed;
+    private readonly DesktopOriginalWorkLifetime _originalWork;
+    private readonly Func<bool>? _originalPresentationCurrent;
+    private readonly List<HavenGenUiWhiteboard> _acquiredWhiteboards = [];
+    private GenUiDocument? _registeringOriginalDocument;
+    private Task? _pendingRebuild;
+    private long _generation;
+    public Task? OriginalClose => _originalWork.OriginalClose;
 
     public HavenGenUiSceneSurface(GenerativeUiEventRouter router, GenUiInstanceStore instances)
+        : this(router, instances, null) { }
+    internal HavenGenUiSceneSurface(GenerativeUiEventRouter router, GenUiInstanceStore instances, Func<bool>? originalPresentationCurrent)
     {
+        _originalPresentationCurrent = originalPresentationCurrent;
+        _originalWork = new DesktopOriginalWorkLifetime(StopChildrenAsync, CleanupOriginalAsync);
         _router = router ?? throw new ArgumentNullException(nameof(router));
         _instances = instances ?? throw new ArgumentNullException(nameof(instances));
         Root = new Container { Layout = HavenLayout.Vertical };
-        Root.SetValue(HavenProperties.Width, HavenLength.Percent(100));
-        Root.SetValue(HavenProperties.Gap, HavenLength.Px(8));
+        PublishOriginal(() => Root.SetValue(HavenProperties.Width, HavenLength.Percent(100)));
+        PublishOriginal(() => Root.SetValue(HavenProperties.Gap, HavenLength.Px(8)));
         Root.Accessibility.AccessibleName = "Generated interface";
-        _activity.SetValue(HavenProperties.FontSize, 11d);
-        _activity.SetValue(HavenProperties.Foreground, "TextSecondary");
-        _activity.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
+        PublishOriginal(() => _activity.SetValue(HavenProperties.FontSize, 11d));
+        PublishOriginal(() => _activity.SetValue(HavenProperties.Foreground, "TextSecondary"));
+        PublishOriginal(() => _activity.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed));
         _activity.Accessibility.AccessibleName = "Generated interface status";
         _instances.DocumentChanged += OnDocumentChanged;
     }
@@ -46,17 +59,25 @@ internal sealed class HavenGenUiSceneSurface : IDisposable
     public event EventHandler<GenUiEvent>? SemanticEventEmitted;
     public event EventHandler<GenUiActionResult>? ActionCompleted;
 
-    public void Present(GenUiDocument document)
+    public void Present(GenUiDocument document) => _originalWork.RunSynchronous(original =>
     {
         ArgumentNullException.ThrowIfNull(document);
-        if (_disposed) throw new ObjectDisposedException(nameof(HavenGenUiSceneSurface));
+        BindOriginal(original, ++_generation);
+        original.DemandPublication();
         GenerativeUiContractValidator.ValidateAndThrow(document);
-        _instances.Register(document);
+        var previous = _registeringOriginalDocument;
+        _registeringOriginalDocument = document;
+        try { _instances.Register(document); }
+        finally { _registeringOriginalDocument = previous; }
+        original.DemandPublication();
         ApplyDocument(document);
-    }
+        original.DemandPublication();
+    });
 
-    public void PresentExisting(GenUiDocument document)
+    public void PresentExisting(GenUiDocument document) => _originalWork.RunSynchronous(original =>
     {
+        BindOriginal(original, ++_generation);
+        original.DemandPublication();
         ArgumentNullException.ThrowIfNull(document);
         if (_disposed) throw new ObjectDisposedException(nameof(HavenGenUiSceneSurface));
         GenerativeUiContractValidator.ValidateAndThrow(document);
@@ -65,34 +86,44 @@ internal sealed class HavenGenUiSceneSurface : IDisposable
         if (registered.Origin.ThreadId != document.Origin.ThreadId)
             throw new InvalidOperationException("A generated UI instance cannot move between threads.");
         ApplyDocument(registered);
-    }
+        original.DemandPublication();
+    });
 
-    public bool OwnsInput(Input input) =>
-        _inputs.ContainsKey(input) || _whiteboards.Values.Any(whiteboard => whiteboard.OwnsInput(input));
+    public bool OwnsInput(Input input) => !_originalWork.IsRetiring && _pendingRebuild is null &&
+        (_inputs.ContainsKey(input) || _whiteboards.Values.Any(whiteboard => whiteboard.OwnsInput(input)));
 
     public Task SubmitInputAsync(Input input, CancellationToken cancellationToken = default)
     {
         if (_inputs.TryGetValue(input, out var component))
             return EmitAsync(component, GenUiEventType.TextSubmitted, JsonSerializer.SerializeToElement(input.Text), cancellationToken);
         var whiteboard = _whiteboards.Values.FirstOrDefault(candidate => candidate.OwnsInput(input));
-        return whiteboard is null ? Task.CompletedTask : whiteboard.SubmitInputAsync(input);
+        return whiteboard is null ? Task.CompletedTask : whiteboard.SubmitInputAsync(input, cancellationToken);
     }
 
     private void OnDocumentChanged(object? sender, GenUiDocument document)
     {
-        if (_disposed || _document?.Origin.InstanceId != document.Origin.InstanceId) return;
-        if (Dispatcher.UIThread.CheckAccess()) ApplyDocument(document);
-        else Dispatcher.UIThread.Post(() =>
-        {
-            if (!_disposed && _document?.Origin.InstanceId == document.Origin.InstanceId) ApplyDocument(document);
-        });
+        if (_disposed || _originalWork.IsRetiring || ReferenceEquals(document, _registeringOriginalDocument) ||
+            _document?.Origin.InstanceId != document.Origin.InstanceId) return;
+        var generation = _generation;
+        if (Dispatcher.UIThread.CheckAccess())
+            RunOriginalCallback(() => ApplyDocument(document));
+        else
+            _ = _originalWork.RunAsync(async original =>
+            {
+                BindOriginal(original, generation);
+                await PublishOriginalAsync(original, () =>
+                {
+                    if (_document?.Origin.InstanceId != document.Origin.InstanceId) return;
+                    ApplyDocument(document);
+                });
+            }); // SAME posted-original Task is retained by this owner before dispatch.
     }
 
     private void ApplyDocument(GenUiDocument document)
     {
         var signature = StructureSignature(document.Root);
         _document = document;
-        if (!string.Equals(_structureSignature, signature, StringComparison.Ordinal))
+        if (_pendingRebuild is not null || !string.Equals(_structureSignature, signature, StringComparison.Ordinal))
         {
             _structureSignature = signature;
             Rebuild(document);
@@ -103,14 +134,22 @@ internal sealed class HavenGenUiSceneSurface : IDisposable
 
     private void Rebuild(GenUiDocument document)
     {
-        foreach (var whiteboard in _whiteboards.Values) whiteboard.Dispose();
+        if (_whiteboards.Count != 0 || _pendingRebuild is not null)
+        { QueueRebuildOriginal(document); return; }
+        RebuildOriginalCore(document);
+    }
+
+    private void RebuildOriginalCore(GenUiDocument document)
+    {
+        DemandOriginalPublication();
         _whiteboards.Clear();
         _elements.Clear();
         _components.Clear();
         _inputs.Clear();
-        foreach (var child in Root.Children.ToArray()) Root.Remove(child);
-        Root.Add(Build(document.Root));
-        Root.Add(_activity);
+        foreach (var child in Root.Children.ToArray()) PublishOriginal(() => Root.Remove(child));
+        var originalRoot = Build(document.Root);
+        PublishOriginal(() => Root.Add(originalRoot));
+        PublishOriginal(() => Root.Add(_activity));
     }
 
     private HavenElement Build(GenUiComponent component)
@@ -137,7 +176,7 @@ internal sealed class HavenGenUiSceneSurface : IDisposable
             _ => throw new InvalidOperationException($"Trusted Haven scene renderer has no component mapping for '{component.ComponentType}'.")
         };
         element.Name = "GenUI_" + SanitizeName(component.ComponentId);
-        element.Accessibility.AccessibleName = GetString(component, "automationName") ?? GetString(component, "label") ?? component.ComponentId;
+        PublishOriginal(() => element.Accessibility.AccessibleName = GetString(component, "automationName") ?? GetString(component, "label") ?? component.ComponentId);
         _elements.Add(component.ComponentId, element);
         _components[component.ComponentId] = component;
         UpdateControl(component, element);
@@ -147,7 +186,7 @@ internal sealed class HavenGenUiSceneSurface : IDisposable
     private Container BuildStack(GenUiComponent component, bool horizontal)
     {
         var stack = new Container { Layout = horizontal ? HavenLayout.Horizontal : HavenLayout.Vertical };
-        stack.SetValue(HavenProperties.Gap, HavenLength.Px(GetDouble(component, "spacing", horizontal ? 8 : 10)));
+        PublishOriginal(() => stack.SetValue(HavenProperties.Gap, HavenLength.Px(GetDouble(component, "spacing", horizontal ? 8 : 10))));
         foreach (var child in component.Children) stack.Add(Build(child));
         return stack;
     }
@@ -163,21 +202,21 @@ internal sealed class HavenGenUiSceneSurface : IDisposable
             Layout = responsive ? HavenLayout.Wrap : HavenLayout.Grid,
             Columns = responsive ? string.Empty : string.Join(' ', Enumerable.Repeat("1fr", columns))
         };
-        grid.SetValue(HavenProperties.Gap, HavenLength.Px(spacing));
-        grid.SetValue(HavenProperties.Width, HavenLength.Percent(100));
-        grid.SetValue(HavenProperties.Responsive, responsive);
+        PublishOriginal(() => grid.SetValue(HavenProperties.Gap, HavenLength.Px(spacing)));
+        PublishOriginal(() => grid.SetValue(HavenProperties.Width, HavenLength.Percent(100)));
+        PublishOriginal(() => grid.SetValue(HavenProperties.Responsive, responsive));
         for (var index = 0; index < component.Children.Count; index++)
         {
             var child = Build(component.Children[index]);
             if (responsive)
             {
-                child.SetValue(HavenProperties.MinWidth, HavenLength.Px(itemMinWidth));
-                child.SetValue(HavenProperties.Responsive, true);
+                PublishOriginal(() => child.SetValue(HavenProperties.MinWidth, HavenLength.Px(itemMinWidth)));
+                PublishOriginal(() => child.SetValue(HavenProperties.Responsive, true));
             }
             else
             {
-                child.SetValue(HavenProperties.Column, index % columns);
-                child.SetValue(HavenProperties.Row, index / columns);
+                PublishOriginal(() => child.SetValue(HavenProperties.Column, index % columns));
+                PublishOriginal(() => child.SetValue(HavenProperties.Row, index / columns));
             }
             grid.Add(child);
         }
@@ -187,11 +226,11 @@ internal sealed class HavenGenUiSceneSurface : IDisposable
     private Container BuildSplit(GenUiComponent component)
     {
         var split = new Container { Layout = HavenLayout.Grid, Columns = "1fr 1fr" };
-        split.SetValue(HavenProperties.Gap, HavenLength.Px(12));
+        PublishOriginal(() => split.SetValue(HavenProperties.Gap, HavenLength.Px(12)));
         for (var index = 0; index < Math.Min(2, component.Children.Count); index++)
         {
             var child = Build(component.Children[index]);
-            child.SetValue(HavenProperties.Column, index);
+            PublishOriginal(() => child.SetValue(HavenProperties.Column, index));
             split.Add(child);
         }
         return split;
@@ -200,15 +239,15 @@ internal sealed class HavenGenUiSceneSurface : IDisposable
     private Container BuildCard(GenUiComponent component)
     {
         var card = new Container { Layout = HavenLayout.Vertical };
-        card.SetValue(HavenProperties.Background, string.Equals(GetString(component, "variant"), "flashcard", StringComparison.OrdinalIgnoreCase) ? "Accent" : "SurfaceRaised");
-        card.SetValue(HavenProperties.Padding, HavenThickness.Uniform(HavenLength.Px(string.Equals(GetString(component, "variant"), "flashcard", StringComparison.OrdinalIgnoreCase) ? 28 : 14)));
-        card.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(16)));
-        card.SetValue(HavenProperties.Gap, HavenLength.Px(GetDouble(component, "spacing", 8)));
+        PublishOriginal(() => card.SetValue(HavenProperties.Background, string.Equals(GetString(component, "variant"), "flashcard", StringComparison.OrdinalIgnoreCase) ? "Accent" : "SurfaceRaised"));
+        PublishOriginal(() => card.SetValue(HavenProperties.Padding, HavenThickness.Uniform(HavenLength.Px(string.Equals(GetString(component, "variant"), "flashcard", StringComparison.OrdinalIgnoreCase) ? 28 : 14))));
+        PublishOriginal(() => card.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(16))));
+        PublishOriginal(() => card.SetValue(HavenProperties.Gap, HavenLength.Px(GetDouble(component, "spacing", 8))));
         foreach (var child in component.Children) card.Add(Build(child));
         if (component.Actions.Count > 0)
         {
             card.Accessibility.Focusable = true;
-            card.SetValue(HavenProperties.Hover, true);
+            PublishOriginal(() => card.SetValue(HavenProperties.Hover, true));
             card.Invoked += async (_, _) => await EmitAsync(component, GenUiEventType.ActionInvoked, null, CancellationToken.None);
         }
         return card;
@@ -228,7 +267,7 @@ internal sealed class HavenGenUiSceneSurface : IDisposable
                 _ => ButtonVariant.Secondary
             }
         };
-        button.SetValue(HavenProperties.HorizontalAlignment, HavenHorizontalAlignment.Start);
+        PublishOriginal(() => button.SetValue(HavenProperties.HorizontalAlignment, HavenHorizontalAlignment.Start));
         button.Invoked += async (_, _) => await EmitAsync(component, GenUiEventType.ActionInvoked, GetValue(component, "value"), CancellationToken.None);
         return button;
     }
@@ -273,42 +312,42 @@ internal sealed class HavenGenUiSceneSurface : IDisposable
         return slider;
     }
 
-    private static HavenElement BuildStatus()
+    private HavenElement BuildStatus()
     {
         var status = new HavenText();
-        status.SetValue(HavenProperties.Background, "SurfaceRaised");
-        status.SetValue(HavenProperties.Padding, HavenThickness.Parse("6px 10px"));
-        status.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(12)));
+        PublishOriginal(() => status.SetValue(HavenProperties.Background, "SurfaceRaised"));
+        PublishOriginal(() => status.SetValue(HavenProperties.Padding, HavenThickness.Parse("6px 10px")));
+        PublishOriginal(() => status.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(12))));
         return status;
     }
 
     private Container BuildList(GenUiComponent component)
     {
         var list = new Container { Layout = HavenLayout.Vertical };
-        list.SetValue(HavenProperties.Gap, HavenLength.Px(5));
+        PublishOriginal(() => list.SetValue(HavenProperties.Gap, HavenLength.Px(5)));
         return list;
     }
 
     private Container BuildTabs(GenUiComponent component)
     {
         var root = new Container { Layout = HavenLayout.Vertical };
-        root.SetValue(HavenProperties.Gap, HavenLength.Px(8));
+        PublishOriginal(() => root.SetValue(HavenProperties.Gap, HavenLength.Px(8)));
         var headers = new Container { Layout = HavenLayout.Horizontal };
-        headers.SetValue(HavenProperties.Gap, HavenLength.Px(6));
+        PublishOriginal(() => headers.SetValue(HavenProperties.Gap, HavenLength.Px(6)));
         var bodies = new List<HavenElement>();
         for (var index = 0; index < component.Children.Count; index++)
         {
             var tab = component.Children[index];
             var body = Build(tab);
-            body.SetValue(HavenProperties.Visibility, index == 0 ? HavenVisibility.Visible : HavenVisibility.Collapsed);
+            PublishOriginal(() => body.SetValue(HavenProperties.Visibility, index == 0 ? HavenVisibility.Visible : HavenVisibility.Collapsed));
             bodies.Add(body);
             var tabIndex = index;
             var button = new HavenButton { Variant = ButtonVariant.Ghost, Content = GetString(tab, "title") ?? tab.ComponentId };
-            button.Invoked += (_, _) =>
+            button.Invoked += (_, _) => RunOriginalCallback(() =>
             {
                 for (var bodyIndex = 0; bodyIndex < bodies.Count; bodyIndex++)
-                    bodies[bodyIndex].SetValue(HavenProperties.Visibility, bodyIndex == tabIndex ? HavenVisibility.Visible : HavenVisibility.Collapsed);
-            };
+                    PublishOriginal(() => bodies[bodyIndex].SetValue(HavenProperties.Visibility, bodyIndex == tabIndex ? HavenVisibility.Visible : HavenVisibility.Collapsed));
+            });
             headers.Add(button);
         }
         root.Add(headers);
@@ -326,20 +365,32 @@ internal sealed class HavenGenUiSceneSurface : IDisposable
             var stateKey = "canvas." + component.ComponentId;
             JsonElement? persisted = null;
             if (_document?.State.TryGetValue(stateKey, out var state) == true) persisted = state;
-            var whiteboard = new HavenGenUiWhiteboard(
+            var originalDocument = _document ?? throw new InvalidOperationException("The original whiteboard has no owning document.");
+            HavenGenUiWhiteboard? whiteboard = null;
+            whiteboard = new HavenGenUiWhiteboard(
                 component,
                 persisted,
                 value =>
                 {
+                    DemandOriginalPublication();
                     var document = _document;
                     if (document is null) return;
                     _instances.ApplyPatch(new GenUiStatePatch(
                         Guid.NewGuid(), document.Origin.InstanceId, GenUiPatchOperation.Replace,
                         "state", stateKey, value, DateTimeOffset.UtcNow));
+                    DemandOriginalPublication();
                 },
                 component.Actions.Count == 0
                     ? null
-                    : request => EmitAsync(component, GenUiEventType.ActionInvoked, request, CancellationToken.None));
+                    : request => EmitAsync(component, GenUiEventType.ActionInvoked, request, CancellationToken.None),
+                () => !_disposed && !_originalWork.IsRetiring && _pendingRebuild is null &&
+                    (_originalPresentationCurrent?.Invoke() ?? true),
+                value => PersistOriginalChildRetirement(
+                    whiteboard ?? throw new InvalidOperationException("The original whiteboard acquisition has not returned."),
+                    originalDocument.Origin.InstanceId, stateKey, value));
+            _acquiredWhiteboards.Add(whiteboard); // Capture actual child before attached publication.
+            if (_originalWork.IsRetiring) whiteboard.RequestRetirement();
+            DemandOriginalPublication();
             _whiteboards[component.ComponentId] = whiteboard;
             return whiteboard;
         }
@@ -357,19 +408,19 @@ internal sealed class HavenGenUiSceneSurface : IDisposable
                     _ => HavenImageFit.Contain
                 }
             };
-            image.SetValue(HavenProperties.MinHeight, HavenLength.Px(GetDouble(component, "minHeight", 180)));
-            image.SetValue(HavenProperties.Width, HavenLength.Percent(100));
+            PublishOriginal(() => image.SetValue(HavenProperties.MinHeight, HavenLength.Px(GetDouble(component, "minHeight", 180))));
+            PublishOriginal(() => image.SetValue(HavenProperties.Width, HavenLength.Percent(100)));
             return image;
         }
 
         var visual = new Container { Layout = HavenLayout.Vertical };
-        visual.SetValue(HavenProperties.MinHeight, HavenLength.Px(GetDouble(component, "minHeight", 180)));
-        visual.SetValue(HavenProperties.Width, HavenLength.Percent(100));
-        visual.SetValue(HavenProperties.Background, "SurfaceRaised");
-        visual.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(16)));
-        visual.SetValue(HavenProperties.Padding, HavenThickness.Uniform(HavenLength.Px(16)));
+        PublishOriginal(() => visual.SetValue(HavenProperties.MinHeight, HavenLength.Px(GetDouble(component, "minHeight", 180))));
+        PublishOriginal(() => visual.SetValue(HavenProperties.Width, HavenLength.Percent(100)));
+        PublishOriginal(() => visual.SetValue(HavenProperties.Background, "SurfaceRaised"));
+        PublishOriginal(() => visual.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(16))));
+        PublishOriginal(() => visual.SetValue(HavenProperties.Padding, HavenThickness.Uniform(HavenLength.Px(16))));
         var label = new HavenText { Content = GetString(component, "emptyText") ?? $"{component.ComponentType} foundation" };
-        label.SetValue(HavenProperties.HorizontalAlignment, HavenHorizontalAlignment.Center);
+        PublishOriginal(() => label.SetValue(HavenProperties.HorizontalAlignment, HavenHorizontalAlignment.Center));
         visual.Add(label);
         return visual;
     }
@@ -389,40 +440,40 @@ internal sealed class HavenGenUiSceneSurface : IDisposable
         switch (element)
         {
             case HavenText text:
-                text.Content = GetString(component, "text") ?? GetString(component, "label") ?? string.Empty;
+                PublishOriginal(() => text.Content = GetString(component, "text") ?? GetString(component, "label") ?? string.Empty);
                 var textSize = GetDouble(component, "fontSize", 0);
-                if (textSize > 0) text.SetValue(HavenProperties.FontSize, textSize);
-                text.SetValue(HavenProperties.FontWeight, GetBool(component, "emphasis") ? 800 : 500);
-                text.SetValue(HavenProperties.Opacity, Math.Clamp(GetDouble(component, "opacity", 1), 0, 1));
+                if (textSize > 0) PublishOriginal(() => text.SetValue(HavenProperties.FontSize, textSize));
+                PublishOriginal(() => text.SetValue(HavenProperties.FontWeight, GetBool(component, "emphasis") ? 800 : 500));
+                PublishOriginal(() => text.SetValue(HavenProperties.Opacity, Math.Clamp(GetDouble(component, "opacity", 1), 0, 1)));
                 break;
             case Markdown markdown:
-                markdown.Content = GetString(component, "text") ?? GetString(component, "label") ?? string.Empty;
+                PublishOriginal(() => markdown.Content = GetString(component, "text") ?? GetString(component, "label") ?? string.Empty);
                 break;
             case HavenButton button:
-                button.Content = GetString(component, "label") ?? component.ComponentId;
-                button.SetValue(HavenProperties.Enabled, !GetBool(component, "disabled"));
+                PublishOriginal(() => button.Content = GetString(component, "label") ?? component.ComponentId);
+                PublishOriginal(() => button.SetValue(HavenProperties.Enabled, !GetBool(component, "disabled")));
                 break;
             case Input input:
-                input.Placeholder = GetString(component, "placeholder") ?? string.Empty;
+                PublishOriginal(() => input.Placeholder = GetString(component, "placeholder") ?? string.Empty);
                 var next = GetString(component, "value") ?? string.Empty;
-                if (!input.State.HasFlag(HavenElementState.Focused) && input.Text != next) input.Text = next;
+                if (!input.State.HasFlag(HavenElementState.Focused) && input.Text != next) PublishOriginal(() => input.Text = next);
                 break;
             case Select select:
                 var options = GetStringArray(component, "options");
-                select.Items = options;
+                PublishOriginal(() => select.Items = options);
                 var requested = GetString(component, "value");
-                select.SelectedIndex = requested is null ? (options.Count > 0 ? 0 : -1) : options.ToList().FindIndex(item => item.Equals(requested, StringComparison.Ordinal));
+                PublishOriginal(() => select.SelectedIndex = requested is null ? (options.Count > 0 ? 0 : -1) : options.ToList().FindIndex(item => item.Equals(requested, StringComparison.Ordinal)));
                 break;
             case Toggle toggle:
-                toggle.IsChecked = GetBool(component, "value");
+                PublishOriginal(() => toggle.IsChecked = GetBool(component, "value"));
                 break;
             case Slider slider:
-                slider.Minimum = GetDouble(component, "minimum", 0);
-                slider.Maximum = GetDouble(component, "maximum", 100);
-                slider.Value = GetDouble(component, "value", slider.Minimum);
+                PublishOriginal(() => slider.Minimum = GetDouble(component, "minimum", 0));
+                PublishOriginal(() => slider.Maximum = GetDouble(component, "maximum", 100));
+                PublishOriginal(() => slider.Value = GetDouble(component, "value", slider.Minimum));
                 break;
             case Progress progress:
-                progress.Value = GetDouble(component, "value", 0);
+                PublishOriginal(() => progress.Value = GetDouble(component, "value", 0));
                 break;
             case HavenGenUiPlot plot:
                 plot.Update(component);
@@ -431,102 +482,112 @@ internal sealed class HavenGenUiSceneSurface : IDisposable
                 whiteboard.Update(component);
                 break;
             case Container list when component.ComponentType is "HavenList" or "HavenTable":
-                foreach (var child in list.Children.ToArray()) list.Remove(child);
-                foreach (var item in GetStringArray(component, "items")) list.Add(new HavenText { Content = item });
+                foreach (var child in list.Children.ToArray()) PublishOriginal(() => list.Remove(child));
+                foreach (var item in GetStringArray(component, "items")) PublishOriginal(() => list.Add(new HavenText { Content = item }));
                 break;
         }
 
         var minWidth = GetDouble(component, "minWidth", 0);
-        if (minWidth > 0) element.SetValue(HavenProperties.MinWidth, HavenLength.Px(minWidth));
+        if (minWidth > 0) PublishOriginal(() => element.SetValue(HavenProperties.MinWidth, HavenLength.Px(minWidth)));
         var minHeight = GetDouble(component, "minHeight", 0);
-        if (minHeight > 0) element.SetValue(HavenProperties.MinHeight, HavenLength.Px(minHeight));
+        if (minHeight > 0) PublishOriginal(() => element.SetValue(HavenProperties.MinHeight, HavenLength.Px(minHeight)));
         var width = GetDouble(component, "width", 0);
-        if (width > 0) element.SetValue(HavenProperties.Width, HavenLength.Px(width));
+        if (width > 0) PublishOriginal(() => element.SetValue(HavenProperties.Width, HavenLength.Px(width)));
         var height = GetDouble(component, "height", 0);
-        if (height > 0) element.SetValue(HavenProperties.Height, HavenLength.Px(height));
+        if (height > 0) PublishOriginal(() => element.SetValue(HavenProperties.Height, HavenLength.Px(height)));
 
         var horizontalAlignment = GetString(component, "horizontalAlignment")?.ToLowerInvariant();
         if (!string.IsNullOrWhiteSpace(horizontalAlignment))
         {
-            element.SetValue(HavenProperties.HorizontalAlignment, horizontalAlignment switch
+            PublishOriginal(() => element.SetValue(HavenProperties.HorizontalAlignment, horizontalAlignment switch
             {
                 "left" or "start" => HavenHorizontalAlignment.Start,
                 "center" => HavenHorizontalAlignment.Center,
                 "right" or "end" => HavenHorizontalAlignment.End,
                 "stretch" => HavenHorizontalAlignment.Stretch,
                 _ => element.GetValue(HavenProperties.HorizontalAlignment)
-            });
+            }));
         }
 
         var verticalAlignment = GetString(component, "verticalAlignment")?.ToLowerInvariant();
         if (!string.IsNullOrWhiteSpace(verticalAlignment))
         {
-            element.SetValue(HavenProperties.VerticalAlignment, verticalAlignment switch
+            PublishOriginal(() => element.SetValue(HavenProperties.VerticalAlignment, verticalAlignment switch
             {
                 "top" or "start" => HavenVerticalAlignment.Start,
                 "center" => HavenVerticalAlignment.Center,
                 "bottom" or "end" => HavenVerticalAlignment.End,
                 "stretch" => HavenVerticalAlignment.Stretch,
                 _ => element.GetValue(HavenProperties.VerticalAlignment)
-            });
+            }));
         }
 
         if (element is HavenText && string.Equals(GetString(component, "tone"), "onAccent", StringComparison.OrdinalIgnoreCase))
-            element.SetValue(HavenProperties.Foreground, "TextOnAccent");
+            PublishOriginal(() => element.SetValue(HavenProperties.Foreground, "TextOnAccent"));
 
-        element.Accessibility.AccessibleName = GetString(component, "automationName") ?? GetString(component, "label") ?? component.ComponentId;
+        PublishOriginal(() => element.Accessibility.AccessibleName = GetString(component, "automationName") ?? GetString(component, "label") ?? component.ComponentId);
     }
 
-    private async Task EmitAsync(GenUiComponent component, GenUiEventType eventType, JsonElement? value, CancellationToken cancellationToken)
+    private Task EmitAsync(GenUiComponent component, GenUiEventType eventType, JsonElement? value, CancellationToken cancellationToken)
     {
         var presentedDocument = _document;
-        if (presentedDocument is null) return;
-
-        // Event handlers are wired when the scene tree is first built. Resolve the
-        // component against the authoritative instance store at invocation time so
-        // in-place updates cannot keep routing a replaced action/capability binding.
-        var document = _instances.TryGet(presentedDocument.Origin.InstanceId);
-        if (document is null || document.Origin.ThreadId != presentedDocument.Origin.ThreadId) return;
-        var currentComponent = FindComponent(document.Root, component.ComponentId);
-        if (currentComponent is null) return;
-        var binding = GenerativeUiContractValidator.SelectActionBinding(currentComponent);
-        if (binding is null) return;
-        component = currentComponent;
-        if (value is null && eventType == GenUiEventType.ActionInvoked)
-            value = GetValue(component, "value");
-
-        var semanticEvent = new GenUiEvent(
-            Guid.NewGuid(), eventType, DateTimeOffset.UtcNow, document.Origin,
-            component.ComponentId, binding.ActionId, null, null, value,
-            JsonSerializer.SerializeToElement(new { values = CaptureCurrentInputValues(), component = component.ComponentId, value }),
-            GenUiEventSource.User, "Haven Chat generated UI interaction");
-        SemanticEventEmitted?.Invoke(this, semanticEvent);
-        SetActivity(binding.Route == GenUiRouteKind.Local ? "Updating…" : "Haven is working…");
-        try
+        var generation = _generation;
+        return _originalWork.RunAsync(async original =>
         {
-            var result = await _router.RouteAsync(semanticEvent, binding, cancellationToken);
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            BindOriginal(original, generation);
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(original.Token, cancellationToken);
+            linked.Token.ThrowIfCancellationRequested();
+            original.DemandPublication();
+            if (presentedDocument is null || _pendingRebuild is not null) return;
+            var document = _instances.TryGet(presentedDocument.Origin.InstanceId);
+            if (document is null || document.Origin.ThreadId != presentedDocument.Origin.ThreadId) return;
+            var currentComponent = FindComponent(document.Root, component.ComponentId);
+            if (currentComponent is null) return;
+            var binding = GenerativeUiContractValidator.SelectActionBinding(currentComponent);
+            if (binding is null) return;
+            component = currentComponent;
+            if (value is null && eventType == GenUiEventType.ActionInvoked) value = GetValue(component, "value");
+            var semanticEvent = new GenUiEvent(
+                Guid.NewGuid(), eventType, DateTimeOffset.UtcNow, document.Origin,
+                component.ComponentId, binding.ActionId, null, null, value,
+                JsonSerializer.SerializeToElement(new { values = CaptureCurrentInputValues(), component = component.ComponentId, value }),
+                GenUiEventSource.User, "Haven Chat generated UI interaction");
+            original.DemandPublication();
+            SemanticEventEmitted?.Invoke(this, semanticEvent);
+            original.DemandPublication();
+            SetActivity(binding.Route == GenUiRouteKind.Local ? "Updating…" : "Haven is working…");
+            Task<GenUiActionResult>? actualRoute = null;
+            try
             {
-                SetActivity(result.Summary);
-                ActionCompleted?.Invoke(this, result);
-            });
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
-        catch (Exception exception)
-        {
-            await Dispatcher.UIThread.InvokeAsync(() =>
+                original.DemandPublication();
+                actualRoute = _router.RouteAsync(semanticEvent, binding, linked.Token);
+                var result = await original.AwaitAsync(actualRoute);
+                await PublishOriginalAsync(original, () =>
+                {
+                    original.DemandPublication(); SetActivity(result.Summary);
+                    original.DemandPublication(); ActionCompleted?.Invoke(this, result); original.DemandPublication();
+                });
+            }
+            catch (OperationCanceledException cause) when (linked.IsCancellationRequested)
+            { original.Capture(actualRoute, cause); } // Retain the exact handled policy cause; never a green close waiver.
+            catch (Exception exception)
             {
-                var message = $"Generated action failed: {exception.Message}";
-                Root.Accessibility.Description = message;
-                SetActivity(message);
-            });
-        }
+                original.Capture(actualRoute, exception);
+                if (original.IsPublicationCurrent)
+                    await PublishOriginalAsync(original, () =>
+                    {
+                        var message = $"Generated action failed: {exception.Message}";
+                        original.DemandPublication(); Root.Accessibility.Description = message;
+                        original.DemandPublication(); SetActivity(message);
+                    });
+            }
+        });
     }
 
     private void SetActivity(string? value)
     {
-        _activity.Content = value ?? string.Empty;
-        _activity.SetValue(HavenProperties.Visibility, string.IsNullOrWhiteSpace(value) ? HavenVisibility.Collapsed : HavenVisibility.Visible);
+        PublishOriginal(() => _activity.Content = value ?? string.Empty);
+        PublishOriginal(() => _activity.SetValue(HavenProperties.Visibility, string.IsNullOrWhiteSpace(value) ? HavenVisibility.Collapsed : HavenVisibility.Visible));
     }
 
     private IReadOnlyDictionary<string, object?> CaptureCurrentInputValues()
@@ -607,15 +668,166 @@ internal sealed class HavenGenUiSceneSurface : IDisposable
         return value.EnumerateArray().Select(item => item.ValueKind == JsonValueKind.String ? item.GetString() ?? string.Empty : item.ToString()).ToArray();
     }
 
-    public void Dispose()
+    private void BindOriginal(DesktopOriginalWorkLifetime.Original original, long generation) =>
+        original.BindPublicationGuard(() => !_disposed && _generation == generation && (_originalPresentationCurrent?.Invoke() ?? true));
+    private void DemandOriginalPublication()
     {
-        if (_disposed) return;
-        _disposed = true;
-        _instances.DocumentChanged -= OnDocumentChanged;
-        foreach (var whiteboard in _whiteboards.Values) whiteboard.Dispose();
-        _whiteboards.Clear();
-        _elements.Clear();
-        _components.Clear();
-        _inputs.Clear();
+        if (_originalWork.Executing is { } original) original.DemandPublication();
+        else _originalWork.DemandAdmission(); // Constructor-before-return is a separate acquisition prerequisite.
     }
+    private void RunOriginalCallback(Action callback)
+    {
+        if (_originalWork.Executing is { } original)
+        { original.DemandPublication(); callback(); original.DemandPublication(); return; }
+        _originalWork.RunSynchronous(admitted =>
+        { BindOriginal(admitted, _generation); admitted.DemandPublication(); callback(); admitted.DemandPublication(); });
+    }
+    private void PublishOriginal(Action actualWrite)
+    { DemandOriginalPublication(); actualWrite(); DemandOriginalPublication(); }
+    private async Task PublishOriginalAsync(DesktopOriginalWorkLifetime.Original original, Action callback)
+    {
+        var actualDispatcher = Dispatcher.UIThread.InvokeAsync(() => _originalWork.RunSynchronous(callbackOriginal =>
+        {
+            callbackOriginal.BindPublicationGuard(() => original.IsPublicationCurrent);
+            original.DemandPublication(); callbackOriginal.DemandPublication();
+            callback();
+            callbackOriginal.DemandPublication(); original.DemandPublication();
+        })).GetTask();
+        await original.AwaitAsync(actualDispatcher);
+    }
+    private void PersistOriginalChildRetirement(HavenGenUiWhiteboard actualChild, Guid originalInstanceId,
+        string originalStateKey, JsonElement actualState)
+    {
+        var actualClose = actualChild.OriginalClose
+            ?? throw new InvalidOperationException("The actual child release has no published original close.");
+        bool HasOriginalChild() => _acquiredWhiteboards.Any(child => ReferenceEquals(child, actualChild)) &&
+            ReferenceEquals(actualChild.OriginalClose, actualClose);
+        void ApplyActualState()
+        {
+            if (!HasOriginalChild())
+                throw new InvalidOperationException("The released child is not this scene's retained original acquisition.");
+            // Source-created callback from the SAME child's stop, exact old instance
+            // and state key. This is cleanup, never new input or a replacement frame.
+            if (!_instances.ApplyPatch(new GenUiStatePatch(Guid.NewGuid(), originalInstanceId,
+                GenUiPatchOperation.Replace, "state", originalStateKey, actualState, DateTimeOffset.UtcNow)))
+                throw new InvalidOperationException("Original whiteboard retirement state was not acknowledged by its instance owner.");
+        }
+        if (_originalWork.OriginalClose is not null)
+            _originalWork.RunCloseCallback(ApplyActualState);
+        else
+            _originalWork.RunSynchronous(original =>
+            {
+                // A live-parent structural rebuild has no parent close. Admit the
+                // actual cleanup callback before its synchronous store notifications.
+                original.BindPublicationGuard(() => !_disposed && HasOriginalChild());
+                original.DemandPublication();
+                ApplyActualState();
+                // No normal/native publication follows the acknowledged old-state
+                // patch. Any notification/patch failure belongs to this real original.
+            });
+    }
+
+    private void QueueRebuildOriginal(GenUiDocument document)
+    {
+        var preceding = _pendingRebuild;
+        var generation = _generation;
+        var children = _whiteboards.Values.ToArray();
+        _ = _originalWork.RunAsync(async original =>
+        {
+            BindOriginal(original, generation);
+            var childFailures = new List<Exception>();
+            // This exact renderer original exists before any stop callback is entered.
+            foreach (var child in children)
+                try { child.RequestRetirement(); } catch (Exception cause) { Capture(childFailures, null, cause); original.Retain(cause); }
+            try
+            {
+                if (preceding is not null)
+                    try { await original.AwaitAsync(preceding); }
+                    catch (Exception cause) { original.Capture(preceding, cause); }
+                // Preceding renderer failure remains retained; independently inspect
+                // every actual child close before any physical old-tree removal.
+                foreach (var child in children)
+                {
+                    Task? close = null;
+                    try
+                    {
+                        close = child.OriginalClose ?? throw new InvalidOperationException("The captured whiteboard did not publish its original close.");
+                        await original.AwaitAsync(close);
+                    }
+                    catch (Exception cause) { Capture(childFailures, close, cause); original.Capture(close, cause); }
+                }
+                Throw(childFailures); // All actual children are independently joined, including failed siblings.
+                await PublishOriginalAsync(original, () =>
+                {
+                    original.DemandPublication();
+                    if (!ReferenceEquals(_document, document)) return;
+                    RebuildOriginalCore(document);
+                    foreach (var child in children) _acquiredWhiteboards.Remove(child);
+                });
+            }
+            finally
+            {
+                // The exact task remains in the original ledger even after this
+                // pending-publication pointer retires. No successful drain is inferred.
+                _ = Interlocked.CompareExchange(ref _pendingRebuild, null, original.Task);
+            }
+        }, actual => _pendingRebuild = actual);
+    }
+    public void RequestRetirement() => _originalWork.RequestRetirement();
+    internal void DemandOriginalExternalClose()
+    {
+        _originalWork.DemandExternalClose();
+        foreach (var child in _acquiredWhiteboards.ToArray()) child.DemandOriginalExternalClose();
+    }
+    public Task CloseAndDrainAsync()
+    { DemandOriginalExternalClose(); return _originalWork.CloseAndDrainAsync(); }
+    public void Dispose() => RequestRetirement();
+    public ValueTask DisposeAsync() => new(CloseAndDrainAsync());
+    private Task StopChildrenAsync() => Dispatcher.UIThread.InvokeAsync(() => _originalWork.RunCloseCallback(() =>
+    {
+        _instances.DocumentChanged -= OnDocumentChanged;
+        var errors = new List<Exception>();
+        foreach (var child in _acquiredWhiteboards.ToArray())
+            try { child.RequestRetirement(); } catch (Exception cause) { errors.Add(cause); }
+        if (errors.Count != 0) throw new AggregateException("Original generated whiteboard stops failed.", errors);
+    })).GetTask();
+    private async Task CleanupOriginalAsync()
+    {
+        var errors = new List<Exception>();
+        foreach (var child in _acquiredWhiteboards.ToArray())
+        {
+            try { child.RequestRetirement(); } catch (Exception cause) { Add(errors, cause); }
+            Task? close = null;
+            try
+            {
+                close = child.OriginalClose ?? throw new InvalidOperationException("The actual whiteboard close is unavailable.");
+                await close;
+            }
+            catch (Exception cause) { Capture(errors, close, cause); }
+        }
+        if (errors.Count != 0) Throw(errors);
+        var actualCleanup = Dispatcher.UIThread.InvokeAsync(() => _originalWork.RunCloseCallback(() =>
+        {
+            _disposed = true;
+            _whiteboards.Clear(); _acquiredWhiteboards.Clear(); _elements.Clear(); _components.Clear(); _inputs.Clear();
+        })).GetTask();
+        try { await actualCleanup; } catch (Exception cause) { Capture(errors, actualCleanup, cause); }
+        Throw(errors);
+    }
+    private static void Add(List<Exception> errors, Exception cause)
+    { if (!errors.Any(error => ReferenceEquals(error, cause))) errors.Add(cause); }
+    private static void Capture(List<Exception> errors, Task? actual, Exception cause)
+    {
+        if (actual?.Exception is { InnerExceptions.Count: > 0 } group)
+            foreach (var direct in group.InnerExceptions) Add(errors, direct);
+        else Add(errors, cause);
+    }
+    private static void Throw(List<Exception> errors)
+    {
+        if (errors.Count == 0) return;
+        if (errors.Count > 1 || errors[0] is OperationCanceledException)
+            throw new AggregateException("Original generated scene child or cleanup failed; physical tree retained.", errors);
+        ExceptionDispatchInfo.Capture(errors[0]).Throw();
+    }
+
 }

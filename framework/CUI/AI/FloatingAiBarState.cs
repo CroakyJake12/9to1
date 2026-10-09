@@ -15,6 +15,24 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
 {
     private CancellationTokenSource? _requestCancellation;
     private long _requestVersion;
+    private long _searchVersion;
+    private bool _disposed;
+    private readonly object _auditSync = new();
+    private readonly List<AppAiActionResult> _pendingAudits = [];
+    private bool _hasUnconfirmedActionAudit;
+    public bool HasUnconfirmedActionAudit { get { lock (_auditSync) return _hasUnconfirmedActionAudit; } }
+    private bool _unsupportedAudit;
+    public bool HasPendingActionAudit { get { lock (_auditSync) return _pendingAudits.Count > 0; } }
+    private void RetainAudit(AppAiActionResult result)
+    {
+        lock (_auditSync)
+        {
+            if (result.CompletionAuditPending) _hasUnconfirmedActionAudit = true;
+            if (result.AuditRecovery is null)
+            { if (result.CompletionAuditPending) _unsupportedAudit = true; return; }
+            if (!_pendingAudits.Any(item => ReferenceEquals(item.AuditRecovery, result.AuditRecovery))) _pendingAudits.Add(result);
+        }
+    }
 
     public FloatingAiBarMode Mode { get; private set; } = FloatingAiBarMode.Collapsed;
     public AppAiAccessMode AccessMode { get; private set; } = AppAiAccessMode.ReadOnly;
@@ -27,12 +45,41 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
         AppAiRequestState.Generating => "Thinking…",
         AppAiRequestState.WaitingForApproval => "Waiting for approval…",
         AppAiRequestState.ExecutingAction => "Applying an approved app action…",
-        AppAiRequestState.Completed => "Ready",
+        AppAiRequestState.Completed => HasUnconfirmedActionAudit ? "Owner outcome retained; Home audit pending" : "Ready",
         AppAiRequestState.Cancelled => "Stopped",
         AppAiRequestState.Failed => "Could not complete the request",
         _ => string.Empty
     };
-    public string Prompt { get; set; } = string.Empty;
+    public InvocationCompose Compose { get; } = new();
+    public string Prompt
+    {
+        get => Compose.Text;
+        set { Compose.SetText(value); Changed?.Invoke(this, EventArgs.Empty); }
+    }
+    public IReadOnlyList<InvocationSection> InvocationSections { get; private set; } = [];
+    public async ValueTask SearchInvocationsAsync(IInvocationCatalogue catalogue, int caret, CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        var version = Interlocked.Increment(ref _searchVersion);
+        Compose.UpdateCaret(caret);
+        var query = Compose.Query;
+        var text = Compose.Text;
+        var resources = await catalogue.SearchAsync(query, cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_disposed || version != Volatile.Read(ref _searchVersion) || text != Compose.Text || query != Compose.Query) return;
+        InvocationSections = Compose.Sections(resources);
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+    public void InsertInvocation(InvocationResource resource, int caret)
+    {
+        Compose.Insert(resource, caret);
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+    public void RemoveInvocation(string tokenId)
+    {
+        Compose.Remove(tokenId);
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
     public string Response { get; private set; } = string.Empty;
     public string? ContextLabel { get; private set; }
     public string? Error { get; private set; }
@@ -169,8 +216,16 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
 
     public async Task SubmitAsync(CancellationToken cancellationToken = default)
     {
-        var submittedPrompt = Prompt.Trim();
-        if (submittedPrompt.Length == 0)
+        IReadOnlyList<InvocationToken> invocations;
+        try { invocations = Compose.Resolve(); }
+        catch (InvalidOperationException exception)
+        {
+            Error = exception.Message;
+            SetMode(FloatingAiBarMode.Error);
+            return;
+        }
+        var submittedPrompt = Prompt;
+        if (string.IsNullOrWhiteSpace(submittedPrompt))
         {
             Error = "Enter a request first.";
             SetMode(FloatingAiBarMode.Error);
@@ -193,8 +248,10 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
                 submittedPrompt,
                 Guid.NewGuid().ToString("N"),
                 AccessMode,
-                token).ConfigureAwait(false))
+                token,
+                invocations).ConfigureAwait(false))
             {
+                if (chunk.ActionObservation is { } observed) RetainAudit(observed);
                 if (version != Volatile.Read(ref _requestVersion))
                     return;
 
@@ -228,6 +285,76 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
         }
     }
 
+    /// <summary>Executes or retries the host's retained exact typed request through the same coordinator.
+    /// This does not ask a model to regenerate a plan and never treats a copied token as an owner grant.</summary>
+    public async ValueTask<AppAiActionResult> ExecuteActionAsync(AppAiActionRequest request, CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this); ArgumentNullException.ThrowIfNull(request);
+        if (AccessMode != AppAiAccessMode.Write)
+            return AppAiActionResult.Rejected("Read-only mode does not allow app actions.", "read-only-mode");
+        var captured = request with { Arguments = request.Arguments.Clone(), ApprovalToken = null, AccessMode = AccessMode };
+        Cancel();
+        var version = Interlocked.Increment(ref _requestVersion);
+        var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        _requestCancellation = cancellation;
+        RequestState = AppAiRequestState.ExecutingAction; Error = null; SetMode(FloatingAiBarMode.Review);
+        try
+        {
+            var result = await coordinator.ExecuteAsync(captured, cancellation.Token).ConfigureAwait(false);
+            RetainAudit(result); // retain even if this view was replaced while the owner finished
+            if (version != Volatile.Read(ref _requestVersion)) return result;
+            Response = result.Summary;
+            if (result.ErrorCode == "approval-pending")
+            { RequestState = AppAiRequestState.WaitingForApproval; SetMode(FloatingAiBarMode.Review); }
+            else if (result.Succeeded)
+            { RequestState = AppAiRequestState.Completed; SetMode(FloatingAiBarMode.Ready); }
+            else
+            { Error = result.Summary; RequestState = AppAiRequestState.Failed; SetMode(FloatingAiBarMode.Error); }
+            return result;
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        {
+            if (version == Volatile.Read(ref _requestVersion))
+            { RequestState = AppAiRequestState.Cancelled; SetMode(FloatingAiBarMode.Ready); }
+            throw;
+        }
+        catch
+        {
+            if (version == Volatile.Read(ref _requestVersion))
+            { Error = "The app action could not be completed. Inspect its current result before retrying."; RequestState = AppAiRequestState.Failed; SetMode(FloatingAiBarMode.Error); }
+            throw;
+        }
+        finally
+        {
+            Interlocked.CompareExchange(ref _requestCancellation, null, cancellation);
+            cancellation.Dispose();
+        }
+    }
+
+    /// <summary>Retries only an already-issued completion audit. Never executes, verifies, or begins an action.</summary>
+    public async ValueTask<AppAiCompletionObservation> FinishActionAuditAsync(CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        var version = Volatile.Read(ref _requestVersion);
+        AppAiActionResult observed;
+        lock (_auditSync) observed = _pendingAudits.FirstOrDefault()
+            ?? throw new InvalidOperationException("This bar has no retained completion audit recovery.");
+        var recovery = observed.AuditRecovery!;
+        var completion = await recovery.FinishAsync(cancellationToken).ConfigureAwait(false);
+        if (completion.AuditRecorded) lock (_auditSync)
+        {
+            _pendingAudits.Remove(observed);
+            // Unsupported legacy audit transports have no owned handle and remain explicitly unconfirmed.
+            _hasUnconfirmedActionAudit = _pendingAudits.Count > 0 || _unsupportedAudit;
+        }
+        // Always acknowledge actual durable recovery, but never overwrite a newer or disposed view.
+        if (_disposed || version != Volatile.Read(ref _requestVersion)) return completion;
+        // Audit recovery updates audit availability only. The retained outcome must not replace
+        // any response/error belonging to another request, even one started before Finish.
+        Changed?.Invoke(this, EventArgs.Empty);
+        return completion;
+    }
+
     public void Cancel()
     {
         Interlocked.Increment(ref _requestVersion);
@@ -242,7 +369,7 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
             SetMode(FloatingAiBarMode.Ready);
     }
 
-    public void Dispose() => Cancel();
+    public void Dispose() { _disposed = true; Interlocked.Increment(ref _searchVersion); Cancel(); }
 
     private void SetMode(FloatingAiBarMode mode)
     {

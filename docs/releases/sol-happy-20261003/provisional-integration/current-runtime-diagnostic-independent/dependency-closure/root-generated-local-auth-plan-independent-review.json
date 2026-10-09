@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "C6 independent generated local account execution preflight",
+  "sourceCommit": "df547b5c7492050dc2ad2bdd99e250358cf444fc",
+  "bindingSha256": "7b59da2037141b92ef17215fd36ba0805588247a39ebdf4f3cc107a230299862",
+  "planSha256": "656779d23dd7e6466027c12a668f5db99549a84610d2f9c93c703eff6e135fd9",
+  "invocationSha256": "5f99d1c99ca4b0ae6844029a72e0ff646101f3b07f1b37cb9e711dca07f9486c",
+  "originalPublicationTuple": "Exact original df inner ZIP/manifest/seal/catalog body identity retained; independently audited separately",
+  "localManifest": "Whole parsed original manifest equal except named assets publishRoot; all285 extracted actual asset size/SHA exact",
+  "sourceRunnerContractHost": "Exact reviewed frozen current bodies",
+  "planPinsReadback": 5370,
+  "issuerPrivateManifestAndTLSKeyContents": "NOT_READ",
+  "tlsKeyMetadataModeOwnerIdentity": "PASS; metadata only",
+  "argvCustodianAndBounds": "Existing unchanged browser custodian + exactNode/currentrunner/binding/source + only actualRootREADY path;240seconds/192000000bytes",
+  "diagnosticEnvironment": "DEBUG/PWDEBUG/NODE_DEBUG/NODE_OPTIONS explicitly empty before Node spawn",
+  "verdict": "ACK root sole actual prepared account browser invocation",
+  "qualifications": [
+    "Root original issuer TTY88463 is separate and must remain held; issuer cleanup requires stop newline on that actual session and strict issuer closure readback.",
+    "Browser family caption only does not prove issuer custody; actual issuer/browser outcomes and both terminal closures still pending.",
+    "No private fixture/credentials/TLS key contents read or actual browser/issuer work executed by C6.",
+    "Complete pinned dependencies are verified actual files; intended readonly linkage is not an enforced readonly mount.",
+    "No global/full-app/provider/.NETRSA/auth-revision or installedHome acceptance inferred."
+  ]
+}

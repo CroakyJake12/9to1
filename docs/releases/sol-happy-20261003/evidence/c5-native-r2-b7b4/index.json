@@ -1,0 +1,137 @@
+{
+  "candidate": "b7b4b4ee5cf7b77e75e1bdca0b4a48a22c7ea95b",
+  "status": "QUALIFIED_E0C_TYPES_SOURCE_ACK_RECEIVING_ADOPTION_BLOCKED",
+  "sourceBindings": [
+    {
+      "path": "9to1 Workspace/Sites/Hosting/R2NativeSiteArtifactReader.cs",
+      "bytes": 6714,
+      "sha256": "d82c24a3ee745cecbc5457d685a0b38cf9732d15f0f2b90d55a1f914236ed749"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Tests/R2NativeSiteArtifactReaderTests.cs",
+      "bytes": 5514,
+      "sha256": "c71db97aa1cc7217dfbfca79680609b556f4669158d5e5432a774d4c951bea3b"
+    }
+  ],
+  "review": "Complete reader/test successor and semantic evidence read; originalreader/contracts reviewedpreviousc218. Nullartifact and blankartifactsource/config reject beforeHTTP. Expanded controls cover redirectstatus, foreignfinalURI, encodedresponse, truncated/extrabody and precancelled/null admissions.",
+  "independentResults": {
+    "exactSuccessor": {
+      "exit": 0,
+      "pass": 21,
+      "fail": 0
+    },
+    "originalBlankBothProbesOnCorrectedSource": {
+      "exit": 0,
+      "pass": 14,
+      "fail": 0
+    },
+    "isolatedHashOmission": {
+      "exit": 1,
+      "pass": 19,
+      "fail": 2
+    }
+  },
+  "originalFailures": "Preserved unchanged tracked c5-native-r2-c218/index.json (commit813d119f).",
+  "command": "DOTNET_CLI_HOME=/workspace/team-c/evidence/c5/dotnet-home NUGET_PACKAGES=/workspace/.tools/nuget /workspace/.tools/dotnet/dotnet test PROJECT --logger trx --results-directory RESULTS",
+  "closure": "Eight complete e0c sourcefiles copiedbyteexact into localharness; no stubs/duplicatedpublictype declarations. ActualNativeSiteBuildPipeline owns SiteArtifactManifest/SiteOutputFile. Reader adds no modelcontract.",
+  "receivingGate": "Actualroot288d/0bf lacks those declarations. C1 ownerclosure26fa review and exactnormalA63 five-sourceguardedstore/authoring/pipeline sourceclosure ACK required before root adoption; these tests do not establish receivingroot compilecompatibility.",
+  "transportQualification": "FakeHTTP local tests only; defaultSocketsHttpHandler disables redirects beforehop. Injectedhandler must enforce samebeforehop policy. ForeignfinalURI rejection alone cannot prevent redirected credential disclosure.",
+  "acceptanceLimits": [
+    "No realR2/provider activation, wholeSites build, secret-scanner/sourceexport/currentprincipal/CAS/quota integration or runtime serving acceptance.",
+    "Verifies listed paths only, not absenceofunlisted remote objects.",
+    "SafeASCII matchescurrentnativeproducer route/index output; genericassets notclaimed.",
+    "Explicitendpoint/prefixmap and positivebytecaps are required owner inputs, not authorisation grants."
+  ],
+  "payloads": [
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-b7b4/positive.log",
+      "bytes": 733,
+      "sha256": "4083e296866c95f7c133fbb8206a51650aa182ab73b35e543d2ae6cfa9a8b1a5"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-b7b4/positive.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-b7b4/positive.trx",
+      "bytes": 32822,
+      "sha256": "bfcc44acd2e7541fc9e838ccae0d84eb00a166e10462d04d9f2c82efe1c135b4"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-b7b4/positive/R2NativeSiteArtifactReader.cs",
+      "bytes": 6714,
+      "sha256": "d82c24a3ee745cecbc5457d685a0b38cf9732d15f0f2b90d55a1f914236ed749"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-b7b4/positive/R2NativeSiteArtifactReaderTests.cs",
+      "bytes": 5514,
+      "sha256": "c71db97aa1cc7217dfbfca79680609b556f4669158d5e5432a774d4c951bea3b"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-b7b4/positive/ActualNativeR2.Tests.csproj",
+      "bytes": 718,
+      "sha256": "c30d5c48bcb3ae0804f572d5955eeb937780e9919a6eb32d26b959c507f516a4"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-b7b4/original-blank-probes.log",
+      "bytes": 798,
+      "sha256": "71c849655de707f92ec3cad452dcea90fd643df385f100e47c53e48949258875"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-b7b4/original-blank-probes.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-b7b4/original-blank-probes.trx",
+      "bytes": 23024,
+      "sha256": "18f6fcbe9c9bb7cafe68b0afe61848f17d861bbbc255820852116ac14077d6b8"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-b7b4/original-blank-probes/R2NativeSiteArtifactReader.cs",
+      "bytes": 6714,
+      "sha256": "d82c24a3ee745cecbc5457d685a0b38cf9732d15f0f2b90d55a1f914236ed749"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-b7b4/original-blank-probes/R2NativeSiteArtifactReaderTests.cs",
+      "bytes": 3433,
+      "sha256": "847f0cf4695fe9aabdcf6d600251bbce19dda66d6816586a0923852062299e31"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-b7b4/original-blank-probes/ActualNativeR2.Tests.csproj",
+      "bytes": 718,
+      "sha256": "c30d5c48bcb3ae0804f572d5955eeb937780e9919a6eb32d26b959c507f516a4"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-b7b4/hash-omission.log",
+      "bytes": 3987,
+      "sha256": "a682e789eeca54c08c7f7e30bbb0f19abba86d3651e4b7185ed54d93969d717f"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-b7b4/hash-omission.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-b7b4/hash-omission.trx",
+      "bytes": 39899,
+      "sha256": "2b6c41721fa842ca1ad8140f258c680815b1092a63d17cf3e92a1abf15514989"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-b7b4/hash-omission/R2NativeSiteArtifactReader.cs",
+      "bytes": 6672,
+      "sha256": "372d21fe6140f516dd4e058ae82a44089e74a8024e529d77e2991c8e142ee5d5"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-b7b4/hash-omission/R2NativeSiteArtifactReaderTests.cs",
+      "bytes": 5514,
+      "sha256": "c71db97aa1cc7217dfbfca79680609b556f4669158d5e5432a774d4c951bea3b"
+    },
+    {
+      "path": "docs/releases/sol-happy-20261003/evidence/c5-native-r2-b7b4/hash-omission/ActualNativeR2.Tests.csproj",
+      "bytes": 718,
+      "sha256": "c30d5c48bcb3ae0804f572d5955eeb937780e9919a6eb32d26b959c507f516a4"
+    }
+  ]
+}

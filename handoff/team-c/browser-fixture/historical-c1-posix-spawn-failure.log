@@ -1,0 +1,12 @@
+Local browser fixture failed: Wrangler exited before readiness.
+Fixture custody HELD: NotImplementedError: posix_spawn: setsid unavailable on this platform
+
+file:///workspace/team-c/c2-browser-fixture/cloud/cake-id-auth/tests/browser-fixture.mjs:82
+    throw new Error("Custodian exit/drain unproven; fixture state retained");
+          ^
+
+Error: Custodian exit/drain unproven; fixture state retained
+    at stopWorker (file:///workspace/team-c/c2-browser-fixture/cloud/cake-id-auth/tests/browser-fixture.mjs:82:11)
+    at async file:///workspace/team-c/c2-browser-fixture/cloud/cake-id-auth/tests/browser-fixture.mjs:238:3
+
+Node.js v24.19.0

@@ -1,0 +1,29 @@
+{
+  "recordedUTC": "2026-10-04T11:49:11.276055+00:00",
+  "outcome": "FAILED",
+  "testedSource": "7f0b1dde7af29dec421d6c0bffc099b3e008e06a",
+  "deployedVersion": "713c1695-7e21-489b-bc97-906450972cfa",
+  "command": [
+    "node",
+    "--use-env-proxy",
+    "--use-system-ca",
+    "deployment/https/authenticated.mjs",
+    "PRIVATE_FIXTURE.json",
+    "NEW_RESULT.json"
+  ],
+  "exit": 1,
+  "failedStage": "authenticated.mjs:98 genuine Bearer GET /api/account/current",
+  "assertion": {
+    "actualHTTPStatus": 401,
+    "expectedHTTPStatus": 200
+  },
+  "orderedPrecedingStages": "Actual public PKCE exchange and JOSE signature/issuer/audience/sub/nonce/session claim assertions reached before this failure; no total count inferred",
+  "laterStages": "Profile CAS, refresh, cross-account isolation, revocation and signout NOT_RUN",
+  "evidencePreacquired": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "privateDiagnostics": "Retained exclusively outside Git; no body/password/token/cookie/code/state/key published",
+  "restoration": "Exact fixture rows cleaned after known failure; closed exposure and independent count-only readback confirm zero user/client/session/token/consent/verification rows; actual issuer keys/resource and limiter counter preserved",
+  "causeAtRecordTime": "Same-Worker global JWKS fetch routing is a documented hypothesis; reviewed configuration-only controlled rerun pending"
+}

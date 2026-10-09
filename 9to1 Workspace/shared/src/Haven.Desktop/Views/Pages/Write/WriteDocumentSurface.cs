@@ -253,28 +253,30 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
         var block = layout.Block;
         var text = TextOf(block);
         var rect = Absolute(layout.ContentRect);
-        var first = block.Runs.FirstOrDefault();
-        var family = first?.FontFamily ?? (block.Kind == NotesBlockKind.Code ? "Cascadia Mono" : "Montserrat");
-        var fontSize = layout.FontSize;
-        var weight = first?.Bold == true || block.Kind == NotesBlockKind.Heading ? 700 : 400;
-        var fullLayout = new HavenTextLayout(text, family, fontSize, weight, rect.Width);
+        var paragraph = layout.Paragraph!;
+        var origin = new HavenPoint(rect.X, rect.Y);
+        var fullLayout = ParagraphDescriptor(paragraph, origin, rect.Width);
         if (_editor.SelectionForBlock(block.Id) is { } selected && selected.End > selected.Start)
             context.Add(new HavenTextSelectionCommand(rect, fullLayout, selected.Start, selected.End - selected.Start, new HavenSolidBrush(95, 57, 110, 220), opacity));
 
-        if (block.Runs.Count <= 1)
+        if (paragraph.Runs.Count <= 1)
         {
-            var run = first ?? new NotesTextRun { Text = text, FontFamily = family, FontSize = fontSize / _zoom, Bold = weight >= 700 };
-            var background = Colour(run.Background, transparentFallback: true);
-            if (background is HavenSolidBrush { A: > 0 }) context.Add(new HavenFillRoundedRectCommand(rect, background, 1, opacity));
-            context.Add(new HavenTextCommand(rect, fullLayout, DocumentTextColour(run.Foreground), opacity));
+            context.Add(new HavenTextCommand(rect, fullLayout, paragraph.Runs[0].Foreground, opacity));
         }
         else
         {
-            var offset = 0;
-            foreach (var run in block.Runs)
+            foreach (var segment in paragraph.Segments)
             {
-                DrawRunSegments(context, rect, run.Text, run, layout, offset, opacity);
-                offset += run.Text.Length;
+                var run = paragraph.Runs[segment.RunIndex];
+                var bounds = segment.Bounds;
+                var segmentRect = new HavenRect(origin.X + bounds.X, origin.Y + bounds.Y, bounds.Width, bounds.Height);
+                var descriptor = new HavenTextLayout(text.Substring(segment.Start, segment.Length), run.FontFamily,
+                    run.FontSize, run.FontWeight, bounds.Width, false, run.Italic)
+                {
+                    Paragraph = paragraph, ParagraphOrigin = origin,
+                    ParagraphStart = segment.Start, ParagraphLength = segment.Length
+                };
+                context.Add(new HavenTextCommand(segmentRect, descriptor, run.Foreground, opacity));
             }
         }
 
@@ -287,46 +289,6 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
                 CaretIndex = caret
             });
         }
-    }
-
-    private void DrawRunSegments(HavenDrawingContext context, HavenRect rect, string runText, NotesTextRun run, BlockLayout layout, int globalStart, double opacity)
-    {
-        if (runText.Length == 0) return;
-        var line = globalStart == 0 ? 0 : VisualPosition(TextOf(layout.Block)[..Math.Min(globalStart, TextOf(layout.Block).Length)], layout.Columns).Line;
-        var column = globalStart == 0 ? 0 : VisualPosition(TextOf(layout.Block)[..Math.Min(globalStart, TextOf(layout.Block).Length)], layout.Columns).Column;
-        var buffer = new System.Text.StringBuilder();
-        var segmentColumn = column;
-        void Flush()
-        {
-            if (buffer.Length == 0) return;
-            var text = buffer.ToString();
-            var x = rect.X + LineAlignmentOffset(layout, line) + segmentColumn * layout.CharacterWidth;
-            var y = rect.Y + line * layout.LineHeight;
-            var width = Math.Max(layout.CharacterWidth, text.Length * layout.CharacterWidth);
-            var segmentRect = new HavenRect(x, y, Math.Min(width, Math.Max(layout.CharacterWidth, rect.Right - x)), layout.LineHeight);
-            var background = Colour(run.Background, transparentFallback: true);
-            if (background is HavenSolidBrush { A: > 0 }) context.Add(new HavenFillRoundedRectCommand(segmentRect, background, 1, opacity));
-            var foreground = DocumentTextColour(run.Foreground);
-            context.Add(new HavenTextCommand(segmentRect, new HavenTextLayout(text, string.IsNullOrWhiteSpace(run.FontFamily) ? "Montserrat" : run.FontFamily, Math.Max(8, run.FontSize * _zoom), run.Bold ? 700 : 400, segmentRect.Width, false, run.Italic), foreground, opacity));
-            if (run.Underline) context.Add(new HavenLineCommand(new HavenPoint(segmentRect.X, segmentRect.Bottom - 2), new HavenPoint(segmentRect.Right, segmentRect.Bottom - 2), new HavenPen(foreground, 1), opacity));
-            if (run.StrikeThrough) context.Add(new HavenLineCommand(new HavenPoint(segmentRect.X, segmentRect.Y + segmentRect.Height * .55), new HavenPoint(segmentRect.Right, segmentRect.Y + segmentRect.Height * .55), new HavenPen(foreground, 1), opacity));
-            buffer.Clear();
-        }
-        foreach (var character in runText)
-        {
-            if (character == '\n')
-            {
-                Flush(); line++; column = 0; segmentColumn = 0; continue;
-            }
-            if (column >= layout.Columns)
-            {
-                Flush(); line++; column = 0; segmentColumn = 0;
-            }
-            if (buffer.Length == 0) segmentColumn = column;
-            buffer.Append(character);
-            column++;
-        }
-        Flush();
     }
 
     private void DrawList(HavenDrawingContext context, BlockLayout layout, double opacity)
@@ -361,15 +323,17 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
             var selected = _activeTableCellId == cell.Id;
             context.Add(new HavenStrokeRoundedRectCommand(cellRect, new HavenPen(selected ? new HavenSolidBrush(210, 57, 110, 220) : new HavenSolidBrush(80, 92, 103, 117), selected ? 2 : 1), 0, opacity));
             var textRect = new HavenRect(cellRect.X + 6, cellRect.Y + 4, Math.Max(1, cellRect.Width - 12), Math.Max(1, cellRect.Height - 8));
-            var weight = cellLayout.Row == 0 && table.HeaderRow ? 600 : 400;
-            var textLayout = new HavenTextLayout(cell.Text, "Montserrat", 11 * _zoom, weight, textRect.Width, true);
+            var paragraph = ShapeTableCell(cellLayout);
+            var textOrigin = new HavenPoint(textRect.X, textRect.Y + Math.Max(0, (textRect.Height - paragraph.Size.Height) / 2));
+            var textLayout = ParagraphDescriptor(paragraph, textOrigin, textRect.Width);
             if (_tableCellSelection is { } tableSelection && tableSelection.CellId == cell.Id && tableSelection.Length > 0)
                 context.Add(new HavenTextSelectionCommand(textRect, textLayout, tableSelection.Start, tableSelection.Length, new HavenSolidBrush(95, 57, 110, 220), opacity));
             context.Add(new HavenTextCommand(textRect, textLayout, new HavenSolidBrush(255, 35, 42, 52), opacity));
             if (State.HasFlag(HavenElementState.Focused) && selected)
             {
                 var caret = Math.Clamp(_tableCellCaret, 0, cell.Text.Length);
-                context.Add(new HavenCaretCommand(textRect, new HavenTextLayout(cell.Text[..caret], "Montserrat", 11 * _zoom, weight, textRect.Width, true), new HavenSolidBrush(255, 25, 30, 36), opacity));
+                context.Add(new HavenCaretCommand(textRect, textLayout, new HavenSolidBrush(255, 25, 30, 36), opacity)
+                { FullLayout = textLayout, CaretIndex = caret });
             }
         }
     }
@@ -400,16 +364,30 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
             var measure = Measure(block, contentWidth);
             if (paginated && cursorY + measure.Height > pageHeight - marginBottom && cursorY > marginTop + 2)
             {
-                pageY += pageHeight + pageGap;
+                var occupiedEnd = pageY + cursorY;
+                do { pageY += pageHeight + pageGap; }
+                while (pageY + marginTop < occupiedEnd);
                 cursorY = marginTop;
-                _pages.Add(new HavenRect(pageX, pageY, pageWidth, pageHeight));
+                if (!_pages.Any(page => page.Y == pageY))
+                    _pages.Add(new HavenRect(pageX, pageY, pageWidth, pageHeight));
             }
             var left = pageX + marginLeft + measure.Indent;
             var width = Math.Max(80, contentWidth - measure.Indent);
             var rect = new HavenRect(left, pageY + cursorY, width, measure.Height);
             var content = new HavenRect(rect.X, rect.Y + measure.TopInset, rect.Width, Math.Max(1, rect.Height - measure.TopInset));
-            _layouts.Add(new BlockLayout(block, rect, content, measure.FontSize, measure.LineHeight, measure.CharacterWidth, measure.Columns));
+            _layouts.Add(new BlockLayout(block, rect, content, measure.Paragraph, measure.Table));
             cursorY += measure.Height + 7 * _zoom;
+            if (paginated)
+            {
+                // An atomic wrapped block can be taller than one page. Reserve its actual
+                // occupied extent so neither the canvas nor a following block truncates it.
+                var coverageY = _pages[^1].Y;
+                while (coverageY + pageHeight < rect.Bottom + marginBottom)
+                {
+                    coverageY += pageHeight + pageGap;
+                    _pages.Add(new HavenRect(pageX, coverageY, pageWidth, pageHeight));
+                }
+            }
         }
 
         if (!paginated)
@@ -424,26 +402,23 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
 
     private MeasureResult Measure(NotesBlock block, double width)
     {
-        var first = block.Runs.FirstOrDefault();
-        var baseSize = Math.Max(9, (first?.FontSize ?? (block.Kind == NotesBlockKind.Heading ? 24 : 14)) * _zoom);
-        var charWidth = Math.Max(4, baseSize * .56);
         var indent = Math.Clamp(block.Paragraph.IndentLeft * _zoom, 0, width * .65);
         var available = Math.Max(80, width - indent);
-        var columns = Math.Max(1, (int)Math.Floor(available / charWidth));
-        var lineHeight = Math.Max(14, baseSize * 1.35 * Math.Clamp(block.Paragraph.LineSpacing, .7, 4));
+        var paragraph = IsTextBlock(block) ? ShapeTextBlock(block, available) : null;
+        var table = block.Kind == NotesBlockKind.Table ? MeasureTable(block, available) : null;
         var topInset = Math.Max(0, block.Paragraph.SpaceBefore * _zoom);
         var height = block.Kind switch
         {
-            NotesBlockKind.Paragraph or NotesBlockKind.Heading or NotesBlockKind.Quote or NotesBlockKind.Code => Math.Max(lineHeight, CountVisualLines(TextOf(block), columns) * lineHeight) + topInset + Math.Max(4, block.Paragraph.SpaceAfter * _zoom),
+            NotesBlockKind.Paragraph or NotesBlockKind.Heading or NotesBlockKind.Quote or NotesBlockKind.Code => paragraph!.Size.Height + topInset + Math.Max(4, block.Paragraph.SpaceAfter * _zoom),
             NotesBlockKind.List => Math.Max(34 * _zoom, (block.List?.Items.Count ?? 1) * 27 * _zoom + 4 * _zoom),
-            NotesBlockKind.Table => Math.Max(50 * _zoom, (block.Table?.Rows.Count ?? 1) * 42 * _zoom),
+            NotesBlockKind.Table => table!.Height + topInset,
             NotesBlockKind.Image or NotesBlockKind.Audio or NotesBlockKind.Video => Math.Clamp((block.Media?.Height ?? 240) * _zoom, 120 * _zoom, 380 * _zoom) + (string.IsNullOrWhiteSpace(block.Media?.Caption) ? 0 : 28 * _zoom),
             NotesBlockKind.Shape => 180 * _zoom,
             NotesBlockKind.Equation => 70 * _zoom,
             NotesBlockKind.Divider => 18 * _zoom,
             _ => 54 * _zoom
         };
-        return new MeasureResult(height, topInset, baseSize, lineHeight, charWidth, columns, indent);
+        return new MeasureResult(height, topInset, indent, paragraph, table);
     }
 
     private WriteDocumentPosition? HitTextPosition(HavenPoint point, bool nearest = false)
@@ -453,12 +428,8 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
         var layout = textLayouts.LastOrDefault(value => value.ContentRect.Contains(point));
         if (layout is null && nearest) layout = textLayouts.OrderBy(value => DistanceToRectY(point.Y, value.ContentRect)).First();
         if (layout is null) return null;
-        var localY = Math.Clamp(point.Y - layout.ContentRect.Y, 0, Math.Max(0, layout.ContentRect.Height));
-        var line = Math.Max(0, (int)Math.Floor(localY / Math.Max(1, layout.LineHeight)));
-        var alignmentOffset = LineAlignmentOffset(layout, line);
-        var localX = Math.Max(0, point.X - layout.ContentRect.X - alignmentOffset);
-        var column = Math.Max(0, (int)Math.Round(localX / Math.Max(1, layout.CharacterWidth)));
-        return new WriteDocumentPosition(layout.Block.Id, OffsetForVisualPosition(TextOf(layout.Block), layout.Columns, line, column));
+        return new WriteDocumentPosition(layout.Block.Id, layout.Paragraph!.HitTest(
+            new HavenPoint(point.X - layout.ContentRect.X, point.Y - layout.ContentRect.Y)));
     }
 
     private bool MoveVertical(int direction, bool extend)
@@ -468,11 +439,11 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
         var caret = _editor.DocumentCaret;
         var layout = _layouts.FirstOrDefault(value => value.Block.Id == caret.BlockId);
         if (layout is null || !IsTextBlock(layout.Block)) return false;
-        var pos = VisualPosition(TextOf(layout.Block)[..Math.Clamp(caret.Offset, 0, TextOf(layout.Block).Length)], layout.Columns);
-        var targetLine = pos.Line + direction;
-        if (targetLine >= 0 && targetLine < CountVisualLines(TextOf(layout.Block), layout.Columns))
+        var paragraph = layout.Paragraph!;
+        var targetLine = paragraph.LineIndex(caret.Offset) + direction;
+        if (targetLine >= 0 && targetLine < paragraph.Lines.Count)
         {
-            _editor.SetDocumentCaret(layout.Block.Id, OffsetForVisualPosition(TextOf(layout.Block), layout.Columns, targetLine, pos.Column), extend);
+            _editor.SetDocumentCaret(layout.Block.Id, paragraph.NavigateVertical(caret.Offset, direction), extend);
             SelectionChanged?.Invoke(this, EventArgs.Empty); Invalidate(); return true;
         }
         var textLayouts = _layouts.Where(value => IsTextBlock(value.Block)).ToArray();
@@ -480,67 +451,12 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
         var target = index + direction;
         if (target < 0 || target >= textLayouts.Length) return false;
         var next = textLayouts[target];
-        var nextLine = direction < 0 ? Math.Max(0, CountVisualLines(TextOf(next.Block), next.Columns) - 1) : 0;
-        _editor.SetDocumentCaret(next.Block.Id, OffsetForVisualPosition(TextOf(next.Block), next.Columns, nextLine, pos.Column), extend);
+        var nextParagraph = next.Paragraph!;
+        var nextLine = nextParagraph.Lines[direction < 0 ? nextParagraph.Lines.Count - 1 : 0];
+        var position = paragraph.CaretRect(caret.Offset);
+        _editor.SetDocumentCaret(next.Block.Id, nextParagraph.HitTest(new HavenPoint(position.X,
+            nextLine.Bounds.Y + nextLine.Bounds.Height / 2)), extend);
         SelectionChanged?.Invoke(this, EventArgs.Empty); Invalidate(); return true;
-    }
-
-    private double LineAlignmentOffset(BlockLayout layout, int line)
-    {
-        var alignment = layout.Block.Paragraph.Alignment;
-        if (alignment is not (NotesTextAlignment.Center or NotesTextAlignment.Right)) return 0;
-        var text = TextOf(layout.Block);
-        var length = VisualLineLength(text, layout.Columns, line);
-        var spare = Math.Max(0, layout.ContentRect.Width - length * layout.CharacterWidth);
-        return alignment == NotesTextAlignment.Center ? spare / 2 : spare;
-    }
-
-    private static int CountVisualLines(string text, int columns)
-    {
-        if (text.Length == 0) return 1;
-        var position = VisualPosition(text, columns);
-        return position.Line + 1;
-    }
-
-    private static (int Line, int Column) VisualPosition(string text, int columns)
-    {
-        var line = 0; var column = 0; columns = Math.Max(1, columns);
-        foreach (var character in text)
-        {
-            if (character == '\n') { line++; column = 0; continue; }
-            column++;
-            if (column >= columns) { line++; column = 0; }
-        }
-        return (line, column);
-    }
-
-    private static int OffsetForVisualPosition(string text, int columns, int targetLine, int targetColumn)
-    {
-        columns = Math.Max(1, columns); targetLine = Math.Max(0, targetLine); targetColumn = Math.Max(0, targetColumn);
-        var line = 0; var column = 0;
-        for (var index = 0; index < text.Length; index++)
-        {
-            if (line == targetLine && column >= targetColumn) return index;
-            if (text[index] == '\n') { if (line == targetLine) return index; line++; column = 0; continue; }
-            column++;
-            if (column >= columns) { line++; column = 0; }
-            if (line > targetLine) return index + 1;
-        }
-        return text.Length;
-    }
-
-    private static int VisualLineLength(string text, int columns, int targetLine)
-    {
-        var count = 0; var line = 0; var column = 0;
-        foreach (var character in text)
-        {
-            if (character == '\n') { if (line == targetLine) return count; line++; column = 0; count = 0; continue; }
-            if (line == targetLine) count++;
-            column++;
-            if (column >= columns) { if (line == targetLine) return count; line++; column = 0; count = 0; }
-            if (line > targetLine) break;
-        }
-        return count;
     }
 
     private HavenRect Absolute(HavenRect local) => new(Bounds.X + local.X, Bounds.Y + local.Y, local.Width, local.Height);
@@ -569,6 +485,6 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
         return Colour(normalized);
     }
 
-    private sealed record BlockLayout(NotesBlock Block, HavenRect Rect, HavenRect ContentRect, double FontSize, double LineHeight, double CharacterWidth, int Columns);
-    private readonly record struct MeasureResult(double Height, double TopInset, double FontSize, double LineHeight, double CharacterWidth, int Columns, double Indent);
+    private sealed record BlockLayout(NotesBlock Block, HavenRect Rect, HavenRect ContentRect, HavenParagraphLayout? Paragraph, MeasuredTable? Table);
+    private readonly record struct MeasureResult(double Height, double TopInset, double Indent, HavenParagraphLayout? Paragraph, MeasuredTable? Table);
 }

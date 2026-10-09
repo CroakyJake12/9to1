@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
@@ -30,6 +31,9 @@ public sealed partial class WritePage : UserControl, IDisposable
     private IReadOnlyList<NotesDocumentSummary> _documents = [];
     private int _documentIndex;
     private int _saveRunning;
+    private long _editGeneration;
+    private bool _closePreparing;
+    private static readonly JsonSerializerOptions DocumentJson = new(JsonSerializerDefaults.Web);
     private bool _initialized;
     private bool _busy;
     private bool _dirty;
@@ -99,7 +103,7 @@ public sealed partial class WritePage : UserControl, IDisposable
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        if (_initialized || _disposed)
+        if (_initialized || _disposed || _closePreparing)
             return;
 
         _initialized = true;
@@ -149,6 +153,7 @@ public sealed partial class WritePage : UserControl, IDisposable
         string reason = "Manual save",
         CancellationToken cancellationToken = default)
     {
+        if (_disposed) return false;
         if (Document is null || (!_dirty && !Document.Recovery.HasUnsavedRecovery))
             return true;
 
@@ -157,23 +162,39 @@ public sealed partial class WritePage : UserControl, IDisposable
 
         try
         {
-            if (string.IsNullOrWhiteSpace(Document.Title))
+            var document = Document;
+            if (string.IsNullOrWhiteSpace(document.Title))
             {
-                Document.Title = "Untitled document";
-                _route.SetTitleFromModel(Document.Title);
+                document.Title = "Untitled document";
+                _route.SetTitleFromModel(document.Title);
             }
 
-            var result = await _repository.SaveAsync(Document, reason, cancellationToken);
-            Document.Version = result.Version;
-            Document.Recovery.HasUnsavedRecovery = false;
-            _dirty = false;
+            // The repository owns this submitted snapshot. Later retained edits
+            // keep their own content and remain dirty against the acknowledged revision.
+            var generation = _editGeneration;
+            var snapshot = JsonSerializer.Deserialize<NotesDocument>(
+                JsonSerializer.Serialize(document, DocumentJson), DocumentJson)
+                ?? throw new InvalidDataException("The Write document could not be snapshotted.");
+            var result = await _repository.SaveAsync(snapshot, reason, cancellationToken);
+            if (Document is { } current && current.Id == document.Id)
+            {
+                current.Version = result.Version;
+                current.Recovery = snapshot.Recovery;
+                if (generation == _editGeneration) current.UpdatedAt = snapshot.UpdatedAt;
+                _dirty = generation != _editGeneration;
+            }
 
             await RefreshDocumentsAsync(cancellationToken);
-            _documentIndex = IndexOfDocument(Document.Id);
-            UpdatePosition();
-            _route.SetStatus($"Saved locally at {result.SavedAt.LocalDateTime:t} Â· v{result.Version}");
+            if (Document?.Id == document.Id)
+            {
+                _documentIndex = IndexOfDocument(document.Id);
+                UpdatePosition();
+                _route.SetStatus(_dirty ? "Newer changes remain unsaved. Save them before closing."
+                    : $"Saved locally at {result.SavedAt.LocalDateTime:t} Â· v{result.Version}");
+            }
             _bus.Fire("Write.Saved");
-            return true;
+            return Document is { } remaining && remaining.Id == document.Id && !_dirty
+                && !remaining.Recovery.HasUnsavedRecovery;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -187,6 +208,39 @@ public sealed partial class WritePage : UserControl, IDisposable
         finally
         {
             Interlocked.Exchange(ref _saveRunning, 0);
+        }
+    }
+
+    /// <summary>Refuses close over active owner work or a draft not acknowledged by storage.</summary>
+    public async Task<bool> PrepareToCloseAsync(
+        string reason = "Autosave before closing Write", CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_disposed) return false;
+        if (_busy || _closePreparing || Volatile.Read(ref _saveRunning) != 0)
+        {
+            _route.SetStatus("Finish the current Write operation before closing.");
+            return false;
+        }
+
+        _closePreparing = true;
+        SetBusy(true);
+        try
+        {
+            await StopReadAloudForContextChangeAsync();
+            if (_readAloud?.IsActive == true) return false;
+            if (!await SaveAsync(reason, cancellationToken)) return false;
+            if (_dirty || Document?.Recovery.HasUnsavedRecovery == true)
+            {
+                _route.SetStatus("Newer changes remain unsaved. Save them before closing.");
+                return false;
+            }
+            return true;
+        }
+        finally
+        {
+            _closePreparing = false;
+            SetBusy(false);
         }
     }
 
@@ -846,6 +900,7 @@ public sealed partial class WritePage : UserControl, IDisposable
             return;
 
         Document.UpdatedAt = DateTimeOffset.UtcNow;
+        ++_editGeneration;
         _dirty = true;
         _route.SetStatus("Unsaved changes Â· autosave is on");
     }
@@ -887,7 +942,7 @@ public sealed partial class WritePage : UserControl, IDisposable
 
     public async Task<bool> OpenDocumentAsync(Guid documentId, CancellationToken cancellationToken = default)
     {
-        if (_disposed) return false;
+        if (_disposed || _closePreparing) return false;
         await InitializeAsync(cancellationToken);
         await RefreshDocumentsAsync(cancellationToken);
         var index = -1;
@@ -993,7 +1048,7 @@ public sealed partial class WritePage : UserControl, IDisposable
 
     private async Task RunBusyAsync(Func<Task> action, string description)
     {
-        if (_busy || _disposed)
+        if (_busy || _disposed || _closePreparing)
             return;
 
         SetBusy(true);

@@ -22,13 +22,6 @@ namespace Avalonia.Utilities
         IRef<T> Clone();
 
         /// <summary>
-        /// Create another reference to the same object, but cast the object to a different type.
-        /// </summary>
-        /// <typeparam name="TResult">The type of the new reference.</typeparam>
-        /// <returns>A reference to the value as the new type but sharing the refcount.</returns>
-        IRef<TResult> CloneAs<TResult>() where TResult : class;
-
-        /// <summary>
         /// Gets whether the reference still tracks a valid item.
         /// </summary>
         bool IsAlive { get; }
@@ -43,6 +36,26 @@ namespace Avalonia.Utilities
 
     internal static class RefCountable
     {
+        /// <summary>
+        /// Cast a cloned reference while retaining the same counter. A static generic operation
+        /// avoids generic virtual dispatch in the native/AOT backend.
+        /// </summary>
+        public static IRef<TResult> CloneAs<TResult>(this IRef<object> reference) where TResult : class
+        {
+            if (reference.Item is not TResult)
+                throw new InvalidCastException("The reference item cannot be cast to the requested type.");
+            return new CastReference<TResult>(reference.Clone());
+        }
+
+        private sealed class CastReference<TResult>(IRef<object> reference) : IRef<TResult> where TResult : class
+        {
+            public TResult Item => (TResult)reference.Item;
+            public IRef<TResult> Clone() => new CastReference<TResult>(reference.Clone());
+            public bool IsAlive => reference.IsAlive;
+            public int RefCount => reference.RefCount;
+            public void Dispose() => reference.Dispose();
+        }
+
         /// <summary>
         /// Create a reference counted object wrapping the given item.
         /// </summary>

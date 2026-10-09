@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "status": "ACK_ADDITIVE_PUBLICATION_FINAL_COUNT_CORRECTED",
+  "sourceEvidenceCommit": "6f0c33915f6f41becbb4f5dafdfdffa7c66dc0b7",
+  "priorThirtyPayloadEvidence": "b3657a084aeec9c7395d1dee1575e136935d466a",
+  "historicalBaseEvidence": "b012178230e0d6b15ab8120eba169bda8a1e7454",
+  "indexSHA256": "587e2204bac30f8763fc527b5316d5fe9d6debc3efa529b5f783fbfd2d029195",
+  "payloads": 579,
+  "totalBytes": 89422374,
+  "newPayloads": 30,
+  "newBytes": 5367958,
+  "historical549BodiesAndEntryMetadataUnchanged": true,
+  "countSuccessorOther578BodiesAndEntryMetadataUnchanged": true,
+  "all579FinalGitBodySizeShaVerified": true,
+  "zipAndGzipCustody": "Original Home e1 official2,492,125B diagnostic archive digest0d6fd789 verified; all eight CRC/member bodies exact selected copies,large source snapshots losslessly compressed with original5969725B/hash attribution. Independent official Home job/artifact readback confirms owning build failure before discovery. Source17109beforeafter exact.",
+  "scope": "Actual Home first owning build0warnings2MSB4062errors; six/native/package NOT_RUN. Corrected public task-location recipe source-only. Separate owner testcompiler blocker retained. Studio catalog declarations source-only/current36pins/14authoredcases/originalc22precompilernegative and all3 workflowmatrix explicit. Whole source/peer bytes exact.",
+  "privacy": "Only original bounded diagnostic ZIP/logs/source-hashmetadata,source/proposal/diffs/peerreceipts and qualified summary. No compiled assets/private profile/model/runtime/state/keys/credentials/signedURLs. All new30 JSON/log/source metadata and ZIP/gzipexpanded members inspected.",
+  "findingResolution": "Original b365 summary stale newPayloads28 preserved. Final successor corrects only summary count to30 and matching index hash; no raw failure/oracle/source/runtime rerun.",
+  "publication": "Root may publish complete final6f0 evidence after already-integrated historicalbase; do not publish intermediatead3 lacking ignored logs or misreport original summary count."
+}

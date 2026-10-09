@@ -1,0 +1,9 @@
+{
+  "actualNewHarnessInvoked": true,
+  "scenario": "rich-history",
+  "actualHost": "Linux PowerShell7.6.6",
+  "actualExit": 1,
+  "expected": "Windowsplatformrefusal beforeartifact extraction/nativeinput",
+  "observed": "First exact Windowsx64guard refused, structured result, zero app launches",
+  "nativeWindowsUI": "NOT_RUN"
+}

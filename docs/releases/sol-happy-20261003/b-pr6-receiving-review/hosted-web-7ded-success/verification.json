@@ -1,0 +1,93 @@
+{
+  "state": "ACK_ORIGINAL_HOSTED_SOURCE_BUILD_AND_BROWSER_NINE_VERIFIED",
+  "sourceCommit": "7ded080066ec4b066519c2fb1848fec5c66fba06",
+  "runId": 37214417698,
+  "publisherArtifactId": 11307853142,
+  "browserArtifactId": 11308306040,
+  "sourceInputs": 4537,
+  "allSourceInputsEqualActualGitBodies": true,
+  "sourceBeforeAfterFinalByteEqual": true,
+  "sourceSnapshotSha256": "1b314cc9b9ac023ac2442c7f2a47f51ab95c4fbad97f4d5c6c1c5ebc148eb2f0",
+  "sdk": "10.0.401",
+  "runtimeVersion": "10.0.12",
+  "nativeInputs": [
+    {
+      "path": "/home/runner/work/_temp/pb-publish/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.56/st,simd/libSkiaSharp.a",
+      "bytes": 15270536,
+      "sha256": "9d44db6960c0ab9c14323585dc6d552c12c3edf24a475614be74120a71f76d6c"
+    },
+    {
+      "path": "/home/runner/work/_temp/pb-publish/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/libHarfBuzzSharp.a/3.1.56/st,simd/libHarfBuzzSharp.a",
+      "bytes": 3343154,
+      "sha256": "865f1ac8e246bda1ad88ffbb499a71c56fb24557d6f23717cf34666fd9dbc24e"
+    }
+  ],
+  "publisherSealReported": {
+    "sourceCommit": "7ded080066ec4b066519c2fb1848fec5c66fba06",
+    "receiptSha256": "3d4036e54557779e5560d600d8c6083ac1d6cae94711a7cb6e207e11df3aa8ff",
+    "zipSha256": "6637b14673dd5dcf931f847344c938a136643ade87c23e4091ad66d489c26f9d",
+    "zipBytes": 36039006,
+    "fileCount": 285,
+    "totalBytes": 59201672,
+    "runtimeVerified": false,
+    "deploymentVerified": false,
+    "fullParityVerified": false
+  },
+  "publishFileCount": 285,
+  "publishBytes": 59201672,
+  "browserCounts": {
+    "discovered": 9,
+    "executed": 9,
+    "passed": 9,
+    "failed": 0,
+    "notRun": 0
+  },
+  "actualChromiumVersion": "151.0.7922.34",
+  "distinctBrowserProcesses": 2,
+  "closedContexts": 2,
+  "portRebind": true,
+  "browserDiagnostics": 0,
+  "verifiedCommandFamilies": 26,
+  "allNormalEOF_ECHILD_FamilyClosed_NoSignals": true,
+  "actualBrowserPidsIncludedInCustodianBirths": true,
+  "tracePrivacyAndIntegrity": [
+    {
+      "path": "browser/raw/picture-final-process.zip",
+      "bytes": 14409683,
+      "sha256": "8821358948a0392304535f4aaf6734cc03795a57f5ba57a740cfa468f8ffe0d2",
+      "members": 130,
+      "uncompressedBytes": 36414085,
+      "networkRequests": 261,
+      "allNetworkRequestsToControlledLoopback": true,
+      "authorizationOrCookieHeaders": false
+    },
+    {
+      "path": "browser/raw/picture-first-process.zip",
+      "bytes": 14352533,
+      "sha256": "ed574982c3aa06774f01d39f38f03a927eabe2e06806bbee0c9738a492e22391",
+      "members": 121,
+      "uncompressedBytes": 36048044,
+      "networkRequests": 87,
+      "allNetworkRequestsToControlledLoopback": true,
+      "authorizationOrCookieHeaders": false
+    }
+  ],
+  "warningCodes": {
+    "build.log": [
+      "IL2026",
+      "WASM0001"
+    ],
+    "publish.log": [
+      "IL2026",
+      "IL2104"
+    ]
+  },
+  "limitations": [
+    "The original workflow uploads diagnostics and controlled traces only; actual sealed publish-manifest.json/wwwroot.zip/seal.json were consumed on runner but not uploaded or read back here.",
+    "Published source hashes and reported seal bind the original nine-group browser run; complete publication byte download requires the separate bounded upload proposal.",
+    "Warnings remain in the ordinary build/publish logs; this is not a zero-warning claim.",
+    "Nine local Picture groups do not establish provider, permission, hardware, accessibility, full native metadata/GPS, whole release or full app parity acceptance.",
+    "Final output resource receipt does not establish transient/deleted-byte peak bounds.",
+    "Original ce50 failure and all historical native/source/orchestration negatives remain preserved."
+  ]
+}

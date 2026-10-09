@@ -1,0 +1,45 @@
+{
+  "schema": "c6-independent-root-local-auth-third-short-generated-plan/v1",
+  "status": "ACK_FOR_ROOT_SINGLE_BOUNDED_AUTH7_EXECUTION",
+  "originalIssuerRootPTY": 24402,
+  "producerAndFixture": "df547b5c7492050dc2ad2bdd99e250358cf444fc",
+  "testSource": "17783bf2c8d8b230d01f9ed9855352715e409a5e",
+  "binding": {
+    "path": "/tmp/c-auth-df-r3/public-binding.json",
+    "bytes": 27754,
+    "sha256": "0e6770ceb86c6638d9bc6913a2a39a014fc0535b4acab41e8fe31cbb99944a51"
+  },
+  "plan": {
+    "path": "/tmp/c-auth-df-r3/plan.json",
+    "bytes": 1240284,
+    "sha256": "75619a9c79a70fbc34c58e16b7fac13b75b8072fe1502b3b3d7f682fb3dd717f",
+    "regularPhysicalPublicPinsVerified": 5387,
+    "maximumSeconds": 240,
+    "maximumOutputAndTemporaryBytes": 192000000,
+    "minimumFreeBytes": 384000000,
+    "reserveFloorBytes": 256000000
+  },
+  "invocation": {
+    "path": "/tmp/c-auth-df-r3/invocation.json",
+    "sha256": "4d917519b36f675528b4a8bcbf08a73b71b1d90dab08f4a2f350e36b9cdf56c4",
+    "unchangedExistingCustodianArgv": true,
+    "credentialDiagnosticsClearedBeforeNode": true,
+    "canonicalActualSocketTempBytes": 21,
+    "actualChromiumSingletonSocketBytes": 66,
+    "lessThan108ByteLinuxBound": true
+  },
+  "conservation": {
+    "allSixTestBodiesAnd13CriticalConsumersExactTestGit": true,
+    "all92IssuerBodiesExactFixturePins": true,
+    "separateProducerFixtureTestHeadsExplicit": true,
+    "originalArchiveManifestSealAndEqual4548CatalogsUnchanged": true,
+    "actualLocalOriginalAssets": 285,
+    "onlyLocalManifestPublishRootDiffers": true,
+    "privateTlsKeyContentsRead": false,
+    "privateTlsKeyMetadata600UIDIdentityOnly": true,
+    "privateReadyManifestBodyRead": false,
+    "freshOpaqueOwnRootRunPathCarriedOnly": true
+  },
+  "closure": "Root holds original24402 PTY then exact stop newline through same original session after browser. Require strict original family reap/disappearance/final0; browser custodian unchanged and separate from maintained issuer stop signals.",
+  "qualification": "Read-only public plan/source/tool/dependency/asset and restrictive metadata pre-invocation audit. No browser/issuer/provider/test invocation. Original first sign-in and second startup failures retained; short path fixes unsafe setup, not proven prior cause. No authentication/provider/global/Home acceptance yet."
+}

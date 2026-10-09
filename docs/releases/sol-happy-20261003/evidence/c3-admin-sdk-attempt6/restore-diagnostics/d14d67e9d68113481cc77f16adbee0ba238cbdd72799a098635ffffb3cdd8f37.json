@@ -1,0 +1,36 @@
+{
+  "project": "9to1 Workspace/Accounts/Tests/Accounts.Specs.csproj",
+  "argv": [
+    "dotnet",
+    "msbuild",
+    "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Accounts/Tests/Accounts.Specs.csproj",
+    "-nologo",
+    "-m:1",
+    "-nr:false",
+    "-p:Configuration=Release",
+    "-p:TargetFramework=net10.0",
+    "-p:RuntimeIdentifier=linux-x64",
+    "-p:RuntimeIdentifiers=linux-x64",
+    "-p:SelfContained=false",
+    "-p:EnableWindowsTargeting=true",
+    "-p:AvsSkipBuildingLegacyTargetFrameworks=True",
+    "-p:UseSharedCompilation=false",
+    "-p:UseArtifactsOutput=true",
+    "-p:ArtifactsPath=/workspace/team-c/c3-admin-custody-validation/artifacts/root14-managed-build",
+    "-p:IncludeProjectNameInArtifactsPaths=true",
+    "-p:AvaloniaBuildTasksLocation=/workspace/team-c/c3-admin-custody-validation/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/Avalonia.Build.Tasks.dll",
+    "-getProperty:MSBuildProjectFullPath,MSBuildProjectName,MSBuildProjectFile,Configuration,Platform,TargetFramework,RuntimeIdentifier,MSBuildProjectExtensionsPath,ProjectAssetsFile,RestoreOutputPath"
+  ],
+  "cwd": "/workspace/team-c/c3-admin-custody-validation",
+  "exitCode": 0,
+  "stdout": "{\n  \"Properties\": {\n    \"MSBuildProjectFullPath\": \"/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Accounts/Tests/Accounts.Specs.csproj\",\n    \"MSBuildProjectName\": \"Accounts.Specs\",\n    \"MSBuildProjectFile\": \"Accounts.Specs.csproj\",\n    \"Configuration\": \"Debug\",\n    \"Platform\": \"AnyCPU\",\n    \"TargetFramework\": \"net10.0\",\n    \"RuntimeIdentifier\": \"linux-x64\",\n    \"MSBuildProjectExtensionsPath\": \"/workspace/team-c/c3-admin-custody-validation/artifacts/root14-managed-build/obj/Accounts.Specs/\",\n    \"ProjectAssetsFile\": \"/workspace/team-c/c3-admin-custody-validation/artifacts/root14-managed-build/obj/Accounts.Specs/project.assets.json\",\n    \"RestoreOutputPath\": \"/workspace/team-c/c3-admin-custody-validation/artifacts/root14-managed-build/obj/Accounts.Specs/\"\n  }\n}\n",
+  "stderr": "",
+  "resolved": {
+    "extensions": "/workspace/team-c/c3-admin-custody-validation/artifacts/root14-managed-build/obj/Accounts.Specs",
+    "assets": "/workspace/team-c/c3-admin-custody-validation/artifacts/root14-managed-build/obj/Accounts.Specs/project.assets.json",
+    "dgspec": "/workspace/team-c/c3-admin-custody-validation/artifacts/root14-managed-build/obj/Accounts.Specs/Accounts.Specs.csproj.nuget.dgspec.json",
+    "assetsExists": true,
+    "dgspecExists": true,
+    "authoritativeRestoredSpec": null
+  }
+}

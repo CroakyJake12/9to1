@@ -1,0 +1,37 @@
+[
+  {
+    "bytes": 78256,
+    "path": "artifacts/root14-managed-build/bin/Accounts.Specs/debug_linux-x64/Accounts.Specs",
+    "sha256": "be5eb4d873f08144bcc27dbcdb9ae2b7a6c67853f06ea60d7ddf3622c7df4ab0"
+  },
+  {
+    "bytes": 866,
+    "path": "artifacts/root14-managed-build/bin/Accounts.Specs/debug_linux-x64/Accounts.Specs.deps.json",
+    "sha256": "6b856ad2aebe281583a54d242462b568fb745232ba79120676613b01840e30c1"
+  },
+  {
+    "bytes": 141824,
+    "path": "artifacts/root14-managed-build/bin/Accounts.Specs/debug_linux-x64/Accounts.Specs.dll",
+    "sha256": "c5221be29efe1eaa28a959e5036fdb530519e9f16c7239078772dbdad447a6bf"
+  },
+  {
+    "bytes": 36784,
+    "path": "artifacts/root14-managed-build/bin/Accounts.Specs/debug_linux-x64/Accounts.Specs.pdb",
+    "sha256": "e2d870f2c12be57094748ee0b9ae759546847227ab656da05091fccc83db9b79"
+  },
+  {
+    "bytes": 259,
+    "path": "artifacts/root14-managed-build/bin/Accounts.Specs/debug_linux-x64/Accounts.Specs.runtimeconfig.json",
+    "sha256": "f9bc8e9f0c46247078ed47309f19a7576b4b94e4300e9de0003917d6bd2d667a"
+  },
+  {
+    "bytes": 410624,
+    "path": "artifacts/root14-managed-build/bin/Accounts.Specs/debug_linux-x64/NineToOne.Accounts.dll",
+    "sha256": "52494b4e22c544390aba7858ef7837ec3148129ab29c8fde82d3b31c45b6ce85"
+  },
+  {
+    "bytes": 87492,
+    "path": "artifacts/root14-managed-build/bin/Accounts.Specs/debug_linux-x64/NineToOne.Accounts.pdb",
+    "sha256": "78938d1fd091052fae1c77a12343ea8b19127fd403ab830a219bf57c7da2e44b"
+  }
+]

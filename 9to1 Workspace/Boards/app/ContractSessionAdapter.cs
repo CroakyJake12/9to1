@@ -37,8 +37,9 @@ public sealed class ContractSessionAdapter : IRichBoardSession
         if (string.IsNullOrWhiteSpace(path))
         {
             var fallback = DefaultBoardPath();
-            real = await RichBoardSession.OpenAtPathAsync(store, fallback, cancellationToken).ConfigureAwait(false)
-                ?? await CreateAtAsync(store, fallback, "My Board", cancellationToken).ConfigureAwait(false);
+            if (!File.Exists(fallback) && !File.Exists(fallback + ".bak"))
+                return await CreateNewAtPathAsync(store, fallback, cancellationToken).ConfigureAwait(false);
+            real = await RichBoardSession.OpenAtPathAsync(store, fallback, cancellationToken).ConfigureAwait(false);
         }
         else if (IsMemoryPath(path))
         {
@@ -190,12 +191,14 @@ public sealed class ContractSessionAdapter : IRichBoardSession
     public async ValueTask SaveAsync(CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
-        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await _mergeGate.WaitAsync(cancellationToken);
         try
         {
-            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
-            await _real.SaveAsync(cancellationToken).ConfigureAwait(false);
-            RefreshView();
+            var submittedView = JsonSerializer.Serialize(_view, Json);
+            await MergeCoreAsync(cancellationToken);
+            _baselineJson = ProjectedViewJson();
+            await _real.SaveAsync(cancellationToken);
+            await RefreshAfterSaveAsync(submittedView, cancellationToken);
             _lastError = null;
         }
         catch (Exception error)
@@ -212,12 +215,14 @@ public sealed class ContractSessionAdapter : IRichBoardSession
     public async ValueTask SaveAsAsync(string path, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
-        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await _mergeGate.WaitAsync(cancellationToken);
         try
         {
-            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
-            await _real.SaveAsAsync(path, cancellationToken).ConfigureAwait(false);
-            RefreshView();
+            var submittedView = JsonSerializer.Serialize(_view, Json);
+            await MergeCoreAsync(cancellationToken);
+            _baselineJson = ProjectedViewJson();
+            await _real.SaveAsAsync(path, cancellationToken);
+            await RefreshAfterSaveAsync(submittedView, cancellationToken);
             _lastError = null;
         }
         catch (Exception error)
@@ -470,10 +475,34 @@ public sealed class ContractSessionAdapter : IRichBoardSession
     {
         var baseline = JsonSerializer.Deserialize<RichBoardDocument>(_baselineJson, Json)
             ?? new RichBoardDocument();
-        if (!MergeDeltas.HasChanges(_view, baseline))
+        // The real session can await its gate. Never pass the live, mutable editor
+        // graph into that later callback: this merge represents this exact draft.
+        var submitted = JsonSerializer.Deserialize<RichBoardDocument>(
+            JsonSerializer.Serialize(_view, Json), Json) ?? new RichBoardDocument();
+        if (!MergeDeltas.HasChanges(submitted, baseline))
             return;
-        await _real.MutateAsync(rich => MergeDeltas.Apply(rich, _view, baseline), cancellationToken)
+        await _real.MutateAsync(rich => MergeDeltas.Apply(rich, submitted, baseline), cancellationToken)
             .ConfigureAwait(false);
+    }
+
+    private string ProjectedViewJson()
+    {
+        var projected = new RichBoardDocument();
+        Projector.Project(_real.Rich, projected);
+        return JsonSerializer.Serialize(projected, Json);
+    }
+
+    private async Task RefreshAfterSaveAsync(string submittedView, CancellationToken cancellationToken)
+    {
+        if (string.Equals(submittedView, JsonSerializer.Serialize(_view, Json), StringComparison.Ordinal))
+        {
+            RefreshView();
+            return;
+        }
+        // The physical ACK belongs to the submitted draft. Keep newer editor
+        // input intact and merge it as dirty; a later Save/autosave persists it.
+        await MergeCoreAsync(cancellationToken);
+        _baselineJson = ProjectedViewJson();
     }
 
     private void RefreshView()

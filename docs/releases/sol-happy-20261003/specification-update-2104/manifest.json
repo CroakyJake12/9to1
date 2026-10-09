@@ -1,0 +1,20 @@
+{
+  "qualification": "Latest atomic native canonical capture;8534paragraphs are not a requirement denominator. Prior snapshots/maps/runtime keep originalrevision; full LE semantic/platform acceptance unverified.",
+  "artifacts": [
+    {
+      "path": "capture.json",
+      "bytes": 606,
+      "sha256": "677b57dcdc6c02a24f510a884bdf53d9ee241b4e617f1c19957eed58ab695a48"
+    },
+    {
+      "path": "native-text.txt",
+      "bytes": 1383780,
+      "sha256": "a48cf720b257d16aca1feed8d8a95915759b78cf8a2d2d91fd82b0d31977914c"
+    },
+    {
+      "path": "nonblank.diff",
+      "bytes": 42521,
+      "sha256": "556579cc6fc074a2ee4890472d86aa2982e074c3fc1d25d64d8199b52ee6ca83"
+    }
+  ]
+}

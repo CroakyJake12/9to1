@@ -4,9 +4,9 @@ using System.Text.Json.Serialization;
 namespace HavenOS.Apps.Motion;
 
 // FileId is retained as an opaque Files identity; resolution is not available in this Motion-only lane.
-internal sealed record MotionAssetReference(Guid AssetId, string FileId);
+public sealed record MotionAssetReference(Guid AssetId, string FileId, string? SourceRevisionID = null);
 
-internal sealed record MotionElement(
+public sealed record MotionElement(
     Guid ElementId,
     Guid TrackId,
     Guid AssetId,
@@ -16,9 +16,9 @@ internal sealed record MotionElement(
     long SourceOut,
     Guid? ProxyAssetId = null);
 
-internal sealed record MotionTrack(Guid TrackId, string Name, IReadOnlyList<MotionElement> Elements);
+public sealed record MotionTrack(Guid TrackId, string Name, IReadOnlyList<MotionElement> Elements);
 
-internal sealed record MotionSequence(
+public sealed record MotionSequence(
     Guid SequenceId,
     int Width,
     int Height,
@@ -26,7 +26,7 @@ internal sealed record MotionSequence(
     int FrameRateDenominator,
     IReadOnlyList<MotionTrack> VideoTracks);
 
-internal sealed record MotionProject(
+public sealed record MotionProject(
     int SchemaVersion,
     Guid ProjectId,
     IReadOnlyList<MotionSequence> Sequences,
@@ -35,7 +35,7 @@ internal sealed record MotionProject(
     DateTimeOffset ModifiedAt,
     long Revision);
 
-internal sealed class MotionProjectStore
+public sealed class MotionProjectStore
 {
     private const int CurrentSchemaVersion = 1;
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -62,7 +62,7 @@ internal sealed class MotionProjectStore
         Guid assetId, long timelineStart, long sourceIn, long sourceOut)
     {
         EnsureRevision(project, expectedRevision);
-        if (timelineStart < 0 || sourceIn < 0 || sourceOut <= sourceIn)
+        if (timelineStart < 0 || sourceIn < 0 || sourceOut <= sourceIn || timelineStart > long.MaxValue - (sourceOut - sourceIn))
             throw new ArgumentOutOfRangeException(nameof(timelineStart), "Timeline and source ranges must be non-negative and have positive duration.");
         if (!project.AssetReferences.Any(asset => asset.AssetId == assetId))
             throw new KeyNotFoundException("AssetNotFound");
@@ -113,6 +113,56 @@ internal sealed class MotionProjectStore
         throw new KeyNotFoundException("ElementNotFound");
     }
 
+    // Values are integral frames in the ORIGINAL sequence timebase, never pixels or seconds.
+    // Source references and bytes remain canonical; these edits only alter timeline metadata.
+    public MotionProject Move(MotionProject project, long expectedRevision, Guid sequenceId, Guid elementId, long timelineStart)
+        => EditElement(project, expectedRevision, sequenceId, elementId, original =>
+        {
+            if (timelineStart < 0 || timelineStart > long.MaxValue - original.Duration)
+                throw new ArgumentOutOfRangeException(nameof(timelineStart));
+            return original with { TimelineStart = timelineStart };
+        });
+
+    public MotionProject Slip(MotionProject project, long expectedRevision, Guid sequenceId, Guid elementId, long sourceIn)
+        => EditElement(project, expectedRevision, sequenceId, elementId, original =>
+        {
+            if (sourceIn < 0 || sourceIn > long.MaxValue - original.Duration)
+                throw new ArgumentOutOfRangeException(nameof(sourceIn));
+            return original with { SourceIn = sourceIn, SourceOut = sourceIn + original.Duration };
+        });
+
+    // Non-ripple trim narrows the original source range and preserves its timeline mapping.
+    // Extending beyond the original range needs source-duration evidence and is deliberately rejected.
+    public MotionProject Trim(MotionProject project, long expectedRevision, Guid sequenceId, Guid elementId, long sourceIn, long sourceOut)
+        => EditElement(project, expectedRevision, sequenceId, elementId, original =>
+        {
+            if (sourceIn < original.SourceIn || sourceOut > original.SourceOut || sourceOut <= sourceIn)
+                throw new ArgumentOutOfRangeException(nameof(sourceIn));
+            return original with { TimelineStart = checked(original.TimelineStart + (sourceIn - original.SourceIn)),
+                SourceIn = sourceIn, SourceOut = sourceOut, Duration = sourceOut - sourceIn };
+        });
+
+    private static MotionProject EditElement(MotionProject project, long expectedRevision, Guid sequenceId,
+        Guid elementId, Func<MotionElement, MotionElement> edit)
+    {
+        Validate(project); EnsureRevision(project, expectedRevision);
+        var sequenceIndex = IndexOf(project.Sequences, sequenceId, item => item.SequenceId, "SequenceNotFound");
+        var sequence = project.Sequences[sequenceIndex];
+        for (var i = 0; i < sequence.VideoTracks.Count; i++)
+        {
+            var track = sequence.VideoTracks[i];
+            var index = IndexOfOrDefault(track.Elements, elementId, item => item.ElementId);
+            if (index < 0) continue;
+            var elements = track.Elements.ToArray(); elements[index] = edit(elements[index]);
+            var tracks = sequence.VideoTracks.ToArray();
+            tracks[i] = track with { Elements = elements.OrderBy(item => item.TimelineStart).ThenBy(item => item.ElementId).ToArray() };
+            var sequences = project.Sequences.ToArray(); sequences[sequenceIndex] = sequence with { VideoTracks = tracks };
+            var result = project with { Sequences = sequences, Revision = checked(project.Revision + 1), ModifiedAt = DateTimeOffset.UtcNow };
+            Validate(result); return result;
+        }
+        throw new KeyNotFoundException("ElementNotFound");
+    }
+
     public void Save(string path, MotionProject project, long expectedStoredRevision)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
@@ -158,7 +208,7 @@ internal sealed class MotionProjectStore
         return project;
     }
 
-    private static void Validate(MotionProject project)
+    public static void Validate(MotionProject project)
     {
         if (project.Sequences is null || project.AssetReferences is null
             || project.SchemaVersion != CurrentSchemaVersion || project.ProjectId == Guid.Empty || project.Revision < 0
@@ -178,10 +228,11 @@ internal sealed class MotionProjectStore
             if (!sequenceIds.Add(sequence.SequenceId)) throw new InvalidDataException("Sequence IDs must be unique.");
             foreach (var track in sequence.VideoTracks)
             {
-                if (track is null || track.Elements is null || !trackIds.Add(track.TrackId)) throw new InvalidDataException("Track IDs and element lists must be valid and unique.");
+                if (track is null || track.Elements is null || track.TrackId == Guid.Empty || !trackIds.Add(track.TrackId)) throw new InvalidDataException("Track IDs and element lists must be valid and unique.");
                 foreach (var element in track.Elements)
-                    if (element is null || element.TrackId != track.TrackId || !elementIds.Add(element.ElementId) || !assets.Contains(element.AssetId)
-                        || element.TimelineStart < 0 || element.Duration <= 0 || element.SourceIn < 0 || element.SourceOut - element.SourceIn != element.Duration)
+                    if (element is null || element.TrackId != track.TrackId || element.ElementId == Guid.Empty || !elementIds.Add(element.ElementId) || !assets.Contains(element.AssetId)
+                        || element.TimelineStart < 0 || element.Duration <= 0 || element.TimelineStart > long.MaxValue - element.Duration
+                        || element.SourceIn < 0 || element.SourceOut <= element.SourceIn || element.SourceOut - element.SourceIn != element.Duration)
                         throw new InvalidDataException("Motion element identity, asset, or time ranges are invalid.");
             }
         }
