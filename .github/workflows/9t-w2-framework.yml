@@ -1,0 +1,84 @@
+name: 9T Worker 2 source-built CUI
+
+on:
+  push:
+    branches: ["w2/9t-fw-001-20261009"]
+    paths:
+      - "framework/CUI/Runtime/**"
+      - "framework/CUI/Runtime.Tests/**"
+      - ".github/workflows/9t-w2-framework.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  original-runtime:
+    if: github.ref == 'refs/heads/w2/9t-fw-001-20261009'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
+    env:
+      DOTNET_NOLOGO: "1"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_GENERATE_ASPNET_CERTIFICATE: "false"
+      MSBUILDDISABLENODEREUSE: "1"
+      AVALONIA_TELEMETRY_OPTOUT: "1"
+    steps:
+      - name: Check out exact proposal commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Record original source custody
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/w2-evidence"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git rev-parse HEAD > "$RUNNER_TEMP/w2-evidence/commit.txt"
+          git ls-tree -r HEAD -- framework/CUI > "$RUNNER_TEMP/w2-evidence/cui-source-blobs.txt"
+          git diff --exit-code HEAD -- framework/CUI
+          git archive --format=tar.gz --output="$RUNNER_TEMP/w2-evidence/runtime-source.tar.gz" HEAD framework/CUI/Runtime framework/CUI/Runtime.Tests framework/CUI/Core framework/CUI/Language
+          sha256sum "$RUNNER_TEMP/w2-evidence/runtime-source.tar.gz" > "$RUNNER_TEMP/w2-evidence/runtime-source.sha256"
+      - name: Initialize only pinned CUI dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          git submodule update --init --recursive --depth 1 -- framework/CUI/vendor/Avalonia/external/XamlX framework/CUI/vendor/Avalonia/external/Avalonia.DBus 2>&1 | tee "$RUNNER_TEMP/w2-evidence/submodules.log"
+          git submodule status --recursive -- framework/CUI/vendor/Avalonia/external/XamlX framework/CUI/vendor/Avalonia/external/Avalonia.DBus > "$RUNNER_TEMP/w2-evidence/submodule-pins.txt"
+      - name: Set up maintained SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.401"
+      - name: Build and execute original runtime suite
+        shell: bash
+        env:
+          CONFIGURATION: ${{ matrix.configuration }}
+        run: |
+          set -euo pipefail
+          dotnet --info > "$RUNNER_TEMP/w2-evidence/dotnet-info.txt"
+          export HAVEN_DATA_DIR="$RUNNER_TEMP/w2-isolated-profile"
+          mkdir -p "$HAVEN_DATA_DIR"
+          artifacts="$RUNNER_TEMP/w2-build"
+          task_dll="$artifacts/bin/Avalonia.Build.Tasks/${CONFIGURATION,,}/Avalonia.Build.Tasks.dll"
+          set +e
+          dotnet test framework/CUI/Runtime.Tests/CakeOS.Cui.Runtime.Tests.csproj -c "$CONFIGURATION" --artifacts-path "$artifacts" --results-directory "$RUNNER_TEMP/w2-evidence/results" --logger "trx;LogFileName=runtime.trx" --logger "console;verbosity=normal" --disable-build-servers -m:1 -nodeReuse:false -p:UseSharedCompilation=false -p:AvaloniaBuildTasksLocation="$task_dll" 2>&1 | tee "$RUNNER_TEMP/w2-evidence/runtime.log"
+          result=${PIPESTATUS[0]}
+          set -e
+          printf '%s\n' "$result" > "$RUNNER_TEMP/w2-evidence/runtime-exit.txt"
+          find "$artifacts/bin" -type f \( -name 'CakeOS.Cui*.dll' -o -name 'Avalonia.Build.Tasks.dll' \) -print0 | sort -z | xargs -0 -r sha256sum > "$RUNNER_TEMP/w2-evidence/compiled-assembly-sha256.txt"
+          git diff --exit-code HEAD -- framework/CUI > "$RUNNER_TEMP/w2-evidence/source-unchanged.txt"
+          exit "$result"
+      - name: Retain exact logs and source snapshot even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 9t-w2-cui-${{ matrix.configuration }}-${{ github.sha }}
+          path: ${{ runner.temp }}/w2-evidence
+          if-no-files-found: error
+          retention-days: 7
