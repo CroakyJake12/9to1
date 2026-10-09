@@ -508,7 +508,7 @@ public sealed class CanvasArtifactSession
                 return Failure<CanvasChangePage>(CanvasApiErrorCode.InvalidArgument, "Events.GetChanges", "Change cursor or page size is invalid.");
             var matching = _events.Where((_, index) => index + 1 > afterCursor).Take(pageSize).ToArray();
             var nextCursor = matching.Length == 0 ? afterCursor : _events.IndexOf(matching[^1]) + 1L;
-            var hasMore = _events.Any((_, index) => index + 1 > nextCursor);
+            var hasMore = _events.Count > nextCursor;
             return CanvasApiResult<CanvasChangePage>.Success(new CanvasChangePage(matching, nextCursor, hasMore));
         }
     }

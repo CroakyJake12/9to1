@@ -32,6 +32,8 @@ public interface IBrowseEngineHostFactory
 {
     bool IsSupported { get; }
     string UnsupportedReason { get; }
+    bool IsSupportedFor(BrowseEngineKind engine) => IsSupported;
+    string GetUnsupportedReason(BrowseEngineKind engine) => UnsupportedReason;
     Task<IBrowseEngineTab> CreateAsync(BrowseEngineTabRequest request, CancellationToken cancellationToken);
 }
 
@@ -186,9 +188,10 @@ public sealed class BrowseChrome : IAsyncDisposable
             _status = "A site-specific engine preference is available after opening an HTTP or HTTPS page.";
             return Publish();
         }
+        await SetTabEngineAsync(tab, engine, cancellationToken).ConfigureAwait(false);
         _enginePolicy.SetSiteOverride(tab.Address, engine);
         await SaveEnginePreferencesAsync(cancellationToken).ConfigureAwait(false);
-        return await SetTabEngineAsync(tab, engine, cancellationToken).ConfigureAwait(false);
+        return Publish();
     }
 
     public Task<BrowseChromeSnapshot> SetSelectedTabEngineAsync(BrowseEngineKind engine, CancellationToken cancellationToken = default) =>
@@ -205,33 +208,25 @@ public sealed class BrowseChrome : IAsyncDisposable
             await SaveEnginePreferencesAsync(cancellationToken).ConfigureAwait(false);
             return Publish();
         }
-        var previous = tab.Engine;
-        await ReleaseHostAsync(tab).ConfigureAwait(false);
-        tab.Engine = engine;
+        if (_engineFactory?.IsSupportedFor(engine) != true)
+            throw new PlatformNotSupportedException(_engineFactory?.GetUnsupportedReason(engine) ?? EngineUnsupportedReason);
+        // Prepare the new donor target before touching the old renderer or canonical identity.
+        var replacement = await CreateHostAsync(tab, engine, cancellationToken).ConfigureAwait(false);
         try
         {
-            if (EngineAvailable) await AttachHostAsync(tab, cancellationToken).ConfigureAwait(false);
-            else
-            {
-                tab.EngineState = BrowseEngineState.Unsupported;
-                tab.Status = EngineUnsupportedReason;
-            }
             _enginePolicy.SetTabOverride(tab.Id, engine);
             await SaveEnginePreferencesAsync(cancellationToken).ConfigureAwait(false);
-            _status = $"This tab now uses {engine}.";
         }
         catch
         {
-            tab.Engine = previous;
             _enginePolicy.SetTabOverride(tab.Id, hadOverride ? previousOverride : null);
-            try { await AttachHostAsync(tab, CancellationToken.None).ConfigureAwait(false); }
-            catch (Exception recoveryFailure) when (recoveryFailure is not OutOfMemoryException)
-            {
-                tab.EngineState = BrowseEngineState.Crashed;
-                tab.Status = "Engine switch failed and the previous renderer could not be restored.";
-            }
+            await replacement.DisposeAsync().ConfigureAwait(false);
             throw;
         }
+        await ReleaseHostAsync(tab).ConfigureAwait(false);
+        tab.Engine = engine;
+        AttachPreparedHost(tab, replacement);
+        _status = $"This tab now uses {engine}.";
         return Publish();
     }
 
@@ -518,26 +513,34 @@ public sealed class BrowseChrome : IAsyncDisposable
         var session = new BrowserSessionService(new TabPaths(StandardProfileDirectory));
         var tab = new TabRuntime(id, title, address, privacy, group, session, _enginePolicy.Resolve(address, id));
         _tabs.Add(tab);
-        if (EngineAvailable)
+        if (_engineFactory?.IsSupportedFor(tab.Engine) == true)
             await AttachHostAsync(tab, cancellationToken).ConfigureAwait(false);
         else
         {
             tab.EngineState = BrowseEngineState.Unsupported;
-            tab.Status = EngineUnsupportedReason;
+            tab.Status = _engineFactory?.GetUnsupportedReason(tab.Engine) ?? EngineUnsupportedReason;
         }
         return tab;
     }
 
-    private async Task AttachHostAsync(TabRuntime tab, CancellationToken cancellationToken)
+    private async Task<IBrowseEngineTab> CreateHostAsync(TabRuntime tab, BrowseEngineKind engine, CancellationToken cancellationToken)
     {
-        if (_engineFactory is null) throw new PlatformNotSupportedException(EngineUnsupportedReason);
+        if (_engineFactory?.IsSupportedFor(engine) != true)
+            throw new PlatformNotSupportedException(_engineFactory?.GetUnsupportedReason(engine) ?? EngineUnsupportedReason);
         var profileRoot = tab.Privacy == BrowserTabPrivacy.Private
             ? await _privateProfiles.CreateAsync(tab.Id, cancellationToken).ConfigureAwait(false)
             : StandardProfileDirectory;
-        var profile = Path.Combine(profileRoot, "engines", tab.Engine.ToString().ToLowerInvariant());
+        var profile = Path.Combine(profileRoot, "engines", engine.ToString().ToLowerInvariant());
         Directory.CreateDirectory(profile);
-        var host = await _engineFactory.CreateAsync(
-            new BrowseEngineTabRequest(tab.Id, tab.Privacy, profile, tab.Address, tab.Engine), cancellationToken).ConfigureAwait(false);
+        return await _engineFactory.CreateAsync(
+            new BrowseEngineTabRequest(tab.Id, tab.Privacy, profile, tab.Address, engine), cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task AttachHostAsync(TabRuntime tab, CancellationToken cancellationToken) =>
+        AttachPreparedHost(tab, await CreateHostAsync(tab, tab.Engine, cancellationToken).ConfigureAwait(false));
+
+    private void AttachPreparedHost(TabRuntime tab, IBrowseEngineTab host)
+    {
         tab.Host = host;
         tab.Session.Attach(host);
         host.PopupRequested += tab.PopupHandler = (_, request) => _ = HandlePopupFromAsync(tab, request.Address);
