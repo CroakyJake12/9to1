@@ -124,6 +124,11 @@ export function transition(s, action, p, actor, now) {
     h.status='ACKNOWLEDGED';h.ack={worker:actor,sha:p.reconstructed_sha,at:now,revision:p.revision};
     for(const id of h.tasks){const t=s.tasks.find(t=>t.id===id);t.owner=null;t.fence=null;if(t.status==='CHECKPOINT'){t.status='QUEUED';t.source=h.source;t.lane=h.to;}}
     s.lease=null; emit('HANDOVER_ACKNOWLEDGED',{handover:h.id});
+  } else if (action === 'resolve-empty') {
+    if(actor!=='local')refuse('Local operator reconciliation required');valid();
+    if(!Array.isArray(p.proofs)||!p.proofs.length||p.proofs.length>20)refuse('Exact empty checkpoint proofs required');
+    for(const proof of p.proofs){const t=s.tasks.find(t=>t.id===proof.task_id);if(!t||t.owner!=='local'||t.status!=='BLOCKED'||t.result?.source||proof.checkpoint!==t.result?.checkpoint||proof.base_sha!==t.source.sha||proof.paths!==0||proof.files!==0||proof.owned_processes_ended!==true)refuse('Unreconciled source cannot be retired');}
+    for(const proof of p.proofs){const t=s.tasks.find(t=>t.id===proof.task_id);t.resolution={kind:'VERIFIED_EMPTY_CHECKPOINT',previous_fence:t.fence,at:now,proof};t.owner=null;t.fence=null;emit('EMPTY_CHECKPOINT_RECONCILED',{task:t.id});}
   } else if (action === 'release') {
     valid(); if(s.tasks.some(t=>t.owner===actor && ['WORKING','CHECKPOINT','RECOVERY_REQUIRED'].includes(t.status))) refuse('Unhanded source remains owned');
     s.lease=null; emit('LEASE_RELEASED');

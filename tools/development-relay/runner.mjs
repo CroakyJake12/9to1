@@ -67,6 +67,7 @@ export class LocalRunner {
     await this.dispatchCloud(h);return {ok:true,message:'READY handover published; local ownership retained until exact cloud ACK',status:this.status()};
   }
   async dispatchCloud(h){
+    if(this.config.cloud_commissioning?.daily_resume?.enabled&&this.config.cloud_commissioning.daily_resume.thread_id===this.config.cloud_commissioning.thread_id){this.put('cloud',{...this.config.cloud_commissioning,status:'AWAITING_SCHEDULED_RESUME',handover_id:h.id});return;}
     if(!this.config.cloud_environment_id){this.put('cloud',{status:'BLOCKED',reason:'No published Codex Cloud environment configured'});return;}
     const previous=this.get('cloud');if(previous&&['SUBMITTING','SUBMITTED','UNKNOWN'].includes(previous.status))throw new Error('An outstanding cloud submission must be reconciled before retry');
     this.put('cloud',{status:'SUBMITTING',handover_id:h.id});
