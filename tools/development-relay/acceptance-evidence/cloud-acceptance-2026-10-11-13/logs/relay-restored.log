@@ -1,0 +1,796 @@
+TAP version 13
+# (node:159503) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+# --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./")); register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./"));'
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: A successor with different owned paths verifies an already committed predecessor without copying its changes again
+ok 1 - A successor with different owned paths verifies an already committed predecessor without copying its changes again
+  ---
+  duration_ms: 119.537564
+  type: 'test'
+  ...
+# Subtest: A verified queue successor retains exact predecessor changes and rejects a tampered checkpoint before writing
+ok 2 - A verified queue successor retains exact predecessor changes and rejects a tampered checkpoint before writing
+  ---
+  duration_ms: 94.343927
+  type: 'test'
+  ...
+# Subtest: A stopped nonempty session resumes only when its working bytes match the exact preserved checkpoint
+ok 3 - A stopped nonempty session resumes only when its working bytes match the exact preserved checkpoint
+  ---
+  duration_ms: 95.775681
+  type: 'test'
+  ...
+# (node:159504) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+# --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./")); register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./"));'
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Campaign preparation is inside the permitted local shift near its boundary
+ok 4 - Campaign preparation is inside the permitted local shift near its boundary
+  ---
+  duration_ms: 1.041375
+  type: 'test'
+  ...
+# Subtest: A prepared acceptance checkpoint becomes a cloud-queued task only on exact ACK, using the fresh main handover rather than its earlier preparation SHA
+ok 5 - A prepared acceptance checkpoint becomes a cloud-queued task only on exact ACK, using the fresh main handover rather than its earlier preparation SHA
+  ---
+  duration_ms: 207.438012
+  type: 'test'
+  ...
+# (node:159505) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+# --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./")); register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./"));'
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Actual HTTP handover verifies the remote ref and exact cloud acknowledgement transfers custody
+ok 6 - Actual HTTP handover verifies the remote ref and exact cloud acknowledgement transfers custody
+  ---
+  duration_ms: 3211.803703
+  type: 'test'
+  ...
+# Subtest: Actual Durable Object runtime: authenticated exclusive arbitration, replay rejection and persistent recovery
+ok 7 - Actual Durable Object runtime: authenticated exclusive arbitration, replay rejection and persistent recovery
+  ---
+  duration_ms: 3279.900443
+  type: 'test'
+  ...
+# (node:159687) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+# --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./")); register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./"));'
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: A stopped managed runner recovers an expired fence, but never replaces an unresolved writer
+ok 8 - A stopped managed runner recovers an expired fence, but never replaces an unresolved writer
+  ---
+  duration_ms: 197.162568
+  type: 'test'
+  ...
+# Subtest: A private continuation keeps source and checkpoint locally without publishing or committing it
+ok 9 - A private continuation keeps source and checkpoint locally without publishing or committing it
+  ---
+  duration_ms: 128.800105
+  type: 'test'
+  ...
+# Subtest: An exact drained cloud ACK during renewal clears handover drain, while unexplained lease loss stays blocked
+ok 10 - An exact drained cloud ACK during renewal clears handover drain, while unexplained lease loss stays blocked
+  ---
+  duration_ms: 38.129688
+  type: 'test'
+  ...
+# Subtest: A noninteractive child reading redirected stdin receives EOF and its positional prompt
+ok 11 - A noninteractive child reading redirected stdin receives EOF and its positional prompt
+  ---
+  duration_ms: 33.104964
+  type: 'test'
+  ...
+# Subtest: Actual dashboard HTTP controls persist, fail closed, prevent CSRF and reject duplicate listener
+ok 12 - Actual dashboard HTTP controls persist, fail closed, prevent CSRF and reject duplicate listener
+  ---
+  duration_ms: 48.225075
+  type: 'test'
+  ...
+# (node:159710) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+# --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./")); register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./"));'
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Recovery diagnostics identify actual exit/cause/checkpoint and never read arbitrary paths or expose Bearer [REDACTED]
+ok 13 - Recovery diagnostics identify actual exit/cause/checkpoint and never read arbitrary paths or expose Bearer [REDACTED]
+  ---
+  duration_ms: 5.853274
+  type: 'test'
+  ...
+# (node:159727) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+# --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./")); register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./"));'
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Git advertisement matches only the exact named branch, including capabilities and version packets
+ok 14 - Git advertisement matches only the exact named branch, including capabilities and version packets
+  ---
+  duration_ms: 1.322292
+  type: 'test'
+  ...
+# Subtest: Malformed, truncated and conflicting Git advertisements are refused
+ok 15 - Malformed, truncated and conflicting Git advertisements are refused
+  ---
+  duration_ms: 0.493472
+  type: 'test'
+  ...
+# Subtest: REST exact ref passes and a changed ref fails without using an alternate transport
+ok 16 - REST exact ref passes and a changed ref fails without using an alternate transport
+  ---
+  duration_ms: 19.730642
+  type: 'test'
+  ...
+# Subtest: Exhausted anonymous REST quota uses the same repository Git HTTPS ref and exact SHA
+ok 17 - Exhausted anonymous REST quota uses the same repository Git HTTPS ref and exact SHA
+  ---
+  duration_ms: 1.213471
+  type: 'test'
+  ...
+# Subtest: Fallback refuses changed, missing, malformed or HTML refs
+ok 18 - Fallback refuses changed, missing, malformed or HTML refs
+  ---
+  duration_ms: 1.481398
+  type: 'test'
+  ...
+# Subtest: Forbidden without a quota signal and missing REST refs remain closed
+ok 19 - Forbidden without a quota signal and missing REST refs remain closed
+  ---
+  duration_ms: 0.329379
+  type: 'test'
+  ...
+# Subtest: Another repository, malformed commit or absent branch never triggers network access
+ok 20 - Another repository, malformed commit or absent branch never triggers network access
+  ---
+  duration_ms: 0.167299
+  type: 'test'
+  ...
+# (node:159740) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+# --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./")); register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./"));'
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Exact receiving source verifies raw binary blob hashes and refuses mismatches or dirty reconstruction
+ok 21 - Exact receiving source verifies raw binary blob hashes and refuses mismatches or dirty reconstruction
+  ---
+  duration_ms: 56.176783
+  type: 'test'
+  ...
+# Subtest: Dirty and untracked source survive checkpoint and isolated exact-commit reconstruction
+ok 22 - Dirty and untracked source survive checkpoint and isolated exact-commit reconstruction
+  ---
+  duration_ms: 143.148398
+  type: 'test'
+  ...
+# Subtest: Unowned and private changes are refused before staging
+ok 23 - Unowned and private changes are refused before staging
+  ---
+  duration_ms: 0.809772
+  type: 'test'
+  ...
+# (node:159884) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+# --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./")); register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./"));'
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Live source and verification milestones move development without inflating acceptance or double-counting refreshes
+ok 24 - Live source and verification milestones move development without inflating acceptance or double-counting refreshes
+  ---
+  duration_ms: 2.591294
+  type: 'test'
+  ...
+# (node:159891) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+# --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./")); register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./"));'
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Two main-based detached workers consolidate disjoint changes on main without creating branches; conflicting newer code is preserved
+ok 25 - Two main-based detached workers consolidate disjoint changes on main without creating branches; conflicting newer code is preserved
+  ---
+  duration_ms: 220.807847
+  type: 'test'
+  ...
+# Subtest: A retry verifies its own published WIP receipt, preserves deletion and new-file changes, and cannot overwrite newer code
+ok 26 - A retry verifies its own published WIP receipt, preserves deletion and new-file changes, and cannot overwrite newer code
+  ---
+  duration_ms: 390.382866
+  type: 'test'
+  ...
+# (node:159900) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+# --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./")); register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./"));'
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Forbidden hours cannot probe/start a model and a healthy resident model is reused without spawning
+ok 27 - Forbidden hours cannot probe/start a model and a healthy resident model is reused without spawning
+  ---
+  duration_ms: 0.826576
+  type: 'test'
+  ...
+# Subtest: Missing readiness uses the existing signed guarded launcher and waits for actual health before dispatch
+ok 28 - Missing readiness uses the existing signed guarded launcher and waits for actual health before dispatch
+  ---
+  duration_ms: 0.326494
+  type: 'test'
+  ...
+# Subtest: An unhealthy occupied server remains blocked and does not enter an uncontrolled restart loop
+ok 29 - An unhealthy occupied server remains blocked and does not enter an uncontrolled restart loop
+  ---
+  duration_ms: 0.334005
+  type: 'test'
+  ...
+# (node:159946) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+# --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./")); register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./"));'
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Windows OpenCode wrapper transmits quoted diagnostics, option-like text and Unicode through stdin
+ok 30 - Windows OpenCode wrapper transmits quoted diagnostics, option-like text and Unicode through stdin # SKIP Windows PowerShell transport test
+  ---
+  duration_ms: 0.76207
+  type: 'test'
+  ...
+# (node:160018) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+# --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./")); register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./"));'
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Monday boundary 8:59
+ok 31 - Monday boundary 8:59
+  ---
+  duration_ms: 16.060968
+  type: 'test'
+  ...
+# Subtest: Monday boundary 9:0
+ok 32 - Monday boundary 9:0
+  ---
+  duration_ms: 0.368316
+  type: 'test'
+  ...
+# Subtest: Monday boundary 16:59
+ok 33 - Monday boundary 16:59
+  ---
+  duration_ms: 0.290701
+  type: 'test'
+  ...
+# Subtest: Monday boundary 17:0
+ok 34 - Monday boundary 17:0
+  ---
+  duration_ms: 0.220727
+  type: 'test'
+  ...
+# Subtest: Tuesday boundary 8:59
+ok 35 - Tuesday boundary 8:59
+  ---
+  duration_ms: 0.255009
+  type: 'test'
+  ...
+# Subtest: Tuesday boundary 9:0
+ok 36 - Tuesday boundary 9:0
+  ---
+  duration_ms: 0.184484
+  type: 'test'
+  ...
+# Subtest: Tuesday boundary 16:59
+ok 37 - Tuesday boundary 16:59
+  ---
+  duration_ms: 0.173157
+  type: 'test'
+  ...
+# Subtest: Tuesday boundary 17:0
+ok 38 - Tuesday boundary 17:0
+  ---
+  duration_ms: 0.156482
+  type: 'test'
+  ...
+# Subtest: Wednesday boundary 8:59
+ok 39 - Wednesday boundary 8:59
+  ---
+  duration_ms: 0.299194
+  type: 'test'
+  ...
+# Subtest: Wednesday boundary 9:0
+ok 40 - Wednesday boundary 9:0
+  ---
+  duration_ms: 0.29712
+  type: 'test'
+  ...
+# Subtest: Wednesday boundary 16:59
+ok 41 - Wednesday boundary 16:59
+  ---
+  duration_ms: 0.164855
+  type: 'test'
+  ...
+# Subtest: Wednesday boundary 17:0
+ok 42 - Wednesday boundary 17:0
+  ---
+  duration_ms: 0.154219
+  type: 'test'
+  ...
+# Subtest: Thursday boundary 8:59
+ok 43 - Thursday boundary 8:59
+  ---
+  duration_ms: 0.176972
+  type: 'test'
+  ...
+# Subtest: Thursday boundary 9:0
+ok 44 - Thursday boundary 9:0
+  ---
+  duration_ms: 0.131666
+  type: 'test'
+  ...
+# Subtest: Thursday boundary 16:59
+ok 45 - Thursday boundary 16:59
+  ---
+  duration_ms: 0.214488
+  type: 'test'
+  ...
+# Subtest: Thursday boundary 17:0
+ok 46 - Thursday boundary 17:0
+  ---
+  duration_ms: 0.166347
+  type: 'test'
+  ...
+# Subtest: Friday boundary 8:59
+ok 47 - Friday boundary 8:59
+  ---
+  duration_ms: 0.143703
+  type: 'test'
+  ...
+# Subtest: Friday boundary 9:0
+ok 48 - Friday boundary 9:0
+  ---
+  duration_ms: 0.227578
+  type: 'test'
+  ...
+# Subtest: Friday boundary 16:59
+ok 49 - Friday boundary 16:59
+  ---
+  duration_ms: 0.198284
+  type: 'test'
+  ...
+# Subtest: Friday boundary 17:0
+ok 50 - Friday boundary 17:0
+  ---
+  duration_ms: 0.191104
+  type: 'test'
+  ...
+# Subtest: Saturday boundary 8:59
+ok 51 - Saturday boundary 8:59
+  ---
+  duration_ms: 0.180438
+  type: 'test'
+  ...
+# Subtest: Saturday boundary 9:0
+ok 52 - Saturday boundary 9:0
+  ---
+  duration_ms: 0.163192
+  type: 'test'
+  ...
+# Subtest: Saturday boundary 16:59
+ok 53 - Saturday boundary 16:59
+  ---
+  duration_ms: 0.235148
+  type: 'test'
+  ...
+# Subtest: Saturday boundary 17:0
+ok 54 - Saturday boundary 17:0
+  ---
+  duration_ms: 0.144965
+  type: 'test'
+  ...
+# Subtest: Sunday boundary 8:59
+ok 55 - Sunday boundary 8:59
+  ---
+  duration_ms: 0.130955
+  type: 'test'
+  ...
+# Subtest: Sunday boundary 9:0
+ok 56 - Sunday boundary 9:0
+  ---
+  duration_ms: 0.129812
+  type: 'test'
+  ...
+# Subtest: Sunday boundary 16:59
+ok 57 - Sunday boundary 16:59
+  ---
+  duration_ms: 0.134489
+  type: 'test'
+  ...
+# Subtest: Sunday boundary 17:0
+ok 58 - Sunday boundary 17:0
+  ---
+  duration_ms: 0.212546
+  type: 'test'
+  ...
+# Subtest: No pre-college start on October 12
+ok 59 - No pre-college start on October 12
+  ---
+  duration_ms: 0.214549
+  type: 'test'
+  ...
+# Subtest: No pre-college start on October 13
+ok 60 - No pre-college start on October 13
+  ---
+  duration_ms: 0.127459
+  type: 'test'
+  ...
+# Subtest: No pre-college start on October 14
+ok 61 - No pre-college start on October 14
+  ---
+  duration_ms: 0.137334
+  type: 'test'
+  ...
+# Subtest: No pre-college start on October 15
+ok 62 - No pre-college start on October 15
+  ---
+  duration_ms: 0.179026
+  type: 'test'
+  ...
+# Subtest: No pre-college start on October 16
+ok 63 - No pre-college start on October 16
+  ---
+  duration_ms: 0.169181
+  type: 'test'
+  ...
+# Subtest: Home/Away and pause cannot bypass schedule
+ok 64 - Home/Away and pause cannot bypass schedule
+  ---
+  duration_ms: 0.489376
+  type: 'test'
+  ...
+# Subtest: DST spring and autumn retain London wall-clock boundaries
+ok 65 - DST spring and autumn retain London wall-clock boundaries
+  ---
+  duration_ms: 0.581162
+  type: 'test'
+  ...
+# Subtest: Date overrides change holidays without changing source
+ok 66 - Date overrides change holidays without changing source
+  ---
+  duration_ms: 0.340996
+  type: 'test'
+  ...
+# Subtest: Paths normalize and reject traversal and Windows escape
+ok 67 - Paths normalize and reject traversal and Windows escape
+  ---
+  duration_ms: 0.767159
+  type: 'test'
+  ...
+# Subtest: Git administrative ownership is refused at any segment, case insensitive
+ok 68 - Git administrative ownership is refused at any segment, case insensitive
+  ---
+  duration_ms: 0.845745
+  type: 'test'
+  ...
+# Subtest: Empty and ambiguous segments are refused while ordinary scoped paths and trailing slashes work
+ok 69 - Empty and ambiguous segments are refused while ordinary scoped paths and trailing slashes work
+  ---
+  duration_ms: 0.229801
+  type: 'test'
+  ...
+# Subtest: Enqueue refuses administrative or ambiguous ownership before the task is recorded
+ok 70 - Enqueue refuses administrative or ambiguous ownership before the task is recorded
+  ---
+  duration_ms: 1.002217
+  type: 'test'
+  ...
+# Subtest: Exclusive acquisition rejects duplicate owner and other shift
+ok 71 - Exclusive acquisition rejects duplicate owner and other shift
+  ---
+  duration_ms: 0.615292
+  type: 'test'
+  ...
+# Subtest: Expired lease increments fence and quarantines source
+ok 72 - Expired lease increments fence and quarantines source
+  ---
+  duration_ms: 0.778905
+  type: 'test'
+  ...
+# Subtest: Overlapping task claims are rejected even in separate worktrees
+ok 73 - Overlapping task claims are rejected even in separate worktrees
+  ---
+  duration_ms: 0.865945
+  type: 'test'
+  ...
+# Subtest: Offline presence gives cloud the schedule but retains owned task quarantine
+ok 74 - Offline presence gives cloud the schedule but retains owned task quarantine
+  ---
+  duration_ms: 0.728981
+  type: 'test'
+  ...
+# Subtest: Pause and drain prevent further task assignments
+ok 75 - Pause and drain prevent further task assignments
+  ---
+  duration_ms: 0.507793
+  type: 'test'
+  ...
+# Subtest: Failed remote verification cannot publish READY
+ok 76 - Failed remote verification cannot publish READY
+  ---
+  duration_ms: 0.819235
+  type: 'test'
+  ...
+# Subtest: READY retains ownership; ACK requires exact source, revision and receiver
+ok 77 - READY retains ownership; ACK requires exact source, revision and receiver
+  ---
+  duration_ms: 0.733919
+  type: 'test'
+  ...
+# Subtest: Unfinished writer cannot hand over or release
+ok 78 - Unfinished writer cannot hand over or release
+  ---
+  duration_ms: 0.579019
+  type: 'test'
+  ...
+# Subtest: Operator retires only a verified empty failed checkpoint and retains its failure history
+ok 79 - Operator retires only a verified empty failed checkpoint and retains its failure history
+  ---
+  duration_ms: 0.724915
+  type: 'test'
+  ...
+# Subtest: Implementer cannot promote independent, RCVP or FULL acceptance
+ok 80 - Implementer cannot promote independent, RCVP or FULL acceptance
+  ---
+  duration_ms: 0.589144
+  type: 'test'
+  ...
+# Subtest: Acknowledgement transfers a checkpoint task lane and exact source to its receiver
+ok 81 - Acknowledgement transfers a checkpoint task lane and exact source to its receiver
+  ---
+  duration_ms: 0.704205
+  type: 'test'
+  ...
+# Subtest: Production defaults to cloud without transmitting a timetable
+ok 82 - Production defaults to cloud without transmitting a timetable
+  ---
+  duration_ms: 0.145005
+  type: 'test'
+  ...
+# Subtest: Private evaluated eligibility grants local only until the signed deadline
+ok 83 - Private evaluated eligibility grants local only until the signed deadline
+  ---
+  duration_ms: 0.12803
+  type: 'test'
+  ...
+# Subtest: Eligibility cannot be indefinite or be set by the cloud identity
+ok 84 - Eligibility cannot be indefinite or be set by the cloud identity
+  ---
+  duration_ms: 0.266886
+  type: 'test'
+  ...
+# Subtest: An early override cannot start on a college day
+ok 85 - An early override cannot start on a college day
+  ---
+  duration_ms: 0.445882
+  type: 'test'
+  ...
+# Subtest: Holiday/day-off must be explicitly marked to permit an early start
+ok 86 - Holiday/day-off must be explicitly marked to permit an early start
+  ---
+  duration_ms: 0.391481
+  type: 'test'
+  ...
+# Subtest: Missing college timing or a class ending after the local window fails closed
+ok 87 - Missing college timing or a class ending after the local window fails closed
+  ---
+  duration_ms: 0.456828
+  type: 'test'
+  ...
+# Subtest: Mixed valid and Git administrative paths reject enqueue atomically without poisoning later tasks
+ok 88 - Mixed valid and Git administrative paths reject enqueue atomically without poisoning later tasks
+  ---
+  duration_ms: 1.453367
+  type: 'test'
+  ...
+# (node:160101) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+# --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./")); register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./"));'
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: The execution plan follows live Dulche work and its next implementation scope, independently of scheduled handover
+ok 89 - The execution plan follows live Dulche work and its next implementation scope, independently of scheduled handover
+  ---
+  duration_ms: 1.418865
+  type: 'test'
+  ...
+# Subtest: Retained legacy queue records remain in history without entering the current main execution plan
+ok 90 - Retained legacy queue records remain in history without entering the current main execution plan
+  ---
+  duration_ms: 0.232626
+  type: 'test'
+  ...
+# Subtest: A live owned pipeline can finish verification after its coding child exits, while a genuinely missing pipeline still triggers recovery
+ok 91 - A live owned pipeline can finish verification after its coding child exits, while a genuinely missing pipeline still triggers recovery
+  ---
+  duration_ms: 0.317371
+  type: 'test'
+  ...
+# Subtest: Application grouping preserves every platform and milestone while unknown remains unassessed
+ok 92 - Application grouping preserves every platform and milestone while unknown remains unassessed
+  ---
+  duration_ms: 0.395517
+  type: 'test'
+  ...
+# Subtest: Ready infrastructure does not imply working processes and resuming a checkpoint does not retain its old failure as current
+ok 93 - Ready infrastructure does not imply working processes and resuming a checkpoint does not retain its old failure as current
+  ---
+  duration_ms: 0.31631
+  type: 'test'
+  ...
+# Subtest: An unlinked recorded milestone cannot fabricate direct evidence or independent acceptance
+ok 94 - An unlinked recorded milestone cannot fabricate direct evidence or independent acceptance
+  ---
+  duration_ms: 0.182771
+  type: 'test'
+  ...
+# Subtest: Queue dependencies require actual passing predecessor evidence and inactivity never duplicates a live process
+ok 95 - Queue dependencies require actual passing predecessor evidence and inactivity never duplicates a live process
+  ---
+  duration_ms: 0.256691
+  type: 'test'
+  ...
+# Subtest: Steering is bounded and persists as a pending instruction for a known fresh worker
+ok 96 - Steering is bounded and persists as a pending instruction for a known fresh worker
+  ---
+  duration_ms: 9.204059
+  type: 'test'
+  ...
+# Subtest: Separate display server proxies real state, retains backend CSRF and rejects arbitrary routes or cross-origin controls
+ok 97 - Separate display server proxies real state, retains backend CSRF and rejects arbitrary routes or cross-origin controls
+  ---
+  duration_ms: 51.401654
+  type: 'test'
+  ...
+# (node:160211) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+# --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./")); register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./"));'
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Every part combines actual development counts at 80% and independent acceptance counts at 20%
+ok 98 - Every part combines actual development counts at 80% and independent acceptance counts at 20%
+  ---
+  duration_ms: 1.383022
+  type: 'test'
+  ...
+# Subtest: Missing scope or invalid evidence counts stay unmeasured instead of fabricating zero or completion
+ok 99 - Missing scope or invalid evidence counts stay unmeasured instead of fabricating zero or completion
+  ---
+  duration_ms: 0.327566
+  type: 'test'
+  ...
+# Subtest: Fractional and unsafe integer milestone or acceptance counts are not accepted as progress
+ok 100 - Fractional and unsafe integer milestone or acceptance counts are not accepted as progress
+  ---
+  duration_ms: 0.192966
+  type: 'test'
+  ...
+# Subtest: An unassessed scope remains Unknown even when a snapshot contains zero counters
+ok 101 - An unassessed scope remains Unknown even when a snapshot contains zero counters
+  ---
+  duration_ms: 0.156101
+  type: 'test'
+  ...
+# (node:160252) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+# --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./")); register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./"));'
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Human app feedback persists pending when worker state is missing, then routes once to its owner without rejecting silence
+ok 102 - Human app feedback persists pending when worker state is missing, then routes once to its owner without rejecting silence
+  ---
+  duration_ms: 11.292243
+  type: 'test'
+  ...
+# Subtest: Screenshot review begins awaiting review, comments do not reject it, and explicit decisions survive a fresh database read
+not ok 103 - Screenshot review begins awaiting review, comments do not reject it, and explicit decisions survive a fresh database read
+  ---
+  duration_ms: 5.031114
+  type: 'test'
+  location: '[SOURCE]/tools/development-relay/tests/reviews.test.mjs:14:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'ACCEPTED'
+    - 'NEEDS_WORK'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'NEEDS_WORK'
+  actual: 'ACCEPTED'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://[SOURCE]/tools/development-relay/tests/reviews.test.mjs:16:835)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: Only rendered and functionally checked PNG captures can enter review
+ok 104 - Only rendered and functionally checked PNG captures can enter review
+  ---
+  duration_ms: 2.914574
+  type: 'test'
+  ...
+# (node:160260) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+# --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./")); register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./"));'
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: The primary runner serves app reviews and live activity after a fresh startup, with authenticated persisted decisions
+ok 105 - The primary runner serves app reviews and live activity after a fresh startup, with authenticated persisted decisions
+  ---
+  duration_ms: 72.719847
+  type: 'test'
+  ...
+# (node:160273) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+# --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./")); register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./"));'
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Source activity counts untracked edits, hashes actual bytes and persists deduplicated milestones separately from tool activity
+ok 106 - Source activity counts untracked edits, hashes actual bytes and persists deduplicated milestones separately from tool activity
+  ---
+  duration_ms: 49.716648
+  type: 'test'
+  ...
+# Subtest: OpenCode recovery finds the exact worktree session even when the last log is a failed test
+ok 107 - OpenCode recovery finds the exact worktree session even when the last log is a failed test
+  ---
+  duration_ms: 2.376325
+  type: 'test'
+  ...
+# (node:160298) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+# --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./")); register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./"));'
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: A duplicate supervisor exits before network requests or dispatch and preserves its existing owner record
+ok 108 - A duplicate supervisor exits before network requests or dispatch and preserves its existing owner record
+  ---
+  duration_ms: 7.572254
+  type: 'test'
+  ...
+# (node:160313) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+# --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./")); register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./"));'
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Parent exit stops the owned writer and a fresh runner preserves its final source while retaining the recovery gate
+not ok 109 - Parent exit stops the owned writer and a fresh runner preserves its final source while retaining the recovery gate
+  ---
+  duration_ms: 720.141341
+  type: 'test'
+  location: '[SOURCE]/tools/development-relay/tests/worker-guard.test.mjs:30:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'baseline\ntick\ntick\ntick\ntick\ntick\n'
+    - 'baseline\ntick\ntick\n'
+                             ^
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: |-
+    baseline
+    tick
+    tick
+    
+  actual: |-
+    baseline
+    tick
+    tick
+    tick
+    tick
+    tick
+    
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://[SOURCE]/tools/development-relay/tests/worker-guard.test.mjs:31:812)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: Independent polling stops a live parent writer after the coordinator changes its lease fence
+ok 110 - Independent polling stops a live parent writer after the coordinator changes its lease fence
+  ---
+  duration_ms: 2363.500335
+  type: 'test'
+  ...
+# Subtest: PID reuse or changed ancestry cannot match an owned process identity
+ok 111 - PID reuse or changed ancestry cannot match an owned process identity
+  ---
+  duration_ms: 0.273656
+  type: 'test'
+  ...
+# Subtest: Continuous development has no deadline and an operator checkpoint still stops and preserves its writer
+ok 112 - Continuous development has no deadline and an operator checkpoint still stops and preserves its writer
+  ---
+  duration_ms: 2240.661584
+  type: 'test'
+  ...
+# (node:160327) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+# --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./")); register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./"));'
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: A verified human hold overrides idle supervision, preserves the session and blocks steering from resuming the worker
+ok 113 - A verified human hold overrides idle supervision, preserves the session and blocks steering from resuming the worker
+  ---
+  duration_ms: 7.333981
+  type: 'test'
+  ...
+1..113
+# tests 113
+# suites 0
+# pass 110
+# fail 2
+# cancelled 0
+# skipped 1
+# todo 0
+# duration_ms 9030.042346

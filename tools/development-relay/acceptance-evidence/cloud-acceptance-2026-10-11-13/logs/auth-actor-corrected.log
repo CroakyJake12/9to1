@@ -1,0 +1,85 @@
+TAP version 13
+# (node:162662) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+# --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./")); register("[PRIVATE_RUNTIME]/helpers/relay-deps-loader.mjs", pathToFileURL("./"));'
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: signed Task identity appears only after real current account and private owner replacement ACK
+ok 1 - signed Task identity appears only after real current account and private owner replacement ACK
+  ---
+  duration_ms: 46.54938
+  type: 'test'
+  ...
+# Subtest: server-revoked signed session refuses Task identity and clears the same broker session
+ok 2 - server-revoked signed session refuses Task identity and clears the same broker session
+  ---
+  duration_ms: 11.075687
+  type: 'test'
+  ...
+# Subtest: actual profile owned by another subject never becomes the verified Task profile
+ok 3 - actual profile owned by another subject never becomes the verified Task profile
+  ---
+  duration_ms: 6.18108
+  type: 'test'
+  ...
+# Subtest: generation retirement while actual profile read is held refuses stale signed facts
+ok 4 - generation retirement while actual profile read is held refuses stale signed facts
+  ---
+  duration_ms: 5.364359
+  type: 'test'
+  ...
+# Subtest: actual profile Task is joined by the same terminal account owner before close completes
+ok 5 - actual profile Task is joined by the same terminal account owner before close completes
+  ---
+  duration_ms: 5.807836
+  type: 'test'
+  ...
+# Subtest: expired memory session never starts a fresh API request or repeats the code exchange
+ok 6 - expired memory session never starts a fresh API request or repeats the code exchange
+  ---
+  duration_ms: 4.673593
+  type: 'test'
+  ...
+# Subtest: wrong EdDSA signature grants neither Task identity nor canonical account verification
+ok 7 - wrong EdDSA signature grants neither Task identity nor canonical account verification
+  ---
+  duration_ms: 3.813378
+  type: 'test'
+  ...
+# Subtest: profile scope denial is unavailable Task identity and preserves ordinary current account access
+ok 8 - profile scope denial is unavailable Task identity and preserves ordinary current account access
+  ---
+  duration_ms: 5.317559
+  type: 'test'
+  ...
+# Subtest: caller cancellation cannot publish held profile facts and actual request still drains
+ok 9 - caller cancellation cannot publish held profile facts and actual request still drains
+  ---
+  duration_ms: 3.429398
+  type: 'test'
+  ...
+# Subtest: session retirement after JSON response still invalidates the privately issued final observation
+ok 10 - session retirement after JSON response still invalidates the privately issued final observation
+  ---
+  duration_ms: 3.062233
+  type: 'test'
+  ...
+# Subtest: released Task identity read receipt cannot be consumed or reconstructed from its JSON
+ok 11 - released Task identity read receipt cannot be consumed or reconstructed from its JSON
+  ---
+  duration_ms: 3.446794
+  type: 'test'
+  ...
+# Subtest: unconfigured broker cannot derive actor from caller identity-looking arguments
+ok 12 - unconfigured broker cannot derive actor from caller identity-looking arguments
+  ---
+  duration_ms: 0.242349
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 285.802299

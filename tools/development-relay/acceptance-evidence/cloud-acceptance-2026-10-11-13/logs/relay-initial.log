@@ -1,0 +1,165 @@
+✔ A successor with different owned paths verifies an already committed predecessor without copying its changes again (136.237934ms)
+✔ A verified queue successor retains exact predecessor changes and rejects a tampered checkpoint before writing (107.749377ms)
+✔ A stopped nonempty session resumes only when its working bytes match the exact preserved checkpoint (92.978828ms)
+✔ Campaign preparation is inside the permitted local shift near its boundary (1.066753ms)
+✔ A prepared acceptance checkpoint becomes a cloud-queued task only on exact ACK, using the fresh main handover rather than its earlier preparation SHA (228.803044ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'miniflare' imported from [SOURCE]/tools/development-relay/tests/coordinator.test.mjs
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:768:81)
+    at moduleResolve (node:internal/modules/esm/resolve:859:18)
+    at defaultResolve (node:internal/modules/esm/resolve:992:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:701:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:721:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:759:56)
+    at #resolve (node:internal/modules/esm/loader:683:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:603:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:163:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v24.19.0
+✖ tools/development-relay/tests/coordinator.test.mjs (37.325071ms)
+✔ A stopped managed runner recovers an expired fence, but never replaces an unresolved writer (140.744299ms)
+✔ A private continuation keeps source and checkpoint locally without publishing or committing it (144.779004ms)
+✔ An exact drained cloud ACK during renewal clears handover drain, while unexplained lease loss stays blocked (110.799562ms)
+✔ A noninteractive child reading redirected stdin receives EOF and its positional prompt (40.407248ms)
+✔ Actual dashboard HTTP controls persist, fail closed, prevent CSRF and reject duplicate listener (51.727072ms)
+✔ Recovery diagnostics identify actual exit/cause/checkpoint and never read arbitrary paths or expose Bearer [REDACTED] (9.877133ms)
+✔ Git advertisement matches only the exact named branch, including capabilities and version packets (1.276143ms)
+✔ Malformed, truncated and conflicting Git advertisements are refused (0.51284ms)
+✔ REST exact ref passes and a changed ref fails without using an alternate transport (23.258806ms)
+✔ Exhausted anonymous REST quota uses the same repository Git HTTPS ref and exact SHA (1.475299ms)
+✔ Fallback refuses changed, missing, malformed or HTML refs (1.778549ms)
+✔ Forbidden without a quota signal and missing REST refs remain closed (0.945412ms)
+✔ Another repository, malformed commit or absent branch never triggers network access (0.156753ms)
+✔ Exact receiving source verifies raw binary blob hashes and refuses mismatches or dirty reconstruction (69.362506ms)
+✔ Dirty and untracked source survive checkpoint and isolated exact-commit reconstruction (159.143109ms)
+✔ Unowned and private changes are refused before staging (1.073072ms)
+✔ Live source and verification milestones move development without inflating acceptance or double-counting refreshes (1.93447ms)
+✔ Two main-based detached workers consolidate disjoint changes on main without creating branches; conflicting newer code is preserved (262.238521ms)
+✔ A retry verifies its own published WIP receipt, preserves deletion and new-file changes, and cannot overwrite newer code (445.689504ms)
+✔ Forbidden hours cannot probe/start a model and a healthy resident model is reused without spawning (1.200231ms)
+✔ Missing readiness uses the existing signed guarded launcher and waits for actual health before dispatch (0.415426ms)
+✔ An unhealthy occupied server remains blocked and does not enter an uncontrolled restart loop (0.583055ms)
+﹣ Windows OpenCode wrapper transmits quoted diagnostics, option-like text and Unicode through stdin (0.749251ms) # Windows PowerShell transport test
+✔ Monday boundary 8:59 (14.986433ms)
+✔ Monday boundary 9:0 (0.318392ms)
+✔ Monday boundary 16:59 (0.250221ms)
+✔ Monday boundary 17:0 (0.241108ms)
+✔ Tuesday boundary 8:59 (0.268449ms)
+✔ Tuesday boundary 9:0 (0.573671ms)
+✔ Tuesday boundary 16:59 (0.206236ms)
+✔ Tuesday boundary 17:0 (0.201199ms)
+✔ Wednesday boundary 8:59 (0.246326ms)
+✔ Wednesday boundary 9:0 (0.272915ms)
+✔ Wednesday boundary 16:59 (0.434415ms)
+✔ Wednesday boundary 17:0 (0.193977ms)
+✔ Thursday boundary 8:59 (0.140268ms)
+✔ Thursday boundary 9:0 (0.216661ms)
+✔ Thursday boundary 16:59 (0.17527ms)
+✔ Thursday boundary 17:0 (0.196512ms)
+✔ Friday boundary 8:59 (0.183101ms)
+✔ Friday boundary 9:0 (0.139407ms)
+✔ Friday boundary 16:59 (0.198785ms)
+✔ Friday boundary 17:0 (0.159246ms)
+✔ Saturday boundary 8:59 (0.129342ms)
+✔ Saturday boundary 9:0 (0.131605ms)
+✔ Saturday boundary 16:59 (0.187278ms)
+✔ Saturday boundary 17:0 (0.137984ms)
+✔ Sunday boundary 8:59 (0.130243ms)
+✔ Sunday boundary 9:0 (0.391981ms)
+✔ Sunday boundary 16:59 (0.278073ms)
+✔ Sunday boundary 17:0 (0.142091ms)
+✔ No pre-college start on October 12 (0.22216ms)
+✔ No pre-college start on October 13 (0.172496ms)
+✔ No pre-college start on October 14 (0.134981ms)
+✔ No pre-college start on October 15 (0.493182ms)
+✔ No pre-college start on October 16 (0.957451ms)
+✔ Home/Away and pause cannot bypass schedule (0.415777ms)
+✔ DST spring and autumn retain London wall-clock boundaries (0.654882ms)
+✔ Date overrides change holidays without changing source (0.373784ms)
+✔ Paths normalize and reject traversal and Windows escape (0.796672ms)
+✔ Git administrative ownership is refused at any segment, case insensitive (0.880527ms)
+✔ Empty and ambiguous segments are refused while ordinary scoped paths and trailing slashes work (0.335989ms)
+✔ Enqueue refuses administrative or ambiguous ownership before the task is recorded (1.353539ms)
+✔ Exclusive acquisition rejects duplicate owner and other shift (0.645358ms)
+✔ Expired lease increments fence and quarantines source (1.171638ms)
+✔ Overlapping task claims are rejected even in separate worktrees (1.068986ms)
+✔ Offline presence gives cloud the schedule but retains owned task quarantine (0.653259ms)
+✔ Pause and drain prevent further task assignments (0.326715ms)
+✔ Failed remote verification cannot publish READY (0.457198ms)
+✔ READY retains ownership; ACK requires exact source, revision and receiver (0.915999ms)
+✔ Unfinished writer cannot hand over or release (0.573771ms)
+✔ Operator retires only a verified empty failed checkpoint and retains its failure history (0.879775ms)
+✔ Implementer cannot promote independent, RCVP or FULL acceptance (0.693769ms)
+✔ Acknowledgement transfers a checkpoint task lane and exact source to its receiver (0.557697ms)
+✔ Production defaults to cloud without transmitting a timetable (0.139827ms)
+✔ Private evaluated eligibility grants local only until the signed deadline (0.158625ms)
+✔ Eligibility cannot be indefinite or be set by the cloud identity (0.163943ms)
+✔ An early override cannot start on a college day (0.284883ms)
+✔ Holiday/day-off must be explicitly marked to permit an early start (0.379964ms)
+✔ Missing college timing or a class ending after the local window fails closed (0.348897ms)
+✔ Mixed valid and Git administrative paths reject enqueue atomically without poisoning later tasks (0.598778ms)
+✔ The execution plan follows live Dulche work and its next implementation scope, independently of scheduled handover (1.471453ms)
+✔ Retained legacy queue records remain in history without entering the current main execution plan (0.165416ms)
+✔ A live owned pipeline can finish verification after its coding child exits, while a genuinely missing pipeline still triggers recovery (0.513422ms)
+✔ Application grouping preserves every platform and milestone while unknown remains unassessed (0.741119ms)
+✔ Ready infrastructure does not imply working processes and resuming a checkpoint does not retain its old failure as current (0.560982ms)
+✔ An unlinked recorded milestone cannot fabricate direct evidence or independent acceptance (0.48516ms)
+✔ Queue dependencies require actual passing predecessor evidence and inactivity never duplicates a live process (1.074965ms)
+✔ Steering is bounded and persists as a pending instruction for a known fresh worker (13.380652ms)
+✔ Separate display server proxies real state, retains backend CSRF and rejects arbitrary routes or cross-origin controls (56.521615ms)
+✔ Every part combines actual development counts at 80% and independent acceptance counts at 20% (1.664729ms)
+✔ Missing scope or invalid evidence counts stay unmeasured instead of fabricating zero or completion (0.295769ms)
+✔ Fractional and unsafe integer milestone or acceptance counts are not accepted as progress (0.200357ms)
+✔ An unassessed scope remains Unknown even when a snapshot contains zero counters (0.996368ms)
+✔ Human app feedback persists pending when worker state is missing, then routes once to its owner without rejecting silence (13.95925ms)
+✔ Screenshot review begins awaiting review, comments do not reject it, and explicit decisions survive a fresh database read (8.228548ms)
+✔ Only rendered and functionally checked PNG captures can enter review (1.719892ms)
+✔ The primary runner serves app reviews and live activity after a fresh startup, with authenticated persisted decisions (86.603504ms)
+✔ Source activity counts untracked edits, hashes actual bytes and persists deduplicated milestones separately from tool activity (52.838441ms)
+✔ OpenCode recovery finds the exact worktree session even when the last log is a failed test (2.266412ms)
+✔ A duplicate supervisor exits before network requests or dispatch and preserves its existing owner record (6.927438ms)
+✖ Parent exit stops the owned writer and a fresh runner preserves its final source while retaining the recovery gate (676.026479ms)
+✔ Independent polling stops a live parent writer after the coordinator changes its lease fence (2284.746084ms)
+✔ PID reuse or changed ancestry cannot match an owned process identity (0.278713ms)
+✔ Continuous development has no deadline and an operator checkpoint still stops and preserves its writer (2300.039325ms)
+✔ A verified human hold overrides idle supervision, preserves the session and blocks steering from resuming the worker (9.709365ms)
+ℹ tests 112
+ℹ suites 0
+ℹ pass 109
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 6504.802731
+
+✖ failing tests:
+
+test at tools/development-relay/tests/coordinator.test.mjs:1:1
+✖ tools/development-relay/tests/coordinator.test.mjs (37.325071ms)
+  'test failed'
+
+test at tools/development-relay/tests/worker-guard.test.mjs:30:1
+✖ Parent exit stops the owned writer and a fresh runner preserves its final source while retaining the recovery gate (676.026479ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'baseline\ntick\ntick\ntick\ntick\ntick\n'
+  - 'baseline\ntick\ntick\n'
+                           ^
+  
+      at TestContext.<anonymous> (file://[SOURCE]/tools/development-relay/tests/worker-guard.test.mjs:31:812)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'baseline\ntick\ntick\ntick\ntick\ntick\n',
+    expected: 'baseline\ntick\ntick\n',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

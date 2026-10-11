@@ -1,0 +1,770 @@
+TAP version 13
+# Subtest: requires explicit secure origin and cleanup/token boundaries
+ok 1 - requires explicit secure origin and cleanup/token boundaries
+  ---
+  duration_ms: 2.19042
+  type: 'test'
+  ...
+# Subtest: current account preserves exact wire body and uses protected fetch policy
+ok 2 - current account preserves exact wire body and uses protected fetch policy
+  ---
+  duration_ms: 6.436619
+  type: 'test'
+  ...
+# Subtest: profile patch preserves omitted fields and explicit nullable clears; no client entitlement body
+ok 3 - profile patch preserves omitted fields and explicit nullable clears; no client entitlement body
+  ---
+  duration_ms: 1.373948
+  type: 'test'
+  ...
+# Subtest: source conflict and error codes remain unchanged, with revision; no mutation retries
+ok 4 - source conflict and error codes remain unchanged, with revision; no mutation retries
+  ---
+  duration_ms: 1.380488
+  type: 'test'
+  ...
+# Subtest: malformed success, invalid identity/schema and invented success are rejected
+ok 5 - malformed success, invalid identity/schema and invented success are rejected
+  ---
+  duration_ms: 3.190533
+  type: 'test'
+  ...
+# Subtest: session list retains source fields and rejects mixed-account or duplicate identities
+ok 6 - session list retains source fields and rejects mixed-account or duplicate identities
+  ---
+  duration_ms: 3.188396
+  type: 'test'
+  ...
+# Subtest: session mutations clear prior context and exactly use source routes/status
+ok 7 - session mutations clear prior context and exactly use source routes/status
+  ---
+  duration_ms: 0.763382
+  type: 'test'
+  ...
+# Subtest: revoked/expired server session invalidates other pending requests and preserves source failure
+ok 8 - revoked/expired server session invalidates other pending requests and preserves source failure
+  ---
+  duration_ms: 0.694942
+  type: 'test'
+  ...
+# Subtest: explicit account/organisation switch drops late private result
+ok 9 - explicit account/organisation switch drops late private result
+  ---
+  duration_ms: 0.472231
+  type: 'test'
+  ...
+# Subtest: cancelled token acquisition and fetch never become successful data
+ok 10 - cancelled token acquisition and fetch never become successful data
+  ---
+  duration_ms: 0.634382
+  type: 'test'
+  ...
+# Subtest: transport errors and missing authentication never log/expose tokens or retry writes
+ok 11 - transport errors and missing authentication never log/expose tokens or retry writes
+  ---
+  duration_ms: 0.426352
+  type: 'test'
+  ...
+# Subtest: failed cleanup blocks mutation before any dispatch
+ok 12 - failed cleanup blocks mutation before any dispatch
+  ---
+  duration_ms: 0.238484
+  type: 'test'
+  ...
+# Subtest: session mutations bind original token before cleanup can replace/remove token context
+ok 13 - session mutations bind original token before cleanup can replace/remove token context
+  ---
+  duration_ms: 0.376929
+  type: 'test'
+  ...
+# Subtest: concurrent context switch during asynchronous session cleanup prevents dispatch
+ok 14 - concurrent context switch during asynchronous session cleanup prevents dispatch
+  ---
+  duration_ms: 0.501133
+  type: 'test'
+  ...
+# Subtest: invalid original token cannot be replaced by a new account token during cleanup
+ok 15 - invalid original token cannot be replaced by a new account token during cleanup
+  ---
+  duration_ms: 0.459772
+  type: 'test'
+  ...
+# Subtest: 401 from previous context cannot surface after an additional switch while reading its body
+ok 16 - 401 from previous context cannot surface after an additional switch while reading its body
+  ---
+  duration_ms: 0.387935
+  type: 'test'
+  ...
+# Subtest: real-fetch successful body cancellation remains Cancelled instead of malformed JSON
+ok 17 - real-fetch successful body cancellation remains Cancelled instead of malformed JSON
+  ---
+  duration_ms: 45.432904
+  type: 'test'
+  ...
+# Subtest: 401 and missing token preserve cleanup failure distinctly
+ok 18 - 401 and missing token preserve cleanup failure distinctly
+  ---
+  duration_ms: 0.703664
+  type: 'test'
+  ...
+# Subtest: redirect responses and foreign response URL are rejected
+ok 19 - redirect responses and foreign response URL are rejected
+  ---
+  duration_ms: 0.419883
+  type: 'test'
+  ...
+# Subtest: streamed real-fetch 401 body survives invalidation; explicit body-phase abort is cancelled
+ok 20 - streamed real-fetch 401 body survives invalidation; explicit body-phase abort is cancelled
+  ---
+  duration_ms: 13.213588
+  type: 'test'
+  ...
+# Subtest: real fetch loopback redirect does not transmit Bearer [REDACTED] second origin (transport fixture, not issuer acceptance)
+ok 21 - real fetch loopback redirect does not transmit Bearer [REDACTED] second origin (transport fixture, not issuer acceptance)
+  ---
+  duration_ms: 7.2862
+  type: 'test'
+  ...
+# Subtest: null host configuration retains unavailable transport and no sign-in authority
+ok 22 - null host configuration retains unavailable transport and no sign-in authority
+  ---
+  duration_ms: 1.556079
+  type: 'test'
+  ...
+# Subtest: invalid remote HTTP/cross-origin callback/client secret config fails before network
+ok 23 - invalid remote HTTP/cross-origin callback/client secret config fails before network
+  ---
+  duration_ms: 2.624674
+  type: 'test'
+  ...
+# Subtest: configured but tokenless actions require proven private cleanup and never grant identity
+ok 24 - configured but tokenless actions require proven private cleanup and never grant identity
+  ---
+  duration_ms: 1.30071
+  type: 'test'
+  ...
+# Subtest: unconfigured private lifetime invalidation awaits owner cleanup and remains unavailable
+ok 25 - unconfigured private lifetime invalidation awaits owner cleanup and remains unavailable
+  ---
+  duration_ms: 0.353004
+  type: 'test'
+  ...
+# Subtest: configured private lifetime invalidation aborts pending sign-in and preserves prepared ability
+ok 26 - configured private lifetime invalidation aborts pending sign-in and preserves prepared ability
+  ---
+  duration_ms: 8.756171
+  type: 'test'
+  ...
+# Subtest: callback forwards only to same-origin parent and strips one-use code without running app
+ok 27 - callback forwards only to same-origin parent and strips one-use code without running app
+  ---
+  duration_ms: 0.449117
+  type: 'test'
+  ...
+# Subtest: discovery issuer mismatch rejects and closes owned popup with cleanup
+ok 28 - discovery issuer mismatch rejects and closes owned popup with cleanup
+  ---
+  duration_ms: 22.669894
+  type: 'test'
+  ...
+# Subtest: fresh S256/state/nonce and wrong state reject before code exchange
+ok 29 - fresh S256/state/nonce and wrong state reject before code exchange
+  ---
+  duration_ms: 2.861255
+  type: 'test'
+  ...
+# Subtest: foreign source and origin cannot consume actual pending callback
+ok 30 - foreign source and origin cannot consume actual pending callback
+  ---
+  duration_ms: 1.359877
+  type: 'test'
+  ...
+# Subtest: caller cancellation closes popup and leaves no access token
+ok 31 - caller cancellation closes popup and leaves no access token
+  ---
+  duration_ms: 1.761078
+  type: 'test'
+  ...
+# Subtest: duplicate callback cannot exchange code twice and unsigned token never grants account
+ok 32 - duplicate callback cannot exchange code twice and unsigned token never grants account
+  ---
+  duration_ms: 2.020728
+  type: 'test'
+  ...
+# node:internal/modules/package_json_reader:301
+#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+#         ^
+# Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'jose' imported from [SOURCE]/apps/Web/Auth/browser-task-actor.test.js
+#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+#     at packageResolve (node:internal/modules/esm/resolve:768:81)
+#     at moduleResolve (node:internal/modules/esm/resolve:859:18)
+#     at defaultResolve (node:internal/modules/esm/resolve:992:11)
+#     at \#cachedDefaultResolve (node:internal/modules/esm/loader:701:20)
+#     at \#resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:721:38)
+#     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:759:56)
+#     at \#resolve (node:internal/modules/esm/loader:683:17)
+#     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:603:35)
+#     at ModuleJob.syncLink (node:internal/modules/esm/module_job:163:33) {
+#   code: 'ERR_MODULE_NOT_FOUND'
+# }
+# Node.js v24.19.0
+# Subtest: apps/Web/Auth/browser-task-actor.test.js
+not ok 3 - apps/Web/Auth/browser-task-actor.test.js
+  ---
+  duration_ms: 53.412438
+  type: 'test'
+  location: '[SOURCE]/apps/Web/Auth/browser-task-actor.test.js:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: broker omitted default fetch uses Window receiver and preserves denial/policy
+ok 34 - broker omitted default fetch uses Window receiver and preserves denial/policy
+  ---
+  duration_ms: 26.6514
+  type: 'test'
+  ...
+# Subtest: account API omitted default fetch uses Window receiver and preserves exact wire/policy
+ok 35 - account API omitted default fetch uses Window receiver and preserves exact wire/policy
+  ---
+  duration_ms: 1.720343
+  type: 'test'
+  ...
+# Subtest: broker explicit current global fetch uses Window receiver and preserves denial/policy
+ok 36 - broker explicit current global fetch uses Window receiver and preserves denial/policy
+  ---
+  duration_ms: 3.072869
+  type: 'test'
+  ...
+# Subtest: account API explicit current global fetch uses Window receiver and preserves exact wire/policy
+ok 37 - account API explicit current global fetch uses Window receiver and preserves exact wire/policy
+  ---
+  duration_ms: 0.740208
+  type: 'test'
+  ...
+# Subtest: configured composition forwards its native default without changing cleanup or granting identity
+ok 38 - configured composition forwards its native default without changing cleanup or granting identity
+  ---
+  duration_ms: 2.577274
+  type: 'test'
+  ...
+# Subtest: broker captures native transport and receiver before later global replacement
+ok 39 - broker captures native transport and receiver before later global replacement
+  ---
+  duration_ms: 0.998952
+  type: 'test'
+  ...
+# Subtest: broker preserves injected non-global transport receiver and policy
+ok 40 - broker preserves injected non-global transport receiver and policy
+  ---
+  duration_ms: 0.923821
+  type: 'test'
+  ...
+# Subtest: broker native-default receiver binding preserves caller cancellation
+ok 41 - broker native-default receiver binding preserves caller cancellation
+  ---
+  duration_ms: 6.33582
+  type: 'test'
+  ...
+# Subtest: account API captures native transport and receiver before later global replacement
+ok 42 - account API captures native transport and receiver before later global replacement
+  ---
+  duration_ms: 0.735541
+  type: 'test'
+  ...
+# Subtest: account API preserves injected non-global transport receiver and policy
+ok 43 - account API preserves injected non-global transport receiver and policy
+  ---
+  duration_ms: 0.473782
+  type: 'test'
+  ...
+# Subtest: account API native-default receiver binding preserves caller cancellation
+ok 44 - account API native-default receiver binding preserves caller cancellation
+  ---
+  duration_ms: 0.774248
+  type: 'test'
+  ...
+# Subtest: unconfigured bridge reports unavailable and unknown actions never dispatch
+ok 45 - unconfigured bridge reports unavailable and unknown actions never dispatch
+  ---
+  duration_ms: 1.872257
+  type: 'test'
+  ...
+# Subtest: bridge forwards reviewed current/profile CAS replies without a parallel model
+ok 46 - bridge forwards reviewed current/profile CAS replies without a parallel model
+  ---
+  duration_ms: 31.905185
+  type: 'test'
+  ...
+# Subtest: bridge cancellation and disposal discard late responses and close future calls
+ok 47 - bridge cancellation and disposal discard late responses and close future calls
+  ---
+  duration_ms: 0.604727
+  type: 'test'
+  ...
+# Subtest: bridge preserves original-token mutation through private-view cleanup
+ok 48 - bridge preserves original-token mutation through private-view cleanup
+  ---
+  duration_ms: 0.610125
+  type: 'test'
+  ...
+# Subtest: controller registration precedes synchronous token-supplier cancellation
+ok 49 - controller registration precedes synchronous token-supplier cancellation
+  ---
+  duration_ms: 0.562154
+  type: 'test'
+  ...
+# node:fs:482
+#       path = getValidatedPath(path);
+#              ^
+# TypeError [ERR_INVALID_ARG_TYPE]: The "path" argument must be of type string or an instance of Buffer or URL. Received undefined
+#     at Object.readFileSync (node:fs:482:14)
+#     at file://[SOURCE]/apps/Web/Tests/browser-accessibility.test.mjs:9:19
+#     at ModuleJob.run (node:internal/modules/esm/module_job:439:25)
+#     at async node:internal/modules/esm/loader:643:26
+#     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+#   code: 'ERR_INVALID_ARG_TYPE'
+# }
+# Node.js v24.19.0
+# Subtest: apps/Web/Tests/browser-accessibility.test.mjs
+not ok 6 - apps/Web/Tests/browser-accessibility.test.mjs
+  ---
+  duration_ms: 52.500471
+  type: 'test'
+  location: '[SOURCE]/apps/Web/Tests/browser-accessibility.test.mjs:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# PASS B1-HISTORY-01-duplicate-does-not-push
+# PASS B1-HISTORY-02-context-address
+# PASS B1-HISTORY-03-replace-is-explicit
+# PASS B1-HISTORY-04-back-forward-location
+# PASS B1-HISTORY-05-status-is-text
+# PASS B1-HISTORY-06-bfcache-preserves-live-runtime
+# PASS B1-HISTORY-08-clean-owner-does-not-warn
+# PASS B1-HISTORY-09-actual-dirty-owner-warns-without-clearing
+# PASS B1-HISTORY-10-owner-failure-cannot-confirm-saved
+# PASS B1-HISTORY-07-release-subscriptions
+# Discovered: 10; executed: 10; passed: 10; failed: 0. Real browser acceptance: NOT-RUN.
+# Subtest: apps/Web/Tests/browser-platform.test.mjs
+ok 7 - apps/Web/Tests/browser-platform.test.mjs
+  ---
+  duration_ms: 41.625115
+  type: 'test'
+  ...
+# Subtest: reentrant join sees placeholder before actual owner export returns
+ok 52 - reentrant join sees placeholder before actual owner export returns
+  ---
+  duration_ms: 3.275769
+  type: 'test'
+  ...
+# Subtest: owner fence precedes presentation cleanup and begin is a void acknowledgment
+ok 53 - owner fence precedes presentation cleanup and begin is a void acknowledgment
+  ---
+  duration_ms: 1.171207
+  type: 'test'
+  ...
+# Subtest: join waits all earlier and newly issued drains
+ok 54 - join waits all earlier and newly issued drains
+  ---
+  duration_ms: 13.517435
+  type: 'test'
+  ...
+# Subtest: completed owner failure remains observable to every late join
+ok 55 - completed owner failure remains observable to every late join
+  ---
+  duration_ms: 1.156085
+  type: 'test'
+  ...
+# Subtest: a later successful reset cannot erase a completed earlier failure
+ok 56 - a later successful reset cannot erase a completed earlier failure
+  ---
+  duration_ms: 0.371621
+  type: 'test'
+  ...
+# Subtest: presentation fault is immediate and its join still drains actual owner work
+ok 57 - presentation fault is immediate and its join still drains actual owner work
+  ---
+  duration_ms: 0.467273
+  type: 'test'
+  ...
+# Subtest: throw undefined in presentation is still failure and cannot grant a join
+ok 58 - throw undefined in presentation is still failure and cannot grant a join
+  ---
+  duration_ms: 0.273295
+  type: 'test'
+  ...
+# Subtest: owner and presentation failures preserve both original causes
+ok 59 - owner and presentation failures preserve both original causes
+  ---
+  duration_ms: 0.287196
+  type: 'test'
+  ...
+# Subtest: synchronous export failure stays held and still clears semantic presentation
+ok 60 - synchronous export failure stays held and still clears semantic presentation
+  ---
+  duration_ms: 1.127032
+  type: 'test'
+  ...
+# Subtest: missing owner drain receipt cannot be acknowledged
+ok 61 - missing owner drain receipt cannot be acknowledged
+  ---
+  duration_ms: 0.499601
+  type: 'test'
+  ...
+# Subtest: async presentation acknowledgment is rejected without dropping owner drain
+ok 62 - async presentation acknowledgment is rejected without dropping owner drain
+  ---
+  duration_ms: 0.403359
+  type: 'test'
+  ...
+# Subtest: failure observer exception cannot replace or hide the original failure
+ok 63 - failure observer exception cannot replace or hide the original failure
+  ---
+  duration_ms: 0.286976
+  type: 'test'
+  ...
+# Subtest: external admission failure remains held even when no owner work is active
+ok 64 - external admission failure remains held even when no owner work is active
+  ---
+  duration_ms: 0.231023
+  type: 'test'
+  ...
+# Subtest: synchronous owner and presentation faults retain both causes without acknowledgment
+ok 65 - synchronous owner and presentation faults retain both causes without acknowledgment
+  ---
+  duration_ms: 0.780017
+  type: 'test'
+  ...
+# Subtest: a rejected invalid async presentation acknowledgment is observed and retained
+ok 66 - a rejected invalid async presentation acknowledgment is observed and retained
+  ---
+  duration_ms: 2.674819
+  type: 'test'
+  ...
+# Subtest: a rejected invalid async failure notification is observed and retained
+ok 67 - a rejected invalid async failure notification is observed and retained
+  ---
+  duration_ms: 0.400064
+  type: 'test'
+  ...
+# Subtest: root opaque operation reaches its actual owner callback and uses the same drain
+ok 68 - root opaque operation reaches its actual owner callback and uses the same drain
+  ---
+  duration_ms: 0.342247
+  type: 'test'
+  ...
+# Subtest: native-QuotaExceededError
+ok 69 - native-QuotaExceededError
+  ---
+  duration_ms: 2.62171
+  type: 'test'
+  ...
+# Subtest: native-SecurityError
+ok 70 - native-SecurityError
+  ---
+  duration_ms: 0.199456
+  type: 'test'
+  ...
+# Subtest: native-NotAllowedError
+ok 71 - native-NotAllowedError
+  ---
+  duration_ms: 0.160217
+  type: 'test'
+  ...
+# Subtest: native-UnknownError
+ok 72 - native-UnknownError
+  ---
+  duration_ms: 0.208679
+  type: 'test'
+  ...
+# Subtest: own-string-CapabilityUnavailable
+ok 73 - own-string-CapabilityUnavailable
+  ---
+  duration_ms: 0.251924
+  type: 'test'
+  ...
+# Subtest: own-string-StorageBlocked
+ok 74 - own-string-StorageBlocked
+  ---
+  duration_ms: 0.208389
+  type: 'test'
+  ...
+# Subtest: own-string-InvalidArgument
+ok 75 - own-string-InvalidArgument
+  ---
+  duration_ms: 0.175
+  type: 'test'
+  ...
+# Subtest: own-string-CapacityExceeded
+ok 76 - own-string-CapacityExceeded
+  ---
+  duration_ms: 0.231824
+  type: 'test'
+  ...
+# Subtest: own-string-RevisionConflict
+ok 77 - own-string-RevisionConflict
+  ---
+  duration_ms: 0.26321
+  type: 'test'
+  ...
+# Subtest: own-string-StorageFailed
+ok 78 - own-string-StorageFailed
+  ---
+  duration_ms: 0.268137
+  type: 'test'
+  ...
+# Subtest: own-string-OperationBusy
+ok 79 - own-string-OperationBusy
+  ---
+  duration_ms: 0.238033
+  type: 'test'
+  ...
+# Subtest: own-string-OperationCancelled
+ok 80 - own-string-OperationCancelled
+  ---
+  duration_ms: 0.124094
+  type: 'test'
+  ...
+# Subtest: own-string-DocumentNotFound
+ok 81 - own-string-DocumentNotFound
+  ---
+  duration_ms: 1.066091
+  type: 'test'
+  ...
+# Subtest: unknown-string-does-not-authorize-private-message
+ok 82 - unknown-string-does-not-authorize-private-message
+  ---
+  duration_ms: 0.166246
+  type: 'test'
+  ...
+# Subtest: null-error-falls-back
+ok 83 - null-error-falls-back
+  ---
+  duration_ms: 0.137805
+  type: 'test'
+  ...
+# Subtest: numeric-code-zero-uses-native-name
+ok 84 - numeric-code-zero-uses-native-name
+  ---
+  duration_ms: 0.111545
+  type: 'test'
+  ...
+# Subtest: numeric-code22-uses-native-name
+ok 85 - numeric-code22-uses-native-name
+  ---
+  duration_ms: 0.105968
+  type: 'test'
+  ...
+# Subtest: throwing-code-getter-falls-back
+ok 86 - throwing-code-getter-falls-back
+  ---
+  duration_ms: 0.166387
+  type: 'test'
+  ...
+# Subtest: code-getter-is-read-once
+ok 87 - code-getter-is-read-once
+  ---
+  duration_ms: 0.176642
+  type: 'test'
+  ...
+# Subtest: code-getter-cannot-return-late-private-string
+ok 88 - code-getter-cannot-return-late-private-string
+  ---
+  duration_ms: 0.142141
+  type: 'test'
+  ...
+# Subtest: name-getter-is-read-once
+ok 89 - name-getter-is-read-once
+  ---
+  duration_ms: 0.116744
+  type: 'test'
+  ...
+# Subtest: native-message-getter-not-read
+ok 90 - native-message-getter-not-read
+  ---
+  duration_ms: 0.139207
+  type: 'test'
+  ...
+# Subtest: own-message-getter-is-read-once
+ok 91 - own-message-getter-is-read-once
+  ---
+  duration_ms: 0.137954
+  type: 'test'
+  ...
+# Subtest: throwing-own-message-falls-back
+ok 92 - throwing-own-message-falls-back
+  ---
+  duration_ms: 0.211905
+  type: 'test'
+  ...
+# Subtest: nonstring-own-message-uses-safe-fallback
+ok 93 - nonstring-own-message-uses-safe-fallback
+  ---
+  duration_ms: 0.131324
+  type: 'test'
+  ...
+# Subtest: spoofed-known-code-CapabilityUnavailable
+ok 94 - spoofed-known-code-CapabilityUnavailable
+  ---
+  duration_ms: 0.109132
+  type: 'test'
+  ...
+# Subtest: spoofed-known-code-StorageBlocked
+ok 95 - spoofed-known-code-StorageBlocked
+  ---
+  duration_ms: 0.079468
+  type: 'test'
+  ...
+# Subtest: spoofed-known-code-InvalidArgument
+ok 96 - spoofed-known-code-InvalidArgument
+  ---
+  duration_ms: 0.074671
+  type: 'test'
+  ...
+# Subtest: spoofed-known-code-CapacityExceeded
+ok 97 - spoofed-known-code-CapacityExceeded
+  ---
+  duration_ms: 0.118035
+  type: 'test'
+  ...
+# Subtest: spoofed-known-code-RevisionConflict
+ok 98 - spoofed-known-code-RevisionConflict
+  ---
+  duration_ms: 0.077074
+  type: 'test'
+  ...
+# Subtest: spoofed-known-code-StorageFailed
+ok 99 - spoofed-known-code-StorageFailed
+  ---
+  duration_ms: 0.075723
+  type: 'test'
+  ...
+# Subtest: spoofed-known-code-OperationBusy
+ok 100 - spoofed-known-code-OperationBusy
+  ---
+  duration_ms: 0.075752
+  type: 'test'
+  ...
+# Subtest: spoofed-known-code-OperationCancelled
+ok 101 - spoofed-known-code-OperationCancelled
+  ---
+  duration_ms: 0.10805
+  type: 'test'
+  ...
+# Subtest: spoofed-known-code-DocumentNotFound
+ok 102 - spoofed-known-code-DocumentNotFound
+  ---
+  duration_ms: 0.120199
+  type: 'test'
+  ...
+# Subtest: unbranded-known-code-message-getter-not-read
+ok 103 - unbranded-known-code-message-getter-not-read
+  ---
+  duration_ms: 0.147109
+  type: 'test'
+  ...
+# Subtest: unbranded-known-code-keeps-native-name-mapping
+ok 104 - unbranded-known-code-keeps-native-name-mapping
+  ---
+  duration_ms: 0.136913
+  type: 'test'
+  ...
+# Subtest: own-fault-prototype-does-not-transfer-brand
+ok 105 - own-fault-prototype-does-not-transfer-brand
+  ---
+  duration_ms: 0.171444
+  type: 'test'
+  ...
+# Subtest: unbranded-changing-known-code-reads-once-without-message
+ok 106 - unbranded-changing-known-code-reads-once-without-message
+  ---
+  duration_ms: 0.203021
+  type: 'test'
+  ...
+# Subtest: native DOMException NotAllowedError preserves typed code and privacy
+ok 107 - native DOMException NotAllowedError preserves typed code and privacy
+  ---
+  duration_ms: 1.059102
+  type: 'test'
+  ...
+# Subtest: native DOMException QuotaExceededError preserves typed code and privacy
+ok 108 - native DOMException QuotaExceededError preserves typed code and privacy
+  ---
+  duration_ms: 0.174279
+  type: 'test'
+  ...
+# Subtest: native DOMException SecurityError preserves typed code and privacy
+ok 109 - native DOMException SecurityError preserves typed code and privacy
+  ---
+  duration_ms: 0.146087
+  type: 'test'
+  ...
+# Subtest: native DOMException NotSupportedError preserves typed code and privacy
+ok 110 - native DOMException NotSupportedError preserves typed code and privacy
+  ---
+  duration_ms: 0.153097
+  type: 'test'
+  ...
+# Subtest: all actual module fault strings and messages are preserved
+ok 111 - all actual module fault strings and messages are preserved
+  ---
+  duration_ms: 1.281
+  type: 'test'
+  ...
+# Subtest: unknown provider string code and message use private generic fallback
+ok 112 - unknown provider string code and message use private generic fallback
+  ---
+  duration_ms: 0.209271
+  type: 'test'
+  ...
+# Subtest: opaque values and native abort yield a typed generic failure
+ok 113 - opaque values and native abort yield a typed generic failure
+  ---
+  duration_ms: 0.266655
+  type: 'test'
+  ...
+# Subtest: throwing code accessor does not throw or expose details
+ok 114 - throwing code accessor does not throw or expose details
+  ---
+  duration_ms: 0.240297
+  type: 'test'
+  ...
+# Subtest: changing code getter returns the single validated snapshot: 22
+ok 115 - changing code getter returns the single validated snapshot: 22
+  ---
+  duration_ms: 0.40482
+  type: 'test'
+  ...
+# Subtest: changing code getter returns the single validated snapshot: private-changing-code
+ok 116 - changing code getter returns the single validated snapshot: private-changing-code
+  ---
+  duration_ms: 0.281949
+  type: 'test'
+  ...
+# Subtest: changing native name getter is read once
+ok 117 - changing native name getter is read once
+  ---
+  duration_ms: 0.208019
+  type: 'test'
+  ...
+# Subtest: changing owner message getter returns the same validated value
+ok 118 - changing owner message getter returns the same validated value
+  ---
+  duration_ms: 0.182441
+  type: 'test'
+  ...
+1..118
+# tests 118
+# suites 0
+# pass 116
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 341.713989
