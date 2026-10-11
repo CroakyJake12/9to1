@@ -102,7 +102,7 @@ export function transition(s, action, p, actor, now) {
     valid(); const t=s.tasks.find(t => t.id === p.task_id);
     if (!t || t.owner !== actor || t.fence !== p.fence || t.status !== 'WORKING') refuse('Task not owned');
     if (!['CHECKPOINT','BLOCKED','COMPLETED'].includes(p.status) || !Array.isArray(p.evidence)) refuse('Result requires truthful status and evidence');
-    if (['RCVP_VERIFIED','FULL_VERIFIED','INDEPENDENT_ACCEPTANCE_PASSED'].includes(p.acceptance)) refuse('Worker results cannot promote independent product acceptance');
+    if (!['NOT_RUN','IMPLEMENTED','BUILD_VERIFIED','BUILD_AND_TARGETED_TESTS','SMOKE_TESTED'].includes(p.acceptance??'NOT_RUN')) refuse('Worker results cannot promote independent product acceptance');
     Object.assign(t, { status:p.status, evidence:p.evidence, result:p.result, acceptance:p.acceptance ?? 'NOT_RUN' }); emit('TASK_RESULT', { task:t.id,status:t.status });
   } else if (action === 'handover') {
     valid(); const h=p.handover;
@@ -117,7 +117,7 @@ export function transition(s, action, p, actor, now) {
     if(!h || h.to!==actor || h.status!=='READY' || h.revision!==p.revision || h.source.sha!==p.reconstructed_sha || !p.remote_verified) refuse('Missing, stale or unreconstructed handover');
     if(s.lease?.worker!==h.from || s.lease.fence!==h.fence) refuse('Sender ownership changed; reconcile before acknowledgement');
     h.status='ACKNOWLEDGED';h.ack={worker:actor,sha:p.reconstructed_sha,at:now,revision:p.revision};
-    for(const id of h.tasks){const t=s.tasks.find(t=>t.id===id);t.owner=null;t.fence=null;if(t.status==='CHECKPOINT'){t.status='QUEUED';t.source=h.source;}}
+    for(const id of h.tasks){const t=s.tasks.find(t=>t.id===id);t.owner=null;t.fence=null;if(t.status==='CHECKPOINT'){t.status='QUEUED';t.source=h.source;t.lane=h.to;}}
     s.lease=null; emit('HANDOVER_ACKNOWLEDGED',{handover:h.id});
   } else if (action === 'release') {
     valid(); if(s.tasks.some(t=>t.owner===actor && ['WORKING','CHECKPOINT','RECOVERY_REQUIRED'].includes(t.status))) refuse('Unhanded source remains owned');

@@ -38,6 +38,7 @@ export function reviewPaths(paths,owned) {
 }
 export async function publish(config,worktree,task) {
   const d=await dirty(worktree.root);reviewPaths(d.paths,task.paths);
+  if(!d.paths.length&&!task.verification_only)throw new Error('No implementation source changes; task completion is unverified');
   if(d.paths.length){await git(worktree.root,['add','--',...d.paths]);await git(worktree.root,['diff','--cached','--check']);await git(worktree.root,['commit','-m',`Relay ${task.id}: ${task.objective.replace(/[\r\n]/g,' ').slice(0,120)}`]);}
   const commit=await sha(worktree.root);await git(worktree.root,['push',config.remote??'origin',`HEAD:refs/heads/${worktree.branch}`]);
   const remote=(await git(worktree.root,['ls-remote',config.remote??'origin',`refs/heads/${worktree.branch}`])).trim().split(/\s/)[0];
