@@ -89,8 +89,9 @@ public sealed class GenerateCuiResourcesTaskTests : IDisposable
 
     private static string WriteResource(string directory, string name, string content)
     {
-        Directory.CreateDirectory(directory);
         var path = Path.Combine(directory, name);
+        var parent = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(parent)) Directory.CreateDirectory(parent);
         File.WriteAllText(path, content, new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
         return path;
     }
