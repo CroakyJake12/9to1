@@ -15,7 +15,13 @@ public sealed class CuiResourceBundleTests : IDisposable
         Directory.CreateDirectory(_root);
     }
 
-    public void Dispose() => Directory.Delete(_root, recursive: true);
+    public void Dispose()
+    {
+        foreach (var file in Directory.GetFiles(_root, "*", SearchOption.AllDirectories))
+            File.SetAttributes(file, FileAttributes.Normal);
+
+        Directory.Delete(_root, recursive: true);
+    }
 
     [Fact]
     public void CanonicalDefinitionDeclarationIsValidAndItsOriginalBytesArePreserved()
@@ -164,6 +170,133 @@ public sealed class CuiResourceBundleTests : IDisposable
         Assert.Equal("nested.callout.cui", entry.LogicalName);
         Assert.Equal(File.ReadAllBytes(nested), entry.Data);
     }
+
+    [Fact]
+    public void SuccessfulWriteStagesInDestinationDirectoryAndLeavesOnlyTheBundle()
+    {
+        var path = WriteResource("panel.cui", "<Cui><Text>Panel</Text></Cui>");
+        var entries = CuiResourceBundle.Collect(_root, new[] { path }, _log);
+
+        var directory = Path.Combine(_root, "out");
+        var output = Path.Combine(directory, "bundle.bin");
+        CuiResourceBundle.Write(output, entries, _log);
+
+        var roundTrip = Assert.Single(ReadBundle(output));
+        Assert.Equal("panel.cui", roundTrip.LogicalName);
+        Assert.Equal(File.ReadAllBytes(path), roundTrip.Data);
+        Assert.Equal(new[] { "bundle.bin" }, FileNames(directory));
+    }
+
+    [Fact]
+    public void OverwritingAnExistingBundleReplacesItAndLeavesNoStagingFile()
+    {
+        var directory = Path.Combine(_root, "out");
+        Directory.CreateDirectory(directory);
+        var output = Path.Combine(directory, "bundle.bin");
+
+        CuiResourceBundle.Write(output, new[] { new CuiResourceEntry("first.cui", new byte[] { 1 }) }, _log);
+        CuiResourceBundle.Write(output, new[] { new CuiResourceEntry("second.cui", new byte[] { 2, 3 }) }, _log);
+
+        var roundTrip = Assert.Single(ReadBundle(output));
+        Assert.Equal("second.cui", roundTrip.LogicalName);
+        Assert.Equal(new byte[] { 2, 3 }, roundTrip.Data);
+        Assert.Equal(new[] { "bundle.bin" }, FileNames(directory));
+    }
+
+    [Fact]
+    public void BundleBytesMatchTheDocumentedFormatExactly()
+    {
+        var directory = Path.Combine(_root, "out");
+        var output = Path.Combine(directory, "bundle.bin");
+
+        CuiResourceBundle.Write(output, new[] { new CuiResourceEntry("Home.cui", new byte[] { 60, 67, 117, 105, 62 }) }, _log);
+
+        var expected = new byte[]
+        {
+            1, 0, 0, 0, 8,
+            (byte)'H', (byte)'o', (byte)'m', (byte)'e', (byte)'.', (byte)'c', (byte)'u', (byte)'i',
+            5, 0, 0, 0,
+            60, 67, 117, 105, 62,
+        };
+
+        Assert.Equal(expected, File.ReadAllBytes(output));
+        Assert.Equal(new[] { "bundle.bin" }, FileNames(directory));
+    }
+
+    [Fact]
+    public void FailedSerializationPreservesThePriorBundleAndRemovesTheStagingFile()
+    {
+        var directory = Path.Combine(_root, "out");
+        Directory.CreateDirectory(directory);
+        var output = Path.Combine(directory, "bundle.bin");
+
+        CuiResourceBundle.Write(output, new[] { new CuiResourceEntry("prior.cui", new byte[] { 1, 2, 3 }) }, _log);
+        var prior = File.ReadAllBytes(output);
+
+        Assert.ThrowsAny<Exception>(() =>
+            CuiResourceBundle.Write(output, new[] { new CuiResourceEntry(null!, new byte[] { 4, 5 }) }, _log));
+
+        Assert.Equal(prior, File.ReadAllBytes(output));
+        Assert.Equal(new[] { "bundle.bin" }, FileNames(directory));
+
+        var roundTrip = Assert.Single(ReadBundle(output));
+        Assert.Equal("prior.cui", roundTrip.LogicalName);
+        Assert.Equal(new byte[] { 1, 2, 3 }, roundTrip.Data);
+    }
+
+    [Fact]
+    public void FailedReplacementPreservesThePriorBundleAndRemovesTheStagingFile()
+    {
+        var directory = Path.Combine(_root, "out");
+        Directory.CreateDirectory(directory);
+        var output = Path.Combine(directory, "bundle.bin");
+
+        CuiResourceBundle.Write(output, new[] { new CuiResourceEntry("prior.cui", new byte[] { 1, 2, 3 }) }, _log);
+        var prior = File.ReadAllBytes(output);
+
+        File.SetAttributes(output, FileAttributes.ReadOnly);
+        File.SetAttributes(directory, FileAttributes.ReadOnly);
+        if (!OperatingSystem.IsWindows())
+            File.SetUnixFileMode(directory, UnixFileMode.UserRead | UnixFileMode.UserExecute);
+
+        try
+        {
+            using (var held = new FileStream(output, FileMode.Open, FileAccess.Read, FileShare.None))
+                Assert.ThrowsAny<IOException>(() =>
+                    CuiResourceBundle.Write(output, new[] { new CuiResourceEntry("next.cui", new byte[] { 4 }) }, _log));
+
+            Assert.Equal(prior, File.ReadAllBytes(output));
+            Assert.Equal(new[] { "bundle.bin" }, FileNames(directory));
+
+            var roundTrip = Assert.Single(ReadBundle(output));
+            Assert.Equal("prior.cui", roundTrip.LogicalName);
+            Assert.Equal(new byte[] { 1, 2, 3 }, roundTrip.Data);
+        }
+        finally
+        {
+            File.SetAttributes(output, FileAttributes.Normal);
+            if (!OperatingSystem.IsWindows())
+                File.SetUnixFileMode(directory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+            else
+                File.SetAttributes(directory, FileAttributes.Normal);
+        }
+    }
+
+    [Fact]
+    public void FailedWriteToANewDestinationLeavesNoPartialBundle()
+    {
+        var directory = Path.Combine(_root, "new");
+        var output = Path.Combine(directory, "bundle.bin");
+
+        Assert.ThrowsAny<Exception>(() =>
+            CuiResourceBundle.Write(output, new[] { new CuiResourceEntry(null!, new byte[] { 1 }) }, _log));
+
+        Assert.False(File.Exists(output));
+        Assert.Empty(FileNames(directory));
+    }
+
+    private static string[] FileNames(string directory) =>
+        Directory.GetFiles(directory).Select(Path.GetFileName).OrderBy(name => name, StringComparer.Ordinal).ToArray();
 
     private string WriteResource(string name, string content)
     {

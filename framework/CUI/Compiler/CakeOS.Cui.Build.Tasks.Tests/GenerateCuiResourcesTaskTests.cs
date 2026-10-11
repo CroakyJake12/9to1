@@ -16,7 +16,13 @@ public sealed class GenerateCuiResourcesTaskTests : IDisposable
         Directory.CreateDirectory(_prefix);
     }
 
-    public void Dispose() => Directory.Delete(_prefix, recursive: true);
+    public void Dispose()
+    {
+        foreach (var file in Directory.GetFiles(_prefix, "*", SearchOption.AllDirectories))
+            File.SetAttributes(file, FileAttributes.Normal);
+
+        Directory.Delete(_prefix, recursive: true);
+    }
 
     [Fact]
     public void RootWithoutTrailingSeparatorIsARealDirectoryBoundary()
@@ -168,6 +174,50 @@ public sealed class GenerateCuiResourcesTaskTests : IDisposable
         Assert.Equal(File.ReadAllBytes(malformed), entries[1].Data);
         Assert.Equal(File.ReadAllBytes(outside), entries[2].Data);
     }
+
+    [Fact]
+    public void FailedReplacementThroughTheTaskPreservesTheExistingBundleAndLeavesNoStagingFile()
+    {
+        var root = Path.Combine(_prefix, "repo");
+        Directory.CreateDirectory(root);
+        var resource = WriteResource(root, "callout.cui", "<Cui><Text>Shared</Text></Cui>");
+
+        var directory = Path.Combine(_prefix, "out");
+        Directory.CreateDirectory(directory);
+        var output = Path.Combine(directory, "bundle.bin");
+
+        Assert.True(CreateTask(root, output, resource).Execute());
+        var prior = File.ReadAllBytes(output);
+
+        File.SetAttributes(output, FileAttributes.ReadOnly);
+        File.SetAttributes(directory, FileAttributes.ReadOnly);
+        if (!OperatingSystem.IsWindows())
+            File.SetUnixFileMode(directory, UnixFileMode.UserRead | UnixFileMode.UserExecute);
+
+        try
+        {
+            using (var held = new FileStream(output, FileMode.Open, FileAccess.Read, FileShare.None))
+                Assert.ThrowsAny<IOException>(() => CreateTask(root, output, resource).Execute());
+
+            Assert.Equal(prior, File.ReadAllBytes(output));
+            Assert.Equal(new[] { "bundle.bin" }, FileNames(directory));
+
+            var roundTrip = Assert.Single(ReadBundle(output));
+            Assert.Equal("callout.cui", roundTrip.LogicalName);
+            Assert.Equal(File.ReadAllBytes(resource), roundTrip.Data);
+        }
+        finally
+        {
+            File.SetAttributes(output, FileAttributes.Normal);
+            if (!OperatingSystem.IsWindows())
+                File.SetUnixFileMode(directory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+            else
+                File.SetAttributes(directory, FileAttributes.Normal);
+        }
+    }
+
+    private static string[] FileNames(string directory) =>
+        Directory.GetFiles(directory).Select(Path.GetFileName).OrderBy(name => name, StringComparer.Ordinal).ToArray();
 
     private GenerateCuiResourcesTask CreateTask(string root, string output, params string[] fullPaths)
     {

@@ -58,6 +58,10 @@ public sealed class CuiResourceEntry
 /// the bundle identity, so a second resource mapping to an already claimed dot-separated
 /// logical name is reported as an error instead of silently shadowing the first one.
 /// Only duplicate identities are errors; existing validation warnings stay warnings.
+/// Write stages the complete bundle in the destination directory, flushes and closes it,
+/// then promotes it over the destination, so a serialization, I/O or replacement failure
+/// never truncates a previously valid bundle; the failed staging file is removed and the
+/// original output is retained.
 /// </summary>
 public static class CuiResourceBundle
 {
@@ -111,20 +115,94 @@ public static class CuiResourceBundle
         var dir = Path.GetDirectoryName(output);
         if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
 
-        using (var stream = new FileStream(output, FileMode.Create, FileAccess.Write))
-        using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
+        var staging = Path.Combine(
+            string.IsNullOrEmpty(dir) ? string.Empty : dir,
+            Path.GetFileName(output) + "." + Guid.NewGuid().ToString("N") + ".tmp");
+
+        try
         {
-            writer.Write(entries.Count);
-            foreach (var entry in entries)
+            using (var stream = new FileStream(staging, FileMode.CreateNew, FileAccess.Write, FileShare.None, 16 * 1024, FileOptions.WriteThrough))
+            using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
             {
-                writer.Write(entry.LogicalName);
-                writer.Write(entry.Data.Length);
-                writer.Write(entry.Data);
+                writer.Write(entries.Count);
+                foreach (var entry in entries)
+                {
+                    writer.Write(entry.LogicalName);
+                    writer.Write(entry.Data.Length);
+                    writer.Write(entry.Data);
+                }
+
+                writer.Flush();
+                stream.Flush(flushToDisk: true);
             }
+
+            Promote(staging, output);
+        }
+        catch
+        {
+            TryDelete(staging);
+            throw;
         }
 
         log.LogMessage(MessageImportance.High,
             $"Generated CUI resource bundle: {entries.Count} resources -> {output}");
+    }
+
+    private static void Promote(string staging, string output)
+    {
+        if (!File.Exists(output))
+        {
+            File.Move(staging, output);
+            return;
+        }
+
+        try
+        {
+            File.Replace(staging, output, null);
+            return;
+        }
+        catch (PlatformNotSupportedException)
+        {
+            // netstandard2.0 has no atomic overwrite, so the original is renamed aside and
+            // restored if promotion fails.
+        }
+
+        var retained = staging + ".retained";
+        File.Move(output, retained);
+
+        try
+        {
+            File.Move(staging, output);
+        }
+        catch
+        {
+            TryMove(retained, output);
+            throw;
+        }
+
+        TryDelete(retained);
+    }
+
+    private static void TryDelete(string path)
+    {
+        try
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+        catch (IOException)
+        {
+        }
+    }
+
+    private static void TryMove(string source, string destination)
+    {
+        try
+        {
+            if (File.Exists(source) && !File.Exists(destination)) File.Move(source, destination);
+        }
+        catch (IOException)
+        {
+        }
     }
 
     public static string NormalizeRoot(string root)
