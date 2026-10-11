@@ -4,6 +4,12 @@ import {mkdtemp} from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import {LocalRunner} from '../runner.mjs';
+
+test('A noninteractive child reading redirected stdin receives EOF and its positional prompt',async()=>{
+  const root=await mkdtemp(path.join(process.env.RELAY_TEST_ROOT??os.tmpdir(),'relay-eof-'));
+  const runner=new LocalRunner({state_db:path.join(root,'state.db'),logs:path.join(root,'logs')});
+  try{const result=await runner.command(process.execPath,['-e',"process.stdin.resume();process.stdin.on('end',()=>process.stdout.write(process.argv[1]))",'owned prompt'],root,3000,'stdin-eof');assert.equal(result.code,0);assert.equal(result.stdout,'owned prompt');}finally{runner.db.close();}
+});
 test('Actual dashboard HTTP controls persist, fail closed, prevent CSRF and reject duplicate listener',async()=>{
   const root=await mkdtemp(path.join(process.env.RELAY_TEST_ROOT??os.tmpdir(),'relay-ui-'));
   const config={state_db:path.join(root,'state.db'),dashboard_port:18891,checkpoints:path.join(root,'checkpoints'),logs:path.join(root,'logs'),schedule:{timezone:'Europe/London',weekdays:Object.fromEntries(['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map(d=>[d,{local_start:'00:00',local_end:'23:59'}]))}};

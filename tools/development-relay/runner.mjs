@@ -27,6 +27,7 @@ export class LocalRunner {
     selectShift(latest.schedule,{...this.presence,healthy:true});
     this.config.schedule=latest.schedule;
     this.config.cloud_environment_id=latest.cloud_environment_id;
+    this.config.cloud_commissioning=latest.cloud_commissioning;
     this.config.coordinator_url=latest.coordinator_url;
   }
   async health(){
@@ -36,7 +37,7 @@ export class LocalRunner {
   status(){return {installed:true,runner_pid:process.pid,at:new Date().toISOString(),presence:this.presence,
     planned_shift:selectShift(this.config.schedule,{...this.presence,healthy:true}),coordinator:this.remote?'CONNECTED':'BLOCKED',
     active_shift:this.remote?.lease?.worker??'NONE',active_worker:this.active?.worker??'NONE',strata:this.strata,
-    opencode:this.active?.worker==='OpenCode'?'RUNNING':'STOPPED',cloud:this.get('cloud')??{status:'NOT_CONFIGURED'},
+    opencode:this.active?.worker==='OpenCode'?'RUNNING':'STOPPED',cloud:this.get('cloud')??this.config.cloud_commissioning??{status:'NOT_CONFIGURED'},
     tasks:this.remote?.tasks??[],latest_handover:this.remote?.handovers?.at(-1)??null,
     checkpoint:this.get('checkpoint'),recovery:this.recovery,error:this.error,unattended_switching:'NOT_VERIFIED',
     events:this.db.prepare('SELECT at,event,value FROM events ORDER BY id DESC LIMIT 30').all().map(x=>({...x,value:JSON.parse(x.value)}))};}
@@ -80,7 +81,8 @@ export class LocalRunner {
     if(this.active){if(this.draining&&label.endsWith('-task'))throw new Error('Runner is draining; no new worker command may start');await request(this.config,'heartbeat',{fence:this.active.fence});}
     const log=path.join(this.config.logs,`${Date.now()}-${label}.log`);await mkdir(this.config.logs,{recursive:true});
     return await new Promise((resolve,reject)=>{
-      const child=spawn(executable,args,{cwd,env:{...process.env,...env},windowsHide:true,shell:false});let stdout='',stderr='',timedOut=false;
+      // Noninteractive CLIs read redirected stdin to EOF before processing positional prompts.
+      const child=spawn(executable,args,{cwd,env:{...process.env,...env},windowsHide:true,shell:false,stdio:['ignore','pipe','pipe']});let stdout='',stderr='',timedOut=false;
       if(this.active){this.child=child;this.active.pid=child.pid;this.put('active',this.active);}
       let overflow=false;const bound=()=>{if(!overflow){overflow=true;timedOut=true;void this.stopOwnedChild(child).catch(e=>{this.error=e.message;});}};
       child.stdout.on('data',b=>{stdout+=b;if(stdout.length>8*1024*1024){stdout=stdout.slice(0,8*1024*1024);bound();}});child.stderr.on('data',b=>{stderr+=b;if(stderr.length>8*1024*1024){stderr=stderr.slice(0,8*1024*1024);bound();}});
@@ -148,7 +150,7 @@ export class LocalRunner {
       this.remote=await request(this.config,'presence',{...this.presence,healthy:true,local_permitted:planned.shift==='local',local_until:planned.shift==='local'?Date.now()+30000:0});
       const lease=this.remote.lease;
       if(lease?.worker==='local')this.remote=await request(this.config,'heartbeat',{fence:lease.fence});
-      if(planned.shift!=='local'||this.presence.paused||this.recovery||this.draining||this.remote.checkpoint_requested){
+      if(planned.shift!=='local'||this.presence.paused||this.recovery||this.draining||(this.remote.checkpoint_requested&&lease?.worker==='local')||this.remote.handovers.some(h=>h.status==='READY'&&h.from==='local')){
         if(planned.shift!=='local'||this.presence.paused)this.draining=true;
         if(!this.active&&!this.recovery&&lease?.worker==='local'){
           const owned=this.remote.tasks.filter(t=>t.owner==='local');

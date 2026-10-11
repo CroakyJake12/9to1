@@ -4,7 +4,16 @@ $settings=Get-Content -LiteralPath $Config -Raw | ConvertFrom-Json
 & node (Join-Path $PSScriptRoot 'relayctl.mjs') check-task $Config $Fence $TaskId
 if($LASTEXITCODE -ne 0){throw 'OpenCode startup blocked by schedule or exclusive task ownership.'}
 $env:OPENCODE_CONFIG=$settings.opencode_config
+# Keep relay sessions separate from the owner's existing OpenCode database/config.
+$stateRoot=Join-Path (Split-Path -Parent $Config) 'opencode-isolated'
+foreach($kind in @('data','cache','state','config')){New-Item -ItemType Directory -Path (Join-Path $stateRoot $kind) -Force | Out-Null}
+$env:XDG_DATA_HOME=Join-Path $stateRoot 'data'
+$env:XDG_CACHE_HOME=Join-Path $stateRoot 'cache'
+$env:XDG_STATE_HOME=Join-Path $stateRoot 'state'
+$env:XDG_CONFIG_HOME=Join-Path $stateRoot 'config'
 $inline=Get-Content -LiteralPath $settings.opencode_config -Raw | ConvertFrom-Json
+$inline | Add-Member -NotePropertyName enabled_providers -NotePropertyValue @('strata') -Force
+$inline | Add-Member -NotePropertyName agent -NotePropertyValue @{relay=@{mode='primary';model='strata/iq2_xs';description='Bounded owned local relay worker'}} -Force
 $inline.permission.bash='deny'
 $editRules=[ordered]@{'*'='deny'}
 foreach($owned in ($OwnedPaths | ConvertFrom-Json)){
@@ -19,5 +28,5 @@ $inline.permission.edit=$editRules
 $env:OPENCODE_CONFIG_CONTENT=$inline | ConvertTo-Json -Depth 20 -Compress
 $env:OPENCODE_DISABLE_AUTOUPDATE='true'
 Set-Location -LiteralPath $Worktree
-& $settings.opencode run --pure --model 'strata/iq2_xs' --format json --dir $Worktree $Prompt
+& $settings.opencode run --pure --print-logs --log-level INFO --agent relay --model 'strata/iq2_xs' --format json --dir $Worktree $Prompt
 exit $LASTEXITCODE

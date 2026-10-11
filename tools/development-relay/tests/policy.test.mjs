@@ -24,9 +24,19 @@ test('Paths normalize and reject traversal and Windows escape',()=>{
   assert.ok(pathsOverlap(normalizePaths(['framework/CUI']),normalizePaths(['framework/cui/runtime'])));
   for(const paths of [['../x'],['C:/x'],['/x'],['x\\y'],['x/./y'],[]])assert.throws(()=>normalizePaths(paths));
 });
+test('Git administrative ownership is refused at any segment, case insensitive',()=>{
+  for(const paths of [['.git'],['x/.git'],['x/.GIT/y'],['.GIT'],['framework/CUI/.git/config'],['a/.Git/b/']])assert.throws(()=>normalizePaths(paths));
+  assert.deepEqual(normalizePaths(['docs/.gitignore','apps/git/notes','a/gitignore']),['docs/.gitignore/','apps/git/notes/','a/gitignore/']);
+});
+test('Empty and ambiguous segments are refused while ordinary scoped paths and trailing slashes work',()=>{
+  for(const paths of [['/'],['///'],['a//b'],['a/b//c/'],['a/./b'],['../x'],[]])assert.throws(()=>normalizePaths(paths));
+  assert.deepEqual(normalizePaths(['framework/CUI','framework/CUI/','framework/CUI//','framework/CUI/runtime']),['framework/CUI/','framework/CUI/runtime/']);
+  assert.ok(pathsOverlap(normalizePaths(['apps/write/']),normalizePaths(['apps/write/feature.cs'])));
+});
 const now=Date.parse('2026-10-12T10:00:00Z');
 function state(){const s=initialState();transition(s,'policy',{policy},'local',now);transition(s,'presence',{...available},'local',now);return s;}
 function queue(s,id='one',paths=['framework/CUI']){transition(s,'enqueue',{task:{id,paths,objective:'Bounded feature',source:{sha:'a'.repeat(40),branch:'relay/source'},tests:[{executable:'node',args:['--test']}] }},'local',now);}
+test('Enqueue refuses administrative or ambiguous ownership before the task is recorded',()=>{const s=state();for(const paths of [['framework/CUI/.git'],['framework/CUI//runtime'],['//'],['x/.GIT/y']])assert.throws(()=>queue(s,'unsafe',paths));assert.equal(s.tasks.length,0);queue(s,'scoped',['framework/CUI/']);assert.deepEqual(s.tasks[0].paths,['framework/CUI/']);assert.equal(s.tasks[0].status,'QUEUED');});
 test('Exclusive acquisition rejects duplicate owner and other shift',()=>{const s=state();transition(s,'acquire',{},'local',now);assert.throws(()=>transition(s,'acquire',{},'local',now));assert.throws(()=>transition(s,'acquire',{},'cloud',now));});
 test('Expired lease increments fence and quarantines source',()=>{const s=state();queue(s);transition(s,'acquire',{},'local',now);transition(s,'claim',{fence:1,task_id:'one'},'local',now);transition(s,'presence',available,'local',now+100000);transition(s,'acquire',{},'local',now+100000);assert.equal(s.lease.fence,2);assert.equal(s.tasks[0].status,'RECOVERY_REQUIRED');assert.throws(()=>transition(s,'result',{fence:1,task_id:'one',status:'COMPLETED',evidence:[]},'local',now+100000));});
 test('Overlapping task claims are rejected even in separate worktrees',()=>{const s=state();queue(s);queue(s,'two',['framework/CUI/Runtime']);transition(s,'acquire',{},'local',now);transition(s,'claim',{fence:1,task_id:'one'},'local',now);assert.throws(()=>transition(s,'claim',{fence:1,task_id:'two'},'local',now));});
