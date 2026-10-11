@@ -168,6 +168,8 @@ public sealed class CuiResourceBundleTests : IDisposable
     private string WriteResource(string name, string content)
     {
         var path = Path.Combine(_root, name);
+        var parent = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(parent)) Directory.CreateDirectory(parent);
         File.WriteAllText(path, content, new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
         return path;
     }
