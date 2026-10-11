@@ -1,5 +1,6 @@
 import { DurableObject } from 'cloudflare:workers';
 import { initialState, transition } from './policy.mjs';
+import {verifyPublishedSource} from './git-remote.mjs';
 
 const algorithm = { name:'RSASSA-PKCS1-v1_5',hash:'SHA-256' };
 const decode = b => Uint8Array.from(atob(b), c => c.charCodeAt(0));
@@ -25,13 +26,6 @@ export class RelayCoordinator extends DurableObject {
   }
 }
 
-async function verifySource(source) {
-  if(source?.repository!=='CroakyJake12/9to1' || !/^[0-9a-f]{40}$/.test(source.sha??'') || !source.branch || source.branch.length>180) return false;
-  const r=await fetch(`https://api.github.com/repos/CroakyJake12/9to1/git/ref/heads/${source.branch.split('/').map(encodeURIComponent).join('/')}`,{
-    headers:{Accept:'application/vnd.github+json','User-Agent':'9to1-relay','X-GitHub-Api-Version':'2022-11-28'}, signal:AbortSignal.timeout(15000)
-  });
-  return r.ok && (await r.json()).object?.sha===source.sha;
-}
 export default {
   async fetch(request,env) {
     const url=new URL(request.url);
@@ -55,7 +49,9 @@ export default {
       if(['handover','ack'].includes(action)) {
         let source=payload.handover?.source;
         if(action==='ack') { const current=await env.COORDINATOR.getByName('CroakyJake12/9to1').handle('state',{},actor,crypto.randomUUID(),now);source=current.state.handovers.find(h=>h.id===payload.handover_id)?.source; }
-        payload.remote_verified=await verifySource(source);
+        const verification=await verifyPublishedSource(source);
+        payload.remote_verified=verification.verified;
+        if(!verification.verified)return Response.json({status:409,error:`Exact remote source verification failed (GitHub HTTP ${verification.http_status??'none'}, remaining ${verification.rate_limit_remaining??'unknown'}); ownership retained`,verification},{status:409,headers:{'Cache-Control':'no-store'}});
       }
       const result=await env.COORDINATOR.getByName('CroakyJake12/9to1').handle(action,payload,actor,nonce,now);
       return Response.json(result,{status:result.status,headers:{'Cache-Control':'no-store'}});
