@@ -42,7 +42,9 @@ public sealed class CuiResourceEntry
 /// <summary>
 /// Collects and writes the CUI resource bundle. Original resource bytes are embedded
 /// unchanged; the canonical lexical form is only inspected for validation, so a
-/// malformed resource still warns and is still embedded.
+/// malformed resource still warns and is still embedded. A resource is root-relative
+/// only when it crosses a real normalized directory boundary, so a similarly prefixed
+/// sibling such as C:/repo-other is never treated as inside C:/repo.
 /// </summary>
 public static class CuiResourceBundle
 {
@@ -51,6 +53,7 @@ public static class CuiResourceBundle
     public static List<CuiResourceEntry> Collect(string root, IEnumerable<string> fullPaths, ICuiResourceLog log)
     {
         var entries = new List<CuiResourceEntry>();
+        var normalizedRoot = NormalizeRoot(root);
 
         foreach (var fullPath in fullPaths)
         {
@@ -60,9 +63,11 @@ public static class CuiResourceBundle
                 continue;
             }
 
-            var relativePath = fullPath;
-            if (fullPath.StartsWith(root, StringComparison.OrdinalIgnoreCase))
-                relativePath = fullPath.Substring(root.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            if (!TryGetRelativePath(normalizedRoot, fullPath, out var relativePath))
+            {
+                relativePath = Path.GetFullPath(fullPath);
+                log.LogWarning($"CUI resource '{relativePath}' is outside the CUI resource root '{normalizedRoot}' and is embedded under its full path.");
+            }
 
             var logicalName = relativePath.Replace('\\', '.').Replace('/', '.');
             var data = File.ReadAllBytes(fullPath);
@@ -96,6 +101,35 @@ public static class CuiResourceBundle
 
         log.LogMessage(MessageImportance.High,
             $"Generated CUI resource bundle: {entries.Count} resources -> {output}");
+    }
+
+    public static string NormalizeRoot(string root)
+    {
+        if (string.IsNullOrEmpty(root)) return string.Empty;
+
+        var full = Path.GetFullPath(root);
+        return full.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+    }
+
+    public static bool TryGetRelativePath(string root, string fullPath, out string relativePath)
+    {
+        relativePath = string.Empty;
+
+        if (string.IsNullOrEmpty(root) || string.IsNullOrEmpty(fullPath)) return false;
+
+        var normalizedRoot = NormalizeRoot(root);
+        var normalizedPath = Path.GetFullPath(fullPath);
+        var comparison = Path.DirectorySeparatorChar == '\\' ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+
+        if (!normalizedPath.StartsWith(normalizedRoot, comparison)) return false;
+
+        var remainder = normalizedPath.Substring(normalizedRoot.Length);
+        if (remainder.Length == 0) return false;
+
+        if (remainder[0] != Path.DirectorySeparatorChar && remainder[0] != Path.AltDirectorySeparatorChar) return false;
+
+        relativePath = remainder.TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        return relativePath.Length > 0;
     }
 
     private static void ValidateResource(string relativePath, byte[] data, ICuiResourceLog log)
