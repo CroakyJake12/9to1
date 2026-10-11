@@ -149,29 +149,29 @@ export class LocalRunner {
         const installed=JSON.parse(inventory.stdout).installed;
         const args=['exec','--sandbox','workspace-write','-C',worktree.root,'-c','model="qwen3.8-flash-next-iq2_xs"','-c','model_provider="strata"','-c','model_context_window=524288','-c','model_auto_compact_token_limit=450560','-c','apps._default.enabled=false','-c','apps.google_drive.enabled=true','-c','apps.github.enabled=true'];
         for(const item of installed)args.push('-c',`plugins."${item.pluginId}".enabled=${this.config.plugin_allowlist.includes(item.pluginId)}`);
-        args.push(prompt);result=await this.command(this.config.codex,args,worktree.root,task.timeout_ms??1800000,'strata-task');
+        if(task.codex_session_id)args.push('resume',task.codex_session_id);args.push(prompt);result=await this.command(this.config.codex,args,worktree.root,task.timeout_ms??1800000,'strata-task');
       }else{
         const args=['-NoProfile','-File',path.join(here,'Run-OpenCode.ps1'),'-Config',this.config.config_path,'-Worktree',worktree.root,'-Fence',String(fence),'-TaskId',task.id,'-OwnedPaths',JSON.stringify(task.paths),'-Prompt',prompt];
         result=await this.command(this.config.powershell,args,worktree.root,task.timeout_ms??1800000,'opencode-task');
       }
-      evidence.push({kind:'IMPLEMENTATION',exit_code:result.code,status:result.code===0?'PASS':'FAIL',log:result.log});if(result.code!==0)throw new Error('Implementation worker did not exit successfully');
+      evidence.push({kind:'IMPLEMENTATION',exit_code:result.code,status:result.code===0?'PASS':'FAIL',log:path.basename(result.log)});if(result.code!==0)throw new Error('Implementation worker did not exit successfully');
       const checkpoint=await preserve(worktree.root,this.config.checkpoints,randomUUID());this.put('checkpoint',checkpoint);
       for(const test of task.tests){
         if(!this.config.allowed_test_executables.includes(test.executable) || !Array.isArray(test.args))throw new Error('Unapproved test executable');
         const r=await this.command(test.executable,test.args,worktree.root,Math.min(test.timeout_ms??300000,1800000),'test');
-        evidence.push({kind:test.kind??'TARGETED_TEST',command:[test.executable,...test.args],exit_code:r.code,status:r.code===0?'PASS':'FAIL',log:r.log});if(r.code!==0)throw new Error('Applicable verification failed; source is preserved');
+        evidence.push({kind:test.kind??'TARGETED_TEST',command:[test.executable,...test.args],exit_code:r.code,status:r.code===0?'PASS':'FAIL',log:path.basename(r.log)});if(r.code!==0)throw new Error('Applicable verification failed; source is preserved');
       }
       await request(this.config,'heartbeat',{fence});
       if(task.local_only===true){
         const {reviewPaths,dirty}=await import('./git.mjs');const changes=await dirty(worktree.root);reviewPaths(changes.paths,task.paths);
         if(!changes.paths.length&&!task.verification_only)throw new Error('No implementation source changes; private task completion is unverified');
-        status='CHECKPOINT';await request(this.config,'result',{fence,task_id:task.id,status,evidence,acceptance:'BUILD_AND_TARGETED_TESTS',result:{checkpoint:checkpoint.directory,base:worktree.base,private_source:true,remaining:['Review preserved application source before any publication or cloud transfer'],blockers:[],independent_acceptance:'NOT_RUN',RCVP:'NOT_RUN',FULL:'NOT_RUN'}});return;
+        status='CHECKPOINT';await request(this.config,'result',{fence,task_id:task.id,status,evidence,acceptance:'BUILD_AND_TARGETED_TESTS',result:{checkpoint:path.basename(checkpoint.directory),checkpoint_ref_kind:'LOCAL_PRIVATE_CHECKPOINT_ID',base:worktree.base,private_source:true,remaining:['Review preserved application source before any publication or cloud transfer'],blockers:[],independent_acceptance:'NOT_RUN',RCVP:'NOT_RUN',FULL:'NOT_RUN'}});return;
       }
       const source=await publish(this.config,worktree,task);status='COMPLETED';
       await request(this.config,'result',{fence,task_id:task.id,status,evidence,acceptance:'BUILD_AND_TARGETED_TESTS',result:{source,remaining:[],blockers:[],independent_acceptance:'NOT_RUN',RCVP:'NOT_RUN',FULL:'NOT_RUN'}});
     }catch(e){
       const checkpoint=await preserve(worktree.root,this.config.checkpoints,randomUUID());this.put('checkpoint',checkpoint);
-      try{await request(this.config,'result',{fence,task_id:task.id,status:'BLOCKED',evidence,acceptance:'NOT_RUN',result:{blockers:[e.message],checkpoint:checkpoint.directory}});}catch{this.recovery=worktree;this.draining=true;}
+      try{await request(this.config,'result',{fence,task_id:task.id,status:'BLOCKED',evidence,acceptance:'NOT_RUN',result:{blockers:[e.message],checkpoint:path.basename(checkpoint.directory),checkpoint_ref_kind:'LOCAL_PRIVATE_CHECKPOINT_ID'}});}catch{this.recovery=worktree;this.draining=true;}
       this.error=e.message;
     }finally{this.active=null;this.put('active',this.recovery??null);this.event('WORKER_FINISHED',{task:task.id,status});}
   }

@@ -19,7 +19,13 @@ test('Dirty and untracked source survive checkpoint and isolated exact-commit re
   const c=await preserve(repo,path.join(root,'checkpoints'),'checkpoint');assert.equal(c.manifest.files.length,2);assert.equal(await readFile(path.join(c.directory,'source','owned','feature.txt'),'utf8'),'dirty preserved\n');assert.equal(await sha(repo),base);
   const task={id:'owned-task',source:{sha:base},paths:['owned/'],objective:'Implement a durable feature'};const config={repository:repo,worktrees:path.join(root,'worktrees'),remote:'origin'};
   const w=await createTaskWorktree(config,task,1);assert.equal(await readFile(path.join(w.root,'owned','feature.txt'),'utf8'),'original\n');assert.equal((await dirty(repo)).paths.length,2);
+  const resume={...task,local_only:true,codex_session_id:'12345678-1234-1234-1234-123456789012',resume_worktree_id:path.basename(w.root),resume_branch:w.branch};
+  assert.deepEqual(await createTaskWorktree(config,resume,2),w);
+  await assert.rejects(()=>createTaskWorktree(config,{...resume,resume_worktree_id:'../repo'},2),/continuation scope/);
+  await assert.rejects(()=>createTaskWorktree(config,{...resume,resume_worktree_id:undefined},2),/verified worktree locator/);
+  await assert.rejects(()=>createTaskWorktree(config,{...resume,resume_branch:'wrong'},2),/source changed/);
   await writeFile(path.join(w.root,'owned','feature.txt'),'actual new feature\n');const bare=path.join(root,'remote.git');await mkdir(bare);await git(bare,['init','--bare']);await git(repo,['remote','add','origin',bare]);
+  await assert.rejects(()=>createTaskWorktree(config,resume,2),/source changed/);
   const source=await publish(config,w,task);const receiving=path.join(root,'receiver');await git(repo,['clone','--no-checkout',bare,receiving]);await git(receiving,['config','core.autocrlf','false']);await git(receiving,['checkout','--detach',source.sha]);
   assert.equal(await sha(receiving),source.sha);assert.equal(await readFile(path.join(receiving,'owned','feature.txt'),'utf8'),'actual new feature\n');assert.equal(await readFile(path.join(repo,'owned','feature.txt'),'utf8'),'dirty preserved\n');
 });

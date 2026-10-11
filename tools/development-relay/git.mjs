@@ -37,6 +37,15 @@ export async function preserve(root,checkpointRoot,id) {
 }
 export async function createTaskWorktree(config,task,fence) {
   if(await sha(config.repository)!==task.source.sha && !(await git(config.repository,['cat-file','-t',task.source.sha])).includes('commit'))throw new Error('Exact source commit unavailable');
+  if(task.codex_session_id&&!task.resume_worktree_id)throw new Error('A session continuation requires its verified worktree locator');
+  if(task.resume_worktree_id){
+    if(!task.local_only||!task.codex_session_id?.match(/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i)||!task.resume_worktree_id.match(/^[a-z0-9][a-z0-9-]{0,99}$/)||!task.resume_branch)throw new Error('Private verified continuation scope required');
+    const dest=path.resolve(config.worktrees,task.resume_worktree_id);
+    if((await lstat(dest)).isSymbolicLink())throw new Error('Continuation worktree must not redirect through a link');
+    const branch=(await git(dest,['branch','--show-current'])).trim();
+    if(branch!==task.resume_branch||await sha(dest)!==task.source.sha||(await dirty(dest)).paths.length)throw new Error('Continuation worktree source changed; preserve and review it first');
+    return {root:dest,branch,base:task.source.sha};
+  }
   const dest=path.resolve(config.worktrees,`${task.id}-${fence}`),branch=`relay/${task.id}-${fence}`;
   await mkdir(path.dirname(dest),{recursive:true});await git(config.repository,['worktree','add','-b',branch,dest,task.source.sha]);
   return {root:dest,branch,base:task.source.sha};
