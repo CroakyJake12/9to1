@@ -1,0 +1,32 @@
+[
+  {
+    "id": "ACCEPT-001",
+    "priority": "P1",
+    "scope": "Relay writer custody",
+    "status": "FAIL",
+    "steps": "Run unchanged worker-guard parent-exit test, also alone with --test-name-pattern=Parent exit.",
+    "expected": "Owned writer is stopped before preserved checkpoint is treated as final; final bytes remain stable.",
+    "actual": "Snapshot baseline plus two ticks differs from bytes 300ms later (five ticks). Reproduced in full and isolated runs.",
+    "follow_up": "Review process identity after parent reparenting, actual child termination and checkpoint ordering. Preserve the regression; do not weaken the assertion."
+  },
+  {
+    "id": "ACCEPT-002",
+    "priority": "P1",
+    "scope": "Human review decision ordering",
+    "status": "FAIL",
+    "steps": "Using real private SQLite review implementation, save ACCEPTED then NEEDS_WORK at the same persisted timestamp.",
+    "expected": "Most recent explicit decision NEEDS_WORK is returned.",
+    "actual": "listReviews returns ACCEPTED. SQL sorts only by timestamp, with no monotonic tie-breaker.",
+    "follow_up": "Preserve insertion/decision ordering deterministically and test equal timestamp decisions. No whole-app acceptance may derive from an interface rating."
+  },
+  {
+    "id": "ACCEPT-003",
+    "priority": "P2",
+    "scope": "Cross-platform resource replacement regressions",
+    "status": "FAIL",
+    "steps": "Run exact compiler regression project on Linux SDK 10.0.401 with isolated artifacts.",
+    "expected": "Deliberate permission-denied replacement is tested while checking prior bundle/staging preservation.",
+    "actual": "Two tests expect IOException but Linux returns UnauthorizedAccessException; later preservation assertions are not reached.",
+    "follow_up": "Define platform-correct failure contract without weakening preservation/staging assertions. Re-run on Windows and Linux."
+  }
+]
