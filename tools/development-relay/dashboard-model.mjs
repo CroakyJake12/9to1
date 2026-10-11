@@ -17,9 +17,9 @@ export function operationalState(s){
  const blocked=continued?null:recovery??[...current].reverse().find(t=>t.status==='BLOCKED'&&t.owner&&!t.resolution&&!working.some(w=>w.executor===t.executor));
  const workers=['strata','opencode'].map(executor=>{
   const active=working.find(t=>t.executor===executor),next=queued.find(t=>t.executor===executor),last=[...tasks].reverse().find(t=>t.executor===executor);
-  const held=blocked?.executor===executor?blocked:null;
+  const held=blocked?.executor===executor?blocked:null,hold=s.worker_supervision?.workers?.find(w=>w.worker===executor&&w.status==='ON_HOLD')?.hold;
   return {executor,name:executor==='strata'?'Strata':'OpenCode',role:executor==='strata'?'Local coordinator':'Implementation worker',active,next,last,held,
-   state:active?'Working':held?'Blocked':next?'Queued':'Idle',task:active??held??next??last};
+   hold,state:hold?'On hold':active?'Working':held?'Blocked':next?'Queued':'Idle',task:active??held??next??last};
  });
  return {working,queued,recovery,blocked,workers,title:working.length?'Development in motion':blocked?'Development held at a checkpoint':s.presence?.paused?'Development paused':'Ready for the next task'};
 }

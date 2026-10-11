@@ -1,6 +1,11 @@
 import {DatabaseSync} from 'node:sqlite';
-import {open} from 'node:fs/promises';
+import {open,readFile} from 'node:fs/promises';
 import path from 'node:path';
+export async function readWorkerReport(privateRoot){
+ const report=JSON.parse(await readFile(path.join(privateRoot,'worker-status.private.json'),'utf8'));let plan;try{plan=JSON.parse(await readFile(path.join(privateRoot,'autonomous-worker-plan.private.json'),'utf8'));}catch{return report;}
+ for(const worker of report.workers??[]){const hold=plan.worker_holds?.[worker.worker];if(hold?.status==='ON_HOLD'&&hold.process_stopped===true)Object.assign(worker,{status:'ON_HOLD',pid:null,title:hold.title,task_id:hold.task_id,session_id:hold.session_id,worktree_id:hold.worktree_id,hold:{reason:hold.reason,check_at:hold.check_at,release_policy:hold.release_policy,instruction_file:hold.instruction_file,checkpoint_id:hold.checkpoint_id}});}
+ if(plan.goal?.status==='ON_HOLD')report.goal=plan.goal;return report;
+}
 export function openCodeSession(privateRoot,root){let db;try{db=new DatabaseSync(path.join(privateRoot,'opencode-isolated/data/opencode/opencode.db'),{readOnly:true});return db.prepare('SELECT id,title,time_updated FROM session WHERE directory=? OR directory=? ORDER BY time_updated DESC LIMIT 1').get(root,root.replace(/\\/g,'/'));}finally{db?.close();}}
 export function readActive(file){let db;try{db=new DatabaseSync(file,{readOnly:true});return JSON.parse(db.prepare('SELECT value FROM state WHERE key=?').get('active')?.value??'null');}catch(e){if(/unable to open|no such table/.test(e.message))return null;throw e;}finally{db?.close();}}
 export async function logTail(file,max=48000){const handle=await open(file,'r');try{const info=await handle.stat(),size=Math.min(info.size,max),buffer=Buffer.alloc(size);await handle.read(buffer,0,size,info.size-size);return buffer.toString('utf8');}finally{await handle.close();}}
