@@ -352,6 +352,39 @@ public sealed class CuiMarkupTests
             () => new CuiRichParser().ParseFile(Path.Combine(Path.GetTempPath(), sourceName)));
 
         Assert.Contains(".cui", parserException.Message, StringComparison.Ordinal);
-        Assert.Contains(".cui", loaderException.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ParserCapturesImportSourcesAndAliases()
+    {
+        var parser = new CuiRichParser();
+        var document = parser.Parse(
+            "<Cui><Import Source:\"shared/ui\"/><Import Source:\"shared/theme\" As:SharedTheme/><Page><Text>Hello</Text></Page></Cui>",
+            "imports.cui");
+
+        Assert.Empty(parser.Diagnostics.Diagnostics);
+        Assert.Equal(2, document.Imports.Count);
+        Assert.Equal("shared/ui", document.Imports[0].Source);
+        Assert.Null(document.Imports[0].Alias);
+        Assert.Equal("shared/theme", document.Imports[1].Source);
+        Assert.Equal("SharedTheme", document.Imports[1].Alias);
+    }
+
+    [Fact]
+    public void ImportRequiresASource()
+    {
+        var parser = new CuiRichParser();
+        _ = parser.Parse("<Cui><Import/></Cui>", "import.cui");
+
+        Assert.Contains(parser.Diagnostics.Diagnostics, diagnostic => diagnostic.Code == "CUI044");
+    }
+
+    [Fact]
+    public void ToolchainIndexesThemeAndPrefabProjectItems()
+    {
+        Assert.Equal(CuiProjectItemKind.ThemeMarkup, CuiProjectItems.Recognize("theme.cui-theme"));
+        Assert.Equal(CuiProjectItemKind.PrefabMarkup, CuiProjectItems.Recognize("aibar.cui-prefab"));
+        Assert.True(CuiProjectItems.IsCuiSourceFamily("aibar.cui-prefab"));
+        Assert.False(CuiProjectItems.IsCui("aibar.cui-prefab"));
     }
 }

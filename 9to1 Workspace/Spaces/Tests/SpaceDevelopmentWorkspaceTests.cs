@@ -26,12 +26,30 @@ public sealed partial class SpaceDevelopmentWorkspaceTests
         Assert.Equal(rig.Reference, reopened.Project.Reference);
         Assert.Equal(rig.Workspace.WorkspaceId, reopened.Project.Workspace.WorkspaceId);
         Assert.Equal(rig.Workspace.Revision, reopened.Project.Workspace.Revision);
-        Assert.Equal(rig.Workspace.Projects[0].ProjectId, reopened.Project.Project.ProjectId);
-        Assert.Equal(rig.Workspace.Projects[0].Name, reopened.Project.Project.Name);
         Assert.Equal(rig.Workspace.Roots[0], reopened.Project.Root);
         Assert.Equal(rig.Workspace.SourceControlBindings[0], reopened.Project.Repository);
         Assert.Equal(rig.Workspace.Roots, reopened.Project.Workspace.Roots);
-        Assert.Equal(rig.Workspace.Projects, reopened.Project.Workspace.Projects);
+        var expectedProjects = rig.Workspace.Projects;
+        var actualProjects = reopened.Project.Workspace.Projects;
+        Assert.Equal(expectedProjects.Count, actualProjects.Count);
+        for (var index = 0; index < expectedProjects.Count; index++)
+        {
+            var expectedProject = expectedProjects[index];
+            var actualProject = actualProjects[index];
+            Assert.Equal(expectedProject.ProjectId, actualProject.ProjectId);
+            Assert.Equal(expectedProject.ProjectTypeId, actualProject.ProjectTypeId);
+            Assert.Equal(expectedProject.Name, actualProject.Name);
+            Assert.Equal(expectedProject.RootIds.ToArray(), actualProject.RootIds.ToArray());
+            Assert.Equal(expectedProject.Language, actualProject.Language);
+            Assert.Equal(expectedProject.Framework, actualProject.Framework);
+            Assert.Equal(expectedProject.BuildSystem, actualProject.BuildSystem);
+            Assert.Equal(expectedProject.TargetPlatforms.ToArray(), actualProject.TargetPlatforms.ToArray());
+            Assert.Equal(expectedProject.ToolchainRequirementIds.ToArray(), actualProject.ToolchainRequirementIds.ToArray());
+            Assert.Equal(expectedProject.RunConfigurationIds.ToArray(), actualProject.RunConfigurationIds.ToArray());
+            Assert.Equal(expectedProject.DebugConfigurationIds.ToArray(), actualProject.DebugConfigurationIds.ToArray());
+            Assert.Equal(expectedProject.PreviewProviderId, actualProject.PreviewProviderId);
+            Assert.Equal(expectedProject.Revision, actualProject.Revision);
+        }
         Assert.Equal(rig.Original.TaskId, reopened.Task.Snapshot!.TaskId);
         Assert.Equal(rig.Original.ExecutionId, reopened.Task.Snapshot.ExecutionId);
         Assert.Equal(rig.Conversations.Current.Id, reopened.Task.Snapshot.ContextId);

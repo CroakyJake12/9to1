@@ -6,15 +6,60 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <AssemblyName>NineToOne.Wave.BrowserEngine</AssemblyName>
     <WaveOwnerRoot>$(MSBuildProjectDirectory)/../../../../9to1 Workspace/Wave</WaveOwnerRoot>
+    <WaveMediaOwnerRoot>$(MSBuildProjectDirectory)/../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Media</WaveMediaOwnerRoot>
     <WavePythonExecutable Condition="'$(WavePythonExecutable)' == ''">python3</WavePythonExecutable>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../../9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj" />
+    <!-- Haven.Infrastructure declares Platforms=x64 for the Windows-native speech and VAD
+         binaries, so it cannot be referenced from a browser-wasm assembly. The pure PCM
+         decoder is source-linked unchanged instead of pulling in the x64 project. -->
+    <WaveOwnerSource Include="$(WaveMediaOwnerRoot)/PcmWaveformReader.cs" ExpectedHash="1fdaec0685586e7a0eb75af80c9ff0fea84a927237ab2a7cbfada2e35fa88095" />
     <Compile Include="$(WaveOwnerRoot)/WaveProject.cs" Link="Owner/WaveProject.cs" />
     <Compile Include="$(WaveOwnerRoot)/WaveProjectEdits.cs" Link="Owner/WaveProjectEdits.cs" />
     <Compile Include="$(WaveOwnerRoot)/WaveTimelineAnnotations.cs" Link="Owner/WaveTimelineAnnotations.cs" />
     <Compile Include="$(WaveOwnerRoot)/WaveMediaAssetReferences.cs" Link="Owner/WaveMediaAssetReferences.cs" />
+    <Compile Include="$(WaveMediaOwnerRoot)/PcmWaveformReader.cs" Link="Owner/PcmWaveformReader.cs" />
   </ItemGroup>
+  <UsingTask TaskName="CheckCanonicalSourcePins" TaskFactory="RoslynCodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)/Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Files ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" /><Using Namespace="System.Security.Cryptography" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        // Pins record the canonical LF source blob. A CRLF checkout must not be
+        // judged as a content change, so the guard hashes canonical content.
+        using (var sha = SHA256.Create())
+        {
+          foreach (var item in Files)
+          {
+            var bytes = File.ReadAllBytes(item.ItemSpec);
+            using (var canonical = new MemoryStream())
+            {
+              for (int i = 0; i < bytes.Length; i++)
+              {
+                if (bytes[i] == 13 && i + 1 < bytes.Length && bytes[i + 1] == 10) continue;
+                canonical.WriteByte(bytes[i]);
+              }
+              var hash = BitConverter.ToString(sha.ComputeHash(canonical.ToArray())).Replace("-", "").ToLowerInvariant();
+              var expected = item.GetMetadata("ExpectedHash");
+              if (!string.Equals(hash, expected, StringComparison.OrdinalIgnoreCase))
+              {
+                Log.LogError("The owning Wave source {0} changed. Canonical LF hash {1} does not match the reviewed pin {2}. Review that owner revision and its browser dependency closure before updating the source pin.",
+                  item.ItemSpec, hash, expected);
+                return false;
+              }
+            }
+          }
+        }
+      ]]></Code>
+    </Task>
+  </UsingTask>
+  <Target Name="CheckReviewedWaveOwnerSources" BeforeTargets="CoreCompile">
+    <CheckCanonicalSourcePins Files="@(WaveOwnerSource)" />
+  </Target>
   <Target Name="GenerateReviewedOwnerWaveDecoder" BeforeTargets="CoreCompile">
     <MakeDir Directories="$(IntermediateOutputPath)" />
     <Exec Command="&quot;$(WavePythonExecutable)&quot; &quot;$(MSBuildProjectDirectory)/generate-owner-decoder.py&quot; --source &quot;$(WaveOwnerRoot)/Program.cs&quot; --output &quot;$(IntermediateOutputPath)OwnerWaveDecoder.g.cs&quot; --manifest &quot;$(IntermediateOutputPath)owner-decoder-manifest.json&quot;" />

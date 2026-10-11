@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input;
 using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Themes.Fluent;
 
@@ -78,8 +79,44 @@ public sealed class WriteApplication : Application
                 }
                 finally { closePending = false; }
             };
+            window.KeyDown += async (_, args) =>
+            {
+                if (_host is null || startupPending || closePending) return;
+                if (args.Key != Key.P || !args.KeyModifiers.HasFlag(KeyModifiers.Control)) return;
+                args.Handled = true;
+                try
+                {
+                    await _host.PrintAsync();
+                }
+                catch (Exception error)
+                {
+                    // A refused or failed print must never look like it succeeded,
+                    // and it must never tear down the editor holding the draft.
+                    await ShowMessageAsync(window, "Write could not print", error.Message);
+                }
+            };
             desktop.MainWindow = window;
         }
         base.OnFrameworkInitializationCompleted();
+
+        static async Task ShowMessageAsync(Window owner, string title, string message)
+        {
+            var dialog = new Window
+            {
+                Title = title,
+                Width = 480,
+                SizeToContent = SizeToContent.WidthAndHeight,
+                CanResize = false,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Content = new TextBlock
+                {
+                    Text = message,
+                    Margin = new Thickness(20),
+                    MaxWidth = 440,
+                    TextWrapping = Avalonia.Media.TextWrapping.Wrap
+                }
+            };
+            await dialog.ShowDialog(owner);
+        }
     }
 }

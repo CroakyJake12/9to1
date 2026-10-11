@@ -597,6 +597,11 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunDelegationAutho
         private async ValueTask<IAsyncDisposable?> AcquireOriginalCommitPinBodyAsync(CancellationToken token)
         {
             // Raw lifetime only: NO provider/Home/Files/SQLite/Context read under owner transaction.
+            lock (issuer._sync)
+            lock (_sync)
+            {
+                if (_closing) return null;
+            }
             await _commit.WaitAsync(token).ConfigureAwait(false);
             lock (issuer._sync)
             lock (_sync)

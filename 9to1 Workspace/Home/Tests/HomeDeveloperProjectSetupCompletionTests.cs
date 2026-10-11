@@ -53,12 +53,12 @@ public sealed partial class HomeDeveloperProjectSetupJournalTests
         var prepared = await rig.Prepare(owner); await AcknowledgeCompletePlan(owner, prepared, rig.Source, issuer, completionLifetime.Token);
         var completion = await owner.GetOriginalCompletionAsync(prepared.Intent, rig.Source, completionLifetime.Token);
         Assert.NotNull(completion);
-        var reopened = CompletionOwner(rig, issuer); var adopted = await rig.Prepare(reopened); var writes = rig.Store.SetupWrites; rig.ExpectFault = true;
+        var reopened = CompletionOwner(rig, issuer); var writes = rig.Store.SetupWrites; rig.ExpectFault = true;
         var record = (await rig.Store.Inner.ReadAsync()).State!.Records.Single(row => row.RecordType == "home.dev-project-setup");
         Assert.All(record.Payload.Deserialize<DeveloperProjectSetupCheckpoint>()!.Observations,
             observation => Assert.Equal(DeveloperProjectSetupStepState.Acknowledged, observation.State));
-        await AssertOriginalCause<UnauthorizedAccessException>(() => reopened.GetOriginalCompletionAsync(adopted.Intent, rig.Source, completionLifetime.Token));
-        Assert.False(reopened.IsIssuedOriginalCompletion(adopted.Intent, rig.Source, completion));
+        await AssertOriginalCause<UnauthorizedAccessException>(() => reopened.GetOriginalCompletionAsync(prepared.Intent, rig.Source, completionLifetime.Token));
+        Assert.False(reopened.IsIssuedOriginalCompletion(prepared.Intent, rig.Source, completion));
         Assert.Equal(writes, rig.Store.SetupWrites); Assert.Equal(0, rig.Captures.ResourceEffects);
     }
 
@@ -165,3 +165,4 @@ public sealed partial class HomeDeveloperProjectSetupJournalTests
         public void DemandExternalOriginalSetupStepOutcomeJoin() { }
     }
 }
+

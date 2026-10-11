@@ -196,5 +196,16 @@ public sealed class ModelRouterTests
         /// Retrieves models async for the current operation.
         /// </summary>
         public Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken) => Task.FromResult(models);
+        // The router reads through the policy overload, so the stub must answer that same policy. Without this
+        // override the interface default enumerates Providers, which this stub has none of, so every route
+        // that expects a successful selection sees an empty candidate set.
+        public Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(ModelCataloguePolicy policy, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(policy);
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult<IReadOnlyList<ProviderModelDescriptor>>(models.Where(model =>
+                (model.IsLocal ? policy.AllowLocal : policy.AllowRemote) &&
+                (policy.AllowedProviderIds is null || policy.AllowedProviderIds.Contains(model.ProviderId))).ToArray());
+        }
     }
 }

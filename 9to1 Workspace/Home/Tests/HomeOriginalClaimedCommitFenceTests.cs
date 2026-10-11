@@ -174,7 +174,7 @@ public sealed class HomeOriginalClaimedCommitFenceTests
                     "Actual test Home WRITE fence only; no Den or Files mutation.", null, "original-fence-test");
                 var submitted = await rig.Broker.AuthorizePreparedReviewAsync(review, rig.Token);
                 Assert.Equal(HomePermissionRequestState.PendingApproval, submitted.Request!.State);
-                Assert.True((await permissions.DecideAsync(review.RequestId, HomeApprovalChoice.Accept, rig.Token)).Succeeded);
+                Assert.True((await permissions.DecideAsync(review.RequestId, HomeApprovalChoice.Accept, cancellationToken: rig.Token)).Succeeded);
                 rig.Capability = await rig.Broker.BeginExecutionCapabilityAsync(review.RequestId, arguments, rig.Token)
                     ?? throw new InvalidOperationException("No actual approved capability.");
                 Assert.Equal(HomeResourceClaimDisposition.Claimed, (await rig.Broker.ClaimExecutionObservedAsync(rig.Capability,

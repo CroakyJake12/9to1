@@ -1,4 +1,4 @@
-using Haven.Application;
+﻿using Haven.Application;
 using Haven.Browser;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -48,7 +48,11 @@ public static class OriginalTaskExecutionServiceCollectionExtensions
         services.AddSingleton<CapabilityPreflightService>();
         services.AddSingleton<TerminalCommandActivityHub>();
         services.AddSingleton<WorkspaceToolRuntime>();
-        services.AddSingleton<ComputerToolRuntime>();
+        services.AddSingleton<IComputerUseAdmission, HomeComputerUseAdmission>();
+        services.AddSingleton<ComputerToolRuntime>(provider => new(
+            provider.GetRequiredService<IComputerToolService>(),
+            provider.GetRequiredService<IComputerUseSessionController>(),
+            provider.GetRequiredService<IComputerUseAdmission>()));
         services.AddSingleton(provider => new DualModelService(provider.GetRequiredService<IOllamaClient>(), provider.GetRequiredService<IExecutionEventSink>()));
         services.AddSingleton(provider => new JudgeService(new TrainingJudgeAdapter(provider.GetRequiredService<IOllamaClient>()), provider.GetRequiredService<IExecutionEventSink>()));
         services.AddSingleton<ChatSessionService>(provider => new ChatSessionService(
@@ -82,3 +86,4 @@ public static class OriginalTaskExecutionServiceCollectionExtensions
     }
     private sealed class Registration { }
 }
+

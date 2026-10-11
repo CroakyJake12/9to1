@@ -64,7 +64,7 @@ public sealed class HomePackageOriginalReadActivationTests
             Assert.True(ContainsReference(failure, borrowedFailure)); expected.Add(original);
             var closeFailure = await Assert.ThrowsAsync<AggregateException>(async () => await close);
             Assert.True(ContainsReference(closeFailure, borrowedFailure)); expected.Add(close);
-            Assert.Same(endpoint.Channel, endpoint.Open.Task.GetAwaiter().GetResult()); Assert.Equal(1, endpoint.Channel!.DisposeCalls);
+            Assert.Same(endpoint.Channel, await endpoint.Open.Task); Assert.Equal(1, endpoint.Channel!.DisposeCalls);
             Assert.Equal(0, artifacts.Calls); Assert.True(endpoint.Channel.OriginalDispose.Task.IsCompletedSuccessfully);
         }
         catch (Exception cause) { errors.Add(cause); }

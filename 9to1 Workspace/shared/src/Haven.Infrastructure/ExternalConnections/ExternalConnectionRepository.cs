@@ -1,4 +1,4 @@
-using Haven.Application;
+﻿using Haven.Application;
 using Haven.Core;
 using Microsoft.Data.Sqlite;
 
@@ -7,6 +7,7 @@ namespace Haven.Infrastructure;
 public sealed class ExternalConnectionRepository(ISqliteConnectionFactory factory) : IExternalConnectionRepository
 {
     public bool HasOriginalSqliteFactory(ISqliteConnectionFactory sameActual) => ReferenceEquals(factory, sameActual);
+    public bool SupportsGuardedPublication => true;
     internal static ExternalConnectionCapabilityMetadata ReadOriginalCapabilityMetadata(SqliteDataReader reader) => new(
         reader.Guid("id"), reader.String("name"), (ExternalConnectionKind)reader.Int32("kind"),
         reader.Boolean("is_enabled"), (ExternalConnectionState)reader.Int32("state"), reader.DateTimeOffset("updated_at"));
@@ -24,17 +25,58 @@ public sealed class ExternalConnectionRepository(ISqliteConnectionFactory factor
     public async Task<ExternalConnection?> GetAsync(Guid id, CancellationToken cancellationToken)
     {
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        return await ReadAsync(connection, null, id, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task UpsertAsync(ExternalConnection item, CancellationToken cancellationToken)
+    {
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await WriteAsync(connection, null, item, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<bool> CompareExchangeAsync(ExternalConnection? expected, ExternalConnection replacement, CancellationToken cancellationToken)
+    {
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+
+        var current = await ReadAsync(connection, transaction, replacement.Id, cancellationToken).ConfigureAwait(false);
+        if (expected is null)
+        {
+            if (current is not null) return false;
+        }
+        else if (current != expected)
+        {
+            return false;
+        }
+
+        await WriteAsync(connection, transaction, replacement, cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return true;
+    }
+
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM external_connections WHERE id=$id;";
+        command.Parameters.AddWithValue("$id", id.ToString());
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task<ExternalConnection?> ReadAsync(SqliteConnection connection, SqliteTransaction? transaction, Guid id, CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText = "SELECT * FROM external_connections WHERE id=$id LIMIT 1;";
         command.Parameters.AddWithValue("$id", id.ToString());
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         return await reader.ReadAsync(cancellationToken).ConfigureAwait(false) ? Read(reader) : null;
     }
 
-    public async Task UpsertAsync(ExternalConnection item, CancellationToken cancellationToken)
+    private static async Task WriteAsync(SqliteConnection connection, SqliteTransaction? transaction, ExternalConnection item, CancellationToken cancellationToken)
     {
-        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText = """
             INSERT INTO external_connections(id,name,provider_key,kind,preset_key,is_enabled,state,status,configuration_json,server_name,server_version,protocol_version,created_at,updated_at,capability_snapshot_json,capability_snapshot_version)
             VALUES($id,$name,$provider,$kind,$preset,$enabled,$state,$status,$config,$serverName,$serverVersion,$protocol,$created,$updated,$snapshot,$snapshotVersion)
@@ -59,15 +101,6 @@ public sealed class ExternalConnectionRepository(ISqliteConnectionFactory factor
         command.Parameters.AddWithValue("$updated", item.UpdatedAt.ToString("O"));
         command.Parameters.AddWithValue("$snapshot", (object?)item.CapabilitySnapshotJson ?? DBNull.Value);
         command.Parameters.AddWithValue("$snapshotVersion", (object?)item.CapabilitySnapshotVersion ?? DBNull.Value);
-        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-    }
-
-    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
-    {
-        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
-        await using var command = connection.CreateCommand();
-        command.CommandText = "DELETE FROM external_connections WHERE id=$id;";
-        command.Parameters.AddWithValue("$id", id.ToString());
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 

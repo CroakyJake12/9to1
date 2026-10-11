@@ -172,7 +172,10 @@ public sealed class PlaySessionServiceTests
         router = new GenerativeUiEventRouter(
             [appHandler],
             new BoundedGenUiEventAuditSink(),
-            new GenUiInstanceStore());
+            new GenUiInstanceStore(),
+            // App-route actions always pass through the shared decision engine, so the fixture must supply the
+            // real one. Without it the router reports the engine as unavailable and no action can complete.
+            new PermissionDecisionEngine());
         return service;
     }
 

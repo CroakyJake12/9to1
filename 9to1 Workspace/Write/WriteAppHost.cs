@@ -13,12 +13,14 @@ public sealed class WriteAppHost : IAsyncDisposable
 {
     private readonly HavenEventBus _eventBus;
     private readonly ServiceProvider? _ownedServices;
+    private readonly INotesImportExportService _formats;
     private bool _disposed;
 
-    private WriteAppHost(WritePage page, HavenEventBus eventBus, ServiceProvider? ownedServices)
+    private WriteAppHost(WritePage page, HavenEventBus eventBus, INotesImportExportService formats, ServiceProvider? ownedServices)
     {
         Page = page;
         _eventBus = eventBus;
+        _formats = formats;
         _ownedServices = ownedServices;
     }
 
@@ -96,6 +98,18 @@ public sealed class WriteAppHost : IAsyncDisposable
         return Page.PrepareToCloseAsync("Autosave before closing Write", cancellationToken);
     }
 
+    /// <summary>
+    /// Hands the open document to the owner's print service. The document must be
+    /// open: printing the last closed document would silently print work the
+    /// writer can no longer see, so the guard is an explicit failure instead.
+    /// </summary>
+    public Task PrintAsync(CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (Document is not { } document) throw new InvalidOperationException("Open a document first.");
+        return _formats.PrintAsync(document, cancellationToken);
+    }
+
     public async ValueTask DisposeAsync()
     {
         if (_disposed) return;
@@ -128,7 +142,7 @@ public sealed class WriteAppHost : IAsyncDisposable
         {
             var page = new WritePage(eventBus, repository, formats, attachments, initialDocumentId,
                 ai, aiModels, readAloud, nativePackageStore);
-            return new WriteAppHost(page, eventBus, ownedServices);
+            return new WriteAppHost(page, eventBus, formats, ownedServices);
         }
         catch
         {

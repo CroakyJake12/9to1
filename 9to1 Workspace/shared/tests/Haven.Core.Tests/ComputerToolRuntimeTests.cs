@@ -8,6 +8,8 @@
  */
 
 using Haven.Application;
+using Haven.Core;
+using NineToOne.Cui.AI;
 
 namespace Haven.Core.Tests;
 
@@ -23,7 +25,7 @@ public sealed class ComputerToolRuntimeTests
     public async Task DirectLaunchRequestExecutesWithoutAWorkspace()
     {
         var service = new RecordingComputerTools();
-        var pass = new ComputerToolRuntime(service).CreatePass();
+        var pass = AuthorizedPass(service, SyntheticComputerTarget);
         var call = pass.TryCreateBootstrapCall("open notepad");
 
         Assert.NotNull(call);
@@ -41,7 +43,7 @@ public sealed class ComputerToolRuntimeTests
     public async Task DesktopMutationsAutomaticallyInspectBetweenActions()
     {
         var tools = new RecordingComputerTools();
-        var pass = new ComputerToolRuntime(tools).CreatePass();
+        var pass = AuthorizedPass(tools, SyntheticComputerTarget);
         var first = pass.TryCreateBootstrapCall("open notepad")!;
         var second = pass.TryCreateBootstrapCall("open calculator")!;
 
@@ -70,7 +72,7 @@ public sealed class ComputerToolRuntimeTests
     public async Task ActivityPreviewIsBoundedWhileFullSnapshotRemainsAvailableToModel()
     {
         var fullSnapshot = new string('x', 900);
-        var pass = new ComputerToolRuntime(new RecordingComputerTools { SnapshotOutput = fullSnapshot }).CreatePass();
+        var pass = AuthorizedPass(new RecordingComputerTools { SnapshotOutput = fullSnapshot }, SyntheticComputerTarget);
 
         var result = await pass.ExecuteAsync(Call("computer_snapshot", new { }), CancellationToken.None);
 
@@ -102,7 +104,7 @@ public sealed class ComputerToolRuntimeTests
     public async Task ComputerClickPublishesVirtualCursorWithoutOwningPhysicalPointerState()
     {
         using var controller = new ComputerUseSessionController();
-        using var pass = new ComputerToolRuntime(new RecordingComputerTools(), controller).CreatePass();
+        using var pass = AuthorizedPass(new RecordingComputerTools(), SyntheticComputerTarget, controller);
 
         var result = await pass.ExecuteAsync(Call("computer_click", new
         {
@@ -129,11 +131,39 @@ public sealed class ComputerToolRuntimeTests
         return new OllamaToolCall(name, document.RootElement.EnumerateObject().ToDictionary(property => property.Name, property => property.Value.Clone()));
     }
 
+    // The runtime will not dispatch without an eligible canonical target and a Home grant for that exact target,
+    // so the fixture must supply both through the same canonical seams the product uses.
+    private const string SyntheticComputerTarget = "synthetic.test.application.notepad";
+
+    private static ComputerUseRequest EligibleComputerRequest(string targetAppId) => new("synthetic-request", targetAppId,
+        [new InvocationToken("synthetic-computer-use-token", new InvocationResource(InvocationKind.System,
+            InvocationCompose.ComputerUseCapabilityId, "Computer Use"), 0, 0, "Computer Use", Guid.NewGuid().ToString("N")),
+         new InvocationToken("synthetic-app-token", new InvocationResource(InvocationKind.App, targetAppId, "Notepad",
+            Revision: "synthetic-backend-revision1", InteractionPath: AppInteractionPath.ComputerUseRequired,
+            Classification: AppClassification.OrdinaryApplication), 0, 0, "Notepad")]);
+
+    private static ComputerToolPass AuthorizedPass(RecordingComputerTools tools, string targetAppId,
+        ComputerUseSessionController? controller = null)
+    {
+        var engine = new PermissionDecisionEngine();
+        var request = EligibleComputerRequest(targetAppId);
+        tools.EligibleTarget = targetAppId;
+        engine.Grant("computeruse:" + targetAppId);
+        return new ComputerToolRuntime(tools, controller ?? new ComputerUseSessionController(),
+            new HomeComputerUseAdmission(engine)).CreatePass(request);
+    }
+
     /// <summary>
     /// Represents recording computer tools and keeps its related state and behavior together.
     /// </summary>
     private sealed class RecordingComputerTools : IComputerToolService
     {
+        /// <summary>
+        /// Gets or updates eligible target, the canonical app this fixture resolves before dispatch.
+        /// </summary>
+        public string EligibleTarget { get; set; } = SyntheticComputerTarget;
+        public ValueTask<bool> VerifyTargetAsync(string canonicalAppId, string toolName, System.Text.Json.JsonElement arguments,
+            CancellationToken cancellationToken) => ValueTask.FromResult(canonicalAppId == EligibleTarget);
         /// <summary>
         /// Gets or updates snapshot output, the bindable or domain state represented by this property.
         /// </summary>

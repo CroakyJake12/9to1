@@ -1,4 +1,4 @@
-/*
+﻿/*
  * FILE DOCUMENTATION
  * Where: src/Haven.Infrastructure/VerifiedNotesStores.cs, in the Infrastructure layer, where persistence, providers, Windows integration, and external I/O are implemented.
  * What: This file owns VerifiedNotesRepository, NotesIntegrityManifest, SecureNotesAttachmentStore. Read the type and member comments below as a map of each responsibility.
@@ -24,6 +24,11 @@ public sealed class VerifiedNotesRepository(
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web) { WriteIndented = true };
     private readonly string _root = inner.VerifyOwningRoot(paths);
+
+    /// <summary>
+    /// Forwards the migration path registered by the managed wrapper to the repository that owns the read fence.
+    /// </summary>
+    internal void RegisterMigrationPath(INotesDocumentMigrator migrator) => inner.RegisterMigrationPath(migrator);
 
     public Task<IReadOnlyList<NotesDocumentSummary>> ListAsync(CancellationToken cancellationToken) => inner.ListAsync(cancellationToken);
 

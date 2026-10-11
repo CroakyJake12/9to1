@@ -1,4 +1,4 @@
-<Cui id="home" product="9-1" version="1">
+﻿<Cui id="home" product="9-1" version="1">
   <DefaultTheme value="Default">
     <StackPanel id="home-root" orientation="Vertical" background="{Resource CuiBackgroundBrush}"><If Condition="{Binding IsNativeHomeShell, fallback=true}">
       <StackPanel id="top-bar" orientation="Horizontal" padding="24 16" background="{Resource CuiPanelBrush}">
@@ -149,7 +149,7 @@
                  <Button action="DisableAIReorder" content="Keep layout fixed" />
                </StackPanel>
                <Button action="RefreshHomeWorkspace" content="Reload saved preferences" margin="0 12 0 0" />
-               <TextBlock text="{Binding NavigationStatus}" foreground="{Resource CuiTextSoftBrush}" margin="0 12 0 0" />
+               <TextBlock id="settings-navigation-status" text="{Binding NavigationStatus}" foreground="{Resource CuiTextSoftBrush}" margin="0 12 0 0" />
              </StackPanel>
            </If>
            <If Condition="{Binding IsPermissions}">
@@ -163,7 +163,7 @@
                  <Button id="home-permission-accept" content="Allow once" margin="0 0 12 0" />
                  <Button id="home-permission-decline" content="Decline" />
                </StackPanel>
-               <TextBlock text="{Binding NavigationStatus}" foreground="{Resource CuiTextSoftBrush}" margin="0 12 0 0" />
+               <TextBlock id="permissions-navigation-status" text="{Binding NavigationStatus}" foreground="{Resource CuiTextSoftBrush}" margin="0 12 0 0" />
              </StackPanel>
            </If>
          </StackPanel>
@@ -200,3 +200,4 @@
     </StackPanel>
   </DefaultTheme>
 </Cui>
+

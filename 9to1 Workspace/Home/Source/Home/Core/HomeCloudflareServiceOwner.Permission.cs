@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.Json;
 using Haven.Application;
 using HavenOS.Home.PermissionsTrustNotifications;
@@ -31,7 +31,7 @@ public sealed partial class HomeCloudflareServiceOwner
             {
                 if (_acquire is not null) return _acquire;
                 if (_sealed) throw new ObjectDisposedException(nameof(Permission));
-                _stages.BindOriginalOwner(this); _stages.BindOriginalCallerCallback(owner.OriginalHostCaller(Binding.OriginalCallerCallback));
+                _stages.BindOriginalOwner(this); if (Binding.OriginalCallerCallback is { } boundCaller) _stages.BindOriginalCallerCallback(owner.OriginalHostCaller(boundCaller));
                 _stop = CancellationTokenSource.CreateLinkedTokenSource(token);
                 var begin = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                 _acquire = AcquirePublishedAsync(begin.Task, _stop.Token); owner.RetainExistingOriginalHostTask(_acquire, _stages, this); begin.SetResult(); return _acquire;
@@ -41,7 +41,7 @@ public sealed partial class HomeCloudflareServiceOwner
         {
             await begin.ConfigureAwait(false); using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
             await _stages.AwaitAsync(_stages.Invoke(() => owner._actions.ValidateOriginalActionAdmissionAsync(Binding.ActionAdmission, Binding.OriginalPreparation, Binding.OriginalAttempt, token))).ConfigureAwait(false);
-            await _stages.AwaitAsync(_stages.Invoke(() => owner.RevalidateCallerScopedOriginalAsync(Binding.Invocation.Service, Binding.OriginalCallerCallback, token))).ConfigureAwait(false);
+            await _stages.AwaitAsync(_stages.Invoke(() => owner.RevalidateCallerScopedOriginalAsync(Binding.Invocation.Service, _stages.OriginalCallerCallback, token))).ConfigureAwait(false);
             if (!owner._services.TryGetValue(Binding.Invocation.Service, out _capture)) throw new UnauthorizedAccessException("SAME configured Home service required.");
             _namespace = await owner.NamespaceRecordAsync(Binding.Invocation, _stages, token).ConfigureAwait(false);
             if (_namespace is { RecordType: "home.cloudflare.namespace" } && _namespace.Payload.Deserialize<Namespace>() is { } ns && ns.ProfileId != _capture.Actor.ProfileId)
@@ -102,7 +102,7 @@ public sealed partial class HomeCloudflareServiceOwner
         public async ValueTask RevalidateOriginalAsync(CloudflareOriginalTaskBinding actual, CancellationToken token)
         {
             DemandPair(actual);
-            await _stages.AwaitAsync(_stages.Invoke(() => owner.RevalidateCallerScopedOriginalAsync(Binding.Invocation.Service, Binding.OriginalCallerCallback, token))).ConfigureAwait(false);
+            await _stages.AwaitAsync(_stages.Invoke(() => owner.RevalidateCallerScopedOriginalAsync(Binding.Invocation.Service, _stages.OriginalCallerCallback, token))).ConfigureAwait(false);
             var ns = await owner.NamespaceRecordAsync(Binding.Invocation, _stages, token).ConfigureAwait(false);
             if ((_namespace is null) != (ns is null) || _namespace is not null && Fingerprint(_namespace) != Fingerprint(ns)) throw new UnauthorizedAccessException("Original Task namespace changed.");
             if (await owner.ActorAsync(_stages, token).ConfigureAwait(false) != _capture!.Actor) throw new UnauthorizedAccessException("Home actor changed.");
@@ -116,14 +116,14 @@ public sealed partial class HomeCloudflareServiceOwner
             if (_namespace is null || !IsBorrowedMarker(Binding.Invocation, _namespace)) return;
             if (!ReferenceEquals(sdk, owner._mcp)) throw new UnauthorizedAccessException("SAME configured actual SDK binding reader required.");
             var borrowed = _namespace.Payload.Deserialize<BorrowedNamespace>()!;
-            var stages = owner.CreateOriginalHostSources(Binding.OriginalCallerCallback); stages.BindOriginalOwner(this);
+            var stages = owner.CreateOriginalHostSources(_stages.OriginalCallerCallback); stages.BindOriginalOwner(this);
             try
             {
                 var read = new WorkerReadAdmission(owner, Binding.Invocation.Service, borrowed.Selection, _capture!, _capability!, _attestation!,
                     [_capture!.Record, _namespace], stages, Binding, () => DemandPair(Binding));
                 var observation = await stages.AwaitAsync(stages.Invoke(() => sdk.ReadOriginalWorkerBindingAsync(Binding.Invocation.Service,
                     borrowed.Selection, read, finite => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
-                    { if (Binding.OriginalCallerCallback is { } caller) caller(finite); else finite(); return true; }), token))).ConfigureAwait(false);
+                    { if (_stages.OriginalCallerCallback is { } caller) caller(finite); else finite(); return true; }), token))).ConfigureAwait(false);
                 foreach (var raw in observation.OriginalTasks) _ = stages.Track(raw);
                 foreach (var cause in observation.OriginalErrors) stages.Retain(cause);
                 if (observation.OriginalErrors.Count != 0) throw new AggregateException("The actual original live binding read/cleanup failed.", observation.OriginalErrors);
@@ -275,3 +275,4 @@ public sealed partial class HomeCloudflareServiceOwner
         }
     }
 }
+

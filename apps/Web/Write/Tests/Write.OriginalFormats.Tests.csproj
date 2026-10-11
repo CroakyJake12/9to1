@@ -16,6 +16,7 @@
     <Compile Include="../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/NotesImportExportService.cs" Link="Owner/NotesImportExportService.cs" />
     <Compile Include="../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/NotesDocxFormatService.cs" Link="Owner/NotesDocxFormatService.cs" />
     <Compile Include="../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/ProductionReliabilityServices.cs" Link="Owner/ProductionReliabilityServices.cs" />
+    <Compile Include="../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/StartupRecoveryCoordinator.FinalClean.cs" Link="Owner/StartupRecoveryCoordinator.FinalClean.cs" />
     <ProjectReference Include="../Packages/NineToOne.Write.Packages.csproj" />
     <ProjectReference Include="../../../../9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj" />
     <Using Include="Xunit" />

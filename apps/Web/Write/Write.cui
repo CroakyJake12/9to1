@@ -1,30 +1,232 @@
 <Cui id="write.browser" version="1">
-  <Actions><Action name="OpenSavedDocument" command="OpenDocument" parameter="{Binding savedDocument}" /></Actions>
+  <Actions>
+    <Action name="OpenSavedDocument" command="OpenDocument" parameter="{Binding savedDocument}" />
+    <Action name="ApplyStyle" command="ApplyStyle" parameter="{Binding style}" />
+  </Actions>
   <Grid RowDefinitions="Auto,Auto,*" margin="12">
     <TextBlock grid-row="0" text="{Binding DocumentTitle}" font-size="24" />
     <StackPanel grid-row="1" margin="0,8">
-      <WrapPanel>
+        <TextBlock text="Saved documents on this browser" font-size="16" margin="0,8,0,4" />
+        <Button content="Refresh documents" action="RefreshDocuments" is-enabled="{Binding CanRefreshDocuments}" />
+        <ScrollViewer max-height="160">
+          <Repeat Source="{Binding Documents}" As="savedDocument" Key="{Binding savedDocument.Id}">
+            <Button content="{Binding savedDocument.Title}" action="OpenSavedDocument" is-enabled="{Binding CanBrowseDocuments}" />
+          </Repeat>
+        </ScrollViewer>
+        <WrapPanel>
         <Button content="New" action="CreateDocument" is-enabled="{Binding CanCreate}" />
         <Button content="Save" action="SaveDocument" is-enabled="{Binding CanSave}" />
-        <Button content="Bold" action="BoldSelection" is-enabled="{Binding CanBold}" />
+        <Button content="Bold" action="BoldSelection" is-enabled="{Binding CanFormat}" />
+        <Button content="Italic" action="ItalicSelection" is-enabled="{Binding CanFormat}" />
+        <Button content="Underline" action="UnderlineSelection" is-enabled="{Binding CanFormat}" />
+        <Button content="Strikethrough" action="StrikeSelection" is-enabled="{Binding CanFormat}" />
+        <Button content="Align left" action="AlignLeft" is-enabled="{Binding CanAlign}" />
+        <Button content="Align center" action="AlignCenter" is-enabled="{Binding CanAlign}" />
+        <Button content="Align right" action="AlignRight" is-enabled="{Binding CanAlign}" />
+        <Button content="Justify" action="AlignJustify" is-enabled="{Binding CanAlign}" />
         <Button content="Undo" action="Undo" is-enabled="{Binding CanUndo}" />
         <Button content="Redo" action="Redo" is-enabled="{Binding CanRedo}" />
         <Button content="Close" action="CloseDocument" is-enabled="{Binding CanClose}" />
         <Button content="Import native package" action="ImportPackage" is-enabled="{Binding CanImportPackage}" />
         <Button content="Download native package" action="ExportPackage" is-enabled="{Binding CanExportPackage}" />
       </WrapPanel>
+      <WrapPanel margin="0,4">
+        <TextBlock text="Font" vertical-alignment="Center" margin="0,0,6,0" />
+        <Input type="Text" text="{Binding FontFamily, Mode=TwoWay}" width="140"
+               is-enabled="{Binding CanFormat}" accessible-name="Font family for the selected text" />
+        <TextBlock text="Size" vertical-alignment="Center" margin="12,0,6,0" />
+        <Input type="Number" value="{Binding FontSize, Mode=TwoWay}" width="64"
+               is-enabled="{Binding CanFormat}" accessible-name="Font size in points, from 4 to 300" />
+        <TextBlock text="Text colour" vertical-alignment="Center" margin="12,0,6,0" />
+        <Input type="Text" text="{Binding TextColor, Mode=TwoWay}" width="110"
+               is-enabled="{Binding CanFormat}" accessible-name="Text colour as a hex colour value" />
+        <TextBlock text="Highlight" vertical-alignment="Center" margin="12,0,6,0" />
+        <Input type="Text" text="{Binding TextHighlight, Mode=TwoWay}" width="110"
+               is-enabled="{Binding CanFormat}" accessible-name="Text highlight colour as a hex colour value" />
+        <TextBlock text="Link" vertical-alignment="Center" margin="12,0,6,0" />
+        <Input type="Text" text="{Binding Link, Mode=TwoWay}" width="170"
+               is-enabled="{Binding CanFormat}" accessible-name="Hyperlink for the selected text" />
+      </WrapPanel>
+      <WrapPanel margin="0,4">
+        <TextBlock text="Run" vertical-alignment="Center" margin="0,0,6,0" />
+        <Button content="Split run" action="SplitRun" is-enabled="{Binding CanSplitRun}" />
+        <Button content="Merge run" action="MergeRun" is-enabled="{Binding CanMergeRun}" />
+      </WrapPanel>
       <TextBlock text="{Binding SaveStatus}" accessible-name="Document save status" text-wrapping="Wrap" />
+      <TextBlock text="{Binding WordCount}" accessible-name="Document word count" />
+      <WrapPanel margin="0,4">
+        <TextBlock text="Find" vertical-alignment="Center" margin="0,0,6,0" />
+        <Input type="Text" text="{Binding FindText, Mode=TwoWay}" width="150"
+               is-enabled="{Binding CanFind}" accessible-name="Text to find" />
+        <TextBlock text="Replace with" vertical-alignment="Center" margin="12,0,6,0" />
+        <Input type="Text" text="{Binding ReplaceText, Mode=TwoWay}" width="150"
+               is-enabled="{Binding CanFind}" accessible-name="Replacement text" />
+        <Button content="Find previous" action="FindPrevious" is-enabled="{Binding CanFind}" />
+        <Button content="Find next" action="FindNext" is-enabled="{Binding CanFind}" />
+        <Button content="Replace all" action="ReplaceAll" is-enabled="{Binding CanReplace}" />
+        <TextBlock text="{Binding FindStatus}" vertical-alignment="Center" margin="12,0,0,0"
+                   accessible-name="Find and replace status" text-wrapping="Wrap" />
+        <TextBlock text="{Binding ReplaceStatus}" vertical-alignment="Center" margin="8,0,0,0"
+                   accessible-name="Replace all status" text-wrapping="Wrap" />
+      </WrapPanel>
+      <WrapPanel margin="0,4">
+        <TextBlock text="Line spacing" vertical-alignment="Center" margin="0,0,6,0" />
+        <Input type="Number" value="{Binding LineSpacing, Mode=TwoWay}" is-enabled="{Binding CanAlign}" width="72"
+               accessible-name="Paragraph line spacing, from 0.5 to 10" />
+        <TextBlock text="Left indent" vertical-alignment="Center" margin="12,0,6,0" />
+        <Input type="Number" value="{Binding LeftIndent, Mode=TwoWay}" is-enabled="{Binding CanAlign}" width="72"
+               accessible-name="Paragraph left indent in points, 0 to 1000" />
+        <TextBlock text="First line" vertical-alignment="Center" margin="12,0,6,0" />
+        <Input type="Number" value="{Binding FirstLineIndent, Mode=TwoWay}" is-enabled="{Binding CanAlign}" width="72"
+               accessible-name="Paragraph first-line indent in points, negative to -1000 and positive to 1000" />
+        <TextBlock text="Space after" vertical-alignment="Center" margin="12,0,6,0" />
+        <Input type="Number" value="{Binding SpaceAfter, Mode=TwoWay}" is-enabled="{Binding CanAlign}" width="72"
+               accessible-name="Paragraph spacing after in points, 0 to 1000" />
+      </WrapPanel>
+      <StackPanel orientation="Horizontal" margin="0,4">
+        <TextBlock text="Style" vertical-alignment="Center" margin="0,0,6,0" />
+        <Repeat Source="{Binding Styles}" As="style" Key="{Binding style.Id}" orientation="Horizontal">
+          <Button content="{Binding style.Label}" action="ApplyStyle" is-enabled="{Binding CanApplyStyle}" />
+        </Repeat>
+        <TextBlock text="{Binding SelectedStyle}" vertical-alignment="Center" margin="12,0,0,0"
+                   accessible-name="Current paragraph style" />
+      </StackPanel>
+      <WrapPanel margin="0,4">
+        <TextBlock text="Insert" vertical-alignment="Center" margin="0,0,6,0" />
+        <Button content="Paragraph" action="InsertParagraph" is-enabled="{Binding CanInsert}" />
+        <Button content="Heading" action="InsertHeading" is-enabled="{Binding CanInsert}" />
+        <Button content="Quote" action="InsertQuote" is-enabled="{Binding CanInsert}" />
+        <Button content="Code" action="InsertCode" is-enabled="{Binding CanInsert}" />
+        <Button content="Bullets" action="InsertBullets" is-enabled="{Binding CanInsert}" />
+        <Button content="Numbering" action="InsertNumbering" is-enabled="{Binding CanInsert}" />
+        <Button content="Checklist" action="InsertChecklist" is-enabled="{Binding CanInsert}" />
+        <Button content="Page break" action="InsertPageBreak" is-enabled="{Binding CanInsert}" />
+        <Button content="Divider" action="InsertDivider" is-enabled="{Binding CanInsert}" />
+        <TextBlock text="Rows" vertical-alignment="Center" margin="12,0,6,0" />
+        <Input type="Number" value="{Binding TableRows, Mode=TwoWay}" is-enabled="{Binding CanInsert}" width="56"
+               accessible-name="Table rows to insert, whole number from 1 to 100" />
+        <TextBlock text="Columns" vertical-alignment="Center" margin="12,0,6,0" />
+        <Input type="Number" value="{Binding TableColumns, Mode=TwoWay}" is-enabled="{Binding CanInsert}" width="56"
+               accessible-name="Table columns to insert, whole number from 1 to 50" />
+        <Button content="Insert table" action="InsertTable" is-enabled="{Binding CanInsert}" />
+        <Button content="Insert equation" action="InsertEquation" is-enabled="{Binding CanInsertEquation}" />
+      </WrapPanel>
+      <WrapPanel margin="0,4">
+        <TextBlock text="Equation" vertical-alignment="Center" margin="0,0,6,0" />
+        <Input type="Text" text="{Binding EquationSource, Mode=TwoWay}" width="220"
+               is-enabled="{Binding CanEditEquation}" accessible-name="Equation source" />
+        <Input type="Text" text="{Binding EquationAlternative, Mode=TwoWay}" width="220"
+               is-enabled="{Binding CanEditEquation}" accessible-name="Equation accessible alternative" />
+      </WrapPanel>
+      <WrapPanel margin="0,4">
+        <TextBlock text="Block" vertical-alignment="Center" margin="0,0,6,0" />
+        <Button content="Move block up" action="MoveBlockUp" is-enabled="{Binding CanMoveBlocks}" />
+        <Button content="Move block down" action="MoveBlockDown" is-enabled="{Binding CanMoveBlocks}" />
+        <Button content="Delete block" action="DeleteBlock" is-enabled="{Binding CanDeleteBlock}" />
+      </WrapPanel>
+      <WrapPanel margin="0,4">
+        <TextBlock text="Page" vertical-alignment="Center" margin="0,0,6,0" />
+        <Button content="A4" action="SetPageA4" is-enabled="{Binding CanEditPage}" />
+        <Button content="Letter" action="SetPageLetter" is-enabled="{Binding CanEditPage}" />
+        <Button content="Portrait" action="SetPagePortrait" is-enabled="{Binding CanEditPage}" />
+        <Button content="Landscape" action="SetPageLandscape" is-enabled="{Binding CanEditPage}" />
+        <TextBlock text="Margins" vertical-alignment="Center" margin="12,0,6,0" />
+        <Input type="Number" value="{Binding PageMargins, Mode=TwoWay}" width="72"
+               is-enabled="{Binding CanEditPage}" accessible-name="Page margin in points, 0 to 1000" />
+        <Input type="Checkbox" is-checked="{Binding ShowPageNumbers, Mode=TwoWay}" content="Page numbers"
+               is-enabled="{Binding CanEditPage}" accessible-name="Show page numbers" />
+        <Button content="Paginated" action="SetLayoutPaginated" is-enabled="{Binding CanEditPage}" />
+        <Button content="Continuous" action="SetLayoutContinuous" is-enabled="{Binding CanEditPage}" />
+        <TextBlock text="{Binding PageSizeLabel}" vertical-alignment="Center" margin="12,0,0,0"
+                   accessible-name="Current page size in points" />
+      </WrapPanel>
+      <TextBlock text="List items" font-size="16" margin="0,8,0,4" />
+      <ScrollViewer max-height="140">
+        <StackPanel>
+          <Repeat Source="{Binding SelectedListItems}" As="listItem" Key="{Binding listItem.Id}">
+            <StackPanel orientation="Horizontal" margin="0,2">
+              <Input type="Text" text="{Binding listItem.Text, Mode=TwoWay}" width="260"
+                     is-enabled="{Binding CanEditList}" accessible-name="List item text" />
+              <Input type="Checkbox" is-checked="{Binding listItem.Checked, Mode=TwoWay}" content="Done"
+                     is-enabled="{Binding CanEditList}" accessible-name="List item complete" margin="8,0,0,0" />
+              <Input type="Number" value="{Binding listItem.Level, Mode=TwoWay}" width="56"
+                     is-enabled="{Binding CanEditList}" accessible-name="List item nesting level, from 0 to 8"
+                     margin="8,0,0,0" />
+            </StackPanel>
+          </Repeat>
+        </StackPanel>
+      </ScrollViewer>
+      <WrapPanel margin="0,4">
+        <Button content="Add list item" action="AddListItem" is-enabled="{Binding CanEditList}" />
+        <Button content="Set bullets" action="SetListBulleted" is-enabled="{Binding CanEditList}" />
+        <Button content="Set numbering" action="SetListNumbered" is-enabled="{Binding CanEditList}" />
+        <Button content="Set checklist" action="SetListChecklist" is-enabled="{Binding CanEditList}" />
+      </WrapPanel>
+      <TextBlock text="Selected table" font-size="16" margin="0,8,0,4" />
+      <ScrollViewer max-height="160">
+        <StackPanel>
+          <Repeat Source="{Binding SelectedTableRows}" As="tableRow" Key="{Binding tableRow.Id}">
+            <StackPanel orientation="Horizontal" margin="0,2">
+              <Repeat Source="{Binding tableRow.Cells}" As="tableCell" Key="{Binding tableCell.Id}">
+                <Input type="Text" text="{Binding tableCell.Text, Mode=TwoWay}" width="160" margin="0,0,4,0"
+                       is-enabled="{Binding CanEditTable}" accessible-name="Table cell text" />
+              </Repeat>
+            </StackPanel>
+          </Repeat>
+        </StackPanel>
+      </ScrollViewer>
+      <WrapPanel margin="0,4">
+        <Button content="Add table row" action="AddTableRow" is-enabled="{Binding CanEditTable}" />
+        <Button content="Add table column" action="AddTableColumn" is-enabled="{Binding CanEditTable}" />
+        <Button content="Remove table row" action="RemoveTableRow" is-enabled="{Binding CanEditTable}" />
+        <Button content="Remove table column" action="RemoveTableColumn" is-enabled="{Binding CanEditTable}" />
+        <Button content="Merge cell right" action="MergeCellRight" is-enabled="{Binding CanMergeCell}" />
+        <Button content="Split cell" action="SplitCell" is-enabled="{Binding CanSplitCell}" />
+        <TextBlock text="Cell fill" vertical-alignment="Center" margin="12,0,6,0" />
+        <Input type="Text" text="{Binding CellBackground, Mode=TwoWay}" width="110"
+               is-enabled="{Binding CanEditCellBackground}" accessible-name="Table cell background colour" />
+      </WrapPanel>
+      <TextBlock text="Selected image" font-size="16" margin="0,8,0,4" />
+      <WrapPanel margin="0,4">
+        <Button content="Insert image" action="InsertImage" is-enabled="{Binding CanInsertImage}"
+                accessible-name="Insert an image chosen from the platform file picker" />
+      </WrapPanel>
+      <WrapPanel margin="0,4">
+        <TextBlock text="Alt text" vertical-alignment="Center" margin="0,0,6,0" />
+        <Input type="Text" text="{Binding MediaAlt, Mode=TwoWay}" width="220"
+               is-enabled="{Binding CanEditMedia}" accessible-name="Alternative text for the selected image" />
+        <TextBlock text="Caption" vertical-alignment="Center" margin="12,0,6,0" />
+        <Input type="Text" text="{Binding MediaCaption, Mode=TwoWay}" width="220"
+               is-enabled="{Binding CanEditMedia}" accessible-name="Caption for the selected image" />
+        <TextBlock text="Wrapping" vertical-alignment="Center" margin="12,0,6,0" />
+        <Input type="Text" text="{Binding MediaWrapping, Mode=TwoWay}" width="110"
+               is-enabled="{Binding CanEditMedia}" accessible-name="Wrapping mode for the selected image" />
+      </WrapPanel>
+      <WrapPanel margin="0,4">
+        <TextBlock text="Size" vertical-alignment="Center" margin="0,0,6,0" />
+        <Input type="Number" value="{Binding MediaWidth, Mode=TwoWay}" width="72"
+               is-enabled="{Binding CanEditMedia}" accessible-name="Image width in points, from 24 to 10000" />
+        <Input type="Number" value="{Binding MediaHeight, Mode=TwoWay}" width="72" margin="4,0,0,0"
+               is-enabled="{Binding CanEditMedia}" accessible-name="Image height in points, from 24 to 10000" />
+        <TextBlock text="Rotation" vertical-alignment="Center" margin="12,0,6,0" />
+        <Input type="Number" value="{Binding MediaRotation, Mode=TwoWay}" width="72"
+               is-enabled="{Binding CanEditMedia}" accessible-name="Image rotation in degrees" />
+      </WrapPanel>
+      <WrapPanel margin="0,4">
+        <TextBlock text="Crop" vertical-alignment="Center" margin="0,0,6,0" />
+        <Input type="Number" value="{Binding MediaCropLeft, Mode=TwoWay}" width="64"
+               is-enabled="{Binding CanEditMedia}" accessible-name="Crop fraction from the left edge, 0 to 0.95" />
+        <Input type="Number" value="{Binding MediaCropTop, Mode=TwoWay}" width="64" margin="4,0,0,0"
+               is-enabled="{Binding CanEditMedia}" accessible-name="Crop fraction from the top edge, 0 to 0.95" />
+        <Input type="Number" value="{Binding MediaCropRight, Mode=TwoWay}" width="64" margin="4,0,0,0"
+               is-enabled="{Binding CanEditMedia}" accessible-name="Crop fraction from the right edge, 0 to 0.95" />
+        <Input type="Number" value="{Binding MediaCropBottom, Mode=TwoWay}" width="64" margin="4,0,0,0"
+               is-enabled="{Binding CanEditMedia}" accessible-name="Crop fraction from the bottom edge, 0 to 0.95" />
+      </WrapPanel>
       <TextBlock text="{Binding PackageCleanupWarning}" accessible-name="Native package warning" text-wrapping="Wrap" />
       <If Condition="{Binding HasUnknownCommitOutcome}">
         <Button content="Inspect saved state" action="InspectSavedState" is-enabled="{Binding CanInspectSavedState}" />
       </If>
-      <TextBlock text="Saved documents on this browser" font-size="16" margin="0,8,0,4" />
-      <Button content="Refresh documents" action="RefreshDocuments" is-enabled="{Binding CanRefreshDocuments}" />
-      <ScrollViewer max-height="160">
-        <Repeat Source="{Binding Documents}" As="savedDocument" Key="{Binding savedDocument.Id}">
-          <Button content="{Binding savedDocument.Title}" action="OpenSavedDocument" is-enabled="{Binding CanBrowseDocuments}" />
-        </Repeat>
-      </ScrollViewer>
     </StackPanel>
     <ScrollViewer grid-row="2"><Object Type="WriteDocumentSurface" /></ScrollViewer>
   </Grid>

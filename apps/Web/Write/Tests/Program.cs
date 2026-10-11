@@ -17,6 +17,8 @@ var repository = new NotesRepository(paths, new NotesDocumentValidator(), diagno
 var packages = new WriteNativeDocumentPackageStore();
 var statePath = Path.Combine(paths.DataDirectory, "browser-write-test-state.json");
 var packagePath = Path.Combine(paths.DataDirectory, "browser-write.9to1w");
+var mediaStatePath = Path.Combine(paths.DataDirectory, "browser-write-media-state.json");
+var mediaPackagePath = Path.Combine(paths.DataDirectory, "browser-write-media.9to1w");
 var assertions = 0;
 void Check(bool condition, string assertion)
 {
@@ -91,6 +93,63 @@ if (args[0] == "seed")
         JsonSerializer.Serialize(session.GetDocumentSnapshot()!.Sections))));
     Check((await session.CloseAsync()).Succeeded && session.DocumentId is null, "close releases saved editor");
     await session.DisposeAsync();
+
+    // Genuine image journey against the canonical attachment owner. The fixture is
+    // a real PNG file; no document content is fabricated to satisfy an assertion.
+    Check(!File.Exists(mediaStatePath), "media fixture is fresh; never overwrite another test run");
+    var attachments = new NotesAttachmentStore(paths, new ProductionDiagnostics(paths));
+    var fixtureImage = Path.Combine(paths.DataDirectory, "media-fixture.png");
+    File.WriteAllBytes(fixtureImage, PngFixture.Build(2, 2));
+    var fixtureHash = Convert.ToHexString(SHA256.HashData(await File.ReadAllBytesAsync(fixtureImage))).ToLowerInvariant();
+    var mediaSession = new WriteBrowserSession(repository, packages, null, null, new FixtureImageSource(fixtureImage), attachments);
+    Check((await mediaSession.CreateAsync("Media journey")).Succeeded, "media session creates its own durable document");
+    var mediaId = mediaSession.DocumentId!.Value;
+    Check(mediaSession.IsActionAvailable("InsertImage") == true, "image action is available with a real picker and the canonical attachment store");
+    Check((await mediaSession.SelectAsync(First(mediaSession.GetDocumentSnapshot()!).Id, 0, 0)).Succeeded, "select the block the image is inserted after");
+    Check((await mediaSession.InsertImageAsync()).Succeeded, "picked image is imported through the canonical attachment store");
+    var mediaBlock = mediaSession.GetDocumentSnapshot()!.Sections.SelectMany(section => section.Pages)
+        .SelectMany(page => page.Blocks).First(block => block.Kind == NotesBlockKind.Image);
+    Check(mediaBlock.Media!.AttachmentId != Guid.Empty && !string.IsNullOrWhiteSpace(mediaBlock.Media.StoredPath),
+        "the attachment owner assigned the identity and stored path, not the browser");
+    Check(mediaBlock.Media.Sha256 == fixtureHash && mediaBlock.Media.SizeBytes == new FileInfo(fixtureImage).Length,
+        "the stored attachment carries the exact picked bytes");
+    Check(mediaBlock.Media.AltText == Path.GetFileNameWithoutExtension(fixtureImage),
+        "the attachment owner derives alt text from the staged file name");
+    Check((await mediaSession.UndoAsync()).Succeeded, "undo removes the media insert as the most recent admitted edit");
+    Check(mediaSession.GetDocumentSnapshot()!.Sections.SelectMany(section => section.Pages)
+        .SelectMany(page => page.Blocks).All(block => block.Kind != NotesBlockKind.Image),
+        "undo of the insert leaves no media block in the draft");
+    Check((await mediaSession.RedoAsync()).Succeeded, "redo restores the media insert");
+    var replayed = mediaSession.GetDocumentSnapshot()!.Sections.SelectMany(section => section.Pages)
+        .SelectMany(page => page.Blocks).First(block => block.Kind == NotesBlockKind.Image);
+    Check(replayed.Id == mediaBlock.Id && replayed.Media!.AttachmentId == mediaBlock.Media.AttachmentId,
+        "redo restores the same media block and the same stored attachment identity");
+    Check((await mediaSession.SelectAsync(replayed.Id, 0, 0)).Succeeded, "select the restored image block before editing its properties");
+    Check(mediaSession.TrySetValue("MediaAlt", "A test fixture image") &&
+        mediaSession.TrySetValue("MediaCaption", "Fixture caption") && mediaSession.TrySetValue("MediaWrapping", "Square"),
+        "media text properties write through the owning editor");
+    var written = mediaSession.GetDocumentSnapshot()!.Sections.SelectMany(section => section.Pages)
+        .SelectMany(page => page.Blocks).First(block => block.Kind == NotesBlockKind.Image).Media!;
+    Check(written.AltText == "A test fixture image" && written.Caption == "Fixture caption" && written.Wrapping == "Square",
+        "each media property writes its own value without overwriting the others");
+    Check(mediaSession.TrySetValue("MediaWidth", 640d) && mediaSession.TrySetValue("MediaHeight", 480d) &&
+        mediaSession.TrySetValue("MediaRotation", 90d) && mediaSession.TrySetValue("MediaCropLeft", 0.1d) &&
+        mediaSession.TrySetValue("MediaCropTop", 0.2d), "media geometry writes through the owning editor");
+    Check(!mediaSession.TrySetValue("MediaCropLeft", 0.96d),
+        "an out-of-range crop is rejected for validation instead of silently clamped");
+    Check(mediaSession.IsDirty, "media edits are authored changes");
+    Check((await mediaSession.UndoAsync()).Succeeded, "undo removes the last accepted media geometry edit");
+    var rewound = mediaSession.GetDocumentSnapshot()!.Sections.SelectMany(section => section.Pages)
+        .SelectMany(page => page.Blocks).First(block => block.Kind == NotesBlockKind.Image).Media!;
+    Check(rewound.CropTop == 0d && rewound.CropLeft == 0.1d,
+        "undo reverts only the last accepted crop write and leaves the earlier geometry");
+    Check((await mediaSession.RedoAsync()).Succeeded, "redo reapplies the last accepted crop write");
+    Check((await mediaSession.SaveAsync()).Succeeded && !mediaSession.IsDirty, "media document saves through the canonical repository");
+    await File.WriteAllTextAsync(mediaStatePath, JsonSerializer.Serialize(new MediaState(mediaId, mediaBlock.Id,
+        mediaBlock.Media.AttachmentId, fixtureHash)));
+    Check((await mediaSession.ExportNativeAsync(mediaPackagePath)).Succeeded, "native codec exports the saved media document");
+    Check((await mediaSession.CloseAsync()).Succeeded, "media session closes cleanly");
+    await mediaSession.DisposeAsync();
 }
 else
 {
@@ -206,7 +265,138 @@ else
     Check((await queued.CloseAsync()).Succeeded, "recovered draft safely closes");
     await queued.DisposeAsync();
     await session.DisposeAsync();
+
+    // The image journey is read back in this separate process through the same
+    // canonical attachment owner, with nothing carried over from the seed process.
+    var mediaState = JsonSerializer.Deserialize<MediaState>(await File.ReadAllTextAsync(mediaStatePath))!;
+    var attachments = new NotesAttachmentStore(paths, new ProductionDiagnostics(paths));
+    var reopened = (await repository.LoadAsync(mediaState.Id, default))!;
+    var reopenedBlock = reopened.Sections.SelectMany(section => section.Pages).SelectMany(page => page.Blocks)
+        .First(block => block.Kind == NotesBlockKind.Image);
+    var media = reopenedBlock.Media!;
+    Check(reopenedBlock.Id == mediaState.BlockId && media.AttachmentId == mediaState.AttachmentId,
+        "fresh process addresses the same media block and canonical attachment");
+    Check(media.AltText == "A test fixture image" && media.Caption == "Fixture caption" && media.Wrapping == "Square",
+        "media text properties survive save and reopen in a fresh process");
+    Check(media.Width == 640 && media.Height == 480 && media.Rotation == 90 && media.CropLeft == 0.1 && media.CropTop == 0.2,
+        "media geometry survives save and reopen");
+    var resolved = await attachments.ResolvePathAsync(media.AttachmentId, default);
+    Check(File.Exists(resolved), "the canonical attachment store still resolves the reopened attachment");
+    Check(Convert.ToHexString(SHA256.HashData(await File.ReadAllBytesAsync(resolved))).ToLowerInvariant() == mediaState.Sha256,
+        "reopened attachment bytes still match the digest recorded on the media");
+    Check(Path.GetFileName(resolved) == media.StoredPath, "stored path addresses the same canonical attachment file");
+    var mediaPackage = await packages.OpenAsync(mediaPackagePath);
+    Check(mediaPackage.IsSuccess && mediaPackage.Value!.Id == mediaState.Id,
+        "the exported media package opens through the real codec with its canonical identity");
+    Check(mediaPackage.Value!.Sections.SelectMany(section => section.Pages).SelectMany(page => page.Blocks)
+        .Any(block => block.Kind == NotesBlockKind.Image && block.Media!.AttachmentId == mediaState.AttachmentId),
+        "the exported package carries the media block and its canonical attachment reference");
+
+    await using (var readOnlyMedia = new WriteBrowserSession(repository, packages, null, null,
+        new FixtureImageSource(Path.Combine(paths.DataDirectory, "media-fixture.png")), attachments))
+    {
+        Check((await readOnlyMedia.OpenAsync(mediaState.Id, readOnly: true)).Succeeded, "read-only presentation opens the media document");
+        Check(readOnlyMedia.IsActionAvailable("InsertImage") == false, "read-only document reports the image action unavailable");
+        var deniedImage = await readOnlyMedia.InsertImageAsync();
+        Check(!deniedImage.Succeeded && deniedImage.Code == "ReadOnlyDocument" && !readOnlyMedia.IsDirty,
+            "image insertion cannot bypass the read-only gate");
+        Check(!readOnlyMedia.TrySetValue("MediaAlt", "denied"), "read-only document rejects a media property write");
+        Check((await repository.LoadAsync(mediaState.Id, default))!.Version == reopened.Version,
+            "read-only rejection does not change the durable revision or store a new attachment");
+    }
+
+    await using (var withoutStore = new WriteBrowserSession(repository, packages, null, null,
+        new FixtureImageSource(Path.Combine(paths.DataDirectory, "media-fixture.png")), null))
+    {
+        Check((await withoutStore.CreateAsync("No attachment store")).Succeeded, "session without an attachment store still owns its document");
+        Check(withoutStore.IsActionAvailable("InsertImage") == false,
+            "the image action reports itself unavailable without the canonical attachment store");
+        var refused = await withoutStore.InsertImageAsync();
+        Check(!refused.Succeeded && refused.Code == "AttachmentStoreMissing",
+            "the session never accepts an image it cannot store durably");
+        Check((await withoutStore.CloseAsync()).Succeeded, "the unadmitted image session closes cleanly");
+    }
 }
 Console.WriteLine(JsonSerializer.Serialize(new { mode = args[0], assertions, scope = "local durable owner/session; browser GUI not executed" }));
 
-internal sealed record State(Guid Id, Guid BlockId, long Revision, string StructuredSections);
+internal sealed record State(Guid Id, Guid BlockId, long Revision, string StructuredSections);
+internal sealed record MediaState(Guid Id, Guid BlockId, Guid AttachmentId, string Sha256);
+
+/// <summary>Test fixture standing in for the platform chooser. It stages a real file and stores nothing itself.</summary>
+internal sealed class FixtureImageSource(string sourcePath) : IWriteBrowserImageSource
+{
+    public Task<WritePickedImage?> PickImageAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!File.Exists(sourcePath)) throw new FileNotFoundException("The fixture image does not exist.", sourcePath);
+        var name = Path.GetFileName(sourcePath);
+        var directory = Path.Combine(Path.GetTempPath(), "nine-to-one-write-image-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var stagedPath = Path.Combine(directory, name);
+        try { File.Copy(sourcePath, stagedPath); }
+        catch { Directory.Delete(directory, recursive: true); throw; }
+        return Task.FromResult<WritePickedImage?>(new WritePickedImage(name, "image/png",
+            new WriteStagedPackage(stagedPath, name, () => { if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true); return ValueTask.CompletedTask; })));
+    }
+}
+
+/// <summary>Builds a structurally valid PNG so the fixture is a real image file rather than arbitrary bytes.</summary>
+internal static class PngFixture
+{
+    private static readonly uint[] CrcTable = BuildCrcTable();
+
+    public static byte[] Build(int width, int height)
+    {
+        var raw = new byte[height * (1 + width * 4)];
+        for (var y = 0; y < height; y++)
+            for (var x = 0; x < width; x++)
+            {
+                var offset = y * (1 + width * 4) + 1 + x * 4;
+                raw[offset] = 0x20; raw[offset + 1] = 0x80; raw[offset + 2] = 0x40; raw[offset + 3] = 0xFF;
+            }
+
+        byte[] compressed;
+        using (var stream = new MemoryStream())
+        {
+            using (var zlib = new ZLibStream(stream, CompressionLevel.Optimal, leaveOpen: true)) zlib.Write(raw, 0, raw.Length);
+            compressed = stream.ToArray();
+        }
+
+        using var output = new MemoryStream();
+        output.Write([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+        Chunk(output, "IHDR", [.. BigEndian((uint)width), .. BigEndian((uint)height), 8, 6, 0, 0, 0]);
+        Chunk(output, "IDAT", compressed);
+        Chunk(output, "IEND", []);
+        return output.ToArray();
+    }
+
+    private static void Chunk(MemoryStream output, string name, byte[] data)
+    {
+        var nameBytes = System.Text.Encoding.ASCII.GetBytes(name);
+        output.Write(BigEndian((uint)data.Length));
+        output.Write(nameBytes);
+        output.Write(data);
+        output.Write(BigEndian(Crc32(nameBytes, data)));
+    }
+
+    private static byte[] BigEndian(uint value) => [(byte)(value >> 24), (byte)(value >> 16), (byte)(value >> 8), (byte)value];
+
+    private static uint Crc32(byte[] name, byte[] data)
+    {
+        var crc = 0xFFFFFFFFu;
+        foreach (var byteValue in name.Concat(data)) crc = CrcTable[(crc ^ byteValue) & 0xFF] ^ (crc >> 8);
+        return crc;
+    }
+
+    private static uint[] BuildCrcTable()
+    {
+        var table = new uint[256];
+        for (uint index = 0; index < 256; index++)
+        {
+            var value = index;
+            for (var bit = 0; bit < 8; bit++) value = (value & 1) == 1 ? 0xEDB88320 ^ (value >> 1) : value >> 1;
+            table[index] = value;
+        }
+        return table;
+    }
+}

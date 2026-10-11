@@ -24,6 +24,8 @@
   <ItemGroup>
     <Compile Remove="**/Tests/**/*.cs;**/obj/**/*.cs;**/bin/**/*.cs;Wave/Engine/**/*.cs;Write/Scene/**/*.cs;Files/**/*.cs;Sites/**/*.cs;Picture/Engine/**/*.cs;Cards/**/*.cs;Forms/**/*.cs;Productivity/**/*.cs;AI/**/*.cs" />
     <ProjectReference Include="../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+    <!-- Browser host closure: the Assistants product surface uses the same canonical Core and NativeUI owner as the native product. -->
+    <ProjectReference Include="../../9to1 Workspace/Assistants/NativeUI/HavenOS.Assistants.NativeUI.csproj" />
     <ProjectReference Include="../../framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/Avalonia.Browser.csproj" />
     <ProjectReference Include="../../9to1 Workspace/Home/HavenOS.Home.csproj" />
     <ProjectReference Include="Wave/Engine/NineToOne.Wave.BrowserEngine.csproj" />

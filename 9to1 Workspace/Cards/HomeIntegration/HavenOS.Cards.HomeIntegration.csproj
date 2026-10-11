@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>HavenOS.Apps.Cards.HomeIntegration</AssemblyName>
+    <RootNamespace>HavenOS.Apps.Cards.HomeIntegration</RootNamespace>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Tests\**\*</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HavenOS.Cards.csproj" />
+    <ProjectReference Include="..\..\Home\HavenOS.Home.csproj" />
+  </ItemGroup>
+</Project>

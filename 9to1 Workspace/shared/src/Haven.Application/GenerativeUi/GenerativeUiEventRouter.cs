@@ -9,6 +9,9 @@ public interface IGenUiEventHandler
 {
     GenUiRouteKind RouteKind { get; }
     bool CanHandle(string targetKey);
+    /// <summary>True when the destination authoritatively declares this action for the target,
+    /// independently of a generated UI instance.</summary>
+    bool DeclaresAction(string targetKey, string actionId) => false;
     Task<GenUiActionResult> HandleAsync(
         GenUiEvent semanticEvent,
         GenUiActionBinding binding,
@@ -57,10 +60,18 @@ public sealed class GenerativeUiEventRouter(
             : component.Actions.FirstOrDefault(action => action.ActionId.Equals(binding.ActionId, StringComparison.Ordinal));
         if (registeredBinding != binding)
         {
+            // A first-party app declares its own typed actions, so an app-route action can be
+            // authoritative without a generated UI instance declaring it.
+            var declaredByDestination = _handlers.FirstOrDefault(candidate =>
+                candidate.RouteKind == binding.Route && candidate.CanHandle(binding.TargetKey) &&
+                candidate.DeclaresAction(binding.TargetKey, binding.ActionId));
+            if (declaredByDestination is null)
+            {
             var rejected = Result(semanticEvent, GenUiActionStatus.Denied,
                 "The action is not declared by the current generated UI instance.");
             await audit.RecordAsync(semanticEvent, rejected, cancellationToken).ConfigureAwait(false);
             return rejected;
+            }
         }
 
         // App, capability, and external actions always go through the shared
@@ -139,9 +150,16 @@ public sealed class GenerativeUiEventRouter(
             || JsonSerializer.SerializeToUtf8Bytes(result.StructuredResult).Length > GenerativeUiContractValidator.MaximumJsonBytes)
             throw new InvalidOperationException("Action result payload is missing or exceeds the generated UI contract limit.");
 
-        await instances.ApplyOriginalResultAsync(result, originalPredecessor
-            ?? throw new InvalidOperationException("The generated UI predecessor is unavailable."), cancellationToken).ConfigureAwait(false);
-        instances.AcknowledgeOriginalResultJoin(result);
+        // A first-party app can be authoritative for its own typed actions without a generated UI instance
+        // declaring them. Such an action has no instance state to mutate, so the store is only asked when an
+        // occurrence exists. A result that still carries patches must have that occurrence.
+        if (originalPredecessor is not null)
+        {
+            await instances.ApplyOriginalResultAsync(result, originalPredecessor, cancellationToken).ConfigureAwait(false);
+            instances.AcknowledgeOriginalResultJoin(result);
+        }
+        else if (result.Patches.Count > 0)
+            throw new InvalidOperationException("A generated UI action with patches must apply against its originating instance occurrence.");
         await audit.RecordAsync(semanticEvent, result, cancellationToken).ConfigureAwait(false);
         return result;
     }

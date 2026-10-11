@@ -15,6 +15,9 @@ public sealed partial class CanonicalDiResolutionTests08
         Directory.CreateDirectory(root);
         var services = new ServiceCollection();
         services.AddHavenInfrastructure();
+        // The canonical host composition also registers the planner/calendar cohort
+        // (App.axaml.cs); the fixture must borrow the same graph, not a partial one.
+        services.AddHavenPlannerInfrastructure();
         services.AddSingleton<IAppPaths>(new Paths(root));
         // Actual maintained required Chat services; optional Browser/Automation ports
         // remain absent through the supported nullable constructor parameters. This is

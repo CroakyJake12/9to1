@@ -93,13 +93,11 @@ public sealed partial class BoardsWorkspaceService(INotesRepository repository, 
         document.Metadata["boards.pinned"] = bool.FalseString;
         document.Sections[0].Title = "Notes";
         document.Sections[0].Pages[0].Title = "Start here";
+        var heading = NotesBlock.Heading(document.Title);
         var introduction = NotesBlock.CreateParagraph("Capture ideas, arrange content freely, and reuse live components across pages.");
         introduction.Order = 1;
-        document.Sections[0].Pages[0].Blocks =
-        [
-            NotesBlock.Heading(document.Title),
-            introduction
-        ];
+        document.Sections[0].Pages[0].Blocks = [heading, introduction];
+        foreach (var block in document.Sections[0].Pages[0].Blocks) WriteNamedStyleOperations.EnsureRuns(block);
         await repository.SaveAsync(document, "Created Boards notebook", cancellationToken).ConfigureAwait(false);
         return document;
     }

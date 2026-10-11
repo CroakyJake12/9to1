@@ -80,7 +80,7 @@ public sealed partial class HomeCloudflareServiceOwner
     }
     private CloudflareOriginalTaskLedger CreateOriginalHostSources(Action<Action>? parent = null)
     {
-        var sources = new CloudflareOriginalTaskLedger(); sources.BindOriginalCallerCallback(OriginalHostCaller(parent));
+        var sources = new CloudflareOriginalTaskLedger(); if (parent is not null) sources.BindOriginalCallerCallback(OriginalHostCaller(parent));
         AttachOriginalHostSources(sources); return sources;
     }
     private void AttachOriginalHostSources(CloudflareOriginalTaskLedger sources)
@@ -207,3 +207,4 @@ public sealed partial class HomeCloudflareServiceOwner
         if (closes.OriginalErrors.Count != 0) throw new AggregateException("Actual Home Cloudflare host retirement failed.", closes.OriginalErrors);
     }
 }
+

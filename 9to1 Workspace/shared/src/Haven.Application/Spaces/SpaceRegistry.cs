@@ -236,15 +236,30 @@ public sealed partial class SpaceRegistry
                 .OrderBy(space => space.Position)
                 .ThenBy(space => space.CreatedAt)
                 .ToList();
-            var insertion = Math.Clamp(position ?? siblings.Count, 0, siblings.Count);
-            siblings.Insert(insertion, moving with { ParentSpaceId = parentSpaceId });
-            var updatedById = siblings.Select((space, index) => space with
+            // A move without an explicit position preserves the Space's own slot; an explicit
+            // position claims that slot and the remaining siblings fill the free slots in order.
+            var targetPosition = position ?? moving.Position;
+            var moved = moving with { ParentSpaceId = parentSpaceId, Position = targetPosition };
+            siblings.Add(moved);
+            var orderedSiblings = siblings.OrderBy(space => space.Position).ThenBy(space => space.CreatedAt).ToList();
+            var freeSlots = Enumerable.Range(0, orderedSiblings.Count)
+                .Where(slot => slot != targetPosition)
+                .ToList();
+            var updatedById = new Dictionary<Guid, SpaceDefinition>();
+            var freeSlotIndex = 0;
+            foreach (var space in orderedSiblings)
             {
-                ParentSpaceId = parentSpaceId,
-                Position = index,
-                Revision = checked(space.Revision + 1),
-                UpdatedAt = now
-            }).ToDictionary(space => space.Id);
+                var positionValue = ReferenceEquals(space, moved) ? targetPosition : freeSlots[freeSlotIndex++];
+                if (space.Position == positionValue && space.ParentSpaceId == parentSpaceId && !ReferenceEquals(space, moved))
+                    continue;
+                updatedById[space.Id] = space with
+                {
+                    ParentSpaceId = parentSpaceId,
+                    Position = positionValue,
+                    Revision = checked(space.Revision + 1),
+                    UpdatedAt = now
+                };
+            }
             foreach (var (space, index) in sourceSiblings.Select((space, index) => (space, index)))
             {
                 if (!updatedById.ContainsKey(space.Id))

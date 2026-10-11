@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Threading;
@@ -43,6 +43,11 @@ public sealed class CuiControlLoader : IDisposable
     private ICuiActionDispatcher? _actionDispatcher;
     private IReadOnlyDictionary<string, CuiActionDefinition> _documentActions =
         new Dictionary<string, CuiActionDefinition>(StringComparer.Ordinal);
+    private IReadOnlyDictionary<string, CuiTemplateDefinition> _documentTemplates =
+        new Dictionary<string, CuiTemplateDefinition>(StringComparer.Ordinal);
+    private readonly Dictionary<string, CuiComponent> _definitions = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _definitionPath = new(StringComparer.Ordinal);
+    private string? _definitionScope;
     private CuiThemeScopeStack _themeStack = new(CuiSurfacePaletteCatalog.ActiveTheme);
     private string _currentSurface = "Home";
     private CuiAppearance? _appearance;
@@ -245,6 +250,10 @@ public sealed class CuiControlLoader : IDisposable
     public void RegisterObjectRenderer(string objectType, Func<CuiComponent, Control> factory) =>
         _controlRegistry.RegisterObjectRenderer(objectType, factory);
 
+    /// <summary>Bind a prepared control to one authored component identity without replacing a reserved built-in type.</summary>
+    public void BindAuthoredControl(string authoredId, Func<CuiComponent, Control> factory) =>
+        _controlRegistry.BindAuthoredControl(authoredId, factory);
+
     /// <summary>
     /// Loads a CuiDocument and returns the root Avalonia control tree.
     /// </summary>
@@ -269,6 +278,10 @@ public sealed class CuiControlLoader : IDisposable
         _themeStack = new CuiThemeScopeStack(CuiSurfacePaletteCatalog.ActiveTheme);
         _currentLayer = 0;
         _currentRepeatIdentity = null;
+        _documentTemplates = document.Templates;
+        _definitions.Clear();
+        _definitionPath.Clear();
+        _definitionScope = null;
 
         // Populate resource scope
         foreach (var (key, def) in document.Resources)
@@ -280,8 +293,15 @@ public sealed class CuiControlLoader : IDisposable
         if (document.Components.Count == 0)
             return null;
 
-        // The first component is the root
-        var root = LoadComponent(document.Components[0]);
+        CollectDefinitions(document.Components);
+
+        // A definition declaration is library metadata, not a visible control, so it can never
+        // become the root. The root is the first component that is not a declaration.
+        var rootComponent = document.Components.FirstOrDefault(component => !component.IsDefinition);
+        if (rootComponent is null)
+            return null;
+
+        var root = LoadComponent(rootComponent);
 
         // Set DataContext for live bindings if we have a binding context
         if (_bindingContext is not null)
@@ -511,7 +531,7 @@ public sealed class CuiControlLoader : IDisposable
         }
     }
 
-    private Control LoadComponent(CuiComponent component)
+    private Control LoadComponent(CuiComponent component, string? identityOverride = null, bool definitionInstance = false)
     {
         if (component.Type.Equals("Repeat", StringComparison.OrdinalIgnoreCase))
             return LoadRepeat(component);
@@ -528,7 +548,7 @@ public sealed class CuiControlLoader : IDisposable
             {
                 // Load the first child that produces a visual control
                 Control? result = null;
-                foreach (var child in component.Children)
+                foreach (var child in component.Children.Where(child => !child.IsDefinition))
                 {
                     var childControl = LoadComponent(child);
                     if (result is null)
@@ -566,12 +586,17 @@ public sealed class CuiControlLoader : IDisposable
             }
         }
 
-        var control = CreateControl(component);
+        if (!component.IsDefinition && TryResolveDefinition(component.Type, out var definition))
+            return InstantiateDefinition(component, definition);
+        if (!component.IsDefinition && _documentTemplates.TryGetValue(component.Type, out var template))
+            return InstantiateTemplate(component, template);
+
+        var control = CreateControl(component, definitionInstance);
         var parentLayer = _currentLayer;
         var layer = ResolveLayer(component, parentLayer);
         control.ZIndex = layer;
         _authoredControls.Add(control, component);
-        CuiRuntimeIdentity.SetStableId(control, ComposeStableId(component.StableId));
+        CuiRuntimeIdentity.SetStableId(control, identityOverride ?? ComposeStableId(component.StableId));
         if (!string.IsNullOrWhiteSpace(component.Name))
         {
             control.Name = component.Name;
@@ -588,7 +613,7 @@ public sealed class CuiControlLoader : IDisposable
         _currentLayer = layer;
         try
         {
-            foreach (var child in component.Children)
+            foreach (var child in component.Children.Where(child => !child.IsDefinition))
             {
                 var childControl = LoadComponent(child);
                 AddChild(control, childControl);
@@ -630,10 +655,15 @@ public sealed class CuiControlLoader : IDisposable
         return value is not null && bool.TryParse(ResolveValue(value), out var result) && result;
     }
 
-    private Control CreateControl(CuiComponent component)
+    private Control CreateControl(CuiComponent component, bool allowContainerFallback = false)
     {
         if (_controlRegistry.TryCreate(component, ResolveValue, out var control, out var error))
             return control!;
+
+        // A definition authored as a component tree has no built-in element contract to extend,
+        // so its instance lowers as a container.
+        if (allowContainerFallback)
+            return new Panel();
 
         var code = component.Type.Equals("Object", StringComparison.OrdinalIgnoreCase)
             ? "CUIR002"
@@ -673,7 +703,7 @@ public sealed class CuiControlLoader : IDisposable
         _currentLayer = layer;
         try
         {
-            foreach (var child in children)
+            foreach (var child in children.Where(child => !child.IsDefinition))
                 branch.Children.Add(LoadComponent(child));
         }
         finally
@@ -819,7 +849,7 @@ public sealed class CuiControlLoader : IDisposable
                     if (value is CuiBindingValue binding) ApplyLiveBinding(itemRoot, placement, binding, state.Component.Span);
                     else if (ResolveValue(value) is { } resolved) ApplyLiteralProperty(itemRoot, placement, resolved, state.Component.Span);
                 }
-                foreach (var child in state.Component.Children)
+                foreach (var child in state.Component.Children.Where(child => !child.IsDefinition))
                     itemRoot.Children.Add(LoadComponent(child));
             }
             finally
@@ -876,11 +906,190 @@ public sealed class CuiControlLoader : IDisposable
     private string CreateRepeatIdentityPrefix(CuiComponent component, string key)
     {
         var segment = $"{component.StableId}|key:{key.Length}:{key}";
-        return _currentRepeatIdentity is null ? segment : $"{_currentRepeatIdentity}/{segment}";
+        var scoped = _definitionScope is null ? segment : $"{_definitionScope}/{segment}";
+        return _currentRepeatIdentity is null ? scoped : $"{_currentRepeatIdentity}/{scoped}";
     }
 
-    private string ComposeStableId(string stableId) =>
-        _currentRepeatIdentity is null ? stableId : $"{_currentRepeatIdentity}/{stableId}";
+    private string ComposeStableId(string stableId)
+    {
+        // The repeat prefix already carries the definition scope, so it is applied exactly once.
+        if (_currentRepeatIdentity is not null)
+            return $"{_currentRepeatIdentity}/{stableId}";
+        return _definitionScope is null ? stableId : $"{_definitionScope}/{stableId}";
+    }
+
+    private void CollectDefinitions(IEnumerable<CuiComponent> components)
+    {
+        foreach (var component in components)
+        {
+            if (component.IsDefinition)
+                _definitions[component.Name ?? component.Type] = component;
+            CollectDefinitions(component.Children);
+            CollectDefinitions(component.ElseChildren);
+        }
+    }
+
+    /// <summary>A user definition never silently shadows a built-in element name.</summary>
+    private bool TryResolveDefinition(string name, out CuiComponent definition)
+    {
+        definition = null!;
+        if (_controlRegistry.TryResolveElement(name, out _))
+            return false;
+        return _definitions.TryGetValue(name, out definition!);
+    }
+
+    private Control InstantiateDefinition(CuiComponent instance, CuiComponent definition) =>
+        InstantiateInstance(instance, definition.Name ?? definition.Type,
+            MergeDefinitionInstance(definition, instance), IsSharedStatePrefab(definition));
+
+    private Control InstantiateTemplate(CuiComponent instance, CuiTemplateDefinition template)
+    {
+        if (!_definitionPath.Add(template.Name))
+            throw CycleDependency(instance, template.Name);
+
+        var hostScope = ComposeStableId(instance.StableId);
+        var previousScope = _definitionScope;
+        _definitionScope = hostScope;
+        try
+        {
+            var root = new Panel();
+            root.ZIndex = ResolveLayer(instance, _currentLayer);
+            if (!string.IsNullOrWhiteSpace(instance.Name))
+            {
+                root.Name = instance.Name;
+                Avalonia.Automation.AutomationProperties.SetAutomationId(root, instance.Name);
+            }
+            CuiRuntimeIdentity.SetStableId(root, hostScope);
+            _authoredControls.Add(root, instance);
+            ApplyProperties(root, instance);
+            ApplyClasses(root, instance);
+            ApplyActionTag(root, instance);
+            foreach (var child in template.Content.Where(child => !child.IsDefinition))
+                root.Children.Add(LoadComponent(WithTemplateInputs(child, instance, template)));
+            return root;
+        }
+        finally
+        {
+            _definitionScope = previousScope;
+            _definitionPath.Remove(template.Name);
+        }
+    }
+
+    private Control InstantiateInstance(CuiComponent instance, string key, CuiComponent effective, bool sharedInternalScope)
+    {
+        if (!_definitionPath.Add(key))
+            throw CycleDependency(instance, key);
+
+        var hostScope = ComposeStableId(instance.StableId);
+        var internalScope = sharedInternalScope
+            ? (_definitionScope is null ? $"definition:{key}" : $"{_definitionScope}/definition:{key}")
+            : hostScope;
+
+        var previousScope = _definitionScope;
+        _definitionScope = internalScope;
+        try
+        {
+            return LoadComponent(effective, hostScope, definitionInstance: true);
+        }
+        finally
+        {
+            _definitionScope = previousScope;
+            _definitionPath.Remove(key);
+        }
+    }
+
+    private CuiRuntimeLoadException CycleDependency(CuiComponent instance, string key) =>
+        new(new CuiDiagnostic(
+            "CUIR060",
+            CuiDiagnosticSeverity.Error,
+            $"Cyclic definition dependency: {string.Join(" -> ", _definitionPath.Concat(new[] { key }))}.",
+            instance.Span));
+
+    private static bool IsSharedStatePrefab(CuiComponent definition) =>
+        definition.Type.Equals("Prefab", StringComparison.OrdinalIgnoreCase)
+        && definition.TryGetLiteralAttribute("Type", out var prefabType)
+        && prefabType is not null
+        && prefabType.Equals("static", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>The instance supplies identity and inputs; the definition supplies defaults.</summary>
+    private static CuiComponent MergeDefinitionInstance(CuiComponent definition, CuiComponent instance)
+    {
+        var properties = new Dictionary<string, CuiValue>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (name, value) in definition.Properties) properties[name] = value;
+        foreach (var (name, value) in instance.Properties) properties[name] = value;
+
+        var actions = new Dictionary<string, CuiActionReference>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (name, value) in definition.Actions) actions[name] = value;
+        foreach (var (name, value) in instance.Actions) actions[name] = value;
+
+        return new CuiComponent(
+            definition.Type,
+            instance.Name ?? definition.Name,
+            definition.Classes.Concat(instance.Classes).ToArray(),
+            properties,
+            actions,
+            instance.Children.Count > 0 ? instance.Children : definition.Children,
+            instance.Condition ?? definition.Condition,
+            instance.List ?? definition.List,
+            instance.Span,
+            instance.DefaultTheme ?? definition.DefaultTheme,
+            instance.Repeat ?? definition.Repeat,
+            instance.ElseChildren.Count > 0 ? instance.ElseChildren : definition.ElseChildren,
+            instance.Groups.Count > 0 ? instance.Groups : definition.Groups,
+            isDefinition: false,
+            instance.PropertyRegion ?? definition.PropertyRegion)
+        {
+            Text = string.IsNullOrWhiteSpace(instance.Text) ? definition.Text : instance.Text,
+            TextParts = instance.TextParts.Count > 0 ? instance.TextParts : definition.TextParts,
+        };
+    }
+
+    /// <summary>Declared template inputs are the only caller state a template instance may capture.</summary>
+    private static CuiComponent WithTemplateInputs(CuiComponent source, CuiComponent instance, CuiTemplateDefinition template)
+    {
+        if (template.Parameters.Count == 0)
+            return source;
+
+        var properties = new Dictionary<string, CuiValue>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (name, value) in source.Properties)
+            properties[name] = SubstituteInput(value, instance, template.Parameters);
+
+        var textParts = source.TextParts
+            .Select(part => part is CuiExpressionTextPart expression
+                ? new CuiExpressionTextPart(SubstituteInput(expression.Value, instance, template.Parameters), expression.Span)
+                : part)
+            .ToArray();
+
+        return new CuiComponent(
+            source.Type,
+            source.Name,
+            source.Classes,
+            properties,
+            source.Actions,
+            source.Children.Select(child => WithTemplateInputs(child, instance, template)).ToArray(),
+            source.Condition,
+            source.List,
+            source.Span,
+            source.DefaultTheme,
+            source.Repeat,
+            source.ElseChildren.Select(child => WithTemplateInputs(child, instance, template)).ToArray(),
+            source.Groups,
+            source.IsDefinition,
+            source.PropertyRegion)
+        {
+            Text = source.Text,
+            TextParts = textParts,
+        };
+    }
+
+    private static CuiValue SubstituteInput(CuiValue value, CuiComponent instance, IReadOnlyList<string> parameters)
+    {
+        if (value is not CuiBindingValue binding || !parameters.Contains(binding.Path, StringComparer.Ordinal))
+            return value;
+        return instance.Properties.TryGetValue(binding.Path, out var supplied)
+            ? supplied
+            : new CuiLiteralValue(binding.Fallback ?? string.Empty, binding.Span);
+    }
 
     private void SubscribeScope(RepeatItemScope scope)
     {
@@ -947,6 +1156,17 @@ public sealed class CuiControlLoader : IDisposable
 
     private bool EvaluateCondition(CuiCondition condition)
     {
+        // A condition whose binding source is absent degrades to its declared fallback, or to an unmet branch.
+        // Only a source that resolves to a non-boolean value is a genuine type error.
+        if (condition.Test is CuiBindingValue missingSource &&
+            (_bindingContext is null || !_bindingContext.TryGetValue(missingSource.Path, out _)))
+        {
+            var fallbackResult = missingSource.Fallback is string text && bool.TryParse(text, out var parsed)
+                ? parsed
+                : false;
+            return condition.Negate ? !fallbackResult : fallbackResult;
+        }
+
         var value = ResolveObject(condition.Test);
         bool result;
         if (value is bool boolean)
@@ -2057,8 +2277,8 @@ public sealed class CuiControlLoader : IDisposable
 
     /// <summary>
     /// Resolves special theme-related binding paths.
-    /// {Theme} → current theme name (e.g. "Glow")
-    /// {Appearance} → current appearance (e.g. "Dark")
+    /// {Theme} â†’ current theme name (e.g. "Glow")
+    /// {Appearance} â†’ current appearance (e.g. "Dark")
     /// </summary>
     private string? ResolveSpecialBinding(string path)
     {
@@ -2271,3 +2491,4 @@ public sealed class CuiControlLoader : IDisposable
         return true;
     }
 }
+

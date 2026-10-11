@@ -1,4 +1,4 @@
-using System.Buffers.Binary;
+﻿using System.Buffers.Binary;
 using System.Collections.Frozen;
 using System.Collections.ObjectModel;
 using System.Net.Http.Json;
@@ -287,6 +287,7 @@ public sealed partial class LlamaCppModelProvider : IModelProvider, ILocalModelE
     {
         ValidateOptions();
         var configuration = await ObserveOriginalAsync(() => _configurations.GetAsync(Id, token)).ConfigureAwait(false);
+        RequireOriginalLinuxPeerPath();
         if (configuration is not { IsEnabled: true }) throw new InvalidOperationException("The actual local provider is disabled in the configuration store.");
         // IsLocal and Endpoint values in configuration are observations only; neither controls transport.
         await ValidateActualPeerAsync(token).ConfigureAwait(false);
@@ -320,18 +321,20 @@ public sealed partial class LlamaCppModelProvider : IModelProvider, ILocalModelE
     private void ValidateOptions()
     {
         if (!_options.Enabled) throw new InvalidOperationException("The explicit local endpoint is disabled.");
-        if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("The verified Unix peer path requires Linux.");
-        if (!Path.IsPathFullyQualified(_options.SocketPath ?? "") || Encoding.UTF8.GetByteCount(_options.SocketPath!) > 100
-            || !Path.IsPathFullyQualified(_options.ModelPath ?? "") || string.IsNullOrWhiteSpace(_options.ModelAlias))
+        if (!IsPosixAbsolute(_options.SocketPath) || Encoding.UTF8.GetByteCount(_options.SocketPath!) > 100
+            || !IsPosixAbsolute(_options.ModelPath) || string.IsNullOrWhiteSpace(_options.ModelAlias))
             throw new InvalidOperationException("Explicit absolute Unix socket/model paths and a model alias are required.");
         if (!IsSha(_options.ExpectedExecutableSha256) || !IsSha(_options.ExpectedModelSha256))
             throw new InvalidOperationException("Exact original executable and GGUF SHA256 pins are required.");
     }
     private static bool IsSha(string? value) => value is { Length: 64 } && value.All(Uri.IsHexDigit);
+    private static bool IsPosixAbsolute(string? path) => path is { Length: > 1 } && path[0] == '/' && !path.Contains('\\');
+    private static void RequireOriginalLinuxPeerPath() { if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("The verified Unix peer path requires Linux."); }
 
     private async ValueTask<Stream> ConnectOriginalSocketAsync(SocketsHttpConnectionContext context, CancellationToken token)
     {
         ValidateOptions();
+        RequireOriginalLinuxPeerPath();
         var socket = AcquireOriginalDisposable(() => new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified));
         try
         {
@@ -408,7 +411,7 @@ public sealed partial class LlamaCppModelProvider : IModelProvider, ILocalModelE
     // syntax through the SAME SO_PEERCRED process, never through the reader's self namespace.
     internal static string OriginalModelReadPath(int samePeerPid, string configuredModelPath, string? reportedModelPath)
     {
-        if (samePeerPid <= 0 || !Path.IsPathFullyQualified(configuredModelPath)
+        if (samePeerPid <= 0 || !IsPosixAbsolute(configuredModelPath)
             || configuredModelPath.StartsWith("/proc/self/fd/", StringComparison.Ordinal))
             throw new UnauthorizedAccessException("The actual peer and separate configured absolute model path are required.");
         if (reportedModelPath == configuredModelPath) return $"/proc/{samePeerPid}/root" + configuredModelPath;
@@ -639,7 +642,7 @@ public sealed partial class LlamaCppModelProvider : IModelProvider, ILocalModelE
                     finally { lock (_sync) work.Observed.Add(raw); }
                 }
             }
-            try { InvokePhysical(() => { lifetime?.Dispose(); return true; }, cleanup: true); } catch (Exception cause) { Add(cleanup, FaultEnvelope(cause)); }
+            if (lifetime is not null) { try { InvokePhysical(() => { lifetime.Dispose(); return true; }, cleanup: true); } catch (Exception cause) { Add(cleanup, FaultEnvelope(cause)); } }
             foreach (var cause in cleanup) Add(errors, cause);
             phase.Live = false; _executing.Value = prior;
             lock (_sync) foreach (var cause in errors) Add(_errors, cause);
@@ -928,3 +931,8 @@ public sealed partial class LlamaCppModelProvider : IModelProvider, ILocalModelE
     [DllImport("libc", SetLastError = true)] private static extern int getsockopt(int socket, int level, int option, out PeerCredentials credentials, ref uint length);
     [DllImport("libc")] private static extern uint geteuid();
 }
+
+
+
+
+

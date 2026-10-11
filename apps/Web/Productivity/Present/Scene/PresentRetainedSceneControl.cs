@@ -17,6 +17,7 @@ public sealed class PresentRetainedSceneControl : Panel, IDisposable
     private Guid? _renderedSlide;
     private bool _allowed, _disposed;
     public event EventHandler? LiveTextPreviewed;
+    public event EventHandler? SelectionChanged;
 
     public PresentRetainedSceneControl(Func<bool> reduceMotion)
     {
@@ -80,8 +81,8 @@ public sealed class PresentRetainedSceneControl : Panel, IDisposable
             _scene.FocusElement(_canvas);
     }
     private void Changed(object? sender, EventArgs args) => Refresh();
-    private void Select(Guid? id) { if (!_allowed || _editor is null) return; _editor.SelectElements(id is { } value ? [value] : []); Refresh(); }
-    private void SelectMany(IReadOnlyCollection<Guid> ids) { if (!_allowed || _editor is null) return; _editor.SelectElements(ids); Refresh(); }
+    private void Select(Guid? id) { if (!_allowed || _editor is null) return; _editor.SelectElements(id is { } value ? [value] : []); Refresh(); SelectionChanged?.Invoke(this, EventArgs.Empty); }
+    private void SelectMany(IReadOnlyCollection<Guid> ids) { if (!_allowed || _editor is null) return; _editor.SelectElements(ids); Refresh(); SelectionChanged?.Invoke(this, EventArgs.Empty); }
     private void Move(double x, double y) { if (_allowed) _editor?.MoveSelection(x, y); }
     private void Transform(double x, double y, double width, double height, double rotation)
     { if (_allowed) _editor?.TransformSelection(x, y, width, height, rotation); }

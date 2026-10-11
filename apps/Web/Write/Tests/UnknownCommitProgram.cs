@@ -162,13 +162,20 @@ Check(recoveryObserverObserved && recoverySession.DocumentId == recoveryDocument
     recoverySession.DurableRevision == recoveryReceipt.Version && recoverySession.GetDocumentSnapshot()!.Recovery.HasUnsavedRecovery,
     "throwing recovered Open observer sees finalized recovery draft and actual historical base identity");
 // Actual NotesRepository.Load quarantines corrupt current before returning a
-// validated recovery copy. Assert its preserved original, not a fictional
-// invariant that the corrupt file still occupies the current locator.
+// validated recovery copy, and the owning recovery publishes that validated
+// copy back at the current locator while carrying PendingRecovery metadata
+// (NotesRepository.RecoverCoreAsync). Assert the preserved corrupt original is
+// byte-identical in quarantine, that a current was published, and that the
+// published current is not the corrupt payload.
 var quarantined = Directory.GetFiles(Path.GetDirectoryName(recoveryReceipt.CurrentPath)!,
     Path.GetFileName(recoveryReceipt.CurrentPath) + ".corrupt-current-*").Single();
 var corruptAfterOpen = SHA256.HashData(await File.ReadAllBytesAsync(quarantined));
-Check(!File.Exists(recoveryReceipt.CurrentPath) && corruptBytes.SequenceEqual(corruptAfterOpen),
-    "actual recovery load quarantines exact corrupt original without publishing a replacement current");
+var publishedCurrent = File.Exists(recoveryReceipt.CurrentPath)
+    ? SHA256.HashData(await File.ReadAllBytesAsync(recoveryReceipt.CurrentPath))
+    : Array.Empty<byte>();
+Check(File.Exists(recoveryReceipt.CurrentPath) && corruptBytes.SequenceEqual(corruptAfterOpen) &&
+    !corruptBytes.SequenceEqual(publishedCurrent),
+    "actual recovery load quarantines exact corrupt original and publishes the validated recovery instead of the corrupt payload");
 var recoveryDisposeDenied = false;
 try { await recoverySession.DisposeAsync(); }
 catch (InvalidOperationException) { recoveryDisposeDenied = true; }

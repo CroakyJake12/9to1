@@ -1,4 +1,4 @@
-using CakeOS.Cui;
+﻿using CakeOS.Cui;
 using CakeOS.Cui.Compiler;
 using CakeOS.Cui.Runtime;
 using Xunit;
@@ -51,7 +51,7 @@ public sealed class CuiObjectTextCompilerTests
         foreach (var elementName in new[] { "Image", "Audio", "Video" })
         {
             var misplaced = compiler.Compile(
-                $"<Page><{elementName} Text=\"{Binding message.Content}\" /></Page>",
+                $"<Page><{elementName} Text=\"{{Binding message.Content}}\" /></Page>",
                 "misplaced-text.cui", Options());
             Assert.False(misplaced.Succeeded);
             Assert.Contains(misplaced.Diagnostics, diagnostic => diagnostic.Code == "CUIC013");

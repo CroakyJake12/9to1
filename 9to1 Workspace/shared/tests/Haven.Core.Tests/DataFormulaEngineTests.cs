@@ -1,4 +1,4 @@
-using Haven.Application;
+﻿using Haven.Application;
 using Haven.Core;
 
 namespace Haven.Core.Tests;
@@ -35,7 +35,7 @@ public sealed class DataFormulaEngineTests
 
         var report = new DataFormulaEngine(new FixedTimeProvider()).Recalculate(workbook);
 
-        Assert.Empty(report.Issues); Assert.Equal("20", workbook.Sheets[0].GetCell(0, 0)!.Value); Assert.Equal("1.2", workbook.Sheets[0].GetCell(0, 1)!.Value); Assert.Equal(3, workbook.SchemaVersion);
+        Assert.Empty(report.Issues); Assert.Equal("20", workbook.Sheets[0].GetCell(0, 0)!.Value); Assert.Equal("1.2", workbook.Sheets[0].GetCell(0, 1)!.Value); Assert.Equal(DataWorkbook.CurrentSchemaVersion, workbook.SchemaVersion);
     }
 
     [Fact]
@@ -106,3 +106,4 @@ public sealed class DataFormulaEngineTests
         public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Utc;
     }
 }
+

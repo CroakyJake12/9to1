@@ -144,7 +144,7 @@ public sealed class BoardsCloseSaveTests
             await using var reopened = await ContractSessionAdapter.OpenAsync(freshStore, saveAs ? copy : path);
             Assert.Equal("Typed while the real store save was held", reopened.Document.Sections[0]
                 .Pages[0].Blocks.First(b => b.Kind == "paragraph").Text);
-            Assert.Single(reopened.Document.Sections[0].Pages[0].Blocks.Where(b => b.Text == "New late block"));
+            Assert.Single(reopened.Document.Sections[0].Pages[0].Blocks, b => b.Text == "New late block");
             Assert.Equal(identity, (await freshStore.LoadDocumentAtPathAsync(saveAs ? copy : path))!.DocumentId);
         }
         finally { Directory.Delete(root, recursive: true); }

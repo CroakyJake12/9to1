@@ -1,15 +1,27 @@
 // Browser file brokerage only. Canonical IDs/revisions/documents remain in the repository.
 const maximumPackageBytes = 128 * 1024 * 1024;
+const maximumImageBytes = 32 * 1024 * 1024;
 let pendingPick;
 
 export function cancelPick() { pendingPick?.finish(null); }
 
-export function pickPackage() {
-  if (pendingPick) throw new Error("A native package chooser is already open.");
+function readBase64(file, limit) {
+  return file.arrayBuffer().then(buffer => {
+    if (buffer.byteLength > limit) throw new Error("This file exceeds the size limit the document can carry.");
+    const bytes = new Uint8Array(buffer);
+    const chunks = [];
+    for (let offset = 0; offset < bytes.length; offset += 32768)
+      chunks.push(String.fromCharCode(...bytes.subarray(offset, offset + 32768)));
+    return btoa(chunks.join(""));
+  });
+}
+
+function chooseFile(accept, limit, map) {
+  if (pendingPick) throw new Error("A native file chooser is already open.");
   return new Promise((resolve, reject) => {
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = ".9to1w";
+    input.accept = accept;
     input.style.display = "none";
     let settled = false;
     const finish = (value, error) => {
@@ -25,18 +37,24 @@ export function pickPackage() {
       try {
         const file = input.files?.[0];
         if (!file) return finish(null);
-        if (file.size > maximumPackageBytes) throw new Error("This package exceeds the owning codec's size limit.");
-        const bytes = new Uint8Array(await file.arrayBuffer());
+        if (file.size > limit) throw new Error("This file exceeds the size limit the document can carry.");
+        const base64 = await readBase64(file, limit);
         if (settled) return;
-        const chunks = [];
-        for (let offset = 0; offset < bytes.length; offset += 32768)
-          chunks.push(String.fromCharCode(...bytes.subarray(offset, offset + 32768)));
-        finish({ name: file.name, base64: btoa(chunks.join("")) });
+        finish(map(file, base64));
       } catch (error) { finish(null, error); }
     }, { once: true });
     document.body.append(input);
     try { input.click(); } catch (error) { finish(null, error); }
   });
+}
+
+export function pickPackage() {
+  return chooseFile(".9to1w", maximumPackageBytes, (file, base64) => ({ name: file.name, base64 }));
+}
+
+export function pickImage() {
+  return chooseFile("image/png,image/jpeg,image/webp,image/gif,image/bmp", maximumImageBytes,
+    (file, base64) => ({ name: file.name, mediaType: file.type || "application/octet-stream", base64 }));
 }
 
 export function downloadPackage(filename, base64) {

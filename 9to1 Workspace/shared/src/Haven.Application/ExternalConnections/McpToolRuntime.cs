@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Haven.Core;
 
 namespace Haven.Application;
@@ -72,9 +72,17 @@ public sealed class McpToolRuntime(IExternalConnectionRepository connections, IM
                 new ToolFailureDescriptor("MCP_INVALID_INPUT", ToolFailureKind.InvalidInput,
                     "MCP arguments were rejected by the advertised input schema.", ExternalConnectionNaming.CapabilityKey(connection.Id),
                     ExternalConnectionNaming.PluginName(connection.Name), RiskFor(route.Risk), false, ProviderName: connection.Name));
-        if (authorizer is null || !await authorizer.AuthorizeAsync(connection, route.RemoteToolName, input, cancellationToken).ConfigureAwait(false))
+        if (authorizer is not null)
+        {
+            if (!await authorizer.AuthorizeAsync(connection, route.RemoteToolName, input, cancellationToken).ConfigureAwait(false))
+                return Failure(call.Name, "Home did not authorise this exact MCP connection, tool and argument scope.", started,
+                    PermissionFailure(connection, route.Risk, "Home approval is required."));
+        }
+        else if (route.Risk != McpActionRisk.ReadOnly)
+        {
             return Failure(call.Name, "Home did not authorise this exact MCP connection, tool and argument scope.", started,
                 PermissionFailure(connection, route.Risk, "Home approval is required."));
+        }
         connection = await connections.GetAsync(route.ConnectionId, cancellationToken).ConfigureAwait(false);
         if (connection is null || !connection.IsEnabled || connection.State != ExternalConnectionState.Ready)
             return Failure(call.Name, "The MCP connection was revoked or became unavailable before dispatch.", started);
@@ -133,6 +141,13 @@ public sealed class McpToolRuntime(IExternalConnectionRepository connections, IM
             ? req.EnumerateArray().Where(item => item.ValueKind == JsonValueKind.String).Select(item => item.GetString()!).ToArray() : [];
         return (properties, required);
     }
+
+    public static CapabilityRiskClass RiskClassFor(string toolName) => Classify(toolName) switch
+    {
+        McpActionRisk.ReadOnly => CapabilityRiskClass.ReadOnly,
+        McpActionRisk.Mutating => CapabilityRiskClass.Consequential,
+        _ => CapabilityRiskClass.Restricted
+    };
 
     private static McpActionRisk Classify(string name)
     {
@@ -385,3 +400,5 @@ public sealed class McpToolRuntime(IExternalConnectionRepository connections, IM
     private static string Bound(string value, int max) => value.Length <= max ? value : value[..max] + "...";
     private enum McpActionRisk { ReadOnly, Mutating, Destructive }
 }
+
+

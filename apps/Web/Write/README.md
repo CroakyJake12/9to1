@@ -37,6 +37,34 @@ lifetime and implements the root's `IBrowserCloseParticipant`. The root must awa
 successful preparation before asynchronous full route removal. Registry methods
 alone do not establish native/browser close integration; that remains a root gate.
 
+Image insertion is a genuine authoring journey rather than a placeholder. The
+composition root supplies an `IWriteBrowserImageSource`, which opens the
+platform's own image chooser and stages the picked file, and an
+`INotesAttachmentStore`, which owns the attachment identity, the stored copy and
+the digest. `InsertImage` imports the staged file through that store like the
+Desktop host does, so the browser never assigns an attachment identity or a
+storage path; without a store the action reports `AttachmentStoreMissing` and
+without a chooser it reports `ImageSourceMissing` instead of accepting an image
+no save could carry. The inserted block then edits through the same editor
+operations as every other block: alt text, caption and wrapping through
+`UpdateMedia`, size through `ResizeSelectedMedia`, rotation through
+`RotateSelectedMedia` and the four crop fractions through `SetSelectedMediaCrop`,
+each exposed as a two-way binding in `Write.cui` that writes the selected image's
+own properties, and each taking part in undo, the dirty flag, save and the
+read-only gate. The scene journey asserts the stored attachment keeps the exact
+picked bytes with its digest and size, that every property writes through, and
+that the saved document and the native package both carry the media block and its
+canonical attachment reference.
+
+Two ownership gaps remain open and are not covered by these assertions. The browser
+composition root must supply both the chooser and the store: today
+`apps/Web/BrowserFeatureComposition.cs` registers neither `BrowserWriteImageSource` nor an
+`INotesAttachmentStore`, so a real browser run cannot pick an image until that root is wired.
+That file is the shared composition root and belongs to its own owner, so this lane does not
+edit it. Separately, `WriteNativeDocumentPackageStore` writes `manifest.json` and
+`document.json` only, so an exported `.9to1w` carries the attachment reference but not the
+attachment bytes; donor package parity for embedded media is an Infrastructure-owned gap.
+
 An uncertain save acknowledgment preserves the exact submitted real document and
 its prior owner revision. It freezes authoring and leaving/retry commands. The
 explicit saved-state inspection reads the same canonical ID through the repository;

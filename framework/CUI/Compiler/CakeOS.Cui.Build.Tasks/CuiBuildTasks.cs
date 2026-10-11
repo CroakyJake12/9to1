@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using System.Xml.Linq;
+using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -26,65 +24,13 @@ public class GenerateCuiResourcesTask : Task
 
     public override bool Execute()
     {
-        var entries = new List<(string LogicalName, byte[] Data)>();
+        var log = new MsBuildResourceLog(Log);
+        var entries = CuiResourceBundle.Collect(
+            Root,
+            Resources.Select(item => item.GetMetadata("FullPath")),
+            log);
 
-        foreach (var item in Resources)
-        {
-            var fullPath = item.GetMetadata("FullPath");
-            if (string.IsNullOrEmpty(fullPath) || !File.Exists(fullPath))
-            {
-                Log.LogMessage(MessageImportance.Low, $"Skipping missing CUI resource: {fullPath}");
-                continue;
-            }
-
-            var relativePath = fullPath;
-            if (fullPath.StartsWith(Root, System.StringComparison.OrdinalIgnoreCase))
-                relativePath = fullPath.Substring(Root.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-
-            var logicalName = relativePath.Replace('\\', '.').Replace('/', '.');
-            var data = File.ReadAllBytes(fullPath);
-
-            // Validate CUI files; skip binary resources (fonts, images)
-            var extension = Path.GetExtension(fullPath);
-            if (string.Equals(extension, ".cui", System.StringComparison.OrdinalIgnoreCase))
-            {
-                try
-                {
-                    var doc = XDocument.Parse(Encoding.UTF8.GetString(data));
-                    var rootEl = doc.Root;
-                    if (rootEl?.Name.LocalName != "Cui")
-                    {
-                        Log.LogWarning($"CUI resource '{relativePath}' does not have a <Cui> root element.");
-                    }
-                }
-                catch (System.Xml.XmlException ex)
-                {
-                    Log.LogWarning($"CUI resource '{relativePath}' has invalid XML: {ex.Message}");
-                }
-            }
-
-            entries.Add((logicalName, data));
-            Log.LogMessage(MessageImportance.Low,
-                $"CUI resource: {relativePath} -> {logicalName} ({data.Length} bytes)");
-        }
-
-        // Write binary resource index
-        var dir = Path.GetDirectoryName(Output);
-        if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-
-        using var stream = new FileStream(Output, FileMode.Create, FileAccess.Write);
-        using var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true);
-
-        writer.Write(entries.Count);
-        foreach (var (name, data) in entries)
-        {
-            writer.Write(name);
-            writer.Write(data.Length);
-            writer.Write(data);
-        }
-
-        Log.LogMessage(MessageImportance.High,
-            $"Generated CUI resource bundle: {entries.Count} resources -> {Output}");
+        CuiResourceBundle.Write(Output, entries, log);
         return true;
     }
 }

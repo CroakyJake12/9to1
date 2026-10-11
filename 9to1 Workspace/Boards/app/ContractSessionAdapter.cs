@@ -191,14 +191,14 @@ public sealed class ContractSessionAdapter : IRichBoardSession
     public async ValueTask SaveAsync(CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
-        await _mergeGate.WaitAsync(cancellationToken);
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             var submittedView = JsonSerializer.Serialize(_view, Json);
-            await MergeCoreAsync(cancellationToken);
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
             _baselineJson = ProjectedViewJson();
-            await _real.SaveAsync(cancellationToken);
-            await RefreshAfterSaveAsync(submittedView, cancellationToken);
+            await _real.SaveAsync(cancellationToken).ConfigureAwait(false);
+            await RefreshAfterSaveAsync(submittedView, cancellationToken).ConfigureAwait(false);
             _lastError = null;
         }
         catch (Exception error)
@@ -215,14 +215,14 @@ public sealed class ContractSessionAdapter : IRichBoardSession
     public async ValueTask SaveAsAsync(string path, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
-        await _mergeGate.WaitAsync(cancellationToken);
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             var submittedView = JsonSerializer.Serialize(_view, Json);
-            await MergeCoreAsync(cancellationToken);
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
             _baselineJson = ProjectedViewJson();
-            await _real.SaveAsAsync(path, cancellationToken);
-            await RefreshAfterSaveAsync(submittedView, cancellationToken);
+            await _real.SaveAsAsync(path, cancellationToken).ConfigureAwait(false);
+            await RefreshAfterSaveAsync(submittedView, cancellationToken).ConfigureAwait(false);
             _lastError = null;
         }
         catch (Exception error)

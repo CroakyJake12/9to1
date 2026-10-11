@@ -62,7 +62,7 @@ public sealed class HomeNativeOriginalStartupTransferTests
         Assert.Contains(Leaves(refused), same => ReferenceEquals(same, late));
         var close = session.CloseAndDrainAsync(); Assert.Same(close, session.CloseAndDrainAsync());
         var observed = await Assert.ThrowsAsync<AggregateException>(() => close);
-        foreach (var same in new[] { late, clientCause, sessionCause }) Assert.Contains(Leaves(observed), leaf => ReferenceEquals(leaf, same));
+        foreach (var same in new Exception[] { late, clientCause, sessionCause }) Assert.Contains(Leaves(observed), leaf => ReferenceEquals(leaf, same));
         Assert.All(Leaves(observed), same => Assert.Contains(same, rig.Expected));
     });
 
@@ -122,7 +122,7 @@ public sealed class HomeNativeOriginalStartupTransferTests
         internal HomeNativeWindowsStartupSession MakeSession()
         {
             var same = Construct<HomeNativeWindowsStartupSession>(Client,
-                new HomeCompatibilityRequest("unverified-control", "0.0.0", [new HomeServiceRequirement("home.core", 1)]), Lifetime.Token);
+                new HomeCompatibilityRequest("unverified-control", "0.0.0", [new HomeServiceRequirement("home.core", 1), new HomeServiceRequirement("home.state", 1)]), Lifetime.Token);
             Set(same, "_originalScoped", true); _owners.Add(same); return same;
         }
         internal object BindSession(HomeNativeWindowsStartupSession session, Task driver, Action<Action> scope)

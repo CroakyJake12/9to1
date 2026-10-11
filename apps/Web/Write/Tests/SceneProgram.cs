@@ -1,7 +1,8 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
@@ -11,6 +12,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform;
 using Avalonia.VisualTree;
+using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
@@ -43,6 +45,10 @@ var checks = await headless.Dispatch(async () =>
     string Text(NotesDocument document) => string.Concat(First(document).Runs.Select(run => run.Text));
     var paths = new AppPaths();
     var repository = new NotesRepository(paths, new NotesDocumentValidator(), new ProductionDiagnostics(paths));
+    // A real one-pixel PNG, so the picked image journey stages genuine image bytes.
+    var fixtureImagePath = Path.Combine(Path.GetTempPath(), "write-scene-image.png");
+    File.WriteAllBytes(fixtureImagePath, Convert.FromBase64String(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8AAAwAB/AF/9Qn9WQAAAABJRU5ErkJggg=="));
     if (args.Contains("navigation", StringComparer.Ordinal))
     {
         var a = NotesDocument.Create("Canonical document A");
@@ -62,7 +68,7 @@ var checks = await headless.Dispatch(async () =>
         var (rootA, diagnosticsA) = loaderA.TryLoad(viewA.Document);
         Check(rootA is not null && !diagnosticsA.Any(d => d.Severity == CuiDiagnosticSeverity.Error), "actual existing A CUI renders through original registered retained surface");
         loaderA.WireBindings(rootA!);
-        var navigationWindow = new Window { Width = 1100, Height = 800, Content = rootA };
+        var navigationWindow = new Window { Width = 1100, Height = 920, Content = rootA };
         navigationWindow.Show();
         try
         {
@@ -193,7 +199,7 @@ var checks = await headless.Dispatch(async () =>
         pickerLoader.WireBindings(pickerRoot!);
         pickerLoader.WireBindings(pickerRoot!);
         pickerSurface.Admission?.Accept();
-        var pickerWindow = new Window { Width = 1100, Height = 800, Content = pickerRoot };
+        var pickerWindow = new Window { Width = 1100, Height = 920, Content = pickerRoot };
         pickerWindow.Show();
         try
         {
@@ -258,7 +264,8 @@ var checks = await headless.Dispatch(async () =>
         }
         finally { pickerWindow.Close(); }
     }
-    var session = new WriteBrowserSession(repository, new WriteNativeDocumentPackageStore());
+    var session = new WriteBrowserSession(repository, new WriteNativeDocumentPackageStore(), null, null,
+        new SceneImageSource(fixtureImagePath), new NotesAttachmentStore(paths, new ProductionDiagnostics(paths)));
     var parser = new CuiRichParser();
     // An explicit fixture path permits replaying the captured original authored CUI
     // as a negative control; the default always loads the production surface.
@@ -271,9 +278,55 @@ var checks = await headless.Dispatch(async () =>
     loader.SetActionDispatcher(session);
     var (root, diagnostics) = loader.TryLoad(document);
     Check(root is not null && !diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error), "actual registered owner surface lowers");
+    // The owned Write.cui is the browser surface of record. Prove every declared
+    // action and every root-scope binding still matches the live session, so markup
+    // drift cannot leave a control that silently reports UnsupportedFeature.
+    // A component action is either a direct command or a named reference into the
+    // document's <Actions> catalogue; resolve both to the command the session sees.
+    var declaredCommands = document.Components.SelectMany(Descend)
+        .SelectMany(component => component.Actions.Values)
+        .Select(reference => document.Actions.TryGetValue(reference.Name, out var definition)
+            ? definition.Command
+            : reference.Name)
+        .Concat(document.Actions.Values.Select(action => action.Command))
+        .Distinct(StringComparer.Ordinal)
+        .OrderBy(command => command, StringComparer.Ordinal)
+        .ToArray();
+    Check(declaredCommands.Length > 0, "actual owning Write.cui declares real actions to validate");
+    foreach (var command in declaredCommands)
+        Check(WriteBrowserSession.DispatchableCommands.Contains(command),
+            "Write.cui action " + command + " is a dispatchable session command");
+    var rootScopeBindings = document.Components.SelectMany(RootScopeBindings)
+        .Distinct(StringComparer.Ordinal)
+        .OrderBy(path => path, StringComparer.Ordinal)
+        .ToArray();
+    Check(rootScopeBindings.Length > 0, "actual owning Write.cui declares real root-scope bindings to validate");
+    foreach (var bindingPath in rootScopeBindings)
+        Check(session.TryGetValue(bindingPath, out _),
+            "Write.cui binding " + bindingPath + " resolves against the live session");
+    foreach (var command in WriteBrowserSession.DispatchableCommands)
+        Check(declaredCommands.Contains(command),
+            "dispatchable session command " + command + " is still declared by Write.cui");
+    static IEnumerable<CuiComponent> Descend(CuiComponent component)
+    {
+        yield return component;
+        foreach (var child in component.Children) foreach (var nested in Descend(child)) yield return nested;
+        foreach (var child in component.ElseChildren) foreach (var nested in Descend(child)) yield return nested;
+    }
+    // Repeat and list bodies evaluate in an item scope, so only bindings that render
+    // against the session itself are checked here.
+    static IEnumerable<string> RootScopeBindings(CuiComponent component)
+    {
+        if (component.Repeat is not null || component.List is not null) yield break;
+        if (component.Condition?.Test is CuiBindingValue condition) yield return condition.Path;
+        foreach (var value in component.Properties.Values)
+            if (value is CuiBindingValue binding) yield return binding.Path;
+        foreach (var child in component.Children) foreach (var path in RootScopeBindings(child)) yield return path;
+        foreach (var child in component.ElseChildren) foreach (var path in RootScopeBindings(child)) yield return path;
+    }
     loader.WireBindings(root!);
     loader.WireBindings(root!); // The existing runtime promises idempotent event binding.
-    var window = new Window { Width = 1100, Height = 800, Content = root };
+    var window = new Window { Width = 1100, Height = 920, Content = root };
     window.Show();
     try
     {
@@ -292,7 +345,16 @@ var checks = await headless.Dispatch(async () =>
             void Empty()
             {
                 State("New", true);
-                foreach (var name in new[] { "Save", "Bold", "Undo", "Redo", "Close" }) State(name, false);
+                foreach (var name in new[] { "Save", "Bold", "Italic", "Underline", "Strikethrough",
+                    "A4", "Letter", "Portrait", "Landscape", "Paginated", "Continuous",
+                    "Align left", "Align center", "Align right", "Justify", "Undo", "Redo", "Close",
+                    "Paragraph", "Heading", "Quote", "Code", "Bullets", "Numbering", "Checklist", "Page break", "Divider", "Insert table",
+                    "Add list item", "Set bullets", "Set numbering", "Set checklist",
+                    "Add table row", "Add table column", "Remove table row", "Remove table column",
+                    "Find previous", "Find next", "Replace all",
+                    "Move block up", "Move block down", "Delete block",
+                    "Split run", "Merge run", "Merge cell right", "Split cell",
+                    "Set normal", "Set heading 1", "Set heading 2", "Set quote", "Set code" }) State(name, false);
             }
             void ClickStart(string name)
             {
@@ -315,13 +377,70 @@ var checks = await headless.Dispatch(async () =>
             }
             Empty();
             await Click("New", () => session.DocumentId is not null);
-            State("Save", true); State("Bold", true); State("Close", true);
-            State("Undo", false); State("Redo", false);
+            State("Save", true); State("Bold", true); State("Italic", true);
+            State("Underline", true); State("Strikethrough", true);
+            foreach (var page in new[] { "A4", "Letter", "Portrait", "Landscape", "Paginated", "Continuous" })
+                State(page, true);
+            State("Close", true);
+            State("Find previous", true); State("Find next", true); State("Replace all", true);
+            State("Move block up", true); State("Move block down", true); State("Delete block", false);
+            State("Split run", true); State("Merge run", true);
+            State("Merge cell right", false); State("Split cell", false);
+            foreach (var styleName in new[] { "Set normal", "Set heading 1", "Set heading 2", "Set quote", "Set code" })
+                State(styleName, true);
+            State("Undo", false); State("Redo", false); State("Add list item", false);
+            foreach (var listKind in new[] { "Set bullets", "Set numbering", "Set checklist" }) State(listKind, false);
+            foreach (var table in new[] { "Add table row", "Add table column", "Remove table row", "Remove table column" })
+                State(table, false);
+            foreach (var insert in new[] { "Paragraph", "Heading", "Quote", "Code", "Bullets", "Numbering", "Checklist", "Page break", "Divider", "Insert table" })
+                State(insert, true);
             var toolbarId = session.DocumentId!.Value;
             var toolbarBlock = First(session.GetDocumentSnapshot()!).Id;
             await session.SelectAsync(toolbarBlock, 0, 0);
             window.KeyTextInput("Alpha beta gamma");
             Check(Text(session.GetDocumentSnapshot()!) == "Alpha beta gamma", "toolbar journey actual routed typing mutates owner");
+            var wordCountBlock = root!.GetVisualDescendants().OfType<TextBlock>()
+                .Single(block => AutomationProperties.GetName(block) == "Document word count");
+            Check(session.TryGetValue("WordCount", out var typedWords) && Equals(typedWords, 3) &&
+                wordCountBlock.Text == "3",
+                "toolbar reports the typed document's word count through the session and the rendered control, actual " +
+                wordCountBlock.Text);
+            var findInput = root!.GetVisualDescendants().OfType<TextBox>()
+                .Single(box => AutomationProperties.GetName(box) == "Text to find");
+            var replaceInput = root!.GetVisualDescendants().OfType<TextBox>()
+                .Single(box => AutomationProperties.GetName(box) == "Replacement text");
+            var findStatus = root!.GetVisualDescendants().OfType<TextBlock>()
+                .Single(block => AutomationProperties.GetName(block) == "Find and replace status");
+            Check(findInput.IsEnabled && replaceInput.IsEnabled,
+                "toolbar find and replace inputs permit interaction");
+            Check(session.TryGetValue("FindStatus", out var promptedQuery) &&
+                Equals(promptedQuery, "Enter text to find.") && findStatus.Text == "Enter text to find.",
+                "toolbar find prompts for a query before searching, actual " + findStatus.Text);
+            findInput.Text = "a";
+            Check(session.TryGetValue("FindMatchCount", out var lowerMatches) && Equals(lowerMatches, 5),
+                "toolbar find counts every case-insensitive match in the authored paragraph");
+            await Click("Find next", () => session.TryGetValue("FindStatus", out var firstMatch) &&
+                Equals(firstMatch, "5 match(es); showing 1."));
+            await Click("Find next", () => session.TryGetValue("FindStatus", out var secondMatch) &&
+                Equals(secondMatch, "5 match(es); showing 2."));
+            await Click("Find previous", () => session.TryGetValue("FindStatus", out var previousMatch) &&
+                Equals(previousMatch, "5 match(es); showing 1."));
+            Check(findStatus.Text == "5 match(es); showing 1.",
+                "toolbar renders the live find position, actual " + findStatus.Text);
+            findInput.Text = "omega";
+            Check(session.TryGetValue("FindMatchCount", out var absentMatches) && Equals(absentMatches, 0) &&
+                session.TryGetValue("FindStatus", out var absentStatus) &&
+                Equals(absentStatus, "No matches."),
+                "toolbar find reports a genuinely empty result set");
+            await Click("Find next", () => session.ErrorCode == "NoMatches");
+            findInput.Text = string.Empty;
+            Check(session.TryGetValue("FindStatus", out var clearedStatus) &&
+                Equals(clearedStatus, "Enter text to find."),
+                "toolbar find returns to its prompt when the query is cleared");
+            await Click("Find next", () => session.ErrorCode == "EmptyQuery");
+            Check(First(session.GetDocumentSnapshot()!) is { } searchBlock && searchBlock.Runs.All(run => !run.Bold) &&
+                searchBlock.Runs.Count == 1 && searchBlock.Runs[0].Text == "Alpha beta gamma",
+                "find navigation is read-only and leaves the authored paragraph untouched");
             State("Undo", true); State("Redo", false);
             await session.SelectAsync(toolbarBlock, 6, 10);
             await Click("Bold", () => First(session.GetDocumentSnapshot()!).Runs.Any(run => run.Bold));
@@ -331,6 +450,286 @@ var checks = await headless.Dispatch(async () =>
             State("Redo", true);
             await Click("Redo", () => First(session.GetDocumentSnapshot()!).Runs.Any(run => run.Bold));
             State("Redo", false);
+            await Click("Italic", () => First(session.GetDocumentSnapshot()!).Runs.Any(run => run.Italic));
+            await Click("Underline", () => First(session.GetDocumentSnapshot()!).Runs.Any(run => run.Underline));
+            await Click("Strikethrough", () => First(session.GetDocumentSnapshot()!).Runs.Any(run => run.StrikeThrough));
+            Check(First(session.GetDocumentSnapshot()!).Runs is { Count: 3 } decorated &&
+                decorated[1].Text == "beta" &&
+                decorated[1].Bold && decorated[1].Italic && decorated[1].Underline && decorated[1].StrikeThrough &&
+                !decorated[0].Bold && !decorated[0].Italic && !decorated[0].Underline && !decorated[0].StrikeThrough &&
+                !decorated[2].Bold && !decorated[2].Italic && !decorated[2].Underline && !decorated[2].StrikeThrough,
+                "toolbar Italic, Underline and Strikethrough decorate only the selected structured run");
+            Check(session.TryGetValue("ParagraphAlignment", out var initialAlignment) &&
+                Equals(initialAlignment, NotesTextAlignment.Left), "toolbar paragraph begins left aligned");
+            await Click("Align center", () => session.TryGetValue("ParagraphAlignment", out var centered) &&
+                Equals(centered, NotesTextAlignment.Center));
+            Check(First(session.GetDocumentSnapshot()!).Paragraph.Alignment == NotesTextAlignment.Center &&
+                First(session.GetDocumentSnapshot()!).Runs[1].Bold,
+                "toolbar actual Align center changes only the selected paragraph alignment and keeps prior formatting");
+            Check(session.TryGetValue("LineSpacing", out var authoredSpacing) && Equals(authoredSpacing, 1.25d),
+                "toolbar paragraph reports its authored default line spacing through the two-way binding");
+            var numericInputs = root!.GetVisualDescendants().OfType<NumericUpDown>().ToArray();
+            Check(numericInputs.Length == 15, "toolbar exposes one font, four paragraph, two table, one margin and seven image number input");
+            var fontInput = numericInputs[0];
+            var paragraphInputs = numericInputs.Skip(1).Take(4).ToArray();
+            var tableInputs = numericInputs.Skip(5).Take(2).ToArray();
+            var marginInput = numericInputs[7];
+            var mediaInputs = numericInputs.Skip(8).Take(7).ToArray();
+            for (var index = 0; index < 8; index++)
+                Check(numericInputs[index].IsEnabled, "toolbar number input " + index + " permits interaction");
+            Check(mediaInputs.All(input => !input.IsEnabled),
+                "the image property inputs stay disabled while no image is selected");
+            Check(session.TryGetValue("TableRows", out var defaultRows) && Equals(defaultRows, 3) &&
+                session.TryGetValue("TableColumns", out var defaultColumns) && Equals(defaultColumns, 3),
+                "toolbar table dimensions begin at the editor's authored three by three defaults");
+            paragraphInputs[0].Value = 1.5m;
+            paragraphInputs[1].Value = 48m;
+            paragraphInputs[2].Value = -12m;
+            paragraphInputs[3].Value = 6m;
+            Check(session.TryGetValue("LineSpacing", out var editedSpacing) && Equals(editedSpacing, 1.5d) &&
+                session.TryGetValue("LeftIndent", out var editedIndent) && Equals(editedIndent, 48d) &&
+                session.TryGetValue("FirstLineIndent", out var editedFirst) && Equals(editedFirst, -12d) &&
+                session.TryGetValue("SpaceAfter", out var editedAfter) && Equals(editedAfter, 6d),
+                "two-way paragraph inputs write through to the owning editor's paragraph format");
+            paragraphInputs[0].Value = 99m;
+            Check(session.TryGetValue("LineSpacing", out var rejectedSpacing) && Equals(rejectedSpacing, 1.5d) &&
+                CuiInputValidationProperties.GetHasError(paragraphInputs[0]),
+                "out-of-range line spacing is rejected for validation and never reaches the owning document");
+            paragraphInputs[0].Value = 1.5m;
+            Check(session.TryGetValue("FontFamily", out var authoredFamily) && Equals(authoredFamily, "Montserrat") &&
+                session.TryGetValue("FontSize", out var authoredSize) && Equals(authoredSize, 14d) &&
+                session.TryGetValue("TextColor", out var authoredColour) && Equals(authoredColour, "#FFEEEEEE") &&
+                session.TryGetValue("TextHighlight", out var authoredHighlight) && Equals(authoredHighlight, "#00000000"),
+                "toolbar reports the selected run's authored font family, size and colours through the two-way bindings");
+            Check(fontInput.IsEnabled, "toolbar font size input permits interaction");
+            fontInput.Value = 24m;
+            Check(First(session.GetDocumentSnapshot()!).Runs[1].FontSize == 24d &&
+                session.TryGetValue("FontSize", out var editedSize) && Equals(editedSize, 24d),
+                "two-way font size writes through to the owning structured run and reads back through the binding");
+            fontInput.Value = 3m;
+            Check(CuiInputValidationProperties.GetHasError(fontInput) &&
+                First(session.GetDocumentSnapshot()!).Runs[1].FontSize == 24d,
+                "font size below the editor's range is rejected for validation and never reaches the run");
+            fontInput.Value = 18m;
+            var fontFamilyInput = root!.GetVisualDescendants().OfType<TextBox>()
+                .Single(box => AutomationProperties.GetName(box) == "Font family for the selected text");
+            Check(fontFamilyInput.IsEnabled, "toolbar font family input permits interaction");
+            fontFamilyInput.Text = "Segoe UI";
+            Check(First(session.GetDocumentSnapshot()!).Runs[1].FontFamily == "Segoe UI" &&
+                session.TryGetValue("FontFamily", out var editedFamily) && Equals(editedFamily, "Segoe UI"),
+                "two-way font family writes through to the owning structured run");
+            var textColourInput = root!.GetVisualDescendants().OfType<TextBox>()
+                .Single(box => AutomationProperties.GetName(box) == "Text colour as a hex colour value");
+            textColourInput.Text = "#112233";
+            Check(First(session.GetDocumentSnapshot()!).Runs[1].Foreground == "#112233",
+                "two-way text colour writes through to the owning structured run");
+            textColourInput.Text = "red";
+            Check(First(session.GetDocumentSnapshot()!).Runs[1].Foreground == "#112233",
+                "a non-hex text colour is rejected for validation and never reaches the run");
+            var highlightInput = root!.GetVisualDescendants().OfType<TextBox>()
+                .Single(box => AutomationProperties.GetName(box) == "Text highlight colour as a hex colour value");
+            highlightInput.Text = "#00FF00FF";
+            Check(First(session.GetDocumentSnapshot()!).Runs[1].Background == "#00FF00FF",
+                "two-way highlight colour writes through to the owning structured run");
+            var linkInput = root!.GetVisualDescendants().OfType<TextBox>()
+                .Single(box => AutomationProperties.GetName(box) == "Hyperlink for the selected text");
+            Check(linkInput.IsEnabled, "toolbar hyperlink input permits interaction");
+            Check(session.TryGetValue("Link", out var authoredLink) && Equals(authoredLink, string.Empty),
+                "toolbar reports an empty hyperlink before the writer sets one");
+            linkInput.Text = "https://example.test/write";
+            Check(First(session.GetDocumentSnapshot()!).Runs[1].Link == "https://example.test/write" &&
+                session.TryGetValue("Link", out var writtenLink) &&
+                Equals(writtenLink, "https://example.test/write"),
+                "two-way hyperlink writes through to the owning structured run");
+            Check(First(session.GetDocumentSnapshot()!).Runs is { Count: 3 } linkedRuns &&
+                linkedRuns[1].Text == "beta" && linkedRuns[0].Link is null && linkedRuns[2].Link is null,
+                "setting a hyperlink on an exact run boundary leaves the run structure intact");
+            linkInput.Text = string.Empty;
+            Check(First(session.GetDocumentSnapshot()!).Runs[1].Link is null &&
+                session.TryGetValue("Link", out var clearedLink) && Equals(clearedLink, string.Empty),
+                "clearing the hyperlink input removes the link from the owning structured run");
+            linkInput.Text = "https://example.test/write";
+            Check(First(session.GetDocumentSnapshot()!).Runs is { Count: 3 } relinked &&
+                relinked[1].Text == "beta" && relinked[1].Link == "https://example.test/write",
+                "restoring the hyperlink keeps the authored run structure in place");
+            await session.SelectAsync(toolbarBlock, 8, 8);
+            await Click("Split run", () => First(session.GetDocumentSnapshot()!).Runs is { Count: 4 });
+            Check(First(session.GetDocumentSnapshot()!).Runs is
+                    [{ Text: "Alpha " }, { Text: "be" }, { Text: "ta" }, { Text: " gamma" }] splitRuns &&
+                splitRuns[1].Bold && splitRuns[2].Bold &&
+                splitRuns[1].Link == "https://example.test/write" &&
+                splitRuns[2].Link == "https://example.test/write" &&
+                Text(session.GetDocumentSnapshot()!) == "Alpha beta gamma",
+                "splitting a run at the caret divides it in place and carries the formatting over");
+            await Click("Merge run", () => First(session.GetDocumentSnapshot()!).Runs is { Count: 3 });
+            Check(First(session.GetDocumentSnapshot()!).Runs is
+                    [{ Text: "Alpha " }, { Text: "beta" }, { Text: " gamma" }] mergedRuns &&
+                mergedRuns[1].Bold && mergedRuns[1].Link == "https://example.test/write" &&
+                Text(session.GetDocumentSnapshot()!) == "Alpha beta gamma",
+                "merging the split runs back together restores the authored run and its hyperlink");
+            Check(session.TryGetValue("PageMargins", out var authoredMargins) && Equals(authoredMargins, 72d) &&
+                session.TryGetValue("ShowPageNumbers", out var authoredPageNumbers) && Equals(authoredPageNumbers, true),
+                "toolbar reports the authored page margin and page-number setting through the two-way bindings");
+            await Click("Letter", () => session.GetDocumentSnapshot()!.PageSetup is { WidthPoints: 612d, HeightPoints: 792d });
+            var sizeLabel = root!.GetVisualDescendants().OfType<TextBlock>()
+                .Single(block => AutomationProperties.GetName(block) == "Current page size in points");
+            Check(sizeLabel.Text == "612 x 792 pt",
+                "toolbar shows the requested Letter page size through the live binding, actual " + sizeLabel.Text);
+            Check(session.TryGetValue("PageLayoutMode", out var authoredMode) && Equals(authoredMode, "Continuous"),
+                "toolbar reports the authored layout mode through its binding");
+            await Click("Paginated", () => session.TryGetValue("PageLayoutMode", out var paginated) &&
+                Equals(paginated, "Paginated"));
+            await Click("Continuous", () => session.TryGetValue("PageLayoutMode", out var continuous) &&
+                Equals(continuous, "Continuous"));
+            await Click("A4", () => session.GetDocumentSnapshot()!.PageSetup is { WidthPoints: 595d, HeightPoints: 842d });
+            Check(session.GetDocumentSnapshot()!.PageSetup.Orientation == "Portrait",
+                "toolbar A4 request keeps the portrait orientation");
+            await Click("Landscape", () => session.GetDocumentSnapshot()!.PageSetup is
+                { WidthPoints: 842d, HeightPoints: 595d, Orientation: "Landscape" });
+            await Click("Portrait", () => session.GetDocumentSnapshot()!.PageSetup is
+                { WidthPoints: 595d, HeightPoints: 842d, Orientation: "Portrait" });
+            Check(marginInput.IsEnabled, "toolbar page margin input permits interaction");
+            marginInput.Value = 48m;
+            Check(session.GetDocumentSnapshot()!.PageSetup.MarginTopPoints == 48d &&
+                session.GetDocumentSnapshot()!.PageSetup.MarginLeftPoints == 48d &&
+                session.TryGetValue("PageMargins", out var editedMargins) && Equals(editedMargins, 48d),
+                "two-way page margins write through to every edge of the owning page setup");
+            marginInput.Value = 1200m;
+            Check(CuiInputValidationProperties.GetHasError(marginInput) &&
+                session.GetDocumentSnapshot()!.PageSetup.MarginTopPoints == 48d,
+                "a margin beyond the editor's range is rejected for validation and never reaches the page setup");
+            var pageNumbers = root!.GetVisualDescendants().OfType<CheckBox>()
+                .Single(check => AutomationProperties.GetName(check) == "Show page numbers");
+            Check(pageNumbers.IsEnabled, "toolbar page number checkbox permits interaction");
+            pageNumbers.IsChecked = true;
+            Check(session.GetDocumentSnapshot()!.PageSetup.ShowPageNumbers,
+                "two-way page number checkbox writes through to the owning page setup");
+            IReadOnlyList<NotesBlock> ToolbarBlocks() => session.GetDocumentSnapshot()!.Sections
+                .SelectMany(section => section.Pages).SelectMany(page => page.Blocks).ToArray();
+            Check(ToolbarBlocks() is { Count: 1 } && ToolbarBlocks()[0].Kind == NotesBlockKind.Paragraph,
+                "toolbar journey begins with its single authored paragraph");
+            await Click("Bullets", () => ToolbarBlocks() is { Count: 2 } bullets &&
+                bullets[1].Kind == NotesBlockKind.List && bullets[1].List!.Kind == NotesListKind.Bulleted);
+            Check(ToolbarBlocks()[1].List!.Items is { Count: 1 } authoredItems &&
+                authoredItems[0].Text == "List item",
+                "inserted bulleted list carries the editor's authored first item");
+            Check(session.TryGetValue("CanEditList", out var canEditList) && Equals(canEditList, true) &&
+                session.TryGetValue("SelectedListItems", out var initialListItems) &&
+                initialListItems is WriteListItemRow[] { Length: 1 },
+                "toolbar journey reaches the inserted bulleted list's single authored item");
+            var itemText = root!.GetVisualDescendants().OfType<TextBox>()
+                .Single(box => AutomationProperties.GetName(box) == "List item text");
+            Check(itemText.IsEnabled, "toolbar list item text input permits interaction");
+            itemText.Text = "Edited bullet";
+            Check(ToolbarBlocks()[1].List!.Items is [{ Text: "Edited bullet" }],
+                "two-way list item text writes through to the owning list item");
+            var itemCheck = root!.GetVisualDescendants().OfType<CheckBox>()
+                .Single(check => AutomationProperties.GetName(check) == "List item complete");
+            itemCheck.IsChecked = true;
+            Check(ToolbarBlocks()[1].List!.Items is [{ Checked: true }],
+                "two-way list item checkbox writes the checklist state through to the owning list item");
+            var itemLevel = root!.GetVisualDescendants().OfType<NumericUpDown>()
+                .Single(number => AutomationProperties.GetName(number) == "List item nesting level, from 0 to 8");
+            itemLevel.Value = 9m;
+            Check(CuiInputValidationProperties.GetHasError(itemLevel) &&
+                ToolbarBlocks()[1].List!.Items is [{ Level: 0 }],
+                "nesting level beyond the editor's range is rejected for validation and never reaches the list item");
+            itemLevel.Value = 2m;
+            Check(ToolbarBlocks()[1].List!.Items is [{ Level: 2 }],
+                "two-way list item level writes the nesting level through to the owning list item");
+            await Click("Add list item", () => ToolbarBlocks()[1].List!.Items.Count == 2 &&
+                ToolbarBlocks()[1].List!.Items[1].Text == "New item");
+            await Click("Set numbering", () => ToolbarBlocks()[1].List!.Kind == NotesListKind.Numbered);
+            await Click("Set checklist", () => ToolbarBlocks()[1].List!.Kind == NotesListKind.Checklist);
+            await Click("Set bullets", () => ToolbarBlocks()[1].List!.Kind == NotesListKind.Bulleted);
+            Check(ToolbarBlocks()[1].List!.Items is [{ Text: "Edited bullet" }, { Text: "New item" }],
+                "changing an existing list's kind keeps its authored items");
+            await Click("Numbering", () => ToolbarBlocks() is { Count: 3 } numbered &&
+                numbered[2].List!.Kind == NotesListKind.Numbered);
+            await Click("Checklist", () => ToolbarBlocks() is { Count: 4 } checklists &&
+                checklists[3].List!.Kind == NotesListKind.Checklist);
+            await Click("Heading", () => ToolbarBlocks() is { Count: 5 } headings &&
+                headings[4].Kind == NotesBlockKind.Heading && headings[4].StyleId == "heading-1");
+            await Click("Quote", () => ToolbarBlocks() is { Count: 6 } quotes && quotes[5].Kind == NotesBlockKind.Quote);
+            await Click("Code", () => ToolbarBlocks() is { Count: 7 } code && code[6].Kind == NotesBlockKind.Code);
+            await Click("Paragraph", () => ToolbarBlocks() is { Count: 8 } paragraphs && paragraphs[7].Kind == NotesBlockKind.Paragraph);
+            await Click("Divider", () => ToolbarBlocks() is { Count: 9 } dividers && dividers[8].Kind == NotesBlockKind.Divider);
+            await Click("Page break", () => ToolbarBlocks() is { Count: 10 } breaks &&
+                breaks[9].Kind == NotesBlockKind.Paragraph && breaks[9].Paragraph.PageBreakBefore);
+            tableInputs[0].Value = 4m;
+            tableInputs[1].Value = 2m;
+            Check(session.TryGetValue("TableRows", out var requestedRows) && Equals(requestedRows, 4) &&
+                session.TryGetValue("TableColumns", out var requestedColumns) && Equals(requestedColumns, 2),
+                "two-way table inputs request a four by two insert");
+            await Click("Insert table", () => ToolbarBlocks() is { Count: 11 } tables &&
+                tables[10].Kind == NotesBlockKind.Table &&
+                tables[10].Table is { Rows: { Count: 4 } insertedRows } &&
+                insertedRows.All(row => row.Cells.Count == 2));
+            Check(ToolbarBlocks() is { Count: 11 } tableShape &&
+                tableShape[10].Table is { Rows: { Count: 4 } requestedShape } &&
+                requestedShape.All(row => row.Cells.Count == 2),
+                "inserted table carries the requested shape on every row");
+            tableInputs[0].Value = 0m;
+            Check(CuiInputValidationProperties.GetHasError(tableInputs[0]) &&
+                session.TryGetValue("TableRows", out var rejectedRows) && Equals(rejectedRows, 4),
+                "zero table rows are rejected for validation and never reach the session's insert dimensions");
+            tableInputs[1].Value = 51m;
+            Check(CuiInputValidationProperties.GetHasError(tableInputs[1]) &&
+                session.TryGetValue("TableColumns", out var rejectedColumns) && Equals(rejectedColumns, 2),
+                "fifty-one table columns are rejected for validation and never reach the session's insert dimensions");
+            tableInputs[0].Value = 4m;
+            tableInputs[1].Value = 2m;
+            Check(session.TryGetValue("CanEditTable", out var canEditTable) && Equals(canEditTable, true) &&
+                session.TryGetValue("SelectedTableRows", out var selectedRows) &&
+                selectedRows is WriteTableRowRow[] { Length: 4 },
+                "toolbar journey reaches the inserted four row table");
+            var initialCells = root!.GetVisualDescendants().OfType<TextBox>()
+                .Where(box => AutomationProperties.GetName(box) == "Table cell text").ToArray();
+            Check(initialCells.Length == 8, "toolbar surface renders every cell of the four by two table");
+            initialCells[0].Text = "First cell";
+            Check(ToolbarBlocks()[10].Table!.Rows is [{ Cells: [{ Text: "First cell" }, ..] }, ..],
+                "two-way table cell text writes through to the owning table cell");
+            var cellFillInput = root!.GetVisualDescendants().OfType<TextBox>()
+                .Single(box => AutomationProperties.GetName(box) == "Table cell background colour");
+            Check(session.TryGetValue("CanEditCellBackground", out var canEditCell) && Equals(canEditCell, true) &&
+                cellFillInput.IsEnabled && session.TryGetValue("CellBackground", out var emptyCellFill) &&
+                Equals(emptyCellFill, "#00000000"),
+                "the cell fill binding reports the selected cell's own background once a cell is written");
+            cellFillInput.Text = "#334455";
+            Check(ToolbarBlocks()[10].Table!.Rows is [{ Cells: [{ Text: "First cell", Background: "#334455" }, ..] }, ..],
+                "two-way cell fill writes the typed colour into the selected cell's own background");
+            cellFillInput.Text = "red";
+            Check(ToolbarBlocks()[10].Table!.Rows is [{ Cells: [{ Background: "#334455" }, ..] }, ..],
+                "a non-hex cell fill is rejected for validation and never reaches the cell");
+            await Click("Add table row", () => ToolbarBlocks()[10].Table!.Rows.Count == 5);
+            await Click("Add table column", () => ToolbarBlocks()[10].Table!.Rows.All(row => row.Cells.Count == 3));
+            Check(root!.GetVisualDescendants().OfType<TextBox>()
+                .Count(box => AutomationProperties.GetName(box) == "Table cell text") == 15,
+                "toolbar surface re-renders every cell after the table shape changes");
+            Check(ToolbarBlocks()[10].Table!.Rows.Any(row => row.Cells.Any(cell => cell.Text == "First cell")),
+                "edited cell text survives table row and column additions");
+            await Click("Remove table row", () => ToolbarBlocks()[10].Table!.Rows.Count == 4);
+            await Click("Remove table column", () => ToolbarBlocks()[10].Table!.Rows.All(row => row.Cells.Count == 2));
+            Check(ToolbarBlocks()[10].Table!.Rows.Count == 4 &&
+                ToolbarBlocks()[10].Table!.Rows.All(row => row.Cells.Count == 2),
+                "row and column removals leave the table four by two again");
+            var cellBoxes = root!.GetVisualDescendants().OfType<TextBox>()
+                .Where(box => AutomationProperties.GetName(box) == "Table cell text").ToArray();
+            Check(cellBoxes.Length == 8, "toolbar surface renders every cell before cell structure edits");
+            cellBoxes[0].Text = "Working cell";
+            Check(ToolbarBlocks()[10].Table!.Rows is [{ Cells: [{ Text: "Working cell" }, ..] }, ..],
+                "writing a cell selects it for the structural cell commands");
+            await Click("Merge cell right", () => ToolbarBlocks()[10].Table!.Rows[0].Cells.Count == 1);
+            Check(ToolbarBlocks()[10].Table!.Rows is [{ Cells: [{ ColumnSpan: 2, Text: var mergedCell }] }, ..] &&
+                mergedCell is not null && mergedCell.StartsWith("Working cell", StringComparison.Ordinal) &&
+                ToolbarBlocks()[10].Table!.Rows.Count == 4 &&
+                ToolbarBlocks()[10].Table!.Rows[1].Cells.Count == 2,
+                "merging a cell right spans its neighbour into it and leaves the other rows alone");
+            await Click("Split cell", () => ToolbarBlocks()[10].Table!.Rows[0].Cells.Count == 2);
+            Check(ToolbarBlocks()[10].Table!.Rows is [{ Cells: [{ ColumnSpan: 1 }, ..] }, ..] &&
+                ToolbarBlocks()[10].Table!.Rows.Count == 4 &&
+                ToolbarBlocks()[10].Table!.Rows.All(row => row.Cells.Count == 2),
+                "splitting a spanning cell restores the original four by two table shape");
             var toolbarGate = (SemaphoreSlim)typeof(NotesRepository)
                 .GetField("_gate", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(repository)!;
             await toolbarGate.WaitAsync();
@@ -342,10 +741,202 @@ var checks = await headless.Dispatch(async () =>
             }
             finally { toolbarGate.Release(); }
             await WaitFor(() => !session.IsDirty);
-            State("New", true); State("Save", true); State("Bold", true); State("Close", true);
+            State("New", true); State("Save", true); State("Bold", true); State("Italic", true);
+            State("Underline", true); State("Strikethrough", true);
+            foreach (var page in new[] { "A4", "Letter", "Portrait", "Landscape", "Paginated", "Continuous" })
+                State(page, true);
+            State("Align left", true);
+            State("Align center", true); State("Align right", true); State("Justify", true); State("Close", true);
             var toolbarStored = (await repository.LoadAsync(toolbarId, default))!;
-            Check(toolbarStored.Version == session.DurableRevision && First(toolbarStored).Runs[1].Bold,
-                "toolbar actual Save commits canonical revision and selected formatting");
+            Check(toolbarStored.Version == session.DurableRevision && First(toolbarStored).Runs[1].Bold &&
+                First(toolbarStored).Runs[1].Italic && First(toolbarStored).Runs[1].Underline &&
+                First(toolbarStored).Runs[1].StrikeThrough && First(toolbarStored).Runs[1].FontSize == 18d &&
+                First(toolbarStored).Runs[1].FontFamily == "Segoe UI" &&
+                First(toolbarStored).Runs[1].Foreground == "#112233" &&
+                First(toolbarStored).Runs[1].Background == "#00FF00FF" &&
+                First(toolbarStored).Runs[1].Link == "https://example.test/write" &&
+                First(toolbarStored).Paragraph.Alignment == NotesTextAlignment.Center &&
+                First(toolbarStored).Paragraph.LineSpacing == 1.5d && First(toolbarStored).Paragraph.IndentLeft == 48d &&
+                First(toolbarStored).Paragraph.FirstLineIndent == -12d && First(toolbarStored).Paragraph.SpaceAfter == 6d &&
+                toolbarStored.PageSetup.WidthPoints == 595d && toolbarStored.PageSetup.HeightPoints == 842d &&
+                toolbarStored.PageSetup.MarginTopPoints == 48d && toolbarStored.PageSetup.MarginLeftPoints == 48d &&
+                toolbarStored.PageSetup.ShowPageNumbers &&
+                toolbarStored.LayoutMode == NotesLayoutMode.Continuous,
+                "toolbar actual Save commits canonical revision, character and font formatting, page setup and the full paragraph format");
+            var storedBlocks = toolbarStored.Sections.SelectMany(section => section.Pages)
+                .SelectMany(page => page.Blocks).ToArray();
+            Check(storedBlocks is { Length: 11 } &&
+                storedBlocks[1].List is { Kind: NotesListKind.Bulleted,
+                    Items: [{ Text: "Edited bullet", Checked: true, Level: 2 }, { Text: "New item" }] } &&
+                storedBlocks[2].List is { Kind: NotesListKind.Numbered } &&
+                storedBlocks[3].List is { Kind: NotesListKind.Checklist } &&
+                storedBlocks[4].Kind == NotesBlockKind.Heading && storedBlocks[4].StyleId == "heading-1" &&
+                storedBlocks[5].Kind == NotesBlockKind.Quote && storedBlocks[6].Kind == NotesBlockKind.Code &&
+                storedBlocks[7].Kind == NotesBlockKind.Paragraph && storedBlocks[8].Kind == NotesBlockKind.Divider &&
+                storedBlocks[9].Paragraph.PageBreakBefore &&
+                storedBlocks[10].Kind == NotesBlockKind.Table &&
+                storedBlocks[10].Table is { Rows: { Count: 4 } storedShape } &&
+                storedShape.All(row => row.Cells.Count == 2),
+                "toolbar actual Save commits every inserted block structure to the owning repository");
+            await Click("Close", () => session.DocumentId is null);
+            Empty();
+            await Click("New", () => session.DocumentId is not null);
+            var replaceBlock = First(session.GetDocumentSnapshot()!).Id;
+            await session.SelectAsync(replaceBlock, 0, 0);
+            window.KeyTextInput("Alpha beta gamma");
+            Check(Text(session.GetDocumentSnapshot()!) == "Alpha beta gamma",
+                "toolbar replace journey routes typing into its own owner");
+            findInput.Text = "gamma";
+            replaceInput.Text = "DELTA";
+            Check(session.TryGetValue("FindMatchCount", out var replacementMatches) &&
+                Equals(replacementMatches, 1),
+                "toolbar find counts the replacement target before replacing");
+            await Click("Replace all", () => session.TryGetValue("ReplaceStatus", out var replaced) &&
+                Equals(replaced, "Replaced 1 match(es).") &&
+                Text(session.GetDocumentSnapshot()!) == "Alpha beta DELTA");
+            var replaceStatusBlock = root!.GetVisualDescendants().OfType<TextBlock>()
+                .Single(block => AutomationProperties.GetName(block) == "Replace all status");
+            Check(replaceStatusBlock.Text == "Replaced 1 match(es)." && session.IsDirty &&
+                session.TryGetValue("FindMatchCount", out var remainingMatches) &&
+                Equals(remainingMatches, 0) &&
+                session.TryGetValue("FindStatus", out var remainingStatus) &&
+                Equals(remainingStatus, "No matches."),
+                "toolbar replace all writes through to the owner, clears its target and renders its status, actual " +
+                replaceStatusBlock.Text);
+            await Click("Save", () => !session.IsDirty);
+            await Click("Close", () => session.DocumentId is null);
+            Empty();
+            await Click("New", () => session.DocumentId is not null);
+            var structureBlock = First(session.GetDocumentSnapshot()!).Id;
+            await session.SelectAsync(structureBlock, 0, 0);
+            window.KeyTextInput("Kept paragraph");
+            Check(ToolbarBlocks() is { Count: 1 } alone && alone[0].Kind == NotesBlockKind.Paragraph &&
+                alone[0].Runs is [{ Text: "Kept paragraph" }],
+                "toolbar block journey begins with its single typed paragraph");
+            await Click("Heading", () => ToolbarBlocks() is { Count: 2 } inserted &&
+                inserted[0].Kind == NotesBlockKind.Paragraph && inserted[1].Kind == NotesBlockKind.Heading &&
+                inserted[1].StyleId == "heading-1");
+            State("Delete block", true);
+            await Click("Move block up", () => ToolbarBlocks() is { Count: 2 } movedUp &&
+                movedUp[0].Kind == NotesBlockKind.Heading && movedUp[0].StyleId == "heading-1" &&
+                movedUp[1].Kind == NotesBlockKind.Paragraph && movedUp[1].Runs is [{ Text: "Kept paragraph" }]);
+            await Click("Move block up", () => ToolbarBlocks() is { Count: 2 } stillUp &&
+                stillUp[0].Kind == NotesBlockKind.Heading && stillUp[1].Kind == NotesBlockKind.Paragraph);
+            Check(ToolbarBlocks() is { Count: 2 } refusedMove &&
+                refusedMove[0].Kind == NotesBlockKind.Heading &&
+                refusedMove[1].Runs is [{ Text: "Kept paragraph" }],
+                "moving the first block up is refused without reordering or losing content");
+            await Click("Move block down", () => ToolbarBlocks() is { Count: 2 } movedDown &&
+                movedDown[0].Kind == NotesBlockKind.Paragraph && movedDown[0].Runs is [{ Text: "Kept paragraph" }] &&
+                movedDown[1].Kind == NotesBlockKind.Heading);
+            await Click("Delete block", () => ToolbarBlocks() is { Count: 1 } remaining &&
+                remaining[0].Kind == NotesBlockKind.Paragraph && remaining[0].Runs is [{ Text: "Kept paragraph" }]);
+            State("Delete block", false);
+            Check(session.TryGetValue("CanDeleteBlock", out var onlyBlock) && Equals(onlyBlock, false) &&
+                ToolbarBlocks() is { Count: 1 } lastOne && lastOne[0].Runs is [{ Text: "Kept paragraph" }],
+                "deleting the selected block leaves the document's other block intact and hides further deletes");
+            Check((await session.DeleteBlockAsync()).Succeeded &&
+                ToolbarBlocks() is { Count: 1 } declined && declined[0].Runs is [{ Text: "Kept paragraph" }],
+                "the editor refuses to delete the document's last block and leaves it in place");
+            await session.SelectAsync(ToolbarBlocks()[0].Id, 0, 0);
+            Check(session.TryGetValue("Styles", out var paragraphStyles) &&
+                paragraphStyles is WriteStyleRow[] { Length: 5 } namedStyles &&
+                namedStyles.Any(row => row.Id == "heading-1" && row.Name == "Heading 1") &&
+                namedStyles.All(row => row.Label.StartsWith("Set ", StringComparison.Ordinal)),
+                "the paragraph style catalogue reads back every named style the document itself declares");
+            await Click("Set heading 1", () => ToolbarBlocks() is
+                [{ Kind: NotesBlockKind.Heading, StyleId: "heading-1" }]);
+            await Click("Set quote", () => ToolbarBlocks() is
+                [{ Kind: NotesBlockKind.Quote, StyleId: "quote" }]);
+            Check(session.TryGetValue("SelectedStyle", out var quotedStyle) && Equals(quotedStyle, "Quote") &&
+                ToolbarBlocks()[0].Runs is [{ Text: "Kept paragraph" }],
+                "applying a style changes the selected block's kind without touching its text");
+            await Click("Set normal", () => ToolbarBlocks() is
+                [{ Kind: NotesBlockKind.Paragraph, StyleId: "normal", Runs: [{ Text: "Kept paragraph" }] }]);
+            Check(session.TryGetValue("SelectedStyle", out var normalStyle) && Equals(normalStyle, "Normal"),
+                "the paragraph style readout tracks the selected block's authored style");
+            Check(session.TryGetValue("CanInsertImage", out var canInsertImage) && Equals(canInsertImage, true) &&
+                session.TryGetValue("CanEditMedia", out var canEditNoMedia) && Equals(canEditNoMedia, false),
+                "the image controls enable insertion on an editable document and disable editing until an image is selected");
+            var mediaNumericInputs = new[]
+            {
+                "Image width in points, from 24 to 10000", "Image height in points, from 24 to 10000",
+                "Image rotation in degrees", "Crop fraction from the left edge, 0 to 0.95",
+                "Crop fraction from the top edge, 0 to 0.95", "Crop fraction from the right edge, 0 to 0.95",
+                "Crop fraction from the bottom edge, 0 to 0.95"
+            }.Select(name => root!.GetVisualDescendants().OfType<NumericUpDown>()
+                .Single(box => AutomationProperties.GetName(box) == name)).ToArray();
+            await Click("Insert image", () => ToolbarBlocks() is [.., { Kind: NotesBlockKind.Image, Media: not null } last]
+                && last.Media!.OriginalName == "write-scene-image.png");
+            var mediaBlock = ToolbarBlocks()[^1];
+            var media = mediaBlock.Media!;
+            Check(media.AttachmentId != Guid.Empty && !string.IsNullOrWhiteSpace(media.StoredPath) &&
+                    media.Sha256.Length == 64 && media.SizeBytes == new FileInfo(fixtureImagePath).Length,
+                "actual Insert image stores the picked bytes in the canonical attachment store and records its identity, digest and size");
+            Check(media.MediaType == "image/png" && media.Wrapping == "Inline" && media.Width == 400 && media.Height == 300,
+                "the inserted image adopts the chooser's declared media type and the editor's authored default size and inline wrapping");
+            await session.SelectAsync(mediaBlock.Id, 0, 0);
+            Check(session.TryGetValue("CanEditMedia", out var canEditMedia) && Equals(canEditMedia, true) &&
+                session.TryGetValue("MediaAlt", out var seededAlt) && Equals(seededAlt, "write-scene-image") &&
+                session.TryGetValue("MediaWidth", out var insertedWidth) && Equals(insertedWidth, 400d) &&
+                session.TryGetValue("MediaRotation", out var insertedRotation) && Equals(insertedRotation, 0d) &&
+                mediaNumericInputs.All(input => input.IsEnabled),
+                "the media property bindings report the inserted image's own width, height and rotation once selected");
+            var altInput = root!.GetVisualDescendants().OfType<TextBox>()
+                .Single(box => AutomationProperties.GetName(box) == "Alternative text for the selected image");
+            var captionInput = root!.GetVisualDescendants().OfType<TextBox>()
+                .Single(box => AutomationProperties.GetName(box) == "Caption for the selected image");
+            var wrappingInput = root!.GetVisualDescendants().OfType<TextBox>()
+                .Single(box => AutomationProperties.GetName(box) == "Wrapping mode for the selected image");
+            altInput.Text = "Rendered scene alt text";
+            captionInput.Text = "Rendered scene caption";
+            wrappingInput.Text = "Floating";
+            var editedMedia = ToolbarBlocks()[^1].Media!;
+            Check(editedMedia.AltText == "Rendered scene alt text" &&
+                editedMedia.Caption == "Rendered scene caption" && editedMedia.Wrapping == "Floating",
+                "the two-way alt, caption and wrapping inputs write the selected image's own properties");
+            mediaNumericInputs[0].Value = 240m;
+            mediaNumericInputs[1].Value = 180m;
+            Check(ToolbarBlocks()[^1].Media is { Width: 240d, Height: 180d },
+                "the two-way width and height inputs resize the selected image to the requested pixel size");
+            mediaNumericInputs[2].Value = 45m;
+            Check(Math.Abs(ToolbarBlocks()[^1].Media!.Rotation - 45d) < .0001,
+                "the two-way rotation input writes the selected image's absolute angle");
+            mediaNumericInputs[3].Value = .1m;
+            mediaNumericInputs[4].Value = .2m;
+            mediaNumericInputs[5].Value = .3m;
+            Check(ToolbarBlocks()[^1].Media is { CropLeft: .1d, CropTop: .2d, CropRight: .3d, CropBottom: 0d },
+                "the four crop inputs crop the selected image by the requested fractions");
+            await session.SelectAsync(ToolbarBlocks()[0].Id, 0, 0);
+            Check(session.TryGetValue("CanEditMedia", out var canEditDeselected) && Equals(canEditDeselected, false),
+                "the media controls disable again once the selection leaves the image");
+            await session.SelectAsync(mediaBlock.Id, 0, 0);
+            await Click("Insert equation", () => ToolbarBlocks() is [.., { Kind: NotesBlockKind.Equation, Equation: not null } last]);
+            var equationBlock = ToolbarBlocks()[^1];
+            await session.SelectAsync(equationBlock.Id, 0, 0);
+            Check(session.TryGetValue("CanEditEquation", out var canEditEquation) && Equals(canEditEquation, true) &&
+                session.TryGetValue("EquationSource", out var seededEquationSource) &&
+                Equals(seededEquationSource, "x^2 + y^2 = z^2") &&
+                session.TryGetValue("EquationAlternative", out var seededEquationAlternative) &&
+                Equals(seededEquationAlternative, "x squared plus y squared equals z squared"),
+                "the equation property bindings read the inserted equation's own authored source and alternative");
+            var equationSourceInput = root!.GetVisualDescendants().OfType<TextBox>()
+                .Single(box => AutomationProperties.GetName(box) == "Equation source");
+            var equationAlternativeInput = root!.GetVisualDescendants().OfType<TextBox>()
+                .Single(box => AutomationProperties.GetName(box) == "Equation accessible alternative");
+            equationSourceInput.Text = "x^2 + y^2 = r^2";
+            equationAlternativeInput.Text = "a squared plus b squared";
+            Check(ToolbarBlocks()[^1].Equation is { Source: "x^2 + y^2 = r^2",
+                AccessibleAlternative: "a squared plus b squared" } writtenEquation,
+                "the two-way source and alternative inputs write the selected equation's own fields");
+            await Click("Save", () => !session.IsDirty);
+            Check(ToolbarBlocks() is { Count: 3 } savedMediaBlocks && savedMediaBlocks[1].Media is
+                { Sha256.Length: 64, AltText: "Rendered scene alt text", Caption: "Rendered scene caption",
+                    Wrapping: "Floating", Width: 240d, Height: 180d, CropLeft: .1d, CropTop: .2d,
+                    CropRight: .3d } savedMedia && Math.Abs(savedMedia.Rotation - 45d) < .0001
+                && savedMediaBlocks[2].Equation is { Source: "x^2 + y^2 = r^2",
+                    AccessibleAlternative: "a squared plus b squared" },
+                "actual Save commits the inserted image, every one of its edited properties and the typed equation to the owning repository");
             await Click("Close", () => session.DocumentId is null);
             Empty();
             surface.Lifetime!.Dispose();
@@ -479,4 +1070,25 @@ sealed class NavigationReadFault(INotesRepository owner, Guid target) : INotesRe
     public Task<NotesDocument?> LoadVersionAsync(Guid id, string version, CancellationToken token) => owner.LoadVersionAsync(id, version, token);
     public Task<NotesDocument?> RecoverLatestAsync(Guid id, CancellationToken token) => owner.RecoverLatestAsync(id, token);
     public Task<IReadOnlyList<NotesSearchHit>> SearchAsync(string query, CancellationToken token) => owner.SearchAsync(query, token);
+}
+
+// Stages a real file exactly as a platform file chooser would, so the scene
+// journey drives the same admission path the production browser bridge drives.
+sealed class SceneImageSource(string sourcePath) : IWriteBrowserImageSource
+{
+    public Task<WritePickedImage?> PickImageAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!File.Exists(sourcePath)) throw new FileNotFoundException("The fixture image does not exist.", sourcePath);
+        var directory = Path.Combine(Path.GetTempPath(), "nine-to-one-write-image-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var staged = new WriteStagedPackage(Path.Combine(directory, Path.GetFileName(sourcePath)),
+            Path.GetFileName(sourcePath), () =>
+            {
+                if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+                return ValueTask.CompletedTask;
+            });
+        File.Copy(sourcePath, staged.Path);
+        return Task.FromResult<WritePickedImage?>(new WritePickedImage("write-scene-image.png", "image/png", staged));
+    }
 }

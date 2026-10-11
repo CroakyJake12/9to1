@@ -8,15 +8,18 @@
     <Compile Include="Program.cs" />
     <Compile Include="../WriteBrowserSession.cs" Link="Production/WriteBrowserSession.cs" />
     <Compile Include="../IWriteBrowserPackageBroker.cs" Link="Production/IWriteBrowserPackageBroker.cs" />
+    <Compile Include="../IWriteBrowserImageSource.cs" Link="Production/IWriteBrowserImageSource.cs" />
     <Compile Include="../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/NotesRepository.cs" Link="Owner/NotesRepository.cs" />
     <Compile Include="../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Write/WriteNativeDocumentPackageStore.cs" Link="Owner/WriteNativeDocumentPackageStore.cs" />
     <Compile Include="../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/AppPaths.cs" Link="Owner/AppPaths.cs" />
     <Compile Include="../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/ProductionReliabilityServices.cs" Link="Owner/ProductionReliabilityServices.cs" />
+    <Compile Include="../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/StartupRecoveryCoordinator.FinalClean.cs" Link="Owner/StartupRecoveryCoordinator.FinalClean.cs" />
     <Compile Include="../../../../9to1 Workspace/Home/Source/Home/Core/HomeCoreContracts.cs" Link="Owner/HomeCoreContracts.cs" />
     <Compile Include="../../../../9to1 Workspace/Home/Source/Home/Core/HomeStateCommitActorGuard.cs" Link="Owner/HomeStateCommitActorGuard.cs" />
     <Compile Include="../../../../9to1 Workspace/Home/Source/Home/Core/HomeFeatureContracts.cs" Link="Owner/HomeFeatureContracts.cs" />
     <Compile Include="../../../../9to1 Workspace/Home/Source/Home/HomeDashboard.cs" Link="Owner/HomeDashboard.cs" />
     <ProjectReference Include="../../../../9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj" />
     <ProjectReference Include="../../../../framework/CUI/Core/CakeOS.Cui.Core.csproj" />
+    <ProjectReference Include="../../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
   </ItemGroup>
 </Project>

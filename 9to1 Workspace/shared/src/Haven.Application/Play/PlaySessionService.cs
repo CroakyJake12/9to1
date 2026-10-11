@@ -47,8 +47,12 @@ public sealed class PlaySessionService
     {
         _settings = settings;
         Matches = new PlayMatchService(settings);
-        appEvents.Register(AppTargetKey, HandleSemanticEventAsync);
+        appEvents.Register(AppTargetKey, HandleSemanticEventAsync, TypedActionIds);
     }
+
+    /// <summary>Play's first-party typed action catalogue, declared independently of any generated UI instance.</summary>
+    public static IReadOnlyList<string> TypedActionIds { get; } =
+        ["play.chess.move", "play.quiz.answer", "play.session.restart"];
 
     public IReadOnlyList<QuizQuestion> Questions => QuizQuestions;
 

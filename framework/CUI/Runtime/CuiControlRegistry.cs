@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using CakeOS.Cui.Language;
 using Avalonia.Layout;
@@ -16,6 +16,7 @@ public sealed class CuiControlRegistry
 {
     private readonly Dictionary<string, Func<CuiComponent, Control>> _customFactories = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Func<CuiComponent, Control>> _objectFactories = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, Func<CuiComponent, Control>> _authoredFactories = new(StringComparer.Ordinal);
     private ICuiBackdropRenderer? _backdropRenderer;
     private static readonly FrozenDictionary<string, CuiRuntimeElementDescriptor> BuiltInElements = CreateElementDescriptors();
     private static readonly FrozenDictionary<string, CuiRuntimePropertyDescriptor> BuiltInProperties = CreatePropertyDescriptors();
@@ -121,6 +122,18 @@ public sealed class CuiControlRegistry
                 ? "Object requires a Type identifying a registered renderer."
                 : $"No renderer is registered for CUI Object Type '{objectType}'.";
             return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(component.AuthoredId) &&
+            _authoredFactories.TryGetValue(component.AuthoredId, out var authoredFactory))
+        {
+            control = authoredFactory(component);
+            if (control is null)
+            {
+                error = $"The CUI authored control binding '{component.AuthoredId}' returned no control.";
+                return false;
+            }
+            return true;
         }
 
         if (TryCreateBuiltIn(component, resolveValue, out control, out error))
@@ -251,6 +264,19 @@ public sealed class CuiControlRegistry
         return typeProperty.Key is null ? null : resolveValue(typeProperty.Value);
     }
 
+    /// <summary>Bind a prepared control to one authored component identity without replacing a reserved built-in type.</summary>
+    public void BindAuthoredControl(string authoredId, Func<CuiComponent, Control> factory)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(authoredId);
+        ArgumentNullException.ThrowIfNull(factory);
+        if (!_authoredFactories.TryAdd(authoredId, factory))
+            throw new ArgumentException($"A CUI control binding for authored id '{authoredId}' is already registered.", nameof(authoredId));
+    }
+
+    /// <summary>True when a host has registered a specialised control type or object renderer for this name.</summary>
+    public bool IsRegisteredRuntimeType(string name) =>
+        name is not null && (_customFactories.ContainsKey(name) || _objectFactories.ContainsKey(name));
+
     private static bool IsReservedType(string typeName) => BuiltInElements.Keys.Contains(typeName, StringComparer.OrdinalIgnoreCase);
 
     private static FrozenDictionary<string, CuiRuntimeElementDescriptor> CreateElementDescriptors()
@@ -311,7 +337,7 @@ public sealed class CuiControlRegistry
                 "Layer" => common.Concat(new[] { "Background", "Padding", "ZIndex", "Interactive", "ActiveIndependently" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
                 "Anchor" => common.Concat(new[] { "Target", "Placement", "Left", "Top", "Width", "Height" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
                 "Audio" or "Video" => common.ToFrozenSet(StringComparer.OrdinalIgnoreCase),
-                "Object" => common.Concat(new[] { "Text" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
+                "Object" => common.Concat(new[] { "Text", "Type" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
                 _ => legacy,
             };
             properties = properties.Where(property =>
@@ -460,7 +486,8 @@ public sealed class CuiControlRegistry
             ("skew-x", "SkewX"), ("skew-y", "SkewY"), ("translate-x", "TranslateX"), ("translate-y", "TranslateY"),
             ("horizontal-scrolling", "HorizontalScrolling"), ("vertical-scrolling", "VerticalScrolling"),
             ("text-alignment", "TextAlignment"), ("vertical-text-alignment", "VerticalTextAlignment"),
-            ("is-hit-test-visible", "IsHitTestVisible")
+            ("is-hit-test-visible", "IsHitTestVisible"),
+            ("accessibility-name", "AccessibleName")
         })
             aliases[NormalizePropertyName(alias)] = canonical;
         return aliases.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
@@ -474,3 +501,7 @@ public sealed class CuiControlRegistry
             or "Rotate" or "Scale" or "ScaleX" or "ScaleY" or "Skew" or "SkewX" or "SkewY"
             or "Translate" or "TranslateX" or "TranslateY";
 }
+
+
+
+

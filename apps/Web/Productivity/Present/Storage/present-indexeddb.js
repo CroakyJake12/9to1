@@ -7,6 +7,12 @@ export function createPresentModule({ databaseName = 'nine-to-one-present', inde
   const uuid = id => typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) && id !== '00000000-0000-0000-0000-000000000000';
   const revision = n => Number.isInteger(n) && n >= 0 && n <= 2147483647;
   const code = error => error?.name === 'QuotaExceededError' ? 'QuotaExceeded' : 'StorageUnavailable';
+  let picking = false;
+  const encodeBytes = bytes => {
+    let value = '';
+    for (let offset = 0; offset < bytes.length; offset += 8192) value += String.fromCharCode(...bytes.subarray(offset, offset + 8192));
+    return btoa(value);
+  };
   function open() {
     if (disposed || !indexedDB) return Promise.reject(new Error('StorageUnavailable'));
     if (opening) return opening;
@@ -140,6 +146,47 @@ export function createPresentModule({ databaseName = 'nine-to-one-present', inde
       if (!state) return;
       state.cancelled = true;
       if (state.transaction && !state.committed) { try { state.transaction.abort(); } catch {} }
+    },
+    // Device-local transfer for the Present surface itself: bytes leave as a
+    // download and arrive through a picker. Canonical content stays in C#.
+    async download(name, base64) {
+      try {
+        if (typeof name !== 'string' || !name || typeof base64 !== 'string' || !globalThis.document) return JSON.stringify(null);
+        const bytes = Uint8Array.from(atob(base64), character => character.charCodeAt(0));
+        const url = URL.createObjectURL(new Blob([bytes],
+          { type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' }));
+        const link = document.createElement('a'); link.href = url; link.download = name;
+        document.body.append(link); link.click(); link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        return JSON.stringify({ initiated: true });
+      } catch { return JSON.stringify(null); }
+    },
+    async pick(accept) {
+      if (picking || !globalThis.document) return JSON.stringify(null);
+      picking = true;
+      try {
+        return await new Promise(resolve => {
+          const input = document.createElement('input');
+          input.type = 'file'; input.hidden = true;
+          const kinds = String(accept || '').split(',').map(value => value.trim()).filter(Boolean);
+          if (kinds.length) input.accept = kinds.join(',');
+          document.body.append(input);
+          let settled = false;
+          const finish = value => {
+            if (settled) return;
+            settled = true; picking = false; input.remove(); resolve(JSON.stringify(value));
+          };
+          input.addEventListener('cancel', () => finish(null), { once: true });
+          input.addEventListener('change', async () => {
+            try {
+              const file = input.files?.[0];
+              if (!file || file.size > 64 * 1024 * 1024) return finish(null);
+              finish({ name: file.name, base64: encodeBytes(new Uint8Array(await file.arrayBuffer())) });
+            } catch { finish(null); }
+          }, { once: true });
+          input.click();
+        });
+      } catch { picking = false; return JSON.stringify(null); }
     },
     dispose() {
       if (disposal) return disposal;

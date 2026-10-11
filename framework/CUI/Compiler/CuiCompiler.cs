@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Globalization;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
@@ -38,7 +38,15 @@ public sealed record CuiCompilationMetadata
             : value.Trim();
 }
 
-public sealed record CuiCompilerOptions(CuiCompilationMetadata Metadata);
+public sealed record CuiCompilerOptions(
+    CuiCompilationMetadata Metadata,
+    IReadOnlyList<CuiImportedSymbols>? Imports = null);
+
+/// <summary>Symbols contributed by one indexed CUI package source.</summary>
+public sealed record CuiImportedSymbols(
+    string Source,
+    IReadOnlyList<string> Symbols,
+    IReadOnlyList<string> ImportedSources);
 
 public enum CuiDependencyKind
 {
@@ -46,7 +54,8 @@ public enum CuiDependencyKind
     Template,
     Resource,
     Variable,
-    Action
+    Action,
+    Import
 }
 
 public sealed record CuiCompilationDependency(CuiDependencyKind Kind, string Name);
@@ -151,6 +160,7 @@ public sealed class CuiCompiler
         }
 
         var definitions = CollectDefinitions(document);
+        var importedSymbols = ApplyImports(document, options, definitions, diagnostics);
         ValidateDefinitions(document, definitions, diagnostics);
         ValidateComponents(document.Components, definitions, diagnostics);
 
@@ -158,7 +168,7 @@ public sealed class CuiCompiler
             return new CuiCompilation(null, Array.AsReadOnly(diagnostics.Diagnostics.ToArray()));
 
         var sourceMap = BuildSourceMap(document);
-        var dependencies = BuildDependencies(document, definitions);
+        var dependencies = BuildDependencies(document, definitions, importedSymbols);
         var compiledComponents = CompileNodes(document.Components, "document");
         var compiledTemplates = new ReadOnlyDictionary<string, CuiCompiledTemplate>(document.Templates.ToDictionary(
             pair => pair.Key,
@@ -184,7 +194,7 @@ public sealed class CuiCompiler
         foreach (var component in AllComponents(document.Components))
         {
             if (component.IsDefinition)
-                definitions.Add(component.Type);
+                definitions.Add(component.Name ?? component.Type);
         }
         return definitions;
     }
@@ -200,6 +210,113 @@ public sealed class CuiCompiler
                     ?? document.Span;
                 diagnostics.Error("CUIC010", $"Definition '{definition}' conflicts with a built-in CUI element name.", span);
             }
+        }
+    }
+
+    private static Dictionary<string, string> ApplyImports(
+        CuiDocument document,
+        CuiCompilerOptions options,
+        HashSet<string> definitions,
+        CuiDiagnosticBag diagnostics)
+    {
+        var symbolSource = new Dictionary<string, string>(StringComparer.Ordinal);
+        if (document.Imports.Count == 0) return symbolSource;
+
+        var supplied = new Dictionary<string, CuiImportedSymbols>(StringComparer.Ordinal);
+        foreach (var import in options.Imports ?? Array.Empty<CuiImportedSymbols>())
+            supplied[import.Source] = import;
+
+        var resolved = new List<CuiImportedSymbols>();
+        foreach (var import in document.Imports)
+        {
+            if (!supplied.TryGetValue(import.Source, out var symbols))
+            {
+                diagnostics.Error("CUIC018",
+                    $"Import '{import.Source}' is not present in the indexed CUI source roots.", import.Span);
+                continue;
+            }
+
+            resolved.Add(symbols);
+        }
+
+        CuiSourceSpan SpanOfSource(string source) =>
+            document.Imports.First(entry => entry.Source == source).Span;
+
+        var onStack = new HashSet<string>(StringComparer.Ordinal);
+        void Walk(string source, List<string> path)
+        {
+            if (!onStack.Add(source)) return;
+            path.Add(source);
+            if (supplied.TryGetValue(source, out var symbols))
+            {
+                foreach (var dependency in symbols.ImportedSources)
+                {
+                    if (!supplied.ContainsKey(dependency)) continue;
+                    if (onStack.Contains(dependency))
+                    {
+                        diagnostics.Error("CUIC020",
+                            $"Circular CUI import dependency: {string.Join(" -> ", path.Concat(new[] { dependency }))}.",
+                            SpanOfSource(dependency));
+                        continue;
+                    }
+
+                    Walk(dependency, path);
+                }
+            }
+
+            path.RemoveAt(path.Count - 1);
+            onStack.Remove(source);
+        }
+
+        foreach (var symbols in resolved) Walk(symbols.Source, new List<string>());
+
+        var exporters = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+        foreach (var symbols in resolved)
+        {
+            foreach (var symbol in symbols.Symbols)
+            {
+                if (!exporters.TryGetValue(symbol, out var list)) exporters[symbol] = list = new List<string>();
+                list.Add(symbols.Source);
+            }
+        }
+
+        foreach (var (symbol, sources) in exporters)
+        {
+            if (sources.Count > 1)
+            {
+                diagnostics.Error("CUIC019",
+                    $"Ambiguous imported symbol '{symbol}' from imports "
+                    + string.Join(", ", sources.Select(source => $"'{source}'"))
+                    + ". Disambiguate with an explicit alias such as As:SharedUI.",
+                    SpanOfSource(sources[0]));
+                continue;
+            }
+
+            var owner = document.Imports.First(entry => entry.Source == sources[0]);
+            var key = owner.Alias is null ? symbol : $"{owner.Alias}.{symbol}";
+            definitions.Add(key);
+            symbolSource[key] = sources[0];
+        }
+
+        return symbolSource;
+    }
+
+    private static void ValidatePrefab(CuiComponent component, CuiDiagnosticBag diagnostics)
+    {
+        if (!string.Equals(component.Type, "Prefab", StringComparison.OrdinalIgnoreCase)) return;
+
+        if (!component.TryGetLiteralAttribute("Type", out var prefabType)
+            || string.IsNullOrWhiteSpace(prefabType))
+        {
+            diagnostics.Error("CUIC021", "A Prefab definition requires Type to be static or dynamic.", component.Span);
+            return;
+        }
+
+        if (!string.Equals(prefabType, "static", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(prefabType, "dynamic", StringComparison.OrdinalIgnoreCase))
+        {
+            diagnostics.Error("CUIC021",
+                $"Prefab Type '{prefabType}' must be static or dynamic.", component.Span);
         }
     }
 
@@ -228,13 +345,17 @@ public sealed class CuiCompiler
             if (component.IsThemeScope && component.DefaultTheme is { } theme)
                 ValidateTheme(theme, component.Span, diagnostics);
 
+            ValidatePrefab(component, diagnostics);
             ValidateAccessibility(component, diagnostics);
             ValidateComponents(component.Children, definitions, diagnostics);
             ValidateComponents(component.ElseChildren, definitions, diagnostics);
         }
     }
 
-    private void ValidateProperties(CuiComponent component, CuiRuntimeElementDescriptor element, CuiDiagnosticBag diagnostics)
+    private void ValidateProperties(
+        CuiComponent component,
+        CuiRuntimeElementDescriptor? element,
+        CuiDiagnosticBag diagnostics)
     {
         foreach (var (name, value) in component.Properties)
         {
@@ -246,6 +367,11 @@ public sealed class CuiCompiler
                     : $"Unknown CUI property '{name}' on '{component.Type}'. Did you mean '{suggestion}'?", value.Span);
                 continue;
             }
+
+            // A user-defined component instance has no built-in element descriptor. Its
+            // property names remain registry-checked; element-scoped allowance is decided by
+            // the definition's declared inputs, which the compiler models separately.
+            if (element is null) continue;
 
             if (!element.AllowedProperties.Contains(property.Name)
                 && !property.IsAttached)
@@ -260,7 +386,7 @@ public sealed class CuiCompiler
             if (value is CuiLiteralValue literal && !IsValidLiteral(property.LanguageType, literal.Value))
                 diagnostics.Error("CUIC015", $"Value '{literal.Value}' is not valid for {property.LanguageType} property '{property.Name}'.", value.Span);
             else if (value is CuiLiteralValue symbol && property.AllowedValues.Count > 0
-                     && !property.AllowedValues.Contains(symbol.Value))
+                      && !property.AllowedValues.Contains(symbol.Value) && !_registry.IsRegisteredRuntimeType(symbol.Value))
             {
                 var suggestion = Suggest(symbol.Value, property.AllowedValues);
                 diagnostics.Error("CUIC017", suggestion is null
@@ -436,7 +562,10 @@ public sealed class CuiCompiler
         return Array.AsReadOnly(entries.ToArray());
     }
 
-    private static CuiDependencyGraph BuildDependencies(CuiDocument document, HashSet<string> definitions)
+    private static CuiDependencyGraph BuildDependencies(
+        CuiDocument document,
+        HashSet<string> definitions,
+        IReadOnlyDictionary<string, string> importedSymbols)
     {
         var entries = new List<KeyValuePair<string, IEnumerable<CuiCompilationDependency>>>();
         void Add(IReadOnlyList<CuiComponent> components, string parentStableId)
@@ -452,7 +581,11 @@ public sealed class CuiCompiler
                 if (document.Templates.ContainsKey(component.Type))
                     dependencies.Add(new CuiCompilationDependency(CuiDependencyKind.Template, component.Type));
                 else if (definitions.Contains(component.Type) && !component.IsDefinition)
+                {
                     dependencies.Add(new CuiCompilationDependency(CuiDependencyKind.Definition, component.Type));
+                    if (importedSymbols.TryGetValue(component.Type, out var importSource))
+                        dependencies.Add(new CuiCompilationDependency(CuiDependencyKind.Import, importSource));
+                }
                 foreach (var value in component.Properties.Values)
                 {
                     if (value is CuiResourceValue resource)

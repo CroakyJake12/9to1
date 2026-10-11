@@ -1,4 +1,4 @@
-/*
+﻿/*
  * FILE DOCUMENTATION
  * Where: src/Haven.Infrastructure/ServiceCollectionExtensions.cs, in the Infrastructure layer, where persistence, providers, Windows integration, and external I/O are implemented.
  * What: This file owns ServiceCollectionExtensions. Read the type and member comments below as a map of each responsibility.
@@ -113,7 +113,11 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<McpConnectionClient>();
         services.AddSingleton<IMcpConnectionClient>(provider => provider.GetRequiredService<McpConnectionClient>());
         services.AddSingleton<ExternalConnectionRegistryService>();
-        services.AddSingleton<McpToolRuntime>();
+        services.AddSingleton<IMcpInvocationAuthorizer, HomeMcpInvocationAuthorizer>();
+        services.AddSingleton<McpToolRuntime>(provider => new(
+            provider.GetRequiredService<IExternalConnectionRepository>(),
+            provider.GetRequiredService<IMcpConnectionClient>(),
+            provider.GetRequiredService<IMcpInvocationAuthorizer>()));
         services.AddSingleton<CapabilityRegistryService>();
         services.AddSingleton<IGenUiTemplateRepository, GenUiTemplateRepository>();
         services.AddSingleton<IGenUiAppRepository, GenUiAppRepository>();
@@ -474,3 +478,4 @@ public static class ServiceCollectionExtensions
         return string.IsNullOrWhiteSpace(version) ? "0.0.0" : version!;
     }
 }
+

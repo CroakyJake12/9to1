@@ -110,7 +110,7 @@ public sealed class AssistantsBrowserFeature : IHomeFeatureRouteHandler, IBrowse
         }).GetTask());
         var native = _native ?? throw new InvalidOperationException("The actual canonical CUI owner was not captured.");
         Task? initialization = null;
-        await Source(() => Dispatcher.UIThread.InvokeAsync(() => initialization = Source(() => native.InitializeAsync(token))).GetTask());
+        await Source(() => Dispatcher.UIThread.InvokeAsync(() => initialization = Source(() => native.InitializeAsync(token))));
         await (initialization ?? throw new InvalidOperationException("The actual canonical initialization Task was not acquired."));
     }
 
@@ -152,7 +152,7 @@ public sealed class AssistantsBrowserFeature : IHomeFeatureRouteHandler, IBrowse
             lock (_gate) { if (_revoked) return new(false, "PermissionDenied", "The Assistants context has changed."); native = _native; }
             if (native is null) return new(true, "PresentationPrepared", "The setup surface has no private draft.", true);
             Task<bool>? preparation = null;
-            await Source(() => Dispatcher.UIThread.InvokeAsync(() => preparation = Source(() => native.PrepareToCloseAsync(token))).GetTask());
+            await Source(() => Dispatcher.UIThread.InvokeAsync(() => preparation = Source(() => native.PrepareToCloseAsync(token))));
             var prepared = await (preparation ?? throw new InvalidOperationException("The actual canonical preflight Task was not captured."));
             prepared = await Source(() => Dispatcher.UIThread.InvokeAsync(() => Invoke(() =>
             {

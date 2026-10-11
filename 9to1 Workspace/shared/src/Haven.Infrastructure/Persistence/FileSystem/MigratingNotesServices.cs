@@ -1,4 +1,4 @@
-/*
+﻿/*
  * FILE DOCUMENTATION
  * Where: src/Haven.Infrastructure/MigratingNotesServices.cs, in the Infrastructure layer, where persistence, providers, Windows integration, and external I/O are implemented.
  * What: This file owns MigratingNotesRepository, MigratingNotesImportExportService. Read the type and member comments below as a map of each responsibility.
@@ -153,6 +153,7 @@ public sealed class MigratingNotesRepository(
     /// </summary>
     private async Task EnsureAllCurrentDocumentsMigratedAsync(CancellationToken cancellationToken)
     {
+        AdoptMigrationPath();
         if (!Directory.Exists(_root)) return;
         foreach (var directory in Directory.EnumerateDirectories(_root))
         {
@@ -185,6 +186,7 @@ public sealed class MigratingNotesRepository(
     private async Task EnsureCurrentDocumentMigratedAsync(Guid documentId, CancellationToken cancellationToken)
     {
         if (documentId == Guid.Empty) throw new ArgumentException("Document ID cannot be empty.", nameof(documentId));
+        AdoptMigrationPath();
         var path = Path.Combine(_root, documentId.ToString("D"), "current.haven-notes.json");
         if (!File.Exists(path)) return;
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -247,6 +249,12 @@ public sealed class MigratingNotesRepository(
             ? version
             : throw new InvalidDataException("The native Notes schemaVersion must be an integer.");
     }
+
+    /// <summary>
+    /// Declares the schema migration owned by this wrapper to the repository that owns the read fence,
+    /// so a supported legacy current can be committed instead of refused as invalid data.
+    /// </summary>
+    private void AdoptMigrationPath() => inner.RegisterMigrationPath(migrator);
 
     /// <summary>
     /// Performs the ensure valid step owned by this component.

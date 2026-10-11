@@ -312,7 +312,7 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
             var lease = (Lease)f.Attempt.Lease;
             lease.BeforeRevalidate = () =>
             {
-                if (lease.Revalidations == 4) { validationEntered.TrySetResult(); return heldValidation.Task; }
+                if (lease.Revalidations == 6) { validationEntered.TrySetResult(); return heldValidation.Task; }
                 return Task.CompletedTask;
             };
             duplicate = f.Dev.ReadFileAsync(f.Reference, context with { }, f.Document, cancellationToken: OriginalTestBodyToken);
@@ -720,8 +720,8 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         var drain = await Assert.ThrowsAnyAsync<Exception>(() => f.Dev.CloseAndDrainAsync()); Assert.True(Contains(drain, fault));
     }
 
-    // These successful edit controls require the physical before-file observed by
-    // WorkspaceChangeSetService; fake text alone cannot satisfy its File.Exists/hash gate.
+    // These edit controls assert real physical file effects, so they need a real root. The engine now asks the
+    // provider for existence, so the synthetic store can satisfy the hash gate on its own.
     private static async Task WithPhysicalEditFixtureAsync(Func<Fixture, Task> body)
     {
         var directory = Path.Combine(Path.GetTempPath(), "dev-physical-edit-control-" + Guid.NewGuid().ToString("N"));
@@ -899,11 +899,14 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         public bool IsIssuedOriginalRuntime(IWorkspaceToolService actual, string actualRoot, OllamaToolCall actualCall) => ReferenceEquals(actual, tools) && actualRoot == root && WorkspaceToolOriginalDigest.Call(actualCall) == WorkspaceToolOriginalDigest.Call(call);
         public Task<WorkspaceToolResult> RunOriginalRuntimeAsync(IWorkspaceToolService service, string actualRoot, OllamaToolCall actualCall, Func<CancellationToken, Task<WorkspaceToolResult>> body, CancellationToken token) => body(token);
     }
-    private sealed class Tools : IWorkspaceToolService
+    private sealed class Tools : IWorkspaceToolService, IWorkspaceFileExistenceSource
     {
         public int ReadCalls; public int WriteCalls; public string TextValue = "original source"; public Task? BeforeWrite; public int ProcessCalls; public ProcessRequest? LastProcessRequest; public ProcessResult Process = new(0, "observed", "", TimeSpan.Zero, false);
         public bool PhysicalFiles; public Action? OnWrite;
         public string ResolveWorkspacePath(string root, string path) => Path.GetFullPath(Path.Combine(root, path));
+        // The synthetic store answers its own existence so it cannot disagree with the content it returns.
+        public bool FileExists(string root, string path) => PhysicalFiles ? File.Exists(ResolveWorkspacePath(root, path)) : true;
+        public bool DirectoryExists(string root, string path) => PhysicalFiles ? Directory.Exists(ResolveWorkspacePath(root, path)) : false;
         public async Task<string> ReadTextAsync(string root, string path, CancellationToken token)
         { ReadCalls++; token.ThrowIfCancellationRequested(); return PhysicalFiles ? await File.ReadAllTextAsync(ResolveWorkspacePath(root, path), token) : TextValue; }
         public async Task WriteTextAtomicAsync(string root, string path, string content, CancellationToken token)

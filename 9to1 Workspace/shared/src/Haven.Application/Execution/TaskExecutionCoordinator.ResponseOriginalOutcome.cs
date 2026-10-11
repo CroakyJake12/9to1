@@ -1,4 +1,4 @@
-using Haven.Core;
+﻿using Haven.Core;
 
 namespace Haven.Application;
 
@@ -33,7 +33,7 @@ public sealed partial class TaskExecutionCoordinator
     // release the privately retained metadata drivers; their real reads/CAS decide ACKs.
     internal async Task FinishOriginalResponseOwnerCleanupAsync(TaskRunInvocationCustody custody)
     {
-        RequireOriginalInvocation(custody);
+        RequireOriginalInvocation(custody, boundRequired: false);
         var responses = custody.CaptureOriginalResponses();
         foreach (var original in responses)
         {
@@ -98,3 +98,4 @@ public sealed partial class TaskExecutionCoordinator
         }, owningCleanup: original.OriginalResolvedToolCheckpoint is not null);
     }
 }
+

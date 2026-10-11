@@ -13,6 +13,8 @@ public sealed class WriteBrowserFeature : IHomeFeatureRouteHandler, IBrowserClos
     private readonly IWriteNativeDocumentPackageStore _packages;
     private readonly Func<Exception, bool>? _unknown;
     private readonly IWriteBrowserPackageBroker? _broker;
+    private readonly IWriteBrowserImageSource? _imageSource;
+    private readonly INotesAttachmentStore? _attachments;
     private readonly CuiDocument _document;
     private readonly Func<bool> _reduceMotion;
     private readonly HashSet<TrackedView> _views = [];
@@ -29,26 +31,30 @@ public sealed class WriteBrowserFeature : IHomeFeatureRouteHandler, IBrowserClos
 
     public WriteBrowserFeature(INotesRepository authorisedRepository, IWriteNativeDocumentPackageStore packages,
         Func<bool> reduceMotion, string markup, Func<Exception, bool>? isUnknownCommitOutcome = null,
-        IWriteBrowserPackageBroker? packageBroker = null)
+        IWriteBrowserPackageBroker? packageBroker = null, IWriteBrowserImageSource? imageSource = null,
+        INotesAttachmentStore? attachments = null)
     {
         _repository = authorisedRepository ?? throw new ArgumentNullException(nameof(authorisedRepository));
         _packages = packages ?? throw new ArgumentNullException(nameof(packages));
-        _unknown = isUnknownCommitOutcome; _broker = packageBroker; _session = NewSession();
+        _unknown = isUnknownCommitOutcome; _broker = packageBroker; _imageSource = imageSource;
+        _attachments = attachments; _session = NewSession();
         _reduceMotion = reduceMotion ?? throw new ArgumentNullException(nameof(reduceMotion));
         var parser = new CuiRichParser(); _document = parser.Parse(markup, "Write.cui");
         if (parser.Diagnostics.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
             throw new InvalidDataException("The browser Write CUI document is invalid.");
     }
-    private WriteBrowserSession NewSession() => new(_repository, _packages, _unknown, _broker);
+    private WriteBrowserSession NewSession() => new(_repository, _packages, _unknown, _broker, _imageSource, _attachments);
 
     public static HomeCoreOperationResult<bool> Register(BrowserSurfaceRegistry registry, INotesRepository authorisedRepository,
         IWriteNativeDocumentPackageStore packages, Func<bool> reduceMotion,
-        Func<Exception, bool>? isUnknownCommitOutcome = null, IWriteBrowserPackageBroker? packageBroker = null)
+        Func<Exception, bool>? isUnknownCommitOutcome = null, IWriteBrowserPackageBroker? packageBroker = null,
+        IWriteBrowserImageSource? imageSource = null, INotesAttachmentStore? attachments = null)
     {
         using var stream = typeof(WriteBrowserFeature).Assembly.GetManifestResourceStream("NineToOne.Web.Write.cui")
             ?? throw new InvalidOperationException("The Write browser CUI resource is unavailable.");
         using var reader = new StreamReader(stream);
-        var feature = new WriteBrowserFeature(authorisedRepository, packages, reduceMotion, reader.ReadToEnd(), isUnknownCommitOutcome, packageBroker);
+        var feature = new WriteBrowserFeature(authorisedRepository, packages, reduceMotion, reader.ReadToEnd(),
+            isUnknownCommitOutcome, packageBroker, imageSource, attachments);
         return registry.Register(feature, feature.Render, BrowserSurfaceScope.DeviceLocal);
     }
 

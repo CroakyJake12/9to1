@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Data.Sqlite;
 using Haven.Application;
 using Haven.Core;
 using Haven.Infrastructure;
@@ -88,7 +89,13 @@ public sealed class AgentRunCanonicalBindingRepositoryTests : IDisposable
         Assert.Null(Assert.Single(await repository.GetRecentAsync(10, default)).CanonicalTask);
     }
 
-    public void Dispose() => _paths.Dispose();
+    public void Dispose()
+    {
+        // The fixture owns the pooled handle it opened; deleting the temp directory
+        // before the pool is released is a fixture lifetime defect, not product behaviour.
+        SqliteConnection.ClearAllPools();
+        _paths.Dispose();
+    }
 
     private sealed class BindingPaths : IAppPaths, IDisposable
     {

@@ -23,22 +23,25 @@ public static class PresentBrowserSurface
         {
             _session = session; Control = new(reduceMotion);
             Control.LiveTextPreviewed += Preview;
+            Control.SelectionChanged += Selected;
             session.PropertyChanged += Changed;
             Refresh();
         }
         private void Preview(object? sender, EventArgs args) => _session.RecordRetainedPreview();
+        private void Selected(object? sender, EventArgs args) => _session.RecordRetainedSelection();
         private void Changed(object? sender, PropertyChangedEventArgs args)
         { if (Dispatcher.UIThread.CheckAccess()) Refresh(); else Dispatcher.UIThread.Post(Refresh); }
         private void Refresh()
         {
             if (_disposed) return;
-            Control.SetInputAllowed(_session.IsPresentationAdmitted && !_session.IsBusy && !_session.IsReadOnly && !_session.HasUnknownCommitOutcome && _session.Editor is not null);
+            Control.SetInputAllowed(_session.IsPresentationAdmitted && !_session.IsBusy && !_session.IsReadOnly && !_session.HasUnknownCommitOutcome && !_session.IsPlaying && _session.Editor is not null);
             Control.SetEditor(_session.Editor);
         }
         public void Dispose()
         {
             if (_disposed) return;
-            _disposed = true; _session.PropertyChanged -= Changed; Control.LiveTextPreviewed -= Preview; Control.Dispose();
+            _disposed = true; _session.PropertyChanged -= Changed; Control.LiveTextPreviewed -= Preview;
+            Control.SelectionChanged -= Selected; Control.Dispose();
         }
     }
 }

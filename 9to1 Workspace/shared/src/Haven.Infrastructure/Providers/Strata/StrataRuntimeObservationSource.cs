@@ -1,4 +1,4 @@
-using Dulche.Runtime;
+﻿using Dulche.Runtime;
 using Haven.Application;
 using System.Collections.Frozen;
 namespace Haven.Infrastructure;
@@ -107,6 +107,7 @@ public sealed class StrataRuntimeObservationSource(StrataNativeArtifactSource ar
         // protected factory must additionally observe a correlated same-worker/model tool
         // probe before any raw catalogue advertises Tools. Images remain unimplemented.
         return verifiedBuild with { Features = verifiedBuild.Features
-            .Where(value => value is "Text" or "Streaming" or "Tools").ToFrozenSet(StringComparer.Ordinal) };
+            .Where(value => value is "Text" or "Streaming").ToFrozenSet(StringComparer.Ordinal) };
     }
 }
+

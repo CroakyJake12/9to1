@@ -157,7 +157,7 @@ public sealed class VisualCaptureTests
         Assert.NotEmpty(host.Children);
 
         var pixelSize = new PixelSize(width, height);
-        var bitmap = new RenderTargetBitmap(pixelSize, new Vector(96, 96));
+        using var bitmap = new RenderTargetBitmap(pixelSize, new Vector(96, 96));
         bitmap.Render(window);
         var shotPath = Path.Combine(ShotsDirectory(), shotName);
         bitmap.Save(shotPath);

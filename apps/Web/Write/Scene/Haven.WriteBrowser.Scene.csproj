@@ -7,7 +7,7 @@
     <AssemblyName>Haven</AssemblyName>
     <RootNamespace>NineToOne.Web.Write</RootNamespace>
     <WriteOwnerRoot>$(MSBuildThisFileDirectory)../../../../9to1 Workspace/shared/src</WriteOwnerRoot>
-    <WriteOwnerThemeSha256>54e479254465e596f864215cb1a80b0d35d770bf92b406230cb81efdf251a12b</WriteOwnerThemeSha256>
+    <WriteOwnerThemeSha256>e597d116391ea697d2bc7ad2d2854e292fa747a3245db02ad938bdb69e34bae4</WriteOwnerThemeSha256>
   </PropertyGroup>
   <ItemGroup>
     <!-- Original scene consumes this existing pinned ClipboardExtensions API. -->
@@ -42,10 +42,18 @@
       <Using Namespace="System.IO" /><Using Namespace="System.Linq" />
       <Using Namespace="System.Xml.Linq" /><Using Namespace="System.Security.Cryptography" />
       <Code Type="Fragment" Language="cs"><![CDATA[
+        // Pins record the canonical LF source blob. A CRLF checkout must not be
+        // judged as a content change, so the guard hashes canonical content.
         var bytes = File.ReadAllBytes(SourceFile);
+        var canonical = new MemoryStream();
+        for (int i = 0; i < bytes.Length; i++)
+        {
+          if (bytes[i] == 13 && i + 1 < bytes.Length && bytes[i + 1] == 10) continue;
+          canonical.WriteByte(bytes[i]);
+        }
         string hash;
         using (var sha = SHA256.Create())
-          hash = System.BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant();
+          hash = System.BitConverter.ToString(sha.ComputeHash(canonical.ToArray())).Replace("-", "").ToLowerInvariant();
         if (!string.Equals(hash, ExpectedSha256, System.StringComparison.OrdinalIgnoreCase))
         {
           Log.LogError("The owning DefaultTheme source changed ({0}); review the owner revision and extraction before updating the pinned hash.", hash);

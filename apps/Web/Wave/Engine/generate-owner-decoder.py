@@ -9,8 +9,8 @@ import hashlib
 import json
 from pathlib import Path
 
-SOURCE_SHA256 = '4cabd81a662c87df0cc8f70326099b5b358c182c184a6f0c0b60344bdaf77b6f'
-PREFIX_SHA256 = '5426f61c5568b4728d3409d3dd3722dd4a70b23867b86168f0967da4b6a7125a'
+SOURCE_SHA256 = 'dcb0783470d9b5fc61ff63a5124e62b6f36080e96344d68cc918d9fb212a19e1'
+PREFIX_SHA256 = '1fbace8bb954790be48cc05ccc8632a0b1efcec4bd42a8d1fdf35667038e0c4a'
 MARKER = b'internal static class WaveConsoleSurface'
 
 
@@ -22,6 +22,8 @@ def main():
     args = parser.parse_args()
     source, output, manifest = map(Path, (args.source, args.output, args.manifest))
     raw = source.read_bytes()
+    # Pins record the canonical LF source blob; a CRLF checkout is not a content change.
+    raw = raw.replace(b'\r\n', b'\n')
     actual = hashlib.sha256(raw).hexdigest()
     if actual != SOURCE_SHA256 or raw.count(MARKER) != 1:
         raise SystemExit('Owner Wave source changed or marker is ambiguous; review required before browser engine compilation.')

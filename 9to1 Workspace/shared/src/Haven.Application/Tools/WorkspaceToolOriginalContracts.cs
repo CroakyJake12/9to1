@@ -88,6 +88,14 @@ public interface IWorkspaceOriginalRollbackService : IWorkspaceToolService
 {
     Task DeleteOriginalCreatedFileAsync(string workspaceRoot, string relativePath, CancellationToken cancellationToken);
 }
+/// <summary>Provider-owned answer for whether a workspace entry exists. The change-set engine uses this
+/// instead of a platform check, so a non-physical provider can report its own store. Providers that do not
+/// implement it keep the engine's existing physical fallback.</summary>
+public interface IWorkspaceFileExistenceSource : IWorkspaceToolService
+{
+    bool FileExists(string workspaceRoot, string relativePath);
+    bool DirectoryExists(string workspaceRoot, string relativePath);
+}
 
 public sealed record WorkspaceToolPhysicalEffect(WorkspaceToolEffectKind Kind, string CanonicalTarget,
     string ContentOrRequestSha256, bool Admitted, bool EffectKnown, bool TerminalOutcomeKnown,

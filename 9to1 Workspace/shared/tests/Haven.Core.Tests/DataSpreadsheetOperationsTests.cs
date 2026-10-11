@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Haven.Core;
 
 namespace Haven.Core.Tests;
@@ -75,7 +75,7 @@ public sealed class DataSpreadsheetOperationsTests
         workbook.Validations.Add(new DataValidationRule { SheetId = sheet.Id, Range = new DataCellRange { StartRow = 1, EndRow = 3, StartColumn = 1, EndColumn = 1 }, Kind = DataValidationKind.WholeNumber });
         workbook.Charts.Add(new DataChartDefinition { SheetId = sheet.Id, Title = "Scores", SourceRange = new DataCellRange { StartRow = 0, EndRow = 3, StartColumn = 0, EndColumn = 1 }, SeriesColumns = [1] });
         workbook.Normalize(); var json = JsonSerializer.Serialize(workbook); var loaded = JsonSerializer.Deserialize<DataWorkbook>(json)!; loaded.Normalize();
-        Assert.Equal(3, loaded.SchemaVersion); Assert.Single(loaded.Tables); Assert.Single(loaded.Validations); Assert.Single(loaded.Charts); Assert.Equal("Scores", loaded.Charts[0].Title); Assert.Equal(DataFilterOperator.GreaterThan, loaded.Tables[0].Filters[0].Operator);
+        Assert.Equal(DataWorkbook.CurrentSchemaVersion, loaded.SchemaVersion); Assert.Single(loaded.Tables); Assert.Single(loaded.Validations); Assert.Single(loaded.Charts); Assert.Equal("Scores", loaded.Charts[0].Title); Assert.Equal(DataFilterOperator.GreaterThan, loaded.Tables[0].Filters[0].Operator);
     }
 
     [Fact]
@@ -88,3 +88,4 @@ public sealed class DataSpreadsheetOperationsTests
         Assert.Equal("700", sheet.GetCell(49_995, 3)?.Metadata[DataCellFormatMetadata.FontWeight]);
     }
 }
+

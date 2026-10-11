@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Haven.Core;
 
 namespace Haven.Application;
@@ -13,6 +13,9 @@ public interface IExternalConnectionRepository
     /// <summary>Publishes only while the complete expected canonical record still matches.</summary>
     Task<bool> CompareExchangeAsync(ExternalConnection? expected, ExternalConnection replacement, CancellationToken cancellationToken) =>
         Task.FromException<bool>(new NotSupportedException("This connection repository does not support guarded publication."));
+
+    /// <summary>True when this repository can publish conditionally; otherwise callers use the unguarded path.</summary>
+    bool SupportsGuardedPublication => false;
 }
 
 public interface IMcpConnectionClient
@@ -39,3 +42,5 @@ public interface IDynamicCapabilityProvider
 {
     Task<IReadOnlyList<CapabilityDefinition>> GetCapabilitiesAsync(CapabilityPlatform platform, CancellationToken cancellationToken);
 }
+
+

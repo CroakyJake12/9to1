@@ -1,8 +1,11 @@
+using System.Runtime.Versioning;
 using System.Text.Json;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using Haven.Application;
+using Haven.Infrastructure;
 using HavenOS.Home.Core;
+using NineToOne.Web.Productivity.Present.Storage;
 
 namespace NineToOne.Web.Productivity.Present;
 
@@ -11,6 +14,9 @@ public sealed class PresentBrowserFeature : IHomeFeatureRouteHandler, IBrowserCl
 {
     private readonly IPresentRepository _repository;
     private readonly Func<Exception, bool>? _unknown;
+    private readonly IPresentExportService? _exporter;
+    private readonly IPresentImportService? _importer;
+    private readonly IPresentBrowserMedia? _media;
     private readonly CuiDocument _document;
     private readonly Func<bool> _reduceMotion;
     private readonly HashSet<TrackedView> _views = [];
@@ -26,24 +32,32 @@ public sealed class PresentBrowserFeature : IHomeFeatureRouteHandler, IBrowserCl
     private static bool NeedsPreparation(PresentBrowserSession session) => session.IsDirty || session.IsBusy || session.HasUnknownCommitOutcome;
 
     public PresentBrowserFeature(IPresentRepository authorisedRepository, Func<bool> reduceMotion, string markup,
-        Func<Exception, bool>? isUnknownCommitOutcome = null)
+        Func<Exception, bool>? isUnknownCommitOutcome = null, IPresentExportService? exporter = null,
+        IPresentImportService? importer = null, IPresentBrowserMedia? media = null)
     {
         _repository = authorisedRepository ?? throw new ArgumentNullException(nameof(authorisedRepository));
-        _unknown = isUnknownCommitOutcome; _session = NewSession();
+        _unknown = isUnknownCommitOutcome;
+        _exporter = exporter; _importer = importer; _media = media;
+        _session = NewSession();
         _reduceMotion = reduceMotion ?? throw new ArgumentNullException(nameof(reduceMotion));
         var parser = new CuiRichParser(); _document = parser.Parse(markup, "Present.cui");
         if (parser.Diagnostics.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
             throw new InvalidDataException("The browser Present CUI document is invalid.");
     }
-    private PresentBrowserSession NewSession() => new(_repository, _unknown);
+    private PresentBrowserSession NewSession() => new(_repository, _unknown, _exporter, _importer, _media);
 
+    /// <summary>Registers the browser surface, including its device-local PowerPoint transfer bridge.</summary>
+    [SupportedOSPlatform("browser")]
     public static HomeCoreOperationResult<bool> Register(BrowserSurfaceRegistry registry, IPresentRepository authorisedRepository,
         Func<bool> reduceMotion, Func<Exception, bool>? isUnknownCommitOutcome = null)
     {
         using var stream = typeof(PresentBrowserFeature).Assembly.GetManifestResourceStream("NineToOne.Web.Present.cui")
             ?? throw new InvalidOperationException("The Present browser CUI resource is unavailable.");
         using var reader = new StreamReader(stream);
-        var feature = new PresentBrowserFeature(authorisedRepository, reduceMotion, reader.ReadToEnd(), isUnknownCommitOutcome);
+        // Owner format services and the browser transfer bridge are the only
+        // route to PowerPoint files; both live with the Present surface itself.
+        var feature = new PresentBrowserFeature(authorisedRepository, reduceMotion, reader.ReadToEnd(), isUnknownCommitOutcome,
+            new PresentPptxExportService(), new PresentPptxImportService(new AppPaths()), new BrowserPresentMedia());
         return registry.Register(feature, feature.Render, BrowserSurfaceScope.DeviceLocal);
     }
 

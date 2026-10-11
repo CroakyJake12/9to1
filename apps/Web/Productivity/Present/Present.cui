@@ -4,19 +4,87 @@
     <Action name="SelectPresentationSlide" command="SelectSlide" parameter="{Binding slide}" />
   </Actions>
   <Grid RowDefinitions="Auto,Auto,*" margin="12">
-    <TextBlock grid-row="0" text="{Binding Title}" font-size="24" />
+    <TextBox grid-row="0" text="{Binding Title, Mode=TwoWay}" is-enabled="{Binding CanEdit}" font-size="24" accessible-name="Presentation title" />
     <StackPanel grid-row="1" margin="0,8">
       <WrapPanel>
         <Button content="New presentation" action="Create" is-enabled="{Binding CanCreate}" />
         <Button content="Save" action="Save" is-enabled="{Binding CanSave}" />
         <Button content="Close" action="Close" is-enabled="{Binding CanClose}" />
+        <Button content="Export .pptx" action="ExportPowerPoint" is-enabled="{Binding CanExportPowerPoint}" />
+        <Button content="Import .pptx" action="ImportPowerPoint" is-enabled="{Binding CanImportPowerPoint}" />
         <Button content="Add slide" action="AddSlide" is-enabled="{Binding CanEdit}" />
         <Button content="Duplicate slide" action="DuplicateSlide" is-enabled="{Binding CanEdit}" />
+        <Button content="Delete slide" action="DeleteSlide" is-enabled="{Binding CanDeleteSlide}" />
+        <Button content="Move slide earlier" action="MoveSlideEarlier" is-enabled="{Binding CanMoveSlideEarlier}" />
+        <Button content="Move slide later" action="MoveSlideLater" is-enabled="{Binding CanMoveSlideLater}" />
         <Button content="Add text" action="AddText" is-enabled="{Binding CanEdit}" />
         <Button content="Add shape" action="AddShape" is-enabled="{Binding CanEdit}" />
+        <Button content="Delete element" action="DeleteElement" is-enabled="{Binding CanDeleteElement}" />
+        <Button content="Bring to front" action="BringToFront" is-enabled="{Binding CanBringToFront}" />
+        <Button content="Send to back" action="SendToBack" is-enabled="{Binding CanSendToBack}" />
         <Button content="Undo" action="Undo" is-enabled="{Binding CanUndo}" />
         <Button content="Redo" action="Redo" is-enabled="{Binding CanRedo}" />
+        <Button content="Present" action="Present" is-enabled="{Binding CanPresent}" />
       </WrapPanel>
+      <WrapPanel>
+        <Button content="Bold" action="Bold" is-enabled="{Binding CanBold}" />
+        <Button content="Italic" action="Italic" is-enabled="{Binding CanItalic}" />
+        <Button content="Grow" action="Grow" is-enabled="{Binding CanTransformObject}" />
+        <Button content="Shrink" action="Shrink" is-enabled="{Binding CanTransformObject}" />
+        <Button content="Rotate left" action="RotateLeft" is-enabled="{Binding CanTransformObject}" />
+        <Button content="Rotate right" action="RotateRight" is-enabled="{Binding CanTransformObject}" />
+        <Button content="Copy" action="Copy" is-enabled="{Binding CanCopy}" />
+        <Button content="Paste" action="Paste" is-enabled="{Binding CanPaste}" />
+        <Button content="Move object left" action="MoveObjectLeft" is-enabled="{Binding CanMoveObject}" />
+        <Button content="Move object right" action="MoveObjectRight" is-enabled="{Binding CanMoveObject}" />
+        <Button content="Move object up" action="MoveObjectUp" is-enabled="{Binding CanMoveObject}" />
+        <Button content="Move object down" action="MoveObjectDown" is-enabled="{Binding CanMoveObject}" />
+      </WrapPanel>
+      <WrapPanel>
+        <Button content="Align left" action="AlignLeft" is-enabled="{Binding CanAlign}" />
+        <Button content="Align center" action="AlignCenter" is-enabled="{Binding CanAlign}" />
+        <Button content="Align top" action="AlignTop" is-enabled="{Binding CanAlign}" />
+        <Button content="Align middle" action="AlignMiddle" is-enabled="{Binding CanAlign}" />
+        <Button content="Distribute horizontally" action="DistributeHorizontal" is-enabled="{Binding CanDistribute}" />
+        <Button content="Distribute vertically" action="DistributeVertical" is-enabled="{Binding CanDistribute}" />
+        <Button content="Group" action="Group" is-enabled="{Binding CanGroup}" />
+        <Button content="Ungroup" action="Ungroup" is-enabled="{Binding CanUngroup}" />
+        <Button content="Bring forward" action="BringForward" is-enabled="{Binding CanBringForward}" />
+        <Button content="Send backward" action="SendBackward" is-enabled="{Binding CanSendBackward}" />
+      </WrapPanel>
+      <WrapPanel>
+        <TextBox text="{Binding FillColor, Mode=TwoWay}" is-enabled="{Binding CanApplyFill}" accessible-name="Fill color" />
+        <Button content="Apply fill" action="ApplyFill" is-enabled="{Binding CanApplyFill}" />
+        <TextBox text="{Binding StrokeColor, Mode=TwoWay}" is-enabled="{Binding CanApplyStroke}" accessible-name="Stroke color" />
+        <Button content="Apply stroke" action="ApplyStroke" is-enabled="{Binding CanApplyStroke}" />
+        <TextBox text="{Binding StrokeWidth, Mode=TwoWay}" is-enabled="{Binding CanApplyStrokeWidth}" accessible-name="Stroke width" />
+        <Button content="Apply stroke width" action="ApplyStrokeWidth" is-enabled="{Binding CanApplyStrokeWidth}" />
+        <Button content="Font larger" action="FontLarger" is-enabled="{Binding CanFontSize}" />
+        <Button content="Font smaller" action="FontSmaller" is-enabled="{Binding CanFontSize}" />
+      </WrapPanel>
+      <WrapPanel>
+        <TextBox text="{Binding TransitionKind, Mode=TwoWay}" is-enabled="{Binding CanApplyTransition}" accessible-name="Transition kind for the current slide" />
+        <TextBox text="{Binding TransitionDuration, Mode=TwoWay}" is-enabled="{Binding CanApplyTransition}" accessible-name="Transition duration in seconds" />
+        <Button content="Apply transition" action="ApplyTransition" is-enabled="{Binding CanApplyTransition}" />
+        <TextBox text="{Binding AnimationEffect, Mode=TwoWay}" is-enabled="{Binding CanAddAnimation}" accessible-name="Animation effect for the selected object" />
+        <TextBox text="{Binding AnimationTrigger, Mode=TwoWay}" is-enabled="{Binding CanAddAnimation}" accessible-name="Animation trigger for the selected object" />
+        <Button content="Add animation" action="AddAnimation" is-enabled="{Binding CanAddAnimation}" />
+        <Button content="Remove animation" action="RemoveAnimation" is-enabled="{Binding CanRemoveAnimation}" />
+      </WrapPanel>
+      <Repeat Source="{Binding AnimationSteps}" As="cue" Key="{Binding cue.Id}">
+        <TextBlock text="{Binding cue.Effect}" accessible-name="Animation cue effect" text-wrapping="Wrap" />
+        <TextBlock text="{Binding cue.Trigger}" accessible-name="Animation cue trigger" text-wrapping="Wrap" />
+      </Repeat>
+      <If Condition="{Binding IsPlaying}">
+        <StackPanel>
+          <TextBlock text="{Binding PlayStatus}" accessible-name="Playback status" text-wrapping="Wrap" />
+          <WrapPanel>
+            <Button content="Previous slide" action="PlayPrevious" is-enabled="{Binding CanPlayPrevious}" />
+            <Button content="Next slide" action="Advance" is-enabled="{Binding CanAdvance}" />
+            <Button content="End presentation" action="ExitPresentation" is-enabled="{Binding CanExitPresentation}" />
+          </WrapPanel>
+        </StackPanel>
+      </If>
       <TextBlock text="{Binding Status}" accessible-name="Presentation save status" text-wrapping="Wrap" />
       <If Condition="{Binding HasUnknownCommitOutcome}"><Button content="Inspect saved state" action="Inspect" is-enabled="{Binding CanInspect}" /></If>
     </StackPanel>
@@ -29,6 +97,8 @@
             <Button content="{Binding saved.Title}" action="OpenSavedPresentation" is-enabled="{Binding CanBrowse}" />
           </Repeat>
           <TextBlock text="Slides" font-size="16" margin="0,12,0,4" />
+          <Button content="Hide slide" action="HideSlide" is-enabled="{Binding CanHideSlide}" />
+          <Button content="Show slide" action="ShowSlide" is-enabled="{Binding CanShowSlide}" />
           <Repeat Source="{Binding Slides}" As="slide" Key="{Binding slide.Id}">
             <Button content="{Binding slide.Title}" action="SelectPresentationSlide" is-enabled="{Binding CanBrowse}" />
           </Repeat>

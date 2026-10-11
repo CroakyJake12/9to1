@@ -347,7 +347,10 @@ public sealed class TaskRunDelegationAuthorityTests
         public ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken token)
         { token.ThrowIfCancellationRequested(); Callback?.Invoke(); return ValueTask.FromResult<AuthenticatedResourceActor?>(Actor); }
     }
-    private sealed class Settlement : ITaskRunRuntimeSettlement
+    // The canonical composition registers the real frame owner as both the runtime settlement and the retirement
+    // owner, so the fixture must answer through the same two contracts. The real owner retires an acknowledgment
+    // only after its settlement already joined the exact lease close, so retirement here joins nothing twice.
+    private sealed class Settlement : ITaskRunRuntimeSettlement, ITaskRunOriginalAttemptRetirement
     {
         public Func<Guid, TaskRunAttemptAdmission> Original = _ => throw new InvalidOperationException(); public int Joins;
         public async Task AwaitSettlementAsync(Guid task, Guid execution, Guid attempt, CancellationToken token)
@@ -355,6 +358,20 @@ public sealed class TaskRunDelegationAuthorityTests
             token.ThrowIfCancellationRequested(); var actual = Original(attempt);
             if (actual.Snapshot.TaskId != task || actual.Snapshot.ExecutionId != execution) throw new InvalidOperationException();
             var close = actual.Lease.DisposeAsync().AsTask(); await close; Joins++;
+        }
+
+        public ValueTask RetireAcknowledgedOriginalAttemptAsync(
+            TaskRunOriginalRetirementAcknowledgment acknowledgedRetirement, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            var actual = Original(acknowledgedRetirement.AttemptId);
+            if (acknowledgedRetirement.TaskId != actual.Snapshot.TaskId || acknowledgedRetirement.ExecutionId != actual.Snapshot.ExecutionId
+                || acknowledgedRetirement.AcknowledgedRevision <= actual.Snapshot.PersistenceRevision)
+                throw new InvalidOperationException("The retirement receipt does not name the actual admitted attempt.");
+            var close = actual.Lease.DisposeAsync().AsTask();
+            if (!close.IsCompletedSuccessfully)
+                throw new InvalidOperationException("The actual original lease has not joined before retirement.");
+            return ValueTask.CompletedTask;
         }
     }
     private sealed class Repository : ITaskExecutionRepository

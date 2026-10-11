@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -147,7 +147,7 @@ public sealed class HomeNativeCakeAccountTests
         var session = new Session(); HomeNativeCakeAccountBindings? view = null;
         session.Read = _ =>
         {
-            Assert.Throws<InvalidOperationException>(() => view!.CloseAndDrainAsync());
+            InvalidOperationException? synchronousThrow = null; try { var reentrant = view!.CloseAndDrainAsync(); } catch (InvalidOperationException caught) { synchronousThrow = caught; } Assert.NotNull(synchronousThrow);
             Assert.False(view!.IsClosing);
             return Task.FromResult(new ApiResult<RemoteCurrent>(new(session.Snapshot!.AccountId, "original"), ApiFailure.None));
         };
@@ -162,7 +162,7 @@ public sealed class HomeNativeCakeAccountTests
         var session = new Session(); HomeNativeCakeAccountBindings? view = null;
         session.Read = async _ =>
         {
-            await Task.Yield(); Assert.Throws<InvalidOperationException>(() => view!.CloseAndDrainAsync());
+            await Task.Yield(); InvalidOperationException? synchronousThrow = null; try { var reentrant = view!.CloseAndDrainAsync(); } catch (InvalidOperationException caught) { synchronousThrow = caught; } Assert.NotNull(synchronousThrow);
             Assert.False(view!.IsClosing);
             return new(new(session.Snapshot!.AccountId, "original"), ApiFailure.None);
         };
@@ -253,3 +253,6 @@ public sealed class HomeNativeCakeAccountTests
         public ValueTask DisposeAsync() => new(CloseAndDrainAsync());
     }
 }
+
+
+

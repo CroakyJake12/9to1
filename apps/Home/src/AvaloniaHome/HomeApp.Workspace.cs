@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
@@ -223,42 +223,51 @@ internal sealed partial class HomeApp
     {
         _workspaceWindow = window;
         _workspaceReviewButtons.Clear();
-        var tiles = _workspaceTiles = new ListBox();
-        var requests = _workspaceRequests = new ListBox();
-        _workspaceTiles.ItemTemplate = new FuncDataTemplate<HomeTileInstance>((tile, _) => new TextBlock
-        { Text = tile is null ? "" : $"{tile.TileType} · {tile.Size} · {tile.Visibility}" });
-        _workspaceTiles.SelectionChanged += (_, _) =>
+        Func<CakeOS.Cui.CuiComponent, Control> dashboardTiles = component =>
         {
-            if (ReferenceEquals(_workspaceWindow, window) && tiles.SelectedItem is HomeTileInstance selected &&
-                _controller.Surface.Layout?.Tiles.Any(tile => ReferenceEquals(tile, selected)) == true)
-                _controller.Surface.SelectDashboardTile(selected.TileInstanceId);
+            var list = new ListBox();
+            list.ItemTemplate = new FuncDataTemplate<HomeTileInstance>((tile, _) => new TextBlock
+            { Text = tile is null ? "" : "${tile.TileType} · {tile.Size} · {tile.Visibility}" });
+            list.SelectionChanged += (_, _) =>
+            {
+                if (ReferenceEquals(_workspaceWindow, window) && list.SelectedItem is HomeTileInstance selected &&
+                    _controller.Surface.Layout?.Tiles.Any(tile => ReferenceEquals(tile, selected)) == true)
+                    _controller.Surface.SelectDashboardTile(selected.TileInstanceId);
+            };
+            _workspaceTiles = list;
+            ApplyWorkspaceBindings();
+            return list;
         };
-        _workspaceRequests.ItemTemplate = new FuncDataTemplate<HomePermissionRequest>((request, _) => new TextBlock
-        { Text = request is null ? "" : $"{request.Caller.DisplayName} · {request.Scope.ActionName}" });
-        _workspaceRequests.SelectionChanged += (_, _) =>
-        { if (ReferenceEquals(_workspaceWindow, window)) UpdateSelectedPermissionDetails(); };
-        loader.RegisterControlType("ListBox", component => component.AuthoredId switch
+        Func<CakeOS.Cui.CuiComponent, Control> permissionRequests = component =>
         {
-            "dashboard-tiles" => tiles,
-            "home-permission-requests" => requests,
-            _ => new ListBox()
-        });
-        loader.RegisterControlType("Button", component =>
+            var list = new ListBox();
+            list.ItemTemplate = new FuncDataTemplate<HomePermissionRequest>((request, _) => new TextBlock
+            { Text = request is null ? "" : "${request.Caller.DisplayName} · {request.Scope.ActionName}" });
+            list.SelectionChanged += (_, _) =>
+            { if (ReferenceEquals(_workspaceWindow, window)) UpdateSelectedPermissionDetails(); };
+            _workspaceRequests = list;
+            list.ItemsSource = _displayedRequests;
+            return list;
+        };
+        Func<CakeOS.Cui.CuiComponent, Control> reviewButton = component =>
         {
-            if (component.AuthoredId is not ("home-permission-accept" or "home-permission-decline"))
-                return new Button();
             var accept = component.AuthoredId == "home-permission-accept";
-            var button = new Button { Content = accept ? "Allow once" : "Decline", IsEnabled = false };
+            var button = new Button { Content = accept ? "Allow once" : "Decline", IsEnabled = false, Name = component.AuthoredId };
+            _workspaceReviewButtons.RemoveAll(existing => existing.Name == component.AuthoredId);
             _workspaceReviewButtons.Add(button);
             button.Click += (_, _) =>
             {
                 if (!ReferenceEquals(_workspaceWindow, window) || !window.IsVisible) return;
-                var selected = requests.SelectedItem as HomePermissionRequest;
+                var selected = _workspaceRequests.SelectedItem as HomePermissionRequest;
                 _ = RunOriginalNativeWork(() => RunWorkspaceActionAsync(() =>
                     DecideDisplayedPermissionAsync(window, selected, accept ? HomeApprovalChoice.Accept : HomeApprovalChoice.Decline)));
             };
             return button;
-        });
+        };
+        loader.BindAuthoredControl("dashboard-tiles", dashboardTiles);
+        loader.BindAuthoredControl("home-permission-requests", permissionRequests);
+        loader.BindAuthoredControl("home-permission-accept", reviewButton);
+        loader.BindAuthoredControl("home-permission-decline", reviewButton);
         ApplyWorkspaceBindings();
     }
 
@@ -369,3 +378,5 @@ internal sealed partial class HomeApp
         }
     }
 }
+
+

@@ -1,0 +1,48 @@
+<Cui id="9to1.Cards" version="1">
+  <Grid rows="Auto,*,Auto" accessible-name="9to1 Cards">
+    <WrapPanel orientation="Horizontal" spacing="8">
+      <TextBlock text="{Binding SetTitle}" accessible-name="Current flashcard set" />
+      <Button id="cards-open" action="9to1.Cards.Open" content="Open set" accessible-name="Open authorised flashcard set" is-enabled="{Binding CanOpen}" />
+      <Button id="cards-mode" action="9to1.Cards.ToggleMode" content="{Binding ModeLabel}" accessible-name="Switch view and edit modes" is-enabled="{Binding CanChangeMode}" />
+      <Button id="cards-add" action="9to1.Cards.Add" content="New card" accessible-name="Create a real structured flashcard with front and back" is-enabled="{Binding CanCreate}" />
+      <Button id="cards-duplicate" action="9to1.Cards.Duplicate" content="Duplicate" accessible-name="Duplicate the selected flashcard" is-enabled="{Binding CanDuplicate}" />
+      <Button id="cards-delete" action="9to1.Cards.Delete" content="Delete card" accessible-name="Review deleting the selected flashcard with recoverable deletion" is-enabled="{Binding CanDelete}" />
+    </WrapPanel>
+    <Grid grid-row="1" columns="Auto,*" accessible-name="Cards workspace and navigation">
+      <StackPanel grid-column="0" spacing="8" accessible-name="Subjects and topics">
+        <TextBox id="cards-search" text="{Binding SearchText, Mode=TwoWay}" accessible-name="Search flashcards" watermark="Search cards" />
+        <Button id="cards-orientation" action="9to1.Cards.ToggleOrientation" content="{Binding OrientationLabel}" accessible-name="Switch vertical or horizontal card navigation preferences" is-enabled="{Binding CanChangeOrientation}" />
+        <Button id="cards-grouping" action="9to1.Cards.CycleGrouping" content="{Binding GroupModeLabel}" accessible-name="Switch between sets, subjects and topics" is-enabled="{Binding CanGroup}" />
+        <ComboBox id="cards-groups" ItemsSource="{Binding GroupNames}" SelectedIndex="{Binding SelectedGroupIndex, mode=TwoWay, type=int}" accessible-name="Choose a subject or topic" is-enabled="{Binding CanSelectGroup}" />
+        <TextBlock text="{Binding PositionLabel}" accessible-name="Current card position" />
+        <TextBlock text="{Binding RecoveryPosition}" accessible-name="Recoverable deleted cards" />
+        <ComboBox id="cards-recovery-picker" ItemsSource="{Binding RecoveryNames}" SelectedIndex="{Binding SelectedRecoveryIndex, mode=TwoWay, type=int}" accessible-name="Select a deleted card for restoration" />
+        <Button id="cards-restore" action="9to1.Cards.Restore" content="Restore selected card" accessible-name="Restore selected deleted flashcard through canonical permissions" is-enabled="{Binding CanRestore}" />
+        <WrapPanel orientation="Horizontal" spacing="8" accessible-name="Deleted cards pages">
+          <Button id="cards-recovery-prev" action="9to1.Cards.RecoveryPrevious" content="Earlier deleted cards" accessible-name="Previous deleted cards page" is-enabled="{Binding CanPreviousRecoveryPage}" />
+          <Button id="cards-recovery-next" action="9to1.Cards.RecoveryNext" content="More deleted cards" accessible-name="Next deleted cards page" is-enabled="{Binding CanNextRecoveryPage}" />
+        </WrapPanel>
+      </StackPanel>
+      <ScrollViewer grid-column="1" accessible-name="Focused vertical flashcard viewer">
+        <StackPanel spacing="12" accessible-name="Cards in vertical order">
+          <Button id="cards-prev" action="9to1.Cards.Previous" content="Previous card" accessible-name="Previous flashcard" is-enabled="{Binding CanPrevious}" />
+          <TextBlock text="{Binding PreviousPreview}" accessible-name="Partially visible previous card preview" />
+          <StackPanel spacing="8" accessible-name="Focused flashcard">
+            <TextBlock text="{Binding SideLabel}" accessible-name="Currently shown card side" />
+            <TextBlock text="{Binding ContentHint}" accessible-name="Structured content preview status" />
+            <Button id="cards-flip" action="9to1.Cards.Flip" content="Flip card" accessible-name="Flip front and back" is-enabled="{Binding CanFlip}" />
+            <Button id="cards-edit" action="9to1.Cards.EditSide" content="Edit current side" accessible-name="Open the shared rich-content editor" is-enabled="{Binding CanEdit}" />
+            <WrapPanel spacing="8" accessible-name="Personal review">
+              <Button id="cards-red" action="9to1.Cards.RateRed" content="Difficult" accessible-name="Rate this card red" is-enabled="{Binding CanRate}" />
+              <Button id="cards-amber" action="9to1.Cards.RateAmber" content="Needs practice" accessible-name="Rate this card amber" is-enabled="{Binding CanRate}" />
+              <Button id="cards-green" action="9to1.Cards.RateGreen" content="Understood" accessible-name="Rate this card green" is-enabled="{Binding CanRate}" />
+            </WrapPanel>
+          </StackPanel>
+          <TextBlock text="{Binding NextPreview}" accessible-name="Partially visible next card preview" />
+          <Button id="cards-next" action="9to1.Cards.Next" content="Next card" accessible-name="Next flashcard" is-enabled="{Binding CanNext}" />
+        </StackPanel>
+      </ScrollViewer>
+    </Grid>
+    <TextBlock grid-row="2" text="{Binding Status}" accessible-name="Cards operation status" />
+  </Grid>
+</Cui>

@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "handoff_id": "REPLACE_WITH_UNIQUE_ID",
+  "status": "PREPARING",
+  "created_at": "2026-10-11T00:00:00+01:00",
+  "from": "local",
+  "to": "cloud",
+  "spec": {
+    "name": "9to1 Development Specification v2",
+    "directive": "2026-10-10 four-part delivery",
+    "reference_url": "https://docs.google.com/document/d/17BoC2kINJzizCCA0ffqaeHukTtEtg_1FAWeO6zIGIFY/edit"
+  },
+  "source": {
+    "repository": "CroakyJake12/9to1",
+    "branch": "REPLACE",
+    "commit_sha": "REPLACE_WITH_40_HEX_COMMIT",
+    "remote_verified": false,
+    "dirty_worktree_paths": [],
+    "untracked_paths": [],
+    "artifact_manifest_refs": []
+  },
+  "claim": {
+    "released_task_ids": [],
+    "released_paths": [],
+    "lease_reference": null,
+    "fencing_token": null
+  },
+  "work": [
+    {
+      "task_id": "REPLACE",
+      "stage": "WORKING",
+      "product_acceptance": "NOT_RUN",
+      "owner": "REPLACE",
+      "summary": "REPLACE",
+      "done": [],
+      "remaining": [],
+      "evidence_refs": [],
+      "tests": [
+        {
+          "command": "REPLACE",
+          "exit_code": null,
+          "status": "NOT_RUN"
+        }
+      ],
+      "blockers": []
+    }
+  ],
+  "next_actions": [],
+  "receiver_ack": {
+    "handoff_id": null,
+    "receiver": null,
+    "acknowledged_at": null,
+    "verified_commit_sha": null
+  },
+  "notes": "Template only. READY requires durable remote source and explicit released ownership."
+}

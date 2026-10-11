@@ -54,6 +54,9 @@ public sealed class CuiRichParser
             var templates = hasCuiDocumentRoot
                 ? ParseTemplates(root, sourceName)
                 : new Dictionary<string, CuiTemplateDefinition>(StringComparer.Ordinal);
+            var imports = hasCuiDocumentRoot
+                ? ParseImports(root, sourceName)
+                : Array.Empty<CuiImportDefinition>();
             var components = hasCuiDocumentRoot
                 ? ParseComponents(root, sourceName, isRoot: true)
                 : [ParseComponent(root, sourceName)!];
@@ -72,6 +75,7 @@ public sealed class CuiRichParser
                 RootProperties = hasCuiDocumentRoot
                     ? ParseRootProperties(root, sourceName)
                     : new Dictionary<string, CuiValue>(StringComparer.Ordinal),
+                Imports = imports,
             };
         }
         catch (XmlException ex)
@@ -263,6 +267,33 @@ public sealed class CuiRichParser
 
             var content = ParseChildComponents(child, sourceName);
             result[name!] = new CuiTemplateDefinition(name!, parameters, content, span);
+        }
+
+        return result;
+    }
+
+    #endregion
+
+    #region Imports
+
+    private IReadOnlyList<CuiImportDefinition> ParseImports(XElement root, string sourceName)
+    {
+        var result = new List<CuiImportDefinition>();
+
+        foreach (var child in root.Elements())
+        {
+            if (!IsKeyword(child, "Import")) continue;
+
+            var span = SpanOf(child, sourceName);
+            var source = child.Attribute("Source")?.Value?.Trim().Trim('"');
+            if (string.IsNullOrEmpty(source))
+            {
+                _diagnostics.Error("CUI044", "An Import requires a Source.", span);
+                continue;
+            }
+
+            var alias = child.Attribute("As")?.Value?.Trim().Trim('"');
+            result.Add(new CuiImportDefinition(source, string.IsNullOrEmpty(alias) ? null : alias, span));
         }
 
         return result;

@@ -24,6 +24,10 @@ public sealed record CuiTemplateDefinition(
     IReadOnlyList<string> Parameters,
     IReadOnlyList<CuiComponent> Content,
     CuiSourceSpan Span);
+public sealed record CuiImportDefinition(
+    string Source,
+    string? Alias,
+    CuiSourceSpan Span);
 
 public sealed class CuiComponent
 {
@@ -232,4 +236,10 @@ public sealed record CuiDocument(
     /// </summary>
     public IReadOnlyDictionary<string, CuiValue> RootProperties { get; init; } =
         new Dictionary<string, CuiValue>(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Document-level Import declarations. Aliased imports expose their symbols only
+    /// through the alias; unaliased imports expose them directly in the document scope.
+    /// </summary>
+    public IReadOnlyList<CuiImportDefinition> Imports { get; init; } = Array.Empty<CuiImportDefinition>();
 }

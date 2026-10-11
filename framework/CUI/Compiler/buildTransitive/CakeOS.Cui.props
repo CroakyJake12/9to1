@@ -1,6 +1,8 @@
 <Project>
   <ItemGroup Condition="'$(EnableDefaultCuiItems)' != 'false'">
     <Cui Include="**/*.cui" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+    <Cui Include="**/*.cui-theme" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+    <Cui Include="**/*.cui-prefab" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
     <None Remove="@(Cui)" />
     <Content Remove="@(Cui)" />
   </ItemGroup>

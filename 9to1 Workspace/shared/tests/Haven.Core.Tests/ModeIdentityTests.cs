@@ -29,7 +29,7 @@ public sealed class ModeIdentityTests
     {
         string[] expectedKeys =
         [
-            "chat", "study", "automations", "terminal", "tasks", "studio", "browse", "plan", "training",
+            "chat", "study", "automations", "terminal", "tasks", "studio", "dev", "browse", "plan", "training",
             "imagine", "canvas", "present", "data", "vision", "play", "translate", "launcher", "go", "dashboard", "write", "mesh", "spaces", "boards", "maps", "motion", "forms"
         ];
 
@@ -48,3 +48,4 @@ public sealed class ModeIdentityTests
         Assert.NotEqual(SurfaceKind.Tasks, SurfaceKind.Go);
     }
 }
+

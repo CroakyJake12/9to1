@@ -16,7 +16,7 @@ namespace Haven.Infrastructure;
 /// <summary>
 /// Represents workspace tool service and keeps its related state and behavior together.
 /// </summary>
-public sealed partial class WorkspaceToolService(IWorkspaceToolFinalFenceAuthority? originalAuthority = null) : IWorkspaceOriginalInvocationSource
+public sealed partial class WorkspaceToolService(IWorkspaceToolFinalFenceAuthority? originalAuthority = null) : IWorkspaceOriginalInvocationSource, IWorkspaceFileExistenceSource
 {
     /// <summary>
     /// Stores max output characters locally so this component can preserve the dependency, cache, or state between member calls.
@@ -60,6 +60,16 @@ public sealed partial class WorkspaceToolService(IWorkspaceToolFinalFenceAuthori
         var path = ResolveWorkspacePath(workspaceRoot, relativePath);
         return await File.ReadAllTextAsync(path, cancellationToken).ConfigureAwait(false);
     }
+
+    /// <summary>
+    /// Answers existence for this physical provider, which owns the store the change-set engine inspects.
+    /// </summary>
+    public bool FileExists(string workspaceRoot, string relativePath) => File.Exists(ResolveWorkspacePath(workspaceRoot, relativePath));
+
+    /// <summary>
+    /// Answers directory existence for this physical provider, which owns the store the change-set engine inspects.
+    /// </summary>
+    public bool DirectoryExists(string workspaceRoot, string relativePath) => Directory.Exists(ResolveWorkspacePath(workspaceRoot, relativePath));
 
     /// <summary>
     /// Performs write text atomic asynchronously so I/O does not block the caller's thread.

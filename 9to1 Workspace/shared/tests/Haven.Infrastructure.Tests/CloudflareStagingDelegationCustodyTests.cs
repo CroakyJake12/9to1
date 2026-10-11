@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text.Json;
 using Haven.Application;
 using HavenOS.Home.Core;
@@ -35,7 +35,7 @@ public sealed partial class CloudflareStagingDelegationTests
             .Where(field => field.FieldType == typeof(HomeResourceExecutionCapability)).Select(field => (HomeResourceExecutionCapability)field.GetValue(admission)!).Single();
         var broker = Field<HomeResourceOperationBroker>(rig.Owner, "_broker");
         var method = typeof(HomeResourceExecutionCapability).GetMethod("AcquireCommitCompletionLeaseAsync", BindingFlags.Instance | BindingFlags.NonPublic)!;
-        var actualProbe = rig.Own(((ValueTask<IAsyncDisposable?>)method.Invoke(capability, [broker, CancellationToken.None])!).AsTask());
+        var actualProbe = rig.Own(((ValueTask<IAsyncDisposable?>)method.Invoke(capability, [broker, CancellationToken.None, null])!).AsTask());
         IAsyncDisposable? probe = null;
         try { probe = await actualProbe.WaitAsync(TimeSpan.FromSeconds(10)); Assert.NotNull(probe); }
         finally { if (probe is not null) await rig.Own(probe.DisposeAsync().AsTask()); }
@@ -60,3 +60,4 @@ public sealed partial class CloudflareStagingDelegationTests
     }
     private static T Field<T>(object original, string name) => (T)original.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(original)!;
 }
+

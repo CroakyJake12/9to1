@@ -1,4 +1,4 @@
-using System.Collections.Frozen;
+﻿using System.Collections.Frozen;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -118,8 +118,14 @@ internal sealed record StrataDeveloperArtifactCapture(StrataDeveloperArtifactSel
     private static bool Strings(IReadOnlyList<string>? values) => values is { Count: <= 128 } &&
         values.All(value => value is { Length: > 0 and <= 256 } && !value.Any(char.IsControl)) && values.Distinct(StringComparer.Ordinal).Count() == values.Count;
     private static bool Sha(string? value) => value is { Length: 64 } && value.All(Uri.IsHexDigit);
-    private static bool Root(string? value) => value is { Length: > 1 and <= 4096 } && Path.IsPathFullyQualified(value) &&
-        value == Path.TrimEndingDirectorySeparator(Path.GetFullPath(value)) && !value.Any(char.IsControl);
+    private static bool Root(string? value) => value is { Length: > 1 and <= 4096 } && !value.Any(char.IsControl) &&
+        (Path.IsPathFullyQualified(value) ? value == Path.TrimEndingDirectorySeparator(Path.GetFullPath(value)) : IsCanonicalPosixRoot(value));
+    // Developer artifact roots name the actual protected installation on the Linux runtime host; they
+    // must not be re-canonicalised through the reviewing host platform, which would accept a foreign drive root.
+    private static bool IsCanonicalPosixRoot(string value) => value[0] == '/' && !value.Contains('\\') && !value.EndsWith('/') &&
+        value.Split('/').Skip(1).All(segment => segment is not ("" or "." or ".."));
     private static bool File(StrataInstalledFile file) => file.RelativeName is { Length: > 0 and <= 255 } && file.RelativeName is not ("." or "..") &&
         file.RelativeName.IndexOfAny(['/', '\\', '\0']) < 0 && file.Length is > 0 and <= 64L * 1024 * 1024 * 1024 && Sha(file.Sha256);
 }
+
+

@@ -122,10 +122,10 @@ public sealed class WorkspaceChangeSetService(IWorkspaceToolService tools)
         {
             cancellationToken.ThrowIfCancellationRequested();
             var resolved = tools.ResolveWorkspacePath(workspaceRoot, entry.Path);
-            if (Directory.Exists(resolved)) throw new InvalidOperationException($"Change-set target '{entry.Path}' is a directory.");
+            if (EntryExists(workspaceRoot, entry.Path, resolved, directory: true)) throw new InvalidOperationException($"Change-set target '{entry.Path}' is a directory.");
 
             string before;
-            var existed = File.Exists(resolved);
+            var existed = EntryExists(workspaceRoot, entry.Path, resolved, directory: false);
             if (existed)
             {
                 before = await tools.ReadTextAsync(workspaceRoot, entry.Path, cancellationToken).ConfigureAwait(false);
@@ -150,6 +150,18 @@ public sealed class WorkspaceChangeSetService(IWorkspaceToolService tools)
     }
 
     /// <summary>
+    /// Answers whether a workspace entry exists using the provider that owns the store when that provider can
+    /// answer, so a non-physical provider's content and its existence answer cannot disagree. Providers without
+    /// the capability keep the engine's existing platform check.
+    /// </summary>
+    private bool EntryExists(string workspaceRoot, string relativePath, string resolvedPath, bool directory)
+    {
+        if (tools is IWorkspaceFileExistenceSource source)
+            return directory ? source.DirectoryExists(workspaceRoot, relativePath) : source.FileExists(workspaceRoot, relativePath);
+        return directory ? Directory.Exists(resolvedPath) : File.Exists(resolvedPath);
+    }
+
+    /// <summary>
     /// Performs roll back asynchronously so I/O does not block the caller's thread.
     /// </summary>
     private async Task RollBackAsync(string workspaceRoot, IReadOnlyList<PreparedChange> applied)
@@ -164,7 +176,7 @@ public sealed class WorkspaceChangeSetService(IWorkspaceToolService tools)
                     await tools.WriteTextAtomicAsync(workspaceRoot, item.Entry.Path, item.Before, CancellationToken.None).ConfigureAwait(false);
                 else if (tools is IWorkspaceOriginalRollbackService original)
                     await original.DeleteOriginalCreatedFileAsync(workspaceRoot, item.Entry.Path, CancellationToken.None).ConfigureAwait(false);
-                else if (File.Exists(item.ResolvedPath))
+                else if (EntryExists(workspaceRoot, item.Entry.Path, item.ResolvedPath, directory: false))
                     File.Delete(item.ResolvedPath);
             }
             catch (Exception exception)

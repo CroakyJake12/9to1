@@ -10,5 +10,9 @@
     <ProjectReference Include="../../../Write/Scene/Haven.WriteBrowser.Scene.csproj" />
     <Compile Include="PresentRetainedSceneControl.cs" />
     <Compile Include="$(PresentOwnerRoot)/Haven.Desktop/Views/Pages/Present/PresentSlideCanvas.cs;$(PresentOwnerRoot)/Haven.Desktop/Views/Pages/Present/PresentSlideCanvas.Structured.cs;$(PresentOwnerRoot)/Haven.Desktop/Views/Pages/Present/PresentSlideCanvas.TextEditing.cs;$(PresentOwnerRoot)/Haven.Desktop/Views/Pages/Present/PresentSlideCanvas.DirectManipulation.cs" Link="Owner/%(Filename)%(Extension)" />
+    <!-- The browser surface transfers real PowerPoint files, so it compiles the
+         owner's own .pptx exporter, importer, package codec and app paths rather
+         than growing a second implementation of the format. -->
+    <Compile Include="$(PresentOwnerRoot)/Haven.Infrastructure/Persistence/FileSystem/PresentPptxExportService.cs;$(PresentOwnerRoot)/Haven.Infrastructure/Persistence/FileSystem/PresentPptxImportService.cs;$(PresentOwnerRoot)/Haven.Infrastructure/Persistence/FileSystem/PresentPackageCodec.cs;$(PresentOwnerRoot)/Haven.Infrastructure/Lifecycle/AppPaths.cs" Link="Owner/%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

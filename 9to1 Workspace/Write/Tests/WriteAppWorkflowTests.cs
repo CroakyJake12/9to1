@@ -110,9 +110,62 @@ public sealed class WriteAppWorkflowTests
         Assert.True(await host.TrySaveBeforeCloseAsync());
     }
 
+    [AvaloniaFact]
+    public async Task Print_hands_the_open_document_to_the_owner_print_service()
+    {
+        using var paths = new TemporaryWritePaths();
+        var services = new DocumentServices(paths);
+        var document = NotesDocument.Create("Ready for print");
+        await services.Repository.SaveAsync(document, "Seed original identity", default);
+        var formats = new RecordingFormats(services.Formats);
+
+        await using (var host = WriteAppHost.Create(services.Repository, formats, document.Id))
+        {
+            await host.InitializeAsync();
+            await host.PrintAsync();
+
+            var printed = Assert.Single(formats.Printed);
+            Assert.Equal(document.Id, printed.Id);
+            Assert.Equal(document.Title, printed.Title);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Print_without_an_open_document_fails_before_reaching_the_print_service()
+    {
+        using var paths = new TemporaryWritePaths();
+        var services = new DocumentServices(paths);
+        var formats = new RecordingFormats(services.Formats);
+
+        await using (var host = WriteAppHost.Create(services.Repository, formats))
+        {
+            await host.InitializeAsync();
+            Assert.Null(host.Document);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() => host.PrintAsync());
+        }
+        Assert.Empty(formats.Printed);
+    }
+
     private static Input Title(WriteAppHost host) => Assert.Single(
         Assert.IsType<HavenSceneControl>(host.Page.Content).Root!.DescendantsAndSelf().OfType<Input>(),
         element => element.Name == "Write.Word.Title");
+
+    private sealed class RecordingFormats(INotesImportExportService inner) : INotesImportExportService
+    {
+        public List<NotesDocument> Printed { get; } = [];
+        public IReadOnlyList<string> ImportExtensions => inner.ImportExtensions;
+        public IReadOnlyList<string> ExportExtensions => inner.ExportExtensions;
+        public Task<NotesDocument> ImportAsync(string sourcePath, CancellationToken cancellationToken) =>
+            inner.ImportAsync(sourcePath, cancellationToken);
+        public Task<string> ExportAsync(NotesDocument document, string destinationPath, CancellationToken cancellationToken) =>
+            inner.ExportAsync(document, destinationPath, cancellationToken);
+        public Task PrintAsync(NotesDocument document, CancellationToken cancellationToken)
+        {
+            Printed.Add(document);
+            return Task.CompletedTask;
+        }
+    }
 
     private sealed class DocumentServices
     {

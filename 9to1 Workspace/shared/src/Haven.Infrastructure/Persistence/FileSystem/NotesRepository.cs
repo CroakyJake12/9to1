@@ -1,4 +1,4 @@
-/*
+﻿/*
  * FILE DOCUMENTATION
  * Where: src/Haven.Infrastructure/NotesRepository.cs, in the Infrastructure layer, where persistence, providers, Windows integration, and external I/O are implemented.
  * What: This file owns NotesRepository, NotesVersionManifest, NotesAttachmentStore. Read the type and member comments below as a map of each responsibility.
@@ -49,6 +49,11 @@ public sealed class NotesRepository(
     /// Stores trash locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
     private readonly string _trash = Path.Combine(paths.DataDirectory, "Notes", "Trash");
+    /// <summary>
+    /// Holds the migration path registered by the managed wrapper so a legacy current is read
+    /// through a supported schema migration instead of being refused as corrupt data.
+    /// </summary>
+    private INotesDocumentMigrator? _migrator;
 
     // Never replace or delete this file: all instances and processes must lock the same
     // physical object, including while a document directory is moved to recoverable trash.
@@ -478,6 +483,28 @@ public sealed class NotesRepository(
     }
 
     /// <summary>
+    /// Registers the migration path owned by the managed wrapper so this repository can admit a
+    /// legacy current instead of refusing the exact bytes it observed.
+    /// </summary>
+    internal void RegisterMigrationPath(INotesDocumentMigrator migrator)
+    {
+        ArgumentNullException.ThrowIfNull(migrator);
+        _migrator = migrator;
+    }
+
+    /// <summary>
+    /// Returns the effective document for an observed file. A valid current is returned unchanged;
+    /// a legacy schema is admitted only through the registered migration path, never by relaxing validation.
+    /// </summary>
+    private NotesDocument? MigrateObserved(NotesDocument document, NotesValidationResult validation)
+    {
+        if (validation.IsValid) return document;
+        if (_migrator is null || document.SchemaVersion >= NotesDocument.CurrentSchemaVersion) return null;
+        var migrated = _migrator.Migrate(document, document.SchemaVersion);
+        return validator.Validate(migrated.Document).IsValid ? migrated.Document : null;
+    }
+
+    /// <summary>
     /// Performs read and validate asynchronously so I/O does not block the caller's thread.
     /// </summary>
     private async Task<NotesDocument> ReadAndValidateAsync(string path, Guid expectedId, CancellationToken cancellationToken,
@@ -489,8 +516,10 @@ public sealed class NotesRepository(
         if (document.Id != expectedId)
             throw new InvalidDataException("The Notes file does not belong to its canonical document identity.");
         var validation = validator.Validate(document);
-        if (!validation.IsValid)
+        var validated = MigrateObserved(document, validation);
+        if (validated is null)
             throw new InvalidDataException("The Notes document failed validation: " + string.Join(" | ", validation.Issues.Where(issue => issue.IsError).Take(8).Select(issue => issue.Path + ": " + issue.Message)));
+        document = validated;
         if (applyPendingRecovery)
         {
             var pending = await ReadPendingRecoveryAsync(expectedId, cancellationToken).ConfigureAwait(false);
@@ -788,7 +817,7 @@ public sealed class NotesRepository(
             var intent = await JsonSerializer.DeserializeAsync<NotesPublicationIntent>(stream, JsonOptions, token).ConfigureAwait(false);
             if (intent is null || intent.SchemaVersion != 1 || intent.OperationId == Guid.Empty || intent.DocumentId != id ||
                 id == Guid.Empty || intent.SavedAt == default || intent.Intended is null || intent.Prior is null ||
-                !ValidBinding(intent.Intended, id, allowAbsent: false) || !ValidBinding(intent.Prior, id, allowAbsent: true) ||
+                !ValidBinding(intent.Intended, id, allowAbsent: false) || !ValidBinding(intent.Prior, id, allowAbsent: true, allowPreCanonical: true) ||
                 intent.Intended.DocumentVersion != checked(intent.Prior.DocumentVersion + 1) ||
                 intent.TemporaryFile != "current.haven-notes.json.tmp-" + intent.OperationId.ToString("N") ||
                 intent.BackupFile != "backup.haven-notes.json")
@@ -800,9 +829,11 @@ public sealed class NotesRepository(
         catch (Exception error) when (error is not PendingRecoveryException && error is IOException or UnauthorizedAccessException or JsonException or InvalidDataException or OverflowException)
         { throw new PendingRecoveryException("The pending Notes publication intent could not be verified and was preserved.", error); }
     }
-    private static bool ValidBinding(NotesStateBinding binding, Guid id, bool allowAbsent) => binding.Absent
+    // A legacy current has no canonical revision yet, so the exact bytes preserved as the prior state
+    // can legitimately carry version 0. Only the prior side of a journal may admit that state.
+    private static bool ValidBinding(NotesStateBinding binding, Guid id, bool allowAbsent, bool allowPreCanonical = false) => binding.Absent
         ? allowAbsent && binding.DocumentId == Guid.Empty && binding.DocumentVersion == 0 && binding.SizeBytes == 0 && binding.Sha256 == string.Empty
-        : binding.DocumentId == id && binding.DocumentVersion > 0 && binding.SizeBytes > 0 && binding.Sha256 is { Length: 64 } &&
+        : binding.DocumentId == id && (binding.DocumentVersion > 0 || allowPreCanonical) && binding.SizeBytes > 0 && binding.Sha256 is { Length: 64 } &&
             binding.Sha256.All(value => value is >= '0' and <= '9' or >= 'a' and <= 'f');
     internal async Task<PendingNotesIntegrity?> ReadPendingIntegrityAsync(Guid id, NotesPublicationIntent? intent, CancellationToken token)
     {
@@ -856,7 +887,9 @@ public sealed class NotesRepository(
             ?? throw new InvalidDataException("The Notes document was empty.");
         if (document.Id != id) throw new InvalidDataException("The Notes file does not belong to its canonical document identity.");
         var validation = validator.Validate(document);
-        if (!validation.IsValid) throw new InvalidDataException("The observed Notes document failed validation.");
+        var validated = MigrateObserved(document, validation);
+        if (validated is null) throw new InvalidDataException("The observed Notes document failed validation.");
+        document = validated;
         stream.Position = 0;
         var hash = Convert.ToHexString(await SHA256.HashDataAsync(stream, token).ConfigureAwait(false)).ToLowerInvariant();
         return new(document, hash, stream.Length);
@@ -1004,7 +1037,7 @@ public sealed class NotesRepository(
     {
         var start = Math.Max(0, offset - 70);
         var end = Math.Min(text.Length, offset + length + 110);
-        return (start > 0 ? "…" : string.Empty) + text[start..end].ReplaceLineEndings(" ") + (end < text.Length ? "…" : string.Empty);
+        return (start > 0 ? "â€¦" : string.Empty) + text[start..end].ReplaceLineEndings(" ") + (end < text.Length ? "â€¦" : string.Empty);
     }
 
     /// <summary>

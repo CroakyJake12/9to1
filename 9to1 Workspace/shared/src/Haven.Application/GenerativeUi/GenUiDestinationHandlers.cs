@@ -13,16 +13,39 @@ public sealed class GenUiAppEventHandler : IGenUiEventHandler
 {
     private readonly ConcurrentDictionary<string, Func<GenUiEvent, GenUiActionBinding, CancellationToken, Task<GenUiActionResult>>> _handlers =
         new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, HashSet<string>> _declaredActions =
+        new(StringComparer.OrdinalIgnoreCase);
 
     public GenUiRouteKind RouteKind => GenUiRouteKind.App;
 
     public bool CanHandle(string targetKey) => _handlers.ContainsKey(targetKey);
+
+    public bool DeclaresAction(string targetKey, string actionId) =>
+        _declaredActions.TryGetValue(targetKey, out var declared) && declared.Contains(actionId);
 
     public void Register(string appKey, Func<GenUiEvent, GenUiActionBinding, CancellationToken, Task<GenUiActionResult>> handler)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(appKey);
         ArgumentNullException.ThrowIfNull(handler);
         _handlers[appKey] = handler;
+    }
+
+    /// <summary>Registers an app handler together with the typed action ids that app owns.</summary>
+    public void Register(
+        string appKey,
+        Func<GenUiEvent, GenUiActionBinding, CancellationToken, Task<GenUiActionResult>> handler,
+        IEnumerable<string> actionIds)
+    {
+        Register(appKey, handler);
+        ArgumentException.ThrowIfNullOrWhiteSpace(appKey);
+        ArgumentNullException.ThrowIfNull(actionIds);
+        var declared = _declaredActions.GetOrAdd(appKey, _ => new HashSet<string>(StringComparer.Ordinal));
+        foreach (var actionId in actionIds)
+        {
+            if (string.IsNullOrWhiteSpace(actionId))
+                throw new ArgumentException("An app action id cannot be empty.", nameof(actionIds));
+            declared.Add(actionId);
+        }
     }
 
     public Task<GenUiActionResult> HandleAsync(GenUiEvent semanticEvent, GenUiActionBinding binding, CancellationToken cancellationToken)

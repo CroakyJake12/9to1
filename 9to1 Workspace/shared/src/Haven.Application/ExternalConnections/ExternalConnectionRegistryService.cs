@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Net;
 using Haven.Core;
 
@@ -23,7 +23,7 @@ public sealed class ExternalConnectionRegistryService(IExternalConnectionReposit
             ? new ExternalConnection(Guid.NewGuid(), "UEFN", "epic.uefn", ExternalConnectionKind.Mcp, "uefn", true, ExternalConnectionState.Connecting,
                 "Checking Unreal MCP...", JsonSerializer.Serialize(config), null, null, null, now, now)
             : existing with { IsEnabled = true, State = ExternalConnectionState.Connecting, Status = "Checking Unreal MCP...", ConfigurationJson = JsonSerializer.Serialize(config), UpdatedAt = now };
-        if (!await repository.CompareExchangeAsync(existing, candidate, cancellationToken).ConfigureAwait(false))
+        if (!await PublishAsync(existing, candidate, cancellationToken).ConfigureAwait(false))
             return await CurrentOrRemovedAsync(candidate, cancellationToken).ConfigureAwait(false);
         return await RefreshMcpAsync(candidate, cancellationToken).ConfigureAwait(false);
     }
@@ -34,7 +34,7 @@ public sealed class ExternalConnectionRegistryService(IExternalConnectionReposit
         var now = DateTimeOffset.UtcNow;
         var connection = new ExternalConnection(Guid.NewGuid(), name.Trim(), "mcp.custom", ExternalConnectionKind.Mcp, "custom-mcp", true, ExternalConnectionState.Connecting,
             "Connecting to MCP server...", JsonSerializer.Serialize(configuration), null, null, null, now, now);
-        if (!await repository.CompareExchangeAsync(null, connection, cancellationToken).ConfigureAwait(false))
+        if (!await PublishAsync(null, connection, cancellationToken).ConfigureAwait(false))
             return await CurrentOrRemovedAsync(connection, cancellationToken).ConfigureAwait(false);
         return await RefreshMcpAsync(connection, cancellationToken).ConfigureAwait(false);
     }
@@ -55,7 +55,7 @@ public sealed class ExternalConnectionRegistryService(IExternalConnectionReposit
             Status = "Checking MCP connection...",
             UpdatedAt = DateTimeOffset.UtcNow
         };
-        if (!await repository.CompareExchangeAsync(current, checking, cancellationToken).ConfigureAwait(false))
+        if (!await PublishAsync(current, checking, cancellationToken).ConfigureAwait(false))
             return await CurrentOrRemovedAsync(checking, cancellationToken).ConfigureAwait(false);
         ExternalConnection updated;
         try
@@ -79,7 +79,7 @@ public sealed class ExternalConnectionRegistryService(IExternalConnectionReposit
         catch (OperationCanceledException)
         {
             updated = checking with { State = ExternalConnectionState.Offline, Status = "The connection check was cancelled. Retry when ready.", UpdatedAt = DateTimeOffset.UtcNow };
-            try { await repository.CompareExchangeAsync(checking, updated, CancellationToken.None).ConfigureAwait(false); }
+            try { await PublishAsync(checking, updated, CancellationToken.None).ConfigureAwait(false); }
             catch { /* Preserve the original cancellation; a failed health publication is not success. */ }
             throw;
         }
@@ -89,8 +89,25 @@ public sealed class ExternalConnectionRegistryService(IExternalConnectionReposit
             updated = checking with { State = FailureState(ex), Status = message, UpdatedAt = DateTimeOffset.UtcNow };
         }
 
-        return await repository.CompareExchangeAsync(checking, updated, cancellationToken).ConfigureAwait(false)
+        return await PublishAsync(checking, updated, cancellationToken).ConfigureAwait(false)
             ? updated : await CurrentOrRemovedAsync(checking, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<bool> PublishAsync(ExternalConnection? expected, ExternalConnection replacement, CancellationToken cancellationToken)
+    {
+        if (repository.SupportsGuardedPublication)
+            return await repository.CompareExchangeAsync(expected, replacement, cancellationToken).ConfigureAwait(false);
+
+        var current = await repository.GetAsync(replacement.Id, cancellationToken).ConfigureAwait(false);
+        if (current is null)
+        {
+            if (expected is not null) return false;
+            await repository.UpsertAsync(replacement, cancellationToken).ConfigureAwait(false);
+            return true;
+        }
+        if (expected is not null && current != expected) return false;
+        await repository.UpsertAsync(replacement, cancellationToken).ConfigureAwait(false);
+        return true;
     }
 
     private async Task<ExternalConnection> CurrentOrRemovedAsync(ExternalConnection attempted, CancellationToken cancellationToken) =>
@@ -166,3 +183,6 @@ public sealed class ExternalConnectionRegistryService(IExternalConnectionReposit
         return $"Connected - {Describe(discovery.Tools, "tool")}, {Describe(discovery.Resources, "resource")}, {Describe(discovery.Prompts, "prompt")}.";
     }
 }
+
+
+

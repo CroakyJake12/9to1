@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -207,7 +207,7 @@ public sealed partial class HomeCloudflareServiceOwner : ICanonicalResourceAcces
     private async Task RevalidateCallerScopedBodyAsync(CloudflareSavedService service, Action<Action>? callback, CancellationToken token)
     {
         if (!_services.TryGetValue(service, out var original)) throw new UnauthorizedAccessException("SAME Home-issued saved Cloudflare service required.");
-        original.Stages.BindOriginalCallerCallback(OriginalHostCaller(callback)); AttachOriginalHostSources(original.Stages);
+        if (callback is not null) original.Stages.BindOriginalCallerCallback(OriginalHostCaller(callback)); AttachOriginalHostSources(original.Stages);
         await original.Stages.RunToOriginalSettlementAsync(async () =>
         {
             var current = await ReadCaptureAsync(original.Stages, token).ConfigureAwait(false);
@@ -331,3 +331,4 @@ public sealed partial class HomeCloudflareServiceOwner : ICanonicalResourceAcces
         }
     }
 }
+
