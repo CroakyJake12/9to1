@@ -136,7 +136,7 @@ public sealed class GenerateCuiResourcesTaskTests : IDisposable
 
         public void RemoveMetadata(string metadataName) => _metadata.Remove(metadataName);
 
-        public Hashtable CloneCustomMetadata() => new(_metadata);
+        public IDictionary CloneCustomMetadata() => new Hashtable(_metadata);
 
         public void CopyMetadataTo(ITaskItem destinationItem)
         {
