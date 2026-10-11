@@ -23,6 +23,12 @@ Configure `coordinator_url` only after the authenticated Worker is deployed and 
 
 ## Task queue
 
+The dashboard separates development from independent acceptance. Each part uses 0.8 × development percentage + 0.2 × acceptance percentage. Set an absolute private progress_file in the local configuration; its ledger contains parts with part, development and acceptance count objects (completed, total), plus scope/basis notes. Missing or invalid counts display as unmeasured. The current local ledger is a coarse milestone estimate from preserved source/interface coverage and scoped recorded build/journey evidence; exhaustive V2 feature coverage remains unfinished. It does not grant RCVP or FULL acceptance.
+
+For Windows builds, the initializer accepts an optional seventh argument for a short worktree root. Keep generated checkout paths short enough for vendored project paths; do not relocate an active worktree. Current installations can update the private worktrees field, which is applied only when no active/recovery writer exists.
+
+Tasks with local_only set to true preserve private source and finish at a review checkpoint without committing or publishing it. An implementation task with no source changes stays blocked unless explicitly declared verification_only. An independent per-command guard checks process identity and signed task/lease state; stopped-source recovery retains the ownership gate until reconciled. Actual controlled Windows parent-exit and changed-fence scenarios are covered by the guard tests. Physical restart, sleep and unattended scheduling require separate evidence.
+
 Enqueue a reviewed private task JSON with `node relayctl.mjs enqueue ABSOLUTE_CONFIG ABSOLUTE_TASK_JSON`. Fields: unique `id`, `objective`, `paths`, `source` (`sha` and `branch`), nonempty `tests` (`executable`, `args`, optional timeout and evidence kind), optional `part`, `priority`, `lane`, `executor` and indexed `requirements`. Paths must be repository-relative. The runner selects the lowest delivery part then highest priority. Tests must use a configured executable allowlist. Existing dirty source and ownership conflicts must be reconciled and remotely preserved before being offered to the relay; a clean historic main snapshot is not a substitute.
 
 ## Cloud setup and limitation

@@ -4,7 +4,7 @@ import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
-const [supplied,destination,repository,powershell,codex,opencode]=process.argv.slice(2);if(!opencode)throw new Error('Supply package folder, private destination, isolated repository and executable paths');
+const [supplied,destination,repository,powershell,codex,opencode,worktreeRoot]=process.argv.slice(2);if(!opencode)throw new Error('Supply package folder, private destination, isolated repository and executable paths; optionally a short worktree root');
 await mkdir(destination,{recursive:true});
 const configPath=path.join(destination,'relay.private.json');
 try{await readFile(configPath);throw new Error('Private config already exists; refusing overwrite');}catch(e){if(e.code!=='ENOENT')throw e;}
@@ -13,7 +13,7 @@ const launcher=await readFile(path.join(supplied,'Launch-Strata.ps1'),'utf8');co
 const keys=generateKeyPairSync('rsa',{modulusLength:2048});const keyPath=path.join(destination,'local-signing.pem');await writeFile(keyPath,keys.privateKey.export({type:'pkcs8',format:'pem'}),{mode:0o600});
 const publicKey=keys.publicKey.export({type:'spki',format:'der'}).toString('base64');await writeFile(path.join(destination,'public-key.json'),JSON.stringify({local:publicKey}));
 const c={actor:'local',repository,remote:'origin',dashboard_port:8794,coordinator_url:'',cloud_environment_id:'',
-  signing_key:keyPath,state_db:path.join(destination,'runner.db'),logs:path.join(destination,'logs'),checkpoints:path.join(destination,'checkpoints'),worktrees:path.join(destination,'worktrees'),
+  signing_key:keyPath,state_db:path.join(destination,'runner.db'),logs:path.join(destination,'logs'),checkpoints:path.join(destination,'checkpoints'),worktrees:worktreeRoot?path.resolve(worktreeRoot):path.join(destination,'worktrees'),
   strata_root:value('strataRoot'),strata_data:value('strataData'),original_repository:value('strataRepo'),original_outputs:value('strataOutputs'),supplied_launcher:path.join(destination,'Launch-Strata.ps1'),
   powershell,codex,opencode,opencode_config:path.join(destination,'opencode.private.json'),
   plugin_allowlist:['google-drive@openai-curated-remote','github@openai-curated-remote','computer-use@openai-bundled','unified-computer-use@openai-bundled','app-6a99ceead2c481919fb44845267235c4@openai-curated-remote'],

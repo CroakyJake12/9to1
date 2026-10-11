@@ -8,6 +8,8 @@ import { fileURLToPath } from 'node:url';
 import { selectShift } from './policy.mjs';
 import { request } from './client.mjs';
 import { createTaskWorktree, preserve, publish, git, sha } from './git.mjs';
+import {processIdentity} from './worker-guard.mjs';
+import {deliveryProgress} from './progress.mjs';
 
 const here=path.dirname(fileURLToPath(import.meta.url));
 export class LocalRunner {
@@ -30,6 +32,10 @@ export class LocalRunner {
     this.config.cloud_commissioning=latest.cloud_commissioning;
     this.config.pc_wake_enabled=latest.pc_wake_enabled;
     this.config.coordinator_url=latest.coordinator_url;
+    if(!this.active&&!this.recovery)this.config.worktrees=latest.worktrees;
+    this.config.progress_file=latest.progress_file;
+    this.progress=null;this.progressError=null;
+    if(this.config.progress_file){try{this.progress=JSON.parse(await readFile(this.config.progress_file,'utf8'));}catch(e){this.progressError='Progress ledger unavailable: '+e.message;}}
   }
   async health(){
     try{const r=await fetch('http://127.0.0.1:8081/health',{signal:AbortSignal.timeout(3000)});const h=await r.json();return {...h,ready:r.ok&&h.loaded===true&&/iq2_xs/i.test(h.model??'')&&Number(h.max_context)===524288};}
@@ -41,7 +47,7 @@ export class LocalRunner {
     active_shift:this.remote?.lease?.worker??'NONE',active_worker:this.active?.worker??(cloudTask?'Codex Cloud (owned task)':'NONE'),strata:this.strata,
     opencode:this.active?.worker==='OpenCode'?'RUNNING':'STOPPED',cloud:{...cloud,status:cloudTask?'TASK_OWNED':cloud.status,owned_task:cloudTask?.id??null},
     tasks:this.remote?.tasks??[],latest_handover:this.remote?.handovers?.at(-1)??null,
-    checkpoint:this.get('checkpoint'),recovery:this.recovery,error:this.error,unattended_switching:'NOT_VERIFIED',
+    progress:deliveryProgress(this.progress,this.remote?.tasks??[]),progress_error:this.progressError,checkpoint:this.get('checkpoint'),recovery:this.recovery,error:this.error,unattended_switching:'NOT_VERIFIED',
     events:this.db.prepare('SELECT at,event,value FROM events ORDER BY id DESC LIMIT 30').all().map(x=>({...x,value:JSON.parse(x.value)}))};}
   async control(action){
     if(!['home','away','pause','resume','checkpoint','handover'].includes(action))throw new Error('Unsupported control');
@@ -90,24 +96,43 @@ export class LocalRunner {
       if(this.active){this.child=child;this.active.pid=child.pid;this.put('active',this.active);}
       let overflow=false;const bound=()=>{if(!overflow){overflow=true;timedOut=true;void this.stopOwnedChild(child).catch(e=>{this.error=e.message;});}};
       child.stdout.on('data',b=>{stdout+=b;if(stdout.length>8*1024*1024){stdout=stdout.slice(0,8*1024*1024);bound();}});child.stderr.on('data',b=>{stderr+=b;if(stderr.length>8*1024*1024){stderr=stderr.slice(0,8*1024*1024);bound();}});
+      let guard=null;const guarded=this.active&&this.config.worker_guard!==false&&(label.endsWith('-task')||label==='test');
+      const guardReady=guarded?this.attachGuard(child,cwd,timeout,label).then(g=>{guard=g;}).catch(async e=>{timedOut=true;this.error='Independent worker guard failed: '+e.message;await this.stopOwnedChild(child);}):Promise.resolve();
       const timer=setTimeout(()=>{timedOut=true;void this.stopOwnedChild(child).catch(e=>{this.error=e.message;});},timeout);child.once('error',e=>{clearTimeout(timer);reject(e);});
-      child.once('close',async(code,signal)=>{clearTimeout(timer);if(this.child===child)this.child=null;await writeFile(log,JSON.stringify({executable,args,code,signal,timedOut},null,2)+'\n'+stdout+'\n'+stderr);resolve({code:timedOut?-1:code,stdout,stderr,log});});
+      child.once('close',async(code,signal)=>{clearTimeout(timer);await guardReady;if(guard?.connected)guard.send({action:'complete'});if(this.child===child)this.child=null;await writeFile(log,JSON.stringify({executable,args,code,signal,timedOut},null,2)+'\n'+stdout+'\n'+stderr);resolve({code:timedOut?-1:code,stdout,stderr,log});});
     });
+  }
+  async attachGuard(child,root,timeout,label){
+    const identity=await processIdentity(child.pid,this.config.powershell);if(!identity&&(child.exitCode!==null||child.signalCode!==null))return null;if(!identity||identity.parent!==process.pid)throw new Error('Owned child identity unavailable');
+    this.active.identity=identity;this.put('active',this.active);
+    const parentIdentity=await processIdentity(process.pid,this.config.powershell);if(!parentIdentity)throw new Error('Parent runner identity unavailable');
+    const id=randomUUID(),planPath=path.join(this.config.logs,id+'-guard-plan.json'),receipt=path.join(this.config.logs,id+'-guard-receipt.json');
+    const config={actor:this.config.actor,coordinator_url:this.config.coordinator_url,signing_key:this.config.signing_key,key_format:this.config.key_format,powershell:this.config.powershell};
+    await writeFile(planPath,JSON.stringify({id,config,parent_pid:process.pid,parent_identity:parentIdentity,child_pid:child.pid,identity,root,checkpoints:this.config.checkpoints,receipt,deadline:Date.now()+timeout,fence:this.active.fence,task_id:this.active.task_id,label}));
+    const guard=spawn(process.execPath,[path.join(here,'worker-guard.mjs'),planPath],{windowsHide:true,shell:false,stdio:['ignore','ignore','ignore','ipc']});
+    await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Guard readiness timeout')),10000);guard.once('message',m=>{clearTimeout(timer);if(m?.ready&&m.child_pid===child.pid)resolve();else reject(new Error('Guard readiness mismatch'));});guard.once('error',e=>{clearTimeout(timer);reject(e);});guard.once('exit',code=>{clearTimeout(timer);reject(new Error('Guard exited before readiness: '+code));});});this.event('INDEPENDENT_WORKER_GUARD_READY',{pid:guard.pid,child_pid:child.pid,task:this.active.task_id});return guard;
   }
   async stopOwnedChild(child){
     if(child.exitCode!==null||child.signalCode!==null)return;
-    if(this.active){this.put('checkpoint',await preserve(this.active.root,this.config.checkpoints,randomUUID()));this.recovery={...this.active};this.put('active',this.recovery);}
+    const owned=this.active;
     if(child.exitCode!==null||child.signalCode!==null)return;
     if(process.platform==='win32'){
       const {execFile}=await import('node:child_process');const {promisify}=await import('node:util');
       await promisify(execFile)('taskkill.exe',['/PID',String(child.pid),'/T','/F'],{windowsHide:true});
     }else child.kill('SIGTERM');
-    this.event('OWNED_WORKER_STOPPED',{pid:child.pid,reason:'Lease loss or bounded timeout; source preserved first'});
+    if(owned){this.put('checkpoint',await preserve(owned.root,this.config.checkpoints,randomUUID()));this.recovery={...owned};this.put('active',this.recovery);}
+    this.event('OWNED_WORKER_STOPPED',{pid:child.pid,reason:'Lease loss or bounded timeout; ownership retained for checkpoint recovery'});
   }
   async renew(){
     if(!this.remote?.lease||this.remote.lease.worker!=='local')return;
-    try{await this.refreshConfiguration();const planned=selectShift(this.config.schedule,{...this.presence,healthy:true});await request(this.config,'presence',{...this.presence,healthy:true,local_permitted:planned.shift==='local',local_until:planned.shift==='local'?Date.now()+30000:0});await request(this.config,'heartbeat',{fence:this.remote.lease.fence});}
-    catch(e){this.draining=true;this.error='Lease heartbeat failed: '+e.message;this.event('LEASE_LOST',{error:e.message});if(this.child)await this.stopOwnedChild(this.child);}
+    const fence=this.remote.lease.fence;
+    try{await this.refreshConfiguration();const planned=selectShift(this.config.schedule,{...this.presence,healthy:true});const current=await request(this.config,'presence',{...this.presence,healthy:true,local_permitted:planned.shift==='local',local_until:planned.shift==='local'?Date.now()+30000:0});if(this.acceptAcknowledgedTransfer(current,fence))return;if(current.lease?.worker!=='local'||current.lease.fence!==fence)throw new Error('Local ownership changed without a drained acknowledged handover');this.remote=await request(this.config,'heartbeat',{fence});}
+    catch(e){try{const current=await request(this.config,'state');if(this.active?.fence!==fence&&current.lease?.worker==='local'&&current.lease.fence===this.active?.fence&&current.lease.expires_at>Date.now()){this.remote=current;return;}if(this.acceptAcknowledgedTransfer(current,fence))return;}catch{}this.draining=true;this.error='Lease heartbeat failed: '+e.message;this.event('LEASE_LOST',{error:e.message});if(this.child)await this.stopOwnedChild(this.child);}
+  }
+  acceptAcknowledgedTransfer(current,fence){
+    if(this.active||this.recovery||current.lease?.worker==='local'&&current.lease.fence===fence)return false;
+    const h=current.handovers.find(h=>h.from==='local'&&h.to==='cloud'&&h.fence===fence&&h.status==='ACKNOWLEDGED'&&h.ack?.worker==='cloud'&&h.ack.sha===h.source.sha&&h.ack.revision===h.revision);
+    if(!h)return false;this.remote=current;this.draining=selectShift(this.config.schedule,{...this.presence,healthy:true}).shift!=='local';this.error=null;this.event('CUSTODY_TRANSFER_CONFIRMED',{handover:h.id,fence});return true;
   }
   async startTask(task,fence){
     this.remote=await request(this.config,'claim',{fence,task_id:task.id});
@@ -122,7 +147,7 @@ export class LocalRunner {
       if(task.executor==='strata'){
         const inventory=await this.command(this.config.codex,['plugin','list','--json'],worktree.root,30000,'plugin-inventory');if(inventory.code!==0)throw new Error('Codex plugin inventory unavailable');
         const installed=JSON.parse(inventory.stdout).installed;
-        const args=['exec','--profile','strata','--sandbox','workspace-write','-C',worktree.root,'-c','model_context_window=524288','-c','model_auto_compact_token_limit=450560','-c','apps._default.enabled=false','-c','apps.google_drive.enabled=true','-c','apps.github.enabled=true'];
+        const args=['exec','--sandbox','workspace-write','-C',worktree.root,'-c','model="qwen3.8-flash-next-iq2_xs"','-c','model_provider="strata"','-c','model_context_window=524288','-c','model_auto_compact_token_limit=450560','-c','apps._default.enabled=false','-c','apps.google_drive.enabled=true','-c','apps.github.enabled=true'];
         for(const item of installed)args.push('-c',`plugins."${item.pluginId}".enabled=${this.config.plugin_allowlist.includes(item.pluginId)}`);
         args.push(prompt);result=await this.command(this.config.codex,args,worktree.root,task.timeout_ms??1800000,'strata-task');
       }else{
@@ -137,6 +162,11 @@ export class LocalRunner {
         evidence.push({kind:test.kind??'TARGETED_TEST',command:[test.executable,...test.args],exit_code:r.code,status:r.code===0?'PASS':'FAIL',log:r.log});if(r.code!==0)throw new Error('Applicable verification failed; source is preserved');
       }
       await request(this.config,'heartbeat',{fence});
+      if(task.local_only===true){
+        const {reviewPaths,dirty}=await import('./git.mjs');const changes=await dirty(worktree.root);reviewPaths(changes.paths,task.paths);
+        if(!changes.paths.length&&!task.verification_only)throw new Error('No implementation source changes; private task completion is unverified');
+        status='CHECKPOINT';await request(this.config,'result',{fence,task_id:task.id,status,evidence,acceptance:'BUILD_AND_TARGETED_TESTS',result:{checkpoint:checkpoint.directory,base:worktree.base,private_source:true,remaining:['Review preserved application source before any publication or cloud transfer'],blockers:[],independent_acceptance:'NOT_RUN',RCVP:'NOT_RUN',FULL:'NOT_RUN'}});return;
+      }
       const source=await publish(this.config,worktree,task);status='COMPLETED';
       await request(this.config,'result',{fence,task_id:task.id,status,evidence,acceptance:'BUILD_AND_TARGETED_TESTS',result:{source,remaining:[],blockers:[],independent_acceptance:'NOT_RUN',RCVP:'NOT_RUN',FULL:'NOT_RUN'}});
     }catch(e){
@@ -151,7 +181,9 @@ export class LocalRunner {
       await this.refreshConfiguration();
       this.strata=await this.health();const planned=selectShift(this.config.schedule,{...this.presence,healthy:true});
       if(!this.config.coordinator_url){this.error='Shared coordinator not configured; development cannot start';return;}
-      this.remote=await request(this.config,'presence',{...this.presence,healthy:true,local_permitted:planned.shift==='local',local_until:planned.shift==='local'?Date.now()+30000:0});
+      const previousFence=this.remote?.lease?.worker==='local'?this.remote.lease.fence:null;
+      const observed=await request(this.config,'presence',{...this.presence,healthy:true,local_permitted:planned.shift==='local',local_until:planned.shift==='local'?Date.now()+30000:0});
+      if(previousFence!==null)this.acceptAcknowledgedTransfer(observed,previousFence);this.remote=observed;
       const lease=this.remote.lease;
       if(lease?.worker==='local')this.remote=await request(this.config,'heartbeat',{fence:lease.fence});
       if(planned.shift!=='local'||this.presence.paused||this.recovery||this.draining||(this.remote.checkpoint_requested&&lease?.worker==='local')||this.remote.handovers.some(h=>h.status==='READY'&&h.from==='local')){
@@ -179,6 +211,7 @@ export class LocalRunner {
     finally{this.busy=false;}
   }
   async start(){
+    await this.recoverInterruptedWorker();
     const html=await readFile(path.join(here,'dashboard.html'),'utf8');
     this.server=createServer(async(req,res)=>{
       const host=`127.0.0.1:${this.config.dashboard_port}`;
@@ -197,6 +230,11 @@ export class LocalRunner {
     this.event('RUNNER_STARTED',{pid:process.pid});await this.syncWake();this.timer=setInterval(()=>void this.tick(),15000);this.heartbeatTimer=setInterval(()=>void this.renew().catch(e=>{this.error=e.message;}),30000);await this.tick();return this;
   }
   async stop(){this.draining=true;this.event('RUNNER_STOP_REQUESTED');if(this.active){this.put('checkpoint',await preserve(this.active.root,this.config.checkpoints,randomUUID()));throw new Error('Bounded worker still running; runner shutdown deferred');}clearInterval(this.timer);clearInterval(this.heartbeatTimer);await new Promise(r=>this.server.close(r));this.db.close();}
+  async recoverInterruptedWorker(){
+    if(!this.recovery?.pid)return null;const observed=await processIdentity(this.recovery.pid,this.config.powershell);
+    if(observed&&(!this.recovery.identity||observed.pid===this.recovery.identity.pid&&observed.parent===this.recovery.identity.parent&&observed.created===this.recovery.identity.created)){this.event('RECOVERY_WRITER_STILL_PRESENT',{task:this.recovery.task_id,pid:this.recovery.pid});return null;}
+    const checkpoint=await preserve(this.recovery.root,this.config.checkpoints,randomUUID());this.put('checkpoint',checkpoint);this.event('INTERRUPTED_WORKER_PRESERVED',{task:this.recovery.task_id,pid:this.recovery.pid,checkpoint:checkpoint.directory,writer_ended:true});return checkpoint;
+  }
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
   const configPath=process.argv[2];if(!configPath)throw new Error('Usage: node runner.mjs ABSOLUTE_PRIVATE_CONFIG');
