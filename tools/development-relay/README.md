@@ -19,7 +19,7 @@ Run `initialize.mjs` as the Windows user that will own the scheduled task. Suppl
 
 The supplied package defaults to Away. Home is an explicit availability control and cannot bypass forbidden hours. Date overrides and weekday rules are configuration, not source edits. An offline/expired presence heartbeat chooses cloud policy, while unreleased source remains quarantined. Pause stops new work; it does not falsely release unhanded source. No automatic/geolocation presence detector is enabled.
 
-Configure `coordinator_url` only after the authenticated Worker is deployed and checked. Apply a minimal private schedule with `node relayctl.mjs policy ABSOLUTE_CONFIG`. Provision distinct public signing identities in the Worker; never transmit private keys through chat or public GitHub.
+Configure `coordinator_url` only after the authenticated Worker is deployed and checked. Production evaluates the private timetable locally and sends only a signed, short-lived eligibility signal. The full timetable, class details and personal paths stay local. Cloud is the default when the PC is unavailable or that signal expires. The local launcher independently validates the private schedule before starting. `relayctl policy` is an optional generic commissioning fixture, not required for production; do not upload the private timetable. Provision distinct public signing identities in the Worker; never transmit private keys through chat or public GitHub.
 
 ## Task queue
 

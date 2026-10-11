@@ -47,7 +47,9 @@ export function transition(s, action, p, actor, now) {
     return s.lease;
   };
   const expected = () => {
-    if (!s.policy) refuse('Private policy not configured');
+    // Production sends only the evaluated, short-lived local eligibility signal.
+    // The detailed timetable remains on the PC. Hosted work defaults to cloud.
+    if (!s.policy) return s.presence.home && !s.presence.paused && s.presence.healthy && now-s.presence.seen_at<90000 && s.presence.local_permitted && s.presence.local_until>now ? 'local' : 'cloud';
     return selectShift(s.policy, { ...s.presence, healthy: s.presence.healthy && now - s.presence.seen_at < 90000 }, new Date(now)).shift;
   };
   if (action === 'policy') {
@@ -56,6 +58,10 @@ export function transition(s, action, p, actor, now) {
   } else if (action === 'presence') {
     if (actor !== 'local') refuse('Local operator required');
     for (const key of ['home','paused','healthy']) if (typeof p[key] === 'boolean') s.presence[key] = p[key];
+    if (p.local_permitted !== undefined) {
+      if(typeof p.local_permitted!=='boolean'||!Number.isFinite(p.local_until)||p.local_until<0||p.local_until>now+90000)refuse('Invalid short-lived eligibility signal');
+      s.presence.local_permitted=p.local_permitted;s.presence.local_until=p.local_until;
+    }
     s.presence.seen_at = now; emit('PRESENCE', { home: s.presence.home, paused: s.presence.paused });
   } else if (action === 'acquire') {
     if (actor !== expected()) refuse('Requested worker is outside its permitted shift');

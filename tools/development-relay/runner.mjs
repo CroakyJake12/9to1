@@ -92,7 +92,7 @@ export class LocalRunner {
   }
   async renew(){
     if(!this.remote?.lease||this.remote.lease.worker!=='local')return;
-    try{await request(this.config,'heartbeat',{fence:this.remote.lease.fence});}
+    try{const planned=selectShift(this.config.schedule,{...this.presence,healthy:true});await request(this.config,'presence',{...this.presence,healthy:true,local_permitted:planned.shift==='local',local_until:planned.shift==='local'?Date.now()+30000:0});await request(this.config,'heartbeat',{fence:this.remote.lease.fence});}
     catch(e){this.draining=true;this.error='Lease heartbeat failed: '+e.message;this.event('LEASE_LOST',{error:e.message});if(this.child)await this.stopOwnedChild(this.child);}
   }
   async startTask(task,fence){
@@ -136,7 +136,7 @@ export class LocalRunner {
     try{
       this.strata=await this.health();const planned=selectShift(this.config.schedule,{...this.presence,healthy:true});
       if(!this.config.coordinator_url){this.error='Shared coordinator not configured; development cannot start';return;}
-      this.remote=await request(this.config,'presence',{...this.presence,healthy:true});
+      this.remote=await request(this.config,'presence',{...this.presence,healthy:true,local_permitted:planned.shift==='local',local_until:planned.shift==='local'?Date.now()+30000:0});
       const lease=this.remote.lease;
       if(lease?.worker==='local')this.remote=await request(this.config,'heartbeat',{fence:lease.fence});
       if(planned.shift!=='local'||this.presence.paused||this.recovery||this.draining||this.remote.checkpoint_requested){

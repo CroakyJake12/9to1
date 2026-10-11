@@ -11,7 +11,7 @@ else if(command==='policy')console.log(JSON.stringify({configured:!!(await reque
 else if(command==='enqueue'){const task=JSON.parse(await readFile(arg,'utf8'));const state=await request(c,'enqueue',{task});console.log(JSON.stringify({queued:state.tasks.find(t=>t.id===task.id).id}));}
 else if(command==='check-local'||command==='check-task'){
   const s=await request(c,'state');const at=Date.now();
-  const shift=selectShift(s.policy,{...s.presence,healthy:s.presence.healthy&&at-s.presence.seen_at<90000});
+  const shift=selectShift(c.schedule,{...s.presence,healthy:s.presence.healthy&&at-s.presence.seen_at<90000});
   if(shift.shift!=='local'||s.presence.paused||s.checkpoint_requested||s.lease?.worker!=='local'||s.lease.fence!==Number(arg)||s.lease.expires_at<=at)throw new Error('Local start denied by schedule, availability or exclusive lease');
   if(command==='check-task'&&!s.tasks.some(t=>t.id===arg2&&t.owner==='local'&&t.fence===Number(arg)&&t.status==='WORKING'))throw new Error('Task ownership not established');
   console.log('Local ownership and schedule validated');
