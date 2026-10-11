@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "9to1-development-relay",
+  "main": "coordinator.mjs",
+  "compatibility_date": "2026-10-11",
+  "durable_objects": {"bindings": [{"name": "COORDINATOR", "class_name": "RelayCoordinator"}]},
+  "migrations": [{"tag": "v1", "new_sqlite_classes": ["RelayCoordinator"]}],
+  "observability": {"enabled": true, "traces": {"enabled": true}},
+  "limits": {"cpu_ms": 10},
+  "vars": {"PUBLIC_KEYS": "{}"}
+}

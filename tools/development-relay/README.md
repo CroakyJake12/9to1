@@ -1,0 +1,50 @@
+# 9to1 development relay
+
+Implementation status: local gated runner/dashboard installed in the commissioning environment; shared coordinator implemented and runtime-tested, remote deployment pending authorization; cloud continuation NOT CONFIGURED; unattended switching NOT VERIFIED. This is not a completed autonomous relay.
+
+The four-part V2 delivery directive effective 10 October 2026 remains authoritative. Part 1 FULL foundations/apps and donor-complete RCVP products are the critical path. Preserve the entire original/incorporated specification, donor functionality, native/web obligations, privacy, security, persistence and independent acceptance. No build or unit-test result promotes an app to RCVP or FULL.
+
+## Components
+
+- `coordinator.mjs` uses a SQLite Durable Object per repository for transactional claims, exclusive expiring leases, monotonic fences, task/path arbitration, heartbeat, quarantined recovery and exact handover acknowledgement. Requests require RSA signatures, time limits and persisted nonce replay protection. Local and cloud are separate signing identities. GitHub branch identity is independently checked on READY and ACK; a GitHub file is not used as the lock.
+- `runner.mjs` serves a loopback-only dashboard, stores local controls/progress in SQLite, chooses the private London/DST schedule, starts only owned isolated tasks, serializes inference, captures modified/untracked source with hashes before stopping an owned worker, executes bounded authentic tests and publishes reviewed task branches. Unknown port owners are untouched. A lost lease stops an owned child after preserving source; interrupted state prevents an unverified replacement.
+- `Start-StrataServer.ps1` reuses a healthy known server or executes the exact supplied server setup block. The original launcher remains byte-identical in private storage. Model IQ2_XS, 524288 context, YaRN factor 2, loopback 8081 and supplied paths are retained. `Configure-StrataProfile.ps1` adds only a missing named profile/provider, with a private rollback copy. Compaction remains 450560. The launcher plugin allowlist is retained for bounded Codex coordinator commands.
+- `Run-OpenCode.ps1` selects the private Strata-compatible provider, validates task ownership, overrides conflicting project settings, denies external directories and shell execution, and permits edits only in assigned paths. The runner executes tests separately. No alternate paid provider is silently selected.
+- `relayctl.mjs` applies policy, enqueues explicitly described tasks, fetches and reconstructs exact receiving commits before ACK, runs lease heartbeats and generates a London-date daily summary.
+- `Install-Runner.ps1` installs only the named user-session task with login and periodic recovery, IgnoreNew and bounded restart attempts. No sleep, hibernation, Windows power-policy or unrelated task changes are made.
+
+## Private configuration
+
+Run `initialize.mjs` as the Windows user that will own the scheduled task. Supply the extracted private package, a private destination, the isolated repository and observed executable paths. It refuses to overwrite an existing configuration. On Windows the local signing key is protected with DPAPI for that user; plaintext is removed. On a cloud Linux host keep a separately generated cloud key in private storage with mode 0600. Never put either private key, timetable, paths, tokens, logs or state in this repository.
+
+The supplied package defaults to Away. Home is an explicit availability control and cannot bypass forbidden hours. Date overrides and weekday rules are configuration, not source edits. An offline/expired presence heartbeat chooses cloud policy, while unreleased source remains quarantined. Pause stops new work; it does not falsely release unhanded source. No automatic/geolocation presence detector is enabled.
+
+Configure `coordinator_url` only after the authenticated Worker is deployed and checked. Apply a minimal private schedule with `node relayctl.mjs policy ABSOLUTE_CONFIG`. Provision distinct public signing identities in the Worker; never transmit private keys through chat or public GitHub.
+
+## Task queue
+
+Enqueue a reviewed private task JSON with `node relayctl.mjs enqueue ABSOLUTE_CONFIG ABSOLUTE_TASK_JSON`. Fields: unique `id`, `objective`, `paths`, `source` (`sha` and `branch`), nonempty `tests` (`executable`, `args`, optional timeout and evidence kind), optional `part`, `priority`, `lane`, `executor` and indexed `requirements`. Paths must be repository-relative. The runner selects the lowest delivery part then highest priority. Tests must use a configured executable allowlist. Existing dirty source and ownership conflicts must be reconciled and remotely preserved before being offered to the relay; a clean historic main snapshot is not a substitute.
+
+## Cloud setup and limitation
+
+The supported installed CLI provides `codex cloud exec --env ENV_ID --branch BRANCH --attempts 1 PROMPT`, `cloud list --json`, `cloud status` and `cloud diff`. Authentication was verified through the owner's ChatGPT entitlement. The current environment picker contained no configured environment, so no cloud task was submitted.
+
+Create/publish a real 9to1 cloud environment with the correct source/toolchain and cloud signing configuration, then record its observed ID privately. Do not invent an environment ID or authentication endpoint. `CLOUD-WORKER.md` specifies exact-source receive/ACK, lease heartbeat, priority work, builds/tests, recoverable branches and morning handover. Use a Goal in the actual cloud chat where available. The companion heartbeat must run independently of individual model turns.
+
+A locally triggered cloud task can run on the cloud after submission. This does not establish a recurring cloud trigger when the PC is off. The exposed desktop automation interface is local; no unattended Codex Cloud recurrence was installed or demonstrated. Native web/cloud scheduling and a real unattended cloud execution remain commissioning gates. API inference, third-party inference hosting and undocumented login shortcuts were not substituted.
+
+## Recovery
+
+1. Keep the runner paused while ownership/source is uncertain. Inspect `/status`, local SQLite events, the named scheduled task, exact owned process identity and private checkpoint manifests.
+2. If a bounded operation fails, preserve its complete worktree and raw test logs. Never reset/stash/clean a live source tree. Necessary tracked and untracked bytes have per-file hashes in each checkpoint.
+3. An interrupted `active` record blocks replacement. Verify the old owned process has ended; compare actual dirty source and the coordinator fence. Reconstruct source from the exact checkpoint/remote commit and explicitly reconcile the task before resuming. Do not clear recovery merely because a PID is absent or lease expired.
+4. For cloud-to-local receive, run `node relayctl.mjs receive ABSOLUTE_CONFIG HANDOVER_ID`. It fetches the exact source, creates a separate receiving worktree, compares the SHA and then ACKs the exact revision. Review/integrate separately; never overwrite the active product worktree.
+5. READY retains sender ownership; only exact receiver ACK transfers custody. An unsuccessful push, changed remote branch, stale fence, failed test or unacknowledged source is a real blocker. Tasks from an expired owner remain RECOVERY_REQUIRED.
+6. To diagnose the local task, inspect `Get-ScheduledTask -TaskName 9to1-Development-Relay` and `Get-ScheduledTaskInfo`. Start it idempotently with `Start-ScheduledTask`. Do not stop it during an active writer without a verified source checkpoint.
+7. Generate an evidence-based daily report with `node relayctl.mjs summary ABSOLUTE_CONFIG YYYY-MM-DD`. It reports actual recorded changes, operations and the continuing NOT_VERIFIED state.
+
+## Validation
+
+`npm ci` then `npm test` runs generic schedule/DST, atomic claim/fencing/expiry, path conflict, handover failure/exact ACK, real Durable Object runtime persistence, replay/authentication, temporary Git checkpoint/reconstruction, and real dashboard HTTP controls/persistence/CSRF/singleton checks. The private commissioning suite additionally tests the exact user timetable and all weekday mornings. Current commissioning: 63 passed, 0 failed, 0 skipped; dependency audit reports 0 known vulnerabilities. Windows DPAPI signing was independently verified without printing keys.
+
+Live Strata readiness, OpenCode inference/task execution, actual cloud transfer in both directions, a physical PC restart/offline rehearsal and a genuine unattended local/cloud development task are NOT RUN. Dashboard controls were exercised in the real browser; Safe handover's missing-ownership refusal passed, while its successful cloud path remains NOT RUN. Temporary Git/lease tests are controlled simulations and do not prove real cloud handover. A local implementation Goal is not a cloud scheduler.
