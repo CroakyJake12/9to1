@@ -15,6 +15,7 @@ import {queueReady,predecessorFor} from './queue.mjs';
 import {workerView,queueSteering} from './worker-view.mjs';
 import {augmentDashboardStatus} from './dashboard-data.mjs';
 import {listReviews,submitAppFeedback,submitWorkFeedback,reviewImage,feedbackDelivery} from './reviews.mjs';
+import {ensureAcceptanceCampaign,currentMainSource} from './cloud-campaign.mjs';
 
 const here=path.dirname(fileURLToPath(import.meta.url));
 export class LocalRunner {
@@ -37,6 +38,8 @@ export class LocalRunner {
     this.config.cloud_commissioning=latest.cloud_commissioning;
     this.config.pc_wake_enabled=latest.pc_wake_enabled;
     this.config.coordinator_url=latest.coordinator_url;
+    this.config.cloud_acceptance_campaign=latest.cloud_acceptance_campaign;
+    this.config.cloud_acceptance_tests=latest.cloud_acceptance_tests;
     if(!this.active&&!this.recovery)this.config.worktrees=latest.worktrees;
     this.config.progress_file=latest.progress_file;
     this.progress=null;this.progressError=null;
@@ -76,8 +79,9 @@ export class LocalRunner {
     const tasks=this.remote.tasks.filter(t=>t.owner==='local'&&['COMPLETED','CHECKPOINT','BLOCKED'].includes(t.status));
     if(!tasks.length)throw new Error('No released source checkpoint; handover was not published');
     // One handover per exact branch; a multi-branch shift publishes each independently.
-    const task=[...tasks].reverse().find(t=>t.result?.source&&(this.config.branch_strategy!=='main'||t.result.source.branch==='main'));if(!task)throw new Error('No remotely verified canonical source commit');
-    const h={id:randomUUID(),from:'local',to:'cloud',source:task.result.source,artifact_hashes:task.result.source.artifact_hashes??{},deleted_paths:task.result.source.deleted_paths??[],hash_scope:'committed Git blob bytes',tasks:[task.id],tests:task.evidence,blockers:task.result.blockers??[],spec:this.config.spec,next_actions:task.result.remaining??[]};
+    const task=[...tasks].reverse().find(t=>t.handover_campaign&&t.fence===this.remote.lease.fence)??[...tasks].reverse().find(t=>t.result?.source&&(this.config.branch_strategy!=='main'||t.result.source.branch==='main'));if(!task)throw new Error('No remotely verified canonical source commit');
+    const source=task.handover_campaign?await currentMainSource(this.config,this.remote.tasks):task.result.source;
+    const h={id:randomUUID(),from:'local',to:'cloud',source,artifact_hashes:source.artifact_hashes??{},deleted_paths:source.deleted_paths??[],hash_scope:'committed Git blob bytes',tasks:[task.id],tests:task.evidence,blockers:task.result.blockers??[],spec:this.config.spec,next_actions:task.result.remaining??[]};
     this.remote=await request(this.config,'handover',{fence:this.remote.lease.fence,handover:h});
     await this.dispatchCloud(h);return {ok:true,message:'READY handover published; local ownership retained until exact cloud ACK',status:this.status()};
   }
@@ -214,7 +218,7 @@ export class LocalRunner {
       if(lease?.worker==='cloud'){this.error='Cloud owns the shift; awaiting validated cloud-to-local handover';return;}
       if(!lease){this.remote=await request(this.config,'acquire',{});}
       if(this.active)return;
-      if(this.config.supervisor_managed){this.error=null;return;}
+      if(this.config.supervisor_managed){this.remote=await ensureAcceptanceCampaign(this.config,this.remote,planned);this.error=null;return;}
       const task=this.remote.tasks.filter(t=>t.status==='QUEUED'&&(!t.lane||t.lane==='local')&&queueReady(this.remote.tasks,t)).sort((a,b)=>(a.part??1)-(b.part??1)||(b.priority??0)-(a.priority??0))[0];
       if(!task){this.error='No owned, unblocked development task is queued';return;}
       if(!this.strata.ready){
