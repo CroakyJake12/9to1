@@ -20,6 +20,23 @@ public sealed class ScheduledGraphAutomationTests
         Assert.Equal(new TimeOnly(8, 30), draft.Time);
     }
 
+    [Theory]
+    [InlineData("every 2 hours trailing")]
+    [InlineData("weekly Monday 08:30 trailing")]
+    public void Recurrence_binding_rejects_trailing_tokens(string recurrence)
+    {
+        var trigger = Node("Schedule", "Recurrence", ("recurrence", recurrence));
+        var graph = new AutomationGraphDefinition(1, [trigger], []);
+
+        Assert.False(AutomationGraphScheduleBinder.TryBind(
+            graph,
+            new DateTimeOffset(2026, 8, 20, 7, 0, 0, TimeSpan.Zero),
+            out var binding,
+            out var error));
+        Assert.Null(binding);
+        Assert.Contains("Recurrence format is invalid", error, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void Condition_watch_requires_one_hour_minimum_and_preserves_condition()
     {

@@ -63,4 +63,27 @@ public sealed class PlannerRecurrenceTests
         Assert.Throws<FormatException>(() => PlannerRecurrence.Validate("FREQ=MINUTELY"));
         Assert.Throws<FormatException>(() => PlannerRecurrence.Validate("INTERVAL=2"));
     }
+
+    /// <summary>
+    /// Performs malformed explicit interval is rejected rather than defaulted owned by this component.
+    /// </summary>
+    [Fact]
+    public void MalformedExplicitIntervalIsRejected()
+    {
+        Assert.Throws<FormatException>(() => PlannerRecurrence.GetNextOccurrence(
+            new DateTimeOffset(2026, 7, 13, 9, 0, 0, TimeSpan.Zero), "FREQ=DAILY;INTERVAL=garbage", "UTC"));
+    }
+
+    /// <summary>
+    /// Performs omitted interval defaults to one owned by this component.
+    /// </summary>
+    [Fact]
+    public void OmittedIntervalDefaultsToOne()
+    {
+        var occurrence = new DateTimeOffset(2026, 7, 13, 9, 0, 0, TimeSpan.Zero);
+
+        var next = PlannerRecurrence.GetNextOccurrence(occurrence, "FREQ=DAILY", "UTC");
+
+        Assert.Equal(occurrence.AddDays(1), next);
+    }
 }

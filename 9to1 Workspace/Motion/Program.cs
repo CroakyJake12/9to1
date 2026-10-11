@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Buffers.Binary;
 
 namespace HavenOS.Apps.Motion;
 
@@ -78,7 +79,9 @@ internal static class MotionSurface
 
         var fixtureDirectory = Directory.CreateTempSubdirectory("haven-motion-self-test-");
         var mp4Path = Path.Combine(fixtureDirectory.FullName, "valid.mp4");
+        var extendedMp4Path = Path.Combine(fixtureDirectory.FullName, "extended.mp4");
         var invalidMp4Path = Path.Combine(fixtureDirectory.FullName, "invalid.mp4");
+        var truncatedMp4Path = Path.Combine(fixtureDirectory.FullName, "truncated.mp4");
         var unsupportedPath = Path.Combine(fixtureDirectory.FullName, "unsupported.txt");
         try
         {
@@ -94,6 +97,10 @@ internal static class MotionSurface
                 return 14;
             }
 
+            File.WriteAllBytes(extendedMp4Path, [0, 0, 0, 1, (byte)'f', (byte)'t', (byte)'y', (byte)'p', 0, 0, 0, 0, 0, 0, 0, 24, (byte)'i', (byte)'s', (byte)'o', (byte)'m', 0, 0, 0, 0]);
+            if (!MotionMediaInspector.Inspect(extendedMp4Path).HeaderSignatureRecognized)
+                return 17;
+
             File.WriteAllBytes(invalidMp4Path, [0, 0, 0, 16, (byte)'n', (byte)'o', (byte)'p', (byte)'e', 0, 0, 0, 0, 0, 0, 0, 0]);
             try
             {
@@ -102,6 +109,20 @@ internal static class MotionSurface
             }
             catch (InvalidDataException)
             {
+            }
+
+            File.WriteAllBytes(invalidMp4Path, [0, 0, 0, 15, (byte)'f', (byte)'t', (byte)'y', (byte)'p', (byte)'i', (byte)'s', (byte)'o', (byte)'m', 0, 0, 0, 0]);
+            File.WriteAllBytes(truncatedMp4Path, [0, 0, 0, 32, (byte)'f', (byte)'t', (byte)'y', (byte)'p', (byte)'i', (byte)'s', (byte)'o', (byte)'m', 0, 0, 0, 0]);
+            foreach (var malformedPath in new[] { invalidMp4Path, truncatedMp4Path })
+            {
+                try
+                {
+                    _ = MotionMediaInspector.Inspect(malformedPath);
+                    return 18;
+                }
+                catch (InvalidDataException)
+                {
+                }
             }
 
             File.WriteAllBytes(unsupportedPath, []);
@@ -145,11 +166,11 @@ internal static class MotionMediaInspector
         };
 
         using var stream = File.OpenRead(fullPath);
-        Span<byte> header = stackalloc byte[12];
+        Span<byte> header = stackalloc byte[16];
         var bytesRead = stream.Read(header);
         var signatureRecognized = extension switch
         {
-            ".mp4" or ".m4v" or ".mov" or ".3gp" => HasFourCc(header[..bytesRead], 4, "ftyp"),
+            ".mp4" or ".m4v" or ".mov" or ".3gp" => IsValidFtypBox(header[..bytesRead], stream.Length),
             ".webm" or ".mkv" => bytesRead >= 4 && header[0] == 0x1A && header[1] == 0x45 && header[2] == 0xDF && header[3] == 0xA3,
             ".avi" => HasFourCc(header[..bytesRead], 0, "RIFF") && HasFourCc(header[..bytesRead], 8, "AVI "),
             _ => false
@@ -182,6 +203,29 @@ internal static class MotionMediaInspector
         }
 
         return true;
+    }
+
+    private static bool IsValidFtypBox(ReadOnlySpan<byte> header, long fileLength)
+    {
+        if (header.Length < 16 || !HasFourCc(header, 4, "ftyp"))
+            return false;
+
+        var size32 = BinaryPrimitives.ReadUInt32BigEndian(header);
+        ulong boxSize;
+        if (size32 == 1)
+        {
+            if (header.Length < 16)
+                return false;
+
+            boxSize = BinaryPrimitives.ReadUInt64BigEndian(header[8..]);
+            return boxSize >= 24 && boxSize <= (ulong)fileLength;
+        }
+
+        if (size32 == 0)
+            return fileLength >= 16;
+
+        boxSize = size32;
+        return boxSize >= 16 && boxSize <= (ulong)fileLength;
     }
 }
 

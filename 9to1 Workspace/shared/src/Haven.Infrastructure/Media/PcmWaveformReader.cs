@@ -52,7 +52,8 @@ public static class PcmWaveformReader
             var chunkSize = reader.ReadUInt32();
             var chunkStart = stream.Position;
             var chunkEnd = checked(chunkStart + chunkSize);
-            if (chunkEnd > stream.Length) throw new InvalidDataException("WAV chunk exceeds file length.");
+            var paddedChunkEnd = checked(chunkEnd + (chunkSize & 1));
+            if (paddedChunkEnd > stream.Length) throw new InvalidDataException("WAV chunk exceeds RIFF bounds.");
 
             if (chunkId == "fmt ")
             {
@@ -89,9 +90,12 @@ public static class PcmWaveformReader
             }
 
             stream.Position = chunkEnd;
-            if ((chunkSize & 1) != 0 && stream.Position < stream.Length)
+            if ((chunkSize & 1) != 0)
                 stream.Position++;
         }
+
+        if (stream.Position != stream.Length)
+            throw new InvalidDataException("RIFF contains an incomplete chunk header.");
 
         if (!hasFormat || dataOffset < 0 || dataSize <= 0)
             throw new InvalidDataException("WAV format or data chunk is missing.");
