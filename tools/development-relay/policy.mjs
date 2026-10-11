@@ -37,8 +37,13 @@ export function selectShift(policy, availability, at = new Date()) {
 export function normalizePaths(paths) {
   if (!Array.isArray(paths) || !paths.length || paths.length > 200) throw new Error('Owned paths required');
   return [...new Set(paths.map(p => {
-    if (typeof p !== 'string' || !p || p.startsWith('/') || /[:\\\0]/.test(p) || p.split('/').some(x => x === '..' || x === '.')) throw new Error('Unsafe owned path');
-    return p.replace(/\/+$/, '') + '/';
+    if (typeof p !== 'string' || !p || p.startsWith('/') || /[:\\\0]/.test(p)) throw new Error('Unsafe owned path');
+    const body = p.replace(/\/+$/, '');
+    if (!body) throw new Error('Slash-only path cannot be owned');
+    const segments = body.split('/');
+    if (segments.some(x => x === '' || x === '.' || x === '..')) throw new Error('Ambiguous owned path segment');
+    if (segments.some(x => x.toLowerCase() === '.git')) throw new Error('Git administrative path cannot be owned');
+    return body + '/';
   }))];
 }
 export const pathsOverlap = (a, b) => a.some(x => b.some(y => x.toLowerCase().startsWith(y.toLowerCase()) || y.toLowerCase().startsWith(x.toLowerCase())));
