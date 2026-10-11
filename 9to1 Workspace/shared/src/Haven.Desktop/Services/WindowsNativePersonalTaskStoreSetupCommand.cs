@@ -23,7 +23,7 @@ internal static class WindowsNativePersonalTaskStoreSetupCommand
             if (args.Length == 2 && args[0] == Option && args[1] == "--help")
             {
                 output.WriteLine("--create-native-private-store");
-                output.WriteLine("Create a NEW Windows64 personal store at the CURRENT HAVEN_DATA_DIR/default Haven path, then continue Desktop startup in this process. Existing stores always refuse. No alternative path is accepted; recovery remains unverified.");
+                output.WriteLine("Create a NEW Windows64 personal store at the CURRENT HAVEN_DATA_DIR/default 9to1 path, then continue Desktop startup in this process. Existing stores always refuse. No alternative path is accepted; recovery remains unverified.");
                 Environment.ExitCode = 0; return false;
             }
             if (args.Length != 1 || args[0] != Option)

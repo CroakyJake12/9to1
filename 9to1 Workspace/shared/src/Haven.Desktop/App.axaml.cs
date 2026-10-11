@@ -146,7 +146,7 @@ public sealed partial class App : Avalonia.Application
         var correlationId = Guid.NewGuid().ToString("N");
         try
         {
-            var services = _services ?? throw new InvalidOperationException("Haven services have not been initialized.");
+            var services = _services ?? throw new InvalidOperationException("9to1 services have not been initialized.");
             var recovery = _startupRecovery ?? services.GetRequiredService<IStartupRecoveryCoordinator>();
             var recoveryState = await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
                 () => recovery.BeginStartupAsync(CancellationToken.None)));
@@ -185,7 +185,7 @@ public sealed partial class App : Avalonia.Application
                 AcquireOriginalAppSynchronous(original, () =>
                 {
                     services.GetRequiredService<NotificationService>().Show(
-                        "Haven recovery safe mode",
+                        "9to1 recovery safe mode",
                         recoveryState.Reason + " Local Ollama chat and read-only workspace inspection remain available.",
                         ToastKind.Warning, TimeSpan.FromSeconds(30));
                     return true;
@@ -234,14 +234,14 @@ public sealed partial class App : Avalonia.Application
                 original.Retain(diagnosticFailure); // Never hide the primary or actual sink failure.
             }
 
-            var userMessage = $"Haven could not finish starting. Diagnostic reference: {correlationId}.";
+            var userMessage = $"9to1 could not finish starting. Diagnostic reference: {correlationId}.";
             AcquireOriginalAppSynchronous(original, () => { shell.SetStartupError(userMessage); return true; });
             try
             {
                 AcquireOriginalAppSynchronous(original, () =>
                 {
                     _services?.GetService<NotificationService>()?.Show(
-                        "Haven startup problem", userMessage, ToastKind.Error, TimeSpan.FromSeconds(30));
+                        "9to1 startup problem", userMessage, ToastKind.Error, TimeSpan.FromSeconds(30));
                     return true;
                 });
             }

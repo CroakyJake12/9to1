@@ -62,7 +62,7 @@ internal sealed class SpaceEditPlanner(IOllamaClient models, Func<string?> defau
                     model.Name,
                     [new OllamaMessage("user", prompt)],
                     EffortLevel.Low,
-                    "You are Haven's Space configuration planner. Output strict JSON only. You may edit only the explicitly listed draft fields.",
+                    "You are 9to1's Space configuration planner. Output strict JSON only. You may edit only the explicitly listed draft fields.",
                     Options: new GenerationOptions(0.2, 3072, 0)),
                 cancellationToken).ConfigureAwait(false);
             return ParseAndValidate(response);
@@ -73,16 +73,16 @@ internal sealed class SpaceEditPlanner(IOllamaClient models, Func<string?> defau
         }
         catch (Exception exception) when (exception is IOException or HttpRequestException or JsonException or InvalidOperationException)
         {
-            return Fail($"Haven could not create a safe Space edit: {exception.Message}");
+            return Fail($"9to1 could not create a safe Space edit: {exception.Message}");
         }
     }
 
     internal static SpaceEditPlanResult ParseAndValidate(string response)
     {
-        if (string.IsNullOrWhiteSpace(response)) return Fail("Haven returned an empty Space edit.");
+        if (string.IsNullOrWhiteSpace(response)) return Fail("9to1 returned an empty Space edit.");
         var start = response.IndexOf('{');
         var end = response.LastIndexOf('}');
-        if (start < 0 || end <= start) return Fail("Haven did not return a valid Space edit.");
+        if (start < 0 || end <= start) return Fail("9to1 did not return a valid Space edit.");
 
         PlannerPayload? payload;
         try
@@ -95,24 +95,24 @@ internal sealed class SpaceEditPlanner(IOllamaClient models, Func<string?> defau
         }
         catch (JsonException)
         {
-            return Fail("Haven returned malformed Space-edit JSON.");
+            return Fail("9to1 returned malformed Space-edit JSON.");
         }
-        if (payload is null) return Fail("Haven returned an empty Space edit.");
+        if (payload is null) return Fail("9to1 returned an empty Space edit.");
 
         var name = NormalizeOptional(payload.Name);
-        if (name is { Length: > 80 }) return Fail("Haven proposed a Space name longer than 80 characters.");
+        if (name is { Length: > 80 }) return Fail("9to1 proposed a Space name longer than 80 characters.");
         var description = NormalizeOptional(payload.Description);
-        if (description is { Length: > 800 }) return Fail("Haven proposed a Space description that is too long.");
+        if (description is { Length: > 800 }) return Fail("9to1 proposed a Space description that is too long.");
         var modelName = NormalizeOptional(payload.ModelName);
-        if (modelName is { Length: > 160 }) return Fail("Haven proposed an invalid model name.");
+        if (modelName is { Length: > 160 }) return Fail("9to1 proposed an invalid model name.");
         var instructions = NormalizeOptional(payload.Instructions);
-        if (instructions is { Length: > 6000 }) return Fail("Haven proposed Space instructions that are too long.");
+        if (instructions is { Length: > 6000 }) return Fail("9to1 proposed Space instructions that are too long.");
 
         SpaceThinkingMode? thinking = null;
         if (!string.IsNullOrWhiteSpace(payload.ThinkingMode))
         {
             if (!Enum.TryParse<SpaceThinkingMode>(payload.ThinkingMode.Trim(), true, out var parsedThinking))
-                return Fail("Haven proposed an unsupported thinking mode.");
+                return Fail("9to1 proposed an unsupported thinking mode.");
             thinking = parsedThinking;
         }
 
@@ -121,7 +121,7 @@ internal sealed class SpaceEditPlanner(IOllamaClient models, Func<string?> defau
         if (!string.IsNullOrWhiteSpace(payload.SurfaceTemplate))
         {
             surfaceTemplate = payload.SurfaceTemplate.Trim().ToLowerInvariant();
-            if (!SurfaceTemplates.Contains(surfaceTemplate)) return Fail("Haven proposed an unsupported generated-surface template.");
+            if (!SurfaceTemplates.Contains(surfaceTemplate)) return Fail("9to1 proposed an unsupported generated-surface template.");
         }
         if (payload.SurfaceInputs is { } surfaceElement)
         {
@@ -132,7 +132,7 @@ internal sealed class SpaceEditPlanner(IOllamaClient models, Func<string?> defau
         }
 
         if (name is null && description is null && modelName is null && instructions is null && thinking is null && surfaceTemplate is null && surfaceInputs is null)
-            return Fail("Haven did not propose any Space changes.");
+            return Fail("9to1 did not propose any Space changes.");
 
         return new SpaceEditPlanResult(true, "Suggested Space changes are ready to review.",
             new SpaceEditPatch(name, description, modelName, instructions, thinking, surfaceTemplate, surfaceInputs));

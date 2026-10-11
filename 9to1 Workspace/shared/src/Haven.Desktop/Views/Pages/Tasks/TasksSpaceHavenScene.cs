@@ -112,7 +112,7 @@ internal sealed class TasksSpaceHavenScene : IDisposable
         var instruction = Instruction.Text.Trim();
         if (instruction.Length == 0)
         {
-            SetStatus("Describe the one-off task you want Haven to carry out.");
+            SetStatus("Describe the one-off task you want 9to1 to carry out.");
             return;
         }
         DelegateRequested?.Invoke(this, instruction);
@@ -149,7 +149,7 @@ internal sealed class TasksSpaceHavenScene : IDisposable
               <Text Row="0" Content="Tasks" Level="H1" />
               <Text Row="1" Content="Delegate one-off work to Haven. Research, compare, organise, build, or investigate something once; reusable and scheduled workflows live in Automations." Foreground="TextSecondary" FontSize="13" />
               <Container Row="2" Layout="Vertical" Width="100%" Gap="8px" Padding="14px" Background="SurfaceRaised" BorderColor="Border" BorderWidth="1px" Radius="16px">
-                <Input Name="Instruction" Width="100%" MinHeight="52px" Placeholder="What should Haven do?" />
+                <Input Name="Instruction" Width="100%" MinHeight="52px" Placeholder="What should 9to1 do?" />
                 <Container Layout="Grid" Columns="1fr 1fr" Width="100%" Gap="8px">
                   <Button Name="DelegateTask" Column="0" Variant="Primary" IconKey="arrow-up" Content="Delegate task" MinHeight="40px" />
                   <Button Name="NewBlankTask" Column="1" Variant="Tertiary" IconKey="plus" Content="Open blank task" MinHeight="40px" />

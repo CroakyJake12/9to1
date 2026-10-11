@@ -40,4 +40,4 @@ Dynamic UI state is deliberately runtime-owned and non-persistent: reconstructin
 
 The existing `Haven.Desktop/HavenUI` controls are pre-migration Avalonia controls, not the canonical Phase 2 implementation. They remain compatibility surfaces only while consumers move to the Haven scene tree/backend.
 
-Migration must preserve Haven product features, page structure, navigation, interaction flows, Page Accents, spacing/typography/theme principles and design language except where authoritative mockups or a verified accidental framework artefact require correction.
+Migration must preserve 9to1 product features, page structure, navigation, interaction flows, Page Accents, spacing/typography/theme principles and design language except where authoritative mockups or a verified accidental framework artefact require correction.

@@ -17,7 +17,7 @@ public sealed class CanvasAppSurface
     {
         Document = document ?? throw new ArgumentNullException(nameof(document));
         if (!CanvasDocumentModel.IsCanvasDocument(document))
-            throw new ArgumentException("CanvasAppSurface requires a Haven Canvas document.", nameof(document));
+            throw new ArgumentException("CanvasAppSurface requires a 9to1 Canvas document.", nameof(document));
 
         _interaction = new CanvasInteractionController(CanvasDocumentModel.GetBoard(document));
         SyncDocumentBoard();
@@ -55,7 +55,7 @@ public sealed class CanvasAppSurface
         var document = await repository.LoadAsync(documentId, cancellationToken).ConfigureAwait(false);
         if (document is null) return null;
         if (!CanvasDocumentModel.IsCanvasDocument(document))
-            throw new InvalidDataException("The requested Notes document is not a Haven Canvas document.");
+            throw new InvalidDataException("The requested Notes document is not a 9to1 Canvas document.");
 
         return new CanvasAppSurface(document);
     }

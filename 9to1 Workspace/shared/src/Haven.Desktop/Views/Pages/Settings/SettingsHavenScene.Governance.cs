@@ -20,7 +20,7 @@ internal sealed partial class SettingsHavenScene
         nameof(ModelPersonality.Initiative),
         nameof(ModelPersonality.ExplanationDepth)
     ];
-    private const string PersonalityInheritOption = "(use Haven default)";
+    private const string PersonalityInheritOption = "(use 9to1 default)";
     private static readonly string[] PermissionTargetLabels =
         ["Exact model", "Model family", "Provider", "Parameter size below", "All local models", "All cloud models"];
     private static readonly string[] PermissionScopeLabels = ["This device", "Across mesh"];
@@ -72,7 +72,7 @@ internal sealed partial class SettingsHavenScene
         var card = Card("Settings.Models.Fallback");
         card.Add(Heading("Settings.Models.Fallback.Heading", "Priority & fallback order", 18));
         card.Add(Muted("Settings.Models.Fallback.Description",
-            "List one model key per line. The first line is your most preferred model and Haven walks down the list when a higher entry is unavailable."));
+            "List one model key per line. The first line is your most preferred model and 9to1 walks down the list when a higher entry is unavailable."));
         FallbackOrderInput = new Input { Name = "Settings.Models.Fallback.Order", Multiline = true };
         FallbackOrderInput.Accessibility.AccessibleName = "Model priority order, one model key per line";
         FallbackOrderInput.SetValue(HavenProperties.Width, HavenLength.Percent(100));
@@ -119,7 +119,7 @@ internal sealed partial class SettingsHavenScene
         var card = Card("Settings.Models.Personalise");
         card.Add(Heading("Settings.Models.Personalise.Heading", "Per-model overrides", 18));
         card.Add(Muted("Settings.Models.Personalise.Description",
-            "Give one model a nickname and its own personality. Anything left at '(use Haven default)' follows the shared defaults above."));
+            "Give one model a nickname and its own personality. Anything left at '(use 9to1 default)' follows the shared defaults above."));
         OverrideModelKeyInput = new Input { Name = "Settings.Models.Personalise.ModelKey", Placeholder = "Model key, e.g. qwen3:8b" };
         OverrideModelKeyInput.Accessibility.AccessibleName = "Model key to personalise";
         OverrideModelKeyInput.SetValue(HavenProperties.Width, HavenLength.Percent(100));
@@ -223,7 +223,7 @@ internal sealed partial class SettingsHavenScene
         var card = Card("Settings.Models.DefaultApps");
         card.Add(Heading("Settings.Models.DefaultApps.Heading", "Default Apps", 18));
         card.Add(Muted("Settings.Models.DefaultApps.Description",
-            "Choose which Haven App normally performs each action category, or Always Ask to decide per request. Catalogued Apps stay listed even when not yet connected; availability is resolved when the action runs."));
+            "Choose which 9to1 App normally performs each action category, or Always Ask to decide per request. Catalogued Apps stay listed even when not yet connected; availability is resolved when the action runs."));
         foreach (var category in Enum.GetValues<ProviderCategory>())
         {
             var name = ProviderCategoryNames.For(category);
@@ -262,13 +262,13 @@ internal sealed partial class SettingsHavenScene
     private static string DescribePersonalisationEntry(ModelPersonalisationEntry entry)
     {
         var nickname = string.IsNullOrWhiteSpace(entry.Nickname) ? string.Empty : $" “{entry.Nickname}”";
-        if (entry.Personality is not { } personality) return $"{entry.ModelKey}{nickname} — uses Haven defaults";
+        if (entry.Personality is not { } personality) return $"{entry.ModelKey}{nickname} — uses 9to1 defaults";
         var changed = PersonalityFields
             .Where(field => Level(personality, field) != Level(ModelPersonality.Defaults, field))
             .Select(field => $"{PersonalityTitle(field)} {PersonalityLabels[(int)Level(personality, field)]}")
             .ToList();
         return changed.Count == 0
-            ? $"{entry.ModelKey}{nickname} — matches Haven defaults"
+            ? $"{entry.ModelKey}{nickname} — matches 9to1 defaults"
             : $"{entry.ModelKey}{nickname} — {string.Join(", ", changed)}";
     }
 
@@ -410,7 +410,7 @@ internal sealed partial class SettingsHavenScene
     private static string PersonalityDescription(string field) => field switch
     {
         nameof(ModelPersonality.Friendliness) => "How warm or reserved responses feel.",
-        nameof(ModelPersonality.MemoryReferences) => "How often replies draw on what Haven remembers.",
+        nameof(ModelPersonality.MemoryReferences) => "How often replies draw on what 9to1 remembers.",
         nameof(ModelPersonality.Seriousness) => "From playful and casual to formal and serious.",
         nameof(ModelPersonality.Verbosity) => "From extremely concise to highly detailed answers.",
         nameof(ModelPersonality.Initiative) => "From strictly reactive to proactively suggesting next steps.",

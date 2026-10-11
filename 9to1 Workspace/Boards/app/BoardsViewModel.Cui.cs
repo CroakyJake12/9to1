@@ -1,0 +1,140 @@
+namespace CakeOS.Apps.Boards.App;
+
+// Canonical CUI projection over the existing document/session mutation methods.
+// It owns no second document, loader, persistence service, or selection identity.
+public sealed partial class BoardsViewModel
+{
+    private static readonly string[] ContextHorizontalOptions = ["inherit", "left", "center", "right"];
+    private static readonly string[] ContextVerticalOptions = ["inherit", "top", "middle", "bottom"];
+    private static readonly string[] ContextBorderOptions = ["inherit", "none", "solid", "dashed", "dotted"];
+    private static readonly string[] ContextDividerOptions = ["solid", "dashed", "dotted", "none"];
+    private static readonly (string Name, string Hex)[] ContextSurfaces =
+    [
+        ("None", ""), ("White", "#FFFFFFFF"), ("Mist", "#FFF1F3F4"),
+        ("Peach", "#FFFFF3C4"), ("Mint", "#FFE6F4EA"), ("Sky", "#FFE8F0FE"),
+        ("Lavender", "#FFF3E8FD"), ("Rose", "#FFFCE8E6"), ("Slate", "#FFE8EDF3")
+    ];
+    private static readonly string[] ContextSurfaceNames = ContextSurfaces.Select(surface => surface.Name).ToArray();
+
+    internal void RefreshCuiContext()
+    {
+        var block = FindBlock(SelectedBlockId);
+        var cellKey = TryGetContextCell(block, out var row, out var column) ? $"{row},{column}" : null;
+        var cellStyle = cellKey is not null && block!.CellStyles.TryGetValue(cellKey, out var style) ? style : null;
+        Set("ContextHorizontalOptions", ContextHorizontalOptions);
+        Set("ContextVerticalOptions", ContextVerticalOptions);
+        Set("ContextBorderOptions", ContextBorderOptions);
+        Set("ContextDividerOptions", ContextDividerOptions);
+        Set("ContextSurfaceNames", ContextSurfaceNames);
+        Set("ContextCellHorizontalIndex", IndexOf(ContextHorizontalOptions, cellStyle?.AlignH));
+        Set("ContextCellVerticalIndex", IndexOf(ContextVerticalOptions, cellStyle?.AlignV));
+        Set("ContextHasCell", cellKey is not null);
+        Set("ContextCellHint", cellKey is null ? "Focus a cell for cell tools." : $"Cell {cellKey}");
+        Set("ContextTableSurfaceIndex", Math.Max(0, Array.FindIndex(ContextSurfaces, surface => surface.Hex == block?.TableStyle.Background)));
+        Set("ContextTableBorderIndex", IndexOf(ContextBorderOptions, block?.TableStyle.BorderStyle));
+        Set("ContextAlternatingRows", block?.TableStyle.AlternatingRows == true);
+        Set("ContextImageAlignmentIndex", IndexOf(ContextHorizontalOptions, block?.Image?.Alignment));
+        Set("ContextDividerStyleIndex", IndexOf(ContextDividerOptions, block?.Divider?.LineStyle));
+        // Publish branch selection after its data, so a newly created Input has
+        // the current selection on its first binding pass.
+        Set("ContextIsTable", block?.Kind == "table");
+        Set("ContextIsImage", block?.Kind == "image");
+        Set("ContextIsDivider", block?.Kind == "divider");
+        Set("ContextVisible", block?.Kind is "table" or "image" or "divider");
+    }
+
+    private static int IndexOf(string[] options, string? value) => Math.Max(0, Array.IndexOf(options, value));
+
+    private bool TryGetContextCell(RichBoardBlock? block, out int row, out int column)
+    {
+        row = column = -1;
+        if (block?.Kind != "table" || SelectedCell is not { } cell || cell.BlockId != block.Id
+            || cell.Row < 0 || cell.Row >= block.TableRows || cell.Col < 0 || cell.Col >= block.TableCols) return false;
+        row = cell.Row; column = cell.Col; return true;
+    }
+
+    public bool TrySetValue(string path, object? value)
+    {
+        var key = path[(path.LastIndexOf('.') + 1)..];
+        if (_syncing) return key.StartsWith("Context", StringComparison.Ordinal);
+        var block = FindBlock(SelectedBlockId);
+        if (block is null) return false;
+        bool SelectedOption(string[] options, out string result)
+        {
+            result = string.Empty;
+            if (value is not int index || index < 0 || index >= options.Length) return false;
+            result = options[index]; return true;
+        }
+        switch (key)
+        {
+            case "ContextCellHorizontalIndex" when TryGetContextCell(block, out var row, out var column):
+                if (!SelectedOption(ContextHorizontalOptions, out var horizontal)) return false;
+                SetCellAlign(block.Id, row, column, horizontal); RequestRebuild(); break;
+            case "ContextCellVerticalIndex" when TryGetContextCell(block, out var verticalRow, out var verticalColumn):
+                if (!SelectedOption(ContextVerticalOptions, out var vertical)) return false;
+                var cellKey = $"{verticalRow},{verticalColumn}";
+                var cellStyle = block.CellStyles.TryGetValue(cellKey, out var existing) ? existing : block.CellStyles[cellKey] = new RichCellStyleView();
+                cellStyle.AlignV = vertical; CommitViewEdit(); break;
+            case "ContextTableSurfaceIndex" when block.Kind == "table":
+                if (value is not int surfaceIndex || surfaceIndex < 0 || surfaceIndex >= ContextSurfaces.Length) return false;
+                block.TableStyle.Background = ContextSurfaces[surfaceIndex].Hex; CommitViewEdit(); break;
+            case "ContextTableBorderIndex" when block.Kind == "table":
+                if (!SelectedOption(ContextBorderOptions, out var border)) return false;
+                block.TableStyle.BorderStyle = border; CommitViewEdit(); break;
+            case "ContextAlternatingRows" when block.Kind == "table":
+                if (value is not bool alternating) return false;
+                block.TableStyle.AlternatingRows = alternating; CommitViewEdit(); break;
+            case "ContextImageAlignmentIndex" when block.Kind == "image":
+                if (!SelectedOption(ContextHorizontalOptions, out var alignment)) return false;
+                SetImageAlignment(block.Id, alignment); break;
+            case "ContextDividerStyleIndex" when block.Kind == "divider":
+                if (!SelectedOption(ContextDividerOptions, out var divider)) return false;
+                SetDividerStyle(block.Id, divider); break;
+            default: return false;
+        }
+        RefreshCuiContext(); return true;
+    }
+
+    private async ValueTask<bool> DispatchCuiContextAsync(string command, CancellationToken cancellationToken)
+    {
+        if (!command.StartsWith("Context", StringComparison.Ordinal)) return false;
+        cancellationToken.ThrowIfCancellationRequested();
+        var block = FindBlock(SelectedBlockId);
+        if (block is null) return true;
+        switch (command)
+        {
+            case "ContextAddRow" when block.Kind == "table": TableAddRow(block.Id); break;
+            case "ContextDeleteRow" when block.Kind == "table": TableDelRow(block.Id); break;
+            case "ContextAddColumn" when block.Kind == "table": TableAddCol(block.Id); break;
+            case "ContextDeleteColumn" when block.Kind == "table": TableDelCol(block.Id); break;
+            case "ContextCellBold" when TryGetContextCell(block, out var row, out var column): ToggleCellBold(block.Id, row, column); break;
+            case "ContextRoundTable" when block.Kind == "table": block.TableStyle.CornerRadius = Math.Min(32, block.TableStyle.CornerRadius + 2); CommitViewEdit(); break;
+            case "ContextImageNarrower" when block.Kind == "image" && block.Image is not null: ResizeImage(-40); break;
+            case "ContextImageWider" when block.Kind == "image" && block.Image is not null: ResizeImage(40); break;
+            case "ContextImageNatural" when block.Kind == "image" && block.Image is not null: block.Image.Width = 0; CommitViewEdit(); break;
+            case "ContextReplaceImage" when block.Kind == "image": await ReplaceImageAsync(block.Id); break;
+            case "ContextRemoveImage" when block.Kind == "image": await DeleteBlockAsync(block.Id); break;
+            case "ContextDividerThinner" when block.Kind == "divider" && block.Divider is not null: ResizeDivider(-1); break;
+            case "ContextDividerThicker" when block.Kind == "divider" && block.Divider is not null: ResizeDivider(1); break;
+            default:
+                if (block.Kind == "divider" && block.Divider is not null && command.StartsWith("ContextDividerColor", StringComparison.Ordinal))
+                {
+                    var surface = ContextSurfaces.FirstOrDefault(item => item.Name == command["ContextDividerColor".Length..] && item.Hex.Length > 0);
+                    if (surface.Hex is null) return false;
+                    block.Divider.Color = surface.Hex; CommitViewEdit();
+                }
+                else return false;
+                break;
+        }
+        RefreshCuiContext(); return true;
+        void ResizeImage(double delta)
+        {
+            var current = block.Image!.Width > 0 ? block.Image.Width : 320;
+            block.Image.Width = Math.Clamp(current + delta, 40, 1600); CommitViewEdit();
+        }
+        void ResizeDivider(double delta)
+        {
+            block.Divider!.Thickness = Math.Clamp(block.Divider.Thickness + delta, 1, 12); CommitViewEdit();
+        }
+    }
+}

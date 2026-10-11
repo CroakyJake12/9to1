@@ -90,7 +90,7 @@ internal sealed class DashboardEditPlanner(IOllamaClient models, Func<string?> d
                     model.Name,
                     [new OllamaMessage("user", prompt)],
                     EffortLevel.Low,
-                    "You are Haven's dashboard layout planner. Output strict JSON only. You may only use the explicitly allowed dashboard operations.",
+                    "You are 9to1's dashboard layout planner. Output strict JSON only. You may only use the explicitly allowed dashboard operations.",
                     Options: new GenerationOptions(0.2, 4096, 0)),
                 cancellationToken).ConfigureAwait(false);
 
@@ -102,7 +102,7 @@ internal sealed class DashboardEditPlanner(IOllamaClient models, Func<string?> d
         }
         catch (Exception ex) when (ex is IOException or HttpRequestException or JsonException or InvalidOperationException)
         {
-            return Fail($"Edit with Haven could not create a safe plan: {ex.Message}");
+            return Fail($"Edit with 9to1 could not create a safe plan: {ex.Message}");
         }
     }
 
@@ -110,10 +110,10 @@ internal sealed class DashboardEditPlanner(IOllamaClient models, Func<string?> d
         string response,
         IReadOnlyList<DashboardWidgetViewState> widgets)
     {
-        if (string.IsNullOrWhiteSpace(response)) return Fail("Haven returned an empty dashboard plan.");
+        if (string.IsNullOrWhiteSpace(response)) return Fail("9to1 returned an empty dashboard plan.");
         var start = response.IndexOf('{');
         var end = response.LastIndexOf('}');
-        if (start < 0 || end <= start) return Fail("Haven did not return a valid dashboard plan.");
+        if (start < 0 || end <= start) return Fail("9to1 did not return a valid dashboard plan.");
 
         PlannerPayload? payload;
         try
@@ -125,13 +125,13 @@ internal sealed class DashboardEditPlanner(IOllamaClient models, Func<string?> d
         }
         catch (JsonException)
         {
-            return Fail("Haven returned malformed dashboard-plan JSON.");
+            return Fail("9to1 returned malformed dashboard-plan JSON.");
         }
 
         if (payload?.Operations is null || payload.Operations.Count == 0)
-            return Fail("Haven did not propose any dashboard changes.");
+            return Fail("9to1 did not propose any dashboard changes.");
         if (payload.Operations.Count > MaxOperations)
-            return Fail($"Haven proposed too many changes at once. The limit is {MaxOperations}.");
+            return Fail($"9to1 proposed too many changes at once. The limit is {MaxOperations}.");
 
         var knownKeys = widgets.Select(item => item.Definition.Key).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var operations = new List<DashboardEditOperation>(payload.Operations.Count);
@@ -139,31 +139,31 @@ internal sealed class DashboardEditPlanner(IOllamaClient models, Func<string?> d
         {
             var action = item.Action?.Trim().ToLowerInvariant();
             if (string.IsNullOrWhiteSpace(action) || !AllowedActions.Contains(action))
-                return Fail("Haven proposed an unsupported dashboard operation.");
+                return Fail("9to1 proposed an unsupported dashboard operation.");
 
             var key = item.Key?.Trim();
             if (action is "show" or "hide" or "move" or "resize")
             {
                 if (string.IsNullOrWhiteSpace(key) || !knownKeys.Contains(key))
-                    return Fail("Haven referenced a widget that is not on this dashboard.");
+                    return Fail("9to1 referenced a widget that is not on this dashboard.");
             }
 
             if (action == "move")
             {
                 if (item.Column is null or < 0 or >= DashboardWidgetLayoutEngine.Columns || item.Row is null or < 0 or > 200)
-                    return Fail("Haven proposed an invalid widget position.");
+                    return Fail("9to1 proposed an invalid widget position.");
             }
             if (action == "resize")
             {
                 if (item.Width is null or < 1 or > DashboardWidgetLayoutEngine.Columns || item.Height is null or < 1 or > 6)
-                    return Fail("Haven proposed an invalid widget size.");
+                    return Fail("9to1 proposed an invalid widget size.");
             }
             var validatedTitle = item.Title;
             if (action == "rename-page")
             {
                 validatedTitle = item.Title?.Trim();
                 if (string.IsNullOrWhiteSpace(validatedTitle) || validatedTitle.Length > 60)
-                    return Fail("Haven proposed an invalid dashboard page title.");
+                    return Fail("9to1 proposed an invalid dashboard page title.");
             }
 
             operations.Add(new DashboardEditOperation(action, key, item.Column, item.Row, item.Width, item.Height, validatedTitle));

@@ -2,7 +2,7 @@
 
 Status: **inventory in progress; release acceptance is not satisfied**.
 
-Primary donor: AppFlowy, selected revision `804d7898ac0becabf73e45527baf5d5c573cd6bb`, recorded in [DONOR-PROVENANCE.md](Source/DONOR-PROVENANCE.md). The donor must be evaluated at this revision. This manifest separates source presence from integration and runtime proof. No donor source was changed.
+Required primary donor: the AppFlowy workspace application. The recorded source pin `804d7898ac0becabf73e45527baf5d5c573cd6bb` in [DONOR-PROVENANCE.md](Source/DONOR-PROVENANCE.md) is for **AppFlowy Board (`AppFlowy-IO/appflowy-board`)**, not the full AppFlowy workspace application. That pin can support only its applicable board-library provenance; it does not establish a selected full-workspace donor revision or full block/page/database parity. The complete workspace donor revision and inventory remain unresolved. This manifest separates source presence from integration and runtime proof. No donor source was changed.
 
 The donor-parity contract requires every applicable user-visible feature and non-proprietary block to be classified as Preserve, Replace with a 9to1-native equivalent, or Not applicable. The table below is the current known-feature inventory; it is deliberately marked incomplete until the pinned donor's complete public UI and block catalogue have been audited.
 
@@ -18,10 +18,17 @@ The donor-parity contract requires every applicable user-visible feature and non
 ## Known release gaps
 
 - The current shared service stores Boards as a `NotesDocument` with `ProductKey=boards`; it does not yet establish the canonical Board/Page schema required by the specification (including `PageType`, nested `ParentPageID`, page-level permissions/revisions, and explicit shared artifact references).
+- The standalone native app uses `ContractSessionAdapter` → `RichBoardSession` → `JsonFileHavenBoardStore` and the `.9to1board`/`HavenRichNotes` contract, while browser registration supplies `INotesRepository` → `BoardsWorkspaceService` and `NotesDocument`. These are existing distinct paths; a shared canonical cross-client Board/Page identity and revision adapter is not established by either path's tests. Convergence must preserve both existing formats and their user data rather than discarding one store.
 - The current desktop Boards surface has a board picker, recoverable board/page trash, and persisted Edit/View plus Locked/Unlocked controls. Its hierarchy presentation is section/page grouping, not nested parent/child pages; its library is not the required recent-board visual card/grid landing with a Recent pages/components view.
 - The generic Home Shared Productivity Engine, versioned cross-app object bundle, Data-owned artifacts, Write/Canvas canonical page references, Chat/ScopedChat and source ingestion, persistent AI bar, and Home permission broker are dependencies owned outside Boards and are not proven by this lane's code.
 - Full action-catalogue/API parity, authorization broker enforcement, structured errors, revision conflict handling, collaboration merge semantics, platform capability negotiation, web/9to1-OS acceptance, virtualization/performance, accessibility and Home-absent bootstrap remain unverified or incomplete.
-- Current focused shared Boards test execution is blocked before Boards compilation by nullable-reference build errors in `Haven.Application/Canvas/CanvasArtifactCodec.cs`; that file is outside this lane's ownership.
+- The earlier shared-test record was blocked by Canvas nullable diagnostics. The 11 October 2026 isolated Home repair checkout built the current Boards browser core, rich-text runner and retained scene in Release with zero warnings/errors. Its 108 executed assertions cover actual canonical repository lifecycle/revision conflicts/uncertain saves, page-scoped editing, modes, recovery, checklist undo, durable revision preservation and rich-text round-trips. This focused result does not establish donor parity or native/browser interactive acceptance.
+
+## Browser workspace repair, 11 October 2026
+
+`apps/Web/Productivity/Boards/Boards.cui` now projects the existing canonical `BoardsWorkspaceService` and `NotesDocument` through a board picker, page navigation, page actions and contextual editing. The original retained shared editor has an opt-in seamless presentation; its optional page scope prevents select-all, caret movement and text replacement from reaching another page. The normal one-argument Write editor API and paper presentation remain available unchanged. Mode, ordering and recovery state still use the maintained Boards owner; the UI owns no second store or database.
+
+The browser model remains section/page based. This repair does not implement nested `ParentPageID`, every donor block, canonical Data view hosting, page-level Rnote drawing, embedded Write/Canvas/Chat page types, the Dulche AI bar, cross-device cloud persistence or full native parity. Those requirements remain open, with unsupported content preserved rather than flattened into this browser view. Native and browser stage acceptance must be recorded independently after exercising the corresponding running artifacts.
 
 ## Completion rule
 

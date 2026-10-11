@@ -49,7 +49,7 @@ public sealed class Markdown : Container
         "Components/Markdown/Markdown.cs",
         ["Markdown"],
         [],
-        "Block markdown expands into canonical Haven elements; code actions are semantic events rather than platform controls.");
+        "Block markdown expands into canonical 9to1 elements; code actions are semantic events rather than platform controls.");
 
     private void Rebuild()
     {
@@ -283,7 +283,7 @@ public sealed class Markdown : Container
         {
             1 => HavenCornerRadius.Uniform(parts[0]),
             4 => new HavenCornerRadius(parts[0], parts[1], parts[2], parts[3]),
-            _ => throw new FormatException("Markdown surface radius accepts one or four Haven lengths.")
+            _ => throw new FormatException("Markdown surface radius accepts one or four 9to1 lengths.")
         };
     }
 

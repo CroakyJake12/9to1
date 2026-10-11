@@ -85,7 +85,7 @@ public sealed class RecoverySafetyProbe(IAppPaths paths) : IRecoverySafetyProbe
                 true,
                 failures.Count,
                 safeMode
-                    ? $"Haven detected {failures.Count} recent unclean desktop starts. Background automation is blocked until Haven completes a clean desktop shutdown."
+                    ? $"9to1 detected {failures.Count} recent unclean desktop starts. Background automation is blocked until 9to1 completes a clean desktop shutdown."
                     : "Crash-loop threshold not reached.",
                 now);
         }

@@ -41,7 +41,7 @@ public sealed class CuiThemeScope
 
     /// <summary>
     /// Resolves a theme name string to a CuiTheme enum value.
-    /// "Default" resolves to the currently configured global theme (fallback: Glow).
+    /// "Default" resolves to the currently configured global theme (initially Professional).
     /// Null/empty also resolves to the global default.
     /// </summary>
     public static CuiTheme ResolveThemeName(string? themeName, CuiTheme globalDefault)
@@ -51,15 +51,29 @@ public sealed class CuiThemeScope
 
         return themeName.Trim() switch
         {
-            "Default" or "default" => globalDefault,
+            "Default" or "default" or "user_preference" or "USER_PREFERENCE" => globalDefault,
             "Glow" or "glow" => CuiTheme.Glow,
             "Bubble" or "bubble" => CuiTheme.Bubble,
             "Retro" or "retro" => CuiTheme.Retro,
             "Playful" or "playful" => CuiTheme.Playful,
             "Cinematic" or "cinematic" => CuiTheme.Cinematic,
             "Professional" or "professional" => CuiTheme.Professional,
-            _ => globalDefault // Unknown themes fall back to default, not crash
+            _ => CuiTheme.Professional
         };
+    }
+
+    /// <summary>Full scope resolution, including custom rules and explicit fallback diagnosis.</summary>
+    public static CuiThemeResolution Resolve(string? themeName, CuiThemeDefinitionCatalog catalog,
+        CuiThemePreferenceContext? preference = null, CuiTheme globalDefault = CuiTheme.Professional)
+    {
+        ArgumentNullException.ThrowIfNull(catalog);
+        if (preference is not null && (string.IsNullOrWhiteSpace(themeName) || themeName.Equals("user_preference", StringComparison.OrdinalIgnoreCase) || themeName.Equals("Default", StringComparison.OrdinalIgnoreCase)))
+            return preference.Current;
+        var name = string.IsNullOrWhiteSpace(themeName) || themeName.Equals("user_preference", StringComparison.OrdinalIgnoreCase) ||
+            themeName.Equals("Default", StringComparison.OrdinalIgnoreCase) ? CuiThemeCatalog.Name(globalDefault) : themeName.Trim();
+        if (catalog.TryResolve(name, out var resolved) && resolved is not null)
+            return new(resolved, name, null, false, preference?.Current.Accessibility ?? CuiAccessibilitySettings.Default);
+        return new(catalog.Resolve("Professional"), name, $"CUI theme '{name}' is unavailable; using Professional.", true, preference?.Current.Accessibility ?? CuiAccessibilitySettings.Default);
     }
 }
 
@@ -91,7 +105,7 @@ public sealed class CuiThemeScopeStack
     private readonly Stack<CuiTheme> _stack = new();
     private readonly CuiTheme _globalDefault;
 
-    public CuiThemeScopeStack(CuiTheme globalDefault = CuiTheme.Glow)
+    public CuiThemeScopeStack(CuiTheme globalDefault = CuiTheme.Professional)
     {
         _globalDefault = globalDefault;
         _stack.Push(globalDefault);

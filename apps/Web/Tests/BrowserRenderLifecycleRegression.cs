@@ -159,7 +159,7 @@ await session.Dispatch(() =>
 }, CancellationToken.None);
 
 static BrowserCuiSurface Surface(RenderProbeModel model, RenderProbeLifetime lifetime, RenderProbeAdmission admission) =>
-    new(new CuiRichParser().Parse("<Cui version=\"1\"><StackPanel><Button content=\"{Binding Caption}\" action=\"Run\" /><TextBlock text=\"{Binding Caption}\" /></StackPanel></Cui>"),
+    new(new CuiRichParser().Parse("<Cui version=\"1\"><Page><Container Type=\"Vertical Stack\"><Button content=\"{Binding Caption}\" action=\"Run\" /><Text text=\"{Binding Caption}\" /></Container></Page></Cui>"),
         model, model, lifetime, Admission: admission);
 
 public sealed class RenderLifecycleApplication : Application

@@ -49,7 +49,7 @@ internal sealed partial class WriteDocumentSurface
                 var rowSpan = Math.Max(1, cell.RowSpan);
                 var weight = row == 0 && table.HeaderRow ? 600 : 400;
                 var paragraph = HavenSceneControl.ShapeParagraph([new HavenParagraphRun(cell.Text, "Montserrat", 11 * _zoom,
-                    weight, false, new HavenSolidBrush(255, 35, 42, 52))], Math.Max(1, unit * span - 12));
+                    weight, false, _workspaceForeground ?? new HavenSolidBrush(255, 35, 42, 52))], Math.Max(1, unit * span - 12));
                 prepared.Add((cell, row, column, span, rowSpan, paragraph));
                 // Grow the same row/span allocation used by paint, hit testing and pagination.
                 // Later growth is monotonic, so it cannot invalidate an earlier span's height.

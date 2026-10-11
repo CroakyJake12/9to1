@@ -11,7 +11,7 @@ public sealed partial class MainView
 
     private void InitialiseNativeChatSidebar()
     {
-        var services = App.Services ?? throw new InvalidOperationException("Haven services are unavailable while constructing the Chat sidebar.");
+        var services = App.Services ?? throw new InvalidOperationException("9to1 services are unavailable while constructing the Chat sidebar.");
         _nativeChatSidebar = new NativeChatSidebar(
             _conversations,
             _containers,

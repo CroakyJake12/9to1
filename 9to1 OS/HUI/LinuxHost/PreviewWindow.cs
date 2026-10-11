@@ -38,7 +38,7 @@ public sealed class PreviewWindow : Window
             _surface = new HuiAppSurface(page,
                 new HuiSurfaceServices(rootBackend), HavenPlatform.Linux);
 
-            Title = "CakeOS HUI Linux";
+            Title = "9to1OS HUI Linux";
             Width = 960;
             Height = 600;
             MinWidth = 720;
@@ -66,7 +66,7 @@ public sealed class PreviewWindow : Window
         _surface = new HuiAppSurface(scene.Root,
             new HuiSurfaceServices(backend), HavenPlatform.Linux);
 
-        Title = "CakeOS HUI Linux Preview";
+        Title = "9to1OS HUI Linux Preview";
         Width = 960;
         Height = 600;
         MinWidth = 720;
@@ -137,7 +137,7 @@ public sealed class PreviewWindow : Window
         _surface.Input.PointerPressed(center);
         if (!_surface.Input.PointerReleased(center) || _demoAction.Accessibility.Selected != true)
             throw new InvalidOperationException("HUI pointer activation self-test failed.");
-        Title = "CakeOS HUI Linux Preview - input passed";
+        Title = "9to1OS HUI Linux Preview - input passed";
     }
 
     private IImage? ImageFor(string source)

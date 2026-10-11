@@ -344,7 +344,7 @@ public partial class NotesPage : UserControl, IDisposable, INotifyPropertyChange
             if (first is null) await NewDocumentAsync();
             else await OpenDocumentAsync(first.Id, cancellationToken);
             _autosaveTimer.Start();
-            Status = "Haven Notes is ready. Changes autosave locally.";
+            Status = "9to1 Notes is ready. Changes autosave locally.";
             _isInitialized = true;
         }
         finally
@@ -666,7 +666,7 @@ public partial class NotesPage : UserControl, IDisposable, INotifyPropertyChange
                 ReliabilitySeverity.Error,
                 "notes",
                 "autosave-failed",
-                "Haven Notes could not complete an atomic save.",
+                "9to1 Notes could not complete an atomic save.",
                 new Dictionary<string, string> { ["exceptionType"] = ex.GetType().Name },
                 cancellationToken: CancellationToken.None);
         }

@@ -89,7 +89,7 @@ public sealed partial class NewChatPage
                 if (!_originalWork.IsRetiring && !_disposed && _conversation.Id == target.ConversationId &&
                     _originalPresentationGeneration == target.Generation)
                     await original.AwaitAsync(InvokeOriginalChatUiAsync(() => current.Owner.InvokeOriginalPresentationCallback(
-                        () => SetProjectionStatus("Haven could not stop that task: " + cause.Message))));
+                        () => SetProjectionStatus("9to1 could not stop that task: " + cause.Message))));
             }
         }, actual =>
         {

@@ -88,7 +88,7 @@ public sealed class BuiltInAutomationActionNodeExecutor : IAutomationGraphNodeEx
             }
             else
             {
-                issues.Add(new AutomationGraphValidationIssue("file.operation.unsupported", "File nodes support read and search. Writes stay on Haven's explicit permissioned file-action path.", node.Id));
+                issues.Add(new AutomationGraphValidationIssue("file.operation.unsupported", "File nodes support read and search. Writes stay on 9to1's explicit permissioned file-action path.", node.Id));
             }
         }
         else if (IsCategory(node, BuiltInAutomationNodeCategory.Action))
@@ -110,7 +110,7 @@ public sealed class BuiltInAutomationActionNodeExecutor : IAutomationGraphNodeEx
 
     private async Task<AutomationGraphNodeExecutionResult> ExecuteAppAsync(AutomationGraphNodeDefinition node, CancellationToken cancellationToken)
     {
-        if (_deviceActions is null) return new(false, "The app-launch capability is unavailable. Haven did not perform a substitute action.");
+        if (_deviceActions is null) return new(false, "The app-launch capability is unavailable. 9to1 did not perform a substitute action.");
         var platform = OperatingSystem.IsAndroid() ? CapabilityPlatform.Android : CapabilityPlatform.Windows;
         var target = new DeviceTargetDescriptor("current", "Current device", platform, DeviceTargetKind.CurrentDevice,
             platform == CapabilityPlatform.Windows ? WindowsComputerDeviceActionProvider.NativeProviderId : null);
@@ -124,7 +124,7 @@ public sealed class BuiltInAutomationActionNodeExecutor : IAutomationGraphNodeEx
 
     private async Task<AutomationGraphNodeExecutionResult> ExecuteFileAsync(AutomationGraphNodeDefinition node, CancellationToken cancellationToken)
     {
-        if (_filesystem is null) return new(false, "The workspace file capability is unavailable. Haven did not perform a substitute action.");
+        if (_filesystem is null) return new(false, "The workspace file capability is unavailable. 9to1 did not perform a substitute action.");
         var root = Parameter(node, "workspaceRoot");
         var operation = Parameter(node, "operation", "read");
         FilesystemActionResult result = operation.Equals("search", StringComparison.OrdinalIgnoreCase)

@@ -35,7 +35,7 @@ public sealed class NativeTasksSpacePage : UserControl, IActivatablePage, IDispo
         _scene = new TasksSpaceHavenScene();
         Scene = new HavenSceneControl { Root = _scene.Root };
         AutomationProperties.SetAutomationId(this, "HavenNativeTasksSpacePage");
-        AutomationProperties.SetName(this, "Haven Tasks Space");
+        AutomationProperties.SetName(this, "9to1 Tasks Space");
         AutomationProperties.SetAutomationId(Scene, "HavenNativeTasksSpaceScene");
         AutomationProperties.SetName(Scene, "One-off delegated tasks");
         Content = Scene;

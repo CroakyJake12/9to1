@@ -43,7 +43,7 @@ public sealed partial class AutomationsPage : UserControl
     private readonly StackPanel _historyView = new() { Spacing = 14, IsVisible = false };
     private readonly StackPanel _reusableView = new() { Spacing = 20, IsVisible = false };
     private readonly HavenSearchInput _taskSearch = new() { PlaceholderText = "Search automations" };
-    private readonly TextBlock _emptyText = Muted("No reusable workflows yet. Create one to give Haven a repeatable outcome and rules.");
+    private readonly TextBlock _emptyText = Muted("No reusable workflows yet. Create one to give 9to1 a repeatable outcome and rules.");
     private readonly TextBlock _status = Muted(string.Empty);
     private readonly Grid _dashboard = new();
     private readonly Grid _editor = new();
@@ -76,7 +76,7 @@ public sealed partial class AutomationsPage : UserControl
         FontSize = 15,
         FontWeight = FontWeight.SemiBold
     };
-    private readonly HavenTextInput _assistant = Field("Ask Haven Anything");
+    private readonly HavenTextInput _assistant = Field("Ask 9to1 Anything");
     private readonly HavenPopupCard _instructionsOverlay = new() { IsVisible = false };
     private readonly HavenMultilineInput _instructions = new()
     {
@@ -335,7 +335,7 @@ public sealed partial class AutomationsPage : UserControl
             Padding = new Thickness(18),
             Child = _assistantMessage
         };
-        var assistantSend = AccentIconButton("arrow-up", "Ask Haven about this task");
+        var assistantSend = AccentIconButton("arrow-up", "Ask 9to1 about this task");
         assistantSend.Click += async (_, _) => await AskAssistantAsync();
         _assistant.KeyDown += async (_, e) =>
         {
@@ -722,7 +722,7 @@ public sealed partial class AutomationsPage : UserControl
         var draft = BuildInstructions();
         _assistant.Text = string.Empty;
         await InvokeAsync(
-            "Help me configure this reusable Haven workflow. Review the current task draft below, answer my request, and propose exact improved Name, Goal, and Rules. Do not run the task yet.\n\n" +
+            "Help me configure this reusable 9to1 workflow. Review the current task draft below, answer my request, and propose exact improved Name, Goal, and Rules. Do not run the task yet.\n\n" +
             draft + "\n\nRequest:\n" + request);
     }
 

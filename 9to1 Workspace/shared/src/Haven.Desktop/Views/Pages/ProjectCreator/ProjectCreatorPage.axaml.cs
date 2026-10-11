@@ -99,7 +99,7 @@ public sealed partial class ProjectCreatorPage : UserControl
         BrowseButton.Click += async (_, _) =>
         {
             _bus.Fire("ProjectCreator.Actions.Browse");
-            var folders = await PickFolderAsync("Choose where Haven should create the project");
+            var folders = await PickFolderAsync("Choose where 9to1 should create the project");
             var path = folders.FirstOrDefault()?.TryGetLocalPath();
             if (!string.IsNullOrWhiteSpace(path)) DestinationBox.Text = path;
         };

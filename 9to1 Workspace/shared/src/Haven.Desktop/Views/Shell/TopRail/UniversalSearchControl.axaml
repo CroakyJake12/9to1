@@ -12,8 +12,8 @@
       <Grid>
         <hui:HavenTextInput x:Name="SearchBox"
                  AutomationProperties.AutomationId="LauncherSearchBox"
-                 AutomationProperties.Name="Search Haven"
-                 PlaceholderText="Search Haven"
+                 AutomationProperties.Name="Search 9to1"
+                 PlaceholderText="Search 9to1"
                  Padding="43,13,14,13"
                  FontSize="15"
                  BorderThickness="0"

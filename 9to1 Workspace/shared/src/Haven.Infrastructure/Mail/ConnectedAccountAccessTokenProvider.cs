@@ -23,7 +23,7 @@ public sealed class ConnectedAccountAccessTokenProvider(
         var scopes = ParseScopes(token.Scope);
         var missing = requiredScopes.Where(scope => !scopes.Contains(scope)).ToArray();
         if (missing.Length > 0)
-            throw new MailProviderException(MailFailureKind.PermissionDenied, "Reconnect this account in Settings to grant Haven Mail access.");
+            throw new MailProviderException(MailFailureKind.PermissionDenied, "Reconnect this account in Settings to grant 9to1 Mail access.");
 
         if (token.ExpiresAt <= DateTimeOffset.UtcNow.AddMinutes(2))
         {
@@ -45,7 +45,7 @@ public sealed class ConnectedAccountAccessTokenProvider(
 
         var clientId = clientIds.GetClientId(provider);
         if (string.IsNullOrWhiteSpace(clientId))
-            throw new MailProviderException(MailFailureKind.NotConnected, $"{provider} is not configured on this Haven installation.");
+            throw new MailProviderException(MailFailureKind.NotConnected, $"{provider} is not configured on this 9to1 installation.");
 
         var endpoint = provider == CalendarProviderKind.Google
             ? new Uri("https://oauth2.googleapis.com/token")
@@ -85,7 +85,7 @@ public sealed class ConnectedAccountAccessTokenProvider(
         }
         catch (HttpRequestException ex)
         {
-            throw new MailProviderException(MailFailureKind.Offline, "Haven could not reach the mail provider.", ex);
+            throw new MailProviderException(MailFailureKind.Offline, "9to1 could not reach the mail provider.", ex);
         }
         catch (JsonException ex)
         {

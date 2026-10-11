@@ -63,8 +63,8 @@ public sealed partial class CanvasHostWindow : Window
         _approvals = new(Get<HomeCoreRuntime>(), Get<HomeLocalProfileIdentity>(), Get<HomePermissionTrustService>());
         _approvals.DemandExternalOriginalRetirementJoin();
         var controls = new CuiControlRegistry();
-        controls.RegisterControlType("CanvasHostContent", _ => _content);
-        controls.RegisterControlType("CanvasHostApprovals", _ => _approvals);
+        controls.BindAuthoredControl("canvas-native-content", _ => _content);
+        controls.BindAuthoredControl("canvas-home-approvals", _ => _approvals);
         _shell = new(controls);
         _model.Set("NewName", "Untitled canvas");
         Content = _shell;

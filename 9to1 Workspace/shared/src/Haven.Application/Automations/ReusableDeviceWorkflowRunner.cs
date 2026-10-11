@@ -25,13 +25,13 @@ public sealed class ReusableDeviceWorkflowRunner(
     {
         ArgumentNullException.ThrowIfNull(definition);
         if (string.IsNullOrWhiteSpace(definition.GraphJson)) return new(ReusableDeviceWorkflowRunKind.NotDeviceWorkflow, "This workflow uses its instruction path.");
-        if (!AutomationGraphCodec.TryDeserialize(definition.GraphJson, out var graph)) return new(ReusableDeviceWorkflowRunKind.InvalidGraph, "This workflow graph could not be read, so Haven did not execute it.");
+        if (!AutomationGraphCodec.TryDeserialize(definition.GraphJson, out var graph)) return new(ReusableDeviceWorkflowRunKind.InvalidGraph, "This workflow graph could not be read, so 9to1 did not execute it.");
         if (graph.Nodes.Count > 0 && graph.Nodes.All(node => string.Equals(node.Category, "Instruction", StringComparison.OrdinalIgnoreCase)))
             return new(ReusableDeviceWorkflowRunKind.NotDeviceWorkflow, "This workflow uses its instruction path.");
 
         var deviceGraphNodes = graph.Nodes.Where(node => string.Equals(node.Category, DeviceAutomationNodeCategory.Key, StringComparison.OrdinalIgnoreCase)).ToArray();
-        if (deviceGraphNodes.Any(node => node.ToDevice() is null)) return new(ReusableDeviceWorkflowRunKind.InvalidGraph, "This DEVICE workflow is missing a target or action, so Haven did not execute it.");
-        if (deviceGraphNodes.Length > 0 && executor is null) return new(ReusableDeviceWorkflowRunKind.UnsupportedGraph, "The DEVICE graph executor is unavailable, so Haven did not perform a substitute action.");
+        if (deviceGraphNodes.Any(node => node.ToDevice() is null)) return new(ReusableDeviceWorkflowRunKind.InvalidGraph, "This DEVICE workflow is missing a target or action, so 9to1 did not execute it.");
+        if (deviceGraphNodes.Length > 0 && executor is null) return new(ReusableDeviceWorkflowRunKind.UnsupportedGraph, "The DEVICE graph executor is unavailable, so 9to1 did not perform a substitute action.");
 
         DeviceGraphNodeExecutor? adapter = executor is null ? null : new DeviceGraphNodeExecutor(executor, permissionGranted);
         var executors = new List<IAutomationGraphNodeExecutor>();

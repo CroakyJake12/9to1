@@ -17,7 +17,7 @@ public sealed record ModelPersonality(
     public static readonly ModelPersonality Defaults = new();
 }
 
-/// <summary>Per-model personalisation entry. Null members mean "use Haven defaults" (inheritance).</summary>
+/// <summary>Per-model personalisation entry. Null members mean "use 9to1 defaults" (inheritance).</summary>
 public sealed record ModelPersonalisationEntry(
     string ModelKey,
     string? Nickname = null,

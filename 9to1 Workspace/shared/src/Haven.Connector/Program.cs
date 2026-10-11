@@ -27,7 +27,7 @@ if (string.IsNullOrWhiteSpace(apiKey))
 if (string.IsNullOrWhiteSpace(apiKey) || apiKey.Length < 24)
 {
     Console.Error.WriteLine(
-        "Haven Connector did not start: set HAVEN_CONNECTOR_KEY or VS_BUILD_AGENT_KEY to a random secret of at least 24 characters.");
+        "9to1 Connector did not start: set HAVEN_CONNECTOR_KEY or VS_BUILD_AGENT_KEY to a random secret of at least 24 characters.");
     Environment.ExitCode = 2;
     return;
 }
@@ -41,7 +41,7 @@ app.Use(async (context, next) =>
     if (!FixedTimeEquals(apiKey, supplied))
     {
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        await context.Response.WriteAsJsonAsync(new { error = "Invalid or missing Haven connector API key." });
+        await context.Response.WriteAsJsonAsync(new { error = "Invalid or missing 9to1 connector API key." });
         return;
     }
 

@@ -56,7 +56,7 @@ public sealed class AdvancedCodeIntelligenceService(
         {
             if (action.Edit is null || action.Edit.Documents.Count == 0)
             {
-                proposals.Add(new CodeActionProposal(Guid.NewGuid(), action.Title, action.Kind, action.IsPreferred, [], action.ServerCommand is null ? "The language server did not provide an applicable edit." : $"This action requires server command '{action.ServerCommand}', which Haven does not execute outside the safe workspace transaction path."));
+                proposals.Add(new CodeActionProposal(Guid.NewGuid(), action.Title, action.Kind, action.IsPreferred, [], action.ServerCommand is null ? "The language server did not provide an applicable edit." : $"This action requires server command '{action.ServerCommand}', which 9to1 does not execute outside the safe workspace transaction path."));
                 continue;
             }
             try
@@ -92,7 +92,7 @@ public sealed class AdvancedCodeIntelligenceService(
         var definition = await configurations.FindForPathAsync(path, cancellationToken).ConfigureAwait(false) ?? throw new NotSupportedException("No enabled language server is configured for this file type.");
         if (!ExecutableLocator.IsAvailable(definition.Command)) throw new InvalidOperationException($"{definition.DisplayName} is configured, but '{definition.Command}' is unavailable.");
         await using var server = await languageServers.StartAsync(definition, root, cancellationToken).ConfigureAwait(false);
-        if (server is not IAdvancedLanguageServerClient advanced) throw new NotSupportedException("The configured language-server client does not expose Haven's advanced protocol features.");
+        if (server is not IAdvancedLanguageServerClient advanced) throw new NotSupportedException("The configured language-server client does not expose 9to1's advanced protocol features.");
         var uri = StdioLanguageServerClient.ToDocumentUri(path);
         await server.OpenDocumentAsync(uri, definition.LanguageId, documentText, 1, cancellationToken).ConfigureAwait(false);
         return await action(advanced, uri, cancellationToken).ConfigureAwait(false);

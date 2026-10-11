@@ -347,7 +347,7 @@ public sealed class McpToolRuntime(IExternalConnectionRepository connections, IM
 
     private static void WriteSanitizedSchemaElement(Utf8JsonWriter writer, JsonElement element, string? propertyName, int depth)
     {
-        if (depth > 64) throw new InvalidOperationException("MCP schema nesting exceeded Haven's safety limit.");
+        if (depth > 64) throw new InvalidOperationException("MCP schema nesting exceeded 9to1's safety limit.");
         switch (element.ValueKind)
         {
             case JsonValueKind.Object:

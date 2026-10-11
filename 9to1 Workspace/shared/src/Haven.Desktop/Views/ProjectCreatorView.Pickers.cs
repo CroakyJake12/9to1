@@ -8,7 +8,7 @@ public sealed partial class ProjectCreatorView
 {
     private async void OnChooseDestinationClicked(object? sender, RoutedEventArgs e)
     {
-        var folders = await PickFolderAsync("Choose where Haven should create the project");
+        var folders = await PickFolderAsync("Choose where 9to1 should create the project");
         var path = folders.FirstOrDefault()?.TryGetLocalPath();
         if (!string.IsNullOrWhiteSpace(path))
         {

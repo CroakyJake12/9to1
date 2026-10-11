@@ -78,7 +78,7 @@ internal static class TaskbarShelfLayout
         // visible shell composition as bottom taskbar chrome.
         scene.AppsButton.Accessibility.AccessibleName = "Apps";
         scene.ActionsButton.Accessibility.AccessibleName = "Actions";
-        scene.SearchButton.Accessibility.AccessibleName = "Search Haven";
+        scene.SearchButton.Accessibility.AccessibleName = "Search 9to1";
     }
 
     private static void SetWidth(Container host, HavenButton button, double width)

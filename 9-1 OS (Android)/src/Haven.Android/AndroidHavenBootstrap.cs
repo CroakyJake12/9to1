@@ -69,7 +69,7 @@ internal static class AndroidHavenBootstrap
         {
             AndroidRuntimeDiagnostics.Record(
                 exception,
-                "Applying an Android launcher request to the active Haven surface",
+                "Applying an Android launcher request to the active 9to1 surface",
                 showDialog: false);
         }
     }
@@ -88,7 +88,7 @@ internal static class AndroidHavenBootstrap
         {
             var services = App.Services
                 ?? throw new InvalidOperationException(
-                    "Haven services were not created before Android requested its main view.");
+                    "9to1 services were not created before Android requested its main view.");
 
             var preferences = services.GetRequiredService<UserPreferencesService>();
             preferences.ApplyAppearance(preferences.Appearance, save: false);
@@ -117,7 +117,7 @@ internal static class AndroidHavenBootstrap
         {
             AndroidRuntimeDiagnostics.Record(
                 exception,
-                "Haven main-view creation",
+                "9to1 main-view creation",
                 showDialog: true);
             throw;
         }
@@ -185,7 +185,7 @@ internal static class AndroidHavenBootstrap
                 if (recoveryState?.IsSafeMode == true)
                 {
                     services.GetRequiredService<NotificationService>().Show(
-                        "Haven recovery safe mode",
+                        "9to1 recovery safe mode",
                         recoveryState.Reason
                             + " Local chat and read-only workspace inspection remain available.",
                         ToastKind.Warning,
@@ -209,12 +209,12 @@ internal static class AndroidHavenBootstrap
             mainView.SetStartupError(exception.Message);
             AndroidRuntimeDiagnostics.Record(
                 exception,
-                "Haven service and main-view startup",
+                "9to1 service and main-view startup",
                 showDialog: true);
-            System.Diagnostics.Debug.WriteLine("[Haven Android startup] " + exception);
+            System.Diagnostics.Debug.WriteLine("[9to1 Android startup] " + exception);
 
             services.GetService<NotificationService>()?.Show(
-                "Haven could not finish starting",
+                "9to1 could not finish starting",
                 exception.Message,
                 ToastKind.Error,
                 TimeSpan.FromSeconds(30));

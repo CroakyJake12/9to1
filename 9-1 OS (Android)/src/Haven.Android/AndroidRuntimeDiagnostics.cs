@@ -54,7 +54,7 @@ internal static class AndroidRuntimeDiagnostics
         {
             AndroidLog.Error(
                 LogTag,
-                "Could not initialize Haven's private runtime-error file: "
+                "Could not initialize 9to1's private runtime-error file: "
                 + exception.Message);
         }
 
@@ -115,7 +115,7 @@ internal static class AndroidRuntimeDiagnostics
         }
         catch (Exception reportException)
         {
-            report = "Haven Android runtime report"
+            report = "9to1 Android runtime report"
                 + Environment.NewLine
                 + "UTC: "
                 + DateTimeOffset.UtcNow.ToString("O")
@@ -170,7 +170,7 @@ internal static class AndroidRuntimeDiagnostics
             {
                 AndroidLog.Error(
                     LogTag,
-                    "Could not read Haven's runtime-error report: "
+                    "Could not read 9to1's runtime-error report: "
                     + exception.Message);
                 return false;
             }
@@ -193,7 +193,7 @@ internal static class AndroidRuntimeDiagnostics
             {
                 AndroidLog.Error(
                     LogTag,
-                    "Could not clear Haven's runtime-error report: "
+                    "Could not clear 9to1's runtime-error report: "
                     + exception.Message);
             }
         }
@@ -205,14 +205,14 @@ internal static class AndroidRuntimeDiagnostics
         {
             AndroidToast.MakeText(
                 context,
-                "Haven could not start. A technical error report was saved.",
+                "9to1 could not start. A technical error report was saved.",
                 AndroidToastLength.Long)?.Show();
         }
         catch (Exception exception)
         {
             AndroidLog.Error(
                 LogTag,
-                "Could not show Haven's startup error message: "
+                "Could not show 9to1's startup error message: "
                 + exception.Message);
         }
     }
@@ -258,7 +258,7 @@ internal static class AndroidRuntimeDiagnostics
                         AndroidViewGroup.LayoutParams.WrapContent));
 
                 var builder = new AndroidAlertDialog.Builder(activity);
-                builder.SetTitle("Haven encountered an error");
+                builder.SetTitle("9to1 encountered an error");
                 builder.SetView(scroll);
                 builder.SetCancelable(false);
                 builder.SetNeutralButton(
@@ -289,7 +289,7 @@ internal static class AndroidRuntimeDiagnostics
                     Interlocked.Exchange(ref _reportPresented, 0);
                     AndroidLog.Error(
                         LogTag,
-                        "Could not create Haven's native runtime-error dialog.");
+                        "Could not create 9to1's native runtime-error dialog.");
                     return;
                 }
 
@@ -301,7 +301,7 @@ internal static class AndroidRuntimeDiagnostics
                 Interlocked.Exchange(ref _reportPresented, 0);
                 AndroidLog.Error(
                     LogTag,
-                    "Could not display Haven's native runtime-error dialog: "
+                    "Could not display 9to1's native runtime-error dialog: "
                     + exception.Message);
             }
         });
@@ -312,7 +312,7 @@ internal static class AndroidRuntimeDiagnostics
         string context)
     {
         var builder = new StringBuilder();
-        builder.AppendLine("Haven Android runtime report");
+        builder.AppendLine("9to1 Android runtime report");
         builder.AppendLine(
             "UTC: "
             + DateTimeOffset.UtcNow.ToString("O"));
@@ -320,7 +320,7 @@ internal static class AndroidRuntimeDiagnostics
             "Context: "
             + Sanitize(context));
         builder.AppendLine(
-            "Haven version: "
+            "9to1 version: "
             + (Assembly.GetExecutingAssembly()
                 .GetName()
                 .Version?.ToString()
@@ -412,7 +412,7 @@ internal static class AndroidRuntimeDiagnostics
             {
                 AndroidLog.Error(
                     LogTag,
-                    "Could not write Haven's runtime-error report: "
+                    "Could not write 9to1's runtime-error report: "
                     + exception.Message);
             }
         }
@@ -432,7 +432,7 @@ internal static class AndroidRuntimeDiagnostics
             }
 
             var clip = AndroidClipData.NewPlainText(
-                "Haven runtime report",
+                "9to1 runtime report",
                 report);
 
             if (clip is not null)
@@ -442,14 +442,14 @@ internal static class AndroidRuntimeDiagnostics
 
             AndroidToast.MakeText(
                 activity,
-                "Haven error report copied.",
+                "9to1 error report copied.",
                 AndroidToastLength.Short)?.Show();
         }
         catch (Exception exception)
         {
             AndroidLog.Error(
                 LogTag,
-                "Could not copy Haven's runtime-error report: "
+                "Could not copy 9to1's runtime-error report: "
                 + exception.Message);
         }
     }
@@ -465,14 +465,14 @@ internal static class AndroidRuntimeDiagnostics
             intent.SetType("text/plain");
             intent.PutExtra(
                 AndroidIntent.ExtraSubject,
-                "Haven Android runtime report");
+                "9to1 Android runtime report");
             intent.PutExtra(
                 AndroidIntent.ExtraText,
                 report);
 
             var chooser = AndroidIntent.CreateChooser(
                 intent,
-                "Share Haven error report");
+                "Share 9to1 error report");
 
             if (chooser is not null)
             {
@@ -483,7 +483,7 @@ internal static class AndroidRuntimeDiagnostics
         {
             AndroidLog.Error(
                 LogTag,
-                "Could not share Haven's runtime-error report: "
+                "Could not share 9to1's runtime-error report: "
                 + exception.Message);
         }
     }

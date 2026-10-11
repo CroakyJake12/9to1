@@ -20,7 +20,7 @@ public sealed partial class MailPage : UserControl, IDisposable
     public MailPage()
     {
         InitializeComponent();
-        var services = App.Services ?? throw new InvalidOperationException("Haven services are not initialized.");
+        var services = App.Services ?? throw new InvalidOperationException("9to1 services are not initialized.");
         _viewModel = new MailPageViewModel(
             services.GetRequiredService<IMailService>(),
             services.GetRequiredService<IProviderModelClient>());

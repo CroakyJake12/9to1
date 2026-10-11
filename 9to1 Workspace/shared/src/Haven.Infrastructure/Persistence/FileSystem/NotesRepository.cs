@@ -239,7 +239,7 @@ public sealed class NotesRepository(
             ApplyRetention(versions);
             historyComplete = true;
             await transaction.WriteDiagnosticAsync(diagnostics, ReliabilitySeverity.Information, "notes", "document-saved",
-                "A Haven Notes document was written atomically and versioned.",
+                "A 9to1 Notes document was written atomically and versioned.",
                 new Dictionary<string, string> { ["documentId"] = expectedId.ToString("D"),
                     ["version"] = document.Version.ToString(System.Globalization.CultureInfo.InvariantCulture),
                     ["sha256"] = hash, ["reason"] = NormalizeReason(reason) }, cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -297,7 +297,7 @@ public sealed class NotesRepository(
                 ReliabilitySeverity.Information,
                 "notes",
                 "document-trashed",
-                "A Haven Notes document was moved to recoverable trash.",
+                "A 9to1 Notes document was moved to recoverable trash.",
                 new Dictionary<string, string> { ["documentId"] = documentId.ToString("D") },
                 cancellationToken: cancellationToken).ConfigureAwait(false);
             return true;
@@ -584,7 +584,7 @@ public sealed class NotesRepository(
                 Kind = NotesRevisionKind.Restored,
                 Summary = "Recovered the last valid Notes version",
                 CreatedAt = recoveredAt,
-                Author = "Haven recovery"
+                Author = "9to1 recovery"
             });
     }
 

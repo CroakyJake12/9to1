@@ -197,7 +197,11 @@ public sealed class GenerateCuiResourcesTaskTests : IDisposable
         try
         {
             using (var held = new FileStream(output, FileMode.Open, FileAccess.Read, FileShare.None))
-                Assert.ThrowsAny<IOException>(() => CreateTask(root, output, resource).Execute());
+            {
+                Action execute = () => CreateTask(root, output, resource).Execute();
+                if (OperatingSystem.IsWindows()) Assert.ThrowsAny<IOException>(execute);
+                else Assert.Throws<UnauthorizedAccessException>(execute);
+            }
 
             Assert.Equal(prior, File.ReadAllBytes(output));
             Assert.Equal(new[] { "bundle.bin" }, FileNames(directory));

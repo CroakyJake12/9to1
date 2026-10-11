@@ -129,7 +129,7 @@ public sealed class ProviderConfigurationStore : IProviderConfigurationStore, ID
                 .OrderBy(item => item.Id, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
             if (stored.Length > MaximumProviders)
-                throw new InvalidOperationException($"Haven supports at most {MaximumProviders} provider configurations.");
+                throw new InvalidOperationException($"9to1 supports at most {MaximumProviders} provider configurations.");
             await SaveUnsafeAsync(stored, cancellationToken).ConfigureAwait(false);
         }
         finally { _gate.Release(); }

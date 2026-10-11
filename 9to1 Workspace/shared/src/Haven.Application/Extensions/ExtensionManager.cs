@@ -391,7 +391,7 @@ public sealed class ExtensionManager(
         var extensionRoot = Path.GetFullPath(Path.Combine(paths.DataDirectory, "extensions")) + Path.DirectorySeparatorChar;
         var installPath = Path.GetFullPath(package.InstallPath);
         if (!installPath.StartsWith(extensionRoot, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("Installed package path is outside Haven's extension store.");
+            throw new InvalidOperationException("Installed package path is outside 9to1's extension store.");
         var quarantine = installPath + ".uninstalling-" + Guid.NewGuid().ToString("N");
         var moved = false;
         await runtime.UnloadAsync(package.Manifest.PackageId, cancellationToken).ConfigureAwait(false);

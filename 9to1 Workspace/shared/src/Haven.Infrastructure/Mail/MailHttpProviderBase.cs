@@ -46,7 +46,7 @@ public abstract class MailHttpProviderBase(
         }
         catch (HttpRequestException ex)
         {
-            throw new MailProviderException(MailFailureKind.Offline, "Haven could not reach the mail provider.", ex);
+            throw new MailProviderException(MailFailureKind.Offline, "9to1 could not reach the mail provider.", ex);
         }
         catch (JsonException ex)
         {

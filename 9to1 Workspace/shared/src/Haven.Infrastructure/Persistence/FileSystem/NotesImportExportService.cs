@@ -84,7 +84,7 @@ public sealed partial class NotesImportExportService(
             ReliabilitySeverity.Information,
             "notes",
             "document-imported",
-            "A file was imported into a new Haven Notes document.",
+            "A file was imported into a new 9to1 Notes document.",
             new Dictionary<string, string>
             {
                 ["format"] = extension,
@@ -146,7 +146,7 @@ public sealed partial class NotesImportExportService(
                 ReliabilitySeverity.Information,
                 "notes",
                 "document-exported",
-                "A Haven Notes document was exported.",
+                "A 9to1 Notes document was exported.",
                 new Dictionary<string, string>
                 {
                     ["documentId"] = document.Id.ToString("D"),
@@ -168,7 +168,7 @@ public sealed partial class NotesImportExportService(
     public async Task PrintAsync(NotesDocument document, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(document);
-        if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException("Printing Haven Notes currently requires the Windows desktop host.");
+        if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException("Printing 9to1 Notes currently requires the Windows desktop host.");
         var directory = Path.Combine(Path.GetTempPath(), "Haven", "Print");
         Directory.CreateDirectory(directory);
         var path = Path.Combine(directory, "haven-notes-" + document.Id.ToString("N") + ".pdf");
@@ -192,7 +192,7 @@ public sealed partial class NotesImportExportService(
         }
         catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
         {
-            throw new InvalidOperationException("Haven created the print-ready PDF, but Windows could not open a print handler. The file remains at: " + path, ex);
+            throw new InvalidOperationException("9to1 created the print-ready PDF, but Windows could not open a print handler. The file remains at: " + path, ex);
         }
     }
 

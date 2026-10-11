@@ -446,7 +446,7 @@ internal sealed class ManifestDashboardTileProvider(DashboardTileDefinition defi
             "groups" => new DashboardTileData(snapshot.ChatGroups.ToString(), "Chat Groups"),
             "automations" => new DashboardTileData(snapshot.EnabledAutomations.ToString(), "Enabled automations"),
             "conversations" => new DashboardTileData(snapshot.ConversationsToday.ToString(), "Conversations today"),
-            _ => new DashboardTileData("Open", "Haven action")
+            _ => new DashboardTileData("Open", "9to1 action")
         };
         return Task.FromResult(data);
     }
@@ -601,11 +601,11 @@ internal static class BuiltInDashboardTiles
     [
         Tile("new-chat", "New chat", "Start a private local conversation", "chat", "action", "new-chat", 0,
             _ => new("Start", "Saved locally")),
-        Tile("call", "Call", "Talk with Haven hands-free", "call", "calls", "call", 1,
+        Tile("call", "Call", "Talk with 9to1 hands-free", "call", "calls", "call", 1,
             s => new(s.CallsThisWeek.ToString(), $"{s.CallDurationThisWeek.TotalMinutes:0} minutes this week")),
         Tile("plan", "Plan", "Tasks, calendar and AI planning", "plan", "plan", "plan", 2,
             s => new(s.TasksDueToday.ToString(), s.OverdueTasks > 0 ? $"{s.OverdueTasks} overdue" : "Due today", s.OverdueTasks > 0 ? "Needs attention" : null, s.OverdueTasks > 0)),
-        Tile("browse", "Browse", "Open the isolated Haven browser", "browse", "action", "browse", 3,
+        Tile("browse", "Browse", "Open the isolated 9to1 browser", "browse", "action", "browse", 3,
             _ => new("Open", "Private browser workspace")),
         Tile("studio", "Studio", "Continue a local project", "studio", "projects", "studio", 4,
             s => new(s.ActiveProjects.ToString(), "Active projects")),

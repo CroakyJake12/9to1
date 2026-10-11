@@ -141,7 +141,7 @@ public sealed class CuiViewModelDispatchRegressionTests
                 window.KeyReleaseQwerty(PhysicalKey.Space, RawInputModifiers.None);
                 await loader.WhenActionsIdleAsync();
                 Assert.Equal(1, settingsCalls);
-                Assert.NotNull(Find<StackPanel>(root, "home-settings-page"));
+                Assert.NotNull(Find<CuiContainerControl>(root, "home-settings-page"));
                 Assert.DoesNotContain(Controls(root), control => control.Name == "dashboard-page");
                 Assert.Equal("draft retained across navigation", search.Text);
 
@@ -193,7 +193,7 @@ public sealed class CuiViewModelDispatchRegressionTests
     }
 
     private static T Find<T>(Control root, string id) where T : Control =>
-        Assert.IsType<T>(Assert.Single(Controls(root).Where(control => control.Name == id)));
+        Assert.IsType<T>(Assert.Single(Controls(root), control => control.Name == id));
 
     private static IEnumerable<Control> Controls(Control root)
     {

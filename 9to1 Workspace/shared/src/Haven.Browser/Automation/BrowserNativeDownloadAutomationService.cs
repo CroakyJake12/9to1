@@ -177,7 +177,7 @@ public sealed partial class BrowserNativeDownloadAutomationService : IBrowserAut
                 if (originalApproval is not null) CompleteOriginalApproval(originalApproval, download);
                 Forget(actionId);
                 return new BrowserActionExecutionResult(action.Id, BrowserActionState.Executed,
-                    $"Downloaded {download.FileName} ({download.SizeBytes:N0} bytes) to Haven's Downloads folder.", download);
+                    $"Downloaded {download.FileName} ({download.SizeBytes:N0} bytes) to 9to1's Downloads folder.", download);
             }
             catch (Exception exception)
             {

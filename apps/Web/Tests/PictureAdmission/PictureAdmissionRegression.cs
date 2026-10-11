@@ -58,7 +58,7 @@ Loaded Load(PictureBrowserFeature feature, HomeFeatureViewState state)
         var (root, diagnostics) = loader.TryLoad(surface.Document);
         Check(root is not null && !diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error), "Actual Picture CUI loads with its actual raster renderer.");
         loader.WireBindings(root!); var image = root!.GetLogicalDescendants().OfType<Image>().Single();
-        return new(surface, loader, image);
+        return new(surface, loader, image, root!);
     }
     catch { loader.Dispose(); surface.Lifetime?.Dispose(); surface.Admission?.Reject(); throw; }
 }
@@ -281,10 +281,93 @@ tests.Add(("candidate-observer-reentrant-navigation-waits-coherent-retirement", 
         && ready.Succeeded && !f.Feature.HasUnsavedChanges, "Both real canonical transfers preserve coherent source ownership and do not release newer device media.");
 }));
 
+tests.Add(("actual-empty-workspace-mount-and-remount-retain-a-single-visual-parent", async () =>
+{
+    var media = new ControlledMedia(source);
+    using var feature = new PictureBrowserFeature(media, markup);
+    var window = new Window { Width = 1280, Height = 900 };
+    try
+    {
+        window.Show();
+        foreach (var width in new[] { 1280d, 390d, 1280d })
+        {
+            window.Width = width;
+            Dispatcher.UIThread.RunJobs();
+            using var loaded = await Open(feature);
+            window.Content = new ScrollViewer { Content = loaded.Root };
+            window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+            Check(ReferenceEquals(TopLevel.GetTopLevel(loaded.Image), window), "Actual raster preview remains attached after responsive initial layout.");
+            Check(loaded.Root.Bounds.Width > 0, "Actual empty Picture workspace is laid out.");
+            window.Content = null; window.UpdateLayout();
+        }
+    }
+    finally { window.Close(); }
+}));
+
+tests.Add(("new-blank-picture-uses-real-raster-save-reopen-export", async () =>
+{
+    var media = new ControlledMedia(source); using var session = new PictureBrowserSession(media);
+    await session.DispatchAsync("Create", null);
+    var created = session.Document;
+    Check(created is { CanvasWidth: 1280, CanvasHeight: 720, Revision: 0 } && !session.IsDirty,
+        "New creates a real canonical raster document and acknowledges the saved original bytes.");
+    var id = created!.DocumentId.ToString(); var original = File.ReadAllBytes(created.SourcePath!);
+    using (var bitmap = new Bitmap(new MemoryStream(original)))
+    {
+        var pixels = Pixels(bitmap);
+        Check(bitmap.PixelSize == new PixelSize(1280, 720) && pixels.All(value => value == 255), "New canvas source is an actual opaque white PNG.");
+    }
+    Check(await session.CloseAsync() && await session.OpenAsync(id), "New picture closes and reopens through the actual session/owner codec.");
+    Check(session.Document!.DocumentId == created.DocumentId && session.Document.SourceRevision == created.SourceRevision
+        && File.ReadAllBytes(created.SourcePath!).SequenceEqual(original), "New document and original source identity survive reopen.");
+    Check(await session.ExportAsync(PictureMetadataExportMode.RemoveAll), "Created raster exports through the unchanged owner renderer.");
+    using var exported = new Bitmap(new MemoryStream(media.Downloads.Single()));
+    Check(exported.PixelSize == new PixelSize(1280, 720) && Pixels(exported).All(value => value == 255), "Actual downloaded PNG pixels match the white source.");
+}));
+tests.Add(("canonical-colour-effects-history-retains-schema7-geometry-and-original", async () =>
+{
+    var media = new ControlledMedia(source); using var session = new PictureBrowserSession(media);
+    Check(await session.ImportAsync(), "Actual alpha PNG imported for colour/edit-stack coverage.");
+    var original = session.Document!; var originalBytes = File.ReadAllBytes(original.SourcePath!);
+    session.TrySetValue("Exposure", "1"); await session.DispatchAsync("Color", null);
+    Check(session.Document!.Operations.Single() is ColorAdjustmentOperation && !session.HasPendingInput && !session.IsDirty,
+        "Colour fields invoke the existing canonical colour operation and acknowledged persistence.");
+    using var adjusted = session.RenderPreview(); using var sourceBitmap = new Bitmap(new MemoryStream(originalBytes));
+    var adjustedPixels = Pixels(adjusted!); var sourcePixels = Pixels(sourceBitmap);
+    Check(!adjustedPixels.SequenceEqual(sourcePixels) && Enumerable.Range(0, sourcePixels.Length / 4).All(i => adjustedPixels[i * 4 + 3] == sourcePixels[i * 4 + 3]),
+        "Actual colour renderer changes colour while retaining every source alpha value.");
+    session.TrySetValue("BlurRadius", "1"); await session.DispatchAsync("Blur", null);
+    Check(session.Document!.Operations.Last() is BlurOperation, "Blur routes through the existing bounded canonical raster primitive.");
+    session.TrySetValue("PixelSize", "2"); await session.DispatchAsync("Pixelate", null);
+    Check(session.Document!.Operations.Last() is PixelationOperation, "Pixelation routes through the existing canonical primitive.");
+    session.TrySetValue("ResizeWidth", "10"); session.TrySetValue("ResizeHeight", "8"); await session.DispatchAsync("ResizeCanvas", null);
+    Check(session.Document is { CanvasWidth: 10, CanvasHeight: 8 }, "Canvas resize changes bounds without replacing original bytes.");
+    Check(await session.UndoAsync() && await session.UndoAsync(true), "Actual undo/redo can replay schema7 raster adjustments.");
+    Check(session.Document!.InitialCanvasWidth == 8 && session.Document.InitialCanvasHeight == 6,
+        "Undo/redo preserves owner schema7 initial dimensions rather than dropping them in a revision copy.");
+    var saved = Canonical(session); var id = session.Document.DocumentId.ToString();
+    Check(await session.CloseAsync() && await session.OpenAsync(id) && Canonical(session) == saved,
+        "Extended edit stack survives owner serialize, local commit, close and reopen exactly.");
+    Check(File.ReadAllBytes(original.SourcePath!).SequenceEqual(originalBytes), "Non-destructive effects and history do not change the original image bytes.");
+}));
+tests.Add(("invalid-adjustment-retains-input-and-explicit-restore-unblocks-close", async () =>
+{
+    var media = new ControlledMedia(source); using var session = new PictureBrowserSession(media);
+    Check(await session.ImportAsync(), "Actual source imported."); var before = Canonical(session);
+    session.TrySetValue("Gamma", "0"); await session.DispatchAsync("Color", null);
+    Check(session.HasPendingInput && Canonical(session) == before && session.ErrorCode == "InvalidArgument",
+        "Rejected adjustment leaves the canonical source/revision unchanged and preserves typed input.");
+    var close = await session.PrepareToCloseAsync(); Check(!close.Succeeded && close.Code == "UnsavedInput", "Invalid pending adjustment cannot be silently discarded.");
+    await session.DispatchAsync("ResetInputs", null);
+    Check(!session.HasPendingInput && session.TryGetValue("Gamma", out var gamma) && Equals(gamma, "1")
+        && (await session.PrepareToCloseAsync()).Succeeded, "Explicit restoration restores applied values and allows a clean close.");
+}));
+
 var exit = 1;
 try
 {
-    AppBuilder.Configure<Application>().UseSkia().UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false }).SetupWithoutStarting();
+    CuiNativeHost.ConfigureFonts(AppBuilder.Configure<Application>()).UseSkia().UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false }).SetupWithoutStarting();
+    CuiNativeHost.InitialisePrimitiveTheme(Application.Current!, "Picture");
     AvaloniaSynchronizationContext.InstallIfNeeded(); using var stop = new CancellationTokenSource();
     Dispatcher.UIThread.Post(async () =>
     {
@@ -315,9 +398,10 @@ finally
 }
 return exit;
 
-sealed class Loaded(BrowserCuiSurface surface, CuiControlLoader loader, Image image) : IDisposable
+sealed class Loaded(BrowserCuiSurface surface, CuiControlLoader loader, Image image, Control root) : IDisposable
 {
     public BrowserCuiSurface Surface { get; } = surface;
+    public Control Root { get; } = root;
     public PictureBrowserSession Session => (PictureBrowserSession)Surface.Bindings;
     public Image Image { get; } = image;
     public void Reject() { try { Dispose(); } finally { Surface.Admission?.Reject(); } }

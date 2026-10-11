@@ -393,8 +393,8 @@ public sealed class DynamicUI
         return matches.Length switch
         {
             1 => matches[0],
-            0 => throw new KeyNotFoundException($"No DynamicUIRuntime named '{location}' exists in the supplied Haven scope."),
-            _ => throw new InvalidOperationException($"DynamicUIRuntime name '{location}' is ambiguous in the supplied Haven scope. Create the DynamicUI API from a narrower name scope.")
+            0 => throw new KeyNotFoundException($"No DynamicUIRuntime named '{location}' exists in the supplied 9to1 scope."),
+            _ => throw new InvalidOperationException($"DynamicUIRuntime name '{location}' is ambiguous in the supplied 9to1 scope. Create the DynamicUI API from a narrower name scope.")
         };
     }
 }
@@ -428,9 +428,9 @@ public sealed class HavenDynamicUITemplateCatalog
         if (unknownAttributes.Length > 0)
             throw new HavenMarkupException(sourceName, rootInfo.LineNumber, rootInfo.LinePosition, $"DynamicUI declaration has unsupported attribute '{unknownAttributes[0].Name.LocalName}'.");
         if (!root.Elements().Any())
-            throw new HavenMarkupException(sourceName, rootInfo.LineNumber, rootInfo.LinePosition, "DynamicUI requires at least one Haven component inside the declaration.");
+            throw new HavenMarkupException(sourceName, rootInfo.LineNumber, rootInfo.LinePosition, "DynamicUI requires at least one 9to1 component inside the declaration.");
         if (root.Nodes().OfType<XText>().Any(text => !string.IsNullOrWhiteSpace(text.Value)))
-            throw new HavenMarkupException(sourceName, rootInfo.LineNumber, rootInfo.LinePosition, "DynamicUI declaration may contain Haven components, comments, and whitespace only.");
+            throw new HavenMarkupException(sourceName, rootInfo.LineNumber, rootInfo.LinePosition, "DynamicUI declaration may contain 9to1 components, comments, and whitespace only.");
         if (root.Descendants().Any(element => element.Name.LocalName.Equals("DynamicUI", StringComparison.OrdinalIgnoreCase)))
             throw new HavenMarkupException(sourceName, rootInfo.LineNumber, rootInfo.LinePosition, "DynamicUI declarations cannot be nested.");
 

@@ -30,9 +30,9 @@ public sealed partial class MainView
         ArgumentNullException.ThrowIfNull(dispatcher);
         ArgumentNullException.ThrowIfNull(displays);
         if (!_mobileLayoutApplied)
-            throw new InvalidOperationException("Apply Haven's mobile layout before attaching the Projector phone controller.");
+            throw new InvalidOperationException("Apply 9to1's mobile layout before attaching the Projector phone controller.");
         if (Content is not Grid root)
-            throw new InvalidOperationException("Haven's mobile shell requires the MainView root grid.");
+            throw new InvalidOperationException("9to1's mobile shell requires the MainView root grid.");
 
         if (_projectorSessions is not null)
             _projectorSessions.StateChanged -= OnProjectorSessionChanged;

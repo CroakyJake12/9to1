@@ -5,6 +5,9 @@ using System.Text.Json;
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
+using Avalonia.Threading;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Input.Raw;
@@ -28,6 +31,10 @@ var assertions = await headless.Dispatch(async () =>
     var count = 0;
     void Check(bool pass, string oracle)
     { if (!pass) throw new InvalidOperationException(oracle); ++count; Console.WriteLine("ASSERT " + oracle); }
+    Check(Application.Current!.Styles.All(style => style.GetType().Name is not ("FluentTheme" or "SimpleTheme")),
+        "actual retained Present host uses CUI-owned templates without a donor default theme");
+    Check(!Avalonia.Platform.AssetLoader.Exists(new Uri("avares://Haven/WriteOwnerResources/DefaultTheme.Resources.axaml")),
+        "retained Present runs without the removed extracted AXAML theme resource");
     var paths = new AppPaths();
     var repository = new PresentRepository(paths);
     Check((await repository.ListAsync(default)).Count == 0, "actual Present repository fixture starts empty");
@@ -56,7 +63,7 @@ var assertions = await headless.Dispatch(async () =>
             aSurface.Admission!.Accept(); await feature.PrepareToCloseAsync();
             var activeA = (PresentBrowserSession)aSurface.Bindings;
             var originalA = JsonSerializer.Serialize(activeA.GetDocumentSnapshot());
-            var aScene = aRoot!.GetVisualDescendants().OfType<HavenSceneControl>().Single();
+        var aScene = aRoot!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single().GetVisualDescendants().OfType<HavenSceneControl>().Single();
             bool AUnchanged() => activeA.DocumentId == a.Id && activeA.DurableRevision == a.Version &&
                 originalA == JsonSerializer.Serialize(activeA.GetDocumentSnapshot()) && aScene.Root is not null;
             var requestB = new HavenOS.Home.Core.HomeFeatureNavigationRequest("app.present", "PresentDocument", b.Id.ToString("D"));
@@ -84,7 +91,7 @@ var assertions = await headless.Dispatch(async () =>
                 var (candidateRoot, errors) = candidateLoader.TryLoad(pendingSurface.Document);
                 Check(candidateRoot is not null && !errors.Any(error => error.Severity == CuiDiagnosticSeverity.Error), "actual candidate Present B lowers before admission");
                 candidateLoader.WireBindings(candidateRoot!);
-                var candidateScene = candidateRoot!.GetVisualDescendants().OfType<HavenSceneControl>().Single();
+                var candidateScene = candidateRoot!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single().GetVisualDescendants().OfType<HavenSceneControl>().Single();
                 Check(!candidateScene.IsEnabled && AUnchanged(), "actual original retained candidate scene input remains frozen while A stays visible");
             }
             pendingSurface.Admission!.Reject(); pendingSurface.Lifetime!.Dispose();
@@ -112,31 +119,86 @@ var assertions = await headless.Dispatch(async () =>
         new PresentPptxImportService(paths), media);
     var parser = new CuiRichParser();
     var document = parser.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Present.cui")));
+    foreach (var diagnostic in parser.Diagnostics.Diagnostics) Console.WriteLine(JsonSerializer.Serialize(diagnostic));
     Check(!parser.Diagnostics.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error),
         "actual Present CUI parses without disconnected private controls");
     var surface = PresentBrowserSurface.Create(document, session, () => true);
     using var loader = new CuiControlLoader(surface.ControlRegistry!);
-    loader.SetBindingContext(session); loader.SetActionDispatcher(session);
+    var shellActions = new BrowserShellActions(session, () => { });
+    loader.SetBindingContext(session); loader.SetActionDispatcher(shellActions);
     var (root, diagnostics) = loader.TryLoad(document);
     foreach (var diagnostic in diagnostics) Console.WriteLine(JsonSerializer.Serialize(diagnostic));
     Check(root is not null && !diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error),
         "actual registered owning Present canvas lowers through CUI");
     loader.WireBindings(root!); loader.WireBindings(root!);
+    using var availability = BrowserActionAvailability.Observe(root!, loader, document, shellActions, session);
     var window = new Window { Width = 1200, Height = 900, Content = root };
     window.Show();
     try
     {
-        using (var frame = window.CaptureRenderedFrame()) Check(frame is not null, "real Present native frame renders original canvas/resource graph");
-        Button ButtonNamed(string label) => root!.GetVisualDescendants().OfType<Button>()
-            .Single(button => button.Content is string name && name == label);
-        foreach (var button in root!.GetVisualDescendants().OfType<Button>())
-            BrowserActionAvailability.ApplyInitial(button, loader, document, session);
+        using (var frame = window.CaptureRenderedFrame()) { Check(frame is not null, "real Present native frame renders original canvas/resource graph"); frame!.Save(Path.Combine(paths.DataDirectory, "present-empty.png")); }
+        IEnumerable<Control> AuthoredTree(Control ancestor)
+        {
+            var visited = new HashSet<Control>(ReferenceEqualityComparer.Instance);
+            var pending = new Stack<Control>(); pending.Push(ancestor);
+            while (pending.TryPop(out var current))
+            {
+                if (!visited.Add(current)) continue;
+                yield return current;
+                foreach (var child in current.GetLogicalChildren().OfType<Control>()) pending.Push(child);
+                if (current is CuiContainerControl container) foreach (var child in container.AuthoredChildren) pending.Push(child);
+                if (current is ItemsControl items) foreach (var child in items.Items.OfType<Control>()) pending.Push(child);
+            }
+        }
+        Control ButtonNamed(string label)
+        {
+            var currentLabel = label switch { "Add text" => "Text", "Add shape" => "Shape", _ => label };
+            var controls = AuthoredTree(root!).Where(control => control switch
+            {
+                Button button => Equals(button.Content, currentLabel) && (label != "Close" || Equals(button.Tag, "Close")),
+                MenuItem item => Equals(item.Header, currentLabel),
+                _ => false
+            }).OrderBy(control => TopLevel.GetTopLevel(control) is not null && control.IsEffectivelyVisible
+                ? 0 : control is MenuItem ? 1 : 2).ToArray();
+            return controls.FirstOrDefault() ?? throw new InvalidOperationException("Missing authored command control: " + label);
+        }
         async Task Click(string label, Func<bool> completed)
         {
             var button = ButtonNamed(label);
             Check(button.IsEnabled, "real Present " + label + " control enables its owning action");
-            var point = button.TranslatePoint(new Point(button.Bounds.Width / 2, button.Bounds.Height / 2), window)!.Value;
-            window.MouseDown(point, MouseButton.Left); window.MouseUp(point, MouseButton.Left);
+            if (button is MenuItem menuItem)
+            {
+                var parents = new List<MenuItem>();
+                Control child = menuItem;
+                while (AuthoredTree(root!).OfType<MenuItem>().FirstOrDefault(item => item.Items.Contains(child)) is { } parent)
+                { parents.Add(parent); child = parent; }
+                foreach (var parent in parents.AsEnumerable().Reverse())
+                {
+                    if (parent.IsSubMenuOpen) continue;
+                    var menuRoot = TopLevel.GetTopLevel(parent)!;
+                    var menuPoint = parent.TranslatePoint(new Point(parent.Bounds.Width / 2, parent.Bounds.Height / 2), menuRoot)!.Value;
+                    menuRoot.MouseDown(menuPoint, MouseButton.Left); menuRoot.MouseUp(menuPoint, MouseButton.Left);
+                    using var menuFrame = window.CaptureRenderedFrame();
+                    Check(parent.IsSubMenuOpen, "actual pointer opens parent menu for " + label);
+                }
+            }
+            else if (TopLevel.GetTopLevel(button) is null)
+            {
+                await Click("Properties", () => { session.TryGetValue("ShowInspector", out var shown); return shown is true; });
+                button = ButtonNamed(label);
+            }
+            button.BringIntoView(); Dispatcher.UIThread.RunJobs();
+            using (var prepared = window.CaptureRenderedFrame()) { }
+            var inputRoot = TopLevel.GetTopLevel(button) ?? throw new InvalidOperationException("Command remains detached: " + label);
+            var point = button.TranslatePoint(new Point(button.Bounds.Width / 2, button.Bounds.Height / 2), inputRoot)!.Value;
+            Console.WriteLine($"CLICK {label}: bounds={button.Bounds} point={point}");
+            Console.WriteLine($"HIT {inputRoot.InputHitTest(point)}");
+            var hit = inputRoot.InputHitTest(point) as Visual;
+            Check(ReferenceEquals(hit, button) || hit?.GetVisualAncestors().Contains(button) == true,
+                "physical pointer target belongs to the actual " + label + " control");
+            inputRoot.MouseDown(point, MouseButton.Left); inputRoot.MouseUp(point, MouseButton.Left);
+            Console.WriteLine($"AFTER CLICK status={session.Status}, error={session.ErrorCode}, busy={session.IsBusy}");
+            if (session.LastOperationError is not null) Console.WriteLine(session.LastOperationError);
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
             while (!completed() || session.IsBusy) await Task.Delay(10, timeout.Token);
             using var frame = window.CaptureRenderedFrame();
@@ -146,13 +208,26 @@ var assertions = await headless.Dispatch(async () =>
             && !ButtonNamed("Delete element").IsEnabled && !ButtonNamed("Bring to front").IsEnabled && !ButtonNamed("Send to back").IsEnabled
             && !ButtonNamed("Export .pptx").IsEnabled,
             "empty real Present lifecycle enables Create and disables document-only controls, including .pptx export");
+        bool HasStart() => root!.GetVisualDescendants().OfType<Control>().Any(control => control.Name == "present-start");
+        bool HasCanvas() => root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Any();
+        Check(HasStart() && !HasCanvas(), "fresh Present activates a separate start view with no editor in layout, pointer or accessibility scope");
+        await Click("Import .pptx", () => session.Status == "Import cancelled");
+        Check(HasStart() && !HasCanvas() && session.DocumentId is null && (await repository.ListAsync(default)).Count == 0,
+            "cancelled import leaves the start surface intact and creates no presentation");
         await Click("New presentation", () => session.DocumentId is not null);
+        Check(!HasStart() && HasCanvas(), "the actual New action swaps start for the working editor instead of stacking them");
         var id = session.DocumentId!.Value;
         var first = (await repository.LoadAsync(id, default))!;
         Check(first.Version == session.DurableRevision && JsonSerializer.Serialize(first) == JsonSerializer.Serialize(session.GetDocumentSnapshot()),
             "actual New commits same opaque presentation ID/revision and complete original owner model");
-        var scene = root!.GetVisualDescendants().OfType<HavenSceneControl>().Single();
+        var scene = root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single().GetVisualDescendants().OfType<HavenSceneControl>().Single();
         var canvas = scene.Root!;
+        var contentDrawing = new HavenDrawingContext();
+        ((IHavenDrawCommandSource)canvas).Draw(contentDrawing, 1);
+        var titleDrawing = contentDrawing.Commands.OfType<HavenTextCommand>().Single(command => command.Layout.Text == first.Slides[0].Title);
+        Check(titleDrawing.Brush == new HavenSolidBrush(255, 31, 31, 31)
+            && titleDrawing.Layout.FontFamily == first.Theme.HeadingFontFamily,
+            "slide title uses its saved document foreground and heading font, independent of dark application chrome");
         var local = (HavenRect)canvas.GetType().GetMethod("SlideRectLocal", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(canvas, null)!;
         // Query the actual owning layout; no duplicated slide positioning model.
         var title = (HavenRect)canvas.GetType().GetMethod("TitleRect", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(canvas, [local])!;
@@ -165,9 +240,34 @@ var assertions = await headless.Dispatch(async () =>
             "physical native title selection and routed raw typing preview owning canonical slide text");
         window.KeyPress(Key.Enter, RawInputModifiers.Control, PhysicalKey.Enter, "Enter");
         Check(session.Editor!.CanUndo && !session.Editor.IsLiveTextEditActive, "actual retained text commit creates owning undo transaction");
+        var retainedEditor = session.Editor;
+        var retainedDraft = JsonSerializer.Serialize(session.GetDocumentSnapshot());
+        var retainedRevision = session.DurableRevision;
+        await Click("Back to Present start", () => !session.IsWorkspaceActive);
+        using (var frame = window.CaptureRenderedFrame()) frame!.Save(Path.Combine(paths.DataDirectory, "present-return-to-start.png"));
+        Check(HasStart() && !HasCanvas() && !scene.IsEnabled && session.IsDirty && session.DurableRevision == retainedRevision,
+            "return-to-start detaches and disables the editor without saving the dirty draft");
+        window.KeyTextInput("inactive editor must not change");
+        window.KeyPress(Key.Delete, RawInputModifiers.None, PhysicalKey.Delete, "Delete");
+        Check(JsonSerializer.Serialize(session.GetDocumentSnapshot()) == retainedDraft && session.IsActionAvailable("AddShape") == false
+            && !session.TrySetValue("SpeakerNotes", "inactive write") && !((await session.EditAsync(editor => { editor.AddSlide(); return true; })).Succeeded),
+            "inactive document shortcuts, bindings and editing requests cannot mutate the retained presentation");
+        Check((await repository.LoadAsync(id, default))!.Slides[0].Title == first.Slides[0].Title,
+            "return-to-start leaves durable presentation bytes at the acknowledged revision");
+        await Click("Resume presentation", () => session.IsWorkspaceActive);
+        Check(!HasStart() && HasCanvas() && ReferenceEquals(retainedEditor, session.Editor) && session.Editor!.CanUndo
+            && JsonSerializer.Serialize(session.GetDocumentSnapshot()) == retainedDraft,
+            "resume reattaches the same editor with its complete draft and undo history");
+        await Click("Back to Present start", () => !session.IsWorkspaceActive);
+        await Click(first.Title, () => session.IsWorkspaceActive);
+        Check(ReferenceEquals(retainedEditor, session.Editor) && JsonSerializer.Serialize(session.GetDocumentSnapshot()) == retainedDraft,
+            "choosing the currently open recent presentation resumes without reloading or replacing its draft");
         var bodyPoint = scene.TranslatePoint(new Point(canvas.Bounds.X + local.X + local.Width * 0.5,
             canvas.Bounds.Y + local.Y + local.Height * 0.55), window)!.Value;
+        var beforeSelection = JsonSerializer.Serialize(session.GetDocumentSnapshot());
         window.MouseDown(bodyPoint, MouseButton.Left); window.MouseUp(bodyPoint, MouseButton.Left);
+        Check(beforeSelection == JsonSerializer.Serialize(session.GetDocumentSnapshot()),
+            "a pointer selection without a drag cannot move or resize authored slide content");
         Check(session.Editor!.Selection.ElementIds.Count == 1
             && ButtonNamed("Delete element").IsEnabled && ButtonNamed("Rotate right").IsEnabled && ButtonNamed("Bold").IsEnabled,
             "actual retained canvas selection notifies the session so the object controls follow the native selection");
@@ -189,6 +289,24 @@ var assertions = await headless.Dispatch(async () =>
         Check(duplicated.Id != originalSlide && !duplicated.Elements.Select(element => element.Id)
             .Intersect(session.Editor.Document.Slides.Single(slide => slide.Id == originalSlide).Elements.Select(element => element.Id)).Any(),
             "native Duplicate allocates independent slide/object IDs through owning editor");
+        session.TrySetValue("SpeakerNotes", "Second slide notes");
+        var thumbnailScene = root!.GetVisualDescendants().OfType<PresentThumbnailControl>().Single().GetVisualDescendants().OfType<HavenSceneControl>().Single();
+        var thumbnailDrawing = new HavenDrawingContext();
+        ((IHavenDrawCommandSource)thumbnailScene.Root!).Draw(thumbnailDrawing, 1);
+        var thumbnailText = thumbnailDrawing.Commands.OfType<HavenTextCommand>().Where(command => command.Layout.Text == session.Editor!.SelectedSlide.Title).ToArray();
+        Check(thumbnailText.Length > 0 && thumbnailText.All(command => command.Brush == new HavenSolidBrush(255, 31, 31, 31)),
+            "slide preview text retains document colours independently of its surrounding selection chrome");
+        thumbnailScene.FocusElement(thumbnailScene.Root!);
+        window.KeyPress(Key.Home, RawInputModifiers.None, PhysicalKey.Home, "Home");
+        Check(session.Editor.Selection.SlideId == originalSlide && notes.Text == "Actual speaker notes",
+            "real thumbnail keyboard selection updates canonical active slide and bound notes");
+        var canvasHost = root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single();
+        Check((Guid?)typeof(PresentRetainedSceneControl).GetField("_renderedSlide", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(canvasHost) == originalSlide,
+            "thumbnail navigation refreshes the actual retained canvas to the same stable SlideID");
+        window.KeyPress(Key.End, RawInputModifiers.None, PhysicalKey.End, "End");
+        Check(session.Editor.Selection.SlideId == duplicated.Id && notes.Text == "Second slide notes", "thumbnail End selects last slide and refreshes notes without document mutation");
+        using (var frame = window.CaptureRenderedFrame()) frame!.Save(Path.Combine(paths.DataDirectory, "present-editor-desktop.png"));
+        await session.DispatchAsync("Undo", null); // Restore duplicate notes before exercising the original slide-history checks.
         await Click("Undo", () => session.GetDocumentSnapshot()!.Slides.Count == 1);
         await Click("Redo", () => session.GetDocumentSnapshot()!.Slides.Count == 2);
         Check(session.DurableRevision == first.Version && session.GetDocumentSnapshot()!.Version == first.Version,
@@ -267,14 +385,18 @@ var assertions = await headless.Dispatch(async () =>
             .Single(element => element.Id == shape).RotationDegrees == 0);
         double NudgeX() => session.GetDocumentSnapshot()!.Slides[0].Elements.Single(element => element.Id == shape).X;
         double NudgeY() => session.GetDocumentSnapshot()!.Slides[0].Elements.Single(element => element.Id == shape).Y;
-        var nudgedX = NudgeX();
-        var nudgedY = NudgeY();
-        await Click("Move object right", () => NudgeX() > nudgedX);
-        await Click("Move object left", () => Math.Abs(NudgeX() - nudgedX) < 0.000001);
-        await Click("Move object down", () => NudgeY() > nudgedY);
-        await Click("Move object up", () => Math.Abs(NudgeY() - nudgedY) < 0.000001);
-        Check(NudgeX() == nudgedX && NudgeY() == nudgedY,
-            "actual object nudge controls move the selected object one donor step and back on both axes");
+        async Task Nudge(string label, double dx, double dy)
+        {
+            var expected = PresentSnapEngine.Snap(session.Editor!.SelectedSlide, shape, NudgeX() + dx, NudgeY() + dy);
+            await Click(label, () => Math.Abs(NudgeX() - expected.X) < 0.000001 && Math.Abs(NudgeY() - expected.Y) < 0.000001);
+            Check(session.Editor.Selection.ElementIds.Contains(shape), "native nudge retains the owning selected object");
+        }
+        // Native chrome uses the owner's snap guides. A reverse nudge need not
+        // return to the old point when the first nudge snaps to a nearby object.
+        await Nudge("Move object right", 0.01, 0);
+        await Nudge("Move object left", -0.01, 0);
+        await Nudge("Move object down", 0, 0.01);
+        await Nudge("Move object up", 0, -0.01);
         await Click("Send to back", () => session.GetDocumentSnapshot()!.Slides[0].Elements[0].Id == shape);
         Check(session.Editor!.Selection.ElementIds.Contains(shape),
             "native Send to back moves the selected object to the bottom of the stack and keeps it selected");
@@ -286,10 +408,15 @@ var assertions = await headless.Dispatch(async () =>
             "native Delete element restores the slide's original object stack");
         void SelectOnCanvas(double nx, double ny, bool additive)
         {
-            var point = scene.TranslatePoint(new Point(canvas.Bounds.X + local.X + local.Width * nx,
-                canvas.Bounds.Y + local.Y + local.Height * ny), window)!.Value;
+            using (var frame = window.CaptureRenderedFrame()) { }
+            var currentSlide = (HavenRect)canvas.GetType().GetMethod("SlideRectLocal", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(canvas, null)!;
+            var point = scene.TranslatePoint(new Point(canvas.Bounds.X + currentSlide.X + currentSlide.Width * nx,
+                canvas.Bounds.Y + currentSlide.Y + currentSlide.Height * ny), window)!.Value;
+            var before = JsonSerializer.Serialize(session.GetDocumentSnapshot());
             window.MouseDown(point, MouseButton.Left, additive ? RawInputModifiers.Shift : RawInputModifiers.None);
             window.MouseUp(point, MouseButton.Left, additive ? RawInputModifiers.Shift : RawInputModifiers.None);
+            Check(before == JsonSerializer.Serialize(session.GetDocumentSnapshot()),
+                "canvas selection preserves authored geometry, including while the properties panel is open");
         }
         double XOf(Guid id) => session.GetDocumentSnapshot()!.Slides[0].Elements
             .Single(element => element.Id == id).X;
@@ -301,7 +428,12 @@ var assertions = await headless.Dispatch(async () =>
             .Single(box => AutomationProperties.GetName(box) == "Stroke width");
         void TypeInto(TextBox box, string text)
         {
+            box.BringIntoView(); Dispatcher.UIThread.RunJobs();
+            using (var frame = window.CaptureRenderedFrame()) { }
             var point = box.TranslatePoint(new Point(box.Bounds.Width / 2, box.Bounds.Height / 2), window)!.Value;
+            var hit = window.InputHitTest(point) as Visual;
+            Check(ReferenceEquals(hit, box) || hit?.GetVisualAncestors().Contains(box) == true,
+                "physical input point belongs to the actual " + AutomationProperties.GetName(box) + " field");
             window.MouseDown(point, MouseButton.Left); window.MouseUp(point, MouseButton.Left);
             window.KeyPress(Key.A, RawInputModifiers.Control, PhysicalKey.A, "a");
             window.KeyTextInput(text);
@@ -314,10 +446,9 @@ var assertions = await headless.Dispatch(async () =>
             && ButtonNamed("Apply fill").IsEnabled && FillBox().IsEnabled,
             "shape selection enables the fill control and disables the font size controls");
         var fillInput = FillBox();
-        var fillPoint = fillInput.TranslatePoint(new Point(fillInput.Bounds.Width / 2, fillInput.Bounds.Height / 2), window)!.Value;
-        window.MouseDown(fillPoint, MouseButton.Left); window.MouseUp(fillPoint, MouseButton.Left);
-        window.KeyPress(Key.A, RawInputModifiers.Control, PhysicalKey.A, "a");
-        window.KeyTextInput("#336699");
+        TypeInto(fillInput, "#336699");
+        Check(session.TryGetValue("FillColor", out var typedFill) && Equals(typedFill, "#336699"),
+            "actual fill field updates the owner's pending colour before applying it");
         Check(session.GetDocumentSnapshot()!.Slides[0].Elements.Single(element => element.Id == propShape)
                 .Style.FillColor != "#336699",
             "typed fill colour is held by the session until it is applied to the object");
@@ -409,6 +540,20 @@ var assertions = await headless.Dispatch(async () =>
         Check(saved.Id == id && saved.Version == session.DurableRevision && saved.Slides[0].SpeakerNotes == "Actual speaker notes" &&
             JsonSerializer.Serialize(saved) == JsonSerializer.Serialize(session.GetDocumentSnapshot()),
             "actual Save readback preserves complete slides/notes/themes/layouts/masters and identities");
+        window.Width = 390;
+        using (var frame = window.CaptureRenderedFrame()) frame!.Save(Path.Combine(paths.DataDirectory, "present-editor-mobile.png"));
+        session.TryGetValue("ShowSidebar", out var mobileSidebar);
+        Check(mobileSidebar is false && !session.IsDirty, "mobile viewport collapses slide drawer without mutating saved presentation");
+        var compactProperties = root!.GetVisualDescendants().OfType<Button>().Single(button => Equals(button.Tag, "ToggleInspector") && Equals(button.Content, "Properties"));
+        var compactPoint = compactProperties.TranslatePoint(new Point(compactProperties.Bounds.Width / 2, compactProperties.Bounds.Height / 2), window)!.Value;
+        var compactHit = window.InputHitTest(compactPoint) as Visual;
+        Check(ReferenceEquals(compactHit, compactProperties) || compactHit?.GetVisualAncestors().Contains(compactProperties) == true,
+            "the compact toolbar keeps Properties directly in pointer reach without scrolling");
+        window.Width = 1200;
+        using (var frame = window.CaptureRenderedFrame()) { }
+        Check(session.TryGetValue("ShowEditingArea", out var editingRestored) && editingRestored is true
+            && TopLevel.GetTopLevel(scene) == window,
+            "widening while Properties is open restores the real editor after compact detachment");
         var exportedSlideTitle = session.GetDocumentSnapshot()!.Slides[0].Title;
         await Click("Export .pptx", () => media.Downloads.Count == 1);
         var transfer = media.Downloads.Single();
@@ -429,6 +574,7 @@ var assertions = await headless.Dispatch(async () =>
             imported.Slides[0].Title == exportedSlideTitle && !session.IsDirty,
             "actual Import .pptx rebuilds the exported deck as a new stored presentation through the owner importer");
         await Click("Close", () => session.DocumentId is null);
+        Check(HasStart() && !HasCanvas(), "closing a presentation returns to the populated start-only view");
         await Click(saved.Title, () => session.DocumentId == id);
         Check(!session.IsDirty && session.DurableRevision == saved.Version &&
             JsonSerializer.Serialize(session.GetDocumentSnapshot()) == JsonSerializer.Serialize(saved),
@@ -440,7 +586,9 @@ var assertions = await headless.Dispatch(async () =>
         await Click("Add slide", () => session.GetDocumentSnapshot()!.Slides.Count == 2);
         var playbackDeck = session.GetDocumentSnapshot()!.Slides.Select(slide => slide.Id).ToArray();
         var openingTitle = session.GetDocumentSnapshot()!.Slides[0].Title;
-        await Click(openingTitle, () => session.Editor!.Selection.SlideId == playbackDeck[0]);
+        thumbnailScene.FocusElement(thumbnailScene.Root!);
+        window.KeyPress(Key.Home, RawInputModifiers.None, PhysicalKey.Home, "Home");
+        Check(session.Editor!.Selection.SlideId == playbackDeck[0], "actual thumbnail Home selects the opening slide for playback");
         await Click("Present", () => session.IsPlaying);
         Check(!ButtonNamed("Present").IsEnabled && !ButtonNamed("Add text").IsEnabled && !scene.IsEnabled
             && PlaybackStatus() == "Slide 1 of 2; animation step 0",
@@ -470,7 +618,9 @@ var assertions = await headless.Dispatch(async () =>
             "actual Show slide restores the current slide and swaps the visibility controls back");
         var firstSlideId = session.GetDocumentSnapshot()!.Slides[0].Id;
         var openingSlideTitle = session.GetDocumentSnapshot()!.Slides[0].Title;
-        await Click(openingSlideTitle, () => session.Editor!.Selection.SlideId == firstSlideId);
+        thumbnailScene.FocusElement(thumbnailScene.Root!);
+        window.KeyPress(Key.Home, RawInputModifiers.None, PhysicalKey.Home, "Home");
+        Check(session.Editor!.Selection.SlideId == firstSlideId, "actual thumbnail Home selects the slide to hide");
         await Click("Hide slide", () => session.GetDocumentSnapshot()!.Slides[0].Hidden);
         await Click("Present", () => session.IsPlaying);
         Check(session.GetDocumentSnapshot()!.Slides.Count == 2
@@ -478,16 +628,23 @@ var assertions = await headless.Dispatch(async () =>
             && !ButtonNamed("Next slide").IsEnabled && !ButtonNamed("Previous slide").IsEnabled,
             "a hidden slide is excluded from the running presentation's frame list");
         await Click("End presentation", () => !session.IsPlaying);
-        await Click(openingSlideTitle, () => session.Editor!.Selection.SlideId == firstSlideId);
+        thumbnailScene.FocusElement(thumbnailScene.Root!);
+        window.KeyPress(Key.Home, RawInputModifiers.None, PhysicalKey.Home, "Home");
+        Check(session.Editor!.Selection.SlideId == firstSlideId, "actual thumbnail Home selects the hidden slide for restoration");
         await Click("Show slide", () => !session.GetDocumentSnapshot()!.Slides[0].Hidden);
         Check(session.TryGetValue("TransitionKind", out var openingTransition) && Equals(openingTransition, "None") &&
             session.TryGetValue("TransitionDuration", out var openingDuration) && Equals(openingDuration, 0d) &&
             ButtonNamed("Apply transition").IsEnabled,
             "the transition controls read the current slide's own stored transition before authoring");
-        Check(session.TrySetValue("TransitionKind", "Fade") && session.TrySetValue("TransitionDuration", 0.5d),
-            "the two-way transition inputs accept a valid kind and duration");
+        TypeInto(root!.GetVisualDescendants().OfType<TextBox>().Single(box => AutomationProperties.GetName(box) == "Transition kind for the current slide"), "Fade");
+        TypeInto(root!.GetVisualDescendants().OfType<TextBox>().Single(box => AutomationProperties.GetName(box) == "Transition duration in seconds"), "0.5");
+        Check(session.TryGetValue("TransitionKind", out var typedKind) && Equals(typedKind, "Fade")
+            && session.TryGetValue("TransitionDuration", out var typedDuration) && Equals(typedDuration, 0.5d),
+            "actual pointer and keyboard input sets the pending transition kind and duration");
         Check(!session.TrySetValue("TransitionDuration", 40d),
             "a duration outside the owner's 0.05-30 second range is refused rather than silently clamped");
+        Check(!session.TrySetValue("TransitionDuration", double.NaN) && !session.TrySetValue("TransitionKind", "999"),
+            "non-finite durations and undefined transition kinds are refused");
         Check(session.TryGetValue("TransitionDuration", out var keptDuration) && Equals(keptDuration, 0.5d),
             "the rejected duration leaves the accepted value in place");
         await Click("Apply transition", () => session.GetDocumentSnapshot()!.Slides[0].Transition.Kind == PresentTransitionKind.Fade

@@ -6,16 +6,16 @@
     <Action name="OpenWork" command="assistants.work.open" parameter="{Binding work}" />
   </Actions>
   <Page id="assistant-work-page" AccessibleName="Assistant conversation and work">
-    <Container Type="Vertical Stack" VerticalScrolling="True" Margin="20" Spacing="12">
-      <Container Type="Vertical Stack" Spacing="12">
-        <WrapPanel Orientation="Horizontal" AccessibleName="Assistant actions">
+    <Container Type="Vertical Stack" VerticalScrolling="True" Margin="20" CellGap="12">
+      <Container Type="Vertical Stack" CellGap="12">
+        <Container Orientation="Horizontal" AccessibleName="Assistant actions" Type="Wrap">
           <Button id="work-home" action="assistants.home" Margin="0,0,8,8">Assistants</Button>
-          <Button id="assistant-edit" action="assistants.configuration.open" IsEnabled="{Binding CanConfigure}" Margin="0,0,8,8">Configure</Button>
-          <Button id="new-conversation" action="assistants.conversation.new" IsEnabled="{Binding CanNewConversation}" Margin="0,0,8,8">New conversation</Button>
-        </WrapPanel>
-        <Container Type="Grid" Columns="Auto,*" Rows="Auto" AccessibleName="Assistant identity">
+          <Button id="assistant-edit" action="assistants.configuration.open" Margin="0,0,8,8" Interactive="{Binding CanConfigure}">Configure</Button>
+          <Button id="new-conversation" action="assistants.conversation.new" Margin="0,0,8,8" Interactive="{Binding CanNewConversation}">New conversation</Button>
+        </Container>
+        <Container Type="Grid" AccessibleName="Assistant identity" ColumnSizes="Auto 1fr" RowSizes="Auto">
           <Object Type="AssistantAvatar" Text="{Binding SelectedAssistantAvatarKey}" Width="56" Height="56" AccessibleName="{Binding SelectedAssistantAvatarLabel}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,14,0" />
-          <Container Type="Vertical Stack" GridColumn="1" Spacing="6">
+          <Container Type="Vertical Stack" Column="1" CellGap="6">
             <Text Text="{Binding SelectedAssistantName}" FontSize="26" FontWeight="Bold" TextWrapping="Wrap" />
             <Text Text="{Binding SelectedAssistantDescription}" TextWrapping="Wrap" />
           </Container>
@@ -23,46 +23,46 @@
       </Container>
       <Text Text="{Binding SelectedAssistantActivity}" TextWrapping="Wrap" AccessibleName="Assistant activity" Foreground="{Resource CuiMutedTextBrush}" />
       <Object id="assistant-conversation" Type="AssistantConversation" MinHeight="280" AccessibleName="Assistant conversation" />
-      <Container Type="Vertical Stack" Spacing="8" IsVisible="{Binding HasTaskProgress}" AccessibleName="Current Task progress">
+      <Container Type="Vertical Stack" AccessibleName="Current Task progress" CellGap="8" Active="{Binding HasTaskProgress}">
         <Text Text="Current Task" FontSize="18" FontWeight="SemiBold" />
         <Text Text="{Binding TaskObjective}" FontWeight="SemiBold" TextWrapping="Wrap" />
         <Text Text="{Binding TaskExecutionStatus}" TextWrapping="Wrap" />
         <Text Text="{Binding TaskCurrentActivity}" TextWrapping="Wrap" />
-        <Text Text="{Binding TaskFollowUpResult}" IsVisible="{Binding HasTaskFollowUpResult}" TextWrapping="Wrap" AccessibleName="Task instruction result" />
+        <Text Text="{Binding TaskFollowUpResult}" TextWrapping="Wrap" AccessibleName="Task instruction result" Active="{Binding HasTaskFollowUpResult}" />
         <Text Text="Checkpoints" FontWeight="SemiBold" />
         <Text Text="{Binding TaskCheckpointStatus}" TextWrapping="Wrap" />
         <Text Text="{Binding TaskAcceptanceStatus}" TextWrapping="Wrap" />
         <Text Text="{Binding TaskRecoveryStatus}" TextWrapping="Wrap" AccessibleName="Task recovery status" />
-        <Container Type="Vertical Stack" Spacing="6" IsVisible="{Binding HasColdTaskRecovery}" AccessibleName="Saved Task recovery">
+        <Container Type="Vertical Stack" AccessibleName="Saved Task recovery" CellGap="6" Active="{Binding HasColdTaskRecovery}">
           <Text Text="Continue saved work" FontWeight="SemiBold" />
           <Text Text="{Binding ColdTaskRecoveryReason}" TextWrapping="Wrap" />
-          <WrapPanel Orientation="Horizontal">
-            <Button id="assistant-cold-task-review" action="assistants.task.recovery.review" IsEnabled="{Binding CanReviewColdTaskRecovery}" Margin="0,0,8,8">Review recovery</Button>
-            <Button id="assistant-cold-task-resume" action="assistants.task.recovery.resume" IsEnabled="{Binding CanResumeColdTaskRecovery}" Margin="0,0,8,8">Resume saved Task</Button>
-          </WrapPanel>
+          <Container Orientation="Horizontal" Type="Wrap">
+            <Button id="assistant-cold-task-review" action="assistants.task.recovery.review" Margin="0,0,8,8" Interactive="{Binding CanReviewColdTaskRecovery}">Review recovery</Button>
+            <Button id="assistant-cold-task-resume" action="assistants.task.recovery.resume" Margin="0,0,8,8" Interactive="{Binding CanResumeColdTaskRecovery}">Resume saved Task</Button>
+          </Container>
         </Container>
-        <Container Type="Vertical Stack" Spacing="6" IsVisible="{Binding HasTaskPlan}">
+        <Container Type="Vertical Stack" CellGap="6" Active="{Binding HasTaskPlan}">
           <Text Text="Plan" FontWeight="SemiBold" />
           <Repeat Source="{Binding TaskPlanRows}" As="step" Key="{Binding step.Id}">
-            <Container Type="Vertical Stack" Spacing="3">
+            <Container Type="Vertical Stack" CellGap="3">
               <Text Text="{Binding step.Summary}" TextWrapping="Wrap" />
               <Text Text="{Binding step.Status}" Foreground="{Resource CuiMutedTextBrush}" TextWrapping="Wrap" />
             </Container>
           </Repeat>
         </Container>
-        <Container Type="Vertical Stack" Spacing="6" IsVisible="{Binding HasTaskSteers}">
+        <Container Type="Vertical Stack" CellGap="6" Active="{Binding HasTaskSteers}">
           <Text Text="Steering" FontWeight="SemiBold" />
           <Repeat Source="{Binding TaskSteerRows}" As="steer" Key="{Binding steer.Id}">
-            <Container Type="Vertical Stack" Spacing="3">
+            <Container Type="Vertical Stack" CellGap="3">
               <Text Text="{Binding steer.Summary}" TextWrapping="Wrap" />
               <Text Text="{Binding steer.Status}" Foreground="{Resource CuiMutedTextBrush}" TextWrapping="Wrap" />
             </Container>
           </Repeat>
         </Container>
-        <Container Type="Vertical Stack" Spacing="6" IsVisible="{Binding HasTaskQueue}">
+        <Container Type="Vertical Stack" CellGap="6" Active="{Binding HasTaskQueue}">
           <Text Text="Queued next" FontWeight="SemiBold" />
           <Repeat Source="{Binding TaskQueueRows}" As="followup" Key="{Binding followup.Id}">
-            <Container Type="Vertical Stack" Spacing="3">
+            <Container Type="Vertical Stack" CellGap="3">
               <Text Text="{Binding followup.Summary}" TextWrapping="Wrap" />
               <Text Text="{Binding followup.Status}" Foreground="{Resource CuiMutedTextBrush}" TextWrapping="Wrap" />
             </Container>
@@ -70,75 +70,75 @@
         </Container>
       </Container>
       <Text FontSize="18" FontWeight="SemiBold" Text="Tools and resources" Margin="0,12,0,0" />
-      <WrapPanel Orientation="Horizontal" AccessibleName="Assistant actions">
-        <Button id="new-project-task" action="assistants.project.newtask" IsEnabled="{Binding CanNewProjectTask}" Margin="0,0,8,8">New project Task</Button>
-        <Button id="open-assistant-dev" action="assistants.development.open" IsEnabled="{Binding CanOpenDevelopment}" Margin="0,0,8,8">Open current Task in Dev</Button>
-        <Button action="assistants.memory.open" IsEnabled="{Binding CanInspectMemory}" Margin="0,0,8,8">Assistant memory</Button>
-        <Button action="assistants.resources.open" IsEnabled="{Binding CanInspectResources}" Margin="0,0,8,8">Resources</Button>
-        <Button action="assistants.work.refresh" IsEnabled="{Binding CanRefreshWork}" Margin="0,0,8,8">Current work</Button>
-        <Button action="assistants.proactivity.configure" IsEnabled="{Binding CanConfigureProactivity}" Margin="0,0,8,8">Check-ins</Button>
-        <Button action="assistants.computer.open" IsEnabled="{Binding CanOpenMiniComputer}" Margin="0,0,8,8">Mini Computer</Button>
-      </WrapPanel>
+      <Container Orientation="Horizontal" AccessibleName="Assistant actions" Type="Wrap">
+        <Button id="new-project-task" action="assistants.project.newtask" Margin="0,0,8,8" Interactive="{Binding CanNewProjectTask}">New project Task</Button>
+        <Button id="open-assistant-dev" action="assistants.development.open" Margin="0,0,8,8" Interactive="{Binding CanOpenDevelopment}">Open current Task in Dev</Button>
+        <Button action="assistants.memory.open" Margin="0,0,8,8" Interactive="{Binding CanInspectMemory}">Assistant memory</Button>
+        <Button action="assistants.resources.open" Margin="0,0,8,8" Interactive="{Binding CanInspectResources}">Resources</Button>
+        <Button action="assistants.work.refresh" Margin="0,0,8,8" Interactive="{Binding CanRefreshWork}">Current work</Button>
+        <Button action="assistants.proactivity.configure" Margin="0,0,8,8" Interactive="{Binding CanConfigureProactivity}">Check-ins</Button>
+        <Button action="assistants.computer.open" Margin="0,0,8,8" Interactive="{Binding CanOpenMiniComputer}">Mini Computer</Button>
+      </Container>
       <Text Text="{Binding DevelopmentRouteStatus}" TextWrapping="Wrap" />
-      <Button action="assistants.project.pending.read" IsEnabled="{Binding CanReadCompatiblePending}">Saved pending project creations</Button>
-      <Container Type="Vertical Stack" Spacing="8" IsVisible="{Binding HasCompatiblePendingCreations}">
+      <Button action="assistants.project.pending.read" Interactive="{Binding CanReadCompatiblePending}">Saved pending project creations</Button>
+      <Container Type="Vertical Stack" CellGap="8" Active="{Binding HasCompatiblePendingCreations}">
         <Text FontSize="18" FontWeight="SemiBold">Paused project creation</Text>
         <Text Text="This project creation is waiting for approval. Resume to review access and continue." TextWrapping="Wrap" />
         <Repeat Source="{Binding CompatiblePendingCreations}" As="pending" Key="{Binding pending.Id}">
-          <Container Type="Vertical Stack" Spacing="4" Margin="0,0,0,8">
+          <Container Type="Vertical Stack" Margin="0,0,0,8" CellGap="4">
             <Text Text="{Binding pending.Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
             <Text Text="{Binding pending.Reason}" TextWrapping="Wrap" />
-            <Button action="ResumeCompatiblePending" IsEnabled="{Binding CanResumeCompatiblePending}">Resume saved creation</Button>
+            <Button action="ResumeCompatiblePending" Interactive="{Binding CanResumeCompatiblePending}">Resume saved creation</Button>
           </Container>
         </Repeat>
       </Container>
-      <Container Type="Vertical Stack" Spacing="10" IsVisible="{Binding ShowProjectSelection}">
+      <Container Type="Vertical Stack" CellGap="10" Active="{Binding ShowProjectSelection}">
         <Text Text="{Binding ProjectSelectionTitle}" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap" />
         <Text Text="Choose a project to continue working on it or open it in Dev." TextWrapping="Wrap" />
         <Text Text="{Binding ProjectSelectionStatus}" TextWrapping="Wrap" AccessibleName="Canonical project selection status" />
-        <Input id="project-title-search" Type="Text" Text="{Binding ProjectSearchText, Mode=TwoWay}" IsEnabled="{Binding CanSearchProjects}" PlaceholderText="Search saved project titles" AccessibleName="Search saved project titles" />
-        <Button action="assistants.project.search" IsEnabled="{Binding CanSearchProjects}">Search saved projects</Button>
+        <Input id="project-title-search" Type="Text" PlaceholderText="Search saved project titles" AccessibleName="Search saved project titles" Value="{Binding ProjectSearchText, Mode=TwoWay}" Interactive="{Binding CanSearchProjects}" />
+        <Button action="assistants.project.search" Interactive="{Binding CanSearchProjects}">Search saved projects</Button>
         <Repeat Source="{Binding ProjectChoices}" As="project" Key="{Binding project.Id}">
-          <Button action="ChooseOriginalProject" Text="{Binding project.Title}" IsEnabled="{Binding CanChooseProject}" Margin="0,0,0,6" />
+          <Button action="ChooseOriginalProject" Text="{Binding project.Title}" Margin="0,0,0,6" Interactive="{Binding CanChooseProject}" />
         </Repeat>
         <Text Text="{Binding ProjectSelectionMore}" TextWrapping="Wrap" />
-        <Container Type="Vertical Stack" IsVisible="{Binding HasPendingProjectCreation}" Spacing="6">
+        <Container Type="Vertical Stack" Active="{Binding HasPendingProjectCreation}" CellGap="6">
           <Text Text="{Binding PendingProjectCreationTitle}" FontWeight="SemiBold" />
           <Text Text="Your earlier project creation is saved. Try again to check its progress without creating another task." TextWrapping="Wrap" />
-          <Button id="retry-original-project-task" action="assistants.project.retry" IsEnabled="{Binding CanRetryProjectCreation}">Retry original project Task</Button>
+          <Button id="retry-original-project-task" action="assistants.project.retry" Interactive="{Binding CanRetryProjectCreation}">Retry original project Task</Button>
         </Container>
-        <Button action="assistants.project.older" IsEnabled="{Binding CanReadOlderProjects}">Older saved projects</Button>
-        <Button action="assistants.project.refresh" IsEnabled="{Binding CanRefreshProjects}">Refresh newest matching projects</Button>
-        <Button action="assistants.project.cancel" IsEnabled="{Binding CanCloseProjectSelection}">Cancel project selection</Button>
+        <Button action="assistants.project.older" Interactive="{Binding CanReadOlderProjects}">Older saved projects</Button>
+        <Button action="assistants.project.refresh" Interactive="{Binding CanRefreshProjects}">Refresh newest matching projects</Button>
+        <Button action="assistants.project.cancel" Interactive="{Binding CanCloseProjectSelection}">Cancel project selection</Button>
       </Container>
-      <Container Type="Vertical Stack" VerticalScrolling="True" Spacing="8" MaxHeight="200" IsVisible="{Binding HasSelectedConversations}">
+      <Container Type="Vertical Stack" VerticalScrolling="True" MaxHeight="200" CellGap="8" Active="{Binding HasSelectedConversations}">
         <Text FontSize="18" FontWeight="SemiBold">Conversations</Text>
         <Repeat Source="{Binding SelectedConversations}" As="conversation" Key="{Binding conversation.Id}">
-          <Button action="OpenConversation" Text="{Binding conversation.Title}" IsEnabled="{Binding conversation.CanOpen}" Margin="0,0,0,6" />
+          <Button action="OpenConversation" Text="{Binding conversation.Title}" Margin="0,0,0,6" Interactive="{Binding conversation.CanOpen}" />
         </Repeat>
       </Container>
-      <Container Type="Vertical Stack" VerticalScrolling="True" Spacing="8" MaxHeight="200" IsVisible="{Binding HasSelectedWork}">
+      <Container Type="Vertical Stack" VerticalScrolling="True" MaxHeight="200" CellGap="8" Active="{Binding HasSelectedWork}">
         <Text FontSize="18" FontWeight="SemiBold">Tasks and ongoing work</Text>
         <Repeat Source="{Binding SelectedWork}" As="work" Key="{Binding work.Id}">
-          <Container Type="Vertical Stack" Margin="0,0,0,8" Spacing="4">
-            <Button action="OpenWork" Text="{Binding work.Title}" IsEnabled="{Binding work.CanOpen}" />
+          <Container Type="Vertical Stack" Margin="0,0,0,8" CellGap="4">
+            <Button action="OpenWork" Text="{Binding work.Title}" Interactive="{Binding work.CanOpen}" />
             <Text Text="{Binding work.StatusLabel}" TextWrapping="Wrap" />
           </Container>
         </Repeat>
       </Container>
       <Text FontSize="18" FontWeight="SemiBold" Text="Manage Assistant" Margin="0,12,0,0" />
       <Text Text="{Binding IdentityAvailabilityStatus}" TextWrapping="Wrap" AccessibleName="Assistant availability" />
-      <WrapPanel Orientation="Horizontal" AccessibleName="Assistant actions">
-        <Button action="assistants.pause" IsEnabled="{Binding CanPause}" Margin="0,0,8,8">Pause work</Button>
-        <Button action="assistants.resume" IsEnabled="{Binding CanResume}" Margin="0,0,8,8">Resume work</Button>
-        <Button id="assistant-disable" action="assistants.disable" IsEnabled="{Binding CanDisable}" IsVisible="{Binding ShowDisableAssistant}" Margin="0,0,8,8">Disable Assistant</Button>
-        <Button id="assistant-enable" action="assistants.enable" IsEnabled="{Binding CanEnable}" IsVisible="{Binding ShowEnableAssistant}" Margin="0,0,8,8">Enable Assistant</Button>
-        <Button id="assistant-archive" action="assistants.archive" IsEnabled="{Binding CanArchive}" IsVisible="{Binding ShowArchiveAssistant}" Margin="0,0,8,8">Archive Assistant</Button>
-        <Button id="assistant-restore" action="assistants.restore" IsEnabled="{Binding CanRestore}" IsVisible="{Binding ShowRestoreAssistant}" Margin="0,0,8,8">Restore Assistant</Button>
-        <Button action="assistants.delete.review" IsEnabled="{Binding CanDelete}" Margin="0,0,8,8">Delete…</Button>
-      </WrapPanel>
+      <Container Orientation="Horizontal" AccessibleName="Assistant actions" Type="Wrap">
+        <Button action="assistants.pause" Margin="0,0,8,8" Interactive="{Binding CanPause}">Pause work</Button>
+        <Button action="assistants.resume" Margin="0,0,8,8" Interactive="{Binding CanResume}">Resume work</Button>
+        <Button id="assistant-disable" action="assistants.disable" Margin="0,0,8,8" Interactive="{Binding CanDisable}" Active="{Binding ShowDisableAssistant}">Disable Assistant</Button>
+        <Button id="assistant-enable" action="assistants.enable" Margin="0,0,8,8" Interactive="{Binding CanEnable}" Active="{Binding ShowEnableAssistant}">Enable Assistant</Button>
+        <Button id="assistant-archive" action="assistants.archive" Margin="0,0,8,8" Interactive="{Binding CanArchive}" Active="{Binding ShowArchiveAssistant}">Archive Assistant</Button>
+        <Button id="assistant-restore" action="assistants.restore" Margin="0,0,8,8" Interactive="{Binding CanRestore}" Active="{Binding ShowRestoreAssistant}">Restore Assistant</Button>
+        <Button action="assistants.delete.review" Margin="0,0,8,8" Interactive="{Binding CanDelete}">Delete…</Button>
+      </Container>
       <Text Text="{Binding Status}" TextWrapping="Wrap" AccessibleName="Assistant work status" />
-      <Text Text="{Binding Error}" IsVisible="{Binding HasError}" TextWrapping="Wrap" AccessibleName="Assistant work error" />
+      <Text Text="{Binding Error}" TextWrapping="Wrap" AccessibleName="Assistant work error" Active="{Binding HasError}" />
     </Container>
   </Page>
 </Cui>

@@ -96,7 +96,7 @@ public sealed partial class ExperiencesPage : UserControl, IDisposable
         try
         {
             _route.SetStatus("Opening the Experience builder…");
-            await _create("Create a standalone interactive Haven experience that can be saved and reopened from Experiences.");
+            await _create("Create a standalone interactive 9to1 experience that can be saved and reopened from Experiences.");
         }
         catch (Exception exception)
         {

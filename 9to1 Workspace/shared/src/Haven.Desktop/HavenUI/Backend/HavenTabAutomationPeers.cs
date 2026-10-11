@@ -42,7 +42,7 @@ internal sealed class HavenTabItemAutomationPeer(
             for (var current = Element.Parent; current is not null; current = current.Parent)
                 if (current is HavenTabStrip tabs)
                     return (ISelectionProvider)RootPeer.GetOrCreateElementPeer(tabs);
-            throw new InvalidOperationException("A Haven TabItem must belong to a TabStrip.");
+            throw new InvalidOperationException("A 9to1 TabItem must belong to a TabStrip.");
         }
     }
 

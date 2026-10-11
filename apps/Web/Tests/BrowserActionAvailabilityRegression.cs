@@ -20,17 +20,22 @@ await session.Dispatch(() =>
     var model = new CuiViewModel();
     model.Set("Enabled", false); model.SetActionAvailability("Unavailable", false);
     var document = new CuiRichParser().Parse("""
-        <Cui><StackPanel>
-          <Button id="live" action="Unavailable" IsEnabled="{Binding Enabled}" content="Unavailable native action" />
-          <Button id="unbound" action="Unavailable" content="Owner default enabled" />
-          <Button id="literal-disabled" action="Unavailable" IsEnabled="false" content="Owner disabled" />
-        </StackPanel></Cui>
+        <Cui>
+          <Page>
+            <Container Type="Vertical Stack">
+              <Button id="live" action="Unavailable" content="Unavailable native action" Interactive="{Binding Enabled}" />
+              <Button id="unbound" action="Unavailable" content="Owner default enabled" />
+              <Button id="literal-disabled" action="Unavailable" content="Owner disabled" Interactive="false" />
+            </Container>
+          </Page>
+        </Cui>
         """);
     using var loader = new CuiControlLoader(); loader.SetBindingContext(model); loader.SetActionDispatcher(model);
     var (root, diagnostics) = loader.TryLoad(document);
     if (root is not Panel panel || diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error))
         throw new InvalidOperationException("Real owner CUI did not lower.");
     loader.WireBindings(panel);
+    var container = panel.GetLogicalDescendants().OfType<CuiContainerControl>().Single();
     var buttons = panel.GetLogicalDescendants().OfType<Button>().ToDictionary(button => button.Name!);
     var live = buttons["live"]; var unbound = buttons["unbound"]; var literal = buttons["literal-disabled"];
     using var observation = BrowserActionAvailability.Observe(panel, loader, document, model, model);
@@ -62,28 +67,28 @@ await session.Dispatch(() =>
     Check("Later actual native enabled assignment is synchronously capability-clamped", !unbound.IsEnabled);
     Availability(true);
     Check("Captured native authored true survives capability clamp", unbound.IsEnabled);
-    unbound.IsEnabled = false;
+    CuiLifecycleProperties.SetLiteral(unbound, "Interactive", "false", CuiPropertyLevel.Instance, "owner change");
     model.Set("CapabilityRevision", ++revision);
     Check("Context refresh preserves latest actual native authored false", !unbound.IsEnabled);
-    unbound.IsEnabled = true;
+    CuiLifecycleProperties.SetLiteral(unbound, "Interactive", "true", CuiPropertyLevel.Instance, "owner change");
     Availability(false);
-    unbound.IsEnabled = false; // Equal effective false still writes the real owner value below restriction.
+    CuiLifecycleProperties.SetLiteral(unbound, "Interactive", "false", CuiPropertyLevel.Instance, "owner change"); // Retain the authored value below denial.
     Availability(true);
     Check("Equal false unbound owner assignment survives capability restoration", !unbound.IsEnabled);
-    unbound.IsEnabled = true;
+    CuiLifecycleProperties.SetLiteral(unbound, "Interactive", "true", CuiPropertyLevel.Instance, "owner change");
     Check("Unbound owner true remains editable after capability restoration", unbound.IsEnabled);
     Availability(false);
     using (unbound.SetValue(Control.IsEnabledProperty, true, BindingPriority.Animation))
         Check("Later native priority assignment cannot enable unavailable action", !unbound.IsEnabled);
     Availability(true);
-    unbound.IsEnabled = false;
+    CuiLifecycleProperties.SetLiteral(unbound, "Interactive", "false", CuiPropertyLevel.Instance, "owner change");
     model.SetActionAvailability("Unavailable", false);
     observation.Refresh();
     Check("Explicit surface refresh rereads silent actual capability change", !live.IsEnabled);
     model.SetActionAvailability("Unavailable", true);
     observation.Refresh();
     Check("Explicit surface refresh restores latest owning binding", live.IsEnabled && !unbound.IsEnabled);
-    panel.Children.Remove(live);
+    container.RemoveChild(live);
     observation.Refresh();
     model.SetActionAvailability("Unavailable", false);
     model.Set("CapabilityRevision", ++revision);

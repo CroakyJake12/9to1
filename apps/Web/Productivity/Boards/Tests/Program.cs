@@ -6,11 +6,12 @@ using Haven.Core;
 using Haven.Infrastructure;
 using NineToOne.Web.Productivity.Boards;
 
-if (args.Length != 1 || args[0] is not ("seed" or "verify" or "unknown") || string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("HAVEN_DATA_DIR")))
+if (args.Length != 1 || args[0] is not ("seed" or "verify" or "unknown" or "workspace") || string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("HAVEN_DATA_DIR")))
     throw new ArgumentException("Choose seed/verify/unknown in an explicitly isolated actual repository fixture.");
 var paths = new AppPaths();
 var repository = new NotesRepository(paths, new NotesDocumentValidator(), new ProductionDiagnostics(paths));
 var core = new BoardsBrowserCore(repository);
+if (args[0] == "workspace") { await BoardsWorkspaceRegression.Run(repository); return; }
 var statePath = Path.Combine(paths.DataDirectory, "browser-boards-fixture.json");
 var assertions = 0;
 void Check(bool ok, string name)

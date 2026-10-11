@@ -44,7 +44,7 @@ public sealed class ActionGroup : Container
         "HUI/shared/Components/ActionGroup/ActionGroup.cs",
         ["ActionGroup"],
         [],
-        "Compact joined-button group; members stay ordinary Haven buttons.");
+        "Compact joined-button group; members stay ordinary 9to1 buttons.");
 }
 
 /// <summary>

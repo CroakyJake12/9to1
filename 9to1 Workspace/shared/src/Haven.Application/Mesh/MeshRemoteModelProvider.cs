@@ -6,7 +6,7 @@ public sealed class MeshRemoteModelProvider(MeshCoordinator mesh) : IModelProvid
 {
     public const string MeshProviderId = "mesh";
     public string Id => MeshProviderId;
-    public string DisplayName => "Haven Mesh";
+    public string DisplayName => "9to1 Mesh";
     public ModelProviderKind Kind => ModelProviderKind.OpenAICompatible;
     public bool IsLocal => false;
     public bool CanManageModels => false;

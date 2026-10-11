@@ -121,13 +121,13 @@ internal sealed partial class AutomationsHavenScene
         inspector.Add(Field("Name", _nameInput));
         inspector.Add(Field("Goal", _goalInput));
         inspector.Add(Field("Rules", _rulesInput));
-        inspector.Add(Heading(null, "Edit graph with Haven", TextLevel.H3));
+        inspector.Add(Heading(null, "Edit graph with 9to1", TextLevel.H3));
         _aiInput = NewInput("Automations.Editor.AiInstruction", "Describe a typed graph edit", true);
         inspector.Add(_aiInput);
-        inspector.Add(ActionButton("Automations.Editor.AiApply", "Edit with Haven", ButtonVariant.Secondary, (_, _) =>
+        inspector.Add(ActionButton("Automations.Editor.AiApply", "Edit with 9to1", ButtonVariant.Secondary, (_, _) =>
         {
             var instruction = _aiInput.Text.Trim();
-            if (instruction.Length == 0) SetStatus("Describe the graph change you want Haven to make.", true);
+            if (instruction.Length == 0) SetStatus("Describe the graph change you want 9to1 to make.", true);
             else AiEditRequested?.Invoke(instruction);
         }));
         inspector.Add(Heading(null, "Selected node", TextLevel.H3));
@@ -467,7 +467,7 @@ internal sealed partial class AutomationsHavenScene
             _deviceActionSelect.SelectedIndex = string.IsNullOrWhiteSpace(savedAction) ? -1 : 0;
             _deviceStatus.Content = savedTarget is null
                 ? "No real device-action target is available in this host."
-                : $"Saved target {savedTarget.DisplayName} is not currently available. Haven will not substitute another device.";
+                : $"Saved target {savedTarget.DisplayName} is not currently available. 9to1 will not substitute another device.";
         }
         else
         {
@@ -480,7 +480,7 @@ internal sealed partial class AutomationsHavenScene
             _deviceActionSelect.SelectedIndex = selectedActionIndex >= 0 ? selectedActionIndex : actions.Length > 0 && savedTarget is null ? 0 : -1;
             _deviceStatus.Content = targetMatches
                 ? (_deviceSnapshot.IsReachable ? $"Capabilities from {_deviceSnapshot.Target.DisplayName}." : $"{_deviceSnapshot.Target.DisplayName} is currently unavailable.")
-                : $"Saved target {savedTarget!.DisplayName} is not currently available. Haven will not substitute another device.";
+                : $"Saved target {savedTarget!.DisplayName} is not currently available. 9to1 will not substitute another device.";
 
             _deviceActionSelect.SelectionChanged += (_, _) => ApplyDeviceSelection(node.Id);
             if (savedTarget is null) StoreDeviceTarget(node.Id, _deviceSnapshot.Target);
@@ -516,9 +516,9 @@ internal sealed partial class AutomationsHavenScene
         _deviceStatus.Content = action.Availability switch
         {
             DeviceActionAvailability.Supported => $"Supported on {_deviceSnapshot.Target.DisplayName}.",
-            DeviceActionAvailability.PermissionRequired => $"Available on {_deviceSnapshot.Target.DisplayName} with permission. Haven will request permission before execution.",
+            DeviceActionAvailability.PermissionRequired => $"Available on {_deviceSnapshot.Target.DisplayName} with permission. 9to1 will request permission before execution.",
             DeviceActionAvailability.AvailableThroughPlugin => $"Available through {action.ProviderId}.",
-            DeviceActionAvailability.Unsupported => $"Unsupported on {_deviceSnapshot.Target.DisplayName}. Haven will not save this action as runnable.",
+            DeviceActionAvailability.Unsupported => $"Unsupported on {_deviceSnapshot.Target.DisplayName}. 9to1 will not save this action as runnable.",
             _ => "Availability could not be resolved."
         };
         var current = _graphEditor.Document.Nodes.FirstOrDefault(node => node.Id == nodeId);
@@ -556,7 +556,7 @@ internal sealed partial class AutomationsHavenScene
             if (node.DeviceTarget is null || string.IsNullOrWhiteSpace(node.ActionKey)) continue;
             if (_deviceSnapshot is null || !string.Equals(node.DeviceTarget.Id, _deviceSnapshot.Target.Id, StringComparison.OrdinalIgnoreCase))
             {
-                error = $"Saved target {node.DeviceTarget.DisplayName} is not currently available. Haven will not substitute another device.";
+                error = $"Saved target {node.DeviceTarget.DisplayName} is not currently available. 9to1 will not substitute another device.";
                 return false;
             }
             var action = _deviceSnapshot.Actions.FirstOrDefault(value => string.Equals(value.Key, node.ActionKey, StringComparison.OrdinalIgnoreCase));

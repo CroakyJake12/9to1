@@ -123,7 +123,7 @@ public sealed class ToolAvailabilityPlan
     /// <summary>
     /// Retrieves unavailable reason for the current operation.
     /// </summary>
-    public string GetUnavailableReason(string toolName) => _unavailableReasons.TryGetValue(toolName, out var reason) ? reason : $"Tool '{toolName}' is not registered for this Haven pass.";
+    public string GetUnavailableReason(string toolName) => _unavailableReasons.TryGetValue(toolName, out var reason) ? reason : $"Tool '{toolName}' is not registered for this 9to1 pass.";
 
     /// <summary>
     /// Performs the restrict to model step owned by this component.
@@ -237,7 +237,7 @@ public sealed class ToolAvailabilityPlanner
         var modeAllowed = context.Mode is HavenMode.Tasks or HavenMode.Studio;
         foreach (var definition in source)
         {
-            if (!modeAllowed) { reasons[definition.Name] = $"Tool '{definition.Name}' is available only in Haven Tasks or Haven Studio."; continue; }
+            if (!modeAllowed) { reasons[definition.Name] = $"Tool '{definition.Name}' is available only in 9to1 Tasks or 9to1 Studio."; continue; }
             if (!context.HasExistingWorkspace) { reasons[definition.Name] = $"Tool '{definition.Name}' requires a selected workspace folder that exists locally."; continue; }
             if (RuntimeSafetyState.IsSafeMode && !WorkspaceReadTools.Contains(definition.Name))
             {
@@ -363,7 +363,7 @@ public sealed class ToolAvailabilityPlanner
         foreach (var definition in source)
         {
             if (!active) reasons[definition.Name] = $"Tool '{definition.Name}' requires a registered Tasks capability.";
-            else if (!modeAllowed) reasons[definition.Name] = $"Tool '{definition.Name}' is available only in Haven Tasks or Haven Studio.";
+            else if (!modeAllowed) reasons[definition.Name] = $"Tool '{definition.Name}' is available only in 9to1 Tasks or 9to1 Studio.";
             else if (!host) reasons[definition.Name] = $"Tool '{definition.Name}' is unavailable because the local automation store is not connected.";
             else Add(definition, ToolRuntimeKind.Automation, definitions, routes);
         }
@@ -406,7 +406,7 @@ public sealed class ToolAvailabilityPlanner
     /// Performs the safe mode reason step owned by this component.
     /// </summary>
     private static string SafeModeReason(string tool) =>
-        $"Tool '{tool}' is disabled because Haven is in crash-loop recovery safe mode. {RuntimeSafetyState.Reason}";
+        $"Tool '{tool}' is disabled because 9to1 is in crash-loop recovery safe mode. {RuntimeSafetyState.Reason}";
 
     /// <summary>
     /// Performs the add step owned by this component.

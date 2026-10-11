@@ -261,7 +261,7 @@ public sealed class Input : HavenElement
         "Components/Input/Input.cs",
         [InputDefaults.SystemClass],
         [InputDefaults.FocusTransition],
-        "Haven owns field chrome, text editing, caret state, focus state, and rendering; platform backends only translate platform input events into Haven input events.");
+        "9to1 owns field chrome, text editing, caret state, focus state, and rendering; platform backends only translate platform input events into 9to1 input events.");
 
     protected override void OnStateChanged()
     {

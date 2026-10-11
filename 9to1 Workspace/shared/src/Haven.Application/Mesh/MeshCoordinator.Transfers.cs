@@ -197,7 +197,7 @@ public sealed partial class MeshCoordinator
         try
         {
             _ = RequireTransferGrant(message.SourceDeviceId, RemoteFileCapability);
-            if (_fileTransfers is null) throw new InvalidOperationException("This Haven build has no Mesh file inbox.");
+            if (_fileTransfers is null) throw new InvalidOperationException("This 9to1 build has no Mesh file inbox.");
             if (request.Length < 0 || request.Length > MaximumFileBytes) throw new InvalidDataException($"Incoming Mesh files are limited to {MaximumFileBytes / 1024 / 1024} MiB.");
             await _fileTransfers.BeginAsync(message.SourceDeviceId, request.TransferId, request.FileName, request.Length, CancellationToken.None).ConfigureAwait(false);
             begun = true;

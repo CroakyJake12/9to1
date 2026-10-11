@@ -8,7 +8,7 @@ using Avalonia.Android;
 namespace Haven.Android;
 
 [Activity(
-    Label = "Haven",
+    Label = "9to1",
     Theme = "@style/Theme.AppCompat.Light.NoActionBar",
     Icon = "@drawable/haven_icon",
     MainLauncher = false,

@@ -51,7 +51,7 @@ public sealed partial class MeshCoordinator : IAsyncDisposable
             if (_initialised) return;
             _state = await _stateStore.LoadAsync(cancellationToken).ConfigureAwait(false);
             if (_state.Version > MeshPersistentState.CurrentVersion)
-                throw new InvalidDataException($"Mesh state version {_state.Version} is newer than this Haven build supports.");
+                throw new InvalidDataException($"Mesh state version {_state.Version} is newer than this 9to1 build supports.");
             if (_state.Version < MeshPersistentState.CurrentVersion || _state.WorkMembers is null || _state.WorkMessages is null || _state.WorkItems is null)
             {
                 _state = _state with
@@ -83,7 +83,7 @@ public sealed partial class MeshCoordinator : IAsyncDisposable
 
             var privateKey = await _identitySecrets.GetPrivateKeyAsync(_state.LocalIdentity.DeviceId, cancellationToken).ConfigureAwait(false);
             if (string.IsNullOrWhiteSpace(privateKey))
-                throw new InvalidDataException("Mesh identity metadata exists, but its private identity secret is missing. Re-pair this Haven installation rather than silently replacing its identity.");
+                throw new InvalidDataException("Mesh identity metadata exists, but its private identity secret is missing. Re-pair this 9to1 installation rather than silently replacing its identity.");
 
             await _transport.StartAsync(_state.LocalIdentity, privateKey, cancellationToken).ConfigureAwait(false);
             await _transport.SetTrustedPeersAsync(_state.TrustedPeers, cancellationToken).ConfigureAwait(false);
@@ -132,13 +132,13 @@ public sealed partial class MeshCoordinator : IAsyncDisposable
         if (observed.DeviceId == Guid.Empty || string.IsNullOrWhiteSpace(observed.PublicKeyFingerprint))
             return new(false, "The remote peer did not present a valid stable identity.");
         if (observed.DeviceId == _state.LocalIdentity!.DeviceId)
-            return new(false, "Haven cannot pair a device with itself.");
+            return new(false, "9to1 cannot pair a device with itself.");
 
         var existing = _state.TrustedPeers.FirstOrDefault(peer => peer.DeviceId == observed.DeviceId);
         if (existing is { TrustState: MeshPeerTrustState.Revoked })
             return new(false, "This device was revoked. Remove the revoked identity explicitly before pairing it again.");
         if (existing is not null && !string.Equals(existing.PublicKeyFingerprint, observed.PublicKeyFingerprint, StringComparison.OrdinalIgnoreCase))
-            return new(false, "The device ID matches a known peer but its identity fingerprint changed. Haven refused the pairing to prevent silent identity replacement.");
+            return new(false, "The device ID matches a known peer but its identity fingerprint changed. 9to1 refused the pairing to prevent silent identity replacement.");
 
         var now = DateTimeOffset.UtcNow;
         var peer = new MeshPeerRecord(
@@ -224,7 +224,7 @@ public sealed partial class MeshCoordinator : IAsyncDisposable
         _ = RequireTrustedPeer(handoff.TargetDeviceId);
         var presence = GetPresence(RequireTrustedPeer(handoff.TargetDeviceId));
         if (presence.Connection != MeshConnectionState.Connected)
-            return new(handoff.HandoffId, MeshHandoffStatus.Failed, DateTimeOffset.UtcNow, "The target device is offline; Haven kept the current activity on this device.");
+            return new(handoff.HandoffId, MeshHandoffStatus.Failed, DateTimeOffset.UtcNow, "The target device is offline; 9to1 kept the current activity on this device.");
         await _transport.SendAsync(handoff.TargetDeviceId, "handoff.request", JsonSerializer.Serialize(handoff), cancellationToken).ConfigureAwait(false);
         return new(handoff.HandoffId, MeshHandoffStatus.Sent, DateTimeOffset.UtcNow, "Handoff sent with its resource, task, references and source surface context.");
     }
@@ -275,7 +275,7 @@ public sealed partial class MeshCoordinator : IAsyncDisposable
     }
 
     private MeshPeerRecord RequireKnownPeer(Guid deviceId) => _state.TrustedPeers.FirstOrDefault(peer => peer.DeviceId == deviceId)
-        ?? throw new UnauthorizedAccessException("The remote device is unknown to this Haven installation.");
+        ?? throw new UnauthorizedAccessException("The remote device is unknown to this 9to1 installation.");
 
     private MeshPeerRecord RequireTrustedPeer(Guid deviceId)
     {

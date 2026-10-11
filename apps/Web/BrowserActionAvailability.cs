@@ -1,7 +1,7 @@
 using Avalonia.Controls;
 using Avalonia;
 using Avalonia.LogicalTree;
-using Avalonia.Data;
+using System.Runtime.CompilerServices;
 using Avalonia.Threading;
 using System.ComponentModel;
 using CakeOS.Cui;
@@ -12,6 +12,7 @@ namespace NineToOne.Web;
 internal static class BrowserActionAvailability
 {
     private const string UnavailableTip = "This action requires an available account service or browser capability.";
+    private static readonly ConditionalWeakTable<Button, ButtonState> InitialStates = new();
     public static Observation Observe(Control root, CuiControlLoader loader, CuiDocument document,
         ICuiActionDispatcher actions, ICuiBindingContext bindings) => new(root, loader, document, actions, bindings);
 
@@ -19,12 +20,11 @@ internal static class BrowserActionAvailability
     public static void ApplyInitial(Button button, CuiControlLoader loader, CuiDocument document, ICuiActionDispatcher actions)
     {
         if (loader.Inspect(button) is null || button.Tag is not string reference) return;
-        // Tag is the authored reference; the actual loader dispatches the existing
-        // typed Action definition's Command when that reference is an alias.
-        var command = document.Actions.TryGetValue(reference, out var definition) ? definition.Command : reference;
-        var available = (actions as ICuiActionAvailability)?.IsActionAvailable(command) == true;
-        button.IsEnabled = button.IsEnabled && available;
-        if (!available) ToolTip.SetTip(button, UnavailableTip);
+        if (InitialStates.TryGetValue(button, out var previous)) previous.Dispose();
+        InitialStates.Remove(button);
+        var state = new ButtonState(button, document, actions);
+        InitialStates.Add(button, state);
+        state.Refresh();
     }
 
     /// <summary>Owns reactive native button observers for exactly one rendered surface.</summary>
@@ -144,13 +144,9 @@ internal static class BrowserActionAvailability
 
         private void Restrict()
         {
-            if (_restriction is not null && !_button.IsEnabled) return;
-            _restriction?.Dispose(); _restriction = null;
-            // The native value store retains the owner's local values, bindings
-            // and styles below this disposable restriction. Even an equal-false
-            // owner assignment remains intact when the restriction is removed.
-            _restriction = _button.SetValue(Control.IsEnabledProperty, false, BindingPriority.Animation)
-                ?? throw new InvalidOperationException("The native enabled restriction was not disposable.");
+            // Availability can only deny interaction. The canonical lifecycle
+            // projection retains current authored Interactive state underneath it.
+            _restriction ??= CuiLifecycleProperties.RestrictInteraction(_button);
         }
 
         public void Dispose()

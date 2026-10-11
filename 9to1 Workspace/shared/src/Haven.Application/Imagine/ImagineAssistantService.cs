@@ -35,7 +35,7 @@ public sealed class ImagineAssistantService(IProviderModelClient models) : IImag
         var images = asset is { Kind: ImagineMediaKind.Image } && File.Exists(asset.ManagedPath) ? new[] { asset.ManagedPath } : null;
         try
         {
-            var response = await models.CompleteAsync(new OllamaChatRequest(model.Name, [new OllamaMessage("user", prompt, images)], EffortLevel.Medium, "You are Haven Imagine's structural editor. Return strict JSON only and never claim unsupported pixel edits."), cancellationToken).ConfigureAwait(false);
+            var response = await models.CompleteAsync(new OllamaChatRequest(model.Name, [new OllamaMessage("user", prompt, images)], EffortLevel.Medium, "You are 9to1 Imagine's structural editor. Return strict JSON only and never claim unsupported pixel edits."), cancellationToken).ConfigureAwait(false);
             var dto = Parse(response);
             if (dto is null) return new(false, "The model did not return a usable structural edit. The project was not changed.", model.Name, objectId, null, null, null);
             var transform = target.Transform with
@@ -46,7 +46,7 @@ public sealed class ImagineAssistantService(IProviderModelClient models) : IImag
             };
             var text = target.Kind == ImagineObjectKind.Text && !string.IsNullOrWhiteSpace(dto.Text) ? dto.Text.Trim() : target.Text;
             var fill = ValidFill(dto.Fill) ? dto.Fill!.ToUpperInvariant() : target.Fill;
-            return new(true, "Haven proposed a real structural edit for the selected object. Image pixels were not fabricated or replaced.", model.Name, objectId, transform, text, fill);
+            return new(true, "9to1 proposed a real structural edit for the selected object. Image pixels were not fabricated or replaced.", model.Name, objectId, transform, text, fill);
         }
         catch (OperationCanceledException) { throw; }
         catch (Exception exception) when (exception is HttpRequestException or IOException or InvalidOperationException or JsonException)

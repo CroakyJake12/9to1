@@ -51,7 +51,7 @@
 
     <hui:HavenPrimaryButton x:Name="EditWithHavenButton"
             Grid.RowSpan="2"
-            Content="Edit With Haven"
+            Content="Edit With 9to1"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
             Margin="0,0,28,26"

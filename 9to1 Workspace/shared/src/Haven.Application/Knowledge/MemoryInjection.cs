@@ -33,7 +33,7 @@ public interface IMemoryQuerySource
 public static class MemoryInjection
 {
     /// <summary>Header rendered above remembered lines inside the directive.</summary>
-    public const string DirectiveHeader = "Remembered about this user (from Haven Library):";
+    public const string DirectiveHeader = "Remembered about this user (from 9to1 Library):";
 
     /// <summary>Highest number of records that can ever reach one prompt.</summary>
     public const int MaximumRecords = 8;

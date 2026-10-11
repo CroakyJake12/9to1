@@ -29,10 +29,10 @@ internal sealed class OverlayShellHavenScene : IDisposable
         Set(Root, HavenProperties.Width, HavenLength.Percent(100));
         Set(Root, HavenProperties.Background, "Transparent");
 
-        CollapsedPromptButton = Action("Overlay.CollapsedPrompt", "Ask Haven about your Screen", ButtonVariant.Primary);
+        CollapsedPromptButton = Action("Overlay.CollapsedPrompt", "Ask 9to1 about your Screen", ButtonVariant.Primary);
         Set(CollapsedPromptButton, HavenProperties.Width, HavenLength.Percent(100));
         Set(CollapsedPromptButton, HavenProperties.MinHeight, HavenLength.Px(56));
-        CollapsedPromptButton.Accessibility.AccessibleName = "Ask Haven about your Screen";
+        CollapsedPromptButton.Accessibility.AccessibleName = "Ask 9to1 about your Screen";
         CollapsedPromptButton.Invalidated += (_, _) => UpdateCollapsedPromptFocusVisual();
         Root.Add(CollapsedPromptButton);
 
@@ -69,7 +69,7 @@ internal sealed class OverlayShellHavenScene : IDisposable
         var identity = new Container { Name = "Overlay.Identity", Layout = HavenLayout.Vertical };
         Set(identity, HavenProperties.Column, 1);
         TitleText = new HavenText("Overlay") { Name = "Overlay.Title", Level = TextLevel.Caption };
-        SourceText = Secondary("Independent Haven workspace", "Overlay.Source");
+        SourceText = Secondary("Independent 9to1 workspace", "Overlay.Source");
         Set(SourceText, HavenProperties.Visibility, HavenVisibility.Collapsed);
         identity.Add(TitleText);
         identity.Add(SourceText);
@@ -97,7 +97,7 @@ internal sealed class OverlayShellHavenScene : IDisposable
         header.Add(NewChatButton);
         ExpandedPanel.Add(header);
 
-        Heading = new HavenText("Ask Haven about your Screen") { Name = "Overlay.Heading", Level = TextLevel.H2 };
+        Heading = new HavenText("Ask 9to1 about your Screen") { Name = "Overlay.Heading", Level = TextLevel.H2 };
         ExpandedPanel.Add(Heading);
 
         AppHostPanel = new Container { Name = "Overlay.AppHost", Layout = HavenLayout.Vertical };
@@ -209,10 +209,10 @@ internal sealed class OverlayShellHavenScene : IDisposable
         ComposerInput = new Input
         {
             Name = "Overlay.Composer.Input",
-            Placeholder = "Ask Haven anything",
+            Placeholder = "Ask 9to1 anything",
             SubmitOnEnter = true
         };
-        ComposerInput.Accessibility.AccessibleName = "Ask Haven anything";
+        ComposerInput.Accessibility.AccessibleName = "Ask 9to1 anything";
         Set(ComposerInput, HavenProperties.Column, 1);
         Set(ComposerInput, HavenProperties.Width, HavenLength.Percent(100));
         SendButton = Action("Overlay.Composer.Send", "→", ButtonVariant.Primary);
@@ -492,7 +492,7 @@ internal sealed class OverlayShellHavenScene : IDisposable
         var label = string.Join(" · ", parts);
         return string.IsNullOrWhiteSpace(label)
             ? session.SourceAssociation
-              ?? (session.AppKey.Equals("chat", StringComparison.OrdinalIgnoreCase) ? "Haven Chat" : "Haven Go")
+              ?? (session.AppKey.Equals("chat", StringComparison.OrdinalIgnoreCase) ? "9to1 Chat" : "9to1 Go")
             : label;
     }
 

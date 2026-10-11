@@ -1,4 +1,4 @@
-# Haven UI provider contract
+# 9to1 UI provider contract
 
 `llamacpp-provider.json` is the HUI-facing registry entry for the local
 llama.cpp provider. It describes discovery, status, model-key resolution, and

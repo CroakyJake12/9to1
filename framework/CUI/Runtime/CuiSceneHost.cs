@@ -344,7 +344,7 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
                 next.SetActionDispatcher(status);
             }
             var document = availability.State == CuiSceneAvailabilityState.Ready ? scene.Document :
-                new CuiRichParser().Parse("<Cui><StackPanel><TextBlock id=\"scene-availability\" text=\"{Binding AvailabilityMessage}\" accessible-name=\"Application availability\" /></StackPanel></Cui>");
+                new CuiRichParser().Parse("<Cui><Container Type=\"Vertical Stack\"><Text id=\"scene-availability\" text=\"{Binding AvailabilityMessage}\" accessible-name=\"Application availability\" /></Container></Cui>");
             var loaded = next.TryLoad(document);
             if (loaded.Root is null || loaded.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
             {
@@ -382,7 +382,7 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
             _failureModel = new CuiViewModel();
             _failureLoader = new CuiControlLoader(_registry); _failureLoader.SetBindingContext(_failureModel);
             var banner = _failureLoader.Load(new CuiRichParser().Parse(
-                "<Cui><TextBlock id=\"scene-action-status\" text=\"{Binding ActionStatus}\" text-wrapping=\"Wrap\" margin=\"12\" /></Cui>")) ?? throw new InvalidDataException("The action status CUI did not produce a control.");
+                "<Cui><Text id=\"scene-action-status\" text=\"{Binding ActionStatus}\" text-wrapping=\"Wrap\" margin=\"12\" /></Cui>")) ?? throw new InvalidDataException("The action status CUI did not produce a control.");
             var original = Content as Control; Content = null;
             var layout = new Grid { RowDefinitions = new RowDefinitions("Auto,*") };
             layout.Children.Add(banner);
@@ -427,7 +427,7 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
             }
             DemandPublicationCurrent(generation, isPublicationCurrent, cancellationToken, publication);
             var document = availability.State == CuiSceneAvailabilityState.Ready ? scene.Document :
-                new CuiRichParser().Parse("<Cui><StackPanel><TextBlock id=\"scene-availability\" text=\"{Binding AvailabilityMessage}\" accessible-name=\"Application availability\" /></StackPanel></Cui>");
+                new CuiRichParser().Parse("<Cui><Container Type=\"Vertical Stack\"><Text id=\"scene-availability\" text=\"{Binding AvailabilityMessage}\" accessible-name=\"Application availability\" /></Container></Cui>");
             var loaded = next.TryLoad(document);
             root = publication.Root = loaded.Root;
             if (root is null || loaded.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
@@ -521,7 +521,7 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
                 acquired = publication.Loader = new CuiControlLoader(_registry);
                 acquired.SetBindingContext(model);
                 var banner = acquired.Load(new CuiRichParser().Parse(
-                    "<Cui><TextBlock id=\"scene-action-status\" text=\"{Binding ActionStatus}\" text-wrapping=\"Wrap\" margin=\"12\" /></Cui>"))
+                    "<Cui><Text id=\"scene-action-status\" text=\"{Binding ActionStatus}\" text-wrapping=\"Wrap\" margin=\"12\" /></Cui>"))
                     ?? throw new InvalidDataException("The action status CUI did not produce a control.");
                 DemandPublicationCurrent(generation, isPublicationCurrent, CancellationToken.None, publication);
                 var original = Content as Control;

@@ -202,10 +202,10 @@ public sealed class CuiThemeTests
     [Theory]
     [InlineData(null)]
     [InlineData("BogusTheme")]
-    public void Unknown_theme_names_fall_back_to_glow(string? name)
+    public void Unknown_theme_names_fall_back_to_professional(string? name)
     {
-        Assert.Equal(CuiTheme.Glow, CuiThemeCatalog.Parse(name));
-        Assert.Equal(CuiTheme.Glow, CuiThemeCatalog.Resolve((CuiTheme)999).Theme);
+        Assert.Equal(CuiTheme.Professional, CuiThemeCatalog.Parse(name));
+        Assert.Equal(CuiTheme.Professional, CuiThemeCatalog.Resolve((CuiTheme)999).Theme);
     }
 
     [Theory]
@@ -236,7 +236,7 @@ public sealed class CuiThemeTests
             CuiSurfacePaletteCatalog.ActiveTheme = CuiTheme.Cinematic;
             Assert.Equal(CuiTheme.Bubble, CuiThemeScope.ResolveThemeName("Default", CuiTheme.Bubble));
             Assert.Equal(CuiTheme.Bubble, CuiThemeScope.ResolveThemeName(null, CuiTheme.Bubble));
-            Assert.Equal(CuiTheme.Bubble, CuiThemeScope.ResolveThemeName("Unknown", CuiTheme.Bubble));
+            Assert.Equal(CuiTheme.Professional, CuiThemeScope.ResolveThemeName("Unknown", CuiTheme.Bubble));
         }
         finally
         {
@@ -272,11 +272,11 @@ public sealed class CuiThemeTests
             CuiSurfacePaletteCatalog.ActiveTheme = CuiTheme.Bubble;
             var (root, diagnostics) = loader.LoadMarkup("""
                 <Cui id="theme.loader" version="1">
-                  <DefaultTheme value="Default">
+                  <Theme Name="Default">
                     <Page id="root">
-                      <DefaultTheme value="Retro"><Border id="retro" /></DefaultTheme>
+                      <Theme Name="Retro"><Container Type="Grid" id="retro" /></Theme>
                     </Page>
-                  </DefaultTheme>
+                  </Theme>
                 </Cui>
                 """);
 
@@ -285,7 +285,7 @@ public sealed class CuiThemeTests
             Assert.Equal(CuiTheme.Bubble, loader.CurrentTheme);
             Assert.Equal(CuiTheme.Bubble, Assert.IsType<Avalonia.Controls.ResourceDictionary>(root.Resources.MergedDictionaries.Last())["CuiTheme"]);
             var page = Assert.IsType<Avalonia.Controls.Panel>(root);
-            var retro = Assert.IsType<Avalonia.Controls.Border>(Assert.Single(page.Children));
+            var retro = Assert.IsType<CuiContainerControl>(Assert.Single(page.Children));
             Assert.Equal(CuiTheme.Retro, Assert.IsType<Avalonia.Controls.ResourceDictionary>(retro.Resources.MergedDictionaries.Last())["CuiTheme"]);
         }
         finally
@@ -302,7 +302,7 @@ public sealed class CuiThemeTests
         var path = Path.Combine(directory, "preferences.json");
         try
         {
-            Assert.Equal(CuiTheme.Glow, CuiThemePreferenceReader.Read(directory));
+            Assert.Equal(CuiTheme.Professional, CuiThemePreferenceReader.Read(directory));
 
             var first = """{"havenUiThemeName":"Bubble","unrelatedSetting":true}""";
             File.WriteAllText(path, first);
@@ -313,8 +313,10 @@ public sealed class CuiThemeTests
             Assert.Equal(CuiTheme.Retro, CuiThemePreferenceReader.Read(directory));
 
             File.WriteAllText(path, """{"havenUiThemeName":"NotATheme"}""");
-            Assert.Equal(CuiTheme.Glow, CuiThemePreferenceReader.Read(directory));
+            Assert.Equal(CuiTheme.Professional, CuiThemePreferenceReader.Read(directory));
             File.WriteAllText(path, "{" );
+            Assert.Equal(CuiTheme.Professional, CuiThemePreferenceReader.Read(directory));
+            File.WriteAllText(path, """{"havenUiThemeName":"Glow"}""");
             Assert.Equal(CuiTheme.Glow, CuiThemePreferenceReader.Read(directory));
         }
         finally
@@ -363,20 +365,20 @@ public sealed class CuiThemeTests
     }
 
     [Fact]
-    public void Invalid_theme_name_falls_back_to_global_default()
+    public void Invalid_theme_name_falls_back_explicitly_to_Professional()
     {
         CuiSurfacePaletteCatalog.ActiveTheme = CuiTheme.Playful;
-        Assert.Equal(CuiTheme.Playful, CuiThemeScope.ResolveThemeName("NeonRetro", CuiTheme.Playful));
+        Assert.Equal(CuiTheme.Professional, CuiThemeScope.ResolveThemeName("NeonRetro", CuiTheme.Playful));
 
         CuiSurfacePaletteCatalog.ActiveTheme = CuiTheme.Glow;
-        Assert.Equal(CuiTheme.Glow, CuiThemeScope.ResolveThemeName("Bogus", CuiTheme.Glow));
+        Assert.Equal(CuiTheme.Professional, CuiThemeScope.ResolveThemeName("Bogus", CuiTheme.Glow));
     }
 
     [Fact]
     public void Unknown_numeric_theme_names_do_not_escape_the_fallback()
     {
-        Assert.Equal(CuiTheme.Glow, CuiThemeCatalog.Parse("999"));
-        Assert.Equal(CuiTheme.Glow, CuiThemeCatalog.Parse("-1"));
+        Assert.Equal(CuiTheme.Professional, CuiThemeCatalog.Parse("999"));
+        Assert.Equal(CuiTheme.Professional, CuiThemeCatalog.Parse("-1"));
     }
 
     [Fact]
@@ -479,9 +481,9 @@ public sealed class CuiThemeTests
         //   <DefaultTheme="Bubble">
         //     <DefaultTheme="Retro">
         //       ...
-        //     </DefaultTheme>  ← back to Bubble
-        //   </DefaultTheme>  ← back to Glow
-        // </DefaultTheme>
+        //     </Theme>  ← back to Bubble
+        //   </Theme>  ← back to Glow
+        // </Theme>
         var stack = new CuiThemeScopeStack(CuiTheme.Glow);
         Assert.Equal(CuiTheme.Glow, stack.Current);
 
@@ -759,11 +761,11 @@ public sealed class CuiThemeTests
     {
         var cui = """
             <Cui id="test.theme" version="1">
-              <DefaultTheme value="Bubble">
+              <Theme Name="Bubble">
                 <Page id="root">
-                  <TextBlock text="Themed" />
+                  <Text text="Themed" />
                 </Page>
-              </DefaultTheme>
+              </Theme>
             </Cui>
             """;
 
@@ -783,11 +785,11 @@ public sealed class CuiThemeTests
     {
         var cui = """
             <Cui id="test.attr" version="1">
-              <DefaultTheme value="Retro">
+              <Theme Name="Retro">
                 <Page id="root">
-                  <TextBlock text="Retro" />
+                  <Text text="Retro" />
                 </Page>
-              </DefaultTheme>
+              </Theme>
             </Cui>
             """;
 
@@ -805,11 +807,11 @@ public sealed class CuiThemeTests
     {
         var cui = """
             <Cui id="test.loader.theme" version="1">
-              <DefaultTheme value="Cinematic">
+              <Theme Name="Cinematic">
                 <Page id="root">
-                  <TextBlock text="Cinematic themed" />
+                  <Text text="Cinematic themed" />
                 </Page>
-              </DefaultTheme>
+              </Theme>
             </Cui>
             """;
 
@@ -825,17 +827,17 @@ public sealed class CuiThemeTests
     {
         var cui = """
             <Cui id="test.nested.theme" version="1">
-              <DefaultTheme value="Glow">
+              <Theme Name="Glow">
                 <Page id="root">
-                  <TextBlock text="Glow parent" />
-                  <DefaultTheme value="Bubble">
-                    <Border id="bubble-zone">
-                      <TextBlock text="Bubble child" />
-                    </Border>
-                  </DefaultTheme>
-                  <TextBlock text="Glow resume" />
+                  <Text text="Glow parent" />
+                  <Theme Name="Bubble">
+                    <Container Type="Grid" id="bubble-zone">
+                      <Text text="Bubble child" />
+                    </Container>
+                  </Theme>
+                  <Text text="Glow resume" />
                 </Page>
-              </DefaultTheme>
+              </Theme>
             </Cui>
             """;
 
@@ -845,7 +847,7 @@ public sealed class CuiThemeTests
         // Outer DefaultTheme scope (virtual) → Page(Panel) + TextBlock
         // + Inner DefaultTheme scope (virtual) → Border + TextBlock
         // + TextBlock = 5 visual controls
-        Assert.Equal(5, result.ControlCount);
+        Assert.Equal(3, Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(result.Root!).OfType<Avalonia.Controls.TextBlock>().Count());
     }
 
     // === Helpers ===

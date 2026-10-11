@@ -13,7 +13,7 @@ public sealed class WindowsNaturalSpeechOutputService : ISpeechOutputService, IA
     public bool IsAvailable => false;
 
     public string? UnavailableReason =>
-        "Windows speech voices are not available on Android. Haven neural voices remain available.";
+        "Windows speech voices are not available on Android. 9to1 neural voices remain available.";
 
     public IReadOnlyList<CallAudioDevice> Devices { get; } =
         [new CallAudioDevice("default", "Android default output", true)];

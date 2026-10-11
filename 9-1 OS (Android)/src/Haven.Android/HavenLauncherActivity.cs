@@ -10,7 +10,7 @@ using Android.Widget;
 namespace Haven.Android;
 
 [Activity(
-    Label = "Haven Launcher",
+    Label = "9to1 Launcher",
     Theme = "@style/Theme.AppCompat.Light.NoActionBar",
     Icon = "@drawable/haven_icon",
     Exported = true,
@@ -220,12 +220,12 @@ public sealed partial class HavenLauncherActivity : Activity
             ShowAppDrawer));
         row.AddView(IconButton(
             Resource.Drawable.ic_haven_go,
-            "Open Haven Go",
+            "Open 9to1 Go",
             OpenHavenDashboard));
 
         var assistantButton = IconButton(
             Resource.Drawable.ic_haven_go,
-            "Open Haven Assistant. Long press to pin or unpin.",
+            "Open 9to1 Assistant. Long press to pin or unpin.",
             OpenHavenAssistant);
         assistantButton.LongClick += (_, args) =>
         {
@@ -242,7 +242,7 @@ public sealed partial class HavenLauncherActivity : Activity
 
         var go = new EditText(this)
         {
-            Hint = "Go — ask Haven",
+            Hint = "Go — ask 9to1",
             TextSize = 15,
             LayoutParameters = new LinearLayout.LayoutParams(0, Dp(50), 1f)
             {
@@ -268,7 +268,7 @@ public sealed partial class HavenLauncherActivity : Activity
 
         row.AddView(IconButton(
             SystemDrawable("ic_menu_send"),
-            "Send to Haven",
+            "Send to 9to1",
             () =>
             {
                 if (!string.IsNullOrWhiteSpace(go.Text))

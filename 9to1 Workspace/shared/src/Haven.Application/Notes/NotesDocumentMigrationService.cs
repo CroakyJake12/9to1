@@ -86,7 +86,7 @@ public sealed class NotesDocumentMigrator : INotesDocumentMigrator
         var sourceVersion = ReadSchemaVersion(root);
         if (sourceVersion > NotesDocument.CurrentSchemaVersion)
             throw new InvalidDataException(
-                $"This Notes file uses schema {sourceVersion}, but this Haven build supports up to {NotesDocument.CurrentSchemaVersion}.");
+                $"This Notes file uses schema {sourceVersion}, but this 9to1 build supports up to {NotesDocument.CurrentSchemaVersion}.");
         if (sourceVersion < 0)
             throw new InvalidDataException("The native Notes schema version cannot be negative.");
 

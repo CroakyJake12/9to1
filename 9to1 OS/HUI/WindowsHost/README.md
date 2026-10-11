@@ -1,4 +1,4 @@
-# CakeOS HUI Windows host
+# 9to1OS HUI Windows host
 
 Windows port of the HUI preview host. It runs the **real** Cake engines, not mocks:
 

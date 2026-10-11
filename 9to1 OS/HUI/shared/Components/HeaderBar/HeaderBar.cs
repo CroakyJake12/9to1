@@ -122,5 +122,5 @@ public sealed class HeaderBar : Container
         "HUI/shared/Components/HeaderBar/HeaderBar.cs",
         ["HeaderBar"],
         [],
-        "Generic app header composed from Haven primitives; product controls live in the action slot, not in HUI.");
+        "Generic app header composed from 9to1 primitives; product controls live in the action slot, not in HUI.");
 }

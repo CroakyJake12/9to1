@@ -54,7 +54,7 @@ public sealed class AndroidProjectorControllerActionDispatcher
         if (!_handlers.TryGetValue(action.ActionKey, out var handlers) || handlers.Count == 0)
             return new(false, $"No Android handler is registered for {action.Label}.");
         if (handlers.Count != 1)
-            return new(false, $"Multiple Android handlers are registered for {action.Label}; Haven will not choose one implicitly.");
+            return new(false, $"Multiple Android handlers are registered for {action.Label}; 9to1 will not choose one implicitly.");
 
         try
         {

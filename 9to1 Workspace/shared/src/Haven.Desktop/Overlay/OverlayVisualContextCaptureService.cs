@@ -10,7 +10,7 @@ internal sealed class OverlayVisualContextCaptureService(IScreenShareService scr
     public async Task<OverlayContextEnvelope> CaptureAsync(CancellationToken cancellationToken)
     {
         if (!screenShare.IsSupported) throw new PlatformNotSupportedException(screenShare.UnavailableReason ?? "Visual capture is unavailable.");
-        if (screenShare.IsSharing) throw new InvalidOperationException("Visual capture is unavailable while another Haven screen share is active. Stop sharing first.");
+        if (screenShare.IsSharing) throw new InvalidOperationException("Visual capture is unavailable while another 9to1 screen share is active. Stop sharing first.");
         var firstFrame = new TaskCompletionSource<ScreenShareSnapshot>(TaskCreationOptions.RunContinuationsAsynchronously);
         void OnSnapshot(object? sender, ScreenShareSnapshotEventArgs e) => firstFrame.TrySetResult(e.Snapshot);
         screenShare.SnapshotAvailable += OnSnapshot;

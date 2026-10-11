@@ -248,7 +248,7 @@ public sealed class HavenAnimationEngine
         if (type == typeof(HavenThickness)) return HavenThickness.Parse(value);
         if (type == typeof(HavenCornerRadius)) return HavenCornerRadius.Uniform(HavenLength.Parse(value));
         if (type.IsEnum) return Enum.Parse(type, value, true);
-        throw new FormatException($"Haven property '{property.Name}' of type {type.Name} cannot be animated.");
+        throw new FormatException($"9to1 property '{property.Name}' of type {type.Name} cannot be animated.");
     }
 
     private static HavenProperty ResolveProperty(HavenElement element, string name, string owner)
@@ -258,7 +258,7 @@ public sealed class HavenAnimationEngine
         {
             Components.Toggle when name.Equals("Toggle.Checked", StringComparison.OrdinalIgnoreCase) => Components.Toggle.CheckedProperty,
             Components.Slider when name.Equals("Slider.Value", StringComparison.OrdinalIgnoreCase) => Components.Slider.ValueProperty,
-            _ => throw new KeyNotFoundException($"{owner} references unknown Haven property '{name}' for component '{element.Metadata.ComponentName}'.")
+            _ => throw new KeyNotFoundException($"{owner} references unknown 9to1 property '{name}' for component '{element.Metadata.ComponentName}'.")
         };
         return property;
     }

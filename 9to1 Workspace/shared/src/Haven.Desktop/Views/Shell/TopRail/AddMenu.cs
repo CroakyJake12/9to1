@@ -321,7 +321,7 @@ public sealed class AddMenu : HavenIconButton, IDisposable
             AddMenuAction.Capability => "Create new Capabilities in Studio",
             AddMenuAction.Instruction => "Create new Instructions in Studio",
             AddMenuAction.AllowActions => "Applies to this chat only",
-            AddMenuAction.VisualResponses => "Controls when Haven invokes Generative UI on its own",
+            AddMenuAction.VisualResponses => "Controls when 9to1 invokes Generative UI on its own",
             _ => "Manage Apps"
         };
 
@@ -393,7 +393,7 @@ public sealed class AddMenu : HavenIconButton, IDisposable
         var options = new (ChatActionMode Mode, string Label, string Description)[]
         {
             (ChatActionMode.AllowAllActions, "Allow All Actions", "Allow every action available to this chat."),
-            (ChatActionMode.AllowBasicActions, "Allow Basic Actions (Default)", "Use Haven's basic code-interpreter-style action set."),
+            (ChatActionMode.AllowBasicActions, "Allow Basic Actions (Default)", "Use 9to1's basic code-interpreter-style action set."),
             (ChatActionMode.JustChat, "Just Chat", "Do not allow the chat to take actions.")
         };
         foreach (var option in options.Where(item => Matches(item.Label, item.Description, query)))

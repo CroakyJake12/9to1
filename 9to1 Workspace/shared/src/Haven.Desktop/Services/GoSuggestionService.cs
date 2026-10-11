@@ -28,7 +28,7 @@ public sealed class GoSuggestionService(
     [
         new("Show my Recent Chats", "Show my recent chats and help me choose where to continue.", "chat", "#913C00"),
         new("Continue studying Algebra", "Continue studying Algebra from where we last stopped.", "study", "#07539B"),
-        new("Work on Haven", "Help me continue my recent work on Haven in Studio.", "folder", "#5B00A8"),
+        new("Work on 9to1", "Help me continue my recent work on 9to1 in Studio.", "folder", "#5B00A8"),
         new("Recap this Week's Work", "Recap what I worked on this week and suggest the best next step.", "refresh", "#176425")
     ];
 

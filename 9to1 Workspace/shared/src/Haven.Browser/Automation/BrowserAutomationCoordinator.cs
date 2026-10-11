@@ -127,7 +127,7 @@ public sealed class BrowserAutomationService : IBrowserAutomationService, IDispo
         {
             _backgroundSnapshot = await _backgroundPages.LoadAsync(uri, cancellationToken).ConfigureAwait(false);
             finalAddress = _backgroundSnapshot.Address ?? uri;
-            result = $"Loaded {RedactedAddress(finalAddress)} in Haven's isolated background browser. Use browser_snapshot to inspect the bounded page text.";
+            result = $"Loaded {RedactedAddress(finalAddress)} in 9to1's isolated background browser. Use browser_snapshot to inspect the bounded page text.";
         }
         await AuditAsync(null, "navigate", Origin(finalAddress), $"Navigated to {RedactedAddress(finalAddress)}.", true, cancellationToken).ConfigureAwait(false);
         return result;
@@ -353,7 +353,7 @@ public sealed class BrowserAutomationService : IBrowserAutomationService, IDispo
                         if (TryDeleteDownloadedFile(download.StoredPath)) sideEffectCompleted = false;
                         throw;
                     }
-                    message = $"Downloaded {download.FileName} ({download.SizeBytes:N0} bytes) to Haven's Downloads folder.";
+                    message = $"Downloaded {download.FileName} ({download.SizeBytes:N0} bytes) to 9to1's Downloads folder.";
                     break;
                 default:
                     throw new InvalidOperationException("Unsupported browser action kind.");
@@ -381,7 +381,7 @@ public sealed class BrowserAutomationService : IBrowserAutomationService, IDispo
         {
             _ephemeralTargets.TryRemove(action.Id, out _);
             var failure = sideEffectCompleted
-                ? "The browser side effect completed, but Haven could not finish recording its final state: " + Bounded(exception.Message, 700)
+                ? "The browser side effect completed, but 9to1 could not finish recording its final state: " + Bounded(exception.Message, 700)
                 : Bounded(exception.Message, 1_000);
             var failed = action with
             {
@@ -398,7 +398,7 @@ public sealed class BrowserAutomationService : IBrowserAutomationService, IDispo
                 false,
                 CancellationToken.None).ConfigureAwait(false);
             var message = sideEffectCompleted
-                ? "The browser action may have completed, but Haven could not persist its final state. Do not repeat it without checking the page or Downloads folder first."
+                ? "The browser action may have completed, but 9to1 could not persist its final state. Do not repeat it without checking the page or Downloads folder first."
                 : "Browser action failed: " + exception.Message;
             return new BrowserActionExecutionResult(action.Id, failed.State, message, download);
         }
@@ -421,7 +421,7 @@ public sealed class BrowserAutomationService : IBrowserAutomationService, IDispo
     private async Task<BrowserPageSnapshot> RequireInteractiveSnapshotAsync(CancellationToken cancellationToken)
     {
         if (!_browser.IsInteractiveAvailable)
-            throw new InvalidOperationException("Interactive page actions require Haven Browse to be open. Background browsing supports navigation, reading, and approval-gated downloads only.");
+            throw new InvalidOperationException("Interactive page actions require 9to1 Browse to be open. Background browsing supports navigation, reading, and approval-gated downloads only.");
         return await _browser.CaptureStructuredPageAsync(cancellationToken).ConfigureAwait(false);
     }
 

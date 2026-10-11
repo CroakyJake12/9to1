@@ -49,7 +49,7 @@ internal sealed class ProjectCreatorHavenScene
         CreatePanel.SetValue(HavenProperties.Column, 0);
         Body.Add(CreatePanel);
         CreatePanel.Add(Label("ProjectCreator.Create.Title", "Create new", TextLevel.H3));
-        CreatePanel.Add(Muted("ProjectCreator.Create.Help", "Choose the essentials first. Haven shows exactly what it will create before anything runs."));
+        CreatePanel.Add(Muted("ProjectCreator.Create.Help", "Choose the essentials first. 9to1 shows exactly what it will create before anything runs."));
         CreatePanel.Add(Caption("Project name"));
         ProjectNameInput = InputField("ProjectCreator.Name", "Project name");
         CreatePanel.Add(ProjectNameInput);
@@ -86,7 +86,7 @@ internal sealed class ProjectCreatorHavenScene
         CreatePanel.Add(TemplateSection);
 
         CreatePanel.Add(Caption("What are you building?"));
-        PromptInput = InputField("ProjectCreator.Prompt", "Optional description for Haven to infer the right project type");
+        PromptInput = InputField("ProjectCreator.Prompt", "Optional description for 9to1 to infer the right project type");
         PromptInput.Multiline = true;
         PromptInput.SubmitOnEnter = false;
         PromptInput.SetValue(HavenProperties.MinHeight, HavenLength.Px(92));
@@ -101,7 +101,7 @@ internal sealed class ProjectCreatorHavenScene
         PackageSection.Add(PackageDescriptionInput);
         CreatePanel.Add(PackageSection);
 
-        ReviewButton = new HavenButton { Name = "ProjectCreator.Review", Content = "Review what Haven will create", Variant = ButtonVariant.Primary };
+        ReviewButton = new HavenButton { Name = "ProjectCreator.Review", Content = "Review what 9to1 will create", Variant = ButtonVariant.Primary };
         CreatePanel.Add(ReviewButton);
 
         ProposalCard = Card("ProjectCreator.Proposal");
@@ -131,7 +131,7 @@ internal sealed class ProjectCreatorHavenScene
         ExistingPanel.Add(OpenFolderButton);
         OpenProjectFileButton = Ghost("ProjectCreator.OpenProjectFile", "Open project or solution file", "file");
         ExistingPanel.Add(OpenProjectFileButton);
-        ExistingPanel.Add(Muted("ProjectCreator.OpenExisting.Note", "Haven inspects the selected work and connects it as a Project. Source files remain in their existing location."));
+        ExistingPanel.Add(Muted("ProjectCreator.OpenExisting.Note", "9to1 inspects the selected work and connects it as a Project. Source files remain in their existing location."));
 
         Status = Muted("ProjectCreator.Status", "Describe the project, then review the proposed files and commands.");
         Status.SetValue(HavenProperties.Row, 2);

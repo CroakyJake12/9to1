@@ -388,7 +388,7 @@ public sealed partial class App
         catch (Exception error)
         {
             _actualShutdownFailure = error;
-            System.Diagnostics.Debug.WriteLine("[Haven original shutdown] " + error);
+            System.Diagnostics.Debug.WriteLine("[9to1 original shutdown] " + error);
             if (error is OperationCanceledException)
                 throw new AggregateException("The actual native shutdown retains its uncertain cancellation cause.", error);
             throw; // SAME failed original remains inspectable, never retried or described as no effect.

@@ -537,7 +537,7 @@ public sealed partial class NotesWorkspaceView
         var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = "Save verified media copy",
-            SuggestedFileName = string.IsNullOrWhiteSpace(media.OriginalName) ? "Haven Notes media" : media.OriginalName
+            SuggestedFileName = string.IsNullOrWhiteSpace(media.OriginalName) ? "9to1 Notes media" : media.OriginalName
         });
         var path = file?.TryGetLocalPath();
         if (string.IsNullOrWhiteSpace(path)) return;

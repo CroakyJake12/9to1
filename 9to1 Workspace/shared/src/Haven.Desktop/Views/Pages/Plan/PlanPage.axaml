@@ -179,7 +179,7 @@
           <!-- AI prompt -->
           <TextBlock Text="PLAN WITH HAVEN" Classes="eyebrow" />
           <TextBlock Text="AI assistance" FontSize="20" FontWeight="SemiBold" Margin="0,6,0,4" />
-          <TextBlock Text="Ask Haven to break down a goal, organise a week, or resolve conflicts. You approve every edit." Classes="muted" TextWrapping="Wrap" />
+          <TextBlock Text="Ask 9to1 to break down a goal, organise a week, or resolve conflicts. You approve every edit." Classes="muted" TextWrapping="Wrap" />
           <hui:HavenTextInput x:Name="AiPromptBox" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="104" Margin="0,14,0,8"
                    PlaceholderText="Plan my college deadlines around work…" />
           <hui:HavenButton Content="Draft changes" Classes="primary" x:Name="AskAiButton" HorizontalAlignment="Stretch" />
@@ -204,7 +204,7 @@
           <!-- Sync conflicts -->
           <StackPanel x:Name="ConflictsPanel" IsVisible="False" Margin="0,16,0,0">
             <TextBlock Text="SYNC CONFLICTS" Classes="eyebrow" Margin="0,0,0,8" />
-            <TextBlock Text="Both Haven and the connected calendar changed these events. Choose which version to keep; nothing is overwritten automatically."
+            <TextBlock Text="Both 9to1 and the connected calendar changed these events. Choose which version to keep; nothing is overwritten automatically."
                        Classes="muted" TextWrapping="Wrap" Margin="0,0,0,10" />
             <ItemsControl x:Name="ConflictsItemsPanel" />
           </StackPanel>

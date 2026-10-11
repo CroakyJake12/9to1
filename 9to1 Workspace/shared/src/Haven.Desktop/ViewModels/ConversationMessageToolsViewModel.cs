@@ -499,7 +499,7 @@ public sealed record ConversationMessageChoiceViewModel(ChatMessage Message)
     /// <summary>
     /// Gets or updates role label, the bindable or domain state represented by this property.
     /// </summary>
-    public string RoleLabel => Role == MessageRole.User ? "You" : Message.AgentName ?? "Haven";
+    public string RoleLabel => Role == MessageRole.User ? "You" : Message.AgentName ?? "9to1";
     public string DisplayName
     {
         get

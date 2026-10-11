@@ -77,7 +77,7 @@ internal static class Program
         ThreadPool.SetMinThreads(threadCount, threadCount);
         ThreadPool.SetMaxThreads(threadCount, threadCount);
 
-        Console.WriteLine($"[Haven] Thread pool configured: {threadCount} threads ( cores: {coreCount})");
+        Console.WriteLine($"[9to1] Thread pool configured: {threadCount} threads ( cores: {coreCount})");
     }
 
     /// <summary>
@@ -100,7 +100,7 @@ internal static class Program
             var logDirectory = Path.Combine(appData, "Haven", "Logs");
             Directory.CreateDirectory(logDirectory);
             logPath = Path.Combine(logDirectory, "startup-bootstrap-failure.log");
-            var entry = $"[{DateTimeOffset.Now:O}] Haven bootstrap failed.{Environment.NewLine}{exception}{Environment.NewLine}{Environment.NewLine}";
+            var entry = $"[{DateTimeOffset.Now:O}] 9to1 bootstrap failed.{Environment.NewLine}{exception}{Environment.NewLine}{Environment.NewLine}";
             File.AppendAllText(logPath, entry, new UTF8Encoding(false));
         }
         catch
@@ -125,8 +125,8 @@ internal static class Program
                 : $"Full details were written to:{Environment.NewLine}{logPath}";
             MessageBoxW(
                 IntPtr.Zero,
-                $"Haven could not start.{Environment.NewLine}{Environment.NewLine}{detail}{Environment.NewLine}{Environment.NewLine}{location}",
-                "Haven startup failed",
+                $"9to1 could not start.{Environment.NewLine}{Environment.NewLine}{detail}{Environment.NewLine}{Environment.NewLine}{location}",
+                "9to1 startup failed",
                 0x00000010);
         }
         catch

@@ -7,7 +7,7 @@
  * How: Each store serialises its document under a dedicated settings key; corrupt data falls back to defaults.
  * Why: Persistence details stay in Infrastructure so Application policy remains platform-neutral.
  * Maintenance: Preserve forward compatibility: unknown fields are ignored; null personality members mean
- *              "use Haven defaults" and must survive the round trip as explicit nulls.
+ *              "use 9to1 defaults" and must survive the round trip as explicit nulls.
  */
 
 using System.Text.Json.Serialization;

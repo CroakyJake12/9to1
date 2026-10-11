@@ -179,7 +179,7 @@ public sealed partial class TranslatePage : UserControl, IDisposable
         var sourceCode = SourceLanguage.SelectedItem is LanguageOption source && source.Code != "auto" ? source.Code : _lastDetectedSourceCode;
         if (string.IsNullOrWhiteSpace(sourceCode) || FindTarget(sourceCode) is not LanguageOption previousSource)
         {
-            StatusText.Text = "Translate once so Haven can identify the source language before swapping.";
+            StatusText.Text = "Translate once so 9to1 can identify the source language before swapping.";
             return;
         }
         SourceLanguage.SelectedItem = FindSource(target.Code) ?? SourceLanguages[0];

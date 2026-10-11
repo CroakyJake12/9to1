@@ -54,7 +54,7 @@ public sealed class AutomationToolRuntime(
         var result = new List<OllamaToolDefinition>();
         if (enableAutomations)
         {
-            result.Add(Definition("automation_create", "Create a reviewable Haven Scheduled Action after the user has supplied or confirmed its schedule.",
+            result.Add(Definition("automation_create", "Create a reviewable 9to1 Scheduled Action after the user has supplied or confirmed its schedule.",
                 new()
                 {
                     ["name"] = StringProperty("Short action name."),
@@ -65,14 +65,14 @@ public sealed class AutomationToolRuntime(
         }
         if (enableReusableTasks)
         {
-            result.Add(Definition("task_create", "Create a reusable Haven Task that runs only when the user chooses it.",
+            result.Add(Definition("task_create", "Create a reusable 9to1 Task that runs only when the user chooses it.",
                 new()
                 {
                     ["name"] = StringProperty("Short task name."),
                     ["description"] = StringProperty("The task outcome."),
                     ["instruction"] = StringProperty("Complete reusable task instructions.")
                 }, "name", "instruction"));
-            result.Add(Definition("task_list", "List enabled reusable Haven workflows available to this task group or project.", new()));
+            result.Add(Definition("task_list", "List enabled reusable 9to1 workflows available to this task group or project.", new()));
         }
         if (enableAutomations || enableReusableTasks)
             result.Add(Definition("automation_finish_review", "Finish only the retained original Home-reviewed definition operation; no new proposal, scheduled run or enabled graph is authorized.",
@@ -125,7 +125,7 @@ public sealed class AutomationToolRuntime(
                     call.Name == "automation_create" ? "tasks.automation.create" : "tasks.reusable.create",
                     CapabilityRiskClass.Consequential,
                     requiresPermission: true,
-                    $"Allow Haven to execute {call.Name}.");
+                    $"Allow 9to1 to execute {call.Name}.");
                 if (decision.Kind != PermissionDecisionKind.Allowed)
                     throw new InvalidOperationException("Explicit scoped approval is required before this action can persist changes.");
             }

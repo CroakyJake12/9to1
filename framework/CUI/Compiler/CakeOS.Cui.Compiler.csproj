@@ -15,6 +15,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="CakeOS.Cui.Build.Tasks/**/*.cs;CakeOS.Cui.Build.Tasks/**/obj/**/*.cs;CakeOS.Cui.Build.Tasks/**/bin/**/*.cs" />
+    <Compile Remove="CakeOS.Cui.Build.Tasks.Tests/**/*.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="buildTransitive/CakeOS.Cui.props" Pack="true" PackagePath="buildTransitive/CakeOS.Cui.props" />

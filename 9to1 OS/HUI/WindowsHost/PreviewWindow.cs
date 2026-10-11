@@ -38,7 +38,7 @@ public sealed class PreviewWindow : Window
             _surface = new HuiAppSurface(page,
                 new HuiSurfaceServices(rootBackend), HavenPlatform.Windows);
 
-            Title = "CakeOS HUI Windows";
+            Title = "9to1OS HUI Windows";
             Width = 960;
             Height = 600;
             MinWidth = 720;
@@ -66,7 +66,7 @@ public sealed class PreviewWindow : Window
         _surface = new HuiAppSurface(scene.Root,
             new HuiSurfaceServices(backend), HavenPlatform.Windows);
 
-        Title = "CakeOS HUI Windows Preview";
+        Title = "9to1OS HUI Windows Preview";
         Width = 960;
         Height = 600;
         MinWidth = 720;
@@ -155,7 +155,7 @@ public sealed class PreviewWindow : Window
         _surface.Input.PointerPressed(center);
         if (!_surface.Input.PointerReleased(center) || _demoAction.Accessibility.Selected != true)
             throw new InvalidOperationException("HUI pointer activation self-test failed.");
-        Title = "CakeOS HUI Windows Preview - input passed";
+        Title = "9to1OS HUI Windows Preview - input passed";
     }
 
     private IImage? ImageFor(string source)

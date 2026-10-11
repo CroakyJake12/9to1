@@ -48,13 +48,13 @@ public sealed partial class MainView
                     return;
 
                 default:
-                    RestoreGoTask(page, instruction, taskContext, decision.Clarification ?? "Tell Haven where you want this task to go.");
+                    RestoreGoTask(page, instruction, taskContext, decision.Clarification ?? "Tell 9to1 where you want this task to go.");
                     return;
             }
         }
         catch (Exception exception) when (exception is IOException or InvalidOperationException or ArgumentException)
         {
-            RestoreGoTask(page, instruction, taskContext, "Haven could not route that task: " + exception.Message);
+            RestoreGoTask(page, instruction, taskContext, "9to1 could not route that task: " + exception.Message);
         }
     }
 
@@ -89,7 +89,7 @@ public sealed partial class MainView
     {
         if (string.IsNullOrWhiteSpace(decision.TargetKey))
         {
-            RestoreGoTask(page, decision.Instruction, taskContext, "Haven could not identify the destination App.");
+            RestoreGoTask(page, decision.Instruction, taskContext, "9to1 could not identify the destination App.");
             return;
         }
 

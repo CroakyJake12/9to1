@@ -139,7 +139,7 @@ public static class GenerativeUiContractValidator
         if (string.IsNullOrWhiteSpace(component.ComponentId)) errors.Add("Every component requires a stable ID.");
         else if (!ids.Add(component.ComponentId)) errors.Add($"Duplicate component ID '{component.ComponentId}'.");
         if (!TrustedComponentTypes.Contains(component.ComponentType))
-            errors.Add($"Component '{component.ComponentType}' is not in the trusted HavenUI vocabulary.");
+            errors.Add($"Component '{component.ComponentType}' is not in the trusted CUI vocabulary.");
         if (component.Properties is null || component.Actions is null || component.Children is null)
         {
             errors.Add($"Component '{component.ComponentId}' has a missing properties, actions, or children collection.");

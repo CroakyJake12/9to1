@@ -191,7 +191,7 @@ NUGET_PACKAGES=/workspace/team-b-evidence/sol-happy-20261003/b1/tooling/nuget \
 # Actual native capability transitions, owning enabled state and observer disposal:
 /workspace/.tools/dotnet/dotnet run --project apps/Web/Tests/BrowserActionAvailability.Tests.csproj -c Release
 
-# Actual retained Haven virtual-peer membership, distinct from Write editor acceptance:
+# Actual retained 9to1 virtual-peer membership, distinct from Write editor acceptance:
 /workspace/.tools/dotnet/dotnet run --project apps/Web/Tests/BrowserVirtualAccessibility.Tests.csproj -c Release
 
 # Actual owner-approved CUI dashboard layout, distinct from browser verification:

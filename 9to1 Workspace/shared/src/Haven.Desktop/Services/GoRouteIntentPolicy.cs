@@ -80,7 +80,7 @@ public static class GoRouteIntentPolicy
 
         if (string.IsNullOrWhiteSpace(normalized))
         {
-            return Clarify(instruction, context, "Tell Haven what you want to do.");
+            return Clarify(instruction, context, "Tell 9to1 what you want to do.");
         }
 
         if (ContainsAny(normalized, ImageEditTerms))
@@ -94,14 +94,14 @@ public static class GoRouteIntentPolicy
         {
             return context.HasImageAttachment
                 ? App(instruction, context, "vision")
-                : Clarify(instruction, context, "Attach the image you want Haven to inspect.");
+                : Clarify(instruction, context, "Attach the image you want 9to1 to inspect.");
         }
 
         if (ContainsAny(normalized, ProjectTerms))
         {
             var namedProjects = FindNamedProjects(normalized, context);
             if (namedProjects.Count > 1)
-                return Clarify(instruction, context, "Which project should Haven open?");
+                return Clarify(instruction, context, "Which project should 9to1 open?");
             if (namedProjects.Count == 1)
                 return Project(instruction, context, namedProjects[0]);
         }
@@ -132,17 +132,17 @@ public static class GoRouteIntentPolicy
             }
 
             if (context.ProjectTargets.Count > 1)
-                return Clarify(instruction, context, "Which project should Haven open?");
+                return Clarify(instruction, context, "Which project should 9to1 open?");
 
             if (context.ProjectNames.Count == 1)
                 return new GoRouteDecision(GoRouteDestination.Project, instruction, context, ProjectName: context.ProjectNames[0]);
 
-            return Clarify(instruction, context, "Which project should Haven open?");
+            return Clarify(instruction, context, "Which project should 9to1 open?");
         }
 
         if (IsAmbiguousOpenRequest(normalized))
         {
-            return Clarify(instruction, context, "What should Haven open?");
+            return Clarify(instruction, context, "What should 9to1 open?");
         }
 
         return new GoRouteDecision(GoRouteDestination.Chat, instruction, context, TargetKey: "chat");

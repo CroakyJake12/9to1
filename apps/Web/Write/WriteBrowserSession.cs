@@ -10,12 +10,24 @@ using HavenOS.Home.Core;
 
 namespace NineToOne.Web.Write;
 
+public sealed record WriteOutlineRow(Guid Id, string Title) : ICuiBindingContext
+{
+    public bool TryGetValue(string path, out object? value)
+    { value = path switch { "Id" => Id, "Title" => string.IsNullOrWhiteSpace(Title) ? "Heading" : Title, _ => null }; return value is not null; }
+}
+
+public sealed record WriteSectionRow(Guid Id, string Title) : ICuiBindingContext
+{
+    public bool TryGetValue(string path, out object? value)
+    { value = path switch { "Id" => Id, "Title" => Title, _ => null }; return path is "Id" or "Title"; }
+}
+
 /// <summary>
 /// Browser presentation/lifecycle adapter over the owning Write editor and repository.
 /// The composition root supplies an authorised repository; this class is neither a
 /// document model nor an authentication, permission, storage or collaboration service.
 /// </summary>
-public sealed class WriteBrowserSession : ICuiBindingContext, ICuiWritableBindingContext, ICuiActionDispatcher,
+public sealed class WriteBrowserSession : ICuiWritableBindingContext, ICuiActionDispatcher,
     ICuiActionAvailability, INotifyPropertyChanged, IAsyncDisposable
 {
     private static readonly JsonSerializerOptions SnapshotOptions = new(JsonSerializerDefaults.Web);
@@ -42,6 +54,42 @@ public sealed class WriteBrowserSession : ICuiBindingContext, ICuiWritableBindin
     private int _findIndex = -1;
     private WriteStyleRow[]? _styleRows;
     private string? _styleSignature;
+    private bool _showFiles;
+    private bool _showInspector;
+    private bool _showSidebar = true;
+    private bool _compact;
+    private bool _showFind;
+    private bool _showStart = true;
+    public void RefreshSelection() => Notify();
+    public void SetViewportWidth(double width)
+    {
+        var compact = width > 0 && width < 760;
+        if (_compact == compact) return;
+        _compact = compact; _showSidebar = !compact; Notify();
+    }
+    private bool IsTextContext => _editor?.SelectedBlock?.Kind is NotesBlockKind.Paragraph or NotesBlockKind.Heading or NotesBlockKind.Quote or NotesBlockKind.Code;
+    private bool CanTableCommand(string command)
+    {
+        if (IsReadOnly || _editor?.SelectedBlock?.Table is not { } table) return false;
+        return command switch
+        {
+            "RemoveTableRow" => table.Rows.Count > 1,
+            "RemoveTableColumn" => table.Rows.Count > 0 && table.Rows.All(row => row.Cells.Count > 1),
+            "MergeCell" => table.Rows.Any(row => row.Cells.Take(Math.Max(0, row.Cells.Count - 1)).Any(cell => cell.Id == _editor.SelectedTableCellId)),
+            "SplitCell" => table.Rows.SelectMany(row => row.Cells).Any(cell => cell.Id == _editor.SelectedTableCellId && cell.ColumnSpan > 1),
+            _ => true
+        };
+    }
+    private static readonly IReadOnlyDictionary<string, Action<WriteDocumentEditor>> Formatting = new Dictionary<string, Action<WriteDocumentEditor>>
+    {
+        ["LargerText"] = editor => editor.SetFontSize((editor.ActiveRun?.FontSize ?? 16) + 1),
+        ["SmallerText"] = editor => editor.SetFontSize((editor.ActiveRun?.FontSize ?? 16) - 1),
+        ["InsertList"] = editor => editor.InsertBlock(NotesBlockKind.List),
+    };
+    private static readonly IReadOnlyDictionary<string, Action<WriteDocumentEditor>> TableActions = new Dictionary<string, Action<WriteDocumentEditor>>
+    {
+        ["MergeCell"] = editor => editor.MergeTableCellRight(),
+    };
 
     public WriteBrowserSession(INotesRepository authorisedRepository, IWriteNativeDocumentPackageStore packages,
         Func<Exception, bool>? isUnknownCommitOutcome = null, IWriteBrowserPackageBroker? packageBroker = null,
@@ -70,6 +118,7 @@ public sealed class WriteBrowserSession : ICuiBindingContext, ICuiWritableBindin
     public string? PackageCleanupWarning { get; private set; }
     public Exception? LastPackageCleanupError { get; private set; }
     public bool IsPresentationAdmitted => !_presentationPending;
+    public bool IsWorkspaceActive => _document is not null && !_showStart;
     internal long EditGeneration => _editGeneration;
 
     internal void PrepareUnadmittedPresentation()
@@ -671,6 +720,7 @@ public sealed class WriteBrowserSession : ICuiBindingContext, ICuiWritableBindin
         _editor.Changed += OnChanged;
         _durableVersion = document.Version;
         IsReadOnly = readOnly;
+        _showStart = false;
     }
 
     private void OnChanged(object? sender, EventArgs args)
@@ -689,6 +739,7 @@ public sealed class WriteBrowserSession : ICuiBindingContext, ICuiWritableBindin
         IsDirty = false;
         IsReadOnly = false;
         _durableVersion = 0;
+        _showStart = true;
     }
 
     public bool TryGetValue(string path, out object? value)
@@ -701,6 +752,12 @@ public sealed class WriteBrowserSession : ICuiBindingContext, ICuiWritableBindin
             "DocumentRevision" => _durableVersion,
             "WordCount" => _editor?.Statistics.Words ?? 0,
             "HasDocument" => _document is not null,
+            "ShowStart" => !IsWorkspaceActive,
+            "ShowWorkspace" => IsWorkspaceActive,
+            "CanResume" => IsActionAvailable("ResumeDocument") == true,
+            "ResumeLabel" => _document is null ? "Resume document" : "Resume " + _document.Title,
+            "StartStatus" => _document is null ? "Documents stay in this browser." : IsDirty ? "Your open document has unsaved changes. Resume to continue." : "Your open document is saved in this browser.",
+            "NoSavedDocuments" => _documents.Count == 0,
             "IsReadOnly" => IsReadOnly,
             "IsDirty" => IsDirty,
             "IsBusy" => IsBusy,
@@ -786,26 +843,37 @@ public sealed class WriteBrowserSession : ICuiBindingContext, ICuiWritableBindin
             "ReplaceStatus" => _replaceStatus,
             "CanFind" => IsActionAvailable("FindNext") == true,
             "CanReplace" => IsActionAvailable("ReplaceAll") == true,
+            "ShowInspector" => _showInspector,
+            "ShowEditingArea" => !_compact || !_showInspector,
+            "InspectorColumns" => _showInspector ? (_compact ? "0 1fr" : "1fr 320") : "1fr 0",
+            "ShowFiles" => _showFiles,
+            "ShowOutline" => !_showFiles,
+            "ShowSidebar" => _showSidebar,
+            "WorkspaceColumns" => _compact || !_showSidebar ? "0 1fr" : "220 1fr",
+            "SidebarColumnSpan" => _compact ? 2 : 1,
+            "ShowFind" => _showFind,
+            "ReplacementText" => _replaceText,
+            "IsTextContext" => IsTextContext,
+            "IsTableContext" => _editor?.SelectedBlock?.Kind == NotesBlockKind.Table,
+            "IsImageContext" => _editor?.SelectedBlock?.Kind == NotesBlockKind.Image,
+            "CanFormatText" => IsActionAvailable("BoldSelection") == true,
+            "CanRemoveTableRow" => IsActionAvailable("RemoveTableRow") == true,
+            "CanRemoveTableColumn" => IsActionAvailable("RemoveTableColumn") == true,
+            "CurrentStyle" => _document?.Styles.FirstOrDefault(style => style.Id == _editor?.SelectedBlock?.StyleId)?.Name ?? "Normal",
+            "BoldState" => _editor?.ActiveRun?.Bold == true ? "Bold on" : "Bold",
+            "ItalicState" => _editor?.ActiveRun?.Italic == true ? "Italic on" : "Italic",
+            "UnderlineState" => _editor?.ActiveRun?.Underline == true ? "Underline on" : "Underline",
+            "Sections" => _document?.Sections.Select(section => new WriteSectionRow(section.Id, section.Title)).ToArray() ?? [],
+            "EmptyDocument" => _document is null,
+            "Outline" => _editor?.Blocks().Where(block => block.Kind == NotesBlockKind.Heading).Select(block => new WriteOutlineRow(block.Id, string.Concat(block.Runs.Select(run => run.Text)))).ToArray() ?? [],
+            "EditorStatus" => _editor is null ? "Open or create a document" : $"{_editor.Statistics.Words} words · {_document!.Sections.Sum(section => section.Pages.Count)} pages · {Status}",
+            "FontSizeLabel" => (_editor?.ActiveRun?.FontSize ?? 16).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture),
             _ => null
         };
-        return path is "DocumentTitle" or "SaveStatus" or "DocumentId" or "DocumentRevision" or "WordCount"
-            or "HasDocument" or "IsReadOnly" or "IsDirty" or "IsBusy"
-            or "CanCreate" or "CanSave"             or "CanFormat" or "FontFamily" or "FontSize" or "TextColor" or "TextHighlight" or "Link"
-            or "CanEditPage" or "PageMargins" or "ShowPageNumbers" or "PageSizeLabel" or "PageLayoutMode"
-            or "CanAlign" or "CanInsert" or "CanMoveBlocks" or "CanDeleteBlock" or "ParagraphAlignment"             or "CanUndo" or "CanRedo" or "CanClose"
-            or "CanInsertImage" or "CanEditMedia" or "MediaAlt" or "MediaCaption" or "MediaWrapping"
-            or "MediaWidth" or "MediaHeight" or "MediaRotation"
-            or "MediaCropLeft" or "MediaCropTop" or "MediaCropRight" or "MediaCropBottom"
-            or "CanInsertEquation" or "CanEditEquation" or "EquationSource" or "EquationAlternative"
-            or "CanEditCellBackground" or "CellBackground"
-            or "CanSplitRun" or "CanMergeRun" or "CanMergeCell" or "CanSplitCell"
-            or "CanApplyStyle" or "Styles" or "SelectedStyle"
-            or "LineSpacing" or "LeftIndent" or "FirstLineIndent" or "SpaceAfter"
-            or "TableRows" or "TableColumns" or "CanEditList" or "SelectedListItems"
-            or "CanEditTable" or "SelectedTableRows"
+        return path is "ShowInspector" or "ShowEditingArea" or "InspectorColumns" or "DocumentTitle" or "SaveStatus" or "DocumentId" or "DocumentRevision" or "WordCount"
+            or "HasDocument" or "IsReadOnly" or "IsDirty" or "IsBusy" or "CanCreate" or "CanSave" or "CanFormat" or "FontFamily" or "FontSize" or "TextColor" or "TextHighlight" or "Link" or "CanEditPage" or "PageMargins" or "ShowPageNumbers" or "PageSizeLabel" or "PageLayoutMode" or "CanAlign" or "CanInsert" or "CanMoveBlocks" or "CanDeleteBlock" or "ParagraphAlignment" or "CanUndo" or "CanRedo" or "CanClose" or "CanInsertImage" or "CanEditMedia" or "MediaAlt" or "MediaCaption" or "MediaWrapping" or "MediaWidth" or "MediaHeight" or "MediaRotation" or "MediaCropLeft" or "MediaCropTop" or "MediaCropRight" or "MediaCropBottom" or "CanInsertEquation" or "CanEditEquation" or "EquationSource" or "EquationAlternative" or "CanEditCellBackground" or "CellBackground" or "CanSplitRun" or "CanMergeRun" or "CanMergeCell" or "CanSplitCell" or "CanApplyStyle" or "Styles" or "SelectedStyle" or "LineSpacing" or "LeftIndent" or "FirstLineIndent" or "SpaceAfter" or "TableRows" or "TableColumns" or "CanEditList" or "SelectedListItems" or "CanEditTable" or "SelectedTableRows" or "ShowStart" or "ShowWorkspace" or "CanResume" or "ResumeLabel" or "StartStatus" or "NoSavedDocuments" or "CanBold"
             or "Documents" or "CanBrowseDocuments" or "CanRefreshDocuments" or "CanInspectSavedState" or "HasUnknownCommitOutcome"
-            or "CanImportPackage" or "CanExportPackage" or "PackageCleanupWarning"
-            or "FindText" or "ReplaceText" or "FindMatchCount" or "FindStatus" or "ReplaceStatus" or "CanFind" or "CanReplace";
+            or "CanImportPackage" or "CanExportPackage" or "PackageCleanupWarning" or "FindText" or "ReplaceText" or "FindMatchCount" or "FindStatus" or "ReplaceStatus" or "CanFind" or "CanReplace" or "ShowFiles" or "ShowOutline" or "Outline" or "EditorStatus" or "FontSizeLabel" or "ShowSidebar" or "WorkspaceColumns" or "SidebarColumnSpan" or "ShowFind" or "ReplacementText" or "IsTextContext" or "IsTableContext" or "IsImageContext" or "CanFormatText" or "CanEditTable" or "CurrentStyle" or "BoldState" or "ItalicState" or "UnderlineState" or "Sections" or "EmptyDocument" or "CanRemoveTableRow" or "CanRemoveTableColumn" or "CanMergeCell" or "CanSplitCell";
     }
 
     /// <summary>
@@ -861,7 +929,8 @@ public sealed class WriteBrowserSession : ICuiBindingContext, ICuiWritableBindin
     /// </summary>
     public bool TrySetValue(string path, object? value)
     {
-        if (_disposed || IsBusy || _presentationPending || HasUnknownCommitOutcome) return false;
+        if (_disposed || IsBusy || _presentationPending || HasUnknownCommitOutcome || !IsWorkspaceActive) return false;
+        if (path == "ReplacementText") path = "ReplaceText";
         if (path is "FindText" or "ReplaceText")
         {
             // The find and replace strings are session state, not authored
@@ -878,6 +947,8 @@ public sealed class WriteBrowserSession : ICuiBindingContext, ICuiWritableBindin
         if (IsReadOnly) return false;
         if (_editor is null || _editor.SelectedBlock is null) return false;
         var editor = _editor;
+        if (path == "DocumentTitle" && value is string title && !string.IsNullOrWhiteSpace(title))
+        { editor.SetTitle(title.Length > 256 ? title[..256] : title); _document!.Version = _durableVersion; return true; }
         // The media properties are the image the writer is pointing at, so they
         // read their untouched siblings from the block itself while a text or
         // colour property writes its own typed value only.
@@ -1200,12 +1271,16 @@ public sealed class WriteBrowserSession : ICuiBindingContext, ICuiWritableBindin
             "FindNext", "FindPrevious", "ReplaceAll",
             "MoveBlockUp", "MoveBlockDown", "DeleteBlock",
             "SplitRun", "MergeRun", "MergeCellRight", "SplitCell", "ApplyStyle",
-            "InsertImage", "InsertEquation"
+            "InsertImage", "InsertEquation",
+            "ReturnToStart", "ResumeDocument", "ToggleInspector", "ToggleFiles", "ToggleSidebar", "ToggleFind",
+            "StyleNormal", "StyleHeading1", "StyleHeading2", "StyleQuote", "RotateImage",
+            "SelectSection", "SelectOutline", "LargerText", "SmallerText", "InsertList", "MergeCell"
         };
 
     // These are local CUI presentation commands, not a new remote API catalogue.
     public bool? IsActionAvailable(string command) => !_disposed && !_presentationPending && !IsBusy &&
-        (!HasUnknownCommitOutcome || command is "InspectSavedState" or "RefreshDocuments") && (command switch
+        (IsWorkspaceActive || command is "CreateDocument" or "OpenDocument" or "RefreshDocuments" or "ImportPackage" or "ResumeDocument" or "InspectSavedState" or "CloseDocument") &&
+        (!HasUnknownCommitOutcome || command is "InspectSavedState" or "RefreshDocuments" or "ToggleFiles" or "ToggleSidebar" or "ReturnToStart" or "ResumeDocument") && (TableActions.ContainsKey(command) ? CanTableCommand(command) : Formatting.ContainsKey(command) ? _editor is not null && !IsReadOnly && (command.StartsWith("Insert", StringComparison.Ordinal) || IsTextContext) : command switch
     {
         "CreateDocument" => true,
         "SaveDocument" or "BoldSelection" or "ItalicSelection" or "UnderlineSelection" or "StrikeSelection"
@@ -1233,6 +1308,11 @@ public sealed class WriteBrowserSession : ICuiBindingContext, ICuiWritableBindin
         "SetMediaAlt" or "SetMediaCaption" or "SetMediaWrapping" or "SetMediaSize" or "SetMediaRotation"
             or "SetMediaCrop" => _editor is not null && !IsReadOnly
             && _editor.SelectedBlock?.Media is not null,
+        "ReturnToStart" => IsWorkspaceActive,
+        "ResumeDocument" => _document is not null && !IsWorkspaceActive,
+        "StyleNormal" or "StyleHeading1" or "StyleHeading2" or "StyleQuote" => IsTextContext && !IsReadOnly,
+        "RotateImage" => _editor?.SelectedBlock?.Kind == NotesBlockKind.Image && !IsReadOnly,
+        "ToggleFind" or "ToggleSidebar" => true,
         "Undo" => _editor?.CanUndo == true && !IsReadOnly,
         "Redo" => _editor?.CanRedo == true && !IsReadOnly,
         // Searching and navigating matches never mutates, so a read-only document
@@ -1253,13 +1333,34 @@ public sealed class WriteBrowserSession : ICuiBindingContext, ICuiWritableBindin
         "InspectSavedState" => HasUnknownCommitOutcome,
         "ImportPackage" => _packageBroker is not null,
         "ExportPackage" => _packageBroker is not null && _document is not null,
+        "ToggleInspector" or "ToggleFiles" => true,
+        "SelectOutline" => _editor is not null,
+        "SelectSection" => _editor is not null,
         _ => false
     });
 
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (IsActionAvailable(command) != true) { Failure<bool>("UnsupportedFeature", "This document action is unavailable."); Notify(); return; }
+        if (Formatting.TryGetValue(command, out var format)) { await EditAsync(editor => { format(editor); return true; }, cancellationToken); return; }
+        if (TableActions.TryGetValue(command, out var tableAction)) { await EditAsync(editor => { tableAction(editor); return true; }, cancellationToken); return; }
         switch (command)
         {
+            case "ReturnToStart": SetStartView(true); break;
+            case "ResumeDocument": SetStartView(false); break;
+            case "ToggleInspector": _showInspector = !_showInspector; Notify(); break;
+            case "ToggleFiles": _showFiles = !_showFiles; _showSidebar = true; Notify(); break;
+            case "ToggleSidebar": _showSidebar = !_showSidebar; Notify(); break;
+            case "ToggleFind": _showFind = !_showFind; Notify(); break;
+            case "StyleNormal": await EditAsync(editor => { editor.ApplyStyle("normal"); return true; }, cancellationToken); break;
+            case "StyleHeading1": await EditAsync(editor => { editor.ApplyStyle("heading-1"); return true; }, cancellationToken); break;
+            case "StyleHeading2": await EditAsync(editor => { editor.ApplyStyle("heading-2"); return true; }, cancellationToken); break;
+            case "StyleQuote": await EditAsync(editor => { editor.ApplyStyle("quote"); return true; }, cancellationToken); break;
+            case "RotateImage": await EditAsync(editor => editor.RotateSelectedMedia(90), cancellationToken); break;
+            case "SelectSection" when parameter is WriteSectionRow section && _document!.Sections.FirstOrDefault(item => item.Id == section.Id)?.Pages.SelectMany(page => page.Blocks).FirstOrDefault() is { } first:
+                await SelectAsync(first.Id, 0, 0, cancellationToken); if (_compact) { _showSidebar = false; Notify(); } break;
+            case "SelectOutline" when parameter is WriteOutlineRow outline && _editor!.Blocks().Any(block => block.Id == outline.Id):
+                await SelectAsync(outline.Id, 0, 0, cancellationToken); break;
             case "CreateDocument": await CreateAsync(cancellationToken: cancellationToken); break;
             case "SaveDocument": await SaveAsync(cancellationToken); break;
             case "BoldSelection": await ToggleCharacterAsync(WriteCharacterFormat.Bold, cancellationToken); break;
@@ -1323,7 +1424,9 @@ public sealed class WriteBrowserSession : ICuiBindingContext, ICuiWritableBindin
             case "ExportPackage": await ExportToBrowserAsync(cancellationToken); break;
             case "OpenDocument" when parameter is WriteSavedDocumentRow savedDocument &&
                 _documents.Any(current => current.Id == savedDocument.Summary.Id):
-                await OpenAsync(savedDocument.Summary.Id, cancellationToken: cancellationToken); break;
+                if (savedDocument.Summary.Id == DocumentId) SetStartView(false);
+                else await OpenAsync(savedDocument.Summary.Id, cancellationToken: cancellationToken);
+                break;
             default:
                 // A command that is in the owned catalogue but fell through to this
                 // arm means the dispatch switch lost a case. That is an application
@@ -1334,6 +1437,16 @@ public sealed class WriteBrowserSession : ICuiBindingContext, ICuiWritableBindin
                         "Dispatchable Write command '" + command + "' is missing a dispatch case.");
                 Failure<bool>("UnsupportedFeature", "This document action is unavailable."); Notify(); break;
         }
+    }
+
+    private void SetStartView(bool show)
+    {
+        // This is view activation only. Keep the actual document, dirty state,
+        // undo history and selection; never run close/save on an app-home action.
+        var previous = _showStart;
+        _showStart = show;
+        try { Notify(); }
+        catch { _showStart = previous; throw; }
     }
 
     private HomeCoreOperationResult<T> Success<T>(T value) => new(true, "Succeeded", Status, value, Revision: _durableVersion);

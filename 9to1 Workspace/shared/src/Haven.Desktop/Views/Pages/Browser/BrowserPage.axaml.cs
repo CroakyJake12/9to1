@@ -55,7 +55,7 @@ public sealed partial class BrowserPage : UserControl, IDisposable
     private string _bookmarkGroup = "Bookmarks";
     private string _newGroupName = "Research";
     private string _assistantInput = string.Empty;
-    private string _assistantOutput = "Ask Haven to summarise, explain, or extract information from this page.";
+    private string _assistantOutput = "Ask 9to1 to summarise, explain, or extract information from this page.";
     private bool _isBookmarksOpen;
     private bool _isHistoryOpen;
     private bool _isSettingsOpen;
@@ -467,7 +467,7 @@ public sealed partial class BrowserPage : UserControl, IDisposable
             {
                 var response = await _ollama.ChatWithToolsAsync(new OllamaToolRequest(selected.Name, turns, _browserTools.Definitions,
                     _preferences.DefaultEffort,
-                    "You are Haven Browse's side assistant. Inspect the page with browser_read_page and use the bounded browser tools to complete the user's request. Work step by step and verify after navigation or clicks. Never submit a purchase, delete data, expose credentials, or bypass a warning. Do not claim an action succeeded without its tool result. When finished, return a concise result.",
+                    "You are 9to1 Browse's side assistant. Inspect the page with browser_read_page and use the bounded browser tools to complete the user's request. Work step by step and verify after navigation or clicks. Never submit a purchase, delete data, expose credentials, or bypass a warning. Do not claim an action succeeded without its tool result. When finished, return a concise result.",
                     _preferences.GenerationOptions), CancellationToken.None);
                 if (response.ToolCalls.Count == 0)
                 {
@@ -493,7 +493,7 @@ public sealed partial class BrowserPage : UserControl, IDisposable
         AssistantOutput = await _ollama.CompleteAsync(new OllamaChatRequest(selected.Name,
             [new OllamaMessage("user", $"Task: {instruction}\n\nPage URL: {Address}\n\nVisible page text:\n{page}")],
             _preferences.DefaultEffort,
-            "You are Haven's browser side assistant. Use only the supplied page text, state uncertainty, and explain that this model cannot interact with the page."), CancellationToken.None);
+            "You are 9to1's browser side assistant. Use only the supplied page text, state uncertainty, and explain that this model cannot interact with the page."), CancellationToken.None);
     });
 
     private Task ReadPageAloudAsync() => RunSafelyAsync(async () =>
@@ -575,7 +575,7 @@ public sealed partial class BrowserPage : UserControl, IDisposable
         await _data.SaveLoginAsync(LoginOrigin, LoginUsername, LoginPassword, CancellationToken.None);
         LoginPassword = string.Empty;
         RefreshCollections();
-        Status = "Login stored in Windows Credential Manager. Haven saved only its origin and username metadata.";
+        Status = "Login stored in Windows Credential Manager. 9to1 saved only its origin and username metadata.";
     });
 
     private async Task DeleteLoginAsync(SavedLogin? login)
@@ -599,7 +599,7 @@ public sealed partial class BrowserPage : UserControl, IDisposable
                      $"if(pass){{pass.focus();pass.value={passwordJson};pass.dispatchEvent(new Event('input',{{bubbles:true}}));}}" +
                      "return user||pass?'filled':'no compatible fields';})()";
         await _browser.ExecuteUiScriptAsync(script, CancellationToken.None);
-        Status = "Filled matching fields. Haven did not submit the form.";
+        Status = "Filled matching fields. 9to1 did not submit the form.";
     });
 
     private async Task ApplyExtensionsAsync(Uri address)

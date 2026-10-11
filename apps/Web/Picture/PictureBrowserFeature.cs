@@ -1,6 +1,9 @@
 using System.ComponentModel;
 using System.Text.Json;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
@@ -182,28 +185,133 @@ public sealed class PictureBrowserFeature : IHomeFeatureRouteHandler, IBrowserCl
         private Bitmap? _bitmap;
         private HavenOS.Images.PictureDocument? _renderedDocument;
         private bool _renderedOriginal, _disposed;
-        public Image Control { get; } = new() { Stretch = Stretch.Uniform, MaxHeight = 520, MinHeight = 120 };
+        private readonly Image _image = new() { Stretch = Stretch.Uniform };
+        private readonly CropOverlay _overlay = new() { IsHitTestVisible = false };
+        private CuiContainerControl? _root;
+        private Point? _dragStart;
+        private bool _applyingLayout;
+        public Grid Control { get; } = new() { ClipToBounds = true, MinHeight = 120, Background = Brushes.Transparent };
         public PictureViewLifetime(PictureBrowserFeature owner, PictureBrowserSession session)
         {
             _owner = owner; _session = session;
+            Control.Children.Add(_image); Control.Children.Add(_overlay);
+            Control.AttachedToVisualTree += Attached;
+            Control.PointerPressed += PointerPressed; Control.PointerMoved += PointerMoved; Control.PointerReleased += PointerReleased;
+            Control.PointerCaptureLost += CaptureLost;
             // Build the actual Bitmap before subscribing; a failed candidate never leaks an observer.
             Refresh(); session.PropertyChanged += Changed;
         }
+        private void Attached(object? sender, VisualTreeAttachmentEventArgs args)
+        {
+            if (_root is not null) _root.SizeChanged -= Resized;
+            _root = Control.GetLogicalAncestors().OfType<CuiContainerControl>().FirstOrDefault(x => x.Name == "picture-workspace");
+            if (_root is not null) _root.SizeChanged += Resized;
+            // Native attachment walks a stable child list. Responsive Active
+            // changes can remove siblings, so apply after that walk completes.
+            Dispatcher.UIThread.Post(ApplyLayout);
+        }
+        private void Resized(object? sender, SizeChangedEventArgs args) => ApplyLayout();
+        private void ApplyLayout()
+        {
+            if (_root is null || _disposed || _applyingLayout) return;
+            _applyingLayout = true;
+            try
+            {
+                var compact = _root.Bounds.Width is > 0 and < 800; _session.SetCompact(compact);
+                var nodes = AuthoredControls(_root).ToArray();
+                var body = nodes.OfType<CuiContainerControl>().FirstOrDefault(x => x.Name == "picture-body");
+                var inspector = nodes.OfType<CuiContainerControl>().FirstOrDefault(x => x.Name == "picture-inspector");
+                if (body is not null) Set(body,"ColumnSizes",compact || !_session.ShowInspector ? "1fr" : "1fr 284");
+                if (inspector is not null)
+                {
+                    Set(inspector,"Active",_session.ShowInspector); Set(inspector,"Column",compact ? 0 : 1);
+                    Set(inspector,"Width",compact ? Math.Min(320, Math.Max(200, _root.Bounds.Width)) : double.NaN);
+                    Set(inspector,"HorizontalAlignment",compact ? Avalonia.Layout.HorizontalAlignment.Right : Avalonia.Layout.HorizontalAlignment.Stretch);
+                    Set(inspector,"Layer",compact ? 5 : 0);
+                }
+                if (nodes.FirstOrDefault(x => x.Name == "picture-canvas-area") is { } canvas)
+                    Set(canvas,"Margin",new Thickness(compact ? 10 : 24, 16));
+            }
+            finally { _applyingLayout = false; }
+        }
+        private static IEnumerable<Control> AuthoredControls(Control root)
+        {
+            yield return root;
+            var children = root is CuiContainerControl container ? container.AuthoredChildren : root.GetLogicalChildren().OfType<Control>();
+            foreach (var child in children)
+                foreach (var descendant in AuthoredControls(child)) yield return descendant;
+        }
+        private static void Set(Control control, string property, object value)
+        {
+            if (CuiLayoutProperties.SetLiteral(control,property,Convert.ToString(value,System.Globalization.CultureInfo.InvariantCulture) ?? "",CuiPropertyLevel.Instance,"Picture responsive state")) return;
+            if (!CuiPropertyPresentation.Set(control,property,value,CuiPropertyLevel.Instance,"Picture responsive state"))
+                throw new InvalidOperationException($"The canonical CUI property '{property}' is unavailable for Picture.");
+        }
         private void Changed(object? sender, PropertyChangedEventArgs args)
-        { if (Dispatcher.UIThread.CheckAccess()) Refresh(); else Dispatcher.UIThread.Post(Refresh); }
+        { if (Dispatcher.UIThread.CheckAccess()) { Refresh(); ApplyLayout(); } else Dispatcher.UIThread.Post(() => { Refresh(); ApplyLayout(); }); }
         private void Refresh()
         {
             if (_disposed || _session.IsBusy || ReferenceEquals(_renderedDocument, _session.Document) && _renderedOriginal == _session.ShowOriginal) return;
             var replacement = _session.RenderPreview();
-            var previous = _bitmap; _bitmap = replacement; Control.Source = replacement;
+            var previous = _bitmap; _bitmap = replacement; _image.Source = replacement; _overlay.Selection = null; _overlay.InvalidateVisual();
             _renderedDocument = _session.Document; _renderedOriginal = _session.ShowOriginal;
             previous?.Dispose();
         }
+        private Rect ImageRect()
+        {
+            if (_bitmap is null) return default;
+            var scale = Math.Min(Control.Bounds.Width / _bitmap.PixelSize.Width, Control.Bounds.Height / _bitmap.PixelSize.Height);
+            var width = _bitmap.PixelSize.Width * scale; var height = _bitmap.PixelSize.Height * scale;
+            return new((Control.Bounds.Width - width) / 2, (Control.Bounds.Height - height) / 2, width, height);
+        }
+        private void PointerPressed(object? sender, PointerPressedEventArgs args)
+        {
+            if (_session.Document is null || _session.IsBusy || _session.ShowOriginal || !args.GetCurrentPoint(Control).Properties.IsLeftButtonPressed) return;
+            var point = args.GetPosition(Control); if (!ImageRect().Contains(point)) return;
+            _dragStart = point; args.Pointer.Capture(Control); args.Handled = true;
+        }
+        private void PointerMoved(object? sender, PointerEventArgs args)
+        {
+            if (_dragStart is not { } start) return;
+            var image = ImageRect(); var next = args.GetPosition(Control);
+            next = new Point(Math.Clamp(next.X, image.Left, image.Right), Math.Clamp(next.Y, image.Top, image.Bottom));
+            _overlay.Selection = new Rect(Math.Min(start.X, next.X), Math.Min(start.Y, next.Y), Math.Abs(next.X - start.X), Math.Abs(next.Y - start.Y));
+            _overlay.InvalidateVisual(); args.Handled = true;
+        }
+        private void PointerReleased(object? sender, PointerReleasedEventArgs args)
+        {
+            if (_dragStart is null || _session.Document is not { } document) return;
+            PointerMoved(sender, args); var selected = _overlay.Selection; var image = ImageRect();
+            _dragStart = null; args.Pointer.Capture(null);
+            if (selected is not { Width: > 2, Height: > 2 } rectangle || image.Width <= 0) return;
+            var x = Math.Clamp((int)Math.Floor((rectangle.X - image.X) * document.CanvasWidth / image.Width), 0, document.CanvasWidth - 1);
+            var y = Math.Clamp((int)Math.Floor((rectangle.Y - image.Y) * document.CanvasHeight / image.Height), 0, document.CanvasHeight - 1);
+            var width = Math.Clamp((int)Math.Ceiling(rectangle.Width * document.CanvasWidth / image.Width), 1, document.CanvasWidth - x);
+            var height = Math.Clamp((int)Math.Ceiling(rectangle.Height * document.CanvasHeight / image.Height), 1, document.CanvasHeight - y);
+            _session.TrySetValue("CropX", x); _session.TrySetValue("CropY", y); _session.TrySetValue("CropWidth", width); _session.TrySetValue("CropHeight", height);
+            if (!_session.ShowInspector) _session.DispatchAsync("ToggleInspector", null).GetAwaiter().GetResult();
+            args.Handled = true;
+        }
+        private void CaptureLost(object? sender, PointerCaptureLostEventArgs args) { _dragStart = null; }
         public void Dispose()
         {
             if (_disposed) return; _disposed = true; _session.PropertyChanged -= Changed;
-            try { Control.Source = null; }
+            Control.AttachedToVisualTree -= Attached; Control.PointerPressed -= PointerPressed; Control.PointerMoved -= PointerMoved;
+            Control.PointerReleased -= PointerReleased; Control.PointerCaptureLost -= CaptureLost;
+            if (_root is not null) _root.SizeChanged -= Resized;
+            try { _image.Source = null; }
             finally { try { _bitmap?.Dispose(); } finally { _bitmap = null; _owner._views.Remove(this); } }
+        }
+        private sealed class CropOverlay : Control
+        {
+            public Rect? Selection { get; set; }
+            public override void Render(DrawingContext context)
+            {
+                if (Selection is not { } selection) return;
+                var fill = this.TryFindResource("CuiSelectionBrush", out var selected) ? selected as IBrush : Brushes.Transparent;
+                var line = this.TryFindResource("CuiAccentBrush", out var accent) ? accent as IBrush : Brushes.White;
+                context.DrawRectangle(fill,new Pen(line,2),selection);
+            }
         }
     }
 }

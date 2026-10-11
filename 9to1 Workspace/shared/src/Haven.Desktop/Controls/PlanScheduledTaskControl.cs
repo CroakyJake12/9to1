@@ -28,7 +28,7 @@ public sealed class PlanScheduledTaskControl : UserControl, IDisposable
     private readonly HavenTextInput _name = new() { PlaceholderText = "Task name" };
     private readonly HavenMultilineInput _instruction = new()
     {
-        PlaceholderText = "What should Haven handle or check?",
+        PlaceholderText = "What should 9to1 handle or check?",
         MinHeight = 92,
         MaxHeight = 180
     };

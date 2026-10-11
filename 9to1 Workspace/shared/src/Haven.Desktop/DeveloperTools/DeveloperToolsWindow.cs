@@ -47,7 +47,7 @@ internal sealed class DeveloperToolsWindow : Window
     public DeveloperToolsWindow(Window inspectedWindow)
     {
         _inspectedWindow = inspectedWindow;
-        Title = "Haven Developer Tools";
+        Title = "9to1 Developer Tools";
         Width = 1180;
         Height = 720;
         MinWidth = 900;

@@ -1,6 +1,6 @@
 # State and Persistence
 
-Haven keeps data local-first. Categories, owners and lifecycles:
+9to1 keeps data local-first. Categories, owners and lifecycles:
 
 ## 1. Durable domain data — SQLite (`Haven.Infrastructure`)
 

@@ -48,7 +48,7 @@ public sealed class Prefab : Container
         "Components/Prefab/Prefab.cs",
         ["Prefab"],
         [],
-        "Reusable Haven component tree. Dynamic instances keep state by PrefabID+InstanceID; Static instances share state app-wide by PrefabID.");
+        "Reusable 9to1 component tree. Dynamic instances keep state by PrefabID+InstanceID; Static instances share state app-wide by PrefabID.");
 
     public HavenElement GetComponent(string componentName)
     {

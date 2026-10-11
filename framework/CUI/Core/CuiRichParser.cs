@@ -21,6 +21,11 @@ public sealed class CuiRichParser
         ArgumentNullException.ThrowIfNull(source);
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceName);
         _diagnostics.Clear();
+        if (!CuiProjectItems.IsCuiSourceFamily(sourceName))
+        {
+            _diagnostics.Error("CUI044", "Production CUI input must be .cui, .cui-theme or .cui-prefab; AXAML/HUI input is not accepted.", CuiSourceSpan.At(sourceName, 1, 1));
+            return CreateFailedDocument(sourceName);
+        }
         var normalized = new CuiSyntaxNormalizer(_diagnostics).Normalize(source, sourceName);
         _textReferences = normalized.TextReferences;
 
@@ -41,6 +46,11 @@ public sealed class CuiRichParser
                     SpanOf(root, sourceName));
                 return CreateFailedDocument(sourceName);
             }
+            if (root.DescendantsAndSelf().Attributes().Any(attribute => attribute.IsNamespaceDeclaration || attribute.Name.Namespace != XNamespace.None))
+            {
+                _diagnostics.Error("CUI002", "CUI does not accept donor/XML namespace declarations or namespace-qualified properties.", SpanOf(root, sourceName));
+                return CreateFailedDocument(sourceName);
+            }
 
             var hasCuiDocumentRoot = IsKeyword(root, "Cui");
 
@@ -59,7 +69,7 @@ public sealed class CuiRichParser
                 : Array.Empty<CuiImportDefinition>();
             var components = hasCuiDocumentRoot
                 ? ParseComponents(root, sourceName, isRoot: true)
-                : [ParseComponent(root, sourceName)!];
+                : ParseComponent(root, sourceName) is { } singleRoot ? [singleRoot] : Array.Empty<CuiComponent>();
 
             ValidateAddressScopes(components);
 
@@ -379,9 +389,15 @@ public sealed class CuiRichParser
 
         var type = CanonicalBuiltInName(element.Name.LocalName);
         var span = SpanOf(element, sourceName);
+        if (CuiLanguageVocabulary.IsForbiddenElement(type))
+        {
+            _diagnostics.Error("CUI045", $"'{type}' is not a public CUI element. {CuiLanguageVocabulary.ElementCorrection(type)}", span);
+            return null;
+        }
 
         // === DefaultTheme is a first-class CUI construct, not a visual control ===
-        if (string.Equals(type, "DefaultTheme", StringComparison.Ordinal))
+        if (string.Equals(type, "DefaultTheme", StringComparison.Ordinal)
+            || type == "Theme" && !element.Attributes().Any(attribute => attribute.Name.LocalName.Equals("Definition", StringComparison.OrdinalIgnoreCase) && attribute.Value.Equals("True", StringComparison.OrdinalIgnoreCase)))
         {
             return ParseDefaultTheme(element, sourceName);
         }
@@ -418,6 +434,11 @@ public sealed class CuiRichParser
             var attrName = attr.Name.LocalName;
             var attrSpan = SpanOf(attr, sourceName);
             var rawValue = attr.Value;
+            if (CuiLanguageVocabulary.IsForbiddenProperty(attrName))
+            {
+                _diagnostics.Error("CUI046", $"'{attrName}' is donor layout syntax. Use canonical RowSizes/ColumnSizes, Row/Column, spans and X/Y placement properties.", attrSpan);
+                continue;
+            }
 
             if ((type == "If" && string.Equals(attrName, "Condition", StringComparison.OrdinalIgnoreCase))
                 || string.Equals(attrName, "condition", StringComparison.OrdinalIgnoreCase))
@@ -513,7 +534,8 @@ public sealed class CuiRichParser
                     }
                     else
                     {
-                        properties[attrName] = ParseMarkupValue(rawValue, attrSpan);
+                        properties[attrName] = rawValue.Length == 0 && attrName.ToLowerInvariant() is "text" or "content" or "value" or "placeholdertext" or "watermark"
+                            ? new CuiLiteralValue(string.Empty, attrSpan) : ParseMarkupValue(rawValue, attrSpan);
                     }
                     break;
             }
@@ -614,7 +636,7 @@ public sealed class CuiRichParser
         foreach (var attr in element.Attributes())
         {
             var localName = attr.Name.LocalName;
-            if (string.Equals(localName, "value", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(localName, "value", StringComparison.OrdinalIgnoreCase) || string.Equals(localName, "Name", StringComparison.OrdinalIgnoreCase))
             {
                 themeName = attr.Value;
                 break;

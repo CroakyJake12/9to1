@@ -130,7 +130,7 @@ public sealed class BrowserSessionService(IAppPaths paths) : IBrowserToolService
         using var response = await _http.GetAsync(normalised, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
         if (response.Content.Headers.ContentLength is > 8L * 1024 * 1024)
-            throw new InvalidOperationException("The background page exceeds Haven's 8 MB extraction limit.");
+            throw new InvalidOperationException("The background page exceeds 9to1's 8 MB extraction limit.");
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
         using var reader = new StreamReader(stream);
         var buffer = new char[16 * 1024];
@@ -139,7 +139,7 @@ public sealed class BrowserSessionService(IAppPaths paths) : IBrowserToolService
         {
             var read = await reader.ReadAsync(buffer.AsMemory(), cancellationToken).ConfigureAwait(false);
             if (read == 0) break;
-            if (builder.Length + read > 8 * 1024 * 1024) throw new InvalidOperationException("The background page exceeded Haven's 8 MB extraction limit while streaming.");
+            if (builder.Length + read > 8 * 1024 * 1024) throw new InvalidOperationException("The background page exceeded 9to1's 8 MB extraction limit while streaming.");
             builder.Append(buffer, 0, read);
         }
         _fallbackText = HtmlToText(builder.ToString());

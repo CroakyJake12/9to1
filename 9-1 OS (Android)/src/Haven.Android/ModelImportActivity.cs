@@ -56,7 +56,7 @@ public sealed class ModelImportActivity : Activity
 
         var explanation = new TextView(this)
         {
-            Text = "Choose existing .gguf model files or a model folder. Haven copies selected models into its private model library so they remain available after the picker closes. Android does not allow Haven to silently read another app's private storage, so PocketPal models must be selected through the system file picker.",
+            Text = "Choose existing .gguf model files or a model folder. 9to1 copies selected models into its private model library so they remain available after the picker closes. Android does not allow 9to1 to silently read another app's private storage, so PocketPal models must be selected through the system file picker.",
             TextSize = 14
         };
         explanation.SetTextColor(Color.Argb(220, 225, 218, 240));
@@ -394,7 +394,7 @@ public sealed class ModelImportActivity : Activity
     private DirectoryInfo GetModelDirectory()
     {
         var root = FilesDir?.AbsolutePath
-                   ?? throw new IOException("Haven's application storage is unavailable.");
+                   ?? throw new IOException("9to1's application storage is unavailable.");
         return Directory.CreateDirectory(IOPath.Combine(root, "models"));
     }
 

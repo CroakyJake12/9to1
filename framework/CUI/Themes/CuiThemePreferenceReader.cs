@@ -29,6 +29,6 @@ public static class CuiThemePreferenceReader
         catch (UnauthorizedAccessException) { }
         catch (JsonException) { }
 
-        return CuiTheme.Glow;
+        return CuiTheme.Professional;
     }
 }

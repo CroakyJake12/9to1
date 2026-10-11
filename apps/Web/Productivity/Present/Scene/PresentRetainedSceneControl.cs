@@ -16,6 +16,7 @@ public sealed class PresentRetainedSceneControl : Panel, IDisposable
     private PresentEditor? _editor;
     private Guid? _renderedSlide;
     private bool _allowed, _disposed;
+    private bool _restoreCanvasFocus;
     public event EventHandler? LiveTextPreviewed;
     public event EventHandler? SelectionChanged;
 
@@ -25,6 +26,10 @@ public sealed class PresentRetainedSceneControl : Panel, IDisposable
         _scene = new HavenSceneControl(new HavenAvaloniaImageResolver(), new HavenAvaloniaNativeControlResolver(), reduceMotion)
         { Platform = HavenPlatform.Unknown, IsEnabled = false };
         Children.Add(_scene);
+        // The CUI workspace owns application chrome; only the authored slide is paper.
+        _canvas.SetValue(HavenProperties.Background, "Transparent");
+        _canvas.SetValue(HavenProperties.BorderWidth, HavenLength.Px(0));
+        _canvas.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(0)));
         AddHandler(KeyDownEvent, GateKey, RoutingStrategies.Tunnel, handledEventsToo: true);
         AddHandler(KeyUpEvent, GateKey, RoutingStrategies.Tunnel, handledEventsToo: true);
         AddHandler(TextInputEvent, GateText, RoutingStrategies.Tunnel, handledEventsToo: true);
@@ -59,11 +64,12 @@ public sealed class PresentRetainedSceneControl : Panel, IDisposable
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (_allowed == allowed) return;
+        if (!allowed) _restoreCanvasFocus = _scene.IsKeyboardFocusWithin;
         _allowed = allowed; _scene.IsEnabled = allowed;
         _canvas.SetValue(HavenProperties.Enabled, allowed); _canvas.Accessibility.Enabled = allowed;
         if (!allowed && _scene.Root is not null)
         { _scene.Root = null; _scene.Root = _canvas; } // Invalidates original scene's captured asynchronous paste router.
-        else if (allowed && _scene.Root is not null) _scene.FocusElement(_canvas);
+        else if (allowed && _restoreCanvasFocus && _scene.Root is not null) _scene.FocusElement(_canvas);
     }
     private void Refresh()
     {

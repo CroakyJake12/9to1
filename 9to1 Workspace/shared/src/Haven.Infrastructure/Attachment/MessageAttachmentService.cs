@@ -122,7 +122,7 @@ public sealed partial class MessageAttachmentService(
         var limit = SizeLimit(kind, options);
         if (info.Length <= 0) throw new InvalidOperationException("The attachment is empty.");
         if (info.Length > limit)
-            throw new InvalidOperationException($"{info.Name} is {FormatBytes(info.Length)}, above Haven's {FormatBytes(limit)} limit for {kind.ToString().ToLowerInvariant()} attachments.");
+            throw new InvalidOperationException($"{info.Name} is {FormatBytes(info.Length)}, above 9to1's {FormatBytes(limit)} limit for {kind.ToString().ToLowerInvariant()} attachments.");
 
         var id = Guid.NewGuid();
         var conversationDirectory = Path.Combine(paths.AttachmentsDirectory, conversationId.ToString("N"));
@@ -174,7 +174,7 @@ public sealed partial class MessageAttachmentService(
                     break;
                 default:
                     state = AttachmentProcessingState.Unsupported;
-                    metadata["processingNotice"] = "The file is stored, but Haven has no safe local extractor for this format.";
+                    metadata["processingNotice"] = "The file is stored, but 9to1 has no safe local extractor for this format.";
                     break;
             }
         }
@@ -647,7 +647,7 @@ public sealed partial class MessageAttachmentService(
     /// <summary>
     /// Performs the truncate step owned by this component.
     /// </summary>
-    private static string Truncate(string value, int maxCharacters) => value.Length <= maxCharacters ? value : value[..maxCharacters] + "\n[content truncated by Haven]";
+    private static string Truncate(string value, int maxCharacters) => value.Length <= maxCharacters ? value : value[..maxCharacters] + "\n[content truncated by 9to1]";
     /// <summary>
     /// Performs the format bytes step owned by this component.
     /// </summary>

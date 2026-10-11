@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using CakeOS.Cui.Themes;
 using Xunit;
 
@@ -23,18 +24,18 @@ public sealed class CuiSceneAppearanceResourceTests
             loader.SetAppearance(appearance);
             loader.SetBindingContext(new CuiViewModel());
             var (root, diagnostics) = loader.LoadMarkup("""
-                <Cui><StackPanel>
-                  <Border Background="{Resource CuiPanelBrush}">
-                    <TextBlock Foreground="{Resource CuiTextBrush}" Text="{Binding Appearance}" />
-                  </Border>
-                </StackPanel></Cui>
+                <Container Type="Vertical Stack">
+                  <Container Type="Grid" ID="surface" Background="{Resource CuiPanelBrush}">
+                    <Text ID="label" Foreground="{Resource CuiTextBrush}" Text="{Binding Appearance}" />
+                  </Container>
+                </Container>
                 """);
             Assert.Empty(diagnostics);
-            var panel = Assert.IsType<Border>(Assert.Single(Assert.IsType<StackPanel>(root).Children));
-            var label = Assert.IsType<TextBlock>(panel.Child);
+            var panel = Assert.Single(root!.GetVisualDescendants().OfType<CuiContainerControl>(), control => control.Name == "surface");
+            var label = Assert.Single(panel.GetVisualDescendants().OfType<TextBlock>(), control => control.Name == "label");
             var palette = CuiSurfacePaletteCatalog.For("Imagine", appearance, loader.CurrentTheme);
-            Assert.Equal(palette.Panel, Assert.IsType<SolidColorBrush>(panel.Background).Color);
-            Assert.Equal(palette.Text, Assert.IsType<SolidColorBrush>(label.Foreground).Color);
+            Assert.Equal(palette.Panel, Assert.IsAssignableFrom<ISolidColorBrush>(panel.Background).Color);
+            Assert.Equal(palette.Text, Assert.IsAssignableFrom<ISolidColorBrush>(label.Foreground).Color);
             Assert.Equal(appearance.ToString(), label.Text);
         }, CancellationToken.None);
     }

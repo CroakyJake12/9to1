@@ -70,7 +70,7 @@ public sealed partial class MainView
                 () => OpenOriginalExplicitTaskAsync(null));
             RetainOriginalCanonicalPage(page); // Before any tab/property/activation callback.
             original.DemandPublication();
-            AddOrSelectTab(key, "Haven Tasks", page, true, HavenSurface.Tasks, forceNewTab: true);
+            AddOrSelectTab(key, "9to1 Tasks", page, true, HavenSurface.Tasks, forceNewTab: true);
             // ApplySelectedTab owns the one actual ActivateAsync; never activate twice.
         });
     }

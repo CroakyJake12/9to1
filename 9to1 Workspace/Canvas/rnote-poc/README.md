@@ -1,4 +1,4 @@
-# CakeOS Canvas Rnote Proof of Concept
+# 9to1OS Canvas Rnote Proof of Concept
 
 This crate provides a renderer-neutral bridge between the Rnote 0.14.2 engine core and the CakeOS HUI layer. It deliberately depends on `rnote-engine` and `rnote-compose` with default features disabled — no GTK, Libadwaita, or `rnote-ui` is imported.
 

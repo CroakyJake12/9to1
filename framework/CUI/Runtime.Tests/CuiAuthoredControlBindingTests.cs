@@ -22,7 +22,7 @@ public sealed class CuiAuthoredControlBindingTests
             var prepared = new ListBox();
             loader.BindAuthoredControl("dashboard-tiles", _ => prepared);
             var (root, diagnostics) = loader.LoadMarkup(
-                "<Cui><Page><ListBox id=\"dashboard-tiles\" /><ListBox id=\"other-tiles\" /></Page></Cui>");
+                "<Cui><Page><Input Type=\"List\" id=\"dashboard-tiles\" /><Input Type=\"List\" id=\"other-tiles\" /></Page></Cui>");
             if (diagnostics.Count != 0) return false;
             var controls = new List<Control>();
             Collect(root!, controls);
@@ -60,7 +60,7 @@ public sealed class CuiAuthoredControlBindingTests
             context.Set("IsDashboard", true);
             loader.SetBindingContext(context);
             var (root, diagnostics) = loader.LoadMarkup(
-                "<Cui><Page><If Condition=\"{Binding IsDashboard}\"><ListBox id=\"dashboard-tiles\" /></If></Page></Cui>");
+                "<Cui><Page><If Condition=\"{Binding IsDashboard}\"><Input Type=\"List\" id=\"dashboard-tiles\" /></If></Page></Cui>");
             if (diagnostics.Count != 0) return false;
             context.Set("IsDashboard", false);
             loader.RefreshBindings();

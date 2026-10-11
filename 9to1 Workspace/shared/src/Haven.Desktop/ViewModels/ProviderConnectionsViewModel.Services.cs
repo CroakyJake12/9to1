@@ -120,8 +120,8 @@ public sealed class ServiceConnectionItemViewModel : ObservableObject
         SetupMethodLabel = "Browser OAuth";
         CapabilityLabel = "Calendar events - read and write";
         PermissionLabel = kind == CalendarProviderKind.Google
-            ? "Haven requests: account email + Google Calendar read/write"
-            : "Haven requests: basic profile + calendar read/write + offline access";
+            ? "9to1 requests: account email + Google Calendar read/write"
+            : "9to1 requests: basic profile + calendar read/write + offline access";
     }
 
     public CalendarProviderKind Kind { get; }

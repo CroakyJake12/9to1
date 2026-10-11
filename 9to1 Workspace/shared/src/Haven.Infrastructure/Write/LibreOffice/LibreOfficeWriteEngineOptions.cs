@@ -18,9 +18,9 @@ public sealed record LibreOfficeWriteEngineOptions
         var errors = new List<string>();
 
         if (string.IsNullOrWhiteSpace(HelperExecutablePath))
-            errors.Add("A Haven Write helper executable path is required.");
+            errors.Add("A 9to1 Write helper executable path is required.");
         else if (!IsAbsoluteTargetPath(HelperExecutablePath))
-            errors.Add("The Haven Write helper executable path must be absolute.");
+            errors.Add("The 9to1 Write helper executable path must be absolute.");
 
         if (string.IsNullOrWhiteSpace(LibreOfficeProgramPath))
             errors.Add("A LibreOffice program path is required.");
@@ -34,10 +34,10 @@ public sealed record LibreOfficeWriteEngineOptions
         }
 
         if (StartupTimeout <= TimeSpan.Zero || StartupTimeout > TimeSpan.FromMinutes(2))
-            errors.Add("The Haven Write helper startup timeout must be greater than zero and no more than two minutes.");
+            errors.Add("The 9to1 Write helper startup timeout must be greater than zero and no more than two minutes.");
 
         if (MaximumTileBytes is < 1L or > 256L * 1024L * 1024L)
-            errors.Add("The Haven Write maximum tile size must be between 1 byte and 256 MiB.");
+            errors.Add("The 9to1 Write maximum tile size must be between 1 byte and 256 MiB.");
 
         return errors;
     }

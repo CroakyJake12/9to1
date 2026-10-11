@@ -104,7 +104,7 @@ internal sealed partial class BrowserHavenScene : IDisposable
         DownloadsButton = Tool("Browser.Tools.Downloads", "Downloads");
         TabsManagerButton = Tool("Browser.Tools.Tabs", "All tabs");
         PageActionsButton = Tool("Browser.Tools.PageActions", "Page");
-        AssistantButton = Tool("Browser.Tools.Assistant", "Ask Haven");
+        AssistantButton = Tool("Browser.Tools.Assistant", "Ask 9to1");
         SettingsButton = Tool("Browser.Tools.Settings", "Settings");
         PrivateTabButton = Tool("Browser.Tools.Private", "Private tab");
         ExtensionsButton = Tool("Browser.Tools.Extensions", "Extensions");

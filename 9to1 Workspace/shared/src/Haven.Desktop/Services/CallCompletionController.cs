@@ -166,7 +166,7 @@ public sealed class CallCompletionController : IAsyncDisposable
         var transcript = new StringBuilder();
         foreach (var message in messages.TakeLast(80))
         {
-            transcript.Append(message.Role == MessageRole.User ? "User: " : "Haven: ");
+            transcript.Append(message.Role == MessageRole.User ? "User: " : "9to1: ");
             transcript.AppendLine(message.Content.Trim());
             transcript.AppendLine();
         }
@@ -179,13 +179,13 @@ public sealed class CallCompletionController : IAsyncDisposable
                 modelName,
                 [new OllamaMessage("user", "Create a concise durable summary of this completed call. Preserve decisions, promises, named items, follow-up actions and unresolved questions. Do not invent details. Use short headings and bullets.\n\n" + value)],
                 EffortLevel.Low,
-                "You summarize a completed private Haven call using only its text transcript.",
+                "You summarize a completed private 9to1 call using only its text transcript.",
                 Options: new GenerationOptions(0.2, 8192, 0)), CancellationToken.None).ConfigureAwait(false);
         }
         catch (Exception)
         {
             var fallback = messages.TakeLast(10)
-                .Select(message => $"- {(message.Role == MessageRole.User ? "User" : "Haven")}: {Truncate(message.Content.Trim(), 320)}");
+                .Select(message => $"- {(message.Role == MessageRole.User ? "User" : "9to1")}: {Truncate(message.Content.Trim(), 320)}");
             return "Model summary was unavailable. Recent transcript highlights:\n" + string.Join("\n", fallback);
         }
     }

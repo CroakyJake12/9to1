@@ -9,11 +9,11 @@ public readonly record struct HavenSelector(HavenSelectorKind Kind, string Value
         ArgumentException.ThrowIfNullOrWhiteSpace(selector);
         var separator = selector.IndexOf('.');
         if (separator <= 0 || separator == selector.Length - 1)
-            throw new FormatException("Haven selectors use Name.X, Group.X, Class.X, or Type.X.");
+            throw new FormatException("9to1 selectors use Name.X, Group.X, Class.X, or Type.X.");
         var prefix = selector[..separator];
         var value = selector[(separator + 1)..];
         if (!Enum.TryParse<HavenSelectorKind>(prefix, true, out var kind))
-            throw new FormatException($"Unknown Haven selector kind '{prefix}'.");
+            throw new FormatException($"Unknown 9to1 selector kind '{prefix}'.");
         return new HavenSelector(kind, value);
     }
 

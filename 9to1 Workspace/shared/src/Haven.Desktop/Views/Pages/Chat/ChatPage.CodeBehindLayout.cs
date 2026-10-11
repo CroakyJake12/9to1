@@ -173,7 +173,7 @@ public sealed partial class ChatPage
 
         _finalEmptyTitle = new TextBlock
         {
-            Text = "How can Haven help?",
+            Text = "How can 9to1 help?",
             FontSize = 26,
             FontWeight = FontWeight.SemiBold,
             HorizontalAlignment = HorizontalAlignment.Center,
@@ -197,7 +197,7 @@ public sealed partial class ChatPage
 
         _finalComposer = new HavenTextInput
         {
-            PlaceholderText = "Ask Haven anything",
+            PlaceholderText = "Ask 9to1 anything",
             AcceptsReturn = true,
             TextWrapping = TextWrapping.Wrap,
             FontWeight = FontWeight.Bold,

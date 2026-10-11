@@ -13,7 +13,7 @@ internal sealed partial class MeshHavenScene
     {
         var pairing = Card("Mesh.Devices.Pairing");
         pairing.Add(Heading("Pair a device", TextLevel.H2));
-        pairing.Add(Muted("Pairing is explicit and fingerprint-bound. Share the generated offer with the other Haven device, or paste an offer received from it. Trust does not automatically grant remote execution permissions."));
+        pairing.Add(Muted("Pairing is explicit and fingerprint-bound. Share the generated offer with the other 9to1 device, or paste an offer received from it. Trust does not automatically grant remote execution permissions."));
 
         var generate = Button("Mesh.Pairing.Generate", "Create pairing offer", ButtonVariant.Primary);
         generate.Invoked += async (_, _) => await RunAndRenderAsync(token => _viewModel.CreatePairingOfferAsync(token));
@@ -49,7 +49,7 @@ internal sealed partial class MeshHavenScene
         if (_viewModel.Devices.Count == 0)
         {
             var empty = Card("Mesh.Devices.Empty");
-            empty.Add(Muted("Pair another Haven device to expose presence, handoff, remote models/agents and permissioned device capabilities here."));
+            empty.Add(Muted("Pair another 9to1 device to expose presence, handoff, remote models/agents and permissioned device capabilities here."));
             parent.Add(empty);
         }
         else

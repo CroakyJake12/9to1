@@ -16,6 +16,7 @@
     <Compile Include="../Packages/BrowserWriteImageSource.cs" Link="Production/BrowserWriteImageSource.cs" />
     <Compile Include="../../BrowserSurfaceRegistry.cs" Link="Production/BrowserSurfaceRegistry.cs" />
     <Compile Include="../../BrowserActionAvailability.cs" Link="Production/BrowserActionAvailability.cs" />
+    <Compile Include="../../BrowserShellActions.cs" Link="Production/BrowserShellActions.cs" />
     <Compile Include="../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/NotesRepository.cs;../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Write/WriteNativeDocumentPackageStore.cs;../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/AppPaths.cs;../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/ProductionReliabilityServices.cs" Link="Owner/%(Filename)%(Extension)" />
     <Compile Include="../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/StartupRecoveryCoordinator.FinalClean.cs" Link="Owner/StartupRecoveryCoordinator.FinalClean.cs" />
     <Compile Include="../../../../9to1 Workspace/Home/Source/Home/Core/HomeCoreContracts.cs;../../../../9to1 Workspace/Home/Source/Home/Core/HomeFeatureContracts.cs;../../../../9to1 Workspace/Home/Source/Home/Core/HomeStateCommitActorGuard.cs;../../../../9to1 Workspace/Home/Source/Home/HomeDashboard.cs" Link="Owner/%(Filename)%(Extension)" />

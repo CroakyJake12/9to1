@@ -136,7 +136,7 @@ public sealed class LanguageServerSettingsViewModel : ObservableObject
             await _store.UpsertAsync(definition, CancellationToken.None);
             item.Definition = definition;
             item.Status = item.IsEnabled
-                ? "Saved and enabled. Haven will start this command only for matching files in a selected Studio workspace."
+                ? "Saved and enabled. 9to1 will start this command only for matching files in a selected Studio workspace."
                 : "Saved but disabled.";
             Status = $"Saved {definition.DisplayName}.";
         }

@@ -13,14 +13,14 @@ public sealed class SandboxCompatibilityMcpTools
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { WriteIndented = true };
 
     [McpServerTool(Name = "sandbox_preflight")]
-    [Description("Compatibility alias during migration from GPTRemote Sandbox. Returns Haven connector workspace and Git preflight state.")]
+    [Description("Compatibility alias during migration from GPTRemote Sandbox. Returns 9to1 connector workspace and Git preflight state.")]
     public static Task<string> Preflight(
         ConnectorWorkspaceRegistry registry,
         CancellationToken cancellationToken = default) =>
         HavenMcpTools.Preflight(registry, cancellationToken);
 
     [McpServerTool(Name = "sandbox_project_contexts")]
-    [Description("Compatibility alias during migration from GPTRemote Sandbox. Returns configured Haven workspace branch state.")]
+    [Description("Compatibility alias during migration from GPTRemote Sandbox. Returns configured 9to1 workspace branch state.")]
     public static async Task<string> ProjectContexts(
         ConnectorWorkspaceRegistry registry,
         CancellationToken cancellationToken = default) =>

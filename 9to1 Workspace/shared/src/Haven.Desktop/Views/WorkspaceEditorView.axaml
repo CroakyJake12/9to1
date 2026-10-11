@@ -155,7 +155,7 @@
             <StackPanel Spacing="7">
               <TextBlock Text="Inline project comment" Classes="sectionHeading" />
               <TextBlock Text="{Binding SelectedSnippet}" Classes="muted" FontFamily="Cascadia Code, Consolas" FontSize="10" MaxLines="4" />
-              <hui:HavenTextInput Text="{Binding CommentPrompt}" PlaceholderText="Ask Haven about this selection" AcceptsReturn="True" MinHeight="65" />
+              <hui:HavenTextInput Text="{Binding CommentPrompt}" PlaceholderText="Ask 9to1 about this selection" AcceptsReturn="True" MinHeight="65" />
               <hui:HavenButton Content="Register in chat context" Command="{Binding AddCommentCommand}" />
             </StackPanel>
           </hui:HavenAdaptiveSurface>

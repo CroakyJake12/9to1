@@ -105,7 +105,7 @@ internal sealed class AgentsHavenScene : IDisposable, IAsyncDisposable,
         RunTaskInput.SubmitOnEnter = false;
         Set(RunTaskInput, HavenProperties.MinHeight, HavenLength.Px(72));
         runtimeNotice.Add(RunTaskInput);
-        RunResourceInput = InputField("Agents.Execution.Resource", "Optional resource, file, URL, or Haven item reference");
+        RunResourceInput = InputField("Agents.Execution.Resource", "Optional resource, file, URL, or 9to1 item reference");
         runtimeNotice.Add(RunResourceInput);
         var runActions = new Container { Layout = HavenLayout.Horizontal };
         Set(runActions, HavenProperties.Gap, HavenLength.Px(8));
@@ -217,7 +217,7 @@ internal sealed class AgentsHavenScene : IDisposable, IAsyncDisposable,
 
         var builderRow = new Container { Layout = HavenLayout.Grid, Columns = "1fr Auto", Rows = "auto" };
         Set(builderRow, HavenProperties.Gap, HavenLength.Px(8));
-        BuilderPromptInput = InputField("Agents.Creator.BuilderPrompt", "Describe the assistant you want Haven to create");
+        BuilderPromptInput = InputField("Agents.Creator.BuilderPrompt", "Describe the assistant you want 9to1 to create");
         builderRow.Add(BuilderPromptInput);
         BuildWithAiButton = new HavenButton { Name = "Agents.Creator.BuildWithAi", Content = "Build with AI", Variant = ButtonVariant.Secondary };
         BuildWithAiButton.Accessibility.AccessibleName = "Draft agent instructions with AI";
@@ -242,7 +242,7 @@ internal sealed class AgentsHavenScene : IDisposable, IAsyncDisposable,
 
         CapabilitiesInput = InputField("Agents.Creator.Capabilities", "Capability keys, comma-separated (for example web-search)");
         panel.Add(CapabilitiesInput);
-        var permissionNote = new HavenText("Capability access is an allowlist. Haven's global sandbox and permission settings always remain authoritative.") { Level = TextLevel.Caption };
+        var permissionNote = new HavenText("Capability access is an allowlist. 9to1's global sandbox and permission settings always remain authoritative.") { Level = TextLevel.Caption };
         Set(permissionNote, HavenProperties.Foreground, "TextSecondary");
         panel.Add(permissionNote);
 

@@ -95,11 +95,11 @@ public static class GenUiChatDirectiveParser
     {
         var preference = mode switch
         {
-            GenerativeUiResponseMode.AlwaysVisual => "Response preference: Always Visual. When the request can be represented usefully with Haven Generative UI, render it; prefer interactive or visual UI over a text-only presentation.",
-            GenerativeUiResponseMode.PreferVisual => "Response preference: Prefer Visual. Prefer Haven Generative UI whenever it is a natural fit, falling back to text when UI would add little value.",
-            GenerativeUiResponseMode.PreferText => "Response preference: Prefer Text. Default to a text response and use Haven Generative UI autonomously only when it provides a clear usability advantage.",
-            GenerativeUiResponseMode.AlwaysText => "Response preference: Always Text. Do not invoke Haven Generative UI on your own. You may still render Haven Generative UI when the user explicitly asks for a visual, interactive, generated, or UI response.",
-            _ => "Response preference: Auto. Choose between text and Haven Generative UI based on which format best serves the request."
+            GenerativeUiResponseMode.AlwaysVisual => "Response preference: Always Visual. When the request can be represented usefully with 9to1 Generative UI, render it; prefer interactive or visual UI over a text-only presentation.",
+            GenerativeUiResponseMode.PreferVisual => "Response preference: Prefer Visual. Prefer 9to1 Generative UI whenever it is a natural fit, falling back to text when UI would add little value.",
+            GenerativeUiResponseMode.PreferText => "Response preference: Prefer Text. Default to a text response and use 9to1 Generative UI autonomously only when it provides a clear usability advantage.",
+            GenerativeUiResponseMode.AlwaysText => "Response preference: Always Text. Do not invoke 9to1 Generative UI on your own. You may still render 9to1 Generative UI when the user explicitly asks for a visual, interactive, generated, or UI response.",
+            _ => "Response preference: Auto. Choose between text and 9to1 Generative UI based on which format best serves the request."
         };
         return preference + "\n\n" + ModelInstruction;
     }

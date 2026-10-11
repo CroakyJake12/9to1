@@ -41,6 +41,7 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
     private long? _conflictRevision;
     private bool _busy, _conflict, _disposed, _sessionsChecked;
     private string _status = "Account services have not been checked.";
+    private bool _showDiagnostics;
     public event PropertyChangedEventHandler? PropertyChanged;
 
     // A browser composition root must marshal presentation changes onto its CUI UI thread.
@@ -53,6 +54,10 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
         value = path switch
         {
             "Status" => _status, "Busy" => _busy, "CanRefresh" => !_disposed && !_busy,
+            "ConnectionSummary" => _busy ? "Checking your account…" : _current is not null ? "Your 9to1 account is connected." : _openSignIn is null ? "This browser has not been connected to your 9to1 account." : "Sign in to manage your profile and sessions.",
+            "ConnectionRecovery" => _current is not null ? "Profile changes are saved to your connected account." : _openSignIn is null ? "Sign-in must be configured by this app's host. You can keep using local apps and retry the connection later." : "Use Sign in to connect, or retry if the account service could not be reached.",
+            "ShowDiagnostics" => _showDiagnostics,
+            "DiagnosticLabel" => _showDiagnostics ? "Hide technical details" : "Technical details",
             "CanSignIn" => !_disposed && !_busy && _openSignIn is not null,
             "CanEdit" => !_disposed && !_busy && _profile is not null,
             "CanSave" => !_disposed && !_busy && !_conflict && _profile is not null && _changed.Count > 0,
@@ -62,7 +67,7 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
             "AccountId" => Text(_current, "accountId"), "DisplayName" => Text(_current, "displayName"),
             "ProfileRevision" => _profile is null ? "" : _revision.ToString(),
             "Sessions" => Array.AsReadOnly(_sessions), "Confirmation" => _confirmation ?? "",
-            "SessionSummary" => !_sessionsChecked ? "Sessions have not been checked." : _sessions.Length == 0
+            "SessionSummary" => _current is null ? "Connect your account to inspect and manage its signed-in sessions." : !_sessionsChecked ? "Sessions have not been checked." : _sessions.Length == 0
                 ? "No sessions were returned for this account." : "Sessions returned by the account service.",
             "HasConfirmation" => _confirmation is not null,
             "CanConfirm" => !_disposed && !_busy && _confirmation is not null,
@@ -99,6 +104,7 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
     public bool? IsActionAvailable(string command) => !_disposed && (command switch
     {
         "Refresh" or "DiscardAndReload" => !_busy,
+        "ToggleDiagnostics" => true,
         "RequestSignIn" => !_busy && _openSignIn is not null,
         "SaveProfile" => !_busy && !_conflict && _profile is not null && _changed.Count > 0,
         "ClearIcon" or "ClearPronouns" or "ClearJob" => !_busy && _profile is not null,
@@ -161,6 +167,7 @@ public sealed class AccountBrowserBindings : ICuiWritableBindingContext, ICuiRep
         long generation, CommandBoundary boundary)
     {
         if (_disposed || generation != _generation) return;
+        if (command == "ToggleDiagnostics") { _showDiagnostics = !_showDiagnostics; Changed(); return; }
         // Confirmed session mutations and trusted sign-in clear/dispose this private view during their lifecycle.
         // They retain explicit caller cancellation; the reviewed mutation client pins the original session token.
         // View disposal still cancels reads and profile writes and never permits another command on this view.

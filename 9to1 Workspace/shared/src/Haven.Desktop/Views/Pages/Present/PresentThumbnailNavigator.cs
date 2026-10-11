@@ -232,7 +232,8 @@ internal sealed class PresentThumbnailNavigator : HavenElement, IHavenDrawComman
 
         var titleRect = new HavenRect(thumbRect.X + thumbRect.Width * .07, thumbRect.Y + thumbRect.Height * .06, thumbRect.Width * .86, thumbRect.Height * .16);
         var title = string.IsNullOrWhiteSpace(slide.Title) ? "Untitled slide" : slide.Title.Trim();
-        context.Add(new HavenTextCommand(titleRect, new HavenTextLayout(title, "Segoe UI", Math.Max(5, thumbRect.Height * .07), 700, titleRect.Width, false), new HavenTokenBrush("TextPrimary"), opacity));
+        context.Add(new HavenTextCommand(titleRect, new HavenTextLayout(title, _document?.Theme.HeadingFontFamily ?? "Segoe UI", Math.Max(5, thumbRect.Height * .07), 700, titleRect.Width, false),
+            Brush(_document?.Theme.Colors.Foreground, "#1F1F1F"), opacity));
 
         foreach (var element in slide.Elements.Where(value => value.Visible && value.Kind != PresentElementKind.Group).OrderBy(value => value.Order))
         {
@@ -245,7 +246,10 @@ internal sealed class PresentThumbnailNavigator : HavenElement, IHavenDrawComman
             {
                 case PresentElementKind.Text:
                     if (!string.IsNullOrWhiteSpace(element.Text))
-                        context.Add(new HavenTextCommand(rect, new HavenTextLayout(element.Text, "Segoe UI", Math.Max(4, thumbRect.Height * .045), element.TextStyle.Bold ? 700 : 400, rect.Width, false), new HavenTokenBrush("TextPrimary"), opacity * element.Opacity));
+                        context.Add(new HavenTextCommand(rect, new HavenTextLayout(element.Text,
+                            string.IsNullOrWhiteSpace(element.TextStyle.FontFamily) ? _document?.Theme.BodyFontFamily ?? "Segoe UI" : element.TextStyle.FontFamily,
+                            Math.Max(4, thumbRect.Height * .045), element.TextStyle.Bold ? 700 : 400, rect.Width, false),
+                            Brush(element.TextStyle.Color, _document?.Theme.Colors.Foreground ?? "#1F1F1F"), opacity * element.Opacity));
                     break;
                 case PresentElementKind.Shape:
                     context.Add(new HavenFillRoundedRectCommand(rect, new HavenTokenBrush("AccentSubtle"), Math.Min(4, rect.Height / 4), opacity * element.Opacity));

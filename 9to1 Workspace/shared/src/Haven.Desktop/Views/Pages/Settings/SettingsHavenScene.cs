@@ -16,7 +16,7 @@ internal sealed partial class SettingsHavenScene : IDisposable
 
     private static readonly SectionDefinition[] Definitions =
     [
-        new("home", "Settings", "Search Haven settings or choose a category.", ["settings", "home"]),
+        new("home", "Settings", "Search 9to1 settings or choose a category.", ["settings", "home"]),
         new("models", "AI & Models", "Local models, defaults, residency, installation and removal.", ["ai", "model", "models", "ollama", "install", "download", "residency", "effort", "fallback", "priority", "personality", "nickname", "override", "governance", "provider"]),
         new("appearance", "Personalisation", "Default tab, colour appearance and accessibility preferences.", ["personalisation", "default", "tab", "appearance", "theme", "dark", "bright", "font", "accent", "colour", "color", "avatar", "profile", "picture", "motion", "animation", "accessibility"]),
         new("apps", "Chat & Apps", "Chat behaviour, context management and app assistance preferences.", ["chat", "apps", "agentic", "confidence", "compact", "browser", "auto"]),
@@ -27,7 +27,7 @@ internal sealed partial class SettingsHavenScene : IDisposable
         new("privacy", "Privacy & Memory", "Local-data boundaries, memory and background-learning status.", ["privacy", "memory", "knowledge", "background", "learning", "data"]),
         new("advanced", "Advanced", "Generation parameters and bounded tool-action limits.", ["advanced", "temperature", "context", "action", "limit", "generation"]),
         new("updates", "Updates", "Installation source, current version, update channel and update checks.", ["updates", "upgrade", "channel", "stable", "preview", "development", "check now"]),
-        new("about", "About Haven", "Product and runtime information.", ["about", "version", "runtime", "haven"])
+        new("about", "About 9to1", "Product and runtime information.", ["about", "version", "runtime", "haven"])
     ];
 
     private static readonly string[] CatalogModels =
@@ -267,7 +267,7 @@ internal sealed partial class SettingsHavenScene : IDisposable
         ContextLimitSlider.Value = preferences.GenerationOptions.ContextLimit;
         ActionLimitSlider.Value = preferences.GenerationOptions.ActionLimit;
         VoiceProfileStatus.Content = preferences.CustomVoiceProfiles.Count == 0
-            ? "No custom voice profiles are stored. Built-in profiles remain available to Haven Voice."
+            ? "No custom voice profiles are stored. Built-in profiles remain available to 9to1 Voice."
             : $"{preferences.CustomVoiceProfiles.Count} custom voice profile{(preferences.CustomVoiceProfiles.Count == 1 ? string.Empty : "s")} stored locally.";
         UpdateAdvancedValues();
         UpdateCompactValue();
@@ -317,7 +317,7 @@ internal sealed partial class SettingsHavenScene : IDisposable
             .FirstOrDefault();
         if (match is null)
         {
-            SetStatus("No matching Haven setting was found. Try model, appearance, permissions, voice, privacy or advanced.");
+            SetStatus("No matching 9to1 setting was found. Try model, appearance, permissions, voice, privacy or advanced.");
             return false;
         }
         NavigateTo(match.Definition.Key);
@@ -421,7 +421,7 @@ internal sealed partial class SettingsHavenScene : IDisposable
     {
         var section = Section("Settings.Home");
         section.Add(Heading("Settings.Home.Heading", "Choose a category", 22));
-        section.Add(Muted("Settings.Home.Description", "Every mutable control here is backed by a real Haven service; unavailable capabilities are clearly marked informational."));
+        section.Add(Muted("Settings.Home.Description", "Every mutable control here is backed by a real 9to1 service; unavailable capabilities are clearly marked informational."));
         foreach (var definition in Definitions.Skip(1))
         {
             var card = Card($"Settings.Home.{definition.Key}");
@@ -441,7 +441,7 @@ internal sealed partial class SettingsHavenScene : IDisposable
         var section = Section("Settings.Models");
         var residency = Card("Settings.Models.Residency");
         AlwaysLoadedToggle = new Toggle { Name = "Settings.Models.AlwaysLoaded" };
-        residency.Add(SettingRow("Model residency", "Keep the configured local runtime loaded after Haven closes for faster startup at the cost of memory.", AlwaysLoadedToggle));
+        residency.Add(SettingRow("Model residency", "Keep the configured local runtime loaded after 9to1 closes for faster startup at the cost of memory.", AlwaysLoadedToggle));
         section.Add(residency);
 
         var defaults = Card("Settings.Models.Defaults");
@@ -457,7 +457,7 @@ internal sealed partial class SettingsHavenScene : IDisposable
 
         var install = Card("Settings.Models.Install");
         install.Add(Heading("Settings.Models.Install.Heading", "Install a local model", 18));
-        install.Add(Muted("Settings.Models.Install.Description", "Install an Ollama model by name, or choose a model from Haven's small supported starter catalogue."));
+        install.Add(Muted("Settings.Models.Install.Description", "Install an Ollama model by name, or choose a model from 9to1's small supported starter catalogue."));
         InstallModelInput = new Input { Name = "Settings.Models.InstallName", Placeholder = "e.g. qwen3:4b" };
         InstallModelInput.SetValue(HavenProperties.Width, HavenLength.Percent(100));
         CatalogModelSelect = NewSelect("Settings.Models.Catalog", CatalogModels);
@@ -537,17 +537,17 @@ internal sealed partial class SettingsHavenScene : IDisposable
         HavenAvatarToggle = new Toggle { Name = "Settings.Personalisation.HavenAvatar" };
         HavenAvatarChooseButton = new HavenButton { Name = "Settings.Personalisation.HavenAvatar.Choose", Content = "Choose image", Variant = ButtonVariant.Secondary };
         HavenAvatarRemoveButton = new HavenButton { Name = "Settings.Personalisation.HavenAvatar.Remove", Content = "Remove", Variant = ButtonVariant.Ghost };
-        card.Add(SettingRow("Default Tab", "Normal new tabs open the selected installed Haven app. If it is temporarily unavailable, Haven uses the standard new-tab experience without deleting this preference.", DefaultTabSelect));
-        card.Add(SettingRow("Theme", "Choose how Haven looks and reacts. Themes change visual expression only; layouts, navigation and workflows stay the same.", ThemeSelect));
-        card.Add(SettingRow("Colour appearance", "Choose one of Haven's four canonical light/dark appearances.", AppearanceSelect));
+        card.Add(SettingRow("Default Tab", "Normal new tabs open the selected installed 9to1 app. If it is temporarily unavailable, 9to1 uses the standard new-tab experience without deleting this preference.", DefaultTabSelect));
+        card.Add(SettingRow("Theme", "Choose how 9to1 looks and reacts. Themes change visual expression only; layouts, navigation and workflows stay the same.", ThemeSelect));
+        card.Add(SettingRow("Colour appearance", "Choose one of 9to1's four canonical light/dark appearances.", AppearanceSelect));
         card.Add(SettingRow("Reduce animations", "Reduces decorative and transition motion throughout Haven.", ReduceMotionToggle));
         card.Add(SettingRow("Override accent colour", "Replace each app's own accent with one global colour family from the palette below.", AccentOverrideToggle));
         card.Add(AccentSwatches);
         card.Add(AccentSelectionText);
-        card.Add(SettingRow("Font", "Applies the selected installed font across every theme. Montserrat is Haven's bundled default and final fallback.", FontSelect));
+        card.Add(SettingRow("Font", "Applies the selected installed font across every theme. Montserrat is 9to1's bundled default and final fallback.", FontSelect));
         card.Add(SettingRow("User profile picture", "Show your own picture beside your chat messages. Images are processed and stored locally only.", UserAvatarToggle));
         card.Add(AvatarActionRow("Settings.Personalisation.UserAvatar.Actions", UserAvatarChooseButton, UserAvatarRemoveButton));
-        card.Add(SettingRow("Haven profile picture", "Show a separate Haven picture beside Haven chat messages. Works independently from your own picture.", HavenAvatarToggle));
+        card.Add(SettingRow("9to1 profile picture", "Show a separate 9to1 picture beside 9to1 chat messages. Works independently from your own picture.", HavenAvatarToggle));
         card.Add(AvatarActionRow("Settings.Personalisation.HavenAvatar.Actions", HavenAvatarChooseButton, HavenAvatarRemoveButton));
         section.Add(card);
         return section;
@@ -591,16 +591,16 @@ internal sealed partial class SettingsHavenScene : IDisposable
         AdaptiveHelpToggle = NewToggle("Settings.Apps.AdaptiveHelp");
         BrowserSideToggle = NewToggle("Settings.Apps.BrowserSide");
         AutoWakeToggle = NewToggle("Settings.Apps.AutoWake");
-        card.Add(SettingRow("Compatible-model switching", "Allow Haven to switch to a compatible model when a selected model cannot perform a requested capability.", AutoSwitchToggle));
-        card.Add(SettingRow("Agentic capabilities in Chat", "Expose action-capable features in normal Haven Chat.", AgenticInChatToggle));
+        card.Add(SettingRow("Compatible-model switching", "Allow 9to1 to switch to a compatible model when a selected model cannot perform a requested capability.", AutoSwitchToggle));
+        card.Add(SettingRow("Agentic capabilities in Chat", "Expose action-capable features in normal 9to1 Chat.", AgenticInChatToggle));
         card.Add(SettingRow("Confidence indicators", "Show confidence indicators where the product supports them.", ConfidenceToggle));
         card.Add(SettingRow("Automatic context compaction", "Compact conversation context automatically near the configured threshold.", AutoCompactToggle));
         CompactPercentSlider = new Slider { Name = "Settings.Apps.CompactPercent", Minimum = 50, Maximum = 95, Step = 1 };
         CompactPercentValue = Muted("Settings.Apps.CompactPercentValue", string.Empty);
         card.Add(CompactPercentValue);
         card.Add(CompactPercentSlider);
-        card.Add(SettingRow("Adaptive project help", "Allow Haven to adapt assistance to the active project context.", AdaptiveHelpToggle));
-        card.Add(SettingRow("Browser side assistant", "Enable Haven's browser-side assistance preference.", BrowserSideToggle));
+        card.Add(SettingRow("Adaptive project help", "Allow 9to1 to adapt assistance to the active project context.", AdaptiveHelpToggle));
+        card.Add(SettingRow("Browser side assistant", "Enable 9to1's browser-side assistance preference.", BrowserSideToggle));
         card.Add(SettingRow("Wake Ollama automatically", "Start the local runtime when a local-model request finds it offline.", AutoWakeToggle));
         SaveFeaturesButton = new HavenButton { Name = "Settings.Apps.Save", Content = "Save Chat & Apps settings", Variant = ButtonVariant.Primary };
         card.Add(SaveFeaturesButton);
@@ -617,9 +617,9 @@ internal sealed partial class SettingsHavenScene : IDisposable
         CommandPermissionSelect = NewSelect("Settings.Permissions.Commands", names);
         BrowserPermissionSelect = NewSelect("Settings.Permissions.Browser", names);
         ComputerPermissionSelect = NewSelect("Settings.Permissions.Computer", names);
-        card.Add(SettingRow("Files", "Controls whether Haven may read or change local files requested by tools. Ask requires approval, Deny blocks access, and Allow permits it within the configured scope.", FilePermissionSelect));
+        card.Add(SettingRow("Files", "Controls whether 9to1 may read or change local files requested by tools. Ask requires approval, Deny blocks access, and Allow permits it within the configured scope.", FilePermissionSelect));
         card.Add(SettingRow("Commands", "Controls local command execution. Commands may start processes, change files or use the network depending on the command; Ask requires approval before execution.", CommandPermissionSelect));
-        card.Add(SettingRow("Browser", "Controls browser actions that can read the current page and perform navigation or form actions. Use Ask when you want approval before Haven acts.", BrowserPermissionSelect));
+        card.Add(SettingRow("Browser", "Controls browser actions that can read the current page and perform navigation or form actions. Use Ask when you want approval before 9to1 acts.", BrowserPermissionSelect));
         card.Add(SettingRow("Device use", "Controls supported device-control actions such as clicking, typing or changing device state. Ask requires approval before the action.", ComputerPermissionSelect));
         SavePermissionsButton = new HavenButton { Name = "Settings.Permissions.Save", Content = "Save permission defaults", Variant = ButtonVariant.Primary };
         card.Add(SavePermissionsButton);
@@ -634,7 +634,7 @@ internal sealed partial class SettingsHavenScene : IDisposable
         var section = Section("Settings.Extensions");
         var source = Card("Settings.Extensions.Sources");
         source.Add(Heading("Settings.Extensions.Sources.Heading", "Sources / Repositories", 18));
-        source.Add(Muted("Settings.Extensions.Sources.Description", "A GitHub repository may publish multiple Plugins, multiple Skills, or combined bundles. Private sources use an existing connected-account reference; Haven never requests a GitHub password."));
+        source.Add(Muted("Settings.Extensions.Sources.Description", "A GitHub repository may publish multiple Plugins, multiple Skills, or combined bundles. Private sources use an existing connected-account reference; 9to1 never requests a GitHub password."));
         ExtensionSourceNameInput = new Input { Name = "Settings.Extensions.SourceName", Placeholder = "Source name" };
         ExtensionSourceUriInput = new Input { Name = "Settings.Extensions.SourceUri", Placeholder = "https://github.com/owner/repository" };
         ExtensionPrivateToggle = new Toggle { Name = "Settings.Extensions.Private" };
@@ -647,7 +647,7 @@ internal sealed partial class SettingsHavenScene : IDisposable
         ExtensionRemoveSourceButton = new HavenButton { Name = "Settings.Extensions.RemoveSource", Content = "Remove selected source", Variant = ButtonVariant.Danger };
         source.Add(ExtensionSourceNameInput);
         source.Add(ExtensionSourceUriInput);
-        source.Add(SettingRow("Private repository", "Requires an authorised connected GitHub account reference. Authentication stays in Haven's credential infrastructure.", ExtensionPrivateToggle));
+        source.Add(SettingRow("Private repository", "Requires an authorised connected GitHub account reference. Authentication stays in 9to1's credential infrastructure.", ExtensionPrivateToggle));
         source.Add(ExtensionConnectedAccountInput);
         source.Add(SettingRow("Update mode", "Manual, Notify, or Automatic. Permission expansion always requires a separate review.", ExtensionUpdateModeSelect));
         source.Add(ExtensionAddSourceButton);
@@ -718,14 +718,14 @@ internal sealed partial class SettingsHavenScene : IDisposable
 
         var local = Card("Settings.Privacy.Local");
         local.Add(Heading("Settings.Privacy.LocalHeading", "Local preferences", 18));
-        local.Add(Muted("Settings.Privacy.LocalDescription", "These privacy choices are persisted in the configured local application-data directory and enforced by Haven services."));
+        local.Add(Muted("Settings.Privacy.LocalDescription", "These privacy choices are persisted in the configured local application-data directory and enforced by 9to1 services."));
         LocalOnlyToggle = NewToggle("Settings.Privacy.LocalOnly");
         local.Add(SettingRow("Local-only mode", "Restrict model discovery and generation to local providers. Cloud providers remain configured but are not used while this is on.", LocalOnlyToggle));
         section.Add(local);
 
         var learning = Card("Settings.Privacy.BackgroundLearning");
         learning.Add(Heading("Settings.Privacy.BackgroundHeading", "Background Learning", 18));
-        learning.Add(Muted("Settings.Privacy.BackgroundDescription", "Control what Haven may learn in the background. Running work is resource-gated and reports real task states rather than simulated progress."));
+        learning.Add(Muted("Settings.Privacy.BackgroundDescription", "Control what 9to1 may learn in the background. Running work is resource-gated and reports real task states rather than simulated progress."));
         BackgroundLearningToggle = NewToggle("Settings.Privacy.BackgroundLearning.Enabled");
         learning.Add(SettingRow("Background Learning", "Turn all background learning on or off.", BackgroundLearningToggle));
         BackgroundModeSelect = NewSelect("Settings.Privacy.BackgroundLearning.Mode", Enum.GetNames<BackgroundLearningMode>());
@@ -771,7 +771,7 @@ internal sealed partial class SettingsHavenScene : IDisposable
 
         var learnMe = Card("Settings.Privacy.LearnMe");
         learnMe.Add(Heading("Settings.Privacy.LearnMeHeading", "Learn Me", 18));
-        learnMe.Add(Muted("Settings.Privacy.LearnMeDescription", "Inspect what Haven believes about you, including why it learned it, confidence, freshness and provenance. Corrections become explicit user-authoritative records."));
+        learnMe.Add(Muted("Settings.Privacy.LearnMeDescription", "Inspect what 9to1 believes about you, including why it learned it, confidence, freshness and provenance. Corrections become explicit user-authoritative records."));
         LearnMeSelect = NewSelect("Settings.Privacy.LearnMe.Item", []);
         LearnMeDetails = Muted("Settings.Privacy.LearnMe.Details", "No Learn Me records stored.");
         LearnMeCorrectionInput = new Input { Name = "Settings.Privacy.LearnMe.Correction", Placeholder = "Enter the corrected information" };
@@ -825,7 +825,7 @@ internal sealed partial class SettingsHavenScene : IDisposable
     {
         if (record is null) { LearnMeDetails.Content = "No Learn Me records stored."; return; }
         var provenance = record.Sources.Count == 0 ? "No source metadata" : string.Join("; ", record.Sources.Select(source => $"{source.Title} ({source.SourceType}){(string.IsNullOrWhiteSpace(source.Url) ? string.Empty : $" — {source.Url}")}"));
-        LearnMeDetails.Content = $"{record.Summary}\nOrigin: {record.Origin} · Confidence: {record.Confidence:P0} · Freshness: {record.Freshness} · Status: {record.Status} · Scope: {record.Scope} · Pinned: {record.IsPinned}\nLast confirmed: {(record.LastConfirmedAt?.LocalDateTime.ToString("g") ?? "not confirmed")} · Updated: {record.UpdatedAt.LocalDateTime:g}\nWhy Haven learned this: {record.LearnedBecause}\nProvenance: {provenance}";
+        LearnMeDetails.Content = $"{record.Summary}\nOrigin: {record.Origin} · Confidence: {record.Confidence:P0} · Freshness: {record.Freshness} · Status: {record.Status} · Scope: {record.Scope} · Pinned: {record.IsPinned}\nLast confirmed: {(record.LastConfirmedAt?.LocalDateTime.ToString("g") ?? "not confirmed")} · Updated: {record.UpdatedAt.LocalDateTime:g}\nWhy 9to1 learned this: {record.LearnedBecause}\nProvenance: {provenance}";
     }
 
     public void ShowApi(ApiBankRecord? record)
@@ -873,7 +873,7 @@ internal sealed partial class SettingsHavenScene : IDisposable
     {
         var section = Section("Settings.About");
         var card = Card("Settings.About.Card");
-        card.Add(Heading("Settings.About.Heading", "Haven Settings", 18));
+        card.Add(Heading("Settings.About.Heading", "9to1 Settings", 18));
         card.Add(Muted("Settings.About.Description", "This production Settings surface is rendered through Haven.UI. Mutable controls are limited to capabilities backed by current services and persistence."));
         section.Add(card);
         return section;

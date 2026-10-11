@@ -34,7 +34,7 @@ public sealed class NativePlanPage : UserControl, IActivatablePage, IDisposable
         _countdownService = new PlannerCountdownService(_planner);
         _scene = new PlanHavenScene();
         AutomationProperties.SetAutomationId(this, "HavenNativePlanPage");
-        AutomationProperties.SetName(this, "Haven-native Plan");
+        AutomationProperties.SetName(this, "9to1-native Plan");
         Scene = new HavenSceneControl { Root = _scene.Root };
         AutomationProperties.SetAutomationId(Scene, "HavenNativePlanScene");
         AutomationProperties.SetName(Scene, "Plan Today");

@@ -19,7 +19,7 @@ public sealed partial class MainView
         }
 
         var services = global::Haven.Desktop.App.Services
-            ?? throw new InvalidOperationException("Haven services are unavailable while opening Mesh.");
+            ?? throw new InvalidOperationException("9to1 services are unavailable while opening Mesh.");
         var page = new MeshPage(new MeshPageViewModel(services.GetRequiredService<MeshCoordinator>()));
         AddOrSelectTab(key, "Mesh", page, closeable: true, surface: HavenSurface.Mesh);
     }

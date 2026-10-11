@@ -13,7 +13,7 @@ public sealed record ComputerUseApplicationIdentity(
 /// <summary>Product-level Computer Use classification. Official APIs such as MCP do not pass through this policy.</summary>
 public static class ComputerUseApplicationPolicy
 {
-    public const string BlockedMessage = "Blocked by Haven game interaction policy";
+    public const string BlockedMessage = "Blocked by 9to1 game interaction policy";
 
     public static ComputerUseApplicationClass Classify(ComputerUseApplicationIdentity identity)
     {

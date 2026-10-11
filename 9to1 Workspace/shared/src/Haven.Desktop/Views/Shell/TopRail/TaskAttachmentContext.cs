@@ -147,7 +147,7 @@ public sealed class TaskAttachmentContext
             "\n\n",
             _apps.Select(app =>
             {
-                var context = $"Attached Haven app: {app.Name} ({app.Key}).\nPurpose: {app.Description}";
+                var context = $"Attached 9to1 app: {app.Name} ({app.Key}).\nPurpose: {app.Description}";
                 if (!string.IsNullOrWhiteSpace(app.SystemPromptSuffix))
                     context += "\nApp instructions: " + app.SystemPromptSuffix.Trim();
                 return context;

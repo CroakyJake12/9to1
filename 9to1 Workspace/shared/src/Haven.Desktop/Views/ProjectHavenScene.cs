@@ -126,7 +126,7 @@ internal sealed partial class ProjectHavenScene : IDisposable
 
         var editorLanding = Card("Project.Editor.Landing");
         editorLanding.Add(Label("Project.Editor.Landing.Title", "Editor workspace", TextLevel.H2));
-        editorLanding.Add(Muted("Project.Editor.Landing.Help", "Choose a repository file in Explorer to open it with Haven's save, diff and history tools."));
+        editorLanding.Add(Muted("Project.Editor.Landing.Help", "Choose a repository file in Explorer to open it with 9to1's save, diff and history tools."));
         var openEditor = Ghost("Project.Editor.Open", "Open project editor", "edit");
         editorLanding.Add(openEditor);
         editorBody.Add(editorLanding);
@@ -150,7 +150,7 @@ internal sealed partial class ProjectHavenScene : IDisposable
         Composer.SetValue(HavenProperties.Row, 2);
         AssistantPanel.Add(Composer);
         ComposerInput = Composer.GetComponent<Input>("Instruction");
-        ComposerInput.Placeholder = "Ask Haven about this project";
+        ComposerInput.Placeholder = "Ask 9to1 about this project";
         ComposerInput.Multiline = true;
         ComposerInput.SubmitOnEnter = true;
         ContextButton = Composer.GetComponent<HavenButton>("AddMenu");
@@ -192,7 +192,7 @@ internal sealed partial class ProjectHavenScene : IDisposable
         var intelligenceActions = Wrap("Project.Intelligence.Actions", 6);
         intelligenceActions.SetValue(HavenProperties.Column, 2); intelligenceActions.SetValue(HavenProperties.Row, 1);
         intelligenceActions.Add(Ghost("Project.Intelligence.ForecastRisk", "Forecast risk", "shield-check"));
-        intelligenceActions.Add(Ghost("Project.Intelligence.AskError", "Ask Haven about error", "sparkles"));
+        intelligenceActions.Add(Ghost("Project.Intelligence.AskError", "Ask 9to1 about error", "sparkles"));
         intelligence.Add(intelligenceActions);
         ToolDock.Add(intelligence);
 

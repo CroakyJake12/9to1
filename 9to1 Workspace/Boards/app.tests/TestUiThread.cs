@@ -24,7 +24,7 @@ internal static class TestUiThread
             if (_thread is null)
             {
                 _thread = new Thread(RunLoop) { IsBackground = true, Name = "BoardsTestUi" };
-                _thread.SetApartmentState(ApartmentState.STA);
+                if (OperatingSystem.IsWindows()) _thread.SetApartmentState(ApartmentState.STA);
                 _thread.Start();
             }
         }
@@ -38,9 +38,9 @@ internal static class TestUiThread
     {
         try
         {
-            AppBuilder.Configure<Application>()
+            CakeOS.Cui.Runtime.CuiNativeHost.ConfigureFonts(AppBuilder.Configure<Application>()
                 .UseHeadless(new AvaloniaHeadlessPlatformOptions())
-                .UseSkia()
+                .UseSkia())
                 .SetupWithoutStarting();
         }
         catch (InvalidOperationException)

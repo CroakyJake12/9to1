@@ -68,7 +68,7 @@ public sealed partial class WorkspaceEditorPage : UserControl, INotifyPropertyCh
         RollforwardCommand = new AsyncRelayCommand(RollforwardAsync, () => !string.IsNullOrEmpty(_rollforwardContent));
         BranchAfterRollbackCommand = new AsyncRelayCommand(BranchAfterRollbackAsync, () => RequiresBranchAfterRollback);
         AddCommentCommand = new AsyncRelayCommand(AddCommentAsync, () => !string.IsNullOrWhiteSpace(CommentPrompt));
-        InterruptCommand = new RelayCommand(() => { _interrupt(); Status = "Asked Haven to stop after the current safe boundary."; });
+        InterruptCommand = new RelayCommand(() => { _interrupt(); Status = "Asked 9to1 to stop after the current safe boundary."; });
         ReloadCommand = new AsyncRelayCommand(LoadAsync);
         ToggleDiffCommand = new RelayCommand(ToggleDiff);
 
@@ -244,11 +244,11 @@ public sealed partial class WorkspaceEditorPage : UserControl, INotifyPropertyCh
             {
                 var disk = await _tools.ReadTextAsync(_file.Root, _file.RelativePath, CancellationToken.None);
                 if (string.Equals(disk, _savedContent, StringComparison.Ordinal)) return;
-                if (IsDirty) { Status = "Haven or another editor changed this file while you have unsaved text. Save elsewhere or reload after reviewing."; return; }
+                if (IsDirty) { Status = "9to1 or another editor changed this file while you have unsaved text. Save elsewhere or reload after reviewing."; return; }
                 _savedContent = disk;
                 Content = disk;
                 Changelog.Insert(0, $"{DateTimeOffset.Now:t} · Live external/AI edit observed");
-                Status = "Live edit received from Haven or an external editor.";
+                Status = "Live edit received from 9to1 or an external editor.";
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
         });

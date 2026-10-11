@@ -33,7 +33,7 @@ public sealed partial class MainView
 
         AddOrSelectTab(
             key,
-            "Haven Tasks",
+            "9to1 Tasks",
             page,
             closeable: true,
             surface: HavenSurface.Tasks);

@@ -33,7 +33,7 @@ public sealed partial class ChatGroupView : UserControl
             AllowMultiple = true,
             FileTypeFilter =
             [
-                new FilePickerFileType("Haven references")
+                new FilePickerFileType("9to1 references")
                 {
                     Patterns = ["*.txt", "*.md", "*.json", "*.csv", "*.tsv", "*.pdf", "*.docx", "*.png", "*.jpg", "*.jpeg", "*.webp", "*.gif", "*.bmp", "*.cs", "*.axaml", "*.js", "*.ts", "*.py", "*.html", "*.css", "*.sql", "*.yaml", "*.yml"]
                 }

@@ -1,6 +1,6 @@
-# Haven Write LibreOffice engine boundary
+# 9to1 Write LibreOffice engine boundary
 
-Status: **experimental implementation slice; portable Linux runtime-proven, but not runtime-proven on the approved CakeOS VM**.
+Status: **experimental implementation slice; portable Linux runtime-proven, but not runtime-proven on the approved 9to1OS VM**.
 
 Haven Write keeps HUI as the complete visible application. LibreOffice is treated as an optional Linux document engine behind the platform-neutral `IWriteDocumentEngine` contract in `src/Haven.Application/Write/IWriteDocumentEngine.cs`.
 
@@ -11,7 +11,7 @@ HUI Write scene
 IWriteDocumentEngine
     |
     v
-Linux Haven Write helper (planned process boundary)
+Linux 9to1 Write helper (planned process boundary)
     |
     v
 LibreOfficeKit
@@ -112,7 +112,7 @@ Build-host evidence on Ubuntu 24.04 includes:
 - independent ODT inspection resolved the semantic proof marker to bold style `P1`;
 - both jobs in run `34158386834` completed successfully.
 
-This is **portable Linux runtime proof**, not CakeOS image/VM acceptance proof.
+This is **portable Linux runtime proof**, not 9to1OS image/VM acceptance proof.
 
 ## Runtime-only packaging proof
 
@@ -155,7 +155,7 @@ The next **acceptance blocker** remains direct execution of the same native/runt
 
 Within the isolated draft scope, callback-driven semantic completion is no longer the technical blocker. The next smallest **technical blocker** is the real helper-process boundary: turn the proven single-threaded LibreOfficeKit loop into a disposable `haven-write-engine` process with a narrow local IPC protocol, command allow-listing, explicit request/completion correlation, isolated profile ownership, deterministic shutdown, and crash containment. That slice should remain independent of the production Write route and HUI wiring until the approved CakeOS VM acceptance gate passes.
 
-After helper/IPC viability, remaining gates include sandbox/network denial, lifecycle supervision/restart behaviour, the first HUI viewport, complete HUI accessibility exposure, and explicit migration of existing Haven Write documents.
+After helper/IPC viability, remaining gates include sandbox/network denial, lifecycle supervision/restart behaviour, the first HUI viewport, complete HUI accessibility exposure, and explicit migration of existing 9to1 Write documents.
 
 ## Evidence state
 
@@ -185,11 +185,11 @@ As of 2026-09-07:
 | Bold asynchronous command completion | **Runtime-proven via `LOK_CALLBACK_UNO_COMMAND_RESULT`** |
 | Bold state callback | **Runtime-proven — `Bold=true` observed** |
 | Bold-format persistence | **Runtime-proven by independent ODT style resolution (`P1`)** |
-| Approved CakeOS VM package/runtime proof | **Unvalidated — next acceptance blocker; authorization required** |
+| Approved 9to1OS VM package/runtime proof | **Unvalidated — next acceptance blocker; authorization required** |
 | Production helper process/local IPC/sandbox | **Not implemented — next isolated technical blocker** |
-| HUI document viewport integration | **Deferred until CakeOS VM gate passes** |
+| HUI document viewport integration | **Deferred until 9to1OS VM gate passes** |
 | Complete HUI accessibility bridge | **Deferred; release gate** |
-| Existing Haven Write document migration | **Not implemented** |
+| Existing 9to1 Write document migration | **Not implemented** |
 | Production Write route switched to LibreOffice | **No** |
 
-Do not promote this engine to the production Write route until the same native/runtime slice is directly proven on the approved CakeOS/Ubuntu VM and the helper-process security boundary is implemented. GitHub-hosted runner evidence is deliberately not a substitute for CakeOS VM/image acceptance.
+Do not promote this engine to the production Write route until the same native/runtime slice is directly proven on the approved CakeOS/Ubuntu VM and the helper-process security boundary is implemented. GitHub-hosted runner evidence is deliberately not a substitute for 9to1OS VM/image acceptance.

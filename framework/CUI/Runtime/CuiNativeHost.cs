@@ -3,7 +3,6 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Themes;
-using Avalonia.Themes.Fluent;
 using Avalonia.Media;
 
 namespace CakeOS.Cui.Runtime;
@@ -40,11 +39,11 @@ public static class CuiNativeHost
     public static void InitialisePrimitiveTheme(Application application, string surface = "Home", CuiAppearance? appearance = null)
     {
         ArgumentNullException.ThrowIfNull(application);
-        application.Styles.Add(new FluentTheme());
         var effective = appearance ?? CuiThemeScopeApplier.DetectAppearance();
         application.RequestedThemeVariant = CuiSceneVisualResources.Variant(effective);
         var paletteResources = CuiSceneVisualResources.Create(surface, effective);
         application.Resources.MergedDictionaries.Add(paletteResources);
+        application.Styles.Add(new CuiComponentStyles());
     }
 
     private sealed class NativeApplication(CuiNativeScene scene) : Application
@@ -57,6 +56,11 @@ public static class CuiNativeHost
             {
                 var host = new CuiSceneHost(scene.ControlRegistry);
                 var window = new Window { Title = scene.Title, Width = 1100, Height = 760, Content = host, Background = (Avalonia.Media.IBrush?)Resources["CuiBackgroundBrush"] };
+                if (CuiSurfacePaletteCatalog.ActiveTheme == CuiTheme.Professional && OperatingSystem.IsWindows())
+                {
+                    window.TransparencyLevelHint = [WindowTransparencyLevel.Mica, WindowTransparencyLevel.None];
+                    window.Background = Brushes.Transparent;
+                }
                 window.Closed += (_, _) => { _shutdown.Cancel(); host.Dispose(); };
                 desktop.MainWindow = window;
                 _ = InitialiseAsync(host);
@@ -70,7 +74,7 @@ public static class CuiNativeHost
             status.Set("StartupStatus", "Checking required Home services and authentication…");
             var loading = scene with
             {
-                Document = new CuiRichParser().Parse("<Cui><StackPanel><TextBlock text=\"{Binding StartupStatus}\" accessible-name=\"Application startup status\" /></StackPanel></Cui>"),
+                Document = new CuiRichParser().Parse("<Page><Container Type=\"Vertical Stack\"><Text Text=\"{Binding StartupStatus}\" AccessibleName=\"Application startup status\" /></Container></Page>"),
                 Bindings = status, Actions = status,
                 Readiness = new ImmediateReadiness(new(CuiSceneAvailabilityState.Ready, "host-starting", "Checking required services"))
             };

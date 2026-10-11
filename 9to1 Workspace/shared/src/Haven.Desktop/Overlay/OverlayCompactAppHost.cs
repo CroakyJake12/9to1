@@ -14,7 +14,7 @@ internal sealed record OverlayCompactAppRoute(
     public bool IsHome => Key.Equals("home", StringComparison.OrdinalIgnoreCase);
 
     public static OverlayCompactAppRoute Home { get; } =
-        new("home", "Overlay home", "Ask Haven about your Screen");
+        new("home", "Overlay home", "Ask 9to1 about your Screen");
 }
 
 internal sealed class OverlayCompactAppHost

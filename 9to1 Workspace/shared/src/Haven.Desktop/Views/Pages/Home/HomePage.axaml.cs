@@ -548,7 +548,7 @@ public sealed partial class HomePage : UserControl
         {
             new DelegateTileProvider(new("new-chat", "New chat", "Start a conversation", "chat", "action", "new-chat", DefaultOrder: 0),
                 _ => Task.FromResult(new DashboardTileData("Start", "Saved locally"))),
-            new DelegateTileProvider(new("call", "Call", "Voice call with Haven", "call", "calls", "call", DefaultOrder: 1),
+            new DelegateTileProvider(new("call", "Call", "Voice call with 9to1", "call", "calls", "call", DefaultOrder: 1),
                 s => Task.FromResult(new DashboardTileData(s.CallsThisWeek.ToString(), $"{(int)s.CallDurationThisWeek.TotalMinutes} minutes"))),
             new DelegateTileProvider(new("plan", "Plan", "Tasks and schedule", "calendar", "plan", "plan", DefaultOrder: 2),
                 s => Task.FromResult(new DashboardTileData(s.TasksDueToday.ToString(), s.OverdueTasks > 0 ? $"{s.OverdueTasks} overdue" : "Due today"))),

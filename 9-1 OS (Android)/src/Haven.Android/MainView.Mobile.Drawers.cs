@@ -71,7 +71,7 @@ public sealed partial class MainView
             return;
 
         _mobileDrawerContent.Children.Clear();
-        AddDrawerHeading(_mobileDrawerContent, "Haven apps");
+        AddDrawerHeading(_mobileDrawerContent, "9to1 apps");
 
         var modes = await _modeRegistry.GetModesAsync(CancellationToken.None);
         foreach (var mode in modes.OrderBy(item => DisplayObject(item), StringComparer.CurrentCultureIgnoreCase))
@@ -79,7 +79,7 @@ public sealed partial class MainView
             var selected = mode;
             var button = MobileListButton(
                 DisplayObject(mode),
-                "Haven app",
+                "9to1 app",
                 string.IsNullOrWhiteSpace(mode.Key) ? "apps" : mode.Key);
             button.Click += async (_, _) =>
             {
@@ -149,7 +149,7 @@ public sealed partial class MainView
         AddDrawerHeading(_mobileDrawerContent, "Connect an app");
         _mobileDrawerContent.Children.Add(new TextBlock
         {
-            Text = "Selecting an app adds it to chat context. Haven will use supported Android APIs or documented web APIs and will not simply launch the app.",
+            Text = "Selecting an app adds it to chat context. 9to1 will use supported Android APIs or documented web APIs and will not simply launch the app.",
             TextWrapping = Avalonia.Media.TextWrapping.Wrap,
             Foreground = ResourceBrush("HavenTextSoftBrush"),
             Margin = new Thickness(4, 0, 4, 8)
@@ -210,7 +210,7 @@ public sealed partial class MainView
         _mobileDrawerContent.Children.Clear();
         AddDrawerHeading(_mobileDrawerContent, "You");
 
-        var search = MobileListButton("Search Haven", "Apps, chats, tasks, tabs and actions", "search");
+        var search = MobileListButton("Search 9to1", "Apps, chats, tasks, tabs and actions", "search");
         search.Click += (_, _) =>
         {
             CloseMobileDrawer();

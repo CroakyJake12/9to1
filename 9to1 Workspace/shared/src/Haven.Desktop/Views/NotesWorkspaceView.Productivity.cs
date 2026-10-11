@@ -951,9 +951,9 @@ public sealed partial class NotesWorkspaceView
         if (storage is null) return;
         var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = "Save editable Haven Notes copy",
+            Title = "Save editable 9to1 Notes copy",
             SuggestedFileName = SafeFileName(_page.Document.Title) + " copy.haven-notes.json",
-            FileTypeChoices = [new FilePickerFileType("Haven Notes") { Patterns = ["*.haven-notes.json"] }]
+            FileTypeChoices = [new FilePickerFileType("9to1 Notes") { Patterns = ["*.haven-notes.json"] }]
         });
         var path = file?.TryGetLocalPath();
         if (string.IsNullOrWhiteSpace(path)) return;
@@ -970,9 +970,9 @@ public sealed partial class NotesWorkspaceView
         if (storage is null) return;
         var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = "Export Haven Notes styles",
+            Title = "Export 9to1 Notes styles",
             SuggestedFileName = SafeFileName(document.Title) + ".haven-styles.json",
-            FileTypeChoices = [new FilePickerFileType("Haven Notes style set") { Patterns = ["*.haven-styles.json", "*.json"] }]
+            FileTypeChoices = [new FilePickerFileType("9to1 Notes style set") { Patterns = ["*.haven-styles.json", "*.json"] }]
         });
         var path = file?.TryGetLocalPath();
         if (string.IsNullOrWhiteSpace(path)) return;
@@ -989,9 +989,9 @@ public sealed partial class NotesWorkspaceView
         if (storage is null) return;
         var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Import Haven Notes styles",
+            Title = "Import 9to1 Notes styles",
             AllowMultiple = false,
-            FileTypeFilter = [new FilePickerFileType("Haven Notes style set") { Patterns = ["*.haven-styles.json", "*.json"] }]
+            FileTypeFilter = [new FilePickerFileType("9to1 Notes style set") { Patterns = ["*.haven-styles.json", "*.json"] }]
         });
         var path = files.FirstOrDefault()?.TryGetLocalPath();
         if (string.IsNullOrWhiteSpace(path)) return;

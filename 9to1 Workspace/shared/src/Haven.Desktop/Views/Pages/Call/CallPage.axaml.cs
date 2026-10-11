@@ -210,7 +210,7 @@ public sealed partial class CallPage : UserControl
                 ? "Local microphone transcription ready"
                 : _coordinator.Capabilities.SpeechInputUnavailableReason ?? "Unavailable";
             SpeechOutputStatus.Text = _coordinator.Capabilities.HasSpeechOutput
-                ? "Haven Neural and Windows voicebanks ready"
+                ? "9to1 Neural and Windows voicebanks ready"
                 : _coordinator.Capabilities.SpeechOutputUnavailableReason ?? "Unavailable";
             ScreenShareStatus.Text = _coordinator.Capabilities.CanShareScreen
                 ? "Windows screen picker ready"
@@ -552,7 +552,7 @@ public sealed partial class CallPage : UserControl
         {
             var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                Title = "Export Haven Call transcript",
+                Title = "Export 9to1 Call transcript",
                 SuggestedFileName = $"haven-call-{DateTime.Now:yyyy-MM-dd-HHmm}.md",
                 FileTypeChoices =
                 [
@@ -711,7 +711,7 @@ public sealed partial class CallPage : UserControl
     {
         VoiceDescription.Text = _selectedVoice?.Id.StartsWith("kokoro:", StringComparison.OrdinalIgnoreCase) == true
             ? "Neural, expressive and fully local. The compact voice model downloads once on first preview."
-            : "Windows system voice. Instant and offline, but less conversational than Haven Neural.";
+            : "Windows system voice. Instant and offline, but less conversational than 9to1 Neural.";
     }
 
     private void UpdateWaveform(double level)

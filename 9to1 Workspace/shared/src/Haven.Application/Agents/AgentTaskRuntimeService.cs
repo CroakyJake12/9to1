@@ -277,7 +277,7 @@ public sealed partial class AgentTaskRuntimeService(
             {
                 Status = AgentRunStatus.Failed,
                 Error = run.CanonicalTask is null
-                    ? "Interrupted because Haven stopped before this Agent run completed. Explicit new work is available; historical recovery is not implemented."
+                    ? "Interrupted because 9to1 stopped before this Agent run completed. Explicit new work is available; historical recovery is not implemented."
                     : "Interrupted while the SAME canonical task remains preserved. Original recovery custody is unavailable; automatic fresh-task retry is refused.",
                 CompletedAt = DateTimeOffset.UtcNow
             };
@@ -389,7 +389,7 @@ public sealed partial class AgentTaskRuntimeService(
     private static string BuildExecutionTask(AgentRun run)
     {
         if (string.IsNullOrWhiteSpace(run.ResourceReference)) return run.Task;
-        return run.Task + Environment.NewLine + Environment.NewLine + "Resource reference: " + run.ResourceReference + Environment.NewLine + "Use semantic Haven operations when a compatible capability is available; do not simulate mouse/keyboard interaction for Haven-owned app data.";
+        return run.Task + Environment.NewLine + Environment.NewLine + "Resource reference: " + run.ResourceReference + Environment.NewLine + "Use semantic 9to1 operations when a compatible capability is available; do not simulate mouse/keyboard interaction for 9to1-owned app data.";
     }
 
     private static string BuildExecutionInstructions(string instructions, AgentExecutionPolicy policy)

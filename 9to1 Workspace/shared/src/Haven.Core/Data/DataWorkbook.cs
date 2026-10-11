@@ -23,7 +23,7 @@ public static class DataSqlSafety
         if (first == "WITH") return new(DataSqlRisk.Unknown, false, "Common-table expressions are not executed by the first Data slice because WITH can prefix mutating statements.");
         if (DestructiveTokens.Contains(first, StringComparer.OrdinalIgnoreCase)) return new(DataSqlRisk.Destructive, false, $"{first} can remove or materially alter data. Review it before any future execution.");
         if (MutatingTokens.Contains(first, StringComparer.OrdinalIgnoreCase)) return new(DataSqlRisk.Mutating, false, $"{first} changes database state. Review it before any future execution.");
-        return new(DataSqlRisk.Unknown, false, "Haven could not classify this query as read-only. Treat it as potentially mutating.");
+        return new(DataSqlRisk.Unknown, false, "9to1 could not classify this query as read-only. Treat it as potentially mutating.");
     }
 
     private static string FirstToken(string sql)

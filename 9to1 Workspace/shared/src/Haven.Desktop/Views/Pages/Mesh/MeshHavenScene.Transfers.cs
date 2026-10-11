@@ -41,7 +41,7 @@ internal sealed partial class MeshHavenScene
                 var card = Card("Mesh.Transfer.File." + file.TransferId.ToString("N"));
                 card.Add(Heading(file.FileName));
                 card.Add(Muted($"From {file.SourceDeviceName} · {FormatBytes(file.Length)} · SHA-256 verified"));
-                card.Add(Muted("Saved in Haven's controlled Mesh inbox: " + file.SavedPath));
+                card.Add(Muted("Saved in 9to1's controlled Mesh inbox: " + file.SavedPath));
                 var copyPath = Button("Mesh.Transfer.File.CopyPath." + file.TransferId.ToString("N"), "Copy inbox path", ButtonVariant.Ghost);
                 copyPath.Invoked += (_, _) => ClipboardApplyRequested?.Invoke(file.SavedPath);
                 card.Add(copyPath);

@@ -60,7 +60,7 @@ public sealed class AndroidAssistantOverlayCoordinator : IAsyncDisposable
         string initialTitle,
         CancellationToken cancellationToken)
     {
-        if (threadId == Guid.Empty) throw new ArgumentException("Assistant sessions require a real Haven thread identifier.", nameof(threadId));
+        if (threadId == Guid.Empty) throw new ArgumentException("Assistant sessions require a real 9to1 thread identifier.", nameof(threadId));
         ArgumentNullException.ThrowIfNull(content);
         if (string.IsNullOrWhiteSpace(initialAppKey)) throw new ArgumentException("An initial Overlay app key is required.", nameof(initialAppKey));
         if (string.IsNullOrWhiteSpace(initialTitle)) throw new ArgumentException("An initial Overlay surface title is required.", nameof(initialTitle));
@@ -95,7 +95,7 @@ public sealed class AndroidAssistantOverlayCoordinator : IAsyncDisposable
                 Guid.NewGuid(),
                 threadId,
                 "assistant",
-                "Haven Assistant",
+                "9to1 Assistant",
                 "Accent",
                 FloatingActivityPresentation.SystemOverlay,
                 AlwaysOnTop: true,
@@ -135,7 +135,7 @@ public sealed class AndroidAssistantOverlayCoordinator : IAsyncDisposable
         Session session;
         lock (_gate)
         {
-            session = _session ?? throw new InvalidOperationException("Open Haven Assistant before adding Overlay surfaces.");
+            session = _session ?? throw new InvalidOperationException("Open 9to1 Assistant before adding Overlay surfaces.");
             OpenSurfaceCore(session, appKey, title, activate);
         }
         return Publish(session);
@@ -147,7 +147,7 @@ public sealed class AndroidAssistantOverlayCoordinator : IAsyncDisposable
         Session session;
         lock (_gate)
         {
-            session = _session ?? throw new InvalidOperationException("Open Haven Assistant before activating Overlay surfaces.");
+            session = _session ?? throw new InvalidOperationException("Open 9to1 Assistant before activating Overlay surfaces.");
             if (session.Surfaces.All(surface => surface.Id != surfaceId))
                 throw new KeyNotFoundException("The requested Overlay surface is not part of this Assistant session.");
             session.ActiveSurfaceId = surfaceId;
@@ -161,7 +161,7 @@ public sealed class AndroidAssistantOverlayCoordinator : IAsyncDisposable
         Session session;
         lock (_gate)
         {
-            session = _session ?? throw new InvalidOperationException("Open Haven Assistant before closing Overlay surfaces.");
+            session = _session ?? throw new InvalidOperationException("Open 9to1 Assistant before closing Overlay surfaces.");
             var index = session.Surfaces.FindIndex(surface => surface.Id == surfaceId);
             if (index < 0) return SnapshotLocked(session);
             session.Surfaces.RemoveAt(index);
@@ -204,7 +204,7 @@ public sealed class AndroidAssistantOverlayCoordinator : IAsyncDisposable
         try
         {
             Session session;
-            lock (_gate) session = _session ?? throw new InvalidOperationException("Open Haven Assistant before changing Overlay mode.");
+            lock (_gate) session = _session ?? throw new InvalidOperationException("Open 9to1 Assistant before changing Overlay mode.");
             return await SetPresentationStateAsync(session, state, cancellationToken).ConfigureAwait(false);
         }
         finally

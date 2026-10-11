@@ -31,7 +31,7 @@ internal sealed class OverlayWorkspaceWindow : Window
     {
         ArgumentNullException.ThrowIfNull(session);
         if (chatPage is null && goPage is null)
-            throw new ArgumentException("An Overlay window requires a real Haven app surface.", nameof(session));
+            throw new ArgumentException("An Overlay window requires a real 9to1 app surface.", nameof(session));
 
         _chatPage = chatPage;
         GoPage = goPage;
@@ -43,7 +43,7 @@ internal sealed class OverlayWorkspaceWindow : Window
         BodyControl = ShellControl;
         ShellScene.SetBackNavigation(false);
 
-        Title = "Haven Overlay — " + session.Title;
+        Title = "9to1 Overlay — " + session.Title;
         Width = Math.Clamp(session.Geometry.Width, 400, 560);
         Height = Math.Clamp(session.Geometry.Height, 240, 480);
         MinWidth = 400;
@@ -59,11 +59,11 @@ internal sealed class OverlayWorkspaceWindow : Window
         Position = new PixelPoint((int)Math.Round(session.Geometry.X), (int)Math.Round(session.Geometry.Y));
 
         AutomationProperties.SetAutomationId(this, "HavenOverlayWindow-" + session.Id.ToString("N"));
-        AutomationProperties.SetName(this, "Haven Overlay " + session.Title);
+        AutomationProperties.SetName(this, "9to1 Overlay " + session.Title);
         AutomationProperties.SetAutomationId(ShellControl, "HavenOverlayShell");
-        AutomationProperties.SetName(ShellControl, "Haven Overlay controls");
+        AutomationProperties.SetName(ShellControl, "9to1 Overlay controls");
         AutomationProperties.SetAutomationId(BodyControl, "HavenOverlayCompactHost");
-        AutomationProperties.SetName(BodyControl, "Haven Overlay compact app host");
+        AutomationProperties.SetName(BodyControl, "9to1 Overlay compact app host");
 
         Content = CreateVisualRoot(ShellControl, chatPage, goPage);
         ShellControl.InputSubmitted += input =>
@@ -133,7 +133,7 @@ internal sealed class OverlayWorkspaceWindow : Window
         var current = snapshot.Sessions.FirstOrDefault(session => session.Id == SessionId);
         if (current is null) return;
 
-        Title = "Haven Overlay - " + current.Title;
+        Title = "9to1 Overlay - " + current.Title;
         if (current.IsCollapsed)
         {
             CanResize = false;

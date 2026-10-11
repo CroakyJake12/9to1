@@ -49,7 +49,7 @@ public sealed class OllamaModelProvider(IOllamaClient client, IProviderConfigura
         {
             var configuration = await configurations.GetAsync(Id, cancellationToken).ConfigureAwait(false);
             if (configuration?.IsEnabled == false)
-                return new(Id, false, "Ollama is disabled in Haven settings.", Stopwatch.GetElapsedTime(started), DateTimeOffset.UtcNow);
+                return new(Id, false, "Ollama is disabled in 9to1 settings.", Stopwatch.GetElapsedTime(started), DateTimeOffset.UtcNow);
             var available = await client.IsAvailableAsync(cancellationToken).ConfigureAwait(false);
             var endpoint = configuration?.Endpoint ?? Environment.GetEnvironmentVariable("OLLAMA_HOST") ?? "http://127.0.0.1:11434/";
             return new(Id, available, available ? $"Connected to Ollama at {endpoint}." : $"Ollama did not respond at {endpoint}.",

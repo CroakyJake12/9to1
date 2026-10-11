@@ -62,6 +62,7 @@ internal sealed class BrowserAccessibilityBridge
             var role = kind switch
             {
                 AutomationControlType.Button when peer is IInvokeProvider => "button",
+                AutomationControlType.CheckBox when peer is IToggleProvider => "checkbox",
                 AutomationControlType.Edit when peer is IValueProvider && controlPeer.Owner is not TextBox { PasswordChar: not '\0' } => "textbox",
                 AutomationControlType.Text => "text",
                 _ => null
@@ -77,7 +78,8 @@ internal sealed class BrowserAccessibilityBridge
                 current.Add(id);
                 var value = peer as IValueProvider;
                 elements.Add(new(id, role, peer.GetName(), peer.GetAutomationId(), peer.IsEnabled(),
-                    peer.IsKeyboardFocusable(), value?.Value, value?.IsReadOnly ?? true, peer.GetHelpText(), peer.HasKeyboardFocus(), ReadBounds(controlPeer)));
+                    peer.IsKeyboardFocusable(), peer is IToggleProvider toggle ? toggle.ToggleState == ToggleState.On ? "true" : toggle.ToggleState == ToggleState.Off ? "false" : "mixed" : value?.Value,
+                    peer is IToggleProvider ? false : value?.IsReadOnly ?? true, peer.GetHelpText(), peer.HasKeyboardFocus(), ReadBounds(controlPeer)));
                 // Names and values already belong to the actual parent provider;
                 // projecting template children would duplicate its semantics.
                 return;
@@ -132,6 +134,9 @@ internal sealed class BrowserAccessibilityBridge
                 return true;
             case "invoke" when peer.GetAutomationControlType() == AutomationControlType.Button && peer is IInvokeProvider invoke:
                 invoke.Invoke();
+                return true;
+            case "toggle" when peer.GetAutomationControlType() == AutomationControlType.CheckBox && peer is IToggleProvider toggle:
+                toggle.Toggle();
                 return true;
             case "value" when peer.GetAutomationControlType() == AutomationControlType.Edit && peer is IValueProvider { IsReadOnly: false } edit:
                 edit.SetValue(value);

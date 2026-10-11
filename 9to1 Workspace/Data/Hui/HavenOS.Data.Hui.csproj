@@ -13,7 +13,7 @@
     <ProjectReference Include="$(HavenUiProject)" Condition="'$(HavenUiProject)' != ''" />
   </ItemGroup>
   <Target Name="RequireHavenUiProject" BeforeTargets="PrepareForBuild">
-    <Error Condition="'$(HavenUiProject)' == ''" Text="HavenUiProject must point to the exact staged Haven.UI.csproj selected by the CakeOS HUI platform reference." />
+    <Error Condition="'$(HavenUiProject)' == ''" Text="HavenUiProject must point to the exact staged Haven.UI.csproj selected by the 9to1OS HUI platform reference." />
     <Error Condition="'$(HavenUiProject)' != '' and !Exists('$(HavenUiProject)')" Text="HavenUiProject does not exist: $(HavenUiProject)" />
   </Target>
 </Project>

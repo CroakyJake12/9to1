@@ -270,7 +270,7 @@ internal static class LexicalSymbolSearch
                         Path.GetRelativePath(root, path),
                         new CodeRange(position, new CodePosition(position.Line, position.Character + name.Length)),
                         null,
-                        "Haven lexical fallback"));
+                        "9to1 lexical fallback"));
                     if (result.Count >= 1_000) return result;
                 }
             }

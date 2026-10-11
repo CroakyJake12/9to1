@@ -24,7 +24,7 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
     /// Stores default system prompt locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
     private const string DefaultSystemPrompt =
-        "You are Haven in a private, local live call. Respond conversationally and concisely. " +
+        "You are 9to1 in a private, local live call. Respond conversationally and concisely. " +
         "Prefer short paragraphs that sound natural when spoken. Do not claim to see a shared " +
         "screen unless an image is attached to the current turn.";
 
@@ -206,7 +206,7 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
         var startingNewSession = false;
         try
         {
-            if (IsActive) throw new InvalidOperationException("A Haven call is already active.");
+            if (IsActive) throw new InvalidOperationException("A 9to1 call is already active.");
             Conversation? existingConversation = null;
             if (options.ConversationId is { } conversationId)
             {
@@ -594,7 +594,7 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
                 AppendEphemeral(new OllamaMessage("user", text));
             TranscriptChanged?.Invoke(this, new(userMessage.Id, MessageRole.User, userMessage.Content, false, true));
 
-            SetState(CallState.Thinking, "Haven is thinking…");
+            SetState(CallState.Thinking, "9to1 is thinking…");
             var history = await _conversations.GetContextMessagesAsync(CurrentConversation.Id, turnToken).ConfigureAwait(false);
             var requestMessages = history
                 .Where(message => message.Role is MessageRole.User or MessageRole.Assistant)
@@ -721,7 +721,7 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
             if (failed) continue;
             try
             {
-                SetState(CallState.Speaking, "Haven is speaking…");
+                SetState(CallState.Speaking, "9to1 is speaking…");
                 await SpeakWithProfileAsync(
                     sentence,
                     _options?.VoiceName,
@@ -1039,7 +1039,7 @@ public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSo
     private void EnsureActive()
     {
         if (!IsActive || CurrentConversation is null || _options is null)
-            throw new InvalidOperationException("Start a Haven call first.");
+            throw new InvalidOperationException("Start a 9to1 call first.");
     }
 
     /// <summary>

@@ -2,6 +2,7 @@ using System.Text.Json;
 using Avalonia.Threading;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
+using CakeOS.Cui.Runtime;
 using HavenOS.Home.Core;
 using NineToOne.Web.Media;
 
@@ -14,7 +15,7 @@ public sealed class WaveBrowserFeature : IHomeFeatureRouteHandler, IBrowserClose
     private WaveViewLifetime? _view;
     public string RouteId => "app.wave";
     // A missing/unacknowledged save receipt leaves IsDirty true; no guessed receipt changes readiness.
-    public bool HasUnsavedChanges => _session.IsDirty || _session.IsBusy;
+    public bool HasUnsavedChanges => _session.IsDirty || _session.IsBusy || _session.HasPendingInput;
 
     public Task<HomeCoreOperationResult<bool>> PrepareToCloseAsync(CancellationToken cancellationToken = default) =>
         _session.PrepareToCloseAsync(cancellationToken);
@@ -59,8 +60,9 @@ public sealed class WaveBrowserFeature : IHomeFeatureRouteHandler, IBrowserClose
     public BrowserCuiSurface Render(HomeFeatureViewState view)
     {
         if (view.RouteId != RouteId || view.ViewId != "wave.local-editor") throw new ArgumentException("Invalid Wave surface.");
-        _view?.Dispose(); _view = new(_session);
-        return new(_document, _session, _session, _view);
+        _view?.Dispose(); var lifetime = new WaveViewLifetime(_session); _view = lifetime;
+        var registry = new CuiControlRegistry(); registry.RegisterObjectRenderer("WaveTimeline", _ => lifetime.Timeline);
+        return new(_document, _session, _session, lifetime, registry);
     }
 
     public void Dispose()
@@ -79,8 +81,10 @@ public sealed class WaveBrowserFeature : IHomeFeatureRouteHandler, IBrowserClose
         private readonly DispatcherTimer _timer;
         private bool _polling;
         private bool _disposed;
+        public WaveBrowserTimeline Timeline { get; }
         public WaveViewLifetime(WaveBrowserSession session)
         {
+            Timeline = new(session);
             _session = session; _timer = new() { Interval = TimeSpan.FromMilliseconds(250) };
             _timer.Tick += Poll; _timer.Start();
         }
@@ -94,7 +98,7 @@ public sealed class WaveBrowserFeature : IHomeFeatureRouteHandler, IBrowserClose
         public void Dispose()
         {
             if (_disposed) return; _disposed = true;
-            _timer.Stop(); _timer.Tick -= Poll; _session.SuspendPlayback();
+            _timer.Stop(); _timer.Tick -= Poll; Timeline.Dispose(); _session.SuspendPlayback();
         }
     }
 }

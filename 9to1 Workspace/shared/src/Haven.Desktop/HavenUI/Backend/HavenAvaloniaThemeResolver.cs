@@ -14,7 +14,7 @@ internal static class HavenAvaloniaThemeResolver
         };
         if (key is null) return Brushes.Transparent;
         if (Avalonia.Application.Current?.TryFindResource(key, out var value) == true && value is IBrush brush) return brush;
-        throw new InvalidOperationException($"Haven semantic brush '{token}' resolved to missing Avalonia resource '{key}'.");
+        throw new InvalidOperationException($"9to1 semantic brush '{token}' resolved to missing Avalonia resource '{key}'.");
     }
 
     internal static Color ResolveColor(string token, double opacity = 1d)
@@ -24,7 +24,7 @@ internal static class HavenAvaloniaThemeResolver
         return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 
-    internal static Color EffectColor(IBrush brush, string description = "Haven effect")
+    internal static Color EffectColor(IBrush brush, string description = "9to1 effect")
     {
         if (brush is ISolidColorBrush solid) return solid.Color;
         if (brush is IGradientBrush gradient)

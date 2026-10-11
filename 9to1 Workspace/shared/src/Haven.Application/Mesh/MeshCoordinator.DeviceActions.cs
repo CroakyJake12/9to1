@@ -127,7 +127,7 @@ public sealed partial class MeshCoordinator
         try
         {
             _ = RequireTrustedPeer(message.SourceDeviceId);
-            if (_inboundDeviceActions is null) throw new InvalidOperationException("This Haven build has no inbound DEVICE executor.");
+            if (_inboundDeviceActions is null) throw new InvalidOperationException("This 9to1 build has no inbound DEVICE executor.");
             var snapshot = await _inboundDeviceActions.GetSnapshotAsync(CancellationToken.None).ConfigureAwait(false);
             await ReplyDeviceRpcAsync(message.SourceDeviceId, new MeshDeviceRpcResponse(request.RequestId, true, JsonSerializer.Serialize(snapshot), null)).ConfigureAwait(false);
         }
@@ -148,7 +148,7 @@ public sealed partial class MeshCoordinator
             var allowed = (peer.AllowedRemoteCapabilities ?? []).Contains(request.CapabilityKey, StringComparer.OrdinalIgnoreCase);
             if (!request.SourcePermissionGranted)
             {
-                var denied = new DeviceActionResult(DeviceActionResultStatus.PermissionRequired, request.ActionKey, _state.LocalIdentity!.DeviceId.ToString("N"), "The source Haven session has not granted DEVICE permission for this remote action.");
+                var denied = new DeviceActionResult(DeviceActionResultStatus.PermissionRequired, request.ActionKey, _state.LocalIdentity!.DeviceId.ToString("N"), "The source 9to1 session has not granted DEVICE permission for this remote action.");
                 await ReplyDeviceRpcAsync(message.SourceDeviceId, new MeshDeviceRpcResponse(request.RequestId, true, JsonSerializer.Serialize(denied), null)).ConfigureAwait(false);
                 return;
             }
@@ -158,7 +158,7 @@ public sealed partial class MeshCoordinator
                 await ReplyDeviceRpcAsync(message.SourceDeviceId, new MeshDeviceRpcResponse(request.RequestId, true, JsonSerializer.Serialize(denied), null)).ConfigureAwait(false);
                 return;
             }
-            if (_inboundDeviceActions is null) throw new InvalidOperationException("This Haven build has no inbound DEVICE executor.");
+            if (_inboundDeviceActions is null) throw new InvalidOperationException("This 9to1 build has no inbound DEVICE executor.");
             var result = await _inboundDeviceActions.ExecuteAsync(request.ActionKey, request.Parameters, permissionGranted: true, CancellationToken.None).ConfigureAwait(false);
             await ReplyDeviceRpcAsync(message.SourceDeviceId, new MeshDeviceRpcResponse(request.RequestId, true, JsonSerializer.Serialize(result), null)).ConfigureAwait(false);
         }

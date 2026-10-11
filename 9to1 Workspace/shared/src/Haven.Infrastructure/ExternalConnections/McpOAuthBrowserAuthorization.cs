@@ -10,7 +10,7 @@ internal static class McpOAuthBrowserAuthorization
     public static async Task<AuthorizationResult?> AuthorizeAsync(AuthorizationCallbackContext context, CancellationToken cancellationToken)
     {
         if (!context.RedirectUri.IsLoopback || context.RedirectUri.Scheme != Uri.UriSchemeHttp)
-            throw new InvalidOperationException("Haven MCP OAuth requires an HTTP loopback redirect URI.");
+            throw new InvalidOperationException("9to1 MCP OAuth requires an HTTP loopback redirect URI.");
         using var listener = new HttpListener();
         listener.Prefixes.Add(Prefix(context.RedirectUri));
         listener.Start();
@@ -31,7 +31,7 @@ internal static class McpOAuthBrowserAuthorization
     {
         response.StatusCode = 200;
         response.ContentType = "text/plain; charset=utf-8";
-        var bytes = Encoding.UTF8.GetBytes(success ? "Connected to Haven. You can return to the app." : "Connection not completed. Return to Haven to review the error.");
+        var bytes = Encoding.UTF8.GetBytes(success ? "Connected to 9to1. You can return to the app." : "Connection not completed. Return to 9to1 to review the error.");
         response.ContentLength64 = bytes.Length;
         await response.OutputStream.WriteAsync(bytes, cancellationToken).ConfigureAwait(false);
         response.Close();

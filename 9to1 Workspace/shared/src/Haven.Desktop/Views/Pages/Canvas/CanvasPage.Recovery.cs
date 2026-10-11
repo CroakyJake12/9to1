@@ -177,7 +177,7 @@ public sealed partial class CanvasPage
         var saved = _preferences.SaveCanvasPenPreset(requested);
         if (saved is null)
         {
-            _route.SetStatus("Canvas pen presets were created by a newer Haven version, so this version left them unchanged.");
+            _route.SetStatus("Canvas pen presets were created by a newer 9to1 version, so this version left them unchanged.");
             return;
         }
         _route.SetPenPresets(_preferences.CanvasPenPresets);

@@ -15,7 +15,7 @@
             <TextBlock Text="Back" />
           </StackPanel>
         </hui:HavenButton>
-        <TextBlock Text="Haven Training" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
+        <TextBlock Text="9to1 Training" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
       </StackPanel>
 
       <hui:HavenAdaptiveSurface x:Name="SetupPanel" Grid.Row="1" Background="{DynamicResource HavenPanel2Brush}"

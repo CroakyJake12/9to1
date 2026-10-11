@@ -47,7 +47,7 @@ internal sealed class DataVisualQueryGraphController
     {
         var visual = _route.Root.DescendantsAndSelf().OfType<Container>().Single(element => element.Name == "Data.Query.VisualBuilder");
         var original = visual.Children.ToArray(); foreach (var child in original) visual.Remove(child); if (original.FirstOrDefault() is { } intro) visual.Add(intro);
-        _editor.Accessibility.AccessibleName = "Visual SQL pipeline"; _editor.Accessibility.Description = "Select a SQL stage to edit it below. Drag stages to arrange the pipeline; pan and zoom use the shared Haven node editor.";
+        _editor.Accessibility.AccessibleName = "Visual SQL pipeline"; _editor.Accessibility.Description = "Select a SQL stage to edit it below. Drag stages to arrange the pipeline; pan and zoom use the shared 9to1 node editor.";
         _editor.SetValue(HavenProperties.Width, HavenLength.Percent(100)); _editor.SetValue(HavenProperties.Height, HavenLength.Px(360)); _editor.SetValue(HavenProperties.MinHeight, HavenLength.Px(320));
         var toolbar = new Container { Name = "Data.Query.Visual.Toolbar", Layout = HavenLayout.Horizontal }; toolbar.SetValue(HavenProperties.Gap, HavenLength.Px(8)); toolbar.SetValue(HavenProperties.Overflow, HavenOverflow.Scroll);
         var hint = new HavenText("Drag stages to arrange · select a stage to edit") { Level = TextLevel.Caption }; hint.SetValue(HavenProperties.Foreground, "TextSecondary"); toolbar.Add(hint);

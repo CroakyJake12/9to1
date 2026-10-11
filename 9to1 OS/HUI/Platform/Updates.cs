@@ -30,9 +30,9 @@ public sealed class CakeOsReleaseSystemInfoProvider(string releaseFile = "/etc/c
     public CakeOsSystemInfo GetSystemInfo()
     {
         if (!OperatingSystem.IsLinux())
-            throw new PlatformNotSupportedException("Local CakeOS updates can only be installed on Linux.");
+            throw new PlatformNotSupportedException("Local 9to1OS updates can only be installed on Linux.");
         if (!File.Exists(_releaseFile))
-            throw new InvalidOperationException("CakeOS release metadata is unavailable; update compatibility cannot be verified.");
+            throw new InvalidOperationException("9to1OS release metadata is unavailable; update compatibility cannot be verified.");
 
         var version = File.ReadLines(_releaseFile)
             .Select(line => line.Split('=', 2))
@@ -40,13 +40,13 @@ public sealed class CakeOsReleaseSystemInfoProvider(string releaseFile = "/etc/c
             .Select(parts => parts[1].Trim().Trim('\"'))
             .FirstOrDefault();
         if (string.IsNullOrWhiteSpace(version))
-            throw new InvalidDataException("CakeOS release metadata does not contain VERSION_ID.");
+            throw new InvalidDataException("9to1OS release metadata does not contain VERSION_ID.");
 
         return new CakeOsSystemInfo(version, RuntimeInformation.OSArchitecture switch
         {
             Architecture.X64 => "amd64",
             Architecture.Arm64 => "arm64",
-            _ => throw new PlatformNotSupportedException("This CPU architecture is not supported by local CakeOS updates.")
+            _ => throw new PlatformNotSupportedException("This CPU architecture is not supported by local 9to1OS updates.")
         });
     }
 }
@@ -123,8 +123,8 @@ public sealed class CakeUpdateBundleValidator(ICakeOsSystemInfoProvider systemIn
         {
             var fullBundlePath = ValidateBundlePath(bundlePath);
             var systemInfo = _systemInfoProvider.GetSystemInfo();
-            var systemVersion = ParseVersion(systemInfo.InstalledVersion, "Installed CakeOS version");
-            ValidateArchitecture(systemInfo.Architecture, "Installed CakeOS architecture", allowAll: false);
+            var systemVersion = ParseVersion(systemInfo.InstalledVersion, "Installed 9to1OS version");
+            ValidateArchitecture(systemInfo.Architecture, "Installed 9to1OS architecture", allowAll: false);
 
             var fileInfo = new FileInfo(fullBundlePath);
             if (fileInfo.Length > MaximumBundleBytes)
@@ -258,9 +258,9 @@ public sealed class CakeUpdateBundleValidator(ICakeOsSystemInfoProvider systemIn
         if (minimumVersion.CompareTo(maximumVersion) > 0)
             throw new InvalidDataException("Update manifest compatibility version range is invalid.");
         if (systemVersion.CompareTo(minimumVersion) < 0 || systemVersion.CompareTo(maximumVersion) > 0)
-            throw new InvalidDataException("Update is not compatible with this installed CakeOS version.");
+            throw new InvalidDataException("Update is not compatible with this installed 9to1OS version.");
         if (bundleVersion.CompareTo(systemVersion) <= 0)
-            throw new InvalidDataException("Update version must be newer than the installed CakeOS version.");
+            throw new InvalidDataException("Update version must be newer than the installed 9to1OS version.");
 
         var architectures = document.Compatibility.Architectures;
         if (architectures is null || architectures.Length == 0 || architectures.Distinct(StringComparer.Ordinal).Count() != architectures.Length)
@@ -464,9 +464,9 @@ public sealed class PkexecCakeUpdateInstaller : IPrivilegedCakeUpdateInstaller
         cancellationToken.ThrowIfCancellationRequested();
         ValidateInstallRequest(request);
         if (!OperatingSystem.IsLinux())
-            return new PrivilegedInstallerResult(false, "The privileged CakeOS update installer is only available on Linux.");
+            return new PrivilegedInstallerResult(false, "The privileged 9to1OS update installer is only available on Linux.");
         if (!File.Exists(HelperPath))
-            return new PrivilegedInstallerResult(false, "The privileged CakeOS update installer is not installed.");
+            return new PrivilegedInstallerResult(false, "The privileged 9to1OS update installer is not installed.");
 
         try
         {
@@ -483,18 +483,18 @@ public sealed class PkexecCakeUpdateInstaller : IPrivilegedCakeUpdateInstaller
             startInfo.ArgumentList.Add("--manifest-sha256");
             startInfo.ArgumentList.Add(request.ManifestSha256);
 
-            using var process = Process.Start(startInfo) ?? throw new InvalidOperationException("Could not start the privileged CakeOS update installer.");
+            using var process = Process.Start(startInfo) ?? throw new InvalidOperationException("Could not start the privileged 9to1OS update installer.");
             await process.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
             return process.ExitCode switch
             {
-                0 => new PrivilegedInstallerResult(true, "The privileged CakeOS update installer completed successfully.", true),
-                RecordedFailureExitCode => new PrivilegedInstallerResult(false, "The privileged CakeOS update installer failed.", true),
-                _ => new PrivilegedInstallerResult(false, "The privileged CakeOS update installer failed before it could confirm update history.")
+                0 => new PrivilegedInstallerResult(true, "The privileged 9to1OS update installer completed successfully.", true),
+                RecordedFailureExitCode => new PrivilegedInstallerResult(false, "The privileged 9to1OS update installer failed.", true),
+                _ => new PrivilegedInstallerResult(false, "The privileged 9to1OS update installer failed before it could confirm update history.")
             };
         }
         catch (Exception exception) when (exception is InvalidOperationException or System.ComponentModel.Win32Exception)
         {
-            return new PrivilegedInstallerResult(false, $"Could not invoke the privileged CakeOS update installer: {exception.Message}");
+            return new PrivilegedInstallerResult(false, $"Could not invoke the privileged 9to1OS update installer: {exception.Message}");
         }
     }
 

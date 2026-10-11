@@ -243,7 +243,7 @@ public sealed class UpdateOrchestrator(
             }
             PublishState(
                 UpdateState.StagedPendingRestart,
-                $"{sourceNote}Version {manifest.Version} is verified and staged. The external installer/bootstrapper applies it on the next start; Haven has not replaced its own binaries.".Trim());
+                $"{sourceNote}Version {manifest.Version} is verified and staged. The external installer/bootstrapper applies it on the next start; 9to1 has not replaced its own binaries.".Trim());
         }
         finally
         {
@@ -296,7 +296,7 @@ public sealed class UpdateOrchestrator(
 
             PublishState(
                 UpdateState.StagedPendingRestart,
-                $"Update {stagedVersion} is marked for application on next start by the external installer/bootstrapper. Haven does not swap its own running binaries.");
+                $"Update {stagedVersion} is marked for application on next start by the external installer/bootstrapper. 9to1 does not swap its own running binaries.");
         }
         finally
         {

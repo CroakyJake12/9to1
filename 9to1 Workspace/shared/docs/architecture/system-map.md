@@ -1,14 +1,17 @@
 # System Map
 
+The 11 October 2026 V2 correction makes canonical .cui the only first-party application authoring input. Retained .axaml/.hui hosts below identify legacy implementation and migration owners; they are not an accepted alternative UI contract. CUI owns the public vocabulary, property cascade, themes, templates and states over the pinned Avalonia source foundation. See ../ui/building-ui.md and the repository-root eng/cui/first-party-inventory.json for the canonical workflow and unresolved surfaces.
+
 Entry points for the major production systems. "Start reading" names the file
 that best explains the design.
 
 | System | Owns / does | Start reading | Key collaborators |
 |---|---|---|---|
+| Canonical CUI | Ten-element language, typed properties, runtime binding, themes/templates and tooling | framework/CUI/Language, Compiler, Runtime and Themes at repository root | Home settings/readiness; app-owned typed bindings and genuine specialised Object renderers |
 | Shell & launch routing | Window shell, tabs, `LaunchAppAsync` route table, contextual actions | `src/Haven.Desktop/Interface/Shell/MainView.axaml.cs`, `HavenAppRoutePolicy` | Mode registry, TopRail, page factories |
 | Shelf (domain foundation) | Typed canonical launch targets, user collections, membership, deterministic lookup policy | `src/Haven.Core/Shelf/ShelfModels.cs`, `src/Haven.Application/Shelf/ShelfLibraryPolicy.cs` | Target-owning platform and app services; persistence and UI integration remain pending |
-| HavenUI framework | `.hui` markup, scene tree, layout, draw commands, input, animations | `src/Haven.UI/Markup/HavenMarkupParser.cs`, `Rendering/HavenSceneRenderer.cs`, README in project | Backend bridge (Desktop) |
-| HUI↔Avalonia backend | Renders scenes into an Avalonia control; resolves images/fonts/tokens | `src/Haven.Desktop/HavenUI/Backend/HavenSceneControl.cs` | `HavenAvaloniaThemeResolver`, `HavenDesktopImageResolver`, `HavenUiFont` |
+| Retained legacy UI framework (migration required) | `.hui` markup, scene tree, layout, draw commands, input, animations | `src/Haven.UI/Markup/HavenMarkupParser.cs`, `Rendering/HavenSceneRenderer.cs`, README in project | Backend bridge (Desktop) |
+| Retained legacy scene backend (migration required) | Renders scenes into an Avalonia control; resolves images/fonts/tokens | `src/Haven.Desktop/HavenUI/Backend/HavenSceneControl.cs` | `HavenAvaloniaThemeResolver`, `HavenDesktopImageResolver`, `HavenUiFont` |
 | Prefabs & DynamicUI | Reusable `.hui` components with code-behind; data-driven list rows | `src/Haven.UI/Components/Prefab/Prefab.cs`, `Components/DynamicUI/DynamicUI.cs`; examples in `src/Haven.Desktop/Prefabs`, `DynamicUI` | Scene pages (Chat, Imagine, Studio) |
 | Themes & personalisation | 5 themes × 4 appearances, accent override, fonts, avatars | `src/Haven.Desktop/HavenUI/Tokens/HavenThemeCatalog.cs`, `Controls/SurfacePaletteCatalog.cs`, `Services/UserPreferencesService.cs` | `HavenUiResourceApplier`, Settings scene |
 | Tidal background | Surface-following animated gradient backdrop | `src/Haven.Desktop/Controls/TidalBackground.*` | SurfacePaletteCatalog per surface |

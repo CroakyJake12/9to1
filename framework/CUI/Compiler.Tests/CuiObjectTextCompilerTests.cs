@@ -1,4 +1,4 @@
-﻿using CakeOS.Cui;
+using CakeOS.Cui;
 using CakeOS.Cui.Compiler;
 using CakeOS.Cui.Runtime;
 using Xunit;
@@ -8,7 +8,7 @@ namespace CakeOS.Cui.Compiler.Tests;
 public sealed class CuiObjectTextCompilerTests
 {
     private static CuiCompilerOptions Options() => new(
-        new CuiCompilationMetadata("1.0", "1.0", "1.0", ["layout"]));
+        new CuiCompilationMetadata("1.0", "1.0", "2.0", ["layout"]));
 
     [Fact]
     public void Actual_assistant_message_renderer_binding_compiles_without_invoking_the_factory()

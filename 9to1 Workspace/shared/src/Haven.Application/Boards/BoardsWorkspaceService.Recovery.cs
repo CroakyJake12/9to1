@@ -301,7 +301,7 @@ public sealed partial class BoardsWorkspaceService
     {
         EnsureBoards(notebook);
         if (attachments is null)
-            throw new InvalidOperationException("The shared Haven attachment store is unavailable.");
+            throw new InvalidOperationException("The shared 9to1 attachment store is unavailable.");
 
         var page = RequireRecoveryPage(notebook, pageId);
         var media = await attachments.ImportAsync(sourcePath, cancellationToken).ConfigureAwait(false);
@@ -334,7 +334,7 @@ public sealed partial class BoardsWorkspaceService
                 media.AttachmentId,
                 BoardsAttachmentStatus.Unavailable,
                 null,
-                "The shared Haven attachment store is unavailable.");
+                "The shared 9to1 attachment store is unavailable.");
         }
 
         try

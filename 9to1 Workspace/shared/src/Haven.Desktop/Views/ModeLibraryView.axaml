@@ -22,7 +22,7 @@
     <!-- Section: Groups related controls in reading order; spacing is owned by the container instead of repeated margins. -->
     <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
       <TextBlock Text="App Library" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource HavenTextBrush}" />
-      <TextBlock Text="Discover, pin, and create Haven apps." FontSize="12" Foreground="{DynamicResource HavenMutedBrush}" />
+      <TextBlock Text="Discover, pin, and create 9to1 apps." FontSize="12" Foreground="{DynamicResource HavenMutedBrush}" />
     </StackPanel>
 
     <!-- Toolbar -->

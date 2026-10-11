@@ -107,7 +107,7 @@ denies a changed configured mapping; immediately afterward, it checks the SAME a
 DataDirectory and DatabasePath before maintained Home/provider/SQLite registration.
 Ordinary startup with no actual setup observation is unchanged. Receiving mismatch or
 subsequent startup failure from this command uses console-only reporting, preventing
-default-Haven bootstrap logging from creating an unrelated data root. These path
+default-9to1 bootstrap logging from creating an unrelated data root. These path
 checks only deny mismatches; role03's actual current custody validation still owns
 privacy admission. Setup changes neither the recovery selector nor its unverified
 status, and a source or headless command observation does not prove GUI rendering.

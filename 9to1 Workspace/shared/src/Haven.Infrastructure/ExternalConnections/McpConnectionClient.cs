@@ -49,7 +49,7 @@ public sealed partial class McpConnectionClient(IProviderSecretStore secrets) : 
         var identity = new McpServerIdentity(client.ServerInfo?.Name, client.ServerInfo?.Version, client.NegotiatedProtocolVersion,
             BoundedJson(client.ServerCapabilities, MaxSchemaCharacters));
         var snapshot = JsonSerializer.Serialize(new { identity, tools = mapped, resources, prompts });
-        if (snapshot.Length > MaxSchemaCharacters) throw new InvalidOperationException("MCP capability snapshot exceeded Haven's safety size limit.");
+        if (snapshot.Length > MaxSchemaCharacters) throw new InvalidOperationException("MCP capability snapshot exceeded 9to1's safety size limit.");
         var snapshotVersion = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(snapshot))).ToLowerInvariant();
         return new McpServerDiscovery(identity, mapped, resources, prompts, snapshotVersion);
     }
@@ -71,7 +71,7 @@ public sealed partial class McpConnectionClient(IProviderSecretStore secrets) : 
             var contentJson = BoundedJson(result.Content, MaxResultCharacters);
             JsonElement? structured = result.StructuredContent is { } value ? BoundElement(value, MaxResultCharacters) : null;
             if (string.IsNullOrWhiteSpace(text) && structured is { } structuredValue) text = structuredValue.GetRawText();
-            if (text.Length > MaxResultCharacters) text = text[..MaxResultCharacters] + "... [truncated by Haven]";
+            if (text.Length > MaxResultCharacters) text = text[..MaxResultCharacters] + "... [truncated by 9to1]";
             return new McpToolInvocationResult(result.IsError is not true, text, structured, contentJson, result.IsError is true ? text : null);
         }
         finally { gate?.Release(); }
@@ -93,7 +93,7 @@ public sealed partial class McpConnectionClient(IProviderSecretStore secrets) : 
             _ => throw new NotSupportedException("The MCP resource returned an unsupported content block.")
         }).ToArray();
         if (JsonSerializer.Serialize(contents).Length > MaxResultCharacters)
-            throw new InvalidOperationException("MCP resource content exceeded Haven's safety size limit.");
+            throw new InvalidOperationException("MCP resource content exceeded 9to1's safety size limit.");
         return new McpResourceReadResult(Bound(resourceUri, 2_000), contents);
     }
 
@@ -120,7 +120,7 @@ public sealed partial class McpConnectionClient(IProviderSecretStore secrets) : 
             messages.Add(new McpPromptMessage(message.Role.ToString(), [content]));
         }
         if (JsonSerializer.Serialize(messages).Length > MaxResultCharacters)
-            throw new InvalidOperationException("MCP prompt content exceeded Haven's safety size limit.");
+            throw new InvalidOperationException("MCP prompt content exceeded 9to1's safety size limit.");
         return new McpPromptGetResult(Bound(prompt.Name, 200), messages);
     }
 
@@ -195,7 +195,7 @@ public sealed partial class McpConnectionClient(IProviderSecretStore secrets) : 
 
     private static JsonElement BoundElement(JsonElement element, int maxCharacters)
     {
-        if (element.GetRawText().Length > maxCharacters) throw new InvalidOperationException("MCP schema or structured result exceeded Haven's safety size limit.");
+        if (element.GetRawText().Length > maxCharacters) throw new InvalidOperationException("MCP schema or structured result exceeded 9to1's safety size limit.");
         return element.Clone();
     }
 
@@ -207,7 +207,7 @@ public sealed partial class McpConnectionClient(IProviderSecretStore secrets) : 
         {
             source = "untrusted external MCP JSON",
             truncated = true,
-            reason = "MCP JSON exceeded Haven's safety size limit."
+            reason = "MCP JSON exceeded 9to1's safety size limit."
         });
     }
 

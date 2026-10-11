@@ -332,7 +332,7 @@ internal static class OverlayContextActionCatalog
 
         if (context is null || !context.HasPayload) return actions;
 
-        actions.Add(Action("ask-haven", "Ask Haven", "sparkles", true));
+        actions.Add(Action("ask-haven", "Ask 9to1", "sparkles", true));
         actions.Add(Action("share", "Share", "share", true));
 
         if (context.HasTextualSelection)

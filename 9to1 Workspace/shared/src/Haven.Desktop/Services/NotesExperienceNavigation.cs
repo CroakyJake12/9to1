@@ -52,7 +52,7 @@ public static class NotesExperienceNavigation
         Control page;
         if (kind == NotesExperienceKind.Notes)
         {
-            var services = App.Services ?? throw new InvalidOperationException("Haven services are unavailable.");
+            var services = App.Services ?? throw new InvalidOperationException("9to1 services are unavailable.");
             page = ActivatorUtilities.CreateInstance<WritePage>(services);
         }
         else
@@ -80,10 +80,10 @@ public static class NotesExperienceNavigation
     public static string DisplayName(NotesExperienceKind kind) => kind switch
     {
         NotesExperienceKind.Notes => "Write",
-        NotesExperienceKind.Present => "Haven Present",
-        NotesExperienceKind.Data => "Haven Data",
-        NotesExperienceKind.Tasks => "Haven Tasks",
-        NotesExperienceKind.Imagine => "Haven Imagine",
+        NotesExperienceKind.Present => "9to1 Present",
+        NotesExperienceKind.Data => "9to1 Data",
+        NotesExperienceKind.Tasks => "9to1 Tasks",
+        NotesExperienceKind.Imagine => "9to1 Imagine",
         _ => "Haven"
     };
 
@@ -139,7 +139,7 @@ public sealed class BlankNotesExperienceView : UserControl
                         },
                         new TextBlock
                         {
-                            Text = "This is a real routed Haven workspace and is intentionally blank in this Notes build. It contains no invented editor controls.",
+                            Text = "This is a real routed 9to1 workspace and is intentionally blank in this Notes build. It contains no invented editor controls.",
                             TextWrapping = TextWrapping.Wrap,
                             TextAlignment = TextAlignment.Center,
                             Foreground = Avalonia.Application.Current?.Resources["HavenMuted2Brush"] as IBrush ?? Brushes.Gray

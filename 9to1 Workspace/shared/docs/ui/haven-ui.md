@@ -1,6 +1,12 @@
-# HavenUI (HUI) — the UI framework
+# Canonical CUI and retained legacy implementation map
 
-Haven's user-facing interfaces are built with **HavenUI (HUI)**, Haven's own
+The 11 October 2026 V2 correction supersedes the legacy .hui/AXAML authoring directions documented below. Production first-party UI is authored in canonical .cui with exactly ten visual elements, typed Container/Input specialisations, CUI-owned themes/templates and the single CUI property cascade. See building-ui.md for current authoring and eng/cui/first-party-inventory.json at repository root for remaining migrations. Existing Haven.UI namespaces and engine/service contracts are retained identifiers; they do not authorise a second shipping UI language or donor-themed application tree.
+
+## Historical implementation detail to migrate
+
+# CUI (HUI) — the UI framework
+
+9to1's user-facing interfaces are built with **CUI (HUI)**, 9to1's own
 scene-based UI layer in `src/Haven.UI`. HUI is deliberately **platform-free**:
 it has zero Avalonia references. It parses `.hui` markup into a `HavenElement`
 scene tree, lays it out, produces backend-neutral draw commands and routes

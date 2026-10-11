@@ -20,7 +20,7 @@ public sealed class HavenMarkupParser(HavenPrefabCatalog? prefabs = null)
         try
         {
             var document = XDocument.Parse(source, LoadOptions.SetLineInfo | LoadOptions.PreserveWhitespace);
-            var rootNode = document.Root ?? throw new HavenMarkupException(sourceName, 1, 1, "Haven markup has no root element.");
+            var rootNode = document.Root ?? throw new HavenMarkupException(sourceName, 1, 1, "9to1 markup has no root element.");
             var root = ParseElement(rootNode, sourceName);
             root.ValidateUniqueNames();
             return root;
@@ -125,7 +125,7 @@ public sealed class HavenMarkupParser(HavenPrefabCatalog? prefabs = null)
     private static HavenElement Create(string name, string sourceName, int line, int column) => name switch
     {
         "Page" => new Page(), "Container" => new Container(), "Text" => new Text(), "Markdown" => new Markdown(), "Button" => new Button(), "Input" => new Input(), "Toggle" => new Toggle(), "Slider" => new Slider(), "Select" => new Select(), "Image" => new HavenImageComponent(), "Icon" => new Icon(), "Video" => new Video(), "Canvas" => new Canvas(), "Web" => new Web(), "Progress" => new Progress(), "Separator" => new Separator(),
-        _ => throw new HavenMarkupException(sourceName, line, column, $"Unknown Haven component '{name}'.")
+        _ => throw new HavenMarkupException(sourceName, line, column, $"Unknown 9to1 component '{name}'.")
     };
 
     private static bool ApplyCondition(HavenElement element, string name, string value)

@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Threading;
@@ -39,6 +39,12 @@ public sealed class CuiControlLoader : IDisposable
     private readonly Dictionary<Control, EventHandler<RoutedEventArgs>> _actionHandlers = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, ContextMenu> _ownedContextMenus = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<ContextMenu, Task> _contextMenuCloses = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<string, CuiComponent> _typeDefinitions = new(StringComparer.Ordinal);
+    private CuiThemePreferenceContext? _themePreference;
+    private CuiThemeDefinitionCatalog _localThemes = new();
+    private readonly Stack<string> _themeNames = new();
+    private readonly Dictionary<Control, string> _controlThemeNames = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<Control, ResourceDictionary> _controlThemeResources = new(ReferenceEqualityComparer.Instance);
     private ICuiBindingContext? _bindingContext;
     private ICuiActionDispatcher? _actionDispatcher;
     private IReadOnlyDictionary<string, CuiActionDefinition> _documentActions =
@@ -54,6 +60,89 @@ public sealed class CuiControlLoader : IDisposable
     private int _currentLayer;
     private string? _currentRepeatIdentity;
     private PropertyChangedEventHandler? _bindingChangedHandler;
+
+    public void SetThemePreferenceContext(CuiThemePreferenceContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (ReferenceEquals(context, _themePreference)) return;
+        if (_themePreference is not null) _themePreference.Changed -= ThemePreferenceChanged;
+        _themePreference = context; context.Changed += ThemePreferenceChanged;
+        ThemePreferenceChanged(this, EventArgs.Empty);
+    }
+
+    private CuiThemeResolution ResolveTheme(string name)
+    {
+        var resolved = _themePreference?.ResolveScope(name);
+        if (resolved is not null && !resolved.UsedFallback) return resolved;
+        return CuiThemeScope.Resolve(name, _localThemes, _themePreference, CuiSurfacePaletteCatalog.ActiveTheme);
+    }
+
+    private void ThemePreferenceChanged(object? sender, EventArgs args)
+    {
+        void RefreshTheme()
+        {
+            if (_disposed) return;
+            foreach (var (control, name) in _controlThemeNames.ToArray())
+            {
+                var resolution = ResolveTheme(name);
+                ApplyResolvedTheme(control, resolution);
+                if (!_authoredControls.TryGetValue(control, out var component)) continue;
+                _themeStack.Push(resolution.Theme.BaseTheme);
+                try
+                {
+                    foreach (var (property, value) in component.Properties)
+                    {
+                        if (value is CuiResourceValue resource) ApplyResourceProperty(control, property, resource);
+                        else if (control is Image && property.Equals("Source", StringComparison.OrdinalIgnoreCase) && value is CuiLiteralValue literal)
+                            ApplyLiteralProperty(control, property, literal.Value, value.Span);
+                    }
+                }
+                finally { _themeStack.Pop(); }
+            }
+        }
+        if (Dispatcher.UIThread.CheckAccess()) RefreshTheme(); else Dispatcher.UIThread.Post(RefreshTheme);
+    }
+
+    private void ApplyResolvedTheme(Control control, CuiThemeResolution resolution)
+    {
+        // Populate off-tree, then publish once. Mutating an attached dictionary
+        // broadcasts every individual token to this control and its descendants,
+        // repeatedly projecting interaction states against incomplete palettes.
+        var resources = new ResourceDictionary();
+        CuiThemeResourceApplier.ApplyToResources(resources, CuiSurfacePaletteCatalog.For(_currentSurface,
+            _appearance ?? CuiThemeScopeApplier.DetectAppearance(), resolution.Theme.BaseTheme), resolution.Accessibility);
+        resources["CuiEffectiveThemeName"] = resolution.Theme.Name;
+        if (_controlThemeResources.TryGetValue(control, out var previous))
+        {
+            var index = control.Resources.MergedDictionaries.IndexOf(previous);
+            if (index >= 0) control.Resources.MergedDictionaries[index] = resources;
+            else control.Resources.MergedDictionaries.Add(resources);
+        }
+        else control.Resources.MergedDictionaries.Add(resources);
+        _controlThemeResources[control] = resources;
+        var store = CuiPropertyPresentation.For(control);
+        store.RemoveSource(CuiPropertyLevel.Theme, "CUI custom theme");
+        if (_authoredControls.TryGetValue(control, out var component))
+        {
+            var type = component.Properties.FirstOrDefault(pair => pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)).Value as CuiLiteralValue;
+            foreach (var rule in resolution.Theme.Rules.Where(rule => rule.Key.ElementName.Equals(component.Type, StringComparison.OrdinalIgnoreCase)
+                && (rule.Key.TypeName is null || rule.Key.TypeName.Equals(type?.Value, StringComparison.Ordinal))).OrderBy(rule => rule.Key.TypeName is null ? 0 : 1))
+                foreach (var (property, value) in rule.Value)
+                {
+                    if (!_controlRegistry.TryGetProperty(property, out var descriptor)) throw new CuiRuntimeLoadException(new("CUIR056", CuiDiagnosticSeverity.Error, $"Unknown custom theme property '{property}'.", component.Span));
+                    if (value is Avalonia.Media.IBrush or Avalonia.Media.IImage)
+                    {
+                        if (!CuiPropertyPresentation.Set(control, descriptor.Name, value, CuiPropertyLevel.Theme, "CUI custom theme", rule.Key.TypeName is null ? 0 : 1))
+                            throw new CuiRuntimeLoadException(new("CUIR056", CuiDiagnosticSeverity.Error, $"Custom theme property '{property}' has no typed projection for {component.Type}.", component.Span));
+                        continue;
+                    }
+                    var literal = Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
+                    if (!CuiLayoutProperties.SetLiteral(control, descriptor.Name, literal, CuiPropertyLevel.Theme, "CUI custom theme", rule.Key.TypeName is null ? 0 : 1)
+                        && !CuiPropertyPresentation.TrySetLiteral(control, descriptor.Name, literal, CuiPropertyLevel.Theme, "CUI custom theme", rule.Key.TypeName is null ? 0 : 1))
+                        throw new CuiRuntimeLoadException(new("CUIR056", CuiDiagnosticSeverity.Error, $"Custom theme property '{property}' has no typed projection for {component.Type}.", component.Span));
+                }
+        }
+    }
 
     /// <summary>Set a binding context for live {Binding path} resolution.</summary>
     public void SetBindingContext(ICuiBindingContext context)
@@ -135,6 +224,7 @@ public sealed class CuiControlLoader : IDisposable
         {
             Attempt(_lifetime.Cancel);
             ActionFailed = null;
+            if (_themePreference is not null) Attempt(() => _themePreference.Changed -= ThemePreferenceChanged);
             if (_bindingContext is INotifyPropertyChanged observable && _bindingChangedHandler is not null)
                 Attempt(() => observable.PropertyChanged -= _bindingChangedHandler);
             _bindingChangedHandler = null;
@@ -145,6 +235,7 @@ public sealed class CuiControlLoader : IDisposable
             _repeats.Clear();
             foreach (var (control, handler) in _actionHandlers.ToArray()) Attempt(() => UnwireAction(control, handler));
             foreach (var owner in _ownedContextMenus.Keys.ToArray()) Attempt(() => CloseOwnedContextMenu(owner));
+            foreach (var control in _authoredControls.Keys.ToArray()) Attempt(() => DetachPresentation(control));
             _actionHandlers.Clear();
             _wiredActions.Clear();
             _actionInvocations.Clear();
@@ -261,6 +352,8 @@ public sealed class CuiControlLoader : IDisposable
     {
         ArgumentNullException.ThrowIfNull(document);
         ObjectDisposedException.ThrowIf(_disposed, this);
+        if (!CuiProjectItems.IsCuiSourceFamily(document.SourceName))
+            throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR051", CuiDiagnosticSeverity.Error, "Production CUI loading rejects non-CUI/AXAML/HUI application input.", document.Span));
         // Close attached native menus before replacing their authored control lineage.
         foreach (var owner in _ownedContextMenus.Keys.ToArray()) CloseOwnedContextMenu(owner);
         // Reusing a loader must not leak definitions or live controls from a prior document.
@@ -269,19 +362,43 @@ public sealed class CuiControlLoader : IDisposable
         _liveConditionals.Clear();
         ClearRepeatSubscriptions();
         _repeats.Clear();
+        foreach (var control in _authoredControls.Keys.ToArray()) DetachPresentation(control);
+        _controlThemeNames.Clear(); _controlThemeResources.Clear(); _themeNames.Clear(); _themeNames.Push("user_preference");
         _authoredControls.Clear();
         _observedBindings.Clear();
         ClearActionHandlers();
         _actionInvocations.Clear();
         _documentActions = document.Actions;
         _runtimeDiagnostics.Clear();
-        _themeStack = new CuiThemeScopeStack(CuiSurfacePaletteCatalog.ActiveTheme);
+        _themeStack = new CuiThemeScopeStack(_themePreference?.Current.Theme.BaseTheme ?? CuiSurfacePaletteCatalog.ActiveTheme);
         _currentLayer = 0;
         _currentRepeatIdentity = null;
         _documentTemplates = document.Templates;
         _definitions.Clear();
         _definitionPath.Clear();
         _definitionScope = null;
+        _typeDefinitions.Clear(); _localThemes = new();
+        foreach (var definition in document.Components.SelectMany(DefinitionsOutsideTheme))
+        {
+            if (CuiLanguageVocabulary.IsForbiddenElement(definition.Type))
+                throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR054", CuiDiagnosticSeverity.Error, "A Definition cannot re-export a forbidden donor element.", definition.Span));
+            if (definition.Type.Equals("Theme", StringComparison.OrdinalIgnoreCase))
+            {
+                var inherits = definition.Properties.FirstOrDefault(pair => pair.Key.Equals("Inherits", StringComparison.OrdinalIgnoreCase)).Value as CuiLiteralValue;
+                var rules = definition.Children.Where(child => child.IsDefinition).Select(child => new CuiThemeElementRule(child.Type,
+                    (child.Properties.FirstOrDefault(pair => pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)).Value as CuiLiteralValue)?.Value,
+                    child.Properties.Where(pair => !pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)).ToDictionary(pair => pair.Key,
+                        pair => pair.Value is CuiLiteralValue literal ? (object?)literal.Value : throw new CuiRuntimeLoadException(new("CUIR056", CuiDiagnosticSeverity.Error, "Theme defaults must have typed literal values.", pair.Value.Span)), StringComparer.OrdinalIgnoreCase))).ToArray();
+                _localThemes.Add(new CuiThemeDefinition(definition.Name ?? throw new CuiRuntimeLoadException(new("CUIR056", CuiDiagnosticSeverity.Error, "Theme Definition requires Name.", definition.Span)), inherits?.Value ?? "Professional", rules));
+            }
+            else if (CuiLanguageVocabulary.VisualElements.Contains(definition.Type))
+            {
+                if (definition.Name is not null) _definitions[definition.Name] = definition;
+                var definedType = definition.Properties.FirstOrDefault(pair => pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)).Value as CuiLiteralValue;
+                if (definedType is not null) _typeDefinitions[definition.Type + "\0" + definedType.Value] = definition;
+            }
+            else if (!definition.Type.Equals("Theme", StringComparison.OrdinalIgnoreCase)) _definitions[definition.Name ?? definition.Type] = definition;
+        }
 
         // Populate resource scope
         foreach (var (key, def) in document.Resources)
@@ -290,18 +407,12 @@ public sealed class CuiControlLoader : IDisposable
                 _resourceScope[key] = literal.Value;
         }
 
-        if (document.Components.Count == 0)
+        var visibleRoot = document.Components.FirstOrDefault(component => !component.IsDefinition);
+        if (visibleRoot is null)
             return null;
 
-        CollectDefinitions(document.Components);
-
-        // A definition declaration is library metadata, not a visible control, so it can never
-        // become the root. The root is the first component that is not a declaration.
-        var rootComponent = document.Components.FirstOrDefault(component => !component.IsDefinition);
-        if (rootComponent is null)
-            return null;
-
-        var root = LoadComponent(rootComponent);
+        // The first component is the root
+        var root = LoadComponent(visibleRoot);
 
         // Set DataContext for live bindings if we have a binding context
         if (_bindingContext is not null)
@@ -465,7 +576,12 @@ public sealed class CuiControlLoader : IDisposable
             WireBindingsRecursive(menu, control);
 
         // Recurse into visual children
-        if (control is Panel panel)
+        if (control is CuiContainerControl container)
+        {
+            // Inactive view cells are detached from native layout, not retired.
+            foreach (var child in container.AuthoredChildren) WireBindingsRecursive(child, contextMenuOwner);
+        }
+        else if (control is Panel panel)
         {
             foreach (var child in panel.Children)
                 if (child is Control ctrl) WireBindingsRecursive(ctrl, contextMenuOwner);
@@ -541,8 +657,9 @@ public sealed class CuiControlLoader : IDisposable
         // === DefaultTheme is a scope marker, not a visual control ===
         if (component.IsThemeScope && component.DefaultTheme is not null)
         {
-            var resolvedTheme = CuiThemeScope.ResolveThemeName(component.DefaultTheme, CuiSurfacePaletteCatalog.ActiveTheme);
-            _themeStack.Push(resolvedTheme);
+            var resolution = ResolveTheme(component.DefaultTheme);
+            var resolvedTheme = resolution.Theme.BaseTheme;
+            _themeStack.Push(resolvedTheme); _themeNames.Push(component.DefaultTheme);
 
             try
             {
@@ -575,7 +692,8 @@ public sealed class CuiControlLoader : IDisposable
                 // Apply theme resources to the resulting control
                 if (result is not null)
                 {
-                    CuiThemeScopeApplier.ApplyThemeToControl(result, resolvedTheme, _currentSurface, appearanceOverride: _appearance);
+                    _controlThemeNames[result] = component.DefaultTheme;
+                    ApplyResolvedTheme(result, resolution);
                 }
 
                 return result ?? new Panel();
@@ -583,6 +701,7 @@ public sealed class CuiControlLoader : IDisposable
             finally
             {
                 _themeStack.Pop();
+                _themeNames.Pop();
             }
         }
 
@@ -592,6 +711,8 @@ public sealed class CuiControlLoader : IDisposable
             return InstantiateTemplate(component, template);
 
         var control = CreateControl(component, definitionInstance);
+        CuiPropertyPresentation.Attach(control, ownsTemplate: component.Type.ToLowerInvariant() is not ("object" or "audio" or "video"));
+        CuiLifecycleProperties.Attach(control);
         var parentLayer = _currentLayer;
         var layer = ResolveLayer(component, parentLayer);
         control.ZIndex = layer;
@@ -602,13 +723,12 @@ public sealed class CuiControlLoader : IDisposable
             control.Name = component.Name;
             Avalonia.Automation.AutomationProperties.SetAutomationId(control, component.Name);
         }
+        // Typed resource references need the effective scope before authored values.
+        ApplyThemeToControlIfContainer(control);
         ApplyProperties(control, component);
         ApplyAuthoredText(control, component);
         ApplyActionTag(control, component);
         ApplyClasses(control, component);
-
-        // Apply theme resources to this control if it's a container
-        ApplyThemeToControlIfContainer(control);
 
         _currentLayer = layer;
         try
@@ -627,8 +747,17 @@ public sealed class CuiControlLoader : IDisposable
         return WrapScrollable(control, component);
     }
 
+    private static IEnumerable<CuiComponent> DefinitionsOutsideTheme(CuiComponent component)
+    {
+        if (component.IsDefinition) yield return component;
+        if (component.Type.Equals("Theme", StringComparison.OrdinalIgnoreCase) && component.IsDefinition) yield break;
+        foreach (var child in component.Children.Concat(component.ElseChildren))
+            foreach (var definition in DefinitionsOutsideTheme(child)) yield return definition;
+    }
+
     private Control WrapScrollable(Control control, CuiComponent component)
     {
+        if (control is CuiContainerControl) return control; // Canonical Container keeps scrolling inside its identity/decorated bounds.
         var horizontal = GetBooleanProperty(component, "HorizontalScrolling");
         var vertical = GetBooleanProperty(component, "VerticalScrolling");
         if (!horizontal && !vertical)
@@ -657,13 +786,19 @@ public sealed class CuiControlLoader : IDisposable
 
     private Control CreateControl(CuiComponent component, bool allowContainerFallback = false)
     {
-        if (_controlRegistry.TryCreate(component, ResolveValue, out var control, out var error))
+        var creation = component;
+        var declaredType = component.Properties.FirstOrDefault(pair => pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)).Value as CuiLiteralValue;
+        if (declaredType is not null && component.Type == "Text" && _typeDefinitions.ContainsKey(component.Type + "\0" + declaredType.Value))
+            creation = new(component.Type, component.Name, component.Classes,
+                component.Properties.Where(pair => !pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)).ToDictionary(pair => pair.Key, pair => pair.Value),
+                component.Actions, component.Children, component.Condition, component.List, component.Span, groups: component.Groups);
+        if (_controlRegistry.TryCreate(creation, ResolveValue, out var control, out var error))
             return control!;
 
         // A definition authored as a component tree has no built-in element contract to extend,
         // so its instance lowers as a container.
-        if (allowContainerFallback)
-            return new Panel();
+        if (allowContainerFallback && !CuiLanguageVocabulary.IsForbiddenElement(component.Type))
+            return new CuiContainerControl("Overlay");
 
         var code = component.Type.Equals("Object", StringComparison.OrdinalIgnoreCase)
             ? "CUIR002"
@@ -683,15 +818,16 @@ public sealed class CuiControlLoader : IDisposable
                 "If elements require a parsed condition before runtime lowering.", component.Span));
 
         var layer = ResolveLayer(component, _currentLayer);
+        var conditionValue = EvaluateCondition(component.Condition);
         var host = new ContentControl
         {
             Name = component.Name,
-            Content = BuildConditionalBranch(component, EvaluateCondition(component.Condition), layer)
+            Content = BuildConditionalBranch(component, conditionValue, layer)
         };
         host.ZIndex = layer;
         CuiRuntimeIdentity.SetStableId(host, ComposeStableId(component.StableId));
         if (component.Condition.IsLive && component.Condition.Test is CuiBindingValue binding)
-            _liveConditionals.Add(new CuiLiveConditional(host, component, binding.Path, layer, _bindingContext!));
+            _liveConditionals.Add(new CuiLiveConditional(host, component, binding.Path, layer, _bindingContext!, _themeNames.Peek()) { LastValue = conditionValue });
         return host;
     }
 
@@ -737,19 +873,21 @@ public sealed class CuiControlLoader : IDisposable
 
         var layer = ResolveLayer(component, _currentLayer);
         var panelValue = component.Properties.FirstOrDefault(pair => pair.Key.Equals("Panel", StringComparison.OrdinalIgnoreCase)).Value;
-        var panelName = panelValue is null ? "StackPanel" : panelValue is CuiLiteralValue literal ? literal.Value :
+        var panelName = panelValue is null ? "Vertical Stack" : panelValue is CuiLiteralValue literal ? literal.Value :
             throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR050", CuiDiagnosticSeverity.Error, "Repeat Panel must be a structural literal.", component.Span));
         Panel host = panelName.ToLowerInvariant() switch
         {
-            "stackpanel" or "stack" => new StackPanel(),
+            "vertical stack" => new StackPanel(),
+            "horizontal stack" => new StackPanel { Orientation = Orientation.Horizontal },
             "grid" => new Grid(),
-            _ => throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR050", CuiDiagnosticSeverity.Error, "Repeat Panel supports StackPanel or Grid.", component.Span))
+            _ => throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR050", CuiDiagnosticSeverity.Error, "Repeat Panel supports Vertical Stack, Horizontal Stack or Grid.", component.Span))
         };
         host.Name = component.Name; host.ZIndex = layer;
         CuiRuntimeIdentity.SetStableId(host, ComposeStableId(component.StableId));
         _authoredControls[host] = component;
+        CuiPropertyPresentation.Attach(host); CuiLifecycleProperties.Attach(host); ApplyThemeToControlIfContainer(host);
         ApplyProperties(host, component);
-        var state = new CuiRepeatState(host, component, layer, _bindingContext, _currentRepeatIdentity);
+        var state = new CuiRepeatState(host, component, layer, _bindingContext, _currentRepeatIdentity, _themeNames.Peek());
         _repeats.Add(state);
         ReconcileRepeat(state);
         return host;
@@ -757,16 +895,17 @@ public sealed class CuiControlLoader : IDisposable
 
     private static string? RepeatItemPlacement(string property) => property.Replace("-", "", StringComparison.Ordinal).ToLowerInvariant() switch
     {
-        "itemrow" => "Grid.Row", "itemcolumn" => "Grid.Column",
-        "itemrowspan" => "Grid.RowSpan", "itemcolumnspan" => "Grid.ColumnSpan", _ => null
+        "itemrow" => "Row", "itemcolumn" => "Column",
+        "itemrowspan" => "RowSpan", "itemcolumnspan" => "ColumnSpan", _ => null
     };
 
     private void ReconcileRepeat(CuiRepeatState state)
     {
         var previousContext = _bindingContext; var previousIdentity = _currentRepeatIdentity; var previousLayer = _currentLayer;
         _bindingContext = state.Context; _currentRepeatIdentity = state.IdentityPrefix; _currentLayer = state.Layer;
+        _themeStack.Push(ResolveTheme(state.ThemeName).Theme.BaseTheme); _themeNames.Push(state.ThemeName);
         try { ReconcileRepeatCore(state); }
-        finally { _bindingContext = previousContext; _currentRepeatIdentity = previousIdentity; _currentLayer = previousLayer; }
+        finally { _themeStack.Pop(); _themeNames.Pop(); _bindingContext = previousContext; _currentRepeatIdentity = previousIdentity; _currentLayer = previousLayer; }
     }
 
     private void ReconcileRepeatCore(CuiRepeatState state)
@@ -894,6 +1033,8 @@ public sealed class CuiControlLoader : IDisposable
         _liveConditionals.RemoveAll(conditional => removed.Contains(conditional.Host));
         foreach (var control in removed)
         {
+            DetachPresentation(control);
+            _controlThemeNames.Remove(control); _controlThemeResources.Remove(control);
             _authoredControls.Remove(control);
             _observedBindings.Remove(control);
             _actionInvocations.Remove(control);
@@ -901,6 +1042,14 @@ public sealed class CuiControlLoader : IDisposable
             if (_actionHandlers.Remove(control, out var handler)) UnwireAction(control, handler);
             CloseOwnedContextMenu(control);
         }
+    }
+
+    private static void DetachPresentation(Control control)
+    {
+        CuiLayoutProperties.Detach(control);
+        CuiLifecycleProperties.Detach(control);
+        CuiPropertyPresentation.Detach(control);
+        if (control is CuiContainerControl container) container.Dispose();
     }
 
     private string CreateRepeatIdentityPrefix(CuiComponent component, string key)
@@ -916,17 +1065,6 @@ public sealed class CuiControlLoader : IDisposable
         if (_currentRepeatIdentity is not null)
             return $"{_currentRepeatIdentity}/{stableId}";
         return _definitionScope is null ? stableId : $"{_definitionScope}/{stableId}";
-    }
-
-    private void CollectDefinitions(IEnumerable<CuiComponent> components)
-    {
-        foreach (var component in components)
-        {
-            if (component.IsDefinition)
-                _definitions[component.Name ?? component.Type] = component;
-            CollectDefinitions(component.Children);
-            CollectDefinitions(component.ElseChildren);
-        }
     }
 
     /// <summary>A user definition never silently shadows a built-in element name.</summary>
@@ -1183,14 +1321,19 @@ public sealed class CuiControlLoader : IDisposable
 
     private void ApplyProperties(Control control, CuiComponent component)
     {
+        var typeName = component.Properties.FirstOrDefault(pair => pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)).Value as CuiLiteralValue;
+        if (typeName is not null && _typeDefinitions.TryGetValue(component.Type + "\0" + typeName.Value, out var typeDefinition))
+            foreach (var (name, value) in typeDefinition.Properties.Where(pair => !pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)))
+                ApplyAuthoredValue(control, name, value, CuiPropertyLevel.Definition);
         foreach (var (propName, value) in component.Properties)
         {
             if (component.Repeat is not null && (propName.Equals("Panel", StringComparison.OrdinalIgnoreCase) || RepeatItemPlacement(propName) is not null)) continue;
+            if (!_controlRegistry.TryGetProperty(propName, out var descriptor))
+                throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR052", CuiDiagnosticSeverity.Error, $"Unknown or forbidden CUI property '{propName}'.", value.Span));
+            if (_controlRegistry.TryResolveElement(component.Type, out var element) && !element.AllowedProperties.Contains(descriptor.Name) && !descriptor.IsAttached)
+                throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR052", CuiDiagnosticSeverity.Error, $"CUI property '{propName}' is not supported on {component.Type}.", value.Span));
             // Type selects the native lowering of core polymorphic elements.
-            if (propName.Equals("Type", StringComparison.OrdinalIgnoreCase)
-                && (component.Type.Equals("Container", StringComparison.OrdinalIgnoreCase)
-                    || component.Type.Equals("Input", StringComparison.OrdinalIgnoreCase)
-                    || component.Type.Equals("Object", StringComparison.OrdinalIgnoreCase)))
+            if (propName.Equals("Type", StringComparison.OrdinalIgnoreCase))
                 continue;
 
             if (value is CuiInvalidValue invalid)
@@ -1202,34 +1345,58 @@ public sealed class CuiControlLoader : IDisposable
             // Live binding: if value is a CuiBindingValue, create a real Avalonia binding
             if (value is CuiBindingValue binding && _bindingContext is not null)
             {
-                ApplyLiveBinding(control, propName, binding, component.Span);
+                ApplyLiveBinding(control, descriptor.Name, binding, component.Span);
                 continue;
             }
 
-            var resolved = ResolveValue(value);
-            if (resolved is null) continue;
-
-            ApplyLiteralProperty(control, propName, resolved, component.Span);
+            ApplyAuthoredValue(control, descriptor.Name, value);
         }
     }
 
-    private static void ApplyAuthoredText(Control control, CuiComponent component)
+    private void ApplyAuthoredValue(Control control, string property, CuiValue value, CuiPropertyLevel level = CuiPropertyLevel.Instance)
+    {
+        if (value is CuiResourceValue resource) ApplyResourceProperty(control, property, resource, level);
+        else if (ResolveValue(value) is { } literal) ApplyLiteralProperty(control, property, literal, value.Span, level);
+    }
+
+    private void ApplyResourceProperty(Control control, string property, CuiResourceValue resource, CuiPropertyLevel level = CuiPropertyLevel.Instance)
+    {
+        var value = ResolveResourceObject(resource.Key, control);
+        if (value is null) throw new CuiRuntimeLoadException(new("CUIR057", CuiDiagnosticSeverity.Error,
+            $"CUI resource '{resource.Key}' is unavailable in this scope.", resource.Span));
+        if (value is string literal) ApplyLiteralProperty(control, property, literal, resource.Span, level);
+        else ApplyTypedProperty(control, property, value, resource.Span, level);
+    }
+
+    private void ApplyTypedProperty(Control control, string property, object? value, CuiSourceSpan span, CuiPropertyLevel level = CuiPropertyLevel.Instance)
+    {
+        try
+        {
+            if (CuiPropertyPresentation.Set(control, property, value, level, "CUI authored " + level)) return;
+        }
+        catch (Exception error) when (error is ArgumentException or InvalidOperationException)
+        { throw new CuiRuntimeLoadException(new("CUIR053", CuiDiagnosticSeverity.Error, $"Invalid CUI {property}: {error.Message}", span)); }
+        throw new CuiRuntimeLoadException(new("CUIR053", CuiDiagnosticSeverity.Error,
+            $"CUI property '{property}' has no typed projection for this resource.", span));
+    }
+
+    private void ApplyAuthoredText(Control control, CuiComponent component)
     {
         if (string.IsNullOrWhiteSpace(component.Text)
-            || component.Properties.ContainsKey("text")
-            || component.Properties.ContainsKey("content"))
+            || component.Properties.Keys.Any(name => name.Equals("Text", StringComparison.OrdinalIgnoreCase)
+                || name.Equals("Content", StringComparison.OrdinalIgnoreCase) || name.Equals("Value", StringComparison.OrdinalIgnoreCase)))
             return;
 
         switch (control)
         {
-            case TextBlock textBlock:
-                textBlock.Text = component.Text;
+            case TextBlock:
+                ApplyLiteralProperty(control, "Text", component.Text, component.Span);
                 break;
-            case TextBox textBox:
-                textBox.Text = component.Text;
+            case TextBox:
+                ApplyLiteralProperty(control, "Value", component.Text, component.Span);
                 break;
-            case ContentControl contentControl:
-                contentControl.Content = component.Text;
+            case ContentControl:
+                ApplyLiteralProperty(control, "Content", component.Text, component.Span);
                 break;
         }
     }
@@ -1244,7 +1411,11 @@ public sealed class CuiControlLoader : IDisposable
         var context = _bindingContext!;
         ApplyObservedBinding(control, propName, binding, context, sourceSpan);
 
-        if (binding.Mode == CuiBindingMode.TwoWay)
+        var inputDefaultWriteBack = binding.Mode != CuiBindingMode.OneTime && context is ICuiWritableBindingContext
+            && _authoredControls.TryGetValue(control, out var authoredInput) && authoredInput.Type.Equals("Input", StringComparison.OrdinalIgnoreCase)
+            && NormalizeProperty(propName) is "value" or "text" or "checked" or "ischecked" or "selectedindex"
+            && !(authoredInput.Properties.FirstOrDefault(pair => pair.Key.Equals("WriteBack", StringComparison.OrdinalIgnoreCase)).Value is CuiLiteralValue writeBack && writeBack.Value.Equals("false", StringComparison.OrdinalIgnoreCase));
+        if (binding.Mode == CuiBindingMode.TwoWay || inputDefaultWriteBack)
             WireInputWriteBack(control, propName, binding, sourceSpan, context);
     }
 
@@ -1310,16 +1481,23 @@ public sealed class CuiControlLoader : IDisposable
                 continue;
             var previousContext = _bindingContext;
             _bindingContext = conditional.Context;
+            _themeStack.Push(ResolveTheme(conditional.ThemeName).Theme.BaseTheme); _themeNames.Push(conditional.ThemeName);
             try
             {
-                var branch = BuildConditionalBranch(conditional.Component,
-                    EvaluateCondition(conditional.Component.Condition!), conditional.Layer);
+                var conditionValue = EvaluateCondition(conditional.Component.Condition!);
+                // Scalar notifications already refresh live bindings. Keeping the
+                // selected branch preserves editor identity, focus and original owners.
+                if (conditionValue == conditional.LastValue) continue;
+                var branch = BuildConditionalBranch(conditional.Component, conditionValue, conditional.Layer);
                 if (conditional.Host.Content is Control oldBranch) DetachControlTree(oldBranch);
                 conditional.Host.Content = branch;
+                conditional.LastValue = conditionValue;
                 WireBindingsRecursive(branch);
             }
             finally
             {
+                _themeStack.Pop();
+                _themeNames.Pop();
                 _bindingContext = previousContext;
             }
         }
@@ -1333,7 +1511,7 @@ public sealed class CuiControlLoader : IDisposable
             CuiBindingValue binding when _bindingContext is not null
                 && _bindingContext.TryGetValue(binding.Path, out var resolved) => resolved,
             CuiBindingValue binding => binding.Fallback,
-            CuiResourceValue resource => ResolveResourceValue(resource.Key),
+            CuiResourceValue resource => ResolveResourceObject(resource.Key),
             _ => null,
         };
     }
@@ -1448,8 +1626,23 @@ public sealed class CuiControlLoader : IDisposable
         return false;
     }
 
-    private void ApplyLiteralProperty(Control control, string propName, string resolved, CuiSourceSpan sourceSpan)
+    private void ApplyLiteralProperty(Control control, string propName, string resolved, CuiSourceSpan sourceSpan, CuiPropertyLevel level = CuiPropertyLevel.Instance)
     {
+        try
+        {
+            if (control is Image && propName.Equals("Source", StringComparison.OrdinalIgnoreCase))
+            {
+                var image = _controlRegistry.ResolveImageSource(resolved, control);
+                if (image is null) throw new ArgumentException($"Image source '{resolved}' is not registered by this host.");
+                ApplyTypedProperty(control, propName, image, sourceSpan, level);
+                return;
+            }
+            if (CuiLifecycleProperties.SetLiteral(control, propName, resolved, level, "CUI authored " + level)) return;
+            if (CuiLayoutProperties.SetLiteral(control, propName, resolved, level, "CUI authored " + level)) return;
+            if (CuiPropertyPresentation.TrySetLiteral(control, propName, resolved, level, "CUI authored " + level, sourceSpan: sourceSpan)) return;
+        }
+        catch (Exception error) when (error is FormatException or ArgumentException or InvalidOperationException)
+        { throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR053", CuiDiagnosticSeverity.Error, $"Invalid CUI {propName}: {error.Message}", sourceSpan)); }
         var normalizedPropertyName = propName.Replace("-", string.Empty, StringComparison.Ordinal);
             switch (normalizedPropertyName.ToLowerInvariant())
             {
@@ -1912,6 +2105,12 @@ public sealed class CuiControlLoader : IDisposable
         }
         switch (parent)
         {
+            case CuiContainerControl container:
+                if (CuiAbsoluteLayout.HasPlacement(child) && container.Layout is not CuiAbsolutePanel)
+                    throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR058", CuiDiagnosticSeverity.Error,
+                        "Free coordinates require a Container Type Absolute parent.", _authoredControls[child].Span));
+                container.AddChild(child);
+                break;
             case Panel panel:
                 panel.Children.Add(child);
                 break;
@@ -1946,32 +2145,21 @@ public sealed class CuiControlLoader : IDisposable
         };
     }
 
-    private string? ResolveResourceValue(string key)
+    private string? ResolveResourceValue(string key) => ResolveResourceObject(key)?.ToString();
+
+    private object? ResolveResourceObject(string key, Control? control = null)
     {
         if (_resourceScope.TryGetValue(key, out var value))
             return value;
-
-        var palette = CuiSurfacePaletteCatalog.For(
-            _currentSurface,
-            _appearance ?? CuiThemeScopeApplier.DetectAppearance(),
-            _themeStack.Current);
-        return key switch
+        if (control is not null && control.Resources.TryGetResource(key, null, out var scoped)) return scoped;
+        if (control is null)
         {
-            "CuiBackgroundBrush" => palette.TideBase.ToString(),
-            "CuiTextBrush" => palette.Text.ToString(),
-            "CuiTextSoftBrush" => palette.TextSoft.ToString(),
-            "CuiMutedBrush" => palette.Muted.ToString(),
-            "CuiPanelBrush" => palette.Panel.ToString(),
-            "CuiPanel2Brush" => palette.Panel2.ToString(),
-            "CuiPanel3Brush" => palette.Panel3.ToString(),
-            "CuiPanelHoverBrush" => palette.PanelHover.ToString(),
-            "CuiLineBrush" => palette.Line.ToString(),
-            "CuiLineStrongBrush" => palette.LineStrong.ToString(),
-            "CuiButtonBrush" => palette.Button.ToString(),
-            "CuiFocusBrush" => palette.Focus.ToString(),
-            "CuiAccentSoftBrush" => palette.AccentSoft.ToString(),
-            _ => null,
-        };
+            var resources = new ResourceDictionary();
+            CuiThemeResourceApplier.ApplyToResources(resources, CuiSurfacePaletteCatalog.For(_currentSurface,
+                _appearance ?? CuiThemeScopeApplier.DetectAppearance(), _themeStack.Current));
+            if (resources.TryGetResource(key, null, out var themed)) return themed;
+        }
+        return Application.Current?.Resources.TryGetResource(key, null, out var shared) == true ? shared : null;
     }
 
     private string? ResolveBindingValue(CuiBindingValue binding)
@@ -2020,7 +2208,22 @@ public sealed class CuiControlLoader : IDisposable
                     ApplyObservedBinding(control, selected.PropertyName, selected.Binding, selected.Context, selected.Span);
                 return;
             }
+            var previous = _observedBindings.GetValueOrDefault(control)?.GetValueOrDefault(property)?.ResolvedValue;
             var resolved = ResolveObservedBinding(control, property, binding, context);
+            // Renderer objects are already typed. Stringifying them discards gradients,
+            // vector image data and other nonliteral identity/state.
+            if (context.TryGetValue(binding.Path, out var typed) && typed is Avalonia.Media.IBrush or Avalonia.Media.IImage)
+            {
+                ApplyTypedProperty(control, property, typed, span);
+                return;
+            }
+            if (control is Image && property.Equals("Source", StringComparison.OrdinalIgnoreCase)
+                && context.TryGetValue(binding.Path, out typed) && typed is null)
+            {
+                ApplyTypedProperty(control, property, null, span);
+                return;
+            }
+            if (CuiInputValidationProperties.GetHasError(control) && resolved == previous && NormalizeProperty(property) is "value" or "text" or "checked" or "selectedindex") return;
             if (resolved is not null) ApplyLiteralProperty(control, property, resolved, span);
         }
         catch
@@ -2078,7 +2281,7 @@ public sealed class CuiControlLoader : IDisposable
 
     private static Thickness ParseThickness(string value)
     {
-        var parts = value.Split(',', ' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var parts = value.Split([',', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         return parts.Length switch
         {
             1 when double.TryParse(parts[0], out var v) => new Thickness(v),
@@ -2090,7 +2293,7 @@ public sealed class CuiControlLoader : IDisposable
         };
     }
 
-    private static Avalonia.Media.IBrush ParseBrush(string value, CuiSourceSpan sourceSpan)
+    internal static Avalonia.Media.IBrush ParseBrush(string value, CuiSourceSpan sourceSpan)
     {
         if (ContainsBackdropModifier(value))
             throw new CuiRuntimeLoadException(new CuiDiagnostic(
@@ -2268,11 +2471,9 @@ public sealed class CuiControlLoader : IDisposable
     /// </summary>
     private void ApplyThemeToControlIfContainer(Control control)
     {
-        if (control is Panel || control is Border || control is ContentControl || control is Decorator || control is ContextMenu)
-        {
-            var currentTheme = _themeStack.Current;
-            CuiThemeScopeApplier.ApplyThemeToControl(control, currentTheme, _currentSurface, appearanceOverride: _appearance);
-        }
+        var name = _themeNames.Count > 0 ? _themeNames.Peek() : "user_preference";
+        _controlThemeNames[control] = name;
+        ApplyResolvedTheme(control, ResolveTheme(name));
     }
 
     /// <summary>
@@ -2297,6 +2498,10 @@ public sealed class CuiControlLoader : IDisposable
             foreach (var descendant in EnumerateControls(menu)) yield return descendant;
         switch (root)
         {
+            case CuiContainerControl container:
+                foreach (var child in container.AuthoredChildren)
+                foreach (var descendant in EnumerateControls(child)) yield return descendant;
+                break;
             case Panel panel:
                 foreach (var child in panel.Children.OfType<Control>())
                 foreach (var descendant in EnumerateControls(child))
@@ -2329,7 +2534,11 @@ public sealed class CuiControlLoader : IDisposable
         CuiComponent Component,
         string Path,
         int Layer,
-        ICuiBindingContext Context);
+        ICuiBindingContext Context,
+        string ThemeName)
+    {
+        public bool LastValue { get; set; }
+    }
 
     private sealed record RepeatItemInstance(RepeatItemScope Scope, Panel Root);
 
@@ -2339,15 +2548,16 @@ public sealed class CuiControlLoader : IDisposable
         private System.Collections.Specialized.INotifyCollectionChanged? _observableSource;
         private System.Collections.Specialized.NotifyCollectionChangedEventHandler? _handler;
 
-        public CuiRepeatState(Panel host, CuiComponent component, int layer, ICuiBindingContext? context, string? identityPrefix)
+        public CuiRepeatState(Panel host, CuiComponent component, int layer, ICuiBindingContext? context, string? identityPrefix, string themeName)
         {
             Host = host;
             Component = component;
-            Layer = layer; Context = context; IdentityPrefix = identityPrefix;
+            Layer = layer; Context = context; IdentityPrefix = identityPrefix; ThemeName = themeName;
         }
 
         public ICuiBindingContext? Context { get; }
         public string? IdentityPrefix { get; }
+        public string ThemeName { get; }
         public Panel Host { get; }
         public CuiComponent Component { get; }
         public int Layer { get; }

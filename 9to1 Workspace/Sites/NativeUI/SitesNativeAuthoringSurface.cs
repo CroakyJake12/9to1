@@ -89,10 +89,10 @@ public sealed class SitesNativeAuthoringSurface : UserControl, IAsyncDisposable,
         await RequireReadyAsync(linked.Token);
         var page = await _session.ReadAsync(_actor, linked.Token);
         var registry = new CuiControlRegistry();
-        registry.RegisterControlType("SitesNameInput", _ => _name); registry.RegisterControlType("SitesPathInput", _ => _path);
-        registry.RegisterControlType("SitesTextInput", _ => _text); registry.RegisterControlType("SitesProjects", _ => _projects);
-        registry.RegisterControlType("SitesPages", _ => _pages); registry.RegisterControlType("SitesComponents", _ => _components);
-        registry.RegisterControlType("SitesPreview", _ => _preview); registry.RegisterControlType("SitesHtmlPreview", _ => _html);
+        registry.BindAuthoredControl("sites-name-input", _ => _name); registry.BindAuthoredControl("sites-path-input", _ => _path);
+        registry.BindAuthoredControl("sites-text-input", _ => _text); registry.BindAuthoredControl("sites-projects", _ => _projects);
+        registry.BindAuthoredControl("sites-pages", _ => _pages); registry.BindAuthoredControl("sites-components", _ => _components);
+        registry.BindAuthoredControl("sites-preview", _ => _preview); registry.BindAuthoredControl("sites-html-preview", _ => _html);
         _scene = new CuiSceneHost(registry);
         var available = await _scene.ShowAsync(new("sites", "Sites", "Authoring", Load(), this, this, _readiness), linked.Token);
         if (available.State != CuiSceneAvailabilityState.Ready) throw new UnauthorizedAccessException(available.Message);

@@ -15,7 +15,7 @@ public static class TerminalCommandPolicy
 {
     public static TerminalPermissionResult Evaluate(PermissionMode permission, bool approvedOnce = false)
     {
-        if (RuntimeSafetyState.IsSafeMode) return new(TerminalPermissionDecision.Denied, "Haven recovery Safe Mode disables local command execution.");
+        if (RuntimeSafetyState.IsSafeMode) return new(TerminalPermissionDecision.Denied, "9to1 recovery Safe Mode disables local command execution.");
         if (approvedOnce || permission == PermissionMode.FullAccess) return new(TerminalPermissionDecision.Allowed, "Command execution is allowed.");
         return permission switch
         {

@@ -59,7 +59,7 @@ public sealed class OverlayCompactRouteResolver
 
         if (decision.Destination == GoRouteDestination.Clarify)
         {
-            return Clarification(decision, decision.Clarification ?? "Tell Haven what you want to do.");
+            return Clarification(decision, decision.Clarification ?? "Tell 9to1 what you want to do.");
         }
 
         var modes = await GetAvailableModesAsync(cancellationToken).ConfigureAwait(false);
@@ -67,13 +67,13 @@ public sealed class OverlayCompactRouteResolver
         {
             return FullHaven(
                 decision,
-                "Project work opens in full Haven so the project workspace and its tools remain available.");
+                "Project work opens in full 9to1 so the project workspace and its tools remain available.");
         }
 
         var targetKey = decision.Destination == GoRouteDestination.Chat ? "chat" : decision.TargetKey;
         if (string.IsNullOrWhiteSpace(targetKey))
         {
-            return FullHaven(decision, "Haven could not identify a registered destination for this request.");
+            return FullHaven(decision, "9to1 could not identify a registered destination for this request.");
         }
 
         return ResolveRegisteredMode(decision.Instruction, decision.Context, targetKey, modes, decision);
@@ -99,13 +99,13 @@ public sealed class OverlayCompactRouteResolver
 
         if (string.IsNullOrWhiteSpace(normalizedKey))
         {
-            return Clarification(decision, "Choose an installed Haven app to open.");
+            return Clarification(decision, "Choose an installed 9to1 app to open.");
         }
 
         var registered = await _modeRegistry.GetModeByKeyAsync(normalizedKey, cancellationToken).ConfigureAwait(false);
         if (registered is null || !registered.IsEnabled)
         {
-            return FullHaven(decision, $"The Haven app '{normalizedKey}' is not installed or enabled.");
+            return FullHaven(decision, $"The 9to1 app '{normalizedKey}' is not installed or enabled.");
         }
 
         var modes = await GetAvailableModesAsync(cancellationToken).ConfigureAwait(false);
@@ -140,13 +140,13 @@ public sealed class OverlayCompactRouteResolver
         var mode = modes.FirstOrDefault(item => item.Key.Equals(targetKey.Trim(), StringComparison.OrdinalIgnoreCase));
         if (mode is null)
         {
-            return FullHaven(decision, $"The Haven app '{targetKey.Trim()}' is not installed or enabled.");
+            return FullHaven(decision, $"The 9to1 app '{targetKey.Trim()}' is not installed or enabled.");
         }
 
         var route = HavenAppRoutePolicy.Resolve(mode);
         if (IsCompactCapable(mode, route))
         {
-            return Compact(instruction, context, mode, route, $"Route {mode.Name} in the compact Haven Overlay.");
+            return Compact(instruction, context, mode, route, $"Route {mode.Name} in the compact 9to1 Overlay.");
         }
 
         return FullHaven(
@@ -268,7 +268,7 @@ public sealed class OverlayCompactRouteResolver
             null,
             decision.Instruction,
             ImmutableArray.CreateRange(decision.Context.AttachmentPaths),
-            "The request needs clarification before Haven can choose a destination.",
+            "The request needs clarification before 9to1 can choose a destination.",
             clarification,
             decision.Context);
 

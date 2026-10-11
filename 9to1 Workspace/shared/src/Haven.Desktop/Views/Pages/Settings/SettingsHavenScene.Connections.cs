@@ -88,7 +88,7 @@ internal sealed partial class SettingsHavenScene
         var intro = Card("Settings.Integrations.Overview");
         intro.Add(Heading("Settings.Integrations.Heading", "Connections", 20));
         intro.Add(Muted("Settings.Integrations.Description",
-            "Connect services Haven can actually use. Every card shows what access it receives and whether the connection is currently usable."));
+            "Connect services 9to1 can actually use. Every card shows what access it receives and whether the connection is currently usable."));
         _connectionsStatus = Muted("Settings.Integrations.Status", "Loading connection status…");
         _refreshConnectionsButton = new HavenButton
         {
@@ -108,7 +108,7 @@ internal sealed partial class SettingsHavenScene
         var services = Card("Settings.Integrations.Services");
         services.Add(Heading("Settings.Integrations.ServicesHeading", "Connected services", 18));
         services.Add(Muted("Settings.Integrations.ServicesDescription",
-            "Calendar connections can read calendar data and create, update or delete calendar items when Haven performs a calendar action. Sign-in happens with the provider in its own authentication flow; Haven does not ask for or store your Google or Microsoft password."));
+            "Calendar connections can read calendar data and create, update or delete calendar items when 9to1 performs a calendar action. Sign-in happens with the provider in its own authentication flow; 9to1 does not ask for or store your Google or Microsoft password."));
         _servicesHost = new Container { Name = "Settings.Integrations.ServicesHost", Layout = HavenLayout.Vertical };
         _servicesHost.SetValue(HavenProperties.Gap, HavenLength.Px(10));
         _servicesHost.SetValue(HavenProperties.Width, HavenLength.Percent(100));
@@ -118,7 +118,7 @@ internal sealed partial class SettingsHavenScene
         var providers = Card("Settings.Integrations.ModelProviders");
         providers.Add(Heading("Settings.Integrations.ModelProvidersHeading", "Cloud model providers", 18));
         providers.Add(Muted("Settings.Integrations.ModelProvidersDescription",
-            "When a cloud model is selected, Haven sends the request content needed to answer that model request to the configured provider. Saved API keys live in Windows Credential Manager and are never redisplayed here."));
+            "When a cloud model is selected, 9to1 sends the request content needed to answer that model request to the configured provider. Saved API keys live in Windows Credential Manager and are never redisplayed here."));
         providers.Add(Muted("Settings.Integrations.SecretNotice",
             "API keys use Haven.UI secure input: characters are masked, clipboard export is disabled, and platform automation receives no secret value."));
         _providersHost = new Container { Name = "Settings.Integrations.ProvidersHost", Layout = HavenLayout.Vertical };
@@ -130,7 +130,7 @@ internal sealed partial class SettingsHavenScene
         var mcp = Card("Settings.Integrations.Mcp");
         mcp.Add(Heading("Settings.Integrations.McpHeading", "MCP & external connections", 18));
         mcp.Add(Muted("Settings.Integrations.McpDescription",
-            "Model Context Protocol servers connect Haven to tools from other apps and services. Remote HTTPS servers sign in with OAuth 2.1 in your browser; local loopback and preset servers connect without OAuth."));
+            "Model Context Protocol servers connect 9to1 to tools from other apps and services. Remote HTTPS servers sign in with OAuth 2.1 in your browser; local loopback and preset servers connect without OAuth."));
         _mcpSuggestionsHost = new Container { Name = "Settings.Integrations.Mcp.SuggestionsHost", Layout = HavenLayout.Vertical };
         _mcpSuggestionsHost.SetValue(HavenProperties.Gap, HavenLength.Px(10));
         _mcpSuggestionsHost.SetValue(HavenProperties.Width, HavenLength.Percent(100));
@@ -317,7 +317,7 @@ internal sealed partial class SettingsHavenScene
         confirmation.SetValue(HavenProperties.Gap, HavenLength.Px(6));
         confirmation.SetValue(HavenProperties.Width, HavenLength.Percent(100));
         confirmation.Add(Muted($"Settings.Integrations.Mcp.{connection.Id}.RemoveWarning",
-            $"Removing {connection.DisplayName} disconnects its tools from Haven and cannot be undone from this page."));
+            $"Removing {connection.DisplayName} disconnects its tools from 9to1 and cannot be undone from this page."));
         var confirmActions = ActionRow();
 
         var confirm = new HavenButton
@@ -365,7 +365,7 @@ internal sealed partial class SettingsHavenScene
         review.Add(Muted(null,
             "The exact tool list is provided by the server during connection. Afterward, tool inputs are sent only when an attached tool is invoked."));
         review.Add(Muted(null,
-            "Haven's existing permission checks still apply: tools that change external state require permission, and destructive tools require one-action approval or Full Access."));
+            "9to1's existing permission checks still apply: tools that change external state require permission, and destructive tools require one-action approval or Full Access."));
         if (!string.IsNullOrWhiteSpace(details.ValidationError))
             review.Add(Muted($"Settings.Integrations.Mcp.Suggest.{suggestion.Key}.Review.Validation", details.ValidationError));
 
@@ -430,7 +430,7 @@ internal sealed partial class SettingsHavenScene
                 ? "Sign-in: none. The UEFN preset is restricted to a loopback endpoint on this device."
                 : isLoopback
                     ? "Sign-in: none. This loopback connection stays on this device."
-                    : "Sign-in: OAuth 2.1 in your browser. Haven stores returned credentials in its protected provider store.";
+                    : "Sign-in: OAuth 2.1 in your browser. 9to1 stores returned credentials in its protected provider store.";
 
         return new McpAccessReviewDetails(destination, authentication, validationError);
     }

@@ -22,7 +22,7 @@ public sealed class ElementTreeSemanticSelectorTests
     [Fact]
     public void Hot_reload_keeps_last_valid_tree_after_a_compile_error()
     {
-        var options = new CuiCompilerOptions(new CuiCompilationMetadata("1", "1", "1"));
+        var options = new CuiCompilerOptions(new CuiCompilationMetadata("1", "1", "2.0"));
         var session = new CuiHotReloadSession(new CuiCompiler(), options);
         var initial = session.Update("<Page id=\"home\"><Text id=\"title\" Text=\"Hello\" /></Page>", "home.cui");
         var current = session.Current;

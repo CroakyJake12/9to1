@@ -32,7 +32,7 @@ public sealed class ImagineSemanticService(IProviderModelClient models) : IImagi
             return new(false, "No compatible vision model is available. Semantic decomposition was not changed.", null, []);
 
         const string system =
-            "You are Haven Imagine's visual decomposition engine. Return strict JSON only. " +
+            "You are 9to1 Imagine's visual decomposition engine. Return strict JSON only. " +
             "Describe visible editable semantic parts with normalized bounds. Never claim segmentation masks you did not produce.";
         const string prompt =
             """

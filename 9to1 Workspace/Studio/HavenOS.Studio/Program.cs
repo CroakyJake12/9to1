@@ -25,7 +25,7 @@ internal static class Program
             if (command is "status" or "source")
             {
                 var ubuntu = document.RootElement.GetProperty("ubuntu");
-                Console.WriteLine($"HavenOS source workspace: {root}");
+                Console.WriteLine($"9to1OS source workspace: {root}");
                 Console.WriteLine($"Ubuntu base: {ubuntu.GetProperty("release").GetString()} ({ubuntu.GetProperty("codename").GetString()})");
                 foreach (var component in document.RootElement.GetProperty("components").EnumerateObject())
                     Console.WriteLine($"{component.Name}: {component.Value.GetProperty("classification").GetString()}");
@@ -39,7 +39,7 @@ internal static class Program
                 Console.Error.WriteLine("Missing required workspace paths: " + string.Join(", ", missing));
                 return 1;
             }
-            Console.WriteLine("HavenOS workspace contract is present. This does not assert that an ISO or VM exists.");
+            Console.WriteLine("9to1OS workspace contract is present. This does not assert that an ISO or VM exists.");
             return 0;
         }
         catch (Exception ex) when (ex is IOException or JsonException or InvalidOperationException)
@@ -53,6 +53,6 @@ internal static class Program
     {
         for (var directory = new DirectoryInfo(start); directory is not null; directory = directory.Parent)
             if (File.Exists(Path.Combine(directory.FullName, "havenos.lock"))) return directory.FullName;
-        throw new InvalidOperationException("Run inside a HavenOS workspace containing havenos.lock.");
+        throw new InvalidOperationException("Run inside a 9to1OS workspace containing havenos.lock.");
     }
 }

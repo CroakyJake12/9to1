@@ -92,7 +92,7 @@ public sealed partial class MeshCoordinator
                 await SendTaskReceiptAsync(message.SourceDeviceId, receipt).ConfigureAwait(false);
                 return;
             }
-            if (_inboundTasks is null) throw new InvalidOperationException("This Haven build has no inbound Mesh task executor.");
+            if (_inboundTasks is null) throw new InvalidOperationException("This 9to1 build has no inbound Mesh task executor.");
 
             receipt = new MeshTaskReceipt(task.TaskId, MeshTaskStatus.Accepted, DateTimeOffset.UtcNow, $"Accepted delegated task from {peer.DisplayName}.");
             await RecordTaskAsync(receipt, CancellationToken.None).ConfigureAwait(false);

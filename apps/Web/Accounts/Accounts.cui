@@ -2,70 +2,100 @@
   <Actions>
     <Action name="SelectSession" command="SelectSession" parameter="{Binding session}" />
   </Actions>
-  <DefaultTheme value="Default">
-    <StackPanel id="account-root" orientation="Vertical" padding="20" background="{Resource CuiBackgroundBrush}">
-      <TextBlock text="Account settings" font-size="26" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
-      <TextBlock id="account-status" text="{Binding Status}" text-wrapping="Wrap" accessible-name="Account operation status" margin="0 8 0 12" />
-      <WrapPanel>
-        <Button id="account-signin" action="RequestSignIn" content="Sign in" is-enabled="{Binding CanSignIn}" accessible-name="Open trusted CAKE ID sign-in" margin="0 0 8 8" />
-        <Button id="account-refresh" action="Refresh" content="Check account" is-enabled="{Binding CanRefresh}" accessible-name="Check current account, profile and sessions" margin="0 0 8 8" />
-        <Button id="account-discard" action="DiscardAndReload" content="Discard draft and reload" is-enabled="{Binding CanRefresh}" accessible-name="Discard unsaved profile edits and reload from the account service" margin="0 0 8 8" />
-      </WrapPanel>
-      <If condition="{Binding HasAccount}">
-        <StackPanel margin="0 8 0 16">
-          <TextBlock text="{Binding DisplayName}" font-size="20" text-wrapping="Wrap" />
-          <TextBlock text="{Binding AccountId}" accessible-name="Canonical account ID" text-wrapping="Wrap" />
-        </StackPanel>
-      </If>
-      <If condition="{Binding HasProfile}">
-        <StackPanel id="account-profile" orientation="Vertical">
-          <TextBlock text="Profile" font-size="20" font-weight="SemiBold" />
-          <TextBlock text="* denotes a required field. Icon, Pronouns and Job are optional." text-wrapping="Wrap" />
-          <TextBlock text="{Binding ProfileRevision}" accessible-name="Current profile revision" />
-          <If condition="{Binding Conflict}"><TextBlock text="{Binding ConflictRevision}" accessible-name="Conflicting server profile revision" /></If>
-          <TextBlock text="Name*" margin="0 8 0 4" />
-          <TextBox id="profile-name" text="{Binding Draft.name, mode=TwoWay, type=string}" is-enabled="{Binding CanEdit}" accessible-name="Profile name" />
-          <TextBlock text="Username*" margin="0 8 0 4" />
-          <TextBox id="profile-username" text="{Binding Draft.username, mode=TwoWay, type=string}" is-enabled="{Binding CanEdit}" accessible-name="Profile username" />
-          <TextBlock text="Profile icon link" margin="0 8 0 4" />
-          <TextBox id="profile-icon" text="{Binding Draft.icon, mode=TwoWay, type=string}" is-enabled="{Binding CanEdit}" accessible-name="HTTPS profile icon link" />
-          <Button action="ClearIcon" content="Clear profile icon" is-enabled="{Binding CanEdit}" accessible-name="Remove the profile icon" margin="0 4 0 8" />
-          <TextBlock text="Pronouns" margin="0 8 0 4" />
-          <TextBox id="profile-pronouns" text="{Binding Draft.pronouns, mode=TwoWay, type=string}" is-enabled="{Binding CanEdit}" accessible-name="Profile pronouns" />
-          <Button action="ClearPronouns" content="Clear pronouns" is-enabled="{Binding CanEdit}" accessible-name="Remove profile pronouns" margin="0 4 0 8" />
-          <TextBlock text="Job" margin="0 8 0 4" />
-          <TextBox id="profile-job" text="{Binding Draft.job, mode=TwoWay, type=string}" is-enabled="{Binding CanEdit}" accessible-name="Profile job" />
-          <Button action="ClearJob" content="Clear job" is-enabled="{Binding CanEdit}" accessible-name="Remove profile job" margin="0 4 0 8" />
-          <Button id="profile-save" action="SaveProfile" content="Save profile" is-enabled="{Binding CanSave}" accessible-name="Save changed profile fields using the original revision" margin="0 8 0 16" />
-        </StackPanel>
-      </If>
-      <TextBlock text="Sessions" font-size="20" font-weight="SemiBold" margin="0 8 0 8" />
-      <TextBlock text="{Binding SessionSummary}" accessible-name="Session inspection status" text-wrapping="Wrap" margin="0 0 0 8" />
-      <Repeat Source="{Binding Sessions}" As="session" Key="{Binding session.sessionId}">
-        <Border border-thickness="1" border-brush="{Resource CuiLineBrush}" padding="12" margin="0 0 0 8">
-          <StackPanel>
-            <TextBlock text="{Binding session.deviceName}" text-wrapping="Wrap" />
-            <TextBlock text="{Binding session.sessionId}" accessible-name="Canonical session ID" text-wrapping="Wrap" />
-            <TextBlock text="{Binding session.createdAt}" accessible-name="Session created at" />
-            <TextBlock text="{Binding session.expiresAt}" accessible-name="Session expires at" />
-            <Button action="SelectSession" content="Revoke this session…" is-enabled="{Binding CanSessionActions}" accessible-name="Review revocation of this exact session" margin="0 8 0 0" />
-          </StackPanel>
-        </Border>
-      </Repeat>
-      <WrapPanel>
-        <Button id="sessions-revoke-others" action="RequestRevokeOthers" content="Revoke other sessions…" is-enabled="{Binding CanSessionActions}" accessible-name="Review revocation of all other sessions" margin="0 8 8 8" />
-        <Button id="account-signout" action="RequestSignOut" content="Sign out…" is-enabled="{Binding CanSessionActions}" accessible-name="Review sign out of the current session" margin="0 8 8 8" />
-      </WrapPanel>
-      <If condition="{Binding HasConfirmation}">
-        <StackPanel id="session-confirmation" orientation="Vertical" margin="0 8 0 16">
-          <TextBlock text="{Binding Confirmation}" text-wrapping="Wrap" accessible-name="Session change confirmation" />
-          <WrapPanel>
-            <Button id="session-confirm" action="ConfirmSessionMutation" content="Confirm session change" is-enabled="{Binding CanConfirm}" accessible-name="Confirm the reviewed session change" margin="0 8 8 0" />
-            <Button action="CancelSessionMutation" content="Cancel" is-enabled="{Binding CanConfirm}" accessible-name="Cancel the session change" margin="0 8 0 0" />
-          </WrapPanel>
-        </StackPanel>
-      </If>
-      <TextBlock text="{Binding UnsupportedServices}" text-wrapping="Wrap" margin="0 12 0 0" accessible-name="Unavailable account services" />
-    </StackPanel>
-  </DefaultTheme>
+  <Theme Name="user_preference">
+    <Page>
+      <Container id="account-root" padding="28" background="{Resource CuiBackgroundBrush}" Type="Overlay" VerticalScrolling="True" HorizontalScrolling="False">
+        <Container max-width="920" horizontal-alignment="Left" Type="Vertical Stack">
+          <Button content="Home" action="ShellHome" margin="0,0,0,20" />
+          <Container id="appearance-settings" Active="{Binding ShowAppearanceSettings, fallback=false}" Type="Vertical Stack" CellGap="10" Margin="0,0,0,24" Padding="18" Background="{Resource CuiPanelBrush}">
+  <Text Text="Appearance" FontSize="20" FontWeight="SemiBold" />
+  <Text Text="{Binding AppearanceThemeName}" AccessibleName="Current CUI theme" />
+  <Text Text="{Binding AppearanceScope}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+  <Container Type="Wrap" CellGap="8">
+    <Button Action="ThemeProfessional" Content="Professional" Interactive="{Binding AppearanceCanChange}" />
+    <Button Action="ThemeGlow" Content="Glow" Interactive="{Binding AppearanceCanChange}" />
+    <Button Action="ThemePlayful" Content="Playful" Interactive="{Binding AppearanceCanChange}" />
+    <Button Action="ThemeBubble" Content="Bubble" Interactive="{Binding AppearanceCanChange}" />
+    <Button Action="ThemeCinematic" Content="Cinematic" Interactive="{Binding AppearanceCanChange}" />
+  </Container>
+  <Text Text="{Binding AppearanceStatus}" TextWrapping="Wrap" AccessibleName="Appearance status" />
+  <Button Action="ThemeRefresh" Content="Reload saved appearance" Interactive="{Binding AppearanceCanChange}" HorizontalAlignment="Left" />
+</Container>
+          <Text text="Account settings" font-size="26" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <Text id="account-status" text="{Binding ConnectionSummary}" text-wrapping="Wrap" accessible-name="Account operation status" margin="0,8,0,12" />
+          <Text text="{Binding ConnectionRecovery}" text-wrapping="Wrap" margin="0,0,0,20" foreground="{Resource CuiTextSoftBrush}" />
+          <Container Type="Wrap">
+            <If condition="{Binding CanSignIn}">
+              <Button id="account-signin" action="RequestSignIn" content="Sign in" accessible-name="Open trusted CAKE ID sign-in" margin="0,0,8,8" Interactive="{Binding CanSignIn}" />
+            </If>
+            <Button id="account-refresh" action="Refresh" content="Check account" accessible-name="Check current account, profile and sessions" margin="0,0,8,8" Interactive="{Binding CanRefresh}" />
+            <If condition="{Binding HasChanges}">
+              <Button id="account-discard" action="DiscardAndReload" content="Discard draft and reload" accessible-name="Discard unsaved profile edits and reload from the account service" margin="0,0,8,8" Interactive="{Binding CanRefresh}" />
+            </If>
+          </Container>
+          <If condition="{Binding HasAccount}">
+            <Container margin="0,8,0,16" Type="Vertical Stack">
+              <Text text="{Binding DisplayName}" font-size="20" text-wrapping="Wrap" />
+              <Text text="{Binding AccountId}" accessible-name="Canonical account ID" text-wrapping="Wrap" />
+            </Container>
+          </If>
+          <If condition="{Binding HasProfile}">
+            <Container id="account-profile" Type="Vertical Stack">
+              <Text text="Profile" font-size="20" font-weight="SemiBold" />
+              <Text text="* denotes a required field. Icon, Pronouns and Job are optional." text-wrapping="Wrap" />
+              <Text text="{Binding ProfileRevision}" accessible-name="Current profile revision" />
+              <If condition="{Binding Conflict}">
+                <Text text="{Binding ConflictRevision}" accessible-name="Conflicting server profile revision" />
+              </If>
+              <Text text="Name*" margin="0,8,0,4" />
+              <Input id="profile-name" accessible-name="Profile name" Type="Text" Value="{Binding Draft.name, mode=TwoWay, type=string}" Interactive="{Binding CanEdit}" />
+              <Text text="Username*" margin="0,8,0,4" />
+              <Input id="profile-username" accessible-name="Profile username" Type="Text" Value="{Binding Draft.username, mode=TwoWay, type=string}" Interactive="{Binding CanEdit}" />
+              <Text text="Profile icon link" margin="0,8,0,4" />
+              <Input id="profile-icon" accessible-name="HTTPS profile icon link" Type="Text" Value="{Binding Draft.icon, mode=TwoWay, type=string}" Interactive="{Binding CanEdit}" />
+              <Button action="ClearIcon" content="Clear profile icon" accessible-name="Remove the profile icon" margin="0,4,0,8" Interactive="{Binding CanEdit}" />
+              <Text text="Pronouns" margin="0,8,0,4" />
+              <Input id="profile-pronouns" accessible-name="Profile pronouns" Type="Text" Value="{Binding Draft.pronouns, mode=TwoWay, type=string}" Interactive="{Binding CanEdit}" />
+              <Button action="ClearPronouns" content="Clear pronouns" accessible-name="Remove profile pronouns" margin="0,4,0,8" Interactive="{Binding CanEdit}" />
+              <Text text="Job" margin="0,8,0,4" />
+              <Input id="profile-job" accessible-name="Profile job" Type="Text" Value="{Binding Draft.job, mode=TwoWay, type=string}" Interactive="{Binding CanEdit}" />
+              <Button action="ClearJob" content="Clear job" accessible-name="Remove profile job" margin="0,4,0,8" Interactive="{Binding CanEdit}" />
+              <Button id="profile-save" action="SaveProfile" content="Save profile" accessible-name="Save changed profile fields using the original revision" margin="0,8,0,16" Interactive="{Binding CanSave}" />
+            </Container>
+          </If>
+          <Text text="Sessions" font-size="20" font-weight="SemiBold" margin="0,8,0,8" />
+          <Text text="{Binding SessionSummary}" accessible-name="Session inspection status" text-wrapping="Wrap" margin="0,0,0,8" />
+          <Repeat Source="{Binding Sessions}" As="session" Key="{Binding session.sessionId}">
+            <Container padding="12" margin="0,0,0,8" Type="Overlay" BorderWidth="1" BorderColor="{Resource CuiLineBrush}">
+              <Container Type="Vertical Stack">
+                <Text text="{Binding session.deviceName}" text-wrapping="Wrap" />
+                <Text text="{Binding session.sessionId}" accessible-name="Canonical session ID" text-wrapping="Wrap" />
+                <Text text="{Binding session.createdAt}" accessible-name="Session created at" />
+                <Text text="{Binding session.expiresAt}" accessible-name="Session expires at" />
+                <Button action="SelectSession" content="Revoke this session…" accessible-name="Review revocation of this exact session" margin="0,8,0,0" Interactive="{Binding CanSessionActions}" />
+              </Container>
+            </Container>
+          </Repeat>
+          <Container Type="Wrap">
+            <Button id="sessions-revoke-others" action="RequestRevokeOthers" content="Revoke other sessions…" accessible-name="Review revocation of all other sessions" margin="0,8,8,8" Interactive="{Binding CanSessionActions}" />
+            <Button id="account-signout" action="RequestSignOut" content="Sign out…" accessible-name="Review sign out of the current session" margin="0,8,8,8" Interactive="{Binding CanSessionActions}" />
+          </Container>
+          <If condition="{Binding HasConfirmation}">
+            <Container id="session-confirmation" margin="0,8,0,16" Type="Vertical Stack">
+              <Text text="{Binding Confirmation}" text-wrapping="Wrap" accessible-name="Session change confirmation" />
+              <Container Type="Wrap">
+                <Button id="session-confirm" action="ConfirmSessionMutation" content="Confirm session change" accessible-name="Confirm the reviewed session change" margin="0,8,8,0" Interactive="{Binding CanConfirm}" />
+                <Button action="CancelSessionMutation" content="Cancel" accessible-name="Cancel the session change" margin="0,8,0,0" Interactive="{Binding CanConfirm}" />
+              </Container>
+            </Container>
+          </If>
+          <Text text="{Binding UnsupportedServices}" text-wrapping="Wrap" margin="0,12,0,0" accessible-name="Unavailable account services" />
+          <Button content="{Binding DiagnosticLabel}" action="ToggleDiagnostics" margin="0,24,0,8" />
+          <If condition="{Binding ShowDiagnostics}">
+            <Text text="{Binding Status}" text-wrapping="Wrap" accessible-name="Account technical details" />
+          </If>
+        </Container>
+      </Container>
+    </Page>
+  </Theme>
 </Cui>

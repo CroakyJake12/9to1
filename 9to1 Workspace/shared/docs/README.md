@@ -1,8 +1,8 @@
-# Haven Developer Documentation
+# 9to1 Developer Documentation
 
-Haven is a local-first AI assistant for Windows desktop and Android, built on
-.NET 10 and Avalonia. Its user-facing interfaces are authored in **HavenUI
-(HUI)** — Haven's own scene-based UI layer — which renders through an
+9to1 is a local-first AI assistant for Windows desktop and Android, built on
+.NET 10 and Avalonia. Its user-facing interfaces are authored in **CUI
+(HUI)** — 9to1's own scene-based UI layer — which renders through an
 Avalonia-backed host. All AI inference is local-first (Ollama), data stays on
 device by default, and the product is organised around **Apps** (Chat, Study,
 Tasks, Studio, Browser, Plan, Imagine, and more).
@@ -41,7 +41,7 @@ not yet a persisted setting.
 | What does each source project own? | [architecture/repository-structure.md](architecture/repository-structure.md) |
 | Where does an existing system live? | [architecture/system-map.md](architecture/system-map.md) |
 | What is HUI and how does it use Avalonia? | [ui/haven-ui.md](ui/haven-ui.md) |
-| How do I build a normal Haven surface? | [ui/building-ui.md](ui/building-ui.md) |
+| How do I build a normal 9to1 surface? | [ui/building-ui.md](ui/building-ui.md) |
 | How do themes/accent/fonts/avatars work? | [ui/theming-and-personalisation.md](ui/theming-and-personalisation.md) |
 | Where does state belong? | [architecture/state-and-persistence.md](architecture/state-and-persistence.md) |
 | How do I add a feature or an app? | [development/adding-a-feature.md](development/adding-a-feature.md), [development/adding-an-app.md](development/adding-an-app.md) |

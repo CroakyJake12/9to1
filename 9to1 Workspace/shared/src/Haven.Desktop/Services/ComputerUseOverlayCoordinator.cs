@@ -67,7 +67,7 @@ public sealed partial class ComputerUseOverlayCoordinator : IDisposable, IAsyncD
 
             var labels = new TextBlock
             {
-                Text = "Haven is using your Computer",
+                Text = "9to1 is using your Computer",
                 FontSize = 34,
                 FontWeight = FontWeight.Bold,
                 Foreground = Brushes.White,
@@ -87,7 +87,7 @@ public sealed partial class ComputerUseOverlayCoordinator : IDisposable, IAsyncD
             layout.Children.Add(stop);
 
             _banner = AcquireOriginalComputerUseWindow();
-            PublishOriginalComputerUseEffect(() => _banner.Title = "Haven Computer Use controls");
+            PublishOriginalComputerUseEffect(() => _banner.Title = "9to1 Computer Use controls");
             PublishOriginalComputerUseEffect(() => _banner.Width = 1400);
             PublishOriginalComputerUseEffect(() => _banner.Height = 136);
             PublishOriginalComputerUseEffect(() => _banner.Content = new HavenAdaptiveSurface
@@ -114,7 +114,7 @@ public sealed partial class ComputerUseOverlayCoordinator : IDisposable, IAsyncD
             });
 
             _status = AcquireOriginalComputerUseWindow();
-            PublishOriginalComputerUseEffect(() => _status.Title = "Haven Computer Use status");
+            PublishOriginalComputerUseEffect(() => _status.Title = "9to1 Computer Use status");
             PublishOriginalComputerUseEffect(() => _status.Width = 250);
             PublishOriginalComputerUseEffect(() => _status.Height = 102);
             PublishOriginalComputerUseEffect(() => _status.IsHitTestVisible = false);
@@ -147,7 +147,7 @@ public sealed partial class ComputerUseOverlayCoordinator : IDisposable, IAsyncD
             });
 
             _cursor = AcquireOriginalComputerUseWindow();
-            PublishOriginalComputerUseEffect(() => _cursor.Title = "Haven virtual cursor");
+            PublishOriginalComputerUseEffect(() => _cursor.Title = "9to1 virtual cursor");
             PublishOriginalComputerUseEffect(() => _cursor.Width = 106);
             PublishOriginalComputerUseEffect(() => _cursor.Height = 110);
             PublishOriginalComputerUseEffect(() => _cursor.IsHitTestVisible = false);

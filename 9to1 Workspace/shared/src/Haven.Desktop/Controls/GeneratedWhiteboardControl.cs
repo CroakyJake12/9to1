@@ -327,10 +327,10 @@ public sealed class GeneratedWhiteboardControl : UserControl, IDisposable, IAsyn
 
         var askText = new HavenTextInput
         {
-            PlaceholderText = "Ask Haven to add, mark, or refine something",
+            PlaceholderText = "Ask 9to1 to add, mark, or refine something",
             MinWidth = 300
         };
-        var ask = new HavenPrimaryButton { Content = "Ask Haven", MinWidth = 112 };
+        var ask = new HavenPrimaryButton { Content = "Ask 9to1", MinWidth = 112 };
         ask.Click += async (_, _) => await RunOwnedAsync(windowWork, async operation =>
         {
             operation.DemandPublication();
@@ -343,7 +343,7 @@ public sealed class GeneratedWhiteboardControl : UserControl, IDisposable, IAsyn
             }
 
             PublishOwned(windowWork, () => ask.IsEnabled = false);
-            PublishOwned(windowWork, () => status.Text = "Sending the selected canvas context to Haven…");
+            PublishOwned(windowWork, () => status.Text = "Sending the selected canvas context to 9to1…");
             try
             {
                 operation.DemandPublication();
@@ -357,18 +357,18 @@ public sealed class GeneratedWhiteboardControl : UserControl, IDisposable, IAsyn
                 }));
                 await operation.AwaitAsync(actualAgent);
                 operation.DemandPublication();
-                PublishOwned(windowWork, () => status.Text = "Haven received the whiteboard request.");
+                PublishOwned(windowWork, () => status.Text = "9to1 received the whiteboard request.");
                 PublishOwned(windowWork, () => askText.Text = string.Empty);
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
                 operation.Retain(exception);
                 if (operation.IsPublicationCurrent)
-                    PublishOwned(windowWork, () => status.Text = "Haven could not process the whiteboard request: " + exception.Message);
+                    PublishOwned(windowWork, () => status.Text = "9to1 could not process the whiteboard request: " + exception.Message);
             }
             finally { if (operation.IsPublicationCurrent) PublishOwned(windowWork, () => ask.IsEnabled = true); }
         });
-        AutomationProperties.SetName(ask, "Ask Haven about the whiteboard selection");
+        AutomationProperties.SetName(ask, "Ask 9to1 about the whiteboard selection");
 
         var close = new HavenPrimaryButton { Content = "Close", MinWidth = 110 };
         close.Click += (_, _) => windowWork.RunSynchronous(operation =>
@@ -1505,7 +1505,7 @@ public sealed class GeneratedWhiteboardControl : UserControl, IDisposable, IAsyn
             context.DrawRectangle(null, pen, bounds, 5, 5);
             if (element.AgentGenerated)
             {
-                var label = new FormattedText("Haven", CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
+                var label = new FormattedText("9to1", CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
                     Typeface.Default, 11 / _session.Zoom, new SolidColorBrush(Color.Parse("#8E24AA")));
                 context.DrawText(label, new Point(bounds.X, bounds.Y - 18 / _session.Zoom));
             }

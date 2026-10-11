@@ -242,7 +242,7 @@ public sealed class BrowserAutomationStore : IBrowserAutomationStore, IDisposabl
             if (item.State == BrowserActionState.Approved)
             {
                 changed = true;
-                const string failure = "Haven restarted after approval. The action was not resumed automatically.";
+                const string failure = "9to1 restarted after approval. The action was not resumed automatically.";
                 recoveryAudit.Add(new BrowserAuditEntry(
                     Guid.NewGuid(), item.Kind, "recovery-interrupted", item.Origin, failure, false, now));
                 return item with { State = BrowserActionState.Failed, UpdatedAt = now, Failure = failure };

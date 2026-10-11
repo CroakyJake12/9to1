@@ -11,6 +11,12 @@ public static class HavenIconCatalog
 
     public static HavenGeometry Resolve(string? key) => (key ?? string.Empty).Trim().ToLowerInvariant() switch
     {
+        "home" => Geometry(Line((3, 11), (12, 3), (21, 11)), Line((5, 9), (5, 21), (10, 21), (10, 15), (14, 15), (14, 21), (19, 21), (19, 9))),
+        "wave" => Geometry(Line((3, 10), (3, 14)), Line((7, 6), (7, 18)), Line((12, 3), (12, 21)), Line((17, 7), (17, 17)), Line((21, 10), (21, 14))),
+        "shield" => Geometry(new HavenPathFigure(new HavenPoint(12, 3),
+            [new HavenLineSegment(new HavenPoint(20, 6)), new HavenLineSegment(new HavenPoint(19, 15)), new HavenLineSegment(new HavenPoint(16, 19)), new HavenLineSegment(new HavenPoint(12, 22)), new HavenLineSegment(new HavenPoint(8, 19)), new HavenLineSegment(new HavenPoint(5, 15)), new HavenLineSegment(new HavenPoint(4, 6))], true), Line((8, 12), (11, 15), (16, 9))),
+        "boards" => Geometry(new HavenPathFigure(new HavenPoint(3, 4),
+            [new HavenLineSegment(new HavenPoint(21, 4)), new HavenLineSegment(new HavenPoint(21, 20)), new HavenLineSegment(new HavenPoint(3, 20))], true), Line((9, 4), (9, 20)), Line((15, 4), (15, 20)), Line((5, 8), (7, 8)), Line((11, 8), (13, 8)), Line((17, 8), (19, 8)), Line((5, 12), (7, 12)), Line((11, 12), (13, 12))),
         "plus" or "add" => Geometry(Line((12, 4), (12, 20)), Line((4, 12), (20, 12))),
         "close" or "x" => Geometry(Line((5, 5), (19, 19)), Line((19, 5), (5, 19))),
         "check" => Geometry(Line((4, 13), (9, 18), (20, 6))),

@@ -33,9 +33,9 @@ internal sealed partial class TasksHavenScene
     private void InitializeEditor()
     {
         _nameInput = EditorInput("Tasks.Editor.Name", "Task name");
-        _goalInput = EditorInput("Tasks.Editor.Goal", "What outcome should Haven achieve?");
-        _rulesInput = EditorInput("Tasks.Editor.Rules", "Rules Haven must follow", multiline: true, minimumHeight: 150);
-        _assistantInput = EditorInput("Tasks.Editor.Assistant", "Ask Haven about this task");
+        _goalInput = EditorInput("Tasks.Editor.Goal", "What outcome should 9to1 achieve?");
+        _rulesInput = EditorInput("Tasks.Editor.Rules", "Rules 9to1 must follow", multiline: true, minimumHeight: 150);
+        _assistantInput = EditorInput("Tasks.Editor.Assistant", "Ask 9to1 about this task");
         _instructionsInput = EditorInput("Tasks.Instructions.Input", "Task instructions", multiline: true, minimumHeight: 320);
         _editorStatus = Muted("Tasks.Editor.Status", string.Empty);
 
@@ -85,10 +85,10 @@ internal sealed partial class TasksHavenScene
         assistant.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(20)));
         assistant.SetValue(HavenProperties.Padding, HavenThickness.Parse("16px"));
         assistant.SetValue(HavenProperties.Gap, HavenLength.Px(10));
-        assistant.Add(new HavenText("Ask Haven") { Level = TextLevel.H3 });
-        assistant.Add(Muted(null, "Ask for help improving the task. Haven opens the request in a Tasks conversation; it does not silently change this draft."));
+        assistant.Add(new HavenText("Ask 9to1") { Level = TextLevel.H3 });
+        assistant.Add(Muted(null, "Ask for help improving the task. 9to1 opens the request in a Tasks conversation; it does not silently change this draft."));
         assistant.Add(_assistantInput);
-        assistant.Add(Action("Tasks.Editor.Assistant.Send", "Ask Haven", ButtonVariant.Secondary, (_, _) => RequestAssistant()));
+        assistant.Add(Action("Tasks.Editor.Assistant.Send", "Ask 9to1", ButtonVariant.Secondary, (_, _) => RequestAssistant()));
         _editorView.Add(assistant);
         _editorView.Add(_editorStatus);
         Root.Add(_editorView);
@@ -228,7 +228,7 @@ internal sealed partial class TasksHavenScene
         if (request.Length == 0) return;
         _assistantInput.Text = string.Empty;
         AssistantRequested?.Invoke(this, new TasksHavenInstructionEventArgs(
-            "Help me configure this reusable Haven Task. Review the current task draft below, answer my request, and propose exact improved Name, Goal, and Rules. Do not run the task yet.\n\n" +
+            "Help me configure this reusable 9to1 Task. Review the current task draft below, answer my request, and propose exact improved Name, Goal, and Rules. Do not run the task yet.\n\n" +
             BuildInstructions() + "\n\nRequest:\n" + request));
     }
 

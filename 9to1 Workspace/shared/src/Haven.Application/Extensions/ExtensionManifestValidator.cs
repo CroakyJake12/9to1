@@ -36,9 +36,9 @@ public sealed partial class ExtensionManifestValidator
         if (!IsSafeRelativePath(package.PackagePath)) errors.Add($"{prefix}: package path must be a safe relative path.");
         if (string.IsNullOrWhiteSpace(package.DisplayName) || package.DisplayName.Length > 120) errors.Add($"{prefix}: display name is required and must be at most 120 characters.");
         if (!Version.TryParse(package.Version, out _)) errors.Add($"{prefix}: version must be a valid dotted numeric version.");
-        if (string.IsNullOrWhiteSpace(package.HavenVersionRange)) errors.Add($"{prefix}: Haven compatibility range is required.");
+        if (string.IsNullOrWhiteSpace(package.HavenVersionRange)) errors.Add($"{prefix}: 9to1 compatibility range is required.");
         if (!string.IsNullOrWhiteSpace(package.MinimumHavenVersion) && !Version.TryParse(package.MinimumHavenVersion, out _))
-            errors.Add($"{prefix}: minimum Haven version must be a dotted numeric version.");
+            errors.Add($"{prefix}: minimum 9to1 version must be a dotted numeric version.");
         if (!Enum.IsDefined(package.PackageType)) errors.Add($"{prefix}: package type is unsupported.");
         if (package.DeclaredContentHash is not null && !Regex.IsMatch(package.DeclaredContentHash, "^[0-9a-fA-F]{64}$", RegexOptions.CultureInvariant))
             errors.Add($"{prefix}: declared SHA-256 integrity hash is invalid.");

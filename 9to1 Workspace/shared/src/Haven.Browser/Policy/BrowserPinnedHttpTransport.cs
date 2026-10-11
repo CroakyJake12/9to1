@@ -62,7 +62,7 @@ internal static class BrowserPinnedHttpTransport
                 throw;
             }
         }
-        throw new HttpRequestException($"The browser request exceeded Haven's {maximumRedirects}-redirect limit.");
+        throw new HttpRequestException($"The browser request exceeded 9to1's {maximumRedirects}-redirect limit.");
     }
 
     /// <summary>

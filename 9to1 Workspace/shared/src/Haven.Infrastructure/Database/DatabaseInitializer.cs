@@ -82,7 +82,7 @@ public sealed class ConversationProductionDatabase : IAppDatabase
         {
             var health = await _maintenance.VerifyIntegrityAsync(cancellationToken).ConfigureAwait(false);
             if (!health.IsHealthy)
-                throw new InvalidDataException("The Haven database failed its post-migration integrity check. Startup was stopped to protect the data.");
+                throw new InvalidDataException("The 9to1 database failed its post-migration integrity check. Startup was stopped to protect the data.");
         }
     }
 }

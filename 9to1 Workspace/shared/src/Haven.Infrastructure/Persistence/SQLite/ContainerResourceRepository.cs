@@ -180,7 +180,7 @@ public sealed class ContainerResourceRepository(IAppPaths paths, ISqliteConnecti
                 ? await File.ReadAllTextAsync(path, cancellationToken).ConfigureAwait(false)
                 : await ReadDocxTextAsync(path, cancellationToken).ConfigureAwait(false);
             if (string.IsNullOrWhiteSpace(text)) continue;
-            if (text.Length > remaining) text = text[..remaining] + "\n[reference truncated by Haven]";
+            if (text.Length > remaining) text = text[..remaining] + "\n[reference truncated by 9to1]";
             result.Append("\n\nReference: ").Append(resource.Name).Append("\n```\n").Append(text).Append("\n```");
         }
         return result.ToString();

@@ -14,14 +14,21 @@ public sealed partial class WriteDocumentEditor
     private readonly List<NotesDocument> _undo = [];
     private readonly List<NotesDocument> _redo = [];
 
-    public WriteDocumentEditor(NotesDocument document)
+    public WriteDocumentEditor(NotesDocument document) : this(document, null) { }
+
+    public WriteDocumentEditor(NotesDocument document, Guid? pageScopeId)
     {
         Document = document ?? throw new ArgumentNullException(nameof(document));
+        if (pageScopeId is { } pageId && !document.Sections.SelectMany(section => section.Pages).Any(page => page.Id == pageId))
+            throw new ArgumentException("The editor page must belong to this document.", nameof(pageScopeId));
+        PageScopeId = pageScopeId;
         if (Blocks().FirstOrDefault() is { } first) SelectBlock(first.Id);
     }
 
     public event EventHandler? Changed;
     public NotesDocument Document { get; }
+    /// <summary>Optional presentation scope. The canonical document and save identity remain unchanged.</summary>
+    public Guid? PageScopeId { get; }
     public Guid? SelectedBlockId { get; private set; }
     public Guid? SelectedTableCellId { get; private set; }
     public int ActiveRunIndex { get; private set; }
@@ -35,7 +42,8 @@ public sealed partial class WriteDocumentEditor
     public NotesBlock? SelectedBlock => SelectedBlockId is { } id ? Blocks().FirstOrDefault(block => block.Id == id) : null;
     public NotesTextRun? ActiveRun => SelectedBlock is { } block ? RunAt(block, ActiveRunIndex) : null;
     public NotesStatistics Statistics => NotesTextStatistics.Calculate(Document);
-    public IReadOnlyList<NotesBlock> Blocks() => Document.Sections.SelectMany(section => section.Pages).SelectMany(page => page.Blocks).OrderBy(block => block.Order).ToArray();
+    public IReadOnlyList<NotesBlock> Blocks() => Document.Sections.SelectMany(section => section.Pages)
+        .Where(page => PageScopeId is null || page.Id == PageScopeId).SelectMany(page => page.Blocks).OrderBy(block => block.Order).ToArray();
 
     public void SelectBlock(Guid blockId, int caretIndex = 0, int? selectionStart = null, int? selectionEnd = null)
     {
@@ -464,7 +472,8 @@ public sealed partial class WriteDocumentEditor
     private void SetParagraph(Action<NotesParagraphFormat> apply, string reason) { if (SelectedBlock is not { } block) return; Mutate(() => apply(block.Paragraph), reason); }
     private bool TryActiveRun(out NotesTextRun run) { run = null!; if (SelectedBlock is not { } block) return false; EnsureRuns(block); ActiveRunIndex = Math.Clamp(ActiveRunIndex, 0, block.Runs.Count - 1); run = block.Runs[ActiveRunIndex]; return true; }
     private void Mutate(Action action, string reason) { _undo.Add(Clone(Document)); if (_undo.Count > HistoryLimit) _undo.RemoveAt(0); _redo.Clear(); action(); Document.UpdatedAt = DateTimeOffset.UtcNow; Changed?.Invoke(this, EventArgs.Empty); }
-    private NotesPage PageForSelection() => SelectedBlock is { } block ? PageFor(block) : Document.Sections.First().Pages.First();
+    private NotesPage PageForSelection() => SelectedBlock is { } block ? PageFor(block) :
+        Document.Sections.SelectMany(section => section.Pages).First(page => PageScopeId is null || page.Id == PageScopeId);
     private NotesPage PageFor(NotesBlock block) => Document.Sections.SelectMany(section => section.Pages).First(page => page.Blocks.Contains(block));
     private static void Renumber(NotesPage page) { for (var index = 0; index < page.Blocks.Count; index++) page.Blocks[index].Order = index; }
     private static string EditableText(NotesBlock block) => block.Runs.Count > 0 ? string.Concat(block.Runs.Select(run => run.Text)) : block.PlainText;

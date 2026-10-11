@@ -13,7 +13,7 @@
         <StackPanel Spacing="4">
           <StackPanel Orientation="Horizontal" Spacing="10">
             <controls:HavenIcon IconKey="call" Width="24" Height="24" Foreground="{DynamicResource HavenAccentBrush}"/>
-            <TextBlock Text="Haven Call" FontSize="24" FontWeight="SemiBold"/>
+            <TextBlock Text="9to1 Call" FontSize="24" FontWeight="SemiBold"/>
           </StackPanel>
           <TextBlock Text="A private local voice conversation with your Ollama model"
                      Foreground="{DynamicResource HavenMutedBrush}"/>
@@ -106,7 +106,7 @@
                              Foreground="{DynamicResource HavenMutedBrush}"/>
                   <hui:HavenButton x:Name="PreviewVoiceButton" Content="Preview selected voice"
                           Classes="secondary" HorizontalAlignment="Stretch"/>
-                  <hui:HavenCheckBox x:Name="SpeechOutputCheck" Content="Speak Haven responses" IsChecked="True" IsEnabled="True"/>
+                  <hui:HavenCheckBox x:Name="SpeechOutputCheck" Content="Speak 9to1 responses" IsChecked="True" IsEnabled="True"/>
                   <TextBlock x:Name="SpeechOutputStatus" TextWrapping="Wrap" FontSize="11"
                              Foreground="{DynamicResource HavenMutedBrush}" Text="Checking..."/>
                 </StackPanel>

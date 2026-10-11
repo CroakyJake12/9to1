@@ -67,7 +67,7 @@ public static class LlamaCppLaunchPlanner
         if (string.IsNullOrWhiteSpace(path))
             throw new ArgumentException("An explicit path is required.", parameterName);
         if (!Path.IsPathFullyQualified(path))
-            throw new ArgumentException("The path must be fully qualified so Haven cannot resolve an unintended executable or model.", parameterName);
+            throw new ArgumentException("The path must be fully qualified so 9to1 cannot resolve an unintended executable or model.", parameterName);
         return path;
     }
 }

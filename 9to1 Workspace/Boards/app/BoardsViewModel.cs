@@ -15,10 +15,11 @@ using System.Runtime.CompilerServices;
 using Avalonia.Controls;
 using Avalonia.Input;
 using CakeOS.Cui;
+using CakeOS.Cui.Runtime;
 
 namespace CakeOS.Apps.Boards.App;
 
-public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, INotifyPropertyChanged
+public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiActionDispatcher, INotifyPropertyChanged
 {
     private readonly IRichBoardSession _session;
     private readonly Dictionary<string, object?> _properties = new(StringComparer.OrdinalIgnoreCase);
@@ -127,6 +128,7 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
 
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (await DispatchCuiContextAsync(command, cancellationToken)) return;
         switch (command)
         {
             case "NewBoard":
@@ -251,6 +253,12 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
                 break;
             case "OverflowMenu":
                 OverflowRequested?.Invoke();
+                break;
+            case "BoardProperties":
+                BoardPropertiesRequested?.Invoke();
+                break;
+            case "CloseWindow":
+                CloseWindowRequested?.Invoke();
                 break;
             case "ToggleTheme":
                 ThemeToggleRequested?.Invoke();
@@ -702,6 +710,7 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
             return;
         _selectedBlockId = blockId;
         PushSelectedInfo();
+        RefreshCuiContext();
         SelectionChanged?.Invoke();
     }
 
@@ -724,6 +733,12 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
 
     /// <summary>Raised when the overflow menu should open (host builds it).</summary>
     public event Action? OverflowRequested;
+
+    /// <summary>Host displays metadata for the current canonical document.</summary>
+    public event Action? BoardPropertiesRequested;
+
+    /// <summary>Host requests its ordinary guarded close; this never discards the session.</summary>
+    public event Action? CloseWindowRequested;
 
     /// <summary>Raised when the theme toggle is invoked (host re-applies chrome).</summary>
     public event Action? ThemeToggleRequested;
@@ -1115,6 +1130,7 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
             {
                 FocusBlock(string.Join("_", rest[..^2]));
                 SelectedCell = (string.Join("_", rest[..^2]), row, col);
+                RefreshCuiContext();
                 SelectionChanged?.Invoke();
             }
         }
@@ -2125,6 +2141,7 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
             Set("UnderlineState", selected?.Underline == true ? "On" : "Off");
             Set("CanUndo", _session.CanUndo);
             Set("CanRedo", _session.CanRedo);
+            RefreshCuiContext();
         }
         finally
         {

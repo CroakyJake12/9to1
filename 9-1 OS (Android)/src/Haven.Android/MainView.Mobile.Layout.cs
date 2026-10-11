@@ -38,16 +38,16 @@ public sealed partial class MainView
 
         _mobileLayoutApplied = true;
         if (Content is not Grid root)
-            throw new InvalidOperationException("Haven's mobile shell requires the MainView root grid.");
+            throw new InvalidOperationException("9to1's mobile shell requires the MainView root grid.");
 
         var body = root.Children
             .OfType<Grid>()
             .FirstOrDefault(candidate => Grid.GetRow(candidate) == 1)
-            ?? throw new InvalidOperationException("Haven's main content grid was not found.");
+            ?? throw new InvalidOperationException("9to1's main content grid was not found.");
         var contentHost = body.Children
             .OfType<Grid>()
             .FirstOrDefault(candidate => Grid.GetColumn(candidate) == 1)
-            ?? throw new InvalidOperationException("Haven's content host was not found.");
+            ?? throw new InvalidOperationException("9to1's content host was not found.");
 
         TopRail.IsVisible = false;
         SidebarControl.IsVisible = false;
@@ -290,7 +290,7 @@ public sealed partial class MainView
 
         _mobileGoInput = new HavenTextInput
         {
-            PlaceholderText = "Go — ask Haven",
+            PlaceholderText = "Go — ask 9to1",
             MinHeight = 48,
             MinWidth = 0,
             HorizontalAlignment = HorizontalAlignment.Stretch
@@ -342,7 +342,7 @@ public sealed partial class MainView
             {
                 new TextBlock
                 {
-                    Text = "Haven",
+                    Text = "9to1",
                     FontSize = 20,
                     FontWeight = FontWeight.Bold,
                     VerticalAlignment = VerticalAlignment.Center

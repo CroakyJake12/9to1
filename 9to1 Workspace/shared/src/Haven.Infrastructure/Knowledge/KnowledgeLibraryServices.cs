@@ -69,7 +69,7 @@ internal static class KnowledgeContentSafety
                 ContainsLongTokenAfter(candidate, "sk-") ||
                 ContainsAwsAccessKey(candidate))
             {
-                throw new InvalidOperationException("Credentials and secret values cannot be stored in Haven Library or API Bank.");
+                throw new InvalidOperationException("Credentials and secret values cannot be stored in 9to1 Library or API Bank.");
             }
         }
     }

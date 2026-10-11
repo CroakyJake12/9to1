@@ -118,7 +118,7 @@ public static class CuiSurfacePaletteCatalog
     public static CuiAccentColour? AccentOverride { get; set; }
 
     /// <summary>Active canonical theme — set by the personalisation system.</summary>
-    public static CuiTheme ActiveTheme { get; set; } = CuiTheme.Glow;
+    public static CuiTheme ActiveTheme { get; set; } = CuiTheme.Professional;
 
     /// <summary>
     /// Resolves a full palette for the given surface and appearance, applying the current
@@ -281,15 +281,7 @@ public static class CuiSurfacePaletteCatalog
                 ButtonPressed = WithAlpha(Blend(palette.AccentSoft, palette.AccentStrong, 0.55), 0xFF),
                 Focus = WithAlpha(palette.AccentSecondary, 0xE6)
             },
-            CuiTheme.Professional => palette with
-            {
-                Panel = WithAlpha(palette.Panel, 0xFF),
-                Panel2 = WithAlpha(palette.Panel2, 0xFF),
-                Line = Blend(palette.LineStrong, palette.Panel3, 0.35),
-                ButtonHover = Blend(palette.ButtonHover, palette.AccentSoft, 0.25),
-                ButtonPressed = Blend(palette.ButtonPressed, palette.AccentStrong, 0.20),
-                Focus = WithAlpha(palette.AccentSecondary, 0xFF)
-            },
+            CuiTheme.Professional => Professional(palette, appearance),
             CuiTheme.Cinematic => palette with
             {
                 Panel = WithAlpha(Blend(palette.Panel, palette.TideColour, isDark ? 0.18 : 0.10), isDark ? (byte)0xEC : (byte)0xF0),
@@ -301,6 +293,32 @@ public static class CuiSurfacePaletteCatalog
                 Focus = WithAlpha(palette.Accent, 0xCC)
             },
             _ => palette
+        };
+    }
+
+    // Shared Windows-style material roles. Surface colour belongs in icons and
+    // selection accents; large panels remain neutral across every CUI app.
+    // These opaque colours are also the browser/non-composited Mica fallback.
+    private static CuiPalette Professional(CuiPalette palette, CuiAppearance appearance)
+    {
+        var dark = appearance is CuiAppearance.Dark or CuiAppearance.SuperDark;
+        var deep = appearance == CuiAppearance.SuperDark;
+        var accent = OverrideAccent ? palette.Accent : Color.Parse(dark ? "#FF60CDFF" : "#FF0067C0");
+        var background = Color.Parse(dark ? deep ? "#FF1C2228" : "#FF20262C" : "#FFF3F3F3");
+        var panel = Color.Parse(dark ? deep ? "#FF252B32" : "#FF2B3138" : "#FFFAFAFA");
+        return palette with
+        {
+            TideBase = background, TideColour = Blend(background, palette.TideColour, .08),
+            Accent = accent, AccentSecondary = accent, AccentStrong = accent,
+            AccentSoft = Blend(panel, accent, dark ? .12 : .08), AccentInk = dark ? Color.Parse("#FF003449") : Colors.White,
+            Text = Color.Parse(dark ? "#FFF5F5F5" : "#FF1B1B1B"),
+            TextSoft = Color.Parse(dark ? "#FFD0D3D6" : "#FF4F5255"),
+            Muted = Color.Parse(dark ? "#FFA7ADB3" : "#FF61676C"), Muted2 = Color.Parse(dark ? "#FF8F969D" : "#FF6E757B"),
+            Panel = panel, Panel2 = Color.Parse(dark ? "#FF30363F" : "#FFFFFFFF"),
+            Panel3 = Color.Parse(dark ? "#FF363C45" : "#FFF0F0F0"), PanelHover = Color.Parse(dark ? "#FF3B424B" : "#FFEDEDED"),
+            Line = Color.Parse(dark ? "#FF3D444C" : "#FFE4E4E4"), LineStrong = Color.Parse(dark ? "#FF5C646C" : "#FFB8BEC3"),
+            Button = Color.Parse(dark ? "#FF343B43" : "#FFFFFFFF"), ButtonHover = Color.Parse(dark ? "#FF404851" : "#FFF6F6F6"),
+            ButtonPressed = Color.Parse(dark ? "#FF2B3239" : "#FFEAEAEA"), Focus = accent, AccentBorder = accent
         };
     }
 

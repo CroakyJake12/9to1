@@ -88,7 +88,7 @@ internal sealed class PlayHavenScene
             "Games.Chess",
             "Chess",
             "Strategy",
-            "Legal move validation, check/checkmate state and a deterministic local Haven opponent.",
+            "Legal move validation, check/checkmate state and a deterministic local 9to1 opponent.",
             PlayExperienceKind.Chess));
         featured.Add(ExperienceCard(
             "Games.Quiz",
@@ -137,7 +137,7 @@ internal sealed class PlayHavenScene
         var shell = Card("Games.Chess.Session");
         shell.Add(new HavenText(
             state.Result == "playing"
-                ? state.WhiteToMove ? "White to move · You are White" : "Black to move · Haven's local opponent is thinking"
+                ? state.WhiteToMove ? "White to move · You are White" : "Black to move · 9to1's local opponent is thinking"
                 : state.Result)
         {
             Name = "Games.Chess.Status",

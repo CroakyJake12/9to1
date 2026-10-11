@@ -13,6 +13,9 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
     private WriteDocumentEditor? _editor;
     private bool _pointerSelecting;
     private double _zoom = 1;
+    private HavenBrush? _workspaceForeground;
+    private bool _readOnly;
+    private bool _workspaceLayoutLocked;
 
     private readonly Action<Action>? _originalCallbackOwner;
     private bool _retiring;
@@ -33,6 +36,18 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
     public event EventHandler? SelectionChanged;
     public double Zoom => _zoom;
     public string SelectedText => SelectedTableText ?? _editor?.SelectedDocumentText ?? string.Empty;
+
+    /// <summary>Opt-in seamless shared-object presentation. This never changes stored page setup.</summary>
+    public void SetWorkspaceAppearance(HavenBrush? foreground)
+    {
+        _workspaceForeground = foreground;
+        SetValue(HavenProperties.MinHeight, HavenLength.Px(foreground is null ? 900 : 320));
+        Accessibility.AccessibleName = foreground is null ? "Document editor" : "Board page editor";
+        InvalidateDocument();
+    }
+
+    public void SetReadOnly(bool readOnly) { if (_readOnly == readOnly) return; _readOnly = readOnly; _pointerSelecting = false; }
+    public void SetWorkspaceLayoutLocked(bool locked) { _workspaceLayoutLocked = locked; Invalidate(); }
 
     public void SetEditor(WriteDocumentEditor editor)
     {
@@ -60,7 +75,8 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
     {
         if (_editor is null) return false;
         BuildLayout();
-        if (TryPointerPressSpecial(input)) return true;
+        if (!_readOnly && (_workspaceForeground is null || !_workspaceLayoutLocked || HitTableCell(input.LocalPosition) is not null)
+            && TryPointerPressSpecial(input)) return true;
         if (HitTextPosition(input.LocalPosition) is { } position)
         {
             _activeTableCellId = null;
@@ -88,7 +104,7 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
     private bool PointerMovedCore(HavenPointerInput input)
     {
         if (_editor is null) return false;
-        if (TryPointerMoveSpecial(input)) return true;
+        if (!_readOnly && TryPointerMoveSpecial(input)) return true;
         if (!_pointerSelecting) return false;
         BuildLayout();
         if (HitTextPosition(input.LocalPosition, nearest: true) is not { } position) return false;
@@ -101,7 +117,7 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
     public bool PointerReleased(HavenPointerInput input) => OwnOriginalInput(() => PointerReleasedCore(input));
     private bool PointerReleasedCore(HavenPointerInput input)
     {
-        if (TryPointerReleaseSpecial(input)) return true;
+        if (!_readOnly && TryPointerReleaseSpecial(input)) return true;
         if (!_pointerSelecting) return false;
         _pointerSelecting = false;
         if (_editor is not null && HitTextPosition(input.LocalPosition, nearest: true) is { } position)
@@ -114,6 +130,7 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
     public bool TextInput(string? text) => OwnOriginalInput(() => TextInputCore(text));
     private bool TextInputCore(string? text)
     {
+        if (_readOnly) return false;
         if (TryTableTextInput(text)) return true;
         if (_editor?.InsertDocumentText(text) != true) return false;
         InvalidateDocument();
@@ -124,6 +141,8 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
     private bool KeyDownCore(HavenKey key, HavenInputModifiers modifiers)
     {
         if (_editor is null) return false;
+        if (_readOnly && !(modifiers.Control && key == HavenKey.A) &&
+            key is not (HavenKey.Left or HavenKey.Right or HavenKey.Up or HavenKey.Down or HavenKey.Home or HavenKey.End)) return false;
         if (TryTableKeyDown(key, modifiers)) return true;
         if (modifiers.Control)
         {
@@ -182,6 +201,7 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
     public bool DeleteSelection() => OwnOriginalInput(DeleteSelectionCore);
     private bool DeleteSelectionCore()
     {
+        if (_readOnly) return false;
         if (DeleteTableCellSelection()) return true;
         if (_editor?.DeleteDocumentSelection() != true) return false;
         InvalidateDocument();
@@ -209,7 +229,7 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
     {
         if (_editor is null || Bounds.Width <= 1) return;
         BuildLayout();
-        foreach (var page in _pages)
+        foreach (var page in _workspaceForeground is null ? _pages : [])
         {
             var absolute = Absolute(page);
             context.Add(new HavenShadowCommand(absolute, new HavenShadow(new HavenSolidBrush(45, 0, 0, 0), 18, 0, 5, 0, .28), 4));
@@ -267,7 +287,7 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
         if (_editor?.SelectedBlockId == block.Id && !IsTextBlock(block))
         {
             context.Add(new HavenStrokeRoundedRectCommand(Absolute(DisplayRectLocal(layout)), new HavenPen(new HavenSolidBrush(255, 57, 110, 220), 2), 5, opacity));
-            DrawObjectHandles(context, layout, opacity);
+            if (!_readOnly && (_workspaceForeground is null || !_workspaceLayoutLocked)) DrawObjectHandles(context, layout, opacity);
         }
         if (_editor?.Document.Comments.Any(comment => comment.BlockId == block.Id) == true)
             context.Add(new HavenEllipseCommand(new HavenRect(Absolute(layout.Rect).Right + 6, Absolute(layout.Rect).Y + 4, 8, 8), new HavenSolidBrush(255, 255, 166, 0), null, opacity));
@@ -309,7 +329,7 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
         if (State.HasFlag(HavenElementState.Focused) && _editor.DocumentCaret.BlockId == block.Id)
         {
             var caret = Math.Clamp(_editor.DocumentCaret.Offset, 0, text.Length);
-            context.Add(new HavenCaretCommand(rect, fullLayout, new HavenSolidBrush(255, 25, 30, 36), opacity)
+            context.Add(new HavenCaretCommand(rect, fullLayout, _workspaceForeground ?? new HavenSolidBrush(255, 25, 30, 36), opacity)
             {
                 FullLayout = fullLayout,
                 CaretIndex = caret
@@ -327,8 +347,8 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
             var item = list.Items[index];
             var indent = item.Level * 22 * _zoom;
             var marker = list.Kind switch { NotesListKind.Numbered => $"{list.StartNumber + index}.", NotesListKind.Checklist => item.Checked ? "☑" : "☐", _ => "•" };
-            context.Add(new HavenTextCommand(new HavenRect(rect.X + indent, y, 26 * _zoom, 24 * _zoom), new HavenTextLayout(marker, "Montserrat", 13 * _zoom, 600, 26 * _zoom), new HavenSolidBrush(255, 28, 34, 42), opacity));
-            context.Add(new HavenTextCommand(new HavenRect(rect.X + indent + 28 * _zoom, y, Math.Max(20, rect.Width - indent - 28 * _zoom), 24 * _zoom), new HavenTextLayout(item.Text, "Montserrat", 13 * _zoom, 400, Math.Max(20, rect.Width - indent - 28 * _zoom)), new HavenSolidBrush(255, 28, 34, 42), opacity));
+            context.Add(new HavenTextCommand(new HavenRect(rect.X + indent, y, 26 * _zoom, 24 * _zoom), new HavenTextLayout(marker, "Montserrat", 13 * _zoom, 600, 26 * _zoom), _workspaceForeground ?? new HavenSolidBrush(255, 28, 34, 42), opacity));
+            context.Add(new HavenTextCommand(new HavenRect(rect.X + indent + 28 * _zoom, y, Math.Max(20, rect.Width - indent - 28 * _zoom), 24 * _zoom), new HavenTextLayout(item.Text, "Montserrat", 13 * _zoom, 400, Math.Max(20, rect.Width - indent - 28 * _zoom)), _workspaceForeground ?? new HavenSolidBrush(255, 28, 34, 42), opacity));
             y += 27 * _zoom;
         }
     }
@@ -340,7 +360,7 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
         {
             var cell = cellLayout.Cell;
             var cellRect = Absolute(cellLayout.Rect);
-            if (cellLayout.Row == 0 && table.HeaderRow)
+            if (cellLayout.Row == 0 && table.HeaderRow && _workspaceForeground is null)
                 context.Add(new HavenFillRoundedRectCommand(cellRect, new HavenSolidBrush(255, 244, 246, 250), 0, opacity));
             if (Colour(cell.Background, transparentFallback: true) is HavenSolidBrush { A: > 0 } background)
                 context.Add(new HavenFillRoundedRectCommand(cellRect, background, 0, opacity));
@@ -354,11 +374,11 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
             var textLayout = ParagraphDescriptor(paragraph, textOrigin, textRect.Width);
             if (_tableCellSelection is { } tableSelection && tableSelection.CellId == cell.Id && tableSelection.Length > 0)
                 context.Add(new HavenTextSelectionCommand(textRect, textLayout, tableSelection.Start, tableSelection.Length, new HavenSolidBrush(95, 57, 110, 220), opacity));
-            context.Add(new HavenTextCommand(textRect, textLayout, new HavenSolidBrush(255, 35, 42, 52), opacity));
+            context.Add(new HavenTextCommand(textRect, textLayout, _workspaceForeground ?? new HavenSolidBrush(255, 35, 42, 52), opacity));
             if (State.HasFlag(HavenElementState.Focused) && selected)
             {
                 var caret = Math.Clamp(_tableCellCaret, 0, cell.Text.Length);
-                context.Add(new HavenCaretCommand(textRect, textLayout, new HavenSolidBrush(255, 25, 30, 36), opacity)
+                context.Add(new HavenCaretCommand(textRect, textLayout, _workspaceForeground ?? new HavenSolidBrush(255, 25, 30, 36), opacity)
                 { FullLayout = textLayout, CaretIndex = caret });
             }
         }
@@ -369,6 +389,24 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
         _layouts.Clear();
         _pages.Clear();
         if (_editor is null) return;
+        if (_workspaceForeground is not null)
+        {
+            // Boards owns the outer continuous surface; only content is laid out here.
+            // Window changes affect this view geometry, never canonical page coordinates.
+            var width = Math.Max(120, Math.Min(960, Bounds.Width - 48));
+            var left = Math.Max(24, (Bounds.Width - width) / 2);
+            var top = 18d;
+            foreach (var block in _editor.Blocks())
+            {
+                var measure = Measure(block, width);
+                var rect = new HavenRect(left + measure.Indent, top, Math.Max(80, width - measure.Indent), measure.Height);
+                _layouts.Add(new BlockLayout(block, rect, new HavenRect(rect.X, rect.Y + measure.TopInset,
+                    rect.Width, Math.Max(1, rect.Height - measure.TopInset)), measure.Paragraph, measure.Table));
+                top += measure.Height + 10 * _zoom;
+            }
+            SetValue(HavenProperties.Height, HavenLength.Px(Math.Max(320, top + 80)));
+            return;
+        }
         var setup = _editor.Document.PageSetup;
         var pageWidth = Math.Max(360, setup.WidthPoints * _zoom);
         var pageHeight = Math.Max(480, setup.HeightPoints * _zoom);
@@ -501,13 +539,13 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
         return transparentFallback ? new HavenSolidBrush(0, 0, 0, 0) : new HavenSolidBrush(255, 28, 34, 42);
     }
 
-    private static HavenBrush DocumentTextColour(string? value)
+    private HavenBrush DocumentTextColour(string? value)
     {
         var normalized = value?.Trim();
         if (string.IsNullOrWhiteSpace(normalized)
             || normalized.Equals("#FFEEEEEE", StringComparison.OrdinalIgnoreCase)
             || normalized.Equals("#EEEEEE", StringComparison.OrdinalIgnoreCase))
-            return new HavenSolidBrush(255, 28, 34, 42);
+            return _workspaceForeground ?? new HavenSolidBrush(255, 28, 34, 42);
         return Colour(normalized);
     }
 

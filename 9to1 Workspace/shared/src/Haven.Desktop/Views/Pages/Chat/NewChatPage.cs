@@ -158,10 +158,10 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
         _scene = new ChatHavenScene();
         AutomationProperties.SetAutomationId(this, "HavenNativeChatPage");
-        AutomationProperties.SetName(this, "Haven-native Chat page");
+        AutomationProperties.SetName(this, "9to1-native Chat page");
         Scene = new HavenSceneControl(new HavenAvaloniaImageResolver(), _genUiNativeResolver) { Root = _scene.Root };
         AutomationProperties.SetAutomationId(Scene, "HavenNativeChatScene");
-        AutomationProperties.SetName(Scene, "Haven-native Chat");
+        AutomationProperties.SetName(Scene, "9to1-native Chat");
         _originalWork = new NewChatOriginalWorkLifetime(StopOriginalPageAsync, CleanupOriginalPageAsync);
         Content = Scene;
         WireScene();
@@ -246,12 +246,12 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         {
             "imagine" => "Describe an image, style or visual concept",
             "present" => "Describe the presentation you want to create",
-            "data" => "Attach data or ask Haven to analyse it",
+            "data" => "Attach data or ask 9to1 to analyse it",
             "vision" => "Attach an image and ask what you want to inspect",
             "play" => "Describe what you want to play, build or explore",
             "translate" => "Paste text and name the target language",
             "launcher" => "Find an app, project, command or recent item",
-            _ => $"Ask Haven {mode.Name}"
+            _ => $"Ask 9to1 {mode.Name}"
         });
         SetProjectionStatus(mode.Description);
         ConversationStateChanged?.Invoke(this, EventArgs.Empty);
@@ -271,7 +271,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         _chatActionModeOverride = null;
         _chatGenerativeUiResponseModeOverride = null;
         _scene.SetComposerPlaceholder("Describe your task");
-        SetProjectionStatus("Describe what you want Haven to complete. Haven will ask only for details that materially affect the result.");
+        SetProjectionStatus("Describe what you want 9to1 to complete. 9to1 will ask only for details that materially affect the result.");
         ConversationStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -1025,7 +1025,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     {
         _scene.ShowResolveProblemsMenu(
             "Resolve Problems",
-            "Choose what is going wrong. Haven will apply the selected recovery directly.",
+            "Choose what is going wrong. 9to1 will apply the selected recovery directly.",
             [
                 ("Hallucinating", () => SetRecoveryDraft("Stop and audit your previous responses in this chat for hallucinations. Re-check every factual claim against the information actually available, clearly separate verified facts from assumptions, correct anything unsupported, and ask for missing information instead of guessing.")),
                 ("Looping", () => SetRecoveryDraft("You are repeating the same approach. Stop the loop, briefly identify what has already been attempted and why it did not work, then choose a materially different approach and continue from there without repeating earlier steps.")),
@@ -1253,7 +1253,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         catch (Exception exception) when (exception is HttpRequestException or IOException or InvalidOperationException)
         {
             RetainHandledOriginalChatCause(exception);
-            await AwaitChatOriginalAsync(SetStatusAsync("Haven could not complete that response: " + exception.Message));
+            await AwaitChatOriginalAsync(SetStatusAsync("9to1 could not complete that response: " + exception.Message));
         }
         finally
         {
@@ -1425,7 +1425,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         catch (Exception exception) when (exception is HttpRequestException or IOException or InvalidOperationException)
         {
             RetainHandledOriginalChatCause(exception);
-            await AwaitChatOriginalAsync(SetStatusAsync("Haven could not complete that dual comparison: " + exception.Message));
+            await AwaitChatOriginalAsync(SetStatusAsync("9to1 could not complete that dual comparison: " + exception.Message));
         }
         finally
         {
@@ -2330,7 +2330,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         if (!string.IsNullOrWhiteSpace(_registeredContextOverride)) sections.Add(_registeredContextOverride);
         if (_modeDefinition is { } mode)
         {
-            sections.Add($"Active Haven app: {mode.Name}.\nPurpose: {mode.Description}");
+            sections.Add($"Active 9to1 app: {mode.Name}.\nPurpose: {mode.Description}");
             if (!string.IsNullOrWhiteSpace(mode.SystemPromptSuffix)) sections.Add(mode.SystemPromptSuffix.Trim());
         }
         if (_taskAttachments.BuildAppContext() is { } appContext) sections.Add(appContext);

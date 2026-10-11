@@ -19,5 +19,5 @@ public sealed class Progress : HavenElement
     public double Value { get => _value; set => _value = Math.Clamp(value, _minimum, _maximum); }
     public double NormalizedValue => _maximum <= _minimum ? 0 : (_value - _minimum) / (_maximum - _minimum);
 
-    public override HavenComponentMetadata Metadata => new("Progress", "Components/Progress/Progress.cs", ["Progress"], [], "Non-interactive progress shares Haven slider geometry without exposing pointer state.");
+    public override HavenComponentMetadata Metadata => new("Progress", "Components/Progress/Progress.cs", ["Progress"], [], "Non-interactive progress shares 9to1 slider geometry without exposing pointer state.");
 }

@@ -46,7 +46,7 @@ public sealed partial class OdsAwareMessageAttachmentService(
                 attachment.StoredName));
             var attachmentRoot = Path.GetFullPath(paths.AttachmentsDirectory).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
             if (!storedPath.StartsWith(attachmentRoot, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("The stored attachment path escaped Haven's attachment directory.");
+                throw new InvalidOperationException("The stored attachment path escaped 9to1's attachment directory.");
             var text = await ExtractOdsTextAsync(storedPath, cancellationToken).ConfigureAwait(false);
             if (string.IsNullOrWhiteSpace(text))
                 throw new InvalidDataException("The OpenDocument spreadsheet contained no readable cell text.");

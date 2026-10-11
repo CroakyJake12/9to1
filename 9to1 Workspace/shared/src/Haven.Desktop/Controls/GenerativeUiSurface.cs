@@ -726,7 +726,7 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable, IAsyncDispos
                 component.ComponentId, binding.ActionId, null, null, value,
                 payload, GenUiEventSource.User, $"User interacted with {component.ComponentId}.");
             original.DemandPublication(); SemanticEventEmitted?.Invoke(this, semanticEvent); original.DemandPublication();
-            PublishOriginal(() => _activity.Text = binding.Route == GenUiRouteKind.Local ? "Updating…" : "Haven is working…");
+            PublishOriginal(() => _activity.Text = binding.Route == GenUiRouteKind.Local ? "Updating…" : "9to1 is working…");
             Task<GenUiActionResult>? actualRoute = null;
             try
             {

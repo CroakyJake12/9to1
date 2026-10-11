@@ -18,7 +18,7 @@ public static class PromptCatalog
         BuiltIn("GoldenRules", "Apply the project's non-negotiable rules.", "golden-rules", "Treat explicit golden rules in the conversation and project instructions as non-negotiable acceptance criteria. Surface conflicts before acting.", persists: true),
         BuiltIn("Rigid", "Stay strictly within the requested scope.", "rigid", "Follow the user's stated scope as closely as possible. Do not add unrequested product features or broaden the task; ask before any material expansion."),
         BuiltIn("StressTest", "Find edge cases, contradictions, and abuse paths.", "stress-test", "Adversarially test assumptions, edge cases, contradictions, failure modes, security and abuse paths. Rank risks and propose proportionate mitigations."),
-        BuiltIn("Context", "Register durable context for this conversation.", "context", "Register the user's supplied context in Haven's context store. Do not produce a handoff. Confirm what was registered and flag contradictions."),
+        BuiltIn("Context", "Register durable context for this conversation.", "context", "Register the user's supplied context in 9to1's context store. Do not produce a handoff. Confirm what was registered and flag contradictions."),
         BuiltIn("Handoff", "Create a portable, evidence-backed handoff.", "handoff", "Produce a structured handoff with objective, current state, decisions, constraints, changed files, verification, unresolved risks, and exact next steps. In Tasks or Studio attach evidence and timestamps to claims about completed work.", agentic: true)
     ];
 
@@ -31,7 +31,7 @@ public static class AgentCatalog
 {
     public static readonly IReadOnlyList<AgentDefinition> BuiltIns =
     [
-        new(GuidUtility.FromStableName("haven.agent.default"), "Default", "Normal Haven behaviour.", "Be helpful, accurate and direct.", "agent-default", "", null, "", "{}", true, true, DateTimeOffset.UnixEpoch),
+        new(GuidUtility.FromStableName("haven.agent.default"), "Default", "Normal 9to1 behaviour.", "Be helpful, accurate and direct.", "agent-default", "", null, "", "{}", true, true, DateTimeOffset.UnixEpoch),
         new(GuidUtility.FromStableName("haven.agent.auto"), "Auto", "Selects an installed agent when a request clearly matches.", "Choose a suitable enabled agent, show the reason and allow reversal.", "agent-auto", "", null, "", "{}", true, true, DateTimeOffset.UnixEpoch),
         new(GuidUtility.FromStableName("haven.agent.research"), "Research Agent", "Cross-checks current information and clearly cites evidence.", "Define scope, search multiple relevant sources, prefer primary sources, verify current facts, identify disagreement, distinguish evidence from inference, and cite factual claims.", "agent-research", "", null, "research|verify|latest|compare sources|what do experts|what do sources say", "{\"webSearch\":true}", true, true, DateTimeOffset.UnixEpoch)
     ];

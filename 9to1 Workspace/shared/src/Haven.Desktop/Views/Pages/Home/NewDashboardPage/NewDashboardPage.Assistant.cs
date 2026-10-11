@@ -34,7 +34,7 @@ public sealed partial class NewDashboardPage
 
         var title = new TextBlock
         {
-            Text = "Edit with Haven",
+            Text = "Edit with 9to1",
             FontSize = 20,
             FontWeight = Avalonia.Media.FontWeight.ExtraBold,
             VerticalAlignment = VerticalAlignment.Center
@@ -57,14 +57,14 @@ public sealed partial class NewDashboardPage
         };
         _dashboardAssistantStatus = new TextBlock
         {
-            Text = "Haven can show, hide, move, resize, reset, or rename this page.",
+            Text = "9to1 can show, hide, move, resize, reset, or rename this page.",
             Classes = { "muted" },
             TextWrapping = Avalonia.Media.TextWrapping.Wrap,
             FontSize = 11
         };
-        _dashboardAssistantApply = new HavenPrimaryButton { Content = "Apply with Haven" };
+        _dashboardAssistantApply = new HavenPrimaryButton { Content = "Apply with 9to1" };
         _dashboardAssistantApply.Click += async (_, _) => await ApplyDashboardAssistantAsync();
-        _dashboardAssistantRevert = new HavenButton { Content = "Revert last Haven change", Classes = { "subtle" }, IsEnabled = false };
+        _dashboardAssistantRevert = new HavenButton { Content = "Revert last 9to1 change", Classes = { "subtle" }, IsEnabled = false };
         _dashboardAssistantRevert.Click += async (_, _) => await RevertDashboardAssistantAsync();
 
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
@@ -75,7 +75,7 @@ public sealed partial class NewDashboardPage
         body.Children.Add(header);
         body.Children.Add(new TextBlock
         {
-            Text = "Describe the layout you want. The dashboard stays visible while Haven applies one reversible, validated layout change.",
+            Text = "Describe the layout you want. The dashboard stays visible while 9to1 applies one reversible, validated layout change.",
             Classes = { "muted" },
             TextWrapping = Avalonia.Media.TextWrapping.Wrap,
             FontSize = 12
@@ -193,7 +193,7 @@ public sealed partial class NewDashboardPage
         if (_lastDashboardAssistantSnapshot is not { } snapshot || _dashboardAssistantStatus is null) return;
         if (!snapshot.PageId.Equals(_selectedPageId, StringComparison.OrdinalIgnoreCase))
         {
-            _dashboardAssistantStatus.Text = "Switch back to the dashboard page Haven edited before reverting it.";
+            _dashboardAssistantStatus.Text = "Switch back to the dashboard page 9to1 edited before reverting it.";
             return;
         }
 
@@ -210,7 +210,7 @@ public sealed partial class NewDashboardPage
         RebuildPageTabs();
         _lastDashboardAssistantSnapshot = null;
         if (_dashboardAssistantRevert is not null) _dashboardAssistantRevert.IsEnabled = false;
-        _dashboardAssistantStatus.Text = "Reverted the last Haven dashboard change.";
+        _dashboardAssistantStatus.Text = "Reverted the last 9to1 dashboard change.";
     }
 
     private sealed record DashboardAssistantSnapshot(

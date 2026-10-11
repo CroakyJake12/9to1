@@ -209,7 +209,7 @@ public sealed class ReliabilityStatusViewModel : ObservableObject
         try
         {
             IsBusy = true;
-            Status = "Checking Haven reliability state…";
+            Status = "Checking 9to1 reliability state…";
             var health = await _database.VerifyIntegrityAsync(cancellationToken);
             DatabaseStatus = health.IsHealthy
                 ? $"Healthy · schema {health.SchemaVersion} · SQLite integrity and foreign-key checks passed at {health.CheckedAt.LocalDateTime:g}."
@@ -224,7 +224,7 @@ public sealed class ReliabilityStatusViewModel : ObservableObject
 
             await LoadBackupsAndRestoreAsync(cancellationToken);
             await LoadEventsAsync(cancellationToken);
-            Status = health.IsHealthy ? "Reliability checks completed." : "The database needs attention. Haven has recorded the failed integrity result.";
+            Status = health.IsHealthy ? "Reliability checks completed." : "The database needs attention. 9to1 has recorded the failed integrity result.";
         }
         catch (Exception ex)
         {
@@ -265,8 +265,8 @@ public sealed class ReliabilityStatusViewModel : ObservableObject
             var pending = await _restore.RequestRestoreAsync(RestoreCandidate.FileName, CancellationToken.None);
             HasPendingRestore = true;
             RaisePropertyChanged(nameof(HasPendingRestore));
-            PendingRestoreStatus = $"Restore pending: {pending.BackupFileName}. It will be re-verified and applied before SQLite opens on the next Haven launch.";
-            Status = "Verified database restore scheduled. Close Haven normally, then launch it again to apply the restore.";
+            PendingRestoreStatus = $"Restore pending: {pending.BackupFileName}. It will be re-verified and applied before SQLite opens on the next 9to1 launch.";
+            Status = "Verified database restore scheduled. Close 9to1 normally, then launch it again to apply the restore.";
             IsRestoreConfirming = false;
             RestoreCandidate = null;
             CancelPendingRestoreCommand.RaiseCanExecuteChanged();

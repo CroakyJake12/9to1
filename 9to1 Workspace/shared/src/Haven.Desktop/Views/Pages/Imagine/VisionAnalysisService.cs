@@ -40,7 +40,7 @@ public sealed class VisionAnalysisService
     public static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(60);
 
     private const string DefaultSystemPrompt =
-        "Act as Haven Vision. Analyse only the supplied image, distinguish observation from inference, transcribe visible text accurately, and state uncertainty.";
+        "Act as 9to1 Vision. Analyse only the supplied image, distinguish observation from inference, transcribe visible text accurately, and state uncertainty.";
 
     private readonly IProviderModelClient _models;
 

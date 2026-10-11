@@ -1,6 +1,6 @@
 # Theming and Personalisation
 
-How Haven's five themes, four appearances, accent override, global font and
+How 9to1's five themes, four appearances, accent override, global font and
 profile pictures work — and how apps consume them. Implementation lives in
 `src/Haven.Desktop/HavenUI/Tokens/`, `Controls/SurfacePaletteCatalog.cs`,
 `HavenUI/Tokens` applier, and `Services/UserPreferencesService.cs`.
@@ -22,7 +22,7 @@ application resources (brushes, radii, motion scale) → Avalonia styles + HUI s
 
 - **Themes decide how things look and react; never where they go.** Layout,
   navigation, spacing rhythm and information architecture are theme-invariant.
-- **Appearances are the Light/Dark dimension** Haven already had: Bright and
+- **Appearances are the Light/Dark dimension** 9to1 already had: Bright and
   SuperBright are the light expressions, Dark and SuperDark the dark ones.
   Every theme ships all four.
 - **Glow is the baseline**: with default personalisation the pipeline is an

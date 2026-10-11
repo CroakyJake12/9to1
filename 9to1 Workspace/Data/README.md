@@ -1,6 +1,6 @@
-# Haven Data — Calc + DuckDB first slice
+# 9to1 Data — Calc + DuckDB first slice
 
-Status: **implemented and runtime-proven in disposable Ubuntu CI, including a thin HUI contract integration against the accepted CakeOS HUI reference; not yet graphically hosted inside the accepted Linux host and not yet accepted inside the approved CakeOS VM**.
+Status: **implemented and runtime-proven in disposable Ubuntu CI, including a thin HUI contract integration against the accepted 9to1OS HUI reference; not yet graphically hosted inside the accepted Linux host and not yet accepted inside the approved 9to1OS VM**.
 
 This directory is the CakeOS-native Haven Data foundation. The historical donor import selected LibreOffice and DuckDB upstream source for `Source/LibreOffice/` and `Source/DuckDB/`; see `Source/DONOR-PROVENANCE.md` and `eng/donor-sources.json` for exact commits and fork URLs. That source import does not replace the separately versioned Calc/UNO and DuckDB worker runtimes or prove their compatibility with the newest sources. HUI-facing code depends only on Haven-owned interfaces; LibreOffice Calc and DuckDB live behind separate worker processes.
 
@@ -57,7 +57,7 @@ No UNO type, DuckDB API, Avalonia type, Linux-host renderer primitive or platfor
 
 ## Accepted HUI reference
 
-The Data branch consumes, but does not merge or copy, the accepted CakeOS HUI platform revision:
+The Data branch consumes, but does not merge or copy, the accepted 9to1OS HUI platform revision:
 
 - CakeOS HUI platform: `2a578502c31973fbefa3b3f82efa22d7ad11db53`
 - pinned `Haven.UI` donor: `CroakyJake12/CakeAI@7c021082565b3e0ef9110bc4a1287ca3cc2c1fbb:src/Haven.UI`
@@ -93,9 +93,9 @@ CI stages that exact platform commit into a disposable worktree, runs its own do
 | Accepted Data graphical Linux-host window | **No** — the accepted Linux host currently constructs its own private preview scene and exposes no external scene/root-provider injection seam for Data; no renderer copy is introduced here |
 | Visual screenshot of the Data scene | **No** — Data HUI contract/runtime is proven headlessly, not through the accepted graphical host screenshot gate |
 | Approved desktop checkout | Located — Sandbox project `cakeos`; its tracked/untracked Boards work is intentionally untouched by this Data branch |
-| Approved CakeOS VM | **No** — the actual CakeOS VM/session has not run this branch |
-| CakeOS package/image | **No** — no package list, image, ISO or VM state was changed by this branch |
-| Approved-VM visual/accessibility acceptance | **No** — requires the graphical host seam first, then actual CakeOS-session verification |
+| Approved 9to1OS VM | **No** — the actual 9to1OS VM/session has not run this branch |
+| 9to1OS package/image | **No** — no package list, image, ISO or VM state was changed by this branch |
+| Approved-VM visual/accessibility acceptance | **No** — requires the graphical host seam first, then actual 9to1OS-session verification |
 
 The HUI contract result is intentionally labelled separately from graphical-host and approved-VM proof. A headless layout/render/input pass does not establish that the Data scene has been drawn in the accepted Linux window or visually inspected in CakeOS.
 
@@ -113,10 +113,10 @@ The HUI contract result is intentionally labelled separately from graphical-host
 - bounded case-insensitive literal text-equality row filtering with explicit clear;
 - global named ranges backed by one concrete cell range only;
 - range-backed named ranges track Calc row/column shifts and persist in ODS;
-- formula-style/non-range named expressions are not surfaced through the Haven API;
+- formula-style/non-range named expressions are not surfaced through the 9to1 API;
 - literal-list data validation behind a typed range operation;
 - first-slice list rules contain 1–50 unique literal strings, each 1–64 characters, with control characters, semicolons and double quotes excluded;
-- imported formula/range-driven validation is not reinterpreted as a Haven literal-list rule;
+- imported formula/range-driven validation is not reinterpreted as a 9to1 literal-list rule;
 - list validation tracks Calc row/column shifts, persists in ODS and obeys read-only mutation guards;
 - first-slice save-as to `.ods` or `.xlsx`, with in-place overwrite disabled;
 - saved-output existence/size verification;
@@ -168,7 +168,7 @@ Run `34159933201` completed the HUI job successfully and the unchanged Ubuntu 24
 
 ## Sort compatibility and safety boundary
 
-- Haven exposes only one relative key column, ascending/descending order and a header flag; callers cannot supply arbitrary UNO sort descriptors;
+- 9to1 exposes only one relative key column, ascending/descending order and a header flag; callers cannot supply arbitrary UNO sort descriptors;
 - the target must fit wholly inside the first-slice 10 × 8 viewport when invoked through `DataGridSession`;
 - sorting is a mutation and is refused for read-only workbooks;
 - the Calc worker supports both LibreOffice sort descriptor forms observed in the supported distro lanes: legacy `SortColumns`/`util.SortField` and newer `IsSortColumns`/`table.TableSortField`;
@@ -179,7 +179,7 @@ Multi-key sorting and custom collators/user lists remain separate deferred capab
 
 ## Filter compatibility and safety boundary
 
-- Haven exposes one relative key column, one literal string and a header flag; callers cannot provide arbitrary UNO filter descriptors, formulas, regex patterns or compound predicates;
+- 9to1 exposes one relative key column, one literal string and a header flag; callers cannot provide arbitrary UNO filter descriptors, formulas, regex patterns or compound predicates;
 - first-slice matching is case-insensitive literal text equality only, with regular-expression handling explicitly disabled;
 - the target must fit wholly inside the 10 × 8 `DataGridSession` viewport and filter values are limited to 1–256 non-control characters;
 - filtering and clearing are mutations and are refused for read-only workbooks;
@@ -191,12 +191,12 @@ Numeric comparison operators, NOT-EQUAL/range conditions, multiple criteria, reg
 
 ## Literal-list validation safety boundary
 
-- only literal list items are created by Haven Data in this slice;
+- only literal list items are created by 9to1 Data in this slice;
 - no validation formula, named range, external link or arbitrary UNO validation expression is accepted from HUI/GenUI;
 - values are bounded to 1–50 unique strings of at most 64 characters;
 - formula-sensitive/control characters used by the literal-list encoding are rejected;
-- Calc's stored validation is re-read after apply/clear and must match the requested Haven rule;
-- imported validation that is not representable as this literal subset is reported as not being a Haven literal-list rule rather than being rewritten or deleted;
+- Calc's stored validation is re-read after apply/clear and must match the requested 9to1 rule;
+- imported validation that is not representable as this literal subset is reported as not being a 9to1 literal-list rule rather than being rewritten or deleted;
 - live tests prove structural row/column shifts, ODS save/reopen persistence, read-only guards and clearing.
 
 Numeric/date/text-length/custom validation remain separate deferred capabilities.
@@ -244,7 +244,7 @@ Current publication is intentionally display-string based. Typed date/error/valu
 
 `JsonLineWorkerClient` serialises calls per worker. If cancellation occurs after a request may have been written, or stdout contains malformed JSON, EOF, a missing result or a mismatched response ID, the client faults and terminates the worker. It does not continue on a potentially shifted request/response stream.
 
-## Runtime dependencies — not installed into CakeOS by this branch
+## Runtime dependencies — not installed into 9to1OS by this branch
 
 The Calc worker expects:
 
@@ -326,9 +326,9 @@ Data should **not** copy the Avalonia host, `HuiPreviewSurface`, renderer bridge
 3. Confirm the approved VM identity, Ubuntu 26.04.1 environment and current package state before mutation.
 4. Build first without package/image mutation.
 5. If dependencies are absent, record that before any install and add them only through the approved platform/package path.
-6. Run the same disposable Python/.NET/HUI integration gates in the actual CakeOS session.
+6. Run the same disposable Python/.NET/HUI integration gates in the actual 9to1OS session.
 7. Verify worker cleanup, local-pipe-only UNO communication, filesystem/network confinement, resource limits and failure/restart behaviour.
-8. Perform visual and accessibility acceptance in the actual CakeOS session; do not infer it from headless CI.
+8. Perform visual and accessibility acceptance in the actual 9to1OS session; do not infer it from headless CI.
 
 ## Deliberately deferred
 
@@ -349,4 +349,4 @@ Data should **not** copy the Avalonia host, `HuiPreviewSurface`, renderer bridge
 
 ## Safety notes
 
-The worker boundary is defence in depth, not the final OS sandbox. Before shipping, Calc and DuckDB still need target-runtime confinement (AppArmor/systemd/bubblewrap or the platform-selected equivalent), explicit filesystem brokers, resource limits, crash supervision, a larger golden-file/formula corpus and actual visual/accessibility acceptance through the platform HUI host and approved CakeOS runtime.
+The worker boundary is defence in depth, not the final OS sandbox. Before shipping, Calc and DuckDB still need target-runtime confinement (AppArmor/systemd/bubblewrap or the platform-selected equivalent), explicit filesystem brokers, resource limits, crash supervision, a larger golden-file/formula corpus and actual visual/accessibility acceptance through the platform HUI host and approved 9to1OS runtime.

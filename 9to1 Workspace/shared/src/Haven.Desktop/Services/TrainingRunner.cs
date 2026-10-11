@@ -100,7 +100,7 @@ public sealed class TrainingRunner(
         var step = 0;
         var stopwatch = Stopwatch.StartNew();
         var completedBeforeTimeout = false;
-        var agentName = "Haven Training Agent";
+        var agentName = "9to1 Training Agent";
         var isEmptyWorkspace = !Directory.EnumerateFileSystemEntries(workspaceRoot).Any();
         var agentInstructions = "You are a training agent with full access to workspace tools. " +
                                 (isEmptyWorkspace

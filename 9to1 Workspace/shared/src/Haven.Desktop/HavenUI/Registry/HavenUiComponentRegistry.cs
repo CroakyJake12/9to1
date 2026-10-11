@@ -38,7 +38,7 @@ public static class HavenUiComponentRegistry
     public static HavenUiComponentDescriptor Resolve(string componentType) =>
         Components.TryGetValue(componentType, out var descriptor)
             ? descriptor
-            : throw new KeyNotFoundException($"HavenUI has no trusted component named '{componentType}'.");
+            : throw new KeyNotFoundException($"CUI has no trusted component named '{componentType}'.");
 
     public static bool TryResolve(string componentType, out HavenUiComponentDescriptor descriptor) =>
         Components.TryGetValue(componentType, out descriptor!);
@@ -47,7 +47,7 @@ public static class HavenUiComponentRegistry
     {
         var descriptor = Resolve(componentType);
         return (Control)(Activator.CreateInstance(descriptor.ControlType)
-            ?? throw new InvalidOperationException($"HavenUI component '{componentType}' could not be created."));
+            ?? throw new InvalidOperationException($"CUI component '{componentType}' could not be created."));
     }
 
     private static IEnumerable<HavenUiComponentDescriptor> Build()
@@ -66,7 +66,7 @@ public static class HavenUiComponentRegistry
         yield return Input<HavenTextInput>("HavenTextInput", "Single-line text input");
         yield return Input<HavenSearchInput>("HavenSearchInput", "Search field");
         yield return Input<HavenMultilineInput>("HavenMultilineInput", "Multi-line editor");
-        yield return Input<HavenSelect>("HavenSelect", "Haven-owned selection field and dropdown");
+        yield return Input<HavenSelect>("HavenSelect", "9to1-owned selection field and dropdown");
         yield return Input<HavenSwitch>("HavenToggle", "Binary switch");
         yield return Input<HavenSlider>("HavenSlider", "Interactive range input");
         yield return Input<HavenProgressBar>("HavenProgress", "Progress indicator");

@@ -124,9 +124,9 @@ public sealed partial class AutomationsPage
         _deviceAvailability.Text = action.Availability switch
         {
             DeviceActionAvailability.Supported => $"Supported on {targetName}.",
-            DeviceActionAvailability.PermissionRequired => $"Available on {targetName} with permission. Haven will request permission before execution.",
+            DeviceActionAvailability.PermissionRequired => $"Available on {targetName} with permission. 9to1 will request permission before execution.",
             DeviceActionAvailability.AvailableThroughPlugin => $"Available on {targetName} through {action.ProviderId}.",
-            DeviceActionAvailability.Unsupported => $"Unsupported on {targetName}. Haven will not execute or save this DEVICE action.",
+            DeviceActionAvailability.Unsupported => $"Unsupported on {targetName}. 9to1 will not execute or save this DEVICE action.",
             _ => $"Availability for this action on {targetName} could not be resolved."
         };
 
@@ -186,7 +186,7 @@ public sealed partial class AutomationsPage
 
         if (targetChoice is null)
         {
-            _deviceAvailability.Text = $"Saved target {_editingDeviceNode.Target.DisplayName} is not currently available. Haven will not substitute another device.";
+            _deviceAvailability.Text = $"Saved target {_editingDeviceNode.Target.DisplayName} is not currently available. 9to1 will not substitute another device.";
             return;
         }
 

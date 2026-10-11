@@ -29,6 +29,29 @@ public static class CuiThemeResourceApplier
     {
         var settings = (accessibility ?? CuiAccessibilitySettings.Default).Validate();
         palette = CuiAccessibilityPalette.Resolve(palette, settings);
+        var application = Application.Current;
+        var provider = application?.Resources as IResourceProvider;
+        var ownsResources = application is not null && ReferenceEquals(provider?.Owner, application);
+        // Keep the dictionary and legacy brush identities, but disconnect its
+        // notification owner while updating the palette. Reattachment publishes
+        // the completed palette instead of invalidating every control per token.
+        if (ownsResources) provider!.RemoveOwner(application!);
+        try
+        {
+            ApplyCore(palette, settings, localization);
+        }
+        finally
+        {
+            if (ownsResources) provider!.AddOwner(application!);
+        }
+        PaletteChanged?.Invoke(null, EventArgs.Empty);
+    }
+
+    private static void ApplyCore(
+        CuiPalette palette,
+        CuiAccessibilitySettings settings,
+        CuiLocalizationContext? localization)
+    {
         var isDark = Luminance(palette.Text) > Luminance(palette.Panel);
         var disabledText = WithAlpha(palette.Muted, 0x88);
         var overlay = WithAlpha(palette.Panel, isDark ? (byte)0xF2 : (byte)0xF7);
@@ -73,6 +96,7 @@ public static class CuiThemeResourceApplier
         SetBrush("CuiTextBrush", palette.Text);
         SetBrush("CuiTextSoftBrush", palette.TextSoft);
         SetBrush("CuiMutedBrush", palette.Muted);
+        SetBrush("CuiMuted2Brush", palette.Muted2);
         SetBrush("CuiPanelBrush", palette.Panel);
         SetBrush("CuiPanel2Brush", palette.Panel2);
         SetBrush("CuiPanel3Brush", palette.Panel3);
@@ -105,6 +129,7 @@ public static class CuiThemeResourceApplier
         var resources = Application.Current?.Resources;
         if (resources is not null)
         {
+            ApplyComponentResources(resources, palette, expression, settings);
             ApplyButtonForegroundResources(resources, palette);
             var effectiveMotionScale = settings.EffectiveMotionScale(expression.MotionDurationScale);
             resources["CuiMotionDurationScale"] = effectiveMotionScale;
@@ -112,9 +137,9 @@ public static class CuiThemeResourceApplier
             resources["CuiTheme"] = palette.Theme;
             resources["CuiAppearance"] = isDark ? "Dark" : "Bright";
             ApplyAccessibilityResources(resources, expression, settings, localization);
+            ApplyLegacyScopeAliases(resources);
         }
 
-        PaletteChanged?.Invoke(null, EventArgs.Empty);
     }
 
     /// <summary>
@@ -188,6 +213,10 @@ public static class CuiThemeResourceApplier
         resources["CuiButtonPressedBrush"] = new SolidColorBrush(palette.ButtonPressed);
         resources["CuiFocusBrush"] = new SolidColorBrush(palette.Focus);
         resources["CuiShadowBrush"] = new SolidColorBrush(shadow);
+        resources["CuiOverlaySurfaceBrush"] = new SolidColorBrush(WithAlpha(palette.Panel, isDark ? (byte)0xF2 : (byte)0xF7));
+        resources["CuiInputSurfaceBrush"] = new SolidColorBrush(palette.Button);
+        resources["CuiSuccessBrush"] = new SolidColorBrush(Color.Parse(isDark ? "#FF76D7A0" : "#FF147A48"));
+        resources["CuiInformationBrush"] = new SolidColorBrush(palette.AccentSecondary);
         resources["CuiControlRadius"] = new CornerRadius(Math.Max(0d, Math.Round(CuiThemeExpression.BaseControlRadius * expression.ControlRadiusScale)));
         resources["CuiCardRadius"] = new CornerRadius(Math.Max(0d, Math.Round(CuiThemeExpression.BaseCardRadius * expression.CardRadiusScale)));
         resources["CuiPopupRadius"] = new CornerRadius(Math.Max(0d, Math.Round(CuiThemeExpression.BasePopupRadius * expression.PopupRadiusScale)));
@@ -199,6 +228,40 @@ public static class CuiThemeResourceApplier
         ApplyAccentToResources(resources, accents);
         ApplyButtonForegroundResources(resources, palette);
         ApplyLegacyScopeAliases(resources);
+        ApplyComponentResources(resources, palette, expression, settings);
+        ApplyLegacyScopeAliases(resources);
+    }
+
+    private static void ApplyComponentResources(IResourceDictionary resources, CuiPalette palette, CuiThemeExpression expression, CuiAccessibilitySettings settings)
+    {
+        var professional = palette.Theme == CuiTheme.Professional;
+        resources["CuiInterfaceFontFamily"] = new FontFamily(CuiTypography.ResolveInterfaceFontFamily(settings.InterfaceFontFamilyOverride));
+        var spacing = expression.SpacingScale * settings.DisplayScale;
+        resources["CuiControlPadding"] = new Avalonia.Thickness((professional ? 12 : 14) * spacing, (professional ? 7 : 10) * spacing);
+        resources["CuiControlMinHeight"] = (professional ? 34d : 40d * expression.ControlHeightScale) * settings.DisplayScale;
+        resources["CuiControlBorderWidth"] = new Thickness((settings.HighContrast ? 2 : 1) * settings.DisplayScale);
+        resources["CuiDisabledOpacity"] = settings.HighContrast ? .7d : .5d;
+        resources["CuiValidationBrush"] = new SolidColorBrush(palette.Attention);
+        resources["CuiChoiceSize"] = 22d * settings.DisplayScale;
+        resources["CuiThumbSize"] = 20d * settings.DisplayScale;
+        resources["CuiScrollBarSize"] = 12d * settings.DisplayScale;
+        resources["CuiTransparentBrush"] = Brushes.Transparent;
+        resources["CuiScrollThumbBrush"] = new SolidColorBrush(palette.Muted);
+        resources["CuiScrollThumbHoverBrush"] = new SolidColorBrush(palette.TextSoft);
+        resources["CuiScrollThumbPressedBrush"] = new SolidColorBrush(palette.Text);
+        resources["CuiScrollThumbRadius"] = new CornerRadius(6 * settings.DisplayScale);
+        resources["CuiThumbRadius"] = new CornerRadius(10 * settings.DisplayScale);
+        resources["CuiSpinnerButtonWidth"] = 24d * settings.DisplayScale;
+        resources["CuiSpinnerButtonHeight"] = 17d * settings.DisplayScale;
+        resources["CuiShellBrush"] = professional ? new LinearGradientBrush
+        {
+            StartPoint = new Avalonia.RelativePoint(0, 0, Avalonia.RelativeUnit.Relative),
+            EndPoint = new Avalonia.RelativePoint(1, 1, Avalonia.RelativeUnit.Relative),
+            GradientStops = [new(palette.TideBase, 0), new(palette.TideColour, 1)]
+        } : new SolidColorBrush(palette.TideBase);
+        resources["CuiSelectionBrush"] = new SolidColorBrush(palette.AccentSoft);
+        resources["CuiSelectionIndicatorBrush"] = new SolidColorBrush(palette.Accent);
+        resources["CuiSelectionIndicatorRadius"] = new CornerRadius(2);
     }
 
     private static void ApplyButtonForegroundResources(IResourceDictionary resources, CuiPalette palette)
@@ -219,12 +282,17 @@ public static class CuiThemeResourceApplier
 
     // Existing Haven primitive styles must resolve this SAME scoped palette,
     // rather than escaping to the application's bootstrap appearance.
-    private static void ApplyLegacyScopeAliases(ResourceDictionary resources)
+    private static void ApplyLegacyScopeAliases(IResourceDictionary resources)
     {
         foreach (var (legacy, semantic) in new (string, string)[]
         {
             ("HavenBackgroundBrush", "CuiBackgroundBrush"),
             ("HavenTextBrush", "CuiTextBrush"), ("HavenTextSoftBrush", "CuiTextSoftBrush"),
+            ("HavenTextPrimaryBrush", "CuiTextBrush"), ("HavenTextSecondaryBrush", "CuiTextSoftBrush"),
+            ("HavenTextMutedBrush", "CuiMutedBrush"), ("HavenBorderSubtleBrush", "CuiLineBrush"),
+            ("HavenCardSurfaceBrush", "CuiPanelBrush"), ("HavenOverlaySurfaceBrush", "CuiOverlaySurfaceBrush"),
+            ("HavenButtonTextPrimaryBrush", "CuiButtonForegroundBrush"), ("HavenButtonTextSecondaryBrush", "CuiTextSoftBrush"),
+            ("HavenShadowBrush", "CuiShadowBrush"),
             ("HavenMutedBrush", "CuiMutedBrush"), ("HavenMuted2Brush", "CuiMuted2Brush"),
             ("HavenPanelBrush", "CuiPanelBrush"), ("HavenElevatedBrush", "CuiPanelBrush"),
             ("HavenPanel2Brush", "CuiPanel2Brush"), ("HavenPanel3Brush", "CuiPanel3Brush"),
@@ -235,6 +303,9 @@ public static class CuiThemeResourceApplier
             ("HavenAccentBrush", "CuiAccentBrush"), ("HavenAccentPrimaryBrush", "CuiAccentPrimaryBrush"),
             ("HavenAccentSecondaryBrush", "CuiAccentSecondaryBrush"),
             ("HavenAccentTertiaryBrush", "CuiAccentTertiaryBrush"),
+            ("HavenAccentPrimaryHoverBrush", "CuiAccentPrimaryHoverBrush"),
+            ("HavenAccentSecondaryHoverBrush", "CuiAccentSecondaryHoverBrush"),
+            ("HavenAccentTertiaryHoverBrush", "CuiAccentTertiaryHoverBrush"), ("HavenAccentPressedBrush", "CuiAccentPressedBrush"),
             ("HavenAccentInkBrush", "CuiAccentInkBrush"),
             ("HavenAccentSoftBrush", "CuiAccentSoftBrush"), ("HavenBlueSoftBrush", "CuiAccentSoftBrush"),
             ("HavenControlRadius", "CuiControlRadius"), ("HavenCardRadius", "CuiCardRadius"),
@@ -275,6 +346,10 @@ public static class CuiThemeResourceApplier
         resources["CuiAccentPrimaryBrush"] = CreateGradientBrush(accents.Primary);
         resources["CuiAccentSecondaryBrush"] = CreateGradientBrush(accents.Secondary);
         resources["CuiAccentTertiaryBrush"] = CreateGradientBrush(accents.Tertiary);
+        resources["CuiAccentPrimaryHoverBrush"] = CreateGradientBrush(Shift(accents.Primary, accents.Secondary.Start, 0.16));
+        resources["CuiAccentSecondaryHoverBrush"] = CreateGradientBrush(Shift(accents.Secondary, accents.Primary.Start, 0.18));
+        resources["CuiAccentTertiaryHoverBrush"] = CreateGradientBrush(Shift(accents.Tertiary, accents.Secondary.Start, 0.70));
+        resources["CuiAccentPressedBrush"] = CreateGradientBrush(Shift(accents.Primary, accents.Tertiary.Middle, 0.22));
         resources["CuiAccentPrimaryColor"] = accents.Primary.Middle;
         resources["CuiAccentSecondaryColor"] = accents.Secondary.Middle;
         resources["CuiAccentTertiaryColor"] = accents.Tertiary.Middle;

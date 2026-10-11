@@ -44,7 +44,7 @@ public sealed partial class ContainerSettingsView : UserControl
         if (storage is null) return;
         var folders = await storage.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
-            Title = "Choose the Haven workspace folder",
+            Title = "Choose the 9to1 workspace folder",
             AllowMultiple = false
         });
         var path = folders.FirstOrDefault()?.TryGetLocalPath();

@@ -8,8 +8,8 @@ namespace CakeOS.Cui.Themes;
 /// Canonical CUI visual themes. A theme decides how components look and react
 /// (colour treatment, geometry personality, interaction feedback and motion);
 /// it never changes navigation structure or information architecture.
-/// Glow is the default and migration fallback and must remain visually
-/// identical to the pre-theme appearance.
+/// Professional is the default. Explicit Glow preferences retain their
+/// pre-theme appearance and persisted enum values remain unchanged.
 /// </summary>
 public enum CuiTheme
 {

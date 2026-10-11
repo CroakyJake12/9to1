@@ -13,10 +13,12 @@ using NineToOne.Web.Services;
 const string Id = "12345678-1234-4234-8234-123456789abc";
 var parser = new CuiRichParser();
 var document = parser.Parse(await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Home.cui")), "Home.cui");
-Check(!parser.Diagnostics.Diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error), "browser Home CUI invalid");
+Check(!parser.Diagnostics.Diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error), "browser Home CUI invalid: " + string.Join("; ", parser.Diagnostics.Diagnostics));
 AccountSettingsFeature Feature(Service service) => new(document, service, action => { action(); return Task.CompletedTask; });
 var cases = new (string Name, Func<Task> Run)[]
 {
+    ("shell dispatch preserves view and caller cancellation and joins the original owner", ShellActionLifetimeChecks.Run),
+    ("appearance observers cannot replace acknowledged writes or dispose the borrowed owner", AppearanceSettingsChecks.Run),
     ("unavailable account remains anonymous; real Settings navigation grants no Home provider", async () =>
     {
         var service = new Service((_, _) => Task.FromResult(Fail("AuthenticationRequired")));
@@ -24,7 +26,7 @@ var cases = new (string Name, Func<Task> Run)[]
         HomeFeatureNavigationRequest? target = null;
         using var home = new BrowserHomeContext(document, request => target = request, owner);
         await home.ActivateAsync();
-        Check(Value(home, "AccountAvailable") is false && (string?)Value(home, "AccountHeading") == "Welcome to 9-1", "unavailable identity shown");
+        Check(Value(home, "AccountAvailable") is false && (string?)Value(home, "AccountHeading") == "Welcome to 9to1", "unavailable identity shown");
         await home.DispatchAsync("NavigateSettings", null);
         Check(target?.RouteId == HomeFeatureRouteIds.Settings && service.Actions.SequenceEqual(new[] {"GetCurrent"}), "Settings changed account/route semantics");
         AssertUnavailable(home);
@@ -49,7 +51,7 @@ var cases = new (string Name, Func<Task> Run)[]
         revoked = true;
         await home.DispatchAsync("AccountRefresh", null);
         Check(Value(home, "AccountAvailable") is false && home.IsActionAvailable("AccountRequestSignOut") is false, "revoked identity retained");
-        Check((string?)Value(home, "AccountHeading") == "Welcome to 9-1", "revoked account heading retained");
+        Check((string?)Value(home, "AccountHeading") == "Welcome to 9to1", "revoked account heading retained");
     }),
     ("foreign profile record cannot preserve a displayed current account", async () =>
     {
@@ -57,7 +59,7 @@ var cases = new (string Name, Func<Task> Run)[]
         await using var owner = Feature(service);
         using var home = new BrowserHomeContext(document, _ => {}, owner);
         await home.ActivateAsync();
-        Check(Value(home, "AccountAvailable") is false && (string?)Value(home, "AccountHeading") == "Welcome to 9-1", "foreign profile kept identity");
+        Check(Value(home, "AccountAvailable") is false && (string?)Value(home, "AccountHeading") == "Welcome to 9to1", "foreign profile kept identity");
         Check(!service.Actions.Contains("ListSessions"), "foreign profile continued reads");
     }),
     ("retirement drains SAME held original refresh and refuses late account publication", async () =>
@@ -184,6 +186,7 @@ var cases = new (string Name, Func<Task> Run)[]
 // actor/storage fixtures. They do not issue account identity or claim real IndexedDB acceptance.
 cases = cases.Concat(new (string Name, Func<Task> Run)[]
 {
+    ("actual Home CUI layouts and controls work at desktop and mobile widths", () => DashboardLayoutChecks.Run(document)),
     ("Home principal workflow saves flags and selected tile then a fresh view reopens SAME profile", async () =>
     {
         var wire = new HomeWire(); var actor = new HomeActor();
@@ -381,6 +384,103 @@ cases = cases.Concat(new (string Name, Func<Task> Run)[]
         await owner.DisposeAsync();
     }),
 }).ToArray();
+cases = cases.Concat(new (string Name, Func<Task> Run)[]
+{
+    ("local dashboard stays useful without an account and persists independent AI preferences", async () =>
+    {
+        var preferences = new LocalPreferences();
+        using (var home = new BrowserHomeContext(document, _ => {}, isRegisteredRoute: route => route is "app.write" or "app.boards", localPreferences: preferences))
+        {
+            Check(((string)Value(home, "BriefSummary")!).Contains("2 apps are ready"), "briefing does not reflect available routes");
+            Check(Value(home, "CanSignInHere") is false && ((string)Value(home, "AccountMessage")!).Contains("not configured"), "missing auth configuration hidden");
+            Check(Value(home, "IsCustomising") is false && home.IsActionAvailable("MoveLocalDown") is false, "edit controls active outside customisation");
+            await home.DispatchAsync("ToggleAiTiles", null);
+            Check(Value(home, "AiTilesSwitch") is true && Value(home, "AiReorderSwitch") is false, "AI controls are coupled");
+            AssertUnavailable(home);
+        }
+        using var reopened = new BrowserHomeContext(document, _ => {}, localPreferences: preferences);
+        Check(Value(reopened, "AiTilesSwitch") is true && Value(reopened, "AiReorderSwitch") is false, "local AI preferences did not reopen");
+        Check(preferences.Json is not null && !preferences.Json.Contains("AccountId"), "device preference persisted account authority");
+    }),
+    ("local tile locking, pinning, hiding and order persist without changing provider capabilities", async () =>
+    {
+        var preferences = new LocalPreferences();
+        using (var home = new BrowserHomeContext(document, _ => {}, localPreferences: preferences))
+        {
+            await home.DispatchAsync("ToggleCustomise", null);
+            await home.DispatchAsync("ToggleLocalLock", null);
+            Check(home.IsActionAvailable("MoveLocalDown") is false && home.IsActionAvailable("ToggleLocalHidden") is false, "locked tile is editable");
+            await home.DispatchAsync("ToggleLocalLock", null);
+            await home.DispatchAsync("MoveLocalDown", null);
+            await home.DispatchAsync("ToggleLocalPin", null);
+            Check(home.IsActionAvailable("MoveLocalUp") is false, "pinned tile can move");
+            await home.DispatchAsync("ToggleLocalHidden", null);
+        }
+        using var reopened = new BrowserHomeContext(document, _ => {}, localPreferences: preferences);
+        Check(reopened.LocalDashboard.Tiles[1] is { Id: "continue", Pinned: true, Hidden: true }, "tile state/order lost");
+        AssertUnavailable(reopened);
+    }),
+    ("corrupt or unwritable local preferences remain visible failures and preserve stored bytes", async () =>
+    {
+        var corrupt = new LocalPreferences { Json = "invalid" };
+        using var home = new BrowserHomeContext(document, _ => {}, localPreferences: corrupt);
+        await home.DispatchAsync("ToggleAiTiles", null);
+        Check(corrupt.Json == "invalid" && ((string)Value(home, "LocalPreferenceSummary")!).Contains("preserved"), "corrupt saved copy overwritten");
+        var failing = new LocalPreferences { FailWrites = true };
+        using var other = new BrowserHomeContext(document, _ => {}, localPreferences: failing);
+        await other.DispatchAsync("ToggleAiTiles", null);
+        Check(((string)Value(other, "LocalPreferenceSummary")!).Contains("could not be saved"), "storage failure claimed success");
+    }),
+    ("local app search filters real route cards and activity stays distinct from Planner", () =>
+    {
+        using var home = new BrowserHomeContext(document, _ => {});
+        Check(home.TrySetValue("AppSearch", "write"), "local search input refused");
+        Check(Value(home, "ShowWrite") is true && Value(home, "ShowWave") is false, "local search did not filter");
+        Check(((string)Value(home, "EventsSummary")!).Contains("not a calendar") && ((string)Value(home, "PlannerSummary")!).Contains("Planner"), "activity and scheduling conflated");
+        return Task.CompletedTask;
+    }),
+    ("briefing prioritises actual local recovery metadata and opens the exact owning document", async () =>
+    {
+        var first = Guid.NewGuid(); var recovery = Guid.NewGuid();
+        var targets = new List<HomeFeatureNavigationRequest>();
+        using var home = new BrowserHomeContext(document, targets.Add, isRegisteredRoute: route => route == "app.write",
+            localDocuments: _ => Task.FromResult<IReadOnlyList<Haven.Core.NotesDocumentSummary>>([
+                new(first, "New document", DateTimeOffset.UtcNow, 2, 1, 2, 35, false),
+                new(recovery, "Recovered work", DateTimeOffset.UtcNow.AddDays(-1), 1, 1, 2, 70, true)]));
+        await home.ActivateAsync();
+        Check((string?)Value(home, "Recent0") == "Recovered work" && ((string)Value(home, "BriefSummary")!).Contains("2 local documents"), "recovery/document evidence not prioritised");
+        await home.DispatchAsync("OpenRecent0", null);
+        Check(targets.Single() is { RouteId: "app.write", EntityType: "NotesDocument", Action: "open" } && targets[0].EntityId == recovery.ToString("D"), "recent action opened a different owner or document");
+        AssertUnavailable(home);
+    }),
+    ("local briefing is ready before first presentation and activation does not reflow it with a second read", async () =>
+    {
+        var calls = 0;
+        var pending = new TaskCompletionSource<IReadOnlyList<Haven.Core.NotesDocumentSummary>>();
+        using var home = new BrowserHomeContext(document, _ => {}, isRegisteredRoute: _ => true,
+            localDocuments: _ => { ++calls; return pending.Task; });
+        var preparation = home.PrepareLocalBriefingAsync();
+        Check(!preparation.IsCompleted && calls == 1, "presentation preparation did not wait for local metadata");
+        pending.SetResult([new(Guid.NewGuid(), "Stable target layout", DateTimeOffset.UtcNow, 1, 1, 1, 3, false)]);
+        await preparation;
+        Check(Value(home, "HasRecentDocuments") is true, "recents were absent from the prepared first layout");
+        await home.ActivateAsync();
+        Check(calls == 1 && (string?)Value(home, "Recent0") == "Stable target layout", "activation reread or replaced the prepared metadata");
+    }),
+    ("failed or retired local reads never publish false or late document metadata", async () =>
+    {
+        using var failure = new BrowserHomeContext(document, _ => {}, isRegisteredRoute: _ => true,
+            localDocuments: _ => Task.FromException<IReadOnlyList<Haven.Core.NotesDocumentSummary>>(new IOException("Storage error")));
+        await failure.ActivateAsync();
+        Check(Value(failure, "HasRecentDocuments") is false && ((string)Value(failure, "RecentSummary")!).Contains("could not be read"), "failed read appeared successful");
+        var pending = new TaskCompletionSource<IReadOnlyList<Haven.Core.NotesDocumentSummary>>();
+        var retired = new BrowserHomeContext(document, _ => {}, isRegisteredRoute: _ => true, localDocuments: _ => pending.Task);
+        var read = retired.ActivateAsync(); retired.Dispose();
+        pending.SetResult([new(Guid.NewGuid(), "Late", DateTimeOffset.UtcNow, 1, 1, 1, 1, false)]);
+        await read;
+        Check(Value(retired, "HasRecentDocuments") is false, "retired view accepted late local data");
+    })
+}).ToArray();
 var failures = 0;
 // Present is a genuine separately registered device-local owner. Opening it never
 // requires an account grant; retirement and missing registration still refuse.
@@ -436,6 +536,13 @@ static Service ReadyAsync(Func<string, Task<JsonElement?>> custom) => new(async 
         _ => Fail("ServiceUnavailable"),
     };
 });
+sealed class LocalPreferences : IHomeLocalPreferences
+{
+    internal string? Json;
+    internal bool FailWrites;
+    public string? Read() => Json;
+    public void Write(string json) { if (FailWrites) throw new IOException("Storage denied"); Json = json; }
+}
 sealed class Service(Func<string, CancellationToken, Task<JsonElement>> invoke) : IAccountBrowserTransport
 {
     public List<string> Actions { get; } = [];

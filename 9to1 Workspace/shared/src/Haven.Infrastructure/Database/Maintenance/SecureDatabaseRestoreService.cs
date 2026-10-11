@@ -47,11 +47,11 @@ public sealed class SecureDatabaseRestoreService(
     {
         var backup = (await GetBackupsAsync(cancellationToken).ConfigureAwait(false))
             .FirstOrDefault(item => item.FileName.Equals(backupFileName, StringComparison.OrdinalIgnoreCase))
-            ?? throw new FileNotFoundException("The selected managed Haven backup does not exist.", backupFileName);
+            ?? throw new FileNotFoundException("The selected managed 9to1 backup does not exist.", backupFileName);
         if (!backup.IsVerified)
         {
             await LogBlockedAsync(backup, "request", cancellationToken).ConfigureAwait(false);
-            throw new InvalidDataException("The selected backup is outside Haven's trusted managed-backup boundary: " + backup.VerificationMessage);
+            throw new InvalidDataException("The selected backup is outside 9to1's trusted managed-backup boundary: " + backup.VerificationMessage);
         }
         return await inner.RequestRestoreAsync(backup.FileName, cancellationToken).ConfigureAwait(false);
     }
@@ -75,7 +75,7 @@ public sealed class SecureDatabaseRestoreService(
         {
             if (backup is not null) await LogBlockedAsync(backup, "apply", cancellationToken).ConfigureAwait(false);
             await inner.CancelPendingAsync(cancellationToken).ConfigureAwait(false);
-            throw new InvalidDataException("The pending restore no longer points to a trusted managed Haven backup. The request was cancelled without changing the database.");
+            throw new InvalidDataException("The pending restore no longer points to a trusted managed 9to1 backup. The request was cancelled without changing the database.");
         }
         return await inner.ApplyPendingRestoreAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -92,7 +92,7 @@ public sealed class SecureDatabaseRestoreService(
             var manifestPath = Path.GetFullPath(backup.ManifestPath);
             if (!databasePath.StartsWith(_backupRoot, StringComparison.OrdinalIgnoreCase)
                 || !manifestPath.StartsWith(_backupRoot, StringComparison.OrdinalIgnoreCase))
-                return Reject(backup, "Backup or manifest is outside Haven's managed backup directory.");
+                return Reject(backup, "Backup or manifest is outside 9to1's managed backup directory.");
 
             var databaseRelative = databasePath[_backupRoot.Length..];
             var manifestRelative = manifestPath[_backupRoot.Length..];
@@ -100,7 +100,7 @@ public sealed class SecureDatabaseRestoreService(
                 || manifestRelative.Contains(Path.DirectorySeparatorChar)
                 || databaseRelative.Contains(Path.AltDirectorySeparatorChar)
                 || manifestRelative.Contains(Path.AltDirectorySeparatorChar))
-                return Reject(backup, "Backup and manifest must be direct children of Haven's managed backup directory.");
+                return Reject(backup, "Backup and manifest must be direct children of 9to1's managed backup directory.");
 
             var expectedDatabaseName = Path.GetFileNameWithoutExtension(manifestPath) + ".db";
             if (!expectedDatabaseName.Equals(backup.FileName, StringComparison.OrdinalIgnoreCase)

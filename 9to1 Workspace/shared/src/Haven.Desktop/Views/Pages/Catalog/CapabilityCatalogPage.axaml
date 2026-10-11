@@ -6,7 +6,7 @@
     <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
       <StackPanel>
         <TextBlock Text="Capabilities" Classes="heading" />
-        <TextBlock Text="One registry for what Haven can discover, attach, and use through permissioned providers."
+        <TextBlock Text="One registry for what 9to1 can discover, attach, and use through permissioned providers."
                    Classes="muted" Margin="0,4,0,0" />
       </StackPanel>
       <hui:HavenButton Grid.Column="1" x:Name="TemplateLabButton" Content="Template Preview Lab" Classes="chrome" />

@@ -57,7 +57,7 @@ internal static class SpaceLaunchPolicy
     {
         var sections = new List<string>
         {
-            $"Active Haven Space: {space.Name}.",
+            $"Active 9to1 Space: {space.Name}.",
             $"Space kind: {space.Kind}."
         };
         if (!string.IsNullOrWhiteSpace(space.Description)) sections.Add("Purpose: " + space.Description.Trim());

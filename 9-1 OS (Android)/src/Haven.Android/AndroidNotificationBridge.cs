@@ -48,8 +48,8 @@ public sealed class AndroidNotificationBridge : IDisposable
     private void EnsureChannel()
     {
         if (_manager is null || !OperatingSystem.IsAndroidVersionAtLeast(26)) return;
-        try { using var channel = new NotificationChannel(ChannelId, "Haven alerts", NotificationImportance.Default) { Description = "Background alerts from Haven." }; _manager.CreateNotificationChannel(channel); }
-        catch (Exception exception) { global::Android.Util.Log.Warn("HavenNotifications", "Could not create the Haven notification channel: " + exception.Message); }
+        try { using var channel = new NotificationChannel(ChannelId, "9to1 alerts", NotificationImportance.Default) { Description = "Background alerts from 9to1." }; _manager.CreateNotificationChannel(channel); }
+        catch (Exception exception) { global::Android.Util.Log.Warn("HavenNotifications", "Could not create the 9to1 notification channel: " + exception.Message); }
     }
 
     private static int ToNotificationId(Guid id) { var value = BitConverter.ToInt32(id.ToByteArray(), 0) & int.MaxValue; return value == 0 ? 1 : value; }

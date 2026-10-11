@@ -98,7 +98,7 @@ public sealed partial class BrowserDownloadTransport : IBrowserOriginalNativeDow
         var partialPath = EnsureOwnedNativePath(plan.PartialPath);
         if (!partialPath.StartsWith(plannedFinal + ".haven-download-", StringComparison.OrdinalIgnoreCase)
             || !partialPath.EndsWith(".tmp", StringComparison.OrdinalIgnoreCase))
-            throw new UnauthorizedAccessException("The native download partial path is not a Haven-managed partial.");
+            throw new UnauthorizedAccessException("The native download partial path is not a 9to1-managed partial.");
         if (!File.Exists(partialPath)) throw new FileNotFoundException("The native download did not produce its expected partial file.", partialPath);
 
         var completed = false;
@@ -106,7 +106,7 @@ public sealed partial class BrowserDownloadTransport : IBrowserOriginalNativeDow
         {
             var initialLength = new FileInfo(partialPath).Length;
             if (initialLength > MaximumDownloadBytes)
-                throw new InvalidOperationException("The download exceeds Haven's 250 MB limit.");
+                throw new InvalidOperationException("The download exceeds 9to1's 250 MB limit.");
 
             long size = 0;
             using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
@@ -121,7 +121,7 @@ public sealed partial class BrowserDownloadTransport : IBrowserOriginalNativeDow
                     if (read == 0) break;
                     size += read;
                     if (size > MaximumDownloadBytes)
-                        throw new InvalidOperationException("The download exceeded Haven's 250 MB limit while finalizing.");
+                        throw new InvalidOperationException("The download exceeded 9to1's 250 MB limit while finalizing.");
                     hash.AppendData(buffer, 0, read);
                 }
             }
@@ -158,7 +158,7 @@ public sealed partial class BrowserDownloadTransport : IBrowserOriginalNativeDow
         var partialPath = EnsureOwnedNativePath(plan.PartialPath);
         if (!partialPath.StartsWith(plannedFinal + ".haven-download-", StringComparison.OrdinalIgnoreCase)
             || !partialPath.EndsWith(".tmp", StringComparison.OrdinalIgnoreCase))
-            throw new UnauthorizedAccessException("The native download partial path is not a Haven-managed partial.");
+            throw new UnauthorizedAccessException("The native download partial path is not a 9to1-managed partial.");
         TryDeleteNativePartial(partialPath);
     }
 
@@ -170,7 +170,7 @@ public sealed partial class BrowserDownloadTransport : IBrowserOriginalNativeDow
         var prefix = root.EndsWith(Path.DirectorySeparatorChar) ? root : root + Path.DirectorySeparatorChar;
         if (!full.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
             || !string.Equals(Path.GetDirectoryName(full), root, StringComparison.OrdinalIgnoreCase))
-            throw new UnauthorizedAccessException("The native download path escaped Haven's download directory.");
+            throw new UnauthorizedAccessException("The native download path escaped 9to1's download directory.");
         return full;
     }
 
@@ -236,7 +236,7 @@ public sealed partial class BrowserDownloadTransport : IBrowserOriginalNativeDow
         var response = lease.Response;
         response.EnsureSuccessStatusCode();
         if (response.Content.Headers.ContentLength is > MaximumDownloadBytes)
-            throw new InvalidOperationException("The download exceeds Haven's 250 MB limit.");
+            throw new InvalidOperationException("The download exceeds 9to1's 250 MB limit.");
         return await SaveAsync(action, lease.FinalAddress, response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -271,7 +271,7 @@ public sealed partial class BrowserDownloadTransport : IBrowserOriginalNativeDow
                     if (read == 0) break;
                     size += read;
                     if (size > MaximumDownloadBytes)
-                        throw new InvalidOperationException("The download exceeded Haven's 250 MB limit while streaming.");
+                        throw new InvalidOperationException("The download exceeded 9to1's 250 MB limit while streaming.");
                     hash.AppendData(buffer, 0, read);
                     await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
                 }

@@ -48,8 +48,8 @@
                                         <controls:HavenIcon IconKey="chat" Width="18" Height="18"
                                                             Foreground="{DynamicResource HavenMutedBrush}" VerticalAlignment="Center" />
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                            <TextBlock Text="Haven Chat" FontWeight="SemiBold" />
-                                            <TextBlock Text="Chat with Haven" Classes="muted" FontSize="10" />
+                                            <TextBlock Text="9to1 Chat" FontWeight="SemiBold" />
+                                            <TextBlock Text="Chat with 9to1" Classes="muted" FontSize="10" />
                                         </StackPanel>
                                     </Grid>
                                 </hui:HavenButton>

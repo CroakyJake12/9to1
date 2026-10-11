@@ -322,7 +322,7 @@ public sealed class BrowserDataService : IDisposable
         var forbidden = new[] { "nativeMessaging", "proxy", "debugger", "webRequestBlocking", "management", "downloads.open" };
         var permissions = ReadStringArray(root, "permissions");
         var denied = permissions.Where(permission => forbidden.Contains(permission, StringComparer.OrdinalIgnoreCase)).ToArray();
-        if (denied.Length > 0) throw new InvalidOperationException("Chrome extension requests capabilities Haven will not grant: " + string.Join(", ", denied));
+        if (denied.Length > 0) throw new InvalidOperationException("Chrome extension requests capabilities 9to1 will not grant: " + string.Join(", ", denied));
         var name = root.TryGetProperty("name", out var nameElement) ? nameElement.GetString() : null;
         if (string.IsNullOrWhiteSpace(name)) throw new InvalidOperationException("Chrome manifest requires a name.");
         var description = root.TryGetProperty("description", out var descriptionElement) ? descriptionElement.GetString() ?? string.Empty : string.Empty;
@@ -336,7 +336,7 @@ public sealed class BrowserDataService : IDisposable
                 foreach (var scriptPath in ReadStringArray(item, "js"))
                 {
                     scripts.AppendLine(await ReadInsideAsync(Path.GetDirectoryName(fullManifest)!, scriptPath, cancellationToken).ConfigureAwait(false));
-                    if (scripts.Length > 512_000) throw new InvalidOperationException("Converted extension scripts exceed Haven's 512 KB limit.");
+                    if (scripts.Length > 512_000) throw new InvalidOperationException("Converted extension scripts exceed 9to1's 512 KB limit.");
                 }
             }
         }

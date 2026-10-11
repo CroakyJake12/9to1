@@ -104,7 +104,7 @@ public sealed partial class SettingsHavenPage
             await _fallbackOrders.SetOrderAsync(lines, _lifetime.Token);
             if (_disposed) return;
             _route.SetStatus(lines.Count == 0
-                ? "Saved an empty priority order; Haven will choose models automatically."
+                ? "Saved an empty priority order; 9to1 will choose models automatically."
                 : $"Saved model priority order with {lines.Count} entr{(lines.Count == 1 ? "y" : "ies")}.");
             _bus.Fire("Settings.Models.FallbackOrderSaved");
         }

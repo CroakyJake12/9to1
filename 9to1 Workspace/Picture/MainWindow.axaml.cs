@@ -150,7 +150,7 @@ public sealed partial class MainWindow : Window, ICuiActionDispatcher, ICuiActio
     private void UpdateResponsiveLayout()
     {
         var compact = Width < 880;
-        _layout.Set("WorkspaceColumns", compact ? "*" : "*,300");
+        _layout.Set("WorkspaceColumns", compact ? "1fr" : "1fr 300");
         _layout.Set("WorkspaceRows", compact ? "Auto,Auto" : "Auto");
         _layout.Set("CanvasHeight", compact ? 300d : 520d);
         _layout.Set("InspectorColumn", compact ? 0 : 1);

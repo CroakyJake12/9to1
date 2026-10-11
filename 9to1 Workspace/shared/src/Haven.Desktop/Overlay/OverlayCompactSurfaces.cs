@@ -31,14 +31,14 @@ internal sealed class OverlayCompactSurfaces : IDisposable
         Set(Root, HavenProperties.Width, HavenLength.Percent(100));
         Set(Root, HavenProperties.Gap, HavenLength.Px(8));
         Set(Root, HavenProperties.Overflow, HavenOverflow.Scroll);
-        Root.Accessibility.AccessibleName = "Compact Haven app surface";
+        Root.Accessibility.AccessibleName = "Compact 9to1 app surface";
 
         GoPanel = Panel("Overlay.Compact.Go", "Go");
         GoStatus = Text("Overlay.Compact.Go.Status", string.Empty, TextLevel.Caption);
         GoShortcuts = new Container { Name = "Overlay.Compact.Go.Shortcuts", Layout = HavenLayout.Wrap };
         Set(GoShortcuts, HavenProperties.Width, HavenLength.Percent(100));
         Set(GoShortcuts, HavenProperties.Gap, HavenLength.Px(6));
-        GoShortcuts.Accessibility.AccessibleName = "Installed Haven app shortcuts";
+        GoShortcuts.Accessibility.AccessibleName = "Installed 9to1 app shortcuts";
         GoPanel.Add(GoShortcuts);
         GoPanel.Add(GoStatus);
 
@@ -50,7 +50,7 @@ internal sealed class OverlayCompactSurfaces : IDisposable
         Set(ChatMessages, HavenProperties.Overflow, HavenOverflow.Scroll);
         ChatMessages.Accessibility.AccessibleName = "Chat messages";
         ChatStatus = Text("Overlay.Compact.Chat.Status", string.Empty, TextLevel.Caption);
-        ChatInput = new Input { Name = "Overlay.Compact.Chat.Input", Placeholder = "Ask Haven anything", SubmitOnEnter = true };
+        ChatInput = new Input { Name = "Overlay.Compact.Chat.Input", Placeholder = "Ask 9to1 anything", SubmitOnEnter = true };
         Set(ChatInput, HavenProperties.Width, HavenLength.Percent(100));
         ChatInput.Accessibility.AccessibleName = "Chat message";
         ChatSendButton = Action("Overlay.Compact.Chat.Send", "Send", ButtonVariant.Primary);

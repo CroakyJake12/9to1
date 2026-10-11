@@ -156,7 +156,7 @@ public sealed partial class AutomationsPage
     {
         if (!AutomationGraphCodec.TryDeserialize(entry.GraphJson, out var graph))
         {
-            _status.Text = "The captured graph snapshot is unreadable, so Haven did not retry it.";
+            _status.Text = "The captured graph snapshot is unreadable, so 9to1 did not retry it.";
             return;
         }
 
@@ -173,14 +173,14 @@ public sealed partial class AutomationsPage
         {
             if (_deviceWorkflowRunner is null)
             {
-                _status.Text = "The real graph runtime is unavailable. Haven did not route this retry to Tasks or perform a substitute action.";
+                _status.Text = "The real graph runtime is unavailable. 9to1 did not route this retry to Tasks or perform a substitute action.";
                 return;
             }
             var run = await _deviceWorkflowRunner.RunAsync(HistoryWorkflow(entry), permissionGranted: false, CancellationToken.None);
             result = run.GraphResult;
             if (result is null)
             {
-                _status.Text = "This captured real graph no longer has a compatible graph executor. Haven did not route it to Tasks.";
+                _status.Text = "This captured real graph no longer has a compatible graph executor. 9to1 did not route it to Tasks.";
                 return;
             }
         }

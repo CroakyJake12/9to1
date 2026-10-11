@@ -7,13 +7,13 @@
     <AssemblyName>Haven</AssemblyName>
     <RootNamespace>NineToOne.Web.Write</RootNamespace>
     <WriteOwnerRoot>$(MSBuildThisFileDirectory)../../../../9to1 Workspace/shared/src</WriteOwnerRoot>
-    <WriteOwnerThemeSha256>e597d116391ea697d2bc7ad2d2854e292fa747a3245db02ad938bdb69e34bae4</WriteOwnerThemeSha256>
   </PropertyGroup>
   <ItemGroup>
     <!-- Original scene consumes this existing pinned ClipboardExtensions API. -->
     <Using Include="Avalonia.Input.Platform" />
     <Compile Include="WriteRetainedSceneControl.cs" />
     <Compile Include="WriteRetainedSceneResources.cs" />
+    <Compile Include="PresentThumbnailControl.cs" />
     <Compile Include="$(WriteOwnerRoot)/Haven.Desktop/Controls/AcrylicSurface.cs" Link="Owner/AcrylicSurface.cs" />
     <Compile Include="$(WriteOwnerRoot)/Haven.Desktop/Views/Pages/Write/WriteDocumentSurface*.cs" Link="Owner/Write/%(Filename)%(Extension)" />
     <Compile Include="$(WriteOwnerRoot)/Haven.Desktop/HavenUI/Backend/HavenSceneControl.cs;$(WriteOwnerRoot)/Haven.Desktop/HavenUI/Backend/HavenSceneAutomationPeer.cs;$(WriteOwnerRoot)/Haven.Desktop/HavenUI/Backend/HavenInteractiveAutomationPeers.cs;$(WriteOwnerRoot)/Haven.Desktop/HavenUI/Backend/HavenSelectItemAutomationPeer.cs;$(WriteOwnerRoot)/Haven.Desktop/HavenUI/Backend/HavenTabAutomationPeers.cs;$(WriteOwnerRoot)/Haven.Desktop/HavenUI/Backend/HavenAvaloniaThemeResolver.cs;$(WriteOwnerRoot)/Haven.Desktop/HavenUI/Backend/HavenAvaloniaImageResolver.cs;$(WriteOwnerRoot)/Haven.Desktop/HavenUI/Backend/HavenDesktopImageResolver.cs;$(WriteOwnerRoot)/Haven.Desktop/HavenUI/Backend/HavenAvaloniaNativeControlResolver.cs" Link="Owner/Backend/%(Filename)%(Extension)" />
@@ -31,60 +31,4 @@
   <!-- Existing pinned upstream asset/compiler targets preserve the AssetLoader
        resource format. The product shell itself remains Write.cui. -->
   <Import Project="../../../../framework/CUI/vendor/Avalonia/build/BuildTargets.targets" />
-  <UsingTask TaskName="ExtractWriteOwnerThemeResources" TaskFactory="RoslynCodeTaskFactory"
-             AssemblyFile="$(MSBuildToolsPath)/Microsoft.Build.Tasks.Core.dll">
-    <ParameterGroup>
-      <SourceFile ParameterType="System.String" Required="true" />
-      <DestinationFile ParameterType="System.String" Required="true" />
-      <ExpectedSha256 ParameterType="System.String" Required="true" />
-    </ParameterGroup>
-    <Task>
-      <Using Namespace="System.IO" /><Using Namespace="System.Linq" />
-      <Using Namespace="System.Xml.Linq" /><Using Namespace="System.Security.Cryptography" />
-      <Code Type="Fragment" Language="cs"><![CDATA[
-        // Pins record the canonical LF source blob. A CRLF checkout must not be
-        // judged as a content change, so the guard hashes canonical content.
-        var bytes = File.ReadAllBytes(SourceFile);
-        var canonical = new MemoryStream();
-        for (int i = 0; i < bytes.Length; i++)
-        {
-          if (bytes[i] == 13 && i + 1 < bytes.Length && bytes[i + 1] == 10) continue;
-          canonical.WriteByte(bytes[i]);
-        }
-        string hash;
-        using (var sha = SHA256.Create())
-          hash = System.BitConverter.ToString(sha.ComputeHash(canonical.ToArray())).Replace("-", "").ToLowerInvariant();
-        if (!string.Equals(hash, ExpectedSha256, System.StringComparison.OrdinalIgnoreCase))
-        {
-          Log.LogError("The owning DefaultTheme source changed ({0}); review the owner revision and extraction before updating the pinned hash.", hash);
-          return false;
-        }
-        var original = XDocument.Load(SourceFile, LoadOptions.PreserveWhitespace);
-        var root = original.Root;
-        var resources = root.Element(root.Name.Namespace + "Styles.Resources");
-        if (resources == null) { Log.LogError("Owning DefaultTheme Styles.Resources is missing."); return false; }
-        var dictionary = new XElement(root.Name.Namespace + "ResourceDictionary",
-          root.Attributes().Where(attribute => attribute.IsNamespaceDeclaration).Select(attribute => new XAttribute(attribute)),
-          resources.Nodes());
-        var generated = new XDocument(new XComment("Exact owning DefaultTheme Styles.Resources; full source SHA256=" + hash), dictionary);
-        // Preserve the entire resources subtree, including original ControlThemes.
-        // The original AcrylicSurface source is linked; no palette values are authored here.
-        if (!dictionary.Elements().Select(element => element.ToString(SaveOptions.DisableFormatting))
-            .SequenceEqual(resources.Elements().Select(element => element.ToString(SaveOptions.DisableFormatting))))
-        { Log.LogError("Owning resources extraction is not structurally exact."); return false; }
-        Directory.CreateDirectory(Path.GetDirectoryName(DestinationFile));
-        var text = generated.ToString(SaveOptions.DisableFormatting);
-        if (!File.Exists(DestinationFile) || File.ReadAllText(DestinationFile) != text) File.WriteAllText(DestinationFile, text);
-      ]]></Code>
-    </Task>
-  </UsingTask>
-  <Target Name="ExtractWriteOwnerTheme" BeforeTargets="ResolveReferences">
-    <PropertyGroup><WriteGeneratedTheme>$(IntermediateOutputPath)WriteOwnerResources/DefaultTheme.Resources.axaml</WriteGeneratedTheme></PropertyGroup>
-    <ExtractWriteOwnerThemeResources SourceFile="$(WriteOwnerRoot)/Haven.Desktop/Styles/DefaultTheme.axaml"
-      DestinationFile="$(WriteGeneratedTheme)" ExpectedSha256="$(WriteOwnerThemeSha256)" />
-    <ItemGroup>
-      <AvaloniaResource Include="$(WriteGeneratedTheme)" Link="WriteOwnerResources/DefaultTheme.Resources.axaml" />
-      <FileWrites Include="$(WriteGeneratedTheme)" />
-    </ItemGroup>
-  </Target>
 </Project>

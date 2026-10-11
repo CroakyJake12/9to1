@@ -288,12 +288,12 @@ public sealed class PresentPptxExportService : IPresentReportExportService
     private static string ExportText(PresentElement element) => element.Kind switch
     {
         PresentElementKind.Text => element.Text,
-        PresentElementKind.Image => "[Image preserved in Haven] " + FirstNonEmpty(element.AlternativeText, element.Text, element.AssetId),
-        PresentElementKind.Shape => "[Shape preserved in Haven] " + FirstNonEmpty(element.Text, element.ShapeType),
-        PresentElementKind.GenUi => "[Interactive Haven content — open in Haven to use] " + FirstNonEmpty(element.AlternativeText, element.Text),
-        PresentElementKind.Media => "[Media preserved in Haven] " + FirstNonEmpty(element.AlternativeText, element.Text, element.AssetId),
-        PresentElementKind.Group => "[Haven object group]",
-        _ => "[Haven content preserved in native presentation]"
+        PresentElementKind.Image => "[Image preserved in 9to1] " + FirstNonEmpty(element.AlternativeText, element.Text, element.AssetId),
+        PresentElementKind.Shape => "[Shape preserved in 9to1] " + FirstNonEmpty(element.Text, element.ShapeType),
+        PresentElementKind.GenUi => "[Interactive 9to1 content — open in 9to1 to use] " + FirstNonEmpty(element.AlternativeText, element.Text),
+        PresentElementKind.Media => "[Media preserved in 9to1] " + FirstNonEmpty(element.AlternativeText, element.Text, element.AssetId),
+        PresentElementKind.Group => "[9to1 object group]",
+        _ => "[9to1 content preserved in native presentation]"
     };
 
     private static string FirstNonEmpty(params string[] values) =>

@@ -586,7 +586,7 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine("Haven clipboard copy failed: " + ex.Message);
+            System.Diagnostics.Debug.WriteLine("9to1 clipboard copy failed: " + ex.Message);
         }
     }
 
@@ -604,7 +604,7 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine("Haven clipboard paste failed: " + ex.Message);
+            System.Diagnostics.Debug.WriteLine("9to1 clipboard paste failed: " + ex.Message);
         }
     }
 
@@ -717,7 +717,7 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
     private static void DrawEffect(DrawingContext context, HavenRect bounds, double radius, HavenBrush brush, double offsetX, double offsetY, double blur, double spread)
     {
         var resolved = Resolve(brush);
-        var color = HavenAvaloniaThemeResolver.EffectColor(resolved, "Haven shadow/glow brush");
+        var color = HavenAvaloniaThemeResolver.EffectColor(resolved, "9to1 shadow/glow brush");
         var shadows = new BoxShadows(new BoxShadow { OffsetX = offsetX, OffsetY = offsetY, Blur = Math.Max(0, blur), Spread = spread, Color = color });
         context.DrawRectangle(Brushes.Transparent, null, Rect(bounds), radius, radius, shadows);
     }
@@ -769,7 +769,7 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
     {
         HavenTokenBrush token => HavenAvaloniaThemeResolver.Resolve(token.Token),
         HavenSolidBrush solid => new SolidColorBrush(Color.FromArgb(solid.A, solid.R, solid.G, solid.B)),
-        _ => throw new InvalidOperationException($"Unsupported Haven brush '{brush.GetType().Name}'.")
+        _ => throw new InvalidOperationException($"Unsupported 9to1 brush '{brush.GetType().Name}'.")
     };
 
     private static Avalonia.Rect Rect(HavenRect rect) => new(rect.X, rect.Y, rect.Width, rect.Height);

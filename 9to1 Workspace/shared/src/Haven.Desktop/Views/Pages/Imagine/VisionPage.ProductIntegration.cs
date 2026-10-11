@@ -50,7 +50,7 @@ public sealed partial class VisionPage
 
         try
         {
-            _scene.SetStatus("Choose a window or screen to capture. Haven only keeps the selected frame.");
+            _scene.SetStatus("Choose a window or screen to capture. 9to1 only keeps the selected frame.");
             var path = await _captureImageAsync(CancellationToken.None);
             if (string.IsNullOrWhiteSpace(path))
             {

@@ -1,6 +1,6 @@
-# HavenOS Dev app surface
+# 9to1OS Dev app surface
 
-This directory owns the independent HavenOS Dev domain surface. It currently provides versioned multi-root workspace persistence, provider-driven project-template discovery with preflight toolchain readiness, a stage-oriented task executor, and a code-intelligence adapter over Haven's maintained language service.
+This directory owns the independent 9to1OS Dev domain surface. It currently provides versioned multi-root workspace persistence, provider-driven project-template discovery with preflight toolchain readiness, a stage-oriented task executor, and a code-intelligence adapter over 9to1's maintained language service.
 
 The canonical workspace path also connects the maintained source editor, reviewed text edits, saved build stages, tests, Git observations and terminal commands to the existing Task/Run. The native workbench is composed by the Desktop owner over the same Dev, Files and canonical task services; its presence does not register a separate Dev App launch or grant workspace execution.
 

@@ -330,7 +330,7 @@ internal sealed class SpacesHavenScene : IDisposable
         Write(() => ManageLayout.SetValue(HavenProperties.Enabled, available));
         Write(() => ManageLayout.Content = available ? "Manage Layout / Additional Logic" : "Manage Layout / Additional Logic · waiting for shared editor");
         Write(() => LayoutState.Content = available
-            ? "Uses Haven's shared node editor."
+            ? "Uses 9to1's shared node editor."
             : "The canonical shared NodeEditor is still being landed by the Data/Automations workstream; Spaces will consume it rather than create a second graph editor.");
     }
 
@@ -382,7 +382,7 @@ internal sealed class SpacesHavenScene : IDisposable
             var pair = _examples[index];
             var row = Card();
             Write(() => row.Add(new HavenText { Content = $"You: {pair.User}" }));
-            Write(() => row.Add(Muted($"Haven: {pair.Assistant}")));
+            Write(() => row.Add(Muted($"9to1: {pair.Assistant}")));
             var remove = new HavenButton { Content = "Remove example", Variant = ButtonVariant.Text };
             remove.Accessibility.AccessibleName = $"Remove example {index + 1}";
             var removeIndex = index;
@@ -496,7 +496,7 @@ internal sealed class SpacesHavenScene : IDisposable
         var assistant = ExampleAssistant.Text.Trim();
         if (user.Length == 0 || assistant.Length == 0)
         {
-            SetStatus("Example pairs need both a user message and a Haven response.");
+            SetStatus("Example pairs need both a user message and a 9to1 response.");
             return;
         }
         Write(() => { _examples.Add(new SpaceExamplePair(user, assistant)); ++_draftRevision; });
@@ -622,7 +622,7 @@ internal sealed class SpacesHavenScene : IDisposable
                     <Container Layout="Vertical" Gap="6px" Width="100%"><Text Content="Conversations" Level="H2" /><Button Name="NewConversation" Variant="Tertiary" Content="New chat" MinHeight="36px" /><Container Name="Conversations" Layout="Vertical" Gap="6px" Width="100%" /></Container>
                     <Container Layout="Vertical" Gap="7px" Padding="14px" Background="SurfaceRaised" BorderColor="Border" BorderWidth="1px" Radius="16px">
                       <Text Content="Describe a Space change" Level="H2" />
-                      <Text Content="Tell Haven what you want to change. Suggested edits are applied to this draft for review and are not saved automatically." Foreground="TextSecondary" FontSize="11" />
+                      <Text Content="Tell 9to1 what you want to change. Suggested edits are applied to this draft for review and are not saved automatically." Foreground="TextSecondary" FontSize="11" />
                       <Container Layout="Grid" Columns="1fr Auto" Width="100%" Gap="8px">
                         <Input Name="EditInstruction" Column="0" Width="100%" Placeholder="e.g. Make this a deep research Space with a checklist" />
                         <Button Name="ApplySuggestedEdit" Column="1" Variant="Tertiary" Content="Suggest changes" MinHeight="38px" />
@@ -634,16 +634,16 @@ internal sealed class SpacesHavenScene : IDisposable
                       <Text Content="Description" Foreground="TextSecondary" FontSize="11" /><Input Name="Description" Width="100%" Multiline="true" MinHeight="64px" Placeholder="What is this Space for?" />
                       <Text Content="Model" Foreground="TextSecondary" FontSize="11" /><Input Name="Model" Width="100%" Placeholder="Default model" />
                       <Text Content="Thinking" Foreground="TextSecondary" FontSize="11" /><Select Name="Thinking" Width="100%" />
-                      <Text Content="Instructions" Foreground="TextSecondary" FontSize="11" /><Input Name="Instructions" Width="100%" Multiline="true" MinHeight="100px" Placeholder="How should Haven behave in this Space?" />
+                      <Text Content="Instructions" Foreground="TextSecondary" FontSize="11" /><Input Name="Instructions" Width="100%" Multiline="true" MinHeight="100px" Placeholder="How should 9to1 behave in this Space?" />
                     </Container>
                     <Container Layout="Vertical" Gap="7px" Padding="14px" Background="SurfaceRaised" BorderColor="Border" BorderWidth="1px" Radius="16px">
                       <Text Content="Examples" Level="H2" /><Text Content="Teach the Space with small user/assistant examples." Foreground="TextSecondary" FontSize="11" />
                       <Container Name="Examples" Layout="Vertical" Width="100%" Gap="6px" />
-                      <Input Name="ExampleUser" Width="100%" Placeholder="Example user message" /><Input Name="ExampleAssistant" Width="100%" Multiline="true" MinHeight="64px" Placeholder="Example Haven response" />
+                      <Input Name="ExampleUser" Width="100%" Placeholder="Example user message" /><Input Name="ExampleAssistant" Width="100%" Multiline="true" MinHeight="64px" Placeholder="Example 9to1 response" />
                       <Button Name="AddExample" Variant="Tertiary" Content="Add example pair" MinHeight="36px" />
                     </Container>
                     <Container Layout="Vertical" Gap="7px" Padding="14px" Background="SurfaceRaised" BorderColor="Border" BorderWidth="1px" Radius="16px">
-                      <Text Content="Generated surface" Level="H2" /><Text Content="Choose a trusted Haven GenUI template or keep the standard Space surface." Foreground="TextSecondary" FontSize="11" />
+                      <Text Content="Generated surface" Level="H2" /><Text Content="Choose a trusted 9to1 GenUI template or keep the standard Space surface." Foreground="TextSecondary" FontSize="11" />
                       <Select Name="SurfaceTemplate" Width="100%" /><Input Name="SurfaceInputs" Width="100%" Multiline="true" MinHeight="80px" Placeholder="Template inputs JSON" />
                       <Text Name="GeneratedPreviewState" Content="" Foreground="TextSecondary" FontSize="11" Visibility="Collapsed" />
                       <Container Name="GeneratedPreview" Layout="Vertical" Width="100%" MinHeight="140px" Gap="8px" Padding="12px" Background="Surface" BorderColor="Border" BorderWidth="1px" Radius="14px" Visibility="Collapsed" />

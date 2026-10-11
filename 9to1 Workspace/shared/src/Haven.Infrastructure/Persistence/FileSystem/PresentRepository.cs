@@ -233,7 +233,7 @@ public sealed class PresentRepository : IPresentRepository
         if (document.Id == Guid.Empty)
             throw new InvalidDataException("A presentation must have a stable identifier.");
         if (document.SchemaVersion <= 0 || document.SchemaVersion > PresentDocument.CurrentSchemaVersion)
-            throw new InvalidDataException("This presentation schema version is not supported by this Haven build.");
+            throw new InvalidDataException("This presentation schema version is not supported by this 9to1 build.");
         if (document.Slides is null)
             throw new InvalidDataException("A presentation must contain a slide collection.");
     }

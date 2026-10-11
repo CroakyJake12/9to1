@@ -19,17 +19,22 @@ namespace NineToOne.Web;
 internal static class BrowserFeatureComposition
 {
     [SupportedOSPlatform("browser")]
+    public static async Task<IBrowserHomeThemePreferences> CreateThemePreferencesAsync() =>
+        await BrowserHomeThemePreferences.CreateAsync();
+
+    [SupportedOSPlatform("browser")]
     public static AccountSettingsFeature Register(BrowserSurfaceRegistry registry)
     {
         var wave = WaveBrowserFeature.Register(registry);
         if (!wave.Succeeded) throw new InvalidOperationException(wave.Message);
         var picture = PictureBrowserFeature.Register(registry);
         if (!picture.Succeeded) throw new InvalidOperationException(picture.Message);
-        var write = WriteBrowserFeature.Register(registry,
-            new IndexedDbNotesRepository(new BrowserNotesTransport(), new NotesDocumentValidator()),
+        var localNotes = new IndexedDbNotesRepository(new BrowserNotesTransport(), new NotesDocumentValidator());
+        var write = WriteBrowserFeature.Register(registry, localNotes,
             new WriteNativeDocumentPackageStore(), Program.ReduceMotion,
             error => error is NotesCommitOutcomeUnknownException, new BrowserWritePackageBroker());
         if (!write.Succeeded) throw new InvalidOperationException(write.Message);
+        BrowserHomeBriefingSources.Register(registry, localNotes);
         var present = PresentBrowserFeature.Register(registry,
             new IndexedDbPresentRepository(new BrowserPresentTransport(), PresentRepository.ValidateForSave),
             Program.ReduceMotion, error => error is PresentCommitOutcomeUnknownException);

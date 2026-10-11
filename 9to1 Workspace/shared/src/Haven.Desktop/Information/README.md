@@ -1,8 +1,8 @@
-# Haven Desktop Architecture
+# 9to1 Desktop Architecture
 
 ## Overview
 
-Haven Desktop is a local-first AI assistant built with Avalonia UI. It uses raw C# code-behind (no MVVM bindings) with a central event bus for inter-component communication.
+9to1 Desktop is a local-first AI assistant built with Avalonia UI. It uses raw C# code-behind (no MVVM bindings) with a central event bus for inter-component communication.
 
 ## Folder Structure
 

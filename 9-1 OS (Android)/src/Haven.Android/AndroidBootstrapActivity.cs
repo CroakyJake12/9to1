@@ -6,7 +6,7 @@ using Android.OS;
 namespace Haven.Android;
 
 [Activity(
-    Label = "Haven",
+    Label = "9to1",
     Theme = "@android:style/Theme.Material.Light.NoActionBar",
     Icon = "@drawable/haven_icon",
     MainLauncher = true,
@@ -61,7 +61,7 @@ public sealed class AndroidBootstrapActivity : Activity
         {
             AndroidRuntimeDiagnostics.Record(
                 exception,
-                "Launching Haven from the native Android bootstrap activity",
+                "Launching 9to1 from the native Android bootstrap activity",
                 showDialog: false);
 
             if (AndroidRuntimeDiagnostics.TryReadReport(out var report))

@@ -31,7 +31,7 @@ internal sealed partial class SettingsHavenScene
         var card = Card("Settings.Updates.Card");
         card.Add(Heading("Settings.Updates.Heading", "Updates", 18));
         card.Add(Muted("Settings.Updates.Description",
-            "Shows how this copy of Haven receives updates. Microsoft Store installs are updated by the Store itself; direct installs stage hash-verified packages for an external installer to apply on the next start."));
+            "Shows how this copy of 9to1 receives updates. Microsoft Store installs are updated by the Store itself; direct installs stage hash-verified packages for an external installer to apply on the next start."));
 
         UpdatesInstallSourceText = Muted("Settings.Updates.InstallSource", "Installation source: detecting…");
         UpdatesCurrentVersionText = Muted("Settings.Updates.CurrentVersion", "Current version: unknown");
@@ -53,7 +53,7 @@ internal sealed partial class SettingsHavenScene
         card.Add(UpdatesCurrentVersionText);
         card.Add(UpdatesLatestStateText);
         card.Add(SettingRow("Update channel", "Release lane used when checking for updates.", UpdatesChannelSelect));
-        card.Add(SettingRow("Background update checks", "Let Haven check for updates while it runs in the background.", UpdatesBackgroundChecksToggle));
+        card.Add(SettingRow("Background update checks", "Let 9to1 check for updates while it runs in the background.", UpdatesBackgroundChecksToggle));
         card.Add(UpdatesCheckNowButton);
         UpdatesStatusText = Muted("Settings.Updates.Status", string.Empty);
         UpdatesStatusText.SetValue(HavenProperties.MinHeight, HavenLength.Px(24));
@@ -102,7 +102,7 @@ internal sealed partial class SettingsHavenScene
         UpdateState.StagedPendingRestart
             => "A verified package is staged; the external installer applies it on the next start.",
         UpdateState.UpToDate => report.StoreManaged
-            ? "Nothing for Haven to act on — the Microsoft Store owns availability."
+            ? "Nothing for 9to1 to act on — the Microsoft Store owns availability."
             : "You are up to date.",
         UpdateState.Failed => "The last update check did not complete.",
         _ => "No update check has run in this session."

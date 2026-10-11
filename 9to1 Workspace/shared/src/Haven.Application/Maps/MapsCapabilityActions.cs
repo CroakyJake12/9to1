@@ -44,7 +44,7 @@ public static class MapsCapabilityActions
     public static readonly MapsCapabilityAction SavePlace = new(
         "maps.save-place",
         "Save place",
-        "Keep a marked place in Haven's local saved places list.");
+        "Keep a marked place in 9to1's local saved places list.");
 
     /// <summary>All Maps capability actions in catalog order.</summary>
     public static readonly IReadOnlyList<MapsCapabilityAction> All =

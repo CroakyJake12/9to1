@@ -9,7 +9,7 @@ public sealed class Image : HavenElement
     public string Source { get => _source; set { var next = value ?? string.Empty; if (_source == next) return; _source = next; Invalidate(); } }
     public HavenImageFit Fit { get => _fit; set { if (_fit == value) return; _fit = value; Invalidate(); } }
     public Image() { Accessibility.Role = HavenAccessibleRole.Image; SetValue(HavenProperties.Hover, false, HavenValueSource.Default); }
-    public override HavenComponentMetadata Metadata => new("Image", "Components/Media/Media.cs", ["Image"], [], "Bitmap/vector source is decoded by the rendering backend; semantic layout remains Haven-owned.");
+    public override HavenComponentMetadata Metadata => new("Image", "Components/Media/Media.cs", ["Image"], [], "Bitmap/vector source is decoded by the rendering backend; semantic layout remains 9to1-owned.");
 }
 
 public sealed class Icon : HavenElement
@@ -24,13 +24,13 @@ public sealed class Video : HavenElement
 {
     public string Source { get; set; } = string.Empty;
     public bool AutoPlay { get; set; }
-    public override HavenComponentMetadata Metadata => new("Video", "Components/Media/Media.cs", ["Video"], [], "Media playback is a native/backend adapter behind this Haven primitive.");
+    public override HavenComponentMetadata Metadata => new("Video", "Components/Media/Media.cs", ["Video"], [], "Media playback is a native/backend adapter behind this 9to1 primitive.");
 }
 
 public sealed class Web : HavenElement
 {
     public string Url { get; set; } = string.Empty;
-    public override HavenComponentMetadata Metadata => new("Web", "Components/Media/Media.cs", ["Web"], [], "WebView remains a platform capability behind this Haven primitive.");
+    public override HavenComponentMetadata Metadata => new("Web", "Components/Media/Media.cs", ["Web"], [], "WebView remains a platform capability behind this 9to1 primitive.");
 }
 
 /// <summary>Explicit placeholder for a trusted platform control supplied by a composition root.</summary>

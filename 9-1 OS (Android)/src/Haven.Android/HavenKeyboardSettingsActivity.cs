@@ -28,7 +28,7 @@ namespace Haven.Android;
 /// one-handed mode, theme and long-press delay.
 /// </summary>
 [Activity(
-    Label = "Haven Keyboard Settings",
+    Label = "9to1 Keyboard Settings",
     Exported = true,
     ConfigurationChanges =
         ConfigChanges.Orientation
@@ -60,7 +60,7 @@ public sealed class HavenKeyboardSettingsActivity : Activity
         root.SetPadding(Dp(20), Dp(24), Dp(20), Dp(24));
         scroll.AddView(root);
 
-        AddHeading(root, "Haven Keyboard");
+        AddHeading(root, "9to1 Keyboard");
         AddSummary(root, "Offline-first keyboard. Suggestions come from a small built-in word list on this device. Nothing you type is stored or sent anywhere by the keyboard.");
 
         AddSection(root, "AI actions");

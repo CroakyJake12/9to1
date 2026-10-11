@@ -43,7 +43,7 @@ internal sealed class OverlayGlobalHotkey : IAsyncDisposable
         _thread = new Thread(MessageLoop)
         {
             IsBackground = true,
-            Name = "Haven Overlay hotkey"
+            Name = "9to1 Overlay hotkey"
         };
         _thread.Start();
         if (!_ready.Wait(TimeSpan.FromSeconds(2)))

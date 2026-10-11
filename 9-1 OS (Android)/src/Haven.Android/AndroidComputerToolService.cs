@@ -32,7 +32,7 @@ public sealed class AndroidComputerToolService : IComputerToolService
     }
 
     public Task<string> FocusWindowAsync(string title, CancellationToken cancellationToken) =>
-        Unsupported("Android does not allow Haven to focus another app window without launching an activity.", cancellationToken);
+        Unsupported("Android does not allow 9to1 to focus another app window without launching an activity.", cancellationToken);
     public Task<string> InvokeAsync(string windowTitle, string name, string automationId, CancellationToken cancellationToken) =>
         Unsupported("Android UI invocation requires an explicitly enabled accessibility service and is not silently enabled.", cancellationToken);
     public Task<string> ClickAsync(string windowTitle, int x, int y, string button, CancellationToken cancellationToken) =>
@@ -42,7 +42,7 @@ public sealed class AndroidComputerToolService : IComputerToolService
     public Task<string> PressAsync(string windowTitle, string keys, CancellationToken cancellationToken) =>
         Unsupported("Android key injection is not available to ordinary applications.", cancellationToken);
     public Task<string> CloseWindowAsync(string title, CancellationToken cancellationToken) =>
-        Unsupported("Android does not allow Haven to close another application's task.", cancellationToken);
+        Unsupported("Android does not allow 9to1 to close another application's task.", cancellationToken);
 
     private static Task<string> Unsupported(string message, CancellationToken cancellationToken)
     {

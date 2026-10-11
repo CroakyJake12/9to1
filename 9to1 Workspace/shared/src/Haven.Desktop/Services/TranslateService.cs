@@ -33,7 +33,7 @@ public sealed class TranslateService(IOllamaClient models, UserPreferencesServic
         if (string.IsNullOrWhiteSpace(request.Text)) throw new ArgumentException("Enter text to translate.", nameof(request));
         if (string.IsNullOrWhiteSpace(request.TargetLanguageCode)) throw new ArgumentException("Choose a target language.", nameof(request));
         if (request.Text.Length > MaxTranslationCharacters)
-            throw new InvalidOperationException($"This translation is {request.Text.Length:N0} characters. Haven Translate currently accepts up to {MaxTranslationCharacters:N0} characters per translation.");
+            throw new InvalidOperationException($"This translation is {request.Text.Length:N0} characters. 9to1 Translate currently accepts up to {MaxTranslationCharacters:N0} characters per translation.");
 
         bool available;
         try { available = await models.IsAvailableAsync(cancellationToken).ConfigureAwait(false); }
@@ -44,7 +44,7 @@ public sealed class TranslateService(IOllamaClient models, UserPreferencesServic
         IReadOnlyList<ModelDescriptor> installed;
         try { installed = await models.GetModelsAsync(cancellationToken).ConfigureAwait(false); }
         catch (Exception ex) when (ex is IOException or HttpRequestException or InvalidOperationException)
-        { throw new InvalidOperationException("Haven could not read the available local models.", ex); }
+        { throw new InvalidOperationException("9to1 could not read the available local models.", ex); }
 
         var selected = installed.FirstOrDefault(item => !string.IsNullOrWhiteSpace(preferences.DefaultModel) && item.Name.Equals(preferences.DefaultModel, StringComparison.OrdinalIgnoreCase))
                        ?? installed.FirstOrDefault();
@@ -105,7 +105,7 @@ public sealed class TranslateService(IOllamaClient models, UserPreferencesServic
             {
                 var notice = ProcessingNotice(imported.MetadataJson);
                 throw new InvalidOperationException(string.IsNullOrWhiteSpace(notice)
-                    ? $"Haven could not extract translatable text from {imported.OriginalName}."
+                    ? $"9to1 could not extract translatable text from {imported.OriginalName}."
                     : notice);
             }
             return new TranslateExtractedFile(imported.OriginalName, imported.ExtractedText, ProcessingNotice(imported.MetadataJson), imported.Kind.ToString());

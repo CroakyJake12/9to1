@@ -49,7 +49,7 @@ public sealed partial class MainView
 
     private ImaginePage CreateImagineWorkspace()
     {
-        var services = App.Services ?? throw new InvalidOperationException("Haven services are unavailable while opening Imagine.");
+        var services = App.Services ?? throw new InvalidOperationException("9to1 services are unavailable while opening Imagine.");
         var page = new ImaginePage(
             services.GetRequiredService<IImagineProjectRepository>(),
             services.GetRequiredService<IImagineSemanticService>(),
@@ -62,7 +62,7 @@ public sealed partial class MainView
 
     private VisionPage CreateVisionWorkspace()
     {
-        var services = App.Services ?? throw new InvalidOperationException("Haven services are unavailable while opening Vision.");
+        var services = App.Services ?? throw new InvalidOperationException("9to1 services are unavailable while opening Vision.");
         var page = new VisionPage(services.GetRequiredService<IProviderModelClient>());
 #if ANDROID
         page.ConfigureProductIntegration(services.GetRequiredService<VisionWorkspaceStateStore>(), null);
@@ -123,10 +123,10 @@ public sealed partial class MainView
             string.IsNullOrWhiteSpace(handoff.Response) ? null : handoff.Response,
             [attachment],
             null,
-            new OverlayContextProvenance("Haven Vision", null, null, now, now.AddMinutes(30), OverlayContextPermissionState.NotRequired, "The user explicitly sent the current Vision source to Overlay."),
+            new OverlayContextProvenance("9to1 Vision", null, null, now, now.AddMinutes(30), OverlayContextPermissionState.NotRequired, "The user explicitly sent the current Vision source to Overlay."),
             false,
             [selection]).Bound();
-        var services = App.Services ?? throw new InvalidOperationException("Haven services are unavailable while opening Overlay.");
+        var services = App.Services ?? throw new InvalidOperationException("9to1 services are unavailable while opening Overlay.");
         await services.GetRequiredService<OverlayWorkspaceController>().OpenNewGoAsync(context, "Vision", CancellationToken.None);
 #endif
     }

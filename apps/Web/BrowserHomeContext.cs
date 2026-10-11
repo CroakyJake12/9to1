@@ -9,7 +9,7 @@ using NineToOne.Web.Accounts;
 namespace NineToOne.Web;
 
 /// <summary>Projects the existing verified account owner; other Home providers stay unavailable.</summary>
-internal sealed class BrowserHomeContext : ICuiWritableBindingContext, ICuiLifetimeAwareActionDispatcher,
+internal sealed partial class BrowserHomeContext : ICuiWritableBindingContext, ICuiLifetimeAwareActionDispatcher,
     ICuiActionAvailability, INotifyPropertyChanged, IDisposable
 {
     private static readonly IReadOnlyDictionary<string, HomeRoute> ShellActions = new Dictionary<string, HomeRoute>(StringComparer.Ordinal)
@@ -56,11 +56,14 @@ internal sealed class BrowserHomeContext : ICuiWritableBindingContext, ICuiLifet
     private bool _layoutBusy;
     private string _layoutStatus = "Sign in to save and reopen your dashboard on this browser.";
     private Task? _activation;
+    private Task? _initialLocalBriefing;
     private bool _disposed;
 
     public BrowserHomeContext(CuiDocument document, Action<HomeFeatureNavigationRequest> navigate,
         AccountSettingsFeature? accountOwner = null, Func<string, bool>? isRegisteredRoute = null,
-        BrowserHomeDashboardLayoutStore? layoutOwner = null)
+        BrowserHomeDashboardLayoutStore? layoutOwner = null, IHomeLocalPreferences? localPreferences = null,
+        Func<CancellationToken, Task<IReadOnlyList<Haven.Core.NotesDocumentSummary>>>? localDocuments = null,
+        BrowserHomeSearchState? searchState = null)
     {
         _surface = new(document);
         _navigate = navigate;
@@ -71,15 +74,23 @@ internal sealed class BrowserHomeContext : ICuiWritableBindingContext, ICuiLifet
         _account = accountOwner?.CreateHomeBinding();
         _surface.PropertyChanged += OnChanged;
         if (_account is not null) _account.PropertyChanged += OnChanged;
+        InitialiseDashboard(localPreferences);
+        _readLocalDocuments = localDocuments;
+        _searchState = searchState ?? new();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    internal Task PrepareLocalBriefingAsync(CancellationToken cancellationToken = default) =>
+        (_initialLocalBriefing ??= RefreshLocalBriefingAsync()).WaitAsync(cancellationToken);
+
     public Task ActivateAsync()
     {
-        if (_disposed || _account is null || _accountOwner is null) return Task.CompletedTask;
-        return _activation ??= _layoutOwner is null ? _accountOwner.RefreshHomeAsync(_account) :
-            _layoutOwner.RunViewAsync(() => RefreshAccountAndLayoutAsync(CancellationToken.None));
+        if (_disposed) return Task.CompletedTask;
+        return _activation ??= Task.WhenAll(PrepareLocalBriefingAsync(),
+            _account is null || _accountOwner is null ? Task.CompletedTask :
+            _layoutOwner is null ? _accountOwner.RefreshHomeAsync(_account) :
+                _layoutOwner.RunViewAsync(() => RefreshAccountAndLayoutAsync(CancellationToken.None)));
     }
 
     public bool Open(HomeFeatureNavigationRequest request)
@@ -100,10 +111,11 @@ internal sealed class BrowserHomeContext : ICuiWritableBindingContext, ICuiLifet
 
     public bool TryGetValue(string path, out object? value)
     {
+        if (TryGetDashboardValue(path, out value)) return true;
         value = path switch
         {
             "AccountHeading" => AccountValue("HasAccount") is true && AccountValue("DisplayName") is string name
-                ? "Welcome, " + name : "Welcome to 9-1",
+                ? "Welcome, " + name : "Welcome to 9to1",
             "AccountStatus" => AccountValue("Status") ?? "Account services are unavailable.",
             "AccountAvailable" => AccountValue("HasAccount") is true,
             "AccountConfirmation" => AccountValue("Confirmation") ?? "",
@@ -136,6 +148,7 @@ internal sealed class BrowserHomeContext : ICuiWritableBindingContext, ICuiLifet
     public bool? IsActionAvailable(string command)
     {
         if (_disposed) return false;
+        if (DashboardActionAvailable(command) is { } dashboardAvailable) return dashboardAvailable;
         if (LayoutCommands.Contains(command))
         {
             if (!LayoutAvailable) return false;
@@ -163,6 +176,7 @@ internal sealed class BrowserHomeContext : ICuiWritableBindingContext, ICuiLifet
     {
         caller.ThrowIfCancellationRequested();
         if (_disposed) return ValueTask.CompletedTask;
+        if (DispatchDashboard(command, caller) is { } dashboardDispatch) return dashboardDispatch;
         if (command == "AccountRefresh" && _account is not null && _accountOwner is not null)
             return _layoutOwner is null ? new(_accountOwner.RefreshHomeAsync(_account, caller, lifetime)) :
                 new(_layoutOwner.RunViewAsync(() => RefreshAccountAndLayoutAsync(caller, lifetime), caller));
@@ -199,6 +213,7 @@ internal sealed class BrowserHomeContext : ICuiWritableBindingContext, ICuiLifet
         AccountValue("HasAccount") is true && AccountValue("AccountId") is string id && id == actor.AccountId?.ToString("D");
     public bool TrySetValue(string path, object? value)
     {
+        if (SetDashboardValue(path, value)) return true;
         if (_disposed || path != "SelectedDashboardTileIndex" || value is not int index || _layout is null || index < -1 || index >= _layout.Tiles.Count)
             return false;
         _selectedTile = index; Notify(); return true;
@@ -314,6 +329,10 @@ internal sealed class BrowserHomeContext : ICuiWritableBindingContext, ICuiLifet
     {
         if (_disposed) return;
         _disposed = true;
+        _briefingLifetime.Cancel();
+        _briefingLifetime.Dispose();
+        _recentDocuments = [];
+        DashboardPresentationChanged = null;
         PropertyChanged = null;
         ClearLayout();
         // Actual account fields are cleared before cancellation/disposal callbacks.

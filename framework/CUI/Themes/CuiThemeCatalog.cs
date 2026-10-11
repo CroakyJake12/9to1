@@ -1,15 +1,13 @@
 // CUI Theme Catalog — ported from HavenThemeCatalog.cs.
 // Original source: 9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Tokens/HavenThemeCatalog.cs
 //
-// Glow is deliberately the identity transform: when the user has not personalised,
-// every value below reproduces the pre-theme appearance exactly.
+// Professional is the default. Explicit Glow remains the legacy identity transform.
 
 namespace CakeOS.Cui.Themes;
 
 /// <summary>
-/// Catalogue of the six canonical themes. Glow is deliberately the identity
-/// transform: when the user has not personalised, every value below
-/// reproduces the pre-theme appearance exactly.
+/// Catalogue of the six canonical themes. Professional is the default;
+/// explicit Glow remains the legacy identity transform.
 /// </summary>
 public static class CuiThemeCatalog
 {
@@ -17,7 +15,7 @@ public static class CuiThemeCatalog
     [
         new(
             CuiTheme.Glow, "Glow",
-            "The default CUI look: tidal gradients, soft glow accents.",
+            "Tidal gradients and soft glow accents.",
             1.0, 1.0, 1.0, 1.0, 1.0, 1.0),
         new(
             CuiTheme.Bubble, "Bubble",
@@ -37,12 +35,12 @@ public static class CuiThemeCatalog
             1.0, 1.05, 1.1, 1.25, 1.7, 0.95, 1.05, 1.02, 1.0, 1.7),
         new(
             CuiTheme.Professional, "Professional",
-            "A restrained, balanced interface with clear hierarchy and familiar controls.",
-            1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
+            "Windows-style material layers, quiet surfaces and familiar controls.",
+            0.4, 0.5, 0.4, 0.8, 0.45, 0.65, 1.0, 1.0, 0.9, 0.6)
     ];
 
     /// <summary>
-    /// Resolves a theme expression; unknown values fall back to Glow so a
+    /// Resolves a theme expression; unknown values fall back to Professional so a
     /// malformed preference can never prevent the app from launching.
     /// </summary>
     public static CuiThemeExpression Resolve(CuiTheme theme)
@@ -50,16 +48,16 @@ public static class CuiThemeCatalog
         foreach (var candidate in All)
             if (candidate.Theme == theme)
                 return candidate;
-        return All[0];
+        return All.Single(expression => expression.Theme == CuiTheme.Professional);
     }
 
-    /// <summary>Parses a persisted theme name safely, falling back to Glow.</summary>
+    /// <summary>Parses a persisted theme name safely, falling back to Professional.</summary>
     public static CuiTheme Parse(string? value) =>
         Enum.TryParse<CuiTheme>(value, ignoreCase: true, out var parsed) && Enum.IsDefined(parsed)
             ? parsed
-            : CuiTheme.Glow;
+            : CuiTheme.Professional;
 
     /// <summary>Returns the canonical persisted name for a theme.</summary>
     public static string Name(CuiTheme theme) =>
-        All.FirstOrDefault(expression => expression.Theme == theme)?.DisplayName ?? All[0].DisplayName;
+        Resolve(theme).DisplayName;
 }

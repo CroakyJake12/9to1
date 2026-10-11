@@ -126,7 +126,7 @@ public sealed partial class NotesWorkspaceView : UserControl, IDisposable
     {
         _page = page ?? throw new ArgumentNullException(nameof(page));
         DataContext = page;
-        AutomationProperties.SetName(this, "Haven Notes document workspace");
+        AutomationProperties.SetName(this, "9to1 Notes document workspace");
         Content = BuildLayout();
         AttachedToVisualTree += OnAttachedToVisualTree;
         DetachedFromVisualTree += OnDetachedFromVisualTree;
@@ -178,7 +178,7 @@ public sealed partial class NotesWorkspaceView : UserControl, IDisposable
             Margin = new Thickness(14, 10, 14, 0)
         };
         panel.Children.Add(ActionButton("New", async () => await _page.NewDocumentCommand.ExecuteAsync(), "Create a new local Notes document"));
-        panel.Children.Add(WithColumn(ActionButton("Import", ImportDocumentAsync, "Open or import a supported document into Haven Documents"), 1));
+        panel.Children.Add(WithColumn(ActionButton("Import", ImportDocumentAsync, "Open or import a supported document into 9to1 Documents"), 1));
         panel.Children.Add(WithColumn(ActionButton("Save", async () => await _page.SaveCommand.ExecuteAsync(), "Save now; autosave also runs automatically"), 2));
         panel.Children.Add(WithColumn(ActionButton("Undo", () => { _page.UndoCommand.Execute(null); return Task.CompletedTask; }, "Undo the last document edit"), 3));
         panel.Children.Add(WithColumn(ActionButton("Redo", () => { _page.RedoCommand.Execute(null); return Task.CompletedTask; }, "Redo the last undone edit"), 4));
@@ -804,7 +804,7 @@ public sealed partial class NotesWorkspaceView : UserControl, IDisposable
         if (storage is null) return;
         var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Import into Haven Notes",
+            Title = "Import into 9to1 Notes",
             AllowMultiple = false,
             FileTypeFilter =
             [
@@ -830,11 +830,11 @@ public sealed partial class NotesWorkspaceView : UserControl, IDisposable
         if (storage is null) return;
         var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = "Export Haven Notes",
+            Title = "Export 9to1 Notes",
             SuggestedFileName = SafeFileName(_page.Document.Title) + ".haven-notes.json",
             FileTypeChoices =
             [
-                new FilePickerFileType("Haven Notes") { Patterns = ["*.haven-notes.json"] },
+                new FilePickerFileType("9to1 Notes") { Patterns = ["*.haven-notes.json"] },
                 new FilePickerFileType("PDF") { Patterns = ["*.pdf"] },
                 new FilePickerFileType("Word document") { Patterns = ["*.docx"] },
                 new FilePickerFileType("OpenDocument Text") { Patterns = ["*.odt"] },
@@ -860,7 +860,7 @@ public sealed partial class NotesWorkspaceView : UserControl, IDisposable
         if (storage is null) return;
         var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Insert media into Haven Notes",
+            Title = "Insert media into 9to1 Notes",
             AllowMultiple = false,
             FileTypeFilter =
             [
@@ -977,7 +977,7 @@ public sealed partial class NotesWorkspaceView : UserControl, IDisposable
     {
         var invalid = Path.GetInvalidFileNameChars().ToHashSet();
         var normalized = new string(value.Where(character => !invalid.Contains(character)).ToArray()).Trim();
-        return string.IsNullOrWhiteSpace(normalized) ? "Haven Note" : normalized;
+        return string.IsNullOrWhiteSpace(normalized) ? "9to1 Note" : normalized;
     }
 
     /// <summary>

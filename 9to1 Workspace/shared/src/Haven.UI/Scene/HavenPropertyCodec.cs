@@ -109,7 +109,7 @@ public static class HavenPropertyCodec
             case Page page when propertyName.Equals("PageAccent", StringComparison.OrdinalIgnoreCase): page.PageAccent = value; return;
         }
 
-        throw new KeyNotFoundException($"Property '{propertyName}' is not valid for Haven component '{element.Metadata.ComponentName}'.");
+        throw new KeyNotFoundException($"Property '{propertyName}' is not valid for 9to1 component '{element.Metadata.ComponentName}'.");
     }
 
     public static bool IsSafeActionProperty(string propertyName) => propertyName.Trim().ToLowerInvariant() is

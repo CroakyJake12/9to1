@@ -5,6 +5,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Avalonia.Media.Imaging;
+using Avalonia;
+using Avalonia.Media;
+using Haven.Application;
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
 using HavenOS.Images;
@@ -27,7 +30,14 @@ public sealed class PictureBrowserSession : ICuiWritableBindingContext, ICuiActi
     private readonly List<string> _undo = [], _redo = [];
     private LocalSummary[] _documents = [];
     private readonly Dictionary<string, string> _fields = new(StringComparer.Ordinal)
-    { ["CropX"] = "0", ["CropY"] = "0", ["CropWidth"] = "100", ["CropHeight"] = "100", ["ResizeWidth"] = "100", ["ResizeHeight"] = "100" };
+    { ["CropX"] = "0", ["CropY"] = "0", ["CropWidth"] = "100", ["CropHeight"] = "100", ["ResizeWidth"] = "100", ["ResizeHeight"] = "100",
+      ["Exposure"] = "0", ["Brightness"] = "0", ["Contrast"] = "0", ["Saturation"] = "0", ["Gamma"] = "1", ["Angle"] = "0", ["BlurRadius"] = "4", ["PixelSize"] = "12" };
+    public bool ShowInspector { get; private set; }
+    public bool ShowLibrary { get; private set; }
+    public bool ShowDetails { get; private set; }
+    private bool _compact;
+    internal void SetCompact(bool compact)
+    { if (_compact == compact) return; _compact = compact; ShowInspector = !compact && _document is not null; Notify(stateChanged: false); }
     private bool _disposed, _presentationAttached = true, _preparingPresentation;
     private readonly HashSet<string> _pendingInput = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _appliedFields;
@@ -88,7 +98,7 @@ public sealed class PictureBrowserSession : ICuiWritableBindingContext, ICuiActi
     public bool IsDirty { get; private set; }
     public bool IsBusy { get; private set; }
     public bool ShowOriginal { get; private set; }
-    public string Status { get; private set; } = "Import a static PNG to create an editable local document.";
+    public string Status { get; private set; } = "Create a picture or open a PNG to get started.";
     public string? ErrorCode { get; private set; }
     public string? PresentationWarning { get; private set; }
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -132,7 +142,25 @@ public sealed class PictureBrowserSession : ICuiWritableBindingContext, ICuiActi
             using var preview = Render(candidate);
             CheckAlive(); _document = candidate; _sourceBase64 = picked.Base64; _sourceName = picked.Name;
             _savedRevision = -1; _undo.Clear(); _redo.Clear(); ShowOriginal = false; SetDirty(true);
-            SetDimensionFields(candidate); return await SaveCoreAsync(token);
+            ShowInspector = !_compact; SetDimensionFields(candidate); return await SaveCoreAsync(token);
+        }
+        catch { if (_document?.SourcePath != path && File.Exists(path)) File.Delete(path); throw; }
+    }, token);
+
+    public Task<bool> CreateAsync(CancellationToken token = default) => OperateAsync(async () =>
+    {
+        if (!await SaveBeforeLeavingAsync(token)) return false;
+        Directory.CreateDirectory(SourceDirectory);
+        var path = Path.Combine(SourceDirectory, $"{Guid.NewGuid():N}.png");
+        try
+        {
+            using (var bitmap = new RenderTargetBitmap(new PixelSize(1280, 720), new Vector(96, 96)))
+            { using (var drawing = bitmap.CreateDrawingContext()) drawing.DrawRectangle(Brushes.White, null, new Rect(0, 0, 1280, 720)); bitmap.Save(path); }
+            var bytes = File.ReadAllBytes(path); CheckPng(bytes);
+            var candidate = _engine.OpenSource(path); using var preview = Render(candidate);
+            CheckAlive(); _document = candidate; _sourceBase64 = Convert.ToBase64String(bytes); _sourceName = "Untitled picture.png";
+            _savedRevision = -1; _undo.Clear(); _redo.Clear(); ShowOriginal = false; SetDirty(true);
+            ShowInspector = !_compact; SetDimensionFields(candidate); return await SaveCoreAsync(token);
         }
         catch { if (_document?.SourcePath != path && File.Exists(path)) File.Delete(path); throw; }
     }, token);
@@ -172,7 +200,7 @@ public sealed class PictureBrowserSession : ICuiWritableBindingContext, ICuiActi
         CheckAlive(); _document = document; _sourceBase64 = bundle.SourceBase64; _sourceName = bundle.Name;
         _savedRevision = document.Revision; _lastId = documentId;
         _undo.Clear(); _undo.AddRange(bundle.Undo); _redo.Clear(); _redo.AddRange(bundle.Redo);
-        ShowOriginal = false; SetDimensionFields(document); SetDirty(false);
+        ShowOriginal = false; ShowLibrary = false; ShowInspector = !_compact; SetDimensionFields(document); SetDirty(false);
         Status = $"Opened local Picture document · revision {_savedRevision}"; return true;
     }, token);
 
@@ -290,6 +318,19 @@ public sealed class PictureBrowserSession : ICuiWritableBindingContext, ICuiActi
         value = path switch
         {
             "Status" => Status + (ErrorCode is null ? "" : " · " + ErrorCode) + (PresentationWarning is null ? "" : " · " + PresentationWarning),
+            "DisplayStatus" => ErrorCode switch
+            {
+                "InvalidArgument" => "Check the tool values and try again. Your saved picture is unchanged.",
+                "RenderFailed" => "Picture could not finish this edit. Your saved picture is unchanged.",
+                "RevisionConflict" => "This picture changed in another tab. Your unsaved edits are retained.",
+                _ => Status
+            },
+            "DocumentTitle" => _document is null ? "Picture" : _sourceName,
+            "DocumentSummary" => _document is null ? "9to1 Picture · local workspace" : $"{_document.CanvasWidth} × {_document.CanvasHeight} px · {_document.Operations.Count} edits · {(IsDirty ? "Unsaved changes" : "Saved locally")}",
+            "HasDocument" => _document is not null, "IsEmpty" => _document is null,
+            "ShowInspector" => ShowInspector, "ShowLibrary" => ShowLibrary, "ShowDetails" => ShowDetails,
+            "InspectorLabel" => ShowInspector ? "Hide tools" : "Tools", "HasPendingInput" => HasPendingInput,
+            "SelectionHint" => _document is null ? "Open or create a picture to use the editing tools." : "Drag across the picture to select a crop, or enter exact pixel values in Tools.",
             "Identity" => _document is null ? "No document open" : $"Document {_document.DocumentId} · revision {_document.Revision} · {_document.CanvasWidth} × {_document.CanvasHeight} · {_document.Operations.Count} operations · original {_sourceName}",
             "CanEdit" => _presentationAttached && !IsBusy && _document is not null, "NotBusy" => _presentationAttached && !IsBusy,
             "CanUndo" => _presentationAttached && !IsBusy && _undo.Count > 0, "CanRedo" => _presentationAttached && !IsBusy && _redo.Count > 0,
@@ -308,24 +349,36 @@ public sealed class PictureBrowserSession : ICuiWritableBindingContext, ICuiActi
         if (next == _appliedFields[path]) _pendingInput.Remove(path); else _pendingInput.Add(path);
         Notify(); return true;
     }
-    public bool? IsActionAvailable(string command) => new[] { "Import", "Refresh", "OpenDocument", "OpenDocumentRow", "Reopen", "Undo", "Redo",
-        "Crop", "Rotate", "FlipHorizontal", "FlipVertical", "Resize", "Save", "Close", "Compare", "ExportPreserve", "ExportLocation", "ExportAll" }.Contains(command);
+    public bool? IsActionAvailable(string command) => new[] { "Create", "Import", "Refresh", "OpenDocument", "OpenDocumentRow", "Reopen", "Undo", "Redo",
+        "Crop", "Rotate", "FlipHorizontal", "FlipVertical", "Resize", "Save", "Close", "Compare", "ExportPreserve", "ExportLocation", "ExportAll",
+        "ToggleInspector", "ToggleLibrary", "ToggleDetails", "ResetInputs", "Color", "Straighten", "Blur", "Pixelate", "ResizeCanvas" }.Contains(command);
     public bool CanExecute(string command, object? parameter)
     {
         if (_disposed || !_presentationAttached || IsBusy) return false;
         return command switch
         {
-            "Import" or "Refresh" or "OpenDocument" => true, "Reopen" => _lastId.Length > 0,
+            "Create" or "Import" or "Refresh" or "OpenDocument" or "ToggleInspector" or "ToggleLibrary" or "ToggleDetails" or "ResetInputs" => true, "Reopen" => _lastId.Length > 0,
             "Undo" => _document is not null && _undo.Count > 0, "Redo" => _document is not null && _redo.Count > 0,
             "Crop" or "Rotate" or "FlipHorizontal" or "FlipVertical" or "Resize" or "Save" or "Close" or "Compare"
-                or "ExportPreserve" or "ExportLocation" or "ExportAll" => _document is not null,
+                or "ExportPreserve" or "ExportLocation" or "ExportAll" or "Color" or "Straighten" or "Blur" or "Pixelate" or "ResizeCanvas" => _document is not null,
             _ => false
         };
     }
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (_disposed || !_presentationAttached) return;
         switch (command)
         {
+            case "ToggleInspector": ShowInspector = !ShowInspector; Notify(stateChanged: false); return;
+            case "ToggleLibrary": ShowLibrary = !ShowLibrary; Notify(stateChanged: false); return;
+            case "ToggleDetails": ShowDetails = !ShowDetails; Notify(stateChanged: false); return;
+            case "ResetInputs": foreach (var field in _pendingInput) _fields[field] = _appliedFields[field]; _pendingInput.Clear(); Notify(); return;
+            case "Create": await CreateAsync(cancellationToken); return;
+            case "Color": await EditInputAsync(document => document.AdjustColor(new RasterColorAdjustment(Scalar("Exposure"), Scalar("Brightness"), Scalar("Contrast"), Scalar("Saturation"), Scalar("Gamma")), PictureColorWorkingSpace.Srgb8), ["Exposure", "Brightness", "Contrast", "Saturation", "Gamma"], cancellationToken); return;
+            case "Straighten": await EditInputAsync(document => document.Straighten(Scalar("Angle")), ["Angle"], cancellationToken); return;
+            case "ResizeCanvas": await EditInputAsync(document => document.ResizeCanvas(Number("ResizeWidth"), Number("ResizeHeight")), ["ResizeWidth", "ResizeHeight"], cancellationToken); return;
+            case "Blur": await EditInputAsync(document => document.Blur(new RasterBlur(Number("CropX"), Number("CropY"), Number("CropWidth"), Number("CropHeight"), Number("BlurRadius"))), ["CropX", "CropY", "CropWidth", "CropHeight", "BlurRadius"], cancellationToken); return;
+            case "Pixelate": await EditInputAsync(document => document.Pixelate(new RasterPixelation(Number("CropX"), Number("CropY"), Number("CropWidth"), Number("CropHeight"), Number("PixelSize"))), ["CropX", "CropY", "CropWidth", "CropHeight", "PixelSize"], cancellationToken); return;
             case "Crop": await EditInputAsync(document => document.Crop(Number("CropX"), Number("CropY"), Number("CropWidth"), Number("CropHeight")),
                 ["CropX", "CropY", "CropWidth", "CropHeight"], cancellationToken); return;
             case "Resize": await EditInputAsync(document => document.Resize(Number("ResizeWidth"), Number("ResizeHeight")),
@@ -383,6 +436,7 @@ public sealed class PictureBrowserSession : ICuiWritableBindingContext, ICuiActi
     }
     private PictureDocument RequireDocument() => _document ?? throw new PictureBrowserException("DocumentNotFound", "Open a local document first.");
     private int Number(string name) => int.Parse(_fields[name], CultureInfo.InvariantCulture);
+    private double Scalar(string name) => double.Parse(_fields[name], CultureInfo.InvariantCulture);
     private void SetDimensionFields(PictureDocument document)
     {
         foreach (var (field, dimension) in new[] { ("CropWidth", document.CanvasWidth), ("ResizeWidth", document.CanvasWidth), ("CropHeight", document.CanvasHeight), ("ResizeHeight", document.CanvasHeight) })
@@ -397,7 +451,9 @@ public sealed class PictureBrowserSession : ICuiWritableBindingContext, ICuiActi
     {
         DocumentId = document.DocumentId, SchemaVersion = document.SchemaVersion, DisplayName = document.DisplayName,
         FileId = document.FileId, SourcePath = document.SourcePath, SourceRevision = document.SourceRevision,
-        CanvasWidth = document.CanvasWidth, CanvasHeight = document.CanvasHeight, Operations = document.Operations, Revision = revision
+        CanvasWidth = document.CanvasWidth, CanvasHeight = document.CanvasHeight, Operations = document.Operations, Revision = revision,
+        InitialCanvasWidth = document.InitialCanvasWidth, InitialCanvasHeight = document.InitialCanvasHeight,
+        CompositionState = document.CompositionState, SemanticHistory = document.SemanticHistory
     };
     private static string SourceDirectory => Path.Combine(Path.GetTempPath(), "9to1-picture-local", "sources");
     private static void CheckLocalSource(PictureDocument document)

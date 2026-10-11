@@ -37,7 +37,7 @@ internal static class ProviderHttp
     {
         var configuration = await configurations.GetAsync(providerId, cancellationToken).ConfigureAwait(false)
                             ?? throw new InvalidOperationException($"Provider '{providerId}' is not configured.");
-        if (!configuration.IsEnabled) throw new InvalidOperationException($"{configuration.DisplayName} is disabled in Haven settings.");
+        if (!configuration.IsEnabled) throw new InvalidOperationException($"{configuration.DisplayName} is disabled in 9to1 settings.");
         var endpoint = string.IsNullOrWhiteSpace(configuration.Endpoint) ? defaultEndpoint : configuration.Endpoint;
         if (string.IsNullOrWhiteSpace(endpoint)) throw new InvalidOperationException($"{configuration.DisplayName} requires an endpoint.");
         if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var endpointUri) || endpointUri.Scheme is not ("http" or "https"))

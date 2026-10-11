@@ -25,7 +25,7 @@ public sealed class AgentsPage : UserControl, IDisposable, IAsyncDisposable,
         Scene = new HavenSceneControl { Root = _scene.Root };
         _originalWork = new DesktopOriginalWorkLifetime(StopOriginalAsync, CleanupOriginalAsync);
         AutomationProperties.SetAutomationId(this, "HavenNativeAgentsPage");
-        AutomationProperties.SetName(this, "Haven-native Agents management");
+        AutomationProperties.SetName(this, "9to1-native Agents management");
         AutomationProperties.SetAutomationId(Scene, "HavenNativeAgentsScene");
         AutomationProperties.SetName(Scene, "Agents management");
         Content = Scene;

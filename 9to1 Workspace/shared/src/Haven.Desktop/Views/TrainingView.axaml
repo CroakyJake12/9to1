@@ -57,7 +57,7 @@
             <TextBlock Text="Back" />
           </StackPanel>
         </hui:HavenButton>
-        <TextBlock Text="Haven Training" FontSize="20" FontWeight="Bold"
+        <TextBlock Text="9to1 Training" FontSize="20" FontWeight="Bold"
                    VerticalAlignment="Center"/>
       </StackPanel>
 

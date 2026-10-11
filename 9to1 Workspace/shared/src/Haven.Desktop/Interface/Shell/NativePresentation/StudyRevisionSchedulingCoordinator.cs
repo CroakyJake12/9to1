@@ -140,7 +140,7 @@ internal sealed class StudyRevisionSchedulingCoordinator
         card.Add(new HavenText { Content = "Schedule revision", Level = TextLevel.H2 });
         var hint = new HavenText
         {
-            Content = "Haven will place this in the first free Plan slot inside your window.",
+            Content = "9to1 will place this in the first free Plan slot inside your window.",
             Level = TextLevel.Paragraph
         };
         hint.SetValue(HavenProperties.Foreground, "TextSecondary");

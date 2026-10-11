@@ -25,7 +25,7 @@ internal static class AndroidSharedContextStore
 }
 
 [Activity(
-    Label = "Ask Haven",
+    Label = "Ask 9to1",
     Theme = "@style/Theme.AppCompat.Light.NoActionBar",
     Icon = "@drawable/haven_icon",
     Exported = true,
@@ -115,7 +115,7 @@ public sealed class HavenShareActivity : Activity
         catch (Exception exception)
         {
             global::Android.Util.Log.Error("HavenShare", "Share intake failed: " + exception);
-            Toast.MakeText(this, "Haven could not open the shared content.", ToastLength.Long)?.Show();
+            Toast.MakeText(this, "9to1 could not open the shared content.", ToastLength.Long)?.Show();
         }
         finally
         {
@@ -201,7 +201,7 @@ public sealed class HavenShareActivity : Activity
                 if (read == 0) break;
                 total += read;
                 if (total > maximumBytes)
-                    throw new InvalidOperationException("The shared payload is larger than Haven's intake limit.");
+                    throw new InvalidOperationException("The shared payload is larger than 9to1's intake limit.");
                 await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
             }
 
@@ -219,7 +219,7 @@ public sealed class HavenShareActivity : Activity
     private Stream OpenInput(global::Android.Net.Uri uri)
     {
         if (!string.Equals(uri.Scheme, "content", StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("Haven only accepts Android-granted content URIs from the share sheet.");
+            throw new InvalidOperationException("9to1 only accepts Android-granted content URIs from the share sheet.");
         return ContentResolver?.OpenInputStream(uri)
             ?? throw new InvalidOperationException("The shared content provider did not expose a readable stream.");
     }

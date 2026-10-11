@@ -234,7 +234,7 @@ internal sealed class DataHavenScene : IDisposable
         if (selectedCell.Metadata.TryGetValue("formulaError", out var error) && !string.IsNullOrWhiteSpace(error))
         {
             FormulaStatusText.Content = selectedCell.Metadata.TryGetValue("formulaCachedFallback", out var fallback) && fallback == "xlsx"
-                ? $"Imported cached result · {selectedCell.Value} · Haven cannot calculate this Excel formula yet: {error}"
+                ? $"Imported cached result · {selectedCell.Value} · 9to1 cannot calculate this Excel formula yet: {error}"
                 : $"Formula issue · {selectedCell.Value}: {error}";
         }
         else

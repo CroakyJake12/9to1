@@ -1,4 +1,6 @@
 using System.ComponentModel;
+using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Threading;
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
@@ -26,15 +28,39 @@ public static class WriteBrowserSurface
     {
         private readonly WriteBrowserSession _session;
         private bool _disposed;
+        private TopLevel? _topLevel;
         public WriteRetainedSceneControl Control { get; }
 
         public PresentationLifetime(WriteBrowserSession session, Func<bool> reduceMotion)
         {
             _session = session;
             Control = new(reduceMotion);
+            Control.SelectionChanged += SelectionChanged;
+            Control.AttachedToVisualTree += Attached;
             session.PropertyChanged += OnChanged;
             Refresh();
         }
+
+        private void SelectionChanged(object? sender, EventArgs args) => _session.RefreshSelection();
+        private void Attached(object? sender, VisualTreeAttachmentEventArgs args)
+        {
+            var nextRoot = TopLevel.GetTopLevel(Control);
+            if (ReferenceEquals(_topLevel, nextRoot)) return;
+            if (_topLevel is not null) _topLevel.PropertyChanged -= ViewportChanged;
+            _topLevel = nextRoot;
+            if (_topLevel is null) return;
+            _topLevel.PropertyChanged += ViewportChanged;
+            var attachedRoot = _topLevel;
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (!_disposed && ReferenceEquals(_topLevel, attachedRoot))
+                    _session.SetViewportWidth(attachedRoot.ClientSize.Width);
+            });
+        }
+        // Keep observing the surface viewport while its editor is detached by
+        // the start view or compact Properties; Dispose releases the observer.
+        private void ViewportChanged(object? sender, AvaloniaPropertyChangedEventArgs args)
+        { if (args.Property == TopLevel.ClientSizeProperty && _topLevel is not null) _session.SetViewportWidth(_topLevel.ClientSize.Width); }
 
         private void OnChanged(object? sender, PropertyChangedEventArgs args)
         {
@@ -46,7 +72,7 @@ public static class WriteBrowserSurface
         {
             if (_disposed) return;
             // Freeze native and retained input before exposing/rebinding the owner.
-            var enabled = _session.IsPresentationAdmitted && !_session.IsBusy && !_session.IsReadOnly && !_session.HasUnknownCommitOutcome && _session.Editor is not null;
+            var enabled = _session.IsPresentationAdmitted && _session.IsWorkspaceActive && !_session.IsBusy && !_session.IsReadOnly && !_session.HasUnknownCommitOutcome && _session.Editor is not null;
             Control.SetInputAllowed(enabled);
             Control.SetEditor(_session.Editor);
         }
@@ -56,6 +82,10 @@ public static class WriteBrowserSurface
             if (_disposed) return;
             _disposed = true;
             _session.PropertyChanged -= OnChanged;
+            if (_topLevel is not null) _topLevel.PropertyChanged -= ViewportChanged;
+            Control.SelectionChanged -= SelectionChanged;
+            Control.AttachedToVisualTree -= Attached;
+            _topLevel = null;
             Control.Dispose();
         }
     }

@@ -8,7 +8,7 @@ public sealed record HavenAction(HavenSelector Target, string Property, string V
         var arrow = expression.IndexOf("->", StringComparison.Ordinal);
         var equals = expression.IndexOf('=', arrow + 2);
         if (arrow <= 0 || equals <= arrow + 2)
-            throw new FormatException("Haven action syntax is '<selector> -> <safe-property>=<value>'.");
+            throw new FormatException("9to1 action syntax is '<selector> -> <safe-property>=<value>'.");
         return new HavenAction(HavenSelector.Parse(expression[..arrow].Trim()), expression[(arrow + 2)..equals].Trim(), expression[(equals + 1)..].Trim());
     }
 }
@@ -18,7 +18,7 @@ public sealed class HavenActionExecutor
     public int Execute(HavenElement root, HavenAction action)
     {
         if (!HavenPropertyCodec.IsSafeActionProperty(action.Property))
-            throw new InvalidOperationException($"Haven actions may not mutate '{action.Property}'.");
+            throw new InvalidOperationException($"9to1 actions may not mutate '{action.Property}'.");
         var matches = action.Target.Select(root);
         foreach (var element in matches)
         {

@@ -45,7 +45,7 @@ public sealed class CanvasNativeCuiSurface(Func<CancellationToken, Task<CanvasRn
             token.ThrowIfCancellationRequested();
             _viewport = new CanvasNativeViewport(_document, readiness);
             var registry = new CuiControlRegistry();
-            registry.RegisterControlType("CanvasSpatialSurface", _ => _viewport!);
+            registry.RegisterObjectRenderer("CanvasSpatialSurface", _ => _viewport!);
             _scene = new CuiSceneHost(registry);
             if (ink is not null)
             {

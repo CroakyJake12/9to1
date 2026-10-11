@@ -22,7 +22,7 @@ public sealed partial class ProviderConnectionsViewModel
         _externalConnections = registry;
         SuggestedConnections.Add(new SuggestedConnectionItemViewModel(
             "uefn", "Unreal Editor for Fortnite (UEFN)",
-            "Connect Haven to UEFN for Verse, devices, Scene Graph and official MCP playtesting capabilities. This preset is local-only and does not use OAuth.",
+            "Connect 9to1 to UEFN for Verse, devices, Scene Graph and official MCP playtesting capabilities. This preset is local-only and does not use OAuth.",
             "http://127.0.0.1:8000/mcp", "Connect UEFN", isAdvanced: false));
         SuggestedConnections.Add(new SuggestedConnectionItemViewModel(
             "custom-mcp", "Custom MCP Server",

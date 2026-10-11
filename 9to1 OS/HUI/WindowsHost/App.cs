@@ -88,7 +88,7 @@ public sealed class App : Application
                 {
                     Architecture.X64 => "amd64",
                     Architecture.Arm64 => "arm64",
-                    _ => throw new PlatformNotSupportedException("This CPU architecture is not supported by local CakeOS updates.")
+                    _ => throw new PlatformNotSupportedException("This CPU architecture is not supported by local 9to1OS updates.")
                 }))),
             new PkexecCakeUpdateInstaller(),
             new CakeUpdateHistoryStore(Path.Combine(

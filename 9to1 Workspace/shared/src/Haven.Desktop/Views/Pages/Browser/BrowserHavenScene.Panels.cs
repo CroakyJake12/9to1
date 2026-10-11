@@ -201,7 +201,7 @@ internal sealed partial class BrowserHavenScene
                 assistantOutput = string.IsNullOrWhiteSpace(assistantOutput)
                     ? _page.ReadAloudSummary
                     : assistantOutput + "\n" + _page.ReadAloudSummary;
-            ConfigureUtility("Ask Haven", _page.AssistantInput, "", true, false,
+            ConfigureUtility("Ask 9to1", _page.AssistantInput, "", true, false,
                 "Ask", "Summarise", true, true, assistantOutput);
             _utilityInput1.Placeholder = "Ask about this page";
             _utilityInput1.Multiline = true;
@@ -237,7 +237,7 @@ internal sealed partial class BrowserHavenScene
         if (_page.IsExtensionsOpen)
         {
             ConfigureUtility("Extensions", "", "", false, false,
-                "Import Haven", "Import Chrome", true, true, "");
+                "Import 9to1", "Import Chrome", true, true, "");
             foreach (var extension in _page.Extensions)
                 AddUtilityRow($"{extension.Name} ({OnOff(extension.IsEnabled)})", "Remove",
                     () => _page.ToggleExtensionCommand.Execute(extension),

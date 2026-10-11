@@ -345,8 +345,8 @@ public abstract class OAuthCalendarTransportBase(
     private static async Task WriteLoopbackResponseAsync(Stream stream, bool success, CancellationToken cancellationToken)
     {
         var html = success
-            ? "<!doctype html><title>Haven</title><meta name='viewport' content='width=device-width'><style>body{font:16px system-ui;background:#0b111a;color:#eef7ff;padding:3rem}</style><h1>Connected to Haven</h1><p>You can return to the app.</p>"
-            : "<!doctype html><title>Haven</title><meta name='viewport' content='width=device-width'><style>body{font:16px system-ui;background:#0b111a;color:#eef7ff;padding:3rem}</style><h1>Sign-in was not completed</h1><p>You can return to Haven and try again.</p>";
+            ? "<!doctype html><title>9to1</title><meta name='viewport' content='width=device-width'><style>body{font:16px system-ui;background:#0b111a;color:#eef7ff;padding:3rem}</style><h1>Connected to 9to1</h1><p>You can return to the app.</p>"
+            : "<!doctype html><title>9to1</title><meta name='viewport' content='width=device-width'><style>body{font:16px system-ui;background:#0b111a;color:#eef7ff;padding:3rem}</style><h1>Sign-in was not completed</h1><p>You can return to 9to1 and try again.</p>";
         var body = Encoding.UTF8.GetBytes(html);
         var crlf = ((char)13).ToString() + (char)10;
         var headers = Encoding.ASCII.GetBytes(string.Join(crlf,

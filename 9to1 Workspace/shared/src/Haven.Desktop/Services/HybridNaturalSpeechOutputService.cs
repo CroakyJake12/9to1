@@ -35,14 +35,14 @@ public sealed class HybridNaturalSpeechOutputService : ISpeechOutputService, IAd
 
     private static readonly CallVoice[] NeuralVoices =
     [
-        new("kokoro:af_heart", "Heart · Haven Neural", "en-US", true),
-        new("kokoro:af_nova", "Nova · Haven Neural", "en-US"),
-        new("kokoro:af_sky", "Sky · Haven Neural", "en-US"),
-        new("kokoro:af_bella", "Bella · Haven Neural", "en-US"),
-        new("kokoro:am_michael", "Michael · Haven Neural", "en-US"),
-        new("kokoro:am_adam", "Adam · Haven Neural", "en-US"),
-        new("kokoro:bf_emma", "Emma · Haven Neural", "en-GB"),
-        new("kokoro:bm_george", "George · Haven Neural", "en-GB")
+        new("kokoro:af_heart", "Heart · 9to1 Neural", "en-US", true),
+        new("kokoro:af_nova", "Nova · 9to1 Neural", "en-US"),
+        new("kokoro:af_sky", "Sky · 9to1 Neural", "en-US"),
+        new("kokoro:af_bella", "Bella · 9to1 Neural", "en-US"),
+        new("kokoro:am_michael", "Michael · 9to1 Neural", "en-US"),
+        new("kokoro:am_adam", "Adam · 9to1 Neural", "en-US"),
+        new("kokoro:bf_emma", "Emma · 9to1 Neural", "en-GB"),
+        new("kokoro:bm_george", "George · 9to1 Neural", "en-GB")
     ];
 
     public HybridNaturalSpeechOutputService(WindowsNaturalSpeechOutputService windows)

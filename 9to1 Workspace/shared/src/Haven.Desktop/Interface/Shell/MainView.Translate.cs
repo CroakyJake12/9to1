@@ -12,7 +12,7 @@ public sealed partial class MainView
 
     private TranslatePage CreateTranslatePage()
     {
-        var services = App.Services ?? throw new InvalidOperationException("Haven services are unavailable while opening Translate.");
+        var services = App.Services ?? throw new InvalidOperationException("9to1 services are unavailable while opening Translate.");
         var attachments = services.GetRequiredService<IMessageAttachmentService>();
         var page = new TranslatePage(new TranslateService(_ollama, _preferences, attachments), _versionedSettings);
         page.CopyRequested += (_, text) => CopyRequested?.Invoke(this, text);

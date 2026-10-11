@@ -111,6 +111,7 @@ internal sealed class BoardsApp : Application
     private Task? _closeActionDrain;
     private Task? _closeDrain;
     private bool _closeAccepted;
+    private IDisposable? _closeInteractionRestriction;
     private readonly List<Task> _menuActionTasks = [];
 
     public override void OnFrameworkInitializationCompleted()
@@ -153,6 +154,8 @@ internal sealed class BoardsApp : Application
         viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         viewModel.FileMenuRequested -= PostFileMenu;
         viewModel.OverflowRequested -= PostOverflowMenu;
+        viewModel.BoardPropertiesRequested -= ShowProperties;
+        viewModel.CloseWindowRequested -= RequestWindowClose;
         viewModel.ThemeToggleRequested -= PostThemeToggle;
         viewModel.PickFileAsync = null;
         viewModel.OpenBoardAsync = null;
@@ -210,7 +213,8 @@ internal sealed class BoardsApp : Application
             if (_closeAccepted) return;
             args.Cancel = true;
             if (_closeAttempt is { IsCompleted: false }) return;
-            if (window.Content is Control content) content.IsEnabled = false;
+            if (window.Content is Control content)
+                _closeInteractionRestriction ??= CuiLifecycleProperties.RestrictInteraction(content);
             _closeAttempt = PrepareWindowCloseAsync(window);
         };
 
@@ -280,7 +284,8 @@ internal sealed class BoardsApp : Application
         {
             Console.WriteLine($"[CUI Boards] Save on close failed: {error.Message}");
             _viewModel?.Set("StatusText", "Close canceled; save failed: " + error.Message.Split('\n')[0]);
-            if (window.Content is Control content) content.IsEnabled = true;
+            _closeInteractionRestriction?.Dispose();
+            _closeInteractionRestriction = null;
             return;
         }
         try
@@ -310,9 +315,8 @@ internal sealed class BoardsApp : Application
         _styleBox = FindByAutomationId<ComboBox>(root, "StyleBox");
         _addKindBox = FindByAutomationId<ComboBox>(root, "AddKindBox");
         var insertButton = FindByAutomationId<Button>(root, "AddBlockKind");
-        // NOTE: the CUI loader never applies id="..." to Control.Name
-        // (CuiComponent.Name is dropped), so static-surface lookup uses the
-        // automationid attributes above; dynamic controls use real Names.
+        // Canonical CUI keeps authored identity on its outer control. Layout
+        // panels are internal adapters, resolved through the helper below.
         WireTitleBox(root);
         WireSearchBox(root);
         ThemeApplier.ApplyChrome(root);
@@ -331,6 +335,8 @@ internal sealed class BoardsApp : Application
         _viewModel.NewBoardRequested += PostNewBoard;
         _viewModel.NewMenuRequested += PostNewMenu;
         _viewModel.OverflowRequested += PostOverflowMenu;
+        _viewModel.BoardPropertiesRequested += ShowProperties;
+        _viewModel.CloseWindowRequested += RequestWindowClose;
         _viewModel.ThemeToggleRequested += PostThemeToggle;
         if (_styleBox is not null)
         {
@@ -437,9 +443,7 @@ internal sealed class BoardsApp : Application
         var toolbar = FindByAutomationId<StackPanel>(_root, "ToolbarHost");
         if (toolbar is not null)
             ToolbarBuilder.Rebuild(toolbar, _viewModel);
-        var context = FindByAutomationId<StackPanel>(_root, "ContextHost");
-        if (context is not null)
-            ContextPanels.Rebuild(context, _viewModel);
+        _viewModel.RefreshCuiContext();
     }
 
     private void UpdateWindowTitle()
@@ -452,9 +456,9 @@ internal sealed class BoardsApp : Application
 
     private void TameEditorScroll(Control root)
     {
-        var scroller = FindByAutomationId<ScrollViewer>(root, "EditorScroll");
-        if (scroller is not null)
-            scroller.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
+        var scroller = FindByAutomationId<CuiContainerControl>(root, "EditorScroll");
+        if (scroller is not null && !CuiLayoutProperties.SetLiteral(scroller,"HorizontalScrolling","False",source:"Boards editor viewport"))
+            throw new InvalidOperationException("The canonical Boards scrolling property is unavailable.");
     }
 
     private void WireSearchBox(Control root)
@@ -472,16 +476,9 @@ internal sealed class BoardsApp : Application
     {
         if (_viewModel is null)
             return;
-        var left = FindByAutomationId<StackPanel>(root, "TopBarLeft");
-        var right = FindByAutomationId<StackPanel>(root, "TopBarRight");
-        if (left is null || right is null)
-            return;
-        var vm = _viewModel;
-        ShellChrome.BuildTopBar(left, right, vm,
-            onFileMenu: PostFileMenu,
-            onOverflow: PostOverflowMenu,
-            onTheme: PostThemeToggle,
-            onSaveState: text => { _saveStateText = text; SyncSaveState(); });
+        // Top-bar topology and action wiring are authored once in Boards.cui.
+        _saveStateText = FindByAutomationId<TextBlock>(root, "SaveState");
+        SyncSaveState();
     }
 
     private void SyncSaveState()
@@ -489,10 +486,10 @@ internal sealed class BoardsApp : Application
         if (_saveStateText is null || _viewModel is null)
             return;
         var state = _viewModel.Get("SaveStateText")?.ToString() ?? "Saved";
-        _saveStateText.Text = state;
-        _saveStateText.Foreground = state.StartsWith("Save failed", StringComparison.OrdinalIgnoreCase)
-            ? BoardsTheme.ErrorBrush
-            : BoardsTheme.SecondaryTextBrush;
+        CuiPropertyPresentation.Set(_saveStateText, "Text", state, CuiPropertyLevel.Instance, "Boards save owner");
+        var role = state.StartsWith("Save failed", StringComparison.OrdinalIgnoreCase) ? "CuiValidationBrush" : "CuiTextSoftBrush";
+        if (_saveStateText.TryFindResource(role, out var resource) && resource is IBrush brush)
+            CuiPropertyPresentation.Set(_saveStateText, "Foreground", brush, CuiPropertyLevel.Instance, "Boards save owner");
     }
 
     private void FillNav(Control root)
@@ -516,47 +513,20 @@ internal sealed class BoardsApp : Application
             Dispatcher.UIThread.Post(action);
     }
 
-    private void PostFileMenu()
-    {
-        if (_window is null || _viewModel is null)
-            return;
-        Post(() =>
-        {
-            if (_window is null || _viewModel is null)
-                return;
-            var flyout = new MenuFlyout { Placement = PlacementMode.BottomEdgeAlignedLeft };
-            var vm = _viewModel;
-            var win = _window;
-            flyout.Items.Add(MenuAction("New board", async () => await vm.DispatchAsync("NewBoard", null)));
-            flyout.Items.Add(MenuAction("Open…", async () => await vm.DispatchAsync("OpenBoard", null)));
-            flyout.Items.Add(MenuAction("Save", async () => await vm.DispatchAsync("SaveBoard", null), "Ctrl+S"));
-            flyout.Items.Add(MenuAction("Save As…", async () => await vm.DispatchAsync("SaveAsBoard", null)));
-            flyout.Items.Add(new Separator());
-            flyout.Items.Add(MenuAction("Board properties…", () => ShowProperties()));
-            flyout.Items.Add(new Separator());
-            flyout.Items.Add(MenuAction("Exit", () => win.Close()));
-            flyout.ShowAt(win, true);
-        });
-    }
+    private void PostFileMenu() => OpenAuthoredMenu("FileMenuButton");
 
-    private void PostNewMenu()
-    {
-        if (_window is null || _viewModel is null)
-            return;
-        Post(() =>
-        {
-            if (_window is null || _viewModel is null)
-                return;
-            var flyout = BoardsCreationMenu.Create(_viewModel);
-            var button = _root is null ? null : FindByAutomationId<Button>(_root, "AddNewButton");
-            if (button is not null)
-                flyout.ShowAt(button);
-            else
-                flyout.ShowAt(_window, true);
-        });
-    }
+    private void PostNewMenu() => OpenAuthoredMenu("AddNewButton");
 
-    private void PostNewBoard() => Post(() => _ = CreateNewBoardAsync());
+    private void OpenAuthoredMenu(string id) => Post(() =>
+    {
+        if (_root is null || _closeAttempt is { IsCompleted: false }) return;
+        if (FindByAutomationId<MenuItem>(_root, id) is { IsEffectivelyEnabled: true } menu)
+            menu.Open();
+    });
+
+    private void PostNewBoard() => Post(() => _ = ObserveMenuActionAsync(CreateNewBoardAsync));
+
+    private void RequestWindowClose() => Post(() => _window?.Close());
 
     private async Task CreateNewBoardAsync()
     {
@@ -566,10 +536,10 @@ internal sealed class BoardsApp : Application
         {
             var file = await _window.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                Title = "Create a new 9-1 Board",
+                Title = "Create a new 9to1 board",
                 SuggestedFileName = "Untitled board",
                 DefaultExtension = "9to1board",
-                FileTypeChoices = [new FilePickerFileType("9-1 Boards") { Patterns = ["*.9to1board"] }],
+                FileTypeChoices = [new FilePickerFileType("9to1 Boards") { Patterns = ["*.9to1board"] }],
                 ShowOverwritePrompt = false,
             });
             var path = file?.TryGetLocalPath();
@@ -585,15 +555,8 @@ internal sealed class BoardsApp : Application
         catch (Exception error)
         {
             _viewModel?.Set("StatusText", "New board failed: " + error.Message.Split('\n')[0]);
+            throw; // The menu owner retains the same failed task for close/drain diagnostics.
         }
-    }
-
-    private MenuItem MenuAction(string header, Func<Task> tapped, string? gesture = null)
-    {
-        var item = new MenuItem { Header = gesture is null ? header : $"{header}    {gesture}" };
-        AutomationProperties.SetName(item, header);
-        item.Click += (_, _) => _ = ObserveMenuActionAsync(tapped);
-        return item;
     }
 
     private async Task ObserveMenuActionAsync(Func<Task> tapped)
@@ -621,32 +584,7 @@ internal sealed class BoardsApp : Application
         }
     }
 
-    private static MenuItem MenuAction(string header, Action tapped)
-    {
-        var item = new MenuItem { Header = header };
-        AutomationProperties.SetName(item, header);
-        item.Click += (_, _) => tapped();
-        return item;
-    }
-
-    private void PostOverflowMenu()
-    {
-        if (_window is null || _viewModel is null)
-            return;
-        Post(() =>
-        {
-            if (_window is null || _viewModel is null)
-                return;
-            var vm = _viewModel;
-            var flyout = new MenuFlyout { Placement = PlacementMode.BottomEdgeAlignedRight };
-            flyout.Items.Add(MenuAction("Styles…", async () => await vm.DispatchAsync("ManageStyles", null)));
-            flyout.Items.Add(MenuAction(
-                BoardsTheme.Mode == BoardsThemeMode.Dark ? "Light theme" : "Dark theme",
-                () => PostThemeToggle()));
-            flyout.Items.Add(MenuAction("Board properties…", () => ShowProperties()));
-            flyout.ShowAt(_window, true);
-        });
-    }
+    private void PostOverflowMenu() => OpenAuthoredMenu("OverflowButton");
 
     private void PostThemeToggle()
     {
@@ -672,7 +610,7 @@ internal sealed class BoardsApp : Application
             return;
         var owner = _window;
         var viewModel = _viewModel;
-        Post(() =>
+        Post(() => _ = ObserveMenuActionAsync(async () =>
         {
             var (title, fileName, path, size) = viewModel.BoardInfo();
             var dialog = new Window
@@ -681,46 +619,38 @@ internal sealed class BoardsApp : Application
                 Width = 440,
                 Height = 320,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Background = BoardsTheme.CardBrush,
             };
-            var panel = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(20) };
-            panel.Children.Add(new TextBlock
-            {
-                Text = "Board properties",
-                FontSize = 20,
-                FontWeight = FontWeight.Bold,
-                Foreground = BoardsTheme.TextBrush,
-                Margin = new Thickness(0, 0, 0, 12),
-            });
-            void Row(string label, string value)
-            {
-                panel.Children.Add(new TextBlock
-                {
-                    Text = label,
-                    FontSize = 12,
-                    FontWeight = FontWeight.SemiBold,
-                    Foreground = BoardsTheme.SecondaryTextBrush,
-                });
-                panel.Children.Add(new TextBlock
-                {
-                    Text = string.IsNullOrEmpty(value) ? "—" : value,
-                    FontSize = 13,
-                    Foreground = BoardsTheme.TextBrush,
-                    TextWrapping = TextWrapping.Wrap,
-                    Margin = new Thickness(0, 0, 0, 8),
-                });
-            }
-            Row("Title", title);
-            Row("File", fileName);
-            Row("Location", path);
-            Row("Size", BlockRenderer.FormatBytes(size));
-            var close = new Button { Content = "Close", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right };
-            AutomationProperties.SetName(close, "Close properties");
-            close.Click += (_, _) => dialog.Close();
-            panel.Children.Add(close);
-            dialog.Content = panel;
-            dialog.ShowDialog(owner);
-        });
+            var properties = new CuiViewModel();
+            properties.Set("Title", string.IsNullOrEmpty(title) ? "—" : title);
+            properties.Set("File", string.IsNullOrEmpty(fileName) ? "—" : fileName);
+            properties.Set("Location", string.IsNullOrEmpty(path) ? "—" : path);
+            properties.Set("Size", BlockRenderer.FormatBytes(size));
+            properties.On("CloseProperties", _ => dialog.Close());
+            using var loader = new CuiControlLoader();
+            loader.SetBindingContext(properties); loader.SetActionDispatcher(properties);
+            var (content, diagnostics) = loader.LoadMarkup("""
+                <Cui><Theme Name="user_preference"><Page ID="BoardPropertiesPage">
+                  <Container Type="Vertical Stack" Padding="20" CellGap="6" VerticalScrolling="True" Background="{Resource CuiPanelBrush}">
+                    <Text Text="Board properties" FontSize="20" FontWeight="Bold" Margin="0 0 0 6" />
+                    <Text Text="Title" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+                    <Text Text="{Binding Title}" TextWrapping="Wrap" Margin="0 0 0 2" />
+                    <Text Text="File" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+                    <Text Text="{Binding File}" TextWrapping="Wrap" Margin="0 0 0 2" />
+                    <Text Text="Location" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+                    <Text Text="{Binding Location}" TextWrapping="Wrap" Margin="0 0 0 2" />
+                    <Text Text="Size" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+                    <Text Text="{Binding Size}" Margin="0 0 0 2" />
+                    <Button Content="Close" Action="CloseProperties" AccessibleName="Close properties" HorizontalAlignment="Right" />
+                  </Container>
+                </Page></Theme></Cui>
+                """, "BoardProperties.cui");
+            if (content is null)
+                throw new InvalidOperationException("The canonical board properties view could not load: " + string.Join("; ", diagnostics));
+            loader.WireBindings(content);
+            dialog.Content = content;
+            await dialog.ShowDialog(owner);
+            await loader.WhenActionsIdleAsync();
+        }));
     }
 
     private void PostStyleEditor()
@@ -1192,10 +1122,12 @@ internal sealed class BoardsApp : Application
 
     private static T? FindByAutomationId<T>(Control root, string automationId) where T : Control
     {
-        if (root is T match
-            && (string.Equals(root.Name, automationId, StringComparison.Ordinal)
-                || string.Equals(AutomationProperties.GetAutomationId(root), automationId, StringComparison.Ordinal)))
-            return match;
+        if (string.Equals(root.Name, automationId, StringComparison.Ordinal)
+            || string.Equals(AutomationProperties.GetAutomationId(root), automationId, StringComparison.Ordinal))
+        {
+            if (root is T match) return match;
+            if (root is CuiContainerControl container && container.Layout is T layout) return layout;
+        }
         foreach (var child in LogicalChildren(root))
         {
             var found = FindByAutomationId<T>(child, automationId);
@@ -1255,32 +1187,25 @@ internal sealed class BoardsApp : Application
         }
     }
 
-    private static StackPanel CreateFallbackUI(string message)
+    private Control CreateFallbackUI(string message)
     {
-        var panel = new StackPanel
-        {
-            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-        };
-
-        panel.Children.Add(new TextBlock
-        {
-            Text = "Boards",
-            FontSize = 32,
-            FontWeight = FontWeight.Bold,
-            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-            Margin = new Thickness(0, 0, 0, 16),
-        });
-
-        panel.Children.Add(new TextBlock
-        {
-            Text = message,
-            FontSize = 14,
-            TextWrapping = TextWrapping.Wrap,
-            MaxWidth = 600,
-            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-        });
-
-        return panel;
+        // An explicit CUI failure surface never substitutes for the board or
+        // reports successful application readiness after a rejected document.
+        _loader?.Dispose(); _loader = new CuiControlLoader();
+        var diagnostic = new CuiViewModel(); diagnostic.Set("Failure",message);
+        _loader.SetBindingContext(diagnostic);
+        var parser = new CakeOS.Cui.Language.CuiRichParser();
+        var document = parser.Parse("""
+            <Cui><Theme Name="user_preference"><Page id="boards-startup-failure">
+              <Container Type="Vertical Stack" Padding="24" CellGap="16" MaxWidth="660" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Text Text="Boards could not open" FontSize="24" FontWeight="SemiBold" />
+                <Text Text="The application surface could not be loaded. Your saved boards have not been replaced." TextWrapping="Wrap" />
+                <Text Text="{Binding Failure}" TextWrapping="Wrap" AccessibleName="Boards startup error" />
+              </Container>
+            </Page></Theme></Cui>
+            """, "BoardsStartupFailure.cui");
+        var (root,diagnostics) = _loader.TryLoad(document);
+        if (root is null) throw new InvalidOperationException("Boards and its CUI diagnostic surface could not load: "+string.Join("; ",diagnostics));
+        _loader.WireBindings(root); return root;
     }
 }

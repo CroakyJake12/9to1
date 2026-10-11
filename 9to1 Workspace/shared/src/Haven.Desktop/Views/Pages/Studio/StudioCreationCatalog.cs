@@ -26,21 +26,21 @@ public static class StudioCreationCatalog
         App("image", "Images", "Create or edit an image in Imagine.", "Media", "imagine", "image"),
         App("video", "Videos", "Start a video project in Imagine.", "Media", "imagine", "video"),
         App("audio", "Audio", "Start an audio project in Imagine.", "Media", "imagine", "audio"),
-        InHouse("text-to-speech", "Text to Speech", "Turn text into spoken audio with Haven's in-house voice flow.", "Media", "text-to-speech"),
+        InHouse("text-to-speech", "Text to Speech", "Turn text into spoken audio with 9to1's in-house voice flow.", "Media", "text-to-speech"),
 
         // Interactive
-        Project("windows-app", "Windows Apps", "Build a Windows application as a Haven project.", "Interactive", "Create a Windows application project."),
-        Project("android-app", "Android Apps", "Build an Android application as a Haven project.", "Interactive", "Create an Android application project."),
-        Project("haven-app", "Haven Apps", "Build an installable Haven application.", "Interactive", "Create a Haven application project."),
+        Project("windows-app", "Windows Apps", "Build a Windows application as a 9to1 project.", "Interactive", "Create a Windows application project."),
+        Project("android-app", "Android Apps", "Build an Android application as a 9to1 project.", "Interactive", "Create an Android application project."),
+        Project("haven-app", "9to1 Apps", "Build an installable 9to1 application.", "Interactive", "Create a 9to1 application project."),
         Project("game", "Games", "Create a new game project; Games remains the library and player.", "Interactive", "Create a new game project."),
-        Project("website", "Websites", "Build a website as a Haven project.", "Interactive", "Create a website project."),
-        Experience("experience", "Experiences", "Create a saved interactive Haven-generated experience.", "Interactive"),
+        Project("website", "Websites", "Build a website as a 9to1 project.", "Interactive", "Create a website project."),
+        Experience("experience", "Experiences", "Create a saved interactive 9to1-generated experience.", "Interactive"),
 
         // Tools
-        Project("agent", "Agents", "Create a reusable Haven agent.", "Tools", "Create a Haven agent project."),
-        Project("plugin", "Plugins", "Create a Haven plugin project.", "Tools", "Create a Haven plugin project."),
-        Project("skill", "Skills", "Create a reusable Haven skill.", "Tools", "Create a Haven skill project."),
-        Project("widget", "Widgets", "Create a reusable Haven widget.", "Tools", "Create a Haven widget project."),
+        Project("agent", "Agents", "Create a reusable 9to1 agent.", "Tools", "Create a 9to1 agent project."),
+        Project("plugin", "Plugins", "Create a 9to1 plugin project.", "Tools", "Create a 9to1 plugin project."),
+        Project("skill", "Skills", "Create a reusable 9to1 skill.", "Tools", "Create a 9to1 skill project."),
+        Project("widget", "Widgets", "Create a reusable 9to1 widget.", "Tools", "Create a 9to1 widget project."),
 
         // Documents
         App("text-document", "Text Document", "Start a document in Write.", "Documents", "write", "document"),
@@ -63,7 +63,7 @@ public static class StudioCreationCatalog
         new(id, name, description, category, StudioCreationDestinationKind.ProjectCreator, "projects", prompt);
 
     private static StudioCreationIntent Experience(string id, string name, string description, string category) =>
-        new(id, name, description, category, StudioCreationDestinationKind.ExperienceBuilder, "experiences", "Create a standalone interactive Haven experience.");
+        new(id, name, description, category, StudioCreationDestinationKind.ExperienceBuilder, "experiences", "Create a standalone interactive 9to1 experience.");
 
     private static StudioCreationIntent InHouse(string id, string name, string description, string category, string flow) =>
         new(id, name, description, category, StudioCreationDestinationKind.InHouse, InHouseFlow: flow);

@@ -8,7 +8,7 @@ using NineToOne.Web.Write;
 
 // Run seed and verify in separate processes with the same explicit isolated HAVEN_DATA_DIR.
 // Production repository, diagnostics, validator, codec and editor are linked unchanged.
-if (args.Length != 1 || args[0] is not ("seed" or "verify" or "subscriber") ||
+if (args.Length != 1 || args[0] is not ("seed" or "verify" or "subscriber" or "shell") ||
     string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("HAVEN_DATA_DIR")))
     throw new ArgumentException("Choose seed or verify and set an isolated HAVEN_DATA_DIR.");
 var paths = new AppPaths();
@@ -37,6 +37,63 @@ void AssertFormatting(NotesDocument document)
         "range formatting preserves three text runs");
     Check(!runs[0].Bold && runs[1].Bold && !runs[2].Bold,
         "only beta is bold; adjacent text remains unchanged");
+}
+
+if (args[0] == "shell")
+{
+    var session = new WriteBrowserSession(repository, packages);
+    Check((await session.CreateAsync("Contextual editor journey")).Succeeded, "create actual contextual editor document");
+    var id = session.DocumentId!.Value;
+    var block = First(session.GetDocumentSnapshot()!).Id;
+    await session.InsertTextAsync("One two One");
+    Check(session.TrySetValue("FindText", "One"), "find input accepts actual query");
+    await session.DispatchAsync("FindNext", null);
+    Check(session.Editor!.SelectionStart == 0 && session.Editor.SelectionEnd == 3, "first match selects actual document range");
+    await session.DispatchAsync("FindNext", null);
+    Check(session.Editor.SelectionStart == 8 && session.Editor.SelectionEnd == 11, "next match selects later actual document range");
+    session.TrySetValue("ReplacementText", "Three");
+    await session.DispatchAsync("ReplaceAll", null);
+    Check(Text(session.GetDocumentSnapshot()!) == "Three two Three", "replace acts on canonical document text");
+    await session.DispatchAsync("StyleHeading1", null);
+    Check(First(session.GetDocumentSnapshot()!).StyleId == "heading-1", "style command applies persisted named style");
+    await session.DispatchAsync("InsertTable", null);
+    Check(session.Editor.SelectedBlock?.Kind == NotesBlockKind.Table && session.IsActionAvailable("BoldSelection") == false,
+        "table selection excludes irrelevant text formatting");
+    await session.DispatchAsync("AddTableRow", null);
+    Check(session.Editor.SelectedBlock!.Table!.Rows.Count == 4, "contextual table action calls owning structured editor");
+    var tableBlock = session.Editor.SelectedBlock;
+    var firstCell = tableBlock.Table!.Rows[0].Cells[0];
+    session.Editor.SelectTableCell(tableBlock.Id, firstCell.Id);
+    Check(session.IsActionAvailable("MergeCell") == true && session.IsActionAvailable("SplitCell") == false,
+        "table capabilities reflect whether selected cell can merge or split");
+    await session.DispatchAsync("MergeCell", null);
+    Check(firstCell.ColumnSpan == 2 && session.IsActionAvailable("SplitCell") == true, "merge persists actual span and enables split");
+    await session.DispatchAsync("SplitCell", null);
+    Check(firstCell.ColumnSpan == 1 && session.IsActionAvailable("SplitCell") == false, "split preserves table structure and disables inapplicable repeat");
+    Check(session.TrySetValue("DocumentTitle", "Updated title while table selected"), "title remains editable outside text selection");
+    await session.SelectAsync(block, 0, 0);
+    Check(session.IsActionAvailable("AddTableRow") == false && session.IsActionAvailable("BoldSelection") == true,
+        "text selection removes irrelevant table controls");
+    await session.SaveAsync();
+    var before = JsonSerializer.Serialize(session.GetDocumentSnapshot());
+    session.SetViewportWidth(390);
+    session.TryGetValue("ShowSidebar", out var sidebar);
+    session.TryGetValue("WorkspaceColumns", out var columns);
+    Check(sidebar is false && Equals(columns, "0 1fr") && !session.IsDirty, "narrow viewport collapses sidebar without changing content");
+    await session.DispatchAsync("ToggleSidebar", null);
+    session.TryGetValue("SidebarColumnSpan", out var span);
+    Check(Equals(span, 2) && before == JsonSerializer.Serialize(session.GetDocumentSnapshot()), "mobile drawer overlays without document mutation");
+    await session.CloseAsync();
+    await session.OpenAsync(id);
+    Check(before == JsonSerializer.Serialize(session.GetDocumentSnapshot()), "contextual edits reopen with exact canonical state");
+    await session.CloseAsync();
+    await session.OpenAsync(id, readOnly: true);
+    session.TrySetValue("FindText", "Three");
+    Check(session.IsActionAvailable("FindNext") == true && session.IsActionAvailable("ReplaceAll") == false,
+        "read-only document permits search but rejects replacement");
+    await session.CloseAsync(); await session.DisposeAsync();
+    Console.WriteLine(JsonSerializer.Serialize(new { mode = args[0], assertions, scope = "actual owner editor and filesystem repository; no donor/browser acceptance" }));
+    return;
 }
 
 if (args[0] == "subscriber")
@@ -319,7 +376,7 @@ else
 }
 Console.WriteLine(JsonSerializer.Serialize(new { mode = args[0], assertions, scope = "local durable owner/session; browser GUI not executed" }));
 
-internal sealed record State(Guid Id, Guid BlockId, long Revision, string StructuredSections);
+internal sealed record State(Guid Id, Guid BlockId, long Revision, string StructuredSections);
 internal sealed record MediaState(Guid Id, Guid BlockId, Guid AttachmentId, string Sha256);
 
 /// <summary>Test fixture standing in for the platform chooser. It stages a real file and stores nothing itself.</summary>

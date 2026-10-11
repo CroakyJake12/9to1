@@ -22,8 +22,8 @@ public sealed class CuiButtonTextBindingTests
                   <Button Text="Literal label" />
                   <Button Text="{Binding Label}" />
                   <Button Content="{Binding ContentLabel}" />
-                  <TextBlock Text="{Binding Label}" />
-                  <TextBox Text="{Binding Label}" />
+                  <Text Text="{Binding Label}" />
+                  <Input Type="Text" Value="{Binding Label}" />
                 </Page></Cui>
                 """);
             Assert.Empty(diagnostics);

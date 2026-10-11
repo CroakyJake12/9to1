@@ -193,7 +193,7 @@ internal sealed partial class PresentHavenScene : IDisposable
             DeckTitleInput.Text = _deckTitle; SlideTitleInput.Text = _slideTitle; BodyInput.Text = _bodyText; NotesInput.Text = _notesText;
             PositionText.Content = $"Deck {deckIndex + 1} of {Math.Max(deckCount, 1)} Ã‚Â· Slide {slideIndex + 1} of {document.Slides.Count} Ã‚Â· v{document.Version}";
             var rich = slide.Elements.Count(element => element.Kind != PresentElementKind.Text);
-            RichContentText.Content = rich == 0 ? "All slide content in this view is directly editable." : $"{rich} richer Haven element{(rich == 1 ? string.Empty : "s")} preserved in this slide.";
+            RichContentText.Content = rich == 0 ? "All slide content in this view is directly editable." : $"{rich} richer 9to1 element{(rich == 1 ? string.Empty : "s")} preserved in this slide.";
         }
         finally { _suppressChanges = false; }
     }

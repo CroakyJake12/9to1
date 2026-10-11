@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Avalonia;
@@ -9,6 +9,7 @@ using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Input.Raw;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Platform;
 using Avalonia.VisualTree;
@@ -35,6 +36,10 @@ var checks = await headless.Dispatch(async () =>
         ++assertions;
         Console.WriteLine("ASSERT " + name);
     }
+    Check(Application.Current!.Styles.All(style => style.GetType().Name is not ("FluentTheme" or "SimpleTheme")),
+        "actual retained Write host uses CUI-owned templates without a donor default theme");
+    Check(!AssetLoader.Exists(new Uri("avares://Haven/WriteOwnerResources/DefaultTheme.Resources.axaml")),
+        "retained Write runs without the removed extracted AXAML theme resource");
     using (var font = AssetLoader.Open(new Uri("avares://Haven/Assets/Fonts/MontserratStatic/Montserrat-Regular.ttf")))
     {
         var digest = Convert.ToHexString(SHA256.HashData(font)).ToLowerInvariant();
@@ -271,13 +276,18 @@ var checks = await headless.Dispatch(async () =>
     // as a negative control; the default always loads the production surface.
     var document = parser.Parse(File.ReadAllText(Environment.GetEnvironmentVariable("WRITE_CUI_FIXTURE_PATH")
         ?? Path.Combine(AppContext.BaseDirectory, "Write.cui")));
+    foreach (var diagnostic in parser.Diagnostics.Diagnostics) Console.WriteLine(JsonSerializer.Serialize(diagnostic));
     Check(!parser.Diagnostics.Diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error), "actual owning Write.cui parses");
     var surface = WriteBrowserSurface.Create(document, session, () => true);
     using var loader = new CuiControlLoader(surface.ControlRegistry!);
     loader.SetBindingContext(session);
-    loader.SetActionDispatcher(session);
+    var homeRequests = 0;
+    var shellActions = new BrowserShellActions(session, () => ++homeRequests);
+    loader.SetActionDispatcher(shellActions);
     var (root, diagnostics) = loader.TryLoad(document);
+    foreach (var diagnostic in diagnostics) Console.WriteLine(JsonSerializer.Serialize(diagnostic));
     Check(root is not null && !diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error), "actual registered owner surface lowers");
+    if (root is null) throw new InvalidOperationException("Write CUI did not produce a root.");
     // The owned Write.cui is the browser surface of record. Prove every declared
     // action and every root-scope binding still matches the live session, so markup
     // drift cannot leave a control that silently reports UnsupportedFeature.
@@ -294,8 +304,8 @@ var checks = await headless.Dispatch(async () =>
         .ToArray();
     Check(declaredCommands.Length > 0, "actual owning Write.cui declares real actions to validate");
     foreach (var command in declaredCommands)
-        Check(WriteBrowserSession.DispatchableCommands.Contains(command),
-            "Write.cui action " + command + " is a dispatchable session command");
+        Check(command == "ShellHome" ? shellActions.IsActionAvailable(command) == true : WriteBrowserSession.DispatchableCommands.Contains(command),
+            "Write.cui action " + command + " is a dispatchable owner or shell command");
     var rootScopeBindings = document.Components.SelectMany(RootScopeBindings)
         .Distinct(StringComparer.Ordinal)
         .OrderBy(path => path, StringComparer.Ordinal)
@@ -332,13 +342,120 @@ var checks = await headless.Dispatch(async () =>
     {
         using (var initialFrame = window.CaptureRenderedFrame())
             Check(initialFrame is not null, "actual native templates render before querying editor descendants");
-        var host = root!.GetVisualDescendants().OfType<WriteRetainedSceneControl>().Single();
+        IEnumerable<Control> AuthoredTree(Control ancestor)
+        {
+            var visited = new HashSet<Control>(ReferenceEqualityComparer.Instance);
+            var pending = new Stack<Control>(); pending.Push(ancestor);
+            while (pending.TryPop(out var current))
+            {
+                if (!visited.Add(current)) continue;
+                yield return current;
+                foreach (var child in current.GetLogicalChildren().OfType<Control>()) pending.Push(child);
+                if (current is CuiContainerControl container) foreach (var child in container.AuthoredChildren) pending.Push(child);
+                if (current is ItemsControl items) foreach (var child in items.Items.OfType<Control>()) pending.Push(child);
+            }
+        }
+        var host = AuthoredTree(root!).OfType<WriteRetainedSceneControl>().Single();
         var scene = host.GetVisualDescendants().OfType<HavenSceneControl>().Single();
+        if (args.Contains("input", StringComparer.Ordinal))
+        {
+            var home = root!.GetLogicalDescendants().OfType<Button>().Single(button => Equals(button.Tag, "ShellHome"));
+            home.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await loader.WhenActionsIdleAsync();
+            Check(homeRequests == 1 && session.DocumentId is null, "start Home delegates once to the real shell dispatcher without creating a document");
+            var create = root!.GetLogicalDescendants().OfType<Button>().Single(button => Equals(button.Tag, "CreateDocument"));
+            create.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await loader.WhenActionsIdleAsync();
+            using (var frame = window.CaptureRenderedFrame()) { }
+            var point = scene.TranslatePoint(new Avalonia.Point(scene.Bounds.Width / 2, 100), window)!.Value;
+            window.MouseDown(point, MouseButton.Left); window.MouseUp(point, MouseButton.Left);
+            Check(session.Editor!.DocumentAnchor is null, "a completed click has a caret without a latent selection anchor");
+            bool? keyHandled = null;
+            window.AddHandler(InputElement.KeyDownEvent, (_, e) => keyHandled = e.Handled,
+                RoutingStrategies.Bubble, handledEventsToo: true);
+            window.KeyPress(Key.C, RawInputModifiers.None, PhysicalKey.C, "C");
+            Check(keyHandled == false, "first printable key after a real pointer focus remains available for browser text input");
+            window.KeyTextInput("C");
+            window.KeyRelease(Key.C, RawInputModifiers.None, PhysicalKey.C, "C");
+            Check(Text(session.GetDocumentSnapshot()!) == "C", "first separately routed character survives pointer focus");
+            window.KeyTextInput("at");
+            Check(Text(session.GetDocumentSnapshot()!) == "Cat", "subsequent characters retain the first character and order");
+            window.KeyPress(Key.Left, RawInputModifiers.Shift, PhysicalKey.ArrowLeft, "ArrowLeft");
+            window.KeyPress(Key.Right, RawInputModifiers.Shift, PhysicalKey.ArrowRight, "ArrowRight");
+            Check(session.Editor.DocumentAnchor is null && !session.Editor.HasDocumentSelection,
+                "extending back to the anchor collapses keyboard selection");
+            window.KeyTextInput("s"); window.KeyTextInput("!");
+            Check(Text(session.GetDocumentSnapshot()!) == "Cats!", "typing after a collapsed keyboard selection preserves successive characters");
+            window.KeyPress(Key.Left, RawInputModifiers.Shift, PhysicalKey.ArrowLeft, "ArrowLeft");
+            Check(session.Editor.SelectedDocumentText == "!", "nonempty keyboard selection still selects the exact character");
+            window.KeyTextInput("?");
+            Check(Text(session.GetDocumentSnapshot()!) == "Cats?", "typing still replaces a real selection exactly once");
+            Check((await session.PrepareToCloseAsync()).Succeeded, "real owner saves the repaired typing sequence before retirement");
+            surface.Lifetime!.Dispose(); await session.DisposeAsync(); return assertions;
+        }
+        if (args.Contains("launch", StringComparer.Ordinal))
+        {
+            bool HasWorkspace() => root!.GetLogicalDescendants().OfType<WriteRetainedSceneControl>().Any();
+            bool HasStart() => root!.GetLogicalDescendants().OfType<Control>().Any(control => control.Name == "write-start");
+            Check(HasStart() && !HasWorkspace() && session.DocumentId is null, "fresh Write launch composes only start actions and recents, with no editor in layout or accessibility tree");
+            using (var frame = window.CaptureRenderedFrame()) frame!.Save(Path.Combine(paths.DataDirectory, "write-start.png"));
+            var create = root!.GetLogicalDescendants().OfType<Button>().Single(button => Equals(button.Tag, "CreateDocument"));
+            create.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await loader.WhenActionsIdleAsync();
+            using (var frame = window.CaptureRenderedFrame()) { }
+            Check(session.DocumentId is not null && HasWorkspace() && !HasStart(), "actual start action activates the editor without stacking the start surface above it");
+            var launchId = session.DocumentId!.Value;
+            var launchBlock = First(session.GetDocumentSnapshot()!).Id;
+            var retainedEditor = session.Editor;
+            var retainedNode = scene.Root;
+            scene.FocusElement(scene.Root!); window.KeyTextInput("Retained unsaved text");
+            await session.SelectAsync(launchBlock, 0, 8);
+            var revision = session.DurableRevision;
+            var launchBefore = JsonSerializer.Serialize(session.GetDocumentSnapshot());
+            Check(session.IsDirty && Text(session.GetDocumentSnapshot()!) == "Retained unsaved text", "actual routed typing creates a dirty owner draft");
+            var back = AuthoredTree(root!).OfType<MenuItem>().Single(control => Equals(control.Tag, "ReturnToStart"));
+            back.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)); await loader.WhenActionsIdleAsync();
+            using (var frame = window.CaptureRenderedFrame()) frame!.Save(Path.Combine(paths.DataDirectory, "write-return-to-start.png"));
+            Check(HasStart() && !HasWorkspace() && !scene.IsEnabled, "return-to-start detaches and gates the retained editor input and accessibility");
+            Check(session.IsDirty && session.DurableRevision == revision && launchBefore == JsonSerializer.Serialize(session.GetDocumentSnapshot()), "return-to-start neither saves nor replaces the unsaved draft");
+            Check(Text((await repository.LoadAsync(launchId, default))!) == "", "return-to-start does not silently publish dirty content to the owner store");
+            var resume = root.GetLogicalDescendants().OfType<Button>().Single(button => Equals(button.Tag, "ResumeDocument"));
+            resume.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await loader.WhenActionsIdleAsync();
+            using (var frame = window.CaptureRenderedFrame()) { }
+            Check(HasWorkspace() && !HasStart() && ReferenceEquals(retainedEditor, session.Editor) && ReferenceEquals(retainedNode, scene.Root), "resume restores the same owner editor and retained document surface");
+            Check(session.Editor!.SelectionStart == 0 && session.Editor.SelectionEnd == 8 && session.Editor.CanUndo, "resume preserves selection and undo history");
+            await session.UndoAsync(); Check(Text(session.GetDocumentSnapshot()!) == "", "original undo works after return and resume");
+            await session.RedoAsync(); Check(Text(session.GetDocumentSnapshot()!) == "Retained unsaved text", "original redo restores authored text after resume");
+            Check((await session.SaveAsync()).Succeeded, "resumed document explicitly saves through its original owner");
+            Check((await session.CloseAsync()).Succeeded && HasStart() && !HasWorkspace(), "closing a saved document returns to a genuine start-only composition");
+            Check((await session.OpenAsync(launchId)).Succeeded && Text(session.GetDocumentSnapshot()!) == "Retained unsaved text", "saved document reopens from actual repository after close");
+            window.Width = 390; using (var frame = window.CaptureRenderedFrame()) { }
+            await session.DispatchAsync("ReturnToStart", null);
+            using (var frame = window.CaptureRenderedFrame()) frame!.Save(Path.Combine(paths.DataDirectory, "write-start-mobile.png"));
+            Check(HasStart() && !HasWorkspace(), "narrow viewport retains start-only composition");
+            await session.DispatchAsync("ResumeDocument", null);
+            using (var frame = window.CaptureRenderedFrame()) { }
+            Check(HasWorkspace() && !HasStart(), "narrow resume restores workspace-only composition");
+            var properties = root!.GetVisualDescendants().OfType<Button>().Single(button => Equals(button.Tag, "ToggleInspector"));
+            using (var frame = window.CaptureRenderedFrame()) { }
+            var propertiesPoint = properties.TranslatePoint(new Point(properties.Bounds.Width / 2, properties.Bounds.Height / 2), window)!.Value;
+            var propertiesHit = window.InputHitTest(propertiesPoint) as Visual;
+            Check(ReferenceEquals(propertiesHit, properties) || propertiesHit?.GetVisualAncestors().Contains(properties) == true,
+                "the narrow toolbar keeps the real Properties control directly in pointer reach without scrolling");
+            window.MouseDown(propertiesPoint, MouseButton.Left); window.MouseUp(propertiesPoint, MouseButton.Left);
+            await loader.WhenActionsIdleAsync();
+            using (var frame = window.CaptureRenderedFrame()) { }
+            Check(TopLevel.GetTopLevel(scene) is null, "compact properties detaches the document editor from native input");
+            window.Width = 1100;
+            using (var frame = window.CaptureRenderedFrame()) { }
+            Check(TopLevel.GetTopLevel(scene) == window && session.TryGetValue("ShowEditingArea", out var restored) && restored is true,
+                "widening while properties is open restores the retained Write editor");
+            surface.Lifetime!.Dispose(); await session.DisposeAsync(); return assertions;
+        }
         if (args.Contains("toolbar", StringComparer.Ordinal))
         {
-            var buttons = root!.GetVisualDescendants().OfType<Button>()
-                .Where(button => button.Content is string).ToDictionary(button => (string)button.Content!);
-            foreach (var button in buttons.Values)
+            var commands = new Dictionary<string, string> { ["New"] = "CreateDocument", ["Save"] = "SaveDocument", ["Bold"] = "BoldSelection", ["Undo"] = "Undo", ["Redo"] = "Redo", ["Close"] = "CloseDocument" };
+            var controls = AuthoredTree(root!).Concat(root!.GetVisualDescendants().OfType<Control>()).Distinct().ToArray();
+            var buttons = commands.ToDictionary(pair => pair.Key, pair => controls.Where(control => Equals(control.Tag, pair.Value))
+                .OrderByDescending(control => control is Button && control.IsEffectivelyVisible).First());
+            foreach (var button in buttons.Values.OfType<Button>())
                 BrowserActionAvailability.ApplyInitial(button, loader, document, session);
             void State(string name, bool expected) => Check(buttons[name].IsEnabled == expected,
                 "actual toolbar " + name + " enabled=" + expected);
@@ -359,6 +476,11 @@ var checks = await headless.Dispatch(async () =>
             void ClickStart(string name)
             {
                 Check(buttons[name].IsEnabled, "actual " + name + " control permits interaction");
+                if (buttons[name] is MenuItem menuItem)
+                {
+                    menuItem.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+                    return;
+                }
                 var center = buttons[name].TranslatePoint(new Point(buttons[name].Bounds.Width / 2,
                     buttons[name].Bounds.Height / 2), window)!.Value;
                 window.MouseDown(center, MouseButton.Left);
@@ -397,6 +519,7 @@ var checks = await headless.Dispatch(async () =>
             var toolbarId = session.DocumentId!.Value;
             var toolbarBlock = First(session.GetDocumentSnapshot()!).Id;
             await session.SelectAsync(toolbarBlock, 0, 0);
+            scene.FocusElement(scene.Root!);
             window.KeyTextInput("Alpha beta gamma");
             Check(Text(session.GetDocumentSnapshot()!) == "Alpha beta gamma", "toolbar journey actual routed typing mutates owner");
             var wordCountBlock = root!.GetVisualDescendants().OfType<TextBlock>()
@@ -951,13 +1074,14 @@ var checks = await headless.Dispatch(async () =>
             Check(frame is not null && host.Bounds.Width > 0 && host.Bounds.Height > 0, "actual retained scene renders nonzero editor canvas");
         Check(scene.Platform == HavenPlatform.Unknown && scene.Root?.Name == "Write.Document.Surface",
             "original retained editor is attached without false platform claim");
+        scene.FocusElement(scene.Root!);
         window.KeyTextInput("Alpha beta gamma");
         Check(Text(session.GetDocumentSnapshot()!) == "Alpha beta gamma", "actual routed text input mutates owner exactly once");
         await session.SelectAsync(block, 6, 10);
         var changes = 0;
         session.Editor!.Changed += Count;
         void Count(object? sender, EventArgs args) => ++changes;
-        var bold = root!.GetVisualDescendants().OfType<Button>().Single(button => button.Content is string label && label == "Bold");
+        var bold = root!.GetVisualDescendants().OfType<Button>().Single(button => button.Content is string label && label == "B");
         bold.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         var runs = First(session.GetDocumentSnapshot()!).Runs;
         Check(changes == 1 && runs.Count == 3 && runs[1].Text == "beta" && runs[1].Bold && !runs[0].Bold && !runs[2].Bold,
@@ -967,6 +1091,20 @@ var checks = await headless.Dispatch(async () =>
             Check(frame is not null, "actual structured edit renders a captured frame");
             frame!.Save(Path.Combine(paths.DataDirectory, "write-retained-scene.png"));
         }
+        var desktopDocument = JsonSerializer.Serialize(session.GetDocumentSnapshot());
+        window.Width = 390;
+        using (var frame = window.CaptureRenderedFrame()) frame!.Save(Path.Combine(paths.DataDirectory, "write-mobile.png"));
+        session.TryGetValue("ShowSidebar", out var narrowSidebar);
+        Check(narrowSidebar is false && desktopDocument == JsonSerializer.Serialize(session.GetDocumentSnapshot()),
+            "narrow Write viewport collapses Sections without document or selection data changes");
+        await session.DispatchAsync("ToggleSidebar", null);
+        using (var frame = window.CaptureRenderedFrame()) frame!.Save(Path.Combine(paths.DataDirectory, "write-mobile-drawer.png"));
+        session.TryGetValue("SidebarColumnSpan", out var drawerSpan);
+        Check(Equals(drawerSpan, 2) && desktopDocument == JsonSerializer.Serialize(session.GetDocumentSnapshot()),
+            "mobile Sections drawer overlays the canvas without changing canonical content");
+        window.Width = 1100;
+        using (var frame = window.CaptureRenderedFrame()) { }
+        scene.FocusElement(scene.Root!);
         if (args.Contains("layout", StringComparer.Ordinal))
         {
             var drawing = new HavenDrawingContext();

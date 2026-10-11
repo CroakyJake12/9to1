@@ -44,11 +44,11 @@ public sealed class BrowserToolRuntime
     /// </summary>
     private static readonly IReadOnlyList<OllamaToolDefinition> BackgroundToolDefinitions =
     [
-        Definition("browser_navigate", "Navigate Haven's isolated browser to a public HTTP or HTTPS URL or search query. Local and private network destinations are blocked.",
+        Definition("browser_navigate", "Navigate 9to1's isolated browser to a public HTTP or HTTPS URL or search query. Local and private network destinations are blocked.",
             new() { ["address"] = StringProperty("Public URL or search query.") }, "address"),
         Definition("browser_snapshot", "Capture bounded visible page text, headings, and stable references for links, buttons, and editable fields.", new()),
         Definition("browser_read_page", "Alias for browser_snapshot for compatibility with existing prompts.", new()),
-        Definition("browser_download", "Request a download. Haven never downloads until the user approves the pending action in Browser safety.",
+        Definition("browser_download", "Request a download. 9to1 never downloads until the user approves the pending action in Browser safety.",
             new()
             {
                 ["address"] = StringProperty("Public HTTP or HTTPS download URL."),

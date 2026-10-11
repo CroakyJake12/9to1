@@ -74,7 +74,7 @@ export function createBrowserAccessibility(browserWindow, browserDocument, owner
             current.add(peer.id);
             let node = elements.get(peer.id);
             if (!node) {
-                node = browserDocument.createElement(peer.role === 'button' ? 'button' : peer.role === 'textbox' ? 'input' : 'span');
+                node = browserDocument.createElement(peer.role === 'button' ? 'button' : ['textbox', 'checkbox'].includes(peer.role) ? 'input' : 'span');
                 node.dataset.nativePeerId = peer.id;
                 node.addEventListener('focus', () => {
                     if (restoringFocus || disposed) return;
@@ -89,6 +89,9 @@ export function createBrowserAccessibility(browserWindow, browserDocument, owner
                 if (peer.role === 'button') {
                     node.type = 'button';
                     node.addEventListener('click', () => { if (disposed) return; owner.PerformAccessibility(peer.id, 'invoke', null); refresh(); });
+                } else if (peer.role === 'checkbox') {
+                    node.type = 'checkbox';
+                    node.addEventListener('change', () => { if (disposed) return; owner.PerformAccessibility(peer.id, 'toggle', null); refresh(); });
                 } else if (peer.role === 'textbox') {
                     node.type = 'text';
                     node.addEventListener('input', () => { if (disposed) return; owner.PerformAccessibility(peer.id, 'value', node.value); refresh(); });
@@ -103,6 +106,7 @@ export function createBrowserAccessibility(browserWindow, browserDocument, owner
                 node.disabled = !peer.enabled;
                 node.tabIndex = peer.enabled && peer.focusable ? 0 : -1;
                 if (peer.role === 'button') node.textContent = peer.name;
+                else if (peer.role === 'checkbox') { node.checked = peer.value === 'true'; node.indeterminate = peer.value === 'mixed'; }
                 else {
                     node.readOnly = peer.readOnly;
                     if (node.value !== (peer.value ?? '')) node.value = peer.value ?? '';

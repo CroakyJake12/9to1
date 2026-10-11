@@ -41,7 +41,7 @@ public static class HavenPropertyRegistry
         lock (Properties)
         {
             if (!Properties.TryAdd(property.Name, property))
-                throw new InvalidOperationException($"A Haven property named '{property.Name}' is already registered.");
+                throw new InvalidOperationException($"A 9to1 property named '{property.Name}' is already registered.");
         }
         return property;
     }

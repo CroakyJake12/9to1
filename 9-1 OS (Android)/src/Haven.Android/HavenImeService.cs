@@ -52,7 +52,7 @@ namespace Haven.Android;
 /// </summary>
 [Service(
     Name = "com.cakemods.haven.HavenImeService",
-    Label = "Haven Keyboard",
+    Label = "9to1 Keyboard",
     Permission = "android.permission.BIND_INPUT_METHOD",
     Exported = true)]
 [IntentFilter(new[] { "android.view.InputMethod" })]
@@ -307,7 +307,7 @@ public sealed class HavenImeService : InputMethodService
             && !_profile.IsSecure
             && IsNetworkAvailable();
         _aiHint = !Settings.AiEnabled
-            ? "AI is off - enable it in Haven Keyboard settings"
+            ? "AI is off - enable it in 9to1 Keyboard settings"
             : _profile.IsSecure
                 ? "AI is disabled in secure fields"
                 : !HavenKeyboardAiController.IsConfigured
@@ -739,7 +739,7 @@ public sealed class HavenImeService : InputMethodService
             using var intent = new Intent(Intent.ActionInsert);
             intent.SetData(CalendarContract.Events.ContentUri);
             intent.PutExtra("title", nudge.Title);
-            intent.PutExtra("description", "Added from Haven Keyboard");
+            intent.PutExtra("description", "Added from 9to1 Keyboard");
 
             // String keys mirror CalendarContract.EXTRA_EVENT_BEGIN_TIME / .TITLE
             // so no extra binding surface is required.

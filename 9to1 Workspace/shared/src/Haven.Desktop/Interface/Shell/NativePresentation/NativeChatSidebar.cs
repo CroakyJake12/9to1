@@ -61,7 +61,7 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
         _scene = new ChatSidebarHavenScene();
         SceneHost = new HavenSceneControl { Root = _scene.Root };
         AutomationProperties.SetAutomationId(this, "HavenNativeChatSidebar");
-        AutomationProperties.SetName(this, "Haven-native Chat sidebar");
+        AutomationProperties.SetName(this, "9to1-native Chat sidebar");
         AutomationProperties.SetAutomationId(SceneHost, "HavenNativeChatSidebarScene");
         Content = SceneHost;
 

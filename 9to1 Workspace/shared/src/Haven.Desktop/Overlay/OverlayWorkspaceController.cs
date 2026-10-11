@@ -100,7 +100,7 @@ internal sealed class OverlayWorkspaceController : IAsyncDisposable
         Mount(session, page);
         _windows[session.Id].ShowAndActivate();
         await RefreshAllAsync(_registry.Snapshot, cancellationToken);
-        QueueGoSuggestionRefresh(session.Id, page, "The user opened the floating Haven Overlay workspace.");
+        QueueGoSuggestionRefresh(session.Id, page, "The user opened the floating 9to1 Overlay workspace.");
         return _registry.Snapshot.Sessions.First(item => item.Id == session.Id);
     }
 
@@ -172,7 +172,7 @@ internal sealed class OverlayWorkspaceController : IAsyncDisposable
             var goPage = await _go.CreateAsync(cancellationToken);
             Mount(session, goPage);
             if (show) _windows[session.Id].ShowAndActivate();
-            QueueGoSuggestionRefresh(session.Id, goPage, "The user restored a floating Haven Overlay Go workspace.");
+            QueueGoSuggestionRefresh(session.Id, goPage, "The user restored a floating 9to1 Overlay Go workspace.");
             return;
         }
 
@@ -447,7 +447,7 @@ internal sealed class OverlayWorkspaceController : IAsyncDisposable
         if (storage is null) return;
         var files = await storage.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
         {
-            Title = "Attach files to Haven Overlay",
+            Title = "Attach files to 9to1 Overlay",
             AllowMultiple = true
         });
         page.AttachFiles(files.Select(file => file.Path.LocalPath).Where(path => !string.IsNullOrWhiteSpace(path)));
@@ -586,8 +586,8 @@ internal sealed class OverlayWorkspaceController : IAsyncDisposable
             "paste" => "Help me review a paste action for the selected context; do not modify another app without explicit permission.",
             "share" => "Prepare the selected context for sharing, but do not send it until I explicitly approve the destination.",
             "inspect-control" => "Inspect the selected UI control's role, state, accessibility details, and available interactions without activating it.",
-            "run-automation" => "Identify the automation associated with the selected UI context and prepare the requested run for my review; do not execute it without the normal Haven permission flow.",
-            "open-in-app" => "Identify the app or destination associated with the selected UI context and prepare an open or navigation action for my review; do not execute it without the normal Haven permission flow.",
+            "run-automation" => "Identify the automation associated with the selected UI context and prepare the requested run for my review; do not execute it without the normal 9to1 permission flow.",
+            "open-in-app" => "Identify the app or destination associated with the selected UI context and prepare an open or navigation action for my review; do not execute it without the normal 9to1 permission flow.",
             "analyse-frame" => "Analyse the selected video frame at the captured media position using only the provided visible context.",
             "summarise-media" => "Summarise the selected visible media context without assuming content outside the captured selection.",
             _ when action.IsGenerated => "Use the selected context with the suggested capability action: " + action.Label + ".",
@@ -606,7 +606,7 @@ internal sealed class OverlayWorkspaceController : IAsyncDisposable
                 .Append(capability.RiskClass)
                 .Append(", ")
                 .Append(capability.Availability)
-                .Append("). Use the normal Haven permission flow before any capability/tool execution; this draft does not mean the action has run.");
+                .Append("). Use the normal 9to1 permission flow before any capability/tool execution; this draft does not mean the action has run.");
         }
         else if (action.IsGenerated)
         {
@@ -617,7 +617,7 @@ internal sealed class OverlayWorkspaceController : IAsyncDisposable
                 .Append(action.Availability?.ToString() ?? "unknown")
                 .Append(", provider ")
                 .Append(action.ProviderId ?? "unknown")
-                .Append(". Use the normal Haven permission flow before execution.");
+                .Append(". Use the normal 9to1 permission flow before execution.");
         }
 
         if (context is null) return builder.ToString();

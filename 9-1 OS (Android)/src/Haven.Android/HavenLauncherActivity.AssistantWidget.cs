@@ -22,7 +22,7 @@ public sealed partial class HavenLauncherActivity
         RenderWidgets();
         Toast.MakeText(
             this,
-            pinned ? "Haven Assistant pinned to the launcher." : "Haven Assistant unpinned.",
+            pinned ? "9to1 Assistant pinned to the launcher." : "9to1 Assistant unpinned.",
             ToastLength.Short)?.Show();
     }
 
@@ -34,10 +34,10 @@ public sealed partial class HavenLauncherActivity
 
         var assistant = new TextView(this)
         {
-            Text = "Haven Assistant\nTap to open",
+            Text = "9to1 Assistant\nTap to open",
             TextSize = 18,
             Gravity = GravityFlags.Center,
-            ContentDescription = "Open Haven Assistant",
+            ContentDescription = "Open 9to1 Assistant",
             LayoutParameters = new LinearLayout.LayoutParams(Dp(260), Dp(90))
             {
                 RightMargin = Dp(8)

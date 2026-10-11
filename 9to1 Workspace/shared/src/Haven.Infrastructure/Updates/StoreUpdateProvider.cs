@@ -17,7 +17,7 @@ namespace Haven.Infrastructure;
 /// </summary>
 /// <remarks>
 /// State semantics: <see cref="UpdateState.Idle"/> until the first check completes; because availability lives inside the Store,
-/// a completed check transitions to <see cref="UpdateState.UpToDate"/> meaning "nothing for Haven to act on — the Store owns updates",
+/// a completed check transitions to <see cref="UpdateState.UpToDate"/> meaning "nothing for 9to1 to act on — the Store owns updates",
 /// not a proof that no Store release exists. <see cref="StoreUpdateProvider.CheckForUpdateAsync"/> always returns <c>null</c>.
 /// </remarks>
 public sealed class StoreUpdateProvider(
@@ -72,12 +72,12 @@ public sealed class StoreUpdateProvider(
     public Task ApplyStagedUpdateAsync(CancellationToken cancellationToken)
     {
         _ = cancellationToken;
-        throw new NotSupportedException("Updates are managed by the Microsoft Store. Open the Microsoft Store library and let it install the update; Haven does not replace its own binaries for Store installs.");
+        throw new NotSupportedException("Updates are managed by the Microsoft Store. Open the Microsoft Store library and let it install the update; 9to1 does not replace its own binaries for Store installs.");
     }
 
     /// <summary>
     /// Builds the refusal exception used by every operation that would download or replace binaries.
     /// </summary>
     internal static NotSupportedException CreateNotSupportedForDownload() => new(
-        "Updates are managed by the Microsoft Store. Haven never downloads update binaries for Store installs; open the Microsoft Store library instead.");
+        "Updates are managed by the Microsoft Store. 9to1 never downloads update binaries for Store installs; open the Microsoft Store library instead.");
 }

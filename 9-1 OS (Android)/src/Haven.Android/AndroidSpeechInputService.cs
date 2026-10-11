@@ -39,10 +39,10 @@ public sealed class AndroidSpeechInputService : ISpeechInputService, IAsyncDispo
         ArgumentNullException.ThrowIfNull(onEvent);
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (!IsAvailable) throw new PlatformNotSupportedException(UnavailableReason);
-        if (!await AndroidRuntimePermissions.EnsureRecordAudioPermissionAsync(cancellationToken).ConfigureAwait(false)) throw new UnauthorizedAccessException("Microphone permission is required for Haven Voice.");
+        if (!await AndroidRuntimePermissions.EnsureRecordAudioPermissionAsync(cancellationToken).ConfigureAwait(false)) throw new UnauthorizedAccessException("Microphone permission is required for 9to1 Voice.");
         await StopAsync(CancellationToken.None).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
-        var activity = AndroidRuntimePermissions.CurrentActivity ?? throw new InvalidOperationException("Haven must be open before Voice can access the microphone.");
+        var activity = AndroidRuntimePermissions.CurrentActivity ?? throw new InvalidOperationException("9to1 must be open before Voice can access the microphone.");
         var sessionCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         int generation;
         lock (_sync) { ObjectDisposedException.ThrowIf(_disposed, this); _onEvent = onEvent; _inputMode = options.InputMode; _sessionCts = sessionCts; generation = ++_generation; }
@@ -108,7 +108,7 @@ public sealed class AndroidSpeechInputService : ISpeechInputService, IAsyncDispo
         {
             if (generation != _generation || _sessionCts is null || _listening) return;
             recognizer = _recognizer ?? throw new InvalidOperationException("Android speech recognition is not ready.");
-            activity = AndroidRuntimePermissions.CurrentActivity ?? throw new InvalidOperationException("Haven must be open before Voice can access the microphone.");
+            activity = AndroidRuntimePermissions.CurrentActivity ?? throw new InvalidOperationException("9to1 must be open before Voice can access the microphone.");
             _listening = true;
         }
         try
@@ -175,7 +175,7 @@ public sealed class AndroidSpeechInputService : ISpeechInputService, IAsyncDispo
     }
 
     private bool IsCurrent(int generation) { lock (_sync) return generation == _generation && _sessionCts is not null; }
-    private void EnsureRunningLocked() { if (_recognizer is null || _sessionCts is null) throw new InvalidOperationException("Start Haven Voice before controlling the microphone."); }
+    private void EnsureRunningLocked() { if (_recognizer is null || _sessionCts is null) throw new InvalidOperationException("Start 9to1 Voice before controlling the microphone."); }
     private static string? ReadTopResult(Bundle? results) => results?.GetStringArrayList(SpeechRecognizer.ResultsRecognition)?.FirstOrDefault();
 
     private static Task RunOnUiThreadAsync(MainActivity activity, Action action, CancellationToken cancellationToken)

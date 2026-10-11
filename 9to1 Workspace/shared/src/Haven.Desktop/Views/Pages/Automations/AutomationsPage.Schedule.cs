@@ -21,7 +21,7 @@ public sealed partial class AutomationsPage
         }
 
         if (existing is not null && !ScheduledGraphAutomationPayloadCodec.IsPayload(existing.Instruction))
-            throw new InvalidOperationException("A legacy automation already uses this workflow ID. Haven left it unchanged instead of overwriting it.");
+            throw new InvalidOperationException("A legacy automation already uses this workflow ID. 9to1 left it unchanged instead of overwriting it.");
 
         var now = DateTimeOffset.UtcNow;
         var payload = ScheduledGraphAutomationPayloadCodec.Serialize(
@@ -62,7 +62,7 @@ public sealed partial class AutomationsPage
 
         if (!ScheduledGraphAutomationPayloadCodec.TryDeserialize(automation.Instruction, out var payload))
         {
-            _status.Text = "This scheduled graph payload is invalid. Haven did not route it to Tasks or perform a substitute instruction.";
+            _status.Text = "This scheduled graph payload is invalid. 9to1 did not route it to Tasks or perform a substitute instruction.";
             return Task.CompletedTask;
         }
 

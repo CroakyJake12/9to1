@@ -176,7 +176,7 @@ public sealed partial class CapabilityCatalogPage : UserControl
         var prompt = BuilderPromptBox.Text?.Trim();
         if (string.IsNullOrWhiteSpace(prompt))
         {
-            StatusText.Text = "Describe the capability before asking Haven to draft it.";
+            StatusText.Text = "Describe the capability before asking 9to1 to draft it.";
             return;
         }
 
@@ -188,7 +188,7 @@ public sealed partial class CapabilityCatalogPage : UserControl
                         ?? throw new InvalidOperationException("No local Ollama model is installed.");
             var result = await _ollama.CompleteAsync(new OllamaChatRequest(
                 model.Name,
-                [new OllamaMessage("user", $"Write concise provider-routing and safety instructions for a Haven capability with this purpose: {prompt}\nState that observed outcomes must be verified. Return instructions only.")],
+                [new OllamaMessage("user", $"Write concise provider-routing and safety instructions for a 9to1 capability with this purpose: {prompt}\nState that observed outcomes must be verified. Return instructions only.")],
                 EffortLevel.Medium), CancellationToken.None);
             InstructionsBox.Text = result.Trim();
             if (string.IsNullOrWhiteSpace(DescriptionBox.Text)) DescriptionBox.Text = prompt;

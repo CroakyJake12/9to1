@@ -220,7 +220,7 @@ public sealed class ScheduledTaskRunner(
         ArgumentNullException.ThrowIfNull(task);
         var leaseToken = Guid.NewGuid().ToString("N");
         if (!await repository.TryAcquireLeaseAsync(task.Id, leaseToken, requestedAt.AddMinutes(15), cancellationToken).ConfigureAwait(false))
-            throw new InvalidOperationException("This Task is already running in another Haven process.");
+            throw new InvalidOperationException("This Task is already running in another 9to1 process.");
         return await CompleteLeasedRunAsync(task, leaseToken, requestedAt, cancellationToken).ConfigureAwait(false);
     }
 
@@ -282,7 +282,7 @@ public sealed class ScheduledTaskRunner(
         if (ScheduledGraphAutomationPayloadCodec.IsPayload(task.Instruction))
         {
             if (!ScheduledGraphAutomationPayloadCodec.TryDeserialize(task.Instruction, out var payload))
-                throw new InvalidOperationException("The scheduled graph payload is invalid, so Haven did not fall back to an instruction run.");
+                throw new InvalidOperationException("The scheduled graph payload is invalid, so 9to1 did not fall back to an instruction run.");
             return await ExecuteGraphPayloadAsync(task, payload, attempt, maximumAttempts, cancellationToken).ConfigureAwait(false);
         }
 
@@ -295,7 +295,7 @@ public sealed class ScheduledTaskRunner(
         var models = await ollama.GetModelsAsync(cancellationToken).ConfigureAwait(false);
         var model = models.FirstOrDefault(candidate => candidate.Supports(ToolCapability.Text))
                     ?? throw new InvalidOperationException("No text-capable model is installed.");
-        var system = $"You are Haven Automations executing a user-approved scheduled instruction. Mode: {task.Mode}. Execute safely and return a concise run report. Never claim external actions unless confirmed. Attempt {attempt} of {maximumAttempts}.";
+        var system = $"You are 9to1 Automations executing a user-approved scheduled instruction. Mode: {task.Mode}. Execute safely and return a concise run report. Never claim external actions unless confirmed. Attempt {attempt} of {maximumAttempts}.";
         return await ollama.CompleteAsync(new OllamaChatRequest(
             model.Name,
             [new OllamaMessage("user", task.Instruction)],
@@ -335,7 +335,7 @@ public sealed class ScheduledTaskRunner(
             .RunAsync(workflow, permissionGranted: false, cancellationToken)
             .ConfigureAwait(false);
         if (!graphRun.Handled || graphRun.GraphResult is null)
-            throw new InvalidOperationException("The scheduled graph could not be executed, and Haven did not substitute an instruction run.");
+            throw new InvalidOperationException("The scheduled graph could not be executed, and 9to1 did not substitute an instruction run.");
         if (!graphRun.GraphResult.Succeeded)
             throw new InvalidOperationException(graphRun.GraphResult.FailureMessage ?? graphRun.Message);
 
@@ -355,7 +355,7 @@ public sealed class ScheduledTaskRunner(
         var models = await ollama.GetModelsAsync(cancellationToken).ConfigureAwait(false);
         var model = models.FirstOrDefault(candidate => candidate.Supports(ToolCapability.Text))
                     ?? throw new InvalidOperationException("No text-capable model is installed.");
-        var system = $"You are Haven Automations evaluating a scheduled condition. Mode: {mode}. Return one JSON object and no markdown: {{\"conditionMet\":true|false,\"report\":\"concise evidence-based report\"}}. Fail closed when evidence is missing or ambiguous. Never claim an external action unless it was confirmed. Attempt {attempt} of {maximumAttempts}.";
+        var system = $"You are 9to1 Automations evaluating a scheduled condition. Mode: {mode}. Return one JSON object and no markdown: {{\"conditionMet\":true|false,\"report\":\"concise evidence-based report\"}}. Fail closed when evidence is missing or ambiguous. Never claim an external action unless it was confirmed. Attempt {attempt} of {maximumAttempts}.";
         var raw = await ollama.CompleteAsync(new OllamaChatRequest(
             model.Name,
             [new OllamaMessage("user", instruction)],

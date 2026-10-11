@@ -26,6 +26,8 @@ public sealed record CuiAccessibilitySettings
         if (!double.IsFinite(DisplayScale) || DisplayScale is < 0.5d or > 5d)
             throw new ArgumentOutOfRangeException(nameof(DisplayScale), DisplayScale,
                 "Display scale must be finite and between 0.5 and 5.");
+        _ = CuiTypography.ResolveInterfaceFontFamily(InterfaceFontFamilyOverride);
+        _ = CuiTypography.ResolveCodeFontFamily(CodeFontFamilyOverride);
         return this;
     }
 

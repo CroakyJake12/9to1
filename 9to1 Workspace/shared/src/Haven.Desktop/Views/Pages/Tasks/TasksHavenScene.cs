@@ -114,7 +114,7 @@ internal sealed partial class TasksHavenScene : IDisposable
         var header = new Container { Name = compact ? "Tasks.Header.Compact" : "Tasks.Header.Wide", Layout = HavenLayout.Vertical };
         header.SetValue(HavenProperties.Gap, HavenLength.Px(8));
         header.Add(new HavenText("Tasks") { Level = TextLevel.H1 });
-        header.Add(Muted(null, compact ? "Run, reuse and review Haven Tasks." : "Run something once, reuse a proven workflow, or review what Haven has already done."));
+        header.Add(Muted(null, compact ? "Run, reuse and review 9to1 Tasks." : "Run something once, reuse a proven workflow, or review what 9to1 has already done."));
         var actions = new Container { Layout = HavenLayout.Wrap };
         actions.SetValue(HavenProperties.Gap, HavenLength.Px(8));
         actions.Add(Action(header.Name + ".Refresh", "Refresh", ButtonVariant.Ghost, (_, _) => RefreshRequested?.Invoke(this, EventArgs.Empty)));

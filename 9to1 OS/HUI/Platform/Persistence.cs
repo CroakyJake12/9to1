@@ -47,7 +47,7 @@ public sealed class XdgPlatformStorageLayout : IPlatformStorageLayout
 
         var home = readEnvironment("HOME");
         if (string.IsNullOrWhiteSpace(home))
-            throw new InvalidOperationException("XDG_DATA_HOME or HOME is required to resolve the Haven data root.");
+            throw new InvalidOperationException("XDG_DATA_HOME or HOME is required to resolve the 9to1 data root.");
         return new XdgPlatformStorageLayout(Path.Combine(home, ".local", "share", "haven"));
     }
 

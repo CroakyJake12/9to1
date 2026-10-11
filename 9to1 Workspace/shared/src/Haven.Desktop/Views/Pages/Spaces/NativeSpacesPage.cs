@@ -75,7 +75,7 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         });
         Scene = new HavenSceneControl { Root = _scene.Root };
         AutomationProperties.SetAutomationId(this, "HavenNativeSpacesPage");
-        AutomationProperties.SetName(this, "Haven Spaces");
+        AutomationProperties.SetName(this, "9to1 Spaces");
         AutomationProperties.SetAutomationId(Scene, "HavenNativeSpacesScene");
         AutomationProperties.SetName(Scene, "Spaces picker and editor");
         Content = Scene;
@@ -422,7 +422,7 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         if (space?.GeneratedSurface is null) return;
         if (_generatedSurfaceRenderer is null)
         {
-            _scene.SetGeneratedPreview(null, "Live preview will appear when Spaces is connected to Haven's trusted GenUI runtime.");
+            _scene.SetGeneratedPreview(null, "Live preview will appear when Spaces is connected to 9to1's trusted GenUI runtime.");
             return;
         }
 

@@ -926,7 +926,7 @@ public sealed class PlanPageViewModel : ObservableObject, IActivatablePage, IDis
             var response = await _ollama.ChatWithToolsAsync(new OllamaToolRequest(model.Name,
                 [new OllamaToolTurn("user", $"Current planner state:\n{context}\n\nUser request:\n{AiPrompt.Trim()}\n\nDraft changes with planner_propose_changes. Do not claim they were applied.")],
                 [_proposals.ToolDefinition], EffortLevel.Medium,
-                "You are Haven Plan's local planning assistant. Preserve existing items unless asked, use ISO-8601 timestamps, and return a reviewable proposal."), CancellationToken.None);
+                "You are 9to1 Plan's local planning assistant. Preserve existing items unless asked, use ISO-8601 timestamps, and return a reviewable proposal."), CancellationToken.None);
             var call = response.ToolCalls.FirstOrDefault(item => item.Name.Equals(_proposals.ToolDefinition.Name, StringComparison.OrdinalIgnoreCase))
                        ?? throw new InvalidOperationException("The model did not return a planner proposal.");
             var proposal = _proposals.ParseToolCall(call.Arguments);
@@ -1077,9 +1077,9 @@ public sealed class PlanPageViewModel : ObservableObject, IActivatablePage, IDis
             await RefreshAsync();
             Status = resolution switch
             {
-                CalendarConflictResolution.KeepHaven => "Kept Haven's version; it will be sent on the next calendar sync.",
+                CalendarConflictResolution.KeepHaven => "Kept 9to1's version; it will be sent on the next calendar sync.",
                 CalendarConflictResolution.KeepProvider => "Kept the calendar provider's version.",
-                _ => "Kept the provider version and saved the Haven edit as a private local copy."
+                _ => "Kept the provider version and saved the 9to1 edit as a private local copy."
             };
         }
         catch (Exception ex) { Status = $"Calendar conflict could not be resolved: {ex.Message}"; }
@@ -2004,8 +2004,8 @@ public sealed class CalendarConflictItemViewModel
     /// Gets or updates haven version, the bindable or domain state represented by this property.
     /// </summary>
     public string HavenVersion => _haven is null
-        ? "Haven version unavailable"
-        : $"Haven: {_haven.StartsAt.ToLocalTime():g} · {_haven.Title}";
+        ? "9to1 version unavailable"
+        : $"9to1: {_haven.StartsAt.ToLocalTime():g} · {_haven.Title}";
     /// <summary>
     /// Gets or updates provider version, the bindable or domain state represented by this property.
     /// </summary>

@@ -99,7 +99,7 @@ public sealed partial class ProjectIntelligenceService(IWorkspaceToolService pro
         var ahead = parts.Length > 0 && int.TryParse(parts[0], out var parsedAhead) ? parsedAhead : 0;
         var behind = parts.Length > 1 && int.TryParse(parts[1], out var parsedBehind) ? parsedBehind : 0;
         var error = FindRecentError(root);
-        var build = _buildResults.TryGetValue(Path.GetFullPath(root), out var value) ? value : "Not run in this Haven session";
+        var build = _buildResults.TryGetValue(Path.GetFullPath(root), out var value) ? value : "Not run in this 9to1 session";
         var recommendation = !string.IsNullOrWhiteSpace(error) ? "Explain and reproduce the most recent error"
             : !string.IsNullOrWhiteSpace(status) ? "Review and test the uncommitted work"
             : behind > 0 ? "Review upstream changes before starting new work"

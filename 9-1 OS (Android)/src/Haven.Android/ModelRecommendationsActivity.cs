@@ -36,7 +36,7 @@ public sealed class ModelRecommendationsActivity : Activity
         root.AddView(Label("Recommended models", 25, bold: true));
 
         var explanation = Label(
-            $"CakeAI detected about {ramGb:0.#} GB of RAM. These shortcuts open public GGUF searches sized for this device. Downloads stay in the browser until you explicitly import a file through Android's system picker.",
+            $"9to1 detected about {ramGb:0.#} GB of RAM. These shortcuts open public GGUF searches sized for this device. Downloads stay in the browser until you explicitly import a file through Android's system picker.",
             14);
         explanation.SetPadding(0, Dp(8), 0, Dp(14));
         root.AddView(explanation);
@@ -80,7 +80,7 @@ public sealed class ModelRecommendationsActivity : Activity
         scrollContent.AddView(import);
 
         var safety = Label(
-            "CakeAI does not auto-download models from this screen. Review the model card, license and file size in the public catalog, then import only the GGUF file you intend to run.",
+            "9to1 does not auto-download models from this screen. Review the model card, license and file size in the public catalog, then import only the GGUF file you intend to run.",
             12);
         safety.SetTextColor(Color.Argb(220, 214, 193, 255));
         safety.SetPadding(0, Dp(14), 0, Dp(4));

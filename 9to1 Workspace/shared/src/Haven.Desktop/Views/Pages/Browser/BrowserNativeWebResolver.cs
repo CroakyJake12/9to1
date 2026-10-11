@@ -134,7 +134,7 @@ internal sealed class BrowserNativeWebResolver : IHavenAvaloniaNativeControlReso
             replacement = new NativeWebView();
             replacement.EnvironmentRequested += (_, args) =>
                 ConfigureEnvironment(args, profileDirectory, isPrivate, tabId);
-            var services = App.Services ?? throw new InvalidOperationException("Haven services are unavailable.");
+            var services = App.Services ?? throw new InvalidOperationException("9to1 services are unavailable.");
             BrowserNativeWebViewDownloadBridge.Attach(
                 replacement,
                 services.GetRequiredService<BrowserDownloadTransport>(),
@@ -159,7 +159,7 @@ internal sealed class BrowserNativeWebResolver : IHavenAvaloniaNativeControlReso
             return;
         try
         {
-            var services = App.Services ?? throw new InvalidOperationException("Haven services are unavailable.");
+            var services = App.Services ?? throw new InvalidOperationException("9to1 services are unavailable.");
             var permissions = BrowserSitePermissionStoreProvider.Get(services.GetRequiredService<IAppPaths>());
             _host = new NativeWebViewHost(_activeWebView, permissions, _page.OpenPopupInNewTabAsync);
             _page.Browser.Attach(_host);
@@ -211,7 +211,7 @@ internal sealed class BrowserNativeWebResolver : IHavenAvaloniaNativeControlReso
         catch (UnauthorizedAccessException exception)
         {
             _page.ReportBrowserError(new UnauthorizedAccessException(
-                "Haven could not remove a private Browser profile.", exception));
+                "9to1 could not remove a private Browser profile.", exception));
         }
     }
 

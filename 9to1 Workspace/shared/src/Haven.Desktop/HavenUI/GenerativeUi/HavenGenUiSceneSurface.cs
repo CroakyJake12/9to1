@@ -173,7 +173,7 @@ internal sealed class HavenGenUiSceneSurface : IDisposable, IAsyncDisposable
             "HavenList" or "HavenTable" => BuildList(component),
             "HavenTabs" => BuildTabs(component),
             "HavenChart" or "HavenGraph" or "HavenCanvas" or "HavenImage" => BuildVisualFoundation(component),
-            _ => throw new InvalidOperationException($"Trusted Haven scene renderer has no component mapping for '{component.ComponentType}'.")
+            _ => throw new InvalidOperationException($"Trusted 9to1 scene renderer has no component mapping for '{component.ComponentType}'.")
         };
         element.Name = "GenUI_" + SanitizeName(component.ComponentId);
         PublishOriginal(() => element.Accessibility.AccessibleName = GetString(component, "automationName") ?? GetString(component, "label") ?? component.ComponentId);
@@ -551,11 +551,11 @@ internal sealed class HavenGenUiSceneSurface : IDisposable, IAsyncDisposable
                 Guid.NewGuid(), eventType, DateTimeOffset.UtcNow, document.Origin,
                 component.ComponentId, binding.ActionId, null, null, value,
                 JsonSerializer.SerializeToElement(new { values = CaptureCurrentInputValues(), component = component.ComponentId, value }),
-                GenUiEventSource.User, "Haven Chat generated UI interaction");
+                GenUiEventSource.User, "9to1 Chat generated UI interaction");
             original.DemandPublication();
             SemanticEventEmitted?.Invoke(this, semanticEvent);
             original.DemandPublication();
-            SetActivity(binding.Route == GenUiRouteKind.Local ? "Updating…" : "Haven is working…");
+            SetActivity(binding.Route == GenUiRouteKind.Local ? "Updating…" : "9to1 is working…");
             Task<GenUiActionResult>? actualRoute = null;
             try
             {

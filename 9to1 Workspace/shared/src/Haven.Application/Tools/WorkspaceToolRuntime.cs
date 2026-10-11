@@ -71,7 +71,7 @@ public sealed class WorkspaceToolRuntime(
     /// </summary>
     public IReadOnlyList<OllamaToolDefinition> Definitions =>
     [
-        Definition("list_files", "List files and folders inside the selected Haven workspace.",
+        Definition("list_files", "List files and folders inside the selected 9to1 workspace.",
             new() { ["path"] = StringProperty("Workspace-relative folder, or . for the root."), ["max_depth"] = IntegerProperty("Recursion depth from 1 to 10.") }),
         Definition("read_file", "Read a UTF-8 text file inside the selected workspace.",
             new() { ["path"] = StringProperty("Workspace-relative file path.") }, "path"),
@@ -304,7 +304,7 @@ public sealed class WorkspaceToolRuntime(
         {
             var info = new FileInfo(resolved);
             if (!info.Exists) throw new FileNotFoundException("Workspace file was not found.", path);
-            if (info.Length > 4 * 1024 * 1024) throw new InvalidOperationException("File is larger than Haven's 4 MB text-read limit.");
+            if (info.Length > 4 * 1024 * 1024) throw new InvalidOperationException("File is larger than 9to1's 4 MB text-read limit.");
         }
         // The original physical source checks the SAME held read handle and existing 4 MB
         // limit. Do not follow a mutable filename again outside that owning read port.

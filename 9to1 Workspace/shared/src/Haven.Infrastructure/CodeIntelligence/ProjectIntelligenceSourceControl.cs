@@ -66,7 +66,7 @@ public sealed partial class ProjectIntelligenceService
         var current = await GetSourceControlAsync(canonicalRoot, cancellationToken).ConfigureAwait(false);
         if (!current.IsRepository) throw new InvalidOperationException("This project is not a Git repository.");
         if (current.Changes.Count == 0) throw new InvalidOperationException("There are no working-tree changes to stash.");
-        var label = string.IsNullOrWhiteSpace(message) ? $"Haven stash {DateTimeOffset.Now:yyyy-MM-dd HH:mm}" : message.Trim();
+        var label = string.IsNullOrWhiteSpace(message) ? $"9to1 stash {DateTimeOffset.Now:yyyy-MM-dd HH:mm}" : message.Trim();
         if (label.Length > 200 || label.Any(char.IsControl) || label.Contains('\"')) throw new ArgumentException("Stash messages must be 200 characters or fewer and cannot contain quotes or control characters.", nameof(message));
         var result = await RunGitAsync(canonicalRoot, $"stash push -u -m {QuoteGitArgument(label)}", TimeSpan.FromMinutes(2), cancellationToken).ConfigureAwait(false);
         EnsureGitSucceeded(result, "create stash");
@@ -220,5 +220,5 @@ public sealed partial class ProjectIntelligenceService
     private static bool IsConflictCode(char x, char y) => (x, y) is ('D', 'D') or ('A', 'U') or ('U', 'D') or ('U', 'A') or ('D', 'U') or ('A', 'A') or ('U', 'U');
     private static string StatusName(char value) => value switch { ' ' => "None", '?' => "Untracked", 'M' => "Modified", 'A' => "Added", 'D' => "Deleted", 'R' => "Renamed", 'C' => "Copied", 'U' => "Unmerged", 'T' => "Type changed", _ => value.ToString() };
     private static string StatusSummary(char x, char y) { if (x == '?' && y == '?') return "Untracked"; if (IsConflictCode(x, y)) return "Conflict"; if (x != ' ' && y != ' ') return $"Staged {StatusName(x).ToLowerInvariant()}, working tree {StatusName(y).ToLowerInvariant()}"; if (x != ' ') return $"Staged {StatusName(x).ToLowerInvariant()}"; return StatusName(y); }
-    private static string TruncateGitOutput(string value, int maximum = 80_000) => value.Length <= maximum ? value : value[..maximum] + "\n[output truncated by Haven]";
+    private static string TruncateGitOutput(string value, int maximum = 80_000) => value.Length <= maximum ? value : value[..maximum] + "\n[output truncated by 9to1]";
 }

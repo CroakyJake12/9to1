@@ -175,6 +175,7 @@ export async function invoke(action, argumentsJson) {
                 stopAudio();
                 audioUrl = URL.createObjectURL(new Blob([bytesFromBase64(args.base64)], { type: 'audio/wav' }));
                 const target = new Audio(audioUrl); audio = target; target.loop = args.loop === true;
+                if (Number.isFinite(args.seconds) && args.seconds > 0) target.currentTime = args.seconds;
                 const generation = audioGeneration;
                 try { await target.play(); }
                 catch (error) {

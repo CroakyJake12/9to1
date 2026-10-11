@@ -291,7 +291,7 @@ public sealed partial class StartupRecoveryCoordinator(IAppPaths paths, IProduct
 
                 var safeMode = failures.Count >= SafeModeThreshold;
                 var reason = safeMode
-                    ? $"Haven detected {failures.Count} unclean starts within {CrashWindow.TotalMinutes:0} minutes. External tools, browser automation, cloud providers and workspace mutations are disabled for this run."
+                    ? $"9to1 detected {failures.Count} unclean starts within {CrashWindow.TotalMinutes:0} minutes. External tools, browser automation, cloud providers and workspace mutations are disabled for this run."
                     : failures.Count == 0
                         ? "Normal startup."
                         : $"Recovered after {failures.Count} recent unclean start{(failures.Count == 1 ? string.Empty : "s")}.";
@@ -365,7 +365,7 @@ public sealed partial class StartupRecoveryCoordinator(IAppPaths paths, IProduct
                         ReliabilitySeverity.Information,
                         "startup",
                         eventName,
-                        eventName == "clean-shutdown" ? "Haven recorded a clean shutdown." : "Haven completed startup.",
+                        eventName == "clean-shutdown" ? "9to1 recorded a clean shutdown." : "9to1 completed startup.",
                         new Dictionary<string, string> { ["runId"] = updated.Id },
                         updated.Id,
                         cancellationToken));

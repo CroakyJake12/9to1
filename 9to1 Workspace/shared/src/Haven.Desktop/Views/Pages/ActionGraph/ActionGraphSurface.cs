@@ -35,7 +35,7 @@ internal sealed class ActionGraphSurface : HavenElement, IHavenDrawCommandSource
         Name = "ActionGraph.Canvas";
         Accessibility.Role = HavenAccessibleRole.Group;
         Accessibility.AccessibleName = "Execution graph canvas";
-        Accessibility.Description = "Timeline of what Haven executed. Drag to pan, scroll to zoom, click a node for details, arrow keys to move between nodes.";
+        Accessibility.Description = "Timeline of what 9to1 executed. Drag to pan, scroll to zoom, click a node for details, arrow keys to move between nodes.";
         Accessibility.Focusable = true;
         SetValue(HavenProperties.Background, "Transparent");
         SetValue(HavenProperties.Clip, true);
@@ -602,7 +602,7 @@ internal sealed class ActionGraphSurface : HavenElement, IHavenDrawCommandSource
         else
         {
             Accessibility.Selected = false;
-            Accessibility.Description = "Timeline of what Haven executed. Drag to pan, scroll to zoom, click a node for details, arrow keys to move between nodes.";
+            Accessibility.Description = "Timeline of what 9to1 executed. Drag to pan, scroll to zoom, click a node for details, arrow keys to move between nodes.";
         }
     }
 }

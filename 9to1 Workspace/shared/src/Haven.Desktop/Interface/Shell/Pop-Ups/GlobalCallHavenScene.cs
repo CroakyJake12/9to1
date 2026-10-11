@@ -273,7 +273,7 @@ internal sealed class GlobalCallHavenScene : IDisposable
         context.Accessibility.AccessibleName = "Session context";
         context.Invoked += (_, _) => ShowPanel("context");
         composer.Add(context);
-        TranscriptInput = new Input { Name = "Voice.Transcript.Input", Placeholder = "Talk to Haven Voice" };
+        TranscriptInput = new Input { Name = "Voice.Transcript.Input", Placeholder = "Talk to 9to1 Voice" };
         TranscriptInput.Accessibility.AccessibleName = "Voice message";
         Set(TranscriptInput, HavenProperties.Column, 1);
         composer.Add(TranscriptInput);

@@ -44,12 +44,12 @@ public sealed partial class TerminalPage : UserControl, IDisposable
         _input.KeyDown += InputKeyDown; _stop.Click += (_, _) => CancelRunningCommand();
         AttachedToVisualTree += Attached; DetachedFromVisualTree += Detached;
         UpdatePrompt();
-        SystemLine($"Haven Terminal · session {_session.Metadata.SessionId:N} · persistent {_session.Metadata.ShellRuntime} · PID {_session.ProcessId?.ToString() ?? "starting"}");
+        SystemLine($"9to1 Terminal · session {_session.Metadata.SessionId:N} · persistent {_session.Metadata.ShellRuntime} · PID {_session.ProcessId?.ToString() ?? "starting"}");
         if (restoredFromSessionId is { } previousSessionId)
-            SystemLine($"Restored Terminal tab from Haven session {previousSessionId:N}; the prior OS shell did not survive. This is a new shell session/process.");
+            SystemLine($"Restored Terminal tab from 9to1 session {previousSessionId:N}; the prior OS shell did not survive. This is a new shell session/process.");
         SystemLine("cwd, environment variables, functions and shell variables persist inside this tab's live shell process.");
-        SystemLine("Shell processes are runtime-only: reopening Haven creates a fresh shell even when the Terminal tab is restored.");
-        SystemLine("Visible history is memory-only and secret-redacted. Every submitted command still uses Haven's command permission policy.");
+        SystemLine("Shell processes are runtime-only: reopening 9to1 creates a fresh shell even when the Terminal tab is restored.");
+        SystemLine("Visible history is memory-only and secret-redacted. Every submitted command still uses 9to1's command permission policy.");
     }
 
     public bool IsRunning => _running;

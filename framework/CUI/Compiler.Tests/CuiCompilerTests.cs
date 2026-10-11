@@ -5,7 +5,7 @@ namespace CakeOS.Cui.Compiler.Tests;
 
 public sealed class CuiCompilerTests
 {
-    private static CuiCompilerOptions Options() => new(new CuiCompilationMetadata("1.0", "1.0", "1.0", ["layout"]));
+    private static CuiCompilerOptions Options() => new(new CuiCompilationMetadata("1.0", "1.0", "2.0", ["layout"]));
 
     [Fact]
     public void Compile_emits_compatibility_metadata_and_authored_identity()
@@ -47,6 +47,7 @@ public sealed class CuiCompilerTests
             new CuiCompilerOptions(Options().Metadata, [new CuiImportedSymbols("shared/ui", ["Card"], [])]));
 
         Assert.True(result.Succeeded, string.Join(Environment.NewLine, result.Diagnostics));
+        Assert.NotNull(result.Output);
         Assert.Contains(result.Output.Dependencies.Entries.Values.SelectMany(entry => entry),
             dependency => dependency.Kind == CuiDependencyKind.Import && dependency.Name == "shared/ui");
     }

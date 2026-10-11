@@ -8,6 +8,16 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="../../BrowserHomeContext.cs" />
+    <Compile Include="../../BrowserHomeContext.Dashboard.cs" />
+    <Compile Include="../HomeLocalPreferences.cs" />
+    <Compile Include="../../BrowserHomePresentation.cs" />
+    <Compile Include="../../BrowserCanonicalIcons.cs" />
+    <Compile Include="../../BrowserActionAvailability.cs" />
+    <Compile Include="../../BrowserShellActions.cs" />
+    <Compile Include="ShellActionLifetimeChecks.cs" />
+    <Compile Include="AppearanceSettingsChecks.cs" />
+    <Compile Include="../BrowserAppearanceSettings.cs" />
+    <Compile Include="DashboardLayoutChecks.cs" />
     <Compile Include="../../BrowserHomeDashboardLayoutStore.cs" />
     <Compile Include="../../Services/BrowserTaskActorSource.cs" />
     <Compile Include="../../Services/BrowserTaskIdentityReadOperation.cs" />
@@ -17,6 +27,7 @@
     <Compile Include="../../Services/IAccountBrowserTransport.cs" />
     <Compile Include="../../Services/BrowserAccountTransport.cs" />
     <ProjectReference Include="../../../../9to1 Workspace/Home/HavenOS.Home.csproj" />
+    <ProjectReference Include="../../../../9to1 Workspace/shared/src/Haven.UI/Haven.UI.csproj" />
     <ProjectReference Include="../../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
     <None Include="../Home.cui" Link="Home.cui" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

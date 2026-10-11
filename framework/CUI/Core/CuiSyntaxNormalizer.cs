@@ -272,7 +272,7 @@ internal sealed class CuiSyntaxNormalizer(CuiDiagnosticBag diagnostics)
         var equals = token.IndexOf('=');
         if (equals > 0)
         {
-            normalized = token;
+            normalized = NormalizeAttributeName(token[..equals]) + token[equals..];
             return true;
         }
 
@@ -280,11 +280,20 @@ internal sealed class CuiSyntaxNormalizer(CuiDiagnosticBag diagnostics)
         if (colon <= 0 || colon >= token.Length - 1 || token.Contains("::", StringComparison.Ordinal))
             return false;
 
-        var name = token[..colon];
+        var name = NormalizeAttributeName(token[..colon]);
         var value = token[(colon + 1)..].Replace('_', ' ');
         normalized = $"{name}=\"{EscapeAttribute(value)}\"";
         return true;
     }
+
+    // Percentage coordinates are CUI syntax. Encode their property name before
+    // entering the XML reader, without rewriting any literal text or values.
+    private static string NormalizeAttributeName(string name) => name.ToLowerInvariant() switch
+    {
+        "x%" or "x-%" => "XPercent",
+        "y%" or "y-%" => "YPercent",
+        _ => name
+    };
 
     private static List<string> SplitHeader(string header)
     {

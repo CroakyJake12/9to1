@@ -1,4 +1,4 @@
-# HavenOS Canvas
+# 9to1OS Canvas
 
 This directory is the bounded standalone Canvas app surface for HavenOS.
 

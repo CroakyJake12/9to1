@@ -328,9 +328,9 @@ public sealed class NotesReadAloudController(
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
             if (RuntimeSafetyState.IsSafeMode)
-                throw new InvalidOperationException("Notes read aloud is disabled while Haven recovery safe mode is active.");
+                throw new InvalidOperationException("Notes read aloud is disabled while 9to1 recovery safe mode is active.");
             if (calls.IsActive)
-                throw new InvalidOperationException("End the active Haven Call before starting Notes read aloud.");
+                throw new InvalidOperationException("End the active 9to1 Call before starting Notes read aloud.");
             if (!speech.IsAvailable)
                 throw new InvalidOperationException(speech.UnavailableReason ?? "Local speech output is unavailable.");
             if (IsActive)
@@ -425,9 +425,9 @@ public sealed class NotesReadAloudController(
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
             if (RuntimeSafetyState.IsSafeMode)
-                throw new InvalidOperationException("Read aloud is disabled while Haven recovery safe mode is active.");
+                throw new InvalidOperationException("Read aloud is disabled while 9to1 recovery safe mode is active.");
             if (calls.IsActive)
-                throw new InvalidOperationException("End the active Haven Call before starting read aloud.");
+                throw new InvalidOperationException("End the active 9to1 Call before starting read aloud.");
             if (!speech.IsAvailable)
                 throw new InvalidOperationException(speech.UnavailableReason ?? "Local speech output is unavailable.");
             if (IsActive)

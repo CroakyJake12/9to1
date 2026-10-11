@@ -100,7 +100,7 @@ public sealed partial class WaveCuiWorkspace : ICuiWritableBindingContext, ICuiA
             "CanRedo" => IsActionAvailable("9to1.Wave.Redo"), "CanEditClip" => IsActionAvailable("9to1.Wave.Move"),
             "CanEdit" => !_busy && !_retiring && !_disposed,
             "CanImport" => IsActionAvailable("9to1.Wave.Import"), "CanExport" => IsActionAvailable("9to1.Wave.Export"),
-            "WorkspaceColumns" => _compact ? "*" : "220,*,270", "WorkspaceRows" => _compact ? "Auto,Auto,Auto" : "Auto",
+            "WorkspaceColumns" => _compact ? "1fr" : "220 1fr 270", "WorkspaceRows" => _compact ? "Auto,Auto,Auto" : "Auto",
             "TimelineColumn" => _compact ? 0 : 1, "TimelineRow" => _compact ? 1 : 0,
             "InspectorColumn" => _compact ? 0 : 2, "InspectorRow" => _compact ? 2 : 0,
             "TimelineHeight" => Math.Max(160, _snapshot.Tracks.Count * 46 + 24),

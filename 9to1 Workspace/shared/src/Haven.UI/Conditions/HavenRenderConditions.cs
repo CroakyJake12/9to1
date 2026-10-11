@@ -27,7 +27,7 @@ public sealed class HavenPlatformCondition : IHavenRenderCondition
         _platforms = platforms.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Select(value => Enum.TryParse<HavenPlatform>(value, true, out var parsed)
                 ? parsed
-                : throw new FormatException($"Unknown Haven platform '{value}'."))
+                : throw new FormatException($"Unknown 9to1 platform '{value}'."))
             .ToHashSet();
     }
 

@@ -99,8 +99,8 @@ public sealed partial class SettingsHavenPage : UserControl, IDisposable
         {
             _preferences.SetAlwaysLoaded(_route.AlwaysLoadedToggle.IsChecked);
             _route.SetStatus(_route.AlwaysLoadedToggle.IsChecked
-                ? "Local models will stay ready after Haven closes."
-                : "Local models will unload when Haven closes.");
+                ? "Local models will stay ready after 9to1 closes."
+                : "Local models will unload when 9to1 closes.");
             _bus.Fire("Settings.Models.ResidencyChanged");
         };
 
@@ -282,7 +282,7 @@ public sealed partial class SettingsHavenPage : UserControl, IDisposable
             : _route.HavenAvatarToggle.IsChecked;
         if (kind == HavenAvatarKind.User) _preferences.SetUserAvatarEnabled(enabled);
         else _preferences.SetHavenAvatarEnabled(enabled);
-        var label = kind == HavenAvatarKind.User ? "User" : "Haven";
+        var label = kind == HavenAvatarKind.User ? "User" : "9to1";
         if (enabled && AvatarStore.Current?.Has(kind) != true)
         {
             _route.SetStatus($"Select an image first to use the {label} profile picture.");
@@ -305,7 +305,7 @@ public sealed partial class SettingsHavenPage : UserControl, IDisposable
         var files = await topLevel.StorageProvider.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
         {
             AllowMultiple = false,
-            Title = kind == HavenAvatarKind.User ? "Choose your profile picture" : "Choose the Haven profile picture",
+            Title = kind == HavenAvatarKind.User ? "Choose your profile picture" : "Choose the 9to1 profile picture",
             FileTypeFilter =
             [
                 new("Images")
@@ -425,7 +425,7 @@ public sealed partial class SettingsHavenPage : UserControl, IDisposable
         if (index < 0 || index >= _defaultTabModes.Count) return;
         var mode = _defaultTabModes[index];
         _preferences.SetDefaultTabAppKey(mode.Key);
-        _route.SetStatus($"New tabs will open {mode.Name}. If it becomes unavailable, Haven will fall back safely.");
+        _route.SetStatus($"New tabs will open {mode.Name}. If it becomes unavailable, 9to1 will fall back safely.");
         _bus.Fire("Settings.Personalisation.DefaultTabChanged");
     }
 

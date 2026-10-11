@@ -6,6 +6,7 @@ using Avalonia.LogicalTree;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using HavenOS.Home.Core;
 using NineToOne.Web.Accounts;
 
@@ -20,6 +21,12 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
     private CuiControlLoader? _loader;
     private IDisposable? _surfaceLifetime;
     private BrowserActionAvailability.Observation? _availability;
+    private BrowserHomePresentation? _homePresentation;
+    private BrowserAppearanceSettings? _appearance;
+    private IBrowserHomeThemePreferences? _themePreferences;
+    private CuiThemePreferenceContext? _themeContext;
+    private Task? _themeInitialisation;
+    private readonly BrowserHomeSearchState _homeSearch = new();
     private BrowserHomeContext? _home;
     private AccountSettingsFeature? _accountSettings;
     private CuiDocument? _homeDocument;
@@ -84,6 +91,8 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
     public async Task OpenFragmentAsync(string fragment)
     {
         if (_disposed || _closing || _privateContextResets != 0) return;
+        await (_themeInitialisation ??= InitialiseThemeAsync());
+        if (_disposed || _closing || _privateContextResets != 0) return;
         var previousCancellation = _navigationCancellation;
         _navigationCancellation = new();
         var cancellation = _navigationCancellation.Token;
@@ -106,7 +115,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
             EnsureHome();
             var home = new BrowserHomeContext(_homeDocument!, NavigateHome, _accountSettings,
                 route => _surfaces.AvailableRoutes.Contains(route, StringComparer.Ordinal),
-                BrowserHomeDashboardLayoutStore.GetCurrent(_surfaces));
+                BrowserHomeDashboardLayoutStore.GetCurrent(_surfaces), new BrowserHomeLocalPreferences(), BrowserHomeBriefingSources.Get(_surfaces), _homeSearch);
             if (!home.Open(target)) { home.Dispose(); return null; }
             return new(_homeDocument!, home, home, home, Admission: new HomeAdmission(this, home));
         }, cancellation);
@@ -121,7 +130,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
             Program.ShowStatus(result.Code, "This destination is unavailable. Your link has been preserved so you can try again.");
             return;
         }
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        await Dispatcher.UIThread.InvokeAsync(async () =>
         {
             if (_disposed || _closing || version != _navigationVersion || cancellation.IsCancellationRequested)
                 return;
@@ -131,17 +140,48 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
                 Program.ShowStatus("BrowserPresentationExpired", "This destination changed before it could open. Try opening it again.");
                 return;
             }
+            if (surface.Bindings is BrowserHomeContext preparedHome)
+            {
+                try
+                {
+                    // Local recents change the hero's height. Complete that
+                    // read before exposing clickable app targets so a late
+                    // initial update cannot move them under a pointer.
+                    await preparedHome.PrepareLocalBriefingAsync(cancellation);
+                }
+                catch { surface.Admission?.Reject(); throw; }
+                if (_disposed || _closing || version != _navigationVersion || cancellation.IsCancellationRequested)
+                { surface.Admission?.Reject(); return; }
+            }
             if (Render(surface, BrowserRouteCodec.Encode(request!)))
             {
                 Program.ShowStatus(_presentationCleanupError is not null ? "BrowserPresentationCleanupFailed"
-                        : isUnavailableHome ? "HomeProvidersUnavailable" : "Ready",
+                        : "Ready",
                     _presentationCleanupError is not null ? "Your destination opened, but the previous view could not fully close."
-                        : isUnavailableHome ? "Home files and activity are unavailable. Account status is checked separately." : "");
+                        : "");
                 // Only after the native presentation is transferred; the actual Settings owner retains the refresh.
                 if (surface.Bindings is BrowserHomeContext home && ReferenceEquals(_home, home))
                     _ = home.ActivateAsync();
             }
         });
+    }
+
+    private async Task InitialiseThemeAsync()
+    {
+        var preferences = await BrowserFeatureComposition.CreateThemePreferencesAsync();
+        if (_disposed) { await preferences.DisposeAsync(); return; }
+        _themePreferences = preferences;
+        _themeContext = new(preferences, preferences.Catalog);
+        _themeContext.Changed += OnThemeChanged;
+        OnThemeChanged(this, EventArgs.Empty);
+    }
+
+    private void OnThemeChanged(object? sender, EventArgs args)
+    {
+        if (_disposed || _themeContext is null) return;
+        if (!Dispatcher.UIThread.CheckAccess()) { Dispatcher.UIThread.Post(() => OnThemeChanged(sender, args)); return; }
+        var current = _themeContext.Current;
+        CuiThemeScopeApplier.ApplyGlobalTheme(current.Theme.BaseTheme, "Home", current.Accessibility);
     }
 
     private void EnsureHome()
@@ -174,15 +214,29 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
             Program.ShowStatus("HomeServiceIncompatible", "This view requires an incompatible runtime. Your previous view has been preserved.");
             return false;
         }
-        var candidate = surface.ControlRegistry is null ? new CuiControlLoader() : new CuiControlLoader(surface.ControlRegistry);
+        var registry = surface.ControlRegistry ?? new CuiControlRegistry();
+        BrowserCanonicalIcons.Register(registry);
+        var candidate = new CuiControlLoader(registry);
         BrowserActionAvailability.Observation? candidateAvailability = null;
+        BrowserHomePresentation? candidateHomePresentation = null;
+        BrowserAppearanceSettings? candidateAppearance = null;
         var transferred = false;
         var previousContent = _view.Content;
         var previousRoot = (previousContent as ScrollViewer)?.Content as Control;
         try
         {
-            candidate.SetBindingContext(surface.Bindings);
-            candidate.SetActionDispatcher(surface.Actions);
+            if (_themeContext is not null) candidate.SetThemePreferenceContext(_themeContext);
+            ICuiBindingContext bindings = surface.Bindings;
+            ICuiActionDispatcher actions = surface.Actions;
+            if (surface.Bindings is AccountBrowserBindings && _themePreferences is not null)
+            {
+                candidateAppearance = new(surface.Bindings, surface.Actions, _themePreferences);
+                bindings = candidateAppearance;
+                actions = candidateAppearance;
+            }
+            candidate.SetBindingContext(bindings);
+            var shellActions = new BrowserShellActions(actions, () => NavigateHome(new(HomeFeatureRouteIds.Dashboard)));
+            candidate.SetActionDispatcher(shellActions);
             var (root, diagnostics) = candidate.TryLoad(surface.Document);
             if (root is null || diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
             {
@@ -190,10 +244,10 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
                 return false;
             }
             candidate.WireBindings(root);
-            candidateAvailability = BrowserActionAvailability.Observe(root, candidate, surface.Document, surface.Actions, surface.Bindings);
+            candidateAvailability = BrowserActionAvailability.Observe(root, candidate, surface.Document, shellActions, bindings);
             foreach (var control in root.GetLogicalDescendants().OfType<Control>().Prepend(root))
             {
-                if (control is TextBox input && surface.Bindings is BrowserHomeContext)
+                if (control is TextBox input && surface.Bindings is BrowserHomeContext && input.Name != "global-search")
                 {
                     input.IsEnabled = false;
                     ToolTip.SetTip(input, "Search requires an available account service.");
@@ -202,13 +256,20 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
             var previousLoader = _loader;
             var previousLifetime = _surfaceLifetime;
             var previousAvailability = _availability;
+            var previousHomePresentation = _homePresentation;
+            var previousAppearance = _appearance;
+            if (surface.Bindings is BrowserHomeContext homeContext)
+                candidateHomePresentation = new(root, homeContext);
             if (_currentAddress is not null && _view.Content is ScrollViewer previousScroll)
             {
                 if (!_scrollOffsets.ContainsKey(_currentAddress) && _scrollOffsets.Count >= 256)
                     _scrollOffsets.Remove(_scrollOffsets.Keys.First());
                 _scrollOffsets[_currentAddress] = previousScroll.Offset;
             }
-            var scroll = new ScrollViewer { Content = root, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto };
+            var ownsViewport = root is Grid or CuiContainerControl || candidate.Inspect(root)?.ComponentType == "Page";
+            var scroll = new ScrollViewer { Content = root, HorizontalScrollBarVisibility = ownsViewport
+                ? Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled : Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+                VerticalScrollBarVisibility = ownsViewport ? Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled : Avalonia.Controls.Primitives.ScrollBarVisibility.Auto };
             if (_scrollOffsets.TryGetValue(address, out var offset))
                 scroll.Loaded += (_, _) => scroll.Offset = offset;
             _view.Content = scroll;
@@ -218,10 +279,14 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
             _loader = candidate;
             _surfaceLifetime = surface.Lifetime;
             _availability = candidateAvailability;
+            _homePresentation = candidateHomePresentation;
+            _appearance = candidateAppearance;
             _currentAddress = address;
             transferred = true;
             List<Exception>? cleanupErrors = null;
             Retire(() => previousAvailability?.Dispose());
+            Retire(() => previousHomePresentation?.Dispose());
+            Retire(() => previousAppearance?.Dispose());
             Retire(() => previousLoader?.Dispose());
             Retire(() => previousLifetime?.Dispose());
             _presentationCleanupError = cleanupErrors is null ? null
@@ -252,14 +317,18 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
                 }
                 finally
                 {
-                    try { candidateAvailability?.Dispose(); }
+                    try { candidateAppearance?.Dispose(); }
                     finally
                     {
-                        try { candidate.Dispose(); }
+                        try { candidateHomePresentation?.Dispose(); candidateAvailability?.Dispose(); }
                         finally
                         {
-                            try { surface.Lifetime?.Dispose(); }
-                            finally { surface.Admission?.Reject(); }
+                            try { candidate.Dispose(); }
+                            finally
+                            {
+                                try { surface.Lifetime?.Dispose(); }
+                                finally { surface.Admission?.Reject(); }
+                            }
                         }
                     }
                 }
@@ -327,9 +396,14 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         var loader = _loader;
         var lifetime = _surfaceLifetime;
         var availability = _availability;
+        var homePresentation = _homePresentation;
+        var appearance = _appearance;
         _loader = null;
         _surfaceLifetime = null;
         _availability = null;
+        _homePresentation = null;
+        _appearance = null;
+        _homeSearch.Query = "";
         _home = null;
         _accountSettings = null;
         _homeDocument = null;
@@ -344,6 +418,8 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         Remove(() => _view.Content = null);
         Remove(() => _navigationCancellation?.Cancel());
         Remove(() => availability?.Dispose());
+        Remove(() => homePresentation?.Dispose());
+        Remove(() => appearance?.Dispose());
         Remove(() => loader?.Dispose());
         Remove(() => lifetime?.Dispose());
         try { await reset.DrainAsync(); }
@@ -403,6 +479,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
                 {
                     if (_disposed)
                     {
+                        await DisposeThemeAsync();
                         _navigationCancellation?.Dispose();
                         _navigationCancellation = null;
                     }
@@ -420,6 +497,23 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         if (!await CloseAsync()) throw new InvalidOperationException("Browser owners could not close. Their drafts remain open.");
+    }
+
+    private async Task DisposeThemeAsync()
+    {
+        if (_themeInitialisation is not null) await _themeInitialisation;
+        if (_themeContext is not null)
+        {
+            _themeContext.Changed -= OnThemeChanged;
+            _themeContext.Dispose();
+            _themeContext = null;
+        }
+        if (_themePreferences is not null)
+        {
+            var owner = _themePreferences;
+            _themePreferences = null;
+            await owner.DisposeAsync();
+        }
     }
 
     internal async Task ReplacePrivateAccountSettingsAsync()

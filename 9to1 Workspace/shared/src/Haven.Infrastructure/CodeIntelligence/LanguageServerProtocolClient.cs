@@ -687,7 +687,7 @@ internal static class LanguageServerProtocolCodec
                 contentLength = length;
         }
         if (contentLength is null) throw new InvalidDataException("The language-server message did not contain Content-Length.");
-        if (contentLength > 16 * 1024 * 1024) throw new InvalidDataException("The language-server message exceeded Haven's 16 MB safety limit.");
+        if (contentLength > 16 * 1024 * 1024) throw new InvalidDataException("The language-server message exceeded 9to1's 16 MB safety limit.");
         var body = new byte[contentLength.Value];
         var offset = 0;
         while (offset < body.Length)
@@ -725,7 +725,7 @@ internal static class LanguageServerProtocolCodec
             if (read == 0) return bytes.Count == 0 ? null : Encoding.ASCII.GetString(bytes.ToArray()).TrimEnd('\r');
             if (single[0] == (byte)'\n') return Encoding.ASCII.GetString(bytes.ToArray()).TrimEnd('\r');
             bytes.Add(single[0]);
-            if (bytes.Count > 8_192) throw new InvalidDataException("The language-server header line exceeded Haven's safety limit.");
+            if (bytes.Count > 8_192) throw new InvalidDataException("The language-server header line exceeded 9to1's safety limit.");
         }
     }
 }

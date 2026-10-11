@@ -78,7 +78,7 @@
             <hui:HavenMenuItem x:Name="PrintMenuItem" Header="Print" />
             <hui:HavenMenuItem x:Name="InspectMenuItem" Header="Inspect" />
             <Separator />
-            <hui:HavenMenuItem x:Name="AssistantMenuItem" Header="Haven side assistant" />
+            <hui:HavenMenuItem x:Name="AssistantMenuItem" Header="9to1 side assistant" />
             <hui:HavenMenuItem x:Name="SettingsMenuItem" Header="Browser settings" />
           </hui:HavenMenuFlyout>
         </hui:HavenButton.Flyout>
@@ -259,7 +259,7 @@
 
           <ScrollViewer x:Name="AssistantPanel" IsVisible="False" VerticalScrollBarVisibility="Auto">
             <StackPanel Margin="16" Spacing="9">
-              <TextBlock Text="Haven side assistant" Classes="sectionHeading" />
+              <TextBlock Text="9to1 side assistant" Classes="sectionHeading" />
               <TextBlock Text="Uses visible page text and your selected local model." Classes="muted" FontSize="11" />
               <hui:HavenButton x:Name="SummariseButton" Content="Summarise page" />
               <hui:HavenTextInput x:Name="AssistantInputBox" PlaceholderText="Ask about this page" AcceptsReturn="True" MinHeight="70" />
@@ -271,7 +271,7 @@
           <ScrollViewer x:Name="SettingsPanel" IsVisible="False" VerticalScrollBarVisibility="Auto">
             <StackPanel Margin="16" Spacing="9">
               <TextBlock Text="Browser settings" Classes="sectionHeading" />
-              <TextBlock Text="Tabs, history, credentials, and extensions stay in Haven's isolated profile." Classes="muted" FontSize="11" />
+              <TextBlock Text="Tabs, history, credentials, and extensions stay in 9to1's isolated profile." Classes="muted" FontSize="11" />
               <hui:HavenTextInput x:Name="HomePageBox" PlaceholderText="Home page" />
               <hui:HavenTextInput x:Name="SearchTemplateBox" PlaceholderText="Search URL containing {query}" />
               <hui:HavenCheckBox x:Name="SaveHistoryCheckBox" Content="Save history" />
@@ -290,7 +290,7 @@
               <TextBlock Text="Extensions" Classes="sectionHeading" />
               <TextBlock Text="Imports are disabled initially. Chrome conversion accepts only bounded content scripts and rejects privileged permissions." Classes="muted" FontSize="11" />
               <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
-                <hui:HavenButton x:Name="ImportExtensionButton" Content="Import Haven extension" />
+                <hui:HavenButton x:Name="ImportExtensionButton" Content="Import 9to1 extension" />
                 <hui:HavenButton x:Name="ConvertChromeButton" Grid.Column="1" Content="Convert Chrome extension" />
               </Grid>
               <ItemsControl x:Name="ExtensionsList">

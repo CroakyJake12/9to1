@@ -43,7 +43,7 @@ public sealed class BrowserBackgroundPageLoader(IBrowserNavigationPolicy policy)
         var response = lease.Response;
         response.EnsureSuccessStatusCode();
         if (response.Content.Headers.ContentLength is > MaximumResponseBytes)
-            throw new InvalidOperationException("The background page exceeds Haven's 8 MB extraction limit.");
+            throw new InvalidOperationException("The background page exceeds 9to1's 8 MB extraction limit.");
 
         var mediaType = response.Content.Headers.ContentType?.MediaType;
         if (mediaType is not null
@@ -61,7 +61,7 @@ public sealed class BrowserBackgroundPageLoader(IBrowserNavigationPolicy policy)
             var read = await stream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
             if (read == 0) break;
             if (output.Length + read > MaximumResponseBytes)
-                throw new InvalidOperationException("The background page exceeded Haven's 8 MB extraction limit while streaming.");
+                throw new InvalidOperationException("The background page exceeded 9to1's 8 MB extraction limit while streaming.");
             await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
         }
 

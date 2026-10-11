@@ -227,9 +227,9 @@ public sealed class LocalConversationShareService(
         var encode = HtmlEncoder.Default;
         var builder = new StringBuilder(16_384);
         builder.Append("<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">")
-            .Append("<title>").Append(encode.Encode(document.Conversation.Title)).Append(" · Haven</title>")
+            .Append("<title>").Append(encode.Encode(document.Conversation.Title)).Append(" · 9to1</title>")
             .Append("<style>body{margin:0;background:#11151b;color:#f4f6f8;font:16px/1.55 system-ui,sans-serif}main{max-width:900px;margin:auto;padding:32px 20px 80px}.notice{color:#aab4c0;font-size:13px}.message{margin:24px 0;padding:18px;border:1px solid #2e3742;border-radius:16px;background:#171d25}.role{font-weight:700;color:#7dcfff}.content{white-space:pre-wrap;overflow-wrap:anywhere}.meta{color:#8995a3;font-size:12px}a{color:#8ed0ff}</style>")
-            .Append("</head><body><main><h1>").Append(encode.Encode(document.Conversation.Title)).Append("</h1><p class=\"notice\">Read-only Haven LAN share · expires ")
+            .Append("</head><body><main><h1>").Append(encode.Encode(document.Conversation.Title)).Append("</h1><p class=\"notice\">Read-only 9to1 LAN share · expires ")
             .Append(encode.Encode(expiresAt.LocalDateTime.ToString("g"))).Append("</p>");
         foreach (var message in document.Messages.OrderBy(item => item.CreatedAt))
         {

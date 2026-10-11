@@ -1,6 +1,6 @@
-# Haven App Editing Guide
+# 9to1 App Editing Guide
 
-This guide maps the current Avalonia application as of 14 July 2026. It is intended for editing Haven itself, not for using Haven as an end user.
+This guide maps the current Avalonia application as of 14 July 2026. It is intended for editing 9to1 itself, not for using 9to1 as an end user.
 
 ## Start here
 
@@ -49,9 +49,9 @@ dotnet build .\src\Haven.Desktop\Haven.Desktop.csproj -c Debug `
 - Store chats and catalog data through repositories; do not write directly to `haven.db` from the UI.
 - Keep tool availability and tool execution aligned through `ToolAvailabilityPlanner`.
 - Do not advertise a tool in the picker if its runtime, mode, permissions, platform, or project root cannot support it.
-- Do not claim hidden chain-of-thought. Haven exposes streamed replies, explicit live activity, command output, timings, and edit counts.
+- Do not claim hidden chain-of-thought. 9to1 exposes streamed replies, explicit live activity, command output, timings, and edit counts.
 - Add a SQLite migration instead of rewriting an old migration that users may already have applied.
-- Native browser actions must stay bound to the attached Haven WebView and its dedicated profile.
+- Native browser actions must stay bound to the attached 9to1 WebView and its dedicated profile.
 - Keep deliverables and temporary build outputs separate; remove temporary verification artifacts after use.
 
 ## Guide contents

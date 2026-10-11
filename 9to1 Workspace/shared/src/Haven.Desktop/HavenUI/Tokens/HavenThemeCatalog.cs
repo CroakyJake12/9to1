@@ -37,7 +37,7 @@ internal static class HavenThemeCatalog
     [
         new(
             HavenUiTheme.Glow, "Glow",
-            "The default Haven look: tidal gradients, soft glow accents.",
+            "The default 9to1 look: tidal gradients, soft glow accents.",
             1.0, 1.0, 1.0, 1.0, 1.0, 1.0),
         new(
             HavenUiTheme.Bubble, "Bubble",

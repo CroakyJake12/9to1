@@ -286,7 +286,8 @@ internal sealed partial class PresentSlideCanvas
         if (_slide is null) return;
         var rect = TitleRect(slideRect);
         var text = _textEditTarget == PresentTextEditTarget.SlideTitle ? _editingText : _slide.Title;
-        DrawEditableText(context, rect, text, "Segoe UI", Math.Clamp(rect.Height * .34, 18, 34), 700, new HavenTokenBrush("TextPrimary"), opacity, _textEditTarget == PresentTextEditTarget.SlideTitle);
+        DrawEditableText(context, rect, text, _document?.Theme.HeadingFontFamily ?? "Segoe UI", Math.Clamp(rect.Height * .34, 18, 34), 700,
+            Brush(_document?.Theme.Colors.Foreground, "#1F1F1F"), opacity, _textEditTarget == PresentTextEditTarget.SlideTitle);
     }
 
     private void DrawEditableElementText(HavenDrawingContext context, PresentElement element, HavenRect rect, double opacity)
@@ -294,7 +295,9 @@ internal sealed partial class PresentSlideCanvas
         var editing = _textEditTarget == PresentTextEditTarget.Element && _textEditElementId == element.Id;
         var text = editing ? _editingText : element.Text;
         if (string.IsNullOrWhiteSpace(text) && !editing) return;
-        DrawEditableText(context, rect, text, string.IsNullOrWhiteSpace(element.TextStyle.FontFamily) ? "Segoe UI" : element.TextStyle.FontFamily, Math.Max(8, element.TextStyle.FontSizePoints * Math.Max(.45, rect.Height / 180)), element.TextStyle.Bold ? 700 : 400, Brush(element.TextStyle.Color, "TextPrimary"), opacity * element.Opacity, editing, element.TextStyle.Italic);
+        DrawEditableText(context, rect, text, string.IsNullOrWhiteSpace(element.TextStyle.FontFamily) ? _document?.Theme.BodyFontFamily ?? "Segoe UI" : element.TextStyle.FontFamily,
+            Math.Max(8, element.TextStyle.FontSizePoints * Math.Max(.45, rect.Height / 180)), element.TextStyle.Bold ? 700 : 400,
+            Brush(element.TextStyle.Color, _document?.Theme.Colors.Foreground ?? "#1F1F1F"), opacity * element.Opacity, editing, element.TextStyle.Italic);
     }
 
     private void DrawEditableText(HavenDrawingContext context, HavenRect rect, string text, string fontFamily, double fontSize, int weight, HavenBrush brush, double opacity, bool editing, bool italic = false)

@@ -42,7 +42,7 @@ public sealed partial class TerminalPage
         root.SetValue(HavenProperties.Height, HavenLength.Percent(100));
         root.SetValue(HavenProperties.Gap, HavenLength.Px(10));
         root.SetValue(HavenProperties.Padding, HavenThickness.Parse("14px 20px 14px 20px"));
-        root.Accessibility.AccessibleName = "Haven Terminal workspace";
+        root.Accessibility.AccessibleName = "9to1 Terminal workspace";
 
         var titleRow = new HavenContainer { Name = "Terminal.TitleRow", Layout = HavenLayout.Horizontal };
         titleRow.SetValue(HavenProperties.Width, HavenLength.Percent(100));

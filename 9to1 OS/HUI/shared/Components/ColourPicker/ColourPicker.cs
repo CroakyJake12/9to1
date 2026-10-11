@@ -14,7 +14,7 @@ public readonly record struct HavenColour(byte R, byte G, byte B)
     public static HavenColour FromHex(string hex)
     {
         if (!TryParse(hex, out var colour))
-            throw new FormatException($"'{hex}' is not a Haven colour. Use #RRGGBB.");
+            throw new FormatException($"'{hex}' is not a 9to1 colour. Use #RRGGBB.");
         return colour;
     }
 

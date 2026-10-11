@@ -27,7 +27,7 @@ public sealed partial class MainView
     private Control CreateDocumentWorkspace(string key, Action<Control>? captureOriginalOwner = null)
     {
         var services = global::Haven.Desktop.App.Services
-            ?? throw new InvalidOperationException("Haven services are unavailable.");
+            ?? throw new InvalidOperationException("9to1 services are unavailable.");
         return key.ToLowerInvariant() switch
         {
             "write" => new WritePage(_bus, services.GetRequiredService<INotesRepository>(),

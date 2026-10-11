@@ -27,7 +27,7 @@ internal sealed class ElementPickerWindow : Window
     public ElementPickerWindow(Window inspectedWindow)
     {
         _inspectedWindow = inspectedWindow;
-        Title = "Haven element picker";
+        Title = "9to1 element picker";
         WindowDecorations = WindowDecorations.None;
         ShowInTaskbar = false;
         CanResize = false;

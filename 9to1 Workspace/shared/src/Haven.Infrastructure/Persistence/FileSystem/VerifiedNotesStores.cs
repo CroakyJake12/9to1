@@ -62,7 +62,7 @@ public sealed class VerifiedNotesRepository(
                     return document;
                 }
                 await transaction.WriteDiagnosticAsync(diagnostics, ReliabilitySeverity.Critical, "notes", "integrity-mismatch",
-                    "A Haven Notes document did not match its durable integrity manifest and was not returned as current data.",
+                    "A 9to1 Notes document did not match its durable integrity manifest and was not returned as current data.",
                     new Dictionary<string, string> { ["documentId"] = documentId.ToString("D"),
                         ["expected"] = expected?.Sha256 ?? "missing", ["actual"] = observed.Sha256 },
                     cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -80,7 +80,7 @@ public sealed class VerifiedNotesRepository(
                 error is IOException or UnauthorizedAccessException or JsonException or InvalidDataException)
             {
                 await transaction.WriteDiagnosticAsync(diagnostics, ReliabilitySeverity.Warning, "notes", "integrity-check-failed",
-                    "Haven Notes could not verify the document integrity sidecar and entered recovery.",
+                    "9to1 Notes could not verify the document integrity sidecar and entered recovery.",
                     new Dictionary<string, string> { ["documentId"] = documentId.ToString("D"), ["exceptionType"] = error.GetType().Name },
                     cancellationToken: cancellationToken).ConfigureAwait(false);
                 return await transaction.RecoverAsync(documentId, cancellationToken).ConfigureAwait(false);

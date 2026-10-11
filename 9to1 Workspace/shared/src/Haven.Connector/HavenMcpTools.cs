@@ -12,7 +12,7 @@ public sealed class HavenMcpTools
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { WriteIndented = true };
 
     [McpServerTool(Name = "haven_preflight")]
-    [Description("Inspect the Haven connector, its allowlisted workspaces, actual Git branches, dirty state, and current commit before source work.")]
+    [Description("Inspect the 9to1 connector, its allowlisted workspaces, actual Git branches, dirty state, and current commit before source work.")]
     public static async Task<string> Preflight(
         ConnectorWorkspaceRegistry registry,
         CancellationToken cancellationToken = default) =>
@@ -28,7 +28,7 @@ public sealed class HavenMcpTools
         }, Json);
 
     [McpServerTool(Name = "haven_list_files")]
-    [Description("List files and folders inside one configured Haven connector workspace. Paths are workspace-relative and cannot escape the configured root.")]
+    [Description("List files and folders inside one configured 9to1 connector workspace. Paths are workspace-relative and cannot escape the configured root.")]
     public static Task<string> ListFiles(
         ConnectorWorkspaceRegistry registry,
         WorkspaceToolRuntime runtime,
@@ -40,7 +40,7 @@ public sealed class HavenMcpTools
             new() { ["path"] = path, ["max_depth"] = Math.Clamp(maxDepth, 1, 10) }, cancellationToken);
 
     [McpServerTool(Name = "haven_read_file")]
-    [Description("Read a UTF-8 text file from one configured Haven connector workspace.")]
+    [Description("Read a UTF-8 text file from one configured 9to1 connector workspace.")]
     public static Task<string> ReadFile(
         ConnectorWorkspaceRegistry registry,
         WorkspaceToolRuntime runtime,
@@ -51,7 +51,7 @@ public sealed class HavenMcpTools
             new() { ["path"] = path }, cancellationToken);
 
     [McpServerTool(Name = "haven_search_files")]
-    [Description("Search text files inside one configured Haven connector workspace for a literal query.")]
+    [Description("Search text files inside one configured 9to1 connector workspace for a literal query.")]
     public static Task<string> SearchFiles(
         ConnectorWorkspaceRegistry registry,
         WorkspaceToolRuntime runtime,
@@ -64,7 +64,7 @@ public sealed class HavenMcpTools
             new() { ["query"] = query, ["path"] = path, ["max_results"] = Math.Clamp(maxResults, 1, 200) }, cancellationToken);
 
     [McpServerTool(Name = "haven_write_file")]
-    [Description("Create or atomically replace a UTF-8 text file inside one configured Haven connector workspace.")]
+    [Description("Create or atomically replace a UTF-8 text file inside one configured 9to1 connector workspace.")]
     public static Task<string> WriteFile(
         ConnectorWorkspaceRegistry registry,
         WorkspaceToolRuntime runtime,
@@ -76,7 +76,7 @@ public sealed class HavenMcpTools
             new() { ["path"] = path, ["content"] = content }, cancellationToken);
 
     [McpServerTool(Name = "haven_replace_in_file")]
-    [Description("Replace exact text in a file inside one configured Haven connector workspace. Prefer this over whole-file replacement for focused edits.")]
+    [Description("Replace exact text in a file inside one configured 9to1 connector workspace. Prefer this over whole-file replacement for focused edits.")]
     public static Task<string> ReplaceInFile(
         ConnectorWorkspaceRegistry registry,
         WorkspaceToolRuntime runtime,
@@ -96,7 +96,7 @@ public sealed class HavenMcpTools
             }, cancellationToken);
 
     [McpServerTool(Name = "haven_preview_change_set")]
-    [Description("Preflight a transactional multi-file Haven workspace change set without writing files.")]
+    [Description("Preflight a transactional multi-file 9to1 workspace change set without writing files.")]
     public static Task<string> PreviewChangeSet(
         ConnectorWorkspaceRegistry registry,
         WorkspaceToolRuntime runtime,
@@ -107,7 +107,7 @@ public sealed class HavenMcpTools
             new() { ["changes_json"] = changesJson }, cancellationToken);
 
     [McpServerTool(Name = "haven_apply_change_set")]
-    [Description("Apply a transactional multi-file Haven workspace change set. Haven rolls back earlier writes if a later write fails.")]
+    [Description("Apply a transactional multi-file 9to1 workspace change set. 9to1 rolls back earlier writes if a later write fails.")]
     public static Task<string> ApplyChangeSet(
         ConnectorWorkspaceRegistry registry,
         WorkspaceToolRuntime runtime,
@@ -118,7 +118,7 @@ public sealed class HavenMcpTools
             new() { ["changes_json"] = changesJson }, cancellationToken);
 
     [McpServerTool(Name = "haven_run_tests")]
-    [Description("Run tests for a configured Haven connector workspace. Optionally target one workspace-relative .sln, .slnx, or .csproj. The connector constructs dotnet test itself and never accepts an arbitrary shell command.")]
+    [Description("Run tests for a configured 9to1 connector workspace. Optionally target one workspace-relative .sln, .slnx, or .csproj. The connector constructs dotnet test itself and never accepts an arbitrary shell command.")]
     public static async Task<string> RunTests(
         ConnectorWorkspaceRegistry registry,
         WorkspaceToolRuntime runtime,
@@ -150,7 +150,7 @@ public sealed class HavenMcpTools
     }
 
     [McpServerTool(Name = "haven_build")]
-    [Description("Build a configured Haven connector workspace with dotnet build. Optionally target one workspace-relative .sln, .slnx, or .csproj. Configuration must be Debug or Release; no arbitrary shell command is accepted.")]
+    [Description("Build a configured 9to1 connector workspace with dotnet build. Optionally target one workspace-relative .sln, .slnx, or .csproj. Configuration must be Debug or Release; no arbitrary shell command is accepted.")]
     public static async Task<string> Build(
         ConnectorWorkspaceRegistry registry,
         IWorkspaceToolService tools,
@@ -192,7 +192,7 @@ public sealed class HavenMcpTools
     }
 
     [McpServerTool(Name = "haven_git_status")]
-    [Description("Read Git branch and working-tree status for one configured Haven connector workspace.")]
+    [Description("Read Git branch and working-tree status for one configured 9to1 connector workspace.")]
     public static async Task<string> GitStatus(
         ConnectorWorkspaceRegistry registry,
         IWorkspaceToolService tools,
@@ -207,7 +207,7 @@ public sealed class HavenMcpTools
     }
 
     [McpServerTool(Name = "haven_git_diff")]
-    [Description("Read the current unstaged or staged Git diff for one configured Haven connector workspace.")]
+    [Description("Read the current unstaged or staged Git diff for one configured 9to1 connector workspace.")]
     public static async Task<string> GitDiff(
         ConnectorWorkspaceRegistry registry,
         IWorkspaceToolService tools,

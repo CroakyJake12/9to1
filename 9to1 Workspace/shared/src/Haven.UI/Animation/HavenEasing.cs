@@ -22,7 +22,7 @@ public static partial class HavenEasing
             "stepstart" => t <= 0 ? 0 : 1,
             "stepend" => t < 1 ? 0 : 1,
             "cubicbezier" => CubicBezier(t, easing.Parameters[0], easing.Parameters[1], easing.Parameters[2], easing.Parameters[3]),
-            _ => throw new InvalidOperationException($"Unsupported Haven easing '{value}'.")
+            _ => throw new InvalidOperationException($"Unsupported 9to1 easing '{value}'.")
         };
     }
 
@@ -34,7 +34,7 @@ public static partial class HavenEasing
             return new ParsedEasing(normalized, []);
 
         var match = CubicBezierRegex().Match(normalized);
-        if (!match.Success) throw new FormatException($"Unknown Haven easing '{value}'.");
+        if (!match.Success) throw new FormatException($"Unknown 9to1 easing '{value}'.");
         var parameters = match.Groups[1].Value.Split(',', StringSplitOptions.TrimEntries)
             .Select(part => double.Parse(part, NumberStyles.Float, CultureInfo.InvariantCulture))
             .ToArray();

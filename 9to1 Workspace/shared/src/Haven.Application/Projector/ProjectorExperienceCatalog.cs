@@ -57,7 +57,7 @@ public sealed class BuiltInProjectorExperienceProvider : IProjectorExperiencePro
         new ProjectorExperience(
             "desktop",
             "Desktop",
-            "A focused workspace with apps, Haven, status and task switching.",
+            "A focused workspace with apps, 9to1, status and task switching.",
             "studio",
             ArtworkKey: null,
             ProjectorExperienceSource.BuiltIn,
@@ -113,7 +113,7 @@ public sealed class GeneratedProjectorExperienceProvider(IGenUiAppRepository rep
             experiences.Add(new ProjectorExperience(
                 ExperienceId(instanceId),
                 title,
-                "A saved Haven generated experience, rendered through the current GenUI runtime.",
+                "A saved 9to1 generated experience, rendered through the current GenUI runtime.",
                 "apps",
                 ArtworkKey: null,
                 ProjectorExperienceSource.GeneratedUi,

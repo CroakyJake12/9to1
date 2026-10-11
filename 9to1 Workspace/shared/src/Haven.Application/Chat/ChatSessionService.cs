@@ -2223,7 +2223,7 @@ public sealed partial class ChatSessionService(
         try
         {
             var allowed = definitions.Select(definition => definition.Name).ToHashSet(StringComparer.Ordinal);
-            var system = "You are Haven's compatibility tool router. Choose exactly one appropriate tool for the user's action request. " +
+            var system = "You are 9to1's compatibility tool router. Choose exactly one appropriate tool for the user's action request. " +
                          "Return only one JSON object in the form {\"name\":\"tool_name\",\"arguments\":{}}. " +
                          "Use an empty name when no tool is appropriate. Available tools: " + JsonSerializer.Serialize(definitions);
             var response = await ollama.CompleteAsync(new OllamaChatRequest(
@@ -2280,10 +2280,10 @@ public sealed partial class ChatSessionService(
     {
         var mode = conversation.Mode switch
         {
-            HavenMode.Chat => "You are Haven Chat, a local private assistant.",
-            HavenMode.Study => "You are Haven Study. Explain clearly, check factual teaching claims with enabled research tools, and adapt to the learner.",
-            HavenMode.Tasks => "You are Haven Tasks. Complete tasks safely, request approval for risky or irreversible actions, and keep an audit trail.",
-            HavenMode.Studio => "You are Haven Studio. Inspect, edit, test, observe failures, repair, explain, and validate local software projects before finishing.",
+            HavenMode.Chat => "You are 9to1 Chat, a local private assistant.",
+            HavenMode.Study => "You are 9to1 Study. Explain clearly, check factual teaching claims with enabled research tools, and adapt to the learner.",
+            HavenMode.Tasks => "You are 9to1 Tasks. Complete tasks safely, request approval for risky or irreversible actions, and keep an audit trail.",
+            HavenMode.Studio => "You are 9to1 Studio. Inspect, edit, test, observe failures, repair, explain, and validate local software projects before finishing.",
             _ => "You are Haven."
         };
         var builder = new StringBuilder(mode);
@@ -2310,7 +2310,7 @@ public sealed partial class ChatSessionService(
             builder.Append("\nPrompt >").Append(prompt.Name).Append(":\n").Append(prompt.Instructions.Trim());
         if (!string.IsNullOrWhiteSpace(workspaceRoot))
         {
-            builder.Append("\nYou are connected to real Haven workspace tools rooted at: ").Append(workspaceRoot)
+            builder.Append("\nYou are connected to real 9to1 workspace tools rooted at: ").Append(workspaceRoot)
                 .Append("\nUse the tools instead of pretending to inspect or modify files. Inspect first, make the minimum necessary changes, examine each result, run relevant validation, and continue until complete or genuinely blocked. Never claim an action succeeded unless a tool result confirms it. Do not access paths outside the selected workspace.");
             if (conversation.Mode is HavenMode.Tasks or HavenMode.Studio)
                 builder.Append("\nBefore a material edit, give a concise impact estimate (scope, risk, affected surfaces). During edits, keep steps and change counts explicit. After every edit, provide a short changelog. Explain errors in plain English and point to their likely cause. Gather only relevant logs and recent actions. Critical correctness or security faults may be fixed immediately; ask before unrelated cleanup, style-only rewrites, dependency modernisation, or scope expansion. Keep deliverables easy to find, with a desktop executable at the requested top level when packaging permits it.");

@@ -93,7 +93,7 @@
           <hui:HavenProgressBar Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Height="5" MaxWidth="320" HorizontalAlignment="Left" Margin="0,8,0,0" />
           <TextBlock Text="{Binding ProgressLabel}" Classes="muted2" FontSize="10" Margin="0,4,0,0" />
         </StackPanel>
-        <hui:HavenButton Grid.Column="1" Content="Haven AI" Command="{Binding ShowAiPanelCommand}" />
+        <hui:HavenButton Grid.Column="1" Content="9to1" Command="{Binding ShowAiPanelCommand}" />
         <hui:HavenButton Grid.Column="2" Content="Calendars" Command="{Binding ShowCalendarPanelCommand}" />
         <Grid x:Name="ScheduledTaskHost" Grid.Column="3" VerticalAlignment="Center" />
         <hui:HavenButton Grid.Column="4" Classes="icon" Command="{Binding PreviousPeriodCommand}" ToolTip.Tip="Previous period">
@@ -379,7 +379,7 @@
               </hui:HavenButton>
             </Grid>
           <TextBlock Text="AI assistance" FontSize="20" FontWeight="SemiBold" Margin="0,6,0,4" />
-          <TextBlock Text="Ask Haven to break down a goal, organise a week, or resolve conflicts. You approve every edit." Classes="muted" TextWrapping="Wrap" />
+          <TextBlock Text="Ask 9to1 to break down a goal, organise a week, or resolve conflicts. You approve every edit." Classes="muted" TextWrapping="Wrap" />
           <hui:HavenTextInput Text="{Binding AiPrompt}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="104" Margin="0,14,0,8"
                    PlaceholderText="Plan my college deadlines around work…" />
           <hui:HavenButton Content="Draft changes" Classes="primary" Command="{Binding AskAiCommand}" HorizontalAlignment="Stretch" />
@@ -440,7 +440,7 @@
 
           <StackPanel IsVisible="{Binding HasConflicts}" Margin="0,16,0,0">
             <TextBlock Text="SYNC CONFLICTS" Classes="eyebrow" Margin="0,0,0,8" />
-            <TextBlock Text="Both Haven and the connected calendar changed these events. Choose which version to keep; nothing is overwritten automatically."
+            <TextBlock Text="Both 9to1 and the connected calendar changed these events. Choose which version to keep; nothing is overwritten automatically."
                        Classes="muted" TextWrapping="Wrap" Margin="0,0,0,10" />
             <ItemsControl ItemsSource="{Binding Conflicts}">
               <ItemsControl.ItemTemplate>
@@ -452,7 +452,7 @@
                       <TextBlock Text="{Binding HavenVersion}" TextWrapping="Wrap" FontSize="11" />
                       <TextBlock Text="{Binding ProviderVersion}" TextWrapping="Wrap" FontSize="11" Margin="0,3,0,10" />
                       <Grid ColumnDefinitions="*,*,*" ColumnSpacing="5">
-                        <hui:HavenButton Content="Keep Haven"
+                        <hui:HavenButton Content="Keep 9to1"
                                 Command="{Binding $parent[UserControl].DataContext.KeepHavenConflictCommand}"
                                 CommandParameter="{Binding}" />
                         <hui:HavenButton Grid.Column="1" Content="Keep provider"

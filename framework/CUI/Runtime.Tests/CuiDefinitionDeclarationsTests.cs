@@ -7,9 +7,8 @@ namespace CakeOS.Cui.Runtime.Tests;
 
 /// <summary>
 /// FW-012 regression: a definition declaration is library metadata. It must never create a
-/// visible native control and must never replace the actual root. Alias/Prefab instantiation
-/// of a declaration is a separate remaining requirement, so these tests assert only that the
-/// declaration produces no control.
+/// visible native control or replace the actual root. Instances preserve authored
+/// identity, explicit inputs, content precedence and independent or shared state scopes.
 /// </summary>
 public sealed class CuiDefinitionDeclarationsTests
 {
@@ -19,8 +18,8 @@ public sealed class CuiDefinitionDeclarationsTests
         var result = CuiHeadlessRenderer.Render(
             """
             <Cui id="definitions" version="1">
-              <TextBlock (Definition) id="Paragraph" text="library" />
-              <Page id="actual"><TextBlock text="visible" /></Page>
+              <Text (Definition) id="Paragraph" text="library" />
+              <Page id="actual"><Text text="visible" /></Page>
             </Cui>
             """,
             "definition-root.cui");
@@ -30,7 +29,7 @@ public sealed class CuiDefinitionDeclarationsTests
         Assert.Equal("actual", page.Name);
         var visible = Assert.IsType<TextBlock>(Assert.Single(page.Children));
         Assert.Equal("visible", visible.Text);
-        Assert.Equal(2, result.ControlCount); // Page(Panel) plus TextBlock; the declaration has no control
+        Assert.Equal(2, result.ControlCount); // Page and Text; declaration adds no control
     }
 
     [Fact]
@@ -40,8 +39,8 @@ public sealed class CuiDefinitionDeclarationsTests
             """
             <Cui id="nested" version="1">
               <Page id="actual">
-                <TextBlock (Definition) id="Paragraph" text="library" />
-                <TextBlock text="visible" />
+                <Text (Definition) id="Paragraph" text="library" />
+                <Text text="visible" />
               </Page>
             </Cui>
             """,
@@ -62,7 +61,7 @@ public sealed class CuiDefinitionDeclarationsTests
         var (root, diagnostics) = loader.LoadMarkup(
             """
             <Cui id="library-only" version="1">
-              <TextBlock (Definition) id="Paragraph" text="library" />
+              <Text (Definition) id="Paragraph" text="library" />
             </Cui>
             """,
             "definition-only.cui");
@@ -78,10 +77,10 @@ public sealed class CuiDefinitionDeclarationsTests
             """
             <Cui id="theme" version="1">
               <Page id="actual">
-                <DefaultTheme value="Default">
-                  <TextBlock (Definition) id="Paragraph" text="library" />
-                  <TextBlock text="visible" />
-                </DefaultTheme>
+                <Theme Name="Professional">
+                  <Text (Definition) id="Paragraph" text="library" />
+                  <Text text="visible" />
+                </Theme>
               </Page>
             </Cui>
             """,
@@ -100,7 +99,7 @@ public sealed class CuiDefinitionDeclarationsTests
         var result = CuiHeadlessRenderer.Render(
             """
             <Cui id="conditional" version="1">
-              <Page id="actual"><If Condition="true"><TextBlock (Definition) id="Paragraph" text="library" /><TextBlock text="visible" /></If></Page>
+              <Page id="actual"><If Condition="true"><Text (Definition) id="Paragraph" text="library" /><Text text="visible" /></If></Page>
             </Cui>
             """,
             "definition-conditional.cui");
@@ -111,7 +110,7 @@ public sealed class CuiDefinitionDeclarationsTests
         var branch = Assert.IsType<Panel>(host.Content);
         var visible = Assert.IsType<TextBlock>(Assert.Single(branch.Children));
         Assert.Equal("visible", visible.Text);
-        Assert.Equal(4, result.ControlCount); // Page plus If host plus branch plus TextBlock
+        Assert.Equal(4, result.ControlCount); // Page, If host, branch and Text
     }
 
     [Fact]
@@ -128,7 +127,7 @@ public sealed class CuiDefinitionDeclarationsTests
             var (root, diagnostics) = loader.LoadMarkup(
                 """
                 <Cui id="repeat" version="1">
-                  <Page id="actual"><Repeat Source="{Binding Rows}" As="row" Key="{Binding row.Id}"><TextBlock (Definition) id="Paragraph" text="library" /><TextBlock text="visible" /></Repeat></Page>
+                  <Page id="actual"><Repeat Source="{Binding Rows}" As="row" Key="{Binding row.Id}"><Text (Definition) id="Paragraph" text="library" /><Text text="visible" /></Repeat></Page>
                 </Cui>
                 """);
 
@@ -152,7 +151,7 @@ public sealed class CuiDefinitionDeclarationsTests
             """
             <Cui id="instance" version="1">
               <Page id="actual">
-                <TextBlock (Definition) id="Paragraph" text="library" />
+                <Text (Definition) id="Paragraph" text="library" />
                 <Paragraph text="rendered" />
               </Page>
             </Cui>
@@ -173,17 +172,17 @@ public sealed class CuiDefinitionDeclarationsTests
             """
             <Cui id="instance-content" version="1">
               <Page id="actual">
-                <StackPanel (Definition) id="Card"><TextBlock text="default" /></StackPanel>
-                <Card id="card"><TextBlock text="supplied" /></Card>
+                <Container Type="Vertical Stack" (Definition) id="Card"><Text text="default" /></Container>
+                <Card id="card"><Text text="supplied" /></Card>
               </Page>
             </Cui>
             """);
 
         Assert.Empty(diagnostics);
         var page = Assert.IsType<Panel>(root);
-        var card = Assert.IsType<StackPanel>(Assert.Single(page.Children));
+        var card = Assert.IsType<CuiContainerControl>(Assert.Single(page.Children));
         Assert.Equal("card", card.Name);
-        var supplied = Assert.IsType<TextBlock>(Assert.Single(card.Children));
+        var supplied = Assert.IsType<TextBlock>(Assert.Single(card.AuthoredChildren));
         Assert.NotNull(supplied.Text);
         Assert.Equal("supplied", supplied.Text);
     }
@@ -196,7 +195,7 @@ public sealed class CuiDefinitionDeclarationsTests
             """
             <Cui id="instance-scopes" version="1">
               <Page id="actual">
-                <Panel (Definition) id="Card"><TextBlock id="inner" /></Panel>
+                <Container Type="Overlay" (Definition) id="Card"><Text id="inner" /></Container>
                 <Card id="first" />
                 <Card id="second" />
               </Page>
@@ -205,12 +204,12 @@ public sealed class CuiDefinitionDeclarationsTests
 
         Assert.Empty(diagnostics);
         var page = Assert.IsType<Panel>(root);
-        var first = Assert.IsType<Panel>(page.Children[0]);
-        var second = Assert.IsType<Panel>(page.Children[1]);
+        var first = Assert.IsType<CuiContainerControl>(page.Children[0]);
+        var second = Assert.IsType<CuiContainerControl>(page.Children[1]);
         Assert.Equal("id:first", CuiRuntimeIdentity.GetStableId(first));
         Assert.Equal("id:second", CuiRuntimeIdentity.GetStableId(second));
-        Assert.Equal("id:first/id:inner", CuiRuntimeIdentity.GetStableId(Assert.IsType<TextBlock>(Assert.Single(first.Children))));
-        Assert.Equal("id:second/id:inner", CuiRuntimeIdentity.GetStableId(Assert.IsType<TextBlock>(Assert.Single(second.Children))));
+        Assert.Equal("id:first/id:inner", CuiRuntimeIdentity.GetStableId(Assert.IsType<TextBlock>(Assert.Single(first.AuthoredChildren))));
+        Assert.Equal("id:second/id:inner", CuiRuntimeIdentity.GetStableId(Assert.IsType<TextBlock>(Assert.Single(second.AuthoredChildren))));
         Assert.NotEqual(CuiRuntimeIdentity.GetStableId(first), CuiRuntimeIdentity.GetStableId(second));
     }
 
@@ -222,7 +221,7 @@ public sealed class CuiDefinitionDeclarationsTests
             """
             <Cui id="static-prefab" version="1">
               <Page id="actual">
-                <Prefab (Definition) id="AIBar" Type="static"><TextBlock id="inner" text="bar" /></Prefab>
+                <Prefab (Definition) id="AIBar" Type="static"><Text id="inner" text="bar" /></Prefab>
                 <AIBar id="first" />
                 <AIBar id="second" />
               </Page>
@@ -231,10 +230,10 @@ public sealed class CuiDefinitionDeclarationsTests
 
         Assert.Empty(diagnostics);
         var page = Assert.IsType<Panel>(root);
-        var first = Assert.IsType<Panel>(page.Children[0]);
-        var second = Assert.IsType<Panel>(page.Children[1]);
-        var firstInner = Assert.IsType<TextBlock>(Assert.Single(first.Children));
-        var secondInner = Assert.IsType<TextBlock>(Assert.Single(second.Children));
+        var first = Assert.IsType<CuiContainerControl>(page.Children[0]);
+        var second = Assert.IsType<CuiContainerControl>(page.Children[1]);
+        var firstInner = Assert.IsType<TextBlock>(Assert.Single(first.AuthoredChildren));
+        var secondInner = Assert.IsType<TextBlock>(Assert.Single(second.AuthoredChildren));
         Assert.Equal("definition:AIBar/id:inner", CuiRuntimeIdentity.GetStableId(firstInner));
         Assert.Equal(CuiRuntimeIdentity.GetStableId(firstInner), CuiRuntimeIdentity.GetStableId(secondInner));
         Assert.NotEqual(CuiRuntimeIdentity.GetStableId(first), CuiRuntimeIdentity.GetStableId(second));
@@ -248,8 +247,8 @@ public sealed class CuiDefinitionDeclarationsTests
             """
             <Cui id="cycle" version="1">
               <Page id="actual">
-                <TextBlock (Definition) id="A"><B /></TextBlock>
-                <TextBlock (Definition) id="B"><A /></TextBlock>
+                <Text (Definition) id="A"><B /></Text>
+                <Text (Definition) id="B"><A /></Text>
                 <A />
               </Page>
             </Cui>
@@ -268,7 +267,7 @@ public sealed class CuiDefinitionDeclarationsTests
         var (root, diagnostics) = loader.LoadMarkup(
             """
             <Cui id="template" version="1">
-              <Templates><Template name="Card" parameters="Title"><TextBlock text="{Binding Title}" /></Template></Templates>
+              <Templates><Template name="Card" parameters="Title"><Text text="{Binding Title}" /></Template></Templates>
               <Page id="actual"><Card Title="supplied" /></Page>
             </Cui>
             """);
@@ -289,7 +288,7 @@ public sealed class CuiDefinitionDeclarationsTests
             """
             <Cui id="def-conditional" version="1">
               <Page id="actual">
-                <Panel (Definition) id="Card"><If id="branch" Condition="true"><TextBlock id="yes" text="yes" /></If></Panel>
+                <Container Type="Overlay" (Definition) id="Card"><If id="branch" Condition="true"><Text id="yes" text="yes" /></If></Container>
                 <Card id="first" />
               </Page>
             </Cui>
@@ -297,8 +296,8 @@ public sealed class CuiDefinitionDeclarationsTests
 
         Assert.Empty(diagnostics);
         var page = Assert.IsType<Panel>(root);
-        var instance = Assert.IsType<Panel>(Assert.Single(page.Children));
-        var host = Assert.IsType<ContentControl>(Assert.Single(instance.Children));
+        var instance = Assert.IsType<CuiContainerControl>(Assert.Single(page.Children));
+        var host = Assert.IsType<ContentControl>(Assert.Single(instance.AuthoredChildren));
         var branch = Assert.IsType<Panel>(host.Content);
         var visible = Assert.IsType<TextBlock>(Assert.Single(branch.Children));
         Assert.NotNull(visible.Text);
@@ -323,7 +322,7 @@ public sealed class CuiDefinitionDeclarationsTests
                 """
                 <Cui id="def-repeat" version="1">
                   <Page id="actual">
-                    <Panel (Definition) id="Card"><Repeat id="rows" Source="{Binding Rows}" As="row" Key="{Binding row.Name}"><TextBlock id="cell" text="{Binding row.Name}" /></Repeat></Panel>
+                    <Container Type="Overlay" (Definition) id="Card"><Repeat id="rows" Source="{Binding Rows}" As="row" Key="{Binding row.Name}"><Text id="cell" text="{Binding row.Name}" /></Repeat></Container>
                     <Card id="first" />
                     <Card id="second" />
                   </Page>
@@ -332,10 +331,10 @@ public sealed class CuiDefinitionDeclarationsTests
 
             Assert.Empty(diagnostics);
             var page = Assert.IsType<Panel>(root);
-            var first = Assert.IsType<Panel>(page.Children[0]);
-            var second = Assert.IsType<Panel>(page.Children[1]);
-            var firstHost = Assert.IsType<StackPanel>(Assert.Single(first.Children));
-            var secondHost = Assert.IsType<StackPanel>(Assert.Single(second.Children));
+            var first = Assert.IsType<CuiContainerControl>(page.Children[0]);
+            var second = Assert.IsType<CuiContainerControl>(page.Children[1]);
+            var firstHost = Assert.IsType<StackPanel>(Assert.Single(first.AuthoredChildren));
+            var secondHost = Assert.IsType<StackPanel>(Assert.Single(second.AuthoredChildren));
             var firstItem = Assert.IsType<Panel>(Assert.Single(firstHost.Children));
             var secondItem = Assert.IsType<Panel>(Assert.Single(secondHost.Children));
             var firstCell = Assert.IsType<TextBlock>(Assert.Single(firstItem.Children));

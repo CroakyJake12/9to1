@@ -8,6 +8,7 @@ import * as writePackages from './write-packages.js';
 import { createPresentModule } from './present-indexeddb.js';
 import { createPrivateContextLifecycle } from './browser-private-context.js';
 import { createTaskExecutionHost } from './task-execution-host.js';
+import * as homeLocalPreferences from './home-local-preferences.js';
 
 const platform = createBrowserPlatform(window, document);
 let accessibility;
@@ -98,6 +99,7 @@ try {
         const { dotnet } = await import('./_framework/dotnet.js');
         const runtime = await dotnet.create();
         runtime.setModuleImports('nineToOneBrowser', { ...platform, releasePrivateAccountContext });
+        runtime.setModuleImports('nineToOneHomeLocal', homeLocalPreferences);
         runtime.setModuleImports('nineToOneWave', waveBrowser);
         runtime.setModuleImports('nineToOnePicture', pictureBrowser);
         runtime.setModuleImports('nineToOneAccounts', accounts);

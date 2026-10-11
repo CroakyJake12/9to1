@@ -28,7 +28,7 @@ public sealed class UnavailableSpeechInputService : ISpeechInputService
     /// Gets or updates unavailable reason, the bindable or domain state represented by this property.
     /// </summary>
     public string UnavailableReason =>
-        "Local microphone transcription is not installed. Use typed transcript mode or install the Haven speech runtime.";
+        "Local microphone transcription is not installed. Use typed transcript mode or install the 9to1 speech runtime.";
     /// <summary>
     /// Gets or updates devices, the bindable or domain state represented by this property.
     /// </summary>

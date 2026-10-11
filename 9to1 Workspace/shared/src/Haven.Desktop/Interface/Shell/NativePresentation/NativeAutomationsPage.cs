@@ -307,7 +307,7 @@ internal sealed class NativeAutomationsPage : ContentControl, IDisposable
             _scene.SetStatus(validationError ?? "Fix the current graph before applying an AI edit.", true);
             return;
         }
-        _scene.SetStatus("Asking Haven for a typed graph edit…");
+        _scene.SetStatus("Asking 9to1 for a typed graph edit…");
         try
         {
             var result = await _graphAiEditor.ProposeEditAsync(current, instruction, _lifetime.Token);
@@ -347,7 +347,7 @@ internal sealed class NativeAutomationsPage : ContentControl, IDisposable
                 await InvokeTaskAsync(workflow.Instruction);
                 return;
             }
-            _scene.SetStatus("The graph runtime is unavailable. Haven did not route this graph to Tasks or perform a substitute instruction.", true);
+            _scene.SetStatus("The graph runtime is unavailable. 9to1 did not route this graph to Tasks or perform a substitute instruction.", true);
             return;
         }
 
@@ -444,7 +444,7 @@ internal sealed class NativeAutomationsPage : ContentControl, IDisposable
         }
         if (!ScheduledGraphAutomationPayloadCodec.TryDeserialize(automation.Instruction, out var payload))
         {
-            _scene.SetStatus("This scheduled graph payload is invalid. Haven did not route it to Tasks or perform a substitute instruction.", true);
+            _scene.SetStatus("This scheduled graph payload is invalid. 9to1 did not route it to Tasks or perform a substitute instruction.", true);
             return;
         }
         var captured = new ReusableTaskDefinition(
@@ -471,7 +471,7 @@ internal sealed class NativeAutomationsPage : ContentControl, IDisposable
             return null;
         }
         if (existing is not null && !ScheduledGraphAutomationPayloadCodec.IsPayload(existing.Instruction))
-            throw new InvalidOperationException("A legacy automation already uses this workflow ID. Haven left it unchanged instead of overwriting it.");
+            throw new InvalidOperationException("A legacy automation already uses this workflow ID. 9to1 left it unchanged instead of overwriting it.");
         var now = DateTimeOffset.UtcNow;
         var payload = ScheduledGraphAutomationPayloadCodec.Serialize(workflow.Id, binding.TriggerNodeId, workflow.Name, graphJson, binding.WatchCondition);
         var definition = new AutomationDefinition(

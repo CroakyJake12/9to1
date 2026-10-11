@@ -28,12 +28,14 @@ public sealed class WaveBrowserSession : ICuiWritableBindingContext, ICuiActionD
     private int _clipIndex;
     private int _projectIndex;
     private string _title = "Untitled audio";
+    private string? _newTitle;
     private string _sampleRate = "48000";
     private string _channels = "2";
     private string _start = "0";
     private string _trimStart = "0";
     private string _trimEnd = "0";
     private string _gain = "1";
+    private string _trackGain = "1", _trackTitle = "Audio track";
     private string _fadeIn = "0";
     private string _fadeOut = "0";
     private string _pan = "0";
@@ -47,6 +49,61 @@ public sealed class WaveBrowserSession : ICuiWritableBindingContext, ICuiActionD
     private Dictionary<string, object?>[] _waveform = [];
     private string _previewStatus = "Play or export to compute the mixed waveform.";
     private string? _presentationWarning;
+    private bool _compact, _playbackLoaded;
+    private readonly HashSet<string> _pendingInput = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, string> _appliedInput = new(StringComparer.Ordinal)
+    { ["Start"] = "0", ["TrimStart"] = "0", ["TrimEnd"] = "0", ["Gain"] = "1", ["TrackGain"] = "1", ["Pan"] = "0", ["FadeIn"] = "0", ["FadeOut"] = "0" };
+    public bool HasPendingInput => _pendingInput.Count != 0;
+    private void ConsumeInput(params string[] fields)
+    {
+        foreach (var field in fields)
+            if (TryGetValue(field, out var value)) { _pendingInput.Remove(field); _appliedInput[field] = Convert.ToString(value, CultureInfo.InvariantCulture) ?? ""; }
+    }
+    private void DemandAppliedInput()
+    { if (HasPendingInput) throw new WaveBrowserException("UnsavedInput", "Apply or restore the inspector values before changing selection or leaving this project."); }
+    public bool ShowInspector { get; private set; }
+    public bool ShowLibrary { get; private set; }
+    public bool ShowNewProject { get; private set; }
+    public bool ShowDetails { get; private set; }
+    public double Position => _position;
+    public Guid? SelectedTrackId => _project?.Tracks.ElementAtOrDefault(_trackIndex)?.TrackId;
+    public Guid? SelectedClipId => _project?.Tracks.ElementAtOrDefault(_trackIndex)?.Clips.ElementAtOrDefault(_clipIndex)?.ClipId;
+    public double Duration => _project is null ? 0 : _project.Tracks.SelectMany(t => t.Clips).Select(c => (c.TimelineStartFrame + c.FrameCount) / (double)_project.SampleRate).DefaultIfEmpty(0).Max();
+    internal void SetCompact(bool compact) { if (_compact == compact) return; _compact = compact; ShowInspector = !compact && _project is not null; Notify(); }
+    internal string ClipName(WaveClip clip) => _sources.TryGetValue(clip.SourcePath, out var source) ? source.Name : "Audio clip";
+    public void SelectTimelineClip(Guid trackId, Guid? clipId)
+    {
+        if (_disposed || IsBusy || _project is null) return;
+        if (HasPendingInput) { Status = "Apply or restore the inspector values before selecting another clip."; Notify(); return; }
+        var index = _project.Tracks.FindIndex(t => t.TrackId == trackId); if (index < 0) return;
+        _trackIndex = index; _clipIndex = clipId is null ? 0 : Math.Max(0, _project.Tracks[index].Clips.FindIndex(c => c.ClipId == clipId));
+        ReadSelectionFields(); Notify();
+    }
+    private void ReadSelectionFields()
+    {
+        var track = _project?.Tracks.ElementAtOrDefault(_trackIndex); var clip = track?.Clips.ElementAtOrDefault(_clipIndex);
+        _start = (clip is null || _project is null ? 0 : clip.TimelineStartFrame / (double)_project.SampleRate).ToString("0.###", CultureInfo.InvariantCulture);
+        _trimStart = _trimEnd = "0"; _gain = (clip?.Gain ?? track?.Gain ?? 1).ToString(CultureInfo.InvariantCulture);
+        _pan = (track?.Pan ?? 0).ToString(CultureInfo.InvariantCulture);
+        _trackGain = (track?.Gain ?? 1).ToString(CultureInfo.InvariantCulture);
+        _fadeIn = (_project is null ? 0 : (clip?.FadeInFrames ?? 0) / (double)_project.SampleRate).ToString("0.###", CultureInfo.InvariantCulture);
+        _fadeOut = (_project is null ? 0 : (clip?.FadeOutFrames ?? 0) / (double)_project.SampleRate).ToString("0.###", CultureInfo.InvariantCulture);
+        ConsumeInput(_appliedInput.Keys.ToArray());
+    }
+    public async Task SeekTimelineAsync(double seconds, CancellationToken token = default)
+    {
+        if (_disposed || IsBusy || _project is null || !double.IsFinite(seconds)) return;
+        await OperateAsync(() => SeekCoreAsync(seconds, token), token);
+    }
+    private async Task<bool> SeekCoreAsync(double seconds, CancellationToken token)
+    {
+        RequireProject(); if (!double.IsFinite(seconds)) throw new ArgumentException("Use a finite time.");
+        var next = Math.Clamp(seconds, 0, Duration);
+        if (_playbackLoaded) await CallAsync("seek", new { seconds = next }, token);
+        _position = next; _seek = next.ToString("0.###", CultureInfo.InvariantCulture);
+        if (!_pendingInput.Contains("Start")) { _start = _seek; ConsumeInput("Start"); }
+        return true;
+    }
 
     public WaveBrowserSession(IWaveBrowserMedia media) => _media = media;
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -61,6 +118,7 @@ public sealed class WaveBrowserSession : ICuiWritableBindingContext, ICuiActionD
     public async Task<HomeCoreOperationResult<bool>> PrepareToCloseAsync(CancellationToken token = default)
     {
         if (_disposed) return new(true, "Succeeded", "The Wave session is already closed.", true);
+        if (HasPendingInput) return new(false, "UnsavedInput", "Apply or restore the inspector values before leaving Wave.", false);
         var attempted = false;
         var prepared = await OperateAsync(async () =>
         {
@@ -84,11 +142,13 @@ public sealed class WaveBrowserSession : ICuiWritableBindingContext, ICuiActionD
     public Task<bool> CreateAsync(CancellationToken token = default) => OperateAsync(async () =>
     {
         if (!await SaveBeforeLeavingAsync(token)) return false;
-        var project = WaveProjectStore.Create(_title, ParseInt(_sampleRate), ParseInt(_channels));
+        var title = string.IsNullOrWhiteSpace(_newTitle) ? "Untitled audio" : _newTitle.Trim();
+        var project = WaveProjectStore.Create(title, ParseInt(_sampleRate), ParseInt(_channels));
         await CallAsync("unload", new { }, token);
         ThrowIfDisposed();
-        _project = project; _savedRevision = -1; _undo.Clear(); _redo.Clear(); _sources.Clear();
-        _trackIndex = _clipIndex = 0; _waveform = []; SetDirty(true);
+        _project = project; _title = title; _newTitle = null; _savedRevision = -1; _undo.Clear(); _redo.Clear(); _sources.Clear();
+        _trackIndex = _clipIndex = 0; _waveform = []; _playbackLoaded = false; _position = 0; ShowNewProject = false; ShowInspector = !_compact; SetDirty(true);
+        ReadSelectionFields();
         return await SaveCoreAsync(token);
     }, token);
 
@@ -127,7 +187,7 @@ public sealed class WaveBrowserSession : ICuiWritableBindingContext, ICuiActionD
         _project = project; _savedRevision = project.Revision; _lastProjectId = projectId;
         _title = bundle.Name; _sources.Clear(); foreach (var item in restoredSources) _sources.Add(item.Key, item.Value);
         _undo.Clear(); _undo.AddRange(bundle.Undo); _redo.Clear(); _redo.AddRange(bundle.Redo);
-        _trackIndex = _clipIndex = 0; _paused = true; _position = 0; SetDirty(false); BuildWaveform();
+        _trackIndex = _clipIndex = 0; _paused = true; _position = 0; _playbackLoaded = false; ShowLibrary = false; ShowInspector = !_compact; ReadSelectionFields(); SetDirty(false); BuildWaveform();
         Status = $"Opened local project · revision {_savedRevision}";
         return true;
     }, token);
@@ -135,6 +195,7 @@ public sealed class WaveBrowserSession : ICuiWritableBindingContext, ICuiActionD
     public Task<bool> ImportAsync(CancellationToken token = default) => OperateAsync(async () =>
     {
         var project = RequireProject();
+        if (_pendingInput.Any(field => field != "Start")) DemandAppliedInput();
         var picked = (await CallAsync("pick", new { }, token)).Deserialize<WavePickedFile>(Json)
             ?? throw new InvalidDataException("The selected file could not be read.");
         ThrowIfDisposed();
@@ -145,7 +206,7 @@ public sealed class WaveBrowserSession : ICuiWritableBindingContext, ICuiActionD
         {
             var candidate = WaveProjectStore.AddWavClip(project, SelectedTrack().TrackId, path, Seconds(_start));
             _sources.Add(path, new(path, picked.Name, Convert.ToHexString(SHA256.HashData(bytes)), picked.Base64));
-            Apply(candidate); _clipIndex = SelectedTrack().Clips.Count - 1;
+            Apply(candidate); _clipIndex = SelectedTrack().Clips.Count - 1; ConsumeInput("Start"); ReadSelectionFields();
             return await SaveCoreAsync(token);
         }
         catch (NotSupportedException error)
@@ -165,13 +226,16 @@ public sealed class WaveBrowserSession : ICuiWritableBindingContext, ICuiActionD
         await CallAsync("unload", new { }, token);
         ThrowIfDisposed();
         _project = null; _sources.Clear(); _undo.Clear(); _redo.Clear(); _savedRevision = -1; _waveform = [];
-        _position = 0; _paused = true; SetDirty(false); Status = "Closed. Your saved project remains in this browser.";
+        _position = 0; _paused = true; _playbackLoaded = false; SetDirty(false); Status = "Closed. Your saved project remains in this browser.";
         return true;
     }, token);
 
     public Task<bool> EditAsync(Func<WaveProject, WaveProject> edit, CancellationToken token = default) => OperateAsync(async () =>
+    { DemandAppliedInput(); Apply(edit(RequireProject())); return await SaveCoreAsync(token); }, token);
+    private Task<bool> EditFieldsAsync(Func<WaveProject, WaveProject> edit, string[] consumedFields, CancellationToken token) => OperateAsync(async () =>
     {
         Apply(edit(RequireProject()));
+        ConsumeInput(consumedFields);
         return await SaveCoreAsync(token);
     }, token);
 
@@ -181,25 +245,30 @@ public sealed class WaveBrowserSession : ICuiWritableBindingContext, ICuiActionD
         if (candidate.ProjectId != before.ProjectId || candidate.Revision != checked(before.Revision + 1))
             throw new InvalidDataException("The owner edit returned an incompatible project revision.");
         WaveProjectStore.Validate(candidate);
+        if (_playbackLoaded) { _media.Release(); _playbackLoaded = false; _paused = true; }
         _undo.Add(Serialize(before)); if (_undo.Count > 32) _undo.RemoveAt(0);
-        _redo.Clear(); _project = candidate; SetDirty(true); _waveform = [];
+        _redo.Clear(); _project = candidate; _trackIndex = Math.Clamp(_trackIndex, 0, Math.Max(0, candidate.Tracks.Count - 1));
+        _clipIndex = Math.Clamp(_clipIndex, 0, Math.Max(0, SelectedTrack().Clips.Count - 1)); SetDirty(true); _waveform = [];
     }
 
     public Task<bool> UndoAsync(bool redo = false, CancellationToken token = default) => OperateAsync(async () =>
     {
+        DemandAppliedInput();
         var current = RequireProject(); var from = redo ? _redo : _undo; var to = redo ? _undo : _redo;
         if (from.Count == 0) throw new WaveBrowserException("HistoryUnavailable", redo ? "There is no edit to redo." : "There is no edit to undo.");
         var restored = ReadProject(current.ProjectId, from[^1]);
         // Same owner revision/ModifiedAt rule as WaveProjectEdits.Commit; history never rewinds revision.
         restored = restored with { Revision = checked(current.Revision + 1), ModifiedAt = DateTimeOffset.UtcNow };
         WaveProjectStore.Validate(restored); ValidateSources(restored, _sources);
+        if (_playbackLoaded) { await CallAsync("unload", new { }, token); _playbackLoaded = false; _paused = true; }
         to.Add(Serialize(current)); if (to.Count > 32) to.RemoveAt(0); from.RemoveAt(from.Count - 1);
         _project = restored; _trackIndex = Math.Clamp(_trackIndex, 0, Math.Max(0, restored.Tracks.Count - 1)); _clipIndex = 0;
-        SetDirty(true); _waveform = [];
+        ReadSelectionFields(); SetDirty(true); _waveform = [];
         return await SaveCoreAsync(token);
     }, token);
 
-    private async Task<bool> SaveBeforeLeavingAsync(CancellationToken token) => !IsDirty || await SaveCoreAsync(token);
+    private async Task<bool> SaveBeforeLeavingAsync(CancellationToken token)
+    { DemandAppliedInput(); return !IsDirty || await SaveCoreAsync(token); }
 
     private async Task<bool> SaveCoreAsync(CancellationToken token)
     {
@@ -238,8 +307,9 @@ public sealed class WaveBrowserSession : ICuiWritableBindingContext, ICuiActionD
             var data = File.ReadAllBytes(path);
             SetWaveform(data, project.Channels);
             await CallAsync(playback ? "play" : "download", new {
-                base64 = Convert.ToBase64String(data), name = "Wave-" + project.ProjectId.ToString("N") + ".wav", mime = "audio/wav", loop = _loop
+                base64 = Convert.ToBase64String(data), name = "Wave-" + project.ProjectId.ToString("N") + ".wav", mime = "audio/wav", loop = _loop, seconds = _position
             }, token);
+            if (playback) { _playbackLoaded = true; _paused = false; }
             Status = playback ? $"Playing local project revision {project.Revision}" : $"WAV download started for revision {project.Revision}. Project and sources are unchanged.";
             return true;
         }
@@ -248,11 +318,12 @@ public sealed class WaveBrowserSession : ICuiWritableBindingContext, ICuiActionD
 
     public async Task PollTransportAsync()
     {
-        if (_disposed || IsBusy || _project is null) return;
+        if (_disposed || IsBusy || _project is null || !_playbackLoaded) return;
+        var observedProject = _project;
         try
         {
             var state = await CallAsync("state", new { });
-            if (_disposed) return;
+            if (_disposed || !_playbackLoaded || !ReferenceEquals(observedProject, _project)) return;
             _position = state.GetProperty("position").GetDouble(); _paused = state.GetProperty("paused").GetBoolean();
             Notify("Transport");
         }
@@ -267,21 +338,40 @@ public sealed class WaveBrowserSession : ICuiWritableBindingContext, ICuiActionD
         value = path switch
         {
             "Title" => _title, "SampleRate" => _sampleRate, "Channels" => _channels,
+            "NewTitle" => _newTitle ?? "Untitled audio",
             "Start" => _start, "TrimStart" => _trimStart, "TrimEnd" => _trimEnd,
             "Gain" => _gain, "FadeIn" => _fadeIn, "FadeOut" => _fadeOut, "Pan" => _pan,
+            "TrackGain" => _trackGain, "TrackTitle" => _trackTitle,
             "Seek" => _seek, "MarkerName" => _marker, "Loop" => _loop, "JoinClipId" => _joinClipId,
             "LoopLabel" => _loop ? "Loop playback: on" : "Loop playback: off",
+            "ShowInspector" => ShowInspector, "ShowLibrary" => ShowLibrary, "ShowNewProject" => ShowNewProject, "ShowDetails" => ShowDetails,
+            "HasPendingInput" => HasPendingInput,
+            "InspectorLabel" => ShowInspector ? "Hide inspector" : "Inspector", "IsEmpty" => _project is null,
+            "WorkspaceTitle" => _project is null ? "Wave" : _title,
+            "ProjectSummary" => _project is null ? "9to1 Wave · local workspace" : $"{_project.Tracks.Count} tracks · {_project.SampleRate:N0} Hz · {_project.Channels} channels · {(IsDirty ? "Unsaved changes" : "Saved locally")}",
+            "Timecode" => string.Create(CultureInfo.InvariantCulture, $"{Math.Floor(_position / 3600):00}:{Math.Floor(_position / 60) % 60:00}:{_position % 60:00.000}"),
+            "CanPlay" => _project is not null && !IsBusy && _project.Tracks.Any(t => t.Clips.Count > 0),
+            "CanPause" => _playbackLoaded && !_paused && !IsBusy, "CanResume" => _playbackLoaded && _paused && !IsBusy,
+            "MuteLabel" => track?.Mute == true ? "Muted" : "Mute", "SoloLabel" => track?.Solo == true ? "Solo on" : "Solo",
+            "TrackName" => track?.Name ?? "No track selected", "ClipName" => clip is null ? "Select a clip on the timeline" : ClipName(clip),
             "ProjectIndex" => _projectIndex, "TrackIndex" => _trackIndex, "ClipIndex" => _clipIndex,
             "ProjectChoices" => _projects.Select(p => $"{p.Name} · r{p.Revision} · {p.ProjectId}").ToArray(),
-            "Projects" => _projects.Select(p => new Dictionary<string, object?> { ["ID"] = p.ProjectId, ["Label"] = $"Open {p.Name} · revision {p.Revision} · {p.ProjectId}" }).ToArray(),
-            "Tracks" => _project?.Tracks.Select(t => new Dictionary<string, object?> { ["ID"] = t.TrackId.ToString(), ["Label"] = $"{(t.TrackId == track?.TrackId ? "Selected: " : "Select ")}{t.Name} · {t.TrackId}" }).ToArray() ?? [],
-            "Clips" => track?.Clips.Select(c => new Dictionary<string, object?> { ["ID"] = c.ClipId.ToString(), ["Label"] = $"{(c.ClipId == clip?.ClipId ? "Selected clip: " : "Select clip ")}{c.ClipId} · {c.FrameCount} frames" }).ToArray() ?? [],
+            "Projects" => _projects.Select(p => new Dictionary<string, object?> { ["ID"] = p.ProjectId, ["Label"] = $"{p.Name} · revision {p.Revision}" }).ToArray(),
+            "Tracks" => _project?.Tracks.Select(t => new Dictionary<string, object?> { ["ID"] = t.TrackId.ToString(), ["Label"] = $"{(t.TrackId == track?.TrackId ? "● " : "")}{t.Name} · {t.Clips.Count} clips" }).ToArray() ?? [],
+            "Clips" => track?.Clips.Select(c => new Dictionary<string, object?> { ["ID"] = c.ClipId.ToString(), ["Label"] = $"{(c.ClipId == clip?.ClipId ? "● " : "")}{ClipName(c)} · {c.FrameCount / (double)_project!.SampleRate:0.##} s" }).ToArray() ?? [],
             "TrackChoices" => _project?.Tracks.Select(t => $"{t.Name} · {t.TrackId}").ToArray() ?? [],
             "ClipChoices" => track?.Clips.Select(c => $"{Path.GetFileName(c.SourcePath)} · {c.ClipId}").ToArray() ?? [],
-            "HasProject" => _project is not null, "HasClip" => clip is not null,
+            "HasProject" => _project is not null, "HasClip" => clip is not null && !IsBusy,
             "CanEdit" => _project is not null && !IsBusy, "NotBusy" => !IsBusy,
             "CanUndo" => _undo.Count > 0 && !IsBusy, "CanRedo" => _redo.Count > 0 && !IsBusy,
             "Status" => (ErrorCode is null ? "" : ErrorCode + ": ") + Status + (_presentationWarning is null ? "" : " · " + _presentationWarning),
+            "DisplayStatus" => ErrorCode switch
+            {
+                "InvalidArgument" => "Check the edit values and try again. Your saved project is unchanged.",
+                "StorageFailed" => "Wave could not finish saving. Keep this project open and try Save again.",
+                "RevisionConflict" => "This project changed in another tab. Your unsaved edits are retained.",
+                _ => Status
+            },
             "ProjectIdentity" => _project is null ? "No project open" : $"Project {_project.ProjectId} · {_project.SampleRate} Hz · {_project.Channels} channels · revision {_project.Revision}",
             "Selection" => clip is null ? "Choose an imported clip." : $"Clip {clip.ClipId} · source {clip.SourceReferenceId} · source frames {clip.SourceStartFrame}–{clip.SourceStartFrame + clip.FrameCount} · timeline frame {clip.TimelineStartFrame} · gain {clip.Gain} · fades {clip.FadeInFrames}/{clip.FadeOutFrames} frames",
             "Mixer" => track is null ? "" : $"Track {track.TrackId} · gain {track.Gain} · pan {track.Pan} · mute {track.Mute} · solo {track.Solo}",
@@ -298,36 +388,54 @@ public sealed class WaveBrowserSession : ICuiWritableBindingContext, ICuiActionD
     public bool TrySetValue(string path, object? value)
     {
         if (_disposed || IsBusy) return false;
+        if (HasPendingInput && path is "TrackIndex" or "ClipIndex") return false;
         var text = Convert.ToString(value, CultureInfo.InvariantCulture) ?? "";
         switch (path)
         {
-            case "Title": _title = text; break;
+            case "Title": _title = _newTitle = text; break;
+            case "NewTitle": _newTitle = text; break;
             case "SampleRate": _sampleRate = text; break; case "Channels": _channels = text; break;
             case "Start": _start = text; break; case "TrimStart": _trimStart = text; break; case "TrimEnd": _trimEnd = text; break;
             case "Gain": _gain = text; break; case "FadeIn": _fadeIn = text; break; case "FadeOut": _fadeOut = text; break;
             case "Pan": _pan = text; break; case "Seek": _seek = text; break; case "MarkerName": _marker = text; break;
+            case "TrackGain": _trackGain = text; break; case "TrackTitle": _trackTitle = text; break;
             case "JoinClipId": _joinClipId = text; break;
             case "TrackIndex": _trackIndex = Math.Max(0, Convert.ToInt32(value)); _clipIndex = 0; break;
             case "ClipIndex": _clipIndex = Math.Max(0, Convert.ToInt32(value)); break; case "ProjectIndex": _projectIndex = Math.Max(0, Convert.ToInt32(value)); break;
             case "Loop": _loop = Convert.ToBoolean(value); break;
             default: return false;
         }
+        if (_appliedInput.TryGetValue(path, out var applied))
+        { if (text == applied) _pendingInput.Remove(path); else _pendingInput.Add(path); }
         Notify(); return true;
     }
 
     public bool? IsActionAvailable(string command) => new[] { "Create", "Refresh", "Open", "Reopen", "Import", "Save", "Close",
         "AddTrack", "Split", "Trim", "Move", "Duplicate", "Delete", "RippleDelete", "Processing", "Mixer", "Mute", "Solo",
         "Undo", "Redo", "Export", "Play", "Pause", "Resume", "Stop", "Seek", "Loop", "Marker",
-        "OpenProject", "OpenProjectRow", "SelectTrack", "SelectTrackRow", "SelectClip", "SelectClipRow", "Join", "ToggleLoop" }.Contains(command);
+        "OpenProject", "OpenProjectRow", "SelectTrack", "SelectTrackRow", "SelectClip", "SelectClipRow", "Join", "ToggleLoop",
+        "ToggleInspector", "ToggleLibrary", "ToggleNew", "ToggleDetails", "SeekStart", "SeekEnd", "JoinNext", "SplitAtPlayhead", "ResetInputs" }.Contains(command);
 
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (_disposed) return;
         switch (command)
         {
+            case "ToggleInspector": ShowInspector = !ShowInspector; Notify(); return;
+            case "ToggleLibrary": ShowLibrary = !ShowLibrary; Notify(); return;
+            case "ToggleNew": ShowNewProject = !ShowNewProject; Notify(); return;
+            case "ToggleDetails": ShowDetails = !ShowDetails; Notify(); return;
+            case "ResetInputs":
+                if (IsBusy) return;
+                foreach (var field in _pendingInput.ToArray()) TrySetValue(field, _appliedInput[field]);
+                _pendingInput.Clear(); Notify(); return;
+            case "SeekStart": await SeekTimelineAsync(0, cancellationToken); return;
+            case "SeekEnd": await SeekTimelineAsync(Duration, cancellationToken); return;
             case "OpenProject": await OpenAsync(Convert.ToString(parameter) ?? "", cancellationToken); return;
             case "SelectTrack": case "SelectClip":
                 await OperateAsync(() =>
                 {
+                    DemandAppliedInput();
                     var id = Guid.Parse(Convert.ToString(parameter) ?? "");
                     if (command == "SelectTrack")
                     {
@@ -341,7 +449,7 @@ public sealed class WaveBrowserSession : ICuiWritableBindingContext, ICuiActionD
                         if (index < 0) throw new KeyNotFoundException("ClipNotFound");
                         _clipIndex = index;
                     }
-                    Status = "Selection updated."; return Task.FromResult(true);
+                    ReadSelectionFields(); Status = "Selection updated."; return Task.FromResult(true);
                 }, cancellationToken); return;
             case "Create": await CreateAsync(cancellationToken); return;
             case "Open": await OpenAsync(_projects.ElementAtOrDefault(_projectIndex)?.ProjectId ?? "", cancellationToken); return;
@@ -354,26 +462,41 @@ public sealed class WaveBrowserSession : ICuiWritableBindingContext, ICuiActionD
             case "Refresh": await OperateAsync(async () => { await RefreshAsync(cancellationToken); Status = "Local projects refreshed."; return true; }, cancellationToken); return;
             case "ToggleLoop":
                 await OperateAsync(async () => { _loop = !_loop; await CallAsync("loop", new { loop = _loop }, cancellationToken); Status = _loop ? "Loop playback enabled." : "Loop playback disabled."; return true; }, cancellationToken); return;
-            case "Pause": case "Resume": case "Stop": case "Seek": case "Loop":
+            case "Seek": await OperateAsync(() => SeekCoreAsync(Seconds(_seek), cancellationToken), cancellationToken); return;
+            case "Pause": case "Resume": case "Stop": case "Loop":
                 await OperateAsync(async () => { await CallAsync(command.ToLowerInvariant(), new { seconds = Seconds(_seek), loop = _loop }, cancellationToken); Status = "Transport updated."; return true; }, cancellationToken); return;
         }
-        await EditAsync(project => command switch
+        var consumedFields = command switch
         {
-            "AddTrack" => WaveProjectEdits.AddTrack(project, project.Revision, _title),
+            "Split" or "Move" or "Duplicate" or "Marker" => new[] { "Start" },
+            "Trim" => ["TrimStart", "TrimEnd"], "Processing" => ["Gain", "FadeIn", "FadeOut"], "Mixer" => ["TrackGain", "Pan"], _ => []
+        };
+        await EditFieldsAsync(project =>
+        {
+            if (command is "AddTrack" or "Delete" or "RippleDelete" or "Join" or "JoinNext") DemandAppliedInput();
+            return command switch
+        {
+            "AddTrack" => WaveProjectEdits.AddTrack(project, project.Revision, _trackTitle),
             "Split" => WaveProjectEdits.Split(project, project.Revision, SelectedClip().ClipId, Frames(_start)),
+            "SplitAtPlayhead" => WaveProjectEdits.Split(project, project.Revision, SelectedClip().ClipId,
+                checked((long)Math.Round(_position * project.SampleRate, MidpointRounding.AwayFromZero))),
             "Join" => WaveProjectEdits.Join(project, project.Revision, SelectedClip().ClipId, Guid.Parse(_joinClipId)),
+            "JoinNext" => WaveProjectEdits.Join(project, project.Revision, SelectedClip().ClipId,
+                SelectedTrack().Clips.FirstOrDefault(c => c.ClipId != SelectedClip().ClipId && c.TimelineStartFrame == SelectedClip().TimelineStartFrame + SelectedClip().FrameCount)?.ClipId
+                ?? throw new WaveBrowserException("ClipNotFound", "Place a compatible clip immediately after this clip before joining.")),
             "Trim" => WaveProjectEdits.Trim(project, project.Revision, SelectedClip().ClipId, Frames(_trimStart), Frames(_trimEnd)),
             "Move" => WaveProjectEdits.Move(project, project.Revision, SelectedClip().ClipId, Frames(_start)),
             "Duplicate" => WaveProjectEdits.Duplicate(project, project.Revision, SelectedClip().ClipId, Frames(_start)),
             "Delete" => WaveProjectEdits.Delete(project, project.Revision, SelectedClip().ClipId, false),
             "RippleDelete" => WaveProjectEdits.Delete(project, project.Revision, SelectedClip().ClipId, true),
             "Processing" => WaveProjectEdits.SetClipProcessing(project, project.Revision, SelectedClip().ClipId, Number(_gain), Frames(_fadeIn), Frames(_fadeOut)),
-            "Mixer" => WaveProjectEdits.SetTrackMixer(project, project.Revision, SelectedTrack().TrackId, Number(_gain), Number(_pan), SelectedTrack().Mute, SelectedTrack().Solo),
+            "Mixer" => WaveProjectEdits.SetTrackMixer(project, project.Revision, SelectedTrack().TrackId, Number(_trackGain), Number(_pan), SelectedTrack().Mute, SelectedTrack().Solo),
             "Mute" => WaveProjectEdits.SetTrackMixer(project, project.Revision, SelectedTrack().TrackId, SelectedTrack().Gain, SelectedTrack().Pan, !SelectedTrack().Mute, SelectedTrack().Solo),
             "Solo" => WaveProjectEdits.SetTrackMixer(project, project.Revision, SelectedTrack().TrackId, SelectedTrack().Gain, SelectedTrack().Pan, SelectedTrack().Mute, !SelectedTrack().Solo),
             "Marker" => WaveTimelineAnnotations.AddMarker(project, project.Revision, Frames(_start), _marker),
             _ => throw new WaveBrowserException("CapabilityUnavailable", "This Wave operation is unavailable.")
-        }, cancellationToken);
+            };
+        }, consumedFields, cancellationToken);
     }
 
     private async Task<bool> OperateAsync(Func<Task<bool>> operation, CancellationToken token)
@@ -500,7 +623,7 @@ public sealed class WaveBrowserSession : ICuiWritableBindingContext, ICuiActionD
     {
         try { _media.Release(); }
         catch (Exception error) { PresentationFailed(error, "Playback cleanup failed. Close the browser tab if audio continues."); throw; }
-        finally { if (!_disposed) SetDirty(IsDirty); }
+        finally { _playbackLoaded = false; _paused = true; if (!_disposed) SetDirty(IsDirty); }
     }
     public void Dispose()
     {
@@ -508,6 +631,7 @@ public sealed class WaveBrowserSession : ICuiWritableBindingContext, ICuiActionD
         _disposed = true;
         // Clear retained content before invoking external browser cleanup, which may fail.
         _project = null; _sources.Clear(); _undo.Clear(); _redo.Clear(); _waveform = []; _projects = [];
+        _pendingInput.Clear();
         _savedRevision = -1; IsDirty = false; _lastProjectId = ""; _title = "";
         _media.Release();
     }

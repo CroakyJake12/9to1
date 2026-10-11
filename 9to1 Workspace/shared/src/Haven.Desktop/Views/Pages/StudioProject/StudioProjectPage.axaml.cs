@@ -103,7 +103,7 @@ public sealed partial class StudioProjectPage : UserControl, INotifyPropertyChan
         {
             if (!HasRoot) { Status = "Connect a project folder first."; return; }
             await _openTerminal(RootPath);
-            Status = "Opened Haven Terminal at the project root.";
+            Status = "Opened 9to1 Terminal at the project root.";
         });
         StartServerCommand = new AsyncRelayCommand(() => WithRoot(_intelligence.LaunchLocalServerAsync));
         BuildCommand = new AsyncRelayCommand(BuildAsync);
@@ -148,9 +148,9 @@ public sealed partial class StudioProjectPage : UserControl, INotifyPropertyChan
             new("Automatic Error Context", "Gather only relevant logs, settings, and recent actions.", ">Debug Gather only relevant project context and explain this failure in plain English: "),
             new("Project State Summary", "Explain what changed, what is unfinished, and what needs attention.", ">Report Summarise this project's current state, unfinished work, risks, and recommended next action with evidence."),
             new("Smart Defaults", "Recommend project and device settings without applying them automatically.", ">Inspect Recommend initial settings for this project and device. Explain each recommendation and wait for my approval before changing anything."),
-            new("Feature Discovery", "Find an existing feature or workflow that already solves the problem.", ">Inspect Identify existing project or Haven features that could solve my current problem before adding anything new."),
+            new("Feature Discovery", "Find an existing feature or workflow that already solves the problem.", ">Inspect Identify existing project or 9to1 features that could solve my current problem before adding anything new."),
             new("Repetitive Work Detector", "Spot tedious repeated work and propose a reviewable script.", ">Inspect Look for repetitive, tedious project work and propose a safe script or macro, but do not create it without my approval."),
-            new("Haven Extension Builder", "Create a limited-scope Browse extension manifest and content script.", ">Rigid Build a Haven Browse extension with a declarative manifest, explicit allowed origins, and no privileged or native APIs. Validate its scope before importing it.")
+            new("9to1 Extension Builder", "Create a limited-scope Browse extension manifest and content script.", ">Rigid Build a 9to1 Browse extension with a declarative manifest, explicit allowed origins, and no privileged or native APIs. Validate its scope before importing it.")
         ];
         InitializeComponent();
         InnerView.DataContext = this;
@@ -174,7 +174,7 @@ public sealed partial class StudioProjectPage : UserControl, INotifyPropertyChan
     public string RelevantConversation { get; private set; } = "No relevant conversation";
     public string AdaptiveHelp => _state is null ? "Choose a project folder to enable builds, file editing, intent search, and developer intelligence."
         : _state.HasUncommittedWork ? "Review the changed files and run the Release Risk Forecaster before publishing."
-        : "Start from the recommended action, or open a file directly in Haven's editor.";
+        : "Start from the recommended action, or open a file directly in 9to1's editor.";
     public ObservableCollection<WorkspaceFileItemViewModel> Files { get; } = [];
     public ObservableCollection<Conversation> ProjectConversations { get; } = [];
     public ObservableCollection<DecisionItemViewModel> Decisions { get; } = [];
@@ -230,7 +230,7 @@ public sealed partial class StudioProjectPage : UserControl, INotifyPropertyChan
     public bool IsInOverview => !IsInCreateMode && !IsInConfigureMode;
     public StudioCreationKind CreationKind { get => _creationKind; set { if (SetProperty(ref _creationKind, value)) { RaisePropertyChanged(nameof(CreationTitle)); RaisePropertyChanged(nameof(CreationHint)); RaisePropertyChanged(nameof(IsCreatingMode)); RaisePropertyChanged(nameof(IsCreatingCapability)); RaisePropertyChanged(nameof(IsCreatingAgent)); RaisePropertyChanged(nameof(IsCreatingPrompt)); RaisePropertyChanged(nameof(HasCreationKind)); } } }
     public string CreationTitle => CreationKind switch { StudioCreationKind.Mode => "Create Mode", StudioCreationKind.Capability => "Create Capability", StudioCreationKind.Agent => "Create Agent", StudioCreationKind.Prompt => "Create Prompt", _ => "Create" };
-    public string CreationHint => CreationKind switch { StudioCreationKind.Mode => "Define a new Haven mode with custom surfaces, tools, and system prompt.", StudioCreationKind.Capability => "Create a capability draft with instructions, constraints, and an implementation binding requirement.", StudioCreationKind.Agent => "Define a specialised assistant with instructions and model preferences.", StudioCreationKind.Prompt => "Create a reusable instruction prompt.", _ => "Choose what to create." };
+    public string CreationHint => CreationKind switch { StudioCreationKind.Mode => "Define a new 9to1 mode with custom surfaces, tools, and system prompt.", StudioCreationKind.Capability => "Create a capability draft with instructions, constraints, and an implementation binding requirement.", StudioCreationKind.Agent => "Define a specialised assistant with instructions and model preferences.", StudioCreationKind.Prompt => "Create a reusable instruction prompt.", _ => "Choose what to create." };
     public bool IsCreatingMode => CreationKind == StudioCreationKind.Mode;
     public bool IsCreatingCapability => CreationKind == StudioCreationKind.Capability;
     public bool IsCreatingAgent => CreationKind == StudioCreationKind.Agent;
@@ -518,7 +518,7 @@ public sealed partial class StudioProjectPage : UserControl, INotifyPropertyChan
             DecisionAlternatives.Trim(), DecisionReasoning.Trim(), DecisionEvidence.Trim(), DecisionConsequences.Trim(), now, now), CancellationToken.None);
         DecisionTitle = DecisionText = DecisionAlternatives = DecisionReasoning = DecisionEvidence = DecisionConsequences = string.Empty;
         await RefreshDecisionsAsync();
-        Status = "Decision saved with its alternatives, evidence, and consequences. Haven will warn before contradicting it.";
+        Status = "Decision saved with its alternatives, evidence, and consequences. 9to1 will warn before contradicting it.";
     }
 
     private async Task DeleteDecisionAsync(DecisionItemViewModel? item)
@@ -613,7 +613,7 @@ public sealed partial class StudioProjectPage : UserControl, INotifyPropertyChan
             var kind = CreationKind switch { StudioCreationKind.Mode => "mode", StudioCreationKind.Capability => "capability", StudioCreationKind.Agent => "agent", _ => "prompt" };
             var result = await _ollama.CompleteAsync(new OllamaChatRequest(
                 model.Name,
-                [new OllamaMessage("user", $"Write concise, production-ready system instructions for a Haven {kind} with this purpose: {CreationBuilderPrompt.Trim()}\nReturn only the instruction text.")],
+                [new OllamaMessage("user", $"Write concise, production-ready system instructions for a 9to1 {kind} with this purpose: {CreationBuilderPrompt.Trim()}\nReturn only the instruction text.")],
                 EffortLevel.Medium), CancellationToken.None);
             CreationInstructions = result.Trim();
             if (string.IsNullOrWhiteSpace(CreationDescription)) CreationDescription = CreationBuilderPrompt.Trim();

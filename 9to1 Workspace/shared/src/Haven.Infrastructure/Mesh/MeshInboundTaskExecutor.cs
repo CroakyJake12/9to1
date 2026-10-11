@@ -23,7 +23,7 @@ public sealed class MeshInboundTaskExecutor(IServiceProvider services) : IMeshIn
             candidate.ModelName,
             [new OllamaMessage("user", task.Instruction + references)],
             EffortLevel.Medium,
-            $"You are executing a delegated Haven Mesh task from another explicitly trusted device. Complete only the supplied reasoning task. Do not claim to use files, browser, desktop, commands, or other tools because this execution path grants none. Source surface: {task.SourceSurface}.");
+            $"You are executing a delegated 9to1 Mesh task from another explicitly trusted device. Complete only the supplied reasoning task. Do not claim to use files, browser, desktop, commands, or other tools because this execution path grants none. Source surface: {task.SourceSurface}.");
         return await candidate.Provider.CompleteAsync(request, cancellationToken).ConfigureAwait(false);
     }
 

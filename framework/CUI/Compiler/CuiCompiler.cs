@@ -123,10 +123,12 @@ public sealed class CuiCompiler
 
     private static readonly HashSet<string> InteractiveElements = new(StringComparer.OrdinalIgnoreCase)
     {
-        "Button", "Input", "TextBox", "CheckBox", "RadioButton", "Slider", "ComboBox", "ListBox", "MenuItem"
+        "Button", "Input"
     };
 
     private readonly CuiControlRegistry _registry;
+    private readonly HashSet<string> _declaredTypes = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _declaredThemes = new(StringComparer.Ordinal);
 
     public CuiCompiler(CuiControlRegistry? registry = null) => _registry = registry ?? CuiControlRegistry.Default;
 
@@ -138,6 +140,8 @@ public sealed class CuiCompiler
         ArgumentNullException.ThrowIfNull(options.Metadata);
 
         var diagnostics = new CuiDiagnosticBag();
+        if (!string.Equals(options.Metadata.ComponentRegistryVersion, CuiControlRegistry.ComponentRegistryVersion, StringComparison.Ordinal))
+            diagnostics.Error("CUIC024", $"Requested component registry '{options.Metadata.ComponentRegistryVersion}' does not match the actual canonical CUI registry '{CuiControlRegistry.ComponentRegistryVersion}'.", CuiSourceSpan.At(sourceName, 1, 1));
         var parser = new CuiRichParser();
         var document = parser.Parse(source, sourceName);
         foreach (var diagnostic in parser.Diagnostics.Diagnostics)
@@ -160,6 +164,12 @@ public sealed class CuiCompiler
         }
 
         var definitions = CollectDefinitions(document);
+        _declaredTypes.Clear();
+        _declaredThemes.Clear();
+        foreach (var definition in AllComponents(document.Components).Where(component => component.IsDefinition && component.Type == "Theme" && component.Name is not null))
+            _declaredThemes.Add(definition.Name!);
+        foreach (var typeDefinition in AllComponents(document.Components).Where(component => component.IsDefinition && CuiLanguageVocabulary.VisualElements.Contains(component.Type)))
+            if (typeDefinition.TryGetLiteralAttribute("Type", out var typeName) && !string.IsNullOrWhiteSpace(typeName)) _declaredTypes.Add(typeDefinition.Type + "\0" + typeName);
         var importedSymbols = ApplyImports(document, options, definitions, diagnostics);
         ValidateDefinitions(document, definitions, diagnostics);
         ValidateComponents(document.Components, definitions, diagnostics);
@@ -186,14 +196,14 @@ public sealed class CuiCompiler
     }
 
     private static bool IsCuiSource(string sourceName) =>
-        string.Equals(Path.GetExtension(sourceName), ".cui", StringComparison.OrdinalIgnoreCase);
+        CuiProjectItems.IsCuiSourceFamily(sourceName);
 
     private static HashSet<string> CollectDefinitions(CuiDocument document)
     {
         var definitions = new HashSet<string>(document.Templates.Keys, StringComparer.Ordinal);
         foreach (var component in AllComponents(document.Components))
         {
-            if (component.IsDefinition)
+            if (component.IsDefinition && !CuiLanguageVocabulary.VisualElements.Contains(component.Type))
                 definitions.Add(component.Name ?? component.Type);
         }
         return definitions;
@@ -203,7 +213,7 @@ public sealed class CuiCompiler
     {
         foreach (var definition in definitions)
         {
-            if (_registry.TryResolveElement(definition, out _))
+            if (_registry.TryResolveElement(definition, out _) || CuiLanguageVocabulary.IsForbiddenElement(definition))
             {
                 var span = AllComponents(document.Components)
                     .FirstOrDefault(component => component.IsDefinition && component.Type == definition)?.Span
@@ -357,6 +367,13 @@ public sealed class CuiCompiler
         CuiRuntimeElementDescriptor? element,
         CuiDiagnosticBag diagnostics)
     {
+        var declaredType = component.Properties.FirstOrDefault(pair => pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)).Value as CuiLiteralValue;
+        var typeValues = CuiControlRegistry.TypesFor(component.Type);
+        if (component.Type.Equals("Container", StringComparison.OrdinalIgnoreCase) && declaredType is null && !component.Properties.Keys.Any(key => key.Equals("Type", StringComparison.OrdinalIgnoreCase)))
+            diagnostics.Error("CUIC022", "Container requires a registered Type.", component.Span);
+        if (declaredType is not null && component.Type is not ("Object" or "Audio" or "Video") && !typeValues.Contains(declaredType.Value)
+            && !_declaredTypes.Contains(component.Type + "\0" + declaredType.Value) && !_registry.IsRegisteredRuntimeType(declaredType.Value))
+            diagnostics.Error("CUIC017", $"Unknown {component.Type} Type '{declaredType.Value}'. Supported Types: {string.Join(", ", typeValues)}.", declaredType.Span);
         foreach (var (name, value) in component.Properties)
         {
             if (!_registry.TryGetProperty(name, out var property))
@@ -382,6 +399,10 @@ public sealed class CuiCompiler
 
             if (!property.IsAttached && !property.SupportedElementTypes.Contains(element.Name))
                 diagnostics.Error("CUIC014", $"Property '{property.Name}' is not supported on '{component.Type}'.", value.Span);
+
+            if (declaredType is not null && property.Name is "RowSizes" or "ColumnSizes" or "Rows" or "Columns"
+                && !declaredType.Value.Equals("Grid", StringComparison.OrdinalIgnoreCase))
+                diagnostics.Error("CUIC023", $"{property.Name} requires Container Type Grid.", value.Span);
 
             if (value is CuiLiteralValue literal && !IsValidLiteral(property.LanguageType, literal.Value))
                 diagnostics.Error("CUIC015", $"Value '{literal.Value}' is not valid for {property.LanguageType} property '{property.Name}'.", value.Span);
@@ -409,6 +430,7 @@ public sealed class CuiCompiler
                     || value.All(char.IsLetter),
         "text" or "content" or "symbol" or "brush" or "thickness" or "grid-definitions"
             or "font-family" or "font-weight" or "font-style" or "text-decoration" => true,
+        "grid-sizes" => CuiGridSizes.IsValid(value),
         _ => true
     };
 
@@ -438,10 +460,11 @@ public sealed class CuiCompiler
         && bool.TryParse(literal.Value, out var result)
         && !result;
 
-    private static void ValidateTheme(string theme, CuiSourceSpan span, CuiDiagnosticBag diagnostics)
+    private void ValidateTheme(string theme, CuiSourceSpan span, CuiDiagnosticBag diagnostics)
     {
+        if (_declaredThemes.Contains(theme)) return;
         var supported = CakeOS.Cui.Themes.CuiThemeCatalog.All.Select(item => item.DisplayName)
-            .Append("Default").ToHashSet(StringComparer.OrdinalIgnoreCase);
+            .Append("Default").Append("user_preference").ToHashSet(StringComparer.OrdinalIgnoreCase);
         if (!supported.Contains(theme))
         {
             var suggestion = Suggest(theme, supported);

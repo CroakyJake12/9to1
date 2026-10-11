@@ -149,7 +149,7 @@ public sealed class LocalMotionPreferencesService : IMotionPreferences
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            System.Diagnostics.Debug.WriteLine("[Haven motion preferences] " + exception.Message);
+            System.Diagnostics.Debug.WriteLine("[9to1 motion preferences] " + exception.Message);
         }
     }
 

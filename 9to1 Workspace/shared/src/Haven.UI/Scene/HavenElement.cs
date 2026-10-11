@@ -117,7 +117,7 @@ public abstract class HavenElement
         GetType().Name,
         [],
         [],
-        "Generic Haven scene element.");
+        "Generic 9to1 scene element.");
 
     public IReadOnlySet<string> Groups => SplitTokens(Group).ToHashSet(StringComparer.Ordinal);
     public IReadOnlySet<string> Classes => SplitTokens(Class).ToHashSet(StringComparer.Ordinal);
@@ -169,7 +169,7 @@ public abstract class HavenElement
     {
         ArgumentNullException.ThrowIfNull(property);
         if (value is not null && !property.ValueType.IsInstanceOfType(value))
-            throw new ArgumentException($"Value for Haven property '{property.Name}' must be {property.ValueType.Name}, not {value.GetType().Name}.", nameof(value));
+            throw new ArgumentException($"Value for 9to1 property '{property.Name}' must be {property.ValueType.Name}, not {value.GetType().Name}.", nameof(value));
         if (!_values.TryGetValue(property, out var slot))
         {
             slot = [];
@@ -231,9 +231,9 @@ public abstract class HavenElement
     {
         ArgumentNullException.ThrowIfNull(child);
         if (ReferenceEquals(child, this) || child.DescendantsAndSelf().Contains(this))
-            throw new InvalidOperationException("A Haven element cannot contain itself or one of its ancestors.");
+            throw new InvalidOperationException("A 9to1 element cannot contain itself or one of its ancestors.");
         if (child.Parent is not null)
-            throw new InvalidOperationException("A Haven element already has a parent. Remove it before reparenting.");
+            throw new InvalidOperationException("A 9to1 element already has a parent. Remove it before reparenting.");
         child.Parent = this;
         _children.Add(child);
         Invalidate(HavenInvalidationKinds.All);
@@ -336,7 +336,7 @@ public abstract class HavenElement
             .Select(group => group.Key)
             .ToArray();
         if (duplicates.Length > 0)
-            throw new InvalidOperationException($"Duplicate Haven element Name values in scope '{scope.Name ?? scope.GetType().Name}': {string.Join(", ", duplicates)}.");
+            throw new InvalidOperationException($"Duplicate 9to1 element Name values in scope '{scope.Name ?? scope.GetType().Name}': {string.Join(", ", duplicates)}.");
 
         foreach (var childScope in scoped.Where(element => !ReferenceEquals(element, scope) && element.CreatesNameScope))
             ValidateNameScope(childScope);

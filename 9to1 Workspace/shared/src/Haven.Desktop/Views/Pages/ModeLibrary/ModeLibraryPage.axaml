@@ -9,7 +9,7 @@
 
     <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
       <TextBlock Text="App Library" FontSize="38" FontWeight="ExtraBold" Foreground="{DynamicResource HavenTextBrush}" />
-      <TextBlock Text="Discover, pin, and create Haven apps." FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource HavenMutedBrush}" />
+      <TextBlock Text="Discover, pin, and create 9to1 apps." FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource HavenMutedBrush}" />
     </StackPanel>
 
     <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,12">

@@ -91,7 +91,7 @@ internal sealed class BrowserNativeWebViewDownloadBridge
         catch (Exception exception)
         {
             _reportError(new InvalidOperationException(
-                "Haven could not attach its managed download handler to the native browser.", exception));
+                "9to1 could not attach its managed download handler to the native browser.", exception));
         }
     }
 
@@ -110,7 +110,7 @@ internal sealed class BrowserNativeWebViewDownloadBridge
             operation.Pause();
             if (operation.TotalBytesToReceive is { } totalBytesToReceive
                 && totalBytesToReceive > (ulong)BrowserDownloadTransport.MaximumDownloadBytes)
-                throw new InvalidOperationException("The download exceeds Haven's 250 MB limit.");
+                throw new InvalidOperationException("The download exceeds 9to1's 250 MB limit.");
             if (!Uri.TryCreate(operation.Uri, UriKind.Absolute, out var sourceAddress))
                 throw new InvalidOperationException("The native browser download did not expose a valid source address.");
 
@@ -154,7 +154,7 @@ internal sealed class BrowserNativeWebViewDownloadBridge
             if (exception is not OperationCanceledException)
             {
                 _reportError(new InvalidOperationException(
-                    "The page download could not enter Haven's approval queue. " + exception.Message,
+                    "The page download could not enter 9to1's approval queue. " + exception.Message,
                     exception));
             }
         }
@@ -210,7 +210,7 @@ internal sealed class BrowserNativeWebViewDownloadBridge
                         if (_operation.BytesReceived > BrowserDownloadTransport.MaximumDownloadBytes)
                         {
                             _ = FailAsync(new InvalidOperationException(
-                                "The download exceeded Haven's 250 MB limit while streaming."));
+                                "The download exceeded 9to1's 250 MB limit while streaming."));
                             return;
                         }
                         if (_operation.State == CoreWebView2DownloadState.Completed)
@@ -261,7 +261,7 @@ internal sealed class BrowserNativeWebViewDownloadBridge
             if (Volatile.Read(ref _terminal) != 0) return;
             if (_operation.BytesReceived > BrowserDownloadTransport.MaximumDownloadBytes)
                 _ = FailAsync(new InvalidOperationException(
-                    "The download exceeded Haven's 250 MB limit while streaming."));
+                    "The download exceeded 9to1's 250 MB limit while streaming."));
         }
 
         private void OnStateChanged(object? sender, object args)

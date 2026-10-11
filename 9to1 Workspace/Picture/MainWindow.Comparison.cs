@@ -94,7 +94,7 @@ public sealed partial class MainWindow
     private void RefreshComparisonLayout()
     {
         var side = _comparisonMode == PictureComparisonMode.SideBySide;
-        _layout.Set("ComparisonColumns", side ? "*,*" : "*");
+        _layout.Set("ComparisonColumns", side ? "1fr 1fr" : "1fr");
         _layout.Set("CurrentPreviewColumn", side ? 1 : 0);
         _layout.Set("HasComparisonPreview", _bitmap is not null);
         _layout.Set("HasSideBySideComparison", side);

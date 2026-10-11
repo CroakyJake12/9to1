@@ -31,7 +31,7 @@ public static class HavenEffects
 
         var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (parts.Length is not (5 or 6))
-            throw new FormatException($"Shadow '{value}' must be a named Haven shadow or 'offsetX offsetY blur spread brush [opacity]'.");
+            throw new FormatException($"Shadow '{value}' must be a named 9to1 shadow or 'offsetX offsetY blur spread brush [opacity]'.");
         var opacity = parts.Length == 6 ? ParseNumber(parts[5], "opacity") : 1d;
         if (opacity is < 0 or > 1) throw new FormatException("Shadow opacity must be between 0 and 1.");
         shadow = new HavenShadow(

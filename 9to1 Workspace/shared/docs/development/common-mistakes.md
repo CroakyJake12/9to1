@@ -1,6 +1,6 @@
 # Common Mistakes and Anti-Patterns
 
-How a correct Haven change differs from a plausible-looking shortcut. For
+How a correct 9to1 change differs from a plausible-looking shortcut. For
 each, the preferred approach is the one in canonical docs.
 
 ## Creating a parallel system instead of extending the existing one
@@ -27,12 +27,12 @@ share it; the scene cannot be exercised without a window.
 `Haven.Application` contracts tested by Core/Desktop suites. The page adapter
 passes services into the scene and handles events back out.
 
-## Bypassing HUI for normal Haven UI
+## Bypassing HUI for normal 9to1 UI
 
 **Problem.** Constructing ad-hoc Avalonia controls for a product surface that
 should be a HUI scene + thin host.
 
-**Why it hurts.** Bypasses Haven's token system, responsive patterns, and
+**Why it hurts.** Bypasses 9to1's token system, responsive patterns, and
 future theme/typography rollouts; breaks Android sharing.
 
 **Prefer.** `docs/ui/building-ui.md`: scene + host, reuse `Haven.UI`

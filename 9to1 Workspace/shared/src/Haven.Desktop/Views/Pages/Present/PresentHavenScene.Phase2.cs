@@ -211,7 +211,7 @@ internal sealed partial class PresentHavenScene
                 PresentElementKind.Media => "Media Â· " + TrimLabel(element.AlternativeText),
                 PresentElementKind.Shape => "Shape Â· " + (string.IsNullOrWhiteSpace(element.ShapeType) ? "rect" : element.ShapeType),
                 PresentElementKind.Group => "Group",
-                PresentElementKind.GenUi => "Interactive Haven UI",
+                PresentElementKind.GenUi => "Interactive 9to1 UI",
                 _ => element.Kind.ToString()
             };
             var button = NewButton($"Present.Object.{element.Id:N}", label);

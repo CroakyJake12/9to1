@@ -11,7 +11,7 @@
               <TextBlock Text="Play" FontSize="34" FontWeight="ExtraBold"/>
               <TextBlock Text="Local interactive experiences, with AI when it genuinely adds something." Classes="muted" TextWrapping="Wrap"/>
             </StackPanel>
-            <hui:HavenPrimaryButton x:Name="CreateButton" Grid.Column="1" Content="Create with Haven" Padding="20,11" VerticalAlignment="Center"/>
+            <hui:HavenPrimaryButton x:Name="CreateButton" Grid.Column="1" Content="Create with 9to1" Padding="20,11" VerticalAlignment="Center"/>
           </Grid>
 
           <hui:HavenCard Padding="18">

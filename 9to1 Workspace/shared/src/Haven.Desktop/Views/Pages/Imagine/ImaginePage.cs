@@ -133,7 +133,7 @@ public sealed partial class ImaginePage : UserControl, IDisposable
     private async Task ApplyAssistantAsync(string instruction)
     {
         if (_session is null || string.IsNullOrWhiteSpace(instruction)) return; ImagineAiEditRequest request; try { request = _session.CreateAiEditRequest(instruction); } catch (Exception exception) when (exception is ArgumentException or InvalidOperationException) { SetStatus(exception.Message); return; } _scene.AssistantInput.Text = string.Empty;
-        await RunOperationAsync("Haven is editing the selected object…", async token => { var result = await _assistant.ProposeEditAsync(_session.Project, request, token); if (result.Succeeded && _session.ApplyAssistantObjectEdit(result)) await _projects.SaveAsync(_session.Project, token); SetStatus(result.Status); });
+        await RunOperationAsync("9to1 is editing the selected object…", async token => { var result = await _assistant.ProposeEditAsync(_session.Project, request, token); if (result.Succeeded && _session.ApplyAssistantObjectEdit(result)) await _projects.SaveAsync(_session.Project, token); SetStatus(result.Status); });
     }
     private void AddText() { if (_session is null) return; var value = _scene.TextInput.Text.Trim(); _session.AddText(string.IsNullOrWhiteSpace(value) ? "Text" : value); _scene.TextInput.Text = string.Empty; SetStatus("Text added."); }
     private void SelectAsset(ImagineMediaAsset asset)

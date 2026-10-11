@@ -68,7 +68,7 @@ public sealed class MeshInboundRuntimeExecutor(IServiceProvider services) : IMes
             else if (item.Kind == ChatStreamEventKind.PreflightFailed)
             {
                 var missing = string.Join(", ", item.PreflightResult?.Missing.Select(requirement => requirement.Capability.ToString()) ?? []);
-                throw new InvalidOperationException(string.IsNullOrWhiteSpace(missing) ? "The remote agent model failed Haven capability preflight." : $"The remote agent model cannot satisfy this request without additional capabilities: {missing}.");
+                throw new InvalidOperationException(string.IsNullOrWhiteSpace(missing) ? "The remote agent model failed 9to1 capability preflight." : $"The remote agent model cannot satisfy this request without additional capabilities: {missing}.");
             }
         }
         return output.ToString();

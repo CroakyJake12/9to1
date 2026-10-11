@@ -122,7 +122,7 @@ public sealed partial class CatalogPageViewModel : ObservableObject
     /// <summary>
     /// Builds er hint from the currently available inputs.
     /// </summary>
-    public string BuilderHint => Kind switch { CatalogPageKind.Agents => "Describe the assistant you want Haven to create", CatalogPageKind.Capabilities => "Describe the functional capability and constraints", _ => "Describe the reusable instruction behaviour" };
+    public string BuilderHint => Kind switch { CatalogPageKind.Agents => "Describe the assistant you want 9to1 to create", CatalogPageKind.Capabilities => "Describe the functional capability and constraints", _ => "Describe the reusable instruction behaviour" };
     /// <summary>
     /// Reports whether agent catalog applies to the current state.
     /// </summary>
@@ -295,7 +295,7 @@ public sealed partial class CatalogPageViewModel : ObservableObject
             var kind = Kind == CatalogPageKind.Agents ? "agent" : "prompt";
             var result = await _ollama.CompleteAsync(new OllamaChatRequest(
                 model.Name,
-                [new OllamaMessage("user", $"Write concise, production-ready system instructions for a Haven {kind} with this purpose: {BuilderPrompt.Trim()}\nReturn only the instruction text.")],
+                [new OllamaMessage("user", $"Write concise, production-ready system instructions for a 9to1 {kind} with this purpose: {BuilderPrompt.Trim()}\nReturn only the instruction text.")],
                 EffortLevel.Medium), CancellationToken.None);
             NewInstructions = result.Trim();
             if (string.IsNullOrWhiteSpace(NewDescription)) NewDescription = BuilderPrompt.Trim();
@@ -549,7 +549,7 @@ public sealed class AutomationsPageViewModel : ObservableObject
             NewName = string.Empty;
             NewInstruction = string.Empty;
             await RefreshAsync();
-            Status = "Automation created. Register the background worker once to run it while Haven is closed.";
+            Status = "Automation created. Register the background worker once to run it while 9to1 is closed.";
         }
         catch (Exception ex)
         {
@@ -1057,11 +1057,11 @@ public sealed class SettingsPageViewModel : ObservableObject
     /// <summary>
     /// Gets or updates data statement, the bindable or domain state represented by this property.
     /// </summary>
-    public string DataStatement => "Haven stores chats, agents, capabilities, preferences, and task history in local files and SQLite. Ollama requests stay on the configured local endpoint.";
+    public string DataStatement => "9to1 stores chats, agents, capabilities, preferences, and task history in local files and SQLite. Ollama requests stay on the configured local endpoint.";
     /// <summary>
     /// Gets or updates browser statement, the bindable or domain state represented by this property.
     /// </summary>
-    public string BrowserStatement => "The embedded browser runs in Haven's native WebView session rather than controlling your normal browser window.";
+    public string BrowserStatement => "The embedded browser runs in 9to1's native WebView session rather than controlling your normal browser window.";
     /// <summary>
     /// Gets or updates safety statement, the bindable or domain state represented by this property.
     /// </summary>
@@ -1123,7 +1123,7 @@ public sealed class SettingsPageViewModel : ObservableObject
     {
         try
         {
-            var saved = _preferences.SaveCustomTheme(new HavenThemePreset(string.Empty, ThemeName, "Custom Haven theme",
+            var saved = _preferences.SaveCustomTheme(new HavenThemePreset(string.Empty, ThemeName, "Custom 9to1 theme",
                 ThemeBackground, ThemePanel, ThemePanel2, ThemeText, ThemeMuted, ThemeAccent, ThemeBlue, ThemeIsLight,
                 string.IsNullOrWhiteSpace(ThemeNubColor) ? "#00000000" : ThemeNubColor, ThemeCardBorder));
             RefreshThemes();

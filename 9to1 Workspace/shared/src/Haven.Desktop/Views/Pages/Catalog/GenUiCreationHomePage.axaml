@@ -3,7 +3,7 @@
     <StackPanel Margin="32,26" Spacing="18" MaxWidth="1180" HorizontalAlignment="Center">
       <StackPanel Spacing="5">
         <TextBlock Text="Create with Generative UI" Classes="heading" FontSize="30" />
-        <TextBlock Text="Describe the app or interactive surface you need. Haven generates the first useful workflow, keeps normal actions deterministic, and saves generated apps so you can reopen them." Classes="muted" TextWrapping="Wrap" MaxWidth="860" />
+        <TextBlock Text="Describe the app or interactive surface you need. 9to1 generates the first useful workflow, keeps normal actions deterministic, and saves generated apps so you can reopen them." Classes="muted" TextWrapping="Wrap" MaxWidth="860" />
       </StackPanel>
       <hui:HavenAdaptiveSurface Classes="card" Padding="20">
         <StackPanel Spacing="12">

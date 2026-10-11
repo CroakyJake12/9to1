@@ -1,6 +1,6 @@
-# Haven Native
+# 9to1 Native
 
-Haven is a local-first Windows desktop assistant built with Avalonia and .NET 10. The application is one native .NET solution; it does not depend on the old Go/HTML/JavaScript sidecar.
+9to1 is a local-first Windows desktop assistant built with Avalonia and .NET 10. The application is one native .NET solution; it does not depend on the old Go/HTML/JavaScript sidecar.
 
 ## Current application
 
@@ -14,11 +14,11 @@ Haven is a local-first Windows desktop assistant built with Avalonia and .NET 10
 - Project-specific chats and sidebar content, local file browsing/editing, atomic saves, edit history, rollback/rollforward, build and detected-test actions, local server and terminal launchers, Git initialization, and origin connection.
 - Contextual tool planning gives the model only definitions supported by the current app context, project root, permission level, platform, and attached runtime; the picker hides functional plugins with no runnable or approvable path.
 - Target-bound Windows Computer Use, workspace-confined file tools, cancellable process execution, explicit activity, timings, command output, and edit counts.
-- Haven Browse with one stable native WebView host, horizontal or vertical browser tabs, private tabs, groups, bookmark bar and manager, history, secure Windows Credential Manager logins, bounded extensions, printing, developer tools, and a page assistant.
+- 9to1 Browse with one stable native WebView host, horizontal or vertical browser tabs, private tabs, groups, bookmark bar and manager, history, secure Windows Credential Manager logins, bounded extensions, printing, developer tools, and a page assistant.
 - SQLite persistence with ordered migrations and best-effort one-time import from `%APPDATA%\LocalCode\state.json`.
 - Scheduled Actions with run history, leases, pause/resume, and a separate worker so the desktop UI does not need to remain open.
 
-Haven exposes streamed replies and verifiable activity. It does not claim to expose a model's private chain-of-thought.
+9to1 exposes streamed replies and verifiable activity. It does not claim to expose a model's private chain-of-thought.
 
 ## Solution structure
 

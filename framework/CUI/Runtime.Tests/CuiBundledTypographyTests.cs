@@ -41,11 +41,11 @@ public sealed class CuiBundledTypographyTests
             using var host = new CuiSceneHost();
             var scene = new CuiNativeScene("font-fixture", "Font fixture", "Home",
                 new CuiRichParser().Parse("""
-                    <Cui><StackPanel>
-                      <TextBlock text="9to1 chrome" />
+                    <Cui><Container Type="Vertical Stack">
+                      <Text text="9to1 chrome" />
                       <Button content="Open" />
-                      <TextBlock text="user code" font-family="monospace" />
-                    </StackPanel></Cui>
+                      <Text text="user code" font-family="monospace" />
+                    </Container></Cui>
                     """), bindings, bindings, new FixtureReadiness());
             await host.ShowAsync(scene, CancellationToken.None);
             var window = new Window { Content = host, Width = 800, Height = 500 };
@@ -53,11 +53,13 @@ public sealed class CuiBundledTypographyTests
             {
                 window.Show();
                 window.UpdateLayout();
-                var panel = Assert.IsType<StackPanel>(host.Content);
-                var label = Assert.IsType<TextBlock>(panel.Children[0]);
-                var button = Assert.IsType<Button>(panel.Children[1]);
-                var code = Assert.IsType<TextBlock>(panel.Children[2]);
-                Assert.Equal(new FontFamily(CuiNativeHost.BundledInterfaceFontFamily), label.FontFamily);
+                var panel = Assert.IsType<CuiContainerControl>(host.Content);
+                var label = Assert.IsType<TextBlock>(panel.AuthoredChildren[0]);
+                var button = Assert.IsType<Button>(panel.AuthoredChildren[1]);
+                var code = Assert.IsType<TextBlock>(panel.AuthoredChildren[2]);
+                Assert.True(FontManager.Current.TryGetGlyphTypeface(new Typeface(label.FontFamily, label.FontStyle, label.FontWeight), out var actualGlyphs));
+                Assert.True(FontManager.Current.TryGetGlyphTypeface(new Typeface(new FontFamily(CuiNativeHost.BundledInterfaceFontFamily), label.FontStyle, label.FontWeight), out var bundledGlyphs));
+                Assert.Same(bundledGlyphs, actualGlyphs);
                 Assert.Equal(label.FontFamily, button.FontFamily);
                 Assert.Equal(FontWeight.Medium, label.FontWeight);
                 Assert.Equal(FontWeight.Medium, button.FontWeight);

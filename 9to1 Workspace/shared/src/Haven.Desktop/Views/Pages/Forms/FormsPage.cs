@@ -51,7 +51,7 @@ public sealed class FormsPage : UserControl, IDisposable
         _sceneHost.InputSubmitted += OnInputSubmitted;
         Content = _sceneHost;
         AutomationProperties.SetAutomationId(this, "HavenFormsPage");
-        AutomationProperties.SetName(this, "Haven Forms");
+        AutomationProperties.SetName(this, "9to1 Forms");
         AutomationProperties.SetAutomationId(_sceneHost, "HavenFormsScene");
         AutomationProperties.SetName(_sceneHost, "Feedback form and locally stored responses");
         _ = RefreshResponsesAsync();

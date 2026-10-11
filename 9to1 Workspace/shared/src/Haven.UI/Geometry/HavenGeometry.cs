@@ -59,7 +59,7 @@ public readonly record struct HavenLength(double Value, HavenLengthUnit Unit)
         if (text.EndsWith("vw", StringComparison.OrdinalIgnoreCase)) return Vw(ParseNumber(text[..^2]));
         if (text.EndsWith("vh", StringComparison.OrdinalIgnoreCase)) return Vh(ParseNumber(text[..^2]));
         if (text.EndsWith("fr", StringComparison.OrdinalIgnoreCase)) return Fr(ParseNumber(text[..^2]));
-        throw new FormatException($"'{value}' is not a Haven length. Use px, %, vw, vh, fr, or Auto.");
+        throw new FormatException($"'{value}' is not a 9to1 length. Use px, %, vw, vh, fr, or Auto.");
     }
 
     public double Resolve(double parentExtent, HavenSize viewport)
@@ -71,7 +71,7 @@ public readonly record struct HavenLength(double Value, HavenLengthUnit Unit)
             HavenLengthUnit.ViewportWidth => viewport.Width * Value / 100d,
             HavenLengthUnit.ViewportHeight => viewport.Height * Value / 100d,
             HavenLengthUnit.Auto or HavenLengthUnit.Fraction => double.NaN,
-            _ => throw new InvalidOperationException($"Unsupported Haven length unit {Unit}.")
+            _ => throw new InvalidOperationException($"Unsupported 9to1 length unit {Unit}.")
         };
     }
 
@@ -103,7 +103,7 @@ public readonly record struct HavenThickness(HavenLength Left, HavenLength Top, 
             1 => Uniform(parts[0]),
             2 => new(parts[1], parts[0], parts[1], parts[0]),
             4 => new(parts[3], parts[0], parts[1], parts[2]),
-            _ => throw new FormatException("Haven thickness accepts one, two, or four length values.")
+            _ => throw new FormatException("9to1 thickness accepts one, two, or four length values.")
         };
     }
 }

@@ -334,7 +334,7 @@ internal static class NotesDocxFormatService
             case NotesBlockKind.Divider: body.Add(WritePlainParagraph("────────────────────────", null, new NotesParagraphFormat(), context)); break;
             case NotesBlockKind.Equation when block.Equation is not null: body.Add(WritePlainParagraph(block.Equation.Source, null, block.Paragraph, context)); break;
             case NotesBlockKind.Image or NotesBlockKind.Audio or NotesBlockKind.Video when block.Media is not null: body.Add(WritePlainParagraph($"{block.Kind}: {block.Media.AltText} {block.Media.Caption}".Trim(), null, block.Paragraph, context)); break;
-            case NotesBlockKind.Canvas when block.Canvas is not null: body.Add(WritePlainParagraph($"Canvas ({block.Canvas.Objects.Count} objects; editable data remains in the Haven document).", null, block.Paragraph, context)); break;
+            case NotesBlockKind.Canvas when block.Canvas is not null: body.Add(WritePlainParagraph($"Canvas ({block.Canvas.Objects.Count} objects; editable data remains in the 9to1 document).", null, block.Paragraph, context)); break;
             case NotesBlockKind.HtmlWidget when block.Html is not null: body.Add(WritePlainParagraph(string.IsNullOrWhiteSpace(block.Html.FallbackText) ? "Interactive HTML content" : block.Html.FallbackText, null, block.Paragraph, context)); break;
             case NotesBlockKind.Flashcard when block.Flashcard is not null: body.Add(WritePlainParagraph("Question: " + block.Flashcard.Front, null, block.Paragraph, context)); body.Add(WritePlainParagraph("Answer: " + block.Flashcard.Back, null, block.Paragraph, context)); break;
             default: body.Add(WriteRichParagraph(block, context)); break;

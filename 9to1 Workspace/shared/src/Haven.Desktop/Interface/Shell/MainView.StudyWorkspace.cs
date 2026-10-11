@@ -12,7 +12,7 @@ public sealed partial class MainView
     private readonly Dictionary<Guid, StudySubjectPage> _studySubjectPages = [];
 
     private IStudyPlannerService StudyPlanner =>
-        (App.Services ?? throw new InvalidOperationException("Haven services are unavailable while opening Study."))
+        (App.Services ?? throw new InvalidOperationException("9to1 services are unavailable while opening Study."))
         .GetRequiredService<IStudyPlannerService>();
 
     internal static bool UsesNativeStudyWorkspace(ContainerDefinition container) =>

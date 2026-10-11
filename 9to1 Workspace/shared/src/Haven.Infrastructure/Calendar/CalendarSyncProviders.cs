@@ -33,7 +33,7 @@ public sealed class CalendarSyncProvider(
     /// Gets or updates configuration status, the bindable or domain state represented by this property.
     /// </summary>
     public string ConfigurationStatus => !IsConfigured
-        ? $"{Kind} Calendar is not configured. Add Haven's public OAuth client ID to enable sign-in."
+        ? $"{Kind} Calendar is not configured. Add 9to1's public OAuth client ID to enable sign-in."
         : transport is null
             ? $"{Kind} Calendar credentials are configured, but the live synchronization transport is unavailable in this build."
             : $"{Kind} Calendar is ready to connect.";

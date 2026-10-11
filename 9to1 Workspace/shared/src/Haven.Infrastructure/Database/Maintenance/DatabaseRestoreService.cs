@@ -73,7 +73,7 @@ public sealed class DatabaseRestoreService(
             var normalizedName = NormalizeFileName(backupFileName);
             var backups = await GetBackupsCoreAsync(cancellationToken).ConfigureAwait(false);
             var backup = backups.FirstOrDefault(item => item.FileName.Equals(normalizedName, StringComparison.OrdinalIgnoreCase))
-                         ?? throw new FileNotFoundException("The selected managed Haven backup no longer exists.", normalizedName);
+                         ?? throw new FileNotFoundException("The selected managed 9to1 backup no longer exists.", normalizedName);
             if (!backup.IsVerified)
                 throw new InvalidDataException("The selected backup failed verification and cannot be scheduled for restore: " + backup.VerificationMessage);
 
@@ -83,7 +83,7 @@ public sealed class DatabaseRestoreService(
                 ReliabilitySeverity.Warning,
                 "database",
                 "restore-requested",
-                "A verified database restore was scheduled for the next Haven launch.",
+                "A verified database restore was scheduled for the next 9to1 launch.",
                 new Dictionary<string, string>
                 {
                     ["backupFileName"] = backup.FileName,
@@ -164,14 +164,14 @@ public sealed class DatabaseRestoreService(
 
                 var restored = await VerifyDatabaseAsync(paths.DatabasePath, cancellationToken).ConfigureAwait(false);
                 if (!restored.IsHealthy)
-                    throw new InvalidDataException("The restored Haven database failed its final integrity verification.");
+                    throw new InvalidDataException("The restored 9to1 database failed its final integrity verification.");
 
                 TryDelete(_pendingPath);
                 await diagnostics.WriteAsync(
                     ReliabilitySeverity.Warning,
                     "database",
                     "restore-applied",
-                    "A verified database backup was restored before Haven opened its data store.",
+                    "A verified database backup was restored before 9to1 opened its data store.",
                     new Dictionary<string, string>
                     {
                         ["backupFileName"] = backup.FileName,
@@ -206,7 +206,7 @@ public sealed class DatabaseRestoreService(
                             ReliabilitySeverity.Critical,
                             "database",
                             "restore-rollback-failed",
-                            "Database restore failed and the emergency rollback also failed. Haven startup must remain stopped.",
+                            "Database restore failed and the emergency rollback also failed. 9to1 startup must remain stopped.",
                             new Dictionary<string, string>
                             {
                                 ["restoreException"] = restoreFailure.GetType().Name,
@@ -309,7 +309,7 @@ public sealed class DatabaseRestoreService(
         var pending = await ReadPendingFileCoreAsync(cancellationToken).ConfigureAwait(false);
         return pending is null
             ? null
-            : new PendingDatabaseRestore(pending.BackupFileName, pending.Sha256, pending.RequestedAt, true, "Verified restore pending for the next Haven launch.");
+            : new PendingDatabaseRestore(pending.BackupFileName, pending.Sha256, pending.RequestedAt, true, "Verified restore pending for the next 9to1 launch.");
     }
 
     /// <summary>
@@ -486,7 +486,7 @@ public sealed class DatabaseRestoreService(
         var normalized = NormalizeFileName(fileName);
         var root = Path.GetFullPath(_backupDirectory).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
         var path = Path.GetFullPath(Path.Combine(_backupDirectory, normalized));
-        if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("The backup path is outside Haven's managed backup directory.", nameof(fileName));
+        if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("The backup path is outside 9to1's managed backup directory.", nameof(fileName));
         return path;
     }
 
@@ -500,7 +500,7 @@ public sealed class DatabaseRestoreService(
         if (!normalized.Equals(Path.GetFileName(normalized), StringComparison.Ordinal)
             || !normalized.EndsWith(".db", StringComparison.OrdinalIgnoreCase)
             || normalized.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
-            throw new ArgumentException("Only a managed Haven database backup file name is allowed.", nameof(fileName));
+            throw new ArgumentException("Only a managed 9to1 database backup file name is allowed.", nameof(fileName));
         return normalized;
     }
 

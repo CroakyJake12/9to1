@@ -1,6 +1,6 @@
-# Haven App Editing Guide
+# 9to1 App Editing Guide
 
-This guide maps the current Avalonia application as of 15 July 2026. It is for editing Haven itself, not for using Haven as an end user.
+This guide maps the current Avalonia application as of 15 July 2026. It is for editing 9to1 itself, not for using 9to1 as an end user.
 
 ## Start here
 
@@ -59,7 +59,7 @@ Use `HAVEN_DATA_DIR` for migration and destructive-operation testing. Never poin
 - Add a new SQLite migration instead of rewriting any migration that a user may already have applied.
 - Keep user project operations confined to the selected project root.
 - Do not advertise a tool if its runtime, surface, permissions, platform, or project root cannot support it.
-- Do not claim hidden chain-of-thought. Haven exposes streamed replies, explicit activity, command output, timings and edit counts.
+- Do not claim hidden chain-of-thought. 9to1 exposes streamed replies, explicit activity, command output, timings and edit counts.
 - Keep temporary build outputs and deliverables separate, then remove task-created verification files.
 
 ## Guide contents

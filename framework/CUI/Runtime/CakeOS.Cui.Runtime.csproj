@@ -10,7 +10,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../vendor/Avalonia/src/Avalonia.Desktop/Avalonia.Desktop.csproj" />
-    <ProjectReference Include="../vendor/Avalonia/src/Avalonia.Themes.Fluent/Avalonia.Themes.Fluent.csproj" />
     <ProjectReference Include="../Core/CakeOS.Cui.Core.csproj" />
     <ProjectReference Include="../Themes/CakeOS.Cui.Themes.csproj" />
     <ProjectReference Include="../../CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj" />
@@ -24,6 +23,8 @@
                       Link="Assets/Fonts/MontserratStatic/%(Filename)%(Extension)" />
     <AvaloniaResource Include="../../../9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/OFL-Montserrat.txt"
                       Link="Assets/Fonts/OFL-Montserrat.txt" />
+    <AvaloniaResource Include="../vendor/Avalonia/src/Avalonia.Fonts.Inter/Assets/*.ttf" Link="Assets/Fonts/Inter/%(Filename)%(Extension)" />
+    <AvaloniaResource Include="../vendor/Avalonia/src/Avalonia.Fonts.Inter/Assets/OFL.txt" Link="Assets/Fonts/Inter/OFL.txt" />
   </ItemGroup>
   <Import Project="../vendor/Avalonia/build/BuildTargets.targets" />
 </Project>

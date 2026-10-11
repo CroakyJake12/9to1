@@ -165,7 +165,7 @@ public static class BrowserDownloadFilePolicy
         var full = Path.GetFullPath(candidate);
         var prefix = root.EndsWith(Path.DirectorySeparatorChar) ? root : root + Path.DirectorySeparatorChar;
         if (!full.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-            throw new UnauthorizedAccessException("The download destination escaped Haven's download directory.");
+            throw new UnauthorizedAccessException("The download destination escaped 9to1's download directory.");
         return full;
     }
 }

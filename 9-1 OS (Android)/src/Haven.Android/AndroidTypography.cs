@@ -51,7 +51,7 @@ internal static class AndroidTypography
 
     private static Typeface Load(string assetPath)
         => Typeface.CreateFromAsset(global::Android.App.Application.Context.Assets, assetPath)
-           ?? throw new InvalidOperationException($"Bundled Haven font asset '{assetPath}' could not be loaded.");
+           ?? throw new InvalidOperationException($"Bundled 9to1 font asset '{assetPath}' could not be loaded.");
 }
 
 internal enum NativeFontEmphasis

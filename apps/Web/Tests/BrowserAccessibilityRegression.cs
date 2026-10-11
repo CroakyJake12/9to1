@@ -2,6 +2,7 @@ using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
+using Avalonia.LogicalTree;
 using Avalonia.Automation.Peers;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
@@ -25,26 +26,38 @@ await session.Dispatch(() =>
     loader.SetBindingContext(model);
     loader.SetActionDispatcher(model);
     var document = new CuiRichParser().Parse("""
-        <Cui><Actions><Action name="Alias" command="Run" /></Actions><StackPanel><Button id="run" content="Native action" action="Run" />
-        <TextBox id="edit" accessible-name="Native value" text="original" />
-        <TextBlock text="Actual native text" />
-        <Button id="authored-disabled" content="Unavailable owning state" action="Run" IsEnabled="false" />
-        <Button id="alias" content="Aliased native action" action="Alias" />
-        </StackPanel></Cui>
+        <Cui>
+          <Actions>
+            <Action name="Alias" command="Run" />
+          </Actions>
+          <Page>
+            <Container Type="Vertical Stack">
+              <Button id="run" content="Native action" action="Run" />
+              <Input id="edit" accessible-name="Native value" Type="Text" Value="original" />
+              <Text text="Actual native text" />
+              <Button id="authored-disabled" content="Unavailable owning state" action="Run" Interactive="false" />
+              <Button id="alias" content="Aliased native action" action="Alias" />
+            </Container>
+          </Page>
+        </Cui>
         """);
     var (root, diagnostics) = loader.TryLoad(document);
-    if (root is not StackPanel stack || diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error))
+    if (root is null || diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error))
         throw new InvalidOperationException("Real CUI fixture failed to lower.");
+    var container = root.GetLogicalDescendants().OfType<CuiContainerControl>().Single();
+    var stack = (StackPanel)container.Layout;
     loader.WireBindings(root);
-    var button = (Button)stack.Children[0];
-    var input = (TextBox)stack.Children[1];
-    var authoredDisabled = (Button)stack.Children[3];
-    var alias = (Button)stack.Children[4];
+    var button = (Button)container.AuthoredChildren[0];
+    var input = (TextBox)container.AuthoredChildren[1];
+    var authoredDisabled = (Button)container.AuthoredChildren[3];
+    var alias = (Button)container.AuthoredChildren[4];
     BrowserActionAvailability.ApplyInitial(authoredDisabled, loader, document, model);
     BrowserActionAvailability.ApplyInitial(alias, loader, document, model);
     Check("Available action does not overwrite authored disabled state", !authoredDisabled.IsEnabled);
     Check("Actual typed alias command determines availability", alias.IsEnabled && (string?)alias.Tag == "Alias");
-    stack.Children.Add(new CheckBox { Content = "Unsupported toggle" });
+    stack.Children.Add(new RadioButton { Content = "Unsupported radio" });
+    var checkBox = new CheckBox { Content = "Actual native toggle" };
+    stack.Children.Add(checkBox);
     stack.Children.Add(new TextBox { Text = "private-password", PasswordChar = '*' });
     var window = new Window { Content = root, Width = 400, Height = 300 };
     window.Show();
@@ -69,7 +82,7 @@ await session.Dispatch(() =>
         Check("Supported bounds are actual native logical top-level geometry", MatchesBounds(action.GetProperty("bounds"),
             ControlAutomationPeer.CreatePeerForElement(button).GetBoundingRectangle()));
         var unsupportedToggle = snapshot.RootElement.GetProperty("unsupportedPeers").EnumerateArray()
-            .Single(e => e.GetProperty("controlType").GetString() == "CheckBox");
+            .Single(e => e.GetProperty("controlType").GetString() == "RadioButton");
         Check("Unsupported peer diagnostic retains native geometry without advertising actions or values",
             MatchesBounds(unsupportedToggle.GetProperty("bounds"), ControlAutomationPeer.CreatePeerForElement(stack.Children[5]).GetBoundingRectangle())
             && !unsupportedToggle.TryGetProperty("id", out _) && !unsupportedToggle.TryGetProperty("value", out _)
@@ -89,7 +102,13 @@ await session.Dispatch(() =>
         Check("Snapshot reports the actual current native focused peer", focused.RootElement.GetProperty("elements").EnumerateArray().Single(e => e.GetProperty("id").GetString() == editId).GetProperty("focused").GetBoolean());
         input.Focusable = false;
         Check("Changed native focusability rejects focus", !bridge.Perform(editId, "focus", null));
-        Check("Unsupported provider roles are explicit", snapshot.RootElement.GetProperty("unsupported").EnumerateArray().Any(e => e.GetString() == "CheckBox"));
+        Check("Unsupported provider roles are explicit", snapshot.RootElement.GetProperty("unsupported").EnumerateArray().Any(e => e.GetString() == "RadioButton"));
+        var toggle = elements.Single(e => e.GetProperty("role").GetString() == "checkbox");
+        var toggleId = toggle.GetProperty("id").GetString()!;
+        Check("Native checkbox state is exposed", toggle.GetProperty("value").GetString() == "false");
+        Check("Toggle invokes the real native provider", bridge.Perform(toggleId, "toggle", null) && checkBox.IsChecked is true);
+        checkBox.IsEnabled = false;
+        Check("Disabled native checkbox rejects toggling", !bridge.Perform(toggleId, "toggle", null) && checkBox.IsChecked is true);
         Check("Password values are not projected", !bridge.ReadSnapshot().Contains("private-password", StringComparison.Ordinal));
         var aliasId = elements.Single(e => e.GetProperty("automationId").GetString() == "alias").GetProperty("id").GetString()!;
         Check("Alias invokes the actual loader-resolved command once", bridge.Perform(aliasId, "invoke", null) && invokes == 2);

@@ -103,10 +103,10 @@ public sealed class BoardsAppTests
             var root = Assert.IsAssignableFrom<Control>(loader.LoadMarkup(
                 """
                 <Cui>
-                  <StackPanel>
+                  <Container Type="Vertical Stack">
                     <Button content="Save" action="SaveBoard" />
                     <Button content="Add" action="AddBlock" />
-                  </StackPanel>
+                  </Container>
                 </Cui>
                 """,
                 "boards-actions.cui").Root);
@@ -122,13 +122,13 @@ public sealed class BoardsAppTests
     {
         var markup = """
             <Cui>
-              <StackPanel>
-                <TextBox id="Para" text="hello" acceptsreturn="true" textwrapping="Wrap" fontsize="14" fontweight="Bold" fontstyle="Italic" />
-                <TextBlock text="styled" textdecorations="Underline" />
-                <Canvas width="100" height="100">
-                  <TextBlock text="dot" canvas.left="12" canvas.top="34" />
-                </Canvas>
-              </StackPanel>
+              <Container Type="Vertical Stack">
+                <Input Type="Text" id="Para" Value="hello" Multiline="true" TextWrapping="Wrap" FontSize="14" FontWeight="Bold" FontStyle="Italic" />
+                <Text Text="styled" TextDecoration="Underline" />
+                <Container Type="Absolute" Width="100" Height="100" XInherited="True" YInherited="True">
+                  <Text Text="dot" X-px="12" Y-px="34" />
+                </Container>
+              </Container>
             </Cui>
             """;
         var (acceptsReturn, wrapping, weight, style, hasDecorations, left, top) = await OnUiThreadAsync(() =>
@@ -136,13 +136,20 @@ public sealed class BoardsAppTests
             var loader = new CuiControlLoader();
             var (root, diagnostics) = loader.LoadMarkup(markup, "boards-ext.cui");
             Assert.True(diagnostics.Count == 0, $"Diagnostics: {string.Join("; ", diagnostics.Select(d => d.ToString()))}");
-            var panel = Assert.IsType<StackPanel>(root);
-            var textBox = Assert.IsType<TextBox>(panel.Children[0]);
-            var styled = Assert.IsType<TextBlock>(panel.Children[1]);
-            var canvas = Assert.IsType<Canvas>(panel.Children[2]);
-            var dot = Assert.IsType<TextBlock>(canvas.Children[0]);
-            return (textBox.AcceptsReturn, textBox.TextWrapping, textBox.FontWeight, textBox.FontStyle,
-                styled.TextDecorations is not null, Canvas.GetLeft(dot), Canvas.GetTop(dot));
+            var panel = Assert.IsType<CuiContainerControl>(root);
+            var textBox = Assert.IsType<TextBox>(panel.AuthoredChildren[0]);
+            var styled = Assert.IsType<TextBlock>(panel.AuthoredChildren[1]);
+            var canvas = Assert.IsType<CuiContainerControl>(panel.AuthoredChildren[2]);
+            var dot = Assert.IsType<TextBlock>(canvas.AuthoredChildren[0]);
+            var window = new Window { Width = 300, Height = 300, Content = panel };
+            try
+            {
+                window.Show(); window.UpdateLayout();
+                var centre = dot.TranslatePoint(new Point(dot.Bounds.Width / 2, dot.Bounds.Height / 2), canvas)!.Value;
+                return (textBox.AcceptsReturn, textBox.TextWrapping, textBox.FontWeight, textBox.FontStyle,
+                    styled.TextDecorations is not null, centre.X, centre.Y);
+            }
+            finally { window.Close(); }
         });
 
         Assert.True(acceptsReturn);
@@ -150,8 +157,9 @@ public sealed class BoardsAppTests
         Assert.Equal(Avalonia.Media.FontWeight.Bold, weight);
         Assert.Equal(Avalonia.Media.FontStyle.Italic, style);
         Assert.True(hasDecorations);
-        Assert.Equal(12, left);
-        Assert.Equal(34, top);
+        // Owner-approved pixels use the inherited bounds' centre, with Y up.
+        Assert.Equal(50 + 12, left, 5);
+        Assert.Equal(50 - 34, top, 5);
     }
 
     [Fact]
@@ -163,15 +171,16 @@ public sealed class BoardsAppTests
             var (loaded, diagnostics) = loader.LoadMarkup(
                 """
                 <Cui>
-                  <Grid columnDefinitions="100,*" rowDefinitions="Auto,*">
-                    <TextBlock text="layout" grid-column="1" grid-row="1" />
-                  </Grid>
+                  <Container Type="Grid" ColumnSizes="100 1fr" RowSizes="Auto 1fr">
+                    <Text Text="layout" Column="1" Row="1" />
+                  </Container>
                 </Cui>
                 """,
                 "boards-grid.cui");
             Assert.Empty(diagnostics);
-            var grid = Assert.IsType<Grid>(loaded);
-            var child = Assert.IsType<TextBlock>(grid.Children[0]);
+            var container = Assert.IsType<CuiContainerControl>(loaded);
+            var grid = Assert.IsType<Grid>(container.Layout);
+            var child = Assert.IsType<TextBlock>(container.AuthoredChildren[0]);
             return (
                 ColumnCount: grid.ColumnDefinitions.Count,
                 RowCount: grid.RowDefinitions.Count,
@@ -205,9 +214,9 @@ public sealed class BoardsAppTests
                 var host = Assert.IsAssignableFrom<Control>(hostLoader.LoadMarkup(
                     """
                     <Cui>
-                      <StackPanel>
-                        <TextBox id="ParaBox" text="Edit this paragraph." acceptsreturn="true" textwrapping="Wrap" />
-                      </StackPanel>
+                      <Container Type="Vertical Stack">
+                        <Input Type="Text" id="ParaBox" Value="Edit this paragraph." Multiline="true" TextWrapping="Wrap" />
+                      </Container>
                     </Cui>
                     """,
                     "boards-edit-host.cui").Root);
@@ -265,9 +274,9 @@ public sealed class BoardsAppTests
             var root = loader.LoadMarkup(
                 """
                 <Cui>
-                  <StackPanel>
-                    <TextBox id="ParaBox" text="{Binding ParaText, fallback=Edit this paragraph.}" acceptsreturn="true" textwrapping="Wrap" />
-                  </StackPanel>
+                  <Container Type="Vertical Stack">
+                    <Input Type="Text" id="ParaBox" Value="{Binding ParaText, fallback=Edit this paragraph.}" WriteBack="False" Multiline="true" TextWrapping="Wrap" />
+                  </Container>
                 </Cui>
                 """,
                 "boards-edit-host.cui").Root;

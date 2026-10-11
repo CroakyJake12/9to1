@@ -24,7 +24,7 @@ internal sealed class TextToSpeechHavenScene : IDisposable
         title.SetValue(HavenProperties.FontWeight, 800);
         Root.Add(title);
 
-        var subtitle = new HavenText("Turn text into spoken audio using Haven's local speech output.") { Level = TextLevel.Paragraph };
+        var subtitle = new HavenText("Turn text into spoken audio using 9to1's local speech output.") { Level = TextLevel.Paragraph };
         subtitle.SetValue(HavenProperties.Foreground, "TextSecondary");
         Root.Add(subtitle);
 

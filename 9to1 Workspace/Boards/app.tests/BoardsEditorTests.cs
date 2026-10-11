@@ -226,9 +226,7 @@ public sealed class BoardsEditorTests
         };
         var components = document.Components
             .SelectMany(c => c.DescendantsAndSelf())
-            .Where(c => c.Properties.TryGetValue("automationid", out var id)
-                && id is CakeOS.Cui.CuiLiteralValue literal
-                && expected.Contains(literal.Value, StringComparer.Ordinal))
+            .Where(c => expected.Contains(c.Name, StringComparer.Ordinal))
             .ToArray();
         Assert.Equal(expected.Length, components.Length);
 
@@ -238,20 +236,20 @@ public sealed class BoardsEditorTests
             var root = Assert.IsAssignableFrom<Control>(loader.LoadMarkup(
                 """
                 <Cui>
-                  <StackPanel>
-                    <TextBox automationid="BoardTitleBox" text="Title" />
-                    <StackPanel automationid="NavHost" />
-                    <StackPanel automationid="ToolbarHost" />
-                    <StackPanel automationid="ContextHost" />
-                    <StackPanel automationid="BlocksHost" />
-                  </StackPanel>
+                  <Container Type="Vertical Stack">
+                    <Input Type="Text" ID="BoardTitleBox" Value="Title" />
+                    <Container Type="Vertical Stack" ID="NavHost" />
+                    <Container Type="Vertical Stack" ID="ToolbarHost" />
+                    <Container Type="Vertical Stack" ID="ContextHost" />
+                    <Container Type="Vertical Stack" ID="BlocksHost" />
+                  </Container>
                 </Cui>
                 """,
                 "boards-host-lookup.cui").Root);
-            return FindByAutomationId<StackPanel>(root, "BlocksHost") is not null
-                && FindByAutomationId<StackPanel>(root, "NavHost") is not null
-                && FindByAutomationId<StackPanel>(root, "ToolbarHost") is not null
-                && FindByAutomationId<StackPanel>(root, "ContextHost") is not null
+            return FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "BlocksHost") is { LayoutType: "Vertical Stack" }
+                && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "NavHost") is { LayoutType: "Vertical Stack" }
+                && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "ToolbarHost") is { LayoutType: "Vertical Stack" }
+                && FindByAutomationId<CakeOS.Cui.Runtime.CuiContainerControl>(root, "ContextHost") is { LayoutType: "Vertical Stack" }
                 && FindByAutomationId<TextBox>(root, "BoardTitleBox") is not null;
         });
         Assert.True(found);

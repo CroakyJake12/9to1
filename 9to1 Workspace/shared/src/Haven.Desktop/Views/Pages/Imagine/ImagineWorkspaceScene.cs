@@ -106,7 +106,7 @@ internal sealed partial class ImagineWorkspaceScene : IDisposable
         Status = Muted("Imagine.Status", "Loading…"); Right.Add(Status);
 
         Assistant = _prefabs.Create("Chatbox", "Imagine-Chatbox");
-        AssistantInput = Assistant.GetComponent<Input>("Instruction"); AssistantInput.Placeholder = "Ask Haven to edit the selected object";
+        AssistantInput = Assistant.GetComponent<Input>("Instruction"); AssistantInput.Placeholder = "Ask 9to1 to edit the selected object";
         AssistantInput.Multiline = true; AssistantInput.SubmitOnEnter = true;
         Assistant.GetComponent<HavenButton>("AddMenu").SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         AssistantSend = Assistant.GetComponent<HavenButton>("Send"); AssistantSend.Accessibility.AccessibleName = "Apply AI structural edit to selection";

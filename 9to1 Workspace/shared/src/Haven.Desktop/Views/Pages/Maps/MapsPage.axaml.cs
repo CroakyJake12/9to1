@@ -60,7 +60,7 @@ public sealed partial class MapsPage : UserControl, IDisposable
         _scene = new MapsHavenScene();
         Scene = new HavenSceneControl(new MapTileImageResolver(tiles)) { Root = _scene.Root };
         AutomationProperties.SetAutomationId(this, "HavenMapsPage");
-        AutomationProperties.SetName(this, "Haven Maps");
+        AutomationProperties.SetName(this, "9to1 Maps");
         AutomationProperties.SetAutomationId(Scene, "HavenMapsScene");
         AutomationProperties.SetName(Scene, "Map search, directions and saved places");
         Content = Scene;

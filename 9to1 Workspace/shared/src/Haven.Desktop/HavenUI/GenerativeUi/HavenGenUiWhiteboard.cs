@@ -146,12 +146,12 @@ internal sealed class HavenGenUiWhiteboard : Container, IDisposable, IAsyncDispo
 
         if (_requestAgent is not null)
         {
-            _agentInput.Placeholder = "Ask Haven to add, mark, or refine something";
+            _agentInput.Placeholder = "Ask 9to1 to add, mark, or refine something";
             _agentInput.SubmitOnEnter = true;
-            _agentInput.Accessibility.AccessibleName = "Ask Haven about whiteboard";
+            _agentInput.Accessibility.AccessibleName = "Ask 9to1 about whiteboard";
             _agentInput.SetValue(HavenProperties.MinWidth, HavenLength.Px(260));
             controls.Add(_agentInput);
-            AddActionButton(controls, "Ask Haven", () => _ = SubmitAgentAsync());
+            AddActionButton(controls, "Ask 9to1", () => _ = SubmitAgentAsync());
         }
 
         _status.SetValue(HavenProperties.FontSize, 11d);
@@ -295,8 +295,8 @@ internal sealed class HavenGenUiWhiteboard : Container, IDisposable, IAsyncDispo
             original.DemandPublication();
             if (_requestAgent is null) return;
             var instruction = _agentInput.Text.Trim();
-            if (string.IsNullOrWhiteSpace(instruction)) { SetStatus("Enter an instruction for Haven first."); return; }
-            SetStatus("Sending whiteboard context to Haven…");
+            if (string.IsNullOrWhiteSpace(instruction)) { SetStatus("Enter an instruction for 9to1 first."); return; }
+            SetStatus("Sending whiteboard context to 9to1…");
             Task? actualRequest = null;
             try
             {
@@ -315,14 +315,14 @@ internal sealed class HavenGenUiWhiteboard : Container, IDisposable, IAsyncDispo
                     original.DemandPublication();
                     _agentInput.Text = string.Empty;
                     original.DemandPublication();
-                    SetStatus("Haven received the whiteboard request.");
+                    SetStatus("9to1 received the whiteboard request.");
                 });
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
                 original.Capture(actualRequest, exception);
                 if (original.IsPublicationCurrent)
-                    await PublishOriginalAsync(original, () => SetStatus("Haven could not process the whiteboard request: " + exception.Message));
+                    await PublishOriginalAsync(original, () => SetStatus("9to1 could not process the whiteboard request: " + exception.Message));
             }
         });
     }

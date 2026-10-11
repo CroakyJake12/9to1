@@ -326,6 +326,11 @@ public sealed partial class WriteDocumentEditor
     {
         var normalized = Normalise(position);
         _documentCaret = normalized;
+        // A click/drag returning to its anchor is a caret, not a latent
+        // selection. Otherwise the first insertion moves the caret away from
+        // that anchor and the next insertion deletes the newly typed text.
+        if (_documentAnchor is { } anchor && Normalise(anchor) == normalized)
+            _documentAnchor = null;
         SelectedBlockId = normalized.BlockId;
         CaretIndex = normalized.Offset;
         var block = TextBlocks().FirstOrDefault(candidate => candidate.Id == normalized.BlockId);

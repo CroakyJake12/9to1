@@ -48,7 +48,7 @@ public sealed partial class BoardsPage : UserControl, IDisposable
         _boards = boards ?? throw new ArgumentNullException(nameof(boards));
         _attachments = attachments;
         Focusable = true;
-        AutomationProperties.SetName(this, "Haven Boards");
+        AutomationProperties.SetName(this, "9to1 Boards");
 
         _pageTabScene.Layout = HavenLayout.Vertical;
         _pageTabScene.Add(_pageTabs);

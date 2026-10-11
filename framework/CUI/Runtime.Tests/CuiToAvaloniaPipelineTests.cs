@@ -15,8 +15,8 @@ public class CuiToAvaloniaPipelineTests
     {
         var cui = """
             <Cui id="test.simple" version="1">
-              <Page id="root" title="Test">
-                <TextBlock text="Hello from CUI" />
+              <Page id="root" accessible-name="Test">
+                <Text text="Hello from CUI" />
                 <Button content="Click me" />
               </Page>
             </Cui>
@@ -34,19 +34,19 @@ public class CuiToAvaloniaPipelineTests
     {
         var cui = """
             <Cui id="test.identity" version="1">
-              <StackPanel id="home-root">
+              <Container Type="Vertical Stack" id="home-root">
                 <Button id="nav-home" content="Home" />
                 <Button id="nav-settings" automation-id="settings-accessibility-id" content="Settings" />
-              </StackPanel>
+              </Container>
             </Cui>
             """;
 
         var result = CuiHeadlessRenderer.Render(cui, "component-identity.cui");
 
         Assert.True(result.Success, $"Render failed: {string.Join("; ", result.Errors)}");
-        var root = Assert.IsType<StackPanel>(result.Root);
-        var home = Assert.IsType<Button>(root.Children[0]);
-        var settings = Assert.IsType<Button>(root.Children[1]);
+        var root = Assert.IsType<CuiContainerControl>(result.Root);
+        var home = Assert.IsType<Button>(root.AuthoredChildren[0]);
+        var settings = Assert.IsType<Button>(root.AuthoredChildren[1]);
         Assert.Equal("home-root", root.Name);
         Assert.Equal("nav-home", home.Name);
         Assert.Equal("nav-home", Avalonia.Automation.AutomationProperties.GetAutomationId(home));
@@ -60,15 +60,15 @@ public class CuiToAvaloniaPipelineTests
         var cui = """
             <Cui id="test.nested" version="1">
               <Page id="root">
-                <StackPanel orientation="vertical">
-                  <Border padding="10">
-                    <TextBlock text="Inside border" />
-                  </Border>
-                  <Grid>
+                <Container Type="Vertical Stack">
+                  <Container Type="Overlay" padding="10">
+                    <Text text="Inside border" />
+                  </Container>
+                  <Container Type="Grid">
                     <Button content="Button A" />
                     <Button content="Button B" />
-                  </Grid>
-                </StackPanel>
+                  </Container>
+                </Container>
               </Page>
             </Cui>
             """;
@@ -77,8 +77,8 @@ public class CuiToAvaloniaPipelineTests
 
         Assert.True(result.Success, $"Render failed: {string.Join("; ", result.Errors)}");
         Assert.NotNull(result.Root);
-        // Page(Panel) + StackPanel + Border + TextBlock + Grid + Button + Button = 7
-        Assert.Equal(7, result.ControlCount);
+        // Seven authored controls plus three internal layouts and five child cells.
+        Assert.Equal(15, result.ControlCount);
     }
 
     [Fact]
@@ -87,9 +87,9 @@ public class CuiToAvaloniaPipelineTests
         var cui = """
             <Cui id="test.props" version="1">
               <Page id="root">
-                <TextBlock text="Styled" font-size="20" font-weight="Bold" />
+                <Text text="Styled" font-size="20" font-weight="Bold" />
                 <Button content="Sized" width="200" height="50" />
-                <StackPanel orientation="horizontal" margin="5" />
+                <Container Type="Horizontal Stack" margin="5" />
               </Page>
             </Cui>
             """;
@@ -100,9 +100,9 @@ public class CuiToAvaloniaPipelineTests
         Assert.NotNull(result.Root);
 
         var root = (Panel)result.Root;
-        var stackPanel = root.Children[2] as StackPanel;
+        var stackPanel = root.Children[2] as CuiContainerControl;
         Assert.NotNull(stackPanel);
-        Assert.Equal(Avalonia.Layout.Orientation.Horizontal, stackPanel.Orientation);
+        Assert.Equal(Avalonia.Layout.Orientation.Horizontal, Assert.IsType<StackPanel>(stackPanel.Layout).Orientation);
         Assert.Equal(new Thickness(5), stackPanel.Margin);
 
         var button = root.Children[1] as Button;
@@ -135,7 +135,8 @@ public class CuiToAvaloniaPipelineTests
             "scroll.cui");
 
         Assert.True(result.Success, string.Join("; ", result.Errors));
-        var scroll = Assert.IsType<ScrollViewer>(result.Root);
+        var container = Assert.IsType<CuiContainerControl>(result.Root);
+        var scroll = Assert.IsType<ScrollViewer>(container.Child);
         Assert.Equal(Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, scroll.HorizontalScrollBarVisibility);
         Assert.Equal(Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled, scroll.VerticalScrollBarVisibility);
         Assert.IsType<StackPanel>(scroll.Content);
@@ -191,19 +192,20 @@ public class CuiToAvaloniaPipelineTests
     {
         var cui = """
             <Cui>
-              <Grid columnDefinitions="120,*" rowDefinitions="Auto,*">
-                <Grid grid-column="1" grid-row="1" columnDefinitions="32,*" rowDefinitions="Auto,*" />
-              </Grid>
+              <Container Type="Grid" ColumnSizes="120 1fr" RowSizes="Auto 1fr">
+                <Container Type="Grid" Column="1" Row="1" ColumnSizes="32 1fr" RowSizes="Auto 1fr" />
+              </Container>
             </Cui>
             """;
 
         var result = CuiHeadlessRenderer.Render(cui, "nested-grid-coordinates.cui");
 
         Assert.True(result.Success, $"Render failed: {string.Join("; ", result.Errors)}");
-        var root = Assert.IsType<Grid>(result.Root);
-        var nested = Assert.IsType<Grid>(root.Children[0]);
-        Assert.Equal(2, nested.ColumnDefinitions.Count);
-        Assert.Equal(2, nested.RowDefinitions.Count);
+        var root = Assert.IsType<CuiContainerControl>(result.Root);
+        var nested = Assert.IsType<CuiContainerControl>(root.AuthoredChildren[0]);
+        var nestedGrid = Assert.IsType<Grid>(nested.Layout);
+        Assert.Equal(2, nestedGrid.ColumnDefinitions.Count);
+        Assert.Equal(2, nestedGrid.RowDefinitions.Count);
         Assert.Equal(1, Grid.GetColumn(nested));
         Assert.Equal(1, Grid.GetRow(nested));
     }
@@ -214,7 +216,7 @@ public class CuiToAvaloniaPipelineTests
         var cui = """
             <Cui id="test.classes" version="1">
               <Page id="root">
-                <TextBlock class="heading muted" text="Classed" />
+                <Text class="heading muted" text="Classed" />
                 <Button class="primary large" content="Classed button" />
               </Page>
             </Cui>
@@ -243,7 +245,7 @@ public class CuiToAvaloniaPipelineTests
         var cui = """
             <Cui id="test.binding" version="1">
               <Page id="root">
-                <TextBlock text="{Binding message, fallback=Loading...}" />
+                <Text text="{Binding message, fallback=Loading...}" />
                 <Button content="{Binding action.label}" />
               </Page>
             </Cui>
@@ -267,7 +269,7 @@ public class CuiToAvaloniaPipelineTests
                 <Resource key="app-title" value="My Application" />
               </Resources>
               <Page id="root">
-                <TextBlock text="{Resource app-title}" />
+                <Text text="{Resource app-title}" />
               </Page>
             </Cui>
             """;
@@ -296,30 +298,30 @@ public class CuiToAvaloniaPipelineTests
 
         Assert.True(result.Success, string.Join("; ", result.Errors));
         var page = Assert.IsType<Panel>(result.Root);
-        var stack = Assert.IsType<StackPanel>(Assert.Single(page.Children));
-        Assert.Equal(Avalonia.Layout.Orientation.Vertical, stack.Orientation);
-        Assert.IsType<TextBlock>(stack.Children[0]);
-        Assert.IsType<Button>(stack.Children[1]);
-        Assert.IsType<CheckBox>(stack.Children[2]);
-        Assert.IsType<Image>(stack.Children[3]);
+        var stack = Assert.IsType<CuiContainerControl>(Assert.Single(page.Children));
+        Assert.Equal(Avalonia.Layout.Orientation.Vertical, Assert.IsType<StackPanel>(stack.Layout).Orientation);
+        Assert.IsType<TextBlock>(stack.AuthoredChildren[0]);
+        Assert.IsType<Button>(stack.AuthoredChildren[1]);
+        Assert.IsType<CheckBox>(stack.AuthoredChildren[2]);
+        Assert.IsType<Image>(stack.AuthoredChildren[3]);
     }
 
     [Theory]
-    [InlineData("Grid", typeof(Grid))]
-    [InlineData("Vertical Stack", typeof(StackPanel))]
-    [InlineData("Horizontal Stack", typeof(StackPanel))]
-    [InlineData("Absolute", typeof(Canvas))]
-    public void Container_types_lower_to_their_declared_native_layout_type(string type, Type expectedType)
+    [InlineData("Grid", "Avalonia.Controls.Grid")]
+    [InlineData("Vertical Stack", "Avalonia.Controls.StackPanel")]
+    [InlineData("Horizontal Stack", "Avalonia.Controls.StackPanel")]
+    [InlineData("Absolute", "CakeOS.Cui.Runtime.CuiAbsolutePanel")]
+    public void Container_types_lower_to_their_declared_native_layout_type(string type, string expectedType)
     {
         var result = CuiHeadlessRenderer.Render($"<Cui><Container Type=\"{type}\" /></Cui>");
 
         Assert.True(result.Success, string.Join("; ", result.Errors));
-        var container = Assert.IsAssignableFrom<Control>(result.Root);
-        Assert.IsType(expectedType, container);
+        var container = Assert.IsType<CuiContainerControl>(result.Root);
+        Assert.Equal(expectedType, container.Layout.GetType().FullName);
         if (type == "Vertical Stack")
-            Assert.Equal(Avalonia.Layout.Orientation.Vertical, Assert.IsType<StackPanel>(container).Orientation);
+            Assert.Equal(Avalonia.Layout.Orientation.Vertical, Assert.IsType<StackPanel>(container.Layout).Orientation);
         if (type == "Horizontal Stack")
-            Assert.Equal(Avalonia.Layout.Orientation.Horizontal, Assert.IsType<StackPanel>(container).Orientation);
+            Assert.Equal(Avalonia.Layout.Orientation.Horizontal, Assert.IsType<StackPanel>(container.Layout).Orientation);
     }
 
     [Fact]
@@ -362,8 +364,8 @@ public class CuiToAvaloniaPipelineTests
         Assert.DoesNotContain("Text", registry.Elements.Single(element => element.Name == "Image").AllowedProperties);
         Assert.Contains("Text", registry.Elements.Single(element => element.Name == "Button").AllowedProperties);
 
-        Assert.True(registry.TryGetProperty("grid-column", out var column));
-        Assert.Equal("GridColumn", column.Name);
+        Assert.True(registry.TryGetProperty("Column", out var column));
+        Assert.Equal("Column", column.Name);
         Assert.Equal(typeof(int), column.RuntimeType);
         Assert.True(column.IsAttached);
         Assert.True(registry.TryGetProperty("Opacity", out var opacity));
@@ -445,17 +447,17 @@ public class CuiToAvaloniaPipelineTests
         var (first, firstDiagnostics) = loader.LoadMarkup("""
             <Cui>
               <Resources><Resource key="local-title" value="First document" /></Resources>
-              <Page><TextBlock text="{Resource local-title}" /></Page>
+              <Page><Text text="{Resource local-title}" /></Page>
             </Cui>
             """);
         Assert.Empty(firstDiagnostics);
         Assert.Equal("First document", Assert.IsType<TextBlock>(Assert.Single(Assert.IsType<Panel>(first).Children)).Text);
 
         var (second, secondDiagnostics) = loader.LoadMarkup("""
-            <Cui><Page><TextBlock text="{Resource local-title}" /></Page></Cui>
+            <Cui><Page><Text text="{Resource local-title}" /></Page></Cui>
             """);
-        Assert.Empty(secondDiagnostics);
-        Assert.Null(Assert.IsType<TextBlock>(Assert.Single(Assert.IsType<Panel>(second).Children)).Text);
+        Assert.Null(second);
+        Assert.Equal("CUIR057", Assert.Single(secondDiagnostics).Code);
     }
 
     [Fact]
@@ -575,27 +577,27 @@ public class CuiToAvaloniaPipelineTests
     [Fact]
     public void Complex_chat_space_structure_loads()
     {
-        // This is the actual ChatSpace.cui structure - proves real app markup works
+        // Explicitly registered custom Types compose with canonical CUI containers.
         var cui = """
             <Cui id="spaces.chat" version="1">
               <Page id="chat-space" role="main" accessible-name="Chat Space">
-                <AdaptiveSplit id="chat-layout" compact-breakpoint="720">
-                  <Aside id="recent-chats" role="navigation" accessible-name="Recent chats" compact-mode="drawer">
-                    <Heading level="2">Recent chats</Heading>
+                <Container Type="AdaptiveSplit" id="chat-layout">
+                  <Container Type="Aside" id="recent-chats" role="navigation" accessible-name="Recent chats">
+                    <Container Type="Heading">Recent chats</Container>
                     <Button id="new-chat" action="chat.new" accessible-name="Start a new chat">New chat</Button>
-                    <SearchField id="recent-search" binding="recentQuery" accessible-name="Search recent chats" placeholder="Search chats" />
-                    <List id="recent-list" binding="recentChats" role="list" accessible-name="Recent conversations" empty-text="No recent chats" />
-                  </Aside>
-                  <Main id="conversation" accessible-name="Conversation">
-                    <Toolbar id="conversation-toolbar" accessible-name="Conversation controls" wrap="true">
-                      <Heading id="conversation-title" level="1" binding="conversation.title">New chat</Heading>
-                      <Select id="model-choice" binding="models" selected-binding="composer.selectedModelName" action="chat.select-model" accessible-name="Choose model" />
-                    </Toolbar>
-                    <Transcript id="transcript" binding="conversation.messages" accessible-name="Message history" />
-                    <Composer id="composer" binding="composer" accessible-name="Message input" />
-                    <StatusBar id="status" binding="status" accessible-name="Chat status" />
-                  </Main>
-                </AdaptiveSplit>
+                    <Container Type="SearchField" id="recent-search" accessible-name="Search recent chats" />
+                    <Container Type="List" id="recent-list" role="list" accessible-name="Recent conversations" />
+                  </Container>
+                  <Container Type="Main" id="conversation" accessible-name="Conversation">
+                    <Container Type="Toolbar" id="conversation-toolbar" accessible-name="Conversation controls">
+                      <Container Type="Heading" id="conversation-title">New chat</Container>
+                      <Container Type="Select" id="model-choice" action="chat.select-model" accessible-name="Choose model" />
+                    </Container>
+                    <Container Type="Transcript" id="transcript" accessible-name="Message history" />
+                    <Container Type="Composer" id="composer" accessible-name="Message input" />
+                    <Container Type="StatusBar" id="status" accessible-name="Chat status" />
+                  </Container>
+                </Container>
               </Page>
             </Cui>
             """;

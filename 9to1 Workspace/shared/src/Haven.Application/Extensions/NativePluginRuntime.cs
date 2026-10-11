@@ -212,7 +212,7 @@ public sealed class NativePluginRuntime(
             var root = Path.GetFullPath(package.InstallPath) + Path.DirectorySeparatorChar;
             if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Skill path escaped the installed package.");
             EnsureNoLinkedPath(package.InstallPath, path);
-            if (new FileInfo(path).Length > 1_000_000) throw new InvalidDataException("Skill instructions exceed Haven's one-megabyte package limit.");
+            if (new FileInfo(path).Length > 1_000_000) throw new InvalidDataException("Skill instructions exceed 9to1's one-megabyte package limit.");
             var instructions = await File.ReadAllTextAsync(path, cancellationToken).ConfigureAwait(false);
             await catalog.UpsertPromptAsync(new PromptDefinition(
                 StableId(package.Manifest.PackageId, "skill:" + item.Id), item.DisplayName, item.Description,

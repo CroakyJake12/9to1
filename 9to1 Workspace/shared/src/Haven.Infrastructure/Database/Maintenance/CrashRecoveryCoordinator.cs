@@ -61,7 +61,7 @@ public sealed class CleanResetStartupRecoveryCoordinator(
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            throw new IOException("Haven disposed its services but could not clear the crash-loop state. The next launch may enter recovery safe mode.", ex);
+            throw new IOException("9to1 disposed its services but could not clear the crash-loop state. The next launch may enter recovery safe mode.", ex);
         }
     }
 }

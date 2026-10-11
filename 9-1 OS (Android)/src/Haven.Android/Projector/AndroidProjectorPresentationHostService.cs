@@ -452,7 +452,7 @@ public sealed class AndroidProjectorPresentationHostService : IDisposable
                 }
                 if (entry.View.Content is not HavenSceneControl host)
                 {
-                    completion.TrySetResult(new(false, "The Projector display no longer has a Haven surface host."));
+                    completion.TrySetResult(new(false, "The Projector display no longer has a 9to1 surface host."));
                     return;
                 }
 
@@ -730,8 +730,8 @@ public sealed class AndroidProjectorPresentationHostService : IDisposable
         catch (Exception exception)
         {
             global::Android.Util.Log.Warn("HavenProjector", "Application opened but Projector session state could not be updated: " + exception.Message);
-            desktop?.SetStatus("Opened, but Haven could not update the Projector session state.");
-            PostExperienceStatus(entry, experience, "Opened, but Haven could not update the Projector session state.");
+            desktop?.SetStatus("Opened, but 9to1 could not update the Projector session state.");
+            PostExperienceStatus(entry, experience, "Opened, but 9to1 could not update the Projector session state.");
         }
     }
 

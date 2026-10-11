@@ -12,7 +12,7 @@ public sealed partial class BrowserPage
         {
             var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                Title = convertChrome ? "Select a Chrome manifest.json" : "Select a Haven extension manifest",
+                Title = convertChrome ? "Select a Chrome manifest.json" : "Select a 9to1 extension manifest",
                 AllowMultiple = false,
                 FileTypeFilter = [new FilePickerFileType("JSON manifest") { Patterns = ["*.json"] }]
             });

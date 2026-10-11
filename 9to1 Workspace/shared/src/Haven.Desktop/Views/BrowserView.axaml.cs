@@ -236,7 +236,7 @@ public sealed partial class BrowserView : UserControl
         }
         catch (OperationCanceledException) { }
         catch (IOException ex) { _viewModel.ReportBrowserError(new IOException("A private Browser profile could not be removed. Close other Browser processes and try again.", ex)); }
-        catch (UnauthorizedAccessException ex) { _viewModel.ReportBrowserError(new UnauthorizedAccessException("Haven could not remove a private Browser profile.", ex)); }
+        catch (UnauthorizedAccessException ex) { _viewModel.ReportBrowserError(new UnauthorizedAccessException("9to1 could not remove a private Browser profile.", ex)); }
     }
 
     /// <summary>
@@ -260,7 +260,7 @@ public sealed partial class BrowserView : UserControl
         {
             var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                Title = convertChrome ? "Select a Chrome manifest.json" : "Select a Haven extension manifest",
+                Title = convertChrome ? "Select a Chrome manifest.json" : "Select a 9to1 extension manifest",
                 AllowMultiple = false,
                 FileTypeFilter = [new FilePickerFileType("JSON manifest") { Patterns = ["*.json"] }]
             });
@@ -395,7 +395,7 @@ public sealed partial class BrowserView : UserControl
         if (_host is not null || !this.IsAttachedToVisualTree() || _viewModel is not { } vm) return;
         try
         {
-            var services = App.Services ?? throw new InvalidOperationException("Haven services are unavailable.");
+            var services = App.Services ?? throw new InvalidOperationException("9to1 services are unavailable.");
             var permissions = BrowserSitePermissionStoreProvider.Get(services.GetRequiredService<IAppPaths>());
             _host = new NativeWebViewHost(_nativeBrowser, permissions, vm.OpenPopupInNewTabAsync);
             vm.Browser.Attach(_host);

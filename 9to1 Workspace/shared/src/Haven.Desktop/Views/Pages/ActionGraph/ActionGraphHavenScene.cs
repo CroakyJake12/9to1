@@ -95,7 +95,7 @@ internal sealed class ActionGraphHavenScene
         titles.SetValue(HavenProperties.Gap, HavenLength.Px(3));
         titles.SetValue(HavenProperties.VerticalAlignment, HavenVerticalAlignment.Center);
         TitleText = new HavenText("Action Graph") { Name = "ActionGraph.Title", Level = TextLevel.H1 };
-        SubtitleText = new HavenText("Visualize how Haven planned, executed, and delivered this response")
+        SubtitleText = new HavenText("Visualize how 9to1 planned, executed, and delivered this response")
         {
             Name = "ActionGraph.Subtitle",
             Level = TextLevel.Caption

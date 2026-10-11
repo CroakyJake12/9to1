@@ -209,7 +209,7 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
     // ─── Mode properties ────────────────────────────────────────────
 
     public HavenMode Mode { get; }
-    public string ModeTitle => Mode switch { HavenMode.Chat => "Chat", HavenMode.Study => "Study", HavenMode.Tasks => "Tasks", HavenMode.Studio => "Studio", _ => "Haven" };
+    public string ModeTitle => Mode switch { HavenMode.Chat => "Chat", HavenMode.Study => "Study", HavenMode.Tasks => "Tasks", HavenMode.Studio => "Studio", _ => "9to1" };
     public string ModeSubtitle => Mode switch
     {
         HavenMode.Chat => "Private conversation with your local models",
@@ -224,7 +224,7 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
         HavenMode.Study => "What should we learn?",
         HavenMode.Tasks => "What would you like to get done?",
         HavenMode.Studio => "What are we building?",
-        _ => "How can Haven help?"
+        _ => "How can 9to1 help?"
     };
     public string StarterOne => Mode switch
     {
@@ -1241,7 +1241,7 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
             }
 
             var text = await File.ReadAllTextAsync(attachment.Path, cancellationToken);
-            if (text.Length > 200_000) text = text[..200_000] + "\n[attachment truncated by Haven]";
+            if (text.Length > 200_000) text = text[..200_000] + "\n[attachment truncated by 9to1]";
             textContext.Append("\n\nAttached file: ").Append(attachment.Name).Append("\n```\n").Append(text).Append("\n```");
         }
         return new(textContext.ToString(), images.Count == 0 ? null : images);
@@ -1508,7 +1508,7 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
         "BrowserUse" => "@BrowserUse appears only while the native Browse host is attached and interactive browser permission is available.",
         "WebSearch" => "@WebSearch needs the local browser runtime and browser permission.",
         "ComputerUse" => "@ComputerUse is available only on Windows with explicit approval.",
-        "Automate" => "@Automate is available only in Haven Tasks or Studio.",
+        "Automate" => "@Automate is available only in 9to1 Tasks or Studio.",
         "Test" => "@Test requires a connected local project and command permission.",
         _ => $"@{name} is not available in this context."
     };
@@ -2040,7 +2040,7 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
         if (Regex.IsMatch(prompt, @"\b(schedule|scheduled|automate|automation|every (?:day|hour|week))\b", RegexOptions.IgnoreCase))
             return ("Automate", "This request appears to create a Scheduled Action.");
         if (Regex.IsMatch(prompt, @"\b(run|execute|generate)\b.{0,30}\btests?\b|\btest (?:this|the) (?:app|program|project|code)\b", RegexOptions.IgnoreCase))
-            return ("Test", "This request asks Haven to run or generate targeted tests.");
+            return ("Test", "This request asks 9to1 to run or generate targeted tests.");
         return null;
     }
 
@@ -2084,10 +2084,10 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
         var browserActive = Plugins.Any(item => item.IsActive && item.Name is "BrowserUse" or "WebSearch");
         if (browserActive && _preferences.BrowserPermission == PermissionMode.Ask &&
             Regex.IsMatch(prompt, @"\b(search|browse|navigate|open|click|fill|submit|website|webpage|sources?)\b|https?://", RegexOptions.IgnoreCase))
-            requested.Add("use Haven's isolated browser for this message");
+            requested.Add("use 9to1's isolated browser for this message");
         if (requested.Count == 0) return false;
         _permissionRetryPrompt = originalPrompt;
-        ToolPermissionRequest = "Allow Haven to " + string.Join(", and ", requested) + "? This approval applies only to the retried message.";
+        ToolPermissionRequest = "Allow 9to1 to " + string.Join(", and ", requested) + "? This approval applies only to the retried message.";
         IsToolPermissionPending = true;
         Composer = originalPrompt;
         Status = "Waiting for tool permission.";

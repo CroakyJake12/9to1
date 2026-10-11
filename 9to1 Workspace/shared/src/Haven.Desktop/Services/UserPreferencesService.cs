@@ -124,7 +124,7 @@ public sealed partial class UserPreferencesService
     public void ApplyAppearance(HavenUiAppearance appearance, bool save = true)
     {
         if (!Enum.IsDefined(appearance))
-            throw new ArgumentOutOfRangeException(nameof(appearance), appearance, "Unknown HavenUI appearance.");
+            throw new ArgumentOutOfRangeException(nameof(appearance), appearance, "Unknown CUI appearance.");
 
         _preferences = _preferences with
         {
@@ -230,7 +230,7 @@ public sealed partial class UserPreferencesService
             "#0D1510", "#121E17", "#18281E", "#ECF5EF", "#7FA38D", "#4ECC7A", "#7AEAA3", false, "#4ECC7A", false),
         new("rose", "Rose", "Warm dark with pink accent",
             "#181114", "#22161A", "#2D1C22", "#FBF0F2", "#A38088", "#FF6B8A", "#FF9AB5", false, "#FF6B8A", false),
-        new("new-haven", "New Haven", "Phase 1 mockup palette",
+        new("new-haven", "New 9to1", "Phase 1 mockup palette",
             "#F1F8E9", "#FFFFFF", "#F7F7F7", "#050505", "#646464", "#6FE9F0", "#0078D4", true, "#6FE9F0", false),
         new("light", "Light", "Clean Windows 11 Mica light",
             "#F3F3F3", "#FFFFFF", "#F9F9F9", "#1A1A1A", "#616161", "#005FB8", "#0078D4", true, "#005FB8", true),

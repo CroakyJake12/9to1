@@ -33,7 +33,7 @@ public sealed class AutomationGraphAiEditor(IProviderModelClient models) : IAuto
     {
         ArgumentNullException.ThrowIfNull(current);
         if (string.IsNullOrWhiteSpace(instruction))
-            return Fail("Describe the graph change you want Haven to make.");
+            return Fail("Describe the graph change you want 9to1 to make.");
 
         ModelDescriptor? model;
         try
@@ -83,7 +83,7 @@ public sealed class AutomationGraphAiEditor(IProviderModelClient models) : IAuto
                     model.Name,
                     [new OllamaMessage("user", prompt)],
                     EffortLevel.Medium,
-                    "You are Haven Automations' typed graph editor. Return strict JSON only. Never fabricate provider credentials or permission grants."),
+                    "You are 9to1 Automations' typed graph editor. Return strict JSON only. Never fabricate provider credentials or permission grants."),
                 cancellationToken).ConfigureAwait(false);
 
             if (!TryParse(response, out var proposed))
@@ -98,7 +98,7 @@ public sealed class AutomationGraphAiEditor(IProviderModelClient models) : IAuto
             if (validation.Count > 0)
                 return Fail("The proposed graph was rejected: " + validation[0].Message, model.Name);
 
-            return new(true, $"Haven proposed a validated typed graph edit using {model.Name}.", model.Name, normalized);
+            return new(true, $"9to1 proposed a validated typed graph edit using {model.Name}.", model.Name, normalized);
         }
         catch (OperationCanceledException) { throw; }
         catch (Exception exception) when (exception is HttpRequestException or IOException or InvalidOperationException)

@@ -139,7 +139,7 @@ internal sealed class OverlayRegionCaptureService
             capturedAt,
             expiresAt,
             sourceContext.Provenance.PermissionState,
-            "Selected from a real Haven screen/window capture.");
+            "Selected from a real 9to1 screen/window capture.");
         var item = new OverlaySelectionItem(
             Guid.NewGuid().ToString("N"),
             OverlaySelectionKind.Region,

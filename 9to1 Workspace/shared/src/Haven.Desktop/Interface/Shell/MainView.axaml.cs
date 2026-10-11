@@ -354,7 +354,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         BuildBrowserExtensionCommand = new RelayCommand(() =>
         {
             OpenCurrentChatTab();
-            CurrentChat.UsePrompt(">Rigid Build a limited-scope Haven Browse extension. Ask for the allowed origins and behavior, then create a declarative manifest and content script without privileged APIs.");
+            CurrentChat.UsePrompt(">Rigid Build a limited-scope 9to1 Browse extension. Ask for the allowed origins and behavior, then create a declarative manifest and content script without privileged APIs.");
         });
         SwitchSurfaceCommand = new AsyncRelayCommand<string>(SwitchSurfaceAsync);
         NavigateModeLibraryCommand = new RelayCommand(OpenModeLibrary);
@@ -680,18 +680,18 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
 
     public string ProductName => CurrentSurface switch
     {
-        HavenSurface.Home => "Haven Home",
+        HavenSurface.Home => "9to1 Home",
         HavenSurface.Assistants => "Assistants",
-        HavenSurface.Chat or HavenSurface.Study => "Haven Chat",
-        HavenSurface.Tasks => "Haven Tasks",
-        HavenSurface.Studio => "Haven Studio",
-        HavenSurface.Browse => "Haven Browse",
-        HavenSurface.Plan => "Haven Plan",
-        HavenSurface.Training => "Haven Training",
-        HavenSurface.Mesh => "Haven Mesh",
-        HavenSurface.Mail => "Haven Mail",
-        HavenSurface.Maps => "Haven Maps",
-        HavenSurface.Forms => "Haven Forms",
+        HavenSurface.Chat or HavenSurface.Study => "9to1 Chat",
+        HavenSurface.Tasks => "9to1 Tasks",
+        HavenSurface.Studio => "9to1 Studio",
+        HavenSurface.Browse => "9to1 Browse",
+        HavenSurface.Plan => "9to1 Plan",
+        HavenSurface.Training => "9to1 Training",
+        HavenSurface.Mesh => "9to1 Mesh",
+        HavenSurface.Mail => "9to1 Mail",
+        HavenSurface.Maps => "9to1 Maps",
+        HavenSurface.Forms => "9to1 Forms",
         _ => "Haven"
     };
 
@@ -1079,7 +1079,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     {
         var page = new PlayPage(_playSessions, _genUiRouter);
         page.CreateRequested += (_, _) => StartOriginalShellEvent(original =>
-            original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => OpenNewChatAsync("Help me create an interactive Play experience. Ask what I want to play, then design it with Haven interactive UI and deterministic local state where possible."))));
+            original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => OpenNewChatAsync("Help me create an interactive Play experience. Ask what I want to play, then design it with 9to1 interactive UI and deterministic local state where possible."))));
         return page;
     }
 
@@ -1119,7 +1119,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         }
         catch (Exception exception)
         {
-            _notifications.Show("Study unavailable", $"Haven could not open this Study assignment: {exception.Message}", ToastKind.Warning, TimeSpan.FromSeconds(6));
+            _notifications.Show("Study unavailable", $"9to1 could not open this Study assignment: {exception.Message}", ToastKind.Warning, TimeSpan.FromSeconds(6));
         }
     }
 
@@ -1456,7 +1456,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             if (executionId is { } id && existing.Page is ActionGraphPage existingPage) _ = existingPage.OpenAsync(id, actionId);
             return;
         }
-        var services = App.Services ?? throw new InvalidOperationException("Haven services are not available.");
+        var services = App.Services ?? throw new InvalidOperationException("9to1 services are not available.");
         var page = new ActionGraphPage(
             services.GetRequiredService<ExecutionTraceService>(),
             services.GetRequiredService<IActionFeedbackRepository>(),
@@ -1969,7 +1969,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             return original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => RouteGoSubmissionAsync(page, instruction)));
         });
         page.RefreshSuggestionsRequested += (_, _) =>
-            QueueGoSuggestionRefresh(page, "The user asked Haven for another set of useful next actions.", TimeSpan.Zero, true);
+            QueueGoSuggestionRefresh(page, "The user asked 9to1 for another set of useful next actions.", TimeSpan.Zero, true);
         page.Disposed += OnGoPageDisposed;
         page.AddRequested += OnGoAddRequested;
         page.AddCatalogItemSelected += OnGoCatalogItemSelected;
@@ -2066,7 +2066,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
 
     private async Task OpenGenUiGenerationAsync(string prompt)
     {
-        var request = "Create this as a Haven Generative UI app or interactive surface. Build the complete first-turn workflow rather than describing it in text.\n\n" + prompt;
+        var request = "Create this as a 9to1 Generative UI app or interactive surface. Build the complete first-turn workflow rather than describing it in text.\n\n" + prompt;
         await OpenScopedNewChatPageAsync(HavenMode.Studio, null, $"genui-generation-{Guid.NewGuid():N}",
             "Generative UI", HavenSurface.Studio, prompt: request);
     }
@@ -2832,7 +2832,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             Command("Rename chat", "Change the current chat title.", string.Empty, BeginRenameCurrentCommand),
             Command("Delete current chat", "Permanently remove the current conversation after confirmation.", string.Empty, RequestDeleteCurrentCommand),
             Command("Pin or unpin chat", "Toggle the chat in the Pinned section.", string.Empty, TogglePinCurrentCommand),
-            Command("Copy last response", "Copy the most recent Haven response.", string.Empty, CopyLastResponseCommand),
+            Command("Copy last response", "Copy the most recent 9to1 response.", string.Empty, CopyLastResponseCommand),
             Command("Undo", "Undo the latest chat message or editable workspace change.", "Ctrl+Z", UndoCurrentCommand),
             Command("Redo", "Restore the latest undone chat message or workspace change.", "Ctrl+Y", RedoCurrentCommand),
             Command("Save", "Save the current editable workspace.", "Ctrl+S", SaveCurrentCommand),
@@ -2840,16 +2840,16 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             Command("Agents", "Create and manage specialised assistants shared with Chat and Go.", string.Empty, NavigateAgentsCommand),
             Command("Instruction Library", "Browse built-in and custom reusable instructions invoked with >.", string.Empty, NavigatePromptsCommand),
             Command("Capabilities", "Browse discoverable, App-owned capabilities and their runtime safety metadata.", string.Empty, NavigateCapabilitiesCommand),
-            Command("Create with Generative UI", "Generate, reopen, pin and import persistent interactive Haven surfaces.", string.Empty, new RelayCommand(OpenGenUiCreationHome)),
+            Command("Create with Generative UI", "Generate, reopen, pin and import persistent interactive 9to1 surfaces.", string.Empty, new RelayCommand(OpenGenUiCreationHome)),
             Command("Template Preview Lab", "Search registered GenUI templates and exercise trusted structured previews.", string.Empty, new RelayCommand(OpenTemplateLab)),
             Command("Automations", "Create, test, and run reusable, scheduled, recurring, and triggered workflows.", string.Empty, NavigateAutomationsCommand),
             Command("Archive", "Restore archived chats, groups, and projects.", string.Empty, NavigateArchiveCommand),
             Command("Activity Log", "View recent conversations and tool activity across sessions.", string.Empty, NavigateActivityLogCommand),
             Command("Action Graph", "Inspect the real execution trace in Graph or List form, including failures, recovery and action feedback.", string.Empty, new RelayCommand(OpenActionGraph)),
-            Command("Haven Browse", "Open the isolated tabbed browser and side assistant.", string.Empty, NavigateBrowserCommand),
-            Command("Haven Training", "Run an autonomous agent session and score the result.", string.Empty, NavigateTrainingCommand),
-            Command("App Library", "Discover, pin, and create Haven apps.", string.Empty, NavigateModeLibraryCommand),
-            Command("Build Browse extension", "Create a scoped Haven extension manifest and content script in Tasks or Studio.", string.Empty, BuildBrowserExtensionCommand),
+            Command("9to1 Browse", "Open the isolated tabbed browser and side assistant.", string.Empty, NavigateBrowserCommand),
+            Command("9to1 Training", "Run an autonomous agent session and score the result.", string.Empty, NavigateTrainingCommand),
+            Command("App Library", "Discover, pin, and create 9to1 apps.", string.Empty, NavigateModeLibraryCommand),
+            Command("Build Browse extension", "Create a scoped 9to1 extension manifest and content script in Tasks or Studio.", string.Empty, BuildBrowserExtensionCommand),
             Command("Toggle sidebar", "Show or hide the current product sidebar.", string.Empty, ToggleSidebarCommand),
             Command("Refresh models", "Reload the installed Ollama model list.", string.Empty, RefreshModelsCommand),
             Command("Settings", "Appearance, models, permissions, context, and browser options.", string.Empty, NavigateSettingsCommand)
@@ -2872,9 +2872,9 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             new("New chat", "plus", StartNewConversation,
                 Description: "Start a new chat without changing app settings.", IsFeatured: true),
             new("Apps", "rocket", () => _ = ShowAppLauncherAsync(false),
-                Description: "Open another Haven app in this tab.", IsFeatured: true),
+                Description: "Open another 9to1 app in this tab.", IsFeatured: true),
             new("Settings", "settings", OpenApplicationSettings,
-                Description: "Open Haven settings.", IsFeatured: true)
+                Description: "Open 9to1 settings.", IsFeatured: true)
         };
 
         var contextual = new List<DynamicActionToolbar.ToolbarAction>();
@@ -2945,7 +2945,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
                 new("Live preview", "browse", () => _ = OpenProjectPreviewAsync(project), Category: "Studio", Description: "Open the supported running web preview beside this Project."),
                 new("Open terminal", "commands", () => Invoke(project.OpenTerminalCommand), Category: "Studio", Description: "Open a terminal at the project root."),
                 new("Project chat", "chat", () => Invoke(project.StartChatCommand), Category: "Studio", Description: "Start a chat scoped to this project."),
-                new("Create with Generative UI", "sparkles", OpenGenUiCreationHome, Category: "Studio", Description: "Generate or reopen persistent interactive Haven surfaces."),
+                new("Create with Generative UI", "sparkles", OpenGenUiCreationHome, Category: "Studio", Description: "Generate or reopen persistent interactive 9to1 surfaces."),
                 new("Template Preview Lab", "sparkles", OpenTemplateLab, Category: "Studio", Description: "Inspect and exercise trusted structured GenUI templates.")
             ]);
         }
@@ -2979,7 +2979,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             contextual.AddRange(
             [
                 new("Focus Go", "search", go.FocusComposer, Category: "Recommended", Description: "Focus the universal Go instruction box."),
-                new("Refresh suggestions", "refresh", () => QueueGoSuggestionRefresh(go, "Refresh the useful next actions for the current Haven state.", TimeSpan.Zero, true), Category: "Recommended", Description: "Generate a fresh set of useful next actions."),
+                new("Refresh suggestions", "refresh", () => QueueGoSuggestionRefresh(go, "Refresh the useful next actions for the current 9to1 state.", TimeSpan.Zero, true), Category: "Recommended", Description: "Generate a fresh set of useful next actions."),
                 new("Add context", "plus", () => _ = ConfigureAddMenuAsync(go), Category: "Tools", Description: "Refresh Agents, Capabilities, Instructions and Apps available to Go.")
             ]);
         }
@@ -2989,7 +2989,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             [
                 new("Refresh dashboard", "refresh", () => _ = dashboard.ActivateAsync(CancellationToken.None), Category: "Recommended", Description: "Refresh pins, activity and dashboard content."),
                 new("Manage Apps", "rocket", () => _ = ShowAppLauncherAsync(false), Category: "Recommended", Description: "Choose which Apps are pinned and available."),
-                new("Customise with Haven", "edit", () => _ = OpenNewChatAsync("Help me customise my Haven dashboard around what I use most."), Category: "View", Description: "Open a guided dashboard customisation chat.")
+                new("Customise with 9to1", "edit", () => _ = OpenNewChatAsync("Help me customise my 9to1 dashboard around what I use most."), Category: "View", Description: "Open a guided dashboard customisation chat.")
             ]);
         }
         else if (CurrentSurface == HavenSurface.Home)
@@ -2998,7 +2998,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             [
                 new("Refresh Home", "refresh", () => _ = OpenHomeAsync(), Category: "Recommended", Description: "Refresh dashboard statistics and recent work."),
                 new("Open Dashboard", "dashboard", () => _ = OpenDashboardAsync(), Category: "Recommended", Description: "Open your custom dashboard pages."),
-                new("Manage Apps", "rocket", () => _ = ShowAppLauncherAsync(false), Category: "Tools", Description: "Manage installed and pinned Haven Apps.")
+                new("Manage Apps", "rocket", () => _ = ShowAppLauncherAsync(false), Category: "Tools", Description: "Manage installed and pinned 9to1 Apps.")
             ]);
         }
         else if (CurrentSurface == HavenSurface.Training)
@@ -3011,7 +3011,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             ]);
         }
 
-        contextual.Add(new("Action Graph", "commands", OpenActionGraph, Category: "View", Description: "Inspect what Haven actually did for a request in Graph or List form."));
+        contextual.Add(new("Action Graph", "commands", OpenActionGraph, Category: "View", Description: "Inspect what 9to1 actually did for a request in Graph or List form."));
 
         var catalogue = AllCommandItems
             .Where(item => !IsConversationOnlyAction(item.Name) || hasConversation)
@@ -3100,7 +3100,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             HavenSurface.Vision => "Inspect the attached image carefully. Describe what is visible, note uncertainty, and answer: ",
             HavenSurface.Play => "Help me design or find a safe interactive local experience for: ",
             HavenSurface.Translate => "Translate the following while preserving tone, formatting and terminology. Target language: ",
-            HavenSurface.Launcher => "Find the best installed Haven app, project, command or recent item for: ",
+            HavenSurface.Launcher => "Find the best installed 9to1 app, project, command or recent item for: ",
             _ => string.Empty
         };
         if (!string.IsNullOrWhiteSpace(draft))
@@ -3546,7 +3546,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         catch (Exception ex) when (ex is HttpRequestException or IOException or InvalidOperationException)
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
-                _notifications.Show("Models unavailable", "Haven could not load the local model list.", ToastKind.Warning, TimeSpan.FromSeconds(6)));
+                _notifications.Show("Models unavailable", "9to1 could not load the local model list.", ToastKind.Warning, TimeSpan.FromSeconds(6)));
         }
         finally
         {

@@ -114,7 +114,7 @@ public static class BrowserNativeRequestPolicy
         {
             BrowserSitePermissionDecision.Allow => new BrowserPopupAssessment(
                 BrowserPopupDisposition.OpenInNewTab,
-                "The requesting origin is allowed to open the target in a new Haven browser tab."),
+                "The requesting origin is allowed to open the target in a new 9to1 browser tab."),
             BrowserSitePermissionDecision.Deny => new BrowserPopupAssessment(
                 BrowserPopupDisposition.BlockDenied,
                 "Popup blocked by the saved WindowManagement decision for this origin."),

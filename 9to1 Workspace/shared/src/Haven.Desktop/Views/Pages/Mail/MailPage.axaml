@@ -185,7 +185,7 @@
         <Border HorizontalAlignment="Center" VerticalAlignment="Center" Padding="22" CornerRadius="18" Background="{DynamicResource HavenPanelBrush}" IsVisible="{Binding ShowConnectionRequired}">
           <StackPanel Spacing="8" MaxWidth="520">
             <TextBlock Text="Connect a mail account" FontSize="22" FontWeight="SemiBold"/>
-            <TextBlock Text="Mail reuses Haven's Google and Microsoft connected accounts. Open Settings → Connected services, connect an account, then return and refresh." TextWrapping="Wrap"/>
+            <TextBlock Text="Mail reuses 9to1's Google and Microsoft connected accounts. Open Settings → Connected services, connect an account, then return and refresh." TextWrapping="Wrap"/>
             <Button Content="Refresh" Command="{Binding RefreshCommand}" HorizontalAlignment="Left"/>
           </StackPanel>
         </Border>
@@ -193,7 +193,7 @@
         <Border HorizontalAlignment="Center" VerticalAlignment="Center" Padding="22" CornerRadius="18" Background="{DynamicResource HavenPanelBrush}" IsVisible="{Binding ShowPermissionRequired}">
           <StackPanel Spacing="8" MaxWidth="520">
             <TextBlock Text="Mail permission needed" FontSize="22" FontWeight="SemiBold"/>
-            <TextBlock Text="This account was connected before Mail permissions were added. Reconnect it in Settings to grant mail access; Haven will not pretend the old token can read or send mail." TextWrapping="Wrap"/>
+            <TextBlock Text="This account was connected before Mail permissions were added. Reconnect it in Settings to grant mail access; 9to1 will not pretend the old token can read or send mail." TextWrapping="Wrap"/>
           </StackPanel>
         </Border>
 
@@ -291,7 +291,7 @@
           <StackPanel Spacing="12">
             <TextBlock Text="Delete this folder or label?" FontSize="21" FontWeight="SemiBold"/>
             <TextBlock Text="{Binding SelectedFolder.DisplayName}" FontWeight="SemiBold"/>
-            <TextBlock Text="This changes the connected mail provider, not just Haven's local view." TextWrapping="Wrap" Opacity="0.75"/>
+            <TextBlock Text="This changes the connected mail provider, not just 9to1's local view." TextWrapping="Wrap" Opacity="0.75"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
               <Button Content="Keep it" Command="{Binding CancelDeleteFolderCommand}"/>
               <Button Content="Delete" Command="{Binding ConfirmDeleteFolderCommand}" Padding="18,8"/>

@@ -262,8 +262,13 @@ public sealed class CuiResourceBundleTests : IDisposable
         try
         {
             using (var held = new FileStream(output, FileMode.Open, FileAccess.Read, FileShare.None))
-                Assert.ThrowsAny<IOException>(() =>
-                    CuiResourceBundle.Write(output, new[] { new CuiResourceEntry("next.cui", new byte[] { 4 }) }, _log));
+            {
+                Action write = () => CuiResourceBundle.Write(output, new[] { new CuiResourceEntry("next.cui", new byte[] { 4 }) }, _log);
+                // Windows rejects replacement of the locked destination. Unix
+                // rejects staging creation in the deliberately unwritable directory.
+                if (OperatingSystem.IsWindows()) Assert.ThrowsAny<IOException>(write);
+                else Assert.Throws<UnauthorizedAccessException>(write);
+            }
 
             Assert.Equal(prior, File.ReadAllBytes(output));
             Assert.Equal(new[] { "bundle.bin" }, FileNames(directory));

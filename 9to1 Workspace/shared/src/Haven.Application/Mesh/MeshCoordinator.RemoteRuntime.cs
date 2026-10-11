@@ -149,7 +149,7 @@ public sealed partial class MeshCoordinator
         if (request is null) return;
         await ReplyRuntimeGuardedAsync(message.SourceDeviceId, request.RequestId, RemoteModelCapability, async () =>
         {
-            if (_inboundRuntime is null) throw new InvalidOperationException("This Haven build has no inbound model runtime.");
+            if (_inboundRuntime is null) throw new InvalidOperationException("This 9to1 build has no inbound model runtime.");
             var models = await _inboundRuntime.GetModelsAsync(CancellationToken.None).ConfigureAwait(false);
             var inventory = models.Where(model => !string.Equals(model.ProviderId, MeshRemoteModelProvider.MeshProviderId, StringComparison.OrdinalIgnoreCase))
                 .Select(model => new MeshModelInventoryItem(model.ProviderId, model.Name, model.Model.SizeBytes, model.Model.Family, model.Model.ParameterSize, model.Model.Quantization, model.Capabilities.ToArray(), model.Model.ModifiedAt, model.ContextWindow, model.DisplayName)).ToArray();
@@ -163,7 +163,7 @@ public sealed partial class MeshCoordinator
         if (request is null) return;
         await ReplyRuntimeGuardedAsync(message.SourceDeviceId, request.RequestId, RemoteModelCapability, async () =>
         {
-            if (_inboundRuntime is null) throw new InvalidOperationException("This Haven build has no inbound model runtime.");
+            if (_inboundRuntime is null) throw new InvalidOperationException("This 9to1 build has no inbound model runtime.");
             if (string.Equals(request.ProviderId, MeshRemoteModelProvider.MeshProviderId, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("Mesh model recursion is not allowed.");
             return await _inboundRuntime.CompleteModelAsync(request.ProviderId, request.Request, CancellationToken.None).ConfigureAwait(false);
         }).ConfigureAwait(false);
@@ -175,7 +175,7 @@ public sealed partial class MeshCoordinator
         if (request is null) return;
         await ReplyRuntimeGuardedAsync(message.SourceDeviceId, request.RequestId, RemoteModelCapability, async () =>
         {
-            if (_inboundRuntime is null) throw new InvalidOperationException("This Haven build has no inbound model runtime.");
+            if (_inboundRuntime is null) throw new InvalidOperationException("This 9to1 build has no inbound model runtime.");
             if (string.Equals(request.ProviderId, MeshRemoteModelProvider.MeshProviderId, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("Mesh model recursion is not allowed.");
             return JsonSerializer.Serialize(await _inboundRuntime.ChatWithToolsAsync(request.ProviderId, request.Request, CancellationToken.None).ConfigureAwait(false));
         }).ConfigureAwait(false);
@@ -187,7 +187,7 @@ public sealed partial class MeshCoordinator
         if (request is null) return;
         await ReplyRuntimeGuardedAsync(message.SourceDeviceId, request.RequestId, RemoteAgentCapability, async () =>
         {
-            if (_inboundRuntime is null) throw new InvalidOperationException("This Haven build has no inbound agent runtime.");
+            if (_inboundRuntime is null) throw new InvalidOperationException("This 9to1 build has no inbound agent runtime.");
             var agents = await _inboundRuntime.GetAgentsAsync(CancellationToken.None).ConfigureAwait(false);
             return JsonSerializer.Serialize(agents.Where(agent => agent.IsEnabled).Select(agent => new MeshAgentInventoryItem(agent.Id, agent.Name, agent.Description, agent.IconKey, agent.PreferredModel)).ToArray());
         }).ConfigureAwait(false);
@@ -199,7 +199,7 @@ public sealed partial class MeshCoordinator
         if (request is null) return;
         await ReplyRuntimeGuardedAsync(message.SourceDeviceId, request.RequestId, RemoteAgentCapability, async () =>
         {
-            if (_inboundRuntime is null) throw new InvalidOperationException("This Haven build has no inbound agent runtime.");
+            if (_inboundRuntime is null) throw new InvalidOperationException("This 9to1 build has no inbound agent runtime.");
             return await _inboundRuntime.ExecuteAgentAsync(request.AgentId, request.Prompt, CancellationToken.None).ConfigureAwait(false);
         }).ConfigureAwait(false);
     }

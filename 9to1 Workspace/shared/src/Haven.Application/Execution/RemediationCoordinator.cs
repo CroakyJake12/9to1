@@ -118,7 +118,7 @@ public sealed class RemediationCoordinator(
         events.TryPublish(new ExecutionEvent(
             Guid.NewGuid(), request.ExecutionId, Guid.NewGuid(), request.ActionId, ExecutionOrigin.Haven,
             ExecutionActionType.AutomaticRepair, ExecutionActionStatus.Completed, "Credential configured",
-            "The required credential was stored by Haven's secure credential service.", null,
+            "The required credential was stored by 9to1's secure credential service.", null,
             request.RequestingComponentId, now, now, now, RecoveryOfActionId: request.ActionId,
             RemediationId: request.Id));
         await ResumeContinuationAsync(completed, new RemediationResolution(CredentialReference: credentialReference), cancellationToken).ConfigureAwait(false);
@@ -227,7 +227,7 @@ public sealed class RemediationCoordinator(
             events.TryPublish(new ExecutionEvent(
                 Guid.NewGuid(), current.ExecutionId, Guid.NewGuid(), current.ActionId, ExecutionOrigin.Haven,
                 ExecutionActionType.Warning, ExecutionActionStatus.Suspended, "Waiting timed out", null,
-                $"Haven stopped waiting after {(int)current.IdleTimeout.TotalSeconds} seconds. Resolve and resume later.",
+                $"9to1 stopped waiting after {(int)current.IdleTimeout.TotalSeconds} seconds. Resolve and resume later.",
                 current.RequestingComponentId, _time.GetUtcNow(), RemediationId: current.Id));
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }

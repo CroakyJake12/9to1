@@ -67,13 +67,15 @@ public sealed class CuiViewModel : ICuiWritableBindingContext, ICuiActionDispatc
     /// <summary>Dispatch a command by name (sync).</summary>
     public void Dispatch(string command, object? parameter = null)
     {
-        if (_commands.TryGetValue(command, out var handler))
-            handler(parameter);
+        if (!_commands.TryGetValue(command, out var handler))
+            throw new InvalidOperationException($"CUI command '{command}' has no registered handler.");
+        handler(parameter);
     }
 
     /// <summary>ICuiActionDispatcher: async dispatch.</summary>
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         Dispatch(command, parameter);
         return ValueTask.CompletedTask;
     }

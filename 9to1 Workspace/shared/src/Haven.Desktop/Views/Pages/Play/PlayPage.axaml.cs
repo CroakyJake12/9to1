@@ -15,7 +15,7 @@ public sealed partial class PlayPage : UserControl
 {
     private static readonly IReadOnlyList<PlayExperienceDescriptor> Experiences =
     [
-        new("chess", "Chess", "Strategy", "A complete local board with legal turns, checkmate detection and a deterministic Haven opponent.", PlayExperienceKind.Chess),
+        new("chess", "Chess", "Strategy", "A complete local board with legal turns, checkmate detection and a deterministic 9to1 opponent.", PlayExperienceKind.Chess),
         new("quick-quiz", "Quick quiz", "Quiz", "Five local questions with progress, scoring and instant continuation.", PlayExperienceKind.Quiz)
     ];
 
@@ -410,7 +410,7 @@ public sealed partial class PlayPage : UserControl
         if (_active is null) return;
         var state = _sessions.ReadChess(_active);
         ExperienceStatus.Text = state.Result == "playing"
-            ? (state.WhiteToMove ? "White to move · You are White" : "Black to move · Haven local opponent is thinking")
+            ? (state.WhiteToMove ? "White to move · You are White" : "Black to move · 9to1 local opponent is thinking")
             : state.Result;
 
         var board = new Grid { Width = 520, Height = 520, HorizontalAlignment = HorizontalAlignment.Center };
@@ -483,7 +483,7 @@ public sealed partial class PlayPage : UserControl
         if (state.WhiteToMove || state.Result != "playing") return;
         var move = _sessions.ChooseLocalChessOpponentMove(state);
         if (move is null) return;
-        ExperienceStatus.Text = "Haven local opponent chose a legal move…";
+        ExperienceStatus.Text = "9to1 local opponent chose a legal move…";
         if (await RouteAsync("play.chess.move", "chess-board", new { sessionId = _active.Id, from = move.Value.From, to = move.Value.To }, GenUiEventSource.Agent))
         {
             _active = await _sessions.GetAsync(_active.Id, CancellationToken.None);

@@ -67,14 +67,14 @@ public sealed class DatabaseMaintenanceService(IAppPaths paths, IProductionDiagn
                     ReliabilitySeverity.Critical,
                     "database",
                     "pre-migration-integrity-failed",
-                    "The Haven database failed SQLite quick_check or foreign-key validation. Migrations were not started.",
+                    "The 9to1 database failed SQLite quick_check or foreign-key validation. Migrations were not started.",
                     new Dictionary<string, string>
                     {
                         ["integrityResults"] = string.Join(" | ", preflight.Take(20)),
                         ["foreignKeyViolations"] = string.Join(" | ", preflightForeignKeys.Take(20))
                     },
                     cancellationToken: cancellationToken).ConfigureAwait(false);
-                throw new InvalidDataException("The Haven database failed its pre-migration integrity checks. Migrations were stopped to protect the existing data.");
+                throw new InvalidDataException("The 9to1 database failed its pre-migration integrity checks. Migrations were stopped to protect the existing data.");
             }
 
             var currentVersion = await ReadSchemaVersionAsync(source, cancellationToken).ConfigureAwait(false);
@@ -191,7 +191,7 @@ public sealed class DatabaseMaintenanceService(IAppPaths paths, IProductionDiagn
                 result.IsHealthy ? ReliabilitySeverity.Information : ReliabilitySeverity.Critical,
                 "database",
                 result.IsHealthy ? "integrity-check-passed" : "integrity-check-failed",
-                result.IsHealthy ? "The Haven database passed SQLite integrity and foreign-key checks." : "The Haven database failed SQLite integrity or foreign-key checks.",
+                result.IsHealthy ? "The 9to1 database passed SQLite integrity and foreign-key checks." : "The 9to1 database failed SQLite integrity or foreign-key checks.",
                 new Dictionary<string, string>
                 {
                     ["schemaVersion"] = result.SchemaVersion.ToString(System.Globalization.CultureInfo.InvariantCulture),

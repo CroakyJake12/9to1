@@ -30,7 +30,7 @@ internal sealed class TopRailFinalScene
         LogoHost.SetValue(HavenProperties.Height, HavenLength.Px(54));
         LogoHost.SetValue(HavenProperties.VerticalAlignment, HavenVerticalAlignment.Center);
         LogoButton = new HavenButton { Name = "TopRail.Logo", Variant = ButtonVariant.Icon };
-        LogoButton.Accessibility.AccessibleName = "Haven home";
+        LogoButton.Accessibility.AccessibleName = "9to1 home";
         LogoButton.SetValue(HavenProperties.Width, HavenLength.Px(54));
         LogoButton.SetValue(HavenProperties.Height, HavenLength.Px(54));
         LogoButton.SetValue(HavenProperties.MinHeight, HavenLength.Px(54));
@@ -122,7 +122,7 @@ internal sealed class TopRailFinalScene
         NotificationHost.Add(NotificationBadge);
         Root.Add(NotificationHost);
 
-        SearchButton = AccentIconButton("TopRail.Actions.Search", "search", "Search Haven");
+        SearchButton = AccentIconButton("TopRail.Actions.Search", "search", "Search 9to1");
         Root.Add(SearchButton);
 
         LogoButton.Invoked += (_, _) => HomeRequested?.Invoke(this, EventArgs.Empty);

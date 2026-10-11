@@ -6,7 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../../BrowserSurfaceRegistry.cs" Link="Production/BrowserSurfaceRegistry.cs" />
-    <Compile Include="Program.cs;../BoardsBrowserCore.cs;../BoardsBrowserCore.RichText.cs;../BoardsBrowserFeature.cs" Link="Production/%(Filename)%(Extension)" />
+    <Compile Include="Program.cs;BoardsWorkspaceRegression.cs;../BoardsBrowserCore.cs;../BoardsBrowserCore.RichText.cs;../BoardsBrowserCore.Workspace.cs;../BoardsBrowserFeature.cs" Link="Production/%(Filename)%(Extension)" />
     <Compile Include="../../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/NotesRepository.cs;../../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Write/WriteNativeDocumentPackageStore.cs;../../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/AppPaths.cs;../../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/ProductionReliabilityServices.cs;../../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Lifecycle/StartupRecoveryCoordinator.FinalClean.cs" Link="Owner/%(Filename)%(Extension)" />
     <Compile Include="../../../../../9to1 Workspace/Home/Source/Home/Core/HomeCoreContracts.cs;../../../../../9to1 Workspace/Home/Source/Home/Core/HomeStateCommitActorGuard.cs;../../../../../9to1 Workspace/Home/Source/Home/Core/HomeFeatureContracts.cs;../../../../../9to1 Workspace/Home/Source/Home/HomeDashboard.cs" Link="Owner/%(Filename)%(Extension)" />
     <ProjectReference Include="../../../../../9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj" />

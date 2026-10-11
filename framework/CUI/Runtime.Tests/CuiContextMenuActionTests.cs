@@ -21,9 +21,9 @@ public sealed class CuiContextMenuActionTests
             var (tree, diagnostics) = loader.LoadMarkup("""
                 <Cui><Actions><Action name="Choose" command="rows.choose" parameter="{Binding row}" /></Actions>
                 <Page><Repeat Source="{Binding Rows}" As="row" Key="{Binding row.Id}">
-                  <Button Text="{Binding row.Name}"><ContextMenu>
-                    <MenuItem Header="{Binding row.Name}" action="Choose" />
-                  </ContextMenu></Button>
+                  <Button Text="{Binding row.Name}"><Container Type="Context Menu">
+                    <Button Type="Menu Item" Content="{Binding row.Name}" action="Choose" />
+                  </Container></Button>
                 </Repeat></Page></Cui>
                 """);
             Assert.Empty(diagnostics); var root = Assert.IsAssignableFrom<Control>(tree); loader.WireBindings(root);
@@ -41,11 +41,15 @@ public sealed class CuiContextMenuActionTests
                 menu.Open(owner); window.UpdateLayout(); Assert.True(menu.IsOpen);
                 item.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)); await loader.WhenActionsIdleAsync();
                 Assert.Same(current, Assert.Single(calls)); Assert.DoesNotContain(first, calls);
-                item.IsEnabled = false; item.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)); await loader.WhenActionsIdleAsync();
+                CuiLifecycleProperties.SetLiteral(item, "Interactive", "false", CuiPropertyLevel.Instance, "test owner gate");
+                Assert.False(item.IsEffectivelyEnabled);
+                item.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)); await loader.WhenActionsIdleAsync();
                 Assert.Single(calls);
-                item.IsEnabled = true; owner.IsEnabled = false;
+                CuiLifecycleProperties.SetLiteral(item, "Interactive", "true", CuiPropertyLevel.Instance, "test owner gate");
+                CuiLifecycleProperties.SetLiteral(owner, "Interactive", "false", CuiPropertyLevel.Instance, "test owner gate");
+                Assert.False(owner.IsEffectivelyEnabled);
                 item.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)); await loader.WhenActionsIdleAsync(); Assert.Single(calls);
-                owner.IsEnabled = true;
+                CuiLifecycleProperties.SetLiteral(owner, "Interactive", "true", CuiPropertyLevel.Instance, "test owner gate");
                 menu.Close(); loader.Dispose(); await loader.WhenActionsIdleAsync();
                 Assert.Null(owner.ContextMenu); item.IsEnabled = true;
                 item.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)); await loader.WhenActionsIdleAsync(); Assert.Single(calls);
@@ -67,13 +71,13 @@ public sealed class CuiContextMenuActionTests
             var (tree, diagnostics) = loader.LoadMarkup("""
                 <Cui><Actions><Action name="Choose" command="rows.choose" parameter="{Binding row}" /></Actions>
                 <Page><Repeat Source="{Binding Rows}" As="row" Key="{Binding row.Id}">
-                  <Border><ContextMenu><MenuItem Header="Parent" action="Choose">
-                    <MenuItem Header="Child" action="Choose" />
-                  </MenuItem></ContextMenu><Text Text="{Binding row.Name}" /></Border>
+                  <Container Type="Overlay" ID="menu-owner"><Container Type="Context Menu"><Button Type="Menu Item" Content="Parent" action="Choose">
+                    <Button Type="Menu Item" Content="Child" action="Choose" />
+                  </Button></Container><Text Text="{Binding row.Name}" /></Container>
                 </Repeat></Page></Cui>
                 """);
             Assert.Empty(diagnostics); var root = Assert.IsAssignableFrom<Control>(tree); loader.WireBindings(root);
-            var owner = Assert.Single(root.GetVisualDescendants().OfType<Border>());
+            var owner = Assert.Single(root.GetVisualDescendants().OfType<CuiContainerControl>(), c => c.Name == "menu-owner");
             var menu = Assert.IsType<ContextMenu>(owner.ContextMenu); var parent = Assert.IsType<MenuItem>(Assert.Single(menu.Items));
             var child = Assert.IsType<MenuItem>(Assert.Single(parent.Items));
             child.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)); await loader.WhenActionsIdleAsync();
@@ -101,7 +105,7 @@ public sealed class CuiContextMenuActionTests
                 Assert.False(loader.WhenActionsIdleAsync().IsCompleted); entered.SetResult(); return new ValueTask(raw.Task);
             }));
             loader.ActionFailed += (_, _) => throw observer;
-            var (root, diagnostics) = loader.LoadMarkup("<Cui><Page><Button Text=\"Owner\"><ContextMenu><MenuItem Header=\"Run\" action=\"run\" /></ContextMenu></Button></Page></Cui>");
+            var (root, diagnostics) = loader.LoadMarkup("<Cui><Page><Button Text=\"Owner\"><Container Type=\"Context Menu\"><Button Type=\"Menu Item\" Content=\"Run\" action=\"run\" /></Container></Button></Page></Cui>");
             Assert.Empty(diagnostics); var tree = Assert.IsAssignableFrom<Control>(root); loader.WireBindings(tree);
             var owner = Assert.Single(tree.GetVisualDescendants().OfType<Button>()); var item = Assert.IsType<MenuItem>(Assert.Single(owner.ContextMenu!.Items));
             try
@@ -133,7 +137,7 @@ public sealed class CuiContextMenuActionTests
         Assert.True(await session.Dispatch<bool>(async () =>
         {
             var loader = new CuiControlLoader(); var cause = new IOException("Actual native Closed callback"); var attempts = 0;
-            var (tree, diagnostics) = loader.LoadMarkup("<Cui><Page><Button Text=\"Owner\"><ContextMenu><MenuItem Header=\"Item\" /></ContextMenu></Button></Page></Cui>");
+            var (tree, diagnostics) = loader.LoadMarkup("<Cui><Page><Button Text=\"Owner\"><Container Type=\"Context Menu\"><Button Type=\"Menu Item\" Content=\"Item\" /></Container></Button></Page></Cui>");
             Assert.Empty(diagnostics); var root = Assert.IsAssignableFrom<Control>(tree); var owner = Assert.Single(root.GetVisualDescendants().OfType<Button>());
             var menu = Assert.IsType<ContextMenu>(owner.ContextMenu); var window = new Window { Width = 600, Height = 400, Content = root };
             EventHandler<RoutedEventArgs> fail = (_, _) => { attempts++; throw cause; };

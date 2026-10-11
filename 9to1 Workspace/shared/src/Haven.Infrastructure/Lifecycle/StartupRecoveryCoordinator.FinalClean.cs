@@ -49,7 +49,7 @@ public sealed partial class StartupRecoveryCoordinator : IStartupRecoveryFinalCl
 
         // No provider callback is invoked while the store/state gates are held.
         var audit = AcquireRecoveryAuditOriginal(() => diagnostics.WriteAsync(ReliabilitySeverity.Information, "startup", "shutdown-prepared",
-            "Haven prepared to join its original shutdown work before recording a clean exit.",
+            "9to1 prepared to join its original shutdown work before recording a clean exit.",
             new Dictionary<string, string> { ["runId"] = expected.CurrentRun!.Id },
             expected.CurrentRun.Id, cancellationToken));
         await AwaitRecoveryOriginalAsync(audit).ConfigureAwait(false);

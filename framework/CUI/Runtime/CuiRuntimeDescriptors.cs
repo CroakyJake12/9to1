@@ -7,7 +7,11 @@ public sealed record CuiRuntimeElementDescriptor(
     string Name,
     IReadOnlySet<string> Aliases,
     IReadOnlySet<string> AllowedProperties,
-    bool RequiresSpecializedHost);
+    bool RequiresSpecializedHost)
+{
+    /// <summary>Anchor is a nonvisual placement declaration, never an eleventh primitive.</summary>
+    public bool IsVisual { get; init; } = true;
+}
 
 /// <summary>
 /// Typed metadata for a property understood by the native runtime. Property parsing

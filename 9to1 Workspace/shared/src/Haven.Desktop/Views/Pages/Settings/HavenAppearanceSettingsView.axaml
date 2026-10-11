@@ -6,7 +6,7 @@
     <StackPanel Spacing="12">
       <StackPanel Spacing="3">
         <TextBlock Text="APPEARANCE" Classes="eyebrow" />
-        <TextBlock Text="HavenUI brightness" Classes="sectionHeading" />
+        <TextBlock Text="CUI brightness" Classes="sectionHeading" />
         <TextBlock Text="Colour changes only. Layout, spacing and controls stay the same."
                    Classes="muted"
                    TextWrapping="Wrap" />
@@ -19,7 +19,7 @@
               IsSnapToTickEnabled="True"
               SmallChange="1"
               LargeChange="1"
-              AutomationProperties.Name="HavenUI brightness: Super Bright, Bright, Dark, Super Dark" />
+              AutomationProperties.Name="CUI brightness: Super Bright, Bright, Dark, Super Dark" />
 
       <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="7">
         <hui:HavenButton x:Name="SuperBrightButton" Content="Super Bright" FontSize="11" />

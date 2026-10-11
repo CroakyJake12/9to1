@@ -28,13 +28,18 @@ public sealed class PresentBrowserSession : ICuiWritableBindingContext, ICuiActi
     private double _strokeWidth = 2;
     private string _clipboard = string.Empty;
     private string _transitionKind = "None";
-    private double _transitionDuration = 0.35; // The donor's own transition default.
+    private double _transitionDuration;
+    private (Guid SlideId, PresentTransitionKind Kind, double Duration)? _observedTransition;
     private string _animationEffect = "Fade";
     private string _animationTrigger = "OnClick";
+    private bool _showFiles;
+    private bool _showInspector;
+    private bool _showStart = true;
     private long _generation;
     private PendingCommit? _pending;
     public PresentEditor? Editor { get; private set; }
     public Guid? DocumentId => Editor?.Document.Id;
+    public bool IsWorkspaceActive => Editor is not null && !_showStart;
     public int DurableRevision { get; private set; }
     public bool IsBusy { get; private set; }
     public bool IsReadOnly { get; private set; }
@@ -123,7 +128,7 @@ public sealed class PresentBrowserSession : ICuiWritableBindingContext, ICuiActi
     public Task<HomeCoreOperationResult<bool>> EditAsync(Func<PresentEditor, bool> edit, CancellationToken token = default) => Operate(ct =>
     {
         ct.ThrowIfCancellationRequested();
-        if (_presentationPending) return Task.FromResult(Failure<bool>("PresentationNotAdmitted", "This prepared view is not active."));
+        if (_presentationPending || !IsWorkspaceActive) return Task.FromResult(Failure<bool>("PresentationNotAdmitted", "This presentation editor is not active."));
         if (Editor is null) return Task.FromResult(Failure<bool>("NotFound", "Open a presentation first."));
         if (IsReadOnly) return Task.FromResult(Failure<bool>("PermissionDenied", "This presentation is read-only."));
         if (_pending is not null) return Task.FromResult(Failure<bool>("CommitOutcomeUnknown", "Inspect saved state before editing this preserved draft."));
@@ -336,7 +341,7 @@ public sealed class PresentBrowserSession : ICuiWritableBindingContext, ICuiActi
     /// <summary>Called only after the actual retained canvas invokes an owning live-text preview.</summary>
     public void RecordRetainedPreview()
     {
-        if (_disposed || _presentationPending || IsBusy || IsReadOnly || _pending is not null) return;
+        if (_disposed || _presentationPending || !IsWorkspaceActive || IsBusy || IsReadOnly || _pending is not null) return;
         ++_generation; _dirty = true; Status = "Editing text; Ctrl+Enter commits, Esc cancels"; Notify();
     }
 
@@ -426,13 +431,13 @@ public sealed class PresentBrowserSession : ICuiWritableBindingContext, ICuiActi
         try
         {
             if (_disposed) return Failure<T>("Disposed", "This presentation session is closed.");
-            IsBusy = true; ErrorCode = null; Notify();
+            IsBusy = true; ErrorCode = null; LastOperationError = null; Notify();
             return await action(token);
         }
         catch (PresentRevisionConflictException) { return Failure<T>("RevisionConflict", "A newer stored revision exists. The draft is preserved."); }
         catch (OperationCanceledException) { throw; }
         catch (UnauthorizedAccessException) { return Failure<T>("PermissionDenied", "The operation is not permitted. The draft is preserved."); }
-        catch (ArgumentException) { return Failure<T>("InvalidArgument", "The presentation operation is invalid."); }
+        catch (ArgumentException error) { LastOperationError = error; return Failure<T>("InvalidArgument", "The presentation operation is invalid."); }
         catch (Exception error) when (_pending is not null && _unknown(error))
         { return Failure<T>("CommitOutcomeUnknown", "Save may already be committed; inspect saved state before retrying."); }
         catch (Exception error) when (error is IOException or JsonException)
@@ -440,9 +445,9 @@ public sealed class PresentBrowserSession : ICuiWritableBindingContext, ICuiActi
         finally { IsBusy = false; try { Notify(); } finally { _operations.Release(); } }
     }
     private void Attach(PresentDocument document, bool readOnly)
-    { Detach(); _clipboard = string.Empty; Editor = new(document); Editor.Changed += Changed; DurableRevision = document.Version; IsReadOnly = readOnly; }
+    { Detach(); _clipboard = string.Empty; _showFiles = false; _showStart = false; Editor = new(document); Editor.Changed += Changed; DurableRevision = document.Version; IsReadOnly = readOnly; }
     private void Detach()
-    { if (Editor is not null) Editor.Changed -= Changed; Editor = null; DurableRevision = 0; _dirty = false; IsReadOnly = false; _playback = null; }
+    { if (Editor is not null) Editor.Changed -= Changed; Editor = null; DurableRevision = 0; _dirty = false; IsReadOnly = false; _playback = null; _observedTransition = null; _showStart = true; }
     private void Changed(object? sender, EventArgs args)
     { ++_generation; _dirty = true; Status = "Unsaved changes"; Notify(); }
     private void Remember(PresentDocument document)
@@ -457,6 +462,30 @@ public sealed class PresentBrowserSession : ICuiWritableBindingContext, ICuiActi
         value = path switch
         {
             "Title" => Editor?.Document.Title ?? "Present", "Status" => Status,
+            "ShowStart" => !IsWorkspaceActive, "ShowWorkspace" => IsWorkspaceActive,
+            "HasDocument" => Editor is not null, "NoSavedDocuments" => _documents.Count == 0,
+            "CanResume" => IsActionAvailable("ResumePresentation") == true,
+            "StartStatus" => IsDirty ? "Your open presentation has unsaved changes. Resume to continue." : "Your open presentation is saved in this browser.",
+            "SlideTitle" => Editor?.SelectedSlide.Title ?? "No slide selected",
+            "EmptyDocument" => Editor is null,
+            "SelectedText" => Editor?.SelectedElements.FirstOrDefault(element => element.Kind == PresentElementKind.Text)?.Text ?? string.Empty,
+            "HasTextSelection" => Editor?.SelectedElements.Any(element => element.Kind == PresentElementKind.Text) == true,
+            "HasSelection" => Editor?.SelectedElements.Count > 0,
+            "CanEditSelection" => IsActionAvailable("DeleteObject") == true,
+            "CanDeleteSlide" => IsActionAvailable("DeleteSlide") == true,
+            "CanSlideUp" => IsActionAvailable("SlideUp") == true,
+            "CanSlideDown" => IsActionAvailable("SlideDown") == true,
+            "CanPreviousSlide" => IsActionAvailable("PreviousSlide") == true,
+            "CanNextSlide" => IsActionAvailable("NextSlide") == true,
+            "HideSlideLabel" => Editor?.SelectedSlide.Hidden == true ? "Show slide" : "Hide slide",
+            "ShowSidebar" => _showSidebar,
+            "WorkspaceColumns" => _compact || !_showSidebar ? "0 1fr" : "224 1fr",
+            "SidebarColumnSpan" => _compact ? 2 : 1,
+            "SelectionStatus" => Editor is null ? string.Empty : Editor.SelectedElements.Count == 0 ? "Select an object to format or arrange" : $"{Editor.SelectedElements.Count} object(s) selected",
+            "ShowInspector" => _showInspector,
+            "ShowEditingArea" => !_compact || !_showInspector,
+            "InspectorColumns" => _showInspector ? (_compact ? "0 1fr" : "1fr 320") : "1fr 0",
+            "ShowFiles" => _showFiles, "ShowSlides" => !_showFiles,
             "SpeakerNotes" => Editor?.SelectedSlide.SpeakerNotes ?? string.Empty,
             "SlideStatus" => Editor is null ? "No slide" : $"Slide {Editor.SelectedSlide.Order + 1} of {Editor.Document.Slides.Count}"
                 + (Editor is null || !Editor.SelectedSlide.Hidden ? string.Empty : " · hidden"),
@@ -477,7 +506,6 @@ public sealed class PresentBrowserSession : ICuiWritableBindingContext, ICuiActi
             "CanEdit" => IsActionAvailable("AddSlide") == true, "CanSave" => IsActionAvailable("Save") == true,
             "CanClose" => IsActionAvailable("Close") == true, "CanUndo" => IsActionAvailable("Undo") == true,
             "CanRedo" => IsActionAvailable("Redo") == true, "CanInspect" => IsActionAvailable("Inspect") == true,
-            "CanDeleteSlide" => IsActionAvailable("DeleteSlide") == true,
             "CanMoveSlideEarlier" => IsActionAvailable("MoveSlideEarlier") == true,
             "CanMoveSlideLater" => IsActionAvailable("MoveSlideLater") == true,
             "CanDeleteElement" => IsActionAvailable("DeleteElement") == true,
@@ -515,32 +543,26 @@ public sealed class PresentBrowserSession : ICuiWritableBindingContext, ICuiActi
             "HasUnknownCommitOutcome" => _pending is not null,
             _ => null
         };
-        return path is "Title" or "Status" or "SpeakerNotes" or "SlideStatus" or "Documents" or "Slides" or
-            "CanCreate" or "CanBrowse" or "CanEdit" or "CanSave" or "CanClose" or "CanUndo" or "CanRedo" or "CanInspect" or
-            "CanDeleteSlide" or "CanMoveSlideEarlier" or "CanMoveSlideLater" or
-            "CanDeleteElement" or "CanBringToFront" or "CanSendToBack" or
-            "CanBold" or "CanItalic" or "CanTransformObject" or
-            "CanAlign" or "CanDistribute" or "CanGroup" or "CanUngroup" or "CanBringForward" or "CanSendBackward" or
-            "FillColor" or "CanApplyFill" or "CanFontSize" or
-            "StrokeColor" or "StrokeWidth" or "CanApplyStroke" or "CanApplyStrokeWidth" or
-            "IsPlaying" or "PlayStatus" or "CanPresent" or "CanAdvance" or "CanPlayPrevious" or "CanExitPresentation" or
-            "SlideStatus" or "SlideHidden" or "CanHideSlide" or "CanShowSlide" or
-            "TransitionKind" or "TransitionDuration" or "AnimationEffect" or "AnimationTrigger" or
-            "CanApplyTransition" or "CanAddAnimation" or "CanRemoveAnimation" or "AnimationSteps" or
-            "CanExportPowerPoint" or "CanImportPowerPoint" or
-            "CanCopy" or "CanPaste" or "CanMoveObject" or
-            "HasUnknownCommitOutcome";
+        return path is "ShowStart" or "ShowWorkspace" or "HasDocument" or "NoSavedDocuments" or "CanResume" or "StartStatus" or "ShowInspector" or "ShowEditingArea" or "InspectorColumns" or "Title" or "Status" or "SpeakerNotes" or "SlideStatus" or "Documents" or "Slides" or
+            "CanCreate" or "CanBrowse" or "CanEdit" or "CanSave" or "CanClose" or "CanUndo" or "CanRedo" or "CanInspect" or "CanDeleteSlide" or "CanMoveSlideEarlier" or "CanMoveSlideLater" or "CanDeleteElement" or "CanBringToFront" or "CanSendToBack" or "CanBold" or "CanItalic" or "CanTransformObject" or "CanAlign" or "CanDistribute" or "CanGroup" or "CanUngroup" or "CanBringForward" or "CanSendBackward" or "FillColor" or "CanApplyFill" or "CanFontSize" or "StrokeColor" or "StrokeWidth" or "CanApplyStroke" or "CanApplyStrokeWidth" or "IsPlaying" or "PlayStatus" or "CanPresent" or "CanAdvance" or "CanPlayPrevious" or "CanExitPresentation" or "SlideStatus" or "SlideHidden" or "CanHideSlide" or "CanShowSlide" or "TransitionKind" or "TransitionDuration" or "AnimationEffect" or "AnimationTrigger" or "CanApplyTransition" or "CanAddAnimation" or "CanRemoveAnimation" or "AnimationSteps" or "CanExportPowerPoint" or "CanImportPowerPoint" or "CanCopy" or "CanPaste" or "CanMoveObject" or "HasUnknownCommitOutcome" or "SlideTitle" or "ShowFiles" or "ShowSlides" or "EmptyDocument" or "SelectedText" or "HasTextSelection" or "HasSelection" or "CanEditSelection" or "CanSlideUp" or "CanSlideDown" or "CanPreviousSlide" or "CanNextSlide" or "HideSlideLabel" or "ShowSidebar" or "WorkspaceColumns" or "SidebarColumnSpan" or "SelectionStatus";
     }
     public bool TrySetValue(string path, object? value)
     {
+        if (path == "TransitionDuration" && value is string durationText)
+            return double.TryParse(durationText, NumberStyles.Float, CultureInfo.InvariantCulture, out var duration)
+                && TrySetValue(path, duration);
+        if (path == "SelectedText" && value is string content && IsActionAvailable("DeleteObject") == true && Editor?.SelectedElements.FirstOrDefault(element => element.Kind == PresentElementKind.Text) is { } selected)
+        { Editor.CommitLiveTextEdit(); Editor.SetElementText(Editor.Selection.SlideId, selected.Id, content); Editor.Document.Version = DurableRevision; return true; }
+        if (path is "Title" or "SlideTitle" && value is string title && !string.IsNullOrWhiteSpace(title) && IsActionAvailable("AddSlide") == true && Editor is not null)
+        { if (path == "Title") Editor.SetDocumentTitle(title); else Editor.SetSlideTitle(Editor.Selection.SlideId, title); Editor.Document.Version = DurableRevision; return true; }
         if (Editor is null || IsActionAvailable("AddSlide") != true) return false;
         switch (path)
         {
             case "SpeakerNotes" when value is string notes:
                 Editor.SetSpeakerNotes(Editor.Selection.SlideId, notes);
                 Editor.Document.Version = DurableRevision; return true;
-            case "Title" when value is string title:
-                Editor.SetDocumentTitle(title);
+            case "Title" when value is string documentTitle:
+                Editor.SetDocumentTitle(documentTitle);
                 Editor.Document.Version = DurableRevision; return true;
             case "FillColor" when value is string color && IsActionAvailable("ApplyFill") == true:
                 _fillColor = color; return true;
@@ -549,12 +571,12 @@ public sealed class PresentBrowserSession : ICuiWritableBindingContext, ICuiActi
             case "StrokeWidth" when value is double strokeWidth && IsActionAvailable("ApplyStrokeWidth") == true:
                 _strokeWidth = strokeWidth; return true;
             case "TransitionKind" when value is string transitionKind && IsActionAvailable("ApplyTransition") == true:
-                if (!Enum.TryParse<PresentTransitionKind>(transitionKind, ignoreCase: true, out var parsedTransition)) return false;
+                if (!Enum.TryParse<PresentTransitionKind>(transitionKind, ignoreCase: true, out var parsedTransition) || !Enum.IsDefined(parsedTransition)) return false;
                 _transitionKind = transitionKind; return true;
             case "TransitionDuration" when value is double transitionDuration && IsActionAvailable("ApplyTransition") == true:
                 // The owner clamps a duration to 0.05-30 seconds, so a value
                 // outside that range is refused here rather than silently rewritten.
-                if (transitionDuration is < 0.05 or > 30) return false;
+                if (!double.IsFinite(transitionDuration) || transitionDuration is < 0.05 or > 30) return false;
                 _transitionDuration = transitionDuration; return true;
             case "AnimationEffect" when value is string animationEffect && IsActionAvailable("AddAnimation") == true:
                 if (!Enum.TryParse<PresentAnimationEffect>(animationEffect, ignoreCase: true, out var parsedEffect)) return false;
@@ -630,10 +652,15 @@ public sealed class PresentBrowserSession : ICuiWritableBindingContext, ICuiActi
     }
 
     public bool? IsActionAvailable(string command) => !_disposed && !_presentationPending && !IsBusy &&
-        (_pending is null || command is "Inspect" or "Refresh") &&
+        (IsWorkspaceActive || command is "Create" or "Open" or "Refresh" or "ImportPowerPoint" or "ResumePresentation" or "Inspect" or "Close") &&
+        (_pending is null || command is "Inspect" or "Refresh" or "ReturnToStart" or "ResumePresentation") &&
         (_playback is null || command is "Advance" or "PlayPrevious" or "ExitPresentation") && (command switch
         {
             "Create" or "Open" or "Refresh" => true,
+            "ReturnToStart" => IsWorkspaceActive,
+            "ResumePresentation" => Editor is not null && !IsWorkspaceActive,
+            "ToggleInspector" or "ToggleFiles" => true,
+            "ToggleSidebar" => true,
             "SelectSlide" => Editor is not null,
             "Present" => Editor is not null && !IsReadOnly && Editor.Document.Slides.Any(slide => !slide.Hidden),
             "Advance" => _playback is not null &&
@@ -677,14 +704,33 @@ public sealed class PresentBrowserSession : ICuiWritableBindingContext, ICuiActi
                 !IsReadOnly && Editor.Selection.ElementIds.Count > 0,
             "ExportPowerPoint" => Editor is not null && _exporter is not null && _media is not null,
             "ImportPowerPoint" => _importer is not null && _media is not null,
+            "PreviousSlide" => Editor is not null && Editor.SelectedSlide.Order > 0,
+            "NextSlide" => Editor is not null && Editor.SelectedSlide.Order < Editor.Document.Slides.Count - 1,
+            "ToggleHidden" => Editor is not null && !IsReadOnly,
+            "DeleteObject" or "RotateObject" => Editor?.SelectedElements.Count > 0 && !IsReadOnly,
+            "SlideUp" => Editor is not null && !IsReadOnly && Editor.SelectedSlide.Order > 0,
+            "SlideDown" => Editor is not null && !IsReadOnly && Editor.SelectedSlide.Order < Editor.Document.Slides.Count - 1,
             "Undo" => Editor?.CanUndo == true && !IsReadOnly, "Redo" => Editor?.CanRedo == true && !IsReadOnly,
             "Close" => Editor is not null, "Inspect" => _pending is not null, _ => false
         });
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         if (IsActionAvailable(command) != true) { Failure<bool>("UnsupportedFeature", "This presentation action is unavailable."); Notify(); return; }
         switch (command)
         {
+            case "ReturnToStart": SetStartView(true); break;
+            case "ResumePresentation": SetStartView(false); break;
+            case "ToggleInspector": _showInspector = !_showInspector; Notify(); break;
+            case "ToggleFiles": _showFiles = !_showFiles; _showSidebar = true; Notify(); break;
+            case "ToggleSidebar": _showSidebar = !_showSidebar; Notify(); break;
+            case "PreviousSlide": Editor!.CommitLiveTextEdit(); Editor.SelectSlide(Editor.Document.Slides[Editor.SelectedSlide.Order - 1].Id); Notify(); break;
+            case "NextSlide": Editor!.CommitLiveTextEdit(); Editor.SelectSlide(Editor.Document.Slides[Editor.SelectedSlide.Order + 1].Id); Notify(); break;
+            case "ToggleHidden": await EditAsync(editor => editor.SetSlideHidden(editor.Selection.SlideId, !editor.SelectedSlide.Hidden), cancellationToken); break;
+            case "DeleteObject": await EditAsync(editor => editor.RemoveSelectedElements(), cancellationToken); break;
+            case "RotateObject": await EditAsync(editor => editor.RotateSelection(90), cancellationToken); break;
+            case "SlideUp": await EditAsync(editor => editor.MoveSlide(editor.Selection.SlideId, editor.SelectedSlide.Order - 1), cancellationToken); break;
+            case "SlideDown": await EditAsync(editor => editor.MoveSlide(editor.Selection.SlideId, editor.SelectedSlide.Order + 1), cancellationToken); break;
             case "Create": await CreateAsync(token: cancellationToken); break;
             case "Refresh": await RefreshAsync(cancellationToken); break;
             case "Save": await SaveAsync(cancellationToken); break;
@@ -695,7 +741,9 @@ public sealed class PresentBrowserSession : ICuiWritableBindingContext, ICuiActi
             case "ExitPresentation": EndPresentation(); break;
             case "Inspect": await InspectSavedStateAsync(cancellationToken); break;
             case "Open" when parameter is PresentSavedRow row && _documents.Any(item => item.Id == row.Summary.Id):
-                await OpenAsync(row.Summary.Id, token: cancellationToken); break;
+                if (DocumentId == row.Summary.Id) SetStartView(false);
+                else await OpenAsync(row.Summary.Id, token: cancellationToken);
+                break;
             case "SelectSlide" when parameter is PresentSlideRow row && Editor!.Document.Slides.Any(slide => slide.Id == row.Slide.Id):
                 Editor.CommitLiveTextEdit(); Editor.SelectSlide(row.Slide.Id); Notify(); break;
             case "AddSlide": await EditAsync(editor => { editor.AddSlide(editor.Selection.SlideId); return true; }, cancellationToken); break;
@@ -759,7 +807,43 @@ public sealed class PresentBrowserSession : ICuiWritableBindingContext, ICuiActi
             default: Failure<bool>("InvalidArgument", "Choose a current presentation or slide."); Notify(); break;
         }
     }
-    private void Notify() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+    private void SetStartView(bool show)
+    {
+        // A view change retains the canonical editor, dirty content, selection
+        // and undo history. It never runs the close/save lifecycle.
+        var previous = _showStart;
+        _showStart = show;
+        try { Notify(); }
+        catch { _showStart = previous; throw; }
+    }
+    private void Notify()
+    {
+        // Selection, open and undo can change the owner's transition. Preserve
+        // pending input through unrelated notifications, but never carry a
+        // previous slide's fields into a newly selected slide.
+        if (Editor is { } editor)
+        {
+            var transition = editor.SelectedSlide.Transition;
+            var current = (editor.Selection.SlideId, transition.Kind, transition.DurationSeconds);
+            if (_observedTransition != current)
+            {
+                _observedTransition = current;
+                _transitionKind = transition.Kind.ToString();
+                _transitionDuration = transition.DurationSeconds;
+            }
+        }
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+    }
+    internal Exception? LastOperationError { get; private set; }
+    private bool _showSidebar = true;
+    private bool _compact;
+    public void RefreshSelection() => Notify();
+    public void SetViewportWidth(double width)
+    {
+        var compact = width > 0 && width < 760;
+        if (_compact == compact) return;
+        _compact = compact; _showSidebar = !compact; Notify();
+    }
     private HomeCoreOperationResult<T> Success<T>(T value) => new(true, "Succeeded", Status, value, Revision: DurableRevision);
     private HomeCoreOperationResult<T> Failed<T>() => new(false, ErrorCode ?? "ProviderUnavailable", Status);
     private HomeCoreOperationResult<T> Failure<T>(string code, string message)
@@ -785,7 +869,9 @@ public sealed class PresentBrowserSession : ICuiWritableBindingContext, ICuiActi
 public sealed record PresentSavedRow(PresentDocumentSummary Summary) : ICuiBindingContext
 {
     public bool TryGetValue(string path, out object? value)
-    { value = path switch { "Id" => Summary.Id, "Title" => Summary.Title, _ => null }; return path is "Id" or "Title"; }
+    { value = path switch { "Id" => Summary.Id, "Title" => Summary.Title,
+        "LocationAndModified" => $"This browser · updated {Summary.UpdatedAt:dd MMM yyyy, HH:mm}", _ => null };
+        return path is "Id" or "Title" or "LocationAndModified"; }
 }
 public sealed record PresentSlideRow(PresentSlide Slide) : ICuiBindingContext
 {

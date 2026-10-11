@@ -1,6 +1,6 @@
-# HavenOS / CakeOS Windows compatibility broker
+# 9to1OS Windows compatibility broker
 
-This directory contains the first implementation slice of the optional Windows compatibility layer for the current CakeOS repository. Historical HavenOS naming is retained where the surrounding platform interfaces have not yet been renamed.
+This directory contains the first implementation slice of the optional Windows compatibility layer for the current 9to1OS repository. Historical HavenOS interface names are retained for API compatibility.
 
 ## Implemented
 

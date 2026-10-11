@@ -533,7 +533,7 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
             }
             var text = await _models.CompleteAsync(new OllamaChatRequest(
                 model.Name, [new OllamaMessage("user", prompt)], EffortLevel.Low,
-                "You are Haven Mail's contextual writing assistant. Work only from the supplied email content."), CancellationToken.None);
+                "You are 9to1 Mail's contextual writing assistant. Work only from the supplied email content."), CancellationToken.None);
             AiText = text.Trim();
             if (applyToCompose)
             {
@@ -662,8 +662,8 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
     {
         MailFailureKind.NotConnected => "Connect a Mail account to continue.",
         MailFailureKind.ReconnectRequired => "Your Mail session needs to be reconnected in Settings.",
-        MailFailureKind.PermissionDenied => "Haven does not currently have permission for that Mail action.",
-        MailFailureKind.Offline => "Haven cannot reach the Mail provider right now.",
+        MailFailureKind.PermissionDenied => "9to1 does not currently have permission for that Mail action.",
+        MailFailureKind.Offline => "9to1 cannot reach the Mail provider right now.",
         MailFailureKind.InvalidRequest => "The Mail provider could not complete that request.",
         _ => "The Mail provider could not complete this operation."
     };

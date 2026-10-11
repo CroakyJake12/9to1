@@ -4,7 +4,7 @@ using HavenOS.Home.Core;
 
 namespace NineToOne.Web.Productivity.Boards;
 
-// Proposal only: the original public editor owns rich text on the exact notebook
+// The original public editor owns rich text on the exact notebook
 // document passed to the existing Boards service/repository. No parallel model.
 public sealed partial class BoardsBrowserCore
 {
@@ -12,15 +12,16 @@ public sealed partial class BoardsBrowserCore
     internal WriteDocumentEditor? NativeRichEditor => _richEditor;
     internal bool RichEditingPermitted => _document is not null && _richEditor is not null &&
         !_disposed && !_presentationPending && !IsReadOnly && _pending is null &&
-        _document.Sections.SelectMany(section => section.Pages)
-            .All(page => _boards.GetEditMode(_document, page.Id) == BoardsPageEditMode.Edit);
+        ActivePageId is { } pageId && VisiblePages.Any(page => page.Id == pageId) &&
+        _boards.GetEditMode(_document, pageId) == BoardsPageEditMode.Edit;
     internal bool AllowRetainedRichInput => !IsBusy && RichEditingPermitted;
+    internal bool AllowRetainedSelection => !IsBusy && !_disposed && !_presentationPending && _pending is null && _richEditor is not null;
 
     private void BindRichEditor()
     {
-        if (_document is null) return;
+        if (_document is null || ActivePageId is not { } pageId) return;
         var before = System.Text.Json.JsonSerializer.Serialize(_document, Json);
-        _richEditor = new WriteDocumentEditor(_document);
+        _richEditor = new WriteDocumentEditor(_document, pageId);
         _richEditor.Changed += OnRichEditorChanged;
         // Owning initialization may create missing run IDs in a legacy document.
         // Such changes are unsaved, never attributed to an acknowledged revision.
@@ -37,6 +38,7 @@ public sealed partial class BoardsBrowserCore
         if (!ReferenceEquals(sender, _richEditor) || _document is null) return;
         if (!ReferenceEquals(_richEditor!.Document, _document))
             throw new InvalidOperationException("The retained editor must own this exact notebook document.");
+        _document.Version = DurableRevision; // Undo restores authored content, never the durable receipt revision.
         ++_generation; IsDirty = true; Status = "Unsaved changes"; Notify();
     }
 

@@ -19,7 +19,7 @@ public static class GenUiRenderingLayerSelector
 
         if (document.Origin.TemplateId is null)
             return new(GenUiRenderingLayer.GeneratedSandbox,
-                "Purpose-built generated UI stays inside the bounded declarative HavenUI sandbox; executable generated code is disabled.",
+                "Purpose-built generated UI stays inside the bounded declarative CUI sandbox; executable generated code is disabled.",
                 AllowsExecutableCode: false);
 
         if (components.Any(component => SceneComponents.Contains(component.ComponentType)))
@@ -28,10 +28,10 @@ public static class GenUiRenderingLayerSelector
 
         if (components.Any(component => CompositeComponents.Contains(component.ComponentType)) || components.Length >= 12)
             return new(GenUiRenderingLayer.Composite,
-                "Multi-region composition benefits from the composite HavenUI layout path.");
+                "Multi-region composition benefits from the composite CUI layout path.");
 
         return new(GenUiRenderingLayer.Native,
-            "Standard controls can use the native trusted HavenUI renderer without a scene dependency.");
+            "Standard controls can use the native trusted CUI renderer without a scene dependency.");
     }
 
     private static IEnumerable<GenUiComponent> Flatten(GenUiComponent root)

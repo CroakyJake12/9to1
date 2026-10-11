@@ -47,7 +47,7 @@ public sealed class ConnectorWorkspaceRegistry
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentException("A workspace key is required.", nameof(key));
         if (!_workspaces.TryGetValue(key.Trim(), out var workspace))
-            throw new KeyNotFoundException($"Workspace '{key}' is not configured for the Haven connector.");
+            throw new KeyNotFoundException($"Workspace '{key}' is not configured for the 9to1 connector.");
         if (!Directory.Exists(workspace.RootPath))
             throw new DirectoryNotFoundException($"Configured workspace '{workspace.Key}' does not exist: {workspace.RootPath}");
         return workspace;
@@ -117,14 +117,14 @@ public sealed class ConnectorWorkspaceRegistry
         }
         catch (JsonException exception)
         {
-            throw new InvalidOperationException($"Haven connector workspace configuration is invalid: {path}", exception);
+            throw new InvalidOperationException($"9to1 connector workspace configuration is invalid: {path}", exception);
         }
 
         var result = new Dictionary<string, ConnectorWorkspaceDefinition>(StringComparer.OrdinalIgnoreCase);
         foreach (var item in configuration?.Workspaces ?? [])
         {
             if (string.IsNullOrWhiteSpace(item.Key) || string.IsNullOrWhiteSpace(item.RootPath))
-                throw new InvalidOperationException("Every Haven connector workspace requires a key and rootPath.");
+                throw new InvalidOperationException("Every 9to1 connector workspace requires a key and rootPath.");
 
             var key = item.Key.Trim();
             var root = Path.GetFullPath(Environment.ExpandEnvironmentVariables(item.RootPath.Trim()))
@@ -133,7 +133,7 @@ public sealed class ConnectorWorkspaceRegistry
             var approvedBranch = string.IsNullOrWhiteSpace(item.ApprovedBranch) ? null : item.ApprovedBranch.Trim();
 
             if (!result.TryAdd(key, new ConnectorWorkspaceDefinition(key, displayName, root, approvedBranch)))
-                throw new InvalidOperationException($"Duplicate Haven connector workspace key '{key}'.");
+                throw new InvalidOperationException($"Duplicate 9to1 connector workspace key '{key}'.");
         }
 
         return result;

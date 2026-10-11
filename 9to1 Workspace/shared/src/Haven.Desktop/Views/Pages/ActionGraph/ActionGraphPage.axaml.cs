@@ -315,7 +315,7 @@ public sealed partial class ActionGraphPage : UserControl, IDisposable
             {
                 AddDetailCard("Node details", _events.Count == 0
                     ? "Select an execution on the left, then choose a step in the graph or list."
-                    : "Select a node in the graph or a row in the list to inspect what Haven did.");
+                    : "Select a node in the graph or a row in the list to inspect what 9to1 did.");
                 return;
             }
             RenderActionDetails(action);
@@ -472,7 +472,7 @@ public sealed partial class ActionGraphPage : UserControl, IDisposable
         };
         card.Add(Caption(heading));
         card.Add(BodyText(request.RequestingComponentName + (request.ProviderName is null ? string.Empty : " · " + request.ProviderName), "ActionGraph.Remediation.Component"));
-        card.Add(BodyText(request.Explanation + Environment.NewLine + "Stored securely by Haven where applicable.", "ActionGraph.Remediation.Explanation"));
+        card.Add(BodyText(request.Explanation + Environment.NewLine + "Stored securely by 9to1 where applicable.", "ActionGraph.Remediation.Explanation"));
 
         if (request.State is RemediationState.Completed or RemediationState.Cancelled or RemediationState.Expired or RemediationState.Failed)
         {
@@ -483,7 +483,7 @@ public sealed partial class ActionGraphPage : UserControl, IDisposable
         var canResumeNow = request.CanResume && _remediationCoordinator.CanResume(request.Id);
         if (request.CanResume && !canResumeNow)
             card.Add(BodyText(
-                "Automatic resume is no longer available for this saved blocker, usually because Haven restarted. Resolve the setup issue, then retry the action from its task.",
+                "Automatic resume is no longer available for this saved blocker, usually because 9to1 restarted. Resolve the setup issue, then retry the action from its task.",
                 "ActionGraph.Remediation.ResumeNote"));
 
         if (request.Type == RemediationType.SecretInput)

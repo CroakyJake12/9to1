@@ -86,7 +86,7 @@ public sealed partial class MeshCoordinator
         if (string.IsNullOrWhiteSpace(member.ProviderId) || string.IsNullOrWhiteSpace(member.ModelName))
             throw new InvalidDataException($"{member.Name} has an incomplete model assignment.");
         var route = MeshRemoteModelProvider.EncodeRoute(member.DeviceId, member.ProviderId, member.ModelName);
-        var system = $"You are {member.Name}, a named AI team member in Haven Mesh Work Mode. Role: {member.Role ?? "general team member"}. Work with the shared team context provided in the prompt. Be explicit about what you actually completed and never claim access to capabilities you were not given.";
+        var system = $"You are {member.Name}, a named AI team member in 9to1 Mesh Work Mode. Role: {member.Role ?? "general team member"}. Work with the shared team context provided in the prompt. Be explicit about what you actually completed and never claim access to capabilities you were not given.";
         return CompleteRemoteModelAsync(route, new OllamaChatRequest(route, [new OllamaMessage("user", prompt)], EffortLevel.Medium, system), cancellationToken);
     }
 
@@ -107,7 +107,7 @@ public sealed partial class MeshCoordinator
         var recent = history.OrderByDescending(message => message.CreatedAt).Take(channel == MeshWorkChannelKind.SharedPool ? 24 : 12).Reverse().ToArray();
         if (recent.Length == 0) return content;
         var transcript = string.Join(Environment.NewLine, recent.Select(FormatWorkMessage));
-        return $"Recent Haven Work Mode {channel} context:\n{transcript}\n\nNew message for {member.Name}:\n{content}";
+        return $"Recent 9to1 Work Mode {channel} context:\n{transcript}\n\nNew message for {member.Name}:\n{content}";
     }
 
     private string FormatWorkMessage(MeshWorkMessage message)

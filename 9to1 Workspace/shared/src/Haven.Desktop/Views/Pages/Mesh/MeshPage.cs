@@ -23,7 +23,7 @@ public sealed class MeshPage : UserControl, IDisposable
         _scene.ClipboardApplyRequested += OnClipboardApplyRequested;
         Scene = new HavenSceneControl { Root = _scene.Root };
         AutomationProperties.SetAutomationId(this, "HavenNativeMeshPage");
-        AutomationProperties.SetName(this, "Haven Mesh and Work Mode");
+        AutomationProperties.SetName(this, "9to1 Mesh and Work Mode");
         AutomationProperties.SetAutomationId(Scene, "HavenNativeMeshScene");
         AutomationProperties.SetName(Scene, "Mesh device and AI team management");
         Content = Scene;
@@ -52,7 +52,7 @@ public sealed class MeshPage : UserControl, IDisposable
         {
             var storage = TopLevel.GetTopLevel(this)?.StorageProvider;
             if (storage is null) { SetStatus("The platform file picker is unavailable."); return; }
-            var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions { Title = "Send file with Haven Mesh", AllowMultiple = false });
+            var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions { Title = "Send file with 9to1 Mesh", AllowMultiple = false });
             var file = files.FirstOrDefault();
             if (file is null) return;
             await using var stream = await file.OpenReadAsync();

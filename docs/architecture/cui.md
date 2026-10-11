@@ -64,7 +64,7 @@ Shared CUI Language/Core, Runtime and Themes contracts have one framework
 owner during convergence. Product lanes consume the documented parser,
 resource and binding interfaces; they do not change shared CUI or vendor
 sources while those contracts remain under validation. Theme preference
-propagation across the remaining native hosts must continue to use Haven's
+propagation across the remaining native hosts must continue to use 9to1's
 preference owner; no product-specific copy of the theme choice is authoritative.
 
 The DevTools project attaches a read-only `CuiLiveTreeInspector` to a native

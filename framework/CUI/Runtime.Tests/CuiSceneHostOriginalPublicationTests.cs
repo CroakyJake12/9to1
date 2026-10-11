@@ -388,7 +388,7 @@ public sealed class CuiSceneHostOriginalPublicationTests
             Task<CuiSceneAvailability>? replacement = null;
             action.Replace = () =>
             {
-                replacement = rig.Track(rig.Host.ShowAsync(Scene(markup: "<Cui><TextBlock text=\"Replacement\" /></Cui>") with
+                replacement = rig.Track(rig.Host.ShowAsync(Scene(markup: "<Cui><Text text=\"Replacement\" /></Cui>") with
                 { IsPublicationCurrent = () => current }));
                 return replacement;
             };

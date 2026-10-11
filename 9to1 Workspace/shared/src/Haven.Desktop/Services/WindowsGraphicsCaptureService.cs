@@ -312,7 +312,7 @@ public sealed class WindowsGraphicsCaptureService : IScreenShareService, IAsyncD
             && desktop.MainWindow?.TryGetPlatformHandle() is { } handle
             && handle.Handle != IntPtr.Zero)
             return handle.Handle;
-        throw new InvalidOperationException("Haven's main window is not ready for the Windows screen picker.");
+        throw new InvalidOperationException("9to1's main window is not ready for the Windows screen picker.");
     }
 
     /// <summary>

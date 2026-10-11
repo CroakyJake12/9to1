@@ -175,7 +175,7 @@ public sealed partial class WorkspaceChromeHost
 
         grid.Children.Add(new TextBlock
         {
-            Text = "Haven",
+            Text = "9to1",
             FontSize = 22,
             FontWeight = FontWeight.Bold,
             VerticalAlignment = VerticalAlignment.Center,
@@ -270,7 +270,7 @@ public sealed partial class WorkspaceChromeHost
             Padding = new Thickness(15, 8)
         };
         _actionsButton.Classes.Add("primary");
-        ToolTip.SetTip(_actionsButton, "Search Haven actions · Ctrl+K");
+        ToolTip.SetTip(_actionsButton, "Search 9to1 actions · Ctrl+K");
         _actionsFlyout = BuildActionsFlyout();
         _actionsButton.Flyout = _actionsFlyout;
         _actionsButton.Click += (_, _) =>

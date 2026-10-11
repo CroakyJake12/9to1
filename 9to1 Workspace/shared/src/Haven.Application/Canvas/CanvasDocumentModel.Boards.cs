@@ -95,7 +95,7 @@ public static partial class CanvasDocumentModel
     private static void EnsureCanvasPages(NotesDocument document)
     {
         if (!IsCanvasDocument(document))
-            throw new InvalidOperationException("This Notes document is not a Haven Canvas board.");
+            throw new InvalidOperationException("This Notes document is not a 9to1 Canvas board.");
 
         document.LayoutMode = NotesLayoutMode.InfiniteCanvas;
         document.Metadata[SchemaMetadataKey] = SchemaVersion;

@@ -389,7 +389,7 @@ public sealed class PlannerRepository(ISqliteConnectionFactory factory) : IPlann
         }
 
         var haven = JsonSerializer.Deserialize<PlannerEvent>(conflict.HavenSnapshotJson)
-                    ?? throw new InvalidOperationException("The saved Haven conflict snapshot is invalid.");
+                    ?? throw new InvalidOperationException("The saved 9to1 conflict snapshot is invalid.");
         var provider = JsonSerializer.Deserialize<PlannerEvent>(conflict.ProviderSnapshotJson)
                        ?? throw new InvalidOperationException("The saved provider conflict snapshot is invalid.");
 
@@ -428,7 +428,7 @@ public sealed class PlannerRepository(ISqliteConnectionFactory factory) : IPlann
                 {
                     Id = Guid.NewGuid(),
                     CalendarId = PlannerDefaults.LocalCalendarId,
-                    Title = haven.Title + " (Haven copy)",
+                    Title = haven.Title + " (9to1 copy)",
                     IsReadOnly = false,
                     ProviderEventId = null,
                     ProviderETag = null,

@@ -1,6 +1,6 @@
 <Cui id="9to1.Picture.Metadata" version="1">
   <Page AccessibleName="Image information">
-    <Container Type="Vertical Stack" Margin="20" Spacing="12" VerticalScrolling="True">
+    <Container Type="Vertical Stack" Margin="20" VerticalScrolling="True" CellGap="12">
       <Text FontSize="22" FontWeight="Bold">Image information</Text>
       <Text Text="{Binding FileFacts}" TextWrapping="Wrap" AccessibleName="Image file facts" />
       <Text FontSize="18" FontWeight="SemiBold">Embedded metadata</Text>
