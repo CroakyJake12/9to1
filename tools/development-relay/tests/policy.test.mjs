@@ -60,3 +60,25 @@ test('Eligibility cannot be indefinite or be set by the cloud identity',()=>{con
 test('An early override cannot start on a college day',()=>{const p={...policy,school_term:true,rules:{no_local_development_before_college:true,commute_minutes_each_way:45},weekdays:{...policy.weekdays,Monday:{local_start:'08:00',local_end:'17:00',final_non_EPQ_class_end:'13:00'}}};assert.equal(selectShift(p,available,new Date('2026-10-12T11:00:00Z')).shift,'cloud');assert.equal(selectShift(p,available,new Date('2026-10-12T12:45:00Z')).shift,'local');});
 test('Holiday/day-off must be explicitly marked to permit an early start',()=>{const p={...policy,school_term:true,rules:{no_local_development_before_college:true,commute_minutes_each_way:45},weekdays:{...policy.weekdays,Monday:{local_start:'09:00',local_end:'17:00',final_non_EPQ_class_end:'13:00'}},date_overrides:{'2026-10-12':{local_start:'08:00',local_end:'17:00'}}};assert.equal(selectShift(p,available,new Date('2026-10-12T08:00:00Z')).shift,'cloud');p.date_overrides['2026-10-12'].college_day=false;assert.equal(selectShift(p,available,new Date('2026-10-12T08:00:00Z')).shift,'local');});
 test('Missing college timing or a class ending after the local window fails closed',()=>{const p={...policy,school_term:true,rules:{no_local_development_before_college:true,commute_minutes_each_way:45}};assert.throws(()=>selectShift(p,available,new Date('2026-10-12T10:00:00Z')));p.weekdays={...p.weekdays,Monday:{local_start:'09:00',local_end:'17:00',final_non_EPQ_class_end:'18:00'}};assert.equal(selectShift(p,available,new Date('2026-10-12T15:00:00Z')).shift,'cloud');});
+
+test('Mixed valid and Git administrative paths reject enqueue atomically without poisoning later tasks',()=>{
+  const s=state();
+  queue(s,'legitimate',['framework/CUI/runtime']);
+  const legitimateBytes=JSON.stringify(s.tasks[0]);
+  const stateBytes=JSON.stringify(s);
+  for(const paths of [
+    ['tools/development-relay/tests','.git/config'],
+    ['tools/.GiT/config','tools/development-relay/tests']
+  ]){
+    assert.throws(()=>queue(s,'mixed-unsafe',paths),/Git administrative path cannot be owned/);
+    assert.equal(JSON.stringify(s.tasks[0]),legitimateBytes);
+    assert.equal(JSON.stringify(s),stateBytes);
+    assert.equal(s.tasks.length,1);
+    assert.equal(s.tasks.some(t=>t.id==='mixed-unsafe'),false);
+  }
+  queue(s,'mixed-unsafe',['tools/development-relay/tests']);
+  assert.equal(JSON.stringify(s.tasks[0]),legitimateBytes);
+  assert.deepEqual(s.tasks.map(t=>t.id),['legitimate','mixed-unsafe']);
+  assert.deepEqual(s.tasks[1].paths,['tools/development-relay/tests/']);
+  assert.equal(s.tasks[1].status,'QUEUED');
+});

@@ -34,10 +34,10 @@ export class LocalRunner {
     try{const r=await fetch('http://127.0.0.1:8081/health',{signal:AbortSignal.timeout(3000)});const h=await r.json();return {...h,ready:r.ok&&h.loaded===true&&/iq2_xs/i.test(h.model??'')&&Number(h.max_context)===524288};}
     catch{return {ready:false,status:'UNREACHABLE'};}
   }
-  status(){return {installed:true,runner_pid:process.pid,at:new Date().toISOString(),presence:this.presence,
+  status(){const cloudTask=this.remote?.lease?.worker==='cloud'&&this.remote.lease.expires_at>Date.now()?this.remote.tasks.find(t=>t.owner==='cloud'&&t.fence===this.remote.lease.fence&&t.status==='WORKING'):null;const cloud=this.get('cloud')??this.config.cloud_commissioning??{status:'NOT_CONFIGURED'};return {installed:true,runner_pid:process.pid,at:new Date().toISOString(),presence:this.presence,
     planned_shift:selectShift(this.config.schedule,{...this.presence,healthy:true}),coordinator:this.remote?'CONNECTED':'BLOCKED',
-    active_shift:this.remote?.lease?.worker??'NONE',active_worker:this.active?.worker??'NONE',strata:this.strata,
-    opencode:this.active?.worker==='OpenCode'?'RUNNING':'STOPPED',cloud:this.get('cloud')??this.config.cloud_commissioning??{status:'NOT_CONFIGURED'},
+    active_shift:this.remote?.lease?.worker??'NONE',active_worker:this.active?.worker??(cloudTask?'Codex Cloud (owned task)':'NONE'),strata:this.strata,
+    opencode:this.active?.worker==='OpenCode'?'RUNNING':'STOPPED',cloud:{...cloud,status:cloudTask?'TASK_OWNED':cloud.status,owned_task:cloudTask?.id??null},
     tasks:this.remote?.tasks??[],latest_handover:this.remote?.handovers?.at(-1)??null,
     checkpoint:this.get('checkpoint'),recovery:this.recovery,error:this.error,unattended_switching:'NOT_VERIFIED',
     events:this.db.prepare('SELECT at,event,value FROM events ORDER BY id DESC LIMIT 30').all().map(x=>({...x,value:JSON.parse(x.value)}))};}
@@ -62,7 +62,7 @@ export class LocalRunner {
     if(!tasks.length)throw new Error('No released source checkpoint; handover was not published');
     // One handover per exact branch; a multi-branch shift publishes each independently.
     const task=tasks.find(t=>t.result?.source);if(!task)throw new Error('No remotely verified source commit');
-    const h={id:randomUUID(),from:'local',to:'cloud',source:task.result.source,tasks:[task.id],tests:task.evidence,blockers:task.result.blockers??[],spec:this.config.spec,next_actions:task.result.remaining??[]};
+    const h={id:randomUUID(),from:'local',to:'cloud',source:task.result.source,artifact_hashes:task.result.source.artifact_hashes??{},deleted_paths:task.result.source.deleted_paths??[],hash_scope:'committed Git blob bytes',tasks:[task.id],tests:task.evidence,blockers:task.result.blockers??[],spec:this.config.spec,next_actions:task.result.remaining??[]};
     this.remote=await request(this.config,'handover',{fence:this.remote.lease.fence,handover:h});
     await this.dispatchCloud(h);return {ok:true,message:'READY handover published; local ownership retained until exact cloud ACK',status:this.status()};
   }

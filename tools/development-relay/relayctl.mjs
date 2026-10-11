@@ -4,7 +4,7 @@ import {randomUUID} from 'node:crypto';
 import path from 'node:path';
 import {request} from './client.mjs';
 import {selectShift} from './policy.mjs';
-import {git,sha} from './git.mjs';
+import {git,sha,verifyArtifactHashes} from './git.mjs';
 const [command,configPath,arg,arg2]=process.argv.slice(2);const c=JSON.parse(await readFile(configPath,'utf8'));
 if(command==='state')console.log(JSON.stringify(await request(c,'state'),null,2));
 else if(command==='policy')console.log(JSON.stringify({configured:!!(await request(c,'policy',{policy:c.schedule})).policy}));
@@ -22,8 +22,9 @@ else if(command==='check-local'||command==='check-task'){
   const fetched=(await git(c.repository,['rev-parse','FETCH_HEAD'])).trim();if(fetched!==h.source.sha)throw new Error('Remote handover source changed');
   const root=path.resolve(c.worktrees,'received-'+randomUUID());await mkdir(path.dirname(root),{recursive:true});await git(c.repository,['worktree','add','--detach',root,h.source.sha]);
   if(await sha(root)!==h.source.sha)throw new Error('Receiving reconstruction failed');
+  const artifact_hashes=await verifyArtifactHashes(root,h.source.sha,h.artifact_hashes??h.source.artifact_hashes??{});
   const result=await request(c,'ack',{handover_id:h.id,revision:h.revision,reconstructed_sha:await sha(root)});
-  await writeFile(path.join(c.checkpoints,'received-'+h.id+'.json'),JSON.stringify({source:h.source,root,ack:result.handovers.find(x=>x.id===h.id).ack},null,2));
+  await writeFile(path.join(c.checkpoints,'received-'+h.id+'.json'),JSON.stringify({source:h.source,root,artifact_hashes,ack:result.handovers.find(x=>x.id===h.id).ack},null,2));
   console.log(JSON.stringify({acknowledged:h.id,sha:h.source.sha,root}));
 }else if(command==='heartbeat'){
   const fence=Number(arg);if(!Number.isSafeInteger(fence))throw new Error('Exact lease fence required');
@@ -32,5 +33,5 @@ else if(command==='check-local'||command==='check-task'){
   const db=new DatabaseSync(c.state_db,{readOnly:true});const day=arg??new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/London'}).format(new Date());
   const dateFormat=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/London'});
   const events=db.prepare('SELECT at,event,value FROM events ORDER BY id').all().filter(e=>dateFormat.format(new Date(e.at))===day).map(e=>({...e,value:JSON.parse(e.value)}));
-  const summary={day,timezone:'Europe/London',changes:events.filter(x=>x.event==='WORKER_FINISHED'&&x.value.status==='COMPLETED'),operations:events,unattended_switching:'NOT_VERIFIED'};db.close();console.log(JSON.stringify(summary,null,2));
+  const summary={day,timezone:'Europe/London',changes:events.filter(x=>x.event==='REVIEWED_SOURCE_PUBLISHED'||x.event==='WORKER_FINISHED'&&x.value.status==='COMPLETED'),operations:events,unattended_switching:'NOT_VERIFIED'};db.close();console.log(JSON.stringify(summary,null,2));
 }else throw new Error('Supported commands: state, policy, enqueue, check-local, check-task, receive, heartbeat, summary');

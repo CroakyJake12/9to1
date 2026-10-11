@@ -3,7 +3,14 @@ import assert from 'node:assert/strict';
 import {mkdtemp,mkdir,writeFile,readFile} from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import {git,sha,dirty,preserve,createTaskWorktree,reviewPaths,publish} from '../git.mjs';
+import {createHash} from 'node:crypto';
+import {git,sha,dirty,preserve,createTaskWorktree,reviewPaths,publish,verifyArtifactHashes} from '../git.mjs';
+
+test('Exact receiving source verifies raw binary blob hashes and refuses mismatches or dirty reconstruction',async()=>{
+  const repo=await mkdtemp(path.join(process.env.RELAY_TEST_ROOT??os.tmpdir(),'relay-artifact-'));await git(repo,['init']);await git(repo,['config','user.name','Relay Temporary Test']);await git(repo,['config','user.email','relay-test@example.invalid']);
+  const bytes=Buffer.from([0,255,254,13,10,128,65]);await writeFile(path.join(repo,'asset.bin'),bytes);await git(repo,['add','asset.bin']);await git(repo,['commit','-m','Binary artifact fixture']);const commit=await sha(repo),digest=createHash('sha256').update(bytes).digest('hex');
+  assert.deepEqual(await verifyArtifactHashes(repo,commit,{'asset.bin':digest}),{'asset.bin':digest});await assert.rejects(()=>verifyArtifactHashes(repo,commit,{'asset.bin':'a'.repeat(64)}),/differs/);await assert.rejects(()=>verifyArtifactHashes(repo,commit,{'../asset.bin':digest}),/owned path/);await writeFile(path.join(repo,'asset.bin'),Buffer.from('changed'));await assert.rejects(()=>verifyArtifactHashes(repo,commit,{'asset.bin':digest}),/clean commit/);
+});
 test('Dirty and untracked source survive checkpoint and isolated exact-commit reconstruction',async()=>{
   const root=await mkdtemp(path.join(process.env.RELAY_TEST_ROOT??os.tmpdir(),'relay-git-')),repo=path.join(root,'repo');await mkdir(repo);
   await git(repo,['init']);await git(repo,['config','core.autocrlf','false']);await git(repo,['config','user.name','Relay Temporary Test']);await git(repo,['config','user.email','relay-test@example.invalid']);
