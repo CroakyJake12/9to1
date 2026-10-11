@@ -53,7 +53,7 @@ export async function supervise(configPath,planPath){
    const original=plan.tasks.find(t=>t.id===(previous.continuation_of??previous.id)),root=previous.resume_worktree_id?path.join(config.worktrees,previous.resume_worktree_id):path.join(config.worktrees,previous.id+'-'+previous.fence);
    const manifest=JSON.parse(await readFile(path.join(config.checkpoints,previous.result.checkpoint,'manifest.json'),'utf8'));let source;
    if(config.branch_strategy==='main'){
-    if(!previous.result.source?.remote_verified&&previous.result.source?.branch!=='main')throw new Error('Published main predecessor required');
+    if(!previous.result.source?.remote_verified||previous.result.source?.branch!=='main')throw new Error('Published main predecessor required');
     const commit=await sha(config.repository);source={repository:previous.source.repository,branch:'main',sha:commit,artifact_hashes:{},deleted_paths:[]};for(const file of manifest.files){if(file.deleted)source.deleted_paths.push(file.path);else source.artifact_hashes[file.path]=await blobHash(config.repository,commit,file.path);}
    }else{
     await verifyCheckpointFiles(root,manifest);const changed=await dirty(root);reviewPaths(changed.paths,original.paths);if(changed.paths.length){await git(root,['add','--',...changed.paths]);await git(root,['diff','--cached','--check']);await git(root,['commit','-m','Private verified relay checkpoint: '+original.id]);}

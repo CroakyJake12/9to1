@@ -76,7 +76,7 @@ export class LocalRunner {
     const tasks=this.remote.tasks.filter(t=>t.owner==='local'&&['COMPLETED','CHECKPOINT','BLOCKED'].includes(t.status));
     if(!tasks.length)throw new Error('No released source checkpoint; handover was not published');
     // One handover per exact branch; a multi-branch shift publishes each independently.
-    const task=tasks.find(t=>t.result?.source);if(!task)throw new Error('No remotely verified source commit');
+    const task=[...tasks].reverse().find(t=>t.result?.source&&(this.config.branch_strategy!=='main'||t.result.source.branch==='main'));if(!task)throw new Error('No remotely verified canonical source commit');
     const h={id:randomUUID(),from:'local',to:'cloud',source:task.result.source,artifact_hashes:task.result.source.artifact_hashes??{},deleted_paths:task.result.source.deleted_paths??[],hash_scope:'committed Git blob bytes',tasks:[task.id],tests:task.evidence,blockers:task.result.blockers??[],spec:this.config.spec,next_actions:task.result.remaining??[]};
     this.remote=await request(this.config,'handover',{fence:this.remote.lease.fence,handover:h});
     await this.dispatchCloud(h);return {ok:true,message:'READY handover published; local ownership retained until exact cloud ACK',status:this.status()};
@@ -181,7 +181,8 @@ export class LocalRunner {
       await request(this.config,'result',{fence,task_id:task.id,status,evidence,acceptance:'BUILD_AND_TARGETED_TESTS',result:{source,checkpoint:path.basename(checkpoint.directory),remaining:[],blockers:[],independent_acceptance:'NOT_RUN',RCVP:'NOT_RUN',FULL:'NOT_RUN'}});
     }catch(e){
       const checkpoint=await preserve(worktree.root,this.config.checkpoints,randomUUID());this.put('checkpoint',checkpoint);
-      try{await request(this.config,'result',{fence,task_id:task.id,status:'BLOCKED',evidence,acceptance:'NOT_RUN',result:{blockers:[e.message],checkpoint:path.basename(checkpoint.directory),checkpoint_ref_kind:'LOCAL_PRIVATE_CHECKPOINT_ID'}});}catch{this.recovery=worktree;this.draining=true;}
+      let source=null;if(this.config.branch_strategy==='main'){try{const {dirty}=await import('./git.mjs');if((await dirty(worktree.root)).paths.length)source=await publish(this.config,worktree,task);}catch(publishError){evidence.push({kind:'SOURCE_INTEGRATION',status:'FAIL',exit_code:1,reason:publishError.message});}}
+      try{await request(this.config,'result',{fence,task_id:task.id,status:'BLOCKED',evidence,acceptance:'NOT_RUN',result:{blockers:[e.message],checkpoint:path.basename(checkpoint.directory),checkpoint_ref_kind:'LOCAL_PRIVATE_CHECKPOINT_ID',...(source?{source,source_stage:'WIP_CHECKPOINT_NOT_ACCEPTED'}:{})}});}catch{this.recovery=worktree;this.draining=true;}
       this.error=e.message;
     }finally{this.active=null;this.put('active',this.recovery??null);this.event('WORKER_FINISHED',{task:task.id,status});}
   }
