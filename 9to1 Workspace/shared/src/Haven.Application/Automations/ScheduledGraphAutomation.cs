@@ -80,9 +80,9 @@ public static class AutomationGraphScheduleBinder
         {
             kind = AutomationScheduleKind.Hourly;
         }
-        else if (parts.Length >= 3 && parts[0].Equals("every", StringComparison.OrdinalIgnoreCase)
+        else if (parts.Length == 3 && parts[0].Equals("every", StringComparison.OrdinalIgnoreCase)
                  && int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var hours)
-                 && parts[2].StartsWith("hour", StringComparison.OrdinalIgnoreCase))
+                 && parts[2].Equals("hours", StringComparison.OrdinalIgnoreCase))
         {
             if (hours is < 1 or > 168)
             {
@@ -97,7 +97,7 @@ public static class AutomationGraphScheduleBinder
             kind = AutomationScheduleKind.Daily;
             draft = draft with { Time = dailyTime };
         }
-        else if (parts.Length >= 3 && parts[0].Equals("weekly", StringComparison.OrdinalIgnoreCase)
+        else if (parts.Length == 3 && parts[0].Equals("weekly", StringComparison.OrdinalIgnoreCase)
                  && Enum.TryParse<DayOfWeek>(parts[1], true, out var day)
                  && TryParseTime(parts[^1], out var weeklyTime))
         {

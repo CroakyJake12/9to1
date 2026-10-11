@@ -14,7 +14,7 @@
     <!-- Haven.Infrastructure declares Platforms=x64 for the Windows-native speech and VAD
          binaries, so it cannot be referenced from a browser-wasm assembly. The pure PCM
          decoder is source-linked unchanged instead of pulling in the x64 project. -->
-    <WaveOwnerSource Include="$(WaveMediaOwnerRoot)/PcmWaveformReader.cs" ExpectedHash="1fdaec0685586e7a0eb75af80c9ff0fea84a927237ab2a7cbfada2e35fa88095" />
+    <WaveOwnerSource Include="$(WaveMediaOwnerRoot)/PcmWaveformReader.cs" ExpectedHash="31d588e4e5392288719e6fd31dda11143571eeb9e97e7318d46023b803304040" />
     <Compile Include="$(WaveOwnerRoot)/WaveProject.cs" Link="Owner/WaveProject.cs" />
     <Compile Include="$(WaveOwnerRoot)/WaveProjectEdits.cs" Link="Owner/WaveProjectEdits.cs" />
     <Compile Include="$(WaveOwnerRoot)/WaveTimelineAnnotations.cs" Link="Owner/WaveTimelineAnnotations.cs" />

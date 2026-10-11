@@ -82,11 +82,19 @@ public sealed class FileMailDraftStore(IAppPaths paths) : IMailDraftStore
         try
         {
             await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 32 * 1024, useAsync: true);
-            return await JsonSerializer.DeserializeAsync<MailDraft>(stream, JsonOptions, cancellationToken).ConfigureAwait(false);
+            var draft = await JsonSerializer.DeserializeAsync<MailDraft>(stream, JsonOptions, cancellationToken).ConfigureAwait(false);
+            var fileName = Path.GetFileNameWithoutExtension(path);
+            return draft is not null
+                && Guid.TryParseExact(fileName, "N", out var fileId)
+                && fileId != Guid.Empty
+                && draft.LocalId != Guid.Empty
+                && draft.LocalId == fileId
+                    ? draft
+                    : null;
         }
-        catch (JsonException ex)
+        catch (JsonException)
         {
-            throw new InvalidDataException("A persisted Mail draft is unreadable.", ex);
+            throw new InvalidDataException("A persisted Mail draft is unreadable.");
         }
     }
 

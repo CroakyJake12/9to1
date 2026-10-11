@@ -27,10 +27,12 @@ public static class PlannerRecurrence
             .Where(parts => parts.Length == 2)
             .ToDictionary(parts => parts[0].ToUpperInvariant(), parts => parts[1].ToUpperInvariant(), StringComparer.OrdinalIgnoreCase);
         if (!values.TryGetValue("FREQ", out var frequency)) throw new FormatException("Recurrence requires FREQ.");
-        var interval = values.TryGetValue("INTERVAL", out var intervalText)
-            && int.TryParse(intervalText, NumberStyles.None, CultureInfo.InvariantCulture, out var parsed)
-            ? parsed
-            : 1;
+        var interval = 1;
+        if (values.TryGetValue("INTERVAL", out var intervalText)
+            && !int.TryParse(intervalText, NumberStyles.None, CultureInfo.InvariantCulture, out interval))
+        {
+            throw new FormatException("Recurrence INTERVAL must be an integer.");
+        }
         if (interval is < 1 or > 999) throw new FormatException("Recurrence INTERVAL must be between 1 and 999.");
 
         var zone = ResolveTimeZone(timeZoneId);
