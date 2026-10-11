@@ -21,6 +21,14 @@ export class LocalRunner {
   get(k){const r=this.db.prepare('SELECT value FROM state WHERE key=?').get(k);return r?JSON.parse(r.value):null;}
   put(k,v){this.db.prepare('INSERT INTO state VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(k,JSON.stringify(v));}
   event(event,value={}){this.db.prepare('INSERT INTO events(at,event,value) VALUES (?,?,?)').run(new Date().toISOString(),event,JSON.stringify(value));}
+  async refreshConfiguration(){
+    if(!this.config.config_path)return;
+    const latest=JSON.parse(await readFile(this.config.config_path,'utf8'));
+    selectShift(latest.schedule,{...this.presence,healthy:true});
+    this.config.schedule=latest.schedule;
+    this.config.cloud_environment_id=latest.cloud_environment_id;
+    this.config.coordinator_url=latest.coordinator_url;
+  }
   async health(){
     try{const r=await fetch('http://127.0.0.1:8081/health',{signal:AbortSignal.timeout(3000)});const h=await r.json();return {...h,ready:r.ok&&h.loaded===true&&/iq2_xs/i.test(h.model??'')&&Number(h.max_context)===524288};}
     catch{return {ready:false,status:'UNREACHABLE'};}
@@ -92,7 +100,7 @@ export class LocalRunner {
   }
   async renew(){
     if(!this.remote?.lease||this.remote.lease.worker!=='local')return;
-    try{const planned=selectShift(this.config.schedule,{...this.presence,healthy:true});await request(this.config,'presence',{...this.presence,healthy:true,local_permitted:planned.shift==='local',local_until:planned.shift==='local'?Date.now()+30000:0});await request(this.config,'heartbeat',{fence:this.remote.lease.fence});}
+    try{await this.refreshConfiguration();const planned=selectShift(this.config.schedule,{...this.presence,healthy:true});await request(this.config,'presence',{...this.presence,healthy:true,local_permitted:planned.shift==='local',local_until:planned.shift==='local'?Date.now()+30000:0});await request(this.config,'heartbeat',{fence:this.remote.lease.fence});}
     catch(e){this.draining=true;this.error='Lease heartbeat failed: '+e.message;this.event('LEASE_LOST',{error:e.message});if(this.child)await this.stopOwnedChild(this.child);}
   }
   async startTask(task,fence){
@@ -134,6 +142,7 @@ export class LocalRunner {
   async tick(){
     if(this.busy)return;this.busy=true;
     try{
+      await this.refreshConfiguration();
       this.strata=await this.health();const planned=selectShift(this.config.schedule,{...this.presence,healthy:true});
       if(!this.config.coordinator_url){this.error='Shared coordinator not configured; development cannot start';return;}
       this.remote=await request(this.config,'presence',{...this.presence,healthy:true,local_permitted:planned.shift==='local',local_until:planned.shift==='local'?Date.now()+30000:0});

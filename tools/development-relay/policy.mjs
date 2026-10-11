@@ -13,16 +13,25 @@ export function selectShift(policy, availability, at = new Date()) {
     if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(t ?? '')) throw new Error('Invalid schedule time');
     return Number(t.slice(0,2)) * 60 + Number(t.slice(3));
   };
-  const start = toMinute(rule.local_start), end = toMinute(rule.local_end);
+  let start = toMinute(rule.local_start); const end = toMinute(rule.local_end);
   if (start >= end) throw new Error('Overnight local windows are forbidden');
-  const within = !rule.disabled && minute >= start && minute < end;
+  const collegeDay=rule.college_day ?? (policy.school_term===true&&!['Saturday','Sunday'].includes(parts.weekday));
+  if(collegeDay&&policy.rules?.no_local_development_before_college===true){
+    const classEnd=rule.final_non_EPQ_class_end??policy.weekdays[parts.weekday]?.final_non_EPQ_class_end;
+    if(!classEnd)throw new Error('College day requires the final non-EPQ class time');
+    const commute=policy.rules.commute_minutes_each_way;
+    if(!Number.isInteger(commute)||commute<0||commute>240)throw new Error('Invalid configured home travel allowance');
+    start=Math.max(start,toMinute(classEnd)+commute);
+  }
+  const effectiveStart=String(Math.floor(start/60)).padStart(2,'0')+':'+String(start%60).padStart(2,'0');
+  const within = !rule.disabled && start<end && minute >= start && minute < end;
   const available = availability.home === true && availability.paused !== true && availability.healthy === true;
   const local = within && available;
   return { shift: local ? 'local' : 'cloud', date, day: parts.weekday,
     local_time: `${parts.hour}:${parts.minute}:${parts.second}`,
-    window: `${rule.local_start}-${rule.local_end}`, within_window: within,
+    window: start<end?`${effectiveStart}-${rule.local_end}`:'No local window after college', within_window: within,
     reason: !within ? 'Outside permitted window' : availability.paused ? 'Paused' : !availability.home ? 'Away' : !availability.healthy ? 'Runner unhealthy or offline' : 'Home and healthy',
-    next_boundary: within ? rule.local_end : minute < start ? rule.local_start : 'Next day', timezone: policy.timezone };
+    next_boundary: within ? rule.local_end : minute < start && start<end && !rule.disabled ? effectiveStart : 'Next day', timezone: policy.timezone };
 }
 
 export function normalizePaths(paths) {
