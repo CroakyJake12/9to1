@@ -28,12 +28,14 @@ export class LocalRunner {
     this.config.schedule=latest.schedule;
     this.config.cloud_environment_id=latest.cloud_environment_id;
     this.config.cloud_commissioning=latest.cloud_commissioning;
+    this.config.pc_wake_enabled=latest.pc_wake_enabled;
     this.config.coordinator_url=latest.coordinator_url;
   }
   async health(){
     try{const r=await fetch('http://127.0.0.1:8081/health',{signal:AbortSignal.timeout(3000)});const h=await r.json();return {...h,ready:r.ok&&h.loaded===true&&/iq2_xs/i.test(h.model??'')&&Number(h.max_context)===524288};}
     catch{return {ready:false,status:'UNREACHABLE'};}
   }
+  async syncWake(){if(process.platform!=='win32'||!this.config.pc_wake_enabled)return;const {execFile}=await import('node:child_process');const {promisify}=await import('node:util');await promisify(execFile)(this.config.powershell,['-NoProfile','-File',path.join(here,'Configure-Wake.ps1'),'-Config',this.config.config_path,'-SyncOnly'],{windowsHide:true,timeout:15000,maxBuffer:65536});}
   status(){const cloudTask=this.remote?.lease?.worker==='cloud'&&this.remote.lease.expires_at>Date.now()?this.remote.tasks.find(t=>t.owner==='cloud'&&t.fence===this.remote.lease.fence&&t.status==='WORKING'):null;const cloud=this.get('cloud')??this.config.cloud_commissioning??{status:'NOT_CONFIGURED'};return {installed:true,runner_pid:process.pid,at:new Date().toISOString(),presence:this.presence,
     planned_shift:selectShift(this.config.schedule,{...this.presence,healthy:true}),coordinator:this.remote?'CONNECTED':'BLOCKED',
     active_shift:this.remote?.lease?.worker??'NONE',active_worker:this.active?.worker??(cloudTask?'Codex Cloud (owned task)':'NONE'),strata:this.strata,
@@ -46,6 +48,7 @@ export class LocalRunner {
     if(action==='home'){this.presence.home=true;if(!this.recovery&&!this.presence.paused)this.draining=false;}if(action==='away')this.presence.home=false;
     if(action==='pause')this.presence.paused=true;if(action==='resume')this.presence.paused=false;
     this.put('presence',this.presence);this.event('CONTROL',{action});
+    if(['home','away','pause','resume'].includes(action))await this.syncWake();
     if(['away','pause','checkpoint','handover'].includes(action)){
       this.draining=true;
       if(this.active){const c=await preserve(this.active.root,this.config.checkpoints,randomUUID());this.put('checkpoint',c);}
@@ -191,7 +194,7 @@ export class LocalRunner {
       }catch(e){respond(409,{ok:false,error:e.message,status:this.status()});}
     });
     await new Promise((resolve,reject)=>{this.server.once('error',reject);this.server.listen(this.config.dashboard_port,'127.0.0.1',resolve);});
-    this.event('RUNNER_STARTED',{pid:process.pid});this.timer=setInterval(()=>void this.tick(),15000);this.heartbeatTimer=setInterval(()=>void this.renew().catch(e=>{this.error=e.message;}),30000);await this.tick();return this;
+    this.event('RUNNER_STARTED',{pid:process.pid});await this.syncWake();this.timer=setInterval(()=>void this.tick(),15000);this.heartbeatTimer=setInterval(()=>void this.renew().catch(e=>{this.error=e.message;}),30000);await this.tick();return this;
   }
   async stop(){this.draining=true;this.event('RUNNER_STOP_REQUESTED');if(this.active){this.put('checkpoint',await preserve(this.active.root,this.config.checkpoints,randomUUID()));throw new Error('Bounded worker still running; runner shutdown deferred');}clearInterval(this.timer);clearInterval(this.heartbeatTimer);await new Promise(r=>this.server.close(r));this.db.close();}
 }
