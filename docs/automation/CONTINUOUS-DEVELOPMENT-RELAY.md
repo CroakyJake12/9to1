@@ -12,9 +12,9 @@ The repository's main branch and legacy migration ledger may lag active private 
 
 ## Shift selection
 
-- **Local shift:** whenever the owner is home **and** the local PC is available. Weekend provisional window 07:30–22:00 Europe/London. Weekdays depend on college and cannot be assumed from a fixed time.
-- **Cloud shift:** when the local session has yielded and its handover is durable; usually 22:00–07:30, plus verified weekday absences.
-- Presence should be determined by an explicit owner-set availability flag and local runner health, **not** geolocation, calendar speculation, or simply whether a laptop is online.
+- **Local shift:** only after the owner returns home from college (allow 45 minutes after the final non-EPQ lesson), or when at home on a non-college day, and the local PC is available. No pre-college local Strata/OpenCode work, even on late-start college days. Provisional weekend window 07:30–22:00 Europe/London.
+- **Cloud shift:** all remaining hours, including mornings before college, all class/commute hours, nights after 22:00, and verified owner absences. Cloud may begin/continue its own isolated work before local shift starts; switching ownership of local work still requires a durable remote handoff.
+- Presence should be determined by an explicit owner-set availability flag and local runner health, **not** geolocation, calendar speculation, or simply whether a laptop is online. The school timetable and exact local user home-directory paths are private information and must not be committed to this public repository. Keep exact school/commute schedule and working launch commands in local private configuration.
 - At the handover time, request a graceful local checkpoint. Do not kill a process before preserving dirty changes. If shutdown is unsafe, delay transfer and report why.
 - A switch is **not** complete until the receiving shift has acknowledged the exact handover revision.
 - Use Europe/London with DST-aware timestamps. Do not hard-code UTC+1 year-round.
@@ -71,7 +71,7 @@ Task stage and worker status are separate:
 ## Automation deployment gates
 
 - Phase A (this PR): reviewable protocol, worker prompts, handoff template.
-- Phase B: owner configures Strata/OpenCode install paths, local commands and presence toggle; implement a Windows Scheduled Task or service plus graceful process checkpoint and logs.
+- Phase B: owner configures Strata/OpenCode install paths, local commands and presence toggle; implement a Windows Scheduled Task or service plus graceful process checkpoint and logs. The 2026-10-11 supplied *working* Strata baseline is a 524288-context IQ2_XS Qwen setup on port 8081 using Codex profile strata, verified /health fields, and model_auto_compact_token_limit=450560. Preserve that command behavior and plugins allowlist; keep absolute user paths in private local config. OpenCode launch command still requires configuration.
 - Phase C: configure a **published** Codex Cloud environment with access to the correct repositories/toolchains, and select a supported scheduling/trigger mechanism. **Do not claim that GitHub Actions or this repo can silently launch paid-plan Codex Cloud tasks without a verified supported integration.** ChatGPT Scheduled Tasks and Codex Cloud environments are separate capabilities; verify the chosen cloud execution surface end to end.
 - Phase D: implement a central atomic lease/heartbeat store and test timeout, offline, overlapping-start and failed-handoff scenarios.
 - Phase E: run two supervised local/cloud transition rehearsals; only then enable unsupervised rotation.
