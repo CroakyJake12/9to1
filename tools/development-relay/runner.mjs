@@ -132,6 +132,8 @@ export class LocalRunner {
   }
   async renew(){
     if(!this.remote?.lease||this.remote.lease.worker!=='local')return;
+    // A stopped managed runner lets tick acquire a fresh fence; never renew an expired one.
+    if(this.config.supervisor_managed&&!this.active&&!this.recovery&&this.remote.lease.expires_at<=Date.now())return;
     const fence=this.remote.lease.fence;
     try{await this.refreshConfiguration();const planned=selectShift(this.config.schedule,{...this.presence,healthy:true});const current=await request(this.config,'presence',{...this.presence,healthy:true,local_permitted:planned.shift==='local',local_until:planned.shift==='local'?Date.now()+30000:0});if(this.acceptAcknowledgedTransfer(current,fence))return;if(current.lease?.worker!=='local'||current.lease.fence!==fence)throw new Error('Local ownership changed without a drained acknowledged handover');this.remote=await request(this.config,'heartbeat',{fence});}
     catch(e){try{const current=await request(this.config,'state');if(this.active?.fence!==fence&&current.lease?.worker==='local'&&current.lease.fence===this.active?.fence&&current.lease.expires_at>Date.now()){this.remote=current;return;}if(this.acceptAcknowledgedTransfer(current,fence))return;}catch{}this.draining=true;this.error='Lease heartbeat failed: '+e.message;this.event('LEASE_LOST',{error:e.message});if(this.child)await this.stopOwnedChild(this.child);}
@@ -195,7 +197,10 @@ export class LocalRunner {
       const previousFence=this.remote?.lease?.worker==='local'?this.remote.lease.fence:null;
       const observed=await request(this.config,'presence',{...this.presence,healthy:true,local_permitted:planned.shift==='local',local_until:planned.shift==='local'?Date.now()+30000:0});
       if(previousFence!==null)this.acceptAcknowledgedTransfer(observed,previousFence);this.remote=observed;
-      const lease=this.remote.lease;
+      let lease=this.remote.lease;
+      if(lease?.expires_at<=Date.now()&&this.config.supervisor_managed&&planned.shift==='local'&&!this.presence.paused&&!this.active&&!this.recovery&&!this.remote.tasks.some(t=>t.owner==='local'&&['WORKING','RECOVERY_REQUIRED','READY'].includes(t.status))&&!this.remote.handovers.some(h=>h.status==='READY'&&h.from==='local')){
+        this.remote=await request(this.config,'acquire',{});lease=this.remote.lease;this.draining=false;this.event('EXPIRED_LEASE_RECOVERED',{fence:lease.fence});
+      }
       if(lease?.worker==='local')this.remote=await request(this.config,'heartbeat',{fence:lease.fence});
       if(planned.shift!=='local'||this.presence.paused||this.recovery||this.draining||(this.remote.checkpoint_requested&&lease?.worker==='local')||this.remote.handovers.some(h=>h.status==='READY'&&h.from==='local')){
         if(planned.shift!=='local'||this.presence.paused)this.draining=true;

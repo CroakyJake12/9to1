@@ -8,6 +8,14 @@ import os from 'node:os';
 import {LocalRunner} from '../runner.mjs';
 import {git,sha} from '../git.mjs';
 
+test('A stopped managed runner recovers an expired fence, but never replaces an unresolved writer',async()=>{
+ const root=await mkdtemp(path.join(process.env.RELAY_TEST_ROOT??os.tmpdir(),'relay-expired-')),key=path.join(root,'fixture.pem'),pair=generateKeyPairSync('rsa',{modulusLength:2048});await writeFile(key,pair.privateKey.export({type:'pkcs8',format:'pem'}));
+ const schedule={timezone:'Europe/London',weekdays:Object.fromEntries(['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map(d=>[d,{local_start:'00:00',local_end:'23:59'}]))};let acquisitions=0,heartbeats=0,current={lease:{worker:'local',fence:12,expires_at:Date.now()-1000},tasks:[],handovers:[],presence:{home:true,paused:false}};
+ const server=createServer((req,res)=>{req.resume();res.setHeader('content-type','application/json');if(req.url==='/acquire'){acquisitions++;current.lease={worker:'local',fence:13,expires_at:Date.now()+90000};}if(req.url==='/heartbeat'){heartbeats++;if(current.lease.expires_at<=Date.now()){res.statusCode=409;res.end(JSON.stringify({error:'Lease absent, expired or fenced'}));return;}}res.end(JSON.stringify({state:current}));});await new Promise(r=>server.listen(0,'127.0.0.1',r));
+ const runner=new LocalRunner({state_db:path.join(root,'state.db'),schedule,supervisor_managed:true,actor:'local',signing_key:key,coordinator_url:'http://127.0.0.1:'+server.address().port});runner.presence={home:true,paused:false};runner.draining=true;runner.health=async()=>({ready:true});
+ try{await runner.tick();assert.equal(acquisitions,1);assert.equal(runner.remote.lease.fence,13);assert.equal(runner.error,null);assert.equal(runner.draining,false);current.lease.expires_at=Date.now()-1000;current.tasks=[{owner:'local',status:'RECOVERY_REQUIRED'}];await runner.tick();assert.equal(acquisitions,1);assert.match(runner.error,/expired/);current.tasks=[];current.handovers=[{from:'local',status:'READY'}];await runner.tick();assert.equal(acquisitions,1);assert.ok(heartbeats>=1);}finally{runner.db.close();await new Promise(r=>server.close(r));}
+});
+
 test('A private continuation keeps source and checkpoint locally without publishing or committing it',async()=>{
   const root=await mkdtemp(path.join(process.env.RELAY_TEST_ROOT??os.tmpdir(),'relay-private-'));
   await git(root,['init']);await git(root,['config','user.name','Relay Temporary Test']);await git(root,['config','user.email','relay-test@example.invalid']);

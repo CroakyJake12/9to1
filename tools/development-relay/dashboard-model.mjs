@@ -1,4 +1,5 @@
 export const partNames=['Foundations & first apps','Full apps & wider previews','The complete app ecosystem','9to1OS'];
+export function taskTitle(task){return task?.display_title??task?.objective?.split('. ')[0]??'Next development requirement';}
 export function groupApplications(part){
  const groups=new Map();
  for(const [index,item] of (part?.scope??[]).entries()){
@@ -10,10 +11,10 @@ export function groupApplications(part){
  return [...groups.values()].sort((a,b)=>Number(b.live)-Number(a.live));
 }
 export function operationalState(s){
- const tasks=s.tasks??[],working=tasks.filter(t=>t.status==='WORKING'),queued=tasks.filter(t=>t.status==='QUEUED'&&t.lane==='local');
+ const tasks=s.tasks??[],current=tasks.filter(t=>!s.current_plan_task_ids||s.current_plan_task_ids.includes(t.continuation_of??t.id)),working=tasks.filter(t=>t.status==='WORKING'),queued=current.filter(t=>t.status==='QUEUED'&&t.lane==='local');
  const recovery=s.recovery?tasks.find(t=>t.id===s.recovery.task_id):null;
  const continued=recovery&&working.some(t=>t.executor===recovery.executor&&t.resume_worktree_id&&s.recovery.root.replace(/\\/g,'/').endsWith('/'+t.resume_worktree_id));
- const blocked=continued?null:recovery??[...tasks].reverse().find(t=>t.status==='BLOCKED'&&t.owner&&!t.resolution&&!working.some(w=>w.executor===t.executor));
+ const blocked=continued?null:recovery??[...current].reverse().find(t=>t.status==='BLOCKED'&&t.owner&&!t.resolution&&!working.some(w=>w.executor===t.executor));
  const workers=['strata','opencode'].map(executor=>{
   const active=working.find(t=>t.executor===executor),next=queued.find(t=>t.executor===executor),last=[...tasks].reverse().find(t=>t.executor===executor);
   const held=blocked?.executor===executor?blocked:null;
@@ -30,10 +31,11 @@ export function failureReason(task){
 }
 export function executionPlan(s){
  const op=operationalState(s),steps=[];
- if(op.blocked)steps.push({title:'Verify the preserved CUI checkpoint',owner:op.blocked.executor==='strata'?'Strata / lead review':'OpenCode / lead review',state:'Blocked',dependency:'Requires source review and a passing build before continuation.',description:'Keep the current source. Inspect the failure and checkpoint before resuming this task.',action:'diagnostics',task:op.blocked.id,actionLabel:'Inspect checkpoint'});
- else if(op.working.length){const task=op.working.find(t=>t.executor==='strata')??op.working[0];steps.push({title:'Current goal: CUI runtime definitions',owner:task.executor==='strata'?'Strata':'OpenCode',state:'Working',dependency:'Next: Dulche foundations after this scoped task verifies. Local work continues until22:00.',description:'Implement reusable definitions and Prefab instances. Preserve existing source and test binding isolation.',action:'diagnostics',task:task.id,actionLabel:'View owned goal'});}
- if(op.queued.length){const task=op.queued[0];steps.push({title:task.id.includes('root-boundary')?'Correct resource path boundaries':'Continue the next scoped task',owner:task.executor==='strata'?'Strata':'OpenCode',state:task.requires_predecessor?'Waiting':'Queued',dependency:task.requires_predecessor?'Depends on '+task.requires_predecessor+' passing its build and tests.':'Starts when the local lease and model are available.',description:task.id.includes('root-boundary')?'Prevent sibling directories from being embedded with an incorrect logical resource name.':task.objective,action:'diagnostics',task:task.id,actionLabel:'View queued task'});}
- else steps.push({title:op.working.length?'Finish the owned task':'Select the next development requirement',owner:'Relay coordinator',state:op.working.length?'Working':'Waiting',dependency:op.blocked?'Depends on resolving the preserved checkpoint.':'Requires an explicitly scoped, unblocked task.',description:op.working.length?'Source and verification evidence must be recorded before transfer.':'No local task is queued. Model readiness alone does not start development.',action:null});
+ if(op.blocked)steps.push({title:'Review checkpoint: '+taskTitle(op.blocked),owner:op.blocked.executor==='strata'?'Strata / lead review':'OpenCode / lead review',state:'Blocked',dependency:'Requires source review and focused checks before continuation.',description:failureReason(op.blocked),action:'diagnostics',task:op.blocked.id,actionLabel:'Inspect checkpoint'});
+ for(const task of op.working)steps.push({title:taskTitle(task),owner:task.executor==='strata'?'Strata':'OpenCode',state:'Working',dependency:'Publish the checkpoint to main after focused checks, then advance the queue. Local work continues until 22:00.',description:task.objective,action:'diagnostics',task:task.id,actionLabel:'View owned work'});
+ for(const task of op.queued)steps.push({title:taskTitle(task),owner:task.executor==='strata'?'Strata':'OpenCode',state:task.requires_predecessor?'Waiting':'Queued',dependency:task.requires_predecessor?'Starts after its predecessor passes focused checks.':'Starts when the local lease and model are available.',description:task.objective,action:'diagnostics',task:task.id,actionLabel:'View queued task'});
+ for(const task of s.planned_queue??[])steps.push({title:task.title,owner:task.executor==='strata'?'Strata':'OpenCode',state:'Waiting',dependency:'After '+task.after_title+' passes focused checks.',description:task.objective,action:null});
+ if(!steps.length)steps.push({title:'Select the next development requirement',owner:'Relay coordinator',state:'Waiting',dependency:'Requires an explicitly scoped, unblocked task.',description:'No local task is queued. Model readiness alone does not start development.',action:null});
  // Shift handover is time-driven and rendered separately from task dependencies.
  return steps;
 }

@@ -5,10 +5,18 @@ import {mkdtemp,writeFile,readFile} from 'node:fs/promises';
 import {DatabaseSync} from 'node:sqlite';
 import path from 'node:path';
 import os from 'node:os';
-import {groupApplications,operationalState,milestoneEvidence} from '../dashboard-model.mjs';
+import {groupApplications,operationalState,milestoneEvidence,executionPlan} from '../dashboard-model.mjs';
 import {queueReady,inactivityDecision} from '../queue.mjs';
 import {startDashboard} from '../dashboard-server.mjs';
 import {validateSteering,queueSteering} from '../worker-view.mjs';
+
+test('The execution plan follows live Dulche work and its next implementation scope, independently of scheduled handover',()=>{
+ const steps=executionPlan({tasks:[{id:'dulche',executor:'strata',status:'WORKING',display_title:'Dulche: scoped streaming',objective:'Implement cancellation and endpoint ownership.'},{id:'resource',executor:'opencode',status:'WORKING',display_title:'CUI resource path boundaries',objective:'Preserve sibling directory names.'}],planned_queue:[{title:'Common platform',executor:'strata',after_title:'Dulche: scoped streaming',objective:'Implement the next ownership requirement.'}]});
+ assert.equal(steps.length,3);assert.equal(steps[0].title,'Dulche: scoped streaming');assert.equal(steps[1].title,'CUI resource path boundaries');assert.equal(steps[2].state,'Waiting');assert.match(steps[2].dependency,/Dulche/);assert.ok(steps.every(s=>!s.title.includes('handover')));assert.match(steps[0].dependency,/advance the queue/);
+});
+test('Retained legacy queue records remain in history without entering the current main execution plan',()=>{
+ const tasks=[{id:'legacy',status:'QUEUED',lane:'local',executor:'opencode'},{id:'old-failure',status:'BLOCKED',owner:'local',executor:'strata'},{id:'main-task',status:'WORKING',lane:'local',executor:'strata'}],state={tasks,current_plan_task_ids:['main-task']},op=operationalState(state);assert.equal(op.queued.length,0);assert.ok(!op.blocked);assert.equal(op.working.length,1);assert.equal(state.tasks.length,3);
+});
 test('Application grouping preserves every platform and milestone while unknown remains unassessed',()=>{const scope=[{app:'Write',platform:'native',milestones:[{name:'source',done:true},{name:'build',done:false}]},{app:'Write',platform:'web',milestones:[{name:'journey',done:true}]},{app:'CUI · definitions',platform:'current work',live_work:true,milestones:[{name:'source',done:true}]},{app:'OS',assessed:false,milestones:[{name:'source',done:false}]}];const groups=groupApplications({scope});assert.equal(groups.flatMap(g=>g.entries).length,scope.length);assert.equal(groups.flatMap(g=>g.entries.flatMap(e=>e.milestones)).length,5);assert.equal(groups.find(g=>g.name==='Write').total,3);assert.equal(groups.find(g=>g.name==='Write').completed,2);assert.equal(groups.find(g=>g.name==='OS').assessed,false);assert.equal(groups.find(g=>g.name==='OS').total,0);});
 test('Ready infrastructure does not imply working processes and resuming a checkpoint does not retain its old failure as current',()=>{const base={strata:{ready:true},tasks:[{id:'old',status:'BLOCKED',owner:'local',executor:'strata'}],recovery:{task_id:'old',root:'C:/w/cui'}};assert.equal(operationalState(base).workers[0].state,'Blocked');const resumed={...base,tasks:[...base.tasks,{id:'new',executor:'strata',status:'WORKING',resume_worktree_id:'cui'}]};assert.equal(operationalState(resumed).blocked,null);assert.equal(operationalState(resumed).workers[0].state,'Working');assert.equal(operationalState({tasks:[],strata:{ready:true}}).workers[0].state,'Idle');});
 test('An unlinked recorded milestone cannot fabricate direct evidence or independent acceptance',()=>{const d=milestoneEvidence({note:'partial'},{app:'Write',platform:'web',stage:'RCVP',milestones:[]},{name:'source',done:true},{checkpoint:null});assert.equal(d.source,null);assert.match(d.limitation,/not linked/);assert.equal(d.target,'RCVP');});
