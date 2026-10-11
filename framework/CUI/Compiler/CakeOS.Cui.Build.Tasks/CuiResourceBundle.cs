@@ -11,6 +11,8 @@ public interface ICuiResourceLog
 {
     void LogWarning(string message);
 
+    void LogError(string message);
+
     void LogMessage(MessageImportance importance, string message);
 }
 
@@ -20,7 +22,15 @@ public sealed class MsBuildResourceLog : ICuiResourceLog
 
     public MsBuildResourceLog(TaskLoggingHelper log) => _log = log;
 
+    public bool HasErrors { get; private set; }
+
     public void LogWarning(string message) => _log.LogWarning(message);
+
+    public void LogError(string message)
+    {
+        HasErrors = true;
+        _log.LogError(message);
+    }
 
     public void LogMessage(MessageImportance importance, string message) => _log.LogMessage(importance, message);
 }
@@ -44,7 +54,10 @@ public sealed class CuiResourceEntry
 /// unchanged; the canonical lexical form is only inspected for validation, so a
 /// malformed resource still warns and is still embedded. A resource is root-relative
 /// only when it crosses a real normalized directory boundary, so a similarly prefixed
-/// sibling such as C:/repo-other is never treated as inside C:/repo.
+/// sibling such as C:/repo-other is never treated as inside C:/repo. A logical name is
+/// the bundle identity, so a second resource mapping to an already claimed dot-separated
+/// logical name is reported as an error instead of silently shadowing the first one.
+/// Only duplicate identities are errors; existing validation warnings stay warnings.
 /// </summary>
 public static class CuiResourceBundle
 {
@@ -54,6 +67,7 @@ public static class CuiResourceBundle
     {
         var entries = new List<CuiResourceEntry>();
         var normalizedRoot = NormalizeRoot(root);
+        var firstSourceByLogicalName = new Dictionary<string, string>(StringComparer.Ordinal);
 
         foreach (var fullPath in fullPaths)
         {
@@ -73,6 +87,16 @@ public static class CuiResourceBundle
             var data = File.ReadAllBytes(fullPath);
 
             ValidateResource(relativePath, data, log);
+
+            if (firstSourceByLogicalName.TryGetValue(logicalName, out var firstSource))
+            {
+                log.LogError(
+                    $"Duplicate CUI resource logical name '{logicalName}': '{firstSource}' and '{relativePath}' " +
+                    "map to the same identity. CUI resources must have unique logical names.");
+                continue;
+            }
+
+            firstSourceByLogicalName[logicalName] = relativePath;
 
             entries.Add(new CuiResourceEntry(logicalName, data));
             log.LogMessage(MessageImportance.Low,

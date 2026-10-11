@@ -7,7 +7,9 @@ namespace CakeOS.Cui.Build.Tasks;
 
 /// <summary>
 /// MSBuild task that processes .cui resource files into an embedded resource stream.
-/// Replaces Avalonia's GenerateAvaloniaResourcesTask for CUI markup.
+/// Replaces Avalonia's GenerateAvaloniaResourcesTask for CUI markup. Duplicate logical
+/// resource identities are rejected with an error before the output bundle is replaced,
+/// so an existing bundle is never overwritten with an ambiguous one.
 /// </summary>
 public class GenerateCuiResourcesTask : Task
 {
@@ -29,6 +31,8 @@ public class GenerateCuiResourcesTask : Task
             Root,
             Resources.Select(item => item.GetMetadata("FullPath")),
             log);
+
+        if (log.HasErrors) return false;
 
         CuiResourceBundle.Write(Output, entries, log);
         return true;

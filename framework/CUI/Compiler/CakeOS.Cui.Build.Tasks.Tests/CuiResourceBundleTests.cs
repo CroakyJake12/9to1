@@ -147,6 +147,24 @@ public sealed class CuiResourceBundleTests : IDisposable
         Assert.Empty(_log.Warnings);
     }
 
+    [Fact]
+    public void DuplicateLogicalNameIsReportedAsAnErrorAndTheFirstEntryIsKept()
+    {
+        var nested = WriteResource("nested/callout.cui", "<Cui><Text>Nested</Text></Cui>");
+        var flattened = WriteResource("nested.callout.cui", "<Cui><Text>Flattened</Text></Cui>");
+
+        var entries = CuiResourceBundle.Collect(_root, new[] { nested, flattened }, _log);
+
+        var error = Assert.Single(_log.Errors);
+        Assert.Contains("Duplicate CUI resource logical name", error);
+        Assert.Contains("nested.callout.cui", error);
+        Assert.Contains(Path.Combine("nested", "callout.cui"), error);
+
+        var entry = Assert.Single(entries);
+        Assert.Equal("nested.callout.cui", entry.LogicalName);
+        Assert.Equal(File.ReadAllBytes(nested), entry.Data);
+    }
+
     private string WriteResource(string name, string content)
     {
         var path = Path.Combine(_root, name);
@@ -178,7 +196,11 @@ public sealed class CuiResourceBundleTests : IDisposable
     {
         public List<string> Warnings { get; } = [];
 
+        public List<string> Errors { get; } = [];
+
         public void LogWarning(string message) => Warnings.Add(message);
+
+        public void LogError(string message) => Errors.Add(message);
 
         public void LogMessage(MessageImportance importance, string message)
         {

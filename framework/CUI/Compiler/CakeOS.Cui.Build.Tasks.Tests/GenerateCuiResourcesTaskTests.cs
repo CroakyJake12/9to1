@@ -73,15 +73,116 @@ public sealed class GenerateCuiResourcesTaskTests : IDisposable
         Assert.Contains("repo-other", warning);
     }
 
-    private List<CuiResourceEntry> RunTask(string root, params string[] fullPaths)
+    [Fact]
+    public void DuplicateLogicalNameIsRejectedBeforeTheOutputBundleIsReplaced()
     {
-        var task = new GenerateCuiResourcesTask
+        var root = Path.Combine(_prefix, "repo");
+        Directory.CreateDirectory(root);
+
+        var nested = WriteResource(root, "nested/callout.cui", "<Cui><Text>Nested</Text></Cui>");
+        var flattened = WriteResource(root, "nested.callout.cui", "<Cui><Text>Flattened</Text></Cui>");
+
+        var output = Path.Combine(_prefix, "bundle.bin");
+        var existingBundle = new byte[] { 1, 2, 3, 4 };
+        File.WriteAllBytes(output, existingBundle);
+
+        var task = CreateTask(root, output, nested, flattened);
+
+        Assert.False(task.Execute());
+
+        var error = Assert.Single(_engine.RecordedErrors);
+        Assert.Contains("Duplicate CUI resource logical name", error);
+        Assert.Contains("nested.callout.cui", error);
+        Assert.Contains(Path.Combine("nested", "callout.cui"), error);
+        Assert.Contains("unique logical names", error);
+
+        Assert.Equal(existingBundle, File.ReadAllBytes(output));
+    }
+
+    [Fact]
+    public void TheSameResourceListedTwiceIsRejectedAsADuplicateIdentity()
+    {
+        var root = Path.Combine(_prefix, "repo");
+        Directory.CreateDirectory(root);
+        var resource = WriteResource(root, "callout.cui", "<Cui><Text>Shared</Text></Cui>");
+
+        var task = CreateTask(root, Path.Combine(_prefix, "bundle.bin"), resource, resource);
+
+        Assert.False(task.Execute());
+
+        var error = Assert.Single(_engine.RecordedErrors);
+        Assert.Contains("Duplicate CUI resource logical name", error);
+        Assert.Contains("callout.cui", error);
+    }
+
+    [Fact]
+    public void ValidMultiResourceBundleIsGeneratedWithEveryOriginalBytePreserved()
+    {
+        var root = Path.Combine(_prefix, "repo");
+        Directory.CreateDirectory(root);
+
+        var home = WriteResource(root, "Home.cui", "<Cui><Text>Home</Text></Cui>");
+        var theme = WriteResource(root, "Themes/Dark.cui-theme", "<Theme><Color Name=\"Light_Green\">#8FCD6A</Color></Theme>");
+        var prefab = WriteResource(root, "Prefabs/AIBar.cui-prefab", "<Prefab (Definition) Type=\"dynamic\" ID=\"AIBar\"><Text ID=\"t\">x</Text></Prefab>");
+        var font = Path.Combine(root, "Assets", "font.ttf");
+        Directory.CreateDirectory(Path.GetDirectoryName(font)!);
+        var fontBytes = new byte[] { 0, 1, 2, 3, 255, 254 };
+        File.WriteAllBytes(font, fontBytes);
+
+        var entries = RunTask(root, home, theme, prefab, font);
+
+        Assert.Empty(_engine.RecordedWarnings);
+        Assert.Empty(_engine.RecordedErrors);
+        Assert.Equal(4, entries.Count);
+
+        Assert.Equal("Home.cui", entries[0].LogicalName);
+        Assert.Equal("Themes.Dark.cui-theme", entries[1].LogicalName);
+        Assert.Equal("Prefabs.AIBar.cui-prefab", entries[2].LogicalName);
+        Assert.Equal("Assets.font.ttf", entries[3].LogicalName);
+
+        Assert.Equal(File.ReadAllBytes(home), entries[0].Data);
+        Assert.Equal(File.ReadAllBytes(theme), entries[1].Data);
+        Assert.Equal(File.ReadAllBytes(prefab), entries[2].Data);
+        Assert.Equal(fontBytes, entries[3].Data);
+    }
+
+    [Fact]
+    public void ExistingWarningsAreNotPromotedIntoErrorsAndTheBundleIsStillGenerated()
+    {
+        var root = Path.Combine(_prefix, "repo");
+        var sibling = Path.Combine(_prefix, "repo-other");
+        Directory.CreateDirectory(root);
+        Directory.CreateDirectory(sibling);
+
+        var inside = WriteResource(root, "panel.cui", "<Cui><Text>Inside</Text></Cui>");
+        var malformed = WriteResource(root, "broken.cui", "<Cui><Text (Definition</Text></Cui>");
+        var outside = WriteResource(sibling, "extra.cui", "<Cui><Text>Outside</Text></Cui>");
+
+        var entries = RunTask(root, inside, malformed, outside);
+
+        Assert.Equal(3, entries.Count);
+        Assert.Equal(2, _engine.RecordedWarnings.Count);
+        Assert.Empty(_engine.RecordedErrors);
+        Assert.Contains("invalid CUI syntax", _engine.RecordedWarnings[0]);
+        Assert.Contains("outside the CUI resource root", _engine.RecordedWarnings[1]);
+        Assert.Equal(File.ReadAllBytes(malformed), entries[1].Data);
+        Assert.Equal(File.ReadAllBytes(outside), entries[2].Data);
+    }
+
+    private GenerateCuiResourcesTask CreateTask(string root, string output, params string[] fullPaths)
+    {
+        return new GenerateCuiResourcesTask
         {
             BuildEngine = _engine,
             Root = root,
-            Output = Path.Combine(_prefix, "bundle.bin"),
+            Output = output,
             Resources = fullPaths.Select(path => (ITaskItem)new FakeTaskItem(path)).ToArray(),
         };
+    }
+
+    private List<CuiResourceEntry> RunTask(string root, params string[] fullPaths)
+    {
+        var task = CreateTask(root, Path.Combine(_prefix, "bundle.bin"), fullPaths);
 
         Assert.True(task.Execute());
         return ReadBundle(task.Output);
