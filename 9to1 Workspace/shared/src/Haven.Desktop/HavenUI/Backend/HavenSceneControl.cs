@@ -117,6 +117,7 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
             _input?.PointerExited();
             ClearSubscriptions();
             _root = value;
+            _lastLayoutViewport = new Size(double.NaN, double.NaN);
             _input = value is null ? null : new HavenInputRouter(value);
             if (_input is not null) _input.InputSubmitted += input => InputSubmitted?.Invoke(input);
             _motionTokens.Clear();
@@ -154,7 +155,7 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
             Platform,
             this);
 
-        _lastMeasureAvailable = availableSize;
+        _lastLayoutViewport = availableSize;
 
         return new Size(
             FiniteDesired(_root.DesiredSize.Width, metricWidth),
@@ -172,16 +173,17 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
     private static double FiniteDesired(double desired, double fallback)
         => double.IsFinite(desired) ? Math.Max(0, desired) : Math.Max(0, fallback);
 
-    private Size _lastMeasureAvailable;
+    private Size _lastLayoutViewport = new(double.NaN, double.NaN);
 
     protected override Size ArrangeOverride(Size finalSize)
     {
-        // The measure pass already laid out and arranged the scene when it ran
-        // against this exact finite size; re-running the full Haven layout here
-        // would duplicate every measure/arrange computation for no change.
-        var skipLayout = double.IsFinite(_lastMeasureAvailable.Width)
-            && Math.Abs(_lastMeasureAvailable.Width - finalSize.Width) < .01d
-            && Math.Abs(_lastMeasureAvailable.Height - finalSize.Height) < .01d;
+        // Skip only if the CURRENT retained arrangement used this viewport.
+        // An intermediate arrange can replace the measured geometry; comparing
+        // only the last measure constraint then reuses the wrong slide bounds
+        // when a panel or reopened window returns to that constraint.
+        var skipLayout = double.IsFinite(_lastLayoutViewport.Width)
+            && Math.Abs(_lastLayoutViewport.Width - finalSize.Width) < .01d
+            && Math.Abs(_lastLayoutViewport.Height - finalSize.Height) < .01d;
         if (skipLayout)
         {
             DiagArrangeLayoutSkips++;
@@ -189,7 +191,11 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
         else
         {
             UpdateSurfaceMetrics(finalSize.Width, finalSize.Height);
-            if (_root is not null) _layout.Layout(_root, SurfaceMetrics.Viewport, Platform, this);
+            if (_root is not null)
+            {
+                _layout.Layout(_root, SurfaceMetrics.Viewport, Platform, this);
+                _lastLayoutViewport = finalSize;
+            }
         }
         _drawingSurface.Arrange(new Rect(finalSize));
         ArrangeNativeControls();

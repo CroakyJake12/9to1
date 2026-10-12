@@ -154,6 +154,7 @@ public sealed partial class PresentBrowserSession
             "ZoomPercent" => DisplayZoom * 100,
             "ZoomReadout" => $"{DisplayZoom * 100:0}%",
             "ZoomMinimum" => Math.Min(25, DisplayZoom * 100),
+            "ZoomControlsWidth" => Math.Clamp(_viewportWidth - 156, 208, 320),
             "ZoomLabel" => _fitToWindow ? "Fit" : $"{_zoom * 100:0}%",
             _ => MissingUiValue
         };
