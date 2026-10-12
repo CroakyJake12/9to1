@@ -48,6 +48,13 @@ internal static class PresentTitleChecks
             "title inherits master font size, theme font/colour and both alignments");
         Check(document.Slides[0].GetOrCreateBodyText().Id != titleId && document.Slides[0].GetOrCreateBodyText().Text.Contains("Plan together."),
             "imported title never consumes the original body role");
+        Title().Locked = true;
+        var lockedTitleState = JsonSerializer.Serialize(editor.Document);
+        Check(!editor.SetSlideTitle(slideId, "Locked metadata edit") && !editor.PreviewSlideTitle(slideId, "Locked metadata preview")
+            && !editor.SetElementText(slideId, titleId, "Locked direct edit") && !editor.PreviewElementText(slideId, titleId, "Locked direct preview")
+            && JsonSerializer.Serialize(editor.Document) == lockedTitleState && !editor.IsLiveTextEditActive,
+            "locked imported title rejects metadata and direct text edits without a history or preview mutation");
+        Title().Locked = false;
         Check(editor.SetSlideTitle(slideId, "Metadata edit") && Title().Text == "Metadata edit" && Title().Id == titleId,
             "slide-title owner updates the same editable title object");
         Check(editor.Undo() && Title().Text == "Quarterly roadmap" && editor.Document.Slides[0].Title == "Quarterly roadmap",

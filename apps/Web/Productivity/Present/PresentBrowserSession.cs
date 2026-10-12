@@ -436,7 +436,7 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
             "StartStatus" => IsDirty ? "Your open presentation has unsaved changes. Resume to continue." : "Your open presentation is saved in this browser.",
             "SlideTitle" => Editor?.SelectedSlide.Title ?? "No slide selected",
             "EmptyDocument" => Editor is null,
-            "SelectedText" => Editor?.SelectedElements.FirstOrDefault(element => element.Kind == PresentElementKind.Text)?.Text ?? string.Empty,
+            "SelectedText" => SelectedTextElement?.Text ?? string.Empty,
             "HasTextSelection" => SelectedTextElement is not null,
             "HasSelection" => Editor?.SelectedElements.Count > 0,
             "CanEditSelection" => IsActionAvailable("DeleteObject") == true,
@@ -520,10 +520,12 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
         if (path == "TransitionDuration" && value is string durationText)
             return double.TryParse(durationText, NumberStyles.Float, CultureInfo.InvariantCulture, out var duration)
                 && TrySetValue(path, duration);
-        if (path == "SelectedText" && value is string content && IsActionAvailable("DeleteObject") == true && Editor?.SelectedElements.FirstOrDefault(element => element.Kind == PresentElementKind.Text) is { } selected)
+        if (path == "SelectedText" && value is string content && IsActionAvailable("EditSelectedText") == true && SelectedTextElement is { } selected && Editor is not null)
         { Editor.CommitLiveTextEdit(); Editor.SetElementText(Editor.Selection.SlideId, selected.Id, content); Editor.Document.Version = DurableRevision; return true; }
-        if (path is "Title" or "SlideTitle" && value is string title && !string.IsNullOrWhiteSpace(title) && IsActionAvailable("AddSlide") == true && Editor is not null)
-        { if (path == "Title") Editor.SetDocumentTitle(title); else Editor.SetSlideTitle(Editor.Selection.SlideId, title); Editor.Document.Version = DurableRevision; return true; }
+        if (path == "SlideTitle" && value is string slideTitle && IsActionAvailable("EditSlideTitle") == true && Editor is not null)
+        { Editor.SetSlideTitle(Editor.Selection.SlideId, slideTitle); Editor.Document.Version = DurableRevision; return true; }
+        if (path == "Title" && value is string title && !string.IsNullOrWhiteSpace(title) && IsActionAvailable("AddSlide") == true && Editor is not null)
+        { Editor.SetDocumentTitle(title); Editor.Document.Version = DurableRevision; return true; }
         if (Editor is null || IsActionAvailable("AddSlide") != true) return false;
         switch (path)
         {
@@ -632,7 +634,8 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
             "ResumePresentation" => Editor is not null && !IsWorkspaceActive,
             "ToggleInspector" or "ToggleFiles" or "ToggleNotes" or "ShowHelp" or "CloseHistory" or "ZoomFit" or "ZoomIn" or "ZoomOut" or "SetZoom" => true,
             "BeginShape" => Editor is not null && !IsReadOnly && BeginShapeInsertion is not null,
-            "SetTextColor" => Editor is not null && !IsReadOnly && SelectedTextElement is not null,
+            "SetTextColor" or "EditSelectedText" => Editor is not null && !IsReadOnly && SelectedTextElement is { Locked: false },
+            "EditSlideTitle" => Editor is not null && !IsReadOnly && Editor.SelectedSlide.GetTitleText() is not { Locked: true },
             "SetFillColor" or "SetStrokeColor" or "SetStrokeWidth" => Editor is not null && !IsReadOnly && Editor.SelectedElements.Any(element => element.Kind == PresentElementKind.Shape && !element.Locked),
             "ShowHistory" => Editor is not null && _repository is IPresentVersionRepository,
             "RestoreVersion" => Editor is not null && !IsReadOnly && _showHistory,
@@ -653,8 +656,8 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
                 Editor.Selection.ElementIds.Count > 0,
             "Grow" or "Shrink" or "RotateLeft" or "RotateRight" => Editor is not null && !IsReadOnly &&
                 Editor.Selection.ElementIds.Count > 0,
-            "Bold" or "Italic" or "Underline" or "TextAlignLeft" or "TextAlignCenter" or "TextAlignRight" => Editor is not null && !IsReadOnly && SelectedTextElement is not null,
-            "FontLarger" or "FontSmaller" => Editor is not null && !IsReadOnly && SelectedTextElement is not null,
+            "Bold" or "Italic" or "Underline" or "TextAlignLeft" or "TextAlignCenter" or "TextAlignRight" => Editor is not null && !IsReadOnly && SelectedTextElement is { Locked: false },
+            "FontLarger" or "FontSmaller" => Editor is not null && !IsReadOnly && SelectedTextElement is { Locked: false },
             "ApplyFill" => Editor is not null && !IsReadOnly &&
                 Editor.SelectedElements.Any(element => element.Kind == PresentElementKind.Shape),
             "ApplyStroke" or "ApplyStrokeWidth" => Editor is not null && !IsReadOnly &&

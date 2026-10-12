@@ -552,7 +552,7 @@
                     <Text ID="present-ui-210" Text="Slide" FontSize="13" FontWeight="SemiBold" />
                     <Container ID="present-ui-211" Type="Vertical Stack" CellGap="4">
                       <EditorLabel ID="present-ui-212" Text="Slide title" />
-                      <Input ID="present-ui-213" Type="Text" AccessibleName="Slide title" Value="{Binding SlideTitle, Mode=TwoWay}" Interactive="{Binding CanEdit}" Height="36" />
+                      <Input ID="present-ui-213" Type="Text" AccessibleName="Slide title" Value="{Binding SlideTitle, Mode=TwoWay}" Interactive="{Binding CanEditSlideTitle}" Height="36" />
                     </Container>
                     <Container ID="present-ui-214" Type="Vertical Stack" CellGap="4">
                       <EditorLabel ID="present-ui-215" Text="Layout" />
@@ -583,7 +583,7 @@
                     <Text ID="present-ui-233" Text="Text" FontSize="13" FontWeight="SemiBold" />
                     <Container ID="present-ui-234" Type="Vertical Stack" CellGap="4">
                       <EditorLabel ID="present-ui-235" Text="Selected object text" />
-                      <Input ID="present-ui-236" Type="Text" AccessibleName="Selected object text" Value="{Binding SelectedText, Mode=TwoWay}" Interactive="{Binding CanEdit}" Height="36" />
+                      <Input ID="present-ui-236" Type="Text" AccessibleName="Selected object text" Value="{Binding SelectedText, Mode=TwoWay}" Interactive="{Binding CanEditSelectedText}" Height="36" />
                     </Container>
                     <Container ID="present-ui-237" Type="Vertical Stack" CellGap="4">
                       <EditorLabel ID="present-ui-238" Text="Typeface" />

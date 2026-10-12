@@ -656,9 +656,9 @@ var assertions = await headless.Dispatch(async () =>
             "native Delete element removes the selected object and disables the element controls once nothing is selected");
         await Click("Add shape", () => session.GetDocumentSnapshot()!.Slides[0].Elements.Count == elementCount + 1);
         var shape = session.Editor!.Selection.ElementIds.Single();
-        Check(!ButtonNamed("Bold").IsEnabled && !ButtonNamed("Italic").IsEnabled
+        Check(ButtonNamed("Bold").IsEnabled && ButtonNamed("Italic").IsEnabled
             && ButtonNamed("Grow").IsEnabled && ButtonNamed("Rotate right").IsEnabled,
-            "shape selection disables the text style commands and enables the object transform commands");
+            "editable shape text and object transforms retain their original owner command capabilities");
         var originalWidth = session.GetDocumentSnapshot()!.Slides[0].Elements.Single(element => element.Id == shape).Width;
         await Click("Grow", () => session.GetDocumentSnapshot()!.Slides[0].Elements
             .Single(element => element.Id == shape).Width > originalWidth);

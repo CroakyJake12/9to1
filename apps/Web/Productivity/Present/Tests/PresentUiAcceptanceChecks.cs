@@ -152,5 +152,12 @@ internal static class PresentUiAcceptanceChecks
         window.KeyRelease(Key.Escape, RawInputModifiers.None, PhysicalKey.Escape, "Escape"); Flush();
         check(!sceneControl.IsTextEditing && Bound<bool>("ShowShapeToolbar") && !Bound<bool>("ShowTextToolbar"),
             "leaving shape text restores the original object appearance controls");
+        Type("Selected object text", "Shape inspector text");
+        check(Selected().Text == "Shape inspector text" && Bound<string>("SelectedText") == "Shape inspector text",
+            "the actual Properties text field reads and writes the same shape text owner");
+        Selected().Locked = true; session.RefreshSelection();
+        check(!Bound<bool>("CanEditSelectedText") && !session.TrySetValue("SelectedText", "Forbidden change")
+            && Selected().Text == "Shape inspector text", "locked shape text is disabled and rejects inspector writeback");
+        Selected().Locked = false; session.RefreshSelection();
     }
 }

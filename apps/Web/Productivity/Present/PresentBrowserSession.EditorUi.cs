@@ -59,6 +59,8 @@ public sealed partial class PresentBrowserSession
         value = path switch
         {
             "TextContext" => CanvasTextCommands?.IsTextEditing == true,
+            "CanEditSelectedText" => IsActionAvailable("EditSelectedText") == true,
+            "CanEditSlideTitle" => IsActionAvailable("EditSlideTitle") == true,
             "ObjectContext" => CanvasTextCommands?.IsTextEditing != true && Editor?.SelectedElements.Count > 0,
             "CanvasContext" => CanvasTextCommands?.IsTextEditing != true && Editor?.SelectedElements.Count == 0,
             "CanCut" => IsActionAvailable("Cut") == true,

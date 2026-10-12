@@ -16,6 +16,7 @@ public sealed partial class PresentEditor
     public bool PreviewSlideTitle(Guid slideId, string? title)
     {
         var slide = RequireSlide(slideId);
+        if (slide.GetTitleText() is { Locked: true }) return false;
         var value = title ?? string.Empty;
         if (string.Equals(slide.Title, value, StringComparison.Ordinal)) return false;
         BeginLiveTextEdit();
@@ -29,6 +30,7 @@ public sealed partial class PresentEditor
         var slide = RequireSlide(slideId);
         var element = slide.Elements.FirstOrDefault(item => item.Id == elementId)
             ?? throw new ArgumentOutOfRangeException(nameof(elementId));
+        if (element.Locked) return false;
         var value = text ?? string.Empty;
         if (string.Equals(element.Text, value, StringComparison.Ordinal)) return false;
         BeginLiveTextEdit();

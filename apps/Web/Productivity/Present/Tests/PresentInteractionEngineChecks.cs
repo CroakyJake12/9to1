@@ -47,6 +47,19 @@ internal static class PresentInteractionEngineChecks
         { using var frame = window.CaptureRenderedFrame(); frame!.Save(Path.Combine(Environment.GetEnvironmentVariable("HAVEN_DATA_DIR")!, name + ".png")); }
         void DrawCheck(Func<HavenDrawingContext, bool> assertion, string message)
         { var draw = new HavenDrawingContext(); ((IHavenDrawCommandSource)canvas).Draw(draw, 1); check(assertion(draw), message); }
+        async Task BeginSeparateDrag(Point point)
+        {
+            // A second press inside the real platform double-click interval is
+            // intentionally text editing. These are independent drag gestures.
+            await Task.Delay((window.GetPlatformSettings()?.GetDoubleTapTime(PointerType.Mouse)
+                ?? TimeSpan.FromMilliseconds(500)) + TimeSpan.FromMilliseconds(50));
+            var clicks = 0;
+            EventHandler<PointerPressedEventArgs> observe = (_, args) => clicks = args.ClickCount;
+            window.AddHandler(InputElement.PointerPressedEvent, observe, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+            try { window.MouseDown(point, MouseButton.Left); }
+            finally { window.RemoveHandler(InputElement.PointerPressedEvent, observe); }
+            check(clicks == 1, "independent native drag starts with a platform-classified single press");
+        }
 
         Select(editor.SelectedSlide.Elements.Select(element => element.Id).ToArray()); editor.RemoveSelectedElements();
         var shapeId = editor.AddShape(editor.Selection.SlideId).Id;
@@ -66,7 +79,7 @@ internal static class PresentInteractionEngineChecks
 
         Frame("engine-selected");
         var original = JsonSerializer.Serialize(Item(shapeId));
-        window.MouseDown(body, MouseButton.Left); window.MouseMove(body + new Vector(40, 24));
+        await BeginSeparateDrag(body); window.MouseMove(body + new Vector(40, 24));
         check(control.InteractionState == PresentInteractionState.ObjectDragging && control.LiveGeometry.Single().X > .25 && Item(shapeId).X == .25,
             "native drag displays real geometry continuously before the one owner mutation");
         Frame("engine-live-drag");
@@ -77,7 +90,7 @@ internal static class PresentInteractionEngineChecks
         Tap(Key.Escape); window.MouseUp(body + new Vector(50, 30), MouseButton.Left);
         check(JsonSerializer.Serialize(Item(shapeId)) == original && control.InteractionState == PresentInteractionState.ObjectSelected,
             "Escape cancels live movement without authored geometry or stuck capture");
-        window.MouseDown(body, MouseButton.Left); window.MouseMove(body + new Vector(40, 24));
+        await BeginSeparateDrag(body); window.MouseMove(body + new Vector(40, 24));
         pointer.PointerCancelled(new(default, default, HavenPointerKind.Mouse)); window.MouseUp(body + new Vector(40, 24), MouseButton.Left);
         check(JsonSerializer.Serialize(Item(shapeId)) == original, "explicit capture cancellation cannot commit a stale release");
 
