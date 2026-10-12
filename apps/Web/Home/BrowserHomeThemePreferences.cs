@@ -7,11 +7,13 @@ using HavenOS.Home.Core;
 
 namespace NineToOne.Web;
 
-/// <summary>Browser adapter over Home's existing local-appearance envelope. Account sync is not fabricated.</summary>
+/// <summary>Browser adapter over the authenticated CAKE account preference owner; local data is an exact-account offline cache.</summary>
 [SupportedOSPlatform("browser")]
 internal sealed partial class BrowserHomeThemePreferences : IBrowserHomeThemePreferences
 {
     private Backend? _backend;
+    private Action<bool>? _accountChanged;
+    private int _accountSubscription;
     private HomeThemePreferenceService? _service;
     private bool _disposed, _refreshQueued, _refreshRunning, _canChange;
     private Task _refreshWork = Task.CompletedTask;
@@ -23,6 +25,9 @@ internal sealed partial class BrowserHomeThemePreferences : IBrowserHomeThemePre
     public bool CanChange => !_disposed && _service is not null && _canChange;
     public CuiThemePreferenceSnapshot Current { get; private set; }
     public string? Diagnostic { get; private set; }
+    public string ScopeDescription => Scope is null ? "Sign in to save account-wide theme preferences." :
+        Current.FromCache ? "Account-wide preferences · using this account’s offline cache." : "Account-wide theme preferences.";
+    public string SavedDescription => "Appearance saved to your account.";
     public event EventHandler? Changed;
     public CuiThemeDefinitionCatalog Catalog { get; }
 
@@ -38,7 +43,7 @@ internal sealed partial class BrowserHomeThemePreferences : IBrowserHomeThemePre
     {
         token.ThrowIfCancellationRequested();
         var owner=new BrowserHomeThemePreferences(catalog??new());
-        try { await owner.RefreshAsync(token); return owner; }
+        try { owner._accountChanged=owner.AccountChanged; owner._accountSubscription=Subscribe(owner._accountChanged); await owner.RefreshAsync(token); return owner; }
         catch(Exception primary)
         {
             try { await owner.DisposeAsync(); }
@@ -58,18 +63,43 @@ internal sealed partial class BrowserHomeThemePreferences : IBrowserHomeThemePre
             var mode=appearance??Current.Appearance;
             if(mode is { } selected && !Enum.IsDefined(selected))throw new ArgumentOutOfRangeException(nameof(appearance));
             _operations.RemoveWhere(task=>task.IsCompleted);
-            original=SetCoreAsync(start.Task,_service,scope,name,settings,Current.Revision,token,mode,accent ?? Current.EffectiveAccent);_operations.Add(original);
+            original=SetCoreAsync(start.Task,_service,scope,name,settings,Current.Revision,token,mode,accent ?? Current.EffectiveAccent,null);_operations.Add(original);
         }
         start.SetResult();return original;
     }
-    private async Task<HomeThemeOperationResult> SetCoreAsync(Task start,HomeThemePreferenceService service,HomeThemeScope scope,string name,CuiAccessibilitySettings settings,long revision,CancellationToken token,CuiAppearance? appearance,CuiAccentPreference accent)
+    public Task<HomeThemeOperationResult> SaveCustomThemeAsync(CuiCustomTheme theme,CuiThemePreferenceSnapshot observed,CancellationToken token=default)
+    {
+        var start=new TaskCompletionSource();Task<HomeThemeOperationResult> original;
+        lock(_operationGate)
+        {
+            ObjectDisposedException.ThrowIf(_disposed,this);
+            if(!CanChange||_service is null||Scope is not { } scope||observed.ScopeId!=scope.OwnerId||!CanAccess(scope.OwnerId))
+                return Task.FromResult(new HomeThemeOperationResult(false,"ThemeScopeMismatch",Diagnostic:"The signed-in account changed. Reopen the theme editor before saving."));
+            if(!ReferenceEquals(observed,Current))
+                return Task.FromResult(new HomeThemeOperationResult(false,"RevisionConflict",Diagnostic:"Account appearance changed while this draft was open. Refresh before saving."));
+            string library;
+            try
+            {
+                theme=CuiCustomThemeContract.Validate(theme);
+                var existing=observed.CustomThemesJson is null?Array.Empty<CuiCustomTheme>():CuiCustomThemeContract.DeserializeLibrary(observed.CustomThemesJson);
+                library=CuiCustomThemeContract.SerializeLibrary(existing.Where(item=>item.Id!=theme.Id).Append(theme));
+            }
+            catch(ArgumentException error)
+            { return Task.FromResult(new HomeThemeOperationResult(false,"InvalidCustomTheme",Diagnostic:error.Message)); }
+            _operations.RemoveWhere(task=>task.IsCompleted);
+            original=SetCoreAsync(start.Task,_service,scope,theme.Name,observed.Accessibility,observed.Revision,token,observed.Appearance,observed.EffectiveAccent,library);
+            _operations.Add(original);
+        }
+        start.SetResult();return original;
+    }
+    private async Task<HomeThemeOperationResult> SetCoreAsync(Task start,HomeThemePreferenceService service,HomeThemeScope scope,string name,CuiAccessibilitySettings settings,long revision,CancellationToken token,CuiAppearance? appearance,CuiAccentPreference accent,string? customThemesJson)
     {
         await start;
         var result=await service.SetAsync(scope,name,new(settings.ReduceMotion,settings.HighContrast,settings.DisplayScale,
             settings.InterfaceFontFamilyOverride,settings.CodeFontFamilyOverride),revision,token,appearance?.ToString(),
-            new HomeThemeAccentPreference((HomeThemeAccentOverrideMode)accent.Mode,accent.AllAppsColour,accent.IndividualApps));
+            new HomeThemeAccentPreference((HomeThemeAccentOverrideMode)accent.Mode,accent.AllAppsColour,accent.IndividualApps),customThemesJson);
         if(result.Succeeded && result.Value is { } value) Observe(value);
-        else Diagnostic=result.Diagnostic;
+        else if(Scope==scope)Diagnostic=result.Diagnostic;
         return result;
     }
 
@@ -92,17 +122,19 @@ internal sealed partial class BrowserHomeThemePreferences : IBrowserHomeThemePre
     }
     private async Task RefreshOwnerAsync(CancellationToken token)
     {
+        token.ThrowIfCancellationRequested();
+        string account;
+        try { account=await Request(token,ThemeContext); }
+        catch(Exception error) when(error is JSException or IOException or InvalidOperationException)
+        { _canChange=false;Diagnostic="Account preferences are unavailable. Sign in or reconnect to save appearance changes.";Publish();return; }
+        if(string.IsNullOrEmpty(account))
+        { ResetAccountPresentation();Diagnostic="Sign in to save account-wide theme preferences.";Publish();return; }
+        var scope=new HomeThemeScope(HomeDataScope.AccountSynchronized,account);
+        if(Scope!=scope) { ResetAccountPresentation();Scope=scope; }
         if(_service is null)
         {
-            token.ThrowIfCancellationRequested();
-            try
-            {
-                var scope=new HomeThemeScope(HomeDataScope.DeviceLocal,await ThemeContext());
-                _backend=new(scope);_service=new(_backend,new DeviceAuthority(scope),new CatalogAdapter(Catalog));
-                Scope=scope;_service.Changed+=Invalidated;
-            }
-            catch(Exception error) when(error is JSException or InvalidOperationException or IOException or JsonException)
-            { Diagnostic="Home theme preferences are unavailable. Professional is being used for this session; theme changes cannot be saved.";Publish();return; }
+            _backend=new();_service=new(_backend,new AccountAuthority(),new CatalogAdapter());
+            _service.Changed+=Invalidated;
         }
         HomeThemeOperationResult result;
         try { result=await _service.GetAsync(Scope!,token); }
@@ -113,9 +145,9 @@ internal sealed partial class BrowserHomeThemePreferences : IBrowserHomeThemePre
                 "Home preferences could not be read. Professional is being used for this session; saving is unavailable.";
             Publish();return;
         }
-        if(_disposed)return;
+        if(_disposed||Scope!=scope)return;
         var previousCanChange=_canChange;
-        _canChange=result.Succeeded && result.Value is { } resolved && !(resolved.UsedFallback&&resolved.Preference.Revision==0);
+        _canChange=result.Succeeded && result.Value is { } resolved && !resolved.FromCache && !(resolved.UsedFallback&&resolved.Preference.Revision==0);
         if(result.Succeeded && result.Value is { } value) {Observe(value);if(previousCanChange!=_canChange)Publish();}
         else
         {
@@ -132,7 +164,7 @@ internal sealed partial class BrowserHomeThemePreferences : IBrowserHomeThemePre
             new() {ReduceMotion=a.ReduceMotion,HighContrast=a.HighContrast,DisplayScale=a.DisplayScale,
                 InterfaceFontFamilyOverride=a.InterfaceFontFamily,CodeFontFamilyOverride=a.CodeFontFamily},
             stored.Appearance is null ? null : Enum.Parse<CuiAppearance>(stored.Appearance),
-            stored.Accent is { } accent ? new CuiAccentPreference((CuiAccentOverrideMode)accent.Mode,accent.AllAppsColour,accent.IndividualApps) : null);
+            stored.Accent is { } accent ? new CuiAccentPreference((CuiAccentOverrideMode)accent.Mode,accent.AllAppsColour,accent.IndividualApps) : null,stored.CustomThemesJson);
         Diagnostic=value.Diagnostic;
         if(next==Current)return;
         Current=next; Publish();
@@ -144,9 +176,24 @@ internal sealed partial class BrowserHomeThemePreferences : IBrowserHomeThemePre
             try { ((EventHandler)observer)(this,EventArgs.Empty); }
             catch(Exception) { Diagnostic="Theme saved; a presentation observer needs to refresh."; }
     }
+    private void ResetAccountPresentation()
+    {
+        _canChange=false;Scope=null;
+        Current=new("Professional",0,"presentation-only",false,new() { ReduceMotion=Program.ReduceMotion() });
+    }
+    private void AccountChanged(bool revoked)
+    {
+        if(_disposed)return;
+        if(revoked) { ResetAccountPresentation();Diagnostic="Sign in to save account-wide theme preferences.";Publish(); }
+        QueueRefresh();
+    }
     private void Invalidated(object? sender,HomeThemeScope scope)
     {
         if(_disposed||scope!=Scope)return;
+        QueueRefresh();
+    }
+    private void QueueRefresh()
+    {
         _refreshQueued=true;
         if(!_refreshRunning) { _refreshRunning=true; _refreshWork=DrainRefreshAsync(); }
     }
@@ -162,7 +209,7 @@ internal sealed partial class BrowserHomeThemePreferences : IBrowserHomeThemePre
         lock(_operationGate)
         {
             if(_disposal is not null)return new(_disposal);
-            _disposed=true;if(_service is not null)_service.Changed-=Invalidated;
+            _disposed=true;Unsubscribe(_accountSubscription);_accountChanged=null;if(_service is not null)_service.Changed-=Invalidated;
             start=new();disposal=CloseAsync(start.Task,_operations.Append(_refreshWork).ToArray());_disposal=disposal;
         }
         start.SetResult();return new(disposal);
@@ -182,52 +229,76 @@ internal sealed partial class BrowserHomeThemePreferences : IBrowserHomeThemePre
         if(errors.Count>1)throw new AggregateException("Home appearance operations settled with errors.",errors);
     }
 
-    private sealed class DeviceAuthority(HomeThemeScope scope):IHomeThemeScopeAuthority
+    private sealed class AccountAuthority:IHomeThemeScopeAuthority
     {
-        public ValueTask<bool> CanAccessAsync(HomeThemeScope requested,bool write,CancellationToken cancellationToken=default)
-        { cancellationToken.ThrowIfCancellationRequested();return ValueTask.FromResult(requested==scope&&scope.Scope==HomeDataScope.DeviceLocal); }
+        public ValueTask<bool> CanAccessAsync(HomeThemeScope scope,bool write,CancellationToken cancellationToken=default)
+        { cancellationToken.ThrowIfCancellationRequested();return ValueTask.FromResult(scope.Scope==HomeDataScope.AccountSynchronized&&scope.OrganizationId is null&&CanAccess(scope.OwnerId)); }
     }
-    private sealed class CatalogAdapter(CuiThemeDefinitionCatalog catalog):IHomeThemeCatalog
+    private sealed class CatalogAdapter:IHomeCustomThemeCatalog
     {
         public bool TryResolve(string requestedName,out string canonicalName)
-        { if(catalog.TryResolve(requestedName,out var theme)&&theme is not null) {canonicalName=theme.Name;return true;} canonicalName="Professional";return false; }
+        { var theme=CuiThemeCatalog.All.FirstOrDefault(theme=>string.Equals(theme.DisplayName,requestedName,StringComparison.OrdinalIgnoreCase)); canonicalName=theme?.DisplayName??"Professional";return theme is not null; }
+        public bool TryResolve(string requestedName,string customThemesJson,out string canonicalName)
+        {
+            canonicalName="Professional";
+            try
+            {
+                var library=CuiCustomThemeContract.DeserializeLibrary(customThemesJson);
+                var selected=library.FirstOrDefault(theme=>string.Equals(theme.Name,requestedName,StringComparison.OrdinalIgnoreCase));
+                if(selected is not null) { canonicalName=selected.Name;return true; }
+                // Custom names from a previous account never qualify a new scope.
+                var builtin=CuiThemeCatalog.All.FirstOrDefault(theme=>string.Equals(theme.DisplayName,requestedName,StringComparison.OrdinalIgnoreCase));
+                if(builtin is not null) {canonicalName=builtin.DisplayName;return true;}
+            }
+            catch(ArgumentException) { }
+            return false;
+        }
     }
-    private sealed class Backend: IHomeThemePreferenceBackend,IDisposable
+    private sealed class Backend:IHomeThemePreferenceBackend,IDisposable
     {
-        private readonly HomeThemeScope _scope;
-        private readonly Action _notify;
-        private readonly int _subscription;
-        public event EventHandler<HomeThemeScope>? Changed;
-        public Backend(HomeThemeScope scope)
-        { _scope=scope;_notify=()=>Changed?.Invoke(this,scope);_subscription=Subscribe(_notify); }
-        public bool Supports(HomeThemeScope scope)=>scope==_scope&&scope.Scope==HomeDataScope.DeviceLocal;
+        public event EventHandler<HomeThemeScope>? Changed { add { } remove { } }
+        public bool Supports(HomeThemeScope scope)=>scope.Scope==HomeDataScope.AccountSynchronized&&scope.OrganizationId is null;
         public async Task<HomeThemeReadResult> ReadAsync(HomeThemeScope scope,CancellationToken cancellationToken=default)
         {
-            cancellationToken.ThrowIfCancellationRequested();
             if(!Supports(scope))return new(HomeThemeReadState.Unsupported);
-            return JsonSerializer.Deserialize(await ReadTheme(scope.OwnerId),BrowserHomeThemeJsonContext.Default.HomeThemeReadResult)??new(HomeThemeReadState.InvalidData);
+            return JsonSerializer.Deserialize(await Request(cancellationToken,id=>ReadTheme(id,scope.OwnerId)),BrowserHomeThemeJsonContext.Default.HomeThemeReadResult)??new(HomeThemeReadState.InvalidData);
         }
-        public Task<HomeThemeReadResult> ReadCacheAsync(HomeThemeScope scope,CancellationToken cancellationToken=default)=>ReadAsync(scope,cancellationToken);
-        public async Task<HomeThemeWriteResult> CompareExchangeAsync(HomeThemeScope scope,long expectedRevision,HomeThemePreference candidate,CancellationToken cancellationToken=default)
+        public Task<HomeThemeReadResult> ReadCacheAsync(HomeThemeScope scope,CancellationToken cancellationToken=default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if(!Supports(scope))return new(false,"ThemeScopeUnsupported");
-            return JsonSerializer.Deserialize(await CompareTheme(scope.OwnerId,expectedRevision,
-                JsonSerializer.Serialize(candidate,BrowserHomeThemeJsonContext.Default.HomeThemePreference)),BrowserHomeThemeJsonContext.Default.HomeThemeWriteResult)
-                ??new(false,"InvalidThemeReceipt");
+            return Task.FromResult(Supports(scope)?JsonSerializer.Deserialize(ReadCache(scope.OwnerId),BrowserHomeThemeJsonContext.Default.HomeThemeReadResult)??new(HomeThemeReadState.InvalidData):new(HomeThemeReadState.Unsupported));
         }
-        // For device-local preferences the original durable envelope is already
-        // the offline copy; there is no redundant browser cache/store to overwrite.
+        public async Task<HomeThemeWriteResult> CompareExchangeAsync(HomeThemeScope scope,long expectedRevision,HomeThemePreference candidate,CancellationToken cancellationToken=default)
+        {
+            if(!Supports(scope))return new(false,"ThemeScopeUnsupported");
+            return JsonSerializer.Deserialize(await Request(cancellationToken,id=>CompareTheme(id,scope.OwnerId,expectedRevision,
+                JsonSerializer.Serialize(candidate,BrowserHomeThemeJsonContext.Default.HomeThemePreference))),BrowserHomeThemeJsonContext.Default.HomeThemeWriteResult)??new(false,"InvalidThemeReceipt");
+        }
         public Task WriteCacheAsync(HomeThemePreference preference,CancellationToken cancellationToken=default)
-        { cancellationToken.ThrowIfCancellationRequested();if(!Supports(preference.Scope))throw new UnauthorizedAccessException();return Task.CompletedTask; }
-        public void Dispose() { Unsubscribe(_subscription);Changed=null; }
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if(!Supports(preference.Scope))throw new UnauthorizedAccessException();
+            try { WriteCache(preference.Scope.OwnerId,JsonSerializer.Serialize(preference,BrowserHomeThemeJsonContext.Default.HomeThemePreference)); }
+            catch(JSException error) { throw new IOException("The account preference cache could not be refreshed.",error); }
+            return Task.CompletedTask;
+        }
+        public void Dispose() { }
     }
-
-    [JSImport("themeContext","nineToOneHomeLocal")] private static partial Task<string> ThemeContext();
-    [JSImport("readTheme","nineToOneHomeLocal")] private static partial Task<string> ReadTheme(string scope);
-    [JSImport("compareTheme","nineToOneHomeLocal")] private static partial Task<string> CompareTheme(string scope,double expectedRevision,string candidate);
-    [JSImport("subscribe","nineToOneHomeLocal")] private static partial int Subscribe([JSMarshalAs<JSType.Function>] Action callback);
-    [JSImport("unsubscribe","nineToOneHomeLocal")] private static partial void Unsubscribe(int subscription);
+    private static async Task<string> Request(CancellationToken token,Func<string,Task<string>> operation)
+    {
+        token.ThrowIfCancellationRequested();var id=Guid.NewGuid().ToString("N");
+        using var registration=token.Register(()=>Cancel(id));
+        token.ThrowIfCancellationRequested();var result=await operation(id);token.ThrowIfCancellationRequested();return result;
+    }
+    [JSImport("themeContext","nineToOneHomeAccountTheme")] private static partial Task<string> ThemeContext(string requestId);
+    [JSImport("canAccess","nineToOneHomeAccountTheme")] private static partial bool CanAccess(string scope);
+    [JSImport("readTheme","nineToOneHomeAccountTheme")] private static partial Task<string> ReadTheme(string requestId,string scope);
+    [JSImport("readCache","nineToOneHomeAccountTheme")] private static partial string ReadCache(string scope);
+    [JSImport("compareTheme","nineToOneHomeAccountTheme")] private static partial Task<string> CompareTheme(string requestId,string scope,double expectedRevision,string candidate);
+    [JSImport("writeCache","nineToOneHomeAccountTheme")] private static partial void WriteCache(string scope,string preference);
+    [JSImport("cancel","nineToOneHomeAccountTheme")] private static partial void Cancel(string requestId);
+    [JSImport("subscribe","nineToOneHomeAccountTheme")] private static partial int Subscribe([JSMarshalAs<JSType.Function<JSType.Boolean>>] Action<bool> callback);
+    [JSImport("unsubscribe","nineToOneHomeAccountTheme")] private static partial void Unsubscribe(int subscription);
 }
 
 [JsonSourceGenerationOptions(PropertyNamingPolicy=JsonKnownNamingPolicy.CamelCase,PropertyNameCaseInsensitive=true)]

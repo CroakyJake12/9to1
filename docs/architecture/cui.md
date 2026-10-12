@@ -35,9 +35,18 @@ read-only `CuiThemePreferenceReader` over the existing `havenUiThemeName` key;
 this reader does not create a competing settings owner or cross-process channel.
 
 `HomeThemePreferenceService` owns authorised get/set/subscribe semantics.
-The browser adapter uses the existing Home preference envelope and Web Locks
-for device-local commits. It explicitly reports that account synchronisation
-is not connected. Native cross-process propagation remains an integration gate;
+The browser adapter now binds the existing Home preference contract to the
+maintained CAKE account transport (`GET/PATCH /api/account/theme`). Theme,
+appearance, accessibility, app accent overrides and the validated custom-theme
+library share one account-owned revision. The authenticated server chooses the
+account row and atomically checks expected revision, active session and token
+expiry at commit. Existing device-local preferences are preserved and never
+silently uploaded. Browser local storage is only an exact-account/API-origin
+cache; signed-out, expired and switched accounts cannot read or save through it.
+Offline cache reads require the same currently verified credential lifetime;
+offline writes are not presented as saved. Actual deployed account sync and
+cross-device acceptance remain gates until the endpoint/migration and configured
+browser have run together. Native cross-process propagation remains an integration gate;
 browser live propagation does not establish it.
 
 Home's existing v1 theme envelope now has an optional immutable accent preference:
