@@ -9,7 +9,7 @@
          do not create another assembly with that identity or copy its renderer. -->
     <ProjectReference Include="../../../Write/Scene/Haven.WriteBrowser.Scene.csproj" />
     <Compile Include="PresentRetainedSceneControl.cs" />
-    <Compile Include="$(PresentOwnerRoot)/Haven.Desktop/Views/Pages/Present/PresentSlideCanvas.cs;$(PresentOwnerRoot)/Haven.Desktop/Views/Pages/Present/PresentSlideCanvas.Structured.cs;$(PresentOwnerRoot)/Haven.Desktop/Views/Pages/Present/PresentSlideCanvas.TextEditing.cs;$(PresentOwnerRoot)/Haven.Desktop/Views/Pages/Present/PresentSlideCanvas.DirectManipulation.cs" Link="Owner/%(Filename)%(Extension)" />
+    <Compile Include="$(PresentOwnerRoot)/Haven.Desktop/Views/Pages/Present/PresentSlideCanvas.cs;$(PresentOwnerRoot)/Haven.Desktop/Views/Pages/Present/PresentSlideCanvas.Structured.cs;$(PresentOwnerRoot)/Haven.Desktop/Views/Pages/Present/PresentSlideCanvas.TextEditing.cs;$(PresentOwnerRoot)/Haven.Desktop/Views/Pages/Present/PresentSlideCanvas.DirectManipulation.cs;$(PresentOwnerRoot)/Haven.Desktop/Views/Pages/Present/PresentSlideCanvas.Interaction.cs" Link="Owner/%(Filename)%(Extension)" />
     <!-- The browser surface transfers real PowerPoint files, so it compiles the
          owner's own .pptx exporter, importer, package codec and app paths rather
          than growing a second implementation of the format. -->

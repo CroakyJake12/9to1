@@ -11,6 +11,7 @@ public sealed class HavenInputRouter(HavenElement root)
     private readonly HavenActionExecutor _actions = new();
     private readonly HashSet<HavenElement> _hoverPath = [];
     private HavenElement? _hovered;
+    private HavenElement? _hoverTargetElement;
     private HavenElement? _pressed;
     private HavenElement? _focused;
     private IHavenPointerInputTarget? _pointerTarget;
@@ -568,6 +569,12 @@ public sealed class HavenInputRouter(HavenElement root)
 
     private void UpdateHover(HavenElement? rawHit)
     {
+        var hoverTarget = FindPointerTarget(rawHit);
+        if (!ReferenceEquals(hoverTarget, _hoverTargetElement))
+            (_hoverTargetElement as IHavenHoverInputTarget)?.PointerHovered(null);
+        _hoverTargetElement = hoverTarget;
+        if (hoverTarget is IHavenHoverInputTarget hover)
+            hover.PointerHovered(new HavenPoint(_lastPointerPoint.X - hoverTarget.Bounds.X, _lastPointerPoint.Y - hoverTarget.Bounds.Y));
         var nextPath = new HashSet<HavenElement>();
         for (var element = rawHit; element is not null; element = element.Parent)
             if (element.GetValue(HavenProperties.Hover) == true) nextPath.Add(element);

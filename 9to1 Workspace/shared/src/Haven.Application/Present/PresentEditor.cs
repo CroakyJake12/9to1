@@ -393,20 +393,11 @@ public sealed partial class PresentEditor
 
     public bool RemoveSelectedElements()
     {
-        var selectedIds = _selectedElementIds.ToHashSet();
+        var selectedIds = InteractionMembers(InteractionRoots()).Select(element => element.Id).ToHashSet();
         if (selectedIds.Count == 0) return false;
         Mutate(() =>
         {
             var slide = SelectedSlide;
-            var removedGroupIds = slide.Elements
-                .Where(element => selectedIds.Contains(element.Id) && element.Kind == PresentElementKind.Group)
-                .Select(element => element.Id)
-                .ToHashSet();
-            foreach (var element in slide.Elements)
-            {
-                if (element.ParentGroupId is { } groupId && removedGroupIds.Contains(groupId))
-                    element.ParentGroupId = null;
-            }
             slide.Elements.RemoveAll(element => selectedIds.Contains(element.Id));
             slide.Animations.RemoveAll(cue => selectedIds.Contains(cue.TargetElementId));
             _selectedElementIds.Clear();
@@ -416,72 +407,40 @@ public sealed partial class PresentEditor
 
     public bool MoveSelection(double deltaX, double deltaY, bool snap = false, double snapTolerance = 0.008)
     {
-        var elements = EditableSelection();
-        if (elements.Count == 0) return false;
+        var roots = InteractionRoots();
+        var elements = InteractionMembers(roots);
+        if (elements.Count == 0 || !double.IsFinite(deltaX) || !double.IsFinite(deltaY)) return false;
+        if (snap && roots.Count == 1)
+        {
+            var root = roots[0];
+            var result = PresentSnapEngine.Snap(SelectedSlide, root.Id, root.X + deltaX, root.Y + deltaY, snapTolerance);
+            deltaX = result.X - root.X; deltaY = result.Y - root.Y;
+        }
+        // Keep the spacing of a multi-selection/group at slide boundaries.
+        deltaX = Math.Clamp(deltaX, -elements.Min(element => element.X), Math.Max(0, 1 - elements.Max(element => element.X + element.Width)));
+        deltaY = Math.Clamp(deltaY, -elements.Min(element => element.Y), Math.Max(0, 1 - elements.Max(element => element.Y + element.Height)));
+        if (Math.Abs(deltaX) < .0000001 && Math.Abs(deltaY) < .0000001) return false;
         Mutate(() =>
         {
-            foreach (var element in elements)
-            {
-                var proposedX = element.X + deltaX;
-                var proposedY = element.Y + deltaY;
-                if (snap)
-                {
-                    var result = PresentSnapEngine.Snap(SelectedSlide, element.Id, proposedX, proposedY, snapTolerance);
-                    proposedX = result.X;
-                    proposedY = result.Y;
-                }
-                element.X = Math.Clamp(proposedX, 0, Math.Max(0, 1 - element.Width));
-                element.Y = Math.Clamp(proposedY, 0, Math.Max(0, 1 - element.Height));
-            }
+            foreach (var element in elements) { element.X += deltaX; element.Y += deltaY; }
         });
         return true;
     }
 
-    public bool ResizeSelection(double deltaWidth, double deltaHeight)
-    {
-        var elements = EditableSelection();
-        if (elements.Count == 0) return false;
-        Mutate(() =>
-        {
-            foreach (var element in elements)
-            {
-                element.Width = Math.Clamp(element.Width + deltaWidth, 0.01, 1 - element.X);
-                element.Height = Math.Clamp(element.Height + deltaHeight, 0.01, 1 - element.Y);
-            }
-        });
-        return true;
-    }
+    public bool ResizeSelection(double deltaWidth, double deltaHeight) =>
+        TransformSelection(0, 0, deltaWidth, deltaHeight, 0);
 
-    public bool RotateSelection(double deltaDegrees)
-    {
-        var elements = EditableSelection();
-        if (elements.Count == 0 || !double.IsFinite(deltaDegrees)) return false;
-        Mutate(() =>
-        {
-            foreach (var element in elements) element.RotationDegrees += deltaDegrees;
-        });
-        return true;
-    }
+    public bool RotateSelection(double deltaDegrees) => TransformSelection(0, 0, 0, 0, deltaDegrees);
 
     public bool TransformSelection(double deltaX, double deltaY, double deltaWidth, double deltaHeight, double deltaRotationDegrees)
     {
-        var elements = EditableSelection();
-        if (elements.Count == 0 || !double.IsFinite(deltaX) || !double.IsFinite(deltaY)
+        var roots = InteractionRoots();
+        if (roots.Count == 0 || !double.IsFinite(deltaX) || !double.IsFinite(deltaY)
             || !double.IsFinite(deltaWidth) || !double.IsFinite(deltaHeight) || !double.IsFinite(deltaRotationDegrees)) return false;
         Mutate(() =>
         {
-            foreach (var element in elements)
-            {
-                var x = Math.Clamp(element.X + deltaX, 0, .99);
-                var y = Math.Clamp(element.Y + deltaY, 0, .99);
-                var width = Math.Clamp(element.Width + deltaWidth, .01, 1 - x);
-                var height = Math.Clamp(element.Height + deltaHeight, .01, 1 - y);
-                element.X = Math.Min(x, 1 - width);
-                element.Y = Math.Min(y, 1 - height);
-                element.Width = width;
-                element.Height = height;
-                element.RotationDegrees += deltaRotationDegrees;
-            }
+            foreach (var root in roots)
+                ApplyInteractionTransform(root, deltaX, deltaY, deltaWidth, deltaHeight, deltaRotationDegrees);
         });
         return true;
     }
@@ -556,7 +515,7 @@ public sealed partial class PresentEditor
 
     public bool AlignSelection(PresentAlignment alignment)
     {
-        var elements = EditableSelection();
+        var elements = InteractionRoots();
         if (elements.Count < 2) return false;
         Mutate(() =>
         {
@@ -568,15 +527,17 @@ public sealed partial class PresentEditor
             var verticalCenter = (top + bottom) / 2;
             foreach (var element in elements)
             {
+                var x = element.X; var y = element.Y;
                 switch (alignment)
                 {
-                    case PresentAlignment.Left: element.X = left; break;
-                    case PresentAlignment.HorizontalCenter: element.X = horizontalCenter - element.Width / 2; break;
-                    case PresentAlignment.Right: element.X = right - element.Width; break;
-                    case PresentAlignment.Top: element.Y = top; break;
-                    case PresentAlignment.VerticalCenter: element.Y = verticalCenter - element.Height / 2; break;
-                    case PresentAlignment.Bottom: element.Y = bottom - element.Height; break;
+                    case PresentAlignment.Left: x = left; break;
+                    case PresentAlignment.HorizontalCenter: x = horizontalCenter - element.Width / 2; break;
+                    case PresentAlignment.Right: x = right - element.Width; break;
+                    case PresentAlignment.Top: y = top; break;
+                    case PresentAlignment.VerticalCenter: y = verticalCenter - element.Height / 2; break;
+                    case PresentAlignment.Bottom: y = bottom - element.Height; break;
                 }
+                ApplyInteractionTransform(element, x - element.X, y - element.Y, 0, 0, 0);
             }
         });
         return true;
@@ -584,7 +545,7 @@ public sealed partial class PresentEditor
 
     public bool DistributeSelection(PresentDistribution distribution)
     {
-        var elements = EditableSelection();
+        var elements = InteractionRoots();
         if (elements.Count < 3) return false;
         Mutate(() =>
         {
@@ -600,7 +561,7 @@ public sealed partial class PresentEditor
                 var cursor = left;
                 foreach (var element in ordered)
                 {
-                    element.X = cursor;
+                    ApplyInteractionTransform(element, cursor - element.X, 0, 0, 0, 0);
                     cursor += element.Width + gap;
                 }
             }
@@ -613,7 +574,7 @@ public sealed partial class PresentEditor
                 var cursor = top;
                 foreach (var element in ordered)
                 {
-                    element.Y = cursor;
+                    ApplyInteractionTransform(element, 0, cursor - element.Y, 0, 0, 0);
                     cursor += element.Height + gap;
                 }
             }
@@ -623,7 +584,7 @@ public sealed partial class PresentEditor
 
     public string CopySelection()
     {
-        var selected = SelectedElements;
+        var selected = InteractionMembers(SelectedElements);
         return selected.Count == 0 ? string.Empty : JsonSerializer.Serialize(selected, SnapshotOptions);
     }
 
@@ -638,6 +599,8 @@ public sealed partial class PresentEditor
         {
             var idMap = source.ToDictionary(element => element.Id, _ => Guid.NewGuid());
             var sourceIds = idMap.Keys.ToHashSet();
+            var offsetX = Math.Clamp(offset, -source.Min(element => element.X), Math.Max(0, 1 - source.Max(element => element.X + element.Width)));
+            var offsetY = Math.Clamp(offset, -source.Min(element => element.Y), Math.Max(0, 1 - source.Max(element => element.Y + element.Height)));
             foreach (var element in source)
             {
                 var oldId = element.Id;
@@ -645,14 +608,14 @@ public sealed partial class PresentEditor
                 element.ParentGroupId = element.ParentGroupId is { } parent && sourceIds.Contains(parent)
                     ? idMap[parent]
                     : null;
-                element.X = Math.Clamp(element.X + offset, 0, Math.Max(0, 1 - element.Width));
-                element.Y = Math.Clamp(element.Y + offset, 0, Math.Max(0, 1 - element.Height));
+                element.X += offsetX;
+                element.Y += offsetY;
                 target.Elements.Add(element);
                 pastedIds.Add(element.Id);
             }
             _selectedSlideId = target.Id;
             _selectedElementIds.Clear();
-            _selectedElementIds.AddRange(pastedIds);
+            _selectedElementIds.AddRange(source.Where(element => element.ParentGroupId is null).Select(element => element.Id));
         });
         return pastedIds;
     }
@@ -695,29 +658,31 @@ public sealed partial class PresentEditor
     private bool MoveSelectionInZOrder(int delta)
     {
         var slide = SelectedSlide;
-        var selected = _selectedElementIds.ToHashSet();
+        var selected = InteractionRoots().Select(element => Ancestors(element).LastOrDefault()?.Id ?? element.Id).ToHashSet();
         if (selected.Count == 0) return false;
+        var roots = slide.Elements.Where(element => element.ParentGroupId is null).OrderBy(element => element.Order).ToList();
         var moved = false;
         Mutate(() =>
         {
             if (delta > 0)
             {
-                for (var index = slide.Elements.Count - 2; index >= 0; index--)
+                for (var index = roots.Count - 2; index >= 0; index--)
                 {
-                    if (!selected.Contains(slide.Elements[index].Id) || selected.Contains(slide.Elements[index + 1].Id)) continue;
-                    (slide.Elements[index], slide.Elements[index + 1]) = (slide.Elements[index + 1], slide.Elements[index]);
-                    moved = true;
+                    if (!selected.Contains(roots[index].Id) || selected.Contains(roots[index + 1].Id)) continue;
+                    (roots[index], roots[index + 1]) = (roots[index + 1], roots[index]); moved = true;
                 }
             }
             else
             {
-                for (var index = 1; index < slide.Elements.Count; index++)
+                for (var index = 1; index < roots.Count; index++)
                 {
-                    if (!selected.Contains(slide.Elements[index].Id) || selected.Contains(slide.Elements[index - 1].Id)) continue;
-                    (slide.Elements[index], slide.Elements[index - 1]) = (slide.Elements[index - 1], slide.Elements[index]);
-                    moved = true;
+                    if (!selected.Contains(roots[index].Id) || selected.Contains(roots[index - 1].Id)) continue;
+                    (roots[index], roots[index - 1]) = (roots[index - 1], roots[index]); moved = true;
                 }
             }
+            if (!moved) return;
+            var ordered = roots.SelectMany(root => InteractionMembers(new[] { root }).OrderBy(element => element.Order)).ToArray();
+            slide.Elements.Clear(); slide.Elements.AddRange(ordered);
         });
         return moved;
     }

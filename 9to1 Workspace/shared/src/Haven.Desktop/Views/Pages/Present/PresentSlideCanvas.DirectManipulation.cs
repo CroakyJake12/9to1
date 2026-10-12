@@ -19,7 +19,8 @@ internal enum PresentTransformHandle
 
 internal sealed partial class PresentSlideCanvas
 {
-    private const double TransformHandleRadius = 7;
+    private const double TransformHandleRadius = 4.5;
+    private const double TransformHandleHitRadius = 10.5;
     private PresentTransformHandle _activeTransformHandle;
     private bool _marqueeSelecting;
 
@@ -28,7 +29,8 @@ internal sealed partial class PresentSlideCanvas
 
     public HavenCursor GetCursor(HavenPoint local)
     {
-        if (_dragElementId is not null) return HavenCursor.Grabbing;
+        if (_insertionPreset is not null) return HavenCursor.Crosshair;
+        if (_gestureActivated && _dragElementId is not null) return HavenCursor.Grabbing;
         var handle = _activeTransformHandle != PresentTransformHandle.None ? _activeTransformHandle : HitTransformHandle(local);
         if (handle == PresentTransformHandle.Rotate) return HavenCursor.Rotate;
         if (handle is not null && handle != PresentTransformHandle.None)
@@ -49,7 +51,7 @@ internal sealed partial class PresentSlideCanvas
         }
         if (IsTextEditing && !HitEditingBorder(local) && TryEditingRect(out var rect, out var textRotation)
             && rect.Contains(InverseRotatePoint(local, rect, textRotation))) return HavenCursor.Text;
-        return HitElement(local) is { Locked: false } ? HavenCursor.Move : HavenCursor.Default;
+        return HitElement(local) is { } hovered ? hovered.Locked ? HavenCursor.NotAllowed : HavenCursor.Move : HavenCursor.Default;
     }
 
     private bool HitEditingBorder(HavenPoint local)
@@ -62,7 +64,7 @@ internal sealed partial class PresentSlideCanvas
     }
 
     private double PreviewRotation(PresentElement element) => element.RotationDegrees +
-        (_activeTransformHandle == PresentTransformHandle.Rotate && _selectedIds.Contains(element.Id)
+        (_gestureActivated && _activeTransformHandle == PresentTransformHandle.Rotate && IsSelectedForTransform(element)
             ? BuildDirectTransform(_activeTransformHandle, 0, 0).DeltaRotation : 0);
 
     private void ResetDirectGesture()
@@ -71,19 +73,27 @@ internal sealed partial class PresentSlideCanvas
         _dragVectorHandle = null;
         _activeTransformHandle = PresentTransformHandle.None;
         _marqueeSelecting = false;
+        _gestureActivated = false;
+        _gestureModifiers = HavenKeyModifiers.None;
     }
 
     private PresentTransformHandle? HitTransformHandle(HavenPoint local)
     {
         if (_slide is null || _selectedIds.Count != 1) return null;
-        var element = _slide.Elements.FirstOrDefault(value => _selectedIds.Contains(value.Id) && value.Visible && !value.Locked && value.Kind != PresentElementKind.Group);
+        var element = _slide.Elements.FirstOrDefault(value => _selectedIds.Contains(value.Id) && value.Visible && !value.Locked);
         if (element is null) return null;
         var rect = ElementRect(element, SlideRectLocal(), false);
-        var center = Center(rect);
-        var handles = HandlePoints(rect, element.RotationDegrees);
-        foreach (var pair in handles)
-            if (DistanceSquared(local, pair.Point) <= TransformHandleRadius * TransformHandleRadius * 2.25) return pair.Handle;
-        return null;
+        // Enlarged corner targets must not consume the entire body of a tiny
+        // object. Keep its central grab region movable even when the visual
+        // corner circles overlap at a small zoom.
+        var unrotated = InverseRotatePoint(local, rect, element.RotationDegrees);
+        if ((rect.Width < 24 || rect.Height < 24)
+            && Math.Abs(unrotated.X - Center(rect).X) < rect.Width / 4
+            && Math.Abs(unrotated.Y - Center(rect).Y) < rect.Height / 4) return null;
+        var nearest = HandlePoints(rect, element.RotationDegrees)
+            .Select(pair => (pair.Handle, Distance: DistanceSquared(local, pair.Point)))
+            .OrderBy(pair => pair.Distance).First();
+        return nearest.Distance <= TransformHandleHitRadius * TransformHandleHitRadius ? nearest.Handle : null;
     }
 
     private DirectTransform BuildDirectTransform(PresentTransformHandle handle, double dx, double dy)
@@ -99,6 +109,7 @@ internal sealed partial class PresentSlideCanvas
             var degrees = (current - start) * 180d / Math.PI;
             while (degrees > 180) degrees -= 360;
             while (degrees < -180) degrees += 360;
+            if (_gestureModifiers.HasFlag(HavenKeyModifiers.Shift)) degrees = Math.Round(degrees / 15) * 15;
             return new DirectTransform(0, 0, 0, 0, degrees);
         }
 
@@ -115,6 +126,11 @@ internal sealed partial class PresentSlideCanvas
         var south = handle is PresentTransformHandle.South or PresentTransformHandle.SouthWest or PresentTransformHandle.SouthEast;
         var width = Math.Max(.01 * slide.Width, selected.Width * slide.Width + (west ? -localX : east ? localX : 0));
         var height = Math.Max(.01 * slide.Height, selected.Height * slide.Height + (north ? -localY : south ? localY : 0));
+        if (_gestureModifiers.HasFlag(HavenKeyModifiers.Shift) && (west || east) && (north || south))
+        {
+            var scale = Math.Max(width / (selected.Width * slide.Width), height / (selected.Height * slide.Height));
+            width = selected.Width * slide.Width * scale; height = selected.Height * slide.Height * scale;
+        }
         var deltaWidth = width - selected.Width * slide.Width;
         var deltaHeight = height - selected.Height * slide.Height;
         var centreX = (west ? -deltaWidth : deltaWidth) / 2;
@@ -131,7 +147,7 @@ internal sealed partial class PresentSlideCanvas
         var slide = SlideRectLocal();
         return _slide.Elements
             .Where(element => element.Visible && element.Kind != PresentElementKind.Group && Intersects(marquee, RotatedBounds(ElementRect(element, slide, false), element.RotationDegrees)))
-            .Select(element => element.Id)
+            .Select(element => SelectionRoot(element).Id).Distinct()
             .ToArray();
     }
 
@@ -142,27 +158,21 @@ internal sealed partial class PresentSlideCanvas
         if (Math.Abs(rotation) > .001)
             context.Add(new HavenPushTransformCommand(rect, new HavenTransform(RotationDegrees: rotation), center));
         context.Add(new HavenStrokeRoundedRectCommand(rect, new HavenPen(new HavenTokenBrush("Accent"), 2), 3, opacity));
-        if (showHandles)
-        {
-            var size = TransformHandleRadius * 2;
-            foreach (var point in new[]
-            {
-                new HavenPoint(rect.X, rect.Y), new HavenPoint(rect.Right, rect.Y),
-                new HavenPoint(rect.X, rect.Bottom), new HavenPoint(rect.Right, rect.Bottom),
-                new HavenPoint(center.X, rect.Y), new HavenPoint(center.X, rect.Bottom),
-                new HavenPoint(rect.X, center.Y), new HavenPoint(rect.Right, center.Y)
-            })
-                context.Add(new HavenEllipseCommand(new HavenRect(point.X - TransformHandleRadius, point.Y - TransformHandleRadius, size, size), new HavenTokenBrush("Surface"), new HavenPen(new HavenTokenBrush("Accent"), 2), opacity));
-            var rotate = new HavenPoint(rect.X + rect.Width / 2, rect.Y - 28);
-            context.Add(new HavenLineCommand(new HavenPoint(rect.X + rect.Width / 2, rect.Y), rotate, new HavenPen(new HavenTokenBrush("Accent"), 1.5), opacity));
-            context.Add(new HavenEllipseCommand(new HavenRect(rotate.X - TransformHandleRadius, rotate.Y - TransformHandleRadius, size, size), new HavenTokenBrush("Surface"), new HavenPen(new HavenTokenBrush("Accent"), 2), opacity));
-        }
         if (Math.Abs(rotation) > .001) context.Add(new HavenPopTransformCommand(rect));
+        if (showHandles && !element.Locked)
+        {
+            var radius = HandleRadius(rect);
+            foreach (var (_, point) in HandlePoints(rect, rotation))
+                context.Add(new HavenEllipseCommand(new HavenRect(point.X - radius, point.Y - radius, radius * 2, radius * 2), new HavenTokenBrush("Surface"), new HavenPen(new HavenTokenBrush("Accent"), 1.5), opacity));
+            var top = RotatePoint(new HavenPoint(center.X, rect.Y), center, rotation);
+            var rotate = RotatePoint(new HavenPoint(center.X, rect.Y - 28), center, rotation);
+            context.Add(new HavenLineCommand(top, rotate, new HavenPen(new HavenTokenBrush("Accent"), 1), opacity));
+        }
     }
 
     private void DrawMarquee(HavenDrawingContext context, double opacity)
     {
-        if (!_marqueeSelecting || DistanceSquared(_pointerStart, _pointerCurrent) < 4) return;
+        if (!_marqueeSelecting || !_gestureActivated) return;
         var rect = NormalizeRect(_pointerStart, _pointerCurrent);
         var absolute = new HavenRect(Bounds.X + rect.X, Bounds.Y + rect.Y, rect.Width, rect.Height);
         context.Add(new HavenFillRoundedRectCommand(absolute, new HavenTokenBrush("AccentSubtle"), 2, opacity * .35));
@@ -173,15 +183,17 @@ internal sealed partial class PresentSlideCanvas
     {
         var center = Center(rect);
         yield return (PresentTransformHandle.NorthWest, RotatePoint(new HavenPoint(rect.X, rect.Y), center, rotation));
-        yield return (PresentTransformHandle.NorthEast, RotatePoint(new HavenPoint(rect.Right, rect.Y), center, rotation));
-        yield return (PresentTransformHandle.SouthWest, RotatePoint(new HavenPoint(rect.X, rect.Bottom), center, rotation));
+        if (rect.Height >= 14 && rect.Width >= 14) yield return (PresentTransformHandle.NorthEast, RotatePoint(new HavenPoint(rect.Right, rect.Y), center, rotation));
+        if (rect.Height >= 14 && rect.Width >= 14) yield return (PresentTransformHandle.SouthWest, RotatePoint(new HavenPoint(rect.X, rect.Bottom), center, rotation));
         yield return (PresentTransformHandle.SouthEast, RotatePoint(new HavenPoint(rect.Right, rect.Bottom), center, rotation));
-        yield return (PresentTransformHandle.North, RotatePoint(new HavenPoint(center.X, rect.Y), center, rotation));
-        yield return (PresentTransformHandle.South, RotatePoint(new HavenPoint(center.X, rect.Bottom), center, rotation));
-        yield return (PresentTransformHandle.West, RotatePoint(new HavenPoint(rect.X, center.Y), center, rotation));
-        yield return (PresentTransformHandle.East, RotatePoint(new HavenPoint(rect.Right, center.Y), center, rotation));
+        if (rect.Width >= 32) yield return (PresentTransformHandle.North, RotatePoint(new HavenPoint(center.X, rect.Y), center, rotation));
+        if (rect.Width >= 32) yield return (PresentTransformHandle.South, RotatePoint(new HavenPoint(center.X, rect.Bottom), center, rotation));
+        if (rect.Height >= 32) yield return (PresentTransformHandle.West, RotatePoint(new HavenPoint(rect.X, center.Y), center, rotation));
+        if (rect.Height >= 32) yield return (PresentTransformHandle.East, RotatePoint(new HavenPoint(rect.Right, center.Y), center, rotation));
         yield return (PresentTransformHandle.Rotate, RotatePoint(new HavenPoint(rect.X + rect.Width / 2, rect.Y - 28), center, rotation));
     }
+
+    private static double HandleRadius(HavenRect rect) => Math.Clamp(Math.Min(rect.Width, rect.Height) / 4, 2, TransformHandleRadius);
 
     private static HavenPoint Center(HavenRect rect) => new(rect.X + rect.Width / 2, rect.Y + rect.Height / 2);
 

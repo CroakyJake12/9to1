@@ -60,6 +60,8 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
         AttachedToVisualTree += (_, _) => AttachTopLevelPointerObserver();
         DetachedFromVisualTree += (_, _) =>
         {
+            _input?.CancelPointer();
+            _input?.PointerExited();
             DetachTopLevelPointerObserver();
             _animationTimer.Stop();
         };
@@ -110,6 +112,8 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
         set
         {
             if (ReferenceEquals(_root, value)) return;
+            _input?.CancelPointer();
+            _input?.PointerExited();
             ClearSubscriptions();
             _root = value;
             _input = value is null ? null : new HavenInputRouter(value);
@@ -297,13 +301,20 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
     }
 
     private HavenCursor? _pointerCursor;
+    private HavenCursor? _cursorOverride;
+    public void SetCursorOverride(HavenCursor? cursor)
+    {
+        _cursorOverride = cursor;
+        UpdatePointerCursor(default);
+    }
     private void UpdatePointerCursor(Point point)
     {
-        var cursor = _input?.CursorAt(new HavenPoint(point.X, point.Y)) ?? HavenCursor.Default;
+        var cursor = _cursorOverride ?? _input?.CursorAt(new HavenPoint(point.X, point.Y)) ?? HavenCursor.Default;
         if (_pointerCursor == cursor) return;
         _pointerCursor = cursor;
         Cursor = new Cursor(cursor switch
         {
+            HavenCursor.NotAllowed => StandardCursorType.No,
             HavenCursor.Pointer => StandardCursorType.Hand,
             HavenCursor.Text => StandardCursorType.Ibeam,
             HavenCursor.Grab or HavenCursor.Grabbing or HavenCursor.Move => StandardCursorType.SizeAll,
@@ -372,6 +383,8 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
     {
         base.OnPointerCaptureLost(e);
         if (_input?.CancelPointer() != true) return;
+        _pointerCursor = null;
+        Cursor = Cursor.Default;
         InvalidateScene();
     }
 

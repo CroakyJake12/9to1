@@ -237,6 +237,11 @@ var assertions = await headless.Dispatch(async () =>
             "actual New commits same opaque presentation ID/revision and complete original owner model");
         var scene = root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single().GetVisualDescendants().OfType<HavenSceneControl>().Single();
         var canvas = scene.Root!;
+        if (args.Contains("engine", StringComparer.Ordinal))
+        {
+            await PresentInteractionEngineChecks.Run(window, root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single(), session, Check);
+            return count;
+        }
         if (args.Contains("interaction", StringComparer.Ordinal))
         {
             var sceneControl = root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single();
@@ -460,14 +465,16 @@ var assertions = await headless.Dispatch(async () =>
             await Click("Properties", () => { session.TryGetValue("ShowInspector", out var shown); return shown is true; }); FitFrame("fit-properties");
             await Click("Speaker notes", () => { session.TryGetValue("ShowNotes", out var shown); return shown is false; }); FitFrame("fit-properties-no-notes");
             await Click("Close properties", () => { session.TryGetValue("ShowInspector", out var shown); return shown is false; });
-            await Click("Zoom in", () => session.CanvasZoom > 1);
+            var beforeZoom = root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single().EffectiveZoom;
+            await Click("Zoom in", () => !session.IsFitToWindow && session.CanvasZoom > beforeZoom);
             using (var frame = window.CaptureRenderedFrame()) frame!.Save(Path.Combine(paths.DataDirectory, "zoom-in.png"));
             Check(CurrentSlideRect().Width > 200, "zoom-in retains the real editable slide");
-            await Click("Fit slide", () => session.CanvasZoom == 1); FitFrame("fit-after-zoom");
-            await Click("Zoom out", () => session.CanvasZoom < 1);
+            await Click("Fit slide", () => session.IsFitToWindow); FitFrame("fit-after-zoom");
+            beforeZoom = root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single().EffectiveZoom;
+            await Click("Zoom out", () => !session.IsFitToWindow && session.CanvasZoom < beforeZoom);
             using (var frame = window.CaptureRenderedFrame()) frame!.Save(Path.Combine(paths.DataDirectory, "zoom-out.png"));
             var small = CurrentSlideRect();
-            await Click("Fit slide", () => session.CanvasZoom == 1); FitFrame("fit-after-zoom-out");
+            await Click("Fit slide", () => session.IsFitToWindow); FitFrame("fit-after-zoom-out");
             Check(CurrentSlideRect().Width > small.Width, "Fit restores the full calculated scale after zoom-out");
             await Click("Save", () => !session.IsDirty);
             await Click("Close", () => session.DocumentId is null);

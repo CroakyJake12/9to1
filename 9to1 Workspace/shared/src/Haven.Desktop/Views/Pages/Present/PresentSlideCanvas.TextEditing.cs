@@ -65,7 +65,7 @@ internal sealed partial class PresentSlideCanvas
         _textSelectionAnchor = modifiers.Shift ? 0 : null;
         _textPointerSelecting = true;
         ResetDirectGesture();
-        Invalidate();
+        InvalidateInteraction();
     }
 
     private bool TryHandleTextPointerPress(HavenPointerInput input)
@@ -78,7 +78,7 @@ internal sealed partial class PresentSlideCanvas
         else _textSelectionAnchor ??= _textCaret;
         _textCaret = next;
         _textPointerSelecting = true;
-        Invalidate();
+        InvalidateInteraction();
         return true;
     }
 
@@ -88,7 +88,7 @@ internal sealed partial class PresentSlideCanvas
         var point = rotation == 0 ? input.LocalPosition : InverseRotatePoint(input.LocalPosition, rect, rotation);
         _textSelectionAnchor ??= _textCaret;
         _textCaret = CaretFromPoint(rect, point);
-        Invalidate();
+        InvalidateInteraction();
         return true;
     }
 
@@ -97,7 +97,7 @@ internal sealed partial class PresentSlideCanvas
         if (!_textPointerSelecting) return false;
         _textPointerSelecting = false;
         if (_textSelectionAnchor == _textCaret) _textSelectionAnchor = null;
-        Invalidate();
+        InvalidateInteraction();
         return true;
     }
 
@@ -140,10 +140,12 @@ internal sealed partial class PresentSlideCanvas
 
     public bool KeyDown(HavenKey key, HavenInputModifiers modifiers)
     {
+        if (key == HavenKey.Escape && (HasDirectGesture || _insertionPreset is not null)) { CancelInteraction(); return true; }
         if (!IsTextEditing)
         {
+            if (key == HavenKey.Escape && _selectedIds.Count > 0) { SelectionSetRequested?.Invoke(Array.Empty<Guid>()); return true; }
             if (key == HavenKey.Enter && _slide is not null && _selectedIds.Count == 1
-                && _slide.Elements.FirstOrDefault(element => _selectedIds.Contains(element.Id)) is { Kind: PresentElementKind.Text } text)
+                && _slide.Elements.FirstOrDefault(element => _selectedIds.Contains(element.Id)) is { Kind: PresentElementKind.Text, Locked: false } text)
             {
                 BeginElementTextEdit(text, Center(ElementRect(text, SlideRectLocal(), false)), default);
                 return true;
@@ -153,7 +155,7 @@ internal sealed partial class PresentSlideCanvas
 
         if (modifiers.Control && key == HavenKey.A)
         {
-            _textSelectionAnchor = 0; _textCaret = _editingText.Length; Invalidate(); return true;
+            _textSelectionAnchor = 0; _textCaret = _editingText.Length; InvalidateInteraction(); return true;
         }
         if (key == HavenKey.Escape) { CommitTextEdit(); return true; }
         if (modifiers.Control && key == HavenKey.Enter) { CommitTextEdit(); return true; }
@@ -197,7 +199,7 @@ internal sealed partial class PresentSlideCanvas
         var changed = !string.Equals(_editingOriginal, _editingText, StringComparison.Ordinal);
         ClearTextEditState();
         if (changed) TextEditCommitRequested?.Invoke(this, EventArgs.Empty);
-        Invalidate();
+        InvalidateInteraction();
     }
 
     public void CancelTextEdit()
@@ -206,14 +208,14 @@ internal sealed partial class PresentSlideCanvas
         var changed = !string.Equals(_editingOriginal, _editingText, StringComparison.Ordinal);
         ClearTextEditState();
         if (changed) TextEditCancelRequested?.Invoke(this, EventArgs.Empty);
-        Invalidate();
+        InvalidateInteraction();
     }
 
     private void PreviewText()
     {
         if (_textEditTarget == PresentTextEditTarget.SlideTitle) TitleTextPreviewRequested?.Invoke(_editingText);
         else if (_textEditTarget == PresentTextEditTarget.Element && _textEditElementId is { } id) ElementTextPreviewRequested?.Invoke(id, _editingText);
-        Invalidate();
+        InvalidateInteraction();
     }
 
     private void ClearTextEditState()
@@ -236,7 +238,7 @@ internal sealed partial class PresentSlideCanvas
         else _textSelectionAnchor = null;
         _textCaret = next;
         if (_textSelectionAnchor == _textCaret) _textSelectionAnchor = null;
-        Invalidate();
+        InvalidateInteraction();
     }
 
     private bool TrySelection(out int start, out int end)

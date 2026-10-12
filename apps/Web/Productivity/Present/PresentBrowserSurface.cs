@@ -75,6 +75,8 @@ public static class PresentBrowserSurface
         {
             _session = session; Control = new(reduceMotion); Playback = new(reduceMotion); Thumbnails = new(reduceMotion);
             _session.CanvasTextCommands = Control;
+            _session.EffectiveCanvasZoom = () => Control.EffectiveZoom;
+            Control.ZoomRequested += _session.SetCanvasZoom;
             Thumbnails.SetPreviewRenderer(PresentRetainedSceneControl.CreatePreviewRenderer());
             Control.LiveTextPreviewed += Preview;
             Control.SelectionChanged += Selection;
@@ -112,7 +114,7 @@ public static class PresentBrowserSurface
             if (_disposed) return;
             Control.SetInputAllowed(_session.IsPresentationAdmitted && _session.IsWorkspaceActive && !_session.IsBusy && !_session.IsReadOnly && !_session.HasUnknownCommitOutcome && !_session.IsPlaying && _session.Editor is not null);
             Control.SetEditor(_session.Editor);
-            Control.SetZoom(_session.CanvasZoom);
+            Control.SetZoom(_session.CanvasZoom, _session.IsFitToWindow);
             Playback.SetEditor(_session.IsPlaying ? _session.Editor : null);
             Thumbnails.SetEditor(_session.Editor, _session.IsPresentationAdmitted && _session.IsWorkspaceActive && !_session.IsBusy && !_session.HasUnknownCommitOutcome, !_session.IsReadOnly);
         }
@@ -156,7 +158,8 @@ public static class PresentBrowserSurface
         public void Dispose()
         {
             if (_disposed) return;
-            if (ReferenceEquals(_session.CanvasTextCommands, Control)) _session.CanvasTextCommands = null;
+            Control.ZoomRequested -= _session.SetCanvasZoom;
+            if (ReferenceEquals(_session.CanvasTextCommands, Control)) { _session.CanvasTextCommands = null; _session.EffectiveCanvasZoom = null; }
             if (_topLevel is not null) { _topLevel.PropertyChanged -= ViewportChanged; _topLevel.RemoveHandler(InputElement.KeyDownEvent, KeyDown); }
             _topLevel = null;
             Control.AttachedToVisualTree -= Attached;

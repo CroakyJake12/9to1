@@ -22,6 +22,12 @@ public interface IHavenCursorInputTarget
     HavenCursor GetCursor(HavenPoint localPosition);
 }
 
+/// <summary>Non-capturing hover feedback. Null means the pointer left this surface.</summary>
+public interface IHavenHoverInputTarget
+{
+    void PointerHovered(HavenPoint? localPosition);
+}
+
 /// <summary>Consumes raw pointer press/move/release without exposing a platform input type to Haven.UI.</summary>
 public interface IHavenPointerInputTarget
 {
