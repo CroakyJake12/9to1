@@ -65,6 +65,8 @@ public static class CuiCustomThemeContract
         MaxDepth = 16
     };
 
+    private static readonly CuiCustomThemeJsonContext JsonContext = new(JsonOptions);
+
     public static CuiCustomTheme CreateDefault(string name = "My theme", string? id = null)
     {
         var normal = new CuiCustomFont("Montserrat", 500, 14);
@@ -81,13 +83,18 @@ public static class CuiCustomThemeContract
             throw Error("JSON", "A custom theme must be a non-empty bounded JSON document.");
         try
         {
-            return Validate(JsonSerializer.Deserialize<CuiCustomTheme>(json, JsonOptions)
+            return Validate(JsonSerializer.Deserialize(json, JsonContext.CuiCustomTheme)
                 ?? throw Error("JSON", "A custom theme cannot be null."));
         }
         catch (JsonException) { throw Error("JSON", "The custom theme document is malformed or has unknown fields."); }
     }
 
-    public static string Serialize(CuiCustomTheme theme) => JsonSerializer.Serialize(Validate(theme), JsonOptions);
+    public static string Serialize(CuiCustomTheme theme)
+    {
+        var json = JsonSerializer.Serialize(Validate(theme), JsonContext.CuiCustomTheme);
+        if (json.Length > MaximumJsonLength) throw Error("JSON", "The custom theme exceeds its size limit.");
+        return json;
+    }
 
     public static IReadOnlyList<CuiCustomTheme> DeserializeLibrary(string json)
     {
@@ -95,7 +102,7 @@ public static class CuiCustomThemeContract
             throw Error("LIBRARY", "The custom theme library is empty or exceeds its size limit.");
         try
         {
-            return ValidateLibrary(JsonSerializer.Deserialize<CuiCustomTheme[]>(json, JsonOptions)
+            return ValidateLibrary(JsonSerializer.Deserialize(json, JsonContext.CuiCustomThemeArray)
                 ?? throw Error("LIBRARY", "The custom theme library cannot be null."));
         }
         catch (JsonException) { throw Error("LIBRARY", "The custom theme library is malformed."); }
@@ -103,7 +110,7 @@ public static class CuiCustomThemeContract
 
     public static string SerializeLibrary(IEnumerable<CuiCustomTheme> themes)
     {
-        var json = JsonSerializer.Serialize(ValidateLibrary(themes), JsonOptions);
+        var json = JsonSerializer.Serialize(ValidateLibrary(themes).ToArray(), JsonContext.CuiCustomThemeArray);
         if (json.Length > MaximumLibraryJsonLength) throw Error("LIBRARY", "The custom theme library exceeds its size limit.");
         return json;
     }
@@ -201,3 +208,7 @@ public static class CuiCustomThemeContract
     }
     private static CuiCustomThemeException Error(string code, string message) => new("CUI_CUSTOM_" + code, message);
 }
+
+[JsonSerializable(typeof(CuiCustomTheme))]
+[JsonSerializable(typeof(CuiCustomTheme[]))]
+internal partial class CuiCustomThemeJsonContext : JsonSerializerContext;

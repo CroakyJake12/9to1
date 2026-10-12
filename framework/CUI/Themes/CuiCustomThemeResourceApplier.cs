@@ -1,0 +1,142 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+
+namespace CakeOS.Cui.Themes;
+
+public enum CuiFontRole { Main, PrimaryButton, SecondaryButton, TertiaryButton, Heading, Body, Code }
+public enum CuiAccentRole { None, Primary, Secondary, Tertiary }
+
+/// <summary>Backend conversion of a validated portable custom theme into existing shared CUI resources.</summary>
+public static class CuiCustomThemeResourceApplier
+{
+    public static void ApplyToResources(ResourceDictionary resources, CuiCustomTheme theme,
+        CuiAccessibilitySettings? accessibility = null)
+    {
+        ArgumentNullException.ThrowIfNull(resources);
+        var value = theme.Validate();
+        var settings = (accessibility ?? CuiAccessibilitySettings.Default).Validate();
+        resources["CuiCustomTypography"] = value.Fonts;
+        resources["CuiCustomFontScale"] = settings.DisplayScale;
+        resources["CuiButtonRoundnessPercent"] = value.ButtonRoundnessPercent;
+        resources["CuiInterfaceFontFamily"] = new FontFamily(CuiCustomThemeFonts.ResourceFamily(value.Fonts.Main.Family));
+        resources["CuiFontWeightBody"] = (FontWeight)value.Fonts.Main.Weight;
+        resources["CuiFontSizeBody"] = value.Fonts.Main.Size * settings.DisplayScale;
+        resources["CuiFontFamilyInterface"] = CuiCustomThemeFonts.ResourceFamily(value.Fonts.Main.Family);
+        resources["CuiFontFamilyCode"] = CuiCustomThemeFonts.ResourceFamily(value.Fonts.Code.Family);
+        resources["CuiFontSizeHeading"] = value.Fonts.Heading.Size * settings.DisplayScale;
+        resources["CuiFontSizeCode"] = value.Fonts.Code.Size * settings.DisplayScale;
+        if (!settings.HighContrast)
+        {
+            ApplyFill(resources, "Primary", value.PrimaryAccent);
+            ApplyFill(resources, "Secondary", value.SecondaryAccent);
+            ApplyFill(resources, "Tertiary", value.TertiaryAccent);
+            resources["CuiAccentBrush"] = resources["CuiAccentPrimaryBrush"];
+            resources["HavenAccentBrush"] = resources["CuiAccentPrimaryBrush"];
+            resources["PrimaryBrush"] = resources["CuiAccentPrimaryBrush"];
+        }
+    }
+
+    private static void ApplyFill(ResourceDictionary resources, string role, CuiCustomFill fill)
+    {
+        var brush = CreateBrush(fill);
+        resources[$"CuiAccent{role}Brush"] = brush;
+        resources[$"HavenAccent{role}Brush"] = brush;
+        // A role keeps its authored fill through interaction; the shared focus,
+        // pressed and disabled state contracts remain independently projected.
+        resources[$"CuiAccent{role}HoverBrush"] = brush;
+        resources[$"CuiAccent{role}PressedBrush"] = brush;
+        resources[$"CuiAccent{role}Fill"] = fill;
+        var background = resources["CuiPanelBrush"] is ISolidColorBrush panel ? panel.Color : Colors.Black;
+        var colours = fill.Kind switch
+        {
+            CuiCustomFillKind.Gradient => fill.Gradient!.Stops.Select(stop => Colour(stop.Colour)),
+            CuiCustomFillKind.Pattern => new[] { Colour(fill.Pattern!.Foreground), Colour(fill.Pattern.Background) },
+            _ => new[] { Colour(fill.Colour) }
+        };
+        var samples = colours.Select(colour => Color.FromRgb(
+            (byte)Math.Round(colour.R * colour.A / 255d + background.R * (1 - colour.A / 255d)),
+            (byte)Math.Round(colour.G * colour.A / 255d + background.G * (1 - colour.A / 255d)),
+            (byte)Math.Round(colour.B * colour.A / 255d + background.B * (1 - colour.A / 255d)))).ToArray();
+        var ink = samples.Min(colour => CuiContrast.Ratio(Colors.Black, colour)) >= samples.Min(colour => CuiContrast.Ratio(Colors.White, colour)) ? Colors.Black : Colors.White;
+        resources[$"CuiAccent{role}ForegroundBrush"] = new SolidColorBrush(ink).ToImmutable();
+    }
+
+    public static IBrush CreateBrush(CuiCustomFill fill)
+    {
+        var value = CuiCustomThemeContract.ValidateFill(fill);
+        return value.Kind switch
+        {
+            CuiCustomFillKind.SolidColour => new SolidColorBrush(Colour(value.Colour)).ToImmutable(),
+            CuiCustomFillKind.Gradient => Gradient(value.Gradient!).ToImmutable(),
+            CuiCustomFillKind.Pattern => Pattern(value.Pattern!),
+            _ => throw new ArgumentOutOfRangeException(nameof(fill))
+        };
+    }
+
+    public static Color Colour(CuiCustomColour value)
+    {
+        var colour = Color.Parse(value.Hex);
+        return Color.FromArgb((byte)Math.Round(255 * (1 - value.TransparencyPercent / 100)), colour.R, colour.G, colour.B);
+    }
+
+    private static GradientBrush Gradient(CuiCustomGradient value)
+    {
+        var angle = value.Angle * Math.PI / 180;
+        GradientBrush result = value.Kind switch
+        {
+            CuiCustomGradientKind.Linear => new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(.5 - Math.Cos(angle) / 2, .5 - Math.Sin(angle) / 2, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(.5 + Math.Cos(angle) / 2, .5 + Math.Sin(angle) / 2, RelativeUnit.Relative)
+            },
+            CuiCustomGradientKind.Radial => new RadialGradientBrush
+            {
+                Center = new RelativePoint(value.CenterX, value.CenterY, RelativeUnit.Relative),
+                GradientOrigin = new RelativePoint(value.CenterX, value.CenterY, RelativeUnit.Relative),
+                Radius = value.Radius
+            },
+            CuiCustomGradientKind.Conic => new ConicGradientBrush
+            {
+                Center = new RelativePoint(value.CenterX, value.CenterY, RelativeUnit.Relative), Angle = value.Angle
+            },
+            _ => throw new ArgumentOutOfRangeException(nameof(value))
+        };
+        foreach (var stop in value.Stops) result.GradientStops.Add(new GradientStop(Colour(stop.Colour), stop.Offset));
+        return result;
+    }
+
+    private static DrawingBrush Pattern(CuiCustomPattern value)
+    {
+        var cell = value.Size + value.Spacing;
+        var extent = value.Kind == CuiCustomPatternKind.Checkerboard ? cell * 2 : cell;
+        var group = new DrawingGroup();
+        var foreground = new SolidColorBrush(Colour(value.Foreground)).ToImmutable();
+        var background = new GeometryGroup { FillRule = FillRule.EvenOdd };
+        background.Children.Add(new RectangleGeometry(new Rect(0, 0, extent, extent)));
+        group.Children.Add(new GeometryDrawing(new SolidColorBrush(Colour(value.Background)).ToImmutable(), null, background));
+        switch (value.Kind)
+        {
+            case CuiCustomPatternKind.Stripes:
+                group.Children.Add(new GeometryDrawing(foreground, null, new RectangleGeometry(new Rect(0, 0, value.Size, extent))));
+                break;
+            case CuiCustomPatternKind.Checkerboard:
+                group.Children.Add(new GeometryDrawing(foreground, null, new RectangleGeometry(new Rect(0, 0, value.Size, value.Size))));
+                group.Children.Add(new GeometryDrawing(foreground, null, new RectangleGeometry(new Rect(cell, cell, value.Size, value.Size))));
+                break;
+            case CuiCustomPatternKind.Dots:
+                group.Children.Add(new GeometryDrawing(foreground, null,
+                    new EllipseGeometry(new Rect(value.Spacing / 2, value.Spacing / 2, value.Size, value.Size))));
+                break;
+        }
+        foreach (var drawing in group.Children.Skip(1).OfType<GeometryDrawing>())
+            background.Children.Add(drawing.Geometry!.Clone());
+        return new DrawingBrush(group)
+        {
+            TileMode = TileMode.Tile, Stretch = Stretch.None,
+            SourceRect = new RelativeRect(0, 0, extent, extent, RelativeUnit.Absolute),
+            DestinationRect = new RelativeRect(0, 0, extent, extent, RelativeUnit.Absolute),
+            Transform = new RotateTransform(value.Angle), TransformOrigin = RelativePoint.Center
+        };
+    }
+}

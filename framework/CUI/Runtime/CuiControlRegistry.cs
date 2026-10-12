@@ -331,17 +331,17 @@ public sealed class CuiControlRegistry
         }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         var text = common.Concat(new[]
         {
-            "Text", "Foreground", "FontFamily", "FontSize", "FontWeight", "FontStyle", "TextDecoration",
+            "Text", "Foreground", "FontFamily", "FontSize", "FontWeight", "FontStyle", "FontRole", "TextDecoration",
             "TextWrapping", "TextAlignment", "VerticalTextAlignment"
         }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         var input = common.Concat(new[]
         {
             "Type", "Text", "Value", "Checked", "IsChecked", "PlaceholderText", "AcceptsReturn", "Foreground",
-            "Background", "FontFamily", "FontSize", "FontWeight", "FontStyle", "TextWrapping", "ItemsSource", "SelectedIndex", "Minimum", "Maximum", "Increment", "ResizeEdge", "PasswordChar", "Watermark", "Padding", "CornerRadius", "Content", "WriteBack", "Border", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness", "FocusRequested", "SelectOnFocusRequest"
+            "Background", "FontFamily", "FontSize", "FontWeight", "FontStyle", "FontRole", "TextWrapping", "ItemsSource", "SelectedIndex", "Minimum", "Maximum", "Increment", "ResizeEdge", "PasswordChar", "Watermark", "Padding", "CornerRadius", "Content", "WriteBack", "Border", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness", "FocusRequested", "SelectOnFocusRequest"
         }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         var content = common.Concat(new[]
         {
-            "Content", "Text", "Type", "Foreground", "Background", "FontFamily", "FontSize", "FontWeight", "FontStyle", "Padding", "CornerRadius", "HorizontalContentAlignment", "VerticalContentAlignment", "Border", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness"
+            "Content", "Text", "Type", "Foreground", "Background", "FontFamily", "FontSize", "FontWeight", "FontStyle", "FontRole", "AccentRole", "Padding", "CornerRadius", "HorizontalContentAlignment", "VerticalContentAlignment", "Border", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness"
         }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         var entries = new (string Name, bool Specialized, string[] Aliases)[]
         {
@@ -414,6 +414,8 @@ public sealed class CuiControlRegistry
             ("ColumnSpan", "integer", typeof(int), true), ("RowSpan", "integer", typeof(int), true),
             ("FontFamily", "font-family", typeof(Avalonia.Media.FontFamily), true), ("FontSize", "length", typeof(double), true),
             ("FontWeight", "font-weight", typeof(Avalonia.Media.FontWeight), true),
+            ("FontRole", "symbol", typeof(CakeOS.Cui.Themes.CuiFontRole), true),
+            ("AccentRole", "symbol", typeof(CakeOS.Cui.Themes.CuiAccentRole), true),
             ("FontStyle", "font-style", typeof(Avalonia.Media.FontStyle), true),
             ("TextDecoration", "text-decoration", typeof(Avalonia.Media.TextDecorationCollection), true),
             ("TextWrapping", "symbol", typeof(Avalonia.Media.TextWrapping), true),
@@ -477,6 +479,8 @@ public sealed class CuiControlRegistry
             "TextAlignment" => new[] { "Left", "Center", "Right", "Justify" },
             "TextWrapping" => new[] { "NoWrap", "Wrap", "WrapWithOverflow" },
             "FontStyle" => new[] { "Normal", "Italic", "Oblique" },
+            "FontRole" => Enum.GetNames<CakeOS.Cui.Themes.CuiFontRole>(),
+            "AccentRole" => Enum.GetNames<CakeOS.Cui.Themes.CuiAccentRole>(),
             "Stretch" => new[] { "None", "Fill", "Uniform", "UniformToFill" },
             "Cursor" => new[] { "Arrow", "Hand", "IBeam", "Wait", "Cross", "SizeAll" },
             "Placement" => new[] { "Top", "Bottom", "Left", "Right", "Center", "Absolute" },

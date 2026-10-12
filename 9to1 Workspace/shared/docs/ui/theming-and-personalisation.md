@@ -5,6 +5,49 @@ profile pictures work — and how apps consume them. Implementation lives in
 `src/Haven.Desktop/HavenUI/Tokens/`, `Controls/SurfacePaletteCatalog.cs`,
 `HavenUI/Tokens` applier, and `Services/UserPreferencesService.cs`.
 
+## Current shared CUI account themes
+
+The current user-directed theme creator uses `framework/CUI/Themes/CuiCustomTheme.cs`.
+`CuiCustomThemeContract` validates bounded declarative values and produces canonical
+JSON for the existing Home account preference owner. It contains no executable
+expressions, downloaded assets, renderer objects, credentials or document formatting.
+A library contains at most 32 themes (1 MiB), with stable UUIDs and unique names.
+Home/account transport owns durable compare-and-swap, authorisation and cache scope;
+the CUI catalog is only a presentation view of that observation.
+
+The built-in choices now include Professional, Glow, Playful, Frosted Glass,
+Bubble, Metallic, Retro and Western. Existing Cinematic numeric ID 4 remains
+readable; new IDs are appended after Professional 5. Each custom theme has three
+independent solid, linear/radial/conic gradient or stripes/checkerboard/dots pattern
+fills; each colour retains transparency and Gaussian backdrop radius. Solid and
+multi-colour backdrop execution uses the shared material renderer, separately from
+Professional's Mica treatment; a foreground blur does not satisfy that contract.
+
+Seven explicit typography roles are Main, PrimaryButton, SecondaryButton,
+TertiaryButton, Heading, Body and Code. The creator offers only packaged families
+and available weights, so a missing OS font cannot silently replace the selection.
+Custom selections are an explicit user override of the historical Montserrat-only
+chrome rule; the built-in interface still uses bundled Montserrat. Theme typography
+does not modify authored document text. `FontRole` selects a role on ordinary CUI
+text, input or button controls. `AccentRole` on a button selects Primary, Secondary
+or Tertiary fill and, unless explicitly overridden, its corresponding button font.
+Authored Definition/Instance/Region values retain normal precedence over Theme.
+Button roundness is a percentage of half the actual shortest control dimension:
+0 is square and 100 is fully rounded, recalculated when the control is resized.
+
+`CuiThemeDefinitionCatalog.UpsertCustomTheme` and `RemoveCustomTheme` publish a
+local catalog change without writing Home or inventing a Home revision. The theme
+creator can use a fixed named scope and private draft ID for a real live preview.
+`ReplaceAccountCustomThemes` atomically replaces only account-owned IDs and retains
+that draft. `CuiThemePreferenceContext` reconciles the signed-in account observation
+and refreshes named scopes when the catalog changes. Resource snapshots include
+the canonical custom fingerprint; same-name edits therefore update the existing
+controls. Mutable pattern drawing resources are copied per renderer owner.
+
+The sections below describe the historical Desktop personalisation pipeline where
+it has not yet been migrated to the shared account contract; they are not evidence
+that the browser implementation has passed native device or whole-app acceptance.
+
 ## The model
 
 ```text

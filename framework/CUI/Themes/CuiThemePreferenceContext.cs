@@ -2,7 +2,7 @@ namespace CakeOS.Cui.Themes;
 
 /// <summary>Observation issued by the owning Home settings service, including its authorised offline cache.</summary>
 public sealed record CuiThemePreferenceSnapshot(string Name, long Revision, string ScopeId, bool FromCache,
-    CuiAccessibilitySettings Accessibility, CuiAppearance? Appearance = null, CuiAccentPreference? Accent = null)
+    CuiAccessibilitySettings Accessibility, CuiAppearance? Appearance = null, CuiAccentPreference? Accent = null, string? CustomThemesJson = null)
 {
     public CuiAccentPreference EffectiveAccent => Accent ?? CuiAccentPreference.Default;
 }
@@ -28,6 +28,9 @@ public sealed class CuiThemePreferenceContext : IDisposable
     private readonly CuiThemeDefinitionCatalog _catalog;
     private CuiThemePreferenceSnapshot _lastSnapshot;
     private bool _disposed;
+    private bool _synchronizingCatalog;
+    private string? _accountCustomJson;
+    private string[] _accountCustomIds = [];
     private readonly HashSet<EventHandler> _failedObservers = [];
     public CuiThemeResolution Current { get; private set; }
     public long ObserverFailureCount { get; private set; }
@@ -37,13 +40,33 @@ public sealed class CuiThemePreferenceContext : IDisposable
     public CuiThemePreferenceContext(ICuiThemePreferenceSource source, CuiThemeDefinitionCatalog? catalog = null)
     {
         _source = source ?? throw new ArgumentNullException(nameof(source));
-        _catalog = catalog ?? new(); _lastSnapshot = source.Current; Current = Resolve(_lastSnapshot);
+        _catalog = catalog ?? new(); _lastSnapshot = source.Current; SynchronizeCatalog(_lastSnapshot); Current = Resolve(_lastSnapshot);
         source.Changed += SourceChanged;
+        _catalog.Changed += CatalogChanged;
     }
     public CuiThemeResolution ResolveScope(string? name)
     {
         if (string.IsNullOrWhiteSpace(name) || name.Equals("user_preference", StringComparison.OrdinalIgnoreCase) || name.Equals("Default", StringComparison.OrdinalIgnoreCase)) return Current;
         return Resolve(new(name, Current.Revision, Current.ScopeId ?? string.Empty, Current.FromCache, Current.Accessibility, Current.Appearance, Current.Accent));
+    }
+    private void SynchronizeCatalog(CuiThemePreferenceSnapshot snapshot)
+    {
+        if (snapshot.Revision < 0 || string.IsNullOrWhiteSpace(snapshot.ScopeId))
+            throw new ArgumentException("A Home theme observation requires a valid revision and explicit scope.", nameof(snapshot));
+        snapshot.Accessibility.Validate();
+        if (snapshot.Appearance is { } appearance && !Enum.IsDefined(appearance))
+            throw new ArgumentOutOfRangeException(nameof(snapshot), "Unknown CUI appearance.");
+        if (_accountCustomJson == snapshot.CustomThemesJson) return;
+        var themes = snapshot.CustomThemesJson is null ? Array.Empty<CuiCustomTheme>() : CuiCustomThemeContract.DeserializeLibrary(snapshot.CustomThemesJson);
+        _synchronizingCatalog = true;
+        try { _catalog.ReplaceAccountCustomThemes(themes, _accountCustomIds); }
+        finally { _synchronizingCatalog = false; }
+        _accountCustomIds = themes.Select(item => item.Id).ToArray();
+        _accountCustomJson = snapshot.CustomThemesJson;
+    }
+    private void CatalogChanged(object? sender, EventArgs args)
+    {
+        if (!_disposed && !_synchronizingCatalog) Publish(_source.Current, force: true);
     }
     private CuiThemeResolution Resolve(CuiThemePreferenceSnapshot snapshot)
     {
@@ -65,11 +88,16 @@ public sealed class CuiThemePreferenceContext : IDisposable
     private void SourceChanged(object? sender, EventArgs args)
     {
         if (_disposed) return;
-        var snapshot = _source.Current;
+        Publish(_source.Current, force: false);
+    }
+    private void Publish(CuiThemePreferenceSnapshot snapshot, bool force)
+    {
+        if (snapshot.ScopeId == Current.ScopeId && snapshot.Revision < Current.Revision) return;
+        SynchronizeCatalog(snapshot);
         var next = Resolve(snapshot);
         // A new scope may legitimately restart revision numbering; never merge scopes.
         if (next.ScopeId == Current.ScopeId && next.Revision < Current.Revision) return;
-        var unchanged = snapshot == _lastSnapshot && next.Theme.Name == Current.Theme.Name && next.UsedFallback == Current.UsedFallback;
+        var unchanged = !force && snapshot == _lastSnapshot && next.Theme.Name == Current.Theme.Name && next.Theme.CustomFingerprint == Current.Theme.CustomFingerprint && next.UsedFallback == Current.UsedFallback;
         if (unchanged && _failedObservers.Count == 0) return;
         Current = next; _lastSnapshot = snapshot;
         var observers = Changed?.GetInvocationList().Cast<EventHandler>().ToArray() ?? [];
@@ -95,5 +123,5 @@ public sealed class CuiThemePreferenceContext : IDisposable
         }
         if (_failedObservers.Count == 0) ObserverDiagnostic = null;
     }
-    public void Dispose() { if (_disposed) return; _disposed = true; _source.Changed -= SourceChanged; _failedObservers.Clear(); Changed = null; }
+    public void Dispose() { if (_disposed) return; _disposed = true; _source.Changed -= SourceChanged; _catalog.Changed -= CatalogChanged; _failedObservers.Clear(); Changed = null; }
 }

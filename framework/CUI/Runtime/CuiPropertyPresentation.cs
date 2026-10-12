@@ -77,6 +77,11 @@ public static class CuiPropertyPresentation
         private bool _applying;
         private bool _selected;
         private bool _dragging;
+        private CuiFontRole _fontRole;
+        private CuiAccentRole _accentRole;
+        private CuiCustomFonts? _customFonts;
+        private double _customFontScale = 1;
+        private double? _roundnessPercent;
         private TemplatePart? _part;
         public CuiEffectivePropertyStore Store { get; } = new();
         public Projection(Control control,bool ownsTemplate)
@@ -106,6 +111,24 @@ public static class CuiPropertyPresentation
             Watch("CuiInterfaceFontFamily", "FontFamily");
             Watch("CuiFontWeightBody", "FontWeight");
             Watch("CuiFontSizeBody", "FontSize");
+            Register("FontRole", typeof(CuiFontRole), CuiFontRole.Main, value =>
+            { _fontRole = (CuiFontRole)value!; RefreshFontRole(); });
+            WatchCustom("CuiCustomTypography", value => { _customFonts = value as CuiCustomFonts; RefreshFontRole(); });
+            WatchCustom("CuiCustomFontScale", value => { _customFontScale = value is double scale ? scale : 1; RefreshFontRole(); });
+            if (control is Button)
+            {
+                Register("AccentRole", typeof(CuiAccentRole), CuiAccentRole.None, value =>
+                { _accentRole = (CuiAccentRole)value!; RefreshAccentRole(); RefreshFontRole(); });
+                WatchCustom("CuiButtonRoundnessPercent", value =>
+                { _roundnessPercent = value is double percent ? percent : null; RefreshRoundness(); });
+                foreach (var tier in new[] { "Primary", "Secondary", "Tertiary" })
+                {
+                    WatchCustom($"CuiAccent{tier}Brush", _ => RefreshAccentRole());
+                    WatchCustom($"CuiAccent{tier}ForegroundBrush", _ => RefreshAccentRole());
+                    Watch($"CuiAccent{tier}HoverBrush", null);
+                    Watch($"CuiAccent{tier}PressedBrush", null);
+                }
+            }
             Watch("CuiTextBrush", "Foreground");
             Watch("CuiFlowDirection", "FlowDirection");
             if (control is ContextMenu)
@@ -271,9 +294,70 @@ public static class CuiPropertyPresentation
             })));
         }
 
+        private void WatchCustom(string key, Action<object?> changed)
+        {
+            object? previous = AvaloniaProperty.UnsetValue; var observed = false;
+            _subscriptions.Add(_control.GetResourceObservable(key).Subscribe(new ResourceObserver(value =>
+            {
+                if (value == AvaloniaProperty.UnsetValue) value = null;
+                if (observed && Equals(previous, value)) return;
+                if (value is null) _resources.Remove(key); else _resources[key] = value;
+                changed(value); previous = value; observed = true;
+            })));
+        }
+
+        private void RefreshFontRole()
+        {
+            const string source = "CUI semantic font role";
+            var role = _fontRole == CuiFontRole.Main && _accentRole != CuiAccentRole.None
+                ? (CuiFontRole)(int)_accentRole : _fontRole;
+            if (!Enum.IsDefined(role)) throw new ArgumentOutOfRangeException(nameof(role));
+            if (_customFonts is null)
+            {
+                Store.RemoveSource(CuiPropertyLevel.Theme, source);
+                return;
+            }
+            var font = role switch
+            {
+                CuiFontRole.PrimaryButton => _customFonts.PrimaryButton,
+                CuiFontRole.SecondaryButton => _customFonts.SecondaryButton,
+                CuiFontRole.TertiaryButton => _customFonts.TertiaryButton,
+                CuiFontRole.Heading => _customFonts.Heading, CuiFontRole.Body => _customFonts.Body,
+                CuiFontRole.Code => _customFonts.Code, _ => _customFonts.Main
+            };
+            Set("FontFamily", new FontFamily(CuiCustomThemeFonts.ResourceFamily(font.Family)), CuiPropertyLevel.Theme, source, 2);
+            Set("FontWeight", (FontWeight)font.Weight, CuiPropertyLevel.Theme, source, 2);
+            Set("FontSize", font.Size * _customFontScale, CuiPropertyLevel.Theme, source, 2);
+        }
+
+        private void RefreshAccentRole()
+        {
+            const string source = "CUI semantic accent role";
+            if (!Enum.IsDefined(_accentRole)) throw new ArgumentOutOfRangeException(nameof(_accentRole));
+            if (_accentRole == CuiAccentRole.None) Store.RemoveSource(CuiPropertyLevel.Theme, source);
+            else
+            {
+                if (_resources.TryGetValue($"CuiAccent{_accentRole}Brush", out var brush))
+                    Set("Background", brush, CuiPropertyLevel.Theme, source, 2);
+                if (_resources.TryGetValue($"CuiAccent{_accentRole}ForegroundBrush", out var foreground))
+                    Set("Foreground", foreground, CuiPropertyLevel.Theme, source, 2);
+                else Store.Remove("Foreground", CuiPropertyLevel.Theme, source);
+            }
+            UpdateState();
+        }
+
+        private void RefreshRoundness()
+        {
+            const string source = "CUI button roundness";
+            if (_roundnessPercent is not { } percent) { Store.RemoveSource(CuiPropertyLevel.Theme, source); return; }
+            var side = Math.Min(_control.Bounds.Width, _control.Bounds.Height);
+            if (side > 0) Set("CornerRadius", new CornerRadius(side * .5 * percent / 100), CuiPropertyLevel.Theme, source, 2);
+        }
+
         private void NativeChanged(object? sender, AvaloniaPropertyChangedEventArgs change)
         {
             if (_applying) return;
+            if (change.Property == Visual.BoundsProperty && _control is Button) RefreshRoundness();
             var mapped = _mapped.FirstOrDefault(pair => pair.Value == change.Property);
             // Editable native input owns its in-progress representation (including
             // invalid text); the CUI writeback/validation contract owns commit.
@@ -299,11 +383,11 @@ public static class CuiPropertyPresentation
                 if (_dragging) State("Background","CuiScrollThumbPressedBrush");
             }
             else if (!rail && _control.IsPointerOver)
-            { State("Background", "CuiButtonHoverBrush"); State("Foreground", "CuiButtonHoverForegroundBrush"); }
+            { State("Background", _accentRole == CuiAccentRole.None ? "CuiButtonHoverBrush" : $"CuiAccent{_accentRole}HoverBrush"); State("Foreground", _accentRole == CuiAccentRole.None ? "CuiButtonHoverForegroundBrush" : $"CuiAccent{_accentRole}ForegroundBrush"); }
             if (_selected || _control is ToggleButton { IsChecked: true } or ListBoxItem { IsSelected: true } or MenuItem { IsSelected: true })
             { State("Background", _control is MenuItem or ListBoxItem ? "CuiMenuSelectionBrush" : "CuiSelectionBrush"); State("BorderColor", "CuiSelectionIndicatorBrush"); }
             if (!rail && _control is Button { IsPressed: true })
-            { State("Background", "CuiButtonPressedBrush"); State("Foreground", "CuiButtonPressedForegroundBrush"); }
+            { State("Background", _accentRole == CuiAccentRole.None ? "CuiButtonPressedBrush" : $"CuiAccent{_accentRole}PressedBrush"); State("Foreground", _accentRole == CuiAccentRole.None ? "CuiButtonPressedForegroundBrush" : $"CuiAccent{_accentRole}ForegroundBrush"); }
             if (_control.IsKeyboardFocusWithin)
             {
                 State("BorderColor", "CuiFocusBrush");

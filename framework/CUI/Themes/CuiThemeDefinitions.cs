@@ -33,6 +33,61 @@ public sealed class CuiThemeDefinitionCatalog
 {
     private readonly Dictionary<string, CuiThemeDefinition> _definitions = new(StringComparer.OrdinalIgnoreCase);
     private readonly object _gate = new();
+    private readonly Dictionary<string, CuiCustomTheme> _custom = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, CuiResolvedTheme> _resolvedCustom = new(StringComparer.Ordinal);
+    public event EventHandler? Changed;
+    public IReadOnlyList<string> Names
+    {
+        get { lock (_gate) return Array.AsReadOnly(CuiThemeCatalog.All.Select(item => item.DisplayName)
+            .Concat(_definitions.Keys).Concat(_custom.Values.Select(item => item.Name)).ToArray()); }
+    }
+
+    /// <summary>Atomically replaces one validated account/draft definition. No account storage is written.</summary>
+    public void UpsertCustomTheme(CuiCustomTheme theme)
+    {
+        var frozen = theme.Validate();
+        lock (_gate)
+        {
+            if (_definitions.ContainsKey(frozen.Name) || _custom.Values.Any(item => item.Id != frozen.Id &&
+                string.Equals(item.Name, frozen.Name, StringComparison.OrdinalIgnoreCase)))
+                throw new CuiThemeDefinitionException("CUI_THEME_DUPLICATE", "Another theme already uses this name.");
+            if (_custom.TryGetValue(frozen.Id, out var previous) && CuiCustomThemeContract.Serialize(previous) == CuiCustomThemeContract.Serialize(frozen)) return;
+            _custom[frozen.Id] = frozen;
+            _resolvedCustom.Remove(frozen.Id);
+        }
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    public bool RemoveCustomTheme(string id)
+    {
+        bool removed;
+        lock (_gate) { removed = _custom.Remove(id); if (removed) _resolvedCustom.Remove(id); }
+        if (removed) Changed?.Invoke(this, EventArgs.Empty);
+        return removed;
+    }
+
+    /// <summary>Reconcile only the previous account-owned IDs, retaining independent local draft themes.</summary>
+    public void ReplaceAccountCustomThemes(IReadOnlyList<CuiCustomTheme> themes, IReadOnlyCollection<string> previousIds)
+    {
+        var values = CuiCustomThemeContract.DeserializeLibrary(CuiCustomThemeContract.SerializeLibrary(themes));
+        var changed = false;
+        lock (_gate)
+        {
+            var next = new Dictionary<string, CuiCustomTheme>(_custom, StringComparer.Ordinal);
+            foreach (var id in previousIds) next.Remove(id);
+            foreach (var value in values)
+            {
+                if (_definitions.ContainsKey(value.Name) || next.Values.Any(item => item.Id != value.Id &&
+                    string.Equals(item.Name, value.Name, StringComparison.OrdinalIgnoreCase)))
+                    throw new CuiThemeDefinitionException("CUI_THEME_DUPLICATE", "Another theme already uses this name.");
+                next[value.Id] = value;
+            }
+            changed = _custom.Count != next.Count || next.Any(entry => !_custom.TryGetValue(entry.Key, out var old) ||
+                CuiCustomThemeContract.Serialize(old) != CuiCustomThemeContract.Serialize(entry.Value));
+            if (changed) { _custom.Clear(); _resolvedCustom.Clear(); foreach (var entry in next) _custom.Add(entry.Key, entry.Value); }
+        }
+        if (changed) Changed?.Invoke(this, EventArgs.Empty);
+    }
 
     public void Add(CuiThemeDefinition definition)
     {
@@ -43,7 +98,7 @@ public sealed class CuiThemeDefinitionCatalog
             var inherits = RequireName(definition.Inherits, nameof(definition.Inherits));
             if (CuiThemeCatalog.All.Any(theme => string.Equals(theme.DisplayName, name, StringComparison.OrdinalIgnoreCase)))
                 throw new CuiThemeDefinitionException("CUI_THEME_BUILTIN_SHADOW", $"Custom theme '{name}' cannot shadow a built-in theme.");
-            if (_definitions.ContainsKey(name))
+            if (_definitions.ContainsKey(name) || _custom.Values.Any(theme => string.Equals(theme.Name, name, StringComparison.OrdinalIgnoreCase)))
                 throw new CuiThemeDefinitionException("CUI_THEME_DUPLICATE", $"Custom theme '{name}' is already defined.");
 
             var rules = definition.Rules ?? throw new ArgumentNullException(nameof(definition.Rules));
@@ -95,6 +150,18 @@ public sealed class CuiThemeDefinitionCatalog
         if (builtIn is not null)
             return new CuiResolvedTheme(builtIn.DisplayName, builtIn.Theme, builtIn, EmptyRules());
 
+        var custom = _custom.Values.FirstOrDefault(item => string.Equals(item.Name, name, StringComparison.OrdinalIgnoreCase));
+        if (custom is not null)
+        {
+            if (_resolvedCustom.TryGetValue(custom.Id, out var cached)) return cached;
+            var expression = CuiThemeCatalog.Resolve(custom.BaseTheme) with { DisplayName = custom.Name, Description = "Account custom theme." };
+            var json = CuiCustomThemeContract.Serialize(custom);
+            var fingerprint = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(json)));
+            var resolved = new CuiResolvedTheme(custom.Name, custom.BaseTheme, expression, EmptyRules(), custom, fingerprint);
+            _resolvedCustom.Add(custom.Id, resolved);
+            return resolved;
+        }
+
         if (!_definitions.TryGetValue(name, out var definition))
             throw new CuiThemeDefinitionException("CUI_THEME_UNKNOWN_BASE", $"Theme '{name}' is not a built-in or declared custom theme.");
         if (!path.Add(definition.Name))
@@ -121,7 +188,7 @@ public sealed class CuiThemeDefinitionCatalog
                 DisplayName = definition.Name,
                 Description = $"Custom theme based on {parent.Name}."
             };
-            return new CuiResolvedTheme(definition.Name, parent.BaseTheme, expression, FreezeRules(rules));
+            return new CuiResolvedTheme(definition.Name, parent.BaseTheme, expression, FreezeRules(rules), parent.CustomTheme, parent.CustomFingerprint);
         }
         finally
         {
@@ -196,4 +263,5 @@ public sealed record CuiResolvedTheme(
     string Name,
     CuiTheme BaseTheme,
     CuiThemeExpression Expression,
-    IReadOnlyDictionary<CuiThemeRuleKey, IReadOnlyDictionary<string, object?>> Rules);
+    IReadOnlyDictionary<CuiThemeRuleKey, IReadOnlyDictionary<string, object?>> Rules,
+    CuiCustomTheme? CustomTheme = null, string? CustomFingerprint = null);
