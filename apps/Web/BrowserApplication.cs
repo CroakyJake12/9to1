@@ -165,7 +165,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
                 if (_disposed || _closing || version != _navigationVersion || cancellation.IsCancellationRequested)
                 { surface.Admission?.Reject(); return; }
             }
-            if (Render(surface, BrowserRouteCodec.Encode(request!)))
+            if (Render(surface, BrowserRouteCodec.Encode(request!), request!.RouteId))
             {
                 StartupTrace?.Invoke("shell:attached");
                 Program.ShowStatus(_presentationCleanupError is not null ? "BrowserPresentationCleanupFailed"
@@ -224,7 +224,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         QueueNavigation(fragment);
     }
 
-    private bool Render(BrowserCuiSurface surface, string address)
+    private bool Render(BrowserCuiSurface surface, string address, string routeId)
     {
         StartupTrace?.Invoke("cui:load-begin");
         var languageVersion = surface.Document.RootProperties.GetValueOrDefault("version") as CuiLiteralValue;
@@ -246,6 +246,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         var previousRoot = (previousContent as ScrollViewer)?.Content as Control;
         try
         {
+            candidate.SetSurface(CuiAppAccentCatalog.SurfaceForRoute(routeId));
             if (_themeContext is not null) candidate.SetThemePreferenceContext(_themeContext);
             ICuiBindingContext bindings = surface.Bindings;
             ICuiActionDispatcher actions = surface.Actions;

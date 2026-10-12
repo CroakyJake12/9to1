@@ -124,56 +124,45 @@ public static class CuiSurfacePaletteCatalog
     /// Resolves a full palette for the given surface and appearance, applying the current
     /// theme expression and accent override logic.
     /// </summary>
-    public static CuiPalette For(string surface, CuiAppearance appearance)
+    public static CuiPalette For(string surface, CuiAppearance appearance) =>
+        For(surface, appearance, ActiveTheme);
+
+    /// <summary>Compatibility entry point for existing personalisation callers.</summary>
+    public static CuiPalette For(string surface, CuiAppearance appearance, CuiTheme themeOverride) =>
+        ForCore(surface, appearance, themeOverride,
+            OverrideAccent && AccentOverride is { } colour ? CuiAccentCatalog.Resolve(colour, appearance) : null);
+
+    /// <summary>
+    /// Resolves a scoped preference without reading or mutating global accent state.
+    /// Null preserves the owning app's default. A chosen colour remains an anchor:
+    /// the theme and appearance still own gradients, surfaces and interaction states.
+    /// </summary>
+    public static CuiPalette For(string surface, CuiAppearance appearance, CuiTheme themeOverride, string? accentColour) =>
+        ForCore(surface, appearance, themeOverride, accentColour is null ? null : ColourAnchors(accentColour));
+
+    private static CuiPalette ForCore(string surface, CuiAppearance appearance, CuiTheme theme, CuiAccentAnchorSet? accentOverride)
     {
+        if (!Enum.IsDefined(appearance)) throw new ArgumentOutOfRangeException(nameof(appearance));
         var hue = Hues.TryGetValue(surface, out var configured) ? configured : Hues["Home"];
-        var theme = ActiveTheme;
-        var accent = Color.Parse(hue.Accent);
-        var secondary = Color.Parse(hue.Secondary);
-        var strong = Color.Parse(hue.Strong);
-        var soft = Color.Parse(hue.Soft);
-
-        // Accent precedence: an explicit personalisation palette replaces the
-        // surface hue anchors; the appearance branch and theme interpretation
-        // still adapt them, so apps only ever consume semantic accent values.
-        if (OverrideAccent && AccentOverride is { } overrideColour)
-        {
-            var anchors = CuiAccentCatalog.Resolve(overrideColour, appearance);
-            accent = anchors.Primary;
-            secondary = anchors.Secondary;
-            strong = anchors.Strong;
-            soft = anchors.Soft;
-        }
-
+        var appColour = CuiAppAccentCatalog.Find(surface)?.Colour;
+        var anchors = accentOverride ?? (appColour is null ? null : ColourAnchors(appColour));
+        var accent = anchors?.Primary ?? Color.Parse(hue.Accent);
+        var secondary = anchors?.Secondary ?? Color.Parse(hue.Secondary);
+        var strong = anchors?.Strong ?? Color.Parse(hue.Strong);
+        var soft = anchors?.Soft ?? Color.Parse(hue.Soft);
+        if (anchors is not null)
+            hue = hue with { Tide = Blend(Colors.White, accent, .28).ToString() };
         var palette = Assemble(hue, appearance, theme, accent, secondary, strong, soft);
         return theme == CuiTheme.Glow ? palette : Express(palette, appearance);
     }
 
-    /// <summary>
-    /// Resolves a full palette for the given surface and appearance with an explicit theme override.
-    /// Used by DefaultTheme scoping. Thread-safe: does not mutate ActiveTheme.
-    /// </summary>
-    public static CuiPalette For(string surface, CuiAppearance appearance, CuiTheme themeOverride)
+    private static CuiAccentAnchorSet ColourAnchors(string value)
     {
-        // Thread-safe: compute directly without mutating global state
-        var hue = Hues.TryGetValue(surface, out var configured) ? configured : Hues["Home"];
-        var theme = themeOverride;
-        var accent = Color.Parse(hue.Accent);
-        var secondary = Color.Parse(hue.Secondary);
-        var strong = Color.Parse(hue.Strong);
-        var soft = Color.Parse(hue.Soft);
-
-        if (OverrideAccent && AccentOverride is { } overrideColour)
-        {
-            var anchors = CuiAccentCatalog.Resolve(overrideColour, appearance);
-            accent = anchors.Primary;
-            secondary = anchors.Secondary;
-            strong = anchors.Strong;
-            soft = anchors.Soft;
-        }
-
-        var palette = Assemble(hue, appearance, theme, accent, secondary, strong, soft);
-        return theme == CuiTheme.Glow ? palette : Express(palette, appearance);
+        if (value.Length != 7 || value[0] != '#' || !value.AsSpan(1).ToArray().All(Uri.IsHexDigit))
+            throw new ArgumentException("An accent colour must use #RRGGBB.", nameof(value));
+        var colour = Color.Parse(value);
+        return new(colour, Blend(colour, Colors.White, .22), Blend(colour, Colors.Black, .25),
+            Blend(colour, Colors.White, .85));
     }
 
     private static CuiPalette Assemble(
@@ -304,7 +293,7 @@ public static class CuiSurfacePaletteCatalog
         var dark = appearance is CuiAppearance.Dark or CuiAppearance.SuperDark;
         var deep = appearance == CuiAppearance.SuperDark;
         var white = appearance == CuiAppearance.SuperBright;
-        var accent = OverrideAccent ? palette.Accent : Color.Parse(dark ? "#FFA5A7EB" : "#FF6267A8");
+        var accent = palette.Accent;
         var background = Color.Parse(dark ? deep ? "#FF171819" : "#FF202122" : white ? "#FFFCFCFD" : "#FFF0F1F3");
         var panel = background;
         return palette with
@@ -312,7 +301,8 @@ public static class CuiSurfacePaletteCatalog
             TideBase = background,
             TideColour = Color.Parse(dark ? deep ? "#FF090B0E" : "#FF111419" : white ? "#FFFFFFFF" : "#FFFAFAFC"),
             Accent = accent, AccentSecondary = accent, AccentStrong = accent,
-            AccentSoft = Blend(panel, accent, dark ? .16 : .10), AccentInk = dark ? Color.Parse("#FF1B1C29") : Colors.White,
+            AccentSoft = Blend(panel, accent, dark ? .16 : .10),
+            AccentInk = CuiContrast.Ratio(Colors.Black, accent) >= CuiContrast.Ratio(Colors.White, accent) ? Colors.Black : Colors.White,
             Text = Color.Parse(dark ? "#FFE5E5E7" : "#FF252628"),
             TextSoft = Color.Parse(dark ? "#FFC3C4C7" : "#FF55575D"),
             Muted = Color.Parse(dark ? "#FFA0A1A6" : "#FF696B72"), Muted2 = Color.Parse(dark ? "#FF929399" : "#FF75777E"),
@@ -320,7 +310,8 @@ public static class CuiSurfacePaletteCatalog
             Panel3 = Color.Parse(dark ? "#FF292A2D" : "#FFE9EAED"), PanelHover = Color.Parse(dark ? "#FF303134" : "#FFE3E4E8"),
             Line = Color.Parse(dark ? "#FF2D2E31" : "#FFE0E1E5"), LineStrong = Color.Parse(dark ? "#FF55565C" : "#FFA6A7AD"),
             Button = Color.Parse(dark ? "#FF292A2D" : "#FFE8E9ED"), ButtonHover = Color.Parse(dark ? "#FF343538" : "#FFDDDEE3"),
-            ButtonPressed = Color.Parse(dark ? "#FF242527" : "#FFD1D2D8"), Focus = accent, AccentBorder = accent
+            ButtonPressed = Color.Parse(dark ? "#FF242527" : "#FFD1D2D8"),
+            Focus = CuiContrast.EnsureForegroundContrast(accent, panel, 3), AccentBorder = accent
         };
     }
 
