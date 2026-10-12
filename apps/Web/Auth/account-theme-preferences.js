@@ -3,7 +3,7 @@ import { validThemePreference } from './theme-preference-contract.js';
 // This cache is available only after the maintained account API has verified the
 // current live token's account. It never migrates or uploads device-local themes.
 export function createAccountThemePreferences({ client, hasCredential, apiResource, storage = undefined, window = globalThis.window }) {
-    let accountId = null, epoch = 0, disposed = false, nextListener = 1;
+    let accountId = null, epoch = 0, disposed = false, nextListener = 1, disposalTask;
     const listeners = new Map(), pending = new Map();
     const cacheKey = id => `9to1.home.account-theme-cache.v1:${JSON.stringify([apiResource, id])}`;
     const current = id => !disposed && typeof id === 'string' && id === accountId && hasCredential();
@@ -88,15 +88,21 @@ export function createAccountThemePreferences({ client, hasCredential, apiResour
         subscribe(callback) { const id = nextListener++; listeners.set(id, callback); return id; },
         unsubscribe(id) { listeners.delete(id); },
         cancel(id) { pending.get(id)?.controller.abort(); },
-        invalidate() { epoch++; accountId = null; notify(true); }, // Synchronous observation fence, before cancellation.
+        fence() { epoch++; accountId = null; }, // No observers/cancellation before the root native fence.
+        publishInvalidated() { notify(true); },
+        invalidate() { this.fence();this.publishInvalidated(); },
         signedIn() { if (!disposed) notify(false); },
-        revoke() { disposed = true; epoch++; accountId = null; notify(true); },
-        async disposeAsync() {
+        revoke() { if(disposed)return;disposed = true; epoch++; accountId = null; notify(true); },
+        disposeAsync() {
+            if(disposalTask)return disposalTask;
             this.revoke();
             window?.removeEventListener?.('storage', onStorage);
-            for (const entry of pending.values()) entry.controller.abort();
-            while (pending.size) await Promise.all([...pending.values()].map(entry => entry.completion));
-            listeners.clear();
+            disposalTask=(async()=>{
+                for (const entry of pending.values()) entry.controller.abort();
+                while (pending.size) await Promise.all([...pending.values()].map(entry => entry.completion));
+                listeners.clear();
+            })();
+            return disposalTask;
         }
     };
 }

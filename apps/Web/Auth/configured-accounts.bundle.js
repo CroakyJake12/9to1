@@ -1605,7 +1605,7 @@ function createAccountModule(client = null) {
 
 // apps/Web/Auth/account-theme-preferences.js
 function createAccountThemePreferences({ client, hasCredential, apiResource, storage = void 0, window = globalThis.window }) {
-  let accountId = null, epoch2 = 0, disposed = false, nextListener = 1;
+  let accountId = null, epoch2 = 0, disposed = false, nextListener = 1, disposalTask;
   const listeners = /* @__PURE__ */ new Map(), pending = /* @__PURE__ */ new Map();
   const cacheKey = (id) => `9to1.home.account-theme-cache.v1:${JSON.stringify([apiResource, id])}`;
   const current = (id) => !disposed && typeof id === "string" && id === accountId && hasCredential();
@@ -1716,27 +1716,38 @@ function createAccountThemePreferences({ client, hasCredential, apiResource, sto
     cancel(id) {
       pending.get(id)?.controller.abort();
     },
-    invalidate() {
+    fence() {
       epoch2++;
       accountId = null;
+    },
+    // No observers/cancellation before the root native fence.
+    publishInvalidated() {
       notify(true);
     },
-    // Synchronous observation fence, before cancellation.
+    invalidate() {
+      this.fence();
+      this.publishInvalidated();
+    },
     signedIn() {
       if (!disposed) notify(false);
     },
     revoke() {
+      if (disposed) return;
       disposed = true;
       epoch2++;
       accountId = null;
       notify(true);
     },
-    async disposeAsync() {
+    disposeAsync() {
+      if (disposalTask) return disposalTask;
       this.revoke();
       window?.removeEventListener?.("storage", onStorage);
-      for (const entry of pending.values()) entry.controller.abort();
-      while (pending.size) await Promise.all([...pending.values()].map((entry) => entry.completion));
-      listeners.clear();
+      disposalTask = (async () => {
+        for (const entry of pending.values()) entry.controller.abort();
+        while (pending.size) await Promise.all([...pending.values()].map((entry) => entry.completion));
+        listeners.clear();
+      })();
+      return disposalTask;
     }
   };
 }
@@ -1786,7 +1797,7 @@ function createConfiguredAccounts({
   };
   const base = configuration === null ? createAccountModule() : (() => {
     const begin = (reason) => {
-      themes?.invalidate();
+      themes?.fence();
       taskIdentityReceipts.clear();
       broker?.clearToken({ cancelPending: false });
       try {
@@ -1796,16 +1807,18 @@ function createConfiguredAccounts({
           });
           throw new TypeError("Root private fencing must synchronously return void.");
         }
+        themes?.publishInvalidated();
       } finally {
         if (reason !== "sign_in_started") broker?.clearToken();
       }
     };
     const clear = async (reason) => {
-      if (beginPrivateContextInvalidation === void 0) themes?.invalidate();
+      if (beginPrivateContextInvalidation === void 0) themes?.fence();
       taskIdentityReceipts.clear();
       if (beginPrivateContextInvalidation === void 0)
         broker?.clearToken({ cancelPending: reason !== "sign_in_started" });
       await onPrivateContextInvalidated(reason);
+      if (beginPrivateContextInvalidation === void 0) themes?.publishInvalidated();
     };
     broker = new BrowserPublicClient({
       configuration,

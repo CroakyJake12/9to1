@@ -22,7 +22,7 @@ export function createConfiguredAccounts({ configuration = null, window = global
   const joinIssued = async()=>{while(issued.size)await Promise.all([...issued].map(e=>e.completion));if(cleanupErrors.length)throw new AggregateError([...cleanupErrors],'Configured lifecycle cleanup failed.');};
   const base = configuration === null ? createAccountModule() : (() => {
     const begin = reason => {
-      themes?.invalidate();
+      themes?.fence();
       taskIdentityReceipts.clear(); // Synchronous private reset removes observed account/profile metadata.
       // Real parent-memory credentials/generation cleared without abort callbacks.
       broker?.clearToken({ cancelPending: false });
@@ -32,6 +32,7 @@ export function createConfiguredAccounts({ configuration = null, window = global
           if (acknowledgement && typeof acknowledgement.then === 'function') Promise.resolve(acknowledgement).catch(() => {});
           throw new TypeError('Root private fencing must synchronously return void.');
         }
+        themes?.publishInvalidated();
       } finally {
         // This is the EXISTING broker's internal generation/cancellation, never
         // server auth_revision. Its original sign-in survives its own start reset.
@@ -39,7 +40,7 @@ export function createConfiguredAccounts({ configuration = null, window = global
       }
     };
     const clear = async reason => {
-      if (beginPrivateContextInvalidation === undefined) themes?.invalidate();
+      if (beginPrivateContextInvalidation === undefined) themes?.fence();
       taskIdentityReceipts.clear(); // The legacy awaited reset also retires all one-use identity observations.
       if (beginPrivateContextInvalidation === undefined)
         broker?.clearToken({ cancelPending: reason !== 'sign_in_started' });
@@ -47,6 +48,7 @@ export function createConfiguredAccounts({ configuration = null, window = global
       // With explicit begin installed, the root callback JOINs its complete
       // native reset/sticky-error ledger; defaults retain original awaited clear.
       await onPrivateContextInvalidated(reason);
+      if (beginPrivateContextInvalidation === undefined) themes?.publishInvalidated();
     };
     broker = new BrowserPublicClient({ configuration, window, fetch, crypto,
       onBeforeSignIn: () => api.invalidatePrivateContext('sign_in_started'),

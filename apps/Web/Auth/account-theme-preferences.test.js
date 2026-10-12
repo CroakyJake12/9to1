@@ -3,6 +3,8 @@ import { test } from 'node:test';
 import { createAccountThemePreferences } from './account-theme-preferences.js';
 import { validCustomThemeLibrary } from './theme-preference-contract.js';
 import { AccountApiClient } from './account-api-client.js';
+import { createConfiguredAccounts } from './configured-accounts.bundle.js';
+import { webcrypto } from 'node:crypto';
 
 const A='11111111-1111-4111-8111-111111111111',B='22222222-2222-4222-8222-222222222222';
 const preference=(id=A,revision=1)=>({schemaVersion:1,scope:{scope:1,ownerId:id},themeName:'Professional',revision,
@@ -85,4 +87,15 @@ test('unavailable browser storage cannot prevent authenticated service compositi
     const theme=createAccountThemePreferences({client:{getCurrent:async()=>({ok:true,body:{accountId:A}})},hasCredential:()=>true,apiResource:'https://accounts.example.test',storage:unavailable,window:null});
     assert.equal(await theme.themeContext('a'),A);assert.equal(JSON.parse(theme.readCache(A)).state,4);
     assert.throws(()=>theme.writeCache(A,JSON.stringify(preference())));await theme.disposeAsync();
+});
+
+test('configured native private fence precedes theme observers and cleanup joins',async()=>{
+    const events=[];
+    const configuration={issuer:'https://accounts.example.test/api/auth',apiResource:'https://accounts.example.test',clientId:'unit-client',redirectUri:'https://app.example.test/callback',scopes:'openid cake:account:read'};
+    const accounts=createConfiguredAccounts({configuration,window:{location:{origin:'https://app.example.test'}},crypto:webcrypto,
+        fetch:()=>assert.fail('No network allowed in fence ordering control'),beginPrivateContextInvalidation:()=>{events.push('native');},
+        onPrivateContextInvalidated:async()=>{events.push('join');},onVerifiedIdentity:()=>assert.fail(),onFailure:()=>{}});
+    accounts.themePreferences.subscribe(revoked=>{assert.equal(revoked,true);events.push('theme');});
+    await accounts.prepare();assert.deepEqual(events,['native','theme','join']);
+    await accounts.disposeAsync();
 });
