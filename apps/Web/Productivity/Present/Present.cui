@@ -320,7 +320,7 @@
               <EditorToolGroup ID="present-primary-extra" Active="{Binding WideHeader}">
                 <EditorDivider ID="present-zoom-divider" />
                 <Container Type="Menu" Background="Transparent" BorderWidth="0" VerticalAlignment="Center">
-                  <EditorMenu ID="present-toolbar-zoom" Content="{Binding ZoomLabel}" AccessibleName="Zoom" Tooltip="Slide zoom" Height="36" MinWidth="58" VerticalContentAlignment="Center">
+                  <EditorIconMenu ID="present-toolbar-zoom" Content="Zoom" IconSource="icon:fit" AccessibleName="Zoom" Tooltip="Slide zoom">
                     <EditorMenu Content="Fit slide" Action="ZoomFit" />
                     <EditorMenu Content="50%" Action="Zoom50" />
                     <EditorMenu Content="75%" Action="Zoom75" />
@@ -329,7 +329,7 @@
                     <EditorMenu Content="200%" Action="Zoom200" />
                     <EditorMenu Content="Zoom in" Action="ZoomIn" />
                     <EditorMenu Content="Zoom out" Action="ZoomOut" />
-                  </EditorMenu>
+                  </EditorIconMenu>
                 </Container>
                 <EditorToolGroup Active="{Binding ToolbarClipboard}">
                 <EditorDivider ID="present-clipboard-divider" />
