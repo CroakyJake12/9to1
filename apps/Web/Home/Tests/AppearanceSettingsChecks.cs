@@ -1,4 +1,11 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Headless;
+using Avalonia.LogicalTree;
+using Avalonia.Threading;
 using CakeOS.Cui;
+using CakeOS.Cui.Language;
+using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
 using HavenOS.Home.Core;
 using NineToOne.Web;
@@ -7,6 +14,11 @@ internal static class AppearanceSettingsChecks
 {
     internal static async Task Run()
     {
+        var sourceMap = new Dictionary<string,string> { ["app.present"]="#db3545" };
+        var immutable = new CuiAccentPreference(CuiAccentOverrideMode.IndividualApps,individualApps:sourceMap);
+        sourceMap["app.present"]="#FFFFFF";
+        Demand(immutable.ResolveColour("app.present")=="#DB3545", "Caller mutation changed accent projection");
+        Demand(immutable.Equals(new CuiAccentPreference(CuiAccentOverrideMode.IndividualApps,individualApps:new Dictionary<string,string>{{"app.present","#DB3545"}})), "Equivalent CUI accent projections are not value equal");
         var preferences = new Preferences();
         var empty = new EmptyOwner();
         using var settings = new BrowserAppearanceSettings(empty, empty, preferences);
@@ -38,10 +50,91 @@ internal static class AppearanceSettingsChecks
         }
         await appearanceSettings.DispatchAsync("ThemeGlow", null);
         Demand(modes.Current.Appearance == CuiAppearance.SuperDark && modes.Current.Name == "Glow", "Changing theme discarded brightness");
+        await appearanceSettings.DispatchAsync("AppearanceAccentAllApps", null);
+        Demand(modes.Current.EffectiveAccent.Mode == CuiAccentOverrideMode.AllApps && modes.Current.EffectiveAccent.AllAppsColour == CuiAccentPreference.InitialAllAppsColour, "All Apps did not persist a visible initial colour");
+        await appearanceSettings.DispatchAsync("AppearanceAccentColour", "#168B4F");
+        Demand(modes.Current.EffectiveAccent.ResolveColour("app.present") == "#168B4F", "Global colour was not saved through the owner");
+        await appearanceSettings.DispatchAsync("ThemeProfessional", null);
+        Demand(modes.Current.EffectiveAccent.ResolveColour("app.write") == "#168B4F", "Theme change erased accent choice");
+        Demand(appearanceSettings.TrySetValue("AppearanceAccentColour", "#12"), "Partial user colour entry was rejected");
+        Demand(appearanceSettings.IsActionAvailable("AppearanceAccentApply") is false, "Incomplete colour could be persisted");
+        Demand(appearanceSettings.TrySetValue("AppearanceAccentColour", "#aBcD12"), "Valid user colour entry failed");
+        await appearanceSettings.DispatchAsync("AppearanceAccentApply", null);
+        Demand(modes.Current.EffectiveAccent.AllAppsColour == "#ABCD12", "Custom colour was not canonicalized");
+        await appearanceSettings.DispatchAsync("AppearanceAccentIndividualApps", null);
+        Demand(modes.Current.EffectiveAccent.Mode == CuiAccentOverrideMode.IndividualApps && modes.Current.EffectiveAccent.ResolveColour("app.present") is null, "Individual mode leaked global colour");
+        await appearanceSettings.DispatchAsync("AppearanceAccentNone", null);
+        Demand(modes.Current.EffectiveAccent.Mode == CuiAccentOverrideMode.None && modes.Current.EffectiveAccent.AllAppsColour == "#ABCD12", "None erased saved user choice");
+        Demand(appearanceSettings.IsActionAvailable("CreateTheme") is false, "Disconnected creator appeared available");
+        var opened = false;
+        using (var connectedCreator = new BrowserAppearanceSettings(empty, empty, modes, () => opened = true))
+            await connectedCreator.DispatchAsync("CreateTheme", null);
+        Demand(opened, "Connected Create Theme action did not open the real host callback");
+        var writesBeforeUnavailable = modes.Writes;
         modes.AllowChanges = false;
         Demand(appearanceSettings.IsActionAvailable("AppearanceBright") is false, "Brightness bypassed owner write availability");
         await appearanceSettings.DispatchAsync("AppearanceBright", null);
-        Demand(modes.Writes == 5, "Unavailable brightness action wrote to the owner");
+        Demand(modes.Writes == writesBeforeUnavailable, "Unavailable brightness action wrote to the owner");
+        await RenderCanonicalSettings();
+    }
+    private static async Task RenderCanonicalSettings()
+    {
+        var location = new DirectoryInfo(AppContext.BaseDirectory);
+        while (location is not null && !File.Exists(Path.Combine(location.FullName,"apps/Web/Accounts/Accounts.cui"))) location = location.Parent;
+        Demand(location is not null,"Cannot locate canonical Accounts.cui source");
+        var path = Path.Combine(location!.FullName,"apps/Web/Accounts/Accounts.cui");
+        var parser = new CuiRichParser(); var document = parser.Parse(await File.ReadAllTextAsync(path),path);
+        Demand(!parser.Diagnostics.Diagnostics.Any(d=>d.Severity==CuiDiagnosticSeverity.Error),"Accounts CUI parse failed");
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(DashboardTestApplication));
+        await session.Dispatch(() =>
+        {
+            foreach (var width in new[] {1280,390})
+            foreach (var mode in Enum.GetValues<CuiAppearance>())
+            {
+                var preferences = new Preferences(); preferences.SetAsync("Professional",appearance:mode,accent:new CuiAccentPreference(CuiAccentOverrideMode.AllApps)).GetAwaiter().GetResult();
+                var empty = new EmptyOwner(); using var settings = new BrowserAppearanceSettings(empty,empty,preferences,()=>{});
+                using var theme = new CuiThemePreferenceContext(preferences);
+                var registry = new CuiControlRegistry(); BrowserCanonicalIcons.Register(registry);
+                using var loader = new CuiControlLoader(registry); loader.SetThemePreferenceContext(theme); loader.SetBindingContext(settings); loader.SetActionDispatcher(settings);
+                var result = loader.TryLoad(document);
+                Demand(result.Root is not null && !result.Diagnostics.Any(d=>d.Severity==CuiDiagnosticSeverity.Error),"Canonical Settings failed to lower: "+string.Join("; ",result.Diagnostics));
+                var root = result.Root!; loader.WireBindings(root);
+                using var availability = BrowserActionAvailability.Observe(root,loader,document,settings,settings);
+                var window = new Window {Width=width,Height=1100,Content=root}; window.Show();
+                try
+                {
+                    Dispatcher.UIThread.RunJobs(); using (window.CaptureRenderedFrame()) {}
+                    var chooseNone = root.GetLogicalDescendants().OfType<Button>().Single(button=>Equals(button.Content,"None"));
+                    chooseNone.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+                    Dispatcher.UIThread.RunJobs(); using (window.CaptureRenderedFrame()) {}
+                    var chooseAll = root.GetLogicalDescendants().OfType<Button>().Single(button=>Equals(button.Content,"All Apps"));
+                    chooseAll.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+                    Dispatcher.UIThread.RunJobs(); using (window.CaptureRenderedFrame()) {}
+                    Demand(preferences.Current.EffectiveAccent.Mode==CuiAccentOverrideMode.AllApps,"Native All Apps control did not update owner");
+                    var swatch = root.GetLogicalDescendants().OfType<Button>().SingleOrDefault(button=>Avalonia.Automation.AutomationProperties.GetName(button)=="Use Green accent");
+                    if(swatch is null) throw new InvalidOperationException("Missing labelled Green choice. Buttons: "+string.Join(" | ",root.GetLogicalDescendants().OfType<Button>().Select(button=>$"{button.Content} / {Avalonia.Automation.AutomationProperties.GetName(button)}")));
+                    swatch.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+                    Dispatcher.UIThread.RunJobs(); using (window.CaptureRenderedFrame()) {}
+                    Demand(preferences.Current.EffectiveAccent.AllAppsColour=="#1E9E58","Canonical swatch action lost its row parameter");
+                    var colourButtons=root.GetLogicalDescendants().OfType<Button>().Where(button=>Avalonia.Automation.AutomationProperties.GetName(button)?.StartsWith("Use ",StringComparison.Ordinal)==true && Avalonia.Automation.AutomationProperties.GetName(button)!.EndsWith(" accent",StringComparison.Ordinal)).ToArray();
+                    Demand(colourButtons.Length==13,"Canonical swatch choices were lost");
+                    if(width==1280) Demand(colourButtons.Select(button=>button.TranslatePoint(default,root)!.Value.X).Distinct().Count()>1,"Accent choices did not wrap into usable columns");
+                    foreach(var button in colourButtons)
+                    {
+                        var origin=button.TranslatePoint(default,root)!.Value;
+                        Demand(origin.X>=-.5 && origin.X+button.Bounds.Width<=width+.5,$"Colour swatch exceeds {width}px viewport");
+                    }
+                    foreach (var button in root.GetLogicalDescendants().OfType<Button>().Where(button=>button.IsEffectivelyVisible && new[] {"All Apps","Individual Apps","None","Use colour","Green"}.Contains(button.Content as string)))
+                    {
+                        var origin=button.TranslatePoint(default,root)!.Value;
+                        Demand(origin.X>=-.5 && origin.X+button.Bounds.Width<=width+.5,$"Accent control exceeds {width}px viewport");
+                    }
+                    var output=Environment.GetEnvironmentVariable("HOME_ACCENT_CAPTURES");
+                    if (output is not null) {Directory.CreateDirectory(output);using var frame=window.CaptureRenderedFrame();frame!.Save(Path.Combine(output,$"appearance-{mode}-{width}.png"));}
+                }
+                finally {window.Close();}
+            }
+        },CancellationToken.None);
     }
     private static void Demand(bool condition, string message) { if (!condition) throw new InvalidOperationException(message); }
     private sealed class EmptyOwner : ICuiBindingContext, ICuiActionDispatcher

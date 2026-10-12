@@ -1,5 +1,6 @@
 <Cui id="home.settings.account" product="9-1" version="1">
   <Actions>
+    <Action name="ChooseAccentColour" command="AppearanceAccentColour" parameter="{Binding accent.Colour}" />
     <Action name="SelectSession" command="SelectSession" parameter="{Binding session}" />
   </Actions>
   <Theme Name="user_preference">
@@ -8,7 +9,7 @@
         <Container max-width="920" horizontal-alignment="Left" Type="Vertical Stack">
           <Button content="Home" action="ShellHome" margin="0,0,0,20" />
           <Container id="appearance-settings" Active="{Binding ShowAppearanceSettings, fallback=false}" Type="Vertical Stack" CellGap="10" Margin="0,0,0,24" Padding="18" Background="{Resource CuiPanelBrush}">
-  <Text Text="Appearance" FontSize="20" FontWeight="SemiBold" />
+  <Text Text="User Defined Theme" FontSize="20" FontWeight="SemiBold" />
   <Text Text="{Binding AppearanceThemeName}" AccessibleName="Current CUI theme" />
   <Text Text="{Binding AppearanceScope}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
   <Container Type="Wrap" CellGap="8">
@@ -17,6 +18,7 @@
     <Button Action="ThemePlayful" Content="Playful" Interactive="{Binding AppearanceCanChange}" />
     <Button Action="ThemeBubble" Content="Bubble" Interactive="{Binding AppearanceCanChange}" />
     <Button Action="ThemeCinematic" Content="Cinematic" Interactive="{Binding AppearanceCanChange}" />
+    <Button Action="CreateTheme" Content="+ Create Theme" Interactive="{Binding AppearanceCanCreateTheme}" />
   </Container>
   <Text Text="Brightness" FontWeight="SemiBold" />
   <Text Text="{Binding AppearanceModeName}" AccessibleName="Current CUI brightness" />
@@ -26,6 +28,36 @@
     <Button Action="AppearanceDark" Content="Dark" Interactive="{Binding AppearanceCanChange}" />
     <Button Action="AppearanceSuperDark" Content="Super Dark" Interactive="{Binding AppearanceCanChange}" />
   </Container>
+  <Text Text="Override Accent Colours?" FontWeight="SemiBold" />
+  <Text Text="{Binding AppearanceAccentModeName}" AccessibleName="Accent override mode" />
+  <Container Type="Wrap" CellGap="8">
+    <Button Action="AppearanceAccentAllApps" Content="All Apps" AccessibleName="Override accent colours for all apps" Interactive="{Binding AppearanceCanChange}" />
+    <Button Action="AppearanceAccentIndividualApps" Content="Individual Apps" AccessibleName="Choose accent colours in individual apps" Interactive="{Binding AppearanceCanChange}" />
+    <Button Action="AppearanceAccentNone" Content="None" AccessibleName="Use each app's default accent colour" Interactive="{Binding AppearanceCanChange}" />
+  </Container>
+  <If Condition="{Binding AppearanceAccentAllApps}">
+    <Container Type="Vertical Stack" CellGap="8">
+      <Text Text="Accent colour for all apps" FontWeight="SemiBold" />
+      <Text Text="Your colour follows each theme's appearance, including Glow gradients." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+      <Container Type="Wrap" CellGap="6">
+        <Repeat Panel="Wrap" Source="{Binding AppearanceAccentChoices}" As="accent" Key="{Binding accent.Name}">
+          <Button Action="ChooseAccentColour" AccessibleName="{Binding accent.AccessibleName}" Interactive="{Binding AppearanceCanChange}" Margin="0,0,6,6">
+            <Container Type="Horizontal Stack" CellGap="8">
+              <Container Type="Overlay" Width="12" Height="12" Background="{Binding accent.Colour}" CornerRadius="6" VerticalAlignment="Center" />
+              <Text Text="{Binding accent.Name}" />
+            </Container>
+          </Button>
+        </Repeat>
+      </Container>
+      <Container Type="Wrap" CellGap="8">
+        <Input Type="Text" Value="{Binding AppearanceAccentColour, mode=TwoWay, type=string}" AccessibleName="Custom accent colour in #RRGGBB format" MaxWidth="180" Interactive="{Binding AppearanceCanChange}" />
+        <Button Action="AppearanceAccentApply" Content="Use colour" Interactive="{Binding AppearanceCanApplyAccent}" />
+      </Container>
+    </Container>
+  </If>
+  <If Condition="{Binding AppearanceAccentIndividualApps}">
+    <Text Text="Choose Accent colour from each app's settings. Apps without a saved choice keep their default colour." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+  </If>
   <Text Text="{Binding AppearanceStatus}" TextWrapping="Wrap" AccessibleName="Appearance status" />
   <Button Action="ThemeRefresh" Content="Reload saved appearance" Interactive="{Binding AppearanceCanChange}" HorizontalAlignment="Left" />
 </Container>

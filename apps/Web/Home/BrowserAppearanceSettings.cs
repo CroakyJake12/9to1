@@ -11,6 +11,8 @@ internal interface IBrowserHomeThemePreferences : ICuiThemePreferenceSource, IAs
     CuiThemeDefinitionCatalog Catalog { get; }
     string? Diagnostic { get; }
     bool CanChange { get; }
+    string ScopeDescription => "This browser · device-local appearance. Account theme synchronisation is not connected.";
+    string SavedDescription => "Appearance saved on this browser.";
     Task<HomeThemeOperationResult> SetAsync(string name, CuiAccessibilitySettings? accessibility = null, CancellationToken token = default, CuiAppearance? appearance = null, CuiAccentPreference? accent = null);
     Task RefreshAsync(CancellationToken token = default);
 }
@@ -23,6 +25,23 @@ internal sealed class BrowserAppearanceSettings : ICuiWritableBindingContext, IC
     private readonly ICuiActionDispatcher _actions;
     private readonly IBrowserHomeThemePreferences _preferences;
     private bool _busy, _disposed;
+    private readonly Action? _openThemeCreator;
+    private string? _accentDraft;
+    private string? _draftScope;
+    private sealed record AccentChoice(string Name, string Colour, string AccessibleName) : ICuiBindingContext
+    {
+        public bool TryGetValue(string path, out object? value)
+        {
+            value = path switch { "Name" => Name, "Colour" => Colour, "AccessibleName" => AccessibleName, _ => null };
+            return value is not null;
+        }
+    }
+    private static readonly IReadOnlyList<AccentChoice> AccentChoices = CuiAccentCatalog.Colours.Select(colour =>
+    {
+        var anchor = CuiAccentCatalog.Resolve(colour, CuiAppearance.Bright).Primary;
+        var name = CuiAccentCatalog.Name(colour);
+        return new AccentChoice(name, $"#{anchor.R:X2}{anchor.G:X2}{anchor.B:X2}", $"Use {name} accent");
+    }).ToArray();
     private string? _operationStatus;
     private Exception? _presentationFailure;
     private static readonly Dictionary<string, string> ThemeCommands = new(StringComparer.Ordinal)
@@ -37,9 +56,9 @@ internal sealed class BrowserAppearanceSettings : ICuiWritableBindingContext, IC
     };
     private CuiAppearance EffectiveAppearance => _preferences.Current.Appearance ?? CuiThemeScopeApplier.DetectAppearance();
     public event PropertyChangedEventHandler? PropertyChanged;
-    public BrowserAppearanceSettings(ICuiBindingContext bindings, ICuiActionDispatcher actions, IBrowserHomeThemePreferences preferences)
+    public BrowserAppearanceSettings(ICuiBindingContext bindings, ICuiActionDispatcher actions, IBrowserHomeThemePreferences preferences, Action? openThemeCreator = null)
     {
-        _bindings = bindings; _actions = actions; _preferences = preferences;
+        _bindings = bindings; _actions = actions; _preferences = preferences; _openThemeCreator = openThemeCreator;
         if (bindings is INotifyPropertyChanged observable) observable.PropertyChanged += OwnerChanged;
         preferences.Changed += PreferenceChanged;
     }
@@ -50,10 +69,17 @@ internal sealed class BrowserAppearanceSettings : ICuiWritableBindingContext, IC
             "ShowAppearanceSettings" => true,
             "AppearanceThemeName" => _preferences.Current.Name,
             "AppearanceModeName" => EffectiveAppearance switch { CuiAppearance.SuperBright => "Super Bright", CuiAppearance.SuperDark => "Super Dark", var mode => mode.ToString() },
-            "AppearanceScope" => "This browser · device-local appearance. Account theme synchronisation is not connected.",
+            "AppearanceScope" => _preferences.ScopeDescription,
             "AppearanceStatus" => (_operationStatus ?? _preferences.Diagnostic ?? "Your apps use the same Home appearance preference.") +
                 (_presentationFailure is null ? "" : " Some controls could not refresh; reopen Settings to refresh the view."),
             "AppearanceCanChange" => !_disposed && !_busy && _preferences.CanChange,
+            "AppearanceAccentModeName" => _preferences.Current.EffectiveAccent.Mode switch { CuiAccentOverrideMode.AllApps => "All Apps", CuiAccentOverrideMode.IndividualApps => "Individual Apps", _ => "None" },
+            "AppearanceAccentAllApps" => _preferences.Current.EffectiveAccent.Mode == CuiAccentOverrideMode.AllApps,
+            "AppearanceAccentIndividualApps" => _preferences.Current.EffectiveAccent.Mode == CuiAccentOverrideMode.IndividualApps,
+            "AppearanceAccentChoices" => AccentChoices,
+            "AppearanceAccentColour" => _accentDraft ?? _preferences.Current.EffectiveAccent.AllAppsColour ?? CuiAccentPreference.InitialAllAppsColour,
+            "AppearanceCanApplyAccent" => CanApplyAccent,
+            "AppearanceCanCreateTheme" => !_disposed && !_busy && _preferences.CanChange && _openThemeCreator is not null,
             _ => null
         };
         if (value is not null) return true;
@@ -64,15 +90,38 @@ internal sealed class BrowserAppearanceSettings : ICuiWritableBindingContext, IC
         }
         return _bindings.TryGetValue(path, out value);
     }
-    public bool TrySetValue(string path, object? value) => !_disposed && _bindings is ICuiWritableBindingContext writable && writable.TrySetValue(path, value);
+    public bool TrySetValue(string path, object? value)
+    {
+        if (_disposed) return false;
+        if (path == "AppearanceAccentColour")
+        {
+            if (_busy || !_preferences.CanChange || _preferences.Current.EffectiveAccent.Mode != CuiAccentOverrideMode.AllApps) return false;
+            _accentDraft = Convert.ToString(value) ?? string.Empty; _draftScope = _preferences.Current.ScopeId;
+            Publish(new("AppearanceCanApplyAccent")); return true;
+        }
+        return _bindings is ICuiWritableBindingContext writable && writable.TrySetValue(path, value);
+    }
+    private bool CanApplyAccent
+    {
+        get
+        {
+            if (_disposed || _busy || !_preferences.CanChange || _preferences.Current.EffectiveAccent.Mode != CuiAccentOverrideMode.AllApps ||
+                _draftScope is not null && _draftScope != _preferences.Current.ScopeId) return false;
+            try { _ = CuiAccentPreference.CanonicalColour(_accentDraft ?? _preferences.Current.EffectiveAccent.AllAppsColour ?? CuiAccentPreference.InitialAllAppsColour); return true; }
+            catch (ArgumentException) { return false; }
+        }
+    }
+    private static bool IsAccentCommand(string command) => command is "AppearanceAccentNone" or "AppearanceAccentAllApps" or "AppearanceAccentIndividualApps" or "AppearanceAccentColour" or "AppearanceAccentApply";
     public bool? IsActionAvailable(string command) => _disposed ? false : command == "ThemeRefresh" ? !_busy :
-        ThemeCommands.ContainsKey(command) || AppearanceCommands.ContainsKey(command) ? !_busy && _preferences.CanChange : (_actions as ICuiActionAvailability)?.IsActionAvailable(command);
+        command == "CreateTheme" ? !_busy && _preferences.CanChange && _openThemeCreator is not null :
+        command == "AppearanceAccentApply" ? CanApplyAccent :
+        ThemeCommands.ContainsKey(command) || AppearanceCommands.ContainsKey(command) || IsAccentCommand(command) ? !_busy && _preferences.CanChange : (_actions as ICuiActionAvailability)?.IsActionAvailable(command);
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default) =>
         DispatchWithLifetimeAsync(command, parameter, new(default, cancellationToken));
     public async ValueTask DispatchWithLifetimeAsync(string command, object? parameter, CuiActionDispatchLifetime lifetime)
     {
         if (_disposed) return;
-        if (command != "ThemeRefresh" && !ThemeCommands.ContainsKey(command) && !AppearanceCommands.ContainsKey(command))
+        if (command != "ThemeRefresh" && command != "CreateTheme" && !IsAccentCommand(command) && !ThemeCommands.ContainsKey(command) && !AppearanceCommands.ContainsKey(command))
         {
             if (_actions is ICuiLifetimeAwareActionDispatcher tracked)
                 await tracked.DispatchWithLifetimeAsync(command, parameter, lifetime);
@@ -86,6 +135,7 @@ internal sealed class BrowserAppearanceSettings : ICuiWritableBindingContext, IC
         lifetime.CallerCancellation.ThrowIfCancellationRequested();
         lifetime.ViewCancellation.ThrowIfCancellationRequested();
         if (IsActionAvailable(command) != true) return;
+        if (command == "CreateTheme") { _openThemeCreator?.Invoke(); return; }
         _busy = true; _operationStatus = null; _presentationFailure = null; Publish();
         try
         {
@@ -98,14 +148,29 @@ internal sealed class BrowserAppearanceSettings : ICuiWritableBindingContext, IC
             {
                 var name = ThemeCommands.GetValueOrDefault(command) ?? _preferences.Current.Name;
                 var appearance = AppearanceCommands.TryGetValue(command, out var selected) ? selected : _preferences.Current.Appearance;
-                var result = await _preferences.SetAsync(name, token: lifetime.CallerCancellation, appearance: appearance);
-                _operationStatus = result.Succeeded ? result.Diagnostic ?? "Appearance saved on this browser." : result.Diagnostic ?? "Appearance could not be saved. Try again.";
+                var accent = _preferences.Current.EffectiveAccent;
+                accent = command switch
+                {
+                    "AppearanceAccentNone" => accent.WithMode(CuiAccentOverrideMode.None),
+                    "AppearanceAccentAllApps" => accent.WithMode(CuiAccentOverrideMode.AllApps).WithAllAppsColour(accent.AllAppsColour ?? CuiAccentPreference.InitialAllAppsColour),
+                    "AppearanceAccentIndividualApps" => accent.WithMode(CuiAccentOverrideMode.IndividualApps),
+                    "AppearanceAccentColour" => accent.WithMode(CuiAccentOverrideMode.AllApps).WithAllAppsColour(Convert.ToString(parameter)),
+                    "AppearanceAccentApply" => accent.WithAllAppsColour(_accentDraft ?? accent.AllAppsColour ?? CuiAccentPreference.InitialAllAppsColour),
+                    _ => accent
+                };
+                var result = await _preferences.SetAsync(name, token: lifetime.CallerCancellation, appearance: appearance, accent: accent);
+                if (result.Succeeded) { _accentDraft = null; _draftScope = null; }
+                _operationStatus = result.Succeeded ? result.Diagnostic ?? _preferences.SavedDescription : result.Diagnostic ?? "Appearance could not be saved. Try again.";
             }
         }
         finally { _busy = false; Publish(); }
     }
     private void OwnerChanged(object? sender, PropertyChangedEventArgs args) => Publish(args);
-    private void PreferenceChanged(object? sender, EventArgs args) { _operationStatus = null; Publish(); }
+    private void PreferenceChanged(object? sender, EventArgs args)
+    {
+        if (_draftScope is not null && _draftScope != _preferences.Current.ScopeId) { _accentDraft = null; _draftScope = null; }
+        _operationStatus = null; Publish();
+    }
     private void Publish(PropertyChangedEventArgs? args = null)
     {
         if (_disposed) return;

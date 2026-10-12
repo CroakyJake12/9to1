@@ -83,3 +83,38 @@ test('missing locking fails closed and observer failure cannot change a committe
     const before = data.get(key); Object.defineProperty(globalThis, 'navigator', { configurable: true, value: {} });
     await assert.rejects(owner.save(before), /safe shared preference writes/); assert.equal(data.get(key), before);
 });
+
+
+test('accent choices round-trip in the existing envelope without stale theme or dashboard writes clearing them', async () => {
+    const { data } = fixture(); const first = await moduleUnderTest(); const second = await moduleUnderTest();
+    const scope = await first.themeContext(); const oldDashboard = first.load();
+    const accent = { mode: 2, allAppsColour: '#6366F1', individualApps: { 'app.present': '#DB3545', 'app.write': '#123ABC' } };
+    const saved = JSON.parse(await first.compareTheme(scope, 0, JSON.stringify({ ...preference(scope, 1), accent })));
+    assert.equal(saved.succeeded, true); assert.deepEqual(saved.preference.accent, accent);
+    // An older client has no additive accent field; its theme-only write retains current choices.
+    const changed = JSON.parse(await second.compareTheme(scope, 1, JSON.stringify(preference(scope, 2, 'Glow'))));
+    assert.equal(changed.succeeded, true); assert.deepEqual(changed.preference.accent, accent);
+    await second.save(oldDashboard);
+    assert.deepEqual(JSON.parse(await first.readTheme(scope)).preference.accent, accent);
+    const none = { ...accent, mode: 0 };
+    const [one, two] = await Promise.all([
+        first.compareTheme(scope, 2, JSON.stringify({ ...preference(scope, 3, 'Glow'), accent: none })),
+        second.compareTheme(scope, 2, JSON.stringify({ ...preference(scope, 3, 'Bubble'), accent: { ...accent, mode: 1 } }))]);
+    assert.equal(JSON.parse(one).succeeded, true); assert.equal(JSON.parse(two).code, 'RevisionConflict');
+    assert.deepEqual(JSON.parse(data.get(key)).Theme.accent, none);
+});
+
+test('invalid accent payloads and unrecognised modes never overwrite existing choices', async () => {
+    const { data } = fixture(); const owner = await moduleUnderTest(); const scope = await owner.themeContext();
+    const valid = { mode: 1, allAppsColour: '#6366F1', individualApps: {} };
+    assert.equal(JSON.parse(await owner.compareTheme(scope, 0, JSON.stringify({ ...preference(scope, 1), accent: valid }))).succeeded, true);
+    const before = data.get(key);
+    for (const accent of [{ ...valid, mode: 7 }, { ...valid, allAppsColour: 'red' }, { ...valid, allAppsColour: '#abc123' },
+        { ...valid, individualApps: [] }, { ...valid, individualApps: { '../present': '#123456' } },
+        { ...valid, individualApps: { 'app.present': '#12345678' } }]) {
+        assert.equal(JSON.parse(await owner.compareTheme(scope, 1, JSON.stringify({ ...preference(scope, 2), accent }))).code, 'InvalidArgument');
+        assert.equal(data.get(key), before);
+    }
+    const unknown = JSON.stringify({ ...JSON.parse(before), Theme: { ...preference(scope, 1), accent: { ...valid, mode: 7 } } });
+    data.set(key, unknown); assert.equal(JSON.parse(await owner.readTheme(scope)).state, 4); assert.equal(data.get(key), unknown);
+});

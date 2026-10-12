@@ -1,5 +1,7 @@
 using HavenOS.Home.Core;
 using Xunit;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace HavenOS.Home.Tests;
 
@@ -88,13 +90,69 @@ public sealed class HomeThemePreferenceServiceTests
         backend.HoldCommit.SetResult();
         Assert.True((await operation).Succeeded);await close;Assert.Equal(1,backend.Value!.Revision);
     }
+    [Fact]
+    public async Task Accent_choices_use_structural_JSON_receipts_and_theme_only_writes_preserve_them()
+    {
+        var choices = new Dictionary<string,string> { ["app.present"]="#db3545", ["app.write"]="#123abc" };
+        var accent = new HomeThemeAccentPreference(HomeThemeAccentOverrideMode.IndividualApps,"#6366f1",choices);
+        choices["app.present"]="#FFFFFF";
+        Assert.Equal("#DB3545",accent.ResolveColour("app.present"));
+        Assert.Throws<NotSupportedException>(() => ((IDictionary<string,string>)accent.IndividualApps).Add("app.wave","#000000"));
+        var backend = new Backend { CloneReceipt=true };
+        using var service = new HomeThemePreferenceService(backend,new Authority(),new Catalog());
+        var saved = await service.SetAsync(Device,"Glow",new(),0,appearance:"Dark",accent:accent);
+        Assert.True(saved.Succeeded); Assert.Equal(accent,saved.Value!.Preference.Accent);
+        Assert.NotSame(accent,backend.Value!.Accent);
+        Assert.Equal(saved.Value.Preference,backend.Value);
+        var themeOnly = await service.SetAsync(Device,"Bubble",new(),1);
+        Assert.True(themeOnly.Succeeded); Assert.Equal(accent,themeOnly.Value!.Preference.Accent);
+        Assert.Equal("Dark",themeOnly.Value.Preference.Appearance);
+        var reloaded = await service.GetAsync(Device);
+        Assert.Equal(accent,reloaded.Value!.Preference.Accent);
+        var none = await service.SetAsync(Device,"Professional",new(),2,accent:accent.WithMode(HomeThemeAccentOverrideMode.None));
+        Assert.True(none.Succeeded); Assert.Null(none.Value!.Preference.Accent!.ResolveColour("app.present"));
+        Assert.Equal("#DB3545",none.Value.Preference.Accent.IndividualApps["app.present"]);
+    }
+    [Fact]
+    public void Legacy_v1_preferences_default_to_no_override_and_invalid_new_values_fail_without_mutation()
+    {
+        var legacy = JsonSerializer.Deserialize("{\"schemaVersion\":1,\"scope\":{\"scope\":0,\"ownerId\":\"fixture-device\"},\"themeName\":\"Professional\",\"revision\":0,\"accessibility\":{}}",AccentJsonContext.Default.HomeThemePreference)!;
+        Assert.Null(legacy.Accent); legacy.Validate();
+        Assert.Null(HomeThemeAccentPreference.Default.ResolveColour("app.present"));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new HomeThemeAccentPreference((HomeThemeAccentOverrideMode)19));
+        Assert.Throws<ArgumentException>(() => new HomeThemeAccentPreference(allAppsColour:"red"));
+        Assert.Throws<ArgumentException>(() => new HomeThemeAccentPreference(individualApps:new Dictionary<string,string>{{"../present","#123456"}}));
+        Assert.Throws<ArgumentException>(() => new HomeThemeAccentPreference(individualApps:Enumerable.Range(0,33).ToDictionary(x=>"app.a"+x,_=>"#123456")));
+        Assert.Equal("#6366F1",new HomeThemeAccentPreference(HomeThemeAccentOverrideMode.AllApps).ResolveColour("app.wave"));
+        var first = new HomeThemeAccentPreference(HomeThemeAccentOverrideMode.IndividualApps,individualApps:new Dictionary<string,string>{{"app.wave","#112233"},{"app.present","#445566"}});
+        var second = new HomeThemeAccentPreference(HomeThemeAccentOverrideMode.IndividualApps,individualApps:new Dictionary<string,string>{{"app.present","#445566"},{"app.wave","#112233"}});
+        Assert.Equal(first,second); Assert.Equal(first.GetHashCode(),second.GetHashCode());
+    }
+    [Fact]
+    public async Task Concurrent_accent_and_theme_only_writes_do_not_erase_the_winner()
+    {
+        var backend = new Backend { HoldCommit=new(TaskCreationOptions.RunContinuationsAsynchronously) };
+        using var first = new HomeThemePreferenceService(backend,new Authority(),new Catalog());
+        using var second = new HomeThemePreferenceService(backend,new Authority(),new Catalog());
+        var accent = new HomeThemeAccentPreference(HomeThemeAccentOverrideMode.AllApps,"#168B4F");
+        var write = first.SetAsync(Device,"Glow",new(),0,accent:accent);
+        await backend.CommitEntered.Task;
+        var oldThemeWrite = second.SetAsync(Device,"Bubble",new(),0);
+        backend.HoldCommit.SetResult();
+        var results = await Task.WhenAll(write,oldThemeWrite);
+        Assert.Single(results,result=>result.Succeeded);
+        Assert.Single(results,result=>result.Code=="RevisionConflict");
+        Assert.Equal(1,backend.Value!.Revision);
+        if (results[0].Succeeded) Assert.Equal(accent,backend.Value.Accent);
+        else Assert.Null(backend.Value.Accent);
+    }
     private sealed class Authority:IHomeThemeScopeAuthority
     { public bool Allowed=true;public ValueTask<bool> CanAccessAsync(HomeThemeScope scope,bool write,CancellationToken token=default)=>ValueTask.FromResult(Allowed&&scope==Device); }
     private sealed class Catalog:IHomeThemeCatalog
     { public bool TryResolve(string name,out string canonicalName) {canonicalName=name;return name is "Professional" or "Glow" or "Bubble";} }
     private sealed class Backend:IHomeThemePreferenceBackend
     {
-        public HomeThemePreference? Value,Cache;public int CacheReads;public HomeThemeReadState ReadState=HomeThemeReadState.Available;
+        public HomeThemePreference? Value,Cache;public bool CloneReceipt;public int CacheReads;public HomeThemeReadState ReadState=HomeThemeReadState.Available;
         public HomeThemeReadResult? OverrideRead;public Exception? CacheFailure;public Action? ReadAction;
         public TaskCompletionSource? HoldCommit;public TaskCompletionSource CommitEntered=new(TaskCreationOptions.RunContinuationsAsynchronously);
         public event EventHandler<HomeThemeScope>? Changed;
@@ -106,10 +164,14 @@ public sealed class HomeThemePreferenceServiceTests
         public async Task<HomeThemeWriteResult> CompareExchangeAsync(HomeThemeScope scope,long expectedRevision,HomeThemePreference candidate,CancellationToken token=default)
         {
             CommitEntered.TrySetResult();if(HoldCommit is not null)await HoldCommit.Task;
-            lock(this) {if((Value?.Revision??0)!=expectedRevision)return new(false,"RevisionConflict");Value=candidate;return new(true,"Succeeded",candidate);}
+            lock(this) {if((Value?.Revision??0)!=expectedRevision)return new(false,"RevisionConflict");Value=CloneReceipt ? JsonSerializer.Deserialize(JsonSerializer.Serialize(candidate,AccentJsonContext.Default.HomeThemePreference),AccentJsonContext.Default.HomeThemePreference) : candidate;return new(true,"Succeeded",Value);}
         }
         public Task WriteCacheAsync(HomeThemePreference preference,CancellationToken token=default)
         {if(CacheFailure is not null)throw CacheFailure;Cache=preference;return Task.CompletedTask;}
         public void Invalidate(HomeThemeScope scope)=>Changed?.Invoke(this,scope);
     }
 }
+
+[JsonSourceGenerationOptions(PropertyNamingPolicy=JsonKnownNamingPolicy.CamelCase)]
+[JsonSerializable(typeof(HomeThemePreference))]
+internal sealed partial class AccentJsonContext : JsonSerializerContext;

@@ -40,6 +40,20 @@ for device-local commits. It explicitly reports that account synchronisation
 is not connected. Native cross-process propagation remains an integration gate;
 browser live propagation does not establish it.
 
+Home's existing v1 theme envelope now has an optional immutable accent preference:
+`None` (default), `AllApps`, or `IndividualApps`. Colours are canonical `#RRGGBB`
+values and per-app choices use the original stable `app.*` IDs. Missing legacy
+fields mean app defaults; selecting another theme or brightness retains saved
+accent choices. Omitted fields in old browser clients preserve the current
+owner value, and conflicting revisions still fail through the same compare-and-
+exchange path. Switching to None retains choices for later reuse. CUI borrows a
+structurally equal read-only projection; it does not persist settings or mutate
+a global override. Named picker presets use the existing canonical accent catalog,
+and custom hex entry commits only a complete valid colour. Account synchronization
+and native cross-process integration remain separate gates until their real owners
+are connected and exercised.
+
+
 The CUI typed property store owns built-in < theme < definition < instance <
 region < overlay precedence. The renderer projects its selected values and uses
 CUI-owned templates; Fluent/Simple styles are not an alternate authority.
