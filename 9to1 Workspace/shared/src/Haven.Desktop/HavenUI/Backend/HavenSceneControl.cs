@@ -292,7 +292,28 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
             new HavenPoint(p.X, p.Y),
             e.Pointer.Type == PointerType.Touch ? HavenPointerKind.Touch : e.Pointer.Type == PointerType.Pen ? HavenPointerKind.Pen : HavenPointerKind.Mouse,
             ToHavenModifiers(e.KeyModifiers));
+        UpdatePointerCursor(p);
         InvalidateScene();
+    }
+
+    private HavenCursor? _pointerCursor;
+    private void UpdatePointerCursor(Point point)
+    {
+        var cursor = _input?.CursorAt(new HavenPoint(point.X, point.Y)) ?? HavenCursor.Default;
+        if (_pointerCursor == cursor) return;
+        _pointerCursor = cursor;
+        Cursor = new Cursor(cursor switch
+        {
+            HavenCursor.Pointer => StandardCursorType.Hand,
+            HavenCursor.Text => StandardCursorType.Ibeam,
+            HavenCursor.Grab or HavenCursor.Grabbing or HavenCursor.Move => StandardCursorType.SizeAll,
+            HavenCursor.Crosshair or HavenCursor.Rotate => StandardCursorType.Cross,
+            HavenCursor.ResizeHorizontal => StandardCursorType.SizeWestEast,
+            HavenCursor.ResizeVertical => StandardCursorType.SizeNorthSouth,
+            HavenCursor.ResizeNorthWestSouthEast => StandardCursorType.TopLeftCorner,
+            HavenCursor.ResizeNorthEastSouthWest => StandardCursorType.TopRightCorner,
+            _ => StandardCursorType.Arrow
+        });
     }
 
     protected override void OnPointerExited(PointerEventArgs e)
@@ -315,11 +336,13 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
             PointerUpdateKind.MiddleButtonPressed => HavenPointerButton.Middle,
             _ => HavenPointerButton.Primary
         };
+        if (pointerButton != HavenPointerButton.Primary) return;
         _input?.PointerPressed(
             new HavenPoint(p.X, p.Y),
             e.Pointer.Type == PointerType.Touch ? HavenPointerKind.Touch : e.Pointer.Type == PointerType.Pen ? HavenPointerKind.Pen : HavenPointerKind.Mouse,
             pointerButton,
-            ToHavenModifiers(e.KeyModifiers));
+            ToHavenModifiers(e.KeyModifiers), e.ClickCount);
+        UpdatePointerCursor(p);
         Focus();
         e.Pointer.Capture(this);
         e.Handled = true;
@@ -330,9 +353,16 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
     {
         base.OnPointerReleased(e);
         if (IsNativeControlSource(e.Source)) return;
+        if (e.InitialPressMouseButton == MouseButton.Right)
+        {
+            RaiseEvent(new ContextRequestedEventArgs(e));
+            e.Handled = true;
+            return;
+        }
         ConfigureInputRouter();
         var p = e.GetPosition(this);
         _input?.PointerReleased(new HavenPoint(p.X, p.Y), ToHavenModifiers(e.KeyModifiers));
+        UpdatePointerCursor(p);
         e.Pointer.Capture(null);
         e.Handled = true;
         InvalidateScene();

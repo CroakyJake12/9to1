@@ -1,3 +1,4 @@
+using CakeOS.Cui.Runtime;
 using System.Runtime.Versioning;
 using System.Text.Json;
 using CakeOS.Cui;
@@ -17,7 +18,7 @@ public sealed class PresentBrowserFeature : IHomeFeatureRouteHandler, IBrowserCl
     private readonly IPresentExportService? _exporter;
     private readonly IPresentImportService? _importer;
     private readonly IPresentBrowserMedia? _media;
-    private readonly CuiDocument _document;
+    private readonly CuiDocumentSource _document;
     private readonly Func<bool> _reduceMotion;
     private readonly HashSet<TrackedView> _views = [];
     private readonly List<PresentBrowserSession> _retired = [];
@@ -33,16 +34,14 @@ public sealed class PresentBrowserFeature : IHomeFeatureRouteHandler, IBrowserCl
 
     public PresentBrowserFeature(IPresentRepository authorisedRepository, Func<bool> reduceMotion, string markup,
         Func<Exception, bool>? isUnknownCommitOutcome = null, IPresentExportService? exporter = null,
-        IPresentImportService? importer = null, IPresentBrowserMedia? media = null)
+        IPresentImportService? importer = null, IPresentBrowserMedia? media = null, bool deferMarkup = false)
     {
         _repository = authorisedRepository ?? throw new ArgumentNullException(nameof(authorisedRepository));
         _unknown = isUnknownCommitOutcome;
         _exporter = exporter; _importer = importer; _media = media;
         _session = NewSession();
         _reduceMotion = reduceMotion ?? throw new ArgumentNullException(nameof(reduceMotion));
-        var parser = new CuiRichParser(); _document = parser.Parse(markup, "Present.cui");
-        if (parser.Diagnostics.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
-            throw new InvalidDataException("The browser Present CUI document is invalid.");
+        _document = new CuiDocumentSource(markup, "Present.cui", deferMarkup);
     }
     private PresentBrowserSession NewSession() => new(_repository, _unknown, _exporter, _importer, _media);
 
@@ -57,7 +56,7 @@ public sealed class PresentBrowserFeature : IHomeFeatureRouteHandler, IBrowserCl
         // Owner format services and the browser transfer bridge are the only
         // route to PowerPoint files; both live with the Present surface itself.
         var feature = new PresentBrowserFeature(authorisedRepository, reduceMotion, reader.ReadToEnd(), isUnknownCommitOutcome,
-            new PresentPptxExportService(), new PresentPptxImportService(new AppPaths()), new BrowserPresentMedia());
+            new PresentPptxExportService(), new PresentPptxImportService(new AppPaths()), new BrowserPresentMedia(), deferMarkup: true);
         return registry.Register(feature, feature.Render, BrowserSurfaceScope.DeviceLocal);
     }
 
@@ -113,7 +112,7 @@ public sealed class PresentBrowserFeature : IHomeFeatureRouteHandler, IBrowserCl
         if (_disposed || state.RouteId != RouteId || state.ViewId != "present.browser-editor" || offer is null ||
             !ReferenceEquals(offer.State, state) || !offer.CanAccept)
             throw new InvalidOperationException("The prepared Present view is no longer valid.");
-        var surface = PresentBrowserSurface.Create(_document, offer.Candidate, _reduceMotion);
+        var surface = PresentBrowserSurface.Create(_document.Document, offer.Candidate, _reduceMotion);
         if (surface.Lifetime is { } lifetime)
         {
             var tracked = new TrackedView(this, lifetime);

@@ -14,6 +14,9 @@ namespace NineToOne.Web;
 
 public sealed class BrowserApplication : Application, IAsyncDisposable
 {
+    // The host records stage names only; no document, account or file data enters diagnostics.
+    internal static Action<string>? StartupTrace { get; set; }
+    internal static Action<string, string, string>? HostPaletteChanged { get; set; }
     private readonly ContentControl _view = new();
     private readonly BrowserSurfaceRegistry _surfaces = new();
     private readonly BrowserAccessibilityBridge _accessibility = new();
@@ -60,8 +63,11 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
 
     public override void Initialize()
     {
+        StartupTrace?.Invoke("cui:begin");
         CuiNativeHost.InitialisePrimitiveTheme(this, "Home");
+        StartupTrace?.Invoke("cui:theme-ready");
         NineToOne.Web.Write.WriteRetainedSceneResources.Register(this);
+        StartupTrace?.Invoke("cui:resources-ready");
     }
 
     public override void OnFrameworkInitializationCompleted()
@@ -70,7 +76,9 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
             throw new InvalidOperationException("A browser single-view lifetime is required.");
         lifetime.MainView = _view;
         Program.Attach(this);
+        StartupTrace?.Invoke("services:begin");
         _accountSettings = BrowserFeatureComposition.Register(_surfaces);
+        StartupTrace?.Invoke("services:ready");
         base.OnFrameworkInitializationCompleted();
     }
 
@@ -91,7 +99,9 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
     public async Task OpenFragmentAsync(string fragment)
     {
         if (_disposed || _closing || _privateContextResets != 0) return;
+        StartupTrace?.Invoke("navigation:begin");
         await (_themeInitialisation ??= InitialiseThemeAsync());
+        StartupTrace?.Invoke("preferences:ready");
         if (_disposed || _closing || _privateContextResets != 0) return;
         var previousCancellation = _navigationCancellation;
         _navigationCancellation = new();
@@ -120,6 +130,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
             return new(_homeDocument!, home, home, home, Admission: new HomeAdmission(this, home));
         }, cancellation);
         var (result, present, isUnavailableHome) = dispatch;
+        StartupTrace?.Invoke("document:prepared");
         if (_disposed || _closing || version != _navigationVersion || cancellation.IsCancellationRequested)
         {
             return;
@@ -135,6 +146,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
             if (_disposed || _closing || version != _navigationVersion || cancellation.IsCancellationRequested)
                 return;
             var surface = present();
+            StartupTrace?.Invoke("surface:created");
             if (surface is null)
             {
                 Program.ShowStatus("BrowserPresentationExpired", "This destination changed before it could open. Try opening it again.");
@@ -155,6 +167,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
             }
             if (Render(surface, BrowserRouteCodec.Encode(request!)))
             {
+                StartupTrace?.Invoke("shell:attached");
                 Program.ShowStatus(_presentationCleanupError is not null ? "BrowserPresentationCleanupFailed"
                         : "Ready",
                     _presentationCleanupError is not null ? "Your destination opened, but the previous view could not fully close."
@@ -182,6 +195,13 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         if (!Dispatcher.UIThread.CheckAccess()) { Dispatcher.UIThread.Post(() => OnThemeChanged(sender, args)); return; }
         var current = _themeContext.Current;
         CuiThemeScopeApplier.ApplyGlobalTheme(current.Theme.BaseTheme, "Home", current.Accessibility);
+        if (Resources.TryGetResource("CuiBackgroundBrush", ActualThemeVariant, out var background) && background is Avalonia.Media.ISolidColorBrush backgroundBrush
+            && Resources.TryGetResource("CuiTextBrush", ActualThemeVariant, out var foreground) && foreground is Avalonia.Media.ISolidColorBrush foregroundBrush
+            && Resources.TryGetResource("CuiPanelBrush", ActualThemeVariant, out var panel) && panel is Avalonia.Media.ISolidColorBrush panelBrush)
+        {
+            static string Css(Avalonia.Media.Color color) => $"#{color.R:x2}{color.G:x2}{color.B:x2}";
+            HostPaletteChanged?.Invoke(Css(backgroundBrush.Color), Css(foregroundBrush.Color), Css(panelBrush.Color));
+        }
     }
 
     private void EnsureHome()
@@ -206,6 +226,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
 
     private bool Render(BrowserCuiSurface surface, string address)
     {
+        StartupTrace?.Invoke("cui:load-begin");
         var languageVersion = surface.Document.RootProperties.GetValueOrDefault("version") as CuiLiteralValue;
         if (!CuiRuntimeCompatibility.IsLanguageVersionCompatible(languageVersion?.Value))
         {
@@ -238,6 +259,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
             var shellActions = new BrowserShellActions(actions, () => NavigateHome(new(HomeFeatureRouteIds.Dashboard)));
             candidate.SetActionDispatcher(shellActions);
             var (root, diagnostics) = candidate.TryLoad(surface.Document);
+            StartupTrace?.Invoke("cui:load-end");
             if (root is null || diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
             {
                 Program.ShowStatus("HomeServiceIncompatible", "This view is incompatible with the browser runtime. Your previous view has been preserved.");

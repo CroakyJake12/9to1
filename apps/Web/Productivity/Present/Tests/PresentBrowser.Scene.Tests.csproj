@@ -6,7 +6,7 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Program.cs;../PresentBrowserSession.cs;../PresentBrowserSession.EditorUi.cs;../PresentBrowserSurface.cs;../PresentBrowserFeature.cs;../Storage/BrowserPresentMedia.cs" Link="Production/%(Filename)%(Extension)" />
+    <Compile Include="Program.cs;PresentInterchangeChecks.cs;../PresentBrowserSession.cs;../PresentBrowserSession.EditorUi.cs;../PresentBrowserSurface.cs;../PresentBrowserFeature.cs;../Storage/BrowserPresentMedia.cs" Link="Production/%(Filename)%(Extension)" />
     <Compile Include="../../../BrowserSurfaceRegistry.cs;../../../BrowserActionAvailability.cs" Link="Production/%(Filename)%(Extension)" />
     <Compile Include="../../../BrowserCanonicalIcons.cs" Link="Production/BrowserCanonicalIcons.cs" />
     <Compile Include="../../../BrowserAccessibilityBridge.cs;../../../BrowserAccessibilityJsonContext.cs" Link="Production/%(Filename)%(Extension)" />
@@ -14,6 +14,7 @@
     <Compile Include="../../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/PresentRepository.cs" Link="Owner/%(Filename)%(Extension)" />
     <Compile Include="../../../../../9to1 Workspace/Home/Source/Home/Core/HomeCoreContracts.cs;../../../../../9to1 Workspace/Home/Source/Home/Core/HomeFeatureContracts.cs;../../../../../9to1 Workspace/Home/Source/Home/Core/HomeStateCommitActorGuard.cs;../../../../../9to1 Workspace/Home/Source/Home/HomeDashboard.cs" Link="Owner/%(Filename)%(Extension)" />
     <ProjectReference Include="../Scene/NineToOne.Present.BrowserScene.csproj" />
+    <None Include="Fixtures/external-styled-notes.pptx" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Present.cui" Link="Present.cui" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

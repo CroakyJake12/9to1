@@ -15,11 +15,15 @@ public static partial class Program
     {
         try
         {
+            BrowserApplication.StartupTrace = MarkStartup;
+            BrowserApplication.HostPaletteChanged = SetHostPalette;
+            MarkStartup("backend:begin");
             await CuiNativeHost.ConfigureFonts(AppBuilder.Configure<BrowserApplication>()).StartBrowserAppAsync("nine-to-one-root", new BrowserPlatformOptions
             {
                 RegisterAvaloniaServiceWorker = false,
                 RenderingMode = [BrowserRenderingMode.WebGL2, BrowserRenderingMode.WebGL1, BrowserRenderingMode.Software2D],
             });
+            MarkStartup("backend:ready");
             await Application!.OpenFragmentAsync(ReadFragment());
         }
         catch (Exception exception)
@@ -73,6 +77,12 @@ public static partial class Program
 
     [JSImport("showStatus", "nineToOneBrowser")]
     internal static partial void ShowStatus(string code, string message);
+
+    [JSImport("markStartup", "nineToOneBrowser")]
+    internal static partial void MarkStartup(string stage);
+
+    [JSImport("setHostPalette", "nineToOneBrowser")]
+    internal static partial void SetHostPalette(string background, string foreground, string panel);
 
     [JSImport("reduceMotion", "nineToOneBrowser")]
     internal static partial bool ReduceMotion();

@@ -169,41 +169,8 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
     /// keeps its fill and corner radius and writes a transparent stroke with a
     /// zero width for a blank colour, exactly like the Desktop chrome.
     /// </summary>
-    private static bool ApplyShapeStroke(PresentEditor editor, string color)
-    {
-        var element = editor.SelectedElements.FirstOrDefault();
-        if (element is null || element.Kind != PresentElementKind.Shape) return false;
-        if (element.VectorShape is not null) return editor.SetSelectedVectorStroke(color);
-        var stroke = (color ?? string.Empty).Trim();
-        return editor.SetSelectedElementStyle(new PresentElementStyle
-        {
-            FillColor = element.Style.FillColor,
-            StrokeColor = string.IsNullOrWhiteSpace(stroke) ? "#00000000" : stroke,
-            StrokeWidth = string.IsNullOrWhiteSpace(stroke) ? 0 : Math.Max(1, element.Style.StrokeWidth),
-            CornerRadius = element.Style.CornerRadius,
-            Shadow = element.Style.Shadow
-        });
-    }
-
-    /// <summary>
-    /// Applies the donor's shape outline width over the vector stroke path for a
-    /// vector shape and over the plain shape's own style otherwise, keeping the
-    /// remaining style fields.
-    /// </summary>
-    private static bool ApplyShapeStrokeWidth(PresentEditor editor, double width)
-    {
-        var element = editor.SelectedElements.FirstOrDefault();
-        if (element is null || element.Kind != PresentElementKind.Shape) return false;
-        if (element.VectorShape is not null) return editor.SetSelectedVectorStrokeWidth(width);
-        return editor.SetSelectedElementStyle(new PresentElementStyle
-        {
-            FillColor = element.Style.FillColor,
-            StrokeColor = element.Style.StrokeColor,
-            StrokeWidth = Math.Max(0, width),
-            CornerRadius = element.Style.CornerRadius,
-            Shadow = element.Style.Shadow
-        });
-    }
+    private static bool ApplyShapeStroke(PresentEditor editor, string stroke) => editor.SetSelectedShapeAppearance(stroke: stroke);
+    private static bool ApplyShapeStrokeWidth(PresentEditor editor, double width) => editor.SetSelectedShapeAppearance(strokeWidth: width);
 
     /// <summary>
     /// Hides or shows the current slide for the running presentation. Hiding a
@@ -342,7 +309,7 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
     public void RecordRetainedPreview()
     {
         if (_disposed || _presentationPending || !IsWorkspaceActive || IsBusy || IsReadOnly || _pending is not null) return;
-        ++_generation; _dirty = true; Status = "Editing text; Ctrl+Enter commits, Esc cancels"; Notify();
+        ++_generation; _dirty = true; Status = "Editing text; Esc returns to object selection"; Notify();
     }
 
     /// <summary>
@@ -663,7 +630,10 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
             "Create" or "Open" or "Refresh" => true,
             "ReturnToStart" => IsWorkspaceActive,
             "ResumePresentation" => Editor is not null && !IsWorkspaceActive,
-            "ToggleInspector" or "ToggleFiles" or "ToggleNotes" or "ShowHelp" or "CloseHistory" or "ZoomFit" or "ZoomIn" or "ZoomOut" => true,
+            "ToggleInspector" or "ToggleFiles" or "ToggleNotes" or "ShowHelp" or "CloseHistory" or "ZoomFit" or "ZoomIn" or "ZoomOut" or "SetZoom" => true,
+            "BeginShape" => Editor is not null && !IsReadOnly && BeginShapeInsertion is not null,
+            "SetTextColor" => Editor is not null && !IsReadOnly && SelectedTextElement is not null,
+            "SetFillColor" or "SetStrokeColor" or "SetStrokeWidth" => Editor is not null && !IsReadOnly && Editor.SelectedElements.Any(element => element.Kind == PresentElementKind.Shape && !element.Locked),
             "ShowHistory" => Editor is not null && _repository is IPresentVersionRepository,
             "RestoreVersion" => Editor is not null && !IsReadOnly && _showHistory,
             "ShowSlideProperties" or "ShowObjectProperties" => Editor is not null,
@@ -683,7 +653,7 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
                 Editor.Selection.ElementIds.Count > 0,
             "Grow" or "Shrink" or "RotateLeft" or "RotateRight" => Editor is not null && !IsReadOnly &&
                 Editor.Selection.ElementIds.Count > 0,
-            "Bold" or "Italic" => Editor is not null && !IsReadOnly && SelectedTextElement is not null,
+            "Bold" or "Italic" or "Underline" or "TextAlignLeft" or "TextAlignCenter" or "TextAlignRight" => Editor is not null && !IsReadOnly && SelectedTextElement is not null,
             "FontLarger" or "FontSmaller" => Editor is not null && !IsReadOnly && SelectedTextElement is not null,
             "ApplyFill" => Editor is not null && !IsReadOnly &&
                 Editor.SelectedElements.Any(element => element.Kind == PresentElementKind.Shape),
@@ -699,8 +669,11 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
                 Editor.SelectedElements.Any(element => element.Kind == PresentElementKind.Group),
             "BringForward" or "SendBackward" => Editor is not null && !IsReadOnly &&
                 Editor.Selection.ElementIds.Count > 0,
-            "Copy" => Editor is not null && Editor.Selection.ElementIds.Count > 0,
-            "Paste" => Editor is not null && !IsReadOnly && _clipboard.Length > 0,
+            "Copy" => Editor is not null && (CanvasTextCommands?.IsTextEditing == true ? CanvasTextCommands.HasSelectedText : Editor.Selection.ElementIds.Count > 0),
+            "Cut" => Editor is not null && !IsReadOnly && (CanvasTextCommands?.IsTextEditing == true ? CanvasTextCommands.HasSelectedText : Editor.Selection.ElementIds.Count > 0),
+            "DuplicateObject" => Editor is not null && !IsReadOnly && Editor.Selection.ElementIds.Count > 0,
+            "SelectAllText" => CanvasTextCommands?.IsTextEditing == true,
+            "Paste" => Editor is not null && !IsReadOnly && (CanvasTextCommands?.IsTextEditing == true || _clipboard.Length > 0),
             "HideSlide" => Editor is not null && !IsReadOnly && SlideIndex >= 0 && !Editor.SelectedSlide.Hidden,
             "ShowSlide" => Editor is not null && !IsReadOnly && SlideIndex >= 0 && Editor.SelectedSlide.Hidden,
             "ApplyTransition" => Editor is not null && !IsReadOnly && SlideIndex >= 0,
@@ -724,6 +697,17 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (IsActionAvailable(command) != true) { Failure<bool>("UnsupportedFeature", "This presentation action is unavailable."); Notify(); return; }
+        if (CanvasTextCommands is { IsTextEditing: true } textCommands && command is "Cut" or "Copy" or "Paste" or "SelectAllText")
+        {
+            try
+            {
+                var applied = await textCommands.ExecuteTextCommandAsync(command, cancellationToken);
+                if (!applied) Status = "The clipboard action could not complete. Your text is unchanged.";
+            }
+            catch (Exception error) when (error is not OperationCanceledException)
+            { LastOperationError = error; Status = "Clipboard access is unavailable. Use the keyboard shortcut or try again."; }
+            Notify(); return;
+        }
         switch (command)
         {
             case "ReturnToStart": SetStartView(true); break;
@@ -734,9 +718,23 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
             case "CloseHistory": _showHistory = false; Notify(); break;
             case "RestoreVersion" when parameter is PresentVersionRow version && _versions.Contains(version):
                 await EditAsync(editor => editor.RestoreSavedContent(version.Document), cancellationToken); _showHistory = false; Notify(); break;
-            case "ZoomFit": _zoom = 1; Notify(); break;
-            case "ZoomIn": _zoom = Math.Min(2.5, _zoom + .25); Notify(); break;
-            case "ZoomOut": _zoom = Math.Max(.5, _zoom - .25); Notify(); break;
+            case "ZoomFit": _fitToWindow = true; Notify(); break;
+            case "ZoomIn": SetCanvasZoom((_fitToWindow ? EffectiveCanvasZoom?.Invoke() ?? _zoom : _zoom) + .25); break;
+            case "ZoomOut": SetCanvasZoom((_fitToWindow ? EffectiveCanvasZoom?.Invoke() ?? _zoom : _zoom) - .25); break;
+            case "SetZoom" when Number(parameter, out var zoom): SetCanvasZoom(zoom); break;
+            case "SetTextColor" when parameter is string textColor && Avalonia.Media.Color.TryParse(textColor, out _):
+                await EditAsync(editor => UpdateTextStyle(editor, style => style.Color = textColor), cancellationToken); break;
+            case "SetFillColor" when parameter is string fill && (fill == "none" || Avalonia.Media.Color.TryParse(fill, out _)):
+                await EditAsync(editor => editor.SetSelectedShapeAppearance(fill: fill == "none" ? "" : fill), cancellationToken); break;
+            case "SetStrokeColor" when parameter is string stroke && (stroke == "none" || Avalonia.Media.Color.TryParse(stroke, out _)):
+                await EditAsync(editor => editor.SetSelectedShapeAppearance(stroke: stroke == "none" ? "" : stroke), cancellationToken); break;
+            case "SetStrokeWidth" when Number(parameter, out var strokeSize) && strokeSize is >= 0 and <= 100:
+                await EditAsync(editor => editor.SetSelectedShapeAppearance(strokeWidth: strokeSize), cancellationToken); break;
+            case "BeginShape" when parameter is string preset && DocumentShapePresets.All.Any(shape => shape.Id == preset):
+                Editor!.CommitLiveTextEdit();
+                _shapeInsertion = (Editor, Editor.Selection.SlideId, preset);
+                BeginShapeInsertion?.Invoke(preset, DocumentShapePresets.Create(preset));
+                Status = "Drag on the slide to draw, or click to insert. Escape cancels."; Notify(); break;
             case "ShowSlideProperties": Editor!.CommitLiveTextEdit(); Editor.SelectElements([]); _showInspector = true; Notify(); break;
             case "ShowObjectProperties": _showInspector = true; Notify(); break;
             case "ToggleInspector": _showInspector = !_showInspector; Notify(); break;
@@ -773,25 +771,17 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
             case "SendToBack": await EditAsync(editor => editor.SendToBack(), cancellationToken); break;
             case "Bold": await EditAsync(editor => ToggleTextStyle(editor, bold: true), cancellationToken); break;
             case "Italic": await EditAsync(editor => ToggleTextStyle(editor, bold: false), cancellationToken); break;
+            case "Underline": await EditAsync(editor => UpdateTextStyle(editor, style => style.Underline = !style.Underline), cancellationToken); break;
+            case "TextAlignLeft": await EditAsync(editor => UpdateTextStyle(editor, style => style.HorizontalAlignment = PresentTextHorizontalAlignment.Left), cancellationToken); break;
+            case "TextAlignCenter": await EditAsync(editor => UpdateTextStyle(editor, style => style.HorizontalAlignment = PresentTextHorizontalAlignment.Center), cancellationToken); break;
+            case "TextAlignRight": await EditAsync(editor => UpdateTextStyle(editor, style => style.HorizontalAlignment = PresentTextHorizontalAlignment.Right), cancellationToken); break;
             case "Grow": await EditAsync(editor => editor.ResizeSelection(0.02, 0.02), cancellationToken); break;
             case "Shrink": await EditAsync(editor => editor.ResizeSelection(-0.02, -0.02), cancellationToken); break;
             case "RotateLeft": await EditAsync(editor => editor.RotateSelection(-15), cancellationToken); break;
             case "RotateRight": await EditAsync(editor => editor.RotateSelection(15), cancellationToken); break;
             case "FontLarger": await EditAsync(editor => ResizeSelectedFont(editor, 2), cancellationToken); break;
             case "FontSmaller": await EditAsync(editor => ResizeSelectedFont(editor, -2), cancellationToken); break;
-            case "ApplyFill": await EditAsync(editor =>
-            {
-                var source = editor.SelectedElements.FirstOrDefault();
-                if (source is null) return false;
-                return editor.SetSelectedElementStyle(new PresentElementStyle
-                {
-                    FillColor = _fillColor,
-                    StrokeColor = source.Style.StrokeColor,
-                    StrokeWidth = source.Style.StrokeWidth,
-                    CornerRadius = source.Style.CornerRadius,
-                    Shadow = source.Style.Shadow
-                });
-            }, cancellationToken); break;
+            case "ApplyFill": await EditAsync(editor => editor.SetSelectedShapeAppearance(fill: _fillColor), cancellationToken); break;
             case "ApplyStroke": await EditAsync(editor => ApplyShapeStroke(editor, _strokeColor), cancellationToken); break;
             case "ApplyStrokeWidth": await EditAsync(editor => ApplyShapeStrokeWidth(editor, _strokeWidth), cancellationToken); break;
             case "AlignLeft": await EditAsync(editor => editor.AlignSelection(PresentAlignment.Left), cancellationToken); break;
@@ -817,6 +807,11 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
             case "AddAnimation": await AddAnimationAsync(cancellationToken); break;
             case "RemoveAnimation": await RemoveSelectedAnimationsAsync(cancellationToken); break;
             case "Copy": await CopySelectionAsync(cancellationToken); break;
+            case "Cut":
+                if ((await CopySelectionAsync(cancellationToken)).Succeeded)
+                    await EditAsync(editor => editor.RemoveSelectedElements(), cancellationToken);
+                break;
+            case "DuplicateObject": await EditAsync(editor => editor.Paste(editor.CopySelection()).Count > 0, cancellationToken); break;
             case "Paste": await EditAsync(editor => editor.Paste(_clipboard).Count > 0, cancellationToken); break;
             case "MoveObjectLeft": await MoveObjectAsync(-0.01, 0d, cancellationToken); break;
             case "MoveObjectRight": await MoveObjectAsync(0.01, 0d, cancellationToken); break;

@@ -1,3 +1,4 @@
+using CakeOS.Cui.Runtime;
 using System.Text.Json;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
@@ -15,7 +16,7 @@ public sealed class WriteBrowserFeature : IHomeFeatureRouteHandler, IBrowserClos
     private readonly IWriteBrowserPackageBroker? _broker;
     private readonly IWriteBrowserImageSource? _imageSource;
     private readonly INotesAttachmentStore? _attachments;
-    private readonly CuiDocument _document;
+    private readonly CuiDocumentSource _document;
     private readonly Func<bool> _reduceMotion;
     private readonly HashSet<TrackedView> _views = [];
     private readonly List<WriteBrowserSession> _retired = [];
@@ -32,16 +33,14 @@ public sealed class WriteBrowserFeature : IHomeFeatureRouteHandler, IBrowserClos
     public WriteBrowserFeature(INotesRepository authorisedRepository, IWriteNativeDocumentPackageStore packages,
         Func<bool> reduceMotion, string markup, Func<Exception, bool>? isUnknownCommitOutcome = null,
         IWriteBrowserPackageBroker? packageBroker = null, IWriteBrowserImageSource? imageSource = null,
-        INotesAttachmentStore? attachments = null)
+        INotesAttachmentStore? attachments = null, bool deferMarkup = false)
     {
         _repository = authorisedRepository ?? throw new ArgumentNullException(nameof(authorisedRepository));
         _packages = packages ?? throw new ArgumentNullException(nameof(packages));
         _unknown = isUnknownCommitOutcome; _broker = packageBroker; _imageSource = imageSource;
         _attachments = attachments; _session = NewSession();
         _reduceMotion = reduceMotion ?? throw new ArgumentNullException(nameof(reduceMotion));
-        var parser = new CuiRichParser(); _document = parser.Parse(markup, "Write.cui");
-        if (parser.Diagnostics.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
-            throw new InvalidDataException("The browser Write CUI document is invalid.");
+        _document = new CuiDocumentSource(markup, "Write.cui", deferMarkup);
     }
     private WriteBrowserSession NewSession() => new(_repository, _packages, _unknown, _broker, _imageSource, _attachments);
 
@@ -54,7 +53,7 @@ public sealed class WriteBrowserFeature : IHomeFeatureRouteHandler, IBrowserClos
             ?? throw new InvalidOperationException("The Write browser CUI resource is unavailable.");
         using var reader = new StreamReader(stream);
         var feature = new WriteBrowserFeature(authorisedRepository, packages, reduceMotion, reader.ReadToEnd(),
-            isUnknownCommitOutcome, packageBroker, imageSource, attachments);
+            isUnknownCommitOutcome, packageBroker, imageSource, attachments, deferMarkup: true);
         return registry.Register(feature, feature.Render, BrowserSurfaceScope.DeviceLocal);
     }
 
@@ -110,7 +109,7 @@ public sealed class WriteBrowserFeature : IHomeFeatureRouteHandler, IBrowserClos
         if (_disposed || state.RouteId != RouteId || state.ViewId != "write.browser-editor" || offer is null ||
             !ReferenceEquals(offer.State, state) || !offer.CanAccept)
             throw new InvalidOperationException("The prepared Write view is no longer valid.");
-        var surface = WriteBrowserSurface.Create(_document, offer.Candidate, _reduceMotion);
+        var surface = WriteBrowserSurface.Create(_document.Document, offer.Candidate, _reduceMotion);
         if (surface.Lifetime is { } lifetime)
         {
             var tracked = new TrackedView(this, lifetime);

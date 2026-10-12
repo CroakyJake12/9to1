@@ -141,6 +141,18 @@ await session.Dispatch(() =>
         Check("Menu provider invokes exactly once", menuInvokes == 1);
         file.IsSubMenuOpen = false; window.UpdateLayout();
         Check("Closed popup does not retain an invocable menu child", !bridge.Perform(saveId, "invoke", null));
+        var contextMenu = new ContextMenu();
+        var contextItem = new CuiMenuItem { Header = "Context action" };
+        var contextInvokes = 0; contextItem.Click += (_, _) => ++contextInvokes;
+        contextMenu.Items.Add(contextItem); input.ContextMenu = contextMenu;
+        contextMenu.Open(input); window.UpdateLayout();
+        var contextId = CurrentId("Context action");
+        Check("Open context menu exposes its real provider outside the main visual tree", Current("Context action").GetProperty("role").GetString() == "menuitem"
+            && bridge.Perform(contextId, "invoke", null));
+        Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+        Check("Context provider invokes the real menu command once", contextInvokes == 1);
+        contextMenu.Close(); window.UpdateLayout();
+        Check("Closed context menu rejects its previously exposed provider", !bridge.Perform(contextId, "invoke", null));
         Check("Combo box exposes actual selection and expansion", Current("Layout choices").GetProperty("value").GetString() == "First"
             && bridge.Perform(CurrentId("Layout choices"), "expand", null) && choices.IsDropDownOpen);
         window.UpdateLayout();

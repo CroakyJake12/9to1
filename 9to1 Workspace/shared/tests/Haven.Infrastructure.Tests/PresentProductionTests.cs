@@ -276,7 +276,9 @@ public sealed class PresentProductionTests : IDisposable
 
         var report = new PresentPptxExportService().PreviewExport(document, destination);
         Assert.Contains(report.Issues, issue => issue.FeatureType == "object-type" && issue.SourceTargetId == first.Elements[1].Id);
-        Assert.Contains(report.Issues, issue => issue.FeatureType == "speaker-notes" && issue.SourceTargetId == first.Id);
+        XNamespace drawing = "http://schemas.openxmlformats.org/drawingml/2006/main";
+        Assert.Contains(ReadXml(archive, "ppt/notesSlides/notesSlide1.xml").Descendants(drawing + "t"), text => text.Value == first.SpeakerNotes);
+        Assert.DoesNotContain(report.Issues, issue => issue.FeatureType == "speaker-notes" && issue.SourceTargetId == first.Id);
         Assert.DoesNotContain(report.Issues, issue => issue.FeatureType == "speaker-notes" && issue.SourceTargetId == second.Id);
         Assert.False(report.HasBlockingIssues);
     }

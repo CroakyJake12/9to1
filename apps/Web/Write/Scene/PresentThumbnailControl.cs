@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Haven.Application;
 using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.Views.Pages.Present;
@@ -24,6 +25,14 @@ public sealed class PresentThumbnailControl : Panel, IDisposable
         _navigator.SetValue(HavenProperties.Background, "Transparent");
         _navigator.SlideSelected += index => { if (_allowed && _editor is { } editor && index >= 0 && index < editor.Document.Slides.Count) { editor.CommitLiveTextEdit(); editor.SelectSlide(editor.Document.Slides[index].Id); Refresh(); SelectionChanged?.Invoke(this, EventArgs.Empty); } };
         _navigator.SlideReorderRequested += (from, to) => { if (_allowed && _editable && _editor is { } editor && from >= 0 && from < editor.Document.Slides.Count) { editor.CommitLiveTextEdit(); editor.MoveSlide(editor.Document.Slides[from].Id, to); } };
+        ContextRequested += (_, args) =>
+        {
+            if (!_allowed) { args.Handled = true; return; }
+            if (!args.TryGetPosition(_scene, out var point)) return;
+            var item = _navigator.GetVisibleItems().FirstOrDefault(item => item.Bounds.Contains(new HavenPoint(point.X, point.Y)));
+            if (item.SlideId != Guid.Empty) _navigator.ActivateSlide(item.SlideId);
+            else args.Handled = true;
+        };
     }
     public void SetEditor(PresentEditor? editor, bool allowed, bool editable = true)
     {

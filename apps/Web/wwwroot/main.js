@@ -11,6 +11,7 @@ import { createTaskExecutionHost } from './task-execution-host.js';
 import * as homeLocalPreferences from './home-local-preferences.js';
 
 const platform = createBrowserPlatform(window, document);
+platform.markStartup('javascript:begin');
 let accessibility;
 let unsubscribe;
 let accounts;
@@ -95,9 +96,12 @@ try {
         notes = createNotesModule();
         present = createPresentModule();
         taskStorage = createTaskExecutionHost();
+        platform.markStartup('javascript:services-created');
         if (!isCompatible) throw new Error('BrowserCapabilityUnavailable');
         const { dotnet } = await import('./_framework/dotnet.js');
+        platform.markStartup('runtime:begin');
         const runtime = await dotnet.create();
+        platform.markStartup('runtime:ready');
         runtime.setModuleImports('nineToOneBrowser', { ...platform, releasePrivateAccountContext });
         runtime.setModuleImports('nineToOneHomeLocal', homeLocalPreferences);
         runtime.setModuleImports('nineToOneWave', waveBrowser);
@@ -117,6 +121,7 @@ try {
         const exports = await runtime.getAssemblyExports(config.mainAssemblyName);
         owner = exports.NineToOne.Web.Program;
         await accounts.prepare();
+        platform.markStartup('accounts:ready');
         accessibility = createBrowserAccessibility(window, document, owner);
         unsubscribe = platform.subscribe(owner.LocationChanged,
             () => { releasePrivateAccountContext().catch(cleanupFailed); },

@@ -37,6 +37,14 @@ public sealed class HavenInputRouter(HavenElement root)
     public event Action? ClipboardPasteRequested;
     public HavenElement? HitTest(HavenPoint point) => HitTestCore(root, point);
 
+    public HavenCursor CursorAt(HavenPoint point)
+    {
+        var target = _pointerTargetElement ?? FindPointerTarget(HitTest(point));
+        if (target is IHavenCursorInputTarget cursor)
+            return cursor.GetCursor(new HavenPoint(point.X - target.Bounds.X, point.Y - target.Bounds.Y));
+        return (target ?? HitTest(point))?.GetValue(HavenProperties.Cursor) ?? HavenCursor.Default;
+    }
+
     public void PointerMoved(
         HavenPoint point,
         HavenPointerKind pointerKind = HavenPointerKind.Mouse,
@@ -81,7 +89,8 @@ public sealed class HavenInputRouter(HavenElement root)
         HavenPoint point,
         HavenPointerKind pointerKind = HavenPointerKind.Mouse,
         HavenPointerButton pointerButton = HavenPointerButton.Primary,
-        HavenInputModifiers modifiers = default)
+        HavenInputModifiers modifiers = default,
+        int clickCount = 1)
     {
         PointerMoved(point, pointerKind, modifiers);
         _pressed?.SetState(HavenElementState.Pressed, false);
@@ -137,7 +146,7 @@ public sealed class HavenInputRouter(HavenElement root)
         {
             _pointerTarget = pointerTarget;
             _pointerTargetElement = pointerTargetElement;
-            _pointerConsumed = pointerTarget.PointerPressed(PointerInput(pointerTargetElement, point, pointerKind, modifiers, pointerButton));
+            _pointerConsumed = pointerTarget.PointerPressed(PointerInput(pointerTargetElement, point, pointerKind, modifiers, pointerButton) with { ClickCount = clickCount });
         }
         if (_pressed.Accessibility.Focusable) Focus(_pressed);
 

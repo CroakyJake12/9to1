@@ -6,7 +6,7 @@ namespace Haven.Desktop.Views.Pages.Present;
 
 internal enum PresentVectorHandleKind { Node = 0, Control1 = 1, Control2 = 2 }
 
-internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawCommandSource, IHavenPointerInputTarget, IHavenKeyboardInputTarget, IHavenTextInputTarget, IHavenClipboardInputTarget
+internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawCommandSource, IHavenPointerInputTarget, IHavenCursorInputTarget, IHavenKeyboardInputTarget, IHavenTextInputTarget, IHavenClipboardInputTarget
 {
     private PresentDocument? _document;
     private PresentSlide? _slide;
@@ -33,6 +33,17 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
     public event Action<double, double>? MoveSelectionRequested;
     public event Action<Guid, Guid, PresentVectorHandleKind, double, double>? VectorHandleMoveRequested;
 
+    public void PrepareContext(HavenPoint local)
+    {
+        if (IsTextEditing && TryEditingRect(out var rect, out var rotation)
+            && rect.Contains(InverseRotatePoint(local, rect, rotation))) return;
+        CommitTextEdit(); ResetDirectGesture();
+        var hit = HitElement(local);
+        if (hit is null) SelectionSetRequested?.Invoke(Array.Empty<Guid>());
+        else if (!_selectedIds.Contains(hit.Id)) SelectionSetRequested?.Invoke(new[] { hit.Id });
+        Invalidate();
+    }
+
     public void SetSlide(PresentDocument document, PresentSlide slide, IEnumerable<Guid> selectedIds)
     {
         _document = document ?? throw new ArgumentNullException(nameof(document)); _slide = slide ?? throw new ArgumentNullException(nameof(slide)); _selectedIds = selectedIds?.ToHashSet() ?? []; _vectorPointEditingElementId = _vectorPointEditingElementId is { } editingId && _selectedIds.Contains(editingId) && slide.Elements.Any(element => element.Id == editingId && !element.Locked && element.VectorShape is not null) ? editingId : null; _dragElementId = null; _dragVectorHandle = null; _pointerStart = _pointerCurrent = default; Accessibility.Description = $"Slide {slide.Order + 1}. {slide.Elements.Count} editable objects."; Invalidate();
@@ -57,10 +68,13 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
 
     public bool PointerPressed(HavenPointerInput input)
     {
-        if (_slide is null || _document is null) return false;
+        if (_slide is null || _document is null || input.Button != HavenPointerButton.Primary) return false;
         if (IsTextEditing)
         {
-            if (TryHandleTextPointerPress(input)) return true;
+            // Handles and the selection border remain manipulation targets while
+            // editing. Only the interior captures text-selection gestures.
+            if (HitTransformHandle(input.LocalPosition) is null && !HitEditingBorder(input.LocalPosition)
+                && TryHandleTextPointerPress(input)) return true;
             CommitTextEdit();
         }
         ResetDirectGesture();
@@ -88,7 +102,8 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
         var hit = HitElement(input.LocalPosition);
         if (hit is not null)
         {
-            if (!input.Modifiers.HasFlag(HavenKeyModifiers.Shift) && hit.Kind == PresentElementKind.Text && _selectedIds.Contains(hit.Id))
+            if (input.ClickCount == 2 && !input.Modifiers.HasFlag(HavenKeyModifiers.Shift)
+                && hit.Kind == PresentElementKind.Text && !hit.Locked && _selectedIds.Contains(hit.Id))
             {
                 BeginElementTextEdit(hit, input.LocalPosition, ToInputModifiers(input.Modifiers));
                 return true;
@@ -172,6 +187,14 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
         return true;
     }
 
+    public bool PointerCancelled(HavenPointerInput input)
+    {
+        ResetDirectGesture();
+        _textPointerSelecting = false;
+        Invalidate();
+        return true;
+    }
+
     public void Draw(HavenDrawingContext context, double opacity)
     {
         if (_document is null || _slide is null || Bounds.Width <= 1 || Bounds.Height <= 1) return; var slideRect = SlideRectAbsolute();
@@ -186,7 +209,7 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
     internal void DrawPreview(HavenDrawingContext context, PresentDocument document, PresentSlide slide, HavenRect target, double opacity)
     {
         _document = document; _slide = slide;
-        context.Add(new HavenFillRoundedRectCommand(target, BackgroundBrush(document, slide), 2, opacity));
+        context.Add(new HavenFillRoundedRectCommand(target, BackgroundBrush(document, slide), 7, opacity));
         DrawSlideContent(context, target, opacity);
     }
 
@@ -206,8 +229,9 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
 
     private void DrawElement(HavenDrawingContext context, PresentElement element, HavenRect slideRect, double opacity)
     {
-        var rect = ElementRect(element, slideRect, _dragElementId == element.Id);
-        if (Math.Abs(element.RotationDegrees) > .001) context.Add(new HavenPushTransformCommand(rect, new HavenTransform(RotationDegrees: element.RotationDegrees), new HavenPoint(rect.X + rect.Width / 2, rect.Y + rect.Height / 2)));
+        var rect = ElementRect(element, slideRect, _dragElementId is not null && _selectedIds.Contains(element.Id));
+        var rotation = PreviewRotation(element);
+        if (Math.Abs(rotation) > .001) context.Add(new HavenPushTransformCommand(rect, new HavenTransform(RotationDegrees: rotation), new HavenPoint(rect.X + rect.Width / 2, rect.Y + rect.Height / 2)));
         switch (element.Kind)
         {
             case PresentElementKind.Text:
@@ -216,8 +240,7 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
             case PresentElementKind.Shape when element.VectorShape is { } vector:
                 var renderedVector = BuildPreviewVector(element, vector);
                 DrawVectorShape(context, renderedVector, rect, opacity * element.Opacity);
-                if (_vectorPointEditingElementId == element.Id
-                    || (_vectorPointEditingElementId is null && _selectedIds.Count == 1 && _selectedIds.Contains(element.Id)))
+                if (_vectorPointEditingElementId == element.Id)
                     DrawVectorHandles(context, renderedVector, rect, opacity);
                 break;
             case PresentElementKind.Shape:
@@ -236,7 +259,7 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
                 context.Add(new HavenFillRoundedRectCommand(rect, new HavenTokenBrush("SurfaceRaised"), 8, opacity * element.Opacity)); context.Add(new HavenTextCommand(rect, new HavenTextLayout("Media", "Segoe UI", 14, 600, rect.Width, true), new HavenTokenBrush("TextSecondary"), opacity));
                 break;
         }
-        if (Math.Abs(element.RotationDegrees) > .001) context.Add(new HavenPopTransformCommand(rect));
+        if (Math.Abs(rotation) > .001) context.Add(new HavenPopTransformCommand(rect));
     }
 
     private static void DrawVectorShape(HavenDrawingContext context, DocumentVectorShape shape, HavenRect rect, double opacity)
@@ -307,7 +330,7 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
     {
         if (_slide is null || _selectedIds.Count != 1) return null;
         var element = _slide.Elements.FirstOrDefault(value => _selectedIds.Contains(value.Id) && !value.Locked && value.VectorShape is not null
-            && (_vectorPointEditingElementId is null || value.Id == _vectorPointEditingElementId));
+            && value.Id == _vectorPointEditingElementId);
         if (element?.VectorShape is not { } shape) return null;
         var rect = ElementRect(element, SlideRectLocal(), false);
         var point = InverseRotatePoint(local, rect, element.RotationDegrees);
@@ -401,6 +424,20 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
     private HavenRect ElementRect(PresentElement element, HavenRect slideRect, bool preview)
     {
         var measured = SlideRectLocal();
+        if (_activeTransformHandle != PresentTransformHandle.None && _selectedIds.Contains(element.Id))
+        {
+            var transform = BuildDirectTransform(_activeTransformHandle,
+                (_pointerCurrent.X - _pointerStart.X) / measured.Width,
+                (_pointerCurrent.Y - _pointerStart.Y) / measured.Height);
+            // Match the owner's constraints so the release cannot jump away from
+            // the exact dimensions previewed during a captured gesture.
+            var x = Math.Clamp(element.X + transform.DeltaX, 0, .99);
+            var y = Math.Clamp(element.Y + transform.DeltaY, 0, .99);
+            var width = Math.Clamp(element.Width + transform.DeltaWidth, .01, 1 - x);
+            var height = Math.Clamp(element.Height + transform.DeltaHeight, .01, 1 - y);
+            return new HavenRect(slideRect.X + x * slideRect.Width, slideRect.Y + y * slideRect.Height,
+                width * slideRect.Width, height * slideRect.Height);
+        }
         var dx = preview ? (_pointerCurrent.X - _pointerStart.X) * slideRect.Width / Math.Max(1, measured.Width) : 0;
         var dy = preview ? (_pointerCurrent.Y - _pointerStart.Y) * slideRect.Height / Math.Max(1, measured.Height) : 0;
         return new HavenRect(slideRect.X + element.X * slideRect.Width + dx, slideRect.Y + element.Y * slideRect.Height + dy, element.Width * slideRect.Width, element.Height * slideRect.Height);

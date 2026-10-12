@@ -22,6 +22,7 @@ internal sealed partial class PresentSlideCanvas
     public event EventHandler? TextEditCancelRequested;
 
     public bool IsTextEditing => _textEditTarget != PresentTextEditTarget.None;
+    internal object TextEditContext => (_textEditTarget, _textEditElementId, _editingText, _textCaret, _textSelectionAnchor);
     public string SelectedText
     {
         get
@@ -154,7 +155,7 @@ internal sealed partial class PresentSlideCanvas
         {
             _textSelectionAnchor = 0; _textCaret = _editingText.Length; Invalidate(); return true;
         }
-        if (key == HavenKey.Escape) { CancelTextEdit(); return true; }
+        if (key == HavenKey.Escape) { CommitTextEdit(); return true; }
         if (modifiers.Control && key == HavenKey.Enter) { CommitTextEdit(); return true; }
         if (key == HavenKey.Enter && _textEditTarget == PresentTextEditTarget.SlideTitle) { CommitTextEdit(); return true; }
         switch (key)

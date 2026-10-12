@@ -13,7 +13,14 @@ public readonly record struct HavenPointerInput(
     HavenPoint LocalPosition,
     HavenPointerKind PointerKind,
     HavenKeyModifiers Modifiers = HavenKeyModifiers.None,
-    HavenPointerButton Button = HavenPointerButton.Primary);
+    HavenPointerButton Button = HavenPointerButton.Primary,
+    int ClickCount = 1);
+
+/// <summary>Backend-neutral cursor feedback for a retained drawing surface.</summary>
+public interface IHavenCursorInputTarget
+{
+    HavenCursor GetCursor(HavenPoint localPosition);
+}
 
 /// <summary>Consumes raw pointer press/move/release without exposing a platform input type to Haven.UI.</summary>
 public interface IHavenPointerInputTarget

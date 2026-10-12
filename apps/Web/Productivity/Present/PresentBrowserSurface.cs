@@ -7,6 +7,9 @@ using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
+using Haven.Application;
+using Haven.Core;
+using Avalonia.Media;
 
 namespace NineToOne.Web.Productivity.Present;
 
@@ -16,11 +19,49 @@ public static class PresentBrowserSurface
     {
         var lifetime = new PresentationLifetime(session, reduceMotion);
         var registry = new CuiControlRegistry();
-        BrowserCanonicalIcons.Register(registry);
+        BrowserCanonicalIcons.Register(registry, ShapePreview);
         registry.RegisterObjectRenderer("PresentSlideCanvas", _ => lifetime.Control);
         registry.RegisterObjectRenderer("PresentThumbnails", _ => lifetime.Thumbnails);
         registry.RegisterObjectRenderer("PresentPlaybackCanvas", _ => lifetime.Playback);
         return new(CuiEditorComponents.Compose(document), session, session, lifetime, registry);
+    }
+
+    private static IImage? ShapePreview(string source, Avalonia.Controls.Control target)
+    {
+        if (source.StartsWith("color:", StringComparison.Ordinal) && Color.TryParse(source[6..], out var color))
+            return new DrawingImage(new GeometryDrawing { Geometry = new RectangleGeometry(new Rect(2,2,20,20), 4, 4),
+                Brush = new SolidColorBrush(color), Pen = new Pen(new SolidColorBrush(Color.FromArgb(100,128,128,128)), 1) })
+                { Viewbox = new Rect(0,0,24,24) };
+        if (!source.StartsWith("shape:", StringComparison.Ordinal)) return null;
+        var shape = DocumentShapePresets.Create(source[6..]);
+        if (!target.Resources.TryGetResource("CuiTextBrush", null, out var resource) || resource is not IBrush brush)
+            throw new InvalidOperationException("Shape previews require their scoped CUI palette.");
+        var drawings = new DrawingGroup();
+        foreach (var path in shape.Paths)
+        {
+            var geometry = new StreamGeometry();
+            using (var writer = geometry.Open())
+            {
+                writer.SetFillRule(path.FillRule == DocumentVectorFillRule.NonZero ? FillRule.NonZero : FillRule.EvenOdd);
+                foreach (var subpath in path.Subpaths.Where(item => item.Nodes.Count > 0))
+                {
+                    var first = subpath.Nodes[0];
+                    writer.BeginFigure(new(first.X, first.Y), false);
+                    foreach (var node in subpath.Nodes.Skip(1))
+                    {
+                        var end = new Point(node.X, node.Y);
+                        if (node.IncomingSegment == DocumentVectorSegmentKind.Cubic && node.Control1 is { } c1 && node.Control2 is { } c2)
+                            writer.CubicBezierTo(new(c1.X,c1.Y), new(c2.X,c2.Y), end, true);
+                        else if (node.IncomingSegment == DocumentVectorSegmentKind.Quadratic && node.Control1 is { } q)
+                            writer.QuadraticBezierTo(new(q.X,q.Y), end, true);
+                        else writer.LineTo(end, true);
+                    }
+                    writer.EndFigure(subpath.Closed);
+                }
+            }
+            drawings.Children.Add(new GeometryDrawing { Geometry = geometry, Pen = new Pen(brush, 4, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round) });
+        }
+        return new DrawingImage(drawings) { Viewbox = new Rect(-8, -8, 116, 116) };
     }
     private sealed class PresentationLifetime : IDisposable
     {
@@ -33,6 +74,7 @@ public static class PresentBrowserSurface
         public PresentationLifetime(PresentBrowserSession session, Func<bool> reduceMotion)
         {
             _session = session; Control = new(reduceMotion); Playback = new(reduceMotion); Thumbnails = new(reduceMotion);
+            _session.CanvasTextCommands = Control;
             Thumbnails.SetPreviewRenderer(PresentRetainedSceneControl.CreatePreviewRenderer());
             Control.LiveTextPreviewed += Preview;
             Control.SelectionChanged += Selection;
@@ -98,8 +140,10 @@ public static class PresentBrowserSurface
             {
                 Key.S => "Save", Key.M when !textInput => "AddSlide",
                 Key.B when !textInput => "Bold", Key.I when !textInput => "Italic",
+                Key.U when !textInput => "Underline",
                 Key.Z when !textInput => shift ? "Redo" : "Undo", Key.Y when !textInput => "Redo",
-                Key.C when !textInput => "Copy", Key.V when !textInput => "Paste", _ => null
+                Key.C when !textInput => "Copy", Key.V when !textInput => "Paste",
+                Key.X when !textInput => "Cut", Key.D when !textInput => "DuplicateObject", _ => null
             } : !textInput && Control.IsKeyboardFocusWithin ? args.Key switch
             {
                 Key.Delete or Key.Back => "DeleteObject", Key.Left => "MoveObjectLeft", Key.Right => "MoveObjectRight",
@@ -112,6 +156,7 @@ public static class PresentBrowserSurface
         public void Dispose()
         {
             if (_disposed) return;
+            if (ReferenceEquals(_session.CanvasTextCommands, Control)) _session.CanvasTextCommands = null;
             if (_topLevel is not null) { _topLevel.PropertyChanged -= ViewportChanged; _topLevel.RemoveHandler(InputElement.KeyDownEvent, KeyDown); }
             _topLevel = null;
             Control.AttachedToVisualTree -= Attached;

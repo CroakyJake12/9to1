@@ -46,7 +46,8 @@ public static class CuiControlTemplates
         });
         Add<ComboBox>(resources, Select); Add<ComboBoxItem>(resources, Content); Add<ListBoxItem>(resources, Content);
         Add<ListBox>(resources, Items); Add<ItemsControl>(resources, Items); Add<TreeView>(resources, Items);
-        Add<TreeViewItem>(resources, TreeItem); Add<Menu>(resources, Items); Add<ContextMenu>(resources, Items);
+        Add<TreeViewItem>(resources, TreeItem); Add<Menu>(resources, Items);
+        Add<ContextMenu>(resources, (owner, scope) => PopupFrame(owner, new ScrollViewer { Content = ItemPresenter(owner, scope) }));
         Add<MenuItem>(resources, MenuItem); Add<TabControl>(resources, Tabs); Add<TabItem>(resources, Header);
         Add<CuiMenuItem>(resources, (owner, scope) => MenuItem(owner, scope));
         Add<ContentControl>(resources, Content); Add<UserControl>(resources, Content); Add<ToolTip>(resources, Content);
@@ -222,9 +223,9 @@ public static class CuiControlTemplates
 
     private static Border PopupFrame(Control owner, Control content)
     {
-        var frame = new Border { Child = content, Padding = new(6), BorderThickness = new(1) };
+        var frame = new Border { Child = content, Padding = new(8), BorderThickness = new(1) };
         // Explicit popup scope borrows the owner's canonical resources, not a donor popup theme.
-        frame.Bind(Border.BackgroundProperty, owner.GetResourceObservable("CuiPanelBrush"));
+        frame.Bind(Border.BackgroundProperty, owner.GetResourceObservable("CuiPanel2Brush"));
         frame.Bind(Border.BorderBrushProperty, owner.GetResourceObservable("CuiLineBrush"));
         frame.Bind(Border.CornerRadiusProperty, owner.GetResourceObservable("CuiPopupRadius"));
         return frame;
@@ -264,16 +265,37 @@ public static class CuiControlTemplates
         var row = new Grid { ColumnDefinitions = new(owner.IsTopLevel ? "*" : "Auto,*,Auto,Auto"), ColumnSpacing = owner.IsTopLevel ? 0 : 8 };
         var header = Presenter(owner, scope, "PART_HeaderPresenter", "Header");
         Grid.SetColumn(header, owner.IsTopLevel ? 0 : 1); row.Children.Add(header);
+        var iconImage = new Image { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false };
+        Bind(iconImage, Image.SourceProperty, owner, "Icon"); row.Children.Add(iconImage);
+        var iconContent = new ContentPresenter(); Bind(iconContent, ContentPresenter.ContentProperty, owner, "Icon"); row.Children.Add(iconContent);
+        TextBlock? shortcut = null, arrow = null;
         if (!owner.IsTopLevel)
         {
-            var icon = new ContentPresenter(); Bind(icon, ContentPresenter.ContentProperty, owner, "Icon"); row.Children.Add(icon);
-            var shortcut = new TextBlock { VerticalAlignment = VerticalAlignment.Center };
+            shortcut = new TextBlock { VerticalAlignment = VerticalAlignment.Center };
             Bind(shortcut, TextBlock.TextProperty, owner, "InputGesture");
             Resource(shortcut, TextBlock.ForegroundProperty, "CuiTextSoftBrush");
             Grid.SetColumn(shortcut, 2); row.Children.Add(shortcut);
-            var arrow = new TextBlock { Text = "›", IsVisible = owner.Items.Count > 0, VerticalAlignment = VerticalAlignment.Center };
+            arrow = new TextBlock { Text = "›", IsVisible = owner.Items.Count > 0, VerticalAlignment = VerticalAlignment.Center };
             Grid.SetColumn(arrow, 3); row.Children.Add(arrow);
         }
+        void UpdateIcon()
+        {
+            var iconOnly = owner is CuiMenuItem { IconOnly: true };
+            var hasImage = owner.Icon is Avalonia.Media.IImage;
+            row.ColumnDefinitions = new(owner.IsTopLevel || iconOnly ? "*" : "Auto,*,Auto,Auto");
+            Grid.SetColumn(header, owner.IsTopLevel || iconOnly ? 0 : 1);
+            iconImage.Width = iconImage.Height = iconOnly ? 36 : 20;
+            iconImage.IsVisible = hasImage;
+            iconContent.IsVisible = !hasImage && owner.Icon is not null;
+            header.IsVisible = !(hasImage && (owner.IsTopLevel || iconOnly));
+            if (shortcut is not null) shortcut.IsVisible = !iconOnly;
+            if (arrow is not null) arrow.IsVisible = !iconOnly && owner.Items.Count > 0;
+        }
+        owner.PropertyChanged += (_, change) =>
+        {
+            if (change.Property == Avalonia.Controls.MenuItem.IconProperty || change.Property == CuiMenuItem.IconOnlyProperty) UpdateIcon();
+        };
+        UpdateIcon();
         var popup = Name(new Popup { PlacementTarget = owner, Placement = owner.IsTopLevel ? PlacementMode.Bottom : PlacementMode.RightEdgeAlignedTop, IsLightDismissEnabled = false }, "PART_Popup", scope);
         Bind(popup, Popup.IsOpenProperty, owner, "IsSubMenuOpen", true);
         popup.Child = PopupFrame(owner, new ScrollViewer { Content = ItemPresenter(owner, scope) }); row.Children.Add(popup);

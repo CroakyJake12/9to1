@@ -10,8 +10,15 @@ using Haven.UI;
 
 namespace NineToOne.Web.Productivity.Present;
 
+public interface IPresentCanvasTextCommands
+{
+    bool IsTextEditing { get; }
+    bool HasSelectedText { get; }
+    Task<bool> ExecuteTextCommandAsync(string command, CancellationToken cancellationToken);
+}
+
 /// <summary>Retains the actual owning canvas, scene and editor; this class supplies only event/lifetime/input composition.</summary>
-public sealed class PresentRetainedSceneControl : Panel, IDisposable
+public sealed class PresentRetainedSceneControl : Panel, IDisposable, IPresentCanvasTextCommands
 {
     private readonly HavenSceneControl _scene;
     private readonly PresentSlideCanvas _canvas = new();
@@ -25,6 +32,7 @@ public sealed class PresentRetainedSceneControl : Panel, IDisposable
     private Point? _pointerStartInWindow;
     private bool _pointerMovedInWindow;
     public bool IsTextEditing => _canvas.IsTextEditing;
+    public bool HasSelectedText => !string.IsNullOrEmpty(_canvas.SelectedText);
     public event EventHandler? LiveTextPreviewed;
     public event EventHandler? SelectionChanged;
     public static Action<HavenDrawingContext, Haven.Core.PresentDocument, Haven.Core.PresentSlide, HavenRect, double> CreatePreviewRenderer()
@@ -60,6 +68,37 @@ public sealed class PresentRetainedSceneControl : Panel, IDisposable
         _canvas.ElementTextPreviewRequested += PreviewText;
         _canvas.TextEditCommitRequested += Commit;
         _canvas.TextEditCancelRequested += Cancel;
+        ContextRequested += (_, args) =>
+        {
+            if (!_allowed) { args.Handled = true; return; }
+            if (args.TryGetPosition(_scene, out var point))
+                _canvas.PrepareContext(new HavenPoint(point.X - _canvas.Bounds.X, point.Y - _canvas.Bounds.Y));
+            SelectionChanged?.Invoke(this, EventArgs.Empty);
+        };
+    }
+
+    public async Task<bool> ExecuteTextCommandAsync(string command, CancellationToken cancellationToken)
+    {
+        if (!_allowed || !_canvas.IsTextEditing) return false;
+        if (command == "SelectAllText") return _canvas.KeyDown(HavenKey.A, new HavenInputModifiers(Control: true));
+        var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+        if (clipboard is null) return false;
+        var editor = _editor; var slide = _renderedSlide; var textContext = _canvas.TextEditContext;
+        if (command == "Paste")
+        {
+            var text = await Avalonia.Input.Platform.ClipboardExtensions.TryGetTextAsync(clipboard);
+            cancellationToken.ThrowIfCancellationRequested();
+            return !_disposed && _allowed && ReferenceEquals(editor, _editor) && slide == _renderedSlide
+                && _canvas.IsTextEditing && Equals(textContext, _canvas.TextEditContext) && _canvas.Paste(text);
+        }
+        var selected = _canvas.Copy();
+        if (selected is null) return false;
+        await Avalonia.Input.Platform.ClipboardExtensions.SetTextAsync(clipboard, selected);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_disposed || !_allowed || !ReferenceEquals(editor, _editor) || slide != _renderedSlide || !_canvas.IsTextEditing
+            || !Equals(textContext, _canvas.TextEditContext)) return false;
+        if (command == "Cut" && _canvas.SelectedText == selected) _canvas.DeleteSelection();
+        return true;
     }
 
     public void SetEditor(PresentEditor? editor)

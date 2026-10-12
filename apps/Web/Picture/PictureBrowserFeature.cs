@@ -19,7 +19,7 @@ namespace NineToOne.Web.Picture;
 public sealed class PictureBrowserFeature : IHomeFeatureRouteHandler, IBrowserCloseParticipant, IDisposable
 {
     private readonly IPictureBrowserMedia _media;
-    private readonly CuiDocument _document;
+    private readonly CuiDocumentSource _document;
     private readonly HashSet<PictureViewLifetime> _views = [];
     private readonly HashSet<PictureBrowserSession> _preparingCandidates = [];
     private int _preparations;
@@ -31,19 +31,17 @@ public sealed class PictureBrowserFeature : IHomeFeatureRouteHandler, IBrowserCl
     public string RouteId => "app.picture";
     public Exception? LastRetirementError { get; private set; }
     public bool HasUnsavedChanges => _session.IsDirty || _session.IsBusy || _session.HasPendingInput || _preparations != 0 || !_retirement.IsCompletedSuccessfully;
-    public PictureBrowserFeature(IPictureBrowserMedia media, string markup)
+    public PictureBrowserFeature(IPictureBrowserMedia media, string markup, bool deferMarkup = false)
     {
         _media = media ?? throw new ArgumentNullException(nameof(media)); _session = new(media);
-        var parser = new CuiRichParser(); _document = parser.Parse(markup, "Picture.cui");
-        if (parser.Diagnostics.Diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error))
-            throw new InvalidDataException("The browser Picture CUI is invalid.");
+        _document = new CuiDocumentSource(markup, "Picture.cui", deferMarkup);
     }
     public static HomeCoreOperationResult<bool> Register(BrowserSurfaceRegistry registry)
     {
         using var stream = typeof(PictureBrowserFeature).Assembly.GetManifestResourceStream("NineToOne.Web.Picture.cui")
             ?? throw new InvalidOperationException("The Picture browser resource is unavailable.");
         using var reader = new StreamReader(stream);
-        var feature = new PictureBrowserFeature(new BrowserPictureMedia(), reader.ReadToEnd());
+        var feature = new PictureBrowserFeature(new BrowserPictureMedia(), reader.ReadToEnd(), deferMarkup: true);
         var result = registry.Register(feature, feature.Render, BrowserSurfaceScope.DeviceLocal);
         if (!result.Succeeded) feature.Dispose(); return result;
     }
@@ -95,7 +93,7 @@ public sealed class PictureBrowserFeature : IHomeFeatureRouteHandler, IBrowserCl
         var view = new PictureViewLifetime(this, offer.Candidate); _views.Add(view);
         var registry = new CuiControlRegistry(); registry.RegisterObjectRenderer("PictureRasterPreview", _ => view.Control);
         // Previous view disposal belongs to the shell's successful retained-CUI handoff.
-        return new(_document, offer.Candidate, offer.Candidate, view, registry, offer);
+        return new(_document.Document, offer.Candidate, offer.Candidate, view, registry, offer);
     }
     public async Task<HomeCoreOperationResult<bool>> PrepareToCloseAsync(CancellationToken cancellationToken = default)
     {

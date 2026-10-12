@@ -1,6 +1,13 @@
 export function createBrowserPlatform(windowObject, documentObject) {
     let lastFragment = windowObject.location.hash;
     return {
+        markStartup: stage => windowObject.performance?.mark('9to1:' + stage),
+        setHostPalette(background, foreground, panel) {
+            const palette = [background, foreground, panel];
+            if (!palette.every(value => /^#[0-9a-f]{6}$/i.test(value))) return;
+            ['background', 'foreground', 'panel'].forEach((name, index) => documentObject.documentElement.style.setProperty('--cui-boot-' + name, palette[index]));
+            try { windowObject.localStorage.setItem('9to1.cui.host-palette.v1', JSON.stringify(palette)); } catch { }
+        },
         readFragment: () => windowObject.location.hash,
         reduceMotion: () => windowObject.matchMedia('(prefers-reduced-motion: reduce)').matches,
         writeFragment(fragment, replace) {
@@ -15,6 +22,13 @@ export function createBrowserPlatform(windowObject, documentObject) {
             status.dataset.code = code;
             status.textContent = message;
             status.hidden = message.length === 0;
+            const retry = documentObject.querySelector?.('#browser-retry');
+            if (retry) retry.hidden = !['BrowserRuntimeUnavailable', 'BrowserCapabilityUnavailable', 'BrowserSurfaceFailed'].includes(code);
+            if (code === 'Ready') {
+                windowObject.performance?.mark('9to1:interactive');
+                windowObject.requestAnimationFrame?.(() => windowObject.requestAnimationFrame(() =>
+                    windowObject.performance?.mark('9to1:visible-frame')));
+            }
             documentObject.title = '9to1';
         },
         subscribe(locationChanged, releasePage, invalidatePrivateContext, hasUnsavedChanges = () => false) {

@@ -11,7 +11,7 @@ internal sealed class PresentThumbnailNavigator : HavenElement, IHavenDrawComman
     private const double HorizontalPadding = 10;
     private const double VerticalPadding = 8;
     private const double ItemGap = 12;
-    private const double LabelHeight = 22;
+    private const double LabelHeight = 30;
     private const double DragThresholdSquared = 25;
 
     private PresentDocument? _document;
@@ -227,16 +227,18 @@ internal sealed class PresentThumbnailNavigator : HavenElement, IHavenDrawComman
         var thumbRect = new HavenRect(itemRect.X, itemRect.Y, itemRect.Width, itemRect.Height - LabelHeight);
         var selected = index == _selectedIndex;
         if (selected)
-            context.Add(new HavenFillRoundedRectCommand(new HavenRect(itemRect.X - 4, itemRect.Y - 4, itemRect.Width + 8, itemRect.Height + 6), new HavenTokenBrush("AccentSubtle"), 10, opacity));
+            context.Add(new HavenFillRoundedRectCommand(new HavenRect(itemRect.X - 5, itemRect.Y - 5, itemRect.Width + 10, itemRect.Height + 7), new HavenTokenBrush("AccentSubtle"), 12, opacity));
         context.Add(new HavenShadowCommand(thumbRect, new HavenShadow(new HavenSolidBrush(55, 0, 0, 0), 8, 0, 2, 0, .22), 5));
         var renderer = _previewRenderer ?? throw new InvalidOperationException("Present thumbnails require the owning slide renderer.");
         renderer(context, _document!, slide, thumbRect, opacity);
-        context.Add(new HavenStrokeRoundedRectCommand(thumbRect, new HavenPen(new HavenTokenBrush(selected ? "Accent" : "Border"), selected ? 2 : 1), 4, opacity));
+        context.Add(new HavenStrokeRoundedRectCommand(thumbRect, new HavenPen(new HavenTokenBrush(selected ? "Accent" : "Border"), selected ? 2 : 1), 7, opacity));
         var title = string.IsNullOrWhiteSpace(slide.Title) ? "Untitled slide" : slide.Title.Trim();
 
-        var labelRect = new HavenRect(itemRect.X, thumbRect.Bottom + 3, itemRect.Width, LabelHeight - 3);
-        var label = $"{index + 1}  {title.Replace('\r', ' ').Replace('\n', ' ').Trim()}";
-        context.Add(new HavenTextCommand(labelRect, new HavenTextLayout(label, "Segoe UI", 11, selected ? 700 : 500, labelRect.Width, false)
+        var numberRect = new HavenRect(itemRect.X + 2, thumbRect.Bottom + 7, 24, LabelHeight - 7);
+        context.Add(new HavenTextCommand(numberRect, new HavenTextLayout($"{index + 1}", "Montserrat", 11, 500, numberRect.Width, false), new HavenTokenBrush("TextSecondary"), opacity));
+        var labelRect = new HavenRect(itemRect.X + 28, thumbRect.Bottom + 7, itemRect.Width - 30, LabelHeight - 7);
+        var label = title.Replace('\r', ' ').Replace('\n', ' ').Trim();
+        context.Add(new HavenTextCommand(labelRect, new HavenTextLayout(label, "Montserrat", 11, selected ? 600 : 500, labelRect.Width, false)
             { SingleLineEllipsis = true }, new HavenTokenBrush(selected ? "TextPrimary" : "TextSecondary"), opacity));
     }
 

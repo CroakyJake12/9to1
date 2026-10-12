@@ -10,7 +10,11 @@ internal enum PresentTransformHandle
     NorthEast,
     SouthWest,
     SouthEast,
-    Rotate
+    Rotate,
+    North,
+    South,
+    West,
+    East
 }
 
 internal sealed partial class PresentSlideCanvas
@@ -21,6 +25,45 @@ internal sealed partial class PresentSlideCanvas
 
     public event Action<IReadOnlyCollection<Guid>>? SelectionSetRequested;
     public event Action<double, double, double, double, double>? TransformSelectionRequested;
+
+    public HavenCursor GetCursor(HavenPoint local)
+    {
+        if (_dragElementId is not null) return HavenCursor.Grabbing;
+        var handle = _activeTransformHandle != PresentTransformHandle.None ? _activeTransformHandle : HitTransformHandle(local);
+        if (handle == PresentTransformHandle.Rotate) return HavenCursor.Rotate;
+        if (handle is not null && handle != PresentTransformHandle.None)
+        {
+            var rotation = _slide?.Elements.FirstOrDefault(element => _selectedIds.Contains(element.Id))?.RotationDegrees ?? 0;
+            var angle = rotation + (handle switch
+            {
+                PresentTransformHandle.North or PresentTransformHandle.South => 90,
+                PresentTransformHandle.NorthWest or PresentTransformHandle.SouthEast => 45,
+                PresentTransformHandle.NorthEast or PresentTransformHandle.SouthWest => 135,
+                _ => 0
+            });
+            return (((int)Math.Round(angle / 45) % 4 + 4) % 4) switch
+            {
+                0 => HavenCursor.ResizeHorizontal, 1 => HavenCursor.ResizeNorthWestSouthEast,
+                2 => HavenCursor.ResizeVertical, _ => HavenCursor.ResizeNorthEastSouthWest
+            };
+        }
+        if (IsTextEditing && !HitEditingBorder(local) && TryEditingRect(out var rect, out var textRotation)
+            && rect.Contains(InverseRotatePoint(local, rect, textRotation))) return HavenCursor.Text;
+        return HitElement(local) is { Locked: false } ? HavenCursor.Move : HavenCursor.Default;
+    }
+
+    private bool HitEditingBorder(HavenPoint local)
+    {
+        if (!IsTextEditing || !TryEditingRect(out var rect, out var rotation)) return false;
+        var point = InverseRotatePoint(local, rect, rotation);
+        return point.X >= rect.X - 5 && point.X <= rect.Right + 5 && point.Y >= rect.Y - 5 && point.Y <= rect.Bottom + 5
+            && (Math.Abs(point.X - rect.X) <= 5 || Math.Abs(point.X - rect.Right) <= 5
+                || Math.Abs(point.Y - rect.Y) <= 5 || Math.Abs(point.Y - rect.Bottom) <= 5);
+    }
+
+    private double PreviewRotation(PresentElement element) => element.RotationDegrees +
+        (_activeTransformHandle == PresentTransformHandle.Rotate && _selectedIds.Contains(element.Id)
+            ? BuildDirectTransform(_activeTransformHandle, 0, 0).DeltaRotation : 0);
 
     private void ResetDirectGesture()
     {
@@ -48,7 +91,9 @@ internal sealed partial class PresentSlideCanvas
         if (handle == PresentTransformHandle.Rotate && _slide is not null && _selectedIds.Count == 1)
         {
             var element = _slide.Elements.First(value => _selectedIds.Contains(value.Id));
-            var center = Center(ElementRect(element, SlideRectLocal(), false));
+            var paper = SlideRectLocal();
+            var center = new HavenPoint(paper.X + (element.X + element.Width / 2) * paper.Width,
+                paper.Y + (element.Y + element.Height / 2) * paper.Height);
             var start = Math.Atan2(_pointerStart.Y - center.Y, _pointerStart.X - center.X);
             var current = Math.Atan2(_pointerCurrent.Y - center.Y, _pointerCurrent.X - center.X);
             var degrees = (current - start) * 180d / Math.PI;
@@ -57,14 +102,26 @@ internal sealed partial class PresentSlideCanvas
             return new DirectTransform(0, 0, 0, 0, degrees);
         }
 
-        return handle switch
-        {
-            PresentTransformHandle.NorthWest => new DirectTransform(dx, dy, -dx, -dy, 0),
-            PresentTransformHandle.NorthEast => new DirectTransform(0, dy, dx, -dy, 0),
-            PresentTransformHandle.SouthWest => new DirectTransform(dx, 0, -dx, dy, 0),
-            PresentTransformHandle.SouthEast => new DirectTransform(0, 0, dx, dy, 0),
-            _ => default
-        };
+        if (_slide is null || _selectedIds.Count != 1) return default;
+        var selected = _slide.Elements.First(value => _selectedIds.Contains(value.Id));
+        var slide = SlideRectLocal();
+        var radians = selected.RotationDegrees * Math.PI / 180;
+        var cos = Math.Cos(radians); var sin = Math.Sin(radians);
+        var localX = cos * dx * slide.Width + sin * dy * slide.Height;
+        var localY = -sin * dx * slide.Width + cos * dy * slide.Height;
+        var west = handle is PresentTransformHandle.West or PresentTransformHandle.NorthWest or PresentTransformHandle.SouthWest;
+        var east = handle is PresentTransformHandle.East or PresentTransformHandle.NorthEast or PresentTransformHandle.SouthEast;
+        var north = handle is PresentTransformHandle.North or PresentTransformHandle.NorthWest or PresentTransformHandle.NorthEast;
+        var south = handle is PresentTransformHandle.South or PresentTransformHandle.SouthWest or PresentTransformHandle.SouthEast;
+        var width = Math.Max(.01 * slide.Width, selected.Width * slide.Width + (west ? -localX : east ? localX : 0));
+        var height = Math.Max(.01 * slide.Height, selected.Height * slide.Height + (north ? -localY : south ? localY : 0));
+        var deltaWidth = width - selected.Width * slide.Width;
+        var deltaHeight = height - selected.Height * slide.Height;
+        var centreX = (west ? -deltaWidth : deltaWidth) / 2;
+        var centreY = (north ? -deltaHeight : deltaHeight) / 2;
+        return new DirectTransform((cos * centreX - sin * centreY - deltaWidth / 2) / slide.Width,
+            (sin * centreX + cos * centreY - deltaHeight / 2) / slide.Height,
+            deltaWidth / slide.Width, deltaHeight / slide.Height, 0);
     }
 
     private IReadOnlyCollection<Guid> HitElementsInMarquee(HavenPoint start, HavenPoint end)
@@ -81,8 +138,9 @@ internal sealed partial class PresentSlideCanvas
     private void DrawDirectSelection(HavenDrawingContext context, PresentElement element, HavenRect rect, double opacity, bool showHandles)
     {
         var center = Center(rect);
-        if (Math.Abs(element.RotationDegrees) > .001)
-            context.Add(new HavenPushTransformCommand(rect, new HavenTransform(RotationDegrees: element.RotationDegrees), center));
+        var rotation = PreviewRotation(element);
+        if (Math.Abs(rotation) > .001)
+            context.Add(new HavenPushTransformCommand(rect, new HavenTransform(RotationDegrees: rotation), center));
         context.Add(new HavenStrokeRoundedRectCommand(rect, new HavenPen(new HavenTokenBrush("Accent"), 2), 3, opacity));
         if (showHandles)
         {
@@ -90,14 +148,16 @@ internal sealed partial class PresentSlideCanvas
             foreach (var point in new[]
             {
                 new HavenPoint(rect.X, rect.Y), new HavenPoint(rect.Right, rect.Y),
-                new HavenPoint(rect.X, rect.Bottom), new HavenPoint(rect.Right, rect.Bottom)
+                new HavenPoint(rect.X, rect.Bottom), new HavenPoint(rect.Right, rect.Bottom),
+                new HavenPoint(center.X, rect.Y), new HavenPoint(center.X, rect.Bottom),
+                new HavenPoint(rect.X, center.Y), new HavenPoint(rect.Right, center.Y)
             })
                 context.Add(new HavenEllipseCommand(new HavenRect(point.X - TransformHandleRadius, point.Y - TransformHandleRadius, size, size), new HavenTokenBrush("Surface"), new HavenPen(new HavenTokenBrush("Accent"), 2), opacity));
             var rotate = new HavenPoint(rect.X + rect.Width / 2, rect.Y - 28);
             context.Add(new HavenLineCommand(new HavenPoint(rect.X + rect.Width / 2, rect.Y), rotate, new HavenPen(new HavenTokenBrush("Accent"), 1.5), opacity));
             context.Add(new HavenEllipseCommand(new HavenRect(rotate.X - TransformHandleRadius, rotate.Y - TransformHandleRadius, size, size), new HavenTokenBrush("Surface"), new HavenPen(new HavenTokenBrush("Accent"), 2), opacity));
         }
-        if (Math.Abs(element.RotationDegrees) > .001) context.Add(new HavenPopTransformCommand(rect));
+        if (Math.Abs(rotation) > .001) context.Add(new HavenPopTransformCommand(rect));
     }
 
     private void DrawMarquee(HavenDrawingContext context, double opacity)
@@ -116,6 +176,10 @@ internal sealed partial class PresentSlideCanvas
         yield return (PresentTransformHandle.NorthEast, RotatePoint(new HavenPoint(rect.Right, rect.Y), center, rotation));
         yield return (PresentTransformHandle.SouthWest, RotatePoint(new HavenPoint(rect.X, rect.Bottom), center, rotation));
         yield return (PresentTransformHandle.SouthEast, RotatePoint(new HavenPoint(rect.Right, rect.Bottom), center, rotation));
+        yield return (PresentTransformHandle.North, RotatePoint(new HavenPoint(center.X, rect.Y), center, rotation));
+        yield return (PresentTransformHandle.South, RotatePoint(new HavenPoint(center.X, rect.Bottom), center, rotation));
+        yield return (PresentTransformHandle.West, RotatePoint(new HavenPoint(rect.X, center.Y), center, rotation));
+        yield return (PresentTransformHandle.East, RotatePoint(new HavenPoint(rect.Right, center.Y), center, rotation));
         yield return (PresentTransformHandle.Rotate, RotatePoint(new HavenPoint(rect.X + rect.Width / 2, rect.Y - 28), center, rotation));
     }
 

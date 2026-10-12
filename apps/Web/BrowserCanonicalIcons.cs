@@ -13,12 +13,12 @@ internal static class BrowserCanonicalIcons
 {
     private static readonly ConditionalWeakTable<CuiControlRegistry, object> Registrations = new();
     private static readonly object RegistrationLock = new();
-    internal static void Register(CuiControlRegistry registry)
+    internal static void Register(CuiControlRegistry registry, Func<string, Control, IImage?>? additionalSource = null)
     {
         lock (RegistrationLock)
         {
             if (Registrations.TryGetValue(registry, out _)) return;
-            registry.RegisterImageSourceResolver(Resolve);
+            registry.RegisterImageSourceResolver((source, target) => additionalSource?.Invoke(source, target) ?? Resolve(source, target));
             Registrations.Add(registry, new object());
         }
     }

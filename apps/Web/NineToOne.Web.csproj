@@ -54,6 +54,8 @@
     <EmbeddedResource Include="Productivity/Present/Present.cui" LogicalName="NineToOne.Web.Present.cui" />
     <EmbeddedResource Include="Productivity/Boards/Boards.cui" LogicalName="NineToOne.Web.Boards.cui" />
     <Content Include="Media/wave-browser.js" Link="wwwroot/wave-browser.js" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../framework/CUI/Themes/BrowserBootstrap.css" Link="wwwroot/cui-bootstrap.css" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/MontserratStatic/Montserrat-Medium.ttf" Link="wwwroot/Montserrat-Medium.ttf" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Media/picture-browser.js" Link="wwwroot/picture-browser.js" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Home/Storage/home-dashboard-indexeddb.js" Link="wwwroot/Home/Storage/home-dashboard-indexeddb.js" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Services/account-service.js" Link="wwwroot/account-service.js" CopyToOutputDirectory="PreserveNewest" />

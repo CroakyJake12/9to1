@@ -1,10 +1,130 @@
 <Cui id="present.browser" version="1">
   <Import Source="framework/CUI/Components/Editor.cui" />
+  <Button (Definition) ID="PresentShapeGallery" Type="Menu Item" Content="Shapes" Padding="7,6" Background="Transparent" BorderWidth="0">
+    <EditorMenu Content="Basic shapes" MenuColumns="4">
+      <EditorMenu Content="Rectangle" AccessibleName="Rectangle" Tooltip="Rectangle" IconSource="shape:rect" IconOnly="True" Width="56" Height="56" CornerRadius="8" Action="InsertShape_rect" Interactive="{Binding CanEdit}" />
+      <EditorMenu Content="Rounded rectangle" AccessibleName="Rounded rectangle" Tooltip="Rounded rectangle" IconSource="shape:roundRect" IconOnly="True" Width="56" Height="56" CornerRadius="8" Action="InsertShape_roundRect" Interactive="{Binding CanEdit}" />
+      <EditorMenu Content="Ellipse" AccessibleName="Ellipse" Tooltip="Ellipse" IconSource="shape:ellipse" IconOnly="True" Width="56" Height="56" CornerRadius="8" Action="InsertShape_ellipse" Interactive="{Binding CanEdit}" />
+      <EditorMenu Content="Triangle" AccessibleName="Triangle" Tooltip="Triangle" IconSource="shape:triangle" IconOnly="True" Width="56" Height="56" CornerRadius="8" Action="InsertShape_triangle" Interactive="{Binding CanEdit}" />
+      <EditorMenu Content="Diamond" AccessibleName="Diamond" Tooltip="Diamond" IconSource="shape:diamond" IconOnly="True" Width="56" Height="56" CornerRadius="8" Action="InsertShape_diamond" Interactive="{Binding CanEdit}" />
+      <EditorMenu Content="Hexagon" AccessibleName="Hexagon" Tooltip="Hexagon" IconSource="shape:hexagon" IconOnly="True" Width="56" Height="56" CornerRadius="8" Action="InsertShape_hexagon" Interactive="{Binding CanEdit}" />
+      <EditorMenu Content="Star" AccessibleName="Star" Tooltip="Star" IconSource="shape:star" IconOnly="True" Width="56" Height="56" CornerRadius="8" Action="InsertShape_star" Interactive="{Binding CanEdit}" />
+    </EditorMenu>
+    <EditorMenu Content="Lines and arrows" MenuColumns="4">
+      <EditorMenu Content="Line" AccessibleName="Line" Tooltip="Line" IconSource="shape:line" IconOnly="True" Width="56" Height="56" CornerRadius="8" Action="InsertShape_line" Interactive="{Binding CanEdit}" />
+      <EditorMenu Content="Right arrow" AccessibleName="Right arrow" Tooltip="Right arrow" IconSource="shape:rightArrow" IconOnly="True" Width="56" Height="56" CornerRadius="8" Action="InsertShape_rightArrow" Interactive="{Binding CanEdit}" />
+      <EditorMenu Content="Left arrow" AccessibleName="Left arrow" Tooltip="Left arrow" IconSource="shape:leftArrow" IconOnly="True" Width="56" Height="56" CornerRadius="8" Action="InsertShape_leftArrow" Interactive="{Binding CanEdit}" />
+      <EditorMenu Content="Two-way arrow" AccessibleName="Two-way arrow" Tooltip="Two-way arrow" IconSource="shape:leftRightArrow" IconOnly="True" Width="56" Height="56" CornerRadius="8" Action="InsertShape_leftRightArrow" Interactive="{Binding CanEdit}" />
+    </EditorMenu>
+    <EditorMenu Content="Flowchart" MenuColumns="4">
+      <EditorMenu Content="Decision" AccessibleName="Decision" Tooltip="Decision" IconSource="shape:flowDecision" IconOnly="True" Width="56" Height="56" CornerRadius="8" Action="InsertShape_flowDecision" Interactive="{Binding CanEdit}" />
+      <EditorMenu Content="Process" AccessibleName="Process" Tooltip="Process" IconSource="shape:flowProcess" IconOnly="True" Width="56" Height="56" CornerRadius="8" Action="InsertShape_flowProcess" Interactive="{Binding CanEdit}" />
+      <EditorMenu Content="Terminator" AccessibleName="Terminator" Tooltip="Terminator" IconSource="shape:flowTerminator" IconOnly="True" Width="56" Height="56" CornerRadius="8" Action="InsertShape_flowTerminator" Interactive="{Binding CanEdit}" />
+    </EditorMenu>
+    <EditorMenu Content="Callouts" MenuColumns="4">
+      <EditorMenu Content="Speech bubble" AccessibleName="Speech bubble" Tooltip="Speech bubble" IconSource="shape:callout" IconOnly="True" Width="56" Height="56" CornerRadius="8" Action="InsertShape_callout" Interactive="{Binding CanEdit}" />
+    </EditorMenu>
+  </Button>
+  <Button (Definition) ID="PresentTextPalette" Type="Menu Item" MenuColumns="5" Content="Text colour" AccessibleName="Text colour" Tooltip="Text colour" IconSource="icon:text-color" Width="36" Height="36" Padding="8" BorderWidth="0" Background="Transparent" CornerRadius="8" Interactive="{Binding CanFontSize}">
+      <EditorMenu Content="Black" AccessibleName="Black" Tooltip="Black" IconSource="color:#202020" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="TextColourBlack" />
+      <EditorMenu Content="White" AccessibleName="White" Tooltip="White" IconSource="color:#ffffff" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="TextColourWhite" />
+      <EditorMenu Content="Blue" AccessibleName="Blue" Tooltip="Blue" IconSource="color:#4472c4" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="TextColourBlue" />
+      <EditorMenu Content="Teal" AccessibleName="Teal" Tooltip="Teal" IconSource="color:#008080" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="TextColourTeal" />
+      <EditorMenu Content="Green" AccessibleName="Green" Tooltip="Green" IconSource="color:#228b22" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="TextColourGreen" />
+      <EditorMenu Content="Yellow" AccessibleName="Yellow" Tooltip="Yellow" IconSource="color:#ffd966" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="TextColourYellow" />
+      <EditorMenu Content="Orange" AccessibleName="Orange" Tooltip="Orange" IconSource="color:#ed7d31" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="TextColourOrange" />
+      <EditorMenu Content="Red" AccessibleName="Red" Tooltip="Red" IconSource="color:#c00000" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="TextColourRed" />
+      <EditorMenu Content="Purple" AccessibleName="Purple" Tooltip="Purple" IconSource="color:#7030a0" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="TextColourPurple" />
+    <EditorMenu IconOnly="True" IconSource="icon:properties" Tooltip="Custom colour" Width="44" Height="44" Padding="4" Content="Custom colour…" Action="ShowObjectProperties" />
+  </Button>
+  <Button (Definition) ID="PresentFillPalette" Type="Menu Item" MenuColumns="5" Content="Shape fill" AccessibleName="Shape fill" Tooltip="Shape fill" IconSource="icon:palette" Width="36" Height="36" Padding="8" BorderWidth="0" Background="Transparent" CornerRadius="8" Interactive="{Binding CanApplyFill}">
+      <EditorMenu Content="Black" AccessibleName="Black" Tooltip="Black" IconSource="color:#202020" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="FillColourBlack" />
+      <EditorMenu Content="White" AccessibleName="White" Tooltip="White" IconSource="color:#ffffff" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="FillColourWhite" />
+      <EditorMenu Content="Blue" AccessibleName="Blue" Tooltip="Blue" IconSource="color:#4472c4" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="FillColourBlue" />
+      <EditorMenu Content="Teal" AccessibleName="Teal" Tooltip="Teal" IconSource="color:#008080" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="FillColourTeal" />
+      <EditorMenu Content="Green" AccessibleName="Green" Tooltip="Green" IconSource="color:#228b22" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="FillColourGreen" />
+      <EditorMenu Content="Yellow" AccessibleName="Yellow" Tooltip="Yellow" IconSource="color:#ffd966" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="FillColourYellow" />
+      <EditorMenu Content="Orange" AccessibleName="Orange" Tooltip="Orange" IconSource="color:#ed7d31" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="FillColourOrange" />
+      <EditorMenu Content="Red" AccessibleName="Red" Tooltip="Red" IconSource="color:#c00000" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="FillColourRed" />
+      <EditorMenu Content="Purple" AccessibleName="Purple" Tooltip="Purple" IconSource="color:#7030a0" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="FillColourPurple" />
+    <EditorMenu IconOnly="True" IconSource="icon:close" Tooltip="No fill" Width="44" Height="44" Padding="4" Content="No fill" Action="FillColourNone" />
+    <EditorMenu IconOnly="True" IconSource="icon:properties" Tooltip="Custom colour" Width="44" Height="44" Padding="4" Content="Custom colour…" Action="ShowObjectProperties" />
+  </Button>
+  <Button (Definition) ID="PresentStrokePalette" Type="Menu Item" MenuColumns="5" Content="Shape outline" AccessibleName="Shape outline" Tooltip="Shape outline" IconSource="icon:stroke" Width="36" Height="36" Padding="8" BorderWidth="0" Background="Transparent" CornerRadius="8" Interactive="{Binding CanApplyStroke}">
+      <EditorMenu Content="Black" AccessibleName="Black" Tooltip="Black" IconSource="color:#202020" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="StrokeColourBlack" />
+      <EditorMenu Content="White" AccessibleName="White" Tooltip="White" IconSource="color:#ffffff" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="StrokeColourWhite" />
+      <EditorMenu Content="Blue" AccessibleName="Blue" Tooltip="Blue" IconSource="color:#4472c4" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="StrokeColourBlue" />
+      <EditorMenu Content="Teal" AccessibleName="Teal" Tooltip="Teal" IconSource="color:#008080" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="StrokeColourTeal" />
+      <EditorMenu Content="Green" AccessibleName="Green" Tooltip="Green" IconSource="color:#228b22" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="StrokeColourGreen" />
+      <EditorMenu Content="Yellow" AccessibleName="Yellow" Tooltip="Yellow" IconSource="color:#ffd966" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="StrokeColourYellow" />
+      <EditorMenu Content="Orange" AccessibleName="Orange" Tooltip="Orange" IconSource="color:#ed7d31" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="StrokeColourOrange" />
+      <EditorMenu Content="Red" AccessibleName="Red" Tooltip="Red" IconSource="color:#c00000" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="StrokeColourRed" />
+      <EditorMenu Content="Purple" AccessibleName="Purple" Tooltip="Purple" IconSource="color:#7030a0" IconOnly="True" Width="44" Height="44" Padding="4" CornerRadius="8" Action="StrokeColourPurple" />
+    <EditorMenu IconOnly="True" IconSource="icon:close" Tooltip="No stroke" Width="44" Height="44" Padding="4" Content="No stroke" Action="StrokeColourNone" />
+    <EditorMenu IconOnly="True" IconSource="icon:properties" Tooltip="Custom colour" Width="44" Height="44" Padding="4" Content="Custom colour…" Action="ShowObjectProperties" />
+  </Button>
   <Actions>
     <Action name="RestoreSavedVersion" command="RestoreVersion" parameter="{Binding version}" />
     <Action name="OpenSavedPresentation" command="Open" parameter="{Binding saved}" />
     <Action name="OpenStartPresentation" command="Open" parameter="{Binding recent}" />
     <Action name="SelectPresentationSlide" command="SelectSlide" parameter="{Binding slide}" />
+    <Action name="InsertShape_rect" command="BeginShape" parameter="rect" />
+    <Action name="InsertShape_roundRect" command="BeginShape" parameter="roundRect" />
+    <Action name="InsertShape_ellipse" command="BeginShape" parameter="ellipse" />
+    <Action name="InsertShape_triangle" command="BeginShape" parameter="triangle" />
+    <Action name="InsertShape_diamond" command="BeginShape" parameter="diamond" />
+    <Action name="InsertShape_hexagon" command="BeginShape" parameter="hexagon" />
+    <Action name="InsertShape_star" command="BeginShape" parameter="star" />
+    <Action name="InsertShape_line" command="BeginShape" parameter="line" />
+    <Action name="InsertShape_rightArrow" command="BeginShape" parameter="rightArrow" />
+    <Action name="InsertShape_leftArrow" command="BeginShape" parameter="leftArrow" />
+    <Action name="InsertShape_leftRightArrow" command="BeginShape" parameter="leftRightArrow" />
+    <Action name="InsertShape_flowDecision" command="BeginShape" parameter="flowDecision" />
+    <Action name="InsertShape_flowProcess" command="BeginShape" parameter="flowProcess" />
+    <Action name="InsertShape_flowTerminator" command="BeginShape" parameter="flowTerminator" />
+    <Action name="InsertShape_callout" command="BeginShape" parameter="callout" />
+    <Action name="Zoom25" command="SetZoom" parameter="0.25" />
+    <Action name="Zoom50" command="SetZoom" parameter="0.5" />
+    <Action name="Zoom75" command="SetZoom" parameter="0.75" />
+    <Action name="Zoom100" command="SetZoom" parameter="1" />
+    <Action name="Zoom150" command="SetZoom" parameter="1.5" />
+    <Action name="Zoom200" command="SetZoom" parameter="2" />
+    <Action name="Zoom400" command="SetZoom" parameter="4" />
+    <Action name="TextColourBlack" command="SetTextColor" parameter="#202020" />
+    <Action name="TextColourWhite" command="SetTextColor" parameter="#ffffff" />
+    <Action name="TextColourBlue" command="SetTextColor" parameter="#4472c4" />
+    <Action name="TextColourTeal" command="SetTextColor" parameter="#008080" />
+    <Action name="TextColourGreen" command="SetTextColor" parameter="#228b22" />
+    <Action name="TextColourYellow" command="SetTextColor" parameter="#ffd966" />
+    <Action name="TextColourOrange" command="SetTextColor" parameter="#ed7d31" />
+    <Action name="TextColourRed" command="SetTextColor" parameter="#c00000" />
+    <Action name="TextColourPurple" command="SetTextColor" parameter="#7030a0" />
+    <Action name="FillColourBlack" command="SetFillColor" parameter="#202020" />
+    <Action name="FillColourWhite" command="SetFillColor" parameter="#ffffff" />
+    <Action name="FillColourBlue" command="SetFillColor" parameter="#4472c4" />
+    <Action name="FillColourTeal" command="SetFillColor" parameter="#008080" />
+    <Action name="FillColourGreen" command="SetFillColor" parameter="#228b22" />
+    <Action name="FillColourYellow" command="SetFillColor" parameter="#ffd966" />
+    <Action name="FillColourOrange" command="SetFillColor" parameter="#ed7d31" />
+    <Action name="FillColourRed" command="SetFillColor" parameter="#c00000" />
+    <Action name="FillColourPurple" command="SetFillColor" parameter="#7030a0" />
+    <Action name="FillColourNone" command="SetFillColor" parameter="none" />
+    <Action name="StrokeColourBlack" command="SetStrokeColor" parameter="#202020" />
+    <Action name="StrokeColourWhite" command="SetStrokeColor" parameter="#ffffff" />
+    <Action name="StrokeColourBlue" command="SetStrokeColor" parameter="#4472c4" />
+    <Action name="StrokeColourTeal" command="SetStrokeColor" parameter="#008080" />
+    <Action name="StrokeColourGreen" command="SetStrokeColor" parameter="#228b22" />
+    <Action name="StrokeColourYellow" command="SetStrokeColor" parameter="#ffd966" />
+    <Action name="StrokeColourOrange" command="SetStrokeColor" parameter="#ed7d31" />
+    <Action name="StrokeColourRed" command="SetStrokeColor" parameter="#c00000" />
+    <Action name="StrokeColourPurple" command="SetStrokeColor" parameter="#7030a0" />
+    <Action name="StrokeColourNone" command="SetStrokeColor" parameter="none" />
+    <Action name="OutlineWidth0" command="SetStrokeWidth" parameter="0" />
+    <Action name="OutlineWidth1" command="SetStrokeWidth" parameter="1" />
+    <Action name="OutlineWidth2" command="SetStrokeWidth" parameter="2" />
+    <Action name="OutlineWidth4" command="SetStrokeWidth" parameter="4" />
+    <Action name="OutlineWidth6" command="SetStrokeWidth" parameter="6" />
+    <Action name="OutlineWidth8" command="SetStrokeWidth" parameter="8" />
   </Actions>
   <Theme Name="user_preference">
     <Page>
@@ -49,24 +169,24 @@
         </Container>
         <EditorShell ID="present-workspace" Active="{Binding ShowWorkspace}">
           <EditorHeader ID="present-document-header" Active="{Binding ShowEditorChrome}">
-            <EditorToolGroup ID="present-ui-26">
+            <EditorToolGroup ID="present-ui-26" VerticalAlignment="Top">
               <EditorIcon ID="present-ui-27" AccessibleName="9to1 Home" Tooltip="9to1 Home" Action="ShellHome">
                 <Image ID="present-ui-28" Source="icon:home" Width="20" Height="20" />
               </EditorIcon>
               <Text ID="present-ui-29" Text="Present" FontWeight="SemiBold" FontSize="16" Active="{Binding WideHeader}" Margin="2,0,8,0" VerticalAlignment="Center" />
             </EditorToolGroup>
-            <Container ID="present-ui-30" Type="Vertical Stack" Column="1" CellGap="2">
-              <Input ID="present-ui-31" Type="Text" AccessibleName="Presentation title" Value="{Binding Title, Mode=TwoWay}" Interactive="{Binding CanEdit}" Height="30" Padding="6,3" BorderWidth="0" Background="Transparent" FontSize="16" FontWeight="SemiBold" />
+            <Container ID="present-ui-30" Type="Vertical Stack" Column="1" CellGap="3" VerticalAlignment="Center">
+              <Input ID="present-ui-31" Type="Text" AccessibleName="Presentation title" Value="{Binding Title, Mode=TwoWay}" Interactive="{Binding CanEdit}" Height="36" Padding="6,3" BorderWidth="0" Background="Transparent" FontSize="16" FontWeight="SemiBold" />
               <Text ID="present-ui-32" Text="{Binding HeaderStatus}" AccessibleName="Presentation save status" Foreground="{Resource CuiTextSoftBrush}" FontSize="11" Margin="6,0" />
             </Container>
-            <EditorToolGroup ID="present-ui-33" Column="2">
+            <EditorToolGroup ID="present-ui-33" Column="2" CellGap="6">
               <EditorIcon ID="present-ui-34" AccessibleName="Save (Ctrl+S)" Tooltip="Save (Ctrl+S)" Action="Save" Interactive="{Binding CanSave}">
                 <Image ID="present-ui-35" Source="icon:save" Width="20" Height="20" />
               </EditorIcon>
               <EditorIcon ID="present-ui-36" AccessibleName="Version history" Tooltip="Version history" Action="ShowHistory" Interactive="{Binding CanHistory}">
                 <Image ID="present-ui-37" Source="icon:history" Width="20" Height="20" />
               </EditorIcon>
-              <Button ID="present-ui-38" Content="Present" Action="Present" Interactive="{Binding CanPresent}" Height="36" Padding="14,6" Background="{Resource CuiAccentBrush}" Foreground="{Resource CuiAccentForegroundBrush}" BorderWidth="0" Margin="6,0,0,0" />
+              <Button ID="present-ui-38" Content="Present" Action="Present" Interactive="{Binding CanPresent}" Height="36" Padding="14,6" Background="{Resource CuiAccentBrush}" Foreground="{Resource CuiAccentForegroundBrush}" BorderWidth="0" CornerRadius="10" />
             </EditorToolGroup>
           </EditorHeader>
           <EditorMenus ID="present-menu-bar" Row="1" Active="{Binding ShowEditorChrome}">
@@ -91,13 +211,14 @@
               <EditorMenu ID="present-ui-56" Content="Text formatting">
                 <EditorMenu ID="present-ui-57" Content="Bold" Action="Bold" Interactive="{Binding CanBold}" Shortcut="Ctrl+B" />
                 <EditorMenu ID="present-ui-58" Content="Italic" Action="Italic" Interactive="{Binding CanItalic}" Shortcut="Ctrl+I" />
+                <EditorMenu ID="present-edit-underline" Content="Underline" Action="Underline" Interactive="{Binding CanFontSize}" Shortcut="Ctrl+U" />
                 <EditorMenu ID="present-ui-59" Content="Font larger" Action="FontLarger" Interactive="{Binding CanFontSize}" />
                 <EditorMenu ID="present-ui-60" Content="Font smaller" Action="FontSmaller" Interactive="{Binding CanFontSize}" />
               </EditorMenu>
             </EditorMenu>
             <EditorMenu ID="present-ui-61" Content="Insert">
               <EditorMenu ID="present-ui-62" Content="Text box" Action="AddText" Interactive="{Binding CanEdit}" />
-              <EditorMenu ID="present-ui-63" Content="Shape" Action="AddShape" Interactive="{Binding CanEdit}" />
+              <PresentShapeGallery ID="present-ui-63" Interactive="{Binding CanEdit}" />
             </EditorMenu>
             <EditorMenu ID="present-ui-64" Content="Slide">
               <EditorMenu ID="present-ui-65" Content="Add slide" Action="AddSlide" Interactive="{Binding CanEdit}" Shortcut="Ctrl+M" />
@@ -162,66 +283,96 @@
                 <Image ID="present-ui-113" Source="icon:redo" Width="20" Height="20" />
               </EditorIcon>
               <EditorDivider ID="present-ui-114" />
-              <EditorIcon ID="present-ui-115" AccessibleName="Add slide (Ctrl+M)" Tooltip="Add slide (Ctrl+M)" Action="AddSlide" Interactive="{Binding CanEdit}">
-                <Image ID="present-ui-116" Source="icon:add-slide" Width="20" Height="20" />
-              </EditorIcon>
-              <EditorIcon ID="present-ui-117" AccessibleName="Text box" Tooltip="Text box" Action="AddText" Interactive="{Binding CanEdit}">
-                <Image ID="present-ui-118" Source="icon:text" Width="20" Height="20" />
-              </EditorIcon>
-              <EditorIcon ID="present-ui-119" AccessibleName="Shape" Tooltip="Shape" Action="AddShape" Interactive="{Binding CanEdit}">
-                <Image ID="present-ui-120" Source="icon:shape" Width="20" Height="20" />
-              </EditorIcon>
+              <Container Type="Menu" Background="Transparent" BorderWidth="0" VerticalAlignment="Center">
+                <EditorMenu ID="present-toolbar-insert" Content="+ Insert" AccessibleName="Insert content" Tooltip="Insert content" Height="36" Padding="10,6" CornerRadius="8" Interactive="{Binding CanEdit}">
+                  <EditorMenu Content="New slide" Action="AddSlide" Shortcut="Ctrl+M" />
+                  <EditorMenu Content="Text box" Action="AddText" />
+                  <PresentShapeGallery />
+                </EditorMenu>
+              </Container>
+              <EditorToolGroup ID="present-primary-extra" Active="{Binding WideHeader}">
+                <EditorDivider ID="present-zoom-divider" />
+                <Container Type="Menu" Background="Transparent" BorderWidth="0" VerticalAlignment="Center">
+                  <EditorMenu ID="present-toolbar-zoom" Content="{Binding ZoomLabel}" AccessibleName="Zoom" Tooltip="Slide zoom" Height="36" MinWidth="58" VerticalContentAlignment="Center">
+                    <EditorMenu Content="Fit slide" Action="ZoomFit" />
+                    <EditorMenu Content="50%" Action="Zoom50" />
+                    <EditorMenu Content="75%" Action="Zoom75" />
+                    <EditorMenu Content="100%" Action="Zoom100" />
+                    <EditorMenu Content="150%" Action="Zoom150" />
+                    <EditorMenu Content="200%" Action="Zoom200" />
+                    <EditorMenu Content="Zoom in" Action="ZoomIn" />
+                    <EditorMenu Content="Zoom out" Action="ZoomOut" />
+                  </EditorMenu>
+                </Container>
+                <EditorDivider ID="present-clipboard-divider" />
+<EditorIcon ID="present-toolbar-copy" AccessibleName="Copy object" Tooltip="Copy object" Action="Copy" Interactive="{Binding CanCopy}" ><Image Source="icon:copy" Width="20" Height="20" /></EditorIcon>
+<EditorIcon ID="present-toolbar-paste" AccessibleName="Paste object" Tooltip="Paste object" Action="Paste" Interactive="{Binding CanPaste}" ><Image Source="icon:paste" Width="20" Height="20" /></EditorIcon>
+<EditorIcon ID="present-toolbar-duplicate" AccessibleName="Duplicate slide" Tooltip="Duplicate slide" Action="DuplicateSlide" Interactive="{Binding CanEdit}" ><Image Source="icon:duplicate-slide" Width="20" Height="20" /></EditorIcon>
+              </EditorToolGroup>
             </EditorToolGroup>
             <Container ID="present-ui-121" Type="Grid" Column="1" Active="{Binding FullToolbar}" Margin="12,0" ColumnSizes="Auto 1fr">
               <EditorDivider ID="present-ui-122" />
               <Container ID="present-ui-123" Type="Overlay" Column="1">
-                <EditorToolGroup ID="present-ui-124" Active="{Binding HasTextSelection}">
-                  <Input ID="present-ui-125" Type="Select" AccessibleName="Font family" ItemsSource="{Binding FontFamilies}" SelectedIndex="{Binding FontFamilyIndex, Mode=TwoWay}" Interactive="{Binding CanFontSize}" Width="148" Height="34" />
-                  <Input ID="present-ui-126" Type="Number" AccessibleName="Font size" Value="{Binding FontSize, Mode=TwoWay}" Interactive="{Binding CanFontSize}" Width="76" Height="34" Minimum="1" Maximum="400" />
+                <EditorToolGroup ID="present-ui-124" Active="{Binding ShowTextToolbar}">
+                  <Input ID="present-ui-125" Type="Select" AccessibleName="Font family" ItemsSource="{Binding FontFamilies}" SelectedIndex="{Binding FontFamilyIndex, Mode=TwoWay}" Interactive="{Binding CanFontSize}" Width="128" Height="36" />
+                  <Input ID="present-ui-126" Type="Number" AccessibleName="Font size" Value="{Binding FontSize, Mode=TwoWay}" Interactive="{Binding CanFontSize}" Width="68" Height="36" Minimum="1" Maximum="400" />
+                  <EditorIcon AccessibleName="Decrease font size" Tooltip="Decrease font size" Action="FontSmaller" Interactive="{Binding CanFontSize}"><Image Source="icon:font-decrease" Width="20" Height="20" /></EditorIcon>
+                  <EditorIcon AccessibleName="Increase font size" Tooltip="Increase font size" Action="FontLarger" Interactive="{Binding CanFontSize}"><Image Source="icon:font-increase" Width="20" Height="20" /></EditorIcon>
                   <EditorIcon ID="present-ui-127" AccessibleName="Bold (Ctrl+B)" Tooltip="Bold (Ctrl+B)" Action="Bold" Interactive="{Binding CanBold}" Selected="{Binding IsBold}">
                     <Image ID="present-ui-128" Source="icon:bold" Width="20" Height="20" />
                   </EditorIcon>
                   <EditorIcon ID="present-ui-129" AccessibleName="Italic (Ctrl+I)" Tooltip="Italic (Ctrl+I)" Action="Italic" Interactive="{Binding CanItalic}" Selected="{Binding IsItalic}">
                     <Image ID="present-ui-130" Source="icon:italic" Width="20" Height="20" />
                   </EditorIcon>
+<EditorIcon ID="present-toolbar-underline" AccessibleName="Underline (Ctrl+U)" Tooltip="Underline (Ctrl+U)" Action="Underline" Interactive="{Binding CanFontSize}" Selected="{Binding IsUnderline}"><Image Source="icon:underline" Width="20" Height="20" /></EditorIcon>
+<Container Type="Menu" Background="Transparent" BorderWidth="0"><PresentTextPalette ID="present-toolbar-color" /></Container>
+                  <Container Type="Menu" Background="Transparent" BorderWidth="0" VerticalAlignment="Center">
+                    <EditorIconMenu ID="present-text-align" Content="Text alignment" AccessibleName="Paragraph alignment" Tooltip="Paragraph alignment" IconSource="icon:align-text" Interactive="{Binding CanFontSize}">
+                      <EditorMenu Content="Align text left" Action="TextAlignLeft" Interactive="{Binding CanFontSize}" />
+                      <EditorMenu Content="Center text" Action="TextAlignCenter" Interactive="{Binding CanFontSize}" />
+                      <EditorMenu Content="Align text right" Action="TextAlignRight" Interactive="{Binding CanFontSize}" />
+                    </EditorIconMenu>
+                  </Container>
                 </EditorToolGroup>
-                <EditorToolGroup ID="present-ui-131" Active="{Binding HasShapeSelection}">
-                  <EditorIcon ID="present-ui-132" AccessibleName="Shape appearance" Tooltip="Shape appearance" Action="ShowObjectProperties" Interactive="{Binding CanEditSelection}">
-                    <Image ID="present-ui-133" Source="icon:palette" Width="20" Height="20" />
-                  </EditorIcon>
+                <EditorToolGroup ID="present-ui-131" Active="{Binding ShowShapeToolbar}">
+                  <Container Type="Menu" Background="Transparent" BorderWidth="0">
+                    <PresentFillPalette ID="present-ui-132" />
+                    <PresentStrokePalette />
+                    <EditorIconMenu Content="Outline width" AccessibleName="Outline width" Tooltip="Outline width" IconSource="icon:stroke-width">
+                      <EditorMenu Content="0 px" Action="OutlineWidth0" />
+                      <EditorMenu Content="1 px" Action="OutlineWidth1" />
+                      <EditorMenu Content="2 px" Action="OutlineWidth2" />
+                      <EditorMenu Content="4 px" Action="OutlineWidth4" />
+                      <EditorMenu Content="6 px" Action="OutlineWidth6" />
+                      <EditorMenu Content="8 px" Action="OutlineWidth8" />
+                    </EditorIconMenu>
+                  </Container>
                   <Container ID="present-ui-134" Type="Menu" BorderWidth="0" Background="Transparent">
-                    <EditorMenu ID="present-ui-135" Content="Order">
+                    <EditorIconMenu ID="present-ui-135" Content="Order" AccessibleName="Order" Tooltip="Order" IconSource="icon:layers">
                       <EditorMenu ID="present-ui-136" Content="Bring to front" Action="BringToFront" Interactive="{Binding CanBringToFront}" />
                       <EditorMenu ID="present-ui-137" Content="Bring forward" Action="BringForward" Interactive="{Binding CanBringForward}" />
                       <EditorMenu ID="present-ui-138" Content="Send backward" Action="SendBackward" Interactive="{Binding CanSendBackward}" />
                       <EditorMenu ID="present-ui-139" Content="Send to back" Action="SendToBack" Interactive="{Binding CanSendToBack}" />
-                    </EditorMenu>
-                    <EditorMenu ID="present-ui-140" Content="Align">
+                    </EditorIconMenu>
+                    <EditorIconMenu ID="present-ui-140" Content="Align" AccessibleName="Align" Tooltip="Align" IconSource="icon:align-objects">
                       <EditorMenu ID="present-ui-141" Content="Align left" Action="AlignLeft" Interactive="{Binding CanAlign}" />
                       <EditorMenu ID="present-ui-142" Content="Align center" Action="AlignCenter" Interactive="{Binding CanAlign}" />
                       <EditorMenu ID="present-ui-143" Content="Align top" Action="AlignTop" Interactive="{Binding CanAlign}" />
                       <EditorMenu ID="present-ui-144" Content="Align middle" Action="AlignMiddle" Interactive="{Binding CanAlign}" />
                       <EditorMenu ID="present-ui-145" Content="Distribute horizontally" Action="DistributeHorizontal" Interactive="{Binding CanDistribute}" />
                       <EditorMenu ID="present-ui-146" Content="Distribute vertically" Action="DistributeVertical" Interactive="{Binding CanDistribute}" />
-                    </EditorMenu>
+                    </EditorIconMenu>
                   </Container>
                 </EditorToolGroup>
-                <EditorToolGroup ID="present-ui-147" Active="{Binding HasSlideSelection}">
-                  <EditorIcon ID="present-ui-149" AccessibleName="Layout &amp; background" Tooltip="Slide layout and background" Action="ShowSlideProperties" Interactive="{Binding CanEdit}">
-                    <Image ID="present-layout-icon" Source="icon:layout" Width="20" Height="20" />
-                  </EditorIcon>
-                  <EditorIcon ID="present-ui-150" AccessibleName="Transition" Tooltip="Slide transition" Action="ShowSlideProperties" Interactive="{Binding CanEdit}">
-                    <Image ID="present-transition-icon" Source="icon:transition" Width="20" Height="20" />
-                  </EditorIcon>
-                </EditorToolGroup>
+
               </Container>
             </Container>
             <EditorToolGroup ID="present-ui-151" Column="2">
               <EditorIcon ID="present-ui-152" AccessibleName="Properties" Tooltip="Properties" Action="ToggleInspector" Selected="{Binding ShowInspector}">
                 <Image ID="present-ui-153" Source="icon:properties" Width="20" Height="20" />
               </EditorIcon>
-              <Container ID="present-ui-154" Type="Menu" BorderWidth="0" Background="Transparent">
-                <EditorMenu ID="present-ui-155" Content="More">
+              <Container ID="present-ui-154" Type="Menu" BorderWidth="0" Background="Transparent" VerticalAlignment="Center">
+                <EditorIconMenu ID="present-ui-155" Content="More" AccessibleName="More" Tooltip="More" IconSource="icon:more">
                   <EditorMenu ID="present-ui-156" Content="Show / hide slides" Action="ToggleSidebar" />
                   <EditorMenu ID="present-ui-157" Content="Speaker notes" Action="ToggleNotes" />
                   <EditorMenu ID="present-ui-158" Content="Duplicate slide" Action="DuplicateSlide" Interactive="{Binding CanEdit}" />
@@ -231,6 +382,7 @@
                   <EditorMenu ID="present-ui-162" Content="Text formatting">
                     <EditorMenu ID="present-ui-163" Content="Bold" Action="Bold" Interactive="{Binding CanBold}" Shortcut="Ctrl+B" />
                     <EditorMenu ID="present-ui-164" Content="Italic" Action="Italic" Interactive="{Binding CanItalic}" Shortcut="Ctrl+I" />
+                    <EditorMenu ID="present-overflow-underline" Content="Underline" Action="Underline" Interactive="{Binding CanFontSize}" Shortcut="Ctrl+U" />
                     <EditorMenu ID="present-ui-165" Content="Font larger" Action="FontLarger" Interactive="{Binding CanFontSize}" />
                     <EditorMenu ID="present-ui-166" Content="Font smaller" Action="FontSmaller" Interactive="{Binding CanFontSize}" />
                   </EditorMenu>
@@ -250,7 +402,7 @@
                   </EditorMenu>
                   <EditorMenu ID="present-ui-179" Content="Group" Action="Group" Interactive="{Binding CanGroup}" />
                   <EditorMenu ID="present-ui-180" Content="Ungroup" Action="Ungroup" Interactive="{Binding CanUngroup}" />
-                </EditorMenu>
+                </EditorIconMenu>
               </Container>
             </EditorToolGroup>
           </EditorToolbar>
@@ -264,7 +416,17 @@
                   </EditorIcon>
                 </Container>
                 <Container ID="present-ui-188" Type="Overlay" Row="1" Active="{Binding ShowSlides}" VerticalScrolling="True">
-                  <Object Type="PresentThumbnails" />
+                  <Object Type="PresentThumbnails">
+                    <EditorContextMenu>
+                      <EditorMenu Content="New slide" Action="AddSlide" Interactive="{Binding CanEdit}" Shortcut="Ctrl+M" />
+                      <EditorMenu Content="Duplicate slide" Action="DuplicateSlide" Interactive="{Binding CanEdit}" />
+                      <EditorMenu Content="Delete slide" Action="DeleteSlide" Interactive="{Binding CanDeleteSlide}" />
+                      <EditorMenu Content="Move slide up" Action="SlideUp" Interactive="{Binding CanSlideUp}" />
+                      <EditorMenu Content="Move slide down" Action="SlideDown" Interactive="{Binding CanSlideDown}" />
+                      <EditorMenu Content="{Binding HideSlideLabel}" Action="ToggleHidden" Interactive="{Binding CanEdit}" />
+                      <EditorMenu Content="Layout and slide settings" Action="ShowSlideProperties" Interactive="{Binding CanEdit}" />
+                    </EditorContextMenu>
+                  </Object>
                 </Container>
                 <Container ID="present-ui-189" Type="Overlay" Row="1" Active="{Binding ShowFiles}" VerticalScrolling="True">
                   <Container ID="present-ui-190" Type="Vertical Stack" CellGap="8">
@@ -279,11 +441,51 @@
               <Input ID="present-ui-194" Type="Resize" Column="1" Active="{Binding ShowSidebarResize}" AccessibleName="Slides panel width" Tooltip="Resize slides panel; use Left or Right arrows" Value="{Binding SidebarWidth, Mode=TwoWay}" Minimum="160" Maximum="320" Width="8" ResizeEdge="End" Background="Transparent" />
               <Container ID="present-ui-195" Type="Grid" Column="2" RowSizes="1fr Auto">
                 <Container ID="present-ui-196" Type="Overlay" HorizontalScrolling="{Binding IsZoomed}" VerticalScrolling="{Binding IsZoomed}">
-                  <Object ID="present-canvas" Type="PresentSlideCanvas" />
+                  <Object ID="present-canvas" Type="PresentSlideCanvas">
+                    <EditorContextMenu>
+                      <EditorMenu Content="Cut" Action="Cut" Interactive="{Binding CanCut}" Shortcut="Ctrl+X" />
+                      <EditorMenu Content="Copy" Action="Copy" Interactive="{Binding CanCopy}" Shortcut="Ctrl+C" />
+                      <EditorMenu Content="Paste" Action="Paste" Interactive="{Binding CanPaste}" Shortcut="Ctrl+V" />
+                      <EditorMenu Content="Select all text" Action="SelectAllText" Active="{Binding TextContext}" Shortcut="Ctrl+A" />
+                      <EditorMenu Content="Text formatting" Active="{Binding TextContext}">
+                        <EditorMenu Content="Bold" Action="Bold" Interactive="{Binding CanBold}" Shortcut="Ctrl+B" />
+                        <EditorMenu Content="Italic" Action="Italic" Interactive="{Binding CanItalic}" Shortcut="Ctrl+I" />
+                        <EditorMenu Content="Underline" Action="Underline" Interactive="{Binding CanFontSize}" Shortcut="Ctrl+U" />
+                      </EditorMenu>
+                      <EditorMenu Content="Duplicate" Action="DuplicateObject" Interactive="{Binding CanDuplicateObject}" Active="{Binding ObjectContext}" Shortcut="Ctrl+D" />
+                      <EditorMenu Content="Delete" Action="DeleteObject" Interactive="{Binding CanEditSelection}" Active="{Binding ObjectContext}" Shortcut="Delete" />
+                      <EditorMenu Content="Order" Active="{Binding ObjectContext}">
+                        <EditorMenu Content="Bring to front" Action="BringToFront" Interactive="{Binding CanBringToFront}" />
+                        <EditorMenu Content="Bring forward" Action="BringForward" Interactive="{Binding CanBringForward}" />
+                        <EditorMenu Content="Send backward" Action="SendBackward" Interactive="{Binding CanSendBackward}" />
+                        <EditorMenu Content="Send to back" Action="SendToBack" Interactive="{Binding CanSendToBack}" />
+                      </EditorMenu>
+                      <EditorMenu Content="Align" Active="{Binding ObjectContext}">
+                        <EditorMenu Content="Align left" Action="AlignLeft" Interactive="{Binding CanAlign}" />
+                        <EditorMenu Content="Align center" Action="AlignCenter" Interactive="{Binding CanAlign}" />
+                        <EditorMenu Content="Align top" Action="AlignTop" Interactive="{Binding CanAlign}" />
+                        <EditorMenu Content="Align middle" Action="AlignMiddle" Interactive="{Binding CanAlign}" />
+                        <EditorMenu Content="Distribute horizontally" Action="DistributeHorizontal" Interactive="{Binding CanDistribute}" />
+                        <EditorMenu Content="Distribute vertically" Action="DistributeVertical" Interactive="{Binding CanDistribute}" />
+                      </EditorMenu>
+                      <EditorMenu Content="Group" Action="Group" Interactive="{Binding CanGroup}" Active="{Binding ObjectContext}" />
+                      <EditorMenu Content="Ungroup" Action="Ungroup" Interactive="{Binding CanUngroup}" Active="{Binding ObjectContext}" />
+                      <EditorMenu Content="Format object" Action="ShowObjectProperties" Active="{Binding ObjectContext}" />
+                      <EditorMenu Content="Insert" Active="{Binding CanvasContext}">
+                        <EditorMenu Content="Text box" Action="AddText" Interactive="{Binding CanEdit}" />
+                        <EditorMenu Content="Shapes" Action="AddShape" Interactive="{Binding CanEdit}" />
+                        <EditorMenu Content="New slide" Action="AddSlide" Interactive="{Binding CanEdit}" />
+                      </EditorMenu>
+                      <EditorMenu Content="Background and slide settings" Action="ShowSlideProperties" Active="{Binding CanvasContext}" />
+                    </EditorContextMenu>
+                  </Object>
                 </Container>
                 <Container ID="present-ui-197" Type="Vertical Stack" Active="{Binding ShowNotes}" Background="{Resource CuiPanelBrush}" Padding="16,8" CellGap="6" Row="1">
-                  <EditorLabel ID="present-ui-198" Text="Speaker notes" />
-                  <Input ID="present-ui-199" Type="Text" AccessibleName="Speaker notes" Value="{Binding SpeakerNotes, Mode=TwoWay}" Interactive="{Binding CanEdit}" Multiline="True" TextWrapping="Wrap" Height="80" />
+                  <Container ID="present-notes-heading" Type="Grid" ColumnSizes="1fr Auto">
+                    <EditorLabel ID="present-ui-198" Text="Speaker notes" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <EditorIcon ID="present-notes-close" AccessibleName="Collapse speaker notes" Tooltip="Collapse speaker notes" Action="ToggleNotes" Width="28" Height="28" MinWidth="28" MinHeight="28" Padding="5" Column="1"><Image Source="icon:chevron-down" Width="18" Height="18" /></EditorIcon>
+                  </Container>
+                  <Input ID="present-ui-199" Type="Text" AccessibleName="Speaker notes" Value="{Binding SpeakerNotes, Mode=TwoWay}" Interactive="{Binding CanEdit}" Multiline="True" TextWrapping="Wrap" PlaceholderText="Add speaker notes…" Height="80" Padding="12,10" CornerRadius="8" FontSize="13" BorderWidth="1" BorderColor="{Resource CuiLineBrush}" />
                 </Container>
               </Container>
             </Container>
@@ -402,7 +604,6 @@
                       <Container Type="Overlay" Background="{Binding FillPreview}" Width="28" Height="28" BorderWidth="1" BorderColor="{Resource CuiLineBrush}" VerticalAlignment="Center" />
                       <Input Type="Select" Column="1" AccessibleName="Fill palette" ItemsSource="{Binding ColorPalette}" SelectedIndex="{Binding FillPaletteIndex, Mode=TwoWay}" Interactive="{Binding CanApplyFill}" Height="36" />
                     </Container>
-                    <Button ID="present-ui-281" Content="Apply fill" Action="ApplyFill" Interactive="{Binding CanApplyFill}" />
                     <Container ID="present-ui-282" Type="Vertical Stack" CellGap="4">
                       <EditorLabel ID="present-ui-283" Text="Stroke color" />
                       <Input ID="present-ui-284" Type="Text" AccessibleName="Stroke color" Value="{Binding StrokeColor, Mode=TwoWay}" Interactive="{Binding CanEdit}" Height="36" />
@@ -411,12 +612,10 @@
                       <Container Type="Overlay" Background="{Binding StrokePreview}" Width="28" Height="28" BorderWidth="1" BorderColor="{Resource CuiLineBrush}" VerticalAlignment="Center" />
                       <Input Type="Select" Column="1" AccessibleName="Stroke palette" ItemsSource="{Binding ColorPalette}" SelectedIndex="{Binding StrokePaletteIndex, Mode=TwoWay}" Interactive="{Binding CanApplyStroke}" Height="36" />
                     </Container>
-                    <Button ID="present-ui-285" Content="Apply stroke" Action="ApplyStroke" Interactive="{Binding CanApplyStroke}" />
                     <Container ID="present-ui-286" Type="Vertical Stack" CellGap="4">
                       <EditorLabel ID="present-ui-287" Text="Stroke width" />
                       <Input ID="present-ui-288" Type="Number" AccessibleName="Stroke width" Value="{Binding StrokeWidth, Mode=TwoWay}" Interactive="{Binding CanEdit}" Height="36" Minimum="0" Maximum="100" />
                     </Container>
-                    <Button ID="present-ui-289" Content="Apply stroke width" Action="ApplyStrokeWidth" Interactive="{Binding CanApplyStrokeWidth}" />
                   </EditorPropertyGroup>
                   <EditorPropertyGroup ID="present-ui-290" Active="{Binding HasSelection}">
                     <Text ID="present-ui-291" Text="Opacity" FontSize="13" FontWeight="SemiBold" />

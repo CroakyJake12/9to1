@@ -8,6 +8,7 @@ namespace NineToOne.Web.Productivity.Present;
 
 public sealed partial class PresentBrowserSession
 {
+    internal IPresentCanvasTextCommands? CanvasTextCommands { get; set; }
     private static readonly object MissingUiValue = new();
     private static readonly string[] TransitionKinds = Enum.GetNames<PresentTransitionKind>();
     private static readonly string[] AnimationEffects = Enum.GetNames<PresentAnimationEffect>();
@@ -19,11 +20,28 @@ public sealed partial class PresentBrowserSession
     private static readonly string[] PaletteValues = ["#202020", "#ffffff", "#4472c4", "#008080", "#228b22", "#ffd966", "#ed7d31", "#c00000", "#7030a0"];
     private static readonly string[] StandardFonts = ["Aptos", "Arial", "Georgia", "Inter", "Montserrat", "Times New Roman"];
     private double _viewportWidth = 1280, _sidebarWidth = 208, _inspectorWidth = 288;
-    private bool _showNotes, _showHelp, _showHistory;
+    private bool _showNotes = true, _showHelp, _showHistory;
     private double _zoom = 1;
+    private bool _fitToWindow = true;
+    private (PresentEditor Editor, Guid SlideId, string Preset)? _shapeInsertion;
+    internal event Action<string, DocumentVectorShape>? BeginShapeInsertion;
     private IReadOnlyList<PresentVersionRow> _versions = [];
     private (Guid Id, string Fill, string Stroke, double Width)? _observedShape;
     public double CanvasZoom => _zoom;
+    public bool IsFitToWindow => _fitToWindow;
+    internal Func<double>? EffectiveCanvasZoom { get; set; }
+    public void SetCanvasZoom(double zoom)
+    {
+        if (!double.IsFinite(zoom) || IsActionAvailable("SetZoom") != true) return;
+        _zoom = Math.Clamp(zoom, .25, 4); _fitToWindow = false; Notify();
+    }
+    internal Task CompleteShapeInsertionAsync(string preset, double x, double y, double width, double height)
+    {
+        var insertion = _shapeInsertion; _shapeInsertion = null;
+        if (insertion is null || insertion.Value.Preset != preset || !ReferenceEquals(insertion.Value.Editor, Editor)
+            || insertion.Value.SlideId != Editor?.Selection.SlideId || IsActionAvailable("AddShape") != true) return Task.CompletedTask;
+        return EditAsync(editor => { editor.AddShapeAt(insertion.Value.SlideId, preset, x, y, width, height); return true; });
+    }
     private PresentElement? SelectedObject => Editor?.SelectedElements.FirstOrDefault();
     private double SlideWidth => (Editor?.Document.SlideSize.WidthInches ?? 13.333333) * 96;
     private double SlideHeight => (Editor?.Document.SlideSize.HeightInches ?? 7.5) * 96;
@@ -40,8 +58,15 @@ public sealed partial class PresentBrowserSession
         var selected = SelectedObject;
         value = path switch
         {
+            "TextContext" => CanvasTextCommands?.IsTextEditing == true,
+            "ObjectContext" => CanvasTextCommands?.IsTextEditing != true && Editor?.SelectedElements.Count > 0,
+            "CanvasContext" => CanvasTextCommands?.IsTextEditing != true && Editor?.SelectedElements.Count == 0,
+            "CanCut" => IsActionAvailable("Cut") == true,
+            "CanDuplicateObject" => IsActionAvailable("DuplicateObject") == true,
             "WideHeader" => _viewportWidth >= 620,
             "FullToolbar" => FullToolbar,
+            "ShowTextToolbar" => Editor is not null && (!Editor.SelectedElements.Any(item => item.Kind == PresentElementKind.Shape) || SelectedTextElement is not null),
+            "ShowShapeToolbar" => Editor?.SelectedElements.Any(item => item.Kind == PresentElementKind.Shape) == true && SelectedTextElement is null,
             "HeaderStatus" => IsBusy ? "Working…" : IsDirty ? "Unsaved changes" : Status,
             "ShowNotes" => _showNotes, "ShowHelp" => _showHelp, "ShowHistory" => _showHistory,
             "Versions" => _versions, "NoVersions" => _versions.Count == 0,
@@ -75,6 +100,7 @@ public sealed partial class PresentBrowserSession
             "FontSize" => SelectedTextElement?.TextStyle.FontSizePoints ?? 22d,
             "IsBold" => SelectedTextElement?.TextStyle.Bold == true,
             "IsItalic" => SelectedTextElement?.TextStyle.Italic == true,
+            "IsUnderline" => SelectedTextElement?.TextStyle.Underline == true,
             "TextColor" => SelectedTextElement?.TextStyle.Color ?? string.Empty,
             "TextAlignments" => TextAlignments,
             "TextVerticalAlignments" => TextVerticalAlignments,
@@ -87,8 +113,8 @@ public sealed partial class PresentBrowserSession
             "TransitionKinds" => TransitionKinds, "TransitionIndex" => Array.IndexOf(TransitionKinds, _transitionKind),
             "AnimationEffects" => AnimationEffects, "AnimationEffectIndex" => Array.IndexOf(AnimationEffects, _animationEffect),
             "AnimationTriggers" => AnimationTriggers, "AnimationTriggerIndex" => Array.IndexOf(AnimationTriggers, _animationTrigger),
-            "IsZoomed" => _zoom > 1,
-            "ZoomLabel" => _zoom == 1 ? "Fit" : $"{_zoom * 100:0}%",
+            "IsZoomed" => !_fitToWindow,
+            "ZoomLabel" => _fitToWindow ? "Fit" : $"{_zoom * 100:0}%",
             _ => MissingUiValue
         };
         return !ReferenceEquals(value, MissingUiValue);
@@ -107,7 +133,7 @@ public sealed partial class PresentBrowserSession
         }
         if (path is not ("ObjectX" or "ObjectY" or "ObjectWidth" or "ObjectHeight" or "ObjectRotation" or "ObjectOpacity"
             or "FontSize" or "FontFamilyIndex" or "TextColor" or "TextAlignmentIndex" or "TextVerticalAlignmentIndex"
-            or "FillPaletteIndex" or "StrokePaletteIndex" or "SlideLayoutIndex" or "SlideBackground" or "SlideSizeIndex" or "TransitionIndex" or "AnimationEffectIndex" or "AnimationTriggerIndex")) return null;
+            or "FillColor" or "StrokeColor" or "StrokeWidth" or "FillPaletteIndex" or "StrokePaletteIndex" or "SlideLayoutIndex" or "SlideBackground" or "SlideSizeIndex" or "TransitionIndex" or "AnimationEffectIndex" or "AnimationTriggerIndex")) return null;
         if (IsActionAvailable("AddSlide") != true || Editor is null) return false;
         var editor = Editor;
         bool Edit(Func<PresentEditor, bool> operation)
@@ -122,10 +148,12 @@ public sealed partial class PresentBrowserSession
                 (Equals(current, value) || Number(current, out var currentNumber) && Number(value, out var requestedNumber)
                     && currentNumber == requestedNumber);
         }
-        if (path is "TextColor" or "SlideBackground")
+        if (path is "TextColor" or "SlideBackground" or "FillColor" or "StrokeColor")
         {
             if (value is not string color || !Avalonia.Media.Color.TryParse(color, out _)) return false;
             if (path == "SlideBackground") return Edit(owner => owner.SetSlideBackgroundColor(owner.Selection.SlideId, color));
+            if (path == "FillColor") return Edit(owner => owner.SetSelectedShapeAppearance(fill: color));
+            if (path == "StrokeColor") return Edit(owner => owner.SetSelectedShapeAppearance(stroke: color));
             return Edit(owner => UpdateTextStyle(owner, style => style.Color = color));
         }
         if (!Number(value, out var number)) return false;
@@ -133,9 +161,11 @@ public sealed partial class PresentBrowserSession
         switch (path)
         {
             case "FillPaletteIndex" when index >= 0 && index < PaletteValues.Length && IsActionAvailable("ApplyFill") == true:
-                _fillColor = PaletteValues[index]; Notify(); return true;
+                return Edit(owner => owner.SetSelectedShapeAppearance(fill: PaletteValues[index]));
             case "StrokePaletteIndex" when index >= 0 && index < PaletteValues.Length && IsActionAvailable("ApplyStroke") == true:
-                _strokeColor = PaletteValues[index]; Notify(); return true;
+                return Edit(owner => owner.SetSelectedShapeAppearance(stroke: PaletteValues[index]));
+            case "StrokeWidth" when number is >= 0 and <= 100:
+                return Edit(owner => owner.SetSelectedShapeAppearance(strokeWidth: number));
             case "FontFamilyIndex" when index >= 0 && index < FontFamilies.Length:
                 var family = FontFamilies[index]; return Edit(owner => UpdateTextStyle(owner, style => style.FontFamily = family));
             case "FontSize" when number is >= 1 and <= 400:
@@ -178,11 +208,15 @@ public sealed partial class PresentBrowserSession
     {
         if (SelectedObject is { Kind: PresentElementKind.Shape } shape)
         {
-            var current = (shape.Id, shape.Style.FillColor, shape.Style.StrokeColor, shape.Style.StrokeWidth);
+            var vectorPath = shape.VectorShape?.Paths.FirstOrDefault();
+            var current = (shape.Id,
+                vectorPath is null ? shape.Style.FillColor : vectorPath.Fill.Kind == DocumentVectorFillKind.None ? "#00000000" : vectorPath.Fill.Color,
+                vectorPath is null ? shape.Style.StrokeColor : vectorPath.Stroke.Enabled ? vectorPath.Stroke.Color : "#00000000",
+                vectorPath is null ? shape.Style.StrokeWidth : vectorPath.Stroke.Enabled ? vectorPath.Stroke.Width : 0);
             if (current != _observedShape)
             {
                 _observedShape = current;
-                _fillColor = shape.Style.FillColor; _strokeColor = shape.Style.StrokeColor; _strokeWidth = shape.Style.StrokeWidth;
+                _fillColor = current.Item2; _strokeColor = current.Item3; _strokeWidth = current.Item4;
             }
         }
         else _observedShape = null;

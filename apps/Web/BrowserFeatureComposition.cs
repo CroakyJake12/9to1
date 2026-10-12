@@ -39,6 +39,7 @@ internal static class BrowserFeatureComposition
             new IndexedDbPresentRepository(new BrowserPresentTransport(), PresentRepository.ValidateForSave),
             Program.ReduceMotion, error => error is PresentCommitOutcomeUnknownException);
         if (!present.Succeeded) throw new InvalidOperationException(present.Message);
+        BrowserApplication.StartupTrace?.Invoke("present:registered");
         var boards = BoardsBrowserRegistration.Register(registry,
             new IndexedDbNotesRepository(new BrowserNotesTransport(), new NotesDocumentValidator()),
             Program.ReduceMotion, error => error is NotesCommitOutcomeUnknownException);

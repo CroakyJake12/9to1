@@ -18,6 +18,7 @@ internal sealed class BrowserAccessibilityBridge
     private int _nextId;
     private readonly Dictionary<AutomationPeer, string> _ids = new();
     private readonly Dictionary<string, ControlAutomationPeer> _peers = new(StringComparer.Ordinal);
+    private readonly Dictionary<ContextMenu, Control> _openContextOwners = new(ReferenceEqualityComparer.Instance);
 
     public void Bind(Control root)
     {
@@ -33,6 +34,7 @@ internal sealed class BrowserAccessibilityBridge
         _nextId = 0;
         _ids.Clear();
         _peers.Clear();
+        _openContextOwners.Clear();
     }
 
     public string ReadSnapshot()
@@ -43,7 +45,12 @@ internal sealed class BrowserAccessibilityBridge
         var unsupported = new HashSet<string>(StringComparer.Ordinal);
         var current = new HashSet<string>(StringComparer.Ordinal);
         var visited = new HashSet<AutomationPeer>();
-        if (_root is not null) Visit(ControlAutomationPeer.CreatePeerForElement(_root));
+        _openContextOwners.Clear();
+        if (_root is not null)
+        {
+            Visit(ControlAutomationPeer.CreatePeerForElement(_root));
+            foreach (var menu in _openContextOwners.Keys.ToArray()) Visit(ControlAutomationPeer.CreatePeerForElement(menu));
+        }
         foreach (var id in _peers.Keys.Except(current).ToArray())
         {
             _ids.Remove(_peers[id]);
@@ -63,6 +70,8 @@ internal sealed class BrowserAccessibilityBridge
                 return;
             }
             if (!InScope(controlPeer.Owner)) return;
+            if (controlPeer.Owner.IsEffectivelyEnabled && controlPeer.Owner.ContextMenu is { IsOpen: true } contextMenu)
+                _openContextOwners.TryAdd(contextMenu, controlPeer.Owner);
             var role = kind switch
             {
                 AutomationControlType.Button when peer is IInvokeProvider => "button",
@@ -121,7 +130,9 @@ internal sealed class BrowserAccessibilityBridge
 
     private bool InScope(Control owner) => _root is not null && owner.IsEffectivelyVisible &&
         (ReferenceEquals(owner, _root) || owner.GetVisualAncestors().Contains(_root)
-         || TopLevel.GetTopLevel(owner) is not null && owner.GetLogicalAncestors().Contains(_root));
+         || TopLevel.GetTopLevel(owner) is not null && (owner.GetLogicalAncestors().Contains(_root)
+            || owner is ContextMenu ownMenu && _openContextOwners.ContainsKey(ownMenu)
+            || owner.GetLogicalAncestors().OfType<ContextMenu>().Any(_openContextOwners.ContainsKey)));
 
     private Viewport? ReadViewport()
     {

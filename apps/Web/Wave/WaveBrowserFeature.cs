@@ -11,7 +11,7 @@ namespace NineToOne.Web.Wave;
 public sealed class WaveBrowserFeature : IHomeFeatureRouteHandler, IBrowserCloseParticipant, IDisposable
 {
     private readonly WaveBrowserSession _session;
-    private readonly CuiDocument _document;
+    private readonly CuiDocumentSource _document;
     private WaveViewLifetime? _view;
     public string RouteId => "app.wave";
     // A missing/unacknowledged save receipt leaves IsDirty true; no guessed receipt changes readiness.
@@ -20,12 +20,10 @@ public sealed class WaveBrowserFeature : IHomeFeatureRouteHandler, IBrowserClose
     public Task<HomeCoreOperationResult<bool>> PrepareToCloseAsync(CancellationToken cancellationToken = default) =>
         _session.PrepareToCloseAsync(cancellationToken);
 
-    public WaveBrowserFeature(IWaveBrowserMedia media, string markup)
+    public WaveBrowserFeature(IWaveBrowserMedia media, string markup, bool deferMarkup = false)
     {
         _session = new(media);
-        var parser = new CuiRichParser(); _document = parser.Parse(markup, "Wave.cui");
-        if (parser.Diagnostics.Diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error))
-            throw new InvalidDataException("The browser Wave CUI document is invalid.");
+        _document = new CuiDocumentSource(markup, "Wave.cui", deferMarkup);
     }
 
     public static HomeCoreOperationResult<bool> Register(BrowserSurfaceRegistry registry)
@@ -33,7 +31,7 @@ public sealed class WaveBrowserFeature : IHomeFeatureRouteHandler, IBrowserClose
         using var stream = typeof(WaveBrowserFeature).Assembly.GetManifestResourceStream("NineToOne.Web.Wave.cui")
             ?? throw new InvalidOperationException("The Wave browser CUI resource is unavailable.");
         using var reader = new StreamReader(stream);
-        var feature = new WaveBrowserFeature(new BrowserWaveMedia(), reader.ReadToEnd());
+        var feature = new WaveBrowserFeature(new BrowserWaveMedia(), reader.ReadToEnd(), deferMarkup: true);
         var result = registry.Register(feature, feature.Render, BrowserSurfaceScope.DeviceLocal);
         if (!result.Succeeded) feature.Dispose();
         return result;
@@ -62,7 +60,7 @@ public sealed class WaveBrowserFeature : IHomeFeatureRouteHandler, IBrowserClose
         if (view.RouteId != RouteId || view.ViewId != "wave.local-editor") throw new ArgumentException("Invalid Wave surface.");
         _view?.Dispose(); var lifetime = new WaveViewLifetime(_session); _view = lifetime;
         var registry = new CuiControlRegistry(); registry.RegisterObjectRenderer("WaveTimeline", _ => lifetime.Timeline);
-        return new(_document, _session, _session, lifetime, registry);
+        return new(_document.Document, _session, _session, lifetime, registry);
     }
 
     public void Dispose()

@@ -3,6 +3,9 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Threading;
 using Avalonia.Interactivity;
+using Avalonia.Input;
+using Avalonia.VisualTree;
+using Avalonia.LogicalTree;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using CakeOS.Cui.Language;
@@ -38,6 +41,7 @@ public sealed class CuiControlLoader : IDisposable
     private readonly HashSet<Control> _wiredActions = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, EventHandler<RoutedEventArgs>> _actionHandlers = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, ContextMenu> _ownedContextMenus = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<ContextMenu, EventHandler<RoutedEventArgs>> _contextMenuFocusHandlers = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<ContextMenu, Task> _contextMenuCloses = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<string, CuiComponent> _typeDefinitions = new(StringComparer.Ordinal);
     private CuiThemePreferenceContext? _themePreference;
@@ -45,6 +49,8 @@ public sealed class CuiControlLoader : IDisposable
     private readonly Stack<string> _themeNames = new();
     private readonly Dictionary<Control, string> _controlThemeNames = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, ResourceDictionary> _controlThemeResources = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<(CuiPalette Palette, CuiAccessibilitySettings Accessibility, string Name),
+        KeyValuePair<object, object?>[]> _themeResourceSnapshots = new();
     private ICuiBindingContext? _bindingContext;
     private ICuiActionDispatcher? _actionDispatcher;
     private IReadOnlyDictionary<string, CuiActionDefinition> _documentActions =
@@ -93,7 +99,8 @@ public sealed class CuiControlLoader : IDisposable
                     foreach (var (property, value) in component.Properties)
                     {
                         if (value is CuiResourceValue resource) ApplyResourceProperty(control, property, resource);
-                        else if (control is Image && property.Equals("Source", StringComparison.OrdinalIgnoreCase) && value is CuiLiteralValue literal)
+                        else if ((control is Image && property.Equals("Source", StringComparison.OrdinalIgnoreCase)
+                            || control is MenuItem && property.Equals("IconSource", StringComparison.OrdinalIgnoreCase)) && value is CuiLiteralValue literal)
                             ApplyLiteralProperty(control, property, literal.Value, value.Span);
                     }
                 }
@@ -108,10 +115,52 @@ public sealed class CuiControlLoader : IDisposable
         // Populate off-tree, then publish once. Mutating an attached dictionary
         // broadcasts every individual token to this control and its descendants,
         // repeatedly projecting interaction states against incomplete palettes.
+        var palette = CuiSurfacePaletteCatalog.For(_currentSurface,
+            _appearance ?? CuiThemeScopeApplier.DetectAppearance(), resolution.Theme.BaseTheme);
+        var key = (palette, resolution.Accessibility, resolution.Theme.Name);
+        if (!_themeResourceSnapshots.TryGetValue(key, out var snapshot))
+        {
+            var source = new ResourceDictionary();
+            CuiThemeResourceApplier.ApplyToResources(source, palette, resolution.Accessibility);
+            source["CuiEffectiveThemeName"] = resolution.Theme.Name;
+            // Backend resource dictionaries have one owner. Reuse their immutable
+            // values, never the attached dictionary or a mutable brush instance.
+            var immutable = new Dictionary<Avalonia.Media.IBrush, Avalonia.Media.IBrush>(ReferenceEqualityComparer.Instance);
+            snapshot = source.Select(pair =>
+            {
+                object? value = pair.Value;
+                if (value is Avalonia.Media.ISolidColorBrush brush)
+                {
+                    if (!immutable.TryGetValue(brush, out var shared))
+                        immutable.Add(brush, shared = Avalonia.Media.BrushExtensions.ToImmutable(brush));
+                    value = shared;
+                }
+                return new KeyValuePair<object, object?>(pair.Key, value);
+            }).ToArray();
+            if (_themeResourceSnapshots.Count >= 32) _themeResourceSnapshots.Clear();
+            _themeResourceSnapshots.Add(key, snapshot);
+        }
         var resources = new ResourceDictionary();
-        CuiThemeResourceApplier.ApplyToResources(resources, CuiSurfacePaletteCatalog.For(_currentSurface,
-            _appearance ?? CuiThemeScopeApplier.DetectAppearance(), resolution.Theme.BaseTheme), resolution.Accessibility);
-        resources["CuiEffectiveThemeName"] = resolution.Theme.Name;
+        var gradients = new Dictionary<Avalonia.Media.LinearGradientBrush, Avalonia.Media.LinearGradientBrush>(ReferenceEqualityComparer.Instance);
+        foreach (var pair in snapshot)
+        {
+            object? value = pair.Value;
+            if (value is Avalonia.Media.LinearGradientBrush gradient)
+            {
+                if (!gradients.TryGetValue(gradient, out var owned))
+                {
+                    owned = new Avalonia.Media.LinearGradientBrush
+                    {
+                        StartPoint = gradient.StartPoint, EndPoint = gradient.EndPoint, SpreadMethod = gradient.SpreadMethod,
+                        Opacity = gradient.Opacity, Transform = gradient.Transform, TransformOrigin = gradient.TransformOrigin
+                    };
+                    foreach (var stop in gradient.GradientStops) owned.GradientStops.Add(new Avalonia.Media.GradientStop(stop.Color, stop.Offset));
+                    gradients.Add(gradient, owned);
+                }
+                value = owned;
+            }
+            resources.Add(pair.Key, value);
+        }
         if (_controlThemeResources.TryGetValue(control, out var previous))
         {
             var index = control.Resources.MergedDictionaries.IndexOf(previous);
@@ -636,6 +685,7 @@ public sealed class CuiControlLoader : IDisposable
             if (menu.IsOpen)
                 throw new InvalidOperationException("The owned native context menu did not close; its owner remains retained.");
             if (ReferenceEquals(owner.ContextMenu, menu)) owner.ContextMenu = null;
+            if (_contextMenuFocusHandlers.Remove(menu, out var focusHandler)) menu.Closed -= focusHandler;
             _ownedContextMenus.Remove(owner);
             close.SetResult();
             _contextMenuCloses.Remove(menu);
@@ -1634,6 +1684,13 @@ public sealed class CuiControlLoader : IDisposable
     {
         try
         {
+            if (propName.Equals("IconSource", StringComparison.OrdinalIgnoreCase))
+            {
+                if (control is not MenuItem menu) throw new ArgumentException("IconSource requires a menu item.");
+                menu.Icon = _controlRegistry.ResolveImageSource(resolved, control)
+                    ?? throw new ArgumentException($"Icon source '{resolved}' is not registered by this host.");
+                return;
+            }
             if (control is Image && propName.Equals("Source", StringComparison.OrdinalIgnoreCase))
             {
                 var image = _controlRegistry.ResolveImageSource(resolved, control);
@@ -2124,6 +2181,24 @@ public sealed class CuiControlLoader : IDisposable
                     "A control can own only one authored ContextMenu.", _authoredControls[child].Span));
             // Capture ownership before native attachment can enter any callback.
             _ownedContextMenus.Add(parent, menu);
+            EventHandler<RoutedEventArgs> restoreFocus = (_, _) =>
+            {
+                var root = TopLevel.GetTopLevel(parent);
+                var focused = root?.FocusManager?.GetFocusedElement();
+                // Wait for light-dismiss/action routing to settle, then return keyboard
+                // input to the context owner only if focus has not moved elsewhere.
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (_disposed || menu.IsOpen || root is null || !ReferenceEquals(TopLevel.GetTopLevel(parent), root)
+                        || !ReferenceEquals(parent.ContextMenu, menu) || !parent.IsEffectivelyEnabled || !parent.IsEffectivelyVisible
+                        || !ReferenceEquals(root.FocusManager?.GetFocusedElement(), focused)) return;
+                    if (focused is Control current && current.IsEffectivelyVisible && TopLevel.GetTopLevel(current) is not null
+                        && !ReferenceEquals(current, menu) && !current.GetLogicalAncestors().Contains(menu)) return;
+                    parent.Focus(NavigationMethod.Unspecified);
+                });
+            };
+            _contextMenuFocusHandlers.Add(menu, restoreFocus);
+            menu.Closed += restoreFocus;
             parent.ContextMenu = menu;
             return;
         }
