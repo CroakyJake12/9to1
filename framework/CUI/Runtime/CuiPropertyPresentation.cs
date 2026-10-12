@@ -216,11 +216,13 @@ public static class CuiPropertyPresentation
                 // dictionaries shadowed by this control's own palette. Compare
                 // per subscription: one key can project to several properties.
                 if (observed && Equals(previous, value)) return;
-                previous = value;
-                observed = true;
                 _resources[key] = value;
                 if (property is not null) Set(property, value, CuiPropertyLevel.Theme, source, order);
                 UpdateState();
+                // Only a completed projection may suppress identical future
+                // notifications. A failed observer must be able to retry.
+                previous = value;
+                observed = true;
             })));
         }
 

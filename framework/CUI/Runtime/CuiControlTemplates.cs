@@ -50,7 +50,8 @@ public static class CuiControlTemplates
         Add<ContextMenu>(resources, (owner, scope) => PopupFrame(owner, new ScrollViewer { Content = ItemPresenter(owner, scope) }));
         Add<MenuItem>(resources, MenuItem); Add<TabControl>(resources, Tabs); Add<TabItem>(resources, Header);
         Add<CuiMenuItem>(resources, (owner, scope) => MenuItem(owner, scope));
-        Add<ContentControl>(resources, Content); Add<UserControl>(resources, Content); Add<ToolTip>(resources, Content);
+        Add<ContentControl>(resources, Content); Add<UserControl>(resources, Content);
+        Add<ToolTip>(resources, (owner, scope) => PopupFrame(owner, Presenter(owner, scope)));
         Add<NumericUpDown>(resources, Numeric); Add<ButtonSpinner>(resources, Spinner);
         Add<ProgressBar>(resources, Progress); Add<Separator>(resources, Separator);
         Add<DataValidationErrors>(resources, Content); Add<Expander>(resources, Expander);

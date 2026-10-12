@@ -88,26 +88,38 @@ public sealed class CuiControlLoader : IDisposable
         void RefreshTheme()
         {
             if (_disposed) return;
+            List<Exception>? failures = null;
             foreach (var (control, name) in _controlThemeNames.ToArray())
             {
-                var resolution = ResolveTheme(name);
-                ApplyResolvedTheme(control, resolution);
-                if (!_authoredControls.TryGetValue(control, out var component)) continue;
-                _themeStack.Push(resolution.Theme.BaseTheme);
                 try
                 {
-                    foreach (var (property, value) in component.Properties)
+                    var resolution = ResolveTheme(name);
+                    ApplyResolvedTheme(control, resolution);
+                    if (!_authoredControls.TryGetValue(control, out var component)) continue;
+                    _themeStack.Push(resolution.Theme.BaseTheme);
+                    try
                     {
-                        if (value is CuiResourceValue resource) ApplyResourceProperty(control, property, resource);
-                        else if ((control is Image && property.Equals("Source", StringComparison.OrdinalIgnoreCase)
-                            || control is MenuItem && property.Equals("IconSource", StringComparison.OrdinalIgnoreCase)) && value is CuiLiteralValue literal)
-                            ApplyLiteralProperty(control, property, literal.Value, value.Span);
+                        foreach (var (property, value) in component.Properties)
+                        {
+                            if (value is CuiResourceValue resource) ApplyResourceProperty(control, property, resource);
+                            else if ((control is Image && property.Equals("Source", StringComparison.OrdinalIgnoreCase)
+                                || control is MenuItem && property.Equals("IconSource", StringComparison.OrdinalIgnoreCase)) && value is CuiLiteralValue literal)
+                                ApplyLiteralProperty(control, property, literal.Value, value.Span);
+                        }
                     }
+                    finally { _themeStack.Pop(); }
                 }
-                finally { _themeStack.Pop(); }
+                catch (Exception error) { (failures ??= []).Add(error); }
             }
+            // A failing renderer is local to that control. Let the remaining
+            // controls observe the committed Home preference, while retaining
+            // the loader's failed-observer status for an identical-revision retry.
+            if (failures is not null) throw new AggregateException("One or more CUI controls could not apply the theme.", failures);
         }
-        if (Dispatcher.UIThread.CheckAccess()) RefreshTheme(); else Dispatcher.UIThread.Post(RefreshTheme);
+        // Preserve failure custody with the preference context even when the
+        // settings owner publishes from an I/O thread. Fire-and-forget posting
+        // would mark the observer successful before any control was refreshed.
+        if (Dispatcher.UIThread.CheckAccess()) RefreshTheme(); else Dispatcher.UIThread.Invoke(RefreshTheme);
     }
 
     private void ApplyResolvedTheme(Control control, CuiThemeResolution resolution)
