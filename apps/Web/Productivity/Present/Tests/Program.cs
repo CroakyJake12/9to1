@@ -739,11 +739,13 @@ var assertions = await headless.Dispatch(async () =>
         TypeInto(StrokeBox(), "#202020");
         Check(StyledShape().VectorShape!.Paths.All(path => path.Stroke.Enabled && path.Stroke.Color == "#202020"),
             "actual outline field writes every path of the selected real vector immediately");
-        TypeInto(StrokeWidthBox(), "6");
-        Check(StyledShape().VectorShape!.Paths.All(path => path.Stroke.Width == 6),
+        var originalStrokeWidth = StyledShape().VectorShape!.Paths[0].Stroke.Width;
+        var editedStrokeWidth = originalStrokeWidth + 2;
+        TypeInto(StrokeWidthBox(), editedStrokeWidth.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        Check(StyledShape().VectorShape!.Paths.All(path => path.Stroke.Width == editedStrokeWidth),
             "actual outline-width field immediately updates vector geometry styling");
-        await Click("Undo", () => StyledShape().VectorShape!.Paths.All(path => path.Stroke.Width != 6));
-        await Click("Redo", () => StyledShape().VectorShape!.Paths.All(path => path.Stroke.Width == 6));
+        await Click("Undo", () => StyledShape().VectorShape!.Paths.All(path => path.Stroke.Width == originalStrokeWidth));
+        await Click("Redo", () => StyledShape().VectorShape!.Paths.All(path => path.Stroke.Width == editedStrokeWidth));
         await Click("Delete element", () => session.GetDocumentSnapshot()!.Slides[0].Elements.Count == elementCount);
         SelectOnCanvas(0.70, 0.60, additive: false);
         var propBody = session.Editor!.Selection.ElementIds.Single();
