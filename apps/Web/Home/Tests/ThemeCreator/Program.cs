@@ -72,7 +72,7 @@ await using (var session = HeadlessUnitTestSession.StartNew(typeof(ThemeCreatorT
         using var loader = new CuiControlLoader(); loader.SetThemePreferenceContext(theme); loader.SetBindingContext(creator); loader.SetActionDispatcher(creator);
         const string markup = """
             <Cui><Import Source="framework/CUI/Components/ThemeCreator.cui"/>
-              <Page><Container Type="Overlay" VerticalScrolling="True" HorizontalScrolling="False"><ThemeCreatorPanel/></Container></Page>
+              <Page><Container Type="Overlay" Background="{Resource CuiBackgroundBrush}" VerticalScrolling="True" HorizontalScrolling="False"><ThemeCreatorPanel/></Container></Page>
             </Cui>
             """;
         var document = new CuiRichParser().Parse(markup);
@@ -90,6 +90,15 @@ await using (var session = HeadlessUnitTestSession.StartNew(typeof(ThemeCreatorT
             var point = control.TranslatePoint(new(control.Bounds.Width / 2, control.Bounds.Height / 2), window)!.Value;
             window.MouseDown(point, MouseButton.Left); window.MouseUp(point, MouseButton.Left); Pump();
         }
+        void Capture(string stage, int width, int height)
+        {
+            var output = Environment.GetEnvironmentVariable("THEME_CREATOR_EVIDENCE");
+            if (string.IsNullOrEmpty(output)) return;
+            Directory.CreateDirectory(output);
+            using var frame = window.CaptureRenderedFrame();
+            Check(frame is not null, "Native creator screenshot was not rendered");
+            frame!.Save(Path.Combine(output, $"creator-{width}x{height}-{stage}.png"));
+        }
         try
         {
             window.Show(); Pump(); var input = Find<TextBox>("Theme name");
@@ -100,6 +109,7 @@ await using (var session = HeadlessUnitTestSession.StartNew(typeof(ThemeCreatorT
             window.KeyTextInput("!"); Pump(); Check(input.Text == "Native theme draf!t", "Middle-caret insertion failed");
             var type = Find<ComboBox>("Accent type"); Click(type); window.KeyPress(Key.Down, RawInputModifiers.None, PhysicalKey.ArrowDown, null); window.KeyRelease(Key.Down, RawInputModifiers.None, PhysicalKey.ArrowDown, null); window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null); window.KeyRelease(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null); Pump();
             Check(Read(creator, "IsGradient") is true, "Physical accent selector did not enter gradient builder");
+            Check(Read(creator, "GradientHasAngle") is true && Read(creator, "GradientHasCentre") is false && Read(creator, "GradientHasRadius") is false, "Linear gradient exposed irrelevant geometry");
             Click(loaded.Root!.GetVisualDescendants().OfType<Button>().Single(button => button.Content as string == "Add stop"));
             Check(((string[])Read(creator, "StopNames")!).Length == 3, "Physical Add stop failed");
             var colour = Find<TextBox>("Colour hexadecimal RGB"); Click(colour);
@@ -113,8 +123,10 @@ await using (var session = HeadlessUnitTestSession.StartNew(typeof(ThemeCreatorT
                 window.Width = width; window.Height = height; Pump();
                 var controls = loaded.Root!.GetVisualDescendants().Where(control => control.IsVisible && control is TextBox or ComboBox or Button).ToArray();
                 Check(controls.All(control => control.Bounds.Width <= width), "Creator control exceeds narrow viewport");
-                var output = Environment.GetEnvironmentVariable("THEME_CREATOR_EVIDENCE");
-                if (!string.IsNullOrEmpty(output)) { Directory.CreateDirectory(output); window.CaptureRenderedFrame()?.Save(Path.Combine(output, $"creator-{width}x{height}.png")); }
+                var scroll = loaded.Root!.GetVisualDescendants().OfType<ScrollViewer>().First();
+                scroll.Offset = default; Pump(); Capture("top", width, height);
+                colour.BringIntoView(); Pump(); Capture("colour", width, height);
+                Find<TextBox>("Colour Gaussian background blur").BringIntoView(); Pump(); Capture("material", width, height);
             }
             Click(Find<Button>("Save custom theme to account")); await loader.WhenActionsIdleAsync(); Pump();
             Check(owner.Writes == 1 && owner.Saved?.Name == "Native theme draf!t", "Actual CUI Save did not reach same account delegate");

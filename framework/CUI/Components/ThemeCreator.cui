@@ -40,17 +40,17 @@
         <Text Text="Gradient Creator" FontWeight="SemiBold" />
         <Input Type="Select" ItemsSource="{Binding ThemeCreatorGradientKinds}" SelectedIndex="{Binding ThemeCreatorGradientKindIndex, mode=TwoWay, type=int}" AccessibleName="Gradient type" Interactive="{Binding ThemeCreatorCanEdit}" />
         <Container Type="Wrap" CellGap="12">
-          <Container Type="Vertical Stack" CellGap="4" Width="130"><Text id="gradient-angle-label" Text="Angle (degrees)" /><Input Type="Text" Value="{Binding ThemeCreatorGradientAngle, mode=TwoWay, type=string}" AccessibleName="Gradient angle in degrees" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
-          <Container Type="Vertical Stack" CellGap="4" Width="130"><Text Text="Centre X (%)" /><Input Type="Text" Value="{Binding ThemeCreatorGradientCenterX, mode=TwoWay, type=string}" AccessibleName="Gradient centre X percent" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
-          <Container Type="Vertical Stack" CellGap="4" Width="130"><Text Text="Centre Y (%)" /><Input Type="Text" Value="{Binding ThemeCreatorGradientCenterY, mode=TwoWay, type=string}" AccessibleName="Gradient centre Y percent" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
-          <Container Type="Vertical Stack" CellGap="4" Width="130"><Text Text="Radius (%)" /><Input Type="Text" Value="{Binding ThemeCreatorGradientRadius, mode=TwoWay, type=string}" AccessibleName="Gradient radius percent" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
+          <Container Active="{Binding ThemeCreatorGradientHasAngle}" Type="Vertical Stack" CellGap="4" Width="130"><Text id="gradient-angle-label" Text="Angle (degrees)" /><Input Type="Text" Value="{Binding ThemeCreatorGradientAngle, mode=TwoWay, type=string}" AccessibleName="Gradient angle in degrees" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
+          <Container Active="{Binding ThemeCreatorGradientHasCentre}" Type="Vertical Stack" CellGap="4" Width="130"><Text Text="Centre X (%)" /><Input Type="Text" Value="{Binding ThemeCreatorGradientCenterX, mode=TwoWay, type=string}" AccessibleName="Gradient centre X percent" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
+          <Container Active="{Binding ThemeCreatorGradientHasCentre}" Type="Vertical Stack" CellGap="4" Width="130"><Text Text="Centre Y (%)" /><Input Type="Text" Value="{Binding ThemeCreatorGradientCenterY, mode=TwoWay, type=string}" AccessibleName="Gradient centre Y percent" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
+          <Container Active="{Binding ThemeCreatorGradientHasRadius}" Type="Vertical Stack" CellGap="4" Width="130"><Text Text="Radius (%)" /><Input Type="Text" Value="{Binding ThemeCreatorGradientRadius, mode=TwoWay, type=string}" AccessibleName="Gradient radius percent" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
         </Container>
         <Container Type="Wrap" CellGap="8">
           <Input Type="Select" Width="180" ItemsSource="{Binding ThemeCreatorStopNames}" SelectedIndex="{Binding ThemeCreatorStopIndex, mode=TwoWay, type=int}" AccessibleName="Gradient colour stop" Interactive="{Binding ThemeCreatorCanEdit}" />
           <Button Action="ThemeCreatorAddStop" Content="Add stop" Interactive="{Binding ThemeCreatorCanAddStop}" />
           <Button Action="ThemeCreatorRemoveStop" Content="Remove stop" Interactive="{Binding ThemeCreatorCanRemoveStop}" />
         </Container>
-        <Container Type="Vertical Stack" CellGap="4" MaxWidth="180"><Text Text="Stop position (%)" /><Input Type="Text" Value="{Binding ThemeCreatorStopPosition, mode=TwoWay, type=string}" AccessibleName="Gradient stop position percent" Interactive="{Binding ThemeCreatorCanEditStopPosition}" /></Container>
+        <Container Type="Vertical Stack" CellGap="4" Width="180" HorizontalAlignment="Left"><Text Text="Stop position (%)" /><Input Type="Text" Value="{Binding ThemeCreatorStopPosition, mode=TwoWay, type=string}" AccessibleName="Gradient stop position percent" Interactive="{Binding ThemeCreatorCanEditStopPosition}" /></Container>
         <Text Text="Endpoint stops stay at 0% and 100%. Add a stop to place another colour between them." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
       </Container>
       <Container Active="{Binding ThemeCreatorIsPattern}" Type="Vertical Stack" CellGap="8">
@@ -66,7 +66,7 @@
 
       <Text Text="{Binding ThemeCreatorColourLabel}" FontWeight="SemiBold" />
       <Container Type="Grid" ColumnSizes="Auto 1fr" CellGap="12">
-        <Container Width="48" Height="40" CornerRadius="8" Background="{Binding ThemeCreatorColourSwatch}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" AccessibleName="Selected colour preview" />
+        <Container Type="Overlay" Width="48" Height="40" CornerRadius="8" Background="{Binding ThemeCreatorColourSwatch}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" AccessibleName="Selected colour preview" />
         <Input Column="1" Type="Text" Value="{Binding ThemeCreatorColourHex, mode=TwoWay, type=string}" AccessibleName="Colour hexadecimal RGB" Interactive="{Binding ThemeCreatorCanEdit}" />
       </Container>
       <Container Type="Grid" ColumnSizes="Auto 1fr Auto" RowSizes="Auto Auto Auto" CellGap="8">
@@ -76,7 +76,7 @@
       </Container>
       <Container Type="Wrap" CellGap="12">
         <Container Type="Vertical Stack" CellGap="4" Width="180"><Text Text="Transparency (%)" /><Input Type="Text" Value="{Binding ThemeCreatorTransparency, mode=TwoWay, type=string}" AccessibleName="Colour transparency percent" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
-        <Container Type="Vertical Stack" CellGap="4" Width="220"><Text Text="Gaussian background blur (0–32)" /><Input Type="Text" Value="{Binding ThemeCreatorBackgroundBlur, mode=TwoWay, type=string}" AccessibleName="Colour Gaussian background blur" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
+        <Container Type="Vertical Stack" CellGap="4" Width="220"><Text Text="Gaussian background blur (0–32)" TextWrapping="Wrap" /><Input Type="Text" Value="{Binding ThemeCreatorBackgroundBlur, mode=TwoWay, type=string}" AccessibleName="Colour Gaussian background blur" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
       </Container>
 
       <Text Text="Fonts" FontSize="18" FontWeight="SemiBold" />
