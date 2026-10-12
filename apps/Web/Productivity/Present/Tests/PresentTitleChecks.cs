@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Reflection;
+using System.Text.Json;
 using System.Xml.Linq;
 using Avalonia;
 using Avalonia.Controls;
