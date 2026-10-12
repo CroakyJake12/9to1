@@ -50,7 +50,9 @@ public sealed class CuiControlLoader : IDisposable
     private readonly Stack<string> _themeNames = new();
     private readonly Dictionary<Control, string> _controlThemeNames = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, IResourceProvider> _controlThemeResources = new(ReferenceEqualityComparer.Instance);
-    private readonly Dictionary<(CuiPalette Palette, CuiAccessibilitySettings Accessibility, string Name),
+    private readonly record struct ThemeResourceKey(CuiPalette Palette, CuiAccessibilitySettings Accessibility, string Name, string? Fingerprint);
+    private readonly Dictionary<Control, ThemeResourceKey> _appliedThemeKeys = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<ThemeResourceKey,
         FrozenDictionary<object, object?>> _themeResourceSnapshots = new();
     private ICuiBindingContext? _bindingContext;
     private ICuiActionDispatcher? _actionDispatcher;
@@ -96,7 +98,7 @@ public sealed class CuiControlLoader : IDisposable
                 try
                 {
                     var resolution = ResolveTheme(name);
-                    ApplyResolvedTheme(control, resolution);
+                    if (!ApplyResolvedTheme(control, resolution)) continue;
                     if (!_authoredControls.TryGetValue(control, out var component)) continue;
                     _themeStack.Push(resolution.Theme.BaseTheme);
                     try
@@ -111,7 +113,13 @@ public sealed class CuiControlLoader : IDisposable
                     }
                     finally { _themeStack.Pop(); }
                 }
-                catch (Exception error) { (failures ??= []).Add(error); }
+                catch (Exception error)
+                {
+                    // Resource projection can fail after the provider was attached.
+                    // An identical-revision retry must still visit that control.
+                    _appliedThemeKeys.Remove(control);
+                    (failures ??= []).Add(error);
+                }
             }
             // A failing renderer is local to that control. Let the remaining
             // controls observe the committed Home preference, while retaining
@@ -124,7 +132,7 @@ public sealed class CuiControlLoader : IDisposable
         if (Dispatcher.UIThread.CheckAccess()) RefreshTheme(); else Dispatcher.UIThread.Invoke(RefreshTheme);
     }
 
-    private void ApplyResolvedTheme(Control control, CuiThemeResolution resolution)
+    private bool ApplyResolvedTheme(Control control, CuiThemeResolution resolution)
     {
         // Populate off-tree, then publish once. Mutating an attached dictionary
         // broadcasts every individual token to this control and its descendants,
@@ -132,11 +140,16 @@ public sealed class CuiControlLoader : IDisposable
         var palette = CuiSurfacePaletteCatalog.For(_currentSurface,
             _appearance ?? resolution.Appearance ?? CuiThemeScopeApplier.DetectAppearance(), resolution.Theme.BaseTheme,
             resolution.EffectiveAccent.ResolveColour(_accentAppId ?? string.Empty));
-        var key = (palette, resolution.Accessibility, resolution.Theme.Name);
+        var key = new ThemeResourceKey(palette, resolution.Accessibility, resolution.Theme.Name, resolution.Theme.CustomFingerprint);
+        // Editing a named draft changes the shared catalog. Scopes whose effective
+        // palette and custom definition are unchanged retain their resource owners.
+        if (_appliedThemeKeys.TryGetValue(control, out var applied) && applied == key) return false;
         if (!_themeResourceSnapshots.TryGetValue(key, out var snapshot))
         {
             var source = new ResourceDictionary();
             CuiThemeResourceApplier.ApplyToResources(source, palette, resolution.Accessibility);
+            if (resolution.Theme.CustomTheme is { } custom)
+                CuiCustomThemeResourceApplier.ApplyToResources(source, custom, resolution.Accessibility);
             source["CuiEffectiveThemeName"] = resolution.Theme.Name;
             // Backend resource dictionaries have one owner. Reuse their immutable
             // values, never the attached dictionary or a mutable brush instance.
@@ -188,6 +201,8 @@ public sealed class CuiControlLoader : IDisposable
                         throw new CuiRuntimeLoadException(new("CUIR056", CuiDiagnosticSeverity.Error, $"Custom theme property '{property}' has no typed projection for {component.Type}.", component.Span));
                 }
         }
+        _appliedThemeKeys[control] = key;
+        return true;
     }
 
     /// <summary>Set a binding context for live {Binding path} resolution.</summary>
@@ -423,7 +438,7 @@ public sealed class CuiControlLoader : IDisposable
         ClearRepeatSubscriptions();
         _repeats.Clear();
         foreach (var control in _authoredControls.Keys.ToArray()) DetachPresentation(control);
-        _controlThemeNames.Clear(); _controlThemeResources.Clear(); _themeNames.Clear(); _themeNames.Push("user_preference");
+        _controlThemeNames.Clear(); _controlThemeResources.Clear(); _appliedThemeKeys.Clear(); _themeNames.Clear(); _themeNames.Push("user_preference");
         _authoredControls.Clear();
         _observedBindings.Clear();
         ClearActionHandlers();
@@ -1109,7 +1124,7 @@ public sealed class CuiControlLoader : IDisposable
         foreach (var control in removed)
         {
             DetachPresentation(control);
-            _controlThemeNames.Remove(control); _controlThemeResources.Remove(control);
+            _controlThemeNames.Remove(control); _controlThemeResources.Remove(control); _appliedThemeKeys.Remove(control);
             _authoredControls.Remove(control);
             _observedBindings.Remove(control);
             _actionInvocations.Remove(control);
