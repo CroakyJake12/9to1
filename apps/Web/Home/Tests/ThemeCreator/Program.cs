@@ -70,14 +70,15 @@ await using (var session = HeadlessUnitTestSession.StartNew(typeof(ThemeCreatorT
         creator.Open();
         using var theme = new CuiThemePreferenceContext(owner, owner.Catalog);
         using var loader = new CuiControlLoader(); loader.SetThemePreferenceContext(theme); loader.SetBindingContext(creator); loader.SetActionDispatcher(creator);
-        var document = new CuiRichParser().Parse("""
+        const string markup = """
             <Cui><Import Source="framework/CUI/Components/ThemeCreator.cui"/>
               <Page><Container Type="Overlay" VerticalScrolling="True" HorizontalScrolling="False"><ThemeCreatorPanel/></Container></Page>
             </Cui>
-            """);
+            """;
+        var document = new CuiRichParser().Parse(markup);
         var composed = CuiThemeCreatorComponents.Compose(document);
         Check(ReferenceEquals(composed, CuiThemeCreatorComponents.Compose(composed)), "Theme creator library composed twice");
-        var loaded = loader.TryLoad(composed);
+        var loaded = loader.TryLoad(document);
         Check(loaded.Root is not null && !loaded.Diagnostics.Any(diagnostic => diagnostic.Severity == CakeOS.Cui.Language.CuiDiagnosticSeverity.Error), "Actual creator CUI failed: " + string.Join("; ", loaded.Diagnostics));
         loader.WireBindings(loaded.Root!);
         var window = new Window { Content = loaded.Root, Width = 800, Height = 600 };
@@ -119,7 +120,7 @@ await using (var session = HeadlessUnitTestSession.StartNew(typeof(ThemeCreatorT
             Check(owner.Writes == 1 && owner.Saved?.Name == "Native theme draf!t", "Actual CUI Save did not reach same account delegate");
             Check(Read(creator, "Open") is false, "Successful native save did not close draft");
             using var absentOwnerLoader = new CuiControlLoader();
-            var absentOwner = absentOwnerLoader.TryLoad(composed);
+            var absentOwner = absentOwnerLoader.LoadMarkup(markup);
             Check(absentOwner.Root is not null && !absentOwner.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error), "Native Settings without a creator owner cannot load the imported library");
             Check(!absentOwner.Root!.GetVisualDescendants().OfType<CuiContainerControl>().Any(control => control.Name == "theme-creator" && control.IsVisible), "Native Settings exposed creator without a borrowed owner");
         }
