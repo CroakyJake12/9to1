@@ -878,7 +878,7 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
                 if (run.Underline) foreach (var decoration in TextDecorations.Underline) decorations.Add(decoration);
                 if (run.StrikeThrough) foreach (var decoration in TextDecorations.Strikethrough) decorations.Add(decoration);
                 var properties = new GenericTextRunProperties(
-                    new Typeface(HavenUiFont.Resolve(run.FontFamily), run.Italic ? FontStyle.Italic : FontStyle.Normal,
+                    new Typeface(HavenDocumentFont.Resolve(run.FontFamily), run.Italic ? FontStyle.Italic : FontStyle.Normal,
                         Weight(run.FontWeight), FontStretch.Normal), run.FontSize,
                     textDecorations: decorations, foregroundBrush: Resolve(run.Foreground),
                     backgroundBrush: run.Background is null ? null : Resolve(run.Background), cultureInfo: CultureInfo.CurrentCulture);

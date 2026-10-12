@@ -3,7 +3,8 @@ using Avalonia.Media;
 namespace Haven.Desktop.HavenUI.Tokens;
 
 /// <summary>
-/// Resolves the globally selected UI font family for every text surface.
+/// Resolves the globally selected UI font family for interface text surfaces.
+/// Authored document paragraphs use HavenDocumentFont instead.
 /// Montserrat remains the bundled default and final fallback; a user-selected
 /// installed family is expressed as an Avalonia fallback chain so a missing
 /// font degrades safely instead of breaking layout.

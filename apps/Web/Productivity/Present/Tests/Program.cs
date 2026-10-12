@@ -39,6 +39,7 @@ var assertions = await headless.Dispatch(async () =>
     if (args.Contains("shape-text", StringComparer.Ordinal)) return await PresentShapeTextChecks.Run(paths);
     if (args.Contains("interchange", StringComparer.Ordinal)) return await PresentInterchangeChecks.Run(paths);
     if (args.Contains("title", StringComparer.Ordinal)) return await PresentTitleChecks.Run(paths);
+    if (args.Contains("document-fonts", StringComparer.Ordinal)) return PresentDocumentFontChecks.Run(paths);
     var repository = new PresentRepository(paths);
     Check((await repository.ListAsync(default)).Count == 0, "actual Present repository fixture starts empty");
     if (args.Contains("admission", StringComparer.Ordinal))

@@ -12,6 +12,7 @@ Preserve notices, source offers and licence files when packaging or moving code.
 | AppFlowy Board | `9to1 Workspace/Boards/Source/AppFlowyBoard/` | Latest upstream `804d7898` (matches existing proof); AGPL-3.0 OR MPL-2.0 in `LICENSE`, MPL-2.0 selected for Boards. |
 | Firefox/Gecko | `9to1 Workspace/Browse/Source/FirefoxGecko/` | MPL-2.0; source present does not prove Gecko embedding. |
 | LibreOffice / LibreOfficeKit | `9to1 Workspace/{Write,Present,Data}/Source/LibreOffice/` | Latest core `d3fca73f`; retain `COPYING*` (MPL/LGPL); installed runtime and LOK/UNO ABI are separately validated. |
+| Carlito document fonts | `9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/Carlito/` | Unmodified 2013-09-20 four-style archive pinned by LibreOffice `d3fca73f`; SIL OFL-1.1 copyright and licence in `LICENSE`, exact source/hash receipt in `README.md`. Authored Calibri fallback only; not CUI chrome. |
 | DuckDB | `9to1 Workspace/Data/Source/DuckDB/` | MIT; latest default branch `12633c22` is distinct from the existing worker's 1.5.5 runtime requirement. |
 | EDS / libical | `9to1 Workspace/Planner/Source/{EvolutionDataServer,libical}/` | Preserve LGPL/dual MPL-LGPL and component notices; runtime integration not proven. |
 | libvterm | `9to1 Workspace/Terminal/Source/libvterm/` | MIT; platform PTY/ConPTY APIs are not code donors. |
