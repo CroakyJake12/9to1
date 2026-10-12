@@ -53,6 +53,7 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
         _timeProvider = timeProvider ?? TimeProvider.System;
         _drawingSurface = new HavenDrawingSurface(this);
         Children.Add(_drawingSurface);
+        ResourcesChanged += (_, _) => InvalidateScene();
         Focusable = true;
         ClipToBounds = true;
         _animationTimer = new DispatcherTimer(TimeSpan.FromMilliseconds(16), DispatcherPriority.Render, (_, _) => AdvanceAnimationFrame());
@@ -734,8 +735,8 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
         var target = Rect(command.Rect);
         if (!_images.TryResolve(command.Image.Source, out var image) || image is null)
         {
-            var border = new Pen(HavenAvaloniaThemeResolver.Resolve("Border"), 1.5d);
-            context.DrawRectangle(HavenAvaloniaThemeResolver.Resolve("SurfaceRaised"), border, target, 8, 8, default);
+            var border = new Pen(HavenAvaloniaThemeResolver.Resolve("Border", this), 1.5d);
+            context.DrawRectangle(HavenAvaloniaThemeResolver.Resolve("SurfaceRaised", this), border, target, 8, 8, default);
             context.DrawLine(border, target.TopLeft + new Vector(8, 8), target.BottomRight - new Vector(8, 8));
             context.DrawLine(border, target.TopRight + new Vector(-8, 8), target.BottomLeft + new Vector(8, -8));
             return;
@@ -762,7 +763,7 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
         return new Avalonia.Rect(target.X + (target.Width - width) / 2d, target.Y + (target.Height - height) / 2d, width, height);
     }
 
-    private static void DrawEffect(DrawingContext context, HavenRect bounds, double radius, HavenBrush brush, double offsetX, double offsetY, double blur, double spread)
+    private void DrawEffect(DrawingContext context, HavenRect bounds, double radius, HavenBrush brush, double offsetX, double offsetY, double blur, double spread)
     {
         var resolved = Resolve(brush);
         var color = HavenAvaloniaThemeResolver.EffectColor(resolved, "9to1 shadow/glow brush");
@@ -813,9 +814,10 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
         return new Size(size.Width * scaleX, size.Height * scaleY);
     }
 
-    private static IBrush Resolve(HavenBrush brush) => brush switch
+    private IBrush Resolve(HavenBrush brush) => ResolveBrush(brush, this);
+    private static IBrush ResolveBrush(HavenBrush brush, Control? scope = null) => brush switch
     {
-        HavenTokenBrush token => HavenAvaloniaThemeResolver.Resolve(token.Token),
+        HavenTokenBrush token => HavenAvaloniaThemeResolver.Resolve(token.Token, scope),
         HavenSolidBrush solid => new SolidColorBrush(Color.FromArgb(solid.A, solid.R, solid.G, solid.B)),
         _ => throw new InvalidOperationException($"Unsupported 9to1 brush '{brush.GetType().Name}'.")
     };
@@ -880,8 +882,8 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
                 var properties = new GenericTextRunProperties(
                     new Typeface(HavenDocumentFont.Resolve(run.FontFamily), run.Italic ? FontStyle.Italic : FontStyle.Normal,
                         Weight(run.FontWeight), FontStretch.Normal), run.FontSize,
-                    textDecorations: decorations, foregroundBrush: Resolve(run.Foreground),
-                    backgroundBrush: run.Background is null ? null : Resolve(run.Background), cultureInfo: CultureInfo.CurrentCulture);
+                    textDecorations: decorations, foregroundBrush: ResolveBrush(run.Foreground),
+                    backgroundBrush: run.Background is null ? null : ResolveBrush(run.Background), cultureInfo: CultureInfo.CurrentCulture);
                 defaultStyle ??= properties;
                 if (run.Text.Length != 0) styles.Add(new(offset, run.Text.Length, properties));
                 offset += run.Text.Length;
@@ -997,7 +999,7 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
         }
     }
 
-    private static FormattedText CreateText(string text, HavenElement element, double maxWidth) => CreateText(text, element.GetValue(HavenProperties.FontFamily), element.GetValue(HavenProperties.FontSize), element.GetValue(HavenProperties.FontWeight), maxWidth, HavenAvaloniaThemeResolver.Resolve(element.GetValue(HavenProperties.Foreground)));
+    private FormattedText CreateText(string text, HavenElement element, double maxWidth) => CreateText(text, element.GetValue(HavenProperties.FontFamily), element.GetValue(HavenProperties.FontSize), element.GetValue(HavenProperties.FontWeight), maxWidth, HavenAvaloniaThemeResolver.Resolve(element.GetValue(HavenProperties.Foreground), this));
     private static FormattedText CreateText(string text, string family, double size, int weight, double maxWidth, IBrush foreground, bool italic = false)
     {
         var fontFamily = HavenUiFont.Resolve(family);

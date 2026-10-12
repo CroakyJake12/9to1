@@ -6,13 +6,16 @@ namespace Haven.Desktop.HavenUI.Backend;
 
 internal static class HavenAvaloniaThemeResolver
 {
-    internal static IBrush Resolve(string token)
+    internal static IBrush Resolve(string token, Control? scope = null)
     {
         var key = token switch
         {
             "Accent" => "HavenAccentPrimaryBrush", "AccentSubtle" => "HavenAccentSoftBrush", "AccentHover" => "HavenAccentPrimaryHoverBrush", "AccentSecondary" => "HavenAccentSecondaryBrush", "AccentSecondaryHover" => "HavenAccentSecondaryHoverBrush", "AccentMuted" => "HavenAccentTertiaryBrush", "AccentTertiaryHover" => "HavenAccentTertiaryHoverBrush", "AccentGlow" => "HavenAccentPrimaryBrush", "AccentSecondaryGlow" => "HavenAccentSecondaryBrush", "AccentTertiaryGlow" => "HavenAccentTertiaryBrush", "Surface" => "HavenPanelBrush", "SurfaceRaised" => "HavenPanel2Brush", "SurfaceSubtle" => "HavenPanel2Brush", "SurfaceSecondary" => "HavenPanel3Brush", "SurfaceElevated" => "HavenCardSurfaceBrush", "Overlay" => "HavenOverlaySurfaceBrush", "TextPrimary" => "HavenTextPrimaryBrush", "TextSecondary" or "TextSoft" => "HavenTextSecondaryBrush", "TextMuted" => "HavenTextMutedBrush", "TextOnAccent" => "HavenButtonTextPrimaryBrush", "ButtonTextPrimary" => "HavenButtonTextPrimaryBrush", "ButtonTextSecondary" => "HavenButtonTextSecondaryBrush", "Border" => "HavenBorderSubtleBrush", "Shadow" => "HavenShadowBrush", "Warning" => "HavenWarningBrush", "Danger" or "DangerHover" or "DangerGlow" => "HavenDangerBrush", "TextOnDanger" => "HavenAccentForegroundBrush", "Transparent" or "None" => null, _ => token
         };
         if (key is null) return Brushes.Transparent;
+        // A retained scene inherits its owning CUI object's theme resources.
+        // Resolve there before the application-wide compatibility resources.
+        if (scope is not null && scope.TryFindResource(key, out var scoped) && scoped is IBrush scopedBrush) return scopedBrush;
         if (Avalonia.Application.Current?.TryFindResource(key, out var value) == true && value is IBrush brush) return brush;
         throw new InvalidOperationException($"9to1 semantic brush '{token}' resolved to missing Avalonia resource '{key}'.");
     }

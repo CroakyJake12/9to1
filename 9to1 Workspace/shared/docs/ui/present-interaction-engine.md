@@ -145,3 +145,20 @@ model preservation, read-only browsing, notification stability and last-slide
 visibility at 1280×900 and 800×700. Failed pre-repair native evidence is retained
 outside the repository. Browser29 must independently retest these workflows;
 these native results alone are not browser, donor or whole-app acceptance.
+
+## Scoped CUI resources in retained scenes
+
+Retained scene chrome resolves semantic brushes through the native scene's
+resource ancestry, including the original CUI Object's explicit theme scope.
+The existing application resources remain the inherited fallback. A scoped
+resource change invalidates painting without recreating the scene, changing the
+editor selection or reconciling the document. Canvas selection handles, guides,
+caret and thumbnail highlights therefore consume the same canonical CUI palette
+as their owning controls. Literal authored slide colours remain document data;
+this adapter does not recolour them or introduce a Present-specific palette.
+
+The `scoped-theme` regression loads the current canonical Present CUI with
+explicit Object themes, checks actual native pixels for handles and thumbnail
+highlights, changes the scope live, and checks literal document pixels and exact
+repository preservation. This establishes the scoped resource bridge only;
+browser/device and whole-app visual acceptance remain separate requirements.
