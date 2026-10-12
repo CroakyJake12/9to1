@@ -32,5 +32,6 @@
   </ItemGroup>
   <ItemGroup><EmbeddedResource Include="../Components/Editor.cui" LogicalName="CakeOS.Cui.Editor.cui" /></ItemGroup>
   <ItemGroup><EmbeddedResource Include="../Components/App.cui" LogicalName="CakeOS.Cui.App.cui" /></ItemGroup>
+  <ItemGroup><EmbeddedResource Include="../Components/ThemeCreator.cui" LogicalName="CakeOS.Cui.ThemeCreator.cui" /></ItemGroup>
   <Import Project="../vendor/Avalonia/build/BuildTargets.targets" />
 </Project>

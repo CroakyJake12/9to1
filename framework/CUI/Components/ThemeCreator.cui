@@ -1,0 +1,100 @@
+<Cui id="home.settings.theme-creator" version="1">
+  <Prefab (Definition) id="ThemeCreatorPanel" Type="dynamic">
+    <Container id="theme-creator" Active="{Binding ThemeCreatorOpen, fallback=false}" Type="Vertical Stack" CellGap="12" Padding="18" Margin="0,0,0,24" Background="{Resource CuiPanelBrush}" CornerRadius="18">
+      <Container Type="Grid" ColumnSizes="1fr Auto">
+        <Text Text="Create Theme" FontSize="22" FontWeight="SemiBold" />
+        <Button Column="1" Action="ThemeCreatorCancel" Content="Close" AccessibleName="Close theme creator without saving" Interactive="{Binding ThemeCreatorCanEdit}" />
+      </Container>
+      <Text Text="Create a theme for your account. Changes here are a preview until you save." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+      <Text Text="Theme Name" FontWeight="SemiBold" />
+      <Input id="theme-name" Type="Text" Value="{Binding ThemeCreatorName, mode=TwoWay, type=string}" AccessibleName="Theme name" FocusRequested="{Binding ThemeCreatorFocusName}" SelectOnFocusRequest="True" Interactive="{Binding ThemeCreatorCanEdit}" />
+
+      <Text Text="Live preview" FontWeight="SemiBold" />
+      <Theme Name="9to1 Draft Theme Preview">
+      <Container Type="Vertical Stack" CellGap="10" Padding="16" Background="{Resource CuiWorkspaceBrush}" CornerRadius="14">
+        <Text Text="Your workspace" FontRole="Main" TextWrapping="Wrap" />
+        <Text Text="A theme of your own" FontRole="Heading" TextWrapping="Wrap" />
+        <Text Text="Colour, texture and typography work together." FontRole="Body" TextWrapping="Wrap" />
+        <Container Type="Wrap" CellGap="8">
+          <Button Content="Primary" Action="ThemeCreatorSelectPrimary" AccentRole="Primary" FontRole="PrimaryButton" AccessibleName="Preview primary accent and edit it" />
+          <Button Content="Secondary" Action="ThemeCreatorSelectSecondary" AccentRole="Secondary" FontRole="SecondaryButton" AccessibleName="Preview secondary accent and edit it" />
+          <Button Content="Tertiary" Action="ThemeCreatorSelectTertiary" AccentRole="Tertiary" FontRole="TertiaryButton" AccessibleName="Preview tertiary accent and edit it" />
+        </Container>
+        <Text Text="theme.preview = true" FontRole="Code" TextWrapping="Wrap" />
+      </Container>
+      </Theme>
+
+      <Text Text="Accents" FontSize="18" FontWeight="SemiBold" />
+      <Container Type="Wrap" CellGap="12">
+        <Container Type="Vertical Stack" CellGap="4" Width="180">
+          <Text Text="Accent" />
+          <Input Type="Select" ItemsSource="{Binding ThemeCreatorAccentNames}" SelectedIndex="{Binding ThemeCreatorAccentIndex, mode=TwoWay, type=int}" AccessibleName="Accent to edit" Interactive="{Binding ThemeCreatorCanEdit}" />
+        </Container>
+        <Container Type="Vertical Stack" CellGap="4" Width="180">
+          <Text Text="Accent type" />
+          <Input Type="Select" ItemsSource="{Binding ThemeCreatorFillKinds}" SelectedIndex="{Binding ThemeCreatorFillKindIndex, mode=TwoWay, type=int}" AccessibleName="Accent type" Interactive="{Binding ThemeCreatorCanEdit}" />
+        </Container>
+      </Container>
+      <Container Active="{Binding ThemeCreatorIsGradient}" Type="Vertical Stack" CellGap="8">
+        <Text Text="Gradient Creator" FontWeight="SemiBold" />
+        <Input Type="Select" ItemsSource="{Binding ThemeCreatorGradientKinds}" SelectedIndex="{Binding ThemeCreatorGradientKindIndex, mode=TwoWay, type=int}" AccessibleName="Gradient type" Interactive="{Binding ThemeCreatorCanEdit}" />
+        <Container Type="Wrap" CellGap="12">
+          <Container Type="Vertical Stack" CellGap="4" Width="130"><Text Text="Angle (degrees)" /><Input Type="Text" Value="{Binding ThemeCreatorGradientAngle, mode=TwoWay, type=string}" AccessibleName="Gradient angle in degrees" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
+          <Container Type="Vertical Stack" CellGap="4" Width="130"><Text Text="Centre X (%)" /><Input Type="Text" Value="{Binding ThemeCreatorGradientCenterX, mode=TwoWay, type=string}" AccessibleName="Gradient centre X percent" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
+          <Container Type="Vertical Stack" CellGap="4" Width="130"><Text Text="Centre Y (%)" /><Input Type="Text" Value="{Binding ThemeCreatorGradientCenterY, mode=TwoWay, type=string}" AccessibleName="Gradient centre Y percent" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
+          <Container Type="Vertical Stack" CellGap="4" Width="130"><Text Text="Radius (%)" /><Input Type="Text" Value="{Binding ThemeCreatorGradientRadius, mode=TwoWay, type=string}" AccessibleName="Gradient radius percent" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
+        </Container>
+        <Container Type="Wrap" CellGap="8">
+          <Input Type="Select" Width="180" ItemsSource="{Binding ThemeCreatorStopNames}" SelectedIndex="{Binding ThemeCreatorStopIndex, mode=TwoWay, type=int}" AccessibleName="Gradient colour stop" Interactive="{Binding ThemeCreatorCanEdit}" />
+          <Button Action="ThemeCreatorAddStop" Content="Add stop" Interactive="{Binding ThemeCreatorCanAddStop}" />
+          <Button Action="ThemeCreatorRemoveStop" Content="Remove stop" Interactive="{Binding ThemeCreatorCanRemoveStop}" />
+        </Container>
+        <Container Type="Vertical Stack" CellGap="4" MaxWidth="180"><Text Text="Stop position (%)" /><Input Type="Text" Value="{Binding ThemeCreatorStopPosition, mode=TwoWay, type=string}" AccessibleName="Gradient stop position percent" Interactive="{Binding ThemeCreatorCanEditStopPosition}" /></Container>
+        <Text Text="Endpoint stops stay at 0% and 100%. Add a stop to place another colour between them." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+      </Container>
+      <Container Active="{Binding ThemeCreatorIsPattern}" Type="Vertical Stack" CellGap="8">
+        <Text Text="Pattern builder" FontWeight="SemiBold" />
+        <Input Type="Select" ItemsSource="{Binding ThemeCreatorPatternKinds}" SelectedIndex="{Binding ThemeCreatorPatternKindIndex, mode=TwoWay, type=int}" AccessibleName="Pattern geometry" Interactive="{Binding ThemeCreatorCanEdit}" />
+        <Container Type="Wrap" CellGap="12">
+          <Container Type="Vertical Stack" CellGap="4" Width="140"><Text Text="Size (px)" /><Input Type="Text" Value="{Binding ThemeCreatorPatternSize, mode=TwoWay, type=string}" AccessibleName="Pattern size in pixels" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
+          <Container Type="Vertical Stack" CellGap="4" Width="140"><Text Text="Spacing (px)" /><Input Type="Text" Value="{Binding ThemeCreatorPatternSpacing, mode=TwoWay, type=string}" AccessibleName="Pattern spacing in pixels" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
+          <Container Type="Vertical Stack" CellGap="4" Width="140"><Text Text="Angle (degrees)" /><Input Type="Text" Value="{Binding ThemeCreatorPatternAngle, mode=TwoWay, type=string}" AccessibleName="Pattern angle in degrees" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
+        </Container>
+        <Input Type="Select" ItemsSource="{Binding ThemeCreatorPatternColourNames}" SelectedIndex="{Binding ThemeCreatorPatternColourIndex, mode=TwoWay, type=int}" AccessibleName="Pattern colour to edit" Interactive="{Binding ThemeCreatorCanEdit}" />
+      </Container>
+
+      <Text Text="{Binding ThemeCreatorColourLabel}" FontWeight="SemiBold" />
+      <Container Type="Grid" ColumnSizes="Auto 1fr" CellGap="12">
+        <Container Width="48" Height="40" CornerRadius="8" Background="{Binding ThemeCreatorColourSwatch}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" AccessibleName="Selected colour preview" />
+        <Input Column="1" Type="Text" Value="{Binding ThemeCreatorColourHex, mode=TwoWay, type=string}" AccessibleName="Colour hexadecimal RGB" Interactive="{Binding ThemeCreatorCanEdit}" />
+      </Container>
+      <Container Type="Grid" ColumnSizes="Auto 1fr Auto" RowSizes="Auto Auto Auto" CellGap="8">
+        <Text Text="Red" /><Input Column="1" Type="Slider" Minimum="0" Maximum="255" Value="{Binding ThemeCreatorColourRed, mode=TwoWay, type=double}" AccessibleName="Colour red channel" Interactive="{Binding ThemeCreatorCanEdit}" /><Text Column="2" Text="{Binding ThemeCreatorColourRed}" />
+        <Text Row="1" Text="Green" /><Input Row="1" Column="1" Type="Slider" Minimum="0" Maximum="255" Value="{Binding ThemeCreatorColourGreen, mode=TwoWay, type=double}" AccessibleName="Colour green channel" Interactive="{Binding ThemeCreatorCanEdit}" /><Text Row="1" Column="2" Text="{Binding ThemeCreatorColourGreen}" />
+        <Text Row="2" Text="Blue" /><Input Row="2" Column="1" Type="Slider" Minimum="0" Maximum="255" Value="{Binding ThemeCreatorColourBlue, mode=TwoWay, type=double}" AccessibleName="Colour blue channel" Interactive="{Binding ThemeCreatorCanEdit}" /><Text Row="2" Column="2" Text="{Binding ThemeCreatorColourBlue}" />
+      </Container>
+      <Container Type="Wrap" CellGap="12">
+        <Container Type="Vertical Stack" CellGap="4" Width="180"><Text Text="Transparency (%)" /><Input Type="Text" Value="{Binding ThemeCreatorTransparency, mode=TwoWay, type=string}" AccessibleName="Colour transparency percent" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
+        <Container Type="Vertical Stack" CellGap="4" Width="220"><Text Text="Gaussian background blur (0–32)" /><Input Type="Text" Value="{Binding ThemeCreatorBackgroundBlur, mode=TwoWay, type=string}" AccessibleName="Colour Gaussian background blur" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
+      </Container>
+
+      <Text Text="Fonts" FontSize="18" FontWeight="SemiBold" />
+      <Input Type="Select" ItemsSource="{Binding ThemeCreatorFontRoles}" SelectedIndex="{Binding ThemeCreatorFontRoleIndex, mode=TwoWay, type=int}" AccessibleName="Font role to edit" Interactive="{Binding ThemeCreatorCanEdit}" />
+      <Container Type="Wrap" CellGap="12">
+        <Container Type="Vertical Stack" CellGap="4" Width="220"><Text Text="Family" /><Input Type="Select" ItemsSource="{Binding ThemeCreatorFontFamilies}" SelectedIndex="{Binding ThemeCreatorFontFamilyIndex, mode=TwoWay, type=int}" AccessibleName="Font family" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
+        <Container Type="Vertical Stack" CellGap="4" Width="130"><Text Text="Weight" /><Input Type="Select" ItemsSource="{Binding ThemeCreatorFontWeights}" SelectedIndex="{Binding ThemeCreatorFontWeightIndex, mode=TwoWay, type=int}" AccessibleName="Font weight" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
+        <Container Type="Vertical Stack" CellGap="4" Width="130"><Text Text="Size (px)" /><Input Type="Text" Value="{Binding ThemeCreatorFontSize, mode=TwoWay, type=string}" AccessibleName="Font size in pixels" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
+      </Container>
+      <Text Text="Button Roundness" FontWeight="SemiBold" />
+      <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="12">
+        <Input Type="Slider" Minimum="0" Maximum="100" Value="{Binding ThemeCreatorRoundness, mode=TwoWay, type=double}" AccessibleName="Button roundness percent" Interactive="{Binding ThemeCreatorCanEdit}" />
+        <Text Column="1" Text="{Binding ThemeCreatorRoundnessLabel}" />
+      </Container>
+      <Text Text="{Binding ThemeCreatorStatus}" AccessibleName="Theme creator status" TextWrapping="Wrap" />
+      <Container Type="Wrap" CellGap="8">
+        <Button Action="ThemeCreatorSave" Content="Save theme" Interactive="{Binding ThemeCreatorCanSave}" AccessibleName="Save custom theme to account" />
+        <Button Action="ThemeCreatorCancel" Content="Cancel" Interactive="{Binding ThemeCreatorCanEdit}" AccessibleName="Cancel custom theme changes" />
+      </Container>
+    </Container>
+  </Prefab>
+</Cui>
