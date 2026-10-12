@@ -1,4 +1,5 @@
 <Cui id="present.browser" version="1">
+  <Import Source="framework/CUI/Components/App.cui" />
   <Import Source="framework/CUI/Components/Editor.cui" />
   <Button (Definition) ID="PresentShapeGallery" Type="Menu Item" Content="Shapes" Padding="7,6" Background="Transparent" BorderWidth="0">
     <EditorMenu Content="Basic shapes" MenuColumns="4">
@@ -148,7 +149,10 @@
       <Container ID="present-views" Type="Overlay" Background="{Resource CuiBackgroundBrush}">
         <Container ID="present-start" Type="Overlay" Active="{Binding ShowStart}" VerticalScrolling="True">
           <Container ID="present-ui-1" Type="Vertical Stack" CellGap="24" Padding="32" MaxWidth="1000" HorizontalAlignment="Stretch" VerticalAlignment="Top">
-            <Button ID="present-ui-2" Content="Home" Action="ShellHome" HorizontalAlignment="Left" />
+            <Container Type="Grid" ColumnSizes="1fr Auto">
+              <Button ID="present-ui-2" Content="Home" Action="ShellHome" HorizontalAlignment="Left" />
+              <AppAccentMenu ID="present-start-accent" Column="1" />
+            </Container>
             <Container ID="present-ui-3" Type="Vertical Stack" CellGap="8">
               <Text ID="present-ui-4" Text="Present" FontSize="32" FontWeight="SemiBold" />
               <Text ID="present-ui-5" Text="Give your next story a place to start." FontSize="18" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
@@ -197,6 +201,7 @@
               <Text ID="present-ui-32" Text="{Binding HeaderStatus}" AccessibleName="Presentation save status" Foreground="{Resource CuiTextSoftBrush}" FontSize="11" Margin="6,0" />
             </Container>
             <EditorToolGroup ID="present-ui-33" Column="2" CellGap="6">
+              <AppAccentMenu ID="present-app-accent" />
               <EditorIcon ID="present-ui-34" AccessibleName="Save (Ctrl+S)" Tooltip="Save (Ctrl+S)" Action="Save" Interactive="{Binding CanSave}">
                 <Image ID="present-ui-35" Source="icon:save" Width="20" Height="20" />
               </EditorIcon>

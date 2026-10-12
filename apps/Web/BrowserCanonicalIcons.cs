@@ -25,6 +25,16 @@ internal static class BrowserCanonicalIcons
 
     private static IImage? Resolve(string source, Control target)
     {
+        // Colour samples are picker data, not an alternate application palette.
+        if (source.StartsWith("color:", StringComparison.Ordinal) && Color.TryParse(source[6..], out var colour))
+        {
+            var outline = target.TryFindResource("CuiLineBrush", out var value) && value is IBrush line ? line : null;
+            return new DrawingImage(new GeometryDrawing
+            {
+                Geometry = new RectangleGeometry(new Rect(3, 3, 18, 18), 3, 3),
+                Brush = new SolidColorBrush(colour), Pen = outline is null ? null : new Pen(outline, 1)
+            }) { Viewbox = new Rect(0, 0, 24, 24) };
+        }
         if (!source.StartsWith("icon:", StringComparison.Ordinal)) return null;
         var key = source[5..];
         if (string.IsNullOrWhiteSpace(key) || key.Length > 64 || key.Any(character => !char.IsAsciiLetterOrDigit(character) && character != '-'))

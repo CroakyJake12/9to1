@@ -429,6 +429,7 @@ public sealed class CuiControlLoader : IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (!CuiProjectItems.IsCuiSourceFamily(document.SourceName))
             throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR051", CuiDiagnosticSeverity.Error, "Production CUI loading rejects non-CUI/AXAML/HUI application input.", document.Span));
+        document = CuiAppComponents.Compose(document);
         // Close attached native menus before replacing their authored control lineage.
         foreach (var owner in _ownedContextMenus.Keys.ToArray()) CloseOwnedContextMenu(owner);
         // Reusing a loader must not leak definitions or live controls from a prior document.

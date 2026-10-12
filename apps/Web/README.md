@@ -60,6 +60,19 @@ owner assignment made while the effective value was already false. Each rendered
 surface owns this observer and disposes it before its loader. This does not grant
 an action permission; the owner dispatcher continues to enforce availability.
 
+Individual app accent settings use the explicit shared
+`framework/CUI/Components/App.cui` import. The runtime composes that embedded
+library only when requested; it performs no external import lookup. Existing app
+headers expose its compact menu only in Home's `IndividualApps` mode.
+`BrowserAppAccentSettings` decorates the original bindings/actions and borrows
+`IBrowserHomeThemePreferences`; it never owns a second preference store or app
+session. Swatches persist canonical colour values through Home's acknowledged
+write, and reset removes only the current app's override. View retirement prevents
+new admissions while an already admitted write retains the original Home outcome.
+Browser composition supplies the stable app ID and disposes this presentation
+decorator before its borrowed owner. Dormant Files/Sites header placements do not
+activate their provider-dependent routes.
+
 The accessibility snapshot uses generated JSON metadata. Canonical Wave storage
 owns existing private reflection-based serializer options, so this browser host
 explicitly enables the SDK's reflection serialization contract and preserves the

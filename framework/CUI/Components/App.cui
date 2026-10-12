@@ -1,0 +1,20 @@
+<Cui id="cui.app.components" version="1">
+  <Container (Definition) ID="AppAccentMenu" Type="Menu" Active="{Binding ShowAppAccentSettings, fallback=false}" VerticalAlignment="Center" Background="Transparent" BorderWidth="0" Padding="0">
+    <Button Type="Menu Item" Content="App accent colour" AccessibleName="App accent colour" Tooltip="{Binding AppAccentStatus, fallback=App accent colour}" IconSource="icon:palette" IconOnly="True" Width="36" Height="36" MinWidth="36" MinHeight="36" Padding="8" BorderWidth="0" Background="Transparent" CornerRadius="8">
+      <Button Type="Menu Item" Content="Red" Action="AppAccentRed" IconSource="{Binding AppAccentSwatchRed}" Selected="{Binding AppAccentIsRed, fallback=false}" Interactive="{Binding AppAccentCanChange, fallback=false}" />
+      <Button Type="Menu Item" Content="Orange" Action="AppAccentOrange" IconSource="{Binding AppAccentSwatchOrange}" Selected="{Binding AppAccentIsOrange, fallback=false}" Interactive="{Binding AppAccentCanChange, fallback=false}" />
+      <Button Type="Menu Item" Content="Yellow" Action="AppAccentYellow" IconSource="{Binding AppAccentSwatchYellow}" Selected="{Binding AppAccentIsYellow, fallback=false}" Interactive="{Binding AppAccentCanChange, fallback=false}" />
+      <Button Type="Menu Item" Content="Lime" Action="AppAccentLime" IconSource="{Binding AppAccentSwatchLime}" Selected="{Binding AppAccentIsLime, fallback=false}" Interactive="{Binding AppAccentCanChange, fallback=false}" />
+      <Button Type="Menu Item" Content="Green" Action="AppAccentGreen" IconSource="{Binding AppAccentSwatchGreen}" Selected="{Binding AppAccentIsGreen, fallback=false}" Interactive="{Binding AppAccentCanChange, fallback=false}" />
+      <Button Type="Menu Item" Content="Teal" Action="AppAccentTeal" IconSource="{Binding AppAccentSwatchTeal}" Selected="{Binding AppAccentIsTeal, fallback=false}" Interactive="{Binding AppAccentCanChange, fallback=false}" />
+      <Button Type="Menu Item" Content="Cyan" Action="AppAccentCyan" IconSource="{Binding AppAccentSwatchCyan}" Selected="{Binding AppAccentIsCyan, fallback=false}" Interactive="{Binding AppAccentCanChange, fallback=false}" />
+      <Button Type="Menu Item" Content="Blue" Action="AppAccentBlue" IconSource="{Binding AppAccentSwatchBlue}" Selected="{Binding AppAccentIsBlue, fallback=false}" Interactive="{Binding AppAccentCanChange, fallback=false}" />
+      <Button Type="Menu Item" Content="Purple" Action="AppAccentPurple" IconSource="{Binding AppAccentSwatchPurple}" Selected="{Binding AppAccentIsPurple, fallback=false}" Interactive="{Binding AppAccentCanChange, fallback=false}" />
+      <Button Type="Menu Item" Content="Pink" Action="AppAccentPink" IconSource="{Binding AppAccentSwatchPink}" Selected="{Binding AppAccentIsPink, fallback=false}" Interactive="{Binding AppAccentCanChange, fallback=false}" />
+      <Button Type="Menu Item" Content="Strawberry" Action="AppAccentStrawberry" IconSource="{Binding AppAccentSwatchStrawberry}" Selected="{Binding AppAccentIsStrawberry, fallback=false}" Interactive="{Binding AppAccentCanChange, fallback=false}" />
+      <Button Type="Menu Item" Content="Brown" Action="AppAccentBrown" IconSource="{Binding AppAccentSwatchBrown}" Selected="{Binding AppAccentIsBrown, fallback=false}" Interactive="{Binding AppAccentCanChange, fallback=false}" />
+      <Button Type="Menu Item" Content="Monotone" Action="AppAccentMonotone" IconSource="{Binding AppAccentSwatchMonotone}" Selected="{Binding AppAccentIsMonotone, fallback=false}" Interactive="{Binding AppAccentCanChange, fallback=false}" />
+      <Button Type="Menu Item" Content="Reset app colour" Action="AppAccentReset" Interactive="{Binding AppAccentCanReset, fallback=false}" />
+    </Button>
+  </Container>
+</Cui>

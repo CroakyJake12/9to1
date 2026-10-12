@@ -19,6 +19,7 @@ var cases = new (string Name, Func<Task> Run)[]
 {
     ("shell dispatch preserves view and caller cancellation and joins the original owner", ShellActionLifetimeChecks.Run),
     ("appearance observers cannot replace acknowledged writes or dispose the borrowed owner", AppearanceSettingsChecks.Run),
+    ("individual app accent controls preserve Home ownership and native menu focus", AppAccentSettingsChecks.Run),
     ("unavailable account remains anonymous; real Settings navigation grants no Home provider", async () =>
     {
         var service = new Service((_, _) => Task.FromResult(Fail("AuthenticationRequired")));

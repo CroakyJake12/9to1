@@ -1,4 +1,5 @@
 <Cui id="sites.browser" version="1">
+  <Import Source="framework/CUI/Components/App.cui" />
   <Actions>
     <Action name="ChooseProject" command="OpenProject" parameter="{Binding website}" />
     <Action name="ChoosePage" command="SelectPage" parameter="{Binding page}" />
@@ -6,7 +7,10 @@
   </Actions>
   <Page>
     <Container margin="16" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False">
-      <Text text="Sites" font-size="28" />
+      <Container Type="Grid" ColumnSizes="1fr Auto">
+        <Text text="Sites" font-size="28" />
+        <AppAccentMenu ID="sites-app-accent" Column="1" />
+      </Container>
       <Text text="{Binding Status}" text-wrapping="Wrap" accessible-name="Sites status" margin="0,8" />
       <Container Type="Wrap">
         <Button content="Reload saved state" action="Reload" Interactive="{Binding CanReload}" />

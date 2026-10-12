@@ -1,10 +1,14 @@
 <Cui id="files.browser" version="1">
+  <Import Source="framework/CUI/Components/App.cui" />
   <Actions>
     <Action name="SelectItem" command="Select" parameter="{Binding item}" />
   </Actions>
   <Page>
     <Container margin="16" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False">
-      <Text text="Files" font-size="28" />
+      <Container Type="Grid" ColumnSizes="1fr Auto">
+        <Text text="Files" font-size="28" />
+        <AppAccentMenu ID="files-app-accent" Column="1" />
+      </Container>
       <Text text="{Binding FolderName}" font-size="20" margin="0,8" />
       <Text text="{Binding Status}" text-wrapping="Wrap" accessible-name="Files status" margin="0,8" />
       <Container Type="Wrap">

@@ -16,6 +16,8 @@
     <Compile Include="../../BrowserShellActions.cs" />
     <Compile Include="ShellActionLifetimeChecks.cs" />
     <Compile Include="AppearanceSettingsChecks.cs" />
+    <Compile Include="AppAccentSettingsChecks.cs" />
+    <Compile Include="../../BrowserAppAccentSettings.cs" />
     <Compile Include="../BrowserAppearanceSettings.cs" />
     <Compile Include="DashboardLayoutChecks.cs" />
     <Compile Include="../../BrowserHomeDashboardLayoutStore.cs" />

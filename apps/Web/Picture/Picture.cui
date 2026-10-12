@@ -1,4 +1,5 @@
 <Cui id="picture-browser" product="9to1" version="1">
+  <Import Source="framework/CUI/Components/App.cui" />
   <Actions>
     <Action name="OpenDocumentRow" command="OpenDocument" parameter="{Binding item.ID}" />
   </Actions>
@@ -35,7 +36,10 @@
                 </Button>
               </Container>
             </Container>
-            <Button action="Save" content="Save" Column="2" Interactive="{Binding CanEdit}" />
+            <Container Type="Horizontal Stack" Column="2" CellGap="6">
+              <AppAccentMenu ID="picture-app-accent" />
+              <Button action="Save" content="Save" Interactive="{Binding CanEdit}" />
+            </Container>
           </Container>
         </Container>
         <Container padding="12,8" background="{Resource CuiPanel2Brush}" Type="Overlay" Row="1">
