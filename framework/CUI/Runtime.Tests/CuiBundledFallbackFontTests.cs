@@ -23,6 +23,7 @@ public sealed class CuiBundledFallbackFontTests
             {
                 (0x21b6, CuiNativeHost.BundledSymbolFontFamily),
                 (0x21b7, CuiNativeHost.BundledSymbolFontFamily),
+                (0x2713, CuiNativeHost.BundledSymbolFontFamily), // Canonical checked choice mark.
                 (0x1f469, CuiNativeHost.BundledEmojiFontFamily),
                 (0x1f3fd, CuiNativeHost.BundledEmojiFontFamily),
                 (0x1f4bb, CuiNativeHost.BundledEmojiFontFamily)
@@ -33,7 +34,7 @@ public sealed class CuiBundledFallbackFontTests
                 Assert.Equal(new FontFamily(family), fallback.FontFamily);
                 Assert.NotEqual((ushort)0, fallback.GlyphTypeface.CharacterToGlyphMap[codepoint]);
             }
-            foreach (var text in new[] { "↶↷", "👩🏽‍💻" })
+            foreach (var text in new[] { "↶↷", "✓", "👩🏽‍💻" })
             {
                 using var layout = new TextLayout(text, authored, 24, Brushes.Black);
                 var runs = layout.TextLines.SelectMany(line => line.TextRuns).OfType<ShapedTextRun>().ToArray();

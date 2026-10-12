@@ -78,7 +78,12 @@
                   <Container margin="32" max-width="960" horizontal-alignment="Stretch" Type="Vertical Stack" CellGap="16">
                     <Text text="Your boards" font-size="30" font-weight="Bold" />
                     <Text text="A place for your notes, plans and ideas." text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
-                    <Button content="＋ Create a board" action="Create" horizontal-alignment="Left" padding="20,12" />
+                    <Button accessible-name="＋ Create a board" action="Create" horizontal-alignment="Left" padding="20,12">
+                      <Container Type="Horizontal Stack" CellGap="8" VerticalAlignment="Center">
+                        <Image id="boards-create-icon" Source="icon:add" Width="16" Height="16" />
+                        <Text Text="Create a board" />
+                      </Container>
+                    </Button>
                     <Text text="Recent boards" font-size="18" font-weight="SemiBold" margin="0,20,0,0" />
                     <If condition="{Binding NoBoards}">
                       <Text text="Your boards will appear here as you create them." text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
@@ -116,7 +121,12 @@
                   <If condition="{Binding ShowBoardPicker}">
                     <Container Type="Vertical Stack" CellGap="8">
                       <Input accessible-name="Search boards" Type="Text" Value="{Binding BoardSearch, mode=TwoWay}" PlaceholderText="Find a board" />
-                      <Button content="＋ New board" action="Create" />
+                      <Button accessible-name="＋ New board" action="Create">
+                        <Container Type="Horizontal Stack" CellGap="8" VerticalAlignment="Center">
+                          <Image id="boards-new-icon" Source="icon:add" Width="16" Height="16" />
+                          <Text Text="New board" />
+                        </Container>
+                      </Button>
                       <Button content="Refresh" action="Refresh" />
                       <Repeat Source="{Binding Notebooks}" As="savedNotebook" Key="{Binding savedNotebook.Id}">
                         <Button content="{Binding savedNotebook.Title}" action="OpenSavedNotebook" horizontal-content-alignment="Left" />
