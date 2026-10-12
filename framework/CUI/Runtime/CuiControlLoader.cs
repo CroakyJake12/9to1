@@ -41,7 +41,7 @@ public sealed class CuiControlLoader : IDisposable
     private readonly HashSet<Control> _wiredActions = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, EventHandler<RoutedEventArgs>> _actionHandlers = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, ContextMenu> _ownedContextMenus = new(ReferenceEqualityComparer.Instance);
-    private readonly Dictionary<ContextMenu, EventHandler<RoutedEventArgs>> _contextMenuFocusHandlers = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<ContextMenu, (EventHandler<AvaloniaPropertyChangedEventArgs> Opening, EventHandler<RoutedEventArgs> Closed)> _contextMenuFocusHandlers = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<ContextMenu, Task> _contextMenuCloses = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<string, CuiComponent> _typeDefinitions = new(StringComparer.Ordinal);
     private CuiThemePreferenceContext? _themePreference;
@@ -704,7 +704,11 @@ public sealed class CuiControlLoader : IDisposable
             if (menu.IsOpen)
                 throw new InvalidOperationException("The owned native context menu did not close; its owner remains retained.");
             if (ReferenceEquals(owner.ContextMenu, menu)) owner.ContextMenu = null;
-            if (_contextMenuFocusHandlers.Remove(menu, out var focusHandler)) menu.Closed -= focusHandler;
+            if (_contextMenuFocusHandlers.Remove(menu, out var focusHandlers))
+            {
+                menu.PropertyChanged -= focusHandlers.Opening;
+                menu.Closed -= focusHandlers.Closed;
+            }
             _ownedContextMenus.Remove(owner);
             close.SetResult();
             _contextMenuCloses.Remove(menu);
@@ -2200,23 +2204,45 @@ public sealed class CuiControlLoader : IDisposable
                     "A control can own only one authored ContextMenu.", _authoredControls[child].Span));
             // Capture ownership before native attachment can enter any callback.
             _ownedContextMenus.Add(parent, menu);
+            TopLevel? openingRoot = null;
+            Control? previousFocus = null;
+            var openingGeneration = 0;
+            EventHandler<AvaloniaPropertyChangedEventArgs> captureFocus = (_, change) =>
+            {
+                if (change.Property != ContextMenu.IsOpenProperty || !menu.IsOpen) return;
+                // IsOpen is published before the popup takes focus, for both
+                // context requests and programmatic Open (which bypasses Opening).
+                openingGeneration++;
+                openingRoot = TopLevel.GetTopLevel(parent);
+                var focused = openingRoot?.FocusManager?.GetFocusedElement() as Control;
+                previousFocus = focused is not null && (ReferenceEquals(focused, parent) || parent.IsVisualAncestorOf(focused))
+                    ? focused : null;
+            };
             EventHandler<RoutedEventArgs> restoreFocus = (_, _) =>
             {
-                var root = TopLevel.GetTopLevel(parent);
+                var root = openingRoot;
+                var target = previousFocus ?? parent;
+                var generation = openingGeneration;
                 var focused = root?.FocusManager?.GetFocusedElement();
                 // Wait for light-dismiss/action routing to settle, then return keyboard
-                // input to the context owner only if focus has not moved elsewhere.
+                // input to the same editor inside the owner if focus has not moved.
+                // Object/Container owners can be nonfocusable composition controls.
                 Dispatcher.UIThread.Post(() =>
                 {
-                    if (_disposed || menu.IsOpen || root is null || !ReferenceEquals(TopLevel.GetTopLevel(parent), root)
+                    if (_disposed || menu.IsOpen || generation != openingGeneration || root is null
+                        || !ReferenceEquals(TopLevel.GetTopLevel(parent), root)
                         || !ReferenceEquals(parent.ContextMenu, menu) || !parent.IsEffectivelyEnabled || !parent.IsEffectivelyVisible
+                        || !target.Focusable || !target.IsEffectivelyEnabled || !target.IsEffectivelyVisible
+                        || !ReferenceEquals(TopLevel.GetTopLevel(target), root)
+                        || !(ReferenceEquals(target, parent) || parent.IsVisualAncestorOf(target))
                         || !ReferenceEquals(root.FocusManager?.GetFocusedElement(), focused)) return;
                     if (focused is Control current && current.IsEffectivelyVisible && TopLevel.GetTopLevel(current) is not null
                         && !ReferenceEquals(current, menu) && !current.GetLogicalAncestors().Contains(menu)) return;
-                    parent.Focus(NavigationMethod.Unspecified);
+                    target.Focus(NavigationMethod.Unspecified);
                 });
             };
-            _contextMenuFocusHandlers.Add(menu, restoreFocus);
+            _contextMenuFocusHandlers.Add(menu, (captureFocus, restoreFocus));
+            menu.PropertyChanged += captureFocus;
             menu.Closed += restoreFocus;
             parent.ContextMenu = menu;
             return;
