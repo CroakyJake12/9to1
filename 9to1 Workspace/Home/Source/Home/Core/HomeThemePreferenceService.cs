@@ -28,6 +28,7 @@ public sealed record HomeThemePreference(int SchemaVersion, HomeThemeScope Scope
     // Optional in the existing v1 envelope: old preferences keep the host default.
     // Home owns the value without referencing a particular UI renderer.
     public string? Appearance { get; init; }
+    public string? CustomThemesJson { get; init; }
     public HomeThemeAccentPreference? Accent { get; init; }
     public const int CurrentSchemaVersion = 1;
     public static HomeThemePreference Default(HomeThemeScope scope) => new(CurrentSchemaVersion,scope.Validate(),"Professional",0,new());
@@ -35,6 +36,17 @@ public sealed record HomeThemePreference(int SchemaVersion, HomeThemeScope Scope
     {
         ArgumentNullException.ThrowIfNull(Scope); ArgumentNullException.ThrowIfNull(Accessibility);
         Scope.Validate(); Accessibility.Validate();
+        if (CustomThemesJson is { } library)
+        {
+            if (library.Length > 1_048_576) throw new ArgumentException("Custom theme library exceeds its size limit.");
+            try
+            {
+                using var document = System.Text.Json.JsonDocument.Parse(library,new() { MaxDepth=16 });
+                if (document.RootElement.ValueKind != System.Text.Json.JsonValueKind.Array || document.RootElement.GetArrayLength() > 32)
+                    throw new ArgumentException("Custom theme library requires a bounded array.");
+            }
+            catch(System.Text.Json.JsonException error) { throw new ArgumentException("Custom theme library is malformed.",error); }
+        }
         if (SchemaVersion != CurrentSchemaVersion || Revision < 0 || string.IsNullOrWhiteSpace(ThemeName) || ThemeName.Length > 128 || ThemeName.Any(char.IsControl) ||
             Appearance is not (null or "SuperBright" or "Bright" or "Dark" or "SuperDark"))
             throw new ArgumentException("Theme preference has an unsupported schema or invalid value.");
@@ -75,6 +87,12 @@ public interface IHomeThemePreferenceBackend
 public interface IHomeThemeCatalog
 {
     bool TryResolve(string requestedName, out string canonicalName);
+}
+
+/// <summary>Validates the complete portable library and resolves a selected design without mutating live presentation.</summary>
+public interface IHomeCustomThemeCatalog : IHomeThemeCatalog
+{
+    bool TryResolve(string requestedName, string customThemesJson, out string canonicalName);
 }
 
 /// <summary>Canonical theme get/set/subscribe semantics over existing owning providers; no competing store.</summary>
@@ -122,7 +140,7 @@ public sealed class HomeThemePreferenceService : IDisposable,IAsyncDisposable
             catch(ArgumentException) { invalid=true; value=null; }
         }
         value??=HomeThemePreference.Default(scope);
-        var supported=_catalog.TryResolve(value.ThemeName,out var name);
+        var supported=TryResolve(value.ThemeName,value.CustomThemesJson,out var name);
         var fallback=invalid||!supported;
         var diagnostic=fallback ? "The saved theme is unavailable or incompatible. Professional is being used; the saved preference is preserved." :
             fromCache ? "Using the last valid cached Home theme preference while offline." : null;
@@ -137,20 +155,20 @@ public sealed class HomeThemePreferenceService : IDisposable,IAsyncDisposable
         return new(true,fallback?"ThemeFallback":fromCache?"ThemeCached":"Succeeded",new(value,name,fromCache,fallback,diagnostic),diagnostic);
     }
 
-    public Task<HomeThemeOperationResult> SetAsync(HomeThemeScope scope,string themeName,HomeThemeAccessibility accessibility,long expectedRevision,CancellationToken token=default,string? appearance=null,HomeThemeAccentPreference? accent=null)=>
-        Track(()=>SetCoreAsync(scope,themeName,accessibility,expectedRevision,token,appearance,accent));
-    private async Task<HomeThemeOperationResult> SetCoreAsync(HomeThemeScope scope,string themeName,HomeThemeAccessibility accessibility,long expectedRevision,CancellationToken token,string? appearance,HomeThemeAccentPreference? accent)
+    public Task<HomeThemeOperationResult> SetAsync(HomeThemeScope scope,string themeName,HomeThemeAccessibility accessibility,long expectedRevision,CancellationToken token=default,string? appearance=null,HomeThemeAccentPreference? accent=null,string? customThemesJson=null)=>
+        Track(()=>SetCoreAsync(scope,themeName,accessibility,expectedRevision,token,appearance,accent,customThemesJson));
+    private async Task<HomeThemeOperationResult> SetCoreAsync(HomeThemeScope scope,string themeName,HomeThemeAccessibility accessibility,long expectedRevision,CancellationToken token,string? appearance,HomeThemeAccentPreference? accent,string? customThemesJson)
     {
         ObjectDisposedException.ThrowIf(_disposed,this); scope.Validate(); accessibility.Validate();
         if(expectedRevision<0||string.IsNullOrWhiteSpace(themeName)) return new(false,"InvalidArgument",Diagnostic:"Choose a valid theme and revision.");
         if(!await _authority.CanAccessAsync(scope,true,token).ConfigureAwait(false)) return Denied();
         if(!_backend.Supports(scope)) return new(false,"ThemeScopeUnsupported",Diagnostic:"No preference provider supports this scope.");
-        if(!_catalog.TryResolve(themeName,out var name)) return new(false,"ThemeUnavailable",Diagnostic:"This theme is not installed or compatible.");
         // Legacy/theme-only callers must not erase additive choices. Read the same
         // authority and revision before CAS; a concurrent write still conflicts.
-        if (accent is null || appearance is null)
+        if (accent is null || appearance is null || customThemesJson is null)
         {
             var prior = await _backend.ReadAsync(scope,token).ConfigureAwait(false);
+            if (prior.State == HomeThemeReadState.PermissionDenied) return Denied();
             if (prior.State != HomeThemeReadState.Available)
                 return new(false,"ThemePreferenceUnavailable",Diagnostic:"The saved appearance could not be read safely; no changes were saved.");
             if (prior.Preference is { } stored)
@@ -161,11 +179,13 @@ public sealed class HomeThemePreferenceService : IDisposable,IAsyncDisposable
                 if (stored.Revision != expectedRevision) return new(false,"RevisionConflict");
                 accent ??= stored.Accent;
                 appearance ??= stored.Appearance;
+                customThemesJson ??= stored.CustomThemesJson;
             }
             else if (expectedRevision != 0) return new(false,"RevisionConflict");
             if (!await _authority.CanAccessAsync(scope,true,token).ConfigureAwait(false)) return Denied();
         }
-        var candidate=(new HomeThemePreference(HomeThemePreference.CurrentSchemaVersion,scope,name,checked(expectedRevision+1),accessibility) { Appearance=appearance, Accent=accent }).Validate();
+        if(!TryResolve(themeName,customThemesJson,out var name)) return new(false,"ThemeUnavailable",Diagnostic:"The theme or custom library is unavailable or incompatible.");
+        var candidate=(new HomeThemePreference(HomeThemePreference.CurrentSchemaVersion,scope,name,checked(expectedRevision+1),accessibility) { Appearance=appearance, Accent=accent, CustomThemesJson=customThemesJson }).Validate();
         var receipt=await _backend.CompareExchangeAsync(scope,expectedRevision,candidate,token).ConfigureAwait(false);
         if(!receipt.Succeeded) return new(false,receipt.Code,Diagnostic:receipt.Diagnostic);
         if(receipt.Preference!=candidate) return new(false,"InvalidThemeReceipt",Diagnostic:"The preference provider did not confirm the exact requested revision and scope.");
@@ -186,6 +206,12 @@ public sealed class HomeThemePreferenceService : IDisposable,IAsyncDisposable
         }
         catch(Exception error) { RecordObserverFailure(error); diagnostic="Theme saved. Its current-scope observation could not be refreshed."; }
         return new(true,"Succeeded",new(candidate,name,false,false,diagnostic),diagnostic);
+    }
+    private bool TryResolve(string name,string? customThemesJson,out string canonicalName)
+    {
+        if(customThemesJson is null)return _catalog.TryResolve(name,out canonicalName);
+        if(_catalog is IHomeCustomThemeCatalog custom)return custom.TryResolve(name,customThemesJson,out canonicalName);
+        canonicalName="Professional";return false;
     }
     private static HomeThemeOperationResult Denied()=>new(false,"PermissionDenied",Diagnostic:"This theme preference scope is not authorised.");
     private void Invalidated(object? sender,HomeThemeScope scope) { if(!_closing) PublishChanged(scope); }
