@@ -81,3 +81,32 @@ Native headless frames and those tests do not establish browser/device acceptanc
 physical trackpad support, LibreOffice Impress parity or whole-application VERIFIED
 status. The integrated application must still undergo the requested browser visual
 and functional workflows, all applicable appearance/platform checks and donor gates.
+
+## Structured document objects
+
+The shared canvas draws tables and charts from the existing `haven.present.table.v1`
+and `haven.present.chart.v1` payloads. Rendering does not mutate those payloads.
+Cell text, header weight and each cell's fill colour are retained. Cell clips prevent
+long text from painting into neighbouring cells. These are document objects, so
+colours and fonts come from the presentation theme rather than application chrome.
+
+Column and Bar use a shared signed zero baseline and cluster every series. Line
+connects each series independently, Area adds a translucent fill to zero, and
+Scatter draws independent markers at the owner model's categorical X positions.
+The current model has no separate numerical X-value array; the renderer does not
+invent one. Zero values do not acquire artificial nonzero bars. Scaling handles
+finite extremes without overflowing an intermediate `max - min`.
+
+Pie and Doughnut render one labelled pie/ring per series, with the category legend
+controlled by `ShowLegend`. Sector areas encode absolute magnitude, as ordinary
+pie charts do; signed numeric labels retain negative source values. A zero-only
+series displays zero, and a single nonzero value produces a real full circle.
+All existing series/category limits are rendered, though dense data naturally
+requires enlarging the chart for readable labels. The existing free-form `Style`
+value remains preserved; no undocumented style-name interpretation is introduced.
+
+`PresentStructuredRenderingChecks` exercises the production retained renderer in
+the native headless application, saves screenshots of all seven chart types and
+edited tables, checks the actual emitted geometry against signed source values,
+and saves/reopens the document. This focused native evidence does not establish
+browser, packaged-device, PowerPoint round-trip or LibreOffice Impress parity.

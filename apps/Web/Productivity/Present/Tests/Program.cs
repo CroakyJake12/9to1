@@ -237,6 +237,11 @@ var assertions = await headless.Dispatch(async () =>
             "actual New commits same opaque presentation ID/revision and complete original owner model");
         var scene = root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single().GetVisualDescendants().OfType<HavenSceneControl>().Single();
         var canvas = scene.Root!;
+        if (args.Contains("structured", StringComparer.Ordinal))
+        {
+            await PresentStructuredRenderingChecks.Run(window, root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single(), session, Check);
+            return count;
+        }
         if (args.Contains("engine", StringComparer.Ordinal))
         {
             await PresentInteractionEngineChecks.Run(window, root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single(), session, Check);
