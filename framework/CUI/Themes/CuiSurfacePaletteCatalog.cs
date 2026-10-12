@@ -271,6 +271,9 @@ public static class CuiSurfacePaletteCatalog
                 Focus = WithAlpha(palette.AccentSecondary, 0xE6)
             },
             CuiTheme.Professional => Professional(palette, appearance),
+            CuiTheme.FrostedGlass => FrostedGlass(palette, appearance),
+            CuiTheme.Metallic => Metallic(palette, appearance),
+            CuiTheme.Western => Western(palette, appearance),
             CuiTheme.Cinematic => palette with
             {
                 Panel = WithAlpha(Blend(palette.Panel, palette.TideColour, isDark ? 0.18 : 0.10), isDark ? (byte)0xEC : (byte)0xF0),
@@ -314,6 +317,99 @@ public static class CuiSurfacePaletteCatalog
             Focus = CuiContrast.EnsureForegroundContrast(accent, panel, 3), AccentBorder = accent
         };
     }
+
+    private static CuiPalette FrostedGlass(CuiPalette palette, CuiAppearance appearance)
+    {
+        var dark = appearance is CuiAppearance.Dark or CuiAppearance.SuperDark;
+        var deep = appearance == CuiAppearance.SuperDark;
+        var white = appearance == CuiAppearance.SuperBright;
+        var shell = Color.Parse(dark ? deep ? "#FF060F1C" : "#FF101D2C" : white ? "#FFEAF3FA" : "#FFDCE8F1");
+        var panel = Color.Parse(dark ? deep ? "#E01E344E" : "#E425435B" : white ? "#EAF0F8FC" : "#E8ECF5FB");
+        var raised = Color.Parse(dark ? deep ? "#EF2D455E" : "#F035536B" : white ? "#F8FFFFFF" : "#F8F6FBFF");
+        return FinishPreset(palette with
+        {
+            TideBase = shell,
+            TideColour = Color.Parse(dark ? deep ? "#FF0B1B2D" : "#FF152A3C" : white ? "#FFFAFDFF" : "#FFEEF5FA"),
+            Panel = panel, Panel2 = raised,
+            Panel3 = Color.Parse(dark ? "#FF3D5A73" : "#FFD8E7F2"),
+            PanelHover = Blend(raised, palette.Accent, dark ? .12 : .06),
+            Text = Color.Parse(dark ? "#FFF0F8FF" : "#FF12293D"),
+            TextSoft = Color.Parse(dark ? "#FFD8E8F4" : "#FF334F66"),
+            Muted = Color.Parse(dark ? "#FFBDCEDD" : "#FF466077"),
+            Muted2 = Color.Parse(dark ? "#FFB3C7D9" : "#FF526A7E"),
+            Line = Color.Parse(dark ? "#FF466A88" : "#FFB5CDDF"),
+            LineStrong = Color.Parse(dark ? "#FF86AAC6" : "#FF64849F"),
+            Button = WithAlpha(Blend(raised, palette.Accent, dark ? .15 : .10), 244),
+            ButtonHover = Blend(raised, palette.Accent, dark ? .23 : .16),
+            ButtonPressed = Blend(raised, palette.Accent, dark ? .30 : .24),
+            AccentSoft = Blend(panel, palette.Accent, dark ? .20 : .12)
+        });
+    }
+
+    private static CuiPalette Metallic(CuiPalette palette, CuiAppearance appearance)
+    {
+        var dark = appearance is CuiAppearance.Dark or CuiAppearance.SuperDark;
+        var deep = appearance == CuiAppearance.SuperDark;
+        var white = appearance == CuiAppearance.SuperBright;
+        var shell = Color.Parse(dark ? deep ? "#FF080B0F" : "#FF14171B" : white ? "#FFE7EAEE" : "#FFC9CDD2");
+        var panel = Color.Parse(dark ? deep ? "#FF1E232A" : "#FF292F36" : white ? "#FFF9FAFC" : "#FFE2E5E9");
+        var raised = Color.Parse(dark ? deep ? "#FF2B323B" : "#FF353D45" : white ? "#FFFFFFFF" : "#FFF0F2F4");
+        return FinishPreset(palette with
+        {
+            TideBase = shell,
+            TideColour = Color.Parse(dark ? deep ? "#FF030507" : "#FF0B0E12" : white ? "#FFCCD2D9" : "#FFB6BDC5"),
+            Panel = panel, Panel2 = raised,
+            Panel3 = Color.Parse(dark ? deep ? "#FF37414D" : "#FF424B56" : white ? "#FFD9DEE5" : "#FFB7BEC7"),
+            PanelHover = Blend(raised, dark ? Colors.White : Colors.Black, .08),
+            Text = Color.Parse(dark ? "#FFF5F7FA" : "#FF171C23"),
+            TextSoft = Color.Parse(dark ? "#FFD9E0E8" : "#FF343E4A"),
+            Muted = Color.Parse(dark ? "#FFBDC8D5" : "#FF424F5E"),
+            Muted2 = Color.Parse(dark ? "#FFAFBDCC" : "#FF4B5969"),
+            Line = Color.Parse(dark ? "#FF596775" : "#FF9AA6B4"),
+            LineStrong = Color.Parse(dark ? "#FF8E9BAB" : "#FF607184"),
+            Button = raised,
+            ButtonHover = Blend(raised, dark ? Colors.White : Colors.Black, .10),
+            ButtonPressed = Blend(raised, Colors.Black, dark ? .16 : .12),
+            AccentSoft = Blend(panel, palette.Accent, dark ? .20 : .12)
+        });
+    }
+
+    private static CuiPalette Western(CuiPalette palette, CuiAppearance appearance)
+    {
+        var dark = appearance is CuiAppearance.Dark or CuiAppearance.SuperDark;
+        var deep = appearance == CuiAppearance.SuperDark;
+        var white = appearance == CuiAppearance.SuperBright;
+        var shell = Color.Parse(dark ? deep ? "#FF160F09" : "#FF2B2016" : white ? "#FFF8EFD9" : "#FFE9D6B3");
+        var panel = Color.Parse(dark ? deep ? "#FF2E2116" : "#FF453321" : white ? "#FFFFF7E5" : "#FFF4E6CA");
+        var raised = Color.Parse(dark ? deep ? "#FF3B2B1C" : "#FF513D28" : white ? "#FFFFFBF0" : "#FFFBF0DA");
+        return FinishPreset(palette with
+        {
+            TideBase = shell,
+            TideColour = Color.Parse(dark ? deep ? "#FF0E0905" : "#FF1D140D" : white ? "#FFEEDDAD" : "#FFCFB184"),
+            Panel = panel, Panel2 = raised,
+            Panel3 = Color.Parse(dark ? "#FF655037" : "#FFE4CCA2"),
+            PanelHover = Blend(raised, Color.Parse("#FFC29558"), .15),
+            Text = Color.Parse(dark ? "#FFFFF1D7" : "#FF302010"),
+            TextSoft = Color.Parse(dark ? "#FFEBD2AA" : "#FF523A20"),
+            Muted = Color.Parse(dark ? "#FFE0C39A" : "#FF634727"),
+            Muted2 = Color.Parse(dark ? "#FFD5B88E" : "#FF6D502E"),
+            Line = Color.Parse(dark ? "#FF8F704A" : "#FFBA9868"),
+            LineStrong = Color.Parse(dark ? "#FFD5AA70" : "#FF80613C"),
+            Button = Color.Parse(dark ? "#FF62482C" : "#FFE3C492"),
+            ButtonHover = Color.Parse(dark ? "#FF775837" : "#FFECD4AC"),
+            ButtonPressed = Color.Parse(dark ? "#FF4D371F" : "#FFC9A16A"),
+            AccentSoft = Blend(panel, palette.Accent, dark ? .18 : .12)
+        });
+    }
+
+    private static CuiPalette FinishPreset(CuiPalette palette) => palette with
+    {
+        // Preserve every app/override accent anchor; make focus and ink readable
+        // against the preset's own surfaces rather than changing that identity.
+        Focus = CuiContrast.EnsureForegroundContrast(palette.Accent, Blend(palette.TideBase, palette.Panel, palette.Panel.A / 255d), 3),
+        AccentInk = CuiContrast.Ratio(Colors.Black, palette.Accent) >= CuiContrast.Ratio(Colors.White, palette.Accent) ? Colors.Black : Colors.White,
+        AccentBorder = palette.Accent
+    };
 
     private static CuiSurfaceHue Hue(string tide, string accent, string secondary, string strong, string soft) =>
         new(tide, accent, secondary, strong, soft);

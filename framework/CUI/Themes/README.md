@@ -19,7 +19,7 @@ The only presentation cascade is, from lowest to highest:
 
 ## Themes and accessibility
 
-Professional is the default/fallback. The required built-in designs are Professional, Glow, Playful, Bubble and Cinematic. The existing Retro enum/API is retained for compatibility with existing saved settings. Built-ins share a controlled component vocabulary while supplying their own palette, geometry, spacing, typography/elevation scales and motion defaults. Custom `.cui-theme` definitions inherit a built-in or another registered custom theme and supply validated element/Type property deltas.
+Professional is the default/fallback. The selectable built-in designs are Professional, Glow, Playful, Frosted Glass, Bubble, Metallic, Retro and Western. Cinematic remains readable for existing saved settings; every persisted enum ID is unchanged. Built-ins share a controlled component vocabulary while supplying their own palette, geometry, spacing, typography/elevation scales and motion defaults. Custom `.cui-theme` definitions inherit a built-in or another registered custom theme and supply validated element/Type property deltas.
 
 ```xml
 <Theme Name="user_preference">
@@ -35,6 +35,10 @@ Professional is the default/fallback. The required built-in designs are Professi
 Montserrat is the default interface font. The host maps it to the bundled OFL font assets. Validated interface/code font overrides keep CUI's fallback stack. Display scale affects typography, padding and control dimensions; high contrast and reduced motion remain inherited accessibility settings rather than a theme's optional preference. Application chrome and authored document styling are distinct.
 
 `CuiThemeResourceApplier` supplies the same semantic palette for global and nested scopes. Exact legacy brush names required by retained renderers alias these resources; they do not install legacy control templates. The browser retained Write assembly no longer imports the extracted `DefaultTheme.Resources.axaml` dictionary. Its engine source, font bytes and assembly identity are preserved.
+
+Frosted Glass uses cool translucent layers and directional light; Metallic uses neutral steel surfaces and compact reflective gradients; Western uses parchment/leather tones and warm borders. Their four brightness appearances retain app accent identities and the shared explicit accent policy. Decorative brushes are immutable ordinary gradients; high contrast replaces them with opaque canonical surfaces. Frosted Glass does **not** currently perform Gaussian backdrop filtering. Its real blur and actual browser acceptance remain pending; the colour/gradient implementation is not evidence of a backdrop effect. Professional alone has implicit Mica.
+
+Explicit All Apps or Individual Apps accent choices recolour a custom theme's primary fill through `CuiCustomThemeAccentResolver.Resolve`. A solid maps to the chosen colour; the first gradient stop or pattern foreground anchors the colour transformation, and the other colours retain relative hue and tonal order. Stop offsets, geometry, transparency and per-colour blur remain authored; secondary/tertiary fills and fonts are untouched. The result is a rendering copy, never a change to the saved theme library. No explicit override returns the authored fill unchanged.
 
 ## Professional material surfaces
 

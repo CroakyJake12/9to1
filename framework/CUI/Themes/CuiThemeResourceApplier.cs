@@ -321,6 +321,7 @@ public static class CuiThemeResourceApplier
         resources["CuiSelectionBrush"] = new SolidColorBrush(palette.AccentSoft);
         resources["CuiSelectionIndicatorBrush"] = new SolidColorBrush(palette.Accent);
         resources["CuiSelectionIndicatorRadius"] = new CornerRadius(2);
+        CuiPresetSurfaceResources.Apply(resources, palette, settings);
     }
 
     private static Color InputSurface(CuiPalette palette) =>
@@ -337,6 +338,7 @@ public static class CuiThemeResourceApplier
             ("CuiButtonPressedForegroundBrush", palette.ButtonPressedForeground)
         })
             resources[key] = resources[color == palette.Text ? "CuiTextBrush" : "CuiAccentInkBrush"];
+        CuiPresetSurfaceResources.ApplyForeground(resources, palette);
         resources["HavenButtonForegroundBrush"] = resources["CuiButtonForegroundBrush"];
         resources["HavenButtonHoverForegroundBrush"] = resources["CuiButtonHoverForegroundBrush"];
         resources["HavenButtonPressedForegroundBrush"] = resources["CuiButtonPressedForegroundBrush"];
