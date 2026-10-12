@@ -764,20 +764,30 @@
               </Container>
             </Container>
           </Container>
-          <Container ID="present-ui-322" Type="Grid" Row="4" Active="{Binding ShowEditorChrome}" ColumnSizes="Auto 1fr Auto" Padding="12,4" Background="{Resource CuiPanelBrush}">
+          <Container ID="present-ui-322" Type="Grid" Row="4" Active="{Binding ShowEditorChrome}" ColumnSizes="Auto 1fr Auto" Padding="8,4" Background="{Resource CuiPanelBrush}">
             <EditorToolGroup ID="present-ui-323">
-              <EditorIcon ID="present-ui-324" AccessibleName="Previous slide" Tooltip="Previous slide" Action="PreviousSlide" Interactive="{Binding CanPreviousSlide}">
+              <EditorIcon ID="present-ui-324" AccessibleName="Previous slide" Tooltip="Previous slide" Action="PreviousSlide" Interactive="{Binding CanPreviousSlide}" Width="28" Height="28" MinWidth="28" MinHeight="28" Padding="4">
                 <Image ID="present-ui-325" Source="icon:chevron-left" Width="20" Height="20" />
               </EditorIcon>
-              <Text ID="present-ui-326" Text="{Binding SlideStatus}" AccessibleName="Current slide" FontSize="11" VerticalAlignment="Center" />
-              <EditorIcon ID="present-ui-327" AccessibleName="Next slide" Tooltip="Next slide" Action="NextSlide" Interactive="{Binding CanNextSlide}">
+              <Text ID="present-ui-326" Text="{Binding SlideStatus}" AccessibleName="Current slide" FontSize="11" Width="80" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" />
+              <EditorIcon ID="present-ui-327" AccessibleName="Next slide" Tooltip="Next slide" Action="NextSlide" Interactive="{Binding CanNextSlide}" Width="28" Height="28" MinWidth="28" MinHeight="28" Padding="4">
                 <Image ID="present-ui-328" Source="icon:chevron-right" Width="20" Height="20" />
               </EditorIcon>
             </EditorToolGroup>
-            <Text ID="present-ui-329" Text="{Binding SelectionStatus}" Active="{Binding FullToolbar}" Foreground="{Resource CuiTextSoftBrush}" FontSize="11" Column="1" VerticalAlignment="Center" />
-            <EditorToolGroup ID="present-ui-330" Column="2">
-              <Button ID="present-ui-335" Content="{Binding ZoomLabel}" Action="ZoomFit" Tooltip="Fit slide" Padding="6" BorderWidth="0" Background="Transparent" />
-            </EditorToolGroup>
+            <Text ID="present-ui-329" Text="{Binding SelectionStatus}" Active="{Binding FullToolbar}" Foreground="{Resource CuiTextSoftBrush}" FontSize="11" Column="1" VerticalAlignment="Center" TextWrapping="Wrap" Margin="8,0" />
+            <Container ID="present-ui-330" Type="Grid" Column="2" ColumnSizes="Auto 1fr Auto Auto Auto" CellGap="4" Width="{Binding ZoomControlsWidth}" VerticalAlignment="Center">
+              <EditorIcon ID="present-zoom-out" AccessibleName="Zoom out" Tooltip="Zoom out" Action="ZoomOut" Width="28" Height="28" MinWidth="28" MinHeight="28" Padding="4">
+                <Image Source="icon:zoom-out" Width="20" Height="20" />
+              </EditorIcon>
+              <Input ID="present-zoom-slider" Type="Slider" AccessibleName="Zoom percentage" Tooltip="Zoom percentage" Column="1" Minimum="{Binding ZoomMinimum}" Maximum="400" Value="{Binding ZoomPercent, Mode=TwoWay}" MinWidth="64" Height="28" MinHeight="28" Padding="0" BorderWidth="0" Background="Transparent" VerticalAlignment="Center" />
+              <EditorIcon ID="present-zoom-in" AccessibleName="Zoom in" Tooltip="Zoom in" Action="ZoomIn" Column="2" Width="28" Height="28" MinWidth="28" MinHeight="28" Padding="4">
+                <Image Source="icon:zoom-in" Width="20" Height="20" />
+              </EditorIcon>
+              <Text ID="present-zoom-readout" Text="{Binding ZoomReadout}" AccessibleName="Current zoom" Column="3" Width="44" FontSize="11" TextAlignment="Center" VerticalAlignment="Center" />
+              <EditorIcon ID="present-ui-335" AccessibleName="Fit slide" Tooltip="Fit slide" Action="ZoomFit" Selected="{Binding IsFitToWindow}" Column="4" Width="28" Height="28" MinWidth="28" MinHeight="28" Padding="4">
+                <Image Source="icon:fit" Width="20" Height="20" />
+              </EditorIcon>
+            </Container>
           </Container>
           <Container ID="present-ui-336" Type="Overlay" RowSpan="5" Active="{Binding IsPlaying}" Background="{Resource CuiBackgroundBrush}">
             <Container ID="present-ui-337" Type="Grid" RowSizes="1fr Auto">
