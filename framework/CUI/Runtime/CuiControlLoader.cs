@@ -1020,7 +1020,9 @@ public sealed class CuiControlLoader : IDisposable
             if (state.Items.TryGetValue(key, out var existing))
             {
                 existing.Scope.Update(item);
-                RefreshBindingsForContext(existing.Scope, null);
+                // Update publishes the new item through the registered scope
+                // observer. A second pass re-reads every field and reprojects
+                // the same native inputs during each character edit.
                 nextInstances.Add(key, existing);
                 nextRoots.Add(existing.Root);
                 continue;
@@ -2347,16 +2349,16 @@ public sealed class CuiControlLoader : IDisposable
                 return;
             }
             var previous = _observedBindings.GetValueOrDefault(control)?.GetValueOrDefault(property)?.ResolvedValue;
-            var resolved = ResolveObservedBinding(control, property, binding, context);
+            var resolved = ResolveObservedBinding(control, property, binding, context, out var typed, out var hasTypedValue);
             // Renderer objects are already typed. Stringifying them discards gradients,
             // vector image data and other nonliteral identity/state.
-            if (context.TryGetValue(binding.Path, out var typed) && typed is Avalonia.Media.IBrush or Avalonia.Media.IImage)
+            if (hasTypedValue && typed is Avalonia.Media.IBrush or Avalonia.Media.IImage)
             {
                 ApplyTypedProperty(control, property, typed, span);
                 return;
             }
             if (control is Image && property.Equals("Source", StringComparison.OrdinalIgnoreCase)
-                && context.TryGetValue(binding.Path, out typed) && typed is null)
+                && hasTypedValue && typed is null)
             {
                 ApplyTypedProperty(control, property, null, span);
                 return;
@@ -2377,8 +2379,10 @@ public sealed class CuiControlLoader : IDisposable
         Control control,
         string property,
         CuiBindingValue binding,
-        ICuiBindingContext context)
+        ICuiBindingContext context, out object? typedValue, out bool hasTypedValue)
     {
+        typedValue = null;
+        hasTypedValue = false;
         string? value = null;
         string? sourceType = null;
         var sourceFound = false;
@@ -2394,6 +2398,11 @@ public sealed class CuiControlLoader : IDisposable
             }
             else if (context.TryGetValue(binding.Path, out var result))
             {
+                // Diagnostics and rendering must use the same host snapshot.
+                // Re-reading can allocate fresh projections or observe a newer
+                // value than the one recorded for this binding refresh.
+                typedValue = result;
+                hasTypedValue = true;
                 sourceFound = true;
                 sourceType = result?.GetType().Name;
                 value = result?.ToString();
