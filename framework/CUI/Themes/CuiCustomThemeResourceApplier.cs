@@ -10,7 +10,18 @@ public enum CuiAccentRole { None, Primary, Secondary, Tertiary }
 /// <summary>Backend conversion of a validated portable custom theme into existing shared CUI resources.</summary>
 public static class CuiCustomThemeResourceApplier
 {
-    public static void ApplyToResources(ResourceDictionary resources, CuiCustomTheme theme,
+    /// <summary>Remove custom-only tokens before the owning host reapplies its base palette.
+    /// Fresh off-tree scope dictionaries do not need this; reused global dictionaries do.</summary>
+    public static void ClearFromResources(IResourceDictionary resources)
+    {
+        ArgumentNullException.ThrowIfNull(resources);
+        foreach (var key in new[] { "CuiCustomTypography", "CuiCustomFontScale", "CuiButtonRoundnessPercent" }) resources.Remove(key);
+        foreach (var role in new[] { "Primary", "Secondary", "Tertiary" })
+            foreach (var suffix in new[] { "Fill", "ForegroundBrush", "PressedBrush", "Background", "HoverBackground", "PressedBackground" })
+                resources.Remove($"CuiAccent{role}{suffix}");
+    }
+
+    public static void ApplyToResources(IResourceDictionary resources, CuiCustomTheme theme,
         CuiAccessibilitySettings? accessibility = null)
     {
         ArgumentNullException.ThrowIfNull(resources);
@@ -65,7 +76,7 @@ public static class CuiCustomThemeResourceApplier
         }
     }
 
-    private static void ApplyFill(ResourceDictionary resources, string role, CuiCustomFill fill)
+    private static void ApplyFill(IResourceDictionary resources, string role, CuiCustomFill fill)
     {
         var brush = CreateBrush(fill);
         resources[$"CuiAccent{role}Brush"] = brush;
@@ -162,7 +173,7 @@ public static class CuiCustomThemeResourceApplier
             background.Children.Add(drawing.Geometry!.Clone());
         return new DrawingBrush(group)
         {
-            TileMode = TileMode.Tile, Stretch = Stretch.None,
+            TileMode = TileMode.Tile, Stretch = Stretch.None, AlignmentX = AlignmentX.Left, AlignmentY = AlignmentY.Top,
             SourceRect = new RelativeRect(0, 0, extent, extent, RelativeUnit.Absolute),
             DestinationRect = new RelativeRect(0, 0, extent, extent, RelativeUnit.Absolute),
             Transform = new RotateTransform(value.Angle), TransformOrigin = RelativePoint.Center

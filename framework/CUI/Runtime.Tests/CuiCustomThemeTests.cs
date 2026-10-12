@@ -92,6 +92,10 @@ public sealed class CuiCustomThemeTests
         CuiCustomThemeResourceApplier.ApplyToResources(resources, theme);
         Assert.NotNull(resources["CuiAccentPrimaryFill"]);
         Assert.Equal(Color.Parse(theme.PrimaryAccent.Colour.Hex), Assert.IsAssignableFrom<ISolidColorBrush>(resources["CuiAccentPrimaryBrush"]).Color);
+        CuiCustomThemeResourceApplier.ClearFromResources(resources);
+        CuiThemeResourceApplier.ApplyToResources(resources, palette);
+        Assert.Null(resources["CuiCustomTypography"]); Assert.Null(resources["CuiButtonRoundnessPercent"]);
+        Assert.Null(resources["CuiAccentPrimaryFill"]); Assert.Null(resources["CuiAccentPrimaryForegroundBrush"]);
     }
 
     [Fact]
