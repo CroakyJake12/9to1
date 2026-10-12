@@ -3,6 +3,8 @@ using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using Avalonia.Threading;
+using SkiaSharp;
 using CakeOS.Cui.Themes;
 using Xunit;
 
@@ -169,6 +171,35 @@ public sealed class CuiCustomThemeTests
         Assert.Equal(TileMode.Tile, brush.TileMode);
         Assert.Equal(kind == CuiCustomPatternKind.Checkerboard ? 3 : 2, Assert.IsType<DrawingGroup>(brush.Drawing).Children.Count);
         Assert.Equal(kind == CuiCustomPatternKind.Checkerboard ? 18 : 9, brush.DestinationRect.Rect.Width);
+    }
+
+    [Theory]
+    [InlineData(CuiCustomPatternKind.Stripes)] [InlineData(CuiCustomPatternKind.Checkerboard)] [InlineData(CuiCustomPatternKind.Dots)]
+    public async Task Actual_pattern_pixels_respect_independent_transparent_regions(CuiCustomPatternKind kind)
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            var model = new CuiViewModel();
+            model.Set("Fill", CuiCustomThemeResourceApplier.CreateBrush(new(CuiCustomFillKind.Pattern, new("#000000"),
+                Pattern: new(kind, new("#00FF00", 100), new("#FF0000"), 10, 10))));
+            using var loader = new CuiControlLoader(); loader.SetBindingContext(model);
+            var loaded = loader.LoadMarkup("<Container Type='Overlay' Background='Blue'><Container Type='Overlay' Background='{Binding Fill}'/></Container>");
+            Assert.Empty(loaded.Diagnostics); Assert.NotNull(loaded.Root); loader.WireBindings(loaded.Root);
+            var window = new Window { Width = 160, Height = 80, Content = loaded.Root };
+            try
+            {
+                window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                using var frame = window.CaptureRenderedFrame(); Assert.NotNull(frame);
+                using var bytes = new MemoryStream(); frame.Save(bytes);
+                using var pixels = SKBitmap.Decode(bytes.ToArray());
+                var foreground = kind == CuiCustomPatternKind.Dots ? new PixelPoint(10, 10) : new PixelPoint(5, 5);
+                var background = kind == CuiCustomPatternKind.Dots ? new PixelPoint(1, 1) : new PixelPoint(15, 5);
+                Assert.Equal(SKColors.Blue, pixels.GetPixel(foreground.X, foreground.Y));
+                Assert.Equal(SKColors.Red, pixels.GetPixel(background.X, background.Y));
+            }
+            finally { window.Close(); }
+        }, CancellationToken.None);
     }
 
     private sealed class Source(CuiThemePreferenceSnapshot current) : ICuiThemePreferenceSource
