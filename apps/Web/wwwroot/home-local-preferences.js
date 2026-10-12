@@ -52,11 +52,22 @@ export async function themeContext() {
     });
 }
 function exactScope(envelope, scope) { return envelope.DeviceId && scope === 'browser:' + envelope.DeviceId; }
+function validAccent(accent) {
+    if (accent == null) return true; // Existing v1 preferences inherit app defaults.
+    const colour = value => typeof value === 'string' && /^#[0-9A-F]{6}$/.test(value);
+    if (!accent || Array.isArray(accent) || ![0, 1, 2].includes(accent.mode) ||
+        accent.allAppsColour != null && !colour(accent.allAppsColour) ||
+        !accent.individualApps || typeof accent.individualApps !== 'object' || Array.isArray(accent.individualApps)) return false;
+    const entries = Object.entries(accent.individualApps);
+    return entries.length <= 32 && entries.every(([id, value]) => id.length <= 64 &&
+        /^app\.[a-z][a-z0-9.-]*$/.test(id) && !id.endsWith('.') && !id.includes('..') && colour(value));
+}
 function validTheme(value, scope) {
     const a = value?.accessibility;
     const font = text => text == null || typeof text === 'string' && text.trim() && text.length <= 128 && !/[,\u0000-\u001f]/.test(text);
     return value?.schemaVersion === 1 && Number.isSafeInteger(value.revision) && value.revision >= 0 &&
         value.scope?.scope === 0 && value.scope.ownerId === scope && value.scope.organizationId == null &&
+        validAccent(value.accent) &&
         (value.appearance == null || ['SuperBright', 'Bright', 'Dark', 'SuperDark'].includes(value.appearance)) &&
         typeof value.themeName === 'string' && value.themeName.trim() && value.themeName.length <= 128 &&
         !/[\u0000-\u001f]/.test(value.themeName) && a && typeof a.reduceMotion === 'boolean' && typeof a.highContrast === 'boolean' &&
@@ -87,7 +98,9 @@ export async function compareTheme(scope, expectedRevision, json) {
         if (revision !== expectedRevision) return { succeeded: false, code: 'RevisionConflict' };
         if (!validTheme(candidate, scope) || candidate.revision !== expectedRevision + 1)
             return { succeeded: false, code: 'InvalidArgument' };
-        const stored = { ...current.Theme, ...candidate, accessibility: { ...current.Theme?.accessibility, ...candidate.accessibility } };
+        const stored = { ...current.Theme, ...candidate,
+            accent: candidate.accent ?? current.Theme?.accent,
+            appearance: candidate.appearance ?? current.Theme?.appearance, accessibility: { ...current.Theme?.accessibility, ...candidate.accessibility } };
         writeEnvelope({ ...current, Theme: stored });
         return { succeeded: true, code: 'Succeeded', preference: stored };
     });

@@ -47,7 +47,7 @@ internal sealed partial class BrowserHomeThemePreferences : IBrowserHomeThemePre
         }
     }
 
-    public Task<HomeThemeOperationResult> SetAsync(string name,CuiAccessibilitySettings? accessibility=null,CancellationToken token=default,CuiAppearance? appearance=null)
+    public Task<HomeThemeOperationResult> SetAsync(string name,CuiAccessibilitySettings? accessibility=null,CancellationToken token=default,CuiAppearance? appearance=null,CuiAccentPreference? accent=null)
     {
         var start=new TaskCompletionSource();Task<HomeThemeOperationResult> original;
         lock(_operationGate)
@@ -58,15 +58,16 @@ internal sealed partial class BrowserHomeThemePreferences : IBrowserHomeThemePre
             var mode=appearance??Current.Appearance;
             if(mode is { } selected && !Enum.IsDefined(selected))throw new ArgumentOutOfRangeException(nameof(appearance));
             _operations.RemoveWhere(task=>task.IsCompleted);
-            original=SetCoreAsync(start.Task,_service,scope,name,settings,Current.Revision,token,mode);_operations.Add(original);
+            original=SetCoreAsync(start.Task,_service,scope,name,settings,Current.Revision,token,mode,accent ?? Current.EffectiveAccent);_operations.Add(original);
         }
         start.SetResult();return original;
     }
-    private async Task<HomeThemeOperationResult> SetCoreAsync(Task start,HomeThemePreferenceService service,HomeThemeScope scope,string name,CuiAccessibilitySettings settings,long revision,CancellationToken token,CuiAppearance? appearance)
+    private async Task<HomeThemeOperationResult> SetCoreAsync(Task start,HomeThemePreferenceService service,HomeThemeScope scope,string name,CuiAccessibilitySettings settings,long revision,CancellationToken token,CuiAppearance? appearance,CuiAccentPreference accent)
     {
         await start;
         var result=await service.SetAsync(scope,name,new(settings.ReduceMotion,settings.HighContrast,settings.DisplayScale,
-            settings.InterfaceFontFamilyOverride,settings.CodeFontFamilyOverride),revision,token,appearance?.ToString());
+            settings.InterfaceFontFamilyOverride,settings.CodeFontFamilyOverride),revision,token,appearance?.ToString(),
+            new HomeThemeAccentPreference((HomeThemeAccentOverrideMode)accent.Mode,accent.AllAppsColour,accent.IndividualApps));
         if(result.Succeeded && result.Value is { } value) Observe(value);
         else Diagnostic=result.Diagnostic;
         return result;
@@ -119,7 +120,7 @@ internal sealed partial class BrowserHomeThemePreferences : IBrowserHomeThemePre
         else
         {
             Diagnostic=result.Diagnostic??"Home theme preferences are unavailable. Professional is being used.";
-            Current=new("Professional",Current.Revision,Scope!.OwnerId,false,Current.Accessibility,Current.Appearance); Publish();
+            Current=new("Professional",Current.Revision,Scope!.OwnerId,false,Current.Accessibility,Current.Appearance,Current.Accent); Publish();
         }
     }
     private void Observe(HomeThemeResolution value)
@@ -130,7 +131,8 @@ internal sealed partial class BrowserHomeThemePreferences : IBrowserHomeThemePre
         var next=new CuiThemePreferenceSnapshot(stored.ThemeName,stored.Revision,Scope!.OwnerId,value.FromCache,
             new() {ReduceMotion=a.ReduceMotion,HighContrast=a.HighContrast,DisplayScale=a.DisplayScale,
                 InterfaceFontFamilyOverride=a.InterfaceFontFamily,CodeFontFamilyOverride=a.CodeFontFamily},
-            stored.Appearance is null ? null : Enum.Parse<CuiAppearance>(stored.Appearance));
+            stored.Appearance is null ? null : Enum.Parse<CuiAppearance>(stored.Appearance),
+            stored.Accent is { } accent ? new CuiAccentPreference((CuiAccentOverrideMode)accent.Mode,accent.AllAppsColour,accent.IndividualApps) : null);
         Diagnostic=value.Diagnostic;
         if(next==Current)return;
         Current=next; Publish();

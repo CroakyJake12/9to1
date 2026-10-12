@@ -11,7 +11,7 @@ internal interface IBrowserHomeThemePreferences : ICuiThemePreferenceSource, IAs
     CuiThemeDefinitionCatalog Catalog { get; }
     string? Diagnostic { get; }
     bool CanChange { get; }
-    Task<HomeThemeOperationResult> SetAsync(string name, CuiAccessibilitySettings? accessibility = null, CancellationToken token = default, CuiAppearance? appearance = null);
+    Task<HomeThemeOperationResult> SetAsync(string name, CuiAccessibilitySettings? accessibility = null, CancellationToken token = default, CuiAppearance? appearance = null, CuiAccentPreference? accent = null);
     Task RefreshAsync(CancellationToken token = default);
 }
 

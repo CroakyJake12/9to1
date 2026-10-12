@@ -61,12 +61,12 @@ internal static class AppearanceSettingsChecks
         internal bool Disposed;
         internal TaskCompletionSource? Release;
         internal void Notify() => Changed?.Invoke(this, EventArgs.Empty);
-        public async Task<HomeThemeOperationResult> SetAsync(string name, CuiAccessibilitySettings? accessibility = null, CancellationToken token = default, CuiAppearance? appearance = null)
+        public async Task<HomeThemeOperationResult> SetAsync(string name, CuiAccessibilitySettings? accessibility = null, CancellationToken token = default, CuiAppearance? appearance = null, CuiAccentPreference? accent = null)
         {
             token.ThrowIfCancellationRequested();
             if (Release is not null) await Release.Task;
             Writes++;
-            Current = Current with { Name = name, Revision = Current.Revision + 1, Appearance = appearance ?? Current.Appearance };
+            Current = Current with { Name = name, Revision = Current.Revision + 1, Appearance = appearance ?? Current.Appearance, Accent = accent ?? Current.Accent };
             Diagnostic = null;
             Notify();
             return new(true, "Succeeded"); // Controlled receipt for presentation-only regression; no storage claim.

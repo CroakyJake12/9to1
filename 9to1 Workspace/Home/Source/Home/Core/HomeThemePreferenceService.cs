@@ -28,6 +28,7 @@ public sealed record HomeThemePreference(int SchemaVersion, HomeThemeScope Scope
     // Optional in the existing v1 envelope: old preferences keep the host default.
     // Home owns the value without referencing a particular UI renderer.
     public string? Appearance { get; init; }
+    public HomeThemeAccentPreference? Accent { get; init; }
     public const int CurrentSchemaVersion = 1;
     public static HomeThemePreference Default(HomeThemeScope scope) => new(CurrentSchemaVersion,scope.Validate(),"Professional",0,new());
     public HomeThemePreference Validate()
@@ -136,16 +137,35 @@ public sealed class HomeThemePreferenceService : IDisposable,IAsyncDisposable
         return new(true,fallback?"ThemeFallback":fromCache?"ThemeCached":"Succeeded",new(value,name,fromCache,fallback,diagnostic),diagnostic);
     }
 
-    public Task<HomeThemeOperationResult> SetAsync(HomeThemeScope scope,string themeName,HomeThemeAccessibility accessibility,long expectedRevision,CancellationToken token=default,string? appearance=null)=>
-        Track(()=>SetCoreAsync(scope,themeName,accessibility,expectedRevision,token,appearance));
-    private async Task<HomeThemeOperationResult> SetCoreAsync(HomeThemeScope scope,string themeName,HomeThemeAccessibility accessibility,long expectedRevision,CancellationToken token,string? appearance)
+    public Task<HomeThemeOperationResult> SetAsync(HomeThemeScope scope,string themeName,HomeThemeAccessibility accessibility,long expectedRevision,CancellationToken token=default,string? appearance=null,HomeThemeAccentPreference? accent=null)=>
+        Track(()=>SetCoreAsync(scope,themeName,accessibility,expectedRevision,token,appearance,accent));
+    private async Task<HomeThemeOperationResult> SetCoreAsync(HomeThemeScope scope,string themeName,HomeThemeAccessibility accessibility,long expectedRevision,CancellationToken token,string? appearance,HomeThemeAccentPreference? accent)
     {
         ObjectDisposedException.ThrowIf(_disposed,this); scope.Validate(); accessibility.Validate();
         if(expectedRevision<0||string.IsNullOrWhiteSpace(themeName)) return new(false,"InvalidArgument",Diagnostic:"Choose a valid theme and revision.");
         if(!await _authority.CanAccessAsync(scope,true,token).ConfigureAwait(false)) return Denied();
         if(!_backend.Supports(scope)) return new(false,"ThemeScopeUnsupported",Diagnostic:"No preference provider supports this scope.");
         if(!_catalog.TryResolve(themeName,out var name)) return new(false,"ThemeUnavailable",Diagnostic:"This theme is not installed or compatible.");
-        var candidate=(new HomeThemePreference(HomeThemePreference.CurrentSchemaVersion,scope,name,checked(expectedRevision+1),accessibility) { Appearance=appearance }).Validate();
+        // Legacy/theme-only callers must not erase additive choices. Read the same
+        // authority and revision before CAS; a concurrent write still conflicts.
+        if (accent is null || appearance is null)
+        {
+            var prior = await _backend.ReadAsync(scope,token).ConfigureAwait(false);
+            if (prior.State != HomeThemeReadState.Available)
+                return new(false,"ThemePreferenceUnavailable",Diagnostic:"The saved appearance could not be read safely; no changes were saved.");
+            if (prior.Preference is { } stored)
+            {
+                if (stored.Scope != scope) return new(false,"ThemeScopeMismatch",Diagnostic:"The preference provider returned a different scope.");
+                try { stored.Validate(); }
+                catch (ArgumentException) { return new(false,"ThemeSchemaUnsupported",Diagnostic:"The existing appearance is incompatible and has been preserved."); }
+                if (stored.Revision != expectedRevision) return new(false,"RevisionConflict");
+                accent ??= stored.Accent;
+                appearance ??= stored.Appearance;
+            }
+            else if (expectedRevision != 0) return new(false,"RevisionConflict");
+            if (!await _authority.CanAccessAsync(scope,true,token).ConfigureAwait(false)) return Denied();
+        }
+        var candidate=(new HomeThemePreference(HomeThemePreference.CurrentSchemaVersion,scope,name,checked(expectedRevision+1),accessibility) { Appearance=appearance, Accent=accent }).Validate();
         var receipt=await _backend.CompareExchangeAsync(scope,expectedRevision,candidate,token).ConfigureAwait(false);
         if(!receipt.Succeeded) return new(false,receipt.Code,Diagnostic:receipt.Diagnostic);
         if(receipt.Preference!=candidate) return new(false,"InvalidThemeReceipt",Diagnostic:"The preference provider did not confirm the exact requested revision and scope.");
