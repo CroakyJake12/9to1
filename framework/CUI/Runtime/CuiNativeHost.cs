@@ -22,6 +22,10 @@ public static class CuiNativeHost
 
     public const string BundledInterfaceFontFamily =
         "avares://CakeOS.Cui.Runtime/Assets/Fonts/MontserratStatic#Montserrat";
+    public const string BundledEmojiFontFamily =
+        "avares://CakeOS.Cui.Runtime/Assets/Fonts/NotoEmoji#Noto Emoji";
+    public const string BundledSymbolFontFamily =
+        "avares://CakeOS.Cui.Runtime/Assets/Fonts/DejaVuSans#DejaVu Sans";
 
     public static AppBuilder ConfigureFonts(AppBuilder builder)
     {
@@ -29,6 +33,14 @@ public static class CuiNativeHost
         return builder.With(new FontManagerOptions
         {
             DefaultFamilyName = BundledInterfaceFontFamily,
+            // Browser renderers have no OS font collection. Resolve missing
+            // glyphs through bundled, licensed faces without changing the
+            // authored font family or replacing the interface's Montserrat.
+            FontFallbacks =
+            [
+                new FontFallback { FontFamily = new(BundledEmojiFontFamily) },
+                new FontFallback { FontFamily = new(BundledSymbolFontFamily) }
+            ],
             FontFamilyMappings = new Dictionary<string, FontFamily>(StringComparer.OrdinalIgnoreCase)
             {
                 ["Montserrat"] = new(BundledInterfaceFontFamily)

@@ -18,6 +18,10 @@
     <ProjectReference Include="../../CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/Avalonia.Headless.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <AvaloniaResource Include="Assets/Fonts/**/*.ttf" />
+    <AvaloniaResource Include="Assets/Fonts/**/OFL.txt" />
+    <AvaloniaResource Include="Assets/Fonts/**/LICENSE.txt" />
+    <AvaloniaResource Include="Assets/Fonts/fallback-provenance.json" />
     <!-- Use the maintained bundled family without depending on the Desktop UI process. -->
     <AvaloniaResource Include="../../../9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/MontserratStatic/*.ttf"
                       Link="Assets/Fonts/MontserratStatic/%(Filename)%(Extension)" />
