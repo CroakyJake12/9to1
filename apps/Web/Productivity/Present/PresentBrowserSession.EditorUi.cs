@@ -33,6 +33,20 @@ public sealed partial class PresentBrowserSession
     public double CanvasZoom => _zoom;
     public bool IsFitToWindow => _fitToWindow;
     internal Func<double>? EffectiveCanvasZoom { get; set; }
+    private double DisplayZoom
+    {
+        get
+        {
+            var measured = _fitToWindow ? EffectiveCanvasZoom?.Invoke() : null;
+            return measured is > 0 && double.IsFinite(measured.Value) ? measured.Value : _zoom;
+        }
+    }
+    internal void RefreshZoomReadout()
+    {
+        if (_disposed) return;
+        foreach (var property in new[] { "ZoomPercent", "ZoomReadout", "ZoomMinimum", "ZoomLabel" })
+            PropertyChanged?.Invoke(this, new(property));
+    }
     public void SetCanvasZoom(double zoom)
     {
         if (!double.IsFinite(zoom) || IsActionAvailable("SetZoom") != true) return;
@@ -136,6 +150,10 @@ public sealed partial class PresentBrowserSession
             "AnimationEffects" => AnimationEffects, "AnimationEffectIndex" => Array.IndexOf(AnimationEffects, _animationEffect),
             "AnimationTriggers" => AnimationTriggers, "AnimationTriggerIndex" => Array.IndexOf(AnimationTriggers, _animationTrigger),
             "IsZoomed" => !_fitToWindow,
+            "IsFitToWindow" => _fitToWindow,
+            "ZoomPercent" => DisplayZoom * 100,
+            "ZoomReadout" => $"{DisplayZoom * 100:0}%",
+            "ZoomMinimum" => Math.Min(25, DisplayZoom * 100),
             "ZoomLabel" => _fitToWindow ? "Fit" : $"{_zoom * 100:0}%",
             _ => MissingUiValue
         };
@@ -146,6 +164,11 @@ public sealed partial class PresentBrowserSession
         NumberStyles.Float, CultureInfo.InvariantCulture, out number) && double.IsFinite(number);
     private bool? TrySetEditorUiValue(string path, object? value)
     {
+        if (path == "ZoomPercent")
+        {
+            if (!Number(value, out var percent) || IsActionAvailable("SetZoom") != true) return false;
+            SetCanvasZoom(percent / 100); return true;
+        }
         if (path == "RenameSlideName")
         {
             if (IsActionAvailable("CancelRenameSlide") != true || IsReadOnly || _pending is not null

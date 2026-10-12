@@ -79,6 +79,7 @@ public static class PresentBrowserSurface
             _session.CanvasTextCommands = Control;
             _session.EffectiveCanvasZoom = () => Control.EffectiveZoom;
             Control.ZoomRequested += _session.SetCanvasZoom;
+            Control.EffectiveZoomChanged += ZoomChanged;
             _session.BeginShapeInsertion += Control.BeginShapeInsertion;
             Control.ShapeInsertionRequested += InsertShape;
             Thumbnails.SetPreviewRenderer(PresentRetainedSceneControl.CreatePreviewRenderer());
@@ -90,6 +91,7 @@ public static class PresentBrowserSurface
             session.PropertyChanged += Changed;
             Refresh();
         }
+        private void ZoomChanged(object? sender, EventArgs args) => _session.RefreshZoomReadout();
         private void Preview(object? sender, EventArgs args) => _session.RecordRetainedPreview();
         private void Selection(object? sender, EventArgs args) => _session.RecordRetainedSelection();
         private void InteractionChanged(object? sender, EventArgs args)
@@ -125,7 +127,10 @@ public static class PresentBrowserSurface
         private void ViewportChanged(object? sender, AvaloniaPropertyChangedEventArgs args)
         { if (args.Property == TopLevel.ClientSizeProperty && _topLevel is not null) _session.SetViewportWidth(_topLevel.ClientSize.Width); }
         private void Changed(object? sender, PropertyChangedEventArgs args)
-        { if (Dispatcher.UIThread.CheckAccess()) Refresh(); else Dispatcher.UIThread.Post(Refresh); }
+        {
+            if (args.PropertyName is "ZoomPercent" or "ZoomReadout" or "ZoomMinimum" or "ZoomLabel") return;
+            if (Dispatcher.UIThread.CheckAccess()) Refresh(); else Dispatcher.UIThread.Post(Refresh);
+        }
         private void Refresh()
         {
             if (_disposed) return;
@@ -187,6 +192,7 @@ public static class PresentBrowserSurface
         {
             if (_disposed) return;
             Control.ZoomRequested -= _session.SetCanvasZoom;
+            Control.EffectiveZoomChanged -= ZoomChanged;
             _session.BeginShapeInsertion -= Control.BeginShapeInsertion;
             Control.ShapeInsertionRequested -= InsertShape;
             if (ReferenceEquals(_session.CanvasTextCommands, Control)) { _session.CanvasTextCommands = null; _session.EffectiveCanvasZoom = null; }

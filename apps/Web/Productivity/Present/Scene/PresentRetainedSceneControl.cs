@@ -43,6 +43,7 @@ public sealed class PresentRetainedSceneControl : Panel, IDisposable, IPresentCa
     private Guid[] _renderedSelection = [];
     private Point? _pointerStartInWindow;
     private bool _pointerMovedInWindow;
+    private double _observedEffectiveZoom = double.NaN;
     public bool IsTextEditing => _canvas.IsTextEditing;
     public bool HasSelectedText => !string.IsNullOrEmpty(_canvas.SelectedText);
     public PresentInteractionState InteractionState => _panPointer is not null ? PresentInteractionState.CanvasPanning
@@ -54,6 +55,7 @@ public sealed class PresentRetainedSceneControl : Panel, IDisposable, IPresentCa
     public event EventHandler? GeometryPreviewed;
     public event Action<string, double, double, double, double>? ShapeInsertionRequested;
     public event Action<double>? ZoomRequested;
+    public event EventHandler? EffectiveZoomChanged;
     public event EventHandler? LiveTextPreviewed;
     public event EventHandler? SelectionChanged;
     public static Action<HavenDrawingContext, Haven.Core.PresentDocument, Haven.Core.PresentSlide, HavenRect, double> CreatePreviewRenderer()
@@ -68,6 +70,7 @@ public sealed class PresentRetainedSceneControl : Panel, IDisposable, IPresentCa
         _scene = new HavenSceneControl(new HavenAvaloniaImageResolver(), new HavenAvaloniaNativeControlResolver(), reduceMotion)
         { Platform = HavenPlatform.Unknown, IsEnabled = false };
         Children.Add(_scene);
+        _scene.LayoutUpdated += SceneLayoutUpdated;
         // The CUI workspace owns application chrome; only the authored slide is paper.
         _canvas.SetValue(HavenProperties.Background, "Transparent");
         _canvas.SetValue(HavenProperties.BorderWidth, HavenLength.Px(0));
@@ -105,6 +108,15 @@ public sealed class PresentRetainedSceneControl : Panel, IDisposable, IPresentCa
                 _canvas.PrepareContext(new HavenPoint(point.X - _canvas.Bounds.X, point.Y - _canvas.Bounds.Y));
             SelectionChanged?.Invoke(this, EventArgs.Empty);
         };
+    }
+
+    private void SceneLayoutUpdated(object? sender, EventArgs args)
+    {
+        if (_disposed || _editor is null || _canvas.PaperBounds.Width <= 0) return;
+        var zoom = EffectiveZoom;
+        if (!double.IsFinite(zoom) || Math.Abs(zoom - _observedEffectiveZoom) < .000001) return;
+        _observedEffectiveZoom = zoom;
+        EffectiveZoomChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public void BeginShapeInsertion(string presetId, DocumentVectorShape preview)
@@ -337,6 +349,7 @@ public sealed class PresentRetainedSceneControl : Panel, IDisposable, IPresentCa
         if (_disposed) return;
         CancelInteraction(); ++_zoomGeneration;
         if (_editor is not null) _editor.Changed -= Changed;
+        _scene.LayoutUpdated -= SceneLayoutUpdated; EffectiveZoomChanged = null;
         _scene.Root = null; _editor = null; LiveTextPreviewed = null; _disposed = true;
     }
 }
