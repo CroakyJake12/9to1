@@ -18,11 +18,18 @@ const NATIVE_CLIENT: ClientDefinition = {
   scopes: ["openid", "profile", "cake:account:read", "cake:profile:read",
     "cake:sessions:read", "cake:sessions:revoke"],
 };
+const PRESENT_CLIENT: ClientDefinition = {
+  name: "9to1 Present preview",
+  redirectUri: "https://present-4581358882177bc7.9to1.uk/oauth/callback",
+  applicationType: "web", grants: ["authorization_code", "refresh_token"],
+  scopes: AUTHORIZATION_SCOPES,
+};
 type PublicClientState =
   | { kind: "conflict" }
   | { kind: "ready"; clientId: string }
   | { kind: "missing"; registration: ReturnType<typeof registration> };
 type ClientState = { kind: "not-admin" } | PublicClientState;
+export type PresentAppState = ClientState;
 // Existing web kind/clientId/registration retain their meaning; native is independent.
 export type StagingAppsState = { kind: "not-admin" } | (PublicClientState & { native: PublicClientState });
 
@@ -97,12 +104,18 @@ export async function readStagingAppsState(env: Env, userId: string): Promise<St
   return { ...web, native };
 }
 
+// This is an independent registration, never an edit or alias of the staging clients.
+export async function readPresentAppState(env: Env, userId: string): Promise<PresentAppState> {
+  return readClientState(env, userId, PRESENT_CLIENT);
+}
+
 function html(value: string): string {
   return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;").replaceAll("'", "&#39;");
 }
 
-export function stagingAppsAccountPage(name: string, state: StagingAppsState): Response {
+export function stagingAppsAccountPage(name: string, state: StagingAppsState,
+  present: PresentAppState = { kind: "not-admin" }): Response {
   const describe = (label: string, client: PublicClientState): string => client.kind === "ready"
     ? `<p>${label} connected. Public client ID: <code>${html(client.clientId)}</code></p>`
     : client.kind === "conflict" ? `<p>${label} metadata needs review. No new client was created.</p>` : "";
@@ -111,7 +124,12 @@ export function stagingAppsAccountPage(name: string, state: StagingAppsState): R
     (state.kind !== "conflict" && state.native.kind !== "conflict" &&
       (state.kind === "missing" || state.native.kind === "missing")
       ? '<form id="connect-staging-apps"><button type="submit">Connect staging apps</button></form>' : "");
-  return new Response(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CAKE ID account</title><body><main><h1>CAKE ID</h1><p>Signed in as ${html(name)}</p><p><a href="/api/account/profile">Profile API</a> · <a href="/api/account/sessions">Sessions API</a></p>${connected}<p id="staging-apps-status" role="status" aria-live="polite"></p><form method="post" action="/api/auth/sign-out"><button type="submit">Sign out</button></form><script src="/assets/auth-ui.js?staging=20261005-02" defer></script></main></body></html>`, {
+  const presentConnection = present.kind === "not-admin" ? "" :
+    `<section aria-labelledby="present-connection-heading"><h2 id="present-connection-heading">Present preview</h2><p>Public browser client for <code>${html(PRESENT_CLIENT.redirectUri)}</code>.</p>` +
+    describe("Present preview client", present) +
+    (present.kind === "missing" ? '<form id="connect-present-app"><button type="submit">Connect Present preview</button></form>' : "") +
+    '<p id="present-app-status" role="status" aria-live="polite"></p></section>';
+  return new Response(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CAKE ID account</title><body><main><h1>CAKE ID</h1><p>Signed in as ${html(name)}</p><p><a href="/api/account/profile">Profile API</a> · <a href="/api/account/sessions">Sessions API</a></p>${connected}<p id="staging-apps-status" role="status" aria-live="polite"></p>${presentConnection}<form method="post" action="/api/auth/sign-out"><button type="submit">Sign out</button></form><script src="/assets/auth-ui.js?clients=20261012-01" defer></script></main></body></html>`, {
     headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store",
       "x-content-type-options": "nosniff", "referrer-policy": "no-referrer",
       "content-security-policy": "default-src 'self'; script-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'" },

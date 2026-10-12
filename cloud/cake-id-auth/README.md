@@ -8,6 +8,8 @@ Only `wrangler.local.jsonc` and `wrangler.password-test.jsonc` are provided. The
 
 The maintained Better Auth OAuth provider enforces authorization-code PKCE and exact redirect matching. Dynamic Client Registration is disabled. Operators must register clients through the privileged path. ID tokens identify the public client; API access tokens are resource-bound and short lived. Domain permissions and entitlements are not copied into tokens. Resource API handlers check scopes, the canonical UUID subject, and active session state on every request. The issuer includes the configured auth path, matching discovery and signed tokens. Resource scope policy includes the approved OIDC scopes so public-client flows can receive an ID token alongside a resource-bound access token. Privileged client/resource administration reads the private role from the canonical D1 account row; it never trusts a user/session output role.
 
+The administrator account page includes a separate exact-host registration path for the protected Present preview. See [Connect the protected Present preview](PRESENT_CLIENT_REGISTRATION.md) for the maintained owner flow, metadata reconciliation and validation limits.
+
 `src/local.ts` is a test-only entrypoint. It applies the library-generated schema to Wrangler's local D1 emulator and captures verification/reset messages in a local outbox. It has a test-only administrator bootstrap guarded by an ephemeral key; the production entrypoint does not contain this route. The outbox is not an email provider and proves no real delivery.
 
 ## Shared 9to1 account API contract

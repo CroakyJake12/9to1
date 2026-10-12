@@ -79,3 +79,68 @@ export function installStagingAppsAction(): void {
     finally { busy = false; }
   });
 }
+
+// The protected Present host has its own exact public client; connecting it never provisions staging/native clients.
+export function installPresentAppAction(): void {
+  const form = document.getElementById("connect-present-app") as HTMLFormElement | null;
+  const status = document.getElementById("present-app-status");
+  if (!form || !status) return;
+  const button = form.querySelector<HTMLButtonElement>("button[type=submit]");
+  let busy = false;
+  const message = (text: string) => { status.textContent = text; };
+  type State = { kind?: string; clientId?: unknown; registration?: unknown };
+  const read = async (): Promise<State> => {
+    const response = await fetch("/account/present-app", {
+      credentials: "same-origin", cache: "no-store", headers: { accept: "application/json" },
+    });
+    if (!response.ok) throw new Error("The current administrator session could not be verified.");
+    return await response.json();
+  };
+  const showReady = (state: State): boolean => {
+    if (state.kind !== "ready" || typeof state.clientId !== "string" || !state.clientId) return false;
+    message("Present preview connected. Public client ID: " + state.clientId);
+    return true;
+  };
+  const connect = async () => {
+    const state = await read();
+    if (showReady(state)) return;
+    if (state.kind !== "missing" || !state.registration) {
+      message("Present preview client metadata needs review. No new client was created.");
+      return;
+    }
+    let response: Response | undefined;
+    try {
+      response = await fetch("/api/auth/oauth2/create-client", {
+        method: "POST", credentials: "same-origin",
+        headers: { "content-type": "application/json", accept: "application/json" },
+        body: JSON.stringify(state.registration),
+      });
+    } catch { /* An unknown reply is reconciled by observation; never repeat this POST automatically. */ }
+    try {
+      const reconciled = await read();
+      if (showReady(reconciled)) return;
+      if (reconciled.kind === "conflict")
+        message("Present preview client metadata needs review. No further registration was attempted.");
+      else if (response && !response.ok)
+        message("Present preview registration was refused (HTTP " + response.status + "). Refresh the account page before retrying.");
+      else message("Present preview registration outcome could not be confirmed. Refresh the account page before retrying.");
+    } catch { message("Present preview registration outcome could not be confirmed. Refresh the account page before retrying."); }
+  };
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    if (busy || button?.disabled) return;
+    busy = true;
+    if (button) button.disabled = true;
+    message("Connecting Present preview…");
+    try {
+      if (navigator.locks) {
+        await navigator.locks.request("cake-connect-present-preview", { ifAvailable: true }, async lock => {
+          if (!lock) { message("Another account tab is connecting Present preview. Refresh when it finishes."); return; }
+          await connect();
+        });
+      } else await connect();
+    } catch { message("The current administrator session could not be verified. Refresh the account page."); }
+    // Keep disabled for success, refusal and unknown outcome; reload first observes the canonical owner state.
+    finally { busy = false; }
+  });
+}
