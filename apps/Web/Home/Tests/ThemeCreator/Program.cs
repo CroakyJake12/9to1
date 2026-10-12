@@ -63,7 +63,7 @@ using (var creator = new BrowserThemeCreator(sink, sink, preferences, preference
 
 await using (var session = HeadlessUnitTestSession.StartNew(typeof(ThemeCreatorTestApplication)))
 {
-    await session.Dispatch(async () =>
+    await session.Dispatch<bool>(async () =>
     {
         var owner = new ControlledPreferences();
         using var creator = new BrowserThemeCreator(sink, sink, owner, owner.Save);
@@ -96,14 +96,14 @@ await using (var session = HeadlessUnitTestSession.StartNew(typeof(ThemeCreatorT
             Check(input.IsFocused && input.SelectedText == "My theme", "Opening did not select theme name");
             foreach (var character in "Native theme draft") { window.KeyTextInput(character.ToString()); Pump(); }
             Check(input.Text == "Native theme draft" && input.CaretIndex == input.Text.Length, "Per-character editing lost caret/value");
-            window.KeyPress(Key.Left, RawInputModifiers.None, PhysicalKey.ArrowLeft); window.KeyRelease(Key.Left, RawInputModifiers.None, PhysicalKey.ArrowLeft);
+            window.KeyPress(Key.Left, RawInputModifiers.None, PhysicalKey.ArrowLeft, null); window.KeyRelease(Key.Left, RawInputModifiers.None, PhysicalKey.ArrowLeft, null);
             window.KeyTextInput("!"); Pump(); Check(input.Text == "Native theme draf!t", "Middle-caret insertion failed");
-            var type = Find<ComboBox>("Accent type"); Click(type); window.KeyPress(Key.Down, RawInputModifiers.None, PhysicalKey.ArrowDown); window.KeyRelease(Key.Down, RawInputModifiers.None, PhysicalKey.ArrowDown); window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter); window.KeyRelease(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter); Pump();
+            var type = Find<ComboBox>("Accent type"); Click(type); window.KeyPress(Key.Down, RawInputModifiers.None, PhysicalKey.ArrowDown, null); window.KeyRelease(Key.Down, RawInputModifiers.None, PhysicalKey.ArrowDown, null); window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null); window.KeyRelease(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null); Pump();
             Check(Read(creator, "IsGradient") is true, "Physical accent selector did not enter gradient builder");
             Click(loaded.Root!.GetVisualDescendants().OfType<Button>().Single(button => button.Content as string == "Add stop"));
             Check(((string[])Read(creator, "StopNames")!).Length == 3, "Physical Add stop failed");
             var colour = Find<TextBox>("Colour hexadecimal RGB"); Click(colour);
-            window.KeyPress(Key.A, RawInputModifiers.Control, PhysicalKey.KeyA); window.KeyRelease(Key.A, RawInputModifiers.Control, PhysicalKey.KeyA);
+            window.KeyPress(Key.A, RawInputModifiers.Control, PhysicalKey.A, "a"); window.KeyRelease(Key.A, RawInputModifiers.Control, PhysicalKey.A, "a");
             foreach (var character in "#CE3864") { window.KeyTextInput(character.ToString()); Pump(); }
             Check((string?)Read(creator, "ColourHex") == "#CE3864", "Physical colour picker edits did not reach selected gradient stop");
             var preview = Find<Button>("Preview primary accent and edit it");
@@ -125,6 +125,7 @@ await using (var session = HeadlessUnitTestSession.StartNew(typeof(ThemeCreatorT
             Check(!absentOwner.Root!.GetVisualDescendants().OfType<CuiContainerControl>().Any(control => control.Name == "theme-creator" && control.IsVisible), "Native Settings exposed creator without a borrowed owner");
         }
         finally { window.Close(); }
+        return true;
     }, CancellationToken.None);
 }
 Console.WriteLine(JsonSerializer.Serialize(new { assertions, scope = "Creator source/controller and actual native CUI interaction only; controlled account receipts are not real account sync or browser acceptance." }));

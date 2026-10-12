@@ -19,7 +19,7 @@ public static class CuiThemeCreatorComponents
         var parser = new CuiRichParser();
         var document = parser.Parse(markup, ImportSource);
         if (parser.Diagnostics.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
-            throw new InvalidDataException("The CUI theme creator library is invalid.");
+            throw new InvalidDataException("The CUI theme creator library is invalid: " + string.Join("; ", parser.Diagnostics.Diagnostics));
         return document;
     }
     public static CuiDocument Compose(CuiDocument document)

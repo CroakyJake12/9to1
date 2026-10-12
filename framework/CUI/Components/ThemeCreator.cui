@@ -40,7 +40,7 @@
         <Text Text="Gradient Creator" FontWeight="SemiBold" />
         <Input Type="Select" ItemsSource="{Binding ThemeCreatorGradientKinds}" SelectedIndex="{Binding ThemeCreatorGradientKindIndex, mode=TwoWay, type=int}" AccessibleName="Gradient type" Interactive="{Binding ThemeCreatorCanEdit}" />
         <Container Type="Wrap" CellGap="12">
-          <Container Type="Vertical Stack" CellGap="4" Width="130"><Text Text="Angle (degrees)" /><Input Type="Text" Value="{Binding ThemeCreatorGradientAngle, mode=TwoWay, type=string}" AccessibleName="Gradient angle in degrees" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
+          <Container Type="Vertical Stack" CellGap="4" Width="130"><Text id="gradient-angle-label" Text="Angle (degrees)" /><Input Type="Text" Value="{Binding ThemeCreatorGradientAngle, mode=TwoWay, type=string}" AccessibleName="Gradient angle in degrees" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
           <Container Type="Vertical Stack" CellGap="4" Width="130"><Text Text="Centre X (%)" /><Input Type="Text" Value="{Binding ThemeCreatorGradientCenterX, mode=TwoWay, type=string}" AccessibleName="Gradient centre X percent" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
           <Container Type="Vertical Stack" CellGap="4" Width="130"><Text Text="Centre Y (%)" /><Input Type="Text" Value="{Binding ThemeCreatorGradientCenterY, mode=TwoWay, type=string}" AccessibleName="Gradient centre Y percent" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
           <Container Type="Vertical Stack" CellGap="4" Width="130"><Text Text="Radius (%)" /><Input Type="Text" Value="{Binding ThemeCreatorGradientRadius, mode=TwoWay, type=string}" AccessibleName="Gradient radius percent" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
@@ -57,9 +57,9 @@
         <Text Text="Pattern builder" FontWeight="SemiBold" />
         <Input Type="Select" ItemsSource="{Binding ThemeCreatorPatternKinds}" SelectedIndex="{Binding ThemeCreatorPatternKindIndex, mode=TwoWay, type=int}" AccessibleName="Pattern geometry" Interactive="{Binding ThemeCreatorCanEdit}" />
         <Container Type="Wrap" CellGap="12">
-          <Container Type="Vertical Stack" CellGap="4" Width="140"><Text Text="Size (px)" /><Input Type="Text" Value="{Binding ThemeCreatorPatternSize, mode=TwoWay, type=string}" AccessibleName="Pattern size in pixels" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
+          <Container Type="Vertical Stack" CellGap="4" Width="140"><Text id="pattern-size-label" Text="Size (px)" /><Input Type="Text" Value="{Binding ThemeCreatorPatternSize, mode=TwoWay, type=string}" AccessibleName="Pattern size in pixels" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
           <Container Type="Vertical Stack" CellGap="4" Width="140"><Text Text="Spacing (px)" /><Input Type="Text" Value="{Binding ThemeCreatorPatternSpacing, mode=TwoWay, type=string}" AccessibleName="Pattern spacing in pixels" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
-          <Container Type="Vertical Stack" CellGap="4" Width="140"><Text Text="Angle (degrees)" /><Input Type="Text" Value="{Binding ThemeCreatorPatternAngle, mode=TwoWay, type=string}" AccessibleName="Pattern angle in degrees" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
+          <Container Type="Vertical Stack" CellGap="4" Width="140"><Text id="pattern-angle-label" Text="Angle (degrees)" /><Input Type="Text" Value="{Binding ThemeCreatorPatternAngle, mode=TwoWay, type=string}" AccessibleName="Pattern angle in degrees" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
         </Container>
         <Input Type="Select" ItemsSource="{Binding ThemeCreatorPatternColourNames}" SelectedIndex="{Binding ThemeCreatorPatternColourIndex, mode=TwoWay, type=int}" AccessibleName="Pattern colour to edit" Interactive="{Binding ThemeCreatorCanEdit}" />
       </Container>
@@ -84,7 +84,7 @@
       <Container Type="Wrap" CellGap="12">
         <Container Type="Vertical Stack" CellGap="4" Width="220"><Text Text="Family" /><Input Type="Select" ItemsSource="{Binding ThemeCreatorFontFamilies}" SelectedIndex="{Binding ThemeCreatorFontFamilyIndex, mode=TwoWay, type=int}" AccessibleName="Font family" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
         <Container Type="Vertical Stack" CellGap="4" Width="130"><Text Text="Weight" /><Input Type="Select" ItemsSource="{Binding ThemeCreatorFontWeights}" SelectedIndex="{Binding ThemeCreatorFontWeightIndex, mode=TwoWay, type=int}" AccessibleName="Font weight" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
-        <Container Type="Vertical Stack" CellGap="4" Width="130"><Text Text="Size (px)" /><Input Type="Text" Value="{Binding ThemeCreatorFontSize, mode=TwoWay, type=string}" AccessibleName="Font size in pixels" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
+        <Container Type="Vertical Stack" CellGap="4" Width="130"><Text id="font-size-label" Text="Size (px)" /><Input Type="Text" Value="{Binding ThemeCreatorFontSize, mode=TwoWay, type=string}" AccessibleName="Font size in pixels" Interactive="{Binding ThemeCreatorCanEdit}" /></Container>
       </Container>
       <Text Text="Button Roundness" FontWeight="SemiBold" />
       <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="12">
