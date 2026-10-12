@@ -58,6 +58,9 @@ public sealed class CuiThemeScope
             "Playful" or "playful" => CuiTheme.Playful,
             "Cinematic" or "cinematic" => CuiTheme.Cinematic,
             "Professional" or "professional" => CuiTheme.Professional,
+            "Frosted Glass" or "frosted glass" or "FrostedGlass" or "frostedglass" => CuiTheme.FrostedGlass,
+            "Metallic" or "metallic" => CuiTheme.Metallic,
+            "Western" or "western" => CuiTheme.Western,
             _ => CuiTheme.Professional
         };
     }

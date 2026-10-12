@@ -6,7 +6,7 @@
 namespace CakeOS.Cui.Themes;
 
 /// <summary>
-/// Catalogue of the six canonical themes. Professional is the default;
+/// Catalogue of the canonical themes. Professional is the default;
 /// explicit Glow remains the legacy identity transform.
 /// </summary>
 public static class CuiThemeCatalog
@@ -36,7 +36,13 @@ public static class CuiThemeCatalog
         new(
             CuiTheme.Professional, "Professional",
             "Quiet layered surfaces, rounded floating menus and precise editorial controls.",
-            1.0, 0.75, 1.2, 0.8, 0.55, 0.65, 1.0, 1.0, 0.9, 0.8)
+            1.0, 0.75, 1.2, 0.8, 0.55, 0.65, 1.0, 1.0, 0.9, 0.8),
+        new(CuiTheme.FrostedGlass, "Frosted Glass", "Translucent frosted surfaces and soft light.",
+            1.2, 1.15, 1.25, 1, .65, .6),
+        new(CuiTheme.Metallic, "Metallic", "Brushed tonal surfaces and precise metallic highlights.",
+            .6, .75, .8, .75, .75, 1.1),
+        new(CuiTheme.Western, "Western", "Warm parchment tones and crafted borders.",
+            .45, .65, .6, .9, .65, 1.15)
     ];
 
     /// <summary>
@@ -53,7 +59,7 @@ public static class CuiThemeCatalog
 
     /// <summary>Parses a persisted theme name safely, falling back to Professional.</summary>
     public static CuiTheme Parse(string? value) =>
-        Enum.TryParse<CuiTheme>(value, ignoreCase: true, out var parsed) && Enum.IsDefined(parsed)
+        Enum.TryParse<CuiTheme>(value?.Replace(" ", string.Empty), ignoreCase: true, out var parsed) && Enum.IsDefined(parsed)
             ? parsed
             : CuiTheme.Professional;
 

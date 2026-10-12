@@ -18,7 +18,10 @@ public enum CuiTheme
     Retro = 2,
     Playful = 3,
     Cinematic = 4,
-    Professional = 5
+    Professional = 5,
+    FrostedGlass = 6,
+    Metallic = 7,
+    Western = 8
 }
 
 /// <summary>
