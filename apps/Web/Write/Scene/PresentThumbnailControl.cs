@@ -46,6 +46,11 @@ public sealed class PresentThumbnailControl : Panel, IDisposable
         _scene.Root = editor is null ? null : _navigator;
         Refresh();
     }
+    public void FocusSelectedSlide()
+    {
+        if (!_disposed && _allowed && _scene.IsEffectivelyVisible && _scene.IsEffectivelyEnabled)
+            _scene.FocusElement(_navigator);
+    }
     private void Changed(object? sender, EventArgs args) => Refresh();
     private void Refresh() { if (!_disposed && _editor is { } editor) _navigator.SetDocument(editor.Document, editor.SelectedSlide.Order); }
     public void Dispose() { if (_disposed) return; _disposed = true; if (_editor is not null) _editor.Changed -= Changed; _scene.Root = null; _editor = null; }

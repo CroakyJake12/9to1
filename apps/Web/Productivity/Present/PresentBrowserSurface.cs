@@ -68,6 +68,7 @@ public static class PresentBrowserSurface
         private readonly PresentBrowserSession _session;
         private bool _disposed;
         private bool _textEditing;
+        private bool _restoreThumbnailFocus;
         private TopLevel? _topLevel;
         public PresentRetainedSceneControl Control { get; }
         public PresentThumbnailControl Thumbnails { get; }
@@ -128,11 +129,22 @@ public static class PresentBrowserSurface
         private void Refresh()
         {
             if (_disposed) return;
-            Control.SetInputAllowed(_session.IsPresentationAdmitted && _session.IsWorkspaceActive && !_session.IsBusy && !_session.IsReadOnly && !_session.HasUnknownCommitOutcome && !_session.IsPlaying && _session.Editor is not null);
+            Control.SetInputAllowed(_session.IsPresentationAdmitted && _session.IsWorkspaceActive && !_session.IsRenamingSlide && !_session.IsBusy && !_session.IsReadOnly && !_session.HasUnknownCommitOutcome && !_session.IsPlaying && _session.Editor is not null);
             Control.SetEditor(_session.Editor);
             Control.SetZoom(_session.CanvasZoom, _session.IsFitToWindow);
             Playback.SetEditor(_session.IsPlaying ? _session.Editor : null);
-            Thumbnails.SetEditor(_session.Editor, _session.IsPresentationAdmitted && _session.IsWorkspaceActive && !_session.IsBusy && !_session.HasUnknownCommitOutcome, !_session.IsReadOnly);
+            Thumbnails.SetEditor(_session.Editor, _session.IsPresentationAdmitted && _session.IsWorkspaceActive && !_session.IsRenamingSlide && !_session.IsBusy && !_session.HasUnknownCommitOutcome, !_session.IsReadOnly);
+            if (_session.IsRenamingSlide) _restoreThumbnailFocus = true;
+            else if (_restoreThumbnailFocus && !_session.IsBusy)
+            {
+                _restoreThumbnailFocus = false;
+                var owner = _session.Editor;
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (!_disposed && !_session.IsRenamingSlide && _session.IsWorkspaceActive
+                        && ReferenceEquals(owner, _session.Editor)) Thumbnails.FocusSelectedSlide();
+                }, DispatcherPriority.Input);
+            }
         }
         private async void KeyDown(object? sender, KeyEventArgs args)
         {

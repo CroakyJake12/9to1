@@ -21,6 +21,9 @@ public sealed partial class PresentBrowserSession
     private static readonly string[] StandardFonts = ["Aptos", "Arial", "Georgia", "Inter", "Montserrat", "Times New Roman"];
     private double _viewportWidth = 1280, _sidebarWidth = 208, _inspectorWidth = 288;
     private bool _showNotes = true, _showHelp, _showHistory;
+    private (PresentEditor Owner, Guid SlideId)? _renameSlide;
+    private string _renameSlideName = string.Empty;
+    internal bool IsRenamingSlide => _renameSlide is not null;
     private double _zoom = 1;
     private bool _fitToWindow = true;
     private (PresentEditor Editor, Guid SlideId, string Preset)? _shapeInsertion;
@@ -82,6 +85,12 @@ public sealed partial class PresentBrowserSession
                 && !(SelectedTextElement is { Kind: PresentElementKind.Shape } && CanvasTextCommands?.IsTextEditing == true),
             "HeaderStatus" => IsBusy ? "Working…" : IsDirty ? "Unsaved changes" : Status,
             "ShowNotes" => _showNotes, "ShowHelp" => _showHelp, "ShowHistory" => _showHistory,
+            "ShowNotesBubble" => !_showNotes,
+            "SidebarToggleLabel" => _showSidebar ? "Collapse sidebar" : "Expand sidebar",
+            "ShowRenameSlide" => IsRenamingSlide,
+            "CanUseEditor" => !IsRenamingSlide,
+            "RenameSlideName" => _renameSlideName,
+            "CanCommitRenameSlide" => IsActionAvailable("CommitRenameSlide") == true,
             "Versions" => _versions, "NoVersions" => _versions.Count == 0,
             "CanHistory" => IsActionAvailable("ShowHistory") == true,
             "CanRestoreHistory" => IsActionAvailable("RestoreVersion") == true,
@@ -137,6 +146,18 @@ public sealed partial class PresentBrowserSession
         NumberStyles.Float, CultureInfo.InvariantCulture, out number) && double.IsFinite(number);
     private bool? TrySetEditorUiValue(string path, object? value)
     {
+        if (path == "RenameSlideName")
+        {
+            if (IsActionAvailable("CancelRenameSlide") != true || IsReadOnly || _pending is not null
+                || _renameSlide is not { } target || !ReferenceEquals(Editor, target.Owner)
+                || !target.Owner.Document.Slides.Any(slide => slide.Id == target.SlideId)
+                || value is not string name) return false;
+            _renameSlideName = name;
+            // Editing the pending name is not a document edit and must not
+            // create undo entries or refresh the canvas on each character.
+            PropertyChanged?.Invoke(this, new("CanCommitRenameSlide"));
+            return true;
+        }
         if (path is "SidebarWidth" or "InspectorWidth")
         {
             if (!Number(value, out var width)) return false;
@@ -219,6 +240,9 @@ public sealed partial class PresentBrowserSession
     }
     private void RefreshEditorUi()
     {
+        if (_renameSlide is { } rename && (!ReferenceEquals(rename.Owner, Editor) || !IsWorkspaceActive
+            || !rename.Owner.Document.Slides.Any(slide => slide.Id == rename.SlideId)))
+            _renameSlide = null;
         if (SelectedObject is { Kind: PresentElementKind.Shape } shape)
         {
             var vectorPath = shape.VectorShape?.Paths.FirstOrDefault();
@@ -233,6 +257,30 @@ public sealed partial class PresentBrowserSession
             }
         }
         else _observedShape = null;
+    }
+
+    private void BeginRenameSlide()
+    {
+        var editor = Editor!;
+        editor.CommitLiveTextEdit();
+        _renameSlide = (editor, editor.SelectedSlide.Id);
+        _renameSlideName = editor.SelectedSlide.Title;
+        Notify();
+    }
+
+    private async Task CommitRenameSlideAsync(CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        if (_renameSlide is not { } target) return;
+        var name = _renameSlideName.Trim();
+        _renameSlide = null;
+        try
+        {
+            await EditAsync(editor => ReferenceEquals(editor, target.Owner)
+                && editor.Document.Slides.Any(slide => slide.Id == target.SlideId)
+                && editor.SetSlideTitle(target.SlideId, name), token);
+        }
+        finally { if (!_disposed) Notify(); }
     }
     private async Task ShowHistoryAsync(CancellationToken token) => await Operate(async ct =>
     {

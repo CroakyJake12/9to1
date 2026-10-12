@@ -623,6 +623,7 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
     }
 
     public bool? IsActionAvailable(string command) => !_disposed && !_presentationPending && !IsBusy &&
+        (!IsRenamingSlide || command is "CommitRenameSlide" or "CancelRenameSlide") &&
         (!_showHistory || command is "CloseHistory" or "RestoreVersion") &&
         (!_showHelp || command is "ShowHelp") &&
         (IsWorkspaceActive || command is "Create" or "Open" or "Refresh" or "ImportPowerPoint" or "ResumePresentation" or "Inspect" or "Close") &&
@@ -635,7 +636,10 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
             "ToggleInspector" or "ToggleFiles" or "ToggleNotes" or "ShowHelp" or "CloseHistory" or "ZoomFit" or "ZoomIn" or "ZoomOut" or "SetZoom" => true,
             "BeginShape" => Editor is not null && !IsReadOnly && BeginShapeInsertion is not null,
             "SetTextColor" or "EditSelectedText" => Editor is not null && !IsReadOnly && SelectedTextElement is { Locked: false },
-            "EditSlideTitle" => Editor is not null && !IsReadOnly && Editor.SelectedSlide.GetTitleText() is not { Locked: true },
+            "EditSlideTitle" or "RenameSlide" => Editor is not null && !IsReadOnly,
+            "CancelRenameSlide" => IsRenamingSlide,
+            "CommitRenameSlide" => _renameSlide is { } rename && ReferenceEquals(Editor, rename.Owner) && !IsReadOnly
+                && !string.IsNullOrWhiteSpace(_renameSlideName) && rename.Owner.Document.Slides.Any(slide => slide.Id == rename.SlideId),
             "SetFillColor" or "SetStrokeColor" or "SetStrokeWidth" => Editor is not null && !IsReadOnly && Editor.SelectedElements.Any(element => element.Kind == PresentElementKind.Shape && !element.Locked),
             "ShowHistory" => Editor is not null && _repository is IPresentVersionRepository,
             "RestoreVersion" => Editor is not null && !IsReadOnly && _showHistory,
@@ -716,6 +720,9 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
         {
             case "ReturnToStart": SetStartView(true); break;
             case "ResumePresentation": SetStartView(false); break;
+            case "RenameSlide": BeginRenameSlide(); break;
+            case "CancelRenameSlide": _renameSlide = null; Notify(); break;
+            case "CommitRenameSlide": await CommitRenameSlideAsync(cancellationToken); break;
             case "ToggleNotes": _showNotes = !_showNotes; Notify(); break;
             case "ShowHelp": _showHelp = !_showHelp; Notify(); break;
             case "ShowHistory": await ShowHistoryAsync(cancellationToken); break;

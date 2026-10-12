@@ -184,7 +184,7 @@
             </Container>
           </Container>
         </Container>
-        <EditorShell ID="present-workspace" Active="{Binding ShowWorkspace}">
+        <EditorShell ID="present-workspace" Active="{Binding ShowWorkspace}" Interactive="{Binding CanUseEditor}">
           <EditorHeader ID="present-document-header" Active="{Binding ShowEditorChrome}">
             <EditorToolGroup ID="present-ui-26" VerticalAlignment="Top">
               <EditorIcon ID="present-ui-27" AccessibleName="9to1 Home" Tooltip="9to1 Home" Action="ShellHome">
@@ -206,7 +206,11 @@
               <Button ID="present-ui-38" Content="Present" Action="Present" Interactive="{Binding CanPresent}" Height="36" Padding="14,6" Background="{Resource CuiAccentBrush}" Foreground="{Resource CuiAccentForegroundBrush}" BorderWidth="0" CornerRadius="10" />
             </EditorToolGroup>
           </EditorHeader>
-          <EditorMenus ID="present-menu-bar" Row="1" Active="{Binding ShowEditorChrome}">
+          <Container ID="present-menu-row" Type="Grid" Row="1" ColumnSizes="Auto 1fr" Active="{Binding ShowEditorChrome}">
+            <EditorIcon ID="present-sidebar-toggle" AccessibleName="{Binding SidebarToggleLabel}" Tooltip="{Binding SidebarToggleLabel}" Action="ToggleSidebar" Selected="{Binding ShowSidebar}" Width="34" Height="34" Margin="6,0,2,0">
+              <Image Source="icon:slides" Width="20" Height="20" />
+            </EditorIcon>
+          <EditorMenus ID="present-menu-bar" Column="1">
             <EditorMenu ID="present-ui-39" Content="File">
               <EditorMenu ID="present-ui-40" Content="Back to Present start" Action="ReturnToStart" />
               <EditorMenu ID="present-ui-41" Content="New presentation" Action="Create" Interactive="{Binding CanCreate}" />
@@ -285,7 +289,7 @@
             <EditorMenu ID="present-ui-100" Content="View">
               <EditorMenu ID="present-ui-101" Content="Show / hide slides" Action="ToggleSidebar" />
               <EditorMenu ID="present-ui-102" Content="Properties" Action="ToggleInspector" />
-              <EditorMenu ID="present-ui-103" Content="Speaker notes" Action="ToggleNotes" />
+              <EditorMenu ID="present-ui-103" Content="Slide Notes" Action="ToggleNotes" />
               <EditorMenu ID="present-ui-104" Content="Fit slide" Action="ZoomFit" />
               <EditorMenu ID="present-ui-105" Content="Zoom in" Action="ZoomIn" />
               <EditorMenu ID="present-ui-106" Content="Zoom out" Action="ZoomOut" />
@@ -294,6 +298,7 @@
               <EditorMenu ID="present-ui-108" Content="Editing and keyboard shortcuts" Action="ShowHelp" />
             </EditorMenu>
           </EditorMenus>
+          </Container>
           <EditorToolbar ID="present-toolbar" Row="2" Active="{Binding ShowEditorChrome}">
             <EditorToolGroup ID="present-ui-109">
               <EditorIcon ID="present-ui-110" AccessibleName="Undo (Ctrl+Z)" Tooltip="Undo (Ctrl+Z)" Action="Undo" Interactive="{Binding CanUndo}">
@@ -405,7 +410,7 @@
               <Container ID="present-ui-154" Type="Menu" BorderWidth="0" Background="Transparent" VerticalAlignment="Center">
                 <EditorIconMenu ID="present-ui-155" Content="More" AccessibleName="More" Tooltip="More" IconSource="icon:more">
                   <EditorMenu ID="present-ui-156" Content="Show / hide slides" Action="ToggleSidebar" />
-                  <EditorMenu ID="present-ui-157" Content="Speaker notes" Action="ToggleNotes" />
+                  <EditorMenu ID="present-ui-157" Content="Slide Notes" Action="ToggleNotes" />
                   <EditorMenu ID="present-ui-158" Content="Duplicate slide" Action="DuplicateSlide" Interactive="{Binding CanEdit}" />
                   <EditorMenu ID="present-ui-159" Content="Fit slide" Action="ZoomFit" />
                   <EditorMenu ID="present-ui-160" Content="Zoom in" Action="ZoomIn" />
@@ -462,6 +467,7 @@
                 <Container ID="present-ui-188" Type="Overlay" Row="1" Active="{Binding ShowSlides}" VerticalScrolling="True">
                   <Object Type="PresentThumbnails">
                     <EditorContextMenu>
+                      <EditorMenu Content="Rename slide" Action="RenameSlide" Interactive="{Binding CanEdit}" />
                       <EditorMenu ID="present-content-editormenu-17" Content="New slide" Action="AddSlide" Interactive="{Binding CanEdit}" Shortcut="Ctrl+M" />
                       <EditorMenu Content="Duplicate slide" Action="DuplicateSlide" Interactive="{Binding CanEdit}" />
                       <EditorMenu Content="Delete slide" Action="DeleteSlide" Interactive="{Binding CanDeleteSlide}" />
@@ -526,12 +532,18 @@
                     </EditorContextMenu>
                   </Object>
                 </Container>
+                <Button ID="present-notes-bubble" Row="1" Active="{Binding ShowNotesBubble}" Action="ToggleNotes" AccessibleName="Expand Slide Notes" Tooltip="Expand Slide Notes" HorizontalAlignment="Left" Margin="16,8" Padding="16,10" CornerRadius="24" BorderWidth="0" Background="{Resource CuiPanelBrush}">
+                  <Container Type="Horizontal Stack" CellGap="8">
+                    <Image Source="icon:chat" Width="20" Height="20" />
+                    <Text Text="Slide Notes" FontWeight="SemiBold" VerticalAlignment="Center" />
+                  </Container>
+                </Button>
                 <Container ID="present-ui-197" Type="Vertical Stack" Active="{Binding ShowNotes}" Background="{Resource CuiPanelBrush}" Padding="16,8" CellGap="6" Row="1">
                   <Container ID="present-notes-heading" Type="Grid" ColumnSizes="1fr Auto">
-                    <EditorLabel ID="present-ui-198" Text="Speaker notes" FontWeight="SemiBold" VerticalAlignment="Center" />
-                    <EditorIcon ID="present-notes-close" AccessibleName="Collapse speaker notes" Tooltip="Collapse speaker notes" Action="ToggleNotes" Width="28" Height="28" MinWidth="28" MinHeight="28" Padding="5" Column="1"><Image Source="icon:chevron-down" Width="18" Height="18" /></EditorIcon>
+                    <EditorLabel ID="present-ui-198" Text="Slide Notes" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <EditorIcon ID="present-notes-close" AccessibleName="Collapse Slide Notes" Tooltip="Collapse Slide Notes" Action="ToggleNotes" Width="28" Height="28" MinWidth="28" MinHeight="28" Padding="5" Column="1"><Image Source="icon:chevron-down" Width="18" Height="18" /></EditorIcon>
                   </Container>
-                  <Input ID="present-ui-199" Type="Text" AccessibleName="Speaker notes" Value="{Binding SpeakerNotes, Mode=TwoWay}" Interactive="{Binding CanEdit}" Multiline="True" TextWrapping="Wrap" PlaceholderText="Add speaker notes…" Height="80" Padding="12,10" CornerRadius="8" FontSize="13" BorderWidth="1" BorderColor="{Resource CuiLineBrush}" />
+                  <Input ID="present-ui-199" Type="Text" AccessibleName="Slide Notes" Value="{Binding SpeakerNotes, Mode=TwoWay}" Interactive="{Binding CanEdit}" Multiline="True" TextWrapping="Wrap" PlaceholderText="Add Slide Notes…" Height="80" Padding="12,10" CornerRadius="8" FontSize="13" BorderWidth="1" BorderColor="{Resource CuiLineBrush}" />
                 </Container>
               </Container>
             </Container>
@@ -550,10 +562,6 @@
                 <Container ID="present-ui-208" Type="Vertical Stack" CellGap="8">
                   <EditorPropertyGroup ID="present-ui-209" Active="{Binding HasSlideSelection}">
                     <Text ID="present-ui-210" Text="Slide" FontSize="13" FontWeight="SemiBold" />
-                    <Container ID="present-ui-211" Type="Vertical Stack" CellGap="4">
-                      <EditorLabel ID="present-ui-212" Text="Slide title" />
-                      <Input ID="present-ui-213" Type="Text" AccessibleName="Slide title" Value="{Binding SlideTitle, Mode=TwoWay}" Interactive="{Binding CanEditSlideTitle}" Height="36" />
-                    </Container>
                     <Container ID="present-ui-214" Type="Vertical Stack" CellGap="4">
                       <EditorLabel ID="present-ui-215" Text="Layout" />
                       <Input ID="present-ui-216" Type="Select" AccessibleName="Layout" ItemsSource="{Binding SlideLayouts}" SelectedIndex="{Binding SlideLayoutIndex, Mode=TwoWay}" Interactive="{Binding CanEdit}" Height="36" />
@@ -768,12 +776,6 @@
             </EditorToolGroup>
             <Text ID="present-ui-329" Text="{Binding SelectionStatus}" Active="{Binding FullToolbar}" Foreground="{Resource CuiTextSoftBrush}" FontSize="11" Column="1" VerticalAlignment="Center" />
             <EditorToolGroup ID="present-ui-330" Column="2">
-              <EditorIcon ID="present-ui-331" AccessibleName="Slides" Tooltip="Slides" Action="ToggleSidebar" Selected="{Binding ShowSidebar}">
-                <Image ID="present-ui-332" Source="icon:slides" Width="20" Height="20" />
-              </EditorIcon>
-              <EditorIcon ID="present-ui-333" AccessibleName="Speaker notes" Tooltip="Speaker notes" Action="ToggleNotes" Selected="{Binding ShowNotes}">
-                <Image ID="present-ui-334" Source="icon:notes" Width="20" Height="20" />
-              </EditorIcon>
               <Button ID="present-ui-335" Content="{Binding ZoomLabel}" Action="ZoomFit" Tooltip="Fit slide" Padding="6" BorderWidth="0" Background="Transparent" />
             </EditorToolGroup>
           </Container>
@@ -813,6 +815,16 @@
             </Container>
           </Container>
         </EditorShell>
+        <Container ID="present-rename-overlay" Type="Overlay" Active="{Binding ShowRenameSlide}" Background="{Resource CuiShadowBrush}" Padding="24">
+          <Container ID="present-rename-card" Type="Vertical Stack" CellGap="16" Width="360" MaxWidth="480" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24" Background="{Resource CuiPopupSurfaceBrush}" CornerRadius="{Resource CuiPopupRadius}">
+            <Text Text="Rename slide" FontSize="18" FontWeight="SemiBold" />
+            <Input ID="present-rename-input" Type="Text" AccessibleName="Slide name" Value="{Binding RenameSlideName, Mode=TwoWay}" FocusRequested="{Binding ShowRenameSlide}" SelectOnFocusRequest="True" />
+            <Container Type="Horizontal Stack" CellGap="8" HorizontalAlignment="Right">
+              <Button Content="Cancel" Action="CancelRenameSlide" CancelAction="True" />
+              <Button Content="Rename" Action="CommitRenameSlide" Interactive="{Binding CanCommitRenameSlide}" DefaultAction="True" />
+            </Container>
+          </Container>
+        </Container>
       </Container>
     </Page>
   </Theme>

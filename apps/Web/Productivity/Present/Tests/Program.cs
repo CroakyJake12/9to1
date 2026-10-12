@@ -211,6 +211,10 @@ var assertions = await headless.Dispatch(async () =>
             inputRoot.MouseDown(point, MouseButton.Left); inputRoot.MouseUp(point, MouseButton.Left);
             if (label == "Add shape")
             {
+                await loader.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(5));
+                Check(root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single().InteractionState
+                    == Haven.Desktop.Views.Pages.Present.PresentInteractionState.InsertionMode,
+                    "physical shape gallery action has entered insertion mode before the placement gesture");
                 Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); using (var prepared = window.CaptureRenderedFrame()) { }
                 var insertionScene = root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single().GetVisualDescendants().OfType<HavenSceneControl>().Single();
                 var paper = (HavenRect)insertionScene.Root!.GetType().GetMethod("SlideRectLocal", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(insertionScene.Root, null)!;
@@ -470,12 +474,12 @@ var assertions = await headless.Dispatch(async () =>
             }
             FitFrame("fit-initial");
             Check(session.TryGetValue("ShowNotes", out var initialNotes) && initialNotes is true, "initial editor shows the real notes field");
-            await Click("Collapse speaker notes", () => { session.TryGetValue("ShowNotes", out var shown); return shown is false; }); FitFrame("fit-notes-collapsed");
+            await Click("Collapse Slide Notes", () => { session.TryGetValue("ShowNotes", out var shown); return shown is false; }); FitFrame("fit-notes-collapsed");
             await Click("Add slide", () => session.Editor!.Document.Slides.Count == 2); FitFrame("fit-add");
             await Click("Duplicate slide", () => session.Editor!.Document.Slides.Count == 3); FitFrame("fit-duplicate");
             var selected = session.Editor!.Selection.SlideId;
             await Click("Previous slide", () => session.Editor!.Selection.SlideId != selected); FitFrame("fit-switch");
-            await Click("Speaker notes", () => { session.TryGetValue("ShowNotes", out var shown); return shown is true; }); FitFrame("fit-notes");
+            await Click("Expand Slide Notes", () => { session.TryGetValue("ShowNotes", out var shown); return shown is true; }); FitFrame("fit-notes");
             window.Width = 390; FitFrame("fit-390");
             window.Width = 1280; FitFrame("fit-1280");
             await Click("Properties", () => { session.TryGetValue("ShowInspector", out var shown); return shown is true; });
@@ -484,7 +488,7 @@ var assertions = await headless.Dispatch(async () =>
             window.Width = 390; window.Height = 844; FitFrame("fit-390-after-properties");
             window.Width = 1280; window.Height = 900; FitFrame("fit-restored-after-properties");
             await Click("Properties", () => { session.TryGetValue("ShowInspector", out var shown); return shown is true; }); FitFrame("fit-properties");
-            await Click("Speaker notes", () => { session.TryGetValue("ShowNotes", out var shown); return shown is false; }); FitFrame("fit-properties-no-notes");
+            await Click("Collapse Slide Notes", () => { session.TryGetValue("ShowNotes", out var shown); return shown is false; }); FitFrame("fit-properties-no-notes");
             await Click("Close properties", () => { session.TryGetValue("ShowInspector", out var shown); return shown is false; });
             var beforeZoom = root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single().EffectiveZoom;
             await Click("Zoom in", () => !session.IsFitToWindow && session.CanvasZoom > beforeZoom);
@@ -560,10 +564,10 @@ var assertions = await headless.Dispatch(async () =>
             && !ButtonNamed("Delete element").IsEnabled && !ButtonNamed("Bold").IsEnabled,
             "clearing the selection on empty canvas disables the object controls again");
         Check(session.TryGetValue("ShowNotes", out var initialNotesVisible) && initialNotesVisible is true, "initial notes region is visible instead of a hidden placeholder");
-        await Click("Collapse speaker notes", () => { session.TryGetValue("ShowNotes", out var shown); return shown is false; });
-        await Click("Speaker notes", () => { session.TryGetValue("ShowNotes", out var shown); return shown is true; });
+        await Click("Collapse Slide Notes", () => { session.TryGetValue("ShowNotes", out var shown); return shown is false; });
+        await Click("Expand Slide Notes", () => { session.TryGetValue("ShowNotes", out var shown); return shown is true; });
         var notes = root!.GetVisualDescendants().OfType<TextBox>()
-            .Single(box => AutomationProperties.GetName(box) == "Speaker notes");
+            .Single(box => AutomationProperties.GetName(box) == "Slide Notes");
         var notesPoint = notes.TranslatePoint(new Point(notes.Bounds.Width / 2, notes.Bounds.Height / 2), window)!.Value;
         window.MouseDown(notesPoint, MouseButton.Left); window.MouseUp(notesPoint, MouseButton.Left);
         window.KeyTextInput("Actual speaker notes");
