@@ -212,7 +212,12 @@ var assertions = await headless.Dispatch(async () =>
                 var insertionScene = root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single().GetVisualDescendants().OfType<HavenSceneControl>().Single();
                 var paper = (HavenRect)insertionScene.Root!.GetType().GetMethod("SlideRectLocal", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(insertionScene.Root, null)!;
                 var place = insertionScene.TranslatePoint(new Point(paper.X + paper.Width * .42, paper.Y + paper.Height * .42), window)!.Value;
+                var placementHit = window.InputHitTest(place) as Visual;
+                Console.WriteLine($"SHAPE PLACE paper={paper} point={place} hit={placementHit} selected={string.Join(',', session.Editor!.SelectedElements.Select(element => element.Kind))}");
+                Check(ReferenceEquals(placementHit, insertionScene) || placementHit?.GetVisualAncestors().Contains(insertionScene) == true,
+                    "physical shape placement targets the actual editable slide");
                 window.MouseDown(place, MouseButton.Left); window.MouseUp(place, MouseButton.Left);
+                Console.WriteLine($"SHAPE PLACED selected={string.Join(',', session.Editor!.SelectedElements.Select(element => element.Kind))}");
             }
             Console.WriteLine($"AFTER CLICK status={session.Status}, error={session.ErrorCode}, busy={session.IsBusy}");
             if (session.LastOperationError is not null) Console.WriteLine(session.LastOperationError);
@@ -735,8 +740,10 @@ var assertions = await headless.Dispatch(async () =>
         var propShape = session.Editor!.Selection.ElementIds.Single();
         if (session.TryGetValue("ShowInspector", out var visibleInspector) && visibleInspector is false)
             await Click("Properties", () => { session.TryGetValue("ShowInspector", out var shown); return shown is true; });
-        Check(!ButtonNamed("Font larger").IsEnabled && !ButtonNamed("Font smaller").IsEnabled && FillBox().IsEnabled,
-            "shape selection enables immediate fill and disables text-only font controls");
+        Check(ButtonNamed("Font larger").IsEnabled && ButtonNamed("Font smaller").IsEnabled && FillBox().IsEnabled
+                && session.TryGetValue("ShowShapeToolbar", out var shapeToolbar) && shapeToolbar is true
+                && session.TryGetValue("ShowTextToolbar", out var textToolbar) && textToolbar is false,
+            "shape selection exposes its object toolbar and immediate fill while retaining shape-text formatting commands");
         TypeInto(FillBox(), "#336699");
         Check(session.TryGetValue("FillColor", out var typedFill) && Equals(typedFill, "#336699")
                 && ShapeFill(session.GetDocumentSnapshot()!.Slides[0].Elements.Single(element => element.Id == propShape)) == "#336699",
