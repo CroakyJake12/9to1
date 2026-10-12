@@ -1,5 +1,7 @@
 <Cui id="home.settings.account" product="9-1" version="1">
+  <Import Source="framework/CUI/Components/ThemeCreator.cui" />
   <Actions>
+    <Action name="ChooseHomeTheme" command="AppearanceSelectTheme" parameter="{Binding theme.Name}" />
     <Action name="ChooseAccentColour" command="AppearanceAccentColour" parameter="{Binding accent.Colour}" />
     <Action name="SelectSession" command="SelectSession" parameter="{Binding session}" />
   </Actions>
@@ -13,11 +15,9 @@
   <Text Text="{Binding AppearanceThemeName}" AccessibleName="Current CUI theme" />
   <Text Text="{Binding AppearanceScope}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
   <Container Type="Wrap" CellGap="8">
-    <Button Action="ThemeProfessional" Content="Professional" Interactive="{Binding AppearanceCanChange}" />
-    <Button Action="ThemeGlow" Content="Glow" Interactive="{Binding AppearanceCanChange}" />
-    <Button Action="ThemePlayful" Content="Playful" Interactive="{Binding AppearanceCanChange}" />
-    <Button Action="ThemeBubble" Content="Bubble" Interactive="{Binding AppearanceCanChange}" />
-    <Button Action="ThemeCinematic" Content="Cinematic" Interactive="{Binding AppearanceCanChange}" />
+    <Repeat Panel="Wrap" Source="{Binding AppearanceThemeChoices}" As="theme" Key="{Binding theme.Name}">
+      <Button Action="ChooseHomeTheme" Content="{Binding theme.Name}" AccessibleName="{Binding theme.AccessibleName}" Interactive="{Binding AppearanceCanChange}" Margin="0,0,8,8" />
+    </Repeat>
     <Button Action="CreateTheme" Content="+ Create Theme" Interactive="{Binding AppearanceCanCreateTheme}" />
   </Container>
   <Text Text="Brightness" FontWeight="SemiBold" />
@@ -61,6 +61,7 @@
   <Text Text="{Binding AppearanceStatus}" TextWrapping="Wrap" AccessibleName="Appearance status" />
   <Button Action="ThemeRefresh" Content="Reload saved appearance" Interactive="{Binding AppearanceCanChange}" HorizontalAlignment="Left" />
 </Container>
+          <ThemeCreatorPanel />
           <Text text="Account settings" font-size="26" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
           <Text id="account-status" text="{Binding ConnectionSummary}" text-wrapping="Wrap" accessible-name="Account operation status" margin="0,8,0,12" />
           <Text text="{Binding ConnectionRecovery}" text-wrapping="Wrap" margin="0,0,0,20" foreground="{Resource CuiTextSoftBrush}" />

@@ -70,6 +70,34 @@ internal static class AppearanceSettingsChecks
         using (var connectedCreator = new BrowserAppearanceSettings(empty, empty, modes, () => opened = true))
             await connectedCreator.DispatchAsync("CreateTheme", null);
         Demand(opened, "Connected Create Theme action did not open the real host callback");
+        var expectedNames = new[] { "Professional", "Glow", "Playful", "Frosted Glass", "Bubble", "Metallic", "Retro", "Western" };
+        Demand(Names().SequenceEqual(expectedNames), "Home picker does not expose the requested available built-in themes in order");
+        foreach(var name in expectedNames)
+        {
+            await appearanceSettings.DispatchAsync("AppearanceSelectTheme", name);
+            Demand(modes.Current.Name==name,"Dynamic theme selection did not use the real catalog: "+name);
+        }
+        var custom = CuiCustomThemeContract.CreateDefault("My saved design");
+        modes.Catalog.UpsertCustomTheme(custom);
+        Demand(Names().Contains(custom.Name),"Saved custom theme is missing from the picker");
+        await appearanceSettings.DispatchAsync("AppearanceSelectTheme",custom.Name);
+        Demand(modes.Current.Name==custom.Name,"Custom theme did not route through the preference owner");
+        modes.Catalog.RemoveCustomTheme(custom.Id);
+        var beforeStaleChoice=modes.Writes;
+        await appearanceSettings.DispatchAsync("AppearanceSelectTheme",custom.Name);
+        await appearanceSettings.DispatchAsync("AppearanceSelectTheme","9to1 Draft Theme Preview");
+        Demand(modes.Writes==beforeStaleChoice,"Missing/private preview theme was written as a durable choice");
+        await modes.SetAsync("Cinematic");
+        Demand(Names().Contains("Cinematic"),"Existing Cinematic preference became inaccessible");
+        await appearanceSettings.DispatchAsync("AppearanceSelectTheme","Professional");
+        Demand(!Names().Contains("Cinematic"),"Legacy-only theme displaced the requested choices");
+        var unavailableCustom=await ((IBrowserHomeThemePreferences)modes).SaveCustomThemeAsync(custom,modes.Current);
+        Demand(!unavailableCustom.Succeeded && unavailableCustom.Code=="ThemePreferenceUnavailable","Disconnected custom save fabricated success");
+        string[] Names()
+        {
+            Demand(appearanceSettings.TryGetValue("AppearanceThemeChoices",out var rows),"Missing theme choices");
+            return ((System.Collections.IEnumerable)rows!).Cast<ICuiBindingContext>().Select(row=>row.TryGetValue("Name",out var name)?(string)name!:string.Empty).ToArray();
+        }
         var writesBeforeUnavailable = modes.Writes;
         modes.AllowChanges = false;
         Demand(appearanceSettings.IsActionAvailable("AppearanceBright") is false, "Brightness bypassed owner write availability");

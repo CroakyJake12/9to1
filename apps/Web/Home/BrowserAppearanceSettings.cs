@@ -14,6 +14,11 @@ internal interface IBrowserHomeThemePreferences : ICuiThemePreferenceSource, IAs
     string ScopeDescription => "This browser · device-local appearance. Account theme synchronisation is not connected.";
     string SavedDescription => "Appearance saved on this browser.";
     Task<HomeThemeOperationResult> SetAsync(string name, CuiAccessibilitySettings? accessibility = null, CancellationToken token = default, CuiAppearance? appearance = null, CuiAccentPreference? accent = null);
+    Task<HomeThemeOperationResult> SaveCustomThemeAsync(CuiCustomTheme theme, CuiThemePreferenceSnapshot observed, CancellationToken token = default)
+    {
+        token.ThrowIfCancellationRequested();
+        return Task.FromResult(new HomeThemeOperationResult(false, "ThemePreferenceUnavailable", Diagnostic: "This settings owner cannot save custom themes."));
+    }
     Task RefreshAsync(CancellationToken token = default);
 }
 
@@ -42,6 +47,25 @@ internal sealed class BrowserAppearanceSettings : ICuiWritableBindingContext, IC
         var name = CuiAccentCatalog.Name(colour);
         return new AccentChoice(name, $"#{anchor.R:X2}{anchor.G:X2}{anchor.B:X2}", $"Use {name} accent");
     }).ToArray();
+    private sealed record ThemeChoice(string Name) : ICuiBindingContext
+    {
+        public bool TryGetValue(string path, out object? value)
+        {
+            value = path switch { "Name" => Name, "AccessibleName" => $"Use {Name} theme", _ => null };
+            return value is not null;
+        }
+    }
+    private IReadOnlyList<ThemeChoice> ThemeChoices
+    {
+        get
+        {
+            var names = _preferences.Catalog.Names.Where(name => name != "9to1 Draft Theme Preview" &&
+                (!name.Equals("Cinematic", StringComparison.OrdinalIgnoreCase) || _preferences.Current.Name.Equals(name, StringComparison.OrdinalIgnoreCase))).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            string[] order = ["Professional", "Glow", "Playful", "Frosted Glass", "Bubble", "Metallic", "Retro", "Western"];
+            return order.Where(names.Contains).Concat(names.Except(order, StringComparer.OrdinalIgnoreCase).Order(StringComparer.OrdinalIgnoreCase))
+                .Select(name => new ThemeChoice(name)).ToArray();
+        }
+    }
     private string? _operationStatus;
     private Exception? _presentationFailure;
     private static readonly Dictionary<string, string> ThemeCommands = new(StringComparer.Ordinal)
@@ -68,6 +92,7 @@ internal sealed class BrowserAppearanceSettings : ICuiWritableBindingContext, IC
         {
             "ShowAppearanceSettings" => true,
             "AppearanceThemeName" => _preferences.Current.Name,
+            "AppearanceThemeChoices" => ThemeChoices,
             "AppearanceModeName" => EffectiveAppearance switch { CuiAppearance.SuperBright => "Super Bright", CuiAppearance.SuperDark => "Super Dark", var mode => mode.ToString() },
             "AppearanceScope" => _preferences.ScopeDescription,
             "AppearanceStatus" => (_operationStatus ?? _preferences.Diagnostic ?? "Your apps use the same Home appearance preference.") +
@@ -115,13 +140,13 @@ internal sealed class BrowserAppearanceSettings : ICuiWritableBindingContext, IC
     public bool? IsActionAvailable(string command) => _disposed ? false : command == "ThemeRefresh" ? !_busy :
         command == "CreateTheme" ? !_busy && _preferences.CanChange && _openThemeCreator is not null :
         command == "AppearanceAccentApply" ? CanApplyAccent :
-        ThemeCommands.ContainsKey(command) || AppearanceCommands.ContainsKey(command) || IsAccentCommand(command) ? !_busy && _preferences.CanChange : (_actions as ICuiActionAvailability)?.IsActionAvailable(command);
+        command == "AppearanceSelectTheme" || ThemeCommands.ContainsKey(command) || AppearanceCommands.ContainsKey(command) || IsAccentCommand(command) ? !_busy && _preferences.CanChange : (_actions as ICuiActionAvailability)?.IsActionAvailable(command);
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default) =>
         DispatchWithLifetimeAsync(command, parameter, new(default, cancellationToken));
     public async ValueTask DispatchWithLifetimeAsync(string command, object? parameter, CuiActionDispatchLifetime lifetime)
     {
         if (_disposed) return;
-        if (command != "ThemeRefresh" && command != "CreateTheme" && !IsAccentCommand(command) && !ThemeCommands.ContainsKey(command) && !AppearanceCommands.ContainsKey(command))
+        if (command != "ThemeRefresh" && command != "CreateTheme" && command != "AppearanceSelectTheme" && !IsAccentCommand(command) && !ThemeCommands.ContainsKey(command) && !AppearanceCommands.ContainsKey(command))
         {
             if (_actions is ICuiLifetimeAwareActionDispatcher tracked)
                 await tracked.DispatchWithLifetimeAsync(command, parameter, lifetime);
@@ -136,6 +161,14 @@ internal sealed class BrowserAppearanceSettings : ICuiWritableBindingContext, IC
         lifetime.ViewCancellation.ThrowIfCancellationRequested();
         if (IsActionAvailable(command) != true) return;
         if (command == "CreateTheme") { _openThemeCreator?.Invoke(); return; }
+        string? selectedTheme = null;
+        if (command == "AppearanceSelectTheme")
+        {
+            selectedTheme = parameter as string;
+            if (selectedTheme is null || !ThemeChoices.Any(choice => choice.Name.Equals(selectedTheme, StringComparison.OrdinalIgnoreCase)) ||
+                !_preferences.Catalog.TryResolve(selectedTheme, out var resolved) || resolved is null) return;
+            selectedTheme = resolved.Name;
+        }
         _busy = true; _operationStatus = null; _presentationFailure = null; Publish();
         try
         {
@@ -146,7 +179,7 @@ internal sealed class BrowserAppearanceSettings : ICuiWritableBindingContext, IC
             }
             else
             {
-                var name = ThemeCommands.GetValueOrDefault(command) ?? _preferences.Current.Name;
+                var name = selectedTheme ?? ThemeCommands.GetValueOrDefault(command) ?? _preferences.Current.Name;
                 var appearance = AppearanceCommands.TryGetValue(command, out var selected) ? selected : _preferences.Current.Appearance;
                 var accent = _preferences.Current.EffectiveAccent;
                 accent = command switch

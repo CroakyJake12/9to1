@@ -146,6 +146,44 @@ public sealed class HomeThemePreferenceServiceTests
         if (results[0].Succeeded) Assert.Equal(accent,backend.Value.Accent);
         else Assert.Null(backend.Value.Accent);
     }
+    [Fact]
+    public async Task Custom_library_uses_the_same_revision_and_survives_theme_and_accent_only_updates()
+    {
+        const string library="[{\"id\":\"fixture\",\"name\":\"My theme\"}]";
+        var backend=new Backend {CloneReceipt=true};
+        using var service=new HomeThemePreferenceService(backend,new Authority(),new CustomCatalog(library));
+        var saved=await service.SetAsync(Device,"My theme",new(),0,customThemesJson:library);
+        Assert.True(saved.Succeeded); Assert.Equal(library,backend.Value!.CustomThemesJson);
+        var themeOnly=await service.SetAsync(Device,"Glow",new(),1);
+        Assert.True(themeOnly.Succeeded); Assert.Equal(library,themeOnly.Value!.Preference.CustomThemesJson);
+        var accentOnly=await service.SetAsync(Device,"Glow",new(),2,accent:new(HomeThemeAccentOverrideMode.AllApps,"#123456"));
+        Assert.True(accentOnly.Succeeded); Assert.Equal(library,accentOnly.Value!.Preference.CustomThemesJson);
+        Assert.Equal("RevisionConflict",(await service.SetAsync(Device,"Professional",new(),1,customThemesJson:"[]")).Code);
+        Assert.Equal(library,backend.Value!.CustomThemesJson);
+        var clear=await service.SetAsync(Device,"Professional",new(),3,customThemesJson:"[]");
+        Assert.True(clear.Succeeded); Assert.Equal("[]",clear.Value!.Preference.CustomThemesJson);
+        Assert.Equal("#123456",clear.Value.Preference.Accent!.AllAppsColour);
+    }
+    [Fact]
+    public async Task Unsupported_custom_libraries_and_denied_preservation_reads_do_not_change_the_owner()
+    {
+        const string library="[{\"id\":\"fixture\",\"name\":\"My theme\"}]";
+        var backend=new Backend {Value=HomeThemePreference.Default(Device) with {Revision=5,CustomThemesJson=library}};
+        using var service=new HomeThemePreferenceService(backend,new Authority(),new CustomCatalog(library));
+        var before=backend.Value;
+        Assert.Equal("ThemeUnavailable",(await service.SetAsync(Device,"Professional",new(),5,customThemesJson:"[{\"unknown\":true}]")).Code);
+        Assert.Equal("ThemeUnavailable",(await service.SetAsync(Device,"Missing theme",new(),5,customThemesJson:library)).Code);
+        Assert.Equal(before,backend.Value);
+        backend.ReadState=HomeThemeReadState.PermissionDenied;
+        Assert.Equal("PermissionDenied",(await service.SetAsync(Device,"Glow",new(),5)).Code);
+        Assert.Equal(before,backend.Value);
+    }
+    private sealed class CustomCatalog(string validLibrary):IHomeCustomThemeCatalog
+    {
+        public bool TryResolve(string name,out string canonicalName) {canonicalName=name;return name is "Professional" or "Glow";}
+        public bool TryResolve(string name,string library,out string canonicalName)
+        {canonicalName=name;return (library==validLibrary||library=="[]") && (TryResolve(name,out canonicalName)||library==validLibrary&&name=="My theme");}
+    }
     private sealed class Authority:IHomeThemeScopeAuthority
     { public bool Allowed=true;public ValueTask<bool> CanAccessAsync(HomeThemeScope scope,bool write,CancellationToken token=default)=>ValueTask.FromResult(Allowed&&scope==Device); }
     private sealed class Catalog:IHomeThemeCatalog
