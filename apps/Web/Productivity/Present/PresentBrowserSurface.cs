@@ -77,6 +77,8 @@ public static class PresentBrowserSurface
             _session.CanvasTextCommands = Control;
             _session.EffectiveCanvasZoom = () => Control.EffectiveZoom;
             Control.ZoomRequested += _session.SetCanvasZoom;
+            _session.BeginShapeInsertion += Control.BeginShapeInsertion;
+            Control.ShapeInsertionRequested += InsertShape;
             Thumbnails.SetPreviewRenderer(PresentRetainedSceneControl.CreatePreviewRenderer());
             Control.LiveTextPreviewed += Preview;
             Control.SelectionChanged += Selection;
@@ -87,6 +89,10 @@ public static class PresentBrowserSurface
         }
         private void Preview(object? sender, EventArgs args) => _session.RecordRetainedPreview();
         private void Selection(object? sender, EventArgs args) => _session.RecordRetainedSelection();
+        private async void InsertShape(string preset, double x, double y, double width, double height)
+        {
+            if (!_disposed) await _session.CompleteShapeInsertionAsync(preset, x, y, width, height);
+        }
         private void Attached(object? sender, VisualTreeAttachmentEventArgs args)
         {
             var nextRoot = TopLevel.GetTopLevel(Control);
@@ -159,6 +165,8 @@ public static class PresentBrowserSurface
         {
             if (_disposed) return;
             Control.ZoomRequested -= _session.SetCanvasZoom;
+            _session.BeginShapeInsertion -= Control.BeginShapeInsertion;
+            Control.ShapeInsertionRequested -= InsertShape;
             if (ReferenceEquals(_session.CanvasTextCommands, Control)) { _session.CanvasTextCommands = null; _session.EffectiveCanvasZoom = null; }
             if (_topLevel is not null) { _topLevel.PropertyChanged -= ViewportChanged; _topLevel.RemoveHandler(InputElement.KeyDownEvent, KeyDown); }
             _topLevel = null;
