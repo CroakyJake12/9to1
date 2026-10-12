@@ -166,8 +166,31 @@ internal static class AppAccentSettingsChecks
                     $"Escape closes app settings without a write and restores document focus: open={palette.IsSubMenuOpen}, inputFocus={input.IsFocused}, focused={window.FocusManager?.GetFocusedElement()?.GetType().Name}, writes={preferences.Writes}/{acknowledged}");
                 Click(palette); Click(Menu("Reset app colour")); await loader.WhenActionsIdleAsync(); Flush();
                 Check(!preferences.Current.EffectiveAccent.IndividualApps.ContainsKey("app.present"), "physical reset clears only the app's explicit colour");
+                Click(palette);
+                Check(palette.IsSubMenuOpen, "global mode change starts with the actual app palette open");
                 preferences.Change(CuiAccentPreference.Default.WithMode(CuiAccentOverrideMode.AllApps)); Flush();
-                Check(!palette.IsEffectivelyVisible && settings.IsActionAvailable("AppAccentBlue") == false, "changing global mode retires the individual app menu and its actions");
+                Console.WriteLine($"APP_ACCENT_RETIRED localVisible={palette.IsVisible} effectiveVisible={palette.IsEffectivelyVisible} liveRoot={root!.GetVisualDescendants().Contains(palette)} topLevel={TopLevel.GetTopLevel(palette)} popup={palette.IsSubMenuOpen}");
+                // Inactive CUI cells are retained outside the live visual tree. A
+                // detached child's local visibility does not mean it is rendered.
+                Check(!root!.GetVisualDescendants().Contains(palette) && TopLevel.GetTopLevel(palette) is null
+                    && !palette.IsSubMenuOpen && TopLevel.GetTopLevel(blue) is null,
+                    "global mode change removes the app menu and its open popup from the actual native roots");
+                Check(!Value<bool>(settings, "ShowAppAccentSettings") && settings.IsActionAvailable("AppAccentBlue") == false,
+                    "global mode change revokes individual app colour action authority");
+                var writesBeforeRetiredCommand = preferences.Writes;
+                await settings.DispatchAsync("AppAccentBlue", null);
+                Check(preferences.Writes == writesBeforeRetiredCommand && preferences.Current.EffectiveAccent.Mode == CuiAccentOverrideMode.AllApps,
+                    "a retained stale colour command cannot write or change the global mode");
+                preferences.Change(preferences.Current.EffectiveAccent.WithMode(CuiAccentOverrideMode.IndividualApps)); Flush();
+                Check(ReferenceEquals(TopLevel.GetTopLevel(palette), window) && root!.GetVisualDescendants().Contains(palette),
+                    "reenabling individual accents reattaches the same canonical header menu");
+                Click(palette); Check(palette.IsSubMenuOpen, "the first physical click reopens the reactivated menu");
+                Click(blue); await loader.WhenActionsIdleAsync(); Flush();
+                Check(preferences.Writes == writesBeforeRetiredCommand + 1 && preferences.Current.EffectiveAccent.IndividualApps["app.present"] == "#2563EB",
+                    "reactivated menu retains its original working colour action");
+                preferences.Change(preferences.Current.EffectiveAccent.WithMode(CuiAccentOverrideMode.None)); Flush();
+                Check(!root!.GetVisualDescendants().Contains(palette) && TopLevel.GetTopLevel(palette) is null
+                    && settings.IsActionAvailable("AppAccentBlue") == false, "None also retires the native menu and rejects its actions");
                 window.Width = 390; Flush();
                 Check(input.Bounds.Width > 200 && owner.Text == "draft continued", "hidden accent controls preserve the original compact header input");
                 Frame("accent-menu-hidden-compact");
