@@ -322,6 +322,7 @@ public static class CuiThemeResourceApplier
     {
         resources["CuiFontFamilyInterface"] = CuiTypography.ResolveInterfaceFontFamily(settings.InterfaceFontFamilyOverride);
         resources["CuiFontFamilyCode"] = CuiTypography.ResolveCodeFontFamily(settings.CodeFontFamilyOverride);
+        resources["CuiFontWeightBody"] = CuiTypography.BodyWeight;
         resources["CuiFontSizeBody"] = CuiTypography.BodySize * expression.TypographyScale * settings.DisplayScale;
         resources["CuiFontSizeCaption"] = CuiTypography.CaptionSize * expression.TypographyScale * settings.DisplayScale;
         resources["CuiFontSizeHeading"] = CuiTypography.HeadingSize * expression.TypographyScale * settings.DisplayScale;

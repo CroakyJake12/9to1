@@ -38,7 +38,7 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
         // Inherited chrome defaults also apply when an existing shell embeds this host.
         // A content control with its own authored font retains that local value.
         FontFamily = new Avalonia.Media.FontFamily(CuiNativeHost.BundledInterfaceFontFamily);
-        FontWeight = Avalonia.Media.FontWeight.Medium;
+        FontWeight = CuiTypography.BodyWeight;
     }
     private CuiControlLoader? _loader;
     private CuiControlLoader? _failureLoader;

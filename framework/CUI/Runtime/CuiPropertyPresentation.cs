@@ -88,6 +88,7 @@ public static class CuiPropertyPresentation
                 Set("Template",template,CuiPropertyLevel.BuiltIn,"CUI-owned control template",0);
             var interactive = control is Button or TextBox or SelectingItemsControl or ListBoxItem or RangeBase or MenuItem or Thumb or NumericUpDown;
             Watch("CuiInterfaceFontFamily", "FontFamily");
+            Watch("CuiFontWeightBody", "FontWeight");
             Watch("CuiFontSizeBody", "FontSize");
             Watch("CuiTextBrush", "Foreground");
             Watch("CuiFlowDirection", "FlowDirection");

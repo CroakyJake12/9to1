@@ -1,16 +1,63 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Data;
 using Avalonia.Headless;
+using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Platform;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Xunit;
 
 namespace CakeOS.Cui.Runtime.Tests;
 
 public sealed class CuiBundledTypographyTests
 {
+    [Fact]
+    public async Task Direct_CUI_hosts_use_canonical_medium_chrome_across_themes_without_restyling_document_content()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            foreach (var theme in new[] { "Professional", "Glow", "Playful", "Bubble", "Cinematic" })
+            foreach (var appearance in Enum.GetValues<CuiAppearance>())
+            {
+                var registry = new CuiControlRegistry();
+                var document = new TextBlock { Text = "User document", FontWeight = FontWeight.Normal, FontFamily = new FontFamily("serif") };
+                registry.RegisterObjectRenderer("Document", _ => document);
+                using var loader = new CuiControlLoader(registry);
+                loader.SetAppearance(appearance);
+                var loaded = loader.LoadMarkup($"<Theme Name='{theme}'><Container Type='Vertical Stack'>" +
+                    "<Text id='label' Text='Chrome'/><Button Content='Action'/><Input Type='Text' Value='Editable'/>" +
+                    "<Text id='heading' Text='Explicit heading' FontWeight='Bold'/><Object Type='Document'/>" +
+                    "</Container></Theme>");
+                Assert.Empty(loaded.Diagnostics);
+                var root = Assert.IsType<CuiContainerControl>(loaded.Root);
+                var window = new Window { Content = root, Width = 400, Height = 300 };
+                window.Show();
+                try
+                {
+                    window.UpdateLayout();
+                    var label = Assert.IsType<TextBlock>(root.AuthoredChildren[0]);
+                    var button = Assert.IsType<Button>(root.AuthoredChildren[1]);
+                    var input = Assert.IsType<TextBox>(root.AuthoredChildren[2]);
+                    Assert.Equal(FontWeight.Medium, label.FontWeight);
+                    Assert.Equal(FontWeight.Medium, button.FontWeight);
+                    Assert.Equal(FontWeight.Medium, input.FontWeight);
+                    Assert.Equal(CuiPropertyLevel.Theme, CuiPropertyPresentation.For(button).Resolve("FontWeight").Level);
+                    Assert.Equal(FontWeight.Bold, Assert.IsType<TextBlock>(root.AuthoredChildren[3]).FontWeight);
+                    Assert.Equal(FontWeight.Normal, document.FontWeight);
+                    Assert.Equal("serif", document.FontFamily.Name);
+                    using var competingBackendValue = button.SetValue(TemplatedControl.FontWeightProperty, FontWeight.Light, BindingPriority.Animation);
+                    Assert.Equal(FontWeight.Medium, button.FontWeight);
+                }
+                finally { window.Close(); }
+            }
+        }, CancellationToken.None);
+    }
+
     [Fact]
     public async Task Native_chrome_loads_the_bundled_Montserrat_glyphs_and_notice()
     {

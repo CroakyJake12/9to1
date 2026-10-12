@@ -40,11 +40,12 @@ public sealed record CuiAccessibilitySettings
     }
 }
 
-/// <summary>Shared font families and sizes used by CUI roles.</summary>
+/// <summary>Shared font families, weights and sizes used by CUI roles.</summary>
 public static class CuiTypography
 {
     public const string InterfaceFontFamily = "Montserrat, Segoe UI, Arial, sans-serif";
     public const string CodeFontFamily = "Cascadia Mono, Consolas, monospace";
+    public const FontWeight BodyWeight = FontWeight.Medium;
     public const double BodySize = 14d;
     public const double CaptionSize = 12d;
     public const double HeadingSize = 24d;
