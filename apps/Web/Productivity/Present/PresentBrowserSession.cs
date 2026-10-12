@@ -835,6 +835,7 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
     }
     private void Notify()
     {
+        if (_contentEditDepth > 0) return;
         RefreshEditorUi();
         RefreshContentUi();
         // Selection, open and undo can change the owner's transition. Preserve

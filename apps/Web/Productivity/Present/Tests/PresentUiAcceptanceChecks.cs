@@ -35,6 +35,36 @@ internal static class PresentUiAcceptanceChecks
             window.KeyRelease(Key.A, RawInputModifiers.Control, PhysicalKey.A, "a");
             window.KeyTextInput(value); Flush();
         }
+        void TypeCharacters(string name, string value)
+        {
+            var input = (TextBox)Named(name);
+            input.BringIntoView(); Flush();
+            var point = input.TranslatePoint(new Point(input.Bounds.Width / 2, input.Bounds.Height / 2), window)!.Value;
+            window.MouseDown(point, MouseButton.Left); window.MouseUp(point, MouseButton.Left);
+            window.KeyPress(Key.A, RawInputModifiers.Control, PhysicalKey.A, "a");
+            window.KeyRelease(Key.A, RawInputModifiers.Control, PhysicalKey.A, "a");
+            var refreshes = 0;
+            var stableRevision = true;
+            var stableInput = true;
+            void Observe(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+            {
+                ++refreshes;
+                stableRevision &= session.Editor!.Document.Version == session.DurableRevision;
+            }
+            session.PropertyChanged += Observe;
+            try
+            {
+                for (var index = 0; index < value.Length; ++index)
+                {
+                    window.KeyTextInput(value[index].ToString()); Flush();
+                    stableInput &= ReferenceEquals(input, Named(name)) && input.IsFocused && input.CaretIndex == index + 1;
+                }
+            }
+            finally { session.PropertyChanged -= Observe; }
+            check(stableInput && input.Text == value, "successive physical keystrokes retain the same attached input, focus and caret");
+            check(refreshes == value.Length && stableRevision,
+                "each physical cell edit publishes one completed owner refresh with its durable revision restored");
+        }
         T Bound<T>(string name) { check(session.TryGetValue(name, out var value), "CUI exposes " + name); return (T)value!; }
         PresentElement Selected() => session.Editor!.SelectedElements.Single();
         PresentTable Table() => Selected().ReadTable();
@@ -51,7 +81,7 @@ internal static class PresentUiAcceptanceChecks
         check(!staleCell.TrySetValue("Text", "stale overwrite") && Table().GetCell(0, 0).Text == "Milestone",
             "a cell callback captured before table structure changed cannot overwrite current content");
         check(session.TrySetValue("TableRowIndex", 1), "row selection accepts a real table row");
-        Type("Column 2", "Design review");
+        TypeCharacters("Column 2", "Design review");
         check(Table().GetCell(1, 1).Text == "Design review", "editing a different row targets the intended real cell");
         await click("Add column", () => Table().Columns == 4);
         check(Table().GetCell(1, 1).Text == "Design review", "column insertion preserves existing cell content");

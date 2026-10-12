@@ -10,17 +10,42 @@ public sealed partial class PresentBrowserSession
     private static readonly string[] ChartTypes = Enum.GetNames<PresentChartType>();
     private (PresentEditor Editor, Guid Slide, Guid Object)? _contentSelection;
     private int _tableRow, _chartSeries;
+    private PresentEditor? _contentProjectionEditor;
+    private PresentElement? _contentProjectionElement;
+    private long _contentProjectionGeneration = -1;
+    private PresentTable? _contentTable;
+    private PresentChart? _contentChart;
+    private int _contentEditDepth;
     private PresentElement? SelectedTable => Editor?.SelectedElements is [{ Kind: PresentElementKind.Table } table] ? table : null;
     private PresentElement? SelectedChart => Editor?.SelectedElements is [{ Kind: PresentElementKind.Chart } chart] ? chart : null;
 
     private void RefreshContentUi()
     {
+        // These are private, read-only projections for one UI refresh. Commands
+        // still decode a fresh owner value before making any mutation.
+        _contentProjectionGeneration = -1;
+        EnsureContentProjection();
         var selected = SelectedTable ?? SelectedChart;
         var current = Editor is { } editor && selected is not null ? (editor, editor.Selection.SlideId, selected.Id) : ((PresentEditor, Guid, Guid)?)null;
         if (_contentSelection != current) { _contentSelection = current; _tableRow = 0; _chartSeries = 0; }
-        if (SelectedTable is { } table) _tableRow = Math.Clamp(_tableRow, 0, table.ReadTable().Rows - 1);
-        if (SelectedChart is { } chart) _chartSeries = Math.Clamp(_chartSeries, 0, chart.ReadChart().Series.Count - 1);
+        if (_contentTable is { } table) _tableRow = Math.Clamp(_tableRow, 0, table.Rows - 1);
+        if (_contentChart is { } chart) _chartSeries = Math.Clamp(_chartSeries, 0, chart.Series.Count - 1);
     }
+
+    private void EnsureContentProjection()
+    {
+        var element = SelectedTable ?? SelectedChart;
+        if (ReferenceEquals(_contentProjectionEditor, Editor) && ReferenceEquals(_contentProjectionElement, element)
+            && _contentProjectionGeneration == _generation) return;
+        _contentProjectionEditor = Editor;
+        _contentProjectionElement = element;
+        _contentProjectionGeneration = _generation;
+        _contentTable = element?.Kind == PresentElementKind.Table ? element.ReadTable() : null;
+        _contentChart = element?.Kind == PresentElementKind.Chart ? element.ReadChart() : null;
+    }
+
+    private PresentTable? ContentTable { get { EnsureContentProjection(); return _contentTable; } }
+    private PresentChart? ContentChart { get { EnsureContentProjection(); return _contentChart; } }
 
     // This is the capability tail of the existing session admission/lifecycle
     // gate. It never supplies document authority independently of that gate.
@@ -29,14 +54,14 @@ public sealed partial class PresentBrowserSession
         "AddTable" or "AddChart" => Editor is not null && !IsReadOnly,
         "EditTable" => SelectedTable is { Locked: false } && !IsReadOnly,
         "EditChart" => SelectedChart is { Locked: false } && !IsReadOnly,
-        "InsertTableRow" => SelectedTable is { Locked: false } table && !IsReadOnly && table.ReadTable().Rows < 100,
-        "DeleteTableRow" => SelectedTable is { Locked: false } table && !IsReadOnly && table.ReadTable().Rows > 1,
-        "InsertTableColumn" => SelectedTable is { Locked: false } table && !IsReadOnly && table.ReadTable().Columns < 100,
-        "DeleteTableColumn" => SelectedTable is { Locked: false } table && !IsReadOnly && table.ReadTable().Columns > 1,
-        "AddChartCategory" => SelectedChart is { Locked: false } chart && !IsReadOnly && chart.ReadChart().Categories.Count < 100,
-        "RemoveChartCategory" => SelectedChart is { Locked: false } chart && !IsReadOnly && chart.ReadChart().Categories.Count > 1,
-        "AddChartSeries" => SelectedChart is { Locked: false } chart && !IsReadOnly && chart.ReadChart().Series.Count < 32,
-        "RemoveChartSeries" => SelectedChart is { Locked: false } chart && !IsReadOnly && chart.ReadChart().Series.Count > 1,
+        "InsertTableRow" => SelectedTable is { Locked: false } && !IsReadOnly && ContentTable!.Rows < 100,
+        "DeleteTableRow" => SelectedTable is { Locked: false } && !IsReadOnly && ContentTable!.Rows > 1,
+        "InsertTableColumn" => SelectedTable is { Locked: false } && !IsReadOnly && ContentTable!.Columns < 100,
+        "DeleteTableColumn" => SelectedTable is { Locked: false } && !IsReadOnly && ContentTable!.Columns > 1,
+        "AddChartCategory" => SelectedChart is { Locked: false } && !IsReadOnly && ContentChart!.Categories.Count < 100,
+        "RemoveChartCategory" => SelectedChart is { Locked: false } && !IsReadOnly && ContentChart!.Categories.Count > 1,
+        "AddChartSeries" => SelectedChart is { Locked: false } && !IsReadOnly && ContentChart!.Series.Count < 32,
+        "RemoveChartSeries" => SelectedChart is { Locked: false } && !IsReadOnly && ContentChart!.Series.Count > 1,
         "TextVerticalTop" or "TextVerticalMiddle" or "TextVerticalBottom" => SelectedTextElement is { Locked: false } && !IsReadOnly,
         _ => false
     };
@@ -99,8 +124,8 @@ public sealed partial class PresentBrowserSession
             or "TableRows" or "TableRowIndex" or "TableSummary" or "TableCells" or "ChartTypes" or "ChartTypeIndex"
             or "ChartSeriesNames" or "ChartSeriesIndex" or "ChartSeriesName" or "ChartShowLegend" or "ChartDataRows"))
         { value = null; return false; }
-        var table = SelectedTable?.ReadTable();
-        var chart = SelectedChart?.ReadChart();
+        var table = ContentTable;
+        var chart = ContentChart;
         value = path switch
         {
             "HasTableSelection" => table is not null,
@@ -160,17 +185,28 @@ public sealed partial class PresentBrowserSession
 
     private bool CommitContentEdit(PresentEditor editor, Func<bool> edit)
     {
-        editor.CommitLiveTextEdit();
-        edit();
-        editor.Document.Version = DurableRevision;
-        Notify();
-        return true;
+        // Owner change events still advance the generation and dirty state.
+        // Publish the new field contexts only once the whole synchronous edit
+        // and the durable revision restoration have completed.
+        ++_contentEditDepth;
+        try
+        {
+            editor.CommitLiveTextEdit();
+            edit();
+            return true;
+        }
+        finally
+        {
+            editor.Document.Version = DurableRevision;
+            --_contentEditDepth;
+            Notify();
+        }
     }
 
     private PresentContentField[] TableCellBindings()
     {
         if (SelectedTable is not { } element || Editor is not { } editor) return [];
-        var generation = _generation; var slideId = editor.Selection.SlideId; var row = _tableRow; var table = element.ReadTable();
+        var generation = _generation; var slideId = editor.Selection.SlideId; var row = _tableRow; var table = ContentTable!;
         if (row >= table.Rows) return [];
         return Enumerable.Range(0, table.Columns).Select(column => new PresentContentField(
             $"{element.Id}:{row}:{column}", $"Column {column + 1}", table.GetCell(row, column).Text,
@@ -186,7 +222,7 @@ public sealed partial class PresentBrowserSession
     private PresentChartDataRow[] ChartDataBindings()
     {
         if (SelectedChart is not { } element || Editor is not { } editor) return [];
-        var generation = _generation; var slideId = editor.Selection.SlideId; var series = _chartSeries; var chart = element.ReadChart();
+        var generation = _generation; var slideId = editor.Selection.SlideId; var series = _chartSeries; var chart = ContentChart!;
         if (series >= chart.Series.Count) return [];
         return Enumerable.Range(0, chart.Categories.Count).Select(category => new PresentChartDataRow(
             $"{element.Id}:{series}:{category}", category + 1, chart.Categories[category], chart.Series[series].Values[category],
