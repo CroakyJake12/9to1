@@ -28,7 +28,7 @@ public sealed class CuiCustomThemeScopeTests
                   <Theme Name="Local Preview"><Button Content="Preview" AccentRole="Primary" /></Theme>
                 </Container></Page>
                 """);
-            Assert.Empty(diagnostics);
+            Assert.Empty(diagnostics); Assert.NotNull(root);
             var window = new Window { Content = root, Width = 500, Height = 300 };
             try
             {
