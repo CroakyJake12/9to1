@@ -42,8 +42,8 @@
           <Container Type="Wrap">
             <Button action="Create" content="New" margin="0,0,6,0" />
             <Button action="Import" content="Open PNG" margin="0,0,16,0" />
-            <Button action="Undo" content="↶" accessible-name="Undo" margin="0,0,4,0" Interactive="{Binding CanUndo}" />
-            <Button action="Redo" content="↷" accessible-name="Redo" margin="0,0,16,0" Interactive="{Binding CanRedo}" />
+            <Button action="Undo" accessible-name="Undo" Tooltip="Undo" Width="36" Height="36" Padding="8" margin="0,0,4,0" Interactive="{Binding CanUndo}"><Image Source="icon:undo" Width="20" Height="20" /></Button>
+            <Button action="Redo" accessible-name="Redo" Tooltip="Redo" Width="36" Height="36" Padding="8" margin="0,0,16,0" Interactive="{Binding CanRedo}"><Image Source="icon:redo" Width="20" Height="20" /></Button>
             <Button action="Rotate" content="Rotate 90°" margin="0,0,6,0" Interactive="{Binding CanEdit}" />
             <Button action="FlipHorizontal" content="Flip horizontal" margin="0,0,6,0" Interactive="{Binding CanEdit}" />
             <Button action="FlipVertical" content="Flip vertical" margin="0,0,16,0" Interactive="{Binding CanEdit}" />

@@ -51,13 +51,16 @@ byte[] Pixels(Bitmap bitmap)
 }
 Loaded Load(PictureBrowserFeature feature, HomeFeatureViewState state)
 {
-    var surface = feature.Render(state); var loader = new CuiControlLoader(surface.ControlRegistry!);
+    var surface = feature.Render(state); BrowserCanonicalIcons.Register(surface.ControlRegistry!);
+    var loader = new CuiControlLoader(surface.ControlRegistry!);
     try
     {
         loader.SetBindingContext(surface.Bindings); loader.SetActionDispatcher(surface.Actions);
         var (root, diagnostics) = loader.TryLoad(surface.Document);
         Check(root is not null && !diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error), "Actual Picture CUI loads with its actual raster renderer.");
-        loader.WireBindings(root!); var image = root!.GetLogicalDescendants().OfType<Image>().Single();
+        // The browser registers canonical chrome icons; the raster image belongs
+        // to the specialised Object renderer, not an authored Image control.
+        loader.WireBindings(root!); var image = root!.GetLogicalDescendants().OfType<Image>().Single(control => !loader.IsAuthoredControl(control));
         return new(surface, loader, image, root!);
     }
     catch { loader.Dispose(); surface.Lifetime?.Dispose(); surface.Admission?.Reject(); throw; }
@@ -289,6 +292,7 @@ tests.Add(("actual-empty-workspace-mount-and-remount-retain-a-single-visual-pare
     try
     {
         window.Show();
+        var visit = 0;
         foreach (var width in new[] { 1280d, 390d, 1280d })
         {
             window.Width = width;
@@ -298,6 +302,8 @@ tests.Add(("actual-empty-workspace-mount-and-remount-retain-a-single-visual-pare
             window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
             Check(ReferenceEquals(TopLevel.GetTopLevel(loaded.Image), window), "Actual raster preview remains attached after responsive initial layout.");
             Check(loaded.Root.Bounds.Width > 0, "Actual empty Picture workspace is laid out.");
+            using (var frame = window.CaptureRenderedFrame())
+                frame!.Save(Path.Combine(output, $"empty-remount-{++visit}-{width:0}.png"));
             window.Content = null; window.UpdateLayout();
         }
     }

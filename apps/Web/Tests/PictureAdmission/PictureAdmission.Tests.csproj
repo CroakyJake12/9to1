@@ -17,10 +17,12 @@
     <Compile Include="PictureAdmissionRegression.cs" Condition="'$(PictureControlVariant)' != 'production-original' and '$(PictureControlVariant)' != 'production-original-repaired-markup'" />
     <Compile Include="$(PictureSourceRoot)/PictureBrowserFeature.cs;$(PictureSourceRoot)/PictureBrowserSession.cs" Link="SelectedActualSource/%(Filename)%(Extension)" />
     <Compile Include="$(RepositoryRoot)/apps/Web/BrowserSurfaceRegistry.cs;$(RepositoryRoot)/apps/Web/Media/IPictureBrowserMedia.cs;$(RepositoryRoot)/apps/Web/Media/BrowserPictureMedia.cs" Link="Production/%(Filename)%(Extension)" />
+    <Compile Include="$(RepositoryRoot)/apps/Web/BrowserCanonicalIcons.cs" Link="Production/BrowserCanonicalIcons.cs" />
     <ProjectReference Include="$(RepositoryRoot)/apps/Web/Picture/Engine/NineToOne.Picture.BrowserEngine.csproj" />
     <ProjectReference Include="$(RepositoryRoot)/framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
     <ProjectReference Include="$(RepositoryRoot)/framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/Avalonia.Headless.csproj" />
     <ProjectReference Include="$(RepositoryRoot)/9to1 Workspace/Home/HavenOS.Home.csproj" />
+    <ProjectReference Include="$(RepositoryRoot)/9to1 Workspace/shared/src/Haven.UI/Haven.UI.csproj" />
     <EmbeddedResource Include="$(PictureMarkupSource)" LogicalName="NineToOne.Picture.Admission.Tests.Picture.cui" />
     <None Include="Fixtures/Picture8x6.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

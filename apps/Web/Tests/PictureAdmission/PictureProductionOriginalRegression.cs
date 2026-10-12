@@ -51,13 +51,14 @@ byte[] Pixels(Bitmap bitmap)
 }
 Loaded Load(PictureBrowserFeature feature, HomeFeatureViewState state)
 {
-    var surface = feature.Render(state); var loader = new CuiControlLoader(surface.ControlRegistry!);
+    var surface = feature.Render(state); BrowserCanonicalIcons.Register(surface.ControlRegistry!);
+    var loader = new CuiControlLoader(surface.ControlRegistry!);
     try
     {
         loader.SetBindingContext(surface.Bindings); loader.SetActionDispatcher(surface.Actions);
         var (root, diagnostics) = loader.TryLoad(surface.Document);
         Check(root is not null && !diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error), "Actual Picture CUI loads with its actual raster renderer.");
-        loader.WireBindings(root!); var image = root!.GetLogicalDescendants().OfType<Image>().Single();
+        loader.WireBindings(root!); var image = root!.GetLogicalDescendants().OfType<Image>().Single(control => !loader.IsAuthoredControl(control));
         return new(surface, loader, image);
     }
     catch { loader.Dispose(); surface.Lifetime?.Dispose(); surface.Admission?.Reject(); throw; }
