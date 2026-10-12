@@ -95,14 +95,14 @@ await using (var session = HeadlessUnitTestSession.StartNew(typeof(ThemeCreatorT
             Check(input.IsFocused && input.SelectedText == "My theme", "Opening did not select theme name");
             foreach (var character in "Native theme draft") { window.KeyTextInput(character.ToString()); Pump(); }
             Check(input.Text == "Native theme draft" && input.CaretIndex == input.Text.Length, "Per-character editing lost caret/value");
-            window.KeyPress(Key.Left, RawInputModifiers.None); window.KeyRelease(Key.Left, RawInputModifiers.None);
+            window.KeyPress(Key.Left, RawInputModifiers.None, PhysicalKey.ArrowLeft); window.KeyRelease(Key.Left, RawInputModifiers.None, PhysicalKey.ArrowLeft);
             window.KeyTextInput("!"); Pump(); Check(input.Text == "Native theme draf!t", "Middle-caret insertion failed");
-            var type = Find<ComboBox>("Accent type"); Click(type); window.KeyPress(Key.Down, RawInputModifiers.None); window.KeyRelease(Key.Down, RawInputModifiers.None); window.KeyPress(Key.Enter, RawInputModifiers.None); window.KeyRelease(Key.Enter, RawInputModifiers.None); Pump();
+            var type = Find<ComboBox>("Accent type"); Click(type); window.KeyPress(Key.Down, RawInputModifiers.None, PhysicalKey.ArrowDown); window.KeyRelease(Key.Down, RawInputModifiers.None, PhysicalKey.ArrowDown); window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter); window.KeyRelease(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter); Pump();
             Check(Read(creator, "IsGradient") is true, "Physical accent selector did not enter gradient builder");
             Click(loaded.Root!.GetVisualDescendants().OfType<Button>().Single(button => button.Content as string == "Add stop"));
             Check(((string[])Read(creator, "StopNames")!).Length == 3, "Physical Add stop failed");
             var colour = Find<TextBox>("Colour hexadecimal RGB"); Click(colour);
-            window.KeyPress(Key.A, RawInputModifiers.Control); window.KeyRelease(Key.A, RawInputModifiers.Control);
+            window.KeyPress(Key.A, RawInputModifiers.Control, PhysicalKey.KeyA); window.KeyRelease(Key.A, RawInputModifiers.Control, PhysicalKey.KeyA);
             foreach (var character in "#CE3864") { window.KeyTextInput(character.ToString()); Pump(); }
             Check((string?)Read(creator, "ColourHex") == "#CE3864", "Physical colour picker edits did not reach selected gradient stop");
             var preview = Find<Button>("Preview primary accent and edit it");
@@ -110,7 +110,7 @@ await using (var session = HeadlessUnitTestSession.StartNew(typeof(ThemeCreatorT
             foreach (var (width, height) in new[] { (1200, 900), (800, 600), (390, 844) })
             {
                 window.Width = width; window.Height = height; Pump();
-                var controls = loaded.Root.GetVisualDescendants().Where(control => control.IsVisible && control is TextBox or ComboBox or Button).ToArray();
+                var controls = loaded.Root!.GetVisualDescendants().Where(control => control.IsVisible && control is TextBox or ComboBox or Button).ToArray();
                 Check(controls.All(control => control.Bounds.Width <= width), "Creator control exceeds narrow viewport");
                 var output = Environment.GetEnvironmentVariable("THEME_CREATOR_EVIDENCE");
                 if (!string.IsNullOrEmpty(output)) { Directory.CreateDirectory(output); window.CaptureRenderedFrame()?.Save(Path.Combine(output, $"creator-{width}x{height}.png")); }
