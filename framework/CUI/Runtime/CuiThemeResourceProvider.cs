@@ -14,7 +14,7 @@ internal sealed class CuiThemeResourceProvider(FrozenDictionary<object, object?>
     private static Drawing CloneDrawing(Drawing? drawing) => drawing switch
     {
         DrawingGroup group => CloneGroup(group),
-        GeometryDrawing geometry => new GeometryDrawing(geometry.Brush, geometry.Pen, geometry.Geometry is { } shape ? CloneGeometry(shape) : null),
+        GeometryDrawing geometry => new GeometryDrawing { Brush = geometry.Brush, Pen = geometry.Pen, Geometry = geometry.Geometry is { } shape ? CloneGeometry(shape) : null },
         _ => throw new InvalidOperationException("A custom pattern must contain only declarative geometry.")
     };
     private static Geometry CloneGeometry(Geometry geometry)

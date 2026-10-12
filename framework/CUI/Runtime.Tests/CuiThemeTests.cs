@@ -1,7 +1,7 @@
 // CUI Theme Regression Tests — ported from PersonalisationTests.cs.
 // Original source: 9to1 Workspace/shared/tests/Haven.Desktop.Tests/PersonalisationTests.cs
 //
-// Proves: all six themes resolve across all four appearances, accent override
+// Proves: all nine themes resolve across all four appearances, accent override
 // precedence, safe fallbacks, Glow baseline parity, nested DefaultTheme scoping,
 // and that theme changes don't alter the control tree structure.
 
@@ -14,7 +14,7 @@ using Xunit;
 namespace CakeOS.Cui.Runtime.Tests;
 
 /// <summary>
-/// Covers the CUI personalisation pipeline: six themes across all four
+/// Covers the CUI personalisation pipeline: nine themes across all four
 /// appearances, accent override precedence, safe fallbacks, Glow baseline parity,
 /// nested DefaultTheme scoping, and theme expression scaling.
 /// </summary>
@@ -509,7 +509,8 @@ public sealed class CuiThemeTests
     public void Theme_expression_values_are_distinct_per_theme()
     {
         var expressions = CuiThemeCatalog.All;
-        Assert.Equal(6, expressions.Count);
+        Assert.Equal(9, expressions.Count);
+        Assert.Equal(new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8 }, expressions.Select(e => (int)e.Theme).Order().ToArray());
 
         var radii = expressions.Select(e => e.ControlRadiusScale).Distinct().ToList();
         Assert.True(radii.Count >= 3, "At least 3 distinct control radius scales expected");

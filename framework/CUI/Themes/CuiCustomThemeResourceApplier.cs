@@ -94,7 +94,8 @@ public static class CuiCustomThemeResourceApplier
             {
                 Center = new RelativePoint(value.CenterX, value.CenterY, RelativeUnit.Relative),
                 GradientOrigin = new RelativePoint(value.CenterX, value.CenterY, RelativeUnit.Relative),
-                Radius = value.Radius
+                RadiusX = new RelativeScalar(value.Radius, RelativeUnit.Relative),
+                RadiusY = new RelativeScalar(value.Radius, RelativeUnit.Relative)
             },
             CuiCustomGradientKind.Conic => new ConicGradientBrush
             {
@@ -114,19 +115,19 @@ public static class CuiCustomThemeResourceApplier
         var foreground = new SolidColorBrush(Colour(value.Foreground)).ToImmutable();
         var background = new GeometryGroup { FillRule = FillRule.EvenOdd };
         background.Children.Add(new RectangleGeometry(new Rect(0, 0, extent, extent)));
-        group.Children.Add(new GeometryDrawing(new SolidColorBrush(Colour(value.Background)).ToImmutable(), null, background));
+        group.Children.Add(new GeometryDrawing { Brush = new SolidColorBrush(Colour(value.Background)).ToImmutable(), Geometry = background });
         switch (value.Kind)
         {
             case CuiCustomPatternKind.Stripes:
-                group.Children.Add(new GeometryDrawing(foreground, null, new RectangleGeometry(new Rect(0, 0, value.Size, extent))));
+                group.Children.Add(new GeometryDrawing { Brush = foreground, Geometry = new RectangleGeometry(new Rect(0, 0, value.Size, extent)) });
                 break;
             case CuiCustomPatternKind.Checkerboard:
-                group.Children.Add(new GeometryDrawing(foreground, null, new RectangleGeometry(new Rect(0, 0, value.Size, value.Size))));
-                group.Children.Add(new GeometryDrawing(foreground, null, new RectangleGeometry(new Rect(cell, cell, value.Size, value.Size))));
+                group.Children.Add(new GeometryDrawing { Brush = foreground, Geometry = new RectangleGeometry(new Rect(0, 0, value.Size, value.Size)) });
+                group.Children.Add(new GeometryDrawing { Brush = foreground, Geometry = new RectangleGeometry(new Rect(cell, cell, value.Size, value.Size)) });
                 break;
             case CuiCustomPatternKind.Dots:
-                group.Children.Add(new GeometryDrawing(foreground, null,
-                    new EllipseGeometry(new Rect(value.Spacing / 2, value.Spacing / 2, value.Size, value.Size))));
+                group.Children.Add(new GeometryDrawing { Brush = foreground,
+                    Geometry = new EllipseGeometry(new Rect(value.Spacing / 2, value.Spacing / 2, value.Size, value.Size)) });
                 break;
         }
         foreach (var drawing in group.Children.Skip(1).OfType<GeometryDrawing>())
