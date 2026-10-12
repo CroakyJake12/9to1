@@ -441,7 +441,8 @@ var assertions = await headless.Dispatch(async () =>
                 var rect = CurrentSlideRect();
                 var stage = canvas.Bounds;
                 using var semantics = JsonDocument.Parse(accessibility.ReadSnapshot());
-                foreach (var commandName in new[] { "Add slide (Ctrl+M)", "Text box", "Shape", "Properties" })
+                // The unified Insert menu owns slide, text and shape actions; they are exercised through real menus below.
+                foreach (var commandName in new[] { "Insert content", "Properties" })
                     Check(semantics.RootElement.GetProperty("elements").EnumerateArray().Any(element => element.GetProperty("name").GetString() == commandName),
                         name + ": actual toolbar semantics retain " + commandName);
                 if (session.TryGetValue("ShowSidebar", out var sidebar) && sidebar is true)
