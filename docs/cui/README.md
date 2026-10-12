@@ -12,6 +12,9 @@ The former lightweight `NineToOne.Cui.Markup` parser is retired from active
 compilation. Do not add a second parser or reference historical
 `9to1 OS/HUI/Cui` project paths.
 
+See [Input focus requests and form actions](input-focus.md) for the canonical
+form focus, text selection and Enter/Escape action contract.
+
 The native runtime is not presently build-verified because the checked-in
 Avalonia vendor tree imports a missing build file and has restore-time target
 cycles. See

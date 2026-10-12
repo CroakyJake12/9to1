@@ -66,6 +66,8 @@ public static class CuiPropertyPresentation
     private sealed class Projection : IDisposable
     {
         private Border? _focusRing;
+        private CuiInputFocusRequest? _focusRequest;
+        private bool _selectOnFocusRequest;
         private readonly Control _control;
         private readonly Dictionary<string, AvaloniaProperty> _mapped = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, Action<object?>> _custom = new(StringComparer.OrdinalIgnoreCase);
@@ -84,6 +86,16 @@ public static class CuiPropertyPresentation
             control.PropertyChanged += NativeChanged;
             Register("Selected", typeof(bool), false, value => { _selected = value is true; UpdateState(); });
             if(!ownsTemplate)return; // Specialised renderer owns its content; CUI supplies its declared outer chrome separately.
+            if (control is TextBox or NumericUpDown or ToggleButton or Slider or CuiResizeInput or ComboBox or ListBox)
+            {
+                Register("SelectOnFocusRequest", typeof(bool), false, value => _selectOnFocusRequest = value is true);
+                Register("FocusRequested", typeof(bool), false, value =>
+                {
+                    if (value is true)
+                        (_focusRequest ??= new CuiInputFocusRequest(control, () => _selectOnFocusRequest)).SetRequested(true);
+                    else _focusRequest?.SetRequested(false);
+                });
+            }
             if(control is TemplatedControl)
             {
                 if (!CuiControlTemplates.TryGet(control.GetType(),out var template))
@@ -144,7 +156,9 @@ public static class CuiPropertyPresentation
             {
                 "border" or "bordercolor" => "BorderBrush", "borderwidth" => "BorderThickness", "checked" => "IsChecked",
                 "layer" => "ZIndex", "value" when _control is TextBox => "Text",
-                "content" when _control is MenuItem => "Header", _ => canonical
+                "content" when _control is MenuItem => "Header",
+                "defaultaction" when _control is Button => "IsDefault",
+                "cancelaction" when _control is Button => "IsCancel", _ => canonical
             };
             var property = AvaloniaPropertyRegistry.Instance.GetRegistered(_control.GetType())
                 .Concat(AvaloniaPropertyRegistry.Instance.GetRegisteredDirect(_control.GetType()))
@@ -341,6 +355,7 @@ public static class CuiPropertyPresentation
             _control is SelectingItemsControl && property.Name is "SelectedIndex" or "SelectedItem";
         public void Dispose()
         {
+            _focusRequest?.Dispose();
             _control.PropertyChanged-=NativeChanged;foreach(var subscription in _subscriptions)subscription.Dispose();_subscriptions.Clear();
             foreach(var fence in _nativeFences.Values)fence.Dispose();_nativeFences.Clear();
         }
