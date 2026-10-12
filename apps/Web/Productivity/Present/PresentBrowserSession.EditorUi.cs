@@ -48,7 +48,7 @@ public sealed partial class PresentBrowserSession
     private string CurrentFont => string.IsNullOrWhiteSpace(SelectedTextElement?.TextStyle.FontFamily)
         ? Editor?.Document.Theme.BodyFontFamily ?? "Aptos" : SelectedTextElement!.TextStyle.FontFamily;
     private string[] FontFamilies => StandardFonts.Contains(CurrentFont) ? StandardFonts : [CurrentFont, .. StandardFonts];
-    private bool FullToolbar => _viewportWidth >= 1000;
+    private bool FullToolbar => _viewportWidth >= 820;
     private double SidebarWidth => Math.Min(_sidebarWidth, Math.Max(160, _viewportWidth * .3));
     private double InspectorWidth => _compact ? _viewportWidth : Math.Min(_inspectorWidth,
         Math.Max(256, _viewportWidth - (_showSidebar ? SidebarWidth + 8 : 0) - 360));
@@ -65,8 +65,11 @@ public sealed partial class PresentBrowserSession
             "CanDuplicateObject" => IsActionAvailable("DuplicateObject") == true,
             "WideHeader" => _viewportWidth >= 620,
             "FullToolbar" => FullToolbar,
-            "ShowTextToolbar" => Editor is not null && (!Editor.SelectedElements.Any(item => item.Kind == PresentElementKind.Shape) || SelectedTextElement is not null),
-            "ShowShapeToolbar" => Editor?.SelectedElements.Any(item => item.Kind == PresentElementKind.Shape) == true && SelectedTextElement is null,
+            "ToolbarClipboard" => _viewportWidth >= 1400,
+            "ToolbarFonts" => _viewportWidth >= 1000,
+            "ToolbarExpandedText" => _viewportWidth >= 1200,
+            "ShowTextToolbar" => Editor is not null && (Editor.SelectedElements.Count == 0 || SelectedTextElement is not null),
+            "ShowShapeToolbar" => Editor?.SelectedElements.Count > 0 && SelectedTextElement is null,
             "HeaderStatus" => IsBusy ? "Working…" : IsDirty ? "Unsaved changes" : Status,
             "ShowNotes" => _showNotes, "ShowHelp" => _showHelp, "ShowHistory" => _showHistory,
             "Versions" => _versions, "NoVersions" => _versions.Count == 0,

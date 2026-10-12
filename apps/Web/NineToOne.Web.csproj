@@ -32,7 +32,7 @@
     <ProjectReference Include="Picture/Engine/NineToOne.Picture.BrowserEngine.csproj" />
     <ProjectReference Include="Write/Scene/Haven.WriteBrowser.Scene.csproj" />
     <ProjectReference Include="Productivity/Present/Scene/NineToOne.Present.BrowserScene.csproj" />
-    <Compile Include="Productivity/Present/PresentBrowserFeature.cs;Productivity/Present/PresentBrowserSession.cs;Productivity/Present/PresentBrowserSession.EditorUi.cs;Productivity/Present/PresentBrowserSurface.cs;Productivity/Present/Storage/*.cs" />
+    <Compile Include="Productivity/Present/PresentBrowserFeature.cs;Productivity/Present/PresentBrowserSession.cs;Productivity/Present/PresentBrowserSession.EditorUi.cs;Productivity/Present/PresentBrowserSession.ContentUi.cs;Productivity/Present/PresentBrowserSurface.cs;Productivity/Present/Storage/*.cs" />
     <Compile Include="Productivity/Boards/*.cs" />
     <Compile Include="../../9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/PresentRepository.cs" Link="Owner/PresentRepository.cs" />
     <ProjectReference Include="Write/Packages/NineToOne.Write.Packages.csproj" />

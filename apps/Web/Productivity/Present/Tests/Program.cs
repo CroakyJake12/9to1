@@ -242,6 +242,11 @@ var assertions = await headless.Dispatch(async () =>
             await PresentInteractionEngineChecks.Run(window, root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single(), session, Check);
             return count;
         }
+        if (args.Contains("content-ui", StringComparer.Ordinal))
+        {
+            await PresentUiAcceptanceChecks.Run(session, window, root!, Click, Check, paths.DataDirectory);
+            return count;
+        }
         if (args.Contains("interaction", StringComparer.Ordinal))
         {
             var sceneControl = root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single();

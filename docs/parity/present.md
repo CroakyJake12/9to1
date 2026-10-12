@@ -10,6 +10,65 @@ The LibreOfficeKit donor integration remains a mandatory acceptance gap. Its sep
 
 The current specification requires APP-AC, LAUNCH-001–006, PARITY-001, CUI-001–002, DESIGN-001, STAGING-001, ACCEPT-001–006 and GOV-001–002 (and WRITE-AC for Write). Acceptance requires a version-pinned exhaustive donor feature inventory, approved stage assignments/exceptions, independent start/editor composition, real retained-session transitions, complete packaged workflows and format fidelity, privacy/accessibility, platform/performance evidence and independent review. None is waived by an attractive shell or a passing focused test.
 
+## Cloud Present/Impress continuation — 12 October 2026
+
+The Present lane preserves the current CUI shell and original `PresentEditor`.
+The traditional Insert menu, the single toolbar's + Insert menu and empty-canvas
+context menu now use the same shape gallery and expose the original table/chart
+owners. Properties edits real table cells, rows and columns, chart categories,
+independent data series, chart type and legend visibility. These are stored in the
+existing structured-object properties; this change adds no model or repository.
+Callbacks retain editor, slide, object and edit-generation custody, so a previous
+selection or table structure cannot receive a delayed field write. Locked objects,
+read-only routes and normal session admission still gate mutation.
+
+The compact toolbar retains three header rows, with direct font/colour/alignment
+controls shown according to measured window-width tiers. Clipboard and extended
+text controls move out of the direct toolbar before they can clip. Their original
+menu/Properties actions remain reachable. Shape actions in the empty-canvas menu
+use the same choose-then-draw workflow as the other Insert entry points. The slide
+rail uses the existing darker CUI background token. Centre-origin X/Y with positive
+Y upward is preserved; inherited-axis projection is not claimed by this change.
+
+`PresentUiAcceptanceChecks` exercises real CUI menus and typed input, table/chart
+content, stale-field and locked-object refusals, undo/redo, save/close/reopen and
+single-toolbar bounds at 800, 1000, 1200 and 1440 pixels. It is a focused native
+retained-host check, not browser, packaged-platform or donor-parity acceptance.
+The integrated retained engine must draw every exposed chart/table type and the
+actual browser must exercise them before this restored UI can pass acceptance.
+
+### Actual donor observation and outstanding integration
+
+The existing `Present/present-engine` C++ LOK render probe was strictly compiled
+against the pinned LibreOffice source headers
+`d3fca73f81dfb19a72a0da41598b7390eaf5845b` (C++20, `-Wall -Wextra
+-Wpedantic -Werror`). It then loaded the external styled PPTX fixture through a
+real installed Impress/LOK runtime, observed two slides and a 19201×10801 twip
+slide extent, and painted a 1280×720 tile. The inspected tile contains the slide's
+formatted text and blue shape. This is actual isolated donor execution.
+
+The installed runtime's BuildId is
+`2c87e51eeaa2b413ff4ae097b2705eea1995d8e5` (LibreOfficeDev 26.8), which differs
+from the pinned source. This observation therefore **does not** establish matching
+source/runtime compatibility, normal CUI-route integration, distribution packaging,
+format-complete editing or PARITY-001. No donor exception has been introduced.
+Present's normal route still uses the existing retained model; the separate
+worker remains unconnected to that route. The Windows/Android/browser engine
+custody and matched donor runtime remain required work.
+
+Inspection of the pinned Impress menubar plus 52 toolbar declarations finds 830
+unique `.uno:` declaration URLs. That count includes menu families and is **not**
+an exhaustive user-feature inventory. Dialogs, sidebar panels, keyboard workflows,
+filters and source-only capabilities still need classification and corresponding
+CUI/domain/runtime evidence. A small text/shape/table/chart subset is not Impress
+parity. ODP, full master/layout/placeholder semantics, rich text, rich notes,
+media, proofing/review, advanced drawing and complete export fidelity remain
+mandatory gaps; the existing Actions-runtime requirements are unchanged.
+
+Canonical pages consulted: `shared/docs/ui/building-ui.md`,
+`shared/docs/architecture/system-map.md`, repository UI/architecture/validation
+rules, the pinned Present specification and the maintained engine README.
+
 ## Recovered historical worker record
 
 The report below is preserved from the old OpenCode checkpoint `d66d27a1fe0a10238f83d2d318352f39c0fa1a00` during worktree consolidation. Its implementation labels, test totals and environment observations describe that historical worker report only; they are **not current independent acceptance evidence**. Preserve the useful behavioral detail while validating the current integrated source afresh.

@@ -1,3 +1,13 @@
+Current browser UI restoration (12 October 2026): the same original owner now
+exposes table/chart insertion and Properties editing through all Insert menus.
+`PresentBrowserSession.ContentUi.cs` holds only presentation bindings and dispatch;
+`PresentEditor.Structured.cs` remains the mutation owner. Selection/generation
+fences reject stale cell/data callbacks. Chart data retains independent series,
+finite numeric values and real persisted categories. Focused native evidence lives
+in `Tests/PresentUiAcceptanceChecks.cs`; integrated browser rendering and matched
+Impress donor acceptance remain separate required gates. The current immediate
+fill/stroke controls supersede the historical Apply-button description below.
+
 The browser Present route consumes the original `PresentEditor` and an injected
 `IPresentRepository`. The specialized CUI object compiles the four unchanged
 `PresentSlideCanvas` source files and reuses the single original Haven scene

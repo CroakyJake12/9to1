@@ -426,7 +426,7 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
 
     public bool TryGetValue(string path, out object? value)
     {
-        if (TryGetEditorUiValue(path, out value)) return true;
+        if (TryGetEditorUiValue(path, out value) || TryGetContentUiValue(path, out value)) return true;
         value = path switch
         {
             "Title" => Editor?.Document.Title ?? "Present", "Status" => Status,
@@ -516,7 +516,7 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
     }
     public bool TrySetValue(string path, object? value)
     {
-        if (TrySetEditorUiValue(path, value) is { } uiResult) return uiResult;
+        if ((TrySetEditorUiValue(path, value) ?? TrySetContentUiValue(path, value)) is { } uiResult) return uiResult;
         if (path == "TransitionDuration" && value is string durationText)
             return double.TryParse(durationText, NumberStyles.Float, CultureInfo.InvariantCulture, out var duration)
                 && TrySetValue(path, duration);
@@ -691,7 +691,7 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
             "SlideUp" => Editor is not null && !IsReadOnly && Editor.SelectedSlide.Order > 0,
             "SlideDown" => Editor is not null && !IsReadOnly && Editor.SelectedSlide.Order < Editor.Document.Slides.Count - 1,
             "Undo" => Editor?.CanUndo == true && !IsReadOnly, "Redo" => Editor?.CanRedo == true && !IsReadOnly,
-            "Close" => Editor is not null, "Inspect" => _pending is not null, _ => false
+            "Close" => Editor is not null, "Inspect" => _pending is not null, _ => IsContentActionAvailable(command)
         });
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
@@ -708,6 +708,7 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
             { LastOperationError = error; Status = "Clipboard access is unavailable. Use the keyboard shortcut or try again."; }
             Notify(); return;
         }
+        if (await TryExecuteContentUiAsync(command, parameter, cancellationToken)) return;
         switch (command)
         {
             case "ReturnToStart": SetStartView(true); break;
@@ -832,6 +833,7 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
     private void Notify()
     {
         RefreshEditorUi();
+        RefreshContentUi();
         // Selection, open and undo can change the owner's transition. Preserve
         // pending input through unrelated notifications, but never carry a
         // previous slide's fields into a newly selected slide.
