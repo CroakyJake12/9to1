@@ -17,14 +17,14 @@ public class CuiMaterialBorder : Border
     {
         base.OnPropertyChanged(change);
         if (change.Property != BackgroundProperty && change.Property != CornerRadiusProperty && change.Property != BorderThicknessProperty) return;
-        if (Background is CuiMaterialBrush material)
+        if (Background is CuiMaterialBrush or CuiCustomMaterialBrush)
         {
             if (_materialLayer is null)
             {
                 _materialLayer = new MaterialLayer { IsHitTestVisible = false, Focusable = false, ZIndex = int.MinValue };
                 VisualChildren.Insert(0, _materialLayer);
             }
-            _materialLayer.Material = material; _materialLayer.Radius = CornerRadius;
+            _materialLayer.Material = Background; _materialLayer.Radius = CornerRadius;
             _materialLayer.IsVisible = true; _materialLayer.InvalidateVisual(); InvalidateArrange();
         }
         else if (_materialLayer is not null) _materialLayer.IsVisible = false;
@@ -44,10 +44,14 @@ public class CuiMaterialBorder : Border
 
     private sealed class MaterialLayer : Control
     {
-        public CuiMaterialBrush? Material;
+        public IBrush? Material;
         public CornerRadius Radius;
         public override void Render(DrawingContext context)
-        { if (Material is not null && Bounds.Width > 0 && Bounds.Height > 0) context.Custom(new MaterialOperation(new Rect(Bounds.Size), Radius, Material)); }
+        {
+            if (Bounds.Width <= 0 || Bounds.Height <= 0) return;
+            if (Material is CuiMaterialBrush material) context.Custom(new MaterialOperation(new Rect(Bounds.Size), Radius, material));
+            else if (Material is CuiCustomMaterialBrush custom) context.Custom(new CuiCustomMaterialOperation(new Rect(Bounds.Size), Radius, custom));
+        }
     }
 
     private sealed class MaterialOperation : ICustomDrawOperation
