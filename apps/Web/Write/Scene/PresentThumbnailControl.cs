@@ -20,7 +20,10 @@ public sealed class PresentThumbnailControl : Panel, IDisposable
         _navigator.SetPreviewRenderer(renderer);
     public PresentThumbnailControl(Func<bool> reduceMotion)
     {
-        _scene = new(new HavenAvaloniaImageResolver(), new HavenAvaloniaNativeControlResolver(), reduceMotion) { Platform = HavenPlatform.Unknown };
+        // The entire retained rail is an input surface, including unpainted gaps
+        // and the scrollbar gutter. Transparent pixels must still hit this host.
+        _scene = new(new HavenAvaloniaImageResolver(), new HavenAvaloniaNativeControlResolver(), reduceMotion)
+        { Platform = HavenPlatform.Unknown, Background = Avalonia.Media.Brushes.Transparent };
         Children.Add(_scene);
         _navigator.SetValue(HavenProperties.Background, "Transparent");
         _navigator.SlideSelected += index => { if (_allowed && _editor is { } editor && index >= 0 && index < editor.Document.Slides.Count) { editor.CommitLiveTextEdit(); editor.SelectSlide(editor.Document.Slides[index].Id); Refresh(); SelectionChanged?.Invoke(this, EventArgs.Empty); } };

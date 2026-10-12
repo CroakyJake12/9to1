@@ -16,6 +16,8 @@ internal sealed class PresentThumbnailNavigator : HavenElement, IHavenDrawComman
 
     private PresentDocument? _document;
     private int _selectedIndex;
+    private Guid _selectedSlideId;
+    private HavenSize? _viewportSize;
     private double _scrollOffset;
     private int? _pressedIndex;
     private HavenPoint _pressPoint;
@@ -47,6 +49,7 @@ internal sealed class PresentThumbnailNavigator : HavenElement, IHavenDrawComman
     // drawn and hit-tested below; they never add visual child elements.
     internal IReadOnlyList<PresentThumbnailItem> GetVisibleItems()
     {
+        SynchronizeViewport();
         if (_document is null || Bounds.Width <= 1 || Bounds.Height <= 1) return [];
         var items = new List<PresentThumbnailItem>();
         var itemWidth = Math.Max(40, Bounds.Width - HorizontalPadding * 2);
@@ -79,14 +82,20 @@ internal sealed class PresentThumbnailNavigator : HavenElement, IHavenDrawComman
 
     public void SetDocument(PresentDocument document, int selectedIndex)
     {
-        _document = document ?? throw new ArgumentNullException(nameof(document));
-        _document.Normalize();
-        _selectedIndex = Math.Clamp(selectedIndex, 0, Math.Max(0, _document.Slides.Count - 1));
+        ArgumentNullException.ThrowIfNull(document);
+        document.Normalize();
+        var index = Math.Clamp(selectedIndex, 0, Math.Max(0, document.Slides.Count - 1));
+        var slideId = document.Slides[index].Id;
+        var selectionChanged = _document?.Id != document.Id || _selectedIndex != index || _selectedSlideId != slideId;
+        _document = document;
+        _selectedIndex = index;
+        _selectedSlideId = slideId;
         _pressedIndex = null;
         _dragging = false;
         _dropIndex = -1;
         ClampScroll();
-        EnsureSelectedVisible();
+        // A binding/status refresh must not undo the user browsing other slides.
+        if (selectionChanged) EnsureSelectedVisible();
         Accessibility.Description = $"{_document.Slides.Count} slides. Slide {_selectedIndex + 1} selected. Scroll, select, or drag a thumbnail to reorder.";
         Invalidate();
     }
@@ -140,9 +149,12 @@ internal sealed class PresentThumbnailNavigator : HavenElement, IHavenDrawComman
 
     public bool PointerWheel(HavenPoint localPosition, double deltaX, double deltaY)
     {
-        if (_document is null || _document.Slides.Count == 0 || Math.Abs(deltaY) < .001) return false;
+        if (_document is null || _document.Slides.Count == 0 || !double.IsFinite(deltaY) || Math.Abs(deltaY) < .001) return false;
+        SynchronizeViewport();
         var before = _scrollOffset;
-        _scrollOffset -= deltaY * 44;
+        // HavenInputRouter receives logical scroll pixels, already converted by
+        // the backend. Positive Y moves down; do not invert or multiply again.
+        _scrollOffset += deltaY;
         ClampScroll();
         if (Math.Abs(before - _scrollOffset) < .001) return false;
         Invalidate();
@@ -169,8 +181,15 @@ internal sealed class PresentThumbnailNavigator : HavenElement, IHavenDrawComman
     private bool SelectKeyboardSlide(int index)
     {
         if (_document is null || _document.Slides.Count == 0) return false;
+        SynchronizeViewport();
         var target = Math.Clamp(index, 0, _document.Slides.Count - 1);
-        if (target == _selectedIndex) return true;
+        if (target == _selectedIndex)
+        {
+            // Home/End can reveal a selected slide that the user scrolled away.
+            EnsureSelectedVisible();
+            Invalidate();
+            return true;
+        }
         _selectedIndex = target;
         EnsureSelectedVisible();
         UpdateAccessibilityDescription();
@@ -203,6 +222,7 @@ internal sealed class PresentThumbnailNavigator : HavenElement, IHavenDrawComman
 
     public void Draw(HavenDrawingContext context, double opacity)
     {
+        SynchronizeViewport();
         if (_document is null || Bounds.Width <= 1 || Bounds.Height <= 1) return;
         var itemWidth = Math.Max(40, Bounds.Width - HorizontalPadding * 2);
         var thumbHeight = ThumbnailHeight(itemWidth);
@@ -264,6 +284,7 @@ internal sealed class PresentThumbnailNavigator : HavenElement, IHavenDrawComman
 
     private int IndexAt(HavenPoint local)
     {
+        SynchronizeViewport();
         if (_document is null) return -1;
         var itemWidth = Math.Max(40, Bounds.Width - HorizontalPadding * 2);
         var stride = ThumbnailHeight(itemWidth) + LabelHeight + ItemGap;
@@ -292,6 +313,18 @@ internal sealed class PresentThumbnailNavigator : HavenElement, IHavenDrawComman
         if (localY < edge) _scrollOffset -= Math.Min(24, edge - localY);
         else if (localY > Bounds.Height - edge) _scrollOffset += Math.Min(24, localY - (Bounds.Height - edge));
         ClampScroll();
+    }
+
+    private void SynchronizeViewport()
+    {
+        if (_document is null || Bounds.Width <= 1 || Bounds.Height <= 1) return;
+        var size = new HavenSize(Bounds.Width, Bounds.Height);
+        if (_viewportSize == size) return;
+        _viewportSize = size;
+        // SetDocument can precede native arrange. Use the actual final viewport
+        // before drawing, hit testing or exposing matching virtual slide items.
+        ClampScroll();
+        EnsureSelectedVisible();
     }
 
     private void EnsureSelectedVisible()

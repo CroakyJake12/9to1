@@ -217,7 +217,8 @@ public sealed class PresentPageTests
             Assert.True(navigator.Bounds.Height > 200);
 
             var before = navigator.ScrollOffset;
-            Assert.True(navigator.PointerWheel(new HavenPoint(navigator.Bounds.Width / 2, navigator.Bounds.Height / 2), 0, -4));
+            // The backend converts native wheel units to logical pixels before this API.
+            Assert.True(navigator.PointerWheel(new HavenPoint(navigator.Bounds.Width / 2, navigator.Bounds.Height / 2), 0, 192));
             Assert.True(navigator.ScrollOffset > before);
             Assert.Empty(navigator.Children);
         }

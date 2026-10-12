@@ -126,3 +126,22 @@ captures the running native interface. The current importer retains one uniform
 text style per shape; mixed source runs and text insets are not represented by
 that model. These native checks establish neither mixed-format PPTX fidelity nor
 browser/device or LibreOffice Impress acceptance.
+
+## Thumbnail wheel and viewport ownership
+
+The thumbnail navigator receives logical scroll pixels from the shared input
+router; the native backend has already converted wheel direction and magnitude.
+Positive Y scrolls downward once. Its native host accepts input over unpainted
+gaps and the gutter as well as rendered thumbnails. Browsing does not select or
+mutate a slide, and an unchanged session/status refresh preserves the offset.
+Selection changes and actual viewport-size changes bring the selected thumbnail
+back into view; Home/End also reveal an already selected slide after browsing.
+The existing CUI scrolling composition and renderer remain in place.
+
+The `thumbnail-wheel` native regression uses the independently authored 24-slide
+PPTX, real window wheel/pointer/key input and current canonical CUI. It checks
+bidirectional scrolling, gutter routing, dynamic visible automation items, exact
+model preservation, read-only browsing, notification stability and last-slide
+visibility at 1280×900 and 800×700. Failed pre-repair native evidence is retained
+outside the repository. Browser29 must independently retest these workflows;
+these native results alone are not browser, donor or whole-app acceptance.

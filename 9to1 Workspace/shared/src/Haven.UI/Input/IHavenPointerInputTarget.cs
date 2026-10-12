@@ -36,7 +36,8 @@ public interface IHavenPointerInputTarget
     bool PointerReleased(HavenPointerInput input);
     bool PointerCancelled(HavenPointerInput input) => PointerReleased(input);
 }
-/// <summary>Consumes a backend-neutral pointer-wheel gesture before ordinary scroll containers.</summary>
+/// <summary>Consumes a backend-neutral scroll gesture before ordinary scroll containers.
+/// Deltas are logical scroll pixels, positive right/down, already converted from native wheel units.</summary>
 public interface IHavenScrollInputTarget
 {
     bool PointerWheel(HavenPoint localPosition, double deltaX, double deltaY);
