@@ -64,6 +64,16 @@
     <Content Include="Productivity/Present/Storage/present-indexeddb.js" Link="wwwroot/present-indexeddb.js" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Write/Packages/write-packages.js" Link="wwwroot/write-packages.js" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <Target Name="RequireCuiOwnedPresentation" AfterTargets="ResolveReferences">
+    <!-- The browser composition owns all ordinary presentation through CUI.
+         A transitive desktop project must not silently reintroduce a donor theme. -->
+    <ItemGroup>
+      <_CuiDonorThemeReference Include="@(ReferencePath)"
+        Condition="'%(ReferencePath.Filename)' == 'Avalonia.Themes.Fluent' or '%(ReferencePath.Filename)' == 'Avalonia.Themes.Simple'" />
+    </ItemGroup>
+    <Error Condition="'@(_CuiDonorThemeReference)' != ''"
+      Text="The browser CUI composition cannot reference Fluent or Simple presentation themes: @(_CuiDonorThemeReference). Use the shared CUI templates and effective theme resources." />
+  </Target>
   <Target Name="RequirePinnedBrowserAssets" BeforeTargets="ResolveStaticWebAssetsInputs">
     <Error Condition="!Exists('$(PinnedBrowserProject)/staticwebassets/avalonia.js') or !Exists('$(PinnedBrowserProject)/staticwebassets/storage.js')" Text="The pinned Avalonia browser runtime assets have not been built. Build the adapter's locked webapp sources before publishing this host." />
     <ItemGroup>
