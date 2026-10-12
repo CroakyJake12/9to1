@@ -365,6 +365,13 @@ public sealed class CuiControlLoader : IDisposable
     /// <summary>The currently active theme at the current point in the tree.</summary>
     public CuiTheme CurrentTheme => _themeStack.Current;
 
+    /// <summary>Nonallocating authored-control membership, without creating a diagnostic snapshot or querying action policy.</summary>
+    public bool IsAuthoredControl(Control control)
+    {
+        ArgumentNullException.ThrowIfNull(control);
+        return !_disposed && _authoredControls.ContainsKey(control);
+    }
+
     /// <summary>Read-only diagnostic snapshot for a control created by this loader.</summary>
     public CuiControlDiagnostics? Inspect(Control control)
     {

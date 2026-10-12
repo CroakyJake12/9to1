@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using System.Runtime.Versioning;
 using System.Text.Json;
 using CakeOS.Cui;
-using CakeOS.Cui.Language;
+using CakeOS.Cui.Runtime;
 using HavenOS.Home.Core;
 using NineToOne.Web.Services;
 
@@ -13,7 +13,7 @@ public sealed class AccountSettingsFeature : IHomeFeatureRouteHandler, IDisposab
 {
     public const string ViewId = "home.settings.account";
     public string RouteId => HomeFeatureRouteIds.Settings;
-    private readonly CuiDocument _document;
+    private readonly Func<CuiDocument> _document;
     private readonly IAccountBrowserTransport _transport;
     private readonly Func<Action, Task> _present;
     private readonly Func<CancellationToken, Task>? _signIn;
@@ -32,6 +32,14 @@ public sealed class AccountSettingsFeature : IHomeFeatureRouteHandler, IDisposab
 
     public AccountSettingsFeature(CuiDocument document, IAccountBrowserTransport transport,
         Func<Action, Task> present, Func<CancellationToken, Task>? signIn = null)
+        : this(() => document, transport, present, signIn) { ArgumentNullException.ThrowIfNull(document); }
+
+    internal AccountSettingsFeature(CuiDocumentSource document, IAccountBrowserTransport transport,
+        Func<Action, Task> present, Func<CancellationToken, Task>? signIn = null)
+        : this(() => document.Document, transport, present, signIn) { ArgumentNullException.ThrowIfNull(document); }
+
+    private AccountSettingsFeature(Func<CuiDocument> document, IAccountBrowserTransport transport,
+        Func<Action, Task> present, Func<CancellationToken, Task>? signIn)
     { _document = document; _transport = transport; _present = present; _signIn = signIn; }
 
     [SupportedOSPlatform("browser")]
@@ -41,10 +49,7 @@ public sealed class AccountSettingsFeature : IHomeFeatureRouteHandler, IDisposab
         using var stream = typeof(AccountSettingsFeature).Assembly.GetManifestResourceStream("NineToOne.Web.Accounts.cui")
             ?? throw new InvalidOperationException("The account CUI resource is unavailable.");
         using var reader = new StreamReader(stream);
-        var parser = new CuiRichParser();
-        var document = parser.Parse(reader.ReadToEnd(), "Accounts.cui");
-        if (parser.Diagnostics.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
-            throw new InvalidOperationException("The account CUI resource is incompatible.");
+        var document = new CuiDocumentSource(reader.ReadToEnd(), "Accounts.cui", deferParsing: true);
         return new(document, new BrowserAccountTransport(), present, signIn);
     }
 
@@ -169,7 +174,14 @@ public sealed class AccountSettingsFeature : IHomeFeatureRouteHandler, IDisposab
             !_pending.TryRemove(id.GetString()!, out var pending))
             throw new InvalidOperationException("The account presentation is unavailable or has already been consumed.");
         pending.Detach();
-        return new(_document, pending.Bindings, pending.Bindings, pending.Bindings);
+        try { return new(_document(), pending.Bindings, pending.Bindings, pending.Bindings); }
+        catch
+        {
+            // Deferred markup failure must release this consumed presentation
+            // lease. The existing account owner still joins its cleanup work.
+            pending.Bindings.Dispose();
+            throw;
+        }
     }
 
     private void RemovePending(string id)

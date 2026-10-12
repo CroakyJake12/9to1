@@ -1,5 +1,6 @@
 using System.Text.Json;
 using CakeOS.Cui.Language;
+using CakeOS.Cui.Runtime;
 using HavenOS.Home.Core;
 using NineToOne.Web.Accounts;
 using NineToOne.Web.Services;
@@ -7,6 +8,27 @@ var parser = new CuiRichParser();
 var cui = parser.Parse(await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Accounts.cui")), "Accounts.cui");
 AccountSettingsFeature Feature(Service service) => new(cui, service, action => { action(); return Task.CompletedTask; });
 var cases = new (string, Func<Task>)[] {
+    ("optional account markup parses only when rendered and is reused across presentations", async () => {
+        var source = new CuiDocumentSource("<Page><Text Text='Settings'/></Page>", "deferred-settings.cui", deferParsing: true);
+        await using var feature = new AccountSettingsFeature(source, new Service(), action => { action(); return Task.CompletedTask; });
+        Check(!source.IsLoaded, "feature registration parsed optional settings");
+        var first = await feature.OpenAsync(new(HomeFeatureRouteIds.Settings));
+        Check(first.Succeeded && !source.IsLoaded, "route preparation parsed settings or lost route");
+        var firstSurface = feature.Render(first.ViewState!);
+        Check(source.IsLoaded, "actual settings presentation did not parse markup");
+        var second = await feature.OpenAsync(new(HomeFeatureRouteIds.Settings));
+        var secondSurface = feature.Render(second.ViewState!);
+        Check(ReferenceEquals(firstSurface.Document, secondSurface.Document), "immutable markup was reparsed");
+        firstSurface.Lifetime!.Dispose(); secondSurface.Lifetime!.Dispose();
+    }),
+    ("invalid optional account markup fails before presentation and retires the consumed lease", async () => {
+        var source = new CuiDocumentSource("<TextBlock Text='Forbidden native markup'/>", "invalid-settings.cui", deferParsing: true);
+        await using var feature = new AccountSettingsFeature(source, new Service(), action => { action(); return Task.CompletedTask; });
+        var result = await feature.OpenAsync(new(HomeFeatureRouteIds.Settings));
+        try { feature.Render(result.ViewState!); throw new Exception("invalid markup was displayed"); }
+        catch (InvalidDataException) { }
+        Throws(() => feature.Render(result.ViewState!));
+    }),
     ("each unsupported target preserves original request and performs zero service calls", async () => {
         var requests = new[] { new HomeFeatureNavigationRequest(HomeFeatureRouteIds.Settings, EntityType: "account"), new(HomeFeatureRouteIds.Settings, EntityId: ""), new(HomeFeatureRouteIds.Settings, Action: "signout"), new(HomeFeatureRouteIds.Settings, DeepLink: "?private"), new(HomeFeatureRouteIds.Settings, ModelPickerTarget: new("account", null, "text", null)) };
         var service = new Service(); using var feature = Feature(service);

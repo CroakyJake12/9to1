@@ -19,7 +19,7 @@ internal static class BrowserActionAvailability
     /// <summary>Capability availability narrows the owning CUI's initial enabled state.</summary>
     public static void ApplyInitial(Button button, CuiControlLoader loader, CuiDocument document, ICuiActionDispatcher actions)
     {
-        if (loader.Inspect(button) is null || button.Tag is not string reference) return;
+        if (!loader.IsAuthoredControl(button) || button.Tag is not string reference) return;
         if (InitialStates.TryGetValue(button, out var previous)) previous.Dispose();
         InitialStates.Remove(button);
         var state = new ButtonState(button, document, actions);
@@ -60,7 +60,7 @@ internal static class BrowserActionAvailability
             Dispatcher.UIThread.VerifyAccess();
             if (_disposed) return;
             var current = _root.GetLogicalDescendants().OfType<Control>().Prepend(_root).OfType<Button>()
-                .Where(button => _loader.Inspect(button) is not null && button.Tag is string).ToHashSet();
+                .Where(button => _loader.IsAuthoredControl(button) && button.Tag is string).ToHashSet();
             foreach (var removed in _buttons.Keys.Except(current).ToArray())
             {
                 _buttons[removed].Dispose(); _buttons.Remove(removed);
