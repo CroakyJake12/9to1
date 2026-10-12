@@ -15,7 +15,7 @@ export function installStagingAppsAction(): void {
     if (!response.ok) throw new Error("The current administrator session could not be verified.");
     return await response.json();
   };
-  const ready = (client: ClientState | undefined): client is ClientState & { clientId: string } =>
+  const ready = <T extends ClientState>(client: T | undefined): client is T & { clientId: string } =>
     client?.kind === "ready" && typeof client.clientId === "string" && !!client.clientId;
   const showReady = (state: State): boolean => {
     if (!ready(state) || !ready(state.native)) return false;
