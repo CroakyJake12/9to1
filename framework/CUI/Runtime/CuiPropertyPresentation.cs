@@ -338,7 +338,13 @@ public static class CuiPropertyPresentation
                 if(_nativeFences.Remove(property,out var previous))previous.Dispose();
                 // Native priority is only the final renderer transport. It never
                 // selects a CUI winner. Editable input representations stay local.
-                var priority=property.IsDirect||IsInputRepresentation(property)?BindingPriority.LocalValue:BindingPriority.Animation;
+                // Range endpoints participate in native coercion together. The
+                // pinned backend's animated/base-value coercion can restore its
+                // default endpoint when the other endpoint changes. Transport
+                // this input configuration at local priority, retaining the CUI
+                // store and NativeChanged fence as its sole value authority.
+                var rangeEndpoint = _control is RangeBase && property.Name is "Minimum" or "Maximum";
+                var priority=property.IsDirect||IsInputRepresentation(property)||rangeEndpoint?BindingPriority.LocalValue:BindingPriority.Animation;
                 var fence=_control.SetValue(property,resolved.Value,priority);
                 if(fence is not null)_nativeFences[property]=fence;
             }
