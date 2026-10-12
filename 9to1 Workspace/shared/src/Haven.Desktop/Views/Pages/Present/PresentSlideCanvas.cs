@@ -108,7 +108,7 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
         if (hit is not null)
         {
             if (input.ClickCount == 2 && !input.Modifiers.HasFlag(HavenKeyModifiers.Shift)
-                && hit.Kind == PresentElementKind.Text && !hit.Locked && _selectedIds.Contains(hit.Id))
+                && (hit.Kind is PresentElementKind.Text or PresentElementKind.Shape) && !hit.Locked && _selectedIds.Contains(hit.Id))
             {
                 BeginElementTextEdit(hit, input.LocalPosition, ToInputModifiers(input.Modifiers));
                 return true;
@@ -257,6 +257,7 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
             case PresentElementKind.Shape when element.VectorShape is { } vector:
                 var renderedVector = BuildPreviewVector(element, vector);
                 DrawVectorShape(context, renderedVector, rect, opacity * element.Opacity);
+                DrawEditableElementText(context, element, rect, opacity);
                 if (_vectorPointEditingElementId == element.Id)
                     DrawVectorHandles(context, renderedVector, rect, opacity);
                 break;
@@ -264,6 +265,7 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
                 context.Add(new HavenFillRoundedRectCommand(rect, Brush(element.Style.FillColor, "AccentSubtle"), Math.Max(0, rect.Width * element.Style.CornerRadius), opacity * element.Opacity));
                 if (element.Style.StrokeWidth > 0)
                     context.Add(new HavenStrokeRoundedRectCommand(rect, new HavenPen(Brush(element.Style.StrokeColor, "Accent"), element.Style.StrokeWidth), Math.Max(0, rect.Width * element.Style.CornerRadius), opacity * element.Opacity));
+                DrawEditableElementText(context, element, rect, opacity);
                 break;
             case PresentElementKind.Table:
                 DrawTable(context, element.ReadTable(), rect, opacity * element.Opacity);

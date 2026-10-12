@@ -145,7 +145,7 @@ internal sealed partial class PresentSlideCanvas
         {
             if (key == HavenKey.Escape && _selectedIds.Count > 0) { SelectionSetRequested?.Invoke(Array.Empty<Guid>()); return true; }
             if (key == HavenKey.Enter && _slide is not null && _selectedIds.Count == 1
-                && _slide.Elements.FirstOrDefault(element => _selectedIds.Contains(element.Id)) is { Kind: PresentElementKind.Text, Locked: false } text)
+                && _slide.Elements.FirstOrDefault(element => _selectedIds.Contains(element.Id)) is { Kind: PresentElementKind.Text or PresentElementKind.Shape, Locked: false } text)
             {
                 BeginElementTextEdit(text, Center(ElementRect(text, SlideRectLocal(), false)), default);
                 return true;

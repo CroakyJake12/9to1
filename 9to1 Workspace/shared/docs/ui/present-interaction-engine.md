@@ -110,3 +110,19 @@ the native headless application, saves screenshots of all seven chart types and
 edited tables, checks the actual emitted geometry against signed source values,
 and saves/reopens the document. This focused native evidence does not establish
 browser, packaged-device, PowerPoint round-trip or LibreOffice Impress parity.
+
+## Text-bearing shapes
+
+Plain and vector shapes paint their existing `PresentElement.Text` with the same
+clipped, rotated text renderer used by text objects, preserving the owner's
+`TextStyle` and opacity. A single click selects the shape for movement; double
+click or Enter enters the existing text editor. Typing, commit, undo and redo use
+the original owner transaction. Empty shapes acquire real text only when typed.
+
+The `shape-text` native regression imports and saves the independently authored
+24-slide fixture `operations-review-24.pptx`, confirms all 96 text-bearing shapes
+remain in the repository, exercises real pointer/key input and save/reopen, and
+captures the running native interface. The current importer retains one uniform
+text style per shape; mixed source runs and text insets are not represented by
+that model. These native checks establish neither mixed-format PPTX fidelity nor
+browser/device or LibreOffice Impress acceptance.

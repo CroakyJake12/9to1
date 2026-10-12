@@ -36,6 +36,7 @@ var assertions = await headless.Dispatch(async () =>
     Check(!Avalonia.Platform.AssetLoader.Exists(new Uri("avares://Haven/WriteOwnerResources/DefaultTheme.Resources.axaml")),
         "retained Present runs without the removed extracted AXAML theme resource");
     var paths = new AppPaths();
+    if (args.Contains("shape-text", StringComparer.Ordinal)) return await PresentShapeTextChecks.Run(paths);
     if (args.Contains("interchange", StringComparer.Ordinal)) return await PresentInterchangeChecks.Run(paths);
     if (args.Contains("title", StringComparer.Ordinal)) return await PresentTitleChecks.Run(paths);
     var repository = new PresentRepository(paths);
