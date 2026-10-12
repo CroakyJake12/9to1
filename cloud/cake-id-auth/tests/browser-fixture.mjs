@@ -136,18 +136,20 @@ globalThis.fetch = async (input, init = {}) => {
 const authClient = createAuthClient({ baseURL: `${baseURL}${authPath}`, plugins: [oauthProviderClient()] });
 
 async function waitForWorker() {
-  for (let attempt = 0; attempt < 200; attempt++) {
+  const readinessDeadline = Date.now() + 60000;
+  while (Date.now() < readinessDeadline) {
     if (workerStartupError) throw new Error("Wrangler spawn failed before readiness");
     if (worker.exitCode !== null) throw new Error(`Wrangler exited before readiness.\n${serverOutput.slice(-12000)}`);
     try {
-      const response = await globalThis.fetch(`${baseURL}/__test/health`, { headers: { "x-local-test-key": testKey }, signal: AbortSignal.timeout(1500) });
+      const response = await globalThis.fetch(`${baseURL}/__test/health`, { headers: { "x-local-test-key": testKey },
+        signal: AbortSignal.timeout(Math.max(1, Math.min(1500, readinessDeadline - Date.now()))) });
       const body = await response.json();
       if (response.ok && body.ready === true) return;
       if (response.status >= 500) throw new Error(`Local worker returned ${response.status}: ${JSON.stringify(body)}\n${serverOutput.slice(-12000)}`);
     } catch (error) {
       if (error.message?.includes("Local worker returned")) throw error;
     }
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, Math.max(0, Math.min(300, readinessDeadline - Date.now()))));
   }
   throw new Error(`Local Worker did not become ready.\n${serverOutput.slice(-12000)}`);
 }
