@@ -16,6 +16,15 @@ public static class CuiCustomThemeResourceApplier
         ArgumentNullException.ThrowIfNull(resources);
         var value = theme.Validate();
         var settings = (accessibility ?? CuiAccessibilitySettings.Default).Validate();
+        // Implicit Mica belongs only to the named Professional preset, not to
+        // custom themes that use its structural base. Explicit colour backdrop
+        // settings are rendered separately by the custom material adapter.
+        resources["CuiWorkspaceMaterial"] = resources["CuiWorkspaceBrush"];
+        resources["CuiShellMaterial"] = resources["CuiBackgroundBrush"];
+        resources["CuiSurfaceMaterial"] = resources["CuiPanelBrush"];
+        resources["CuiFloatingSurfaceMaterial"] = resources["CuiPanel2Brush"];
+        if (resources["CuiPanel2Brush"] is ISolidColorBrush popup)
+            resources["CuiPopupSurfaceBrush"] = new SolidColorBrush(Color.FromRgb(popup.Color.R, popup.Color.G, popup.Color.B)).ToImmutable();
         resources["CuiCustomTypography"] = value.Fonts;
         resources["CuiCustomFontScale"] = settings.DisplayScale;
         resources["CuiButtonRoundnessPercent"] = value.ButtonRoundnessPercent;
@@ -34,6 +43,25 @@ public static class CuiCustomThemeResourceApplier
             resources["CuiAccentBrush"] = resources["CuiAccentPrimaryBrush"];
             resources["HavenAccentBrush"] = resources["CuiAccentPrimaryBrush"];
             resources["PrimaryBrush"] = resources["CuiAccentPrimaryBrush"];
+        }
+        else
+        {
+            // Explicitly replace every custom role in a reused dictionary too.
+            var panel = resources["CuiPanelBrush"] is ISolidColorBrush surface ? surface.Color : Colors.Black;
+            var background = new SolidColorBrush(Color.FromRgb(panel.R, panel.G, panel.B)).ToImmutable();
+            var foreground = resources["CuiTextBrush"] as IBrush ?? Brushes.White;
+            foreach (var role in new[] { "Primary", "Secondary", "Tertiary" })
+            {
+                resources.Remove($"CuiAccent{role}Fill");
+                resources[$"CuiAccent{role}Brush"] = background;
+                resources[$"HavenAccent{role}Brush"] = background;
+                resources[$"CuiAccent{role}HoverBrush"] = background;
+                resources[$"CuiAccent{role}PressedBrush"] = background;
+                resources[$"CuiAccent{role}ForegroundBrush"] = foreground;
+            }
+            resources["CuiAccentBrush"] = background;
+            resources["HavenAccentBrush"] = background;
+            resources["PrimaryBrush"] = background;
         }
     }
 

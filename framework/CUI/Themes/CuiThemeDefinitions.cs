@@ -34,16 +34,17 @@ public sealed class CuiThemeDefinitionCatalog
     private readonly Dictionary<string, CuiThemeDefinition> _definitions = new(StringComparer.OrdinalIgnoreCase);
     private readonly object _gate = new();
     private readonly Dictionary<string, CuiCustomTheme> _custom = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _ephemeralIds = new(StringComparer.Ordinal);
     private readonly Dictionary<string, CuiResolvedTheme> _resolvedCustom = new(StringComparer.Ordinal);
     public event EventHandler? Changed;
     public IReadOnlyList<string> Names
     {
         get { lock (_gate) return Array.AsReadOnly(CuiThemeCatalog.All.Select(item => item.DisplayName)
-            .Concat(_definitions.Keys).Concat(_custom.Values.Select(item => item.Name)).ToArray()); }
+            .Concat(_definitions.Keys).Concat(_custom.Values.Where(item => !_ephemeralIds.Contains(item.Id)).Select(item => item.Name)).ToArray()); }
     }
 
     /// <summary>Atomically replaces one validated account/draft definition. No account storage is written.</summary>
-    public void UpsertCustomTheme(CuiCustomTheme theme)
+    public void UpsertCustomTheme(CuiCustomTheme theme, bool ephemeral = false)
     {
         var frozen = theme.Validate();
         lock (_gate)
@@ -51,8 +52,11 @@ public sealed class CuiThemeDefinitionCatalog
             if (_definitions.ContainsKey(frozen.Name) || _custom.Values.Any(item => item.Id != frozen.Id &&
                 string.Equals(item.Name, frozen.Name, StringComparison.OrdinalIgnoreCase)))
                 throw new CuiThemeDefinitionException("CUI_THEME_DUPLICATE", "Another theme already uses this name.");
+            if (_custom.ContainsKey(frozen.Id) && _ephemeralIds.Contains(frozen.Id) != ephemeral)
+                throw new CuiThemeDefinitionException("CUI_THEME_ID_CUSTODY", "A preview and an account theme cannot share one ID.");
             if (_custom.TryGetValue(frozen.Id, out var previous) && CuiCustomThemeContract.Serialize(previous) == CuiCustomThemeContract.Serialize(frozen)) return;
             _custom[frozen.Id] = frozen;
+            if (ephemeral) _ephemeralIds.Add(frozen.Id);
             _resolvedCustom.Remove(frozen.Id);
         }
         Changed?.Invoke(this, EventArgs.Empty);
@@ -61,7 +65,7 @@ public sealed class CuiThemeDefinitionCatalog
     public bool RemoveCustomTheme(string id)
     {
         bool removed;
-        lock (_gate) { removed = _custom.Remove(id); if (removed) _resolvedCustom.Remove(id); }
+        lock (_gate) { removed = _custom.Remove(id); if (removed) { _resolvedCustom.Remove(id); _ephemeralIds.Remove(id); } }
         if (removed) Changed?.Invoke(this, EventArgs.Empty);
         return removed;
     }
@@ -77,6 +81,8 @@ public sealed class CuiThemeDefinitionCatalog
             foreach (var id in previousIds) next.Remove(id);
             foreach (var value in values)
             {
+                if (next.ContainsKey(value.Id))
+                    throw new CuiThemeDefinitionException("CUI_THEME_ID_CUSTODY", "An account theme cannot replace an independent local definition.");
                 if (_definitions.ContainsKey(value.Name) || next.Values.Any(item => item.Id != value.Id &&
                     string.Equals(item.Name, value.Name, StringComparison.OrdinalIgnoreCase)))
                     throw new CuiThemeDefinitionException("CUI_THEME_DUPLICATE", "Another theme already uses this name.");

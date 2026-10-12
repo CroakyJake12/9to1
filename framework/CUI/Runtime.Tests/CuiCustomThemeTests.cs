@@ -59,6 +59,42 @@ public sealed class CuiCustomThemeTests
     }
 
     [Fact]
+    public void Preview_definitions_are_resolvable_but_not_saved_choices_or_account_replace_targets()
+    {
+        var draft = CuiCustomThemeContract.CreateDefault("Preview"); var catalog = new CuiThemeDefinitionCatalog();
+        catalog.UpsertCustomTheme(draft, ephemeral: true);
+        Assert.DoesNotContain(draft.Name, catalog.Names);
+        Assert.True(catalog.TryResolve(draft.Name, out _));
+        Assert.Throws<CuiThemeDefinitionException>(() => catalog.ReplaceAccountCustomThemes([draft], []));
+        Assert.Throws<CuiThemeDefinitionException>(() => catalog.UpsertCustomTheme(draft));
+        Assert.True(catalog.RemoveCustomTheme(draft.Id));
+        catalog.UpsertCustomTheme(draft); Assert.Contains(draft.Name, catalog.Names);
+    }
+
+    [Fact]
+    public void Reused_resources_restore_high_contrast_and_custom_themes_have_no_implicit_Mica()
+    {
+        var resources = new ResourceDictionary(); var theme = CuiCustomThemeContract.CreateDefault();
+        var palette = CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Dark, CuiTheme.Professional);
+        CuiThemeResourceApplier.ApplyToResources(resources, palette);
+        CuiCustomThemeResourceApplier.ApplyToResources(resources, theme);
+        Assert.Same(resources["CuiWorkspaceBrush"], resources["CuiWorkspaceMaterial"]);
+        Assert.Same(resources["CuiPanelBrush"], resources["CuiSurfaceMaterial"]);
+        Assert.NotNull(resources["CuiAccentPrimaryFill"]);
+        var high = new CuiAccessibilitySettings { HighContrast = true };
+        CuiThemeResourceApplier.ApplyToResources(resources, palette, high);
+        CuiCustomThemeResourceApplier.ApplyToResources(resources, theme, high);
+        Assert.Null(resources["CuiAccentPrimaryFill"]);
+        var background = Assert.IsAssignableFrom<ISolidColorBrush>(resources["CuiAccentPrimaryBrush"]);
+        var foreground = Assert.IsAssignableFrom<ISolidColorBrush>(resources["CuiAccentPrimaryForegroundBrush"]);
+        Assert.Equal(255, background.Color.A); Assert.True(CuiContrast.Ratio(background.Color, foreground.Color) >= 7);
+        CuiThemeResourceApplier.ApplyToResources(resources, palette);
+        CuiCustomThemeResourceApplier.ApplyToResources(resources, theme);
+        Assert.NotNull(resources["CuiAccentPrimaryFill"]);
+        Assert.Equal(Color.Parse(theme.PrimaryAccent.Colour.Hex), Assert.IsAssignableFrom<ISolidColorBrush>(resources["CuiAccentPrimaryBrush"]).Color);
+    }
+
+    [Fact]
     public void Account_observation_reconciles_library_without_dropping_private_preview()
     {
         var saved = CuiCustomThemeContract.CreateDefault("Saved"); var preview = CuiCustomThemeContract.CreateDefault("Preview");
