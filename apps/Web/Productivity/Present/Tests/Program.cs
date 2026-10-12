@@ -41,6 +41,7 @@ var assertions = await headless.Dispatch(async () =>
     if (args.Contains("thumbnail-wheel", StringComparer.Ordinal)) return await PresentThumbnailWheelChecks.Run(paths);
     if (args.Contains("shape-text", StringComparer.Ordinal)) return await PresentShapeTextChecks.Run(paths);
     if (args.Contains("interchange", StringComparer.Ordinal)) return await PresentInterchangeChecks.Run(paths);
+    if (args.Contains("rename-ui", StringComparer.Ordinal)) return await PresentRenameChecks.Run(paths);
     if (args.Contains("slide-metadata", StringComparer.Ordinal)) return await PresentSlideMetadataChecks.Run(paths);
     if (args.Contains("title", StringComparer.Ordinal)) return await PresentTitleChecks.Run(paths);
     if (args.Contains("document-fonts", StringComparer.Ordinal)) return PresentDocumentFontChecks.Run(paths);
@@ -512,22 +513,17 @@ var assertions = await headless.Dispatch(async () =>
         }
         var contentDrawing = new HavenDrawingContext();
         ((IHavenDrawCommandSource)canvas).Draw(contentDrawing, 1);
-        var titleDrawing = contentDrawing.Commands.OfType<HavenTextCommand>().Single(command => command.Layout.Text == first.Slides[0].Title);
-        Check(titleDrawing.Brush == new HavenSolidBrush(255, 31, 31, 31)
-            && titleDrawing.Layout.FontFamily == first.Theme.HeadingFontFamily,
-            "slide title uses its saved document foreground and heading font, independent of dark application chrome");
+        Check(!contentDrawing.Commands.OfType<HavenTextCommand>().Any(command => command.Layout.Text == first.Slides[0].Title),
+            "slide metadata is absent from authored canvas content");
         var local = (HavenRect)canvas.GetType().GetMethod("SlideRectLocal", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(canvas, null)!;
-        // Query the actual owning layout; no duplicated slide positioning model.
-        var title = (HavenRect)canvas.GetType().GetMethod("TitleRect", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(canvas, [local])!;
-        var titlePoint = scene.TranslatePoint(new Point(canvas.Bounds.X + title.X + title.Width / 2,
-            canvas.Bounds.Y + title.Y + title.Height / 2), window)!.Value;
-        window.MouseDown(titlePoint, MouseButton.Left); window.MouseUp(titlePoint, MouseButton.Left);
-        window.KeyPress(Key.A, RawInputModifiers.Control, PhysicalKey.A, "a");
-        window.KeyTextInput("Actual native slide title");
-        Check(session.GetDocumentSnapshot()!.Slides[0].Title == "Actual native slide title" && session.IsDirty,
-            "physical native title selection and routed raw typing preview owning canonical slide text");
-        window.KeyPress(Key.Enter, RawInputModifiers.Control, PhysicalKey.Enter, "Enter");
-        Check(session.Editor!.CanUndo && !session.Editor.IsLiveTextEditActive, "actual retained text commit creates owning undo transaction");
+        var renameUi = new PresentRenameChecks.NativeUi(session, loader, root!, window, Check);
+        await renameUi.OpenRename(0);
+        renameUi.ReplaceName("Actual native slide name");
+        await renameUi.EnterAndWait();
+        Check(session.GetDocumentSnapshot()!.Slides[0].Title == "Actual native slide name" && session.IsDirty,
+            "physical thumbnail Rename and Enter update the owning canonical slide metadata");
+        Check(session.Editor!.CanUndo && !session.Editor.IsLiveTextEditActive,
+            "actual rename creates an owning undo transaction without starting a canvas text editor");
         var retainedEditor = session.Editor;
         var retainedDraft = JsonSerializer.Serialize(session.GetDocumentSnapshot());
         var retainedRevision = session.DurableRevision;
@@ -559,6 +555,10 @@ var assertions = await headless.Dispatch(async () =>
         Check(session.Editor!.Selection.ElementIds.Count == 1
             && ButtonNamed("Delete element").IsEnabled && ButtonNamed("Rotate right").IsEnabled && ButtonNamed("Bold").IsEnabled,
             "actual retained canvas selection notifies the session so the object controls follow the native selection");
+        renameUi.Tap(Key.Enter);
+        window.KeyTextInput("Authored preview text"); renameUi.Tap(Key.Escape);
+        Check(session.Editor.SelectedElements.Single().Text == "Authored preview text" && !session.Editor.IsLiveTextEditActive,
+            "real body text remains editable after metadata rename through the original canvas text owner");
         var emptyPoint = scene.TranslatePoint(new Point(canvas.Bounds.X + local.X + local.Width * 0.5,
             canvas.Bounds.Y + local.Y + local.Height * 0.92), window)!.Value;
         window.MouseDown(emptyPoint, MouseButton.Left); window.MouseUp(emptyPoint, MouseButton.Left);
@@ -584,11 +584,16 @@ var assertions = await headless.Dispatch(async () =>
         var thumbnailScene = root!.GetVisualDescendants().OfType<PresentThumbnailControl>().Single().GetVisualDescendants().OfType<HavenSceneControl>().Single();
         var thumbnailDrawing = new HavenDrawingContext();
         ((IHavenDrawCommandSource)thumbnailScene.Root!).Draw(thumbnailDrawing, 1);
-        // Preview content uses canonical document point sizes before its uniform transform;
-        // the separate 11 px rail caption deliberately uses UI selection colours.
-        var thumbnailText = thumbnailDrawing.Commands.OfType<HavenTextCommand>().Where(command => command.Layout.Text == session.Editor!.SelectedSlide.Title && command.Layout.FontSize > 11).ToArray();
-        Check(thumbnailText.Length > 0 && thumbnailText.All(command => command.Brush == new HavenSolidBrush(255, 31, 31, 31)),
-            "slide preview text retains document colours independently of its surrounding selection chrome");
+        // Slide names belong only to the 11 px navigation caption. Authored body text
+        // in the genuine preview retains its own document colours and point sizes.
+        var thumbnailText = thumbnailDrawing.Commands.OfType<HavenTextCommand>().ToArray();
+        var bodyText = session.Editor!.SelectedSlide.Elements.First(element => element.Kind == PresentElementKind.Text && !string.IsNullOrEmpty(element.Text)).Text;
+        Check(thumbnailText.Any(command => command.Layout.Text == session.Editor.SelectedSlide.Title && command.Layout.FontSize == 11)
+            && !thumbnailText.Any(command => command.Layout.Text == session.Editor.SelectedSlide.Title && command.Layout.FontSize > 11),
+            "slide metadata appears only in the thumbnail navigation label, never in slide content");
+        Check(thumbnailText.Any(command => command.Layout.Text == bodyText && command.Layout.FontSize > 11
+            && command.Brush == new HavenSolidBrush(255, 31, 31, 31)),
+            "actual authored preview text retains document colours independently of its surrounding selection chrome");
         thumbnailScene.FocusElement(thumbnailScene.Root!);
         window.KeyPress(Key.Home, RawInputModifiers.None, PhysicalKey.Home, "Home");
         Check(session.Editor.Selection.SlideId == originalSlide && notes.Text == "Actual speaker notes",
