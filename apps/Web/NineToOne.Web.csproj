@@ -64,6 +64,17 @@
     <Content Include="Productivity/Present/Storage/present-indexeddb.js" Link="wwwroot/present-indexeddb.js" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Write/Packages/write-packages.js" Link="wwwroot/write-packages.js" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <Target Name="TrackBrowserNativeTrampolineHeader" BeforeTargets="_WasmCompileNativeSourceFiles">
+    <!-- The .NET 10 runtime source includes this generated header, but the SDK
+         omits it from incremental native compilation dependencies. Reusing an
+         older runtime.o can omit newly required interpreter call signatures. -->
+    <ItemGroup>
+      <_WasmRuntimePackSrcFile Update="@(_WasmRuntimePackSrcFile)"
+        Condition="'%(_WasmRuntimePackSrcFile.Filename)' == 'runtime'">
+        <Dependencies>%(_WasmRuntimePackSrcFile.Dependencies);$(_WasmInterpToNativeTablePath)</Dependencies>
+      </_WasmRuntimePackSrcFile>
+    </ItemGroup>
+  </Target>
   <Target Name="RequireCuiOwnedPresentation" AfterTargets="ResolveReferences">
     <!-- The browser composition owns all ordinary presentation through CUI.
          A transitive desktop project must not silently reintroduce a donor theme. -->
