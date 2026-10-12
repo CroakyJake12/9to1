@@ -2,7 +2,7 @@ import { validThemePreference } from './theme-preference-contract.js';
 
 // This cache is available only after the maintained account API has verified the
 // current live token's account. It never migrates or uploads device-local themes.
-export function createAccountThemePreferences({ client, hasCredential, apiResource, storage = globalThis.localStorage, window = globalThis.window }) {
+export function createAccountThemePreferences({ client, hasCredential, apiResource, storage = undefined, window = globalThis.window }) {
     let accountId = null, epoch = 0, disposed = false, nextListener = 1;
     const listeners = new Map(), pending = new Map();
     const cacheKey = id => `9to1.home.account-theme-cache.v1:${JSON.stringify([apiResource, id])}`;
@@ -22,7 +22,7 @@ export function createAccountThemePreferences({ client, hasCredential, apiResour
     const readCache = scope => {
         if (!current(scope)) return deniedRead();
         try {
-            const raw = storage?.getItem(cacheKey(scope));
+            const raw = (storage ?? globalThis.localStorage)?.getItem(cacheKey(scope));
             if (raw == null) return { state: 1, diagnostic: 'No offline theme cache exists for this account.' };
             if (raw.length > 2_200_000) return { state: 4 };
             const envelope = JSON.parse(raw);
@@ -36,8 +36,9 @@ export function createAccountThemePreferences({ client, hasCredential, apiResour
         if (cached.preference?.revision > preference.revision) return; // Never regress a newer same-account cache.
         const serialized = JSON.stringify({ version: 1, apiResource, preference });
         if (serialized.length > 2_200_000) throw new Error('ThemeCacheTooLarge');
-        storage.setItem(cacheKey(scope), serialized);
-        if (storage.getItem(cacheKey(scope)) !== serialized) throw new Error('ThemeCacheWriteFailed');
+        const cacheStorage = storage ?? globalThis.localStorage;
+        cacheStorage.setItem(cacheKey(scope), serialized);
+        if (cacheStorage.getItem(cacheKey(scope)) !== serialized) throw new Error('ThemeCacheWriteFailed');
     };
     const onStorage = event => { if (accountId && event.key === cacheKey(accountId) && current(accountId)) notify(false); };
     window?.addEventListener?.('storage', onStorage);

@@ -1604,7 +1604,7 @@ function createAccountModule(client = null) {
 }
 
 // apps/Web/Auth/account-theme-preferences.js
-function createAccountThemePreferences({ client, hasCredential, apiResource, storage = globalThis.localStorage, window = globalThis.window }) {
+function createAccountThemePreferences({ client, hasCredential, apiResource, storage = void 0, window = globalThis.window }) {
   let accountId = null, epoch2 = 0, disposed = false, nextListener = 1;
   const listeners = /* @__PURE__ */ new Map(), pending = /* @__PURE__ */ new Map();
   const cacheKey = (id) => `9to1.home.account-theme-cache.v1:${JSON.stringify([apiResource, id])}`;
@@ -1635,7 +1635,7 @@ function createAccountThemePreferences({ client, hasCredential, apiResource, sto
   const readCache = (scope) => {
     if (!current(scope)) return deniedRead();
     try {
-      const raw = storage?.getItem(cacheKey(scope));
+      const raw = (storage ?? globalThis.localStorage)?.getItem(cacheKey(scope));
       if (raw == null) return { state: 1, diagnostic: "No offline theme cache exists for this account." };
       if (raw.length > 22e5) return { state: 4 };
       const envelope = JSON.parse(raw);
@@ -1650,8 +1650,9 @@ function createAccountThemePreferences({ client, hasCredential, apiResource, sto
     if (cached.preference?.revision > preference.revision) return;
     const serialized = JSON.stringify({ version: 1, apiResource, preference });
     if (serialized.length > 22e5) throw new Error("ThemeCacheTooLarge");
-    storage.setItem(cacheKey(scope), serialized);
-    if (storage.getItem(cacheKey(scope)) !== serialized) throw new Error("ThemeCacheWriteFailed");
+    const cacheStorage = storage ?? globalThis.localStorage;
+    cacheStorage.setItem(cacheKey(scope), serialized);
+    if (cacheStorage.getItem(cacheKey(scope)) !== serialized) throw new Error("ThemeCacheWriteFailed");
   };
   const onStorage = (event) => {
     if (accountId && event.key === cacheKey(accountId) && current(accountId)) notify(false);

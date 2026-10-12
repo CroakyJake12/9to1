@@ -79,3 +79,10 @@ test('portable custom library validates inactive branches, fonts, role coverage,
     assert.equal(validCustomThemeLibrary(JSON.stringify([{...theme,name:'Professional'}])),false);
     assert.equal(validCustomThemeLibrary(JSON.stringify([{...theme,unknownCallback:'run()'}])),false);
 });
+
+test('unavailable browser storage cannot prevent authenticated service composition',async()=>{
+    const unavailable=new Proxy({}, {get(){throw new Error('StorageDenied');}});
+    const theme=createAccountThemePreferences({client:{getCurrent:async()=>({ok:true,body:{accountId:A}})},hasCredential:()=>true,apiResource:'https://accounts.example.test',storage:unavailable,window:null});
+    assert.equal(await theme.themeContext('a'),A);assert.equal(JSON.parse(theme.readCache(A)).state,4);
+    assert.throws(()=>theme.writeCache(A,JSON.stringify(preference())));await theme.disposeAsync();
+});
