@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Documents;
@@ -37,10 +38,17 @@ public static class CuiControlTemplates
         Add<CheckBox>(resources, Choice); Add<RadioButton>(resources, Choice); Add<ToggleSwitch>(resources, Choice);
         Add<TextBox>(resources, TextInput); Add<ScrollViewer>(resources, Scroll); Add<ScrollBar>(resources, ScrollBar);
         Add<Thumb>(resources, (owner, _) => Frame(owner)); Add<Slider>(resources, Slider);
+        Add<CuiResizeInput>(resources, (owner, _) =>
+        {
+            var handle = new Border { Width = 2, Height = 32, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+            Resource(handle, Border.BackgroundProperty, "CuiLineBrush");
+            return Frame(owner, handle);
+        });
         Add<ComboBox>(resources, Select); Add<ComboBoxItem>(resources, Content); Add<ListBoxItem>(resources, Content);
         Add<ListBox>(resources, Items); Add<ItemsControl>(resources, Items); Add<TreeView>(resources, Items);
         Add<TreeViewItem>(resources, TreeItem); Add<Menu>(resources, Items); Add<ContextMenu>(resources, Items);
         Add<MenuItem>(resources, MenuItem); Add<TabControl>(resources, Tabs); Add<TabItem>(resources, Header);
+        Add<CuiMenuItem>(resources, (owner, scope) => MenuItem(owner, scope));
         Add<ContentControl>(resources, Content); Add<UserControl>(resources, Content); Add<ToolTip>(resources, Content);
         Add<NumericUpDown>(resources, Numeric); Add<ButtonSpinner>(resources, Spinner);
         Add<ProgressBar>(resources, Progress); Add<Separator>(resources, Separator);
@@ -120,7 +128,7 @@ public static class CuiControlTemplates
             var menu=new ContextMenu();
             foreach(var (label,path,action) in new (string,string?,Action)[] { ("Cut","CanCut",owner.Cut),("Copy","CanCopy",owner.Copy),("Paste","CanPaste",owner.Paste),("Select all",null,owner.SelectAll) })
             {
-                var item=new MenuItem { Header=label }; if(path is not null) Bind(item,Control.IsEnabledProperty,owner,path);
+                var item=new CuiMenuItem { Header=label }; if(path is not null) Bind(item,Control.IsEnabledProperty,owner,path);
                 item.Click+=(_,_)=>action();menu.Items.Add(item);
             }
             owner.ContextMenu=menu;owner.DetachedFromVisualTree+=(_,_)=>menu.Close();
@@ -234,7 +242,15 @@ public static class CuiControlTemplates
         Bind(editable,TextBox.PlaceholderTextProperty,owner,"PlaceholderText");row.Children.Add(editable);
         void SelectMode() {selected.IsVisible=!owner.IsEditable;editable.IsVisible=owner.IsEditable;placeholder.IsVisible=!owner.IsEditable&&owner.SelectedIndex<0;}
         owner.PropertyChanged+=(_,change)=> { if(change.Property.Name is "IsEditable" or "SelectedIndex") SelectMode(); };SelectMode();
-        var arrow = new ToggleButton { Content = "⌄", Focusable = false }; Grid.SetColumn(arrow,1); row.Children.Add(arrow);
+        var chevron = new Avalonia.Controls.Shapes.Path
+        {
+            Data = Geometry.Parse("M 1,3 L 6,8 L 11,3"), Width = 12, Height = 12,
+            StrokeThickness = 1.5, VerticalAlignment = VerticalAlignment.Center
+        };
+        Resource(chevron, Avalonia.Controls.Shapes.Shape.StrokeProperty, "CuiTextBrush");
+        var arrow = new ToggleButton { Content = chevron, Focusable = false, Width = 28 };
+        AutomationProperties.SetName(arrow, "Open choices");
+        Grid.SetColumn(arrow,1); row.Children.Add(arrow);
         Bind(arrow, ToggleButton.IsCheckedProperty, owner, "IsDropDownOpen", true);
         var popup = Name(new Popup { PlacementTarget = owner, IsLightDismissEnabled = true }, "PART_Popup", scope);
         Bind(popup, Popup.IsOpenProperty, owner, "IsDropDownOpen", true); Bind(popup, Control.MinWidthProperty, owner, "Bounds.Width");
@@ -245,11 +261,19 @@ public static class CuiControlTemplates
 
     private static Control MenuItem(MenuItem owner, INameScope scope)
     {
-        var row = new Grid { ColumnDefinitions = new("Auto,*,Auto"), ColumnSpacing = 8 };
-        var icon = new ContentPresenter(); Bind(icon, ContentPresenter.ContentProperty, owner, "Icon"); row.Children.Add(icon);
-        var header = Presenter(owner, scope, "PART_HeaderPresenter", "Header"); Grid.SetColumn(header,1); row.Children.Add(header);
-        var arrow = new TextBlock { Text = "›", VerticalAlignment = VerticalAlignment.Center }; Grid.SetColumn(arrow,2); row.Children.Add(arrow);
-        arrow.IsVisible = owner.Items.Count > 0;
+        var row = new Grid { ColumnDefinitions = new(owner.IsTopLevel ? "*" : "Auto,*,Auto,Auto"), ColumnSpacing = owner.IsTopLevel ? 0 : 8 };
+        var header = Presenter(owner, scope, "PART_HeaderPresenter", "Header");
+        Grid.SetColumn(header, owner.IsTopLevel ? 0 : 1); row.Children.Add(header);
+        if (!owner.IsTopLevel)
+        {
+            var icon = new ContentPresenter(); Bind(icon, ContentPresenter.ContentProperty, owner, "Icon"); row.Children.Add(icon);
+            var shortcut = new TextBlock { VerticalAlignment = VerticalAlignment.Center };
+            Bind(shortcut, TextBlock.TextProperty, owner, "InputGesture");
+            Resource(shortcut, TextBlock.ForegroundProperty, "CuiTextSoftBrush");
+            Grid.SetColumn(shortcut, 2); row.Children.Add(shortcut);
+            var arrow = new TextBlock { Text = "›", IsVisible = owner.Items.Count > 0, VerticalAlignment = VerticalAlignment.Center };
+            Grid.SetColumn(arrow, 3); row.Children.Add(arrow);
+        }
         var popup = Name(new Popup { PlacementTarget = owner, Placement = owner.IsTopLevel ? PlacementMode.Bottom : PlacementMode.RightEdgeAlignedTop, IsLightDismissEnabled = false }, "PART_Popup", scope);
         Bind(popup, Popup.IsOpenProperty, owner, "IsSubMenuOpen", true);
         popup.Child = PopupFrame(owner, new ScrollViewer { Content = ItemPresenter(owner, scope) }); row.Children.Add(popup);
@@ -279,6 +303,8 @@ public static class CuiControlTemplates
     private static Control Numeric(NumericUpDown owner,INameScope scope)
     {
         var input=Name(new TextBox(),"PART_TextBox",scope); Bind(input,TextBox.TextProperty,owner,"Text",true);
+        input.Bind(AutomationProperties.NameProperty, owner.GetObservable(AutomationProperties.NameProperty));
+        input.Bind(AutomationProperties.HelpTextProperty, owner.GetObservable(AutomationProperties.HelpTextProperty));
         Bind(input,TextBox.IsReadOnlyProperty,owner,"IsReadOnly"); Bind(input,TextBox.PlaceholderTextProperty,owner,"PlaceholderText");
         var spinner=Name(new ButtonSpinner { Content=input },"PART_Spinner",scope); Bind(spinner,ButtonSpinner.AllowSpinProperty,owner,"AllowSpin");
         return spinner;

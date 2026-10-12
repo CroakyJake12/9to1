@@ -42,6 +42,7 @@ public sealed record HavenImage(string Source);
 public enum HavenImageLayout { Contain, Cover, Fill, None }
 public sealed record HavenTextLayout(string Text, string FontFamily, double FontSize, int FontWeight, double MaxWidth = double.PositiveInfinity, bool CenterVertically = false, bool Italic = false)
 {
+    public bool SingleLineEllipsis { get; init; }
     public HavenParagraphLayout? Paragraph { get; init; }
     public int ParagraphStart { get; init; }
     public int ParagraphLength { get; init; }

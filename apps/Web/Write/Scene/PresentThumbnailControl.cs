@@ -15,6 +15,8 @@ public sealed class PresentThumbnailControl : Panel, IDisposable
     private bool _allowed, _disposed;
     private bool _editable;
     public event EventHandler? SelectionChanged;
+    public void SetPreviewRenderer(Action<HavenDrawingContext, Haven.Core.PresentDocument, Haven.Core.PresentSlide, HavenRect, double> renderer) =>
+        _navigator.SetPreviewRenderer(renderer);
     public PresentThumbnailControl(Func<bool> reduceMotion)
     {
         _scene = new(new HavenAvaloniaImageResolver(), new HavenAvaloniaNativeControlResolver(), reduceMotion) { Platform = HavenPlatform.Unknown };

@@ -1,4 +1,6 @@
 using Avalonia.Controls;
+using Avalonia;
+using Avalonia.VisualTree;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Haven.Application;
@@ -17,8 +19,19 @@ public sealed class PresentRetainedSceneControl : Panel, IDisposable
     private Guid? _renderedSlide;
     private bool _allowed, _disposed;
     private bool _restoreCanvasFocus;
+    private ScrollViewer? _viewport;
+    private double _zoom = 1;
+    private Guid[] _renderedSelection = [];
+    private Point? _pointerStartInWindow;
+    private bool _pointerMovedInWindow;
+    public bool IsTextEditing => _canvas.IsTextEditing;
     public event EventHandler? LiveTextPreviewed;
     public event EventHandler? SelectionChanged;
+    public static Action<HavenDrawingContext, Haven.Core.PresentDocument, Haven.Core.PresentSlide, HavenRect, double> CreatePreviewRenderer()
+    {
+        var preview = new PresentSlideCanvas();
+        return preview.DrawPreview;
+    }
 
     public PresentRetainedSceneControl(Func<bool> reduceMotion)
     {
@@ -30,6 +43,8 @@ public sealed class PresentRetainedSceneControl : Panel, IDisposable
         _canvas.SetValue(HavenProperties.Background, "Transparent");
         _canvas.SetValue(HavenProperties.BorderWidth, HavenLength.Px(0));
         _canvas.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(0)));
+        _canvas.SetValue(HavenProperties.MinHeight, HavenLength.Px(0));
+        _canvas.SetValue(HavenProperties.Height, HavenLength.Percent(100));
         AddHandler(KeyDownEvent, GateKey, RoutingStrategies.Tunnel, handledEventsToo: true);
         AddHandler(KeyUpEvent, GateKey, RoutingStrategies.Tunnel, handledEventsToo: true);
         AddHandler(TextInputEvent, GateText, RoutingStrategies.Tunnel, handledEventsToo: true);
@@ -58,7 +73,33 @@ public sealed class PresentRetainedSceneControl : Panel, IDisposable
             editor.Changed += Changed;
             _scene.Root = _canvas;
         }
-        if (_editor is not null && _renderedSlide != _editor.Selection.SlideId) Refresh();
+        if (_editor is not null && (_renderedSlide != _editor.Selection.SlideId || !_renderedSelection.SequenceEqual(_editor.Selection.ElementIds))) Refresh();
+    }
+    public void SetZoom(double zoom)
+    {
+        if (_zoom == zoom) return;
+        _zoom = zoom; _canvas.ViewScale = Math.Min(zoom, 1); UpdateViewport();
+    }
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        _viewport = this.GetVisualAncestors().OfType<ScrollViewer>().FirstOrDefault();
+        if (_viewport is not null) { _viewport.PropertyChanged += ViewportChanged; UpdateViewport(); }
+    }
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        if (_viewport is not null) _viewport.PropertyChanged -= ViewportChanged;
+        _viewport = null; base.OnDetachedFromVisualTree(e);
+    }
+    private void ViewportChanged(object? sender, AvaloniaPropertyChangedEventArgs args)
+    { if (args.Property == ScrollViewer.ViewportProperty) UpdateViewport(); }
+    private void UpdateViewport()
+    {
+        // Fit is a constrained stage, not a measured scroll extent. An explicit
+        // content size at fit creates a feedback loop when scrollbars appear.
+        if (_zoom <= 1) { Width = double.NaN; Height = double.NaN; return; }
+        if (_viewport is not { Viewport.Width: > 0, Viewport.Height: > 0 }) return;
+        Width = _viewport.Viewport.Width * _zoom; Height = _viewport.Viewport.Height * _zoom;
     }
     public void SetInputAllowed(bool allowed)
     {
@@ -81,6 +122,7 @@ public sealed class PresentRetainedSceneControl : Panel, IDisposable
         if (_disposed || !ReferenceEquals(originalEditor, _editor) ||
             originalEditor.Selection.SlideId != originalSlide) return;
         _renderedSlide = originalSlide;
+        _renderedSelection = originalEditor.Selection.ElementIds.ToArray();
         // Model refresh must not steal focus from the native speaker-notes field.
         // Preserve canvas focus only while the SAME scene still owns it after notifications.
         if (_allowed && hadCanvasFocus && _scene.IsKeyboardFocusWithin && ReferenceEquals(_scene.Root, _canvas))
@@ -89,12 +131,12 @@ public sealed class PresentRetainedSceneControl : Panel, IDisposable
     private void Changed(object? sender, EventArgs args) => Refresh();
     private void Select(Guid? id) { if (!_allowed || _editor is null) return; _editor.SelectElements(id is { } value ? [value] : []); Refresh(); SelectionChanged?.Invoke(this, EventArgs.Empty); }
     private void SelectMany(IReadOnlyCollection<Guid> ids) { if (!_allowed || _editor is null) return; _editor.SelectElements(ids); Refresh(); SelectionChanged?.Invoke(this, EventArgs.Empty); }
-    private void Move(double x, double y) { if (_allowed) _editor?.MoveSelection(x, y); }
+    private void Move(double x, double y) { if (_allowed && _pointerMovedInWindow) _editor?.MoveSelection(x, y); }
     private void Transform(double x, double y, double width, double height, double rotation)
-    { if (_allowed) _editor?.TransformSelection(x, y, width, height, rotation); }
+    { if (_allowed && _pointerMovedInWindow) _editor?.TransformSelection(x, y, width, height, rotation); }
     private void MoveVector(Guid elementId, Guid nodeId, PresentVectorHandleKind kind, double x, double y)
     {
-        if (!_allowed || _editor is null) return;
+        if (!_allowed || !_pointerMovedInWindow || _editor is null) return;
         _editor.UpdateCustomShape(_editor.Selection.SlideId, elementId, vector =>
         { if (kind == PresentVectorHandleKind.Node) vector.MoveNode(nodeId, x, y); else vector.MoveControlPoint(nodeId, kind == PresentVectorHandleKind.Control1 ? 1 : 2, x, y); });
     }
@@ -106,7 +148,16 @@ public sealed class PresentRetainedSceneControl : Panel, IDisposable
     private void Cancel(object? sender, EventArgs args) { if (_allowed) _editor?.CancelLiveTextEdit(); }
     private void GateKey(object? sender, KeyEventArgs args) { if (!_allowed) args.Handled = true; }
     private void GateText(object? sender, TextInputEventArgs args) { if (!_allowed) args.Handled = true; }
-    private void GatePointer(object? sender, PointerEventArgs args) { if (!_allowed) args.Handled = true; }
+    private void GatePointer(object? sender, PointerEventArgs args)
+    {
+        if (!_allowed) { args.Handled = true; return; }
+        var position = args.GetPosition(TopLevel.GetTopLevel(this));
+        if (args is PointerPressedEventArgs) { _pointerStartInWindow = position; _pointerMovedInWindow = false; }
+        else if (_pointerStartInWindow is { } start && Math.Pow(position.X - start.X, 2) + Math.Pow(position.Y - start.Y, 2) > 1) _pointerMovedInWindow = true;
+        // A layout adjustment under a stationary pointer is not an authored drag.
+        // The routed release reaches this tunnel before the owning canvas commits.
+        if (args is PointerReleasedEventArgs) _pointerStartInWindow = null;
+    }
     public void Dispose()
     {
         if (_disposed) return;

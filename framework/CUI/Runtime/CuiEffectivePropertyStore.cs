@@ -39,9 +39,9 @@ public sealed class CuiEffectivePropertyStore
         ArgumentException.ThrowIfNullOrWhiteSpace(source);
         if (!Enum.IsDefined(level)) throw new ArgumentOutOfRangeException(nameof(level));
         Validate(name, property.Type, value);
-        var before = Resolve(name);
         var key = (level, source);
         if (property.Values.TryGetValue(key, out var previous) && Equals(previous.Value, value) && previous.Order == order) return;
+        var before = Resolve(name);
         property.Values[key] = new(value, level, source, order, previous?.Sequence ?? ++_sequence);
         Publish(name, before);
     }
@@ -49,7 +49,7 @@ public sealed class CuiEffectivePropertyStore
     public bool Remove(string name, CuiPropertyLevel level, string source)
     {
         if (level == CuiPropertyLevel.BuiltIn) throw new InvalidOperationException("A CUI property must retain its built-in default.");
-        if (!_properties.TryGetValue(name, out var property)) return false;
+        if (!_properties.TryGetValue(name, out var property) || !property.Values.ContainsKey((level, source))) return false;
         var before = Resolve(name);
         var removed = property.Values.Remove((level, source));
         if (removed) Publish(name, before);
@@ -62,9 +62,15 @@ public sealed class CuiEffectivePropertyStore
     public CuiEffectiveProperty Resolve(string name)
     {
         if (!_properties.TryGetValue(name, out var property)) throw new KeyNotFoundException($"CUI property '{name}' is not registered.");
-        var winner = property.Values.Values.OrderByDescending(value => value.Level).ThenByDescending(value => value.Order)
-            .ThenByDescending(value => value.Sequence).First();
-        return new(name, property.Type, winner.Value, winner.Level, winner.Source, winner.Order);
+        Declaration? winner = null;
+        foreach (var candidate in property.Values.Values)
+            if (winner is null || candidate.Level > winner.Level ||
+                candidate.Level == winner.Level && (candidate.Order > winner.Order ||
+                candidate.Order == winner.Order && candidate.Sequence > winner.Sequence))
+                winner = candidate;
+        // Register installs an undeletable built-in declaration, so a property
+        // always has a winner. Avoid allocating sorting iterators on each read.
+        return new(name, property.Type, winner!.Value, winner.Level, winner.Source, winner.Order);
     }
 
     public IReadOnlyList<CuiEffectiveProperty> Inspect() => _properties.Keys.Order(StringComparer.OrdinalIgnoreCase).Select(Resolve).ToArray();

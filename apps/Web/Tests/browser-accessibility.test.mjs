@@ -23,6 +23,7 @@ function environment() {
     replaceChildren() { for (const node of this.children) node.parent=null; this.children=[]; }
     remove() { if(this.parent) this.parent.children=this.parent.children.filter(n=>n!==this); this.parent=null; }
     setAttribute(k,v) { this.attributes[k]=v; }
+    getAttribute(k) { return this.attributes[k] ?? null; }
     removeAttribute(k) { delete this.attributes[k]; }
     addEventListener(k,f) { this.handlers[k]=f; }
     focus() { document.activeElement=this; }
@@ -123,7 +124,28 @@ const nativeDisposed = (create,e) => {
   const event=native.event();retained(event);assert(!event.stopped&&!event.prevented);
   assert.equal(native.listeners.size,0);assert.equal(native.host.tabIndex,0);
 };
-for(const [name,check] of [['native-nonfocusable-remains-out-of-tab-sequence',nonfocusable],['initial-snapshot-failure-removes-root-and-timer',startupRollback],['stable-peers-follow-current-native-order-and-retain-focus',reorder],['disposed-retained-dom-controls-stop-forwarding-operations',disposedEvents]]) {
+const editorProviders = (create,e) => {
+  let expanded=false; const calls=[];
+  const owner={ReadAccessibility:()=>JSON.stringify({generation:1,unsupported:[],elements:[
+    {id:'menu',role:'menuitem',name:'File',enabled:true,focusable:true,expanded:false},
+    {id:'choice',role:'combobox',name:'Layout',enabled:true,focusable:true,expanded,value:'Title'},
+    {id:'option',role:'option',name:'Blank',enabled:true,focusable:true,selected:false},
+    {id:'range',role:'slider',name:'Opacity',enabled:true,focusable:true,readOnly:false,value:'50',minimum:0,maximum:100}
+  ]}),PerformAccessibility:(id,operation,value)=>{calls.push({id,operation,value});if(id==='choice')expanded=operation==='expand';return true;}};
+  const bridge=create(e.window,e.document,owner);
+  try {
+    const [menu,choice,option,range]=e.document.body.children[0].children;
+    assert.equal(menu.getAttribute('role'),'menuitem'); menu.handlers.click();
+    assert.equal(choice.getAttribute('aria-expanded'),'false'); choice.handlers.click();
+    assert.equal(choice.getAttribute('aria-expanded'),'true'); choice.handlers.click();
+    option.handlers.click(); range.value='75'; range.handlers.input();
+    assert.deepEqual(calls,[{id:'menu',operation:'invoke',value:null},{id:'choice',operation:'expand',value:null},
+      {id:'choice',operation:'collapse',value:null},{id:'option',operation:'select',value:null},{id:'range',operation:'value',value:'75'}]);
+    assert.equal(range.min,0); assert.equal(range.max,100); assert.equal(range.type,'range');
+    assert.equal(option.getAttribute('aria-selected'),'false');
+  } finally {bridge.dispose();}
+};
+for(const [name,check] of [['native-nonfocusable-remains-out-of-tab-sequence',nonfocusable],['initial-snapshot-failure-removes-root-and-timer',startupRollback],['stable-peers-follow-current-native-order-and-retain-focus',reorder],['disposed-retained-dom-controls-stop-forwarding-operations',disposedEvents],['editor-menu-choice-and-range-forward-to-owning-providers',editorProviders]]) {
   await test(source,check); checks.push({name,result:'PASS'});
 }
 for(const [name,check] of [['native-host-tab-follows-current-peer-focus-and-skips-disabled',nativeTab],['native-host-keeps-other-keys-modifiers-and-empty-view-egress',unrelatedKeys],['disposed-native-tab-listener-stops-routing-and-restores-host',nativeDisposed]]) {

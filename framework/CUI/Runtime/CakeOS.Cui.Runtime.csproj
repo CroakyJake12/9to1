@@ -26,5 +26,6 @@
     <AvaloniaResource Include="../vendor/Avalonia/src/Avalonia.Fonts.Inter/Assets/*.ttf" Link="Assets/Fonts/Inter/%(Filename)%(Extension)" />
     <AvaloniaResource Include="../vendor/Avalonia/src/Avalonia.Fonts.Inter/Assets/OFL.txt" Link="Assets/Fonts/Inter/OFL.txt" />
   </ItemGroup>
+  <ItemGroup><EmbeddedResource Include="../Components/Editor.cui" LogicalName="CakeOS.Cui.Editor.cui" /></ItemGroup>
   <Import Project="../vendor/Avalonia/build/BuildTargets.targets" />
 </Project>

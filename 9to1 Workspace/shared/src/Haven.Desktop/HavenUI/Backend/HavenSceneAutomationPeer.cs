@@ -35,8 +35,20 @@ internal sealed class HavenSceneAutomationPeer : ControlAutomationPeer
 
     protected override string? GetHelpTextCore() => _owner.Root?.Accessibility.Description;
 
-    protected override IReadOnlyList<AutomationPeer> GetOrCreateChildrenCore() =>
-        _owner.Root is { } root ? GetChildrenFor(root, this) : [];
+    protected override IReadOnlyList<AutomationPeer> GetOrCreateChildrenCore()
+    {
+        if (_owner.Root is not { } root) return [];
+        // A thumbnail navigator owns virtual slide items. It can itself be the
+        // retained scene root, so walking only HavenElement.Children loses them.
+        if (root is PresentThumbnailNavigator)
+        {
+            PruneDetachedElementPeers(root);
+            var navigatorPeer = GetOrCreateElementPeer(root);
+            navigatorPeer.AttachTo(this);
+            return [navigatorPeer];
+        }
+        return GetChildrenFor(root, this);
+    }
 
     internal IReadOnlyList<AutomationPeer> GetChildrenFor(HavenElement parent, AutomationPeer parentPeer)
     {

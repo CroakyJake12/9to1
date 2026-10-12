@@ -1,4 +1,3 @@
-using System.Globalization;
 using Haven.Application;
 using Haven.Core;
 using Haven.UI;
@@ -17,6 +16,12 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
     private Guid? _vectorPointEditingElementId;
     private HavenPoint _pointerStart;
     private HavenPoint _pointerCurrent;
+    private double _viewScale = 1;
+    public double ViewScale
+    {
+        get => _viewScale;
+        set { var next = double.IsFinite(value) ? Math.Clamp(value, .1, 1) : 1; if (_viewScale == next) return; _viewScale = next; Invalidate(); }
+    }
 
     public PresentSlideCanvas()
     {
@@ -171,12 +176,32 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
     {
         if (_document is null || _slide is null || Bounds.Width <= 1 || Bounds.Height <= 1) return; var slideRect = SlideRectAbsolute();
         context.Add(new HavenShadowCommand(slideRect, new HavenShadow(new HavenSolidBrush(70, 0, 0, 0), 18, 0, 5, 0, .3), 4)); context.Add(new HavenFillRoundedRectCommand(slideRect, BackgroundBrush(_document, _slide), 4, opacity)); context.Add(new HavenStrokeRoundedRectCommand(slideRect, new HavenPen(new HavenTokenBrush("Border"), 1), 4, opacity));
-        DrawSlideTitle(context, slideRect, opacity);
-        foreach (var element in _slide.Elements.Where(value => value.Visible && value.Kind != PresentElementKind.Group).OrderBy(value => value.Order)) DrawElement(context, element, slideRect, opacity);
+        DrawSlideContent(context, slideRect, opacity);
         var showHandles = _selectedIds.Count == 1;
         foreach (var element in _slide.Elements.Where(value => _selectedIds.Contains(value.Id) && value.Kind != PresentElementKind.Group))
             DrawDirectSelection(context, element, ElementRect(element, slideRect, _dragElementId is not null && _selectedIds.Contains(element.Id)), opacity, showHandles);
         DrawMarquee(context, opacity);
+    }
+
+    internal void DrawPreview(HavenDrawingContext context, PresentDocument document, PresentSlide slide, HavenRect target, double opacity)
+    {
+        _document = document; _slide = slide;
+        context.Add(new HavenFillRoundedRectCommand(target, BackgroundBrush(document, slide), 2, opacity));
+        DrawSlideContent(context, target, opacity);
+    }
+
+    private void DrawSlideContent(HavenDrawingContext context, HavenRect target, double opacity)
+    {
+        if (_document is null || _slide is null) return;
+        var logical = new HavenRect(0, 0, _document.SlideSize.WidthInches * 96, _document.SlideSize.HeightInches * 96);
+        context.Add(new HavenPushClipCommand(target));
+        context.Add(new HavenPushTransformCommand(target,
+            new HavenTransform(target.Width / logical.Width, target.Height / logical.Height, TranslateX: target.X, TranslateY: target.Y), new HavenPoint(0, 0)));
+        DrawSlideTitle(context, logical, opacity);
+        foreach (var element in _slide.Elements.Where(value => value.Visible && value.Kind != PresentElementKind.Group).OrderBy(value => value.Order))
+            DrawElement(context, element, logical, opacity);
+        context.Add(new HavenPopTransformCommand(target));
+        context.Add(new HavenPopClipCommand(target));
     }
 
     private void DrawElement(HavenDrawingContext context, PresentElement element, HavenRect slideRect, double opacity)
@@ -365,12 +390,20 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
     private HavenRect SlideRectAbsolute() { var local = SlideRectLocal(); return new HavenRect(Bounds.X + local.X, Bounds.Y + local.Y, local.Width, local.Height); }
     private HavenRect SlideRectLocal()
     {
-        var ratio = _document?.SlideSize is { HeightInches: > 0 } size ? size.WidthInches / size.HeightInches : 16d / 9d; var availableWidth = Math.Max(1, Bounds.Width - 32); var availableHeight = Math.Max(1, Bounds.Height - 32); var width = Math.Min(availableWidth, availableHeight * ratio); var height = width / ratio; return new HavenRect((Bounds.Width - width) / 2, (Bounds.Height - height) / 2, width, height);
+        var ratio = _document?.SlideSize is { HeightInches: > 0 } size ? size.WidthInches / size.HeightInches : 16d / 9d;
+        var availableWidth = Math.Max(1, Bounds.Width - 32);
+        var availableHeight = Math.Max(1, Bounds.Height - 32);
+        var width = Math.Min(availableWidth, availableHeight * ratio) * _viewScale;
+        var height = width / ratio;
+        return new HavenRect((Bounds.Width - width) / 2, (Bounds.Height - height) / 2, width, height);
     }
 
     private HavenRect ElementRect(PresentElement element, HavenRect slideRect, bool preview)
     {
-        var dx = preview ? _pointerCurrent.X - _pointerStart.X : 0; var dy = preview ? _pointerCurrent.Y - _pointerStart.Y : 0; return new HavenRect(slideRect.X + element.X * slideRect.Width + dx, slideRect.Y + element.Y * slideRect.Height + dy, element.Width * slideRect.Width, element.Height * slideRect.Height);
+        var measured = SlideRectLocal();
+        var dx = preview ? (_pointerCurrent.X - _pointerStart.X) * slideRect.Width / Math.Max(1, measured.Width) : 0;
+        var dy = preview ? (_pointerCurrent.Y - _pointerStart.Y) * slideRect.Height / Math.Max(1, measured.Height) : 0;
+        return new HavenRect(slideRect.X + element.X * slideRect.Width + dx, slideRect.Y + element.Y * slideRect.Height + dy, element.Width * slideRect.Width, element.Height * slideRect.Height);
     }
 
     private static HavenPoint ToHaven(DocumentVectorPoint point) => new(point.X, point.Y);
@@ -385,8 +418,11 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
 
     private static HavenBrush Brush(string? value, string fallback, double opacity = 1)
     {
-        var text = string.IsNullOrWhiteSpace(value) ? fallback : value.Trim(); if (!text.StartsWith('#')) return new HavenTokenBrush(text);
-        var hex = text[1..]; if (hex.Length is not (6 or 8) || !uint.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var packed)) return new HavenTokenBrush(fallback);
-        byte a, r, g, b; if (hex.Length == 8) { a = (byte)(packed >> 24); r = (byte)(packed >> 16); g = (byte)(packed >> 8); b = (byte)packed; } else { a = 255; r = (byte)(packed >> 16); g = (byte)(packed >> 8); b = (byte)packed; } a = (byte)Math.Clamp(a * opacity, 0, 255); return new HavenSolidBrush(a, r, g, b);
+        // Accept exactly the literal colour forms accepted by the editor (including
+        // #RGB, #ARGB and named colours). A literal fallback must never become a theme key.
+        var text = string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
+        if (Avalonia.Media.Color.TryParse(text, out var color) || Avalonia.Media.Color.TryParse(fallback, out color))
+            return new HavenSolidBrush((byte)Math.Clamp(color.A * opacity, 0, 255), color.R, color.G, color.B);
+        return new HavenTokenBrush(fallback);
     }
 }

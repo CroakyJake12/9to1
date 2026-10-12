@@ -395,7 +395,7 @@ public sealed class CuiControlLoader : IDisposable
             {
                 if (definition.Name is not null) _definitions[definition.Name] = definition;
                 var definedType = definition.Properties.FirstOrDefault(pair => pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)).Value as CuiLiteralValue;
-                if (definedType is not null) _typeDefinitions[definition.Type + "\0" + definedType.Value] = definition;
+                if (definedType is not null && definition.Name is null) _typeDefinitions[definition.Type + "\0" + definedType.Value] = definition;
             }
             else if (!definition.Type.Equals("Theme", StringComparison.OrdinalIgnoreCase)) _definitions[definition.Name ?? definition.Type] = definition;
         }
@@ -1115,7 +1115,11 @@ public sealed class CuiControlLoader : IDisposable
 
     private Control InstantiateInstance(CuiComponent instance, string key, CuiComponent effective, bool sharedInternalScope)
     {
-        if (!_definitionPath.Add(key))
+        // Finite caller-supplied children can nest the same reusable container
+        // (for example a menu inside a menu). Only definition-authored expansion
+        // contributes a dependency; otherwise normal nesting is a false cycle.
+        var trackDependency = instance.Children.Count == 0 || !CuiLanguageVocabulary.VisualElements.Contains(effective.Type);
+        if (trackDependency && !_definitionPath.Add(key))
             throw CycleDependency(instance, key);
 
         var hostScope = ComposeStableId(instance.StableId);
@@ -1132,7 +1136,7 @@ public sealed class CuiControlLoader : IDisposable
         finally
         {
             _definitionScope = previousScope;
-            _definitionPath.Remove(key);
+            if (trackDependency) _definitionPath.Remove(key);
         }
     }
 
@@ -1993,6 +1997,26 @@ public sealed class CuiControlLoader : IDisposable
                         Avalonia.Controls.Canvas.SetTop(control, ct);
                     break;
                 // Automation / Accessibility
+                case "tooltip":
+                    ToolTip.SetTip(control, resolved);
+                    break;
+                case "shortcut":
+                    var gesture = Avalonia.Input.KeyGesture.Parse(resolved);
+                    if (control is MenuItem shortcutMenu) shortcutMenu.InputGesture = gesture;
+                    else HotKeyManager.SetHotKey(control, gesture);
+                    CakeOS.Cui.Themes.CuiAccessibilityProperties.SetShortcut(control, resolved);
+                    break;
+                case "selected":
+                    CuiPropertyPresentation.SetSelected(control, bool.Parse(resolved));
+                    break;
+                case "resizeedge":
+                    if (control is not CuiResizeInput resize || resolved is not ("Start" or "End"))
+                        throw new ArgumentException("ResizeEdge must be Start or End on a Resize input.");
+                    resize.FromStart = resolved == "Start";
+                    break;
+                case "accessibledescription":
+                    Avalonia.Automation.AutomationProperties.SetHelpText(control, resolved);
+                    break;
                 case "accessible-name":
                 case "accessiblename":
                     Avalonia.Automation.AutomationProperties.SetName(control, resolved);
@@ -2198,12 +2222,16 @@ public sealed class CuiControlLoader : IDisposable
                         "ItemsSource exceeds the supported 10000-item bound.", span));
                     snapshot.Add(value);
                 }
-                items.ItemsSource = snapshot;
+                // A notification can concern another field. Retain native item
+                // containers, focus and open-popup selection for equal values.
+                var unchanged = items.ItemsSource is not null &&
+                    items.ItemsSource.Cast<object?>().SequenceEqual(snapshot);
+                if (!unchanged) items.ItemsSource = snapshot;
                 if (!_observedBindings.TryGetValue(control, out var observed))
                     _observedBindings[control] = observed = new(StringComparer.OrdinalIgnoreCase);
                 observed[property] = new(property, binding, $"{snapshot.Count} items", source.GetType().Name, false, true, null);
                 // Reapply the host's selection after replacement; native reset notifications are not user edits.
-                foreach (var selected in _liveBindings.Where(record => ReferenceEquals(record.Control, control) &&
+                foreach (var selected in _liveBindings.Where(record => !unchanged && ReferenceEquals(record.Control, control) &&
                     NormalizeProperty(record.PropertyName) == "selectedindex").ToArray())
                     ApplyObservedBinding(control, selected.PropertyName, selected.Binding, selected.Context, selected.Span);
                 return;

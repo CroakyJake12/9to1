@@ -86,7 +86,7 @@ public static class CuiPropertyPresentation
             if(!ownsTemplate)return; // Specialised renderer owns its content; CUI supplies its declared outer chrome separately.
             if(control is TemplatedControl && CuiControlTemplates.TryGet(control.GetType(),out var template))
                 Set("Template",template,CuiPropertyLevel.BuiltIn,"CUI-owned control template",0);
-            var interactive = control is Button or TextBox or SelectingItemsControl or RangeBase or MenuItem or Thumb or NumericUpDown;
+            var interactive = control is Button or TextBox or SelectingItemsControl or ListBoxItem or RangeBase or MenuItem or Thumb or NumericUpDown;
             Watch("CuiInterfaceFontFamily", "FontFamily");
             Watch("CuiFontSizeBody", "FontSize");
             Watch("CuiTextBrush", "Foreground");
@@ -207,9 +207,17 @@ public static class CuiPropertyPresentation
 
         private void Watch(string key, string? property, string source = "CUI inherited theme", long order = 0)
         {
+            object? previous = null;
+            var observed = false;
             _subscriptions.Add(_control.GetResourceObservable(key).Subscribe(new ResourceObserver(value =>
             {
                 if (value == AvaloniaProperty.UnsetValue || value is null) return;
+                // Resource notifications are dictionary-wide, including ancestor
+                // dictionaries shadowed by this control's own palette. Compare
+                // per subscription: one key can project to several properties.
+                if (observed && Equals(previous, value)) return;
+                previous = value;
+                observed = true;
                 _resources[key] = value;
                 if (property is not null) Set(property, value, CuiPropertyLevel.Theme, source, order);
                 UpdateState();

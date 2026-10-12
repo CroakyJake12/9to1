@@ -325,7 +325,7 @@ public sealed class CuiRichParser
                 // Inside <Cui>, top-level sections are Resources/Styles/Actions/Templates
                 var localName = child.Name.LocalName;
                 if (IsKeyword(child, "Resources") || IsKeyword(child, "Styles")
-                    || IsKeyword(child, "Actions") || IsKeyword(child, "Templates"))
+                    || IsKeyword(child, "Actions") || IsKeyword(child, "Templates") || IsKeyword(child, "Import"))
                     continue;
             }
             elements.Add(child);

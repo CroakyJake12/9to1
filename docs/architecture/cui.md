@@ -25,21 +25,30 @@ The parser's authored component `id` is retained as the native control's
 override only the automation ID. This contract is covered by the CUI Runtime
 suite and a headless test that builds the actual Home host window from its
 canonical `Home.cui`, arranges the route, and checks bound unavailable states.
-`CuiThemeScope.ResolveThemeName` uses its supplied global default for `Default`,
-empty and unknown names. The loader snapshots the active global theme at load
-time, so a loader constructed before a theme change still builds the new
-palette; explicit nested scopes override it. `ApplyGlobalTheme(theme)` updates
-the active catalog theme and application palette for subsequently loaded
-surfaces. This does not itself persist the choice across processes or update
-already rendered code-built controls.
-Haven's `UserPreferencesService` remains the sole writer and migration owner for
-`preferences.json` (`IAppPaths.DataDirectory`, default `%APPDATA%/Haven`, or
-`HAVEN_DATA_DIR`). The read-only `CuiThemePreferenceReader` consumes its
-`havenUiThemeName` for standalone CUI hosts, falling back to Glow if absent or
-invalid. Native Home loads the choice before building its CUI window; Boards
-loads it at startup and continues to keep its separate light/dark appearance
-setting. A newly built Home window rereads the choice. This is restart/reload
-propagation, not live cross-process notification or an additional settings store.
+`CuiThemeScope.ResolveThemeName` resolves explicit scopes against their supplied
+default. Professional is the built-in fallback. `CuiThemePreferenceContext`
+borrows an authorised Home snapshot (scope, revision, theme and accessibility)
+and updates existing loader-owned controls when that source changes. Failed
+observers are isolated and can retry an unchanged revision without repeating
+healthy observers. Native processes without a live source still use the
+read-only `CuiThemePreferenceReader` over the existing `havenUiThemeName` key;
+this reader does not create a competing settings owner or cross-process channel.
+
+`HomeThemePreferenceService` owns authorised get/set/subscribe semantics.
+The browser adapter uses the existing Home preference envelope and Web Locks
+for device-local commits. It explicitly reports that account synchronisation
+is not connected. Native cross-process propagation remains an integration gate;
+browser live propagation does not establish it.
+
+The CUI typed property store owns built-in < theme < definition < instance <
+region < overlay precedence. The renderer projects its selected values and uses
+CUI-owned templates; Fluent/Simple styles are not an alternate authority.
+Loader palettes are built off-tree before publication. Global palette updates
+batch dictionary notifications while preserving resource and brush identities.
+Per-property subscriptions ignore unchanged resolved resource values, including
+notifications from ancestors shadowed by a local palette. A shared key may still
+update several native properties (for example text, caret and selection color).
+Mutable brush values keep their native drawing invalidation behavior.
 
 The intended runtime order is:
 

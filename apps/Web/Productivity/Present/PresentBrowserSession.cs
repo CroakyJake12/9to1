@@ -10,7 +10,7 @@ using HavenOS.Home.Core;
 namespace NineToOne.Web.Productivity.Present;
 
 /// <summary>Presentation/lifecycle only; canonical editing and durable authority belong to injected owners.</summary>
-public sealed class PresentBrowserSession : ICuiWritableBindingContext, ICuiActionDispatcher,
+public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, ICuiActionDispatcher,
     ICuiActionAvailability, INotifyPropertyChanged, IAsyncDisposable
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
@@ -459,6 +459,7 @@ public sealed class PresentBrowserSession : ICuiWritableBindingContext, ICuiActi
 
     public bool TryGetValue(string path, out object? value)
     {
+        if (TryGetEditorUiValue(path, out value)) return true;
         value = path switch
         {
             "Title" => Editor?.Document.Title ?? "Present", "Status" => Status,
@@ -548,6 +549,7 @@ public sealed class PresentBrowserSession : ICuiWritableBindingContext, ICuiActi
     }
     public bool TrySetValue(string path, object? value)
     {
+        if (TrySetEditorUiValue(path, value) is { } uiResult) return uiResult;
         if (path == "TransitionDuration" && value is string durationText)
             return double.TryParse(durationText, NumberStyles.Float, CultureInfo.InvariantCulture, out var duration)
                 && TrySetValue(path, duration);
@@ -652,6 +654,8 @@ public sealed class PresentBrowserSession : ICuiWritableBindingContext, ICuiActi
     }
 
     public bool? IsActionAvailable(string command) => !_disposed && !_presentationPending && !IsBusy &&
+        (!_showHistory || command is "CloseHistory" or "RestoreVersion") &&
+        (!_showHelp || command is "ShowHelp") &&
         (IsWorkspaceActive || command is "Create" or "Open" or "Refresh" or "ImportPowerPoint" or "ResumePresentation" or "Inspect" or "Close") &&
         (_pending is null || command is "Inspect" or "Refresh" or "ReturnToStart" or "ResumePresentation") &&
         (_playback is null || command is "Advance" or "PlayPrevious" or "ExitPresentation") && (command switch
@@ -659,7 +663,10 @@ public sealed class PresentBrowserSession : ICuiWritableBindingContext, ICuiActi
             "Create" or "Open" or "Refresh" => true,
             "ReturnToStart" => IsWorkspaceActive,
             "ResumePresentation" => Editor is not null && !IsWorkspaceActive,
-            "ToggleInspector" or "ToggleFiles" => true,
+            "ToggleInspector" or "ToggleFiles" or "ToggleNotes" or "ShowHelp" or "CloseHistory" or "ZoomFit" or "ZoomIn" or "ZoomOut" => true,
+            "ShowHistory" => Editor is not null && _repository is IPresentVersionRepository,
+            "RestoreVersion" => Editor is not null && !IsReadOnly && _showHistory,
+            "ShowSlideProperties" or "ShowObjectProperties" => Editor is not null,
             "ToggleSidebar" => true,
             "SelectSlide" => Editor is not null,
             "Present" => Editor is not null && !IsReadOnly && Editor.Document.Slides.Any(slide => !slide.Hidden),
@@ -721,6 +728,17 @@ public sealed class PresentBrowserSession : ICuiWritableBindingContext, ICuiActi
         {
             case "ReturnToStart": SetStartView(true); break;
             case "ResumePresentation": SetStartView(false); break;
+            case "ToggleNotes": _showNotes = !_showNotes; Notify(); break;
+            case "ShowHelp": _showHelp = !_showHelp; Notify(); break;
+            case "ShowHistory": await ShowHistoryAsync(cancellationToken); break;
+            case "CloseHistory": _showHistory = false; Notify(); break;
+            case "RestoreVersion" when parameter is PresentVersionRow version && _versions.Contains(version):
+                await EditAsync(editor => editor.RestoreSavedContent(version.Document), cancellationToken); _showHistory = false; Notify(); break;
+            case "ZoomFit": _zoom = 1; Notify(); break;
+            case "ZoomIn": _zoom = Math.Min(2.5, _zoom + .25); Notify(); break;
+            case "ZoomOut": _zoom = Math.Max(.5, _zoom - .25); Notify(); break;
+            case "ShowSlideProperties": Editor!.CommitLiveTextEdit(); Editor.SelectElements([]); _showInspector = true; Notify(); break;
+            case "ShowObjectProperties": _showInspector = true; Notify(); break;
             case "ToggleInspector": _showInspector = !_showInspector; Notify(); break;
             case "ToggleFiles": _showFiles = !_showFiles; _showSidebar = true; Notify(); break;
             case "ToggleSidebar": _showSidebar = !_showSidebar; Notify(); break;
@@ -818,6 +836,7 @@ public sealed class PresentBrowserSession : ICuiWritableBindingContext, ICuiActi
     }
     private void Notify()
     {
+        RefreshEditorUi();
         // Selection, open and undo can change the owner's transition. Preserve
         // pending input through unrelated notifications, but never carry a
         // previous slide's fields into a newly selected slide.
@@ -841,8 +860,10 @@ public sealed class PresentBrowserSession : ICuiWritableBindingContext, ICuiActi
     public void SetViewportWidth(double width)
     {
         var compact = width > 0 && width < 760;
-        if (_compact == compact) return;
-        _compact = compact; _showSidebar = !compact; Notify();
+        if (_viewportWidth == width) return;
+        _viewportWidth = width;
+        if (_compact != compact) _showSidebar = !compact;
+        _compact = compact; Notify();
     }
     private HomeCoreOperationResult<T> Success<T>(T value) => new(true, "Succeeded", Status, value, Revision: DurableRevision);
     private HomeCoreOperationResult<T> Failed<T>() => new(false, ErrorCode ?? "ProviderUnavailable", Status);

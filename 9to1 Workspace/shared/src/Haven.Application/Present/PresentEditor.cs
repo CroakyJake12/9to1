@@ -228,6 +228,30 @@ public sealed partial class PresentEditor
         return true;
     }
 
+    public bool SetSelectedOpacity(double opacity)
+    {
+        if (!double.IsFinite(opacity) || opacity is < 0 or > 1) return false;
+        var selected = EditableSelection();
+        if (selected.Count == 0 || selected.All(element => element.Opacity == opacity)) return false;
+        Mutate(() => { foreach (var element in selected) element.Opacity = opacity; });
+        return true;
+    }
+
+    /// <summary>Restore content into the same document as an undoable edit; the save/CAS base stays current.</summary>
+    public bool RestoreSavedContent(PresentDocument saved)
+    {
+        ArgumentNullException.ThrowIfNull(saved);
+        if (saved.Id != Document.Id) throw new ArgumentException("Saved content must belong to this presentation.", nameof(saved));
+        var replacement = JsonSerializer.Deserialize<PresentDocument>(Snapshot(saved), SnapshotOptions)!;
+        replacement.Normalize();
+        replacement.Version = Document.Version;
+        replacement.Recovery = Document.Recovery;
+        replacement.UpdatedAt = Document.UpdatedAt;
+        Mutate(() => Document = replacement);
+        EnsureSelectionIsValid();
+        return true;
+    }
+
     public PresentSlide AddSlide(Guid? afterSlideId = null, Guid? layoutId = null)
     {
         PresentSlide? created = null;

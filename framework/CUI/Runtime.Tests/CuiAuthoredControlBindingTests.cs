@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia;
+using Avalonia.VisualTree;
+using Avalonia.Input;
 using Avalonia.Headless;
 using CakeOS.Cui;
 using Xunit;
@@ -12,6 +15,52 @@ namespace CakeOS.Cui.Runtime.Tests;
 
 public sealed class CuiAuthoredControlBindingTests
 {
+    [Fact]
+    public async Task Equal_choice_notifications_preserve_the_open_native_dropdown_and_its_containers()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        Assert.True(await session.Dispatch<bool>(async () =>
+        {
+            var model = new CuiViewModel();
+            model.Set("Choices", new[] { "One", "Two" }); model.Set("Selection", 1);
+            using var loader = new CuiControlLoader(); loader.SetBindingContext(model);
+            var (root, diagnostics) = loader.LoadMarkup("""
+                <Cui><Input Type="Select" ItemsSource="{Binding Choices}" SelectedIndex="{Binding Selection, Mode=TwoWay}" /></Cui>
+                """);
+            Assert.Empty(diagnostics); loader.WireBindings(root!);
+            var select = Assert.IsType<ComboBox>(root);
+            var window = new Window { Width = 600, Height = 400, Content = root };
+            try
+            {
+                window.Show(); window.UpdateLayout(); select.Focus(); select.IsDropDownOpen = true; window.UpdateLayout();
+                var source = select.ItemsSource;
+                var container = select.ContainerFromIndex(1);
+                Assert.NotNull(container);
+                model.Set("Choices", new[] { "One", "Two" }); loader.RefreshBindings(); window.UpdateLayout();
+                Assert.Same(source, select.ItemsSource); Assert.Same(container, select.ContainerFromIndex(1));
+                Assert.True(select.IsDropDownOpen); Assert.Equal(1, select.SelectedIndex);
+                model.Set("Choices", new[] { "One", "Three" }); loader.RefreshBindings(); window.UpdateLayout();
+                Assert.NotSame(source, select.ItemsSource); Assert.Equal("Three", select.SelectedItem);
+                model.Set("Selection", 0); loader.RefreshBindings(); window.UpdateLayout();
+                select.IsDropDownOpen = true; window.UpdateLayout();
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                using (var frame = window.CaptureRenderedFrame()) { }
+                var choice = select.ContainerFromIndex(1)!;
+                var inputRoot = TopLevel.GetTopLevel(choice)!;
+                inputRoot.UpdateLayout();
+                var point = choice.TranslatePoint(new Avalonia.Point(choice.Bounds.Width - 10, choice.Bounds.Height / 2), inputRoot)!.Value;
+                var hit = inputRoot.InputHitTest(point) as Visual;
+                Assert.True(ReferenceEquals(hit, choice) || hit?.GetVisualAncestors().Contains(choice) == true,
+                    $"Choice bounds {choice.Bounds}, point {point}, hit {hit?.GetType().Name}, background {(choice as ComboBoxItem)?.Background}");
+                inputRoot.MouseDown(point, Avalonia.Input.MouseButton.Left);
+                inputRoot.MouseUp(point, Avalonia.Input.MouseButton.Left);
+                Assert.Equal("Three", select.SelectedItem); Assert.False(select.IsDropDownOpen);
+            }
+            finally { window.Close(); }
+            return true;
+        }, CancellationToken.None));
+    }
+
     [Fact]
     public async Task Authored_binding_serves_one_component_without_replacing_a_reserved_builtin_type()
     {

@@ -634,6 +634,11 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
                     break;
                 }
                 var formatted = CreateText(text.Layout.Text, text.Layout.FontFamily, text.Layout.FontSize, text.Layout.FontWeight, text.Layout.MaxWidth, Resolve(text.Brush), text.Layout.Italic);
+                if (text.Layout.SingleLineEllipsis)
+                {
+                    formatted.MaxLineCount = 1;
+                    formatted.Trimming = TextTrimming.CharacterEllipsis;
+                }
                 var y = text.Layout.CenterVertically
                     ? text.Rect.Y + Math.Max(0, (text.Rect.Height - formatted.Height) / 2d)
                     : text.Rect.Y;
@@ -781,7 +786,7 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
         return shaped;
     }
 
-    internal static HavenParagraphLayout ShapeParagraph(IReadOnlyList<HavenParagraphRun> runs, double width,
+    public static HavenParagraphLayout ShapeParagraph(IReadOnlyList<HavenParagraphRun> runs, double width,
         double lineSpacing = 1, HavenParagraphAlignment alignment = HavenParagraphAlignment.Left, bool wrap = true) =>
         new AvaloniaParagraphLayout(runs, width, lineSpacing, alignment, wrap);
 

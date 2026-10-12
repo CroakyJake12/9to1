@@ -2,6 +2,9 @@ using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.VisualTree;
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
 
@@ -13,9 +16,11 @@ public static class PresentBrowserSurface
     {
         var lifetime = new PresentationLifetime(session, reduceMotion);
         var registry = new CuiControlRegistry();
+        BrowserCanonicalIcons.Register(registry);
         registry.RegisterObjectRenderer("PresentSlideCanvas", _ => lifetime.Control);
         registry.RegisterObjectRenderer("PresentThumbnails", _ => lifetime.Thumbnails);
-        return new(document, session, session, lifetime, registry);
+        registry.RegisterObjectRenderer("PresentPlaybackCanvas", _ => lifetime.Playback);
+        return new(CuiEditorComponents.Compose(document), session, session, lifetime, registry);
     }
     private sealed class PresentationLifetime : IDisposable
     {
@@ -24,9 +29,11 @@ public static class PresentBrowserSurface
         private TopLevel? _topLevel;
         public PresentRetainedSceneControl Control { get; }
         public PresentThumbnailControl Thumbnails { get; }
+        public PresentRetainedSceneControl Playback { get; }
         public PresentationLifetime(PresentBrowserSession session, Func<bool> reduceMotion)
         {
-            _session = session; Control = new(reduceMotion); Thumbnails = new(reduceMotion);
+            _session = session; Control = new(reduceMotion); Playback = new(reduceMotion); Thumbnails = new(reduceMotion);
+            Thumbnails.SetPreviewRenderer(PresentRetainedSceneControl.CreatePreviewRenderer());
             Control.LiveTextPreviewed += Preview;
             Control.SelectionChanged += Selection;
             Thumbnails.SelectionChanged += Selection;
@@ -40,10 +47,11 @@ public static class PresentBrowserSurface
         {
             var nextRoot = TopLevel.GetTopLevel(Control);
             if (ReferenceEquals(_topLevel, nextRoot)) return;
-            if (_topLevel is not null) _topLevel.PropertyChanged -= ViewportChanged;
+            if (_topLevel is not null) { _topLevel.PropertyChanged -= ViewportChanged; _topLevel.RemoveHandler(InputElement.KeyDownEvent, KeyDown); }
             _topLevel = nextRoot;
             if (_topLevel is null) return;
             _topLevel.PropertyChanged += ViewportChanged;
+            _topLevel.AddHandler(InputElement.KeyDownEvent, KeyDown, RoutingStrategies.Tunnel);
             var attachedRoot = _topLevel;
             Dispatcher.UIThread.Post(() =>
             {
@@ -62,16 +70,53 @@ public static class PresentBrowserSurface
             if (_disposed) return;
             Control.SetInputAllowed(_session.IsPresentationAdmitted && _session.IsWorkspaceActive && !_session.IsBusy && !_session.IsReadOnly && !_session.HasUnknownCommitOutcome && !_session.IsPlaying && _session.Editor is not null);
             Control.SetEditor(_session.Editor);
+            Control.SetZoom(_session.CanvasZoom);
+            Playback.SetEditor(_session.IsPlaying ? _session.Editor : null);
             Thumbnails.SetEditor(_session.Editor, _session.IsPresentationAdmitted && _session.IsWorkspaceActive && !_session.IsBusy && !_session.HasUnknownCommitOutcome, !_session.IsReadOnly);
+        }
+        private async void KeyDown(object? sender, KeyEventArgs args)
+        {
+            if (!_session.IsWorkspaceActive || args.Handled) return;
+            if (args.Key == Key.Escape)
+            {
+                var overlayCommand = _session.TryGetValue("ShowHistory", out var history) && history is true ? "CloseHistory"
+                    : _session.TryGetValue("ShowHelp", out var help) && help is true ? "ShowHelp" : null;
+                if (overlayCommand is not null && _session.IsActionAvailable(overlayCommand) == true)
+                {
+                    args.Handled = true; await _session.DispatchAsync(overlayCommand, null); return;
+                }
+            }
+            var primary = args.KeyModifiers.HasFlag(KeyModifiers.Control) || args.KeyModifiers.HasFlag(KeyModifiers.Meta);
+            var shift = args.KeyModifiers.HasFlag(KeyModifiers.Shift);
+            var textInput = Control.IsTextEditing || args.Source is Avalonia.Controls.Control source &&
+                (source is TextBox || source.GetVisualAncestors().OfType<TextBox>().Any());
+            var command = _session.IsPlaying ? args.Key switch
+            {
+                Key.Escape => "ExitPresentation", Key.Right or Key.Space or Key.PageDown => "Advance",
+                Key.Left or Key.PageUp => "PlayPrevious", _ => null
+            } : primary ? args.Key switch
+            {
+                Key.S => "Save", Key.M when !textInput => "AddSlide",
+                Key.B when !textInput => "Bold", Key.I when !textInput => "Italic",
+                Key.Z when !textInput => shift ? "Redo" : "Undo", Key.Y when !textInput => "Redo",
+                Key.C when !textInput => "Copy", Key.V when !textInput => "Paste", _ => null
+            } : !textInput && Control.IsKeyboardFocusWithin ? args.Key switch
+            {
+                Key.Delete or Key.Back => "DeleteObject", Key.Left => "MoveObjectLeft", Key.Right => "MoveObjectRight",
+                Key.Up => "MoveObjectUp", Key.Down => "MoveObjectDown", _ => null
+            } : null;
+            if (command is null || _session.IsActionAvailable(command) != true) return;
+            args.Handled = true;
+            await _session.DispatchAsync(command, null);
         }
         public void Dispose()
         {
             if (_disposed) return;
-            if (_topLevel is not null) _topLevel.PropertyChanged -= ViewportChanged;
+            if (_topLevel is not null) { _topLevel.PropertyChanged -= ViewportChanged; _topLevel.RemoveHandler(InputElement.KeyDownEvent, KeyDown); }
             _topLevel = null;
             Control.AttachedToVisualTree -= Attached;
             Control.SelectionChanged -= Selection; Thumbnails.SelectionChanged -= Selection;
-            _disposed = true; _session.PropertyChanged -= Changed; Control.LiveTextPreviewed -= Preview; Control.Dispose(); Thumbnails.Dispose();
+            _disposed = true; _session.PropertyChanged -= Changed; Control.LiveTextPreviewed -= Preview; Control.Dispose(); Playback.Dispose(); Thumbnails.Dispose();
         }
     }
 }

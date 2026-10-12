@@ -8,7 +8,7 @@ namespace NineToOne.Web.Productivity.Present.Storage;
 
 /// <summary>This-origin durable canonical Present bytes; no account, Files or remote storage authority.</summary>
 public sealed class IndexedDbPresentRepository(IPresentBrowserTransport transport, Action<PresentDocument> validateForSave)
-    : IPresentRepository
+    : IPresentRepository, IPresentVersionRepository
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { WriteIndented = true };
     private static JsonElement Args(object value) => JsonSerializer.SerializeToElement(value, Json);
@@ -95,6 +95,24 @@ public sealed class IndexedDbPresentRepository(IPresentBrowserTransport transpor
         if (documentId == Guid.Empty) throw new ArgumentException("Choose a canonical presentation ID.", nameof(documentId));
         return Read(await Raw(documentId, cancellationToken), documentId);
     }
+    public async Task<IReadOnlyList<PresentDocument>> ReadVersionsAsync(Guid documentId, CancellationToken cancellationToken)
+    {
+        if (documentId == Guid.Empty) throw new ArgumentException("Choose a canonical presentation ID.", nameof(documentId));
+        var record = await Raw(documentId, cancellationToken);
+        if (record.ValueKind == JsonValueKind.Null) return [];
+        if (record.GetProperty("id").GetGuid() != documentId) throw new InvalidDataException("Stored presentation ID differs.");
+        var result = new List<PresentDocument>();
+        foreach (var key in new[] { "current", "previous" })
+        {
+            var copy = record.GetProperty(key);
+            if (copy.ValueKind == JsonValueKind.Null) continue;
+            // Invalid copies are not offered as restorable history.
+            try { result.Add(Decode(copy, documentId)); }
+            catch (InvalidDataException) { }
+        }
+        return result;
+    }
+
     public async Task<PresentSaveResult> SaveAsync(PresentDocument document, string reason, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(document);

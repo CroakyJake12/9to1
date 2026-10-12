@@ -87,6 +87,8 @@ internal sealed partial class PresentHavenScene
         SlideToolbar.Add(MoveSlideLaterButton);
 
         SlideNavigator = new PresentThumbnailNavigator();
+        var previewCanvas = new PresentSlideCanvas();
+        SlideNavigator.SetPreviewRenderer(previewCanvas.DrawPreview);
         SlideNavigator.SlideSelected += index => SlideSelected?.Invoke(index);
         SlideNavigator.SlideReorderRequested += (fromIndex, toIndex) => SlideReorderRequested?.Invoke(fromIndex, toIndex);
         SlidePane.Add(SlideNavigator);

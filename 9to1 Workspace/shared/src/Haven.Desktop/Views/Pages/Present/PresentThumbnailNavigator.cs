@@ -1,4 +1,3 @@
-using System.Globalization;
 using Haven.Core;
 using Haven.UI;
 
@@ -6,6 +5,9 @@ namespace Haven.Desktop.Views.Pages.Present;
 
 internal sealed class PresentThumbnailNavigator : HavenElement, IHavenDrawCommandSource, IHavenPointerInputTarget, IHavenScrollInputTarget, IHavenKeyboardInputTarget
 {
+    private Action<HavenDrawingContext, PresentDocument, PresentSlide, HavenRect, double>? _previewRenderer;
+    internal void SetPreviewRenderer(Action<HavenDrawingContext, PresentDocument, PresentSlide, HavenRect, double> renderer)
+    { _previewRenderer = renderer ?? throw new ArgumentNullException(nameof(renderer)); Invalidate(); }
     private const double HorizontalPadding = 10;
     private const double VerticalPadding = 8;
     private const double ItemGap = 12;
@@ -227,50 +229,15 @@ internal sealed class PresentThumbnailNavigator : HavenElement, IHavenDrawComman
         if (selected)
             context.Add(new HavenFillRoundedRectCommand(new HavenRect(itemRect.X - 4, itemRect.Y - 4, itemRect.Width + 8, itemRect.Height + 6), new HavenTokenBrush("AccentSubtle"), 10, opacity));
         context.Add(new HavenShadowCommand(thumbRect, new HavenShadow(new HavenSolidBrush(55, 0, 0, 0), 8, 0, 2, 0, .22), 5));
-        context.Add(new HavenFillRoundedRectCommand(thumbRect, SlideBackground(slide), 4, opacity));
+        var renderer = _previewRenderer ?? throw new InvalidOperationException("Present thumbnails require the owning slide renderer.");
+        renderer(context, _document!, slide, thumbRect, opacity);
         context.Add(new HavenStrokeRoundedRectCommand(thumbRect, new HavenPen(new HavenTokenBrush(selected ? "Accent" : "Border"), selected ? 2 : 1), 4, opacity));
-
-        var titleRect = new HavenRect(thumbRect.X + thumbRect.Width * .07, thumbRect.Y + thumbRect.Height * .06, thumbRect.Width * .86, thumbRect.Height * .16);
         var title = string.IsNullOrWhiteSpace(slide.Title) ? "Untitled slide" : slide.Title.Trim();
-        context.Add(new HavenTextCommand(titleRect, new HavenTextLayout(title, _document?.Theme.HeadingFontFamily ?? "Segoe UI", Math.Max(5, thumbRect.Height * .07), 700, titleRect.Width, false),
-            Brush(_document?.Theme.Colors.Foreground, "#1F1F1F"), opacity));
-
-        foreach (var element in slide.Elements.Where(value => value.Visible && value.Kind != PresentElementKind.Group).OrderBy(value => value.Order))
-        {
-            var rect = new HavenRect(
-                thumbRect.X + element.X * thumbRect.Width,
-                thumbRect.Y + element.Y * thumbRect.Height,
-                Math.Max(1, element.Width * thumbRect.Width),
-                Math.Max(1, element.Height * thumbRect.Height));
-            switch (element.Kind)
-            {
-                case PresentElementKind.Text:
-                    if (!string.IsNullOrWhiteSpace(element.Text))
-                        context.Add(new HavenTextCommand(rect, new HavenTextLayout(element.Text,
-                            string.IsNullOrWhiteSpace(element.TextStyle.FontFamily) ? _document?.Theme.BodyFontFamily ?? "Segoe UI" : element.TextStyle.FontFamily,
-                            Math.Max(4, thumbRect.Height * .045), element.TextStyle.Bold ? 700 : 400, rect.Width, false),
-                            Brush(element.TextStyle.Color, _document?.Theme.Colors.Foreground ?? "#1F1F1F"), opacity * element.Opacity));
-                    break;
-                case PresentElementKind.Shape:
-                    context.Add(new HavenFillRoundedRectCommand(rect, new HavenTokenBrush("AccentSubtle"), Math.Min(4, rect.Height / 4), opacity * element.Opacity));
-                    context.Add(new HavenStrokeRoundedRectCommand(rect, new HavenPen(new HavenTokenBrush("Accent"), 1), Math.Min(4, rect.Height / 4), opacity * element.Opacity));
-                    break;
-                case PresentElementKind.Image:
-                    context.Add(new HavenFillRoundedRectCommand(rect, new HavenTokenBrush("SurfaceRaised"), 3, opacity * element.Opacity));
-                    context.Add(new HavenIconCommand(new HavenRect(rect.X + rect.Width * .35, rect.Y + rect.Height * .25, rect.Width * .3, rect.Height * .5), "image", new HavenTokenBrush("TextSecondary"), opacity));
-                    break;
-                case PresentElementKind.Media:
-                    context.Add(new HavenFillRoundedRectCommand(rect, new HavenTokenBrush("SurfaceRaised"), 3, opacity * element.Opacity));
-                    context.Add(new HavenIconCommand(new HavenRect(rect.X + rect.Width * .35, rect.Y + rect.Height * .25, rect.Width * .3, rect.Height * .5), "play", new HavenTokenBrush("TextSecondary"), opacity));
-                    break;
-                case PresentElementKind.GenUi:
-                    context.Add(new HavenFillRoundedRectCommand(rect, new HavenTokenBrush("SurfaceRaised"), 3, opacity * element.Opacity));
-                    break;
-            }
-        }
 
         var labelRect = new HavenRect(itemRect.X, thumbRect.Bottom + 3, itemRect.Width, LabelHeight - 3);
-        context.Add(new HavenTextCommand(labelRect, new HavenTextLayout($"{index + 1}  {TrimLabel(title)}", "Segoe UI", 11, selected ? 700 : 500, labelRect.Width, false), new HavenTokenBrush(selected ? "TextPrimary" : "TextSecondary"), opacity));
+        var label = $"{index + 1}  {title.Replace('\r', ' ').Replace('\n', ' ').Trim()}";
+        context.Add(new HavenTextCommand(labelRect, new HavenTextLayout(label, "Segoe UI", 11, selected ? 700 : 500, labelRect.Width, false)
+            { SingleLineEllipsis = true }, new HavenTokenBrush(selected ? "TextPrimary" : "TextSecondary"), opacity));
     }
 
     private void DrawInsertionMarker(HavenDrawingContext context, double itemWidth, double itemHeight, double stride, double opacity)
@@ -355,33 +322,9 @@ internal sealed class PresentThumbnailNavigator : HavenElement, IHavenDrawComman
         new(Bounds.X + HorizontalPadding, Bounds.Y + VerticalPadding + index * (itemHeight + ItemGap) - _scrollOffset,
             itemWidth, itemHeight);
 
-    private static double ThumbnailHeight(double itemWidth) => Math.Max(36, itemWidth * 9d / 16d);
+    private double ThumbnailHeight(double itemWidth) => Math.Max(36, itemWidth * (_document?.SlideSize.HeightInches ?? 7.5) / (_document?.SlideSize.WidthInches ?? 13.333333));
 
-    private HavenBrush SlideBackground(PresentSlide slide)
-    {
-        if (_document is null) return new HavenTokenBrush("Surface");
-        if (slide.Background.Kind == PresentBackgroundKind.Solid) return Brush(slide.Background.Color, "Surface");
-        if (slide.Background.Kind == PresentBackgroundKind.Theme && _document.Theme.Background.Kind == PresentBackgroundKind.Solid)
-            return Brush(_document.Theme.Background.Color, "Surface");
-        return Brush(_document.Theme.Colors.Background, "Surface");
-    }
 
-    private static HavenBrush Brush(string? value, string fallback)
-    {
-        var text = string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
-        if (!text.StartsWith('#')) return new HavenTokenBrush(text);
-        var hex = text[1..];
-        if (hex.Length is not (6 or 8) || !uint.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var packed)) return new HavenTokenBrush(fallback);
-        return hex.Length == 8
-            ? new HavenSolidBrush((byte)(packed >> 24), (byte)(packed >> 16), (byte)(packed >> 8), (byte)packed)
-            : new HavenSolidBrush(255, (byte)(packed >> 16), (byte)(packed >> 8), (byte)packed);
-    }
-
-    private static string TrimLabel(string value)
-    {
-        var normalized = value.Replace('\r', ' ').Replace('\n', ' ').Trim();
-        return normalized.Length <= 20 ? normalized : normalized[..17] + "…";
-    }
 }
 
 internal readonly record struct PresentThumbnailItem(Guid SlideId, string Name, HavenRect Bounds, bool IsSelected);

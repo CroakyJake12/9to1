@@ -39,6 +39,12 @@ public interface IPresentRepository
     Task DeleteAsync(Guid documentId, CancellationToken cancellationToken);
 }
 
+/// <summary>Read actual retained saved copies without granting additional storage authority.</summary>
+public interface IPresentVersionRepository
+{
+    Task<IReadOnlyList<PresentDocument>> ReadVersionsAsync(Guid documentId, CancellationToken cancellationToken);
+}
+
 public interface IPresentExportService
 {
     IReadOnlyList<string> ExportExtensions { get; }

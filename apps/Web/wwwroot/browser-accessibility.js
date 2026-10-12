@@ -74,7 +74,7 @@ export function createBrowserAccessibility(browserWindow, browserDocument, owner
             current.add(peer.id);
             let node = elements.get(peer.id);
             if (!node) {
-                node = browserDocument.createElement(peer.role === 'button' ? 'button' : ['textbox', 'checkbox'].includes(peer.role) ? 'input' : 'span');
+                node = browserDocument.createElement(['button', 'menuitem', 'combobox', 'option'].includes(peer.role) ? 'button' : ['textbox', 'checkbox', 'slider'].includes(peer.role) ? 'input' : 'span');
                 node.dataset.nativePeerId = peer.id;
                 node.addEventListener('focus', () => {
                     if (restoringFocus || disposed) return;
@@ -86,14 +86,30 @@ export function createBrowserAccessibility(browserWindow, browserDocument, owner
                         else if (projectedFocus === claimed) releaseProjectedFocus();
                     } finally { restoringFocus = false; }
                 });
-                if (peer.role === 'button') {
+                if (['button', 'menuitem', 'combobox', 'option'].includes(peer.role)) {
                     node.type = 'button';
-                    node.addEventListener('click', () => { if (disposed) return; owner.PerformAccessibility(peer.id, 'invoke', null); refresh(); });
+                    if (peer.role !== 'button') node.setAttribute('role', peer.role);
+                    node.addEventListener('click', () => {
+                        if (disposed) return;
+                        const operation = peer.role === 'combobox' ? node.getAttribute('aria-expanded') === 'true' ? 'collapse' : 'expand'
+                            : peer.role === 'option' ? 'select' : 'invoke';
+                        owner.PerformAccessibility(peer.id, operation, null); refresh();
+                    });
+                    node.addEventListener('keydown', event => {
+                        if (disposed || !['menuitem', 'combobox'].includes(peer.role)) return;
+                        if (event.key === 'ArrowDown' || event.key === 'Escape') {
+                            event.preventDefault();
+                            owner.PerformAccessibility(peer.id, event.key === 'Escape' ? 'collapse' : 'expand', null); refresh();
+                        }
+                    });
                 } else if (peer.role === 'checkbox') {
                     node.type = 'checkbox';
                     node.addEventListener('change', () => { if (disposed) return; owner.PerformAccessibility(peer.id, 'toggle', null); refresh(); });
                 } else if (peer.role === 'textbox') {
                     node.type = 'text';
+                    node.addEventListener('input', () => { if (disposed) return; owner.PerformAccessibility(peer.id, 'value', node.value); refresh(); });
+                } else if (peer.role === 'slider') {
+                    node.type = 'range'; node.step = 'any';
                     node.addEventListener('input', () => { if (disposed) return; owner.PerformAccessibility(peer.id, 'value', node.value); refresh(); });
                 }
                 elements.set(peer.id, node);
@@ -101,14 +117,23 @@ export function createBrowserAccessibility(browserWindow, browserDocument, owner
             }
             node.dataset.automationId = peer.automationId ?? '';
             if (peer.role === 'text') node.textContent = peer.name;
+            else if (peer.role === 'img') { node.setAttribute('role', 'img'); node.setAttribute('aria-label', peer.name); }
             else {
                 node.setAttribute('aria-label', peer.name);
                 node.disabled = !peer.enabled;
                 node.tabIndex = peer.enabled && peer.focusable ? 0 : -1;
-                if (peer.role === 'button') node.textContent = peer.name;
+                if (['button', 'menuitem', 'combobox', 'option'].includes(peer.role)) {
+                    node.textContent = peer.role === 'combobox' && peer.value ? `${peer.name}: ${peer.value}` : peer.name;
+                    if (peer.expanded != null) {
+                        node.setAttribute('aria-expanded', String(peer.expanded));
+                        node.setAttribute('aria-haspopup', peer.role === 'combobox' ? 'listbox' : 'menu');
+                    } else { node.removeAttribute('aria-expanded'); node.removeAttribute('aria-haspopup'); }
+                    if (peer.selected != null) node.setAttribute('aria-selected', String(peer.selected));
+                }
                 else if (peer.role === 'checkbox') { node.checked = peer.value === 'true'; node.indeterminate = peer.value === 'mixed'; }
                 else {
                     node.readOnly = peer.readOnly;
+                    if (peer.role === 'slider') { node.min = peer.minimum; node.max = peer.maximum; }
                     if (node.value !== (peer.value ?? '')) node.value = peer.value ?? '';
                 }
             }

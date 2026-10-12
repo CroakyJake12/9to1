@@ -13,6 +13,47 @@ namespace CakeOS.Cui.Runtime.Tests;
 public sealed class CuiDefinitionDeclarationsTests
 {
     [Fact]
+    public void Named_container_defaults_do_not_leak_and_finite_nested_instances_are_not_cycles()
+    {
+        using var loader = new CuiControlLoader();
+        var (root, diagnostics) = loader.LoadMarkup("""
+            <Cui>
+              <Container (Definition) id="Card" Type="Vertical Stack" Padding="24" />
+              <Page><Container id="plain" Type="Vertical Stack">
+                <Card id="outer"><Card id="inner"><Text Text="Nested content" /></Card></Card>
+              </Container></Page>
+            </Cui>
+            """);
+        Assert.Empty(diagnostics);
+        var plain = Assert.IsType<CuiContainerControl>(Assert.Single(Assert.IsType<Panel>(root).Children));
+        Assert.Equal(default, plain.Padding);
+        var outer = Assert.IsType<CuiContainerControl>(Assert.Single(plain.AuthoredChildren));
+        Assert.Equal(new Avalonia.Thickness(24), outer.Padding);
+        var inner = Assert.IsType<CuiContainerControl>(Assert.Single(outer.AuthoredChildren));
+        Assert.Equal("Nested content", Assert.IsType<TextBlock>(Assert.Single(inner.AuthoredChildren)).Text);
+    }
+
+    [Fact]
+    public void Imported_editor_library_is_metadata_and_reusable_components_lower_to_canonical_controls()
+    {
+        var parser = new CakeOS.Cui.Language.CuiRichParser();
+        var document = parser.Parse("""
+            <Cui><Import Source="framework/CUI/Components/Editor.cui" />
+              <Page><EditorShell><EditorToolbar><EditorIcon AccessibleName="Save" Tooltip="Save (Ctrl+S)" /></EditorToolbar></EditorShell></Page>
+            </Cui>
+            """);
+        Assert.DoesNotContain(document.Components, component => component.Type == "Import");
+        using var loader = new CuiControlLoader();
+        var (root, diagnostics) = loader.TryLoad(CuiEditorComponents.Compose(document));
+        Assert.Empty(diagnostics);
+        var shell = Assert.IsType<CuiContainerControl>(Assert.Single(Assert.IsType<Panel>(root).Children));
+        var toolbar = Assert.IsType<CuiContainerControl>(Assert.Single(shell.AuthoredChildren));
+        var button = Assert.IsType<Button>(Assert.Single(toolbar.AuthoredChildren));
+        Assert.Equal(36, button.Width); Assert.Equal(36, button.Height);
+        Assert.Equal("Save (Ctrl+S)", ToolTip.GetTip(button));
+    }
+
+    [Fact]
     public void Preceding_declaration_leaves_the_real_page_as_the_rendered_root()
     {
         var result = CuiHeadlessRenderer.Render(

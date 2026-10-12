@@ -1,4 +1,5 @@
 using Haven.Core;
+using Haven.Desktop.HavenUI.Backend;
 using Haven.UI;
 
 namespace Haven.Desktop.Views.Pages.Present;
@@ -59,7 +60,7 @@ internal sealed partial class PresentSlideCanvas
         _textEditElementId = elementId;
         _editingText = text ?? string.Empty;
         _editingOriginal = _editingText;
-        _textCaret = CaretFromPoint(_editingText, rect, local, TextFontSize(target, elementId, rect));
+        _textCaret = CaretFromPoint(rect, local);
         _textSelectionAnchor = modifiers.Shift ? 0 : null;
         _textPointerSelecting = true;
         ResetDirectGesture();
@@ -71,7 +72,7 @@ internal sealed partial class PresentSlideCanvas
         if (!IsTextEditing || !TryEditingRect(out var rect, out var rotation)) return false;
         var point = rotation == 0 ? input.LocalPosition : InverseRotatePoint(input.LocalPosition, rect, rotation);
         if (!rect.Contains(point)) return false;
-        var next = CaretFromPoint(_editingText, rect, point, TextFontSize(_textEditTarget, _textEditElementId, rect));
+        var next = CaretFromPoint(rect, point);
         if (!input.Modifiers.HasFlag(HavenKeyModifiers.Shift)) _textSelectionAnchor = next;
         else _textSelectionAnchor ??= _textCaret;
         _textCaret = next;
@@ -85,7 +86,7 @@ internal sealed partial class PresentSlideCanvas
         if (!_textPointerSelecting || !IsTextEditing || !TryEditingRect(out var rect, out var rotation)) return false;
         var point = rotation == 0 ? input.LocalPosition : InverseRotatePoint(input.LocalPosition, rect, rotation);
         _textSelectionAnchor ??= _textCaret;
-        _textCaret = CaretFromPoint(_editingText, rect, point, TextFontSize(_textEditTarget, _textEditElementId, rect));
+        _textCaret = CaretFromPoint(rect, point);
         Invalidate();
         return true;
     }
@@ -261,24 +262,57 @@ internal sealed partial class PresentSlideCanvas
         rect = default; return false;
     }
 
-    private double TextFontSize(PresentTextEditTarget target, Guid? elementId, HavenRect rect)
+    private readonly Dictionary<ParagraphKey, HavenParagraphLayout> _textLayouts = new();
+    private sealed record ParagraphKey(string Text, string Family, double Size, int Weight, bool Italic,
+        bool Underline, HavenBrush Color, double Width, HavenParagraphAlignment Alignment);
+
+    private HavenTextLayout TextDescriptor(HavenRect rect, string text, string family, double fontSize,
+        int weight, HavenBrush color, bool italic = false, bool underline = false,
+        PresentTextHorizontalAlignment horizontal = PresentTextHorizontalAlignment.Left,
+        PresentTextVerticalAlignment vertical = PresentTextVerticalAlignment.Top)
     {
-        if (target == PresentTextEditTarget.SlideTitle) return Math.Clamp(rect.Height * .34, 18, 34);
-        var element = _slide?.Elements.FirstOrDefault(value => value.Id == elementId);
-        return element is null ? 16 : Math.Max(8, element.TextStyle.FontSizePoints * Math.Max(.45, rect.Height / 180));
+        var alignment = horizontal switch
+        {
+            PresentTextHorizontalAlignment.Center => HavenParagraphAlignment.Center,
+            PresentTextHorizontalAlignment.Right => HavenParagraphAlignment.Right,
+            PresentTextHorizontalAlignment.Justify => HavenParagraphAlignment.Justify,
+            _ => HavenParagraphAlignment.Left
+        };
+        var key = new ParagraphKey(text, family, fontSize, weight, italic, underline, color, Math.Max(1, rect.Width), alignment);
+        if (!_textLayouts.TryGetValue(key, out var paragraph))
+        {
+            // Reuse shaped paragraphs across paints without retaining old documents indefinitely.
+            if (_textLayouts.Count >= 128) _textLayouts.Clear();
+            paragraph = HavenSceneControl.ShapeParagraph(
+                [new HavenParagraphRun(text, family, fontSize, weight, italic, color, Underline: underline)], key.Width, alignment: alignment);
+            _textLayouts.Add(key, paragraph);
+        }
+        var freeHeight = Math.Max(0, rect.Height - paragraph.Size.Height);
+        var y = rect.Y + (vertical == PresentTextVerticalAlignment.Middle ? freeHeight / 2 : vertical == PresentTextVerticalAlignment.Bottom ? freeHeight : 0);
+        return new HavenTextLayout(text, family, fontSize, weight, rect.Width, false, italic)
+        {
+            Paragraph = paragraph, ParagraphOrigin = new HavenPoint(rect.X, y), ParagraphLength = text.Length
+        };
     }
 
-    private static int CaretFromPoint(string text, HavenRect rect, HavenPoint point, double fontSize)
+    private HavenTextLayout ElementTextDescriptor(PresentElement element, HavenRect rect, string text, double scale = 1) =>
+        TextDescriptor(rect, text,
+            string.IsNullOrWhiteSpace(element.TextStyle.FontFamily) ? _document?.Theme.BodyFontFamily ?? "Segoe UI" : element.TextStyle.FontFamily,
+            element.TextStyle.FontSizePoints * 96d / 72d * scale, element.TextStyle.Bold ? 700 : 400,
+            Brush(element.TextStyle.Color, _document?.Theme.Colors.Foreground ?? "#1F1F1F"),
+            element.TextStyle.Italic, element.TextStyle.Underline, element.TextStyle.HorizontalAlignment, element.TextStyle.VerticalAlignment);
+
+    private int CaretFromPoint(HavenRect rect, HavenPoint point)
     {
-        if (string.IsNullOrEmpty(text)) return 0;
-        var lineHeight = Math.Max(12, fontSize * 1.25);
-        var charWidth = Math.Max(5, fontSize * .55);
-        var lines = text.Split('\n');
-        var lineIndex = Math.Clamp((int)Math.Floor((point.Y - rect.Y) / lineHeight), 0, lines.Length - 1);
-        var offset = 0;
-        for (var index = 0; index < lineIndex; index++) offset += lines[index].Length + 1;
-        var column = Math.Clamp((int)Math.Round((point.X - rect.X) / charWidth), 0, lines[lineIndex].Length);
-        return Math.Clamp(offset + column, 0, text.Length);
+        var documentHeight = (_document?.SlideSize.HeightInches ?? 7.5) * 96;
+        var scale = SlideRectLocal().Height / documentHeight;
+        var element = _slide?.Elements.FirstOrDefault(value => value.Id == _textEditElementId);
+        var layout = _textEditTarget == PresentTextEditTarget.Element && element is not null
+            ? ElementTextDescriptor(element, rect, _editingText, scale)
+            : TextDescriptor(rect, _editingText, _document?.Theme.HeadingFontFamily ?? "Segoe UI",
+                Math.Clamp(documentHeight * .14 * .34, 18, 34) * scale, 700,
+                Brush(_document?.Theme.Colors.Foreground, "#1F1F1F"), vertical: PresentTextVerticalAlignment.Middle);
+        return layout.Paragraph!.HitTest(new HavenPoint(point.X - layout.ParagraphOrigin.X, point.Y - layout.ParagraphOrigin.Y));
     }
 
     private void DrawSlideTitle(HavenDrawingContext context, HavenRect slideRect, double opacity)
@@ -286,8 +320,10 @@ internal sealed partial class PresentSlideCanvas
         if (_slide is null) return;
         var rect = TitleRect(slideRect);
         var text = _textEditTarget == PresentTextEditTarget.SlideTitle ? _editingText : _slide.Title;
-        DrawEditableText(context, rect, text, _document?.Theme.HeadingFontFamily ?? "Segoe UI", Math.Clamp(rect.Height * .34, 18, 34), 700,
-            Brush(_document?.Theme.Colors.Foreground, "#1F1F1F"), opacity, _textEditTarget == PresentTextEditTarget.SlideTitle);
+        var brush = Brush(_document?.Theme.Colors.Foreground, "#1F1F1F");
+        var layout = TextDescriptor(rect, text, _document?.Theme.HeadingFontFamily ?? "Segoe UI",
+            Math.Clamp(rect.Height * .34, 18, 34), 700, brush, vertical: PresentTextVerticalAlignment.Middle);
+        DrawEditableText(context, rect, layout, brush, opacity, _textEditTarget == PresentTextEditTarget.SlideTitle);
     }
 
     private void DrawEditableElementText(HavenDrawingContext context, PresentElement element, HavenRect rect, double opacity)
@@ -295,18 +331,20 @@ internal sealed partial class PresentSlideCanvas
         var editing = _textEditTarget == PresentTextEditTarget.Element && _textEditElementId == element.Id;
         var text = editing ? _editingText : element.Text;
         if (string.IsNullOrWhiteSpace(text) && !editing) return;
-        DrawEditableText(context, rect, text, string.IsNullOrWhiteSpace(element.TextStyle.FontFamily) ? _document?.Theme.BodyFontFamily ?? "Segoe UI" : element.TextStyle.FontFamily,
-            Math.Max(8, element.TextStyle.FontSizePoints * Math.Max(.45, rect.Height / 180)), element.TextStyle.Bold ? 700 : 400,
-            Brush(element.TextStyle.Color, _document?.Theme.Colors.Foreground ?? "#1F1F1F"), opacity * element.Opacity, editing, element.TextStyle.Italic);
+        var layout = ElementTextDescriptor(element, rect, text);
+        DrawEditableText(context, rect, layout, layout.Paragraph!.Runs[0].Foreground, opacity * element.Opacity, editing);
     }
 
-    private void DrawEditableText(HavenDrawingContext context, HavenRect rect, string text, string fontFamily, double fontSize, int weight, HavenBrush brush, double opacity, bool editing, bool italic = false)
+    private void DrawEditableText(HavenDrawingContext context, HavenRect rect, HavenTextLayout layout, HavenBrush brush, double opacity, bool editing)
     {
-        var layout = new HavenTextLayout(text, fontFamily, fontSize, weight, rect.Width, true, italic);
+        context.Add(new HavenPushClipCommand(rect));
         context.Add(new HavenTextCommand(rect, layout, brush, opacity));
-        if (!editing) return;
-        if (TrySelection(out var start, out var end))
-            context.Add(new HavenTextSelectionCommand(rect, layout, start, end, new HavenSolidBrush(88, 56, 132, 255), opacity));
-        context.Add(new HavenCaretCommand(rect, new HavenTextLayout(text[..Math.Clamp(_textCaret, 0, text.Length)], fontFamily, fontSize, weight, rect.Width, true, italic), new HavenTokenBrush("Accent"), opacity));
+        if (editing)
+        {
+            if (TrySelection(out var start, out var end))
+                context.Add(new HavenTextSelectionCommand(rect, layout, start, end - start, new HavenSolidBrush(88, 56, 132, 255), opacity));
+            context.Add(new HavenCaretCommand(rect, layout, new HavenTokenBrush("Accent"), opacity) { FullLayout = layout, CaretIndex = _textCaret });
+        }
+        context.Add(new HavenPopClipCommand(rect));
     }
 }

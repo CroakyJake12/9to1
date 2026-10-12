@@ -14,6 +14,49 @@ namespace CakeOS.Cui.Runtime.Tests;
 public sealed class CuiThemeAuthorityTests
 {
     [Fact]
+    public async Task Unrelated_resource_changes_preserve_editing_and_later_palette_updates()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            using var loader = new CuiControlLoader();
+            var (root, diagnostics) = loader.LoadMarkup("<Page><Container Type='Vertical Stack'>" +
+                string.Concat(Enumerable.Range(0, 40).Select(i => $"<Input Type='Text' Value='Draft {i}'/>")) +
+                "</Container></Page>");
+            Assert.Empty(diagnostics);
+            Assert.NotNull(root);
+            var window = new Window { Content = root, Width = 600, Height = 900 };
+            try
+            {
+                window.Show(); window.UpdateLayout();
+                var input = root!.GetVisualDescendants().OfType<TextBox>().First();
+                input.Focus(); input.SelectionStart = 0; input.SelectionEnd = 5;
+                var color = input.Foreground; var notifications = 0;
+                input.ResourcesChanged += (_, _) => ++notifications;
+                root.Resources["OwnerMetadataRevision"] = -1;
+                var allocated = GC.GetAllocatedBytesForCurrentThread();
+                var watch = System.Diagnostics.Stopwatch.StartNew();
+                for (var i = 0; i < 50; ++i) root.Resources["OwnerMetadataRevision"] = i;
+                var elapsed = watch.Elapsed.TotalMilliseconds;
+                allocated = GC.GetAllocatedBytesForCurrentThread() - allocated;
+                System.Console.WriteLine($"Unrelated resource refresh: {notifications} notifications, {allocated} bytes, {elapsed:F2} ms");
+                Assert.Equal(51, notifications);
+                Assert.Equal("Draft 0", input.Text); Assert.Equal("Draft", input.SelectedText);
+                Assert.True(input.IsKeyboardFocusWithin); Assert.Same(color, input.Foreground);
+                var next = new SolidColorBrush(Color.Parse("#FFAC3456"));
+                input.Resources["CuiTextBrush"] = next;
+                Assert.Same(next, input.Foreground); Assert.Same(next, input.CaretBrush);
+                Assert.Same(next, input.SelectionForegroundBrush);
+                // A mutable brush keeps its identity; its drawing invalidation
+                // still updates the native value after redundant notifications.
+                next.Color = Color.Parse("#FF234567");
+                Assert.Equal(next.Color, ((ISolidColorBrush)input.Foreground!).Color);
+            }
+            finally { window.Close(); }
+        }, CancellationToken.None);
+    }
+
+    [Fact]
     public async Task Global_palette_refresh_publishes_complete_resources_without_per_token_notifications()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));

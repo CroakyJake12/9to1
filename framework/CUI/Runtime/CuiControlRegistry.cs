@@ -73,7 +73,7 @@ public sealed class CuiControlRegistry
     public static IReadOnlySet<string> TypesFor(string element) => (element.ToLowerInvariant() switch
     {
         "container" => new[] { "Grid", "Vertical Stack", "Horizontal Stack", "Absolute", "Overlay", "Wrap", "Menu", "Context Menu" },
-        "input" => new[] { "Text", "Number", "Checkbox", "Radio", "Slider", "Select", "List" },
+        "input" => new[] { "Text", "Number", "Checkbox", "Radio", "Slider", "Select", "List", "Resize" },
         "button" => new[] { "Action", "Menu Item" },
         _ => Array.Empty<string>()
     }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
@@ -261,6 +261,7 @@ public sealed class CuiControlRegistry
             "checkbox" or "check box" => new CheckBox(),
             "radio" => new RadioButton(),
             "slider" => new Slider(),
+            "resize" => new CuiResizeInput(),
             "select" => new ComboBox(),
             "list" => new ListBox(),
             _ => UnknownInputType(type, out error),
@@ -274,7 +275,7 @@ public sealed class CuiControlRegistry
         return type.ToLowerInvariant() switch
         {
             "action" => new Button(),
-            "menu item" => new MenuItem(),
+            "menu item" => new CuiMenuItem(),
             _ => UnknownInputType(type, out error)
         };
     }
@@ -319,7 +320,7 @@ public sealed class CuiControlRegistry
         {
             "Type", "Width", "Height", "MinWidth", "MinHeight", "MaxWidth", "MaxHeight", "Margin", "Opacity", "Active",
             "Hidden", "Interactive", "IsVisible", "IsEnabled", "Focusable", "TabIndex", "AccessibleName", "AccessibleDescription",
-            "Role", "AutomationId", "HorizontalAlignment", "VerticalAlignment", "IsHitTestVisible", "Effect", "Shadow", "Layer", "Modal",
+            "Role", "AutomationId", "Tooltip", "HorizontalAlignment", "VerticalAlignment", "IsHitTestVisible", "Effect", "Shadow", "Layer", "Modal",
             "Clip", "Cursor", "Rotate", "Scale", "ScaleX", "ScaleY", "Skew", "SkewX", "SkewY", "Translate",
             "TranslateX", "TranslateY", "Column", "Row", "ColumnSpan", "RowSpan", "X", "Y", "XPixel", "YPixel", "XPercent", "YPercent", "ActiveIndependently"
         };
@@ -336,7 +337,7 @@ public sealed class CuiControlRegistry
         var input = common.Concat(new[]
         {
             "Type", "Text", "Value", "Checked", "IsChecked", "PlaceholderText", "AcceptsReturn", "Foreground",
-            "Background", "FontFamily", "FontSize", "FontWeight", "FontStyle", "TextWrapping", "ItemsSource", "SelectedIndex", "Minimum", "Maximum", "Increment", "PasswordChar", "Watermark", "Padding", "CornerRadius", "Content", "WriteBack", "Border", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness"
+            "Background", "FontFamily", "FontSize", "FontWeight", "FontStyle", "TextWrapping", "ItemsSource", "SelectedIndex", "Minimum", "Maximum", "Increment", "ResizeEdge", "PasswordChar", "Watermark", "Padding", "CornerRadius", "Content", "WriteBack", "Border", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness"
         }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         var content = common.Concat(new[]
         {
@@ -358,7 +359,7 @@ public sealed class CuiControlRegistry
                 "Text" => text,
                 "Input" => input,
                 "Image" => common.Concat(new[] { "Source", "Stretch", "Opacity", "Background" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
-                "Button" => content.Concat(new[] { "Action" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
+                "Button" => content.Concat(new[] { "Action", "Shortcut", "Selected" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
                 "Layer" => common.Concat(new[] { "Background", "Padding", "ZIndex", "Interactive", "ActiveIndependently" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
                 "Anchor" => common.Concat(new[] { "Target", "Placement" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
                 "Audio" or "Video" => common.Concat(new[] { "Type", "Source" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
@@ -396,6 +397,8 @@ public sealed class CuiControlRegistry
             ("IsEnabled", "boolean", typeof(bool), true), ("Focusable", "boolean", typeof(bool), true),
             ("TabIndex", "integer", typeof(int), true), ("AccessibleName", "text", typeof(string), true),
             ("AccessibleDescription", "text", typeof(string), true), ("Role", "symbol", typeof(string), true),
+            ("Tooltip", "text", typeof(string), true), ("Shortcut", "text", typeof(string), true),
+            ("Selected", "boolean", typeof(bool), true), ("ResizeEdge", "symbol", typeof(string), true),
             ("Header", "text", typeof(string), true), ("Text", "text", typeof(string), true), ("Content", "content", typeof(object), true),
             ("ItemsSource", "collection", typeof(System.Collections.IEnumerable), true), ("SelectedIndex", "integer", typeof(int), true),
             ("Value", "value", typeof(object), true), ("Checked", "boolean", typeof(bool), true),

@@ -1,7 +1,10 @@
 using System.Text.Json;
+using System.Globalization;
+using Avalonia.Automation;
 using Avalonia.Automation.Peers;
 using Avalonia.Automation.Provider;
 using Avalonia.Controls;
+using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 
@@ -39,6 +42,7 @@ internal sealed class BrowserAccessibilityBridge
         var unsupportedPeers = new List<UnsupportedPeer>();
         var unsupported = new HashSet<string>(StringComparer.Ordinal);
         var current = new HashSet<string>(StringComparer.Ordinal);
+        var visited = new HashSet<AutomationPeer>();
         if (_root is not null) Visit(ControlAutomationPeer.CreatePeerForElement(_root));
         foreach (var id in _peers.Keys.Except(current).ToArray())
         {
@@ -51,20 +55,25 @@ internal sealed class BrowserAccessibilityBridge
 
         void Visit(AutomationPeer peer)
         {
+            if (!visited.Add(peer)) return;
             var kind = peer.GetAutomationControlType();
             if (peer is not ControlAutomationPeer controlPeer)
             {
                 unsupported.Add($"{kind}:{peer.GetClassName()}");
                 return;
             }
-            if (!controlPeer.Owner.IsEffectivelyVisible || _root is null
-                || !(ReferenceEquals(controlPeer.Owner, _root) || controlPeer.Owner.GetVisualAncestors().Contains(_root))) return;
+            if (!InScope(controlPeer.Owner)) return;
             var role = kind switch
             {
                 AutomationControlType.Button when peer is IInvokeProvider => "button",
                 AutomationControlType.CheckBox when peer is IToggleProvider => "checkbox",
                 AutomationControlType.Edit when peer is IValueProvider && controlPeer.Owner is not TextBox { PasswordChar: not '\0' } => "textbox",
                 AutomationControlType.Text => "text",
+                AutomationControlType.MenuItem when peer is IInvokeProvider => "menuitem",
+                AutomationControlType.ComboBox when peer is IExpandCollapseProvider => "combobox",
+                AutomationControlType.ListItem or AutomationControlType.ComboBoxItem when peer is ISelectionItemProvider => "option",
+                AutomationControlType.Slider when peer is IRangeValueProvider => "slider",
+                AutomationControlType.Image => "img",
                 _ => null
             };
             if (role is not null)
@@ -77,14 +86,27 @@ internal sealed class BrowserAccessibilityBridge
                 }
                 current.Add(id);
                 var value = peer as IValueProvider;
+                var range = peer as IRangeValueProvider;
+                var expansion = peer as IExpandCollapseProvider;
                 elements.Add(new(id, role, peer.GetName(), peer.GetAutomationId(), peer.IsEnabled(),
-                    peer.IsKeyboardFocusable(), peer is IToggleProvider toggle ? toggle.ToggleState == ToggleState.On ? "true" : toggle.ToggleState == ToggleState.Off ? "false" : "mixed" : value?.Value,
-                    peer is IToggleProvider ? false : value?.IsReadOnly ?? true, peer.GetHelpText(), peer.HasKeyboardFocus(), ReadBounds(controlPeer)));
+                    peer.IsKeyboardFocusable(), peer is IToggleProvider toggle ? toggle.ToggleState == ToggleState.On ? "true" : toggle.ToggleState == ToggleState.Off ? "false" : "mixed"
+                        : range?.Value.ToString(CultureInfo.InvariantCulture) ?? value?.Value,
+                    peer is IToggleProvider ? false : range?.IsReadOnly ?? value?.IsReadOnly ?? true, peer.GetHelpText(), peer.HasKeyboardFocus(), ReadBounds(controlPeer),
+                    expansion is null || expansion.ExpandCollapseState == ExpandCollapseState.LeafNode ? null : expansion.ExpandCollapseState == ExpandCollapseState.Expanded,
+                    range?.Minimum, range?.Maximum, peer is ISelectionItemProvider selected ? selected.IsSelected : null));
+                if (expansion?.ExpandCollapseState == ExpandCollapseState.Expanded)
+                {
+                    foreach (var child in peer.GetChildren()) Visit(child);
+                    // A popup has its own visual root, but its real item containers
+                    // remain logically owned by the current native menu/select.
+                    if (controlPeer.Owner is ItemsControl items)
+                        foreach (var child in items.GetRealizedContainers()) Visit(ControlAutomationPeer.CreatePeerForElement(child));
+                }
                 // Names and values already belong to the actual parent provider;
                 // projecting template children would duplicate its semantics.
                 return;
             }
-            if (kind is not (AutomationControlType.None or AutomationControlType.Custom or AutomationControlType.Pane or AutomationControlType.Group)
+            if (kind is not (AutomationControlType.None or AutomationControlType.Custom or AutomationControlType.Pane or AutomationControlType.Group or AutomationControlType.Menu or AutomationControlType.List)
                 || peer is IInvokeProvider or IValueProvider)
             {
                 unsupported.Add(kind.ToString());
@@ -96,6 +118,10 @@ internal sealed class BrowserAccessibilityBridge
             foreach (var child in peer.GetChildren()) Visit(child);
         }
     }
+
+    private bool InScope(Control owner) => _root is not null && owner.IsEffectivelyVisible &&
+        (ReferenceEquals(owner, _root) || owner.GetVisualAncestors().Contains(_root)
+         || TopLevel.GetTopLevel(owner) is not null && owner.GetLogicalAncestors().Contains(_root));
 
     private Viewport? ReadViewport()
     {
@@ -124,15 +150,14 @@ internal sealed class BrowserAccessibilityBridge
         // rather than trusting membership from the preceding polling snapshot.
         ReadSnapshot();
         if (_root is null || !_peers.TryGetValue(id, out var peer)
-            || !peer.Owner.IsEffectivelyVisible || !peer.IsEnabled()
-            || !(ReferenceEquals(peer.Owner, _root) || peer.Owner.GetVisualAncestors().Contains(_root))) return false;
+            || !InScope(peer.Owner) || !peer.IsEnabled()) return false;
         switch (operation)
         {
             case "focus" when peer.IsKeyboardFocusable():
                 peer.BringIntoView();
                 peer.SetFocus();
                 return true;
-            case "invoke" when peer.GetAutomationControlType() == AutomationControlType.Button && peer is IInvokeProvider invoke:
+            case "invoke" when peer.GetAutomationControlType() is AutomationControlType.Button or AutomationControlType.MenuItem && peer is IInvokeProvider invoke:
                 invoke.Invoke();
                 return true;
             case "toggle" when peer.GetAutomationControlType() == AutomationControlType.CheckBox && peer is IToggleProvider toggle:
@@ -141,6 +166,16 @@ internal sealed class BrowserAccessibilityBridge
             case "value" when peer.GetAutomationControlType() == AutomationControlType.Edit && peer is IValueProvider { IsReadOnly: false } edit:
                 edit.SetValue(value);
                 return true;
+            case "expand" when peer is IExpandCollapseProvider expand:
+                expand.Expand(); return true;
+            case "collapse" when peer is IExpandCollapseProvider collapse:
+                collapse.Collapse(); return true;
+            case "select" when peer is ISelectionItemProvider selection:
+                selection.Select(); return true;
+            case "value" when peer is IRangeValueProvider { IsReadOnly: false } range
+                && double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var number)
+                && double.IsFinite(number) && number >= range.Minimum && number <= range.Maximum:
+                range.SetValue(number); return true;
             default:
                 return false;
         }
@@ -154,5 +189,6 @@ internal sealed class BrowserAccessibilityBridge
     internal sealed record UnsupportedPeer(string? AutomationId, string Name, string ClassName, string ControlType, Bounds? Bounds);
 
     internal sealed record Element(string Id, string Role, string Name, string? AutomationId, bool Enabled,
-        bool Focusable, string? Value, bool ReadOnly, string Help, bool Focused, Bounds? Bounds);
+        bool Focusable, string? Value, bool ReadOnly, string Help, bool Focused, Bounds? Bounds,
+        bool? Expanded = null, double? Minimum = null, double? Maximum = null, bool? Selected = null);
 }

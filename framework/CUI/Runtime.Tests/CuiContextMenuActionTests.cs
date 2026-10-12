@@ -32,7 +32,7 @@ public sealed class CuiContextMenuActionTests
             {
                 window.Show(); window.UpdateLayout();
                 var owner = Assert.Single(root.GetVisualDescendants().OfType<Button>());
-                var menu = Assert.IsType<ContextMenu>(owner.ContextMenu); var item = Assert.IsType<MenuItem>(Assert.Single(menu.Items));
+                var menu = Assert.IsType<ContextMenu>(owner.ContextMenu); var item = Assert.IsAssignableFrom<MenuItem>(Assert.Single(menu.Items));
                 Assert.Equal("First", owner.Content); Assert.Equal("First", item.Header);
                 Assert.DoesNotContain(menu, root.GetVisualDescendants());
                 var current = Row("same", "Current"); model.Set("Rows", new[] { current }); window.UpdateLayout();
@@ -78,8 +78,8 @@ public sealed class CuiContextMenuActionTests
                 """);
             Assert.Empty(diagnostics); var root = Assert.IsAssignableFrom<Control>(tree); loader.WireBindings(root);
             var owner = Assert.Single(root.GetVisualDescendants().OfType<CuiContainerControl>(), c => c.Name == "menu-owner");
-            var menu = Assert.IsType<ContextMenu>(owner.ContextMenu); var parent = Assert.IsType<MenuItem>(Assert.Single(menu.Items));
-            var child = Assert.IsType<MenuItem>(Assert.Single(parent.Items));
+            var menu = Assert.IsType<ContextMenu>(owner.ContextMenu); var parent = Assert.IsAssignableFrom<MenuItem>(Assert.Single(menu.Items));
+            var child = Assert.IsAssignableFrom<MenuItem>(Assert.Single(parent.Items));
             child.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)); await loader.WhenActionsIdleAsync();
             Assert.Same(row, Assert.Single(calls));
             model.Set("Rows", Array.Empty<Dictionary<string, object?>>());
@@ -107,7 +107,7 @@ public sealed class CuiContextMenuActionTests
             loader.ActionFailed += (_, _) => throw observer;
             var (root, diagnostics) = loader.LoadMarkup("<Cui><Page><Button Text=\"Owner\"><Container Type=\"Context Menu\"><Button Type=\"Menu Item\" Content=\"Run\" action=\"run\" /></Container></Button></Page></Cui>");
             Assert.Empty(diagnostics); var tree = Assert.IsAssignableFrom<Control>(root); loader.WireBindings(tree);
-            var owner = Assert.Single(tree.GetVisualDescendants().OfType<Button>()); var item = Assert.IsType<MenuItem>(Assert.Single(owner.ContextMenu!.Items));
+            var owner = Assert.Single(tree.GetVisualDescendants().OfType<Button>()); var item = Assert.IsAssignableFrom<MenuItem>(Assert.Single(owner.ContextMenu!.Items));
             try
             {
                 item.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)); var original = loader.WhenActionsIdleAsync();

@@ -5,7 +5,7 @@ using Haven.Core;
 
 namespace Haven.Infrastructure;
 
-public sealed class PresentRepository : IPresentRepository
+public sealed class PresentRepository : IPresentRepository, IPresentVersionRepository
 {
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> SaveLocks = new(StringComparer.OrdinalIgnoreCase);
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
@@ -70,6 +70,22 @@ public sealed class PresentRepository : IPresentRepository
         backup.Recovery.RecoveredAt = DateTimeOffset.UtcNow;
         backup.Recovery.Message = "Recovered the previous valid presentation after the current file could not be read.";
         return backup;
+    }
+
+    public async Task<IReadOnlyList<PresentDocument>> ReadVersionsAsync(Guid documentId, CancellationToken cancellationToken)
+    {
+        var (currentPath, backupPath) = Paths(documentId);
+        var saveLock = SaveLocks.GetOrAdd(currentPath, static _ => new SemaphoreSlim(1, 1));
+        await saveLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var result = new List<PresentDocument>();
+            foreach (var path in new[] { currentPath, backupPath })
+                if (await TryLoadAsync(path, documentId, cancellationToken).ConfigureAwait(false) is { } document)
+                    result.Add(document);
+            return result;
+        }
+        finally { saveLock.Release(); }
     }
 
     public async Task<PresentSaveResult> SaveAsync(

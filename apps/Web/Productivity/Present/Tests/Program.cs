@@ -123,6 +123,7 @@ var assertions = await headless.Dispatch(async () =>
     Check(!parser.Diagnostics.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error),
         "actual Present CUI parses without disconnected private controls");
     var surface = PresentBrowserSurface.Create(document, session, () => true);
+    document = surface.Document;
     using var loader = new CuiControlLoader(surface.ControlRegistry!);
     var shellActions = new BrowserShellActions(session, () => { });
     loader.SetBindingContext(session); loader.SetActionDispatcher(shellActions);
@@ -152,14 +153,16 @@ var assertions = await headless.Dispatch(async () =>
         }
         Control ButtonNamed(string label)
         {
-            var currentLabel = label switch { "Add text" => "Text", "Add shape" => "Shape", _ => label };
+            var currentLabel = label switch { "Add text" => "Text box", "Add shape" => "Shape", "Move slide earlier" => "Move slide up", "Move slide later" => "Move slide down", "Delete element" => "Delete object", _ => label };
+            bool LabelMatches(object? content, Control control) => Equals(content, currentLabel) ||
+                AutomationProperties.GetName(control) is { } name && (name == currentLabel || name.StartsWith(currentLabel + " (", StringComparison.Ordinal));
             var controls = AuthoredTree(root!).Where(control => control switch
             {
-                Button button => Equals(button.Content, currentLabel) && (label != "Close" || Equals(button.Tag, "Close")),
+                Button button => LabelMatches(button.Content, button) && (label != "Close" || Equals(button.Tag, "Close")),
                 MenuItem item => Equals(item.Header, currentLabel),
                 _ => false
             }).OrderBy(control => TopLevel.GetTopLevel(control) is not null && control.IsEffectivelyVisible
-                ? 0 : control is MenuItem ? 1 : 2).ToArray();
+                ? 0 : control is MenuItem && control.GetLogicalAncestors().OfType<Menu>().Any(menu => menu.Name == "present-menu-bar") ? 1 : 2).ToArray();
             return controls.FirstOrDefault() ?? throw new InvalidOperationException("Missing authored command control: " + label);
         }
         async Task Click(string label, Func<bool> completed)
@@ -177,7 +180,9 @@ var assertions = await headless.Dispatch(async () =>
                     if (parent.IsSubMenuOpen) continue;
                     var menuRoot = TopLevel.GetTopLevel(parent)!;
                     var menuPoint = parent.TranslatePoint(new Point(parent.Bounds.Width / 2, parent.Bounds.Height / 2), menuRoot)!.Value;
-                    menuRoot.MouseDown(menuPoint, MouseButton.Left); menuRoot.MouseUp(menuPoint, MouseButton.Left);
+                    Console.WriteLine($"MENU {parent.Header}: bounds={parent.Bounds} point={menuPoint} hit={menuRoot.InputHitTest(menuPoint)}");
+                    menuRoot.MouseMove(menuPoint); await Task.Delay(250);
+                    if (!parent.IsSubMenuOpen) { menuRoot.MouseDown(menuPoint, MouseButton.Left); menuRoot.MouseUp(menuPoint, MouseButton.Left); }
                     using var menuFrame = window.CaptureRenderedFrame();
                     Check(parent.IsSubMenuOpen, "actual pointer opens parent menu for " + label);
                 }
@@ -222,6 +227,182 @@ var assertions = await headless.Dispatch(async () =>
             "actual New commits same opaque presentation ID/revision and complete original owner model");
         var scene = root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single().GetVisualDescendants().OfType<HavenSceneControl>().Single();
         var canvas = scene.Root!;
+        if (args.Contains("manipulation", StringComparer.Ordinal))
+        {
+            await Click("Add shape", () => session.Editor!.SelectedElements.Any(item => item.Kind == PresentElementKind.Shape));
+            await Click("Properties", () => { session.TryGetValue("ShowInspector", out var shown); return shown is true; });
+            Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); using (var frame = window.CaptureRenderedFrame()) { }
+            var manipulatedShape = session.Editor!.SelectedElements.Single();
+            var beforeX = manipulatedShape.X; var beforeY = manipulatedShape.Y;
+            var slideRect = (HavenRect)canvas.GetType().GetMethod("SlideRectLocal", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(canvas, null)!;
+            var shapePoint = scene.TranslatePoint(new Point(slideRect.X + (manipulatedShape.X + manipulatedShape.Width / 2) * slideRect.Width,
+                slideRect.Y + (manipulatedShape.Y + manipulatedShape.Height / 2) * slideRect.Height), window)!.Value;
+            window.MouseDown(shapePoint, MouseButton.Left); window.MouseUp(shapePoint, MouseButton.Left);
+            Check(manipulatedShape.X == beforeX && manipulatedShape.Y == beforeY, "stationary pointer selection preserves exact manipulatedShape geometry");
+            window.MouseDown(shapePoint, MouseButton.Left);
+            window.MouseMove(shapePoint + new Vector(40, 30)); window.MouseUp(shapePoint + new Vector(40, 30), MouseButton.Left);
+            Check(manipulatedShape.X > beforeX && manipulatedShape.Y > beforeY && session.Editor.CanUndo, "physical canvas drag still authors movement after the stationary-pointer guard");
+            await Click("Undo", () => session.Editor!.SelectedElements.Single().X == beforeX && session.Editor.SelectedElements.Single().Y == beforeY);
+            TypeInto(NumberBox("X (px)"), "0");
+            TypeInto(NumberBox("Y (px)"), "0");
+            manipulatedShape = session.Editor.SelectedElements.Single();
+            Check(Math.Abs(manipulatedShape.X + manipulatedShape.Width / 2 - .5) < .00001 && Math.Abs(manipulatedShape.Y + manipulatedShape.Height / 2 - .5) < .00001,
+                "actual Properties fields place the object centre at the slide centre");
+            TypeInto(NumberBox("Y (px)"), "72");
+            manipulatedShape = session.Editor.SelectedElements.Single();
+            Check(Math.Abs((.5 - manipulatedShape.Y - manipulatedShape.Height / 2) * session.Editor.Document.SlideSize.HeightInches * 96 - 72) < .00001,
+                "positive authored Y pixels move the object upwards using the real slide size");
+            TypeInto(FillBox(), "#2244aa");
+            await Click("Apply fill", () => session.Editor.SelectedElements.Single().Style.FillColor == "#2244aa");
+            var previewDrawing = new HavenDrawingContext();
+            PresentRetainedSceneControl.CreatePreviewRenderer()(previewDrawing, session.Editor.Document, session.Editor.SelectedSlide, new HavenRect(0, 0, 160, 90), 1);
+            var previewScale = previewDrawing.Commands.OfType<HavenPushTransformCommand>().First().Transform;
+            Check(Math.Abs(previewScale.ScaleX - previewScale.ScaleY) < .00001 && Math.Abs(previewScale.ScaleX - .125) < .00001,
+                "thumbnail content uses one uniform transform of the complete canonical slide");
+            Check(previewDrawing.Commands.OfType<HavenFillRoundedRectCommand>().Any(command => command.Brush == new HavenSolidBrush(255, 34, 68, 170)),
+                "thumbnail paints the real authored shape fill instead of a generic accent swatch");
+            await Click("Add text", () => session.Editor.SelectedElements.Any(item => item.Kind == PresentElementKind.Text));
+            var textElement = session.Editor.SelectedElements.Single();
+            await session.EditAsync(editor => editor.SetSelectedTextStyle(new PresentTextStyle
+            {
+                FontFamily = "Montserrat", FontSizePoints = 36, Bold = true, Underline = true,
+                HorizontalAlignment = PresentTextHorizontalAlignment.Center, VerticalAlignment = PresentTextVerticalAlignment.Middle
+            }));
+            HavenTextCommand TextPaint()
+            {
+                var drawing = new HavenDrawingContext();
+                PresentRetainedSceneControl.CreatePreviewRenderer()(drawing, session.Editor.Document, session.Editor.SelectedSlide, new HavenRect(0, 0, 640, 360), 1);
+                return drawing.Commands.OfType<HavenTextCommand>().Single(command => command.Layout.Text == textElement.Text);
+            }
+            var textPaint = TextPaint();
+            var paragraph = textPaint.Layout.Paragraph!;
+            Check(paragraph is not null && paragraph.Runs[0].FontSize == 48 && paragraph.Runs[0].Underline,
+                "36-point text uses 48 canonical pixels and retained underline styling");
+            var line = paragraph!.Lines[0].Bounds;
+            Check(Math.Abs(line.X - (textPaint.Rect.Width - line.Width) / 2) < 1,
+                "center alignment positions the actual shaped glyphs in the text box");
+            Check(Math.Abs(textPaint.Layout.ParagraphOrigin.Y - textPaint.Rect.Y - (textPaint.Rect.Height - paragraph.Size.Height) / 2) < 1,
+                "middle alignment uses the actual shaped paragraph height");
+            var caret = paragraph.CaretRect(2);
+            Check(paragraph.HitTest(new HavenPoint(caret.X, caret.Y + caret.Height / 2)) == 2,
+                "aligned text caret hit testing uses the same shaped glyph positions as painting");
+            foreach (var (value, expected) in new (string, HavenSolidBrush)[]
+            {
+                ("#fff", new(255, 255, 255, 255)), ("#8fff", new(136, 255, 255, 255)),
+                ("white", new(255, 255, 255, 255)), ("#ffffff", new(255, 255, 255, 255)),
+                ("invalid-imported-colour", new(255, 31, 31, 31))
+            })
+            {
+                await session.EditAsync(editor => editor.SetSelectedTextStyle(new PresentTextStyle { FontSizePoints = 36, Color = value }));
+                Check(TextPaint().Brush == expected,
+                    "actual paragraph renderer accepts literal or fallback colour without semantic-resource lookup: " + value);
+            }
+            var heightBefore = textElement.Height;
+            TypeInto(NumberBox("Height (px)"), "220");
+            Check(session.Editor.SelectedElements.Single().Height != heightBefore && TextPaint().Layout.FontSize == 48,
+                "resizing the text box preserves authored point size rather than rescaling the font");
+            await Click("Save", () => !session.IsDirty);
+            await Click("Close", () => session.DocumentId is null);
+            await Click(first.Title, () => session.DocumentId == id);
+            var savedShape = session.GetDocumentSnapshot()!.Slides[0].Elements.Single(item => item.Id == manipulatedShape.Id);
+            Check(savedShape.X == manipulatedShape.X && savedShape.Y == manipulatedShape.Y, "direct manipulation and Properties geometry survive save/reopen");
+            await Click("Close", () => session.DocumentId is null);
+            return count;
+        }
+        if (args.Contains("history", StringComparer.Ordinal))
+        {
+            TextBox DocumentTitle() => root!.GetVisualDescendants().OfType<TextBox>().Single(box => AutomationProperties.GetName(box) == "Presentation title");
+            TypeInto(DocumentTitle(), "First saved title");
+            await Click("Save", () => !session.IsDirty);
+            var previousRevision = session.DurableRevision;
+            TypeInto(DocumentTitle(), "Second saved title");
+            await Click("Save", () => !session.IsDirty);
+            var currentRevision = session.DurableRevision;
+            await Click("Version history", () => { session.TryGetValue("ShowHistory", out var shown); return shown is true; });
+            var versions = await ((IPresentVersionRepository)repository).ReadVersionsAsync(id, default);
+            Check(versions.Select(version => version.Version).SequenceEqual(new[] { currentRevision, previousRevision }),
+                "history reads actual current and previous durable revisions in order");
+            var restores = root!.GetVisualDescendants().OfType<Button>().Where(button => Equals(button.Content, "Restore this version"))
+                .OrderBy(button => button.TranslatePoint(default, window)!.Value.Y).ToArray();
+            Check(restores.Length == 2, "history presents exactly the two available saved copies");
+            using (var frame = window.CaptureRenderedFrame()) frame!.Save(Path.Combine(paths.DataDirectory, "version-history.png"));
+            var restorePoint = restores[1].TranslatePoint(new Point(restores[1].Bounds.Width / 2, restores[1].Bounds.Height / 2), window)!.Value;
+            window.MouseDown(restorePoint, MouseButton.Left); window.MouseUp(restorePoint, MouseButton.Left);
+            await loader.WhenActionsIdleAsync(); Dispatcher.UIThread.RunJobs();
+            Check(session.GetDocumentSnapshot()!.Title == "First saved title" && session.IsDirty && session.DurableRevision == currentRevision,
+                "physical previous-version restore changes the owner draft without rewinding its durable CAS revision");
+            Check((await repository.LoadAsync(id, default))!.Title == "Second saved title", "restoring never silently overwrites durable content");
+            await Click("Undo", () => session.GetDocumentSnapshot()!.Title == "Second saved title");
+            await Click("Redo", () => session.GetDocumentSnapshot()!.Title == "First saved title");
+            await Click("Save", () => !session.IsDirty);
+            Check(session.DurableRevision > currentRevision, "saving restored content commits a new revision");
+            await Click("Close", () => session.DocumentId is null);
+            await Click("First saved title", () => session.DocumentId == id);
+            Check(session.GetDocumentSnapshot()!.Title == "First saved title", "restored content reopens from its original durable document identity");
+            await Click("Close", () => session.DocumentId is null);
+            return count;
+        }
+        if (args.Contains("viewport", StringComparer.Ordinal))
+        {
+            var accessibility = new BrowserAccessibilityBridge(); accessibility.Bind(root!);
+            HavenRect CurrentSlideRect() => (HavenRect)canvas.GetType().GetMethod("SlideRectLocal", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(canvas, null)!;
+            void FitFrame(string name)
+            {
+                Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                using (var firstFrame = window.CaptureRenderedFrame()) { }
+                window.UpdateLayout();
+                using (var frame = window.CaptureRenderedFrame()) frame!.Save(Path.Combine(paths.DataDirectory, name + ".png"));
+                var rect = CurrentSlideRect();
+                var stage = canvas.Bounds;
+                using var semantics = JsonDocument.Parse(accessibility.ReadSnapshot());
+                foreach (var commandName in new[] { "Add slide (Ctrl+M)", "Text box", "Shape", "Properties" })
+                    Check(semantics.RootElement.GetProperty("elements").EnumerateArray().Any(element => element.GetProperty("name").GetString() == commandName),
+                        name + ": actual toolbar semantics retain " + commandName);
+                if (session.TryGetValue("ShowSidebar", out var sidebar) && sidebar is true)
+                    Check(semantics.RootElement.GetProperty("elements").EnumerateArray().Any(element => element.GetProperty("automationId").GetString()?.StartsWith("Present.Rail.", StringComparison.Ordinal) == true),
+                        name + ": actual retained thumbnail root exposes its virtual slide actions");
+                Console.WriteLine($"FIT {name}: scene={scene.Bounds} stage={stage} slide={rect}");
+                var ratio = session.Editor!.Document.SlideSize.WidthInches / session.Editor.Document.SlideSize.HeightInches;
+                var expected = Math.Min(stage.Width - 32, (stage.Height - 32) * ratio);
+                Check(rect.Width > 200 && Math.Abs(rect.Width - expected) < .1 && Math.Abs(rect.Width / rect.Height - ratio) < .00001,
+                    name + ": actual editable slide fits the measured usable stage at full aspect-preserving size");
+                Check(Math.Abs(rect.X + rect.Width / 2 - stage.Width / 2) < .1 && Math.Abs(rect.Y + rect.Height / 2 - stage.Height / 2) < .1,
+                    name + ": slide is centred on both axes within the actual stage");
+                Check(Math.Abs(scene.Bounds.Width - stage.Width) < 1 && Math.Abs(scene.Bounds.Height - stage.Height) < 1,
+                    name + ": retained document canvas fills its native viewport instead of measuring from empty content");
+            }
+            FitFrame("fit-initial");
+            await Click("Add slide", () => session.Editor!.Document.Slides.Count == 2); FitFrame("fit-add");
+            await Click("Duplicate slide", () => session.Editor!.Document.Slides.Count == 3); FitFrame("fit-duplicate");
+            var selected = session.Editor!.Selection.SlideId;
+            await Click("Previous slide", () => session.Editor!.Selection.SlideId != selected); FitFrame("fit-switch");
+            await Click("Speaker notes", () => { session.TryGetValue("ShowNotes", out var shown); return shown is true; }); FitFrame("fit-notes");
+            window.Width = 390; FitFrame("fit-390");
+            window.Width = 1280; FitFrame("fit-1280");
+            await Click("Properties", () => { session.TryGetValue("ShowInspector", out var shown); return shown is true; });
+            window.Width = 900; window.Height = 650; FitFrame("fit-900-properties");
+            await Click("Close properties", () => { session.TryGetValue("ShowInspector", out var shown); return shown is false; });
+            window.Width = 390; window.Height = 844; FitFrame("fit-390-after-properties");
+            window.Width = 1280; window.Height = 900; FitFrame("fit-restored-after-properties");
+            await Click("Properties", () => { session.TryGetValue("ShowInspector", out var shown); return shown is true; }); FitFrame("fit-properties");
+            await Click("Speaker notes", () => { session.TryGetValue("ShowNotes", out var shown); return shown is false; }); FitFrame("fit-properties-no-notes");
+            await Click("Close properties", () => { session.TryGetValue("ShowInspector", out var shown); return shown is false; });
+            await Click("Zoom in", () => session.CanvasZoom > 1);
+            using (var frame = window.CaptureRenderedFrame()) frame!.Save(Path.Combine(paths.DataDirectory, "zoom-in.png"));
+            Check(CurrentSlideRect().Width > 200, "zoom-in retains the real editable slide");
+            await Click("Fit slide", () => session.CanvasZoom == 1); FitFrame("fit-after-zoom");
+            await Click("Zoom out", () => session.CanvasZoom < 1);
+            using (var frame = window.CaptureRenderedFrame()) frame!.Save(Path.Combine(paths.DataDirectory, "zoom-out.png"));
+            var small = CurrentSlideRect();
+            await Click("Fit slide", () => session.CanvasZoom == 1); FitFrame("fit-after-zoom-out");
+            Check(CurrentSlideRect().Width > small.Width, "Fit restores the full calculated scale after zoom-out");
+            await Click("Save", () => !session.IsDirty);
+            await Click("Close", () => session.DocumentId is null);
+            await Click("Untitled presentation", () => session.DocumentId == id); FitFrame("fit-reopen");
+            Check(session.Editor!.Document.Slides.Count == 3, "reopened owner document preserves all three slides");
+            await Click("Close", () => session.DocumentId is null);
+            return count;
+        }
         var contentDrawing = new HavenDrawingContext();
         ((IHavenDrawCommandSource)canvas).Draw(contentDrawing, 1);
         var titleDrawing = contentDrawing.Commands.OfType<HavenTextCommand>().Single(command => command.Layout.Text == first.Slides[0].Title);
@@ -277,6 +458,7 @@ var assertions = await headless.Dispatch(async () =>
         Check(session.Editor!.Selection.ElementIds.Count == 0
             && !ButtonNamed("Delete element").IsEnabled && !ButtonNamed("Bold").IsEnabled,
             "clearing the selection on empty canvas disables the object controls again");
+        await Click("Speaker notes", () => { session.TryGetValue("ShowNotes", out var shown); return shown is true; });
         var notes = root!.GetVisualDescendants().OfType<TextBox>()
             .Single(box => AutomationProperties.GetName(box) == "Speaker notes");
         var notesPoint = notes.TranslatePoint(new Point(notes.Bounds.Width / 2, notes.Bounds.Height / 2), window)!.Value;
@@ -415,6 +597,11 @@ var assertions = await headless.Dispatch(async () =>
             var before = JsonSerializer.Serialize(session.GetDocumentSnapshot());
             window.MouseDown(point, MouseButton.Left, additive ? RawInputModifiers.Shift : RawInputModifiers.None);
             window.MouseUp(point, MouseButton.Left, additive ? RawInputModifiers.Shift : RawInputModifiers.None);
+            if (before != JsonSerializer.Serialize(session.GetDocumentSnapshot()))
+            {
+                File.WriteAllText(Path.Combine(paths.DataDirectory, "selection-before.json"), before);
+                File.WriteAllText(Path.Combine(paths.DataDirectory, "selection-after.json"), JsonSerializer.Serialize(session.GetDocumentSnapshot()));
+            }
             Check(before == JsonSerializer.Serialize(session.GetDocumentSnapshot()),
                 "canvas selection preserves authored geometry, including while the properties panel is open");
         }
@@ -424,8 +611,9 @@ var assertions = await headless.Dispatch(async () =>
             .Single(box => AutomationProperties.GetName(box) == "Fill color");
         TextBox StrokeBox() => root!.GetVisualDescendants().OfType<TextBox>()
             .Single(box => AutomationProperties.GetName(box) == "Stroke color");
-        TextBox StrokeWidthBox() => root!.GetVisualDescendants().OfType<TextBox>()
-            .Single(box => AutomationProperties.GetName(box) == "Stroke width");
+        TextBox NumberBox(string name) => root!.GetVisualDescendants().OfType<NumericUpDown>()
+            .Single(box => AutomationProperties.GetName(box) == name).GetVisualDescendants().OfType<TextBox>().Single();
+        TextBox StrokeWidthBox() => NumberBox("Stroke width");
         void TypeInto(TextBox box, string text)
         {
             box.BringIntoView(); Dispatcher.UIThread.RunJobs();
@@ -442,6 +630,8 @@ var assertions = await headless.Dispatch(async () =>
             .Single(element => element.Id == id).TextStyle.FontSizePoints;
         await Click("Add shape", () => session.GetDocumentSnapshot()!.Slides[0].Elements.Count == elementCount + 1);
         var propShape = session.Editor!.Selection.ElementIds.Single();
+        if (session.TryGetValue("ShowInspector", out var visibleInspector) && visibleInspector is false)
+            await Click("Properties", () => { session.TryGetValue("ShowInspector", out var shown); return shown is true; });
         Check(!ButtonNamed("Font larger").IsEnabled && !ButtonNamed("Font smaller").IsEnabled
             && ButtonNamed("Apply fill").IsEnabled && FillBox().IsEnabled,
             "shape selection enables the fill control and disables the font size controls");
@@ -481,9 +671,9 @@ var assertions = await headless.Dispatch(async () =>
         SelectOnCanvas(0.70, 0.60, additive: false);
         var propBody = session.Editor!.Selection.ElementIds.Single();
         Check(ButtonNamed("Font larger").IsEnabled && ButtonNamed("Font smaller").IsEnabled
-            && !ButtonNamed("Apply fill").IsEnabled && !FillBox().IsEnabled
-            && !ButtonNamed("Apply stroke").IsEnabled && !StrokeBox().IsEnabled
-            && !ButtonNamed("Apply stroke width").IsEnabled && !StrokeWidthBox().IsEnabled,
+            && !ButtonNamed("Apply fill").IsEnabled && !root!.GetVisualDescendants().OfType<TextBox>().Any(box => AutomationProperties.GetName(box) == "Fill color")
+            && !ButtonNamed("Apply stroke").IsEnabled && !root!.GetVisualDescendants().OfType<TextBox>().Any(box => AutomationProperties.GetName(box) == "Stroke color")
+            && !ButtonNamed("Apply stroke width").IsEnabled && !root!.GetVisualDescendants().OfType<NumericUpDown>().Any(box => AutomationProperties.GetName(box) == "Stroke width"),
             "text object selection enables the font size controls and disables the shape property controls");
         var originalFontSize = FontSizeOf(propBody);
         await Click("Font larger", () => FontSizeOf(propBody) == originalFontSize + 2);
@@ -544,7 +734,7 @@ var assertions = await headless.Dispatch(async () =>
         using (var frame = window.CaptureRenderedFrame()) frame!.Save(Path.Combine(paths.DataDirectory, "present-editor-mobile.png"));
         session.TryGetValue("ShowSidebar", out var mobileSidebar);
         Check(mobileSidebar is false && !session.IsDirty, "mobile viewport collapses slide drawer without mutating saved presentation");
-        var compactProperties = root!.GetVisualDescendants().OfType<Button>().Single(button => Equals(button.Tag, "ToggleInspector") && Equals(button.Content, "Properties"));
+        var compactProperties = root!.GetVisualDescendants().OfType<Button>().Single(button => Equals(button.Tag, "ToggleInspector") && AutomationProperties.GetName(button) == "Properties");
         var compactPoint = compactProperties.TranslatePoint(new Point(compactProperties.Bounds.Width / 2, compactProperties.Bounds.Height / 2), window)!.Value;
         var compactHit = window.InputHitTest(compactPoint) as Visual;
         Check(ReferenceEquals(compactHit, compactProperties) || compactHit?.GetVisualAncestors().Contains(compactProperties) == true,
@@ -605,16 +795,16 @@ var assertions = await headless.Dispatch(async () =>
         Check(scene.IsEnabled && ButtonNamed("Add text").IsEnabled && ButtonNamed("Present").IsEnabled,
             "ending the actual presentation restores the native canvas and the authoring chrome");
         Check(session.TryGetValue("SlideHidden", out var visibleSecond) && Equals(visibleSecond, false) &&
-            ButtonNamed("Hide slide").IsEnabled && !ButtonNamed("Show slide").IsEnabled,
+            ButtonNamed("Hide slide").IsEnabled && session.TryGetValue("CanShowSlide", out var canShowVisible) && Equals(canShowVisible, false),
             "the slide visibility controls report the current slide as visible before hiding");
         var currentSlideId = session.Editor!.Selection.SlideId;
         bool CurrentSlideHidden() => session.GetDocumentSnapshot()!.Slides
             .Single(slide => slide.Id == currentSlideId).Hidden;
         await Click("Hide slide", CurrentSlideHidden);
-        Check(CurrentSlideHidden() && !ButtonNamed("Hide slide").IsEnabled && ButtonNamed("Show slide").IsEnabled,
+        Check(CurrentSlideHidden() && session.TryGetValue("CanHideSlide", out var canHideHidden) && Equals(canHideHidden, false) && ButtonNamed("Show slide").IsEnabled,
             "actual Hide slide marks the current slide hidden and swaps the visibility controls");
         await Click("Show slide", () => !CurrentSlideHidden());
-        Check(!CurrentSlideHidden() && ButtonNamed("Hide slide").IsEnabled && !ButtonNamed("Show slide").IsEnabled,
+        Check(!CurrentSlideHidden() && ButtonNamed("Hide slide").IsEnabled && session.TryGetValue("CanShowSlide", out var canShowRestored) && Equals(canShowRestored, false),
             "actual Show slide restores the current slide and swaps the visibility controls back");
         var firstSlideId = session.GetDocumentSnapshot()!.Slides[0].Id;
         var openingSlideTitle = session.GetDocumentSnapshot()!.Slides[0].Title;
@@ -636,8 +826,10 @@ var assertions = await headless.Dispatch(async () =>
             session.TryGetValue("TransitionDuration", out var openingDuration) && Equals(openingDuration, 0d) &&
             ButtonNamed("Apply transition").IsEnabled,
             "the transition controls read the current slide's own stored transition before authoring");
-        TypeInto(root!.GetVisualDescendants().OfType<TextBox>().Single(box => AutomationProperties.GetName(box) == "Transition kind for the current slide"), "Fade");
-        TypeInto(root!.GetVisualDescendants().OfType<TextBox>().Single(box => AutomationProperties.GetName(box) == "Transition duration in seconds"), "0.5");
+        var transitionSelect = root!.GetVisualDescendants().OfType<ComboBox>().Single(box => AutomationProperties.GetName(box) == "Transition kind for the current slide");
+        transitionSelect.Focus(); window.KeyPress(Key.Home, RawInputModifiers.None, PhysicalKey.Home, "Home");
+        window.KeyPress(Key.Down, RawInputModifiers.None, PhysicalKey.ArrowDown, "ArrowDown");
+        TypeInto(NumberBox("Transition duration in seconds"), "0.5");
         Check(session.TryGetValue("TransitionKind", out var typedKind) && Equals(typedKind, "Fade")
             && session.TryGetValue("TransitionDuration", out var typedDuration) && Equals(typedDuration, 0.5d),
             "actual pointer and keyboard input sets the pending transition kind and duration");

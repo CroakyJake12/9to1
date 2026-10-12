@@ -1,5 +1,7 @@
 <Cui id="present.browser" version="1">
+  <Import Source="framework/CUI/Components/Editor.cui" />
   <Actions>
+    <Action name="RestoreSavedVersion" command="RestoreVersion" parameter="{Binding version}" />
     <Action name="OpenSavedPresentation" command="Open" parameter="{Binding saved}" />
     <Action name="OpenStartPresentation" command="Open" parameter="{Binding recent}" />
     <Action name="SelectPresentationSlide" command="SelectSlide" parameter="{Binding slide}" />
@@ -8,279 +10,518 @@
     <Page>
       <Container ID="present-views" Type="Overlay" Background="{Resource CuiBackgroundBrush}">
         <Container ID="present-start" Type="Overlay" Active="{Binding ShowStart}" VerticalScrolling="True">
-          <Container Type="Vertical Stack" CellGap="24" Padding="32" MaxWidth="1000" HorizontalAlignment="Stretch" VerticalAlignment="Top">
-            <Button Content="Home" Action="ShellHome" HorizontalAlignment="Left" />
-            <Container Type="Vertical Stack" CellGap="8">
-              <Text Text="Present" FontSize="32" FontWeight="SemiBold" />
-              <Text Text="Give your next story a place to start." FontSize="18" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Container ID="present-ui-1" Type="Vertical Stack" CellGap="24" Padding="32" MaxWidth="1000" HorizontalAlignment="Stretch" VerticalAlignment="Top">
+            <Button ID="present-ui-2" Content="Home" Action="ShellHome" HorizontalAlignment="Left" />
+            <Container ID="present-ui-3" Type="Vertical Stack" CellGap="8">
+              <Text ID="present-ui-4" Text="Present" FontSize="32" FontWeight="SemiBold" />
+              <Text ID="present-ui-5" Text="Give your next story a place to start." FontSize="18" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
             </Container>
-            <Container Type="Wrap" CellGap="12">
-              <Button Content="New presentation" Action="Create" Interactive="{Binding CanCreate}" Padding="22,16" />
-              <Button Content="Import .pptx" Action="ImportPowerPoint" Interactive="{Binding CanImportPowerPoint}" Padding="22,16" />
+            <Container ID="present-ui-6" Type="Wrap" CellGap="12">
+              <Button ID="present-ui-7" Content="New presentation" Action="Create" Interactive="{Binding CanCreate}" Padding="22,16" />
+              <Button ID="present-ui-8" Content="Import .pptx" Action="ImportPowerPoint" Interactive="{Binding CanImportPowerPoint}" Padding="22,16" />
             </Container>
-            <Container Type="Vertical Stack" CellGap="10" Active="{Binding HasDocument}" Background="{Resource CuiPanelBrush}" Padding="20" CornerRadius="8">
-              <Text Text="Continue working" FontSize="18" FontWeight="SemiBold" />
-              <Text Text="{Binding StartStatus}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
-              <Button Content="Resume presentation" Action="ResumePresentation" Interactive="{Binding CanResume}" HorizontalAlignment="Left" />
+            <Container ID="present-ui-9" Type="Vertical Stack" CellGap="10" Active="{Binding HasDocument}" Background="{Resource CuiPanelBrush}" Padding="20" CornerRadius="8">
+              <Text ID="present-ui-10" Text="Continue working" FontSize="18" FontWeight="SemiBold" />
+              <Text ID="present-ui-11" Text="{Binding StartStatus}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              <Button ID="present-ui-12" Content="Resume presentation" Action="ResumePresentation" Interactive="{Binding CanResume}" HorizontalAlignment="Left" />
             </Container>
-            <Container Type="Vertical Stack" CellGap="12">
-              <Container Type="Grid" ColumnSizes="1fr Auto">
-                <Text Text="Recent presentations" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" />
-                <Button Content="Refresh" Action="Refresh" Interactive="{Binding CanBrowse}" Column="1" />
+            <Container ID="present-ui-13" Type="Vertical Stack" CellGap="12">
+              <Container ID="present-ui-14" Type="Grid" ColumnSizes="1fr Auto">
+                <Text ID="present-ui-15" Text="Recent presentations" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <Button ID="present-ui-16" Content="Refresh" Action="Refresh" Interactive="{Binding CanBrowse}" Column="1" />
               </Container>
-              <Text Text="Saved in this browser" Foreground="{Resource CuiTextSoftBrush}" />
-              <Container Type="Overlay" Active="{Binding NoSavedDocuments}" Background="{Resource CuiPanelBrush}" Padding="20" CornerRadius="8">
-                <Text Text="Create a presentation, or import an existing PowerPoint file." TextWrapping="Wrap" />
+              <Text ID="present-ui-17" Text="Saved in this browser" Foreground="{Resource CuiTextSoftBrush}" />
+              <Container ID="present-ui-18" Type="Overlay" Active="{Binding NoSavedDocuments}" Background="{Resource CuiPanelBrush}" Padding="20" CornerRadius="8">
+                <Text ID="present-ui-19" Text="Create a presentation, or import an existing PowerPoint file." TextWrapping="Wrap" />
               </Container>
               <Repeat Source="{Binding Documents}" As="recent" Key="{Binding recent.Id}">
-                <Container Type="Vertical Stack" CellGap="6" Margin="0,0,0,12">
-                  <Button Content="{Binding recent.Title}" Action="OpenStartPresentation" Interactive="{Binding CanBrowse}" HorizontalAlignment="Stretch" Padding="16,12" />
-                  <Text Text="{Binding recent.LocationAndModified}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                <Container ID="present-ui-20" Type="Vertical Stack" CellGap="6" Margin="0,0,0,12">
+                  <Button ID="present-ui-21" Content="{Binding recent.Title}" Action="OpenStartPresentation" Interactive="{Binding CanBrowse}" HorizontalAlignment="Stretch" Padding="16,12" />
+                  <Text ID="present-ui-22" Text="{Binding recent.LocationAndModified}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
                 </Container>
               </Repeat>
-              <Text Text="{Binding Status}" TextWrapping="Wrap" />
-              <Container Type="Overlay" Active="{Binding HasUnknownCommitOutcome}">
-                <Button Content="Inspect saved state" Action="Inspect" Interactive="{Binding CanInspect}" />
+              <Text ID="present-ui-23" Text="{Binding Status}" TextWrapping="Wrap" />
+              <Container ID="present-ui-24" Type="Overlay" Active="{Binding HasUnknownCommitOutcome}">
+                <Button ID="present-ui-25" Content="Inspect saved state" Action="Inspect" Interactive="{Binding CanInspect}" />
               </Container>
             </Container>
           </Container>
         </Container>
-      <Container ID="present-workspace" Active="{Binding ShowWorkspace}" background="{Resource CuiBackgroundBrush}" Type="Grid" RowSizes="Auto Auto 1fr Auto">
-        <Container background="{Resource CuiPanelBrush}" padding="16,10" Type="Overlay">
-          <Container Type="Grid" ColumnSizes="Auto Auto 1fr Auto" RowSizes="Auto Auto">
-            <Button Content="Home" Action="ShellHome" Margin="0,0,8,0" />
-            <Container Column="1" margin="0,0,14,0" vertical-alignment="Center" Type="Menu">
-              <Button accessible-name="Presentation file menu" Type="Menu Item" Content="Present">
-                <Button action="ReturnToStart" Type="Menu Item" Content="Back to Present start" />
-                <Button action="Create" Type="Menu Item" Content="New presentation" Interactive="{Binding CanCreate}" />
-                <Button action="ToggleFiles" Type="Menu Item" Content="Open presentations" />
-                <Button action="Save" Type="Menu Item" Content="Save" Interactive="{Binding CanSave}" />
-                <Button action="Close" Type="Menu Item" Content="Close" Interactive="{Binding CanClose}" />
-                <Button Type="Menu Item" Content="Export .pptx" Action="ExportPowerPoint" Interactive="{Binding CanExportPowerPoint}" />
-                <Button Type="Menu Item" Content="Import .pptx" Action="ImportPowerPoint" Interactive="{Binding CanImportPowerPoint}" />
-              </Button>
+        <EditorShell ID="present-workspace" Active="{Binding ShowWorkspace}">
+          <EditorHeader ID="present-document-header" Active="{Binding ShowEditorChrome}">
+            <EditorToolGroup ID="present-ui-26">
+              <EditorIcon ID="present-ui-27" AccessibleName="9to1 Home" Tooltip="9to1 Home" Action="ShellHome">
+                <Image ID="present-ui-28" Source="icon:home" Width="20" Height="20" />
+              </EditorIcon>
+              <Text ID="present-ui-29" Text="Present" FontWeight="SemiBold" FontSize="16" Active="{Binding WideHeader}" Margin="2,0,8,0" VerticalAlignment="Center" />
+            </EditorToolGroup>
+            <Container ID="present-ui-30" Type="Vertical Stack" Column="1" CellGap="2">
+              <Input ID="present-ui-31" Type="Text" AccessibleName="Presentation title" Value="{Binding Title, Mode=TwoWay}" Interactive="{Binding CanEdit}" Height="30" Padding="6,3" BorderWidth="0" Background="Transparent" FontSize="16" FontWeight="SemiBold" />
+              <Text ID="present-ui-32" Text="{Binding HeaderStatus}" AccessibleName="Presentation save status" Foreground="{Resource CuiTextSoftBrush}" FontSize="11" Margin="6,0" />
             </Container>
-            <Input accessible-name="Presentation title" max-width="480" horizontal-alignment="Left" Type="Text" Column="2" Value="{Binding Title, mode=TwoWay}" Interactive="{Binding CanEdit}" />
-            <Button content="Save" action="Save" margin="12,0,0,0" Column="3" Interactive="{Binding CanSave}" />
-            <Container margin="0,5,0,0" Type="Overlay" Row="1" ColumnSpan="4" HorizontalScrolling="True" VerticalScrolling="False">
-              <Container Type="Menu">
-                <Button Type="Menu Item" Content="Edit">
-                  <Button action="Undo" Type="Menu Item" Content="Undo" Interactive="{Binding CanUndo}" />
-                  <Button action="Redo" Type="Menu Item" Content="Redo" Interactive="{Binding CanRedo}" />
-                </Button>
-                <Button Type="Menu Item" Content="Insert">
-                  <Button action="AddText" Type="Menu Item" Content="Text box" Interactive="{Binding CanEdit}" />
-                  <Button action="AddShape" Type="Menu Item" Content="Shape" Interactive="{Binding CanEdit}" />
-                </Button>
-                <Button Type="Menu Item" Content="Slide">
-                  <Button action="AddSlide" Type="Menu Item" Content="Add slide" Interactive="{Binding CanEdit}" />
-                  <Button action="DuplicateSlide" Type="Menu Item" Content="Duplicate slide" Interactive="{Binding CanEdit}" />
-                  <Button action="SlideUp" Type="Menu Item" Content="Move slide up" Interactive="{Binding CanSlideUp}" />
-                  <Button action="SlideDown" Type="Menu Item" Content="Move slide down" Interactive="{Binding CanSlideDown}" />
-                  <Button action="ToggleHidden" Type="Menu Item" Content="{Binding HideSlideLabel}" Interactive="{Binding CanEdit}" />
-                  <Button action="DeleteSlide" Type="Menu Item" Content="Delete slide" Interactive="{Binding CanDeleteSlide}" />
-                </Button>
-                <Button Type="Menu Item" Content="Arrange">
-                  <Button action="BringForward" Type="Menu Item" Content="Bring forward" Interactive="{Binding CanEditSelection}" />
-                  <Button action="SendBackward" Type="Menu Item" Content="Send backward" Interactive="{Binding CanEditSelection}" />
-                  <Button action="RotateObject" Type="Menu Item" Content="Rotate 90°" Interactive="{Binding CanEditSelection}" />
-                  <Button action="DeleteObject" Type="Menu Item" Content="Delete object" Interactive="{Binding CanEditSelection}" />
-                </Button>
-                <Button Type="Menu Item" Content="View">
-                  <Button action="ToggleSidebar" Type="Menu Item" Content="Show / hide slides" />
-                </Button>
-              </Container>
-            </Container>
-          </Container>
-        </Container>
-        <Container background="{Resource CuiPanel2Brush}" padding="10,6" margin="12,8" corner-radius="8" Type="Overlay" Row="1">
-          <Container Type="Overlay">
-            <Container Type="Wrap" CellGap="6">
-              <Button content="Slides" action="ToggleSidebar" />
-              <Button content="Add slide" action="AddSlide" Interactive="{Binding CanEdit}" />
-              <Button content="Duplicate slide" action="DuplicateSlide" margin="0,0,12,0" Interactive="{Binding CanEdit}" />
-              <Button content="Undo" action="Undo" Interactive="{Binding CanUndo}" />
-              <Button content="Redo" action="Redo" margin="0,0,12,0" Interactive="{Binding CanRedo}" />
-              <Button content="Text" action="AddText" Interactive="{Binding CanEdit}" />
-              <Button content="Shape" action="AddShape" Interactive="{Binding CanEdit}" />
-              <Button Content="Properties" Action="ToggleInspector" AccessibleName="Presentation properties" />
-              <Button Content="Present" Action="Present" Interactive="{Binding CanPresent}" />
-            </Container>
-          </Container>
-        </Container>
-        <Container background="{Resource CuiPanelBrush}" padding="16,8" Type="Overlay" Row="3">
-          <Container Type="Vertical Stack" CellGap="4">
-            <If Condition="{Binding IsPlaying}">
-              <Container Type="Vertical Stack">
-                <Text text="{Binding PlayStatus}" accessible-name="Playback status" text-wrapping="Wrap" />
-                <Container Type="Wrap">
-                  <Button content="Previous slide" action="PlayPrevious" Interactive="{Binding CanPlayPrevious}" />
-                  <Button content="Next slide" action="Advance" Interactive="{Binding CanAdvance}" />
-                  <Button content="End presentation" action="ExitPresentation" Interactive="{Binding CanExitPresentation}" />
-                </Container>
-              </Container>
-            </If>
-            <Container Type="Grid" ColumnSizes="Auto 1fr Auto">
-              <Text text="{Binding SlideStatus}" accessible-name="Current slide" vertical-alignment="Center" />
-              <Text text="{Binding SelectionStatus}" foreground="{Resource CuiTextSoftBrush}" margin="18,0" vertical-alignment="Center" text-wrapping="Wrap" Column="1" />
-              <Container Type="Horizontal Stack" Column="2" CellGap="6">
-                <Button content="‹" accessible-name="Previous slide" action="PreviousSlide" Interactive="{Binding CanPreviousSlide}" />
-                <Button content="›" accessible-name="Next slide" action="NextSlide" Interactive="{Binding CanNextSlide}" />
-              </Container>
-            </Container>
-            <Text text="{Binding Status}" accessible-name="Presentation save status" text-wrapping="Wrap" />
-            <Container Type="Overlay" Active="{Binding HasUnknownCommitOutcome}">
-              <Button content="Inspect saved state" action="Inspect" Interactive="{Binding CanInspect}" />
-            </Container>
-          </Container>
-        </Container>
-        <Container Type="Grid" Row="2" ColumnSizes="{Binding InspectorColumns}">
-          <Container Type="Grid" ColumnSizes="{Binding WorkspaceColumns}" Row="0" Active="{Binding ShowEditingArea}">
-            <Container margin="16,4,16,12" Type="Grid" Column="1" RowSizes="1fr Auto">
-              <Container Type="Grid">
-                <Object Type="PresentSlideCanvas" />
-              </Container>
-              <Container background="{Resource CuiPanelBrush}" padding="12" corner-radius="8" margin="0,12,0,0" Type="Overlay" Row="1">
-                <Container Type="Grid" RowSizes="Auto Auto">
-                  <Text text="Speaker notes" foreground="{Resource CuiTextSoftBrush}" font-weight="SemiBold" margin="0,0,0,6" />
-                  <Input min-height="58" max-height="150" accessible-name="Speaker notes" Type="Text" Row="1" Value="{Binding SpeakerNotes, mode=TwoWay}" Interactive="{Binding CanEdit}" Multiline="True" />
-                </Container>
-              </Container>
-            </Container>
-            <Container Type="Overlay" Active="{Binding ShowSidebar}" ColumnSpan="{Binding SidebarColumnSpan}">
-              <Container width="224" background="{Resource CuiPanelBrush}" padding="12" horizontal-alignment="Left" Type="Overlay">
-                <Container Type="Grid" RowSizes="Auto 1fr">
-                  <Container margin="0,0,0,12" Type="Vertical Stack" CellGap="8">
-                    <Container Type="Grid" ColumnSizes="1fr Auto">
-                      <Text text="Slides" font-weight="SemiBold" vertical-alignment="Center" />
-                      <Button content="×" accessible-name="Close slides" action="ToggleSidebar" Column="1" />
-                    </Container>
-                    <Button content="Presentations / Slides" action="ToggleFiles" />
+            <EditorToolGroup ID="present-ui-33" Column="2">
+              <EditorIcon ID="present-ui-34" AccessibleName="Save (Ctrl+S)" Tooltip="Save (Ctrl+S)" Action="Save" Interactive="{Binding CanSave}">
+                <Image ID="present-ui-35" Source="icon:save" Width="20" Height="20" />
+              </EditorIcon>
+              <EditorIcon ID="present-ui-36" AccessibleName="Version history" Tooltip="Version history" Action="ShowHistory" Interactive="{Binding CanHistory}">
+                <Image ID="present-ui-37" Source="icon:history" Width="20" Height="20" />
+              </EditorIcon>
+              <Button ID="present-ui-38" Content="Present" Action="Present" Interactive="{Binding CanPresent}" Height="36" Padding="14,6" Background="{Resource CuiAccentBrush}" Foreground="{Resource CuiAccentForegroundBrush}" BorderWidth="0" Margin="6,0,0,0" />
+            </EditorToolGroup>
+          </EditorHeader>
+          <EditorMenus ID="present-menu-bar" Row="1" Active="{Binding ShowEditorChrome}">
+            <EditorMenu ID="present-ui-39" Content="File">
+              <EditorMenu ID="present-ui-40" Content="Back to Present start" Action="ReturnToStart" />
+              <EditorMenu ID="present-ui-41" Content="New presentation" Action="Create" Interactive="{Binding CanCreate}" />
+              <EditorMenu ID="present-ui-42" Content="Open presentations" Action="ToggleFiles" />
+              <EditorMenu ID="present-ui-43" Content="Refresh presentations" Action="Refresh" Interactive="{Binding CanBrowse}" />
+              <EditorMenu ID="present-ui-44" Content="Save" Action="Save" Interactive="{Binding CanSave}" Shortcut="Ctrl+S" />
+              <EditorMenu ID="present-ui-45" Content="Version history" Action="ShowHistory" Interactive="{Binding CanHistory}" />
+              <EditorMenu ID="present-ui-46" Content="Import .pptx" Action="ImportPowerPoint" Interactive="{Binding CanImportPowerPoint}" />
+              <EditorMenu ID="present-ui-47" Content="Export .pptx" Action="ExportPowerPoint" Interactive="{Binding CanExportPowerPoint}" />
+              <EditorMenu ID="present-ui-48" Content="Inspect saved state" Action="Inspect" Interactive="{Binding CanInspect}" />
+              <EditorMenu ID="present-ui-49" Content="Close" Action="Close" Interactive="{Binding CanClose}" />
+            </EditorMenu>
+            <EditorMenu ID="present-ui-50" Content="Edit">
+              <EditorMenu ID="present-ui-51" Content="Undo" Action="Undo" Interactive="{Binding CanUndo}" Shortcut="Ctrl+Z" />
+              <EditorMenu ID="present-ui-52" Content="Redo" Action="Redo" Interactive="{Binding CanRedo}" Shortcut="Ctrl+Shift+Z" />
+              <EditorMenu ID="present-ui-53" Content="Copy" Action="Copy" Interactive="{Binding CanCopy}" Shortcut="Ctrl+C" />
+              <EditorMenu ID="present-ui-54" Content="Paste" Action="Paste" Interactive="{Binding CanPaste}" Shortcut="Ctrl+V" />
+              <EditorMenu ID="present-ui-55" Content="Delete object" Action="DeleteObject" Interactive="{Binding CanEditSelection}" Shortcut="Delete" />
+              <EditorMenu ID="present-ui-56" Content="Text formatting">
+                <EditorMenu ID="present-ui-57" Content="Bold" Action="Bold" Interactive="{Binding CanBold}" Shortcut="Ctrl+B" />
+                <EditorMenu ID="present-ui-58" Content="Italic" Action="Italic" Interactive="{Binding CanItalic}" Shortcut="Ctrl+I" />
+                <EditorMenu ID="present-ui-59" Content="Font larger" Action="FontLarger" Interactive="{Binding CanFontSize}" />
+                <EditorMenu ID="present-ui-60" Content="Font smaller" Action="FontSmaller" Interactive="{Binding CanFontSize}" />
+              </EditorMenu>
+            </EditorMenu>
+            <EditorMenu ID="present-ui-61" Content="Insert">
+              <EditorMenu ID="present-ui-62" Content="Text box" Action="AddText" Interactive="{Binding CanEdit}" />
+              <EditorMenu ID="present-ui-63" Content="Shape" Action="AddShape" Interactive="{Binding CanEdit}" />
+            </EditorMenu>
+            <EditorMenu ID="present-ui-64" Content="Slide">
+              <EditorMenu ID="present-ui-65" Content="Add slide" Action="AddSlide" Interactive="{Binding CanEdit}" Shortcut="Ctrl+M" />
+              <EditorMenu ID="present-ui-66" Content="Duplicate slide" Action="DuplicateSlide" Interactive="{Binding CanEdit}" />
+              <EditorMenu ID="present-ui-67" Content="Delete slide" Action="DeleteSlide" Interactive="{Binding CanDeleteSlide}" />
+              <EditorMenu ID="present-ui-68" Content="Move slide up" Action="SlideUp" Interactive="{Binding CanSlideUp}" />
+              <EditorMenu ID="present-ui-69" Content="Move slide down" Action="SlideDown" Interactive="{Binding CanSlideDown}" />
+              <EditorMenu ID="present-ui-70" Content="{Binding HideSlideLabel}" Action="ToggleHidden" Interactive="{Binding CanEdit}" />
+              <EditorMenu ID="present-ui-71" Content="Previous slide" Action="PreviousSlide" Interactive="{Binding CanPreviousSlide}" />
+              <EditorMenu ID="present-ui-72" Content="Next slide" Action="NextSlide" Interactive="{Binding CanNextSlide}" />
+              <EditorMenu ID="present-ui-73" Content="Slide settings" Action="ShowSlideProperties" Interactive="{Binding CanEdit}" />
+            </EditorMenu>
+            <EditorMenu ID="present-ui-74" Content="Arrange">
+              <EditorMenu ID="present-ui-75" Content="Order">
+                <EditorMenu ID="present-ui-76" Content="Bring to front" Action="BringToFront" Interactive="{Binding CanBringToFront}" />
+                <EditorMenu ID="present-ui-77" Content="Bring forward" Action="BringForward" Interactive="{Binding CanBringForward}" />
+                <EditorMenu ID="present-ui-78" Content="Send backward" Action="SendBackward" Interactive="{Binding CanSendBackward}" />
+                <EditorMenu ID="present-ui-79" Content="Send to back" Action="SendToBack" Interactive="{Binding CanSendToBack}" />
+              </EditorMenu>
+              <EditorMenu ID="present-ui-80" Content="Align">
+                <EditorMenu ID="present-ui-81" Content="Align left" Action="AlignLeft" Interactive="{Binding CanAlign}" />
+                <EditorMenu ID="present-ui-82" Content="Align center" Action="AlignCenter" Interactive="{Binding CanAlign}" />
+                <EditorMenu ID="present-ui-83" Content="Align top" Action="AlignTop" Interactive="{Binding CanAlign}" />
+                <EditorMenu ID="present-ui-84" Content="Align middle" Action="AlignMiddle" Interactive="{Binding CanAlign}" />
+                <EditorMenu ID="present-ui-85" Content="Distribute horizontally" Action="DistributeHorizontal" Interactive="{Binding CanDistribute}" />
+                <EditorMenu ID="present-ui-86" Content="Distribute vertically" Action="DistributeVertical" Interactive="{Binding CanDistribute}" />
+              </EditorMenu>
+              <EditorMenu ID="present-ui-87" Content="Group" Action="Group" Interactive="{Binding CanGroup}" />
+              <EditorMenu ID="present-ui-88" Content="Ungroup" Action="Ungroup" Interactive="{Binding CanUngroup}" />
+              <EditorMenu ID="present-ui-89" Content="Transform">
+                <EditorMenu ID="present-ui-90" Content="Grow" Action="Grow" Interactive="{Binding CanTransformObject}" />
+                <EditorMenu ID="present-ui-91" Content="Shrink" Action="Shrink" Interactive="{Binding CanTransformObject}" />
+                <EditorMenu ID="present-ui-92" Content="Rotate left" Action="RotateLeft" Interactive="{Binding CanTransformObject}" />
+                <EditorMenu ID="present-ui-93" Content="Rotate right" Action="RotateRight" Interactive="{Binding CanTransformObject}" />
+                <EditorMenu ID="present-ui-94" Content="Rotate 90°" Action="RotateObject" Interactive="{Binding CanTransformObject}" />
+              </EditorMenu>
+              <EditorMenu ID="present-ui-95" Content="Move">
+                <EditorMenu ID="present-ui-96" Content="Move object left" Action="MoveObjectLeft" Interactive="{Binding CanMoveObject}" />
+                <EditorMenu ID="present-ui-97" Content="Move object right" Action="MoveObjectRight" Interactive="{Binding CanMoveObject}" />
+                <EditorMenu ID="present-ui-98" Content="Move object up" Action="MoveObjectUp" Interactive="{Binding CanMoveObject}" />
+                <EditorMenu ID="present-ui-99" Content="Move object down" Action="MoveObjectDown" Interactive="{Binding CanMoveObject}" />
+              </EditorMenu>
+            </EditorMenu>
+            <EditorMenu ID="present-ui-100" Content="View">
+              <EditorMenu ID="present-ui-101" Content="Show / hide slides" Action="ToggleSidebar" />
+              <EditorMenu ID="present-ui-102" Content="Properties" Action="ToggleInspector" />
+              <EditorMenu ID="present-ui-103" Content="Speaker notes" Action="ToggleNotes" />
+              <EditorMenu ID="present-ui-104" Content="Fit slide" Action="ZoomFit" />
+              <EditorMenu ID="present-ui-105" Content="Zoom in" Action="ZoomIn" />
+              <EditorMenu ID="present-ui-106" Content="Zoom out" Action="ZoomOut" />
+            </EditorMenu>
+            <EditorMenu ID="present-ui-107" Content="Help">
+              <EditorMenu ID="present-ui-108" Content="Editing and keyboard shortcuts" Action="ShowHelp" />
+            </EditorMenu>
+          </EditorMenus>
+          <EditorToolbar ID="present-toolbar" Row="2" Active="{Binding ShowEditorChrome}">
+            <EditorToolGroup ID="present-ui-109">
+              <EditorIcon ID="present-ui-110" AccessibleName="Undo (Ctrl+Z)" Tooltip="Undo (Ctrl+Z)" Action="Undo" Interactive="{Binding CanUndo}">
+                <Image ID="present-ui-111" Source="icon:undo" Width="20" Height="20" />
+              </EditorIcon>
+              <EditorIcon ID="present-ui-112" AccessibleName="Redo (Ctrl+Shift+Z)" Tooltip="Redo (Ctrl+Shift+Z)" Action="Redo" Interactive="{Binding CanRedo}">
+                <Image ID="present-ui-113" Source="icon:redo" Width="20" Height="20" />
+              </EditorIcon>
+              <EditorDivider ID="present-ui-114" />
+              <EditorIcon ID="present-ui-115" AccessibleName="Add slide (Ctrl+M)" Tooltip="Add slide (Ctrl+M)" Action="AddSlide" Interactive="{Binding CanEdit}">
+                <Image ID="present-ui-116" Source="icon:add-slide" Width="20" Height="20" />
+              </EditorIcon>
+              <EditorIcon ID="present-ui-117" AccessibleName="Text box" Tooltip="Text box" Action="AddText" Interactive="{Binding CanEdit}">
+                <Image ID="present-ui-118" Source="icon:text" Width="20" Height="20" />
+              </EditorIcon>
+              <EditorIcon ID="present-ui-119" AccessibleName="Shape" Tooltip="Shape" Action="AddShape" Interactive="{Binding CanEdit}">
+                <Image ID="present-ui-120" Source="icon:shape" Width="20" Height="20" />
+              </EditorIcon>
+            </EditorToolGroup>
+            <Container ID="present-ui-121" Type="Grid" Column="1" Active="{Binding FullToolbar}" Margin="12,0" ColumnSizes="Auto 1fr">
+              <EditorDivider ID="present-ui-122" />
+              <Container ID="present-ui-123" Type="Overlay" Column="1">
+                <EditorToolGroup ID="present-ui-124" Active="{Binding HasTextSelection}">
+                  <Input ID="present-ui-125" Type="Select" AccessibleName="Font family" ItemsSource="{Binding FontFamilies}" SelectedIndex="{Binding FontFamilyIndex, Mode=TwoWay}" Interactive="{Binding CanFontSize}" Width="148" Height="34" />
+                  <Input ID="present-ui-126" Type="Number" AccessibleName="Font size" Value="{Binding FontSize, Mode=TwoWay}" Interactive="{Binding CanFontSize}" Width="76" Height="34" Minimum="1" Maximum="400" />
+                  <EditorIcon ID="present-ui-127" AccessibleName="Bold (Ctrl+B)" Tooltip="Bold (Ctrl+B)" Action="Bold" Interactive="{Binding CanBold}" Selected="{Binding IsBold}">
+                    <Image ID="present-ui-128" Source="icon:bold" Width="20" Height="20" />
+                  </EditorIcon>
+                  <EditorIcon ID="present-ui-129" AccessibleName="Italic (Ctrl+I)" Tooltip="Italic (Ctrl+I)" Action="Italic" Interactive="{Binding CanItalic}" Selected="{Binding IsItalic}">
+                    <Image ID="present-ui-130" Source="icon:italic" Width="20" Height="20" />
+                  </EditorIcon>
+                </EditorToolGroup>
+                <EditorToolGroup ID="present-ui-131" Active="{Binding HasShapeSelection}">
+                  <EditorIcon ID="present-ui-132" AccessibleName="Shape appearance" Tooltip="Shape appearance" Action="ShowObjectProperties" Interactive="{Binding CanEditSelection}">
+                    <Image ID="present-ui-133" Source="icon:palette" Width="20" Height="20" />
+                  </EditorIcon>
+                  <Container ID="present-ui-134" Type="Menu" BorderWidth="0" Background="Transparent">
+                    <EditorMenu ID="present-ui-135" Content="Order">
+                      <EditorMenu ID="present-ui-136" Content="Bring to front" Action="BringToFront" Interactive="{Binding CanBringToFront}" />
+                      <EditorMenu ID="present-ui-137" Content="Bring forward" Action="BringForward" Interactive="{Binding CanBringForward}" />
+                      <EditorMenu ID="present-ui-138" Content="Send backward" Action="SendBackward" Interactive="{Binding CanSendBackward}" />
+                      <EditorMenu ID="present-ui-139" Content="Send to back" Action="SendToBack" Interactive="{Binding CanSendToBack}" />
+                    </EditorMenu>
+                    <EditorMenu ID="present-ui-140" Content="Align">
+                      <EditorMenu ID="present-ui-141" Content="Align left" Action="AlignLeft" Interactive="{Binding CanAlign}" />
+                      <EditorMenu ID="present-ui-142" Content="Align center" Action="AlignCenter" Interactive="{Binding CanAlign}" />
+                      <EditorMenu ID="present-ui-143" Content="Align top" Action="AlignTop" Interactive="{Binding CanAlign}" />
+                      <EditorMenu ID="present-ui-144" Content="Align middle" Action="AlignMiddle" Interactive="{Binding CanAlign}" />
+                      <EditorMenu ID="present-ui-145" Content="Distribute horizontally" Action="DistributeHorizontal" Interactive="{Binding CanDistribute}" />
+                      <EditorMenu ID="present-ui-146" Content="Distribute vertically" Action="DistributeVertical" Interactive="{Binding CanDistribute}" />
+                    </EditorMenu>
                   </Container>
-                  <Container Type="Grid" Row="1">
-                    <Container Type="Overlay" Active="{Binding ShowSlides}">
-                      <Container Type="Overlay" VerticalScrolling="True" HorizontalScrolling="False">
-                        <Object Type="PresentThumbnails" />
+                </EditorToolGroup>
+                <EditorToolGroup ID="present-ui-147" Active="{Binding HasSlideSelection}">
+                  <EditorIcon ID="present-ui-149" AccessibleName="Layout &amp; background" Tooltip="Slide layout and background" Action="ShowSlideProperties" Interactive="{Binding CanEdit}">
+                    <Image ID="present-layout-icon" Source="icon:layout" Width="20" Height="20" />
+                  </EditorIcon>
+                  <EditorIcon ID="present-ui-150" AccessibleName="Transition" Tooltip="Slide transition" Action="ShowSlideProperties" Interactive="{Binding CanEdit}">
+                    <Image ID="present-transition-icon" Source="icon:transition" Width="20" Height="20" />
+                  </EditorIcon>
+                </EditorToolGroup>
+              </Container>
+            </Container>
+            <EditorToolGroup ID="present-ui-151" Column="2">
+              <EditorIcon ID="present-ui-152" AccessibleName="Properties" Tooltip="Properties" Action="ToggleInspector" Selected="{Binding ShowInspector}">
+                <Image ID="present-ui-153" Source="icon:properties" Width="20" Height="20" />
+              </EditorIcon>
+              <Container ID="present-ui-154" Type="Menu" BorderWidth="0" Background="Transparent">
+                <EditorMenu ID="present-ui-155" Content="More">
+                  <EditorMenu ID="present-ui-156" Content="Show / hide slides" Action="ToggleSidebar" />
+                  <EditorMenu ID="present-ui-157" Content="Speaker notes" Action="ToggleNotes" />
+                  <EditorMenu ID="present-ui-158" Content="Duplicate slide" Action="DuplicateSlide" Interactive="{Binding CanEdit}" />
+                  <EditorMenu ID="present-ui-159" Content="Fit slide" Action="ZoomFit" />
+                  <EditorMenu ID="present-ui-160" Content="Zoom in" Action="ZoomIn" />
+                  <EditorMenu ID="present-ui-161" Content="Zoom out" Action="ZoomOut" />
+                  <EditorMenu ID="present-ui-162" Content="Text formatting">
+                    <EditorMenu ID="present-ui-163" Content="Bold" Action="Bold" Interactive="{Binding CanBold}" Shortcut="Ctrl+B" />
+                    <EditorMenu ID="present-ui-164" Content="Italic" Action="Italic" Interactive="{Binding CanItalic}" Shortcut="Ctrl+I" />
+                    <EditorMenu ID="present-ui-165" Content="Font larger" Action="FontLarger" Interactive="{Binding CanFontSize}" />
+                    <EditorMenu ID="present-ui-166" Content="Font smaller" Action="FontSmaller" Interactive="{Binding CanFontSize}" />
+                  </EditorMenu>
+                  <EditorMenu ID="present-ui-167" Content="Order">
+                    <EditorMenu ID="present-ui-168" Content="Bring to front" Action="BringToFront" Interactive="{Binding CanBringToFront}" />
+                    <EditorMenu ID="present-ui-169" Content="Bring forward" Action="BringForward" Interactive="{Binding CanBringForward}" />
+                    <EditorMenu ID="present-ui-170" Content="Send backward" Action="SendBackward" Interactive="{Binding CanSendBackward}" />
+                    <EditorMenu ID="present-ui-171" Content="Send to back" Action="SendToBack" Interactive="{Binding CanSendToBack}" />
+                  </EditorMenu>
+                  <EditorMenu ID="present-ui-172" Content="Align">
+                    <EditorMenu ID="present-ui-173" Content="Align left" Action="AlignLeft" Interactive="{Binding CanAlign}" />
+                    <EditorMenu ID="present-ui-174" Content="Align center" Action="AlignCenter" Interactive="{Binding CanAlign}" />
+                    <EditorMenu ID="present-ui-175" Content="Align top" Action="AlignTop" Interactive="{Binding CanAlign}" />
+                    <EditorMenu ID="present-ui-176" Content="Align middle" Action="AlignMiddle" Interactive="{Binding CanAlign}" />
+                    <EditorMenu ID="present-ui-177" Content="Distribute horizontally" Action="DistributeHorizontal" Interactive="{Binding CanDistribute}" />
+                    <EditorMenu ID="present-ui-178" Content="Distribute vertically" Action="DistributeVertical" Interactive="{Binding CanDistribute}" />
+                  </EditorMenu>
+                  <EditorMenu ID="present-ui-179" Content="Group" Action="Group" Interactive="{Binding CanGroup}" />
+                  <EditorMenu ID="present-ui-180" Content="Ungroup" Action="Ungroup" Interactive="{Binding CanUngroup}" />
+                </EditorMenu>
+              </Container>
+            </EditorToolGroup>
+          </EditorToolbar>
+          <Container ID="present-ui-181" Type="Grid" Row="3" Active="{Binding ShowEditorChrome}" ColumnSizes="{Binding InspectorColumns}">
+            <Container ID="present-ui-182" Type="Grid" ColumnSizes="{Binding WorkspaceColumns}" Active="{Binding ShowEditingArea}">
+              <Container ID="present-ui-183" Type="Grid" Active="{Binding ShowSidebar}" ColumnSpan="{Binding SidebarColumnSpan}" RowSizes="Auto 1fr" Background="{Resource CuiPanelBrush}" Width="{Binding SidebarWidth}" HorizontalAlignment="Left" Padding="12,8">
+                <Container ID="present-ui-184" Type="Grid" ColumnSizes="1fr Auto">
+                  <Text ID="present-ui-185" Text="{Binding SidebarTitle}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
+                  <EditorIcon ID="present-ui-186" AccessibleName="Close slides" Tooltip="Close slides" Action="ToggleSidebar" Column="1">
+                    <Image ID="present-ui-187" Source="icon:close" Width="20" Height="20" />
+                  </EditorIcon>
+                </Container>
+                <Container ID="present-ui-188" Type="Overlay" Row="1" Active="{Binding ShowSlides}" VerticalScrolling="True">
+                  <Object Type="PresentThumbnails" />
+                </Container>
+                <Container ID="present-ui-189" Type="Overlay" Row="1" Active="{Binding ShowFiles}" VerticalScrolling="True">
+                  <Container ID="present-ui-190" Type="Vertical Stack" CellGap="8">
+                    <EditorLabel ID="present-ui-191" Text="Saved in this browser" />
+                    <Button ID="present-ui-192" Content="Refresh presentations" Action="Refresh" Interactive="{Binding CanBrowse}" />
+                    <Repeat Source="{Binding Documents}" As="saved" Key="{Binding saved.Id}">
+                      <Button ID="present-ui-193" Content="{Binding saved.Title}" Action="OpenSavedPresentation" Interactive="{Binding CanBrowse}" />
+                    </Repeat>
+                  </Container>
+                </Container>
+              </Container>
+              <Input ID="present-ui-194" Type="Resize" Column="1" Active="{Binding ShowSidebarResize}" AccessibleName="Slides panel width" Tooltip="Resize slides panel; use Left or Right arrows" Value="{Binding SidebarWidth, Mode=TwoWay}" Minimum="160" Maximum="320" Width="8" ResizeEdge="End" Background="Transparent" />
+              <Container ID="present-ui-195" Type="Grid" Column="2" RowSizes="1fr Auto">
+                <Container ID="present-ui-196" Type="Overlay" HorizontalScrolling="{Binding IsZoomed}" VerticalScrolling="{Binding IsZoomed}">
+                  <Object ID="present-canvas" Type="PresentSlideCanvas" />
+                </Container>
+                <Container ID="present-ui-197" Type="Vertical Stack" Active="{Binding ShowNotes}" Background="{Resource CuiPanelBrush}" Padding="16,8" CellGap="6" Row="1">
+                  <EditorLabel ID="present-ui-198" Text="Speaker notes" />
+                  <Input ID="present-ui-199" Type="Text" AccessibleName="Speaker notes" Value="{Binding SpeakerNotes, Mode=TwoWay}" Interactive="{Binding CanEdit}" Multiline="True" TextWrapping="Wrap" Height="80" />
+                </Container>
+              </Container>
+            </Container>
+            <Input ID="present-ui-200" Type="Resize" Column="1" Active="{Binding ShowInspectorResize}" AccessibleName="Properties panel width" Tooltip="Resize properties panel; use Left or Right arrows" Value="{Binding InspectorWidth, Mode=TwoWay}" Minimum="256" Maximum="420" Width="8" ResizeEdge="Start" Background="Transparent" />
+            <Container ID="present-inspector" Type="Grid" Column="2" RowSizes="Auto 1fr" Active="{Binding ShowInspector}" Background="{Resource CuiPanelBrush}" Padding="16,8">
+              <Container ID="present-ui-201" Type="Grid" ColumnSizes="1fr Auto" Margin="0,0,0,12">
+                <Container ID="present-ui-202" Type="Vertical Stack" CellGap="3">
+                  <Text ID="present-ui-203" Text="{Binding PropertiesTitle}" FontSize="16" FontWeight="SemiBold" />
+                  <EditorLabel ID="present-ui-204" Text="Properties" />
+                </Container>
+                <EditorIcon ID="present-ui-205" AccessibleName="Close properties" Tooltip="Close properties" Action="ToggleInspector" Column="1">
+                  <Image ID="present-ui-206" Source="icon:close" Width="20" Height="20" />
+                </EditorIcon>
+              </Container>
+              <Container ID="present-ui-207" Type="Overlay" Row="1" VerticalScrolling="True">
+                <Container ID="present-ui-208" Type="Vertical Stack" CellGap="8">
+                  <EditorPropertyGroup ID="present-ui-209" Active="{Binding HasSlideSelection}">
+                    <Text ID="present-ui-210" Text="Slide" FontSize="13" FontWeight="SemiBold" />
+                    <Container ID="present-ui-211" Type="Vertical Stack" CellGap="4">
+                      <EditorLabel ID="present-ui-212" Text="Slide title" />
+                      <Input ID="present-ui-213" Type="Text" AccessibleName="Slide title" Value="{Binding SlideTitle, Mode=TwoWay}" Interactive="{Binding CanEdit}" Height="36" />
+                    </Container>
+                    <Container ID="present-ui-214" Type="Vertical Stack" CellGap="4">
+                      <EditorLabel ID="present-ui-215" Text="Layout" />
+                      <Input ID="present-ui-216" Type="Select" AccessibleName="Layout" ItemsSource="{Binding SlideLayouts}" SelectedIndex="{Binding SlideLayoutIndex, Mode=TwoWay}" Interactive="{Binding CanEdit}" Height="36" />
+                    </Container>
+                    <Container ID="present-ui-217" Type="Vertical Stack" CellGap="4">
+                      <EditorLabel ID="present-ui-218" Text="Background color" />
+                      <Input ID="present-ui-219" Type="Text" AccessibleName="Background color" Value="{Binding SlideBackground, Mode=TwoWay}" Interactive="{Binding CanEdit}" Height="36" />
+                    </Container>
+                    <Container ID="present-ui-220" Type="Vertical Stack" CellGap="4">
+                      <EditorLabel ID="present-ui-221" Text="Slide size" />
+                      <Input ID="present-ui-222" Type="Select" AccessibleName="Slide size" ItemsSource="{Binding SlideSizes}" SelectedIndex="{Binding SlideSizeIndex, Mode=TwoWay}" Interactive="{Binding CanEdit}" Height="36" />
+                    </Container>
+                  </EditorPropertyGroup>
+                  <EditorPropertyGroup ID="present-ui-223" Active="{Binding HasSlideSelection}">
+                    <Text ID="present-ui-224" Text="Transition" FontSize="13" FontWeight="SemiBold" />
+                    <Container ID="present-ui-225" Type="Vertical Stack" CellGap="4">
+                      <EditorLabel ID="present-ui-226" Text="Transition kind for the current slide" />
+                      <Input ID="present-ui-227" Type="Select" AccessibleName="Transition kind for the current slide" ItemsSource="{Binding TransitionKinds}" SelectedIndex="{Binding TransitionIndex, Mode=TwoWay}" Interactive="{Binding CanEdit}" Height="36" />
+                    </Container>
+                    <Container ID="present-ui-228" Type="Vertical Stack" CellGap="4">
+                      <EditorLabel ID="present-ui-229" Text="Transition duration in seconds" />
+                      <Input ID="present-ui-230" Type="Number" AccessibleName="Transition duration in seconds" Value="{Binding TransitionDuration, Mode=TwoWay}" Interactive="{Binding CanEdit}" Height="36" Minimum="0.05" Maximum="30" Increment="0.05" />
+                    </Container>
+                    <Button ID="present-ui-231" Content="Apply transition" Action="ApplyTransition" Interactive="{Binding CanApplyTransition}" />
+                  </EditorPropertyGroup>
+                  <EditorPropertyGroup ID="present-ui-232" Active="{Binding HasTextSelection}">
+                    <Text ID="present-ui-233" Text="Text" FontSize="13" FontWeight="SemiBold" />
+                    <Container ID="present-ui-234" Type="Vertical Stack" CellGap="4">
+                      <EditorLabel ID="present-ui-235" Text="Selected object text" />
+                      <Input ID="present-ui-236" Type="Text" AccessibleName="Selected object text" Value="{Binding SelectedText, Mode=TwoWay}" Interactive="{Binding CanEdit}" Height="36" />
+                    </Container>
+                    <Container ID="present-ui-237" Type="Vertical Stack" CellGap="4">
+                      <EditorLabel ID="present-ui-238" Text="Typeface" />
+                      <Input ID="present-ui-239" Type="Select" AccessibleName="Typeface" ItemsSource="{Binding FontFamilies}" SelectedIndex="{Binding FontFamilyIndex, Mode=TwoWay}" Interactive="{Binding CanFontSize}" Height="36" />
+                    </Container>
+                    <Container ID="present-ui-240" Type="Vertical Stack" CellGap="4">
+                      <EditorLabel ID="present-ui-241" Text="Text size (pt)" />
+                      <Input ID="present-ui-242" Type="Number" AccessibleName="Text size (pt)" Value="{Binding FontSize, Mode=TwoWay}" Interactive="{Binding CanEdit}" Height="36" Minimum="1" Maximum="400" />
+                    </Container>
+                    <Container ID="present-ui-243" Type="Vertical Stack" CellGap="4">
+                      <EditorLabel ID="present-ui-244" Text="Text alignment" />
+                      <Input ID="present-ui-245" Type="Select" AccessibleName="Text alignment" ItemsSource="{Binding TextAlignments}" SelectedIndex="{Binding TextAlignmentIndex, Mode=TwoWay}" Interactive="{Binding CanFontSize}" Height="36" />
+                    </Container>
+                    <Container ID="present-ui-246" Type="Vertical Stack" CellGap="4">
+                      <EditorLabel ID="present-ui-247" Text="Vertical alignment" />
+                      <Input ID="present-ui-248" Type="Select" AccessibleName="Vertical alignment" ItemsSource="{Binding TextVerticalAlignments}" SelectedIndex="{Binding TextVerticalAlignmentIndex, Mode=TwoWay}" Interactive="{Binding CanFontSize}" Height="36" />
+                    </Container>
+                    <Container ID="present-ui-249" Type="Vertical Stack" CellGap="4">
+                      <EditorLabel ID="present-ui-250" Text="Text color" />
+                      <Input ID="present-ui-251" Type="Text" AccessibleName="Text color" Value="{Binding TextColor, Mode=TwoWay}" Interactive="{Binding CanEdit}" Height="36" />
+                    </Container>
+                    <EditorToolGroup ID="present-ui-252">
+                      <EditorIcon ID="present-ui-253" AccessibleName="Bold" Tooltip="Bold" Action="Bold" Interactive="{Binding CanBold}" Selected="{Binding IsBold}">
+                        <Image ID="present-ui-254" Source="icon:bold" Width="20" Height="20" />
+                      </EditorIcon>
+                      <EditorIcon ID="present-ui-255" AccessibleName="Italic" Tooltip="Italic" Action="Italic" Interactive="{Binding CanItalic}" Selected="{Binding IsItalic}">
+                        <Image ID="present-ui-256" Source="icon:italic" Width="20" Height="20" />
+                      </EditorIcon>
+                    </EditorToolGroup>
+                  </EditorPropertyGroup>
+                  <EditorPropertyGroup ID="present-ui-257" Active="{Binding HasSelection}">
+                    <Text ID="present-ui-258" Text="Position &amp; size" FontSize="13" FontWeight="SemiBold" />
+                    <Container ID="present-ui-259" Type="Grid" ColumnSizes="1fr 1fr" RowSizes="Auto Auto Auto" CellGap="8">
+                      <Container ID="present-ui-260" Type="Vertical Stack" Row="0" Column="0" CellGap="4">
+                        <EditorLabel ID="present-ui-261" Text="X (px)" />
+                        <Input ID="present-ui-262" Type="Number" AccessibleName="X (px)" AccessibleDescription="Object centre from slide centre; positive values move right." Tooltip="Object centre from slide centre; positive right" Value="{Binding ObjectX, Mode=TwoWay}" Interactive="{Binding CanEditSelection}" Height="36" Minimum="-10000" Maximum="10000" />
+                      </Container>
+                      <Container ID="present-ui-263" Type="Vertical Stack" Row="0" Column="1" CellGap="4">
+                        <EditorLabel ID="present-ui-264" Text="Y (px)" />
+                        <Input ID="present-ui-265" Type="Number" AccessibleName="Y (px)" AccessibleDescription="Object centre from slide centre; positive values move upward." Tooltip="Object centre from slide centre; positive upward" Value="{Binding ObjectY, Mode=TwoWay}" Interactive="{Binding CanEditSelection}" Height="36" Minimum="-10000" Maximum="10000" />
+                      </Container>
+                      <Container ID="present-ui-266" Type="Vertical Stack" Row="1" Column="0" CellGap="4">
+                        <EditorLabel ID="present-ui-267" Text="Width (px)" />
+                        <Input ID="present-ui-268" Type="Number" AccessibleName="Width (px)" Value="{Binding ObjectWidth, Mode=TwoWay}" Interactive="{Binding CanEditSelection}" Height="36" Minimum="1" Maximum="10000" />
+                      </Container>
+                      <Container ID="present-ui-269" Type="Vertical Stack" Row="1" Column="1" CellGap="4">
+                        <EditorLabel ID="present-ui-270" Text="Height (px)" />
+                        <Input ID="present-ui-271" Type="Number" AccessibleName="Height (px)" Value="{Binding ObjectHeight, Mode=TwoWay}" Interactive="{Binding CanEditSelection}" Height="36" Minimum="1" Maximum="10000" />
+                      </Container>
+                      <Container ID="present-ui-272" Type="Vertical Stack" Row="2" Column="0" CellGap="4">
+                        <EditorLabel ID="present-ui-273" Text="Rotation (°)" />
+                        <Input ID="present-ui-274" Type="Number" AccessibleName="Rotation (°)" Value="{Binding ObjectRotation, Mode=TwoWay}" Interactive="{Binding CanEditSelection}" Height="36" Minimum="-360" Maximum="360" />
                       </Container>
                     </Container>
-                    <Container Type="Overlay" Active="{Binding ShowFiles}">
-                      <Container Type="Overlay" VerticalScrolling="True" HorizontalScrolling="False">
-                        <Container Type="Vertical Stack" CellGap="8">
-                          <Text text="Saved in this browser" foreground="{Resource CuiTextSoftBrush}" text-wrapping="Wrap" />
-                          <Button id="present-create-library" content="New presentation" action="Create" Interactive="{Binding CanCreate}" />
-                          <Button content="Refresh presentations" action="Refresh" Interactive="{Binding CanBrowse}" />
-                          <Repeat Source="{Binding Documents}" As="saved" Key="{Binding saved.Id}">
-                            <Button content="{Binding saved.Title}" action="OpenSavedPresentation" Interactive="{Binding CanBrowse}" />
-                          </Repeat>
-                        </Container>
-                      </Container>
+                    <EditorLabel ID="present-ui-275" Text="Position from slide centre · Y upward" />
+                  </EditorPropertyGroup>
+                  <EditorPropertyGroup ID="present-ui-276" Active="{Binding HasShapeSelection}">
+                    <Text ID="present-ui-277" Text="Appearance" FontSize="13" FontWeight="SemiBold" />
+                    <Container ID="present-ui-278" Type="Vertical Stack" CellGap="4">
+                      <EditorLabel ID="present-ui-279" Text="Fill color" />
+                      <Input ID="present-ui-280" Type="Text" AccessibleName="Fill color" Value="{Binding FillColor, Mode=TwoWay}" Interactive="{Binding CanEdit}" Height="36" />
                     </Container>
-                  </Container>
+                    <Container Type="Grid" ColumnSizes="32 1fr" CellGap="8">
+                      <Container Type="Overlay" Background="{Binding FillPreview}" Width="28" Height="28" BorderWidth="1" BorderColor="{Resource CuiLineBrush}" VerticalAlignment="Center" />
+                      <Input Type="Select" Column="1" AccessibleName="Fill palette" ItemsSource="{Binding ColorPalette}" SelectedIndex="{Binding FillPaletteIndex, Mode=TwoWay}" Interactive="{Binding CanApplyFill}" Height="36" />
+                    </Container>
+                    <Button ID="present-ui-281" Content="Apply fill" Action="ApplyFill" Interactive="{Binding CanApplyFill}" />
+                    <Container ID="present-ui-282" Type="Vertical Stack" CellGap="4">
+                      <EditorLabel ID="present-ui-283" Text="Stroke color" />
+                      <Input ID="present-ui-284" Type="Text" AccessibleName="Stroke color" Value="{Binding StrokeColor, Mode=TwoWay}" Interactive="{Binding CanEdit}" Height="36" />
+                    </Container>
+                    <Container Type="Grid" ColumnSizes="32 1fr" CellGap="8">
+                      <Container Type="Overlay" Background="{Binding StrokePreview}" Width="28" Height="28" BorderWidth="1" BorderColor="{Resource CuiLineBrush}" VerticalAlignment="Center" />
+                      <Input Type="Select" Column="1" AccessibleName="Stroke palette" ItemsSource="{Binding ColorPalette}" SelectedIndex="{Binding StrokePaletteIndex, Mode=TwoWay}" Interactive="{Binding CanApplyStroke}" Height="36" />
+                    </Container>
+                    <Button ID="present-ui-285" Content="Apply stroke" Action="ApplyStroke" Interactive="{Binding CanApplyStroke}" />
+                    <Container ID="present-ui-286" Type="Vertical Stack" CellGap="4">
+                      <EditorLabel ID="present-ui-287" Text="Stroke width" />
+                      <Input ID="present-ui-288" Type="Number" AccessibleName="Stroke width" Value="{Binding StrokeWidth, Mode=TwoWay}" Interactive="{Binding CanEdit}" Height="36" Minimum="0" Maximum="100" />
+                    </Container>
+                    <Button ID="present-ui-289" Content="Apply stroke width" Action="ApplyStrokeWidth" Interactive="{Binding CanApplyStrokeWidth}" />
+                  </EditorPropertyGroup>
+                  <EditorPropertyGroup ID="present-ui-290" Active="{Binding HasSelection}">
+                    <Text ID="present-ui-291" Text="Opacity" FontSize="13" FontWeight="SemiBold" />
+                    <Input ID="present-ui-292" Type="Slider" AccessibleName="Object opacity" Minimum="0" Maximum="100" Value="{Binding ObjectOpacity, Mode=TwoWay}" Interactive="{Binding CanEditSelection}" />
+                    <EditorLabel ID="present-ui-293" Text="{Binding OpacityLabel}" />
+                  </EditorPropertyGroup>
+                  <EditorPropertyGroup ID="present-ui-294" Active="{Binding HasSelection}">
+                    <Text ID="present-ui-295" Text="Arrange" FontSize="13" FontWeight="SemiBold" />
+                    <Container ID="present-ui-296" Type="Menu" BorderWidth="0" Background="Transparent">
+                      <EditorMenu ID="present-ui-297" Content="Order">
+                        <EditorMenu ID="present-ui-298" Content="Bring to front" Action="BringToFront" Interactive="{Binding CanBringToFront}" />
+                        <EditorMenu ID="present-ui-299" Content="Bring forward" Action="BringForward" Interactive="{Binding CanBringForward}" />
+                        <EditorMenu ID="present-ui-300" Content="Send backward" Action="SendBackward" Interactive="{Binding CanSendBackward}" />
+                        <EditorMenu ID="present-ui-301" Content="Send to back" Action="SendToBack" Interactive="{Binding CanSendToBack}" />
+                      </EditorMenu>
+                      <EditorMenu ID="present-ui-302" Content="Align">
+                        <EditorMenu ID="present-ui-303" Content="Align left" Action="AlignLeft" Interactive="{Binding CanAlign}" />
+                        <EditorMenu ID="present-ui-304" Content="Align center" Action="AlignCenter" Interactive="{Binding CanAlign}" />
+                        <EditorMenu ID="present-ui-305" Content="Align top" Action="AlignTop" Interactive="{Binding CanAlign}" />
+                        <EditorMenu ID="present-ui-306" Content="Align middle" Action="AlignMiddle" Interactive="{Binding CanAlign}" />
+                        <EditorMenu ID="present-ui-307" Content="Distribute horizontally" Action="DistributeHorizontal" Interactive="{Binding CanDistribute}" />
+                        <EditorMenu ID="present-ui-308" Content="Distribute vertically" Action="DistributeVertical" Interactive="{Binding CanDistribute}" />
+                      </EditorMenu>
+                    </Container>
+                  </EditorPropertyGroup>
+                  <EditorPropertyGroup ID="present-ui-309" Active="{Binding HasSelection}">
+                    <Text ID="present-ui-310" Text="Animation" FontSize="13" FontWeight="SemiBold" />
+                    <Container ID="present-ui-311" Type="Vertical Stack" CellGap="4">
+                      <EditorLabel ID="present-ui-312" Text="Animation effect for the selected object" />
+                      <Input ID="present-ui-313" Type="Select" AccessibleName="Animation effect for the selected object" ItemsSource="{Binding AnimationEffects}" SelectedIndex="{Binding AnimationEffectIndex, Mode=TwoWay}" Interactive="{Binding CanAddAnimation}" Height="36" />
+                    </Container>
+                    <Container ID="present-ui-314" Type="Vertical Stack" CellGap="4">
+                      <EditorLabel ID="present-ui-315" Text="Animation trigger for the selected object" />
+                      <Input ID="present-ui-316" Type="Select" AccessibleName="Animation trigger for the selected object" ItemsSource="{Binding AnimationTriggers}" SelectedIndex="{Binding AnimationTriggerIndex, Mode=TwoWay}" Interactive="{Binding CanAddAnimation}" Height="36" />
+                    </Container>
+                    <Button ID="present-ui-317" Content="Add animation" Action="AddAnimation" Interactive="{Binding CanAddAnimation}" />
+                    <Button ID="present-ui-318" Content="Remove animation" Action="RemoveAnimation" Interactive="{Binding CanRemoveAnimation}" />
+                    <Repeat Source="{Binding AnimationSteps}" As="cue" Key="{Binding cue.Id}">
+                      <Container ID="present-ui-319" Type="Horizontal Stack" CellGap="8">
+                        <Text ID="present-ui-320" Text="{Binding cue.Effect}" />
+                        <EditorLabel ID="present-ui-321" Text="{Binding cue.Trigger}" />
+                      </Container>
+                    </Repeat>
+                  </EditorPropertyGroup>
                 </Container>
               </Container>
             </Container>
           </Container>
-          <Container ID="present-inspector" Type="Grid" Column="1" RowSizes="Auto 1fr" Active="{Binding ShowInspector}" Background="{Resource CuiPanelBrush}" Padding="16" MaxWidth="340">
-            <Container Type="Grid" ColumnSizes="1fr Auto" Margin="0,0,0,12">
-              <Text Text="Properties" FontSize="18" FontWeight="SemiBold" />
-              <Button Content="Close" AccessibleName="Close properties" Action="ToggleInspector" Column="1" />
+          <Container ID="present-ui-322" Type="Grid" Row="4" Active="{Binding ShowEditorChrome}" ColumnSizes="Auto 1fr Auto" Padding="12,4" Background="{Resource CuiPanelBrush}">
+            <EditorToolGroup ID="present-ui-323">
+              <EditorIcon ID="present-ui-324" AccessibleName="Previous slide" Tooltip="Previous slide" Action="PreviousSlide" Interactive="{Binding CanPreviousSlide}">
+                <Image ID="present-ui-325" Source="icon:chevron-left" Width="20" Height="20" />
+              </EditorIcon>
+              <Text ID="present-ui-326" Text="{Binding SlideStatus}" AccessibleName="Current slide" FontSize="11" VerticalAlignment="Center" />
+              <EditorIcon ID="present-ui-327" AccessibleName="Next slide" Tooltip="Next slide" Action="NextSlide" Interactive="{Binding CanNextSlide}">
+                <Image ID="present-ui-328" Source="icon:chevron-right" Width="20" Height="20" />
+              </EditorIcon>
+            </EditorToolGroup>
+            <Text ID="present-ui-329" Text="{Binding SelectionStatus}" Active="{Binding FullToolbar}" Foreground="{Resource CuiTextSoftBrush}" FontSize="11" Column="1" VerticalAlignment="Center" />
+            <EditorToolGroup ID="present-ui-330" Column="2">
+              <EditorIcon ID="present-ui-331" AccessibleName="Slides" Tooltip="Slides" Action="ToggleSidebar" Selected="{Binding ShowSidebar}">
+                <Image ID="present-ui-332" Source="icon:slides" Width="20" Height="20" />
+              </EditorIcon>
+              <EditorIcon ID="present-ui-333" AccessibleName="Speaker notes" Tooltip="Speaker notes" Action="ToggleNotes" Selected="{Binding ShowNotes}">
+                <Image ID="present-ui-334" Source="icon:notes" Width="20" Height="20" />
+              </EditorIcon>
+              <Button ID="present-ui-335" Content="{Binding ZoomLabel}" Action="ZoomFit" Tooltip="Fit slide" Padding="6" BorderWidth="0" Background="Transparent" />
+            </EditorToolGroup>
+          </Container>
+          <Container ID="present-ui-336" Type="Overlay" RowSpan="5" Active="{Binding IsPlaying}" Background="{Resource CuiBackgroundBrush}">
+            <Container ID="present-ui-337" Type="Grid" RowSizes="1fr Auto">
+              <Object Type="PresentPlaybackCanvas" />
+              <Container ID="present-ui-338" Type="Vertical Stack" Row="1" Padding="16" CellGap="8">
+                <Text ID="present-ui-339" Text="{Binding PlayStatus}" AccessibleName="Playback status" />
+                <Container ID="present-ui-340" Type="Horizontal Stack" CellGap="8">
+                  <Button ID="present-ui-341" Content="Previous slide" Action="PlayPrevious" Interactive="{Binding CanPlayPrevious}" />
+                  <Button ID="present-ui-342" Content="Next slide" Action="Advance" Interactive="{Binding CanAdvance}" />
+                  <Button ID="present-ui-343" Content="End presentation" Action="ExitPresentation" Interactive="{Binding CanExitPresentation}" />
+                </Container>
+              </Container>
             </Container>
-            <Container Type="Overlay" Row="1" VerticalScrolling="True" HorizontalScrolling="False">
-              <Container Type="Vertical Stack" CellGap="18">
-                <Container Type="Vertical Stack" CellGap="8" Active="{Binding HasTextSelection}">
-                  <Text text="Selected text" />
-                  <Input accessible-name="Selected object text" Type="Text" Value="{Binding SelectedText, mode=TwoWay}" Interactive="{Binding CanEditSelection}" />
-                </Container>
-                <Container Type="Vertical Stack" CellGap="8">
-                  <Text Text="Slide and objects" FontWeight="SemiBold" />
-                  <Container Type="Wrap">
-                    <Button content="Export .pptx" action="ExportPowerPoint" Interactive="{Binding CanExportPowerPoint}" />
-                    <Button content="Import .pptx" action="ImportPowerPoint" Interactive="{Binding CanImportPowerPoint}" />
-                    <Button content="Move slide earlier" action="MoveSlideEarlier" Interactive="{Binding CanMoveSlideEarlier}" />
-                    <Button content="Move slide later" action="MoveSlideLater" Interactive="{Binding CanMoveSlideLater}" />
-                    <Button content="Delete element" action="DeleteElement" Interactive="{Binding CanDeleteElement}" />
-                    <Button content="Bring to front" action="BringToFront" Interactive="{Binding CanBringToFront}" />
-                    <Button content="Send to back" action="SendToBack" Interactive="{Binding CanSendToBack}" />
-                    <Button content="Present" action="Present" Interactive="{Binding CanPresent}" />
-                  </Container>
-                </Container>
-                <Container Type="Vertical Stack" CellGap="8">
-                  <Text Text="Transform" FontWeight="SemiBold" />
-                  <Container Type="Wrap">
-                    <Button content="Bold" action="Bold" Interactive="{Binding CanBold}" />
-                    <Button content="Italic" action="Italic" Interactive="{Binding CanItalic}" />
-                    <Button content="Grow" action="Grow" Interactive="{Binding CanTransformObject}" />
-                    <Button content="Shrink" action="Shrink" Interactive="{Binding CanTransformObject}" />
-                    <Button content="Rotate left" action="RotateLeft" Interactive="{Binding CanTransformObject}" />
-                    <Button content="Rotate right" action="RotateRight" Interactive="{Binding CanTransformObject}" />
-                    <Button content="Copy" action="Copy" Interactive="{Binding CanCopy}" />
-                    <Button content="Paste" action="Paste" Interactive="{Binding CanPaste}" />
-                    <Button content="Move object left" action="MoveObjectLeft" Interactive="{Binding CanMoveObject}" />
-                    <Button content="Move object right" action="MoveObjectRight" Interactive="{Binding CanMoveObject}" />
-                    <Button content="Move object up" action="MoveObjectUp" Interactive="{Binding CanMoveObject}" />
-                    <Button content="Move object down" action="MoveObjectDown" Interactive="{Binding CanMoveObject}" />
-                  </Container>
-                </Container>
-                <Container Type="Vertical Stack" CellGap="8">
-                  <Text Text="Arrange" FontWeight="SemiBold" />
-                  <Container Type="Wrap">
-                    <Button content="Align left" action="AlignLeft" Interactive="{Binding CanAlign}" />
-                    <Button content="Align center" action="AlignCenter" Interactive="{Binding CanAlign}" />
-                    <Button content="Align top" action="AlignTop" Interactive="{Binding CanAlign}" />
-                    <Button content="Align middle" action="AlignMiddle" Interactive="{Binding CanAlign}" />
-                    <Button content="Distribute horizontally" action="DistributeHorizontal" Interactive="{Binding CanDistribute}" />
-                    <Button content="Distribute vertically" action="DistributeVertical" Interactive="{Binding CanDistribute}" />
-                    <Button content="Group" action="Group" Interactive="{Binding CanGroup}" />
-                    <Button content="Ungroup" action="Ungroup" Interactive="{Binding CanUngroup}" />
-                  </Container>
-                </Container>
-                <Container Type="Vertical Stack" CellGap="8">
-                  <Text Text="Appearance" FontWeight="SemiBold" />
-                  <Container Type="Vertical Stack">
-                    <Input accessible-name="Fill color" Type="Text" Value="{Binding FillColor, Mode=TwoWay}" Interactive="{Binding CanApplyFill}" HorizontalAlignment="Stretch" />
-                    <Button content="Apply fill" action="ApplyFill" Interactive="{Binding CanApplyFill}" />
-                    <Input accessible-name="Stroke color" Type="Text" Value="{Binding StrokeColor, Mode=TwoWay}" Interactive="{Binding CanApplyStroke}" HorizontalAlignment="Stretch" />
-                    <Button content="Apply stroke" action="ApplyStroke" Interactive="{Binding CanApplyStroke}" />
-                    <Input accessible-name="Stroke width" Type="Text" Value="{Binding StrokeWidth, Mode=TwoWay}" Interactive="{Binding CanApplyStrokeWidth}" HorizontalAlignment="Stretch" />
-                    <Button content="Apply stroke width" action="ApplyStrokeWidth" Interactive="{Binding CanApplyStrokeWidth}" />
-                    <Button content="Font larger" action="FontLarger" Interactive="{Binding CanFontSize}" />
-                    <Button content="Font smaller" action="FontSmaller" Interactive="{Binding CanFontSize}" />
-                  </Container>
-                </Container>
-                <Container Type="Vertical Stack" CellGap="8">
-                  <Text Text="Transition and animation" FontWeight="SemiBold" />
-                  <Container Type="Vertical Stack">
-                    <Input accessible-name="Transition kind for the current slide" Type="Text" Value="{Binding TransitionKind, Mode=TwoWay}" Interactive="{Binding CanApplyTransition}" HorizontalAlignment="Stretch" />
-                    <Input accessible-name="Transition duration in seconds" Type="Text" Value="{Binding TransitionDuration, Mode=TwoWay}" Interactive="{Binding CanApplyTransition}" HorizontalAlignment="Stretch" />
-                    <Button content="Apply transition" action="ApplyTransition" Interactive="{Binding CanApplyTransition}" />
-                    <Input accessible-name="Animation effect for the selected object" Type="Text" Value="{Binding AnimationEffect, Mode=TwoWay}" Interactive="{Binding CanAddAnimation}" HorizontalAlignment="Stretch" />
-                    <Input accessible-name="Animation trigger for the selected object" Type="Text" Value="{Binding AnimationTrigger, Mode=TwoWay}" Interactive="{Binding CanAddAnimation}" HorizontalAlignment="Stretch" />
-                    <Button content="Add animation" action="AddAnimation" Interactive="{Binding CanAddAnimation}" />
-                    <Button content="Remove animation" action="RemoveAnimation" Interactive="{Binding CanRemoveAnimation}" />
-                  </Container>
-                  <Repeat Source="{Binding AnimationSteps}" As="cue" Key="{Binding cue.Id}">
-                    <Text text="{Binding cue.Effect}" accessible-name="Animation cue effect" text-wrapping="Wrap" />
-                    <Text text="{Binding cue.Trigger}" accessible-name="Animation cue trigger" text-wrapping="Wrap" />
-                  </Repeat>
-                </Container>
-                <Container Type="Vertical Stack" CellGap="8">
-                  <Text Text="Visibility" FontWeight="SemiBold" />
-                  <Container Type="Wrap">
-                    <Button content="Hide slide" action="HideSlide" Interactive="{Binding CanHideSlide}" />
-                    <Button content="Show slide" action="ShowSlide" Interactive="{Binding CanShowSlide}" />
-                  </Container>
-                </Container>
+          </Container>
+          <Container ID="present-ui-344" Type="Overlay" RowSpan="5" Active="{Binding ShowHelp}" Background="{Resource CuiPanelBrush}" Padding="24" VerticalScrolling="True">
+            <Container ID="present-ui-345" Type="Vertical Stack" CellGap="16" MaxWidth="620" HorizontalAlignment="Center" VerticalAlignment="Center">
+              <Text ID="present-ui-346" Text="Editing in Present" FontSize="24" FontWeight="SemiBold" />
+              <Text ID="present-ui-347" Text="Click an object to select it. Shift-click adds to the selection; drag an empty area to select several objects. Drag selection handles to resize or rotate. Double-click text or press Enter to edit; Escape cancels and Ctrl+Enter commits." TextWrapping="Wrap" />
+              <Text ID="present-ui-348" Text="Ctrl+S saves · Ctrl+Z undoes · Ctrl+Shift+Z redoes · Ctrl+M adds a slide · Ctrl+B / Ctrl+I formats selected text. In the slide list, use Up/Down to select and Ctrl+Up/Down to reorder. Tab reaches every control; arrows navigate menus and resize handles." TextWrapping="Wrap" />
+              <Button ID="present-ui-349" Content="Back to presentation" Action="ShowHelp" HorizontalAlignment="Left" />
+            </Container>
+          </Container>
+          <Container ID="present-history" Type="Overlay" RowSpan="5" Active="{Binding ShowHistory}" Background="{Resource CuiPanelBrush}" Padding="24" VerticalScrolling="True">
+            <Container Type="Vertical Stack" CellGap="16" MaxWidth="620" HorizontalAlignment="Center" VerticalAlignment="Center">
+              <Text Text="Version history" FontSize="24" FontWeight="SemiBold" />
+              <Text Text="This device keeps the current and previous saved version. Restoring creates an unsaved change that you can undo; Save commits it as a new version." TextWrapping="Wrap" />
+              <Repeat Source="{Binding Versions}" As="version" Key="{Binding version.Version}">
                 <Container Type="Vertical Stack" CellGap="6">
-                  <Text Text="Go to slide" FontWeight="SemiBold" />
-                  <Repeat Source="{Binding Slides}" As="slide" Key="{Binding slide.Id}">
-                    <Button Content="{Binding slide.Title}" Action="SelectPresentationSlide" Interactive="{Binding CanBrowse}" />
-                  </Repeat>
+                  <Text Text="{Binding version.Title}" FontWeight="SemiBold" />
+                  <Text Text="{Binding version.Summary}" />
+                  <Button Content="Restore this version" Action="RestoreSavedVersion" Interactive="{Binding CanRestoreHistory}" />
                 </Container>
-              </Container>
+              </Repeat>
+              <Button Content="Close version history" Action="CloseHistory" HorizontalAlignment="Left" />
             </Container>
           </Container>
-        </Container>
-      </Container>
+        </EditorShell>
       </Container>
     </Page>
   </Theme>
