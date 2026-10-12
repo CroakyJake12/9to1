@@ -35,8 +35,8 @@ public static class CuiThemeCatalog
             1.0, 1.05, 1.1, 1.25, 1.7, 0.95, 1.05, 1.02, 1.0, 1.7),
         new(
             CuiTheme.Professional, "Professional",
-            "Windows-style material layers, quiet surfaces and familiar controls.",
-            0.4, 0.5, 0.4, 0.8, 0.45, 0.65, 1.0, 1.0, 0.9, 0.6)
+            "Quiet layered surfaces, rounded floating menus and precise editorial controls.",
+            1.0, 0.75, 0.8, 0.8, 0.7, 0.65, 1.0, 1.0, 0.9, 0.8)
     ];
 
     /// <summary>

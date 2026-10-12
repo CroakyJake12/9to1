@@ -27,8 +27,12 @@ public static class CuiControlTemplates
     { foreach(var entry in Catalogue.Value) resources[entry.Key]=entry.Value; }
     public static bool TryGet(Type backendType,out IControlTemplate? template)
     {
-        if(Catalogue.Value.TryGetValue(backendType,out var value) && value is ControlTheme theme && theme.Setters.SingleOrDefault() is Setter setter && setter.Value is IControlTemplate found)
-        { template=found;return true; }
+        // Ordinary adapters may subclass a supported primitive for behavior.
+        // Resolve its nearest CUI template explicitly; backend style lookup must
+        // never choose an inherited donor template for that subclass.
+        for (var type = backendType; type is not null; type = type.BaseType)
+            if(Catalogue.Value.TryGetValue(type,out var value) && value is ControlTheme theme && theme.Setters.SingleOrDefault() is Setter setter && setter.Value is IControlTemplate found)
+            { template=found;return true; }
         template=null;return false;
     }
     private static ResourceDictionary CreateCatalogue()
@@ -118,6 +122,7 @@ public static class CuiControlTemplates
         owner.PropertyChanged += (_, change) => { if (change.Property == ToggleButton.IsCheckedProperty) Update(); };
         Update();
         var box = Frame(owner, mark); Resource(box, Control.WidthProperty, "CuiChoiceSize"); Resource(box, Control.HeightProperty, "CuiChoiceSize"); box.VerticalAlignment = VerticalAlignment.Center;
+        Resource(box, Border.CornerRadiusProperty, owner is RadioButton ? "CuiThumbRadius" : "CuiChoiceRadius");
         var presenter = Presenter(owner, scope); Grid.SetColumn(presenter, 1);
         row.Children.Add(box); row.Children.Add(presenter);
         return row;
@@ -159,11 +164,29 @@ public static class CuiControlTemplates
         var scroll = Name(new ScrollViewer { Content = surface, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled }, "PART_ScrollViewer", scope);
         scroll.Bind(ScrollViewer.HorizontalScrollBarVisibilityProperty, owner.GetObservable(ScrollViewer.HorizontalScrollBarVisibilityProperty));
         scroll.Bind(ScrollViewer.VerticalScrollBarVisibilityProperty, owner.GetObservable(ScrollViewer.VerticalScrollBarVisibilityProperty));
-        var inner = new Grid { ColumnDefinitions = new("Auto,*,Auto"), Children = { scroll } }; Grid.SetColumn(scroll, 1);
+        var inner = new Grid { ColumnDefinitions = new("Auto,*,Auto,Auto"), Children = { scroll } }; Grid.SetColumn(scroll, 1);
         var left = new ContentPresenter(); Bind(left, ContentPresenter.ContentProperty, owner, "InnerLeftContent"); inner.Children.Add(left);
         var right = new ContentPresenter(); Bind(right, ContentPresenter.ContentProperty, owner, "InnerRightContent"); Grid.SetColumn(right,2); inner.Children.Add(right);
+        var invalid = ValidationMarker(owner, scope); Grid.SetColumn(invalid, 3); inner.Children.Add(invalid);
         Bind(inner, Control.MarginProperty, owner, "Padding");
         return Frame(owner, inner);
+    }
+
+    private static Control ValidationMarker(Control owner, INameScope scope)
+    {
+        // A shape cue remains visible when high contrast intentionally shares
+        // the same foreground for ordinary borders and invalid outlines.
+        var marker = Name(new Avalonia.Controls.Shapes.Path
+        {
+            Data = Geometry.Parse("M 8,1 L 15,15 L 1,15 Z M 8,5 L 8,9 M 8,11 L 8,12"),
+            Width = 16, Height = 16, Margin = new Thickness(8, 0, 0, 0),
+            StrokeThickness = 1.5, VerticalAlignment = VerticalAlignment.Center,
+            IsHitTestVisible = false
+        }, "PART_ValidationIndicator", scope);
+        Resource(marker, Avalonia.Controls.Shapes.Shape.StrokeProperty, "CuiValidationBrush");
+        marker.Bind(Control.IsVisibleProperty, owner.GetObservable(CuiInputValidationProperties.HasErrorProperty));
+        AutomationProperties.SetName(marker, "Invalid value");
+        return marker;
     }
 
     private static Control Scroll(ScrollViewer owner, INameScope scope)
@@ -224,11 +247,17 @@ public static class CuiControlTemplates
 
     private static Border PopupFrame(Control owner, Control content)
     {
-        var frame = new Border { Child = content, Padding = new(8), BorderThickness = new(1) };
+        var frame = new Border { Child = content };
         // Explicit popup scope borrows the owner's canonical resources, not a donor popup theme.
-        frame.Bind(Border.BackgroundProperty, owner.GetResourceObservable("CuiPanel2Brush"));
+        frame.Bind(Border.BackgroundProperty, owner.GetResourceObservable("CuiPopupSurfaceBrush"));
         frame.Bind(Border.BorderBrushProperty, owner.GetResourceObservable("CuiLineBrush"));
         frame.Bind(Border.CornerRadiusProperty, owner.GetResourceObservable("CuiPopupRadius"));
+        frame.Bind(Border.PaddingProperty, owner.GetResourceObservable("CuiPopupPadding"));
+        frame.Bind(Border.BorderThicknessProperty, owner.GetResourceObservable("CuiControlBorderWidth"));
+        frame.Bind(Border.BoxShadowProperty, owner.GetResourceObservable("CuiPopupShadow"));
+        // Reserve the rendered shadow's actual extents inside the popup host;
+        // otherwise native and browser popup roots clip it to a hard rectangle.
+        frame.Bind(Control.MarginProperty, owner.GetResourceObservable("CuiPopupShadowMargin"));
         return frame;
     }
 
@@ -251,10 +280,13 @@ public static class CuiControlTemplates
         };
         Resource(chevron, Avalonia.Controls.Shapes.Shape.StrokeProperty, "CuiTextBrush");
         var arrow = new ToggleButton { Content = chevron, Focusable = false, Width = 28 };
+        CuiPropertyPresentation.ConfigurePart(arrow,CuiPropertyPresentation.TemplatePart.DisclosureButton);
         AutomationProperties.SetName(arrow, "Open choices");
         Grid.SetColumn(arrow,1); row.Children.Add(arrow);
         Bind(arrow, ToggleButton.IsCheckedProperty, owner, "IsDropDownOpen", true);
         var popup = Name(new Popup { PlacementTarget = owner, IsLightDismissEnabled = true }, "PART_Popup", scope);
+        popup.Bind(Popup.HorizontalOffsetProperty, owner.GetResourceObservable("CuiPopupHorizontalOffset"));
+        popup.Bind(Popup.VerticalOffsetProperty, owner.GetResourceObservable("CuiPopupVerticalOffset"));
         Bind(popup, Popup.IsOpenProperty, owner, "IsDropDownOpen", true); Bind(popup, Control.MinWidthProperty, owner, "Bounds.Width");
         Bind(popup, Control.MaxHeightProperty, owner, "MaxDropDownHeight");
         popup.Child = PopupFrame(owner, new ScrollViewer { Content = ItemPresenter(owner, scope) }); row.Children.Add(popup);
@@ -263,8 +295,12 @@ public static class CuiControlTemplates
 
     private static Control MenuItem(MenuItem owner, INameScope scope)
     {
-        var row = new Grid { ColumnDefinitions = new(owner.IsTopLevel ? "*" : "Auto,*,Auto,Auto"), ColumnSpacing = owner.IsTopLevel ? 0 : 8 };
+        var row = new Grid { ColumnDefinitions = new(owner.IsTopLevel ? "*" : "24,*,Auto,12"), ColumnSpacing = owner.IsTopLevel ? 0 : 8 };
+        // Padding belongs to the entire row, so icons, labels and shortcuts share
+        // a single alignment and target. Nested buttons do not draw extra boxes.
+        Bind(row, Control.MarginProperty, owner, "Padding");
         var header = Presenter(owner, scope, "PART_HeaderPresenter", "Header");
+        header.Padding = new Thickness(0);
         Grid.SetColumn(header, owner.IsTopLevel ? 0 : 1); row.Children.Add(header);
         var iconImage = new Image { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false };
         Bind(iconImage, Image.SourceProperty, owner, "Icon"); row.Children.Add(iconImage);
@@ -283,7 +319,7 @@ public static class CuiControlTemplates
         {
             var iconOnly = owner is CuiMenuItem { IconOnly: true };
             var hasImage = owner.Icon is Avalonia.Media.IImage;
-            row.ColumnDefinitions = new(owner.IsTopLevel || iconOnly ? "*" : "Auto,*,Auto,Auto");
+            row.ColumnDefinitions = new(owner.IsTopLevel || iconOnly ? "*" : "24,*,Auto,12");
             Grid.SetColumn(header, owner.IsTopLevel || iconOnly ? 0 : 1);
             iconImage.Width = iconImage.Height = iconOnly ? 36 : 20;
             iconImage.IsVisible = hasImage;
@@ -298,6 +334,8 @@ public static class CuiControlTemplates
         };
         UpdateIcon();
         var popup = Name(new Popup { PlacementTarget = owner, Placement = owner.IsTopLevel ? PlacementMode.Bottom : PlacementMode.RightEdgeAlignedTop, IsLightDismissEnabled = false }, "PART_Popup", scope);
+        popup.Bind(Popup.HorizontalOffsetProperty, owner.GetResourceObservable(owner.IsTopLevel ? "CuiPopupHorizontalOffset" : "CuiSubmenuHorizontalOffset"));
+        popup.Bind(Popup.VerticalOffsetProperty, owner.GetResourceObservable(owner.IsTopLevel ? "CuiPopupVerticalOffset" : "CuiSubmenuVerticalOffset"));
         Bind(popup, Popup.IsOpenProperty, owner, "IsSubMenuOpen", true);
         popup.Child = PopupFrame(owner, new ScrollViewer { Content = ItemPresenter(owner, scope) }); row.Children.Add(popup);
         return Frame(owner, row);
@@ -326,18 +364,34 @@ public static class CuiControlTemplates
     private static Control Numeric(NumericUpDown owner,INameScope scope)
     {
         var input=Name(new TextBox(),"PART_TextBox",scope); Bind(input,TextBox.TextProperty,owner,"Text",true);
+        CuiPropertyPresentation.ConfigurePart(input,CuiPropertyPresentation.TemplatePart.EmbeddedInput);
         input.Bind(AutomationProperties.NameProperty, owner.GetObservable(AutomationProperties.NameProperty));
         input.Bind(AutomationProperties.HelpTextProperty, owner.GetObservable(AutomationProperties.HelpTextProperty));
         Bind(input,TextBox.IsReadOnlyProperty,owner,"IsReadOnly"); Bind(input,TextBox.PlaceholderTextProperty,owner,"PlaceholderText");
         var spinner=Name(new ButtonSpinner { Content=input },"PART_Spinner",scope); Bind(spinner,ButtonSpinner.AllowSpinProperty,owner,"AllowSpin");
-        return spinner;
+        var row = new Grid { ColumnDefinitions = new("*,Auto"), Children = { spinner } };
+        var invalid = ValidationMarker(owner, scope); invalid.Margin = new Thickness(8, 0, 8, 0);
+        Grid.SetColumn(invalid, 1); row.Children.Add(invalid);
+        return Frame(owner, row);
     }
     private static Control Spinner(ButtonSpinner owner,INameScope scope)
     {
         var root=new Grid { ColumnDefinitions=new("*,Auto") }; root.Children.Add(Presenter(owner,scope));
         var buttons=new StackPanel(); Grid.SetColumn(buttons,1);
-        var increase=Name(new RepeatButton { Content="+",Focusable=false },"PART_IncreaseButton",scope);
-        var decrease=Name(new RepeatButton { Content="−",Focusable=false },"PART_DecreaseButton",scope);
+        Control SpinArrow(bool up)
+        {
+            var arrow = new Avalonia.Controls.Shapes.Path
+            {
+                Data = Geometry.Parse(up ? "M 1,7 L 5,3 L 9,7" : "M 1,3 L 5,7 L 9,3"),
+                Width = 10, Height = 10, StrokeThickness = 1.5,
+                HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center
+            };
+            Resource(arrow, Avalonia.Controls.Shapes.Shape.StrokeProperty, "CuiTextBrush");
+            return arrow;
+        }
+        var increase=Name(new RepeatButton { Content=SpinArrow(true),Focusable=false },"PART_IncreaseButton",scope);
+        var decrease=Name(new RepeatButton { Content=SpinArrow(false),Focusable=false },"PART_DecreaseButton",scope);
+        AutomationProperties.SetName(increase,"Increase value"); AutomationProperties.SetName(decrease,"Decrease value");
         CuiPropertyPresentation.ConfigurePart(increase,CuiPropertyPresentation.TemplatePart.SpinnerButton);
         CuiPropertyPresentation.ConfigurePart(decrease,CuiPropertyPresentation.TemplatePart.SpinnerButton);
         buttons.Children.Add(increase);buttons.Children.Add(decrease);root.Children.Add(buttons);return Frame(owner,root);

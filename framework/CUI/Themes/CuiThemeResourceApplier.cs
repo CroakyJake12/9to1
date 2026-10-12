@@ -59,7 +59,7 @@ public static class CuiThemeResourceApplier
         var isDark = Luminance(palette.Text) > Luminance(palette.Panel);
         var disabledText = WithAlpha(palette.Muted, 0x88);
         var overlay = WithAlpha(palette.Panel, isDark ? (byte)0xF2 : (byte)0xF7);
-        var input = palette.Button;
+        var input = InputSurface(palette, isDark);
         var success = Color.Parse(isDark ? "#FF76D7A0" : "#FF147A48");
         var information = palette.AccentSecondary;
         var expression = CuiThemeCatalog.Resolve(palette.Theme);
@@ -218,7 +218,7 @@ public static class CuiThemeResourceApplier
         resources["CuiFocusBrush"] = new SolidColorBrush(palette.Focus);
         resources["CuiShadowBrush"] = new SolidColorBrush(shadow);
         resources["CuiOverlaySurfaceBrush"] = new SolidColorBrush(WithAlpha(palette.Panel, isDark ? (byte)0xF2 : (byte)0xF7));
-        resources["CuiInputSurfaceBrush"] = new SolidColorBrush(palette.Button);
+        resources["CuiInputSurfaceBrush"] = new SolidColorBrush(InputSurface(palette, isDark));
         resources["CuiSuccessBrush"] = new SolidColorBrush(Color.Parse(isDark ? "#FF76D7A0" : "#FF147A48"));
         resources["CuiInformationBrush"] = new SolidColorBrush(palette.AccentSecondary);
         resources["CuiControlRadius"] = new CornerRadius(Math.Max(0d, Math.Round(CuiThemeExpression.BaseControlRadius * expression.ControlRadiusScale)));
@@ -244,8 +244,36 @@ public static class CuiThemeResourceApplier
         resources["CuiControlPadding"] = new Avalonia.Thickness((professional ? 12 : 14) * spacing, (professional ? 7 : 10) * spacing);
         resources["CuiControlMinHeight"] = (professional ? 34d : 40d * expression.ControlHeightScale) * settings.DisplayScale;
         resources["CuiControlBorderWidth"] = new Thickness((settings.HighContrast ? 2 : 1) * settings.DisplayScale);
+        // Popup structure and menu rows belong to CUI, including scaling and
+        // accessibility. Opaque content prevents text from the editor bleeding
+        // through menus in translucent theme families.
+        resources["CuiPopupSurfaceBrush"] = new SolidColorBrush(WithAlpha(palette.Panel2, 255));
+        resources["CuiPopupPadding"] = new Thickness(8 * spacing);
+        resources["CuiMenuItemPadding"] = new Thickness(10 * spacing, 7 * spacing);
+        resources["CuiMenuItemBorderWidth"] = new Thickness(0);
+        resources["CuiMenuItemRadius"] = new CornerRadius(8 * settings.DisplayScale);
+        resources["CuiChoiceRadius"] = new CornerRadius(5 * settings.DisplayScale);
+        var shadowAlpha = (byte)Math.Clamp(Math.Round((Luminance(palette.Text) > Luminance(palette.Panel) ? 110 : 42) * expression.ShadowOpacityScale), 0, 255);
+        var popupShadow = new BoxShadow
+        {
+            OffsetY = 8 * settings.DisplayScale, Blur = 24 * settings.DisplayScale,
+            Spread = 0, Color = Color.FromArgb(shadowAlpha, 0, 0, 0)
+        };
+        resources["CuiPopupShadow"] = settings.HighContrast ? new BoxShadows() : new BoxShadows(popupShadow);
+        var shadowBounds = settings.HighContrast ? new Rect(0, 0, 1, 1) : popupShadow.TransformBounds(new Rect(0, 0, 1, 1));
+        var shadowMargin = new Thickness(Math.Max(0, -shadowBounds.X), Math.Max(0, -shadowBounds.Y),
+            Math.Max(0, shadowBounds.Right - 1), Math.Max(0, shadowBounds.Bottom - 1));
+        resources["CuiPopupShadowMargin"] = shadowMargin;
+        resources["CuiPopupHorizontalOffset"] = -shadowMargin.Left;
+        resources["CuiPopupVerticalOffset"] = 4 * spacing - shadowMargin.Top;
+        resources["CuiSubmenuHorizontalOffset"] = 4 * spacing - shadowMargin.Left;
+        resources["CuiSubmenuVerticalOffset"] = -shadowMargin.Top;
         resources["CuiDisabledOpacity"] = settings.HighContrast ? .7d : .5d;
-        resources["CuiValidationBrush"] = new SolidColorBrush(palette.Attention);
+        // Attention is a filled-surface role, not an error outline. Derive the
+        // outline from its existing semantic border and ensure it remains
+        // discernible against the actual field in light and dark appearances.
+        resources["CuiValidationBrush"] = new SolidColorBrush(CuiContrast.EnsureForegroundContrast(
+            palette.AttentionBorder, InputSurface(palette, Luminance(palette.Text) > Luminance(palette.Panel)), 4.5));
         resources["CuiChoiceSize"] = 22d * settings.DisplayScale;
         resources["CuiThumbSize"] = 20d * settings.DisplayScale;
         resources["CuiScrollBarSize"] = 12d * settings.DisplayScale;
@@ -257,6 +285,8 @@ public static class CuiThemeResourceApplier
         resources["CuiThumbRadius"] = new CornerRadius(10 * settings.DisplayScale);
         resources["CuiSpinnerButtonWidth"] = 24d * settings.DisplayScale;
         resources["CuiSpinnerButtonHeight"] = 17d * settings.DisplayScale;
+        // Retain the established typed shell-gradient resource contract. The
+        // Professional endpoints are CUI colours, not a native material.
         resources["CuiShellBrush"] = professional ? new LinearGradientBrush
         {
             StartPoint = new Avalonia.RelativePoint(0, 0, Avalonia.RelativeUnit.Relative),
@@ -267,6 +297,9 @@ public static class CuiThemeResourceApplier
         resources["CuiSelectionIndicatorBrush"] = new SolidColorBrush(palette.Accent);
         resources["CuiSelectionIndicatorRadius"] = new CornerRadius(2);
     }
+
+    private static Color InputSurface(CuiPalette palette, bool isDark) =>
+        palette.Theme == CuiTheme.Professional ? isDark ? palette.TideBase : palette.Panel2 : palette.Button;
 
     private static void ApplyButtonForegroundResources(IResourceDictionary resources, CuiPalette palette)
     {

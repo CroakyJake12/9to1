@@ -296,29 +296,30 @@ public static class CuiSurfacePaletteCatalog
         };
     }
 
-    // Shared Windows-style material roles. Surface colour belongs in icons and
-    // selection accents; large panels remain neutral across every CUI app.
-    // These opaque colours are also the browser/non-composited Mica fallback.
+    // CUI Professional owns the hierarchy across platforms: a quiet stage,
+    // distinct working panels and lifted floating surfaces. No platform material
+    // or native theme is the visual source of these roles.
     private static CuiPalette Professional(CuiPalette palette, CuiAppearance appearance)
     {
         var dark = appearance is CuiAppearance.Dark or CuiAppearance.SuperDark;
         var deep = appearance == CuiAppearance.SuperDark;
-        var accent = OverrideAccent ? palette.Accent : Color.Parse(dark ? "#FF60CDFF" : "#FF0067C0");
-        var background = Color.Parse(dark ? deep ? "#FF1C2228" : "#FF20262C" : "#FFF3F3F3");
-        var panel = Color.Parse(dark ? deep ? "#FF252B32" : "#FF2B3138" : "#FFFAFAFA");
+        var white = appearance == CuiAppearance.SuperBright;
+        var accent = OverrideAccent ? palette.Accent : Color.Parse(dark ? "#FFB4C5ED" : "#FF385C9B");
+        var background = Color.Parse(dark ? deep ? "#FF101216" : "#FF181B20" : white ? "#FFFAFBFC" : "#FFF0F2F5");
+        var panel = Color.Parse(dark ? deep ? "#FF191C22" : "#FF21252C" : white ? "#FFFFFFFF" : "#FFFAFBFC");
         return palette with
         {
-            TideBase = background, TideColour = Blend(background, palette.TideColour, .08),
+            TideBase = background, TideColour = background,
             Accent = accent, AccentSecondary = accent, AccentStrong = accent,
-            AccentSoft = Blend(panel, accent, dark ? .12 : .08), AccentInk = dark ? Color.Parse("#FF003449") : Colors.White,
-            Text = Color.Parse(dark ? "#FFF5F5F5" : "#FF1B1B1B"),
-            TextSoft = Color.Parse(dark ? "#FFD0D3D6" : "#FF4F5255"),
-            Muted = Color.Parse(dark ? "#FFA7ADB3" : "#FF61676C"), Muted2 = Color.Parse(dark ? "#FF8F969D" : "#FF6E757B"),
-            Panel = panel, Panel2 = Color.Parse(dark ? "#FF30363F" : "#FFFFFFFF"),
-            Panel3 = Color.Parse(dark ? "#FF363C45" : "#FFF0F0F0"), PanelHover = Color.Parse(dark ? "#FF3B424B" : "#FFEDEDED"),
-            Line = Color.Parse(dark ? "#FF3D444C" : "#FFE4E4E4"), LineStrong = Color.Parse(dark ? "#FF5C646C" : "#FFB8BEC3"),
-            Button = Color.Parse(dark ? "#FF343B43" : "#FFFFFFFF"), ButtonHover = Color.Parse(dark ? "#FF404851" : "#FFF6F6F6"),
-            ButtonPressed = Color.Parse(dark ? "#FF2B3239" : "#FFEAEAEA"), Focus = accent, AccentBorder = accent
+            AccentSoft = Blend(panel, accent, dark ? .16 : .10), AccentInk = dark ? Color.Parse("#FF172238") : Colors.White,
+            Text = Color.Parse(dark ? "#FFF1F3F7" : "#FF222833"),
+            TextSoft = Color.Parse(dark ? "#FFCDD3DF" : "#FF505B6C"),
+            Muted = Color.Parse(dark ? "#FFAAB4C4" : "#FF657084"), Muted2 = Color.Parse(dark ? "#FF929EAF" : "#FF737F90"),
+            Panel = panel, Panel2 = Color.Parse(dark ? "#FF2A2F38" : "#FFFFFFFF"),
+            Panel3 = Color.Parse(dark ? "#FF303640" : "#FFE9EDF3"), PanelHover = Color.Parse(dark ? "#FF373F4C" : "#FFE8EDF5"),
+            Line = Color.Parse(dark ? "#FF353C47" : "#FFDDE3EB"), LineStrong = Color.Parse(dark ? "#FF596578" : "#FFA7B3C5"),
+            Button = Color.Parse(dark ? "#FF2B313B" : "#FFF3F5F8"), ButtonHover = Color.Parse(dark ? "#FF3B4453" : "#FFE7ECF4"),
+            ButtonPressed = Color.Parse(dark ? "#FF242A34" : "#FFDAE2EE"), Focus = accent, AccentBorder = accent
         };
     }
 

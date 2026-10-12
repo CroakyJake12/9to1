@@ -96,8 +96,12 @@ public sealed class CuiThemeRecoveryTests
                 window.UpdateLayout();
                 tooltip.ApplyTemplate();
                 var frame = Assert.Single(tooltip.GetVisualChildren().OfType<Border>());
-                Assert.True(button.TryFindResource("CuiPanel2Brush", out var background));
+                Assert.True(button.TryFindResource("CuiPopupSurfaceBrush", out var background));
                 Assert.Equal(((ISolidColorBrush)background!).Color, Assert.IsAssignableFrom<ISolidColorBrush>(frame.Background).Color);
+                Assert.Equal(255, Assert.IsAssignableFrom<ISolidColorBrush>(frame.Background).Color.A);
+                Assert.True(button.TryFindResource("CuiPanel2Brush", out var panel));
+                var panelColour = ((ISolidColorBrush)panel!).Color;
+                Assert.Equal(Color.FromArgb(255, panelColour.R, panelColour.G, panelColour.B), ((ISolidColorBrush)frame.Background!).Color);
                 Assert.True(frame.Padding.Left > 0 && frame.Padding.Top > 0);
                 Assert.True(frame.CornerRadius.TopLeft > 0);
                 Assert.Equal("Save (Ctrl+S)", tooltip.Content);

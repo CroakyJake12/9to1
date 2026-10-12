@@ -13,7 +13,7 @@ namespace CakeOS.Cui.Runtime;
 /// <summary>Internal backend projection of resolved CUI values. Native style priorities are never a CUI layer.</summary>
 public static class CuiPropertyPresentation
 {
-    internal enum TemplatePart { ScrollBar, ScrollThumb, RailButton, SliderThumb, SpinnerButton }
+    internal enum TemplatePart { ScrollBar, ScrollThumb, RailButton, SliderThumb, SpinnerButton, DisclosureButton, EmbeddedInput }
     private static readonly ConditionalWeakTable<Control, Projection> Projections = new();
     public static CuiEffectivePropertyStore For(Control control) => Get(control).Store;
     public static void Attach(Control control,bool ownsTemplate=true) => _ = Get(control,ownsTemplate);
@@ -84,14 +84,23 @@ public static class CuiPropertyPresentation
             control.PropertyChanged += NativeChanged;
             Register("Selected", typeof(bool), false, value => { _selected = value is true; UpdateState(); });
             if(!ownsTemplate)return; // Specialised renderer owns its content; CUI supplies its declared outer chrome separately.
-            if(control is TemplatedControl && CuiControlTemplates.TryGet(control.GetType(),out var template))
+            if(control is TemplatedControl)
+            {
+                if (!CuiControlTemplates.TryGet(control.GetType(),out var template))
+                    throw new InvalidOperationException($"CUI_TEMPLATE_MISSING: ordinary control '{control.GetType().FullName}' has no CUI-owned template. Register its canonical adapter or host specialised content through Object.");
                 Set("Template",template,CuiPropertyLevel.BuiltIn,"CUI-owned control template",0);
+            }
             var interactive = control is Button or TextBox or SelectingItemsControl or ListBoxItem or RangeBase or MenuItem or Thumb or NumericUpDown;
             Watch("CuiInterfaceFontFamily", "FontFamily");
             Watch("CuiFontWeightBody", "FontWeight");
             Watch("CuiFontSizeBody", "FontSize");
             Watch("CuiTextBrush", "Foreground");
             Watch("CuiFlowDirection", "FlowDirection");
+            if (control is ContextMenu)
+            {
+                Watch("CuiPopupHorizontalOffset", "HorizontalOffset");
+                Watch("CuiPopupVerticalOffset", "VerticalOffset");
+            }
             if (!interactive) return;
             Set("FocusAdorner", new FuncTemplate<Control>(() =>
             {
@@ -102,7 +111,20 @@ public static class CuiPropertyPresentation
             Watch("CuiControlPadding", "Padding"); Watch("CuiControlMinHeight", "MinHeight");
             Watch("CuiControlRadius", "CornerRadius"); Watch("CuiControlBorderWidth", "BorderWidth");
             Watch("CuiLineBrush", "BorderColor");
-            Watch(control is TextBox ? "CuiInputSurfaceBrush" : "CuiButtonBrush", "Background");
+            Watch(control is TextBox or ComboBox or NumericUpDown ? "CuiInputSurfaceBrush" : "CuiButtonBrush", "Background");
+            if (control is Menu)
+            {
+                Watch("CuiTransparentBrush", "Background", "CUI menu container", 1);
+                Set("BorderWidth", new Thickness(0), CuiPropertyLevel.Theme, "CUI menu container", 1);
+                Set("Padding", new Thickness(0), CuiPropertyLevel.Theme, "CUI menu container", 1);
+            }
+            if (control is MenuItem or ListBoxItem)
+            {
+                Watch("CuiTransparentBrush", "Background", "CUI menu row", 1);
+                Watch("CuiMenuItemBorderWidth", "BorderWidth", "CUI menu row", 1);
+                Watch("CuiMenuItemPadding", "Padding", "CUI menu row", 1);
+                Watch("CuiMenuItemRadius", "CornerRadius", "CUI menu row", 1);
+            }
             foreach (var key in new[] { "CuiButtonHoverBrush", "CuiButtonPressedBrush", "CuiButtonHoverForegroundBrush", "CuiButtonPressedForegroundBrush",
                 "CuiSelectionBrush", "CuiSelectionIndicatorBrush", "CuiFocusBrush", "CuiValidationBrush", "CuiDisabledOpacity", "CuiFocusIndicatorThickness" }) Watch(key, null);
             if (control is TextBox)
@@ -159,9 +181,10 @@ public static class CuiPropertyPresentation
             _part = part;
             const string source = "CUI template part";
             void Value(string name,object value) => Set(name,value,CuiPropertyLevel.Theme,source,1);
-            Value("Padding",new Thickness(0));Value("BorderWidth",new Thickness(0));
+            if (part != TemplatePart.EmbeddedInput) Value("Padding",new Thickness(0));
+            Value("BorderWidth",new Thickness(0));
             Value("MinWidth",0d);Value("MinHeight",0d);
-            if (part is TemplatePart.ScrollBar or TemplatePart.RailButton)
+            if (part is TemplatePart.ScrollBar or TemplatePart.RailButton or TemplatePart.DisclosureButton or TemplatePart.SpinnerButton or TemplatePart.EmbeddedInput)
                 Watch("CuiTransparentBrush","Background",source,1);
             if (part == TemplatePart.ScrollThumb)
             {
@@ -248,7 +271,7 @@ public static class CuiPropertyPresentation
             var desired = new Dictionary<string, object?>();
             void State(string name, string key)
             { if (_resources.TryGetValue(key, out var value)) desired[name] = value; }
-            var rail = _part is TemplatePart.RailButton or TemplatePart.ScrollBar;
+            var rail = _control is Menu || _part is TemplatePart.RailButton or TemplatePart.ScrollBar or TemplatePart.EmbeddedInput;
             if (_part == TemplatePart.ScrollThumb)
             {
                 if (_control.IsPointerOver) State("Background","CuiScrollThumbHoverBrush");

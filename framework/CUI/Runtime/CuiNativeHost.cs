@@ -67,12 +67,10 @@ public static class CuiNativeHost
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 var host = new CuiSceneHost(scene.ControlRegistry);
-                var window = new Window { Title = scene.Title, Width = 1100, Height = 760, Content = host, Background = (Avalonia.Media.IBrush?)Resources["CuiBackgroundBrush"] };
-                if (CuiSurfacePaletteCatalog.ActiveTheme == CuiTheme.Professional && OperatingSystem.IsWindows())
-                {
-                    window.TransparencyLevelHint = [WindowTransparencyLevel.Mica, WindowTransparencyLevel.None];
-                    window.Background = Brushes.Transparent;
-                }
+                var window = new Window { Title = scene.Title, Width = 1100, Height = 760, Content = host };
+                // CUI owns the same opaque surface on every backend. A native
+                // platform material must not become Professional's background.
+                window.Bind(Window.BackgroundProperty, window.GetResourceObservable("CuiBackgroundBrush"));
                 window.Closed += (_, _) => { _shutdown.Cancel(); host.Dispose(); };
                 desktop.MainWindow = window;
                 _ = InitialiseAsync(host);
