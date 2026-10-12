@@ -116,7 +116,7 @@ await using (var session = HeadlessUnitTestSession.StartNew(typeof(ThemeCreatorT
             using var absentOwnerLoader = new CuiControlLoader();
             var absentOwner = absentOwnerLoader.TryLoad(composed);
             Check(absentOwner.Root is not null && !absentOwner.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error), "Native Settings without a creator owner cannot load the imported library");
-            Check(!absentOwner.Root!.GetVisualDescendants().OfType<CuiContainerControl>().Single(control => control.Name == "theme-creator").IsVisible, "Native Settings exposed creator without a borrowed owner");
+            Check(!absentOwner.Root!.GetVisualDescendants().OfType<CuiContainerControl>().Any(control => control.Name == "theme-creator" && control.IsVisible), "Native Settings exposed creator without a borrowed owner");
         }
         finally { window.Close(); }
     }, CancellationToken.None);

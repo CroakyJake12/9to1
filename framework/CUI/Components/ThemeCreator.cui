@@ -1,5 +1,6 @@
 <Cui id="home.settings.theme-creator" version="1">
   <Prefab (Definition) id="ThemeCreatorPanel" Type="dynamic">
+    <If condition="{Binding ThemeCreatorOpen, fallback=false}">
     <Container id="theme-creator" Active="{Binding ThemeCreatorOpen, fallback=false}" Type="Vertical Stack" CellGap="12" Padding="18" Margin="0,0,0,24" Background="{Resource CuiPanelBrush}" CornerRadius="18">
       <Container Type="Grid" ColumnSizes="1fr Auto">
         <Text Text="Create Theme" FontSize="22" FontWeight="SemiBold" />
@@ -96,5 +97,6 @@
         <Button Action="ThemeCreatorCancel" Content="Cancel" Interactive="{Binding ThemeCreatorCanEdit}" AccessibleName="Cancel custom theme changes" />
       </Container>
     </Container>
+    </If>
   </Prefab>
 </Cui>
