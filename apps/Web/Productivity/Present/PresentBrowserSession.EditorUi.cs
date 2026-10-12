@@ -55,7 +55,11 @@ public sealed partial class PresentBrowserSession
 
     private bool TryGetEditorUiValue(string path, out object? value)
     {
-        var selected = SelectedObject;
+        // Most queries concern layout, navigation or a different UI group.
+        // The owner materialises its selected-elements projection; do not ask
+        // for that projection on every unrelated binding during character input.
+        var selected = path is "PropertiesTitle" or "ObjectX" or "ObjectY" or "ObjectWidth"
+            or "ObjectHeight" or "ObjectRotation" or "ObjectOpacity" or "OpacityLabel" ? SelectedObject : null;
         value = path switch
         {
             "TextContext" => CanvasTextCommands?.IsTextEditing == true,
