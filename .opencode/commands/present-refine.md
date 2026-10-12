@@ -1,0 +1,5 @@
+---
+description: Start the 9to1 CUI Professional + Present design/interaction refinement worker
+agent: cui-present-professional
+---
+Begin the scoped CUI Professional and Present refinement now, using docs/worker-briefs/cui-present-professional-20261012.md and the owner's local reference image in PRESENT_TARGET_IMAGE if available. Establish exact source/runtime/rendering ownership and baseline real browser evidence first, then implement compatible fixes rather than just proposing a plan. Preserve all existing functional features and the canonical document/editor stack. Use the existing access-protected Cloudflare Present worker for checked previews only and keep main untouched. Report WORKING, CHECKPOINT, BLOCKED, COMPLETED and VERIFIED accurately, with implementation/test/browser/screenshot evidence.
