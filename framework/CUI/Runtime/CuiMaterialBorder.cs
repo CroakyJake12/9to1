@@ -107,12 +107,17 @@ public class CuiMaterialBorder : Border
         }
         private static SKShader CreateGrain()
         {
-            using var bitmap = new SKBitmap(64, 64); uint random = 0x9A1701;
+            using var bitmap = new SKBitmap(64, 64, SKColorType.Rgba8888, SKAlphaType.Opaque);
+            var pixels = bitmap.GetPixelSpan(); var stride = bitmap.RowBytes; uint random = 0x9A1701;
+            // SetPixel creates a native canvas/paint per pixel. Fill this one static
+            // texture directly instead of allocating 4096 native drawing contexts.
             for (var y = 0; y < 64; y++) for (var x = 0; x < 64; x++)
             {
                 random ^= random << 13; random ^= random >> 17; random ^= random << 5;
-                var value = (byte)random; bitmap.SetPixel(x, y, new(value, value, value));
+                var value = (byte)random; var offset = y * stride + x * 4;
+                pixels[offset] = pixels[offset + 1] = pixels[offset + 2] = value; pixels[offset + 3] = 255;
             }
+            bitmap.SetImmutable();
             return SKShader.CreateBitmap(bitmap, SKShaderTileMode.Repeat, SKShaderTileMode.Repeat);
         }
     }
