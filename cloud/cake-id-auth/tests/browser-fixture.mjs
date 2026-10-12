@@ -136,7 +136,7 @@ globalThis.fetch = async (input, init = {}) => {
 const authClient = createAuthClient({ baseURL: `${baseURL}${authPath}`, plugins: [oauthProviderClient()] });
 
 async function waitForWorker() {
-  for (let attempt = 0; attempt < 20; attempt++) {
+  for (let attempt = 0; attempt < 200; attempt++) {
     if (workerStartupError) throw new Error("Wrangler spawn failed before readiness");
     if (worker.exitCode !== null) throw new Error(`Wrangler exited before readiness.\n${serverOutput.slice(-12000)}`);
     try {
@@ -232,6 +232,9 @@ try {
   const manifest = { fixtureOnly: true, runId, issuer: discovery.issuer, apiResource: resource,
     browserOrigin, redirectUri: callback, clientId: client.client_id, discovery,
     accounts, localTestKey: testKey, persistPath,
+    // Optional real local administrator UI journey; private0600 manifest only.
+    // Never copied to host public configuration or the ready line.
+    syntheticOperator: process.env.CAKE_BROWSER_FIXTURE_INCLUDE_ADMIN === "1" ? admin : undefined,
     scopes: "openid profile email offline_access cake:account:read cake:profile:read cake:profile:write cake:sessions:read cake:sessions:revoke" };
   const manifestPath = path.join(persistPath, "browser-fixture-private.json");
   writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), { mode: 0o600, flag: "wx" });
