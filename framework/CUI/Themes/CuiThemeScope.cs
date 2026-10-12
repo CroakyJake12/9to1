@@ -72,8 +72,8 @@ public sealed class CuiThemeScope
         var name = string.IsNullOrWhiteSpace(themeName) || themeName.Equals("user_preference", StringComparison.OrdinalIgnoreCase) ||
             themeName.Equals("Default", StringComparison.OrdinalIgnoreCase) ? CuiThemeCatalog.Name(globalDefault) : themeName.Trim();
         if (catalog.TryResolve(name, out var resolved) && resolved is not null)
-            return new(resolved, name, null, false, preference?.Current.Accessibility ?? CuiAccessibilitySettings.Default, Appearance: preference?.Current.Appearance);
-        return new(catalog.Resolve("Professional"), name, $"CUI theme '{name}' is unavailable; using Professional.", true, preference?.Current.Accessibility ?? CuiAccessibilitySettings.Default, Appearance: preference?.Current.Appearance);
+            return new(resolved, name, null, false, preference?.Current.Accessibility ?? CuiAccessibilitySettings.Default, Appearance: preference?.Current.Appearance, Accent: preference?.Current.Accent);
+        return new(catalog.Resolve("Professional"), name, $"CUI theme '{name}' is unavailable; using Professional.", true, preference?.Current.Accessibility ?? CuiAccessibilitySettings.Default, Appearance: preference?.Current.Appearance, Accent: preference?.Current.Accent);
     }
 }
 
@@ -164,12 +164,15 @@ public static class CuiThemeScopeApplier
         string surface = "Home",
         CuiAccessibilitySettings? accessibility = null,
         CuiLocalizationContext? localization = null,
-        CuiAppearance? appearanceOverride = null)
+        CuiAppearance? appearanceOverride = null,
+        CuiAccentPreference? accentPreference = null)
     {
         CuiSurfacePaletteCatalog.ActiveTheme = theme;
         var appearance = appearanceOverride ?? DetectAppearance();
         if (!Enum.IsDefined(appearance)) throw new ArgumentOutOfRangeException(nameof(appearanceOverride));
-        var palette = CuiSurfacePaletteCatalog.For(surface, appearance, theme);
+        var palette = accentPreference is null ? CuiSurfacePaletteCatalog.For(surface, appearance, theme)
+            : CuiSurfacePaletteCatalog.For(surface, appearance, theme,
+                accentPreference.ResolveColour(CuiAppAccentCatalog.Find(surface)?.AppId ?? string.Empty));
         // Publish the exact four-mode choice with the complete palette, before
         // notifying observers. Brightness must not collapse to light/dark.
         CuiThemeResourceApplier.Apply(palette, accessibility, localization, appearance);

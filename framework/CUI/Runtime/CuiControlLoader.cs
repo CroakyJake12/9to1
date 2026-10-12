@@ -63,6 +63,7 @@ public sealed class CuiControlLoader : IDisposable
     private string? _definitionScope;
     private CuiThemeScopeStack _themeStack = new(CuiSurfacePaletteCatalog.ActiveTheme);
     private string _currentSurface = "Home";
+    private string? _accentAppId;
     private CuiAppearance? _appearance;
     private int _currentLayer;
     private string? _currentRepeatIdentity;
@@ -129,7 +130,8 @@ public sealed class CuiControlLoader : IDisposable
         // broadcasts every individual token to this control and its descendants,
         // repeatedly projecting interaction states against incomplete palettes.
         var palette = CuiSurfacePaletteCatalog.For(_currentSurface,
-            _appearance ?? resolution.Appearance ?? CuiThemeScopeApplier.DetectAppearance(), resolution.Theme.BaseTheme);
+            _appearance ?? resolution.Appearance ?? CuiThemeScopeApplier.DetectAppearance(), resolution.Theme.BaseTheme,
+            resolution.EffectiveAccent.ResolveColour(_accentAppId ?? string.Empty));
         var key = (palette, resolution.Accessibility, resolution.Theme.Name);
         if (!_themeResourceSnapshots.TryGetValue(key, out var snapshot))
         {
@@ -338,7 +340,14 @@ public sealed class CuiControlLoader : IDisposable
     }
 
     /// <summary>Set the surface name for theme resolution (default: "Home").</summary>
-    public void SetSurface(string surface) => _currentSurface = surface;
+    public void SetSurface(string surface) => SetSurface(surface, CuiAppAccentCatalog.Find(surface)?.AppId);
+    public void SetSurface(string surface, string? appId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(surface);
+        if (appId is not null) _ = CuiAccentPreference.Default.WithAppColour(appId, null);
+        _currentSurface = surface;
+        _accentAppId = appId;
+    }
     public void SetAppearance(CuiAppearance appearance)
     {
         if (!Enum.IsDefined(appearance)) throw new ArgumentOutOfRangeException(nameof(appearance));

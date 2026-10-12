@@ -194,7 +194,8 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         if (_disposed || _themeContext is null) return;
         if (!Dispatcher.UIThread.CheckAccess()) { Dispatcher.UIThread.Post(() => OnThemeChanged(sender, args)); return; }
         var current = _themeContext.Current;
-        CuiThemeScopeApplier.ApplyGlobalTheme(current.Theme.BaseTheme, "Home", current.Accessibility, appearanceOverride: current.Appearance);
+        CuiThemeScopeApplier.ApplyGlobalTheme(current.Theme.BaseTheme, "Home", current.Accessibility,
+            appearanceOverride: current.Appearance, accentPreference: current.EffectiveAccent);
         if (Resources.TryGetResource("CuiBackgroundBrush", ActualThemeVariant, out var background) && background is Avalonia.Media.ISolidColorBrush backgroundBrush
             && Resources.TryGetResource("CuiTextBrush", ActualThemeVariant, out var foreground) && foreground is Avalonia.Media.ISolidColorBrush foregroundBrush
             && Resources.TryGetResource("CuiPanelBrush", ActualThemeVariant, out var panel) && panel is Avalonia.Media.ISolidColorBrush panelBrush)
@@ -246,7 +247,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         var previousRoot = (previousContent as ScrollViewer)?.Content as Control;
         try
         {
-            candidate.SetSurface(CuiAppAccentCatalog.SurfaceForRoute(routeId));
+            candidate.SetSurface(CuiAppAccentCatalog.SurfaceForRoute(routeId), routeId.StartsWith("app.", StringComparison.Ordinal) ? routeId : null);
             if (_themeContext is not null) candidate.SetThemePreferenceContext(_themeContext);
             ICuiBindingContext bindings = surface.Bindings;
             ICuiActionDispatcher actions = surface.Actions;
