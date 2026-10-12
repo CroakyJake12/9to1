@@ -36,7 +36,7 @@ public static class CuiThemeCatalog
         new(
             CuiTheme.Professional, "Professional",
             "Quiet layered surfaces, rounded floating menus and precise editorial controls.",
-            1.0, 0.75, 0.8, 0.8, 0.7, 0.65, 1.0, 1.0, 0.9, 0.8)
+            1.0, 0.75, 1.2, 0.8, 0.55, 0.65, 1.0, 1.0, 0.9, 0.8)
     ];
 
     /// <summary>

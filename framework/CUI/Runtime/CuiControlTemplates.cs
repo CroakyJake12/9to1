@@ -101,7 +101,11 @@ public static class CuiControlTemplates
     }
 
     private static Control Button(Button owner, INameScope scope) => Frame(owner, Presenter(owner, scope));
-    private static Control Content(ContentControl owner, INameScope scope) => Frame(owner, Presenter(owner, scope));
+    private static Control Content(ContentControl owner, INameScope scope)
+    {
+        if (owner is ComboBoxItem) CuiPropertyPresentation.ConfigurePart(owner, CuiPropertyPresentation.TemplatePart.FloatingMenuItem);
+        return Frame(owner, Presenter(owner, scope));
+    }
     private static Control Header(HeaderedContentControl owner, INameScope scope) => Frame(owner, Presenter(owner, scope, property: "Header"));
 
     private static Control TopLevelContent(TopLevel owner, INameScope scope)
@@ -250,7 +254,7 @@ public static class CuiControlTemplates
         var frame = new Border { Child = content };
         // Explicit popup scope borrows the owner's canonical resources, not a donor popup theme.
         frame.Bind(Border.BackgroundProperty, owner.GetResourceObservable("CuiPopupSurfaceBrush"));
-        frame.Bind(Border.BorderBrushProperty, owner.GetResourceObservable("CuiLineBrush"));
+        frame.Bind(Border.BorderBrushProperty, owner.GetResourceObservable("CuiPopupBorderBrush"));
         frame.Bind(Border.CornerRadiusProperty, owner.GetResourceObservable("CuiPopupRadius"));
         frame.Bind(Border.PaddingProperty, owner.GetResourceObservable("CuiPopupPadding"));
         frame.Bind(Border.BorderThicknessProperty, owner.GetResourceObservable("CuiControlBorderWidth"));
@@ -295,7 +299,8 @@ public static class CuiControlTemplates
 
     private static Control MenuItem(MenuItem owner, INameScope scope)
     {
-        var row = new Grid { ColumnDefinitions = new(owner.IsTopLevel ? "*" : "24,*,Auto,12"), ColumnSpacing = owner.IsTopLevel ? 0 : 8 };
+        if (!owner.IsTopLevel) CuiPropertyPresentation.ConfigurePart(owner, CuiPropertyPresentation.TemplatePart.FloatingMenuItem);
+        var row = new Grid { ColumnDefinitions = new(owner.IsTopLevel ? "*" : "24,*,Auto,12"), ColumnSpacing = owner.IsTopLevel ? 0 : 12 };
         // Padding belongs to the entire row, so icons, labels and shortcuts share
         // a single alignment and target. Nested buttons do not draw extra boxes.
         Bind(row, Control.MarginProperty, owner, "Padding");

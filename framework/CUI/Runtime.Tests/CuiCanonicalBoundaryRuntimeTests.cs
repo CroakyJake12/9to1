@@ -83,7 +83,7 @@ public sealed class CuiCanonicalBoundaryRuntimeTests
         var source = new ThemeSource();
         using var preference = new CuiThemePreferenceContext(source, new CuiThemeDefinitionCatalog());
         using var loader = new CuiControlLoader(); loader.SetThemePreferenceContext(preference);
-        var loaded = loader.LoadMarkup("<Container Type=\"Overlay\" Background=\"{Resource CuiShellBrush}\"><Container ID=\"marker\" Type=\"Overlay\" Background=\"{Resource CuiAccentBrush}\"/></Container>");
+        var loaded = loader.LoadMarkup("<Container Type=\"Overlay\" Background=\"{Resource CuiAccentSecondaryBrush}\"><Container ID=\"marker\" Type=\"Overlay\" Background=\"{Resource CuiAccentBrush}\"/></Container>");
         Assert.Empty(loaded.Diagnostics);
         var shell = Assert.IsType<CuiContainerControl>(loaded.Root);
         var marker = Assert.IsType<CuiContainerControl>(shell.AuthoredChildren.Single());

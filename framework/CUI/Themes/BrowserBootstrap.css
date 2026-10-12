@@ -1,9 +1,9 @@
 /* CUI's browser bootstrap adapter. Fallback is Professional / SuperDark;
    the running CUI owner supplies the exact active palette for subsequent loads. */
 :root {
-  --cui-boot-background: #1c2228;
-  --cui-boot-foreground: #f5f5f5;
-  --cui-boot-panel: #252b32;
+  --cui-boot-background: #171819;
+  --cui-boot-foreground: #e5e5e7;
+  --cui-boot-panel: #171819;
   color-scheme: dark;
   background: var(--cui-boot-background);
   color: var(--cui-boot-foreground);

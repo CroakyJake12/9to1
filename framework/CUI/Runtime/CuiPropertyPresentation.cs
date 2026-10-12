@@ -13,7 +13,7 @@ namespace CakeOS.Cui.Runtime;
 /// <summary>Internal backend projection of resolved CUI values. Native style priorities are never a CUI layer.</summary>
 public static class CuiPropertyPresentation
 {
-    internal enum TemplatePart { ScrollBar, ScrollThumb, RailButton, SliderThumb, SpinnerButton, DisclosureButton, EmbeddedInput }
+    internal enum TemplatePart { ScrollBar, ScrollThumb, RailButton, SliderThumb, SpinnerButton, DisclosureButton, EmbeddedInput, FloatingMenuItem }
     private static readonly ConditionalWeakTable<Control, Projection> Projections = new();
     public static CuiEffectivePropertyStore For(Control control) => Get(control).Store;
     public static void Attach(Control control,bool ownsTemplate=true) => _ = Get(control,ownsTemplate);
@@ -110,8 +110,10 @@ public static class CuiPropertyPresentation
             }), CuiPropertyLevel.BuiltIn, "CUI keyboard focus indicator", 0);
             Watch("CuiControlPadding", "Padding"); Watch("CuiControlMinHeight", "MinHeight");
             Watch("CuiControlRadius", "CornerRadius"); Watch("CuiControlBorderWidth", "BorderWidth");
-            Watch("CuiLineBrush", "BorderColor");
+            Watch("CuiControlBorderBrush", "BorderColor");
             Watch(control is TextBox or ComboBox or NumericUpDown ? "CuiInputSurfaceBrush" : "CuiButtonBrush", "Background");
+            if (control is TextBox or ComboBox or NumericUpDown) Watch("CuiInputRadius", "CornerRadius", "CUI field shape", 1);
+            if (control is CheckBox or RadioButton) Watch("CuiChoiceBorderBrush", "BorderColor", "CUI choice boundary", 1);
             if (control is Menu)
             {
                 Watch("CuiTransparentBrush", "Background", "CUI menu container", 1);
@@ -126,7 +128,7 @@ public static class CuiPropertyPresentation
                 Watch("CuiMenuItemRadius", "CornerRadius", "CUI menu row", 1);
             }
             foreach (var key in new[] { "CuiButtonHoverBrush", "CuiButtonPressedBrush", "CuiButtonHoverForegroundBrush", "CuiButtonPressedForegroundBrush",
-                "CuiSelectionBrush", "CuiSelectionIndicatorBrush", "CuiFocusBrush", "CuiValidationBrush", "CuiDisabledOpacity", "CuiFocusIndicatorThickness" }) Watch(key, null);
+                "CuiSelectionBrush", "CuiMenuSelectionBrush", "CuiSelectionIndicatorBrush", "CuiFocusBrush", "CuiValidationBrush", "CuiDisabledOpacity", "CuiFocusIndicatorThickness" }) Watch(key, null);
             if (control is TextBox)
             {
                 Watch("CuiTextBrush", "CaretBrush"); Watch("CuiTextSoftBrush", "PlaceholderForeground");
@@ -210,6 +212,11 @@ public static class CuiPropertyPresentation
             {
                 Watch("CuiSpinnerButtonWidth","Width",source,1);Watch("CuiSpinnerButtonHeight","Height",source,1);
             }
+            if (part == TemplatePart.FloatingMenuItem)
+            {
+                Watch("CuiFloatingMenuItemMinHeight", "MinHeight", source, 1);
+                Watch("CuiFloatingMenuItemPadding", "Padding", source, 1);
+            }
             if (part == TemplatePart.ScrollBar && _control is ScrollBar bar)
             {
                 void Dimensions()
@@ -280,7 +287,7 @@ public static class CuiPropertyPresentation
             else if (!rail && _control.IsPointerOver)
             { State("Background", "CuiButtonHoverBrush"); State("Foreground", "CuiButtonHoverForegroundBrush"); }
             if (_selected || _control is ToggleButton { IsChecked: true } or ListBoxItem { IsSelected: true } or MenuItem { IsSelected: true })
-            { State("Background", "CuiSelectionBrush"); State("BorderColor", "CuiSelectionIndicatorBrush"); }
+            { State("Background", _control is MenuItem or ListBoxItem ? "CuiMenuSelectionBrush" : "CuiSelectionBrush"); State("BorderColor", "CuiSelectionIndicatorBrush"); }
             if (!rail && _control is Button { IsPressed: true })
             { State("Background", "CuiButtonPressedBrush"); State("Foreground", "CuiButtonPressedForegroundBrush"); }
             if (_control.IsKeyboardFocusWithin)
