@@ -23,6 +23,7 @@ using (var creator = new BrowserThemeCreator(sink, sink, preferences, preference
 {
     var original = preferences.Current;
     creator.Open(); Check(Read(creator, "Open") is true, "Creator did not open");
+    Check(!preferences.Catalog.Names.Contains(BrowserThemeCreator.PreviewThemeName), "Ephemeral preview leaked into saved theme choices");
     Check(preferences.Writes == 0 && preferences.Current == original, "Opening mutated account preferences");
     Set(creator, "Name", "A real custom theme");
     Set(creator, "FillKindIndex", 1); Set(creator, "GradientKindIndex", 1);

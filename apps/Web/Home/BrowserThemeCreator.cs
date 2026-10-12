@@ -265,7 +265,7 @@ internal sealed class BrowserThemeCreator : ICuiWritableBindingContext, ICuiLife
             var fingerprint = CuiCustomThemeContract.Serialize(preview);
             if (fingerprint != _previewFingerprint)
             {
-                _preferences.Catalog.UpsertCustomTheme(preview);
+                _preferences.Catalog.UpsertCustomTheme(preview, ephemeral: true);
                 _previewFingerprint = fingerprint;
             }
         }
