@@ -1083,14 +1083,21 @@ public sealed class CuiControlLoader : IDisposable
                 continue;
             UnsubscribeScope(removed.Scope);
             DetachControlTree(removed.Root);
+            state.Host.Children.Remove(removed.Root);
         }
 
         state.Items.Clear();
         foreach (var entry in nextInstances)
             state.Items.Add(entry.Key, entry.Value);
-        state.Host.Children.Clear();
-        foreach (var root in nextRoots)
-            state.Host.Children.Add(root);
+        // Keyed identity includes the native attachment, not only the retained
+        // control instance. Clearing and re-adding unchanged rows drops input
+        // focus on every writeback and interrupts caret/selection/composition.
+        for (var index = 0; index < nextRoots.Count; index++)
+        {
+            var current = state.Host.Children.IndexOf(nextRoots[index]);
+            if (current < 0) state.Host.Children.Insert(index, nextRoots[index]);
+            else if (current != index) state.Host.Children.Move(current, index);
+        }
     }
 
     private void DetachControlTree(Control root)
