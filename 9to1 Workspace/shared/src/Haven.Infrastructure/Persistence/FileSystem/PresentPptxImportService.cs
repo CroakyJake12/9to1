@@ -58,6 +58,7 @@ public sealed class PresentPptxImportService : IPresentImportService
                 StringComparer.Ordinal) ?? new Dictionary<string, string>(StringComparer.Ordinal);
 
         var slideIds = presentation.Descendants(Presentation + "sldId").ToArray();
+        var titleParts = new Dictionary<string, XDocument>(StringComparer.Ordinal);
         for (var index = 0; index < slideIds.Length; index++)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -65,7 +66,8 @@ public sealed class PresentPptxImportService : IPresentImportService
             if (relationshipId is null || !relationshipMap.TryGetValue(relationshipId, out var target)) continue;
             var partPath = ResolvePresentationPart(target);
             var slideXml = await ReadXmlAsync(archive, partPath, cancellationToken).ConfigureAwait(false);
-            var slide = ParseSlide(slideXml, index, layoutId, document.SlideSize);
+            var titleSource = await ReadTitleSourceAsync(archive, partPath, titleParts, cancellationToken).ConfigureAwait(false);
+            var slide = ParseSlide(slideXml, index, layoutId, document.SlideSize, titleSource);
             slide.SpeakerNotes = await ReadNotesAsync(archive, partPath, cancellationToken).ConfigureAwait(false);
             document.Slides.Add(slide);
         }
@@ -78,13 +80,15 @@ public sealed class PresentPptxImportService : IPresentImportService
         return document;
     }
 
-    private static PresentSlide ParseSlide(XDocument xml, int order, Guid layoutId, PresentSlideSize slideSize)
+    private static PresentSlide ParseSlide(XDocument xml, int order, Guid layoutId, PresentSlideSize slideSize, TitleSource titleSource)
     {
         var slide = new PresentSlide
         {
             Order = order,
             LayoutId = layoutId,
-            Title = $"Slide {order + 1}",
+            // Navigation may display a numbered fallback, but it must never
+            // become invented slide content when the source has no title.
+            Title = string.Empty,
             Elements = [],
             Hidden = (string?)xml.Root?.Attribute("show") is "0" or "false"
         };
@@ -98,27 +102,29 @@ public sealed class PresentPptxImportService : IPresentImportService
             var nonVisual = shape.Element(Presentation + "nvSpPr");
             var name = (string?)nonVisual?.Element(Presentation + "cNvPr")?.Attribute("name") ?? string.Empty;
             var placeholder = (string?)nonVisual?.Element(Presentation + "nvPr")?.Element(Presentation + "ph")?.Attribute("type");
-            if (placeholder is "title" or "ctrTitle" || name.Equals("Title", StringComparison.OrdinalIgnoreCase) || name.StartsWith("Title ", StringComparison.OrdinalIgnoreCase))
-            {
-                slide.Title = text;
-                continue;
-            }
+            var isTitle = placeholder is "title" or "ctrTitle";
             var properties = shape.Element(Presentation + "spPr");
             var preset = (string?)properties?.Element(Drawing + "prstGeom")?.Attribute("prst");
             var textBox = (string?)nonVisual?.Element(Presentation + "cNvSpPr")?.Attribute("txBox") is "1" or "true";
-            var rectangle = !textBox && placeholder is null && preset is "rect" or "roundRect";
-            if (!rectangle && string.IsNullOrEmpty(text)) continue;
+            var rectangle = !isTitle && !textBox && placeholder is null && preset is "rect" or "roundRect";
+            if (!isTitle && !rectangle && string.IsNullOrEmpty(text)) continue;
             var element = new PresentElement
             {
                 Kind = rectangle ? PresentElementKind.Shape : PresentElementKind.Text,
                 ShapeType = rectangle ? preset! : string.Empty,
-                Role = !rectangle && !bodyAssigned ? PresentElementRoles.Body : string.Empty,
+                Role = isTitle && slide.GetTitleText() is null ? PresentElementRoles.Title
+                    : !isTitle && !rectangle && !bodyAssigned ? PresentElementRoles.Body : string.Empty,
                 Text = text,
+                Visible = (string?)nonVisual?.Element(Presentation + "cNvPr")?.Attribute("hidden") is not ("1" or "true"),
                 Order = slide.Elements.Count,
                 AlternativeText = (string?)nonVisual?.Element(Presentation + "cNvPr")?.Attribute("descr") ?? name
             };
-            ApplyGeometry(element, shape, slideSize);
-            ApplyTextStyle(element.TextStyle, textBody);
+            if (isTitle) ApplyTitleInheritance(element, shape, slideSize, titleSource);
+            else
+            {
+                ApplyGeometry(element, shape, slideSize);
+                ApplyTextStyle(element.TextStyle, textBody);
+            }
             if (rectangle)
             {
                 element.Style.FillColor = ReadColor(properties?.Element(Drawing + "solidFill")) ?? (properties?.Element(Drawing + "noFill") is not null ? "#00000000" : "");
@@ -137,7 +143,8 @@ public sealed class PresentPptxImportService : IPresentImportService
                 }
             }
             slide.Elements.Add(element);
-            if (!rectangle) bodyAssigned = true;
+            if (element.Role == PresentElementRoles.Title) slide.Title = text;
+            if (!isTitle && !rectangle) bodyAssigned = true;
         }
         return slide;
     }
@@ -165,19 +172,111 @@ public sealed class PresentPptxImportService : IPresentImportService
     {
         var paragraph = body?.Element(Drawing + "p");
         var run = paragraph?.Element(Drawing + "r")?.Element(Drawing + "rPr") ?? paragraph?.Element(Drawing + "endParaRPr");
-        var defaults = paragraph?.Element(Drawing + "pPr")?.Element(Drawing + "defRPr");
-        string? Value(string name) => (string?)run?.Attribute(name) ?? (string?)defaults?.Attribute(name);
+        var paragraphProperties = paragraph?.Element(Drawing + "pPr");
+        var listProperties = body?.Element(Drawing + "lstStyle")?.Element(Drawing + "lvl1pPr");
+        var defaults = paragraphProperties?.Element(Drawing + "defRPr");
+        var listDefaults = listProperties?.Element(Drawing + "defRPr");
+        string? Value(string name) => (string?)run?.Attribute(name) ?? (string?)defaults?.Attribute(name) ?? (string?)listDefaults?.Attribute(name);
         if (double.TryParse(Value("sz"), NumberStyles.Float, CultureInfo.InvariantCulture, out var size) && double.IsFinite(size) && size > 0)
             style.FontSizePoints = size / 100;
-        style.Bold = Value("b") is "1" or "true";
-        style.Italic = Value("i") is "1" or "true";
-        style.Underline = Value("u") is { } underline && underline != "none";
-        style.FontFamily = (string?)run?.Element(Drawing + "latin")?.Attribute("typeface") ?? (string?)defaults?.Element(Drawing + "latin")?.Attribute("typeface") ?? string.Empty;
-        style.Color = ReadColor(run?.Element(Drawing + "solidFill") ?? defaults?.Element(Drawing + "solidFill")) ?? string.Empty;
-        style.HorizontalAlignment = (string?)paragraph?.Element(Drawing + "pPr")?.Attribute("algn") switch
-        { "ctr" => PresentTextHorizontalAlignment.Center, "r" => PresentTextHorizontalAlignment.Right, "just" or "dist" => PresentTextHorizontalAlignment.Justify, _ => PresentTextHorizontalAlignment.Left };
-        style.VerticalAlignment = (string?)body?.Element(Drawing + "bodyPr")?.Attribute("anchor") switch
-        { "ctr" => PresentTextVerticalAlignment.Middle, "b" => PresentTextVerticalAlignment.Bottom, _ => PresentTextVerticalAlignment.Top };
+        if (Value("b") is { } bold) style.Bold = bold is "1" or "true";
+        if (Value("i") is { } italic) style.Italic = italic is "1" or "true";
+        if (Value("u") is { } underline) style.Underline = underline != "none";
+        if (((string?)run?.Element(Drawing + "latin")?.Attribute("typeface") ?? (string?)defaults?.Element(Drawing + "latin")?.Attribute("typeface")
+            ?? (string?)listDefaults?.Element(Drawing + "latin")?.Attribute("typeface")) is { } family)
+            style.FontFamily = family;
+        if (ReadColor(run?.Element(Drawing + "solidFill") ?? defaults?.Element(Drawing + "solidFill") ?? listDefaults?.Element(Drawing + "solidFill")) is { } color) style.Color = color;
+        if (((string?)paragraphProperties?.Attribute("algn") ?? (string?)listProperties?.Attribute("algn")) is { } alignment)
+            style.HorizontalAlignment = alignment switch
+            { "ctr" => PresentTextHorizontalAlignment.Center, "r" => PresentTextHorizontalAlignment.Right, "just" or "dist" => PresentTextHorizontalAlignment.Justify, _ => PresentTextHorizontalAlignment.Left };
+        if ((string?)body?.Element(Drawing + "bodyPr")?.Attribute("anchor") is { } anchor)
+            style.VerticalAlignment = anchor switch
+            { "ctr" => PresentTextVerticalAlignment.Middle, "b" => PresentTextVerticalAlignment.Bottom, _ => PresentTextVerticalAlignment.Top };
+    }
+
+    private sealed record TitleSource(XDocument? Layout, XDocument? Master, XDocument? Theme);
+
+    private static async Task<TitleSource> ReadTitleSourceAsync(ZipArchive archive, string slidePart, Dictionary<string, XDocument> parts, CancellationToken token)
+    {
+        var layout = await ReadRelatedPartAsync(archive, slidePart, "slideLayout", parts, token).ConfigureAwait(false);
+        var master = layout is { } layoutPart
+            ? await ReadRelatedPartAsync(archive, layoutPart.Path, "slideMaster", parts, token).ConfigureAwait(false) : null;
+        var theme = master is { } masterPart
+            ? await ReadRelatedPartAsync(archive, masterPart.Path, "theme", parts, token).ConfigureAwait(false) : null;
+        return new(layout?.Xml, master?.Xml, theme?.Xml);
+    }
+
+    private static async Task<(string Path, XDocument Xml)?> ReadRelatedPartAsync(ZipArchive archive, string ownerPart, string kind,
+        Dictionary<string, XDocument> parts, CancellationToken token)
+    {
+        // A deck commonly shares one master/theme across every slide. Parse each
+        // bounded package part once for this import, never once per title.
+        async Task<XDocument> ReadPart(string path)
+        {
+            if (parts.TryGetValue(path, out var cached)) return cached;
+            var xml = await ReadXmlAsync(archive, path, token).ConfigureAwait(false);
+            parts.Add(path, xml); return xml;
+        }
+        var slash = ownerPart.LastIndexOf('/');
+        var relationshipsPath = ownerPart[..(slash + 1)] + "_rels/" + ownerPart[(slash + 1)..] + ".rels";
+        if (archive.GetEntry(relationshipsPath) is null) return null;
+        var relationships = await ReadPart(relationshipsPath).ConfigureAwait(false);
+        var relationship = relationships.Root?.Elements(PackageRelationships + "Relationship").FirstOrDefault(item =>
+            (string?)item.Attribute("Type") == OfficeRelationships.NamespaceName + "/" + kind);
+        if (relationship is null) return null;
+        if ((string?)relationship.Attribute("TargetMode") == "External" || relationship.Attribute("Target") is not { } target
+            || !Uri.TryCreate(new Uri("https://package.invalid/" + ownerPart), target.Value.Replace('\\', '/'), out var resolved)
+            || resolved.Scheme != "https" || resolved.Host != "package.invalid" || resolved.Query.Length != 0 || resolved.Fragment.Length != 0)
+            throw new InvalidDataException($"The PPTX {kind} relationship must target an internal package part.");
+        var path = Uri.UnescapeDataString(resolved.AbsolutePath.TrimStart('/'));
+        return (path, await ReadPart(path).ConfigureAwait(false));
+    }
+
+    private static void ApplyTitleInheritance(PresentElement element, XElement shape, PresentSlideSize size, TitleSource source)
+    {
+        static XElement? Placeholder(XElement value) => value.Element(Presentation + "nvSpPr")?.Element(Presentation + "nvPr")?.Element(Presentation + "ph");
+        static XElement? Find(XDocument? document, XElement reference)
+        {
+            var referencePlaceholder = Placeholder(reference);
+            var type = (string?)referencePlaceholder?.Attribute("type") ?? "title";
+            var index = (string?)referencePlaceholder?.Attribute("idx") ?? "0";
+            return document?.Root?.Element(Presentation + "cSld")?.Element(Presentation + "spTree")?.Elements(Presentation + "sp")
+                .Where(item => (string?)Placeholder(item)?.Attribute("type") is "title" or "ctrTitle")
+                .OrderByDescending(item => ((string?)Placeholder(item)?.Attribute("type") == type ? 2 : 0)
+                    + (((string?)Placeholder(item)?.Attribute("idx") ?? "0") == index ? 1 : 0)).FirstOrDefault();
+        }
+        var layoutShape = Find(source.Layout, shape);
+        var masterShape = Find(source.Master, layoutShape ?? shape);
+        var themeElements = source.Theme?.Root?.Element(Drawing + "themeElements");
+        var colors = themeElements?.Element(Drawing + "clrScheme");
+        var colorMap = source.Master?.Root?.Element(Presentation + "clrMap");
+        void ApplyBody(XElement? body)
+        {
+            if (body is null) return;
+            var resolved = new XElement(body);
+            foreach (var color in resolved.Descendants(Drawing + "schemeClr").ToArray())
+            {
+                var key = (string?)color.Attribute("val");
+                if (key is null) continue;
+                key = (string?)colorMap?.Attribute(key) ?? key;
+                var value = colors?.Element(Drawing + key)?.Elements().FirstOrDefault();
+                var hex = (string?)value?.Attribute(value.Name == Drawing + "sysClr" ? "lastClr" : "val");
+                if (hex is not null) color.ReplaceWith(new XElement(Drawing + "srgbClr", new XAttribute("val", hex), color.Elements()));
+            }
+            ApplyTextStyle(element.TextStyle, resolved);
+        }
+        var titleStyle = source.Master?.Root?.Element(Presentation + "txStyles")?.Element(Presentation + "titleStyle");
+        if (titleStyle is not null)
+            ApplyBody(new XElement(Presentation + "txBody", new XElement(Drawing + "lstStyle", titleStyle.Elements()), new XElement(Drawing + "p")));
+        foreach (var inherited in new[] { masterShape, layoutShape, shape })
+        {
+            if (inherited is null) continue;
+            ApplyGeometry(element, inherited, size);
+            ApplyBody(inherited.Element(Presentation + "txBody"));
+        }
+        var fontKind = element.TextStyle.FontFamily switch { "+mj-lt" => "majorFont", "+mn-lt" => "minorFont", _ => null };
+        if (fontKind is not null)
+            element.TextStyle.FontFamily = (string?)themeElements?.Element(Drawing + "fontScheme")?.Element(Drawing + fontKind)?.Element(Drawing + "latin")?.Attribute("typeface") ?? string.Empty;
     }
 
     private static string? ReadColor(XElement? fill)

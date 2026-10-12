@@ -250,16 +250,19 @@ public sealed class PresentPptxExportService : IPresentReportExportService
     private static string BuildSlide(PresentDocument document, PresentSlide slide, long slideWidth, long slideHeight)
     {
         var tree = ShapeTree();
-        var title = new PresentElement { Kind = PresentElementKind.Text, Text = slide.Title,
+        var title = new PresentElement { Kind = PresentElementKind.Text, Role = PresentElementRoles.Title, Text = slide.Title,
             X = .07, Y = .06, Width = .86, Height = .14,
             TextStyle = new PresentTextStyle { FontSizePoints = 25.5, Bold = true,
                 FontFamily = document.Theme.HeadingFontFamily, Color = document.Theme.Colors.Foreground,
                 VerticalAlignment = PresentTextVerticalAlignment.Middle } };
-        tree.Add(ElementShape(2, "Title", title, document.Theme, slideWidth, slideHeight));
+        if (slide.GetTitleText() is null && !string.IsNullOrEmpty(slide.Title))
+            tree.Add(ElementShape(2, "Title", title, document.Theme, slideWidth, slideHeight));
         var id = 3;
-        foreach (var element in slide.Elements.Where(item => item.Visible && item.Kind != PresentElementKind.Group).OrderBy(item => item.Order))
+        foreach (var element in slide.Elements.Where(item => item.Kind != PresentElementKind.Group
+            && (item.Visible || item.Kind == PresentElementKind.Text && string.Equals(item.Role, PresentElementRoles.Title, StringComparison.OrdinalIgnoreCase))).OrderBy(item => item.Order))
         {
-            if (element.Kind == PresentElementKind.Text && string.IsNullOrEmpty(element.Text)) continue;
+            if (element.Kind == PresentElementKind.Text && string.IsNullOrEmpty(element.Text)
+                && !string.Equals(element.Role, PresentElementRoles.Title, StringComparison.OrdinalIgnoreCase)) continue;
             tree.Add(ElementShape(id++, $"Element {element.Id:N}", element, document.Theme, slideWidth, slideHeight));
         }
         var background = slide.Background.Kind == PresentBackgroundKind.Solid ? slide.Background.Color :
@@ -287,8 +290,11 @@ public sealed class PresentPptxExportService : IPresentReportExportService
         properties.Add(new XElement(A + "ln", new XAttribute("w", (long)Math.Round(Math.Max(0, element.Style.StrokeWidth) * 9525)),
             nativeShape && element.Style.StrokeWidth > 0 ? SolidFill(element.Style.StrokeColor, theme.Colors.Accent1, element.Opacity) : new XElement(A + "noFill")));
         var result = new XElement(P + "sp", new XElement(P + "nvSpPr",
-            new XElement(P + "cNvPr", new XAttribute("id", id), new XAttribute("name", name), new XAttribute("descr", element.AlternativeText ?? "")),
-            new XElement(P + "cNvSpPr", new XAttribute("txBox", nativeShape ? "0" : "1")), new XElement(P + "nvPr")), properties);
+            new XElement(P + "cNvPr", new XAttribute("id", id), new XAttribute("name", name), new XAttribute("descr", element.AlternativeText ?? ""),
+                !element.Visible ? new XAttribute("hidden", "1") : null),
+            new XElement(P + "cNvSpPr", new XAttribute("txBox", nativeShape ? "0" : "1")), new XElement(P + "nvPr",
+                element.Kind == PresentElementKind.Text && string.Equals(element.Role, PresentElementRoles.Title, StringComparison.OrdinalIgnoreCase)
+                    ? new XElement(P + "ph", new XAttribute("type", "title")) : null)), properties);
         var text = element.Kind == PresentElementKind.Text || nativeShape ? element.Text : ExportText(element);
         if (!nativeShape || !string.IsNullOrEmpty(text))
             result.Add(TextBody(text, style, theme, element.Opacity));

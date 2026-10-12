@@ -126,6 +126,13 @@ public sealed class PresentSlide
         return body;
     }
 
+    // A title object carries the authored geometry and style. Older slides retain
+    // their metadata-only title and continue using the legacy title presentation.
+    public PresentElement? GetTitleText() => Elements?
+        .Where(element => element.Kind == PresentElementKind.Text
+            && string.Equals(element.Role, PresentElementRoles.Title, StringComparison.OrdinalIgnoreCase))
+        .OrderBy(element => element.Order).FirstOrDefault();
+
     public void Normalize(int order)
     {
         if (Id == Guid.Empty) Id = Guid.NewGuid();
@@ -161,6 +168,8 @@ public sealed class PresentSlide
             Elements[index].Normalize(index);
         }
 
+        if (GetTitleText() is { } title) Title = title.Text;
+
         var groups = Elements.Where(element => element.Kind == PresentElementKind.Group)
             .ToDictionary(element => element.Id);
         foreach (var element in Elements)
@@ -193,6 +202,7 @@ public sealed class PresentSlide
 
 public static class PresentElementRoles
 {
+    public const string Title = "title";
     public const string Body = "body";
 }
 

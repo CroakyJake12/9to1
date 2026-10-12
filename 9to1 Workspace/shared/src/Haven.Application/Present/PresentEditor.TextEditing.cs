@@ -20,6 +20,7 @@ public sealed partial class PresentEditor
         if (string.Equals(slide.Title, value, StringComparison.Ordinal)) return false;
         BeginLiveTextEdit();
         slide.Title = value;
+        if (slide.GetTitleText() is { } titleElement) titleElement.Text = value;
         return true;
     }
 
@@ -32,6 +33,7 @@ public sealed partial class PresentEditor
         if (string.Equals(element.Text, value, StringComparison.Ordinal)) return false;
         BeginLiveTextEdit();
         element.Text = value;
+        if (slide.GetTitleText()?.Id == element.Id) slide.Title = value;
         return true;
     }
 

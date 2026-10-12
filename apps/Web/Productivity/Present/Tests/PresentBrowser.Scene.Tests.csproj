@@ -6,7 +6,7 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Program.cs;PresentInterchangeChecks.cs;PresentUiAcceptanceChecks.cs;PresentInteractionEngineChecks.cs;PresentStructuredRenderingChecks.cs;../PresentBrowserSession.cs;../PresentBrowserSession.EditorUi.cs;../PresentBrowserSession.ContentUi.cs;../PresentBrowserSurface.cs;../PresentBrowserFeature.cs;../Storage/BrowserPresentMedia.cs" Link="Production/%(Filename)%(Extension)" />
+    <Compile Include="Program.cs;PresentInterchangeChecks.cs;PresentUiAcceptanceChecks.cs;PresentInteractionEngineChecks.cs;PresentStructuredRenderingChecks.cs;PresentTitleChecks.cs;../PresentBrowserSession.cs;../PresentBrowserSession.EditorUi.cs;../PresentBrowserSession.ContentUi.cs;../PresentBrowserSurface.cs;../PresentBrowserFeature.cs;../Storage/BrowserPresentMedia.cs" Link="Production/%(Filename)%(Extension)" />
     <Compile Include="../../../BrowserSurfaceRegistry.cs;../../../BrowserActionAvailability.cs" Link="Production/%(Filename)%(Extension)" />
     <Compile Include="../../../BrowserCanonicalIcons.cs" Link="Production/BrowserCanonicalIcons.cs" />
     <Compile Include="../../../BrowserAccessibilityBridge.cs;../../../BrowserAccessibilityJsonContext.cs" Link="Production/%(Filename)%(Extension)" />

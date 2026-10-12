@@ -37,6 +37,7 @@ var assertions = await headless.Dispatch(async () =>
         "retained Present runs without the removed extracted AXAML theme resource");
     var paths = new AppPaths();
     if (args.Contains("interchange", StringComparer.Ordinal)) return await PresentInterchangeChecks.Run(paths);
+    if (args.Contains("title", StringComparer.Ordinal)) return await PresentTitleChecks.Run(paths);
     var repository = new PresentRepository(paths);
     Check((await repository.ListAsync(default)).Count == 0, "actual Present repository fixture starts empty");
     if (args.Contains("admission", StringComparer.Ordinal))

@@ -8,8 +8,24 @@ in `Tests/PresentUiAcceptanceChecks.cs`; integrated browser rendering and matche
 Impress donor acceptance remain separate required gates. The current immediate
 fill/stroke controls supersede the historical Apply-button description below.
 
+Imported PPTX titles now remain original `PresentElement` text objects with the
+existing extensible `title` role. Their geometry and uniform formatting inherit
+from the actual title placeholder/layout/master/theme, with direct slide values
+taking precedence. The element owns visible title content; `Slide.Title` stays
+synchronized for navigation and legacy callers. The original editor's live edit,
+undo, deletion and duplication operations preserve that relationship. Rendering
+and export suppress the synthetic title only when a title object exists;
+metadata-only documents retain their original title behavior without a schema
+migration. Hidden titles keep their native hidden flag, and a slide without a
+title placeholder keeps an empty metadata title instead of gaining a synthetic
+numbered heading. Ordinary textboxes remain ordinary text even when named
+"Title". This focused change does not claim general master/layout fidelity or
+mixed-run text parity. `Tests/PresentTitleChecks.cs` covers the independent PPTX
+fixture, owner identity/history, real repository and PPTX round trips, and native
+physical title editing; browser and pinned Impress execution remain required.
+
 The browser Present route consumes the original `PresentEditor` and an injected
-`IPresentRepository`. The specialized CUI object compiles the four unchanged
+`IPresentRepository`. The specialized CUI object compiles the original
 `PresentSlideCanvas` source files and reuses the single original Haven scene
 assembly, owning font assets and extracted resources already linked for Write.
 It introduces no presentation document model, drawing engine, animation runtime,

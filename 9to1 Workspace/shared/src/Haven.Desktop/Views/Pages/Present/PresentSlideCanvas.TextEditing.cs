@@ -40,7 +40,7 @@ internal sealed partial class PresentSlideCanvas
 
     private bool TryBeginTitleEdit(HavenPoint local, HavenInputModifiers modifiers)
     {
-        if (_slide is null) return false;
+        if (_slide is null || _slide.GetTitleText() is not null || string.IsNullOrEmpty(_slide.Title)) return false;
         var rect = TitleRect(SlideRectLocal());
         if (!rect.Contains(local)) return false;
         BeginTextEdit(PresentTextEditTarget.SlideTitle, null, _slide.Title, rect, local, modifiers);
@@ -320,7 +320,7 @@ internal sealed partial class PresentSlideCanvas
 
     private void DrawSlideTitle(HavenDrawingContext context, HavenRect slideRect, double opacity)
     {
-        if (_slide is null) return;
+        if (_slide is null || _slide.GetTitleText() is not null || string.IsNullOrEmpty(_slide.Title)) return;
         var rect = TitleRect(slideRect);
         var text = _textEditTarget == PresentTextEditTarget.SlideTitle ? _editingText : _slide.Title;
         var brush = Brush(_document?.Theme.Colors.Foreground, "#1F1F1F");
