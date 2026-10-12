@@ -99,3 +99,12 @@ test('configured native private fence precedes theme observers and cleanup joins
     await accounts.prepare();assert.deepEqual(events,['native','theme','join']);
     await accounts.disposeAsync();
 });
+
+test('a server schema refusal is distinguished from CAS conflict and an unknown outcome',async()=>{
+    let error='theme_schema_unsupported';
+    const theme=createAccountThemePreferences({client:{getCurrent:async()=>({ok:true,body:{accountId:A}}),updateTheme:async()=>({ok:false,status:409,error:{code:error}})},hasCredential:()=>true,apiResource:'https://accounts.example.test',window:null});
+    await theme.themeContext('context');
+    assert.equal(JSON.parse(await theme.compareTheme('schema',A,0,JSON.stringify(preference()))).code,'ThemeSchemaUnsupported');
+    error='theme_revision_conflict';assert.equal(JSON.parse(await theme.compareTheme('conflict',A,0,JSON.stringify(preference()))).code,'RevisionConflict');
+    await theme.disposeAsync();
+});

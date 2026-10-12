@@ -79,8 +79,9 @@ export function createAccountThemePreferences({ client, hasCredential, apiResour
                 const reply = await client.updateTheme(scope, expectedRevision, candidate, { signal });
                 // The API itself rejects responses from a changed credential generation.
                 if (generation !== epoch || !current(scope) || signal.aborted) return JSON.stringify(unavailableWrite('ThemeOutcomeUnknown'));
-                if (!reply.ok) return JSON.stringify(unavailableWrite(reply.status === 409 ? 'RevisionConflict' :
-                    reply.status === 401 || reply.status === 403 ? 'PermissionDenied' : 'ThemeOutcomeUnknown'));
+                if (!reply.ok) return JSON.stringify(unavailableWrite(reply.error?.code === 'theme_schema_unsupported' ? 'ThemeSchemaUnsupported' :
+                    reply.error?.code === 'theme_revision_conflict' ? 'RevisionConflict' : reply.status === 400 ? 'InvalidArgument' :
+                    reply.status === 404 ? 'ThemeScopeUnsupported' : reply.status === 401 || reply.status === 403 ? 'PermissionDenied' : 'ThemeOutcomeUnknown'));
                 return JSON.stringify({ succeeded: true, code: 'Succeeded', preference: reply.body.preference });
             });
         },
