@@ -26,6 +26,19 @@ The owner still requires its existing body-text element. A newly created or clea
 slide can therefore contain an empty, selectable body-text object. This compatibility
 behaviour is not a duplicate slide renderer or development fixture.
 
+`PresentSlide.Title` is the navigation name, independent of all authored text.
+Rename and its preview change that metadata through the original owner history;
+normalization, editing or deleting a title object never replace it. Duplication
+names the copied slide without rewriting its content. A real title-role text
+object retains the same selection, movement, editing and deletion semantics as
+other authored text. The canvas and thumbnail preview paint only real elements;
+the thumbnail label displays the metadata. There is no synthetic canvas title or
+invisible title editing region. PPTX stores the name in `p:cSld/@name`; real title
+objects export separately with their geometry and style. External files without
+name metadata may seed their initial name from the imported title placeholder.
+The `slide-metadata` and `title` native checks cover independent names/content,
+undo/redo, physical editing, retained rendering and repository/PPTX round trips.
+
 ## Input and rendering
 
 `IHavenHoverInputTarget` receives uncaptured local hover positions independently of

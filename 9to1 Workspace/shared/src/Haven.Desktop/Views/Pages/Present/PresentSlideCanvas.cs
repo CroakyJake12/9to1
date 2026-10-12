@@ -131,7 +131,6 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
             return true;
         }
 
-        if (TryBeginTitleEdit(input.LocalPosition, ToInputModifiers(input.Modifiers))) return true;
         _marqueeBaseSelection = input.Modifiers.HasFlag(HavenKeyModifiers.Shift) ? _selectedIds.ToHashSet() : [];
         if (!input.Modifiers.HasFlag(HavenKeyModifiers.Shift)) SelectionSetRequested?.Invoke(Array.Empty<Guid>());
         _pointerStart = _pointerCurrent = input.LocalPosition;
@@ -237,7 +236,6 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
         context.Add(new HavenPushClipCommand(target));
         context.Add(new HavenPushTransformCommand(target,
             new HavenTransform(target.Width / logical.Width, target.Height / logical.Height, TranslateX: target.X, TranslateY: target.Y), new HavenPoint(0, 0)));
-        DrawSlideTitle(context, logical, opacity);
         foreach (var element in _slide.Elements.Where(value => IsEffectivelyVisible(value) && value.Kind != PresentElementKind.Group).OrderBy(value => SelectionRoot(value).Order).ThenBy(value => value.Order))
             DrawElement(context, element, logical, opacity);
         context.Add(new HavenPopTransformCommand(target));

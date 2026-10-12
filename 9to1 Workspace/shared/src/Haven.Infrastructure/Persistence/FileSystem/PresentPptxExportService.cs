@@ -250,13 +250,6 @@ public sealed class PresentPptxExportService : IPresentReportExportService
     private static string BuildSlide(PresentDocument document, PresentSlide slide, long slideWidth, long slideHeight)
     {
         var tree = ShapeTree();
-        var title = new PresentElement { Kind = PresentElementKind.Text, Role = PresentElementRoles.Title, Text = slide.Title,
-            X = .07, Y = .06, Width = .86, Height = .14,
-            TextStyle = new PresentTextStyle { FontSizePoints = 25.5, Bold = true,
-                FontFamily = document.Theme.HeadingFontFamily, Color = document.Theme.Colors.Foreground,
-                VerticalAlignment = PresentTextVerticalAlignment.Middle } };
-        if (slide.GetTitleText() is null && !string.IsNullOrEmpty(slide.Title))
-            tree.Add(ElementShape(2, "Title", title, document.Theme, slideWidth, slideHeight));
         var id = 3;
         foreach (var element in slide.Elements.Where(item => item.Kind != PresentElementKind.Group
             && (item.Visible || item.Kind == PresentElementKind.Text && string.Equals(item.Role, PresentElementRoles.Title, StringComparison.OrdinalIgnoreCase))).OrderBy(item => item.Order))
@@ -268,7 +261,7 @@ public sealed class PresentPptxExportService : IPresentReportExportService
         var background = slide.Background.Kind == PresentBackgroundKind.Solid ? slide.Background.Color :
             document.Theme.Background.Kind == PresentBackgroundKind.Solid ? document.Theme.Background.Color : document.Theme.Colors.Background;
         return Root(P + "sld", new XAttribute("show", slide.Hidden ? "0" : "1"),
-            new XElement(P + "cSld", new XElement(P + "bg", new XElement(P + "bgPr",
+            new XElement(P + "cSld", new XAttribute("name", slide.Title), new XElement(P + "bg", new XElement(P + "bgPr",
                 SolidFill(background, document.Theme.Colors.Background), new XElement(A + "effectLst"))), tree),
             new XElement(P + "clrMapOvr", new XElement(A + "masterClrMapping"))).ToString(SaveOptions.DisableFormatting);
     }

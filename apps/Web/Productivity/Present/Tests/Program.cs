@@ -41,6 +41,7 @@ var assertions = await headless.Dispatch(async () =>
     if (args.Contains("thumbnail-wheel", StringComparer.Ordinal)) return await PresentThumbnailWheelChecks.Run(paths);
     if (args.Contains("shape-text", StringComparer.Ordinal)) return await PresentShapeTextChecks.Run(paths);
     if (args.Contains("interchange", StringComparer.Ordinal)) return await PresentInterchangeChecks.Run(paths);
+    if (args.Contains("slide-metadata", StringComparer.Ordinal)) return await PresentSlideMetadataChecks.Run(paths);
     if (args.Contains("title", StringComparer.Ordinal)) return await PresentTitleChecks.Run(paths);
     if (args.Contains("document-fonts", StringComparer.Ordinal)) return PresentDocumentFontChecks.Run(paths);
     var repository = new PresentRepository(paths);

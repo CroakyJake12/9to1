@@ -38,16 +38,6 @@ internal sealed partial class PresentSlideCanvas
         slideRect.Width * .86,
         slideRect.Height * .14);
 
-    private bool TryBeginTitleEdit(HavenPoint local, HavenInputModifiers modifiers)
-    {
-        if (_slide is null || _slide.GetTitleText() is not null || string.IsNullOrEmpty(_slide.Title)) return false;
-        var rect = TitleRect(SlideRectLocal());
-        if (!rect.Contains(local)) return false;
-        BeginTextEdit(PresentTextEditTarget.SlideTitle, null, _slide.Title, rect, local, modifiers);
-        SelectionSetRequested?.Invoke(Array.Empty<Guid>());
-        return true;
-    }
-
     private void BeginElementTextEdit(PresentElement element, HavenPoint local, HavenInputModifiers modifiers)
     {
         var rect = ElementRect(element, SlideRectLocal(), false);
@@ -316,17 +306,6 @@ internal sealed partial class PresentSlideCanvas
                 Math.Clamp(documentHeight * .14 * .34, 18, 34) * scale, 700,
                 Brush(_document?.Theme.Colors.Foreground, "#1F1F1F"), vertical: PresentTextVerticalAlignment.Middle);
         return layout.Paragraph!.HitTest(new HavenPoint(point.X - layout.ParagraphOrigin.X, point.Y - layout.ParagraphOrigin.Y));
-    }
-
-    private void DrawSlideTitle(HavenDrawingContext context, HavenRect slideRect, double opacity)
-    {
-        if (_slide is null || _slide.GetTitleText() is not null || string.IsNullOrEmpty(_slide.Title)) return;
-        var rect = TitleRect(slideRect);
-        var text = _textEditTarget == PresentTextEditTarget.SlideTitle ? _editingText : _slide.Title;
-        var brush = Brush(_document?.Theme.Colors.Foreground, "#1F1F1F");
-        var layout = TextDescriptor(rect, text, _document?.Theme.HeadingFontFamily ?? "Segoe UI",
-            Math.Clamp(rect.Height * .34, 18, 34), 700, brush, vertical: PresentTextVerticalAlignment.Middle);
-        DrawEditableText(context, rect, layout, brush, opacity, _textEditTarget == PresentTextEditTarget.SlideTitle);
     }
 
     private void DrawEditableElementText(HavenDrawingContext context, PresentElement element, HavenRect rect, double opacity)

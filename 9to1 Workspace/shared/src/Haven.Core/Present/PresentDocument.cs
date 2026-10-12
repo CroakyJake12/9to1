@@ -126,8 +126,8 @@ public sealed class PresentSlide
         return body;
     }
 
-    // A title object carries the authored geometry and style. Older slides retain
-    // their metadata-only title and continue using the legacy title presentation.
+    // A title object is authored slide content with its own geometry and style.
+    // Title names the slide in navigation; it is independent metadata.
     public PresentElement? GetTitleText() => Elements?
         .Where(element => element.Kind == PresentElementKind.Text
             && string.Equals(element.Role, PresentElementRoles.Title, StringComparison.OrdinalIgnoreCase))
@@ -167,8 +167,6 @@ public sealed class PresentSlide
             }
             Elements[index].Normalize(index);
         }
-
-        if (GetTitleText() is { } title) Title = title.Text;
 
         var groups = Elements.Where(element => element.Kind == PresentElementKind.Group)
             .ToDictionary(element => element.Id);

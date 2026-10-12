@@ -88,7 +88,7 @@ public sealed class PresentPptxImportService : IPresentImportService
             LayoutId = layoutId,
             // Navigation may display a numbered fallback, but it must never
             // become invented slide content when the source has no title.
-            Title = string.Empty,
+            Title = (string?)xml.Root?.Element(Presentation + "cSld")?.Attribute("name") ?? string.Empty,
             Elements = [],
             Hidden = (string?)xml.Root?.Attribute("show") is "0" or "false"
         };
@@ -149,7 +149,8 @@ public sealed class PresentPptxImportService : IPresentImportService
                 }
             }
             slide.Elements.Add(element);
-            if (element.Role == PresentElementRoles.Title) slide.Title = text;
+            if (element.Role == PresentElementRoles.Title && xml.Root?.Element(Presentation + "cSld")?.Attribute("name") is null)
+                slide.Title = text;
             if (!isTitle && !rectangle) bodyAssigned = true;
         }
         return slide;

@@ -16,12 +16,10 @@ public sealed partial class PresentEditor
     public bool PreviewSlideTitle(Guid slideId, string? title)
     {
         var slide = RequireSlide(slideId);
-        if (slide.GetTitleText() is { Locked: true }) return false;
         var value = title ?? string.Empty;
         if (string.Equals(slide.Title, value, StringComparison.Ordinal)) return false;
         BeginLiveTextEdit();
         slide.Title = value;
-        if (slide.GetTitleText() is { } titleElement) titleElement.Text = value;
         return true;
     }
 
@@ -35,7 +33,6 @@ public sealed partial class PresentEditor
         if (string.Equals(element.Text, value, StringComparison.Ordinal)) return false;
         BeginLiveTextEdit();
         element.Text = value;
-        if (slide.GetTitleText()?.Id == element.Id) slide.Title = value;
         return true;
     }
 

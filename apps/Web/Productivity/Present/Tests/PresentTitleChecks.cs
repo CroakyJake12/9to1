@@ -51,48 +51,52 @@ internal static class PresentTitleChecks
             "imported title never consumes the original body role");
         Title().Locked = true;
         var lockedTitleState = JsonSerializer.Serialize(editor.Document);
-        Check(!editor.SetSlideTitle(slideId, "Locked metadata edit") && !editor.PreviewSlideTitle(slideId, "Locked metadata preview")
-            && !editor.SetElementText(slideId, titleId, "Locked direct edit") && !editor.PreviewElementText(slideId, titleId, "Locked direct preview")
+        Check(!editor.SetElementText(slideId, titleId, "Locked direct edit") && !editor.PreviewElementText(slideId, titleId, "Locked direct preview")
             && JsonSerializer.Serialize(editor.Document) == lockedTitleState && !editor.IsLiveTextEditActive,
-            "locked imported title rejects metadata and direct text edits without a history or preview mutation");
+            "locked imported title rejects direct text edits without a history or preview mutation");
+        Check(editor.SetSlideTitle(slideId, "Independent slide name") && Title().Text == "Quarterly roadmap" && Title().Locked
+            && editor.Undo(), "renaming metadata leaves even a locked authored title untouched and is independently undoable");
+        Check(editor.PreviewSlideTitle(slideId, "Independent preview") && Title().Text == "Quarterly roadmap"
+            && editor.CancelLiveTextEdit(), "metadata live preview is independent from title content and its lock");
         Title().Locked = false;
-        Check(editor.SetSlideTitle(slideId, "Metadata edit") && Title().Text == "Metadata edit" && Title().Id == titleId,
-            "slide-title owner updates the same editable title object");
+        Check(editor.SetSlideTitle(slideId, "Metadata edit") && Title().Text == "Quarterly roadmap" && editor.SelectedSlide.Title == "Metadata edit" && Title().Id == titleId,
+            "slide-name owner updates only metadata while preserving the editable title object");
         Check(editor.Undo() && Title().Text == "Quarterly roadmap" && editor.Document.Slides[0].Title == "Quarterly roadmap",
-            "one undo restores both title text and metadata");
+            "one undo restores the name without changing authored title text");
         editor.PreviewElementText(slideId, titleId, "Preview title");
-        Check(editor.Document.Slides[0].Title == "Preview title" && editor.CancelLiveTextEdit() && Title().Text == "Quarterly roadmap",
-            "live title-object preview synchronizes metadata and cancellation restores original content");
+        Check(editor.Document.Slides[0].Title == "Quarterly roadmap" && Title().Text == "Preview title" && editor.CancelLiveTextEdit() && Title().Text == "Quarterly roadmap",
+            "live title-object preview leaves metadata unchanged and cancellation restores original content");
         editor.PreviewElementText(slideId, titleId, "One transaction"); editor.PreviewElementText(slideId, titleId, "One transaction complete");
         Check(editor.CommitLiveTextEdit() && editor.Undo() && Title().Text == "Quarterly roadmap", "several live title edits commit as one original undo transaction");
-        Check(editor.Redo() && editor.Document.Slides[0].Title == "One transaction complete" && Title().Id == titleId, "redo retains title identity and synchronized metadata");
+        Check(editor.Redo() && editor.Document.Slides[0].Title == "Quarterly roadmap" && Title().Text == "One transaction complete" && Title().Id == titleId, "redo retains title identity without renaming the slide");
         editor.PreviewSlideTitle(slideId, "Metadata live preview");
-        Check(Title().Text == "Metadata live preview" && editor.CancelLiveTextEdit(), "legacy title preview updates and cancels the real title object");
+        Check(Title().Text == "One transaction complete" && editor.SelectedSlide.Title == "Metadata live preview"
+            && editor.CancelLiveTextEdit(), "slide-name preview and cancellation preserve authored title text");
         editor.SelectElements([titleId]);
         var clipboard = editor.CopySelection(); var pasted = editor.Paste(clipboard);
         Check(pasted.Count == 1 && editor.SelectedElements.Single().Role != PresentElementRoles.Title
             && editor.SelectedSlide.GetTitleText()!.Id == titleId, "copying a title duplicates its text and geometry without stealing slide metadata ownership");
         editor.Undo();
         editor.SelectElements([titleId]); editor.RemoveSelectedElements();
-        Check(editor.SelectedSlide.GetTitleText() is null && editor.SelectedSlide.Title == string.Empty,
-            "deleting the title object does not resurrect its text as a synthetic title");
-        Check(editor.Undo() && Title().Id == titleId && editor.SelectedSlide.Title == Title().Text, "undo title deletion restores the original title ID");
+        Check(editor.SelectedSlide.GetTitleText() is null && editor.SelectedSlide.Title == "Quarterly roadmap",
+            "deleting the authored title retains slide-name metadata without a synthetic replacement");
+        Check(editor.Undo() && Title().Id == titleId && editor.SelectedSlide.Title == "Quarterly roadmap" && Title().Text == "One transaction complete", "undo title deletion restores the original title ID");
         var duplicate = editor.DuplicateSlide(slideId);
-        Check(duplicate.GetTitleText() is { } copied && copied.Id != titleId && copied.Text == duplicate.Title && Near(copied.X, Title().X),
-            "duplicating a slide remaps the title ID while preserving geometry and synchronized copy title");
+        Check(duplicate.GetTitleText() is { } copied && copied.Id != titleId && copied.Text == Title().Text && duplicate.Title == "Quarterly roadmap copy" && Near(copied.X, Title().X),
+            "duplicating a slide remaps title ID while preserving authored content and naming only the copy metadata");
         editor.Undo(); editor.SelectSlide(slideId);
         editor.SetElementText(slideId, titleId, "Saved title object");
 
         var repository = new PresentRepository(paths);
         await repository.SaveAsync(editor.Document, "Imported title retention", default);
         var saved = await repository.LoadAsync(document.Id, default) ?? throw new InvalidOperationException("The saved title document disappeared.");
-        Check(saved.Slides[0].GetTitleText()!.Id == titleId && saved.Slides[0].Title == "Saved title object"
+        Check(saved.Slides[0].GetTitleText()!.Id == titleId && saved.Slides[0].Title == "Quarterly roadmap" && saved.Slides[0].GetTitleText()!.Text == "Saved title object"
             && Near(saved.Slides[0].GetTitleText()!.Width, importedTitle.Width), "real repository save and reopen preserve title ID, content and imported geometry");
         var nativePackage = Path.Combine(paths.DataDirectory, "title-native.9to1p");
         await exporter.ExportAsync(saved, nativePackage, default);
         var nativeImported = await importer.ImportAsync(nativePackage, default);
         Check(nativeImported.Id != saved.Id && nativeImported.Slides[0].GetTitleText()!.Id == titleId
-            && nativeImported.Slides[0].Title == "Saved title object" && nativeImported.Slides[0].GetTitleText()!.TextStyle.FontSizePoints == 44,
+            && nativeImported.Slides[0].Title == "Quarterly roadmap" && nativeImported.Slides[0].GetTitleText()!.Text == "Saved title object" && nativeImported.Slides[0].GetTitleText()!.TextStyle.FontSizePoints == 44,
             "native package import creates an independent document while preserving authored title object identity and style");
         var destination = Path.Combine(paths.DataDirectory, "title-roundtrip.pptx");
         await exporter.ExportAsync(saved, destination, default);
@@ -106,7 +110,7 @@ internal static class PresentTitleChecks
         }
         var reimported = await importer.ImportAsync(destination, default);
         var roundTripTitle = reimported.Slides[0].GetTitleText()!;
-        Check(roundTripTitle.Text == saved.Slides[0].Title && Near(roundTripTitle.X, Title().X) && Near(roundTripTitle.Height, Title().Height)
+        Check(roundTripTitle.Text == saved.Slides[0].GetTitleText()!.Text && reimported.Slides[0].Title == saved.Slides[0].Title && Near(roundTripTitle.X, Title().X) && Near(roundTripTitle.Height, Title().Height)
             && roundTripTitle.TextStyle.FontSizePoints == 44 && roundTripTitle.TextStyle.FontFamily == "Calibri",
             "PPTX export and reimport retain editable title geometry and explicit inherited formatting");
         var emptyOwner = new PresentEditor(reimported);
@@ -115,7 +119,7 @@ internal static class PresentTitleChecks
         await exporter.ExportAsync(emptyOwner.Document, emptyPath, default);
         var emptyImported = await importer.ImportAsync(emptyPath, default);
         Check(emptyImported.Slides[0].GetTitleText() is { Text.Length: 0 } emptyTitle
-            && emptyImported.Slides[0].Title.Length == 0 && Near(emptyTitle.Height, importedTitle.Height),
+            && emptyImported.Slides[0].Title == "Quarterly roadmap" && Near(emptyTitle.Height, importedTitle.Height),
             "an intentionally empty title retains its authored box through export instead of becoming an invented default title");
         emptyOwner.SetElementText(reimported.Slides[0].Id, roundTripTitle.Id, "Hidden title retained");
         emptyOwner.SelectedSlide.GetTitleText()!.Visible = false;
@@ -130,7 +134,7 @@ internal static class PresentTitleChecks
         }
         var hiddenImported = await importer.ImportAsync(hiddenPath, default);
         Check(hiddenImported.Slides[0].GetTitleText() is { Visible: false, Text: "Hidden title retained" }
-            && hiddenImported.Slides[0].Title == "Hidden title retained", "hidden-title roundtrip preserves its role and visibility without inventing a visible replacement");
+            && hiddenImported.Slides[0].Title == "Quarterly roadmap", "hidden-title roundtrip preserves its role and visibility without inventing a visible replacement");
 
         var noTitlePath = Path.Combine(paths.DataDirectory, "no-title-placeholder.pptx");
         File.Copy(fixture, noTitlePath);
@@ -258,14 +262,15 @@ internal static class PresentTitleChecks
             window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, "Enter"); window.KeyRelease(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, "Enter");
             window.KeyPress(Key.A, RawInputModifiers.Control, PhysicalKey.A, "a"); window.KeyRelease(Key.A, RawInputModifiers.Control, PhysicalKey.A, "a");
             foreach (var character in "Physical title edit") { window.KeyTextInput(character.ToString()); Flush(); }
-            check(session.Editor.SelectedSlide.Title == "Physical title edit" && session.Editor.SelectedSlide.GetTitleText()!.Text == "Physical title edit",
-                "real canvas typing previews the title object and slide metadata together");
+            check(session.Editor.SelectedSlide.Title == "Quarterly roadmap" && session.Editor.SelectedSlide.GetTitleText()!.Text == "Physical title edit",
+                "real canvas typing edits only the authored title object and preserves the navigation name");
             window.KeyPress(Key.Enter, RawInputModifiers.Control, PhysicalKey.Enter, "Enter"); window.KeyRelease(Key.Enter, RawInputModifiers.Control, PhysicalKey.Enter, "Enter");
-            check(!session.Editor.IsLiveTextEditActive && session.Editor.Undo() && session.Editor.SelectedSlide.Title == "Saved title object",
+            check(!session.Editor.IsLiveTextEditActive && session.Editor.Undo() && session.Editor.SelectedSlide.Title == "Quarterly roadmap" && session.Editor.SelectedSlide.GetTitleText()!.Text == "Saved title object",
                 "physical title typing commits to one owner undo step");
             session.Editor.Redo(); session.RefreshSelection();
             check((await session.SaveAsync()).Succeeded && (await session.CloseAsync()).Succeeded && (await session.OpenAsync(document.Id)).Succeeded
-                && session.Editor!.SelectedSlide.GetTitleText()!.Id == ownerTitle.Id && session.Editor.SelectedSlide.Title == "Physical title edit",
+                && session.Editor!.SelectedSlide.GetTitleText()!.Id == ownerTitle.Id && session.Editor.SelectedSlide.Title == "Quarterly roadmap"
+                && session.Editor.SelectedSlide.GetTitleText()!.Text == "Physical title edit",
                 "physical title edit keeps the same object after session save, close and reopen");
             Flush(); using (var frame = window.CaptureRenderedFrame()) frame!.Save(Path.Combine(paths.DataDirectory, "present-title-edited-reopened.png"));
             check((await session.CloseAsync()).Succeeded && (await session.OpenAsync(noTitleDocument.Id)).Succeeded,

@@ -97,14 +97,9 @@ public sealed partial class PresentEditor
     public bool SetSlideTitle(Guid slideId, string? title)
     {
         var slide = RequireSlide(slideId);
-        if (slide.GetTitleText() is { Locked: true }) return false;
         var value = title ?? string.Empty;
         if (string.Equals(slide.Title, value, StringComparison.Ordinal)) return false;
-        Mutate(() =>
-        {
-            slide.Title = value;
-            if (slide.GetTitleText() is { } titleElement) titleElement.Text = value;
-        });
+        Mutate(() => slide.Title = value);
         return true;
     }
 
@@ -290,7 +285,6 @@ public sealed partial class PresentEditor
             duplicate.Title = string.IsNullOrWhiteSpace(source.Title)
                 ? "Slide copy"
                 : source.Title + " copy";
-            if (duplicate.GetTitleText() is { } titleElement) titleElement.Text = duplicate.Title;
             Document.Slides.Insert(sourceIndex + 1, duplicate);
             _selectedSlideId = duplicate.Id;
             _selectedElementIds.Clear();
@@ -410,8 +404,6 @@ public sealed partial class PresentEditor
         Mutate(() =>
         {
             var slide = SelectedSlide;
-            if (slide.GetTitleText() is { } titleElement && selectedIds.Contains(titleElement.Id))
-                slide.Title = string.Empty;
             slide.Elements.RemoveAll(element => selectedIds.Contains(element.Id));
             slide.Animations.RemoveAll(cue => selectedIds.Contains(cue.TargetElementId));
             _selectedElementIds.Clear();
