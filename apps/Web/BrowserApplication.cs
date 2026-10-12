@@ -28,6 +28,9 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
     private BrowserAppearanceSettings? _appearance;
     private IBrowserHomeThemePreferences? _themePreferences;
     private CuiThemePreferenceContext? _themeContext;
+    private readonly record struct GlobalThemeKey(string Name, string? Fingerprint, CuiAccessibilitySettings Accessibility,
+        CuiAppearance Appearance, string? Accent);
+    private GlobalThemeKey? _appliedGlobalTheme;
     private Task? _themeInitialisation;
     private readonly BrowserHomeSearchState _homeSearch = new();
     private BrowserHomeContext? _home;
@@ -192,10 +195,14 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
     private void OnThemeChanged(object? sender, EventArgs args)
     {
         if (_disposed || _themeContext is null) return;
-        if (!Dispatcher.UIThread.CheckAccess()) { Dispatcher.UIThread.Post(() => OnThemeChanged(sender, args)); return; }
+        if (!Dispatcher.UIThread.CheckAccess()) { Dispatcher.UIThread.Invoke(() => OnThemeChanged(sender, args)); return; }
         var current = _themeContext.Current;
+        var appearance = current.Appearance ?? CuiThemeScopeApplier.DetectAppearance();
+        var key = new GlobalThemeKey(current.Theme.Name, current.Theme.CustomFingerprint, current.Accessibility,
+            appearance, current.EffectiveAccent.ResolveColour(string.Empty));
+        if (_appliedGlobalTheme == key) return;
         CuiThemeScopeApplier.ApplyGlobalTheme(current.Theme.BaseTheme, "Home", current.Accessibility,
-            appearanceOverride: current.Appearance, accentPreference: current.EffectiveAccent);
+            appearanceOverride: appearance, accentPreference: current.EffectiveAccent, customTheme: current.Theme.CustomTheme);
         if (Resources.TryGetResource("CuiBackgroundBrush", ActualThemeVariant, out var background) && background is Avalonia.Media.ISolidColorBrush backgroundBrush
             && Resources.TryGetResource("CuiTextBrush", ActualThemeVariant, out var foreground) && foreground is Avalonia.Media.ISolidColorBrush foregroundBrush
             && Resources.TryGetResource("CuiPanelBrush", ActualThemeVariant, out var panel) && panel is Avalonia.Media.ISolidColorBrush panelBrush)
@@ -203,6 +210,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
             static string Css(Avalonia.Media.Color color) => $"#{color.R:x2}{color.G:x2}{color.B:x2}";
             HostPaletteChanged?.Invoke(Css(backgroundBrush.Color), Css(foregroundBrush.Color), Css(panelBrush.Color));
         }
+        _appliedGlobalTheme = key;
     }
 
     private void EnsureHome()

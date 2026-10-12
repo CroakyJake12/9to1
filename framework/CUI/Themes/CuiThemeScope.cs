@@ -168,7 +168,8 @@ public static class CuiThemeScopeApplier
         CuiAccessibilitySettings? accessibility = null,
         CuiLocalizationContext? localization = null,
         CuiAppearance? appearanceOverride = null,
-        CuiAccentPreference? accentPreference = null)
+        CuiAccentPreference? accentPreference = null,
+        CuiCustomTheme? customTheme = null)
     {
         CuiSurfacePaletteCatalog.ActiveTheme = theme;
         var appearance = appearanceOverride ?? DetectAppearance();
@@ -178,7 +179,7 @@ public static class CuiThemeScopeApplier
                 accentPreference.ResolveColour(CuiAppAccentCatalog.Find(surface)?.AppId ?? string.Empty));
         // Publish the exact four-mode choice with the complete palette, before
         // notifying observers. Brightness must not collapse to light/dark.
-        CuiThemeResourceApplier.Apply(palette, accessibility, localization, appearance);
+        CuiThemeResourceApplier.Apply(palette, accessibility, localization, appearance, customTheme);
     }
 
     /// <summary>Detects the current appearance from application resources.</summary>

@@ -26,11 +26,13 @@ public static class CuiThemeResourceApplier
         CuiPalette palette,
         CuiAccessibilitySettings? accessibility = null,
         CuiLocalizationContext? localization = null,
-        CuiAppearance? appearanceOverride = null)
+        CuiAppearance? appearanceOverride = null,
+        CuiCustomTheme? customTheme = null)
     {
         if (appearanceOverride is { } appearance && !Enum.IsDefined(appearance))
             throw new ArgumentOutOfRangeException(nameof(appearanceOverride));
         var settings = (accessibility ?? CuiAccessibilitySettings.Default).Validate();
+        var custom = customTheme?.Validate();
         palette = CuiAccessibilityPalette.Resolve(palette, settings);
         var application = Application.Current;
         var provider = application?.Resources as IResourceProvider;
@@ -41,7 +43,15 @@ public static class CuiThemeResourceApplier
         if (ownsResources) provider!.RemoveOwner(application!);
         try
         {
+            if (application is not null)
+                CuiCustomThemeResourceApplier.ClearFromResources(application.Resources);
             ApplyCore(palette, settings, localization, appearanceOverride);
+            if (application is not null)
+            {
+                if (custom is not null)
+                    CuiCustomThemeResourceApplier.ApplyToResources(application.Resources, custom, settings);
+                application.Resources["CuiEffectiveThemeName"] = custom?.Name ?? CuiThemeCatalog.Name(palette.Theme);
+            }
         }
         finally
         {
