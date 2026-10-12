@@ -123,14 +123,20 @@ public sealed class PresentPptxImportService : IPresentImportService
             else
             {
                 ApplyGeometry(element, shape, slideSize);
-                ApplyTextStyle(element.TextStyle, textBody);
+                ApplyShapeFontReference(element.TextStyle, shape, titleSource);
+                ApplyTextStyle(element.TextStyle, ResolveThemeColors(textBody, titleSource));
+                ResolveThemeFont(element.TextStyle, titleSource);
             }
             if (rectangle)
             {
-                element.Style.FillColor = ReadColor(properties?.Element(Drawing + "solidFill")) ?? (properties?.Element(Drawing + "noFill") is not null ? "#00000000" : "");
+                element.Style.FillColor = ReadColor(ResolveThemeColors(properties?.Element(Drawing + "solidFill"), titleSource)) ?? (properties?.Element(Drawing + "noFill") is not null ? "#00000000" : "");
                 var line = properties?.Element(Drawing + "ln");
-                element.Style.StrokeColor = ReadColor(line?.Element(Drawing + "solidFill")) ?? (line?.Element(Drawing + "noFill") is not null ? "#00000000" : "");
-                element.Style.StrokeWidth = Math.Max(0, ParseLong(line?.Attribute("w")) / 9525d);
+                var inheritedLine = ResolveStyleReference(shape, "lnRef", "lnStyleLst", titleSource);
+                var noLine = line?.Element(Drawing + "noFill") is not null;
+                element.Style.StrokeColor = noLine ? "#00000000" : ReadColor(ResolveThemeColors(line?.Element(Drawing + "solidFill"), titleSource))
+                    ?? ReadColor(inheritedLine?.Element(Drawing + "solidFill")) ?? "";
+                element.Style.StrokeWidth = noLine ? 0 : Math.Max(0, ParseLong(line?.Attribute("w") ?? inheritedLine?.Attribute("w")) / 9525d);
+                ApplyShapeShadow(element.Style, shape, titleSource);
                 if (preset == "roundRect")
                 {
                     var formula = (string?)properties?.Element(Drawing + "prstGeom")?.Element(Drawing + "avLst")?.Elements(Drawing + "gd")
@@ -195,6 +201,77 @@ public sealed class PresentPptxImportService : IPresentImportService
     }
 
     private sealed record TitleSource(XDocument? Layout, XDocument? Master, XDocument? Theme);
+
+    private static XElement? ResolveThemeColors(XElement? value, TitleSource source, XElement? placeholder = null)
+    {
+        if (value is null) return null;
+        var resolved = new XElement(value);
+        var colors = source.Theme?.Root?.Element(Drawing + "themeElements")?.Element(Drawing + "clrScheme");
+        var colorMap = source.Master?.Root?.Element(Presentation + "clrMap");
+        foreach (var color in resolved.DescendantsAndSelf(Drawing + "schemeClr").ToArray())
+        {
+            var key = (string?)color.Attribute("val");
+            if (key is null) continue;
+            XElement? replacement;
+            if (key == "phClr") replacement = placeholder;
+            else
+            {
+                key = (string?)colorMap?.Attribute(key) ?? key;
+                var declared = colors?.Element(Drawing + key)?.Elements().FirstOrDefault();
+                var hex = (string?)declared?.Attribute(declared.Name == Drawing + "sysClr" ? "lastClr" : "val");
+                replacement = hex is null ? null : new XElement(Drawing + "srgbClr", new XAttribute("val", hex), declared!.Elements());
+            }
+            if (replacement is null) continue;
+            color.ReplaceWith(new XElement(replacement.Name, replacement.Attributes(), replacement.Elements(), color.Elements()));
+        }
+        return resolved;
+    }
+
+    private static void ApplyShapeFontReference(PresentTextStyle style, XElement shape, TitleSource source)
+    {
+        var reference = ResolveThemeColors(shape.Element(Presentation + "style")?.Element(Drawing + "fontRef"), source);
+        if (ReadColor(reference) is { } color) style.Color = color;
+        var kind = (string?)reference?.Attribute("idx");
+        if (kind is "major" or "minor") style.FontFamily = kind == "major" ? "+mj-lt" : "+mn-lt";
+    }
+
+    private static void ResolveThemeFont(PresentTextStyle style, TitleSource source)
+    {
+        var kind = style.FontFamily switch { "+mj-lt" => "majorFont", "+mn-lt" => "minorFont", _ => null };
+        if (kind is not null)
+            style.FontFamily = (string?)source.Theme?.Root?.Element(Drawing + "themeElements")?.Element(Drawing + "fontScheme")
+                ?.Element(Drawing + kind)?.Element(Drawing + "latin")?.Attribute("typeface") ?? style.FontFamily;
+    }
+
+    private static XElement? ResolveStyleReference(XElement shape, string referenceName, string listName, TitleSource source)
+    {
+        var reference = ResolveThemeColors(shape.Element(Presentation + "style")?.Element(Drawing + referenceName), source);
+        var index = ParseLong(reference?.Attribute("idx"));
+        var styles = source.Theme?.Root?.Element(Drawing + "themeElements")?.Element(Drawing + "fmtScheme")?.Element(Drawing + listName);
+        if (index <= 0 || index > (styles?.Elements().Count() ?? 0)) return null;
+        return ResolveThemeColors(styles!.Elements().ElementAt((int)index - 1), source, reference?.Element(Drawing + "srgbClr"));
+    }
+
+    private static void ApplyShapeShadow(PresentElementStyle style, XElement shape, TitleSource source)
+    {
+        var properties = shape.Element(Presentation + "spPr");
+        // An authored empty effectLst clears theme effects; do not reintroduce them.
+        var effects = ResolveThemeColors(properties?.Element(Drawing + "effectLst"), source)
+            ?? ResolveStyleReference(shape, "effectRef", "effectStyleLst", source)?.Element(Drawing + "effectLst");
+        var shadow = effects?.Element(Drawing + "outerShdw");
+        if (shadow is null) return;
+        var radians = ParseLong(shadow.Attribute("dir")) / 60000d * Math.PI / 180;
+        var distance = Math.Max(0, ParseLong(shadow.Attribute("dist")) / 9525d);
+        style.Shadow = true;
+        style.ShadowStyle = new PresentShadowStyle
+        {
+            Color = ReadColor(shadow) ?? "#FF000000",
+            Blur = Math.Max(0, ParseLong(shadow.Attribute("blurRad")) / 9525d),
+            OffsetX = Math.Cos(radians) * distance,
+            OffsetY = Math.Sin(radians) * distance,
+            RotateWithShape = (string?)shadow.Attribute("rotWithShape") is not ("0" or "false")
+        };
+    }
 
     private static async Task<TitleSource> ReadTitleSourceAsync(ZipArchive archive, string slidePart, Dictionary<string, XDocument> parts, CancellationToken token)
     {

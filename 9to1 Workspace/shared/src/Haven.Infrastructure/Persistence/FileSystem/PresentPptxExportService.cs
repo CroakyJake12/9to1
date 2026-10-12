@@ -289,6 +289,17 @@ public sealed class PresentPptxExportService : IPresentReportExportService
         properties.Add(nativeShape ? SolidFill(element.Style.FillColor, theme.Colors.Accent1, element.Opacity) : new XElement(A + "noFill"));
         properties.Add(new XElement(A + "ln", new XAttribute("w", (long)Math.Round(Math.Max(0, element.Style.StrokeWidth) * 9525)),
             nativeShape && element.Style.StrokeWidth > 0 ? SolidFill(element.Style.StrokeColor, theme.Colors.Accent1, element.Opacity) : new XElement(A + "noFill")));
+        if (nativeShape && element.Style.Shadow && element.Style.ShadowStyle is { } shadow)
+        {
+            var direction = Math.Atan2(shadow.OffsetY, shadow.OffsetX) * 180 / Math.PI;
+            if (direction < 0) direction += 360;
+            properties.Add(new XElement(A + "effectLst", new XElement(A + "outerShdw",
+                new XAttribute("blurRad", (long)Math.Round(shadow.Blur * 9525)),
+                new XAttribute("dist", (long)Math.Round(Math.Sqrt(shadow.OffsetX * shadow.OffsetX + shadow.OffsetY * shadow.OffsetY) * 9525)),
+                new XAttribute("dir", (long)Math.Round(direction * 60000)),
+                new XAttribute("rotWithShape", shadow.RotateWithShape ? "1" : "0"),
+                SolidFill(shadow.Color, "#59000000", element.Opacity).Elements())));
+        }
         var result = new XElement(P + "sp", new XElement(P + "nvSpPr",
             new XElement(P + "cNvPr", new XAttribute("id", id), new XAttribute("name", name), new XAttribute("descr", element.AlternativeText ?? ""),
                 !element.Visible ? new XAttribute("hidden", "1") : null),

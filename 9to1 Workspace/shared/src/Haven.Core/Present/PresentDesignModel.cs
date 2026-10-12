@@ -304,6 +304,8 @@ public sealed class PresentElementStyle
     public double StrokeWidth { get; set; }
     public double CornerRadius { get; set; }
     public bool Shadow { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public PresentShadowStyle? ShadowStyle { get; set; }
 
     public void Normalize()
     {
@@ -311,6 +313,25 @@ public sealed class PresentElementStyle
         StrokeColor ??= string.Empty;
         StrokeWidth = double.IsFinite(StrokeWidth) ? Math.Clamp(StrokeWidth, 0, 100) : 0;
         CornerRadius = double.IsFinite(CornerRadius) ? Math.Clamp(CornerRadius, 0, 1) : 0;
+        ShadowStyle?.Normalize();
+    }
+}
+
+/// <summary>An authored outer shadow in document pixels (96 pixels per inch).</summary>
+public sealed class PresentShadowStyle
+{
+    public string Color { get; set; } = "#59000000";
+    public double Blur { get; set; }
+    public double OffsetX { get; set; }
+    public double OffsetY { get; set; }
+    public bool RotateWithShape { get; set; }
+
+    public void Normalize()
+    {
+        Color ??= "#59000000";
+        Blur = double.IsFinite(Blur) ? Math.Clamp(Blur, 0, 1000) : 0;
+        OffsetX = double.IsFinite(OffsetX) ? Math.Clamp(OffsetX, -10000, 10000) : 0;
+        OffsetY = double.IsFinite(OffsetY) ? Math.Clamp(OffsetY, -10000, 10000) : 0;
     }
 }
 

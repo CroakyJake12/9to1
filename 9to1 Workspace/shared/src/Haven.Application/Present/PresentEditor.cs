@@ -227,7 +227,12 @@ public sealed partial class PresentEditor
                     StrokeColor = style.StrokeColor,
                     StrokeWidth = style.StrokeWidth,
                     CornerRadius = style.CornerRadius,
-                    Shadow = style.Shadow
+                    Shadow = style.Shadow,
+                    ShadowStyle = style.ShadowStyle is { } shadow ? new PresentShadowStyle
+                    {
+                        Color = shadow.Color, Blur = shadow.Blur, OffsetX = shadow.OffsetX,
+                        OffsetY = shadow.OffsetY, RotateWithShape = shadow.RotateWithShape
+                    } : null
                 };
             }
         });

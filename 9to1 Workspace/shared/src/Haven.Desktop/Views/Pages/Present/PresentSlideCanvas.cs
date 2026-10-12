@@ -249,6 +249,15 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
         var rect = ElementRect(element, slideRect, _gestureActivated && _dragElementId is not null && IsSelectedForTransform(element));
         var rotation = PreviewRotation(element);
         if (Math.Abs(rotation) > .001) context.Add(new HavenPushTransformCommand(rect, new HavenTransform(RotationDegrees: rotation), new HavenPoint(rect.X + rect.Width / 2, rect.Y + rect.Height / 2)));
+        if (element.Kind == PresentElementKind.Shape && element.VectorShape is null
+            && element.Style.Shadow && element.Style.ShadowStyle is { } shadow)
+        {
+            var radians = shadow.RotateWithShape ? 0 : -rotation * Math.PI / 180;
+            var offsetX = shadow.OffsetX * Math.Cos(radians) - shadow.OffsetY * Math.Sin(radians);
+            var offsetY = shadow.OffsetX * Math.Sin(radians) + shadow.OffsetY * Math.Cos(radians);
+            context.Add(new HavenShadowCommand(rect, new HavenShadow(Brush(shadow.Color, "#59000000"),
+                shadow.Blur, offsetX, offsetY, Opacity: opacity * element.Opacity), Math.Max(0, rect.Width * element.Style.CornerRadius)));
+        }
         switch (element.Kind)
         {
             case PresentElementKind.Text:

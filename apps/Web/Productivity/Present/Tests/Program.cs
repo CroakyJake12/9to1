@@ -36,6 +36,7 @@ var assertions = await headless.Dispatch(async () =>
     Check(!Avalonia.Platform.AssetLoader.Exists(new Uri("avares://Haven/WriteOwnerResources/DefaultTheme.Resources.axaml")),
         "retained Present runs without the removed extracted AXAML theme resource");
     var paths = new AppPaths();
+    if (args.Contains("inherited-styles", StringComparer.Ordinal)) return await PresentInheritedStyleChecks.Run(paths);
     if (args.Contains("scoped-theme", StringComparer.Ordinal)) return await PresentScopedThemeChecks.Run(paths);
     if (args.Contains("thumbnail-wheel", StringComparer.Ordinal)) return await PresentThumbnailWheelChecks.Run(paths);
     if (args.Contains("shape-text", StringComparer.Ordinal)) return await PresentShapeTextChecks.Run(paths);
