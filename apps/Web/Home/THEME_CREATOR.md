@@ -6,6 +6,9 @@ identity, or permission. The constructor's save callback receives the exact Home
 snapshot captured when the creator opened. The original account owner must compare its
 scope and revision and perform its ordinary compare-and-swap update. A failed or unknown
 save keeps the draft; Cancel does not call persistence. A second Open does not reset work.
+If the same account advances its revision, an explicit review action can retain the
+draft and use the new observed revision; it performs no write. A different account
+cannot adopt the old draft through that action.
 
 The canonical library is `framework/CUI/Components/ThemeCreator.cui`, imported explicitly
 through `CuiThemeCreatorComponents`. Hosts without the creator binding retain the same

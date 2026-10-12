@@ -52,7 +52,11 @@ using (var creator = new BrowserThemeCreator(sink, sink, preferences, preference
     Set(creator, "Name", saved.Name); Check(Read(creator, "CanSave") is false, "Custom name collision admitted");
     Set(creator, "Name", "Cancelled theme"); await creator.DispatchAsync("ThemeCreatorCancel", null);
     Check(preferences.Writes == 2 && preferences.Saved == saved, "Cancel changed account or custom library");
-    creator.Open(); Set(creator, "Name", "Pinned owner draft"); preferences.AdvanceOwner();
+    creator.Open(); Set(creator, "Name", "Pinned owner draft"); preferences.AdvanceRevision();
+    Check(Read(creator, "CanSave") is false && Read(creator, "CanUseCurrentRevision") is true, "Same-account revision change silently rebased the draft");
+    await creator.DispatchAsync("ThemeCreatorUseCurrentRevision", null);
+    Check(Read(creator, "CanSave") is true && (string?)Read(creator, "Name") == "Pinned owner draft", "Explicit revision review lost draft or failed to re-enable save");
+    preferences.AdvanceOwner();
     Check(Read(creator, "CanSave") is false, "Changed account/revision admitted old draft");
     await creator.DispatchAsync("ThemeCreatorSave", null); Check(preferences.Writes == 2, "Stale draft reached account delegate");
 }
@@ -150,6 +154,7 @@ sealed class ControlledPreferences : IBrowserHomeThemePreferences
         return Task.FromResult(new HomeThemeOperationResult(true, "Succeeded"));
     }
     public void AdvanceOwner() { Current = Current with { ScopeId = "different-account-owner", Revision = 0 }; Changed?.Invoke(this, EventArgs.Empty); }
+    public void AdvanceRevision() { Current = Current with { Revision = Current.Revision + 1 }; Changed?.Invoke(this, EventArgs.Empty); }
     public Task<HomeThemeOperationResult> SetAsync(string name, CuiAccessibilitySettings? accessibility = null, CancellationToken token = default, CuiAppearance? appearance = null, CuiAccentPreference? accent = null) => throw new InvalidOperationException("Creator bypassed its original save callback");
     public Task RefreshAsync(CancellationToken token = default) => Task.CompletedTask;
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;

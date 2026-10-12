@@ -24,6 +24,8 @@ internal sealed class BrowserThemeCreator : ICuiWritableBindingContext, ICuiLife
     private bool CanEdit => _open && !_busy && !_disposed;
     private bool SameOwner => _opening is { } original && original.ScopeId == _preferences.Current.ScopeId
         && original.Revision == _preferences.Current.Revision;
+    private bool CanUseCurrentRevision => CanEdit && _preferences.CanChange && _opening is { } original
+        && original.ScopeId == _preferences.Current.ScopeId && original.Revision != _preferences.Current.Revision;
     private bool CanSave => CanEdit && _preferences.CanChange && SameOwner && _validation is null;
     private AccentDraft Accent => _draft!.Accents[_accentIndex];
     private ColourDraft Colour => Accent.Kind switch
@@ -65,6 +67,7 @@ internal sealed class BrowserThemeCreator : ICuiWritableBindingContext, ICuiLife
             "Open" => _open && !_disposed,
             "CanEdit" => CanEdit,
             "CanSave" => CanSave,
+            "CanUseCurrentRevision" => CanUseCurrentRevision,
             "FocusName" => CanEdit,
             "Status" => Status,
             "AccentNames" => new[] { "Primary", "Secondary", "Tertiary" },
@@ -123,7 +126,9 @@ internal sealed class BrowserThemeCreator : ICuiWritableBindingContext, ICuiLife
     }
 
     private string Status => (_status ?? (!_open ? string.Empty : !SameOwner
-        ? "Your account or saved appearance changed. Your draft is still here. Close and reopen the creator before saving."
+        ? CanUseCurrentRevision
+            ? $"Saved appearance is now {_preferences.Current.Name}. Your draft is preserved. Review it, then use the current revision to save."
+            : "Your account changed. Your draft is still here; saving into another account is disabled. Close and reopen the creator for that account."
         : _validation ?? "Preview only. Save theme applies it to your account."))
         + (_presentationFailure ? " Some creator controls could not refresh." : string.Empty);
 
@@ -184,6 +189,7 @@ internal sealed class BrowserThemeCreator : ICuiWritableBindingContext, ICuiLife
     {
         "ThemeCreatorSave" => CanSave,
         "ThemeCreatorCancel" => CanEdit,
+        "ThemeCreatorUseCurrentRevision" => CanUseCurrentRevision,
         "ThemeCreatorAddStop" => CanEdit && Accent.Stops.Count < 16,
         "ThemeCreatorRemoveStop" => CanEdit && Accent.StopIndex > 0 && Accent.StopIndex < Accent.Stops.Count - 1,
         "ThemeCreatorSelectPrimary" or "ThemeCreatorSelectSecondary" or "ThemeCreatorSelectTertiary" => CanEdit,
@@ -210,6 +216,7 @@ internal sealed class BrowserThemeCreator : ICuiWritableBindingContext, ICuiLife
         switch (command)
         {
             case "ThemeCreatorCancel": Close(); return;
+            case "ThemeCreatorUseCurrentRevision": _opening = _preferences.Current; break;
             case "ThemeCreatorSelectPrimary": _accentIndex = 0; break;
             case "ThemeCreatorSelectSecondary": _accentIndex = 1; break;
             case "ThemeCreatorSelectTertiary": _accentIndex = 2; break;

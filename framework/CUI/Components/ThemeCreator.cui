@@ -92,6 +92,7 @@
         <Text Column="1" Text="{Binding ThemeCreatorRoundnessLabel}" />
       </Container>
       <Text Text="{Binding ThemeCreatorStatus}" AccessibleName="Theme creator status" TextWrapping="Wrap" />
+      <Button Active="{Binding ThemeCreatorCanUseCurrentRevision}" Action="ThemeCreatorUseCurrentRevision" Content="Use current account revision" AccessibleName="Keep draft and use reviewed current account revision" Interactive="{Binding ThemeCreatorCanUseCurrentRevision}" HorizontalAlignment="Left" />
       <Container Type="Wrap" CellGap="8">
         <Button Action="ThemeCreatorSave" Content="Save theme" Interactive="{Binding ThemeCreatorCanSave}" AccessibleName="Save custom theme to account" />
         <Button Action="ThemeCreatorCancel" Content="Cancel" Interactive="{Binding ThemeCreatorCanEdit}" AccessibleName="Cancel custom theme changes" />
