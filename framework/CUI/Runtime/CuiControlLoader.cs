@@ -944,8 +944,9 @@ public sealed class CuiControlLoader : IDisposable
         {
             "vertical stack" => new StackPanel(),
             "horizontal stack" => new StackPanel { Orientation = Orientation.Horizontal },
+            "wrap" => new WrapPanel(),
             "grid" => new Grid(),
-            _ => throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR050", CuiDiagnosticSeverity.Error, "Repeat Panel supports Vertical Stack, Horizontal Stack or Grid.", component.Span))
+            _ => throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR050", CuiDiagnosticSeverity.Error, "Repeat Panel supports Vertical Stack, Horizontal Stack, Wrap or Grid.", component.Span))
         };
         host.Name = component.Name; host.ZIndex = layer;
         CuiRuntimeIdentity.SetStableId(host, ComposeStableId(component.StableId));
