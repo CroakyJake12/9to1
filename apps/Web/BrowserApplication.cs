@@ -26,6 +26,8 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
     private BrowserActionAvailability.Observation? _availability;
     private BrowserHomePresentation? _homePresentation;
     private BrowserAppearanceSettings? _appearance;
+    private BrowserThemeCreator? _themeCreator;
+    private BrowserAppAccentSettings? _appAccent;
     private IBrowserHomeThemePreferences? _themePreferences;
     private CuiThemePreferenceContext? _themeContext;
     private readonly record struct GlobalThemeKey(string Name, string? Fingerprint, CuiAccessibilitySettings Accessibility,
@@ -250,6 +252,8 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         BrowserActionAvailability.Observation? candidateAvailability = null;
         BrowserHomePresentation? candidateHomePresentation = null;
         BrowserAppearanceSettings? candidateAppearance = null;
+        BrowserThemeCreator? candidateThemeCreator = null;
+        BrowserAppAccentSettings? candidateAppAccent = null;
         var transferred = false;
         var previousContent = _view.Content;
         var previousRoot = (previousContent as ScrollViewer)?.Content as Control;
@@ -261,9 +265,18 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
             ICuiActionDispatcher actions = surface.Actions;
             if (surface.Bindings is AccountBrowserBindings && _themePreferences is not null)
             {
-                candidateAppearance = new(surface.Bindings, surface.Actions, _themePreferences);
-                bindings = candidateAppearance;
-                actions = candidateAppearance;
+                var preferences = _themePreferences;
+                candidateAppearance = new(surface.Bindings, surface.Actions, preferences, () => candidateThemeCreator?.Open());
+                candidateThemeCreator = new(candidateAppearance, candidateAppearance, preferences,
+                    (theme, observed, token) => preferences.SaveCustomThemeAsync(theme, observed, token));
+                bindings = candidateThemeCreator;
+                actions = candidateThemeCreator;
+            }
+            else if (_themePreferences is not null && CuiAppAccentCatalog.Find(routeId) is not null)
+            {
+                candidateAppAccent = new(bindings, actions, _themePreferences, routeId);
+                bindings = candidateAppAccent;
+                actions = candidateAppAccent;
             }
             candidate.SetBindingContext(bindings);
             var shellActions = new BrowserShellActions(actions, () => NavigateHome(new(HomeFeatureRouteIds.Dashboard)));
@@ -290,6 +303,8 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
             var previousAvailability = _availability;
             var previousHomePresentation = _homePresentation;
             var previousAppearance = _appearance;
+            var previousThemeCreator = _themeCreator;
+            var previousAppAccent = _appAccent;
             if (surface.Bindings is BrowserHomeContext homeContext)
                 candidateHomePresentation = new(root, homeContext);
             if (_currentAddress is not null && _view.Content is ScrollViewer previousScroll)
@@ -313,11 +328,15 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
             _availability = candidateAvailability;
             _homePresentation = candidateHomePresentation;
             _appearance = candidateAppearance;
+            _themeCreator = candidateThemeCreator;
+            _appAccent = candidateAppAccent;
             _currentAddress = address;
             transferred = true;
             List<Exception>? cleanupErrors = null;
             Retire(() => previousAvailability?.Dispose());
             Retire(() => previousHomePresentation?.Dispose());
+            Retire(() => previousThemeCreator?.Dispose());
+            Retire(() => previousAppAccent?.Dispose());
             Retire(() => previousAppearance?.Dispose());
             Retire(() => previousLoader?.Dispose());
             Retire(() => previousLifetime?.Dispose());
@@ -349,7 +368,15 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
                 }
                 finally
                 {
-                    try { candidateAppearance?.Dispose(); }
+                    try
+                    {
+                        try { candidateThemeCreator?.Dispose(); }
+                        finally
+                        {
+                            try { candidateAppAccent?.Dispose(); }
+                            finally { candidateAppearance?.Dispose(); }
+                        }
+                    }
                     finally
                     {
                         try { candidateHomePresentation?.Dispose(); candidateAvailability?.Dispose(); }
@@ -430,11 +457,15 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         var availability = _availability;
         var homePresentation = _homePresentation;
         var appearance = _appearance;
+        var themeCreator = _themeCreator;
+        var appAccent = _appAccent;
         _loader = null;
         _surfaceLifetime = null;
         _availability = null;
         _homePresentation = null;
         _appearance = null;
+        _themeCreator = null;
+        _appAccent = null;
         _homeSearch.Query = "";
         _home = null;
         _accountSettings = null;
@@ -451,6 +482,8 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         Remove(() => _navigationCancellation?.Cancel());
         Remove(() => availability?.Dispose());
         Remove(() => homePresentation?.Dispose());
+        Remove(() => themeCreator?.Dispose());
+        Remove(() => appAccent?.Dispose());
         Remove(() => appearance?.Dispose());
         Remove(() => loader?.Dispose());
         Remove(() => lifetime?.Dispose());
