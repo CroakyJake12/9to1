@@ -457,7 +457,7 @@
           </EditorToolbar>
           <Container ID="present-ui-181" Type="Grid" Row="3" Active="{Binding ShowEditorChrome}" ColumnSizes="{Binding InspectorColumns}">
             <Container ID="present-ui-182" Type="Grid" ColumnSizes="{Binding WorkspaceColumns}" Active="{Binding ShowEditingArea}">
-              <Container ID="present-ui-183" Type="Grid" Active="{Binding ShowSidebar}" ColumnSpan="{Binding SidebarColumnSpan}" RowSizes="Auto 1fr" Background="{Resource CuiBackgroundBrush}" Width="{Binding SidebarWidth}" HorizontalAlignment="Left" Padding="12,8">
+              <Container ID="present-ui-183" Type="Grid" Active="{Binding ShowSidebar}" ColumnSpan="{Binding SidebarColumnSpan}" RowSizes="Auto 1fr" Background="{Resource CuiShellMaterial}" Width="{Binding SidebarWidth}" HorizontalAlignment="Left" Padding="12,8">
                 <Container ID="present-ui-184" Type="Grid" ColumnSizes="1fr Auto">
                   <Text ID="present-ui-185" Text="{Binding SidebarTitle}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
                   <EditorIcon ID="present-ui-186" AccessibleName="Close slides" Tooltip="Close slides" Action="ToggleSidebar" Column="1">
@@ -489,8 +489,8 @@
                 </Container>
               </Container>
               <Input ID="present-ui-194" Type="Resize" Column="1" Active="{Binding ShowSidebarResize}" AccessibleName="Slides panel width" Tooltip="Resize slides panel; use Left or Right arrows" Value="{Binding SidebarWidth, Mode=TwoWay}" Minimum="160" Maximum="320" Width="8" ResizeEdge="End" Background="Transparent" />
-              <Container ID="present-ui-195" Type="Grid" Column="2" RowSizes="1fr Auto" Background="{Resource CuiWorkspaceBrush}">
-                <Container ID="present-ui-196" Type="Overlay" Background="{Resource CuiWorkspaceBrush}" HorizontalScrolling="{Binding IsZoomed}" VerticalScrolling="{Binding IsZoomed}">
+              <Container ID="present-ui-195" Type="Grid" Column="2" RowSizes="1fr Auto" Background="{Resource CuiWorkspaceMaterial}">
+                <Container ID="present-ui-196" Type="Overlay" Background="Transparent" HorizontalScrolling="{Binding IsZoomed}" VerticalScrolling="{Binding IsZoomed}">
                   <Object ID="present-canvas" Type="PresentSlideCanvas">
                     <EditorContextMenu>
                       <EditorMenu Content="Cut" Action="Cut" Interactive="{Binding CanCut}" Shortcut="Ctrl+X" />
@@ -532,13 +532,13 @@
                     </EditorContextMenu>
                   </Object>
                 </Container>
-                <Button ID="present-notes-bubble" Row="1" Active="{Binding ShowNotesBubble}" Action="ToggleNotes" AccessibleName="Expand Slide Notes" Tooltip="Expand Slide Notes" HorizontalAlignment="Left" Margin="16,8" Padding="16,10" CornerRadius="24" BorderWidth="0" Background="{Resource CuiPanelBrush}">
+                <Button ID="present-notes-bubble" Row="1" Active="{Binding ShowNotesBubble}" Action="ToggleNotes" AccessibleName="Expand Slide Notes" Tooltip="Expand Slide Notes" HorizontalAlignment="Left" Margin="16,8" Padding="16,10" CornerRadius="24" BorderWidth="0" Background="{Resource CuiFloatingSurfaceMaterial}">
                   <Container Type="Horizontal Stack" CellGap="8">
                     <Image Source="icon:chat" Width="20" Height="20" />
                     <Text Text="Slide Notes" FontWeight="SemiBold" VerticalAlignment="Center" />
                   </Container>
                 </Button>
-                <Container ID="present-ui-197" Type="Vertical Stack" Active="{Binding ShowNotes}" Background="{Resource CuiPanelBrush}" Padding="16,8" CellGap="6" Row="1">
+                <Container ID="present-ui-197" Type="Vertical Stack" Active="{Binding ShowNotes}" Background="{Resource CuiSurfaceMaterial}" Padding="16,8" CellGap="6" Row="1">
                   <Container ID="present-notes-heading" Type="Grid" ColumnSizes="1fr Auto">
                     <EditorLabel ID="present-ui-198" Text="Slide Notes" FontWeight="SemiBold" VerticalAlignment="Center" />
                     <EditorIcon ID="present-notes-close" AccessibleName="Collapse Slide Notes" Tooltip="Collapse Slide Notes" Action="ToggleNotes" Width="28" Height="28" MinWidth="28" MinHeight="28" Padding="5" Column="1"><Image Source="icon:chevron-down" Width="18" Height="18" /></EditorIcon>
@@ -548,7 +548,7 @@
               </Container>
             </Container>
             <Input ID="present-ui-200" Type="Resize" Column="1" Active="{Binding ShowInspectorResize}" AccessibleName="Properties panel width" Tooltip="Resize properties panel; use Left or Right arrows" Value="{Binding InspectorWidth, Mode=TwoWay}" Minimum="256" Maximum="420" Width="8" ResizeEdge="Start" Background="Transparent" />
-            <Container ID="present-inspector" Type="Grid" Column="2" RowSizes="Auto 1fr" Active="{Binding ShowInspector}" Background="{Resource CuiPanelBrush}" Padding="16,8">
+            <Container ID="present-inspector" Type="Grid" Column="2" RowSizes="Auto 1fr" Active="{Binding ShowInspector}" Background="{Resource CuiSurfaceMaterial}" Padding="16,8">
               <Container ID="present-ui-201" Type="Grid" ColumnSizes="1fr Auto" Margin="0,0,0,12">
                 <Container ID="present-ui-202" Type="Vertical Stack" CellGap="3">
                   <Text ID="present-ui-203" Text="{Binding PropertiesTitle}" FontSize="16" FontWeight="SemiBold" />
@@ -764,7 +764,7 @@
               </Container>
             </Container>
           </Container>
-          <Container ID="present-ui-322" Type="Grid" Row="4" Active="{Binding ShowEditorChrome}" ColumnSizes="Auto 1fr Auto" Padding="8,4" Background="{Resource CuiPanelBrush}">
+          <Container ID="present-ui-322" Type="Grid" Row="4" Active="{Binding ShowEditorChrome}" ColumnSizes="Auto 1fr Auto" Padding="8,4" Background="{Resource CuiSurfaceMaterial}">
             <EditorToolGroup ID="present-ui-323">
               <EditorIcon ID="present-ui-324" AccessibleName="Previous slide" Tooltip="Previous slide" Action="PreviousSlide" Interactive="{Binding CanPreviousSlide}" Width="28" Height="28" MinWidth="28" MinHeight="28" Padding="4">
                 <Image ID="present-ui-325" Source="icon:chevron-left" Width="20" Height="20" />
@@ -775,7 +775,7 @@
               </EditorIcon>
             </EditorToolGroup>
             <Text ID="present-ui-329" Text="{Binding SelectionStatus}" Active="{Binding FullToolbar}" Foreground="{Resource CuiTextSoftBrush}" FontSize="11" Column="1" VerticalAlignment="Center" TextWrapping="Wrap" Margin="8,0" />
-            <Container ID="present-ui-330" Type="Grid" Column="2" ColumnSizes="Auto 1fr Auto Auto Auto" CellGap="4" Width="{Binding ZoomControlsWidth}" VerticalAlignment="Center">
+            <Container ID="present-ui-330" Type="Grid" Column="2" ColumnSizes="Auto 1fr Auto Auto Auto" CellGap="4" Width="{Binding ZoomControlsWidth}" VerticalAlignment="Center" CornerRadius="14" Background="{Resource CuiFloatingSurfaceMaterial}">
               <EditorIcon ID="present-zoom-out" AccessibleName="Zoom out" Tooltip="Zoom out" Action="ZoomOut" Width="28" Height="28" MinWidth="28" MinHeight="28" Padding="4">
                 <Image Source="icon:zoom-out" Width="20" Height="20" />
               </EditorIcon>
