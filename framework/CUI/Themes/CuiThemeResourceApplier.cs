@@ -25,8 +25,11 @@ public static class CuiThemeResourceApplier
     public static void Apply(
         CuiPalette palette,
         CuiAccessibilitySettings? accessibility = null,
-        CuiLocalizationContext? localization = null)
+        CuiLocalizationContext? localization = null,
+        CuiAppearance? appearanceOverride = null)
     {
+        if (appearanceOverride is { } appearance && !Enum.IsDefined(appearance))
+            throw new ArgumentOutOfRangeException(nameof(appearanceOverride));
         var settings = (accessibility ?? CuiAccessibilitySettings.Default).Validate();
         palette = CuiAccessibilityPalette.Resolve(palette, settings);
         var application = Application.Current;
@@ -38,7 +41,7 @@ public static class CuiThemeResourceApplier
         if (ownsResources) provider!.RemoveOwner(application!);
         try
         {
-            ApplyCore(palette, settings, localization);
+            ApplyCore(palette, settings, localization, appearanceOverride);
         }
         finally
         {
@@ -50,7 +53,8 @@ public static class CuiThemeResourceApplier
     private static void ApplyCore(
         CuiPalette palette,
         CuiAccessibilitySettings settings,
-        CuiLocalizationContext? localization)
+        CuiLocalizationContext? localization,
+        CuiAppearance? appearanceOverride)
     {
         var isDark = Luminance(palette.Text) > Luminance(palette.Panel);
         var disabledText = WithAlpha(palette.Muted, 0x88);
@@ -135,7 +139,7 @@ public static class CuiThemeResourceApplier
             resources["CuiMotionDurationScale"] = effectiveMotionScale;
             resources["HavenMotionDurationScale"] = effectiveMotionScale;
             resources["CuiTheme"] = palette.Theme;
-            resources["CuiAppearance"] = isDark ? "Dark" : "Bright";
+            resources["CuiAppearance"] = appearanceOverride?.ToString() ?? (isDark ? "Dark" : "Bright");
             ApplyAccessibilityResources(resources, expression, settings, localization);
             ApplyLegacyScopeAliases(resources);
         }

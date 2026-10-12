@@ -72,8 +72,8 @@ public sealed class CuiThemeScope
         var name = string.IsNullOrWhiteSpace(themeName) || themeName.Equals("user_preference", StringComparison.OrdinalIgnoreCase) ||
             themeName.Equals("Default", StringComparison.OrdinalIgnoreCase) ? CuiThemeCatalog.Name(globalDefault) : themeName.Trim();
         if (catalog.TryResolve(name, out var resolved) && resolved is not null)
-            return new(resolved, name, null, false, preference?.Current.Accessibility ?? CuiAccessibilitySettings.Default);
-        return new(catalog.Resolve("Professional"), name, $"CUI theme '{name}' is unavailable; using Professional.", true, preference?.Current.Accessibility ?? CuiAccessibilitySettings.Default);
+            return new(resolved, name, null, false, preference?.Current.Accessibility ?? CuiAccessibilitySettings.Default, Appearance: preference?.Current.Appearance);
+        return new(catalog.Resolve("Professional"), name, $"CUI theme '{name}' is unavailable; using Professional.", true, preference?.Current.Accessibility ?? CuiAccessibilitySettings.Default, Appearance: preference?.Current.Appearance);
     }
 }
 
@@ -163,12 +163,16 @@ public static class CuiThemeScopeApplier
         CuiTheme theme,
         string surface = "Home",
         CuiAccessibilitySettings? accessibility = null,
-        CuiLocalizationContext? localization = null)
+        CuiLocalizationContext? localization = null,
+        CuiAppearance? appearanceOverride = null)
     {
         CuiSurfacePaletteCatalog.ActiveTheme = theme;
-        var appearance = DetectAppearance();
+        var appearance = appearanceOverride ?? DetectAppearance();
+        if (!Enum.IsDefined(appearance)) throw new ArgumentOutOfRangeException(nameof(appearanceOverride));
         var palette = CuiSurfacePaletteCatalog.For(surface, appearance, theme);
-        CuiThemeResourceApplier.Apply(palette, accessibility, localization);
+        // Publish the exact four-mode choice with the complete palette, before
+        // notifying observers. Brightness must not collapse to light/dark.
+        CuiThemeResourceApplier.Apply(palette, accessibility, localization, appearance);
     }
 
     /// <summary>Detects the current appearance from application resources.</summary>

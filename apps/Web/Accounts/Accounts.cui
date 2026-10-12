@@ -18,6 +18,14 @@
     <Button Action="ThemeBubble" Content="Bubble" Interactive="{Binding AppearanceCanChange}" />
     <Button Action="ThemeCinematic" Content="Cinematic" Interactive="{Binding AppearanceCanChange}" />
   </Container>
+  <Text Text="Brightness" FontWeight="SemiBold" />
+  <Text Text="{Binding AppearanceModeName}" AccessibleName="Current CUI brightness" />
+  <Container Type="Wrap" CellGap="8">
+    <Button Action="AppearanceSuperBright" Content="Super Bright" Interactive="{Binding AppearanceCanChange}" />
+    <Button Action="AppearanceBright" Content="Bright" Interactive="{Binding AppearanceCanChange}" />
+    <Button Action="AppearanceDark" Content="Dark" Interactive="{Binding AppearanceCanChange}" />
+    <Button Action="AppearanceSuperDark" Content="Super Dark" Interactive="{Binding AppearanceCanChange}" />
+  </Container>
   <Text Text="{Binding AppearanceStatus}" TextWrapping="Wrap" AccessibleName="Appearance status" />
   <Button Action="ThemeRefresh" Content="Reload saved appearance" Interactive="{Binding AppearanceCanChange}" HorizontalAlignment="Left" />
 </Container>

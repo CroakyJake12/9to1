@@ -21,6 +21,36 @@ const moduleUnderTest = () => import('data:text/javascript;base64,' + Buffer.fro
 const preference = (scope, revision, themeName = 'Professional') => ({ schemaVersion: 1, scope: { scope: 0, ownerId: scope, organizationId: null },
     themeName, revision, accessibility: { reduceMotion: false, highContrast: false, displayScale: 1, interfaceFontFamily: null, codeFontFamily: null } });
 
+test('optional four-mode appearance shares theme CAS, preserves old data and unknown fields', async () => {
+    const { data } = fixture(); const owner = await moduleUnderTest(); const scope = await owner.themeContext();
+    const legacy = preference(scope, 1);
+    assert.equal(JSON.parse(await owner.compareTheme(scope, 0, JSON.stringify(legacy))).succeeded, true);
+    assert.equal(JSON.parse(await owner.readTheme(scope)).preference.appearance, undefined);
+    const oldDashboard = JSON.parse(owner.load());
+    data.set(key, JSON.stringify({ ...oldDashboard, FutureEnvelope: 'preserve', Theme: { ...oldDashboard.Theme, futureTheme: 7,
+        accessibility: { ...oldDashboard.Theme.accessibility, futureAccess: true } } }));
+    let revision = 1;
+    for (const appearance of ['SuperBright', 'Bright', 'Dark', 'SuperDark']) {
+        const candidate = { ...preference(scope, revision + 1, 'Glow'), appearance };
+        const result = JSON.parse(await owner.compareTheme(scope, revision, JSON.stringify(candidate)));
+        assert.equal(result.succeeded, true); assert.equal(result.preference.appearance, appearance); ++revision;
+        assert.equal(JSON.parse(await owner.readTheme(scope)).preference.appearance, appearance);
+    }
+    await owner.save(JSON.stringify(oldDashboard));
+    const saved = JSON.parse(data.get(key));
+    assert.equal(saved.Theme.appearance, 'SuperDark'); assert.equal(saved.Theme.revision, revision);
+    assert.equal(saved.DeviceId, oldDashboard.DeviceId); assert.equal(saved.FutureEnvelope, 'preserve');
+    assert.equal(saved.Theme.futureTheme, 7); assert.equal(saved.Theme.accessibility.futureAccess, true);
+    const before = data.get(key);
+    assert.equal(JSON.parse(await owner.compareTheme(scope, revision - 1, JSON.stringify({ ...preference(scope, revision), appearance: 'Bright' }))).code, 'RevisionConflict');
+    assert.equal(JSON.parse(await owner.compareTheme(scope, revision, JSON.stringify({ ...preference(scope, revision + 1), appearance: 'FutureMode' }))).code, 'InvalidArgument');
+    assert.equal(data.get(key), before);
+    const incompatible = JSON.stringify({ ...saved, Theme: { ...saved.Theme, appearance: 'FutureMode' } });
+    data.set(key, incompatible);
+    assert.equal(JSON.parse(await owner.readTheme(scope)).state, 4);
+    assert.equal(data.get(key), incompatible);
+});
+
 test('theme CAS and stale dashboard save share the same owner and lock', async () => {
     const { data, lockNames } = fixture(); const first = await moduleUnderTest(); const second = await moduleUnderTest();
     const scope = await first.themeContext(); const original = JSON.parse(first.load());

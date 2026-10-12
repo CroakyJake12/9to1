@@ -44,6 +44,8 @@ Montserrat is the default interface font. The host maps it to the bundled OFL fo
 
 The browser adapter shares the existing `9to1.home.local-appearance.v1` envelope with dashboard preferences. Both dashboard writes and theme compare/exchange acquire the same Web Locks gate; stale dashboard snapshots preserve the freshest theme and unknown envelope fields. Storage events invalidate other tabs. A missing lock/storage capability gives a nonpersistent Professional observation and disabled saving, not a fictional durable owner. The browser currently supports device-local scope only; a genuine signed-in settings sync provider is still required.
 
+That same revisioned preference can optionally carry `appearance` (`SuperBright`, `Bright`, `Dark`, or `SuperDark`). An absent value keeps the host's existing default and does not migrate or replace old data. Accounts changes brightness through the Home owner, retaining the theme and accessibility settings. CUI borrows the typed choice for every scoped palette; an explicit host appearance still takes precedence. The browser's existing startup palette cache is derived from those canonical application resources, so a saved bright choice also colours the next startup and resource-failure surface. It is a presentation cache, not another preference owner.
+
 Pending operations are retained through shutdown. Post-commit cache or observer errors cannot replace an acknowledged save receipt with a false write failure.
 
 ## Validation boundary

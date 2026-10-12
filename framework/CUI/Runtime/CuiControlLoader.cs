@@ -129,7 +129,7 @@ public sealed class CuiControlLoader : IDisposable
         // broadcasts every individual token to this control and its descendants,
         // repeatedly projecting interaction states against incomplete palettes.
         var palette = CuiSurfacePaletteCatalog.For(_currentSurface,
-            _appearance ?? CuiThemeScopeApplier.DetectAppearance(), resolution.Theme.BaseTheme);
+            _appearance ?? resolution.Appearance ?? CuiThemeScopeApplier.DetectAppearance(), resolution.Theme.BaseTheme);
         var key = (palette, resolution.Accessibility, resolution.Theme.Name);
         if (!_themeResourceSnapshots.TryGetValue(key, out var snapshot))
         {
@@ -2290,7 +2290,7 @@ public sealed class CuiControlLoader : IDisposable
         {
             var resources = new ResourceDictionary();
             CuiThemeResourceApplier.ApplyToResources(resources, CuiSurfacePaletteCatalog.For(_currentSurface,
-                _appearance ?? CuiThemeScopeApplier.DetectAppearance(), _themeStack.Current));
+                _appearance ?? _themePreference?.Current.Appearance ?? CuiThemeScopeApplier.DetectAppearance(), _themeStack.Current));
             if (resources.TryGetResource(key, null, out var themed)) return themed;
         }
         return Application.Current?.Resources.TryGetResource(key, null, out var shared) == true ? shared : null;
@@ -2624,7 +2624,7 @@ public sealed class CuiControlLoader : IDisposable
         return path switch
         {
             "Theme" or "theme" => CuiThemeCatalog.Name(_themeStack.Current),
-            "Appearance" or "appearance" => (_appearance ?? CuiThemeScopeApplier.DetectAppearance()).ToString(),
+            "Appearance" or "appearance" => (_appearance ?? _themePreference?.Current.Appearance ?? CuiThemeScopeApplier.DetectAppearance()).ToString(),
             _ => null
         };
     }

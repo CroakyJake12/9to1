@@ -7,6 +7,31 @@ public sealed class HomeThemePreferenceServiceTests
 {
     private static readonly HomeThemeScope Device=new(HomeDataScope.DeviceLocal,"fixture-device");
     [Fact]
+    public async Task Optional_appearance_round_trips_in_the_existing_revisioned_owner_and_invalid_values_preserve_saved_data()
+    {
+        var legacy = HomeThemePreference.Default(Device);
+        Assert.Null(legacy.Appearance);
+        var backend = new Backend { Value = legacy };
+        using var service = new HomeThemePreferenceService(backend, new Authority(), new Catalog());
+        Assert.Null((await service.GetAsync(Device)).Value!.Preference.Appearance);
+        foreach (var mode in new[] { "SuperBright", "Bright", "Dark", "SuperDark" })
+        {
+            var result = await service.SetAsync(Device, "Glow", new(DisplayScale: 1.5), backend.Value!.Revision, appearance: mode);
+            Assert.True(result.Succeeded);
+            Assert.Equal(mode, result.Value!.Preference.Appearance);
+            Assert.Equal(result.Value.Preference, backend.Value);
+            Assert.Equal(Device, backend.Value!.Scope);
+            Assert.Equal(1.5, backend.Value.Accessibility.DisplayScale);
+        }
+        var saved = backend.Value;
+        await Assert.ThrowsAsync<ArgumentException>(() => service.SetAsync(Device, "Glow", new(), saved!.Revision, appearance: "Unrecognised"));
+        Assert.Equal(saved, backend.Value);
+        Assert.Equal("RevisionConflict", (await service.SetAsync(Device, "Glow", new(), 0, appearance: "Bright")).Code);
+        backend.OverrideRead = new(HomeThemeReadState.Available, saved! with { Appearance = "FutureMode" });
+        Assert.True((await service.GetAsync(Device)).Value!.UsedFallback);
+        Assert.Equal(saved, backend.Value);
+    }
+    [Fact]
     public async Task Authorised_revisioned_set_and_cache_preserve_exact_scope()
     {
         var backend=new Backend(); using var service=new HomeThemePreferenceService(backend,new Authority(),new Catalog());

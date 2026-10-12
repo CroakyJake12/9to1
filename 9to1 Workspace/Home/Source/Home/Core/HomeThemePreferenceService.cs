@@ -25,13 +25,17 @@ public sealed record HomeThemeAccessibility(bool ReduceMotion = false, bool High
 
 public sealed record HomeThemePreference(int SchemaVersion, HomeThemeScope Scope, string ThemeName, long Revision, HomeThemeAccessibility Accessibility)
 {
+    // Optional in the existing v1 envelope: old preferences keep the host default.
+    // Home owns the value without referencing a particular UI renderer.
+    public string? Appearance { get; init; }
     public const int CurrentSchemaVersion = 1;
     public static HomeThemePreference Default(HomeThemeScope scope) => new(CurrentSchemaVersion,scope.Validate(),"Professional",0,new());
     public HomeThemePreference Validate()
     {
         ArgumentNullException.ThrowIfNull(Scope); ArgumentNullException.ThrowIfNull(Accessibility);
         Scope.Validate(); Accessibility.Validate();
-        if (SchemaVersion != CurrentSchemaVersion || Revision < 0 || string.IsNullOrWhiteSpace(ThemeName) || ThemeName.Length > 128 || ThemeName.Any(char.IsControl))
+        if (SchemaVersion != CurrentSchemaVersion || Revision < 0 || string.IsNullOrWhiteSpace(ThemeName) || ThemeName.Length > 128 || ThemeName.Any(char.IsControl) ||
+            Appearance is not (null or "SuperBright" or "Bright" or "Dark" or "SuperDark"))
             throw new ArgumentException("Theme preference has an unsupported schema or invalid value.");
         return this;
     }
@@ -132,16 +136,16 @@ public sealed class HomeThemePreferenceService : IDisposable,IAsyncDisposable
         return new(true,fallback?"ThemeFallback":fromCache?"ThemeCached":"Succeeded",new(value,name,fromCache,fallback,diagnostic),diagnostic);
     }
 
-    public Task<HomeThemeOperationResult> SetAsync(HomeThemeScope scope,string themeName,HomeThemeAccessibility accessibility,long expectedRevision,CancellationToken token=default)=>
-        Track(()=>SetCoreAsync(scope,themeName,accessibility,expectedRevision,token));
-    private async Task<HomeThemeOperationResult> SetCoreAsync(HomeThemeScope scope,string themeName,HomeThemeAccessibility accessibility,long expectedRevision,CancellationToken token)
+    public Task<HomeThemeOperationResult> SetAsync(HomeThemeScope scope,string themeName,HomeThemeAccessibility accessibility,long expectedRevision,CancellationToken token=default,string? appearance=null)=>
+        Track(()=>SetCoreAsync(scope,themeName,accessibility,expectedRevision,token,appearance));
+    private async Task<HomeThemeOperationResult> SetCoreAsync(HomeThemeScope scope,string themeName,HomeThemeAccessibility accessibility,long expectedRevision,CancellationToken token,string? appearance)
     {
         ObjectDisposedException.ThrowIf(_disposed,this); scope.Validate(); accessibility.Validate();
         if(expectedRevision<0||string.IsNullOrWhiteSpace(themeName)) return new(false,"InvalidArgument",Diagnostic:"Choose a valid theme and revision.");
         if(!await _authority.CanAccessAsync(scope,true,token).ConfigureAwait(false)) return Denied();
         if(!_backend.Supports(scope)) return new(false,"ThemeScopeUnsupported",Diagnostic:"No preference provider supports this scope.");
         if(!_catalog.TryResolve(themeName,out var name)) return new(false,"ThemeUnavailable",Diagnostic:"This theme is not installed or compatible.");
-        var candidate=new HomeThemePreference(HomeThemePreference.CurrentSchemaVersion,scope,name,checked(expectedRevision+1),accessibility).Validate();
+        var candidate=(new HomeThemePreference(HomeThemePreference.CurrentSchemaVersion,scope,name,checked(expectedRevision+1),accessibility) { Appearance=appearance }).Validate();
         var receipt=await _backend.CompareExchangeAsync(scope,expectedRevision,candidate,token).ConfigureAwait(false);
         if(!receipt.Succeeded) return new(false,receipt.Code,Diagnostic:receipt.Diagnostic);
         if(receipt.Preference!=candidate) return new(false,"InvalidThemeReceipt",Diagnostic:"The preference provider did not confirm the exact requested revision and scope.");

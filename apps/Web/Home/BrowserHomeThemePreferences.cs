@@ -47,7 +47,7 @@ internal sealed partial class BrowserHomeThemePreferences : IBrowserHomeThemePre
         }
     }
 
-    public Task<HomeThemeOperationResult> SetAsync(string name,CuiAccessibilitySettings? accessibility=null,CancellationToken token=default)
+    public Task<HomeThemeOperationResult> SetAsync(string name,CuiAccessibilitySettings? accessibility=null,CancellationToken token=default,CuiAppearance? appearance=null)
     {
         var start=new TaskCompletionSource();Task<HomeThemeOperationResult> original;
         lock(_operationGate)
@@ -55,16 +55,18 @@ internal sealed partial class BrowserHomeThemePreferences : IBrowserHomeThemePre
             ObjectDisposedException.ThrowIf(_disposed,this);
             if(!CanChange||_service is null||Scope is not { } scope) return Task.FromResult(new HomeThemeOperationResult(false,"ThemePreferenceUnavailable",Diagnostic:Diagnostic??"Theme changes cannot be saved in this session."));
             var settings=(accessibility??Current.Accessibility).Validate();
+            var mode=appearance??Current.Appearance;
+            if(mode is { } selected && !Enum.IsDefined(selected))throw new ArgumentOutOfRangeException(nameof(appearance));
             _operations.RemoveWhere(task=>task.IsCompleted);
-            original=SetCoreAsync(start.Task,_service,scope,name,settings,Current.Revision,token);_operations.Add(original);
+            original=SetCoreAsync(start.Task,_service,scope,name,settings,Current.Revision,token,mode);_operations.Add(original);
         }
         start.SetResult();return original;
     }
-    private async Task<HomeThemeOperationResult> SetCoreAsync(Task start,HomeThemePreferenceService service,HomeThemeScope scope,string name,CuiAccessibilitySettings settings,long revision,CancellationToken token)
+    private async Task<HomeThemeOperationResult> SetCoreAsync(Task start,HomeThemePreferenceService service,HomeThemeScope scope,string name,CuiAccessibilitySettings settings,long revision,CancellationToken token,CuiAppearance? appearance)
     {
         await start;
         var result=await service.SetAsync(scope,name,new(settings.ReduceMotion,settings.HighContrast,settings.DisplayScale,
-            settings.InterfaceFontFamilyOverride,settings.CodeFontFamilyOverride),revision,token);
+            settings.InterfaceFontFamilyOverride,settings.CodeFontFamilyOverride),revision,token,appearance?.ToString());
         if(result.Succeeded && result.Value is { } value) Observe(value);
         else Diagnostic=result.Diagnostic;
         return result;
@@ -117,7 +119,7 @@ internal sealed partial class BrowserHomeThemePreferences : IBrowserHomeThemePre
         else
         {
             Diagnostic=result.Diagnostic??"Home theme preferences are unavailable. Professional is being used.";
-            Current=new("Professional",Current.Revision,Scope!.OwnerId,false,Current.Accessibility); Publish();
+            Current=new("Professional",Current.Revision,Scope!.OwnerId,false,Current.Accessibility,Current.Appearance); Publish();
         }
     }
     private void Observe(HomeThemeResolution value)
@@ -127,7 +129,8 @@ internal sealed partial class BrowserHomeThemePreferences : IBrowserHomeThemePre
         if(stored.Revision<Current.Revision) { if(value.UsedFallback)Diagnostic=value.Diagnostic;return; }
         var next=new CuiThemePreferenceSnapshot(stored.ThemeName,stored.Revision,Scope!.OwnerId,value.FromCache,
             new() {ReduceMotion=a.ReduceMotion,HighContrast=a.HighContrast,DisplayScale=a.DisplayScale,
-                InterfaceFontFamilyOverride=a.InterfaceFontFamily,CodeFontFamilyOverride=a.CodeFontFamily});
+                InterfaceFontFamilyOverride=a.InterfaceFontFamily,CodeFontFamilyOverride=a.CodeFontFamily},
+            stored.Appearance is null ? null : Enum.Parse<CuiAppearance>(stored.Appearance));
         Diagnostic=value.Diagnostic;
         if(next==Current)return;
         Current=next; Publish();

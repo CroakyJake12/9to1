@@ -2,7 +2,7 @@ namespace CakeOS.Cui.Themes;
 
 /// <summary>Observation issued by the owning Home settings service, including its authorised offline cache.</summary>
 public sealed record CuiThemePreferenceSnapshot(string Name, long Revision, string ScopeId, bool FromCache,
-    CuiAccessibilitySettings Accessibility);
+    CuiAccessibilitySettings Accessibility, CuiAppearance? Appearance = null);
 
 /// <summary>Home owns storage, authorisation and synchronisation. CUI only borrows this typed observation.</summary>
 public interface ICuiThemePreferenceSource
@@ -12,7 +12,8 @@ public interface ICuiThemePreferenceSource
 }
 
 public sealed record CuiThemeResolution(CuiResolvedTheme Theme, string RequestedName, string? Diagnostic, bool UsedFallback,
-    CuiAccessibilitySettings Accessibility, long Revision = 0, string? ScopeId = null, bool FromCache = false);
+    CuiAccessibilitySettings Accessibility, long Revision = 0, string? ScopeId = null, bool FromCache = false,
+    CuiAppearance? Appearance = null);
 
 /// <summary>Per-host, nonpersistent interpretation of one authorised Home preference source.</summary>
 public sealed class CuiThemePreferenceContext : IDisposable
@@ -36,7 +37,7 @@ public sealed class CuiThemePreferenceContext : IDisposable
     public CuiThemeResolution ResolveScope(string? name)
     {
         if (string.IsNullOrWhiteSpace(name) || name.Equals("user_preference", StringComparison.OrdinalIgnoreCase) || name.Equals("Default", StringComparison.OrdinalIgnoreCase)) return Current;
-        return Resolve(new(name, Current.Revision, Current.ScopeId ?? string.Empty, Current.FromCache, Current.Accessibility));
+        return Resolve(new(name, Current.Revision, Current.ScopeId ?? string.Empty, Current.FromCache, Current.Accessibility, Current.Appearance));
     }
     private CuiThemeResolution Resolve(CuiThemePreferenceSnapshot snapshot)
     {
@@ -44,14 +45,16 @@ public sealed class CuiThemePreferenceContext : IDisposable
         if (snapshot.Revision < 0 || string.IsNullOrWhiteSpace(snapshot.ScopeId))
             throw new ArgumentException("A Home theme observation requires a valid revision and explicit scope.", nameof(snapshot));
         var accessibility = snapshot.Accessibility.Validate();
+        if (snapshot.Appearance is { } appearance && !Enum.IsDefined(appearance))
+            throw new ArgumentOutOfRangeException(nameof(snapshot), "Unknown CUI appearance.");
         _ = CuiTypography.ResolveInterfaceFontFamily(accessibility.InterfaceFontFamilyOverride);
         _ = CuiTypography.ResolveCodeFontFamily(accessibility.CodeFontFamilyOverride);
         var name = snapshot.Name?.Trim() ?? string.Empty;
         if (_catalog.TryResolve(name, out var theme) && theme is not null)
-            return new(theme, name, null, false, accessibility, snapshot.Revision, snapshot.ScopeId, snapshot.FromCache);
+            return new(theme, name, null, false, accessibility, snapshot.Revision, snapshot.ScopeId, snapshot.FromCache, snapshot.Appearance);
         return new(_catalog.Resolve("Professional"), name,
             $"The preferred CUI theme '{name}' is unavailable or incompatible. Professional is being used.", true,
-            accessibility, snapshot.Revision, snapshot.ScopeId, snapshot.FromCache);
+            accessibility, snapshot.Revision, snapshot.ScopeId, snapshot.FromCache, snapshot.Appearance);
     }
     private void SourceChanged(object? sender, EventArgs args)
     {

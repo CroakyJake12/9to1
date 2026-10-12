@@ -29,7 +29,7 @@ internal static class BrowserFeatureComposition
         public string? Diagnostic => "Controlled native fixture theme; no provider or persistence acceptance.";
         public bool CanChange => false;
         public event EventHandler? Changed { add { } remove { } }
-        public Task<HomeThemeOperationResult> SetAsync(string name,CuiAccessibilitySettings? accessibility=null,CancellationToken token=default)
+        public Task<HomeThemeOperationResult> SetAsync(string name,CuiAccessibilitySettings? accessibility=null,CancellationToken token=default,CuiAppearance? appearance=null)
             => Task.FromException<HomeThemeOperationResult>(new InvalidOperationException("Theme mutation is outside this navigation/lifetime fixture."));
         public Task RefreshAsync(CancellationToken token=default) { token.ThrowIfCancellationRequested(); return Task.CompletedTask; }
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;

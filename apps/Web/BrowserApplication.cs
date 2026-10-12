@@ -194,7 +194,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         if (_disposed || _themeContext is null) return;
         if (!Dispatcher.UIThread.CheckAccess()) { Dispatcher.UIThread.Post(() => OnThemeChanged(sender, args)); return; }
         var current = _themeContext.Current;
-        CuiThemeScopeApplier.ApplyGlobalTheme(current.Theme.BaseTheme, "Home", current.Accessibility);
+        CuiThemeScopeApplier.ApplyGlobalTheme(current.Theme.BaseTheme, "Home", current.Accessibility, appearanceOverride: current.Appearance);
         if (Resources.TryGetResource("CuiBackgroundBrush", ActualThemeVariant, out var background) && background is Avalonia.Media.ISolidColorBrush backgroundBrush
             && Resources.TryGetResource("CuiTextBrush", ActualThemeVariant, out var foreground) && foreground is Avalonia.Media.ISolidColorBrush foregroundBrush
             && Resources.TryGetResource("CuiPanelBrush", ActualThemeVariant, out var panel) && panel is Avalonia.Media.ISolidColorBrush panelBrush)

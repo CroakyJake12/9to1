@@ -57,6 +57,7 @@ function validTheme(value, scope) {
     const font = text => text == null || typeof text === 'string' && text.trim() && text.length <= 128 && !/[,\u0000-\u001f]/.test(text);
     return value?.schemaVersion === 1 && Number.isSafeInteger(value.revision) && value.revision >= 0 &&
         value.scope?.scope === 0 && value.scope.ownerId === scope && value.scope.organizationId == null &&
+        (value.appearance == null || ['SuperBright', 'Bright', 'Dark', 'SuperDark'].includes(value.appearance)) &&
         typeof value.themeName === 'string' && value.themeName.trim() && value.themeName.length <= 128 &&
         !/[\u0000-\u001f]/.test(value.themeName) && a && typeof a.reduceMotion === 'boolean' && typeof a.highContrast === 'boolean' &&
         Number.isFinite(a.displayScale) && a.displayScale >= 0.5 && a.displayScale <= 5 && font(a.interfaceFontFamily) && font(a.codeFontFamily);

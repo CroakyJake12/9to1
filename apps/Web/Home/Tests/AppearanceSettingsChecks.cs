@@ -27,6 +27,21 @@ internal static class AppearanceSettingsChecks
         preferences.Release.SetResult();
         await pending;
         Demand(preferences.Writes == 2 && preferences.Current.Name == "Professional", "Retirement dropped admitted write");
+
+        var modes = new Preferences();
+        using var appearanceSettings = new BrowserAppearanceSettings(empty, empty, modes);
+        foreach (var mode in Enum.GetValues<CuiAppearance>())
+        {
+            await appearanceSettings.DispatchAsync("Appearance" + mode, null);
+            Demand(modes.Current.Appearance == mode && modes.Current.Name == "Professional", "Brightness changed the theme or lost the selected mode");
+            Demand(appearanceSettings.TryGetValue("AppearanceModeName", out var label) && label is string { Length: > 0 }, "Brightness choice is not observable");
+        }
+        await appearanceSettings.DispatchAsync("ThemeGlow", null);
+        Demand(modes.Current.Appearance == CuiAppearance.SuperDark && modes.Current.Name == "Glow", "Changing theme discarded brightness");
+        modes.AllowChanges = false;
+        Demand(appearanceSettings.IsActionAvailable("AppearanceBright") is false, "Brightness bypassed owner write availability");
+        await appearanceSettings.DispatchAsync("AppearanceBright", null);
+        Demand(modes.Writes == 5, "Unavailable brightness action wrote to the owner");
     }
     private static void Demand(bool condition, string message) { if (!condition) throw new InvalidOperationException(message); }
     private sealed class EmptyOwner : ICuiBindingContext, ICuiActionDispatcher
@@ -39,18 +54,19 @@ internal static class AppearanceSettingsChecks
         public CuiThemeDefinitionCatalog Catalog { get; } = new();
         public CuiThemePreferenceSnapshot Current { get; private set; } = new("Professional", 0, "controlled-observer-fixture", false, new());
         public string? Diagnostic { get; set; }
-        public bool CanChange => true;
+        internal bool AllowChanges = true;
+        public bool CanChange => AllowChanges;
         public event EventHandler? Changed;
         internal int Writes;
         internal bool Disposed;
         internal TaskCompletionSource? Release;
         internal void Notify() => Changed?.Invoke(this, EventArgs.Empty);
-        public async Task<HomeThemeOperationResult> SetAsync(string name, CuiAccessibilitySettings? accessibility = null, CancellationToken token = default)
+        public async Task<HomeThemeOperationResult> SetAsync(string name, CuiAccessibilitySettings? accessibility = null, CancellationToken token = default, CuiAppearance? appearance = null)
         {
             token.ThrowIfCancellationRequested();
             if (Release is not null) await Release.Task;
             Writes++;
-            Current = Current with { Name = name, Revision = Current.Revision + 1 };
+            Current = Current with { Name = name, Revision = Current.Revision + 1, Appearance = appearance ?? Current.Appearance };
             Diagnostic = null;
             Notify();
             return new(true, "Succeeded"); // Controlled receipt for presentation-only regression; no storage claim.

@@ -11,7 +11,7 @@ internal interface IBrowserHomeThemePreferences : ICuiThemePreferenceSource, IAs
     CuiThemeDefinitionCatalog Catalog { get; }
     string? Diagnostic { get; }
     bool CanChange { get; }
-    Task<HomeThemeOperationResult> SetAsync(string name, CuiAccessibilitySettings? accessibility = null, CancellationToken token = default);
+    Task<HomeThemeOperationResult> SetAsync(string name, CuiAccessibilitySettings? accessibility = null, CancellationToken token = default, CuiAppearance? appearance = null);
     Task RefreshAsync(CancellationToken token = default);
 }
 
@@ -30,6 +30,12 @@ internal sealed class BrowserAppearanceSettings : ICuiWritableBindingContext, IC
         ["ThemeProfessional"] = "Professional", ["ThemeGlow"] = "Glow", ["ThemePlayful"] = "Playful",
         ["ThemeBubble"] = "Bubble", ["ThemeCinematic"] = "Cinematic"
     };
+    private static readonly Dictionary<string, CuiAppearance> AppearanceCommands = new(StringComparer.Ordinal)
+    {
+        ["AppearanceSuperBright"] = CuiAppearance.SuperBright, ["AppearanceBright"] = CuiAppearance.Bright,
+        ["AppearanceDark"] = CuiAppearance.Dark, ["AppearanceSuperDark"] = CuiAppearance.SuperDark
+    };
+    private CuiAppearance EffectiveAppearance => _preferences.Current.Appearance ?? CuiThemeScopeApplier.DetectAppearance();
     public event PropertyChangedEventHandler? PropertyChanged;
     public BrowserAppearanceSettings(ICuiBindingContext bindings, ICuiActionDispatcher actions, IBrowserHomeThemePreferences preferences)
     {
@@ -43,6 +49,7 @@ internal sealed class BrowserAppearanceSettings : ICuiWritableBindingContext, IC
         {
             "ShowAppearanceSettings" => true,
             "AppearanceThemeName" => _preferences.Current.Name,
+            "AppearanceModeName" => EffectiveAppearance switch { CuiAppearance.SuperBright => "Super Bright", CuiAppearance.SuperDark => "Super Dark", var mode => mode.ToString() },
             "AppearanceScope" => "This browser · device-local appearance. Account theme synchronisation is not connected.",
             "AppearanceStatus" => (_operationStatus ?? _preferences.Diagnostic ?? "Your apps use the same Home appearance preference.") +
                 (_presentationFailure is null ? "" : " Some controls could not refresh; reopen Settings to refresh the view."),
@@ -59,13 +66,13 @@ internal sealed class BrowserAppearanceSettings : ICuiWritableBindingContext, IC
     }
     public bool TrySetValue(string path, object? value) => !_disposed && _bindings is ICuiWritableBindingContext writable && writable.TrySetValue(path, value);
     public bool? IsActionAvailable(string command) => _disposed ? false : command == "ThemeRefresh" ? !_busy :
-        ThemeCommands.ContainsKey(command) ? !_busy && _preferences.CanChange : (_actions as ICuiActionAvailability)?.IsActionAvailable(command);
+        ThemeCommands.ContainsKey(command) || AppearanceCommands.ContainsKey(command) ? !_busy && _preferences.CanChange : (_actions as ICuiActionAvailability)?.IsActionAvailable(command);
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default) =>
         DispatchWithLifetimeAsync(command, parameter, new(default, cancellationToken));
     public async ValueTask DispatchWithLifetimeAsync(string command, object? parameter, CuiActionDispatchLifetime lifetime)
     {
         if (_disposed) return;
-        if (command != "ThemeRefresh" && !ThemeCommands.ContainsKey(command))
+        if (command != "ThemeRefresh" && !ThemeCommands.ContainsKey(command) && !AppearanceCommands.ContainsKey(command))
         {
             if (_actions is ICuiLifetimeAwareActionDispatcher tracked)
                 await tracked.DispatchWithLifetimeAsync(command, parameter, lifetime);
@@ -89,7 +96,9 @@ internal sealed class BrowserAppearanceSettings : ICuiWritableBindingContext, IC
             }
             else
             {
-                var result = await _preferences.SetAsync(ThemeCommands[command], token: lifetime.CallerCancellation);
+                var name = ThemeCommands.GetValueOrDefault(command) ?? _preferences.Current.Name;
+                var appearance = AppearanceCommands.TryGetValue(command, out var selected) ? selected : _preferences.Current.Appearance;
+                var result = await _preferences.SetAsync(name, token: lifetime.CallerCancellation, appearance: appearance);
                 _operationStatus = result.Succeeded ? result.Diagnostic ?? "Appearance saved on this browser." : result.Diagnostic ?? "Appearance could not be saved. Try again.";
             }
         }
