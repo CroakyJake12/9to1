@@ -489,7 +489,7 @@
                 </Container>
               </Container>
               <Input ID="present-ui-194" Type="Resize" Column="1" Active="{Binding ShowSidebarResize}" AccessibleName="Slides panel width" Tooltip="Resize slides panel; use Left or Right arrows" Value="{Binding SidebarWidth, Mode=TwoWay}" Minimum="160" Maximum="320" Width="8" ResizeEdge="End" Background="Transparent" />
-              <Container ID="present-ui-195" Type="Grid" Column="2" RowSizes="1fr Auto">
+              <Container ID="present-ui-195" Type="Grid" Column="2" RowSizes="1fr Auto" Background="{Resource CuiWorkspaceBrush}">
                 <Container ID="present-ui-196" Type="Overlay" Background="{Resource CuiWorkspaceBrush}" HorizontalScrolling="{Binding IsZoomed}" VerticalScrolling="{Binding IsZoomed}">
                   <Object ID="present-canvas" Type="PresentSlideCanvas">
                     <EditorContextMenu>
