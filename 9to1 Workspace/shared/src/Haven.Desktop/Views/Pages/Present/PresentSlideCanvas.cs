@@ -18,6 +18,7 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
     private HavenPoint _pointerCurrent;
     private double _viewScale = 1;
     internal double? ManualScale { get; set; }
+    internal bool ShowEditorFrame { get; init; } = true;
     internal HavenRect PaperBounds => SlideRectLocal();
     public double ViewScale
     {
@@ -212,7 +213,14 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
     public void Draw(HavenDrawingContext context, double opacity)
     {
         if (_document is null || _slide is null || Bounds.Width <= 1 || Bounds.Height <= 1) return; var slideRect = SlideRectAbsolute();
-        context.Add(new HavenShadowCommand(slideRect, new HavenShadow(new HavenSolidBrush(70, 0, 0, 0), 18, 0, 5, 0, .3), 4)); context.Add(new HavenFillRoundedRectCommand(slideRect, BackgroundBrush(_document, _slide), 4, opacity)); context.Add(new HavenStrokeRoundedRectCommand(slideRect, new HavenPen(new HavenTokenBrush("Border"), 1), 4, opacity));
+        // The rounded paper frame belongs to the editing stage, not the document.
+        // Authored content retains its full rectangular clip and coordinates below.
+        var paperRadius = ShowEditorFrame ? 8 : 0;
+        if (ShowEditorFrame)
+            context.Add(new HavenShadowCommand(slideRect, new HavenShadow(new HavenTokenBrush("Shadow"), 18, 0, 5, 0, .3), paperRadius));
+        context.Add(new HavenFillRoundedRectCommand(slideRect, BackgroundBrush(_document, _slide), paperRadius, opacity));
+        if (ShowEditorFrame)
+            context.Add(new HavenStrokeRoundedRectCommand(slideRect, new HavenPen(new HavenTokenBrush("Border"), 1), paperRadius, opacity));
         DrawSlideContent(context, slideRect, opacity);
         DrawHover(context, slideRect, opacity);
         var showHandles = _selectedIds.Count == 1;

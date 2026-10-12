@@ -24,7 +24,7 @@ public interface IPresentCanvasTextCommands
 public sealed class PresentRetainedSceneControl : Panel, IDisposable, IPresentCanvasTextCommands
 {
     private readonly HavenSceneControl _scene;
-    private readonly PresentSlideCanvas _canvas = new();
+    private readonly PresentSlideCanvas _canvas;
     private PresentEditor? _editor;
     private Guid? _renderedSlide;
     private bool _allowed, _disposed;
@@ -64,9 +64,12 @@ public sealed class PresentRetainedSceneControl : Panel, IDisposable, IPresentCa
         return preview.DrawPreview;
     }
 
-    public PresentRetainedSceneControl(Func<bool> reduceMotion)
+    public PresentRetainedSceneControl(Func<bool> reduceMotion) : this(reduceMotion, showEditorFrame: true) { }
+
+    public PresentRetainedSceneControl(Func<bool> reduceMotion, bool showEditorFrame)
     {
         ArgumentNullException.ThrowIfNull(reduceMotion);
+        _canvas = new PresentSlideCanvas { ShowEditorFrame = showEditorFrame };
         _scene = new HavenSceneControl(new HavenAvaloniaImageResolver(), new HavenAvaloniaNativeControlResolver(), reduceMotion)
         { Platform = HavenPlatform.Unknown, IsEnabled = false };
         Children.Add(_scene);

@@ -75,7 +75,7 @@ public static class PresentBrowserSurface
         public PresentRetainedSceneControl Playback { get; }
         public PresentationLifetime(PresentBrowserSession session, Func<bool> reduceMotion)
         {
-            _session = session; Control = new(reduceMotion); Playback = new(reduceMotion); Thumbnails = new(reduceMotion);
+            _session = session; Control = new(reduceMotion); Playback = new(reduceMotion, showEditorFrame: false); Thumbnails = new(reduceMotion);
             _session.CanvasTextCommands = Control;
             _session.EffectiveCanvasZoom = () => Control.EffectiveZoom;
             Control.ZoomRequested += _session.SetCanvasZoom;

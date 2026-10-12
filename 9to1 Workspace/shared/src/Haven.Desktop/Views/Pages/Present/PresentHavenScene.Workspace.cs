@@ -362,7 +362,7 @@ internal sealed partial class PresentHavenScene
         PlaybackOverlay.SetValue(HavenProperties.Background, "Surface");
         PlaybackOverlay.SetValue(HavenProperties.ZIndex, 800);
         PlaybackOverlay.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
-        PlaybackCanvas = new PresentSlideCanvas();
+        PlaybackCanvas = new PresentSlideCanvas { ShowEditorFrame = false };
         PlaybackCanvas.SetValue(HavenProperties.Row, 0);
         PlaybackCanvas.SetValue(HavenProperties.MinHeight, HavenLength.Px(620));
         PlaybackOverlay.Add(PlaybackCanvas);

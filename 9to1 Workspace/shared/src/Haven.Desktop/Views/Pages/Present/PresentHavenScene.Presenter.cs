@@ -50,7 +50,7 @@ internal sealed partial class PresentHavenScene
         controls.Add(PresenterExitButton);
         PresenterHost.Add(controls);
 
-        PresenterCanvas = new PresentSlideCanvas { Name = "Present.Playback.Canvas" };
+        PresenterCanvas = new PresentSlideCanvas { Name = "Present.Playback.Canvas", ShowEditorFrame = false };
         PresenterCanvas.SetValue(HavenProperties.Row, 1);
         PresenterCanvas.SetValue(HavenProperties.Width, HavenLength.Percent(100));
         PresenterCanvas.SetValue(HavenProperties.MinHeight, HavenLength.Px(280));
