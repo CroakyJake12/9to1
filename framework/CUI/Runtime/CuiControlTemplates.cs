@@ -230,6 +230,8 @@ public static class CuiControlTemplates
     {
         var thumb = new Thumb();CuiPropertyPresentation.ConfigurePart(thumb,CuiPropertyPresentation.TemplatePart.SliderThumb);
         var track = Name(new Track { Thumb = thumb }, "PART_Track", scope);
+        Bind(track, Track.MinimumProperty, owner, "Minimum"); Bind(track, Track.MaximumProperty, owner, "Maximum");
+        Bind(track, Track.ValueProperty, owner, "Value", true);
         Bind(track, Track.OrientationProperty, owner, "Orientation"); Bind(track, Track.IsDirectionReversedProperty, owner, "IsDirectionReversed");
         track.DecreaseButton = Name(new RepeatButton { Focusable = false }, "PART_DecreaseButton", scope);
         track.IncreaseButton = Name(new RepeatButton { Focusable = false }, "PART_IncreaseButton", scope);
