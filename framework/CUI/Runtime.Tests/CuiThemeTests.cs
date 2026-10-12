@@ -283,10 +283,12 @@ public sealed class CuiThemeTests
             Assert.Empty(diagnostics);
             Assert.NotNull(root);
             Assert.Equal(CuiTheme.Bubble, loader.CurrentTheme);
-            Assert.Equal(CuiTheme.Bubble, Assert.IsType<Avalonia.Controls.ResourceDictionary>(root.Resources.MergedDictionaries.Last())["CuiTheme"]);
+            Assert.True(root.Resources.TryGetResource("CuiTheme", null, out var rootTheme));
+            Assert.Equal(CuiTheme.Bubble, rootTheme);
             var page = Assert.IsType<Avalonia.Controls.Panel>(root);
             var retro = Assert.IsType<CuiContainerControl>(Assert.Single(page.Children));
-            Assert.Equal(CuiTheme.Retro, Assert.IsType<Avalonia.Controls.ResourceDictionary>(retro.Resources.MergedDictionaries.Last())["CuiTheme"]);
+            Assert.True(retro.Resources.TryGetResource("CuiTheme", null, out var nestedTheme));
+            Assert.Equal(CuiTheme.Retro, nestedTheme);
         }
         finally
         {

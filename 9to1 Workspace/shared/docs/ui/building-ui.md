@@ -45,6 +45,8 @@ Theme changes preserve content, selection, focus and work. User-authored documen
 
 The shared CUI floating surface template owns menu, context-menu, dropdown and tooltip chrome, including their scoped background, border and radius. Backend popup placement does not supply a separate visual theme. A failed control theme projection must not prevent other controls from observing the committed Home preference. The loader reports the failed observation to the preference context so the same revision can be retried; resource observers memoise only completed projections. Settings notifications issued from an I/O thread retain that failure custody when marshalled to the UI thread.
 
+The backend may share a read-only resolved palette across controls, but each resource provider retains one native owner. Mutable gradient brushes remain local to that owner and preserve canonical/legacy alias identity. Read scoped tokens through resource lookup, without depending on a concrete native dictionary implementation.
+
 ## Actions, lifetime and accessibility
 
 Keep domain logic in the existing owning services. Named CUI actions and automation/API calls use the same typed domain operations. Preserve canonical IDs, permissions, scope checks, cancellation, revision fences, unknown outcomes, persistence, undo and recovery. Existing namespaces and storage/IPC identifiers remain compatibility contracts until explicitly migrated.

@@ -8,6 +8,7 @@ using Avalonia.VisualTree;
 using Avalonia.LogicalTree;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
+using System.Collections.Frozen;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Themes;
 
@@ -48,9 +49,9 @@ public sealed class CuiControlLoader : IDisposable
     private CuiThemeDefinitionCatalog _localThemes = new();
     private readonly Stack<string> _themeNames = new();
     private readonly Dictionary<Control, string> _controlThemeNames = new(ReferenceEqualityComparer.Instance);
-    private readonly Dictionary<Control, ResourceDictionary> _controlThemeResources = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<Control, IResourceProvider> _controlThemeResources = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<(CuiPalette Palette, CuiAccessibilitySettings Accessibility, string Name),
-        KeyValuePair<object, object?>[]> _themeResourceSnapshots = new();
+        FrozenDictionary<object, object?>> _themeResourceSnapshots = new();
     private ICuiBindingContext? _bindingContext;
     private ICuiActionDispatcher? _actionDispatcher;
     private IReadOnlyDictionary<string, CuiActionDefinition> _documentActions =
@@ -148,31 +149,13 @@ public sealed class CuiControlLoader : IDisposable
                     value = shared;
                 }
                 return new KeyValuePair<object, object?>(pair.Key, value);
-            }).ToArray();
+            }).ToFrozenDictionary(pair => pair.Key, pair => pair.Value);
             if (_themeResourceSnapshots.Count >= 32) _themeResourceSnapshots.Clear();
             _themeResourceSnapshots.Add(key, snapshot);
         }
-        var resources = new ResourceDictionary();
-        var gradients = new Dictionary<Avalonia.Media.LinearGradientBrush, Avalonia.Media.LinearGradientBrush>(ReferenceEqualityComparer.Instance);
-        foreach (var pair in snapshot)
-        {
-            object? value = pair.Value;
-            if (value is Avalonia.Media.LinearGradientBrush gradient)
-            {
-                if (!gradients.TryGetValue(gradient, out var owned))
-                {
-                    owned = new Avalonia.Media.LinearGradientBrush
-                    {
-                        StartPoint = gradient.StartPoint, EndPoint = gradient.EndPoint, SpreadMethod = gradient.SpreadMethod,
-                        Opacity = gradient.Opacity, Transform = gradient.Transform, TransformOrigin = gradient.TransformOrigin
-                    };
-                    foreach (var stop in gradient.GradientStops) owned.GradientStops.Add(new Avalonia.Media.GradientStop(stop.Color, stop.Offset));
-                    gradients.Add(gradient, owned);
-                }
-                value = owned;
-            }
-            resources.Add(pair.Key, value);
-        }
+        // Each provider has one native owner; only its read-only palette is shared.
+        // Mutable gradients are created lazily for this owner when actually used.
+        var resources = new CuiThemeResourceProvider(snapshot);
         if (_controlThemeResources.TryGetValue(control, out var previous))
         {
             var index = control.Resources.MergedDictionaries.IndexOf(previous);
