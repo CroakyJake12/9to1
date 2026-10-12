@@ -175,9 +175,40 @@ var assertions = await headless.Dispatch(async () =>
                 ? 0 : control is MenuItem && control.GetLogicalAncestors().OfType<Menu>().Any(menu => menu.Name == "present-menu-bar") ? 1 : 2).ToArray();
             return controls.FirstOrDefault() ?? throw new InvalidOperationException("Missing authored command control: " + label);
         }
+        var galleryTraceAttached = false;
+        var galleryTraceLog = new List<string>();
         async Task Click(string label, Func<bool> completed)
         {
             var button = ButtonNamed(label);
+            if (label == "Add shape" && !galleryTraceAttached && Environment.GetEnvironmentVariable("PRESENT_GALLERY_TRACE") is "1" or "buffer")
+            {
+                galleryTraceAttached = true;
+                var retained = root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single();
+                var native = retained.GetVisualDescendants().OfType<HavenSceneControl>().Single();
+                void Trace(string detail)
+                {
+                    var line = $"GALLERY {detail}; state={retained.InteractionState}; focus={window.FocusManager?.GetFocusedElement()}; within={retained.IsKeyboardFocusWithin}; status={session.Status}";
+                    galleryTraceLog.Add(line);
+                    if (Environment.GetEnvironmentVariable("PRESENT_GALLERY_TRACE") == "1") Console.WriteLine(line);
+                }
+                retained.InteractionChanged += (_, _) =>
+                {
+                    Trace("InteractionChanged");
+                    if (retained.InteractionState == Haven.Desktop.Views.Pages.Present.PresentInteractionState.Idle) Trace(Environment.StackTrace);
+                };
+                retained.LostFocus += (_, change) => Trace("LostFocus source=" + change.Source);
+                retained.GotFocus += (_, change) => Trace("GotFocus source=" + change.Source);
+                retained.DetachedFromVisualTree += (_, _) => Trace("Detached");
+                retained.AttachedToVisualTree += (_, _) => Trace("Attached");
+                native.PropertyChanged += (_, change) => { if (change.Property == InputElement.IsEnabledProperty) Trace("IsEnabled=" + native.IsEnabled); };
+                foreach (var viewport in root!.GetVisualDescendants().OfType<ScrollViewer>())
+                    viewport.PropertyChanged += (_, change) => { if (change.Property == ScrollViewer.ViewportProperty) Trace("Viewport " + viewport.Name + "=" + viewport.Viewport); };
+                session.BeginShapeInsertion += (preset, _) => Trace("BeginShapeInsertion " + preset);
+                button.AddHandler(InputElement.PointerPressedEvent, (_, change) => Trace($"Leaf pressed {change.Route} source={change.Source} handled={change.Handled}"), RoutingStrategies.Tunnel | RoutingStrategies.Bubble, handledEventsToo: true);
+                button.AddHandler(InputElement.PointerReleasedEvent, (_, change) => Trace($"Leaf released {change.Route} source={change.Source} handled={change.Handled}"), RoutingStrategies.Tunnel | RoutingStrategies.Bubble, handledEventsToo: true);
+                button.AddHandler(MenuItem.ClickEvent, (_, change) => Trace($"Leaf click {change.Route} source={change.Source} handled={change.Handled}"), RoutingStrategies.Tunnel | RoutingStrategies.Bubble, handledEventsToo: true);
+                Trace("Ready");
+            }
             Check(button.IsEnabled, "real Present " + label + " control enables its owning action");
             if (button is MenuItem menuItem)
             {
@@ -209,12 +240,17 @@ var assertions = await headless.Dispatch(async () =>
             Console.WriteLine($"CLICK {label}: bounds={button.Bounds} point={point}");
             Console.WriteLine($"HIT {inputRoot.InputHitTest(point)}");
             var hit = inputRoot.InputHitTest(point) as Visual;
+            if (label == "Add shape" && Environment.GetEnvironmentVariable("PRESENT_GALLERY_TRACE") == "1" && hit is Control traceHit)
+                Console.WriteLine("GALLERY hit logical=" + string.Join(" > ", traceHit.GetLogicalAncestors().Select(control => control.GetType().Name)));
             Check(ReferenceEquals(hit, button) || hit?.GetVisualAncestors().Contains(button) == true,
                 "physical pointer target belongs to the actual " + label + " control");
             inputRoot.MouseDown(point, MouseButton.Left); inputRoot.MouseUp(point, MouseButton.Left);
             if (label == "Add shape")
             {
                 await loader.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(5));
+                if (root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single().InteractionState
+                    != Haven.Desktop.Views.Pages.Present.PresentInteractionState.InsertionMode)
+                    Console.WriteLine(string.Join(Environment.NewLine, galleryTraceLog));
                 Check(root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single().InteractionState
                     == Haven.Desktop.Views.Pages.Present.PresentInteractionState.InsertionMode,
                     "physical shape gallery action has entered insertion mode before the placement gesture");
@@ -254,6 +290,23 @@ var assertions = await headless.Dispatch(async () =>
             "actual New commits same opaque presentation ID/revision and complete original owner model");
         var scene = root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single().GetVisualDescendants().OfType<HavenSceneControl>().Single();
         var canvas = scene.Root!;
+        if (args.Contains("gallery-repeat", StringComparer.Ordinal))
+        {
+            await Click("Add text", () => session.Editor!.SelectedElements.Any(item => item.Kind == PresentElementKind.Text));
+            await Click("Delete element", () => !session.Editor!.SelectedElements.Any());
+            for (var attempt = 0; attempt < 12; attempt++)
+            {
+                window.Width = attempt % 3 == 1 ? 800 : 1200;
+                window.Height = attempt % 3 == 1 ? 700 : 900;
+                Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); using (var frame = window.CaptureRenderedFrame()) { }
+                var before = session.Editor!.SelectedSlide.Elements.Count;
+                await Click("Add shape", () => session.Editor!.SelectedSlide.Elements.Count == before + 1);
+                Check(session.Editor!.SelectedElements.Single().Kind == PresentElementKind.Shape,
+                    "repeated physical gallery insertion creates the original editable owner shape at attempt " + attempt);
+                await Click("Delete element", () => session.Editor!.SelectedSlide.Elements.Count == before);
+            }
+            return count;
+        }
         if (args.Contains("structured", StringComparer.Ordinal))
         {
             await PresentStructuredRenderingChecks.Run(window, root!.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single(), session, Check);
