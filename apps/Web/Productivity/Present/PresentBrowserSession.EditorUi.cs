@@ -68,8 +68,12 @@ public sealed partial class PresentBrowserSession
             "ToolbarClipboard" => _viewportWidth >= 1400,
             "ToolbarFonts" => _viewportWidth >= 1000,
             "ToolbarExpandedText" => _viewportWidth >= 1200,
-            "ShowTextToolbar" => Editor is not null && (Editor.SelectedElements.Count == 0 || SelectedTextElement is not null),
-            "ShowShapeToolbar" => Editor?.SelectedElements.Count > 0 && SelectedTextElement is null,
+            "ShowTextToolbar" => Editor is not null && (Editor.SelectedElements.Count == 0
+                || SelectedTextElement is { Kind: PresentElementKind.Text }
+                || SelectedTextElement is { Kind: PresentElementKind.Shape } && CanvasTextCommands?.IsTextEditing == true),
+            "ShowShapeToolbar" => Editor?.SelectedElements.Count > 0
+                && SelectedTextElement is not { Kind: PresentElementKind.Text }
+                && !(SelectedTextElement is { Kind: PresentElementKind.Shape } && CanvasTextCommands?.IsTextEditing == true),
             "HeaderStatus" => IsBusy ? "Working…" : IsDirty ? "Unsaved changes" : Status,
             "ShowNotes" => _showNotes, "ShowHelp" => _showHelp, "ShowHistory" => _showHistory,
             "Versions" => _versions, "NoVersions" => _versions.Count == 0,
@@ -203,7 +207,7 @@ public sealed partial class PresentBrowserSession
     }
     private static bool UpdateTextStyle(PresentEditor editor, Action<PresentTextStyle> update)
     {
-        if (editor.SelectedElements.FirstOrDefault(element => element.Kind == PresentElementKind.Text) is not { } selected) return false;
+        if (editor.SelectedElements.FirstOrDefault(element => element.Kind is PresentElementKind.Text or PresentElementKind.Shape) is not { } selected) return false;
         var style = JsonSerializer.Deserialize<PresentTextStyle>(JsonSerializer.Serialize(selected.TextStyle))!;
         update(style); return editor.SetSelectedTextStyle(style);
     }

@@ -125,5 +125,32 @@ internal static class PresentUiAcceptanceChecks
                 "single toolbar controls remain inside its available width at " + width);
             using var frame = window.CaptureRenderedFrame(); frame!.Save(Path.Combine(evidenceDirectory, $"present-toolbar-{width:0}.png"));
         }
+
+        window.Width = 1280; Flush();
+        await click("Add shape", () => session.Editor!.SelectedElements is [{ Kind: PresentElementKind.Shape }]);
+        var shapeId = Selected().Id;
+        var sceneControl = root.GetVisualDescendants().OfType<PresentRetainedSceneControl>().Single();
+        var scene = sceneControl.GetVisualDescendants().OfType<Haven.Desktop.HavenUI.Backend.HavenSceneControl>().Single();
+        var paper = (Haven.UI.HavenRect)scene.Root!.GetType().GetMethod("SlideRectLocal",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.Invoke(scene.Root, null)!;
+        var shape = Selected();
+        var textPoint = scene.TranslatePoint(new Point(paper.X + (shape.X + shape.Width / 2) * paper.Width,
+            paper.Y + (shape.Y + shape.Height / 2) * paper.Height), window)!.Value;
+        window.MouseDown(textPoint, MouseButton.Left); window.MouseUp(textPoint, MouseButton.Left);
+        window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, "Enter");
+        window.KeyRelease(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, "Enter"); Flush();
+        check(sceneControl.IsTextEditing && Bound<bool>("ShowTextToolbar") && !Bound<bool>("ShowShapeToolbar"),
+            "entering actual shape text swaps the single toolbar to text formatting without a duplicate toolbar");
+        Type("Font size", "30");
+        await click("Bold", () => Selected().TextStyle.Bold);
+        check(Selected().Id == shapeId && Selected().TextStyle.FontSizePoints == 30 && Selected().TextStyle.Bold,
+            "physical shape text formatting updates its existing text style and preserves object identity");
+        await click("Undo", () => !Selected().TextStyle.Bold);
+        check(Selected().TextStyle.FontSizePoints == 30, "undo shape bold retains the preceding exact point size");
+        window.MouseDown(textPoint, MouseButton.Left); window.MouseUp(textPoint, MouseButton.Left);
+        window.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.Escape, "Escape");
+        window.KeyRelease(Key.Escape, RawInputModifiers.None, PhysicalKey.Escape, "Escape"); Flush();
+        check(!sceneControl.IsTextEditing && Bound<bool>("ShowShapeToolbar") && !Bound<bool>("ShowTextToolbar"),
+            "leaving shape text restores the original object appearance controls");
     }
 }

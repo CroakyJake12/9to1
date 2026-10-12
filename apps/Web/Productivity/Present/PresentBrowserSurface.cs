@@ -67,6 +67,7 @@ public static class PresentBrowserSurface
     {
         private readonly PresentBrowserSession _session;
         private bool _disposed;
+        private bool _textEditing;
         private TopLevel? _topLevel;
         public PresentRetainedSceneControl Control { get; }
         public PresentThumbnailControl Thumbnails { get; }
@@ -82,6 +83,7 @@ public static class PresentBrowserSurface
             Thumbnails.SetPreviewRenderer(PresentRetainedSceneControl.CreatePreviewRenderer());
             Control.LiveTextPreviewed += Preview;
             Control.SelectionChanged += Selection;
+            Control.InteractionChanged += InteractionChanged;
             Thumbnails.SelectionChanged += Selection;
             Control.AttachedToVisualTree += Attached;
             session.PropertyChanged += Changed;
@@ -89,6 +91,14 @@ public static class PresentBrowserSurface
         }
         private void Preview(object? sender, EventArgs args) => _session.RecordRetainedPreview();
         private void Selection(object? sender, EventArgs args) => _session.RecordRetainedSelection();
+        private void InteractionChanged(object? sender, EventArgs args)
+        {
+            // Formatting follows text-mode transitions, not every pointer move.
+            var editing = Control.IsTextEditing;
+            if (_disposed || _textEditing == editing) return;
+            _textEditing = editing;
+            _session.RefreshSelection();
+        }
         private async void InsertShape(string preset, double x, double y, double width, double height)
         {
             if (!_disposed) await _session.CompleteShapeInsertionAsync(preset, x, y, width, height);
@@ -172,6 +182,7 @@ public static class PresentBrowserSurface
             _topLevel = null;
             Control.AttachedToVisualTree -= Attached;
             Control.SelectionChanged -= Selection; Thumbnails.SelectionChanged -= Selection;
+            Control.InteractionChanged -= InteractionChanged;
             _disposed = true; _session.PropertyChanged -= Changed; Control.LiveTextPreviewed -= Preview; Control.Dispose(); Playback.Dispose(); Thumbnails.Dispose();
         }
     }

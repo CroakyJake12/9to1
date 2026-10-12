@@ -437,7 +437,7 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
             "SlideTitle" => Editor?.SelectedSlide.Title ?? "No slide selected",
             "EmptyDocument" => Editor is null,
             "SelectedText" => Editor?.SelectedElements.FirstOrDefault(element => element.Kind == PresentElementKind.Text)?.Text ?? string.Empty,
-            "HasTextSelection" => Editor?.SelectedElements.Any(element => element.Kind == PresentElementKind.Text) == true,
+            "HasTextSelection" => SelectedTextElement is not null,
             "HasSelection" => Editor?.SelectedElements.Count > 0,
             "CanEditSelection" => IsActionAvailable("DeleteObject") == true,
             "CanDeleteSlide" => IsActionAvailable("DeleteSlide") == true,
@@ -566,10 +566,10 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
         ? -1
         : Editor.Document.Slides.FindIndex(slide => slide.Id == Editor.Selection.SlideId);
 
-    /// <summary>The first selected text object, or null while the canvas selection holds no text.</summary>
+    /// <summary>The first selected object with an original editable text payload.</summary>
     private PresentElement? SelectedTextElement => Editor is null
         ? null
-        : Editor.SelectedElements.FirstOrDefault(element => element.Kind == PresentElementKind.Text);
+        : Editor.SelectedElements.FirstOrDefault(element => element.Kind is PresentElementKind.Text or PresentElementKind.Shape);
 
     /// <summary>
     /// Toggles bold or italic on the first selected text object while keeping
@@ -579,7 +579,7 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
     /// </summary>
     private static bool ToggleTextStyle(PresentEditor editor, bool bold)
     {
-        var text = editor.SelectedElements.FirstOrDefault(element => element.Kind == PresentElementKind.Text);
+        var text = editor.SelectedElements.FirstOrDefault(element => element.Kind is PresentElementKind.Text or PresentElementKind.Shape);
         if (text is null) return false;
         var source = text.TextStyle;
         return editor.SetSelectedTextStyle(new PresentTextStyle
@@ -602,7 +602,7 @@ public sealed partial class PresentBrowserSession : ICuiWritableBindingContext, 
     /// </summary>
     private static bool ResizeSelectedFont(PresentEditor editor, double delta)
     {
-        var text = editor.SelectedElements.FirstOrDefault(element => element.Kind == PresentElementKind.Text);
+        var text = editor.SelectedElements.FirstOrDefault(element => element.Kind is PresentElementKind.Text or PresentElementKind.Shape);
         if (text is null) return false;
         var source = text.TextStyle;
         var size = Math.Clamp(source.FontSizePoints + delta, 6, 400);

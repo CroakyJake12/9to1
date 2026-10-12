@@ -126,7 +126,7 @@ public sealed partial class PresentEditor
     public bool SetSelectedTextStyle(PresentTextStyle style)
     {
         ArgumentNullException.ThrowIfNull(style);
-        var selected = EditableSelection().Where(element => element.Kind == PresentElementKind.Text).ToArray();
+        var selected = EditableSelection().Where(element => element.Kind is PresentElementKind.Text or PresentElementKind.Shape).ToArray();
         if (selected.Length == 0) return false;
         Mutate(() =>
         {
