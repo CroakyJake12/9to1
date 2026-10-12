@@ -3,6 +3,7 @@ import worker, { fetchRequest } from "./index";
 import { createAuthOptions } from "./auth";
 import type { Env } from "./env";
 import { json } from "./pages";
+import THEME_MIGRATION from "../migrations/0002_account_theme_preference.sql";
 
 let initialization: Promise<void> | undefined;
 let generatedSql = "";
@@ -50,6 +51,7 @@ async function initialize(env: Env): Promise<void> {
   console.log("[local-test] Better Auth D1 migration plan compiled");
   await migration.runMigrations();
   console.log("[local-test] Better Auth D1 schema ready");
+  await env.DB.prepare(THEME_MIGRATION.replace("CREATE TABLE accountThemePreference", "CREATE TABLE IF NOT EXISTS accountThemePreference")).run();
 }
 
 function sameSecret(a: string | null, b: string | undefined): boolean {

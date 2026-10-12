@@ -1,4 +1,4 @@
-// ../node_modules/jose/dist/webapi/lib/buffer_utils.js
+// cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/buffer_utils.js
 var encoder = new TextEncoder();
 var decoder = new TextDecoder();
 var strictDecoder = new TextDecoder("utf-8", { fatal: true });
@@ -40,7 +40,7 @@ function decodeBase64(encoded, url = false) {
   return bytes;
 }
 
-// ../node_modules/jose/dist/webapi/util/errors.js
+// cloud/cake-id-auth/node_modules/jose/dist/webapi/util/errors.js
 var JOSEError = class extends Error {
   static code = "ERR_JOSE_GENERIC";
   code = "ERR_JOSE_GENERIC";
@@ -119,7 +119,7 @@ var JWSSignatureVerificationFailed = class extends JOSEError {
   }
 };
 
-// ../node_modules/jose/dist/webapi/util/base64url.js
+// cloud/cake-id-auth/node_modules/jose/dist/webapi/util/base64url.js
 var invalid = "The input to be decoded is not correctly encoded.";
 function decode(input) {
   try {
@@ -129,7 +129,7 @@ function decode(input) {
   }
 }
 
-// ../node_modules/jose/dist/webapi/lib/validate.js
+// cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/validate.js
 function isObject(input) {
   if (typeof input != "object" || input === null || Object.prototype.toString.call(input) !== "[object Object]")
     return false;
@@ -209,7 +209,7 @@ function validateB64(protectedHeader, extensions) {
   return true;
 }
 
-// ../node_modules/jose/dist/webapi/lib/key.js
+// cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/key.js
 var tag = (key) => key[Symbol.toStringTag];
 var jwkMatchesOp = (entry, key, usage) => {
   const { alg } = entry;
@@ -340,7 +340,7 @@ async function rawKey(key, expected, usage, extractable = false) {
   return key instanceof Uint8Array && (key = await crypto.subtle.importKey("raw", key, expected, extractable, [usage])), checkCryptoKey(key, expected, usage), key;
 }
 
-// ../node_modules/jose/dist/webapi/lib/key_descriptor.js
+// cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/key_descriptor.js
 function table(entries) {
   const out = { __proto__: null };
   for (const alg in entries)
@@ -348,7 +348,7 @@ function table(entries) {
   return out;
 }
 
-// ../node_modules/jose/dist/webapi/lib/jws_algorithms.js
+// cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jws_algorithms.js
 var sig = [["verify"], ["sign"]];
 function hmac(bits) {
   const subtle = { name: "HMAC", hash: `SHA-${bits}` };
@@ -418,7 +418,7 @@ function jwsAlgorithm(alg) {
   return entry;
 }
 
-// ../node_modules/jose/dist/webapi/lib/jws_verify.js
+// cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jws_verify.js
 function prepareVerify(options) {
   return [options && validateAlgorithms("algorithms", options.algorithms), options?.crit];
 }
@@ -470,7 +470,7 @@ async function verifyCompact(jws, shared, key) {
   return verifySignature({ payload, protected: protectedHeader, signature }, shared, key, encodeCompactUnencodedPayload);
 }
 
-// ../node_modules/jose/dist/webapi/lib/jwt_claims_set.js
+// cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jwt_claims_set.js
 var epoch = (date2) => Math.floor(date2.getTime() / 1e3);
 var multipliers = {
   s: 1,
@@ -556,7 +556,7 @@ function validateClaimsSet(protectedHeader, encodedPayload, options = {}) {
   return payload;
 }
 
-// ../node_modules/jose/dist/webapi/jwt/verify.js
+// cloud/cake-id-auth/node_modules/jose/dist/webapi/jwt/verify.js
 async function jwtVerify(jwt, key, options) {
   const [verified, b64] = await verifyCompact(jwt, prepareVerify(options), key);
   if (!b64)
@@ -565,7 +565,7 @@ async function jwtVerify(jwt, key, options) {
   return { ...verified, payload };
 }
 
-// ../node_modules/jose/dist/webapi/jwks/local.js
+// cloud/cake-id-auth/node_modules/jose/dist/webapi/jwks/local.js
 function isUsableJWK(jwk, entry, alg, kid) {
   const { kty, key_ops: keyOps, ext, kid: jwkKid, alg: jwkAlg, use, crv } = jwk;
   return (ext === void 0 || typeof ext == "boolean") && (keyOps === void 0 || Array.isArray(keyOps) && keyOps.every((operation, index) => typeof operation == "string" && keyOps.indexOf(operation) === index) && keyOps.includes("verify")) && entry.kty.includes(kty) && (kid === void 0 || typeof kid == "string" && kid === jwkKid) && (jwkAlg === void 0 ? kty !== "AKP" : alg === jwkAlg) && (use === void 0 || use === "sig") && (!entry.crv || crv === entry.crv);
@@ -619,7 +619,7 @@ function createLocalJWKSet(jwks) {
   });
 }
 
-// ../node_modules/jose/dist/webapi/jwks/remote.js
+// cloud/cake-id-auth/node_modules/jose/dist/webapi/jwks/remote.js
 function isCloudflareWorkers() {
   return typeof WebSocketPair < "u" || typeof navigator < "u" && navigator.userAgent === "Cloudflare-Workers" || typeof EdgeRuntime < "u" && EdgeRuntime === "vercel";
 }
@@ -1157,14 +1157,61 @@ var BrowserPublicClient = class {
   // Legacy caller gets no full-drain receipt.
 };
 
+// apps/Web/Auth/theme-preference-contract.js
+var object2 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+var exact = (value, keys) => object2(value) && Object.keys(value).every((key) => keys.includes(key));
+var range = (value, min, max) => typeof value === "number" && Number.isFinite(value) && value >= min && value <= max;
+var text = (value, max) => typeof value === "string" && value.trim().length > 0 && value.length <= max && !/[\u0000-\u001f\u007f-\u009f]/.test(value);
+var hex = (value) => typeof value === "string" && /^#[0-9A-F]{6}$/.test(value);
+var fontName = (value) => value == null || text(value, 128) && !value.includes(",");
+var kinds = (value) => Number.isInteger(value) && value >= 0 && value <= 2;
+var colour = (value) => exact(value, ["hex", "transparencyPercent", "backgroundBlur"]) && hex(value.hex) && range(value.transparencyPercent, 0, 100) && range(value.backgroundBlur, 0, 32);
+var fontWeights = Object.freeze({ Montserrat: [400, 500, 600, 700, 800, 900], Inter: [400, 500, 600, 700], "DejaVu Sans": [400] });
+var font = (value) => exact(value, ["family", "weight", "size"]) && Object.hasOwn(fontWeights, value.family) && fontWeights[value.family].includes(value.weight) && range(value.size, 8, 72);
+function fill(value) {
+  if (!exact(value, ["kind", "colour", "gradient", "pattern"]) || !kinds(value.kind) || !colour(value.colour)) return false;
+  const gradient = value.gradient, pattern = value.pattern;
+  if (gradient != null && (!exact(gradient, ["kind", "stops", "angle", "centerX", "centerY", "radius"]) || !kinds(gradient.kind) || !range(gradient.angle, -360, 360) || !range(gradient.centerX, 0, 1) || !range(gradient.centerY, 0, 1) || !range(gradient.radius, 0.01, 2) || !Array.isArray(gradient.stops) || gradient.stops.length < 2 || gradient.stops.length > 16 || gradient.stops.some((stop, i) => !exact(stop, ["offset", "colour"]) || !range(stop.offset, 0, 1) || !colour(stop.colour) || i > 0 && stop.offset < gradient.stops[i - 1].offset) || gradient.stops[0].offset !== 0 || gradient.stops.at(-1).offset !== 1)) return false;
+  if (pattern != null && (!exact(pattern, ["kind", "foreground", "background", "size", "spacing", "angle"]) || !kinds(pattern.kind) || !colour(pattern.foreground) || !colour(pattern.background) || !range(pattern.size, 1, 128) || !range(pattern.spacing, 0, 128) || !range(pattern.angle, -360, 360))) return false;
+  return (value.kind !== 1 || gradient != null) && (value.kind !== 2 || pattern != null);
+}
+var builtIns = ["glow", "bubble", "retro", "playful", "cinematic", "professional", "frosted glass", "metallic", "western"];
+function validCustomThemeLibrary(json) {
+  if (typeof json !== "string" || !json || json.length > 1048576) return false;
+  let library;
+  try {
+    library = JSON.parse(json);
+  } catch {
+    return false;
+  }
+  if (!Array.isArray(library) || library.length > 32) return false;
+  const ids = /* @__PURE__ */ new Set(), names = /* @__PURE__ */ new Set();
+  for (const theme of library) {
+    if (!exact(theme, ["schemaVersion", "id", "name", "baseTheme", "primaryAccent", "secondaryAccent", "tertiaryAccent", "fonts", "buttonRoundnessPercent"]) || theme.schemaVersion !== 1 || typeof theme.id !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(theme.id) || !text(theme.name, 64) || theme.name.trim() !== theme.name || builtIns.includes(theme.name.toLowerCase()) || !Number.isInteger(theme.baseTheme) || theme.baseTheme < 0 || theme.baseTheme > 8 || !fill(theme.primaryAccent) || !fill(theme.secondaryAccent) || !fill(theme.tertiaryAccent) || !range(theme.buttonRoundnessPercent, 0, 100) || !exact(theme.fonts, ["main", "primaryButton", "secondaryButton", "tertiaryButton", "heading", "body", "code"]) || !["main", "primaryButton", "secondaryButton", "tertiaryButton", "heading", "body", "code"].every((role) => font(theme.fonts[role])) || JSON.stringify(theme).length > 32768 || ids.has(theme.id) || names.has(theme.name.toLowerCase())) return false;
+    ids.add(theme.id);
+    names.add(theme.name.toLowerCase());
+  }
+  return true;
+}
+function validThemePreference(value, accountId) {
+  if (!object2(value) || value.schemaVersion !== 1 || !Number.isSafeInteger(value.revision) || value.revision < 0 || !object2(value.scope) || value.scope.scope !== 1 || value.scope.ownerId !== accountId || value.scope.organizationId != null || !text(value.themeName, 128) || !object2(value.accessibility)) return false;
+  const a = value.accessibility;
+  if (typeof a.reduceMotion !== "boolean" || typeof a.highContrast !== "boolean" || !range(a.displayScale, 0.5, 5) || !fontName(a.interfaceFontFamily) || !fontName(a.codeFontFamily) || value.appearance != null && !["SuperBright", "Bright", "Dark", "SuperDark"].includes(value.appearance)) return false;
+  if (value.accent != null) {
+    const accent = value.accent;
+    if (!object2(accent) || !kinds(accent.mode) || accent.allAppsColour != null && !hex(accent.allAppsColour) || !object2(accent.individualApps) || Object.keys(accent.individualApps).length > 32 || Object.entries(accent.individualApps).some(([id, colour2]) => !/^app\.[a-z][a-z0-9.-]*$/.test(id) || id.length > 64 || id.endsWith(".") || id.includes("..") || !hex(colour2))) return false;
+  }
+  return value.customThemesJson == null || validCustomThemeLibrary(value.customThemesJson);
+}
+
 // apps/Web/Auth/account-api-client.js
 var uuid2 = (value) => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(value);
-var object2 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+var object3 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 var nullableString = (value) => value === null || typeof value === "string";
 var date = (value) => typeof value === "string" && Number.isFinite(Date.parse(value));
 var positiveRevision = (value) => Number.isSafeInteger(value) && value > 0;
-var profile = (value) => object2(value) && uuid2(value.accountId) && typeof value.name === "string" && typeof value.username === "string" && nullableString(value.icon) && nullableString(value.pronouns) && nullableString(value.job) && positiveRevision(value.revision);
-var session = (value) => object2(value) && uuid2(value.sessionId) && uuid2(value.accountId) && typeof value.deviceName === "string" && date(value.createdAt) && date(value.expiresAt) && (value.revokedAt === null || date(value.revokedAt)) && nullableString(value.registeredClientId);
+var profile = (value) => object3(value) && uuid2(value.accountId) && typeof value.name === "string" && typeof value.username === "string" && nullableString(value.icon) && nullableString(value.pronouns) && nullableString(value.job) && positiveRevision(value.revision);
+var session = (value) => object3(value) && uuid2(value.sessionId) && uuid2(value.accountId) && typeof value.deviceName === "string" && date(value.createdAt) && date(value.expiresAt) && (value.revokedAt === null || date(value.revokedAt)) && nullableString(value.registeredClientId);
 function failed(code, action, status = null, body = null) {
   return { ok: false, status, error: { code, action, body } };
 }
@@ -1239,7 +1286,7 @@ var AccountApiClient = class {
       "/api/account/current",
       "GET",
       void 0,
-      (value) => object2(value) && uuid2(value.accountId) && typeof value.displayName === "string",
+      (value) => object3(value) && uuid2(value.accountId) && typeof value.displayName === "string",
       signal
     );
   }
@@ -1249,13 +1296,13 @@ var AccountApiClient = class {
       "/api/account/profile",
       "GET",
       void 0,
-      (value) => object2(value) && profile(value.profile),
+      (value) => object3(value) && profile(value.profile),
       signal
     );
   }
   updateProfile(expectedRevision, fields, { signal } = {}) {
     const allowed = /* @__PURE__ */ new Set(["name", "username", "icon", "pronouns", "job"]);
-    if (!positiveRevision(expectedRevision) || expectedRevision >= Number.MAX_SAFE_INTEGER || !object2(fields)) {
+    if (!positiveRevision(expectedRevision) || expectedRevision >= Number.MAX_SAFE_INTEGER || !object3(fields)) {
       return Promise.resolve(failed("InvalidArgument", "UpdateProfile"));
     }
     let entries;
@@ -1274,7 +1321,36 @@ var AccountApiClient = class {
       "/api/account/profile",
       "PATCH",
       { expectedRevision, fields: snapshot },
-      (value) => object2(value) && profile(value.profile) && value.profile.revision === nextRevision,
+      (value) => object3(value) && profile(value.profile) && value.profile.revision === nextRevision,
+      signal
+    );
+  }
+  getTheme(accountId, { signal } = {}) {
+    if (!uuid2(accountId)) return Promise.resolve(failed("InvalidArgument", "GetTheme"));
+    return this.#request(
+      "GetTheme",
+      "/api/account/theme",
+      "GET",
+      void 0,
+      (value) => object3(value) && (value.preference === null || validThemePreference(value.preference, accountId)),
+      signal
+    );
+  }
+  updateTheme(accountId, expectedRevision, preference, { signal } = {}) {
+    let snapshot;
+    try {
+      snapshot = JSON.parse(JSON.stringify(preference));
+    } catch {
+      return Promise.resolve(failed("InvalidArgument", "UpdateTheme"));
+    }
+    if (!uuid2(accountId) || !Number.isSafeInteger(expectedRevision) || expectedRevision < 0 || expectedRevision >= Number.MAX_SAFE_INTEGER || !validThemePreference(snapshot, accountId) || snapshot.revision !== expectedRevision + 1 || JSON.stringify(snapshot).length > 22e5)
+      return Promise.resolve(failed("InvalidArgument", "UpdateTheme"));
+    return this.#request(
+      "UpdateTheme",
+      "/api/account/theme",
+      "PATCH",
+      { expectedRevision, preference: snapshot },
+      (value) => object3(value) && validThemePreference(value.preference, accountId) && value.preference.revision === expectedRevision + 1,
       signal
     );
   }
@@ -1284,7 +1360,7 @@ var AccountApiClient = class {
       "/api/account/sessions",
       "GET",
       void 0,
-      (value) => object2(value) && Array.isArray(value.sessions) && value.sessions.every(session) && new Set(value.sessions.map((item) => item.sessionId)).size === value.sessions.length && new Set(value.sessions.map((item) => item.accountId)).size <= 1,
+      (value) => object3(value) && Array.isArray(value.sessions) && value.sessions.every(session) && new Set(value.sessions.map((item) => item.sessionId)).size === value.sessions.length && new Set(value.sessions.map((item) => item.accountId)).size <= 1,
       signal
     );
   }
@@ -1393,7 +1469,7 @@ var AccountApiClient = class {
         }
         if (expectedGeneration !== this.#generation) return failed("SessionContextChanged", action);
         if (controller.signal.aborted) return failed("Cancelled", action);
-        if (!object2(wire2) || typeof wire2.error !== "string" || !wire2.error || wire2.revision !== void 0 && !positiveRevision(wire2.revision)) {
+        if (!object3(wire2) || typeof wire2.error !== "string" || !wire2.error || wire2.revision !== void 0 && !positiveRevision(wire2.revision)) {
           return failed("MalformedResponse", action, response.status);
         }
         return failed(wire2.error, action, response.status, wire2);
@@ -1475,6 +1551,8 @@ function createAccountModule(client = null) {
       const operations = {
         GetCurrent: () => client.getCurrent(options),
         GetProfile: () => client.getProfile(options),
+        GetTheme: () => client.getTheme(args?.accountId, options),
+        UpdateTheme: () => client.updateTheme(args?.accountId, args?.expectedRevision, args?.preference, options),
         ListSessions: () => client.listSessions(options),
         UpdateProfile: () => client.updateProfile(args?.expectedRevision, args?.fields, options),
         SignOut: () => client.signOut(options),
@@ -1525,6 +1603,143 @@ function createAccountModule(client = null) {
   };
 }
 
+// apps/Web/Auth/account-theme-preferences.js
+function createAccountThemePreferences({ client, hasCredential, apiResource, storage = globalThis.localStorage, window = globalThis.window }) {
+  let accountId = null, epoch2 = 0, disposed = false, nextListener = 1;
+  const listeners = /* @__PURE__ */ new Map(), pending = /* @__PURE__ */ new Map();
+  const cacheKey = (id) => `9to1.home.account-theme-cache.v1:${JSON.stringify([apiResource, id])}`;
+  const current = (id) => !disposed && typeof id === "string" && id === accountId && hasCredential();
+  const notify = (revoked) => {
+    for (const callback of listeners.values()) {
+      try {
+        callback(revoked);
+      } catch {
+      }
+    }
+  };
+  const deniedRead = () => ({ state: 3, diagnostic: "Sign in to access account-wide theme preferences." });
+  const unavailableWrite = (code) => ({ succeeded: false, code, diagnostic: "Account appearance was not confirmed saved. Refresh before retrying." });
+  const run = (id, work) => {
+    if (disposed || typeof id !== "string" || !id || pending.has(id)) return Promise.reject(new Error("ThemeRequestUnavailable"));
+    const controller = new AbortController();
+    const entry = { controller, completion: null };
+    pending.set(id, entry);
+    const original = Promise.resolve().then(() => work(controller.signal));
+    entry.completion = original.then(() => {
+      pending.delete(id);
+    }, () => {
+      pending.delete(id);
+    });
+    return original;
+  };
+  const readCache = (scope) => {
+    if (!current(scope)) return deniedRead();
+    try {
+      const raw = storage?.getItem(cacheKey(scope));
+      if (raw == null) return { state: 1, diagnostic: "No offline theme cache exists for this account." };
+      if (raw.length > 22e5) return { state: 4 };
+      const envelope = JSON.parse(raw);
+      return envelope.version === 1 && envelope.apiResource === apiResource && validThemePreference(envelope.preference, scope) ? { state: 0, preference: envelope.preference } : { state: 4 };
+    } catch {
+      return { state: 4, diagnostic: "This account\u2019s offline theme cache could not be read." };
+    }
+  };
+  const store = (scope, preference) => {
+    if (!current(scope) || !validThemePreference(preference, scope)) throw new Error("ThemeScopeMismatch");
+    const cached = readCache(scope);
+    if (cached.preference?.revision > preference.revision) return;
+    const serialized = JSON.stringify({ version: 1, apiResource, preference });
+    if (serialized.length > 22e5) throw new Error("ThemeCacheTooLarge");
+    storage.setItem(cacheKey(scope), serialized);
+    if (storage.getItem(cacheKey(scope)) !== serialized) throw new Error("ThemeCacheWriteFailed");
+  };
+  const onStorage = (event) => {
+    if (accountId && event.key === cacheKey(accountId) && current(accountId)) notify(false);
+  };
+  window?.addEventListener?.("storage", onStorage);
+  return {
+    async themeContext(id) {
+      return run(id, async (signal) => {
+        if (disposed || !client || !hasCredential()) return "";
+        if (current(accountId)) return accountId;
+        const generation = epoch2;
+        const reply = await client.getCurrent({ signal });
+        if (!reply.ok || signal.aborted || generation !== epoch2 || disposed || !hasCredential()) return "";
+        accountId = reply.body.accountId;
+        return accountId;
+      });
+    },
+    canAccess: current,
+    async readTheme(id, scope) {
+      return run(id, async (signal) => {
+        if (!current(scope)) return JSON.stringify(deniedRead());
+        const generation = epoch2;
+        const reply = await client.getTheme(scope, { signal });
+        if (generation !== epoch2 || !current(scope) || signal.aborted) return JSON.stringify(deniedRead());
+        if (reply.ok) return JSON.stringify({ state: 0, preference: reply.body.preference });
+        if (reply.status === 401 || reply.status === 403) return JSON.stringify(deniedRead());
+        if (reply.error?.code === "TransportUnavailable" || reply.status >= 500)
+          return JSON.stringify({ state: 1, diagnostic: "Account preferences are temporarily offline." });
+        return JSON.stringify({ state: reply.status === 404 ? 2 : 4, diagnostic: "Account theme synchronisation is unavailable or incompatible. Existing preferences are preserved." });
+      });
+    },
+    readCache: (scope) => JSON.stringify(readCache(scope)),
+    async compareTheme(id, scope, expectedRevision, json) {
+      return run(id, async (signal) => {
+        if (!current(scope)) return JSON.stringify(unavailableWrite("PermissionDenied"));
+        let candidate;
+        try {
+          candidate = JSON.parse(json);
+        } catch {
+          return JSON.stringify(unavailableWrite("InvalidArgument"));
+        }
+        if (!validThemePreference(candidate, scope)) return JSON.stringify(unavailableWrite("InvalidArgument"));
+        const generation = epoch2;
+        const reply = await client.updateTheme(scope, expectedRevision, candidate, { signal });
+        if (generation !== epoch2 || !current(scope) || signal.aborted) return JSON.stringify(unavailableWrite("ThemeOutcomeUnknown"));
+        if (!reply.ok) return JSON.stringify(unavailableWrite(reply.status === 409 ? "RevisionConflict" : reply.status === 401 || reply.status === 403 ? "PermissionDenied" : "ThemeOutcomeUnknown"));
+        return JSON.stringify({ succeeded: true, code: "Succeeded", preference: reply.body.preference });
+      });
+    },
+    writeCache(scope, json) {
+      store(scope, JSON.parse(json));
+    },
+    subscribe(callback) {
+      const id = nextListener++;
+      listeners.set(id, callback);
+      return id;
+    },
+    unsubscribe(id) {
+      listeners.delete(id);
+    },
+    cancel(id) {
+      pending.get(id)?.controller.abort();
+    },
+    invalidate() {
+      epoch2++;
+      accountId = null;
+      notify(true);
+    },
+    // Synchronous observation fence, before cancellation.
+    signedIn() {
+      if (!disposed) notify(false);
+    },
+    revoke() {
+      disposed = true;
+      epoch2++;
+      accountId = null;
+      notify(true);
+    },
+    async disposeAsync() {
+      this.revoke();
+      window?.removeEventListener?.("storage", onStorage);
+      for (const entry of pending.values()) entry.controller.abort();
+      while (pending.size) await Promise.all([...pending.values()].map((entry) => entry.completion));
+      listeners.clear();
+    }
+  };
+}
+
 // apps/Web/Auth/configured-accounts.js
 function createConfiguredAccounts({
   configuration = null,
@@ -1538,7 +1753,7 @@ function createConfiguredAccounts({
 }) {
   if (typeof onPrivateContextInvalidated !== "function" || typeof onVerifiedIdentity !== "function" || typeof onFailure !== "function") throw new TypeError("Private context callbacks are required.");
   if (beginPrivateContextInvalidation !== void 0 && typeof beginPrivateContextInvalidation !== "function") throw new TypeError("A synchronous root private fence is required when supplied.");
-  let broker, api, disposed = false, prepared = false, cleanupTask, module;
+  let broker, api, themes, disposed = false, prepared = false, cleanupTask, module;
   const signIns = /* @__PURE__ */ new Map(), taskReads = /* @__PURE__ */ new Map(), taskIdentityReceipts = /* @__PURE__ */ new Map(), issued = /* @__PURE__ */ new Set(), cleanupErrors = [];
   const issue = (action, factory) => {
     if (disposed) return Promise.reject(new Error("ServiceUnavailable"));
@@ -1570,6 +1785,7 @@ function createConfiguredAccounts({
   };
   const base = configuration === null ? createAccountModule() : (() => {
     const begin = (reason) => {
+      themes?.invalidate();
       taskIdentityReceipts.clear();
       broker?.clearToken({ cancelPending: false });
       try {
@@ -1584,6 +1800,7 @@ function createConfiguredAccounts({
       }
     };
     const clear = async (reason) => {
+      if (beginPrivateContextInvalidation === void 0) themes?.invalidate();
       taskIdentityReceipts.clear();
       if (beginPrivateContextInvalidation === void 0)
         broker?.clearToken({ cancelPending: reason !== "sign_in_started" });
@@ -1624,7 +1841,9 @@ function createConfiguredAccounts({
     });
     return createAccountModule(api);
   })();
+  themes = createAccountThemePreferences({ client: api, hasCredential: () => Boolean(broker?.getAccessToken()), apiResource: broker?.configuration.apiResource ?? null, window });
   return module = {
+    themePreferences: themes,
     invalidatePrivateContext(reason) {
       return issue("invalidate", async () => {
         if (broker) await api.invalidatePrivateContext(reason);
@@ -1702,6 +1921,7 @@ function createConfiguredAccounts({
         signIns.set(id, controller);
         try {
           await broker.signIn({ signal: controller.signal });
+          themes.signedIn();
           return JSON.stringify({ ok: true });
         } catch (error) {
           return JSON.stringify({ ok: false, error: { code: typeof error?.code === "string" ? error.code : "ProviderUnavailable" } });
@@ -1716,6 +1936,7 @@ function createConfiguredAccounts({
     },
     revokePrivateContext() {
       disposed = true;
+      themes.revoke();
       taskIdentityReceipts.clear();
       broker?.revokePrivateContext();
       base.revokePrivateContext();
@@ -1723,6 +1944,7 @@ function createConfiguredAccounts({
     disposeAsync() {
       if (cleanupTask) return cleanupTask;
       disposed = true;
+      themes.revoke();
       taskIdentityReceipts.clear();
       broker?.revokePrivateContext();
       base.revokePrivateContext();
@@ -1737,7 +1959,7 @@ function createConfiguredAccounts({
       } catch (error) {
         errors.push(error);
       }
-      Promise.allSettled([base.disposeAsync(), broker?.disposeAsync() ?? Promise.resolve(), joinIssued()]).then((results) => {
+      Promise.allSettled([themes.disposeAsync(), base.disposeAsync(), broker?.disposeAsync() ?? Promise.resolve(), joinIssued()]).then((results) => {
         errors.push(...results.filter((r) => r.status === "rejected").map((r) => r.reason));
         if (errors.length) reject(new AggregateError(errors, "Configured account cleanup failed."));
         else resolve();

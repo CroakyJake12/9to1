@@ -3,10 +3,11 @@ import type { createAuth } from "./auth";
 import { AUTH_BASE_PATH, type CakeScope } from "./contract";
 import type { Env } from "./env";
 import { json } from "./pages";
+import { readThemePreference, writeThemePreference } from "./theme-preferences";
 
 type Auth = ReturnType<typeof createAuth>;
-type Claims = Record<string, unknown> & { sub?: string; sid?: string; scope?: string };
-interface Principal { accountId: string; sessionId: string; bearer: boolean }
+type Claims = Record<string, unknown> & { sub?: string; sid?: string; scope?: string; exp?: number };
+interface Principal { accountId: string; sessionId: string; bearer: boolean; accessExpiresAt?: number }
 interface ProfileRow { id: string; name: string; username: string | null; image: string | null; pronouns: string | null; jobTitle: string | null; profileRevision: number | null }
 
 function isUuid(value: string | undefined): value is string {
@@ -29,12 +30,12 @@ async function authorize(request: Request, env: Env, auth: Auth, scope: CakeScop
       return json({ error: "unauthorized" }, 401);
     }
 
-    if (!isUuid(claims.sub) || !isUuid(claims.sid)) return json({ error: "unauthorized" }, 401);
+    if (!isUuid(claims.sub) || !isUuid(claims.sid) || !Number.isSafeInteger(claims.exp)) return json({ error: "unauthorized" }, 401);
     const active = await env.DB.prepare(
       "SELECT 1 FROM session WHERE id = ? AND userId = ? AND expiresAt > ? LIMIT 1",
     ).bind(claims.sid, claims.sub, new Date().toISOString()).first();
     if (!active) return json({ error: "session_revoked_or_expired" }, 401);
-    return { accountId: claims.sub, sessionId: claims.sid, bearer: true };
+    return { accountId: claims.sub, sessionId: claims.sid, bearer: true, accessExpiresAt: claims.exp };
   }
 
   const session = await auth.api.getSession({ headers: request.headers });
@@ -46,8 +47,7 @@ function mutationOriginAllowed(request: Request, env: Env, principal: Principal)
   return principal.bearer || request.headers.get("origin") === new URL(env.AUTH_BASE_URL).origin;
 }
 
-async function readBody(request: Request): Promise<Record<string, unknown> | null> {
-  const maxBytes = 65_536;
+async function readBody(request: Request, maxBytes = 65_536): Promise<Record<string, unknown> | null> {
   const contentLength = request.headers.get("content-length");
   if (contentLength && (!/^\d+$/.test(contentLength) || Number(contentLength) > maxBytes)) return null;
   if (!request.body) return null;
@@ -229,6 +229,8 @@ async function revokeOthers(env: Env, accountId: string, currentSessionId: strin
 async function handle(request: Request, env: Env, auth: Auth): Promise<Response> {
   const url = new URL(request.url);
   const currentRoute = request.method === "GET" && url.pathname === "/api/account/current";
+  const themeRead = request.method === "GET" && url.pathname === "/api/account/theme";
+  const themeWrite = request.method === "PATCH" && url.pathname === "/api/account/theme";
   const profileRead = request.method === "GET" && url.pathname === "/api/account/profile";
   const profileWrite = request.method === "PATCH" && url.pathname === "/api/account/profile";
   const sessionsRead = request.method === "GET" && url.pathname === "/api/account/sessions";
@@ -237,8 +239,8 @@ async function handle(request: Request, env: Env, auth: Auth): Promise<Response>
   const revokeMatch = request.method === "DELETE" && url.pathname.match(/^\/api\/account\/sessions\/([0-9a-f-]{36})$/i);
 
   const scope: CakeScope | null = currentRoute ? "cake:account:read"
-    : profileRead ? "cake:profile:read"
-    : profileWrite ? "cake:profile:write"
+    : profileRead || themeRead ? "cake:profile:read"
+    : profileWrite || themeWrite ? "cake:profile:write"
     : sessionsRead ? "cake:sessions:read"
     : signOut || revokeOthersRoute || revokeMatch ? "cake:sessions:revoke"
     : null;
@@ -246,11 +248,13 @@ async function handle(request: Request, env: Env, auth: Auth): Promise<Response>
 
   const principal = await authorize(request, env, auth, scope);
   if (principal instanceof Response) return principal;
-  if ((profileWrite || signOut || revokeOthersRoute || revokeMatch) && !mutationOriginAllowed(request, env, principal)) {
+  if ((profileWrite || themeWrite || signOut || revokeOthersRoute || revokeMatch) && !mutationOriginAllowed(request, env, principal)) {
     return json({ error: "origin_not_allowed" }, 403);
   }
 
   if (currentRoute) return accountCurrent(env, principal.accountId);
+  if (themeRead) return readThemePreference(env, principal);
+  if (themeWrite) return writeThemePreference(env, principal, await readBody(request, 2_250_000));
   if (profileRead) return readProfile(env, principal.accountId);
   if (profileWrite) return updateProfile(request, env, principal.accountId);
   if (sessionsRead) return listSessions(env, principal.accountId);

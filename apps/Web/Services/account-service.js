@@ -22,6 +22,7 @@ export function createAccountModule(client = null) {
       let args;try { args = JSON.parse(argumentsJson); } catch { return Promise.resolve(failure('InvalidArgument')); }
       const controller = new AbortController(); const options = { signal: controller.signal };
       const operations = { GetCurrent: () => client.getCurrent(options), GetProfile: () => client.getProfile(options),
+        GetTheme: () => client.getTheme(args?.accountId,options), UpdateTheme: () => client.updateTheme(args?.accountId,args?.expectedRevision,args?.preference,options),
         ListSessions: () => client.listSessions(options), UpdateProfile: () => client.updateProfile(args?.expectedRevision,args?.fields,options),
         SignOut: () => client.signOut(options), RevokeSession: () => client.revokeSession(args?.sessionId,options),
         RevokeAllOtherSessions: () => client.revokeAllOtherSessions(options) };

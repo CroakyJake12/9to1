@@ -1,5 +1,6 @@
 // Transport binding only. Protocol authority: CAKE ID Worker 7cc52df0411e0e9e617918f6c5158283cc3199fc.
 // Authentication, authorisation, account identity and entitlements remain server-owned.
+import { validThemePreference } from "./theme-preference-contract.js";
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(value);
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const nullableString = value => value === null || typeof value === 'string';
@@ -117,6 +118,23 @@ export class AccountApiClient {
     const nextRevision = expectedRevision + 1;
     return this.#request('UpdateProfile', '/api/account/profile', 'PATCH', { expectedRevision, fields: snapshot },
       value => object(value) && profile(value.profile) && value.profile.revision === nextRevision, signal);
+  }
+
+  getTheme(accountId, { signal } = {}) {
+    if (!uuid(accountId)) return Promise.resolve(failed('InvalidArgument', 'GetTheme'));
+    return this.#request('GetTheme', '/api/account/theme', 'GET', undefined,
+      value => object(value) && (value.preference === null || validThemePreference(value.preference, accountId)), signal);
+  }
+
+  updateTheme(accountId, expectedRevision, preference, { signal } = {}) {
+    let snapshot;
+    try { snapshot = JSON.parse(JSON.stringify(preference)); }
+    catch { return Promise.resolve(failed('InvalidArgument', 'UpdateTheme')); }
+    if (!uuid(accountId) || !Number.isSafeInteger(expectedRevision) || expectedRevision < 0 || expectedRevision >= Number.MAX_SAFE_INTEGER ||
+        !validThemePreference(snapshot, accountId) || snapshot.revision !== expectedRevision + 1 || JSON.stringify(snapshot).length > 2_200_000)
+      return Promise.resolve(failed('InvalidArgument', 'UpdateTheme'));
+    return this.#request('UpdateTheme', '/api/account/theme', 'PATCH', { expectedRevision, preference: snapshot },
+      value => object(value) && validThemePreference(value.preference, accountId) && value.preference.revision === expectedRevision + 1, signal);
   }
 
   listSessions({ signal } = {}) {

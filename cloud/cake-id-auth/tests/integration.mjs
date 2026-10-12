@@ -109,7 +109,8 @@ globalThis.fetch = async (input, init = {}) => {
 const authClient = createAuthClient({ baseURL: `${baseURL}${authPath}`, plugins: [oauthProviderClient()] });
 
 async function waitForWorker() {
-  for (let attempt = 0; attempt < 20; attempt++) {
+  const readinessDeadline = Date.now() + 60_000;
+  for (let attempt = 0; Date.now() < readinessDeadline; attempt++) {
     if (worker.exitCode !== null) throw new Error(`Wrangler exited before readiness.\n${serverOutput.slice(-12000)}`);
     try {
       const response = await globalThis.fetch(`${baseURL}/__test/health`, { headers: { "x-local-test-key": testKey }, signal: AbortSignal.timeout(1500) });
@@ -450,6 +451,24 @@ try {
   assert.equal(unchanged.revision, 6, "failed profile mutations preserve committed revision");
   assert.equal(unchanged.username, renamedProfile.username, "denied reservations preserve the approved username");
 
+  // Real Worker/D1 theme storage uses the same authenticated account session,
+  // independently of the browser's offline cache and any preview edge gate.
+  const theme = { schemaVersion: 1, scope: { scope: 1, ownerId: testAccount.id, organizationId: null },
+    themeName: "Professional", revision: 1, accessibility: { reduceMotion: false, highContrast: false, displayScale: 1 },
+    appearance: "Dark", accent: { mode: 1, allAppsColour: "#D12441", individualApps: {} }, customThemesJson: "[]" };
+  const themeReadHeaders = { authorization: `Bearer ${profileToken.access_token}` };
+  const themeWriteHeaders = { authorization: `Bearer ${profileWriteToken.access_token}` };
+  assert.equal((await response("/api/account/theme", { headers: themeReadHeaders })).status, 200, "profile read scope reads account theme");
+  const saveTheme = await jsonRequest("/api/account/theme", "PATCH", { expectedRevision: 0, preference: theme }, themeWriteHeaders);
+  assert.equal(saveTheme.status, 200, "account theme commits to real isolated D1");
+  assert.equal((await saveTheme.json()).preference.scope.ownerId, testAccount.id);
+  const savedTheme = (await (await response("/api/account/theme", { headers: themeReadHeaders })).json()).preference;
+  assert.equal(savedTheme.accent.allAppsColour, "#D12441", "saved accent reads through independent authenticated request");
+  assert.equal(savedTheme.revision, 1);
+  assert.equal((await jsonRequest("/api/account/theme", "PATCH", { expectedRevision: 0, preference: theme }, themeWriteHeaders)).status, 409, "stale theme CAS cannot overwrite account settings");
+  assert.equal((await jsonRequest("/api/account/theme", "PATCH", { expectedRevision: 1, preference: { ...theme, revision: 2 } }, themeReadHeaders)).status, 401, "read-only bearer cannot mutate theme");
+  assert.equal((await jsonRequest("/api/account/theme", "PATCH", { expectedRevision: 1, preference: { ...theme, revision: 2, scope: { ...theme.scope, ownerId: "11111111-1111-4111-8111-111111111111" } } }, themeWriteHeaders)).status, 400, "caller cannot choose another account theme row");
+
   const staleWrite = await jsonRequest("/api/account/profile", "PATCH", { expectedRevision: 1, fields: { name: "Stale update" } }, { authorization: `Bearer ${profileWriteToken.access_token}` });
   assert.equal(staleWrite.status, 409, "profile compare-and-swap rejects a stale revision");
   const missingScope = await response("/api/account/sessions", { headers: { authorization: `Bearer ${profileToken.access_token}` } });
@@ -471,6 +490,7 @@ try {
   const otherSession = await (await response(`${authPath}/get-session`)).json();
   assert.equal(otherSession.user.id, otherAccount.id, "new cookie context belongs to the second account");
   const otherCurrent = await (await response("/api/account/current")).json();
+  assert.equal((await (await response("/api/account/theme")).json()).preference, null, "second actual account never reads first account theme");
   assert.equal(otherCurrent.accountId, otherAccount.id, "account lookup never exposes previous cookie context");
   const fixtureHandle = `fixture_${runId}`;
   const fixtureBody = { ownerUserId: otherAccount.id, username: fixtureHandle };
@@ -539,6 +559,8 @@ try {
     headers: { authorization: `Bearer ${sessionToken.access_token}` },
   });
   assert.equal(revoked.status, 204, "self-session revoke succeeds under its explicit scope");
+  assert.equal((await response("/api/account/theme", { headers: themeReadHeaders })).status, 401, "revoked account token cannot read theme");
+  assert.equal((await jsonRequest("/api/account/theme", "PATCH", { expectedRevision: 1, preference: { ...theme, revision: 2 } }, themeWriteHeaders)).status, 401, "revoked account token cannot write theme");
   const afterRevocation = await response("/api/account/profile", { headers: { authorization: `Bearer ${profileToken.access_token}` } });
   assert.equal(afterRevocation.status, 401, "revoked session immediately invalidates its otherwise correctly signed access token");
 

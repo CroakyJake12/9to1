@@ -16,11 +16,38 @@ The issuer uses the canonical OAuth scopes `cake:account:read`, `cake:profile:re
 
 Bearer API requests must present a valid resource-audience token, the required route scope, a canonical AccountID UUID subject, and an active server-side session row. The current account/profile/session records are always selected by that verified subject. Profile and session mutations are owner-scoped. Session revocation removes associated OAuth access and refresh token rows before removing the session. Matching route names does not establish wire compatibility. Read-only review against consumer commit `a63d77fe5a9dfea56c938eaa85678a9e170368ec` identified unresolved JSON-envelope, resource-parameter, signing-key and authentication-revision contracts. This package has not passed real .NET cross-process or deployed integration. See [CONTRACT_COMPATIBILITY.md](CONTRACT_COMPATIBILITY.md).
 
+## Account theme preferences
+
+`GET /api/account/theme` requires the existing `cake:profile:read` scope;
+`PATCH /api/account/theme` requires `cake:profile:write`. Cookie callers retain
+the issuer-origin mutation check. The body is `{expectedRevision, preference}`;
+responses contain `{preference}`, with null for an account that has never saved
+one. `preference` is the existing Home schema-v1 envelope with account scope 1,
+verified AccountID, revision, theme, appearance, accessibility, accent choices
+and optional `customThemesJson`. The latter is a validated declarative array
+(maximum 32 designs / 1 MiB), with no executable content or remote assets.
+Unknown envelope/accessibility fields survive older-client writes; explicit
+accent maps and custom libraries replace their previous values, so removals work.
+
+Forward-only migration `0002_account_theme_preference.sql` creates the account
+row without changing existing IDs/profile revisions or migrating local data.
+Apply it only through the reviewed backup/integrity/migration process for the
+actual existing D1 binding. A successful preliminary JWT check is insufficient:
+the SQL CAS itself checks current session ownership/expiry and bearer expiry.
+Stale revisions return 409; a lost mutation response is an unknown outcome and
+must be reconciled by reading, never blindly replayed.
+
+The browser uses the original short-lived in-memory public-client token; no
+credential is persisted in the preference cache. Account switch, signout and
+token expiry synchronously clear theme observation and reject late replies.
+These source and isolated-runtime checks do not prove hosted deployment or
+cross-device account synchronization.
+
 ## Local workflow
 
 1. `npm ci`
 2. `npm run schema:generate` regenerates `migrations/0001_better_auth.sql` from the pinned Better Auth configuration using Node's in-memory SQLite driver. Review and commit schema changes with library upgrades.
-3. `npm run schema:validate` executes both versioned SQL migrations against an in-memory SQLite database and checks the expected account, OAuth, and guardrail tables. This validates SQL syntax and schema shape only; it does not emulate Workers or D1.
+3. `npm run schema:validate` executes all versioned SQL migrations against an in-memory SQLite database and checks the expected account, OAuth, and guardrail tables. This validates SQL syntax and schema shape only; it does not emulate Workers or D1.
 4. `npm run test` is designed to run the full isolated Wrangler Worker and local D1 authentication scenario with random test credentials, a temporary auth secret, and a local email capture sink. It never contacts Cloudflare's remote API. The current Windows ARM64 host cannot execute the D1 integration: Workerd runs only through x64 emulation here, and its D1 binding fails before the auth flow. The test exits with a clear skip before creating `.dev.vars` or test state. This is a host limitation; the integration remains unverified until run on a supported native Workerd host.
 5. `npm run test:password-runtime` isolates Better Auth's default password hash and verify calls in local Workerd without D1 or account data. It checks the maintained library's 16-byte salt and 64-byte derived key and reports operation timings; it does not replace the full D1 authentication integration. On the current x64-emulated Windows ARM64 host the first functional run eventually passed, but the overall command took about 34 minutes and did not separate hash time from startup/shutdown. Treat the performance result as unqualified; rerun the instrumented check on a supported native Workerd host before sizing production CPU limits.
 6. `npm run build:ui` builds the browser client code used by the sign-in, recovery, and consent screens.

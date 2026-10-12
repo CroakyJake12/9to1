@@ -104,6 +104,7 @@ try {
         platform.markStartup('runtime:ready');
         runtime.setModuleImports('nineToOneBrowser', { ...platform, releasePrivateAccountContext });
         runtime.setModuleImports('nineToOneHomeLocal', homeLocalPreferences);
+        runtime.setModuleImports('nineToOneHomeAccountTheme', accounts.themePreferences);
         runtime.setModuleImports('nineToOneWave', waveBrowser);
         runtime.setModuleImports('nineToOnePicture', pictureBrowser);
         runtime.setModuleImports('nineToOneAccounts', accounts);
