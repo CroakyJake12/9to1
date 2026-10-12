@@ -50,7 +50,7 @@ public sealed class CuiControlLoader : IDisposable
     private readonly Stack<string> _themeNames = new();
     private readonly Dictionary<Control, string> _controlThemeNames = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, IResourceProvider> _controlThemeResources = new(ReferenceEqualityComparer.Instance);
-    private readonly record struct ThemeResourceKey(CuiPalette Palette, CuiAccessibilitySettings Accessibility, string Name, string? Fingerprint);
+    private readonly record struct ThemeResourceKey(CuiPalette Palette, CuiAccessibilitySettings Accessibility, string Name, string? Fingerprint, string? ExplicitAccent);
     private readonly Dictionary<Control, ThemeResourceKey> _appliedThemeKeys = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<ThemeResourceKey,
         FrozenDictionary<object, object?>> _themeResourceSnapshots = new();
@@ -137,10 +137,11 @@ public sealed class CuiControlLoader : IDisposable
         // Populate off-tree, then publish once. Mutating an attached dictionary
         // broadcasts every individual token to this control and its descendants,
         // repeatedly projecting interaction states against incomplete palettes.
+        var explicitAccent = resolution.EffectiveAccent.ResolveColour(_accentAppId ?? string.Empty);
         var palette = CuiSurfacePaletteCatalog.For(_currentSurface,
             _appearance ?? resolution.Appearance ?? CuiThemeScopeApplier.DetectAppearance(), resolution.Theme.BaseTheme,
-            resolution.EffectiveAccent.ResolveColour(_accentAppId ?? string.Empty));
-        var key = new ThemeResourceKey(palette, resolution.Accessibility, resolution.Theme.Name, resolution.Theme.CustomFingerprint);
+            explicitAccent);
+        var key = new ThemeResourceKey(palette, resolution.Accessibility, resolution.Theme.Name, resolution.Theme.CustomFingerprint, explicitAccent);
         // Editing a named draft changes the shared catalog. Scopes whose effective
         // palette and custom definition are unchanged retain their resource owners.
         if (_appliedThemeKeys.TryGetValue(control, out var applied) && applied == key) return false;
@@ -149,7 +150,8 @@ public sealed class CuiControlLoader : IDisposable
             var source = new ResourceDictionary();
             CuiThemeResourceApplier.ApplyToResources(source, palette, resolution.Accessibility);
             if (resolution.Theme.CustomTheme is { } custom)
-                CuiCustomThemeResourceApplier.ApplyToResources(source, custom, resolution.Accessibility);
+                CuiCustomThemeResourceApplier.ApplyToResources(source,
+                    CuiCustomThemeAccentResolver.Resolve(custom, explicitAccent), resolution.Accessibility);
             source["CuiEffectiveThemeName"] = resolution.Theme.Name;
             // Backend resource dictionaries have one owner. Reuse their immutable
             // values, never the attached dictionary or a mutable brush instance.

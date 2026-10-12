@@ -40,10 +40,38 @@ public sealed class CuiAppAccentTests
 
     private sealed class Preferences : ICuiThemePreferenceSource
     {
-        public CuiThemePreferenceSnapshot Current { get; private set; } = new("Glow", 0, "account:test", false, new(), CuiAppearance.Bright);
+        public Preferences(string theme = "Glow") => Current = new(theme, 0, "account:test", false, new(), CuiAppearance.Bright);
+        public CuiThemePreferenceSnapshot Current { get; private set; }
         public event EventHandler? Changed;
         public void Set(CuiAccentPreference accent)
         { Current = Current with { Revision = Current.Revision + 1, Accent = accent }; Changed?.Invoke(this, EventArgs.Empty); }
+    }
+
+    [Fact]
+    public async Task Explicit_default_app_colour_recolours_custom_primary_and_none_restores_authored_fill()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            var theme = CuiCustomThemeContract.CreateDefault("Authored theme");
+            theme = theme with { PrimaryAccent = new(CuiCustomFillKind.SolidColour, new("#247BAA")) };
+            var stored = CuiCustomThemeContract.Serialize(theme);
+            var catalog = new CuiThemeDefinitionCatalog(); catalog.UpsertCustomTheme(theme);
+            var source = new Preferences(theme.Name);
+            using var context = new CuiThemePreferenceContext(source, catalog);
+            using var loader = new CuiControlLoader(); loader.SetSurface("Present"); loader.SetThemePreferenceContext(context);
+            var loaded = loader.LoadMarkup("<Button Content='Primary' AccentRole='Primary'/>");
+            Assert.Empty(loaded.Diagnostics);
+            var button = Assert.IsAssignableFrom<Button>(loaded.Root);
+            static Color Fill(Button target) => Assert.IsAssignableFrom<ISolidColorBrush>(target.Background).Color;
+            Assert.Equal(Color.Parse("#247BAA"), Fill(button));
+            // Same base palette as None; the explicit override must still invalidate custom resources.
+            source.Set(new(CuiAccentOverrideMode.AllApps, "#DB3545"));
+            Assert.Equal(Color.Parse("#DB3545"), Fill(button));
+            source.Set(CuiAccentPreference.Default);
+            Assert.Equal(Color.Parse("#247BAA"), Fill(button));
+            Assert.Equal(stored, CuiCustomThemeContract.Serialize(catalog.Resolve(theme.Name).CustomTheme!));
+        }, CancellationToken.None);
     }
 
     [Fact]

@@ -204,7 +204,9 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
             appearance, current.EffectiveAccent.ResolveColour(string.Empty));
         if (_appliedGlobalTheme == key) return;
         CuiThemeScopeApplier.ApplyGlobalTheme(current.Theme.BaseTheme, "Home", current.Accessibility,
-            appearanceOverride: appearance, accentPreference: current.EffectiveAccent, customTheme: current.Theme.CustomTheme);
+            appearanceOverride: appearance, accentPreference: current.EffectiveAccent,
+            customTheme: current.Theme.CustomTheme is { } custom
+                ? CuiCustomThemeAccentResolver.Resolve(custom, current.EffectiveAccent.ResolveColour(string.Empty)) : null);
         if (Resources.TryGetResource("CuiBackgroundBrush", ActualThemeVariant, out var background) && background is Avalonia.Media.ISolidColorBrush backgroundBrush
             && Resources.TryGetResource("CuiTextBrush", ActualThemeVariant, out var foreground) && foreground is Avalonia.Media.ISolidColorBrush foregroundBrush
             && Resources.TryGetResource("CuiPanelBrush", ActualThemeVariant, out var panel) && panel is Avalonia.Media.ISolidColorBrush panelBrush)
