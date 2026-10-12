@@ -74,6 +74,25 @@ public sealed class CuiCustomThemeTests
     }
 
     [Fact]
+    public void Backdrop_blur_is_applied_only_to_background_roles_and_high_contrast_clears_it()
+    {
+        var resources = new ResourceDictionary(); var theme = CuiCustomThemeContract.CreateDefault();
+        theme = theme with { PrimaryAccent = theme.PrimaryAccent with { Colour = new("#123456", 20, 12) } };
+        var palette = CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Dark, CuiTheme.Professional);
+        CuiThemeResourceApplier.ApplyToResources(resources, palette);
+        CuiCustomThemeResourceApplier.ApplyToResources(resources, theme);
+        Assert.IsType<CuiCustomMaterialBrush>(resources["CuiAccentPrimaryBackground"]);
+        Assert.IsNotType<CuiCustomMaterialBrush>(resources["CuiAccentPrimaryBrush"]);
+        Assert.IsNotType<CuiCustomMaterialBrush>(resources["CuiAccentSecondaryBackground"]);
+        var high = new CuiAccessibilitySettings { HighContrast = true };
+        CuiThemeResourceApplier.ApplyToResources(resources, palette, high);
+        CuiCustomThemeResourceApplier.ApplyToResources(resources, theme, high);
+        Assert.IsNotType<CuiCustomMaterialBrush>(resources["CuiAccentPrimaryBackground"]);
+        Assert.IsNotType<CuiCustomMaterialBrush>(resources["CuiAccentPrimaryHoverBackground"]);
+        Assert.IsNotType<CuiCustomMaterialBrush>(resources["CuiAccentPrimaryPressedBackground"]);
+    }
+
+    [Fact]
     public void Reused_resources_restore_high_contrast_and_custom_themes_have_no_implicit_Mica()
     {
         var resources = new ResourceDictionary(); var theme = CuiCustomThemeContract.CreateDefault();

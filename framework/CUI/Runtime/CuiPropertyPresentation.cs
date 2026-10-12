@@ -125,6 +125,9 @@ public static class CuiPropertyPresentation
                 {
                     WatchCustom($"CuiAccent{tier}Brush", _ => RefreshAccentRole());
                     WatchCustom($"CuiAccent{tier}ForegroundBrush", _ => RefreshAccentRole());
+                    WatchCustom($"CuiAccent{tier}Background", _ => RefreshAccentRole());
+                    WatchCustom($"CuiAccent{tier}HoverBackground", _ => UpdateState());
+                    WatchCustom($"CuiAccent{tier}PressedBackground", _ => UpdateState());
                     Watch($"CuiAccent{tier}HoverBrush", null);
                     Watch($"CuiAccent{tier}PressedBrush", null);
                 }
@@ -337,7 +340,8 @@ public static class CuiPropertyPresentation
             if (_accentRole == CuiAccentRole.None) Store.RemoveSource(CuiPropertyLevel.Theme, source);
             else
             {
-                if (_resources.TryGetValue($"CuiAccent{_accentRole}Brush", out var brush))
+                if (_resources.TryGetValue($"CuiAccent{_accentRole}Background", out var brush) ||
+                    _resources.TryGetValue($"CuiAccent{_accentRole}Brush", out brush))
                     Set("Background", brush, CuiPropertyLevel.Theme, source, 2);
                 if (_resources.TryGetValue($"CuiAccent{_accentRole}ForegroundBrush", out var foreground))
                     Set("Foreground", foreground, CuiPropertyLevel.Theme, source, 2);
@@ -367,6 +371,10 @@ public static class CuiPropertyPresentation
                 UpdateState();
         }
 
+        private string AccentStateBackground(string state) =>
+            _resources.ContainsKey($"CuiAccent{_accentRole}{state}Background")
+                ? $"CuiAccent{_accentRole}{state}Background" : $"CuiAccent{_accentRole}{state}Brush";
+
         private void UpdateState()
         {
             RefreshFocusRing();
@@ -383,11 +391,11 @@ public static class CuiPropertyPresentation
                 if (_dragging) State("Background","CuiScrollThumbPressedBrush");
             }
             else if (!rail && _control.IsPointerOver)
-            { State("Background", _accentRole == CuiAccentRole.None ? "CuiButtonHoverBrush" : $"CuiAccent{_accentRole}HoverBrush"); State("Foreground", _accentRole == CuiAccentRole.None ? "CuiButtonHoverForegroundBrush" : $"CuiAccent{_accentRole}ForegroundBrush"); }
+            { State("Background", _accentRole == CuiAccentRole.None ? "CuiButtonHoverBrush" : AccentStateBackground("Hover")); State("Foreground", _accentRole == CuiAccentRole.None ? "CuiButtonHoverForegroundBrush" : $"CuiAccent{_accentRole}ForegroundBrush"); }
             if (_selected || _control is ToggleButton { IsChecked: true } or ListBoxItem { IsSelected: true } or MenuItem { IsSelected: true })
             { State("Background", _control is MenuItem or ListBoxItem ? "CuiMenuSelectionBrush" : "CuiSelectionBrush"); State("BorderColor", "CuiSelectionIndicatorBrush"); }
             if (!rail && _control is Button { IsPressed: true })
-            { State("Background", _accentRole == CuiAccentRole.None ? "CuiButtonPressedBrush" : $"CuiAccent{_accentRole}PressedBrush"); State("Foreground", _accentRole == CuiAccentRole.None ? "CuiButtonPressedForegroundBrush" : $"CuiAccent{_accentRole}ForegroundBrush"); }
+            { State("Background", _accentRole == CuiAccentRole.None ? "CuiButtonPressedBrush" : AccentStateBackground("Pressed")); State("Foreground", _accentRole == CuiAccentRole.None ? "CuiButtonPressedForegroundBrush" : $"CuiAccent{_accentRole}ForegroundBrush"); }
             if (_control.IsKeyboardFocusWithin)
             {
                 State("BorderColor", "CuiFocusBrush");

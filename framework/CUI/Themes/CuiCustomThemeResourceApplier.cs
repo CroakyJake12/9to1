@@ -69,6 +69,9 @@ public static class CuiCustomThemeResourceApplier
                 resources[$"CuiAccent{role}HoverBrush"] = background;
                 resources[$"CuiAccent{role}PressedBrush"] = background;
                 resources[$"CuiAccent{role}ForegroundBrush"] = foreground;
+                resources[$"CuiAccent{role}Background"] = background;
+                resources[$"CuiAccent{role}HoverBackground"] = background;
+                resources[$"CuiAccent{role}PressedBackground"] = background;
             }
             resources["CuiAccentBrush"] = background;
             resources["HavenAccentBrush"] = background;
@@ -80,6 +83,10 @@ public static class CuiCustomThemeResourceApplier
     {
         var brush = CreateBrush(fill);
         resources[$"CuiAccent{role}Brush"] = brush;
+        var backgroundBrush = CreateBackgroundBrush(fill);
+        resources[$"CuiAccent{role}Background"] = backgroundBrush;
+        resources[$"CuiAccent{role}HoverBackground"] = backgroundBrush;
+        resources[$"CuiAccent{role}PressedBackground"] = backgroundBrush;
         resources[$"HavenAccent{role}Brush"] = brush;
         // A role keeps its authored fill through interaction; the shared focus,
         // pressed and disabled state contracts remain independently projected.
@@ -99,6 +106,20 @@ public static class CuiCustomThemeResourceApplier
             (byte)Math.Round(colour.B * colour.A / 255d + background.B * (1 - colour.A / 255d)))).ToArray();
         var ink = samples.Min(colour => CuiContrast.Ratio(Colors.Black, colour)) >= samples.Min(colour => CuiContrast.Ratio(Colors.White, colour)) ? Colors.Black : Colors.White;
         resources[$"CuiAccent{role}ForegroundBrush"] = new SolidColorBrush(ink).ToImmutable();
+    }
+
+    /// <summary>Backdrop effects belong to the owning surface, never foreground text or icons.</summary>
+    public static IBrush CreateBackgroundBrush(CuiCustomFill fill)
+    {
+        var value = CuiCustomThemeContract.ValidateFill(fill);
+        var hasBlur = value.Kind switch
+        {
+            CuiCustomFillKind.SolidColour => value.Colour.BackgroundBlur > 0,
+            CuiCustomFillKind.Gradient => value.Gradient!.Stops.Any(stop => stop.Colour.BackgroundBlur > 0),
+            CuiCustomFillKind.Pattern => value.Pattern!.Foreground.BackgroundBlur > 0 || value.Pattern.Background.BackgroundBlur > 0,
+            _ => false
+        };
+        return hasBlur ? new CuiCustomMaterialBrush(value) : CreateBrush(value);
     }
 
     public static IBrush CreateBrush(CuiCustomFill fill)
