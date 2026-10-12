@@ -248,10 +248,24 @@ public static class CuiThemeResourceApplier
         resources["CuiChoiceBorderBrush"] = new SolidColorBrush(CuiContrast.EnsureForegroundContrast(palette.LineStrong, palette.Panel, 3));
         resources["CuiInputRadius"] = new CornerRadius((professional ? 12 : CuiThemeExpression.BaseControlRadius * expression.ControlRadiusScale) * settings.DisplayScale);
         resources["CuiWorkspaceBrush"] = new SolidColorBrush(professional ? palette.TideColour : palette.TideBase);
+        var material = professional && !settings.HighContrast;
+        var dark = Luminance(palette.Text) > Luminance(palette.Panel);
+        var floating = Color.FromRgb(
+            (byte)Math.Round(palette.Panel3.R + (255 - palette.Panel3.R) * (dark ? .055 : .70)),
+            (byte)Math.Round(palette.Panel3.G + (255 - palette.Panel3.G) * (dark ? .055 : .70)),
+            (byte)Math.Round(palette.Panel3.B + (255 - palette.Panel3.B) * (dark ? .055 : .70)));
+        resources["CuiWorkspaceMaterial"] = material
+            ? new CuiMaterialBrush(palette.TideColour, 1, 0, .022, tonalBase: true) : resources["CuiWorkspaceBrush"];
+        resources["CuiShellMaterial"] = material
+            ? new CuiMaterialBrush(palette.TideBase, 1, 0, .015, tonalBase: true) : resources["CuiBackgroundBrush"];
+        resources["CuiSurfaceMaterial"] = material
+            ? new CuiMaterialBrush(palette.Panel, .94, 8, .015) : resources["CuiPanelBrush"];
+        resources["CuiFloatingSurfaceMaterial"] = material
+            ? new CuiMaterialBrush(floating, .96, 8, .012) : resources["CuiPanel2Brush"];
         // Popup structure and menu rows belong to CUI, including scaling and
-        // accessibility. Opaque content prevents text from the editor bleeding
-        // through menus in translucent theme families.
-        resources["CuiPopupSurfaceBrush"] = new SolidColorBrush(WithAlpha(palette.Panel2, 255));
+        // accessibility. Professional uses its strongly tinted backdrop surface;
+        // other themes and high contrast retain the existing opaque material.
+        resources["CuiPopupSurfaceBrush"] = material ? resources["CuiFloatingSurfaceMaterial"] : new SolidColorBrush(WithAlpha(palette.Panel2, 255));
         resources["CuiPopupPadding"] = new Thickness((professional ? 12 : 8) * spacing);
         resources["CuiPopupBorderBrush"] = professional && !settings.HighContrast ? Brushes.Transparent : resources["CuiLineBrush"];
         resources["CuiMenuItemPadding"] = new Thickness(10 * spacing, 7 * spacing);

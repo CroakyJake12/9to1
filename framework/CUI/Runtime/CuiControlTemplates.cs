@@ -84,7 +84,7 @@ public static class CuiControlTemplates
         target.Bind(property, target.GetResourceObservable(key));
     private static Border Frame(TemplatedControl owner, Control? content = null)
     {
-        var frame = new Border { Child = content };
+        var frame = new CuiMaterialBorder { Child = content };
         Bind(frame, Border.BackgroundProperty, owner, "Background"); Bind(frame, Border.BorderBrushProperty, owner, "BorderBrush");
         Bind(frame, Border.BorderThicknessProperty, owner, "BorderThickness"); Bind(frame, Border.CornerRadiusProperty, owner, "CornerRadius");
         return frame;
@@ -253,7 +253,7 @@ public static class CuiControlTemplates
 
     private static Border PopupFrame(Control owner, Control content)
     {
-        var frame = new Border { Child = content };
+        var frame = new CuiMaterialBorder { Child = content };
         // Explicit popup scope borrows the owner's canonical resources, not a donor popup theme.
         frame.Bind(Border.BackgroundProperty, owner.GetResourceObservable("CuiPopupSurfaceBrush"));
         frame.Bind(Border.BorderBrushProperty, owner.GetResourceObservable("CuiPopupBorderBrush"));

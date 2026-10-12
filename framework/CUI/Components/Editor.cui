@@ -1,8 +1,8 @@
 <Cui id="cui.editor.components" version="1">
   <Container (Definition) ID="EditorShell" Type="Grid" RowSizes="Auto Auto Auto 1fr Auto" Background="{Resource CuiBackgroundBrush}" />
-  <Container (Definition) ID="EditorHeader" Type="Grid" ColumnSizes="Auto 1fr Auto" Background="{Resource CuiPanelBrush}" Padding="16,10" CellGap="12" />
-  <Container (Definition) ID="EditorMenus" Type="Menu" Background="{Resource CuiPanelBrush}" Padding="10,0" BorderWidth="0" />
-  <Container (Definition) ID="EditorToolbar" Type="Grid" ColumnSizes="Auto 1fr Auto" Background="{Resource CuiPanel2Brush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" CornerRadius="14" Margin="12,6,12,10" Padding="10,5" Height="48" />
+  <Container (Definition) ID="EditorHeader" Type="Grid" ColumnSizes="Auto 1fr Auto" Background="{Resource CuiSurfaceMaterial}" Padding="16,10" CellGap="12" />
+  <Container (Definition) ID="EditorMenus" Type="Menu" Background="{Resource CuiSurfaceMaterial}" Padding="10,0" BorderWidth="0" />
+  <Container (Definition) ID="EditorToolbar" Type="Grid" ColumnSizes="Auto 1fr Auto" Background="{Resource CuiFloatingSurfaceMaterial}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" CornerRadius="14" Margin="12,6,12,10" Padding="10,5" Height="48" />
   <Container (Definition) ID="EditorToolGroup" Type="Horizontal Stack" CellGap="2" VerticalAlignment="Center" />
   <Button (Definition) ID="EditorIcon" Width="36" Height="36" MinWidth="36" MinHeight="36" Padding="8" BorderWidth="0" Background="Transparent" CornerRadius="8" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
   <Button (Definition) ID="EditorIconMenu" Type="Menu Item" Width="36" Height="36" MinWidth="36" MinHeight="36" Padding="8" BorderWidth="0" Background="Transparent" CornerRadius="8" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />

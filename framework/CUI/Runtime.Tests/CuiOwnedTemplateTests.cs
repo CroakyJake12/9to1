@@ -151,7 +151,7 @@ public sealed class CuiOwnedTemplateTests
     }
 
     [Fact]
-    public async Task Floating_menu_uses_opaque_scoped_chrome_and_reacts_to_accessibility_without_replacing_items()
+    public async Task Floating_menu_uses_scoped_material_and_opaque_accessibility_fallback_without_replacing_items()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
         await session.Dispatch(() =>
@@ -173,7 +173,10 @@ public sealed class CuiOwnedTemplateTests
                 owner.IsSubMenuOpen = true; Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
                 var item = owner.Items.OfType<CuiMenuItem>().First();
                 var frame = item.GetVisualAncestors().OfType<Border>().First(border => border.BoxShadow.Count > 0);
-                Assert.Equal(255, Assert.IsAssignableFrom<ISolidColorBrush>(frame.Background).Color.A);
+                var material = Assert.IsType<CuiMaterialBrush>(frame.Background);
+                Assert.Equal(8, material.BlurRadius); Assert.Equal(.96, material.TintOpacity);
+                Assert.Equal(CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Dark, CuiTheme.Professional).Text,
+                    Assert.IsAssignableFrom<ISolidColorBrush>(item.Foreground).Color);
                 Assert.Equal(new CornerRadius(24), frame.CornerRadius);
                 Assert.Equal(new Thickness(12), frame.Padding);
                 Assert.True(item.Bounds.Height >= 40);
@@ -192,9 +195,11 @@ public sealed class CuiOwnedTemplateTests
                 CuiThemeResourceApplier.ApplyToResources(resources,
                     CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Dark, CuiTheme.Professional),
                     new CuiAccessibilitySettings { HighContrast = true, DisplayScale = 1.5 });
-                foreach (var key in new[] { "CuiPopupPadding", "CuiControlBorderWidth", "CuiPopupShadow", "CuiPopupShadowMargin" })
+                foreach (var key in new[] { "CuiPopupPadding", "CuiControlBorderWidth", "CuiPopupShadow", "CuiPopupShadowMargin", "CuiPopupSurfaceBrush" })
                     owner.Resources[key] = resources[key];
                 window.UpdateLayout();
+                Assert.IsNotType<CuiMaterialBrush>(frame.Background);
+                Assert.Equal(255, Assert.IsAssignableFrom<ISolidColorBrush>(frame.Background).Color.A);
                 Assert.Equal(new Thickness(18), frame.Padding);
                 Assert.Equal(new Thickness(3), frame.BorderThickness);
                 Assert.Equal(0, frame.BoxShadow.Count);

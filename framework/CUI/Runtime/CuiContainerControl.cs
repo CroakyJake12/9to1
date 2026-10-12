@@ -6,7 +6,7 @@ namespace CakeOS.Cui.Runtime;
 
 /// <summary>CUI-owned composition boundary over the maintained native layout engines.
 /// The outer element owns CUI identity/placement and decoration; Layout is renderer-private structure.</summary>
-public sealed class CuiContainerControl : Border, IDisposable
+public sealed class CuiContainerControl : CuiMaterialBorder, IDisposable
 {
     public Panel Layout { get; }
     public string LayoutType { get; }
