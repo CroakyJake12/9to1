@@ -64,12 +64,20 @@ public sealed partial class BrowserChatSession : IBrowserSpacesPresentationSessi
                 _status = _state.Status.Message;
             }, linked.Token);
         }
-        catch (BrowserTaskContextUnavailableException)
+        catch (Exception error) when (IsPrivateContextUnavailable(error))
         {
             await PublishAsync(() => { _available = false; _status = "Sign in using the account control to open your private chats."; }, linked.Token);
         }
         finally { _serial.Release(); }
     });
+
+    private static bool IsPrivateContextUnavailable(Exception error) => error switch
+    {
+        BrowserTaskContextUnavailableException => true,
+        AggregateException { InnerExceptions.Count: > 0 } aggregate =>
+            aggregate.InnerExceptions.All(IsPrivateContextUnavailable),
+        _ => false
+    };
 
     public void Admit() { _demand(); if (_disposed) throw new ObjectDisposedException(nameof(BrowserChatSession)); _admitted = true; Changed(); }
     public void Deactivate() { _admitted = false; _root = null; }

@@ -157,6 +157,64 @@ public sealed class BrowserChatSessionTests
     }
 
     [Fact]
+    public async Task Default_product_route_renders_sign_in_after_both_original_reads_refuse_the_missing_account()
+    {
+        var backend = new RecoveryBackend
+        {
+            RecentFailure = new BrowserTaskContextUnavailableException("Recent chats require the actual profile."),
+            InventoryFailure = new AggregateException(new BrowserTaskContextUnavailableException("Model privacy requires the actual profile."))
+        };
+        await using var feature = new BrowserSpacesFeature(
+            () => throw new InvalidOperationException("The product route must not open the configuration manager."),
+            () => { }, action => { action(); return Task.CompletedTask; }, _ => { }, () => backend);
+        var result = await feature.OpenAsync(new(HomeFeatureRouteIds.Spaces));
+        Assert.True(result.Succeeded);
+        var surface = feature.Render(result.ViewState!);
+        var chat = Assert.IsType<BrowserChatSession>(surface.Bindings);
+        surface.Admission!.Accept();
+        Assert.Equal(1, backend.RecentReads); Assert.Equal(1, backend.InventoryReads);
+        Assert.True(chat.TryGetValue("chat.emptyDescription", out var description));
+        Assert.Contains("Sign in", description!.ToString());
+        Assert.False(chat.IsActionAvailable("chat.send"));
+        Assert.False(chat.TrySetValue("composer.text", "Private text needs a real profile."));
+        Assert.True(chat.IsActionAvailable("shell.account"));
+        surface.Lifetime!.Dispose();
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task Missing_account_never_hides_an_independent_read_failure(int kind)
+    {
+        Exception foreign = kind switch
+        {
+            0 => new IOException("The original model read failed."),
+            1 => new AggregateException(),
+            _ => new OperationCanceledException("Foreign model cancellation is a fault.")
+        };
+        var missing = new BrowserTaskContextUnavailableException("The original recent-chat profile is absent.");
+        var backend = new RecoveryBackend { RecentFailure = missing, InventoryFailure = foreign };
+        var chat = new BrowserChatSession(() => backend, () => { },
+            action => { action(); return Task.CompletedTask; }, _ => { });
+        var prepare = chat.PrepareAsync(default);
+        await Assert.ThrowsAnyAsync<Exception>(() => prepare);
+        Assert.True(prepare.IsFaulted);
+        Assert.True(ContainsOriginal(prepare.Exception!, missing));
+        Assert.True(ContainsOriginal(prepare.Exception!, foreign));
+        Assert.Equal(1, backend.RecentReads); Assert.Equal(1, backend.InventoryReads);
+        var close = chat.DisposeAsync().AsTask();
+        await Assert.ThrowsAnyAsync<Exception>(() => close);
+        Assert.True(close.IsFaulted);
+        Assert.True(ContainsOriginal(close.Exception!, missing));
+        Assert.True(ContainsOriginal(close.Exception!, foreign));
+    }
+
+    private static bool ContainsOriginal(Exception observed, Exception original) =>
+        ReferenceEquals(observed, original) || observed is AggregateException aggregate &&
+        aggregate.InnerExceptions.Any(child => ContainsOriginal(child, original));
+
+    [Fact]
     public async Task Revoked_chat_does_not_project_previously_captured_private_repeat_items()
     {
         await using var chat = new BrowserChatSession(
@@ -182,13 +240,23 @@ public sealed class BrowserChatSessionTests
         public int Creates, Sends, DraftWrites;
         public bool HoldFirstDraft;
         public Exception? DraftFailure;
+        public Exception? RecentFailure, InventoryFailure;
+        public int RecentReads, InventoryReads;
         public CancellationToken OriginalSaveToken;
         public readonly TaskCompletionSource DraftStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public readonly TaskCompletionSource ReleaseDraft = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public Task<IReadOnlyList<Conversation>> GetRecentChatsAsync(int limit, CancellationToken token) =>
-            Task.FromResult<IReadOnlyList<Conversation>>(Creates == 0 ? [] : [_conversation]);
-        public Task<ChatSpaceModelInventory> GetModelInventoryAsync(CancellationToken token) =>
-            Task.FromResult(new ChatSpaceModelInventory(UnavailableReason is null ? [_model] : []) { UnavailableReason = UnavailableReason });
+        public Task<IReadOnlyList<Conversation>> GetRecentChatsAsync(int limit, CancellationToken token)
+        {
+            RecentReads++;
+            return RecentFailure is { } error ? Task.FromException<IReadOnlyList<Conversation>>(error)
+                : Task.FromResult<IReadOnlyList<Conversation>>(Creates == 0 ? [] : [_conversation]);
+        }
+        public Task<ChatSpaceModelInventory> GetModelInventoryAsync(CancellationToken token)
+        {
+            InventoryReads++;
+            return InventoryFailure is { } error ? Task.FromException<ChatSpaceModelInventory>(error)
+                : Task.FromResult(new ChatSpaceModelInventory(UnavailableReason is null ? [_model] : []) { UnavailableReason = UnavailableReason });
+        }
         public Task<Conversation> CreateChatAsync(CancellationToken token) { Creates++; return Task.FromResult(_conversation); }
         public Task<ChatSpaceConversationData> GetConversationAsync(Guid id, CancellationToken token)
         {
