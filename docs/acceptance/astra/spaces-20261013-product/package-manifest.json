@@ -1,0 +1,88 @@
+{
+  "status": "WORKING_NOT_FULL_ACCEPTANCE",
+  "createdAt": "2026-10-13",
+  "sourceIdentity": "Per-file/assembly hashes in visual receipts; immutable9c identity only for signed-out Chromium evidence. Final checkpoint commit/deployment pending.",
+  "originalReferenceBytesIncluded": false,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 6524,
+      "sha256": "d736c8fbebf5f1515160f3536b4414e1c64cd52a0f63cd99da320ede5a3c72af"
+    },
+    {
+      "path": "discrepancy-register.md",
+      "bytes": 21246,
+      "sha256": "c115971af5a9e9e93f26a137c04bc0ef652d369c21c64ab0b80eb4e6353749fc"
+    },
+    {
+      "path": "images/signed-out-9c76fced-1530x946.png",
+      "bytes": 378176,
+      "sha256": "291040d562c090c31de018093fcdcdb8b0ad458aeaee53275d73217dccd168f4"
+    },
+    {
+      "path": "images/signed-out-9c76fced-390x844.png",
+      "bytes": 190976,
+      "sha256": "224efa1100434ebc0cb84db5be5a6ea2123434077bd6519e70b07ce6b5b62b1c"
+    },
+    {
+      "path": "images/visual1-desktop-1530x946.png",
+      "bytes": 100483,
+      "sha256": "1c00ec541c93f673c652a9594fa11ff1a5192fad8895cb3be54f1e0bd8787d77"
+    },
+    {
+      "path": "images/visual2-desktop-1530x946.png",
+      "bytes": 100121,
+      "sha256": "61840a150d0367667eb6892f2433dd84c30cb050e96e5d801ac97ffb1acfacf6"
+    },
+    {
+      "path": "images/visual7-compact-390x946.png",
+      "bytes": 64707,
+      "sha256": "d4cc8dc7243c962c106e339d9d228413d895bad0ee271a91d0a3c1982d22773a"
+    },
+    {
+      "path": "images/visual7-desktop-1530x946.png",
+      "bytes": 100835,
+      "sha256": "316b5ef587ff73c32754f73452ea8c0e44352044cf7c417f9fa3f8c2e4f261da"
+    },
+    {
+      "path": "receipts/native9-source-and-assemblies.json",
+      "bytes": 4802,
+      "sha256": "ed3ee676955a9e41f37b9155b91c816aab7d9939e772835401d4b192c8eb2196"
+    },
+    {
+      "path": "receipts/signed-out-9c76fced.json",
+      "bytes": 3351,
+      "sha256": "1a23e7d6d294ba257816e3a1bc67e31d0846f1566abb7b1028b8dc8543f2ca46"
+    },
+    {
+      "path": "receipts/visual1-desktop.json",
+      "bytes": 17466,
+      "sha256": "c40167867f2f881d666161d8ba3de5ffeb565fafd4d9547c4d9eccc72916a2f7"
+    },
+    {
+      "path": "receipts/visual1-metadata-clarification.json",
+      "bytes": 793,
+      "sha256": "9a8bfbdf62f1a2c8550432d2ed317803732691e228337d6a2e4175d197b65e84"
+    },
+    {
+      "path": "receipts/visual2-desktop.json",
+      "bytes": 17672,
+      "sha256": "ca903d1ad5266a4c87881db388b21ae6bf0ccfe17b70e3fc4644ecc835576420"
+    },
+    {
+      "path": "receipts/visual7-compact.json",
+      "bytes": 21122,
+      "sha256": "526ba8d37cef37a03a15be3e70a6d23b24cdf9155bf2a5cf69f31bd047121f14"
+    },
+    {
+      "path": "receipts/visual7-desktop.json",
+      "bytes": 21344,
+      "sha256": "e4c96dc4cc08820bd50e04cc9a222953d0bce1d57d06f0f330b92337c220bfd5"
+    },
+    {
+      "path": "visual-comparison.html",
+      "bytes": 144948,
+      "sha256": "2de9cbd994e47c9497951d8f759175a0a616a16fcb42213d4f6f8842f4460131"
+    }
+  ]
+}

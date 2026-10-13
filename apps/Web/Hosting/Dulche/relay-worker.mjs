@@ -1,6 +1,7 @@
 import { DurableObject } from 'cloudflare:workers';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 const json = (status, value) => Response.json(value, { status, headers: { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer', 'X-Content-Type-Options': 'nosniff' } });
+const ownedFailure = (id, status, error) => { const response = json(status, { error }); response.headers.set('X-Original-Relay-Admitted', id); return response; };
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(value);
 const deferred = () => { let resolve, reject; const promise = new Promise((r,j) => { resolve = r; reject = j; }); return { promise, resolve, reject }; };
 async function bytes(request, limit) {
@@ -41,37 +42,60 @@ export async function dispatchAuthorized(request, env, ctx) {
   }
   if (request.signal.aborted) return json(499, { error: 'client_cancelled' });
   const id = crypto.randomUUID(), headers = new Headers(request.headers); headers.set('X-Original-Relay-Job', id);
-  let retirement, reader, closeTask, closed = false;
+  let retirement, reader, closeTask, cancelled = false;
   const retire = () => {
     if (!retirement) { retirement = stub.retireOriginal(id); retirement.catch(() => {}); ctx.waitUntil(retirement); }
     return retirement;
   };
   const abort = () => { retire().catch(() => {}); };
-  request.signal.addEventListener('abort', abort, { once: true });
-  try {
-    const response = await stub.dispatch(new Request(request, { headers }));
-    if (!response.ok || !response.body) { request.signal.removeEventListener('abort', abort); return response; }
-    reader = response.body.getReader();
-    const close = reason => {
-      if (closeTask) return closeTask;
-      if (closed) return Promise.resolve(); closed = true;
-      closeTask = (async () => {
-      const originalCancellation = reader.cancel(reason);
+  const close = reason => {
+    if (closeTask) return closeTask;
+    closeTask = (async () => {
+      let originalCancellation;
+      try { originalCancellation = reader?.cancel(reason); } catch (error) { originalCancellation = Promise.reject(error); }
       const results = await Promise.allSettled([originalCancellation, retire()]);
-      if (results[1].status === 'fulfilled') { try { await stub.releaseOriginal(id); } catch (error) { results.push({status:'rejected',reason:error}); } }
-      reader.releaseLock(); request.signal.removeEventListener('abort', abort);
+      if (results[1].status === 'fulfilled') {
+        try { await stub.releaseOriginal(id); } catch (error) { results.push({ status: 'rejected', reason: error }); }
+      }
+      try { reader?.releaseLock(); } catch (error) { results.push({ status: 'rejected', reason: error }); }
+      request.signal.removeEventListener('abort', abort);
       const errors = results.filter(result => result.status === 'rejected').map(result => result.reason);
       if (errors.length === 1) throw errors[0];
       if (errors.length > 1) throw new AggregateError(errors, 'Original relay cleanup failed');
-      })(); closeTask.catch(() => {}); return closeTask;
-    };
+    })();
+    closeTask.catch(() => {}); return closeTask;
+  };
+  request.signal.addEventListener('abort', abort, { once: true });
+  try {
+    const response = await stub.dispatch(new Request(request, { headers }));
+    // Pre-admission refusals own no runtime work. Only the exact DO-issued
+    // receipt enrolls error responses in the original terminal join.
+    if (response.headers.get('X-Original-Relay-Admitted') !== id) {
+      request.signal.removeEventListener('abort', abort);
+      if (response.ok) { await response.body?.cancel(); throw new Error('Original admission receipt unavailable'); }
+      return response;
+    }
+    reader = response.body?.getReader();
+    if (!response.ok || !reader) {
+      await close('Original runtime refused');
+      return json(response.ok ? 502 : response.status, { error: 'runtime_unavailable' });
+    }
+    const responseHeaders = new Headers(response.headers); responseHeaders.delete('X-Original-Relay-Admitted');
     return new Response(new ReadableStream({
       async pull(controller) {
-        try { const next = await reader.read(); if (next.done) { await stub.releaseOriginal(id); closed = true; reader.releaseLock(); request.signal.removeEventListener('abort', abort); controller.close(); } else controller.enqueue(next.value); }
-        catch (error) { let cause = error; try { await close(error); } catch (cleanupError) { cause = new AggregateError([error, cleanupError], 'Original relay response failed'); } controller.error(cause); }
-      }, cancel: close,
-    }), { status: response.status, headers: response.headers });
+        try {
+          const next = await reader.read();
+          if (next.done) { await close('Original runtime complete'); if (!cancelled) controller.close(); }
+          else if (!cancelled) controller.enqueue(next.value);
+        } catch (error) {
+          let cause = error; try { await close(error); } catch (cleanupError) { cause = new AggregateError([error, cleanupError], 'Original relay response failed'); }
+          if (!cancelled) controller.error(cause);
+        }
+      },
+      cancel(reason) { cancelled = true; return close(reason); },
+    }), { status: response.status, headers: responseHeaders });
   } catch (error) { request.signal.removeEventListener('abort', abort); throw error; }
+
 }
 // One coordination atom per actual runtime, not per application. Transport jobs
 // are deliberately ephemeral: no prompt, bearer, or generated byte is written
@@ -110,7 +134,7 @@ export class RuntimeRelay extends DurableObject {
   cancel(job, reason) {
     if (job.cancelled || !this.jobs.has(job.id)) return job.terminal.promise;
     job.cancelled = true; job.body = null; job.authorization = null; clearTimeout(job.timer); job.credit?.resolve();
-    if (!job.headersSent) job.ready.resolve(json(502, { error: reason }));
+    if (!job.headersSent) job.ready.resolve(ownedFailure(job.id, 502, reason));
     job.error = new Error(reason); job.available?.resolve();
     if (job.claimed) { this.notices.push({ jobId: job.id, cancel: true }); this.wake(); job.retireTimer = setTimeout(() => this.remove(job, false), 5000); }
     else this.remove(job);
@@ -228,7 +252,7 @@ export class RuntimeRelay extends DurableObject {
     if (!job || !job.claimed) return json(404, { error: 'original_job_unavailable' });
     if (path === '/connector/terminal') {
       if (result.completed !== true && !job.cancelled) this.cancel(job, 'original_runtime_failed');
-      if (!job.cancelled) { if (!job.headersSent) job.ready.resolve(json(502, { error: 'runtime_unavailable' })); else { job.done = true; job.available?.resolve(); } }
+      if (!job.cancelled) { if (!job.headersSent) job.ready.resolve(ownedFailure(job.id, 502, 'runtime_unavailable')); else { job.done = true; job.available?.resolve(); } }
       this.remove(job); return json(200, { terminal: true });
     }
     if (job.cancelled) return json(410, { error: 'original_job_retired' });
@@ -236,7 +260,7 @@ export class RuntimeRelay extends DurableObject {
       if (job.headersSent) return json(409, { error: 'headers_already_owned' });
       const value = JSON.parse(new TextDecoder().decode(await bytes(request, 1024)));
       if (value.status !== 200 || !['application/json', 'application/x-ndjson'].includes(value.contentType)) { this.cancel(job, 'runtime_unavailable'); return json(400, { error: 'invalid_runtime_headers' }); }
-      job.headersSent = true; job.ready.resolve(new Response(job.stream, { status: 200, headers: { 'Content-Type': value.contentType, 'Content-Encoding': 'identity', 'Cache-Control': 'no-store, no-transform', 'Referrer-Policy': 'no-referrer' } }));
+      job.headersSent = true; job.ready.resolve(new Response(job.stream, { status: 200, headers: { 'X-Original-Relay-Admitted': job.id, 'Content-Type': value.contentType, 'Content-Encoding': 'identity', 'Cache-Control': 'no-store, no-transform', 'Referrer-Policy': 'no-referrer' } }));
       return json(200, { ready: true });
     }
     if (path === '/connector/chunk') {

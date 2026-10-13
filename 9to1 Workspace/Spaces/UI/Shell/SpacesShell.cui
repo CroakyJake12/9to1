@@ -1,9 +1,9 @@
 <Cui id="spaces.application" version="1">
   <Theme Name="user_preference">
     <Page ID="spaces-application" AccessibleName="Spaces">
-      <Container ID="spaces-shell" Type="Grid" ColumnSizes="{Binding shell.columns}" RowSizes="{Binding shell.rows}" Background="{Resource CuiShellMaterial}">
+      <Container ID="spaces-shell" Type="Grid" ColumnSizes="{Binding shell.columns}" RowSizes="{Binding shell.rows}" Background="{Resource CuiShellBrush}">
         <Container ID="spaces-navigation-slot" Type="Overlay" RowSpan="2" ColumnSpan="{Binding shell.navigationSpan}" Width="{Binding shell.navigationWidth}" HorizontalAlignment="Left" Layer="10" AccessibleName="Spaces and contextual navigation" />
-        <Container ID="spaces-header" Column="1" MinHeight="{Binding shell.headerMinHeight}" Type="Grid" ColumnSizes="{Binding shell.headerColumns}" RowSizes="{Binding shell.headerRows}" Padding="20,12" CellGap="8" Background="{Resource CuiShellMaterial}" AccessibleName="Spaces controls">
+        <Container ID="spaces-header" Column="1" MinHeight="{Binding shell.headerMinHeight}" Type="Grid" ColumnSizes="{Binding shell.headerColumns}" RowSizes="{Binding shell.headerRows}" Padding="20,12" CellGap="8" Background="{Resource CuiShellBrush}" AccessibleName="Spaces controls">
           <Container Type="Horizontal Stack" CellGap="8" VerticalAlignment="Center">
             <Button ID="spaces-chat-type" Action="chat.choose-type" Content="{Binding chat.typeLabel}" Tooltip="{Binding chat.locationLabel}" Interactive="{Binding chat.canChooseType}" CornerRadius="22" MinHeight="44" Padding="16,8" FontSize="16" FontWeight="SemiBold" AccessibleName="Chat type and location" />
           </Container>
@@ -15,7 +15,7 @@
             <Button ID="spaces-account" Action="shell.account" Interactive="{Binding shell.canAccount}" AccessibleName="Account" Tooltip="Account" Width="44" Height="44" CornerRadius="22" Padding="12"><Image Source="icon:user" Width="20" Height="20" /></Button>
           </Container>
         </Container>
-        <Container ID="spaces-workspace-slot" Column="1" Row="1" Type="Overlay" CornerRadius="28,0,0,0" Background="{Resource CuiWorkspaceMaterial}" AccessibleName="Active Space workspace" />
+        <Container ID="spaces-workspace-slot" Column="1" Row="1" Type="Overlay" CornerRadius="48,0,0,0" Background="{Resource CuiWorkspaceBrush}" AccessibleName="Active Space workspace" />
       </Container>
     </Page>
   </Theme>

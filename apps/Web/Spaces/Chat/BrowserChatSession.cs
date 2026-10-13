@@ -29,7 +29,7 @@ public sealed partial class BrowserChatSession : IBrowserSpacesPresentationSessi
     private ChatSpaceViewState _state = ChatSpaceViewState.Empty;
     private CancellationTokenSource? _sending;
     private Task? _close;
-    private bool _disposed, _admitted, _available, _busy, _dirty, _compact, _sidebar = true, _desktopSidebar = true;
+    private bool _disposed, _admitted, _available, _signedOut, _busy, _dirty, _compact, _sidebar = true, _desktopSidebar = true;
     private string _status = "Connecting Chat services…", _query = "";
     private bool _catalog, _models, _recovery;
     private Control? _root;
@@ -60,13 +60,14 @@ public sealed partial class BrowserChatSession : IBrowserSpacesPresentationSessi
             await PublishAsync(() =>
             {
                 _state = _controller.State;
+                _signedOut = false;
                 _available = !_state.IsLoading && _state.Status.Tone != ChatSpaceStatusTone.Error;
                 _status = _state.Status.Message;
             }, linked.Token);
         }
         catch (Exception error) when (IsPrivateContextUnavailable(error))
         {
-            await PublishAsync(() => { _available = false; _status = "Sign in using the account control to open your private chats."; }, linked.Token);
+            await PublishAsync(() => { _signedOut = true; _available = false; _status = "Sign in using the account control to open your private chats."; }, linked.Token);
         }
         finally { _serial.Release(); }
     });
@@ -117,7 +118,7 @@ public sealed partial class BrowserChatSession : IBrowserSpacesPresentationSessi
     public bool TrySetItemValue(object item, string path, object? value) => false;
     private bool CanAct => !_disposed && _admitted;
     private bool CanEdit => CanAct && _available && !_busy && !_state.Composer.IsSending;
-    private bool HasIssues => _controller is not null && (_saveError is not null || _controller.RequiresTurnReconciliation ||
+    private bool HasIssues => !_disposed && !_signedOut && _controller is not null && (_saveError is not null || _controller.RequiresTurnReconciliation ||
         _state.Status.Tone == ChatSpaceStatusTone.Error || (_available && _state.Models.Count == 0));
 
     private void StartDraftSave()

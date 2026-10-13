@@ -175,6 +175,8 @@ public sealed class BrowserChatSessionTests
         Assert.Equal(1, backend.RecentReads); Assert.Equal(1, backend.InventoryReads);
         Assert.True(chat.TryGetValue("chat.emptyDescription", out var description));
         Assert.Contains("Sign in", description!.ToString());
+        Assert.True(chat.TryGetValue("chat.hasIssues", out var issues)); Assert.Equal(false, issues);
+        Assert.False(chat.IsActionAvailable("chat.resolve"));
         Assert.False(chat.IsActionAvailable("chat.send"));
         Assert.False(chat.TrySetValue("composer.text", "Private text needs a real profile."));
         Assert.True(chat.IsActionAvailable("shell.account"));

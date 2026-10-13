@@ -22,15 +22,15 @@
               <Button ID="chat-model" Action="chat.choose-model" Content="{Binding chat.modelLabel}" Interactive="{Binding chat.canChooseModel}" AccessibleName="Choose model and reasoning" MinHeight="44" CornerRadius="22" Padding="16,8" />
             </Container>
           </Container>
-          <Container ID="conversation-surface" Row="1" Type="Grid" RowSizes="1fr Auto" CornerRadius="28,0,0,0" Background="{Resource CuiWorkspaceMaterial}" Padding="24,20,24,20" CellGap="16">
-            <Container ID="chat-transcript" Type="Vertical Stack" VerticalScrolling="true" CellGap="24" AccessibleName="Conversation messages">
+          <Container ID="conversation-surface" Row="1" Type="Grid" RowSizes="1fr Auto" CornerRadius="48,0,0,0" Background="{Resource CuiWorkspaceBrush}" Padding="{Binding chat.workspacePadding}" CellGap="16">
+            <Container ID="chat-transcript" Margin="{Binding chat.transcriptMargin}" Type="Vertical Stack" VerticalScrolling="true" CellGap="24" AccessibleName="Conversation messages">
               <Container ID="chat-empty" Type="Vertical Stack" Active="{Binding chat.empty}" Padding="16,48" CellGap="12" HorizontalAlignment="Center">
                 <Text Text="How can I help?" FontRole="Heading" FontSize="28" FontWeight="SemiBold" TextWrapping="Wrap" />
                 <Text Text="{Binding chat.emptyDescription}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
               </Container>
               <Repeat Source="{Binding chat.messages}" As="message" Key="{Binding message.id}">
                 <Container ID="chat-message" Type="Vertical Stack" CellGap="8" MaxWidth="880" HorizontalAlignment="{Binding message.alignment}" AccessibleName="{Binding message.accessibleName}">
-                  <Text Text="{Binding message.author}" FontSize="18" FontWeight="SemiBold" Foreground="{Resource CuiTextSoftBrush}" />
+                  <Text Text="{Binding message.author}" FontSize="18" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" HorizontalAlignment="{Binding message.alignment}" />
                   <Container Type="Vertical Stack" Padding="{Binding message.padding}" CornerRadius="20" Background="{Binding message.background}">
                     <Object Type="ChatMessageContent" Text="{Binding message.content}" AccessibleName="{Binding message.accessibleName}" />
                   </Container>
@@ -53,7 +53,7 @@
                 </Container>
               </Repeat>
             </Container>
-            <Container ID="chat-footer" Row="1" Type="Vertical Stack" MaxWidth="960" HorizontalAlignment="Stretch" CellGap="8">
+            <Container ID="chat-footer" Row="1" Type="Vertical Stack" MaxWidth="1013" HorizontalAlignment="Stretch" CellGap="8">
               <Container ID="chat-context" Type="Vertical Stack" Active="{Binding context.visible}" CellGap="8" Padding="12" CornerRadius="16" Background="{Resource CuiBackgroundBrush}">
                 <Container Type="Grid" ColumnSizes="1fr Auto">
                   <Button Action="chat.toggle-context" Content="{Binding context.summary}" HorizontalContentAlignment="Left" MinHeight="36" />
@@ -72,7 +72,11 @@
                 <Button Action="chat.toggle-dual" Content="{Binding dual.label}" MinHeight="36" />
                 <Button Action="chat.choose-dual-model" Content="{Binding dual.modelLabel}" Active="{Binding dual.active}" MinHeight="36" />
               </Container>
-              <Container ID="floating-composer" Type="Vertical Stack" CellGap="8" CornerRadius="28" Padding="18,14" Background="{Resource CuiFloatingSurfaceMaterial}" BorderWidth="0" AccessibleName="Message composer">
+              <Container ID="chat-state" Type="Vertical Stack" CellGap="4">
+                <Text Text="{Binding chat.status}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" AccessibleName="Chat status" />
+                <Button Action="chat.resolve" Content="Resolve Issues" Active="{Binding chat.hasIssues}" HorizontalAlignment="Left" MinHeight="36" />
+              </Container>
+              <Container ID="floating-composer" Type="Vertical Stack" CellGap="8" CornerRadius="32" Padding="18,14" Background="{Resource CuiFloatingSurfaceBrush}" BorderWidth="0" AccessibleName="Message composer">
                 <Container Type="Wrap" CellGap="6" Active="{Binding composer.hasAttachments}">
                   <Repeat Source="{Binding composer.attachments}" As="chip" Key="{Binding chip.id}">
                     <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="4" Padding="8,2" CornerRadius="14" Background="{Resource CuiPanelBrush}">
@@ -81,21 +85,16 @@
                     </Container>
                   </Repeat>
                 </Container>
-                <Input ID="composer-input" Type="Text" Value="{Binding composer.text, mode=TwoWay, type=string}" PlaceholderText="{Binding composer.placeholder}" AcceptsReturn="true" TextWrapping="Wrap" Interactive="{Binding composer.canEdit}" MinHeight="48" MaxHeight="200" MinWidth="0" AccessibleName="Message" Background="Transparent" BorderWidth="0" FontSize="18" FontWeight="Medium" />
-                <Container Type="Grid" ColumnSizes="Auto Auto 1fr Auto Auto" CellGap="8">
+                <Input ID="composer-input" Type="Text" Value="{Binding composer.text, mode=TwoWay, type=string}" PlaceholderText="{Binding composer.placeholder}" AcceptsReturn="true" TextWrapping="Wrap" Interactive="{Binding composer.canEdit}" MinHeight="28" MaxHeight="200" Padding="4,0" MinWidth="0" AccessibleName="Message" Background="Transparent" BorderWidth="0" FontSize="18" FontWeight="Medium" />
+                <Container Type="Grid" ColumnSizes="Auto Auto 1fr Auto Auto" RowSizes="{Binding composer.controlsRows}" CellGap="8">
                   <Button ID="chat-add" Action="chat.add" Content="+" AccessibleName="Attach files, agents, skills, capabilities or apps" Width="44" Height="44" CornerRadius="22" FontSize="22" Interactive="{Binding composer.canEdit}" />
                   <Button ID="chat-response-settings" Column="1" Action="chat.response-settings" Content="⋯" AccessibleName="Chat action and response settings" Tooltip="Chat action and response settings" Width="44" Height="44" CornerRadius="22" />
+                  <Button ID="chat-approval" Column="{Binding composer.approvalColumn}" Row="{Binding composer.approvalRow}" ColumnSpan="{Binding composer.approvalSpan}" HorizontalAlignment="Right" Action="chat.choose-approval" Content="{Binding chat.approvalLabel}" Interactive="{Binding chat.canChooseApproval}" AccessibleName="Choose tool approval policy" MinHeight="44" CornerRadius="22" />
                   <Button ID="stop-response" Column="3" Action="chat.stop" Content="■" Active="{Binding composer.sending}" AccessibleName="Stop current response" Tooltip="Stop current response" Width="44" Height="44" CornerRadius="22" />
                   <Button ID="send" Column="4" Action="chat.send" AccessibleName="{Binding composer.sendLabel}" Tooltip="{Binding composer.sendLabel}" Interactive="{Binding composer.canSend}" Width="44" Height="44" CornerRadius="22" Padding="8" Background="{Resource CuiCommitSurfaceBrush}" Foreground="{Resource CuiCommitInkBrush}" FontSize="28" Content="{Binding composer.sendGlyph}" />
                 </Container>
               </Container>
-              <Container Type="Vertical Stack" CellGap="4">
-                <Text Text="{Binding chat.status}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" AccessibleName="Chat status" />
-                <Container Type="Wrap" CellGap="8">
-                  <Button ID="chat-approval" Action="chat.choose-approval" Content="{Binding chat.approvalLabel}" Interactive="{Binding chat.canChooseApproval}" AccessibleName="Choose tool approval policy" MinHeight="36" />
-                  <Button Action="chat.resolve" Content="Resolve Issues" Active="{Binding chat.hasIssues}" MinHeight="36" />
-                </Container>
-              </Container>
+
             </Container>
           </Container>
         </Container>

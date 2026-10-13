@@ -18,7 +18,13 @@ namespace Haven.Desktop.Views.Shell.NativePresentation;
 internal sealed class NativeChatSidebarCuiAdapter : HavenOS.Apps.Spaces.Chat.Rendering.ISpacesShellNavigation, ICuiWritableBindingContext,
     ICuiRepeatItemBindingContext, ICuiActionDispatcher, INotifyPropertyChanged, IDisposable, IAsyncDisposable
 {
-    private static readonly AsyncLocal<NativeChatSidebarCuiAdapter?> ExecutingCommand = new();
+    private static readonly AsyncLocal<OriginalCommand?> ExecutingCommand = new();
+    private sealed class OriginalCommand(NativeChatSidebarCuiAdapter owner, OriginalCommand? parent)
+    {
+        public NativeChatSidebarCuiAdapter Owner { get; } = owner;
+        public OriginalCommand? Parent { get; } = parent;
+        public Task Task { get; set; } = null!;
+    }
     private readonly NativeChatSidebarCuiActions _actions;
     private readonly CuiControlLoader _loader;
     private readonly NativeChatSidebarCuiInput _input;
@@ -32,6 +38,7 @@ internal sealed class NativeChatSidebarCuiAdapter : HavenOS.Apps.Spaces.Chat.Ren
     private HavenMode _mode = HavenMode.Chat;
     private Guid? _spaceId;
     private string? _spaceName;
+    private string? _spaceIconKey;
     private bool _opensAssistants, _collapsed, _busy, _retiring, _navigationPreferencesObserved;
     private bool _compactViewport, _compactDrawer;
     private NativeSpaceSwitcherLayout _switcher = NativeSpaceSwitcherLayout.Rail;
@@ -106,10 +113,10 @@ internal sealed class NativeChatSidebarCuiAdapter : HavenOS.Apps.Spaces.Chat.Ren
     }
 
     public void SetMode(HavenMode mode) => Publish(() => { _mode = mode; });
-    public void SetSpaceScope(string? name, Guid? spaceId = null, bool opensAssistants = false) => Publish(() =>
+    public void SetSpaceScope(string? name, Guid? spaceId = null, bool opensAssistants = false, string? iconKey = null) => Publish(() =>
     {
         if (_spaceId != spaceId) { ++_scopeRevision; CloseDialog(); }
-        _spaceId = spaceId; _spaceName = name;
+        _spaceId = spaceId; _spaceName = name; _spaceIconKey = iconKey;
         _opensAssistants = opensAssistants || spaceId == SpaceRegistry.AssistantsSpaceId;
     });
     public void SetStatus(string? status) => Publish(() => _values["sidebar.status"] = status ?? "");
@@ -186,6 +193,7 @@ internal sealed class NativeChatSidebarCuiAdapter : HavenOS.Apps.Spaces.Chat.Ren
                 ["available"] = row.Available
             }).ToArray(),
             "sidebar.name" => _spaceName ?? ModeName,
+            "sidebar.iconSource" => "icon:" + (_spaceIconKey ?? (_mode switch { HavenMode.Study => "book", HavenMode.Tasks => "tasks", _ => "chat" })),
             "sidebar.newChatLabel" => _opensAssistants ? "Open Assistants" : _mode switch { HavenMode.Study => "New Study Chat", HavenMode.Tasks => "New Task", _ => "New Chat" },
             "sidebar.groupsLabel" => _mode switch { HavenMode.Study => "Subjects", HavenMode.Tasks => "Task Groups", _ => "Chat Groups" },
             "sidebar.newGroupLabel" => _mode switch { HavenMode.Study => "Create Subject", HavenMode.Tasks => "Create Task Group", _ => "Create Chat Group" },
@@ -225,11 +233,13 @@ internal sealed class NativeChatSidebarCuiAdapter : HavenOS.Apps.Spaces.Chat.Ren
         _originalCommands.RemoveAll(task => task.IsCompletedSuccessfully);
         if (_originalCommands.Count >= 256) return ValueTask.FromException(new InvalidOperationException("Navigation has too many unresolved failures; reopen this Space after reviewing them."));
         var start = new TaskCompletionSource();
-        var actual = DispatchAfterAdmissionAsync(start.Task, command, parameter, cancellationToken);
+        var original = new OriginalCommand(this, ExecutingCommand.Value);
+        var actual = DispatchAfterAdmissionAsync(start.Task, original, command, parameter, cancellationToken);
+        original.Task = actual;
         _originalCommands.Add(actual); start.SetResult();
         return new(actual);
     }
-    private async Task DispatchAfterAdmissionAsync(Task start, string command, object? parameter, CancellationToken cancellationToken)
+    private async Task DispatchAfterAdmissionAsync(Task start, OriginalCommand original, string command, object? parameter, CancellationToken cancellationToken)
     {
         await start;
         cancellationToken.ThrowIfCancellationRequested();
@@ -238,7 +248,7 @@ internal sealed class NativeChatSidebarCuiAdapter : HavenOS.Apps.Spaces.Chat.Ren
         var previousCommand = ExecutingCommand.Value;
         try
         {
-            ExecutingCommand.Value = this;
+            ExecutingCommand.Value = original;
             _busy = true; Changed();
             Task owner;
             if (command == "nav.cancel") { CloseDialog(); return; }
@@ -373,8 +383,11 @@ internal sealed class NativeChatSidebarCuiAdapter : HavenOS.Apps.Spaces.Chat.Ren
     public Task CloseAsync()
     {
         Dispatcher.UIThread.VerifyAccess();
-        if (ReferenceEquals(ExecutingCommand.Value, this))
-            throw new InvalidOperationException("Join the sidebar close outside its original navigation command.");
+        // A copied execution context can outlive the callback that created it.
+        // Refuse a self-join only while that exact retained original is still live.
+        for (var original = ExecutingCommand.Value; original is not null; original = original.Parent)
+            if (ReferenceEquals(original.Owner, this) && !original.Task.IsCompleted)
+                throw new InvalidOperationException("Join the sidebar close outside its original navigation command.");
         if (_close is not null) return _close;
         var start = new TaskCompletionSource();
         _retiring = true;

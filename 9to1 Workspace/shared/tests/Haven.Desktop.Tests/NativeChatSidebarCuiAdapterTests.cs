@@ -150,6 +150,24 @@ public sealed class NativeChatSidebarCuiAdapterTests
         await view.CloseAsync();
     }
 
+    [AvaloniaFact]
+    public async Task Completed_original_context_does_not_refuse_a_later_external_close()
+    {
+        ExecutionContext? captured = null;
+        var view = new NativeChatSidebarCuiAdapter(Actions() with
+        {
+            NewChat = () => { captured = ExecutionContext.Capture(); return Task.CompletedTask; }
+        });
+        var original = view.DispatchAsync("nav.new-chat", null).AsTask();
+        await original;
+        Assert.True(original.IsCompletedSuccessfully);
+        Assert.NotNull(captured);
+        Task? close = null;
+        ExecutionContext.Run(captured!, _ => close = view.CloseAsync(), null);
+        Assert.Same(view.OriginalClose, close);
+        await close!;
+    }
+
     private static T Find<T>(Control root, string name) where T : Control =>
         root.GetVisualDescendants().OfType<T>().Single(control => control.Name == name);
     private static NativeChatSidebarCuiActions Actions() => new(

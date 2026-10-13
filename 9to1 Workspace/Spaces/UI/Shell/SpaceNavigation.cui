@@ -16,7 +16,7 @@
   <Theme Name="user_preference">
     <Page ID="space-navigation" AccessibleName="Spaces navigation">
       <Container Type="Overlay" Interactive="{Binding navigation.interactive}">
-        <Container ID="navigation-columns" Type="Grid" ColumnSizes="{Binding layout.columns}" Background="{Resource CuiShellMaterial}">
+        <Container ID="navigation-columns" Type="Grid" ColumnSizes="{Binding layout.columns}" Background="{Resource CuiShellBrush}">
           <Container ID="space-rail" Type="Grid" RowSizes="Auto 1fr Auto" Active="{Binding layout.railVisible}" Padding="6,12" CellGap="8" AccessibleName="Pinned Spaces">
             <Button ID="reopen-context-sidebar" Action="nav.toggle-sidebar" Content="›" Active="{Binding layout.collapsed}" Interactive="{Binding layout.canChange}" AccessibleName="Show contextual Space sidebar" MinHeight="44" />
             <Container ID="pinned-space-list" Row="1" Type="Vertical Stack" VerticalScrolling="true" CellGap="8">
@@ -28,13 +28,17 @@
             </Container>
             <Container Row="2" Type="Vertical Stack" CellGap="4">
               <Button ID="configure-space-navigation" Action="nav.configure" Content="⋯" Interactive="{Binding navigation.canConfigure}" AccessibleName="Configure Space navigation" Tooltip="Configure Space navigation" MinHeight="44" Padding="4" />
-              <Button ID="manage-spaces" Action="nav.manage-spaces" Content="Spaces" Interactive="{Binding navigation.canManageSpaces}" AccessibleName="Manage Spaces" Tooltip="Manage Spaces" MinHeight="48" Padding="4" />
+              <Button ID="manage-spaces" Action="nav.manage-spaces" Interactive="{Binding navigation.canManageSpaces}" AccessibleName="Manage Spaces" Tooltip="Manage Spaces" Width="48" Height="48" Padding="12"><Image Source="icon:briefcase" Width="24" Height="24" /></Button>
             </Container>
           </Container>
-          <Container ID="context-sidebar" Column="1" Type="Grid" RowSizes="Auto Auto 1fr Auto" Padding="16,12" CellGap="12" Active="{Binding layout.sidebarVisible}" Background="{Resource CuiShellMaterial}" AccessibleName="{Binding sidebar.name}">
-            <Container ID="sidebar-header" Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
-              <Button ID="space-switcher" Action="nav.choose-space" Content="{Binding sidebar.name}" AccessibleName="Current Space selector" HorizontalContentAlignment="Left" MinHeight="44" FontSize="24" FontWeight="Bold" Background="Transparent" Padding="8,4" />
-              <Button ID="collapse-context-sidebar" Column="1" Action="nav.toggle-sidebar" Content="‹" Interactive="{Binding layout.canChange}" AccessibleName="Hide contextual Space sidebar" MinHeight="44" />
+          <Container ID="context-sidebar" Column="1" Type="Grid" RowSizes="Auto Auto 1fr Auto" Padding="16,12" CellGap="12" Active="{Binding layout.sidebarVisible}" Background="{Resource CuiShellBrush}" AccessibleName="{Binding sidebar.name}">
+            <Container ID="sidebar-header" Type="Grid" ColumnSizes="1fr Auto Auto" CellGap="4">
+              <Container Type="Grid" ColumnSizes="Auto 1fr" CellGap="16" Margin="14,0,0,0" VerticalAlignment="Center">
+                <Image Source="{Binding sidebar.iconSource}" Width="42" Height="42" />
+                <Text ID="current-space-name" Column="1" Text="{Binding sidebar.name}" FontSize="24" FontWeight="Bold" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+              </Container>
+              <Button ID="space-switcher" Column="1" Action="nav.choose-space" Content="⌄" AccessibleName="Choose current Space" MinHeight="44" Width="32" Background="Transparent" Padding="4" />
+              <Button ID="collapse-context-sidebar" Column="2" Action="nav.toggle-sidebar" Content="‹" Interactive="{Binding layout.canChange}" AccessibleName="Hide contextual Space sidebar" MinHeight="44" Width="32" Padding="4" />
             </Container>
             <Input ID="sidebar-search" Row="1" Type="Text" Value="{Binding sidebar.query, mode=TwoWay, type=string}" AccessibleName="Search chats, groups and files" PlaceholderText="Search" MinWidth="0" />
             <Container ID="sidebar-scroll" Row="2" Type="Vertical Stack" VerticalScrolling="true" CellGap="12">

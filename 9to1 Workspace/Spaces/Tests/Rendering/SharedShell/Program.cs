@@ -115,7 +115,7 @@ internal sealed class ShellFixture : ICuiWritableBindingContext, ICuiActionDispa
         foreach (var (key, value) in new (string, object?)[] {
             ("navigation.interactive", true), ("navigation.canManageSpaces", false), ("navigation.canConfigure", false),
             ("navigation.pins", new[] { Row(("id", "chat"), ("name", "Chat"), ("description", "Explicit navigation fixture"), ("selected", true), ("available", true), ("iconSource", "icon:chat")), Row(("id", "study"), ("name", "Study"), ("description", "No Study owner in renderer fixture"), ("selected", false), ("available", false), ("iconSource", "icon:study")) }),
-            ("sidebar.name", "Chat"), ("sidebar.query", ""), ("sidebar.newChatLabel", "New Chat"), ("sidebar.canStart", true), ("sidebar.groupsVisible", true), ("sidebar.groupsLabel", "Chat Groups"), ("sidebar.newGroupLabel", "New Chat Group"), ("sidebar.isChat", true), ("sidebar.specialistsAvailable", false), ("sidebar.specialistsDescription", "No service in renderer fixture"), ("sidebar.status", "Explicit renderer fixture"), ("sidebar.sections", Array.Empty<object>()),
+            ("sidebar.name", "Chat"), ("sidebar.iconSource", "icon:chat"), ("sidebar.query", ""), ("sidebar.newChatLabel", "New Chat"), ("sidebar.canStart", true), ("sidebar.groupsVisible", true), ("sidebar.groupsLabel", "Chat Groups"), ("sidebar.newGroupLabel", "New Chat Group"), ("sidebar.isChat", true), ("sidebar.specialistsAvailable", false), ("sidebar.specialistsDescription", "No service in renderer fixture"), ("sidebar.status", "Explicit renderer fixture"), ("sidebar.sections", Array.Empty<object>()),
             ("chat.mainInteractive", true), ("chat.title", "Controlled renderer transcript"), ("chat.typeLabel", "Normal"), ("chat.locationLabel", "Explicit renderer fixture"), ("chat.modelLabel", "A deliberately long catalogue model name · large context"), ("chat.canChooseType", true), ("chat.canChooseModel", true), ("chat.empty", false), ("chat.hasMessages", true), ("chat.hasIssues", false), ("chat.emptyDescription", ""), ("chat.status", "Explicit renderer fixture. No connected model or stored account."), ("chat.approvalLabel", "Ask for Approval"), ("chat.canChooseApproval", false),
             ("chat.messages", new[] {
                 Row(("id", "user-one"), ("author", "You · controlled fixture"), ("content", "Keep the original conversation and navigation owners."), ("alignment", "Right"), ("padding", "16,12"), ("background", Brushes.Transparent), ("accessibleName", "Controlled user message"), ("hasWorkStatus", false), ("workStatus", ""), ("tools", Array.Empty<object>()), ("isAssistant", false), ("canModify", false)),
@@ -133,6 +133,10 @@ internal sealed class ShellFixture : ICuiWritableBindingContext, ICuiActionDispa
     public void SetViewport(double width) { var compact = width < 860; if (compact == _compact) return; _compact = compact; Drawer = false; ApplyGeometry(); }
     private void ApplyGeometry()
     {
+        Values["chat.workspacePadding"] = _compact ? "16,20,16,24" : "24,20,24,53";
+        Values["chat.transcriptMargin"] = _compact ? "0" : "31,0,13,0";
+        Values["composer.controlsRows"] = _compact ? "Auto Auto" : "Auto";
+        Values["composer.approvalRow"] = _compact ? 1 : 0; Values["composer.approvalColumn"] = _compact ? 0 : 2; Values["composer.approvalSpan"] = _compact ? 5 : 1;
         Values["shell.columns"] = _compact ? "70 1fr" : "350 1fr"; Values["shell.rows"] = _compact ? "172 1fr" : "80 1fr";
         Values["shell.navigationWidth"] = _compact && !Drawer ? 70d : 350d; Values["shell.navigationSpan"] = _compact && Drawer ? 2 : 1;
         Values["shell.headerMinHeight"] = _compact ? 172d : 80d;

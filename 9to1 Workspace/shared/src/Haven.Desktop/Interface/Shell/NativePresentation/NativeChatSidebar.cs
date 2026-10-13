@@ -222,7 +222,8 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable, IAsyncDispos
             ? _spaceRows.FirstOrDefault(space => space.Id == id)?.Name
             : null;
         if (_currentSpaceId is { } && name is null) _currentSpaceId = null;
-        _scene.SetSpaceScope(name, _currentSpaceId, IsAssistantSpace(_currentSpaceId));
+        _scene.SetSpaceScope(name, _currentSpaceId, IsAssistantSpace(_currentSpaceId),
+            _spaceRows.FirstOrDefault(space => space.Id == _currentSpaceId)?.IconKey);
         _studyScene.SetSpaceScope(name, _currentSpaceId, IsAssistantSpace(_currentSpaceId));
         PublishNavigationPreferences();
     }

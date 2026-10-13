@@ -268,6 +268,7 @@ public static class CuiThemeResourceApplier
             (byte)Math.Round(palette.Panel3.R + (255 - palette.Panel3.R) * (dark ? .055 : .70)),
             (byte)Math.Round(palette.Panel3.G + (255 - palette.Panel3.G) * (dark ? .055 : .70)),
             (byte)Math.Round(palette.Panel3.B + (255 - palette.Panel3.B) * (dark ? .055 : .70)));
+        resources["CuiFloatingSurfaceBrush"] = material ? new SolidColorBrush(floating) : resources["CuiPanel2Brush"];
         resources["CuiWorkspaceMaterial"] = material
             ? new CuiMaterialBrush(palette.TideColour, 1, 0, .022, tonalBase: true) : resources["CuiWorkspaceBrush"];
         resources["CuiShellMaterial"] = material

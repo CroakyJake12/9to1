@@ -34,6 +34,7 @@ public static class CuiCustomThemeResourceApplier
         resources["CuiShellMaterial"] = resources["CuiBackgroundBrush"];
         resources["CuiSurfaceMaterial"] = resources["CuiPanelBrush"];
         resources["CuiFloatingSurfaceMaterial"] = resources["CuiPanel2Brush"];
+        resources["CuiFloatingSurfaceBrush"] = resources["CuiPanel2Brush"];
         if (resources["CuiPanel2Brush"] is ISolidColorBrush popup)
             resources["CuiPopupSurfaceBrush"] = new SolidColorBrush(Color.FromRgb(popup.Color.R, popup.Color.G, popup.Color.B)).ToImmutable();
         resources["CuiCustomTypography"] = value.Fonts;
@@ -77,6 +78,8 @@ public static class CuiCustomThemeResourceApplier
             resources["HavenAccentBrush"] = background;
             resources["PrimaryBrush"] = background;
         }
+        resources["CuiCommitSurfaceBrush"] = resources["CuiAccentPrimaryBrush"];
+        resources["CuiCommitInkBrush"] = resources["CuiAccentPrimaryForegroundBrush"];
     }
 
     private static void ApplyFill(IResourceDictionary resources, string role, CuiCustomFill fill)

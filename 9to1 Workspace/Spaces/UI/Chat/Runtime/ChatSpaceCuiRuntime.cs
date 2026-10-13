@@ -69,7 +69,7 @@ public static class ChatSpaceCuiRuntime
     private sealed class ChatMarkdownContent : CuiMarkdownView
     {
         protected override double ParagraphFontSize => 18;
-        protected override Avalonia.Media.FontWeight ParagraphFontWeight => Avalonia.Media.FontWeight.Medium;
+        protected override Avalonia.Media.FontWeight ParagraphFontWeight => Avalonia.Media.FontWeight.SemiBold;
         private readonly bool _hasCodeOwner;
         public ChatMarkdownContent(Action<CuiMarkdownView, CuiMarkdownCodeActionRequest>? codeAction)
         {

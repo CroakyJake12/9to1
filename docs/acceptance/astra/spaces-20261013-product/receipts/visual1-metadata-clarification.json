@@ -1,0 +1,8 @@
+{
+  "scope": "Additive semantic clarification; original rendered pixels and capture receipt remain unchanged.",
+  "originalReceiptSha256": "c40167867f2f881d666161d8ba3de5ffeb565fafd4d9547c4d9eccc72916a2f7",
+  "field": "unsupportedReferenceSemantics[3]",
+  "correction": "Qwen 3.6 \u00b7 100%: the reference 100% denotes reasoning effort; the current browser model control has no reasoning-effort selector or separate usage indicator. The fixture does not simulate either in the model name.",
+  "source": "Independent reviewer checked authoritative companion; 100% means reasoning effort, not capacity.",
+  "fixtureOnlyDifference": "The fifth Nearby Restaurants recent row exists only to exercise the genuine initial recent-chat navigation action. The four approved titles remain before it."
+}

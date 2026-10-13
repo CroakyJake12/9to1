@@ -1,0 +1,26 @@
+{
+  "provenance": "Visual-only deterministic data, transcribed from the owner's approved image by root. No model, tool, storage or authentication execution is asserted.",
+  "conversationTitle": "Nearby Restaurants",
+  "modelName": "Qwen 3.6",
+  "speakerName": "Qwen",
+  "userMessage": "Can you look for nearby restaurants?",
+  "assistantMessage": "Looking for restaurants now!\n\nHere are the top 5 restaurants that you should try!",
+  "draft": "Which one should I pick?",
+  "recentTitles": [
+    "Help Me Set up a bus…",
+    "Diet Plans for 2026",
+    "Track Sales Tax",
+    "Monster Energy Drink…"
+  ],
+  "toolActivityTitles": [
+    "Searching for restaurants",
+    "Creating a Shortlist"
+  ],
+  "timestamp": "2026-10-13T18:00:00Z",
+  "unsupportedReferenceSemantics": [
+    "Worked for 2 mins 32 sec: the saved-message projection does not populate working duration or Thinking.",
+    "Quick Question: Do you have any dietary requirements? with Yes (Please Specify) and No controls: the current browser message contract has no original question/answer owner.",
+    "You Answered No: no persisted question answer is available in the current message projection.",
+    "Qwen 3.6 · 100%: the reference 100% denotes reasoning effort; the current browser model control has no reasoning-effort selector or separate usage indicator. The fixture does not simulate either in the model name."
+  ]
+}
