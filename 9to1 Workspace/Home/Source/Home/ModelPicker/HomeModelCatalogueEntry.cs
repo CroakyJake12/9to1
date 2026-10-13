@@ -48,6 +48,9 @@ public sealed record HomeModelCatalogueEntry(
     string? PrivacyResidency = null,
     string? LifecycleLabel = null)
 {
+    /// <summary>Declared provider levels only. An empty catalogue declaration exposes no effort presets.</summary>
+    public IReadOnlyList<ReasoningLevelPreset> ReasoningPresets => ReasoningScale.CreatePresets(ReasoningLevels);
+
     public static HomeModelCatalogueEntry From(HomeModelPickerCatalogueEntry entry)
     {
         ArgumentNullException.ThrowIfNull(entry);

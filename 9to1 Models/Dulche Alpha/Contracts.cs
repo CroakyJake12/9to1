@@ -163,6 +163,8 @@ public interface IDulcheAcquisitionAdapter
 
 public static class ReasoningLevelMapper
 {
+    /// <summary>Legacy arbitrary-percentage mapping retained for API compatibility. UI preset
+    /// labels must use FromPresetPercentage or their actual named level instead.</summary>
     public static OperationResult<string> FromPercentage(double percentage, IReadOnlyList<string> supportedLevels)
     {
         if (double.IsNaN(percentage) || double.IsInfinity(percentage) || percentage is < 0 or > 100)
@@ -171,6 +173,26 @@ public static class ReasoningLevelMapper
             return OperationResult<string>.Failure(new(DulcheErrorCode.UnsupportedCapability, "Model does not advertise reasoning levels.", "reasoningLevels", false));
         var index = Math.Min(supportedLevels.Count - 1, (int)Math.Floor(percentage * supportedLevels.Count / 100d));
         return OperationResult<string>.Success(supportedLevels[index]);
+    }
+
+    /// <summary>Resolves only an exact advertised display preset, without applying the legacy
+    /// floor formula that would skip the first three- or five-tier level.</summary>
+    public static OperationResult<string> FromPresetPercentage(decimal percentage, IReadOnlyList<string>? supportedLevels)
+    {
+        IReadOnlyList<Haven.Core.ReasoningLevelPreset> presets;
+        try { presets = Haven.Core.ReasoningScale.CreatePresets(supportedLevels); }
+        catch (ArgumentException)
+        {
+            return OperationResult<string>.Failure(new(DulcheErrorCode.InvalidArgument,
+                "The advertised reasoning level identities are invalid.", "reasoningLevels", false));
+        }
+        if (presets.Count == 0)
+            return OperationResult<string>.Failure(new(DulcheErrorCode.UnsupportedCapability,
+                "Model does not advertise reasoning levels.", "reasoningLevels", false));
+        var preset = presets.SingleOrDefault(value => value.Percentage == percentage);
+        return preset is not null ? OperationResult<string>.Success(preset.LevelId)
+            : OperationResult<string>.Failure(new(DulcheErrorCode.InvalidArgument,
+                "Choose an advertised reasoning preset for the current model.", "reasoningPercentage", false));
     }
 
     public static OperationResult<string> ResolveNamed(string name, IReadOnlyList<string> supportedLevels) =>

@@ -45,7 +45,7 @@ public sealed class CatalogDefinitionTests
         Assert.Equal(CapabilityAvailability.PermissionRequired, webSearch.Availability);
 
         var runTests = Assert.Single(CapabilityRegistryCatalog.BuiltIns, item => item.Key == "run-tests");
-        Assert.Equal(CapabilityPlatform.Windows, runTests.Platforms);
+        Assert.Equal(CapabilityPlatform.Windows | CapabilityPlatform.Linux, runTests.Platforms);
         Assert.Equal("haven.workspace", runTests.ProviderId);
     }
 }

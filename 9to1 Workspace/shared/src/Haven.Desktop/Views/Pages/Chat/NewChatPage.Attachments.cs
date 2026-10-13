@@ -39,6 +39,7 @@ public sealed partial class NewChatPage
 
     private async Task OnAttachmentRemoveRequestedOriginalBodyAsync(object? sender, string id)
     {
+        if (!CanChangeConversation()) return;
         if (string.IsNullOrWhiteSpace(id)) return;
         var changed = false;
         if (TryReadGuid(id, "attachment:", out var attachmentId) && _messageAttachments is not null)

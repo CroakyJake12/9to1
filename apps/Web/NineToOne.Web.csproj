@@ -28,6 +28,8 @@
     <ProjectReference Include="../../9to1 Workspace/Assistants/NativeUI/HavenOS.Assistants.NativeUI.csproj" />
     <ProjectReference Include="../../framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/Avalonia.Browser.csproj" />
     <ProjectReference Include="../../9to1 Workspace/Home/HavenOS.Home.csproj" />
+    <ProjectReference Include="../../9to1 Workspace/Spaces/HavenOS.Spaces.csproj" />
+    <ProjectReference Include="../../9to1 Workspace/Spaces/UI/Chat/Runtime/HavenOS.Spaces.CuiRuntime.csproj" />
     <ProjectReference Include="Wave/Engine/NineToOne.Wave.BrowserEngine.csproj" />
     <ProjectReference Include="Picture/Engine/NineToOne.Picture.BrowserEngine.csproj" />
     <ProjectReference Include="Write/Scene/Haven.WriteBrowser.Scene.csproj" />

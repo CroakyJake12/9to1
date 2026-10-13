@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.Views.Shell.NativePresentation;
@@ -11,6 +12,30 @@ namespace Haven.Desktop.Tests;
 
 public sealed class ChatSidebarHavenSceneTests
 {
+    [Fact]
+    public void Canonical_chat_keeps_groups_visible_across_row_refreshes_without_using_display_name_as_identity()
+    {
+        using var scene = new ChatSidebarHavenScene();
+        var group = new ChatSidebarEntry(ChatSidebarEntryKind.Group, Guid.NewGuid(), "Project", false, false, false);
+
+        scene.SetSpaceScope("Chat", SpaceRegistry.ChatSpaceId);
+        scene.SetRows([], [], [group], []);
+        Assert.Equal(HavenVisibility.Visible, scene.GroupsHeading.GetValue(HavenProperties.Visibility));
+        Assert.Equal(HavenVisibility.Visible, scene.NewGroup.GetValue(HavenProperties.Visibility));
+        Assert.Equal(HavenVisibility.Visible, scene.GroupRows.GetValue(HavenProperties.Visibility));
+        Assert.Single(scene.GroupRows.Items);
+
+        scene.SetSpaceScope("Chat", Guid.NewGuid());
+        scene.SetRows([], [], [], []);
+        Assert.Equal(HavenVisibility.Collapsed, scene.GroupsHeading.GetValue(HavenProperties.Visibility));
+        Assert.Equal(HavenVisibility.Collapsed, scene.NewGroup.GetValue(HavenProperties.Visibility));
+        Assert.Equal(HavenVisibility.Collapsed, scene.GroupRows.GetValue(HavenProperties.Visibility));
+
+        scene.SetSpaceScope("Chat", SpaceRegistry.ChatSpaceId);
+        scene.SetRows([], [], [group], []);
+        Assert.Equal(HavenVisibility.Visible, scene.GroupRows.GetValue(HavenProperties.Visibility));
+    }
+
     [AvaloniaFact]
     public void Sidebar_three_dot_opens_detached_popup_without_changing_row_height()
     {

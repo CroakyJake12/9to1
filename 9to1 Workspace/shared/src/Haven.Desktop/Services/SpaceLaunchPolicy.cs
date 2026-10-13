@@ -6,7 +6,8 @@ namespace Haven.Desktop.Services;
 internal enum SpaceLaunchDestination
 {
     StudyProduct = 0,
-    ConfiguredWorkspace = 1
+    ConfiguredWorkspace = 1,
+    AssistantsProduct = 2
 }
 
 internal sealed record SpaceLaunchPlan(
@@ -26,9 +27,12 @@ internal static class SpaceLaunchPolicy
     public static SpaceLaunchPlan Resolve(SpaceDefinition space)
     {
         ArgumentNullException.ThrowIfNull(space);
-        var destination = space.Kind == SpaceKind.Study
-            ? SpaceLaunchDestination.StudyProduct
-            : SpaceLaunchDestination.ConfiguredWorkspace;
+        var destination = space.Kind switch
+        {
+            SpaceKind.Study => SpaceLaunchDestination.StudyProduct,
+            SpaceKind.Assistants => SpaceLaunchDestination.AssistantsProduct,
+            _ => SpaceLaunchDestination.ConfiguredWorkspace
+        };
         var mode = destination == SpaceLaunchDestination.StudyProduct
             ? HavenMode.Study
             : space.Kind == SpaceKind.Agent ? HavenMode.Tasks : HavenMode.Chat;

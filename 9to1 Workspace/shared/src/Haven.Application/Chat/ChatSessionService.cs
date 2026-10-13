@@ -237,6 +237,7 @@ public sealed partial class ChatSessionService(
         SendAsync(conversation, prompt, model, effort, capabilities, agentName, agentInstructions, duoMode, workspaceRoot, projectContext, projectInstructions, images, cancellationToken, prompts, registeredContext, generationOptions, filePermission, commandPermission, browserPermission, explicitCapabilities, availableCapabilities, computerUseRequest,
             executionContext: null, taskExecutionIntent: TaskRunExecutionIntent.OrdinaryConversation);
 
+    // Preserve the original canonical-send CLR signature.
     public IAsyncEnumerable<ChatStreamEvent> SendAsync(
         Conversation conversation,
         string prompt,
@@ -261,15 +262,50 @@ public sealed partial class ChatSessionService(
         IReadOnlyCollection<ActiveCapability>? availableCapabilities = null,
         ComputerUseRequest? computerUseRequest = null,
         ProviderExecutionContext? executionContext = null,
-        TaskRunExecutionIntent taskExecutionIntent = TaskRunExecutionIntent.OrdinaryConversation)
+        TaskRunExecutionIntent taskExecutionIntent = TaskRunExecutionIntent.OrdinaryConversation) =>
+        SendWithTransientHistoryAsync(conversation, prompt, model, effort, capabilities, agentName, agentInstructions, duoMode,
+            workspaceRoot, projectContext, projectInstructions, images, cancellationToken, prompts, registeredContext,
+            generationOptions, filePermission, commandPermission, browserPermission, explicitCapabilities,
+            availableCapabilities, computerUseRequest, executionContext, taskExecutionIntent, transientHistory: null);
+
+    /// <summary>Temporary ordinary conversations may supply their prior in-memory turns. The history
+    /// is validated and detached at invocation, before user-message events or provider work begin.</summary>
+    public IAsyncEnumerable<ChatStreamEvent> SendWithTransientHistoryAsync(
+        Conversation conversation,
+        string prompt,
+        ModelDescriptor model,
+        EffortLevel effort,
+        IReadOnlyCollection<ActiveCapability> capabilities,
+        string agentName,
+        string agentInstructions,
+        DuoMode duoMode,
+        string? workspaceRoot,
+        string? projectContext,
+        string? projectInstructions,
+        IReadOnlyList<string>? images,
+        CancellationToken cancellationToken,
+        IReadOnlyCollection<ActivePrompt>? prompts = null,
+        string? registeredContext = null,
+        GenerationOptions? generationOptions = null,
+        PermissionMode filePermission = PermissionMode.FullAccess,
+        PermissionMode commandPermission = PermissionMode.FullAccess,
+        PermissionMode browserPermission = PermissionMode.FullAccess,
+        IReadOnlyCollection<ToolCapability>? explicitCapabilities = null,
+        IReadOnlyCollection<ActiveCapability>? availableCapabilities = null,
+        ComputerUseRequest? computerUseRequest = null,
+        ProviderExecutionContext? executionContext = null,
+        TaskRunExecutionIntent taskExecutionIntent = TaskRunExecutionIntent.OrdinaryConversation,
+        IReadOnlyList<ChatMessage>? transientHistory = null)
     {
+        var transientSnapshot = SnapshotTransientHistory(conversation, transientHistory, executionContext, taskExecutionIntent);
         var originalCustody = taskExecutionIntent == TaskRunExecutionIntent.CanonicalAgenticTask
             ? taskCoordinator?.CreateOriginalInvocationCustody() : null;
         return CreateOriginalSend(conversation, prompt, model, effort, capabilities, agentName,
             agentInstructions, duoMode, workspaceRoot, projectContext, projectInstructions, images,
             cancellationToken, prompts, registeredContext, generationOptions, filePermission,
             commandPermission, browserPermission, explicitCapabilities, availableCapabilities,
-            computerUseRequest, executionContext, taskExecutionIntent, originalCustody);
+            computerUseRequest, executionContext, taskExecutionIntent, originalCustody,
+            transientHistory: transientSnapshot);
     }
 
     private IAsyncEnumerable<ChatStreamEvent> CreateOriginalSend(
@@ -284,7 +320,8 @@ public sealed partial class ChatSessionService(
         IReadOnlyCollection<ActiveCapability>? availableCapabilities,
         ComputerUseRequest? computerUseRequest, ProviderExecutionContext? executionContext,
         TaskRunExecutionIntent taskExecutionIntent, TaskRunInvocationCustody? originalCustody,
-        ChatOrdinaryOriginalInvocation? ordinaryOriginal = null)
+        ChatOrdinaryOriginalInvocation? ordinaryOriginal = null,
+        IReadOnlyList<ChatMessage>? transientHistory = null)
     {
         if (originalCustody is not null)
         {
@@ -313,7 +350,7 @@ public sealed partial class ChatSessionService(
                 var original = SendOriginalAsync(conversation, prompt, model, effort, capabilities, agentName, agentInstructions,
                     duoMode, workspaceRoot, projectContext, projectInstructions, images, originalToken, prompts, registeredContext,
                     generationOptions, filePermission, commandPermission, browserPermission, explicitCapabilities,
-                    availableCapabilities, computerUseRequest, context, taskExecutionIntent, custody, ordinaryOriginal);
+                    availableCapabilities, computerUseRequest, context, taskExecutionIntent, custody, ordinaryOriginal, transientHistory);
                 return custody is null ? original : ObserveOriginalSendAsync(original, custody, originalToken);
             }
             return custody is null ? CreateBody(token)
@@ -429,7 +466,8 @@ public sealed partial class ChatSessionService(
         ProviderExecutionContext? executionContext = null,
         TaskRunExecutionIntent taskExecutionIntent = TaskRunExecutionIntent.OrdinaryConversation,
         TaskRunInvocationCustody? originalCustody = null,
-        ChatOrdinaryOriginalInvocation? ordinaryOriginal = null)
+        ChatOrdinaryOriginalInvocation? ordinaryOriginal = null,
+        IReadOnlyList<ChatMessage>? transientHistory = null)
     {
         if (!Enum.IsDefined(taskExecutionIntent)) throw new ArgumentOutOfRangeException(nameof(taskExecutionIntent));
         var canonicalIntent = taskExecutionIntent == TaskRunExecutionIntent.CanonicalAgenticTask;
@@ -900,8 +938,10 @@ public sealed partial class ChatSessionService(
             throw new InvalidOperationException("This plain ordinary source does not issue canonical tool authority.");
 
         execution.Update(ChatExecutionStage.LoadingContext, "Loading Context");
-        var history = await (ordinaryOriginal is null ? conversations.GetContextMessagesAsync(conversation.Id, cancellationToken)
-            : ordinaryOriginal.Read(() => conversations.GetContextMessagesAsync(conversation.Id, cancellationToken), cancellationToken)).ConfigureAwait(false);
+        // Temporary input belongs to the retained page/session, never to a durable row with the same ID.
+        IReadOnlyList<ChatMessage> history = conversation.IsTemporary ? transientHistory ?? []
+            : await (ordinaryOriginal is null ? conversations.GetContextMessagesAsync(conversation.Id, cancellationToken)
+                : ordinaryOriginal.Read(() => conversations.GetContextMessagesAsync(conversation.Id, cancellationToken), cancellationToken)).ConfigureAwait(false);
 
         var contextBudget = (int)Math.Clamp(
             (long)(generationOptions?.ContextLimit ?? 32768) * 4L,
@@ -915,7 +955,8 @@ public sealed partial class ChatSessionService(
                 message.Content))
             .ToList();
 
-        if (requestMessages.Count == 0 ||
+        // A transient snapshot contains prior turns only. Repeated equal prompts are distinct new input.
+        if (conversation.IsTemporary || requestMessages.Count == 0 ||
             requestMessages[^1].Role != "user" ||
             requestMessages[^1].Content != prompt)
         {

@@ -39,7 +39,7 @@ public sealed class ToolAvailabilityPlannerTests : IDisposable
         var plan = Create(mode, file: PermissionMode.FullAccess, command: PermissionMode.FullAccess);
 
         Assert.DoesNotContain(plan.Definitions, definition => WorkspaceNames.Contains(definition.Name));
-        Assert.Contains("only in Haven Tasks or Haven Studio", plan.GetUnavailableReason("read_file"));
+        Assert.Contains("only in 9to1 Tasks or 9to1 Studio", plan.GetUnavailableReason("read_file"));
     }
 
     /// <summary>

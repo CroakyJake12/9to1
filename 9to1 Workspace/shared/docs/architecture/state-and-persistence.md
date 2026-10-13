@@ -66,6 +66,29 @@ Spaces are also persisted through `IVersionedSettingsStore` by
 `SpaceRegistry`; they are user content, not preferences. See
 `docs/ARCHITECTURE_RULES.md` for state ownership rules.
 
+### Reasoning effort identities and display presets
+
+`Haven.Core.ReasoningScale` owns the existing four-step `EffortLevel` labels
+(25/50/75/100) and the projection of an actual ordered provider-level list.
+Three advertised levels display 35/70/100; five display 20/40/60/80/100.
+`ReasoningLevelPreset.LevelId` retains the provider identity, and an absent
+level list produces no presets. A general reasoning capability flag does not
+establish supported tiers or an independent on/off switch.
+
+`HomeModelCatalogueEntry.ReasoningPresets` projects the retained Dulche Den
+level declarations. Live Home route catalogue entries currently do not carry
+that metadata, so their projected list remains empty. This is metadata
+projection, not a persisted model-setting or successful provider dispatch.
+Provider-specific selections must be revalidated against the current model
+and stored as level identity in their existing request/conversation owner.
+
+`Dulche.Runtime.ReasoningLevelMapper.FromPresetPercentage` accepts only the
+current exact display presets. The older `FromPercentage(double, ...)`
+retains its arbitrary-percentage floor behavior for compatibility and must
+not receive user-facing preset labels. The desktop's retained four-step
+controls use `ReasoningScale` consistently; full per-model CUI selection,
+reasoning on/off and end-to-end provider acceptance remain incomplete.
+
 ## 3. Avatar assets — processed local files
 
 `AvatarStore` stores centre-cropped images at `{DataDir}/avatars/user.png`
@@ -77,6 +100,17 @@ stable well-known reference. Originals are never uploaded anywhere.
 Tab sessions, split-view geometry, workspace windows: owned by Desktop
 services (e.g., `MainView.TabSessions.cs`, workspace session persistence).
 Not a settings concern; may be rebuilt safely after a crash.
+
+Temporary ordinary Chat retains prior messages in its existing page/session.
+`ChatSessionService.SendAsync` accepts an optional `transientHistory` snapshot
+of prior user/assistant turns from that same conversation. It detaches and
+validates the list before emitting the next user message, excludes compacted
+turns through `ChatContextWindow`, and never reads durable conversation history
+for temporary sends. Transient input cannot supply system/tool roles, canonical
+Task intent or a provider execution context. The existing safety, provider and
+tool admission paths still apply. Compact summaries remain in the page's
+registered context; neither the history snapshot nor the summary creates a
+durable row. Durable sends retain the repository-owned context path.
 
 ## 5. Caches and derived state
 

@@ -57,8 +57,7 @@ public sealed class NodeGraphDraftEditor
         var candidate = Copy(change(Copy(_current))) with { Revision = _current.Revision + 1 };
         var errors = _registry.Validate(candidate);
         if (errors.Count != 0) return Result(false, "graph.validation.failed", errors);
-        if (_undo.Count >= 256) return Result(false, "graph.history.limit", []);
-        _undo.Push(_current); _redo.Clear(); _current = candidate;
+        PushBounded(_undo, _current); _redo.Clear(); _current = candidate;
         return Result(true, "graph.draft.changed", []);
     }
     private GraphEditResult Restore(long expectedRevision, Stack<GraphDocument> from, Stack<GraphDocument> to)
@@ -70,10 +69,22 @@ public sealed class NodeGraphDraftEditor
         var candidate = Copy(from.Peek()) with { Revision = _current.Revision + 1 };
         var errors = _registry.Validate(candidate);
         if (errors.Count != 0) return Result(false, "graph.history.migration-required", errors);
-        from.Pop(); to.Push(_current); _current = candidate;
+        from.Pop(); PushBounded(to, _current); _current = candidate;
         return Result(true, "graph.draft.changed", []);
     }
     private GraphEditResult Result(bool succeeded, string code, IReadOnlyList<GraphDiagnostic> errors) => new(succeeded, code, Current, errors.ToArray());
+    private static void PushBounded(Stack<GraphDocument> history, GraphDocument document)
+    {
+        if (history.Count >= 256)
+        {
+            // Retain the newest reversible edits without making the editor stop
+            // accepting work once the history capacity has been reached.
+            var retained = history.Take(255).Reverse().ToArray();
+            history.Clear();
+            foreach (var item in retained) history.Push(item);
+        }
+        history.Push(document);
+    }
     private static GraphNode CopyNode(GraphNode node) => node with { Configuration = node.Configuration.Clone(), Ports = node.Ports.ToArray() };
     private static GraphDocument Copy(GraphDocument graph) => graph with { Nodes = graph.Nodes.Select(CopyNode).ToArray(), Connections = graph.Connections.ToArray() };
 }

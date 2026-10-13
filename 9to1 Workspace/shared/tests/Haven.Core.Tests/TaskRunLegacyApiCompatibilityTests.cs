@@ -31,7 +31,15 @@ public sealed class TaskRunLegacyApiCompatibilityTests
         Assert.All(oldSend.GetParameters(), parameter => Assert.False(parameter.IsOptional));
         var newSend = Assert.IsAssignableFrom<System.Reflection.MethodInfo>(typeof(ChatSessionService).GetMethod(nameof(ChatSessionService.SendAsync),
             [.. send, typeof(ProviderExecutionContext), typeof(TaskRunExecutionIntent)]));
-        Assert.Equal(TaskRunExecutionIntent.OrdinaryConversation, Assert.IsType<TaskRunExecutionIntent>(newSend.GetParameters()[^1].DefaultValue));
+        var currentParameters = newSend.GetParameters();
+        Assert.All(currentParameters.Take(13), parameter => Assert.False(parameter.IsOptional));
+        Assert.All(currentParameters.Skip(13), parameter => Assert.True(parameter.IsOptional));
+        Assert.Equal(TaskRunExecutionIntent.OrdinaryConversation, Assert.IsType<TaskRunExecutionIntent>(currentParameters[^1].DefaultValue));
+        Assert.Equal(PermissionMode.FullAccess, Assert.IsType<PermissionMode>(currentParameters[16].DefaultValue));
+        Assert.Equal(PermissionMode.FullAccess, Assert.IsType<PermissionMode>(currentParameters[17].DefaultValue));
+        Assert.Equal(PermissionMode.FullAccess, Assert.IsType<PermissionMode>(currentParameters[18].DefaultValue));
+        Assert.All(currentParameters.Skip(13).Where(parameter => parameter.ParameterType != typeof(PermissionMode)
+            && parameter.ParameterType != typeof(TaskRunExecutionIntent)), parameter => Assert.Null(parameter.DefaultValue));
     }
 
     [Fact]

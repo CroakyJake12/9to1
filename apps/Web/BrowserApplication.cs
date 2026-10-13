@@ -82,7 +82,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         lifetime.MainView = _view;
         Program.Attach(this);
         StartupTrace?.Invoke("services:begin");
-        _accountSettings = BrowserFeatureComposition.Register(_surfaces);
+        _accountSettings = BrowserFeatureComposition.Register(_surfaces, NavigateHome);
         StartupTrace?.Invoke("services:ready");
         base.OnFrameworkInitializationCompleted();
     }
@@ -125,16 +125,10 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         }
 
         Program.ShowStatus("Loading", "Opening your destination…");
-        var dispatch = await BrowserRouteDispatcher.PrepareAsync(_surfaces, request!, BrowserHomeContext.CanOpen, target =>
-        {
-            EnsureHome();
-            var home = new BrowserHomeContext(_homeDocument!, NavigateHome, _accountSettings,
-                route => _surfaces.AvailableRoutes.Contains(route, StringComparer.Ordinal),
-                BrowserHomeDashboardLayoutStore.GetCurrent(_surfaces), new BrowserHomeLocalPreferences(), BrowserHomeBriefingSources.Get(_surfaces), _homeSearch);
-            if (!home.Open(target)) { home.Dispose(); return null; }
-            return new(_homeDocument!, home, home, home, Admission: new HomeAdmission(this, home));
-        }, cancellation);
-        var (result, present, isUnavailableHome) = dispatch;
+        var requestedHasOwner = _surfaces.AvailableRoutes.Contains(request!.RouteId, StringComparer.Ordinal);
+        var dispatch = await BrowserRouteDispatcher.PrepareAsync(_surfaces, request!, BrowserHomeContext.CanOpen,
+            CreateHomeSurface, cancellation);
+        var (result, present, _) = dispatch;
         StartupTrace?.Invoke("document:prepared");
         if (_disposed || _closing || version != _navigationVersion || cancellation.IsCancellationRequested)
         {
@@ -142,10 +136,51 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         }
         if (!result.Succeeded || present is null)
         {
-            // The requested address stays intact; a failed deep link never opens a different artifact.
-            Program.ShowStatus(result.Code, "This destination is unavailable. Your link has been preserved so you can try again.");
+            const string unavailableMessage = "This destination is unavailable. Your link has been preserved so you can try again.";
+            // A warm failed route retains its existing owner and draft. A cold
+            // unregistered route has no prior view, so admit the normal Home
+            // navigation surface without treating the requested app as opened.
+            // Do not resurrect a revoked account owner or bypass a registered
+            // destination's denial/failure. Home's own owner also retains authority.
+            if (_view.Content is null && _accountSettings is not null && !requestedHasOwner
+                && result.Code == "HomeServiceUnavailable"
+                && !_surfaces.AvailableRoutes.Contains(request!.RouteId, StringComparer.Ordinal))
+            {
+                var homeRequest = new HomeFeatureNavigationRequest(HomeFeatureRouteIds.Dashboard);
+                var recovery = await BrowserRouteDispatcher.PrepareAsync(_surfaces, homeRequest,
+                    BrowserHomeContext.CanOpen, CreateHomeSurface, cancellation);
+                if (_disposed || _closing || version != _navigationVersion || cancellation.IsCancellationRequested)
+                    return;
+                if (recovery.Result.Succeeded && recovery.Present is { } presentHome)
+                {
+                    await PresentPreparedAsync(presentHome, homeRequest, version, cancellation,
+                        result.Code, unavailableMessage);
+                    return;
+                }
+            }
+            // The requested address stays intact; no requested artifact is fabricated.
+            Program.ShowStatus(result.Code, unavailableMessage);
             return;
         }
+
+        await PresentPreparedAsync(present, request!, version, cancellation, "Ready", "");
+    }
+
+    private BrowserCuiSurface? CreateHomeSurface(HomeFeatureNavigationRequest target)
+    {
+        EnsureHome();
+        var home = new BrowserHomeContext(_homeDocument!, NavigateHome, _accountSettings,
+            route => _surfaces.AvailableRoutes.Contains(route, StringComparer.Ordinal),
+            BrowserHomeDashboardLayoutStore.GetCurrent(_surfaces), new BrowserHomeLocalPreferences(),
+            BrowserHomeBriefingSources.Get(_surfaces), _homeSearch);
+        if (!home.Open(target)) { home.Dispose(); return null; }
+        return new(_homeDocument!, home, home, home, Admission: new HomeAdmission(this, home));
+    }
+
+    private async Task PresentPreparedAsync(Func<BrowserCuiSurface?> present,
+        HomeFeatureNavigationRequest request, long version, CancellationToken cancellation,
+        string statusCode, string statusMessage)
+    {
         await Dispatcher.UIThread.InvokeAsync(async () =>
         {
             if (_disposed || _closing || version != _navigationVersion || cancellation.IsCancellationRequested)
@@ -170,13 +205,13 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
                 if (_disposed || _closing || version != _navigationVersion || cancellation.IsCancellationRequested)
                 { surface.Admission?.Reject(); return; }
             }
-            if (Render(surface, BrowserRouteCodec.Encode(request!), request!.RouteId))
+            if (Render(surface, BrowserRouteCodec.Encode(request), request.RouteId))
             {
                 StartupTrace?.Invoke("shell:attached");
                 Program.ShowStatus(_presentationCleanupError is not null ? "BrowserPresentationCleanupFailed"
-                        : "Ready",
+                        : statusCode,
                     _presentationCleanupError is not null ? "Your destination opened, but the previous view could not fully close."
-                        : "");
+                        : statusMessage);
                 // Only after the native presentation is transferred; the actual Settings owner retains the refresh.
                 if (surface.Bindings is BrowserHomeContext home && ReferenceEquals(_home, home))
                     _ = home.ActivateAsync();
@@ -256,6 +291,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         BrowserAppearanceSettings? candidateAppearance = null;
         BrowserThemeCreator? candidateThemeCreator = null;
         BrowserAppAccentSettings? candidateAppAccent = null;
+        IDisposable? candidateAttachment = null;
         var transferred = false;
         var previousContent = _view.Content;
         var previousRoot = (previousContent as ScrollViewer)?.Content as Control;
@@ -292,6 +328,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
             }
             candidate.WireBindings(root);
             candidateAvailability = BrowserActionAvailability.Observe(root, candidate, surface.Document, shellActions, bindings);
+            candidateAttachment = surface.Attach?.Invoke(root);
             foreach (var control in root.GetLogicalDescendants().OfType<Control>().Prepend(root))
             {
                 if (control is TextBox input && surface.Bindings is BrowserHomeContext && input.Name != "global-search")
@@ -326,7 +363,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
             // The independent owner commits only after reversible native installation.
             surface.Admission?.Accept();
             _loader = candidate;
-            _surfaceLifetime = surface.Lifetime;
+            _surfaceLifetime = candidateAttachment is null ? surface.Lifetime : new AttachedSurfaceLifetime(candidateAttachment, surface.Lifetime);
             _availability = candidateAvailability;
             _homePresentation = candidateHomePresentation;
             _appearance = candidateAppearance;
@@ -381,7 +418,11 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
                     }
                     finally
                     {
-                        try { candidateHomePresentation?.Dispose(); candidateAvailability?.Dispose(); }
+                        try
+                        {
+                            try { candidateAttachment?.Dispose(); }
+                            finally { candidateHomePresentation?.Dispose(); candidateAvailability?.Dispose(); }
+                        }
                         finally
                         {
                             try { candidate.Dispose(); }
@@ -592,7 +633,7 @@ public sealed class BrowserApplication : Application, IAsyncDisposable
         if (_closeCompletion is { } closing) await closing.Task;
         await DrainPrivateContextResetTasksAsync();
         if (_disposed || _closing || version != _privateContextVersion || _privateContextResets != 0) return;
-        _accountSettings = BrowserFeatureComposition.RegisterPrivateAccountSettings(_surfaces);
+        _accountSettings = BrowserFeatureComposition.RegisterPrivateAccountSettings(_surfaces, NavigateHome);
         QueueNavigation(Program.ReadFragment());
     }
 

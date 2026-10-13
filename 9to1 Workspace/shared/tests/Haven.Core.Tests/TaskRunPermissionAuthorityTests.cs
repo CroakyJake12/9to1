@@ -191,6 +191,23 @@ public sealed partial class TaskRunPermissionAuthorityTests
     }
 
     [Fact]
+    public async Task Canceled_original_cloud_close_retains_one_cause_across_independent_joins()
+    {
+        var rig = new Rig(); var task = await rig.StartAsync(); var candidate = await rig.CaptureAsync(task, rig.Remote.Model);
+        var lease = await rig.Authority.AuthorizeAttemptAsync(task, Guid.NewGuid(), candidate, null, default);
+        rig.Cloud.Lease.OriginalClose = Task.FromCanceled(new CancellationToken(true));
+
+        var close = lease.DisposeAsync().AsTask();
+        var error = await Assert.ThrowsAsync<AggregateException>(() => close);
+        var originalCancellation = Assert.IsAssignableFrom<OperationCanceledException>(Assert.Single(error.InnerExceptions));
+        Assert.True(close.IsFaulted); // Failed cleanup cannot become a successful release.
+        Assert.Same(close, lease.DisposeAsync().AsTask());
+        var repeated = await Assert.ThrowsAsync<AggregateException>(() => close);
+        Assert.Same(originalCancellation, Assert.Single(repeated.InnerExceptions));
+        Assert.Equal(1, rig.Cloud.Lease.Closes);
+    }
+
+    [Fact]
     public async Task Configured_route_revision_is_rechecked_in_the_actual_owner_reader()
     {
         var routes = new Routes(); var rig = new Rig(routes: routes); var task = await rig.StartAsync();

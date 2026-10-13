@@ -1,8 +1,8 @@
 namespace Haven.Core;
 
 /// <summary>
-/// Keeps the user-facing reasoning percentages and the provider effort enum in sync.
-/// The current product scale has exactly four steps: 25%, 50%, 75%, and 100%.
+/// Keeps legacy four-step effort labels consistent and projects actual provider level identities
+/// to discrete display presets. Display percentages never imply provider capabilities.
 /// </summary>
 public static class ReasoningScale
 {
@@ -11,7 +11,25 @@ public static class ReasoningScale
     public const int StepSize = 25;
 
     public static IReadOnlyList<int> Percentages { get; } =
-        [MinimumPercentage, 50, 75, MaximumPercentage];
+        Array.AsReadOnly(new[] { MinimumPercentage, 50, 75, MaximumPercentage });
+
+    /// <summary>
+    /// Preserves the provider's advertised ordering and exact level identities. Missing metadata
+    /// produces no presets; it never invents a reasoning control or an enabled/disabled switch.
+    /// </summary>
+    public static IReadOnlyList<ReasoningLevelPreset> CreatePresets(IReadOnlyList<string>? supportedLevels)
+    {
+        if (supportedLevels is null || supportedLevels.Count == 0) return [];
+        var levels = supportedLevels.ToArray();
+        if (levels.Any(string.IsNullOrWhiteSpace) || levels.Distinct(StringComparer.Ordinal).Count() != levels.Length)
+            throw new ArgumentException("Advertised reasoning levels require distinct nonempty identities.", nameof(supportedLevels));
+
+        // Preserve distinct, legible labels even for providers advertising more than 100 levels.
+        var decimals = Math.Max(0, (int)Math.Ceiling(Math.Log10(levels.Length)) - 2);
+        return Array.AsReadOnly(levels.Select((level, ordinal) => new ReasoningLevelPreset(level, ordinal,
+            levels.Length == 3 ? new[] { 35m, 70m, 100m }[ordinal]
+                : decimal.Round(100m * (ordinal + 1) / levels.Length, decimals, MidpointRounding.AwayFromZero))).ToArray());
+    }
 
     public static int ToPercentage(EffortLevel effort) => effort switch
     {
@@ -50,4 +68,10 @@ public static class ReasoningScale
     /// </summary>
     public static bool UsesHighReasoningRuntime(EffortLevel effort) =>
         effort == EffortLevel.Max;
+}
+
+/// <summary>A display label bound to one actual advertised level; selection retains LevelId.</summary>
+public sealed record ReasoningLevelPreset(string LevelId, int Ordinal, decimal Percentage)
+{
+    public string Label => Percentage.ToString("0.########", System.Globalization.CultureInfo.InvariantCulture) + "%";
 }

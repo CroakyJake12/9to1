@@ -225,7 +225,9 @@ public sealed partial class MainView
         }
         if (source.Page is NewChatPage chat)
         {
-            var original = chat.CurrentConversation;
+            // This tab action is not consent to convert a temporary conversation.
+            // Ask the owning live page before any persistent read or new branch write.
+            var original = chat.CaptureSavedConversationForTabDuplication();
             var now = DateTimeOffset.UtcNow;
             var branch = original with
             {

@@ -113,6 +113,36 @@ public sealed class RuntimeTests
         Assert.Equal("\"Na\"", JsonSerializer.Serialize(Metric<long>.Na, options));
     }
 
+    [Theory]
+    [InlineData(3)]
+    [InlineData(4)]
+    [InlineData(5)]
+    public void EveryAdvertisedPresetResolvesToItsOwnProviderIdentity(int count)
+    {
+        var levels = Enumerable.Range(0, count).Select(index => "provider-tier-" + index).ToArray();
+        foreach (var preset in ReasoningScale.CreatePresets(levels))
+        {
+            var selected = ReasoningLevelMapper.FromPresetPercentage(preset.Percentage, levels);
+            Assert.True(selected.Succeeded);
+            Assert.Equal(levels[preset.Ordinal], selected.Value);
+        }
+    }
+
+    [Fact]
+    public void PresetSelectionRefusesUnknownStaleAndAmbiguousCapabilities()
+    {
+        Assert.Equal(DulcheErrorCode.UnsupportedCapability,
+            ReasoningLevelMapper.FromPresetPercentage(100m, null).Error!.Code);
+        Assert.Equal(DulcheErrorCode.UnsupportedCapability,
+            ReasoningLevelMapper.FromPresetPercentage(100m, []).Error!.Code);
+        Assert.Equal(DulcheErrorCode.InvalidArgument,
+            ReasoningLevelMapper.FromPresetPercentage(35m, ["first", "second", "third", "fourth"]).Error!.Code);
+        Assert.Equal(DulcheErrorCode.InvalidArgument,
+            ReasoningLevelMapper.FromPresetPercentage(100m, ["same", "same"]).Error!.Code);
+        Assert.Equal(DulcheErrorCode.InvalidArgument,
+            ReasoningLevelMapper.FromPresetPercentage(0m, ["low", "medium", "high"]).Error!.Code);
+    }
+
     [Fact]
     public async Task RouteFiltersCapabilitiesAndCloudPolicyBeforePriority()
     {

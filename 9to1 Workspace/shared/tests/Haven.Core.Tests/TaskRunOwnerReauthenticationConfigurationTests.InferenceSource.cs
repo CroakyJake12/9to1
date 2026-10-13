@@ -89,7 +89,7 @@ public sealed partial class TaskRunOwnerReauthenticationConfigurationTests
         try
         {
             var driver = authority.ValidateOriginalInferenceAdmissionAsync(admission, action => action(), originals.Add, default);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => driver);
+            var originalCancellation = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => driver);
             Assert.True(raw.IsCanceled); Assert.False(raw.IsFaulted);
             Assert.True(driver.IsCanceled); Assert.False(driver.IsFaulted);
             Assert.Contains(originals, task => ReferenceEquals(task, raw));
@@ -101,6 +101,7 @@ public sealed partial class TaskRunOwnerReauthenticationConfigurationTests
             knownOwnerCauses = work.Cast<object>().SelectMany(actual =>
                 ((IEnumerable<Exception>)actual.GetType().GetField("Errors")!.GetValue(actual)!)).ToArray();
             Assert.NotEmpty(knownOwnerCauses); Assert.All(knownOwnerCauses, cause => Assert.IsAssignableFrom<OperationCanceledException>(cause));
+            Assert.Same(originalCancellation, Assert.Single(knownOwnerCauses));
         }
         catch (Exception cause) { primary = cause; throw; }
         finally { await CompleteInferenceOriginalCleanupAsync(authority, admission, primary, knownOwnerCauses); }

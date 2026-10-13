@@ -17,7 +17,8 @@ public enum SpacesDestination
     Shopping,
     Research,
     Translate,
-    Experiences
+    Experiences,
+    Assistants
 }
 
 public sealed record SpacesNavigationItem(
@@ -47,6 +48,7 @@ public sealed class SpacesAppSurface
         new(SpacesDestination.Chat, "Chat", "chat"),
         new(SpacesDestination.Study, "Study", "book"),
         new(SpacesDestination.Tasks, "Tasks", "tasks"),
+        new(SpacesDestination.Assistants, "Assistants", "agents"),
         new(SpacesDestination.Agent, "Agent", "agents"),
         new(SpacesDestination.Shopping, "Shopping", "cart"),
         new(SpacesDestination.Research, "Research", "search"),
@@ -98,6 +100,9 @@ public sealed class SpacesAppSurface
                     break;
                 case SpacesDestination.Agent:
                     await NavigateToBuiltInSpaceAsync(SpaceRegistry.AgentSpaceId, cancellationToken).ConfigureAwait(false);
+                    break;
+                case SpacesDestination.Assistants:
+                    await NavigateToBuiltInSpaceAsync(SpaceRegistry.AssistantsSpaceId, cancellationToken).ConfigureAwait(false);
                     break;
                 case SpacesDestination.Shopping:
                     await NavigateToBuiltInSpaceAsync(SpaceRegistry.ShoppingSpaceId, cancellationToken).ConfigureAwait(false);

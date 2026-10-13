@@ -16,6 +16,7 @@
     <Compile Include="../../Services/BrowserTaskActorSource.cs" Link="Production/BrowserTaskActorSource.cs" />
     <Compile Include="../../Services/BrowserTaskIdentityReadOperation.cs" Link="Production/BrowserTaskIdentityReadOperation.cs" />
     <Compile Include="../Storage/BrowserPrivateTaskStorage.cs" Link="Production/BrowserPrivateTaskStorage.cs" />
+    <Compile Include="../Storage/IndexedDbSpaceSettingsStore.cs" Link="Production/IndexedDbSpaceSettingsStore.cs" />
     <Compile Include="../Storage/BrowserStoredTaskReadOwner.cs" Link="Production/BrowserStoredTaskReadOwner.cs" />
     <Compile Include="../Storage/BrowserPrivateTaskStorageEnrollment.cs" Link="Production/BrowserPrivateTaskStorageEnrollment.cs" />
     <Compile Include="../Storage/BrowserTaskExecutionTransport.cs" Link="Production/BrowserTaskExecutionTransport.cs" />

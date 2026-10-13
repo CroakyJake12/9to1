@@ -10,7 +10,8 @@ public enum SpaceKind
     Chat = 5,
     Tasks = 6,
     Translate = 7,
-    Experiences = 8
+    Experiences = 8,
+    Assistants = 9
 }
 
 public enum SpaceWebAccessPolicy { Allowed = 0, Ask = 1, Disabled = 2 }

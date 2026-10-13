@@ -20,6 +20,7 @@ public sealed class BrowserPrivateTaskStorage : IBrowserPrivateContextParticipan
     private ExecutionEventHub? _eventHub;
     private TaskExecutionCoordinator? _coordinator;
     private BrowserStoredTaskReadOwner? _storedReads;
+    private SpaceRegistry? _spaces;
     private bool _revoked;
     private bool _initializing;
     private Exception? _initializationFailure;
@@ -48,6 +49,7 @@ public sealed class BrowserPrivateTaskStorage : IBrowserPrivateContextParticipan
                 _eventHub = new(_eventRepository); // Capture the genuine collector before later composition.
                 _coordinator = new(_tasks, _eventHub, timeProvider: null); // Actual preserved read-only constructor; no attempt authority.
                 _storedReads = new(_coordinator, _transport, _gate); // Same private fence gate makes final read publication atomic with revocation.
+                _spaces = new(new IndexedDbSpaceSettingsStore(_transport, _actors));
             }
             catch (Exception error) { _initializationFailure = error; throw; }
             finally { _initializing = false; }
@@ -64,6 +66,9 @@ public sealed class BrowserPrivateTaskStorage : IBrowserPrivateContextParticipan
     { get { EnsureInitialized(); return _contexts!; } }
     public BrowserStoredTaskReadOwner StoredTasks
     { get { EnsureInitialized(); return _storedReads!; } }
+    /// <summary>Account-partitioned local Space configuration; no model, Task or workspace admission.</summary>
+    public SpaceRegistry Spaces
+    { get { EnsureInitialized(); return _spaces!; } }
     public void DemandPrivateContextCurrent()
     {
         lock (_gate)

@@ -3492,16 +3492,16 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
 
                 var reasoning = new HavenSlider
                 {
-                    Minimum = 20,
-                    Maximum = 100,
+                    Minimum = ReasoningScale.MinimumPercentage,
+                    Maximum = ReasoningScale.MaximumPercentage,
                     Value = EffortPercentage(_preferences.DefaultEffort),
-                    TickFrequency = 20,
+                    TickFrequency = ReasoningScale.StepSize,
                     IsSnapToTickEnabled = true,
                     Margin = new Avalonia.Thickness(8, 0, 8, 2)
                 };
                 reasoning.ValueChanged += (_, args) =>
                 {
-                    var percent = Math.Clamp((int)Math.Round(args.NewValue / 20d) * 20, 20, 100);
+                    var percent = ReasoningScale.SnapPercentage(args.NewValue);
                     var effort = EffortForPercentage(percent);
                     reasoningValue.Text = $"{percent}%";
                     TopRail.SetModelSummary(
@@ -3554,22 +3554,9 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         }
     }
 
-    private static int EffortPercentage(EffortLevel effort) => effort switch
-    {
-        EffortLevel.Low => 20,
-        EffortLevel.Medium => 60,
-        EffortLevel.High => 80,
-        EffortLevel.Max => 100,
-        _ => 60
-    };
+    private static int EffortPercentage(EffortLevel effort) => ReasoningScale.ToPercentage(effort);
 
-    private static EffortLevel EffortForPercentage(int percentage) => percentage switch
-    {
-        <= 20 => EffortLevel.Low,
-        <= 60 => EffortLevel.Medium,
-        <= 80 => EffortLevel.High,
-        _ => EffortLevel.Max
-    };
+    private static EffortLevel EffortForPercentage(int percentage) => ReasoningScale.FromPercentage(percentage);
 
     private async Task RefreshActiveModelsAsync()
     {
@@ -3580,16 +3567,20 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         ApplyShellVisualState();
     }
 
-    private void OnSavedChatSelected(object? sender, RoutedEventArgs e)
+    private async void OnSavedChatSelected(object? sender, RoutedEventArgs e)
     {
-        _newChatPage?.SetTemporary(false);
-        StoredChatLabel.Text = "Saved Chat";
+        if (_newChatPage is not { } chat) return;
+        await chat.SetTemporaryAsync(false);
+        if (ReferenceEquals(_newChatPage, chat))
+            StoredChatLabel.Text = chat.IsTemporary ? "Temporary Chat" : "Saved Chat";
     }
 
-    private void OnTemporaryChatSelected(object? sender, RoutedEventArgs e)
+    private async void OnTemporaryChatSelected(object? sender, RoutedEventArgs e)
     {
-        _newChatPage?.SetTemporary(true);
-        StoredChatLabel.Text = "Temporary Chat";
+        if (_newChatPage is not { } chat) return;
+        await chat.SetTemporaryAsync(true);
+        if (ReferenceEquals(_newChatPage, chat))
+            StoredChatLabel.Text = chat.IsTemporary ? "Temporary Chat" : "Saved Chat";
     }
 
     private void RefreshTopRailTabs()

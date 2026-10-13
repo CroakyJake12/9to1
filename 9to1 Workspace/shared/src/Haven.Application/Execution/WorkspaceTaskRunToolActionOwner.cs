@@ -415,22 +415,24 @@ public sealed partial class WorkspaceTaskRunToolActionOwner : ITaskRunToolAction
         Func<CancellationToken, Task<WorkspaceToolResult>> originalBody, CancellationToken token)
     {
         if (preparation is not Preparation actual || !IsIssued(actual)) throw new UnauthorizedAccessException("Actual original preparation required.");
+        TaskCompletionSource start;
+        Task<TaskRunToolActionResult> execution;
         lock (_sync)
         {
             // Single-use/coalesced execution; an original receipt or unknown outcome never redispatches.
             if (actual.OriginalExecution is not null) return actual.OriginalExecution;
-            var completion = new TaskCompletionSource<TaskRunToolActionResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-            actual.OriginalExecution = completion.Task; // Publish before frame/body callbacks can reenter.
-            _ = StartPublishedAsync(actual, originalBody, token, completion);
-            return completion.Task;
+            start = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            execution = actual.OriginalExecution = StartPublishedAsync(actual, originalBody, token, start.Task);
         }
+        start.SetResult(); // Publish the actual whole task before frame/body callbacks can reenter.
+        return execution;
     }
-    private async Task StartPublishedAsync(Preparation original, Func<CancellationToken, Task<WorkspaceToolResult>> body,
-        CancellationToken token, TaskCompletionSource<TaskRunToolActionResult> completion)
+    private async Task<TaskRunToolActionResult> StartPublishedAsync(Preparation original, Func<CancellationToken, Task<WorkspaceToolResult>> body,
+        CancellationToken token, Task start)
     {
-        // ExecuteOriginalAsync publishes under its registry lock. Yield before any frame
-        // callback or synchronous pre-body refusal can initiate independent native cleanup.
-        await Task.Yield();
+        // The start gate keeps source callbacks outside the registry lock and retains the
+        // actual async cancellation cause, rather than a token-only completion proxy.
+        await start.ConfigureAwait(false);
         Task<TaskRunToolActionResult>? frame = null;
         try
         {
@@ -440,7 +442,7 @@ public sealed partial class WorkspaceTaskRunToolActionOwner : ITaskRunToolAction
                 return ExecuteCoreAsync(original, body, ct);
             }, token);
             original.OriginalToolFrame = frame; // SAME source Task, never an idle/response proxy.
-            completion.TrySetResult(await frame.ConfigureAwait(false));
+            return await frame.ConfigureAwait(false);
         }
         catch (Exception error)
         {
@@ -448,7 +450,9 @@ public sealed partial class WorkspaceTaskRunToolActionOwner : ITaskRunToolAction
             if (Volatile.Read(ref original.OriginalToolBodyEntered) != 0)
             {
                 // Entered bodies retain their existing Complete/Close finally and exact result/fault path.
-                completion.TrySetException(primary); return;
+                if (primary is OperationCanceledException && frame?.IsCanceled != true)
+                    throw new AggregateException("Original workspace frame faulted cancellation cause.", primary);
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(primary).Throw();
             }
             var errors = new List<Exception> { primary };
             if (original.OriginalInvocation is { } physical)
@@ -465,10 +469,13 @@ public sealed partial class WorkspaceTaskRunToolActionOwner : ITaskRunToolAction
             if (original.OriginalPreBodyClose?.IsCompletedSuccessfully == true && original.Fence is { } fence)
                 try { _effects.RetireOriginal(fence); } catch (Exception cause) { errors.Add(cause); }
             lock (_sync) foreach (var cause in errors) Add(original.Errors, cause);
-            if (errors.Count == 1 && frame?.IsCanceled == true && error is OperationCanceledException canceled)
-                completion.TrySetCanceled(canceled.CancellationToken);
-            else completion.TrySetException(errors.Count == 1 ? primary :
-                new AggregateException("Original workspace pre-body frame and independent physical cleanup failed.", errors));
+            if (errors.Count == 1)
+            {
+                if (primary is OperationCanceledException && frame?.IsCanceled != true)
+                    throw new AggregateException("Original workspace pre-body callback faulted cancellation cause.", primary);
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(primary).Throw();
+            }
+            throw new AggregateException("Original workspace pre-body frame and independent physical cleanup failed.", errors);
         }
     }
     public async ValueTask ValidateOriginalPreparationAsync(ITaskRunToolActionPreparation preparation,

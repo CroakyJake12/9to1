@@ -1,57 +1,90 @@
 <Cui id="spaces.home" version="1">
-  <Page id="spaces-page" role="main" accessible-name="Spaces" font-family="Montserrat" layout="vertical" scalable-text="true" high-contrast="semantic" reduced-motion="respect">
-    <AdaptiveSplit id="spaces-layout" compact-breakpoint="760" primary-min-width="0">
-      <Aside id="spaces-sidebar" role="navigation" accessible-name="Spaces navigation" compact-mode="drawer">
-        <Heading level="1">Spaces</Heading>
-        <SearchField id="spaces-search" binding="spaces.query" accessible-name="Search Spaces" placeholder="Find a Space" clear-action="spaces.clear-search" />
-        <Button id="create-space" action="spaces.create" accessible-name="Create a custom Space" touch-target="44" variant="primary">New Space</Button>
-        <Heading level="2">First-party</Heading>
-        <List id="first-party-spaces" binding="spaces.builtIns" role="list" accessible-name="First-party Spaces">
-          <Button id="first-party-space" repeat="spaces.builtIns" action="spaces.open" action-argument="{id}" selected="{isCurrent}" accessible-name="Open {name}" touch-target="44">
-            <Text binding="name" />
-            <Text binding="summary" tone="muted" />
-          </Button>
-        </List>
-        <Heading level="2">Your Spaces</Heading>
-        <List id="custom-spaces" binding="spaces.customSpaces" role="list" accessible-name="Your custom Spaces" empty-text="Create a Space to keep related conversations and work together">
-          <Article id="custom-space-row" repeat="spaces.customSpaces" role="listitem" accessible-name="{name}, custom Space">
-            <Button id="open-custom-space" action="spaces.open" action-argument="{id}" selected="{isCurrent}" accessible-name="Open {name}" touch-target="44">
-              <Text binding="name" />
-              <Text binding="summary" tone="muted" />
-            </Button>
-            <Row id="custom-space-actions" accessible-name="Actions for {name}" wrap="true">
-              <Button action="spaces.rename" action-argument="{id}" accessible-name="Rename {name}" touch-target="44">Rename</Button>
-              <Button action="spaces.move" action-argument="{id}" accessible-name="Move {name}" touch-target="44">Move</Button>
-              <Button action="spaces.fork" action-argument="{id}" accessible-name="Make a copy of {name}" touch-target="44">Copy</Button>
-              <Button action="spaces.archive" action-argument="{id}" accessible-name="Archive {name}" touch-target="44">Archive</Button>
-            </Row>
-          </Article>
-        </List>
-        <Text id="spaces-status" binding="status.message" role="status" live="polite" accessible-name="Spaces status" />
-      </Aside>
-      <Main id="space-details" accessible-name="Selected Space">
-        <Heading id="selected-space-name" level="1" binding="selection.name">Choose a Space</Heading>
-        <Text id="selected-space-description" binding="selection.description" />
-        <Panel id="space-context" accessible-name="Space context and policy">
-          <Heading level="2">Context</Heading>
-          <List id="space-context-items" binding="selection.contextReferences" role="list" accessible-name="Space context sources" empty-text="No sources added">
-            <Article repeat="selection.contextReferences" role="listitem" accessible-name="{label}, {permissionLabel}">
-              <Text binding="label" />
-              <Text binding="permissionLabel" tone="muted" />
-              <Text binding="indexStateLabel" tone="muted" />
-            </Article>
-          </List>
-          <Button id="add-context" action="spaces.add-context" enabled="{selection.canEdit}" accessible-name="Add a source to this Space" touch-target="44">Add source</Button>
-          <Heading level="2">Model and access</Heading>
-          <Text binding="selection.effectiveModelLabel" accessible-name="Effective model" />
-          <Text binding="selection.webAccessLabel" accessible-name="Web access policy" />
-          <Text binding="selection.memoryScopeLabel" accessible-name="Memory scope" />
-          <Heading level="2">Capabilities</Heading>
-          <List id="space-capabilities" binding="selection.capabilities" role="list" accessible-name="Space capabilities" empty-text="No extra capabilities enabled">
-            <Text repeat="selection.capabilities" binding="label" />
-          </List>
-        </Panel>
-      </Main>
-    </AdaptiveSplit>
-  </Page>
+  <Actions>
+    <Action name="home.open" command="ShellHome" />
+    <Action name="spaces.select" command="spaces.select" parameter="{Binding space.id}" />
+    <Action name="spaces.open" command="spaces.open" parameter="{Binding selection.id}" />
+    <Action name="spaces.build" command="spaces.build" parameter="{Binding selection.id}" />
+    <Action name="spaces.rename" command="spaces.rename" parameter="{Binding space.id}" />
+    <Action name="spaces.move" command="spaces.move" parameter="{Binding space.id}" />
+    <Action name="spaces.fork" command="spaces.fork" parameter="{Binding space.id}" />
+    <Action name="spaces.archive" command="spaces.archive" parameter="{Binding space.id}" />
+    <Action name="spaces.restore" command="spaces.restore" parameter="{Binding space.id}" />
+  </Actions>
+  <Theme Name="user_preference">
+    <Page ID="spaces-page" AccessibleName="Manage Spaces">
+      <Container ID="spaces-layout" Type="Grid" ColumnSizes="{Binding layout.columns, fallback=280 1fr}" Background="{Resource CuiBackgroundBrush}">
+        <Container ID="spaces-sidebar" Type="Grid" RowSizes="Auto Auto Auto 1fr" Active="{Binding layout.sidebarVisible, fallback=true}" AccessibleName="Spaces navigation" Padding="16" CellGap="12" Background="{Resource CuiPanelBrush}">
+          <Container Type="Grid" ColumnSizes="1fr Auto"><Text Text="Spaces" FontSize="24" FontWeight="SemiBold" /><Button ID="close-spaces-sidebar" Column="1" Action="spaces.toggle-sidebar" Content="Hide" AccessibleName="Hide Spaces sidebar" /></Container>
+          <Container Row="1" Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
+            <Input ID="spaces-search" Type="Text" Value="{Binding spaces.query, mode=TwoWay, type=string}" AccessibleName="Search Spaces" PlaceholderText="Find a Space" MinWidth="0" />
+            <Button Column="1" Action="spaces.clear-search" Content="Clear" AccessibleName="Clear Spaces search" />
+          </Container>
+          <Container Row="2" Type="Vertical Stack" CellGap="8">
+            <Button ID="create-space" Action="spaces.create" Content="New Space" AccessibleName="Create a custom Space" MinHeight="44" />
+            <Input ID="show-archived-spaces" Type="Checkbox" Content="Show archived Spaces" Checked="{Binding spaces.showArchived, mode=TwoWay, type=bool}" AccessibleName="Show archived Spaces" />
+          </Container>
+          <Container Row="3" Type="Vertical Stack" VerticalScrolling="true" CellGap="12">
+            <Text Text="First-party" FontWeight="SemiBold" />
+            <Container ID="first-party-spaces" Type="Vertical Stack" AccessibleName="First-party Spaces">
+              <Repeat Source="{Binding spaces.builtIns}" As="space" Key="{Binding space.id}">
+                <Button ID="first-party-space" Action="spaces.select" Selected="{Binding space.isCurrent}" AccessibleName="{Binding space.name}" AccessibleDescription="Selects this Space for details and management" HorizontalContentAlignment="Stretch" MinHeight="44" Margin="0,0,0,6">
+                  <Container Type="Vertical Stack" CellGap="4"><Text Text="{Binding space.name}" TextWrapping="Wrap" /><Text Text="{Binding space.summary}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" FontSize="12" /></Container>
+                </Button>
+              </Repeat>
+            </Container>
+            <Text Text="Your Spaces" FontWeight="SemiBold" />
+            <Container ID="custom-spaces" Type="Vertical Stack" AccessibleName="Your custom Spaces">
+              <Repeat Source="{Binding spaces.customSpaces}" As="space" Key="{Binding space.id}">
+                <Container ID="custom-space-row" Type="Vertical Stack" CellGap="4" Margin="0,0,0,12" AccessibleName="{Binding space.name}">
+                  <Button ID="open-custom-space" Action="spaces.select" Selected="{Binding space.isCurrent}" AccessibleName="{Binding space.name}" AccessibleDescription="Selects this Space for details and management" HorizontalContentAlignment="Stretch" MinHeight="44">
+                    <Container ID="custom-space-labels" Type="Vertical Stack" CellGap="4"><Text ID="custom-space-name" Text="{Binding space.name}" TextWrapping="Wrap" /><Text ID="custom-space-summary" Text="{Binding space.summary}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" FontSize="12" /></Container>
+                  </Button>
+                  <Container ID="custom-space-actions" Type="Menu" AccessibleName="Space actions">
+                    <Button Type="Menu Item" Content="More" AccessibleName="Space actions"><Button Type="Menu Item" Action="spaces.rename" Content="Rename" Interactive="{Binding space.isActive, fallback=true}" /><Button Type="Menu Item" Action="spaces.move" Content="Move" Interactive="{Binding space.isActive, fallback=true}" /><Button Type="Menu Item" Action="spaces.fork" Content="Make a copy" Interactive="{Binding space.isActive, fallback=true}" /><Button Type="Menu Item" Action="spaces.archive" Content="Archive" Active="{Binding space.isActive, fallback=true}" /><Button Type="Menu Item" Action="spaces.restore" Content="Restore" Active="{Binding space.isArchived, fallback=false}" /></Button>
+                  </Container>
+                </Container>
+              </Repeat>
+            </Container>
+          </Container>
+        </Container>
+        <Container ID="space-details" Column="1" Type="Vertical Stack" VerticalScrolling="true" Padding="24" CellGap="16" Active="{Binding layout.detailsVisible, fallback=true}" AccessibleName="Selected Space">
+          <Container ID="spaces-manager-toolbar" Type="Wrap" CellGap="8" AccessibleName="Manage Spaces navigation">
+            <Button ID="reopen-spaces-sidebar" Action="spaces.toggle-sidebar" Content="Show Spaces" Active="{Binding layout.sidebarHidden, fallback=false}" AccessibleName="Show Spaces sidebar" />
+            <Button ID="spaces-home" Action="home.open" Content="Home" AccessibleName="Return to Home" />
+            <Button ID="refresh-spaces" Action="spaces.refresh" Content="Refresh" AccessibleName="Refresh your Spaces" />
+          </Container>
+          <Text ID="spaces-status" Text="{Binding status.message}" TextWrapping="Wrap" AccessibleName="Spaces status" Foreground="{Resource CuiTextSoftBrush}" />
+          <Container ID="space-editor" Type="Vertical Stack" CellGap="10" Padding="16" CornerRadius="16" Background="{Resource CuiPanelBrush}" Active="{Binding editor.visible, fallback=false}" AccessibleName="Space editor">
+            <Text ID="space-editor-title" Text="{Binding editor.title}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" />
+            <Text Text="Name" />
+            <Input ID="space-editor-name" Type="Text" Value="{Binding editor.name, mode=TwoWay, type=string}" AccessibleName="Space name" AccessibleDescription="Up to 80 characters; must be unique among your Spaces" PlaceholderText="Space name" />
+            <Text Text="Description" />
+            <Input ID="space-editor-description" Type="Text" Value="{Binding editor.description, mode=TwoWay, type=string}" AccessibleName="Space description" AcceptsReturn="true" TextWrapping="Wrap" MinHeight="80" MaxHeight="180" PlaceholderText="What is this Space for?" />
+            <Text ID="space-editor-error" Text="{Binding editor.error}" TextWrapping="Wrap" AccessibleName="Space editor error" />
+            <Container Type="Wrap" CellGap="8"><Button ID="confirm-space-edit" Action="spaces.confirm-edit" Content="Save" Interactive="{Binding editor.canConfirm, fallback=false}" AccessibleName="Save Space changes" MinHeight="44" /><Button ID="cancel-space-edit" Action="spaces.cancel-edit" Content="Cancel" AccessibleName="Cancel Space changes" MinHeight="44" /></Container>
+          </Container>
+          <Text ID="selected-space-name" Text="{Binding selection.name, fallback=Choose a Space}" FontSize="28" FontWeight="SemiBold" TextWrapping="Wrap" />
+          <Text ID="selected-space-description" Text="{Binding selection.description}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          <Container ID="selected-space-actions" Type="Wrap" CellGap="8" AccessibleName="Selected Space actions">
+            <Button ID="open-selected-space" Action="spaces.open" Content="Open workspace" Interactive="{Binding selection.canOpen, fallback=false}" AccessibleName="Open selected Space workspace" MinHeight="44" />
+            <Button ID="edit-space-configuration" Action="spaces.build" Content="Edit configuration" Interactive="{Binding selection.canBuild, fallback=false}" AccessibleName="Edit selected Space configuration" MinHeight="44" />
+          </Container>
+          <Text ID="space-workspace-unavailable" Text="{Binding selection.unavailableReason}" TextWrapping="Wrap" AccessibleName="Workspace availability" Foreground="{Resource CuiTextSoftBrush}" />
+          <Container ID="space-context" Type="Vertical Stack" CellGap="12" AccessibleName="Space context and policy">
+            <Text Text="Context" FontSize="18" FontWeight="SemiBold" />
+            <Container ID="space-context-items" Type="Vertical Stack" AccessibleName="Space context sources">
+              <Repeat Source="{Binding selection.contextReferences}" As="source" Key="{Binding source.id}">
+                <Container Type="Vertical Stack" CellGap="4" Margin="0,0,0,12" AccessibleName="{Binding source.label}"><Text Text="{Binding source.label}" TextWrapping="Wrap" /><Text Text="{Binding source.permissionLabel}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" /><Text Text="{Binding source.indexStateLabel}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" /></Container>
+              </Repeat>
+            </Container>
+            <Button ID="add-context" Action="spaces.add-context" Interactive="{Binding selection.canEdit, fallback=false}" Content="Add source" AccessibleName="Add a source to this Space" HorizontalAlignment="Left" MinHeight="44" />
+            <Text Text="Model and access" FontSize="18" FontWeight="SemiBold" Margin="0,12,0,0" />
+            <Text Text="{Binding selection.effectiveModelLabel}" AccessibleName="Effective model" TextWrapping="Wrap" /><Text Text="{Binding selection.webAccessLabel}" AccessibleName="Web access policy" TextWrapping="Wrap" /><Text Text="{Binding selection.memoryScopeLabel}" AccessibleName="Memory scope" TextWrapping="Wrap" />
+            <Text Text="Capabilities" FontSize="18" FontWeight="SemiBold" Margin="0,12,0,0" />
+            <Container ID="space-capabilities" Type="Vertical Stack" AccessibleName="Space capabilities"><Repeat Source="{Binding selection.capabilities}" As="capability" Key="{Binding capability.id}"><Text Text="{Binding capability.label}" TextWrapping="Wrap" /></Repeat></Container>
+          </Container>
+        </Container>
+      </Container>
+    </Page>
+  </Theme>
 </Cui>

@@ -45,6 +45,13 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
     private Task AdmitOriginalConversationLoad(Conversation conversation)
     {
         ArgumentNullException.ThrowIfNull(conversation);
+        if (!CanChangeConversation()) return Task.FromException(new InvalidOperationException(
+            "Resolve the pending temporary chat save before loading another conversation."));
+        if (conversation.IsTemporary)
+        {
+            if (ReferenceEquals(conversation, _conversation)) return Task.CompletedTask;
+            return Task.FromException(new InvalidOperationException("Temporary history belongs to its live chat session and cannot be reloaded from a conversation descriptor."));
+        }
         OriginalConversationTarget? target = null;
         return _originalWork.RunAsync(original =>
         {
@@ -232,6 +239,7 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
         lock (_originalSendGate)
         {
             _originalWork.DemandAdmission();
+            if (!CanChangeConversation()) return Task.CompletedTask;
             if (_originalSend is { IsCompleted: false }) return _originalSend;
             var conversation = _conversation;
             var generation = _originalPresentationGeneration;

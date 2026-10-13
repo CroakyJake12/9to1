@@ -20,6 +20,8 @@ public sealed partial class SpaceRegistry
     public static Guid TasksSpaceId { get; } = Guid.Parse("b1000000-0000-0000-0000-000000000006");
     public static Guid TranslateSpaceId { get; } = Guid.Parse("b1000000-0000-0000-0000-000000000007");
     public static Guid ExperiencesSpaceId { get; } = Guid.Parse("b1000000-0000-0000-0000-000000000008");
+    // Assistant placement is independent of the retained legacy Agent identity.
+    public static Guid AssistantsSpaceId { get; } = Guid.Parse("b1000000-0000-0000-0000-000000000009");
 
     public SpaceRegistry(IVersionedSettingsStore settings) : this(settings, () => DateTimeOffset.UtcNow)
     {
@@ -148,7 +150,8 @@ public sealed partial class SpaceRegistry
         return MutateSpaceAsync(id, (space, spaces) =>
         {
             if (space.IsBuiltIn) throw new InvalidOperationException("Built-in Space names are protected.");
-            EnsureUniqueName(spaces, normalizedName, id);
+            if (!string.Equals(space.Name, normalizedName, StringComparison.OrdinalIgnoreCase))
+                EnsureUniqueName(spaces, normalizedName, id);
             return space with { Name = normalizedName, UpdatedAt = _clock() };
         }, cancellationToken);
     }
@@ -180,7 +183,8 @@ public sealed partial class SpaceRegistry
             if (existing.IsBuiltIn && updated.ParentSpaceId != existing.ParentSpaceId)
                 throw new InvalidOperationException("Built-in Space hierarchy is protected.");
             var name = existing.IsBuiltIn ? existing.Name : NormalizeName(updated.Name);
-            if (!existing.IsBuiltIn) EnsureUniqueName(spaces, name, updated.Id);
+            if (!existing.IsBuiltIn && !string.Equals(existing.Name, name, StringComparison.OrdinalIgnoreCase))
+                EnsureUniqueName(spaces, name, updated.Id);
             return updated with
             {
                 Name = name,
@@ -575,6 +579,7 @@ public sealed partial class SpaceRegistry
             BuiltIn(ChatSpaceId, "Chat", "chat", SpaceKind.Chat, "General conversation, shared objects and authorised app actions.", SpaceThinkingMode.Default, epoch),
             BuiltIn(StudySpaceId, "Study", "book", SpaceKind.Study, "Use the Study product for subject, topic, progress and assessment work.", SpaceThinkingMode.Balanced, epoch),
             BuiltIn(TasksSpaceId, "Tasks", "tasks", SpaceKind.Tasks, "Keep the objective, plan, steps, dependencies, blockers, approvals and observed outputs explicit.", SpaceThinkingMode.Deep, epoch),
+            BuiltIn(AssistantsSpaceId, "Assistants", "agents", SpaceKind.Assistants, "Open the canonical persistent Assistants workspace, preserving Assistant identities, conversations, memory permissions and existing work.", SpaceThinkingMode.Default, epoch),
             BuiltIn(AgentSpaceId, "Agent", "agents", SpaceKind.Agent, "Show persistent Agent identity and effective permissions; Subagents remain runtime children, not persistent Agents.", SpaceThinkingMode.Deep, epoch),
             BuiltIn(ShoppingSpaceId, "Shopping", "cart", SpaceKind.Shopping, "Help compare options and preserve the user's requirements and trade-offs.", SpaceThinkingMode.Balanced, epoch),
             BuiltIn(ResearchSpaceId, "Research", "search", SpaceKind.Research, "Separate sourced facts, inference and unresolved questions.", SpaceThinkingMode.Deep, epoch),
@@ -662,8 +667,12 @@ public sealed partial class SpaceRegistry
     {
         if (spaces.Select(space => space.Id).Distinct().Count() != spaces.Count)
             throw new InvalidDataException("Space registry contains duplicate stable IDs.");
-        if (spaces.Select(space => space.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() != spaces.Count)
-            throw new InvalidDataException("Space registry contains duplicate names.");
+        // A newly introduced built-in may share the name of an existing user Space.
+        // Keep that user's identity/name unchanged; names still remain unique within
+        // each origin, and create/rename continue rejecting new conflicting names.
+        if (spaces.GroupBy(space => space.IsBuiltIn).Any(group =>
+                group.Select(space => space.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() != group.Count()))
+            throw new InvalidDataException("Space registry contains duplicate names within an origin.");
         foreach (var space in spaces)
         {
             try { ValidateDefinition(space, spaces.Where(other => other.Id != space.Id).ToArray()); }
@@ -682,7 +691,7 @@ public sealed partial class SpaceRegistry
         if (space.Name is null || space.Description is null || space.IconKey is null || space.Instructions is null)
             throw new ArgumentException("Space text fields cannot be null.");
         _ = NormalizeName(space.Name);
-        EnsureUniqueName(peers, space.Name, space.Id);
+        EnsureUniqueName(peers.Where(peer => peer.IsBuiltIn == space.IsBuiltIn).ToArray(), space.Name, space.Id);
         if (!Enum.IsDefined(space.Kind) || !Enum.IsDefined(space.ThinkingMode))
             throw new ArgumentException("Space type or thinking mode is unknown.");
         if (space.Position < 0 || space.Revision < 1)

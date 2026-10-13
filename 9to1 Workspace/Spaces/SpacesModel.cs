@@ -27,6 +27,8 @@ public sealed record SpaceScope
 
     public static SpaceScope Agent { get; } = new("spaces.agent", SpaceRegistry.AgentSpaceId);
 
+    public static SpaceScope Assistants { get; } = new("spaces.assistants", SpaceRegistry.AssistantsSpaceId);
+
     public static SpaceScope Shopping { get; } = new("spaces.shopping", SpaceRegistry.ShoppingSpaceId);
 
     public static SpaceScope Research { get; } = new("spaces.research", SpaceRegistry.ResearchSpaceId);
@@ -49,7 +51,8 @@ public enum SpacesDestinationKind
     Research,
     Translate,
     Experiences,
-    Custom
+    Custom,
+    Assistants
 }
 
 /// <summary>
@@ -137,6 +140,7 @@ public sealed class SpacesNavigationActionHost : ISpacesActionHost
         {
         SpacesDestinationKind.Chat => _navigation.OpenModeAsync(HavenMode.Chat, cancellationToken),
         SpacesDestinationKind.Study or SpacesDestinationKind.Tasks or SpacesDestinationKind.Agent or
+            SpacesDestinationKind.Assistants or
             SpacesDestinationKind.Shopping or SpacesDestinationKind.Research or
             SpacesDestinationKind.Translate or SpacesDestinationKind.Experiences or SpacesDestinationKind.Custom =>
                 _navigation.OpenSpaceAsync(
@@ -179,6 +183,7 @@ public sealed class SpacesModel
             "Plan and supervise individual work items and runs.",
             "tasks",
             true),
+        new(SpaceScope.Assistants, SpacesDestinationKind.Assistants, "Assistants", "Open persistent Assistants and their conversations through the canonical Assistants workspace.", "agents", true),
         new(SpaceScope.Agent, SpacesDestinationKind.Agent, "Agent", "Select and supervise persistent Agents and their runs.", "agents", true),
         new(SpaceScope.Shopping, SpacesDestinationKind.Shopping, "Shopping", "Compare products while preserving source provenance.", "cart", true),
         new(SpaceScope.Research, SpacesDestinationKind.Research, "Research", "Manage source-backed research plans, findings and outputs.", "search", true),

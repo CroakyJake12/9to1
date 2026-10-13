@@ -88,8 +88,10 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
         }, remote: true, required: [ToolCapability.Text, ToolCapability.Streaming]);
     }
 
-    [Fact]
-    public async Task Known_original_adapter_cancel_callback_fault_refuses_private_cancellation_proof()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Known_original_adapter_cancel_callback_fault_refuses_private_cancellation_proof(bool holdCallback)
     {
         await Control(async h =>
         {
@@ -101,7 +103,7 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
                 Assert.NotNull(actual.AdapterCancel);
                 Assert.False(actual.AdapterCancel!.IsCompletedSuccessfully);
                 return Task.CompletedTask;
-            });
+            }, holdCallback);
         }, required: [ToolCapability.Text, ToolCapability.Streaming]);
     }
 
@@ -510,7 +512,7 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
         Task? AdapterCancel);
 
     private static async Task CancellationTurn(Harness h, int rawMode, string cleanup, bool callbackFault,
-        Func<CancellationTurnResult, Task> inspect)
+        Func<CancellationTurnResult, Task> inspect, bool holdCallback = false)
     {
         using var caller = new CancellationTokenSource(); var token = caller.Token;
         var entered = Signal(); var release = Signal(); var raw = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -518,6 +520,7 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
         var sibling = new IOException("original direct raw sibling");
         var cleanupFault = new OperationCanceledException("original cleanup fault, never provider cancellation");
         var callbackError = new IOException("actual owned cancellation callback fault");
+        var callbackEntered = Signal(); var callbackRelease = Signal();
         var inner = new OriginalStream(1);
         var stream = new CancellationTestStream(inner, cleanup == "enumerator-sync" ? () => throw cleanupFault : null);
         inner.MoveFactory = index =>
@@ -532,13 +535,21 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
             stream.OwnerToken = ct;
             return ct.Register(() =>
             {
+                // Make the original caller cancellation visible before raw completion,
+                // then retain this request callback while the outward move drains.
+                if (callbackFault && holdCallback) caller.Cancel();
                 if (rawMode == 0) raw.TrySetCanceled(ct);
                 else if (rawMode != 3)
                 {
                     rawFault = new OperationCanceledException("Faulted original raw OCE", ct);
                     if (rawMode == 2) raw.TrySetException([rawFault, sibling]); else raw.TrySetException(rawFault);
                 }
-                if (callbackFault) throw callbackError;
+                if (callbackFault)
+                {
+                    callbackEntered.TrySetResult();
+                    if (holdCallback) callbackRelease.Task.GetAwaiter().GetResult();
+                    throw callbackError;
+                }
             });
         };
         if (cleanup == "held") inner.DisposeOriginal = release.Task;
@@ -556,6 +567,14 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
             if (callbackFault)
             {
                 cancel = h.Adapter.CancelAsync(h.Endpoint, bound.Handle.RequestId, default).AsTask();
+                if (holdCallback)
+                {
+                    await callbackEntered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+                    if (!caller.IsCancellationRequested) caller.Cancel();
+                    Assert.True(raw.Task.IsCanceled);
+                    Assert.False(cancel.IsCompleted);
+                    callbackRelease.TrySetResult();
+                }
                 var error = await Record.ExceptionAsync(() => cancel); Assert.NotNull(error);
                 Assert.Contains(Leaves(error!), cause => ReferenceEquals(cause, callbackError)); h.Expect(error!);
             }
@@ -576,7 +595,7 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
         }
         finally
         {
-            release.TrySetResult(); raw.TrySetCanceled(stream.OwnerToken);
+            callbackRelease.TrySetResult(); release.TrySetResult(); raw.TrySetCanceled(stream.OwnerToken);
             try { if (!caller.IsCancellationRequested) caller.Cancel(); } catch (Exception error) { h.Expect(error); }
             if (move is not null) { var error = await Record.ExceptionAsync(() => move); if (error is not null) h.Expect(error); }
             Task? dispose = null;

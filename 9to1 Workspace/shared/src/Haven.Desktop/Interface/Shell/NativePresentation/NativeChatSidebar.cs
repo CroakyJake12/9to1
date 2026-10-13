@@ -21,6 +21,7 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
     private readonly NativeChatUiStateStore _stateStore;
     private readonly IConversationProductionRepository? _production;
     private readonly SpaceRegistry? _spaces;
+    private readonly Func<SpaceDefinition, Task>? _openSpace;
     private readonly CancellationTokenSource _lifetime = new();
     private readonly ChatSidebarHavenScene _scene;
 
@@ -47,7 +48,8 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
         Func<ContainerDefinition, Task> openGroup,
         NativeChatUiStateStore? stateStore = null,
         IConversationProductionRepository? production = null,
-        SpaceRegistry? spaces = null)
+        SpaceRegistry? spaces = null,
+        Func<SpaceDefinition, Task>? openSpace = null)
     {
         _conversations = conversations ?? throw new ArgumentNullException(nameof(conversations));
         _containers = containers ?? throw new ArgumentNullException(nameof(containers));
@@ -57,6 +59,7 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
         _stateStore = stateStore ?? new NativeChatUiStateStore();
         _production = production;
         _spaces = spaces;
+        _openSpace = openSpace;
 
         _scene = new ChatSidebarHavenScene();
         SceneHost = new HavenSceneControl { Root = _scene.Root };
@@ -106,7 +109,7 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
             ? _spaceRows.FirstOrDefault(space => space.Id == id)?.Name
             : null;
         if (_currentSpaceId is { } && name is null) _currentSpaceId = null;
-        _scene.SetSpaceScope(name);
+        _scene.SetSpaceScope(name, _currentSpaceId, IsAssistantSpace(_currentSpaceId));
     }
 
     private async void OnSpacePickerRequested(object? sender, EventArgs e)
@@ -129,12 +132,34 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
         };
         choices.AddRange(_spaceRows
             .OrderBy(space => space.Name, StringComparer.OrdinalIgnoreCase)
-            .Select(space => (space.Name, (Action)(() => _ = SelectSpaceAsync(space.Id)))));
+            .Select(space => (SpaceChoiceLabel(space, _spaceRows), (Action)(() => _ = OpenSpaceFromPickerAsync(space.Id)))));
         choices.Add(("Manage Spaces…", () => ManageSpacesRequested?.Invoke(this, EventArgs.Empty)));
         _scene.ShowChoices("Spaces", choices);
     }
 
     internal Task SelectSpaceFromShellAsync(Guid? spaceId) => SelectSpaceAsync(spaceId);
+
+    internal async Task OpenSpaceFromPickerAsync(Guid spaceId)
+    {
+        try
+        {
+            var space = _spaces is null ? null : await _spaces.GetAsync(spaceId, _lifetime.Token);
+            if (_disposed) return;
+            if (space is null || space.IsArchived)
+                throw new InvalidOperationException("The selected Space is unavailable. Refresh the Space list.");
+            if (_openSpace is not null)
+                await _openSpace(space);
+            else if (space.Kind == SpaceKind.Assistants)
+                _scene.SetStatus("Assistants needs its configured Assistants workspace on this host.");
+            else
+                await SelectSpaceAsync(space.Id);
+        }
+        catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
+        catch (Exception error) when (error is IOException or InvalidOperationException or UnauthorizedAccessException)
+        {
+            if (!_disposed) _scene.SetStatus("The Space could not be opened: " + error.Message);
+        }
+    }
 
     internal async Task ReloadSpaceScopeAsync()
     {
@@ -144,6 +169,11 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
 
     private async Task SelectSpaceAsync(Guid? spaceId)
     {
+        if (spaceId is { } selected && await RequiresAssistantOwnerAsync(selected))
+        {
+            await OpenSpaceFromPickerAsync(selected);
+            return;
+        }
         if (_spaces is not null)
             await _spaces.SetCurrentSpaceIdAsync(spaceId, _lifetime.Token).ConfigureAwait(false);
         _currentSpaceId = spaceId;
@@ -153,7 +183,7 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
 
         var existing = _conversationRows
             .Where(chat => !chat.IsArchived && chat.Kind != ConversationKind.Call)
-            .Where(chat => spaceId is null ? chat.SpaceId is null : chat.SpaceId == spaceId)
+            .Where(IsConversationInCurrentSpace)
             .OrderByDescending(chat => chat.UpdatedAt)
             .FirstOrDefault();
         if (existing is not null)
@@ -246,11 +276,10 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
     {
         if (_disposed) return;
         bool Matches(string value) => _query.Length == 0 || value.Contains(_query, StringComparison.OrdinalIgnoreCase);
-        bool InScope(Conversation chat) => _currentSpaceId is null
-            ? chat.SpaceId is null
-            : chat.SpaceId == _currentSpaceId;
+        bool InScope(Conversation chat) => IsConversationInCurrentSpace(chat);
 
-        var scoped = _currentSpaceId is not null;
+        var scoped = _currentSpaceId is not null &&
+            !(_currentMode == HavenMode.Chat && _currentSpaceId == SpaceRegistry.ChatSpaceId);
         var groups = scoped
             ? []
             : _groupRows
@@ -300,10 +329,29 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
             .ToArray();
 
         _scene.SetRows(pinned, unread, groupEntries, files, chats);
-        _scene.SetStatus(conversations.Length == 0 && groups.Length == 0 && files.Length == 0
-            ? $"No saved {ModeName(_currentMode)} chats or {GroupName(_currentMode, plural: true)} yet."
-            : null);
+        _scene.SetStatus(IsAssistantSpace(_currentSpaceId)
+            ? "Open Assistants to continue in your Assistants workspace."
+            : conversations.Length == 0 && groups.Length == 0 && files.Length == 0
+                ? $"No saved {ModeName(_currentMode)} chats or {GroupName(_currentMode, plural: true)} yet."
+                : null);
     }
+
+    private bool IsConversationInCurrentSpace(Conversation chat) =>
+        !IsAssistantSpace(_currentSpaceId) &&
+        (chat.SpaceId == _currentSpaceId ||
+         (_currentMode == HavenMode.Chat && _currentSpaceId == SpaceRegistry.ChatSpaceId && chat.SpaceId is null));
+
+    private bool IsAssistantSpace(Guid? spaceId) => spaceId == SpaceRegistry.AssistantsSpaceId ||
+        (spaceId is { } id && _spaceRows.Any(space => space.Id == id && space.Kind == SpaceKind.Assistants));
+
+    internal static string SpaceChoiceLabel(SpaceDefinition space, IReadOnlyList<SpaceDefinition> spaces) =>
+        spaces.Any(other => other.Id != space.Id && other.Name.Equals(space.Name, StringComparison.OrdinalIgnoreCase))
+            ? $"{space.Name} ({(space.IsBuiltIn ? "built-in" : "custom")})"
+            : space.Name;
+
+    private async Task<bool> RequiresAssistantOwnerAsync(Guid spaceId) =>
+        spaceId == SpaceRegistry.AssistantsSpaceId ||
+        (_spaces is not null && (await _spaces.GetAsync(spaceId, _lifetime.Token))?.Kind == SpaceKind.Assistants);
 
     private ChatSidebarEntry ConversationEntry(Conversation chat, bool indented) => new(
         ChatSidebarEntryKind.Conversation,
@@ -508,13 +556,18 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
         };
         choices.AddRange(_spaceRows
             .OrderBy(space => space.Name, StringComparer.OrdinalIgnoreCase)
-            .Where(space => space.Id != current)
-            .Select(space => (space.Name, (Action)(() => _ = MoveConversationToSpaceAsync(chat, space.Id)))));
+            .Where(space => space.Id != current && space.Kind != SpaceKind.Assistants)
+            .Select(space => (SpaceChoiceLabel(space, _spaceRows), (Action)(() => _ = MoveConversationToSpaceAsync(chat, space.Id)))));
         _scene.ShowChoices("Move to Space", choices);
     }
 
     private async Task MoveConversationToSpaceAsync(Conversation chat, Guid? spaceId)
     {
+        if (spaceId is { } selected && await RequiresAssistantOwnerAsync(selected))
+        {
+            _scene.SetStatus("Open Assistants to create or organise conversations with their canonical Assistant identity.");
+            return;
+        }
         await _conversations.UpsertConversationAsync(chat with { SpaceId = spaceId, UpdatedAt = DateTimeOffset.UtcNow }, _lifetime.Token);
         await RefreshAsync();
     }
@@ -526,6 +579,11 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
         _scene.SetNewChatBusy(true);
         try
         {
+            if (_currentSpaceId is { } selected && await RequiresAssistantOwnerAsync(selected))
+            {
+                await OpenSpaceFromPickerAsync(selected);
+                return;
+            }
             if (groupId is Guid id) await _stateStore.SetExpandedAsync(id, true, _lifetime.Token);
             await _startChat(_currentMode, groupId);
             _activeGroupId = groupId;

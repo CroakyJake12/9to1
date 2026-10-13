@@ -739,7 +739,10 @@ public sealed partial class TaskExecutionCoordinator
         {
             // The actual repository Task owns every direct cause; preserve faulted-OCE
             // and sibling custody at the async persistence boundary. No retry is inferred.
-            throw actualWrite.Exception;
+            var fault = actualWrite.Exception!;
+            if (fault.InnerExceptions.Count == 1 && fault.InnerExceptions[0] is not OperationCanceledException)
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(fault.InnerExceptions[0]).Throw();
+            throw fault;
         }
         ObserveOriginalActionAcknowledgedSnapshot(proposed);
         return proposed;

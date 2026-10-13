@@ -105,6 +105,23 @@ public sealed class HomeModelPickerRouteEditorTests
         Assert.Equal("installed", projected.LifecycleLabel);
         Assert.True(projected.HasDeclaredCapability("TEXT"));
         Assert.True(projected.MatchesQuery("alias"));
+        Assert.Empty(projected.ReasoningPresets);
+    }
+
+    [Fact]
+    public void CatalogueReasoningPresetsRetainAdvertisedProviderIdentitiesInsteadOfInferringFromCapabilities()
+    {
+        var declared = new NineToOne.Dulche.Den.ModelRecord
+        {
+            Id = "model", NamespaceId = "models", DisplayName = "Model", Provider = "provider",
+            ArtifactRevision = "revision", ReasoningLevels = ["light", "deliberate", "extended"]
+        };
+        var projected = HomeModelCatalogueEntry.From(declared);
+
+        Assert.Equal("provider:model:revision", projected.Identity!.StableKey);
+        Assert.Equal(new[] { "35%", "70%", "100%" }, projected.ReasoningPresets.Select(preset => preset.Label));
+        Assert.Equal(declared.ReasoningLevels, projected.ReasoningPresets.Select(preset => preset.LevelId));
+        Assert.Empty(HomeModelCatalogueEntry.From(declared with { ReasoningLevels = [] }).ReasoningPresets);
     }
 
     [Fact]

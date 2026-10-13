@@ -46,13 +46,26 @@ public sealed partial class MainView
             return;
         }
         var plan = SpaceLaunchPolicy.Resolve(space);
+        if (plan.Destination == SpaceLaunchDestination.AssistantsProduct)
+        {
+#if !ANDROID
+            // Presentation borrows the existing App-owned Home/Den/controller graph.
+            // Selecting a Space creates no Assistant, conversation, Task or authority.
+            await OpenOriginalRegisteredAssistantsAsync();
+            await SpacesRegistry.SetCurrentSpaceIdAsync(space.Id, CancellationToken.None);
+            if (_nativeChatSidebar is not null)
+                await _nativeChatSidebar.ReloadSpaceScopeAsync();
+#else
+            _notifications.Show("Assistants setup required", "This host has no configured Assistant owner. Your existing data is preserved.", ToastKind.Warning, TimeSpan.FromSeconds(6));
+#endif
+            return;
+        }
         if (plan.Destination == SpaceLaunchDestination.StudyProduct)
         {
             await OpenStudyHomeAsync();
             return;
         }
 
-        if (_nativeChatSidebar is not null)
         if (_nativeChatSidebar is not null)
         {
             _nativeChatSidebar.SetMode(HavenMode.Chat);

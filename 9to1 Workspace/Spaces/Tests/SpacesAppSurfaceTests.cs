@@ -11,12 +11,16 @@ public sealed class SpacesAppSurfaceTests
     public void Built_in_descriptors_have_independent_stable_scopes()
     {
         Assert.Equal(
-            ["Chat", "Study", "Tasks", "Agent", "Shopping", "Research", "Translate", "Experiences"],
+            ["Chat", "Study", "Tasks", "Assistants", "Agent", "Shopping", "Research", "Translate", "Experiences"],
             SpacesModel.BuiltIns.Select(definition => definition.Label));
-        Assert.Equal(8, SpacesModel.BuiltIns.Select(definition => definition.Scope.Key).Distinct().Count());
+        Assert.Equal(9, SpacesModel.BuiltIns.Select(definition => definition.Scope.Key).Distinct().Count());
         Assert.Equal(SpaceRegistry.ChatSpaceId, SpacesModel.BuiltIns[0].Scope.RegisteredSpaceId);
         Assert.Equal(SpaceRegistry.TasksSpaceId, SpacesModel.BuiltIns[2].Scope.RegisteredSpaceId);
         Assert.NotEqual(SpaceRegistry.AgentSpaceId, SpaceRegistry.TasksSpaceId);
+        Assert.NotEqual(SpaceRegistry.AgentSpaceId, SpaceRegistry.AssistantsSpaceId);
+        Assert.Equal("spaces.agent", SpaceScope.Agent.Key);
+        Assert.Equal(4, (int)SpaceKind.Agent);
+        Assert.Equal(9, (int)SpaceKind.Assistants);
     }
 
     [Fact]
@@ -29,7 +33,7 @@ public sealed class SpacesAppSurfaceTests
         var sidebar = await model.GetSidebarDestinationsAsync();
 
         Assert.Equal(
-            ["Chat", "Study", "Tasks", "Agent", "Shopping", "Research", "Translate", "Experiences", "Recipes"],
+            ["Chat", "Study", "Tasks", "Assistants", "Agent", "Shopping", "Research", "Translate", "Experiences", "Recipes"],
             sidebar.Select(item => item.Label));
         var recipes = Assert.Single(sidebar, item => item.Label == "Recipes");
         Assert.Equal(SpacesDestinationKind.Custom, recipes.Destination);
@@ -96,6 +100,14 @@ public sealed class SpacesAppSurfaceTests
         await actions.ExecuteAsync(await model.CreateOpenActionAsync(SpaceScope.Study));
         Assert.Equal(SpaceRegistry.StudySpaceId, host.Space!.Id);
 
+        await actions.ExecuteAsync(await model.CreateOpenActionAsync(SpaceScope.Assistants));
+        Assert.Equal(SpaceRegistry.AssistantsSpaceId, host.Space!.Id);
+        Assert.Equal(SpaceKind.Assistants, host.Space.Kind);
+
+        await actions.ExecuteAsync(await model.CreateOpenActionAsync(SpaceScope.Agent));
+        Assert.Equal(SpaceRegistry.AgentSpaceId, host.Space!.Id);
+        Assert.Equal(SpaceKind.Agent, host.Space.Kind);
+
         var custom = await model.CreateCustomSpaceAsync("Writing");
         await actions.ExecuteAsync(await model.CreateOpenActionAsync(custom.Scope));
         Assert.Equal(custom.Scope.RegisteredSpaceId, host.Space!.Id);
@@ -134,6 +146,7 @@ public sealed class SpacesAppSurfaceTests
                 SpacesDestination.Chat,
                 SpacesDestination.Study,
                 SpacesDestination.Tasks,
+                SpacesDestination.Assistants,
                 SpacesDestination.Agent,
                 SpacesDestination.Shopping,
                 SpacesDestination.Research,
@@ -180,6 +193,7 @@ public sealed class SpacesAppSurfaceTests
     [InlineData(SpacesDestination.Study, "b1000000-0000-0000-0000-000000000001", SpaceKind.Study)]
     [InlineData(SpacesDestination.Tasks, "b1000000-0000-0000-0000-000000000006", SpaceKind.Tasks)]
     [InlineData(SpacesDestination.Agent, "b1000000-0000-0000-0000-000000000004", SpaceKind.Agent)]
+    [InlineData(SpacesDestination.Assistants, "b1000000-0000-0000-0000-000000000009", SpaceKind.Assistants)]
     [InlineData(SpacesDestination.Shopping, "b1000000-0000-0000-0000-000000000002", SpaceKind.Shopping)]
     [InlineData(SpacesDestination.Research, "b1000000-0000-0000-0000-000000000003", SpaceKind.Research)]
     [InlineData(SpacesDestination.Translate, "b1000000-0000-0000-0000-000000000007", SpaceKind.Translate)]
@@ -203,8 +217,10 @@ public sealed class SpacesAppSurfaceTests
         Assert.Equal(destination, surface.CurrentDestination);
     }
 
-    [Fact]
-    public async Task Failed_launch_restores_previous_scope_and_does_not_select_failed_destination()
+    [Theory]
+    [InlineData(SpacesDestination.Study)]
+    [InlineData(SpacesDestination.Assistants)]
+    public async Task Failed_launch_restores_previous_scope_and_does_not_select_failed_destination(SpacesDestination destination)
     {
         var registry = new SpaceRegistry(new MemorySettingsStore());
         await registry.SetCurrentSpaceIdAsync(SpaceRegistry.ResearchSpaceId);
@@ -212,7 +228,7 @@ public sealed class SpacesAppSurfaceTests
         var surface = new SpacesAppSurface(registry, host);
 
         var error = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => surface.NavigateAsync(SpacesDestination.Study));
+            () => surface.NavigateAsync(destination));
 
         Assert.Equal("launch failed", error.Message);
         Assert.Equal(SpaceRegistry.ResearchSpaceId, await registry.GetCurrentSpaceIdAsync());

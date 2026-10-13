@@ -59,10 +59,12 @@ public sealed partial class BrowserTaskExecutionTransport : ITaskExecutionBrowse
     private readonly AsyncLocal<AuthenticatedOriginal?> _authenticatedExecuting = new();
     [ThreadStatic] private static List<BrowserTaskExecutionTransport>? _physicalSources;
 
-    private sealed class AuthenticatedOriginal(BrowserTaskExecutionTransport owner, AuthenticatedOriginal? parent)
+    private sealed class AuthenticatedOriginal(BrowserTaskExecutionTransport owner, AuthenticatedOriginal? parent,
+        AuthenticatedResourceActor? expectedActor)
     {
         internal readonly BrowserTaskExecutionTransport Owner = owner;
         internal readonly AuthenticatedOriginal? Parent = parent;
+        internal readonly AuthenticatedResourceActor? ExpectedActor = expectedActor;
         internal Task? Task;
         internal readonly List<Task> ActorSources = [];
         internal bool StorageIssued;
@@ -88,12 +90,20 @@ public sealed partial class BrowserTaskExecutionTransport : ITaskExecutionBrowse
     internal Task<BrowserAuthenticatedStorageReply> InvokeAuthenticatedControlledAsync(
         IAuthenticatedResourceActorSource actualActors, string action, JsonElement arguments, CancellationToken caller)
         => StartAuthenticatedOriginal(actualActors, action, arguments, caller);
+    internal Task<BrowserAuthenticatedStorageReply> InvokeSpaceSettingsAsync(BrowserTaskActorSource actualActors,
+        string action, JsonElement arguments, AuthenticatedResourceActor? expectedActor, CancellationToken caller)
+    {
+        if (action is not ("SpacesSettings.Export" or "SpacesSettings.CompareExchange"))
+            throw new ArgumentOutOfRangeException(nameof(action));
+        return StartAuthenticatedOriginal(actualActors, action, arguments, caller, expectedActor);
+    }
     private Task<BrowserAuthenticatedStorageReply> StartAuthenticatedOriginal(
-        IAuthenticatedResourceActorSource actualActors, string action, JsonElement arguments, CancellationToken caller)
+        IAuthenticatedResourceActorSource actualActors, string action, JsonElement arguments, CancellationToken caller,
+        AuthenticatedResourceActor? expectedActor = null)
     {
         ArgumentNullException.ThrowIfNull(actualActors);
         var start = new TaskCompletionSource();
-        var original = new AuthenticatedOriginal(this, _authenticatedExecuting.Value);
+        var original = new AuthenticatedOriginal(this, _authenticatedExecuting.Value, expectedActor);
         Task<BrowserAuthenticatedStorageReply> actual;
         lock (_gate)
         {
@@ -140,6 +150,8 @@ public sealed partial class BrowserTaskExecutionTransport : ITaskExecutionBrowse
                 !actor.ActorId.StartsWith("cake-task:", StringComparison.Ordinal) || actor.AccountId is null ||
                 string.IsNullOrWhiteSpace(actor.AuthenticationRevision))
                 throw new BrowserTaskContextUnavailableException("No current verified browser Task account/profile is attached.");
+            if (original.ExpectedActor is { } expected && actor != expected)
+                throw new BrowserTaskContextUnavailableException("The Spaces view's verified account/session changed. Reopen it before editing.");
             var supplied = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(args.GetRawText())
                 ?? throw new ArgumentException("A canonical storage argument object is required.");
             supplied["profileId"] = JsonSerializer.SerializeToElement(actor.ProfileId);
@@ -391,7 +403,7 @@ public sealed partial class BrowserTaskExecutionTransport : ITaskExecutionBrowse
 
     private static bool IsMutation(string action) => action is "ExecutionEvents.Append" or "Upsert" or "Conversation.Upsert" or "Conversation.Delete" or
         "Conversation.DetachSpace" or "Conversation.PutMessage" or "Conversation.DeleteMessage" or
-        "Conversation.CompactMessages" or "Conversation.PutContext" or "Conversation.DeleteContext";
+        "Conversation.CompactMessages" or "Conversation.PutContext" or "Conversation.DeleteContext" or "SpacesSettings.CompareExchange";
 
     private void PruneSuccessfulOriginals()
     {

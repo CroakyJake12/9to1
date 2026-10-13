@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework><IsTestProject>true</IsTestProject><IsPackable>false</IsPackable>
+    <Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="*SessionTests.cs" />
+    <Compile Include="../*.cs" Link="Production/%(Filename)%(Extension)" />
+    <Compile Include="../Storage/*.cs" Link="Production/Storage/%(Filename)%(Extension)" />
+    <Compile Include="../../BrowserSurfaceRegistry.cs;../../BrowserRouteCodec.cs;../../BrowserRouteDispatcher.cs" Link="Production/%(Filename)%(Extension)" />
+    <Compile Include="../../Services/BrowserTaskActorSource.cs;../../Services/BrowserTaskIdentityReadOperation.cs" Link="Production/%(Filename)%(Extension)" />
+    <ProjectReference Include="../../../../9to1 Workspace/Spaces/HavenOS.Spaces.csproj" />
+    <ProjectReference Include="../../../../9to1 Workspace/Spaces/UI/Chat/Runtime/HavenOS.Spaces.CuiRuntime.csproj" />
+    <ProjectReference Include="../../../../9to1 Workspace/Home/HavenOS.Home.csproj" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5"><PrivateAssets>all</PrivateAssets></PackageReference>
+  </ItemGroup>
+</Project>

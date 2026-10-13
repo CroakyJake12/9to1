@@ -247,10 +247,17 @@ await RunAsync("B1-LIFETIME-06-awaits-preparation-and-disposal-before-success", 
 await RunAsync("B1-LIFETIME-07-async-teardown-attempts-all-owners", async () =>
 {
     var registry = new BrowserSurfaceRegistry(); var otherDisposals = 0;
-    registry.Register(new ClosingHandler("app.write", _ => Task.FromResult(new HomeCoreOperationResult<bool>(true, "Succeeded", "Saved.", true)), () => throw new IOException("UNIT async cleanup fault")), _ => FixtureSurface(), BrowserSurfaceScope.DeviceLocal);
+    var cleanupFailure = new IOException("UNIT async cleanup fault");
+    registry.Register(new ClosingHandler("app.write", _ => Task.FromResult(new HomeCoreOperationResult<bool>(true, "Succeeded", "Saved.", true)), () => throw cleanupFailure), _ => FixtureSurface(), BrowserSurfaceScope.DeviceLocal);
     registry.Register(new DisposableHandler("app.wave", r => Task.FromResult(Success(r)), () => otherDisposals++), _ => FixtureSurface(), BrowserSurfaceScope.DeviceLocal);
     try { await registry.ClearAsync(); throw new Exception("Asynchronous teardown failure was suppressed."); }
-    catch (AggregateException error) { Check(error.InnerExceptions.Count == 1 && error.InnerExceptions[0].Message == "UNIT async cleanup fault"); }
+    catch (AggregateException error)
+    {
+        // The final private drain retains and wraps the original cleanup
+        // failure. Require the exact original object once, preserving all-owner teardown.
+        var failures = error.Flatten().InnerExceptions;
+        Check(failures.Count == 1 && ReferenceEquals(failures[0], cleanupFailure));
+    }
     Check(otherDisposals == 1 && registry.AvailableRoutes.Count == 0);
 });
 await RunAsync("B1-LIFETIME-08-cancelled-preparation-retains-owner", async () =>
