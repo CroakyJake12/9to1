@@ -6,7 +6,8 @@ public sealed partial class SpaceRegistry
 {
     private const string SettingsKey = "spaces.registry";
     private const string CurrentSpaceSettingsKey = "spaces.current";
-    private const int CurrentVersion = 3;
+    private const int DefaultVersion = 3;
+    private const int CurrentVersion = 4;
     private readonly IVersionedSettingsStore _settings;
     private readonly Func<DateTimeOffset> _clock;
     private readonly SemaphoreSlim _gate = new(1, 1);
@@ -405,6 +406,8 @@ public sealed partial class SpaceRegistry
         return await MutateAsync(state =>
         {
             var existing = FindRequired(state.Spaces, id);
+            if (existing.GraphConfiguration?.Pending is not null)
+                throw new InvalidOperationException("Reconcile the pending graph publication before editing this Space.");
             var changed = update(existing, state.Spaces);
             if (changed != existing)
                 changed = changed with { Revision = checked(existing.Revision + 1) };
@@ -423,6 +426,7 @@ public sealed partial class SpaceRegistry
         {
             var result = requestedMutation(state);
             if (!allowPendingDeletion) EnsurePendingDeletionsUnchanged(state, result.State);
+            EnsureGraphPublicationFieldsUnchanged(state, result.State);
             ValidateDeletionState(result.State);
             return result;
         };
@@ -461,13 +465,14 @@ public sealed partial class SpaceRegistry
             throw new InvalidOperationException("The Space registry kept changing during reconciliation; reload and retry.");
         }
         var state = await _settings.GetAsync<SpaceRegistryState>(SettingsKey, cancellationToken).ConfigureAwait(false)
-            ?? new SpaceRegistryState(CurrentVersion, []);
+            ?? new SpaceRegistryState(DefaultVersion, []);
         if (state.Version > CurrentVersion)
             throw new InvalidDataException($"Space registry version {state.Version} is newer than supported version {CurrentVersion}.");
         ValidateDeletionState(state);
         var spaces = state.Spaces?.Select(NormalizeStoredSpace).ToList() ?? [];
         ValidateRegistry(spaces);
-        var changed = state.Version != CurrentVersion;
+        var targetVersion = Math.Max(DefaultVersion, state.Version);
+        var changed = state.Version != targetVersion;
         foreach (var builtIn in BuiltIns())
         {
             if (spaces.Any(space => space.Id == builtIn.Id)) continue;
@@ -475,7 +480,7 @@ public sealed partial class SpaceRegistry
             changed = true;
         }
         if (!changed) return state with { Spaces = spaces.Select(CloneSpace).ToArray() };
-        var reconciled = state with { Version = CurrentVersion, Spaces = spaces, Deletions = state.Deletions?.ToArray() ?? [] };
+        var reconciled = state with { Version = targetVersion, Spaces = spaces, Deletions = state.Deletions?.ToArray() ?? [] };
         await _settings.SetAsync(SettingsKey, reconciled, cancellationToken).ConfigureAwait(false);
         return reconciled with { Spaces = reconciled.Spaces.Select(CloneSpace).ToArray() };
     }
@@ -503,19 +508,20 @@ public sealed partial class SpaceRegistry
 
     private (SpaceRegistryState State, bool Changed) ReadComparedState(string? raw)
     {
-        var stored = raw is null ? new SpaceRegistryState(CurrentVersion, []) :
+        var stored = raw is null ? new SpaceRegistryState(DefaultVersion, []) :
             JsonSerializer.Deserialize<SpaceRegistryState>(raw) ?? throw new InvalidDataException("The Space registry is invalid.");
         if (stored.Version > CurrentVersion) throw new InvalidDataException("The Space registry schema is newer than supported.");
         ValidateDeletionState(stored);
         var spaces = stored.Spaces?.Select(NormalizeStoredSpace).ToList() ?? [];
         ValidateRegistry(spaces);
-        var changed = stored.Version != CurrentVersion;
+        var targetVersion = Math.Max(DefaultVersion, stored.Version);
+        var changed = stored.Version != targetVersion;
         foreach (var builtIn in BuiltIns())
         {
             if (spaces.Any(space => space.Id == builtIn.Id)) continue;
             spaces.Add(builtIn); changed = true;
         }
-        return (stored with { Version = CurrentVersion, Spaces = spaces.Select(CloneSpace).ToArray(), Deletions = stored.Deletions?.ToArray() ?? [] }, changed);
+        return (stored with { Version = targetVersion, Spaces = spaces.Select(CloneSpace).ToArray(), Deletions = stored.Deletions?.ToArray() ?? [] }, changed);
     }
 
     private async Task<TResult> MutateComparedAsync<TResult>(Func<SpaceRegistryState, (SpaceRegistryState Next, TResult Result)> mutation,
@@ -571,11 +577,14 @@ public sealed partial class SpaceRegistry
         return new SpaceLayoutDocument(nodes, edges);
     }
 
-    private IReadOnlyList<SpaceDefinition> BuiltIns()
+    private static IReadOnlyList<SpaceDefinition> BuiltIns() => GetFirstPartyDefinitions();
+
+    /// <summary>Detached public product metadata. Does not open, seed or authenticate a private store, or grant route availability.</summary>
+    public static IReadOnlyList<SpaceDefinition> GetFirstPartyDefinitions()
     {
         var epoch = DateTimeOffset.UnixEpoch;
-        return
-        [
+        return Array.AsReadOnly(new SpaceDefinition[]
+        {
             BuiltIn(ChatSpaceId, "Chat", "chat", SpaceKind.Chat, "General conversation, shared objects and authorised app actions.", SpaceThinkingMode.Default, epoch),
             BuiltIn(StudySpaceId, "Study", "book", SpaceKind.Study, "Use the Study product for subject, topic, progress and assessment work.", SpaceThinkingMode.Balanced, epoch),
             BuiltIn(TasksSpaceId, "Tasks", "tasks", SpaceKind.Tasks, "Keep the objective, plan, steps, dependencies, blockers, approvals and observed outputs explicit.", SpaceThinkingMode.Deep, epoch),
@@ -585,7 +594,7 @@ public sealed partial class SpaceRegistry
             BuiltIn(ResearchSpaceId, "Research", "search", SpaceKind.Research, "Separate sourced facts, inference and unresolved questions.", SpaceThinkingMode.Deep, epoch),
             BuiltIn(TranslateSpaceId, "Translate", "translate", SpaceKind.Translate, "Use the selected target languages and preserve one labelled response variant per language.", SpaceThinkingMode.Default, epoch),
             BuiltIn(ExperiencesSpaceId, "Experiences", "experiences", SpaceKind.Experiences, "Run stateful interactive experiences with canonical state and matching conversation branches.", SpaceThinkingMode.Default, epoch)
-        ];
+        }.Select(CloneSpace).ToArray());
     }
 
     private static SpaceDefinition BuiltIn(
@@ -621,6 +630,7 @@ public sealed partial class SpaceRegistry
         Files = space.Files?.ToArray() ?? [],
         ExamplePairs = space.ExamplePairs?.ToArray() ?? [],
         LayoutDocument = CloneLayout(space.LayoutDocument),
+        GraphConfiguration = CloneGraphConfiguration(space.GraphConfiguration),
         ModelPolicy = (space.ModelPolicy ?? new SpaceModelPolicy(space.ModelName)) with
         {
             RequiredCapabilities = space.ModelPolicy?.RequiredCapabilities?.ToArray()
@@ -688,6 +698,7 @@ public sealed partial class SpaceRegistry
     private static void ValidateDefinition(SpaceDefinition space, IReadOnlyList<SpaceDefinition> peers)
     {
         if (space.Id == Guid.Empty) throw new InvalidDataException("Space stable ID cannot be empty.");
+        ValidateGraphConfiguration(space);
         if (space.Name is null || space.Description is null || space.IconKey is null || space.Instructions is null)
             throw new ArgumentException("Space text fields cannot be null.");
         _ = NormalizeName(space.Name);

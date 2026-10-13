@@ -8,13 +8,17 @@ using HavenOS.Apps.Spaces;
 using HavenOS.Apps.Spaces.Rendering;
 using HavenOS.Home.Core;
 using NineToOne.Web.Spaces.Storage;
+using NineToOne.Web.Spaces.Chat;
+using HavenOS.Apps.Spaces.Chat;
+using HavenOS.Apps.Spaces.Chat.Rendering;
 
 namespace NineToOne.Web.Spaces;
 
-/// <summary>Real private Space configuration route. Its registry remains the existing
-/// signed-profile storage owner; this registration grants no product execution capability.</summary>
-public sealed class BrowserSpacesFeature(Func<SpaceRegistry> registry, Action demandCurrent,
-    Func<Action, Task> present, Action<HomeFeatureNavigationRequest> navigate)
+/// <summary>Spaces product entry: canonical Chat by default, with explicit management
+/// and custom-builder utilities. Every operation retains its real private service owner.</summary>
+public sealed partial class BrowserSpacesFeature(Func<SpaceRegistry> registry, Action demandCurrent,
+    Func<Action, Task> present, Action<HomeFeatureNavigationRequest> navigate,
+    Func<IChatSpaceBackend>? chatBackend = null, Func<CancellationToken, Task<string?>>? selectFile = null)
     : IHomeFeatureRouteHandler, IBrowserPrivateContextParticipant, IBrowserCloseParticipant
 {
     private readonly object _gate = new();
@@ -26,16 +30,6 @@ public sealed class BrowserSpacesFeature(Func<SpaceRegistry> registry, Action de
     private Task? _close;
     public string RouteId => HomeFeatureRouteIds.Spaces;
     public bool HasUnsavedChanges { get { lock (_gate) return _sessions.Values.Any(session => session.HasUnsavedChanges); } }
-
-    [SupportedOSPlatform("browser")]
-    internal static void Register(BrowserSurfaceRegistry surfaces, BrowserPrivateTaskStorage sameOwner,
-        Action<HomeFeatureNavigationRequest> navigate)
-    {
-        var feature = new BrowserSpacesFeature(() => sameOwner.Spaces, sameOwner.DemandPrivateContextCurrent,
-            action => Dispatcher.UIThread.InvokeAsync(action).GetTask(), navigate);
-        var result = surfaces.Register(feature, feature.Render, BrowserSurfaceScope.PrivateContext);
-        if (!result.Succeeded) { feature.RevokePrivateContext(); throw new InvalidOperationException(result.Message); }
-    }
 
     public Task<HomeFeatureNavigationResult> OpenAsync(HomeFeatureNavigationRequest request, CancellationToken cancellationToken = default)
     {
@@ -62,21 +56,26 @@ public sealed class BrowserSpacesFeature(Func<SpaceRegistry> registry, Action de
     }
     private async Task<HomeFeatureNavigationResult> OpenCoreAsync(HomeFeatureNavigationRequest request, CancellationToken token)
     {
-        var manager = request.EntityType is null && request.EntityId is null && request.Action is null;
+        var emptyTarget = request.EntityType is null && request.EntityId is null;
+        var chat = emptyTarget && request.Action is null;
+        var manager = emptyTarget && request.Action == "manage";
         Guid builderId = default;
         var builder = request.EntityType == "Space" && request.Action == "edit" &&
             Guid.TryParseExact(request.EntityId, "D", out builderId) && builderId != Guid.Empty;
-        if (request.RouteId != RouteId || request.ModelPickerTarget is not null || request.DeepLink is not null || !(manager || builder))
+        if (request.RouteId != RouteId || request.ModelPickerTarget is not null || request.DeepLink is not null || !(chat || manager || builder))
             return new(false, "HomeFeatureTargetUnsupported", "This Space link is unsupported. Your link has been preserved.", request);
         IBrowserSpacesPresentationSession session;
         long generation;
         lock (_gate)
         {
             Demand(); generation = ++_generation; _pending?.Reject(); _pending = null;
-            var key = manager ? "manager" : builderId.ToString("D");
+            var key = chat ? "chat" : manager ? "manager" : builderId.ToString("D");
             if (!_sessions.TryGetValue(key, out session!))
             {
-                session = manager
+                session = chat
+                    ? new BrowserChatSession(chatBackend ?? (() => throw new InvalidOperationException("Chat services have not been composed by this host.")),
+                        demandCurrent, present, navigate, selectFile)
+                    : manager
                     ? new BrowserSpacesSession(registry, demandCurrent, present,
                         id => navigate(new(RouteId, "Space", id.ToString("D"), "edit")))
                     : new BrowserSpaceBuilderSession(registry, demandCurrent, present, builderId);
@@ -89,10 +88,10 @@ public sealed class BrowserSpacesFeature(Func<SpaceRegistry> registry, Action de
         {
             Demand();
             if (_generation != generation) return new(false, "Cancelled", "A newer Spaces navigation superseded this view.", request);
-            var state = new HomeFeatureViewState(RouteId, manager ? "spaces.manager" : "spaces.builder", generation,
+            var state = new HomeFeatureViewState(RouteId, chat ? "spaces.chat" : manager ? "spaces.manager" : "spaces.builder", generation,
                 JsonSerializer.SerializeToElement(new { generation }));
             _pending = new(this, session, state, token, manager);
-            return new(true, "SpacesConfigurationReady", "Space configuration is ready.", request, ViewState: state);
+            return new(true, chat ? "SpacesChatReady" : "SpacesConfigurationReady", chat ? "Chat is ready." : "Space configuration is ready.", request, ViewState: state);
         }
     }
 
@@ -104,6 +103,13 @@ public sealed class BrowserSpacesFeature(Func<SpaceRegistry> registry, Action de
             var offer = _pending;
             if (offer is null || !ReferenceEquals(offer.State, state) || !offer.CanAccept)
                 throw new InvalidOperationException("The prepared Spaces view has expired.");
+            if (offer.Session is BrowserChatSession chatSession)
+            {
+                var chatDocument = SpacesShellCuiDocument.Load(includeOriginalGeneratedChildren: false);
+                return new(chatDocument, chatSession, chatSession, offer,
+                    ChatSpaceCuiRuntime.CreateRegistry(), offer,
+                    root => { chatSession.AttachRoot(root); return SpacesShellCuiRuntime.Attach(root, chatSession.SetViewportWidth); });
+            }
             var document = offer.Manager ? SpacesHomeCuiDocument.Load() : SpaceBuilderCuiDocument.Load();
             return new(document, offer.Session, offer.Session, offer, Admission: offer,
                 Attach: offer.Session is BrowserSpacesSession managerSession

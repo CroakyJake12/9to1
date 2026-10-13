@@ -1,0 +1,105 @@
+<Cui id="spaces.navigation" version="1">
+  <Actions>
+    <Action name="nav.open-space" command="nav.open-space" parameter="{Binding destination.id}" />
+    <Action name="nav.open-entry" command="nav.open-entry" parameter="{Binding row.key}" />
+    <Action name="nav.toggle-group" command="nav.toggle-group" parameter="{Binding row.id}" />
+    <Action name="nav.rename" command="nav.rename" parameter="{Binding row.key}" />
+    <Action name="nav.pin" command="nav.pin" parameter="{Binding row.key}" />
+    <Action name="nav.read" command="nav.read" parameter="{Binding row.key}" />
+    <Action name="nav.move-group" command="nav.move-group" parameter="{Binding row.key}" />
+    <Action name="nav.move-space" command="nav.move-space" parameter="{Binding row.key}" />
+    <Action name="nav.archive" command="nav.archive" parameter="{Binding row.key}" />
+    <Action name="nav.delete" command="nav.delete" parameter="{Binding row.key}" />
+    <Action name="nav.group-new-chat" command="nav.group-new-chat" parameter="{Binding row.key}" />
+    <Action name="nav.choose" command="nav.choose" parameter="{Binding choice.id}" />
+  </Actions>
+  <Theme Name="user_preference">
+    <Page ID="space-navigation" AccessibleName="Spaces navigation">
+      <Container Type="Overlay" Interactive="{Binding navigation.interactive}">
+        <Container ID="navigation-columns" Type="Grid" ColumnSizes="{Binding layout.columns}" Background="{Resource CuiShellMaterial}">
+          <Container ID="space-rail" Type="Grid" RowSizes="Auto 1fr Auto" Active="{Binding layout.railVisible}" Padding="6,12" CellGap="8" AccessibleName="Pinned Spaces">
+            <Button ID="reopen-context-sidebar" Action="nav.toggle-sidebar" Content="›" Active="{Binding layout.collapsed}" Interactive="{Binding layout.canChange}" AccessibleName="Show contextual Space sidebar" MinHeight="44" />
+            <Container ID="pinned-space-list" Row="1" Type="Vertical Stack" VerticalScrolling="true" CellGap="8">
+              <Repeat Source="{Binding navigation.pins}" As="destination" Key="{Binding destination.id}">
+                <Button ID="pinned-space" Action="nav.open-space" Selected="{Binding destination.selected}" Interactive="{Binding destination.available}" AccessibleName="{Binding destination.name}" AccessibleDescription="{Binding destination.description}" Tooltip="{Binding destination.name}" Width="48" Height="48" CornerRadius="24" HorizontalAlignment="Center" Padding="10">
+                  <Image Source="{Binding destination.iconSource}" Width="24" Height="24" AccessibleName="{Binding destination.name}" />
+                </Button>
+              </Repeat>
+            </Container>
+            <Container Row="2" Type="Vertical Stack" CellGap="4">
+              <Button ID="configure-space-navigation" Action="nav.configure" Content="⋯" Interactive="{Binding navigation.canConfigure}" AccessibleName="Configure Space navigation" Tooltip="Configure Space navigation" MinHeight="44" Padding="4" />
+              <Button ID="manage-spaces" Action="nav.manage-spaces" Content="Spaces" Interactive="{Binding navigation.canManageSpaces}" AccessibleName="Manage Spaces" Tooltip="Manage Spaces" MinHeight="48" Padding="4" />
+            </Container>
+          </Container>
+          <Container ID="context-sidebar" Column="1" Type="Grid" RowSizes="Auto Auto 1fr Auto" Padding="16,12" CellGap="12" Active="{Binding layout.sidebarVisible}" Background="{Resource CuiShellMaterial}" AccessibleName="{Binding sidebar.name}">
+            <Container ID="sidebar-header" Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
+              <Button ID="space-switcher" Action="nav.choose-space" Content="{Binding sidebar.name}" AccessibleName="Current Space selector" HorizontalContentAlignment="Left" MinHeight="44" FontSize="24" FontWeight="Bold" Background="Transparent" Padding="8,4" />
+              <Button ID="collapse-context-sidebar" Column="1" Action="nav.toggle-sidebar" Content="‹" Interactive="{Binding layout.canChange}" AccessibleName="Hide contextual Space sidebar" MinHeight="44" />
+            </Container>
+            <Input ID="sidebar-search" Row="1" Type="Text" Value="{Binding sidebar.query, mode=TwoWay, type=string}" AccessibleName="Search chats, groups and files" PlaceholderText="Search" MinWidth="0" />
+            <Container ID="sidebar-scroll" Row="2" Type="Vertical Stack" VerticalScrolling="true" CellGap="12">
+              <Button ID="new-sidebar-chat" Action="nav.new-chat" Interactive="{Binding sidebar.canStart}" HorizontalContentAlignment="Left" MinHeight="48" Background="Transparent" Padding="8,6" AccessibleName="{Binding sidebar.newChatLabel}"><Container Type="Horizontal Stack" CellGap="12"><Image Source="icon:plus" Width="22" Height="22" /><Text Text="{Binding sidebar.newChatLabel}" FontSize="18" FontWeight="SemiBold" /></Container></Button>
+              <Container ID="chat-groups-header" Type="Grid" ColumnSizes="1fr Auto" Active="{Binding sidebar.groupsVisible}" CellGap="8">
+                <Text Text="{Binding sidebar.groupsLabel}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" />
+                <Button ID="new-sidebar-group" Column="1" Action="nav.new-group" Content="+" AccessibleName="{Binding sidebar.newGroupLabel}" MinHeight="44" MinWidth="44" />
+              </Container>
+              <Button ID="owned-specialists" Action="nav.specialists" FontSize="18" FontWeight="SemiBold" Background="Transparent" Content="Specialists" Interactive="{Binding sidebar.specialistsAvailable}" Active="{Binding sidebar.isChat}" AccessibleDescription="{Binding sidebar.specialistsDescription}" HorizontalContentAlignment="Left" MinHeight="44" />
+              <Repeat Source="{Binding sidebar.sections}" As="section" Key="{Binding section.key}">
+                <Container ID="sidebar-section" Type="Vertical Stack" CellGap="4" Active="{Binding section.visible}" AccessibleName="{Binding section.title}">
+                  <Text Text="{Binding section.title}" FontSize="16" FontWeight="SemiBold" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                  <Repeat Source="{Binding section.rows}" As="row" Key="{Binding row.key}">
+                    <Container ID="sidebar-entry" Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="4" Margin="{Binding row.margin}">
+                      <Button ID="sidebar-group-toggle" Action="nav.toggle-group" Content="{Binding row.toggleLabel}" Active="{Binding row.isGroup}" AccessibleName="{Binding row.toggleDescription}" MinWidth="36" MinHeight="44" Padding="4" />
+                      <Button ID="sidebar-entry-open" Background="Transparent" Column="1" Action="nav.open-entry" Selected="{Binding row.selected}" AccessibleName="{Binding row.accessibleName}" Tooltip="{Binding row.title}" HorizontalContentAlignment="Stretch" MinHeight="44" MinWidth="0" Padding="6">
+                        <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
+                          <Text Text="{Binding row.title}" FontSize="16" FontWeight="Medium" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                          <Container Column="1" Type="Vertical Stack" Width="7" Height="7" CornerRadius="3.5" Background="{Resource CuiInformationBrush}" Active="{Binding row.unread}" AccessibleName="Unread" VerticalAlignment="Center" />
+                        </Container>
+                        <Container Type="Context Menu" Active="{Binding row.hasActions}">
+                          <Button ID="sidebar-context-rename" Type="Menu Item" Action="nav.rename" Content="Rename" />
+                          <Button ID="sidebar-context-pin" Type="Menu Item" Action="nav.pin" Content="{Binding row.pinLabel}" />
+                          <Button ID="sidebar-context-read" Type="Menu Item" Action="nav.read" Content="{Binding row.readLabel}" Active="{Binding row.isConversation}" />
+                          <Button ID="sidebar-context-move-group" Type="Menu Item" Action="nav.move-group" Content="Move to group" Active="{Binding row.isConversation}" />
+                          <Button ID="sidebar-context-move-space" Type="Menu Item" Action="nav.move-space" Content="Move to Space" Active="{Binding row.isConversation}" />
+                          <Button ID="sidebar-context-group-new-chat" Type="Menu Item" Action="nav.group-new-chat" Content="New chat" Active="{Binding row.isGroup}" />
+                          <Button ID="sidebar-context-archive" Type="Menu Item" Action="nav.archive" Content="Archive" />
+                          <Button ID="sidebar-context-delete" Type="Menu Item" Action="nav.delete" Content="{Binding row.deleteLabel}" />
+                        </Container>
+                      </Button>
+                      <Container Column="2" Type="Menu" Active="{Binding row.hasActions}" AccessibleName="{Binding row.manageLabel}">
+                        <Button Type="Menu Item" Content="⋯" AccessibleName="{Binding row.manageLabel}" MinHeight="44">
+                          <Button ID="sidebar-menu-rename" Type="Menu Item" Action="nav.rename" Content="Rename" />
+                          <Button ID="sidebar-menu-pin" Type="Menu Item" Action="nav.pin" Content="{Binding row.pinLabel}" />
+                          <Button ID="sidebar-menu-read" Type="Menu Item" Action="nav.read" Content="{Binding row.readLabel}" Active="{Binding row.isConversation}" />
+                          <Button ID="sidebar-menu-move-group" Type="Menu Item" Action="nav.move-group" Content="Move to group" Active="{Binding row.isConversation}" />
+                          <Button ID="sidebar-menu-move-space" Type="Menu Item" Action="nav.move-space" Content="Move to Space" Active="{Binding row.isConversation}" />
+                          <Button ID="sidebar-menu-group-new-chat" Type="Menu Item" Action="nav.group-new-chat" Content="New chat" Active="{Binding row.isGroup}" />
+                          <Button ID="sidebar-menu-archive" Type="Menu Item" Action="nav.archive" Content="Archive" />
+                          <Button ID="sidebar-menu-delete" Type="Menu Item" Action="nav.delete" Content="{Binding row.deleteLabel}" />
+                        </Button>
+                      </Container>
+                    </Container>
+                  </Repeat>
+                </Container>
+              </Repeat>
+            </Container>
+            <Container Row="3" Type="Vertical Stack" CellGap="6">
+              <Text ID="sidebar-status" Text="{Binding sidebar.status}" TextWrapping="Wrap" AccessibleName="Space navigation status" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+              <Button ID="configure-sidebar-navigation" Action="nav.configure" Content="Navigation settings" Interactive="{Binding navigation.canConfigure}" MinHeight="36" />
+            </Container>
+          </Container>
+        </Container>
+        <Container ID="sidebar-dialog" Type="Vertical Stack" Active="{Binding dialog.visible}" Background="{Resource CuiPanelBrush}" Padding="16" CellGap="12" VerticalScrolling="true" AccessibleName="{Binding dialog.title}">
+          <Text Text="{Binding dialog.title}" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap" />
+          <Input ID="sidebar-dialog-text" Type="Text" Value="{Binding dialog.value, mode=TwoWay, type=string}" Active="{Binding dialog.isText}" AccessibleName="{Binding dialog.title}" MinWidth="0" />
+          <Repeat Source="{Binding dialog.choices}" As="choice" Key="{Binding choice.id}">
+            <Button Action="nav.choose" Content="{Binding choice.label}" Interactive="{Binding dialog.canInteract}" HorizontalContentAlignment="Left" MinHeight="44" />
+          </Repeat>
+          <Text Text="{Binding dialog.error}" TextWrapping="Wrap" AccessibleName="Navigation action error" />
+          <Button ID="confirm-sidebar-dialog" Action="nav.confirm" Content="{Binding dialog.confirmLabel}" Active="{Binding dialog.isText}" Interactive="{Binding dialog.canConfirm}" MinHeight="44" AccentRole="Primary" />
+          <Button ID="cancel-sidebar-dialog" Action="nav.cancel" Content="Cancel" Interactive="{Binding dialog.canInteract}" MinHeight="44" AccentRole="Secondary" />
+        </Container>
+      </Container>
+    </Page>
+  </Theme>
+</Cui>

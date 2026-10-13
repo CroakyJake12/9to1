@@ -190,38 +190,71 @@ public sealed class BrowserSpaceBuilderSession(Func<SpaceRegistry> registry, Act
         // Close input admission before yielding to the presentation dispatcher, so
         // edits cannot race the captured save and then be erased by its return.
         _busy = true;
-        await PresentAsync(() => _status = "Saving configuration…", token);
+        var failures = new BrowserSpacesFailures();
+        Task? actual = null;
+        Task<SpaceDefinition>? write = null;
+        bool writerEntered = false;
+        Exception? handledRefusal = null;
         try
         {
+            actual = PresentAsync(() => _status = "Saving configuration…", token);
+            await actual;
             demandCurrent();
             var owner = registry();
-            var saved = advanced is null
-                ? await owner.ApplyBuilderBasicAsync(spaceId, original.Revision, details, token)
-                : await owner.ApplyBuilderAdvancedAsync(spaceId, original.Revision, advanced, token);
+            writerEntered = true;
+            actual = write = advanced is null
+                ? owner.ApplyBuilderBasicAsync(spaceId, original.Revision, details, token)
+                : owner.ApplyBuilderAdvancedAsync(spaceId, original.Revision, advanced, token);
+            var saved = await write;
             demandCurrent(); token.ThrowIfCancellationRequested();
-            await PresentAsync(() => { Load(saved); _status = "Configuration saved on this browser. No graph was activated and no model or tool was run."; }, token);
+            actual = PresentAsync(() => { Load(saved); _status = "Configuration saved on this browser. No graph was activated and no model or tool was run."; }, token);
+            await actual;
         }
-        catch (Exception error) when (error is SpaceRevisionConflictException or ArgumentException or InvalidOperationException)
-        { await PresentAsync(() => _status = error.Message + " Your unsaved changes are retained.", CancellationToken.None); }
-        catch (Exception)
+        catch (Exception error) when (writerEntered && IsSingleKnownRefusal(error, write))
         {
-            _uncertain = true;
-            await PresentAsync(() => _status = "The save outcome could not be confirmed. Refresh to inspect the saved revision before choosing whether to discard this local draft.", CancellationToken.None);
-            throw; // Retain the original storage/transport/cancellation fault for the owning lifetime.
+            handledRefusal = error;
+            await failures.ObserveAsync(() => PresentAsync(() => _status = error.Message + " Your unsaved changes are retained.", CancellationToken.None));
         }
-        finally { await PresentAsync(() => _busy = false, CancellationToken.None); }
+        catch (Exception error)
+        {
+            // Preserve the writer's original failure before touching the presenter.
+            // Setting the replay fence does not depend on presentation succeeding.
+            _uncertain = true;
+            failures.Retain(error, actual);
+            await failures.ObserveAsync(() => PresentAsync(() => _status = "The save outcome could not be confirmed. Refresh to inspect the saved revision before choosing whether to discard this local draft.", CancellationToken.None));
+        }
+        finally
+        {
+            // A failed dispatcher must not permanently prevent read/discard recovery.
+            _busy = false;
+            await failures.ObserveAsync(() => PresentAsync(() => { }, CancellationToken.None));
+        }
+        if (failures.HasFailures && handledRefusal is not null) failures.Retain(handledRefusal, write);
+        failures.ThrowIfAny();
     }
+    private static bool IsSingleKnownRefusal(Exception error, Task? write) =>
+        // Untyped validation/JSON failures can occur after a committed transport
+        // reply. Only the registry's explicit revision refusal proves no write.
+        error is SpaceRevisionConflictException &&
+        (write is null || write.IsFaulted && write.Exception!.InnerExceptions.Count == 1 &&
+            ReferenceEquals(write.Exception.InnerExceptions[0], error));
+
     private async Task RefreshAsync(bool discardDraft, CancellationToken token)
     {
         demandCurrent();
         if (spaceId == Guid.Empty) throw new ArgumentException("A canonical Space ID is required.");
-        await PresentAsync(() => _busy = true, token);
+        var failures = new BrowserSpacesFailures();
+        Task? actual = null;
+        _busy = true;
         try
         {
-            var observed = await registry().GetAsync(spaceId, token)
-                ?? throw new InvalidOperationException("This saved Space is no longer available.");
+            actual = PresentAsync(() => { }, token);
+            await actual;
+            var read = registry().GetAsync(spaceId, token);
+            actual = read;
+            var observed = await read ?? throw new InvalidOperationException("This saved Space is no longer available.");
             demandCurrent(); token.ThrowIfCancellationRequested();
-            await PresentAsync(() =>
+            actual = PresentAsync(() =>
             {
                 if ((!_dirty && !_uncertain) || discardDraft) Load(observed);
                 _status = _dirty || _uncertain
@@ -229,8 +262,15 @@ public sealed class BrowserSpaceBuilderSession(Func<SpaceRegistry> registry, Act
                     : observed.IsBuiltIn ? "This built-in Space is protected. Make a copy in Spaces to configure your own version."
                     : "Edit this Space's saved configuration. Workspace execution and graph publication are not connected in this browser.";
             }, token);
+            await actual;
         }
-        finally { await PresentAsync(() => _busy = false, CancellationToken.None); }
+        catch (Exception error) { failures.Retain(error, actual); }
+        finally
+        {
+            _busy = false;
+            await failures.ObserveAsync(() => PresentAsync(() => { }, CancellationToken.None));
+        }
+        failures.ThrowIfAny();
     }
     private void Load(SpaceDefinition source)
     {

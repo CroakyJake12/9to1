@@ -75,17 +75,20 @@ public sealed class BrowserSpacesSessionTests
         Assert.DoesNotContain(await files.Open().GetAllAsync(), space => !space.IsBuiltIn);
     }
 
-    [Fact]
-    public async Task Lost_save_acknowledgement_requires_inspection_before_create_can_be_repeated()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Lost_save_acknowledgement_requires_inspection_before_create_can_be_repeated(bool wrongKindAcknowledgement)
     {
         using var files = new RegistryFiles();
         var transport = new LostReplyStore(new VersionedAtomicSettingsStore(files));
+        if (wrongKindAcknowledgement) transport.ReplyFailure = new InvalidOperationException("Controlled wrong-kind JSON acknowledgement after real commit.");
         var registry = new SpaceRegistry(transport);
-        await using var view = Session(registry);
+        var view = Session(registry);
         await view.PrepareAsync(default); view.Admit();
         await view.DispatchAsync("spaces.create", null); view.TrySetValue("editor.name", "Committed once");
         transport.LoseNextReply = true;
-        await view.DispatchAsync("spaces.confirm-edit", null);
+        Assert.Same(transport.ReplyFailure, await Assert.ThrowsAnyAsync<Exception>(() => view.DispatchAsync("spaces.confirm-edit", null).AsTask()));
         Assert.False(view.IsActionAvailable("spaces.confirm-edit"));
         view.Deactivate(); await view.PrepareAsync(default); view.Admit();
         Assert.Equal("Committed once", Value<string>(view, "editor.name"));
@@ -96,6 +99,38 @@ public sealed class BrowserSpacesSessionTests
         await view.DispatchAsync("spaces.refresh", null);
         Assert.Single(Rows(view, "spaces.customSpaces"));
         Assert.True(view.IsActionAvailable("spaces.create"));
+        Assert.Same(transport.ReplyFailure, await Assert.ThrowsAnyAsync<Exception>(() => view.DisposeAsync().AsTask()));
+    }
+
+    [Fact]
+    public async Task Lost_save_reply_survives_failing_status_and_cleanup_presentation_and_still_fences_replay()
+    {
+        using var files = new RegistryFiles();
+        var store = new LostReplyStore(new VersionedAtomicSettingsStore(files));
+        var registry = new SpaceRegistry(store);
+        var presentationFailure = new InvalidOperationException("Controlled actual presentation failure");
+        var refusePresentation = false;
+        var view = new BrowserSpacesSession(() => registry, () => { }, action =>
+        {
+            if (refusePresentation) return Task.FromException(presentationFailure);
+            action(); return Task.CompletedTask;
+        });
+        await view.PrepareAsync(default); view.Admit();
+        await view.DispatchAsync("spaces.create", null); view.TrySetValue("editor.name", "Saved once despite unavailable UI");
+        store.AfterLostReply = () => refusePresentation = true;
+        store.LoseNextReply = true;
+        var failure = await Assert.ThrowsAsync<AggregateException>(() => view.DispatchAsync("spaces.confirm-edit", null).AsTask());
+        Assert.Equal(2, failure.InnerExceptions.Count);
+        Assert.Contains(failure.InnerExceptions, error => ReferenceEquals(error, store.ReplyFailure));
+        Assert.Contains(failure.InnerExceptions, error => ReferenceEquals(error, presentationFailure));
+        refusePresentation = false;
+        Assert.False(view.IsActionAvailable("spaces.confirm-edit"));
+        await view.DispatchAsync("spaces.confirm-edit", null);
+        Assert.Single(await files.Open().GetAllAsync(), space => !space.IsBuiltIn);
+        var close = await Assert.ThrowsAsync<AggregateException>(() => view.DisposeAsync().AsTask());
+        Assert.Equal(2, close.InnerExceptions.Count);
+        Assert.Contains(close.InnerExceptions, error => ReferenceEquals(error, store.ReplyFailure));
+        Assert.Contains(close.InnerExceptions, error => ReferenceEquals(error, presentationFailure));
     }
 
     [Fact]
@@ -134,7 +169,7 @@ public sealed class BrowserSpacesSessionTests
     {
         using var files = new RegistryFiles(); var registry = files.Open();
         await using var feature = new BrowserSpacesFeature(() => registry, () => { }, action => { action(); return Task.CompletedTask; }, _ => { });
-        var request = new HomeFeatureNavigationRequest(HomeFeatureRouteIds.Spaces);
+        var request = new HomeFeatureNavigationRequest(HomeFeatureRouteIds.Spaces, Action: "manage");
         var original = await feature.OpenAsync(request); Assert.True(original.Succeeded);
         var first = feature.Render(original.ViewState!); first.Admission!.Accept();
         var view = Assert.IsType<BrowserSpacesSession>(first.Bindings);
@@ -162,7 +197,7 @@ public sealed class BrowserSpacesSessionTests
         var attempts = 0;
         var feature = new BrowserSpacesFeature(() => throw (++attempts == 1 ? first : second),
             () => { }, action => { action(); return Task.CompletedTask; }, _ => { });
-        Assert.Same(first, await Assert.ThrowsAsync<IOException>(() => feature.OpenAsync(new(HomeFeatureRouteIds.Spaces))));
+        Assert.Same(first, await Assert.ThrowsAsync<IOException>(() => feature.OpenAsync(new(HomeFeatureRouteIds.Spaces, Action: "manage"))));
         Assert.Same(second, await Assert.ThrowsAsync<InvalidDataException>(() => feature.OpenAsync(
             new(HomeFeatureRouteIds.Spaces, "Space", Guid.NewGuid().ToString("D"), "edit"))));
         var failure = await Assert.ThrowsAsync<AggregateException>(() => feature.DisposeAsync().AsTask());
@@ -231,11 +266,13 @@ public sealed class BrowserSpacesSessionTests
     private sealed class LostReplyStore(IVersionedSettingsStore actual) : IVersionedSettingsStore
     {
         public bool LoseNextReply { get; set; }
+        public Exception ReplyFailure { get; set; } = new IOException("Controlled lost acknowledgement after real commit.");
+        public Action? AfterLostReply { get; set; }
         public Task<T?> GetAsync<T>(string key, CancellationToken token) where T : class => actual.GetAsync<T>(key, token);
         public async Task SetAsync<T>(string key, T value, CancellationToken token) where T : class
         {
             await actual.SetAsync(key, value, token);
-            if (LoseNextReply) { LoseNextReply = false; throw new IOException("Controlled lost acknowledgement after real commit."); }
+            if (LoseNextReply) { LoseNextReply = false; AfterLostReply?.Invoke(); throw ReplyFailure; }
         }
         public Task RemoveAsync(string key, CancellationToken token) => actual.RemoveAsync(key, token);
         public Task<SettingsExportManifest> ExportAsync(CancellationToken token) => actual.ExportAsync(token);

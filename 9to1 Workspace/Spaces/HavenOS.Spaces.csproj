@@ -14,9 +14,12 @@
     <ProjectReference Include="..\shared\src\Haven.Core\Haven.Core.csproj" />
     <ProjectReference Include="..\Dev\HavenOS.Dev.csproj" />
     <EmbeddedResource Include="UI\Tasks\SpaceTaskWidget.cui" LogicalName="HavenOS.Apps.Spaces.UI.Tasks.SpaceTaskWidget.cui" />
+    <EmbeddedResource Include="UI/Chat/ChatWorkspace.cui" LogicalName="HavenOS.Apps.Spaces.UI.Chat.ChatWorkspace.cui" />
     <EmbeddedResource Include="UI\Chat\ChatSpace.cui" LogicalName="HavenOS.Apps.Spaces.UI.Chat.ChatSpace.cui" />
     <EmbeddedResource Include="UI\Home\SpacesHome.cui" LogicalName="HavenOS.Apps.Spaces.UI.Home.SpacesHome.cui" />
     <EmbeddedResource Include="UI\Builder\SpaceBuilder.cui" LogicalName="HavenOS.Apps.Spaces.UI.Builder.SpaceBuilder.cui" />
+    <EmbeddedResource Include="UI/Shell/SpacesShell.cui" LogicalName="HavenOS.Apps.Spaces.UI.Shell.SpacesShell.cui" />
+    <EmbeddedResource Include="UI/Shell/SpaceNavigation.cui" LogicalName="HavenOS.Apps.Spaces.UI.Shell.SpaceNavigation.cui" />
     <None Update="UI\Chat\ChatSpace.cui" CopyToOutputDirectory="PreserveNewest" />
     <None Update="UI\Home\SpacesHome.cui" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

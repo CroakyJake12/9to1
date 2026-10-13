@@ -54,7 +54,11 @@ internal static class HavenThemeCatalog
         new(
             HavenUiTheme.Cinematic, "Cinematic",
             "Immersive layered depth with contextual light and smooth fades.",
-            1.0, 1.05, 1.1, 1.25, 1.7, 0.95)
+            1.0, 1.05, 1.1, 1.25, 1.7, 0.95),
+        new(
+            HavenUiTheme.Professional, "Professional",
+            "Restrained professional surfaces with clear hierarchy and subtle motion.",
+            0.8, 0.9, 0.9, 0.8, 0.35, 1.0)
     ];
 
     /// <summary>

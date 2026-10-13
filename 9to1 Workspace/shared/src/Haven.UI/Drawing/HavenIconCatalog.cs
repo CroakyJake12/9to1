@@ -42,6 +42,7 @@ public static class HavenIconCatalog
         "file" or "notes" => Geometry(new HavenPathFigure(new HavenPoint(6, 3),
             [new HavenLineSegment(new HavenPoint(15, 3)), new HavenLineSegment(new HavenPoint(20, 8)), new HavenLineSegment(new HavenPoint(20, 21)), new HavenLineSegment(new HavenPoint(6, 21))], true),
             Line((15, 3), (15, 8), (20, 8)), Line((9, 12), (17, 12)), Line((9, 16), (16, 16))),
+        "user" or "account" => Geometry(Circle(12, 7, 4), Line((4, 21), (4, 18), (7, 14), (17, 14), (20, 18), (20, 21))),
         "agents" => Geometry(Circle(8, 8, 3), Circle(16.5, 8.5, 2.5), Line((3, 20), (3, 17), (5, 14), (11, 14), (13, 17), (13, 20)), Line((14, 14), (19, 14), (21, 17), (21, 20))),
         "bolt" or "rapid" or "build" => Geometry(new HavenPathFigure(new HavenPoint(13, 2),
             [new HavenLineSegment(new HavenPoint(5, 13)), new HavenLineSegment(new HavenPoint(11, 13)), new HavenLineSegment(new HavenPoint(10, 22)), new HavenLineSegment(new HavenPoint(19, 10)), new HavenLineSegment(new HavenPoint(13, 10))], true)),

@@ -17,7 +17,7 @@ public sealed partial class WorkspaceSessionCoordinator(IWorkspaceSessionReposit
     private Task? _finalSave;
 
     private sealed record PopUpRegistration(
-        Func<TabSessionSnapshot> CreateTabSnapshot,
+        Func<TabSessionSnapshot?> CreateTabSnapshot,
         Func<WorkspaceWindowSnapshot> CreateWindowSnapshot);
 
     private sealed class FinalSnapshotCapture
@@ -54,7 +54,7 @@ public sealed partial class WorkspaceSessionCoordinator(IWorkspaceSessionReposit
 
     public void RegisterPopUp(
         Guid windowId,
-        Func<TabSessionSnapshot> createTabSnapshot,
+        Func<TabSessionSnapshot?> createTabSnapshot,
         Func<WorkspaceWindowSnapshot> createWindowSnapshot)
     {
         ArgumentNullException.ThrowIfNull(createTabSnapshot);
@@ -183,13 +183,15 @@ public sealed partial class WorkspaceSessionCoordinator(IWorkspaceSessionReposit
         {
             var tabs = shells.SelectMany(shell => shell.CreateTabSnapshots())
                 .Concat(popUps.Select(popUp => popUp.CreateTabSnapshot()))
+                .OfType<TabSessionSnapshot>()
                 .DistinctBy(tab => tab.Id)
                 .ToArray();
             var groups = shells.SelectMany(shell => shell.CreateGroupSnapshots()).DistinctBy(group => group.Id).ToArray();
             var windows = shells.Select(shell => shell.CreateWindowSnapshot(kinds[shell]))
                 .Concat(popUps.Select(popUp => popUp.CreateWindowSnapshot()))
                 .ToArray();
-            return new WorkspaceSessionSnapshot(WorkspaceSessionSnapshot.CurrentSchemaVersion, tabs, groups, windows, DateTimeOffset.UtcNow);
+            return NormalizeDurableSnapshot(new WorkspaceSessionSnapshot(
+                WorkspaceSessionSnapshot.CurrentSchemaVersion, tabs, groups, windows, DateTimeOffset.UtcNow));
         }
 
         using var callbackScope = EnterOriginalScope(null);
@@ -198,6 +200,49 @@ public sealed partial class WorkspaceSessionCoordinator(IWorkspaceSessionReposit
         {
             throw new AggregateException("A synchronous snapshot callback has no proven canceled original Task.", error);
         }
+    }
+
+    // Temporary chats are live session owners, never durable restore descriptors.
+    // Reconcile every shell AND popup reference after their owners omit such tabs;
+    // a selected temporary pane must not leave an empty synthetic restore window.
+    private static WorkspaceSessionSnapshot NormalizeDurableSnapshot(WorkspaceSessionSnapshot snapshot)
+    {
+        var retained = snapshot.Tabs.Select(tab => tab.Id).ToHashSet();
+        var groups = snapshot.Groups.Select(group => group with
+        {
+            OrderedTabIds = group.OrderedTabIds.Where(retained.Contains).Distinct().ToArray()
+        }).Where(group => group.OrderedTabIds.Count > 0).ToArray();
+        var groupIds = groups.Select(group => group.Id).ToHashSet();
+        var windows = new List<WorkspaceWindowSnapshot>();
+        foreach (var window in snapshot.Windows)
+        {
+            var ordered = window.OrderedTabIds.Where(retained.Contains).Distinct().ToArray();
+            if (ordered.Length == 0) continue;
+            var panes = window.Layout.Panes.Where(pane => ordered.Contains(pane.TabId))
+                .OrderBy(pane => pane.Order).DistinctBy(pane => pane.TabId)
+                .Select((pane, index) => pane with { Order = index }).ToArray();
+            var selected = window.SelectedTabId is { } previous && ordered.Contains(previous) ? previous
+                : panes.FirstOrDefault()?.TabId ?? ordered[0];
+            if (panes.Length == 0) panes = [new WorkspacePaneSnapshot(Guid.NewGuid(), selected, 0)];
+            windows.Add(window with
+            {
+                OrderedTabIds = ordered,
+                SelectedTabId = selected,
+                Layout = window.Layout with
+                {
+                    Kind = panes.Length > 1 ? WorkspaceLayoutKind.Split : WorkspaceLayoutKind.Single,
+                    PrimaryRatio = panes.Length > 1 ? window.Layout.PrimaryRatio : 1d,
+                    Panes = panes
+                }
+            });
+        }
+        return snapshot with
+        {
+            Tabs = snapshot.Tabs.Select(tab => tab.GroupId is { } group && !groupIds.Contains(group)
+                ? tab with { GroupId = null } : tab).ToArray(),
+            Groups = groups,
+            Windows = windows.ToArray()
+        };
     }
 
     private static WorkspaceSessionSnapshot DetachSnapshot(WorkspaceSessionSnapshot snapshot) =>

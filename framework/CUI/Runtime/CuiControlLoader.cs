@@ -2077,6 +2077,17 @@ public sealed class CuiControlLoader : IDisposable
                             twTbx.TextWrapping = tw;
                     }
                     break;
+                case "texttrimming":
+                    if (control is TextBlock trimmedText)
+                        trimmedText.TextTrimming = resolved.ToLowerInvariant() switch
+                        {
+                            "none" => Avalonia.Media.TextTrimming.None,
+                            "characterellipsis" => Avalonia.Media.TextTrimming.CharacterEllipsis,
+                            "wordellipsis" => Avalonia.Media.TextTrimming.WordEllipsis,
+                            "prefixcharacterellipsis" => Avalonia.Media.TextTrimming.PrefixCharacterEllipsis,
+                            _ => throw new ArgumentException("Unknown canonical text trimming value.")
+                        };
+                    break;
                 case "acceptsreturn":
                 case "multiline":
                     if (control is TextBox arTbx && bool.TryParse(resolved, out var ar))
@@ -2664,6 +2675,16 @@ public sealed class CuiControlLoader : IDisposable
             "Appearance" or "appearance" => (_appearance ?? _themePreference?.Current.Appearance ?? CuiThemeScopeApplier.DetectAppearance()).ToString(),
             _ => null
         };
+    }
+
+    /// <summary>Finds a canonical authored control before or after mounting. CUI
+    /// containers retain hidden children outside the current native visual tree;
+    /// templates are therefore not an authoritative control-identity index.</summary>
+    public T FindAuthoredControl<T>(Control root, string name) where T : Control
+    {
+        ArgumentNullException.ThrowIfNull(root);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        return EnumerateControls(root).OfType<T>().Single(control => control.Name == name);
     }
 
     private IEnumerable<Control> EnumerateControls(Control root)

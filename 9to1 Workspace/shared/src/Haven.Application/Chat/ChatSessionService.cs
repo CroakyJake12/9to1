@@ -348,7 +348,7 @@ public sealed partial class ChatSessionService(
             IAsyncEnumerable<ChatStreamEvent> CreateBody(CancellationToken originalToken)
             {
                 var original = SendOriginalAsync(conversation, prompt, model, effort, capabilities, agentName, agentInstructions,
-                    duoMode, workspaceRoot, projectContext, projectInstructions, images, originalToken, prompts, registeredContext,
+                    duoMode, workspaceRoot, projectContext, projectInstructions, images, originalToken, originalToken, prompts, registeredContext,
                     generationOptions, filePermission, commandPermission, browserPermission, explicitCapabilities,
                     availableCapabilities, computerUseRequest, context, taskExecutionIntent, custody, ordinaryOriginal, transientHistory);
                 return custody is null ? original : ObserveOriginalSendAsync(original, custody, originalToken);
@@ -453,6 +453,7 @@ public sealed partial class ChatSessionService(
         string? projectContext,
         string? projectInstructions,
         IReadOnlyList<string>? images,
+        CancellationToken originalSendCancellation,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken,
         IReadOnlyCollection<ActivePrompt>? prompts = null,
         string? registeredContext = null,
@@ -475,6 +476,11 @@ public sealed partial class ChatSessionService(
             throw new InvalidOperationException("A canonical continuation requires explicit agentic-task intent.");
         if (canonicalIntent && (taskCoordinator is null || !taskCoordinator.HasAttemptAuthority || taskToolOwner is null || taskProviderContextCapture is null))
             throw new InvalidOperationException("The actual canonical task authority, typed tool owner and request context owner are unavailable.");
+        // Enumeration may add a linked cancellation token; choice identity stays bound to the original send.
+        using var toolApprovalRequest = ConsumeToolApprovalRequest(conversation, prompt, generationOptions, originalSendCancellation);
+        if (generationOptions?.OriginalToolApprovalRequest is not null)
+            generationOptions = generationOptions with { OriginalToolApprovalRequest = null };
+        generationOptions = ApplyTemporaryMemoryReadChoice(conversation, prompt, generationOptions, originalSendCancellation, taskExecutionIntent);
         DemandOriginalPersistentMemoryRequest(generationOptions, ordinaryOriginal, originalCustody);
         DemandOriginalAttachmentInput(generationOptions, ordinaryOriginal, originalCustody);
         CurrentCanonicalTask = null;
@@ -555,6 +561,10 @@ public sealed partial class ChatSessionService(
 
         void PublishBoundEvent(ExecutionEvent value)
         {
+            // Ordinary Temporary Chat has no durable activity/history side channel.
+            // Canonical children may use transient conversation storage while their
+            // independently governed Task audit remains mandatory.
+            if (conversation.IsTemporary && !canonicalIntent) return;
             var bound = canonicalTask is null ? value : value with { ExecutionId = canonicalTask.ExecutionId, TaskId = canonicalTask.TaskId };
             if (originalCustody?.OriginalProcessProducer is { } producer)
                 producer.InvokeOriginalCallback(() => { executionEvents?.TryPublish(bound); });
@@ -1161,6 +1171,7 @@ public sealed partial class ChatSessionService(
 
             async Task<WorkspaceToolResult> ExecuteToolAsync(OllamaToolCall call)
             {
+                if (toolApprovalRequest is not null) call = SnapshotApprovalToolCall(call);
                 // A constrained request offers only its fresh maintained intersection.
                 // A provider-returned name cannot bypass that selection through the
                 // broader runtime plan, including bridges/bootstrap/recovery paths.
@@ -1201,6 +1212,49 @@ public sealed partial class ChatSessionService(
                         throw new InvalidOperationException("The selected tool has no actual typed canonical owner before dispatch.");
                     var startedAt = DateTimeOffset.UtcNow;
                     WorkspaceToolResult observed;
+                    if (available && toolApprovalRequest is not null &&
+                        NeedsToolApproval(toolApprovalRequest.Mode, selectedRuntime, call))
+                    {
+                        execution.Update(ChatExecutionStage.WaitingForApproval, "Waiting for tool approval", DescribeTool(call));
+                        PublishBoundEvent(new ExecutionEvent(Guid.NewGuid(), execution.OperationId, invocationId,
+                            actionParentId, ExecutionOrigin.Haven, ExecutionActionType.UserActionRequired,
+                            ExecutionActionStatus.UserActionRequired, "Waiting for tool approval", null,
+                            DescribeTool(call), call.Name, startedAt));
+                        var originalApproval = toolApprovalRequest.Session.DecideOriginalAsync(toolApprovalRequest, invocationId, call, token);
+                        originalCustody?.RetainAdditionalOriginal("tools.chat-approval", originalApproval);
+                        var decision = await (ordinaryOriginal is null ? originalApproval
+                            : ordinaryOriginal.Read(() => originalApproval, token)).ConfigureAwait(false);
+                        token.ThrowIfCancellationRequested();
+                        if (decision != ChatToolApprovalOutcome.Allowed)
+                        {
+                            var denied = DeclinedToolApproval(invocationId, call, decision, startedAt);
+                            foreach (var item in denied.Activity.InvocationEvidence!) invocationEvidence.Enqueue(item);
+                            return denied;
+                        }
+                        // Waiting grants no runtime/account authority. Recheck changing source
+                        // policy before the existing canonical preparation and dispatch below.
+                        await (ordinaryOriginal is null ? safety.EnsureMayActAsync(conversation.Id, $"chat.tool.{call.Name}", token)
+                            : ordinaryOriginal.Read(() => safety.EnsureMayActAsync(conversation.Id, $"chat.tool.{call.Name}", token), token)).ConfigureAwait(false);
+                        if (modelPermissions is not null && ModelToolPermissionMap.Map(call.Name) is { } currentRestriction)
+                        {
+                            var currentPermission = await modelPermissions.EvaluateAsync(
+                                effectivePermissionModel ?? DescriptorForPermission(turnModel), currentRestriction, acrossMesh: false, token).ConfigureAwait(false);
+                            if (!currentPermission.Allowed)
+                            {
+                                const string detail = "The selected model's current permission policy denies this tool call. It was not executed.";
+                                invocationEvidence.Enqueue(new(invocationId, call.Name, selectedRuntime.ToString(),
+                                    ToolInvocationObservationStatus.DeniedBeforeDispatch, null, startedAt, DateTimeOffset.UtcNow,
+                                    ReportedFailureCode: "MODEL_PERMISSION_DENIED"));
+                                return new(new ToolActivity(invocationId, call.Name.Replace('_', ' '), detail, false, TimeSpan.Zero, DateTimeOffset.UtcNow), detail);
+                            }
+                        }
+                    }
+                    execution.Update(StageForTool(call.Name, selectedRuntime), StatusForTool(call.Name), DescribeTool(call));
+                    PublishBoundEvent(new ExecutionEvent(
+                        Guid.NewGuid(), execution.OperationId, invocationId, actionParentId, ExecutionOrigin.Haven,
+                        ExecutionActionType.ToolCall, ExecutionActionStatus.Running, StatusForTool(call.Name),
+                        "The registered tool matched the requested operation and current permissions.", DescribeTool(call),
+                        call.Name, startedAt, startedAt));
                     var currentProviderContext = await ProviderContextAsync(invocationId).ConfigureAwait(false);
                     if (available && canonicalTask?.OwnerBinding is not null)
                     {
@@ -1276,12 +1330,6 @@ public sealed partial class ChatSessionService(
                     }
                 }
 
-                PublishBoundEvent(new ExecutionEvent(
-                    Guid.NewGuid(), execution.OperationId, toolActionId, actionParentId, ExecutionOrigin.Haven,
-                    ExecutionActionType.ToolCall, ExecutionActionStatus.Running, StatusForTool(call.Name),
-                    "The registered tool matched the requested operation and current permissions.", DescribeTool(call),
-                    call.Name, toolStartedAt, toolStartedAt));
-
                 WorkspaceToolResult originalResult;
                 ToolRuntimeKind? runtimeKind = null;
                 if (modelPlan.TryGetRuntime(call.Name, out var runtime))
@@ -1329,7 +1377,11 @@ public sealed partial class ChatSessionService(
                         automaticRetryEndedAt = DateTimeOffset.UtcNow;
                         result = automaticRetryResult;
                     }
-                    else if (descriptor.SuggestedRemediation is { } remediationType && remediations is not null)
+                    // Ordinary Temporary turns must not create durable remediation records,
+                    // execution events or resumable continuations retaining their context.
+                    // Canonical Task audit/recovery remains under its original authority.
+                    else if (descriptor.SuggestedRemediation is { } remediationType && remediations is not null &&
+                        (canonicalIntent || !conversation.IsTemporary))
                     {
                         remediationId = Guid.NewGuid();
                         var canResume = descriptor.Retryable && runtimeKind is ToolRuntimeKind.Mcp or ToolRuntimeKind.Calendar;

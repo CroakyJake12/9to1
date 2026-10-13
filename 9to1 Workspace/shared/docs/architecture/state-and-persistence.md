@@ -102,7 +102,7 @@ services (e.g., `MainView.TabSessions.cs`, workspace session persistence).
 Not a settings concern; may be rebuilt safely after a crash.
 
 Temporary ordinary Chat retains prior messages in its existing page/session.
-`ChatSessionService.SendAsync` accepts an optional `transientHistory` snapshot
+`ChatSessionService.SendWithTransientHistoryAsync` accepts a `transientHistory` snapshot
 of prior user/assistant turns from that same conversation. It detaches and
 validates the list before emitting the next user message, excludes compacted
 turns through `ChatContextWindow`, and never reads durable conversation history
@@ -111,6 +111,22 @@ Task intent or a provider execution context. The existing safety, provider and
 tool admission paths still apply. Compact summaries remain in the page's
 registered context; neither the history snapshot nor the summary creates a
 durable row. Durable sends retain the repository-owned context path.
+
+Each temporary ordinary request makes a new Memory-read choice. The actual Chat
+caller obtains `TemporaryChatMemoryReadChoice` from the same `ChatSessionService`
+after the user's choice and supplies it in `GenerationOptions` for that send.
+The service binds it to the exact conversation object, prompt and original
+cancellable send lifetime, then consumes it once when enumeration begins.
+Additional enumeration cancellation does not replace that original identity.
+Missing or denied choices disable persistent Memory reads; allow only permits
+the existing source permissions and requested restrictions to run. A source
+refusal cannot fall back to another reader. The live marker is not serialized
+or passed to provider options and cannot authorize another send or a canonical
+Task request. Saved conversations and canonical Agent child requests retain their
+existing governed Memory-read behavior; an internal transient storage flag does
+not convert a canonical child into ordinary Temporary Chat.
+No temporary Memory create/reinforce operation is introduced. The Den owner
+separately rejects temporary create, reinforcement and correction requests.
 
 ## 5. Caches and derived state
 
@@ -247,3 +263,56 @@ installed Home Windows startup connection/approved host tuple, configured worksp
 trust, complete process-owner handoff and native/browser runtime acceptance remain
 required receiving dependencies. A compatibility readiness check is not a rendered
 frame, installed authority, successful tool effect or completed durable task.
+
+
+## Temporary Chat presentation, workspace snapshots and close consent
+
+The actual `NewChatPage` or maintained `ChatPage` determines whether its conversation
+is Temporary. `MainView.CreateDetachedTabSnapshot` checks that owner before serialising
+the tab title or conversation identity and returns no durable tab for Temporary state.
+The shell and registered popup capture paths use this same projection. An explicit
+local save must receive the original conversation/history/context acknowledgement
+before the page becomes eligible for subsequent workspace capture; an uncertain save
+continues to suppress its tab snapshot.
+
+`WorkspaceSessionCoordinator` normalises the combined captured DTO against retained
+tab identities. It removes references to omitted tabs, empty groups and empty windows,
+clears orphaned group membership, and reconciles pane order, selected tab and layout.
+When the selected tab was omitted, a surviving visible pane takes precedence over a
+background ordered tab. This prevents snapshot metadata from retaining a Temporary
+title or ID and prevents restoration from selecting a tab outside the visible layout.
+It does not independently certify every producer of workspace or execution metadata.
+
+`WorkspaceTabNameGeneration` owns the shell's original AI naming request. It captures
+the actual page, conversation presentation guard, tab identity, title, privacy state
+and lifetime before model discovery. The existing title remains intact while work is
+pending. Changed source, manual title changes, retirement, and reentrant publication
+invalidate a late result; a failed request cannot restore an old title into a new page.
+Temporary-origin requests emit no durable execution events, including after a later
+explicit save. The original provider failure and any reporting failure remain joined
+and visible to the shell's existing command owner. The naming helper neither creates
+account authority nor changes the provider's existing transport/permission contract.
+
+`OriginalDocumentClosePreflight` consumes `NewChatPage.PrepareToCloseAsync` through its
+actual page or shell-hosted CUI choice overlay. A nonempty Temporary source requires
+Save, Discard or Cancel. Save awaits its actual local save and draft owner; missing
+unsent-draft storage keeps the page open. An uncertain save offers retry without
+allowing discard of potentially committed state. Discard authorises only the captured
+conversation, messages, redo, context, draft and attached composer state; subsequent
+changes invalidate that preparation. The maintained legacy page supplies its own
+close-preparation contract and does not claim a page-owned retirement operation where
+none exists. Actual page work must still be joined by the host's original close owner.
+
+These are bounded implementation contracts. Controlled page/popup/coordinator tests
+are not proof of restored-popup close, every window owner, all configuration/draft
+restoration, supported operating-system shutdown, crash durability, or complete Spaces
+privacy and lifecycle acceptance. Those receiving workflows require their own actual
+operation and recovery evidence.
+
+### Chat tool prompting intent and original request ownership
+
+`ChatSessionService` owns the optional chat tool-approval boundary. A `ChatToolApprovalSession` holds only live per-chat prompt exceptions; it grants no account, workspace, browser, Memory or canonical Task authority. Each `ChatToolApprovalRequest` binds the exact original conversation snapshot, prompt and send cancellation token, is consumed once at enumeration, and is removed from provider options. Persisted `RequestedToolApprovalMode` is restrictive intent: replay without a fresh original request refuses. A UI must join both the existing original send lifetime and the approval session on close. A presenter cannot join its own session.
+
+Ask pauses the actual selected call. Auto and Run automatically use finite first-party operation and exact argument checks; unknown/ambiguous, sensitive and unisolated process calls still prompt. The actual existing runtime authority remains required after any user choice. Full access is unavailable until an actual authorized unconfined host capability and fresh session confirmation exist. The source does not claim OS isolation from a permission enum. Per-chat non-Full mode persistence and complete runtime policy coverage remain integration work; live request receipts and Always allow exceptions must never be serialized.
+
+Ordinary Temporary Chat does not publish prompt/tool/response content through the durable execution event sink. Canonical Task children using transient conversation storage retain their independently governed Task auditing. `DualModelService.RunTransientAsync` likewise suppresses durable comparison response/error/critique content per invocation, preserving normal comparisons' events. This is not a Memory permission path: Temporary dual comparison stays unavailable in the actual Chat page until its fresh per-request Memory decision and both model requests share a governed source path.

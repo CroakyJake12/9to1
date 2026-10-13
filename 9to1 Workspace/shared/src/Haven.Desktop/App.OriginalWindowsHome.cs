@@ -30,6 +30,11 @@ public sealed partial class App
             PrepareOriginalAssistantSqliteComposition(collection, paths);
             PrepareOriginalAssistantMiniComputerConfiguration(paths);
             var principal = new OperatingSystemPrincipalSource();
+            // The SAME original settings instance is used by Home evidence and
+            // later by the ordinary SpaceRegistry/settings DI consumers.
+            var spaceSettings = new VersionedAtomicSettingsStore(paths);
+            var spaceEvidence = new SpaceLocalStoreEvidenceProvider(spaceSettings);
+            SpaceLocalStoreAuthority? spaceAuthority = null;
             var ordinary = RetainOriginalAssistantConversationProcess();
             var rootClient = RetainOriginalHomeRootClient(original);
             RetainOriginalNativeHomeStartup(original);
@@ -55,8 +60,9 @@ public sealed partial class App
                     var miniEvidence = CreateOriginalAssistantMiniComputerCatalogEvidence(identity.Profiles);
                     files = new(identity.StateStore, identity.Profiles);
                     personalDen = RetainOriginalAssistantPersonalDen(paths, identity.Profiles);
-                    return new([files, personalDen, miniEvidence, .. sqliteEvidence], new Dictionary<Type, object>
+                    return new([files, personalDen, miniEvidence, spaceEvidence, .. sqliteEvidence], new Dictionary<Type, object>
                     {
+                        [typeof(SpaceLocalStoreEvidenceProvider)] = spaceEvidence,
                         [typeof(NativeFilesWorkspaceService)] = files,
                         [typeof(OriginalAssistantPersonalDenHost)] = personalDen
                     });
@@ -64,12 +70,18 @@ public sealed partial class App
                 configureOriginalResolvers: ownership =>
                 {
                     var projectContexts = CreateOriginalAssistantProjectContextReadOwner(ownership);
+                    spaceAuthority = new(spaceSettings, ownership.Identity.Profiles, ownership.Ownership, () =>
+                        !_originalAppWork.IsRetiring && _actualWindowsHome is { } current &&
+                        ReferenceEquals(current.Profiles, ownership.Identity.Profiles) &&
+                        current.OriginalStartTask?.IsCompletedSuccessfully == true &&
+                        current.OriginalProcessRetirementRequestTask is null && current.OriginalCloseTask is null);
                     authority = new(files!, ownership.Identity.Profiles, ownership.Ownership);
                     resolver = new(authority);
                     sites = new(authority);
                     sitesResolver = new(sites);
                     return new([resolver, sitesResolver], new Dictionary<Type, object>
                     {
+                        [typeof(SpaceLocalStoreAuthority)] = spaceAuthority,
                         [typeof(CanonicalProjectContextStoreReadOwner)] = projectContexts,
                         [typeof(ICanonicalProjectContextStoreReadSource)] = projectContexts,
                         [typeof(NativeFilesWorkspaceAuthority)] = authority, [typeof(FilesArtifactResourceResolver)] = resolver,
@@ -78,6 +90,7 @@ public sealed partial class App
                 });
             original.DemandPublication();
             collection.AddHavenOwnedWindowsHomeDomain(_actualWindowsHome, paths, principal);
+            collection.AddOriginalWindowsSpaceSettings(_actualWindowsHome, spaceSettings, spaceEvidence, spaceAuthority!);
             RegisterOriginalHomeRootOwners(collection, _actualWindowsHome, rootClient);
             collection.AddSingleton(files!); collection.AddSingleton(authority!); collection.AddSingleton(resolver!);
             collection.AddSingleton(personalDen!);

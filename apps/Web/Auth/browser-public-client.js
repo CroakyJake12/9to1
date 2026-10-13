@@ -1,6 +1,7 @@
 // Public-client PKCE/OIDC consumer. Authority: maintained CAKE ID aedc29ec + BROWSER_FIXTURE.md.
 // There are no issuer/client/redirect defaults, local account grants, refresh-token persistence or auth_revision claims.
 import { createRemoteJWKSet, jwtVerify, customFetch } from 'jose';
+import { saveRedirectTransaction, clearRedirectTransaction, captureRedirectCallback, consumeRedirectCallback } from './browser-redirect-transaction.js';
 
 const problem = code => Object.assign(new Error(code), { code });
 const base64url = bytes => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
@@ -43,17 +44,26 @@ export function handleOAuthPopupCallback(configuration, win = globalThis.window)
   return true;
 }
 
+export function captureOAuthRedirectCallback(configuration, win = globalThis.window) {
+  if (!configuration || !win) return null;
+  return captureRedirectCallback(validatePublicClientConfiguration(configuration, win.location.origin), win);
+}
+
 export class BrowserPublicClient {
   #config; #window; #fetch; #crypto; #before; #verifyAccount; #verified; #signInFailed; #expired; #failure;
   #issued = new Set(); #cleanupErrors = []; #cleanupTask; #beginExpiry;
   #taskIdentity = null; #taskProfile; #ownerEpoch; #issuedTaskIdentities = new WeakMap();
   #token = null; #expires = 0; #timer; #pending = null; #generation = 0; #disposed = false; #discovery; #jwks;
+  #signInMode; #canRedirect;
   constructor({ configuration, window: win = globalThis.window, fetch: transport = globalThis.fetch,
-    crypto = globalThis.crypto, onBeforeSignIn, verifyCurrentAccount, onVerifiedIdentity, onSignInFailed, onTokenExpired, onFailure, beginTokenExpiryInvalidation = undefined, readCurrentTaskProfile = undefined }) {
+    crypto = globalThis.crypto, onBeforeSignIn, verifyCurrentAccount, onVerifiedIdentity, onSignInFailed, onTokenExpired, onFailure, beginTokenExpiryInvalidation = undefined, readCurrentTaskProfile = undefined,
+    signInMode = 'popup', canRedirect = undefined }) {
     if (!win || typeof transport !== 'function' || !crypto?.subtle || typeof onBeforeSignIn !== 'function' ||
         typeof verifyCurrentAccount !== 'function' || typeof onVerifiedIdentity !== 'function' || typeof onSignInFailed !== 'function' || typeof onTokenExpired !== 'function' || typeof onFailure !== 'function') throw problem('InvalidConfiguration');
     if(beginTokenExpiryInvalidation !== undefined && typeof beginTokenExpiryInvalidation !== 'function') throw problem('InvalidConfiguration');
     if(readCurrentTaskProfile !== undefined && typeof readCurrentTaskProfile !== 'function') throw problem('InvalidConfiguration');
+    if (!['popup', 'redirect'].includes(signInMode) || (signInMode === 'redirect' && typeof canRedirect !== 'function')) throw problem('InvalidConfiguration');
+    this.#signInMode = signInMode; this.#canRedirect = canRedirect;
     this.#taskProfile = readCurrentTaskProfile;
     // Local owner activation label only: neither an account ID nor server auth_revision.
     this.#ownerEpoch = base64url(crypto.getRandomValues(new Uint8Array(32)));
@@ -64,6 +74,9 @@ export class BrowserPublicClient {
     this.#verifyAccount = verifyCurrentAccount; this.#verified = onVerifiedIdentity; this.#signInFailed = onSignInFailed; this.#expired = onTokenExpired; this.#failure = onFailure;
   }
   get configuration() { return this.#config; } // Public configuration only.
+  #retirementErrors = new WeakSet();
+  #retired(code) { const error = problem(code); this.#retirementErrors.add(error); return error; }
+  isOriginalRetirement(error) { return this.#retirementErrors.has(error); }
   getAccessToken() { return !this.#disposed && this.#token && Date.now() < this.#expires ? this.#token : null; }
   clearToken({ cancelPending = true } = {}) {
     this.#generation++; this.#taskIdentity = null; this.#token = null; this.#expires = 0; clearTimeout(this.#timer);
@@ -73,12 +86,12 @@ export class BrowserPublicClient {
     return this.#issue('task-identity', async () => {
       const original = this.#taskIdentity;
       if (!original || !this.#taskProfile || !this.#taskIdentityCurrent(original)) return null;
-      if (signal?.aborted) throw problem('Cancelled');
+      if (signal?.aborted) throw this.#retired('Cancelled');
       // This callback is the configured owner's actual current-account + profile API read.
       // No subject, session, profile or claimed generation is accepted from the caller.
       const profile = await this.#taskProfile(original.accountId, signal);
-      if (signal?.aborted) throw problem('Cancelled');
-      if (!this.#taskIdentityCurrent(original)) throw problem('SessionContextChanged');
+      if (signal?.aborted) throw this.#retired('Cancelled');
+      if (!this.#taskIdentityCurrent(original)) throw this.#retired('SessionContextChanged');
       if (!object(profile) || profile.accountId !== original.accountId ||
           !Number.isSafeInteger(profile.revision) || profile.revision <= 0) throw problem('TaskProfileVerificationFailed');
       const observed = Object.freeze({ ...original, profileAccountId: profile.accountId, profileRevision: profile.revision });
@@ -89,6 +102,23 @@ export class BrowserPublicClient {
   isOriginalTaskIdentityCurrent(observed) {
     const original = object(observed) ? this.#issuedTaskIdentities.get(observed) : null;
     return original !== undefined && original !== null && this.#taskIdentityCurrent(original);
+  }
+  fetchInferenceForIdentity(identity, method, relativePath, body, signal) {
+    if (!this.isOriginalTaskIdentityCurrent(identity)) return Promise.reject(problem('AuthenticationRequired'));
+    if (!((method === 'GET' && relativePath === 'api/tags' && body === null) ||
+        (method === 'POST' && relativePath === 'api/chat' && typeof body === 'string' && body.length <= 1_048_576)))
+      return Promise.reject(problem('InvalidInferenceRequest'));
+    return this.#issue('inference-headers', async () => {
+      if (signal?.aborted) throw this.#retired('Cancelled');
+      const url = new URL('/api/dulche/' + relativePath, this.#window.location.origin).href;
+      const response = await this.#fetch(url, { method, body: body ?? undefined,
+        headers: { Authorization: 'Bearer ' + this.#token, ...(method === 'POST' ? { 'Content-Type': 'application/json' } : {}) },
+        credentials: 'same-origin', redirect: 'error', cache: 'no-store', referrerPolicy: 'no-referrer', signal });
+      if (signal?.aborted || !this.isOriginalTaskIdentityCurrent(identity) || response.redirected || (response.url && response.url !== url)) {
+        await response.body?.cancel(); throw this.#retired('SessionContextChanged');
+      }
+      return response;
+    });
   }
   #taskIdentityCurrent(original) {
     return !this.#disposed && original === this.#taskIdentity && original.generation === this.#generation &&
@@ -202,7 +232,67 @@ export class BrowserPublicClient {
     if(this.#disposed) return Promise.reject(problem('ServiceUnavailable'));
     // Actual prior exchange may outlive cancelled outer sign-in; preserve original single-sign-in intent.
     if(this.#issued.size) return Promise.reject(problem('SignInInProgress'));
-    return this.#issue('sign-in',()=>this.#signInCore(options));
+    return this.#issue('sign-in',()=>this.#signInMode === 'redirect' ? this.#redirectCore(options) : this.#signInCore(options));
+  }
+  resumeRedirect(receipt, { signal } = {}) {
+    if (this.#disposed || this.#signInMode !== 'redirect') return Promise.reject(problem('ServiceUnavailable'));
+    if (this.#issued.size) return Promise.reject(problem('SignInInProgress'));
+    return this.#issue('redirect-resume', () => this.#redirectCore({ signal, receipt }));
+  }
+  async #redirectCore({ signal, receipt } = {}) {
+    if (this.#disposed || signal?.aborted) throw problem('Cancelled');
+    if (this.#pending) throw problem('SignInInProgress');
+    // A full-page navigation must not discard another owning application's draft.
+    if (!receipt && this.#canRedirect() !== true) throw problem('UnsavedChanges');
+    const callbacks = { before:this.#before, verifyAccount:this.#verifyAccount, verified:this.#verified, signInFailed:this.#signInFailed, failure:this.#failure };
+    const controller = new AbortController(), abort = () => controller.abort();
+    signal?.addEventListener('abort', abort, { once: true });
+    const pending = { controller, generation: null, state: null, nonce: null, verifier: null, callbacks };
+    this.#pending = pending;
+    let navigating = false;
+    try {
+      const captured = receipt ? consumeRedirectCallback(receipt, this.#config) : null;
+      await callbacks.before(controller.signal);
+      if (controller.signal.aborted || this.#disposed) throw problem('Cancelled');
+      pending.generation = this.#generation;
+      if (captured) {
+        Object.assign(pending, { state: captured.transaction.state, nonce: captured.transaction.nonce, verifier: captured.transaction.verifier });
+        const discovery = await this.#metadata(controller.signal);
+        if (controller.signal.aborted || pending.generation !== this.#generation) throw problem('SessionContextChanged');
+        await this.#exchange(pending, captured.callbackUri, discovery);
+        return;
+      }
+      pending.state = base64url(this.#crypto.getRandomValues(new Uint8Array(32)));
+      pending.nonce = base64url(this.#crypto.getRandomValues(new Uint8Array(32)));
+      pending.verifier = base64url(this.#crypto.getRandomValues(new Uint8Array(48)));
+      const challenge = base64url(new Uint8Array(await this.#crypto.subtle.digest('SHA-256', new TextEncoder().encode(pending.verifier))));
+      const discovery = await this.#metadata(controller.signal);
+      if (controller.signal.aborted || pending.generation !== this.#generation || this.#disposed) throw problem('SessionContextChanged');
+      if (this.#canRedirect() !== true) throw problem('UnsavedChanges');
+      const authorization = new URL(discovery.authorization_endpoint);
+      authorization.search = new URLSearchParams({ response_type: 'code', client_id: this.#config.clientId, redirect_uri: this.#config.redirectUri,
+        scope: this.#config.scopes, state: pending.state, nonce: pending.nonce, code_challenge: challenge, code_challenge_method: 'S256', resource: this.#config.apiResource });
+      saveRedirectTransaction(this.#config, this.#window, pending);
+      // Join page termination through the existing cancellation owner. A request that has
+      // started navigation is not a successful sign-in, and must retain its one-use handoff.
+      const leaving = new Promise((_resolve, reject) => controller.signal.addEventListener('abort', () => reject(problem('Cancelled')), { once: true }));
+      leaving.catch(() => {});
+      this.#window.location.assign(authorization.href);
+      navigating = true;
+      await leaving;
+    } catch (error) {
+      let cleanupFailed = false;
+      if (!navigating && !receipt) try { clearRedirectTransaction(this.#window); } catch { cleanupFailed = true; }
+      this.clearToken({ cancelPending: false });
+      let code = cleanupFailed ? 'RedirectStorageUnavailable' : controller.signal.aborted ? 'Cancelled' : typeof error?.code === 'string' ? error.code : 'ProviderUnavailable';
+      try { await callbacks.signInFailed(); } catch { code = 'PrivateContextCleanupFailed'; }
+      try { callbacks.failure(code); } catch (observerError) { this.#cleanupErrors.push(observerError); throw observerError; }
+      throw problem(code);
+    } finally {
+      signal?.removeEventListener('abort', abort);
+      if (this.#pending === pending) this.#pending = null;
+      pending.verifier = null; pending.nonce = null; pending.state = null; pending.callbacks = null;
+    }
   }
   async #signInCore({ signal } = {}) {
     if (this.#disposed) throw problem('ServiceUnavailable');

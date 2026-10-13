@@ -61,8 +61,10 @@ public sealed partial class ChatSessionToolLoopTests : IDisposable
         Assert.Equal(2, ollama.ToolRequests);
     }
 
-    [Fact]
-    public async Task McpPermissionBlockerCreatesResumableRemediationAndRetriesOnlyAfterApproval()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task McpPermissionBlockerCreatesResumableRemediationAndRetriesOnlyAfterApproval(bool temporary)
     {
         var model = new ModelDescriptor("tools-model", 1, "test", "test", "test", new HashSet<ToolCapability> { ToolCapability.Text, ToolCapability.Tools }, DateTimeOffset.UtcNow);
         var connection = ChatMcpRepository.ReadyConnection();
@@ -79,17 +81,28 @@ public sealed partial class ChatSessionToolLoopTests : IDisposable
             new WorkspaceToolRuntime(new TestWorkspaceTools()), new ComputerToolRuntime(new TestComputerTools()),
             mcpTools: mcpRuntime, executionEvents: eventSink, recovery: new AutonomousRecoveryService(), remediations: coordinator);
         var now = DateTimeOffset.UtcNow;
-        var conversation = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "Test", null, null, false, true, now, now);
+        var conversation = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "Test", null, null, false, temporary, now, now);
         var active = new ActiveCapability(ExternalConnectionNaming.CapabilityKey(connection.Id), ExternalConnectionNaming.PluginName(connection.Name),
             "connection", "Use connection", "connection.mcp", "haven.connections");
 
-        await foreach (var _ in service.SendAsync(
+        var streamEvents = new List<ChatStreamEvent>();
+        await foreach (var item in service.SendAsync(
                            conversation, "Update the attached MCP item", model, EffortLevel.Medium, [active], "Default", "",
                            DuoMode.Solo, null, "", "", null, CancellationToken.None, commandPermission: PermissionMode.Ask))
         {
+            streamEvents.Add(item);
         }
 
         Assert.Equal(0, mcpClient.InvocationCount);
+        if (temporary)
+        {
+            Assert.Null(remediationRepository.Value);
+            Assert.Empty(eventSink.Events);
+            var failedTool = Assert.Single(streamEvents, item => item.Kind == ChatStreamEventKind.ToolActivity).ToolActivity!;
+            Assert.False(failedTool.Succeeded);
+            Assert.False(failedTool.HasDeferredInvocations);
+            return;
+        }
         var remediation = Assert.IsType<RemediationRequest>(remediationRepository.Value);
         Assert.Equal(RemediationType.PermissionRequest, remediation.Type);
         Assert.True(remediation.CanResume);

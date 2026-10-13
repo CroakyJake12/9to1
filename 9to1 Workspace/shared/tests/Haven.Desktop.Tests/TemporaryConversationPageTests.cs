@@ -1,8 +1,12 @@
 using System.Data.Common;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Events;
@@ -16,7 +20,7 @@ namespace Haven.Desktop.Tests;
 /// These controls establish page state/custody only, not live-provider or product acceptance.
 /// Every unexpected repository, versioning, tool or provider call fails the test.
 /// </summary>
-public sealed class TemporaryConversationPageTests
+public sealed partial class TemporaryConversationPageTests
 {
     [AvaloniaFact]
     public async Task Pending_save_keeps_original_history_and_temporary_state_until_acknowledgement()
@@ -354,12 +358,14 @@ public sealed class TemporaryConversationPageTests
         private readonly string _root = Path.Combine(Path.GetTempPath(), "9to1-temporary-page", Guid.NewGuid().ToString("N"));
         private readonly HavenEventBus _bus = new();
         private bool _seeding;
+        private Window? _window;
         public NewChatPage Page { get; }
         public Conversation? Stored { get; set; }
         public ChatMessage[] History { get; private set; } = [];
         public int OrdinaryWrites { get; private set; }
         public int ModelExecutions { get; private set; }
         public int HistoryReads { get; private set; }
+        public List<ExecutionEvent> PublishedExecutionEvents { get; } = [];
         public string? CompactionSummary { get; set; }
         public Func<Task<string>>? Compaction { get; set; }
         public Action? SafetySnapshotObserved { get; set; }
@@ -423,7 +429,14 @@ public sealed class TemporaryConversationPageTests
             });
             var sessions = new ChatSessionService(repository, client, new CapabilityPreflightService(), safety,
                 new WorkspaceToolRuntime(Probe<IWorkspaceToolService>()), new ComputerToolRuntime(Probe<IComputerToolService>((method, _) =>
-                    method.Name == "get_IsSupported" ? false : throw new InvalidOperationException("Unexpected computer boundary: " + method.Name))));
+                    method.Name == "get_IsSupported" ? false : throw new InvalidOperationException("Unexpected computer boundary: " + method.Name))),
+                executionEvents: Probe<IExecutionEventSink>((method, args) =>
+                {
+                    if (method.Name != nameof(IExecutionEventSink.TryPublish))
+                        throw new InvalidOperationException("Unexpected execution boundary: " + method.Name);
+                    PublishedExecutionEvents.Add((ExecutionEvent)args[0]!);
+                    return true;
+                }));
             var instances = new GenUiInstanceStore();
             var localActions = new GenUiLocalActionRegistry();
             var router = new GenerativeUiEventRouter([localActions], Probe<IGenUiEventAuditSink>(), instances);
@@ -450,9 +463,11 @@ public sealed class TemporaryConversationPageTests
                 _seeding = true;
                 try
                 {
+                    if (messageCount > 0) ShowPage();
                     for (var turn = 0; turn < messageCount / 2; turn++)
                     {
                         await Page.SubmitOriginalInstructionAsync("Fixture original question " + turn);
+                        await ChooseVisiblePromptAsync("Don't read Memory");
                         // Observe the SAME admitted send task; no replacement send is created.
                         // There is no public awaitable send-completion port on the page.
                         var actualSend = Assert.IsAssignableFrom<Task>(typeof(NewChatPage)
@@ -470,6 +485,9 @@ public sealed class TemporaryConversationPageTests
                     .GetField("_messages", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(Page)).ToArray();
                 Assert.Equal(0, OrdinaryWrites);
                 Assert.Equal(0, HistoryReads);
+                // Native production wires this boundary into the durable execution hub.
+                // An ordinary Temporary turn must not leak a prompt/title/context event.
+                Assert.Empty(PublishedExecutionEvents);
                 ModelExecutions = 0;
                 return;
             }
@@ -521,16 +539,73 @@ public sealed class TemporaryConversationPageTests
             Assert.Fail("The actual page work did not settle within its bounded observation rounds.");
         }
 
+        public void ShowPage()
+        {
+            if (_window is not null) return;
+            _window = new Window { Width = 1000, Height = 760, Content = Page };
+            _window.Show();
+            _window.UpdateLayout();
+        }
+
+        public void CaptureActualPageFrames()
+        {
+            var directory = Environment.GetEnvironmentVariable("HAVEN_VISUAL_CAPTURE_DIR");
+            if (string.IsNullOrWhiteSpace(directory)) return;
+            ShowPage();
+            Directory.CreateDirectory(directory);
+            try
+            {
+                foreach (var width in new[] { 1200, 390 })
+                {
+                    _window!.Width = width; _window.Height = 860;
+                    _window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                    using var frame = _window.CaptureRenderedFrame();
+                    Assert.NotNull(frame);
+                    frame.Save(Path.Combine(directory, $"actual-page-controlled-temporary-history-{width}.png"));
+                }
+            }
+            finally
+            {
+                _window!.Width = 1000; _window.Height = 760; _window.UpdateLayout();
+            }
+        }
+
+        public async Task ChooseVisiblePromptAsync(string label)
+        {
+            ShowPage();
+            var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+            while (DateTimeOffset.UtcNow < deadline)
+            {
+                _window!.UpdateLayout();
+                var choices = _window.GetVisualDescendants().OfType<Button>()
+                    .Where(button => button.Name is "choice-primary" or "choice-secondary" or "choice-cancel")
+                    .Where(button => Equals(button.Content, label) && button.IsEffectivelyVisible && button.IsEffectivelyEnabled)
+                    .ToArray();
+                if (choices.Length != 0)
+                {
+                    Assert.Single(choices).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    return;
+                }
+                await Task.Delay(5);
+            }
+            Assert.Fail("The actual mounted CUI choice did not become available: " + label);
+        }
+
         public async ValueTask DisposeAsync()
         {
-            await DrainObservedPageWorkAsync();
+            var failures = new List<Exception>();
+            try { await DrainObservedPageWorkAsync(); }
+            catch (Exception error) { failures.Add(error); }
             try { await Page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
             catch (Exception error)
             {
                 var causes = error is AggregateException aggregate ? aggregate.Flatten().InnerExceptions.ToArray() : [error];
-                Assert.All(causes, cause => Assert.Contains(cause, ExpectedCloseFailures));
+                if (causes.Length == 0 || causes.Any(cause => !ExpectedCloseFailures.Contains(cause))) failures.Add(error);
             }
-            finally { _bus.Dispose(); Directory.Delete(_root, recursive: true); }
+            try { _window?.Close(); } catch (Exception error) { failures.Add(error); }
+            try { _bus.Dispose(); } catch (Exception error) { failures.Add(error); }
+            try { Directory.Delete(_root, recursive: true); } catch (Exception error) { failures.Add(error); }
+            if (failures.Count != 0) throw new AggregateException("Actual page fixture cleanup failed.", failures);
         }
     }
 }

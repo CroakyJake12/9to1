@@ -1,3 +1,4 @@
+import { createConversationProductionStorage } from './conversation-production-indexeddb.js';
 // Platform storage for the canonical TaskExecutionSnapshot, not another task model or grant.
 export function createTaskExecutionModule({ databaseName = 'nine-to-one-task-execution',
   indexedDB = globalThis.indexedDB, crypto = globalThis.crypto } = {}) {
@@ -625,7 +626,20 @@ export function createTaskExecutionModule({ databaseName = 'nine-to-one-task-exe
     }, ['spaceSettings', 'spaceSettingsVersions']);
   }
 
+  const production = createConversationProductionStorage({ indexedDB, databaseName, hash, transact, refuse, profile, uuid, revision,
+    isSealed: () => sealed, retainOwnerError: error => add(ownerErrors, error), crypto });
   async function execute(action, args, original) {
+    if (action.startsWith('ConversationProduction.')) {
+      const earlier = [];
+      for (const other of originals.values()) {
+        if (other === original) break;
+        if (other.profileId === args?.profileId && other.action.startsWith('ConversationProduction.') &&
+            !['ConversationProduction.Export', 'ConversationProduction.ReadAttachment', 'ConversationProduction.SelectAttachment'].includes(other.action)) earlier.push(other.settled);
+      }
+      await Promise.all(earlier);
+      if (original.cancelled) return refuse('Cancelled');
+      return production.execute(action, args, original);
+    }
     if (action === 'SpacesSettings.Export' || action === 'SpacesSettings.CompareExchange')
       return executeSpaceSettings(action, args, original);
     if (eventActions.has(action)) return executeEvents(action, args, original);
@@ -724,6 +738,8 @@ export function createTaskExecutionModule({ databaseName = 'nine-to-one-task-exe
       const original = originals.get(requestId);
       if (!original) return;
       original.cancelled = true;
+      if (original.cancelSource)
+        try { original.cancelSource(); } catch (error) { retain(original, error); throw error; }
       if (original.transaction && !original.committed)
         try { original.transaction.abort(); }
         catch (error) {
@@ -746,6 +762,7 @@ export function createTaskExecutionModule({ databaseName = 'nine-to-one-task-exe
         for (const outcome of settled) if (outcome.status === 'rejected') add(errors, outcome.reason);
         for (const original of failedOriginals)
           for (const error of original.errors) add(errors, error);
+        try { await production.close(); } catch (error) { add(errors, error); }
         for (const originalOpen of [opening, spacesOpening])
           try { const db = await originalOpen; db?.close(); } catch (error) { add(errors, error); }
         for (const error of ownerErrors) add(errors, error);

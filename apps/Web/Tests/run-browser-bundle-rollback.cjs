@@ -175,8 +175,8 @@ async function saved() {
             assert.equal(await owner('HasUnsavedChanges'), true);
             await click('button', 'Save'); await saved();
             original = await documentStorage(); await capture('candidate-saved-document');
-            await click('button', 'Home'); await ready('Ready'); await click('button', 'Write'); await ready('Ready');
-            await stablePeer('button', title);
+            await click('menuitem', 'Document file menu'); await click('menuitem', 'Back to Write start');
+            await stablePeer('button', title); await capture('candidate-saved-start');
             return original;
         });
         await check('Actual previous bundle reloads and opens the unchanged saved document in the same browser profile', async () => {

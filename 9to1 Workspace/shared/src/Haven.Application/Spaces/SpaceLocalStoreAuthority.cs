@@ -5,6 +5,18 @@ namespace Haven.Application;
 public sealed class SpaceLocalStoreAuthority(IResourceStoreIdentitySource identities,
     IAuthenticatedResourceActorSource actors, IResourceStoreOwnershipAuthority ownership, Func<bool> hostAllowsWrites)
 {
+    internal bool IsBoundToOriginalSettings(IVersionedSettingsStore settings) => ReferenceEquals(identities, settings);
+
+    // Original composition supplies a pure deny-only lifecycle predicate. No
+    // settings/Home reads may occur when this final write fence is inspected.
+    internal bool IsOriginalHostAcceptingWrites() => hostAllowsWrites();
+
+    /// <summary>Reference validation for the maintained original owner composition only;
+    /// this does not bind a store, approve an operation or issue an admission.</summary>
+    public bool IsBoundToOriginalComposition(IVersionedSettingsStore originalSettings,
+        IAuthenticatedResourceActorSource originalActors, IResourceStoreOwnershipAuthority originalOwnership) =>
+        ReferenceEquals(identities, originalSettings) && ReferenceEquals(actors, originalActors) && ReferenceEquals(ownership, originalOwnership);
+
     public ValueTask<ISettingsCommitAdmission> CaptureWriteAdmissionAsync(CancellationToken cancellationToken = default) =>
         CaptureAsync(null, cancellationToken);
 

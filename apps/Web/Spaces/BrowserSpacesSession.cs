@@ -198,7 +198,17 @@ public sealed class BrowserSpacesSession(Func<SpaceRegistry> registry, Action de
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested) { }
             catch (Exception error) when (error is InvalidOperationException or IOException or UnauthorizedAccessException or ArgumentException or KeyNotFoundException)
-            { await PresentAsync(() => { if (!_uncertain) { _editorError = error.Message; _status = error.Message; } }, token); }
+            {
+                Task? presentation = null;
+                try { presentation = PresentAsync(() => { if (!_uncertain) { _editorError = error.Message; _status = error.Message; } }, token); await presentation; }
+                catch (Exception presentationError)
+                {
+                    var failures = new BrowserSpacesFailures(); failures.Retain(error); failures.Retain(presentationError, presentation); failures.ThrowIfAny();
+                }
+                // A foreign write/acknowledgement failure is not proven domain validation.
+                // Keep the actual failed operation owned even when its status rendered.
+                if (_uncertain) throw;
+            }
             finally { _serial.Release(); }
         });
 
@@ -217,28 +227,46 @@ public sealed class BrowserSpacesSession(Func<SpaceRegistry> registry, Action de
     }
     private async Task MutateAsync(Func<Task> mutation, CancellationToken token)
     {
-        await PresentAsync(() => { _busy = true; _editorError = ""; _status = "Saving Space configuration…"; }, token);
+        var failures = new BrowserSpacesFailures();
+        Task? original = null;
+        var mutationIssued = false;
         try
         {
-            await mutation(); demandCurrent(); token.ThrowIfCancellationRequested();
+            _busy = true;
+            await PresentAsync(() => { _editorError = ""; _status = "Saving Space configuration…"; }, token);
+            mutationIssued = true; original = mutation(); await original;
+            demandCurrent(); token.ThrowIfCancellationRequested();
             await RefreshAsync(token);
         }
-        catch (Exception error) when (error is SpaceRevisionConflictException or ArgumentException or KeyNotFoundException or InvalidOperationException)
-        { throw; }
-        catch (Exception)
+        catch (Exception error)
         {
-            await PresentAsync(() => { _uncertain = true; _status = "The save could not be confirmed. Close the editor and refresh the saved state before retrying."; _editorError = _status; }, CancellationToken.None);
-            throw;
+            failures.Retain(error, original);
+            if (mutationIssued && error is not SpaceRevisionConflictException)
+            {
+                // This owner fences replay before presentation, which can independently fail.
+                if (!_disposed) _uncertain = true;
+                await failures.ObserveAsync(() => PresentAsync(() =>
+                {
+                    _status = "The save could not be confirmed. Close the editor and refresh the saved state before retrying.";
+                    _editorError = _status;
+                }, CancellationToken.None));
+            }
         }
-        finally { await PresentAsync(() => _busy = false, CancellationToken.None); }
+        _busy = false;
+        await failures.ObserveAsync(() => PresentAsync(() => { }, CancellationToken.None));
+        failures.ThrowIfAny();
     }
     private async Task RefreshAsync(CancellationToken token)
     {
-        await PresentAsync(() => { _busy = true; }, token);
+        var failures = new BrowserSpacesFailures();
+        Task<IReadOnlyList<SpaceDefinition>>? original = null;
         try
         {
+            _busy = true;
+            await PresentAsync(() => { }, token);
             demandCurrent();
-            var rows = await registry().GetAllAsync(includeArchived: true, cancellationToken: token);
+            original = registry().GetAllAsync(includeArchived: true, cancellationToken: token);
+            var rows = await original;
             demandCurrent(); token.ThrowIfCancellationRequested();
             await PresentAsync(() =>
             {
@@ -250,15 +278,25 @@ public sealed class BrowserSpacesSession(Func<SpaceRegistry> registry, Action de
                 if (!_uncertain) _status = "Space configuration is saved on this browser for your signed-in profile. Account sync and workspace services are not connected here.";
             }, token);
         }
-        catch (BrowserTaskContextUnavailableException)
+        catch (BrowserTaskContextUnavailableException error)
         {
-            await PresentAsync(() =>
+            Task? presentation = null;
+            try
             {
-                _rows = []; _selectedId = null; _available = false;
-                _status = "Sign in through Home settings, then reopen Spaces to save and organise Space configuration on this browser.";
-            }, token);
+                presentation = PresentAsync(() =>
+                {
+                    _rows = []; _selectedId = null; _available = false;
+                    _status = "Sign in through Home settings, then reopen Spaces to save and organise Space configuration on this browser.";
+                }, token);
+                await presentation;
+            }
+            catch (Exception presentationError)
+            { failures.Retain(error, original); failures.Retain(presentationError, presentation); }
         }
-        finally { await PresentAsync(() => _busy = false, CancellationToken.None); }
+        catch (Exception error) { failures.Retain(error, original); }
+        _busy = false;
+        await failures.ObserveAsync(() => PresentAsync(() => { }, CancellationToken.None));
+        failures.ThrowIfAny();
     }
     private Task PresentAsync(Action update, CancellationToken token) => present(() =>
     {

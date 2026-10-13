@@ -37,6 +37,9 @@
     <Compile Include="Productivity/Present/PresentBrowserFeature.cs;Productivity/Present/PresentBrowserSession.cs;Productivity/Present/PresentBrowserSession.EditorUi.cs;Productivity/Present/PresentBrowserSession.ContentUi.cs;Productivity/Present/PresentBrowserSurface.cs;Productivity/Present/Storage/*.cs" />
     <Compile Include="Productivity/Boards/*.cs" />
     <Compile Include="../../9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/PresentRepository.cs" Link="Owner/PresentRepository.cs" />
+    <Compile Include="../../9to1 Workspace/shared/src/Haven.Infrastructure/Providers/OllamaClient.cs" Link="Owner/OllamaClient.cs" />
+    <Compile Include="../../9to1 Workspace/shared/src/Haven.Infrastructure/Providers/ProviderUsageCaptureBuffer.cs" Link="Owner/ProviderUsageCaptureBuffer.cs" />
+    <Compile Include="../../9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/ModelGovernanceStores.cs" Link="Owner/ModelGovernanceStores.cs" />
     <ProjectReference Include="Write/Packages/NineToOne.Write.Packages.csproj" />
     <TrimmerRootAssembly Include="NineToOne.Web" />
     <TrimmerRootAssembly Include="NineToOne.Wave.BrowserEngine" />

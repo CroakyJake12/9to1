@@ -4,12 +4,15 @@ namespace Haven.Desktop.Views.Shell;
 
 public sealed partial class MainView
 {
-    private async Task StartNativeConversationAsync(HavenMode mode, Guid? chatGroupId)
+    private Task StartNativeConversationAsync(HavenMode mode, Guid? chatGroupId) =>
+        StartNativeConversationInSpaceAsync(mode, chatGroupId, _nativeChatSidebar?.CurrentSpaceId);
+
+    private async Task StartNativeConversationInSpaceAsync(HavenMode mode, Guid? chatGroupId, Guid? spaceId)
     {
         await OpenNewChatAsync();
         if (_newChatPage is null)
         {
-            return;
+            throw new InvalidOperationException("The Chat workspace could not be opened.");
         }
 
         Guid? lessonId = null;
@@ -21,13 +24,7 @@ public sealed partial class MainView
                 .FirstOrDefault();
         }
 
-        await _newChatPage.StartFreshConversationAsync(mode, chatGroupId, lessonId);
-        if (_nativeChatSidebar?.CurrentSpaceId is { } spaceId)
-        {
-            await _conversations.UpsertConversationAsync(
-                _newChatPage.CurrentConversation with { SpaceId = spaceId },
-                CancellationToken.None);
-        }
+        await _newChatPage.StartFreshConversationAsync(mode, chatGroupId, lessonId, spaceId);
         _nativeChatSidebar?.SetMode(mode);
         _nativeChatSidebar?.SetActiveConversation(_newChatPage.CurrentConversation.Id, chatGroupId);
         await RefreshNativeChatSidebarAsync();

@@ -258,6 +258,10 @@ public static class CuiThemeResourceApplier
         resources["CuiChoiceBorderBrush"] = new SolidColorBrush(CuiContrast.EnsureForegroundContrast(palette.LineStrong, palette.Panel, 3));
         resources["CuiInputRadius"] = new CornerRadius((professional ? 12 : CuiThemeExpression.BaseControlRadius * expression.ControlRadiusScale) * settings.DisplayScale);
         resources["CuiWorkspaceBrush"] = new SolidColorBrush(professional ? palette.TideColour : palette.TideBase);
+        // Committing the current input is a shared semantic action. Professional
+        // uses monochrome contrast; expressive themes retain their accent.
+        resources["CuiCommitSurfaceBrush"] = professional ? resources["CuiTextBrush"] : resources["CuiAccentPrimaryBrush"];
+        resources["CuiCommitInkBrush"] = professional ? new SolidColorBrush(palette.TideColour) : resources["CuiAccentInkBrush"];
         var material = professional && !settings.HighContrast;
         var dark = Luminance(palette.Text) > Luminance(palette.Panel);
         var floating = Color.FromRgb(

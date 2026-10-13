@@ -23,7 +23,7 @@ internal static class BrowserSpacesDrain
         var observed = new HashSet<Exception>(ReferenceEqualityComparer.Instance);
         void Retain(Exception error)
         {
-            if (error is AggregateException group)
+            if (error is AggregateException { InnerExceptions.Count: > 0 } group)
             {
                 foreach (var inner in group.InnerExceptions) Retain(inner);
             }

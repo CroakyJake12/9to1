@@ -82,13 +82,26 @@ public sealed class DualModelService(IOllamaClient client, IExecutionEventSink? 
     /// response; the critique is appended to the second side's content under a clear label.
     /// </summary>
     /// <exception cref="OperationCanceledException">The caller's token was cancelled.</exception>
-    public async Task<DualModelRun> RunAsync(
-        string prompt,
-        string firstModelKey,
-        string secondModelKey,
-        EffortLevel effort,
-        DualModelMode mode,
-        CancellationToken cancellationToken)
+    public Task<DualModelRun> RunAsync(
+        string prompt, string firstModelKey, string secondModelKey, EffortLevel effort,
+        DualModelMode mode, CancellationToken cancellationToken) =>
+        RunOriginalAsync(prompt, firstModelKey, secondModelKey, effort, mode, retainEvents: true, cancellationToken);
+
+    /// <summary>Runs the same comparison without publishing response/error/critique
+    /// content to the durable activity sink. This does not grant Memory access.</summary>
+    public Task<DualModelRun> RunTransientAsync(
+        string prompt, string firstModelKey, string secondModelKey, EffortLevel effort,
+        CancellationToken cancellationToken) =>
+        RunTransientAsync(prompt, firstModelKey, secondModelKey, effort, DualModelMode.Compare, cancellationToken);
+
+    public Task<DualModelRun> RunTransientAsync(
+        string prompt, string firstModelKey, string secondModelKey, EffortLevel effort,
+        DualModelMode mode, CancellationToken cancellationToken) =>
+        RunOriginalAsync(prompt, firstModelKey, secondModelKey, effort, mode, retainEvents: false, cancellationToken);
+
+    private async Task<DualModelRun> RunOriginalAsync(
+        string prompt, string firstModelKey, string secondModelKey, EffortLevel effort,
+        DualModelMode mode, bool retainEvents, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(prompt);
         ArgumentException.ThrowIfNullOrWhiteSpace(firstModelKey);
@@ -96,8 +109,8 @@ public sealed class DualModelService(IOllamaClient client, IExecutionEventSink? 
         cancellationToken.ThrowIfCancellationRequested();
 
         var executionId = Guid.NewGuid();
-        var firstTask = CompleteSideAsync(executionId, "First", firstModelKey, prompt, effort, cancellationToken);
-        var secondTask = CompleteSideAsync(executionId, "Second", secondModelKey, prompt, effort, cancellationToken);
+        var firstTask = CompleteSideAsync(executionId, "First", firstModelKey, prompt, effort, retainEvents, cancellationToken);
+        var secondTask = CompleteSideAsync(executionId, "Second", secondModelKey, prompt, effort, retainEvents, cancellationToken);
         await Task.WhenAll(firstTask, secondTask).ConfigureAwait(false);
 
         // Per-side errors were captured above; a cancelled shared token must still fail the whole run.
@@ -106,7 +119,7 @@ public sealed class DualModelService(IOllamaClient client, IExecutionEventSink? 
         var first = firstTask.Result;
         var second = secondTask.Result;
         if (mode == DualModelMode.Critique && first.Succeeded && second.Succeeded)
-            second = await AppendCritiqueAsync(executionId, prompt, effort, first, second, cancellationToken).ConfigureAwait(false);
+            second = await AppendCritiqueAsync(executionId, prompt, effort, first, second, retainEvents, cancellationToken).ConfigureAwait(false);
 
         return new DualModelRun(Guid.NewGuid(), prompt, first, second);
     }
@@ -117,6 +130,7 @@ public sealed class DualModelService(IOllamaClient client, IExecutionEventSink? 
         string modelKey,
         string prompt,
         EffortLevel effort,
+        bool retainEvents,
         CancellationToken cancellationToken)
     {
         var actionId = Guid.NewGuid();
@@ -133,7 +147,7 @@ public sealed class DualModelService(IOllamaClient client, IExecutionEventSink? 
                 Guid.NewGuid(), executionId, actionId, null, ExecutionOrigin.Haven,
                 ExecutionActionType.ModelExecution, ExecutionActionStatus.Completed,
                 $"Dual model: {modelKey}", null, Summarize(content), ComponentId, endedAt, startedAt, endedAt,
-                SafeMetadata: SideMetadata(label, modelKey)));
+                SafeMetadata: SideMetadata(label, modelKey)), retainEvents);
             return new DualModelSide(label, modelKey, content, true, null, stopwatch.Elapsed);
         }
         catch (Exception ex)
@@ -148,7 +162,7 @@ public sealed class DualModelService(IOllamaClient client, IExecutionEventSink? 
                 ExecutionActionType.ModelExecution, ExecutionActionStatus.Failed,
                 $"Dual model: {modelKey}", null, Summarize(error), ComponentId, endedAt, startedAt, endedAt,
                 Failure: new ExecutionFailure("MODEL_EXECUTION_FAILED", "Model execution failed", error),
-                SafeMetadata: SideMetadata(label, modelKey)));
+                SafeMetadata: SideMetadata(label, modelKey)), retainEvents);
             return new DualModelSide(label, modelKey, string.Empty, false, error, stopwatch.Elapsed);
         }
     }
@@ -159,6 +173,7 @@ public sealed class DualModelService(IOllamaClient client, IExecutionEventSink? 
         EffortLevel effort,
         DualModelSide first,
         DualModelSide critic,
+        bool retainEvents,
         CancellationToken cancellationToken)
     {
         var actionId = Guid.NewGuid();
@@ -179,7 +194,7 @@ public sealed class DualModelService(IOllamaClient client, IExecutionEventSink? 
                 Guid.NewGuid(), executionId, actionId, null, ExecutionOrigin.Haven,
                 ExecutionActionType.ReasoningSummary, ExecutionActionStatus.Completed,
                 $"Dual model critique: {critic.ModelKey}", null, Summarize(critique), ComponentId, endedAt, startedAt, endedAt,
-                SafeMetadata: SideMetadata(critic.Label, critic.ModelKey, "critique")));
+                SafeMetadata: SideMetadata(critic.Label, critic.ModelKey, "critique")), retainEvents);
             return critic with
             {
                 Content = $"{critic.Content}{Environment.NewLine}{Environment.NewLine}---{Environment.NewLine}{Environment.NewLine}**Critique by {critic.ModelKey}:**{Environment.NewLine}{critique}"
@@ -198,7 +213,7 @@ public sealed class DualModelService(IOllamaClient client, IExecutionEventSink? 
                 ExecutionActionType.ReasoningSummary, ExecutionActionStatus.Failed,
                 $"Dual model critique: {critic.ModelKey}", null, Summarize(ex.Message), ComponentId, endedAt, startedAt, endedAt,
                 Failure: new ExecutionFailure("CRITIQUE_ROUND_FAILED", "Critique round failed", ex.Message),
-                SafeMetadata: SideMetadata(critic.Label, critic.ModelKey, "critique")));
+                SafeMetadata: SideMetadata(critic.Label, critic.ModelKey, "critique")), retainEvents);
             return critic;
         }
     }
@@ -208,7 +223,8 @@ public sealed class DualModelService(IOllamaClient client, IExecutionEventSink? 
         $"Response from {first.ModelKey} to critique:{Environment.NewLine}{first.Content}{Environment.NewLine}{Environment.NewLine}" +
         "Critique the response above. Be specific about strengths, weaknesses and concrete improvements.";
 
-    private void Publish(ExecutionEvent executionEvent) => events?.TryPublish(executionEvent);
+    private void Publish(ExecutionEvent executionEvent, bool retainEvents)
+    { if (retainEvents) events?.TryPublish(executionEvent); }
 
     private static Dictionary<string, string> SideMetadata(string label, string modelKey, string? kind = null)
     {

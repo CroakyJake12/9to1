@@ -13,9 +13,22 @@ namespace NineToOne.Web.Spaces.Storage;
 /// The shared transport owns every actor/storage/actor original. This creates no Task, provider,
 /// permission, remote sync or browser process capability. Branch/turn production APIs require their owner.</summary>
 [SupportedOSPlatform("browser")]
-public sealed class IndexedDbConversationRepository(BrowserTaskExecutionTransport transport, BrowserTaskActorSource actors)
-    : IConversationRepository
+public sealed class IndexedDbConversationRepository : IConversationRepository
 {
+    private readonly BrowserTaskExecutionTransport transport;
+    private readonly IAuthenticatedResourceActorSource actors;
+    public IndexedDbConversationRepository(BrowserTaskExecutionTransport transport, BrowserTaskActorSource actors)
+        : this(transport, (IAuthenticatedResourceActorSource)actors) { }
+    // Source-linked fixture seam. Public production construction requires the sealed
+    // real signed-actor source; both paths retain the SAME authenticated driver.
+    internal IndexedDbConversationRepository(BrowserTaskExecutionTransport transport, IAuthenticatedResourceActorSource actors)
+    { this.transport = transport; this.actors = actors; }
+    private IndexedDbConversationProductionRepository? _production;
+    internal void AttachOriginalProduction(IndexedDbConversationProductionRepository production)
+    {
+        if (Interlocked.CompareExchange(ref _production, production, null) is not null)
+            throw new InvalidOperationException("The original conversation production owner cannot be replaced.");
+    }
     internal void DemandPrivateContextCurrent() => transport.DemandPrivateContextCurrent();
 
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { IgnoreReadOnlyProperties = true };
@@ -97,7 +110,7 @@ public sealed class IndexedDbConversationRepository(BrowserTaskExecutionTranspor
     }
     private async Task<BrowserAuthenticatedStorageReply> Call(string action, object args, CancellationToken token)
     {
-        var observed = await transport.InvokeAuthenticatedAsync(actors, action, JsonSerializer.SerializeToElement(args, WireJson), token);
+        var observed = await transport.InvokeAuthenticatedControlledAsync(actors, action, JsonSerializer.SerializeToElement(args, WireJson), token);
         var reply = observed.Reply;
         if (reply.ValueKind != JsonValueKind.Object || !reply.TryGetProperty("ok", out var ok) || ok.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
             throw new IOException("The actual canonical conversation storage reply is malformed; no retry was dispatched.");
@@ -142,11 +155,23 @@ public sealed class IndexedDbConversationRepository(BrowserTaskExecutionTranspor
     }
     public async Task<Conversation?> GetAsync(Guid id, CancellationToken token) => (await ReadOriginalConversationAsync(id, token)).Conversation;
     public async Task<IReadOnlyList<ChatMessage>> GetMessagesAsync(Guid id, CancellationToken token)
-    { RequireId(id); return Rows<ChatMessage>(await Call("Conversation.Messages", new { conversationId = id, contextOnly = false }, token), "message"); }
+    {
+        var originals = await GetRawMessagesAsync(id, false, token);
+        return _production is null || await GetAsync(id, token) is not { IsTemporary: false } ? originals : await _production.ProjectCurrentAsync(id, originals, token);
+    }
     public async Task<IReadOnlyList<ChatMessage>> GetContextMessagesAsync(Guid id, CancellationToken token)
-    { RequireId(id); return Rows<ChatMessage>(await Call("Conversation.Messages", new { conversationId = id, contextOnly = true }, token), "message"); }
+        => (await GetMessagesAsync(id, token)).Where(message => !message.IsCompacted).ToArray();
+    internal async Task<IReadOnlyList<ChatMessage>> GetRawMessagesAsync(Guid id, bool contextOnly, CancellationToken token)
+    { RequireId(id); return Rows<ChatMessage>(await Call("Conversation.Messages", new { conversationId = id, contextOnly }, token), "message"); }
     public async Task<IReadOnlyList<ConversationContextEntry>> GetContextEntriesAsync(Guid id, CancellationToken token)
-    { RequireId(id); return Rows<ConversationContextEntry>(await Call("Conversation.Context", new { conversationId = id }, token), "context"); }
+    {
+        RequireId(id);
+        var entries = Rows<ConversationContextEntry>(await Call("Conversation.Context", new { conversationId = id }, token), "context");
+        if (_production is not null && entries.Any(entry => entry.Kind == ContextEntryKind.CompactSummary) &&
+            await _production.GetCurrentBranchAsync(id, token) is { ParentBranchId: not null })
+            throw new NotSupportedException("A conversation-scoped compact summary cannot be read by a fork without its original branch projection.");
+        return entries;
+    }
     private async Task<BrowserAuthenticatedStorageReply> Write(string action, object args, CancellationToken token)
     {
         var actual = await Call(action, args, token);
@@ -168,10 +193,13 @@ public sealed class IndexedDbConversationRepository(BrowserTaskExecutionTranspor
     internal Task<(Conversation Conversation, AuthenticatedResourceActor Actor)> InsertOriginalTaskConversationAsync(Conversation row, CancellationToken token) => PutConversation(row, true, token);
     public async Task AddMessageAsync(ChatMessage row, CancellationToken token)
     {
-        Validate(row); var actual = await Write("Conversation.PutMessage", new { row = Encode(row, "message") }, token);
+        Validate(row);
+        if (_production is not null) await _production.ReserveOriginalMessageWriteAsync(row, token);
+        var actual = await Write("Conversation.PutMessage", new { row = Encode(row, "message") }, token);
         var stored = actual.Reply.GetProperty("value").GetProperty("rows");
         if (stored.GetArrayLength() != 1 || Decode<ChatMessage>(stored[0], "message", actual.Actor) != row)
             throw new InvalidDataException("The actual message write differs.");
+        if (_production is not null) await _production.ObserveCommittedMessageAsync(row, token);
     }
     public async Task AddContextEntryAsync(ConversationContextEntry row, CancellationToken token)
     {
@@ -183,9 +211,17 @@ public sealed class IndexedDbConversationRepository(BrowserTaskExecutionTranspor
     public async Task DetachSpaceAsync(Guid spaceId, CancellationToken token)
     { RequireId(spaceId); _ = await Write("Conversation.DetachSpace", new { spaceId }, token); }
     public async Task DeleteMessageAsync(Guid conversationId, Guid id, CancellationToken token)
-    { RequireId(conversationId); RequireId(id); _ = await Write("Conversation.DeleteMessage", new { conversationId, id }, token); }
+    {
+        RequireId(conversationId); RequireId(id);
+        if (_production is not null) throw new NotSupportedException("Deleting a raw message requires its owning branch/version deletion workflow; no original data was changed.");
+        _ = await Write("Conversation.DeleteMessage", new { conversationId, id }, token);
+    }
     public async Task MarkMessagesCompactedAsync(Guid conversationId, IReadOnlyCollection<Guid> messageIds, CancellationToken token)
-    { RequireId(conversationId); foreach (var id in messageIds) RequireId(id); _ = await Write("Conversation.CompactMessages", new { conversationId, messageIds }, token); }
+    {
+        RequireId(conversationId); foreach (var id in messageIds) RequireId(id);
+        if (_production is not null) throw new NotSupportedException("Compaction requires branch-scoped context ownership; no original data was changed.");
+        _ = await Write("Conversation.CompactMessages", new { conversationId, messageIds }, token);
+    }
     public async Task<bool> DeleteContextEntryAsync(Guid conversationId, Guid id, CancellationToken token)
     {
         RequireId(conversationId); RequireId(id);

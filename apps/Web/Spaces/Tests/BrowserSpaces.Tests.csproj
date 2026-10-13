@@ -7,6 +7,8 @@
   <ItemGroup>
     <Compile Include="*SessionTests.cs" />
     <Compile Include="../*.cs" Link="Production/%(Filename)%(Extension)" />
+    <Compile Include="../Chat/BrowserHostedOllamaClient.cs;../Chat/BrowserPrivacyPreferenceStore.cs" Link="Production/Chat/%(Filename)%(Extension)" />
+    <Compile Include="../Chat/BrowserChatSession*.cs" Link="Production/Chat/%(Filename)%(Extension)" />
     <Compile Include="../Storage/*.cs" Link="Production/Storage/%(Filename)%(Extension)" />
     <Compile Include="../../BrowserSurfaceRegistry.cs;../../BrowserRouteCodec.cs;../../BrowserRouteDispatcher.cs" Link="Production/%(Filename)%(Extension)" />
     <Compile Include="../../Services/BrowserTaskActorSource.cs;../../Services/BrowserTaskIdentityReadOperation.cs" Link="Production/%(Filename)%(Extension)" />

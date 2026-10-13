@@ -27,9 +27,19 @@ public static class ChatSpaceCuiRuntime
     public static IDisposable AttachComposer(Control root)
     {
         ArgumentNullException.ThrowIfNull(root);
-        var controls = root.GetVisualDescendants().OfType<Control>().Prepend(root).ToArray();
+        var controls = SpacesShellCuiRuntime.AuthoredControls(root).ToArray();
         var input = controls.OfType<TextBox>().Single(control => control.Name == "composer-input");
         var send = controls.OfType<Button>().Single(control => control.Name == "send");
+        return AttachComposer(root, input, send);
+    }
+
+    /// <summary>Uses the exact retained controls supplied by the canonical loader
+    /// when the authored surface has not yet joined a native visual tree.</summary>
+    public static IDisposable AttachComposer(Control root, TextBox input, Button send)
+    {
+        ArgumentNullException.ThrowIfNull(root);
+        ArgumentNullException.ThrowIfNull(input);
+        ArgumentNullException.ThrowIfNull(send);
         return new ComposerKeys(root, input, send);
     }
 
@@ -58,6 +68,8 @@ public static class ChatSpaceCuiRuntime
 
     private sealed class ChatMarkdownContent : CuiMarkdownView
     {
+        protected override double ParagraphFontSize => 18;
+        protected override Avalonia.Media.FontWeight ParagraphFontWeight => Avalonia.Media.FontWeight.Medium;
         private readonly bool _hasCodeOwner;
         public ChatMarkdownContent(Action<CuiMarkdownView, CuiMarkdownCodeActionRequest>? codeAction)
         {

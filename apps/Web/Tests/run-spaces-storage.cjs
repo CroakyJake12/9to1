@@ -24,7 +24,9 @@ const server = http.createServer((request, response) => {
     browser = await chromium.launch({ executablePath: '/usr/bin/chromium', headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
     const context = await browser.newContext(); const page = await context.newPage();
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    page.on('filechooser', async chooser => { try { if (await page.evaluate(() => globalThis.__productionCancelPicker === true)) return; await chooser.setFiles({ name: 'original-proof.txt', mimeType: 'text/plain', buffer: Buffer.from('Original selected file') }); } catch (error) { if (!String(error).includes('detached') && !String(error).includes('not attached')) throw error; } });
     const results = await page.evaluate(async usePrior => {
+      const production = await import('/Spaces/Tests/conversation-production-storage-controls.js');
       const settings = await import('/Spaces/Tests/space-settings-storage-controls.js');
       const conversations = await import('/Spaces/Tests/conversation-storage-controls.js');
       const events = await import('/Spaces/Tests/execution-event-storage-controls.js');
@@ -32,7 +34,7 @@ const server = http.createServer((request, response) => {
       const results = {};
       const describe = error => ({ message: String(error), stack: error?.stack,
         errors: error?.errors ? [...error.errors].map(describe) : undefined });
-      for (const [name, run] of [['settings', () => settings.runSpaceSettingsStorageControls(prior)],
+      for (const [name, run] of [['production', production.runConversationProductionStorageControls], ['settings', () => settings.runSpaceSettingsStorageControls(prior)],
         ['conversations', conversations.runConversationStorageControls], ['events', events.runExecutionEventStorageControls]])
         try { results[name] = { passed: true, controls: await run() }; }
         catch (error) { results[name] = { passed: false, ...describe(error) }; }
@@ -41,6 +43,6 @@ const server = http.createServer((request, response) => {
     results.browserVersion = browser.version();
     fs.writeFileSync(path.join(output, 'spaces-storage-results.json'), JSON.stringify(results, null, 2));
     console.log(JSON.stringify(results)); await context.close();
-    if (['settings', 'conversations', 'events'].some(name => !results[name].passed)) process.exitCode = 1;
+    if (['production', 'settings', 'conversations', 'events'].some(name => !results[name].passed)) process.exitCode = 1;
   } finally { if (browser) await browser.close(); await new Promise(resolve => server.close(resolve)); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

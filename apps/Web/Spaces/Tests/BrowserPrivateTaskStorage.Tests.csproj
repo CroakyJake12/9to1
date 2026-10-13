@@ -24,6 +24,7 @@
     <Compile Include="../Storage/IndexedDbExecutionEventRepository.cs" Link="Production/IndexedDbExecutionEventRepository.cs" />
     <Compile Include="../Storage/IndexedDbProfileTaskExecutionRepository.cs" Link="Production/IndexedDbProfileTaskExecutionRepository.cs" />
     <Compile Include="../Storage/IndexedDbConversationRepository.cs" Link="Production/IndexedDbConversationRepository.cs" />
+    <Compile Include="../Storage/BrowserConversationProductionStore.cs;../Storage/IndexedDbConversationProductionRepository*.cs;../Storage/BrowserMessageAttachmentService.cs;../Storage/BrowserChatSettingsStore.cs" Link="Production/%(Filename)%(Extension)" />
     <Compile Include="../Storage/BrowserTaskContextIssuer.cs" Link="Production/BrowserTaskContextIssuer.cs" />
     <Compile Include="../../../../9to1 Workspace/Home/Source/Home/Core/HomeCoreContracts.cs" Link="Owner/HomeCoreContracts.cs" />
     <Compile Include="../../../../9to1 Workspace/Home/Source/Home/Core/HomeFeatureContracts.cs" Link="Owner/HomeFeatureContracts.cs" />

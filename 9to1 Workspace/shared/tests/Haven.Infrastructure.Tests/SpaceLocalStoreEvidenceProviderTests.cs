@@ -74,6 +74,12 @@ public sealed class SpaceLocalStoreEvidenceProviderTests
         var allowed = true;
         var authority = new SpaceLocalStoreAuthority(settings, profiles, receipts, () => allowed);
         var registry = new SpaceRegistry(settings, authority.CaptureWriteAdmissionAsync);
+        Assert.True(authority.IsBoundToOriginalComposition(settings, profiles, receipts));
+        Assert.False(authority.IsBoundToOriginalComposition(new VersionedAtomicSettingsStore(fixture), profiles, receipts));
+        Assert.False(authority.IsBoundToOriginalComposition(settings,
+            new HomeLocalProfileIdentity(home, new OperatingSystemPrincipalSource()), receipts));
+        Assert.False(authority.IsBoundToOriginalComposition(settings, profiles,
+            new HomeResourceStoreOwnershipAuthority(localOwnership, profiles)));
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => registry.CreateAsync("Unbound"));
         Assert.Empty((await settings.ExportAsync(default)).Settings);

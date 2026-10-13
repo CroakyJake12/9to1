@@ -1,5 +1,7 @@
 using Avalonia.Threading;
+using Avalonia.Controls;
 using Haven.Desktop.ViewModels;
+using Haven.Desktop.Views.Pages.Chat;
 using Haven.Desktop.Views.Pages.Present;
 using Haven.Desktop.Views.Pages.Write;
 #if !ANDROID
@@ -10,8 +12,17 @@ namespace Haven.Desktop.Views.Shell;
 
 public sealed partial class MainView
 {
+    private readonly ContentControl _originalChatCloseChoiceHost = new();
+    private ContentControl GetOriginalChatCloseChoiceHost()
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        if (!NativeOverlayLayer.Children.Contains(_originalChatCloseChoiceHost))
+            NativeOverlayLayer.Children.Add(_originalChatCloseChoiceHost);
+        return _originalChatCloseChoiceHost;
+    }
     internal OriginalDocumentClosePreflight CaptureOriginalDocumentClosePreflight() =>
-        new(CaptureOriginalDocumentCloseSubjects, () => !IsDisposed && !_originalShellWork.IsRetiring);
+        new(CaptureOriginalDocumentCloseSubjects, () => !IsDisposed && !_originalShellWork.IsRetiring,
+            GetOriginalChatCloseChoiceHost);
 
     private object?[] CaptureOriginalDocumentCloseSubjects()
     {
@@ -31,7 +42,7 @@ public sealed partial class MainView
 
     private OriginalDocumentClosePreflight CaptureOriginalDocumentTabClosePreflight(WorkspaceTabViewModel tab) =>
         new(() => CaptureOriginalDocumentTabCloseSubjects(tab),
-            () => !IsDisposed && !_originalShellWork.IsRetiring && OpenTabs.Contains(tab));
+            () => !IsDisposed && !_originalShellWork.IsRetiring && OpenTabs.Contains(tab), GetOriginalChatCloseChoiceHost);
 
     internal static object?[] CaptureOriginalDocumentTabCloseSubjects(WorkspaceTabViewModel tab) =>
         new object?[] { tab, tab.Page }.Concat(tab.CaptureOriginalPageCohort()).ToArray();
@@ -45,12 +56,15 @@ internal sealed class OriginalDocumentClosePreflight
     private readonly Func<bool> _ownerCurrent;
     private readonly object?[] _subjects;
     private readonly object[] _documents;
+    private readonly Func<ContentControl>? _choiceHost;
 
-    internal OriginalDocumentClosePreflight(Func<object?[]> captureCurrent, Func<bool> ownerCurrent)
+    internal OriginalDocumentClosePreflight(Func<object?[]> captureCurrent, Func<bool> ownerCurrent,
+        Func<ContentControl>? choiceHost = null)
     {
         Dispatcher.UIThread.VerifyAccess();
         _captureCurrent = captureCurrent ?? throw new ArgumentNullException(nameof(captureCurrent));
         _ownerCurrent = ownerCurrent ?? throw new ArgumentNullException(nameof(ownerCurrent));
+        _choiceHost = choiceHost;
         _subjects = _captureCurrent();
         _documents = _subjects.Where(IsPreflightDocument).OfType<object>()
             .Distinct(ReferenceEqualityComparer.Instance).ToArray();
@@ -78,6 +92,8 @@ internal sealed class OriginalDocumentClosePreflight
             {
                 WritePage write => await write.PrepareToCloseAsync("Save before closing Write", caller),
                 PresentPage present => await present.PrepareToCloseAsync("Save before closing Present", caller),
+                NewChatPage chat => await chat.PrepareToCloseAsync(_choiceHost?.Invoke(), caller),
+                ChatPage chat => await chat.PrepareToCloseAsync(_choiceHost?.Invoke(), caller),
 #if !ANDROID
                 NativeAssistantsDesktopPage assistants => await assistants.PrepareToCloseAsync(caller),
                 NativeAssistantsSetupDesktopPage setup => await setup.PrepareToCloseAsync(caller),
@@ -105,6 +121,8 @@ internal sealed class OriginalDocumentClosePreflight
                 {
                     WritePage write => !write.IsOriginalDocumentClosePrepared,
                     PresentPage present => !present.IsOriginalDocumentClosePrepared,
+                    NewChatPage chat => !chat.IsOriginalChatClosePrepared,
+                    ChatPage chat => !chat.IsOriginalChatClosePrepared,
 #if !ANDROID
                     NativeAssistantsDesktopPage assistants => !assistants.IsOriginalClosePrepared,
                     NativeAssistantsSetupDesktopPage setup => !setup.IsOriginalClosePrepared,
@@ -129,7 +147,7 @@ internal sealed class OriginalDocumentClosePreflight
         }
     }
 
-    private static bool IsPreflightDocument(object? document) => document is WritePage or PresentPage
+    private static bool IsPreflightDocument(object? document) => document is WritePage or PresentPage or NewChatPage or ChatPage
 #if !ANDROID
         || document is NativeAssistantsDesktopPage or NativeAssistantsSetupDesktopPage
 #endif
@@ -139,6 +157,8 @@ internal sealed class OriginalDocumentClosePreflight
     {
         WritePage write => write.OriginalClose,
         PresentPage present => present.OriginalClose,
+        NewChatPage chat => chat.OriginalClose,
+        ChatPage chat => chat.OriginalClose,
 #if !ANDROID
         NativeAssistantsDesktopPage assistants => assistants.OriginalClose,
         NativeAssistantsSetupDesktopPage setup => setup.OriginalClose,

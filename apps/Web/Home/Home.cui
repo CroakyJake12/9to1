@@ -34,6 +34,15 @@
                       </Container>
                     </Button>
                   </Container>
+                  <Container id="nav-row-spaces" margin="0,0,0,6" Type="Grid" ColumnSizes="10 1fr">
+                    <Container id="nav-marker-spaces" width="3" height="22" corner-radius="2" vertical-alignment="Center" horizontal-alignment="Left" background="{Resource CuiAccentBrush}" Type="Overlay" />
+                    <Button id="nav-spaces" action="NavigateSpaces" margin="0" horizontal-alignment="Stretch" Column="1" accessible-name="Spaces" Background="Transparent" BorderWidth="0" HorizontalContentAlignment="Left">
+                      <Container Type="Horizontal Stack" CellGap="12" id="nav-spaces-content">
+                        <Image Source="icon:window" Width="22" Height="22" Stretch="Uniform" VerticalAlignment="Center" id="nav-spaces-icon" />
+                        <Text Text="Spaces" VerticalAlignment="Center" id="nav-spaces-label" />
+                      </Container>
+                    </Button>
+                  </Container>
                   <Container id="nav-row-library" margin="0,0,0,6" Type="Grid" ColumnSizes="10 1fr">
                     <Container id="nav-marker-library" width="3" height="22" corner-radius="2" vertical-alignment="Center" horizontal-alignment="Left" background="{Resource CuiAccentBrush}" Type="Overlay" />
                     <Button id="nav-library" action="NavigateLibrary" margin="0" horizontal-alignment="Stretch" Column="1" accessible-name="Library" Background="Transparent" BorderWidth="0" HorizontalContentAlignment="Left">
@@ -73,15 +82,6 @@
                           <Container Type="Horizontal Stack" CellGap="12" id="nav-apps-content">
                             <Image Source="icon:dashboard" Width="22" Height="22" Stretch="Uniform" VerticalAlignment="Center" id="nav-apps-icon" />
                             <Text Text="Apps" VerticalAlignment="Center" id="nav-apps-label" />
-                          </Container>
-                        </Button>
-                      </Container>
-                      <Container id="nav-row-spaces" margin="0,0,0,6" Type="Grid" ColumnSizes="10 1fr">
-                        <Container id="nav-marker-spaces" width="3" height="22" corner-radius="2" vertical-alignment="Center" horizontal-alignment="Left" background="{Resource CuiAccentBrush}" Type="Overlay" />
-                        <Button id="nav-spaces" action="NavigateSpaces" margin="0" horizontal-alignment="Stretch" Column="1" accessible-name="Spaces" Background="Transparent" BorderWidth="0" HorizontalContentAlignment="Left">
-                          <Container Type="Horizontal Stack" CellGap="12" id="nav-spaces-content">
-                            <Image Source="icon:window" Width="22" Height="22" Stretch="Uniform" VerticalAlignment="Center" id="nav-spaces-icon" />
-                            <Text Text="Spaces" VerticalAlignment="Center" id="nav-spaces-label" />
                           </Container>
                         </Button>
                       </Container>

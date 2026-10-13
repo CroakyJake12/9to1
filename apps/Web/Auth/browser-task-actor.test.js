@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
 import { generateKeyPair, exportJWK, SignJWT } from 'jose';
 import { createConfiguredAccounts } from './configured-accounts.js';
+import { createDulcheProvider } from '../wwwroot/dulche-provider.js';
+import { createPrivateContextLifecycle } from '../wwwroot/browser-private-context.js';
 
 const subject = '11111111-1111-4111-8111-111111111111';
 const other = '22222222-2222-4222-8222-222222222222';
@@ -26,7 +28,7 @@ async function rig(options = {}) {
   const keys = await generateKeyPair('EdDSA', { crv: 'Ed25519', extractable: true });
   const jwk = { ...await exportJWK(keys.publicKey), kid: 'synthetic-ed25519', alg: 'EdDSA', use: 'sig' };
   const win = fakeWindow(); let access, accounts, currentCount = 0, profileCount = 0;
-  let revoked = false, wrongProfile = false, deniedProfile = false, tokenPosts = 0;
+  let revoked = false, wrongProfile = false, deniedProfile = false, revokedProfile = false, tokenPosts = 0;
   const fetch = async (url, request = {}) => {
     if (url === config.issuer + '/.well-known/openid-configuration') return Response.json(metadata);
     if (String(url) === metadata.jwks_uri) return Response.json({ keys: [jwk] });
@@ -43,6 +45,11 @@ async function rig(options = {}) {
       return Response.json({ token_type: 'Bearer', access_token: access, id_token: id });
     }
     assert.equal(request.headers.Authorization, `Bearer ${access}`);
+    if (url.startsWith(origin + '/api/dulche/')) {
+      assert.equal(request.credentials, 'same-origin'); assert.equal(request.redirect, 'error'); assert.equal(request.referrerPolicy, 'no-referrer');
+      if (!options.providerFetch) assert.fail('No synthetic inference transport supplied');
+      return options.providerFetch(url, request);
+    }
     assert.equal(request.credentials, 'omit'); assert.equal(request.redirect, 'error');
     if (url === config.apiResource + '/api/account/current') {
       currentCount++;
@@ -52,13 +59,15 @@ async function rig(options = {}) {
     if (url === config.apiResource + '/api/account/profile') {
       profileCount++;
       if (options.profileRead) await options.profileRead();
+      if (revokedProfile) return Response.json({ error: 'Unauthenticated' }, { status: 401 });
       if (deniedProfile) return Response.json({ error: { code: 'InsufficientScope' } }, { status: 403 });
       return Response.json({ profile: { accountId: wrongProfile ? other : subject, revision: 7, name: 'Synthetic', username: 'synthetic', icon: null, pronouns: null, job: null } });
     }
     assert.fail('Unexpected synthetic transport target: ' + url);
   };
   accounts = createConfiguredAccounts({ configuration: config, window: win, fetch, crypto: webcrypto,
-    onPrivateContextInvalidated: async () => {}, onVerifiedIdentity: options.verified ?? (async () => {}), onFailure: () => {} });
+    beginPrivateContextInvalidation: options.begin,
+    onPrivateContextInvalidated: options.clear ?? (async () => {}), onVerifiedIdentity: options.verified ?? (async () => {}), onFailure: () => {} });
   await accounts.prepare();
   const login = async () => {
     const original = accounts.requestSignIn('synthetic-login');
@@ -68,7 +77,7 @@ async function rig(options = {}) {
     return original;
   };
   return { accounts, login, counts: () => ({ currentCount, profileCount, tokenPosts }),
-    revoke: () => { revoked = true; }, wrongProfile: () => { wrongProfile = true; }, denyProfile: () => { deniedProfile = true; } };
+    revoke: () => { revoked = true; }, revokeProfile: () => { revokedProfile = true; }, wrongProfile: () => { wrongProfile = true; }, denyProfile: () => { deniedProfile = true; } };
 }
 async function usingRig(options, body) {
   const original = await rig(options);
@@ -79,6 +88,74 @@ async function usingRig(options, body) {
   catch (failure) { if (error) throw new AggregateError([error, failure], 'Control and actual account owner close failed.'); throw failure; }
   if (error) throw error;
 }
+
+for (const endpoint of ['inference', 'current', 'profile']) {
+  test(`${endpoint} 401 fences immediately and its original provider begin settles before enclosing native reset joins`, { timeout: 1500 }, async () => {
+    let provider, active = false, fenced = false, originalSettled = false;
+    const extraDrain = gate(), entered = gate();
+    const lifecycle = createPrivateContextLifecycle({
+      beginOwnerReset() {
+        if (!active) return Promise.resolve();
+        fenced = true;
+        return (async () => {
+          await provider.dispose('self-join');
+          assert.equal(originalSettled, true);
+          entered.release();
+          await extraDrain.task;
+        })();
+      }, clearPresentation() {},
+    });
+    const r = await rig({ begin: reason => lifecycle.begin(reason), clear: () => lifecycle.join(),
+      providerFetch: async () => Response.json({ error: 'Unauthenticated' }, { status: 401 }) });
+    try {
+      assert.equal(JSON.parse(await r.login()).ok, true);
+      provider = createDulcheProvider(r.accounts.createInferenceOwner());
+      if (endpoint === 'current') r.revoke();
+      if (endpoint === 'profile') r.revokeProfile();
+      active = true;
+      const original = provider.begin('self-join', 'GET', 'api/tags', null, () => true);
+      original.then(() => { originalSettled = true; }, () => { originalSettled = true; });
+      assert.deepEqual(JSON.parse(await original), { retired: true });
+      assert.equal(fenced, true);
+      await entered.task;
+      let closed = false;
+      const closing = r.accounts.disposeAsync().then(() => { closed = true; });
+      const native = lifecycle.join();
+      await Promise.resolve();
+      if (endpoint === 'inference') assert.equal(closed, false);
+      extraDrain.release();
+      await Promise.all([closing, native]);
+    } finally { extraDrain.release(); }
+  });
+}
+
+test('inference uses only original verified account observations and fixed same-origin paths', async () => {
+  let requests = 0;
+  await usingRig({ providerFetch: async url => { requests++; assert.equal(url, origin + '/api/dulche/api/tags'); return Response.json({ models: [] }); } }, async r => {
+    const owner = r.accounts.createInferenceOwner();
+    await assert.rejects(owner.readIdentity(), { code: 'AuthenticationRequired' });
+    assert.equal(JSON.parse(await r.login()).ok, true);
+    const observed = await owner.readIdentity(); assert.equal(owner.isCurrent(observed), true);
+    await assert.rejects(owner.fetch({ ...observed }, 'GET', 'api/tags', null), { code: 'AuthenticationRequired' });
+    await assert.rejects(owner.fetch(observed, 'POST', 'api/pull', '{}'), { code: 'InvalidInferenceRequest' });
+    assert.equal(requests, 0);
+    assert.equal((await owner.fetch(observed, 'GET', 'api/tags', null)).status, 200); assert.equal(requests, 1);
+    await r.accounts.invalidatePrivateContext('retire-inference'); assert.equal(owner.isCurrent(observed), false);
+    await assert.rejects(owner.fetch(observed, 'GET', 'api/tags', null), { code: 'AuthenticationRequired' }); assert.equal(requests, 1);
+  });
+});
+
+test('private inference participant fences with account retirement and terminal account close joins its exact drain', async () => {
+  const release = gate(); let invalidations = 0, drained = false;
+  await usingRig({}, async r => {
+    const owner = r.accounts.createInferenceOwner();
+    owner.attach({ invalidate() { invalidations++; }, async disposeAsync() { await release.task; drained = true; } });
+    assert.equal(JSON.parse(await r.login()).ok, true); assert.ok(invalidations >= 1);
+    await r.accounts.invalidatePrivateContext('private-owner-changed'); assert.ok(invalidations >= 2);
+    let settled = false; const closing = r.accounts.disposeAsync().then(() => { settled = true; });
+    await Promise.resolve(); assert.equal(settled, false); release.release(); await closing; assert.equal(drained, true);
+  });
+});
 
 test('signed Task identity appears only after real current account and private owner replacement ACK', async () => {
   const entered = gate(), release = gate();
@@ -217,4 +294,25 @@ test('unconfigured broker cannot derive actor from caller identity-looking argum
     const result = JSON.parse(await accounts.readTaskIdentity(subject, { accountId: subject, sessionId: sid, generation: 1 }));
     assert.equal(result.ok, false); assert.equal(Object.hasOwn(result, 'identity'), false);
   } finally { await accounts.disposeAsync(); }
+});
+
+test('inference-origin retirement keeps its exact later native cleanup failure through terminal account disposal', { timeout: 1500 }, async () => {
+  let provider, active = false;
+  const originalFailure = new Error('native retirement drain failed after original HTTP completion');
+  const release = gate(), entered = gate();
+  const lifecycle = createPrivateContextLifecycle({ beginOwnerReset() {
+    if (!active) return Promise.resolve();
+    return (async () => { await provider.dispose('retirement-failure'); entered.release(); await release.task; throw originalFailure; })();
+  }, clearPresentation() {} });
+  const r = await rig({ begin: reason => lifecycle.begin(reason), clear: () => lifecycle.join(),
+    providerFetch: async () => Response.json({ error: 'Unauthenticated' }, { status: 401 }) });
+  assert.equal(JSON.parse(await r.login()).ok, true);
+  provider = createDulcheProvider(r.accounts.createInferenceOwner()); active = true;
+  assert.deepEqual(JSON.parse(await provider.begin('retirement-failure', 'GET', 'api/tags', null, () => true)), { retired: true });
+  await entered.task;
+  const closing = r.accounts.disposeAsync(); assert.equal(closing, r.accounts.disposeAsync());
+  release.release();
+  const leaves = error => error instanceof AggregateError ? error.errors.flatMap(leaves) : [error];
+  await assert.rejects(closing, error => leaves(error).length === 1 && leaves(error)[0] === originalFailure);
+  await assert.rejects(lifecycle.join(), error => leaves(error).includes(originalFailure));
 });

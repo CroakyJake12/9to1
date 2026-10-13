@@ -54,6 +54,9 @@ public sealed partial class App : Avalonia.Application
         collection.AddSingleton<ScheduledTaskRunner>();
         collection.AddHavenOriginalTaskExecutionServices();
         collection.AddSingleton<UserPreferencesService>();
+        collection.AddSingleton<NativeCuiThemePreferences>();
+        collection.AddSingleton(provider => new CakeOS.Cui.Themes.CuiThemePreferenceContext(
+            provider.GetRequiredService<NativeCuiThemePreferences>()));
         collection.AddSingleton<Services.AvatarStore>();
         collection.AddSingleton<Services.OllamaWakeService>();
         collection.AddSingleton<ProjectCreationService>();

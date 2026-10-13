@@ -294,7 +294,7 @@ public sealed partial class ChatCloudPermissionCallerTests
         internal TaskRunCloudPermissionRemediationOwner? PermissionOwner;
         internal RemediationCoordinator? PermissionCoordinator;
         internal RemoteChildCapture? RemoteCapture;
-        internal ChildRig(bool remoteAsk = false)
+        internal ChildRig(bool remoteAsk = false, IMemoryQuerySource? memorySource = null)
         {
             Provider = new(remoteAsk);
             TaskExecutionCoordinator? actual = null;
@@ -314,7 +314,7 @@ public sealed partial class ChatCloudPermissionCallerTests
             Client = new(Tasks, Authority, Runtime, Provider, remoteSource);
             var chat = Chat = new ChatSessionService(new Conversations(), Client, new CapabilityPreflightService(), new Safety(),
                 new WorkspaceToolRuntime(new Workspace()), new ComputerToolRuntime(new Computer()), taskCoordinator: Tasks,
-                taskToolOwner: new ToolsOwner(), taskProviderContextCapture: (ITaskRunProviderContextCapture?)RemoteCapture ?? new ChildCapture(), taskCloudPermissionRemediation: PermissionOwner);
+                taskToolOwner: new ToolsOwner(), taskProviderContextCapture: (ITaskRunProviderContextCapture?)RemoteCapture ?? new ChildCapture(), taskCloudPermissionRemediation: PermissionOwner, memorySource: memorySource);
             Definition = new(Guid.NewGuid(), "Actual synthetic child Agent", "No account/model acceptance", "Inspect same child",
                 "agent", Provider.Model.Model.Name, null, "[]", "{}", false, true, DateTimeOffset.UnixEpoch);
             Agents = new(new AgentCatalog(Definition), AgentRows, Client, new CapabilityRegistryService(new EmptyAgentCapabilities()),
@@ -372,11 +372,13 @@ public sealed partial class ChatCloudPermissionCallerTests
         private readonly ChildProvider _provider = provider;
         private readonly TaskRunCentralCloudUsePermissionSource? _remoteSource = remoteSource;
         internal int Dispatches; internal Task? OriginalDispose = null;
+        internal readonly List<OllamaChatRequest> Requests = [];
         public Task<bool> IsAvailableAsync(CancellationToken token) => Task.FromResult(true);
         public Task<IReadOnlyList<ModelDescriptor>> GetModelsAsync(CancellationToken token) => Task.FromResult<IReadOnlyList<ModelDescriptor>>([_provider.Model.Model]);
         public Task<string> CompleteAsync(OllamaChatRequest request, CancellationToken token) => throw new NotSupportedException();
         public Task<OllamaToolResponse> ChatWithToolsAsync(OllamaToolRequest request, CancellationToken token) => throw new NotSupportedException();
-        public IAsyncEnumerable<string> StreamChatAsync(OllamaChatRequest request, CancellationToken token) => new OriginalStream(this, request, token);
+        public IAsyncEnumerable<string> StreamChatAsync(OllamaChatRequest request, CancellationToken token)
+        { Requests.Add(request); return new OriginalStream(this, request, token); }
         private sealed class OriginalStream(ChildClient owner, OllamaChatRequest request, CancellationToken token) : IAsyncEnumerable<string>, IAsyncEnumerator<string>
         {
             private bool _moved; public string Current => string.Empty;

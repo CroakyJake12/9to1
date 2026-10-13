@@ -1,4 +1,4 @@
-// cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/buffer_utils.js
+// ../astra-audit/account-backend-candidate-77f32cb6/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/buffer_utils.js
 var encoder = new TextEncoder();
 var decoder = new TextDecoder();
 var strictDecoder = new TextDecoder("utf-8", { fatal: true });
@@ -40,7 +40,7 @@ function decodeBase64(encoded, url = false) {
   return bytes;
 }
 
-// cloud/cake-id-auth/node_modules/jose/dist/webapi/util/errors.js
+// ../astra-audit/account-backend-candidate-77f32cb6/cloud/cake-id-auth/node_modules/jose/dist/webapi/util/errors.js
 var JOSEError = class extends Error {
   static code = "ERR_JOSE_GENERIC";
   code = "ERR_JOSE_GENERIC";
@@ -119,7 +119,7 @@ var JWSSignatureVerificationFailed = class extends JOSEError {
   }
 };
 
-// cloud/cake-id-auth/node_modules/jose/dist/webapi/util/base64url.js
+// ../astra-audit/account-backend-candidate-77f32cb6/cloud/cake-id-auth/node_modules/jose/dist/webapi/util/base64url.js
 var invalid = "The input to be decoded is not correctly encoded.";
 function decode(input) {
   try {
@@ -129,7 +129,7 @@ function decode(input) {
   }
 }
 
-// cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/validate.js
+// ../astra-audit/account-backend-candidate-77f32cb6/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/validate.js
 function isObject(input) {
   if (typeof input != "object" || input === null || Object.prototype.toString.call(input) !== "[object Object]")
     return false;
@@ -209,52 +209,52 @@ function validateB64(protectedHeader, extensions) {
   return true;
 }
 
-// cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/key.js
-var tag = (key) => key[Symbol.toStringTag];
-var jwkMatchesOp = (entry, key, usage) => {
+// ../astra-audit/account-backend-candidate-77f32cb6/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/key.js
+var tag = (key2) => key2[Symbol.toStringTag];
+var jwkMatchesOp = (entry, key2, usage) => {
   const { alg } = entry;
-  if (key.use !== void 0) {
+  if (key2.use !== void 0) {
     const expected = usage === "sign" || usage === "verify" ? "sig" : "enc";
-    if (key.use !== expected)
+    if (key2.use !== expected)
       throw new TypeError(`Invalid key for this operation, its "use" must be "${expected}" when present`);
   }
-  if (key.alg !== void 0 && key.alg !== alg)
+  if (key2.alg !== void 0 && key2.alg !== alg)
     throw new TypeError(`Invalid key for this operation, its "alg" must be "${alg}" when present`);
-  if (Array.isArray(key.key_ops)) {
+  if (Array.isArray(key2.key_ops)) {
     const expectedKeyOp = usage === "encrypt" || usage === "decrypt" ? entry.ops?.[usage === "encrypt" ? 0 : 1] : usage;
-    if (expectedKeyOp && !key.key_ops.includes(expectedKeyOp))
+    if (expectedKeyOp && !key2.key_ops.includes(expectedKeyOp))
       throw new TypeError(`Invalid key for this operation, its "key_ops" must include "${expectedKeyOp}" when present`);
   }
 };
-async function prepareKey(entry, key, usage) {
+async function prepareKey(entry, key2, usage) {
   const { alg, secret } = entry, privateKey = usage === "decrypt" || usage === "sign";
-  if (secret && key instanceof Uint8Array)
-    return key;
+  if (secret && key2 instanceof Uint8Array)
+    return key2;
   let normalized, keyObject;
-  if (isObject(key)) {
-    if (normalized = normalizeJwk(key), typeof normalized.kty != "string")
-      throw invalidKeyType(alg, key, secret);
+  if (isObject(key2)) {
+    if (normalized = normalizeJwk(key2), typeof normalized.kty != "string")
+      throw invalidKeyType(alg, key2, secret);
     if (!(secret ? normalized.kty === "oct" && typeof normalized.k == "string" : normalized.kty !== "oct" && (privateKey ? normalized.kty === "AKP" && typeof normalized.priv == "string" || typeof normalized.d == "string" : normalized.d === void 0 && normalized.priv === void 0)))
       throw new TypeError(secret ? 'JSON Web Key for symmetric algorithms must have JWK "kty" (Key Type) equal to "oct" and the JWK "k" (Key Value) present' : `JSON Web Key for this operation must be a ${privateKey ? "private" : "public"} JWK`);
     if (jwkMatchesOp(entry, normalized, usage), normalized.kty === "oct")
       return decode(normalized.k);
-    if (!Object.isFrozen(key)) {
-      const { key_ops } = key;
-      Array.isArray(key_ops) && Object.freeze(key_ops), Object.freeze(key);
+    if (!Object.isFrozen(key2)) {
+      const { key_ops } = key2;
+      Array.isArray(key_ops) && Object.freeze(key_ops), Object.freeze(key2);
     }
   } else {
-    if (!isKeyLike(key))
-      throw invalidKeyType(alg, key, secret);
+    if (!isKeyLike(key2))
+      throw invalidKeyType(alg, key2, secret);
     const expectedType = secret ? "secret" : privateKey ? "private" : "public";
-    if (key.type !== expectedType && (secret || ["secret", "public", "private"].includes(key.type)))
-      throw new TypeError(`${tag(key)} instances must be of type "${expectedType}" for the ${alg} algorithm`);
-    if (isCryptoKey(key))
-      return key;
-    if (keyObject = key, keyObject.type === "secret")
+    if (key2.type !== expectedType && (secret || ["secret", "public", "private"].includes(key2.type)))
+      throw new TypeError(`${tag(key2)} instances must be of type "${expectedType}" for the ${alg} algorithm`);
+    if (isCryptoKey(key2))
+      return key2;
+    if (keyObject = key2, keyObject.type === "secret")
       return keyObject.export();
   }
   cache ||= /* @__PURE__ */ new WeakMap();
-  const cacheKey = key;
+  const cacheKey = key2;
   let cached = cache.get(cacheKey);
   if (cached?.[alg])
     return cached[alg];
@@ -271,17 +271,17 @@ var nist = {
   secp384r1: "P-384",
   secp521r1: "P-521"
 };
-var isCryptoKey = (key) => {
-  if (key?.[Symbol.toStringTag] === "CryptoKey")
+var isCryptoKey = (key2) => {
+  if (key2?.[Symbol.toStringTag] === "CryptoKey")
     return true;
   try {
-    return key instanceof CryptoKey;
+    return key2 instanceof CryptoKey;
   } catch {
     return false;
   }
 };
-var isKeyObject = (key) => key?.[Symbol.toStringTag] === "KeyObject";
-var isKeyLike = (key) => isCryptoKey(key) || isKeyObject(key);
+var isKeyObject = (key2) => key2?.[Symbol.toStringTag] === "KeyObject";
+var isKeyLike = (key2) => isCryptoKey(key2) || isKeyObject(key2);
 function message(msg, actual, ...types) {
   if (types.length > 2) {
     const last = types.pop();
@@ -294,17 +294,17 @@ function invalidKeyType(alg, actual, secret) {
   return secret && types.push("Uint8Array"), new TypeError(message(`Key for the ${alg} algorithm must be `, actual, ...types));
 }
 var unusable = (name, prop = "algorithm.name") => new TypeError(`CryptoKey does not support this operation, its ${prop} must be ${name}`);
-function checkUsage(key, usage) {
-  if (usage && !key.usages.includes(usage))
+function checkUsage(key2, usage) {
+  if (usage && !key2.usages.includes(usage))
     throw new TypeError(`CryptoKey does not support this operation, its usages must include ${usage}.`);
 }
-function checkModulusLength(alg, key) {
-  const { modulusLength } = key.algorithm;
+function checkModulusLength(alg, key2) {
+  const { modulusLength } = key2.algorithm;
   if (typeof modulusLength != "number" || modulusLength < 2048)
     throw new TypeError(`${alg} requires key modulusLength to be 2048 bits or larger`);
 }
-function checkCryptoKey(key, expected, usage) {
-  const algorithm = key.algorithm;
+function checkCryptoKey(key2, expected, usage) {
+  const algorithm = key2.algorithm;
   if (algorithm.name !== expected.name)
     throw unusable(expected.name);
   if (expected.hash && algorithm.hash?.name !== expected.hash)
@@ -313,7 +313,7 @@ function checkCryptoKey(key, expected, usage) {
     throw unusable(expected.namedCurve, "algorithm.namedCurve");
   if (expected.length !== void 0 && algorithm.length !== expected.length)
     throw unusable(expected.length, "algorithm.length");
-  checkUsage(key, usage);
+  checkUsage(key2, usage);
 }
 function snapshotJwk(jwk) {
   return { __proto__: null, ...jwk };
@@ -336,11 +336,11 @@ async function jwkToKey(entry, jwk, extractable) {
   const algorithm = entry.resolve?.({ kty: jwk.kty, crv: jwk.crv }) ?? entry.subtle, isPrivate = !!(jwk.d || jwk.priv), keyData = { ...jwk, ext: extractable ?? jwk.ext };
   return keyData.kty !== "AKP" && delete keyData.alg, delete keyData.use, crypto.subtle.importKey("jwk", keyData, algorithm, keyData.ext ?? !isPrivate, jwk.key_ops ?? entry.usages[isPrivate ? 1 : 0]);
 }
-async function rawKey(key, expected, usage, extractable = false) {
-  return key instanceof Uint8Array && (key = await crypto.subtle.importKey("raw", key, expected, extractable, [usage])), checkCryptoKey(key, expected, usage), key;
+async function rawKey(key2, expected, usage, extractable = false) {
+  return key2 instanceof Uint8Array && (key2 = await crypto.subtle.importKey("raw", key2, expected, extractable, [usage])), checkCryptoKey(key2, expected, usage), key2;
 }
 
-// cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/key_descriptor.js
+// ../astra-audit/account-backend-candidate-77f32cb6/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/key_descriptor.js
 function table(entries) {
   const out = { __proto__: null };
   for (const alg in entries)
@@ -348,7 +348,7 @@ function table(entries) {
   return out;
 }
 
-// cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jws_algorithms.js
+// ../astra-audit/account-backend-candidate-77f32cb6/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jws_algorithms.js
 var sig = [["verify"], ["sign"]];
 function hmac(bits) {
   const subtle = { name: "HMAC", hash: `SHA-${bits}` };
@@ -418,7 +418,7 @@ function jwsAlgorithm(alg) {
   return entry;
 }
 
-// cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jws_verify.js
+// ../astra-audit/account-backend-candidate-77f32cb6/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jws_verify.js
 function prepareVerify(options) {
   return [options && validateAlgorithms("algorithms", options.algorithms), options?.crit];
 }
@@ -432,7 +432,7 @@ function encodeCompactUnencodedPayload(payload) {
     throw new JWSInvalid("JWS Compact Serialization payload must use only ASCII characters");
   }
 }
-async function verifySignature(jws, shared, key, encodeUnencodedPayload, parsedProtected) {
+async function verifySignature(jws, shared, key2, encodeUnencodedPayload, parsedProtected) {
   const { protected: encodedProtected, header, payload: inputPayload } = jws, parsedProt = parsedProtected ?? parseProtectedHeader(encodedProtected);
   if (!isDisjoint(parsedProt, header))
     throw new JWSInvalid("JWS Protected and JWS Unprotected Header Parameter names must be disjoint");
@@ -448,8 +448,8 @@ async function verifySignature(jws, shared, key, encodeUnencodedPayload, parsedP
     throw new JWSInvalid("JWS Payload must be a string or an Uint8Array instance");
   const signingPayload = b64 || typeof inputPayload != "string" ? inputPayload : encodeUnencodedPayload(inputPayload);
   let resolvedKey = false;
-  typeof key == "function" && (key = await key(parsedProt, jws), resolvedKey = true);
-  const entry = jwsAlgorithm(alg), data = concat(encodedProtected !== void 0 ? encode(encodedProtected) : new Uint8Array(), encode("."), typeof signingPayload == "string" ? shared[2] ??= encodeBase64url(signingPayload, "payload", JWSInvalid) : signingPayload), signature = decodeBase64url(jws.signature, "signature", JWSInvalid), k = await prepareKey(entry, key, "verify"), cryptoKey = await rawKey(k, entry.subtle, "verify");
+  typeof key2 == "function" && (key2 = await key2(parsedProt, jws), resolvedKey = true);
+  const entry = jwsAlgorithm(alg), data = concat(encodedProtected !== void 0 ? encode(encodedProtected) : new Uint8Array(), encode("."), typeof signingPayload == "string" ? shared[2] ??= encodeBase64url(signingPayload, "payload", JWSInvalid) : signingPayload), signature = decodeBase64url(jws.signature, "signature", JWSInvalid), k = await prepareKey(entry, key2, "verify"), cryptoKey = await rawKey(k, entry.subtle, "verify");
   entry.minRsaBits && checkModulusLength(entry.alg, cryptoKey);
   let verified = false;
   try {
@@ -461,16 +461,16 @@ async function verifySignature(jws, shared, key, encodeUnencodedPayload, parsedP
   const result = { payload: typeof signingPayload == "string" ? decodeBase64url(signingPayload, "payload", JWSInvalid) : signingPayload };
   return encodedProtected !== void 0 && (result.protectedHeader = parsedProt), header !== void 0 && (result.unprotectedHeader = header), resolvedKey ? [{ ...result, key: k }, b64] : [result, b64];
 }
-async function verifyCompact(jws, shared, key) {
+async function verifyCompact(jws, shared, key2) {
   if (jws instanceof Uint8Array && (jws = decoder.decode(jws)), typeof jws != "string")
     throw new JWSInvalid("Compact JWS must be a string or Uint8Array");
   const { 0: protectedHeader, 1: payload, 2: signature, length } = jws.split(".");
   if (length !== 3)
     throw new JWSInvalid("Invalid Compact JWS");
-  return verifySignature({ payload, protected: protectedHeader, signature }, shared, key, encodeCompactUnencodedPayload);
+  return verifySignature({ payload, protected: protectedHeader, signature }, shared, key2, encodeCompactUnencodedPayload);
 }
 
-// cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jwt_claims_set.js
+// ../astra-audit/account-backend-candidate-77f32cb6/cloud/cake-id-auth/node_modules/jose/dist/webapi/lib/jwt_claims_set.js
 var epoch = (date2) => Math.floor(date2.getTime() / 1e3);
 var multipliers = {
   s: 1,
@@ -556,16 +556,16 @@ function validateClaimsSet(protectedHeader, encodedPayload, options = {}) {
   return payload;
 }
 
-// cloud/cake-id-auth/node_modules/jose/dist/webapi/jwt/verify.js
-async function jwtVerify(jwt, key, options) {
-  const [verified, b64] = await verifyCompact(jwt, prepareVerify(options), key);
+// ../astra-audit/account-backend-candidate-77f32cb6/cloud/cake-id-auth/node_modules/jose/dist/webapi/jwt/verify.js
+async function jwtVerify(jwt, key2, options) {
+  const [verified, b64] = await verifyCompact(jwt, prepareVerify(options), key2);
   if (!b64)
     throw new JWTInvalid("JWTs MUST NOT use unencoded payload");
   const payload = validateClaimsSet(verified.protectedHeader, verified.payload, options);
   return { ...verified, payload };
 }
 
-// cloud/cake-id-auth/node_modules/jose/dist/webapi/jwks/local.js
+// ../astra-audit/account-backend-candidate-77f32cb6/cloud/cake-id-auth/node_modules/jose/dist/webapi/jwks/local.js
 function isUsableJWK(jwk, entry, alg, kid) {
   const { kty, key_ops: keyOps, ext, kid: jwkKid, alg: jwkAlg, use, crv } = jwk;
   return (ext === void 0 || typeof ext == "boolean") && (keyOps === void 0 || Array.isArray(keyOps) && keyOps.every((operation, index) => typeof operation == "string" && keyOps.indexOf(operation) === index) && keyOps.includes("verify")) && entry.kty.includes(kty) && (kid === void 0 || typeof kid == "string" && kid === jwkKid) && (jwkAlg === void 0 ? kty !== "AKP" : alg === jwkAlg) && (use === void 0 || use === "sig") && (!entry.crv || crv === entry.crv);
@@ -573,10 +573,10 @@ function isUsableJWK(jwk, entry, alg, kid) {
 async function importWithAlgCache(cache2, jwk, entry) {
   const cached = cache2.get(jwk) || cache2.set(jwk, {}).get(jwk), { alg } = entry;
   if (cached[alg] === void 0) {
-    const pending = jwkToKey(entry, jwk, true).then((key) => {
-      if (key.type !== "public")
+    const pending = jwkToKey(entry, jwk, true).then((key2) => {
+      if (key2.type !== "public")
         throw new JWKSInvalid("JSON Web Key Set members must be public keys");
-      return cached[alg] = key, key;
+      return cached[alg] = key2, key2;
     }).catch((error) => {
       throw cached[alg] === pending && delete cached[alg], error;
     });
@@ -619,7 +619,7 @@ function createLocalJWKSet(jwks) {
   });
 }
 
-// cloud/cake-id-auth/node_modules/jose/dist/webapi/jwks/remote.js
+// ../astra-audit/account-backend-candidate-77f32cb6/cloud/cake-id-auth/node_modules/jose/dist/webapi/jwks/remote.js
 function isCloudflareWorkers() {
   return typeof WebSocketPair < "u" || typeof navigator < "u" && navigator.userAgent === "Cloudflare-Workers" || typeof EdgeRuntime < "u" && EdgeRuntime === "vercel";
 }
@@ -714,8 +714,96 @@ function createRemoteJWKSet(url, options) {
   });
 }
 
-// apps/Web/Auth/browser-public-client.js
+// apps/Web/Auth/browser-redirect-transaction.js
+var key = "9to1.account.redirect.v1";
+var lifetimeMs = 10 * 60 * 1e3;
+var receipts = /* @__PURE__ */ new WeakMap();
 var problem = (code) => Object.assign(new Error(code), { code });
+var random = (value) => typeof value === "string" && /^[A-Za-z0-9_-]{43,128}$/.test(value);
+var binding = (config) => JSON.stringify([config.issuer, config.apiResource, config.clientId, config.redirectUri, config.scopes]);
+var fragment = (value) => typeof value === "string" && value.length <= 4096 && (value === "" || value.startsWith("#/") && !/[\r\n\u0000]/.test(value)) ? value : "";
+function saveRedirectTransaction(config, win, pending, now = Date.now()) {
+  if (![pending.state, pending.nonce, pending.verifier].every(random)) throw problem("InvalidRedirectTransaction");
+  const value = JSON.stringify({
+    version: 1,
+    binding: binding(config),
+    createdAt: now,
+    state: pending.state,
+    nonce: pending.nonce,
+    verifier: pending.verifier,
+    returnFragment: fragment(win.location.hash)
+  });
+  try {
+    win.sessionStorage.setItem(key, value);
+    if (win.sessionStorage.getItem(key) !== value) throw problem("RedirectStorageUnavailable");
+  } catch {
+    try {
+      win.sessionStorage.removeItem(key);
+    } catch {
+    }
+    throw problem("RedirectStorageUnavailable");
+  }
+}
+function clearRedirectTransaction(win) {
+  try {
+    win.sessionStorage.removeItem(key);
+  } catch {
+    throw problem("RedirectStorageUnavailable");
+  }
+}
+function captureRedirectCallback(config, win, now = Date.now()) {
+  const expected = new URL(config.redirectUri);
+  if (win.location.origin !== expected.origin || win.location.pathname !== expected.pathname) {
+    try {
+      clearRedirectTransaction(win);
+    } catch {
+    }
+    return null;
+  }
+  const receipt = Object.freeze({ callback: true });
+  let raw, transaction, callbackUri = win.location.href, failure;
+  try {
+    raw = win.sessionStorage.getItem(key);
+  } catch {
+    failure = "RedirectStorageUnavailable";
+  }
+  try {
+    clearRedirectTransaction(win);
+  } catch {
+    failure = "RedirectStorageUnavailable";
+  }
+  try {
+    if (failure) throw problem(failure);
+    if (typeof raw !== "string" || raw.length > 16384) throw problem("RedirectTransactionUnavailable");
+    transaction = JSON.parse(raw);
+    if (!transaction || transaction.version !== 1 || transaction.binding !== binding(config) || !Number.isSafeInteger(transaction.createdAt) || transaction.createdAt > now || now - transaction.createdAt > lifetimeMs || ![transaction.state, transaction.nonce, transaction.verifier].every(random) || transaction.returnFragment !== fragment(transaction.returnFragment) || Object.keys(transaction).sort().join(",") !== "binding,createdAt,nonce,returnFragment,state,verifier,version")
+      throw problem("InvalidRedirectTransaction");
+    const callback = new URL(callbackUri);
+    if (callback.username || callback.password || callback.hash || callback.searchParams.getAll("state").length !== 1 || callback.searchParams.get("state") !== transaction.state) throw problem("StateMismatch");
+  } catch (error) {
+    failure = error?.code ?? "InvalidRedirectTransaction";
+    transaction = null;
+  }
+  try {
+    win.history.replaceState(null, "", "/" + (transaction?.returnFragment ?? ""));
+  } catch {
+    failure = "CallbackHistoryUnavailable";
+    transaction = null;
+  }
+  receipts.set(receipt, failure ? { failure } : { transaction, callbackUri });
+  return receipt;
+}
+function consumeRedirectCallback(receipt, config, now = Date.now()) {
+  const captured = receipts.get(receipt);
+  receipts.delete(receipt);
+  if (!captured) throw problem("RedirectTransactionUnavailable");
+  if (captured.failure) throw problem(captured.failure);
+  if (captured.transaction.binding !== binding(config) || captured.transaction.createdAt > now || now - captured.transaction.createdAt > lifetimeMs) throw problem("InvalidRedirectTransaction");
+  return captured;
+}
+
+// apps/Web/Auth/browser-public-client.js
+var problem2 = (code) => Object.assign(new Error(code), { code });
 var base64url = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 var uuid = (value) => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(value);
 var object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
@@ -724,21 +812,21 @@ function endpoint(value, allowLoopback) {
   try {
     url = new URL(value);
   } catch {
-    throw problem("InvalidConfiguration");
+    throw problem2("InvalidConfiguration");
   }
   const isolated = allowLoopback === true && ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname) && url.protocol === "http:";
-  if (url.username || url.password || url.search || url.hash || url.protocol !== "https:" && !isolated) throw problem("InvalidConfiguration");
+  if (url.username || url.password || url.search || url.hash || url.protocol !== "https:" && !isolated) throw problem2("InvalidConfiguration");
   return url;
 }
 function validatePublicClientConfiguration(input, origin) {
-  if (!object(input)) throw problem("InvalidConfiguration");
+  if (!object(input)) throw problem2("InvalidConfiguration");
   const allowed = /* @__PURE__ */ new Set(["issuer", "apiResource", "clientId", "redirectUri", "scopes", "allowLoopbackForIsolatedTests"]);
-  if (Object.keys(input).some((key) => !allowed.has(key))) throw problem("InvalidConfiguration");
+  if (Object.keys(input).some((key2) => !allowed.has(key2))) throw problem2("InvalidConfiguration");
   const snapshot = Object.fromEntries(Object.entries(input));
   const issuer = endpoint(snapshot.issuer, snapshot.allowLoopbackForIsolatedTests);
   const api = endpoint(snapshot.apiResource, snapshot.allowLoopbackForIsolatedTests);
   const redirect = endpoint(snapshot.redirectUri, false);
-  if (api.pathname !== "/" || redirect.origin !== origin || typeof snapshot.clientId !== "string" || !snapshot.clientId || typeof snapshot.scopes !== "string" || !snapshot.scopes.split(/\s+/).includes("openid") || snapshot.allowLoopbackForIsolatedTests !== void 0 && typeof snapshot.allowLoopbackForIsolatedTests !== "boolean") throw problem("InvalidConfiguration");
+  if (api.pathname !== "/" || redirect.origin !== origin || typeof snapshot.clientId !== "string" || !snapshot.clientId || typeof snapshot.scopes !== "string" || !snapshot.scopes.split(/\s+/).includes("openid") || snapshot.allowLoopbackForIsolatedTests !== void 0 && typeof snapshot.allowLoopbackForIsolatedTests !== "boolean") throw problem2("InvalidConfiguration");
   return Object.freeze({
     issuer: issuer.href,
     apiResource: api.origin,
@@ -756,14 +844,18 @@ function handleOAuthPopupCallback(configuration, win = globalThis.window) {
   let parent;
   try {
     parent = win.opener;
-    if (!parent || parent.closed || parent.location.origin !== expected.origin) throw problem("CallbackParentUnavailable");
+    if (!parent || parent.closed || parent.location.origin !== expected.origin) throw problem2("CallbackParentUnavailable");
   } catch {
-    throw problem("CallbackParentUnavailable");
+    throw problem2("CallbackParentUnavailable");
   }
   const callbackUri = win.location.href;
   win.history.replaceState(null, "", expected.pathname);
   parent.postMessage({ type: "nineToOne.oauth.callback", callbackUri }, expected.origin);
   return true;
+}
+function captureOAuthRedirectCallback(configuration, win = globalThis.window) {
+  if (!configuration || !win) return null;
+  return captureRedirectCallback(validatePublicClientConfiguration(configuration, win.location.origin), win);
 }
 var BrowserPublicClient = class {
   #config;
@@ -792,6 +884,8 @@ var BrowserPublicClient = class {
   #disposed = false;
   #discovery;
   #jwks;
+  #signInMode;
+  #canRedirect;
   constructor({
     configuration,
     window: win = globalThis.window,
@@ -804,11 +898,16 @@ var BrowserPublicClient = class {
     onTokenExpired,
     onFailure,
     beginTokenExpiryInvalidation = void 0,
-    readCurrentTaskProfile = void 0
+    readCurrentTaskProfile = void 0,
+    signInMode = "popup",
+    canRedirect = void 0
   }) {
-    if (!win || typeof transport !== "function" || !crypto2?.subtle || typeof onBeforeSignIn !== "function" || typeof verifyCurrentAccount !== "function" || typeof onVerifiedIdentity !== "function" || typeof onSignInFailed !== "function" || typeof onTokenExpired !== "function" || typeof onFailure !== "function") throw problem("InvalidConfiguration");
-    if (beginTokenExpiryInvalidation !== void 0 && typeof beginTokenExpiryInvalidation !== "function") throw problem("InvalidConfiguration");
-    if (readCurrentTaskProfile !== void 0 && typeof readCurrentTaskProfile !== "function") throw problem("InvalidConfiguration");
+    if (!win || typeof transport !== "function" || !crypto2?.subtle || typeof onBeforeSignIn !== "function" || typeof verifyCurrentAccount !== "function" || typeof onVerifiedIdentity !== "function" || typeof onSignInFailed !== "function" || typeof onTokenExpired !== "function" || typeof onFailure !== "function") throw problem2("InvalidConfiguration");
+    if (beginTokenExpiryInvalidation !== void 0 && typeof beginTokenExpiryInvalidation !== "function") throw problem2("InvalidConfiguration");
+    if (readCurrentTaskProfile !== void 0 && typeof readCurrentTaskProfile !== "function") throw problem2("InvalidConfiguration");
+    if (!["popup", "redirect"].includes(signInMode) || signInMode === "redirect" && typeof canRedirect !== "function") throw problem2("InvalidConfiguration");
+    this.#signInMode = signInMode;
+    this.#canRedirect = canRedirect;
     this.#taskProfile = readCurrentTaskProfile;
     this.#ownerEpoch = base64url(crypto2.getRandomValues(new Uint8Array(32)));
     this.#beginExpiry = beginTokenExpiryInvalidation;
@@ -827,6 +926,15 @@ var BrowserPublicClient = class {
     return this.#config;
   }
   // Public configuration only.
+  #retirementErrors = /* @__PURE__ */ new WeakSet();
+  #retired(code) {
+    const error = problem2(code);
+    this.#retirementErrors.add(error);
+    return error;
+  }
+  isOriginalRetirement(error) {
+    return this.#retirementErrors.has(error);
+  }
   getAccessToken() {
     return !this.#disposed && this.#token && Date.now() < this.#expires ? this.#token : null;
   }
@@ -842,11 +950,11 @@ var BrowserPublicClient = class {
     return this.#issue("task-identity", async () => {
       const original = this.#taskIdentity;
       if (!original || !this.#taskProfile || !this.#taskIdentityCurrent(original)) return null;
-      if (signal?.aborted) throw problem("Cancelled");
+      if (signal?.aborted) throw this.#retired("Cancelled");
       const profile2 = await this.#taskProfile(original.accountId, signal);
-      if (signal?.aborted) throw problem("Cancelled");
-      if (!this.#taskIdentityCurrent(original)) throw problem("SessionContextChanged");
-      if (!object(profile2) || profile2.accountId !== original.accountId || !Number.isSafeInteger(profile2.revision) || profile2.revision <= 0) throw problem("TaskProfileVerificationFailed");
+      if (signal?.aborted) throw this.#retired("Cancelled");
+      if (!this.#taskIdentityCurrent(original)) throw this.#retired("SessionContextChanged");
+      if (!object(profile2) || profile2.accountId !== original.accountId || !Number.isSafeInteger(profile2.revision) || profile2.revision <= 0) throw problem2("TaskProfileVerificationFailed");
       const observed = Object.freeze({ ...original, profileAccountId: profile2.accountId, profileRevision: profile2.revision });
       this.#issuedTaskIdentities.set(observed, original);
       return observed;
@@ -856,31 +964,55 @@ var BrowserPublicClient = class {
     const original = object(observed) ? this.#issuedTaskIdentities.get(observed) : null;
     return original !== void 0 && original !== null && this.#taskIdentityCurrent(original);
   }
+  fetchInferenceForIdentity(identity, method, relativePath, body, signal) {
+    if (!this.isOriginalTaskIdentityCurrent(identity)) return Promise.reject(problem2("AuthenticationRequired"));
+    if (!(method === "GET" && relativePath === "api/tags" && body === null || method === "POST" && relativePath === "api/chat" && typeof body === "string" && body.length <= 1048576))
+      return Promise.reject(problem2("InvalidInferenceRequest"));
+    return this.#issue("inference-headers", async () => {
+      if (signal?.aborted) throw this.#retired("Cancelled");
+      const url = new URL("/api/dulche/" + relativePath, this.#window.location.origin).href;
+      const response = await this.#fetch(url, {
+        method,
+        body: body ?? void 0,
+        headers: { Authorization: "Bearer " + this.#token, ...method === "POST" ? { "Content-Type": "application/json" } : {} },
+        credentials: "same-origin",
+        redirect: "error",
+        cache: "no-store",
+        referrerPolicy: "no-referrer",
+        signal
+      });
+      if (signal?.aborted || !this.isOriginalTaskIdentityCurrent(identity) || response.redirected || response.url && response.url !== url) {
+        await response.body?.cancel();
+        throw this.#retired("SessionContextChanged");
+      }
+      return response;
+    });
+  }
   #taskIdentityCurrent(original) {
     return !this.#disposed && original === this.#taskIdentity && original.generation === this.#generation && this.#token !== null && Date.now() < this.#expires && Date.now() < original.expiresAt * 1e3;
   }
   async #json(url, options, signal) {
     const response = await this.#fetch(url, { ...options, credentials: "omit", cache: "no-store", redirect: "error", referrerPolicy: "no-referrer", signal });
-    if (signal.aborted) throw problem("Cancelled");
-    if (!response.ok || response.redirected || response.url && response.url !== url) throw problem("ProviderRequestFailed");
+    if (signal.aborted) throw problem2("Cancelled");
+    if (!response.ok || response.redirected || response.url && response.url !== url) throw problem2("ProviderRequestFailed");
     let body;
     try {
       body = await response.json();
     } catch {
-      throw problem(signal.aborted ? "Cancelled" : "MalformedProviderResponse");
+      throw problem2(signal.aborted ? "Cancelled" : "MalformedProviderResponse");
     }
-    if (signal.aborted) throw problem("Cancelled");
-    if (!object(body)) throw problem("MalformedProviderResponse");
+    if (signal.aborted) throw problem2("Cancelled");
+    if (!object(body)) throw problem2("MalformedProviderResponse");
     return body;
   }
   async #metadata(signal) {
     if (this.#discovery) return this.#discovery;
     const issuer = new URL(this.#config.issuer);
     const discovery = await this.#json(`${issuer.href.replace(/\/$/, "")}/.well-known/openid-configuration`, {}, signal);
-    if (discovery.issuer !== this.#config.issuer) throw problem("IssuerMismatch");
+    if (discovery.issuer !== this.#config.issuer) throw problem2("IssuerMismatch");
     for (const field of ["authorization_endpoint", "token_endpoint", "jwks_uri"]) {
       const url = endpoint(discovery[field], this.#config.allowLoopbackForIsolatedTests);
-      if (url.origin !== issuer.origin) throw problem("UnexpectedProviderOrigin");
+      if (url.origin !== issuer.origin) throw problem2("UnexpectedProviderOrigin");
     }
     this.#discovery = Object.freeze({
       issuer: discovery.issuer,
@@ -900,11 +1032,11 @@ var BrowserPublicClient = class {
   async #exchange(pending, callbackUri, discovery) {
     const callback = new URL(callbackUri);
     const expected = new URL(this.#config.redirectUri);
-    if (callback.origin !== expected.origin || callback.pathname !== expected.pathname || callback.username || callback.password || callback.hash) throw problem("CallbackTargetMismatch");
-    if (callback.searchParams.getAll("state").length !== 1 || callback.searchParams.get("state") !== pending.state) throw problem("StateMismatch");
-    if (callback.searchParams.has("iss") && (callback.searchParams.getAll("iss").length !== 1 || callback.searchParams.get("iss") !== this.#config.issuer)) throw problem("IssuerMismatch");
-    if (callback.searchParams.has("error")) throw problem("AuthorizationDenied");
-    if (callback.searchParams.getAll("code").length !== 1 || !callback.searchParams.get("code")) throw problem("AuthorizationCodeMissing");
+    if (callback.origin !== expected.origin || callback.pathname !== expected.pathname || callback.username || callback.password || callback.hash) throw problem2("CallbackTargetMismatch");
+    if (callback.searchParams.getAll("state").length !== 1 || callback.searchParams.get("state") !== pending.state) throw problem2("StateMismatch");
+    if (callback.searchParams.has("iss") && (callback.searchParams.getAll("iss").length !== 1 || callback.searchParams.get("iss") !== this.#config.issuer)) throw problem2("IssuerMismatch");
+    if (callback.searchParams.has("error")) throw problem2("AuthorizationDenied");
+    if (callback.searchParams.getAll("code").length !== 1 || !callback.searchParams.get("code")) throw problem2("AuthorizationCodeMissing");
     const tokens = await this.#json(discovery.token_endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -917,35 +1049,35 @@ var BrowserPublicClient = class {
         resource: this.#config.apiResource
       })
     }, pending.controller.signal);
-    if (tokens.token_type?.toLowerCase() !== "bearer" || typeof tokens.access_token !== "string" || !tokens.access_token || typeof tokens.id_token !== "string") throw problem("MalformedProviderResponse");
+    if (tokens.token_type?.toLowerCase() !== "bearer" || typeof tokens.access_token !== "string" || !tokens.access_token || typeof tokens.id_token !== "string") throw problem2("MalformedProviderResponse");
     let id, access;
     try {
       ({ payload: id } = await jwtVerify(tokens.id_token, this.#jwks, { issuer: this.#config.issuer, audience: this.#config.clientId, requiredClaims: ["exp", "iat", "sub", "nonce"] }));
       ({ payload: access } = await jwtVerify(tokens.access_token, this.#jwks, { issuer: this.#config.issuer, audience: this.#config.apiResource, requiredClaims: ["exp", "iat", "sub", "sid"] }));
     } catch {
-      throw problem("TokenVerificationFailed");
+      throw problem2("TokenVerificationFailed");
     }
-    if (id.nonce !== pending.nonce || Array.isArray(id.aud) && id.aud.length > 1 && id.azp !== this.#config.clientId || id.azp !== void 0 && id.azp !== this.#config.clientId || !uuid(id.sub) || access.sub !== id.sub || !uuid(access.sid) || !Number.isSafeInteger(access.exp) || access.exp * 1e3 <= Date.now()) throw problem("TokenBindingMismatch");
-    if (pending.controller.signal.aborted || pending.generation !== this.#generation || this.#disposed) throw problem("SessionContextChanged");
+    if (id.nonce !== pending.nonce || Array.isArray(id.aud) && id.aud.length > 1 && id.azp !== this.#config.clientId || id.azp !== void 0 && id.azp !== this.#config.clientId || !uuid(id.sub) || access.sub !== id.sub || !uuid(access.sid) || !Number.isSafeInteger(access.exp) || access.exp * 1e3 <= Date.now()) throw problem2("TokenBindingMismatch");
+    if (pending.controller.signal.aborted || pending.generation !== this.#generation || this.#disposed) throw problem2("SessionContextChanged");
     this.#token = tokens.access_token;
     this.#expires = access.exp * 1e3;
     try {
       await pending.callbacks.verifyAccount(id.sub, pending.controller.signal);
     } catch {
       if (pending.generation === this.#generation) this.clearToken({ cancelPending: false });
-      throw problem("CurrentAccountVerificationFailed");
+      throw problem2("CurrentAccountVerificationFailed");
     }
     if (pending.controller.signal.aborted || pending.generation !== this.#generation || this.#disposed) {
       if (pending.generation === this.#generation) this.clearToken({ cancelPending: false });
-      throw problem("SessionContextChanged");
+      throw problem2("SessionContextChanged");
     }
     try {
       await pending.callbacks.verified();
     } catch {
       if (pending.generation === this.#generation) this.clearToken({ cancelPending: false });
-      throw problem("PrivateContextCleanupFailed");
+      throw problem2("PrivateContextCleanupFailed");
     }
-    if (pending.controller.signal.aborted || pending.generation !== this.#generation || this.#disposed) throw problem("SessionContextChanged");
+    if (pending.controller.signal.aborted || pending.generation !== this.#generation || this.#disposed) throw problem2("SessionContextChanged");
     if (Number.isSafeInteger(access.iat) && access.iat >= 0 && access.iat <= access.exp && Number.isSafeInteger(id.exp) && id.exp * 1e3 > Date.now()) {
       this.#taskIdentity = Object.freeze({
         version: 1,
@@ -973,7 +1105,7 @@ var BrowserPublicClient = class {
               if (acknowledgement !== void 0) {
                 if (acknowledgement && typeof acknowledgement.then === "function") Promise.resolve(acknowledgement).catch(() => {
                 });
-                throw problem("PrivateContextCleanupFailed");
+                throw problem2("PrivateContextCleanupFailed");
               }
             } finally {
               this.#pending?.controller.abort();
@@ -994,7 +1126,7 @@ var BrowserPublicClient = class {
     }, Math.min(this.#expires - Date.now(), 2147483647));
   }
   #issue(action, factory) {
-    if (this.#disposed) return Promise.reject(problem("ServiceUnavailable"));
+    if (this.#disposed) return Promise.reject(problem2("ServiceUnavailable"));
     let settle;
     const completion = new Promise((resolve) => {
       settle = resolve;
@@ -1025,23 +1157,106 @@ var BrowserPublicClient = class {
     return this.#issued.size !== 0;
   }
   signIn(options = {}) {
-    if (this.#disposed) return Promise.reject(problem("ServiceUnavailable"));
-    if (this.#issued.size) return Promise.reject(problem("SignInInProgress"));
-    return this.#issue("sign-in", () => this.#signInCore(options));
+    if (this.#disposed) return Promise.reject(problem2("ServiceUnavailable"));
+    if (this.#issued.size) return Promise.reject(problem2("SignInInProgress"));
+    return this.#issue("sign-in", () => this.#signInMode === "redirect" ? this.#redirectCore(options) : this.#signInCore(options));
+  }
+  resumeRedirect(receipt, { signal } = {}) {
+    if (this.#disposed || this.#signInMode !== "redirect") return Promise.reject(problem2("ServiceUnavailable"));
+    if (this.#issued.size) return Promise.reject(problem2("SignInInProgress"));
+    return this.#issue("redirect-resume", () => this.#redirectCore({ signal, receipt }));
+  }
+  async #redirectCore({ signal, receipt } = {}) {
+    if (this.#disposed || signal?.aborted) throw problem2("Cancelled");
+    if (this.#pending) throw problem2("SignInInProgress");
+    if (!receipt && this.#canRedirect() !== true) throw problem2("UnsavedChanges");
+    const callbacks = { before: this.#before, verifyAccount: this.#verifyAccount, verified: this.#verified, signInFailed: this.#signInFailed, failure: this.#failure };
+    const controller = new AbortController(), abort = () => controller.abort();
+    signal?.addEventListener("abort", abort, { once: true });
+    const pending = { controller, generation: null, state: null, nonce: null, verifier: null, callbacks };
+    this.#pending = pending;
+    let navigating = false;
+    try {
+      const captured = receipt ? consumeRedirectCallback(receipt, this.#config) : null;
+      await callbacks.before(controller.signal);
+      if (controller.signal.aborted || this.#disposed) throw problem2("Cancelled");
+      pending.generation = this.#generation;
+      if (captured) {
+        Object.assign(pending, { state: captured.transaction.state, nonce: captured.transaction.nonce, verifier: captured.transaction.verifier });
+        const discovery2 = await this.#metadata(controller.signal);
+        if (controller.signal.aborted || pending.generation !== this.#generation) throw problem2("SessionContextChanged");
+        await this.#exchange(pending, captured.callbackUri, discovery2);
+        return;
+      }
+      pending.state = base64url(this.#crypto.getRandomValues(new Uint8Array(32)));
+      pending.nonce = base64url(this.#crypto.getRandomValues(new Uint8Array(32)));
+      pending.verifier = base64url(this.#crypto.getRandomValues(new Uint8Array(48)));
+      const challenge = base64url(new Uint8Array(await this.#crypto.subtle.digest("SHA-256", new TextEncoder().encode(pending.verifier))));
+      const discovery = await this.#metadata(controller.signal);
+      if (controller.signal.aborted || pending.generation !== this.#generation || this.#disposed) throw problem2("SessionContextChanged");
+      if (this.#canRedirect() !== true) throw problem2("UnsavedChanges");
+      const authorization = new URL(discovery.authorization_endpoint);
+      authorization.search = new URLSearchParams({
+        response_type: "code",
+        client_id: this.#config.clientId,
+        redirect_uri: this.#config.redirectUri,
+        scope: this.#config.scopes,
+        state: pending.state,
+        nonce: pending.nonce,
+        code_challenge: challenge,
+        code_challenge_method: "S256",
+        resource: this.#config.apiResource
+      });
+      saveRedirectTransaction(this.#config, this.#window, pending);
+      const leaving = new Promise((_resolve, reject) => controller.signal.addEventListener("abort", () => reject(problem2("Cancelled")), { once: true }));
+      leaving.catch(() => {
+      });
+      this.#window.location.assign(authorization.href);
+      navigating = true;
+      await leaving;
+    } catch (error) {
+      let cleanupFailed = false;
+      if (!navigating && !receipt) try {
+        clearRedirectTransaction(this.#window);
+      } catch {
+        cleanupFailed = true;
+      }
+      this.clearToken({ cancelPending: false });
+      let code = cleanupFailed ? "RedirectStorageUnavailable" : controller.signal.aborted ? "Cancelled" : typeof error?.code === "string" ? error.code : "ProviderUnavailable";
+      try {
+        await callbacks.signInFailed();
+      } catch {
+        code = "PrivateContextCleanupFailed";
+      }
+      try {
+        callbacks.failure(code);
+      } catch (observerError) {
+        this.#cleanupErrors.push(observerError);
+        throw observerError;
+      }
+      throw problem2(code);
+    } finally {
+      signal?.removeEventListener("abort", abort);
+      if (this.#pending === pending) this.#pending = null;
+      pending.verifier = null;
+      pending.nonce = null;
+      pending.state = null;
+      pending.callbacks = null;
+    }
   }
   async #signInCore({ signal } = {}) {
-    if (this.#disposed) throw problem("ServiceUnavailable");
-    if (this.#pending) throw problem("SignInInProgress");
-    if (signal?.aborted) throw problem("Cancelled");
+    if (this.#disposed) throw problem2("ServiceUnavailable");
+    if (this.#pending) throw problem2("SignInInProgress");
+    if (signal?.aborted) throw problem2("Cancelled");
     const callbacks = { before: this.#before, verifyAccount: this.#verifyAccount, verified: this.#verified, signInFailed: this.#signInFailed, failure: this.#failure };
     const popup = this.#window.open("about:blank", `nine-to-one-${base64url(this.#crypto.getRandomValues(new Uint8Array(16)))}`, "popup,width=520,height=720");
-    if (!popup) throw problem("PopupUnavailable");
+    if (!popup) throw problem2("PopupUnavailable");
     if (this.#disposed || signal?.aborted) {
       try {
         popup.close();
       } catch {
       }
-      throw problem("Cancelled");
+      throw problem2("Cancelled");
     }
     const controller = new AbortController();
     const abort = () => controller.abort();
@@ -1051,14 +1266,14 @@ var BrowserPublicClient = class {
     let listener, poll;
     try {
       await callbacks.before(controller.signal);
-      if (controller.signal.aborted || this.#disposed) throw problem("Cancelled");
+      if (controller.signal.aborted || this.#disposed) throw problem2("Cancelled");
       pending.generation = this.#generation;
       pending.state = base64url(this.#crypto.getRandomValues(new Uint8Array(32)));
       pending.nonce = base64url(this.#crypto.getRandomValues(new Uint8Array(32)));
       pending.verifier = base64url(this.#crypto.getRandomValues(new Uint8Array(48)));
       const challenge = base64url(new Uint8Array(await this.#crypto.subtle.digest("SHA-256", new TextEncoder().encode(pending.verifier))));
       const discovery = await this.#metadata(controller.signal);
-      if (controller.signal.aborted || pending.generation !== this.#generation) throw problem("SessionContextChanged");
+      if (controller.signal.aborted || pending.generation !== this.#generation) throw problem2("SessionContextChanged");
       const completion = new Promise((resolve, reject) => {
         listener = (event) => {
           if (event.origin !== new URL(this.#config.redirectUri).origin || event.source !== popup || event.data?.type !== "nineToOne.oauth.callback" || pending.claimed) return;
@@ -1066,9 +1281,9 @@ var BrowserPublicClient = class {
           this.#issue("exchange", () => this.#exchange(pending, event.data.callbackUri, discovery)).then(resolve, reject);
         };
         this.#window.addEventListener("message", listener);
-        controller.signal.addEventListener("abort", () => reject(problem("Cancelled")), { once: true });
+        controller.signal.addEventListener("abort", () => reject(problem2("Cancelled")), { once: true });
         poll = setInterval(() => {
-          if (popup.closed && !pending.claimed) reject(problem("PopupClosed"));
+          if (popup.closed && !pending.claimed) reject(problem2("PopupClosed"));
         }, 100);
       });
       const authorization = new URL(discovery.authorization_endpoint);
@@ -1099,7 +1314,7 @@ var BrowserPublicClient = class {
         this.#cleanupErrors.push(error2);
         throw error2;
       }
-      throw problem(code);
+      throw problem2(code);
     } finally {
       signal?.removeEventListener("abort", abort);
       this.#window.removeEventListener("message", listener);
@@ -1159,7 +1374,7 @@ var BrowserPublicClient = class {
 
 // apps/Web/Auth/theme-preference-contract.js
 var object2 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-var exact = (value, keys) => object2(value) && Object.keys(value).every((key) => keys.includes(key));
+var exact = (value, keys) => object2(value) && Object.keys(value).every((key2) => keys.includes(key2));
 var range = (value, min, max) => typeof value === "number" && Number.isFinite(value) && value >= min && value <= max;
 var text = (value, max) => typeof value === "string" && value.trim().length > 0 && value.length <= max && !/[\u0000-\u001f\u007f-\u009f]/.test(value);
 var hex = (value) => typeof value === "string" && /^#[0-9A-F]{6}$/.test(value);
@@ -1311,7 +1526,7 @@ var AccountApiClient = class {
     } catch {
       return Promise.resolve(failed("InvalidArgument", "UpdateProfile"));
     }
-    if (!entries.length || entries.some(([key, value]) => !allowed.has(key) || typeof value !== "string" && !(value === null && !["name", "username"].includes(key)))) {
+    if (!entries.length || entries.some(([key2, value]) => !allowed.has(key2) || typeof value !== "string" && !(value === null && !["name", "username"].includes(key2)))) {
       return Promise.resolve(failed("InvalidArgument", "UpdateProfile"));
     }
     const snapshot = Object.fromEntries(entries);
@@ -1761,12 +1976,49 @@ function createConfiguredAccounts({
   onPrivateContextInvalidated,
   onVerifiedIdentity,
   onFailure,
-  beginPrivateContextInvalidation = void 0
+  beginPrivateContextInvalidation = void 0,
+  signInMode = "popup",
+  canRedirect = void 0
 }) {
   if (typeof onPrivateContextInvalidated !== "function" || typeof onVerifiedIdentity !== "function" || typeof onFailure !== "function") throw new TypeError("Private context callbacks are required.");
   if (beginPrivateContextInvalidation !== void 0 && typeof beginPrivateContextInvalidation !== "function") throw new TypeError("A synchronous root private fence is required when supplied.");
   let broker, api, themes, disposed = false, prepared = false, cleanupTask, module;
   const signIns = /* @__PURE__ */ new Map(), taskReads = /* @__PURE__ */ new Map(), taskIdentityReceipts = /* @__PURE__ */ new Map(), issued = /* @__PURE__ */ new Set(), cleanupErrors = [];
+  const retirements = /* @__PURE__ */ new Set(), retiredIdentityErrors = /* @__PURE__ */ new WeakSet();
+  const identityUnavailable = (signal) => {
+    const error = Object.assign(new Error("TaskIdentityUnavailable"), { code: "TaskIdentityUnavailable" });
+    if (signal?.aborted) retiredIdentityErrors.add(error);
+    return error;
+  };
+  const retireFromInference = () => {
+    let settle;
+    const completion = new Promise((resolve) => {
+      settle = resolve;
+    });
+    retirements.add(completion);
+    let actual;
+    try {
+      actual = api.invalidatePrivateContext("authentication_required");
+    } catch (error) {
+      actual = Promise.reject(error);
+    }
+    Promise.resolve(actual).then(() => {
+      retirements.delete(completion);
+      settle();
+    }, (error) => {
+      cleanupErrors.push(error);
+      retirements.delete(completion);
+      settle();
+    });
+  };
+  const privateTransports = /* @__PURE__ */ new Set();
+  const fenceTransports = () => {
+    for (const participant of privateTransports) try {
+      participant.invalidate();
+    } catch (error) {
+      cleanupErrors.push(error);
+    }
+  };
   const issue = (action, factory) => {
     if (disposed) return Promise.reject(new Error("ServiceUnavailable"));
     let settle;
@@ -1792,7 +2044,7 @@ function createConfiguredAccounts({
     return actual;
   };
   const joinIssued = async () => {
-    while (issued.size) await Promise.all([...issued].map((e) => e.completion));
+    while (issued.size || retirements.size) await Promise.all([...issued].map((e) => e.completion).concat([...retirements]));
     if (cleanupErrors.length) throw new AggregateError([...cleanupErrors], "Configured lifecycle cleanup failed.");
   };
   const base = configuration === null ? createAccountModule() : (() => {
@@ -1800,6 +2052,7 @@ function createConfiguredAccounts({
       themes?.fence();
       taskIdentityReceipts.clear();
       broker?.clearToken({ cancelPending: false });
+      fenceTransports();
       try {
         const acknowledgement = beginPrivateContextInvalidation(reason);
         if (acknowledgement !== void 0) {
@@ -1817,6 +2070,7 @@ function createConfiguredAccounts({
       taskIdentityReceipts.clear();
       if (beginPrivateContextInvalidation === void 0)
         broker?.clearToken({ cancelPending: reason !== "sign_in_started" });
+      if (beginPrivateContextInvalidation === void 0) fenceTransports();
       await onPrivateContextInvalidated(reason);
       if (beginPrivateContextInvalidation === void 0) themes?.publishInvalidated();
     };
@@ -1825,6 +2079,8 @@ function createConfiguredAccounts({
       window,
       fetch: fetch2,
       crypto: crypto2,
+      signInMode,
+      canRedirect,
       onBeforeSignIn: () => api.invalidatePrivateContext("sign_in_started"),
       verifyCurrentAccount: async (subject, signal) => {
         const current = await api.getCurrent({ signal });
@@ -1832,10 +2088,10 @@ function createConfiguredAccounts({
       },
       readCurrentTaskProfile: async (subject, signal) => {
         const current = await api.getCurrent({ signal });
-        if (!current.ok) throw Object.assign(new Error("TaskIdentityUnavailable"), { code: "TaskIdentityUnavailable" });
+        if (!current.ok) throw identityUnavailable(signal);
         if (current.body.accountId !== subject || signal?.aborted) throw Object.assign(new Error("SessionContextChanged"), { code: "SessionContextChanged" });
         const response = await api.getProfile({ signal });
-        if (!response.ok) throw Object.assign(new Error("TaskIdentityUnavailable"), { code: "TaskIdentityUnavailable" });
+        if (!response.ok) throw identityUnavailable(signal);
         if (response.body.profile.accountId !== subject || signal?.aborted) throw Object.assign(new Error("TaskProfileVerificationFailed"), { code: "TaskProfileVerificationFailed" });
         return { accountId: response.body.profile.accountId, revision: response.body.profile.revision };
       },
@@ -1858,6 +2114,32 @@ function createConfiguredAccounts({
   themes = createAccountThemePreferences({ client: api, hasCredential: () => Boolean(broker?.getAccessToken()), apiResource: broker?.configuration.apiResource ?? null, window });
   return module = {
     themePreferences: themes,
+    createInferenceOwner() {
+      return Object.freeze({
+        readIdentity: (signal) => issue("inference-identity", async () => {
+          if (!broker || !prepared || disposed || cleanupErrors.length) throw Object.assign(new Error("AuthenticationRequired"), { code: "AuthenticationRequired" });
+          const observed = await broker.readCurrentTaskIdentity({ signal });
+          if (!observed || disposed || cleanupErrors.length || !broker.isOriginalTaskIdentityCurrent(observed)) throw Object.assign(new Error("AuthenticationRequired"), { code: "AuthenticationRequired" });
+          return observed;
+        }),
+        isCurrent: (identity) => !disposed && cleanupErrors.length === 0 && broker?.isOriginalTaskIdentityCurrent(identity) === true,
+        isRetirement: (error) => retiredIdentityErrors.has(error) || broker?.isOriginalRetirement(error) === true,
+        fetch: async (identity, method, relativePath, body, signal, adoptResponse = void 0) => {
+          if (!broker || disposed || cleanupErrors.length) throw new Error("AuthenticationRequired");
+          const response = await broker.fetchInferenceForIdentity(identity, method, relativePath, body, signal);
+          if (adoptResponse !== void 0) {
+            if (typeof adoptResponse !== "function" || adoptResponse(response) !== void 0) throw new TypeError("Original response adoption must synchronously return void.");
+          }
+          if (response.status === 401) retireFromInference();
+          return response;
+        },
+        attach(participant) {
+          if (disposed || typeof participant?.invalidate !== "function" || typeof participant?.disposeAsync !== "function") throw new TypeError("A live private stream participant is required.");
+          privateTransports.add(participant);
+          return () => privateTransports.delete(participant);
+        }
+      });
+    },
     invalidatePrivateContext(reason) {
       return issue("invalidate", async () => {
         if (broker) await api.invalidatePrivateContext(reason);
@@ -1926,6 +2208,18 @@ function createConfiguredAccounts({
     signInAvailable() {
       return Boolean(broker && prepared && !disposed);
     },
+    resumeRedirect(receipt) {
+      return issue("redirect-resume", async () => {
+        if (!broker || !prepared || disposed) return { ok: false, error: { code: "ServiceUnavailable" } };
+        try {
+          await broker.resumeRedirect(receipt);
+          themes.signedIn();
+          return { ok: true };
+        } catch (error) {
+          return { ok: false, error: { code: typeof error?.code === "string" ? error.code : "ProviderUnavailable" } };
+        }
+      });
+    },
     requestSignIn(id) {
       if (disposed) return Promise.resolve(JSON.stringify({ ok: false, error: { code: "ServiceUnavailable" } }));
       return issue("sign-in", async () => {
@@ -1953,6 +2247,7 @@ function createConfiguredAccounts({
       themes.revoke();
       taskIdentityReceipts.clear();
       broker?.revokePrivateContext();
+      fenceTransports();
       base.revokePrivateContext();
     },
     disposeAsync() {
@@ -1973,7 +2268,14 @@ function createConfiguredAccounts({
       } catch (error) {
         errors.push(error);
       }
-      Promise.allSettled([themes.disposeAsync(), base.disposeAsync(), broker?.disposeAsync() ?? Promise.resolve(), joinIssued()]).then((results) => {
+      const transportDrains = [...privateTransports].map((participant) => {
+        try {
+          return participant.disposeAsync();
+        } catch (error) {
+          return Promise.reject(error);
+        }
+      });
+      Promise.allSettled([themes.disposeAsync(), base.disposeAsync(), broker?.disposeAsync() ?? Promise.resolve(), joinIssued(), ...transportDrains]).then((results) => {
         errors.push(...results.filter((r) => r.status === "rejected").map((r) => r.reason));
         if (errors.length) reject(new AggregateError(errors, "Configured account cleanup failed."));
         else resolve();
@@ -1988,6 +2290,7 @@ function createConfiguredAccounts({
 }
 export {
   BrowserPublicClient,
+  captureOAuthRedirectCallback,
   createConfiguredAccounts,
   handleOAuthPopupCallback
 };

@@ -138,8 +138,8 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
         _conversation = NewConversation(now);
         SendCommand = new AsyncRelayCommand(SendAsync, () => !IsSending && !string.IsNullOrWhiteSpace(Composer) && SelectedModel is not null);
         StopCommand = new RelayCommand(Stop, () => IsSending);
-        NewChatCommand = new RelayCommand(NewChat);
-        ToggleTemporaryCommand = new RelayCommand(ToggleTemporary);
+        NewChatCommand = new AsyncRelayCommand(async () => { await NewChatWithConsentAsync(); });
+        ToggleTemporaryCommand = new AsyncRelayCommand(ToggleTemporaryAsync);
         TogglePluginCommand = new RelayCommand<CapabilityItemViewModel>(TogglePlugin);
         SelectPluginCommand = new RelayCommand<CapabilityItemViewModel>(SelectPlugin);
         OpenPluginPickerCommand = new RelayCommand(OpenPluginPicker);
@@ -389,6 +389,7 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
         get => _selectedContainer;
         set
         {
+            if (!_suppressSelectionConversationUpdate && !ReferenceEquals(_selectedContainer, value)) DemandLegacyIdle();
             if (!SetProperty(ref _selectedContainer, value)) return;
             CancelLessonLoad();
             if (_selectedLesson is not null)
@@ -414,6 +415,7 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
         set
         {
             if (value is not null && value.Definition.SubjectId != SelectedContainer?.Id) return;
+            if (!_suppressSelectionConversationUpdate && !ReferenceEquals(_selectedLesson, value)) DemandLegacyIdle();
             if (!SetProperty(ref _selectedLesson, value)) return;
             ApplySelectionToConversation(startNewWhenScopeChanges: true);
             RaiseStudyStateChanged();
@@ -447,15 +449,15 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
 
     public string TemporaryLabel => IsTemporary ? "Temporary · history off" : "Saved locally";
     public string TemporaryHeaderActionLabel => IsTemporary ? "Make Permanent" : "Make Temporary";
-    public bool ShowTemporaryHeaderAction => !HasMessages;
+    public bool ShowTemporaryHeaderAction => IsTemporary || !HasMessages;
     public bool ShowContextHeaderWidget => HasMessages;
 
     // ─── Commands ───────────────────────────────────────────────────
 
     public AsyncRelayCommand SendCommand { get; }
     public RelayCommand StopCommand { get; }
-    public RelayCommand NewChatCommand { get; }
-    public RelayCommand ToggleTemporaryCommand { get; }
+    public AsyncRelayCommand NewChatCommand { get; }
+    public AsyncRelayCommand ToggleTemporaryCommand { get; }
     public RelayCommand<CapabilityItemViewModel> TogglePluginCommand { get; }
     public RelayCommand<CapabilityItemViewModel> SelectPluginCommand { get; }
     public RelayCommand OpenPluginPickerCommand { get; }
@@ -509,6 +511,7 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
 
     private void Detach()
     {
+        _presentationGeneration++;
         PropertyChanged -= OnSelfPropertyChanged;
         ConversationChanged -= OnConversationChangedHandler;
         Attachments.CollectionChanged -= OnAttachmentCollectionChanged;
@@ -687,27 +690,41 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
 
     private async Task ImportAttachmentsAsync(IEnumerable<string> sourcePaths)
     {
+        DemandLegacyIdle();
         var paths = sourcePaths.Where(File.Exists).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         if (paths.Length == 0) return;
-
         if (_attachmentService is null || _production is null || _paths is null || IsTemporary)
         {
             AddAttachments(paths);
             return;
         }
-
-        await EnsureConversationSavedAsync(CancellationToken.None);
-        var branch = await _production.GetCurrentBranchAsync(ConversationId, CancellationToken.None)
-                     ?? await _production.EnsureRootBranchAsync(ConversationId, CancellationToken.None);
-        _attachmentConversationId = ConversationId;
-        foreach (var path in paths)
+        var original = _conversation;
+        var generation = _presentationGeneration;
+        void DemandOriginal()
         {
-            var attachment = await _attachmentService.ImportAsync(
-                ConversationId, null, branch.Id, path, null, CancellationToken.None);
-            _pendingAttachmentIds.Add(attachment.Id);
-            AddMappedAttachment(path, attachment.Id);
+            if (_conversation != original || _presentationGeneration != generation || IsTemporary)
+                throw new InvalidOperationException("The original chat changed during attachment import. Existing stored files have been preserved.");
         }
-        ScheduleDraftSave();
+        _legacyAttachmentOperations++;
+        try
+        {
+            await EnsureConversationSavedAsync(CancellationToken.None);
+            DemandOriginal();
+            var branch = await _production.GetCurrentBranchAsync(original.Id, CancellationToken.None);
+            DemandOriginal();
+            if (branch is null) branch = await _production.EnsureRootBranchAsync(original.Id, CancellationToken.None);
+            DemandOriginal();
+            _attachmentConversationId = original.Id;
+            foreach (var path in paths)
+            {
+                var attachment = await _attachmentService.ImportAsync(original.Id, null, branch.Id, path, null, CancellationToken.None);
+                DemandOriginal();
+                _pendingAttachmentIds.Add(attachment.Id);
+                AddMappedAttachment(path, attachment.Id);
+            }
+            ScheduleDraftSave();
+        }
+        finally { _legacyAttachmentOperations--; }
     }
 
     private void AddMappedAttachment(string path, Guid attachmentId)
@@ -749,18 +766,7 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
         try
         {
             await Task.Delay(650, cancellationToken);
-            if (_production is null || IsTemporary) return;
-            await EnsureConversationSavedAsync(cancellationToken);
-            var branch = await _production.GetCurrentBranchAsync(ConversationId, cancellationToken)
-                         ?? await _production.EnsureRootBranchAsync(ConversationId, cancellationToken);
-            if (string.IsNullOrWhiteSpace(Composer) && _pendingAttachmentIds.Count == 0)
-            {
-                await _production.DeleteDraftAsync(ConversationId, branch.Id, cancellationToken);
-                return;
-            }
-            await _production.SaveDraftAsync(new ConversationDraft(
-                ConversationId, branch.Id, Composer,
-                JsonSerializer.Serialize(_pendingAttachmentIds), DateTimeOffset.UtcNow), cancellationToken);
+            await SaveCurrentLegacyDraftAsync(cancellationToken);
         }
         catch (OperationCanceledException) { }
         catch (Exception ex) when (ex is InvalidOperationException or IOException)
@@ -769,14 +775,42 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
         }
     }
 
+    private async Task SaveCurrentLegacyDraftAsync(CancellationToken cancellationToken)
+    {
+        if (_production is null || IsTemporary) return;
+        var original = _conversation;
+        var draft = Composer;
+        var attachments = _pendingAttachmentIds.ToArray();
+        var generation = _presentationGeneration;
+        bool StillCurrent() => !IsTemporary && !_changingLegacyType && _presentationGeneration == generation && _conversation == original && Composer == draft && attachments.SequenceEqual(_pendingAttachmentIds);
+        var stored = await _conversations.GetAsync(original.Id, cancellationToken);
+        if (!StillCurrent()) throw new InvalidOperationException("The chat or draft changed during its save.");
+        if (stored is null) await _conversations.UpsertConversationAsync(original, cancellationToken);
+        if (!StillCurrent()) throw new InvalidOperationException("The chat or draft changed during its save.");
+        var branch = await _production.GetCurrentBranchAsync(original.Id, cancellationToken);
+        if (!StillCurrent()) throw new InvalidOperationException("The chat or draft changed during its save.");
+        if (branch is null) branch = await _production.EnsureRootBranchAsync(original.Id, cancellationToken);
+        if (!StillCurrent()) throw new InvalidOperationException("The chat or draft changed during its save.");
+        if (string.IsNullOrWhiteSpace(draft) && attachments.Length == 0)
+            await _production.DeleteDraftAsync(original.Id, branch.Id, cancellationToken);
+        else
+            await _production.SaveDraftAsync(new ConversationDraft(original.Id, branch.Id, draft,
+                JsonSerializer.Serialize(attachments), DateTimeOffset.UtcNow), cancellationToken);
+        if (!StillCurrent()) throw new InvalidOperationException("The chat changed during its draft save.");
+    }
+
     private async Task LoadProductionStateAsync(CancellationToken cancellationToken)
     {
         if (_production is null) return;
         try
         {
             if (IsTemporary) return;
-            var branch = await _production.GetCurrentBranchAsync(ConversationId, cancellationToken);
-            var draft = await _production.GetDraftAsync(ConversationId, branch?.Id, cancellationToken);
+            var original = _conversation;
+            var current = CapturePresentationGuard();
+            var branch = await _production.GetCurrentBranchAsync(original.Id, cancellationToken);
+            if (!current()) return;
+            var draft = await _production.GetDraftAsync(original.Id, branch?.Id, cancellationToken);
+            if (!current()) return;
             if (draft is null || !string.IsNullOrWhiteSpace(Composer)) return;
             _loadingDraft = true;
             try { Composer = draft.Content; }
@@ -917,16 +951,23 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
 
     public async Task LoadConversationAsync(Guid id, CancellationToken cancellationToken)
     {
+        DemandLegacyIdle();
+        DemandTemporaryReplacementConsent();
+        var isOriginal = CaptureLegacyHistoryGuard();
         var conversation = await _conversations.GetAsync(id, cancellationToken);
         if (conversation is null || conversation.Mode != Mode) return;
+        if (conversation.IsTemporary) throw new InvalidOperationException("Stored Temporary history cannot be restored as an ephemeral chat. It requires explicit recovery through its original storage owner.");
         if (Mode == HavenMode.Chat && conversation.Kind != ConversationKind.Chat) return;
         if (Mode == HavenMode.Study && conversation.Kind is not (ConversationKind.QuickChat or ConversationKind.LessonChat)) return;
 
-        Stop();
+        var history = await _conversations.GetMessagesAsync(id, cancellationToken);
+        if (!isOriginal()) throw new InvalidOperationException("The conversation changed during the load.");
+        DemandLegacyIdle();
+        ResetLegacyHistory();
         _conversation = conversation;
         IsTemporary = conversation.IsTemporary;
         Messages.Clear();
-        foreach (var message in await _conversations.GetMessagesAsync(id, cancellationToken))
+        foreach (var message in history)
             Messages.Add(new MessageBubbleViewModel(message, ShowConfidence));
 
         _suppressSelectionConversationUpdate = true;
@@ -987,12 +1028,17 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
 
     private async Task SendAsync()
     {
+        DemandLegacyIdle();
+        var originalPresentation = CapturePresentationGuard();
         if (SelectedModel is null || string.IsNullOrWhiteSpace(Composer)) return;
         if (!await EnsureSelectedModelAvailableAsync()) return;
+        if (!originalPresentation()) throw new InvalidOperationException("The chat changed while preparing the request.");
+        DemandLegacyIdle();
         var permissionApproved = _approvedToolPermissionOnce;
         _approvedToolPermissionOnce = false;
         var originalPrompt = Composer.Trim();
         var prompt = await ExecuteSlashCommandsAsync(originalPrompt);
+        if (prompt is null) return; // Canceling a destructive slash command preserves the draft.
         prompt = ActivateInvocations(prompt, out var needsComputerApproval);
         if (needsComputerApproval)
         {
@@ -1014,9 +1060,7 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
             await RegisterContextAsync(prompt);
             return;
         }
-        if (_preferences.AutoCompactContext && ContextPercent >= _preferences.CompactAtPercent)
-            await CompactContextAsync(true);
-        Composer = string.Empty;
+        DemandLegacyIdle();
         _sendCancellation = new CancellationTokenSource();
         IsSending = true;
         EditStep = 0;
@@ -1031,7 +1075,23 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
             var prepared = await PrepareAttachmentAsync(prompt, _sendCancellation.Token);
             prepared = await AddGroupResourceImagesAsync(prepared, _sendCancellation.Token);
             if (Messages.Count == 0)
-                _conversation = NewConversation(_conversation.CreatedAt) with { Id = _conversation.Id, Title = BuildTitle(prompt), IsTemporary = IsTemporary };
+                _conversation = NewConversation(_conversation.CreatedAt) with { Id = _conversation.Id, Title = BuildTitle(prompt), IsTemporary = IsTemporary, SpaceId = _conversation.SpaceId };
+            var generationOptions = _preferences.GenerationOptions;
+            if (_conversation.IsTemporary)
+            {
+                var allowMemory = await ChooseTemporaryMemoryReadAsync(_sendCancellation.Token);
+                if (allowMemory is null) { Status = "Message canceled; your draft has been kept."; return; }
+                generationOptions = generationOptions with
+                {
+                    TemporaryMemoryReadChoice = _sessions.RecordTemporaryMemoryReadChoice(
+                        _conversation, prepared.Prompt, _sendCancellation.Token, allowMemory.Value)
+                };
+            }
+            _sendCancellation.Token.ThrowIfCancellationRequested();
+            if (Composer.Trim() != originalPrompt) throw new InvalidOperationException("The draft changed while preparing this request. Review it before sending.");
+            Composer = string.Empty;
+            if (_preferences.AutoCompactContext && ContextPercent >= _preferences.CompactAtPercent)
+                await CompactContextAsync(true);
             var active = Array.Empty<ActiveCapability>();
             var activePrompts = Prompts.Where(x => x.IsActive).Select(x => new ActivePrompt(x.Name, x.IconKey, x.Persists, x.Instructions)).ToArray();
             var check = _preflight.Evaluate(SelectedModel, active, prepared.Images is { Count: > 0 }, Models);
@@ -1052,14 +1112,15 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
             var deltaBuffer = new StringBuilder();
             var flushTimer = Task.Delay(50, _sendCancellation.Token);
 
-            await foreach (var item in _sessions.SendAsync(
+            await foreach (var item in _sessions.SendWithTransientHistoryAsync(
                                _conversation, prepared.Prompt, model, SelectedEffort, active, agent, agentInstructions,
                                SelectedDuo, SelectedContainer?.RootPath, containerContext, containerInstructions,
-                               prepared.Images, _sendCancellation.Token, activePrompts, registeredContext, _preferences.GenerationOptions,
+                               prepared.Images, _sendCancellation.Token, activePrompts, registeredContext, generationOptions,
                                permissionApproved ? PermissionMode.FullAccess : _preferences.FilePermission,
                                permissionApproved ? PermissionMode.FullAccess : _preferences.CommandPermission,
                                permissionApproved ? PermissionMode.FullAccess : _preferences.BrowserPermission,
-                               availableCapabilities: _registeredCapabilities))
+                               availableCapabilities: _registeredCapabilities,
+                               transientHistory: _conversation.IsTemporary ? Messages.Where(message => !message.IsCompacted && message.Role is MessageRole.User or MessageRole.Assistant).Select(message => message.ToMessage(_conversation.Id)).ToArray() : null))
             {
                 switch (item.Kind)
                 {
@@ -1131,10 +1192,7 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
             }
             if (completedMessage is not null && streaming is not null && !IsTemporary)
             {
-                var metadata = streaming.ConfidenceScore is null
-                    ? null
-                    : JsonSerializer.Serialize(new { confidence = streaming.ConfidenceScore });
-                await _conversations.AddMessageAsync(completedMessage with { Content = streaming.Content, MetadataJson = metadata }, _sendCancellation.Token);
+                await _conversations.AddMessageAsync(streaming.ToMessage(_conversation.Id), _sendCancellation.Token);
             }
             if (!Status.StartsWith("Model preflight", StringComparison.Ordinal)) Status = "Ready";
             HasErrorsToResolve = false;
@@ -1277,7 +1335,10 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
 
     public void NewChat()
     {
-        Stop();
+        DemandLegacyIdle();
+        DemandTemporaryReplacementConsent();
+        if (IsTemporary) { Composer = string.Empty; _pendingAttachmentIds.Clear(); }
+        ResetLegacyHistory();
         Messages.Clear();
         IsComputerPermissionPending = false;
         InlineQuestion = null;
@@ -1330,11 +1391,7 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
         Status = "Quick Chats selected.";
     }
 
-    private void ToggleTemporary()
-    {
-        IsTemporary = !IsTemporary;
-        ConversationChanged?.Invoke(this, EventArgs.Empty);
-    }
+    private Task ToggleTemporaryAsync() => SetTemporaryAsync(!IsTemporary);
 
     private void TogglePlugin(CapabilityItemViewModel? plugin)
     {
@@ -1721,7 +1778,7 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
         return prompt;
     }
 
-    private async Task<string> ExecuteSlashCommandsAsync(string prompt)
+    private async Task<string?> ExecuteSlashCommandsAsync(string prompt)
     {
         var matches = Regex.Matches(prompt, @"(?<!\S)/(?<name>[A-Za-z]+)\b", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         foreach (Match match in matches)
@@ -1729,10 +1786,10 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
             switch (match.Groups["name"].Value.ToLowerInvariant())
             {
                 case "branch": await BranchCurrentAsync(); break;
-                case "temporary": ToggleTemporary(); break;
+                case "temporary": await ToggleTemporaryAsync(); break;
                 case "compact": await CompactContextAsync(false); break;
                 case "archive": await ArchiveCurrentAsync(); break;
-                case "new" or "clear": NewChat(); break;
+                case "new" or "clear": if (!await NewChatWithConsentAsync()) return null; break;
                 case "handoff":
                     var handoff = Prompts.FirstOrDefault(item => item.Name.Equals("Handoff", StringComparison.OrdinalIgnoreCase));
                     if (handoff is not null) handoff.IsActive = true;
@@ -1752,9 +1809,35 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
 
     public async Task BranchCurrentAsync()
     {
+        DemandLegacyIdle();
+        if (_conversation.IsTemporary)
+        {
+            var temporaryBranch = _conversation with { Id = Guid.NewGuid(), Title = $"Branch of {_conversation.Title}",
+                ParentConversationId = _conversation.Id, IsPinned = false, IsArchived = false,
+                CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+            var history = Messages.Select(message => message.ToMessage(_conversation.Id) with
+                { Id = Guid.NewGuid(), ConversationId = temporaryBranch.Id }).ToArray();
+            var context = _temporaryContextEntries.Select(entry => entry with
+                { Id = Guid.NewGuid(), ConversationId = temporaryBranch.Id }).ToArray();
+            _conversation = temporaryBranch;
+            _presentationGeneration++;
+            Messages.Clear();
+            foreach (var message in history) Messages.Add(new MessageBubbleViewModel(message, ShowConfidence));
+            _temporaryContextEntries.Clear();
+            _temporaryContextEntries.AddRange(context);
+            RaiseMessageStateChanged();
+            RaisePropertyChanged(nameof(ConversationId));
+            RaisePropertyChanged(nameof(ConversationTitle));
+            await UpdateContextUsageAsync(CancellationToken.None);
+            Status = "Temporary branch created in this session. It has not been saved.";
+            ConversationChanged?.Invoke(this, EventArgs.Empty);
+            return;
+        }
         if (Messages.Count == 0)
         {
+            var sourceSpaceId = _conversation.SpaceId;
             NewChat();
+            _conversation = _conversation with { SpaceId = sourceSpaceId };
             Status = "Started a new branch.";
             return;
         }
@@ -1780,6 +1863,7 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
                 await _conversations.AddContextEntryAsync(entry with { Id = Guid.NewGuid(), ConversationId = branch.Id }, CancellationToken.None);
         }
         _conversation = branch;
+        _presentationGeneration++;
         Messages.Clear();
         foreach (var message in await _conversations.GetMessagesAsync(branch.Id, CancellationToken.None))
             Messages.Add(new MessageBubbleViewModel(message, ShowConfidence));
@@ -1793,6 +1877,8 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
 
     public async Task ArchiveCurrentAsync()
     {
+        DemandLegacyIdle();
+        if (_conversation.IsTemporary) throw new InvalidOperationException("A temporary chat cannot be archived. Save it locally first.");
         if (Messages.Count == 0) return;
         if (!_conversation.IsTemporary)
             await _conversations.UpsertConversationAsync(_conversation with { IsArchived = true, UpdatedAt = DateTimeOffset.UtcNow }, CancellationToken.None);
@@ -1822,11 +1908,14 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
 
     private async Task RegisterContextAsync(string content)
     {
+        DemandLegacyIdle();
         var now = DateTimeOffset.UtcNow;
         if (Messages.Count == 0) _conversation = _conversation with { Title = BuildTitle(content), UpdatedAt = now };
         if (_conversation.IsTemporary)
         {
             _contextSummary = string.IsNullOrWhiteSpace(_contextSummary) ? content : _contextSummary + "\n" + content;
+            _temporaryContextEntries.Add(new ConversationContextEntry(Guid.NewGuid(), _conversation.Id,
+                ContextEntryKind.Registered, "Registered context", content, string.Empty, now));
         }
         else
         {
@@ -1855,6 +1944,9 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
 
     private async Task CompactContextAsync(bool automatic)
     {
+        if (!automatic) DemandLegacyIdle();
+        var compactOriginal = _conversation;
+        var compactGeneration = _presentationGeneration;
         if (SelectedModel is null) return;
         IReadOnlyList<ChatMessage> contextMessages;
         if (_conversation.IsTemporary)
@@ -1885,7 +1977,13 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
         {
             summary = string.Join("\n", compactable.Select(message => $"- {message.Role}: {Truncate(message.Content, 320)}"));
         }
+        if (_conversation != compactOriginal || _presentationGeneration != compactGeneration || _changingLegacyType || _pendingLegacySave is not null)
+            throw new InvalidOperationException("The chat changed during context compaction.");
         var now = DateTimeOffset.UtcNow;
+        if (_conversation.IsTemporary)
+            _temporaryContextEntries.Add(new ConversationContextEntry(Guid.NewGuid(), _conversation.Id,
+                ContextEntryKind.CompactSummary, automatic ? "Automatic compact summary" : "Manual compact summary",
+                summary, $"Compacted {compactable.Length} messages at {now:O}", now));
         _contextSummary = string.IsNullOrWhiteSpace(_contextSummary) ? summary : _contextSummary + "\n\n" + summary;
         if (!_conversation.IsTemporary)
         {
@@ -1898,7 +1996,7 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
         var ids = compactable.Select(message => message.Id).ToHashSet();
         foreach (var bubble in Messages.Where(item => ids.Contains(item.Id))) bubble.MarkCompacted();
         await UpdateContextUsageAsync(CancellationToken.None);
-        Status = $"Compacted {compactable.Length} older messages into a durable summary.";
+        Status = $"Compacted {compactable.Length} older messages into a {(_conversation.IsTemporary ? "session-only" : "saved")} summary.";
     }
 
     // ─── ViewModel: Update context usage ────────────────────────────
@@ -2118,6 +2216,7 @@ public sealed partial class ChatPage : UserControl, INotifyPropertyChanged
 
     private void FinaliseAssistant(MessageBubbleViewModel streaming, ChatMessage? message)
     {
+        if (message is not null) streaming.RetainOriginalMessage(message);
         var content = streaming.Content;
         var match = Regex.Match(content, @"<haven-question>(?<json>[\s\S]*?)</haven-question>", RegexOptions.IgnoreCase);
         if (match.Success)

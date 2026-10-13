@@ -134,6 +134,121 @@ public sealed class BrowserSpaceBuilderSessionTests
         Assert.False(session.IsActionAvailable("builder.save"));
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Lost_save_ack_and_failing_status_cleanup_retain_every_original_once(bool repeatPresentationFailure)
+    {
+        using var fixture = new Fixture();
+        var registry = new SpaceRegistry(fixture.Store);
+        var space = await registry.CreateAsync("Before save");
+        var first = new InvalidOperationException("Error presentation failed");
+        Exception second = repeatPresentationFailure ? first : new OperationCanceledException("Faulted presenter, not a cancelled task");
+        var presentationsAfterFailure = 0;
+        var failPresentation = true;
+        var session = new BrowserSpaceBuilderSession(() => registry, () => { }, action =>
+        {
+            if (failPresentation && fixture.Store.LastLostAcknowledgement is not null)
+                return Task.FromException(++presentationsAfterFailure == 1 ? first : second);
+            action(); return Task.CompletedTask;
+        }, space.Id);
+        await session.PrepareAsync(default); session.Admit();
+        session.TrySetValue("builder.name", "Actually saved");
+        fixture.Store.LoseNextAcknowledgement = true;
+        var command = session.DispatchAsync("builder.save", null).AsTask();
+        var failure = await Assert.ThrowsAsync<AggregateException>(() => command);
+        Assert.True(command.IsFaulted); Assert.False(command.IsCanceled);
+        var causes = failure.Flatten().InnerExceptions;
+        Assert.Equal(repeatPresentationFailure ? 2 : 3, causes.Count);
+        Assert.Contains(causes, error => ReferenceEquals(error, fixture.Store.LastLostAcknowledgement));
+        Assert.Contains(causes, error => ReferenceEquals(error, first));
+        Assert.Contains(causes, error => ReferenceEquals(error, second));
+        Assert.Equal(2, presentationsAfterFailure);
+        Assert.False(session.IsActionAvailable("builder.save"));
+        Assert.True(session.IsActionAvailable("builder.refresh"));
+        var writes = fixture.Store.Writes;
+        await session.DispatchAsync("builder.save", null);
+        Assert.Equal(writes, fixture.Store.Writes);
+        failPresentation = false;
+        await session.DispatchAsync("builder.refresh", null);
+        Assert.True(session.HasUnsavedChanges);
+        await session.DispatchAsync("builder.discard", null);
+        Assert.Equal("Actually saved", Read<string>(session, "builder.name"));
+        Assert.False(session.HasUnsavedChanges);
+        var closeFailure = await Assert.ThrowsAsync<AggregateException>(() => session.DisposeAsync().AsTask());
+        Assert.Equal(causes.Count, closeFailure.Flatten().InnerExceptions.Count);
+        Assert.All(causes, cause => Assert.Contains(closeFailure.Flatten().InnerExceptions, error => ReferenceEquals(cause, error)));
+    }
+
+    [Fact]
+    public async Task Read_failure_survives_failing_cleanup_and_does_not_stick_busy()
+    {
+        using var fixture = new Fixture();
+        var registry = new SpaceRegistry(fixture.Store);
+        var space = await registry.CreateAsync("Saved Space");
+        var readFailure = new IOException("Original registry read failed");
+        var presentationFailure = new InvalidOperationException("Cleanup projection failed");
+        var failPresentation = true;
+        var session = new BrowserSpaceBuilderSession(() => registry, () => { }, action =>
+        {
+            if (failPresentation && fixture.Store.LastReadFailure is not null) return Task.FromException(presentationFailure);
+            action(); return Task.CompletedTask;
+        }, space.Id);
+        await session.PrepareAsync(default); session.Admit();
+        session.TrySetValue("builder.name", "Retain my draft");
+        fixture.Store.NextReadFailure = readFailure;
+        var failure = await Assert.ThrowsAsync<AggregateException>(() => session.DispatchAsync("builder.refresh", null).AsTask());
+        Assert.Equal(2, failure.Flatten().InnerExceptions.Count);
+        Assert.Contains(failure.Flatten().InnerExceptions, error => ReferenceEquals(error, readFailure));
+        Assert.Contains(failure.Flatten().InnerExceptions, error => ReferenceEquals(error, presentationFailure));
+        Assert.Equal("Retain my draft", Read<string>(session, "builder.name"));
+        Assert.True(session.IsActionAvailable("builder.refresh"));
+        failPresentation = false;
+        await session.DispatchAsync("builder.refresh", null);
+        Assert.Equal("Retain my draft", Read<string>(session, "builder.name"));
+        var closeFailure = await Assert.ThrowsAsync<AggregateException>(() => session.DisposeAsync().AsTask());
+        Assert.Equal(2, closeFailure.Flatten().InnerExceptions.Count);
+    }
+
+    [Fact]
+    public async Task Empty_foreign_aggregate_from_actual_registry_read_survives_action_and_close()
+    {
+        using var fixture = new Fixture();
+        var registry = new SpaceRegistry(fixture.Store);
+        var space = await registry.CreateAsync("Saved Space");
+        var session = fixture.Session(registry, space.Id);
+        await session.PrepareAsync(default); session.Admit();
+        var foreign = new AggregateException("Original source failed without child causes");
+        fixture.Store.NextReadFailure = foreign;
+        var observed = await Assert.ThrowsAsync<AggregateException>(() => session.DispatchAsync("builder.refresh", null).AsTask());
+        Assert.Same(foreign, observed);
+        Assert.True(session.IsActionAvailable("builder.refresh"));
+        var closed = await Assert.ThrowsAsync<AggregateException>(() => session.DisposeAsync().AsTask());
+        Assert.Same(foreign, closed);
+    }
+
+    [Fact]
+    public async Task Wrong_kind_postcommit_acknowledgement_remains_uncertain_and_blocks_replay()
+    {
+        using var fixture = new Fixture();
+        var registry = new SpaceRegistry(fixture.Store);
+        var space = await registry.CreateAsync("Before save");
+        var session = fixture.Session(registry, space.Id);
+        await session.PrepareAsync(default); session.Admit();
+        Assert.True(session.TrySetValue("builder.name", "Durably committed"));
+        fixture.Store.MalformedAcknowledgementOnce = true;
+        var failure = await Assert.ThrowsAsync<InvalidOperationException>(() => session.DispatchAsync("builder.save", null).AsTask());
+        Assert.Same(fixture.Store.LastMalformedAcknowledgement, failure);
+        Assert.Equal("Durably committed", (await registry.ReadExistingAsync(space.Id))!.Name);
+        Assert.False(session.IsActionAvailable("builder.save"));
+        Assert.False(session.TrySetValue("builder.name", "Replay denied"));
+        var writes = fixture.Store.Writes;
+        await session.DispatchAsync("builder.save", null);
+        Assert.Equal(writes, fixture.Store.Writes);
+        var close = await Assert.ThrowsAsync<InvalidOperationException>(() => session.DisposeAsync().AsTask());
+        Assert.Same(failure, close);
+    }
+
     private static T Read<T>(BrowserSpaceBuilderSession session, string path)
     {
         Assert.True(session.TryGetValue(path, out var value));
@@ -158,6 +273,11 @@ public sealed class BrowserSpaceBuilderSessionTests
     private sealed class ObservedStore(VersionedAtomicSettingsStore actual) : IVersionedSettingsStore, IVersionedSettingsCompareExchange
     {
         public bool LoseNextAcknowledgement { get; set; }
+        public IOException? LastLostAcknowledgement { get; private set; }
+        public bool MalformedAcknowledgementOnce { get; set; }
+        public InvalidOperationException? LastMalformedAcknowledgement { get; private set; }
+        public Exception? NextReadFailure { get; set; }
+        public Exception? LastReadFailure { get; private set; }
         public int Writes { get; private set; }
         public TaskCompletionSource? BlockReads { get; set; }
         public bool HoldReadAfterCancellation { get; set; }
@@ -169,6 +289,11 @@ public sealed class BrowserSpaceBuilderSessionTests
         public Task<SettingsImportResult> ImportAsync(SettingsExportManifest manifest, CancellationToken cancellationToken) => actual.ImportAsync(manifest, cancellationToken);
         public async Task<SettingsExportManifest> ExportAsync(CancellationToken cancellationToken)
         {
+            if (NextReadFailure is { } failure)
+            {
+                NextReadFailure = null; LastReadFailure = failure;
+                throw failure;
+            }
             if (BlockReads is { } block)
             {
                 using var registration = cancellationToken.Register(() => CancellationCallback?.Invoke());
@@ -185,10 +310,16 @@ public sealed class BrowserSpaceBuilderSessionTests
             if (outcome.Exchanged)
             {
                 Writes++;
+                if (MalformedAcknowledgementOnce)
+                {
+                    MalformedAcknowledgementOnce = false;
+                    try { _ = JsonSerializer.SerializeToElement(new { exchanged = "wrong kind" }).GetProperty("exchanged").GetBoolean(); }
+                    catch (InvalidOperationException error) { LastMalformedAcknowledgement = error; throw; }
+                }
                 if (LoseNextAcknowledgement)
                 {
                     LoseNextAcknowledgement = false;
-                    throw new IOException("Lost exact save acknowledgement");
+                    throw LastLostAcknowledgement = new IOException("Lost exact save acknowledgement");
                 }
             }
             return outcome;

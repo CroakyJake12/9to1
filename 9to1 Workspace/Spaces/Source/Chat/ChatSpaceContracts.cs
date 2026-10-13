@@ -1,4 +1,5 @@
 using Haven.Core;
+using Haven.Application;
 
 namespace HavenOS.Apps.Spaces.Chat;
 
@@ -19,7 +20,10 @@ public sealed record ChatSpaceMessage(
     IReadOnlyList<MessageAttachment> Attachments,
     IReadOnlyList<ChatSpaceCitation> Citations,
     IReadOnlyList<ToolActivity> ToolActivities,
-    bool CanRegenerate);
+    bool CanRegenerate)
+{
+    public string Thinking { get; init; } = string.Empty;
+}
 
 public sealed record ChatSpaceBranch(
     Guid Id,
@@ -49,7 +53,10 @@ public sealed record ChatSpaceModelChoice(
 
 public sealed record ChatSpaceModelInventory(
     IReadOnlyList<ModelDescriptor> Models,
-    string? PreferredModelName = null);
+    string? PreferredModelName = null)
+{
+    public string? UnavailableReason { get; init; }
+}
 
 public sealed record ChatSpaceComposer(
     string Draft,
@@ -105,6 +112,19 @@ public sealed record ChatSpaceTurnRequest(
 public interface IChatSpaceTurnExecutor
 {
     Task ExecuteAsync(ChatSpaceTurnRequest request, CancellationToken cancellationToken);
+}
+
+/// <summary>Awaits the actual stream observer before requesting the next provider event.</summary>
+public interface IChatSpaceStreamingTurnExecutor : IChatSpaceTurnExecutor
+{
+    Task ExecuteAsync(ChatSpaceTurnRequest request,
+        Func<ChatStreamEvent, CancellationToken, Task> observe, CancellationToken cancellationToken);
+}
+
+public interface IChatSpaceStreamingBackend : IChatSpaceBackend
+{
+    Task SendAsync(ChatSpaceTurnRequest request,
+        Func<ChatStreamEvent, CancellationToken, Task> observe, CancellationToken cancellationToken);
 }
 
 /// <summary>

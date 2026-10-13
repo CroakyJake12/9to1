@@ -272,3 +272,16 @@ runtime errors and before/after asset hashes. The optional third argument names
 an existing unavailable route, such as `app.spaces` before its owner is registered.
 The default uses an unregistered test address without installing a test owner.
 This is route recovery evidence, not provider, account, or Spaces acceptance.
+
+Saved-document rollback can be checked against two different compiled bundles:
+
+```bash
+node apps/Web/Tests/run-browser-bundle-rollback.cjs <candidate-wwwroot> <previous-wwwroot> <new-evidence-directory>
+```
+
+The runner creates and saves a real Write document using physical CUI controls,
+then serves the previous bundle and the candidate again on the same origin and
+browser profile. It verifies the actual application assembly delivered in each
+phase, the reopened title, unchanged document identity and history bytes, and
+both bundles' asset hashes. This checks device-local document rollback; signed-in
+Spaces storage and account acceptance require a legitimate account session.

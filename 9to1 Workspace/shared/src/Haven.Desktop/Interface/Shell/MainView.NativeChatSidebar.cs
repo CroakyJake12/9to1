@@ -20,8 +20,14 @@ public sealed partial class MainView
             OpenNativeContainerAsync,
             production: services.GetRequiredService<IConversationProductionRepository>(),
             spaces: services.GetService<SpaceRegistry>(),
-            openSpace: LaunchSpaceAsync);
-        _nativeChatSidebar.ManageSpacesRequested += (_, _) => _ = OpenSpacesAsync();
+            openSpace: LaunchSpaceAsync,
+            startChatInSpace: StartNativeConversationInSpaceAsync,
+            openSpaceInTransition: LaunchNativeSpaceInTransitionAsync,
+            manageSpaces: OpenSpacesAsync,
+            setSidebarCollapsed: SetNativeSpaceSidebarCollapsedAsync,
+            currentHomeTheme: services.GetService<CakeOS.Cui.Themes.CuiThemePreferenceContext>(),
+            configureNavigation: ConfigureNativeSpaceNavigationAsync);
+        InitializeNativeSpaceNavigation(services);
 
         _studyAssignmentsSidebar = new StudyAssignmentsSidebarCoordinator(
             _nativeChatSidebar,

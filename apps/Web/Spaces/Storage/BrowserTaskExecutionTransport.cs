@@ -88,13 +88,20 @@ public sealed partial class BrowserTaskExecutionTransport : ITaskExecutionBrowse
         BrowserTaskActorSource actualActors, string action, JsonElement arguments, CancellationToken caller)
         => StartAuthenticatedOriginal(actualActors, action, arguments, caller);
     internal Task<BrowserAuthenticatedStorageReply> InvokeAuthenticatedControlledAsync(
-        IAuthenticatedResourceActorSource actualActors, string action, JsonElement arguments, CancellationToken caller)
-        => StartAuthenticatedOriginal(actualActors, action, arguments, caller);
+        IAuthenticatedResourceActorSource actualActors, string action, JsonElement arguments, CancellationToken caller,
+        AuthenticatedResourceActor? expectedActor = null)
+        => StartAuthenticatedOriginal(actualActors, action, arguments, caller, expectedActor);
     internal Task<BrowserAuthenticatedStorageReply> InvokeSpaceSettingsAsync(BrowserTaskActorSource actualActors,
         string action, JsonElement arguments, AuthenticatedResourceActor? expectedActor, CancellationToken caller)
     {
         if (action is not ("SpacesSettings.Export" or "SpacesSettings.CompareExchange"))
             throw new ArgumentOutOfRangeException(nameof(action));
+        return StartAuthenticatedOriginal(actualActors, action, arguments, caller, expectedActor);
+    }
+    internal Task<BrowserAuthenticatedStorageReply> InvokeConversationProductionAsync(BrowserTaskActorSource actualActors,
+        string action, JsonElement arguments, AuthenticatedResourceActor? expectedActor, CancellationToken caller)
+    {
+        if (!action.StartsWith("ConversationProduction.", StringComparison.Ordinal)) throw new ArgumentOutOfRangeException(nameof(action));
         return StartAuthenticatedOriginal(actualActors, action, arguments, caller, expectedActor);
     }
     private Task<BrowserAuthenticatedStorageReply> StartAuthenticatedOriginal(

@@ -21,8 +21,8 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Haven.Desktop.Views.Pages.Chat;
 
 /// <summary>
-/// Production Haven-native conversation surface. Avalonia owns only the platform host/window/file-picker boundary;
-/// visible Chat composition, editing, transcript rendering, menus and generated UI live in Haven scene elements.
+/// Production CUI conversation surface. Avalonia owns the platform host/window/file-picker boundary;
+/// canonical CUI owns composition, editing, transcript rendering, menus and input. Existing generated children retain their original owners.
 /// </summary>
 public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDisposable
 {
@@ -49,7 +49,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     private readonly AssessmentTemplateRuntime _assessmentTemplate;
     private readonly WorkflowTemplateRuntime _workflowTemplate;
     private readonly CustomTemplateRuntime _customTemplate;
-    private readonly ChatHavenScene _scene;
+    private readonly ChatCuiScene _scene;
     private readonly List<ChatMessage> _messages = [];
     private readonly List<ConversationContextEntry> _temporaryContextEntries = [];
     private readonly Stack<ChatMessage> _redoMessages = [];
@@ -89,10 +89,22 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     private readonly DispatcherTimer _sendProgressTimer;
     private bool _isSending;
     private bool _isChangingTemporary;
+    private bool _isAwaitingTemporaryMemory;
+    private readonly ContentControl _choiceOverlay = new();
     private (Conversation Conversation, ChatMessage[] Messages, ConversationContextEntry[] Context)? _pendingTemporarySave;
 
     private bool CanChangeConversation()
     {
+        if (_isPreparingChatClose)
+        {
+            SetProjectionStatus("Finish or cancel the close choice before changing this conversation.");
+            return false;
+        }
+        if (_isAwaitingTemporaryMemory)
+        {
+            SetProjectionStatus("Finish or cancel the Memory choice before changing this conversation.");
+            return false;
+        }
         if (!_isChangingTemporary && _pendingTemporarySave is null) return true;
         SetProjectionStatus("The temporary chat save must finish or be retried before changing this conversation.");
         return false;
@@ -166,14 +178,15 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         _customTemplate = customTemplate;
         _conversation = CreateConversation(HavenMode.Chat);
 
-        _scene = new ChatHavenScene();
-        AutomationProperties.SetAutomationId(this, "HavenNativeChatPage");
-        AutomationProperties.SetName(this, "9to1-native Chat page");
-        Scene = new HavenSceneControl(new HavenAvaloniaImageResolver(), _genUiNativeResolver) { Root = _scene.Root };
-        AutomationProperties.SetAutomationId(Scene, "HavenNativeChatScene");
-        AutomationProperties.SetName(Scene, "9to1-native Chat");
         _originalWork = new NewChatOriginalWorkLifetime(StopOriginalPageAsync, CleanupOriginalPageAsync);
-        Content = Scene;
+        _scene = new ChatCuiScene(CreateCuiChatActions(), _genUiNativeResolver,
+            App.Services?.GetService<CakeOS.Cui.Themes.CuiThemePreferenceContext>());
+        AutomationProperties.SetAutomationId(this, "HavenNativeChatPage");
+        AutomationProperties.SetName(this, "Spaces Chat page");
+        Scene = _scene.Host;
+        AutomationProperties.SetAutomationId(Scene, "HavenNativeChatScene");
+        AutomationProperties.SetName(Scene, "Spaces Chat");
+        Content = new Grid { Children = { Scene, _choiceOverlay } };
         WireScene();
 
         _sendProgressTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
@@ -196,7 +209,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         _ = InitialiseAsync();
     }
 
-    public HavenSceneControl Scene { get; }
+    public ChatCuiSceneHost Scene { get; }
+    internal ChatCuiScene CuiPresentation => _scene;
 
     public event EventHandler? ModelChanged;
     public event EventHandler? ConversationStateChanged;
@@ -1046,38 +1060,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         {
             _dual = new DualModelChatController(dualModels);
             _scene.EnsureDualModelBar();
-            _scene.DualToggleRequested += OnDualToggleRequested;
-            _scene.DualModelPickerRequested += OnDualModelPickerRequested;
-            _scene.DualSecondModelChosen += OnDualSecondModelChosen;
         }
-
-        _scene.SendRequested += (_, _) => _ = SubmitCurrentInstructionAsync();
-        _scene.StopRequested += OnStopRequested;
         _scene.Instruction.Invalidated += OnComposerEditCompleted;
-        _scene.ResolveProblemsRequested += (_, _) =>
-        {
-            if (_originalWork.IsRetiring) return;
-            _bus.Fire("Chat.Problems.Resolve.Click");
-            ShowResolveProblems();
-        };
-        _scene.AddActionSelected += (_, action) =>
-        {
-            if (_originalWork.IsRetiring) return;
-            if (_activeMention is not null) ConsumeActiveMention();
-            AddActionSelected?.Invoke(this, action);
-        };
-        _scene.CatalogItemSelected += (_, selection) =>
-        {
-            if (_originalWork.IsRetiring) return;
-            if (_activeMention is not null) ConsumeActiveMention();
-            ApplyAddSelection(selection);
-            AddCatalogItemSelected?.Invoke(this, selection);
-            FocusComposer();
-        };
-        _scene.MessageActionRequested += OnMessageActionRequested;
-        _scene.MarkdownCodeActionRequested += OnMarkdownCodeActionRequested;
-        _scene.ContextRemoveRequested += (_, entryId) => _ = RemoveContextEntryAsync(entryId);
-        _scene.AttachmentRemoveRequested += OnAttachmentRemoveRequested;
         Scene.InputSubmitted += OnInputSubmitted;
         Scene.PointerPressedOutside += OnOriginalPointerPressedOutside;
     }
@@ -1103,11 +1087,6 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     private void OnInputSubmittedOriginalBody(Input input)
     {
         if (_originalWork.IsRetiring) return;
-        if (ReferenceEquals(input, _scene.Instruction))
-        {
-            _ = SubmitCurrentInstructionAsync();
-            return;
-        }
         foreach (var surface in _generatedSurfaces.Values)
         {
             if (!surface.OwnsInput(input)) continue;
@@ -1150,10 +1129,10 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             "Resolve Problems",
             "Choose what is going wrong. 9to1 will apply the selected recovery directly.",
             [
-                ("Hallucinating", () => SetRecoveryDraft("Stop and audit your previous responses in this chat for hallucinations. Re-check every factual claim against the information actually available, clearly separate verified facts from assumptions, correct anything unsupported, and ask for missing information instead of guessing.")),
-                ("Looping", () => SetRecoveryDraft("You are repeating the same approach. Stop the loop, briefly identify what has already been attempted and why it did not work, then choose a materially different approach and continue from there without repeating earlier steps.")),
-                ("Recurring Bug in Produced Code", () => SetRecoveryDraft("The produced code has a recurring bug. Reproduce or trace the failure, compare it with the previous attempted fixes, identify the underlying root cause, then propose the smallest complete correction and explain how to verify that the same bug no longer recurs. Do not repeat an earlier patch unchanged.")),
-                ("Something Else", () => SetRecoveryDraft("Review this conversation for the unresolved problem. Summarise the observed symptoms and attempted fixes, identify the most likely root cause, state what evidence is still missing, and propose the safest next step without claiming success until it is verified."))
+                ("Hallucinating", () => RunChatOriginalAsync(() => { SetRecoveryDraft("Stop and audit your previous responses in this chat for hallucinations. Re-check every factual claim against the information actually available, clearly separate verified facts from assumptions, correct anything unsupported, and ask for missing information instead of guessing."); return Task.CompletedTask; })),
+                ("Looping", () => RunChatOriginalAsync(() => { SetRecoveryDraft("You are repeating the same approach. Stop the loop, briefly identify what has already been attempted and why it did not work, then choose a materially different approach and continue from there without repeating earlier steps."); return Task.CompletedTask; })),
+                ("Recurring Bug in Produced Code", () => RunChatOriginalAsync(() => { SetRecoveryDraft("The produced code has a recurring bug. Reproduce or trace the failure, compare it with the previous attempted fixes, identify the underlying root cause, then propose the smallest complete correction and explain how to verify that the same bug no longer recurs. Do not repeat an earlier patch unchanged."); return Task.CompletedTask; })),
+                ("Something Else", () => RunChatOriginalAsync(() => { SetRecoveryDraft("Review this conversation for the unresolved problem. Summarise the observed symptoms and attempted fixes, identify the most likely root cause, state what evidence is still missing, and propose the safest next step without claiming success until it is verified."); return Task.CompletedTask; }))
             ]);
     }
 
@@ -1218,6 +1197,11 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
         if (_dual is { IsActive: true })
         {
+            if (originalConversation.IsTemporary)
+            {
+                SetProjectionStatus("Dual comparison is not yet available for Temporary chats. Turn Dual off to send with your per-message Memory choice.");
+                return; // Preserve the draft; no comparison provider or durable execution event is admitted.
+            }
             if (originalConversation.Mode == HavenMode.Tasks)
             {
                 SetProjectionStatus("Canonical Tasks dual comparison is unavailable. Choose one configured task provider.");
@@ -1239,9 +1223,23 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         NewChatOriginalInitialTaskObservation? initialTaskObservation = null;
         try
         {
-        _pendingInstruction = null;
+        _sendCancellation = CancellationTokenSource.CreateLinkedTokenSource(RequireChatOriginal().Token);
+        originalSendCancellation = _sendCancellation;
+        bool? temporaryMemoryRead = null;
+        if (originalConversation.IsTemporary)
+        {
+            temporaryMemoryRead = await AwaitChatOriginalAsync(ChooseTemporaryMemoryReadAsync(originalSendCancellation.Token));
+            if (temporaryMemoryRead is null)
+            {
+                if (_pendingInstruction == instruction) _pendingInstruction = null;
+                return;
+            }
+        }
+        if (_pendingInstruction == instruction) _pendingInstruction = null;
         _redoMessages.Clear();
-        _scene.Instruction.Text = string.Empty;
+        // A later draft may arrive while the original Memory choice is visible.
+        // Accepting this request must not consume that different, unsent draft.
+        if (_scene.Instruction.Text.Trim() == instruction) _scene.Instruction.Text = string.Empty;
         DemandOriginalChatPublication();
         _bus.Fire("Chat.Composer.Send.Click");
         DemandOriginalChatPublication();
@@ -1250,8 +1248,6 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         DemandOriginalChatPublication();
         _sendProgressTimer.Start();
         DemandOriginalChatPublication();
-        _sendCancellation = CancellationTokenSource.CreateLinkedTokenSource(RequireChatOriginal().Token);
-        originalSendCancellation = _sendCancellation;
         RefreshVisualState();
 
         var now = DateTimeOffset.UtcNow;
@@ -1261,6 +1257,13 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             _conversation = _conversation with { Title = title, UpdatedAt = now };
             originalConversation = _conversation;
         }
+        var requestGenerationOptions = _preferences.GenerationOptions;
+        if (temporaryMemoryRead is { } allowRead)
+            requestGenerationOptions = requestGenerationOptions with
+            {
+                TemporaryMemoryReadChoice = _sessions.RecordTemporaryMemoryReadChoice(
+                    originalConversation, instruction, originalSendCancellation.Token, allowRead)
+            };
 
             Guid? emittedUserMessageId = null;
             var sendReportedFailure = false;
@@ -1313,7 +1316,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                 var actualAgentInstructions = _activeAgent?.Instructions ?? string.Empty;
                 var actualImages = _attachedImages.Count == 0 ? null : _attachedImages.ToArray();
                 var actualPrompts = _activeInstructions.Select(item => new ActivePrompt(item.Name, item.IconKey, item.Persists, item.Instructions)).ToArray();
-                var actualGenerationOptions = _preferences.GenerationOptions;
+                var actualGenerationOptions = requestGenerationOptions;
                 var actualFilePermission = _preferences.FilePermission;
                 var actualCommandPermission = _preferences.CommandPermission;
                 var actualBrowserPermission = _preferences.BrowserPermission;
@@ -1339,6 +1342,11 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             else
             {
                 var actualRegisteredContext = await BuildRegisteredContextAsync();
+                requestGenerationOptions = requestGenerationOptions with
+                {
+                    RequestedToolApprovalMode = CurrentToolApprovalMode,
+                    OriginalToolApprovalRequest = CreateOriginalToolApprovalRequest(originalConversation, instruction, originalSendCancellation.Token)
+                };
                 await RequireChatOriginal().ReadStreamAsync(_sessions.SendWithTransientHistoryAsync(
                                originalConversation,
                                instruction,
@@ -1355,7 +1363,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                                originalSendCancellation.Token,
                                prompts: _activeInstructions.Select(item => new ActivePrompt(item.Name, item.IconKey, item.Persists, item.Instructions)).ToArray(),
                                registeredContext: actualRegisteredContext,
-                               generationOptions: _preferences.GenerationOptions,
+                               generationOptions: requestGenerationOptions,
                                filePermission: _preferences.FilePermission,
                                commandPermission: _preferences.CommandPermission,
                                browserPermission: _preferences.BrowserPermission,
@@ -2110,8 +2118,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             message.Id,
             "Branch message",
             [
-                ("Branch in new chat", () => _ = BranchIntoNewChatAsync(message)),
-                ("Branch in existing chat", () => _ = ShowExistingChatPickerAsync(message))
+                ("Branch in new chat", () => BranchIntoNewChatAsync(message)),
+                ("Branch in existing chat", () => ShowExistingChatPickerAsync(message))
             ]);
     }
 
@@ -2121,9 +2129,9 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             message.Id,
             "Edit message",
             [
-                ("Restart from here", () => ShowMessageEditor(message, MessageEditChoice.RestartHere)),
-                ("Edit in new branch", () => ShowMessageEditor(message, MessageEditChoice.NewBranch)),
-                ("Edit in memory only", () => ShowMessageEditor(message, MessageEditChoice.MemoryOnly))
+                ("Restart from here", () => RunChatOriginalAsync(() => { ShowMessageEditor(message, MessageEditChoice.RestartHere); return Task.CompletedTask; })),
+                ("Edit in new branch", () => RunChatOriginalAsync(() => { ShowMessageEditor(message, MessageEditChoice.NewBranch); return Task.CompletedTask; })),
+                ("Edit in memory only", () => RunChatOriginalAsync(() => { ShowMessageEditor(message, MessageEditChoice.MemoryOnly); return Task.CompletedTask; }))
             ]);
     }
 
@@ -2258,9 +2266,9 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             .Where(item => item.Id != _conversation.Id && !item.IsArchived)
             .ToArray();
         var choices = recent
-            .Select<Conversation, (string Label, Action Action)>(conversation =>
+            .Select<Conversation, (string Label, Func<Task> Action)>(conversation =>
                 (string.IsNullOrWhiteSpace(conversation.Title) ? "Untitled chat" : conversation.Title,
-                    () => _ = ContinueInExistingChatAsync(conversation, sourceMessage)))
+                    () => ContinueInExistingChatAsync(conversation, sourceMessage)))
             .ToArray();
         if (choices.Length == 0)
         {
@@ -2541,6 +2549,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     {
         DemandOriginalChatCurrent();
         _scene.SetSending(_isSending, _selectedModel is not null);
+        RefreshCuiConversationHeader();
         DemandOriginalChatCurrent();
         RefreshMessages();
         DemandOriginalChatCurrent();

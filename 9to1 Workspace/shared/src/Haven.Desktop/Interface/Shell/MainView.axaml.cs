@@ -381,7 +381,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             if (IsSplitView && args.Key is Key.Left or Key.Right) QueueWorkspaceSessionSave();
         };
         TopRail.AttachNotifications(_notifications);
-        PageContent.Content = _currentPage;
+        PresentNativePageContent(_currentPage);
         ApplyShellVisualState();
         RefreshTopRailTabs();
 
@@ -463,10 +463,11 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         private set
         {
             CheckPendingOriginalFilesPublication();
+            DemandNativePageMountable(value);
             if (!SetProperty(ref _currentPage, value)) return;
             CheckPendingOriginalFilesPublication();
             if (PageContent is not null)
-                PageContent.Content = value;
+                PresentNativePageContent(value);
             CheckPendingOriginalFilesPublication();
             RaisePropertyChanged(nameof(IsChatVisible));
             CheckPendingOriginalFilesPublication();
@@ -501,6 +502,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
                 SwapSplitPanes();
                 return;
             }
+            DemandNativePageMountable(value.Page);
             if (_selectedTab is not null)
             {
                 _selectedTab.IsSelected = false;
@@ -651,6 +653,12 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         get => _isSidebarOpen;
         set
         {
+            if (_edition == HavenShellEdition.New && _nativeChatSidebar is not null)
+            {
+                if (_isSidebarOpen != value)
+                    StartOriginalShellEvent(original => original.AwaitAsync(SetNativeSpaceSidebarCollapsedAsync(!value)));
+                return;
+            }
             if (!SetProperty(ref _isSidebarOpen, value)) return;
             RaisePropertyChanged(nameof(IsSidebarClosed));
             RaisePropertyChanged(nameof(IsSidebarVisible));
@@ -990,7 +998,6 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             Haven.Desktop.App.Services?.GetService<IConversationProductionRepository>());
         page.ModelChanged += OnNewChatModelChanged;
         page.ConversationStateChanged += OnNewChatConversationStateChanged;
-        page.AddActionSelected += OnNewChatAddActionSelected;
         page.AddCatalogItemSelected += OnNewChatCatalogItemSelected;
         return page;
     }
@@ -1730,7 +1737,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         else if (route.Kind == HavenAppRouteKind.Spaces)
         {
             if (openInNewTab) AddNewTab();
-            await OpenSpacesAsync();
+            await OpenSpacesWorkspaceAsync();
         }
         else if (route.Kind == HavenAppRouteKind.Maps)
         {
@@ -3625,18 +3632,17 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     {
         CheckPendingOriginalFilesPublication();
         if (PageContent is null) return;
-        PageContent.Content = CurrentPage;
+        PresentNativePageContent(IsDisposed ? null : CurrentPage);
         CheckPendingOriginalFilesPublication();
         SidebarControl.IsVisible = _edition == HavenShellEdition.Classic && HasFullSidebar && !IsSplitView;
         CheckPendingOriginalFilesPublication();
-        NativeSidebarHost.IsVisible = _edition == HavenShellEdition.New
-                                      && CurrentSurface == HavenSurface.Chat
-                                      && IsSidebarOpen
+        NativeSidebarHost.IsVisible = !IsNativeSpacesFrameMounted && _edition == HavenShellEdition.New
+                                      && CurrentSurface is HavenSurface.Chat or HavenSurface.Study or HavenSurface.Tasks
                                       && !IsSplitView;
         CheckPendingOriginalFilesPublication();
         ShellContextBar.IsVisible = false;
         CheckPendingOriginalFilesPublication();
-        StoredChatDropdown.IsVisible = _edition == HavenShellEdition.New
+        StoredChatDropdown.IsVisible = !IsNativeSpacesFrameMounted && _edition == HavenShellEdition.New
                                        && CurrentPage is NewChatPage newChatPage
                                        && !newChatPage.HasStarted;
         CheckPendingOriginalFilesPublication();
@@ -3739,7 +3745,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
 
     public void ShowOverlay(UserControl overlay)
     {
-        _previousContent = PageContent.Content;
+        _previousContent = NativeLogicalPage(PageContent.Content);
         OverlayHost.Child = overlay;
         OverlayHost.IsVisible = true;
         PageContent.IsVisible = false;
@@ -3748,7 +3754,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     public void HideOverlay()
     {
         OverlayHost.IsVisible = false;
-        PageContent.Content = _previousContent;
+        PresentNativePageContent(_previousContent);
         PageContent.IsVisible = true;
         OverlayHost.Child = null;
         _previousContent = null;
