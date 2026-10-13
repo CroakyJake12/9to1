@@ -1,0 +1,42 @@
+{
+  "status": "CHECKPOINT",
+  "sourceCommit": "ca3763a88f54d324477f144b7165298d9ceb23d7",
+  "worker": "9to1-dulche-runtime-20261013",
+  "origin": "https://dulche-runtime-20261013.9to1.uk",
+  "deployedAt": "2026-10-13T20:28:36.979944Z",
+  "versionId": "3429f3f1-ce9a-4031-8fa5-7972d1059b41",
+  "sourceSha256": "dd46b3d470bd07936c4cf43068dd1522c2974a6d433114af8b844e4a87dd2d97",
+  "bundleSha256": "2ac61dc0ddf65952c76468795068809fd0c7a992a8e5966724341a883f599ced",
+  "connectorSourceSha256": "e2d12291b94a3d70c91334ce6aa4f1605a4dc66585876994a9b5762d6326441f",
+  "previewWrapperSha256": "2e6d1a7eae38fa39c3b9d58b62588d6dd1334845dfb41780fe522a8f6a6fcb5b",
+  "controls": {
+    "canonicalPreview": 5,
+    "boundedRelay": 8,
+    "persistedRestart": 5,
+    "scope": "Scoped source/actual Workerd protocol controls using isolated account fixture; not signed-in production acceptance"
+  },
+  "liveChecks": {
+    "at": "2026-10-13T20:31:47.320Z",
+    "publicWithoutServiceCredential": 401,
+    "serviceCredentialWithoutCakeBearer": 401,
+    "ownedConnectorHttpAbort": {
+      "at": "2026-10-13T20:29:51.647Z",
+      "replacementStatus": 200,
+      "replacementWaitMs": 20413,
+      "scope": "Real service-only HTTPS connector poll ownership; not generation stop"
+    }
+  },
+  "protection": {
+    "serviceAccessUnchanged": true,
+    "workersDev": false,
+    "alternatePreviewUrls": false,
+    "observability": false,
+    "rawOllama": "loopback only"
+  },
+  "unverified": [
+    "Real signed-in product send/response/Stop/reopen",
+    "Abandoned outer response recovery",
+    "Sustained availability beyond managed host and expiring credential"
+  ],
+  "previewTrafficChanged": false
+}
