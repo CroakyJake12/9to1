@@ -1,0 +1,50 @@
+{
+  "assets": {
+    "config": {
+      "not_found_handling": "single-page-application",
+      "run_worker_first": [
+        "/api/dulche/*"
+      ],
+      "_headers": "/*\n  Cross-Origin-Opener-Policy: same-origin\n  Cross-Origin-Embedder-Policy: require-corp\n  X-Robots-Tag: noindex, nofollow\n  Referrer-Policy: no-referrer\n  Cache-Control: no-cache\n"
+    }
+  },
+  "annotations": {
+    "workers/message": "Template only; inject exact compiled asset receipt and source revision before staging"
+  },
+  "compatibility_date": "2026-10-12",
+  "compatibility_flags": [
+    "enable_request_signal"
+  ],
+  "main_module": "preview-worker.mjs",
+  "bindings": [
+    {
+      "type": "assets",
+      "name": "ASSETS"
+    },
+    {
+      "type": "service",
+      "name": "ACCOUNT_AUTH",
+      "service": "cake-id-release-validation"
+    },
+    {
+      "type": "plain_text",
+      "name": "PREVIEW_ORIGIN",
+      "text": "https://present-4581358882177bc7.9to1.uk"
+    },
+    {
+      "type": "plain_text",
+      "name": "ACCOUNT_ORIGIN",
+      "text": "https://cake-id-release-validation.jcbailey008.workers.dev"
+    },
+    {
+      "type": "plain_text",
+      "name": "DULCHE_ORIGIN",
+      "text": "https://dulche-runtime-20261013.9to1.uk"
+    },
+    {
+      "type": "plain_text",
+      "name": "MODEL_ID",
+      "text": "qwen3:1.7b"
+    }
+  ]
+}
