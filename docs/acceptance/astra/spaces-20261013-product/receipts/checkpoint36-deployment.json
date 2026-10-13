@@ -1,0 +1,81 @@
+{
+  "status": "CHECKPOINT",
+  "sourceCommit": "4ee0c10e6d7d2274202acc9aba735f7c648b9ad0",
+  "previewOrigin": "https://present-4581358882177bc7.9to1.uk",
+  "worker": "9to1-present-preview-20261012",
+  "versionId": "e357b49a-3ca9-40dd-b4a9-05b3e0e58044",
+  "deploymentId": "366b36c6-8ae2-4f9a-9c5b-9769b2729bb8",
+  "deployedAtUtc": "2026-10-13T23:04:08.945915Z",
+  "deployedAtLondon": "2026-10-14T00:04:08.945915+01:00",
+  "percentage": 100,
+  "assets": {
+    "count": 346,
+    "bytes": 83497705,
+    "cloudflareManifestSha256": "33853627a1c7cc3f8db9eaca63323b6716da5b4d02153155b198dc82e3a2b185"
+  },
+  "sourceReconciliation": {
+    "canonicalMain": "2c4d151b954171f2d3c2cfca6d7da5521c018449",
+    "unrelatedDevelopmentRelayPaths": 19,
+    "candidateOrSdkInputOverlap": 0,
+    "sourceResetOrBlindMerge": false
+  },
+  "verification": {
+    "ordinaryReleaseBuildPublish": "PASS with receipt; not isolated clean-cache CI",
+    "independentActualSignedOutProductChecks": {
+      "passed": 10,
+      "total": 10,
+      "consoleErrors": 0,
+      "networkFailures": 0,
+      "allOriginalCleanupJoined": true
+    },
+    "nativeFocusedChecks": {
+      "failed": 0,
+      "passed": 92,
+      "skipped": 0,
+      "total": 92,
+      "exitCode": 0
+    },
+    "deployedResourcesEqualStaged": true,
+    "ownerAccessUnchanged": true,
+    "alternateUrlsDisabled": true,
+    "allPublicProtectionChecksPass": true,
+    "actualLoopbackModel": "qwen3:1.7b",
+    "actualModelDigest": "8f68893c685c3ddff2aa3fffce2aa60a30bb2da65ca488b61fff134a4d1730e7",
+    "originalRuntimeProcessesAlive": true
+  },
+  "rollback": {
+    "versionId": "d4c6cfd1-194e-467f-b8c7-0c8ac0db755b",
+    "retainedAndRetrievable": true,
+    "storageChangedFromRollbackVersion": false,
+    "procedure": "Redeploy retained checkpoint35 at100%; keep Access, hostname and all user records unchanged."
+  },
+  "runtime": {
+    "workerVersion": "f808e90d-36b4-4fcc-ac83-bca11b822c7e",
+    "ollamaExecutionSession": 96813,
+    "connectorExecutionSession": 92829,
+    "serviceCredentialExpiresAt": "2026-10-14T19:33:03Z",
+    "limitation": "Managed environment process lifetime; two earlier interruptions required restoration."
+  },
+  "fullAcceptance": false,
+  "remainingGates": [
+    "Fresh authenticated account and genuine model catalogue/response",
+    "Durable conversation, restart and cross-device account isolation/synchronization",
+    "Actual tools/agents and real progress/questions/answers",
+    "Voice, full first-party Space workflows and complete dependency acceptance",
+    "Exact approved-image pixels unavailable; complete visual semantics/parity not accepted",
+    "Actual protected live preview after deployment (this run used unchanged local immutable artifact)"
+  ],
+  "liveBrowserLimitation": "Public HTTPS checks verify unchanged Access only. No legitimate signed-in browser/session was available; actual authenticated Chat send, response, Stop, reopen and account boundary workflow remain unverified.",
+  "sanitization": "No Access owner emails, credential values, user conversation content or account/session tokens.",
+  "evidence": [
+    "checkpoint36-build-4ee0c10e/build-receipt.json",
+    "checkpoint36-product-4ee0c10e/independent-execution.json",
+    "native-cui-candidate-4ee0c10e-manifest.json",
+    "checkpoint36-canonical-reconciliation.json",
+    "checkpoint36-independent-upload-gate.json",
+    "checkpoint36-assets-upload.json",
+    "checkpoint36-preview-postdeployment.json",
+    "checkpoint36-public-protection.json",
+    "checkpoint36-runtime-postdeployment.json"
+  ]
+}

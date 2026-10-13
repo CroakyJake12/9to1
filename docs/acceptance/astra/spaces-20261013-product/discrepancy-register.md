@@ -1,5 +1,9 @@
 # Spaces visual parity — independent discrepancy register
 
+Latest immutable product: source `4ee0c10e6d7d2274202acc9aba735f7c648b9ad0`, ordinary Release publication, independently operated in Chromium. All ten signed-out route/input/resize/reload checks passed and all346 asset hashes match the build receipt. Actual desktop/compact captures are `images/signed-out-4ee0c10e-1530x946.png` and `images/signed-out-4ee0c10e-390x844.png`. These supersede older signed-out captures for this candidate, but do not supersede the missing authenticated/representative functional gates or the separate labelled visual-fixture scope below.
+
+**V17 — repeated setup guidance, Chat presentation owner:** the actual signed-out product repeats the same sign-in explanation in the empty conversation, status above the composer and sidebar. Root and the independent product reviewer observed this in the compiled desktop/compact captures. Consolidate redundant setup messaging while retaining actual account/model/save/error state and accessible sign-in discoverability. This remains polish debt; no fabricated state or lost user record was observed. Full visual acceptance remains FAILED.
+
 Status at2026-10-13 20:28UTC: **WORKING; visual acceptance NOT PASSED.** This register concerns the approved Spaces Chat references and the actual shared product layout. Functional acceptance remains separate and mandatory.
 
 The comparison baseline is immutable source9c76fced38db619e72b973a9fc6de8900276a2b1, actual Chromium151 product captures in `evidence/p0-product-interaction-9c76fced`, especially `chat-1530x946.png`, `chat-390x844.png` and `real-recovery-dialog.png`. The expanded9-check receipt passes signed-out pointer/keyboard/navigation/resize/reload controls, with unchanged artifact. That does not verify signed-in Chat or the newer source fixes.

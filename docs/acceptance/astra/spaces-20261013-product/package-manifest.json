@@ -1,18 +1,33 @@
 {
   "status": "WORKING_NOT_FULL_ACCEPTANCE",
   "createdAt": "2026-10-13",
-  "sourceIdentity": "Live checkpoint35 remains source0e24d109. Current source candidate includes shared CUI and Chat UI corrections; exact component/fixture sources and assemblies are individually hashed in receipts. Immutable product publication pending; full acceptance has not passed.",
+  "sourceIdentity": "Published compiled checkpoint36 source4ee0c10e. Independent signed-out Chromium, source/native/component and labelled visual-only evidence retain exact separate identities. Full Spaces acceptance has not passed.",
   "originalReferenceBytesIncluded": false,
   "files": [
     {
       "path": "README.md",
-      "bytes": 11610,
-      "sha256": "d4f9770bcb704b6cd0151b4368dca2569d27af4e506813a4da7bc08be9d9f3dc"
+      "bytes": 11736,
+      "sha256": "031499c9a9e10cc50629671a81c40dc3d8dff6ae526a91d804ccfd09246febf5"
     },
     {
       "path": "chat-ui-checkpoint.md",
       "bytes": 4517,
       "sha256": "d45980929905f78a7df7a994b1a460fd0a18837260bb14698f0fef81208f384f"
+    },
+    {
+      "path": "checkpoint36-independent-product.md",
+      "bytes": 1671,
+      "sha256": "d7f43da7b5aa64911067a700dbcd2abe98b26af9b1586eebf2b40b8ef8f6046b"
+    },
+    {
+      "path": "checkpoint36-native.md",
+      "bytes": 4232,
+      "sha256": "2d795c79f643eea7c08ba8cd1113d55686fb18935b8d862112f9e64650a5e483"
+    },
+    {
+      "path": "checkpoint36.md",
+      "bytes": 5626,
+      "sha256": "e5b5e61eec37093826d4714a0ebd210c1def45e047b95c1b354c0070d60cd312"
     },
     {
       "path": "cui-interaction-checkpoint.md",
@@ -21,8 +36,8 @@
     },
     {
       "path": "discrepancy-register.md",
-      "bytes": 26421,
-      "sha256": "50c6c1331e3e6cace711d16d17ce59df8cc0057a55c3f5026c72209173aa5afc"
+      "bytes": 27536,
+      "sha256": "2aeb7e419fe50cfa68833ddb9f7655294457d6ef6dafceaad24e2b167113cc99"
     },
     {
       "path": "fixture-provenance.md",
@@ -38,6 +53,16 @@
       "path": "images/signed-out-0e24d109-390x844.png",
       "bytes": 39166,
       "sha256": "e3a0a4a736cc6d2cdfef941b1e1d1607edf9227eef58f4a342da76a584861c28"
+    },
+    {
+      "path": "images/signed-out-4ee0c10e-1530x946.png",
+      "bytes": 71996,
+      "sha256": "df2a525a3090aa3256b689a777ae7c117449ab4908aed1b82740cb0a30312d5c"
+    },
+    {
+      "path": "images/signed-out-4ee0c10e-390x844.png",
+      "bytes": 46061,
+      "sha256": "aece48ea9b3c7539b944ff22cfde897726632de868e6a3264ffb5ee877fe21d9"
     },
     {
       "path": "images/signed-out-9c76fced-1530x946.png",
@@ -91,8 +116,8 @@
     },
     {
       "path": "p0-provenance-and-acceptance.md",
-      "bytes": 9394,
-      "sha256": "43db6fe1fc00e49cd2cb22b2f6d2c7cb2df5ac72d3530827c1a5ef21f1848607"
+      "bytes": 9658,
+      "sha256": "7a85df1f6e3abeced91887b6d9a01901a0bc8d43742ff271ffad8e3d44db33e0"
     },
     {
       "path": "receipts/browser-chat-ui-owner-tests-1.log",
@@ -118,6 +143,66 @@
       "path": "receipts/checkpoint35-deployment.json",
       "bytes": 3504,
       "sha256": "bd505c25eaf17bf9f53cc377d3aaa8959c16fbe7c23aae7e44ebc1039242f11a"
+    },
+    {
+      "path": "receipts/checkpoint36-assets.json",
+      "bytes": 58215,
+      "sha256": "b167c72d7a4dd2ed97e0f7b9701e9613c25cc645ac3954c7db7134081338c95a"
+    },
+    {
+      "path": "receipts/checkpoint36-build.json",
+      "bytes": 8516,
+      "sha256": "da936a9c13c572efabfb7ce2ce516e6a0bc2f01fe8c335ffbbf9cae0aa5c5ef1"
+    },
+    {
+      "path": "receipts/checkpoint36-canonical-reconciliation.json",
+      "bytes": 1560,
+      "sha256": "e3433b678918cab91d72f519ef2833aaf0fa066be05be5ae5d4e756c4c4a4c62"
+    },
+    {
+      "path": "receipts/checkpoint36-deployment.json",
+      "bytes": 3551,
+      "sha256": "fd0bd184f99bf46ef85e6f8eb54db56e8cdacc37459435b383e63ebe837f6051"
+    },
+    {
+      "path": "receipts/checkpoint36-independent-product.json",
+      "bytes": 4285,
+      "sha256": "7ca75fe43aa1b4adb8eb257029e337caee0e95a1ed49f105f9490dfc008aa0b1"
+    },
+    {
+      "path": "receipts/checkpoint36-native-independent.json",
+      "bytes": 331,
+      "sha256": "00981072504ba7eb753b6f7ddc45ea74c725216a3a1c1de0b2d720f8bb77592c"
+    },
+    {
+      "path": "receipts/checkpoint36-native.json",
+      "bytes": 42013,
+      "sha256": "c0758f4198b72913631f95660226d13e904bfe6a4c53b3aceb6e4181c4b0c92c"
+    },
+    {
+      "path": "receipts/checkpoint36-preview-postdeployment.json",
+      "bytes": 3688,
+      "sha256": "d1d4a067c8cee5b927503fc759bf2bd0ecf7332f8577805cad759aa00de0e114"
+    },
+    {
+      "path": "receipts/checkpoint36-product.json",
+      "bytes": 4201,
+      "sha256": "48e8e526c98d55e9e2005fe1ce3699e837fe7627ac68355aecf724ae6a4ed52c"
+    },
+    {
+      "path": "receipts/checkpoint36-public-protection.json",
+      "bytes": 939,
+      "sha256": "dd6b9fcf481c159267bbca14ca604590c8bbafbbc0d9f96d0735091777f9743c"
+    },
+    {
+      "path": "receipts/checkpoint36-runtime-postdeployment.json",
+      "bytes": 1296,
+      "sha256": "471f7bdc34c99709a01d2bc83d69edb417c2ad9dbde4fd6d69358d2372d37340"
+    },
+    {
+      "path": "receipts/checkpoint36-sdk-items.json",
+      "bytes": 681652,
+      "sha256": "1fa1c0e4a28897ba90ded5e06a98e4b59767d60ced6909d1b9887bc6ada00dc4"
     },
     {
       "path": "receipts/cui-reveal-joined-tests-5.log",
@@ -524,5 +609,6 @@
       "bytes": 13295,
       "sha256": "fded1de0f373d11337d1c9b7f89a7e3f59dddddcbb0f91c1de30dbcda7ab2f7f"
     }
-  ]
+  ],
+  "updatedAtUtc": "2026-10-13T23:08:14.903974+00:00"
 }

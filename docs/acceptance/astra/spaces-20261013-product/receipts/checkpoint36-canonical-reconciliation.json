@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-10-13T23:03:27.262487+00:00",
+  "priorCanonicalMain": "77f32cb609eb9b2c527c6172bd7e5efe06ebe845",
+  "currentCanonicalMain": "2c4d151b954171f2d3c2cfca6d7da5521c018449",
+  "candidate": "4ee0c10e6d7d2274202acc9aba735f7c648b9ad0",
+  "newMainPaths": [
+    "tools/development-relay/README.md",
+    "tools/development-relay/coordinator.mjs",
+    "tools/development-relay/dashboard.mjs",
+    "tools/development-relay/git-remote.mjs",
+    "tools/development-relay/policy.mjs",
+    "tools/development-relay/receiver.mjs",
+    "tools/development-relay/relayctl.mjs",
+    "tools/development-relay/reviews.mjs",
+    "tools/development-relay/runner.mjs",
+    "tools/development-relay/service-start.mjs",
+    "tools/development-relay/tests/automatic-return.test.mjs",
+    "tools/development-relay/tests/coordinator.test.mjs",
+    "tools/development-relay/tests/expired-return.test.mjs",
+    "tools/development-relay/tests/git-remote.test.mjs",
+    "tools/development-relay/tests/receiver.test.mjs",
+    "tools/development-relay/tests/reviews.test.mjs",
+    "tools/development-relay/tests/service-start.test.mjs",
+    "tools/development-relay/tests/worker-guard.test.mjs",
+    "tools/development-relay/worker-guard.mjs"
+  ],
+  "branchPathOverlap": [],
+  "evaluatedRootInputOverlap": [],
+  "decision": "Retain unrelated development-relay commits on canonical main. No source reset or blind merge. They are outside this compiled Spaces/browser checkpoint; PR integration must preserve them. Candidate and staged assets remain exactly bound to4ee0c10e."
+}

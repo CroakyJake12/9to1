@@ -1,6 +1,6 @@
 # P0 mock-up provenance and actual product acceptance
 
-Status: **WORKING — full visual and functional acceptance remain FAILED / UNVERIFIED.** Publication of the next candidate is held. The live preview remains checkpoint35, source `0e24d10972384f5389f150daf3ed76ac1666062d`, version `d4c6cfd1-194e-467f-b8c7-0c8ac0db755b`.
+Status: **WORKING — full visual and functional acceptance remain FAILED / UNVERIFIED.** The qualified continuation is now published as [checkpoint36](checkpoint36.md), source `4ee0c10e6d7d2274202acc9aba735f7c648b9ad0`, version `e357b49a-3ca9-40dd-b4a9-05b3e0e58044`. Checkpoint35 remains recoverable. Historical audit findings below retain their original source boundaries; the current compiled candidate also passed the release guard and independent signed-out checks, without satisfying the separate mandatory authenticated tests.
 
 ## Confirmed source, reported before correction
 

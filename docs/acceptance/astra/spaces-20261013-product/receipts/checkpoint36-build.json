@@ -1,0 +1,229 @@
+{
+  "startedAt": "2026-10-13T22:51:23.898823+00:00",
+  "expectedSource": "4ee0c10e6d7d2274202acc9aba735f7c648b9ad0",
+  "commands": [
+    {
+      "label": "source-head",
+      "args": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "startedAt": "2026-10-13T22:51:23.898882+00:00",
+      "processGroupSettled": true,
+      "exitCode": 0,
+      "finishedAt": "2026-10-13T22:51:23.978089+00:00",
+      "logSha256": "5c4913a830b76909c740c7873839aa97037fae93e4c90381b5f4033fa3314b63"
+    },
+    {
+      "label": "source-clean-before",
+      "args": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "startedAt": "2026-10-13T22:51:23.978343+00:00",
+      "processGroupSettled": true,
+      "exitCode": 0,
+      "finishedAt": "2026-10-13T22:51:24.113521+00:00",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "source-tree",
+      "args": [
+        "git",
+        "ls-tree",
+        "-rz",
+        "HEAD"
+      ],
+      "startedAt": "2026-10-13T22:51:24.113770+00:00",
+      "processGroupSettled": true,
+      "exitCode": 0,
+      "finishedAt": "2026-10-13T22:51:24.198178+00:00",
+      "logSha256": "3a6413942daea7f343ab781e162e9f71327892975824ab15ac8139a5cacaeac1"
+    },
+    {
+      "label": "submodules",
+      "args": [
+        "git",
+        "submodule",
+        "status",
+        "--recursive"
+      ],
+      "startedAt": "2026-10-13T22:51:24.213815+00:00",
+      "processGroupSettled": true,
+      "exitCode": 0,
+      "finishedAt": "2026-10-13T22:51:24.350643+00:00",
+      "logSha256": "c2961c52113ef3c7d9860c3abeb45e072bdf1661a1b540a167701bf7599a0382"
+    },
+    {
+      "label": "sdk-version",
+      "args": [
+        "dotnet",
+        "--version"
+      ],
+      "startedAt": "2026-10-13T22:51:24.350923+00:00",
+      "processGroupSettled": true,
+      "exitCode": 0,
+      "finishedAt": "2026-10-13T22:51:24.536521+00:00",
+      "logSha256": "93c11b5221b72e0032ab2d9f93d28c2c9b7a0bb2557effffcdfef45ab739a0da"
+    },
+    {
+      "label": "sdk-info",
+      "args": [
+        "dotnet",
+        "--info"
+      ],
+      "startedAt": "2026-10-13T22:51:24.536832+00:00",
+      "processGroupSettled": true,
+      "exitCode": 0,
+      "finishedAt": "2026-10-13T22:51:24.824933+00:00",
+      "logSha256": "a501ce7ea12628054e4dd912130babb77ba9ceb893f5c7c43fcdb7aca17d3c14"
+    },
+    {
+      "label": "ordinary-build",
+      "args": [
+        "dotnet",
+        "msbuild",
+        "apps/Web/NineToOne.Web.csproj",
+        "-p:Configuration=Release",
+        "-target:Build",
+        "-getItem:ResolvedRuntimePack,NativeFileReference,Compile,ProjectReference,ReferencePath",
+        "-getProperty:TargetFramework,RuntimeIdentifier,NETCoreSdkVersion,MicrosoftNetCoreAppRuntimePackDir,MicrosoftNetCoreAppRuntimePackRidNativeDir,_WasmRuntimePackVersion",
+        "-p:UseSharedCompilation=false",
+        "-m:1",
+        "-nodeReuse:false"
+      ],
+      "startedAt": "2026-10-13T22:51:24.825519+00:00",
+      "processGroupSettled": true,
+      "exitCode": 0,
+      "finishedAt": "2026-10-13T22:55:11.309650+00:00",
+      "logSha256": "6250ed13e6c3315efe72d77fdd5c26d3034fc4aac5f467f95d31b8d389653f97"
+    },
+    {
+      "label": "ordinary-publish",
+      "args": [
+        "dotnet",
+        "publish",
+        "apps/Web/NineToOne.Web.csproj",
+        "--no-restore",
+        "-c",
+        "Release",
+        "--output",
+        "/workspace/astra-audit/evidence/checkpoint36-build-4ee0c10e/sdk-publish",
+        "--disable-build-servers",
+        "-p:UseSharedCompilation=false",
+        "-m:1",
+        "-nodeReuse:false"
+      ],
+      "startedAt": "2026-10-13T22:55:11.371734+00:00",
+      "processGroupSettled": true,
+      "exitCode": 0,
+      "finishedAt": "2026-10-13T22:56:33.719849+00:00",
+      "logSha256": "6019e0b1515deb7ec5117bb99390bbcd7e2f565543e99aaaf9b225c40176eb2b"
+    },
+    {
+      "label": "production-fixture-isolation",
+      "args": [
+        "node",
+        "apps/Web/Tests/verify-production-isolation.cjs",
+        "/workspace/astra-audit/evidence/checkpoint36-build-4ee0c10e/sdk-publish/wwwroot",
+        "/workspace/9to1/apps/Web/obj/project.assets.json",
+        "/workspace/9to1/apps/Web/NineToOne.Web.csproj",
+        "/workspace/astra-audit/evidence/checkpoint36-build-4ee0c10e/evaluated-build-items.json"
+      ],
+      "startedAt": "2026-10-13T22:56:33.725122+00:00",
+      "processGroupSettled": true,
+      "exitCode": 0,
+      "finishedAt": "2026-10-13T22:56:36.124400+00:00",
+      "logSha256": "ab09962b990744e4568704802b153deca8b58d20be1c2cd381f9d05e7fa153f6"
+    },
+    {
+      "label": "source-clean-after",
+      "args": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "startedAt": "2026-10-13T22:56:36.226907+00:00",
+      "processGroupSettled": true,
+      "exitCode": 0,
+      "finishedAt": "2026-10-13T22:56:36.379924+00:00",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "source-head-after",
+      "args": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "startedAt": "2026-10-13T22:56:36.380591+00:00",
+      "processGroupSettled": true,
+      "exitCode": 0,
+      "finishedAt": "2026-10-13T22:56:36.405982+00:00",
+      "logSha256": "5c4913a830b76909c740c7873839aa97037fae93e4c90381b5f4033fa3314b63"
+    }
+  ],
+  "scope": "Ordinary Release source Build and Publish with existing restored/in-place outputs; immutable destination. Not isolated CI, clean-cache, real account or product acceptance.",
+  "runnerSha256": "ac73a11be57da2360082567af0c192b7a25e105be3a96d5f67dd02a4654ce16e",
+  "status": "PASS",
+  "sourceTreeSha256": "3a6413942daea7f343ab781e162e9f71327892975824ab15ac8139a5cacaeac1",
+  "trackedAdapterInputs": {
+    "scope": "Reused tracked owner assets, not freshly built JavaScript",
+    "sha256": {
+      "avalonia.js": "e8782504d89cc1c41add8d99460369b2c04b4e486d43ff77bced979056791e84",
+      "storage.js": "b38d9247eed6e02e9b57f82997b66e603a2f71584d7c68cfd70b309a1cc3b6c1"
+    }
+  },
+  "runtimeAndNativeInputs": {
+    "runtimePack": "/workspace/.tools/dotnet/packs/Microsoft.NETCore.App.Runtime.Mono.browser-wasm/10.0.12",
+    "runtimeVersion": "10.0.12",
+    "runtimeLoader": {
+      "path": "/workspace/.tools/dotnet/packs/Microsoft.NETCore.App.Runtime.Mono.browser-wasm/10.0.12/runtimes/browser-wasm/native/dotnet.js",
+      "bytes": 37898,
+      "sha256": "ba72088a45591210f9a08fec223b0f848a0a4d3245026ae9479353596c7fa89d"
+    },
+    "nativeLibraries": [
+      {
+        "path": "/workspace/.tools/nuget/packages/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.56/st,simd/libSkiaSharp.a",
+        "bytes": 15270536,
+        "sha256": "9d44db6960c0ab9c14323585dc6d552c12c3edf24a475614be74120a71f76d6c"
+      },
+      {
+        "path": "/workspace/.tools/nuget/packages/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/libHarfBuzzSharp.a/3.1.56/st,simd/libHarfBuzzSharp.a",
+        "bytes": 3343154,
+        "sha256": "865f1ac8e246bda1ad88ffbb499a71c56fb24557d6f23717cf34666fd9dbc24e"
+      }
+    ]
+  },
+  "fixtureIsolation": {
+    "assets": {
+      "scope": "Known visual fixture isolation in explicit public artifacts; not proof of all data provenance or runtime acceptance",
+      "bundlePath": "/workspace/astra-audit/evidence/checkpoint36-build-4ee0c10e/sdk-publish/wwwroot",
+      "assetFiles": 346,
+      "compressedFiles": 230,
+      "expandedBytes": 184210337,
+      "inventorySha256": "95cc1620d555ddf6d09280b839b43e16a9f1c5be715441b140197ef7c049dc8c",
+      "referenceFieldsObserved": 0,
+      "fixtureIsolationVerified": true,
+      "modelNamesRestricted": false,
+      "accountStorageRead": false
+    },
+    "projectClosure": {
+      "projectPath": "/workspace/9to1/apps/Web/NineToOne.Web.csproj",
+      "projectAssetsSha256": "3d3d7160c8a277e52922a93c0d271730be451d95968da1d96542dfbb2a5efd3e",
+      "projectReferences": 47,
+      "rootCompileAndReferenceItemsChecked": true,
+      "evaluatedInputs": 373,
+      "evaluatedItemsSha256": "1fa1c0e4a28897ba90ded5e06a98e4b59767d60ced6909d1b9887bc6ada00dc4",
+      "projectClosureIsolationVerified": true
+    }
+  },
+  "assets": {
+    "count": 346,
+    "manifestSha256": "b167c72d7a4dd2ed97e0f7b9701e9613c25cc645ac3954c7db7134081338c95a",
+    "publicRoot": "/workspace/astra-audit/evidence/checkpoint36-build-4ee0c10e/sdk-publish/wwwroot"
+  },
+  "finishedAt": "2026-10-13T22:56:36.406306+00:00"
+}

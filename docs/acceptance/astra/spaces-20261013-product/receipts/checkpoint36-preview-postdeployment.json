@@ -1,0 +1,130 @@
+{
+  "checkedAt": "2026-10-13T23:05:27.308Z",
+  "sourceCommit": "4ee0c10e6d7d2274202acc9aba735f7c648b9ad0",
+  "deployment": {
+    "id": "366b36c6-8ae2-4f9a-9c5b-9769b2729bb8",
+    "createdOn": "2026-10-13T23:04:08.945915Z",
+    "versions": [
+      {
+        "version_id": "e357b49a-3ca9-40dd-b4a9-05b3e0e58044",
+        "percentage": 100
+      }
+    ]
+  },
+  "version": {
+    "id": "e357b49a-3ca9-40dd-b4a9-05b3e0e58044",
+    "resources": {
+      "script": {
+        "etag": "026cb98946afd996a71c23c99d4d3dbb6147acce44d05cccd74c5a85c409844e",
+        "handlers": [
+          "fetch"
+        ],
+        "named_handlers": [
+          {
+            "name": "verifyAccount",
+            "handlers": [
+              "class"
+            ]
+          }
+        ],
+        "last_deployed_from": "api"
+      },
+      "script_runtime": {
+        "assets": {
+          "not_found_handling": "single-page-application",
+          "headers": {
+            "version": 2,
+            "rules": {
+              "/*": {
+                "set": {
+                  "cache-control": "no-cache",
+                  "cross-origin-embedder-policy": "require-corp",
+                  "cross-origin-opener-policy": "same-origin",
+                  "referrer-policy": "no-referrer",
+                  "x-robots-tag": "noindex, nofollow"
+                },
+                "unset": []
+              }
+            }
+          },
+          "raw_headers": "/*\n  Cross-Origin-Opener-Policy: same-origin\n  Cross-Origin-Embedder-Policy: require-corp\n  X-Robots-Tag: noindex, nofollow\n  Referrer-Policy: no-referrer\n  Cache-Control: no-cache\n",
+          "static_routing": {
+            "user_worker": [
+              "/api/dulche/*"
+            ]
+          },
+          "serve_directly": true,
+          "raw_run_worker_first": [
+            "/api/dulche/*"
+          ],
+          "base_path": "/"
+        },
+        "compatibility_date": "2026-10-12",
+        "compatibility_flags": [
+          "enable_request_signal"
+        ],
+        "usage_model": "standard"
+      },
+      "bindings": [
+        {
+          "environment": "production",
+          "name": "ACCOUNT_AUTH",
+          "service": "cake-id-release-validation",
+          "type": "service"
+        },
+        {
+          "name": "ACCOUNT_ORIGIN",
+          "text": "https://cake-id-release-validation.jcbailey008.workers.dev",
+          "type": "plain_text"
+        },
+        {
+          "name": "ASSETS",
+          "type": "assets"
+        },
+        {
+          "name": "DULCHE_ORIGIN",
+          "text": "https://dulche-runtime-20261013.9to1.uk",
+          "type": "plain_text"
+        },
+        {
+          "name": "MODEL_ID",
+          "text": "qwen3:1.7b",
+          "type": "plain_text"
+        },
+        {
+          "name": "PREVIEW_ORIGIN",
+          "text": "https://present-4581358882177bc7.9to1.uk",
+          "type": "plain_text"
+        },
+        {
+          "name": "RUNTIME_ACCESS_CLIENT_ID",
+          "type": "secret_text"
+        },
+        {
+          "name": "RUNTIME_ACCESS_CLIENT_SECRET",
+          "type": "secret_text"
+        }
+      ]
+    }
+  },
+  "rollbackVersion": "d4c6cfd1-194e-467f-b8c7-0c8ac0db755b",
+  "protection": {
+    "accessApplicationId": "fdb0cdca-42c7-4658-af18-b599db21e6dd",
+    "accessDeepIdenticalToPreflight": true,
+    "subdomain": {
+      "enabled": false,
+      "previews_enabled": false
+    },
+    "workerTags": [
+      "present-private-preview"
+    ],
+    "logpush": false
+  },
+  "runtimeVersions": [
+    {
+      "version_id": "f808e90d-36b4-4fcc-ac83-bca11b822c7e",
+      "percentage": 100
+    }
+  ],
+  "sanitization": "Owner emails, service credential values and account/session data excluded"
+}

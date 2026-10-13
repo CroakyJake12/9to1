@@ -1,14 +1,14 @@
 # Spaces queue
 
-Revision1. User programme remains the scope; this queue is not an exhaustive requirement denominator. Detailed source-linked coverage: `/workspace/astra-audit/spaces-dependency-coverage.json` and indexed requirement ledger.
+Revision2. User programme remains the scope; this queue is not an exhaustive requirement denominator. Detailed source-linked coverage: `/workspace/astra-audit/spaces-dependency-coverage.json` and indexed requirement ledger.
 
 | Priority / item | Status | Dependencies and acceptance |
 |---|---|---|
 | P0 mock-up provenance and fixture separation | COMPLETED scoped checkpoint `0e5aa3b5` | Audit all first-party Spaces; no production seed found; no data deleted. Fixture opt-in/report labels, release guard and native readiness correction independently checked. Full product acceptance not implied. |
-| Current: shared CUI interaction and actual Chat layout corrections | WORKING | Finish preserved RevealWith/focus/lifetime, icons, header/sidebar/composer/disclaimer and idle-state changes. Validate joined tests, actual-owner isolated labelled visual checks, then immutable compiled ordinary product route. Fix failures; preserve design. |
+| Shared CUI interaction and actual Chat layout corrections | COMPLETED scoped checkpoint36 | Reviewed source4ee0c10e; CUI335/Browser63/Spaces112/native92 plus independent actual signed-out10 passed. Eight labelled fixture cases remain visual-only. Published with unchanged Access and rollback35. Full visual/product gates remain open. |
 | Actual signed-in account/model/conversation journey | BLOCKED evidence; implementation remains WORKING | Legitimate authenticated session unavailable through current browser connector. Must create fresh actual account, select genuine model, send original prompt, observe actual reply and reopen/reload saved conversation. Never substitute controlled state. |
 | Runtime continuity across environment lifecycle | WORKING / operational limitation | Original real runtime restored after two environment losses. Needs stable supported service ownership, recovery, credential lifecycle and actual product inference/Stop evidence. No new paid infrastructure assumed. |
-| Rich transcript, questions/answers and work-state chronology | PENDING | Staged source remains unapplied. Reconcile independent data/performance findings, real stream/persistence owners, interaction semantics and tests before integration. No fabricated time or tool/question data. |
+| Next: rich transcript, questions/answers and work-state chronology | PENDING | Staged source remains unapplied. Reconcile independent data/performance findings, real stream/persistence owners, interaction semantics and tests before integration. No fabricated time or tool/question data. |
 | Model/reasoning/usage, Temporary Memory choice, approvals | PENDING | Implement owner choices through actual Dulche/account/permission owners; test discrete effort, real usage, per-request choice and original Unsloth behaviour where applicable. |
 | Composer, attachment menus, tools, voice/media and conversation actions | PENDING | Integrate real capabilities and state, egress/permission checks, errors/recovery and supported platform operation. Existing disabled controls are not completion. |
 | Account-wide preferences, synchronization and isolation | PENDING | Real signed account context, persistence across sessions/devices, revocation/cross-account checks, no private duplicate stores. |

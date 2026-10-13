@@ -1,0 +1,30 @@
+{
+  "observedAt": "2026-10-13T23:04:40.503Z",
+  "source": "4ee0c10e6d7d2274202acc9aba735f7c648b9ad0",
+  "origin": "https://present-4581358882177bc7.9to1.uk",
+  "scope": "Actual HTTPS without any user cookie or bearer; preserved Access protection only, not authenticated product acceptance",
+  "checks": [
+    {
+      "name": "preview",
+      "route": "/",
+      "status": 302,
+      "accessRedirectOrigin": "https://silent-base-19ea.cloudflareaccess.com",
+      "pass": true
+    },
+    {
+      "name": "unauthenticated model catalogue",
+      "route": "/api/dulche/api/tags",
+      "status": 302,
+      "accessRedirectOrigin": "https://silent-base-19ea.cloudflareaccess.com",
+      "pass": true
+    },
+    {
+      "name": "unauthenticated inference",
+      "route": "/api/dulche/api/chat",
+      "status": 302,
+      "accessRedirectOrigin": "https://silent-base-19ea.cloudflareaccess.com",
+      "pass": true
+    }
+  ],
+  "passed": true
+}

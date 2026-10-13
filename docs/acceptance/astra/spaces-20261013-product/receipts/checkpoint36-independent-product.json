@@ -1,0 +1,74 @@
+{
+  "scope": "Independent execution of actual immutable compiled product. Fresh signed-out Chromium; no application, account, route, provider or backend substitution. Not authenticated-account/full visual/full Spaces acceptance.",
+  "sourceCommit": "4ee0c10e6d7d2274202acc9aba735f7c648b9ad0",
+  "executedBy": "spec_dependency_audit independent reviewer",
+  "startedAt": "2026-10-13T22:57:44.690Z",
+  "finishedAt": "2026-10-13T22:58:12.323Z",
+  "browserVersion": "151.0.7922.173",
+  "processExitCode": 0,
+  "boundedChecksPassed": 10,
+  "boundedChecksTotal": 10,
+  "mandatoryAuthenticatedTenTests": "NOT RUN; unavailable authenticated owner session remains separate.",
+  "buildReceipt": "/workspace/astra-audit/evidence/checkpoint36-build-4ee0c10e/build-receipt.json",
+  "buildReceiptSha256": "da936a9c13c572efabfb7ce2ce516e6a0bc2f01fe8c335ffbbf9cae0aa5c5ef1",
+  "publicAssetsManifestSha256": "b167c72d7a4dd2ed97e0f7b9701e9613c25cc645ac3954c7db7134081338c95a",
+  "runnerArtifactManifestSha256": "7d4e44e00f08f5bcd69ebddaacdc8907e1b43786d41c5fc4e51584ce5e86a173",
+  "assetRowsComparedByPathSizeSha256": 346,
+  "allCurrentAssetsMatchBuildAndTestManifests": true,
+  "allBuildCommandLogHashesVerified": true,
+  "sdkEvaluatedItemsHashVerified": true,
+  "runnerMatchesCommittedSource": true,
+  "runnerSha256": "b21ec7f8c761ffcc15c963a4849109b23993e5a8eebe522fa6b6848342f60eac",
+  "productReportSha256": "48e8e526c98d55e9e2005fe1ce3699e837fe7627ac68355aecf724ae6a4ed52c",
+  "consoleErrors": 0,
+  "failedRequests": 0,
+  "consoleWarnings": [
+    {
+      "type": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled"
+    },
+    {
+      "type": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled"
+    },
+    {
+      "type": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled"
+    },
+    {
+      "type": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled"
+    }
+  ],
+  "allOriginalCleanupJoined": true,
+  "screenshotsSha256": {
+    "home-direct-spaces.png": "f3da05e1a1e1969058b177e8bf6d15b026de97647a70d081f9d264463c95e5f8",
+    "chat-1530x946.png": "df2a525a3090aa3256b689a777ae7c117449ab4908aed1b82740cb0a30312d5c",
+    "chat-1920x1080.png": "f3da05e1a1e1969058b177e8bf6d15b026de97647a70d081f9d264463c95e5f8",
+    "chat-reloaded-390x844.png": "aece48ea9b3c7539b944ff22cfde897726632de868e6a3264ffb5ee877fe21d9",
+    "chat-sidebar-collapsed.png": "be8513c30b4cbe1cb3b6fe87548a47407b042f72b0eec859a6b2024a371e06cd",
+    "account-from-chat.png": "bdc89e019801088d0aea280187b9592566b619a22f0614d1cb8d1b7e0a509cee",
+    "chat-390x844.png": "aece48ea9b3c7539b944ff22cfde897726632de868e6a3264ffb5ee877fe21d9",
+    "explicit-manager.png": "cdff3a54cb67f888dd35e5efa4aa02f96034266a45ea9bea078956bc4063fedb"
+  },
+  "screenshotsVisuallyInspected": [
+    "chat-1530x946.png",
+    "chat-390x844.png"
+  ],
+  "observations": [
+    "Real empty recent-chat list and blank composer; no restaurant/model fixture data in product.",
+    "Model selection and sending disabled while signed out; original Account route remains available.",
+    "Actual physical Account click and keyboard Enter navigation, browser back, sidebar collapse, search typing/clear, resize/reload, Manage Spaces and Home route checks passed.",
+    "Shared disclaimer and compact header/composer remain visible without overlap in inspected actual captures.",
+    "Repeated sign-in guidance is visible in empty state, status and desktop sidebar; this is truthful but not complete visual polish."
+  ],
+  "remainingGates": [
+    "Fresh authenticated account and genuine model catalogue/response",
+    "Durable conversation, restart and cross-device account isolation/synchronization",
+    "Actual tools/agents and real progress/questions/answers",
+    "Voice, full first-party Space workflows and complete dependency acceptance",
+    "Exact approved-image pixels unavailable; complete visual semantics/parity not accepted",
+    "Actual protected live preview after deployment (this run used unchanged local immutable artifact)"
+  ],
+  "repositoryWrites": false
+}
