@@ -105,7 +105,7 @@ internal sealed class NativeSpacesShell : ContentControl, ICuiBindingContext, IC
             "shell.headerColumns" => _compact ? "1fr" : "1fr Auto Auto",
             "shell.modelColumn" => _compact ? 0 : 1,
             "shell.modelRow" => _compact ? 1 : 0,
-            "shell.headerRows" => _compact ? "Auto Auto Auto" : "Auto",
+            "shell.headerRows" => _compact ? "Auto Auto Auto" : "1fr",
             "shell.utilityColumn" => _compact ? 0 : 2,
             "shell.utilityRow" => _compact ? 2 : 0,
             "shell.utilitySpan" => 1,

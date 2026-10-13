@@ -78,7 +78,12 @@ public enum ChatSpaceStatusTone
     Error
 }
 
-public sealed record ChatSpaceStatus(string Message, ChatSpaceStatusTone Tone, bool Announce);
+public sealed record ChatSpaceStatus(string Message, ChatSpaceStatusTone Tone, bool Announce)
+{
+    /// <summary>The original read owner has settled into its initial ready state.
+    /// This never describes an error, progress event or user action acknowledgement.</summary>
+    public bool IsIdle { get; init; }
+}
 
 public sealed record ChatSpaceViewState(
     IReadOnlyList<ChatSpaceRecentChat> RecentChats,

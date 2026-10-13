@@ -7,6 +7,7 @@ using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
+using Avalonia.Input.Raw;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -27,12 +28,15 @@ if (args.Length == 0 || args[0] != "--visual-test-fixture")
 }
 args = args[1..];
 Console.Error.WriteLine("VISUAL TEST FIXTURE — NOT LIVE ACCOUNT OR MODEL OUTPUT. Use the labelled HTML report for review; raw comparison PNGs are internal test evidence only.");
-if (args.Length is < 3 or > 4) throw new ArgumentException("Supply repository root, output directory and visual-only JSON fixture path, and optional capture width (1530 or 390).");
+if (args.Length is < 3 or > 5) throw new ArgumentException("Supply repository root, output directory and visual-only JSON fixture path, optional capture width (1530 or 390), and optional canonical appearance.");
 var repository = Path.GetFullPath(args[0]);
 var output = Path.GetFullPath(args[1]);
 var fixturePath = Path.GetFullPath(args[2]);
-var captureWidth = args.Length == 4 ? int.Parse(args[3], CultureInfo.InvariantCulture) : 1530;
+var captureWidth = args.Length >= 4 ? int.Parse(args[3], CultureInfo.InvariantCulture) : 1530;
 if (captureWidth is not (1530 or 390)) throw new ArgumentOutOfRangeException(nameof(captureWidth));
+var appearance = CuiAppearance.Dark;
+if (args.Length == 5 && (!Enum.TryParse(args[4], false, out appearance) || !Enum.IsDefined(appearance)))
+    throw new ArgumentException("Appearance must be SuperBright, Bright, Dark or SuperDark.");
 Directory.CreateDirectory(output);
 CultureInfo.DefaultThreadCurrentCulture = CultureInfo.GetCultureInfo("en-GB");
 CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.GetCultureInfo("en-GB");
@@ -44,7 +48,9 @@ var sourcePaths = new[] {
     "9to1 Workspace/Spaces/Source/Chat/ChatSpaceContracts.cs", "9to1 Workspace/Spaces/Source/Chat/ChatSpaceController.cs",
     "9to1 Workspace/Spaces/Source/Chat/ChatSpaceProjection.cs", "9to1 Workspace/Spaces/UI/Chat/Runtime/ChatSpaceCuiRuntime.cs",
     "9to1 Workspace/Spaces/UI/Chat/Runtime/SpacesShellCuiRuntime.cs", "framework/CUI/Runtime/CuiControlLoader.cs",
-    "framework/CUI/Runtime/CuiMarkdownView.cs", "framework/CUI/Runtime/CuiNativeHost.cs"
+    "framework/CUI/Runtime/CuiMarkdownView.cs", "framework/CUI/Runtime/CuiNativeHost.cs",
+    "framework/CUI/Runtime/CuiInteractionReveal.cs", "framework/CUI/Runtime/CuiControlRegistry.cs",
+    "framework/CUI/Runtime/CuiPropertyPresentation.cs", "9to1 Workspace/shared/src/Haven.UI/Drawing/HavenIconCatalog.cs"
 }.Select(path => Path.Combine(repository, path))
  .Concat(Directory.GetFiles(Path.Combine(repository, "apps/Web/Spaces/Chat"), "BrowserChatSession*.cs"))
  .Concat(Directory.GetFiles(Path.Combine(repository, "9to1 Workspace/Spaces/UI/Shell"), "*", SearchOption.TopDirectoryOnly))
@@ -55,6 +61,7 @@ var sourcePaths = new[] {
 var hashes = sourcePaths.ToDictionary(path => Path.GetRelativePath(repository, path), Hash);
 var checks = new List<object>();
 var observations = new List<object>();
+var revealObservations = new List<object>();
 var failures = new List<string>();
 void Check(bool condition, string detail)
 { checks.Add(new { passed = condition, detail }); if (!condition) failures.Add(detail); }
@@ -72,7 +79,7 @@ await headless.Dispatch<bool>(async () =>
         throw new InvalidOperationException("The route did not issue the same actual BrowserChatSession for binding and action ownership.");
     var registry = surface.ControlRegistry ?? throw new InvalidOperationException("The product's actual control registry is missing.");
     NineToOne.Web.BrowserCanonicalIcons.Register(registry);
-    using var theme = new CuiThemePreferenceContext(new VisualThemePreference());
+    using var theme = new CuiThemePreferenceContext(new VisualThemePreference(appearance));
     using var loader = new CuiControlLoader(registry);
     loader.SetSurface("Spaces", HomeFeatureRouteIds.Spaces); loader.SetThemePreferenceContext(theme);
     var hostActions = new NineToOne.Web.BrowserShellActions(surface.Actions,
@@ -107,6 +114,108 @@ await headless.Dispatch<bool>(async () =>
         var markdown = root.GetVisualDescendants().OfType<CuiMarkdownView>().ToArray();
         Check(markdown.Any(view => view.Text == input.UserMessage) && markdown.Any(view => view.Text == input.AssistantMessage),
             "Original shared Markdown controls render both exact canonical messages.");
+        var messageOwners = root.GetVisualDescendants().OfType<Control>().Where(control => control.Name == "chat-message").ToArray();
+        var messageStrips = messageOwners.Select(owner => owner.GetVisualDescendants().OfType<Control>()
+            .Single(control => control.Name == "chat-message-actions")).ToArray();
+        Check(messageOwners.Length == 2 && messageStrips.Length == 2,
+            "Each actual repeated message retains its own original action strip.");
+        var originalFocus = window.FocusManager?.GetFocusedElement();
+        window.FocusManager?.Focus(null); window.MouseMove(new(-10, -10)); Pump();
+        var ownerGeometry = messageOwners.Select(control => (control.Bounds, control.TranslatePoint(default, window))).ToArray();
+        var stripGeometry = messageStrips.Select(control => (control.Bounds, control.TranslatePoint(default, window))).ToArray();
+        ObserveReveal("resting");
+        Check(messageStrips.All(strip => strip.Opacity == 0 && !strip.IsHitTestVisible),
+            "Original message actions rest transparent and cannot receive pointer hits; original controls remain mounted.");
+        var originalCopy = messageStrips[0].GetVisualDescendants().OfType<Button>().First(button =>
+            button.Tag is string action && (surface.Document.Actions.TryGetValue(action, out var definition) ? definition.Command : action) == "chat.message-copy");
+        using (var restFrame = window.CaptureRenderedFrame())
+        {
+            var hiddenHit = window.InputHitTest(Centre(originalCopy)) as Visual;
+            Check(!ReferenceEquals(hiddenHit, originalCopy) && !(hiddenHit is not null && originalCopy.IsVisualAncestorOf(hiddenHit)),
+                "Resting original Copy button is absent from the actual compositor hit target.");
+        }
+        var firstBody = markdown.Single(view => view.Text == input.UserMessage);
+        window.MouseMove(Centre(firstBody)); Pump();
+        ObserveReveal("pointer-over-first-message");
+        Check(messageStrips[0].Opacity > 0 && messageStrips[0].IsHitTestVisible && messageStrips[1].Opacity == 0,
+            "Real pointer entry reveals only that repeated message's original actions.");
+        var bodyBottom = firstBody.TranslatePoint(new Point(0, firstBody.Bounds.Height), window)!.Value.Y;
+        var stripTop = messageStrips[0].TranslatePoint(default, window)!.Value.Y;
+        var copyCentre = Centre(originalCopy);
+        foreach (var point in new[] { new Point(copyCentre.X, bodyBottom - 1),
+            new Point(copyCentre.X, (bodyBottom + stripTop) / 2),
+            new Point(copyCentre.X, stripTop + 1), copyCentre })
+        {
+            window.MouseMove(point); Pump();
+            using var trajectoryFrame = window.CaptureRenderedFrame();
+            Check(messageStrips[0].Opacity > 0 && messageStrips[0].IsHitTestVisible,
+                $"Original pointer trajectory stays revealed through body/gap/action at{point.X:F1},{point.Y:F1}.");
+        }
+        var copyHit = window.InputHitTest(copyCentre) as Visual;
+        Check(ReferenceEquals(copyHit, originalCopy) || copyHit is not null && originalCopy.IsVisualAncestorOf(copyHit),
+            "Original available Copy remains an actual hit target after pointer crosses its owner's gap.");
+        CheckGeometry("pointer reveal");
+        using (var hoverFrame = window.CaptureRenderedFrame())
+            hoverFrame?.Save(Path.Combine(output, $"actual-browser-chat-actions-hover-{captureWidth}x946.png"));
+        window.MouseMove(new(-10, -10)); Pump();
+        Check(messageStrips.All(strip => strip.Opacity == 0), "Real pointer exit returns unfocused message actions to rest.");
+        loader.FindAuthoredControl<Button>(root, "spaces-account").Focus(NavigationMethod.Pointer);
+        for (var tabs = 0; tabs < 128 && !originalCopy.IsFocused; tabs++)
+        {
+            window.KeyPress(Key.Tab, RawInputModifiers.None, PhysicalKey.Tab, null);
+            window.KeyRelease(Key.Tab, RawInputModifiers.None, PhysicalKey.Tab, null);
+            Pump();
+        }
+        Check(originalCopy.IsFocused, "Physical Tab traversal reaches the same original available Copy action.");
+        window.MouseMove(new(-10, -10)); Pump();
+        ObserveReveal("keyboard-focus-first-message-action");
+        Check(originalCopy.IsFocused && messageStrips[0].Opacity > 0 && messageStrips[0].IsHitTestVisible && messageStrips[1].Opacity == 0,
+            "Original keyboard focus retains the correct actions after pointer exit without revealing its sibling.");
+        CheckGeometry("keyboard reveal");
+        using (var focusedFrame = window.CaptureRenderedFrame())
+            focusedFrame?.Save(Path.Combine(output, $"actual-browser-chat-actions-focused-{captureWidth}x946.png"));
+        window.FocusManager?.Focus(originalFocus); window.MouseMove(new(-10, -10)); Pump();
+        ObserveReveal("restored-original-focus");
+        Check(messageStrips.All(strip => strip.Opacity == 0), "Original focus restoration returns both strips to the resting capture state.");
+        CheckGeometry("focus restoration");
+        var disclaimer = loader.FindAuthoredControl<TextBlock>(root, "chat-disclaimer");
+        Check(disclaimer.Text == "AI can make mistakes. Double-check important information and tasks." &&
+            disclaimer.FontSize == 14 && disclaimer.FontStyle == Avalonia.Media.FontStyle.Italic,
+            "Actual shared footer contains the exact approved disclaimer in canonical14px italic text.");
+        var composerForDisclaimer = loader.FindAuthoredControl<Control>(root, "floating-composer");
+        Check(disclaimer.TranslatePoint(default, window)!.Value.Y >=
+            composerForDisclaimer.TranslatePoint(default, window)!.Value.Y + composerForDisclaimer.Bounds.Height,
+            "Approved disclaimer stays below the actual composer without overlap.");
+        var contrastSurface = loader.FindAuthoredControl<Control>(root, "conversation-surface");
+        if (disclaimer.Foreground is Avalonia.Media.ISolidColorBrush foreground &&
+            contrastSurface.TryFindResource("CuiWorkspaceBrush", out var actualBackground) && actualBackground is Avalonia.Media.ISolidColorBrush background)
+        {
+            var contrast = Contrast(foreground.Color, background.Color);
+            observations.Add(new { id = "disclaimer-contrast", foreground = foreground.Color.ToString(), background = background.Color.ToString(), ratio = contrast });
+            Check(contrast >= 4.5, "Actual Professional disclaimer colours provide at least4.5:1 small-text contrast.");
+        }
+        else Check(false, "Actual disclaimer foreground/background must be observable for contrast verification.");
+        Check(chat.TryGetValue("chat.status", out var idleStatus) && Equals(idleStatus, string.Empty),
+            "Original successfully loaded idle status is not shown as a generic ready message.");
+        void ObserveReveal(string state) => revealObservations.Add(new { state,
+            messages = messageStrips.Select((strip, index) => new { index, strip.Opacity, strip.IsHitTestVisible,
+                ownerBounds = messageOwners[index].Bounds.ToString(), stripBounds = strip.Bounds.ToString(),
+                messageOwners[index].IsKeyboardFocusWithin, messageOwners[index].IsPointerOver }).ToArray() });
+        void CheckGeometry(string phase) => Check(messageOwners.Select((control, index) =>
+            ownerGeometry[index] == (control.Bounds, control.TranslatePoint(default, window)) &&
+            stripGeometry[index] == (messageStrips[index].Bounds, messageStrips[index].TranslatePoint(default, window))).All(equal => equal),
+            "Original message and action bounds do not move during " + phase + ".");
+        static double Contrast(Avalonia.Media.Color foreground, Avalonia.Media.Color background)
+        {
+            static double Channel(double value) => value <= .04045 ? value / 12.92 : Math.Pow((value + .055) / 1.055, 2.4);
+            static double Luminance(double r, double g, double b) => .2126 * Channel(r) + .7152 * Channel(g) + .0722 * Channel(b);
+            var alpha = foreground.A / 255d;
+            var backgroundLuminance = Luminance(background.R / 255d, background.G / 255d, background.B / 255d);
+            var foregroundLuminance = Luminance((foreground.R * alpha + background.R * (1 - alpha)) / 255d,
+                (foreground.G * alpha + background.G * (1 - alpha)) / 255d, (foreground.B * alpha + background.B * (1 - alpha)) / 255d);
+            return (Math.Max(foregroundLuminance, backgroundLuminance) + .05) / (Math.Min(foregroundLuminance, backgroundLuminance) + .05);
+        }
+        Point Centre(Control control) => control.TranslatePoint(new Point(control.Bounds.Width / 2, control.Bounds.Height / 2), window)!.Value;
         var messageActions = new[] { "chat.message-copy", "chat.message-edit", "chat.message-branch", "chat.message-regenerate", "chat.message-forget", "chat.message-delete" }
             .Select(command => new {
                 command, ownerAvailable = hostActions.IsActionAvailable(command) == true,
@@ -124,7 +233,7 @@ await headless.Dispatch<bool>(async () =>
         var headerOrigin = header.TranslatePoint(default, window)!.Value;
         var workspaceOrigin = workspace.TranslatePoint(default, window)!.Value;
         Check(workspaceOrigin.Y >= headerOrigin.Y + header.Bounds.Height - 1, "Actual workspace does not geometrically cover the header.");
-        foreach (var id in new[] { "space-rail", "context-sidebar", "spaces-header", "spaces-workspace-slot", "spaces-model", "spaces-account", "chat-transcript", "floating-composer", "composer-input", "chat-approval", "send" })
+        foreach (var id in new[] { "space-rail", "context-sidebar", "spaces-header", "spaces-workspace-slot", "spaces-model", "spaces-account", "chat-transcript", "floating-composer", "composer-input", "chat-approval", "send", "chat-disclaimer" })
         {
             var control = loader.FindAuthoredControl<Control>(root, id);
             if (id == "context-sidebar" && captureWidth == 390)
@@ -166,8 +275,8 @@ await headless.Dispatch<bool>(async () =>
             bindingOwner = surface.Bindings.GetType().AssemblyQualifiedName, actionOwner = surface.Actions.GetType().AssemblyQualifiedName,
             controllerOwner = actualController?.GetType().AssemblyQualifiedName,
             hostActionOwner = hostActions.GetType().AssemblyQualifiedName, hostAvailability = availability.GetType().AssemblyQualifiedName,
-            messageActions,
-            theme = "Professional", appearance = "Dark", width = captureWidth, height = 946,
+            messageActions, revealObservations,
+            theme = "Professional", appearance = appearance.ToString(), width = captureWidth, height = 946,
             backendCalls = backend.Calls, diagnostics = loaded.Diagnostics.Select(d => d.ToString()).ToArray(),
             controls = observations, checks, layoutChecksPassed = failures.Count == 0, failures,
             unsupportedReferenceSemantics = input.UnsupportedReferenceSemantics, unconnectedActions = unconnected,
@@ -219,8 +328,8 @@ public sealed class BrowserVisualApplication : Application
         .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false });
     public override void Initialize() => CuiNativeHost.InitialisePrimitiveTheme(this, "Spaces");
 }
-internal sealed class VisualThemePreference : ICuiThemePreferenceSource
+internal sealed class VisualThemePreference(CuiAppearance appearance) : ICuiThemePreferenceSource
 {
-    public CuiThemePreferenceSnapshot Current { get; } = new("Professional", 0, "explicit-visual-only-theme", false, new(), CuiAppearance.Dark);
+    public CuiThemePreferenceSnapshot Current { get; } = new("Professional", 0, "explicit-visual-only-theme", false, new(), appearance);
     public event EventHandler? Changed { add { } remove { } }
 }

@@ -22,14 +22,14 @@
               <Button ID="chat-model" Action="chat.choose-model" Content="{Binding chat.modelLabel}" Interactive="{Binding chat.canChooseModel}" AccessibleName="Choose model and reasoning" MinHeight="44" CornerRadius="22" Padding="16,8" />
             </Container>
           </Container>
-          <Container ID="conversation-surface" Row="1" Type="Grid" RowSizes="1fr Auto" CornerRadius="48,0,0,0" Background="{Resource CuiWorkspaceBrush}" Padding="{Binding chat.workspacePadding}" CellGap="16">
+          <Container ID="conversation-surface" Row="1" Type="Grid" RowSizes="1fr Auto Auto" CornerRadius="48,0,0,0" Background="{Resource CuiWorkspaceBrush}" Padding="{Binding chat.workspacePadding}" CellGap="16">
             <Container ID="chat-transcript" Margin="{Binding chat.transcriptMargin}" Type="Vertical Stack" VerticalScrolling="true" CellGap="24" AccessibleName="Conversation messages">
               <Container ID="chat-empty" Type="Vertical Stack" Active="{Binding chat.empty}" Padding="16,48" CellGap="12" HorizontalAlignment="Center">
                 <Text Text="How can I help?" FontRole="Heading" FontSize="28" FontWeight="SemiBold" TextWrapping="Wrap" />
                 <Text Text="{Binding chat.emptyDescription}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
               </Container>
               <Repeat Source="{Binding chat.messages}" As="message" Key="{Binding message.id}">
-                <Container ID="chat-message" Type="Vertical Stack" CellGap="8" MaxWidth="880" HorizontalAlignment="{Binding message.alignment}" AccessibleName="{Binding message.accessibleName}">
+                <Container ID="chat-message" Type="Vertical Stack" CellGap="8" Background="Transparent" MaxWidth="880" HorizontalAlignment="{Binding message.alignment}" AccessibleName="{Binding message.accessibleName}">
                   <Text Text="{Binding message.author}" FontSize="18" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" HorizontalAlignment="{Binding message.alignment}" />
                   <Container Type="Vertical Stack" Padding="{Binding message.padding}" CornerRadius="20" Background="{Binding message.background}">
                     <Object Type="ChatMessageContent" Text="{Binding message.content}" AccessibleName="{Binding message.accessibleName}" />
@@ -42,7 +42,7 @@
                     </Container>
                   </Repeat>
                   <Object Type="OriginalChatGeneratedChildren" Text="{Binding message.id}" Active="{Binding message.hasGenerated}" AccessibleName="Generated response controls" />
-                  <Container Type="Wrap" CellGap="4">
+                  <Container ID="chat-message-actions" Type="Wrap" CellGap="4" RevealWith="chat-message">
                     <Button Action="chat.message-copy" Content="Copy" AccessibleName="Copy this message" MinHeight="36" />
                     <Button Action="chat.message-edit" Content="Edit" Interactive="{Binding message.canModify}" MinHeight="36" />
                     <Button Action="chat.message-branch" Content="Branch" Interactive="{Binding message.canModify}" MinHeight="36" />
@@ -96,6 +96,7 @@
               </Container>
 
             </Container>
+            <Text ID="chat-disclaimer" Row="2" Text="AI can make mistakes. Double-check important information and tasks." FontSize="14" FontWeight="Medium" FontStyle="Italic" Foreground="{Resource CuiTextSoftBrush}" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="1013" HorizontalAlignment="Center" AccessibleName="AI can make mistakes. Double-check important information and tasks." />
           </Container>
         </Container>
         <Container ID="chat-catalog" Type="Vertical Stack" Active="{Binding catalog.visible}" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="24,0,24,140" Padding="16" MaxWidth="440" MaxHeight="440" CornerRadius="20" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" VerticalScrolling="true" CellGap="8">

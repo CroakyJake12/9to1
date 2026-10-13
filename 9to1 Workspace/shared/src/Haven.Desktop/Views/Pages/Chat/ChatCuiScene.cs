@@ -166,7 +166,7 @@ internal sealed partial class ChatCuiScene : ICuiWritableBindingContext, ICuiRep
             "chat.canChooseType" => _actions.ChooseTypeAndLocation is not null && !_disposed,
             "chat.canChooseModel" => _actions.ChooseModelAndReasoning is not null && !_disposed,
             "chat.canChooseApproval" => _actions.ChooseToolApproval is not null && !_disposed,
-            "chat.workspacePadding" => _compactHeader ? "16,20,16,24" : "24,20,24,53",
+            "chat.workspacePadding" => _compactHeader ? "16,20,16,24" : "24,20,24,19",
             "chat.transcriptMargin" => _compactHeader ? "0" : "31,0,13,0",
             "composer.controlsRows" => _compactHeader ? "Auto Auto" : "Auto",
             "composer.approvalRow" => _compactHeader ? 1 : 0,

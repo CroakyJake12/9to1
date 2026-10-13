@@ -2,6 +2,8 @@
 
 **VISUAL TEST FIXTURE — NOT LIVE ACCOUNT OR MODEL OUTPUT.**
 
+Subsequent continuation: the historical freeze described below has ended. The actual shared CUI hover-gap and focus corrections now have335 runtime tests, and eight newly opted-in labelled visual runs cover four appearances at desktop/compact widths. See [the current scoped Chat report](chat-ui-checkpoint.md). These runs do not establish fresh-account/model/tool/persistence acceptance. The historical CLI-only and wrapper-only evidence below remains limited to its original P0 checkpoint.
+
 The source and ownership of every illustrative value were reported before modifications. The confirmed source of the restaurant content shown in comparison captures is the isolated automated visual backend. No reachable restaurant seed or fixture fallback was found in normal production composition. The artifact presentation did not make that distinction prominent enough. No production conversation, message, model choice, draft, schema or user record was removed.
 
 ## Before: exact source of illustrative values

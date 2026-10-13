@@ -11,6 +11,52 @@ namespace NineToOne.Web.Spaces.Tests;
 public sealed class BrowserChatSessionTests
 {
     [Fact]
+    public async Task Original_failed_turn_remains_visible_above_retained_dirty_draft_and_cannot_be_replayed()
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var backend = new RecoveryBackend();
+        var chat = new BrowserChatSession(() => backend, () => { },
+            action => { action(); return Task.CompletedTask; }, _ => { });
+        await chat.PrepareAsync(timeout.Token); chat.Admit();
+        Assert.True(chat.TrySetValue("composer.text", "Keep this original prompt"));
+        var send = chat.DispatchAsync("chat.send", null, timeout.Token).AsTask();
+        var original = await Assert.ThrowsAsync<InvalidOperationException>(() => send);
+        Assert.True(chat.TryGetValue("chat.status", out var status));
+        Assert.Equal(original.Message, status);
+        Assert.True(chat.TryGetValue("composer.text", out var draft));
+        Assert.Equal("Keep this original prompt", draft);
+        Assert.True(chat.HasUnsavedChanges);
+        Assert.True(chat.IsActionAvailable("chat.resolve"));
+        Assert.False(chat.IsActionAvailable("chat.send"));
+        Assert.Equal(1, backend.Sends);
+        var close = chat.DisposeAsync().AsTask();
+        await Assert.ThrowsAnyAsync<Exception>(() => close);
+        Assert.Contains(original, close.Exception!.Flatten().InnerExceptions);
+    }
+
+    [Fact]
+    public async Task Confirmed_idle_read_hides_ready_text_but_original_selection_and_unavailable_status_remain_visible()
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var backend = new RecoveryBackend();
+        await using var chat = new BrowserChatSession(() => backend, () => { },
+            action => { action(); return Task.CompletedTask; }, _ => { });
+        await chat.PrepareAsync(timeout.Token); chat.Admit();
+        Assert.True(chat.TryGetValue("chat.status", out var ready));
+        Assert.Equal(string.Empty, ready);
+        await chat.DispatchAsync("chat.choose-model", null, timeout.Token);
+        await chat.DispatchAsync("chat.choose-dialog", "controlled", timeout.Token);
+        Assert.True(chat.TryGetValue("chat.status", out var selected));
+        Assert.Equal("Model selected: controlled", selected);
+        backend.UnavailableReason = "Original catalogue temporarily unavailable";
+        await chat.DispatchAsync("chat.refresh", null, timeout.Token);
+        Assert.True(chat.TryGetValue("chat.status", out var unavailable));
+        Assert.Equal(backend.UnavailableReason, unavailable);
+        Assert.True(chat.IsActionAvailable("chat.resolve"));
+        Assert.Equal(0, backend.Sends);
+    }
+
+    [Fact]
     public async Task Faulted_presentation_during_account_close_is_not_laundered_as_owned_save_cancellation()
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));

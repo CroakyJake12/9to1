@@ -16,7 +16,7 @@ public sealed class CuiChoicePromptTests
     public async Task Three_authored_choices_render_and_selected_callback_is_awaited_once()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await session.Dispatch<bool>(async () =>
         {
             var source = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             var calls = new int[3];
@@ -44,6 +44,7 @@ public sealed class CuiChoicePromptTests
                 Assert.Same(close, prompt.OriginalClose); Assert.Null(overlay.Content);
             }
             finally { window.Close(); }
+            return true;
         }, CancellationToken.None);
     }
 
@@ -51,7 +52,7 @@ public sealed class CuiChoicePromptTests
     public async Task Escape_invokes_only_cancel_and_restores_the_actual_previous_focus()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await session.Dispatch<bool>(async () =>
         {
             var cancelled = 0;
             await using var prompt = new CuiChoicePrompt(Options(
@@ -72,6 +73,7 @@ public sealed class CuiChoicePromptTests
                 Assert.Equal(1, cancelled); Assert.True(input.IsFocused); Assert.Equal("Preserved draft", input.Text);
             }
             finally { window.Close(); }
+            return true;
         }, CancellationToken.None);
     }
 
@@ -79,7 +81,7 @@ public sealed class CuiChoicePromptTests
     public async Task Owner_cancellation_before_choice_invokes_cancel_without_loading_an_authorising_choice()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await session.Dispatch<bool>(async () =>
         {
             var calls = new int[3]; using var lifetime = new CancellationTokenSource(); lifetime.Cancel();
             await using var prompt = new CuiChoicePrompt(Options(
@@ -89,6 +91,7 @@ public sealed class CuiChoicePromptTests
             var overlay = new ContentControl();
             Assert.Equal(CuiChoiceDecision.Cancel, await prompt.ShowAsync(overlay, lifetime.Token));
             await prompt.CloseAsync(); Assert.Equal([0, 0, 1], calls); Assert.Null(overlay.Content);
+            return true;
         }, CancellationToken.None);
     }
 
@@ -96,7 +99,7 @@ public sealed class CuiChoicePromptTests
     public async Task Close_joins_accepted_callback_and_never_replaces_it_with_cancel()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await session.Dispatch<bool>(async () =>
         {
             var original = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             var cancel = 0;
@@ -112,6 +115,7 @@ public sealed class CuiChoicePromptTests
                 Assert.Equal(CuiChoiceDecision.Primary, await completion); Assert.Equal(0, cancel);
             }
             finally { window.Close(); }
+            return true;
         }, CancellationToken.None);
     }
 
@@ -119,7 +123,7 @@ public sealed class CuiChoicePromptTests
     public async Task Empty_overlay_does_not_intercept_actual_pointer_input_before_or_after_choice()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await session.Dispatch<bool>(async () =>
         {
             var input = new TextBox { Width = 220, Height = 50, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top };
             var other = new Button { Content = "Other focus", Width = 220, Height = 50, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Bottom };
@@ -143,6 +147,7 @@ public sealed class CuiChoicePromptTests
                 window.MouseDown(point, Avalonia.Input.MouseButton.Left);
                 window.MouseUp(point, Avalonia.Input.MouseButton.Left);
             }
+            return true;
         }, CancellationToken.None);
     }
 
@@ -150,7 +155,7 @@ public sealed class CuiChoicePromptTests
     public async Task Replacing_parent_overlay_cancels_only_original_prompt_and_preserves_new_owner()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await session.Dispatch<bool>(async () =>
         {
             var cancelled = 0;
             await using var prompt = new CuiChoicePrompt(Options(() => Task.CompletedTask, () => Task.CompletedTask,
@@ -165,6 +170,74 @@ public sealed class CuiChoicePromptTests
                 await prompt.CloseAsync(); Assert.Same(replacement, host.Content); Assert.Equal(1, cancelled);
             }
             finally { window.Close(); }
+            return true;
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Closing_after_choice_preserves_a_different_control_that_acquired_focus()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            var previous = new TextBox { Text = "Preserved draft" };
+            var newer = new Button { Content = "Another owner" };
+            var overlay = new ContentControl(); var grid = new Grid();
+            grid.Children.Add(previous); grid.Children.Add(newer); grid.Children.Add(overlay);
+            var window = new Window { Width = 800, Height = 600, Content = grid }; window.Show(); previous.Focus();
+            await using var prompt = new CuiChoicePrompt(Options(() => Task.CompletedTask,
+                () => Task.CompletedTask, () => Task.CompletedTask), "Spaces");
+            try
+            {
+                var completion = prompt.ShowAsync(overlay, CancellationToken.None);
+                window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                Find<Button>((Control)overlay.Content!, "choice-cancel").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.Equal(CuiChoiceDecision.Cancel, await completion);
+                Assert.True(newer.Focus());
+                await prompt.CloseAsync();
+                Assert.True(newer.IsFocused); Assert.False(previous.IsFocused);
+                Assert.Equal("Preserved draft", previous.Text);
+            }
+            finally { window.Close(); }
+            return true;
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Close_refuses_the_live_original_callback_but_accepts_its_completed_captured_context()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            ExecutionContext? captured = null;
+            var original = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            CuiChoicePrompt? prompt = null;
+            prompt = new CuiChoicePrompt(Options(() =>
+            {
+                captured = ExecutionContext.Capture();
+                Assert.Throws<InvalidOperationException>(() => { _ = prompt!.CloseAsync(); });
+                Assert.Null(prompt!.OriginalClose); // No self-joining close was admitted.
+                return original.Task;
+            }, () => Task.CompletedTask, () => Task.CompletedTask), "Spaces");
+            await using var retained = prompt;
+            var overlay = new ContentControl(); var window = new Window { Content = overlay }; window.Show();
+            try
+            {
+                var completion = prompt.ShowAsync(overlay, CancellationToken.None);
+                var dispatch = prompt.DispatchAsync("Primary", null).AsTask();
+                Assert.NotNull(captured); Assert.False(dispatch.IsCompleted);
+                original.SetResult(); await dispatch;
+                Assert.Equal(CuiChoiceDecision.Primary, await completion);
+                Task? actualClose = null;
+                // A copied ambient context is not a perpetual owner after its
+                // exact callback Task has settled; cleanup remains original and joined.
+                ExecutionContext.Run(captured!, _ => actualClose = prompt.CloseAsync(), null);
+                Assert.NotNull(actualClose); await actualClose;
+                Assert.Same(actualClose, prompt.OriginalClose); Assert.Null(overlay.Content);
+                ExecutionContext.Run(captured!, _ => Assert.Same(actualClose, prompt.CloseAsync()), null);
+            }
+            finally { original.TrySetResult(); window.Close(); }
+            return true;
         }, CancellationToken.None);
     }
 

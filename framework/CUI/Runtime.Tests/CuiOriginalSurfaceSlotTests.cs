@@ -12,7 +12,7 @@ public sealed class CuiOriginalSurfaceSlotTests
     public async Task Outer_loader_cannot_detach_inner_bindings_actions_or_claim_its_pending_work()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await session.Dispatch<bool>(async () =>
         {
             var owner = new OriginalOwner();
             using var inner = new CuiControlLoader();
@@ -45,6 +45,7 @@ public sealed class CuiOriginalSurfaceSlotTests
                 slot.SetOriginalSurface(null); Assert.Null(child.Parent);
             }
             finally { owner.Completion.TrySetResult(); window.Close(); }
+            return true;
         }, CancellationToken.None);
     }
 

@@ -236,7 +236,9 @@ public sealed class CuiChoicePrompt : ICuiBindingContext, ICuiActionDispatcher,
     public Task CloseAsync()
     {
         Dispatcher.UIThread.VerifyAccess();
-        if (ReferenceEquals(ExecutingCallback.Value, this))
+        // A copied ExecutionContext can outlive the original callback. Refuse
+        // only an actual live self-join; completed originals still permit cleanup.
+        if (ReferenceEquals(ExecutingCallback.Value, this) && _operation is { IsCompleted: false })
             throw new InvalidOperationException("Join the choice prompt close outside its original choice callback.");
         if (_close is not null) return _close;
         var start = new TaskCompletionSource();
@@ -256,7 +258,12 @@ public sealed class CuiChoicePrompt : ICuiBindingContext, ICuiActionDispatcher,
         try { _ownerCancellation.Dispose(); } catch (Exception error) { errors.Add(error); }
         var top = _root is null ? null : TopLevel.GetTopLevel(_root);
         var focus = top?.FocusManager?.GetFocusedElement() as Control;
-        var restore = _root is not null && focus is not null && _root.IsVisualAncestorOf(focus);
+        // Choosing disables the original buttons and can clear their focus before
+        // close starts. An empty focus is still ours to restore only while this
+        // exact prompt remains mounted; never override a replacement or another
+        // control the user has focused in the meantime.
+        var restore = _root is not null && !_detached && ReferenceEquals(_parent?.Content, _root)
+            && (focus is null || _root.IsVisualAncestorOf(focus));
         if (_root is { } root)
         {
             Try(() => root.RemoveHandler(InputElement.KeyDownEvent, OnKeyDown), errors);

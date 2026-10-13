@@ -61,7 +61,7 @@ public sealed class ChatSpaceController(IChatSpaceBackend backend)
             _modelUnavailableReason = inventory.UnavailableReason;
             var selected = ResolveSelectedModel(State.Composer.SelectedModelName, inventory);
             ApplyLoaded(recentTask.Result, inventory, conversationTask?.Result, selected, "Chat Space ready",
-                preserveComposer: draftRevision != _draftRevision);
+                preserveComposer: draftRevision != _draftRevision, isIdle: true);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -418,7 +418,7 @@ public sealed class ChatSpaceController(IChatSpaceBackend backend)
         ChatSpaceModelInventory inventory,
         ChatSpaceConversationData? data,
         string? selectedModel,
-        string status, bool preserveComposer = false)
+        string status, bool preserveComposer = false, bool isIdle = false)
     {
         _originalConversation = data?.Conversation;
         var retainedComposer = State.Composer;
@@ -442,7 +442,8 @@ public sealed class ChatSpaceController(IChatSpaceBackend backend)
                 item.Capabilities)).ToArray(),
             preserveComposer ? retainedComposer with { IsSending = false, SelectedModelName = selectedModel } : new ChatSpaceComposer(draft, pending, selectedModel, false),
             new ChatSpaceStatus(inventory.UnavailableReason ?? status,
-                inventory.UnavailableReason is null ? ChatSpaceStatusTone.Success : ChatSpaceStatusTone.Neutral, true),
+                inventory.UnavailableReason is null ? ChatSpaceStatusTone.Success : ChatSpaceStatusTone.Neutral, true)
+            { IsIdle = isIdle && inventory.UnavailableReason is null },
             false,
             State.Revision + 1));
     }

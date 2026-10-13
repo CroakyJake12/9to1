@@ -1,0 +1,819 @@
+{
+  "scope": "VISUAL ONLY. Real BrowserSpacesFeature route, BrowserChatSession, ChatSpaceController, exact BrowserShellActions/BrowserActionAvailability host presentation, canonical CUI and Skia. Deterministic backend input; no authenticated account, durable storage, model response, tool execution or full acceptance.",
+  "verificationEnvironment": "isolated-automated-visual-fixture",
+  "fixtureOptIn": true,
+  "deliveryArtifact": "VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+  "rawPngUse": "internal comparison only; never a live-product screenshot",
+  "fixtureProvenance": "Visual-only deterministic data, transcribed from the owner\u0027s approved image by root. No model, tool, storage or authentication execution is asserted.",
+  "route": "spaces.chat",
+  "bindingOwner": "NineToOne.Web.Spaces.Chat.BrowserChatSession, BrowserSpaces.Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+  "actionOwner": "NineToOne.Web.Spaces.Chat.BrowserChatSession, BrowserSpaces.Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+  "controllerOwner": "HavenOS.Apps.Spaces.Chat.ChatSpaceController, HavenOS.Spaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+  "hostActionOwner": "NineToOne.Web.BrowserShellActions, BrowserSpaces.Visual, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+  "hostAvailability": "NineToOne.Web.BrowserActionAvailability\u002BObservation, BrowserSpaces.Visual, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+  "messageActions": [
+    {
+      "command": "chat.message-copy",
+      "ownerAvailable": true,
+      "buttons": [
+        {
+          "visible": true,
+          "enabled": true
+        },
+        {
+          "visible": true,
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "command": "chat.message-edit",
+      "ownerAvailable": false,
+      "buttons": [
+        {
+          "visible": true,
+          "enabled": false
+        },
+        {
+          "visible": true,
+          "enabled": false
+        }
+      ]
+    },
+    {
+      "command": "chat.message-branch",
+      "ownerAvailable": true,
+      "buttons": [
+        {
+          "visible": true,
+          "enabled": true
+        },
+        {
+          "visible": true,
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "command": "chat.message-regenerate",
+      "ownerAvailable": false,
+      "buttons": [
+        {
+          "visible": true,
+          "enabled": false
+        }
+      ]
+    },
+    {
+      "command": "chat.message-forget",
+      "ownerAvailable": false,
+      "buttons": [
+        {
+          "visible": true,
+          "enabled": false
+        },
+        {
+          "visible": true,
+          "enabled": false
+        }
+      ]
+    },
+    {
+      "command": "chat.message-delete",
+      "ownerAvailable": false,
+      "buttons": [
+        {
+          "visible": true,
+          "enabled": false
+        },
+        {
+          "visible": true,
+          "enabled": false
+        }
+      ]
+    }
+  ],
+  "revealObservations": [
+    {
+      "state": "resting",
+      "messages": [
+        {
+          "index": 0,
+          "Opacity": 0,
+          "IsHitTestVisible": false,
+          "ownerBounds": "51, 0, 225, 166",
+          "stripBounds": "0, 0, 225, 76",
+          "IsKeyboardFocusWithin": false,
+          "IsPointerOver": false
+        },
+        {
+          "index": 1,
+          "Opacity": 0,
+          "IsHitTestVisible": false,
+          "ownerBounds": "0, 0, 267, 318",
+          "stripBounds": "0, 0, 267, 76",
+          "IsKeyboardFocusWithin": false,
+          "IsPointerOver": false
+        }
+      ]
+    },
+    {
+      "state": "pointer-over-first-message",
+      "messages": [
+        {
+          "index": 0,
+          "Opacity": 1,
+          "IsHitTestVisible": true,
+          "ownerBounds": "51, 0, 225, 166",
+          "stripBounds": "0, 0, 225, 76",
+          "IsKeyboardFocusWithin": false,
+          "IsPointerOver": true
+        },
+        {
+          "index": 1,
+          "Opacity": 0,
+          "IsHitTestVisible": false,
+          "ownerBounds": "0, 0, 267, 318",
+          "stripBounds": "0, 0, 267, 76",
+          "IsKeyboardFocusWithin": false,
+          "IsPointerOver": false
+        }
+      ]
+    },
+    {
+      "state": "keyboard-focus-first-message-action",
+      "messages": [
+        {
+          "index": 0,
+          "Opacity": 1,
+          "IsHitTestVisible": true,
+          "ownerBounds": "51, 0, 225, 166",
+          "stripBounds": "0, 0, 225, 76",
+          "IsKeyboardFocusWithin": true,
+          "IsPointerOver": false
+        },
+        {
+          "index": 1,
+          "Opacity": 0,
+          "IsHitTestVisible": false,
+          "ownerBounds": "0, 0, 267, 318",
+          "stripBounds": "0, 0, 267, 76",
+          "IsKeyboardFocusWithin": false,
+          "IsPointerOver": false
+        }
+      ]
+    },
+    {
+      "state": "restored-original-focus",
+      "messages": [
+        {
+          "index": 0,
+          "Opacity": 0,
+          "IsHitTestVisible": false,
+          "ownerBounds": "51, 0, 225, 166",
+          "stripBounds": "0, 0, 225, 76",
+          "IsKeyboardFocusWithin": false,
+          "IsPointerOver": false
+        },
+        {
+          "index": 1,
+          "Opacity": 0,
+          "IsHitTestVisible": false,
+          "ownerBounds": "0, 0, 267, 318",
+          "stripBounds": "0, 0, 267, 76",
+          "IsKeyboardFocusWithin": false,
+          "IsPointerOver": false
+        }
+      ]
+    }
+  ],
+  "theme": "Professional",
+  "appearance": "Bright",
+  "width": 390,
+  "height": 946,
+  "backendCalls": [
+    "GetRecentChatsAsync",
+    "GetModelInventoryAsync",
+    "GetRecentChatsAsync",
+    "GetModelInventoryAsync",
+    "GetConversationAsync"
+  ],
+  "diagnostics": [],
+  "controls": [
+    {
+      "id": "disclaimer-contrast",
+      "foreground": "#ff55575d",
+      "background": "#fffafafc",
+      "ratio": 6.928290973812939
+    },
+    {
+      "id": "space-rail",
+      "type": "CakeOS.Cui.Runtime.CuiContainerControl",
+      "x": 0,
+      "y": 0,
+      "width": 70,
+      "height": 946,
+      "visible": true,
+      "enabled": true,
+      "accessibleName": "Pinned Spaces"
+    },
+    {
+      "id": "context-sidebar",
+      "mounted": false,
+      "visible": false,
+      "enabled": true
+    },
+    {
+      "id": "spaces-header",
+      "type": "CakeOS.Cui.Runtime.CuiContainerControl",
+      "x": 70,
+      "y": 0,
+      "width": 320,
+      "height": 172,
+      "visible": true,
+      "enabled": true,
+      "accessibleName": "Spaces controls"
+    },
+    {
+      "id": "spaces-workspace-slot",
+      "type": "CakeOS.Cui.Runtime.CuiContainerControl",
+      "x": 70,
+      "y": 172,
+      "width": 320,
+      "height": 774,
+      "visible": true,
+      "enabled": true,
+      "accessibleName": "Active Space workspace"
+    },
+    {
+      "id": "spaces-model",
+      "type": "Avalonia.Controls.Button",
+      "x": 90,
+      "y": 64,
+      "width": 280,
+      "height": 44,
+      "visible": true,
+      "enabled": true,
+      "accessibleName": "Choose model"
+    },
+    {
+      "id": "spaces-account",
+      "type": "Avalonia.Controls.Button",
+      "x": 326,
+      "y": 116,
+      "width": 44,
+      "height": 44,
+      "visible": true,
+      "enabled": true,
+      "accessibleName": "Account"
+    },
+    {
+      "id": "chat-transcript",
+      "type": "CakeOS.Cui.Runtime.CuiContainerControl",
+      "x": 86,
+      "y": 192,
+      "width": 288,
+      "height": 480,
+      "visible": true,
+      "enabled": true,
+      "accessibleName": "Conversation messages"
+    },
+    {
+      "id": "floating-composer",
+      "type": "CakeOS.Cui.Runtime.CuiContainerControl",
+      "x": 86,
+      "y": 711,
+      "width": 288,
+      "height": 160,
+      "visible": true,
+      "enabled": true,
+      "accessibleName": "Message composer"
+    },
+    {
+      "id": "composer-input",
+      "type": "Avalonia.Controls.TextBox",
+      "x": 104,
+      "y": 725,
+      "width": 252,
+      "height": 28,
+      "visible": true,
+      "enabled": true,
+      "accessibleName": "Message"
+    },
+    {
+      "id": "chat-approval",
+      "type": "Avalonia.Controls.Button",
+      "x": 213,
+      "y": 813,
+      "width": 143,
+      "height": 44,
+      "visible": true,
+      "enabled": false,
+      "accessibleName": "Choose tool approval policy"
+    },
+    {
+      "id": "send",
+      "type": "Avalonia.Controls.Button",
+      "x": 312,
+      "y": 761,
+      "width": 44,
+      "height": 44,
+      "visible": true,
+      "enabled": true,
+      "accessibleName": "Send message"
+    },
+    {
+      "id": "chat-disclaimer",
+      "type": "Avalonia.Controls.TextBlock",
+      "x": 95,
+      "y": 887,
+      "width": 270,
+      "height": 35,
+      "visible": true,
+      "enabled": true,
+      "accessibleName": "AI can make mistakes. Double-check important information and tasks."
+    },
+    {
+      "id": "actual-markdown:Can you look for nearby restaurants?",
+      "type": "HavenOS.Apps.Spaces.Chat.Rendering.ChatSpaceCuiRuntime\u002BChatMarkdownContent",
+      "x": 137,
+      "y": 222,
+      "width": 225,
+      "height": 44,
+      "visible": true,
+      "enabled": true,
+      "accessibleName": "You message"
+    },
+    {
+      "id": "actual-markdown:Looking for restaurants now!\n\nHere are the top 5 restaurants that you should try!",
+      "type": "HavenOS.Apps.Spaces.Chat.Rendering.ChatSpaceCuiRuntime\u002BChatMarkdownContent",
+      "x": 86,
+      "y": 388,
+      "width": 267,
+      "height": 96,
+      "visible": true,
+      "enabled": true,
+      "accessibleName": "Qwen message"
+    },
+    {
+      "id": "semantic-text:You",
+      "type": "Avalonia.Controls.TextBlock",
+      "x": 326,
+      "y": 192,
+      "width": 36,
+      "height": 22,
+      "visible": true,
+      "enabled": true,
+      "accessibleName": null
+    },
+    {
+      "id": "semantic-text:Qwen",
+      "type": "Avalonia.Controls.TextBlock",
+      "x": 86,
+      "y": 358,
+      "width": 56,
+      "height": 22,
+      "visible": true,
+      "enabled": true,
+      "accessibleName": null
+    },
+    {
+      "id": "semantic-text:Searching for restaurants",
+      "type": "Avalonia.Controls.TextBlock",
+      "x": 98,
+      "y": 500,
+      "width": 243,
+      "height": 15,
+      "visible": true,
+      "enabled": true,
+      "accessibleName": null
+    },
+    {
+      "id": "semantic-text:Creating a Shortlist",
+      "type": "Avalonia.Controls.TextBlock",
+      "x": 98,
+      "y": 550,
+      "width": 243,
+      "height": 15,
+      "visible": true,
+      "enabled": true,
+      "accessibleName": null
+    }
+  ],
+  "checks": [
+    {
+      "passed": true,
+      "detail": "Actual recent-chat button is visible and enabled."
+    },
+    {
+      "passed": true,
+      "detail": "Actual recent-chat action invokes canonical controller/backend conversation loading once."
+    },
+    {
+      "passed": true,
+      "detail": "Actual BrowserChatSession contains two messages projected by the canonical Chat controller."
+    },
+    {
+      "passed": true,
+      "detail": "Canonical saved draft is loaded into the actual owner."
+    },
+    {
+      "passed": true,
+      "detail": "Original shared Markdown controls render both exact canonical messages."
+    },
+    {
+      "passed": true,
+      "detail": "Each actual repeated message retains its own original action strip."
+    },
+    {
+      "passed": true,
+      "detail": "Original message actions rest transparent and cannot receive pointer hits; original controls remain mounted."
+    },
+    {
+      "passed": true,
+      "detail": "Resting original Copy button is absent from the actual compositor hit target."
+    },
+    {
+      "passed": true,
+      "detail": "Real pointer entry reveals only that repeated message\u0027s original actions."
+    },
+    {
+      "passed": true,
+      "detail": "Original pointer trajectory stays revealed through body/gap/action at168.0,265.0."
+    },
+    {
+      "passed": true,
+      "detail": "Original pointer trajectory stays revealed through body/gap/action at168.0,274.0."
+    },
+    {
+      "passed": true,
+      "detail": "Original pointer trajectory stays revealed through body/gap/action at168.0,283.0."
+    },
+    {
+      "passed": true,
+      "detail": "Original pointer trajectory stays revealed through body/gap/action at168.0,300.0."
+    },
+    {
+      "passed": true,
+      "detail": "Original available Copy remains an actual hit target after pointer crosses its owner\u0027s gap."
+    },
+    {
+      "passed": true,
+      "detail": "Original message and action bounds do not move during pointer reveal."
+    },
+    {
+      "passed": true,
+      "detail": "Real pointer exit returns unfocused message actions to rest."
+    },
+    {
+      "passed": true,
+      "detail": "Physical Tab traversal reaches the same original available Copy action."
+    },
+    {
+      "passed": true,
+      "detail": "Original keyboard focus retains the correct actions after pointer exit without revealing its sibling."
+    },
+    {
+      "passed": true,
+      "detail": "Original message and action bounds do not move during keyboard reveal."
+    },
+    {
+      "passed": true,
+      "detail": "Original focus restoration returns both strips to the resting capture state."
+    },
+    {
+      "passed": true,
+      "detail": "Original message and action bounds do not move during focus restoration."
+    },
+    {
+      "passed": true,
+      "detail": "Actual shared footer contains the exact approved disclaimer in canonical14px italic text."
+    },
+    {
+      "passed": true,
+      "detail": "Approved disclaimer stays below the actual composer without overlap."
+    },
+    {
+      "passed": true,
+      "detail": "Actual Professional disclaimer colours provide at least4.5:1 small-text contrast."
+    },
+    {
+      "passed": true,
+      "detail": "Original successfully loaded idle status is not shown as a generic ready message."
+    },
+    {
+      "passed": true,
+      "detail": "Original message action buttons exist: chat.message-copy"
+    },
+    {
+      "passed": true,
+      "detail": "Exact production host availability restricts actual buttons: chat.message-copy"
+    },
+    {
+      "passed": true,
+      "detail": "Original message action buttons exist: chat.message-edit"
+    },
+    {
+      "passed": true,
+      "detail": "Exact production host availability restricts actual buttons: chat.message-edit"
+    },
+    {
+      "passed": true,
+      "detail": "Original message action buttons exist: chat.message-branch"
+    },
+    {
+      "passed": true,
+      "detail": "Exact production host availability restricts actual buttons: chat.message-branch"
+    },
+    {
+      "passed": true,
+      "detail": "Original message action buttons exist: chat.message-regenerate"
+    },
+    {
+      "passed": true,
+      "detail": "Exact production host availability restricts actual buttons: chat.message-regenerate"
+    },
+    {
+      "passed": true,
+      "detail": "Original message action buttons exist: chat.message-forget"
+    },
+    {
+      "passed": true,
+      "detail": "Exact production host availability restricts actual buttons: chat.message-forget"
+    },
+    {
+      "passed": true,
+      "detail": "Original message action buttons exist: chat.message-delete"
+    },
+    {
+      "passed": true,
+      "detail": "Exact production host availability restricts actual buttons: chat.message-delete"
+    },
+    {
+      "passed": true,
+      "detail": "Actual workspace does not geometrically cover the header."
+    },
+    {
+      "passed": true,
+      "detail": "Visible measured control: space-rail"
+    },
+    {
+      "passed": true,
+      "detail": "Control inside390x946: space-rail"
+    },
+    {
+      "passed": true,
+      "detail": "Compact contextual sidebar is intentionally collapsed by the real session."
+    },
+    {
+      "passed": true,
+      "detail": "Visible measured control: spaces-header"
+    },
+    {
+      "passed": true,
+      "detail": "Control inside390x946: spaces-header"
+    },
+    {
+      "passed": true,
+      "detail": "Visible measured control: spaces-workspace-slot"
+    },
+    {
+      "passed": true,
+      "detail": "Control inside390x946: spaces-workspace-slot"
+    },
+    {
+      "passed": true,
+      "detail": "Visible measured control: spaces-model"
+    },
+    {
+      "passed": true,
+      "detail": "Control inside390x946: spaces-model"
+    },
+    {
+      "passed": true,
+      "detail": "Visible measured control: spaces-account"
+    },
+    {
+      "passed": true,
+      "detail": "Control inside390x946: spaces-account"
+    },
+    {
+      "passed": true,
+      "detail": "Visible measured control: chat-transcript"
+    },
+    {
+      "passed": true,
+      "detail": "Control inside390x946: chat-transcript"
+    },
+    {
+      "passed": true,
+      "detail": "Visible measured control: floating-composer"
+    },
+    {
+      "passed": true,
+      "detail": "Control inside390x946: floating-composer"
+    },
+    {
+      "passed": true,
+      "detail": "Visible measured control: composer-input"
+    },
+    {
+      "passed": true,
+      "detail": "Control inside390x946: composer-input"
+    },
+    {
+      "passed": true,
+      "detail": "Visible measured control: chat-approval"
+    },
+    {
+      "passed": true,
+      "detail": "Control inside390x946: chat-approval"
+    },
+    {
+      "passed": true,
+      "detail": "Visible measured control: send"
+    },
+    {
+      "passed": true,
+      "detail": "Control inside390x946: send"
+    },
+    {
+      "passed": true,
+      "detail": "Visible measured control: chat-disclaimer"
+    },
+    {
+      "passed": true,
+      "detail": "Control inside390x946: chat-disclaimer"
+    },
+    {
+      "passed": true,
+      "detail": "Unoccluded actual centre hit target: spaces-model"
+    },
+    {
+      "passed": true,
+      "detail": "Unoccluded actual centre hit target: spaces-account"
+    },
+    {
+      "passed": true,
+      "detail": "Unoccluded actual centre hit target: composer-input"
+    },
+    {
+      "passed": true,
+      "detail": "Unoccluded actual centre hit target: send"
+    },
+    {
+      "passed": true,
+      "detail": "Exact actual capture pixels390x946."
+    },
+    {
+      "passed": true,
+      "detail": "Actual BrowserChatSession owns an actual canonical ChatSpaceController instance."
+    }
+  ],
+  "layoutChecksPassed": true,
+  "failures": [],
+  "unsupportedReferenceSemantics": [
+    "Worked for 2 mins 32 sec: the saved-message projection does not populate working duration or Thinking.",
+    "Quick Question: Do you have any dietary requirements? with Yes (Please Specify) and No controls: the current browser message contract has no original question/answer owner.",
+    "You Answered No: no persisted question answer is available in the current message projection.",
+    "Qwen 3.6 \u00B7 100%: the reference 100% denotes reasoning effort; the current browser model control has no reasoning-effort selector or separate usage indicator. The fixture does not simulate either in the model name."
+  ],
+  "unconnectedActions": [
+    {
+      "action": "chat.choose-type",
+      "available": false
+    },
+    {
+      "action": "chat.choose-approval",
+      "available": false
+    },
+    {
+      "action": "nav.new-group",
+      "available": false
+    },
+    {
+      "action": "nav.specialists",
+      "available": false
+    },
+    {
+      "action": "nav.configure",
+      "available": false
+    },
+    {
+      "action": "shell.search",
+      "available": false
+    },
+    {
+      "action": "shell.notifications",
+      "available": false
+    }
+  ],
+  "approvedReferenceGeometryTranscribedByRoot": {
+    "width": 1530,
+    "height": 946,
+    "rail": {
+      "x": 0,
+      "width": 70
+    },
+    "sidebar": {
+      "x": 70,
+      "width": 280
+    },
+    "workspace": {
+      "x": 350,
+      "y": 80,
+      "topLeftRadius": 48
+    },
+    "composer": {
+      "x": 434,
+      "y": 786,
+      "width": 1013,
+      "height": 107,
+      "radius": 32
+    },
+    "model": {
+      "x": 1078,
+      "y": 19,
+      "width": 266,
+      "height": 49
+    }
+  },
+  "sourceHashes": {
+    "9to1 Workspace/Spaces/Source/Chat/ChatSpaceContracts.cs": "b54f3b0e64d22d810b7d4099e42fe94e6deaf0180949effac13654a70777a281",
+    "9to1 Workspace/Spaces/Source/Chat/ChatSpaceController.cs": "ef2a021a591176ce1c1d6fdddeec502c021847660c228a17629f03296a6939ba",
+    "9to1 Workspace/Spaces/Source/Chat/ChatSpaceProjection.cs": "d840bf32a7da2ab20b0666a8142a05572db5ee244f2d84339d2ccc3028dccbc0",
+    "9to1 Workspace/Spaces/UI/Chat/ChatSpace.cui": "ea0c58df5e6acce5897288b1bef617f8ba8ede3426ea5b74ccc315fa87ffb4f0",
+    "9to1 Workspace/Spaces/UI/Chat/ChatSpaceCuiDocument.cs": "ca852880cf9032e94e800fdc597e2e72950acf4649abcde7d3353ae80e892ebd",
+    "9to1 Workspace/Spaces/UI/Chat/ChatWorkspace.cui": "de939a333fdddfc80909eba5a19104607c0c933410ecd40af3e0ec90174a1316",
+    "9to1 Workspace/Spaces/UI/Chat/ChatWorkspaceCuiDocument.cs": "673f15a379257907c2adae1b29e5915dbf6f37adee3c641ef10b26c985927433",
+    "9to1 Workspace/Spaces/UI/Chat/Runtime/ChatSpaceCuiRuntime.cs": "594b551cddc37307aac6417477c65a7033f13dd5477c670dc7c983ffa9878208",
+    "9to1 Workspace/Spaces/UI/Chat/Runtime/SpacesShellCuiRuntime.cs": "40e17e23dc5097ec90a3e7d5d5b28552e60226d0aca8f4b8800fa173615ffe91",
+    "9to1 Workspace/Spaces/UI/Shell/SpaceNavigation.cui": "9067197c046c8d82343d70d2f7eec368287dc304bdd26635deef32c8d6f3af33",
+    "9to1 Workspace/Spaces/UI/Shell/SpaceNavigationCuiDocument.cs": "b99bcc9afb4b8448b86395e4d1fe882f7713de3d876984447f6b3ef0bc0cfd4b",
+    "9to1 Workspace/Spaces/UI/Shell/SpacesShell.cui": "20618d607d77652a540f788cd932546eff634918159c81cc5b243c1d707c10e1",
+    "9to1 Workspace/Spaces/UI/Shell/SpacesShellCuiDocument.cs": "63cb7040bcc66a319fa927f71777c49dd7ecd4e816e7aaf3d0a6ead68a517cde",
+    "9to1 Workspace/shared/src/Haven.UI/Drawing/HavenIconCatalog.cs": "24f3749fb2a03533662e588d6e376515e3fa61c63ec1bade9b64c66a6351eb36",
+    "apps/Web/BrowserActionAvailability.cs": "f4d27e8a2a52cbc4ecde8f98073dfa32f2096583e058c36601db00b7c1437280",
+    "apps/Web/BrowserApplication.cs": "a0559d96814631c6275b99f633f03d0e100d23a68236b45fe8597509feff6b07",
+    "apps/Web/BrowserCanonicalIcons.cs": "1464123590021b533cf2f568c4e68998c259ffe5ca91a685b06d9d82580c973a",
+    "apps/Web/BrowserShellActions.cs": "34d462dfd753e6bfae9654ca1d56f837bd87e8b8dd66fca3ceefd131b1815156",
+    "apps/Web/Spaces/BrowserSpacesFeature.cs": "470a71cdd56ea662e6ba105f3504073a311d5838a0bb9adec96c3202c8b45629",
+    "apps/Web/Spaces/Chat/BrowserChatSession.Bindings.cs": "8574b98e8874e8b702180ccafbcb8c8a09bb5e4cddd3b7d939c40a1bf61d562f",
+    "apps/Web/Spaces/Chat/BrowserChatSession.cs": "9a4ec7efa2edea0241a9a2d424f9a04d61714c0cdae3c9095b7191648e5a30a9",
+    "apps/Web/Spaces/Tests/Visual/BrowserSpaces.Visual.csproj": "8e2959c2a4443ab174e476710e1aa7622939c881d8c3fd7530834a787017ee32",
+    "apps/Web/Spaces/Tests/Visual/Program.cs": "ccf6437ae84bb8212c51fd51f10e665200af294d95a39d69d6a87e85bf5a3175",
+    "apps/Web/Spaces/Tests/Visual/README.md": "2e5c575667e936bd0ed2d082ff8b448fc5a3063da3eb0a034974b64338708907",
+    "apps/Web/Spaces/Tests/Visual/RestaurantVisualBackend.cs": "03edc005305368e74c256aeb46c69d12d4c937ba8fab11b47b59e5f92a742d41",
+    "apps/Web/Spaces/Tests/Visual/VisualFixtureReport.cs": "6f407952003eebeea5dc442e6fd3119fa49579c0c0f3945504b185f55ef21b05",
+    "apps/Web/Spaces/Tests/Visual/restaurant.fixture.json": "0ff5a5e07d91fca558c2a11bd2150284fbe26a74b435008c3e54a987a394fb76",
+    "framework/CUI/Runtime/CuiControlLoader.cs": "f30c321411ba6af34efe0ac8df84df6fef8baccaac41984c9bf69b4368831595",
+    "framework/CUI/Runtime/CuiControlRegistry.cs": "fe3c6a0855383df3df7ab256ece0baf87981ef5855952d6f173629990db16f4e",
+    "framework/CUI/Runtime/CuiInteractionReveal.cs": "4ffff7c6d58ece0473c95c3b48913f7c048b164cc0cd82aad92f758f6ac0eca7",
+    "framework/CUI/Runtime/CuiMarkdownView.cs": "ce58493fb47be82dd37cf8d801f8aa9641bab0da66fefbc381ea3cdbad4d1685",
+    "framework/CUI/Runtime/CuiNativeHost.cs": "44abcc4d7bc63bcca1469e618bcaf4ae12880d87d51909e500e5cdf03522ccb6",
+    "framework/CUI/Runtime/CuiPropertyPresentation.cs": "6753cb0684eb390509ae5ed703a0c502f939d1cce42443dfec829345841e78ed",
+    "framework/CUI/Themes/CuiAccentCatalog.cs": "80bacc6e297d958447f790246e3f40b9746bd897ef8420557d5a0ee8da5268dc",
+    "framework/CUI/Themes/CuiAccentPalette.cs": "a56de3c6cc14263a402af73b6ed4c3e9ef2e836d2c56afc194fcacdfe0d68130",
+    "framework/CUI/Themes/CuiAccentPreference.cs": "b29b1179599cf62193e6d44ddd904ea3fd77cd642d065a588e0e52acc6d95d01",
+    "framework/CUI/Themes/CuiAccessibilitySettings.cs": "ecf00d391dff041c87bcddbbe66fb731e093aa0fad3b335499803ac2861ab80c",
+    "framework/CUI/Themes/CuiAppAccentCatalog.cs": "e6ca9d5aea402f0345fc41640e5f40684821457545005b375a3b5f7afd21a063",
+    "framework/CUI/Themes/CuiCustomMaterialBrush.cs": "ae6a05a25c5f287b5afe7282b2c77e472f3b38c061a1be1a3d77273fb26e85d1",
+    "framework/CUI/Themes/CuiCustomTheme.cs": "b8e309fcfdbba388d0f606751a25cf3a981588a9df5d8cd4d58c1a51faf4d903",
+    "framework/CUI/Themes/CuiCustomThemeAccentResolver.cs": "d2d92ad131cd744cf9611bbd2a2dfec63a23e23dff1062cdb4a58b5864d51cec",
+    "framework/CUI/Themes/CuiCustomThemeResourceApplier.cs": "cba021ad13fb098e6ff6c1ad211519b0eb59ce05659c7907813ecd05cf620bc9",
+    "framework/CUI/Themes/CuiMaterialBrush.cs": "39b4b85230f1ccf2b7cbf9f09135f825f615d3115a6cac2c023350a2b235752f",
+    "framework/CUI/Themes/CuiMotion.cs": "9bef76efceee8d17a3f1d04e192149881d94655bee507d009868cb7e659260ae",
+    "framework/CUI/Themes/CuiPresetSurfaceResources.cs": "502b831496f9f125f0bed801ebf243b43445b8c85eb36f4ef2830e85b9536086",
+    "framework/CUI/Themes/CuiSurfacePaletteCatalog.cs": "a4641b3befac7e5520483c496eebf9a5ab0b13f6501217e6c7d7aa61127870d6",
+    "framework/CUI/Themes/CuiThemeCatalog.cs": "6acfb30e2ce0b2f557a9cc39a78fce0429c52deaaa908b1fac2c35b76a7c0b63",
+    "framework/CUI/Themes/CuiThemeDefinitions.cs": "2140c4113022ac2dab43b03d17a8c5cb95b30d780a5fbc9ed95b59b5d3462998",
+    "framework/CUI/Themes/CuiThemeEnums.cs": "d854b27071bdca18d7cb0538465ad3f82fb6b7f3366c30612770981d10811560",
+    "framework/CUI/Themes/CuiThemeExpression.cs": "ebeaae1562b5e47007557b0f2f446c053f386ccd40ab86e3dc867e9642ff1f07",
+    "framework/CUI/Themes/CuiThemePreferenceContext.cs": "d26e3d304c3b50ae43d912877badec1a5f6b76fa819f42f981817ce63af2f5d7",
+    "framework/CUI/Themes/CuiThemePreferenceReader.cs": "dfb9eb8315d9774f43a48f8c1bb3c18914c249a2c3eda0518c425bd32d5c0190",
+    "framework/CUI/Themes/CuiThemeResourceApplier.cs": "677aa712bda7b18c11f6e3ad040f95389e2889b5672d46749cf0916c92dce1e0",
+    "framework/CUI/Themes/CuiThemeScope.cs": "1fbeec731e8906e78e65eb7b95040cf1595f4b31e7bd7d462ce9394fe817551c"
+  },
+  "assemblies": [
+    {
+      "name": "BrowserSpaces.Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/BrowserSpaces.Tests.dll",
+      "sha256": "e0cc164aa5d300a48b53322f02525f74848efed7f8f22e853d567f6ce39ad573"
+    },
+    {
+      "name": "HavenOS.Spaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/HavenOS.Spaces.dll",
+      "sha256": "ee7fe40c363bf8cb66e2a481a35ba652fe8da4ba4eebcec4f17c7d8822aa807e"
+    },
+    {
+      "name": "CakeOS.Cui.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/CakeOS.Cui.Runtime.dll",
+      "sha256": "e0d886f0eec37465674c4dd457f8ee873098e97924c114991437f815fd874c6c"
+    },
+    {
+      "name": "BrowserSpaces.Visual, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/BrowserSpaces.Visual.dll",
+      "sha256": "5ca7d01d07d70461bf592ad8261e1c9bf5a868db8329fcde0ec807424c61a10c"
+    }
+  ]
+}

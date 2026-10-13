@@ -35,20 +35,28 @@ internal static class BrowserCanonicalIcons
                 Brush = new SolidColorBrush(colour), Pen = outline is null ? null : new Pen(outline, 1)
             }) { Viewbox = new Rect(0, 0, 24, 24) };
         }
-        if (!source.StartsWith("icon:", StringComparison.Ordinal)) return null;
-        var key = source[5..];
+        var solid = source.StartsWith("icon-solid:", StringComparison.Ordinal);
+        if (!solid && !source.StartsWith("icon:", StringComparison.Ordinal)) return null;
+        var key = source[(solid ? 11 : 5)..];
         if (string.IsNullOrWhiteSpace(key) || key.Length > 64 || key.Any(character => !char.IsAsciiLetterOrDigit(character) && character != '-'))
             throw new ArgumentException("A catalog icon requires a bounded symbolic key.", nameof(source));
         if (!target.Resources.TryGetResource("CuiTextBrush", null, out var resource) || resource is not IBrush brush)
             throw new InvalidOperationException("The icon's scoped CUI text brush is unavailable.");
-        var sourceGeometry = HavenIconCatalog.Resolve(key);
+        HavenGeometry sourceGeometry;
+        if (solid)
+        {
+            if (!HavenIconCatalog.TryResolveSolid(key, out var filled))
+                throw new ArgumentException($"The canonical icon '{key}' has no filled presentation.", nameof(source));
+            sourceGeometry = filled;
+        }
+        else sourceGeometry = HavenIconCatalog.Resolve(key);
         var geometry = new StreamGeometry();
         using (var writer = geometry.Open())
         {
             writer.SetFillRule(sourceGeometry.Path.FillRule == HavenFillRule.NonZero ? FillRule.NonZero : FillRule.EvenOdd);
             foreach (var figure in sourceGeometry.Path.Figures)
             {
-                writer.BeginFigure(Point(figure.Start), false);
+                writer.BeginFigure(Point(figure.Start), solid);
                 foreach (var segment in figure.Segments)
                 {
                     switch (segment)
@@ -67,7 +75,8 @@ internal static class BrowserCanonicalIcons
         var image = new DrawingImage(new GeometryDrawing
         {
             Geometry = geometry,
-            Pen = new Pen(brush, 1.8, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round)
+            Brush = solid ? brush : null,
+            Pen = solid ? null : new Pen(brush, 1.8, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round)
         });
         if (sourceGeometry.ViewBox is { } viewBox)
             image.Viewbox = new Rect(viewBox.X, viewBox.Y, viewBox.Width, viewBox.Height);

@@ -14,7 +14,7 @@ public sealed class CuiThemeRecoveryTests
     public async Task Worker_thread_theme_failure_is_observed_and_same_revision_can_retry()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
-        await session.Dispatch(async () =>
+        await session.Dispatch<bool>(async () =>
         {
             var source = new ThemeSource();
             using var preference = new CuiThemePreferenceContext(source);
@@ -37,6 +37,7 @@ public sealed class CuiThemeRecoveryTests
             await Task.Run(() => source.Set(source.Current));
             Assert.NotSame(before, image.Source);
             Assert.Null(preference.ObserverDiagnostic);
+            return true;
         }, CancellationToken.None);
     }
 

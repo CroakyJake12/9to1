@@ -203,7 +203,7 @@ public sealed class CuiLoaderOriginalTaskCustodyTests
         try
         {
             session = HeadlessUnitTestSession.StartNew(typeof(CuiRuntimeTestApplication));
-            await session.Dispatch(async () =>
+            await session.Dispatch<int>(async () =>
             {
                 var rig = new Rig();
                 try

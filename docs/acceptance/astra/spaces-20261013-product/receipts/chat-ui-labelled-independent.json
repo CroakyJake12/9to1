@@ -1,0 +1,797 @@
+{
+  "scope": "Independent inspection of explicitly labelled automated fixture reports; no product/authenticated account/provider/tool acceptance.",
+  "matrixSha256": "fded1de0f373d11337d1c9b7f89a7e3f59dddddcbb0f91c1de30dbcda7ab2f7f",
+  "cases": [
+    {
+      "appearance": "Dark",
+      "width": 1530,
+      "checks": 68,
+      "outputChecks": [
+        {
+          "name": "VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-actions-focused-1530x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-actions-hover-1530x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-restaurant-1530x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-restaurant-evidence.json",
+          "matched": true
+        }
+      ],
+      "embeddedChecks": [
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 1530,
+          "height": 946,
+          "hash": "14cfd964b3e4e76c858defda5fa92a77765f2c40fb0c9df6ee4ff54718d1c1e7"
+        },
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 1530,
+          "height": 946,
+          "hash": "543dfb7a1f4d13e701b4f0958c7d21259ad4e732c06228245e97af0b8a24fecd"
+        },
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 1530,
+          "height": 946,
+          "hash": "aad8e2b80a546dceda8a4fecedb1653b7a7dc479cd6638f483bbde433b411d20"
+        }
+      ],
+      "contrast": {
+        "id": "disclaimer-contrast",
+        "foreground": "#ffc3c4c7",
+        "background": "#ff111419",
+        "ratio": 10.581542250890385
+      },
+      "captures": [
+        "Dark-1530-0-LABELLED.png",
+        "Dark-1530-1-LABELLED.png",
+        "Dark-1530-2-LABELLED.png"
+      ],
+      "allPassed": true
+    },
+    {
+      "appearance": "Dark",
+      "width": 390,
+      "checks": 67,
+      "outputChecks": [
+        {
+          "name": "VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-actions-focused-390x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-actions-hover-390x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-restaurant-390x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-restaurant-evidence.json",
+          "matched": true
+        }
+      ],
+      "embeddedChecks": [
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 390,
+          "height": 946,
+          "hash": "9a66cfc00f8279d35dfbc365b5c11b7ad569980fbda6909005276df3d7fde28c"
+        },
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 390,
+          "height": 946,
+          "hash": "8bb84675715cce0388a95a2f664d211822c3a39b9f1ac2ae64fb0eca44ef4d2a"
+        },
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 390,
+          "height": 946,
+          "hash": "4e3013d02e0b68965adffac55ab34be6dbae514b5c3915181077a49c90cbe960"
+        }
+      ],
+      "contrast": {
+        "id": "disclaimer-contrast",
+        "foreground": "#ffc3c4c7",
+        "background": "#ff111419",
+        "ratio": 10.581542250890385
+      },
+      "captures": [
+        "Dark-390-0-LABELLED.png"
+      ],
+      "allPassed": true
+    },
+    {
+      "appearance": "SuperBright",
+      "width": 1530,
+      "checks": 68,
+      "outputChecks": [
+        {
+          "name": "VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-actions-focused-1530x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-actions-hover-1530x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-restaurant-1530x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-restaurant-evidence.json",
+          "matched": true
+        }
+      ],
+      "embeddedChecks": [
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 1530,
+          "height": 946,
+          "hash": "d2d846847a0a633fa4eb8a0ee47faef1b000cb36506b954344c3b5378ac69f70"
+        },
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 1530,
+          "height": 946,
+          "hash": "a9cdb2d2caaa429f905a5e91000c1a23a6bf8c7352120fb81d643819dd5e52bd"
+        },
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 1530,
+          "height": 946,
+          "hash": "3909474fce7046f7ff7c50fd597cff214d916919bd4d81d825aaa5b52d9704ee"
+        }
+      ],
+      "contrast": {
+        "id": "disclaimer-contrast",
+        "foreground": "#ff55575d",
+        "background": "White",
+        "ratio": 7.222452328585558
+      },
+      "captures": [
+        "SuperBright-1530-0-LABELLED.png"
+      ],
+      "allPassed": true
+    },
+    {
+      "appearance": "SuperBright",
+      "width": 390,
+      "checks": 67,
+      "outputChecks": [
+        {
+          "name": "VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-actions-focused-390x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-actions-hover-390x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-restaurant-390x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-restaurant-evidence.json",
+          "matched": true
+        }
+      ],
+      "embeddedChecks": [
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 390,
+          "height": 946,
+          "hash": "5bc57991bb2020e543ba012f65e7c8a18bbe7d207b0cad242b6bce47e7472283"
+        },
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 390,
+          "height": 946,
+          "hash": "2cf7e309b27dd4c2e14105b1140fb7c2dd4a56eaf344512d6983b4898dbac3fb"
+        },
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 390,
+          "height": 946,
+          "hash": "05b6dea6fd67711998689a68fe23154381ff26f1adcf7b399e1fe72c830d86fd"
+        }
+      ],
+      "contrast": {
+        "id": "disclaimer-contrast",
+        "foreground": "#ff55575d",
+        "background": "White",
+        "ratio": 7.222452328585558
+      },
+      "captures": [
+        "SuperBright-390-0-LABELLED.png"
+      ],
+      "allPassed": true
+    },
+    {
+      "appearance": "Bright",
+      "width": 1530,
+      "checks": 68,
+      "outputChecks": [
+        {
+          "name": "VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-actions-focused-1530x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-actions-hover-1530x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-restaurant-1530x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-restaurant-evidence.json",
+          "matched": true
+        }
+      ],
+      "embeddedChecks": [
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 1530,
+          "height": 946,
+          "hash": "e926bf0d913d1b3df9c7515bd00d0321aa1f65367c9f58ce323f4970de974ea8"
+        },
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 1530,
+          "height": 946,
+          "hash": "75997b13f634d1954b706a4bebcfc08a39d6ba0e82a131cc16faf04951b1ae3d"
+        },
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 1530,
+          "height": 946,
+          "hash": "c85d8094e31ea1c865d8500eb5d7fe0a7fdfbc5ec5fb5d0ece7a6c3fa245b3ff"
+        }
+      ],
+      "contrast": {
+        "id": "disclaimer-contrast",
+        "foreground": "#ff55575d",
+        "background": "#fffafafc",
+        "ratio": 6.928290973812939
+      },
+      "captures": [
+        "Bright-1530-0-LABELLED.png"
+      ],
+      "allPassed": true
+    },
+    {
+      "appearance": "Bright",
+      "width": 390,
+      "checks": 67,
+      "outputChecks": [
+        {
+          "name": "VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-actions-focused-390x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-actions-hover-390x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-restaurant-390x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-restaurant-evidence.json",
+          "matched": true
+        }
+      ],
+      "embeddedChecks": [
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 390,
+          "height": 946,
+          "hash": "3ab71b71ea330b90476ffa08aca57d4beb5a7f7eaf5bcf7d0b1f2c9a635e6f04"
+        },
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 390,
+          "height": 946,
+          "hash": "a882038e3d6e8bbcc7c5d0913c1daf4ae06e1b0e49bef895f4dfcb3c8b2b64be"
+        },
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 390,
+          "height": 946,
+          "hash": "6f27718ec7f64c09b74f51157e51bbd75a2ac77a9cb7804cbb6d7b2ecae5bd22"
+        }
+      ],
+      "contrast": {
+        "id": "disclaimer-contrast",
+        "foreground": "#ff55575d",
+        "background": "#fffafafc",
+        "ratio": 6.928290973812939
+      },
+      "captures": [
+        "Bright-390-0-LABELLED.png"
+      ],
+      "allPassed": true
+    },
+    {
+      "appearance": "SuperDark",
+      "width": 1530,
+      "checks": 68,
+      "outputChecks": [
+        {
+          "name": "VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-actions-focused-1530x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-actions-hover-1530x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-restaurant-1530x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-restaurant-evidence.json",
+          "matched": true
+        }
+      ],
+      "embeddedChecks": [
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 1530,
+          "height": 946,
+          "hash": "4600a2a5f1211bf676cfe5e20fb59767e66e5471b78fc95d98ffd4f4a457b01e"
+        },
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 1530,
+          "height": 946,
+          "hash": "79dd25e5bbbd695efac1f02b1be491669b19899a231b23d9b10ad4ef4dce1399"
+        },
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 1530,
+          "height": 946,
+          "hash": "560b9683473bc2500203b6ba98d73214dad92388250699565f2895819c5414f9"
+        }
+      ],
+      "contrast": {
+        "id": "disclaimer-contrast",
+        "foreground": "#ffc3c4c7",
+        "background": "#ff090b0e",
+        "ratio": 11.297436772951082
+      },
+      "captures": [
+        "SuperDark-1530-0-LABELLED.png"
+      ],
+      "allPassed": true
+    },
+    {
+      "appearance": "SuperDark",
+      "width": 390,
+      "checks": 67,
+      "outputChecks": [
+        {
+          "name": "VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-actions-focused-390x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-actions-hover-390x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-restaurant-390x946.png",
+          "matched": true
+        },
+        {
+          "name": "actual-browser-chat-restaurant-evidence.json",
+          "matched": true
+        }
+      ],
+      "embeddedChecks": [
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 390,
+          "height": 946,
+          "hash": "152dc1c3ec04865fa1b76e9093bc096f76bb061c58ededb7aa8ba61731c9459c"
+        },
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 390,
+          "height": 946,
+          "hash": "9fd83db3898a7aedd15813120bda17aaa479030d5011b57ec23c683db630fa11"
+        },
+        {
+          "alt": "Synthetic automated visual-test fixture, not live account or model output",
+          "width": 390,
+          "height": 946,
+          "hash": "5e756f7c85fe9697934d5c93a8bcb4c3a23ce8fa60a96980dfba6c20ee33075d"
+        }
+      ],
+      "contrast": {
+        "id": "disclaimer-contrast",
+        "foreground": "#ffc3c4c7",
+        "background": "#ff090b0e",
+        "ratio": 11.297436772951082
+      },
+      "captures": [
+        "SuperDark-390-0-LABELLED.png"
+      ],
+      "allPassed": true
+    }
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "cleanupErrors": [],
+  "finishedAt": "2026-10-13T22:49:05.077Z",
+  "sourceAndAssemblyChecks": [
+    {
+      "kind": "source",
+      "path": "9to1 Workspace/Spaces/Source/Chat/ChatSpaceContracts.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "9to1 Workspace/Spaces/Source/Chat/ChatSpaceController.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "9to1 Workspace/Spaces/Source/Chat/ChatSpaceProjection.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "9to1 Workspace/Spaces/UI/Chat/ChatSpace.cui",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "9to1 Workspace/Spaces/UI/Chat/ChatSpaceCuiDocument.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "9to1 Workspace/Spaces/UI/Chat/ChatWorkspace.cui",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "9to1 Workspace/Spaces/UI/Chat/ChatWorkspaceCuiDocument.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "9to1 Workspace/Spaces/UI/Chat/Runtime/ChatSpaceCuiRuntime.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "9to1 Workspace/Spaces/UI/Chat/Runtime/SpacesShellCuiRuntime.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "9to1 Workspace/Spaces/UI/Shell/SpaceNavigation.cui",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "9to1 Workspace/Spaces/UI/Shell/SpaceNavigationCuiDocument.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "9to1 Workspace/Spaces/UI/Shell/SpacesShell.cui",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "9to1 Workspace/Spaces/UI/Shell/SpacesShellCuiDocument.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "9to1 Workspace/shared/src/Haven.UI/Drawing/HavenIconCatalog.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "apps/Web/BrowserActionAvailability.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "apps/Web/BrowserApplication.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "apps/Web/BrowserCanonicalIcons.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "apps/Web/BrowserShellActions.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "apps/Web/Spaces/BrowserSpacesFeature.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "apps/Web/Spaces/Chat/BrowserChatSession.Bindings.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "apps/Web/Spaces/Chat/BrowserChatSession.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "apps/Web/Spaces/Tests/Visual/BrowserSpaces.Visual.csproj",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "apps/Web/Spaces/Tests/Visual/Program.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "apps/Web/Spaces/Tests/Visual/README.md",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "apps/Web/Spaces/Tests/Visual/RestaurantVisualBackend.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "apps/Web/Spaces/Tests/Visual/VisualFixtureReport.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "apps/Web/Spaces/Tests/Visual/restaurant.fixture.json",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Runtime/CuiControlLoader.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Runtime/CuiControlRegistry.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Runtime/CuiInteractionReveal.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Runtime/CuiMarkdownView.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Runtime/CuiNativeHost.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Runtime/CuiPropertyPresentation.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Themes/CuiAccentCatalog.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Themes/CuiAccentPalette.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Themes/CuiAccentPreference.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Themes/CuiAccessibilitySettings.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Themes/CuiAppAccentCatalog.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Themes/CuiCustomMaterialBrush.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Themes/CuiCustomTheme.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Themes/CuiCustomThemeAccentResolver.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Themes/CuiCustomThemeResourceApplier.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Themes/CuiMaterialBrush.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Themes/CuiMotion.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Themes/CuiPresetSurfaceResources.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Themes/CuiSurfacePaletteCatalog.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Themes/CuiThemeCatalog.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Themes/CuiThemeDefinitions.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Themes/CuiThemeEnums.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Themes/CuiThemeExpression.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Themes/CuiThemePreferenceContext.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Themes/CuiThemePreferenceReader.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Themes/CuiThemeResourceApplier.cs",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "path": "framework/CUI/Themes/CuiThemeScope.cs",
+      "matched": true
+    },
+    {
+      "kind": "assembly",
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/BrowserSpaces.Tests.dll",
+      "matched": true
+    },
+    {
+      "kind": "assembly",
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/HavenOS.Spaces.dll",
+      "matched": true
+    },
+    {
+      "kind": "assembly",
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/CakeOS.Cui.Runtime.dll",
+      "matched": true
+    },
+    {
+      "kind": "assembly",
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/BrowserSpaces.Visual.dll",
+      "matched": true
+    }
+  ],
+  "sourceAndAssemblyAllMatched": true,
+  "visuallyInspectedCases": [
+    {
+      "appearance": "Dark",
+      "width": 1530
+    },
+    {
+      "appearance": "Dark",
+      "width": 390
+    },
+    {
+      "appearance": "SuperBright",
+      "width": 1530
+    },
+    {
+      "appearance": "SuperBright",
+      "width": 390
+    },
+    {
+      "appearance": "Bright",
+      "width": 1530
+    },
+    {
+      "appearance": "Bright",
+      "width": 390
+    },
+    {
+      "appearance": "SuperDark",
+      "width": 1530
+    },
+    {
+      "appearance": "SuperDark",
+      "width": 390
+    }
+  ],
+  "visualConclusion": "Specific disclosure/footer/sidebar changes supported in labelled deterministic fixtures; exact parity and full product acceptance FAIL/incomplete. Missing original pixels and semantics remain.",
+  "inspectorQualification": "Initial review script required an exact unhyphenated alt-text spelling; corrected inspector to accept the already explicit visual-test fixture label. Original refusal preserved; no report/image/product change."
+}

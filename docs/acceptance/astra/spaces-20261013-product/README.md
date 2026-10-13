@@ -2,6 +2,8 @@
 
 Status: **WORKING. Full Spaces acceptance has not passed.** This package preserves bounded product and visual evidence, including failures and missing capabilities. No Productivity Suite progression is justified.
 
+**Latest source qualification:** [shared CUI interactions](cui-interaction-checkpoint.md) and [actual Chat layout](chat-ui-checkpoint.md) record335 shared runtime,63 browser-owner and112 Spaces-owner passing tests. Eight explicitly labelled visual-fixture cases cover1530px/390px and all four appearances. They qualify specific interaction/layout corrections, not full visual parity or account/model operation. Use the [labelled desktop report](visual11/Dark-1530/VISUAL-TEST-FIXTURE-NOT-LIVE.html) and [labelled compact report](visual11/Dark-390/VISUAL-TEST-FIXTURE-NOT-LIVE.html); raw fixture PNGs are internal comparison files. An immutable compiled product build and browser run for these changes are pending. The live preview remains checkpoint35 until a separate deployment receipt says otherwise.
+
 **Current P0 provenance review:** start with [p0-provenance-and-acceptance.md](p0-provenance-and-acceptance.md). Restaurant captures are isolated synthetic visual tests, never genuine account/model output. The audit found no corresponding production seeding. The published build has separate signed-out browser evidence; fresh-account, genuine Chat inference, real tools and cross-device acceptance remain unrun or unmet. The ten-check signed-out receipt must not be confused with the user's ten mandatory account/model tests.
 
 ## Source chain
@@ -29,7 +31,7 @@ The owner supplied Professional Chat images1/3/5 and Glow button image4 in the c
 
 ## Remaining mandatory failures
 
-Visual parity remains incomplete: actual work/question/recorded-answer chronology, reasoning effort and distinct usage display, Aa formatting, compact Voice state, approved footer, message-control hierarchy and complete attachment/Glow states remain unresolved or not independently retested. See `discrepancy-register.md` for component ownership and before/after scope.
+Visual parity remains incomplete: actual work/question/recorded-answer chronology, reasoning effort and distinct usage display, Aa formatting, compact Voice state and complete attachment/Glow states remain unresolved. Footer and message-action reveal corrections have newer scoped visual-fixture evidence; exact original comparison and actual compiled-product checks remain separate. See `discrepancy-register.md` for component ownership and before/after scope.
 
 Complete product acceptance also requires genuine sign-in/provider/persistence/account-boundary operation; complete Chat types/locations, attachments and voice/media; distinct Assistants/Study/Research/Shopping/Experiences journeys; full Builder/shared graph functionality; account synchronization and all applicable dependency specifications; accessibility, performance, recovery and independent seven-gate acceptance. A disabled unsupported action is honest but remains an unmet requirement.
 

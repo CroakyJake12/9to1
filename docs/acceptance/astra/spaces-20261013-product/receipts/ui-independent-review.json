@@ -1,0 +1,64 @@
+{
+  "scope": "Independent read-only review of pending shared CUI and actual Chat presentation. No product acceptance or new execution claimed.",
+  "atUtc": "2026-10-13T22:40:36.191969+00:00",
+  "head": "0e5aa3b51eb290e98b520b221672473ebbd27932",
+  "sources": {
+    "framework/CUI/Runtime/CuiInteractionReveal.cs": "4ffff7c6d58ece0473c95c3b48913f7c048b164cc0cd82aad92f758f6ac0eca7",
+    "framework/CUI/Runtime/CuiControlLoader.cs": "f30c321411ba6af34efe0ac8df84df6fef8baccaac41984c9bf69b4368831595",
+    "framework/CUI/Runtime/CuiControlRegistry.cs": "fe3c6a0855383df3df7ab256ece0baf87981ef5855952d6f173629990db16f4e",
+    "framework/CUI/Runtime/CuiChoicePrompt.cs": "dad1b89eda319c01f09c5390e8c3a09b16dee4e8abe7baa17d716e5d5e6caa87",
+    "framework/CUI/Runtime.Tests/CuiInteractionRevealTests.cs": "803be9b3f914056199e5cd953768a8b544f60b5d59542e51261bfc010d53b287",
+    "framework/CUI/Runtime.Tests/CuiChoicePromptTests.cs": "fca01bc1f65eccceaebc7265c4ace8c21cd95a7f8aa3d37ac78a830fe0517616",
+    "9to1 Workspace/Spaces/UI/Chat/ChatWorkspace.cui": "de939a333fdddfc80909eba5a19104607c0c933410ecd40af3e0ec90174a1316",
+    "9to1 Workspace/Spaces/UI/Shell/SpaceNavigation.cui": "9067197c046c8d82343d70d2f7eec368287dc304bdd26635deef32c8d6f3af33",
+    "9to1 Workspace/Spaces/UI/Shell/SpacesShell.cui": "20618d607d77652a540f788cd932546eff634918159c81cc5b243c1d707c10e1",
+    "apps/Web/Spaces/Chat/BrowserChatSession.Bindings.cs": "8574b98e8874e8b702180ccafbcb8c8a09bb5e4cddd3b7d939c40a1bf61d562f",
+    "9to1 Workspace/Spaces/Source/Chat/ChatSpaceContracts.cs": "b54f3b0e64d22d810b7d4099e42fe94e6deaf0180949effac13654a70777a281",
+    "9to1 Workspace/Spaces/Source/Chat/ChatSpaceController.cs": "ef2a021a591176ce1c1d6fdddeec502c021847660c228a17629f03296a6939ba",
+    "apps/Web/BrowserCanonicalIcons.cs": "1464123590021b533cf2f568c4e68998c259ffe5ca91a685b06d9d82580c973a",
+    "9to1 Workspace/shared/src/Haven.UI/Drawing/HavenIconCatalog.cs": "24f3749fb2a03533662e588d6e376515e3fa61c63ec1bade9b64c66a6351eb36"
+  },
+  "historicalVisual": {
+    "path": "evidence/browser-chat-visual-10/actual-browser-chat-restaurant-evidence.json",
+    "sha256": "06de72986709dfdff80a54514783ce6b97265271777f33b0029cfb584c501331",
+    "scope": "Historical deterministic automated fixture, prior to mandatory labelled wrapper; internal inspection only, no live account/model or shipping-build claim."
+  },
+  "reviewedFindings": [
+    {
+      "id": "UIR-01",
+      "priority": "P2",
+      "title": "Completed copied callback context refused original prompt close",
+      "status": "Source correction independently reviewed; worker before1FAIL\u2192after31PASS/full335PASS, exact manifest and files independently matched",
+      "beforeEvidence": "evidence/cui-prompt-context-before-2.log"
+    }
+  ],
+  "unacceptedGates": [
+    "Exact original image byte comparison (original bytes unavailable)",
+    "Real touch and assistive technology acceptance",
+    "Current actual compiled browser and native route operation",
+    "Chronological transcript, working duration, actual inline question/answer",
+    "Reasoning-effort and separate usage controls, Aa, Voice",
+    "Authenticated provider/persistence/account workflows and remaining full Spaces dependency gates"
+  ],
+  "runtimeReview": {
+    "manifestSha256": "af0f5ab8fe96c68fdc8402054355c94591340adbde84772ece5199a0ca0cab59",
+    "independentHashChecks": 71,
+    "allMatched": true,
+    "focusedPassed": 31,
+    "fullPassed": 335,
+    "executedBy": "CUI worker",
+    "independentRole": "Source and preserved execution evidence reviewed, no duplicate suite run"
+  },
+  "freshVisualReview": {
+    "matrixSha256": "fded1de0f373d11337d1c9b7f89a7e3f59dddddcbb0f91c1de30dbcda7ab2f7f",
+    "independentReportSha256": "3a7f554b022ffc1b952933e2deee8b241803e74fca00f60c52d35a9c0ae2577e",
+    "cases": 8,
+    "workerBoundedChecks": 540,
+    "outputHashesVerified": 40,
+    "embeddedImagesVerified": 24,
+    "sourceAndAssemblyFilesVerified": 58,
+    "allMatched": true,
+    "fullVisualAcceptance": false,
+    "functionalAcceptance": false
+  }
+}

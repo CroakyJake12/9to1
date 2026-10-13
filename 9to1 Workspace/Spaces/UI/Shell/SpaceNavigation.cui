@@ -18,7 +18,7 @@
       <Container Type="Overlay" Interactive="{Binding navigation.interactive}">
         <Container ID="navigation-columns" Type="Grid" ColumnSizes="{Binding layout.columns}" Background="{Resource CuiShellBrush}">
           <Container ID="space-rail" Type="Grid" RowSizes="Auto 1fr Auto" Active="{Binding layout.railVisible}" Padding="6,12" CellGap="8" AccessibleName="Pinned Spaces">
-            <Button ID="reopen-context-sidebar" Action="nav.toggle-sidebar" Content="›" Active="{Binding layout.collapsed}" Interactive="{Binding layout.canChange}" AccessibleName="Show contextual Space sidebar" MinHeight="44" />
+            <Button ID="reopen-context-sidebar" Action="nav.toggle-sidebar" Active="{Binding layout.collapsed}" Interactive="{Binding layout.canChange}" AccessibleName="Show contextual Space sidebar" MinHeight="44"><Image Source="icon:chevron-right" Width="20" Height="20" /></Button>
             <Container ID="pinned-space-list" Row="1" Type="Vertical Stack" VerticalScrolling="true" CellGap="8">
               <Repeat Source="{Binding navigation.pins}" As="destination" Key="{Binding destination.id}">
                 <Button ID="pinned-space" Action="nav.open-space" Selected="{Binding destination.selected}" Interactive="{Binding destination.available}" AccessibleName="{Binding destination.name}" AccessibleDescription="{Binding destination.description}" Tooltip="{Binding destination.name}" Width="48" Height="48" CornerRadius="24" HorizontalAlignment="Center" Padding="10">
@@ -37,8 +37,8 @@
                 <Image Source="{Binding sidebar.iconSource}" Width="42" Height="42" />
                 <Text ID="current-space-name" Column="1" Text="{Binding sidebar.name}" FontSize="24" FontWeight="Bold" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
               </Container>
-              <Button ID="space-switcher" Column="1" Action="nav.choose-space" Content="⌄" AccessibleName="Choose current Space" MinHeight="44" Width="32" Background="Transparent" Padding="4" />
-              <Button ID="collapse-context-sidebar" Column="2" Action="nav.toggle-sidebar" Content="‹" Interactive="{Binding layout.canChange}" AccessibleName="Hide contextual Space sidebar" MinHeight="44" Width="32" Padding="4" />
+              <Button ID="space-switcher" Column="1" Action="nav.choose-space" AccessibleName="Choose current Space" MinHeight="44" Width="44" Background="Transparent" Padding="4"><Image Source="icon:chevron-down" Width="16" Height="16" /></Button>
+              <Button ID="collapse-context-sidebar" Column="2" Action="nav.toggle-sidebar" Interactive="{Binding layout.canChange}" AccessibleName="Hide contextual Space sidebar" MinHeight="44" Width="44" Padding="4"><Image Source="icon:chevron-left" Width="20" Height="20" /></Button>
             </Container>
             <Input ID="sidebar-search" Row="1" Type="Text" Value="{Binding sidebar.query, mode=TwoWay, type=string}" AccessibleName="Search chats, groups and files" PlaceholderText="Search" MinWidth="0" />
             <Container ID="sidebar-scroll" Row="2" Type="Vertical Stack" VerticalScrolling="true" CellGap="12">
@@ -55,9 +55,10 @@
                     <Container ID="sidebar-entry" Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="4" Margin="{Binding row.margin}">
                       <Button ID="sidebar-group-toggle" Action="nav.toggle-group" Content="{Binding row.toggleLabel}" Active="{Binding row.isGroup}" AccessibleName="{Binding row.toggleDescription}" MinWidth="36" MinHeight="44" Padding="4" />
                       <Button ID="sidebar-entry-open" Background="Transparent" Column="1" Action="nav.open-entry" Selected="{Binding row.selected}" AccessibleName="{Binding row.accessibleName}" Tooltip="{Binding row.title}" HorizontalContentAlignment="Stretch" MinHeight="44" MinWidth="0" Padding="6">
-                        <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="8">
-                          <Text Text="{Binding row.title}" FontSize="16" FontWeight="Medium" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-                          <Container Column="1" Type="Vertical Stack" Width="7" Height="7" CornerRadius="3.5" Background="{Resource CuiInformationBrush}" Active="{Binding row.unread}" AccessibleName="Unread" VerticalAlignment="Center" />
+                        <Container ID="sidebar-entry-label" Type="Grid" ColumnSizes="Auto 1fr Auto">
+                          <Image ID="sidebar-conversation-icon" Source="icon-solid:chat" Active="{Binding row.isConversation}" Width="24" Height="24" Margin="0,0,18,0" VerticalAlignment="Center" />
+                          <Text Column="1" Text="{Binding row.title}" FontSize="16" FontWeight="Medium" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                          <Container Column="2" Type="Vertical Stack" Width="7" Height="7" Margin="8,0,0,0" CornerRadius="3.5" Background="{Resource CuiInformationBrush}" Active="{Binding row.unread}" AccessibleName="Unread" VerticalAlignment="Center" />
                         </Container>
                         <Container Type="Context Menu" Active="{Binding row.hasActions}">
                           <Button ID="sidebar-context-rename" Type="Menu Item" Action="nav.rename" Content="Rename" />

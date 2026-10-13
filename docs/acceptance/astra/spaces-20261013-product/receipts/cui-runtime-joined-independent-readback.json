@@ -1,0 +1,533 @@
+{
+  "scope": "Independent source/receipt validation; worker executed tests, reviewer did not rerun suites.",
+  "atUtc": "2026-10-13T22:41:23.829060+00:00",
+  "workerManifest": "/workspace/astra-audit/evidence/cui-runtime-joined-20261013-manifest.json",
+  "workerManifestSha256": "af0f5ab8fe96c68fdc8402054355c94591340adbde84772ece5199a0ca0cab59",
+  "checks": [
+    {
+      "kind": "sources",
+      "path": "/workspace/9to1/framework/CUI/Runtime/CuiInteractionReveal.cs",
+      "matched": true,
+      "expected": "4ffff7c6d58ece0473c95c3b48913f7c048b164cc0cd82aad92f758f6ac0eca7",
+      "actual": "4ffff7c6d58ece0473c95c3b48913f7c048b164cc0cd82aad92f758f6ac0eca7"
+    },
+    {
+      "kind": "sources",
+      "path": "/workspace/9to1/framework/CUI/Runtime/CuiControlLoader.cs",
+      "matched": true,
+      "expected": "f30c321411ba6af34efe0ac8df84df6fef8baccaac41984c9bf69b4368831595",
+      "actual": "f30c321411ba6af34efe0ac8df84df6fef8baccaac41984c9bf69b4368831595"
+    },
+    {
+      "kind": "sources",
+      "path": "/workspace/9to1/framework/CUI/Runtime/CuiControlRegistry.cs",
+      "matched": true,
+      "expected": "fe3c6a0855383df3df7ab256ece0baf87981ef5855952d6f173629990db16f4e",
+      "actual": "fe3c6a0855383df3df7ab256ece0baf87981ef5855952d6f173629990db16f4e"
+    },
+    {
+      "kind": "sources",
+      "path": "/workspace/9to1/framework/CUI/Runtime/CuiChoicePrompt.cs",
+      "matched": true,
+      "expected": "dad1b89eda319c01f09c5390e8c3a09b16dee4e8abe7baa17d716e5d5e6caa87",
+      "actual": "dad1b89eda319c01f09c5390e8c3a09b16dee4e8abe7baa17d716e5d5e6caa87"
+    },
+    {
+      "kind": "sources",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/CuiInteractionRevealTests.cs",
+      "matched": true,
+      "expected": "803be9b3f914056199e5cd953768a8b544f60b5d59542e51261bfc010d53b287",
+      "actual": "803be9b3f914056199e5cd953768a8b544f60b5d59542e51261bfc010d53b287"
+    },
+    {
+      "kind": "sources",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/CuiChoicePromptTests.cs",
+      "matched": true,
+      "expected": "fca01bc1f65eccceaebc7265c4ace8c21cd95a7f8aa3d37ac78a830fe0517616",
+      "actual": "fca01bc1f65eccceaebc7265c4ace8c21cd95a7f8aa3d37ac78a830fe0517616"
+    },
+    {
+      "kind": "sources",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/CuiOriginalSurfaceSlotTests.cs",
+      "matched": true,
+      "expected": "c95a55ea6146c6a83636a31a8ac8f2156c7a8c9b5fe07797da41fcea95066627",
+      "actual": "c95a55ea6146c6a83636a31a8ac8f2156c7a8c9b5fe07797da41fcea95066627"
+    },
+    {
+      "kind": "sources",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/CuiViewModelDispatchRegressionTests.cs",
+      "matched": true,
+      "expected": "e3889fc99fcb1866dbc1ee7f5492214e6e1567daa91c345eeb3fedc78b998d61",
+      "actual": "e3889fc99fcb1866dbc1ee7f5492214e6e1567daa91c345eeb3fedc78b998d61"
+    },
+    {
+      "kind": "sources",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/CuiLoaderOriginalTaskCustodyTests.cs",
+      "matched": true,
+      "expected": "ed097bc73623d142b3f290f5f8da5e5c3898e4867a44e37728c60cc080e389b0",
+      "actual": "ed097bc73623d142b3f290f5f8da5e5c3898e4867a44e37728c60cc080e389b0"
+    },
+    {
+      "kind": "sources",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/CuiSceneHostOriginalPublicationTests.cs",
+      "matched": true,
+      "expected": "b95aabf457914ad7f9f7cf446e1e428088891883bd6ccad6a99e9f7b1d3ccc24",
+      "actual": "b95aabf457914ad7f9f7cf446e1e428088891883bd6ccad6a99e9f7b1d3ccc24"
+    },
+    {
+      "kind": "sources",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/CuiHostOriginalCauseCustodyTests.cs",
+      "matched": true,
+      "expected": "7913cef96699fcfad8b46ddde205c0f2fc5086645f0311ac272d78ddd5537c16",
+      "actual": "7913cef96699fcfad8b46ddde205c0f2fc5086645f0311ac272d78ddd5537c16"
+    },
+    {
+      "kind": "sources",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/CuiThemeRecoveryTests.cs",
+      "matched": true,
+      "expected": "610387de30c0adefbf2ea37933f72cbaf36b7394ff358f94f425847269dbc97a",
+      "actual": "610387de30c0adefbf2ea37933f72cbaf36b7394ff358f94f425847269dbc97a"
+    },
+    {
+      "kind": "sources",
+      "path": "/workspace/9to1/9to1 Workspace/shared/docs/ui/building-ui.md",
+      "matched": true,
+      "expected": "9286b93bb91915df30c509e90dc25bcbce052713f00a2325de7e6efa41dedfc3",
+      "actual": "9286b93bb91915df30c509e90dc25bcbce052713f00a2325de7e6efa41dedfc3"
+    },
+    {
+      "kind": "dependencies",
+      "path": "/workspace/9to1/global.json",
+      "matched": true,
+      "expected": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b",
+      "actual": "ddd94efbaa73cbd137c7adb70c4ab3314abdb37055635f370211fa716a16682b"
+    },
+    {
+      "kind": "dependencies",
+      "path": "/workspace/9to1/framework/CUI/Directory.Packages.props",
+      "matched": true,
+      "expected": "1e341fe4f7012e5a560493ddb231c1a1d62f558d105d9086f6d4a482a15f6f22",
+      "actual": "1e341fe4f7012e5a560493ddb231c1a1d62f558d105d9086f6d4a482a15f6f22"
+    },
+    {
+      "kind": "dependencies",
+      "path": "/workspace/9to1/framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj",
+      "matched": true,
+      "expected": "58f0619eb200ba3e2ca2f4c0134ef7826630403a59fe8092a1153c70ce396216",
+      "actual": "58f0619eb200ba3e2ca2f4c0134ef7826630403a59fe8092a1153c70ce396216"
+    },
+    {
+      "kind": "dependencies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/CakeOS.Cui.Runtime.Tests.csproj",
+      "matched": true,
+      "expected": "6694df03552e9c5a6cfa7eca9a801dca3de00242fb76a4a45c0795c7e0b055dd",
+      "actual": "6694df03552e9c5a6cfa7eca9a801dca3de00242fb76a4a45c0795c7e0b055dd"
+    },
+    {
+      "kind": "dependencies",
+      "path": "/workspace/9to1/framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/HeadlessUnitTestSession.cs",
+      "matched": true,
+      "expected": "74725f3cc4bea5b5f9003c890e767abcfdeebe3e03af7f99beb512b1365d4ca9",
+      "actual": "74725f3cc4bea5b5f9003c890e767abcfdeebe3e03af7f99beb512b1365d4ca9"
+    },
+    {
+      "kind": "dependencies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/obj/project.assets.json",
+      "matched": true,
+      "expected": "9b575c794d631a348bd781469ae80cfb09f26433589283ed933f830641a54e25",
+      "actual": "9b575c794d631a348bd781469ae80cfb09f26433589283ed933f830641a54e25"
+    },
+    {
+      "kind": "logs",
+      "path": "/workspace/astra-audit/evidence/cui-reveal-joined-tests-4.log",
+      "matched": true,
+      "expected": "657b4f37a6cec12c91fedfdaa33626d1dd7f5ac25ff2bbc69ee0bb2cc45ee9bf",
+      "actual": "657b4f37a6cec12c91fedfdaa33626d1dd7f5ac25ff2bbc69ee0bb2cc45ee9bf"
+    },
+    {
+      "kind": "logs",
+      "path": "/workspace/astra-audit/evidence/cui-prompt-context-before.log",
+      "matched": true,
+      "expected": "563b83cf132c2e194b8e255a5807ade91db9963902448e804eb48caf3abb7e56",
+      "actual": "563b83cf132c2e194b8e255a5807ade91db9963902448e804eb48caf3abb7e56"
+    },
+    {
+      "kind": "logs",
+      "path": "/workspace/astra-audit/evidence/cui-prompt-context-before-2.log",
+      "matched": true,
+      "expected": "83a86f3c2c49f73e25c9afdf8f3b5b6bf20fd4aea1b2d06ea0043abe29bb8fe4",
+      "actual": "83a86f3c2c49f73e25c9afdf8f3b5b6bf20fd4aea1b2d06ea0043abe29bb8fe4"
+    },
+    {
+      "kind": "logs",
+      "path": "/workspace/astra-audit/evidence/cui-reveal-joined-tests-5.log",
+      "matched": true,
+      "expected": "bcb9943857ac3f77e7f002b1d7fc7625bd894d32e04dd7bf9b329873c170b7e2",
+      "actual": "bcb9943857ac3f77e7f002b1d7fc7625bd894d32e04dd7bf9b329873c170b7e2"
+    },
+    {
+      "kind": "logs",
+      "path": "/workspace/astra-audit/evidence/cui-runtime-full-joined-1.log",
+      "matched": true,
+      "expected": "4a9b3d68d123f9b86a947c25df72d285b5ee9d0c7b5c92caaf364ab40179daf0",
+      "actual": "4a9b3d68d123f9b86a947c25df72d285b5ee9d0c7b5c92caaf364ab40179daf0"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.Base.dll",
+      "matched": true,
+      "expected": "ab88d76478d990bf03eb6b4f958baabac3d7e60a97a3d000390963b78565649f",
+      "actual": "ab88d76478d990bf03eb6b4f958baabac3d7e60a97a3d000390963b78565649f"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.Controls.dll",
+      "matched": true,
+      "expected": "73761ef195f25da6fed0782ddcbf15799b8302d997fb64dbb8910f147e917c25",
+      "actual": "73761ef195f25da6fed0782ddcbf15799b8302d997fb64dbb8910f147e917c25"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.DesignerSupport.dll",
+      "matched": true,
+      "expected": "7c1900c3b268558d998541d0adc8691e8f13d329e9ac6763fdb1272c485dde6d",
+      "actual": "7c1900c3b268558d998541d0adc8691e8f13d329e9ac6763fdb1272c485dde6d"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.Desktop.dll",
+      "matched": true,
+      "expected": "fd9468e120f95691d3db1a2f7142a89bdc109842a15e2102e305b6e686bbffd0",
+      "actual": "fd9468e120f95691d3db1a2f7142a89bdc109842a15e2102e305b6e686bbffd0"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.Dialogs.dll",
+      "matched": true,
+      "expected": "35dbea9c4ec0b34cb797a8d1e6ae3b83e233d965bfb42fc9a615fc573d75fcaa",
+      "actual": "35dbea9c4ec0b34cb797a8d1e6ae3b83e233d965bfb42fc9a615fc573d75fcaa"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.Fonts.Inter.dll",
+      "matched": true,
+      "expected": "9bf5bec6c594994e544cc41f315cfd0f228bb6a650a5e687503fadc5355c0c55",
+      "actual": "9bf5bec6c594994e544cc41f315cfd0f228bb6a650a5e687503fadc5355c0c55"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.FreeDesktop.AtSpi.dll",
+      "matched": true,
+      "expected": "9d0c1b85f2f784155aa8f852c8ed1deb4118b7cef1ea29d2dae5a2a566d8242c",
+      "actual": "9d0c1b85f2f784155aa8f852c8ed1deb4118b7cef1ea29d2dae5a2a566d8242c"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.FreeDesktop.dll",
+      "matched": true,
+      "expected": "0a2cbd883145df718c0fa3545f8cda40cc2122b9a4150e8d52baae0e1085bc8c",
+      "actual": "0a2cbd883145df718c0fa3545f8cda40cc2122b9a4150e8d52baae0e1085bc8c"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.HarfBuzz.dll",
+      "matched": true,
+      "expected": "f6ff804badf700fd075d31e5bb107ec396b66ddbb67370d3cfd44bb3c1abf8b2",
+      "actual": "f6ff804badf700fd075d31e5bb107ec396b66ddbb67370d3cfd44bb3c1abf8b2"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.Headless.dll",
+      "matched": true,
+      "expected": "a80540fa417d76cae5a4cff5f6518c983fa241198cb6d7892a97c8893a59ca60",
+      "actual": "a80540fa417d76cae5a4cff5f6518c983fa241198cb6d7892a97c8893a59ca60"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.Markup.Xaml.dll",
+      "matched": true,
+      "expected": "ed4ad7f218e19e9670327ae4d352af18aae8a65d9556184b88d2f25132eadc6a",
+      "actual": "ed4ad7f218e19e9670327ae4d352af18aae8a65d9556184b88d2f25132eadc6a"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.Markup.dll",
+      "matched": true,
+      "expected": "312eee66ae2170b4176395a62f7693093694189c3cc328a3e2d52a857e618be7",
+      "actual": "312eee66ae2170b4176395a62f7693093694189c3cc328a3e2d52a857e618be7"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.Metal.dll",
+      "matched": true,
+      "expected": "e9e9e940b2a094a9c4a4290f95bd18d32c3dfb45555f8317b9c7a93d34018327",
+      "actual": "e9e9e940b2a094a9c4a4290f95bd18d32c3dfb45555f8317b9c7a93d34018327"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.MicroCom.dll",
+      "matched": true,
+      "expected": "f85349529f06e679efda0ded744c9f0e7aa8de2ffbda5e43fd5714be7695ce7c",
+      "actual": "f85349529f06e679efda0ded744c9f0e7aa8de2ffbda5e43fd5714be7695ce7c"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.Native.dll",
+      "matched": true,
+      "expected": "dd7d3cb7ef5af02c29d21b5fad9ced892c860fdaa27616a471a800fd5e3b5fb4",
+      "actual": "dd7d3cb7ef5af02c29d21b5fad9ced892c860fdaa27616a471a800fd5e3b5fb4"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.OpenGL.dll",
+      "matched": true,
+      "expected": "2451445b3009998bcc818efc5701d8f4af0f2d3dc8eae21309f10b4886a3fd9d",
+      "actual": "2451445b3009998bcc818efc5701d8f4af0f2d3dc8eae21309f10b4886a3fd9d"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.Remote.Protocol.dll",
+      "matched": true,
+      "expected": "1cbf1fe05f1ec3269e952119373530cd50cbbfd4c3099b5e1354cdc259126851",
+      "actual": "1cbf1fe05f1ec3269e952119373530cd50cbbfd4c3099b5e1354cdc259126851"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.Skia.dll",
+      "matched": true,
+      "expected": "e53d8a37a7fe803ccee8111a91747a2f9debfd7dff5f58726c9fce58f8c27dc5",
+      "actual": "e53d8a37a7fe803ccee8111a91747a2f9debfd7dff5f58726c9fce58f8c27dc5"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.Vulkan.dll",
+      "matched": true,
+      "expected": "f0ceb3b8b2ee68e94103dc6ea5c23fc8c31fe1815f769e6d76efa3b7c0fd99b1",
+      "actual": "f0ceb3b8b2ee68e94103dc6ea5c23fc8c31fe1815f769e6d76efa3b7c0fd99b1"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.Win32.Automation.dll",
+      "matched": true,
+      "expected": "6dfffcb5cdb49efca2055e6c45f2a754dd0b8d22ae56e993bcd5172d5f619d12",
+      "actual": "6dfffcb5cdb49efca2055e6c45f2a754dd0b8d22ae56e993bcd5172d5f619d12"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.Win32.dll",
+      "matched": true,
+      "expected": "7ea378495174bd1b46f56e35dcbab79c4bdab76a6e33780a5c81feda90da4ea0",
+      "actual": "7ea378495174bd1b46f56e35dcbab79c4bdab76a6e33780a5c81feda90da4ea0"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.X11.dll",
+      "matched": true,
+      "expected": "e9455a78d0fea7e7ddec849e8e938b2174c34f54a88e5c8bcb14645cd8dc48cf",
+      "actual": "e9455a78d0fea7e7ddec849e8e938b2174c34f54a88e5c8bcb14645cd8dc48cf"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Avalonia.dll",
+      "matched": true,
+      "expected": "fff040d83366882cca7fede7fff7aceb8a547b5ccee193f4a9d95c4ef84cc609",
+      "actual": "fff040d83366882cca7fede7fff7aceb8a547b5ccee193f4a9d95c4ef84cc609"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/CakeOS.Cui.Core.dll",
+      "matched": true,
+      "expected": "a4d797a7da64df0ecaa63df025b5633e686e2b54f4a6e271c954f1577738d3e9",
+      "actual": "a4d797a7da64df0ecaa63df025b5633e686e2b54f4a6e271c954f1577738d3e9"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/CakeOS.Cui.Language.dll",
+      "matched": true,
+      "expected": "bb342d627e9ed7b971611504c53fd7cb61435d3760aa583cc5380d0a4fb11522",
+      "actual": "bb342d627e9ed7b971611504c53fd7cb61435d3760aa583cc5380d0a4fb11522"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/CakeOS.Cui.Runtime.Tests.dll",
+      "matched": true,
+      "expected": "70ec1c6993770e0da1a861929a33e01f2d8b80ba8830b1b818dd86eab1c4a4c3",
+      "actual": "70ec1c6993770e0da1a861929a33e01f2d8b80ba8830b1b818dd86eab1c4a4c3"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/CakeOS.Cui.Runtime.dll",
+      "matched": true,
+      "expected": "9cdb803775722732b03329e098a7767dfc6c829f2410e7ebd099c36614ffc0d5",
+      "actual": "9cdb803775722732b03329e098a7767dfc6c829f2410e7ebd099c36614ffc0d5"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/CakeOS.Cui.Themes.dll",
+      "matched": true,
+      "expected": "50afdb8a41333cf35c9d2ceeb53168b70d470769881fe5428061a8b7451045f5",
+      "actual": "50afdb8a41333cf35c9d2ceeb53168b70d470769881fe5428061a8b7451045f5"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/HarfBuzzSharp.dll",
+      "matched": true,
+      "expected": "55e72ac23263f8e12484f3435e02ec22fac9eff6e6d169bb0a8c246be6b99d29",
+      "actual": "55e72ac23263f8e12484f3435e02ec22fac9eff6e6d169bb0a8c246be6b99d29"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/MicroCom.Runtime.dll",
+      "matched": true,
+      "expected": "2e0a43be3d123dae5aa8a7f1082fd3f1c2a8d842f6c513deac526daed620e318",
+      "actual": "2e0a43be3d123dae5aa8a7f1082fd3f1c2a8d842f6c513deac526daed620e318"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Microsoft.TestPlatform.CommunicationUtilities.dll",
+      "matched": true,
+      "expected": "2eba928c1770209f1fd9f515603a0b4ffbfcadf816681ab36d02b9b36417ab33",
+      "actual": "2eba928c1770209f1fd9f515603a0b4ffbfcadf816681ab36d02b9b36417ab33"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Microsoft.TestPlatform.CoreUtilities.dll",
+      "matched": true,
+      "expected": "7837f9df4b11a9844143fc9419e5752bdd50305436adcbf84f82b8a52d5909d7",
+      "actual": "7837f9df4b11a9844143fc9419e5752bdd50305436adcbf84f82b8a52d5909d7"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Microsoft.TestPlatform.CrossPlatEngine.dll",
+      "matched": true,
+      "expected": "2f3b463a227b8f30171f8720164b3c0b90451248e0b2f3e8c3da82c23a3fdfcd",
+      "actual": "2f3b463a227b8f30171f8720164b3c0b90451248e0b2f3e8c3da82c23a3fdfcd"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Microsoft.TestPlatform.PlatformAbstractions.dll",
+      "matched": true,
+      "expected": "668c7f0df2c30feac9cea9dce808ccabb72ff575c1e820404124212b4eae1773",
+      "actual": "668c7f0df2c30feac9cea9dce808ccabb72ff575c1e820404124212b4eae1773"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Microsoft.TestPlatform.Utilities.dll",
+      "matched": true,
+      "expected": "886ef3ab15251e57ca9c124e41de3c43ba0520a036b876bb709ed325438501fe",
+      "actual": "886ef3ab15251e57ca9c124e41de3c43ba0520a036b876bb709ed325438501fe"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Microsoft.VisualStudio.CodeCoverage.Shim.dll",
+      "matched": true,
+      "expected": "e590f0095b103c635c7fd45ad5ff537dd221b0bc2db214717940f59faf4767f0",
+      "actual": "e590f0095b103c635c7fd45ad5ff537dd221b0bc2db214717940f59faf4767f0"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Microsoft.VisualStudio.TestPlatform.Common.dll",
+      "matched": true,
+      "expected": "96d7b2a7e3f79133e17196fdad189486b59852379385198b5cd857e9947164fb",
+      "actual": "96d7b2a7e3f79133e17196fdad189486b59852379385198b5cd857e9947164fb"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Microsoft.VisualStudio.TestPlatform.ObjectModel.dll",
+      "matched": true,
+      "expected": "f6d6bc01a85fd68a0599533fcc0de7357922051bad90012b8ad15de31a4ef5e9",
+      "actual": "f6d6bc01a85fd68a0599533fcc0de7357922051bad90012b8ad15de31a4ef5e9"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Newtonsoft.Json.dll",
+      "matched": true,
+      "expected": "22c649f75fce5be7c7ccda8880473b634ef69ecf33f5d1ab8ad892caf47d5a07",
+      "actual": "22c649f75fce5be7c7ccda8880473b634ef69ecf33f5d1ab8ad892caf47d5a07"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/SkiaSharp.dll",
+      "matched": true,
+      "expected": "24a0ec07162bb5a69f673d12c1326dd79994cc9ce8176b523f237668284987c3",
+      "actual": "24a0ec07162bb5a69f673d12c1326dd79994cc9ce8176b523f237668284987c3"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/Tmds.DBus.Protocol.dll",
+      "matched": true,
+      "expected": "31ebefac6d09694780328414e9d677159590a601991beb36b0aa8f26e9bc121b",
+      "actual": "31ebefac6d09694780328414e9d677159590a601991beb36b0aa8f26e9bc121b"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/testhost.dll",
+      "matched": true,
+      "expected": "f9f95f20f7a99215b50cfd511085b31549b26f87afaeb02c0a3c21f6875817e8",
+      "actual": "f9f95f20f7a99215b50cfd511085b31549b26f87afaeb02c0a3c21f6875817e8"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/xunit.abstractions.dll",
+      "matched": true,
+      "expected": "3166dc70323fb30ccf1cedb0fe86f2ad122c46d254542342d90386efc4c9285c",
+      "actual": "3166dc70323fb30ccf1cedb0fe86f2ad122c46d254542342d90386efc4c9285c"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/xunit.assert.dll",
+      "matched": true,
+      "expected": "bcd9711b22d227ac8cd4c1568e72433a0f576d2ec8aae64ac508081892015b1d",
+      "actual": "bcd9711b22d227ac8cd4c1568e72433a0f576d2ec8aae64ac508081892015b1d"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/xunit.core.dll",
+      "matched": true,
+      "expected": "2f7feeec8c6dec7df684c25fb80aadb292b963d09723460f03d53c5ad2088acc",
+      "actual": "2f7feeec8c6dec7df684c25fb80aadb292b963d09723460f03d53c5ad2088acc"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/xunit.execution.dotnet.dll",
+      "matched": true,
+      "expected": "e70febe547c15f8155db3e2d95c3ba4445a59cbc21a3e7541ab22ed49d3dcf7b",
+      "actual": "e70febe547c15f8155db3e2d95c3ba4445a59cbc21a3e7541ab22ed49d3dcf7b"
+    },
+    {
+      "kind": "assemblies",
+      "path": "/workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/xunit.runner.visualstudio.testadapter.dll",
+      "matched": true,
+      "expected": "384aba4bad96399a7fd2205a5a3517b643a16f4d7e843bd0b92e1e42f81fce2a",
+      "actual": "384aba4bad96399a7fd2205a5a3517b643a16f4d7e843bd0b92e1e42f81fce2a"
+    }
+  ],
+  "allMatched": true,
+  "tests": {
+    "initialFocused": {
+      "passed": 27,
+      "failed": 0
+    },
+    "promptRedTestHarnessCompile": "First invocation failed xUnit async overload diagnostic; corrected to explicit synchronous Action for synchronous CloseAsync refusal.",
+    "promptRedBehavior": {
+      "passed": 0,
+      "failed": 1
+    },
+    "focusedAfter": {
+      "passed": 31,
+      "failed": 0
+    },
+    "fullRuntimeSameBinaries": {
+      "passed": 335,
+      "failed": 0,
+      "skipped": 0,
+      "includesFocused": true
+    }
+  },
+  "limits": [
+    "Component tests use controlled bindings/actions and headless native input. No raw fixture delivered.",
+    "Touch test uses synthetic routed touch, not physical device hit testing.",
+    "No screen-reader/Windows/Android/browser/current product visual acceptance established.",
+    "Full Spaces acceptance remains failed/incomplete."
+  ]
+}

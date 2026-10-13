@@ -327,7 +327,7 @@ public sealed class CuiControlRegistry
         var container = common.Concat(new[]
         {
             "Type", "Padding", "Background", "Foreground", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness",
-            "CornerRadius", "Orientation", "HorizontalScrolling", "VerticalScrolling", "ColumnSizes", "RowSizes", "Rows", "Columns", "CellGap", "CellMargin", "Border", "XInherited", "YInherited"
+            "CornerRadius", "RevealWith", "Orientation", "HorizontalScrolling", "VerticalScrolling", "ColumnSizes", "RowSizes", "Rows", "Columns", "CellGap", "CellMargin", "Border", "XInherited", "YInherited"
         }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         var text = common.Concat(new[]
         {
@@ -393,6 +393,7 @@ public sealed class CuiControlRegistry
             ("BorderWidth", "length", typeof(double), true), ("CornerRadius", "length", typeof(CornerRadius), true),
             ("Border", "brush", typeof(Avalonia.Media.IBrush), true),
             ("Opacity", "number", typeof(double), true), ("Active", "boolean", typeof(bool), true),
+            ("RevealWith", "symbol", typeof(string), false),
             ("Hidden", "boolean", typeof(bool), true), ("IsVisible", "boolean", typeof(bool), true),
             ("IsEnabled", "boolean", typeof(bool), true), ("Focusable", "boolean", typeof(bool), true),
             ("FocusRequested", "boolean", typeof(bool), true), ("SelectOnFocusRequest", "boolean", typeof(bool), true),

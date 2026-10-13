@@ -9,6 +9,23 @@ public sealed class ChatSpaceControllerTests : IDisposable
 {
     private readonly CancellationTokenSource _testLifetime = new(TimeSpan.FromSeconds(30));
     public void Dispose() => _testLifetime.Dispose();
+    [Fact]
+    public async Task Only_original_ready_read_marks_status_idle_and_model_acknowledgement_remains_meaningful()
+    {
+        var backend = new Backend();
+        var controller = new ChatSpaceController(backend);
+        await controller.InitializeAsync(backend.Conversation.Id, _testLifetime.Token);
+        Assert.True(controller.State.Status.IsIdle);
+        controller.SelectModel(controller.State.Models[0].Name);
+        Assert.False(controller.State.Status.IsIdle);
+        Assert.Equal(ChatSpaceStatusTone.Neutral, controller.State.Status.Tone);
+        Assert.True(controller.State.Status.Announce);
+        backend.UnavailableReason = "Original catalogue temporarily unavailable";
+        await controller.InitializeAsync(backend.Conversation.Id, _testLifetime.Token);
+        Assert.False(controller.State.Status.IsIdle);
+        Assert.Equal(backend.UnavailableReason, controller.State.Status.Message);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

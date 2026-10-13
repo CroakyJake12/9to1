@@ -4,10 +4,20 @@
       <Container ID="spaces-shell" Type="Grid" ColumnSizes="{Binding shell.columns}" RowSizes="{Binding shell.rows}" Background="{Resource CuiShellBrush}">
         <Container ID="spaces-navigation-slot" Type="Overlay" RowSpan="2" ColumnSpan="{Binding shell.navigationSpan}" Width="{Binding shell.navigationWidth}" HorizontalAlignment="Left" Layer="10" AccessibleName="Spaces and contextual navigation" />
         <Container ID="spaces-header" Column="1" MinHeight="{Binding shell.headerMinHeight}" Type="Grid" ColumnSizes="{Binding shell.headerColumns}" RowSizes="{Binding shell.headerRows}" Padding="20,12" CellGap="8" Background="{Resource CuiShellBrush}" AccessibleName="Spaces controls">
-          <Container Type="Horizontal Stack" CellGap="8" VerticalAlignment="Center">
-            <Button ID="spaces-chat-type" Action="chat.choose-type" Content="{Binding chat.typeLabel}" Tooltip="{Binding chat.locationLabel}" Interactive="{Binding chat.canChooseType}" CornerRadius="22" MinHeight="44" Padding="16,8" FontSize="16" FontWeight="SemiBold" AccessibleName="Chat type and location" />
+          <Container ID="spaces-chat-type-group" Type="Horizontal Stack" CellGap="8" HorizontalAlignment="Right" VerticalAlignment="Center">
+            <Button ID="spaces-chat-type" Action="chat.choose-type" Tooltip="{Binding chat.locationLabel}" Interactive="{Binding chat.canChooseType}" CornerRadius="22" MinHeight="44" Padding="16,8" FontSize="16" FontWeight="SemiBold" AccessibleName="Chat type and location">
+              <Container ID="spaces-chat-type-content" Type="Horizontal Stack" CellGap="8">
+                <Text Text="{Binding chat.typeLabel}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <Image Source="icon:chevron-down" Width="16" Height="16" VerticalAlignment="Center" />
+              </Container>
+            </Button>
           </Container>
-          <Button ID="spaces-model" Column="{Binding shell.modelColumn}" Row="{Binding shell.modelRow}" Action="chat.choose-model" Content="{Binding chat.modelLabel}" Interactive="{Binding chat.canChooseModel}" MaxWidth="300" CornerRadius="22" MinHeight="44" Padding="16,8" FontSize="16" FontWeight="SemiBold" AccessibleName="Choose model and reasoning" />
+          <Button ID="spaces-model" Column="{Binding shell.modelColumn}" Row="{Binding shell.modelRow}" Action="chat.choose-model" Interactive="{Binding chat.canChooseModel}" MaxWidth="300" MinWidth="0" CornerRadius="22" MinHeight="44" Padding="16,8" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" AccessibleName="Choose model">
+            <Container ID="spaces-model-content" Type="Grid" ColumnSizes="1fr Auto" CellGap="10">
+              <Text Text="{Binding chat.modelLabel}" FontSize="16" FontWeight="SemiBold" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+              <Image Column="1" Source="icon:chevron-down" Width="16" Height="16" VerticalAlignment="Center" />
+            </Container>
+          </Button>
           <Container Column="{Binding shell.utilityColumn}" Row="{Binding shell.utilityRow}" ColumnSpan="{Binding shell.utilitySpan}" Type="Horizontal Stack" HorizontalAlignment="Right" VerticalAlignment="Center" CellGap="4">
             <Button ID="spaces-usage" Action="shell.usage" Content="{Binding shell.usageLabel}" Active="{Binding shell.hasUsage}" Interactive="{Binding shell.canOpenUsage}" AccessibleName="Current model usage" Tooltip="{Binding shell.usageDescription}" CornerRadius="22" MinWidth="44" MinHeight="44" />
             <Button ID="spaces-search" Action="shell.search" Interactive="{Binding shell.canSearch}" AccessibleName="Search Spaces" Tooltip="Search Spaces" Width="44" Height="44" CornerRadius="22" Padding="12"><Image Source="icon:search" Width="20" Height="20" /></Button>

@@ -193,7 +193,7 @@ internal sealed class NativeChatSidebarCuiAdapter : HavenOS.Apps.Spaces.Chat.Ren
                 ["available"] = row.Available
             }).ToArray(),
             "sidebar.name" => _spaceName ?? ModeName,
-            "sidebar.iconSource" => "icon:" + (_spaceIconKey ?? (_mode switch { HavenMode.Study => "book", HavenMode.Tasks => "tasks", _ => "chat" })),
+            "sidebar.iconSource" => SpaceIconSource,
             "sidebar.newChatLabel" => _opensAssistants ? "Open Assistants" : _mode switch { HavenMode.Study => "New Study Chat", HavenMode.Tasks => "New Task", _ => "New Chat" },
             "sidebar.groupsLabel" => _mode switch { HavenMode.Study => "Subjects", HavenMode.Tasks => "Task Groups", _ => "Chat Groups" },
             "sidebar.newGroupLabel" => _mode switch { HavenMode.Study => "Create Subject", HavenMode.Tasks => "Create Task Group", _ => "Create Chat Group" },
@@ -365,6 +365,17 @@ internal sealed class NativeChatSidebarCuiAdapter : HavenOS.Apps.Spaces.Chat.Ren
         else Dispatcher.UIThread.Post(() => { if (!_retiring) { update(); Changed(); } });
     }
     private void Changed() => PropertyChanged?.Invoke(this, new(null));
+    private string SpaceIconSource
+    {
+        get
+        {
+            var key = _spaceIconKey ?? (_mode switch { HavenMode.Study => "book", HavenMode.Tasks => "tasks", _ => "chat" });
+            var canonicalChat = _mode == HavenMode.Chat && (_spaceId is null || _spaceId == SpaceRegistry.ChatSpaceId)
+                && string.Equals(key, "chat", StringComparison.OrdinalIgnoreCase);
+            return (canonicalChat ? "icon-solid:" : "icon:") + key;
+        }
+    }
+
     private string ModeName => _mode switch { HavenMode.Study => "Study", HavenMode.Tasks => "Tasks", _ => "Chat" };
     private static string Key(ChatSidebarEntry row) => $"{row.Kind}:{row.Id:D}";
     private static Dictionary<string, object?> ProjectRow(ChatSidebarEntry row) => new()

@@ -9,6 +9,29 @@ public static class HavenIconCatalog
 {
     private static readonly HavenRect ViewBox = new(0, 0, 24, 24);
 
+    /// <summary>Returns a supported filled presentation of the same semantic icon.
+    /// Unsupported variants are explicit; the ordinary line-icon catalog is unchanged.</summary>
+    public static bool TryResolveSolid(string? key,
+        [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out HavenGeometry? geometry)
+    {
+        if (!string.Equals(key?.Trim(), "chat", StringComparison.OrdinalIgnoreCase))
+        {
+            geometry = null;
+            return false;
+        }
+        // A rounded speech bubble with a curved tail, rather than a filled
+        // version of the separate rectangular outline asset.
+        geometry = Geometry(new HavenPathFigure(new HavenPoint(12, 2),
+            [new HavenCubicBezierSegment(new(18, 2), new(23, 5.6), new(23, 10.5)),
+             new HavenCubicBezierSegment(new(23, 15.4), new(18, 19), new(12, 19)),
+             new HavenCubicBezierSegment(new(10.6, 19), new(9.3, 18.8), new(8.1, 18.4)),
+             new HavenCubicBezierSegment(new(6.4, 20), new(4.3, 21.3), new(2, 22)),
+             new HavenCubicBezierSegment(new(3, 20.1), new(3.5, 18.5), new(3.6, 16.9)),
+             new HavenCubicBezierSegment(new(1.9, 15.3), new(1, 13.2), new(1, 10.5)),
+             new HavenCubicBezierSegment(new(1, 5.6), new(6, 2), new(12, 2))], true));
+        return true;
+    }
+
     public static HavenGeometry Resolve(string? key) => (key ?? string.Empty).Trim().ToLowerInvariant() switch
     {
         "home" => Geometry(Line((3, 11), (12, 3), (21, 11)), Line((5, 9), (5, 21), (10, 21), (10, 15), (14, 15), (14, 21), (19, 21), (19, 9))),

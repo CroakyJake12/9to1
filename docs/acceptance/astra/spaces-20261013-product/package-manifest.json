@@ -1,23 +1,33 @@
 {
   "status": "WORKING_NOT_FULL_ACCEPTANCE",
   "createdAt": "2026-10-13",
-  "sourceIdentity": "Live compiled checkpoint35 source0e24d109. Later P0 correction source and test dependencies are individually hashed in receipts. Visual-only receipts retain separate identities. Full acceptance has not passed.",
+  "sourceIdentity": "Live checkpoint35 remains source0e24d109. Current source candidate includes shared CUI and Chat UI corrections; exact component/fixture sources and assemblies are individually hashed in receipts. Immutable product publication pending; full acceptance has not passed.",
   "originalReferenceBytesIncluded": false,
   "files": [
     {
       "path": "README.md",
-      "bytes": 10713,
-      "sha256": "1436155fd9d7982a9d71a4dac3fa6f7057a512dd4ad4f35b2fd3e5ad9c7a8e6d"
+      "bytes": 11610,
+      "sha256": "d4f9770bcb704b6cd0151b4368dca2569d27af4e506813a4da7bc08be9d9f3dc"
+    },
+    {
+      "path": "chat-ui-checkpoint.md",
+      "bytes": 4517,
+      "sha256": "d45980929905f78a7df7a994b1a460fd0a18837260bb14698f0fef81208f384f"
+    },
+    {
+      "path": "cui-interaction-checkpoint.md",
+      "bytes": 4886,
+      "sha256": "9d269ae7090b6589614e57551c4518d281eb43eb9752a017360913afcc676336"
     },
     {
       "path": "discrepancy-register.md",
-      "bytes": 21246,
-      "sha256": "c115971af5a9e9e93f26a137c04bc0ef652d369c21c64ab0b80eb4e6353749fc"
+      "bytes": 26421,
+      "sha256": "50c6c1331e3e6cace711d16d17ce59df8cc0057a55c3f5026c72209173aa5afc"
     },
     {
       "path": "fixture-provenance.md",
-      "bytes": 6192,
-      "sha256": "82597454786ba62159143e5523ec064db33c2b7adca2454d1eaeeac94d8b0b06"
+      "bytes": 6685,
+      "sha256": "9d7f6879834cecd1736f2aa554c592ce49ddea5ba8a0c81b65d99e88d431a59b"
     },
     {
       "path": "images/signed-out-0e24d109-1530x946.png",
@@ -85,6 +95,21 @@
       "sha256": "43db6fe1fc00e49cd2cb22b2f6d2c7cb2df5ac72d3530827c1a5ef21f1848607"
     },
     {
+      "path": "receipts/browser-chat-ui-owner-tests-1.log",
+      "bytes": 45510,
+      "sha256": "daacb83adf9265a3e56756288d2260f4f1f31da8ea6ebc4f67736f7c74fbaeb4"
+    },
+    {
+      "path": "receipts/chat-ui-current-manifest.json",
+      "bytes": 27129,
+      "sha256": "4ba30188d5d5c14acdf1b646fe3a82e50f89515c1386d24d2b425a69a4d30108"
+    },
+    {
+      "path": "receipts/chat-ui-labelled-independent.json",
+      "bytes": 22568,
+      "sha256": "3a7f554b022ffc1b952933e2deee8b241803e74fca00f60c52d35a9c0ae2577e"
+    },
+    {
       "path": "receipts/checkpoint35-cloudflare-assets.json",
       "bytes": 42299,
       "sha256": "ef0b6c19325f07e177561b1cf757a2a44a5187191f6c017c3b9b2271b5a6483f"
@@ -93,6 +118,26 @@
       "path": "receipts/checkpoint35-deployment.json",
       "bytes": 3504,
       "sha256": "bd505c25eaf17bf9f53cc377d3aaa8959c16fbe7c23aae7e44ebc1039242f11a"
+    },
+    {
+      "path": "receipts/cui-reveal-joined-tests-5.log",
+      "bytes": 5409,
+      "sha256": "bcb9943857ac3f77e7f002b1d7fc7625bd894d32e04dd7bf9b329873c170b7e2"
+    },
+    {
+      "path": "receipts/cui-runtime-full-joined-1.log",
+      "bytes": 321,
+      "sha256": "4a9b3d68d123f9b86a947c25df72d285b5ee9d0c7b5c92caaf364ab40179daf0"
+    },
+    {
+      "path": "receipts/cui-runtime-joined-20261013-manifest.json",
+      "bytes": 9536,
+      "sha256": "af0f5ab8fe96c68fdc8402054355c94591340adbde84772ece5199a0ca0cab59"
+    },
+    {
+      "path": "receipts/cui-runtime-joined-independent-readback.json",
+      "bytes": 25001,
+      "sha256": "cfbbf21d6be73e4d7e384ebbc78a2140d655b13b9e4e8e5207ac3314b6a6ae23"
     },
     {
       "path": "receipts/native9-source-and-assemblies.json",
@@ -180,9 +225,24 @@
       "sha256": "0257274ddd8532e4e629e4e8a1aa8f0cf94961cfb332139c88bda8f1386c3d1a"
     },
     {
+      "path": "receipts/product-runner-independent-review.json",
+      "bytes": 2414,
+      "sha256": "bd77a3aca4dca690b80b2da2b0c63f32e0453b217f1bbe5a7e4d8adddeaf5e75"
+    },
+    {
       "path": "receipts/signed-out-9c76fced.json",
       "bytes": 3351,
       "sha256": "1a23e7d6d294ba257816e3a1bc67e31d0846f1566abb7b1028b8dc8543f2ca46"
+    },
+    {
+      "path": "receipts/spaces-chat-ui-owner-tests-1.log",
+      "bytes": 1142,
+      "sha256": "444aa68a48f82c7dd081f87a083bcbddd1173cce7871a9318e9139de773e0b67"
+    },
+    {
+      "path": "receipts/ui-independent-review.json",
+      "bytes": 4055,
+      "sha256": "2dd0f485338559e488a554d445498bdb0381ddf51127f20f9f405140a4dcba47"
     },
     {
       "path": "receipts/visual1-desktop.json",
@@ -210,9 +270,259 @@
       "sha256": "e4c96dc4cc08820bd50e04cc9a222953d0bce1d57d06f0f330b92337c220bfd5"
     },
     {
+      "path": "ui-independent-review.md",
+      "bytes": 8102,
+      "sha256": "d3ab637d5217720ab8b31688212c31a34244c5ad1c0351a448aa9c727ccc0452"
+    },
+    {
       "path": "visual-comparison.html",
       "bytes": 146315,
       "sha256": "8fe2110d0618732fbb1f97b686e1f0f6699db52359f3b5dd4e968d75e692e9ef"
+    },
+    {
+      "path": "visual11/Bright-1530/VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+      "bytes": 392322,
+      "sha256": "a1c2e56ab534dab4f2c563ddd713831c20a62d4021193db54be2febf7ab85089"
+    },
+    {
+      "path": "visual11/Bright-1530/actual-browser-chat-actions-focused-1530x946.png",
+      "bytes": 98986,
+      "sha256": "c85d8094e31ea1c865d8500eb5d7fe0a7fdfbc5ec5fb5d0ece7a6c3fa245b3ff"
+    },
+    {
+      "path": "visual11/Bright-1530/actual-browser-chat-actions-hover-1530x946.png",
+      "bytes": 98748,
+      "sha256": "75997b13f634d1954b706a4bebcfc08a39d6ba0e82a131cc16faf04951b1ae3d"
+    },
+    {
+      "path": "visual11/Bright-1530/actual-browser-chat-restaurant-1530x946.png",
+      "bytes": 93887,
+      "sha256": "e926bf0d913d1b3df9c7515bd00d0321aa1f65367c9f58ce323f4970de974ea8"
+    },
+    {
+      "path": "visual11/Bright-1530/actual-browser-chat-restaurant-evidence.json",
+      "bytes": 27967,
+      "sha256": "dd393d3800eca0b0d924dcd559c4cd140f322575328f5f7de60e9f7bde40879b"
+    },
+    {
+      "path": "visual11/Bright-1530.log",
+      "bytes": 430,
+      "sha256": "2dd49b26e8c5fad83973b9a466d5febc1bbdfddc8cc591f191658495f08328e1"
+    },
+    {
+      "path": "visual11/Bright-390/VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+      "bytes": 243607,
+      "sha256": "5f18acbe45db2a91ff17e8552d23f2f6b87a6c0b245ac9b2b11f63643d68d10c"
+    },
+    {
+      "path": "visual11/Bright-390/actual-browser-chat-actions-focused-390x946.png",
+      "bytes": 61810,
+      "sha256": "6f27718ec7f64c09b74f51157e51bbd75a2ac77a9cb7804cbb6d7b2ecae5bd22"
+    },
+    {
+      "path": "visual11/Bright-390/actual-browser-chat-actions-hover-390x946.png",
+      "bytes": 61579,
+      "sha256": "a882038e3d6e8bbcc7c5d0913c1daf4ae06e1b0e49bef895f4dfcb3c8b2b64be"
+    },
+    {
+      "path": "visual11/Bright-390/actual-browser-chat-restaurant-390x946.png",
+      "bytes": 56697,
+      "sha256": "3ab71b71ea330b90476ffa08aca57d4beb5a7f7eaf5bcf7d0b1f2c9a635e6f04"
+    },
+    {
+      "path": "visual11/Bright-390/actual-browser-chat-restaurant-evidence.json",
+      "bytes": 27736,
+      "sha256": "6994a497a6270a8c3ec84ef00d03761943264f01b11f02bd113048e8880cd4c6"
+    },
+    {
+      "path": "visual11/Bright-390.log",
+      "bytes": 429,
+      "sha256": "ccd63ea1bd494355c21a86f56bb1eba2d058b0275f2c65df00466bd70a9b7a4a"
+    },
+    {
+      "path": "visual11/Dark-1530/VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+      "bytes": 408330,
+      "sha256": "6780ec42c445b87165cec2df6330a12110fa808cfde153434b40e8b6d36d9110"
+    },
+    {
+      "path": "visual11/Dark-1530/actual-browser-chat-actions-focused-1530x946.png",
+      "bytes": 103024,
+      "sha256": "aad8e2b80a546dceda8a4fecedb1653b7a7dc479cd6638f483bbde433b411d20"
+    },
+    {
+      "path": "visual11/Dark-1530/actual-browser-chat-actions-hover-1530x946.png",
+      "bytes": 102705,
+      "sha256": "543dfb7a1f4d13e701b4f0958c7d21259ad4e732c06228245e97af0b8a24fecd"
+    },
+    {
+      "path": "visual11/Dark-1530/actual-browser-chat-restaurant-1530x946.png",
+      "bytes": 97899,
+      "sha256": "14cfd964b3e4e76c858defda5fa92a77765f2c40fb0c9df6ee4ff54718d1c1e7"
+    },
+    {
+      "path": "visual11/Dark-1530/actual-browser-chat-restaurant-evidence.json",
+      "bytes": 27966,
+      "sha256": "eb06773fb29d01643e3344cc0b4a17f00b781a0359955e2e0632326a41f1e19f"
+    },
+    {
+      "path": "visual11/Dark-1530.log",
+      "bytes": 428,
+      "sha256": "0af4f8430f2a7cf7329b5080d89c524a4c5662e85961b613dface333a4f655b6"
+    },
+    {
+      "path": "visual11/Dark-390/VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+      "bytes": 255435,
+      "sha256": "2dedbeb477b2a7705be48c01f27a5f7c644dbcf8f8294a8285e5063aab2a1655"
+    },
+    {
+      "path": "visual11/Dark-390/actual-browser-chat-actions-focused-390x946.png",
+      "bytes": 64847,
+      "sha256": "4e3013d02e0b68965adffac55ab34be6dbae514b5c3915181077a49c90cbe960"
+    },
+    {
+      "path": "visual11/Dark-390/actual-browser-chat-actions-hover-390x946.png",
+      "bytes": 64553,
+      "sha256": "8bb84675715cce0388a95a2f664d211822c3a39b9f1ac2ae64fb0eca44ef4d2a"
+    },
+    {
+      "path": "visual11/Dark-390/actual-browser-chat-restaurant-390x946.png",
+      "bytes": 59558,
+      "sha256": "9a66cfc00f8279d35dfbc365b5c11b7ad569980fbda6909005276df3d7fde28c"
+    },
+    {
+      "path": "visual11/Dark-390/actual-browser-chat-restaurant-evidence.json",
+      "bytes": 27735,
+      "sha256": "62af01265662da83861542fbd856ebdc963a4c40de7de157d33af70dd998693d"
+    },
+    {
+      "path": "visual11/Dark-390.log",
+      "bytes": 427,
+      "sha256": "4d1d9a7f3245734acc751fcd0996472d6deb5202f89625d4ec109fa6e420aa67"
+    },
+    {
+      "path": "visual11/SuperBright-1530/VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+      "bytes": 394358,
+      "sha256": "1ab148efdd1d4e53b09ecf2597b99a02d3629d5fa577c703ca865ca49a6c083a"
+    },
+    {
+      "path": "visual11/SuperBright-1530/actual-browser-chat-actions-focused-1530x946.png",
+      "bytes": 99558,
+      "sha256": "3909474fce7046f7ff7c50fd597cff214d916919bd4d81d825aaa5b52d9704ee"
+    },
+    {
+      "path": "visual11/SuperBright-1530/actual-browser-chat-actions-hover-1530x946.png",
+      "bytes": 99321,
+      "sha256": "a9cdb2d2caaa429f905a5e91000c1a23a6bf8c7352120fb81d643819dd5e52bd"
+    },
+    {
+      "path": "visual11/SuperBright-1530/actual-browser-chat-restaurant-1530x946.png",
+      "bytes": 94270,
+      "sha256": "d2d846847a0a633fa4eb8a0ee47faef1b000cb36506b954344c3b5378ac69f70"
+    },
+    {
+      "path": "visual11/SuperBright-1530/actual-browser-chat-restaurant-evidence.json",
+      "bytes": 27968,
+      "sha256": "0a0badeebe1ebd5f196fe7283b525bfa0a8e79eb2581a4576fb2e0073c4c0cd2"
+    },
+    {
+      "path": "visual11/SuperBright-1530.log",
+      "bytes": 435,
+      "sha256": "8a9b1f7670a39510e1f33ed3eb7ed74c4619a35dd59d50d5d432da3a6ff886ad"
+    },
+    {
+      "path": "visual11/SuperBright-390/VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+      "bytes": 246655,
+      "sha256": "eb6e73d2e012869c29b8b5b455d5bbbeb0a4479d391677d149f248ec799cb363"
+    },
+    {
+      "path": "visual11/SuperBright-390/actual-browser-chat-actions-focused-390x946.png",
+      "bytes": 62747,
+      "sha256": "05b6dea6fd67711998689a68fe23154381ff26f1adcf7b399e1fe72c830d86fd"
+    },
+    {
+      "path": "visual11/SuperBright-390/actual-browser-chat-actions-hover-390x946.png",
+      "bytes": 62451,
+      "sha256": "2cf7e309b27dd4c2e14105b1140fb7c2dd4a56eaf344512d6983b4898dbac3fb"
+    },
+    {
+      "path": "visual11/SuperBright-390/actual-browser-chat-restaurant-390x946.png",
+      "bytes": 57176,
+      "sha256": "5bc57991bb2020e543ba012f65e7c8a18bbe7d207b0cad242b6bce47e7472283"
+    },
+    {
+      "path": "visual11/SuperBright-390/actual-browser-chat-restaurant-evidence.json",
+      "bytes": 27737,
+      "sha256": "c26a69a9b9816caa480a8d004d440f68940148545e0dcdb6e623c815c6b13e57"
+    },
+    {
+      "path": "visual11/SuperBright-390.log",
+      "bytes": 434,
+      "sha256": "19d9892ac95b180f04bd45b622c4e26cc180994f2c68bf3a3f0841e7042c2230"
+    },
+    {
+      "path": "visual11/SuperDark-1530/VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+      "bytes": 411022,
+      "sha256": "5cd62b770b0c1ec250b19c84825b8f3a6af43be7ffe7883bc10f99b839379099"
+    },
+    {
+      "path": "visual11/SuperDark-1530/actual-browser-chat-actions-focused-1530x946.png",
+      "bytes": 103694,
+      "sha256": "560b9683473bc2500203b6ba98d73214dad92388250699565f2895819c5414f9"
+    },
+    {
+      "path": "visual11/SuperDark-1530/actual-browser-chat-actions-hover-1530x946.png",
+      "bytes": 103384,
+      "sha256": "79dd25e5bbbd695efac1f02b1be491669b19899a231b23d9b10ad4ef4dce1399"
+    },
+    {
+      "path": "visual11/SuperDark-1530/actual-browser-chat-restaurant-1530x946.png",
+      "bytes": 98568,
+      "sha256": "4600a2a5f1211bf676cfe5e20fb59767e66e5471b78fc95d98ffd4f4a457b01e"
+    },
+    {
+      "path": "visual11/SuperDark-1530/actual-browser-chat-restaurant-evidence.json",
+      "bytes": 27971,
+      "sha256": "8ad29501622fe30950612913881026674fccc63c3c11c3f60d30961383ddf51e"
+    },
+    {
+      "path": "visual11/SuperDark-1530.log",
+      "bytes": 433,
+      "sha256": "4bbeb4f440caeb9d56eadefa9fbaceaf6f71a49d4ee8ed48f8ae10d7be6bac13"
+    },
+    {
+      "path": "visual11/SuperDark-390/VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+      "bytes": 257151,
+      "sha256": "d396cc89f702ec7c26321cfaab7e625f871db4823c0fa1b28df5b3f2f93f1a5e"
+    },
+    {
+      "path": "visual11/SuperDark-390/actual-browser-chat-actions-focused-390x946.png",
+      "bytes": 65135,
+      "sha256": "5e756f7c85fe9697934d5c93a8bcb4c3a23ce8fa60a96980dfba6c20ee33075d"
+    },
+    {
+      "path": "visual11/SuperDark-390/actual-browser-chat-actions-hover-390x946.png",
+      "bytes": 64867,
+      "sha256": "9fd83db3898a7aedd15813120bda17aaa479030d5011b57ec23c683db630fa11"
+    },
+    {
+      "path": "visual11/SuperDark-390/actual-browser-chat-restaurant-390x946.png",
+      "bytes": 60243,
+      "sha256": "152dc1c3ec04865fa1b76e9093bc096f76bb061c58ededb7aa8ba61731c9459c"
+    },
+    {
+      "path": "visual11/SuperDark-390/actual-browser-chat-restaurant-evidence.json",
+      "bytes": 27740,
+      "sha256": "279575f5ba2672bdc7ad204b1fadc72d0457d372b8e3c8e3685d04370f65e6c1"
+    },
+    {
+      "path": "visual11/SuperDark-390.log",
+      "bytes": 432,
+      "sha256": "90057495ccc55ea8e611c237a2505e96969b9a6dfcd57ba989207275b80666e4"
+    },
+    {
+      "path": "visual11/matrix.json",
+      "bytes": 13295,
+      "sha256": "fded1de0f373d11337d1c9b7f89a7e3f59dddddcbb0f91c1de30dbcda7ab2f7f"
     }
   ]
 }

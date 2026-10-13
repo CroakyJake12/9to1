@@ -22,7 +22,7 @@ public sealed partial class BrowserChatSession
             "shell.headerColumns" => _compact ? "1fr" : "1fr Auto Auto",
             "shell.modelColumn" => _compact ? 0 : 1,
             "shell.modelRow" => _compact ? 1 : 0,
-            "shell.headerRows" => _compact ? "Auto Auto Auto" : "Auto",
+            "shell.headerRows" => _compact ? "Auto Auto Auto" : "1fr",
             "shell.headerMinHeight" => _compact ? 172d : 80d,
             "shell.utilityColumn" => _compact ? 0 : 2,
             "shell.utilityRow" => _compact ? 2 : 0,
@@ -40,7 +40,7 @@ public sealed partial class BrowserChatSession
             "navigation.canConfigure" => false,
             "navigation.canManageSpaces" => CanAct,
             "sidebar.name" => "Chat",
-            "sidebar.iconSource" => "icon:" + FirstParty.Single(space => space.Id == SpaceRegistry.ChatSpaceId).IconKey,
+            "sidebar.iconSource" => "icon-solid:" + FirstParty.Single(space => space.Id == SpaceRegistry.ChatSpaceId).IconKey,
             "sidebar.isChat" => true,
             "sidebar.query" => _query,
             "sidebar.newChatLabel" => "New Chat",
@@ -53,7 +53,7 @@ public sealed partial class BrowserChatSession
             "sidebar.sections" => new[] { new RecentSection(state.RecentChats.Where(chat => string.IsNullOrEmpty(_query) || chat.Title.Contains(_query, StringComparison.OrdinalIgnoreCase)).ToArray()) },
             "sidebar.status" => _available ? "Local chats · saved for this account on this device" : _status,
             "chat.mainInteractive" => !_models && !_recovery,
-            "chat.workspacePadding" => _compact ? "16,20,16,24" : "24,20,24,53",
+            "chat.workspacePadding" => _compact ? "16,20,16,24" : "24,20,24,19",
             "chat.transcriptMargin" => _compact ? "0" : "31,0,13,0",
             "chat.title" => state.Conversation?.Title ?? "Chat",
             "chat.typeLabel" => "Normal",
@@ -66,7 +66,7 @@ public sealed partial class BrowserChatSession
             "chat.hasIssues" => HasIssues,
             "chat.emptyDescription" => _available ? "Start a conversation with your selected model." : _status,
             "chat.messages" => state.Conversation?.Messages ?? [],
-            "chat.status" => _saveError ?? (_dirty && !state.Composer.IsSending ? "Draft not yet saved" : _status),
+            "chat.status" => VisibleStatus(state),
             "chat.canChooseApproval" => false,
             "chat.approvalLabel" => "Ask for Approval",
             "composer.text" => state.Composer.Draft,
@@ -134,6 +134,18 @@ public sealed partial class BrowserChatSession
             _ => null
         };
         return value is not null;
+    }
+    private string VisibleStatus(ChatSpaceViewState state)
+    {
+        if (_saveError is not null) return _saveError;
+        if (state.Status.Tone == ChatSpaceStatusTone.Error || HasIssues) return _status;
+        if (_dirty && !state.Composer.IsSending) return "Draft not yet saved";
+        // Only the original controller's explicit idle marker may disappear.
+        // Neutral/success strings can also be meaningful user acknowledgements.
+        if (_available && !_busy && !HasIssues && !state.IsLoading &&
+            !state.Composer.IsSending && state.Status.IsIdle && _status == state.Status.Message)
+            return string.Empty;
+        return _status;
     }
     private static string ModelLabel(string? name) => name is null ? "Choose model"
         : name.StartsWith("hosted-ollama:", StringComparison.Ordinal) ? "Hosted · " + name[14..] : name;

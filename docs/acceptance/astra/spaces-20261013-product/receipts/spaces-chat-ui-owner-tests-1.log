@@ -1,0 +1,12 @@
+  CakeOS.Cui.Language -> /workspace/9to1/framework/CUI/Language/bin/Release/net10.0/CakeOS.Cui.Language.dll
+  CakeOS.Cui.Core -> /workspace/9to1/framework/CUI/Core/bin/Release/net10.0/CakeOS.Cui.Core.dll
+  Haven.Core -> /workspace/9to1/9to1 Workspace/shared/src/Haven.Core/bin/Release/net10.0/Haven.Core.dll
+  NineToOne.Cui.AI -> /workspace/9to1/framework/CUI/AI/bin/Release/net10.0/NineToOne.Cui.AI.dll
+  Haven.Application -> /workspace/9to1/9to1 Workspace/shared/src/Haven.Application/bin/Release/net10.0/Haven.Application.dll
+  HavenOS.Dev -> /workspace/9to1/9to1 Workspace/Dev/bin/Release/net10.0/HavenOS.Apps.Dev.dll
+  HavenOS.Spaces -> /workspace/9to1/9to1 Workspace/Spaces/bin/Release/net10.0/HavenOS.Spaces.dll
+  HavenOS.Spaces.Tests -> /workspace/9to1/9to1 Workspace/Spaces/Tests/bin/Release/net10.0/HavenOS.Spaces.Tests.dll
+Test run for /workspace/9to1/9to1 Workspace/Spaces/Tests/bin/Release/net10.0/HavenOS.Spaces.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:   112, Skipped:     0, Total:   112, Duration: 1 s - HavenOS.Spaces.Tests.dll (net10.0)

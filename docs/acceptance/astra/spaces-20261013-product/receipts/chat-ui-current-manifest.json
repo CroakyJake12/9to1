@@ -1,0 +1,492 @@
+{
+  "status": "CHECKPOINT; scoped owner/interaction tests passed; full Spaces and visual parity NOT ACCEPTED",
+  "timeUtc": "2026-10-13T22:48:40.433363+00:00",
+  "baseHead": "0e5aa3b51eb290e98b520b221672473ebbd27932",
+  "productMutationsThisContinuation": false,
+  "testOnlyAddition": "Optional canonical appearance argument in isolated visual executable; opt-in gate and labelled delivery retained.",
+  "ownerTests": {
+    "BrowserSpaces": {
+      "passed": 63,
+      "failed": 0,
+      "warningCount": 94,
+      "warningKind": "CA1416: platform-specific Browser APIs in source-linked test host"
+    },
+    "Spaces": {
+      "passed": 112,
+      "failed": 0
+    }
+  },
+  "fixtureBuild": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "visualFixtureCases": [
+    {
+      "appearance": "Dark",
+      "width": 1530,
+      "checks": 68,
+      "disclaimerContrast": 10.581542250890385,
+      "report": "/workspace/astra-audit/evidence/chat-ui-labelled-11/Dark-1530/VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+      "reportSha256": "6780ec42c445b87165cec2df6330a12110fa808cfde153434b40e8b6d36d9110",
+      "evidenceSha256": "eb06773fb29d01643e3344cc0b4a17f00b781a0359955e2e0632326a41f1e19f"
+    },
+    {
+      "appearance": "Dark",
+      "width": 390,
+      "checks": 67,
+      "disclaimerContrast": 10.581542250890385,
+      "report": "/workspace/astra-audit/evidence/chat-ui-labelled-11/Dark-390/VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+      "reportSha256": "2dedbeb477b2a7705be48c01f27a5f7c644dbcf8f8294a8285e5063aab2a1655",
+      "evidenceSha256": "62af01265662da83861542fbd856ebdc963a4c40de7de157d33af70dd998693d"
+    },
+    {
+      "appearance": "SuperBright",
+      "width": 1530,
+      "checks": 68,
+      "disclaimerContrast": 7.222452328585558,
+      "report": "/workspace/astra-audit/evidence/chat-ui-labelled-11/SuperBright-1530/VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+      "reportSha256": "1ab148efdd1d4e53b09ecf2597b99a02d3629d5fa577c703ca865ca49a6c083a",
+      "evidenceSha256": "0a0badeebe1ebd5f196fe7283b525bfa0a8e79eb2581a4576fb2e0073c4c0cd2"
+    },
+    {
+      "appearance": "SuperBright",
+      "width": 390,
+      "checks": 67,
+      "disclaimerContrast": 7.222452328585558,
+      "report": "/workspace/astra-audit/evidence/chat-ui-labelled-11/SuperBright-390/VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+      "reportSha256": "eb6e73d2e012869c29b8b5b455d5bbbeb0a4479d391677d149f248ec799cb363",
+      "evidenceSha256": "c26a69a9b9816caa480a8d004d440f68940148545e0dcdb6e623c815c6b13e57"
+    },
+    {
+      "appearance": "Bright",
+      "width": 1530,
+      "checks": 68,
+      "disclaimerContrast": 6.928290973812939,
+      "report": "/workspace/astra-audit/evidence/chat-ui-labelled-11/Bright-1530/VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+      "reportSha256": "a1c2e56ab534dab4f2c563ddd713831c20a62d4021193db54be2febf7ab85089",
+      "evidenceSha256": "dd393d3800eca0b0d924dcd559c4cd140f322575328f5f7de60e9f7bde40879b"
+    },
+    {
+      "appearance": "Bright",
+      "width": 390,
+      "checks": 67,
+      "disclaimerContrast": 6.928290973812939,
+      "report": "/workspace/astra-audit/evidence/chat-ui-labelled-11/Bright-390/VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+      "reportSha256": "5f18acbe45db2a91ff17e8552d23f2f6b87a6c0b245ac9b2b11f63643d68d10c",
+      "evidenceSha256": "6994a497a6270a8c3ec84ef00d03761943264f01b11f02bd113048e8880cd4c6"
+    },
+    {
+      "appearance": "SuperDark",
+      "width": 1530,
+      "checks": 68,
+      "disclaimerContrast": 11.297436772951082,
+      "report": "/workspace/astra-audit/evidence/chat-ui-labelled-11/SuperDark-1530/VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+      "reportSha256": "5cd62b770b0c1ec250b19c84825b8f3a6af43be7ffe7883bc10f99b839379099",
+      "evidenceSha256": "8ad29501622fe30950612913881026674fccc63c3c11c3f60d30961383ddf51e"
+    },
+    {
+      "appearance": "SuperDark",
+      "width": 390,
+      "checks": 67,
+      "disclaimerContrast": 11.297436772951082,
+      "report": "/workspace/astra-audit/evidence/chat-ui-labelled-11/SuperDark-390/VISUAL-TEST-FIXTURE-NOT-LIVE.html",
+      "reportSha256": "d396cc89f702ec7c26321cfaab7e625f871db4823c0fa1b28df5b3f2f93f1a5e",
+      "evidenceSha256": "279575f5ba2672bdc7ad204b1fadc72d0457d372b8e3c8e3685d04370f65e6c1"
+    }
+  ],
+  "visualFixtureTotalChecks": 540,
+  "custodyChecks": [
+    {
+      "appearance": "Dark",
+      "width": 1530,
+      "externalBannerBeforeImages": true,
+      "originalPngBytesPreserved": true,
+      "sourceHashesStillCurrent": true,
+      "geometryIdenticalAcrossAppearances": true
+    },
+    {
+      "appearance": "Dark",
+      "width": 390,
+      "externalBannerBeforeImages": true,
+      "originalPngBytesPreserved": true,
+      "sourceHashesStillCurrent": true,
+      "geometryIdenticalAcrossAppearances": true
+    },
+    {
+      "appearance": "SuperBright",
+      "width": 1530,
+      "externalBannerBeforeImages": true,
+      "originalPngBytesPreserved": true,
+      "sourceHashesStillCurrent": true,
+      "geometryIdenticalAcrossAppearances": true
+    },
+    {
+      "appearance": "SuperBright",
+      "width": 390,
+      "externalBannerBeforeImages": true,
+      "originalPngBytesPreserved": true,
+      "sourceHashesStillCurrent": true,
+      "geometryIdenticalAcrossAppearances": true
+    },
+    {
+      "appearance": "Bright",
+      "width": 1530,
+      "externalBannerBeforeImages": true,
+      "originalPngBytesPreserved": true,
+      "sourceHashesStillCurrent": true,
+      "geometryIdenticalAcrossAppearances": true
+    },
+    {
+      "appearance": "Bright",
+      "width": 390,
+      "externalBannerBeforeImages": true,
+      "originalPngBytesPreserved": true,
+      "sourceHashesStillCurrent": true,
+      "geometryIdenticalAcrossAppearances": true
+    },
+    {
+      "appearance": "SuperDark",
+      "width": 1530,
+      "externalBannerBeforeImages": true,
+      "originalPngBytesPreserved": true,
+      "sourceHashesStillCurrent": true,
+      "geometryIdenticalAcrossAppearances": true
+    },
+    {
+      "appearance": "SuperDark",
+      "width": 390,
+      "externalBannerBeforeImages": true,
+      "originalPngBytesPreserved": true,
+      "sourceHashesStillCurrent": true,
+      "geometryIdenticalAcrossAppearances": true
+    }
+  ],
+  "sourceHashes": {
+    "9to1 Workspace/Spaces/Source/Chat/ChatSpaceContracts.cs": "b54f3b0e64d22d810b7d4099e42fe94e6deaf0180949effac13654a70777a281",
+    "9to1 Workspace/Spaces/Source/Chat/ChatSpaceController.cs": "ef2a021a591176ce1c1d6fdddeec502c021847660c228a17629f03296a6939ba",
+    "9to1 Workspace/Spaces/Source/Chat/ChatSpaceProjection.cs": "d840bf32a7da2ab20b0666a8142a05572db5ee244f2d84339d2ccc3028dccbc0",
+    "9to1 Workspace/Spaces/UI/Chat/ChatSpace.cui": "ea0c58df5e6acce5897288b1bef617f8ba8ede3426ea5b74ccc315fa87ffb4f0",
+    "9to1 Workspace/Spaces/UI/Chat/ChatSpaceCuiDocument.cs": "ca852880cf9032e94e800fdc597e2e72950acf4649abcde7d3353ae80e892ebd",
+    "9to1 Workspace/Spaces/UI/Chat/ChatWorkspace.cui": "de939a333fdddfc80909eba5a19104607c0c933410ecd40af3e0ec90174a1316",
+    "9to1 Workspace/Spaces/UI/Chat/ChatWorkspaceCuiDocument.cs": "673f15a379257907c2adae1b29e5915dbf6f37adee3c641ef10b26c985927433",
+    "9to1 Workspace/Spaces/UI/Chat/Runtime/ChatSpaceCuiRuntime.cs": "594b551cddc37307aac6417477c65a7033f13dd5477c670dc7c983ffa9878208",
+    "9to1 Workspace/Spaces/UI/Chat/Runtime/SpacesShellCuiRuntime.cs": "40e17e23dc5097ec90a3e7d5d5b28552e60226d0aca8f4b8800fa173615ffe91",
+    "9to1 Workspace/Spaces/UI/Shell/SpaceNavigation.cui": "9067197c046c8d82343d70d2f7eec368287dc304bdd26635deef32c8d6f3af33",
+    "9to1 Workspace/Spaces/UI/Shell/SpaceNavigationCuiDocument.cs": "b99bcc9afb4b8448b86395e4d1fe882f7713de3d876984447f6b3ef0bc0cfd4b",
+    "9to1 Workspace/Spaces/UI/Shell/SpacesShell.cui": "20618d607d77652a540f788cd932546eff634918159c81cc5b243c1d707c10e1",
+    "9to1 Workspace/Spaces/UI/Shell/SpacesShellCuiDocument.cs": "63cb7040bcc66a319fa927f71777c49dd7ecd4e816e7aaf3d0a6ead68a517cde",
+    "9to1 Workspace/shared/src/Haven.UI/Drawing/HavenIconCatalog.cs": "24f3749fb2a03533662e588d6e376515e3fa61c63ec1bade9b64c66a6351eb36",
+    "apps/Web/BrowserActionAvailability.cs": "f4d27e8a2a52cbc4ecde8f98073dfa32f2096583e058c36601db00b7c1437280",
+    "apps/Web/BrowserApplication.cs": "a0559d96814631c6275b99f633f03d0e100d23a68236b45fe8597509feff6b07",
+    "apps/Web/BrowserCanonicalIcons.cs": "1464123590021b533cf2f568c4e68998c259ffe5ca91a685b06d9d82580c973a",
+    "apps/Web/BrowserShellActions.cs": "34d462dfd753e6bfae9654ca1d56f837bd87e8b8dd66fca3ceefd131b1815156",
+    "apps/Web/Spaces/BrowserSpacesFeature.cs": "470a71cdd56ea662e6ba105f3504073a311d5838a0bb9adec96c3202c8b45629",
+    "apps/Web/Spaces/Chat/BrowserChatSession.Bindings.cs": "8574b98e8874e8b702180ccafbcb8c8a09bb5e4cddd3b7d939c40a1bf61d562f",
+    "apps/Web/Spaces/Chat/BrowserChatSession.cs": "9a4ec7efa2edea0241a9a2d424f9a04d61714c0cdae3c9095b7191648e5a30a9",
+    "apps/Web/Spaces/Tests/Visual/BrowserSpaces.Visual.csproj": "8e2959c2a4443ab174e476710e1aa7622939c881d8c3fd7530834a787017ee32",
+    "apps/Web/Spaces/Tests/Visual/Program.cs": "ccf6437ae84bb8212c51fd51f10e665200af294d95a39d69d6a87e85bf5a3175",
+    "apps/Web/Spaces/Tests/Visual/README.md": "2e5c575667e936bd0ed2d082ff8b448fc5a3063da3eb0a034974b64338708907",
+    "apps/Web/Spaces/Tests/Visual/RestaurantVisualBackend.cs": "03edc005305368e74c256aeb46c69d12d4c937ba8fab11b47b59e5f92a742d41",
+    "apps/Web/Spaces/Tests/Visual/VisualFixtureReport.cs": "6f407952003eebeea5dc442e6fd3119fa49579c0c0f3945504b185f55ef21b05",
+    "apps/Web/Spaces/Tests/Visual/restaurant.fixture.json": "0ff5a5e07d91fca558c2a11bd2150284fbe26a74b435008c3e54a987a394fb76",
+    "framework/CUI/Runtime/CuiControlLoader.cs": "f30c321411ba6af34efe0ac8df84df6fef8baccaac41984c9bf69b4368831595",
+    "framework/CUI/Runtime/CuiControlRegistry.cs": "fe3c6a0855383df3df7ab256ece0baf87981ef5855952d6f173629990db16f4e",
+    "framework/CUI/Runtime/CuiInteractionReveal.cs": "4ffff7c6d58ece0473c95c3b48913f7c048b164cc0cd82aad92f758f6ac0eca7",
+    "framework/CUI/Runtime/CuiMarkdownView.cs": "ce58493fb47be82dd37cf8d801f8aa9641bab0da66fefbc381ea3cdbad4d1685",
+    "framework/CUI/Runtime/CuiNativeHost.cs": "44abcc4d7bc63bcca1469e618bcaf4ae12880d87d51909e500e5cdf03522ccb6",
+    "framework/CUI/Runtime/CuiPropertyPresentation.cs": "6753cb0684eb390509ae5ed703a0c502f939d1cce42443dfec829345841e78ed",
+    "framework/CUI/Themes/CuiAccentCatalog.cs": "80bacc6e297d958447f790246e3f40b9746bd897ef8420557d5a0ee8da5268dc",
+    "framework/CUI/Themes/CuiAccentPalette.cs": "a56de3c6cc14263a402af73b6ed4c3e9ef2e836d2c56afc194fcacdfe0d68130",
+    "framework/CUI/Themes/CuiAccentPreference.cs": "b29b1179599cf62193e6d44ddd904ea3fd77cd642d065a588e0e52acc6d95d01",
+    "framework/CUI/Themes/CuiAccessibilitySettings.cs": "ecf00d391dff041c87bcddbbe66fb731e093aa0fad3b335499803ac2861ab80c",
+    "framework/CUI/Themes/CuiAppAccentCatalog.cs": "e6ca9d5aea402f0345fc41640e5f40684821457545005b375a3b5f7afd21a063",
+    "framework/CUI/Themes/CuiCustomMaterialBrush.cs": "ae6a05a25c5f287b5afe7282b2c77e472f3b38c061a1be1a3d77273fb26e85d1",
+    "framework/CUI/Themes/CuiCustomTheme.cs": "b8e309fcfdbba388d0f606751a25cf3a981588a9df5d8cd4d58c1a51faf4d903",
+    "framework/CUI/Themes/CuiCustomThemeAccentResolver.cs": "d2d92ad131cd744cf9611bbd2a2dfec63a23e23dff1062cdb4a58b5864d51cec",
+    "framework/CUI/Themes/CuiCustomThemeResourceApplier.cs": "cba021ad13fb098e6ff6c1ad211519b0eb59ce05659c7907813ecd05cf620bc9",
+    "framework/CUI/Themes/CuiMaterialBrush.cs": "39b4b85230f1ccf2b7cbf9f09135f825f615d3115a6cac2c023350a2b235752f",
+    "framework/CUI/Themes/CuiMotion.cs": "9bef76efceee8d17a3f1d04e192149881d94655bee507d009868cb7e659260ae",
+    "framework/CUI/Themes/CuiPresetSurfaceResources.cs": "502b831496f9f125f0bed801ebf243b43445b8c85eb36f4ef2830e85b9536086",
+    "framework/CUI/Themes/CuiSurfacePaletteCatalog.cs": "a4641b3befac7e5520483c496eebf9a5ab0b13f6501217e6c7d7aa61127870d6",
+    "framework/CUI/Themes/CuiThemeCatalog.cs": "6acfb30e2ce0b2f557a9cc39a78fce0429c52deaaa908b1fac2c35b76a7c0b63",
+    "framework/CUI/Themes/CuiThemeDefinitions.cs": "2140c4113022ac2dab43b03d17a8c5cb95b30d780a5fbc9ed95b59b5d3462998",
+    "framework/CUI/Themes/CuiThemeEnums.cs": "d854b27071bdca18d7cb0538465ad3f82fb6b7f3366c30612770981d10811560",
+    "framework/CUI/Themes/CuiThemeExpression.cs": "ebeaae1562b5e47007557b0f2f446c053f386ccd40ab86e3dc867e9642ff1f07",
+    "framework/CUI/Themes/CuiThemePreferenceContext.cs": "d26e3d304c3b50ae43d912877badec1a5f6b76fa819f42f981817ce63af2f5d7",
+    "framework/CUI/Themes/CuiThemePreferenceReader.cs": "dfb9eb8315d9774f43a48f8c1bb3c18914c249a2c3eda0518c425bd32d5c0190",
+    "framework/CUI/Themes/CuiThemeResourceApplier.cs": "677aa712bda7b18c11f6e3ad040f95389e2889b5672d46749cf0916c92dce1e0",
+    "framework/CUI/Themes/CuiThemeScope.cs": "1fbeec731e8906e78e65eb7b95040cf1595f4b31e7bd7d462ce9394fe817551c",
+    "9to1 Workspace/Spaces/Tests/ChatSpaceControllerTests.cs": "5548c64da1fd8b5a5340706624a8e010d6d9cb056ae00fd9055eddc22ac1a8e7",
+    "apps/Web/Spaces/Tests/BrowserChatSessionTests.cs": "1b770b9f94588490d04f56ece9724226d6cd16c2e1424dda07d30089da0b1add"
+  },
+  "loadedAssemblies": [
+    {
+      "name": "BrowserSpaces.Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/BrowserSpaces.Tests.dll",
+      "sha256": "e0cc164aa5d300a48b53322f02525f74848efed7f8f22e853d567f6ce39ad573"
+    },
+    {
+      "name": "HavenOS.Spaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/HavenOS.Spaces.dll",
+      "sha256": "ee7fe40c363bf8cb66e2a481a35ba652fe8da4ba4eebcec4f17c7d8822aa807e"
+    },
+    {
+      "name": "CakeOS.Cui.Runtime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/CakeOS.Cui.Runtime.dll",
+      "sha256": "e0d886f0eec37465674c4dd457f8ee873098e97924c114991437f815fd874c6c"
+    },
+    {
+      "name": "BrowserSpaces.Visual, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/BrowserSpaces.Visual.dll",
+      "sha256": "5ca7d01d07d70461bf592ad8261e1c9bf5a868db8329fcde0ec807424c61a10c"
+    }
+  ],
+  "logs": {
+    "browser-chat-ui-owner-tests-1.log": "daacb83adf9265a3e56756288d2260f4f1f31da8ea6ebc4f67736f7c74fbaeb4",
+    "spaces-chat-ui-owner-tests-1.log": "444aa68a48f82c7dd081f87a083bcbddd1173cce7871a9318e9139de773e0b67",
+    "chat-ui-labelled-11-build.log": "d222af0a8d3fbcc837e34f102e0c8d8fca4a932ccd0b7ee8491238bc9af3446a",
+    "cui-runtime-joined-20261013-manifest.json": "af0f5ab8fe96c68fdc8402054355c94591340adbde84772ece5199a0ca0cab59"
+  },
+  "matrixSha256": "fded1de0f373d11337d1c9b7f89a7e3f59dddddcbb0f91c1de30dbcda7ab2f7f",
+  "limits": [
+    "Synthetic backend only; not live account, provider, tool or persisted user data",
+    "No native Windows or physical touch-device acceptance",
+    "No completed full visual parity; known chronology/question/reasoning/usage/Aa/voice/sidebar gaps remain",
+    "Immutable Web publication and signed-out operation owned separately by integration agent"
+  ],
+  "dependencyAssemblyFiles": [
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.Base.dll",
+      "sha256": "ab0658f122d39e7aba9c5cdffd3a21ed94ffd048519a6ff5c471ffc9827e8108"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.Controls.dll",
+      "sha256": "f5083e69f99e0a0fe8f87b5a192b147f8cb28e7af27901a718001031e611f453"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.DesignerSupport.dll",
+      "sha256": "635123cb7c7a72ba50b9397d18b351439185c029d81510f9350c16f6670a373f"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.Desktop.dll",
+      "sha256": "9f078ea1eddd8b15973aecee8c31697319a7623392dcb9f4bd3718b241d4772e"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.Dialogs.dll",
+      "sha256": "9f3afd7c1386bf0d4ed9208c118aab8865d55046fa9eda0ff132e16863b74d2d"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.Fonts.Inter.dll",
+      "sha256": "b065170134142467dbe6465a3e50c228e2f34a858ac86e642705c4332ab7729e"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.FreeDesktop.AtSpi.dll",
+      "sha256": "954539e4df99c4d5aa461b19c89089d4e16f9a59086f1dcf2a39e5a34538cb4d"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.FreeDesktop.dll",
+      "sha256": "f7643d5a0dbe23266cbecbc9219744d2e8e64c1a99dabc2567fea0392e747634"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.HarfBuzz.dll",
+      "sha256": "b97b2960f53152ca1c36cc15bf8c0c53c3b708dc6eafbbc24056c3e7a4f0cbd0"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.Headless.dll",
+      "sha256": "b9cab0cf444326225e0e2cdb8974ef1686ffedf98840e52b68ef60eb9933adb6"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.Markup.Xaml.dll",
+      "sha256": "828bdc4b793f20765e00a83a63e1a8da18c7dad2fcfe9f31f26c663e909a9da5"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.Markup.dll",
+      "sha256": "2a659211aa6e7b2d78bf155735fc0b086fcd8dfb8b2e3e41be19b053ba36ebf6"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.Metal.dll",
+      "sha256": "592e9abd2e9b77987d2129bcf08f777760d6db38cc8d07270d7384b2763dc434"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.MicroCom.dll",
+      "sha256": "4d610e7a77b2c42e5e5cd00ea0adbde24b0a46c308b502fd1da32d6e2fde0e63"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.Native.dll",
+      "sha256": "27c1a8ca41fa03835cd032ecd3967cf39a026b4241c92f56fdaf78f40a57c4f8"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.OpenGL.dll",
+      "sha256": "75521f3d01243715d429c1a2baa23075e7ddb9c2563e1c461a62164802f1285c"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.Remote.Protocol.dll",
+      "sha256": "ef19f3904cf3ed534093654d4f50b39b781b456660781017a9f5c159cae1b25e"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.Skia.dll",
+      "sha256": "8b03159731364396648ba92a7899ec8c1617dbbf490f703e512df54321c303a1"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.Vulkan.dll",
+      "sha256": "427b41150f5101e8b54aa1642272ca37eaa418aac8191dc6d7dee747240c28d0"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.Win32.Automation.dll",
+      "sha256": "4a3a006283be6db97b03957afb49e43b4f568edb1b53ba1c3b4a3b3148073930"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.Win32.dll",
+      "sha256": "54b1efead1a92f5a0b717179edfadf15ada4330e37bf634c9ede9e5ff9fc5277"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.X11.dll",
+      "sha256": "aa4d53b2ad447d502f6ce159e3da56d36008eb7985b1d958c60bdca616717c2c"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Avalonia.dll",
+      "sha256": "1dcdd1fb004bdd3df833fec6065269d781a734ddfefb825381bbadba8214c410"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/BrowserSpaces.Tests.dll",
+      "sha256": "e0cc164aa5d300a48b53322f02525f74848efed7f8f22e853d567f6ce39ad573"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/BrowserSpaces.Visual.dll",
+      "sha256": "5ca7d01d07d70461bf592ad8261e1c9bf5a868db8329fcde0ec807424c61a10c"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/CakeOS.Cui.Core.dll",
+      "sha256": "c85e88137544145456a61d96dad3c478b0caeba88727d9a1b022934bdcf5e2fa"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/CakeOS.Cui.Language.dll",
+      "sha256": "ffbf66ad3e9a9a4aa055576e43de14b29e6eb2d21597801469dac632e0d61f5f"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/CakeOS.Cui.Runtime.dll",
+      "sha256": "e0d886f0eec37465674c4dd457f8ee873098e97924c114991437f815fd874c6c"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/CakeOS.Cui.Themes.dll",
+      "sha256": "0174867b3bd581ef764c45f058da231270028fbad19fb3c17d610777900be418"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Den.dll",
+      "sha256": "b8c0d3bf31b9adcafd26f6e9babef19b5a3461e3b699fb70673eb5f25a79b97f"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Dulche.Runtime.dll",
+      "sha256": "0b9a94656926b558f451c503ee3c013fc92fad82d081821902913d30046fbe40"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/HarfBuzzSharp.dll",
+      "sha256": "55e72ac23263f8e12484f3435e02ec22fac9eff6e6d169bb0a8c246be6b99d29"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Haven.Application.dll",
+      "sha256": "64e1b34b9afa7b8ea75f74c17887aedb27648677ae7b06214c7315bd7753ff71"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Haven.Core.dll",
+      "sha256": "8e1f8b057945ccab2237a4b8fda950dff0503fad9e9e216f2244035005ccb2ca"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Haven.UI.dll",
+      "sha256": "2a71b5e5da76ce48bb1b16c620c0d71533280989df796a4793254c597dd7218b"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/HavenOS.Apps.Dev.dll",
+      "sha256": "b329799dc16499e409e5f0268c938be5b7dade4c0e618be3dfdfc95c015c8f6e"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/HavenOS.Home.dll",
+      "sha256": "ec682bddc51a3e591ede9ac43acb378b2665c893de3bff4c4672c05f148a9d81"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/HavenOS.Spaces.CuiRuntime.dll",
+      "sha256": "c7bca326469e93ddbe568c0231686b6c24d1980a98512a6d28608dcf08279608"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/HavenOS.Spaces.dll",
+      "sha256": "ee7fe40c363bf8cb66e2a481a35ba652fe8da4ba4eebcec4f17c7d8822aa807e"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/MicroCom.Runtime.dll",
+      "sha256": "2e0a43be3d123dae5aa8a7f1082fd3f1c2a8d842f6c513deac526daed620e318"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Microsoft.TestPlatform.CommunicationUtilities.dll",
+      "sha256": "e38a359aa502bb1867d6092dca9aba5c130dd6f9111decea8156aa746b2c69e6"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Microsoft.TestPlatform.CoreUtilities.dll",
+      "sha256": "f6e2495c44640d8915b2aefc938f391c970300266da014350ff35512a448ee84"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Microsoft.TestPlatform.CrossPlatEngine.dll",
+      "sha256": "d55399bc66dc5b451d60ad82662452ca4a5f735918135dfc91ca9b5e3e38a6ab"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Microsoft.TestPlatform.PlatformAbstractions.dll",
+      "sha256": "7b919ce4429c3b7b8fa2c36fd641b70b2f459a30ecb7c65fd80f437673cec930"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Microsoft.TestPlatform.Utilities.dll",
+      "sha256": "01ffd64d25a4bd905aef9594d2aa700e020273a90a77a8720af6bec8b4fd5444"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Microsoft.VisualStudio.CodeCoverage.Shim.dll",
+      "sha256": "a753bc15f23a957f4f91a059376e4472c6bacd1503622de4b9b2b079ad8ea289"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Microsoft.VisualStudio.TestPlatform.Common.dll",
+      "sha256": "059aa2f335c3f7b14ac3fb7caa1625bc2767581b9548e9ff53a246c7f2f94d6a"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Microsoft.VisualStudio.TestPlatform.ObjectModel.dll",
+      "sha256": "f83e38ee9020baa42e284e2299e233070ffa86ce4b10213583f9b7c8a521bcd0"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Newtonsoft.Json.dll",
+      "sha256": "22c649f75fce5be7c7ccda8880473b634ef69ecf33f5d1ab8ad892caf47d5a07"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/NineToOne.Cui.AI.dll",
+      "sha256": "528da2f753dfe4696893114dd23e634bcbb73120d78d6086b43f0901643350d0"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/SkiaSharp.dll",
+      "sha256": "24a0ec07162bb5a69f673d12c1326dd79994cc9ce8176b523f237668284987c3"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/Tmds.DBus.Protocol.dll",
+      "sha256": "31ebefac6d09694780328414e9d677159590a601991beb36b0aa8f26e9bc121b"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/testhost.dll",
+      "sha256": "92cbdf52db5249112f9f53f1fcdaf9f9aa3fce467141c688a31a7fe095e4d304"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/xunit.abstractions.dll",
+      "sha256": "3166dc70323fb30ccf1cedb0fe86f2ad122c46d254542342d90386efc4c9285c"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/xunit.assert.dll",
+      "sha256": "bcd9711b22d227ac8cd4c1568e72433a0f576d2ec8aae64ac508081892015b1d"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/xunit.core.dll",
+      "sha256": "2f7feeec8c6dec7df684c25fb80aadb292b963d09723460f03d53c5ad2088acc"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/xunit.execution.dotnet.dll",
+      "sha256": "e70febe547c15f8155db3e2d95c3ba4445a59cbc21a3e7541ab22ed49d3dcf7b"
+    },
+    {
+      "path": "/workspace/9to1/apps/Web/Spaces/Tests/Visual/bin/Release/net10.0/xunit.runner.visualstudio.testadapter.dll",
+      "sha256": "384aba4bad96399a7fd2205a5a3517b643a16f4d7e843bd0b92e1e42f81fce2a"
+    }
+  ],
+  "dependencyAssemblyScope": "Exact output DLL bytes at completion; these bind the compiled graph. The per-capture loadedAssemblies list separately identifies directly observed original owners."
+}
