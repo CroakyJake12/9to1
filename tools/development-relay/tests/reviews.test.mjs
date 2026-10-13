@@ -6,6 +6,12 @@ import path from 'node:path';
 import {registerCapture,listReviews,saveFeedback,reviewImage} from '../reviews.mjs';
 import {submitAppFeedback,deliverPendingFeedback,feedbackDelivery} from '../reviews.mjs';
 import {DatabaseSync} from 'node:sqlite';
+
+test('Latest explicit review wins at identical timestamps, including after a fresh database connection',async()=>{
+ const root=await mkdtemp(path.join(process.env.RELAY_TEST_ROOT??os.tmpdir(),'relay-review-tie-')),file=path.join(root,'fixture.jpg');await writeFile(file,Buffer.from('ffd8ffe0','hex'));const id=await registerCapture(root,{title:'Fixture',app:'Fixture',part:1,platform:'web',source_sha:'a'.repeat(40),verification:{rendered:true,functional_checks:true}},file);
+ saveFeedback(root,{capture_id:id,decision:'ACCEPTED',comment:'First decision'});const later=saveFeedback(root,{capture_id:id,decision:'NEEDS_WORK',comment:'Latest explicit decision'});let db=new DatabaseSync(path.join(root,'interface-reviews.db'));db.prepare('UPDATE feedback SET at=?').run('2026-10-13T00:00:00.000Z');db.close();assert.equal(listReviews(root)[0].decision,'NEEDS_WORK');assert.equal(listReviews(root)[0].comments[0].id,later.id);
+ const accepted=saveFeedback(root,{capture_id:id,decision:'ACCEPTED',comment:'Now accepted'});db=new DatabaseSync(path.join(root,'interface-reviews.db'));db.prepare('UPDATE feedback SET at=?').run('2026-10-13T00:00:00.000Z');db.close();assert.equal(listReviews(root)[0].decision,'ACCEPTED');assert.equal(listReviews(root)[0].comments[0].id,accepted.id);
+});
 test('Human app feedback persists pending when worker state is missing, then routes once to its owner without rejecting silence',async()=>{
  const root=await mkdtemp(path.join(process.env.RELAY_TEST_ROOT??os.tmpdir(),'relay-feedback-')),file=path.join(root,'preview.jpg');await writeFile(file,Buffer.from('ffd8ffe0','hex'));const id=await registerCapture(root,{title:'App fixture',app:'Write',part:1,platform:'web',source_sha:'b'.repeat(40),verification:{rendered:true,functional_checks:true}},file);
  const saved=await submitAppFeedback(root,{capture_id:id,decision:null,comment:'Please improve the saved-document layout.'});assert.equal(saved.delivery.status,'PENDING');assert.equal(listReviews(root)[0].decision,'AWAITING_REVIEW');

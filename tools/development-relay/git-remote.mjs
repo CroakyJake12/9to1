@@ -16,11 +16,15 @@ async function limitedBytes(response){
   const chunks=[];let size=0;for await(const chunk of response.body){size+=chunk.byteLength;if(size>1048576)throw new Error('Git advertisement exceeds bounded size');chunks.push(chunk);}
   const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}return bytes;
 }
-export async function verifyPublishedSource(source,fetcher=fetch){
+export async function verifyPublishedSource(source,fetcher=fetch,{allowAncestor=false}={}){
   if(source?.repository!=='CroakyJake12/9to1'||!/^[0-9a-f]{40}$/.test(source.sha??'')||typeof source.branch!=='string'||!source.branch||source.branch.length>180)return {verified:false,reason:'Invalid exact source identity'};
   const r=await fetcher(`https://api.github.com/repos/CroakyJake12/9to1/git/ref/heads/${source.branch.split('/').map(encodeURIComponent).join('/')}`,{headers:{Accept:'application/vnd.github+json','User-Agent':'9to1-relay','X-GitHub-Api-Version':'2022-11-28','Cache-Control':'no-cache'},signal:AbortSignal.timeout(15000)});
   const observed=r.ok?(await r.json()).object?.sha:null;
   const result={verified:r.ok&&observed===source.sha,method:'github_rest',http_status:r.status,observed_sha:observed,rate_limit_remaining:r.headers.get('x-ratelimit-remaining'),rate_limit_reset:r.headers.get('x-ratelimit-reset')};
+  if(allowAncestor&&source.branch==='main'&&r.ok&&/^[0-9a-f]{40}$/.test(observed??'')&&observed!==source.sha){
+    const comparison=await fetcher(`https://api.github.com/repos/CroakyJake12/9to1/compare/${source.sha}...${observed}?per_page=1`,{headers:{Accept:'application/vnd.github+json','User-Agent':'9to1-relay','X-GitHub-Api-Version':'2022-11-28','Cache-Control':'no-cache'},signal:AbortSignal.timeout(15000)});
+    const data=comparison.ok?await comparison.json():null;return {...result,verified:comparison.ok&&data.merge_base_commit?.sha===source.sha&&['ahead','identical'].includes(data.status),method:'github_exact_ancestor',comparison_status:comparison.status};
+  }
   // A changed/missing/inaccessible ref is never replaced by another source.
   // Only exhausted REST quota uses Git's ordinary public HTTPS ref discovery.
   if(!(r.status===403&&result.rate_limit_remaining==='0')&&r.status!==429)return result;

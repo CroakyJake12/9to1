@@ -80,6 +80,7 @@ export function transition(s, action, p, actor, now) {
   } else if (action === 'acquire') {
     if (actor !== expected()) refuse('Requested worker is outside its permitted shift');
     if (s.presence.paused) refuse('Relay paused');
+    if (s.handovers.some(h=>h.status==='READY')) refuse('Pending exact handover requires acknowledgement or guarded reconciliation before acquisition');
     if (s.lease && s.lease.expires_at > now) refuse('An exclusive lease already exists');
     if (s.lease) for (const t of s.tasks.filter(t => t.status === 'WORKING')) t.status = 'RECOVERY_REQUIRED';
     const fence = ++s.fence; s.lease = { worker: actor, fence, acquired_at: now, heartbeat_at: now, expires_at: now + 90000 };
@@ -117,10 +118,21 @@ export function transition(s, action, p, actor, now) {
     for (const id of h.tasks) { const t=s.tasks.find(t=>t.id===id); if(!t || t.owner!==actor || t.fence!==p.fence || !['COMPLETED','CHECKPOINT','BLOCKED'].includes(t.status)) refuse('Handover contains an unreleased task'); }
     s.handovers.push({ ...h, status:'READY', fence:p.fence, created_at:now, revision:s.handovers.length+1 });
     s.checkpoint_requested=true; emit('HANDOVER_READY',{handover:h.id});
-  } else if (action === 'ack') {
+  } else if (action === 'ack' || action === 'ack-recovery') {
     const h=s.handovers.find(h=>h.id===p.handover_id);
     if(!h || h.to!==actor || h.status!=='READY' || h.revision!==p.revision || h.source.sha!==p.reconstructed_sha || !p.remote_verified) refuse('Missing, stale or unreconstructed handover');
-    if(s.lease?.worker!==h.from || s.lease.fence!==h.fence) refuse('Sender ownership changed; reconcile before acknowledgement');
+    if(action==='ack-recovery'){
+      if(s.lease?.expires_at>now)refuse('Live exclusive ownership cannot be replaced by recovery');
+      const hashes=h.artifact_hashes??h.source.artifact_hashes??{},proof=p.verified_artifact_hashes;
+      if(!proof||Object.keys(proof).length!==Object.keys(hashes).length||Object.entries(hashes).some(([file,digest])=>proof[file]!==digest))refuse('Exact reconstructed artifact proofs required');
+      for(const id of h.tasks){const t=s.tasks.find(t=>t.id===id);if(!t||t.owner!==h.from||t.fence!==h.fence||!['CHECKPOINT','COMPLETED','BLOCKED'].includes(t.status))refuse('Sender task has not released its exact checkpoint');}
+      const stale=s.tasks.filter(t=>['WORKING','RECOVERY_REQUIRED'].includes(t.status)),stopped=p.stopped_tasks??[];
+      if(!Array.isArray(stopped)||stopped.length!==stale.length)refuse('Every stale writer needs a preserved stopped-process proof');
+      for(const t of stale){const v=stopped.find(v=>v.task_id===t.id);if(t.owner!==actor||!v||v.fence!==t.fence||v.source_sha!==t.source.sha||v.owned_processes_ended!==true||!/^[-a-zA-Z0-9]{1,100}$/.test(v.checkpoint_id??'')||!/^[0-9a-f]{64}$/.test(v.checkpoint_manifest_sha256??''))refuse('Stale writer proof is missing or differs');}
+      h.recovery={at:now,actor,previous_lease:s.lease?structuredClone(s.lease):null,stopped_tasks:stopped};
+      for(const t of stale){const v=stopped.find(v=>v.task_id===t.id);t.status='BLOCKED';t.result={...t.result,recovery_checkpoint:v.checkpoint_id,blockers:[...(t.result?.blockers??[]),'Stopped and preserved for exact expired-handover reconciliation']};t.resolution={kind:'VERIFIED_STOPPED_CHECKPOINT',at:now,proof:v};t.owner=null;t.fence=null;}
+      emit('EXPIRED_HANDOVER_RECONCILED',{handover:h.id,previous_sender_fence:h.fence});
+    }else if(s.lease?.worker!==h.from || s.lease.fence!==h.fence) refuse('Sender ownership changed; reconcile before acknowledgement');
     h.status='ACKNOWLEDGED';h.ack={worker:actor,sha:p.reconstructed_sha,at:now,revision:p.revision};
     for(const id of h.tasks){const t=s.tasks.find(t=>t.id===id);t.owner=null;t.fence=null;if(t.status==='CHECKPOINT'){t.status='QUEUED';t.source=h.source;t.lane=h.to;}}
     s.lease=null; emit('HANDOVER_ACKNOWLEDGED',{handover:h.id});

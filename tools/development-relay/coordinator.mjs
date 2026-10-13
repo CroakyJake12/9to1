@@ -46,10 +46,10 @@ export default {
       const payload=raw?JSON.parse(raw):{};
       const action=url.pathname.replace(/^\//,'');
       if(request.method==='GET' && action!=='state')return new Response('Unsupported route',{status:404});
-      if(['handover','ack'].includes(action)) {
+      if(['handover','ack','ack-recovery'].includes(action)) {
         let source=payload.handover?.source;
-        if(action==='ack') { const current=await env.COORDINATOR.getByName('CroakyJake12/9to1').handle('state',{},actor,crypto.randomUUID(),now);source=current.state.handovers.find(h=>h.id===payload.handover_id)?.source; }
-        const verification=await verifyPublishedSource(source);
+        if(action==='ack'||action==='ack-recovery') { const current=await env.COORDINATOR.getByName('CroakyJake12/9to1').handle('state',{},actor,crypto.randomUUID(),now);source=current.state.handovers.find(h=>h.id===payload.handover_id)?.source; }
+        const verification=await verifyPublishedSource(source,fetch,{allowAncestor:action!=='handover'});
         payload.remote_verified=verification.verified;
         if(!verification.verified)return Response.json({status:409,error:`Exact remote source verification failed (GitHub HTTP ${verification.http_status??'none'}, remaining ${verification.rate_limit_remaining??'unknown'}); ownership retained`,verification},{status:409,headers:{'Cache-Control':'no-store'}});
       }

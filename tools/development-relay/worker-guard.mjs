@@ -12,20 +12,23 @@ export async function processIdentity(pid,powershell){
     const script=`$p=Get-CimInstance Win32_Process -Filter 'ProcessId=${pid}'; if($p){[pscustomobject]@{pid=[int]$p.ProcessId;parent=[int]$p.ParentProcessId;created=$p.CreationDate.ToUniversalTime().ToString('o');executable=$p.ExecutablePath}|ConvertTo-Json -Compress}`;
     const result=await execute(powershell,['-NoProfile','-Command',script],{windowsHide:true,timeout:5000,maxBuffer:8192});return result.stdout.trim()?JSON.parse(result.stdout):null;
   }
-  try{const stat=await readFile(`/proc/${pid}/stat`,'utf8'),fields=stat.slice(stat.lastIndexOf(')')+2).split(' ');return {pid,parent:Number(fields[1]),created:fields[19]};}catch(e){if(e.code==='ENOENT')return null;throw e;}
+  try{const stat=await readFile(`/proc/${pid}/stat`,'utf8'),fields=stat.slice(stat.lastIndexOf(')')+2).split(' ');return {pid,parent:Number(fields[1]),created:fields[19],state:fields[0]};}catch(e){if(e.code==='ENOENT')return null;throw e;}
 }
-export function sameProcess(expected,actual){return !!actual&&actual.pid===expected.pid&&actual.parent===expected.parent&&actual.created===expected.created;}
+export function sameProcess(expected,actual){return !!expected&&!!actual&&actual.pid===expected.pid&&actual.parent===expected.parent&&actual.created===expected.created;}
+export function sameProcessBirth(expected,actual){return !!expected&&!!actual&&actual.state!=='Z'&&actual.pid===expected.pid&&actual.created===expected.created;}
 export async function runGuard(planPath){
   let parentGone=!process.connected;process.once('disconnect',()=>{parentGone=true;});
   const plan=JSON.parse(await readFile(planPath,'utf8'));
-  if(typeof process.send!=='function'||!Number.isSafeInteger(plan.fence)||!plan.task_id||!plan.identity||plan.identity.parent!==plan.parent_pid||plan.identity.pid!==plan.child_pid||!plan.root||!plan.receipt||plan.deadline!==null&&!Number.isFinite(plan.deadline))throw new Error('Private owned process plan and parent IPC required');
+  if(typeof process.send!=='function'||!Number.isSafeInteger(plan.fence)||!plan.task_id||!plan.identity||!plan.parent_identity||plan.parent_identity.pid!==plan.parent_pid||plan.identity.parent!==plan.parent_pid||plan.identity.pid!==plan.child_pid||!plan.root||!plan.receipt||plan.deadline!==null&&!Number.isFinite(plan.deadline))throw new Error('Private owned process plan and parent IPC required');
   let ending=false,renewing=false,current=null,seenAt=0;
   const finish=async(reason,stop)=>{
     if(ending)return;ending=true;clearInterval(poll);clearInterval(watch);
     let checkpoint=null,error=null,killed=false;
     try{
-      if(stop){const actual=await processIdentity(plan.child_pid,plan.config.powershell);if(actual&&!sameProcess(plan.identity,actual))throw new Error('Owned PID identity changed; replacement process left untouched');
-        if(actual){if(process.platform==='win32')await execute('taskkill.exe',['/PID',String(plan.child_pid),'/T','/F'],{windowsHide:true,timeout:10000,maxBuffer:8192});else process.kill(plan.child_pid,'SIGTERM');killed=true;}
+      if(stop){const actual=await processIdentity(plan.child_pid,plan.config.powershell),originalParentGone=!sameProcess(plan.parent_identity,await processIdentity(plan.parent_pid,plan.config.powershell));if(actual&&!sameProcess(plan.identity,actual)&&!(originalParentGone&&sameProcessBirth(plan.identity,actual)))throw new Error('Owned PID identity changed; replacement process left untouched');
+        const signal=kind=>{try{process.kill(plan.child_pid,kind);}catch(e){if(e.code!=='ESRCH')throw e;}};
+        if(actual){if(process.platform==='win32')await execute('taskkill.exe',['/PID',String(plan.child_pid),'/T','/F'],{windowsHide:true,timeout:10000,maxBuffer:8192});else signal('SIGTERM');killed=true;}
+        const end=Date.now()+5000;let observed;while(sameProcessBirth(plan.identity,observed=await processIdentity(plan.child_pid,plan.config.powershell))){if(Date.now()>=end)throw new Error('Owned writer did not stop; final checkpoint refused');if(process.platform!=='win32'&&Date.now()>end-3000)signal('SIGKILL');await new Promise(r=>setTimeout(r,100));}
         // Preserve after the writer has stopped; copying before termination races its last writes.
         checkpoint=await preserve(plan.root,plan.checkpoints,'guard-'+plan.id);
       }

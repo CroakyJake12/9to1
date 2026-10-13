@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { selectShift } from './policy.mjs';
 import { request } from './client.mjs';
 import { createTaskWorktree, preserve, publish, git, sha, restoreOwnedCheckpoint,verifyEmbeddedCheckpoint } from './git.mjs';
-import {processIdentity} from './worker-guard.mjs';
+import {processIdentity,sameProcessBirth} from './worker-guard.mjs';
 import {deliveryProgress} from './progress.mjs';
 import {taskDiagnostics} from './diagnostics.mjs';
 import {queueReady,predecessorFor} from './queue.mjs';
@@ -202,7 +202,7 @@ export class LocalRunner {
       const observed=await request(this.config,'presence',{...this.presence,healthy:true,local_permitted:planned.shift==='local',local_until:planned.shift==='local'?Date.now()+30000:0});
       if(previousFence!==null)this.acceptAcknowledgedTransfer(observed,previousFence);this.remote=observed;
       let lease=this.remote.lease;
-      if(lease?.expires_at<=Date.now()&&this.config.supervisor_managed&&planned.shift==='local'&&!this.presence.paused&&!this.active&&!this.recovery&&!this.remote.tasks.some(t=>t.owner==='local'&&['WORKING','RECOVERY_REQUIRED','READY'].includes(t.status))&&!this.remote.handovers.some(h=>h.status==='READY'&&h.from==='local')){
+      if(lease?.expires_at<=Date.now()&&this.config.supervisor_managed&&planned.shift==='local'&&!this.presence.paused&&!this.active&&!this.recovery&&!this.remote.tasks.some(t=>t.owner==='local'&&['WORKING','RECOVERY_REQUIRED','READY'].includes(t.status))&&!this.remote.handovers.some(h=>h.status==='READY')){
         this.remote=await request(this.config,'acquire',{});lease=this.remote.lease;this.draining=false;this.event('EXPIRED_LEASE_RECOVERED',{fence:lease.fence});
       }
       if(lease?.worker==='local')this.remote=await request(this.config,'heartbeat',{fence:lease.fence});
@@ -260,7 +260,7 @@ export class LocalRunner {
   async stop(){this.draining=true;this.event('RUNNER_STOP_REQUESTED');if(this.active){this.put('checkpoint',await preserve(this.active.root,this.config.checkpoints,randomUUID()));throw new Error('Bounded worker still running; runner shutdown deferred');}clearInterval(this.timer);clearInterval(this.heartbeatTimer);await new Promise(r=>this.server.close(r));this.db.close();}
   async recoverInterruptedWorker(){
     if(!this.recovery?.pid)return null;const observed=await processIdentity(this.recovery.pid,this.config.powershell);
-    if(observed&&(!this.recovery.identity||observed.pid===this.recovery.identity.pid&&observed.parent===this.recovery.identity.parent&&observed.created===this.recovery.identity.created)){this.event('RECOVERY_WRITER_STILL_PRESENT',{task:this.recovery.task_id,pid:this.recovery.pid});return null;}
+    if(observed&&(!this.recovery.identity||sameProcessBirth(this.recovery.identity,observed))){this.event('RECOVERY_WRITER_STILL_PRESENT',{task:this.recovery.task_id,pid:this.recovery.pid});return null;}
     const checkpoint=await preserve(this.recovery.root,this.config.checkpoints,randomUUID());this.put('checkpoint',checkpoint);this.event('INTERRUPTED_WORKER_PRESERVED',{task:this.recovery.task_id,pid:this.recovery.pid,checkpoint:checkpoint.directory,writer_ended:true});return checkpoint;
   }
 }
