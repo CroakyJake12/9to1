@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const assert = require('node:assert/strict');
+const { verifyProductionAssets } = require('./verify-production-isolation.cjs');
 
 const sha256 = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
@@ -61,10 +62,11 @@ function verifyPublishReceipt({ receiptPath, bundlePath, expectedCommit, expecte
   assert.equal(receipt.totalBytes, totalBytes, 'Receipt total byte count differs');
   const actual = inventory(path.resolve(bundlePath));
   assert.deepEqual(actual, declared, 'Published files are missing, extra, changed, or have different sizes');
+  const fixtureIsolation = verifyProductionAssets(bundlePath);
   return { sourceCommit: expectedCommit, receiptSha256: expectedReceiptSha256,
     receiptPath: path.resolve(receiptPath), bundlePath: path.resolve(bundlePath),
     originalPublishRoot: receipt.publishRoot, scope: receipt.scope,
-    fileCount: actual.length, totalBytes, transportVerified: true,
+    fileCount: actual.length, totalBytes, transportVerified: true, fixtureIsolation,
     runtimeVerified: false, deploymentVerified: false, packageAuthorityVerified: false };
 }
 module.exports = { verifyPublishReceipt };

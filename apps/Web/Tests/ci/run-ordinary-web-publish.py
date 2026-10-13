@@ -17,7 +17,7 @@ SOURCE_ROOTS = ["apps/Web", "framework/CUI", "9to1 Workspace/Home", "9to1 Worksp
                 "Directory.Build.targets", "global.json", "NuGet.Config"]
 SOURCE_EXT = {".cs", ".csproj", ".cui", ".axaml", ".props", ".targets", ".json", ".mjs", ".js",
               ".lock", ".ttf", ".otf", ".png", ".svg", ".woff", ".woff2", ".html", ".css",
-              ".py", ".txt", ".yml", ".yaml"}
+              ".py", ".cjs", ".txt", ".yml", ".yaml"}
 LINKED_CUTS = ["9to1 Workspace/Wave/WaveProject.cs", "9to1 Workspace/Wave/WaveProjectEdits.cs",
                "9to1 Workspace/Wave/WaveTimelineAnnotations.cs", "9to1 Workspace/Wave/WaveMediaAssetReferences.cs",
                "9to1 Workspace/Wave/Program.cs", "apps/Web/Wave/Engine/generate-owner-decoder.py",
@@ -246,7 +246,7 @@ def main():
         # or a private-target/runtime-path substitute.
         evaluated = sdk_json(commands.run("build", ["dotnet", "msbuild", project,
                      "-p:Configuration=Release", "-p:UseArtifactsOutput=true", "-p:ArtifactsPath=" + str(artifacts),
-                     "-target:Build", "-getItem:ResolvedRuntimePack,NativeFileReference",
+                     "-target:Build", "-getItem:ResolvedRuntimePack,NativeFileReference,Compile,ProjectReference,ReferencePath",
                      "-getProperty:TargetFramework,RuntimeIdentifier,NETCoreSdkVersion,MicrosoftNetCoreAppRuntimePackDir,MicrosoftNetCoreAppRuntimePackRidNativeDir,_WasmRuntimePackVersion",
                      "-m:1", "-nodeReuse:false"] + props, 600))
         write_json(diagnostics / "runtime-pack-properties.json", evaluated)
@@ -257,6 +257,10 @@ def main():
         command = ["dotnet", "publish", project, "--no-restore", "-c", "Release", "--artifacts-path", str(artifacts),
                    "--output", str(public_root), "--disable-build-servers", "-m:1", "-nodeReuse:false"] + props
         commands.run("publish", command, 600)
+        isolation = json.loads(commands.run("production-fixture-isolation", ["node", "apps/Web/Tests/verify-production-isolation.cjs",
+                     str(public_root / "wwwroot"), str(assets), str(root / project),
+                     str(diagnostics / "runtime-pack-properties.json")], 60))
+        write_json(diagnostics / "production-fixture-isolation.json", isolation)
         rows = public_inventory(public_root / "wwwroot")
         published = {row["path"]: row for row in rows}
         for name in ("avalonia.js", "storage.js"):
@@ -276,7 +280,7 @@ def main():
                    "sourceCustodyRoots": SOURCE_ROOTS, "requiredLinkedOwnerCuts": LINKED_CUTS,
                    "addedSourceInputs": [], "removedSourceInputs": [], "changedSourceInputs": [], "trackedChangesAfter": [],
                    "publishRoot": str(public_root / "wwwroot"), "publishFiles": rows, "fileCount": len(rows),
-                   "totalBytes": sum(x["bytes"] for x in rows)}
+                   "totalBytes": sum(x["bytes"] for x in rows), "productionFixtureIsolation": isolation}
         receipt_path = public_artifact / "publish-manifest.json"
         write_json(receipt_path, receipt)
         commands.run("receipt-verify", ["node", "apps/Web/Tests/verify-publish-receipt.cjs", str(receipt_path),

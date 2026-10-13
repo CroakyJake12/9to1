@@ -1,0 +1,23 @@
+{
+  "observedAt": "2026-10-13T22:12:02.372737+00:00",
+  "ollamaExecutionSession": 25822,
+  "connectorExecutionSession": 38522,
+  "connectorProcesses": [
+    {
+      "pid": 183974,
+      "state": "S (sleeping)",
+      "originalConnectorSource": true
+    }
+  ],
+  "priorOllamaProcess": {
+    "pid": 118950,
+    "state": "Z (zombie)"
+  },
+  "priorConnectorProcess": {
+    "pid": 175467,
+    "state": "Z (zombie)"
+  },
+  "actualSignedInModelRequest": false,
+  "credentialExpiration": "2026-10-14T19:33:03Z",
+  "publication": "held; no new deployment"
+}

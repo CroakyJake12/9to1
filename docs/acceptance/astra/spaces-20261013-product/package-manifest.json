@@ -1,18 +1,33 @@
 {
   "status": "WORKING_NOT_FULL_ACCEPTANCE",
   "createdAt": "2026-10-13",
-  "sourceIdentity": "Per-file/assembly hashes in visual receipts; immutable9c identity only for signed-out Chromium evidence. Final checkpoint commit/deployment pending.",
+  "sourceIdentity": "Live compiled checkpoint35 source0e24d109. Later P0 correction source and test dependencies are individually hashed in receipts. Visual-only receipts retain separate identities. Full acceptance has not passed.",
   "originalReferenceBytesIncluded": false,
   "files": [
     {
       "path": "README.md",
-      "bytes": 6524,
-      "sha256": "d736c8fbebf5f1515160f3536b4414e1c64cd52a0f63cd99da320ede5a3c72af"
+      "bytes": 10713,
+      "sha256": "1436155fd9d7982a9d71a4dac3fa6f7057a512dd4ad4f35b2fd3e5ad9c7a8e6d"
     },
     {
       "path": "discrepancy-register.md",
       "bytes": 21246,
       "sha256": "c115971af5a9e9e93f26a137c04bc0ef652d369c21c64ab0b80eb4e6353749fc"
+    },
+    {
+      "path": "fixture-provenance.md",
+      "bytes": 6192,
+      "sha256": "82597454786ba62159143e5523ec064db33c2b7adca2454d1eaeeac94d8b0b06"
+    },
+    {
+      "path": "images/signed-out-0e24d109-1530x946.png",
+      "bytes": 65203,
+      "sha256": "d19a0f7c01b50bbe60ce05a8390d902c53ce538f8c20a9f9fba61c8658a9b6fb"
+    },
+    {
+      "path": "images/signed-out-0e24d109-390x844.png",
+      "bytes": 39166,
+      "sha256": "e3a0a4a736cc6d2cdfef941b1e1d1607edf9227eef58f4a342da76a584861c28"
     },
     {
       "path": "images/signed-out-9c76fced-1530x946.png",
@@ -45,9 +60,124 @@
       "sha256": "316b5ef587ff73c32754f73452ea8c0e44352044cf7c417f9fa3f8c2e4f261da"
     },
     {
+      "path": "p0-independent-source-audit.md",
+      "bytes": 12881,
+      "sha256": "76b5a82ad0a89ce72094e5bdea641b1541d5b0498b68e31f7d4b38cff8cb8db5"
+    },
+    {
+      "path": "p0-isolation-independent-review.md",
+      "bytes": 6738,
+      "sha256": "f075d9df2ff13ab7796545e3e948afd1bd248a0473bc2afc201dacfa712edfd4"
+    },
+    {
+      "path": "p0-native-independent-review.md",
+      "bytes": 6887,
+      "sha256": "97388cb99e6f5347b65c47b25ea02cc2ee001bb6ae4bf3d715d2b23469966938"
+    },
+    {
+      "path": "p0-product-owner-trace.md",
+      "bytes": 8880,
+      "sha256": "8873e85d940a0d302d3c481a4f17cebfea54861b45b9f7940a4fbf164eeb8497"
+    },
+    {
+      "path": "p0-provenance-and-acceptance.md",
+      "bytes": 9394,
+      "sha256": "43db6fe1fc00e49cd2cb22b2f6d2c7cb2df5ac72d3530827c1a5ef21f1848607"
+    },
+    {
+      "path": "receipts/checkpoint35-cloudflare-assets.json",
+      "bytes": 42299,
+      "sha256": "ef0b6c19325f07e177561b1cf757a2a44a5187191f6c017c3b9b2271b5a6483f"
+    },
+    {
+      "path": "receipts/checkpoint35-deployment.json",
+      "bytes": 3504,
+      "sha256": "bd505c25eaf17bf9f53cc377d3aaa8959c16fbe7c23aae7e44ebc1039242f11a"
+    },
+    {
       "path": "receipts/native9-source-and-assemblies.json",
       "bytes": 4802,
       "sha256": "ed3ee676955a9e41f37b9155b91c816aab7d9939e772835401d4b192c8eb2196"
+    },
+    {
+      "path": "receipts/p0-checkpoint35-byte-scan.json",
+      "bytes": 752,
+      "sha256": "cf3da5f9925bfa04ea110be7d563e8b22456f794ce2c6840ad79dae0e5225395"
+    },
+    {
+      "path": "receipts/p0-fixture-artifact-after.json",
+      "bytes": 2619,
+      "sha256": "8fc2e24af874fac0d0e1a73cdde697d403a605f32a910619998e77028ba775e9"
+    },
+    {
+      "path": "receipts/p0-fixture-artifact-before.json",
+      "bytes": 1021,
+      "sha256": "32dfec365559a288779bbe20067e171cbf9576dd269cb8bcb91c4380258e31b1"
+    },
+    {
+      "path": "receipts/p0-fixture-cli-controls.json",
+      "bytes": 15469,
+      "sha256": "081671dd8cba37d80d6ec7447fefbe162a2f04f7949c3864c4e4049d68071161"
+    },
+    {
+      "path": "receipts/p0-fixture-wrapper-independent.json",
+      "bytes": 610,
+      "sha256": "d53cf4ebf8888fe8804b04267f80b321e535c8d663367c4002e67955249f66c5"
+    },
+    {
+      "path": "receipts/p0-isolation-independent-review.json",
+      "bytes": 3611,
+      "sha256": "2116154ab1dd688f7c96b1fd5474bfc4026d8828c50b66a6d7026e4c7b3e16ef"
+    },
+    {
+      "path": "receipts/p0-native-availability.json",
+      "bytes": 18254,
+      "sha256": "7cc7d6e179b79dee01180ee17c8270222d369c94643d253416cfab99f0a6d2b8"
+    },
+    {
+      "path": "receipts/p0-release-isolation-independent.json",
+      "bytes": 10124,
+      "sha256": "8790d17c8e081f2ce8f2a6dc673719bb8854e66fe561af2ffc2c108caaa4f488"
+    },
+    {
+      "path": "receipts/p0-release-isolation-source.json",
+      "bytes": 1265,
+      "sha256": "a208a77401d85fb1c550cdf5cf94fff290d4a8dcdaf314fef9aff49007edf17d"
+    },
+    {
+      "path": "receipts/p0-runtime-provenance.json",
+      "bytes": 923,
+      "sha256": "265dd063f7e431201ec0f232ad0df4d5eeb4d2847b7c8c8cdb7dda414b4c4016"
+    },
+    {
+      "path": "receipts/p0-runtime-recovery.json",
+      "bytes": 549,
+      "sha256": "cf32dc75d1e5295b9f9b3e15149cfd27f1652d54811c1a966f0ccfe9ee9ba8c9"
+    },
+    {
+      "path": "receipts/p0-signed-out-product.json",
+      "bytes": 3984,
+      "sha256": "1bab02e6b7ee9327a1679e51f60e3168f743571b670f97d2cf67494789cc790a"
+    },
+    {
+      "path": "receipts/p0-source-provenance.json",
+      "bytes": 8558,
+      "sha256": "c92dd07e8747ba59fda1effda5f120161ff1b8b664ee0cf5b2d924aa6e926601"
+    },
+    {
+      "path": "receipts/private-runtime-0e24d109-deployment.json",
+      "bytes": 2871,
+      "sha256": "2ffff5258dcbb496311d7e3d7b53815233f4b823d35ca34590856889e3752bf7"
+    },
+    {
+      "path": "receipts/product-0e24d109-artifacts.json",
+      "bytes": 58214,
+      "sha256": "55d5bb1629ce91793bfc298a01eefb99c3d34aab233873befc604b7250d59155"
+    },
+    {
+      "path": "receipts/product-0e24d109.json",
+      "bytes": 3353,
+      "sha256": "0257274ddd8532e4e629e4e8a1aa8f0cf94961cfb332139c88bda8f1386c3d1a"
     },
     {
       "path": "receipts/signed-out-9c76fced.json",
@@ -81,8 +211,8 @@
     },
     {
       "path": "visual-comparison.html",
-      "bytes": 144948,
-      "sha256": "2de9cbd994e47c9497951d8f759175a0a616a16fcb42213d4f6f8842f4460131"
+      "bytes": 146315,
+      "sha256": "8fe2110d0618732fbb1f97b686e1f0f6699db52359f3b5dd4e968d75e692e9ef"
     }
   ]
 }

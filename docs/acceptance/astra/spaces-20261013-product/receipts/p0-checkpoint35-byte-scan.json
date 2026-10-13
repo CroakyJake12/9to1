@@ -1,0 +1,23 @@
+{
+  "source": "0e24d10972384f5389f150daf3ed76ac1666062d",
+  "scope": "Immutable deployed asset byte scan including decompressed gzip/Brotli and UTF8/UTF16LE managed strings; not a signed-in data test",
+  "assetsHashVerified": 346,
+  "compressedRepresentationsInspected": 230,
+  "terms": [
+    "Can you look for nearby restaurants?",
+    "Looking for restaurants now!",
+    "Here are the top 5 restaurants that you should try!",
+    "Which one should I pick?",
+    "Help Me Set up a bus",
+    "Diet Plans for 2026",
+    "Track Sales Tax",
+    "Monster Energy Drink",
+    "Creating a Shortlist",
+    "Searching for restaurants",
+    "Qwen 3.6",
+    "RestaurantVisualBackend",
+    "BrowserSpaces.Visual",
+    "restaurant.fixture.json"
+  ],
+  "hits": []
+}

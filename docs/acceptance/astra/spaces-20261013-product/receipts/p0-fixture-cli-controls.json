@@ -1,0 +1,318 @@
+{
+  "timeUtc": "2026-10-13T22:27:35.837748+00:00",
+  "status": "PASS",
+  "scope": "No-capture CLI qualification of prepared HEAD+P0 Program with exact current compiled dependency assemblies. Not functional, visual, account, model or tool acceptance.",
+  "baseHead": "0e24d10972384f5389f150daf3ed76ac1666062d",
+  "buildProjectReferences": false,
+  "buildWarnings": 0,
+  "buildErrors": 0,
+  "buildLog": {
+    "path": "audit-workspace/evidence/p0-fixture-opt-in-build.log",
+    "sha256": "17f19d98fd57969ff01d9596ce8ee57c2ec9b9d6a7be4733a6db0cc7d40e2c99"
+  },
+  "checks": [
+    {
+      "name": "without-opt-in",
+      "passed": true,
+      "command": [
+        "workspace-dotnet",
+        "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/P0FixtureControl.dll",
+        "repository-root",
+        "audit-workspace/evidence/p0-fixture-cli-controls/default-output-must-not-exist",
+        "audit-workspace/evidence/p0-fixture-cli-controls/input-must-not-be-read.json",
+        "1530"
+      ],
+      "processReturnCode": 2,
+      "outputDirectoryCreated": false,
+      "fixtureInputExists": false,
+      "stderr": "This isolated automated fixture requires --visual-test-fixture. It is NOT LIVE ACCOUNT OR MODEL OUTPUT and must never be used for functional acceptance.\n",
+      "scope": "Original compiled CLI gate/input validation only; stopped before fixture read, backend creation, rendering or product I/O."
+    },
+    {
+      "name": "with-opt-in-invalid-width",
+      "passed": true,
+      "command": [
+        "workspace-dotnet",
+        "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/P0FixtureControl.dll",
+        "--visual-test-fixture",
+        "repository-root",
+        "audit-workspace/evidence/p0-fixture-cli-controls/opt-in-output-must-not-exist",
+        "audit-workspace/evidence/p0-fixture-cli-controls/input-must-not-be-read.json",
+        "500"
+      ],
+      "processReturnCode": -6,
+      "outputDirectoryCreated": false,
+      "fixtureInputExists": false,
+      "stderr": "VISUAL TEST FIXTURE \u2014 NOT LIVE ACCOUNT OR MODEL OUTPUT. Use the labelled HTML report for review; raw comparison PNGs are internal test evidence only.\nUnhandled exception. System.ArgumentOutOfRangeException: Specified argument was out of the range of valid values. (Parameter 'captureWidth')\n   at Program.<Main>$(String[] args) in audit-workspace/prepared/p0-fixture-only/Program.cs:line 35\n   at Program.<Main>(String[] args)\n",
+      "scope": "Original compiled CLI gate/input validation only; stopped before fixture read, backend creation, rendering or product I/O."
+    }
+  ],
+  "sources": [
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/Program.cs",
+      "sha256": "9be66803029f29e1ef459bd135746ad7ede341c836b1f704286ba10dc6cabae4"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/P0FixtureControl.csproj",
+      "sha256": "08f7c4a1c7f943b9ecd45603191731301affa70dcbada78ddb1cd86fea55999e"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/manifest.json",
+      "sha256": "abd31c0af3378ba6088010bb6b9afeaca2d49719300b0fc27c695b13490f129c"
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/RestaurantVisualBackend.cs",
+      "sha256": "03edc005305368e74c256aeb46c69d12d4c937ba8fab11b47b59e5f92a742d41"
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/VisualFixtureReport.cs",
+      "sha256": "6f407952003eebeea5dc442e6fd3119fa49579c0c0f3945504b185f55ef21b05"
+    },
+    {
+      "path": "apps/Web/BrowserCanonicalIcons.cs",
+      "sha256": "1464123590021b533cf2f568c4e68998c259ffe5ca91a685b06d9d82580c973a"
+    },
+    {
+      "path": "apps/Web/BrowserActionAvailability.cs",
+      "sha256": "f4d27e8a2a52cbc4ecde8f98073dfa32f2096583e058c36601db00b7c1437280"
+    },
+    {
+      "path": "apps/Web/BrowserShellActions.cs",
+      "sha256": "34d462dfd753e6bfae9654ca1d56f837bd87e8b8dd66fca3ceefd131b1815156"
+    }
+  ],
+  "executable": {
+    "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/P0FixtureControl.dll",
+    "sha256": "86a1fbb5e880380f58c884dc852c105e34fcd12459df670be1721b56b3bafe3e"
+  },
+  "dependencyAssemblies": [
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.Base.dll",
+      "sha256": "922a6d28510a899a4f12cca4afb38b83b274487de0a351a1225e15b78959b159"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.Controls.dll",
+      "sha256": "99a58a8dac64a0a5cb31d9ee12d8f551d03d595c154a0df3b7ea20e410806b26"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.DesignerSupport.dll",
+      "sha256": "9953b05c8b791b33dd3d6aa64598bd06222dce6472c538b7968d02a2ca76c046"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.Desktop.dll",
+      "sha256": "88c9b8f60ada9c181621b807bf50cd33a2d987d972c54eccaeadf8a8b6da2ee7"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.Dialogs.dll",
+      "sha256": "1e2ce1be9e01118a6d477c8db5c952dc280864d9b4963e5b5aa9e85f93e604da"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.Fonts.Inter.dll",
+      "sha256": "6e97fb7aeec7120f47c5a30c98d035e003d455ef72f0493a5c283e0eeef0915f"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.FreeDesktop.AtSpi.dll",
+      "sha256": "ef7d3002bb00d6fe9f4da54528fa27470edf019fab46292ffb6107a39d435fd4"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.FreeDesktop.dll",
+      "sha256": "df4d30dadd61beb3d28695b1789fddd2f01b9955ad1c0cf7bd232bde3963e936"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.HarfBuzz.dll",
+      "sha256": "752e18090dea2a05831fbf414eeed067ecb87499fd7b95ff1288eab93da213c2"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.Headless.dll",
+      "sha256": "d5e5b1f7accf9302771e2c247b51ee0e5d8c6f16b452cf5b7224d021de1b95cc"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.Markup.Xaml.dll",
+      "sha256": "3bca7d06761517f766b30db24cd102214b44e6d9afde9bd0283b9888bc6017df"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.Markup.dll",
+      "sha256": "ab5df73d88b656eeb6f5b2fdf20757ba6c1735d2299d4b85c59359a8d7ee492e"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.Metal.dll",
+      "sha256": "4061b1c74936763b927aa0eb2bd2f8fdf464f187258b97609ff918e0fd94c815"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.MicroCom.dll",
+      "sha256": "594c0d8f8433ed6ca0b39be7ea047362b289f47597258504c1db50ef54e7481a"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.Native.dll",
+      "sha256": "72ab1682b7b3a28e17e42fd9e2dc321c51a31c48345ce10343487b15035eb12f"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.OpenGL.dll",
+      "sha256": "f36a32f996775634752c5020d951fbae9888634d9f2628131a4e0a7092d7b85e"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.Remote.Protocol.dll",
+      "sha256": "f621899903cffb109c854487ad23b6a6e39b180f379f0a6d5b1a01302beaa591"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.Skia.dll",
+      "sha256": "47656ef1bb038510fe7878aeb82d47bd0037e6543b1ef73ff8036f628ace90e3"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.Vulkan.dll",
+      "sha256": "2d7fce6a0fdbc2678c818fe114ce11280bc6948dee867a8a15ee1a7313560f6e"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.Win32.Automation.dll",
+      "sha256": "c06fe462e9e7e59d457c489b3d576871c057daad5497339a9297df4132d810f9"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.Win32.dll",
+      "sha256": "9f5e790392ed296e5b86f17d9a167cd5b5db283cb751cf4ec856a0cdb6a975ed"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.X11.dll",
+      "sha256": "fdfa4d3382669997f32fd0fcb8042c035d4d24f73876416a42b9988413e77e0e"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Avalonia.dll",
+      "sha256": "fa1c289e1ad8acf0b495bc4cf4218e826f4e83e94523c868858de423503cb552"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/BrowserSpaces.Tests.dll",
+      "sha256": "155a7a96b3a7d6a3446c212c7845451b70c6c1b40ce1e9b3401852c4eb55979b"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/CakeOS.Cui.Core.dll",
+      "sha256": "3fab39cc60bcdefd45af99bb7baa2b5708d35d9d0d188a0c0b77f7a47e45ac8b"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/CakeOS.Cui.Language.dll",
+      "sha256": "b1bb20f0686ebf652a9e8426dbb76186ddcef18ea15886831bcf4c124df4014d"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/CakeOS.Cui.Runtime.dll",
+      "sha256": "ca70402ab0fd17faafa5d3c80fdda7881c4f8b4b00044614a32c713084c6eb7c"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/CakeOS.Cui.Themes.dll",
+      "sha256": "254a7fc1be8023ef1f3c765997d3fbcb9d3fa23275066c4d6e3a6cd60ee992a8"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Den.dll",
+      "sha256": "351a95be0bb23a4531af719b147fca1a0830586e8a1077403c2fac1ab89f208e"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Dulche.Runtime.dll",
+      "sha256": "4fd8a1d193d6264023462576e63cb4fb8f6d4695e999005e4d9a5f11aecec273"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/HarfBuzzSharp.dll",
+      "sha256": "55e72ac23263f8e12484f3435e02ec22fac9eff6e6d169bb0a8c246be6b99d29"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Haven.Application.dll",
+      "sha256": "3f38253f5144d5334e2d20b2641f5996ec2ae3bde3d6f976a7b1ed450c2b99e0"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Haven.Core.dll",
+      "sha256": "cf68765d352fa8a3874ac07501dfff55a92345441cfab0e91a0573d7b86622d4"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Haven.UI.dll",
+      "sha256": "2bfcd80ff8668f917d662f6aadea935fe9cbad5b5f7b5f3822998668cb2862fa"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/HavenOS.Apps.Dev.dll",
+      "sha256": "c5373b6dd24dc942c21f5387471d2b2537c07279f2e6905e244b7a3687181d3f"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/HavenOS.Home.dll",
+      "sha256": "b2b1d0fb1be5fc5c7ce1d112df9ce62b10f1458fbd039b4f77b06245815a53b4"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/HavenOS.Spaces.CuiRuntime.dll",
+      "sha256": "2712b7557a71d8714c07ceb3277043b64a3b3cd4079ab71431bc4d9877877950"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/HavenOS.Spaces.dll",
+      "sha256": "40a0765531d6982ab3f573c86eb688c94f141ea02371cb635f64b764f349e8ea"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/MicroCom.Runtime.dll",
+      "sha256": "2e0a43be3d123dae5aa8a7f1082fd3f1c2a8d842f6c513deac526daed620e318"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Microsoft.TestPlatform.CommunicationUtilities.dll",
+      "sha256": "e38a359aa502bb1867d6092dca9aba5c130dd6f9111decea8156aa746b2c69e6"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Microsoft.TestPlatform.CoreUtilities.dll",
+      "sha256": "f6e2495c44640d8915b2aefc938f391c970300266da014350ff35512a448ee84"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Microsoft.TestPlatform.CrossPlatEngine.dll",
+      "sha256": "d55399bc66dc5b451d60ad82662452ca4a5f735918135dfc91ca9b5e3e38a6ab"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Microsoft.TestPlatform.PlatformAbstractions.dll",
+      "sha256": "7b919ce4429c3b7b8fa2c36fd641b70b2f459a30ecb7c65fd80f437673cec930"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Microsoft.TestPlatform.Utilities.dll",
+      "sha256": "01ffd64d25a4bd905aef9594d2aa700e020273a90a77a8720af6bec8b4fd5444"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Microsoft.VisualStudio.CodeCoverage.Shim.dll",
+      "sha256": "a753bc15f23a957f4f91a059376e4472c6bacd1503622de4b9b2b079ad8ea289"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Microsoft.VisualStudio.TestPlatform.Common.dll",
+      "sha256": "059aa2f335c3f7b14ac3fb7caa1625bc2767581b9548e9ff53a246c7f2f94d6a"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Microsoft.VisualStudio.TestPlatform.ObjectModel.dll",
+      "sha256": "f83e38ee9020baa42e284e2299e233070ffa86ce4b10213583f9b7c8a521bcd0"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Newtonsoft.Json.dll",
+      "sha256": "22c649f75fce5be7c7ccda8880473b634ef69ecf33f5d1ab8ad892caf47d5a07"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/NineToOne.Cui.AI.dll",
+      "sha256": "70b413bf181bd8d623288c43b1ea95f7d7a16deeb424090522e46e3e33b69971"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/SkiaSharp.dll",
+      "sha256": "24a0ec07162bb5a69f673d12c1326dd79994cc9ce8176b523f237668284987c3"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/Tmds.DBus.Protocol.dll",
+      "sha256": "31ebefac6d09694780328414e9d677159590a601991beb36b0aa8f26e9bc121b"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/testhost.dll",
+      "sha256": "92cbdf52db5249112f9f53f1fcdaf9f9aa3fce467141c688a31a7fe095e4d304"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/xunit.abstractions.dll",
+      "sha256": "3166dc70323fb30ccf1cedb0fe86f2ad122c46d254542342d90386efc4c9285c"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/xunit.assert.dll",
+      "sha256": "bcd9711b22d227ac8cd4c1568e72433a0f576d2ec8aae64ac508081892015b1d"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/xunit.core.dll",
+      "sha256": "2f7feeec8c6dec7df684c25fb80aadb292b963d09723460f03d53c5ad2088acc"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/xunit.execution.dotnet.dll",
+      "sha256": "e70febe547c15f8155db3e2d95c3ba4445a59cbc21a3e7541ab22ed49d3dcf7b"
+    },
+    {
+      "path": "audit-workspace/prepared/p0-fixture-only/bin/Release/net10.0/xunit.runner.visualstudio.testadapter.dll",
+      "sha256": "384aba4bad96399a7fd2205a5a3517b643a16f4d7e843bd0b92e1e42f81fce2a"
+    }
+  ]
+}

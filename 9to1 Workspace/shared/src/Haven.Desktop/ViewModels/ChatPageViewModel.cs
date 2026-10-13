@@ -49,6 +49,7 @@ public sealed partial class ChatPageViewModel : ObservableObject
     /// Stores ollama locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
     private readonly IOllamaClient _ollama;
+    private readonly OllamaWakeService? _ollamaWake;
     /// <summary>
     /// Stores sessions locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
@@ -99,6 +100,7 @@ public sealed partial class ChatPageViewModel : ObservableObject
     /// Stores selected model locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
     private ModelDescriptor? _selectedModel;
+    private long _modelSelectionRevision;
     /// <summary>
     /// Stores selected agent locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
@@ -231,7 +233,8 @@ public sealed partial class ChatPageViewModel : ObservableObject
         CapabilityPreflightService preflight,
         IWorkspaceStateRepository workspaceState,
         IProjectIntelligenceService projectIntelligence,
-        IContainerResourceRepository? containerResources = null)
+        IContainerResourceRepository? containerResources = null,
+        OllamaWakeService? ollamaWake = null)
     {
         Mode = mode;
         _conversations = conversations;
@@ -239,6 +242,7 @@ public sealed partial class ChatPageViewModel : ObservableObject
         _catalog = catalog;
         _capabilityRegistry = App.Services?.GetService<CapabilityRegistryService>();
         _ollama = ollama;
+        _ollamaWake = ollamaWake;
         _sessions = sessions;
         _preferences = preferences;
         _preflight = preflight;
@@ -684,6 +688,7 @@ public sealed partial class ChatPageViewModel : ObservableObject
         set
         {
             if (!SetProperty(ref _selectedModel, value)) return;
+            _modelSelectionRevision++;
             SendCommand.RaiseCanExecuteChanged();
             if (value is not null) _preferences.SetModelDefaults(value.Name, SelectedEffort);
         }
@@ -1106,28 +1111,37 @@ public sealed partial class ChatPageViewModel : ObservableObject
     /// <summary>
     /// Performs refresh models asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    private async Task RefreshModelsAsync() => await RefreshModelsAsync(CancellationToken.None);
+    private async Task RefreshModelsAsync() { await RefreshModelsAsync(CancellationToken.None); }
 
     /// <summary>
     /// Performs refresh models asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    private async Task RefreshModelsAsync(CancellationToken cancellationToken)
+    private async Task<bool> RefreshModelsAsync(CancellationToken cancellationToken, bool preserveSelectedModel = false)
     {
-        var selectedName = SelectedModel?.Name ?? _preferences.DefaultModel;
+        var previousSelection = SelectedModel;
+        var selectionRevision = _modelSelectionRevision;
+        var selectedName = previousSelection?.Name ?? _preferences.DefaultModel;
         Models.Clear();
         try
         {
             foreach (var model in await _ollama.GetModelsAsync(cancellationToken)) Models.Add(model);
-            SelectedModel = Models.FirstOrDefault(model => model.Name == selectedName) ?? Models.FirstOrDefault();
+            if (!IsModelSelectionCurrent(selectionRevision)) return false;
+            if (!preserveSelectedModel)
+                SelectedModel = Models.FirstOrDefault(model => model.Name.Equals(selectedName, StringComparison.OrdinalIgnoreCase))
+                    ?? Models.FirstOrDefault();
             Status = Models.Count == 0 ? "Ollama is running, but no models are installed." : $"{Models.Count} local model{(Models.Count == 1 ? "" : "s")} available";
+            return true;
         }
         catch (Exception ex)
         {
-            SelectedModel = string.IsNullOrWhiteSpace(selectedName) || selectedName.Contains(':', StringComparison.Ordinal)
-                ? null
-                : new ModelDescriptor(selectedName, 0, "Ollama", string.Empty, string.Empty,
-                    new HashSet<ToolCapability>(), DateTimeOffset.MinValue);
+            if (!IsModelSelectionCurrent(selectionRevision)) return false;
+            SelectedModel = previousSelection ?? (string.IsNullOrWhiteSpace(selectedName) ||
+                (_ollamaWake ?? App.Services?.GetService<OllamaWakeService>())?.OwnsModel(selectedName) != true
+                    ? null
+                    : new ModelDescriptor(selectedName, 0, "Ollama", string.Empty, string.Empty,
+                        new HashSet<ToolCapability>(), DateTimeOffset.MinValue));
             Status = $"Ollama unavailable: {ex.Message}";
+            return false;
         }
     }
 
@@ -1319,26 +1333,34 @@ public sealed partial class ChatPageViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Makes a local model usable immediately before a send. Provider-qualified
-    /// names (for example, <c>openai:gpt-4.1</c>) are cloud models and therefore
-    /// bypass this local Ollama check entirely.
+    /// Checks that the current selection still owns this pending availability check.
+    /// A newer user choice, including A-to-B-to-A, must not be overwritten.
     /// </summary>
+    private bool IsModelSelectionCurrent(long revision)
+    {
+        if (_modelSelectionRevision == revision) return true;
+        IsOllamaOfflineWarningVisible = false;
+        Status = "Model selection changed while checking availability. Send again with the current selection.";
+        return false;
+    }
+
     private async Task<bool> EnsureSelectedModelAvailableAsync()
     {
         var selectedName = SelectedModel?.Name;
-        if (string.IsNullOrWhiteSpace(selectedName) || selectedName.Contains(':', StringComparison.Ordinal))
+        var selectionRevision = _modelSelectionRevision;
+        var wake = _ollamaWake ?? App.Services?.GetService<OllamaWakeService>();
+        if (string.IsNullOrWhiteSpace(selectedName) || wake is null || !wake.OwnsModel(selectedName))
         {
             IsOllamaOfflineWarningVisible = false;
             return true;
         }
 
-        var wake = App.Services?.GetService<OllamaWakeService>();
-        if (wake is null) return true;
-
         try
         {
             using var probe = new CancellationTokenSource(TimeSpan.FromSeconds(2));
-            if (await wake.IsAvailableAsync(probe.Token))
+            var available = await wake.IsAvailableAsync(probe.Token);
+            if (!IsModelSelectionCurrent(selectionRevision)) return false;
+            if (available)
             {
                 IsOllamaOfflineWarningVisible = false;
                 return true;
@@ -1349,6 +1371,7 @@ public sealed partial class ChatPageViewModel : ObservableObject
             // A timed-out probe is the same user-facing state as an offline endpoint.
         }
 
+        if (!IsModelSelectionCurrent(selectionRevision)) return false;
         if (!_preferences.AutoWakeOllama)
         {
             IsOllamaOfflineWarningVisible = true;
@@ -1363,22 +1386,41 @@ public sealed partial class ChatPageViewModel : ObservableObject
         try
         {
             using var wakeTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(18));
-            if (!await wake.EnsureAvailableAsync(wakeTimeout.Token))
+            var awakened = await wake.EnsureAvailableAsync(wakeTimeout.Token);
+            if (!IsModelSelectionCurrent(selectionRevision)) return false;
+            if (!awakened)
             {
                 IsOllamaOfflineWarningVisible = true;
                 Status = "Ollama could not be started. Open Ollama, then try again.";
                 return false;
             }
 
-            await RefreshModelsAsync();
-            SelectedModel = Models.FirstOrDefault(model =>
-                model.Name.Equals(selectedName, StringComparison.OrdinalIgnoreCase)) ?? SelectedModel;
+            // A responsive process does not establish model discovery or the
+            // user's requested model. Keep that preference during revalidation;
+            // another returned model is not permission to switch this request.
+            var discovered = await RefreshModelsAsync(wakeTimeout.Token, preserveSelectedModel: true);
+            if (!IsModelSelectionCurrent(selectionRevision)) return false;
+            if (!discovered)
+            {
+                IsOllamaOfflineWarningVisible = true;
+                return false; // Preserve the actual discovery failure status.
+            }
+            var requested = Models.FirstOrDefault(model =>
+                model.Name.Equals(selectedName, StringComparison.OrdinalIgnoreCase));
             IsOllamaOfflineWarningVisible = false;
+            if (requested is null)
+            {
+                Status = Models.Count == 0 ? "Ollama is running, but no models are installed."
+                    : $"Ollama is running, but the selected model '{selectedName}' is not installed. Choose an available model.";
+                return false;
+            }
+            SelectedModel = requested;
             Status = "Ollama is ready.";
             return true;
         }
         catch (OperationCanceledException)
         {
+            if (!IsModelSelectionCurrent(selectionRevision)) return false;
             IsOllamaOfflineWarningVisible = true;
             Status = "Ollama did not become ready in time. Open Ollama, then try again.";
             return false;

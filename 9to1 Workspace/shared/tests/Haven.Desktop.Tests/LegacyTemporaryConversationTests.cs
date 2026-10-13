@@ -181,6 +181,157 @@ public sealed class LegacyTemporaryConversationTests
         finally { window.Content = null; window.Close(); }
     }
 
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Ollama_wake_does_not_claim_ready_or_send_when_model_discovery_fails(bool page)
+    {
+        using var fixture = new Fixture(page, wakeLocalModel: true);
+        fixture.SelectModel(fixture.Model); fixture.Composer = "An original unsent draft";
+        fixture.DiscoverModels = () => Task.FromException<IReadOnlyList<ModelDescriptor>>(new IOException("Controlled catalogue unavailable"));
+
+        await fixture.SendAsync();
+
+        Assert.Equal(2, fixture.AvailabilityReads); Assert.Equal(1, fixture.CatalogueReads);
+        Assert.Contains("Controlled catalogue unavailable", fixture.Status);
+        Assert.DoesNotContain("ready", fixture.Status, StringComparison.OrdinalIgnoreCase);
+        Assert.True(fixture.OfflineWarning);
+        Assert.Empty(fixture.Catalogue);
+        Assert.Equal(fixture.Model.Name, fixture.SelectedModel?.Name);
+        Assert.Equal(fixture.Model.Name, fixture.Preferences.DefaultModel);
+        Assert.Equal(fixture.Model.Name, fixture.ReopenSavedModel());
+        Assert.Equal("An original unsent draft", fixture.Composer);
+        Assert.Empty(fixture.Requests); Assert.Equal(0, fixture.OrdinaryWrites);
+    }
+
+    [AvaloniaTheory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task Ollama_wake_requires_the_requested_model_without_switching_saved_preferences(bool page, bool empty)
+    {
+        using var fixture = new Fixture(page, wakeLocalModel: true);
+        fixture.SelectModel(fixture.Model); fixture.Composer = "Keep my exact selected model";
+        var other = fixture.Model with { Name = "another-controlled-local-model" };
+        fixture.DiscoverModels = () => Task.FromResult<IReadOnlyList<ModelDescriptor>>(empty ? [] : [other]);
+
+        await fixture.SendAsync();
+
+        Assert.Equal(2, fixture.AvailabilityReads); Assert.Equal(1, fixture.CatalogueReads);
+        Assert.DoesNotContain("ready", fixture.Status, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(empty ? "no models" : "selected model", fixture.Status, StringComparison.OrdinalIgnoreCase);
+        Assert.False(fixture.OfflineWarning); // The actual endpoint is up; availability of this model is the missing fact.
+        Assert.Equal(empty ? 0 : 1, fixture.Catalogue.Count);
+        Assert.Same(fixture.Model, fixture.SelectedModel);
+        Assert.Equal(fixture.Model.Name, fixture.Preferences.DefaultModel);
+        Assert.Equal(fixture.Model.Name, fixture.ReopenSavedModel());
+        Assert.Equal("Keep my exact selected model", fixture.Composer);
+        Assert.Empty(fixture.Requests); Assert.Equal(0, fixture.OrdinaryWrites);
+    }
+
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Ollama_wake_ready_uses_the_actual_matching_catalogue_descriptor(bool page)
+    {
+        using var fixture = new Fixture(page, wakeLocalModel: true);
+        fixture.SelectModel(fixture.Model);
+        var refreshed = fixture.Model with { SizeBytes = 42, Family = "Observed refreshed metadata" };
+        var other = fixture.Model with { Name = "another-controlled-local-model" };
+        fixture.DiscoverModels = () => Task.FromResult<IReadOnlyList<ModelDescriptor>>([other, refreshed]);
+
+        Assert.True(await fixture.EnsureModelAsync());
+
+        Assert.Equal(2, fixture.AvailabilityReads); Assert.Equal(1, fixture.CatalogueReads);
+        Assert.Same(refreshed, fixture.SelectedModel);
+        Assert.Equal("Ollama is ready.", fixture.Status); Assert.False(fixture.OfflineWarning);
+        Assert.Equal(fixture.Model.Name, fixture.Preferences.DefaultModel);
+        Assert.Empty(fixture.Requests); Assert.Equal(0, fixture.OrdinaryWrites);
+    }
+
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Ollama_wake_does_not_probe_a_model_owned_by_an_actual_registered_remote_provider(bool page)
+    {
+        using var fixture = new Fixture(page, wakeLocalModel: true);
+        var remote = fixture.Model with { Name = "controlled-remote:model-v1" };
+        fixture.SelectModel(remote);
+
+        Assert.True(await fixture.EnsureModelAsync()); // This check owns only the local engine, not remote readiness.
+
+        Assert.Equal(0, fixture.AvailabilityReads); Assert.Equal(0, fixture.CatalogueReads);
+        Assert.Same(remote, fixture.SelectedModel);
+        Assert.DoesNotContain("Ollama is ready", fixture.Status, StringComparison.OrdinalIgnoreCase);
+        Assert.Empty(fixture.Requests); Assert.Equal(0, fixture.OrdinaryWrites);
+    }
+
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Ollama_wake_revalidates_untagged_local_names_too(bool page)
+    {
+        using var fixture = new Fixture(page, wakeLocalModel: true);
+        var local = fixture.Model with { Name = "controlled-local-model" };
+        fixture.SelectModel(local);
+        fixture.DiscoverModels = () => Task.FromResult<IReadOnlyList<ModelDescriptor>>([local]);
+
+        Assert.True(await fixture.EnsureModelAsync());
+
+        Assert.Equal(2, fixture.AvailabilityReads); Assert.Equal(1, fixture.CatalogueReads);
+        Assert.Same(local, fixture.SelectedModel); Assert.Equal("Ollama is ready.", fixture.Status);
+    }
+
+    [AvaloniaTheory]
+    [InlineData(false, 0, false)]
+    [InlineData(false, 1, false)]
+    [InlineData(false, 2, false)]
+    [InlineData(true, 0, false)]
+    [InlineData(true, 1, false)]
+    [InlineData(true, 2, false)]
+    [InlineData(false, 0, true)]
+    [InlineData(false, 1, true)]
+    [InlineData(false, 2, true)]
+    [InlineData(true, 0, true)]
+    [InlineData(true, 1, true)]
+    [InlineData(true, 2, true)]
+    public async Task Ollama_wake_preserves_a_newer_user_choice_and_refuses_the_original_send(bool page, int boundary, bool returnToOriginal)
+    {
+        using var fixture = new Fixture(page, wakeLocalModel: true);
+        fixture.SelectModel(fixture.Model); fixture.Composer = "Retain this original request";
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var newer = fixture.Model with { Name = "another-real-selection:latest" };
+        fixture.ProbeAvailability = async count =>
+        {
+            if ((boundary == 0 && count == 1) || (boundary == 1 && count == 2))
+            { entered.TrySetResult(); await release.Task; }
+            return count > 1;
+        };
+        fixture.DiscoverModels = async () =>
+        {
+            if (boundary == 2) { entered.TrySetResult(); await release.Task; }
+            return new[] { fixture.Model, newer };
+        };
+
+        var send = fixture.SendAsync();
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        fixture.SelectModel(newer);
+        if (returnToOriginal) fixture.SelectModel(fixture.Model);
+        release.TrySetResult(true);
+        await send.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        var expected = returnToOriginal ? fixture.Model : newer;
+        Assert.Same(expected, fixture.SelectedModel);
+        Assert.Equal(expected.Name, fixture.Preferences.DefaultModel);
+        Assert.Equal(expected.Name, fixture.ReopenSavedModel());
+        Assert.Contains("selection changed", fixture.Status, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("ready", fixture.Status, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("Retain this original request", fixture.Composer);
+        Assert.Empty(fixture.Requests); Assert.Equal(0, fixture.OrdinaryWrites);
+    }
+
     private static Button FindChoice(Window window, string name) => window.GetVisualDescendants().OfType<Button>().Single(button => button.Name == name);
     private static async Task WaitForChoiceAsync(Window window, string name, CancellationToken cancellation)
     {
@@ -216,6 +367,21 @@ public sealed class LegacyTemporaryConversationTests
         public object Owner => _owner;
         public ModelDescriptor Model { get; } = new("legacy:fixture", 1, "test", "test", "test", new HashSet<ToolCapability> { ToolCapability.Text }, DateTimeOffset.UtcNow);
         public List<OllamaChatRequest> Requests { get; } = [];
+        public UserPreferencesService Preferences { get; private set; } = null!;
+        public Func<Task<IReadOnlyList<ModelDescriptor>>> DiscoverModels { get; set; } = null!;
+        public Func<int, Task<bool>> ProbeAvailability { get; set; } = null!;
+        public IAppPaths Paths { get; private set; } = null!;
+        public string? ReopenSavedModel() => new UserPreferencesService(Paths).DefaultModel;
+        public int AvailabilityReads { get; private set; }
+        public int CatalogueReads { get; private set; }
+        public IReadOnlyList<ModelDescriptor> Catalogue => ((System.Collections.ObjectModel.ObservableCollection<ModelDescriptor>)_type.GetProperty("Models")!.GetValue(_owner)!).ToArray();
+        public ModelDescriptor? SelectedModel => (ModelDescriptor?)_type.GetProperty("SelectedModel")!.GetValue(_owner);
+        public string Status => (string)_type.GetProperty("Status")!.GetValue(_owner)!;
+        public bool OfflineWarning => (bool)_type.GetProperty("IsOllamaOfflineWarningVisible")!.GetValue(_owner)!;
+        public string Composer { get => (string)_type.GetProperty("Composer")!.GetValue(_owner)!; set => _type.GetProperty("Composer")!.SetValue(_owner, value); }
+        public void SelectModel(ModelDescriptor value) => _type.GetProperty("SelectedModel")!.SetValue(_owner, value);
+        public Task SendAsync() => _owner is ChatPage page ? page.SendCommand.ExecuteAsync() : ((ChatPageViewModel)_owner).SendCommand.ExecuteAsync();
+        public Task<bool> EnsureModelAsync() => (Task<bool>)_type.GetMethod("EnsureSelectedModelAvailableAsync", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(_owner, null)!;
 
         public ChatMessage[] SeedHistory { get; private set; } = [];
         public List<(Conversation Conversation, IReadOnlyList<ChatMessage> History, IReadOnlyList<ConversationContextEntry> Context)> SaveAttempts { get; } = [];
@@ -224,8 +390,11 @@ public sealed class LegacyTemporaryConversationTests
         public System.Collections.ObjectModel.ObservableCollection<MessageBubbleViewModel> Messages =>
             (System.Collections.ObjectModel.ObservableCollection<MessageBubbleViewModel>)_type.GetProperty("Messages")!.GetValue(_owner)!;
 
-        public Fixture(bool page)
+        public Fixture(bool page, bool wakeLocalModel = false)
         {
+            if (wakeLocalModel) Model = Model with { Name = "qwen3:1.7b", Family = "Controlled local model" };
+            DiscoverModels = () => Task.FromResult<IReadOnlyList<ModelDescriptor>>([Model]);
+            ProbeAvailability = count => Task.FromResult(count > 1 || !wakeLocalModel);
             Directory.CreateDirectory(_directory);
             var repository = Probe<ILegacyConversationProbe>((method, args) => method.Name switch
             {
@@ -237,13 +406,22 @@ public sealed class LegacyTemporaryConversationTests
                 _ => UnexpectedWrite(method.Name)
             });
             var paths = Probe<IAppPaths>((method, _) => method.Name == "get_DataDirectory" ? _directory : Path.Combine(_directory, method.Name));
-            var preferences = new UserPreferencesService(paths);
+            Paths = paths;
+            var preferences = new UserPreferencesService(paths); Preferences = preferences;
+            var remote = Probe<IModelProvider>((method, _) => method.Name switch
+            {
+                "get_Id" => "controlled-remote",
+                "get_DisplayName" => "Controlled remote provider",
+                "get_IsLocal" => false,
+                _ => throw new InvalidOperationException("Unexpected remote provider operation: " + method.Name)
+            });
+            var providers = new ModelProviderRegistry([remote]);
             var client = Probe<IOllamaClient>((method, args) => method.Name switch
             {
                 "get_TransportEndpoint" => new Uri("http://127.0.0.1:11434"),
                 "get_IsDeviceLocalTransportVerified" => true,
-                nameof(IOllamaClient.IsAvailableAsync) => Task.FromResult(true),
-                nameof(IOllamaClient.GetModelsAsync) => Task.FromResult<IReadOnlyList<ModelDescriptor>>([Model]),
+                nameof(IOllamaClient.IsAvailableAsync) => ProbeAvailability(++AvailabilityReads),
+                nameof(IOllamaClient.GetModelsAsync) => DiscoverOriginalModels(),
                 nameof(IOllamaClient.StreamChatAsync) => CaptureResponse((OllamaChatRequest)args[0]!),
                 _ => throw new InvalidOperationException("Unexpected model boundary: " + method.Name)
             });
@@ -254,9 +432,11 @@ public sealed class LegacyTemporaryConversationTests
                     method.Name == "get_IsSupported" ? false : throw new InvalidOperationException("Unexpected computer boundary: " + method.Name))));
             _owner = page
                 ? new ChatPage(new HavenEventBus(), HavenMode.Chat, repository, Probe<IContainerRepository>(), Probe<ICatalogRepository>(), client,
-                    sessions, preferences, preflight, Probe<IWorkspaceStateRepository>(), Probe<IProjectIntelligenceService>())
+                    sessions, preferences, preflight, Probe<IWorkspaceStateRepository>(), Probe<IProjectIntelligenceService>(),
+                    ollamaWake: new OllamaWakeService(client, providers))
                 : new ChatPageViewModel(HavenMode.Chat, repository, Probe<IContainerRepository>(), Probe<ICatalogRepository>(), client,
-                    sessions, preferences, preflight, Probe<IWorkspaceStateRepository>(), Probe<IProjectIntelligenceService>());
+                    sessions, preferences, preflight, Probe<IWorkspaceStateRepository>(), Probe<IProjectIntelligenceService>(),
+                    ollamaWake: new OllamaWakeService(client, providers));
             _type = _owner.GetType();
             if (page)
             {
@@ -275,6 +455,8 @@ public sealed class LegacyTemporaryConversationTests
             }
 
         }
+
+        private Task<IReadOnlyList<ModelDescriptor>> DiscoverOriginalModels() { CatalogueReads++; return DiscoverModels(); }
 
         private async IAsyncEnumerable<string> CaptureResponse(OllamaChatRequest request, [EnumeratorCancellation] CancellationToken token = default)
         {
@@ -329,6 +511,10 @@ public sealed class LegacyTemporaryConversationTests
         public void NewChat() { if (_owner is ChatPage page) page.NewChat(); else ((ChatPageViewModel)_owner).NewChat(); }
         public Func<bool> PresentationGuard() => _owner is ChatPage page ? page.CapturePresentationGuard() : ((ChatPageViewModel)_owner).CapturePresentationGuard();
         public Task InvokePrivateAsync(string method, params object?[] arguments) => (Task)_type.GetMethod(method, BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(_owner, arguments)!;
-        public void Dispose() { if (Directory.Exists(_directory)) Directory.Delete(_directory, recursive: true); }
+        public void Dispose()
+        {
+            if (_owner is ChatPage) _type.GetMethod("Detach", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(_owner, null);
+            if (Directory.Exists(_directory)) Directory.Delete(_directory, recursive: true);
+        }
     }
 }

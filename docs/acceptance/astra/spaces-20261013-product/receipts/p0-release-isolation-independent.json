@@ -1,0 +1,260 @@
+{
+  "scope": "Actual published assets and current restored project graph; controlled failure samples only. No authenticated/runtime/fresh-account acceptance.",
+  "runnerSha256": "d84fe3e1c2e89b929915dd68f337a4cbad3f036576385a618b04620a3378951c",
+  "verifierSha256": "3aa79cf40eff6bf56c6904d0144be821dd9e75d65522f8e539b62ca84f861fec",
+  "receiptVerifierSha256": "9060a627e91d4f9da834716a0a53bbcfec15f006a4f98317f929341dddef3227",
+  "startedAt": "2026-10-13T22:21:39.624Z",
+  "checks": [
+    {
+      "name": "actual supplied immutable production bundle excludes known visual fixture",
+      "status": "PASS",
+      "observed": {
+        "scope": "Known visual fixture isolation in explicit public artifacts; not proof of all data provenance or runtime acceptance",
+        "bundlePath": "/workspace/astra-audit/evidence/checkpoint35-publish-0e24d109/wwwroot",
+        "assetFiles": 346,
+        "compressedFiles": 230,
+        "expandedBytes": 184183230,
+        "inventorySha256": "d2df595572b0670013a151f3bc0bbba44c681132c028c14a9092071997170287",
+        "referenceFieldsObserved": 0,
+        "fixtureIsolationVerified": true,
+        "modelNamesRestricted": false,
+        "accountStorageRead": false
+      }
+    },
+    {
+      "name": "actual restored production project-reference closure excludes visual/test projects",
+      "status": "PASS",
+      "observed": {
+        "projectPath": "/workspace/9to1/apps/Web/NineToOne.Web.csproj",
+        "projectAssetsSha256": "3d3d7160c8a277e52922a93c0d271730be451d95968da1d96542dfbb2a5efd3e",
+        "projectReferences": 47,
+        "rootCompileAndReferenceItemsChecked": false,
+        "evaluatedInputs": 0,
+        "evaluatedItemsSha256": null,
+        "projectClosureIsolationVerified": true
+      }
+    },
+    {
+      "name": "utf8 raw renamed fixture backend is rejected",
+      "status": "PASS",
+      "observed": {
+        "rejected": true,
+        "reason": "Production asset contains fixture backend: _framework/ordinary-name.wasm"
+      }
+    },
+    {
+      "name": "utf8 gzip renamed fixture backend is rejected",
+      "status": "PASS",
+      "observed": {
+        "rejected": true,
+        "reason": "Production asset contains fixture backend: _framework/ordinary-name.wasm.gz"
+      }
+    },
+    {
+      "name": "utf8 brotli renamed fixture backend is rejected",
+      "status": "PASS",
+      "observed": {
+        "rejected": true,
+        "reason": "Production asset contains fixture backend: _framework/ordinary-name.wasm.br"
+      }
+    },
+    {
+      "name": "utf16le raw renamed fixture backend is rejected",
+      "status": "PASS",
+      "observed": {
+        "rejected": true,
+        "reason": "Production asset contains fixture backend: _framework/ordinary-name.wasm"
+      }
+    },
+    {
+      "name": "utf16le gzip renamed fixture backend is rejected",
+      "status": "PASS",
+      "observed": {
+        "rejected": true,
+        "reason": "Production asset contains fixture backend: _framework/ordinary-name.wasm.gz"
+      }
+    },
+    {
+      "name": "utf16le brotli renamed fixture backend is rejected",
+      "status": "PASS",
+      "observed": {
+        "rejected": true,
+        "reason": "Production asset contains fixture backend: _framework/ordinary-name.wasm.br"
+      }
+    },
+    {
+      "name": "utf16be raw renamed fixture backend is rejected",
+      "status": "PASS",
+      "observed": {
+        "rejected": true,
+        "reason": "Production asset contains fixture backend: _framework/ordinary-name.wasm"
+      }
+    },
+    {
+      "name": "utf16be gzip renamed fixture backend is rejected",
+      "status": "PASS",
+      "observed": {
+        "rejected": true,
+        "reason": "Production asset contains fixture backend: _framework/ordinary-name.wasm.gz"
+      }
+    },
+    {
+      "name": "utf16be brotli renamed fixture backend is rejected",
+      "status": "PASS",
+      "observed": {
+        "rejected": true,
+        "reason": "Production asset contains fixture backend: _framework/ordinary-name.wasm.br"
+      }
+    },
+    {
+      "name": "gzip magic is checked even with a renamed suffix",
+      "status": "PASS",
+      "observed": {
+        "rejected": true,
+        "reason": "Production asset contains fixture backend: opaque.bin"
+      }
+    },
+    {
+      "name": "fixture assembly is rejected by artifact ownership even without readable contents",
+      "status": "PASS",
+      "observed": {
+        "rejected": true,
+        "reason": "Production asset includes isolated test/visual ownership: _framework/BrowserSpaces.Visual.a1b2c3.wasm"
+      }
+    },
+    {
+      "name": "renamed split data seed is rejected independently of backend/assembly names",
+      "status": "PASS",
+      "observed": {
+        "rejected": true,
+        "reason": "Production assets contain combined visual reference data: restaurant title, restaurant prompt"
+      }
+    },
+    {
+      "name": "malformed compression cannot pass as clean production assets",
+      "status": "PASS",
+      "observed": {
+        "rejected": true,
+        "reason": "Cannot verify compressed production asset: broken.wasm.br"
+      }
+    },
+    {
+      "name": "genuine model names are not blacklisted",
+      "status": "PASS",
+      "observed": {
+        "scope": "Known visual fixture isolation in explicit public artifacts; not proof of all data provenance or runtime acceptance",
+        "bundlePath": "/tmp/production-isolation-controls-7lxqYP/14",
+        "assetFiles": 1,
+        "compressedFiles": 0,
+        "expandedBytes": 74,
+        "inventorySha256": "7dd00b046747a3588a9300b1df5a9362ddbb48a968920e0255303646f8e0eee7",
+        "referenceFieldsObserved": 0,
+        "fixtureIsolationVerified": true,
+        "modelNamesRestricted": false,
+        "accountStorageRead": false
+      }
+    },
+    {
+      "name": "genuine production Visual directory is not treated as a fixture",
+      "status": "PASS",
+      "observed": {
+        "scope": "Known visual fixture isolation in explicit public artifacts; not proof of all data provenance or runtime acceptance",
+        "bundlePath": "/tmp/production-isolation-controls-7lxqYP/15",
+        "assetFiles": 2,
+        "compressedFiles": 0,
+        "expandedBytes": 51,
+        "inventorySha256": "44cab41d2c540c2d7ff5b6efb5d46db99248cdbb5a856893d3d89efdbd50f7a7",
+        "referenceFieldsObserved": 0,
+        "fixtureIsolationVerified": true,
+        "modelNamesRestricted": false,
+        "accountStorageRead": false
+      }
+    },
+    {
+      "name": "transitive visual project reference is rejected even if assets contain no seed text",
+      "status": "PASS",
+      "observed": {
+        "rejected": true,
+        "reason": "Production project closure includes test/visual project: BrowserSpaces.Visual/1.0.0"
+      }
+    },
+    {
+      "name": "a clean graph for a different entry cannot qualify production",
+      "status": "PASS",
+      "observed": {
+        "rejected": true,
+        "reason": "SDK assets belong to a different entry project\n+ actual - expected\n\n+ '/tmp/production-isolation-controls-7lxqYP/Different.csproj'\n- '/workspace/9to1/apps/Web/NineToOne.Web.csproj'\n"
+      }
+    },
+    {
+      "name": "evaluated root linked Compile leak is rejected independently of project references",
+      "status": "PASS",
+      "observed": {
+        "rejected": true,
+        "reason": "Production Compile includes test/visual input: /workspace/9to1/apps/Web/Spaces/Tests/Visual/RestaurantVisualBackend.cs"
+      }
+    },
+    {
+      "name": "existing receipt validator refuses an otherwise valid sealed fixture leak",
+      "status": "PASS",
+      "observed": {
+        "rejected": true,
+        "reason": "Production asset contains fixture backend: _framework/renamed.wasm.br"
+      }
+    },
+    {
+      "name": "actual immutable bundle remains unchanged after all controls",
+      "status": "PASS",
+      "observed": {
+        "scope": "Known visual fixture isolation in explicit public artifacts; not proof of all data provenance or runtime acceptance",
+        "bundlePath": "/workspace/astra-audit/evidence/checkpoint35-publish-0e24d109/wwwroot",
+        "assetFiles": 346,
+        "compressedFiles": 230,
+        "expandedBytes": 184183230,
+        "inventorySha256": "d2df595572b0670013a151f3bc0bbba44c681132c028c14a9092071997170287",
+        "referenceFieldsObserved": 0,
+        "fixtureIsolationVerified": true,
+        "modelNamesRestricted": false,
+        "accountStorageRead": false
+      }
+    }
+  ],
+  "accountStorageRead": false,
+  "sourceBundleWritten": false,
+  "sdkStarted": false,
+  "actualAssetsBefore": {
+    "scope": "Known visual fixture isolation in explicit public artifacts; not proof of all data provenance or runtime acceptance",
+    "bundlePath": "/workspace/astra-audit/evidence/checkpoint35-publish-0e24d109/wwwroot",
+    "assetFiles": 346,
+    "compressedFiles": 230,
+    "expandedBytes": 184183230,
+    "inventorySha256": "d2df595572b0670013a151f3bc0bbba44c681132c028c14a9092071997170287",
+    "referenceFieldsObserved": 0,
+    "fixtureIsolationVerified": true,
+    "modelNamesRestricted": false,
+    "accountStorageRead": false
+  },
+  "actualClosure": {
+    "projectPath": "/workspace/9to1/apps/Web/NineToOne.Web.csproj",
+    "projectAssetsSha256": "3d3d7160c8a277e52922a93c0d271730be451d95968da1d96542dfbb2a5efd3e",
+    "projectReferences": 47,
+    "rootCompileAndReferenceItemsChecked": false,
+    "evaluatedInputs": 0,
+    "evaluatedItemsSha256": null,
+    "projectClosureIsolationVerified": true
+  },
+  "actualAssetsAfter": {
+    "scope": "Known visual fixture isolation in explicit public artifacts; not proof of all data provenance or runtime acceptance",
+    "bundlePath": "/workspace/astra-audit/evidence/checkpoint35-publish-0e24d109/wwwroot",
+    "assetFiles": 346,
+    "compressedFiles": 230,
+    "expandedBytes": 184183230,
+    "inventorySha256": "d2df595572b0670013a151f3bc0bbba44c681132c028c14a9092071997170287",
+    "referenceFieldsObserved": 0,
+    "fixtureIsolationVerified": true,
+    "modelNamesRestricted": false,
+    "accountStorageRead": false
+  },
+  "temporaryControlsRemoved": true,
+  "finishedAt": "2026-10-13T22:21:44.632Z"
+}

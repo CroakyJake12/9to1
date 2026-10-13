@@ -1,0 +1,209 @@
+{
+  "recordedUtc": "2026-10-13T22:11:38.864309+00:00",
+  "head": "0e24d10972384f5389f150daf3ed76ac1666062d",
+  "worktree": "modified; exact reviewed files hashed below",
+  "scope": "Repository literal scan of source/data markup, excluding generated build/vendor/reference/acceptance docs; additional owning route and repository source inspection recorded in accompanying markdown. Not a runtime/account audit.",
+  "searchedTerms": [
+    "Nearby Restaurants",
+    "Can you look for nearby restaurants?",
+    "Looking for restaurants now!",
+    "Here are the top 5 restaurants that you should try!",
+    "Which one should I pick?",
+    "Help Me Set up a bus",
+    "Diet Plans for 2026",
+    "Track Sales Tax",
+    "Monster Energy Drink",
+    "Qwen 3.6",
+    "Searching for restaurants",
+    "Creating a Shortlist",
+    "Worked for 2 mins 32 sec",
+    "Do you have any dietary requirements?",
+    "You Answered No"
+  ],
+  "sourceFilesScanned": 5964,
+  "matches": [
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ModelConfigurationControlTests.cs",
+      "line": 26,
+      "terms": [
+        "Qwen 3.6"
+      ],
+      "classification": "isolated test/visual input",
+      "text": "[InlineData(\"qwen3.6vl:latest\", \"Qwen 3.6\")]"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ModelConfigurationControlTests.cs",
+      "line": 27,
+      "terms": [
+        "Qwen 3.6"
+      ],
+      "classification": "isolated test/visual input",
+      "text": "[InlineData(\"openrouter:qwen3.6-vl-32b-instruct\", \"Qwen 3.6\")]"
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/restaurant.fixture.json",
+      "line": 3,
+      "terms": [
+        "Nearby Restaurants"
+      ],
+      "classification": "isolated test/visual input",
+      "text": "\"conversationTitle\": \"Nearby Restaurants\","
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/restaurant.fixture.json",
+      "line": 4,
+      "terms": [
+        "Qwen 3.6"
+      ],
+      "classification": "isolated test/visual input",
+      "text": "\"modelName\": \"Qwen 3.6\","
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/restaurant.fixture.json",
+      "line": 6,
+      "terms": [
+        "Nearby Restaurants",
+        "Can you look for nearby restaurants?"
+      ],
+      "classification": "isolated test/visual input",
+      "text": "\"userMessage\": \"Can you look for nearby restaurants?\","
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/restaurant.fixture.json",
+      "line": 7,
+      "terms": [
+        "Looking for restaurants now!",
+        "Here are the top 5 restaurants that you should try!"
+      ],
+      "classification": "isolated test/visual input",
+      "text": "\"assistantMessage\": \"Looking for restaurants now!\\n\\nHere are the top 5 restaurants that you should try!\","
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/restaurant.fixture.json",
+      "line": 8,
+      "terms": [
+        "Which one should I pick?"
+      ],
+      "classification": "isolated test/visual input",
+      "text": "\"draft\": \"Which one should I pick?\","
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/restaurant.fixture.json",
+      "line": 10,
+      "terms": [
+        "Help Me Set up a bus"
+      ],
+      "classification": "isolated test/visual input",
+      "text": "\"Help Me Set up a bus\u2026\","
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/restaurant.fixture.json",
+      "line": 11,
+      "terms": [
+        "Diet Plans for 2026"
+      ],
+      "classification": "isolated test/visual input",
+      "text": "\"Diet Plans for 2026\","
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/restaurant.fixture.json",
+      "line": 12,
+      "terms": [
+        "Track Sales Tax"
+      ],
+      "classification": "isolated test/visual input",
+      "text": "\"Track Sales Tax\","
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/restaurant.fixture.json",
+      "line": 13,
+      "terms": [
+        "Monster Energy Drink"
+      ],
+      "classification": "isolated test/visual input",
+      "text": "\"Monster Energy Drink\u2026\""
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/restaurant.fixture.json",
+      "line": 16,
+      "terms": [
+        "Searching for restaurants"
+      ],
+      "classification": "isolated test/visual input",
+      "text": "\"Searching for restaurants\","
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/restaurant.fixture.json",
+      "line": 17,
+      "terms": [
+        "Creating a Shortlist"
+      ],
+      "classification": "isolated test/visual input",
+      "text": "\"Creating a Shortlist\""
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/restaurant.fixture.json",
+      "line": 21,
+      "terms": [
+        "Worked for 2 mins 32 sec"
+      ],
+      "classification": "isolated test/visual input",
+      "text": "\"Worked for 2 mins 32 sec: the saved-message projection does not populate working duration or Thinking.\","
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/restaurant.fixture.json",
+      "line": 22,
+      "terms": [
+        "Do you have any dietary requirements?"
+      ],
+      "classification": "isolated test/visual input",
+      "text": "\"Quick Question: Do you have any dietary requirements? with Yes (Please Specify) and No controls: the current browser message contract has no original question/answer owner.\","
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/restaurant.fixture.json",
+      "line": 23,
+      "terms": [
+        "You Answered No"
+      ],
+      "classification": "isolated test/visual input",
+      "text": "\"You Answered No: no persisted question answer is available in the current message projection.\","
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/restaurant.fixture.json",
+      "line": 24,
+      "terms": [
+        "Qwen 3.6"
+      ],
+      "classification": "isolated test/visual input",
+      "text": "\"Qwen 3.6 \u00b7 100%: the reference 100% denotes reasoning effort; the current browser model control has no reasoning-effort selector or separate usage indicator. The fixture does not simulate either in the model name.\""
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/Program.cs",
+      "line": 252,
+      "terms": [
+        "Searching for restaurants",
+        "Creating a Shortlist"
+      ],
+      "classification": "isolated test/visual input",
+      "text": "control.Text is \"You\" or \"Qwen\" or \"Searching for restaurants\" or \"Creating a Shortlist\")) Record(\"semantic-text:\" + control.Text, control);"
+    }
+  ],
+  "unclassifiedNonTestMatches": [],
+  "fileSha256": {
+    "apps/Web/NineToOne.Web.csproj": "0850d46c5de6e84e5dd888358d1e40985741d78307f494f79b68d3cfcf793621",
+    "apps/Web/Spaces/BrowserSpacesFeature.cs": "470a71cdd56ea662e6ba105f3504073a311d5838a0bb9adec96c3202c8b45629",
+    "apps/Web/Spaces/Chat/BrowserSpacesRegistration.cs": "b698fb70fb5ce386f152bc5bea81ddef9df6695c5b01c2c21b5014adb88f8213",
+    "apps/Web/Spaces/Chat/BrowserChatRuntime.cs": "6643157f33a7b3cd46d8f9b4bdd3e283b35f1c0c585d265fdbc4dd8a9c88cf34",
+    "apps/Web/Spaces/Chat/BrowserChatSession.cs": "9a4ec7efa2edea0241a9a2d424f9a04d61714c0cdae3c9095b7191648e5a30a9",
+    "apps/Web/Spaces/Chat/BrowserChatSession.Bindings.cs": "8574b98e8874e8b702180ccafbcb8c8a09bb5e4cddd3b7d939c40a1bf61d562f",
+    "apps/Web/Spaces/Tests/Visual/RestaurantVisualBackend.cs": "03edc005305368e74c256aeb46c69d12d4c937ba8fab11b47b59e5f92a742d41",
+    "apps/Web/Spaces/Tests/Visual/Program.cs": "a7c8603109859f354261235af6d5e7707be86050023c7c8ae0bbec2d63eab564",
+    "apps/Web/Spaces/Tests/Visual/restaurant.fixture.json": "0ff5a5e07d91fca558c2a11bd2150284fbe26a74b435008c3e54a987a394fb76",
+    "9to1 Workspace/Spaces/Source/Chat/HavenChatSpaceBackend.cs": "e56afdeb0c9a1dc93b4e02e3183d3b549756e459dea40f2e58b4fd52c8ff0618",
+    "9to1 Workspace/Spaces/Source/Chat/ChatSpaceController.cs": "ef2a021a591176ce1c1d6fdddeec502c021847660c228a17629f03296a6939ba",
+    "9to1 Workspace/shared/src/Haven.Desktop/Services/SpaceLaunchPolicy.cs": "2c5a8190688ffe2f5a9368ca8c92e1af1807469b51b0c3cdf14d640c707da5a0",
+    "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.Spaces.cs": "74edfda35b8b0d37402eb77b97fd87512f9f58f3611f27bf55244a414b8eb3da",
+    "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Chat/ChatPage.axaml.cs": "6e79ff0c0125bec014caddadc38b0103d1c904b9267ad57f6a144aad23da22d5",
+    "9to1 Workspace/shared/src/Haven.Application/Spaces/SpaceRegistry.cs": "bbf64978c8bf53f0140953f94990fbb838753647dc58f4c80413e2d9e8cfc4df"
+  }
+}

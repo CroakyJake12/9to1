@@ -19,6 +19,14 @@ using HavenOS.Home.Core;
 using NineToOne.Web.Spaces;
 using NineToOne.Web.Spaces.Chat;
 
+if (args.Length == 0 || args[0] != "--visual-test-fixture")
+{
+    Console.Error.WriteLine("This isolated automated fixture requires --visual-test-fixture. It is NOT LIVE ACCOUNT OR MODEL OUTPUT and must never be used for functional acceptance.");
+    Environment.ExitCode = 2;
+    return;
+}
+args = args[1..];
+Console.Error.WriteLine("VISUAL TEST FIXTURE — NOT LIVE ACCOUNT OR MODEL OUTPUT. Use the labelled HTML report for review; raw comparison PNGs are internal test evidence only.");
 if (args.Length is < 3 or > 4) throw new ArgumentException("Supply repository root, output directory and visual-only JSON fixture path, and optional capture width (1530 or 390).");
 var repository = Path.GetFullPath(args[0]);
 var output = Path.GetFullPath(args[1]);
@@ -152,6 +160,8 @@ await headless.Dispatch<bool>(async () =>
         Check(actualController?.GetType() == typeof(ChatSpaceController), "Actual BrowserChatSession owns an actual canonical ChatSpaceController instance.");
         var data = new {
             scope = "VISUAL ONLY. Real BrowserSpacesFeature route, BrowserChatSession, ChatSpaceController, exact BrowserShellActions/BrowserActionAvailability host presentation, canonical CUI and Skia. Deterministic backend input; no authenticated account, durable storage, model response, tool execution or full acceptance.",
+            verificationEnvironment = "isolated-automated-visual-fixture", fixtureOptIn = true,
+            deliveryArtifact = "VISUAL-TEST-FIXTURE-NOT-LIVE.html", rawPngUse = "internal comparison only; never a live-product screenshot",
             fixtureProvenance = input.Provenance, route = ready.ViewState.ViewId,
             bindingOwner = surface.Bindings.GetType().AssemblyQualifiedName, actionOwner = surface.Actions.GetType().AssemblyQualifiedName,
             controllerOwner = actualController?.GetType().AssemblyQualifiedName,
@@ -173,6 +183,8 @@ await headless.Dispatch<bool>(async () =>
                 .Distinct().Select(assembly => new { name = assembly.FullName, path = assembly.Location, sha256 = Hash(assembly.Location) }).ToArray()
         };
         File.WriteAllText(Path.Combine(output, "actual-browser-chat-restaurant-evidence.json"), JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true }));
+        var labelledReport = VisualFixtureReport.Write(output, captureWidth, failures.Count == 0);
+        Console.WriteLine("Labelled automated visual-fixture report: " + labelledReport);
         Console.WriteLine($"Actual browser-session visual capture: {checks.Count} layout checks, {failures.Count} failures. Scope is VISUAL ONLY; product/functionality acceptance not asserted.");
     }
     finally

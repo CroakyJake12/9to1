@@ -1,0 +1,57 @@
+{
+  "reviewedUtc": "2026-10-13T22:28:34.072822+00:00",
+  "scope": "Independent source review and script/HTML execution only; no SDK build or product-account acceptance",
+  "files": {
+    "apps/Web/Tests/verify-production-isolation.cjs": "3aa79cf40eff6bf56c6904d0144be821dd9e75d65522f8e539b62ca84f861fec",
+    "apps/Web/Tests/production-isolation.test.cjs": "d84fe3e1c2e89b929915dd68f337a4cbad3f036576385a618b04620a3378951c",
+    "apps/Web/Tests/verify-publish-receipt.cjs": "9060a627e91d4f9da834716a0a53bbcfec15f006a4f98317f929341dddef3227",
+    "apps/Web/Tests/ci/run-ordinary-web-publish.py": "ad680a981f3e47f10e9fb07bea3e91e4046aa08661b9e1caf01df73016dc61de",
+    "apps/Web/Spaces/Tests/Visual/BrowserSpaces.Visual.csproj": "8e2959c2a4443ab174e476710e1aa7622939c881d8c3fd7530834a787017ee32",
+    "apps/Web/Spaces/Tests/Visual/VisualFixtureReport.cs": "6f407952003eebeea5dc442e6fd3119fa49579c0c0f3945504b185f55ef21b05",
+    "docs/acceptance/astra/spaces-20261013-product/visual-comparison.html": "8fe2110d0618732fbb1f97b686e1f0f6699db52359f3b5dd4e968d75e692e9ef"
+  },
+  "p0OnlyProgramSha256": "9be66803029f29e1ef459bd135746ad7ede341c836b1f704286ba10dc6cabae4",
+  "results": {
+    "releaseGuardControls": {
+      "passed": 22,
+      "failed": 0,
+      "report": "evidence/p0-production-isolation-independent-3/report.json"
+    },
+    "additionalProjectPathControls": {
+      "passed": 3,
+      "failed": 0,
+      "report": "evidence/p0-production-isolation-independent-3/scoped-project-input-controls.json"
+    },
+    "actualLabelledHtmlChecks": {
+      "passed": 5,
+      "failed": 0,
+      "report": "evidence/p0-fixture-wrapper-independent/report.json"
+    },
+    "compiledCliGateControls": {
+      "passed": 2,
+      "failed": 0,
+      "executionOwner": "spaces_graph_builder",
+      "independentReviewOnly": true,
+      "report": "evidence/p0-fixture-cli-controls/receipt.json",
+      "reportSha256": "62c1ac313ce07cee076b29b697c25ab07e9659cfccc56c9bf6efcaa08c006d46",
+      "verifiedFileHashes": 67,
+      "dependencyAssemblyHashes": 57,
+      "executableSha256": "86a1fbb5e880380f58c884dc852c105e34fcd12459df670be1721b56b3bafe3e",
+      "missingOptInExitCode": 2,
+      "explicitOptInInvalidWidthExitCode": -6,
+      "scope": "Default refusal and explicit opt-in reaching original input validation only; no valid-input fixture render/report-generation or functional acceptance."
+    }
+  },
+  "limitations": [
+    "Actual SDK Compile/ProjectReference/ReferencePath capture awaits next ordinary publication.",
+    "Signatures identify known fixtures; they do not prove absence of all fabricated runtime data.",
+    "Mandatory genuine-account/model/tool/persistence/sync acceptance remains separate and unproven.",
+    "CLI control executable was an isolated HEAD+P0 project with existing hashed dependencies and BuildProjectReferences=false; not a full source-closure rebuild or successful visual capture."
+  ],
+  "priorP0OnlyProgramSha256": "05326a3a0845b1b85c1489d2591e28283b766d3e4b0dfbcfa5aa7cffd8c198b4",
+  "cliSourceReview": "Final P0-only Program9be668... compiled in isolated external qualification project. Author executed two no-capture gate controls; independent reviewer verified receipt, original stderr, no output/input files, build log and all source/executable/dependency hashes without rerunning.",
+  "documentReview": {
+    "path": "docs/acceptance/astra/spaces-20261013-product/p0-provenance-and-acceptance.md",
+    "result": "No mandatory-acceptance overclaim found against packaged receipts; actual signed-out10 explicitly separate from ten required genuine-account workflows."
+  }
+}

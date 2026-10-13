@@ -1,0 +1,1386 @@
+{
+  "/_framework/Avalonia.Base.4p7we62qz2.wasm": {
+    "hash": "41ef5f11491ea3eba578ab699fa8996a",
+    "size": 1464597
+  },
+  "/_framework/Avalonia.Base.4p7we62qz2.wasm.br": {
+    "hash": "c826cc83f2820e3f750346b881b0c6f2",
+    "size": 397695
+  },
+  "/_framework/Avalonia.Base.4p7we62qz2.wasm.gz": {
+    "hash": "1e94dc6ddec6a51eceee631551f29b06",
+    "size": 494767
+  },
+  "/_framework/Avalonia.Browser.86yu1i75wi.wasm": {
+    "hash": "9501fd70a11b10fc20181b87debe37c9",
+    "size": 135445
+  },
+  "/_framework/Avalonia.Browser.86yu1i75wi.wasm.br": {
+    "hash": "cdd32c4d2094a6da8376af3f850bddac",
+    "size": 42145
+  },
+  "/_framework/Avalonia.Browser.86yu1i75wi.wasm.gz": {
+    "hash": "ee35b6754156ef9aa888e0248162c67e",
+    "size": 51499
+  },
+  "/_framework/Avalonia.Controls.y0yw0e2wru.wasm": {
+    "hash": "f79f01f32d5ab7ed2a3435a0403ab7d6",
+    "size": 570133
+  },
+  "/_framework/Avalonia.Controls.y0yw0e2wru.wasm.br": {
+    "hash": "5b1aff1f0465b74a98651f057c06a293",
+    "size": 195984
+  },
+  "/_framework/Avalonia.Controls.y0yw0e2wru.wasm.gz": {
+    "hash": "b324af4130f26e057364091f1373a866",
+    "size": 237472
+  },
+  "/_framework/Avalonia.HarfBuzz.gam4jf2os4.wasm": {
+    "hash": "59ceb8bad7fad2eca825cf7686060fbd",
+    "size": 21269
+  },
+  "/_framework/Avalonia.HarfBuzz.gam4jf2os4.wasm.br": {
+    "hash": "baec2f1294f4d7abb06333c5e9c26491",
+    "size": 6582
+  },
+  "/_framework/Avalonia.HarfBuzz.gam4jf2os4.wasm.gz": {
+    "hash": "58bb977392944ecc7e865a886c2b9ea6",
+    "size": 7612
+  },
+  "/_framework/avalonia.js": {
+    "hash": "81e6ead7485cfe369b0b1f0da8bb265b",
+    "size": 29170
+  },
+  "/_framework/avalonia.js.br": {
+    "hash": "7730756fdb38fc2fc8243aad5ee12141",
+    "size": 8581
+  },
+  "/_framework/avalonia.js.gz": {
+    "hash": "d9c8f54cc59770d2fd67e82af8a1129f",
+    "size": 9774
+  },
+  "/_framework/avalonia.js.map": {
+    "hash": "1301bb7157be8a16af9cd697f0ff3df6",
+    "size": 113961
+  },
+  "/_framework/avalonia.js.map.br": {
+    "hash": "1c755777149c947b582a8bd90b0c416c",
+    "size": 23965
+  },
+  "/_framework/avalonia.js.map.gz": {
+    "hash": "2a2c0b90abcfa11adc57696945190b16",
+    "size": 28341
+  },
+  "/_framework/Avalonia.Markup.owheoubeng.wasm": {
+    "hash": "e858cb3897aa0aaef8c3a51a210fdcdc",
+    "size": 16661
+  },
+  "/_framework/Avalonia.Markup.owheoubeng.wasm.br": {
+    "hash": "6c0ee288f004a361dee8069ce3f88520",
+    "size": 2962
+  },
+  "/_framework/Avalonia.Markup.owheoubeng.wasm.gz": {
+    "hash": "de8944a9deedd0ba9bb455cf34c10432",
+    "size": 3594
+  },
+  "/_framework/Avalonia.Metal.uglujui8n4.wasm": {
+    "hash": "12d387d58f31b3ab55b51cd3699369eb",
+    "size": 13589
+  },
+  "/_framework/Avalonia.Metal.uglujui8n4.wasm.br": {
+    "hash": "8babbe650e22a05d26780955f9dc9b1b",
+    "size": 3004
+  },
+  "/_framework/Avalonia.Metal.uglujui8n4.wasm.gz": {
+    "hash": "010db4e97da967123235a329acbcdc93",
+    "size": 3630
+  },
+  "/_framework/Avalonia.OpenGL.086fy85vb3.wasm": {
+    "hash": "dac649e304dda5660d0c5667aa2b7f85",
+    "size": 30997
+  },
+  "/_framework/Avalonia.OpenGL.086fy85vb3.wasm.br": {
+    "hash": "9a5db516e642c426e2310bee4fd2ab96",
+    "size": 8076
+  },
+  "/_framework/Avalonia.OpenGL.086fy85vb3.wasm.gz": {
+    "hash": "aa20d27c8dbfdff3867e2df66e0c4c29",
+    "size": 9837
+  },
+  "/_framework/Avalonia.Skia.ypbyv8h1i4.wasm": {
+    "hash": "a2ccdedc672865ea36afb2e596211b4e",
+    "size": 96533
+  },
+  "/_framework/Avalonia.Skia.ypbyv8h1i4.wasm.br": {
+    "hash": "981c723bbf87ea15dd4924fd54ceb4ab",
+    "size": 39426
+  },
+  "/_framework/Avalonia.Skia.ypbyv8h1i4.wasm.gz": {
+    "hash": "a144afe7631f71c7499328d69e683cb6",
+    "size": 46007
+  },
+  "/_framework/Avalonia.Vulkan.zrs7ajbei8.wasm": {
+    "hash": "7b0b80f6924092e8af517098e5c4ae05",
+    "size": 18197
+  },
+  "/_framework/Avalonia.Vulkan.zrs7ajbei8.wasm.br": {
+    "hash": "a0e144d1dcff5a920743b3c321edfad5",
+    "size": 4563
+  },
+  "/_framework/Avalonia.Vulkan.zrs7ajbei8.wasm.gz": {
+    "hash": "1719e9919ed9e07d0e35714e7eb407f9",
+    "size": 5560
+  },
+  "/_framework/CakeOS.Cui.Core.9yxy1a3g88.wasm": {
+    "hash": "504d9aa91b1fd1c7845ddd22b0e9f1b1",
+    "size": 66325
+  },
+  "/_framework/CakeOS.Cui.Core.9yxy1a3g88.wasm.br": {
+    "hash": "9d685174f8f5c206027217761d235822",
+    "size": 22903
+  },
+  "/_framework/CakeOS.Cui.Core.9yxy1a3g88.wasm.gz": {
+    "hash": "93cf48443cd4ec76359a6b81b29f2c5c",
+    "size": 27623
+  },
+  "/_framework/CakeOS.Cui.Language.7b0h88ho57.wasm": {
+    "hash": "87cda06ca5ae8ec41c7a2b1eb64f3ba4",
+    "size": 14613
+  },
+  "/_framework/CakeOS.Cui.Language.7b0h88ho57.wasm.br": {
+    "hash": "80dae3eeef39969c3a4849c9e9bfa91e",
+    "size": 6052
+  },
+  "/_framework/CakeOS.Cui.Language.7b0h88ho57.wasm.gz": {
+    "hash": "f657c1a7f50fd7228aff9d3f80d1af60",
+    "size": 6898
+  },
+  "/_framework/CakeOS.Cui.Runtime.hdcvwl1vvh.wasm": {
+    "hash": "3fa53340b024fd988e08723172b7851b",
+    "size": 8853273
+  },
+  "/_framework/CakeOS.Cui.Runtime.hdcvwl1vvh.wasm.br": {
+    "hash": "d0285078f91b5bf00a0b9a973ba51b34",
+    "size": 2375168
+  },
+  "/_framework/CakeOS.Cui.Runtime.hdcvwl1vvh.wasm.gz": {
+    "hash": "d7765e6fee70d88298bd3873dc74a155",
+    "size": 4235324
+  },
+  "/_framework/CakeOS.Cui.Themes.kbfv39rpt9.wasm": {
+    "hash": "36bdae2321ee70247476ceb789536f7c",
+    "size": 197909
+  },
+  "/_framework/CakeOS.Cui.Themes.kbfv39rpt9.wasm.br": {
+    "hash": "64c5adaa634e9043e94e82a4253c8b1b",
+    "size": 58393
+  },
+  "/_framework/CakeOS.Cui.Themes.kbfv39rpt9.wasm.gz": {
+    "hash": "e93756e423386e737819f73c6550f2c2",
+    "size": 73929
+  },
+  "/_framework/Den.qf9qali5r9.wasm": {
+    "hash": "edab96bed33035ccc1bbdf63d61e44be",
+    "size": 4373
+  },
+  "/_framework/Den.qf9qali5r9.wasm.br": {
+    "hash": "fe52d6d76564e878e3a88a6e55366fe6",
+    "size": 1581
+  },
+  "/_framework/Den.qf9qali5r9.wasm.gz": {
+    "hash": "10a0c82dc4787f7c2927b11f4a910d0f",
+    "size": 1862
+  },
+  "/_framework/dotnet.js": {
+    "hash": "035b026f7b50f632b7ab9d2d9355dbda",
+    "size": 59908
+  },
+  "/_framework/dotnet.js.br": {
+    "hash": "f6e598f29e287936c9b91f74dfabc4a3",
+    "size": 15773
+  },
+  "/_framework/dotnet.js.gz": {
+    "hash": "67fa550a751b45959dbc43f65193e33f",
+    "size": 18038
+  },
+  "/_framework/dotnet.native.py68wzc9mi.wasm": {
+    "hash": "352bb338fef1abe0ef35cfa9e450eedd",
+    "size": 9173504
+  },
+  "/_framework/dotnet.native.py68wzc9mi.wasm.br": {
+    "hash": "cc348ce1f96b56b071aecc2f509064b8",
+    "size": 2581808
+  },
+  "/_framework/dotnet.native.py68wzc9mi.wasm.gz": {
+    "hash": "ce602fa29e2a0a7f81f65a0701962b7b",
+    "size": 3413902
+  },
+  "/_framework/dotnet.native.ykrhmjmwac.js": {
+    "hash": "9f69cb54a8f48206fdec8f4ee99c141e",
+    "size": 377048
+  },
+  "/_framework/dotnet.native.ykrhmjmwac.js.br": {
+    "hash": "1a4b22820573b653358dd22969184326",
+    "size": 62540
+  },
+  "/_framework/dotnet.native.ykrhmjmwac.js.gz": {
+    "hash": "6770cb41f66944e6acf9bb83f638d50c",
+    "size": 76391
+  },
+  "/_framework/dotnet.runtime.v06hirbjsv.js": {
+    "hash": "a6545845723332d15da344a78f342a5b",
+    "size": 198480
+  },
+  "/_framework/dotnet.runtime.v06hirbjsv.js.br": {
+    "hash": "0bf3090d836aeec3267c9ac2ad17b86f",
+    "size": 47894
+  },
+  "/_framework/dotnet.runtime.v06hirbjsv.js.gz": {
+    "hash": "6ed88dcc5f521ecd6bec005fa4d21ee6",
+    "size": 57290
+  },
+  "/_framework/HarfBuzzSharp.5k6g86b1wh.wasm": {
+    "hash": "b39d7a8142af43bb8fb0be2d6f024a82",
+    "size": 29461
+  },
+  "/_framework/HarfBuzzSharp.5k6g86b1wh.wasm.br": {
+    "hash": "0d53d2fb745223b53e5236a4d736ca06",
+    "size": 11520
+  },
+  "/_framework/HarfBuzzSharp.5k6g86b1wh.wasm.gz": {
+    "hash": "c3a56d6bbea1081671a674d7d1e31019",
+    "size": 13942
+  },
+  "/_framework/Haven.Application.yk2gw8fgos.wasm": {
+    "hash": "926b028d2d27b201318ac90587121909",
+    "size": 6034713
+  },
+  "/_framework/Haven.Application.yk2gw8fgos.wasm.br": {
+    "hash": "221454989a888b4730dc0d806813233c",
+    "size": 1511096
+  },
+  "/_framework/Haven.Application.yk2gw8fgos.wasm.gz": {
+    "hash": "8b3360a60af92d843d7f0d97b0de0ccb",
+    "size": 2014241
+  },
+  "/_framework/Haven.Core.92gvna8cfc.wasm": {
+    "hash": "b2ead0588b34695062603932b77bcf75",
+    "size": 1866005
+  },
+  "/_framework/Haven.Core.92gvna8cfc.wasm.br": {
+    "hash": "b3ffafcac1ac3aa6ef5075c62d7dbfeb",
+    "size": 420029
+  },
+  "/_framework/Haven.Core.92gvna8cfc.wasm.gz": {
+    "hash": "2f30276f6f025bb0eef2668b95dd555e",
+    "size": 582983
+  },
+  "/_framework/Haven.d93ynhn0sp.wasm": {
+    "hash": "1a8ac1ee9024e3ff7d3d7279c337d80a",
+    "size": 8616217
+  },
+  "/_framework/Haven.d93ynhn0sp.wasm.br": {
+    "hash": "ceadf0b7e9e57a8a62e2bf5ef700890f",
+    "size": 1838584
+  },
+  "/_framework/Haven.d93ynhn0sp.wasm.gz": {
+    "hash": "f68f42c1b0b832366841a46e74877475",
+    "size": 3477968
+  },
+  "/_framework/Haven.Productivity.NativeUI.nwmu28y3ka.wasm": {
+    "hash": "dbce8030800f9c4cb00e46759fee400a",
+    "size": 23829
+  },
+  "/_framework/Haven.Productivity.NativeUI.nwmu28y3ka.wasm.br": {
+    "hash": "556ab43149a7419ab22961dc2c38cf32",
+    "size": 10098
+  },
+  "/_framework/Haven.Productivity.NativeUI.nwmu28y3ka.wasm.gz": {
+    "hash": "fa7b63473e169167f7f0eb35cb0d3b3e",
+    "size": 11311
+  },
+  "/_framework/Haven.UI.c4h2e213ca.wasm": {
+    "hash": "5dbd088c8d7cbc8e3c787a61b0bfc9bf",
+    "size": 240405
+  },
+  "/_framework/Haven.UI.c4h2e213ca.wasm.br": {
+    "hash": "3660c28458b30f7dd501a90ceb460cd0",
+    "size": 72552
+  },
+  "/_framework/Haven.UI.c4h2e213ca.wasm.gz": {
+    "hash": "5fb5ff6e9a0077e4e99b032b2b11f02c",
+    "size": 90617
+  },
+  "/_framework/HavenOS.Apps.Assistants.Core.wm2xodfoxo.wasm": {
+    "hash": "f5cba3ec96d7882f0e5330df414127ae",
+    "size": 125205
+  },
+  "/_framework/HavenOS.Apps.Assistants.Core.wm2xodfoxo.wasm.br": {
+    "hash": "cd9592ecc57359bcc727d0fd6a197392",
+    "size": 38263
+  },
+  "/_framework/HavenOS.Apps.Assistants.Core.wm2xodfoxo.wasm.gz": {
+    "hash": "06bd54e63e58328197bd6cfa6424cf29",
+    "size": 48373
+  },
+  "/_framework/HavenOS.Apps.Assistants.Migration.Contracts.3u07abxhwx.wasm": {
+    "hash": "e18113270cb773588e0522845c8403ed",
+    "size": 10517
+  },
+  "/_framework/HavenOS.Apps.Assistants.Migration.Contracts.3u07abxhwx.wasm.br": {
+    "hash": "7df2df21e42eed04697aa1130631426e",
+    "size": 3622
+  },
+  "/_framework/HavenOS.Apps.Assistants.Migration.Contracts.3u07abxhwx.wasm.gz": {
+    "hash": "e05ed461c82e404c76e9f4192feb7793",
+    "size": 4285
+  },
+  "/_framework/HavenOS.Apps.Dev.k0gyuz72d9.wasm": {
+    "hash": "264304870d0e2323f9361d4fb5b1e82d",
+    "size": 4373
+  },
+  "/_framework/HavenOS.Apps.Dev.k0gyuz72d9.wasm.br": {
+    "hash": "c9c39d3aea17f9ba7df1250dec07248d",
+    "size": 1561
+  },
+  "/_framework/HavenOS.Apps.Dev.k0gyuz72d9.wasm.gz": {
+    "hash": "f6f25108b514a197b34c2674bef2e06a",
+    "size": 1797
+  },
+  "/_framework/HavenOS.Assistants.NativeUI.d6c39dyvc4.wasm": {
+    "hash": "abf0eed6ddcfe5ed5d1c941ef9bed411",
+    "size": 437013
+  },
+  "/_framework/HavenOS.Assistants.NativeUI.d6c39dyvc4.wasm.br": {
+    "hash": "a733f7f1990439be2baa2108fffd019b",
+    "size": 115861
+  },
+  "/_framework/HavenOS.Assistants.NativeUI.d6c39dyvc4.wasm.gz": {
+    "hash": "c562ac4ae4d141db34449c4d3eb3e75c",
+    "size": 143046
+  },
+  "/_framework/HavenOS.Home.0fn0pi9hgd.wasm": {
+    "hash": "d078336747331d64e62bea5c2e0330e7",
+    "size": 94485
+  },
+  "/_framework/HavenOS.Home.0fn0pi9hgd.wasm.br": {
+    "hash": "9148f110cacdca27ca7e55f2c8c5cbef",
+    "size": 31990
+  },
+  "/_framework/HavenOS.Home.0fn0pi9hgd.wasm.gz": {
+    "hash": "78cd9ce87856ae5d5d415b3d1bee8e15",
+    "size": 39419
+  },
+  "/_framework/HavenOS.Spaces.CuiRuntime.g9ic4wdhae.wasm": {
+    "hash": "67533632f68d36b004955a07a5fea955",
+    "size": 24853
+  },
+  "/_framework/HavenOS.Spaces.CuiRuntime.g9ic4wdhae.wasm.br": {
+    "hash": "f3ba8a3419491edfc329262c2dd2536d",
+    "size": 9241
+  },
+  "/_framework/HavenOS.Spaces.CuiRuntime.g9ic4wdhae.wasm.gz": {
+    "hash": "485f7e3d1f51bb5ecdf11e5b6ea13d05",
+    "size": 10712
+  },
+  "/_framework/HavenOS.Spaces.jlwpqwykeg.wasm": {
+    "hash": "6ec65681a54b4f0ff58cefcb69865d7a",
+    "size": 171797
+  },
+  "/_framework/HavenOS.Spaces.jlwpqwykeg.wasm.br": {
+    "hash": "66bc7e41185a8eec2e294eeecd37b85c",
+    "size": 45278
+  },
+  "/_framework/HavenOS.Spaces.jlwpqwykeg.wasm.gz": {
+    "hash": "42f96d8beb4d7d1af9b6ea9a80bf9df4",
+    "size": 54997
+  },
+  "/_framework/icudt_CJK.tjcz0u77k5.dat": {
+    "hash": "689020c5799f8dc958ffcd69a65688ed",
+    "size": 956416
+  },
+  "/_framework/icudt_CJK.tjcz0u77k5.dat.br": {
+    "hash": "84300769c616f782e7ec7ad1e7e35507",
+    "size": 248840
+  },
+  "/_framework/icudt_CJK.tjcz0u77k5.dat.gz": {
+    "hash": "e1e8a8f425a7ab6da86cd04faf08c631",
+    "size": 359741
+  },
+  "/_framework/icudt_EFIGS.tptq2av103.dat": {
+    "hash": "e0a3b07ccf66fff5b9fbe8ccabd30028",
+    "size": 550832
+  },
+  "/_framework/icudt_EFIGS.tptq2av103.dat.br": {
+    "hash": "59ee88ad0a4784f5fb46832496d72d95",
+    "size": 143983
+  },
+  "/_framework/icudt_EFIGS.tptq2av103.dat.gz": {
+    "hash": "eb9282910942074f9da75a8ee63fe37e",
+    "size": 220093
+  },
+  "/_framework/icudt_no_CJK.lfu7j35m59.dat": {
+    "hash": "405487276451b8ed84742b05a2e60a28",
+    "size": 1107168
+  },
+  "/_framework/icudt_no_CJK.lfu7j35m59.dat.br": {
+    "hash": "39fea126b151ee2e99029480505efa50",
+    "size": 222250
+  },
+  "/_framework/icudt_no_CJK.lfu7j35m59.dat.gz": {
+    "hash": "2df4fbf0c253d9b5309d3ca45114538b",
+    "size": 347783
+  },
+  "/_framework/netstandard.fhrlh81crw.wasm": {
+    "hash": "fb8159a6abe1fa7634fb0d39e49b27c4",
+    "size": 8981
+  },
+  "/_framework/netstandard.fhrlh81crw.wasm.br": {
+    "hash": "e250d23479184ccfb48b9a66302e9317",
+    "size": 2797
+  },
+  "/_framework/netstandard.fhrlh81crw.wasm.gz": {
+    "hash": "3efd98c9a50aec0c2c3302c819fdbb9a",
+    "size": 3277
+  },
+  "/_framework/NineToOne.Cui.AI.uu4ke2r64m.wasm": {
+    "hash": "839c9cf4788888dbc069eba1663f00bd",
+    "size": 17173
+  },
+  "/_framework/NineToOne.Cui.AI.uu4ke2r64m.wasm.br": {
+    "hash": "a9b455d3f85e2259c8de9eb97c768ceb",
+    "size": 6856
+  },
+  "/_framework/NineToOne.Cui.AI.uu4ke2r64m.wasm.gz": {
+    "hash": "da7bcdc37d4e10d75207490d28fbf0e6",
+    "size": 7825
+  },
+  "/_framework/NineToOne.Picture.BrowserEngine.jlejlx32sm.wasm": {
+    "hash": "36a57e009ee9b66d0b128e759ff505b5",
+    "size": 72981
+  },
+  "/_framework/NineToOne.Picture.BrowserEngine.jlejlx32sm.wasm.br": {
+    "hash": "bcc0e8352b667f62bf293c35b8a05fed",
+    "size": 26303
+  },
+  "/_framework/NineToOne.Picture.BrowserEngine.jlejlx32sm.wasm.gz": {
+    "hash": "b17a0075091c1caf9135b3172fd89e44",
+    "size": 30943
+  },
+  "/_framework/NineToOne.Present.BrowserScene.9ht54ugzhy.wasm": {
+    "hash": "61157eda1b8db465dc960209283acfd3",
+    "size": 196373
+  },
+  "/_framework/NineToOne.Present.BrowserScene.9ht54ugzhy.wasm.br": {
+    "hash": "9830aebc6ad0c63e8c746e7c9774e650",
+    "size": 65609
+  },
+  "/_framework/NineToOne.Present.BrowserScene.9ht54ugzhy.wasm.gz": {
+    "hash": "2645a8b3666dc7aec5011c6258b13ac4",
+    "size": 77633
+  },
+  "/_framework/NineToOne.Wave.BrowserEngine.c5ymnfyvfg.wasm": {
+    "hash": "f4e7a15aa11d4156a3b0e80d637d945f",
+    "size": 79637
+  },
+  "/_framework/NineToOne.Wave.BrowserEngine.c5ymnfyvfg.wasm.br": {
+    "hash": "b859b444798c8d2205ea3001cf7b6672",
+    "size": 26368
+  },
+  "/_framework/NineToOne.Wave.BrowserEngine.c5ymnfyvfg.wasm.gz": {
+    "hash": "a52d55161a8ff746548a9f7542ed667e",
+    "size": 32848
+  },
+  "/_framework/NineToOne.Web.d0dd66a5by.wasm": {
+    "hash": "6c024ab5aab34c30f68d983fc91614f9",
+    "size": 1836309
+  },
+  "/_framework/NineToOne.Web.d0dd66a5by.wasm.br": {
+    "hash": "c3c2c8eb84e620e81c91fa26a71d164e",
+    "size": 463453
+  },
+  "/_framework/NineToOne.Web.d0dd66a5by.wasm.gz": {
+    "hash": "9a5ad89625945c7605024a14b5f6cbb7",
+    "size": 608957
+  },
+  "/_framework/NineToOne.Write.Packages.dsnsp4xirp.wasm": {
+    "hash": "9dac688632eb6358287511072c1cdd48",
+    "size": 30997
+  },
+  "/_framework/NineToOne.Write.Packages.dsnsp4xirp.wasm.br": {
+    "hash": "957b05ff3ecb03b771d207312c024a07",
+    "size": 12095
+  },
+  "/_framework/NineToOne.Write.Packages.dsnsp4xirp.wasm.gz": {
+    "hash": "6cb70a288b922c8ef96bcaba6404182f",
+    "size": 13921
+  },
+  "/_framework/SkiaSharp.ytnqnzlhlu.wasm": {
+    "hash": "dfecb549f25410ab6b1c6230fbb055f5",
+    "size": 122645
+  },
+  "/_framework/SkiaSharp.ytnqnzlhlu.wasm.br": {
+    "hash": "4f2f7b5b31cc2afd42edf0d202773bb8",
+    "size": 43216
+  },
+  "/_framework/SkiaSharp.ytnqnzlhlu.wasm.gz": {
+    "hash": "0809c9148328d0ecce21f9522327dd79",
+    "size": 53478
+  },
+  "/_framework/storage.js": {
+    "hash": "fe607cf2f04b0cfb08b0f67135b15f45",
+    "size": 43044
+  },
+  "/_framework/storage.js.br": {
+    "hash": "974236789f13fc06a88c451208798085",
+    "size": 12218
+  },
+  "/_framework/storage.js.gz": {
+    "hash": "ab36b324ceedec73b5b04478f7c22463",
+    "size": 13858
+  },
+  "/_framework/storage.js.map": {
+    "hash": "7bc575b0af5dd2baba100c3a557adb4d",
+    "size": 154310
+  },
+  "/_framework/storage.js.map.br": {
+    "hash": "07a5f5f80a71096e85359f293c3bceb8",
+    "size": 32880
+  },
+  "/_framework/storage.js.map.gz": {
+    "hash": "13b79b06b895cd2c90b30d683f635394",
+    "size": 38300
+  },
+  "/_framework/sw.js": {
+    "hash": "2fc89449c16f51abde8e486c0144f0da",
+    "size": 971
+  },
+  "/_framework/sw.js.br": {
+    "hash": "d7f011e40c95523728d7d25f8721ab26",
+    "size": 416
+  },
+  "/_framework/sw.js.gz": {
+    "hash": "524a2e122805b2d6adfbddd7d3cbbec1",
+    "size": 490
+  },
+  "/_framework/sw.js.map": {
+    "hash": "bbd7e8863954db8a749013ffd811927c",
+    "size": 3909
+  },
+  "/_framework/sw.js.map.br": {
+    "hash": "d87885668337a55ab899d1b7b8dda04b",
+    "size": 1309
+  },
+  "/_framework/sw.js.map.gz": {
+    "hash": "ac239effaaa45a20839f3b0736d109e8",
+    "size": 1534
+  },
+  "/_framework/System.400l3mulw9.wasm": {
+    "hash": "7e18859dd0de17ebc7458c0da8552320",
+    "size": 4885
+  },
+  "/_framework/System.400l3mulw9.wasm.br": {
+    "hash": "2ff2c7135cfe9f25cf324e5a6bfd1d03",
+    "size": 1462
+  },
+  "/_framework/System.400l3mulw9.wasm.gz": {
+    "hash": "f947e713564ba8d3dc44a56199ec684f",
+    "size": 1688
+  },
+  "/_framework/System.Collections.avkbfzsj1l.wasm": {
+    "hash": "450a0d9a930927efdd86f9e71e5203e0",
+    "size": 61717
+  },
+  "/_framework/System.Collections.avkbfzsj1l.wasm.br": {
+    "hash": "6e17a3f6a262f59345fb8c92a34e1063",
+    "size": 21956
+  },
+  "/_framework/System.Collections.avkbfzsj1l.wasm.gz": {
+    "hash": "b31e0b87798afdcfdb7819f9aa852fbd",
+    "size": 25665
+  },
+  "/_framework/System.Collections.Concurrent.1aplq573fv.wasm": {
+    "hash": "5043b651c4d2e2ed5d2d960a8c9e1510",
+    "size": 30485
+  },
+  "/_framework/System.Collections.Concurrent.1aplq573fv.wasm.br": {
+    "hash": "8654cacdf743f0ab90e1ed4c2c863a8b",
+    "size": 12535
+  },
+  "/_framework/System.Collections.Concurrent.1aplq573fv.wasm.gz": {
+    "hash": "2329dfc83b5b0c85af2ada3201d56dca",
+    "size": 14221
+  },
+  "/_framework/System.Collections.Immutable.vm5yv6hidh.wasm": {
+    "hash": "59c3486d19080df13ffe08e7e53d8cb0",
+    "size": 61205
+  },
+  "/_framework/System.Collections.Immutable.vm5yv6hidh.wasm.br": {
+    "hash": "44bfd6f1a17b6996fdfc4809a4b540a0",
+    "size": 22555
+  },
+  "/_framework/System.Collections.Immutable.vm5yv6hidh.wasm.gz": {
+    "hash": "895d4cfbec3f5e338db04566c4df28f8",
+    "size": 26560
+  },
+  "/_framework/System.Collections.NonGeneric.qwue9icigp.wasm": {
+    "hash": "07095f9a49c18c67407b5d937ee01c66",
+    "size": 13077
+  },
+  "/_framework/System.Collections.NonGeneric.qwue9icigp.wasm.br": {
+    "hash": "c7575fb1ed5d80d48bf25d86b454f7bb",
+    "size": 5114
+  },
+  "/_framework/System.Collections.NonGeneric.qwue9icigp.wasm.gz": {
+    "hash": "847688e68ce6b7556e6bc5650f99e55d",
+    "size": 5775
+  },
+  "/_framework/System.Collections.Specialized.zahud5zaqr.wasm": {
+    "hash": "5390cd1b751a1fd733c2f742dcc985c1",
+    "size": 11541
+  },
+  "/_framework/System.Collections.Specialized.zahud5zaqr.wasm.br": {
+    "hash": "a8f3e641f425d697e1c8ed26d99f955b",
+    "size": 4596
+  },
+  "/_framework/System.Collections.Specialized.zahud5zaqr.wasm.gz": {
+    "hash": "78c41652d1160dbc8c8ecba912299b1f",
+    "size": 5221
+  },
+  "/_framework/System.ComponentModel.Primitives.498o5raw52.wasm": {
+    "hash": "6890ef051326205aedb08e9bf3ac934e",
+    "size": 12565
+  },
+  "/_framework/System.ComponentModel.Primitives.498o5raw52.wasm.br": {
+    "hash": "651e5c762f9a7a8517c8db207bb01967",
+    "size": 4920
+  },
+  "/_framework/System.ComponentModel.Primitives.498o5raw52.wasm.gz": {
+    "hash": "248a6834926ee04cd534a1a0ef719bd7",
+    "size": 5646
+  },
+  "/_framework/System.ComponentModel.TypeConverter.xstgjlmgoq.wasm": {
+    "hash": "bce3fe8413f8716a1747dfbd26de89ce",
+    "size": 90901
+  },
+  "/_framework/System.ComponentModel.TypeConverter.xstgjlmgoq.wasm.br": {
+    "hash": "a166d216fe0a88d6fbe36f1d73c9cce6",
+    "size": 31597
+  },
+  "/_framework/System.ComponentModel.TypeConverter.xstgjlmgoq.wasm.gz": {
+    "hash": "e699c0f2a0ac9637c47d913b56c273ad",
+    "size": 37561
+  },
+  "/_framework/System.ComponentModel.vi0jqinrst.wasm": {
+    "hash": "21dda4784cf84b840f48a4a682ccc783",
+    "size": 5397
+  },
+  "/_framework/System.ComponentModel.vi0jqinrst.wasm.br": {
+    "hash": "90cd646ae5ec562fd1117ac5baff2440",
+    "size": 1871
+  },
+  "/_framework/System.ComponentModel.vi0jqinrst.wasm.gz": {
+    "hash": "82762404ad81293e0efa063552f0fe12",
+    "size": 2109
+  },
+  "/_framework/System.Console.zkz083oscp.wasm": {
+    "hash": "c63086b2174a10054f6ba4ff0c691040",
+    "size": 15637
+  },
+  "/_framework/System.Console.zkz083oscp.wasm.br": {
+    "hash": "c2ea66e630b6174dd7b32e610a5a8dfb",
+    "size": 6504
+  },
+  "/_framework/System.Console.zkz083oscp.wasm.gz": {
+    "hash": "b347309ab4d606871382d4d647bb7b70",
+    "size": 7696
+  },
+  "/_framework/System.Diagnostics.DiagnosticSource.msk8x8ymq2.wasm": {
+    "hash": "e1eab5e2bd012ee87af31382d6928cd9",
+    "size": 43797
+  },
+  "/_framework/System.Diagnostics.DiagnosticSource.msk8x8ymq2.wasm.br": {
+    "hash": "7db89ad2a3cb3e0264f6fed8f7aeab70",
+    "size": 18499
+  },
+  "/_framework/System.Diagnostics.DiagnosticSource.msk8x8ymq2.wasm.gz": {
+    "hash": "bef6674d587af38eec27bc484022dfd5",
+    "size": 21523
+  },
+  "/_framework/System.Diagnostics.Process.e3hwynezdf.wasm": {
+    "hash": "c64c3970a97ef07898c2e2f67ba9ec0a",
+    "size": 5909
+  },
+  "/_framework/System.Diagnostics.Process.e3hwynezdf.wasm.br": {
+    "hash": "31df9e840ecf52c45f63fed98b169896",
+    "size": 2206
+  },
+  "/_framework/System.Diagnostics.Process.e3hwynezdf.wasm.gz": {
+    "hash": "95c74f468c130beee7bdb73e68fd2c0a",
+    "size": 2518
+  },
+  "/_framework/System.Drawing.Primitives.ooawzidh0a.wasm": {
+    "hash": "f694a203c4439be6e1078d08bb48499d",
+    "size": 29973
+  },
+  "/_framework/System.Drawing.Primitives.ooawzidh0a.wasm.br": {
+    "hash": "962ecd0f08e07c2706e492d4f24af904",
+    "size": 10474
+  },
+  "/_framework/System.Drawing.Primitives.ooawzidh0a.wasm.gz": {
+    "hash": "a648e6af9d56c49a2792f1b5a024d6c9",
+    "size": 13890
+  },
+  "/_framework/System.Drawing.v9qpw6ylt3.wasm": {
+    "hash": "0e5e4539fa010e38619ff629ef91806a",
+    "size": 4885
+  },
+  "/_framework/System.Drawing.v9qpw6ylt3.wasm.br": {
+    "hash": "69fed9ccd51f58b3168b8b2e32fa3f90",
+    "size": 1593
+  },
+  "/_framework/System.Drawing.v9qpw6ylt3.wasm.gz": {
+    "hash": "81e8f75f3af0e3c494ee63e53c447f1e",
+    "size": 1822
+  },
+  "/_framework/System.IO.Compression.m73tyty5ff.wasm": {
+    "hash": "1cd2a3c8016893aa1293643026f3ea1e",
+    "size": 112405
+  },
+  "/_framework/System.IO.Compression.m73tyty5ff.wasm.br": {
+    "hash": "68e78287637472264014bf4459d49469",
+    "size": 40855
+  },
+  "/_framework/System.IO.Compression.m73tyty5ff.wasm.gz": {
+    "hash": "24c9015dbc69eda8342a22ddef4b87fc",
+    "size": 48300
+  },
+  "/_framework/System.IO.Pipelines.a2z2jsctze.wasm": {
+    "hash": "6b7e6db2b88e1e44b5c43b9bfda2845f",
+    "size": 6421
+  },
+  "/_framework/System.IO.Pipelines.a2z2jsctze.wasm.br": {
+    "hash": "c2c8cf141a74f04cdc886e9fead8a630",
+    "size": 2606
+  },
+  "/_framework/System.IO.Pipelines.a2z2jsctze.wasm.gz": {
+    "hash": "fbc456f0dfe2a7c44bd3d0143a44129d",
+    "size": 3051
+  },
+  "/_framework/System.IO.Pipes.y59lyioav7.wasm": {
+    "hash": "16929ee2e329bbeaf5f2059bd0b3bd6e",
+    "size": 6933
+  },
+  "/_framework/System.IO.Pipes.y59lyioav7.wasm.br": {
+    "hash": "47cd040ebf5e376bf520542ce06795c7",
+    "size": 2605
+  },
+  "/_framework/System.IO.Pipes.y59lyioav7.wasm.gz": {
+    "hash": "6d6971395992dff2c9d6a9dd3e838b77",
+    "size": 2966
+  },
+  "/_framework/System.Linq.Expressions.5rhfwynhnx.wasm": {
+    "hash": "9e310a57856fbd25cc1a81c6cfec976f",
+    "size": 358165
+  },
+  "/_framework/System.Linq.Expressions.5rhfwynhnx.wasm.br": {
+    "hash": "ff07860bba3a3f70725de9430c920996",
+    "size": 113249
+  },
+  "/_framework/System.Linq.Expressions.5rhfwynhnx.wasm.gz": {
+    "hash": "5b982c87e0f1e50b9f79769a7204aa8f",
+    "size": 138525
+  },
+  "/_framework/System.Linq.jm8xv38d58.wasm": {
+    "hash": "9bf2ea82dca0b996cfe265455bd4213a",
+    "size": 98581
+  },
+  "/_framework/System.Linq.jm8xv38d58.wasm.br": {
+    "hash": "c26fb69774c0b9d806c8d845db233a42",
+    "size": 34699
+  },
+  "/_framework/System.Linq.jm8xv38d58.wasm.gz": {
+    "hash": "3b2821ee83a125e0879ebe70a6529a8c",
+    "size": 42067
+  },
+  "/_framework/System.Memory.5ln0cz202h.wasm": {
+    "hash": "50eceece20fc5d89eed5001cb911bc82",
+    "size": 15637
+  },
+  "/_framework/System.Memory.5ln0cz202h.wasm.br": {
+    "hash": "fc33fc5c02edc388a6e504a16bb85151",
+    "size": 6723
+  },
+  "/_framework/System.Memory.5ln0cz202h.wasm.gz": {
+    "hash": "579704a09e1754668fa47b1ea09aaccf",
+    "size": 7670
+  },
+  "/_framework/System.Net.Http.Json.vz9tkvj9wv.wasm": {
+    "hash": "8eb21e26ef372523ef4e3f6b51b96378",
+    "size": 15125
+  },
+  "/_framework/System.Net.Http.Json.vz9tkvj9wv.wasm.br": {
+    "hash": "250a91a430230662307a33befff06b1c",
+    "size": 6189
+  },
+  "/_framework/System.Net.Http.Json.vz9tkvj9wv.wasm.gz": {
+    "hash": "ddfa5612e440246380df38f18146dd18",
+    "size": 7040
+  },
+  "/_framework/System.Net.Http.uyaurey8uo.wasm": {
+    "hash": "473f774489a8ac5e4341f87bd8f32337",
+    "size": 143125
+  },
+  "/_framework/System.Net.Http.uyaurey8uo.wasm.br": {
+    "hash": "5a5c93f83df6ad08f7600856001e1939",
+    "size": 53653
+  },
+  "/_framework/System.Net.Http.uyaurey8uo.wasm.gz": {
+    "hash": "135fc150fa1ef9d7fa8c3dda7e31c387",
+    "size": 63226
+  },
+  "/_framework/System.Net.Mail.gix5p4t59m.wasm": {
+    "hash": "92f4b83a780685299289bcca08e481a4",
+    "size": 14101
+  },
+  "/_framework/System.Net.Mail.gix5p4t59m.wasm.br": {
+    "hash": "7f793343403368f0f9b156201b956928",
+    "size": 5640
+  },
+  "/_framework/System.Net.Mail.gix5p4t59m.wasm.gz": {
+    "hash": "8059c39c68a11a01994a42cdb869ce78",
+    "size": 6487
+  },
+  "/_framework/System.Net.Ping.t1gutj9m79.wasm": {
+    "hash": "1b1edb0e10ce6e66761c1fd5d401ae29",
+    "size": 6421
+  },
+  "/_framework/System.Net.Ping.t1gutj9m79.wasm.br": {
+    "hash": "475fcef561acd1481050ae778f415ffc",
+    "size": 2438
+  },
+  "/_framework/System.Net.Ping.t1gutj9m79.wasm.gz": {
+    "hash": "59e60bd3259ca604a674600300b856f9",
+    "size": 2811
+  },
+  "/_framework/System.Net.Primitives.llz1zzlk2t.wasm": {
+    "hash": "f294d11261f5eb0276c767c9707103ee",
+    "size": 7445
+  },
+  "/_framework/System.Net.Primitives.llz1zzlk2t.wasm.br": {
+    "hash": "989d9841d8b83b0047c5b12ea479437c",
+    "size": 2906
+  },
+  "/_framework/System.Net.Primitives.llz1zzlk2t.wasm.gz": {
+    "hash": "2143a2236d400078c508cc05c632aff7",
+    "size": 3451
+  },
+  "/_framework/System.Net.Security.6wyayub5ga.wasm": {
+    "hash": "13891697ca0dd1573f8d40264c186207",
+    "size": 5397
+  },
+  "/_framework/System.Net.Security.6wyayub5ga.wasm.br": {
+    "hash": "da9f8fff70ef44170d92c50ffafa2937",
+    "size": 1922
+  },
+  "/_framework/System.Net.Security.6wyayub5ga.wasm.gz": {
+    "hash": "33e2b78455d11c796cff49c20d6f8b77",
+    "size": 2175
+  },
+  "/_framework/System.ObjectModel.413jtvi9cx.wasm": {
+    "hash": "17c206af23532b5c43607f625062cdc1",
+    "size": 17685
+  },
+  "/_framework/System.ObjectModel.413jtvi9cx.wasm.br": {
+    "hash": "08455f9fbe5d7ffd6106fdd25a2281c3",
+    "size": 6659
+  },
+  "/_framework/System.ObjectModel.413jtvi9cx.wasm.gz": {
+    "hash": "6ee6dc1e0e77951ece4b40983309c747",
+    "size": 7678
+  },
+  "/_framework/System.Private.CoreLib.xyrmfxstk9.wasm": {
+    "hash": "435387524662f6e51bf9dff1d361303e",
+    "size": 2010901
+  },
+  "/_framework/System.Private.CoreLib.xyrmfxstk9.wasm.br": {
+    "hash": "8c02c0197ceae57261f8043963b01b81",
+    "size": 618213
+  },
+  "/_framework/System.Private.CoreLib.xyrmfxstk9.wasm.gz": {
+    "hash": "80dede9c046c155b6162dc1a6ee6c8e1",
+    "size": 769903
+  },
+  "/_framework/System.Private.Uri.eohano6se7.wasm": {
+    "hash": "3672b1ced78ac2f0df3a4f5acb300d2c",
+    "size": 74517
+  },
+  "/_framework/System.Private.Uri.eohano6se7.wasm.br": {
+    "hash": "ce197d53e53659c2794ffa67cb05688d",
+    "size": 29791
+  },
+  "/_framework/System.Private.Uri.eohano6se7.wasm.gz": {
+    "hash": "4fe1bc4866c89a311d77d6987c23ad52",
+    "size": 34249
+  },
+  "/_framework/System.Private.Xml.dgaawwxx1s.wasm": {
+    "hash": "f9c322b82077bce82d0905d623bd49e8",
+    "size": 862997
+  },
+  "/_framework/System.Private.Xml.dgaawwxx1s.wasm.br": {
+    "hash": "4bf6ec9cc772d7412426177bd1e50346",
+    "size": 223014
+  },
+  "/_framework/System.Private.Xml.dgaawwxx1s.wasm.gz": {
+    "hash": "a4845da146e34d6c189f6b2729f189d4",
+    "size": 282113
+  },
+  "/_framework/System.Private.Xml.Linq.kmdekm0bz7.wasm": {
+    "hash": "365dfdb53918061125d94876a0404c59",
+    "size": 53525
+  },
+  "/_framework/System.Private.Xml.Linq.kmdekm0bz7.wasm.br": {
+    "hash": "d7817649f30b2e704d28329a7f949db5",
+    "size": 19967
+  },
+  "/_framework/System.Private.Xml.Linq.kmdekm0bz7.wasm.gz": {
+    "hash": "36a6a9230287fe36e03c4f256e4b7374",
+    "size": 23663
+  },
+  "/_framework/System.Runtime.InteropServices.JavaScript.w946mwcw4o.wasm": {
+    "hash": "4873bdab131636ab47b0ece5cf48ba28",
+    "size": 50965
+  },
+  "/_framework/System.Runtime.InteropServices.JavaScript.w946mwcw4o.wasm.br": {
+    "hash": "52d4a5b89a9aade08307aa236bf6448e",
+    "size": 18774
+  },
+  "/_framework/System.Runtime.InteropServices.JavaScript.w946mwcw4o.wasm.gz": {
+    "hash": "c86f6d79229c9395d4325dcc888ebf60",
+    "size": 22355
+  },
+  "/_framework/System.Runtime.InteropServices.zsicxx3i3w.wasm": {
+    "hash": "7154e570a7ce343cb6c112468d1f3f1f",
+    "size": 8981
+  },
+  "/_framework/System.Runtime.InteropServices.zsicxx3i3w.wasm.br": {
+    "hash": "f7e0b0c2a87bbd8a33af3b7c25b07cc2",
+    "size": 2903
+  },
+  "/_framework/System.Runtime.InteropServices.zsicxx3i3w.wasm.gz": {
+    "hash": "55958b00a3923f01be5346dbf665e3b4",
+    "size": 3413
+  },
+  "/_framework/System.Runtime.Numerics.csccl5gp68.wasm": {
+    "hash": "64555d705fd5ccfc8387a065be0506b2",
+    "size": 91413
+  },
+  "/_framework/System.Runtime.Numerics.csccl5gp68.wasm.br": {
+    "hash": "5ab8106807a9be9928545a62a81beb0d",
+    "size": 32312
+  },
+  "/_framework/System.Runtime.Numerics.csccl5gp68.wasm.gz": {
+    "hash": "ce977885a16de72becd0e50defcba5a0",
+    "size": 37658
+  },
+  "/_framework/System.Runtime.nxajal70ni.wasm": {
+    "hash": "142044b349a6303ce4e8b129ff34a16c",
+    "size": 13589
+  },
+  "/_framework/System.Runtime.nxajal70ni.wasm.br": {
+    "hash": "5ed6676e8bd2a78d01345c555232c6c2",
+    "size": 3925
+  },
+  "/_framework/System.Runtime.nxajal70ni.wasm.gz": {
+    "hash": "4795fc6c553bcdfa71aada1b95fff57e",
+    "size": 4723
+  },
+  "/_framework/System.Runtime.Serialization.Formatters.mqoqjy0ks6.wasm": {
+    "hash": "27393bb641f59063506639c92adbdae4",
+    "size": 22805
+  },
+  "/_framework/System.Runtime.Serialization.Formatters.mqoqjy0ks6.wasm.br": {
+    "hash": "f6c333856024ba49b244abf67a4ca8cd",
+    "size": 9455
+  },
+  "/_framework/System.Runtime.Serialization.Formatters.mqoqjy0ks6.wasm.gz": {
+    "hash": "1d66086ae1e58b2d7854f2e42d97c179",
+    "size": 10939
+  },
+  "/_framework/System.Security.Cryptography.xkwopgx5oa.wasm": {
+    "hash": "807a8b014a40a16ee20f58aa1ecaba92",
+    "size": 67349
+  },
+  "/_framework/System.Security.Cryptography.xkwopgx5oa.wasm.br": {
+    "hash": "c548526727409759beba2700b973762d",
+    "size": 24801
+  },
+  "/_framework/System.Security.Cryptography.xkwopgx5oa.wasm.gz": {
+    "hash": "97fb78b6814fd6288825ae33de259a3c",
+    "size": 29325
+  },
+  "/_framework/System.Text.Encoding.Extensions.ajdtrmih3n.wasm": {
+    "hash": "d9a13d90d5dfa87328fcbbe9af2998ca",
+    "size": 4885
+  },
+  "/_framework/System.Text.Encoding.Extensions.ajdtrmih3n.wasm.br": {
+    "hash": "649de718a958f60a918a306a09423120",
+    "size": 1683
+  },
+  "/_framework/System.Text.Encoding.Extensions.ajdtrmih3n.wasm.gz": {
+    "hash": "927a8451dbd8f44178cd1bf2c5a85397",
+    "size": 1903
+  },
+  "/_framework/System.Text.Encodings.Web.fi6tg5bbqm.wasm": {
+    "hash": "87c54e2197e0634e43bc0b6373ce1668",
+    "size": 29461
+  },
+  "/_framework/System.Text.Encodings.Web.fi6tg5bbqm.wasm.br": {
+    "hash": "786cb93a4eaa87419ff13c8e660a29fd",
+    "size": 9481
+  },
+  "/_framework/System.Text.Encodings.Web.fi6tg5bbqm.wasm.gz": {
+    "hash": "d0e55b57cbef0330ddd337897d9e9087",
+    "size": 11066
+  },
+  "/_framework/System.Text.Json.r6akv8z7iy.wasm": {
+    "hash": "afafba7c432377c5b4a526e6c74b4600",
+    "size": 422165
+  },
+  "/_framework/System.Text.Json.r6akv8z7iy.wasm.br": {
+    "hash": "44d1bfab2ee1bd30629901cfdb4dead5",
+    "size": 136572
+  },
+  "/_framework/System.Text.Json.r6akv8z7iy.wasm.gz": {
+    "hash": "3f9d5912b7ddbf20346b16ec2673d0a0",
+    "size": 165156
+  },
+  "/_framework/System.Text.RegularExpressions.htcsx84idt.wasm": {
+    "hash": "acee24a868d349a52f3c0867a49f6108",
+    "size": 260885
+  },
+  "/_framework/System.Text.RegularExpressions.htcsx84idt.wasm.br": {
+    "hash": "9a632814027885c12b8c160b00ac3eb5",
+    "size": 101997
+  },
+  "/_framework/System.Text.RegularExpressions.htcsx84idt.wasm.gz": {
+    "hash": "8e62ee833291ad4ecb71b89ead501159",
+    "size": 122769
+  },
+  "/_framework/System.Threading.Channels.n4at23s1db.wasm": {
+    "hash": "f4a498ff9f61383a7702ae28b1efddd6",
+    "size": 38165
+  },
+  "/_framework/System.Threading.Channels.n4at23s1db.wasm.br": {
+    "hash": "3ba31b209b92b272dec1d796fc1de929",
+    "size": 14897
+  },
+  "/_framework/System.Threading.Channels.n4at23s1db.wasm.gz": {
+    "hash": "d313d792a82fff8c6ef08e581e91be9b",
+    "size": 17317
+  },
+  "/_framework/System.Threading.tru52s05x4.wasm": {
+    "hash": "318e532bb3651f9af707cd418ba80c76",
+    "size": 12053
+  },
+  "/_framework/System.Threading.tru52s05x4.wasm.br": {
+    "hash": "6e74274a139e4daa9b12c89b8478c77a",
+    "size": 3781
+  },
+  "/_framework/System.Threading.tru52s05x4.wasm.gz": {
+    "hash": "814c3067b1a9689e7ff22603b0a3ba77",
+    "size": 4462
+  },
+  "/_framework/System.Xml.Linq.pzw688hdq1.wasm": {
+    "hash": "081adeda1e108b305f23c7d29e362a7c",
+    "size": 4373
+  },
+  "/_framework/System.Xml.Linq.pzw688hdq1.wasm.br": {
+    "hash": "6f9c0c34e1dd98d40edf795e5d059bc1",
+    "size": 1446
+  },
+  "/_framework/System.Xml.Linq.pzw688hdq1.wasm.gz": {
+    "hash": "c51d98c5b606f0a0705e255ff732dc28",
+    "size": 1630
+  },
+  "/_framework/System.Xml.ReaderWriter.lu1vir8xm4.wasm": {
+    "hash": "8f5c597812cd405be2de3b95040ce8f8",
+    "size": 4885
+  },
+  "/_framework/System.Xml.ReaderWriter.lu1vir8xm4.wasm.br": {
+    "hash": "a205279d3daf1597a2549d83ba7b93d3",
+    "size": 1660
+  },
+  "/_framework/System.Xml.ReaderWriter.lu1vir8xm4.wasm.gz": {
+    "hash": "62d8c74f40234c02525b5c5ee338c430",
+    "size": 1893
+  },
+  "/_framework/System.Xml.XDocument.8li7ar31za.wasm": {
+    "hash": "6e9a9fa82e5128e9a3085e07b0d01ea3",
+    "size": 4885
+  },
+  "/_framework/System.Xml.XDocument.8li7ar31za.wasm.br": {
+    "hash": "d5344b49a8c78c15ecf35ba7cd18a038",
+    "size": 1695
+  },
+  "/_framework/System.Xml.XDocument.8li7ar31za.wasm.gz": {
+    "hash": "8f159c358da2cd386e9425675f86a30f",
+    "size": 1917
+  },
+  "/_framework/TagLibSharp.0vcap3s9x9.wasm": {
+    "hash": "d814edf32d98ef5434ebab694322f373",
+    "size": 497429
+  },
+  "/_framework/TagLibSharp.0vcap3s9x9.wasm.br": {
+    "hash": "6df8c49d031eb846ec496cffccbc1aa7",
+    "size": 164384
+  },
+  "/_framework/TagLibSharp.0vcap3s9x9.wasm.gz": {
+    "hash": "9c389dc18084abefde4a82171768a492",
+    "size": 205645
+  },
+  "/account-service.js": {
+    "hash": "6dc94698e73030fa8c10fd87d930a3b0",
+    "size": 3384
+  },
+  "/account-service.js.br": {
+    "hash": "55a640cce7a7856f1ae6df5e443dedeb",
+    "size": 1116
+  },
+  "/account-service.js.gz": {
+    "hash": "8b7ed68d803d7bd9b9ae97348a2a0178",
+    "size": 1340
+  },
+  "/browser-accessibility.js": {
+    "hash": "ddc7c4ab964f7fa9b3782d18c8a1091d",
+    "size": 11338
+  },
+  "/browser-accessibility.js.br": {
+    "hash": "f8ebf37ee9e27d8f18d2f0e31877142c",
+    "size": 2468
+  },
+  "/browser-accessibility.js.gz": {
+    "hash": "e080486eb4960bc813dcf0e3c19f9e33",
+    "size": 2934
+  },
+  "/browser-platform.js": {
+    "hash": "d8b6ca1d91f16115ef1e0b812a48a4f8",
+    "size": 4089
+  },
+  "/browser-platform.js.br": {
+    "hash": "1a96c1093567efe08d078f315d0a9149",
+    "size": 1081
+  },
+  "/browser-platform.js.gz": {
+    "hash": "5451380a6a89390f07ca7615fdf37ce4",
+    "size": 1327
+  },
+  "/browser-private-context.js": {
+    "hash": "2af941dc12cfb86bbfbc349a4a373405",
+    "size": 4691
+  },
+  "/browser-private-context.js.br": {
+    "hash": "73e249adec70930ca1fdd5983a323750",
+    "size": 1257
+  },
+  "/browser-private-context.js.gz": {
+    "hash": "9f1e9009236e253521305c1f6c669337",
+    "size": 1538
+  },
+  "/configured-accounts.bundle.js": {
+    "hash": "1b3bb4e4c6f7d41583cd0155ad5994b1",
+    "size": 109115
+  },
+  "/configured-accounts.bundle.js.br": {
+    "hash": "9c87b8cc411b7279059adf258d21e6b8",
+    "size": 21084
+  },
+  "/configured-accounts.bundle.js.gz": {
+    "hash": "6ae9e287450145c8345f61c5d023c4a6",
+    "size": 24369
+  },
+  "/conversation-production-indexeddb.js": {
+    "hash": "a2c79f03933912e978cd6fbf3de78f2a",
+    "size": 13385
+  },
+  "/conversation-production-indexeddb.js.br": {
+    "hash": "cb32ced60ce4b833af818e32f7498e9f",
+    "size": 3008
+  },
+  "/conversation-production-indexeddb.js.gz": {
+    "hash": "9b3b658beae502ccdec2067b828be493",
+    "size": 3491
+  },
+  "/cui-bootstrap.css": {
+    "hash": "cb2c33b18c9c26f971aa4ad782cb5f54",
+    "size": 1411
+  },
+  "/cui-bootstrap.css.br": {
+    "hash": "b52c18d8b5069711543887ec51610cc8",
+    "size": 538
+  },
+  "/cui-bootstrap.css.gz": {
+    "hash": "a4fa7c71e0e773124fceda55ddeff6e1",
+    "size": 670
+  },
+  "/dulche-provider.js": {
+    "hash": "4961169285ea44f5201d6be05d935eed",
+    "size": 7724
+  },
+  "/dulche-provider.js.br": {
+    "hash": "f104531972ee5c0fa11fb78dc5db9d79",
+    "size": 2038
+  },
+  "/dulche-provider.js.gz": {
+    "hash": "91c15af1064db3e1725a33a803ad8298",
+    "size": 2393
+  },
+  "/home-local-preferences.js": {
+    "hash": "29ed9f68f14fff33bd43ed889fae73ee",
+    "size": 7477
+  },
+  "/home-local-preferences.js.br": {
+    "hash": "7c5433a6b2cb7fb2a3c428e237cee5ec",
+    "size": 2084
+  },
+  "/home-local-preferences.js.gz": {
+    "hash": "42b50003b6ae8f7e674f15310dadeba9",
+    "size": 2468
+  },
+  "/Home/Storage/home-dashboard-indexeddb.js": {
+    "hash": "418e760fb4662d9922e810f506d22e3d",
+    "size": 13235
+  },
+  "/Home/Storage/home-dashboard-indexeddb.js.br": {
+    "hash": "d679b506d6927789072f9b8b9c7b978e",
+    "size": 3444
+  },
+  "/Home/Storage/home-dashboard-indexeddb.js.gz": {
+    "hash": "f07632d6be6c67da5dcb423374a75ae3",
+    "size": 4013
+  },
+  "/host-configuration.js": {
+    "hash": "215834f296cc257b82dabf0d12dcb2da",
+    "size": 919
+  },
+  "/host-configuration.js.br": {
+    "hash": "6fb7f54e2d27985df61ebd3e52d8c587",
+    "size": 376
+  },
+  "/host-configuration.js.gz": {
+    "hash": "2065ce141f49ac5e6fed2861c43d2588",
+    "size": 486
+  },
+  "/index.html": {
+    "hash": "3714273f2501faa1a98b2eb396a1e830",
+    "size": 1558
+  },
+  "/index.html.br": {
+    "hash": "96e438b856dcdf7accb4fe13f96c29c7",
+    "size": 586
+  },
+  "/index.html.gz": {
+    "hash": "59d8fd8c2742096d1080f4426266cf40",
+    "size": 842
+  },
+  "/main.js": {
+    "hash": "7a143ac6c566cd5f03cb289cc2286875",
+    "size": 8415
+  },
+  "/main.js.br": {
+    "hash": "2783f10d4fe30cb6b26a1571f0776d78",
+    "size": 2133
+  },
+  "/main.js.gz": {
+    "hash": "c1de0517914d88301073c9d407d105f2",
+    "size": 2552
+  },
+  "/Montserrat-Medium.ttf": {
+    "hash": "e8819e759ff42b5d5eb42f06a05eb710",
+    "size": 447320
+  },
+  "/notes-indexeddb.js": {
+    "hash": "545d825f42d93a218f5f28ebf1bd90ad",
+    "size": 11550
+  },
+  "/notes-indexeddb.js.br": {
+    "hash": "13e6c18f06ca2e04d1c8048632573fc2",
+    "size": 2875
+  },
+  "/notes-indexeddb.js.gz": {
+    "hash": "906f2b920485a55a4ed83b14f144fec4",
+    "size": 3303
+  },
+  "/picture-browser.js": {
+    "hash": "18bebfe3a32516bbb99979e86c07b05f",
+    "size": 7897
+  },
+  "/picture-browser.js.br": {
+    "hash": "1f41927a20effaa7ced533916a7e8fe3",
+    "size": 2217
+  },
+  "/picture-browser.js.gz": {
+    "hash": "f2aa140935554d6f1e0a7b64c7cfffef",
+    "size": 2602
+  },
+  "/present-indexeddb.js": {
+    "hash": "7063a2f7cec4b451041a416b090a117d",
+    "size": 11912
+  },
+  "/present-indexeddb.js.br": {
+    "hash": "838303a024cd283748713879d3bc0bfd",
+    "size": 3174
+  },
+  "/present-indexeddb.js.gz": {
+    "hash": "9509a56ca4a3386139fc3f373acf3eed",
+    "size": 3698
+  },
+  "/task-execution-host.js": {
+    "hash": "ef2c2421d43c9a85cb91b74dfa14d0e7",
+    "size": 12836
+  },
+  "/task-execution-host.js.br": {
+    "hash": "ded3c928b476971c0f4c76389c2ad872",
+    "size": 3318
+  },
+  "/task-execution-host.js.gz": {
+    "hash": "d1e56993907144cb5981c2d5a5f47203",
+    "size": 3892
+  },
+  "/tasks-indexeddb.js": {
+    "hash": "a3757cfd8dd5764addfe2cee24968732",
+    "size": 50965
+  },
+  "/tasks-indexeddb.js.br": {
+    "hash": "618d40cf8e36bf76d67f2acc09deac9d",
+    "size": 10151
+  },
+  "/tasks-indexeddb.js.gz": {
+    "hash": "7896afff4cb8e5ce2b85dc7567d83710",
+    "size": 11745
+  },
+  "/wave-browser.js": {
+    "hash": "7461d39fb3e6ee306c3c9f6014ac379f",
+    "size": 12002
+  },
+  "/wave-browser.js.br": {
+    "hash": "a59d0eee7ce341f482962927193015c4",
+    "size": 2894
+  },
+  "/wave-browser.js.gz": {
+    "hash": "f88cf112cc8a901817a23bf094d98012",
+    "size": 3421
+  },
+  "/write-packages.js": {
+    "hash": "b73671f8226542b9906e25afb873e31e",
+    "size": 2998
+  },
+  "/write-packages.js.br": {
+    "hash": "20338d2837cc0e42b096fec661c024fa",
+    "size": 1015
+  },
+  "/write-packages.js.gz": {
+    "hash": "fe82a4796e38a3842b77510094f3d5a6",
+    "size": 1202
+  }
+}
