@@ -1,10 +1,12 @@
 # 9to1 development relay
 
-Implementation status: local gated runner/dashboard installed and running; authenticated atomic coordinator deployed, connected and live-tested; cloud continuation NOT CONFIGURED; unattended switching NOT VERIFIED. This is not a completed autonomous relay.
+Reference deployment status (13 October 2026): the local gated runner/dashboard and authenticated atomic coordinator are installed and live-tested. The private native cloud daily schedule has restored its environment/signing identity in real scheduled turns; native Goal resume remains blocked by an app error. Whole unattended switching is NOT VERIFIED. Cloning this source does not install or prove the relay on another host.
 
 The four-part V2 delivery directive effective 10 October 2026 remains authoritative. Part 1 FULL foundations/apps and donor-complete RCVP products are the critical path. Preserve the entire original/incorporated specification, donor functionality, native/web obligations, privacy, security, persistence and independent acceptance. No build or unit-test result promotes an app to RCVP or FULL.
 
 ## Components
+
+- `service-start.mjs` is the Windows idempotent startup adapter for the runner, supervisor and display. It serializes starters in private SQLite, checks exact executable/arguments/process identity and loopback health, and returns successfully when the configured service is already running. Unknown port occupants are left untouched. New owned services use independent hidden processes and private logs; the adapter does not start a coding task or reload a model itself.
 
 - `coordinator.mjs` uses a SQLite Durable Object per repository for transactional claims, exclusive expiring leases, monotonic fences, task/path arbitration, heartbeat, quarantined recovery and exact handover acknowledgement. Requests require RSA signatures, time limits and persisted nonce replay protection. Local and cloud are separate signing identities. GitHub branch identity is independently checked on READY and ACK; a GitHub file is not used as the lock.
 - `runner.mjs` serves a loopback-only dashboard, stores local controls/progress in SQLite, chooses the private London/DST schedule, starts only owned isolated tasks, serializes inference, captures modified/untracked source with hashes before stopping an owned worker, executes bounded authentic tests and publishes reviewed task branches. Unknown port owners are untouched. A lost lease stops an owned child after preserving source; interrupted state prevents an unverified replacement.
@@ -52,6 +54,18 @@ A locally triggered cloud task can run on the cloud after submission. This does 
 7. Generate an evidence-based daily report with `node relayctl.mjs summary ABSOLUTE_CONFIG YYYY-MM-DD`. It reports actual recorded changes, operations and the continuing NOT_VERIFIED state.
 
 ## Validation
+
+For Windows scheduler actions, use the reviewed role adapter with the absolute private configuration, preserving the existing login/recovery triggers, principal, IgnoreNew policy and unlimited lifetime:
+
+```powershell
+node service-start.mjs ABSOLUTE_PRIVATE_CONFIG runner
+node service-start.mjs ABSOLUTE_PRIVATE_CONFIG supervisor ABSOLUTE_PRIVATE_PLAN
+node service-start.mjs ABSOLUTE_PRIVATE_CONFIG dashboard
+```
+
+The adapter's Windows integration tests exercise concurrent startup, survival after the short-lived starter exits, exact healthy-process reuse and refusal to adopt or stop a foreign listener. These controlled fixtures do not establish physical PC restart/wake or a whole unattended cloud cycle. A service on a port is distinct from an actively developing model. Human worker holds remain authoritative.
+
+The commissioning numbers below are historical checkpoints. Current source validation and live handover receipts must be collected for the deployed revision before broader acceptance claims.
 
 `npm ci` then `npm test` runs generic schedule/DST, college-day override guards, atomic claim/fencing/expiry, path conflict, handover failure/exact ACK, real Durable Object runtime persistence, replay/authentication, temporary Git checkpoint/reconstruction, real dashboard HTTP controls/persistence/CSRF/singleton checks, and noninteractive child stdin/EOF behavior. The private suite additionally tests the exact timetable and all weekday mornings. Current commissioning: 85 passed, 0 failed, 0 skipped; dependency audit reports 0 known vulnerabilities. Seven live coordinator checks passed, including 20 simultaneous claims with one winner and stale fencing/replay rejection. Windows DPAPI signing was independently verified without printing keys. Live Strata health reports the expected IQ2_XS model loaded with a 524,288-token context. The actual OpenCode/Strata session produced the owned path-validation implementation. Its original faulty array assertion was preserved, repaired by the lead after the worker ended, and56 targeted tests passed; the reviewed source was published on its dedicated branch. The genuine local checkpoint and cloud return both completed exact acknowledged handovers. Home is restored.
 
