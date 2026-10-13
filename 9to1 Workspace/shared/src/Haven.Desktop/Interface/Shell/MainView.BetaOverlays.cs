@@ -198,6 +198,7 @@ public sealed partial class MainView
 
     private void RedirectLegacyPresentation(object? content)
     {
+        content = NativeLogicalPage(content);
         if (content is null || _redirectingLegacyPresentation)
         {
             return;
@@ -236,7 +237,7 @@ public sealed partial class MainView
         _redirectingLegacyPresentation = true;
         try
         {
-            PageContent.Content = _lastNonCallContent;
+            PresentNativePageContent(_lastNonCallContent);
             // A retired/restored Call tab must never activate Voice. Voice is opened
             // exclusively from Actions; the legacy route is discarded silently.
             if (_lastNonCallContent is null)
@@ -263,7 +264,7 @@ public sealed partial class MainView
         _redirectingLegacyPresentation = true;
         try
         {
-            PageContent.Content = nativePage;
+            PresentNativePageContent(nativePage);
             _lastNonCallContent = nativePage;
         }
         finally

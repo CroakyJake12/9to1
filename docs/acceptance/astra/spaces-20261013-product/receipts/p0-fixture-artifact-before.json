@@ -1,0 +1,27 @@
+{
+  "status": "Before P0 fixture artifact separation; no production state modified",
+  "timeUtc": "2026-10-13T22:15:41.877580+00:00",
+  "files": [
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/Program.cs",
+      "sha256": "a7c8603109859f354261235af6d5e7707be86050023c7c8ae0bbec2d63eab564"
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/BrowserSpaces.Visual.csproj",
+      "sha256": "3047d221efceadd3d1450a8bfaa5b2e74439dd810a59655957a589b68f0527ae"
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/README.md",
+      "sha256": "a4dcd7ba6b644066af6df1099f3e9221ac2b12a245a0ee8022f68e1faa72a26f"
+    },
+    {
+      "path": "docs/acceptance/astra/spaces-20261013-product/visual-comparison.html",
+      "sha256": "2de9cbd994e47c9497951d8f759175a0a616a16fcb42213d4f6f8842f4460131"
+    },
+    {
+      "path": "audit-workspace/visual-comparison/index.html",
+      "sha256": "2de9cbd994e47c9497951d8f759175a0a616a16fcb42213d4f6f8842f4460131"
+    }
+  ],
+  "sourceReceipt": "P0-FIXTURE-ARTIFACT-BEFORE.json"
+}

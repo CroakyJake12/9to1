@@ -1,0 +1,16 @@
+{
+  "name": "9to1-private-dulche-hosting",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node preview-worker.test.mjs && node build.mjs relay-test-entry.mjs relay-test-entry.bundle.mjs && node relay-bounded-controls.cjs && node relay-restart-controls.cjs"
+  },
+  "dependencies": {
+    "jose": "6.2.12"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.1",
+    "miniflare": "5.20261001.0-alpha"
+  }
+}

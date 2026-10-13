@@ -2,6 +2,7 @@ using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Services;
 using Haven.Desktop.Views.Pages.Spaces;
+using Haven.Desktop.Views.Shell.NativePresentation;
 
 namespace Haven.Desktop.Views.Shell;
 
@@ -11,6 +12,13 @@ public sealed partial class MainView
     private SpaceRegistry? _spaceRegistry;
 
     private SpaceRegistry SpacesRegistry => _spaceRegistry ??= new SpaceRegistry(_versionedSettings);
+
+    private async Task OpenSpacesWorkspaceAsync()
+    {
+        var chat = await SpacesRegistry.GetAsync(SpaceRegistry.ChatSpaceId, CancellationToken.None)
+            ?? throw new InvalidOperationException("The canonical Chat Space is unavailable.");
+        await LaunchSpaceAsync(chat);
+    }
 
     private async Task OpenSpacesAsync()
     {
@@ -33,12 +41,17 @@ public sealed partial class MainView
             _conversations,
             OpenSpaceConversationAsync);
 
-        AddOrSelectTab("spaces", "Spaces", _spacesPage, false, HavenSurface.Spaces);
+        AddOrSelectTab("spaces", "Manage Spaces", _spacesPage, false, HavenSurface.Spaces);
         await _spacesPage.ActivateAsync(CancellationToken.None);
         ApplyShellVisualState();
     }
 
-    private async Task LaunchSpaceAsync(SpaceDefinition space)
+    private Task LaunchSpaceAsync(SpaceDefinition space) => LaunchSpaceCoreAsync(space, null);
+
+    private Task LaunchNativeSpaceInTransitionAsync(SpaceDefinition space, NativeChatSidebar.DestinationTransition transition) =>
+        LaunchSpaceCoreAsync(space, transition);
+
+    private async Task LaunchSpaceCoreAsync(SpaceDefinition space, NativeChatSidebar.DestinationTransition? transition)
     {
         if (space.Kind == SpaceKind.Tasks)
         {
@@ -46,6 +59,20 @@ public sealed partial class MainView
             return;
         }
         var plan = SpaceLaunchPolicy.Resolve(space);
+        if (plan.Destination == SpaceLaunchDestination.AssistantsProduct)
+        {
+#if !ANDROID
+            // Presentation borrows the existing App-owned Home/Den/controller graph.
+            // Selecting a Space creates no Assistant, conversation, Task or authority.
+            await OpenOriginalRegisteredAssistantsAsync();
+            await SpacesRegistry.SetCurrentSpaceIdAsync(space.Id, CancellationToken.None);
+            if (_nativeChatSidebar is not null)
+                await _nativeChatSidebar.ReloadSpaceScopeAsync();
+#else
+            _notifications.Show("Assistants setup required", "This host has no configured Assistant owner. Your existing data is preserved.", ToastKind.Warning, TimeSpan.FromSeconds(6));
+#endif
+            return;
+        }
         if (plan.Destination == SpaceLaunchDestination.StudyProduct)
         {
             await OpenStudyHomeAsync();
@@ -53,10 +80,9 @@ public sealed partial class MainView
         }
 
         if (_nativeChatSidebar is not null)
-        if (_nativeChatSidebar is not null)
         {
-            _nativeChatSidebar.SetMode(HavenMode.Chat);
-            await _nativeChatSidebar.SelectSpaceFromShellAsync(space.Id);
+            if (transition is null) await _nativeChatSidebar.SelectSpaceFromShellAsync(space.Id, HavenMode.Chat);
+            else await _nativeChatSidebar.SelectSpaceUnderTransitionAsync(space.Id, HavenMode.Chat, transition);
             ApplyShellVisualState();
             return;
         }

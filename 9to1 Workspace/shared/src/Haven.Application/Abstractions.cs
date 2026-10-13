@@ -236,6 +236,16 @@ public sealed record GenerationOptions(double Temperature = 0.7, int ContextLimi
     /// Captured with the original request for continuation/recovery.</summary>
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
     public ModelRequestContextConstraints? RequestedContextConstraints { get; init; }
+    /// <summary>One live user choice bound to an actual temporary send. Never persisted,
+    /// restored, or reused as a Memory source/resource permission.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public TemporaryChatMemoryReadChoice? TemporaryMemoryReadChoice { get; init; }
+    /// <summary>Restrictive per-chat prompting intent. Restoring this intent without
+    /// its live exact request refuses; it cannot restore an approval capability.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public ChatToolApprovalMode? RequestedToolApprovalMode { get; init; }
+    [System.Text.Json.Serialization.JsonIgnore]
+    public ChatToolApprovalRequest? OriginalToolApprovalRequest { get; init; }
     /// <summary>Optional exact concrete tool selection only removes fresh maintained definitions.
     /// Null preserves legacy behavior; names create no resource or action permission.</summary>
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]

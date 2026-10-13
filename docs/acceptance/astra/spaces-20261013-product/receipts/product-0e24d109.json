@@ -1,0 +1,111 @@
+{
+  "startedAt": "2026-10-13T20:58:15.742Z",
+  "runnerSha256": "b55e00a0d901136cc5dcb2cd5ed4d3e67ff787aff5372677ad734e7134249c53",
+  "scope": "Actual compiled P0 shared Spaces shell, signed-out route, pointer navigation and responsive captures. No owner/backend substituted. Not authenticated inference or product acceptance.",
+  "checks": [
+    {
+      "name": "Cold Spaces entry opens actual shared Chat shell at approved1530x946 viewport",
+      "status": "PASS",
+      "observed": {
+        "nativeElements": 36,
+        "sharedChatRoot": true,
+        "signedOutSendDisabled": true
+      }
+    },
+    {
+      "name": "Real pointer opens account settings from shared header and browser back restores Chat",
+      "status": "PASS",
+      "observed": {
+        "actualPointer": true,
+        "accountRoute": true,
+        "backRestoresChat": true
+      }
+    },
+    {
+      "name": "Context sidebar collapses and restores by real pointer",
+      "status": "PASS",
+      "observed": {
+        "actualPointer": true
+      }
+    },
+    {
+      "name": "Actual sidebar search accepts keyboard text and clears without account substitution",
+      "status": "PASS",
+      "observed": {
+        "actualKeyboard": true,
+        "currentOwnerInput": true
+      }
+    },
+    {
+      "name": "Keyboard focus reaches Account and Enter opens its real route",
+      "status": "PASS",
+      "observed": {
+        "actualKeyboard": true,
+        "enterDispatch": true,
+        "backRestoresChat": true
+      }
+    },
+    {
+      "name": "Expected signed-out state does not expose failed-turn recovery",
+      "status": "PASS",
+      "observed": {
+        "expectedSignedOut": true,
+        "noFalseIncident": true,
+        "realAccountActionAvailable": true
+      }
+    },
+    {
+      "name": "Responsive actual Chat shell captures at390x844 and1920x1080 after resize and reload",
+      "status": "PASS",
+      "observed": {
+        "compact": true,
+        "wide": true,
+        "reload": true
+      }
+    },
+    {
+      "name": "Manage Spaces remains an explicit toolbox utility",
+      "status": "PASS",
+      "observed": {
+        "toolboxRoute": "#/app.spaces?action=manage"
+      }
+    },
+    {
+      "name": "Home exposes Spaces directly without expanding More destinations",
+      "status": "PASS",
+      "observed": {
+        "actualPointer": true,
+        "directHomeNavigation": true
+      }
+    }
+  ],
+  "errors": [],
+  "requestsFailed": [],
+  "artifactManifestSha256": "55d5bb1629ce91793bfc298a01eefb99c3d34aab233873befc604b7250d59155",
+  "browserVersion": "151.0.7922.173",
+  "console": [
+    {
+      "type": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled"
+    },
+    {
+      "type": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled"
+    },
+    {
+      "type": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled"
+    },
+    {
+      "type": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled"
+    }
+  ],
+  "currentStatus": {
+    "code": "Ready",
+    "text": ""
+  },
+  "cleanedUp": true,
+  "artifactUnchanged": true,
+  "finishedAt": "2026-10-13T20:58:40.663Z"
+}

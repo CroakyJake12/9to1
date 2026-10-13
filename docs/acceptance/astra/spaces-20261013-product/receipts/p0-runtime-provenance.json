@@ -1,0 +1,19 @@
+{
+  "observedAt": "2026-10-13T22:12:29.739328+00:00",
+  "sourceCommit": "0e24d10972384f5389f150daf3ed76ac1666062d",
+  "previewVersion": "d4c6cfd1-194e-467f-b8c7-0c8ac0db755b",
+  "exactPreviouslyQualifiedVersionResources": true,
+  "activeVersionUnchanged": true,
+  "assetManifestSha256": "ef0b6c19325f07e177561b1cf757a2a44a5187191f6c017c3b9b2271b5a6483f",
+  "configuredRuntimeModel": "qwen3:1.7b",
+  "catalogueProvenance": "Actual loopback /api/tags response filtered by configured model; no synthetic descriptors",
+  "anonymousLiveAssetByteFetch": false,
+  "anonymousLiveAssetByteFetchReason": "Owner Access preserved; deployment/version provenance is provider-read-back, not an unauthorized content fetch",
+  "restoredDependencyEvidence": [
+    "p0-runtime-restored-catalogue.json",
+    "p0-restored-relay-negative.json",
+    "p0-runtime-recovery.json"
+  ],
+  "authenticatedAcceptance": false,
+  "publicationHold": true
+}

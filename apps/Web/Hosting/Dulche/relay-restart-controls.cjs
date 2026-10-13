@@ -1,0 +1,22 @@
+const {Miniflare,convertV4MiniflareOptions}=require('miniflare');
+const fs=require('node:fs'),assert=require('node:assert/strict'),os=require('node:os'),path=require('node:path');
+const persistence=fs.mkdtempSync(path.join(os.tmpdir(),'astra-relay-custody-'));
+const options={modules:true,scriptPath:require('node:path').join(__dirname,'relay-test-entry.bundle.mjs'),compatibilityDate:'2026-10-08',compatibilityFlags:['enable_request_signal'],durableObjectsPersist:persistence,durableObjects:{RUNTIME_RELAY:{className:'RuntimeRelay',useSQLite:true}},bindings:{ACCOUNT_ORIGIN:'https://account.test',PREVIEW_ORIGIN:'https://preview.test',MODEL_ID:'qwen3:1.7b'},serviceBindings:{ACCOUNT_AUTH:async request=>request.headers.has('Authorization')?Response.json({accountId:'11111111-1111-4111-8111-111111111111'}):Response.json({error:'unauthorized'},{status:401})}};
+let mf,base;const create=async()=>{const configuration=convertV4MiniflareOptions(options);configuration.resourcePersistencePath=persistence;mf=new Miniflare(configuration);base=await mf.ready;};
+const lease='22222222-2222-4222-8222-222222222222';const request=(p,init)=>fetch(new URL(p,base),init);
+const connector=(p,body,id)=>request('/connector/'+p,{method:'POST',headers:{'X-Connector-Lease':lease,...(id?{'X-Job-Id':id}:{})},body:body?JSON.stringify(body):undefined});
+(async()=>{await create();const poll=connector('poll');await new Promise(r=>setTimeout(r,50));const opening=request('/api/tags',{headers:{Authorization:'Bearer isolated'}});opening.catch(()=>{});
+const {job}=await(await poll).json();assert.ok(job?.id);console.log('RESTART disposing');await mf.dispose();console.log('RESTART disposed');await create();console.log('RESTART recreated');
+
+const noLease=await request('/api/tags');assert.equal(noLease.status,503);
+const fenced=await request('/api/tags',{headers:{Authorization:'Bearer isolated'}});assert.equal(fenced.status,503);assert.equal((await fenced.json()).error,'connector_unavailable');
+assert.equal((await connector('terminal',{completed:false,cleanupSettled:false},job.id)).status,502);
+assert.equal((await request('/api/tags',{headers:{Authorization:'Bearer isolated'}})).status,503);
+const replacementLease='44444444-4444-4444-8444-444444444444';
+const nextPoll=request('/connector/poll',{method:'POST',headers:{'X-Connector-Lease':replacementLease}});nextPoll.catch(()=>{});await new Promise(r=>setTimeout(r,50));
+assert.equal((await request('/connector/terminal',{method:'POST',headers:{'X-Connector-Lease':replacementLease,'X-Job-Id':job.id},body:JSON.stringify({completed:false,cleanupSettled:true})})).status,409);
+assert.equal((await connector('terminal',{completed:false,cleanupSettled:true},job.id)).status,200);
+assert.equal((await request('/api/tags')).status,401);
+assert.equal((await request('/test/retire?id='+job.id)).status,200);
+const report={time:new Date().toISOString(),scope:'Actual Workerd/SQLite teardown and recreation; isolated authority protocol fixture; no real authenticated inference',passed:true,checks:['Opaque original custody survives actual runtime restart','Known cleanup failure cannot clear quarantine','Exact original lease-bound terminal acknowledgement works before a replacement poll and restores admission','A replacement connector lease cannot acknowledge the old original job','Exact terminal receipt survives restart acknowledgement']};fs.writeFileSync(process.env.RELAY_RESTART_EVIDENCE_PATH ?? require('node:path').join(__dirname,'relay-restart-result.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report));
+})().catch(error=>{console.error(error);process.exitCode=1;}).finally(async()=>{await mf?.dispose();fs.rmSync(persistence,{recursive:true,force:true});});

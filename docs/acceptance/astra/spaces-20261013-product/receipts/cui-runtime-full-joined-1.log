@@ -1,0 +1,4 @@
+Test run for /workspace/9to1/framework/CUI/Runtime.Tests/bin/x64/Release/net10.0/CakeOS.Cui.Runtime.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:   335, Skipped:     0, Total:   335, Duration: 10 s - CakeOS.Cui.Runtime.Tests.dll (net10.0)

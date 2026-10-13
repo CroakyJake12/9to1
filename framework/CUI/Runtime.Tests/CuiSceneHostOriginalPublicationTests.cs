@@ -749,7 +749,7 @@ public sealed class CuiSceneHostOriginalPublicationTests
             session = HeadlessUnitTestSession.StartNew(typeof(CuiRuntimeTestApplication));
             var rig = new OriginalRig(session);
             // Retain one real headless application scope across every original async pipeline.
-            await session.Dispatch(async () =>
+            await session.Dispatch<int>(async () =>
             {
                 try
                 {

@@ -15,7 +15,9 @@ that best explains the design.
 | Prefabs & DynamicUI | Reusable `.hui` components with code-behind; data-driven list rows | `src/Haven.UI/Components/Prefab/Prefab.cs`, `Components/DynamicUI/DynamicUI.cs`; examples in `src/Haven.Desktop/Prefabs`, `DynamicUI` | Scene pages (Chat, Imagine, Studio) |
 | Themes & personalisation | 5 themes × 4 appearances, accent override, fonts, avatars | `src/Haven.Desktop/HavenUI/Tokens/HavenThemeCatalog.cs`, `Controls/SurfacePaletteCatalog.cs`, `Services/UserPreferencesService.cs` | `HavenUiResourceApplier`, Settings scene |
 | Tidal background | Surface-following animated gradient backdrop | `src/Haven.Desktop/Controls/TidalBackground.*` | SurfacePaletteCatalog per surface |
-| Chat | Conversation streaming, tools, attachments; HUI transcript via DynamicUI | `src/Haven.Desktop/Views/Pages/Chat/NewChatPage*.cs`, `ChatHavenScene.cs` | Application chat orchestration, Ollama client |
+| Chat | Existing conversation streaming, tools and attachments projected through canonical CUI; retained original generated children use the narrow child-engine Object integration | `src/Haven.Desktop/Views/Pages/Chat/NewChatPage*.cs`, `ChatCuiScene*.cs`, `Spaces/UI/Chat/ChatWorkspace.cui` | Application chat orchestration, actual page/GenUI originals; `ChatHavenScene` remains a legacy record/fixture owner, not the mounted new Chat surface |
+| Native Space navigation | Canonical Chat/Tasks rail and contextual sidebar on the same coordinator; local saved pins, layout and collapse use guarded Home settings CAS | `src/Haven.Desktop/Interface/Shell/NativePresentation/NativeChatSidebar*.cs`, `MainView.NativeSpaceNavigation.cs`, `src/Haven.Application/Spaces/SpaceNavigationPreferences.cs` | Same `VersionedAtomicSettingsStore` and `SpaceLocalStoreAuthority`; Study retains its original assignment scene pending CUI migration; local preferences are not account synchronisation |
+| Native CUI appearance observation | Read-only, live projection of the existing native local profile preference owner | `src/Haven.Desktop/Services/NativeCuiThemePreferences.cs`, `UserPreferencesService.cs` | Shared `CuiThemePreferenceContext`; no second store, account claim or custom theme library is created; native account synchronisation remains unimplemented |
 | Browser | Embedded browsing, safety policies, private profiles | `src/Haven.Desktop/Views/Pages/Browser/BrowserPage.axaml.cs` (+ scene), `src/Haven.Browser` | Infrastructure WebView integration |
 | Documents (Write/Data/Canvas/Present) | App workspaces hosted by HUI scenes; Write has an experimental platform-neutral document-engine boundary for a future Linux LibreOfficeKit helper | `src/Haven.Desktop/Views/Pages/{Write,Data,Canvas,Present}`, `docs/architecture/write-libreoffice-engine.md` | Core document models, `IWriteDocumentEngine` |
 | Automations & scheduler | Scheduled actions, worker leases | `src/Haven.Application/Automations/*` | AutomationWorker host process |
@@ -33,7 +35,8 @@ that best explains the design.
 | Context & memory | Persisted per-conversation context cards (compact summaries protected); Learn Me injection capped by personality Memory References level | `src/Haven.Application/Knowledge/MemoryInjection.cs`; context entries in `ConversationRepository` | Haven Library storage |
 | Maps app | Switchable OSM stack: raster tiles + Nominatim geocoding + OSRM routing under mandatory provider terms (attribution, UA, ≥7-day cache, viewport-only fetch, HTTPS; Nominatim ≤1 req/s) | `src/Haven.Desktop/Views/Pages/Maps/*`, `src/Haven.Infrastructure/Maps/OpenStreetMapService.cs`, `OsmRasterTileSource.cs`, `OsrmRoutingService.cs` | `IMapService`, `ITileSource`, `MapsAttribution` |
 | Updates | Source-aware orchestration: Store-managed installs never download binaries; direct installs stage packages pending restart and say so | `src/Haven.Infrastructure/Updates/UpdateOrchestrator.cs` | `IUpdateProvider` implementations, versioned settings (`updates.preferences.v1`) |
-| Spaces | Built-in persona workspaces (General/Study/Shopping/Research/Agent) routed onto Chat/Tasks storage by kind | `src/Haven.Application/Spaces/SpaceRegistry.cs`, `src/Haven.Desktop/Services/SpaceLaunchPolicy.cs` | Versioned settings, launch routing |
+| Spaces | Stable built-in/custom Space identities; distinct Assistants destination uses the existing App-owned Assistants workspace, with legacy Agent identity preserved. Other configured workspaces retain their current Chat/Tasks/Study owners. | `src/Haven.Application/Spaces/SpaceRegistry.cs`, `src/Haven.Desktop/Services/SpaceLaunchPolicy.cs` | Versioned settings, launch routing, `MainView.OriginalRegisteredAssistants.cs`; revised Main/Teams and complete rail/sidebar remain implementation work |
+| Native Spaces settings ownership | Maintained Windows composition shares one actual settings instance between existing consumers and Home's evidence/receipt authority; registration creates no ownership import or approval. | `src/Haven.Desktop/App.OriginalWindowsHome.cs`, `src/Haven.Infrastructure/DI/OriginalWindowsSpaceSettingsServiceCollectionExtensions.cs`, `src/Haven.Infrastructure/Spaces/SpaceLocalStoreEvidenceProvider.cs` | Same `VersionedAtomicSettingsStore`, actual Home OS-profile/ownership tuple and `SpaceLocalStoreAuthority`; guarded callers require explicit Home store setup and refuse at App/Home retirement. Browser account storage is a separate owner. Graph publication/activation is not supplied by this registration. |
 | Canonical Task/Run | Durable Task/context/run identity, revision CAS, typed action acceptance and original-provider custody | `src/Haven.Application/Execution/TaskExecutionCoordinator.cs`, `src/Haven.Core/Execution/TaskCoordinationModels.cs` | `ITaskExecutionRepository`, original runtime/tool owners, fresh Task actor authority |
 | Canonical process shutdown | Seal the configured business cohort, join its actual request loops, business producers and frames before provider disposal | `src/Haven.Application/Execution/TaskRunCanonicalProcessRetirementOwner.cs`, `src/Haven.Desktop/App.OriginalCanonicalProcess.cs` | Same coordinator, Agent service, authority and frame owner; process-only Desktop adapter and App shutdown sequence |
 | Spaces task controls | Same-task dashboard/widget, steering and source-issued run-control observations | `../Spaces/Source/Tasks/SpaceTaskWorkspaceService.cs`, `src/Haven.Desktop/Views/Pages/Tasks/SpaceTasksDashboardPage.cs` | Same `SpaceRegistry`, coordinator, supplied native readiness; controls require genuine private owner ports |
@@ -104,3 +107,27 @@ separate and unrun; source composition is not their receipt.
 ### Files product startup
 
 The owning Files Windows executable declares `9to1.InitialApp=files` through the existing FilesWindows publish profile. Actual App startup consumes this declaration after original Windows Home start and shell initialization/session restore, then awaits the existing guarded Files route in the same App work scope. The Home constructor captures the compiled Files mutation policy alongside the original Dev policies before the permission service is built. Metadata selects a route and never supplies actor, store, approval or startup readiness. Files remains setup-required until its actual OS profile has explicitly configured an empty Files directory; the existing `files-configure` Console command is a setup seam, not GUI or IPC acceptance evidence.
+
+
+### Chat workspace snapshot and AI title ownership
+
+- `Interface/Shell/MainView.TabSessions.cs` captures durable shell/popup tabs through
+  `CreateDetachedTabSnapshot`; actual Temporary chat pages are omitted before their
+  title and conversation identity are serialised.
+- `Services/WorkspaceSessionCoordinator.cs` owns combined capture and reconciliation
+  of retained tabs, groups, windows, visible panes and selection. It does not infer
+  conversation persistence from a DTO or promote a Temporary conversation.
+- `Services/WorkspaceTabNameGeneration.cs` executes the shell's single original AI
+  naming request against a captured page/tab presentation. Its source guards belong
+  to `NewChatPage.OriginalLifetime.cs` and `ChatPage.Temporary.cs`. Temporary-origin
+  naming suppresses durable execution events; stale success and failure cannot
+  overwrite a replacement presentation.
+- `Views/Pages/Chat/NewChatPage.ClosePreflight.cs` owns its actual chat Save/Discard/
+  Cancel decision and snapshot validation. `MainView.OriginalDocumentClosePreflight.cs`
+  mounts choices for hidden subjects and consumes page preparation alongside existing
+  document close owners. The maintained legacy page keeps its separate actual owner.
+
+See [State and persistence](state-and-persistence.md#temporary-chat-presentation-workspace-snapshots-and-close-consent)
+for acknowledgement and retention boundaries. Restored popups, complete process
+retirement, full draft/configuration restoration and operating-system lifecycle
+acceptance remain separate from the bounded controlled regression fixtures.

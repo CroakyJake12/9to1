@@ -151,7 +151,7 @@ internal static class BrowserExpectedRefusalControls
     }
     private static async Task ActualActorSourceCannotAcquireItsOwnEncompassingJoin()
     {
-        var platform = new Platform(); var owner = platform.Create(); var guardObserved = false, releases = 0;
+        var platform = new Platform(); var owner = platform.Create(); var guardObserved = false; var releases = 0;
         var actors = new Actors(token => new(BrowserTaskIdentityReadOperation.RunAsync<AuthenticatedResourceActor?>(() =>
         {
             try { _ = owner.CloseAndDrainAsync(); } catch (InvalidOperationException) { guardObserved = true; }

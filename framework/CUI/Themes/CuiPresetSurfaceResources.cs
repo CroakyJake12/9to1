@@ -46,6 +46,7 @@ internal static class CuiPresetSurfaceResources
         resources["CuiShellMaterial"] = resources["CuiBackgroundBrush"];
         resources["CuiSurfaceMaterial"] = resources["CuiPanelBrush"];
         resources["CuiFloatingSurfaceMaterial"] = resources["CuiPanel2Brush"];
+        resources["CuiFloatingSurfaceBrush"] = resources["CuiPanel2Brush"];
         resources["CuiPopupSurfaceBrush"] = Gradient(90,
             (0, Opaque(Mix(palette.Panel2, white, dark ? .04 : .12))), (1, Opaque(palette.Panel2)));
         ApplyForeground(resources, palette);

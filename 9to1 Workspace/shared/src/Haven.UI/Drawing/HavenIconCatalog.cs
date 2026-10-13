@@ -9,6 +9,29 @@ public static class HavenIconCatalog
 {
     private static readonly HavenRect ViewBox = new(0, 0, 24, 24);
 
+    /// <summary>Returns a supported filled presentation of the same semantic icon.
+    /// Unsupported variants are explicit; the ordinary line-icon catalog is unchanged.</summary>
+    public static bool TryResolveSolid(string? key,
+        [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out HavenGeometry? geometry)
+    {
+        if (!string.Equals(key?.Trim(), "chat", StringComparison.OrdinalIgnoreCase))
+        {
+            geometry = null;
+            return false;
+        }
+        // A rounded speech bubble with a curved tail, rather than a filled
+        // version of the separate rectangular outline asset.
+        geometry = Geometry(new HavenPathFigure(new HavenPoint(12, 2),
+            [new HavenCubicBezierSegment(new(18, 2), new(23, 5.6), new(23, 10.5)),
+             new HavenCubicBezierSegment(new(23, 15.4), new(18, 19), new(12, 19)),
+             new HavenCubicBezierSegment(new(10.6, 19), new(9.3, 18.8), new(8.1, 18.4)),
+             new HavenCubicBezierSegment(new(6.4, 20), new(4.3, 21.3), new(2, 22)),
+             new HavenCubicBezierSegment(new(3, 20.1), new(3.5, 18.5), new(3.6, 16.9)),
+             new HavenCubicBezierSegment(new(1.9, 15.3), new(1, 13.2), new(1, 10.5)),
+             new HavenCubicBezierSegment(new(1, 5.6), new(6, 2), new(12, 2))], true));
+        return true;
+    }
+
     public static HavenGeometry Resolve(string? key) => (key ?? string.Empty).Trim().ToLowerInvariant() switch
     {
         "home" => Geometry(Line((3, 11), (12, 3), (21, 11)), Line((5, 9), (5, 21), (10, 21), (10, 15), (14, 15), (14, 21), (19, 21), (19, 9))),
@@ -30,6 +53,9 @@ public static class HavenIconCatalog
         "chevron-up" => Geometry(Line((5, 16), (12, 9), (19, 16))),
         "arrow-up" => Geometry(Line((5, 12), (12, 5), (19, 12)), Line((12, 5), (12, 20))),
         "search" => Geometry(Circle(10, 10, 6), Line((14.5, 14.5), (20, 20))),
+        "briefcase" => Geometry(RoundedBox(3, 7, 18, 14, 2), Line((8, 7), (8, 3), (16, 3), (16, 7)), Line((3, 12), (21, 12)), Line((10, 12), (10, 15), (14, 15), (14, 12))),
+        "cart" => Geometry(Line((2, 3), (5, 3), (8, 16), (19, 16)), Line((6, 6), (22, 6), (20, 12), (7, 12)), Circle(9, 20, 1.5), Circle(18, 20, 1.5)),
+        "experiences" => Geometry(RoundedBox(3, 6, 18, 12, 4), Line((6, 12), (12, 12)), Line((9, 9), (9, 15)), Circle(16, 10, 1), Circle(18, 14, 1)),
         "chat" => Geometry(new HavenPathFigure(new HavenPoint(4, 5),
             [new HavenLineSegment(new HavenPoint(20, 5)), new HavenLineSegment(new HavenPoint(20, 16)), new HavenLineSegment(new HavenPoint(11, 16)), new HavenLineSegment(new HavenPoint(6, 20)), new HavenLineSegment(new HavenPoint(6, 16)), new HavenLineSegment(new HavenPoint(4, 16))], true)),
         "folder" => Geometry(new HavenPathFigure(new HavenPoint(3, 6),
@@ -42,6 +68,7 @@ public static class HavenIconCatalog
         "file" or "notes" => Geometry(new HavenPathFigure(new HavenPoint(6, 3),
             [new HavenLineSegment(new HavenPoint(15, 3)), new HavenLineSegment(new HavenPoint(20, 8)), new HavenLineSegment(new HavenPoint(20, 21)), new HavenLineSegment(new HavenPoint(6, 21))], true),
             Line((15, 3), (15, 8), (20, 8)), Line((9, 12), (17, 12)), Line((9, 16), (16, 16))),
+        "user" or "account" => Geometry(Circle(12, 7, 4), Line((4, 21), (4, 18), (7, 14), (17, 14), (20, 18), (20, 21))),
         "agents" => Geometry(Circle(8, 8, 3), Circle(16.5, 8.5, 2.5), Line((3, 20), (3, 17), (5, 14), (11, 14), (13, 17), (13, 20)), Line((14, 14), (19, 14), (21, 17), (21, 20))),
         "bolt" or "rapid" or "build" => Geometry(new HavenPathFigure(new HavenPoint(13, 2),
             [new HavenLineSegment(new HavenPoint(5, 13)), new HavenLineSegment(new HavenPoint(11, 13)), new HavenLineSegment(new HavenPoint(10, 22)), new HavenLineSegment(new HavenPoint(19, 10)), new HavenLineSegment(new HavenPoint(13, 10))], true)),

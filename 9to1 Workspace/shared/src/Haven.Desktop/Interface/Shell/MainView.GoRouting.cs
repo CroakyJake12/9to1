@@ -95,7 +95,7 @@ public sealed partial class MainView
 
         if (decision.TargetKey.Equals("spaces", StringComparison.OrdinalIgnoreCase))
         {
-            await OpenSpacesAsync();
+            await OpenSpacesWorkspaceAsync();
 
             if (taskContext.Attachments.Files.Count > 0 || taskContext.Attachments.Apps.Count > 0 || taskContext.Attachments.Capabilities.Count > 0)
 

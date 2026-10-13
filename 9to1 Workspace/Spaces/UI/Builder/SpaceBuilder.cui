@@ -1,0 +1,85 @@
+<Cui id="spaces.builder" version="1">
+  <Theme Name="user_preference">
+    <Page ID="space-builder" AccessibleName="Space Builder">
+      <Container Type="Grid" RowSizes="Auto Auto 1fr Auto" Padding="24" CellGap="16" Background="{Resource CuiBackgroundBrush}">
+        <Container Type="Vertical Stack" CellGap="4">
+          <Text Text="{Binding builder.title}" FontSize="28" FontWeight="SemiBold" TextWrapping="Wrap" />
+          <Text Text="{Binding builder.identity}" FontSize="12" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Space identity and saved revision" />
+        </Container>
+        <Container Row="1" Type="Horizontal Stack" CellGap="8" AccessibleName="Builder view">
+          <Button ID="builder-basic" Action="builder.basic" Content="Basic" Selected="{Binding builder.basic}" MinHeight="44" />
+          <Button ID="builder-advanced" Action="builder.advanced" Content="Advanced" Selected="{Binding builder.advanced}" MinHeight="44" />
+          <Button ID="builder-expert" Action="builder.expert" Content="Expert" Selected="{Binding builder.expert}" MinHeight="44" />
+        </Container>
+        <Container Row="2" Type="Vertical Stack" VerticalScrolling="true" CellGap="16">
+          <Container Active="{Binding builder.expert}" Type="Vertical Stack" CellGap="8" AccessibleName="Expert pages">
+            <Container ID="expert-first-pages" Type="Wrap" CellGap="8">
+              <Button ID="expert-details" Action="builder.details" Content="Details" MinHeight="44" />
+              <Button ID="expert-harness" Action="builder.harness" Content="Harness Logic" MinHeight="44" />
+            </Container>
+            <Container ID="expert-logic-pages" Type="Wrap" CellGap="8">
+              <Button ID="expert-model" Action="builder.model" Content="Model Logic" MinHeight="44" />
+              <Button ID="expert-message" Action="builder.message" Content="User Message Logic" MinHeight="44" />
+            </Container>
+            <Button ID="expert-files" Action="builder.files" Content="Files" MinHeight="44" HorizontalAlignment="Left" />
+            <Text Text="{Binding builder.page}" FontSize="20" FontWeight="SemiBold" />
+          </Container>
+          <Container Active="{Binding builder.documentVisible}" Type="Vertical Stack" CellGap="8" AccessibleName="Space details">
+            <Text Text="Name" FontWeight="SemiBold" />
+            <Input ID="builder-name" Type="Text" Value="{Binding builder.name, mode=TwoWay, type=string}" Interactive="{Binding builder.canEdit}" AccessibleName="Space name" />
+            <Text Text="Description" FontWeight="SemiBold" Margin="0,8,0,0" />
+            <Input ID="builder-description" Type="Text" Value="{Binding builder.description, mode=TwoWay, type=string}" Interactive="{Binding builder.canEdit}" AccessibleName="Space description" AcceptsReturn="true" TextWrapping="Wrap" MinHeight="64" />
+            <Text Text="Icon" FontWeight="SemiBold" Margin="0,8,0,0" />
+            <Input ID="builder-icon" Type="Text" Value="{Binding builder.icon, mode=TwoWay, type=string}" Interactive="{Binding builder.canEdit}" AccessibleName="Space icon key" PlaceholderText="For example: book" />
+            <Text Text="Custom instructions" FontWeight="SemiBold" Margin="0,8,0,0" />
+            <Input ID="builder-instructions" Type="Text" Value="{Binding builder.instructions, mode=TwoWay, type=string}" Interactive="{Binding builder.canEdit}" AccessibleName="Custom instructions" AcceptsReturn="true" TextWrapping="Wrap" MinHeight="150" />
+          </Container>
+          <Container Active="{Binding builder.advanced}" Type="Vertical Stack" CellGap="8" AccessibleName="Advanced configuration">
+            <Text Text="Model preferences" FontSize="20" FontWeight="SemiBold" />
+            <Text Text="These saved preferences do not grant access or verify model availability. Model execution is not connected in this browser." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            <Text Text="Configured model ID" />
+            <Input ID="builder-model-id" Type="Text" Value="{Binding builder.modelId, mode=TwoWay, type=string}" Interactive="{Binding builder.canEdit}" AccessibleName="Configured model ID" PlaceholderText="Inherit account choice" />
+            <Text Text="Provider constraint" />
+            <Input ID="builder-provider" Type="Text" Value="{Binding builder.provider, mode=TwoWay, type=string}" Interactive="{Binding builder.canEdit}" AccessibleName="Provider constraint" />
+            <Text Text="Required model capabilities, separated by commas" />
+            <Input ID="builder-model-capabilities" Type="Text" Value="{Binding builder.modelRequired, mode=TwoWay, type=string}" Interactive="{Binding builder.canEdit}" AccessibleName="Required model capabilities" />
+            <Text Text="Context preferences" FontSize="20" FontWeight="SemiBold" Margin="0,12,0,0" />
+            <Text Text="Web access" />
+            <Input ID="builder-web-policy" Type="Select" ItemsSource="{Binding builder.webOptions}" SelectedIndex="{Binding builder.webIndex, mode=TwoWay, type=int}" Interactive="{Binding builder.canEdit}" AccessibleName="Configured web access policy" />
+            <Input Type="Checkbox" Text="Use sources only" Checked="{Binding builder.sourceOnly, mode=TwoWay, type=bool}" Interactive="{Binding builder.canEdit}" AccessibleName="Use sources only" />
+            <Input Type="Checkbox" Text="Include current selection" Checked="{Binding builder.includeSelection, mode=TwoWay, type=bool}" Interactive="{Binding builder.canEdit}" AccessibleName="Include current selection" />
+            <Text Text="Maximum retrieved items" />
+            <Input ID="builder-maximum-items" Type="Text" Value="{Binding builder.maximumItems, mode=TwoWay, type=string}" Interactive="{Binding builder.canEdit}" AccessibleName="Maximum retrieved items" PlaceholderText="Use inherited limit" />
+            <Text Text="Default memory scope within the existing allowed scopes" TextWrapping="Wrap" />
+            <Input ID="builder-memory" Type="Select" ItemsSource="{Binding builder.memoryOptions}" SelectedIndex="{Binding builder.memoryIndex, mode=TwoWay, type=int}" Interactive="{Binding builder.canEdit}" AccessibleName="Configured memory scope" />
+            <Text Text="Existing capability bindings" FontSize="20" FontWeight="SemiBold" Margin="0,12,0,0" />
+            <Text Text="Allowed means requested availability. Home and organisation permissions still apply. Adding installed packages and mandatory-skill validation are not connected here." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            <Repeat Source="{Binding builder.bindings}" As="binding" Key="{Binding binding.id}">
+              <Container Type="Vertical Stack" CellGap="4" Margin="0,0,0,8">
+                <Text Text="{Binding binding.label}" TextWrapping="Wrap" />
+                <Text Text="{Binding binding.version}" Foreground="{Resource CuiTextSoftBrush}" />
+                <Input Type="Select" ItemsSource="{Binding builder.bindingOptions}" SelectedIndex="{Binding binding.index, mode=TwoWay, type=int}" Interactive="{Binding builder.canEdit}" AccessibleName="{Binding binding.label}" />
+              </Container>
+            </Repeat>
+          </Container>
+          <Container Active="{Binding builder.graphVisible}" Type="Vertical Stack" CellGap="12">
+            <Text Text="Graph editing is not connected in this browser yet. No executable graph has been created or activated by this editor." TextWrapping="Wrap" AccessibleName="Graph editing availability" />
+            <Text Text="Your saved Space configuration and existing layouts are retained when you switch views." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+          <Container Active="{Binding builder.filesVisible}" Type="Vertical Stack" CellGap="8" AccessibleName="Saved Space resource references">
+            <Text Text="{Binding builder.resourceSummary}" TextWrapping="Wrap" />
+            <Repeat Source="{Binding builder.resources}" As="resource" Key="{Binding resource.id}">
+              <Container Type="Vertical Stack" CellGap="4" Margin="0,0,0,8"><Text Text="{Binding resource.label}" TextWrapping="Wrap" /><Text Text="{Binding resource.state}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" /></Container>
+            </Repeat>
+          </Container>
+          <Text Active="{Binding builder.hasLegacyLayout}" Text="{Binding builder.legacyLayout}" TextWrapping="Wrap" AccessibleName="Preserved legacy layout" Foreground="{Resource CuiTextSoftBrush}" />
+        </Container>
+        <Container Row="3" Type="Vertical Stack" CellGap="8">
+          <Container ID="builder-save-actions" Type="Wrap" CellGap="8"><Button ID="builder-save" Action="builder.save" Content="Save configuration" MinHeight="44" /><Button ID="builder-refresh" Action="builder.refresh" Content="Refresh saved revision" MinHeight="44" /></Container>
+          <Button ID="builder-discard" Action="builder.discard" Content="Discard unsaved changes" HorizontalAlignment="Left" MinHeight="44" />
+          <Text ID="builder-status" Text="{Binding builder.status}" TextWrapping="Wrap" AccessibleName="Builder status" Foreground="{Resource CuiTextSoftBrush}" />
+        </Container>
+      </Container>
+    </Page>
+  </Theme>
+</Cui>

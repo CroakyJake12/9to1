@@ -55,23 +55,40 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
     }), required: [ToolCapability.Text, ToolCapability.Tools]);
   }
 
-  [Fact]
-  public async Task Actual_native_transport_refuses_tools_before_any_model_or_raw_callback()
+  [Theory]
+  [InlineData(true)]
+  [InlineData(false)]
+  public async Task Native_tool_transport_requires_current_same_model_capability_before_raw_dispatch(bool hasCurrentProof)
   {
     await Control(h => WithRawTransportScope(h, async (source, scope) =>
     {
       var (action, context) = await RawTransportResponseControl(h);
-      var wire = new OllamaToolRequest("model", [new("user", "tools are not text")], [], EffortLevel.Medium)
+      if (!hasCurrentProof) h.Provider.ModelCapabilities.Remove(ToolCapability.Tools);
+      var wire = new OllamaToolRequest("model", [new("user", "tools are not text")],
+        [new("fixture.echo", "typed definition", new Dictionary<string, object>(), [])], EffortLevel.Medium)
         { ExecutionContext = context };
+      OllamaToolRequest? actualWire = null;
+      var response = new OllamaToolResponse("original typed response", []);
+      h.Provider.ToolFactory = (request, _) => { actualWire = request; return Task.FromResult(response); };
       var frame = h.Frames.StartOriginalFrameAsync(h.Admission,
         token => source.ToolsOriginalAsync(wire, h.Admission, action, scope, token), CancellationToken.None);
       scope.Tasks.Add(frame);
-      var cause = await Record.ExceptionAsync(() => frame);
-      if (cause is not null) h.Expect(cause);
-      var refusal = Assert.IsType<InferenceEngineException>(cause);
-      Assert.Equal(DulcheErrorCode.UnsupportedCapability, refusal.Error.Code);
-      Assert.Equal(0, h.Provider.CatalogueCalls);
-      Assert.Equal(0, h.Provider.ToolCalls);
+      if (hasCurrentProof)
+      {
+        Assert.Same(response, await frame);
+        Assert.Same(wire, actualWire);
+        Assert.Equal(1, h.Provider.ToolCalls);
+      }
+      else
+      {
+        var cause = await Record.ExceptionAsync(() => frame);
+        if (cause is not null) h.Expect(cause);
+        var refusal = Assert.IsType<InferenceEngineException>(cause);
+        Assert.Equal(DulcheErrorCode.UnsupportedCapability, refusal.Error.Code);
+        Assert.Null(actualWire);
+        Assert.Equal(0, h.Provider.ToolCalls);
+      }
+      Assert.Equal(1, h.Provider.CatalogueCalls);
       Assert.Equal(0, h.Tools.BindCalls);
     }, nativeContextLimit: 128), required: [ToolCapability.Text, ToolCapability.Tools]);
   }

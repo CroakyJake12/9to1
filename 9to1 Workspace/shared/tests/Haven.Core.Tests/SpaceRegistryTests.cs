@@ -12,7 +12,7 @@ public sealed class SpaceRegistryTests
 
         var spaces = await registry.GetAllAsync();
 
-        Assert.Equal(8, spaces.Count);
+        Assert.Equal(9, spaces.Count);
         Assert.Contains(spaces, space => space.Id == SpaceRegistry.ChatSpaceId && space.Kind == SpaceKind.Chat && space.Origin == SpaceOrigin.BuiltIn);
         Assert.Contains(spaces, space => space.Id == SpaceRegistry.StudySpaceId && space.Kind == SpaceKind.Study && space.IsBuiltIn);
         Assert.Contains(spaces, space => space.Id == SpaceRegistry.TasksSpaceId && space.Kind == SpaceKind.Tasks && space.IsBuiltIn);
@@ -24,6 +24,8 @@ public sealed class SpaceRegistryTests
         Assert.False(string.IsNullOrWhiteSpace(agent.Instructions));
         Assert.Contains(spaces, space => space.Id == SpaceRegistry.TranslateSpaceId && space.Kind == SpaceKind.Translate);
         Assert.Contains(spaces, space => space.Id == SpaceRegistry.ExperiencesSpaceId && space.Kind == SpaceKind.Experiences);
+        Assert.Contains(spaces, space => space.Id == SpaceRegistry.AssistantsSpaceId && space.Kind == SpaceKind.Assistants && space.IsBuiltIn);
+        Assert.NotEqual(SpaceRegistry.AgentSpaceId, SpaceRegistry.AssistantsSpaceId);
     }
 
     [Fact]

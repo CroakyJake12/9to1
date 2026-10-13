@@ -1,7 +1,8 @@
+import { createConversationProductionStorage } from './conversation-production-indexeddb.js';
 // Platform storage for the canonical TaskExecutionSnapshot, not another task model or grant.
 export function createTaskExecutionModule({ databaseName = 'nine-to-one-task-execution',
   indexedDB = globalThis.indexedDB, crypto = globalThis.crypto } = {}) {
-  let opening, sealed = false, close;
+  let opening, spacesOpening, sealed = false, close;
   const originals = new Map();
   const failedOriginals = [], ownerErrors = [];
   const maximumRetainedOriginals = 256; // Finite actual frame custody, never prune a failed frame.
@@ -75,11 +76,13 @@ export function createTaskExecutionModule({ databaseName = 'nine-to-one-task-exe
             }
             acquired.createObjectStore('taskProfiles', { keyPath: 'taskId' });
           }
-          const events = acquired.createObjectStore('executionEvents', { keyPath: ['profileId', 'eventId'] });
-          events.createIndex('profileId', 'profileId');
-          events.createIndex('profileExecution', ['profileId', 'executionId']);
-          events.createIndex('profileSequence', ['profileId', 'sequenceSort'], { unique: true });
-          acquired.createObjectStore('executionEventSequences', { keyPath: 'profileId' });
+          if (oldVersion < 3) {
+            const events = acquired.createObjectStore('executionEvents', { keyPath: ['profileId', 'eventId'] });
+            events.createIndex('profileId', 'profileId');
+            events.createIndex('profileExecution', ['profileId', 'executionId']);
+            events.createIndex('profileSequence', ['profileId', 'sequenceSort'], { unique: true });
+            acquired.createObjectStore('executionEventSequences', { keyPath: 'profileId' });
+          }
         } catch (error) {
           add(errors, error);
           try { request.transaction.abort(); } catch (abort) { add(errors, abort); }
@@ -119,6 +122,53 @@ export function createTaskExecutionModule({ databaseName = 'nine-to-one-task-exe
     const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
     return [...new Uint8Array(bytes)].map(value => value.toString(16).padStart(2, '0')).join('');
   }
+  function openSpaces() {
+    if (!indexedDB || sealed) return Promise.reject(new Error('StorageUnavailable'));
+    if (spacesOpening) return spacesOpening;
+    // Separate canonical storage under the SAME authenticated module lifetime. Keeping
+    // the existing Task database at schema3 allows immediate old-deployment rollback.
+    const actual = new Promise((resolve, reject) => {
+      const request = indexedDB.open(`${databaseName}-spaces`, 1);
+      let acquired, blocked = false;
+      const errors = [];
+      request.onupgradeneeded = event => {
+        try {
+          acquired = request.result;
+          if (event.oldVersion !== 0) throw new Error('UnsupportedSpaceSettingsMigration');
+          const settings = acquired.createObjectStore('spaceSettings', { keyPath: ['profileId', 'key'] });
+          settings.createIndex('profileId', 'profileId');
+          acquired.createObjectStore('spaceSettingsVersions', { keyPath: 'profileId' });
+        } catch (error) {
+          add(errors, error);
+          try { request.transaction.abort(); } catch (abort) { add(errors, abort); }
+        }
+      };
+      request.onblocked = () => { blocked = true; };
+      request.onerror = () => {
+        if (request.error) add(errors, request.error);
+        if (acquired) try { acquired.close(); } catch (error) { add(errors, error); }
+        for (const error of errors) add(ownerErrors, error);
+        reject(new AggregateError(errors, 'Original Space settings open failed.'));
+      };
+      request.onsuccess = () => {
+        const db = acquired = request.result;
+        if (blocked || sealed || errors.length) {
+          try { db.close(); } catch (error) { add(errors, error); }
+          for (const error of errors) add(ownerErrors, error);
+          reject(errors.length ? new AggregateError(errors, 'Original Space settings open/cleanup failed.')
+            : new Error(blocked ? 'StorageBlocked' : 'StorageUnavailable')); return;
+        }
+        db.onversionchange = () => {
+          try { db.close(); } catch (error) { add(ownerErrors, error); return; }
+          if (spacesOpening === actual) spacesOpening = null;
+        };
+        resolve(db);
+      };
+    });
+    spacesOpening = actual;
+    actual.catch(() => { if (spacesOpening === actual) spacesOpening = null; });
+    return actual;
+  }
   function transact(db, write, original, schedule, storeNames = ['tasks']) {
     return new Promise(resolve => {
       if (original.cancelled) { resolve(refuse('Cancelled')); return; }
@@ -129,13 +179,16 @@ export function createTaskExecutionModule({ databaseName = 'nine-to-one-task-exe
         value: original.completionObservation }); // Unvalidated observation, never a successful CAS receipt.
       tx.oncomplete = () => {
         original.transaction = null;
+        original.terminalStopObservation = null; // Actual completion proves a native InvalidState stop was too late.
         original.committed = write;
         original.completionObservation = value;
         resolve(original.errors.length ? failed() : { ok: true, value, committed: write });
       };
       tx.onabort = () => {
         original.transaction = null;
-        if (tx.error && !original.cancelled && !rejection) retain(original, tx.error);
+        original.terminalStopObservation = null; // The actual abort event owns the terminal disposition below.
+        if (!original.cancelled && !rejection)
+          retain(original, tx.error ?? new DOMException('The storage transaction aborted without an owning cancellation or conflict.', 'AbortError'));
         resolve(original.errors.length ? failed() : rejection ?? refuse(original.cancelled ? 'Cancelled' : storageCode(tx.error)));
       };
       tx.onerror = () => {}; // Actual terminal onabort/oncomplete is the only settlement witness.
@@ -506,7 +559,89 @@ export function createTaskExecutionModule({ databaseName = 'nine-to-one-task-exe
     }, ['executionEvents', 'executionEventSequences']);
   }
 
+  const spaceSettingKeys = new Set(['spaces.registry', 'spaces.current']);
+  const settingJson = value => value === null || typeof value === 'string' && value.length <= 8 * 1024 * 1024;
+  async function executeSpaceSettings(action, args, original) {
+    if (!profile(args?.profileId)) return refuse('ActorUnavailable');
+    const owner = args.profileId, write = action === 'SpacesSettings.CompareExchange';
+    const earlier = [];
+    for (const other of originals.values()) {
+      if (other === original) break;
+      if (other.profileId === owner && other.action === 'SpacesSettings.CompareExchange') earlier.push(other.settled);
+    }
+    if (write && (!spaceSettingKeys.has(args.key) || !settingJson(args.expected) || !settingJson(args.replacement) ||
+        !args.guards || typeof args.guards !== 'object' || Array.isArray(args.guards) ||
+        Object.entries(args.guards).some(([key, value]) => !spaceSettingKeys.has(key) || !settingJson(value))))
+      return refuse('InvalidArgument');
+    if (write && args.replacement !== null) {
+      if (!/^[0-9a-f]{64}$/.test(args.sha256 ?? '') || await hash(args.replacement) !== args.sha256) return refuse('InvalidArgument');
+      JSON.parse(args.replacement); // Validate without reserialising or approximating canonical Int64 fields.
+    }
+    await Promise.all(earlier);
+    if (original.cancelled) return refuse('Cancelled');
+    const db = await openSpaces();
+    if (original.cancelled) return refuse('Cancelled');
+    // Hash validation completes outside the IDB transaction. The final write compares
+    // the exact inspected rows again inside one transaction before publishing anything.
+    const observed = await transact(db, false, original, (stores, set, _deny, guard) => {
+      let rows, version;
+      const complete = () => { if (rows !== undefined && version !== undefined) set({ rows, version }); };
+      stores.spaceSettings.index('profileId').getAll(owner).onsuccess = guard(e => { rows = e.target.result; complete(); });
+      stores.spaceSettingsVersions.get(owner).onsuccess = guard(e => { version = e.target.result?.version ?? 0; complete(); });
+    }, ['spaceSettings', 'spaceSettingsVersions']);
+    if (!observed.ok) return observed;
+    const snapshot = observed.value;
+    if (!Number.isInteger(snapshot.version) || snapshot.version < 0 || snapshot.version > 2147483647 || snapshot.rows.length > 2)
+      throw new Error('InvalidSpaceSettingsVersion');
+    for (const row of snapshot.rows) {
+      if (row.profileId !== owner || !spaceSettingKeys.has(row.key) || typeof row.json !== 'string' ||
+          !/^[0-9a-f]{64}$/.test(row.sha256 ?? '') || await hash(row.json) !== row.sha256)
+        throw new Error('InvalidSpaceSettingsIntegrity');
+      try { JSON.parse(row.json); }
+      catch (cause) { throw new Error('InvalidSpaceSettingsPayload', { cause }); }
+    }
+    if (original.cancelled) return refuse('Cancelled');
+    if (!write) return { ok: true, committed: false, value: snapshot };
+    return transact(db, true, original, (stores, set, _deny, guard) => {
+      let rows, version;
+      const complete = () => {
+        if (rows === undefined || version === undefined) return;
+        const current = rows.find(row => row.key === args.key) ?? null;
+        const jsonAt = key => rows.find(row => row.key === key)?.json ?? null;
+        const conflict = Object.keys(args.guards).find(key => jsonAt(key) !== args.guards[key]) ?? null;
+        const reply = { profileId: owner, key: args.key, version, current, exchanged: false, conflictingGuardKey: conflict };
+        // A concurrently changed snapshot is an ordinary CAS loss; registry re-reads it.
+        if (version !== snapshot.version || JSON.stringify(rows) !== JSON.stringify(snapshot.rows) ||
+            (current?.json ?? null) !== args.expected || conflict !== null) { set(reply); return; }
+        if (version === 2147483647) throw new Error('SpaceSettingsVersionCapacity');
+        const replacement = args.replacement === null ? null :
+          { profileId: owner, key: args.key, json: args.replacement, sha256: args.sha256 };
+        if (replacement === null) stores.spaceSettings.delete([owner, args.key]);
+        else stores.spaceSettings.put(replacement);
+        stores.spaceSettingsVersions.put({ profileId: owner, version: version + 1 });
+        set({ ...reply, version: version + 1, current: replacement, exchanged: true });
+      };
+      stores.spaceSettings.index('profileId').getAll(owner).onsuccess = guard(e => { rows = e.target.result; complete(); });
+      stores.spaceSettingsVersions.get(owner).onsuccess = guard(e => { version = e.target.result?.version ?? 0; complete(); });
+    }, ['spaceSettings', 'spaceSettingsVersions']);
+  }
+
+  const production = createConversationProductionStorage({ indexedDB, databaseName, hash, transact, refuse, profile, uuid, revision,
+    isSealed: () => sealed, retainOwnerError: error => add(ownerErrors, error), crypto });
   async function execute(action, args, original) {
+    if (action.startsWith('ConversationProduction.')) {
+      const earlier = [];
+      for (const other of originals.values()) {
+        if (other === original) break;
+        if (other.profileId === args?.profileId && other.action.startsWith('ConversationProduction.') &&
+            !['ConversationProduction.Export', 'ConversationProduction.ReadAttachment', 'ConversationProduction.SelectAttachment'].includes(other.action)) earlier.push(other.settled);
+      }
+      await Promise.all(earlier);
+      if (original.cancelled) return refuse('Cancelled');
+      return production.execute(action, args, original);
+    }
+    if (action === 'SpacesSettings.Export' || action === 'SpacesSettings.CompareExchange')
+      return executeSpaceSettings(action, args, original);
     if (eventActions.has(action)) return executeEvents(action, args, original);
     if (conversationActions.has(action)) return executeConversation(action, args, original);
     if (args?.profileId !== undefined && ['Upsert', 'Get', 'GetByContext', 'GetResumable'].includes(action))
@@ -603,8 +738,17 @@ export function createTaskExecutionModule({ databaseName = 'nine-to-one-task-exe
       const original = originals.get(requestId);
       if (!original) return;
       original.cancelled = true;
+      if (original.cancelSource)
+        try { original.cancelSource(); } catch (error) { retain(original, error); throw error; }
       if (original.transaction && !original.committed)
-        try { original.transaction.abort(); } catch (error) { retain(original, error); throw error; }
+        try { original.transaction.abort(); }
+        catch (error) {
+          // A native complete/abort event can be queued before our oncomplete/onabort
+          // listener runs. Retain that exact stop observation until the SAME actual
+          // terminal event settles it; arbitrary abort failures still fault the owner.
+          if (error instanceof DOMException && error.name === 'InvalidStateError') original.terminalStopObservation = error;
+          else { retain(original, error); throw error; }
+        }
     },
     dispose() {
       if (close) return close;
@@ -618,9 +762,11 @@ export function createTaskExecutionModule({ databaseName = 'nine-to-one-task-exe
         for (const outcome of settled) if (outcome.status === 'rejected') add(errors, outcome.reason);
         for (const original of failedOriginals)
           for (const error of original.errors) add(errors, error);
-        try { const db = await opening; db?.close(); } catch (error) { add(errors, error); }
+        try { await production.close(); } catch (error) { add(errors, error); }
+        for (const originalOpen of [opening, spacesOpening])
+          try { const db = await originalOpen; db?.close(); } catch (error) { add(errors, error); }
         for (const error of ownerErrors) add(errors, error);
-        opening = null;
+        opening = null; spacesOpening = null;
         if (errors.length) reject(new AggregateError(errors, 'Original Task storage close failed.')); else resolve();
       }).catch(reject);
       return close;

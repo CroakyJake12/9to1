@@ -1,3 +1,4 @@
+using Haven.Application;
 using Haven.Core;
 using Haven.UI;
 using Haven.UI.Components;
@@ -65,6 +66,8 @@ internal sealed class ChatSidebarHavenScene : IDisposable
     private PopupMenu? _activePopup;
     private HavenMode _mode = HavenMode.Chat;
     private string? _spaceName;
+    private Guid? _spaceId;
+    private bool _opensAssistants;
     private bool _disposed;
 
     public ChatSidebarHavenScene()
@@ -146,11 +149,12 @@ internal sealed class ChatSidebarHavenScene : IDisposable
         Search.Accessibility.AccessibleName = mode == HavenMode.Chat
             ? "Search chats, Chat Groups and File Library"
             : $"Search {modeName} chats and groups";
-        NewChat.Content = NewChatLabel(mode);
+        NewChat.Content = _opensAssistants ? "Open Assistants" : NewChatLabel(mode);
         NewGroup.Content = string.Empty;
         NewGroup.Accessibility.AccessibleName = $"Create {GroupName(mode, plural: false)}";
         SetHeadingVisibility(FilesHeading, mode == HavenMode.Chat);
         FilesEmpty.SetValue(HavenProperties.Visibility, mode == HavenMode.Chat && FileRows.Items.Count == 0 ? HavenVisibility.Visible : HavenVisibility.Collapsed);
+        ApplyGroupVisibility();
     }
 
     public void SetRows(
@@ -175,7 +179,7 @@ internal sealed class ChatSidebarHavenScene : IDisposable
         SyncRows("ChatRows", chats);
         SetHeadingVisibility(PinnedHeading, pinned.Count > 0);
         SetHeadingVisibility(UnreadHeading, unread.Count > 0);
-        SetHeadingVisibility(GroupsHeading, true);
+        ApplyGroupVisibility();
         SetHeadingVisibility(FilesHeading, _mode == HavenMode.Chat);
         FilesEmpty.SetValue(HavenProperties.Visibility, _mode == HavenMode.Chat && files.Count == 0 ? HavenVisibility.Visible : HavenVisibility.Collapsed);
         SetHeadingVisibility(ChatsHeading, true);
@@ -183,14 +187,16 @@ internal sealed class ChatSidebarHavenScene : IDisposable
 
     /// <summary>
     /// Applies the current Space scope. Null returns to unscoped Chat: the
-    /// picker shows the surface name and Chat Groups return. When scoped, the
-    /// Space name becomes the scope label and group management is hidden so
-    /// only the current Space's content is listed.
+    /// picker shows the surface name and groups return. Canonical Chat retains
+    /// its Chat Groups organisation; other Spaces keep their own scoped content.
+    /// The stable ID, not a mutable display name, determines that distinction.
     /// </summary>
-    public void SetSpaceScope(string? spaceName)
+    public void SetSpaceScope(string? spaceName, Guid? spaceId = null, bool opensAssistants = false)
     {
         _spaceName = spaceName;
-        var scoped = spaceName is not null;
+        _spaceId = spaceId;
+        _opensAssistants = opensAssistants || spaceId == SpaceRegistry.AssistantsSpaceId;
+        NewChat.Content = _opensAssistants ? "Open Assistants" : NewChatLabel(_mode);
         SpacePicker.Content = spaceName ?? ModeName(_mode);
         SpacePicker.Accessibility.AccessibleName = "Current Space selector";
         ChatsHeading.Content = spaceName ?? (_mode switch
@@ -199,9 +205,16 @@ internal sealed class ChatSidebarHavenScene : IDisposable
             HavenMode.Tasks => "Task Chats",
             _ => "Chats"
         });
-        GroupsHeading.SetValue(HavenProperties.Visibility, scoped ? HavenVisibility.Collapsed : HavenVisibility.Visible);
-        NewGroup.SetValue(HavenProperties.Visibility, scoped ? HavenVisibility.Collapsed : HavenVisibility.Visible);
-        GroupRows.SetValue(HavenProperties.Visibility, scoped ? HavenVisibility.Collapsed : HavenVisibility.Visible);
+        ApplyGroupVisibility();
+    }
+
+    private void ApplyGroupVisibility()
+    {
+        var visible = _spaceName is null || (_mode == HavenMode.Chat && _spaceId == SpaceRegistry.ChatSpaceId);
+        var visibility = visible ? HavenVisibility.Visible : HavenVisibility.Collapsed;
+        GroupsHeading.SetValue(HavenProperties.Visibility, visibility);
+        NewGroup.SetValue(HavenProperties.Visibility, visibility);
+        GroupRows.SetValue(HavenProperties.Visibility, visibility);
     }
 
     public void SetNewChatBusy(bool busy) =>

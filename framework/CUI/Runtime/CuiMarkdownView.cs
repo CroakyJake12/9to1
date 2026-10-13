@@ -145,10 +145,13 @@ public class CuiMarkdownView : UserControl
         FlushParagraph(paragraph);
     }
 
+    protected virtual double ParagraphFontSize => 14;
+    protected virtual FontWeight ParagraphFontWeight => FontWeight.Normal;
+
     private void FlushParagraph(List<string> paragraph)
     {
         if (paragraph.Count == 0) return;
-        _root.Children.Add(BuildInlineText(string.Join("\n", paragraph), 14, FontWeight.Normal));
+        _root.Children.Add(BuildInlineText(string.Join("\n", paragraph), ParagraphFontSize, ParagraphFontWeight));
         paragraph.Clear();
     }
 

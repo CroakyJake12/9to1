@@ -8,8 +8,8 @@ public sealed partial class MainView
     {
         if (mode == HavenMode.Study)
         {
-            _nativeChatSidebar?.SetMode(mode);
             await OpenStudyHomeAsync();
+            _nativeChatSidebar?.SetMode(mode);
             await RefreshNativeChatSidebarAsync();
             ApplyShellVisualState();
             return;
@@ -27,11 +27,6 @@ public sealed partial class MainView
             return;
         }
 
-        if (_nativeChatSidebar is not null)
-        {
-            _nativeChatSidebar.SetMode(mode);
-        }
-
         var recent = (await _conversations.GetRecentAsync(mode, 1, CancellationToken.None))
             .FirstOrDefault(item => !item.IsArchived && item.Kind != ConversationKind.Call);
 
@@ -40,6 +35,7 @@ public sealed partial class MainView
             await _newChatPage.LoadConversationAsync(recent);
             if (_nativeChatSidebar is not null)
             {
+                _nativeChatSidebar.SetMode(mode);
                 _nativeChatSidebar.SetActiveConversation(recent.Id, recent.ContainerId);
             }
         }
@@ -48,6 +44,7 @@ public sealed partial class MainView
             await _newChatPage.StartFreshConversationAsync(mode, null);
             if (_nativeChatSidebar is not null)
             {
+                _nativeChatSidebar.SetMode(mode);
                 _nativeChatSidebar.SetActiveConversation(_newChatPage.ConversationId, null);
             }
         }

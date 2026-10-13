@@ -1,4 +1,5 @@
 using System.Runtime.ExceptionServices;
+using System.Runtime.CompilerServices;
 using Haven.Core;
 
 namespace Haven.Application;
@@ -13,6 +14,11 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunOwnerReauthenti
     private bool _renewalClosing;
     private Exception? _renewalCapacityFailure;
     private Task? _renewalClose;
+    private readonly ConditionalWeakTable<Task, RenewalCancellation> _renewalCancellations = new();
+    private sealed record RenewalCancellation(Exception Cause);
+
+    private Exception ObserveRenewalCancellation(Task actual, Exception observed) => actual.IsCanceled
+        ? _renewalCancellations.GetValue(actual, _ => new(observed)).Cause : observed;
 
     // Configuration observation only. Actual private custody/context validation remains mandatory.
     public bool HasOwnerReauthenticationSources => _verifiedReauthentication is TaskRunVerifiedActorReauthenticationSource verified &&
@@ -411,7 +417,7 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunOwnerReauthenti
             { Activated: true, Close.IsCompletedSuccessfully: true, Activation.IsCompletedSuccessfully: true });
         if (_renewalCapacityFailure is not null || _renewalWork.Count >= 128)
             throw _renewalCapacityFailure ??= new InvalidOperationException("Original owner-renewal custody is full.");
-        var work = new RenewalWork { Renewal = renewal }; _renewalWork.Add(work);
+        var work = new RenewalWork(this) { Renewal = renewal }; _renewalWork.Add(work);
         if (addToScopeWork) renewal?.Work.Add(work); return work;
     }
     private async Task<T> RunRenewalWorkAsync<T>(RenewalWork work, Task start, Func<Task<T>> body)
@@ -430,7 +436,7 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunOwnerReauthenti
             ExceptionDispatchInfo.Capture(work.Errors[0]).Throw(); // Genuine returned cancellation, originals remain in the ledger.
         ThrowRenewalCauses(work.Errors); return result;
     }
-    private sealed class RenewalWork
+    private sealed class RenewalWork(TaskRunPermissionAuthority owner)
     {
         public Task Driver = null!;
         public Renewal? Renewal;
@@ -441,18 +447,20 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunOwnerReauthenti
         {
             ArgumentNullException.ThrowIfNull(actual); Raw.Add(actual);
             try { return await actual.ConfigureAwait(false); }
-            catch (Exception error) { Capture(actual, error); if (actual.IsFaulted) ExceptionDispatchInfo.Capture(actual.Exception!).Throw(); throw; }
+            catch (Exception error) { var cause = Capture(actual, error); if (actual.IsFaulted) ExceptionDispatchInfo.Capture(actual.Exception!).Throw(); ExceptionDispatchInfo.Capture(cause).Throw(); throw; }
         }
         public async Task AwaitAsync(Task actual)
         {
             ArgumentNullException.ThrowIfNull(actual); Raw.Add(actual);
             try { await actual.ConfigureAwait(false); }
-            catch (Exception error) { Capture(actual, error); if (actual.IsFaulted) ExceptionDispatchInfo.Capture(actual.Exception!).Throw(); throw; }
+            catch (Exception error) { var cause = Capture(actual, error); if (actual.IsFaulted) ExceptionDispatchInfo.Capture(actual.Exception!).Throw(); ExceptionDispatchInfo.Capture(cause).Throw(); throw; }
         }
-        private void Capture(Task actual, Exception observed)
+        private Exception Capture(Task actual, Exception observed)
         {
+            observed = owner.ObserveRenewalCancellation(actual, observed);
             AddRenewalCause(Errors, observed);
             if (actual.Exception is { } group) { AddRenewalCause(Errors, group); foreach (var cause in group.InnerExceptions) AddRenewalCause(Errors, cause); }
+            return observed;
         }
         public async Task CloseResourceAsync(IAsyncDisposable actual, Func<Func<Task>, Task> invoke)
         {
@@ -460,7 +468,7 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunOwnerReauthenti
             try { close = invoke(() => actual.DisposeAsync().AsTask()); } catch (Exception error) { CleanupIncomplete = true; AddRenewalCause(Errors, error); }
             if (close is not null)
             {
-                Raw.Add(close); await JoinRenewalTaskAsync(close, Errors).ConfigureAwait(false);
+                Raw.Add(close); await owner.JoinRenewalTaskAsync(close, Errors).ConfigureAwait(false);
                 if (!close.IsCompletedSuccessfully) CleanupIncomplete = true;
             }
         }
@@ -490,13 +498,13 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunOwnerReauthenti
     private static TaskCompletionSource NewRenewalGate() => new(TaskCreationOptions.RunContinuationsAsynchronously);
     private static void AddRenewalCause(List<Exception> errors, Exception actual)
     { if (!errors.Any(cause => ReferenceEquals(cause, actual))) errors.Add(actual); }
-    private static async Task JoinRenewalTaskAsync(Task actual, List<Exception> errors)
+    private async Task JoinRenewalTaskAsync(Task actual, List<Exception> errors)
     {
         try { await actual.ConfigureAwait(false); }
         catch (Exception error)
-        { AddRenewalCause(errors, error); if (actual.Exception is { } group) { AddRenewalCause(errors, group); foreach (var cause in group.InnerExceptions) AddRenewalCause(errors, cause); } }
+        { AddRenewalCause(errors, ObserveRenewalCancellation(actual, error)); if (actual.Exception is { } group) { AddRenewalCause(errors, group); foreach (var cause in group.InnerExceptions) AddRenewalCause(errors, cause); } }
     }
-    private static async Task JoinRenewalWorkAsync(RenewalWork work, List<Exception> errors)
+    private async Task JoinRenewalWorkAsync(RenewalWork work, List<Exception> errors)
     {
         await JoinRenewalTaskAsync(work.Driver, errors).ConfigureAwait(false);
         foreach (var raw in work.Raw) await JoinRenewalTaskAsync(raw, errors).ConfigureAwait(false);

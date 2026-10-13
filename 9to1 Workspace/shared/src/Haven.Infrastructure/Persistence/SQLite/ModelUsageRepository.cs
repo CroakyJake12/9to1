@@ -1,103 +1,17 @@
 /*
  * FILE DOCUMENTATION
  * Where: src/Haven.Infrastructure/ModelUsageRepository.cs, in the Infrastructure layer, where persistence, providers, Windows integration, and external I/O are implemented.
- * What: This file owns ProviderUsageCaptureBuffer, ProviderPricingService, ModelUsageRepository. Read the type and member comments below as a map of each responsibility.
+ * What: This file owns ProviderPricingService and ModelUsageRepository. ProviderUsageCaptureBuffer is independently shared with the browser transport. Read the type and member comments below as a map of each responsibility.
  * How: Public members form the callable contract; private members hold implementation details; asynchronous members carry cancellation through I/O.
  * Why: Platform and persistence details are contained here so higher layers do not acquire external-system coupling.
  * Maintenance: Preserve the layer boundary, nullability annotations, cancellation flow, and existing public signatures when changing this file.
  */
 
-using System.Collections.Concurrent;
 using System.Globalization;
 using Haven.Application;
 using Haven.Core;
 
 namespace Haven.Infrastructure;
-
-/// <summary>
-/// Represents provider usage capture buffer and keeps its related state and behavior together.
-/// </summary>
-public sealed class ProviderUsageCaptureBuffer : IModelUsageCapture
-{
-    /// <summary>
-    /// Stores usage locally so this component can preserve the dependency, cache, or state between member calls.
-    /// </summary>
-    private readonly ConcurrentDictionary<string, ConcurrentQueue<ProviderUsageSnapshot>> _usage = new(StringComparer.OrdinalIgnoreCase);
-
-    /// <summary>
-    /// Performs the set step owned by this component.
-    /// </summary>
-    public void Set(ProviderUsageSnapshot usage)
-    {
-        ArgumentNullException.ThrowIfNull(usage);
-        _usage.GetOrAdd(Key(usage.ProviderId, usage.ModelName), static _ => new ConcurrentQueue<ProviderUsageSnapshot>()).Enqueue(usage);
-    }
-
-    /// <summary>
-    /// Performs the consume step owned by this component.
-    /// </summary>
-    public ProviderUsageSnapshot? Consume(string providerId, string modelName)
-    {
-        var key = Key(providerId, modelName);
-        if (!_usage.TryGetValue(key, out var queue)) return null;
-        var values = new List<ProviderUsageSnapshot>();
-        while (queue.TryDequeue(out var value)) values.Add(value);
-        _usage.TryRemove(key, out _);
-        return Aggregate(values);
-    }
-
-    /// <summary>
-    /// Performs the consume last usage step owned by this component.
-    /// </summary>
-    public ProviderUsageSnapshot? ConsumeLastUsage()
-    {
-        foreach (var key in _usage.Keys.OrderBy(value => value, StringComparer.OrdinalIgnoreCase))
-        {
-            if (!_usage.TryGetValue(key, out var queue)) continue;
-            var values = new List<ProviderUsageSnapshot>();
-            while (queue.TryDequeue(out var value)) values.Add(value);
-            _usage.TryRemove(key, out _);
-            if (Aggregate(values) is { } aggregate) return aggregate;
-        }
-        return null;
-    }
-
-    /// <summary>
-    /// Performs the aggregate step owned by this component.
-    /// </summary>
-    private static ProviderUsageSnapshot? Aggregate(IReadOnlyList<ProviderUsageSnapshot> values)
-    {
-        if (values.Count == 0) return null;
-        var first = values[0];
-        return new ProviderUsageSnapshot(
-            first.ProviderId,
-            first.ModelName,
-            SumNullable(values.Select(item => item.InputTokens)),
-            SumNullable(values.Select(item => item.OutputTokens)),
-            SumNullable(values.Select(item => item.CachedTokens)),
-            SumNullable(values.Select(item => item.ReasoningTokens)),
-            values.All(item => item.Measurement == UsageMeasurementKind.ProviderConfirmed)
-                ? UsageMeasurementKind.ProviderConfirmed
-                : values.All(item => item.Measurement == UsageMeasurementKind.LocallyCalculated)
-                    ? UsageMeasurementKind.LocallyCalculated
-                    : UsageMeasurementKind.Estimated,
-            values.Max(item => item.CapturedAt));
-    }
-
-    /// <summary>
-    /// Performs the sum nullable step owned by this component.
-    /// </summary>
-    private static long? SumNullable(IEnumerable<long?> values)
-    {
-        var materialized = values.ToArray();
-        return materialized.Any(value => value is not null) ? materialized.Sum(value => value ?? 0) : null;
-    }
-
-    /// <summary>
-    /// Performs the key step owned by this component.
-    /// </summary>
-    private static string Key(string providerId, string modelName) => providerId.Trim().ToLowerInvariant() + "\n" + modelName.Trim().ToLowerInvariant();
-}
 
 /// <summary>
 /// Represents provider pricing service and keeps its related state and behavior together.

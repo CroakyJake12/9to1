@@ -3,26 +3,53 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using Haven.Application;
 using Haven.Core;
+using Haven.Desktop.Services;
 using Haven.Desktop.HavenUI.Backend;
+using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 
 namespace Haven.Desktop.Views.Shell.NativePresentation;
 
 /// <summary>
-/// Platform host and production coordinator for the Haven-owned Chat sidebar. Avalonia supplies only
-/// the single scene host; visible sidebar controls and runtime rows are Haven.UI/DynamicUI.
+/// Production coordinator for the existing conversation and Space owners. The canonical
+/// CUI document owns visible controls; the platform supplies only its host.
 /// </summary>
-internal sealed class NativeChatSidebar : UserControl, IDisposable
+internal sealed class NativeChatSidebar : UserControl, IDisposable, IAsyncDisposable,
+    IDesktopOriginalRetirementParticipant, IDesktopOriginalRetirementJoinGuard
 {
     private readonly IConversationRepository _conversations;
     private readonly IContainerRepository _containers;
     private readonly Func<Conversation, Task> _openConversation;
     private readonly Func<HavenMode, Guid?, Task> _startChat;
+    private readonly Func<HavenMode, Guid?, Guid?, Task>? _startChatInSpace;
     private readonly Func<ContainerDefinition, Task> _openGroup;
     private readonly NativeChatUiStateStore _stateStore;
     private readonly IConversationProductionRepository? _production;
     private readonly SpaceRegistry? _spaces;
+    private readonly Func<SpaceDefinition, Task>? _openSpace;
+    private readonly Func<SpaceDefinition, DestinationTransition, Task>? _openSpaceInTransition;
+    private readonly object _destinationGate = new();
+    private DestinationTransition? _destinationTransition;
+
+    internal sealed class DestinationTransition(NativeChatSidebar owner, Guid? requestedSpaceId)
+    {
+        internal NativeChatSidebar Owner { get; } = owner;
+        internal Guid? RequestedSpaceId { get; } = requestedSpaceId;
+        internal bool AcceptsScopeSelection = true;
+        internal bool ScopeSelectionIssued;
+        internal Task? ScopeSelection;
+    }
     private readonly CancellationTokenSource _lifetime = new();
-    private readonly ChatSidebarHavenScene _scene;
+    private readonly NativeChatSidebarCuiAdapter _scene;
+    // Study's existing assignment/revision owners inject Haven.UI sections into this
+    // root. Keep that real surface until its complete CUI migration is delivered.
+    private readonly ChatSidebarHavenScene _studyScene;
+    internal ChatSidebarHavenScene Scene => _studyScene;
+    internal HavenSceneControl SceneHost { get; }
+    private readonly DesktopOriginalWorkLifetime _originalWork;
+    private readonly Func<Task>? _manageSpaces;
+    private Task? _refreshOriginal;
+    private SpaceNavigationPreferenceSnapshot? _navigationPreferences;
 
     private IReadOnlyList<Conversation> _conversationRows = [];
     private IReadOnlyList<ContainerDefinition> _groupRows = [];
@@ -34,9 +61,7 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
     private Guid? _currentSpaceId;
     private HavenMode _currentMode = HavenMode.Chat;
     private string _query = string.Empty;
-    private bool _refreshing;
     private bool _refreshPending;
-    private bool _startingChat;
     private bool _disposed;
 
     public NativeChatSidebar(
@@ -47,56 +72,147 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
         Func<ContainerDefinition, Task> openGroup,
         NativeChatUiStateStore? stateStore = null,
         IConversationProductionRepository? production = null,
-        SpaceRegistry? spaces = null)
+        SpaceRegistry? spaces = null,
+        Func<SpaceDefinition, Task>? openSpace = null,
+        Func<HavenMode, Guid?, Guid?, Task>? startChatInSpace = null,
+        Func<SpaceDefinition, DestinationTransition, Task>? openSpaceInTransition = null,
+        Func<Task>? manageSpaces = null,
+        Func<bool, Task>? setSidebarCollapsed = null,
+        CuiThemePreferenceContext? currentHomeTheme = null,
+        Func<Task>? configureNavigation = null)
     {
         _conversations = conversations ?? throw new ArgumentNullException(nameof(conversations));
         _containers = containers ?? throw new ArgumentNullException(nameof(containers));
         _openConversation = openConversation ?? throw new ArgumentNullException(nameof(openConversation));
         _startChat = startChat ?? throw new ArgumentNullException(nameof(startChat));
+        _startChatInSpace = startChatInSpace;
         _openGroup = openGroup ?? throw new ArgumentNullException(nameof(openGroup));
         _stateStore = stateStore ?? new NativeChatUiStateStore();
         _production = production;
         _spaces = spaces;
+        _openSpace = openSpace;
+        _openSpaceInTransition = openSpaceInTransition;
 
-        _scene = new ChatSidebarHavenScene();
-        SceneHost = new HavenSceneControl { Root = _scene.Root };
+        _manageSpaces = manageSpaces;
+        _originalWork = new DesktopOriginalWorkLifetime(StopOriginalAsync, CleanupOriginalAsync);
+        _scene = new NativeChatSidebarCuiAdapter(new NativeChatSidebarCuiActions(
+            query => _originalWork.RunSynchronous(_ => { _query = query; Render(); }),
+            () => StartChatAsync(null),
+            () => _originalWork.RunSynchronous(_ => ShowCreateGroupPrompt()),
+            ShowSpacePickerAsync, HandleConversationActionAsync, HandleGroupActionAsync, OpenFileAsync,
+            OpenSpaceFromPickerAsync, ManageSpacesAsync,
+            collapsed => RunSidebarAsync(() => setSidebarCollapsed?.Invoke(collapsed)
+                ?? throw new InvalidOperationException("The current host cannot save sidebar preferences.")))
+        {
+            ConfigureNavigation = configureNavigation,
+            CanManageSpaces = manageSpaces is not null,
+            CanChangeSidebarLayout = setSidebarCollapsed is not null
+        }, currentHomeTheme);
+        _studyScene = new ChatSidebarHavenScene();
+        SceneHost = new HavenSceneControl { Root = _studyScene.Root };
+        _studyScene.SearchChanged += OnStudySearchChanged;
+        _studyScene.NewChatRequested += OnStudyNewChat;
+        _studyScene.NewGroupRequested += OnStudyNewGroup;
+        _studyScene.SpacePickerRequested += OnStudySpacePicker;
+        _studyScene.ConversationActionRequested += OnStudyConversation;
+        _studyScene.GroupActionRequested += OnStudyGroup;
+        _studyScene.FileRequested += OnStudyFile;
+        _scene.LayoutChanged += OnNavigationLayoutChanged;
         AutomationProperties.SetAutomationId(this, "HavenNativeChatSidebar");
-        AutomationProperties.SetName(this, "9to1-native Chat sidebar");
-        AutomationProperties.SetAutomationId(SceneHost, "HavenNativeChatSidebarScene");
-        Content = SceneHost;
-
-        _scene.SearchChanged += OnSearchChanged;
-        _scene.NewChatRequested += OnNewChatRequested;
-        _scene.NewGroupRequested += OnNewGroupRequested;
-        _scene.SpacePickerRequested += OnSpacePickerRequested;
-        _scene.ConversationActionRequested += OnConversationActionRequested;
-        _scene.GroupActionRequested += OnGroupActionRequested;
-        _scene.FileRequested += OnFileRequested;
-        _ = LoadSpaceScopeAsync();
-        _ = RefreshAsync();
+        AutomationProperties.SetName(this, "Spaces navigation and contextual sidebar");
+        Content = _scene.Root;
+        _ = RunSidebarAsync(async () => { await LoadSpaceScopeAsync(); await RefreshAsync(); });
     }
 
-    internal HavenSceneControl SceneHost { get; }
-    internal ChatSidebarHavenScene Scene => _scene;
+    internal NativeChatSidebarCuiAdapter Navigation => _scene;
+    internal double PreferredWidth => _currentMode == HavenMode.Study ? 280 : _scene.PreferredWidth;
+    internal event EventHandler? NavigationLayoutChanged;
+    private void OnNavigationLayoutChanged(object? sender, EventArgs args) => NavigationLayoutChanged?.Invoke(this, args);
+    internal Task? OriginalClose => _originalWork.OriginalClose;
+
+    private void SetSidebarStatus(string? status)
+    { _scene.SetStatus(status); if (_currentMode == HavenMode.Study) _studyScene.SetStatus(status); }
+    private void SetNewChatBusy(bool busy)
+    { _scene.SetNewChatBusy(busy); _studyScene.SetNewChatBusy(busy); }
+    private void ShowTextPrompt(string title, string value, string confirmLabel, Func<string, Task> confirm)
+    {
+        if (_currentMode == HavenMode.Study) _studyScene.ShowTextPrompt(title, value, confirmLabel, text => RunSidebarAsync(() => confirm(text)));
+        else _scene.ShowTextPrompt(title, value, confirmLabel, text => RunSidebarAsync(() => confirm(text)));
+    }
+    private void ShowChoices(string title, IReadOnlyList<(string Label, Func<Task> Action)> choices)
+    {
+        if (_currentMode == HavenMode.Study)
+            _studyScene.ShowChoices(title, choices.Select(choice => (choice.Label, (Action)(() => _ = ObserveStudyEventAsync(choice.Action)))).ToArray());
+        else _scene.ShowChoices(title, choices);
+    }
+    private async Task ObserveStudyEventAsync(Func<Task> command)
+    {
+        if (_disposed) return;
+        try { await RunSidebarAsync(command); }
+        catch (Exception error) { if (!_disposed) _studyScene.SetStatus(error.Message); }
+    }
+    private void OnStudySearchChanged(object? sender, string query)
+    { if (!_disposed) _originalWork.RunSynchronous(_ => { _query = query; Render(); }); }
+    private void OnStudyNewChat(object? sender, EventArgs args) => _ = ObserveStudyEventAsync(() => StartChatAsync(null));
+    private void OnStudyNewGroup(object? sender, EventArgs args) { if (!_disposed) _originalWork.RunSynchronous(_ => ShowCreateGroupPrompt()); }
+    private void OnStudySpacePicker(object? sender, EventArgs args) => _ = ObserveStudyEventAsync(ShowSpacePickerAsync);
+    private void OnStudyConversation(object? sender, ChatSidebarConversationRequest request) => _ = ObserveStudyEventAsync(() => HandleConversationActionAsync(request));
+    private void OnStudyGroup(object? sender, ChatSidebarGroupRequest request) => _ = ObserveStudyEventAsync(() => HandleGroupActionAsync(request));
+    private void OnStudyFile(object? sender, Guid id) => _ = ObserveStudyEventAsync(() => OpenFileAsync(id));
+
+    private Task RunSidebarAsync(Func<Task> body) => _originalWork.RunAsync(async original =>
+    {
+        original.DemandPublication();
+        await original.AwaitAsync(body());
+    });
+
+    private Task ManageSpacesAsync() => RunSidebarAsync(() => _manageSpaces?.Invoke()
+        ?? throw new InvalidOperationException("The current host has no Spaces manager owner."));
+
+    internal void SetNavigationPreferences(SpaceNavigationPreferenceSnapshot preferences)
+    {
+        _originalWork.DemandAdmission();
+        _navigationPreferences = preferences ?? throw new ArgumentNullException(nameof(preferences));
+        PublishNavigationPreferences();
+    }
+
+    private void PublishNavigationPreferences()
+    {
+        if (_navigationPreferences is not { } preferences || _disposed) return;
+        var rows = preferences.PinnedSpaceIds.Select(id =>
+        {
+            var row = _spaceRows.FirstOrDefault(space => space.Id == id);
+            return row is null
+                ? new NativeSpaceNavigationDestination(id, "Unavailable Space " + id.ToString("D"), "Spaces", false, "This pinned Space is missing or archived.")
+                : new NativeSpaceNavigationDestination(row.Id, SpaceChoiceLabel(row, _spaceRows), row.IconKey,
+                    !row.IsArchived && (_openSpace is not null || _openSpaceInTransition is not null),
+                    row.IsArchived ? "This Space is archived." : "Open this Space through its existing workspace owner.");
+        }).ToArray();
+        _scene.SetNavigationSnapshot(rows, preferences.Layout == SpaceSwitcherLayout.Rail ? NativeSpaceSwitcherLayout.Rail : NativeSpaceSwitcherLayout.Dropdown,
+            preferences.IsCollapsed(_currentSpaceId));
+    }
 
     /// <summary>The Space the sidebar is currently scoped to, or null for unscoped Chat.</summary>
     internal Guid? CurrentSpaceId => _currentSpaceId;
 
-    /// <summary>Raised when the user asks to manage Spaces from the sidebar picker.</summary>
-    internal event EventHandler? ManageSpacesRequested;
 
-    private async Task LoadSpaceScopeAsync()
+    private Task LoadSpaceScopeAsync() => RunSidebarAsync(LoadSpaceScopeCoreAsync);
+
+    private async Task LoadSpaceScopeCoreAsync()
     {
         if (_spaces is null || _disposed) return;
         try
         {
-            _spaceRows = await _spaces.GetAllAsync(false, _lifetime.Token).ConfigureAwait(false);
-            _currentSpaceId = await _spaces.GetCurrentSpaceIdAsync(_lifetime.Token).ConfigureAwait(false);
+            _spaceRows = await _spaces.GetAllAsync(false, _lifetime.Token);
+            _currentSpaceId = await _spaces.GetCurrentSpaceIdAsync(_lifetime.Token);
             if (_disposed) return;
             ApplySpaceScopeToScene();
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException)
         {
+            _originalWork.Executing?.Retain(exception);
+            if (!_disposed) SetSidebarStatus("Spaces could not be loaded: " + exception.Message);
+            throw;
         }
     }
 
@@ -106,93 +222,160 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
             ? _spaceRows.FirstOrDefault(space => space.Id == id)?.Name
             : null;
         if (_currentSpaceId is { } && name is null) _currentSpaceId = null;
-        _scene.SetSpaceScope(name);
+        _scene.SetSpaceScope(name, _currentSpaceId, IsAssistantSpace(_currentSpaceId),
+            _spaceRows.FirstOrDefault(space => space.Id == _currentSpaceId)?.IconKey);
+        _studyScene.SetSpaceScope(name, _currentSpaceId, IsAssistantSpace(_currentSpaceId));
+        PublishNavigationPreferences();
     }
 
-    private async void OnSpacePickerRequested(object? sender, EventArgs e)
+    private Task ShowSpacePickerAsync() => RunSidebarAsync(ShowSpacePickerCoreAsync);
+
+    private async Task ShowSpacePickerCoreAsync()
     {
         if (_spaces is null) return;
         try
         {
-            _spaceRows = await _spaces.GetAllAsync(false, _lifetime.Token).ConfigureAwait(false);
+            _spaceRows = await _spaces.GetAllAsync(false, _lifetime.Token);
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException)
         {
-            _scene.SetStatus("Spaces could not be loaded: " + exception.Message);
-            return;
+            _originalWork.Executing?.Retain(exception);
+            if (!_disposed) SetSidebarStatus("Spaces could not be loaded: " + exception.Message);
+            throw;
         }
         if (_disposed) return;
 
-        var choices = new List<(string Label, Action Action)>
+        var choices = new List<(string Label, Func<Task> Action)>
         {
-            ("General (no Space)", () => _ = SelectSpaceAsync(null))
+            ("General (no Space)", () => SelectSpaceAsync(null))
         };
         choices.AddRange(_spaceRows
             .OrderBy(space => space.Name, StringComparer.OrdinalIgnoreCase)
-            .Select(space => (space.Name, (Action)(() => _ = SelectSpaceAsync(space.Id)))));
-        choices.Add(("Manage Spaces…", () => ManageSpacesRequested?.Invoke(this, EventArgs.Empty)));
-        _scene.ShowChoices("Spaces", choices);
+            .Select(space => (SpaceChoiceLabel(space, _spaceRows), (Func<Task>)(() => OpenSpaceFromPickerAsync(space.Id)))));
+        if (_manageSpaces is not null) choices.Add(("Manage Spaces…", ManageSpacesAsync));
+        ShowChoices("Spaces", choices);
     }
 
-    internal Task SelectSpaceFromShellAsync(Guid? spaceId) => SelectSpaceAsync(spaceId);
+    internal Task SelectSpaceFromShellAsync(Guid? spaceId, HavenMode? mode = null) => SelectSpaceAsync(spaceId, mode);
 
-    internal async Task ReloadSpaceScopeAsync()
+    internal Task OpenSpaceFromPickerAsync(Guid spaceId) => RunSidebarAsync(() => OpenSpaceFromPickerCoreEntryAsync(spaceId));
+
+    private async Task OpenSpaceFromPickerCoreEntryAsync(Guid spaceId)
     {
-        await LoadSpaceScopeAsync().ConfigureAwait(false);
-        await RefreshAsync().ConfigureAwait(false);
+        try { await OpenDestinationAsync(transition => OpenSpaceFromPickerCoreAsync(spaceId, transition), spaceId); }
+        catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
+        catch (Exception error) when (error is IOException or InvalidOperationException or UnauthorizedAccessException)
+        {
+            _originalWork.Executing?.Retain(error);
+            if (!_disposed) SetSidebarStatus("The Space could not be opened: " + error.Message);
+            throw;
+        }
     }
 
-    private async Task SelectSpaceAsync(Guid? spaceId)
+    private async Task OpenSpaceFromPickerCoreAsync(Guid spaceId, DestinationTransition transition)
     {
-        if (_spaces is not null)
-            await _spaces.SetCurrentSpaceIdAsync(spaceId, _lifetime.Token).ConfigureAwait(false);
-        _currentSpaceId = spaceId;
+        var space = _spaces is null ? null : await _spaces.GetAsync(spaceId, _lifetime.Token);
         if (_disposed) return;
-        ApplySpaceScopeToScene();
-        await RefreshAsync();
+        if (space is null || space.IsArchived)
+            throw new InvalidOperationException("The selected Space is unavailable. Refresh the Space list.");
+        if (_openSpaceInTransition is not null) await _openSpaceInTransition(space, transition);
+        else if (_openSpace is not null) await _openSpace(space);
+        else if (space.Kind == SpaceKind.Assistants)
+            throw new InvalidOperationException("Assistants needs its configured Assistants workspace on this host.");
+        else await SelectSpaceUnderTransitionAsync(space.Id, null, transition);
+    }
 
-        var existing = _conversationRows
+    internal Task SelectSpaceUnderTransitionAsync(Guid? spaceId, HavenMode? mode, DestinationTransition transition)
+    {
+        lock (_destinationGate)
+        {
+            if (_disposed || !ReferenceEquals(transition.Owner, this) || !ReferenceEquals(_destinationTransition, transition)
+                || !transition.AcceptsScopeSelection || transition.RequestedSpaceId != spaceId || transition.ScopeSelectionIssued)
+                throw new InvalidOperationException("This Space selection no longer belongs to the active destination request.");
+            transition.ScopeSelectionIssued = true;
+            return transition.ScopeSelection = SelectSpaceCoreAsync(spaceId, mode, transition);
+        }
+    }
+
+    internal Task ReloadSpaceScopeAsync() => RunSidebarAsync(() => ReloadSpaceScopeCoreAsync());
+
+    private async Task ReloadSpaceScopeCoreAsync()
+    {
+        await LoadSpaceScopeAsync();
+        await RefreshAsync();
+    }
+
+    private Task SelectSpaceAsync(Guid? spaceId, HavenMode? requestedMode = null) =>
+        OpenDestinationAsync(transition => SelectSpaceCoreAsync(spaceId, requestedMode, transition), spaceId);
+
+    private async Task SelectSpaceCoreAsync(Guid? spaceId, HavenMode? requestedMode, DestinationTransition transition)
+    {
+        if (spaceId is { } selected && await RequiresAssistantOwnerAsync(selected))
+        {
+            await OpenSpaceFromPickerCoreAsync(selected, transition);
+            return;
+        }
+        var mode = requestedMode ?? _currentMode;
+        var candidates = await _conversations.GetRecentAsync(mode, int.MaxValue, _lifetime.Token);
+        var existing = candidates
             .Where(chat => !chat.IsArchived && chat.Kind != ConversationKind.Call)
-            .Where(chat => spaceId is null ? chat.SpaceId is null : chat.SpaceId == spaceId)
+            .Where(chat => IsConversationInSpace(chat, spaceId, mode))
             .OrderByDescending(chat => chat.UpdatedAt)
             .FirstOrDefault();
         if (existing is not null)
         {
-            await _stateStore.MarkReadAsync(existing.Id, DateTimeOffset.UtcNow, _lifetime.Token).ConfigureAwait(false);
+            await _openConversation(existing);
+            if (_disposed) return;
+            await _stateStore.MarkReadAsync(existing.Id, DateTimeOffset.UtcNow, _lifetime.Token);
+        }
+        else
+        {
+            await StartChatCoreAsync(null, transition, spaceId, mode, explicitSpace: true);
+        }
+        if (_disposed) return;
+        // A requested scope is only published after its real workspace owner accepts.
+        if (_spaces is not null)
+            await _spaces.SetCurrentSpaceIdAsync(spaceId, _lifetime.Token);
+        _currentSpaceId = spaceId;
+        SetMode(mode);
+        if (existing is not null)
+        {
             _activeConversationId = existing.Id;
             _activeGroupId = existing.ContainerId;
-            await _openConversation(existing).ConfigureAwait(false);
-            await RefreshAsync().ConfigureAwait(false);
-            return;
         }
-
-        _scene.SetStatus("This Space has no conversations yet. Starting a new Chat in this Space.");
-        await StartChatAsync(null).ConfigureAwait(false);
+        ApplySpaceScopeToScene();
+        await RefreshAsync();
     }
 
-    public async Task RefreshAsync()
+    public Task RefreshAsync()
     {
-        if (_disposed) return;
-        if (_refreshing)
+        _originalWork.DemandAdmission();
+        if (_refreshOriginal is { IsCompleted: false } current)
         {
             _refreshPending = true;
-            return;
+            return current;
         }
+        return _originalWork.RunAsync(_ => RefreshCoreAsync(), actual => _refreshOriginal = actual);
+    }
 
-        _refreshing = true;
+    private async Task RefreshCoreAsync()
+    {
         try
         {
             do
             {
                 _refreshPending = false;
-                var conversationTask = _conversations.GetRecentAsync(_currentMode, 500, _lifetime.Token);
-                var groupTask = _containers.GetByModeAsync(_currentMode, _lifetime.Token);
+                var mode = _currentMode;
+                var conversationTask = _conversations.GetRecentAsync(mode, 500, _lifetime.Token);
+                var groupTask = _containers.GetByModeAsync(mode, _lifetime.Token);
                 var stateTask = _stateStore.GetAllAsync(_lifetime.Token);
                 var fileTask = _production is null || _currentMode != HavenMode.Chat
                     ? Task.FromResult<IReadOnlyList<MessageAttachment>>([])
                     : _production.GetRecentAttachmentsAsync(100, _lifetime.Token);
-                await Task.WhenAll(conversationTask, groupTask, stateTask, fileTask).ConfigureAwait(false);
+                await _originalWork.Executing!.AwaitAsync(Task.WhenAll(conversationTask, groupTask, stateTask, fileTask));
 
+                if (_disposed) return;
+                if (mode != _currentMode) { _refreshPending = true; continue; }
                 _conversationRows = conversationTask.Result
                     .Where(item => !item.IsArchived && item.Kind != ConversationKind.Call)
                     .ToArray();
@@ -210,11 +393,9 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
         }
         catch (Exception exception) when (exception is IOException or InvalidOperationException or UnauthorizedAccessException)
         {
-            await Dispatcher.UIThread.InvokeAsync(() => _scene.SetStatus("Chat history could not be refreshed: " + exception.Message));
-        }
-        finally
-        {
-            _refreshing = false;
+            _originalWork.Executing?.Retain(exception);
+            if (!_disposed) await Dispatcher.UIThread.InvokeAsync(() => { if (!_disposed) SetSidebarStatus("Chat history could not be refreshed: " + exception.Message); });
+            throw;
         }
     }
 
@@ -224,6 +405,7 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
 
     public void SetActiveConversation(Guid? conversationId, Guid? groupId)
     {
+        _originalWork.DemandAdmission();
         _activeConversationId = conversationId;
         _activeGroupId = groupId;
         if (_disposed) return;
@@ -233,11 +415,15 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
 
     public void SetMode(HavenMode mode)
     {
+        _originalWork.DemandAdmission();
         if (mode == HavenMode.Studio || _currentMode == mode) return;
         _currentMode = mode;
         _activeConversationId = null;
         _activeGroupId = null;
         _scene.SetMode(mode);
+        _studyScene.SetMode(mode);
+        Content = mode == HavenMode.Study ? SceneHost : _scene.Root;
+        NavigationLayoutChanged?.Invoke(this, EventArgs.Empty);
         ContextChanged?.Invoke(this, new NativeChatSidebarContext(_currentMode, _activeGroupId));
         _ = RefreshAsync();
     }
@@ -246,11 +432,10 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
     {
         if (_disposed) return;
         bool Matches(string value) => _query.Length == 0 || value.Contains(_query, StringComparison.OrdinalIgnoreCase);
-        bool InScope(Conversation chat) => _currentSpaceId is null
-            ? chat.SpaceId is null
-            : chat.SpaceId == _currentSpaceId;
+        bool InScope(Conversation chat) => IsConversationInCurrentSpace(chat);
 
-        var scoped = _currentSpaceId is not null;
+        var scoped = _currentSpaceId is not null &&
+            !(_currentMode == HavenMode.Chat && _currentSpaceId == SpaceRegistry.ChatSpaceId);
         var groups = scoped
             ? []
             : _groupRows
@@ -300,10 +485,32 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
             .ToArray();
 
         _scene.SetRows(pinned, unread, groupEntries, files, chats);
-        _scene.SetStatus(conversations.Length == 0 && groups.Length == 0 && files.Length == 0
-            ? $"No saved {ModeName(_currentMode)} chats or {GroupName(_currentMode, plural: true)} yet."
-            : null);
+        if (_currentMode == HavenMode.Study) _studyScene.SetRows(pinned, unread, groupEntries, files, chats);
+        SetSidebarStatus(IsAssistantSpace(_currentSpaceId)
+            ? "Open Assistants to continue in your Assistants workspace."
+            : conversations.Length == 0 && groups.Length == 0 && files.Length == 0
+                ? $"No saved {ModeName(_currentMode)} chats or {GroupName(_currentMode, plural: true)} yet."
+                : null);
     }
+
+    private bool IsConversationInCurrentSpace(Conversation chat) => IsConversationInSpace(chat, _currentSpaceId, _currentMode);
+
+    private bool IsConversationInSpace(Conversation chat, Guid? spaceId, HavenMode mode) =>
+        !IsAssistantSpace(spaceId) &&
+        (chat.SpaceId == spaceId ||
+         (mode == HavenMode.Chat && spaceId == SpaceRegistry.ChatSpaceId && chat.SpaceId is null));
+
+    private bool IsAssistantSpace(Guid? spaceId) => spaceId == SpaceRegistry.AssistantsSpaceId ||
+        (spaceId is { } id && _spaceRows.Any(space => space.Id == id && space.Kind == SpaceKind.Assistants));
+
+    internal static string SpaceChoiceLabel(SpaceDefinition space, IReadOnlyList<SpaceDefinition> spaces) =>
+        spaces.Any(other => other.Id != space.Id && other.Name.Equals(space.Name, StringComparison.OrdinalIgnoreCase))
+            ? $"{space.Name} ({(space.IsBuiltIn ? "built-in" : "custom")})"
+            : space.Name;
+
+    private async Task<bool> RequiresAssistantOwnerAsync(Guid spaceId) =>
+        spaceId == SpaceRegistry.AssistantsSpaceId ||
+        (_spaces is not null && (await _spaces.GetAsync(spaceId, _lifetime.Token))?.Kind == SpaceKind.Assistants);
 
     private ChatSidebarEntry ConversationEntry(Conversation chat, bool indented) => new(
         ChatSidebarEntryKind.Conversation,
@@ -336,46 +543,34 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
             state.IsExpanded);
     }
 
-    private void OnSearchChanged(object? sender, string query)
-    {
-        _query = query;
-        Render();
-    }
+    internal Task OpenFileAsync(Guid attachmentId) => RunSidebarAsync(() => OpenFileCoreAsync(attachmentId));
 
-    private async void OnNewChatRequested(object? sender, EventArgs e)
-    {
-        try { await StartChatAsync(null); }
-        catch (Exception exception) when (exception is InvalidOperationException or IOException) { _scene.SetStatus(exception.Message); }
-    }
-
-    private void OnNewGroupRequested(object? sender, EventArgs e) => ShowCreateGroupPrompt();
-
-    private async void OnFileRequested(object? sender, Guid attachmentId)
+    private async Task OpenFileCoreAsync(Guid attachmentId)
     {
         var file = _fileRows.FirstOrDefault(item => item.Id == attachmentId);
         if (file is null) return;
         var chat = _conversationRows.FirstOrDefault(item => item.Id == file.ConversationId);
         if (chat is null)
         {
-            _scene.SetStatus("The chat that owns this file is no longer available.");
+            SetSidebarStatus("The chat that owns this file is no longer available.");
             return;
         }
 
         try
         {
-            await _stateStore.MarkReadAsync(chat.Id, DateTimeOffset.UtcNow, _lifetime.Token);
-            _activeConversationId = chat.Id;
-            _activeGroupId = chat.ContainerId;
-            await _openConversation(chat);
-            await RefreshAsync();
+            await OpenConversationAsync(chat);
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException)
         {
-            _scene.SetStatus(exception.Message);
+            _originalWork.Executing?.Retain(exception);
+            if (!_disposed) SetSidebarStatus(exception.Message);
+            throw;
         }
     }
 
-    private async void OnConversationActionRequested(object? sender, ChatSidebarConversationRequest request)
+    internal Task HandleConversationActionAsync(ChatSidebarConversationRequest request) => RunSidebarAsync(() => HandleConversationActionCoreAsync(request));
+
+    private async Task HandleConversationActionCoreAsync(ChatSidebarConversationRequest request)
     {
         var chat = _conversationRows.FirstOrDefault(item => item.Id == request.ConversationId);
         if (chat is null) return;
@@ -384,14 +579,10 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
             switch (request.Action)
             {
                 case ChatSidebarConversationAction.Open:
-                    await _stateStore.MarkReadAsync(chat.Id, DateTimeOffset.UtcNow, _lifetime.Token);
-                    _activeConversationId = chat.Id;
-                    _activeGroupId = chat.ContainerId;
-                    await _openConversation(chat);
-                    await RefreshAsync();
+                    await OpenConversationAsync(chat);
                     break;
                 case ChatSidebarConversationAction.Rename:
-                    _scene.ShowTextPrompt("Rename chat", chat.Title, "Save", async title =>
+                    ShowTextPrompt("Rename chat", chat.Title, "Save", async title =>
                     {
                         await _conversations.UpsertConversationAsync(chat with { Title = title, UpdatedAt = DateTimeOffset.UtcNow }, _lifetime.Token);
                         await RefreshAsync();
@@ -419,11 +610,15 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException)
         {
-            _scene.SetStatus(exception.Message);
+            _originalWork.Executing?.Retain(exception);
+            if (!_disposed) SetSidebarStatus(exception.Message);
+            throw;
         }
     }
 
-    private async void OnGroupActionRequested(object? sender, ChatSidebarGroupRequest request)
+    internal Task HandleGroupActionAsync(ChatSidebarGroupRequest request) => RunSidebarAsync(() => HandleGroupActionCoreAsync(request));
+
+    private async Task HandleGroupActionCoreAsync(ChatSidebarGroupRequest request)
     {
         var group = _groupRows.FirstOrDefault(item => item.Id == request.GroupId);
         if (group is null) return;
@@ -433,10 +628,14 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
             switch (request.Action)
             {
                 case ChatSidebarGroupAction.Open:
-                    await _stateStore.MarkReadAsync(group.Id, DateTimeOffset.UtcNow, _lifetime.Token);
-                    _activeGroupId = group.Id;
-                    await _openGroup(group);
-                    await RefreshAsync();
+                    await OpenDestinationAsync(async () =>
+                    {
+                        await _openGroup(group);
+                        if (_disposed) return;
+                        await _stateStore.MarkReadAsync(group.Id, DateTimeOffset.UtcNow, _lifetime.Token);
+                        _activeGroupId = group.Id;
+                        await RefreshAsync();
+                    });
                     break;
                 case ChatSidebarGroupAction.Toggle:
                 case ChatSidebarGroupAction.ToggleExpand:
@@ -444,7 +643,7 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
                     await RefreshAsync();
                     break;
                 case ChatSidebarGroupAction.Rename:
-                    _scene.ShowTextPrompt($"Rename {GroupName(_currentMode, false)}", group.Name, "Save", async name =>
+                    ShowTextPrompt($"Rename {GroupName(_currentMode, false)}", group.Name, "Save", async name =>
                     {
                         await _containers.UpsertAsync(group with { Name = name, UpdatedAt = DateTimeOffset.UtcNow }, _lifetime.Token);
                         await RefreshAsync();
@@ -467,75 +666,144 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException)
         {
-            _scene.SetStatus(exception.Message);
+            _originalWork.Executing?.Retain(exception);
+            if (!_disposed) SetSidebarStatus(exception.Message);
+            throw;
         }
     }
 
     private void ShowCreateGroupPrompt()
     {
         var groupName = GroupName(_currentMode, false);
-        _scene.ShowTextPrompt($"New {groupName}", string.Empty, $"Create {groupName}", async name =>
+        ShowTextPrompt($"New {groupName}", string.Empty, $"Create {groupName}", async name =>
         {
             var now = DateTimeOffset.UtcNow;
             var group = new ContainerDefinition(Guid.NewGuid(), _currentMode, name, null, string.Empty, string.Empty, now, now);
             if (_currentMode == HavenMode.Study) await _containers.CreateSubjectAsync(group, _lifetime.Token);
             else await _containers.UpsertAsync(group, _lifetime.Token);
             await _stateStore.SetExpandedAsync(group.Id, true, _lifetime.Token);
-            await _openGroup(group);
-            _activeGroupId = group.Id;
-            await RefreshAsync();
+            await OpenDestinationAsync(async () =>
+            {
+                await _openGroup(group);
+                if (_disposed) return;
+                _activeGroupId = group.Id;
+                await RefreshAsync();
+            });
         });
     }
 
     private void ShowMoveChoices(Conversation chat)
     {
-        var choices = new List<(string Label, Action Action)>
+        var choices = new List<(string Label, Func<Task> Action)>
         {
-            ("No group", () => _ = MoveConversationAsync(chat, null))
+            ("No group", () => RunSidebarAsync(() => MoveConversationAsync(chat, null)))
         };
         choices.AddRange(_groupRows
             .OrderBy(group => group.Name, StringComparer.OrdinalIgnoreCase)
-            .Select(group => (group.Name, (Action)(() => _ = MoveConversationAsync(chat, group.Id)))));
-        _scene.ShowChoices($"Move to {GroupName(_currentMode, false)}", choices);
+            .Select(group => (group.Name, (Func<Task>)(() => RunSidebarAsync(() => MoveConversationAsync(chat, group.Id))))));
+        ShowChoices($"Move to {GroupName(_currentMode, false)}", choices);
     }
 
     private void ShowSpaceChoices(Conversation chat)
     {
         var current = chat.SpaceId;
-        var choices = new List<(string Label, Action Action)>
+        var choices = new List<(string Label, Func<Task> Action)>
         {
-            ("No Space", () => _ = MoveConversationToSpaceAsync(chat, null))
+            ("No Space", () => RunSidebarAsync(() => MoveConversationToSpaceAsync(chat, null)))
         };
         choices.AddRange(_spaceRows
             .OrderBy(space => space.Name, StringComparer.OrdinalIgnoreCase)
-            .Where(space => space.Id != current)
-            .Select(space => (space.Name, (Action)(() => _ = MoveConversationToSpaceAsync(chat, space.Id)))));
-        _scene.ShowChoices("Move to Space", choices);
+            .Where(space => space.Id != current && space.Kind != SpaceKind.Assistants)
+            .Select(space => (SpaceChoiceLabel(space, _spaceRows), (Func<Task>)(() => RunSidebarAsync(() => MoveConversationToSpaceAsync(chat, space.Id))))));
+        ShowChoices("Move to Space", choices);
     }
 
     private async Task MoveConversationToSpaceAsync(Conversation chat, Guid? spaceId)
     {
+        if (spaceId is { } selected && await RequiresAssistantOwnerAsync(selected))
+        {
+            throw new InvalidOperationException("Open Assistants to create or organise conversations with their canonical Assistant identity.");
+        }
         await _conversations.UpsertConversationAsync(chat with { SpaceId = spaceId, UpdatedAt = DateTimeOffset.UtcNow }, _lifetime.Token);
         await RefreshAsync();
     }
 
-    private async Task StartChatAsync(Guid? groupId)
+    private Task OpenDestinationAsync(Func<Task> open) => OpenDestinationAsync(_ => open(), requestedSpaceId: null);
+
+    private Task OpenDestinationAsync(Func<DestinationTransition, Task> open, Guid? requestedSpaceId) =>
+        RunSidebarAsync(() => OpenDestinationCoreAsync(open, requestedSpaceId));
+
+    private async Task OpenDestinationCoreAsync(Func<DestinationTransition, Task> open, Guid? requestedSpaceId)
     {
-        if (_startingChat) return;
-        _startingChat = true;
-        _scene.SetNewChatBusy(true);
-        try
+        DestinationTransition transition;
+        lock (_destinationGate)
         {
-            if (groupId is Guid id) await _stateStore.SetExpandedAsync(id, true, _lifetime.Token);
-            await _startChat(_currentMode, groupId);
-            _activeGroupId = groupId;
-            await RefreshAsync();
+            if (_disposed) throw new ObjectDisposedException(nameof(NativeChatSidebar));
+            if (_destinationTransition is not null)
+                throw new InvalidOperationException("Wait for the current destination to finish opening before choosing another.");
+            _destinationTransition = transition = new(this, requestedSpaceId);
         }
-        finally
+        var failures = new List<Exception>();
+        var observed = new HashSet<Exception>(ReferenceEqualityComparer.Instance);
+        var faultedCancellation = false;
+        void Retain(Exception error, Task? source = null)
         {
-            _startingChat = false;
-            _scene.SetNewChatBusy(false);
+            if (error is OperationCanceledException && source?.IsCanceled != true) faultedCancellation = true;
+            if (source?.Exception is { } group) { faultedCancellation = true; Retain(group); return; }
+            if (error is AggregateException { InnerExceptions.Count: > 0 } aggregate) foreach (var inner in aggregate.InnerExceptions) Retain(inner);
+            else if (observed.Add(error)) failures.Add(error);
         }
+        Task? original = null;
+        try { SetNewChatBusy(true); original = open(transition); await original; }
+        catch (Exception error) { Retain(error, original); }
+        Task? selected;
+        lock (_destinationGate)
+        {
+            transition.AcceptsScopeSelection = false;
+            selected = transition.ScopeSelection;
+        }
+        // Retain a scope callback even if its owner accidentally returns before awaiting it.
+        if (selected is not null)
+        {
+            try { await selected; }
+            catch (Exception error) { Retain(error, selected); }
+        }
+        lock (_destinationGate) if (ReferenceEquals(_destinationTransition, transition)) _destinationTransition = null;
+        try { if (!_disposed) SetNewChatBusy(false); }
+        catch (Exception error) { Retain(error); }
+        if (failures.Count == 1 && (!faultedCancellation || failures[0] is not OperationCanceledException))
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 0) throw new AggregateException(failures);
+    }
+
+    private Task OpenConversationAsync(Conversation chat) => OpenDestinationAsync(async () =>
+    {
+        await _openConversation(chat);
+        if (_disposed) return;
+        await _stateStore.MarkReadAsync(chat.Id, DateTimeOffset.UtcNow, _lifetime.Token);
+        _activeConversationId = chat.Id;
+        _activeGroupId = chat.ContainerId;
+        await RefreshAsync();
+    });
+
+    private Task StartChatAsync(Guid? groupId) => OpenDestinationAsync(transition => StartChatCoreAsync(groupId, transition), _currentSpaceId);
+
+    private async Task StartChatCoreAsync(Guid? groupId, DestinationTransition transition, Guid? targetSpaceId = null, HavenMode? requestedMode = null, bool explicitSpace = false)
+    {
+        var spaceId = explicitSpace ? targetSpaceId : _currentSpaceId;
+        var mode = requestedMode ?? _currentMode;
+        if (spaceId is { } selected && await RequiresAssistantOwnerAsync(selected))
+        {
+            await OpenSpaceFromPickerCoreAsync(selected, transition);
+            return;
+        }
+        if (_startChatInSpace is not null) await _startChatInSpace(mode, groupId, spaceId);
+        else if (spaceId == _currentSpaceId) await _startChat(mode, groupId);
+        else throw new InvalidOperationException("This host has no configured owner for starting a conversation in another Space.");
+        if (_disposed) return;
+        if (groupId is Guid id) await _stateStore.SetExpandedAsync(id, true, _lifetime.Token);
+        _activeGroupId = groupId;
+        await RefreshAsync();
     }
 
     private async Task ToggleConversationPinAsync(Conversation chat)
@@ -613,20 +881,33 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
         _ => plural ? "Chat Groups" : "Chat Group"
     };
 
-    public void Dispose()
+    public void RequestRetirement() => _originalWork.RequestRetirement();
+    public Task CloseAndDrainAsync() => _originalWork.CloseAndDrainAsync();
+    public void DemandExternalOriginalRetirementJoin() => _originalWork.DemandExternalClose();
+    public void Dispose() => RequestRetirement();
+    public ValueTask DisposeAsync() => new(CloseAndDrainAsync());
+
+    private Task StopOriginalAsync()
     {
-        if (_disposed) return;
         _disposed = true;
-        _scene.SearchChanged -= OnSearchChanged;
-        _scene.NewChatRequested -= OnNewChatRequested;
-        _scene.NewGroupRequested -= OnNewGroupRequested;
-        _scene.SpacePickerRequested -= OnSpacePickerRequested;
-        _scene.ConversationActionRequested -= OnConversationActionRequested;
-        _scene.GroupActionRequested -= OnGroupActionRequested;
-        _scene.FileRequested -= OnFileRequested;
-        _scene.Dispose();
         _lifetime.Cancel();
-        _lifetime.Dispose();
-        SceneHost.Root = null;
+        return Task.CompletedTask;
+    }
+
+    private async Task CleanupOriginalAsync()
+    {
+        try { await _scene.CloseAsync(); }
+        finally
+        {
+            _studyScene.SearchChanged -= OnStudySearchChanged;
+            _studyScene.NewChatRequested -= OnStudyNewChat;
+            _studyScene.NewGroupRequested -= OnStudyNewGroup;
+            _studyScene.SpacePickerRequested -= OnStudySpacePicker;
+            _studyScene.ConversationActionRequested -= OnStudyConversation;
+            _studyScene.GroupActionRequested -= OnStudyGroup;
+            _studyScene.FileRequested -= OnStudyFile;
+            _scene.LayoutChanged -= OnNavigationLayoutChanged;
+            _studyScene.Dispose(); _lifetime.Dispose(); Content = null;
+        }
     }
 }

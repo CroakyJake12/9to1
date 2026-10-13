@@ -1,0 +1,17 @@
+<Cui id="cui.choice-prompt" version="1">
+  <Theme Name="user_preference">
+    <Page ID="choice-prompt" AccessibleName="{Binding prompt.title}">
+      <Container ID="choice-overlay" Type="Overlay">
+        <Button ID="choice-dismiss-backdrop" Action="Cancel" Content="" AccessibleName="Cancel this choice" Background="{Resource CuiOverlaySurfaceBrush}" BorderWidth="0" CornerRadius="0" Focusable="false" Interactive="{Binding prompt.canChoose}" />
+        <Container ID="choice-card" Type="Vertical Stack" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="480" MaxHeight="{Binding prompt.maxHeight}" Margin="16" Padding="24" CellGap="16" CornerRadius="20" Background="{Resource CuiPanelBrush}" VerticalScrolling="true" AccessibleName="{Binding prompt.title}">
+          <Text ID="choice-title" Text="{Binding prompt.title}" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap" />
+          <Text ID="choice-description" Text="{Binding prompt.description}" TextWrapping="Wrap" />
+          <Button ID="choice-primary" Action="Primary" Content="{Binding prompt.primary}" AccessibleName="{Binding prompt.primary}" AccentRole="Primary" Interactive="{Binding prompt.canChoose}" MinHeight="44" />
+          <Button ID="choice-secondary" Action="Secondary" Content="{Binding prompt.secondary}" AccessibleName="{Binding prompt.secondary}" AccentRole="Secondary" Interactive="{Binding prompt.canChoose}" MinHeight="44" />
+          <Button ID="choice-cancel" Action="Cancel" Content="{Binding prompt.cancel}" AccessibleName="{Binding prompt.cancel}" AccentRole="Tertiary" Interactive="{Binding prompt.canChoose}" MinHeight="44" />
+          <Text Text="{Binding prompt.status}" TextWrapping="Wrap" AccessibleName="Choice status" Foreground="{Resource CuiTextSoftBrush}" />
+        </Container>
+      </Container>
+    </Page>
+  </Theme>
+</Cui>

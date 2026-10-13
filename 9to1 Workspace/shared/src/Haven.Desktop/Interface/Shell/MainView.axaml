@@ -12,7 +12,7 @@
   <Grid RowDefinitions="*,Auto" Background="Transparent" ClipToBounds="True">
     <topRail:TopRail x:Name="TopRail" Grid.Row="1" />
 
-    <Grid Grid.Row="0"
+    <Grid x:Name="ApplicationContentHost" Grid.Row="0"
           ColumnDefinitions="Auto,*"
           ColumnSpacing="18"
           Margin="24,0,24,20"

@@ -635,12 +635,13 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunDelegationAutho
             await start.ConfigureAwait(false);
             var previous = CloseExecuting.Value; var phase = new LeaseClosePhase(this, _close!, parent); CloseExecuting.Value = phase;
             var errors = new List<Exception>(); var acquired = false; Task? originalWait = null, originalClose = null;
+            var cancellations = new Dictionary<Task, Exception>(ReferenceEqualityComparer.Instance);
             try
             {
                 try
                 {
                     originalWait = _commit.WaitAsync(); _originalCloseStages.Add(originalWait);
-                    await JoinCloseStageAsync(originalWait, errors).ConfigureAwait(false);
+                    await JoinCloseStageAsync(originalWait, errors, cancellations).ConfigureAwait(false);
                     acquired = originalWait.IsCompletedSuccessfully;
                 }
                 catch (Exception error) { AddCloseCause(errors, error); }
@@ -653,7 +654,7 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunDelegationAutho
                         finally { calls.RemoveAt(calls.Count - 1); }
                     }
                     catch (Exception error) { AddCloseCause(errors, error); }
-                    if (originalClose is not null) await JoinCloseStageAsync(originalClose, errors).ConfigureAwait(false);
+                    if (originalClose is not null) await JoinCloseStageAsync(originalClose, errors, cancellations).ConfigureAwait(false);
                 }
             }
             finally
@@ -662,7 +663,7 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunDelegationAutho
                 phase.Retire(); CloseExecuting.Value = previous;
             }
             foreach (var actualOriginal in _originalCloseStages)
-                await JoinCloseStageAsync(actualOriginal, errors).ConfigureAwait(false);
+                await JoinCloseStageAsync(actualOriginal, errors, cancellations).ConfigureAwait(false);
             if (errors.Count == 1 && errors[0] is not OperationCanceledException)
                 System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(errors[0]).Throw();
             if (errors.Count != 0) throw new AggregateException("Original attempt lease close faults/cancellation/cleanup.", errors);
@@ -688,14 +689,28 @@ public sealed partial class TaskRunPermissionAuthority : ITaskRunDelegationAutho
         }
         private static void AddCloseCause(List<Exception> errors, Exception actual)
         { if (!errors.Any(error => ReferenceEquals(error, actual))) errors.Add(actual); }
-        private static async Task JoinCloseStageAsync(Task actual, List<Exception> errors)
+        private static async Task JoinCloseStageAsync(Task actual, List<Exception> errors,
+            Dictionary<Task, Exception> cancellations)
         {
             try { await actual.ConfigureAwait(false); }
             catch (Exception observed)
             {
-                AddCloseCause(errors, observed);
                 if (actual.Exception is { } group)
-                { AddCloseCause(errors, group); foreach (var cause in group.InnerExceptions) AddCloseCause(errors, cause); }
+                {
+                    // Task.Exception is an observation wrapper, not another original cause.
+                    foreach (var cause in group.InnerExceptions) AddCloseCause(errors, cause);
+                }
+                else
+                {
+                    // Task.FromCanceled can manufacture another exception on each await.
+                    // The same original close keeps its first observed cancellation identity.
+                    if (actual.IsCanceled)
+                    {
+                        if (cancellations.TryGetValue(actual, out var original)) observed = original;
+                        else cancellations.Add(actual, observed);
+                    }
+                    AddCloseCause(errors, observed);
+                }
             }
         }
         private sealed class Pin(SemaphoreSlim gate) : IAsyncDisposable

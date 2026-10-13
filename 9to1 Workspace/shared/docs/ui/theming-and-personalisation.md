@@ -44,6 +44,14 @@ and refreshes named scopes when the catalog changes. Resource snapshots include
 the canonical custom fingerprint; same-name edits therefore update the existing
 controls. Mutable pattern drawing resources are copied per renderer owner.
 
+The revised Spaces shell consumes the shared flat `CuiShellBrush`,
+`CuiWorkspaceBrush` and `CuiFloatingSurfaceBrush` roles. This keeps the approved
+shell and composer surfaces free of implicit grain without changing the owner's
+selected theme or the material roles used by other surfaces. The shared commit
+surface/ink roles provide Professional monochrome contrast and the current
+expressive or custom primary accent. Custom themes update those roles with their
+own validated fill and readable foreground; Spaces does not select its own palette.
+
 The sections below describe the historical Desktop personalisation pipeline where
 it has not yet been migrated to the shared account contract; they are not evidence
 that the browser implementation has passed native device or whole-app acceptance.

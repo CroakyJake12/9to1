@@ -73,7 +73,8 @@ public sealed class OllamaClient(HttpClient httpClient, ProviderUsageCaptureBuff
         {
             cancellationToken.ThrowIfCancellationRequested();
             var line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
-            if (line is null) yield break;
+            if (line is null)
+                throw new InvalidDataException("Ollama ended the response before its completion marker.");
             if (string.IsNullOrWhiteSpace(line)) continue;
             using var document = JsonDocument.Parse(line);
             var root = document.RootElement;

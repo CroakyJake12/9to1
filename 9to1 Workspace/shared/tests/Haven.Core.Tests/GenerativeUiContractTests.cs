@@ -28,7 +28,7 @@ public sealed class GenerativeUiContractTests
 
         var errors = GenerativeUiContractValidator.Validate(Document(root));
 
-        Assert.Contains(errors, error => error.Contains("trusted HavenUI", StringComparison.Ordinal));
+        Assert.Contains(errors, error => error.Contains("trusted CUI", StringComparison.Ordinal));
         Assert.Contains(errors, error => error.Contains("forbidden", StringComparison.Ordinal));
         Assert.Contains(errors, error => error.Contains("cannot own consequential", StringComparison.Ordinal));
     }

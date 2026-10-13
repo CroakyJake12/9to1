@@ -17,6 +17,16 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
     private OriginalConversationTarget CaptureOriginalConversationTarget() =>
         new(_conversation.Id, _originalPresentationGeneration);
 
+    internal Func<bool> CapturePresentationGuard()
+    {
+        var target = CaptureOriginalConversationTarget();
+        var wasTemporary = _conversation.IsTemporary;
+        var title = _conversation.Title;
+        return () => !_disposed && !_originalWork.IsRetiring && _conversation.Id == target.ConversationId &&
+            _originalPresentationGeneration == target.Generation && _conversation.IsTemporary == wasTemporary &&
+            _conversation.Title == title;
+    }
+
     private void BindOriginalConversationTarget(NewChatOriginalWorkLifetime.Original original,
         OriginalConversationTarget target, bool explicitTransition = false)
     {
@@ -45,6 +55,13 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
     private Task AdmitOriginalConversationLoad(Conversation conversation)
     {
         ArgumentNullException.ThrowIfNull(conversation);
+        if (!CanChangeConversation()) return Task.FromException(new InvalidOperationException(
+            "Resolve the pending temporary chat save before loading another conversation."));
+        if (conversation.IsTemporary)
+        {
+            if (ReferenceEquals(conversation, _conversation)) return Task.CompletedTask;
+            return Task.FromException(new InvalidOperationException("Temporary history belongs to its live chat session and cannot be reloaded from a conversation descriptor."));
+        }
         OriginalConversationTarget? target = null;
         return _originalWork.RunAsync(original =>
         {
@@ -232,6 +249,7 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
         lock (_originalSendGate)
         {
             _originalWork.DemandAdmission();
+            if (!CanChangeConversation()) return Task.CompletedTask;
             if (_originalSend is { IsCompleted: false }) return _originalSend;
             var conversation = _conversation;
             var generation = _originalPresentationGeneration;
@@ -296,15 +314,9 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
             void Attempt(Action action)
             { try { action(); } catch (Exception error) { failures.Add(error); } }
             Attempt(() => _sendCancellation?.Cancel());
+            StopOriginalToolApprovals(failures);
             Attempt(_sendProgressTimer.Stop);
-            Attempt(() => _scene.StopRequested -= OnStopRequested);
             Attempt(() => _scene.Instruction.Invalidated -= OnComposerEditCompleted);
-            Attempt(() => _scene.AttachmentRemoveRequested -= OnAttachmentRemoveRequested);
-            Attempt(() => _scene.MessageActionRequested -= OnMessageActionRequested);
-            Attempt(() => _scene.MarkdownCodeActionRequested -= OnMarkdownCodeActionRequested);
-            Attempt(() => _scene.DualToggleRequested -= OnDualToggleRequested);
-            Attempt(() => _scene.DualModelPickerRequested -= OnDualModelPickerRequested);
-            Attempt(() => _scene.DualSecondModelChosen -= OnDualSecondModelChosen);
             Attempt(() => Scene.InputSubmitted -= OnInputSubmitted);
             Attempt(() => Scene.PointerPressedOutside -= OnOriginalPointerPressedOutside);
             RequestAllOriginalInitialTaskStops(failures); // Observation stop only, never Task business stop.
@@ -320,6 +332,7 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
         // Page originals are terminal. Capture any constructor-acquired late mount
         // too, then independently join every SAME child task even if a sibling fails.
         var failures = new List<Exception>();
+        await JoinOriginalToolApprovalsAsync(failures);
         await JoinAllOriginalInitialTaskStopsAsync(failures); // SAME late lease/driver, independent of mount faults.
         foreach (var mount in _originalGeneratedMounts.ToArray()) CaptureOriginalGeneratedStop(mount);
         foreach (var cause in _originalGeneratedStopCauses) AddOriginalGeneratedCause(failures, cause);
@@ -334,6 +347,7 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
             }
             catch (Exception cause) { CaptureOriginalGeneratedCauses(failures, actual, cause); }
         }
+        Task? originalSceneClose = null;
         var actualDispatcher = Dispatcher.UIThread.InvokeAsync(() => _originalWork.RunCloseCallback(() =>
         {
             try { _sendCancellation?.Dispose(); } catch (Exception cause) { AddOriginalGeneratedCause(failures, cause); }
@@ -348,11 +362,16 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
                 _generatedSurfaces.Clear(); _generatedInstanceIds.Clear(); _generatedSignatures.Clear();
                 _originalGeneratedMounts.Clear(); _originalGeneratedCloses.Clear();
                 if (failures.Count == 0)
-                    try { _scene.Dispose(); } catch (Exception cause) { AddOriginalGeneratedCause(failures, cause); }
+                    try { originalSceneClose = _scene.CloseAsync(); } catch (Exception cause) { AddOriginalGeneratedCause(failures, cause); }
             }
         })).GetTask();
         try { await actualDispatcher; }
         catch (Exception cause) { CaptureOriginalGeneratedCauses(failures, actualDispatcher, cause); }
+        if (originalSceneClose is not null)
+        {
+            try { await originalSceneClose; }
+            catch (Exception cause) { CaptureOriginalGeneratedCauses(failures, originalSceneClose, cause); }
+        }
         ThrowIndependentCleanup(failures);
     }
 

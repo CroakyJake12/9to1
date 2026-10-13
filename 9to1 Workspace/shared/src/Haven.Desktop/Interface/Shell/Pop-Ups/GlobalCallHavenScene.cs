@@ -474,14 +474,7 @@ internal sealed class GlobalCallHavenScene : IDisposable
 
     private void OnReasoningChanged(object? sender, EventArgs e)
     {
-        var percent = (int)Math.Round(Reasoning.Value / 25d) * 25;
-        _viewModel.Effort = percent switch
-        {
-            <= 25 => EffortLevel.Low,
-            <= 50 => EffortLevel.Medium,
-            <= 75 => EffortLevel.High,
-            _ => EffortLevel.Max
-        };
+        _viewModel.Effort = ReasoningScale.FromPercentage(Reasoning.Value);
         ReasoningValue.Content = $"{_viewModel.ReasoningPercent}%";
     }
 

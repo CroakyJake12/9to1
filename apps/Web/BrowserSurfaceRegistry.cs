@@ -1,4 +1,5 @@
 using CakeOS.Cui;
+using Avalonia.Controls;
 using CakeOS.Cui.Runtime;
 using HavenOS.Home.Core;
 
@@ -7,7 +8,7 @@ namespace NineToOne.Web;
 /// <summary>Platform presentation binding for a successful, owner-provided domain route.</summary>
 public sealed record BrowserCuiSurface(CuiDocument Document, ICuiBindingContext Bindings,
     ICuiActionDispatcher Actions, IDisposable? Lifetime = null, CuiControlRegistry? ControlRegistry = null,
-    IBrowserPresentationAdmission? Admission = null);
+    IBrowserPresentationAdmission? Admission = null, Func<Control, IDisposable>? Attach = null);
 
 /// <summary>Commit a prepared owner view only after the candidate CUI successfully loads.</summary>
 public interface IBrowserPresentationAdmission

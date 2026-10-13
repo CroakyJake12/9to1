@@ -569,6 +569,7 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
         public bool IsLocal => !remote;
         public bool CanManageModels => false;
         public int CatalogueCalls, CompleteCalls, StreamCalls, ToolCalls;
+        public HashSet<ToolCapability> ModelCapabilities { get; } = [ToolCapability.Text, ToolCapability.Tools, ToolCapability.Streaming];
         public Task<string>? OriginalComplete;
         public Func<OllamaChatRequest, CancellationToken, Task<string>> CompleteFactory = (_, _) => Task.FromResult("synthetic actual reply");
         public Func<OllamaChatRequest, CancellationToken, IAsyncEnumerable<string>> StreamFactory = (_, _) => new OriginalStream(1);
@@ -580,7 +581,7 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
         {
             Interlocked.Increment(ref CatalogueCalls);
             return Task.FromResult<IReadOnlyList<ProviderModelDescriptor>>([new(Id, IsLocal,
-                new("model", 0, "synthetic", "none", "none", new HashSet<ToolCapability> { ToolCapability.Text, ToolCapability.Tools, ToolCapability.Streaming }, DateTimeOffset.UtcNow))]);
+                new("model", 0, "synthetic", "none", "none", ModelCapabilities.ToHashSet(), DateTimeOffset.UtcNow))]);
         }
         public Task<string> CompleteAsync(OllamaChatRequest request, CancellationToken token)
         { Interlocked.Increment(ref CompleteCalls); return OriginalComplete = CompleteFactory(request, token); }

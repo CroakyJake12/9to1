@@ -301,6 +301,7 @@ public sealed partial class ChatPage
 
         CodeBehindHost.Children.Clear();
         CodeBehindHost.Children.Add(root);
+        CodeBehindHost.Children.Add(_legacyChoiceOverlay);
     }
 
     private void RefreshFinalChatUi()

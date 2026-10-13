@@ -10,7 +10,8 @@ public enum SpaceKind
     Chat = 5,
     Tasks = 6,
     Translate = 7,
-    Experiences = 8
+    Experiences = 8,
+    Assistants = 9
 }
 
 public enum SpaceWebAccessPolicy { Allowed = 0, Ask = 1, Disabled = 2 }
@@ -128,7 +129,8 @@ public sealed record SpaceDefinition(
     IReadOnlyList<SpaceCapabilityBinding>? CapabilityBindings = null,
     SpaceInheritancePolicy? Inheritance = null,
     IReadOnlyList<SpaceContextReference>? ContextReferences = null,
-    IReadOnlyList<SpaceShareGrant>? Shares = null)
+    IReadOnlyList<SpaceShareGrant>? Shares = null,
+    SpaceGraphConfiguration? GraphConfiguration = null)
 {
     /// <summary>Origin is derived from the protected registry bit and is not independently mutable.</summary>
     public SpaceOrigin Origin => IsBuiltIn ? SpaceOrigin.BuiltIn : SpaceOrigin.UserCreated;

@@ -7,6 +7,13 @@ namespace HavenOS.Home.Core;
 public sealed class HomeGraphPublicationResourceRegistry : ICanonicalResourceAccessResolver
 {
     private readonly System.Collections.Concurrent.ConcurrentDictionary<HomeGraphPublicationOwner.Review, byte> _reviews = new();
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<HomeSpaceGraphOwner.Operation, byte> _spaceAssociations = new();
+    internal void RegisterSpaceAssociation(HomeSpaceGraphOwner.Operation operation)
+    {
+        if (_spaceAssociations.Count >= 128 || !_spaceAssociations.TryAdd(operation, 0))
+            throw new InvalidOperationException("Original Space graph association capacity or identity is unavailable.");
+    }
+    internal void RetireSpaceAssociation(HomeSpaceGraphOwner.Operation operation) => _spaceAssociations.TryRemove(operation, out _);
     public string ResourceKind => "nodegraph.definition";
     internal void Register(HomeGraphPublicationOwner.Review review)
     {
@@ -18,10 +25,13 @@ public sealed class HomeGraphPublicationResourceRegistry : ICanonicalResourceAcc
         ResourceScope scope, CancellationToken ct)
     {
         var matches = _reviews.Keys.Where(review => review.MatchesResource(actor, actionId, scope)).ToArray();
-        if (matches.Length != 1) return new(false, "GRAPH_PRIVATE_ORIGIN_UNAVAILABLE", actor.ActorId, scope.Revision, actor.OrganisationId);
+        var associations = _spaceAssociations.Keys.Where(operation => operation.MatchesGraphAssociation(actor, actionId, scope)).ToArray();
+        if (matches.Length + associations.Length != 1) return new(false, "GRAPH_PRIVATE_ORIGIN_UNAVAILABLE", actor.ActorId, scope.Revision, actor.OrganisationId);
         try
         {
-            return new(await matches[0].VerifyResourceAsync(ct).ConfigureAwait(false), "GRAPH_PRIVATE_ORIGIN_CHECKED",
+            var admitted = matches.Length == 1 ? await matches[0].VerifyResourceAsync(ct).ConfigureAwait(false) :
+                await associations[0].VerifyGraphAssociationAsync(ct).ConfigureAwait(false);
+            return new(admitted, "GRAPH_PRIVATE_ORIGIN_CHECKED",
                 actor.ActorId, scope.Revision, actor.OrganisationId);
         }
         catch (Exception error) when (error is UnauthorizedAccessException or InvalidDataException)

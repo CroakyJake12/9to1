@@ -37,6 +37,10 @@ public sealed class CuiControlLoader : IDisposable
     private readonly List<CuiRepeatState> _repeats = [];
     private readonly Dictionary<RepeatItemScope, PropertyChangedEventHandler> _scopeChangedHandlers = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, CuiComponent> _authoredControls = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<Control, (string OwnerId, CuiSourceSpan Span)> _interactionRevealDeclarations = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<Control, CuiInteractionReveal> _interactionReveals = new(ReferenceEqualityComparer.Instance);
+    private bool _constructingDocument;
+    private Control? _authoredRoot;
     private readonly Dictionary<Control, Dictionary<string, CuiObservedBinding>> _observedBindings = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, CuiActionInvocation> _actionInvocations = new(ReferenceEqualityComparer.Instance);
     private readonly HashSet<Control> _wiredActions = new(ReferenceEqualityComparer.Instance);
@@ -443,6 +447,7 @@ public sealed class CuiControlLoader : IDisposable
         foreach (var control in _authoredControls.Keys.ToArray()) DetachPresentation(control);
         _controlThemeNames.Clear(); _controlThemeResources.Clear(); _appliedThemeKeys.Clear(); _themeNames.Clear(); _themeNames.Push("user_preference");
         _authoredControls.Clear();
+        _authoredRoot = null;
         _observedBindings.Clear();
         ClearActionHandlers();
         _actionInvocations.Clear();
@@ -490,7 +495,12 @@ public sealed class CuiControlLoader : IDisposable
             return null;
 
         // The first component is the root
-        var root = LoadComponent(visibleRoot);
+        Control root;
+        _constructingDocument = true;
+        try { root = LoadComponent(visibleRoot); }
+        finally { _constructingDocument = false; }
+        _authoredRoot = root;
+        ConfigureInteractionReveals(root);
 
         // Set DataContext for live bindings if we have a binding context
         if (_bindingContext is not null)
@@ -1111,6 +1121,32 @@ public sealed class CuiControlLoader : IDisposable
             if (current < 0) state.Host.Children.Insert(index, nextRoots[index]);
             else if (current != index) state.Host.Children.Move(current, index);
         }
+        if (!_constructingDocument && _interactionRevealDeclarations.Keys.Any(control => !_interactionReveals.ContainsKey(control)))
+            ConfigureInteractionReveals(_authoredRoot ?? state.Host);
+    }
+
+    private void ConfigureInteractionReveals(Control root)
+    {
+        // Traverse retained authored containment, not template/visual ancestry.
+        // Inactive CUI cells retain identity even while detached from layout.
+        var ancestors = new Stack<Control>();
+        Visit(root);
+        void Visit(Control control)
+        {
+            if (!_interactionReveals.ContainsKey(control) && _interactionRevealDeclarations.TryGetValue(control, out var declaration))
+            {
+                var owner = ancestors.FirstOrDefault(candidate =>
+                    _authoredControls.TryGetValue(candidate, out var component) &&
+                    string.Equals(component.AuthoredId, declaration.OwnerId, StringComparison.Ordinal));
+                if (owner is null)
+                    throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR059", CuiDiagnosticSeverity.Error,
+                        $"RevealWith '{declaration.OwnerId}' must identify a containing authored component in the same CUI owner.", declaration.Span));
+                _interactionReveals.Add(control, new CuiInteractionReveal(control, owner));
+            }
+            ancestors.Push(control);
+            try { foreach (var child in OwnedChildren(control)) Visit(child); }
+            finally { ancestors.Pop(); }
+        }
     }
 
     private void DetachControlTree(Control root)
@@ -1137,8 +1173,10 @@ public sealed class CuiControlLoader : IDisposable
         }
     }
 
-    private static void DetachPresentation(Control control)
+    private void DetachPresentation(Control control)
     {
+        if (_interactionReveals.Remove(control, out var reveal)) reveal.Dispose();
+        _interactionRevealDeclarations.Remove(control);
         CuiLayoutProperties.Detach(control);
         CuiLifecycleProperties.Detach(control);
         CuiPropertyPresentation.Detach(control);
@@ -1429,6 +1467,15 @@ public sealed class CuiControlLoader : IDisposable
                 throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR052", CuiDiagnosticSeverity.Error, $"Unknown or forbidden CUI property '{propName}'.", value.Span));
             if (_controlRegistry.TryResolveElement(component.Type, out var element) && !element.AllowedProperties.Contains(descriptor.Name) && !descriptor.IsAttached)
                 throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR052", CuiDiagnosticSeverity.Error, $"CUI property '{propName}' is not supported on {component.Type}.", value.Span));
+            // Owner identity is immutable authored structure, not mutable application data.
+            if (propName.Equals("RevealWith", StringComparison.OrdinalIgnoreCase))
+            {
+                if (value is not CuiLiteralValue literal || string.IsNullOrWhiteSpace(literal.Value))
+                    throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR059", CuiDiagnosticSeverity.Error,
+                        "RevealWith requires a literal containing authored component ID.", value.Span));
+                _interactionRevealDeclarations[control] = (literal.Value, value.Span);
+                continue;
+            }
             // Type selects the native lowering of core polymorphic elements.
             if (propName.Equals("Type", StringComparison.OrdinalIgnoreCase))
                 continue;
@@ -1590,6 +1637,7 @@ public sealed class CuiControlLoader : IDisposable
                 conditional.Host.Content = branch;
                 conditional.LastValue = conditionValue;
                 WireBindingsRecursive(branch);
+                ConfigureInteractionReveals(_authoredRoot ?? branch);
             }
             finally
             {
@@ -2076,6 +2124,17 @@ public sealed class CuiControlLoader : IDisposable
                         else if (control is TextBox twTbx)
                             twTbx.TextWrapping = tw;
                     }
+                    break;
+                case "texttrimming":
+                    if (control is TextBlock trimmedText)
+                        trimmedText.TextTrimming = resolved.ToLowerInvariant() switch
+                        {
+                            "none" => Avalonia.Media.TextTrimming.None,
+                            "characterellipsis" => Avalonia.Media.TextTrimming.CharacterEllipsis,
+                            "wordellipsis" => Avalonia.Media.TextTrimming.WordEllipsis,
+                            "prefixcharacterellipsis" => Avalonia.Media.TextTrimming.PrefixCharacterEllipsis,
+                            _ => throw new ArgumentException("Unknown canonical text trimming value.")
+                        };
                     break;
                 case "acceptsreturn":
                 case "multiline":
@@ -2666,33 +2725,44 @@ public sealed class CuiControlLoader : IDisposable
         };
     }
 
+    /// <summary>Finds a canonical authored control before or after mounting. CUI
+    /// containers retain hidden children outside the current native visual tree;
+    /// templates are therefore not an authoritative control-identity index.</summary>
+    public T FindAuthoredControl<T>(Control root, string name) where T : Control
+    {
+        ArgumentNullException.ThrowIfNull(root);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        return EnumerateControls(root).OfType<T>().Single(control => control.Name == name);
+    }
+
     private IEnumerable<Control> EnumerateControls(Control root)
     {
         yield return root;
-        if (_ownedContextMenus.TryGetValue(root, out var menu))
-            foreach (var descendant in EnumerateControls(menu)) yield return descendant;
+        foreach (var child in OwnedChildren(root))
+            foreach (var descendant in EnumerateControls(child)) yield return descendant;
+    }
+
+    // Actual original child-surface slots deliberately match none of these cases;
+    // their independent loader retains containment and retirement authority.
+    private IEnumerable<Control> OwnedChildren(Control root)
+    {
+        if (_ownedContextMenus.TryGetValue(root, out var menu)) yield return menu;
         switch (root)
         {
             case CuiContainerControl container:
-                foreach (var child in container.AuthoredChildren)
-                foreach (var descendant in EnumerateControls(child)) yield return descendant;
+                foreach (var child in container.AuthoredChildren) yield return child;
                 break;
             case Panel panel:
-                foreach (var child in panel.Children.OfType<Control>())
-                foreach (var descendant in EnumerateControls(child))
-                    yield return descendant;
+                foreach (var child in panel.Children.OfType<Control>()) yield return child;
                 break;
             case Decorator { Child: Control child }:
-                foreach (var descendant in EnumerateControls(child))
-                    yield return descendant;
+                yield return child;
                 break;
             case ContentControl { Content: Control child }:
-                foreach (var descendant in EnumerateControls(child))
-                    yield return descendant;
+                yield return child;
                 break;
             case ItemsControl items:
-                foreach (var item in items.Items.OfType<Control>())
-                foreach (var descendant in EnumerateControls(item)) yield return descendant;
+                foreach (var item in items.Items.OfType<Control>()) yield return item;
                 break;
         }
     }

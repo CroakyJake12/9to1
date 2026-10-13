@@ -14,17 +14,8 @@ public static class ChatSpaceProjection
             .GroupBy(item => item.MessageId!.Value)
             .ToDictionary(group => group.Key, group => (IReadOnlyList<MessageAttachment>)group.ToArray());
 
-        var messages = data.Messages.Select(message => new ChatSpaceMessage(
-            message.Id,
-            message.Role,
-            message.Content,
-            SpeakerFor(message),
-            message.CreatedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture),
-            message.ModelName,
-            attachments.GetValueOrDefault(message.Id, []),
-            ReadCitations(message),
-            ReadToolActivities(message),
-            message.Role == MessageRole.Assistant)).ToArray();
+        var messages = data.Messages.Select(message => ProjectMessage(message,
+            attachments.GetValueOrDefault(message.Id, []))).ToArray();
         var branches = data.Branches
             .OrderBy(item => item.CreatedAt)
             .Select(item => new ChatSpaceBranch(item.Id, item.Name, item.Reason, item.IsCurrent))
@@ -36,6 +27,18 @@ public static class ChatSpaceProjection
             branches,
             branches.FirstOrDefault(item => item.IsCurrent)?.Id);
     }
+
+    public static ChatSpaceMessage ProjectMessage(ChatMessage message, IReadOnlyList<MessageAttachment> attachments) => new(
+            message.Id,
+            message.Role,
+            message.Content,
+            SpeakerFor(message),
+            message.CreatedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture),
+            message.ModelName,
+            attachments,
+            ReadCitations(message),
+            ReadToolActivities(message),
+            message.Role == MessageRole.Assistant);
 
     public static IReadOnlyList<ToolActivity> ReadToolActivities(ChatMessage message)
     {

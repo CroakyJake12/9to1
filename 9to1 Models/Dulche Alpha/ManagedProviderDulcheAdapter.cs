@@ -418,6 +418,7 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
                 || !actual.OriginalReaderDispose.IsCompletedSuccessfully || !actual.OriginalResourceClose.IsCompletedSuccessfully
                 || !actual.OriginalTerminalObserver.IsCompletedSuccessfully || !actual.OriginalTurnCancel.IsCompletedSuccessfully
                 || !actual.OriginalTurnRelease.IsCompletedSuccessfully || turn.OriginalErrors.Count != 0
+                || request.OriginalCancellationTasks.Any(original => !original.IsCompletedSuccessfully)
                 || request.Owner.Errors.Any(error => !ReferenceEquals(error, actual.OriginalOutwardFailure)
                     && !ReferenceEquals(error, actual.OriginalReaderCause) && !ReferenceEquals(error, actual.OriginalRawCause))) return false;
             observation = actual; return true;
@@ -759,12 +760,18 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
             owner = RequireEndpoint(endpoint);
             request = owner.Requests.SingleOrDefault(item => item.Handle.RequestId == requestId)
                 ?? throw new InvalidOperationException("No actual owned request is registered.");
+            // Publish the SAME owned cancellation task before callbacks can run. A raw
+            // reader may finish cancellation while a request callback is still pending
+            // or has faulted; that is not yet proof of a clean original cancellation.
+            request.OriginalCancellationTasks.RemoveAll(original => original.IsCompletedSuccessfully);
+            var actual = StartOwned(owner, () =>
+            {
+                InvokePhysicalOriginal(owner, () => { request.Lifetime.Cancel(); return true; }); // Only this owned request.
+                return Task.FromResult(OperationResult<Unit>.Success(Unit.Value));
+            }, cancellationToken, allowRetiredCancellationBody: true);
+            request.OriginalCancellationTasks.Add(actual);
+            return new(actual);
         }
-        return new(StartOwned(owner, () =>
-        {
-            InvokePhysicalOriginal(owner, () => { request.Lifetime.Cancel(); return true; }); // Only this owned request.
-            return Task.FromResult(OperationResult<Unit>.Success(Unit.Value));
-        }, cancellationToken, allowRetiredCancellationBody: true));
     }
     public ValueTask<OperationResult<Unit>> PauseAsync(DulcheEndpoint endpoint, string requestId, CancellationToken cancellationToken)
         => ValueTask.FromResult(Unsupported("Exact provider pause is not exposed.", requestId));
@@ -1187,7 +1194,7 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
         public readonly TaskRunAttemptAdmission Admission = admission;
         public readonly Guid ActionId = actionId;
         public readonly CancellationTokenSource Lifetime = new();
-        public readonly List<Task> OriginalFrames = new(), RawTasks = new();
+        public readonly List<Task> OriginalFrames = new(), RawTasks = new(), OriginalCancellationTasks = new();
         public readonly Dictionary<string, OllamaToolCall> PendingCalls = new(StringComparer.Ordinal);
         public readonly HashSet<string> ToolResults = new(StringComparer.Ordinal);
         public List<OllamaToolTurn> Turns = new();

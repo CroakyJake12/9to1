@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="referrer" content="no-referrer">
   <link rel="icon" href="data:,">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>9to1</title>
-  <link rel="stylesheet" href="./cui-bootstrap.css">
+  <link rel="stylesheet" href="/cui-bootstrap.css">
   <script>
     performance.mark('9to1:host');
     try {
@@ -20,6 +21,7 @@
   <button id="browser-retry" type="button" hidden onclick="location.reload()">Retry opening 9to1</button>
   <main id="nine-to-one-root" aria-label="9to1 application"></main>
   <noscript>JavaScript is required to run 9to1 in this browser.</noscript>
-  <script type="module" src="./main.js" onerror="document.getElementById('browser-status').textContent='9to1 could not load its resources. Check your connection and try again.'; document.getElementById('browser-status').dataset.code='BrowserResourceUnavailable'; document.getElementById('browser-retry').hidden=false;"></script>
+  <script src="/host-configuration.js"></script>
+  <script type="module" src="/main.js" onerror="document.getElementById('browser-status').textContent='9to1 could not load its resources. Check your connection and try again.'; document.getElementById('browser-status').dataset.code='BrowserResourceUnavailable'; document.getElementById('browser-retry').hidden=false;"></script>
 </body>
 </html>

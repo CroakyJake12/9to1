@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="SpacesCuiRenderChecks.cs" />
+    <ProjectReference Include="../../UI/Chat/Runtime/HavenOS.Spaces.CuiRuntime.csproj" />
+    <ProjectReference Include="../../../../framework/CUI/Compiler/CakeOS.Cui.Compiler.csproj" />
+  </ItemGroup>
+</Project>

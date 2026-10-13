@@ -1,0 +1,31 @@
+{
+  "capturedAt": "2026-10-13T22:23:49.893567+00:00",
+  "scope": "Release-support fixture isolation; no runtime/account/provider acceptance",
+  "sourceFiles": [
+    {
+      "path": "apps/Web/Tests/verify-production-isolation.cjs",
+      "sha256": "3aa79cf40eff6bf56c6904d0144be821dd9e75d65522f8e539b62ca84f861fec"
+    },
+    {
+      "path": "apps/Web/Tests/production-isolation.test.cjs",
+      "sha256": "d84fe3e1c2e89b929915dd68f337a4cbad3f036576385a618b04620a3378951c"
+    },
+    {
+      "path": "apps/Web/Tests/verify-publish-receipt.cjs",
+      "sha256": "9060a627e91d4f9da834716a0a53bbcfec15f006a4f98317f929341dddef3227"
+    },
+    {
+      "path": "apps/Web/Tests/ci/run-ordinary-web-publish.py",
+      "sha256": "ad680a981f3e47f10e9fb07bea3e91e4046aa08661b9e1caf01df73016dc61de"
+    },
+    {
+      "path": "apps/Web/Tests/PRODUCTION-ISOLATION.md",
+      "sha256": "480978e649d8e9933fcb350267d4470f92d38b32841e8dfb977fbbe97dd71579"
+    }
+  ],
+  "independentControls": "22/22 PASS plus 3 scoped project-input controls",
+  "evidence": "/workspace/astra-audit/evidence/p0-production-isolation-independent-3/report.json",
+  "sdkEvaluatedProductionInputs": "NOT RUN until next ordinary publication",
+  "productRecordsModified": false,
+  "timelineApplied": false
+}

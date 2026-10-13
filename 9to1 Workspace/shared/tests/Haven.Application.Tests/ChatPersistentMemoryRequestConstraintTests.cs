@@ -79,16 +79,17 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         private readonly Conversation _conversation;
         private readonly ChatSessionService _chat;
         internal ChatSessionService OriginalChat => _chat;
+        internal Conversation OriginalConversation => _conversation;
         public readonly ModelDescriptor Model;
         public readonly Provider Provider;
         internal readonly Safety OriginalSafety = new();
         internal readonly List<ToolActivity> ToolActivities = [];
 
-        internal Rig(MemorySource actualSource, ScopedMemorySource? scoped = null, string? actualWorkspaceRoot = null)
+        internal Rig(MemorySource actualSource, ScopedMemorySource? scoped = null, string? actualWorkspaceRoot = null, bool temporary = false)
         {
             var now = DateTimeOffset.UtcNow;
             _conversation = new(Guid.NewGuid(), actualWorkspaceRoot is null ? HavenMode.Chat : HavenMode.Tasks, ConversationKind.Chat,
-                "Controlled ordinary conversation", null, null, false, false, now, now);
+                "Controlled ordinary conversation", null, null, false, temporary, now, now);
             Model = new("controlled-memory-model", 1, "controlled", "controlled", "controlled",
                 actualWorkspaceRoot is null ? new HashSet<ToolCapability> { ToolCapability.Text }
                     : new HashSet<ToolCapability> { ToolCapability.Text, ToolCapability.Tools }, now);
@@ -157,13 +158,14 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         internal readonly List<OllamaChatRequest> Requests = [];
         internal readonly List<OllamaToolRequest> ToolRequests = [];
         internal OllamaToolCall? NextControlledToolCall;
+        internal Action<OllamaChatRequest>? BeforeDispatch;
         public Task<bool> IsAvailableAsync(CancellationToken token) => Task.FromResult(true);
         public Task<IReadOnlyList<ModelDescriptor>> GetModelsAsync(CancellationToken token) =>
             Task.FromResult<IReadOnlyList<ModelDescriptor>>([model]);
         public async IAsyncEnumerable<string> StreamChatAsync(OllamaChatRequest request,
             [EnumeratorCancellation] CancellationToken token)
         {
-            token.ThrowIfCancellationRequested(); Requests.Add(request);
+            token.ThrowIfCancellationRequested(); BeforeDispatch?.Invoke(request); Requests.Add(request);
             await Task.CompletedTask; yield return "Controlled response.";
         }
         public Task<string> CompleteAsync(OllamaChatRequest request, CancellationToken token) =>

@@ -45,6 +45,12 @@
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
     <Compile Include="AssemblyInfo.cs;TestAppBuilder.cs" />
+    <Compile Include="TemporaryConversationPageTests.cs;LegacyTemporaryConversationTests.cs" />
+    <Compile Include="NativeChatSidebarCuiAdapterTests.cs;ChatCuiSceneTests.cs;NativeCuiThemePreferencesTests.cs" />
+    <Compile Include="TemporaryWorkspacePrivacyTests.cs;TemporarySpacesFrameTests.cs" />
+    <!-- Same actual canonical Chat/Agent delegation fixtures on the portable managed host. -->
+    <Compile Include="ChatCloudPermissionCallerTests.cs;AgentCanonicalCallerTests.cs;TaskRunDelegationProducerTests.cs;TaskRunDelegationProducerTests.TemporaryMemory.cs" />
+    <Compile Include="SpaceLaunchPolicyTests.cs;ChatSidebarHavenSceneTests.cs;NativeChatSidebarNewChatTests.cs" />
     <Compile Include="WritePageOriginalLifetimeTests.cs;PresentPageOriginalLifetimeTests.cs;NativeSpacesPageLifecycleTests.cs;SpaceGeneratedSurfaceRendererTests.cs;OriginalInitialDocumentProductTests.cs;OriginalDocumentClosePreflightTests.cs" />
     <Compile Include="HavenAppRoutePolicyTests.cs;NativeAssistantsSetupDesktopPageTests.cs" />
     <!-- Actual native home/configuration/empty conversation captures over the already linked genuine Memory rig. -->

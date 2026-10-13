@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>HavenOS.Spaces.CuiRuntime</AssemblyName>
+    <RootNamespace>HavenOS.Apps.Spaces.Chat.Rendering</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Home/Runtime/**/*.cs" />
+    <ProjectReference Include="../../../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+  </ItemGroup>
+</Project>

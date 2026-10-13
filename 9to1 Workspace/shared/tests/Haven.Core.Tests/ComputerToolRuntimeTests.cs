@@ -158,6 +158,9 @@ public sealed class ComputerToolRuntimeTests
     /// </summary>
     private sealed class RecordingComputerTools : IComputerToolService
     {
+        // This deterministic backend implements the exercised operations on every test host;
+        // it does not claim that an installed Windows/Linux automation backend is available.
+        public bool IsSupported => true;
         /// <summary>
         /// Gets or updates eligible target, the canonical app this fixture resolves before dispatch.
         /// </summary>

@@ -6,7 +6,8 @@ public sealed partial class SpaceRegistry
 {
     private const string SettingsKey = "spaces.registry";
     private const string CurrentSpaceSettingsKey = "spaces.current";
-    private const int CurrentVersion = 3;
+    private const int DefaultVersion = 3;
+    private const int CurrentVersion = 4;
     private readonly IVersionedSettingsStore _settings;
     private readonly Func<DateTimeOffset> _clock;
     private readonly SemaphoreSlim _gate = new(1, 1);
@@ -20,6 +21,8 @@ public sealed partial class SpaceRegistry
     public static Guid TasksSpaceId { get; } = Guid.Parse("b1000000-0000-0000-0000-000000000006");
     public static Guid TranslateSpaceId { get; } = Guid.Parse("b1000000-0000-0000-0000-000000000007");
     public static Guid ExperiencesSpaceId { get; } = Guid.Parse("b1000000-0000-0000-0000-000000000008");
+    // Assistant placement is independent of the retained legacy Agent identity.
+    public static Guid AssistantsSpaceId { get; } = Guid.Parse("b1000000-0000-0000-0000-000000000009");
 
     public SpaceRegistry(IVersionedSettingsStore settings) : this(settings, () => DateTimeOffset.UtcNow)
     {
@@ -148,7 +151,8 @@ public sealed partial class SpaceRegistry
         return MutateSpaceAsync(id, (space, spaces) =>
         {
             if (space.IsBuiltIn) throw new InvalidOperationException("Built-in Space names are protected.");
-            EnsureUniqueName(spaces, normalizedName, id);
+            if (!string.Equals(space.Name, normalizedName, StringComparison.OrdinalIgnoreCase))
+                EnsureUniqueName(spaces, normalizedName, id);
             return space with { Name = normalizedName, UpdatedAt = _clock() };
         }, cancellationToken);
     }
@@ -180,7 +184,8 @@ public sealed partial class SpaceRegistry
             if (existing.IsBuiltIn && updated.ParentSpaceId != existing.ParentSpaceId)
                 throw new InvalidOperationException("Built-in Space hierarchy is protected.");
             var name = existing.IsBuiltIn ? existing.Name : NormalizeName(updated.Name);
-            if (!existing.IsBuiltIn) EnsureUniqueName(spaces, name, updated.Id);
+            if (!existing.IsBuiltIn && !string.Equals(existing.Name, name, StringComparison.OrdinalIgnoreCase))
+                EnsureUniqueName(spaces, name, updated.Id);
             return updated with
             {
                 Name = name,
@@ -401,6 +406,8 @@ public sealed partial class SpaceRegistry
         return await MutateAsync(state =>
         {
             var existing = FindRequired(state.Spaces, id);
+            if (existing.GraphConfiguration?.Pending is not null)
+                throw new InvalidOperationException("Reconcile the pending graph publication before editing this Space.");
             var changed = update(existing, state.Spaces);
             if (changed != existing)
                 changed = changed with { Revision = checked(existing.Revision + 1) };
@@ -419,6 +426,7 @@ public sealed partial class SpaceRegistry
         {
             var result = requestedMutation(state);
             if (!allowPendingDeletion) EnsurePendingDeletionsUnchanged(state, result.State);
+            EnsureGraphPublicationFieldsUnchanged(state, result.State);
             ValidateDeletionState(result.State);
             return result;
         };
@@ -457,13 +465,14 @@ public sealed partial class SpaceRegistry
             throw new InvalidOperationException("The Space registry kept changing during reconciliation; reload and retry.");
         }
         var state = await _settings.GetAsync<SpaceRegistryState>(SettingsKey, cancellationToken).ConfigureAwait(false)
-            ?? new SpaceRegistryState(CurrentVersion, []);
+            ?? new SpaceRegistryState(DefaultVersion, []);
         if (state.Version > CurrentVersion)
             throw new InvalidDataException($"Space registry version {state.Version} is newer than supported version {CurrentVersion}.");
         ValidateDeletionState(state);
         var spaces = state.Spaces?.Select(NormalizeStoredSpace).ToList() ?? [];
         ValidateRegistry(spaces);
-        var changed = state.Version != CurrentVersion;
+        var targetVersion = Math.Max(DefaultVersion, state.Version);
+        var changed = state.Version != targetVersion;
         foreach (var builtIn in BuiltIns())
         {
             if (spaces.Any(space => space.Id == builtIn.Id)) continue;
@@ -471,7 +480,7 @@ public sealed partial class SpaceRegistry
             changed = true;
         }
         if (!changed) return state with { Spaces = spaces.Select(CloneSpace).ToArray() };
-        var reconciled = state with { Version = CurrentVersion, Spaces = spaces, Deletions = state.Deletions?.ToArray() ?? [] };
+        var reconciled = state with { Version = targetVersion, Spaces = spaces, Deletions = state.Deletions?.ToArray() ?? [] };
         await _settings.SetAsync(SettingsKey, reconciled, cancellationToken).ConfigureAwait(false);
         return reconciled with { Spaces = reconciled.Spaces.Select(CloneSpace).ToArray() };
     }
@@ -499,19 +508,20 @@ public sealed partial class SpaceRegistry
 
     private (SpaceRegistryState State, bool Changed) ReadComparedState(string? raw)
     {
-        var stored = raw is null ? new SpaceRegistryState(CurrentVersion, []) :
+        var stored = raw is null ? new SpaceRegistryState(DefaultVersion, []) :
             JsonSerializer.Deserialize<SpaceRegistryState>(raw) ?? throw new InvalidDataException("The Space registry is invalid.");
         if (stored.Version > CurrentVersion) throw new InvalidDataException("The Space registry schema is newer than supported.");
         ValidateDeletionState(stored);
         var spaces = stored.Spaces?.Select(NormalizeStoredSpace).ToList() ?? [];
         ValidateRegistry(spaces);
-        var changed = stored.Version != CurrentVersion;
+        var targetVersion = Math.Max(DefaultVersion, stored.Version);
+        var changed = stored.Version != targetVersion;
         foreach (var builtIn in BuiltIns())
         {
             if (spaces.Any(space => space.Id == builtIn.Id)) continue;
             spaces.Add(builtIn); changed = true;
         }
-        return (stored with { Version = CurrentVersion, Spaces = spaces.Select(CloneSpace).ToArray(), Deletions = stored.Deletions?.ToArray() ?? [] }, changed);
+        return (stored with { Version = targetVersion, Spaces = spaces.Select(CloneSpace).ToArray(), Deletions = stored.Deletions?.ToArray() ?? [] }, changed);
     }
 
     private async Task<TResult> MutateComparedAsync<TResult>(Func<SpaceRegistryState, (SpaceRegistryState Next, TResult Result)> mutation,
@@ -567,20 +577,24 @@ public sealed partial class SpaceRegistry
         return new SpaceLayoutDocument(nodes, edges);
     }
 
-    private IReadOnlyList<SpaceDefinition> BuiltIns()
+    private static IReadOnlyList<SpaceDefinition> BuiltIns() => GetFirstPartyDefinitions();
+
+    /// <summary>Detached public product metadata. Does not open, seed or authenticate a private store, or grant route availability.</summary>
+    public static IReadOnlyList<SpaceDefinition> GetFirstPartyDefinitions()
     {
         var epoch = DateTimeOffset.UnixEpoch;
-        return
-        [
+        return Array.AsReadOnly(new SpaceDefinition[]
+        {
             BuiltIn(ChatSpaceId, "Chat", "chat", SpaceKind.Chat, "General conversation, shared objects and authorised app actions.", SpaceThinkingMode.Default, epoch),
             BuiltIn(StudySpaceId, "Study", "book", SpaceKind.Study, "Use the Study product for subject, topic, progress and assessment work.", SpaceThinkingMode.Balanced, epoch),
             BuiltIn(TasksSpaceId, "Tasks", "tasks", SpaceKind.Tasks, "Keep the objective, plan, steps, dependencies, blockers, approvals and observed outputs explicit.", SpaceThinkingMode.Deep, epoch),
+            BuiltIn(AssistantsSpaceId, "Assistants", "agents", SpaceKind.Assistants, "Open the canonical persistent Assistants workspace, preserving Assistant identities, conversations, memory permissions and existing work.", SpaceThinkingMode.Default, epoch),
             BuiltIn(AgentSpaceId, "Agent", "agents", SpaceKind.Agent, "Show persistent Agent identity and effective permissions; Subagents remain runtime children, not persistent Agents.", SpaceThinkingMode.Deep, epoch),
             BuiltIn(ShoppingSpaceId, "Shopping", "cart", SpaceKind.Shopping, "Help compare options and preserve the user's requirements and trade-offs.", SpaceThinkingMode.Balanced, epoch),
             BuiltIn(ResearchSpaceId, "Research", "search", SpaceKind.Research, "Separate sourced facts, inference and unresolved questions.", SpaceThinkingMode.Deep, epoch),
             BuiltIn(TranslateSpaceId, "Translate", "translate", SpaceKind.Translate, "Use the selected target languages and preserve one labelled response variant per language.", SpaceThinkingMode.Default, epoch),
             BuiltIn(ExperiencesSpaceId, "Experiences", "experiences", SpaceKind.Experiences, "Run stateful interactive experiences with canonical state and matching conversation branches.", SpaceThinkingMode.Default, epoch)
-        ];
+        }.Select(CloneSpace).ToArray());
     }
 
     private static SpaceDefinition BuiltIn(
@@ -616,6 +630,7 @@ public sealed partial class SpaceRegistry
         Files = space.Files?.ToArray() ?? [],
         ExamplePairs = space.ExamplePairs?.ToArray() ?? [],
         LayoutDocument = CloneLayout(space.LayoutDocument),
+        GraphConfiguration = CloneGraphConfiguration(space.GraphConfiguration),
         ModelPolicy = (space.ModelPolicy ?? new SpaceModelPolicy(space.ModelName)) with
         {
             RequiredCapabilities = space.ModelPolicy?.RequiredCapabilities?.ToArray()
@@ -662,8 +677,12 @@ public sealed partial class SpaceRegistry
     {
         if (spaces.Select(space => space.Id).Distinct().Count() != spaces.Count)
             throw new InvalidDataException("Space registry contains duplicate stable IDs.");
-        if (spaces.Select(space => space.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() != spaces.Count)
-            throw new InvalidDataException("Space registry contains duplicate names.");
+        // A newly introduced built-in may share the name of an existing user Space.
+        // Keep that user's identity/name unchanged; names still remain unique within
+        // each origin, and create/rename continue rejecting new conflicting names.
+        if (spaces.GroupBy(space => space.IsBuiltIn).Any(group =>
+                group.Select(space => space.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() != group.Count()))
+            throw new InvalidDataException("Space registry contains duplicate names within an origin.");
         foreach (var space in spaces)
         {
             try { ValidateDefinition(space, spaces.Where(other => other.Id != space.Id).ToArray()); }
@@ -679,10 +698,11 @@ public sealed partial class SpaceRegistry
     private static void ValidateDefinition(SpaceDefinition space, IReadOnlyList<SpaceDefinition> peers)
     {
         if (space.Id == Guid.Empty) throw new InvalidDataException("Space stable ID cannot be empty.");
+        ValidateGraphConfiguration(space);
         if (space.Name is null || space.Description is null || space.IconKey is null || space.Instructions is null)
             throw new ArgumentException("Space text fields cannot be null.");
         _ = NormalizeName(space.Name);
-        EnsureUniqueName(peers, space.Name, space.Id);
+        EnsureUniqueName(peers.Where(peer => peer.IsBuiltIn == space.IsBuiltIn).ToArray(), space.Name, space.Id);
         if (!Enum.IsDefined(space.Kind) || !Enum.IsDefined(space.ThinkingMode))
             throw new ArgumentException("Space type or thinking mode is unknown.");
         if (space.Position < 0 || space.Revision < 1)

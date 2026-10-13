@@ -349,6 +349,35 @@ public sealed partial class ChatSessionService
             [], [], null, null, TaskRunExecutionIntent.OrdinaryConversation, null, original));
         return original;
     }
+    /// <summary>The same ordinary source ledger with the host's exact selected context.
+    /// Selection is not a permission grant; original inputs and runtime gates still apply.</summary>
+    public ChatOrdinaryOriginalInvocation CreateOriginalOrdinaryConversation(
+        Conversation sameConversation, string prompt, ModelDescriptor model, EffortLevel effort,
+        IReadOnlyCollection<ActiveCapability> capabilities, string name, string instructions,
+        DuoMode duoMode, string? workspaceRoot, string? projectContext, string? projectInstructions,
+        IReadOnlyList<string>? images, GenerationOptions options, CancellationToken explicitBusinessToken,
+        Action<Action> originalSynchronousScope, IReadOnlyCollection<ActivePrompt>? prompts = null,
+        string? registeredContext = null, PermissionMode filePermission = PermissionMode.Ask,
+        PermissionMode commandPermission = PermissionMode.Ask, PermissionMode browserPermission = PermissionMode.Ask,
+        IReadOnlyCollection<ToolCapability>? explicitCapabilities = null,
+        IReadOnlyCollection<ActiveCapability>? availableCapabilities = null,
+        ComputerUseRequest? computerUseRequest = null, IReadOnlyList<ChatMessage>? transientHistory = null)
+    {
+        ArgumentNullException.ThrowIfNull(originalSynchronousScope);
+        ArgumentNullException.ThrowIfNull(options); ArgumentNullException.ThrowIfNull(capabilities);
+        if (options.RequestedRoutingConstraints is null)
+            throw new InvalidOperationException("This original source requires explicit constrained routing before provider discovery.");
+        var snapshot = SnapshotTransientHistory(sameConversation, transientHistory, null, TaskRunExecutionIntent.OrdinaryConversation);
+        var original = new ChatOrdinaryOriginalInvocation(this, explicitBusinessToken, originalSynchronousScope);
+        original.Bind(CreateOriginalSend(sameConversation, prompt, model with { Capabilities = model.Capabilities.ToFrozenSet() },
+            effort, Array.AsReadOnly(capabilities.ToArray()), name, instructions, duoMode,
+            workspaceRoot, projectContext, projectInstructions, images is null ? null : Array.AsReadOnly(images.ToArray()),
+            explicitBusinessToken, prompts is null ? null : Array.AsReadOnly(prompts.ToArray()), registeredContext,
+            options, filePermission, commandPermission, browserPermission,
+            explicitCapabilities?.ToFrozenSet(), availableCapabilities is null ? null : Array.AsReadOnly(availableCapabilities.ToArray()),
+            computerUseRequest, null, TaskRunExecutionIntent.OrdinaryConversation, null, original, snapshot));
+        return original;
+    }
     public bool IsIssuedOriginalOrdinaryConversation(ChatOrdinaryOriginalInvocation sameOriginal) =>
         sameOriginal is not null && ReferenceEquals(sameOriginal.Issuer, this);
 }

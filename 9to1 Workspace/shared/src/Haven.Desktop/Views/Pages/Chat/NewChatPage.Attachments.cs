@@ -39,6 +39,7 @@ public sealed partial class NewChatPage
 
     private async Task OnAttachmentRemoveRequestedOriginalBodyAsync(object? sender, string id)
     {
+        if (!CanChangeConversation()) return;
         if (string.IsNullOrWhiteSpace(id)) return;
         var changed = false;
         if (TryReadGuid(id, "attachment:", out var attachmentId) && _messageAttachments is not null)
@@ -103,7 +104,11 @@ public sealed partial class NewChatPage
             var branch = await AwaitChatOriginalAsync(_conversationProduction.GetCurrentBranchAsync(conversation.Id, RequireChatOriginal().Token))
                          ?? await AwaitChatOriginalAsync(_conversationProduction.EnsureRootBranchAsync(conversation.Id, RequireChatOriginal().Token));
             var draft = await AwaitChatOriginalAsync(_conversationProduction.GetDraftAsync(conversation.Id, branch.Id, RequireChatOriginal().Token));
-            if (draft is null || string.IsNullOrWhiteSpace(draft.AttachmentIdsJson)) return;
+            if (draft is null) return;
+            // Text-only drafts belong to the same conversation/branch as attachment
+            // drafts and must restore even when the attachment list is empty.
+            _scene.Instruction.Text = draft.Content;
+            if (string.IsNullOrWhiteSpace(draft.AttachmentIdsJson)) return;
 
             Guid[] ids;
             try

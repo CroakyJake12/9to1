@@ -88,7 +88,7 @@ public sealed partial class SpaceRegistry
             if (registryJson is null) throw new KeyNotFoundException("The Space deletion operation is unavailable.");
             var state = System.Text.Json.JsonSerializer.Deserialize<SpaceRegistryState>(registryJson)
                 ?? throw new InvalidDataException("The Space registry is invalid.");
-            if (state.Version != CurrentVersion) throw new InvalidDataException("Deletion requires the current registry schema.");
+            if (state.Version is < DefaultVersion or > CurrentVersion) throw new InvalidDataException("Deletion requires the current registry schema.");
             ValidateDeletionState(state);
             var operation = (state.Deletions ?? []).SingleOrDefault(item => item.OperationId == operationId)
                 ?? throw new KeyNotFoundException("The Space deletion operation is unavailable.");

@@ -28,10 +28,40 @@ owner control/object renderers to that surface's loader; registrations do not
 change route authorisation or action availability.
 The shell does not interpret JSON state as a guessed schema or invent providers.
 
+`app.spaces` registers the canonical Spaces configuration manager through the
+normal Home route owner. It renders `SpacesHome.cui`; editing an existing custom
+Space opens `SpaceBuilder.cui` under `entityType=Space&entityId=<canonical-id>&action=edit`.
+Create, rename, fork, archive/restore and Builder configuration writes use the
+same `SpaceRegistry` supplied by the existing private storage lifetime. Selection
+inspects configuration and does not change the active workspace. Basic/Advanced
+Builder edits preserve unexposed fields and the same Space identity. Expert views
+report the missing canonical graph editor/activation rather than offer simulated
+execution. Browser workspace launches remain unavailable until their actual
+Chat/model/Task owners are composed.
+
+The manager requires the existing signature-verified profile before loading or
+seeding private records. A signed-out view offers Home settings and refresh; it
+does not substitute an anonymous account. This is device-local storage, not
+account synchronisation. Drafts survive ordinary Home navigation, revision
+conflicts retain local edits, and uncertain writes require inspection before
+retry. Private revocation clears the draft and records immediately; asynchronous
+close joins original operations and retains independent failure causes.
+
+Spaces settings use a sibling IndexedDB database owned by the same private
+transport. The existing Task database stays at schema 3 so the previous
+deployment can still read its original stores after new Space writes. See
+`Spaces/Storage/PRIVATE_TASK_STORAGE.md` for the precise partition and rollback
+contract. The mounted CUI attachment supplies editor focus/keyboard handling and
+observes actual viewport width; it is detached before the presentation retires.
+
 With no authenticated adapters registered, Dashboard/Library/Events can expose
 their canonical shell navigation and explicit unavailable provider states.
 Unsupported operations and search are disabled. Opening an unavailable route
-preserves its address and previous valid view. This is an incomplete browser
+preserves its address and previous valid view. On a cold unregistered route,
+the normal Home navigation surface is admitted while the unavailable message
+and requested address remain. This does not register the requested application,
+replace an existing draft, bypass a registered owner's refusal, or reopen a
+presentation after its account owner has been revoked. This is an incomplete browser
 host, not an accepted Home implementation or browser parity release.
 
 Account/session/organisation ownership must call and await
@@ -227,3 +257,31 @@ types; test handlers are fixtures and do not establish backend acceptance.
 
 Account/root teardown ordering and remaining CUI/provider gates are described in
 [Auth/PRIVATE_CONTEXT_LIFETIME.md](Auth/PRIVATE_CONTEXT_LIFETIME.md).
+
+Unavailable-route recovery is checked against a real published bundle:
+
+```bash
+node apps/Web/Tests/run-browser-route-recovery.cjs <published-wwwroot> <new-evidence-directory>
+```
+
+The runner uses a fresh Chromium context and an ephemeral loopback port. It
+checks a cold missing route, its preserved address/error, resize/reload, keyboard
+Home navigation, warm Home peer identity, a real unsaved Write draft, and the
+actual private-reset boundary. It records screenshots, native peer snapshots,
+runtime errors and before/after asset hashes. The optional third argument names
+an existing unavailable route, such as `app.spaces` before its owner is registered.
+The default uses an unregistered test address without installing a test owner.
+This is route recovery evidence, not provider, account, or Spaces acceptance.
+
+Saved-document rollback can be checked against two different compiled bundles:
+
+```bash
+node apps/Web/Tests/run-browser-bundle-rollback.cjs <candidate-wwwroot> <previous-wwwroot> <new-evidence-directory>
+```
+
+The runner creates and saves a real Write document using physical CUI controls,
+then serves the previous bundle and the candidate again on the same origin and
+browser profile. It verifies the actual application assembly delivered in each
+phase, the reopened title, unchanged document identity and history bytes, and
+both bundles' asset hashes. This checks device-local document rollback; signed-in
+Spaces storage and account acceptance require a legitimate account session.

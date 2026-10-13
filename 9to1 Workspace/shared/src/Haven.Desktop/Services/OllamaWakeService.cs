@@ -2,7 +2,7 @@
  * FILE DOCUMENTATION
  * Where: src/Haven.Desktop/Services/OllamaWakeService.cs in the Windows desktop-services layer.
  * What: Starts a locally installed Ollama server on demand and waits until its HTTP endpoint responds.
- * How: ChatPageViewModel calls this service only for unqualified local-model names after an availability check fails.
+ * How: ChatPageViewModel calls this service only for models owned by the actual Ollama provider after an availability check fails.
  * Why: Process launching is a platform concern and should not be embedded in the chat presentation model.
  * Maintenance: Keep launch attempts bounded, hidden, cancellable, and harmless when Ollama is already running.
  */
@@ -17,8 +17,21 @@ namespace Haven.Desktop.Services;
 /// Wakes a local Ollama installation without blocking the UI and verifies that it
 /// is genuinely reachable before chat continues.
 /// </summary>
-public sealed class OllamaWakeService(IOllamaClient models)
+public sealed class OllamaWakeService(IOllamaClient models, IModelProviderRegistry? providers = null)
 {
+    /// <summary>
+    /// Uses the compatibility router's registered-provider identity rule. A colon
+    /// in an unregistered prefix is an Ollama model tag, not a cloud-provider grant.
+    /// Other registered providers (including other local engines) own their own wake.
+    /// </summary>
+    public bool OwnsModel(string model)
+    {
+        var name = model.Trim();
+        var separator = name.IndexOf(':');
+        var provider = separator > 0 ? providers?.Find(name[..separator]) : null;
+        return provider is null || provider.Id.Equals("ollama", StringComparison.OrdinalIgnoreCase);
+    }
+
     /// <summary>
     /// Probes only the local Ollama endpoint.  This deliberately lives on the
     /// wake service instead of the provider-routing client, because a reachable

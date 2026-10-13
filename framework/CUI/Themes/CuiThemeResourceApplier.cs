@@ -258,12 +258,17 @@ public static class CuiThemeResourceApplier
         resources["CuiChoiceBorderBrush"] = new SolidColorBrush(CuiContrast.EnsureForegroundContrast(palette.LineStrong, palette.Panel, 3));
         resources["CuiInputRadius"] = new CornerRadius((professional ? 12 : CuiThemeExpression.BaseControlRadius * expression.ControlRadiusScale) * settings.DisplayScale);
         resources["CuiWorkspaceBrush"] = new SolidColorBrush(professional ? palette.TideColour : palette.TideBase);
+        // Committing the current input is a shared semantic action. Professional
+        // uses monochrome contrast; expressive themes retain their accent.
+        resources["CuiCommitSurfaceBrush"] = professional ? resources["CuiTextBrush"] : resources["CuiAccentPrimaryBrush"];
+        resources["CuiCommitInkBrush"] = professional ? new SolidColorBrush(palette.TideColour) : resources["CuiAccentInkBrush"];
         var material = professional && !settings.HighContrast;
         var dark = Luminance(palette.Text) > Luminance(palette.Panel);
         var floating = Color.FromRgb(
             (byte)Math.Round(palette.Panel3.R + (255 - palette.Panel3.R) * (dark ? .055 : .70)),
             (byte)Math.Round(palette.Panel3.G + (255 - palette.Panel3.G) * (dark ? .055 : .70)),
             (byte)Math.Round(palette.Panel3.B + (255 - palette.Panel3.B) * (dark ? .055 : .70)));
+        resources["CuiFloatingSurfaceBrush"] = material ? new SolidColorBrush(floating) : resources["CuiPanel2Brush"];
         resources["CuiWorkspaceMaterial"] = material
             ? new CuiMaterialBrush(palette.TideColour, 1, 0, .022, tonalBase: true) : resources["CuiWorkspaceBrush"];
         resources["CuiShellMaterial"] = material

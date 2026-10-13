@@ -1,0 +1,71 @@
+{
+  "status": "CHECKPOINT",
+  "sourceCommit": "0e24d10972384f5389f150daf3ed76ac1666062d",
+  "sourceSha256": "a8ec0749abf5cc82908ee055089e805682b2c0dd7119fcf62ac0ab87998064d1",
+  "sourceFile": "apps/Web/Hosting/Dulche/relay-worker.mjs",
+  "worker": "9to1-dulche-runtime-20261013",
+  "origin": "https://dulche-runtime-20261013.9to1.uk",
+  "versionId": "f808e90d-36b4-4fcc-ac83-bca11b822c7e",
+  "deployedAt": "2026-10-13T20:48:19.704936Z",
+  "deploymentId": "8a4b077f-0ea7-4905-9524-830df28412c1",
+  "percentage": 100,
+  "bundles": {
+    "deployedSha256": "76b42e32f12794cd8ed7f20e5892815e30ce192bb73266319423c020c6580a1e",
+    "canonicalBuildSha256": "ed1cc2ad12baedcc88714046f24551c93185477769c31b3cee1ed18531291afd",
+    "difference": "Verified identical after removing generated source-origin comments; immutable deployed bundle preserved separately"
+  },
+  "verification": {
+    "canonicalTestAt": "2026-10-13T20:48:10.920Z",
+    "previewWrapperControls": 5,
+    "exactSourceFinalizationControls": 3,
+    "actualWorkerdProtocolControls": 9,
+    "actualPersistentRestartControls": 5,
+    "protocolScope": "Isolated account protocol fixtures; no signed-in production acceptance",
+    "actualHttpsPollCancellation": {
+      "at": "2026-10-13T20:49:36.226Z",
+      "replacementStatus": 200,
+      "replacementWaitMs": 20310,
+      "scope": "Original service connector poll custody; not model generation stop"
+    },
+    "actualHttpsRefusals": {
+      "at": "2026-10-13T20:56:57.663Z",
+      "withoutServiceCredential": 401,
+      "withServiceCredentialWithoutRealCakeBearer": 401
+    }
+  },
+  "protection": {
+    "serviceAccessUnchanged": true,
+    "serviceAccessAppId": "24e402ea-5582-425d-a38d-6438ec2e401a",
+    "workersDev": false,
+    "alternatePreviews": false,
+    "rawOllamaLoopbackOnly": true,
+    "logs": false,
+    "observability": false
+  },
+  "connector": {
+    "sourceSha256": "e2d12291b94a3d70c91334ce6aa4f1605a4dc66585876994a9b5762d6326441f",
+    "executionSession": 28846,
+    "startedAt": "2026-10-13T20:50:36.382Z",
+    "lastRecordedStatus": {
+      "active": 0,
+      "requests": 0,
+      "completed": 0,
+      "cancelled": 0,
+      "failed": 0
+    },
+    "originalOperationDeadlineSeconds": 120
+  },
+  "operationalDependencies": {
+    "host": "Current managed execution environment with actual loopback Ollama qwen3:1.7b",
+    "serviceCredentialExpiresAt": "2026-10-14T19:33:03Z",
+    "credentialValues": "Excluded from source/evidence; private mode0600 runtime file only"
+  },
+  "unverified": [
+    "Legitimate signed-in Chat send and real streamed response",
+    "Production generation Stop acknowledgment",
+    "Conversation reopen and account change in real signed-in browser",
+    "Abandoned outer response recovery",
+    "Sustained availability beyond current managed host and expiring credential"
+  ],
+  "existingPreviewTrafficChanged": false
+}

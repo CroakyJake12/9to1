@@ -23,7 +23,7 @@ public sealed class UsageTrackingConversationRepository(
     IModelUsageRepository usageRepository,
     IProviderConfigurationStore configurations,
     IProviderPricingService pricingService,
-    ProviderUsageCaptureBuffer usageCapture) : IConversationRepository, IConversationCreateOnlyRepository
+    ProviderUsageCaptureBuffer usageCapture) : IConversationRepository, IConversationCreateOnlyRepository, ITemporaryConversationSaveRepository
 {
     /// <summary>
     /// Stores turn started locally so this component can preserve the dependency, cache, or state between member calls.
@@ -76,6 +76,17 @@ public sealed class UsageTrackingConversationRepository(
     /// Empty conversation creation records no model usage; message usage accounting stays unchanged.</summary>
     public Task<bool> TryCreateConversationAsync(Conversation original, CancellationToken cancellationToken) =>
         inner.TryCreateConversationAsync(original, cancellationToken);
+
+    // Saving an already executed temporary turn is a persistence operation, not
+    // another model response. Do not consume usage buffers or record its cost again.
+    public Task<Conversation> SaveTemporaryLocallyAsync(Conversation temporary,
+        IReadOnlyList<ChatMessage> messages, CancellationToken cancellationToken) =>
+        inner.SaveTemporaryLocallyAsync(temporary, messages, cancellationToken);
+
+    public Task<Conversation> SaveTemporaryLocallyAsync(Conversation temporary,
+        IReadOnlyList<ChatMessage> messages, IReadOnlyList<ConversationContextEntry> contextEntries,
+        CancellationToken cancellationToken) =>
+        inner.SaveTemporaryLocallyAsync(temporary, messages, contextEntries, cancellationToken);
 
     /// <summary>
     /// Performs add message asynchronously so I/O does not block the caller's thread.

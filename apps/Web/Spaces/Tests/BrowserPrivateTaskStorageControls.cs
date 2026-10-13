@@ -276,7 +276,7 @@ internal static class BrowserPrivateTaskStorageControls
     }
     private static async Task PhysicalAndLogicalSourceCannotJoinOwnClose()
     {
-        Rig? rig = null; var physical = false, logical = false;
+        Rig? rig = null; bool physical = false, logical = false;
         rig = new Rig(canonical => new ReadRepository(async (id, context, token) => {
             var value = context ? await canonical.GetByContextAsync(id, token) : await canonical.GetAsync(id, token);
             await Task.Yield(); Exception? refusal = null;
@@ -445,7 +445,7 @@ internal static class BrowserPrivateTaskStorageControls
                 "Actual exposed completion escaped SAME-gate revocation or discarded the full decoded original.");
         }, expectCloseFault: true);
 
-        Rig? faultRig = null; var physicalRefusal = false, logicalRefusal = false;
+        Rig? faultRig = null; bool physicalRefusal = false, logicalRefusal = false;
         var oce = new OperationCanceledException("faulted publication source OCE"); var sibling = new IOException("same publication source sibling");
         var source = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         async Task LogicalPublication()

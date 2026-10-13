@@ -50,11 +50,18 @@ internal sealed class DualModelChatController(DualModelService dualModels)
     /// Runs both models over the prompt. Returns null instead of running when no usable second model is
     /// configured so the page can show an honest setup message.
     /// </summary>
-    public async Task<DualModelRun?> RunAsync(
-        string prompt,
-        string firstModelKey,
-        EffortLevel effort,
-        CancellationToken cancellationToken)
+    public Task<DualModelRun?> RunAsync(string prompt, string firstModelKey,
+        EffortLevel effort, CancellationToken cancellationToken) =>
+        RunOriginalAsync(prompt, firstModelKey, effort, transient: false, cancellationToken);
+
+    /// <summary>Same comparison owner without durable execution content. The page
+    /// must separately satisfy its actual per-request Temporary Memory decision.</summary>
+    public Task<DualModelRun?> RunTransientAsync(string prompt, string firstModelKey,
+        EffortLevel effort, CancellationToken cancellationToken) =>
+        RunOriginalAsync(prompt, firstModelKey, effort, transient: true, cancellationToken);
+
+    private async Task<DualModelRun?> RunOriginalAsync(string prompt, string firstModelKey,
+        EffortLevel effort, bool transient, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(prompt);
         ArgumentException.ThrowIfNullOrWhiteSpace(firstModelKey);
@@ -62,7 +69,9 @@ internal sealed class DualModelChatController(DualModelService dualModels)
         IsRunning = true;
         try
         {
-            return await dualModels.RunAsync(prompt, firstModelKey, second, effort, cancellationToken).ConfigureAwait(false);
+            return await (transient
+                ? dualModels.RunTransientAsync(prompt, firstModelKey, second, effort, cancellationToken)
+                : dualModels.RunAsync(prompt, firstModelKey, second, effort, cancellationToken)).ConfigureAwait(false);
         }
         finally
         {

@@ -147,6 +147,28 @@ public sealed class DualModelTests
     /// <summary>
     /// Represents scripted ollama and keeps its related state and behavior together.
     /// </summary>
+    [Theory]
+    [InlineData(DualModelMode.Compare, false)]
+    [InlineData(DualModelMode.Critique, false)]
+    [InlineData(DualModelMode.Compare, true)]
+    [InlineData(DualModelMode.Critique, true)]
+    public async Task TransientComparisonNeverPublishesContentButFollowingNormalRunStillDoes(DualModelMode mode, bool fail)
+    {
+        using var lifetime = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+        var client = new ScriptedOllama(request => fail && request.Model == "alpha"
+            ? throw new IOException("private original failure") : "private original response");
+        var sink = new RecordingSink();
+        var service = new DualModelService(client, sink);
+        var temporary = await service.RunTransientAsync("private user prompt", "alpha", "beta",
+            EffortLevel.Medium, mode, lifetime.Token);
+        Assert.Equal(!fail, temporary.First.Succeeded);
+        Assert.True(temporary.Second.Succeeded);
+        Assert.Empty(sink.Events);
+        Assert.Equal(mode == DualModelMode.Critique && !fail ? 3 : 2, client.Calls);
+        await service.RunAsync("normal user prompt", "alpha", "beta", EffortLevel.Medium, lifetime.Token);
+        Assert.Equal(2, sink.Events.Count);
+    }
+
     private sealed class ScriptedOllama(Func<OllamaChatRequest, string> respond) : IOllamaClient
     {
         /// <summary>

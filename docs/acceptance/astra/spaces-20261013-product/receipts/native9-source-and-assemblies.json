@@ -1,0 +1,108 @@
+{
+  "result": "PASS68/68; command-context regression and actual-page/frame28 included",
+  "head": "04e2cb07278b26a9ba09f19e82ac0135bc3ffdc9",
+  "assemblies": [
+    {
+      "path": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Desktop.Tests/bin/x64/Release/net10.0/Haven.Desktop.Tests.dll",
+      "sha256": "3481eb49a37d46ab712905c4f6805b590101cf5e62ac3e234655464b7512cbf1"
+    },
+    {
+      "path": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Desktop.Tests/bin/x64/Release/net10.0/Haven.dll",
+      "sha256": "3112a154d80ba6358d0fd652c376d798ee48912e0d3e7aa588d974b7e0bc43eb"
+    },
+    {
+      "path": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Desktop.Tests/bin/x64/Release/net10.0/CakeOS.Cui.Runtime.dll",
+      "sha256": "965bfb90e0b4feeda1e13f8febd35c47909dac8bda2c567fdb7193ac9a7597f8"
+    },
+    {
+      "path": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Desktop.Tests/bin/x64/Release/net10.0/CakeOS.Cui.Themes.dll",
+      "sha256": "3b7dd5c387246a3ffb29f9eab6f9ec05b96ef01bd47efa441923924cf3431624"
+    },
+    {
+      "path": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Desktop.Tests/bin/x64/Release/net10.0/HavenOS.Spaces.dll",
+      "sha256": "bbec6ec1b057f0f779144968c6ce74481a9a806811481605fbc0ebd20e2db1eb"
+    },
+    {
+      "path": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Desktop.Tests/bin/x64/Release/net10.0/HavenOS.Spaces.CuiRuntime.dll",
+      "sha256": "b34b39ef48a004cc280132a2e6aec070f040ad84158c1c02cb7679bb5987ff0f"
+    }
+  ],
+  "source": [
+    {
+      "path": "9to1 Workspace/Spaces/Tests/Rendering/SharedShell/Program.cs",
+      "sha256": "2a97d6bd5dc3fdc50974fcec69fe11da077c665a196842a86f27805948f13913"
+    },
+    {
+      "path": "9to1 Workspace/Spaces/UI/Chat/ChatWorkspace.cui",
+      "sha256": "29ad32c5888a005b9ac7bedb0533a63d34ce8369cf8730b524ed7031ae9e5044"
+    },
+    {
+      "path": "9to1 Workspace/Spaces/UI/Chat/Runtime/ChatSpaceCuiRuntime.cs",
+      "sha256": "594b551cddc37307aac6417477c65a7033f13dd5477c670dc7c983ffa9878208"
+    },
+    {
+      "path": "9to1 Workspace/Spaces/UI/Shell/SpaceNavigation.cui",
+      "sha256": "aee0464a5584412b7dc0e9d33e0bc8cd51ceae5857a8e5d3b2d916809a5bfd64"
+    },
+    {
+      "path": "9to1 Workspace/Spaces/UI/Shell/SpacesShell.cui",
+      "sha256": "2d87bba6604d77239bcb1cf28939c2b3622bc182ffcbcbe4c037dc5ae8e16bff"
+    },
+    {
+      "path": "9to1 Workspace/shared/docs/ui/theming-and-personalisation.md",
+      "sha256": "c6628a0adb77f63bf7e87cfa812ae2c67a231270caef3e4eb5c557a6cb87bdc5"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/NativePresentation/NativeChatSidebar.cs",
+      "sha256": "eefd438701916cce12d34c1880ed55674530193297eee5509b82567fb230a5f2"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/NativePresentation/NativeChatSidebarCuiAdapter.cs",
+      "sha256": "9edb60f0d998229411454fe4868fc28b1fe14cffed8dfdedcd09d39c8cff8b92"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Chat/ChatCuiScene.cs",
+      "sha256": "c15bc9a7a192298c948f5f927e8dda6278238fef14f6f65e300ee6b3b2dd9a63"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.UI/Drawing/HavenIconCatalog.cs",
+      "sha256": "d6da92bb18524da82120d377afa10577460619bf26d4a51c22e16dae082a6721"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeChatSidebarCuiAdapterTests.cs",
+      "sha256": "bc7fa2c6de8ca5208f36681d712f2d155949687c2f9967aba86a8c639925b08f"
+    },
+    {
+      "path": "apps/Web/Hosting/Dulche/relay-bounded-controls.cjs",
+      "sha256": "3c077266d7876a597f6647b621c6ecef2ebb17addb77cfaeefdb31fabf9921ab"
+    },
+    {
+      "path": "apps/Web/Hosting/Dulche/relay-worker.mjs",
+      "sha256": "a8ec0749abf5cc82908ee055089e805682b2c0dd7119fcf62ac0ab87998064d1"
+    },
+    {
+      "path": "apps/Web/Spaces/Chat/BrowserChatSession.Bindings.cs",
+      "sha256": "cfb2664ddb7c45b0b0e4c1db1db76deb9d7cf521c317e537858e070d5f34ba70"
+    },
+    {
+      "path": "apps/Web/Spaces/Chat/BrowserChatSession.cs",
+      "sha256": "9a4ec7efa2edea0241a9a2d424f9a04d61714c0cdae3c9095b7191648e5a30a9"
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/BrowserChatSessionTests.cs",
+      "sha256": "8a900788463d668187cc88176a70f0d536ef96336c0fcafb96ea5c22d7c0b54d"
+    },
+    {
+      "path": "framework/CUI/Themes/CuiCustomThemeResourceApplier.cs",
+      "sha256": "cba021ad13fb098e6ff6c1ad211519b0eb59ce05659c7907813ecd05cf620bc9"
+    },
+    {
+      "path": "framework/CUI/Themes/CuiPresetSurfaceResources.cs",
+      "sha256": "502b831496f9f125f0bed801ebf243b43445b8c85eb36f4ef2830e85b9536086"
+    },
+    {
+      "path": "framework/CUI/Themes/CuiThemeResourceApplier.cs",
+      "sha256": "677aa712bda7b18c11f6e3ad040f95389e2889b5672d46749cf0916c92dce1e0"
+    }
+  ]
+}

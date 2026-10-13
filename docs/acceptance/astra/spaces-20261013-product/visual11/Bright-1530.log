@@ -1,0 +1,3 @@
+VISUAL TEST FIXTURE — NOT LIVE ACCOUNT OR MODEL OUTPUT. Use the labelled HTML report for review; raw comparison PNGs are internal test evidence only.
+Labelled automated visual-fixture report: /workspace/astra-audit/evidence/chat-ui-labelled-11/Bright-1530/VISUAL-TEST-FIXTURE-NOT-LIVE.html
+Actual browser-session visual capture: 68 layout checks, 0 failures. Scope is VISUAL ONLY; product/functionality acceptance not asserted.

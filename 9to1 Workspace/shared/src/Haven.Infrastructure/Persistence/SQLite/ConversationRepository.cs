@@ -135,8 +135,16 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
     {
         await ConversationProductionSchema.EnsureAsync(factory, cancellationToken).ConfigureAwait(false);
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
-        var branchId = await GetCurrentBranchIdAsync(connection, null, conversationId, cancellationToken).ConfigureAwait(false);
+        return await ReadMessagesCoreAsync(connection, null, conversationId, includeCompacted, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task<IReadOnlyList<ChatMessage>> ReadMessagesCoreAsync(
+        SqliteConnection connection, SqliteTransaction? transaction, Guid conversationId,
+        bool includeCompacted, CancellationToken cancellationToken)
+    {
+        var branchId = await GetCurrentBranchIdAsync(connection, transaction, conversationId, cancellationToken).ConfigureAwait(false);
         await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         if (branchId is null)
         {
             command.CommandText = includeCompacted
@@ -194,7 +202,14 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
     public async Task UpsertConversationAsync(Conversation conversation, CancellationToken cancellationToken)
     {
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await UpsertConversationCoreAsync(connection, null, conversation, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task UpsertConversationCoreAsync(SqliteConnection connection, SqliteTransaction? transaction,
+        Conversation conversation, CancellationToken cancellationToken)
+    {
         await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText = """
             INSERT INTO conversations(id, mode, kind, title, container_id, lesson_id, is_pinned, is_temporary, created_at, updated_at,is_archived,parent_conversation_id,compacted_at,space_id)
             VALUES($id,$mode,$kind,$title,$containerId,$lessonId,$isPinned,$isTemporary,$createdAt,$updatedAt,$isArchived,$parentConversationId,$compactedAt,$spaceId)
@@ -228,6 +243,13 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
         await ConversationProductionSchema.EnsureAsync(factory, cancellationToken).ConfigureAwait(false);
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        await AddMessageCoreAsync(connection, transaction, message, cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task AddMessageCoreAsync(SqliteConnection connection, SqliteTransaction transaction,
+        ChatMessage message, CancellationToken cancellationToken)
+    {
         await using (var command = connection.CreateCommand())
         {
             command.Transaction = transaction;
@@ -274,7 +296,6 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
             await version.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
         await UpdateTurnsForMessageAsync(connection, transaction, branchId, message, cancellationToken).ConfigureAwait(false);
-        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -333,7 +354,14 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
     public async Task<IReadOnlyList<ConversationContextEntry>> GetContextEntriesAsync(Guid conversationId, CancellationToken cancellationToken)
     {
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        return await GetContextEntriesCoreAsync(connection, null, conversationId, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task<IReadOnlyList<ConversationContextEntry>> GetContextEntriesCoreAsync(
+        SqliteConnection connection, SqliteTransaction? transaction, Guid conversationId, CancellationToken cancellationToken)
+    {
         await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText = "SELECT * FROM conversation_context WHERE conversation_id=$conversationId ORDER BY created_at;";
         command.Parameters.AddWithValue("$conversationId", conversationId.ToString());
         var result = new List<ConversationContextEntry>();
@@ -350,7 +378,14 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
     public async Task AddContextEntryAsync(ConversationContextEntry entry, CancellationToken cancellationToken)
     {
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await AddContextEntryCoreAsync(connection, null, entry, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task AddContextEntryCoreAsync(SqliteConnection connection, SqliteTransaction? transaction,
+        ConversationContextEntry entry, CancellationToken cancellationToken)
+    {
         await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText = """
             INSERT OR REPLACE INTO conversation_context(id,conversation_id,kind,title,content,evidence,created_at)
             VALUES($id,$conversationId,$kind,$title,$content,$evidence,$createdAt);

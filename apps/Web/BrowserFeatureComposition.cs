@@ -12,6 +12,8 @@ using NineToOne.Web.Productivity.Present.Storage;
 using NineToOne.Web.Productivity.Boards;
 using Haven.Application;
 using Haven.Infrastructure;
+using HavenOS.Home.Core;
+using NineToOne.Web.Spaces;
 
 namespace NineToOne.Web;
 
@@ -23,7 +25,7 @@ internal static class BrowserFeatureComposition
         await BrowserHomeThemePreferences.CreateAsync();
 
     [SupportedOSPlatform("browser")]
-    public static AccountSettingsFeature Register(BrowserSurfaceRegistry registry)
+    public static AccountSettingsFeature Register(BrowserSurfaceRegistry registry, Action<HomeFeatureNavigationRequest> navigate)
     {
         var wave = WaveBrowserFeature.Register(registry);
         if (!wave.Succeeded) throw new InvalidOperationException(wave.Message);
@@ -44,15 +46,16 @@ internal static class BrowserFeatureComposition
             new IndexedDbNotesRepository(new BrowserNotesTransport(), new NotesDocumentValidator()),
             Program.ReduceMotion, error => error is NotesCommitOutcomeUnknownException);
         if (!boards.Succeeded) throw new InvalidOperationException(boards.Message);
-        return RegisterPrivateAccountSettings(registry);
+        return RegisterPrivateAccountSettings(registry, navigate);
     }
 
     [SupportedOSPlatform("browser")]
-    public static AccountSettingsFeature RegisterPrivateAccountSettings(BrowserSurfaceRegistry registry)
+    public static AccountSettingsFeature RegisterPrivateAccountSettings(BrowserSurfaceRegistry registry, Action<HomeFeatureNavigationRequest> navigate)
     {
         BrowserPrivateTaskStorageEnrollment.Register(registry);
         var samePrivateOwner = BrowserPrivateTaskStorageEnrollment.GetCurrent(registry);
         BrowserHomeDashboardLayoutStore.Register(registry, samePrivateOwner.DemandPrivateContextCurrent);
+        BrowserSpacesFeature.Register(registry, samePrivateOwner, navigate);
         var settings = AccountSettingsFeature.CreateForBrowser(action => Dispatcher.UIThread.InvokeAsync(action).GetTask(),
             BrowserAccountSignIn.IsAvailable ? BrowserAccountSignIn.RequestAsync : null);
         var registered = registry.Register(settings, settings.Render);

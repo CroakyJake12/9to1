@@ -2,13 +2,14 @@ import { createBrowserPlatform } from './browser-platform.js';
 import { createBrowserAccessibility } from './browser-accessibility.js';
 import * as waveBrowser from './wave-browser.js';
 import * as pictureBrowser from './picture-browser.js';
-import { createConfiguredAccounts, handleOAuthPopupCallback } from './configured-accounts.bundle.js';
+import { createConfiguredAccounts, captureOAuthRedirectCallback } from './configured-accounts.bundle.js';
 import { createNotesModule } from './notes-indexeddb.js';
 import * as writePackages from './write-packages.js';
 import { createPresentModule } from './present-indexeddb.js';
 import { createPrivateContextLifecycle } from './browser-private-context.js';
 import { createTaskExecutionHost } from './task-execution-host.js';
 import * as homeLocalPreferences from './home-local-preferences.js';
+import { createDulcheProvider } from './dulche-provider.js';
 
 const platform = createBrowserPlatform(window, document);
 platform.markStartup('javascript:begin');
@@ -87,8 +88,10 @@ try {
     // These optional fields are public registration data supplied by the host.
     // The maintained issuer and current-account API establish identity.
     const accountConfiguration = window.nineToOneBrowserConfiguration?.account ?? null;
-    if (!handleOAuthPopupCallback(accountConfiguration)) {
+    const redirectCallback = captureOAuthRedirectCallback(accountConfiguration);
+    {
         accounts = createConfiguredAccounts({ configuration: accountConfiguration, window,
+            signInMode: 'redirect', canRedirect: () => owner?.HasUnsavedChanges() === false,
             beginPrivateContextInvalidation: reason => lifecycle.begin(released ? terminalRelease : reason),
             onPrivateContextInvalidated: () => lifecycle.join(),
             onVerifiedIdentity: replaceVerifiedOwner,
@@ -96,6 +99,7 @@ try {
         notes = createNotesModule();
         present = createPresentModule();
         taskStorage = createTaskExecutionHost();
+        const dulcheProvider = createDulcheProvider(accounts.createInferenceOwner());
         platform.markStartup('javascript:services-created');
         if (!isCompatible) throw new Error('BrowserCapabilityUnavailable');
         const { dotnet } = await import('./_framework/dotnet.js');
@@ -108,6 +112,7 @@ try {
         runtime.setModuleImports('nineToOneWave', waveBrowser);
         runtime.setModuleImports('nineToOnePicture', pictureBrowser);
         runtime.setModuleImports('nineToOneAccounts', accounts);
+        runtime.setModuleImports('nineToOneDulche', dulcheProvider);
         runtime.setModuleImports('nineToOneTaskIdentity', {
             readCurrent: id => accounts.readTaskIdentity(id),
             confirmCurrent: id => accounts.confirmTaskIdentity(id),
@@ -130,6 +135,10 @@ try {
                 cleanupFailed();
             }); }, owner.HasUnsavedChanges);
         await runtime.runMain(config.mainAssemblyName, []);
+        if (redirectCallback) {
+            const resumed = await accounts.resumeRedirect(redirectCallback);
+            if (!resumed.ok) platform.showStatus('AuthenticationRequired', 'Sign-in did not complete. Try signing in again.');
+        }
     }
 } catch (error) {
     if (accounts) {

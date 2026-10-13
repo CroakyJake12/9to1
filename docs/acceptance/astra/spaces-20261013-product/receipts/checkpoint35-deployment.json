@@ -1,0 +1,84 @@
+{
+  "status": "CHECKPOINT",
+  "sourceCommit": "0e24d10972384f5389f150daf3ed76ac1666062d",
+  "previewOrigin": "https://present-4581358882177bc7.9to1.uk",
+  "worker": "9to1-present-preview-20261012",
+  "versionId": "d4c6cfd1-194e-467f-b8c7-0c8ac0db755b",
+  "deploymentId": "d9af59f7-1db6-4339-b862-9331a5487f59",
+  "deployedAt": "2026-10-13T21:04:32.274141Z",
+  "percentage": 100,
+  "compiledAssets": {
+    "count": 346,
+    "bytes": 83484934,
+    "manifestSha256": "ef0b6c19325f07e177561b1cf757a2a44a5187191f6c017c3b9b2271b5a6483f",
+    "immutableRoot": "/workspace/astra-audit/evidence/checkpoint35-publish-0e24d109/wwwroot"
+  },
+  "proxySourceSha256": "2e6d1a7eae38fa39c3b9d58b62588d6dd1334845dfb41780fe522a8f6a6fcb5b",
+  "verification": {
+    "immutableChromiumChecksPassed": 9,
+    "independentReview": "Root and independent acceptance worker reviewed exact compiled artifact",
+    "providerResourcesExact": true,
+    "ownerAccessDeepIdentical": true,
+    "workersDev": false,
+    "alternatePreviewUrls": false,
+    "publicHttpsProtection": {
+      "observedAt": "2026-10-13T21:05:06.039Z",
+      "source": "0e24d10972384f5389f150daf3ed76ac1666062d",
+      "origin": "https://present-4581358882177bc7.9to1.uk",
+      "scope": "Actual HTTPS without any user cookie or bearer; preserved Access protection only, not authenticated product acceptance",
+      "checks": [
+        {
+          "name": "preview",
+          "route": "/",
+          "status": 302,
+          "accessRedirectOrigin": "https://silent-base-19ea.cloudflareaccess.com",
+          "pass": true
+        },
+        {
+          "name": "unauthenticated model catalogue",
+          "route": "/api/dulche/api/tags",
+          "status": 302,
+          "accessRedirectOrigin": "https://silent-base-19ea.cloudflareaccess.com",
+          "pass": true
+        },
+        {
+          "name": "unauthenticated inference",
+          "route": "/api/dulche/api/chat",
+          "status": 302,
+          "accessRedirectOrigin": "https://silent-base-19ea.cloudflareaccess.com",
+          "pass": true
+        }
+      ],
+      "passed": true
+    }
+  },
+  "rollback": {
+    "retainedVersionId": "f7f64d85-0ae6-4a7c-b404-3cfda4e7621f",
+    "sourceCommit": "371825e5ee69d0c08a05ec98dd0dbaa72256429c",
+    "procedure": "Redeploy retained checkpoint34 at100%; preserve Access/hostname. Previous browser task schema remains3; canonical Space settings uses separate database."
+  },
+  "privateRuntime": {
+    "versionId": "f808e90d-36b4-4fcc-ac83-bca11b822c7e",
+    "evidence": "private-runtime-0e24d109-deployment.json",
+    "connectorExecutionSession": 28846,
+    "lastProcessObservedAliveAt": "2026-10-13T21:05:51.472660+00:00",
+    "serviceCredentialExpiresAt": "2026-10-14T19:33:03Z",
+    "availabilityDependency": "Current managed environment and original loopback Ollama process"
+  },
+  "unverified": [
+    "Legitimate signed-in OAuth completion in owner browser",
+    "Chat send and authentic streamed response through production account/runtime chain",
+    "Production generation Stop and account-switch cancellation",
+    "Signed-in conversation reopen and persistence",
+    "Complete Spaces/dependency specification acceptance"
+  ],
+  "fullAcceptance": false,
+  "evidence": [
+    "checkpoint35-preview-prestage.json",
+    "checkpoint35-preview-stage-proposal.json",
+    "checkpoint35-preview-staged-readback.json",
+    "checkpoint35-preview-postdeployment.json",
+    "checkpoint35-assets-upload.json",
+    "checkpoint35-public-protection.json"
+  ]
+}

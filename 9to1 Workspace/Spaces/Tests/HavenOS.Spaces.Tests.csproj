@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Rendering/**/*.cs" />
     <ProjectReference Include="..\HavenOS.Spaces.csproj" />
     <ProjectReference Include="..\..\shared\src\Haven.Application\Haven.Application.csproj" />
     <ProjectReference Include="..\..\shared\src\Haven.Core\Haven.Core.csproj" />

@@ -37,7 +37,7 @@ Use real canonical menu, dropdown, dialog, inspector and toolbar Types/component
 
 ## Theme ownership
 
-CUI is the sole presentation authority. Inherit Home's `user_preference` through CUI. Professional, Glow, Playful, Bubble and Cinematic are complete CUI themes; custom and nested themes retain their declared inheritance. Do not install FluentTheme/SimpleTheme beneath CUI or repair a page with donor selectors and local colour overrides.
+CUI is the sole presentation authority. Inherit Home's `user_preference` through CUI. The normative Home choices are Professional, Glow, Playful, Frosted Glass, Bubble, Metallic, Retro and Western, plus Create Theme. These are complete visual systems; historical Cinematic identities remain compatible, and custom and nested themes retain their declared inheritance. Do not install FluentTheme/SimpleTheme beneath CUI or repair a page with donor selectors and local colour overrides.
 
 Every effective property resolves through the shared CUI cascade: built-in default, inherited Theme, Type/Definition default, explicit instance property, scoped property region, then active Style/event overlay. Runtime assignments update their declared level; temporary states restore the underlying value. Use the effective-property inspector to verify values and sources.
 
@@ -52,6 +52,14 @@ The backend may share a read-only resolved palette across controls, but each res
 Keep domain logic in the existing owning services. Named CUI actions and automation/API calls use the same typed domain operations. Preserve canonical IDs, permissions, scope checks, cancellation, revision fences, unknown outcomes, persistence, undo and recovery. Existing namespaces and storage/IPC identifiers remain compatibility contracts until explicitly migrated.
 
 Accessible names, semantic roles, keyboard traversal, focus restoration, touch targets, scaling, contrast and reduced motion are acceptance requirements. Structural conditions retain their specified lifecycle; Active, Hidden and Interactive are distinct. Ordinary text is literal; only explicit Children/content operations parse authorised CUI.
+
+Awaitable choice prompts retain their original callback and close Tasks. Close refuses a live callback joining itself, but a copied execution context does not retain that authority after the callback Task settles. Cleanup joins the original operation and loader work, restores only surviving prior focus when the same prompt still owns the overlay, and never clears another owner's replacement. Headless async verification must await the entire UI delegate through `Dispatch<TResult>(Func<Task<TResult>>)`; a single await of a nested Task is not evidence for assertions after its first suspension.
+
+An authored action strip can use `RevealWith="message"` where `message` is the literal ID of its containing CUI component. Shared CUI resolves the nearest matching authored ancestor inside the same loader, including each keyed Repeat instance. The strip retains its layout, controls, automation and keyboard tab stops while resting; pointer hover or keyboard focus anywhere inside its owner reveals it. A touch press within the owner reveals the strip until an outside press, with focused actions remaining visible. This does not dispatch an action or move focus. Invalid, self or non-ancestor references fail with CUIR059. Use actual domain actions and accessible labels on the revealed controls; never replace this with app-local native selectors or `Active=false`, which removes the interaction path. Independently owned original surface slots do not cross this ancestry boundary.
+
+Give the owner a continuous authored pointer region, such as `Background="Transparent"`, when gaps separate its content and actions. Verify the actual body-to-gap-to-button pointer path; a screenshot of revealed buttons or a keyboard-only test cannot prove that a pointer can reach them.
+
+Canonical icon sources use `icon:<semantic-key>` for the maintained line asset. A supported filled presentation uses `icon-solid:<semantic-key>`; the shared catalog currently provides the rounded Chat speech bubble. This changes presentation only, preserving the stored semantic key and scoped CUI text brush. Unsupported filled variants fail explicitly rather than inventing a glyph or silently substituting a different icon.
 
 ## Migration and validation
 

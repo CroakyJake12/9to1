@@ -20,5 +20,6 @@ public static class CuiAppAccentCatalog
         app.AppId.Equals(appIdOrSurface, StringComparison.OrdinalIgnoreCase)
         || app.Surface.Equals(appIdOrSurface, StringComparison.OrdinalIgnoreCase));
 
-    public static string SurfaceForRoute(string routeId) => Find(routeId)?.Surface ?? "Home";
+    public static string SurfaceForRoute(string routeId) =>
+        string.Equals(routeId, "app.spaces", StringComparison.OrdinalIgnoreCase) ? "Spaces" : Find(routeId)?.Surface ?? "Home";
 }

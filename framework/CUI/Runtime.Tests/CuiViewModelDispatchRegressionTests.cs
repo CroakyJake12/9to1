@@ -88,7 +88,7 @@ public sealed class CuiViewModelDispatchRegressionTests
     public async Task Actual_Home_keyboard_pointer_bindings_and_missing_route_preserve_the_live_tree(CuiAppearance appearance)
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiW2NativeTestApplication));
-        await session.Dispatch(async () =>
+        await session.Dispatch<int>(async () =>
         {
             var errors = new List<Exception>();
             Exception? expectedFailure = null;

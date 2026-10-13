@@ -38,6 +38,17 @@ public sealed class SpaceLaunchPolicyTests
         Assert.Single(plan.LayoutDocument!.Nodes);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Assistants_spaces_open_the_existing_assistants_product_owner(bool builtIn)
+    {
+        var plan = SpaceLaunchPolicy.Resolve(Create(SpaceKind.Assistants, builtIn));
+
+        Assert.Equal(SpaceLaunchDestination.AssistantsProduct, plan.Destination);
+        Assert.NotEqual(SpaceLaunchDestination.ConfiguredWorkspace, plan.Destination);
+    }
+
     [Fact]
     public void Agent_spaces_route_to_tasks_mode_chat_workspaces_with_high_effort()
     {
@@ -60,7 +71,7 @@ public sealed class SpaceLaunchPolicyTests
     {
         var context = SpaceLaunchPolicy.Resolve(Create(SpaceKind.Research, false)).RegisteredContext;
 
-        Assert.Contains("Active Haven Space: Example Space.", context, StringComparison.Ordinal);
+        Assert.Contains("Active 9to1 Space: Example Space.", context, StringComparison.Ordinal);
         Assert.Contains("Purpose: Purpose text", context, StringComparison.Ordinal);
         Assert.Contains("Space instructions:\nUse careful sources.", context, StringComparison.Ordinal);
         Assert.Contains("User: Question\nHaven: Answer", context, StringComparison.Ordinal);

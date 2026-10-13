@@ -20,6 +20,12 @@ public sealed class BrowserPrivateTaskStorage : IBrowserPrivateContextParticipan
     private ExecutionEventHub? _eventHub;
     private TaskExecutionCoordinator? _coordinator;
     private BrowserStoredTaskReadOwner? _storedReads;
+    private SpaceRegistry? _spaces;
+    private BrowserConversationProductionStore? _productionStore;
+    private IndexedDbConversationProductionRepository? _production;
+    private ConversationVersioningService? _versioning;
+    private BrowserMessageAttachmentService? _attachments;
+    private BrowserChatSettingsStore? _settings;
     private bool _revoked;
     private bool _initializing;
     private Exception? _initializationFailure;
@@ -42,12 +48,19 @@ public sealed class BrowserPrivateTaskStorage : IBrowserPrivateContextParticipan
             {
                 _transport = new(); // Keep the actual acquired transport before subsequent constructors.
                 _conversations = new(_transport, _actors);
+                _productionStore = new(_transport, _actors);
+                _production = new(_productionStore, _conversations);
+                _conversations.AttachOriginalProduction(_production);
+                _versioning = new(_conversations, _production);
+                _attachments = new(_productionStore, _production);
+                _settings = new(_productionStore);
                 _tasks = new(_transport, _actors, actual => _storedReads?.RetainAuthenticatedDriver(actual));
                 _contexts = new(_conversations);
                 _eventRepository = _transport.CreateExecutionEventRepository(_actors);
                 _eventHub = new(_eventRepository); // Capture the genuine collector before later composition.
                 _coordinator = new(_tasks, _eventHub, timeProvider: null); // Actual preserved read-only constructor; no attempt authority.
                 _storedReads = new(_coordinator, _transport, _gate); // Same private fence gate makes final read publication atomic with revocation.
+                _spaces = new(new IndexedDbSpaceSettingsStore(_transport, _actors));
             }
             catch (Exception error) { _initializationFailure = error; throw; }
             finally { _initializing = false; }
@@ -64,6 +77,26 @@ public sealed class BrowserPrivateTaskStorage : IBrowserPrivateContextParticipan
     { get { EnsureInitialized(); return _contexts!; } }
     public BrowserStoredTaskReadOwner StoredTasks
     { get { EnsureInitialized(); return _storedReads!; } }
+    /// <summary>Account-partitioned local Space configuration; no model, Task or workspace admission.</summary>
+    public SpaceRegistry Spaces
+    { get { EnsureInitialized(); return _spaces!; } }
+    public IndexedDbConversationProductionRepository Production
+    { get { EnsureInitialized(); return _production!; } }
+    public IConversationVersioningService Versioning
+    { get { EnsureInitialized(); return _versioning!; } }
+    public BrowserMessageAttachmentService Attachments
+    { get { EnsureInitialized(); return _attachments!; } }
+    public IVersionedSettingsStore Settings
+    { get { EnsureInitialized(); return _settings!; } }
+    public IConversationSafetyService Safety
+    { get { EnsureInitialized(); return _production!; } }
+    /// <summary>Serializes original source custody and cleanup with the private revocation fence.
+    /// It grants no actor/store/model permission; each actual operation still authenticates.</summary>
+    public void RunOriginalSynchronousScope(Action callback)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+        lock (_gate) callback(); // Cleanup must remain callable after revocation; this is no I/O admission.
+    }
     public void DemandPrivateContextCurrent()
     {
         lock (_gate)
@@ -80,6 +113,7 @@ public sealed class BrowserPrivateTaskStorage : IBrowserPrivateContextParticipan
             _revoked = true; // No callbacks, cancellation, actor read or save on this private fence.
             _storedReads?.RevokePrivateContext();
             _eventHub?.RequestClose(); // Private, nonpublishing read graph has no live event issuer.
+            _attachments?.RevokePrivateContext();
             _transport?.RevokePrivateContext();
         }
     }
@@ -96,8 +130,9 @@ public sealed class BrowserPrivateTaskStorage : IBrowserPrivateContextParticipan
             _revoked = true;
             _storedReads?.RevokePrivateContext();
             _eventHub?.RequestClose();
+            _attachments?.RevokePrivateContext();
             _transport?.RevokePrivateContext();
-            actual = CloseOriginalAsync(start.Task, _storedReads, _eventHub, _transport, _initializationFailure);
+            actual = CloseOriginalAsync(start.Task, _storedReads, _eventHub, _transport, _initializationFailure, _attachments);
             _close = actual; // Same actual close Task exists before any disposal source callback.
         }
         start.SetResult();
@@ -106,7 +141,7 @@ public sealed class BrowserPrivateTaskStorage : IBrowserPrivateContextParticipan
     // Exact retirement driver is internal only for source-linked partial/fault controls.
     // It accepts actual owned types, never an authentication/admission/provider bypass.
     internal static async Task CloseOriginalAsync(Task start, BrowserStoredTaskReadOwner? reads, ExecutionEventHub? hub,
-        BrowserTaskExecutionTransport? transport, Exception? initializationFailure)
+        BrowserTaskExecutionTransport? transport, Exception? initializationFailure, BrowserMessageAttachmentService? attachments = null)
     {
         await start;
         reads?.DemandExternalOriginalRetirementJoin();
@@ -126,6 +161,10 @@ public sealed class BrowserPrivateTaskStorage : IBrowserPrivateContextParticipan
             try { await readClose; } catch (Exception error) { Capture(causes, readClose, error); }
         if (raw is not null)
             try { await raw; } catch (Exception error) { Capture(causes, raw, error); }
+        Task? attachmentClose = null;
+        try { attachmentClose = attachments?.DrainOriginalImportsAsync(); } catch (Exception error) { Capture(causes, null, error); }
+        if (attachmentClose is not null)
+            try { await attachmentClose; } catch (Exception error) { Capture(causes, attachmentClose, error); }
         if (causes.Count != 0) throw new AggregateException("Actual private Task storage initialization or drain failed.", causes);
     }
     private static void Capture(List<Exception> causes, Task? actual, Exception error)

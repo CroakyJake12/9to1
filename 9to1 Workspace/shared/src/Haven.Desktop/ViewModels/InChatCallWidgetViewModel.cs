@@ -312,13 +312,7 @@ public sealed class InChatCallWidgetViewModel : ObservableObject, IDisposable
         }
     }
 
-    public int ReasoningPercent => Effort switch
-    {
-        EffortLevel.Low => 25,
-        EffortLevel.Medium => 50,
-        EffortLevel.High => 75,
-        _ => 100
-    };
+    public int ReasoningPercent => ReasoningScale.ToPercentage(Effort);
 
     public string TypedTranscript
     {

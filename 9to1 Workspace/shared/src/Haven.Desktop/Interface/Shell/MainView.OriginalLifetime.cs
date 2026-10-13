@@ -65,7 +65,7 @@ public sealed partial class MainView
     private object[] CaptureCurrentOriginalShellChildren() => new object?[]
         { _homePage, _newDashboardPage, _goPage, _newChatPage, _planPage, _terminalPage,
           _mailPage, _playPage, _currentPage, _currentChat, _activeProjectPage, _previousContent,
-          _studyAssignmentsSidebar, _nativeChatSidebar, _nativeProjectsPage, _spacesPage, _companionDockVm }
+          _studyAssignmentsSidebar, _nativeChatSidebar, _nativeSpacesShell, _nativeProjectsPage, _spacesPage, _companionDockVm }
         .OfType<object>().Concat(_chats.Values).Concat(_projectChats.Values).Concat(_projectPages.Values)
         .Concat(_groupChats.Values).Concat(_groupPages.Values).Concat(_modeWorkspaces.Values)
         .Concat(_canonicalSpaceTaskPages)
@@ -163,11 +163,19 @@ public sealed partial class MainView
                 AddShellFailure(failures, new DesktopOriginalRetirementUnavailableException(child.GetType()));
         ThrowShellFailures(failures);
         // Destroy owned controls only after every actual child has a successful owning join.
+        _nativeSpacesShell?.SetWorkspace(null);
+        _nativeSpacesShell?.ReleaseNavigation();
+        SetNativePlatformContent(PageContent, null);
+        SetNativePlatformContent(NativeSidebarHost, null);
         _callCoordinator.StateChanged -= OnCallStateChanged;
         _homePage?.Deactivate();
         _newDashboardPage?.Deactivate();
         _studyAssignmentsSidebar?.Dispose();
-        _nativeChatSidebar?.Dispose();
+        if (_nativeChatSidebar is { } sidebar)
+        {
+            sidebar.NavigationLayoutChanged -= OnNativeSpaceNavigationLayoutChanged;
+            sidebar.Dispose();
+        }
         RemoveSplitView();
         OpenTabs.Clear();
         TopRail.Dispose();

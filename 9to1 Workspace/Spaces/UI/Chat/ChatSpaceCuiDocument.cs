@@ -14,7 +14,12 @@ public static class ChatSpaceCuiDocument
         using var stream = assembly.GetManifestResourceStream(ResourceName)
             ?? throw new InvalidOperationException($"Embedded Chat Space CUI resource '{ResourceName}' was not found.");
         using var reader = new StreamReader(stream);
-        return new CuiRichParser().Parse(reader.ReadToEnd(), "ChatSpace.cui");
+        var parser = new CuiRichParser();
+        var document = parser.Parse(reader.ReadToEnd(), "ChatSpace.cui");
+        if (parser.Diagnostics.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
+            throw new InvalidOperationException("The canonical Spaces interface could not be parsed: " +
+                string.Join(Environment.NewLine, parser.Diagnostics.Diagnostics));
+        return document;
     }
 
     public static CuiComponent FindById(CuiDocument document, string id)

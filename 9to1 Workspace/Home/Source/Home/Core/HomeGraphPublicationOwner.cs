@@ -40,7 +40,14 @@ public sealed class HomeGraphPublicationOwner
         var authorities = _origins.Where(owner => owner.OwnerAppId == intent.Owner.AppId).ToArray();
         if (authorities.Length != 1 || !authorities[0].IsBoundToGraphRepository(_graphs))
             throw new NotSupportedException("One actual original owner bound to this canonical graph repository required.");
-        if (owningResourceKind != "automations") throw new ArgumentException("Actual registered Automation store kind required.");
+        var action = (owningResourceKind, intent.Owner.AppId, intent.Owner.EntityKind, intent.Kind) switch
+        {
+            ("automations", "automations", "automation.reusable-task", GraphPublicationKind.SaveDraft) => "automations.graph.save-draft",
+            ("automations", "automations", "automation.reusable-task", GraphPublicationKind.Activate) => "automations.activate",
+            ("spaces", "spaces", "space.definition", GraphPublicationKind.SaveDraft) when authorities[0] is HomeSpaceGraphOwner => "spaces.graph.save-draft",
+            ("spaces", "spaces", "space.definition", GraphPublicationKind.Activate) when authorities[0] is HomeSpaceGraphOwner => "spaces.graph.activate",
+            _ => throw new NotSupportedException("The exact maintained owning graph publication adapter is unavailable.")
+        };
         var entityScopeId = intent.Owner.StoreId.ToString("D") + "/" + intent.Owner.EntityId.ToString("D");
         var graphScopeId = intent.OriginalActor.ProfileId + "/" + intent.Graph.GraphId.ToString("D");
         if (intent.Scopes.Count(scope => scope.Kind == intent.Owner.EntityKind && scope.Id == entityScopeId &&
@@ -51,10 +58,6 @@ public sealed class HomeGraphPublicationOwner
             throw new ArgumentException("Exact owning entity and profile-qualified graph scopes required.");
         // Profile qualification is an actor domain, not a physical Home StoreUUID. The actual issuer/store
         // references and locked-state guards provide the local origin check. Missing genuine resolver denies.
-        var action = intent.Kind == GraphPublicationKind.SaveDraft ? "automations.graph.save-draft" : "automations.activate";
-        // Restrict this first owning adapter; no generic arbitrary target/action mapping or legacy ownership adoption.
-        if (intent.Owner.AppId != "automations" || intent.Owner.EntityKind != "automation.reusable-task")
-            throw new NotSupportedException("Registered owning graph publication adapter unavailable.");
         if (_reviews.Count >= 1024) throw new InvalidOperationException("Retained graph review capacity exceeded.");
         var prepared = _broker.PrepareReviewForActor(intent.OriginalActor, intent.Owner.AppId, action, intent.Scopes,
             intent.Arguments, "Publish the exact approved graph revision", null, sessionId);

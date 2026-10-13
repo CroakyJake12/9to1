@@ -206,20 +206,29 @@ public sealed class UnifiedExecutionPolicyTests
     }
 
     [Fact]
-    public async Task Event_collection_survives_a_repository_failure_after_bounded_retries()
+    public async Task Event_collection_preserves_failed_original_without_replay_and_accepts_independent_later_events()
     {
-        var repository = new RecoveringEventRepository(3);
-        await using var hub = new ExecutionEventHub(repository);
-        hub.TryPublish(CreateEvent("First"));
-        for (var attempt = 0; attempt < 40 && hub.PersistenceFailureCount < 3; attempt++)
-            await Task.Delay(25);
-
-        hub.TryPublish(CreateEvent("Second"));
-        for (var attempt = 0; attempt < 40 && repository.Saved.All(item => item.Name != "Second"); attempt++)
-            await Task.Delay(25);
-
-        Assert.Equal(3, hub.PersistenceFailureCount);
-        Assert.Contains(repository.Saved, item => item.Name == "Second");
+        var repository = new RecoveringEventRepository(1);
+        var hub = new ExecutionEventHub(repository);
+        try
+        {
+            Assert.True(hub.TryPublish(CreateEvent("First")));
+            await repository.FailedAppend.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.True(hub.TryPublish(CreateEvent("Second")));
+        }
+        finally
+        {
+            var close = hub.DisposeAsync().AsTask();
+            var failure = await Assert.ThrowsAsync<AggregateException>(() => close);
+            Assert.Same(repository.OriginalFailure, Assert.Single(failure.Flatten().InnerExceptions));
+            Assert.Same(close, hub.DisposeAsync().AsTask());
+        }
+        Assert.Equal(1, hub.PersistenceFailureCount);
+        Assert.Equal(new[] { "First", "Second" }, repository.Attempted.Select(item => item.Name));
+        Assert.Equal("Second", Assert.Single(repository.Saved).Name);
+        var retained = Assert.Single(hub.OriginalPersistenceFailures);
+        Assert.Equal("First", Assert.Single(retained.Events).Name);
+        Assert.Same(repository.OriginalFailure, Assert.Single(retained.OriginalErrors));
     }
 
     private static ExecutionEvent CreateEvent(string name) => new(
@@ -263,12 +272,20 @@ public sealed class UnifiedExecutionPolicyTests
         private readonly object _gate = new();
         private int _failuresRemaining = failuresBeforeSuccess;
         private readonly List<ExecutionEvent> _saved = [];
+        private readonly List<ExecutionEvent> _attempted = [];
+        public IOException OriginalFailure { get; } = new("Original append failure; no replay authority.");
+        public TaskCompletionSource FailedAppend { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public IReadOnlyList<ExecutionEvent> Attempted { get { lock (_gate) return _attempted.ToArray(); } }
         public IReadOnlyList<ExecutionEvent> Saved { get { lock (_gate) return _saved.ToArray(); } }
 
         public Task AppendAsync(IReadOnlyList<ExecutionEvent> events, CancellationToken cancellationToken)
         {
+            lock (_gate) _attempted.AddRange(events);
             if (Interlocked.Decrement(ref _failuresRemaining) >= 0)
-                throw new IOException("Temporary persistence failure.");
+            {
+                FailedAppend.TrySetResult();
+                throw OriginalFailure;
+            }
             lock (_gate) _saved.AddRange(events);
             return Task.CompletedTask;
         }

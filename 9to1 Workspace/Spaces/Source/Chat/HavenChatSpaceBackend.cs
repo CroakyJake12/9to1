@@ -14,8 +14,11 @@ public sealed class HavenChatSpaceBackend(
     IConversationVersioningService versioning,
     IMessageAttachmentService attachmentService,
     IChatSpaceModelCatalog models,
-    IChatSpaceTurnExecutor turns) : IChatSpaceBackend
+    IChatSpaceTurnExecutor turns) : IChatSpaceStreamingBackend
 {
+    private readonly SemaphoreSlim _creation = new(1, 1);
+    private Conversation? _pendingCreation;
+
     public async Task<IReadOnlyList<Conversation>> GetRecentChatsAsync(int limit, CancellationToken cancellationToken) =>
         (await conversations.GetRecentInScopeAsync(ConversationScope.GeneralChat, Math.Clamp(limit, 1, 100), cancellationToken)
             .ConfigureAwait(false))
@@ -29,30 +32,47 @@ public sealed class HavenChatSpaceBackend(
 
     public async Task<Conversation> CreateChatAsync(CancellationToken cancellationToken)
     {
-        var now = DateTimeOffset.UtcNow;
-        var conversation = new Conversation(
-            Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "New chat", null, null,
-            false, false, now, now, SpaceId: SpaceRegistry.ChatSpaceId);
-        await conversations.UpsertConversationAsync(conversation, cancellationToken).ConfigureAwait(false);
-        await production.EnsureRootBranchAsync(conversation.Id, cancellationToken).ConfigureAwait(false);
-        return conversation;
+        await _creation.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var now = DateTimeOffset.UtcNow;
+            var pending = _pendingCreation ??= new Conversation(
+                Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "New chat", null, null,
+                false, false, now, now, SpaceId: SpaceRegistry.ChatSpaceId);
+            // A lost write acknowledgement retains its generated identity. Reconcile that
+            // SAME record before retrying, rather than creating an unrelated second chat.
+            var current = await ChatSpaceOriginalTask.Run(() => conversations.GetAsync(pending.Id, cancellationToken)).ConfigureAwait(false);
+            if (current is null)
+            {
+                await ChatSpaceOriginalTask.Run(() => conversations.UpsertConversationAsync(pending, cancellationToken)).ConfigureAwait(false);
+                current = pending;
+            }
+            else if (!ConversationScope.GeneralChat.Matches(current) || current.IsArchived || current.IsTemporary ||
+                current.SpaceId != SpaceRegistry.ChatSpaceId)
+                throw new InvalidOperationException("The original pending Chat identity changed; inspect it before continuing.");
+            await ChatSpaceOriginalTask.Run(() => production.EnsureRootBranchAsync(current.Id, cancellationToken)).ConfigureAwait(false);
+            _pendingCreation = null;
+            return current;
+        }
+        finally { _creation.Release(); }
     }
 
     public async Task<ChatSpaceConversationData> GetConversationAsync(Guid conversationId, CancellationToken cancellationToken)
     {
-        var conversation = await conversations.GetAsync(conversationId, cancellationToken).ConfigureAwait(false)
+        var conversation = await ChatSpaceOriginalTask.Run(() => conversations.GetAsync(conversationId, cancellationToken)).ConfigureAwait(false)
             ?? throw new KeyNotFoundException($"Chat '{conversationId}' was not found.");
-        if (!ConversationScope.GeneralChat.Matches(conversation) ||
+        if (conversation.IsTemporary || conversation.IsArchived || !ConversationScope.GeneralChat.Matches(conversation) ||
             conversation.SpaceId is { } spaceId && spaceId != SpaceRegistry.ChatSpaceId)
             throw new InvalidOperationException("Chat Space can open only general Chat conversations assigned to Chat.");
 
-        var current = await production.GetCurrentBranchAsync(conversationId, cancellationToken).ConfigureAwait(false)
-            ?? await production.EnsureRootBranchAsync(conversationId, cancellationToken).ConfigureAwait(false);
-        var messageTask = conversations.GetMessagesAsync(conversationId, cancellationToken);
-        var attachmentTask = production.GetAttachmentsAsync(conversationId, null, cancellationToken);
-        var branchTask = production.GetBranchesAsync(conversationId, cancellationToken);
-        var draftTask = production.GetDraftAsync(conversationId, current.Id, cancellationToken);
-        await Task.WhenAll(messageTask, attachmentTask, branchTask, draftTask).ConfigureAwait(false);
+        var current = await ChatSpaceOriginalTask.Run(() => production.GetCurrentBranchAsync(conversationId, cancellationToken)).ConfigureAwait(false)
+            ?? await ChatSpaceOriginalTask.Run(() => production.EnsureRootBranchAsync(conversationId, cancellationToken)).ConfigureAwait(false);
+        var reads = new ChatSpaceReadSettlement();
+        var messageTask = reads.Capture(() => conversations.GetMessagesAsync(conversationId, cancellationToken));
+        var attachmentTask = reads.Capture(() => production.GetAttachmentsAsync(conversationId, null, cancellationToken));
+        var branchTask = reads.Capture(() => production.GetBranchesAsync(conversationId, cancellationToken));
+        var draftTask = reads.Capture(() => production.GetDraftAsync(conversationId, current.Id, cancellationToken));
+        await reads.JoinAsync(cancellationToken).ConfigureAwait(false);
         return new(conversation, messageTask.Result, attachmentTask.Result, branchTask.Result, draftTask.Result);
     }
 
@@ -65,17 +85,17 @@ public sealed class HavenChatSpaceBackend(
     {
         if (string.IsNullOrWhiteSpace(content) && attachmentIds.Count == 0)
         {
-            await production.DeleteDraftAsync(conversationId, branchId, cancellationToken).ConfigureAwait(false);
+            await ChatSpaceOriginalTask.Run(() => production.DeleteDraftAsync(conversationId, branchId, cancellationToken)).ConfigureAwait(false);
             return;
         }
-        await production.SaveDraftAsync(
+        await ChatSpaceOriginalTask.Run(() => production.SaveDraftAsync(
             new ConversationDraft(
                 conversationId,
                 branchId,
                 content,
                 JsonSerializer.Serialize(attachmentIds),
                 DateTimeOffset.UtcNow),
-            cancellationToken).ConfigureAwait(false);
+            cancellationToken)).ConfigureAwait(false);
     }
 
     public Task<MessageAttachment> ImportAttachmentAsync(
@@ -90,6 +110,12 @@ public sealed class HavenChatSpaceBackend(
 
     public Task SendAsync(ChatSpaceTurnRequest request, CancellationToken cancellationToken) =>
         turns.ExecuteAsync(request, cancellationToken);
+
+    public Task SendAsync(ChatSpaceTurnRequest request,
+        Func<ChatStreamEvent, CancellationToken, Task> observe, CancellationToken cancellationToken) =>
+        turns is IChatSpaceStreamingTurnExecutor streaming
+            ? streaming.ExecuteAsync(request, observe, cancellationToken)
+            : turns.ExecuteAsync(request, cancellationToken);
 
     public async Task<ConversationBranch> CreateBranchAsync(
         Guid conversationId,
@@ -118,7 +144,7 @@ public sealed class HavenChatSpaceBackend(
         ModelDescriptor model,
         CancellationToken cancellationToken)
     {
-        var conversation = await conversations.GetAsync(conversationId, cancellationToken).ConfigureAwait(false)
+        var conversation = await ChatSpaceOriginalTask.Run(() => conversations.GetAsync(conversationId, cancellationToken)).ConfigureAwait(false)
             ?? throw new KeyNotFoundException($"Chat '{conversationId}' was not found.");
         var messages = await conversations.GetMessagesAsync(conversationId, cancellationToken).ConfigureAwait(false);
         var index = Array.FindIndex(messages.ToArray(), item => item.Id == assistantMessageId);

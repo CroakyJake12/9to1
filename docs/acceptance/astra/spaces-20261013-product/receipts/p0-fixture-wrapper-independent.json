@@ -1,0 +1,15 @@
+{
+  "scope": "Labelled visual-test wrapper only; not product/provider/account acceptance",
+  "sourceHash": "8fe2110d0618732fbb1f97b686e1f0f6699db52359f3b5dd4e968d75e692e9ef",
+  "pngHash": "316b5ef587ff73c32754f73452ea8c0e44352044cf7c417f9fa3f8c2e4f261da",
+  "checks": [
+    "Prominent labelled banner outside unchanged image",
+    "Banner remains visible while reading image after scroll",
+    "Actual image scale control works without hiding label",
+    "Label retained at compact viewport",
+    "No remote requests, script failures or source mutation"
+  ],
+  "errors": [],
+  "network": [],
+  "closed": true
+}

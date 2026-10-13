@@ -7,6 +7,39 @@ through a weak key of the actual registry. A revoked owner cannot become current
 again; replacement waits for the registry's same reset/drain ledger. Enrollment
 opens no API, IndexedDB database, provider or model, and exposes no page route.
 
+The current Spaces configuration route borrows this same private owner's
+`SpaceRegistry` via `IndexedDbSpaceSettingsStore`. It supports only
+`spaces.registry` and `spaces.current`. Every read/write uses the existing
+verified actor→storage→actor transport, and the settings adapter pins the first
+verified account/profile/session for its lifetime before accepting a write.
+Exact JSON compare/exchange and optional key guards share one real IndexedDB
+transaction; a mismatched guard writes nothing. Payload/hash, partition, key and
+committed acknowledgements are validated. Import remains unavailable without its
+reviewed migration owner.
+
+Space settings live in `${databaseName}-spaces` schema 1, partitioned by the
+actual profile ID. The original `${databaseName}` Task database remains schema 3
+with its stores and rows unchanged. Both handles belong to the same module
+lifetime and are closed after its original requests settle. This avoids upgrading
+the Task database to a version the retained previous deployment cannot open.
+Rolling back static assets leaves the new Spaces database intact and permits the
+old Task adapter to reopen schema 3; returning to the new build reopens saved
+Space records. No downgrade, deletion or swallowed VersionError is used.
+
+`Tests/run-spaces-storage.cjs` runs the Space settings controls together with the
+maintained conversation and execution-event suites in real Chromium IndexedDB.
+`SPACES_ROLLBACK_MODULE` names an immutable previous `tasks-indexeddb.js` file;
+the optional rollback control uses that exact module in the same browser profile
+after new Space writes. These controls use explicit profile metadata fixtures.
+They establish storage protocol behaviour, not authenticated account acceptance
+or an accepted rendered workflow.
+
+Actual transaction abort without a platform `tx.error` retains an AbortError
+observation. A native InvalidStateError when cancellation races a completed
+transaction is retained until that same transaction's complete/abort event
+classifies it. Other abort/close failures remain faults. These rules allow original
+operations to drain without converting unknown transaction failures into success.
+
 Explicit storage use creates the existing verified Task actor source and the
 current canonical Task/conversation/context adapters. The actor is obtained from
 maintained signature verification and current account/profile APIs. Its epoch is

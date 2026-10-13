@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+<PropertyGroup><OutputType>Exe</OutputType><EnableDefaultCompileItems>false</EnableDefaultCompileItems></PropertyGroup>
+<ItemGroup>
+<Compile Include="Program.cs" />
+<ProjectReference Include="../../../UI/Chat/Runtime/HavenOS.Spaces.CuiRuntime.csproj" />
+<ProjectReference Include="../../../../shared/src/Haven.UI/Haven.UI.csproj" />
+<Compile Include="../../../UI/Shell/SpacesShellCuiDocument.cs" Link="SpacesShellCuiDocument.cs" />
+<Compile Include="../../../UI/Shell/SpaceNavigationCuiDocument.cs" Link="SpaceNavigationCuiDocument.cs" />
+<Compile Include="../../../UI/Chat/ChatWorkspaceCuiDocument.cs" Link="ChatWorkspaceCuiDocument.cs" />
+<Compile Include="../../../../../apps/Web/BrowserCanonicalIcons.cs" Link="BrowserCanonicalIcons.cs" />
+<EmbeddedResource Include="../../../UI/Shell/SpacesShell.cui" LogicalName="HavenOS.Apps.Spaces.UI.Shell.SpacesShell.cui" />
+<EmbeddedResource Include="../../../UI/Shell/SpaceNavigation.cui" LogicalName="HavenOS.Apps.Spaces.UI.Shell.SpaceNavigation.cui" />
+<EmbeddedResource Include="../../../UI/Chat/ChatWorkspace.cui" LogicalName="HavenOS.Apps.Spaces.UI.Chat.ChatWorkspace.cui" />
+</ItemGroup>
+</Project>

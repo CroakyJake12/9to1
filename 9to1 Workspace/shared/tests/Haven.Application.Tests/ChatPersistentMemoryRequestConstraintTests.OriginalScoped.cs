@@ -63,7 +63,8 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
     {
         var legacy = new MemorySource(); var scoped = new ScopedMemorySource(); var rig = new Rig(legacy, scoped);
         var payload = JsonSerializer.Serialize(ScopedOptions(scoped));
-        Assert.DoesNotContain(nameof(GenerationOptions.OriginalPersistentMemoryInput), payload, StringComparison.Ordinal);
+        using var json = JsonDocument.Parse(payload);
+        Assert.False(json.RootElement.TryGetProperty(nameof(GenerationOptions.OriginalPersistentMemoryInput), out _));
         var restored = JsonSerializer.Deserialize<GenerationOptions>(payload)!;
         Assert.True(restored.RequestedContextConstraints!.RequireOriginalPersistentMemoryInput);
         Assert.Null(restored.OriginalPersistentMemoryInput);

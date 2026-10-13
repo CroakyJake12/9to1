@@ -212,7 +212,7 @@ public sealed class CuiHostOriginalCauseCustodyTests
         try
         {
             session = HeadlessUnitTestSession.StartNew(typeof(CuiRuntimeTestApplication));
-            await session.Dispatch(async () =>
+            await session.Dispatch<int>(async () =>
             {
                 var rig = new Rig();
                 try

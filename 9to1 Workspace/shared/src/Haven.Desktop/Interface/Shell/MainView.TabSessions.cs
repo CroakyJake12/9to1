@@ -128,14 +128,14 @@ public sealed partial class MainView
             tab = OpenTabs.FirstOrDefault(item => !ReferenceEquals(item, SelectedTab)) ?? tab;
         if (ReferenceEquals(tab, SelectedTab)) return;
         if (_secondaryTab?.Page is IActivatablePage oldPage) oldPage.Deactivate();
-        SecondaryPageContent.Content = null;
+        SetNativePlatformContent(SecondaryPageContent, null);
         _secondaryTab = tab;
         PaneHost.ColumnDefinitions[0].Width = new GridLength(1, GridUnitType.Star);
         PaneHost.ColumnDefinitions[1].Width = new GridLength(8, GridUnitType.Pixel);
         PaneHost.ColumnDefinitions[2].Width = new GridLength(1, GridUnitType.Star);
         SplitDivider.IsVisible = true;
         SecondaryPageContent.IsVisible = true;
-        SecondaryPageContent.Content = tab.Page;
+        SetNativePlatformContent(SecondaryPageContent, tab.Page);
         if (tab.Page is IActivatablePage page) _ = _originalShellWork.RunAsync(async original => await original.AwaitAsync(page.ActivateAsync(CancellationToken.None)));
         RaisePropertyChanged(nameof(SecondaryTab));
         RaisePropertyChanged(nameof(IsSplitView));
@@ -146,7 +146,7 @@ public sealed partial class MainView
     public void RemoveSplitView()
     {
         if (_secondaryTab?.Page is IActivatablePage page) page.Deactivate();
-        SecondaryPageContent.Content = null;
+        SetNativePlatformContent(SecondaryPageContent, null);
         SecondaryPageContent.IsVisible = false;
         SplitDivider.IsVisible = false;
         PaneHost.ColumnDefinitions[0].Width = new GridLength(1, GridUnitType.Star);
@@ -162,11 +162,11 @@ public sealed partial class MainView
     public void SwapSplitPanes()
     {
         if (SelectedTab is not { } primary || _secondaryTab is not { } secondary) return;
-        PageContent.Content = null;
-        SecondaryPageContent.Content = null;
+        PresentNativePageContent(null);
+        SetNativePlatformContent(SecondaryPageContent, null);
         _secondaryTab = primary;
         SelectedTab = secondary;
-        SecondaryPageContent.Content = primary.Page;
+        SetNativePlatformContent(SecondaryPageContent, primary.Page);
         RaisePropertyChanged(nameof(SecondaryTab));
         QueueWorkspaceSessionSave();
     }
@@ -177,7 +177,7 @@ public sealed partial class MainView
         if (ReferenceEquals(_secondaryTab, tab)) RemoveSplitView();
         if (ReferenceEquals(SelectedTab, tab))
         {
-            PageContent.Content = null;
+            PresentNativePageContent(null);
             var replacement = OpenTabs.FirstOrDefault(item => !ReferenceEquals(item, tab));
             if (replacement is null)
             {
@@ -198,7 +198,7 @@ public sealed partial class MainView
         if (replaceExisting)
         {
             RemoveSplitView();
-            PageContent.Content = null;
+            PresentNativePageContent(null);
             foreach (var existing in OpenTabs.ToArray())
             {
                 OpenTabs.Remove(existing);
@@ -225,7 +225,9 @@ public sealed partial class MainView
         }
         if (source.Page is NewChatPage chat)
         {
-            var original = chat.CurrentConversation;
+            // This tab action is not consent to convert a temporary conversation.
+            // Ask the owning live page before any persistent read or new branch write.
+            var original = chat.CaptureSavedConversationForTabDuplication();
             var now = DateTimeOffset.UtcNow;
             var branch = original with
             {
@@ -263,55 +265,12 @@ public sealed partial class MainView
 
     private async Task GenerateTabNameAsync(WorkspaceTabViewModel tab)
     {
-        var oldName = tab.Title;
-        tab.Title = "Generating name…";
-        RefreshTopRailTabs();
-        var executionId = Guid.NewGuid();
-        var actionId = Guid.NewGuid();
-        var sink = App.Services?.GetService<IExecutionEventSink>();
-        var cancellationToken = tab.LifetimeToken;
-        var started = DateTimeOffset.UtcNow;
-        sink?.TryPublish(new ExecutionEvent(Guid.NewGuid(), executionId, actionId, null, ExecutionOrigin.Haven,
-            ExecutionActionType.ModelExecution, ExecutionActionStatus.Running, "Generate tab name with AI", null,
-            $"App: {tab.AppKey}; current title: {oldName}", "tabs", started, started, TabId: tab.SessionId));
-        try
+        if (await WorkspaceTabNameGeneration.GenerateAsync(tab, _ollama, _preferences.DefaultModel,
+            App.Services?.GetService<IExecutionEventSink>()))
         {
-            var models = await _ollama.GetModelsAsync(cancellationToken);
-            var model = models.FirstOrDefault(item => item.Name.Equals(_preferences.DefaultModel, StringComparison.OrdinalIgnoreCase)) ?? models.FirstOrDefault();
-            if (model is null) throw new InvalidOperationException("No configured model is available.");
-            var context = tab.Page is NewChatPage chat
-                ? $"App: {tab.AppKey}. Existing title: {oldName}. Conversation title: {chat.CurrentConversation.Title}."
-                : $"App: {tab.AppKey}. Existing title: {oldName}. Surface: {tab.Surface}.";
-            var answer = await _ollama.CompleteAsync(new OllamaChatRequest(model.Name,
-                [new OllamaMessage("user", context)], EffortLevel.Low,
-                "Return one concise tab name of at most six words. Return only the name."), cancellationToken);
-            var generated = answer.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.Trim().Trim('"', '\'', '.', ':');
-            if (string.IsNullOrWhiteSpace(generated)) throw new InvalidOperationException("The model returned an empty name.");
-            tab.Title = generated.Length <= 80 ? generated : generated[..80].TrimEnd() + "…";
-            var ended = DateTimeOffset.UtcNow;
-            sink?.TryPublish(new ExecutionEvent(Guid.NewGuid(), executionId, actionId, null, ExecutionOrigin.Haven,
-                ExecutionActionType.ModelExecution, ExecutionActionStatus.Completed, "Generate tab name with AI", null,
-                tab.Title, "tabs", ended, started, ended, TabId: tab.SessionId));
+            RefreshTopRailTabs();
+            QueueWorkspaceSessionSave();
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            var ended = DateTimeOffset.UtcNow;
-            sink?.TryPublish(new ExecutionEvent(Guid.NewGuid(), executionId, actionId, null, ExecutionOrigin.Haven,
-                ExecutionActionType.ModelExecution, ExecutionActionStatus.Cancelled, "Generate tab name with AI", null,
-                "Name generation was cancelled because the tab closed.", "tabs", ended, started, ended, TabId: tab.SessionId));
-            return;
-        }
-        catch (Exception ex)
-        {
-            tab.Title = oldName;
-            var ended = DateTimeOffset.UtcNow;
-            sink?.TryPublish(new ExecutionEvent(Guid.NewGuid(), executionId, actionId, null, ExecutionOrigin.Haven,
-                ExecutionActionType.ModelExecution, ExecutionActionStatus.Failed, "Generate tab name with AI", null,
-                SensitiveTextRedactor.Redact(ex.Message), "tabs", ended, started, ended, TabId: tab.SessionId,
-                Failure: new ExecutionFailure("TAB_NAME_GENERATION_FAILED", "Name generation failed", SensitiveTextRedactor.Redact(ex.Message))));
-        }
-        RefreshTopRailTabs();
-        QueueWorkspaceSessionSave();
     }
 
     private async Task CreateTabGroupAsync(WorkspaceTabViewModel anchor)
@@ -514,15 +473,16 @@ public sealed partial class MainView
 
     private sealed record WorkspaceWindowBoundsState(int X, int Y, double Width, double Height);
 
-    internal TabSessionSnapshot CreateTabSnapshot(WorkspaceTabViewModel tab) => CreateDetachedTabSnapshot(tab);
+    internal TabSessionSnapshot? CreateTabSnapshot(WorkspaceTabViewModel tab) => CreateDetachedTabSnapshot(tab);
 
-    internal static TabSessionSnapshot CreateDetachedTabSnapshot(WorkspaceTabViewModel tab) => new(
+    internal static TabSessionSnapshot? CreateDetachedTabSnapshot(WorkspaceTabViewModel tab) =>
+        tab.Page is NewChatPage { IsTemporary: true } or ChatPage { IsTemporary: true } ? null : new(
         tab.SessionId, tab.AppKey, tab.Title,
         CreateTabStateJson(tab), null, null,
         tab.GroupId, tab.IsPinned, tab.IsProtected, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow);
 
     internal IReadOnlyList<TabSessionSnapshot> CreateTabSnapshots() =>
-        OpenTabs.Select(CreateTabSnapshot).ToArray();
+        OpenTabs.Select(CreateTabSnapshot).OfType<TabSessionSnapshot>().ToArray();
 
     private static string CreateTabStateJson(WorkspaceTabViewModel tab) => JsonSerializer.Serialize(new
     {
@@ -571,7 +531,7 @@ public sealed partial class MainView
         if (ordered.Length == 0) return;
 
         RemoveSplitView();
-        PageContent.Content = null;
+        PresentNativePageContent(null);
         foreach (var existing in OpenTabs.ToArray()) { OpenTabs.Remove(existing); existing.Dispose(); }
         _selectedTab = null;
         _goPage = null;

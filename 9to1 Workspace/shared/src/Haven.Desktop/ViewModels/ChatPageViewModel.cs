@@ -25,7 +25,7 @@ namespace Haven.Desktop.ViewModels;
 /// <summary>
 /// Represents chat page view model and keeps its related state and behavior together.
 /// </summary>
-public sealed class ChatPageViewModel : ObservableObject
+public sealed partial class ChatPageViewModel : ObservableObject
 {
     /// <summary>
     /// Stores image extensions locally so this component can preserve the dependency, cache, or state between member calls.
@@ -49,6 +49,7 @@ public sealed class ChatPageViewModel : ObservableObject
     /// Stores ollama locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
     private readonly IOllamaClient _ollama;
+    private readonly OllamaWakeService? _ollamaWake;
     /// <summary>
     /// Stores sessions locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
@@ -99,6 +100,7 @@ public sealed class ChatPageViewModel : ObservableObject
     /// Stores selected model locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
     private ModelDescriptor? _selectedModel;
+    private long _modelSelectionRevision;
     /// <summary>
     /// Stores selected agent locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
@@ -231,7 +233,8 @@ public sealed class ChatPageViewModel : ObservableObject
         CapabilityPreflightService preflight,
         IWorkspaceStateRepository workspaceState,
         IProjectIntelligenceService projectIntelligence,
-        IContainerResourceRepository? containerResources = null)
+        IContainerResourceRepository? containerResources = null,
+        OllamaWakeService? ollamaWake = null)
     {
         Mode = mode;
         _conversations = conversations;
@@ -239,6 +242,7 @@ public sealed class ChatPageViewModel : ObservableObject
         _catalog = catalog;
         _capabilityRegistry = App.Services?.GetService<CapabilityRegistryService>();
         _ollama = ollama;
+        _ollamaWake = ollamaWake;
         _sessions = sessions;
         _preferences = preferences;
         _preflight = preflight;
@@ -251,7 +255,7 @@ public sealed class ChatPageViewModel : ObservableObject
         SendCommand = new AsyncRelayCommand(SendAsync, () => !IsSending && !string.IsNullOrWhiteSpace(Composer) && SelectedModel is not null);
         StopCommand = new RelayCommand(Stop, () => IsSending);
         NewChatCommand = new RelayCommand(NewChat);
-        ToggleTemporaryCommand = new RelayCommand(ToggleTemporary);
+        ToggleTemporaryCommand = new AsyncRelayCommand(ToggleTemporaryAsync);
         TogglePluginCommand = new RelayCommand<CapabilityItemViewModel>(TogglePlugin);
         SelectPluginCommand = new RelayCommand<CapabilityItemViewModel>(SelectPlugin);
         OpenPluginPickerCommand = new RelayCommand(OpenPluginPicker);
@@ -684,6 +688,7 @@ public sealed class ChatPageViewModel : ObservableObject
         set
         {
             if (!SetProperty(ref _selectedModel, value)) return;
+            _modelSelectionRevision++;
             SendCommand.RaiseCanExecuteChanged();
             if (value is not null) _preferences.SetModelDefaults(value.Name, SelectedEffort);
         }
@@ -723,6 +728,7 @@ public sealed class ChatPageViewModel : ObservableObject
         get => _selectedContainer;
         set
         {
+            if (!_suppressSelectionConversationUpdate && !ReferenceEquals(_selectedContainer, value)) DemandLegacyIdle();
             if (!SetProperty(ref _selectedContainer, value)) return;
             CancelLessonLoad();
             if (_selectedLesson is not null)
@@ -748,6 +754,7 @@ public sealed class ChatPageViewModel : ObservableObject
         set
         {
             if (value is not null && value.Definition.SubjectId != SelectedContainer?.Id) return;
+            if (!_suppressSelectionConversationUpdate && !ReferenceEquals(_selectedLesson, value)) DemandLegacyIdle();
             if (!SetProperty(ref _selectedLesson, value)) return;
             ApplySelectionToConversation(startNewWhenScopeChanges: true);
             RaiseStudyStateChanged();
@@ -800,7 +807,7 @@ public sealed class ChatPageViewModel : ObservableObject
     /// <summary>
     /// Gets or updates toggle temporary command, the bindable or domain state represented by this property.
     /// </summary>
-    public RelayCommand ToggleTemporaryCommand { get; }
+    public AsyncRelayCommand ToggleTemporaryCommand { get; }
     /// <summary>
     /// Gets or updates toggle plugin command, the bindable or domain state represented by this property.
     /// </summary>
@@ -1052,16 +1059,23 @@ public sealed class ChatPageViewModel : ObservableObject
     /// </summary>
     public async Task LoadConversationAsync(Guid id, CancellationToken cancellationToken)
     {
+        DemandLegacyIdle();
+        DemandTemporaryReplacementConsent();
+        var isOriginal = CapturePresentationGuard();
         var conversation = await _conversations.GetAsync(id, cancellationToken);
         if (conversation is null || conversation.Mode != Mode) return;
+        if (conversation.IsTemporary) throw new InvalidOperationException("Stored Temporary history cannot be restored as an ephemeral chat. It requires explicit recovery through its original storage owner.");
         if (Mode == HavenMode.Chat && conversation.Kind != ConversationKind.Chat) return;
         if (Mode == HavenMode.Study && conversation.Kind is not (ConversationKind.QuickChat or ConversationKind.LessonChat)) return;
 
-        Stop();
+        var history = await _conversations.GetMessagesAsync(id, cancellationToken);
+        if (!isOriginal()) throw new InvalidOperationException("The conversation changed during the load.");
+        DemandLegacyIdle();
+        ResetLegacyHistory();
         _conversation = conversation;
         IsTemporary = conversation.IsTemporary;
         Messages.Clear();
-        foreach (var message in await _conversations.GetMessagesAsync(id, cancellationToken))
+        foreach (var message in history)
             Messages.Add(new MessageBubbleViewModel(message, ShowConfidence));
 
         _suppressSelectionConversationUpdate = true;
@@ -1097,28 +1111,37 @@ public sealed class ChatPageViewModel : ObservableObject
     /// <summary>
     /// Performs refresh models asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    private async Task RefreshModelsAsync() => await RefreshModelsAsync(CancellationToken.None);
+    private async Task RefreshModelsAsync() { await RefreshModelsAsync(CancellationToken.None); }
 
     /// <summary>
     /// Performs refresh models asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    private async Task RefreshModelsAsync(CancellationToken cancellationToken)
+    private async Task<bool> RefreshModelsAsync(CancellationToken cancellationToken, bool preserveSelectedModel = false)
     {
-        var selectedName = SelectedModel?.Name ?? _preferences.DefaultModel;
+        var previousSelection = SelectedModel;
+        var selectionRevision = _modelSelectionRevision;
+        var selectedName = previousSelection?.Name ?? _preferences.DefaultModel;
         Models.Clear();
         try
         {
             foreach (var model in await _ollama.GetModelsAsync(cancellationToken)) Models.Add(model);
-            SelectedModel = Models.FirstOrDefault(model => model.Name == selectedName) ?? Models.FirstOrDefault();
+            if (!IsModelSelectionCurrent(selectionRevision)) return false;
+            if (!preserveSelectedModel)
+                SelectedModel = Models.FirstOrDefault(model => model.Name.Equals(selectedName, StringComparison.OrdinalIgnoreCase))
+                    ?? Models.FirstOrDefault();
             Status = Models.Count == 0 ? "Ollama is running, but no models are installed." : $"{Models.Count} local model{(Models.Count == 1 ? "" : "s")} available";
+            return true;
         }
         catch (Exception ex)
         {
-            SelectedModel = string.IsNullOrWhiteSpace(selectedName) || selectedName.Contains(':', StringComparison.Ordinal)
-                ? null
-                : new ModelDescriptor(selectedName, 0, "Ollama", string.Empty, string.Empty,
-                    new HashSet<ToolCapability>(), DateTimeOffset.MinValue);
+            if (!IsModelSelectionCurrent(selectionRevision)) return false;
+            SelectedModel = previousSelection ?? (string.IsNullOrWhiteSpace(selectedName) ||
+                (_ollamaWake ?? App.Services?.GetService<OllamaWakeService>())?.OwnsModel(selectedName) != true
+                    ? null
+                    : new ModelDescriptor(selectedName, 0, "Ollama", string.Empty, string.Empty,
+                        new HashSet<ToolCapability>(), DateTimeOffset.MinValue));
             Status = $"Ollama unavailable: {ex.Message}";
+            return false;
         }
     }
 
@@ -1127,8 +1150,12 @@ public sealed class ChatPageViewModel : ObservableObject
     /// </summary>
     private async Task SendAsync()
     {
+        DemandLegacyIdle();
+        var originalPresentation = CapturePresentationGuard();
         if (SelectedModel is null || string.IsNullOrWhiteSpace(Composer)) return;
         if (!await EnsureSelectedModelAvailableAsync()) return;
+        if (!originalPresentation()) throw new InvalidOperationException("The chat changed while preparing the request.");
+        DemandLegacyIdle();
         var permissionApproved = _approvedToolPermissionOnce;
         _approvedToolPermissionOnce = false;
         var originalPrompt = Composer.Trim();
@@ -1154,11 +1181,7 @@ public sealed class ChatPageViewModel : ObservableObject
             await RegisterContextAsync(prompt);
             return;
         }
-        if (_preferences.AutoCompactContext && ContextPercent >= _preferences.CompactAtPercent)
-            await CompactContextAsync(true);
-        Composer = string.Empty;
-        SuggestedActions = [];
-        PendingPlanTitle = null;
+        DemandLegacyIdle();
         _sendCancellation = new CancellationTokenSource();
         IsSending = true;
         EditStep = 0;
@@ -1173,7 +1196,23 @@ public sealed class ChatPageViewModel : ObservableObject
             var prepared = await PrepareAttachmentAsync(prompt, _sendCancellation.Token);
             prepared = await AddGroupResourceImagesAsync(prepared, _sendCancellation.Token);
             if (Messages.Count == 0)
-                _conversation = NewConversation(_conversation.CreatedAt) with { Id = _conversation.Id, Title = BuildTitle(prompt), IsTemporary = IsTemporary };
+                _conversation = NewConversation(_conversation.CreatedAt) with { Id = _conversation.Id, Title = BuildTitle(prompt), IsTemporary = IsTemporary, SpaceId = _conversation.SpaceId };
+            var generationOptions = _preferences.GenerationOptions;
+            if (_conversation.IsTemporary)
+            {
+                var allowMemory = await ChooseTemporaryMemoryReadAsync(_sendCancellation.Token);
+                if (allowMemory is null) { Status = "Message canceled; your draft has been kept."; return; }
+                generationOptions = generationOptions with
+                {
+                    TemporaryMemoryReadChoice = _sessions.RecordTemporaryMemoryReadChoice(
+                        _conversation, prepared.Prompt, _sendCancellation.Token, allowMemory.Value)
+                };
+            }
+            _sendCancellation.Token.ThrowIfCancellationRequested();
+            if (Composer.Trim() != originalPrompt) throw new InvalidOperationException("The draft changed while preparing this request. Review it before sending.");
+            Composer = string.Empty;
+            if (_preferences.AutoCompactContext && ContextPercent >= _preferences.CompactAtPercent)
+                await CompactContextAsync(true);
             var active = _registeredCapabilities
                 .Where(capability => Plugins.Any(item => item.IsActive && item.Name.Equals(capability.Name, StringComparison.OrdinalIgnoreCase)))
                 .ToArray();
@@ -1188,14 +1227,15 @@ public sealed class ChatPageViewModel : ObservableObject
             var deltaBuffer = new StringBuilder();
             var flushTimer = Task.Delay(50, _sendCancellation.Token);
 
-            await foreach (var item in _sessions.SendAsync(
+            await foreach (var item in _sessions.SendWithTransientHistoryAsync(
                                _conversation, prepared.Prompt, model, SelectedEffort, active, agent, agentInstructions,
                                SelectedDuo, SelectedContainer?.RootPath, containerContext, containerInstructions,
-                               prepared.Images, _sendCancellation.Token, activePrompts, registeredContext, _preferences.GenerationOptions,
+                               prepared.Images, _sendCancellation.Token, activePrompts, registeredContext, generationOptions,
                                permissionApproved ? PermissionMode.FullAccess : _preferences.FilePermission,
                                permissionApproved ? PermissionMode.FullAccess : _preferences.CommandPermission,
                                permissionApproved ? PermissionMode.FullAccess : _preferences.BrowserPermission,
-                               availableCapabilities: _registeredCapabilities))
+                               availableCapabilities: _registeredCapabilities,
+                               transientHistory: _conversation.IsTemporary ? Messages.Where(message => !message.IsCompacted && message.Role is MessageRole.User or MessageRole.Assistant).Select(message => message.ToMessage(_conversation.Id)).ToArray() : null))
             {
                 switch (item.Kind)
                 {
@@ -1267,10 +1307,7 @@ public sealed class ChatPageViewModel : ObservableObject
             }
             if (completedMessage is not null && streaming is not null && !IsTemporary)
             {
-                var metadata = streaming.ConfidenceScore is null
-                    ? null
-                    : JsonSerializer.Serialize(new { confidence = streaming.ConfidenceScore });
-                await _conversations.AddMessageAsync(completedMessage with { Content = streaming.Content, MetadataJson = metadata }, _sendCancellation.Token);
+                await _conversations.AddMessageAsync(streaming.ToMessage(_conversation.Id), _sendCancellation.Token);
             }
             if (!Status.StartsWith("Model preflight", StringComparison.Ordinal)) Status = "Ready";
             HasErrorsToResolve = false;
@@ -1296,26 +1333,34 @@ public sealed class ChatPageViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Makes a local model usable immediately before a send. Provider-qualified
-    /// names (for example, <c>openai:gpt-4.1</c>) are cloud models and therefore
-    /// bypass this local Ollama check entirely.
+    /// Checks that the current selection still owns this pending availability check.
+    /// A newer user choice, including A-to-B-to-A, must not be overwritten.
     /// </summary>
+    private bool IsModelSelectionCurrent(long revision)
+    {
+        if (_modelSelectionRevision == revision) return true;
+        IsOllamaOfflineWarningVisible = false;
+        Status = "Model selection changed while checking availability. Send again with the current selection.";
+        return false;
+    }
+
     private async Task<bool> EnsureSelectedModelAvailableAsync()
     {
         var selectedName = SelectedModel?.Name;
-        if (string.IsNullOrWhiteSpace(selectedName) || selectedName.Contains(':', StringComparison.Ordinal))
+        var selectionRevision = _modelSelectionRevision;
+        var wake = _ollamaWake ?? App.Services?.GetService<OllamaWakeService>();
+        if (string.IsNullOrWhiteSpace(selectedName) || wake is null || !wake.OwnsModel(selectedName))
         {
             IsOllamaOfflineWarningVisible = false;
             return true;
         }
 
-        var wake = App.Services?.GetService<OllamaWakeService>();
-        if (wake is null) return true;
-
         try
         {
             using var probe = new CancellationTokenSource(TimeSpan.FromSeconds(2));
-            if (await wake.IsAvailableAsync(probe.Token))
+            var available = await wake.IsAvailableAsync(probe.Token);
+            if (!IsModelSelectionCurrent(selectionRevision)) return false;
+            if (available)
             {
                 IsOllamaOfflineWarningVisible = false;
                 return true;
@@ -1326,6 +1371,7 @@ public sealed class ChatPageViewModel : ObservableObject
             // A timed-out probe is the same user-facing state as an offline endpoint.
         }
 
+        if (!IsModelSelectionCurrent(selectionRevision)) return false;
         if (!_preferences.AutoWakeOllama)
         {
             IsOllamaOfflineWarningVisible = true;
@@ -1340,22 +1386,41 @@ public sealed class ChatPageViewModel : ObservableObject
         try
         {
             using var wakeTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(18));
-            if (!await wake.EnsureAvailableAsync(wakeTimeout.Token))
+            var awakened = await wake.EnsureAvailableAsync(wakeTimeout.Token);
+            if (!IsModelSelectionCurrent(selectionRevision)) return false;
+            if (!awakened)
             {
                 IsOllamaOfflineWarningVisible = true;
                 Status = "Ollama could not be started. Open Ollama, then try again.";
                 return false;
             }
 
-            await RefreshModelsAsync();
-            SelectedModel = Models.FirstOrDefault(model =>
-                model.Name.Equals(selectedName, StringComparison.OrdinalIgnoreCase)) ?? SelectedModel;
+            // A responsive process does not establish model discovery or the
+            // user's requested model. Keep that preference during revalidation;
+            // another returned model is not permission to switch this request.
+            var discovered = await RefreshModelsAsync(wakeTimeout.Token, preserveSelectedModel: true);
+            if (!IsModelSelectionCurrent(selectionRevision)) return false;
+            if (!discovered)
+            {
+                IsOllamaOfflineWarningVisible = true;
+                return false; // Preserve the actual discovery failure status.
+            }
+            var requested = Models.FirstOrDefault(model =>
+                model.Name.Equals(selectedName, StringComparison.OrdinalIgnoreCase));
             IsOllamaOfflineWarningVisible = false;
+            if (requested is null)
+            {
+                Status = Models.Count == 0 ? "Ollama is running, but no models are installed."
+                    : $"Ollama is running, but the selected model '{selectedName}' is not installed. Choose an available model.";
+                return false;
+            }
+            SelectedModel = requested;
             Status = "Ollama is ready.";
             return true;
         }
         catch (OperationCanceledException)
         {
+            if (!IsModelSelectionCurrent(selectionRevision)) return false;
             IsOllamaOfflineWarningVisible = true;
             Status = "Ollama did not become ready in time. Open Ollama, then try again.";
             return false;
@@ -1419,7 +1484,9 @@ public sealed class ChatPageViewModel : ObservableObject
     /// </summary>
     public void NewChat()
     {
-        Stop();
+        DemandLegacyIdle();
+        DemandTemporaryReplacementConsent();
+        ResetLegacyHistory();
         Messages.Clear();
         IsComputerPermissionPending = false;
         InlineQuestion = null;
@@ -1483,11 +1550,7 @@ public sealed class ChatPageViewModel : ObservableObject
     /// <summary>
     /// Performs the toggle temporary step owned by this component.
     /// </summary>
-    private void ToggleTemporary()
-    {
-        IsTemporary = !IsTemporary;
-        ConversationChanged?.Invoke(this, EventArgs.Empty);
-    }
+    private Task ToggleTemporaryAsync() => SetTemporaryAsync(!IsTemporary);
 
     /// <summary>
     /// Performs the toggle plugin step owned by this component.
@@ -1950,7 +2013,7 @@ public sealed class ChatPageViewModel : ObservableObject
             switch (match.Groups["name"].Value.ToLowerInvariant())
             {
                 case "branch": await BranchCurrentAsync(); break;
-                case "temporary": ToggleTemporary(); break;
+                case "temporary": await ToggleTemporaryAsync(); break;
                 case "compact": await CompactContextAsync(false); break;
                 case "archive": await ArchiveCurrentAsync(); break;
                 case "new" or "clear": NewChat(); break;
@@ -1974,6 +2037,30 @@ public sealed class ChatPageViewModel : ObservableObject
     /// </summary>
     public async Task BranchCurrentAsync()
     {
+        DemandLegacyIdle();
+        if (_conversation.IsTemporary)
+        {
+            var temporaryBranch = _conversation with { Id = Guid.NewGuid(), Title = $"Branch of {_conversation.Title}",
+                ParentConversationId = _conversation.Id, IsPinned = false, IsArchived = false,
+                CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+            var history = Messages.Select(message => message.ToMessage(_conversation.Id) with
+                { Id = Guid.NewGuid(), ConversationId = temporaryBranch.Id }).ToArray();
+            var context = _temporaryContextEntries.Select(entry => entry with
+                { Id = Guid.NewGuid(), ConversationId = temporaryBranch.Id }).ToArray();
+            _conversation = temporaryBranch;
+            _presentationGeneration++;
+            Messages.Clear();
+            foreach (var message in history) Messages.Add(new MessageBubbleViewModel(message, ShowConfidence));
+            _temporaryContextEntries.Clear();
+            _temporaryContextEntries.AddRange(context);
+            RaiseMessageStateChanged();
+            RaisePropertyChanged(nameof(ConversationId));
+            RaisePropertyChanged(nameof(ConversationTitle));
+            await UpdateContextUsageAsync(CancellationToken.None);
+            Status = "Temporary branch created in this session. It has not been saved.";
+            ConversationChanged?.Invoke(this, EventArgs.Empty);
+            return;
+        }
         if (Messages.Count == 0)
         {
             var sourceSpaceId = _conversation.SpaceId;
@@ -2004,6 +2091,7 @@ public sealed class ChatPageViewModel : ObservableObject
                 await _conversations.AddContextEntryAsync(entry with { Id = Guid.NewGuid(), ConversationId = branch.Id }, CancellationToken.None);
         }
         _conversation = branch;
+        _presentationGeneration++;
         Messages.Clear();
         foreach (var message in await _conversations.GetMessagesAsync(branch.Id, CancellationToken.None))
             Messages.Add(new MessageBubbleViewModel(message, ShowConfidence));
@@ -2020,6 +2108,8 @@ public sealed class ChatPageViewModel : ObservableObject
     /// </summary>
     public async Task ArchiveCurrentAsync()
     {
+        DemandLegacyIdle();
+        if (_conversation.IsTemporary) throw new InvalidOperationException("A temporary chat cannot be archived. Save it locally first.");
         if (Messages.Count == 0) return;
         if (!_conversation.IsTemporary)
             await _conversations.UpsertConversationAsync(_conversation with { IsArchived = true, UpdatedAt = DateTimeOffset.UtcNow }, CancellationToken.None);
@@ -2054,11 +2144,14 @@ public sealed class ChatPageViewModel : ObservableObject
     /// </summary>
     private async Task RegisterContextAsync(string content)
     {
+        DemandLegacyIdle();
         var now = DateTimeOffset.UtcNow;
         if (Messages.Count == 0) _conversation = _conversation with { Title = BuildTitle(content), UpdatedAt = now };
         if (_conversation.IsTemporary)
         {
             _contextSummary = string.IsNullOrWhiteSpace(_contextSummary) ? content : _contextSummary + "\n" + content;
+            _temporaryContextEntries.Add(new ConversationContextEntry(Guid.NewGuid(), _conversation.Id,
+                ContextEntryKind.Registered, "Registered context", content, string.Empty, now));
         }
         else
         {
@@ -2093,6 +2186,9 @@ public sealed class ChatPageViewModel : ObservableObject
     /// </summary>
     private async Task CompactContextAsync(bool automatic)
     {
+        if (!automatic) DemandLegacyIdle();
+        var compactOriginal = _conversation;
+        var compactGeneration = _presentationGeneration;
         if (SelectedModel is null) return;
         IReadOnlyList<ChatMessage> contextMessages;
         if (_conversation.IsTemporary)
@@ -2123,7 +2219,13 @@ public sealed class ChatPageViewModel : ObservableObject
         {
             summary = string.Join("\n", compactable.Select(message => $"- {message.Role}: {Truncate(message.Content, 320)}"));
         }
+        if (_conversation != compactOriginal || _presentationGeneration != compactGeneration || _changingLegacyType || _pendingLegacySave is not null)
+            throw new InvalidOperationException("The chat changed during context compaction.");
         var now = DateTimeOffset.UtcNow;
+        if (_conversation.IsTemporary)
+            _temporaryContextEntries.Add(new ConversationContextEntry(Guid.NewGuid(), _conversation.Id,
+                ContextEntryKind.CompactSummary, automatic ? "Automatic compact summary" : "Manual compact summary",
+                summary, $"Compacted {compactable.Length} messages at {now:O}", now));
         _contextSummary = string.IsNullOrWhiteSpace(_contextSummary) ? summary : _contextSummary + "\n\n" + summary;
         if (!_conversation.IsTemporary)
         {
@@ -2136,7 +2238,7 @@ public sealed class ChatPageViewModel : ObservableObject
         var ids = compactable.Select(message => message.Id).ToHashSet();
         foreach (var bubble in Messages.Where(item => ids.Contains(item.Id))) bubble.MarkCompacted();
         await UpdateContextUsageAsync(CancellationToken.None);
-        Status = $"Compacted {compactable.Length} older messages into a durable summary.";
+        Status = $"Compacted {compactable.Length} older messages into a {(_conversation.IsTemporary ? "session-only" : "saved")} summary.";
     }
 
     /// <summary>
@@ -2447,6 +2549,7 @@ public sealed class ChatPageViewModel : ObservableObject
     /// </summary>
     private void FinaliseAssistant(MessageBubbleViewModel streaming, ChatMessage? message)
     {
+        if (message is not null) streaming.RetainOriginalMessage(message);
         var content = streaming.Content;
         var match = Regex.Match(content, @"<haven-question>(?<json>[\s\S]*?)</haven-question>", RegexOptions.IgnoreCase);
         if (match.Success)
@@ -2614,7 +2717,7 @@ public sealed class ChatPageViewModel : ObservableObject
     }
 
     /// <summary>Temporary-chat is a setup action and therefore appears only before the first turn.</summary>
-    public bool ShowTemporaryHeaderAction => !HasMessages;
+    public bool ShowTemporaryHeaderAction => IsTemporary || !HasMessages;
 
     /// <summary>Context usage becomes meaningful after the conversation contains at least one turn.</summary>
     public bool ShowContextHeaderWidget => HasMessages;
@@ -2668,9 +2771,11 @@ public sealed class MessageBubbleViewModel : ObservableObject
     /// Stores is compacted locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
     private bool _isCompacted;
+    private ChatMessage? _originalMessage;
 
     public MessageBubbleViewModel(ChatMessage message, bool showConfidence = true)
     {
+        _originalMessage = message;
         Id = message.Id;
         Role = message.Role;
         _content = message.Content;
@@ -2861,8 +2966,20 @@ public sealed class MessageBubbleViewModel : ObservableObject
     /// <summary>
     /// Performs the to message step owned by this component.
     /// </summary>
-    public ChatMessage ToMessage(Guid conversationId) => new(Id, conversationId, Role, Content, AgentName, ModelName,
-        _confidenceScore is null ? null : JsonSerializer.Serialize(new { confidence = _confidenceScore }), CreatedAt, IsCompacted);
+    public void RetainOriginalMessage(ChatMessage message)
+    {
+        if (message.Id != Id || message.Role != Role) throw new InvalidOperationException("The completed message does not own this bubble.");
+        _originalMessage = message;
+    }
+
+    public ChatMessage ToMessage(Guid conversationId)
+    {
+        var metadata = _originalMessage?.Metadata.ToDictionary(pair => pair.Key, pair => pair.Value) ?? [];
+        if (_confidenceScore is { } confidence) metadata["confidence"] = JsonSerializer.SerializeToElement(confidence);
+        var json = metadata.Count == 0 ? _originalMessage?.MetadataJson : JsonSerializer.Serialize(metadata);
+        return new(Id, conversationId, Role, Content, AgentName, ModelName, json,
+            _originalMessage?.CreatedAt ?? CreatedAt, IsCompacted);
+    }
     /// <summary>
     /// Performs the mark complete step owned by this component.
     /// </summary>

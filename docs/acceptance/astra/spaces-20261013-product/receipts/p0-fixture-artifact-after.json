@@ -1,0 +1,55 @@
+{
+  "status": "Artifact/test-only changes; compiled no-capture CLI controls PASS2/2 and independent wrapper checks PASS5/5; no real-product acceptance",
+  "timeUtc": "2026-10-13T22:19:43.018271+00:00",
+  "originalEmbeddedPngHashesUnchanged": [
+    "316b5ef587ff73c32754f73452ea8c0e44352044cf7c417f9fa3f8c2e4f261da"
+  ],
+  "staticChecks": [
+    "wrapper banner precedes image",
+    "embedded PNG bytes equal immutable original",
+    "test project XML valid and non-publishable",
+    "explicit fixture opt-in precedes input/output work",
+    "normal Web test-source exclusion retained",
+    "dynamic image/replacement metadata also explicitly fixture-only",
+    "missing opt-in writes deterministic stderr and exits2 without throwing"
+  ],
+  "files": [
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/Program.cs",
+      "sha256": "5d1c860cf9ae2ac8c24ea5c1403e87a322ffdf92cb34f5314a2749a8da2869f5"
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/BrowserSpaces.Visual.csproj",
+      "sha256": "8e2959c2a4443ab174e476710e1aa7622939c881d8c3fd7530834a787017ee32"
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/VisualFixtureReport.cs",
+      "sha256": "6f407952003eebeea5dc442e6fd3119fa49579c0c0f3945504b185f55ef21b05"
+    },
+    {
+      "path": "apps/Web/Spaces/Tests/Visual/README.md",
+      "sha256": "20f05eb99077bef3363026f3a9ba9ecee52c3187333bfcc019e9d6f86a673586"
+    },
+    {
+      "path": "docs/acceptance/astra/spaces-20261013-product/visual-comparison.html",
+      "sha256": "8fe2110d0618732fbb1f97b686e1f0f6699db52359f3b5dd4e968d75e692e9ef"
+    },
+    {
+      "path": "audit-workspace/visual-comparison/index.html",
+      "sha256": "8fe2110d0618732fbb1f97b686e1f0f6699db52359f3b5dd4e968d75e692e9ef"
+    },
+    {
+      "path": "docs/acceptance/astra/spaces-20261013-product/fixture-provenance.md",
+      "sha256": "82597454786ba62159143e5523ec064db33c2b7adca2454d1eaeeac94d8b0b06"
+    }
+  ],
+  "sourceScope": "Current working-tree before/after custody, including previously uncommitted UI test work; not a staged or published source attestation. P0-only staging source hashes are recorded separately in prepared/p0-fixture-only/manifest.json.",
+  "qualificationTimeUtc": "2026-10-13T22:28:17.483378+00:00",
+  "executableQualification": {
+    "sourceScope": "Prepared HEAD+P0 Program; existing product dependency assemblies reused; no capture or backend construction",
+    "receipt": "evidence/p0-fixture-cli-controls/receipt.json",
+    "sha256": "62c1ac313ce07cee076b29b697c25ab07e9659cfccc56c9bf6efcaa08c006d46",
+    "checksPassed": 2
+  },
+  "sourceReceipt": "P0-FIXTURE-ARTIFACT-AFTER.json"
+}
