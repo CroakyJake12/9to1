@@ -1,10 +1,8 @@
-import {readFile,writeFile,mkdir} from 'node:fs/promises';
+import {readFile} from 'node:fs/promises';
 import {DatabaseSync} from 'node:sqlite';
-import {randomUUID} from 'node:crypto';
-import path from 'node:path';
 import {request} from './client.mjs';
 import {selectShift} from './policy.mjs';
-import {git,sha,verifyArtifactHashes} from './git.mjs';
+import {receiveHandover} from './receiver.mjs';
 const [command,configPath,arg,arg2]=process.argv.slice(2);const c=JSON.parse(await readFile(configPath,'utf8'));
 if(command==='state')console.log(JSON.stringify(await request(c,'state'),null,2));
 else if(command==='policy')console.log(JSON.stringify({configured:!!(await request(c,'policy',{policy:c.schedule})).policy}));
@@ -16,16 +14,8 @@ else if(command==='check-local'||command==='check-task'){
   if(command==='check-task'&&!s.tasks.some(t=>t.id===arg2&&t.owner==='local'&&t.fence===Number(arg)&&t.status==='WORKING'))throw new Error('Task ownership not established');
   console.log('Local ownership and schedule validated');
 }else if(command==='receive'){
-  const state=await request(c,'state');const h=state.handovers.find(h=>h.id===arg&&h.to===(c.actor??'local')&&h.status==='READY');
-  if(!h)throw new Error('No READY handover for this receiver');
-  await git(c.repository,['fetch','--no-tags',c.remote??'origin',`refs/heads/${h.source.branch}`]);
-  const fetched=(await git(c.repository,['rev-parse','FETCH_HEAD'])).trim();if(fetched!==h.source.sha)throw new Error('Remote handover source changed');
-  const root=path.resolve(c.worktrees,'received-'+randomUUID());await mkdir(path.dirname(root),{recursive:true});await git(c.repository,['worktree','add','--detach',root,h.source.sha]);
-  if(await sha(root)!==h.source.sha)throw new Error('Receiving reconstruction failed');
-  const artifact_hashes=await verifyArtifactHashes(root,h.source.sha,h.artifact_hashes??h.source.artifact_hashes??{});
-  const result=await request(c,'ack',{handover_id:h.id,revision:h.revision,reconstructed_sha:await sha(root)});
-  await writeFile(path.join(c.checkpoints,'received-'+h.id+'.json'),JSON.stringify({source:h.source,root,artifact_hashes,ack:result.handovers.find(x=>x.id===h.id).ack},null,2));
-  console.log(JSON.stringify({acknowledged:h.id,sha:h.source.sha,root}));
+  const received=await receiveHandover(c,arg);const r=received.receipt;
+  console.log(JSON.stringify({acknowledged:r.handover_id,sha:r.source.sha,root:r.root}));
 }else if(command==='heartbeat'){
   const fence=Number(arg);if(!Number.isSafeInteger(fence))throw new Error('Exact lease fence required');
   await request(c,'heartbeat',{fence});const timer=setInterval(async()=>{try{await request(c,'heartbeat',{fence});}catch(e){console.error(e.message);clearInterval(timer);process.exitCode=2;}},30000);

@@ -7,6 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { selectShift } from './policy.mjs';
 import { request } from './client.mjs';
+import {receiveHandover} from './receiver.mjs';
 import { createTaskWorktree, preserve, publish, git, sha, restoreOwnedCheckpoint,verifyEmbeddedCheckpoint } from './git.mjs';
 import {processIdentity,sameProcessBirth} from './worker-guard.mjs';
 import {deliveryProgress} from './progress.mjs';
@@ -22,7 +23,7 @@ export class LocalRunner {
   constructor(config) {
     this.config=config;this.db=new DatabaseSync(config.state_db);
     this.db.exec('PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value TEXT NOT NULL); CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY, at TEXT NOT NULL, event TEXT NOT NULL, value TEXT NOT NULL)');
-    this.presence=this.get('presence')??{home:false,paused:false};this.remote=null;this.active=null;this.busy=false;this.draining=false;this.error=null;this.strata=null;
+    this.presence=this.get('presence')??{home:false,paused:false};this.remote=null;this.active=null;this.busy=false;this.draining=false;this.scheduledDrain=false;this.error=null;this.strata=null;
     this.recovery=this.get('active');if(this.recovery){this.draining=true;this.error='Interrupted worker requires preserved-source recovery; replacement worker is blocked';}
     this.csrf=randomUUID();this.server=null;this.retryAt=0;
   }
@@ -65,7 +66,7 @@ export class LocalRunner {
     this.put('presence',this.presence);this.event('CONTROL',{action});
     if(['home','away','pause','resume'].includes(action))await this.syncWake();
     if(['away','pause','checkpoint','handover'].includes(action)){
-      this.draining=true;
+      this.draining=true;this.scheduledDrain=false;
       if(this.active){const c=await preserve(this.active.root,this.config.checkpoints,randomUUID());this.put('checkpoint',c);}
       if(this.remote?.lease?.worker==='local')await request(this.config,'checkpoint',{});
       if(action==='handover')return await this.handover();
@@ -192,6 +193,22 @@ export class LocalRunner {
       this.error=e.message;
     }finally{this.active=null;this.put('active',this.recovery??null);this.event('WORKER_FINISHED',{task:task.id,status});}
   }
+  async receiveReturn(planned){
+    if(this.scheduledDrain&&planned.shift==='local'&&this.presence.home&&!this.presence.paused&&!this.active&&!this.recovery){this.draining=false;this.scheduledDrain=false;this.event('SCHEDULED_LOCAL_RETURN_ELIGIBLE');}
+    if(planned.shift!=='local'||!this.presence.home||this.presence.paused||this.active||this.recovery||this.draining)return null;
+    const pending=this.get('receiving');
+    const incoming=this.remote.handovers.filter(h=>h.to==='local'&&h.from==='cloud'&&h.status==='READY').sort((a,b)=>b.revision-a.revision)[0]
+      ??(pending?this.remote.handovers.find(h=>h.id===pending.id&&h.status==='ACKNOWLEDGED'):null);
+    if(!incoming)return null;
+    const expected=pending??{id:incoming.id,revision:incoming.revision,sha:incoming.source.sha};
+    if(expected.id!==incoming.id)throw new Error('A newer return supersedes the pending reconstruction; reconcile preserved source');
+    this.put('receiving',expected);this.event('AUTOMATIC_RETURN_RECEIVE_STARTED',{handover:incoming.id,revision:incoming.revision});
+    const received=await receiveHandover(this.config,incoming.id,{revision:expected.revision,sha:expected.sha,advanceMain:true,
+      beforeAck:()=>{const current=selectShift(this.config.schedule,{...this.presence,healthy:true});if(current.shift!=='local'||!this.presence.home||this.presence.paused||this.active||this.recovery||this.draining)throw new Error('Local receive shift or writer gate changed');},
+      onEvent:(event,value)=>this.event(event,value)});
+    this.put('received',received.receipt);this.put('receiving',null);this.remote=received.state;this.error=null;
+    this.event('AUTOMATIC_RETURN_ACK_CONFIRMED',{handover:incoming.id,revision:incoming.revision,sha:incoming.source.sha,receipt:received.receiptFile});return received;
+  }
   async tick(){
     if(this.busy)return;this.busy=true;
     try{
@@ -201,13 +218,14 @@ export class LocalRunner {
       const previousFence=this.remote?.lease?.worker==='local'?this.remote.lease.fence:null;
       const observed=await request(this.config,'presence',{...this.presence,healthy:true,local_permitted:planned.shift==='local',local_until:planned.shift==='local'?Date.now()+30000:0});
       if(previousFence!==null)this.acceptAcknowledgedTransfer(observed,previousFence);this.remote=observed;
+      await this.receiveReturn(planned);
       let lease=this.remote.lease;
       if(lease?.expires_at<=Date.now()&&this.config.supervisor_managed&&planned.shift==='local'&&!this.presence.paused&&!this.active&&!this.recovery&&!this.remote.tasks.some(t=>t.owner==='local'&&['WORKING','RECOVERY_REQUIRED','READY'].includes(t.status))&&!this.remote.handovers.some(h=>h.status==='READY')){
         this.remote=await request(this.config,'acquire',{});lease=this.remote.lease;this.draining=false;this.event('EXPIRED_LEASE_RECOVERED',{fence:lease.fence});
       }
       if(lease?.worker==='local')this.remote=await request(this.config,'heartbeat',{fence:lease.fence});
       if(planned.shift!=='local'||this.presence.paused||this.recovery||this.draining||(this.remote.checkpoint_requested&&lease?.worker==='local')||this.remote.handovers.some(h=>h.status==='READY'&&h.from==='local')){
-        if(planned.shift!=='local'||this.presence.paused)this.draining=true;
+        if(planned.shift!=='local'||this.presence.paused){if(planned.shift!=='local'&&!this.presence.paused&&!this.draining)this.scheduledDrain=true;this.draining=true;}
         if(!this.active&&!this.recovery&&lease?.worker==='local'){
           const owned=this.remote.tasks.filter(t=>t.owner==='local');
           if(!owned.length)this.remote=await request(this.config,'release',{fence:lease.fence});
