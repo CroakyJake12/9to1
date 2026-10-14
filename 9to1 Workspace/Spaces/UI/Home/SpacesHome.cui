@@ -34,7 +34,7 @@
             <Button id="create-space" action="spaces.create" content="New Space" accessible-name="Create a custom Space" />
             <Text id="first-party-heading" text="First-party" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
 
-            <Repeat Source="{Binding spaces.builtIns}" As="space" Key="{Binding space.id}">
+            <Repeat id="first-party-spaces" Source="{Binding spaces.builtIns}" As="space" Key="{Binding space.id}">
               <Container id="first-party-space" definition="true" Type="Vertical Stack">
                 <Button id="first-party-space-open" action="spaces.open" action-argument="{Binding space.id}" accessible-name="Open {Binding space.name}">
                   <Text id="first-party-space-name" text="{Binding space.name}" />
@@ -45,7 +45,7 @@
 
             <Text id="custom-spaces-heading" text="Your Spaces" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
 
-            <Repeat Source="{Binding spaces.customSpaces}" As="space" Key="{Binding space.id}">
+            <Repeat id="custom-spaces" Source="{Binding spaces.customSpaces}" As="space" Key="{Binding space.id}">
               <Container id="custom-space-row" definition="true" role="listitem" accessible-name="{Binding space.name}, custom Space" Type="Vertical Stack">
                 <Button id="open-custom-space" action="spaces.open" action-argument="{Binding space.id}" accessible-name="Open {Binding space.name}">
                   <Text id="custom-space-name" text="{Binding space.name}" />
@@ -71,7 +71,7 @@
             <Container id="space-context" accessible-name="Space context and policy" background="{Resource CuiPanelBrush}" corner-radius="12" padding="16" Type="Vertical Stack" CellGap="8">
               <Text id="space-context-heading" text="Context" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
 
-              <Repeat Source="{Binding selection.contextReferences}" As="reference" Key="{Binding reference.id}">
+              <Repeat id="space-context-items" Source="{Binding selection.contextReferences}" As="reference" Key="{Binding reference.id}">
                 <Container id="space-context-item" definition="true" role="listitem" accessible-name="{Binding reference.label}" Type="Vertical Stack">
                   <Text id="space-context-item-label" text="{Binding reference.label}" />
                   <Text id="space-context-item-permission" text="{Binding reference.permissionLabel}" foreground="{Resource CuiTextSoftBrush}" />
@@ -89,7 +89,7 @@
               <Text id="space-memory-scope" text="{Binding selection.memoryScopeLabel}" accessible-name="Memory scope" />
 
               <Text id="space-capabilities-heading" text="Capabilities" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
-              <Repeat Source="{Binding selection.capabilities}" As="capability" Key="{Binding capability.id}">
+              <Repeat id="space-capabilities" Source="{Binding selection.capabilities}" As="capability" Key="{Binding capability.id}">
                 <Container id="space-capability" definition="true" Type="Vertical Stack">
                   <Text id="space-capability-label" text="{Binding capability.label}" />
                 </Container>

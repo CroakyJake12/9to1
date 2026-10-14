@@ -8,6 +8,13 @@
   <ItemGroup>
     <Compile Remove="Tests\**\*.cs" />
     <ProjectReference Include="..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
+    <!--
+      CUI Runtime supplies the binding interfaces the Chat Space projection implements
+      (ICuiBindingContext, ICuiActionDispatcher, ICuiRepeatItemBindingContext, CuiViewModel).
+      Core alone only carries the document model, so this reference is required for the authored
+      ChatSpace.cui to be usable at all.
+    -->
+    <ProjectReference Include="..\..\framework\CUI\Runtime\CakeOS.Cui.Runtime.csproj" />
     <ProjectReference Include="..\shared\src\Haven.Application\Haven.Application.csproj" />
     <ProjectReference Include="..\shared\src\Haven.Core\Haven.Core.csproj" />
     <ProjectReference Include="..\Dev\HavenOS.Dev.csproj" />

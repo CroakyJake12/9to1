@@ -4,7 +4,7 @@
       <Container id="recent-chats" Type="Vertical Stack" CellGap="8" accessible-name="Recent chats">
         <Text id="recent-chats-title" text="Recent chats" font-size="18" />
         <Button id="new-chat" action="chat.new" content="New chat" accessible-name="Start a new chat" />
-        <Input id="recent-search" Type="Text" Value="{Binding RecentSearchQuery}" placeholdertext="Search chats" accessible-name="Search recent chats" />
+        <Input id="recent-search" Type="Text" Value="{Binding RecentSearchQuery}" placeholdertext="Search chats" accessible-name="Search recent chats" action="chat.clear-search" />
         <Repeat Source="{Binding RecentChats}" As="recent" Key="{Binding recent.Id}">
           <Button id="recent-row" action="chat.open" action-argument="{Binding recent.Id}" content="{Binding recent.Title}" accessible-name="Open this conversation" Interactive="{Binding recent.IsCurrent}" />
           <Text text="{Binding recent.UpdatedLabel}" text-wrapping="Wrap" accessible-name="Conversation last updated" />
@@ -14,8 +14,9 @@
       <Container id="conversation" Type="Vertical Stack" CellGap="12" accessible-name="Conversation">
         <Container id="conversation-toolbar" Type="Wrap" CellGap="8" accessible-name="Conversation controls">
           <Text id="conversation-title" text="{Binding Conversation.Title}" font-size="24" text-wrapping="Wrap" />
-          <Input id="model-choice" Type="Select" Items="{Binding Models}" Value="{Binding Composer.SelectedModelName}" action="chat.select-model" accessible-name="Choose model" />
-          <Input id="branch-choice" Type="Select" Items="{Binding Conversation.Branches}" Value="{Binding Conversation.CurrentBranchId}" action="chat.switch-branch" accessible-name="Choose conversation branch" />
+          <Input id="model-choice" Type="Select" Items="{Binding Models}" action="chat.select-model" accessible-name="Choose model" />
+          <Text id="model-choice-current" text="{Binding Composer.SelectedModelName}" accessible-name="Current model" />
+          <Input id="branch-choice" Type="Select" Items="{Binding Conversation.Branches}" action="chat.switch-branch" accessible-name="Choose conversation branch" />
         </Container>
 
         <Container id="transcript" Type="Vertical Stack" CellGap="12" accessible-name="Conversation messages">
@@ -24,13 +25,13 @@
               <Text text="{Binding message.SpeakerLabel}" font-weight="SemiBold" />
               <Text text="{Binding message.Content}" text-wrapping="Wrap" accessible-name="Message content" />
               <Repeat Source="{Binding message.Attachments}" As="attachment" Key="{Binding attachment.Id}">
-                <Text text="{Binding attachment.Name}" accessible-name="Attached file" />
+                <Text text="{Binding attachment.OriginalName}" accessible-name="Attached file" />
               </Repeat>
               <Repeat Source="{Binding message.Citations}" As="citation" Key="{Binding citation.Number}">
                 <Text text="{Binding citation.Title}" text-wrapping="Wrap" accessible-name="Citation source" />
               </Repeat>
               <Repeat Source="{Binding message.ToolActivities}" As="activity" Key="{Binding activity.Id}">
-                <Text text="{Binding activity.Name}" accessible-name="Tool activity" />
+                <Text text="{Binding activity.Title}" accessible-name="Tool activity" />
               </Repeat>
               <Container id="message-actions" Type="Wrap" CellGap="8" accessible-name="Message actions">
                 <Button action="chat.branch" action-argument="{Binding message.Id}" content="Branch" accessible-name="Branch from this message" />
@@ -42,7 +43,7 @@
 
         <Container id="composer" Type="Vertical Stack" CellGap="8" accessible-name="Message composer">
           <Repeat Source="{Binding Composer.Attachments}" As="attachment" Key="{Binding attachment.Id}">
-            <Button action="chat.remove-attachment" action-argument="{Binding attachment.Id}" content="{Binding attachment.Name}" accessible-name="Remove this attachment" />
+            <Button action="chat.remove-attachment" action-argument="{Binding attachment.Id}" content="{Binding attachment.OriginalName}" accessible-name="Remove this attachment" />
           </Repeat>
           <Input id="composer-input" Type="Text" Multiline="true" Value="{Binding Composer.Draft}" placeholdertext="Message" accessible-name="Message" />
           <Container id="composer-actions" Type="Wrap" CellGap="8">
