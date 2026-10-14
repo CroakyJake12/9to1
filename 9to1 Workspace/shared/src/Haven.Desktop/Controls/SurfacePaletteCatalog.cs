@@ -170,13 +170,30 @@ internal static class SurfacePaletteCatalog
                 Parse("#FF45451E"), Parse("#FFB9B54C"), theme);
         }
 
-        var superDarkBase = Parse("#FF06090D");
-        var superDarkTide = Blend(Parse("#FF0B0E18"), accent, 0.25);
-        var superDarkSoft = Blend(Parse("#FF121526"), accent, 0.20);
-        var superDarkPanel = Blend(Parse("#FF0C0F1A"), accent, 0.10);
-        var superDarkPanel2 = Blend(Parse("#FF121628"), accent, 0.15);
-        var superDarkPanel3 = Blend(Parse("#FF191E34"), accent, 0.20);
-        var superDarkHover = Blend(Parse("#FF222941"), accent, 0.24);
+        // CUI owns the neutral Professional shell. CUI-PRO-202 requires a calm, neutral
+        // charcoal/superdark editor with the app accent confined to controls; blending the
+        // per-app accent into the tide/panel neutrals produced the tinted shell that this
+        // replaces, and is exactly the "application-local colour patch" the annex rejects.
+        // CUI-PREF-203 still preserves each app's original accent, so the accent continues to
+        // drive buttons, chips, focus and lines below - only the large neutral surfaces move.
+        var cui = CakeOS.Cui.Themes.CuiSurfacePaletteCatalog.For(
+            surface.ToString(),
+            appearance switch
+            {
+                HavenUiAppearance.SuperBright => CakeOS.Cui.Themes.CuiAppearance.SuperBright,
+                HavenUiAppearance.Bright => CakeOS.Cui.Themes.CuiAppearance.Bright,
+                HavenUiAppearance.Dark => CakeOS.Cui.Themes.CuiAppearance.Dark,
+                _ => CakeOS.Cui.Themes.CuiAppearance.SuperDark
+            },
+            CakeOS.Cui.Themes.CuiTheme.Professional);
+
+        var superDarkBase = cui.TideBase;
+        var superDarkTide = cui.TideColour;
+        var superDarkSoft = cui.Panel;
+        var superDarkPanel = cui.Panel;
+        var superDarkPanel2 = cui.Panel2;
+        var superDarkPanel3 = cui.Panel3;
+        var superDarkHover = cui.PanelHover;
         return new Palette(
             superDarkBase, superDarkTide, secondary, accent, strong, superDarkSoft, Parse("#FF020705"),
             Parse("#FFF9F9FD"), Parse("#FFD6D8E6"), Parse("#FFA9AEC4"), Parse("#FF8990AA"),
