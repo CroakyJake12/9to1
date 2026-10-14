@@ -13,6 +13,20 @@ namespace Haven.Desktop.Controls;
 /// </summary>
 internal static class SurfacePaletteCatalog
 {
+    /// <summary>
+    /// Surfaces whose whole palette is owned by the shared CUI theme rather than by a per-app
+    /// hue, scoped to the Spaces/Chat delivery.
+    ///
+    /// Apps outside this set may have owner-approved mockups that define their own surface
+    /// colours - Tasks asserts a warm orange family background - and repainting those would
+    /// silently override approved design outside this assignment.
+    /// </summary>
+    private static readonly HashSet<HavenSurface> CuiOwnedSurfaces =
+    [
+        HavenSurface.Chat,
+        HavenSurface.Go,
+        HavenSurface.Spaces
+    ];
     private sealed record SurfaceHue(
         string Tide,
         string Accent,
@@ -97,6 +111,34 @@ internal static class SurfacePaletteCatalog
 
     internal static Palette For(HavenSurface surface, HavenUiAppearance appearance)
     {
+        // Merge stage M2: for the Spaces delivery surfaces, CUI is the single semantic palette
+        // owner (owner directive 2026-10-14: merge HUI into CUI, spec takes precedence).
+        //
+        // CUI's palette and this record are field-for-field identical - 25 semantic colours
+        // plus the theme - so this is a collapse onto one owner rather than a hand-copied
+        // subset. It supersedes the earlier partial change that routed only the neutral
+        // surfaces through CUI while locally deriving text, line, button and focus.
+        //
+        // The accent override is threaded through rather than bypassed. An earlier attempt
+        // short-circuited before the override block, which silently disabled CUI-PREF-203's
+        // accent override modes; that was reverted and is not repeated here.
+        //
+        // CUI applies its own per-theme expression for non-Glow themes, so the legacy
+        // Express() must NOT run again on its result.
+        if (CuiOwnedSurfaces.Contains(surface))
+        {
+            return FromCui(CakeOS.Cui.Themes.CuiSurfacePaletteCatalog.For(
+                surface.ToString(),
+                appearance switch
+                {
+                    HavenUiAppearance.SuperBright => CakeOS.Cui.Themes.CuiAppearance.SuperBright,
+                    HavenUiAppearance.Bright => CakeOS.Cui.Themes.CuiAppearance.Bright,
+                    HavenUiAppearance.Dark => CakeOS.Cui.Themes.CuiAppearance.Dark,
+                    _ => CakeOS.Cui.Themes.CuiAppearance.SuperDark
+                },
+                CakeOS.Cui.Themes.CuiSurfacePaletteCatalog.ActiveTheme));
+        }
+
         var hue = Hues.TryGetValue(surface, out var configured) ? configured : Hues[HavenSurface.Home];
         var theme = HavenPersonalisation.Theme;
         var accent = Parse(hue.Accent);
@@ -118,6 +160,44 @@ internal static class SurfacePaletteCatalog
 
         var palette = Assemble(surface, hue, appearance, theme, accent, secondary, strong, soft);
         return theme == HavenUiTheme.Glow ? palette : Express(palette, appearance);
+    }
+
+    /// <summary>
+    /// Projects the authoritative CUI palette onto the legacy record shape.
+    ///
+    /// This is the stage-M2 seam. Nothing is approximated or re-derived - only the theme enum
+    /// is mapped, because <c>HavenUiTheme</c> is numerically <c>CuiTheme</c> 0-4. Stage M3/M5
+    /// retire the legacy record and callers consume CUI's palette directly.
+    /// </summary>
+    internal static Palette FromCui(CakeOS.Cui.Themes.CuiPalette cui)
+    {
+        ArgumentNullException.ThrowIfNull(cui);
+        return new(
+            cui.TideBase,
+            cui.TideColour,
+            cui.Accent,
+            cui.AccentSecondary,
+            cui.AccentStrong,
+            cui.AccentSoft,
+            cui.AccentInk,
+            cui.Text,
+            cui.TextSoft,
+            cui.Muted,
+            cui.Muted2,
+            cui.Panel,
+            cui.Panel2,
+            cui.Panel3,
+            cui.PanelHover,
+            cui.Line,
+            cui.LineStrong,
+            cui.Button,
+            cui.ButtonHover,
+            cui.ButtonPressed,
+            cui.Focus,
+            cui.AccentBorder,
+            cui.Attention,
+            cui.AttentionBorder,
+            UserPreferencesService.LegacyThemeFor(cui.Theme));
     }
 
     private static Palette Assemble(

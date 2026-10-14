@@ -154,6 +154,13 @@ public sealed partial class UserPreferencesService
         // made an unknown saved value resolve to a loud identity instead of Professional.
         // CuiThemeCatalog.Parse falls back to Professional and accepts every legacy name.
         var theme = CuiThemeCatalog.Parse(themeName);
+
+        // CUI is the authority, so publish the resolved theme onto CUI's own active state.
+        // Previously nothing wrote this from the preference path: ActiveTheme was only ever
+        // set by Boards, meaning the user's chosen theme never reached the CUI palette that
+        // owns the neutral surfaces.
+        CuiSurfacePaletteCatalog.ActiveTheme = theme;
+
         _preferences = _preferences with { HavenUiThemeName = CuiThemeCatalog.Name(theme) };
         ApplyCore(_preferences.HavenUiAppearance, save);
     }
@@ -191,6 +198,17 @@ public sealed partial class UserPreferencesService
             OverrideAccentColour = enabled && parsed is not null,
             AccentColourName = parsed is null ? null : AccentColourCatalog.Name(parsed.Value)
         };
+
+        // Publish onto CUI's accent state too. HavenAccentColour and CuiAccentColour are the
+        // same thirteen named colours in the same numeric order (Red = 0 .. Monotone = 12), so
+        // this is an exact mapping, not an approximation. Owner ruling 2026-10-14: the accent
+        // selector accepts ANY colour, which is what CuiSurfacePaletteCatalog's continuous
+        // string overload provides; this named path remains for the discrete preset swatches.
+        CuiSurfacePaletteCatalog.OverrideAccent = _preferences.OverrideAccentColour;
+        CuiSurfacePaletteCatalog.AccentOverride = parsed is null
+            ? null
+            : (CuiAccentColour)(int)parsed.Value;
+
         ApplyCore(_preferences.HavenUiAppearance, save);
     }
 
