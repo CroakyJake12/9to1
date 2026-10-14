@@ -106,6 +106,30 @@ conflates a local model identity with a bare percentage, whereas the ledger requ
 usage/context handling (local usage hidden, missing provider telemetry shown as M, context
 separately measurable) and reasoning mapped to discrete effort LevelIDs.
 
+### Open conflict: model pill encodes reasoning effort by fill (NOT changed)
+
+I attempted to flatten the model pill to the reference's neutral `#2C2F38` surface. **Reverted.**
+
+`TopRailRegressionCorrectionTests.Final_rail_restores_compact_tabs_chevrons_navigation_effort_palette_and_text_tabs`
+pins the behaviour explicitly: `SetModelSummary("...", 20)` → `HavenModelReasoningLowBrush`,
+`80` → `High`, `100` → `Max`, plus `Foreground == "TextOnAccent"`. The fill colour is therefore a
+**deliberate information channel carrying the reasoning effort level**, not an accidental alert
+fill. Flattening it would delete that signal, and the handoff forbids removing approved
+functionality to win a screenshot comparison.
+
+Two genuine conflicts remain unresolved and are **recorded, not changed**:
+
+1. **Channel.** The reference conveys effort in the label text ("Qwen 3.6 • 100%") on a neutral
+   pill; the product conveys it by fill and renders a continuous `{effort}%`.
+2. **Tier model.** SPUI-133 defines discrete LevelIDs — 3 tiers 35/70/100, 4 tiers 25/50/75/100,
+   5 tiers 20/40/60/80/100 — and forbids a continuous fictitious strength control. The product
+   buckets at `<35 / <70 / <95`, which matches none of those, and renders a continuous
+   percentage.
+
+This is model-governance behaviour rather than a visual correction, and it needs an owner
+decision: keep the fill-as-signal channel, or move effort into the label and adopt the discrete
+tiers.
+
 ## 6. Known remaining differences vs `references/intended/`
 
 | # | Difference | State |
