@@ -1,6 +1,0 @@
-{
-  "actualRootAtInvocation": "3cad94393f3039c9b39b91df631cd986aff13ca6",
-  "testedFrozenSource": "1c78a6107264baf5f7da92a5b6abbde7eac10e40",
-  "whole793CurrentBodyHashesEqual": true,
-  "qualification": "Frozen1c78 invocation remains attributed to1c78, not later Home/auth/root commit. Complete physical graph bodies equal receiving root at this recorded observation."
-}

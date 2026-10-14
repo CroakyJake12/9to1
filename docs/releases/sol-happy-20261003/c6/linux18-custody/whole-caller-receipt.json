@@ -1,9 +1,0 @@
-{
-  "cohort": "owning",
-  "commit": "e6ee0cb3af68ad508f8b53b46fa9135a977a4419",
-  "manifestSha256": "9d53c3f0be0fd7202203ebe6ae81bde0fe25c93d707798e947dbe9ee8d83c315",
-  "managedExit": 1,
-  "protectedStateCleanup": "not-created",
-  "status": "FAILED",
-  "qualification": "Actual known original test/setup sessions only; no guarantee of unobserved escaped descendants"
-}

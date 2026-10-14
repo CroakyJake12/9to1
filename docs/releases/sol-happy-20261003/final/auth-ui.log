@@ -1,5 +1,0 @@
-{"candidate": "a44ca3a10a538afd0715f3ad3dcd8d83931c2f70", "tree": "c1e9df46618f14985aff5f222706b448a34c65da", "cwd": "/workspace/team-c/integration/cloud/cake-id-auth", "command": ["npm", "run", "build:ui"], "startUTC": "2026-10-03T17:41:55.060728+00:00"}
-
-> @cake/cake-id-worker@0.1.0 build:ui
-> node scripts/build-ui.mjs
-

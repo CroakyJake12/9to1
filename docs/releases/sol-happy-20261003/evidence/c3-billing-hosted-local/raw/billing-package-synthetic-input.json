@@ -1,1 +1,0 @@
-{"accountId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","workerName":"billing-local-control","databaseId":"11111111-2222-3333-4444-555555555555","databaseName":"billing-local-control","stripeMode":"test","signatureToleranceSeconds":300,"maxWebhookBytes":65536,"cpuMs":1000,"workersDev":false}

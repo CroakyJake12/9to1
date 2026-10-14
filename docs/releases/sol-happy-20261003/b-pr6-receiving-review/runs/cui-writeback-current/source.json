@@ -1,7 +1,0 @@
-{
-  "sourceCommit": "a0de5ad5c2975c98140be79dfcac884dea0ef76a",
-  "original8ProgramUnchanged": true,
-  "programSHA256": "bbf16b48e1e63c5758277606c63a95489a62cec83051dbf4e5b4c2a8410a5ec5",
-  "projectSHA256": "7de0269c36521f758b86186e47d3428b87629668f0fc99589891f2c11d65d59f",
-  "scope": "Exact original approved8 program, actualwholecurrentCUIRuntime/Headless owning projects; only projectpath adaptation. Not source-stub runtime or fullbrowser/focus/Wave acceptance."
-}

@@ -1,5 +1,0 @@
-SDK attempt7 exact fresh receiving head d30253dd94c1d9978367adb80acfd4c4f74c2931 ended with exit0 and actual receipt ACTUAL_WHOLE_ACCOUNTS_ORGPOOLS_WEB_DEBUG_RELEASE_SDK_PASS. 379 commands completed, 379 exited0 and 379 strict drains were true. Executed whole suite outcomes and completed whole configurations are recorded verbatim in result.json and original receipt.json; no unit count is inferred.
-
-All earlier attempts/owner holds and failed controls remain distinct. Original source/compiler/PE/PDB/restore graph/creator/session/drain assertions, budget and deadlines remained mandatory; no product key fix or global adoption. SDK10.0.401 differs workflow10.0.301. Local synthetic CAKE and original HTTP harnesses do not establish actual HTTPS issuer/provider/native/release acceptance or new A3 whole-owner ACK.
-
-Binary payloads remain at indexed external receiving paths. Every published subtree is scanned for binary suffix and PE/PDB/ELF/ZIP magic. Raw logs/generated source remain byte-exact; any whitespace attributes apply only to exact retained raw paths. Exact root external pins, outer argv, original raw failure/outcome/process/source proof are retained.

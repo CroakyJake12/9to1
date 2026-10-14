@@ -1,8 +1,0 @@
-
-Workload version: 10.0.400-manifests.63b36e85
-
-Installed Workload Id      Manifest Version      Installation Source
---------------------------------------------------------------------
-
-Use `dotnet workload search` to find additional workloads to install.
-

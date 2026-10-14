@@ -1,2 +1,0 @@
-PASS actual authenticated HTTP Admin role/export/current-scope/cancellation/revocation flow
-PASS authenticated HTTP CAKE identity, actual Files/Sites adapters, canonical creation/edit, missing price inputs, revocation

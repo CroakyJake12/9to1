@@ -1,3 +1,0 @@
-{"status": "PASS", "controls": ["canonical35/UUID/profileRevision/JWKS/OAuth exact restoration", "source unchanged/private modes", "corruption", "hash-mismatch", "interrupted-before-publication", "existing destination preserved", "foreign-key-corruption", "schema-corruption"], "canonicalSchemaObjects": 35, "providerRestoration": "NOT_RUN", "realSigningKeyAcceptance": "NOT_CLAIMED"}
-{"status": "PASS", "sealedImageControls": 2, "privateValuesPrinted": false}
-{"status": "PASS", "publishedReadbackControls": ["same-count-published-drift", "corrupt-published-image", "same-count-WAL-only-published-drift", "live-WAL-committed-state-recovery"], "providerRestoration": "NOT_RUN", "privateValuesPrinted": false}

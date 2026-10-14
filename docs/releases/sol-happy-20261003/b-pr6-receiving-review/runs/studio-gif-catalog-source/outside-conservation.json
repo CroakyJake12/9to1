@@ -1,9 +1,0 @@
-{
-  "sourceCommit": "137fd22e4cf0379d04adcd6da4c82a1443f5c911",
-  "parent": "c22a80f41fdc584d890e84356256a03e8e3951af",
-  "changedOnly": [
-    ".github/validation/windows-package-probe.json"
-  ],
-  "outsideModeBlobEntriesUnchanged": 9488,
-  "noProductWorkflowScriptTestDependencyChanges": true
-}

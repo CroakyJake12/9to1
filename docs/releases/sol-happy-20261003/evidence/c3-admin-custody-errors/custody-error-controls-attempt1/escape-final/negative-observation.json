@@ -1,9 +1,0 @@
-{
-  "scenario": "escape",
-  "launcherReleased": true,
-  "creatorWaitProven": true,
-  "primary": "None",
-  "cleanup": [],
-  "retainedData": "/tmp/original-custody-fhede06p",
-  "sessionInitialized": true
-}

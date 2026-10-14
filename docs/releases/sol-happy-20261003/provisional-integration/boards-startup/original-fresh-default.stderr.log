@@ -1,4 +1,0 @@
-{"scenario":"fresh-default","status":"FAIL","assertions":2,"type":"System.IO.FileNotFoundException","message":"No .9to1board was found at the requested path."}
-   at CakeOS.Apps.Boards.Contract.RichBoardSession.OpenAtPathAsync(JsonFileHavenBoardStore store, String path, CancellationToken cancellationToken) in /workspace/team-c-c3-boards-startup/9to1 Workspace/Boards/contract/RichBoardSession.cs:line 83
-   at CakeOS.Apps.Boards.App.ContractSessionAdapter.OpenAsync(JsonFileHavenBoardStore store, String path, CancellationToken cancellationToken) in /workspace/team-c-c3-boards-startup/9to1 Workspace/Boards/app/ContractSessionAdapter.cs:line 40
-   at Program.<Main>$(String[] args) in /workspace/team-c-c3-boards-startup/eng/release-validation/boards-startup/Program.cs:line 24

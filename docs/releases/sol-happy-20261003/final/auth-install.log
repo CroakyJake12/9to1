@@ -1,8 +1,0 @@
-{"candidate": "a44ca3a10a538afd0715f3ad3dcd8d83931c2f70", "tree": "c1e9df46618f14985aff5f222706b448a34c65da", "cwd": "/workspace/team-c/integration/cloud/cake-id-auth", "command": ["npm", "ci", "--no-audit", "--no-fund"], "startUTC": "2026-10-03T17:41:49.743424+00:00"}
-
-added 65 packages in 3s
-npm notice
-npm notice New major version of npm available! 11.9.0 -> 12.2.0
-npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
-npm notice To update run: npm install -g npm@12.2.0
-npm notice

@@ -1,8 +1,0 @@
-  Determining projects to restore...
-  Restored /workspace/team-c/c5-workers-ai-metadata/9to1 Workspace/shared/tests/Haven.PluginFixture/Haven.PluginFixture.csproj (in 73 ms).
-  Restored /workspace/team-c/c5-workers-ai-metadata/9to1 Workspace/shared/src/Haven.Browser/Haven.Browser.csproj (in 132 ms).
-  Restored /workspace/team-c/c5-workers-ai-metadata/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj (in 273 ms).
-  3 of 6 projects are up-to-date for restore.
-  Haven.PluginFixture -> /workspace/team-c/c5-workers-ai-metadata/9to1 Workspace/shared/tests/Haven.PluginFixture/bin/Release/net10.0/Haven.PluginFixture.dll
-  Haven.Core -> /workspace/team-c/c5-workers-ai-metadata/9to1 Workspace/shared/src/Haven.Core/bin/Release/net10.0/Haven.Core.dll
-/workspace/team-c/c5-workers-ai-metadata/9to1 Workspace/shared/src/Haven.Application/Canvas/CanvasArtifactSession.cs(511,50): error CS1593: Delegate 'Func<CanvasChangeEvent, bool>' does not take 2 arguments [/workspace/team-c/c5-workers-ai-metadata/9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj]
