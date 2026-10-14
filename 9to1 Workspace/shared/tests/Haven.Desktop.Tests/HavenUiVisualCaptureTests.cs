@@ -250,9 +250,9 @@ public sealed class HavenUiVisualCaptureTests
         }
     }
 
-    private static IBrush SettledTide(HavenSurface surface)
+    private static IBrush SettledTide(HavenSurface surface, HavenUiAppearance appearance = HavenUiAppearance.SuperDark)
     {
-        var palette = SurfacePaletteCatalog.For(surface, HavenUiAppearance.SuperDark);
+        var palette = SurfacePaletteCatalog.For(surface, appearance);
         return new LinearGradientBrush
         {
             StartPoint = new RelativePoint(0, 0.5, RelativeUnit.Relative),
@@ -296,9 +296,27 @@ public sealed class HavenUiVisualCaptureTests
 
         // State 03 - attachment/invocation panel open over the expanded composer.
         CaptureChat(Path.Combine(destination, "chat-03-add-panel.png"), expanded: true, addMenuOpen: true);
+
+        // Appearance probe. The approved reference's measured conversation surface (#14151A)
+        // is far closer to CUI Professional Dark (TideColour #171819) than to SuperDark
+        // (#090B0E). Rather than guess which appearance the reference corresponds to, render
+        // the same real state at every dark appearance and compare. Diagnostic only.
+        foreach (var appearance in new[] { HavenUiAppearance.Dark, HavenUiAppearance.SuperDark })
+        {
+            HavenUiResourceApplier.Apply(SurfacePaletteCatalog.For(HavenSurface.Go, appearance));
+            CaptureChat(
+                Path.Combine(destination, $"chat-appearance-{appearance}.png"),
+                expanded: false,
+                addMenuOpen: false,
+                appearance);
+        }
     }
 
-    private static void CaptureChat(string path, bool expanded, bool addMenuOpen)
+    private static void CaptureChat(
+        string path,
+        bool expanded,
+        bool addMenuOpen,
+        HavenUiAppearance appearance = HavenUiAppearance.SuperDark)
     {
         using var sidebar = new ChatSidebarHavenScene();
         sidebar.SetSpaceScope(null);
@@ -338,7 +356,7 @@ public sealed class HavenUiVisualCaptureTests
             Width = ChatReferenceWidth,
             Height = ChatReferenceHeight,
             CanResize = false,
-            Background = SettledTide(HavenSurface.Go),
+            Background = SettledTide(HavenSurface.Go, appearance),
             Content = shell
         };
 
