@@ -10,6 +10,7 @@
 using System.Text.Json;
 using Avalonia;
 using Avalonia.Media;
+using CakeOS.Cui.Themes;
 using Avalonia.Styling;
 using Haven.Application;
 using Haven.Core;
@@ -142,10 +143,41 @@ public sealed partial class UserPreferencesService
     /// </summary>
     public void ApplyThemeChoice(string? themeName, bool save = true)
     {
-        var theme = HavenThemeCatalog.Parse(themeName);
-        _preferences = _preferences with { HavenUiThemeName = HavenThemeCatalog.Name(theme) };
+        // CUI owns the theme catalogue (owner directive 2026-10-14: merge HUI into CUI, spec
+        // takes precedence). CUI-PREF-201 requires Professional, Glow, Playful, Frosted
+        // Glass, Bubble, Metallic, Retro and Western plus Create Theme, with Professional as
+        // the default, and requires previously saved identities - including Cinematic - to
+        // keep working.
+        //
+        // The previous path resolved through HavenThemeCatalog, which only knew the older
+        // five-theme set and fell back to Glow. That both hid four specification themes and
+        // made an unknown saved value resolve to a loud identity instead of Professional.
+        // CuiThemeCatalog.Parse falls back to Professional and accepts every legacy name.
+        var theme = CuiThemeCatalog.Parse(themeName);
+        _preferences = _preferences with { HavenUiThemeName = CuiThemeCatalog.Name(theme) };
         ApplyCore(_preferences.HavenUiAppearance, save);
     }
+
+    /// <summary>
+    /// Maps the authoritative CUI theme onto the legacy HavenUI enum still consumed by the
+    /// pre-merge palette pipeline.
+    ///
+    /// This is a temporary seam for merge stage M2. <c>HavenUiTheme</c> is numerically
+    /// <c>CuiTheme</c> 0-4, so the five legacy identities map exactly. The four themes that
+    /// exist only in CUI (Professional, Frosted Glass, Metallic, Western) have no legacy
+    /// counterpart and cannot be expressed by the old pipeline at all, so they render through
+    /// the legacy Glow identity transform while CUI owns the neutral surfaces they need.
+    /// Removing this seam is stage M2.
+    /// </summary>
+    internal static HavenUiTheme LegacyThemeFor(CuiTheme theme) => theme switch
+    {
+        CuiTheme.Glow => HavenUiTheme.Glow,
+        CuiTheme.Bubble => HavenUiTheme.Bubble,
+        CuiTheme.Retro => HavenUiTheme.Retro,
+        CuiTheme.Playful => HavenUiTheme.Playful,
+        CuiTheme.Cinematic => HavenUiTheme.Cinematic,
+        _ => HavenUiTheme.Glow
+    };
 
     /// <summary>
     /// Enables or disables global accent override with an optional semantic
@@ -248,8 +280,18 @@ public sealed partial class UserPreferencesService
     public string ThemeId => _preferences.ThemeId;
     /// <summary>Gets the current four-position HavenUI brightness appearance.</summary>
     public HavenUiAppearance Appearance => _preferences.HavenUiAppearance;
-    /// <summary>Gets the active canonical visual theme; unknown persisted values fall back to Glow.</summary>
-    public HavenUiTheme Theme => HavenThemeCatalog.Parse(_preferences.HavenUiThemeName);
+    /// <summary>
+    /// Gets the active theme.
+    ///
+    /// The persisted value is authored by <see cref="ApplyThemeChoice"/> using CUI's
+    /// catalogue, so it must be parsed with CUI's parser too. Reading it back through
+    /// HavenThemeCatalog made the write and read paths disagree: selecting Professional
+    /// persisted "Professional", which the legacy parser did not recognise and silently
+    /// replaced with Glow. Parsing through CUI keeps the two consistent and gives the
+    /// specification's Professional fallback. <see cref="LegacyThemeFor"/> is the M2 seam that
+    /// will retire this projection entirely.
+    /// </summary>
+    public HavenUiTheme Theme => LegacyThemeFor(CuiThemeCatalog.Parse(_preferences.HavenUiThemeName));
     /// <summary>Reports whether a semantic accent palette overrides surface accents. Effective: requires a valid palette name.</summary>
     public bool OverrideAccentColour => _preferences.OverrideAccentColour && AccentColourCatalog.Parse(_preferences.AccentColourName) is not null;
     /// <summary>Gets the selected accent palette name, or null when unset or unrecognised.</summary>
