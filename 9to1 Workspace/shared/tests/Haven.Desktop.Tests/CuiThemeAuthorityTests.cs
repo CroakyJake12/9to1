@@ -78,7 +78,9 @@ public sealed class CuiThemeAuthorityTests
         var written = CuiThemeCatalog.Name(CuiThemeCatalog.Parse(persistedName));
 
         Assert.Equal(written, CuiThemeCatalog.Name(CuiThemeCatalog.Parse(written)));
-        Assert.NotNull(PersistedThemeMapsTo(written));
+        Assert.Equal(
+            UserPreferencesService.LegacyThemeFor(CuiThemeCatalog.Parse(written)),
+            PersistedThemeMapsTo(written));
     }
 
     [Fact]

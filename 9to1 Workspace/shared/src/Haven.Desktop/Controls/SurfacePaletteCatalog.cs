@@ -13,23 +13,6 @@ namespace Haven.Desktop.Controls;
 /// </summary>
 internal static class SurfacePaletteCatalog
 {
-    /// <summary>
-    /// Surfaces whose large neutral areas are owned by the shared CUI theme instead of being
-    /// tinted by the per-app accent. Scoped to the Spaces/Chat delivery: the approved Chat
-    /// reference is a neutral charcoal editor, and CUI-PRO-202 forbids the alternative
-    /// ("controls made to look professional only through application-local colour patches").
-    ///
-    /// Apps outside this set may have owner-approved mockups whose background *is*
-    /// accent-tinted - Tasks asserts a warm orange family background - and repainting those
-    /// would silently override approved design outside this assignment. Widen this set only
-    /// where an approved mockup genuinely calls for it.
-    /// </summary>
-    private static readonly HashSet<HavenSurface> CuiNeutralSurfaces =
-    [
-        HavenSurface.Chat,
-        HavenSurface.Go,
-        HavenSurface.Spaces
-    ];
     private sealed record SurfaceHue(
         string Tide,
         string Accent,
@@ -146,48 +129,12 @@ internal static class SurfacePaletteCatalog
         Color secondary,
         Color strong,
         Color soft)
-    {
-        // CUI owns the neutral shell for the Spaces delivery surfaces. CUI-PRO-202 requires a
-        // calm, neutral charcoal/superdark editor with the app accent confined to controls;
-        // blending the per-app accent into the tide/panel neutrals produced the tinted shell
-        // this replaces, and is exactly the "application-local colour patch" the annex rejects.
-        // CUI-PREF-203 still preserves each app's original accent, so the accent continues to
-        // drive buttons, chips, focus and lines - only the large neutral surfaces move.
-        //
-        // Scope is deliberately limited to the Spaces/Chat delivery surfaces. Other apps have
-        // owner-approved mockups whose background IS accent-tinted - Tasks asserts a warm
-        // orange family background (SurfacePaletteCatalogTests.Tasks_palette_uses_the_mockup_
-        // orange_family_for_background_and_controls). Repainting those would silently
-        // override approved per-app design that is outside this assignment.
-        //
-        // The theme is CUI's live ActiveTheme and is deliberately NOT hardcoded: pinning
-        // Professional here would repaint every other selected theme with Professional
-        // neutrals, which would be a real theme-fidelity regression.
-        var cuiOwnedNeutrals = CuiNeutralSurfaces.Contains(surface);
-        var cui = cuiOwnedNeutrals
-            ? CakeOS.Cui.Themes.CuiSurfacePaletteCatalog.For(
-                surface.ToString(),
-                appearance switch
-                {
-                    HavenUiAppearance.SuperBright => CakeOS.Cui.Themes.CuiAppearance.SuperBright,
-                    HavenUiAppearance.Bright => CakeOS.Cui.Themes.CuiAppearance.Bright,
-                    HavenUiAppearance.Dark => CakeOS.Cui.Themes.CuiAppearance.Dark,
-                    _ => CakeOS.Cui.Themes.CuiAppearance.SuperDark
-                },
-                CakeOS.Cui.Themes.CuiSurfacePaletteCatalog.ActiveTheme)
-            : null;
-
-        if (appearance == HavenUiAppearance.SuperBright)
+    {        if (appearance == HavenUiAppearance.SuperBright)
         {
-            var superBrightTide = cuiOwnedNeutrals
-                ? Blend(Colors.White, cui!.TideColour, 0.62)
-                : Blend(Colors.White, Parse(hue.Tide), 0.62);
-            var superBrightSoft = cuiOwnedNeutrals
-                ? Blend(Colors.White, cui!.Panel, 0.70)
-                : Blend(Colors.White, soft, 0.70);
-            var superBrightBase = cuiOwnedNeutrals ? cui!.TideBase : Parse("#FFFCFEFC");
+            var superBrightTide = Blend(Colors.White, Parse(hue.Tide), 0.62);
+            var superBrightSoft = Blend(Colors.White, soft, 0.70);
             return new Palette(
-                superBrightBase, superBrightTide, accent, secondary, strong, superBrightSoft, Parse(hue.Ink),
+                Parse("#FFFCFEFC"), superBrightTide, accent, secondary, strong, superBrightSoft, Parse(hue.Ink),
                 Parse("#FF050607"), Parse("#FF353A3E"), Parse("#FF5D6469"), Parse("#FF4B5257"),
                 Parse("#FFFFFFFF"), Parse("#FFF8FAF8"), Parse("#FFF1F5F2"), Parse("#FFE9F0EB"),
                 Parse("#FFC8D2CA"), Parse("#FFA9B7AC"), superBrightSoft, Blend(superBrightSoft, secondary, 0.28),
@@ -197,66 +144,39 @@ internal static class SurfacePaletteCatalog
 
         if (appearance == HavenUiAppearance.Bright)
         {
-            var brightBase = cuiOwnedNeutrals ? cui!.TideBase : Colors.White;
-            var brightTide = cuiOwnedNeutrals ? cui!.TideColour : Parse(hue.Tide);
-            var brightSoft = cuiOwnedNeutrals ? cui!.Panel : soft;
             return new Palette(
-                brightBase, brightTide, accent, secondary, strong, brightSoft, Parse(hue.Ink),
+                Colors.White, Parse(hue.Tide), accent, secondary, strong, soft, Parse(hue.Ink),
                 Parse("#FF111111"), Parse("#FF4F565A"), Parse("#FF73797D"), Parse("#FF60676B"),
                 Parse("#F5FFFFFF"), Parse("#EBFFFFFF"), Parse("#FFF5F7F5"), Parse("#FFF0F4F1"),
-                Parse("#FFDDE4DE"), Parse("#FFBFCAC1"), brightSoft, Blend(brightSoft, secondary, 0.24),
-                Blend(brightSoft, secondary, 0.42), WithAlpha(accent, 0x99), WithAlpha(accent, 0x80),
+                Parse("#FFDDE4DE"), Parse("#FFBFCAC1"), soft, Blend(soft, secondary, 0.24),
+                Blend(soft, secondary, 0.42), WithAlpha(accent, 0x99), WithAlpha(accent, 0x80),
                 Parse("#FFFFF9A8"), Parse("#FFE4DF52"), theme);
         }
 
         if (appearance == HavenUiAppearance.Dark)
         {
-            var darkBase = cuiOwnedNeutrals ? cui!.TideBase : Parse("#FF0B0E17");
-            var darkTide = cuiOwnedNeutrals
-                ? cui!.TideColour
-                : Blend(Parse("#FF0B0E17"), accent, 0.27);
-            var darkSoft = cuiOwnedNeutrals
-                ? cui!.Panel
-                : Blend(Parse("#FF171A2A"), accent, 0.22);
-            var darkPanel = cuiOwnedNeutrals
-                ? cui!.Panel
-                : Blend(Parse("#FF161A2A"), accent, 0.09);
-            var darkPanel2 = cuiOwnedNeutrals
-                ? cui!.Panel2
-                : Blend(Parse("#FF1C2238"), accent, 0.14);
-            var darkPanel3 = cuiOwnedNeutrals
-                ? cui!.Panel3
-                : Blend(Parse("#FF232A45"), accent, 0.18);
-            var darkHover = cuiOwnedNeutrals
-                ? cui!.PanelHover
-                : Blend(Parse("#FF2A3354"), accent, 0.22);
+            var darkTide = Blend(Parse("#FF0B0E17"), accent, 0.27);
+            var darkSoft = Blend(Parse("#FF171A2A"), accent, 0.22);
+            var darkPanel = Blend(Parse("#FF161A2A"), accent, 0.09);
+            var darkPanel2 = Blend(Parse("#FF1C2238"), accent, 0.14);
+            var darkPanel3 = Blend(Parse("#FF232A45"), accent, 0.18);
+            var darkHover = Blend(Parse("#FF2A3354"), accent, 0.22);
             return new Palette(
-                darkBase, darkTide, secondary, accent, strong, darkSoft, Parse("#FFFFFFFF"),
+                Parse("#FF0B0E17"), darkTide, secondary, accent, strong, darkSoft, Parse("#FFFFFFFF"),
                 Parse("#FFF8F8FC"), Parse("#FFD5D7E4"), Parse("#FFA7ABC0"), Parse("#FF858BA4"),
                 WithAlpha(darkPanel, 0xF5), WithAlpha(darkPanel2, 0xF0), darkPanel3, darkHover,
                 Parse("#FF323B5E"), Parse("#FF505B82"), darkSoft, Blend(darkSoft, accent, 0.25),
                 Blend(darkSoft, accent, 0.45), WithAlpha(secondary, 0xCC), WithAlpha(secondary, 0xA0),
                 Parse("#FF45451E"), Parse("#FFB9B54C"), theme);
         }
-        var superDarkBase = cuiOwnedNeutrals ? cui!.TideBase : Parse("#FF06090D");
-        var superDarkTide = cuiOwnedNeutrals
-            ? cui!.TideColour
-            : Blend(Parse("#FF0B0E18"), accent, 0.25);
-        var superDarkSoft = cuiOwnedNeutrals
-            ? cui!.Panel
-            : Blend(Parse("#FF121526"), accent, 0.20);
-        var superDarkPanel = cuiOwnedNeutrals
-            ? cui!.Panel
-            : Blend(Parse("#FF0C0F1A"), accent, 0.10);
-        var superDarkPanel2 = cuiOwnedNeutrals
-            ? cui!.Panel2
-            : Blend(Parse("#FF121628"), accent, 0.15);
-        var superDarkPanel3 = cuiOwnedNeutrals
-            ? cui!.Panel3
-            : Blend(Parse("#FF191E34"), accent, 0.20);
-        var superDarkHover = cuiOwnedNeutrals
-            ? cui!.PanelHover
-            : Blend(Parse("#FF222941"), accent, 0.24);
+
+        var superDarkBase = Parse("#FF06090D");
+        var superDarkTide = Blend(Parse("#FF0B0E18"), accent, 0.25);
+        var superDarkSoft = Blend(Parse("#FF121526"), accent, 0.20);
+        var superDarkPanel = Blend(Parse("#FF0C0F1A"), accent, 0.10);
+        var superDarkPanel2 = Blend(Parse("#FF121628"), accent, 0.15);
+        var superDarkPanel3 = Blend(Parse("#FF191E34"), accent, 0.20);
+        var superDarkHover = Blend(Parse("#FF222941"), accent, 0.24);
         return new Palette(
             superDarkBase, superDarkTide, secondary, accent, strong, superDarkSoft, Parse("#FF020705"),
             Parse("#FFF9F9FD"), Parse("#FFD6D8E6"), Parse("#FFA9AEC4"), Parse("#FF8990AA"),
