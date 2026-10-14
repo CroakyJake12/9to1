@@ -1,0 +1,122 @@
+{
+  "record_type": "TEMPLATE_NOT_IMPLEMENTATION_INSPECTION",
+  "repository": null,
+  "worktree": null,
+  "head": null,
+  "dirty_changes": [],
+  "active_owners": [],
+  "build_commands_from_repository": [],
+  "actual_entrypoints": [],
+  "owners": [
+    {
+      "logical_owner": "CUI",
+      "actual_paths": [],
+      "actual_typed_contracts": [],
+      "canonical_entities": [],
+      "known_working_features": [],
+      "observed_defects": [],
+      "source_clauses": [],
+      "test_cases": []
+    },
+    {
+      "logical_owner": "Home Core",
+      "actual_paths": [],
+      "actual_typed_contracts": [],
+      "canonical_entities": [],
+      "known_working_features": [],
+      "observed_defects": [],
+      "source_clauses": [],
+      "test_cases": []
+    },
+    {
+      "logical_owner": "Accounts",
+      "actual_paths": [],
+      "actual_typed_contracts": [],
+      "canonical_entities": [],
+      "known_working_features": [],
+      "observed_defects": [],
+      "source_clauses": [],
+      "test_cases": []
+    },
+    {
+      "logical_owner": "Dulche",
+      "actual_paths": [],
+      "actual_typed_contracts": [],
+      "canonical_entities": [],
+      "known_working_features": [],
+      "observed_defects": [],
+      "source_clauses": [],
+      "test_cases": []
+    },
+    {
+      "logical_owner": "Files",
+      "actual_paths": [],
+      "actual_typed_contracts": [],
+      "canonical_entities": [],
+      "known_working_features": [],
+      "observed_defects": [],
+      "source_clauses": [],
+      "test_cases": []
+    },
+    {
+      "logical_owner": "Spaces",
+      "actual_paths": [],
+      "actual_typed_contracts": [],
+      "canonical_entities": [],
+      "known_working_features": [],
+      "observed_defects": [],
+      "source_clauses": [],
+      "test_cases": []
+    },
+    {
+      "logical_owner": "Node Graph",
+      "actual_paths": [],
+      "actual_typed_contracts": [],
+      "canonical_entities": [],
+      "known_working_features": [],
+      "observed_defects": [],
+      "source_clauses": [],
+      "test_cases": []
+    },
+    {
+      "logical_owner": "Automations",
+      "actual_paths": [],
+      "actual_typed_contracts": [],
+      "canonical_entities": [],
+      "known_working_features": [],
+      "observed_defects": [],
+      "source_clauses": [],
+      "test_cases": []
+    },
+    {
+      "logical_owner": "Vision & Voice",
+      "actual_paths": [],
+      "actual_typed_contracts": [],
+      "canonical_entities": [],
+      "known_working_features": [],
+      "observed_defects": [],
+      "source_clauses": [],
+      "test_cases": []
+    },
+    {
+      "logical_owner": "Shared Productivity Engine",
+      "actual_paths": [],
+      "actual_typed_contracts": [],
+      "canonical_entities": [],
+      "known_working_features": [],
+      "observed_defects": [],
+      "source_clauses": [],
+      "test_cases": []
+    },
+    {
+      "logical_owner": "Owning-app adapters",
+      "actual_paths": [],
+      "actual_typed_contracts": [],
+      "canonical_entities": [],
+      "known_working_features": [],
+      "observed_defects": [],
+      "source_clauses": [],
+      "test_cases": []
+    }
+  ]
+}

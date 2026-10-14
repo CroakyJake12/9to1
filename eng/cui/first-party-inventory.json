@@ -1,10 +1,10 @@
 {
   "specSha256": "7C812DF54C5AD1177559C4D3E0E04EA935DDE3DC02D6D712914BEB55CA44136F",
-  "sourceHead": "78bdc28f1cdd074157c8972e2fccc35a1f41f1b6",
+  "sourceHead": "2c4d151b954171f2d3c2cfca6d7da5521c018449",
   "surfaces": [
     {
       "path": "9to1 Workspace/Assistants/NativeUI/UI/AssistantConfiguration.cui",
-      "sha256": "ccd6bfa76e44a3574e341aecc480acd9a52fe94dfe68f9de85b44dd51a11706d",
+      "sha256": "5a471e5b4f6b4fda4f21e24b4713b0cf8bb2e2d0762176fafe21aba615ed0657",
       "projects": [
         "9to1 Workspace/Assistants/NativeUI/HavenOS.Assistants.NativeUI.csproj"
       ],
@@ -28,7 +28,7 @@
     },
     {
       "path": "9to1 Workspace/Assistants/NativeUI/UI/AssistantConversation.cui",
-      "sha256": "30b3922f8e4ecfda444ee11001973e0fc40988f65e46d616dfa61cbf02e25584",
+      "sha256": "ca00d3b00bcbe13aba79f8b1793c8289ec9023320700a30ca767a951421f92f9",
       "projects": [
         "9to1 Workspace/Assistants/NativeUI/HavenOS.Assistants.NativeUI.csproj"
       ],
@@ -52,7 +52,7 @@
     },
     {
       "path": "9to1 Workspace/Assistants/NativeUI/UI/AssistantLegacyMigration.cui",
-      "sha256": "345cc3e3a4e1baf8e4d050db89e73aa714acf5c97a11b2f4a716109818dece42",
+      "sha256": "121e56f60a2077096b47b20fe7fd8887d889f8a431cb6d61a3701c6aa0bf1d0b",
       "projects": [
         "9to1 Workspace/Assistants/NativeUI/HavenOS.Assistants.NativeUI.csproj"
       ],
@@ -77,7 +77,7 @@
     },
     {
       "path": "9to1 Workspace/Assistants/NativeUI/UI/AssistantMemory.cui",
-      "sha256": "007ff9dabc65fae39664bf836578394960cedc56725b8830159f8953be7268a2",
+      "sha256": "67d5e1bba945a5de18143e2d6bf734338a68b1f6a12745922a5d843df5eca8e5",
       "projects": [
         "9to1 Workspace/Assistants/NativeUI/HavenOS.Assistants.NativeUI.csproj"
       ],
@@ -100,7 +100,7 @@
     },
     {
       "path": "9to1 Workspace/Assistants/NativeUI/UI/AssistantMiniComputer.cui",
-      "sha256": "47c7c6fba1e89a42f0dc6dbb1aa844a0e858f8fd1f42f9f353b717b26c7f09d1",
+      "sha256": "9c5eab1655f2054061d7be4849083f2b416d249cfbf670cdb4efc5da32baf7aa",
       "projects": [
         "9to1 Workspace/Assistants/NativeUI/HavenOS.Assistants.NativeUI.csproj"
       ],
@@ -122,7 +122,7 @@
     },
     {
       "path": "9to1 Workspace/Assistants/NativeUI/UI/AssistantWork.cui",
-      "sha256": "9c7d7ba268496783c07c156f3997038002932b4f2f8ea908c57abf22af1ae20b",
+      "sha256": "a08eca2b15dc709b916f7a88b775a72e8b845ddbb0bc9787e9922edaa7e05dab",
       "projects": [
         "9to1 Workspace/Assistants/NativeUI/HavenOS.Assistants.NativeUI.csproj"
       ],
@@ -146,7 +146,7 @@
     },
     {
       "path": "9to1 Workspace/Assistants/NativeUI/UI/Assistants.cui",
-      "sha256": "0b619dd69c23b306117985e2388a7b22843e31d938e2e440a3be5b6bb9a42ed4",
+      "sha256": "f8d2676c3b1cbc25c6978e1d78119c11ff2c688fdb61b536a834be2135386425",
       "projects": [
         "9to1 Workspace/Assistants/NativeUI/HavenOS.Assistants.NativeUI.csproj"
       ],
@@ -164,7 +164,7 @@
     },
     {
       "path": "9to1 Workspace/Assistants/NativeUI/UI/AssistantsHome.cui",
-      "sha256": "f74f8b98c56e2e49a23937cb2f0b5710ce9314d29e308dc24b067c53c7502f2a",
+      "sha256": "269739d77849899805d4f140975377ae2a771794b6e317842ea440ca2f723a4b",
       "projects": [
         "9to1 Workspace/Assistants/NativeUI/HavenOS.Assistants.NativeUI.csproj"
       ],
@@ -189,7 +189,7 @@
     },
     {
       "path": "9to1 Workspace/Boards/app/Boards.cui",
-      "sha256": "9be15968c6c8192a69c94b2c13eff5ad2ecd8d47121107f60a771df83a4cafa0",
+      "sha256": "058848251d001911faf26e12d3a35e09b6a844eee5174fa1638e6358a9f019aa",
       "projects": [
         "9to1 Workspace/Boards/app/CakeOS.Apps.Boards.App.csproj"
       ],
@@ -210,7 +210,7 @@
     },
     {
       "path": "9to1 Workspace/Boards/hui/Views/Boards.Freeform.cui",
-      "sha256": "4f05d12fa850d2004ece40f7b73248f4bc26a9c03481752a37ae2ebc9dd91d0a",
+      "sha256": "ce103fce3903fecc0f6a5a061089f6ddc7a64ec3c91d9c0c48c18118672bc863",
       "projects": [
         "9to1 Workspace/Boards/hui/CakeOS.Apps.Boards.Hui.csproj"
       ],
@@ -229,7 +229,7 @@
     },
     {
       "path": "9to1 Workspace/Boards/hui/Views/Boards.cui",
-      "sha256": "587340ef59a5fecc78de1baa4ea2b45965586132bf6ac7b31102a38f3bd2bec4",
+      "sha256": "20665ddf397de8ce84f84aa3406875db6496e51b26c3a4660b4c43e5b8b9205d",
       "projects": [
         "9to1 Workspace/Boards/hui/CakeOS.Apps.Boards.Hui.csproj"
       ],
@@ -246,7 +246,7 @@
     },
     {
       "path": "9to1 Workspace/Browse/NativeUI/UI/BrowseWorkspace.cui",
-      "sha256": "e3949e952d61f2341eec383c498c0e53c757c5803cb1fd1d6f0c49b04929e195",
+      "sha256": "c5dce94f2b964d0bf9a1730077054d4d83b2aafeb4a3246cca4701b84a9ab274",
       "projects": [
         "9to1 Workspace/Browse/NativeUI/HavenOS.Apps.Browse.NativeUI.csproj"
       ],
@@ -270,7 +270,7 @@
     },
     {
       "path": "9to1 Workspace/Canvas/Host/UI/CanvasHost.cui",
-      "sha256": "62b829221d190ad854b8e5324057eba8d76e194d1ab35f17f3dea680e4eaf7c1",
+      "sha256": "20e0491d0c6e68dc4710347ca0037514c2a068c3a344ba1401dc743b2ca2fc95",
       "projects": [
         "9to1 Workspace/Canvas/Host/HavenOS.Canvas.Host.csproj"
       ],
@@ -290,7 +290,7 @@
     },
     {
       "path": "9to1 Workspace/Canvas/UI/CanvasWorkspace.cui",
-      "sha256": "e8e97f1edc68da7b5ecf63ac7621e6368a665dd4092612c943e27d168ceed74e",
+      "sha256": "3b6eca0540d7841a101cd6d1b67dd925d112e8d0b3602f81d5427a3b570b1e33",
       "projects": [
         "9to1 Workspace/Canvas/HavenOS.Canvas.csproj"
       ],
@@ -306,6 +306,37 @@
       "customTagsRequiringRegistryReview": [],
       "classification": "first-party",
       "status": "canonical-candidate",
+      "runtimeAcceptance": "NOT RUN"
+    },
+    {
+      "path": "9to1 Workspace/Cards/CUI/UI/CardsWorkspace.cui",
+      "sha256": "7090149ba5065fd7b645877884158b07151960a8cecd3f0d019b588d2a2ef631",
+      "projects": [
+        "9to1 Workspace/Cards/CUI/HavenOS.Cards.CUI.csproj"
+      ],
+      "tags": [
+        "Button",
+        "ComboBox",
+        "Cui",
+        "Grid",
+        "ScrollViewer",
+        "StackPanel",
+        "TextBlock",
+        "TextBox",
+        "WrapPanel"
+      ],
+      "legacyTags": [
+        "ComboBox",
+        "Grid",
+        "ScrollViewer",
+        "StackPanel",
+        "TextBlock",
+        "TextBox",
+        "WrapPanel"
+      ],
+      "customTagsRequiringRegistryReview": [],
+      "classification": "first-party",
+      "status": "legacy-vocabulary",
       "runtimeAcceptance": "NOT RUN"
     },
     {
@@ -359,7 +390,7 @@
     },
     {
       "path": "9to1 Workspace/Files/NativeUI/UI/FilesBrowser.cui",
-      "sha256": "b00648b3e821ff8a7a952b8234843e285c29d398033e325ef935fb5a0c19a34d",
+      "sha256": "9b8f977745e532ae6d74eac3c1a8fb8933642a7f49da2a63278c37894c410224",
       "projects": [
         "9to1 Workspace/Files/NativeUI/HavenOS.Files.NativeUI.csproj"
       ],
@@ -379,7 +410,7 @@
     },
     {
       "path": "9to1 Workspace/Forms/CUI/UI/FormsWorkspace.cui",
-      "sha256": "3d0c28ea6d233fd84e7146717372b547c9a240ac6b1a761347eb698a3b8bad90",
+      "sha256": "a3a00072c394ff50505ddc41ae87e2d015d590b93b69c60e52be3e0e5d99b47e",
       "projects": [
         "9to1 Workspace/Forms/CUI/HavenOS.Forms.csproj"
       ],
@@ -399,7 +430,7 @@
     },
     {
       "path": "9to1 Workspace/Home/NativeUI/Resources/Cui/HomeApprovals.cui",
-      "sha256": "e30027421dff85d9e798a327d03ce6d4395099995a07ef891a493ef8ac3ac852",
+      "sha256": "0a28df4dcc43405144de94f2c8070275922a11a3e2661dfa0562c6d0a47e4e76",
       "projects": [
         "9to1 Workspace/Home/NativeUI/HavenOS.Home.NativeUI.csproj"
       ],
@@ -419,7 +450,7 @@
     },
     {
       "path": "9to1 Workspace/Home/NativeUI/Resources/Cui/Models.cui",
-      "sha256": "6414e3e90f45ff51a749ddd390b2d068ad93a83c4cdafc3526ae1c8065d183ce",
+      "sha256": "3e864aa3e632e15f51a9c717165afc3e436f6c4d43e6f8e3805ba5017feab481",
       "projects": [
         "9to1 Workspace/Home/NativeUI/HavenOS.Home.NativeUI.csproj"
       ],
@@ -442,7 +473,7 @@
     },
     {
       "path": "9to1 Workspace/Home/UI/Home.cui",
-      "sha256": "ad5ee76b450706e2d8ab3921f65a65ccf07cd1f2d90940a147683eba5e146508",
+      "sha256": "3a4d4d02e47f1beb516c52d2565d7332c744b447607e4944e75de48b70e5d354",
       "projects": [
         "9to1 Workspace/Home/HavenOS.Home.csproj"
       ],
@@ -464,7 +495,7 @@
     },
     {
       "path": "9to1 Workspace/Home/UI/ModelPicker.cui",
-      "sha256": "d7351a207ab9ad7f25c7fd3720d1060cb55e5d1ca0b7d1d8143ffc82945f173c",
+      "sha256": "b3aea44e4c5f4a5c55d2a77844dd4b609851811cc979baff3e5621db20ffcd17",
       "projects": [
         "9to1 Workspace/Home/HavenOS.Home.csproj"
       ],
@@ -581,7 +612,7 @@
     },
     {
       "path": "9to1 Workspace/Motion/UI/MotionWorkspace.cui",
-      "sha256": "edd320b7b3f85f00b5992c8dceafc3fa020b8d2473f0212d32b12780b9620134",
+      "sha256": "8a2a45d1b34ec59c63ed8ab53273981a9179ea979e516875c7db587a3c047fcb",
       "projects": [
         "9to1 Workspace/Motion/HavenOS.Motion.csproj"
       ],
@@ -639,7 +670,7 @@
     },
     {
       "path": "9to1 Workspace/Picture/UI/PictureMetadata.cui",
-      "sha256": "0778f03218a70272df4d7d45386eed30c21c08817d8c280b23d30977ed4ab1ad",
+      "sha256": "f6a04181511405e0e4a74dde1546ade1f9334ef49c79ebb1748b3da30c1f8f0f",
       "projects": [
         "9to1 Workspace/Picture/HavenOS.Images.csproj"
       ],
@@ -658,7 +689,7 @@
     },
     {
       "path": "9to1 Workspace/Picture/UI/PictureSaveConfirmation.cui",
-      "sha256": "76da779f92692f3e2203019b7f3eb99b11feb0bff8ca88c0474cbde5c083400a",
+      "sha256": "be76e4cc60ebf5d14949586d2ba367979d56f48bc6e7c26fe739f570065bba02",
       "projects": [
         "9to1 Workspace/Picture/HavenOS.Images.csproj"
       ],
@@ -677,7 +708,7 @@
     },
     {
       "path": "9to1 Workspace/Picture/UI/PictureWorkspace.cui",
-      "sha256": "267f0511810f2a2e2f49e995136495eeeaee680f5f4facb038897f79125dfb0d",
+      "sha256": "8eb01b0e24152dbeefd96447994d6f5bdbfa6cedbcf8704bbefda83499174b66",
       "projects": [
         "9to1 Workspace/Picture/HavenOS.Images.csproj"
       ],
@@ -701,7 +732,7 @@
     },
     {
       "path": "9to1 Workspace/Sites/NativeUI/UI/SitesAuthoring.cui",
-      "sha256": "08001d9d6b0e5a34119fd57173fadec16e679d8018dc99933192620a7e478d0c",
+      "sha256": "333213b2ecde34af48fecb855342ead697a67e199bc0dc9c3b10e65ad2837cb0",
       "projects": [
         "9to1 Workspace/Sites/NativeUI/HavenOS.Sites.NativeUI.csproj"
       ],
@@ -768,45 +799,28 @@
     },
     {
       "path": "9to1 Workspace/Spaces/UI/Home/SpacesHome.cui",
-      "sha256": "2a72c78332087a03159ee654e46a1c8aa9731d1b3c0a670f7e6bdfe09c9e72bb",
+      "sha256": "7d658b28ac2cc0e8f71a60832469868ac0eed699d2085f6cd6a57c2ff3596f03",
       "projects": [
         "9to1 Workspace/Spaces/HavenOS.Spaces.csproj"
       ],
       "tags": [
-        "AdaptiveSplit",
-        "Article",
-        "Aside",
         "Button",
+        "Container",
         "Cui",
-        "Heading",
-        "List",
-        "Main",
+        "Input",
         "Page",
-        "Panel",
-        "Row",
-        "SearchField",
-        "Text"
+        "Text",
+        "Theme"
       ],
-      "legacyTags": [
-        "Panel"
-      ],
-      "customTagsRequiringRegistryReview": [
-        "AdaptiveSplit",
-        "Article",
-        "Aside",
-        "Heading",
-        "List",
-        "Main",
-        "Row",
-        "SearchField"
-      ],
+      "legacyTags": [],
+      "customTagsRequiringRegistryReview": [],
       "classification": "first-party",
       "status": "manual-runtime-adapter-required",
       "runtimeAcceptance": "NOT RUN"
     },
     {
       "path": "9to1 Workspace/Spaces/UI/Tasks/SpaceTaskWidget.cui",
-      "sha256": "140c96470c3122dd2b569cdf7133d1cbdeb2fd7081d8da0bd28f63f416e380a5",
+      "sha256": "aee36ebe16fb37586f13d7e96709be6b24bd3e53b95ee36d01a91c66e7bf05be",
       "projects": [
         "9to1 Workspace/Spaces/HavenOS.Spaces.csproj"
       ],
@@ -826,7 +840,7 @@
     },
     {
       "path": "9to1 Workspace/Stacks/NativeUI/UI/StacksWorkspace.cui",
-      "sha256": "f388c7bd280e94f6ef1479e5f8fe1f921434d73cca7a574905e7aa86f6ab2dbf",
+      "sha256": "b08a472b77b2dcb98c4a0c537ab6df3ef374cbaed4a9313248d2871ebd5b9f1a",
       "projects": [
         "9to1 Workspace/Stacks/NativeUI/HavenOS.Stacks.NativeUI.csproj"
       ],
@@ -932,7 +946,7 @@
     },
     {
       "path": "9to1 Workspace/Wave/UI/WaveWorkspace.cui",
-      "sha256": "a68337ada5d609e086323be7f0cfcbd38fc8a32d182cd28b141345ebc8283d43",
+      "sha256": "71e0570a9f9121f0357b60fa71d5c191b097e139a7eeb6e9928b0f3b2b0cafe5",
       "projects": [
         "9to1 Workspace/Wave/HavenOS.Wave.csproj"
       ],
@@ -2033,7 +2047,7 @@
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Automations/UI/OriginalAutomationLibrary.cui",
-      "sha256": "99653981af4f18671922553f8accb9e6dfa78f09139d52536a1d480441b2d619",
+      "sha256": "5435ae41c63bf27e677872f10c83273502a092364b1f5646fa5b647deb41f094",
       "projects": [
         "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj"
       ],
@@ -3338,7 +3352,7 @@
     },
     {
       "path": "apps/Web/Accounts/Accounts.cui",
-      "sha256": "4ea96abd3d9369c089ab7bcc1da3f63a17117b20e1baae071342d1a5145f21f1",
+      "sha256": "af86eba678807d770e9aff876b507f32cb4e9fb4348bbbfd14f6b3d366a3ec89",
       "projects": [
         "apps/Web/NineToOne.Web.csproj"
       ],
@@ -3349,40 +3363,48 @@
         "Container",
         "Cui",
         "If",
+        "Import",
         "Input",
         "Page",
         "Repeat",
         "Text",
-        "Theme"
+        "Theme",
+        "ThemeCreatorPanel"
       ],
       "legacyTags": [],
-      "customTagsRequiringRegistryReview": [],
+      "customTagsRequiringRegistryReview": [
+        "ThemeCreatorPanel"
+      ],
       "classification": "first-party",
-      "status": "canonical-candidate",
+      "status": "custom-definition-review",
       "runtimeAcceptance": "NOT RUN"
     },
     {
       "path": "apps/Web/Files/Files.cui",
-      "sha256": "3ce40cacdc9ccc58370f6de71265a8ad85fe8e41ef9b3f149f5300e5def02c5f",
+      "sha256": "d0968cb9a004f172aaf1451c85c545af380947ded728c7757cb886dc9abe0d09",
       "projects": [
         "apps/Web/NineToOne.Web.csproj"
       ],
       "tags": [
         "Action",
         "Actions",
+        "AppAccentMenu",
         "Button",
         "Container",
         "Cui",
         "If",
+        "Import",
         "Input",
         "Page",
         "Repeat",
         "Text"
       ],
       "legacyTags": [],
-      "customTagsRequiringRegistryReview": [],
+      "customTagsRequiringRegistryReview": [
+        "AppAccentMenu"
+      ],
       "classification": "first-party",
-      "status": "canonical-candidate",
+      "status": "custom-definition-review",
       "runtimeAcceptance": "NOT RUN"
     },
     {
@@ -3410,16 +3432,19 @@
     },
     {
       "path": "apps/Web/Picture/Picture.cui",
-      "sha256": "7b52af0eb80f56a159be0336a5a94fa780de3870c472e7eb072f257b0756f4e0",
+      "sha256": "fda89fa81933e3cf58c850a58c28ce6a0a608bc475f1f7aa268475b29b5adeae",
       "projects": [
         "apps/Web/NineToOne.Web.csproj"
       ],
       "tags": [
         "Action",
         "Actions",
+        "AppAccentMenu",
         "Button",
         "Container",
         "Cui",
+        "Image",
+        "Import",
         "Input",
         "Object",
         "Page",
@@ -3428,24 +3453,29 @@
         "Theme"
       ],
       "legacyTags": [],
-      "customTagsRequiringRegistryReview": [],
+      "customTagsRequiringRegistryReview": [
+        "AppAccentMenu"
+      ],
       "classification": "first-party",
-      "status": "canonical-candidate",
+      "status": "custom-definition-review",
       "runtimeAcceptance": "NOT RUN"
     },
     {
       "path": "apps/Web/Productivity/Boards/Boards.cui",
-      "sha256": "180eee524fa4a473ea3e1e05a4076fe291707fb8600fa37bb73ca9e41d03930a",
+      "sha256": "6869594bf1fae1e6be18b8c044ec4e9eea380f35868cb7bc3dec59d335cf6b3b",
       "projects": [
         "apps/Web/NineToOne.Web.csproj"
       ],
       "tags": [
         "Action",
         "Actions",
+        "AppAccentMenu",
         "Button",
         "Container",
         "Cui",
         "If",
+        "Image",
+        "Import",
         "Input",
         "Object",
         "Page",
@@ -3454,58 +3484,103 @@
         "Theme"
       ],
       "legacyTags": [],
-      "customTagsRequiringRegistryReview": [],
+      "customTagsRequiringRegistryReview": [
+        "AppAccentMenu"
+      ],
       "classification": "first-party",
-      "status": "canonical-candidate",
+      "status": "custom-definition-review",
       "runtimeAcceptance": "NOT RUN"
     },
     {
       "path": "apps/Web/Productivity/Present/Present.cui",
-      "sha256": "7843983adb984bc24b82178cbb32b29417c346f1da556ebbe2a744064eece84d",
+      "sha256": "d911cb87ee363879b69f3d2026945597b5aff49854ce15efa1210f18559af11f",
       "projects": [
         "apps/Web/NineToOne.Web.csproj"
       ],
       "tags": [
         "Action",
         "Actions",
+        "AppAccentMenu",
         "Button",
         "Container",
         "Cui",
+        "EditorContextMenu",
+        "EditorDivider",
+        "EditorHeader",
+        "EditorIcon",
+        "EditorIconMenu",
+        "EditorLabel",
+        "EditorMenu",
+        "EditorMenus",
+        "EditorPropertyGroup",
+        "EditorShell",
+        "EditorToolGroup",
+        "EditorToolbar",
+        "Image",
+        "Import",
         "Input",
         "Object",
         "Page",
+        "PresentChartMenu",
+        "PresentFillPalette",
+        "PresentShapeGallery",
+        "PresentStrokePalette",
+        "PresentTextPalette",
         "Repeat",
         "Text",
         "Theme"
       ],
       "legacyTags": [],
-      "customTagsRequiringRegistryReview": [],
+      "customTagsRequiringRegistryReview": [
+        "AppAccentMenu",
+        "EditorContextMenu",
+        "EditorDivider",
+        "EditorHeader",
+        "EditorIcon",
+        "EditorIconMenu",
+        "EditorLabel",
+        "EditorMenu",
+        "EditorMenus",
+        "EditorPropertyGroup",
+        "EditorShell",
+        "EditorToolGroup",
+        "EditorToolbar",
+        "PresentChartMenu",
+        "PresentFillPalette",
+        "PresentShapeGallery",
+        "PresentStrokePalette",
+        "PresentTextPalette"
+      ],
       "classification": "first-party",
-      "status": "canonical-candidate",
+      "status": "custom-definition-review",
       "runtimeAcceptance": "NOT RUN"
     },
     {
       "path": "apps/Web/Sites/Sites.cui",
-      "sha256": "7d0ed63a64f39b7a60b7b2b893ebbaf2f61cef6121d8fae893f3690fb28f5675",
+      "sha256": "38c494051ff4efa8b314c4d5ff07930e10751d0287e35f4a2fce5590de41eb07",
       "projects": [
         "apps/Web/NineToOne.Web.csproj"
       ],
       "tags": [
         "Action",
         "Actions",
+        "AppAccentMenu",
         "Button",
         "Container",
         "Cui",
         "If",
+        "Import",
         "Input",
         "Page",
         "Repeat",
         "Text"
       ],
       "legacyTags": [],
-      "customTagsRequiringRegistryReview": [],
+      "customTagsRequiringRegistryReview": [
+        "AppAccentMenu"
+      ],
       "classification": "first-party",
-      "status": "canonical-candidate",
+      "status": "custom-definition-review",
       "runtimeAcceptance": "NOT RUN"
     },
     {
@@ -3574,16 +3649,18 @@
     },
     {
       "path": "apps/Web/Wave/Wave.cui",
-      "sha256": "cfdf079bc7295dd30d7b900151474cdc8948fe19639f29f0f1e34b6f6a9bf11c",
+      "sha256": "b0e45d7cb885fd7c675611ab408099bd0ef24bc34032c3cee6082346cfdb09f9",
       "projects": [
         "apps/Web/NineToOne.Web.csproj"
       ],
       "tags": [
         "Action",
         "Actions",
+        "AppAccentMenu",
         "Button",
         "Container",
         "Cui",
+        "Import",
         "Input",
         "Object",
         "Page",
@@ -3592,23 +3669,27 @@
         "Theme"
       ],
       "legacyTags": [],
-      "customTagsRequiringRegistryReview": [],
+      "customTagsRequiringRegistryReview": [
+        "AppAccentMenu"
+      ],
       "classification": "first-party",
-      "status": "canonical-candidate",
+      "status": "custom-definition-review",
       "runtimeAcceptance": "NOT RUN"
     },
     {
       "path": "apps/Web/Write/Write.cui",
-      "sha256": "eebd1494d27102092bf9db9ce231fda42d6a4bf460bb051ccc334fb81fd70573",
+      "sha256": "cb9085b3bf3b0ed296b5d07811c677b3bb0a58511ca89a54cccbca5975862b61",
       "projects": [
         "apps/Web/NineToOne.Web.csproj"
       ],
       "tags": [
         "Action",
         "Actions",
+        "AppAccentMenu",
         "Button",
         "Container",
         "Cui",
+        "Import",
         "Input",
         "Object",
         "Page",
@@ -3617,14 +3698,16 @@
         "Theme"
       ],
       "legacyTags": [],
-      "customTagsRequiringRegistryReview": [],
+      "customTagsRequiringRegistryReview": [
+        "AppAccentMenu"
+      ],
       "classification": "first-party",
-      "status": "canonical-candidate",
+      "status": "custom-definition-review",
       "runtimeAcceptance": "NOT RUN"
     },
     {
       "path": "framework/CUI/AI/UI/FloatingAiBar.cui",
-      "sha256": "3496572a0568e3c650fd626a5c7f5824cbcbd36884864c4e4c8959f30921a796",
+      "sha256": "3a4d1c22ab07dfbf262120268100891105f09571aa38cc4b14e2b5cb450383b7",
       "projects": [
         "framework/CUI/AI/NineToOne.Cui.AI.csproj"
       ],
@@ -3635,6 +3718,58 @@
         "Input",
         "Page",
         "Text"
+      ],
+      "legacyTags": [],
+      "customTagsRequiringRegistryReview": [],
+      "classification": "first-party",
+      "status": "canonical-candidate",
+      "runtimeAcceptance": "NOT RUN"
+    },
+    {
+      "path": "framework/CUI/Components/App.cui",
+      "sha256": "f9c4272b427fae97cefb6f8dd776d49355a56772c98e887b383800a4a8d43ef2",
+      "projects": [],
+      "tags": [
+        "Button",
+        "Container",
+        "Cui"
+      ],
+      "legacyTags": [],
+      "customTagsRequiringRegistryReview": [],
+      "classification": "first-party",
+      "status": "canonical-candidate",
+      "runtimeAcceptance": "NOT RUN"
+    },
+    {
+      "path": "framework/CUI/Components/Editor.cui",
+      "sha256": "004ed7463fee71586ccbdcd086d0b7cba044057ececcfeced10821a8671ef801",
+      "projects": [],
+      "tags": [
+        "Button",
+        "Container",
+        "Cui",
+        "Input",
+        "Text"
+      ],
+      "legacyTags": [],
+      "customTagsRequiringRegistryReview": [],
+      "classification": "first-party",
+      "status": "canonical-candidate",
+      "runtimeAcceptance": "NOT RUN"
+    },
+    {
+      "path": "framework/CUI/Components/ThemeCreator.cui",
+      "sha256": "d144f9fc016d8a6527a318bb38fdeedf5e5830af0b1a80af3d57d97abd4e405f",
+      "projects": [],
+      "tags": [
+        "Button",
+        "Container",
+        "Cui",
+        "If",
+        "Input",
+        "Prefab",
+        "Text",
+        "Theme"
       ],
       "legacyTags": [],
       "customTagsRequiringRegistryReview": [],

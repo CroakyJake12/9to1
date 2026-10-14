@@ -1,0 +1,1572 @@
+[
+  {
+    "source_id": "M",
+    "start_line": 1,
+    "end_line": 4,
+    "included": true,
+    "extract_ids": [
+      "M00-Governance"
+    ],
+    "reason": "Included: M00-Governance"
+  },
+  {
+    "source_id": "M",
+    "start_line": 5,
+    "end_line": 54,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 55,
+    "end_line": 58,
+    "included": true,
+    "extract_ids": [
+      "M00-Governance"
+    ],
+    "reason": "Included: M00-Governance"
+  },
+  {
+    "source_id": "M",
+    "start_line": 59,
+    "end_line": 61,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 62,
+    "end_line": 80,
+    "included": true,
+    "extract_ids": [
+      "M00-Governance"
+    ],
+    "reason": "Included: M00-Governance"
+  },
+  {
+    "source_id": "M",
+    "start_line": 81,
+    "end_line": 96,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 97,
+    "end_line": 113,
+    "included": true,
+    "extract_ids": [
+      "M00-Governance"
+    ],
+    "reason": "Included: M00-Governance"
+  },
+  {
+    "source_id": "M",
+    "start_line": 114,
+    "end_line": 130,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 131,
+    "end_line": 136,
+    "included": true,
+    "extract_ids": [
+      "M00-Governance"
+    ],
+    "reason": "Included: M00-Governance"
+  },
+  {
+    "source_id": "M",
+    "start_line": 137,
+    "end_line": 187,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 188,
+    "end_line": 220,
+    "included": true,
+    "extract_ids": [
+      "M00-Governance"
+    ],
+    "reason": "Included: M00-Governance"
+  },
+  {
+    "source_id": "M",
+    "start_line": 221,
+    "end_line": 237,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 238,
+    "end_line": 1114,
+    "included": true,
+    "extract_ids": [
+      "M00-Governance"
+    ],
+    "reason": "Included: M00-Governance"
+  },
+  {
+    "source_id": "M",
+    "start_line": 1115,
+    "end_line": 1119,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 1120,
+    "end_line": 1556,
+    "included": true,
+    "extract_ids": [
+      "M01-CUI"
+    ],
+    "reason": "Included: M01-CUI"
+  },
+  {
+    "source_id": "M",
+    "start_line": 1557,
+    "end_line": 1686,
+    "included": true,
+    "extract_ids": [
+      "M02-Shared-App-Surfaces"
+    ],
+    "reason": "Included: M02-Shared-App-Surfaces"
+  },
+  {
+    "source_id": "M",
+    "start_line": 1687,
+    "end_line": 1913,
+    "included": true,
+    "extract_ids": [
+      "M03-Accounts"
+    ],
+    "reason": "Included: M03-Accounts"
+  },
+  {
+    "source_id": "M",
+    "start_line": 1914,
+    "end_line": 1915,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 1916,
+    "end_line": 2446,
+    "included": true,
+    "extract_ids": [
+      "M04-Home"
+    ],
+    "reason": "Included: M04-Home"
+  },
+  {
+    "source_id": "M",
+    "start_line": 2447,
+    "end_line": 2479,
+    "included": true,
+    "extract_ids": [
+      "M05-Node-Graph"
+    ],
+    "reason": "Included: M05-Node-Graph"
+  },
+  {
+    "source_id": "M",
+    "start_line": 2480,
+    "end_line": 2527,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 2528,
+    "end_line": 2890,
+    "included": true,
+    "extract_ids": [
+      "M06-Files"
+    ],
+    "reason": "Included: M06-Files"
+  },
+  {
+    "source_id": "M",
+    "start_line": 2891,
+    "end_line": 3430,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 3431,
+    "end_line": 3847,
+    "included": true,
+    "extract_ids": [
+      "M07-Spaces"
+    ],
+    "reason": "Included: M07-Spaces"
+  },
+  {
+    "source_id": "M",
+    "start_line": 3848,
+    "end_line": 4233,
+    "included": true,
+    "extract_ids": [
+      "M08-Voice"
+    ],
+    "reason": "Included: M08-Voice"
+  },
+  {
+    "source_id": "M",
+    "start_line": 4234,
+    "end_line": 4288,
+    "included": true,
+    "extract_ids": [
+      "D07-AI-Studio"
+    ],
+    "reason": "Included: D07-AI-Studio"
+  },
+  {
+    "source_id": "M",
+    "start_line": 4289,
+    "end_line": 4297,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 4298,
+    "end_line": 4418,
+    "included": true,
+    "extract_ids": [
+      "D07-AI-Studio"
+    ],
+    "reason": "Included: D07-AI-Studio"
+  },
+  {
+    "source_id": "M",
+    "start_line": 4419,
+    "end_line": 4514,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 4515,
+    "end_line": 4532,
+    "included": true,
+    "extract_ids": [
+      "D07-AI-Studio"
+    ],
+    "reason": "Included: D07-AI-Studio"
+  },
+  {
+    "source_id": "M",
+    "start_line": 4533,
+    "end_line": 4568,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 4569,
+    "end_line": 4618,
+    "included": true,
+    "extract_ids": [
+      "D07-AI-Studio"
+    ],
+    "reason": "Included: D07-AI-Studio"
+  },
+  {
+    "source_id": "M",
+    "start_line": 4619,
+    "end_line": 4653,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 4654,
+    "end_line": 4750,
+    "included": true,
+    "extract_ids": [
+      "D10-Play"
+    ],
+    "reason": "Included: D10-Play"
+  },
+  {
+    "source_id": "M",
+    "start_line": 4751,
+    "end_line": 4777,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 4778,
+    "end_line": 4786,
+    "included": true,
+    "extract_ids": [
+      "D10-Play"
+    ],
+    "reason": "Included: D10-Play"
+  },
+  {
+    "source_id": "M",
+    "start_line": 4787,
+    "end_line": 4825,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 4826,
+    "end_line": 4879,
+    "included": true,
+    "extract_ids": [
+      "D10-Play"
+    ],
+    "reason": "Included: D10-Play"
+  },
+  {
+    "source_id": "M",
+    "start_line": 4880,
+    "end_line": 5111,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 5112,
+    "end_line": 5120,
+    "included": true,
+    "extract_ids": [
+      "D11-Write-Present"
+    ],
+    "reason": "Included: D11-Write-Present"
+  },
+  {
+    "source_id": "M",
+    "start_line": 5121,
+    "end_line": 5141,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 5142,
+    "end_line": 5177,
+    "included": true,
+    "extract_ids": [
+      "D11-Write-Present"
+    ],
+    "reason": "Included: D11-Write-Present"
+  },
+  {
+    "source_id": "M",
+    "start_line": 5178,
+    "end_line": 5195,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 5196,
+    "end_line": 5247,
+    "included": true,
+    "extract_ids": [
+      "D11-Write-Present"
+    ],
+    "reason": "Included: D11-Write-Present"
+  },
+  {
+    "source_id": "M",
+    "start_line": 5248,
+    "end_line": 5314,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 5315,
+    "end_line": 5337,
+    "included": true,
+    "extract_ids": [
+      "D11-Write-Present"
+    ],
+    "reason": "Included: D11-Write-Present"
+  },
+  {
+    "source_id": "M",
+    "start_line": 5338,
+    "end_line": 5663,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 5664,
+    "end_line": 5736,
+    "included": true,
+    "extract_ids": [
+      "D01-Canvas"
+    ],
+    "reason": "Included: D01-Canvas"
+  },
+  {
+    "source_id": "M",
+    "start_line": 5737,
+    "end_line": 5740,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 5741,
+    "end_line": 5742,
+    "included": true,
+    "extract_ids": [
+      "D01-Canvas"
+    ],
+    "reason": "Included: D01-Canvas"
+  },
+  {
+    "source_id": "M",
+    "start_line": 5743,
+    "end_line": 5754,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 5755,
+    "end_line": 5801,
+    "included": true,
+    "extract_ids": [
+      "D01-Canvas"
+    ],
+    "reason": "Included: D01-Canvas"
+  },
+  {
+    "source_id": "M",
+    "start_line": 5802,
+    "end_line": 5873,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 5874,
+    "end_line": 6026,
+    "included": true,
+    "extract_ids": [
+      "D01-Canvas"
+    ],
+    "reason": "Included: D01-Canvas"
+  },
+  {
+    "source_id": "M",
+    "start_line": 6027,
+    "end_line": 6039,
+    "included": true,
+    "extract_ids": [
+      "D02-Boards"
+    ],
+    "reason": "Included: D02-Boards"
+  },
+  {
+    "source_id": "M",
+    "start_line": 6040,
+    "end_line": 6074,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 6075,
+    "end_line": 6143,
+    "included": true,
+    "extract_ids": [
+      "D02-Boards"
+    ],
+    "reason": "Included: D02-Boards"
+  },
+  {
+    "source_id": "M",
+    "start_line": 6144,
+    "end_line": 6216,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 6217,
+    "end_line": 6263,
+    "included": true,
+    "extract_ids": [
+      "D02-Boards"
+    ],
+    "reason": "Included: D02-Boards"
+  },
+  {
+    "source_id": "M",
+    "start_line": 6264,
+    "end_line": 6284,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 6285,
+    "end_line": 6400,
+    "included": true,
+    "extract_ids": [
+      "D02-Boards"
+    ],
+    "reason": "Included: D02-Boards"
+  },
+  {
+    "source_id": "M",
+    "start_line": 6401,
+    "end_line": 6436,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 6437,
+    "end_line": 6476,
+    "included": true,
+    "extract_ids": [
+      "D03-Planner"
+    ],
+    "reason": "Included: D03-Planner"
+  },
+  {
+    "source_id": "M",
+    "start_line": 6477,
+    "end_line": 6486,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 6487,
+    "end_line": 6504,
+    "included": true,
+    "extract_ids": [
+      "D03-Planner"
+    ],
+    "reason": "Included: D03-Planner"
+  },
+  {
+    "source_id": "M",
+    "start_line": 6505,
+    "end_line": 6510,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 6511,
+    "end_line": 6542,
+    "included": true,
+    "extract_ids": [
+      "D03-Planner"
+    ],
+    "reason": "Included: D03-Planner"
+  },
+  {
+    "source_id": "M",
+    "start_line": 6543,
+    "end_line": 6563,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 6564,
+    "end_line": 6601,
+    "included": true,
+    "extract_ids": [
+      "D03-Planner"
+    ],
+    "reason": "Included: D03-Planner"
+  },
+  {
+    "source_id": "M",
+    "start_line": 6602,
+    "end_line": 6768,
+    "included": true,
+    "extract_ids": [
+      "D05-Automations"
+    ],
+    "reason": "Included: D05-Automations"
+  },
+  {
+    "source_id": "M",
+    "start_line": 6769,
+    "end_line": 6769,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 6770,
+    "end_line": 6786,
+    "included": true,
+    "extract_ids": [
+      "D12-Additional-Owner-APIs"
+    ],
+    "reason": "Included: D12-Additional-Owner-APIs"
+  },
+  {
+    "source_id": "M",
+    "start_line": 6787,
+    "end_line": 6878,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 6879,
+    "end_line": 6933,
+    "included": true,
+    "extract_ids": [
+      "D12-Additional-Owner-APIs"
+    ],
+    "reason": "Included: D12-Additional-Owner-APIs"
+  },
+  {
+    "source_id": "M",
+    "start_line": 6934,
+    "end_line": 6966,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 6967,
+    "end_line": 6980,
+    "included": true,
+    "extract_ids": [
+      "D12-Additional-Owner-APIs"
+    ],
+    "reason": "Included: D12-Additional-Owner-APIs"
+  },
+  {
+    "source_id": "M",
+    "start_line": 6981,
+    "end_line": 7081,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 7082,
+    "end_line": 7135,
+    "included": true,
+    "extract_ids": [
+      "D12-Additional-Owner-APIs"
+    ],
+    "reason": "Included: D12-Additional-Owner-APIs"
+  },
+  {
+    "source_id": "M",
+    "start_line": 7136,
+    "end_line": 7171,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 7172,
+    "end_line": 7185,
+    "included": true,
+    "extract_ids": [
+      "D12-Additional-Owner-APIs"
+    ],
+    "reason": "Included: D12-Additional-Owner-APIs"
+  },
+  {
+    "source_id": "M",
+    "start_line": 7186,
+    "end_line": 7238,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 7239,
+    "end_line": 7304,
+    "included": true,
+    "extract_ids": [
+      "D12-Additional-Owner-APIs"
+    ],
+    "reason": "Included: D12-Additional-Owner-APIs"
+  },
+  {
+    "source_id": "M",
+    "start_line": 7305,
+    "end_line": 7345,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 7346,
+    "end_line": 7364,
+    "included": true,
+    "extract_ids": [
+      "D12-Additional-Owner-APIs"
+    ],
+    "reason": "Included: D12-Additional-Owner-APIs"
+  },
+  {
+    "source_id": "M",
+    "start_line": 7365,
+    "end_line": 7417,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 7418,
+    "end_line": 7449,
+    "included": true,
+    "extract_ids": [
+      "D12-Additional-Owner-APIs"
+    ],
+    "reason": "Included: D12-Additional-Owner-APIs"
+  },
+  {
+    "source_id": "M",
+    "start_line": 7450,
+    "end_line": 7484,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 7485,
+    "end_line": 7558,
+    "included": true,
+    "extract_ids": [
+      "D12-Additional-Owner-APIs"
+    ],
+    "reason": "Included: D12-Additional-Owner-APIs"
+  },
+  {
+    "source_id": "M",
+    "start_line": 7559,
+    "end_line": 7566,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 7567,
+    "end_line": 7574,
+    "included": true,
+    "extract_ids": [
+      "D12-Additional-Owner-APIs"
+    ],
+    "reason": "Included: D12-Additional-Owner-APIs"
+  },
+  {
+    "source_id": "M",
+    "start_line": 7575,
+    "end_line": 7607,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 7608,
+    "end_line": 7670,
+    "included": true,
+    "extract_ids": [
+      "D04-Forms"
+    ],
+    "reason": "Included: D04-Forms"
+  },
+  {
+    "source_id": "M",
+    "start_line": 7671,
+    "end_line": 7695,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 7696,
+    "end_line": 7703,
+    "included": true,
+    "extract_ids": [
+      "D04-Forms"
+    ],
+    "reason": "Included: D04-Forms"
+  },
+  {
+    "source_id": "M",
+    "start_line": 7704,
+    "end_line": 7743,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 7744,
+    "end_line": 7802,
+    "included": true,
+    "extract_ids": [
+      "D04-Forms"
+    ],
+    "reason": "Included: D04-Forms"
+  },
+  {
+    "source_id": "M",
+    "start_line": 7803,
+    "end_line": 7834,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 7835,
+    "end_line": 7848,
+    "included": true,
+    "extract_ids": [
+      "D06-Dev"
+    ],
+    "reason": "Included: D06-Dev"
+  },
+  {
+    "source_id": "M",
+    "start_line": 7849,
+    "end_line": 7853,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 7854,
+    "end_line": 7878,
+    "included": true,
+    "extract_ids": [
+      "D06-Dev"
+    ],
+    "reason": "Included: D06-Dev"
+  },
+  {
+    "source_id": "M",
+    "start_line": 7879,
+    "end_line": 7891,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 7892,
+    "end_line": 7927,
+    "included": true,
+    "extract_ids": [
+      "D06-Dev"
+    ],
+    "reason": "Included: D06-Dev"
+  },
+  {
+    "source_id": "M",
+    "start_line": 7928,
+    "end_line": 7939,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 7940,
+    "end_line": 7955,
+    "included": true,
+    "extract_ids": [
+      "D06-Dev"
+    ],
+    "reason": "Included: D06-Dev"
+  },
+  {
+    "source_id": "M",
+    "start_line": 7956,
+    "end_line": 7970,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 7971,
+    "end_line": 8010,
+    "included": true,
+    "extract_ids": [
+      "D06-Dev"
+    ],
+    "reason": "Included: D06-Dev"
+  },
+  {
+    "source_id": "M",
+    "start_line": 8011,
+    "end_line": 8018,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 8019,
+    "end_line": 8104,
+    "included": true,
+    "extract_ids": [
+      "D06-Dev"
+    ],
+    "reason": "Included: D06-Dev"
+  },
+  {
+    "source_id": "M",
+    "start_line": 8105,
+    "end_line": 8119,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 8120,
+    "end_line": 8139,
+    "included": true,
+    "extract_ids": [
+      "D12-Additional-Owner-APIs"
+    ],
+    "reason": "Included: D12-Additional-Owner-APIs"
+  },
+  {
+    "source_id": "M",
+    "start_line": 8140,
+    "end_line": 8318,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 8319,
+    "end_line": 8342,
+    "included": true,
+    "extract_ids": [
+      "D12-Additional-Owner-APIs"
+    ],
+    "reason": "Included: D12-Additional-Owner-APIs"
+  },
+  {
+    "source_id": "M",
+    "start_line": 8343,
+    "end_line": 8533,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 8534,
+    "end_line": 8550,
+    "included": true,
+    "extract_ids": [
+      "D12-Additional-Owner-APIs"
+    ],
+    "reason": "Included: D12-Additional-Owner-APIs"
+  },
+  {
+    "source_id": "M",
+    "start_line": 8551,
+    "end_line": 8584,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 8585,
+    "end_line": 8601,
+    "included": true,
+    "extract_ids": [
+      "D12-Additional-Owner-APIs"
+    ],
+    "reason": "Included: D12-Additional-Owner-APIs"
+  },
+  {
+    "source_id": "M",
+    "start_line": 8602,
+    "end_line": 8643,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 8644,
+    "end_line": 8687,
+    "included": true,
+    "extract_ids": [
+      "D12-Additional-Owner-APIs"
+    ],
+    "reason": "Included: D12-Additional-Owner-APIs"
+  },
+  {
+    "source_id": "M",
+    "start_line": 8688,
+    "end_line": 9065,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 9066,
+    "end_line": 9074,
+    "included": true,
+    "extract_ids": [
+      "D12-Additional-Owner-APIs"
+    ],
+    "reason": "Included: D12-Additional-Owner-APIs"
+  },
+  {
+    "source_id": "M",
+    "start_line": 9075,
+    "end_line": 9093,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 9094,
+    "end_line": 9103,
+    "included": true,
+    "extract_ids": [
+      "D12-Additional-Owner-APIs"
+    ],
+    "reason": "Included: D12-Additional-Owner-APIs"
+  },
+  {
+    "source_id": "M",
+    "start_line": 9104,
+    "end_line": 9115,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 9116,
+    "end_line": 9127,
+    "included": true,
+    "extract_ids": [
+      "D12-Additional-Owner-APIs"
+    ],
+    "reason": "Included: D12-Additional-Owner-APIs"
+  },
+  {
+    "source_id": "M",
+    "start_line": 9128,
+    "end_line": 9197,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 9198,
+    "end_line": 9242,
+    "included": true,
+    "extract_ids": [
+      "D12-Additional-Owner-APIs"
+    ],
+    "reason": "Included: D12-Additional-Owner-APIs"
+  },
+  {
+    "source_id": "M",
+    "start_line": 9243,
+    "end_line": 9254,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 9255,
+    "end_line": 9262,
+    "included": true,
+    "extract_ids": [
+      "D12-Additional-Owner-APIs"
+    ],
+    "reason": "Included: D12-Additional-Owner-APIs"
+  },
+  {
+    "source_id": "M",
+    "start_line": 9263,
+    "end_line": 9295,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 9296,
+    "end_line": 9325,
+    "included": true,
+    "extract_ids": [
+      "D09-Mini-Computer"
+    ],
+    "reason": "Included: D09-Mini-Computer"
+  },
+  {
+    "source_id": "M",
+    "start_line": 9326,
+    "end_line": 9361,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 9362,
+    "end_line": 9378,
+    "included": true,
+    "extract_ids": [
+      "D09-Mini-Computer"
+    ],
+    "reason": "Included: D09-Mini-Computer"
+  },
+  {
+    "source_id": "M",
+    "start_line": 9379,
+    "end_line": 9407,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 9408,
+    "end_line": 9426,
+    "included": true,
+    "extract_ids": [
+      "D09-Mini-Computer"
+    ],
+    "reason": "Included: D09-Mini-Computer"
+  },
+  {
+    "source_id": "M",
+    "start_line": 9427,
+    "end_line": 9438,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 9439,
+    "end_line": 9458,
+    "included": true,
+    "extract_ids": [
+      "D09-Mini-Computer"
+    ],
+    "reason": "Included: D09-Mini-Computer"
+  },
+  {
+    "source_id": "M",
+    "start_line": 9459,
+    "end_line": 9462,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 9463,
+    "end_line": 9526,
+    "included": true,
+    "extract_ids": [
+      "D09-Mini-Computer"
+    ],
+    "reason": "Included: D09-Mini-Computer"
+  },
+  {
+    "source_id": "M",
+    "start_line": 9527,
+    "end_line": 9529,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 9530,
+    "end_line": 9547,
+    "included": true,
+    "extract_ids": [
+      "D09-Mini-Computer"
+    ],
+    "reason": "Included: D09-Mini-Computer"
+  },
+  {
+    "source_id": "M",
+    "start_line": 9548,
+    "end_line": 9583,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 9584,
+    "end_line": 9631,
+    "included": true,
+    "extract_ids": [
+      "D08-Browse"
+    ],
+    "reason": "Included: D08-Browse"
+  },
+  {
+    "source_id": "M",
+    "start_line": 9632,
+    "end_line": 9636,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 9637,
+    "end_line": 9654,
+    "included": true,
+    "extract_ids": [
+      "D08-Browse"
+    ],
+    "reason": "Included: D08-Browse"
+  },
+  {
+    "source_id": "M",
+    "start_line": 9655,
+    "end_line": 9658,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 9659,
+    "end_line": 9679,
+    "included": true,
+    "extract_ids": [
+      "D08-Browse"
+    ],
+    "reason": "Included: D08-Browse"
+  },
+  {
+    "source_id": "M",
+    "start_line": 9680,
+    "end_line": 9693,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 9694,
+    "end_line": 9709,
+    "included": true,
+    "extract_ids": [
+      "D12-Additional-Owner-APIs"
+    ],
+    "reason": "Included: D12-Additional-Owner-APIs"
+  },
+  {
+    "source_id": "M",
+    "start_line": 9710,
+    "end_line": 9718,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 9719,
+    "end_line": 9770,
+    "included": true,
+    "extract_ids": [
+      "D12-Additional-Owner-APIs"
+    ],
+    "reason": "Included: D12-Additional-Owner-APIs"
+  },
+  {
+    "source_id": "M",
+    "start_line": 9771,
+    "end_line": 9852,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 9853,
+    "end_line": 11368,
+    "included": true,
+    "extract_ids": [
+      "M09-Dulche"
+    ],
+    "reason": "Included: M09-Dulche"
+  },
+  {
+    "source_id": "M",
+    "start_line": 11369,
+    "end_line": 11832,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 11833,
+    "end_line": 11856,
+    "included": true,
+    "extract_ids": [
+      "M12-Hosted-Contracts"
+    ],
+    "reason": "Included: M12-Hosted-Contracts"
+  },
+  {
+    "source_id": "M",
+    "start_line": 11857,
+    "end_line": 11867,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 11868,
+    "end_line": 11894,
+    "included": true,
+    "extract_ids": [
+      "M12-Hosted-Contracts"
+    ],
+    "reason": "Included: M12-Hosted-Contracts"
+  },
+  {
+    "source_id": "M",
+    "start_line": 11895,
+    "end_line": 11924,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 11925,
+    "end_line": 11943,
+    "included": true,
+    "extract_ids": [
+      "M12-Hosted-Contracts"
+    ],
+    "reason": "Included: M12-Hosted-Contracts"
+  },
+  {
+    "source_id": "M",
+    "start_line": 11944,
+    "end_line": 11958,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 11959,
+    "end_line": 11980,
+    "included": true,
+    "extract_ids": [
+      "M12-Hosted-Contracts"
+    ],
+    "reason": "Included: M12-Hosted-Contracts"
+  },
+  {
+    "source_id": "M",
+    "start_line": 11981,
+    "end_line": 11983,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 11984,
+    "end_line": 12329,
+    "included": true,
+    "extract_ids": [
+      "M10-Lunar-Eclipse"
+    ],
+    "reason": "Included: M10-Lunar-Eclipse"
+  },
+  {
+    "source_id": "M",
+    "start_line": 12330,
+    "end_line": 12381,
+    "included": true,
+    "extract_ids": [
+      "M09-Dulche"
+    ],
+    "reason": "Included: M09-Dulche"
+  },
+  {
+    "source_id": "M",
+    "start_line": 12382,
+    "end_line": 12395,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "M",
+    "start_line": 12396,
+    "end_line": 12406,
+    "included": true,
+    "extract_ids": [
+      "M11-Identity-Commands"
+    ],
+    "reason": "Included: M11-Identity-Commands"
+  },
+  {
+    "source_id": "M",
+    "start_line": 12407,
+    "end_line": 12459,
+    "included": true,
+    "extract_ids": [
+      "M00-Governance"
+    ],
+    "reason": "Included: M00-Governance"
+  },
+  {
+    "source_id": "S",
+    "start_line": 1,
+    "end_line": 569,
+    "included": true,
+    "extract_ids": [
+      "S01-Spaces-Companion"
+    ],
+    "reason": "Included: S01-Spaces-Companion"
+  },
+  {
+    "source_id": "P",
+    "start_line": 1,
+    "end_line": 26,
+    "included": true,
+    "extract_ids": [
+      "P01-Professional"
+    ],
+    "reason": "Included: P01-Professional"
+  },
+  {
+    "source_id": "P",
+    "start_line": 27,
+    "end_line": 56,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  },
+  {
+    "source_id": "P",
+    "start_line": 57,
+    "end_line": 59,
+    "included": true,
+    "extract_ids": [
+      "P01-Professional"
+    ],
+    "reason": "Included: P01-Professional"
+  },
+  {
+    "source_id": "T",
+    "start_line": 1,
+    "end_line": 102,
+    "included": true,
+    "extract_ids": [
+      "T01-Study"
+    ],
+    "reason": "Included: T01-Study"
+  },
+  {
+    "source_id": "R",
+    "start_line": 1,
+    "end_line": 144,
+    "included": true,
+    "extract_ids": [
+      "R01-Agentic"
+    ],
+    "reason": "Included: R01-Agentic"
+  },
+  {
+    "source_id": "R",
+    "start_line": 145,
+    "end_line": 315,
+    "included": false,
+    "extract_ids": [],
+    "reason": "Excluded: unrelated product sections, historical scheduling, OS distribution, later expansion or model-weight research; omission does not repeal source requirements outside this work package."
+  }
+]

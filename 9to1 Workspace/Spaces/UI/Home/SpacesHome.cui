@@ -1,57 +1,93 @@
 <Cui id="spaces.home" version="1">
-  <Page id="spaces-page" role="main" accessible-name="Spaces" font-family="Montserrat" layout="vertical" scalable-text="true" high-contrast="semantic" reduced-motion="respect">
-    <AdaptiveSplit id="spaces-layout" compact-breakpoint="760" primary-min-width="0">
-      <Aside id="spaces-sidebar" role="navigation" accessible-name="Spaces navigation" compact-mode="drawer">
-        <Heading level="1">Spaces</Heading>
-        <SearchField id="spaces-search" binding="spaces.query" accessible-name="Search Spaces" placeholder="Find a Space" clear-action="spaces.clear-search" />
-        <Button id="create-space" action="spaces.create" accessible-name="Create a custom Space" touch-target="44" variant="primary">New Space</Button>
-        <Heading level="2">First-party</Heading>
-        <List id="first-party-spaces" binding="spaces.builtIns" role="list" accessible-name="First-party Spaces">
-          <Button id="first-party-space" repeat="spaces.builtIns" action="spaces.open" action-argument="{id}" selected="{isCurrent}" accessible-name="Open {name}" touch-target="44">
-            <Text binding="name" />
-            <Text binding="summary" tone="muted" />
-          </Button>
-        </List>
-        <Heading level="2">Your Spaces</Heading>
-        <List id="custom-spaces" binding="spaces.customSpaces" role="list" accessible-name="Your custom Spaces" empty-text="Create a Space to keep related conversations and work together">
-          <Article id="custom-space-row" repeat="spaces.customSpaces" role="listitem" accessible-name="{name}, custom Space">
-            <Button id="open-custom-space" action="spaces.open" action-argument="{id}" selected="{isCurrent}" accessible-name="Open {name}" touch-target="44">
-              <Text binding="name" />
-              <Text binding="summary" tone="muted" />
+  <!--
+    Canonical CUI Spaces home surface.
+
+    Migrated from a non-CUI element vocabulary (Aside / AdaptiveSplit / SearchField /
+    Heading / List / Article / Row / Main / Panel). None of those are CUI visual
+    primitives (Page, Container, Text, Image, Audio, Video, Object, Button, Input, Layer),
+    and none were registered Definitions, so the previous document parsed without
+    diagnostics but was not real CUI. Every element below is canonical.
+
+    Behaviour intentionally NOT reconstructed here, because no genuine CUI construct
+    exists for it yet (see docs/handoff-20261014/DECISION-2026-10-14-CUI-RESPONSIVE.md):
+      * AdaptiveSplit compact-breakpoint="760" compact-mode="drawer"
+      * Heading level="N" semantic headings (expressed as sized/semibold Text instead)
+      * SearchField clear-action (expressed as the Input's own action)
+      * empty-text on lists (expressed as canonical empty-template definitions)
+
+    Attributes dropped because they are not canonical CUI properties:
+      * touch-target="44" - CUI has no touch-target property. Touch sizing must come from the
+        shared control templates; until then this is an accessibility gap, not a preference.
+      * variant="primary" on create-space - not a CUI Button property.
+      * scalable-text / high-contrast / reduced-motion on Page - these are inherited
+        accessibility settings owned by the theme layer, not per-document declarations.
+      * font-family="Montserrat" - Montserrat is the CUI default interface family resolved by
+        the host (CuiNativeHost maps it to the bundled assets), not a per-document override.
+  -->
+  <Theme Name="user_preference">
+    <Page id="spaces-page" role="main" accessible-name="Spaces" Type="Vertical Stack">
+      <Container id="spaces-layout" Type="Horizontal Stack" CellGap="16">
+        <Container id="spaces-sidebar" role="navigation" accessible-name="Spaces navigation" width="280" Type="Vertical Stack" CellGap="10">
+          <Text id="spaces-heading" text="Spaces" font-size="24" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <Input id="spaces-search" Type="Text" accessible-name="Search Spaces" placeholdertext="Find a Space" Value="{Binding spaces.query, fallback=}" action="spaces.clear-search" />
+          <Button id="create-space" action="spaces.create" content="New Space" accessible-name="Create a custom Space" />
+          <Text id="first-party-heading" text="First-party" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
+          <Container id="first-party-spaces" items="{Binding spaces.builtIns}" item-template="first-party-space" role="list" accessible-name="First-party Spaces" Type="Vertical Stack" CellGap="8" />
+          <Container id="first-party-space" definition="true" Type="Vertical Stack">
+            <Button id="first-party-space-open" action="spaces.open" action-argument="{Binding id}" selected="{Binding isCurrent}" accessible-name="Open {Binding name}">
+              <Text id="first-party-space-name" text="{Binding name, fallback=}" />
+              <Text id="first-party-space-summary" text="{Binding summary, fallback=}" tone="muted" />
             </Button>
-            <Row id="custom-space-actions" accessible-name="Actions for {name}" wrap="true">
-              <Button action="spaces.rename" action-argument="{id}" accessible-name="Rename {name}" touch-target="44">Rename</Button>
-              <Button action="spaces.move" action-argument="{id}" accessible-name="Move {name}" touch-target="44">Move</Button>
-              <Button action="spaces.fork" action-argument="{id}" accessible-name="Make a copy of {name}" touch-target="44">Copy</Button>
-              <Button action="spaces.archive" action-argument="{id}" accessible-name="Archive {name}" touch-target="44">Archive</Button>
-            </Row>
-          </Article>
-        </List>
-        <Text id="spaces-status" binding="status.message" role="status" live="polite" accessible-name="Spaces status" />
-      </Aside>
-      <Main id="space-details" accessible-name="Selected Space">
-        <Heading id="selected-space-name" level="1" binding="selection.name">Choose a Space</Heading>
-        <Text id="selected-space-description" binding="selection.description" />
-        <Panel id="space-context" accessible-name="Space context and policy">
-          <Heading level="2">Context</Heading>
-          <List id="space-context-items" binding="selection.contextReferences" role="list" accessible-name="Space context sources" empty-text="No sources added">
-            <Article repeat="selection.contextReferences" role="listitem" accessible-name="{label}, {permissionLabel}">
-              <Text binding="label" />
-              <Text binding="permissionLabel" tone="muted" />
-              <Text binding="indexStateLabel" tone="muted" />
-            </Article>
-          </List>
-          <Button id="add-context" action="spaces.add-context" enabled="{selection.canEdit}" accessible-name="Add a source to this Space" touch-target="44">Add source</Button>
-          <Heading level="2">Model and access</Heading>
-          <Text binding="selection.effectiveModelLabel" accessible-name="Effective model" />
-          <Text binding="selection.webAccessLabel" accessible-name="Web access policy" />
-          <Text binding="selection.memoryScopeLabel" accessible-name="Memory scope" />
-          <Heading level="2">Capabilities</Heading>
-          <List id="space-capabilities" binding="selection.capabilities" role="list" accessible-name="Space capabilities" empty-text="No extra capabilities enabled">
-            <Text repeat="selection.capabilities" binding="label" />
-          </List>
-        </Panel>
-      </Main>
-    </AdaptiveSplit>
-  </Page>
+          </Container>
+          <Text id="custom-spaces-heading" text="Your Spaces" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
+          <Container id="custom-spaces" items="{Binding spaces.customSpaces}" item-template="custom-space-row" empty-template="custom-spaces-empty" role="list" accessible-name="Your custom Spaces" Type="Vertical Stack" CellGap="8" />
+          <Container id="custom-space-row" definition="true" role="listitem" accessible-name="{Binding name}, custom Space" Type="Vertical Stack">
+            <Button id="open-custom-space" action="spaces.open" action-argument="{Binding id}" selected="{Binding isCurrent}" accessible-name="Open {Binding name}">
+              <Text id="custom-space-name" text="{Binding name, fallback=}" />
+              <Text id="custom-space-summary" text="{Binding summary, fallback=}" tone="muted" />
+            </Button>
+            <Container id="custom-space-actions" accessible-name="Actions for {Binding name}" Type="Wrap">
+              <Button id="rename-custom-space" action="spaces.rename" action-argument="{Binding id}" content="Rename" accessible-name="Rename {Binding name}" />
+              <Button id="move-custom-space" action="spaces.move" action-argument="{Binding id}" content="Move" accessible-name="Move {Binding name}" />
+              <Button id="fork-custom-space" action="spaces.fork" action-argument="{Binding id}" content="Copy" accessible-name="Make a copy of {Binding name}" />
+              <Button id="archive-custom-space" action="spaces.archive" action-argument="{Binding id}" content="Archive" accessible-name="Archive {Binding name}" />
+            </Container>
+          </Container>
+          <Container id="custom-spaces-empty" definition="true" Type="Vertical Stack">
+            <Text id="custom-spaces-empty-text" text="Create a Space to keep related conversations and work together" tone="muted" />
+          </Container>
+          <Text id="spaces-status" text="{Binding status.message, fallback=}" role="status" accessible-name="Spaces status" />
+        </Container>
+        <Container id="space-details" accessible-name="Selected Space" Type="Vertical Stack" CellGap="10">
+          <Text id="selected-space-name" text="{Binding selection.name, fallback=Choose a Space}" font-size="24" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <Text id="selected-space-description" text="{Binding selection.description, fallback=}" />
+          <Container id="space-context" accessible-name="Space context and policy" background="{Resource CuiPanelBrush}" corner-radius="12" padding="16" Type="Vertical Stack" CellGap="8">
+            <Text id="space-context-heading" text="Context" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
+            <Container id="space-context-items" items="{Binding selection.contextReferences}" item-template="space-context-item" empty-template="space-context-empty" role="list" accessible-name="Space context sources" Type="Vertical Stack" CellGap="8" />
+            <Container id="space-context-item" definition="true" role="listitem" accessible-name="{Binding label}, {Binding permissionLabel}" Type="Vertical Stack">
+              <Text id="space-context-item-label" text="{Binding label, fallback=}" />
+              <Text id="space-context-item-permission" text="{Binding permissionLabel, fallback=}" tone="muted" />
+              <Text id="space-context-item-index-state" text="{Binding indexStateLabel, fallback=}" tone="muted" />
+            </Container>
+            <Container id="space-context-empty" definition="true" Type="Vertical Stack">
+              <Text id="space-context-empty-text" text="No sources added" tone="muted" />
+            </Container>
+            <Button id="add-context" action="spaces.add-context" content="Add source" Interactive="{Binding selection.canEdit}" accessible-name="Add a source to this Space" />
+            <Text id="space-access-heading" text="Model and access" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
+            <Text id="space-effective-model" text="{Binding selection.effectiveModelLabel, fallback=}" accessible-name="Effective model" />
+            <Text id="space-web-access" text="{Binding selection.webAccessLabel, fallback=}" accessible-name="Web access policy" />
+            <Text id="space-memory-scope" text="{Binding selection.memoryScopeLabel, fallback=}" accessible-name="Memory scope" />
+            <Text id="space-capabilities-heading" text="Capabilities" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
+            <Container id="space-capabilities" items="{Binding selection.capabilities}" item-template="space-capability" empty-template="space-capabilities-empty" role="list" accessible-name="Space capabilities" Type="Vertical Stack" CellGap="6" />
+            <Container id="space-capability" definition="true" Type="Vertical Stack">
+              <Text id="space-capability-label" text="{Binding label, fallback=}" />
+            </Container>
+            <Container id="space-capabilities-empty" definition="true" Type="Vertical Stack">
+              <Text id="space-capabilities-empty-text" text="No extra capabilities enabled" tone="muted" />
+            </Container>
+          </Container>
+        </Container>
+      </Container>
+    </Page>
+  </Theme>
 </Cui>

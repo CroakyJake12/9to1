@@ -12,6 +12,8 @@
     <Compile Remove="Tests\**\*.cs" />
     <PackageReference Include="MailKit" VersionOverride="4.18.0" />
     <PackageReference Include="HtmlSanitizer" VersionOverride="9.2.1039" />
+    <!-- Lifts MimeKit's vulnerable transitive 10.0.0 pin; see Directory.Packages.props. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
     <ProjectReference Include="..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
     <ProjectReference Include="..\..\framework\CUI\AI\NineToOne.Cui.AI.csproj" />
   </ItemGroup>
