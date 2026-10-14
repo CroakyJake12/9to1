@@ -10,8 +10,15 @@ public sealed class SpacesAppSurfaceTests
     [Fact]
     public void Built_in_descriptors_have_independent_stable_scopes()
     {
+        // "Assistants" replaces the older "Agent" destination label per the 13 October 2026
+        // Spaces companion (SPUI-154-159, OWNER-CONFIRMED), which makes Assistants a Space
+        // with a permanent Main conversation per Assistant, Teams and owned Specialist
+        // launch. The registered SpaceID and SpaceKind deliberately stay Agent-nominated:
+        // SpaceID must survive a rename and SpaceKind numeric values must never be
+        // renumbered. This expectation was corrected to the effective source; the previous
+        // literal "Agent" label asserted superseded placement guidance.
         Assert.Equal(
-            ["Chat", "Study", "Tasks", "Agent", "Shopping", "Research", "Translate", "Experiences"],
+            ["Chat", "Study", "Tasks", "Assistants", "Shopping", "Research", "Translate", "Experiences"],
             SpacesModel.BuiltIns.Select(definition => definition.Label));
         Assert.Equal(8, SpacesModel.BuiltIns.Select(definition => definition.Scope.Key).Distinct().Count());
         Assert.Equal(SpaceRegistry.ChatSpaceId, SpacesModel.BuiltIns[0].Scope.RegisteredSpaceId);
@@ -29,7 +36,7 @@ public sealed class SpacesAppSurfaceTests
         var sidebar = await model.GetSidebarDestinationsAsync();
 
         Assert.Equal(
-            ["Chat", "Study", "Tasks", "Agent", "Shopping", "Research", "Translate", "Experiences", "Recipes"],
+            ["Chat", "Study", "Tasks", "Assistants", "Shopping", "Research", "Translate", "Experiences", "Recipes"],
             sidebar.Select(item => item.Label));
         var recipes = Assert.Single(sidebar, item => item.Label == "Recipes");
         Assert.Equal(SpacesDestinationKind.Custom, recipes.Destination);

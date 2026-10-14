@@ -47,7 +47,7 @@ public sealed class SpacesAppSurface
         new(SpacesDestination.Chat, "Chat", "chat"),
         new(SpacesDestination.Study, "Study", "book"),
         new(SpacesDestination.Tasks, "Tasks", "tasks"),
-        new(SpacesDestination.Agent, "Agent", "agents"),
+        new(SpacesDestination.Agent, "Assistants", "agents"),
         new(SpacesDestination.Shopping, "Shopping", "cart"),
         new(SpacesDestination.Research, "Research", "search"),
         new(SpacesDestination.Translate, "Translate", "translate"),
