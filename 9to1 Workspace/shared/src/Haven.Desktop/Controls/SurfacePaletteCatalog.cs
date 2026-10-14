@@ -176,6 +176,11 @@ internal static class SurfacePaletteCatalog
         // replaces, and is exactly the "application-local colour patch" the annex rejects.
         // CUI-PREF-203 still preserves each app's original accent, so the accent continues to
         // drive buttons, chips, focus and lines below - only the large neutral surfaces move.
+        //
+        // The theme is read from CUI's live ActiveTheme and is deliberately NOT hardcoded.
+        // Hardcoding Professional here would silently repaint every other selected theme
+        // (Glow, Bubble, Retro, Playful, Frosted Glass, Metallic, Western) with Professional
+        // neutrals, which would be a real theme-fidelity regression.
         var cui = CakeOS.Cui.Themes.CuiSurfacePaletteCatalog.For(
             surface.ToString(),
             appearance switch
@@ -185,7 +190,7 @@ internal static class SurfacePaletteCatalog
                 HavenUiAppearance.Dark => CakeOS.Cui.Themes.CuiAppearance.Dark,
                 _ => CakeOS.Cui.Themes.CuiAppearance.SuperDark
             },
-            CakeOS.Cui.Themes.CuiTheme.Professional);
+            CakeOS.Cui.Themes.CuiSurfacePaletteCatalog.ActiveTheme);
 
         var superDarkBase = cui.TideBase;
         var superDarkTide = cui.TideColour;
