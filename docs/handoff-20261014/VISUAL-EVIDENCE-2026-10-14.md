@@ -63,7 +63,50 @@ which re-encoded the file and corrupted the `•` character, breaking
 test, reverted with `git checkout`, and redone with a byte-safe editor. **11/11 pass after
 redo.**
 
-## 5. Known remaining differences vs `references/intended/`
+## 5. Shell composition — confirmed against source, not assumed
+
+Earlier revisions recorded the missing rail and header as a *harness limitation*. Reading the
+real shell and capturing `TopRail` shows that was **partly wrong**, and the difference matters.
+
+`9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.axaml`:
+
+```xml
+<Grid RowDefinitions="*,Auto">
+  <topRail:TopRail x:Name="TopRail" Grid.Row="1" />
+  <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="24,0,24,20">
+    <sidebar:Sidebar Width="314" IsVisible="False" />      <!-- migration-only -->
+    <ContentControl x:Name="NativeSidebarHost" Width="330" />
+    <ContentArea Grid.Column="1"> <PaneHost ColumnDefinitions="*,0,0"> ... </PaneHost> </ContentArea>
+  </Grid>
+</Grid>
+```
+
+| Reference requirement (D02 / S:L00014) | Product reality | Status |
+|---|---|---|
+| Far-left pinned Space **rail** (~70 px); toolbox/briefcase at bottom is MANAGE SPACES | **No rail control exists in the shell.** Layout is header + one sidebar + pane | **confirmed product gap** |
+| Contextual Space sidebar ~280 px | `NativeSidebarHost` is **330 px** (`Sidebar` is 314 px and migration-only, `IsVisible=False`) | mismatch |
+| Shared **header above** the workspace (~80 px) | `TopRail` is `Grid.Row="1"` of `RowDefinitions="*,Auto"` — it renders at the **bottom** of the window | **confirmed product gap** |
+| Large rounded workspace inset | `ContentArea` sets `CornerRadius="0"`, `BorderThickness="0"` | mismatch |
+
+### Captured `top-rail.png`
+
+Rendered from the real `TopRail` control. It does carry a model pill
+("Local model · 60%"), search, Apps, Actions and notifications — so the *content* broadly
+exists. But:
+
+- Buttons render as **large saturated purple/blue filled pills**, not the reference's
+  restrained neutral controls.
+- The model pill renders **bright orange**; the reference pill surface is `#2C2F38` neutral.
+- Even after neutrals were routed through CUI Professional, **controls remain heavily
+  accent-filled**. `CUI-PRO-202` calls for restrained accents and calm grouping; accent belongs
+  on selected/active state, not on every action. This is the next bounded correction.
+
+Model-pill semantics are also unverified against the supersession ledger: "Local model · 60%"
+conflates a local model identity with a bare percentage, whereas the ledger requires distinct
+usage/context handling (local usage hidden, missing provider telemetry shown as M, context
+separately measurable) and reasoning mapped to discrete effort LevelIDs.
+
+## 6. Known remaining differences vs `references/intended/`
 
 | # | Difference | State |
 |---|---|---|
