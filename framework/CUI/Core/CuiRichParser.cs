@@ -416,6 +416,8 @@ public sealed class CuiRichParser
         string? repeatItemName = null;
         string? repeatKey = null;
         CuiSourceSpan? repeatKeySpan = null;
+        string? repeatTemplate = null;
+        CuiSourceSpan? repeatTemplateSpan = null;
         var isDefinition = false;
         string? propertyName = null;
         string? propertyValue = null;
@@ -464,6 +466,12 @@ public sealed class CuiRichParser
                 {
                     repeatKey = rawValue;
                     repeatKeySpan = attrSpan;
+                    continue;
+                }
+                if (string.Equals(attrName, "Template", StringComparison.OrdinalIgnoreCase))
+                {
+                    repeatTemplate = rawValue;
+                    repeatTemplateSpan = attrSpan;
                     continue;
                 }
             }
@@ -573,7 +581,21 @@ public sealed class CuiRichParser
                     ParseMarkupValue(repeatSource, repeatSourceSpan ?? span),
                     repeatItemName,
                     ParseMarkupValue(repeatKey, repeatKeySpan ?? span),
-                    span);
+                    span,
+                    string.IsNullOrWhiteSpace(repeatTemplate)
+                        ? null
+                        : ParseMarkupValue(repeatTemplate, repeatTemplateSpan ?? span));
+            }
+
+            // A Template selects one of the Repeat's own Definition children per item, so a
+            // single list can mix shapes. Without this the Repeat silently ignores Template
+            // and instantiates every child for every row, which is how the mixed-template
+            // chat transcript could not be expressed before.
+            if (repeatTemplate is not null && !children.Any(child => child.IsDefinition))
+            {
+                _diagnostics.Error("CUI047",
+                    "<Repeat Template=\"...\"> requires at least one child marked Definition=\"true\" to select from.",
+                    repeatTemplateSpan ?? span);
             }
         }
 
