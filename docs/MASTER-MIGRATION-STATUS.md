@@ -47,7 +47,7 @@ Ubuntu integration surface, not a CUI migration completion claim.
 | WinBoat release | 0.9.2 amd64 Debian artifact downloaded and SHA-256 verified for the preparation PC. No upstream ARM64 frontend release found. |
 | 16-inch device tree | Compiled from `19de1891668a1032b9385de072cc77129e64b094`; model/compatible fields match the 16-inch Samsung. Compiler warnings retained. Matching kernel and installer integration **NOT BUILT**. |
 | Python contract checks | 21 tests cover broker prerequisites, EXE routing and stable image selection. No Wine or Windows guest execution is inferred. |
-| Debian packaging | PowerShell repository entry builds the architecture-independent chooser/CLI package. CI defines package installation and visible GTK dialog checks on amd64 and ARM64. |
+| Debian packaging and chooser display | PowerShell entry builds the package. [CI run 38703390921](https://github.com/CroakyJake12/9to1/actions/runs/38703390921) passed tests, package installation and visible GTK dialog smoke on Ubuntu amd64 and ARM64. This does not establish Wine/Windows guest operation. |
 | Hardware and Windows applications | Physical laptop boot, driver operation, firmware extraction, partition changes, dual boot, ARM64 Wine applications and live WinBoat RemoteApp **UNVERIFIED**. |
 
 The external FreeRDP adapter is distinct from the sandboxed broker's still-disabled

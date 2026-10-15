@@ -131,6 +131,7 @@ The tests cover malformed PE headers, DLL refusal, architecture mismatches,
 missing translation modules, selected-file grants, preserved sandbox settings,
 no launch during planning and RDP argument construction. The package is
 architecture-independent Python/GTK code; it does not bundle Wine or WinBoat.
-CI defines amd64/arm64 package installation and visible-dialog smoke tests.
+[CI run 38703390921](https://github.com/CroakyJake12/9to1/actions/runs/38703390921)
+passed the package installation and visible-dialog smoke tests on amd64 and ARM64.
 Real ARM64 Wine application launch and WinBoat RemoteApp behavior still require
 the target desktop/guest and are not claimed by static tests.
