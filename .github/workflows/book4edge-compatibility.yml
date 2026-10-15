@@ -29,7 +29,7 @@ jobs:
       - name: Install desktop dependencies and check package
         run: |
           sudo apt-get update
-          sudo apt-get install -y ./artifacts/packages/9to1-windows-compat_0.1.0_all.deb xvfb xdotool grub-common
+          sudo apt-get install -y ./artifacts/packages/9to1-windows-compat_0.1.0_all.deb xvfb xdotool grub-common shellcheck
           9to1-compat capabilities
           python3 - <<'PY'
           import struct
@@ -53,9 +53,12 @@ jobs:
           import runpy
           from pathlib import Path
           recipe = runpy.run_path('9to1 OS/tooling/book4edge/assemble-live.py')
-          Path('artifacts/book4edge-grub.cfg').write_text(recipe['grub_config'](), encoding='utf-8')
+          for logging in (False, True):
+              Path(f'artifacts/book4edge-grub-{logging}.cfg').write_text(recipe['grub_config'](logging), encoding='utf-8')
           PY
-          grub-script-check artifacts/book4edge-grub.cfg
+          for menu in artifacts/book4edge-grub-*.cfg; do grub-script-check "$menu"; done
+          sh -n '9to1 OS/tooling/book4edge/boot-log.sh'
+          shellcheck -S warning '9to1 OS/tooling/book4edge/boot-log.sh'
       - uses: actions/upload-artifact@v4
         with:
           name: windows-compat-${{ matrix.runner }}

@@ -9,6 +9,7 @@ import gzip
 import hashlib
 import io
 import json
+import re
 import shutil
 import stat
 import tarfile
@@ -173,12 +174,66 @@ def verify_kernel_bundle(directory):
     return image
 
 
-def assemble(tree, bundle, firmware, linux_firmware=None):
+def logging_entries(original, target):
+    """Opt-in USB logging; private identity is supplied by the local inventory."""
+    uuid = str(target['partuuid']).lower().strip('{}')
+    serial = str(target['serialPrefix']).lower()
+    size = int(target['diskBytes'])
+    if not re.fullmatch(r'[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}', uuid):
+        raise ValueError('Invalid log partition UUID')
+    if not re.fullmatch(r'[0-9a-f]{20,64}', serial) or size <= 0 or size % 512:
+        raise ValueError('Invalid log USB identity')
+    config = f"PARTUUID='{uuid}'\nSERIAL_PREFIX='{serial}'\nDISK_SECTORS='{size // 512}'\n"
+    entries = {
+        'etc/book4edge-log-target': (stat.S_IFREG | 0o600, config.encode()),
+        'usr/sbin/book4edge-boot-log': (stat.S_IFREG | 0o755, Path(__file__).with_name('boot-log.sh').read_bytes()),
+    }
+    start = b'''#!/bin/sh
+case "$1" in prereqs) exit 0 ;; esac
+/usr/sbin/book4edge-boot-log </dev/null >/run/book4edge-logger-errors.txt 2>&1 &
+exit 0
+'''
+    stop = b'''#!/bin/sh
+case "$1" in prereqs) exit 0 ;; esac
+test -f /run/book4edge-log.pid || exit 0
+pid=$(cat /run/book4edge-log.pid)
+case "$pid" in ''|*[!0-9]*) exit 0 ;; esac
+grep -q '/usr/sbin/book4edge-boot-log' "/proc/$pid/cmdline" 2>/dev/null || exit 0
+kill -TERM "$pid" 2>/dev/null || true
+count=0
+while kill -0 "$pid" 2>/dev/null && test "$count" -lt 15; do
+    sleep 1
+    count=$((count + 1))
+done
+exit 0
+'''
+    for phase, name, script in [('init-top', '00book4edge-log', start), ('init-bottom', '00book4edge-log-stop', stop)]:
+        script_path = f'scripts/{phase}/{name}'
+        entries[script_path] = (stat.S_IFREG | 0o755, script)
+        order_path = f'scripts/{phase}/ORDER'
+        entries[order_path] = (stat.S_IFREG | 0o755, f'/{script_path} "$@"\n[ -e /conf/param.conf ] && . /conf/param.conf\n'.encode() + original[order_path][1])
+    entries['etc/systemd/system/book4edge-boot-log.service'] = (stat.S_IFREG | 0o644, b'''[Unit]
+Description=Save this live boot's diagnostics to the approved USB
+After=systemd-udevd.service systemd-journald.service local-fs.target
+ConditionKernelCommandLine=book4edge.log=1
+[Service]
+Type=simple
+ExecStart=/usr/sbin/book4edge-boot-log --userspace
+TimeoutStopSec=20
+[Install]
+WantedBy=multi-user.target
+''')
+    return entries
+
+
+def assemble(tree, bundle, firmware, linux_firmware=None, log_target=None):
     image = verify_kernel_bundle(bundle)
     kernel_deb = bundle / f"linux-image-{RELEASE}_6.19.0-1_arm64.deb"
     entries = module_entries(kernel_deb.read_bytes())
     source_initrd = (tree / "casper/initrd").read_bytes()
     original = original_initrd_entries(source_initrd)
+    if log_target is not None:
+        entries.update(logging_entries(original, log_target))
     runtime_firmware = []
     if linux_firmware is not None:
         runtime_manifest = json.loads((linux_firmware / "manifest.json").read_text(encoding="utf-8-sig"))
@@ -249,6 +304,13 @@ cp -a /usr/lib/firmware/updates/. /root/usr/lib/firmware/updates/
 mkdir -p /root/etc/modprobe.d /root/etc/udev/rules.d /root/var/log
 cp /etc/udev/rules.d/99-book4edge-keyboard.rules /root/etc/udev/rules.d/
 cp /etc/udev/rules.d/99-book4edge-internal-test.rules /root/etc/udev/rules.d/
+if test -f /etc/book4edge-log-target; then
+    mkdir -p /root/usr/sbin /root/etc/systemd/system/multi-user.target.wants
+    cp /etc/book4edge-log-target /root/etc/
+    cp /usr/sbin/book4edge-boot-log /root/usr/sbin/
+    cp /etc/systemd/system/book4edge-boot-log.service /root/etc/systemd/system/
+    ln -sf ../book4edge-boot-log.service /root/etc/systemd/system/multi-user.target.wants/book4edge-boot-log.service
+fi
 if test -f /run/book4edge-internal-readonly; then
     cp /run/book4edge-internal-readonly /root/var/log/book4edge-internal-readonly.txt
 fi
@@ -282,7 +344,7 @@ printf '%s\\n' 'Experimental Book4 Edge 16 live hardware test. Kernel/modules/fi
         shutil.copy2(stock_cfg, backup)
     # ISO copies on Windows retain the read-only attribute on these output files.
     stock_cfg.chmod(stock_cfg.stat().st_mode | stat.S_IWUSR)
-    stock_cfg.write_text(grub_config(), encoding="utf-8", newline="\n")
+    stock_cfg.write_text(grub_config(log_target is not None), encoding="utf-8", newline="\n")
     # The stock casper checksum list covers files we changed; regenerate it.
     checksums = []
     for p in sorted(tree.rglob("*")):
@@ -301,13 +363,14 @@ printf '%s\\n' 'Experimental Book4 Edge 16 live hardware test. Kernel/modules/fi
               "dtbSHA256": sha((dest / "book4edge16.dtb").read_bytes()),
               "grubSHA256": sha(stock_cfg.read_bytes()),
               "internalDiskReadOnlyRule": "KIOXIA THGJFJT2T85BAT0A; verify lsblk RO before testing",
+              "usbBootLoggingConfigured": log_target is not None,
               "initrdBytes": len(combined), "overlayBytes": len(overlay)}
     return result
 
 
-def grub_config():
+def grub_config(enable_usb_logging=False):
     # Keep diagnostics separate: reduced graphics is not a hardware-support pass.
-    return '''set timeout=-1
+    config = '''set timeout=-1
 set default=0
 loadfont unicode
 if [ "$lockdown" = "y" ]; then
@@ -372,6 +435,28 @@ menuentry "Power off" {
     halt
 }
 '''
+    # initramfs-tools treats panic=0 as an instruction to halt on its own errors.
+    # Omitting it preserves the diagnostic shell and time to flush USB logs.
+    config = config.replace(' panic=0', '')
+    if enable_usb_logging:
+        auto_entry = '''menuentry "Book4 Edge - SAVE BOOT LOGS TO USB (select this first)" {
+    set gfxpayload=keep
+    echo "Loading Samsung device tree, kernel and automatic USB logger..."
+    if devicetree /book4edge/book4edge16.dtb; then
+        if linux /book4edge/Image boot=casper nopersistent clk_ignore_unused pd_ignore_unused arm64.nopauth cma=256M console=tty0 acpi=off earlycon=efifb keep_bootcon loglevel=7 printk.time=1 log_buf_len=4M fbcon=nodefer nomodeset module_blacklist=msm noplymouth plymouth.enable=0 systemd.show_status=1 systemd.unit=multi-user.target book4edge.log=1 debug ---; then
+            if initrd /book4edge/initrd; then
+                echo "Boot logs will be saved to BOOK4E_DATA/boot-logs once the USB is available."
+                sleep --interruptible 5
+                boot
+            fi
+        fi
+    fi
+    echo "A boot command returned or failed before automatic logging."
+    sleep --interruptible 300
+}
+'''
+        config = config.replace('insmod fdt\n', 'insmod fdt\n' + auto_entry, 1)
+    return config
 
 
 if __name__ == "__main__":
@@ -380,8 +465,10 @@ if __name__ == "__main__":
     parser.add_argument("--kernel", required=True, type=Path)
     parser.add_argument("--firmware", required=True, type=Path)
     parser.add_argument("--linux-firmware", type=Path, help="Hash-manifested Qualcomm runtime files for early driver probing")
+    parser.add_argument("--log-target", type=Path, help="Private JSON identifying the approved exFAT USB data partition for boot logs")
     parser.add_argument("--report", required=True, type=Path)
     args = parser.parse_args()
-    result = assemble(args.tree, args.kernel, args.firmware, args.linux_firmware)
+    result = assemble(args.tree, args.kernel, args.firmware, args.linux_firmware,
+                      json.loads(args.log_target.read_text(encoding='utf-8-sig')) if args.log_target else None)
     args.report.write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps({k: v for k, v in result.items() if k not in ("firmwareFiles", "runtimeFirmware")}, indent=2))

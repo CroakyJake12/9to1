@@ -11,6 +11,23 @@ spec.loader.exec_module(live)
 
 
 class LiveAssemblyTests(unittest.TestCase):
+    def test_logging_target_rejects_shell_injection_and_invalid_identity(self):
+        target = {'partuuid': '00000000-1111-2222-3333-444444444444',
+                  'serialPrefix': '0123456789abcdef0123', 'diskBytes': 1024}
+        original = {f'scripts/{phase}/ORDER': (stat.S_IFREG | 0o755, b'')
+                    for phase in ('init-top', 'init-bottom')}
+        for key, bad in [('partuuid', "'; touch /outside; #"),
+                         ('serialPrefix', 'anything*'), ('diskBytes', 513),
+                         ('diskBytes', -512)]:
+            with self.subTest(key=key, value=bad), self.assertRaises(ValueError):
+                live.logging_entries(original, dict(target, **{key: bad}))
+
+    def test_diagnostic_errors_do_not_request_initramfs_halt(self):
+        for logging in (False, True):
+            menu = live.grub_config(logging)
+            self.assertNotIn(' panic=', menu)
+            self.assertEqual('book4edge.log=1' in menu, logging)
+
     def test_cpio_roundtrip_preserves_linux_modes_and_symlinks(self):
         entries = live.add_parents({
             "usr/lib/modules/test/driver.ko": (stat.S_IFREG | 0o644, b"module\0payload"),
