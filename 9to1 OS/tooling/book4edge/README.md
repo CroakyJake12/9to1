@@ -63,8 +63,12 @@ bash '9to1 OS/tooling/book4edge/build-hardware.sh' "$PWD/artifacts/book4edge-ker
 ```
 
 The script fetches the exact source commit, builds in a new directory, and never
-installs a kernel or edits EFI/GRUB. It uses upstream ARM64 defconfig, which still
-needs review against the laptop's required drivers. Kernel packages, their
+installs a kernel or edits EFI/GRUB. A full build uses the pinned source's
+`ubuntu_x1e_defconfig`, with debug symbols and unavailable distribution signing
+keys removed. The internal sound card is disabled in both configuration and DTB
+for first boot because speaker protection is unverified. The DTB-only mode uses
+ARM64 defconfig. The experimental kernel workflow builds on native ARM64 and
+checks the resulting model, configuration and package identity. Kernel packages, their
 modules, initramfs and DTB must be deployed as a matched set. Integrating that set
 into the live installer and its installed target is an outstanding hardware
 enablement step; copying a DTB alone is insufficient. This community kernel is
@@ -134,6 +138,29 @@ after firmware extraction, then reboot and collect another report.
 The preparation scripts do not change boot order, install GRUB, shrink partitions
 or disable Secure Boot. Keep the USB and Windows recovery media until recovery
 and both operating systems have been tested.
+
+### Export firmware while Windows is running
+
+```powershell
+./export-windows-firmware.ps1 -Destination 'C:\\path\\to\\new-private-firmware-export'
+```
+
+This copies required DSP/GPU firmware and available optional wireless/camera
+firmware into a Windows-style DriverStore tree, preserving timestamps and hashing
+each source and copy. It fails before copying if a required file is missing and
+refuses to overwrite an existing export. Duplicate driver versions remain in
+separate directories for the Linux extraction tool to select. Pass the export root
+to the reviewed `qcom-firmware-extract` tool from a working Linux session. Optional
+wireless files are retained for investigation, not blindly installed into Linux
+firmware paths. Keep the entire export private; no firmware belongs in Git.
+
+Local continuation on 15 October 2026 identified an NP960XMA-KB1UK with X1E80100
+and 16 GB RAM. A private export copied and hash-verified 19 firmware files; the
+optional `battmgr.jsn` was absent. The existing Ubuntu 26.04.1 ARM64 ISO matched
+the official SHA-256. These observations establish file preparation only, not
+physical Linux boot or driver operation. Windows and recovery partitions remain
+untouched. The connected desktop installation USB is approved for reuse after
+the Samsung boot candidate is assembled and checked.
 
 ## Windows application layers
 
