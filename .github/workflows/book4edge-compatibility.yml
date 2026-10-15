@@ -90,6 +90,7 @@ jobs:
           test "$(fdtget artifacts/display-test/book4edge16-gpu.dtb /soc@0/gpu@3d00000 status)" = okay
           if [ "$CONTROLLER_HPD" = true ]; then
             ! fdtget artifacts/display-test/book4edge16-gpu.dtb /soc@0/display-subsystem@ae00000/displayport-controller@aea0000/aux-bus/panel hpd-gpios
+            fdtget artifacts/display-test/book4edge16-gpu.dtb /soc@0/display-subsystem@ae00000/displayport-controller@aea0000/aux-bus/panel no-hpd
             test "$(fdtget artifacts/display-test/book4edge16-gpu.dtb /soc@0/pinctrl@f100000/edp0-hpd-default-state function)" = edp0_hot
           fi
       - uses: actions/upload-artifact@v4

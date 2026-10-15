@@ -76,14 +76,17 @@ def create(source, output, controller_hpd=False):
     shutil.copyfile(source, output)
     subprocess.run(['fdtput', '-t', 's', str(output), GPU, 'status', 'okay'], check=True)
     if controller_hpd:
-        # The pinned panel driver supports controller/AUX HPD when this optional
-        # GPIO is absent. Retain the controller's dedicated edp0_hot input.
+        # Follow the newer Samsung X1E board's panel setup: avoid a duplicate
+        # GPIO request and wait the driver's specified maximum 200 ms after
+        # panel power-on. Retain the controller's dedicated edp0_hot input.
         subprocess.run(['fdtput', '-d', str(output), PANEL, 'hpd-gpios'], check=True)
+        subprocess.run(['fdtput', str(output), PANEL, 'no-hpd'], check=True)
     after, new_header = properties(output.read_bytes())
     expected = dict(before)
     expected[(GPU, 'status')] = b'okay\0'
     if controller_hpd:
         del expected[(PANEL, 'hpd-gpios')]
+        expected[(PANEL, 'no-hpd')] = b''
     if after != expected or header != new_header:
         raise ValueError('Unexpected change beyond the selected display properties')
     report = {'originalDTBSHA256': EXPECTED_SOURCE,
@@ -92,8 +95,10 @@ def create(source, output, controller_hpd=False):
               'soundStillDisabled': True, 'physicalDisplayVerified': False}
     if controller_hpd:
         del report['onlyChangedProperty']
-        report['changedProperties'] = {GPU + '/status': 'okay', PANEL + '/hpd-gpios': 'removed'}
+        report['changedProperties'] = {GPU + '/status': 'okay', PANEL + '/hpd-gpios': 'removed', PANEL + '/no-hpd': 'present'}
         report['controllerHpdRetained'] = True
+        report['panelMaximumPowerOnDelayMs'] = 200
+        report['panelConfigurationSource'] = 'https://github.com/n1c0la84/linux-book4-edge/blob/6221fc7393c8cd04554df24c6853f50d61d6ab03/arch/arm64/boot/dts/qcom/x1e-samsung-galaxy-book4-edge.dtsi'
         report['reason'] = 'Physical boot: panel GPIO119 request conflicts with controller edp0_hot ownership'
     output.with_name('display-test.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(report, indent=2))
