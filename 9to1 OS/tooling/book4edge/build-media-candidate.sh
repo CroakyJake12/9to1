@@ -4,6 +4,7 @@ set -euo pipefail
 work=$1
 headers=$2
 output=$3
+kernel_deb=$4
 recipe=$(cd "$(dirname "$0")" && pwd)
 revision=6221fc7393c8cd04554df24c6853f50d61d6ab03
 release=7.2.7-9to1-book4edge16-next
@@ -11,7 +12,7 @@ release=7.2.7-9to1-book4edge16-next
 git init "$work"
 git -C "$work" remote add origin https://github.com/n1c0la84/linux-book4-edge.git
 git -C "$work" sparse-checkout init --cone
-git -C "$work" sparse-checkout set arch/arm64/boot/dts/qcom include/dt-bindings sound/soc/qcom sound/soc/codecs drivers/media/i2c
+git -C "$work" sparse-checkout set arch/arm64/boot/dts/qcom include/dt-bindings include/uapi sound/soc/qcom sound/soc/codecs drivers/media/i2c
 git -C "$work" fetch --filter=blob:none --depth 1 origin "$revision"
 git -C "$work" checkout --detach FETCH_HEAD
 [[ $(git -C "$work" rev-parse HEAD) == "$revision" ]]
@@ -43,6 +44,41 @@ test "$(fdtget "$output/book4edge16-media.dtb" / model)" = 'Samsung Galaxy Book4
 test "$(fdtget "$output/book4edge16-media.dtb" /soc@0/cci@ac15000/i2c-bus@0/camera@36 compatible)" = ovti,ov02c10
 test "$(fdtget "$output/book4edge16-media.dtb" /sound status)" = okay
 git -C "$work" diff > "$output/candidate.patch"
+# Generate module indexes against the actual complete kernel tree. The updates
+# directory takes precedence over its original sound/camera modules.
+dpkg-deb -x "$kernel_deb" "$work/module-root"
+module_root=$work/module-root/usr/lib/modules/$release
+test -d "$module_root" || module_root=$work/module-root/lib/modules/$release
+mkdir -p "$module_root/updates/book4edge"
+cp "$output/"*.ko "$module_root/updates/book4edge/"
+depmod -b "$work/module-root" "$release"
+mkdir -p "$work/module-overlay/usr/lib/modules/$release"
+cp -a "$module_root/updates" "$module_root/"modules.* "$work/module-overlay/usr/lib/modules/$release/"
+tar -C "$work/module-overlay" -czf "$output/module-overlay.tar.gz" usr
+# Keep the matching modules installable after the main kernel package.
+pkg=$work/media-package
+mkdir -p "$pkg/DEBIAN" "$pkg/usr/lib/modules/$release/updates/book4edge" "$pkg/boot/dtbs/$release"
+cp "$output/"*.ko "$pkg/usr/lib/modules/$release/updates/book4edge/"
+cp "$output/book4edge16-media.dtb" "$pkg/boot/dtbs/$release/"
+cat > "$pkg/DEBIAN/control" <<CONTROL
+Package: book4edge-media-support
+Version: 0.1.0
+Architecture: arm64
+Maintainer: 9to1 compatibility preparation
+Depends: linux-image-$release, kmod, initramfs-tools
+Description: NP960XMA camera and deliberately quiet two-speaker candidate
+ Physical acceptance is pending. This is not calibrated speaker protection.
+CONTROL
+cat > "$pkg/DEBIAN/postinst" <<POSTINST
+#!/bin/sh
+set -e
+depmod '$release'
+if test -f '/boot/initrd.img-$release'; then
+    update-initramfs -u -k '$release'
+fi
+POSTINST
+chmod 755 "$pkg/DEBIAN/postinst"
+dpkg-deb --root-owner-group --build "$pkg" "$output/book4edge-media-support_0.1.0_arm64.deb"
 printf '%s\n' "$revision" > "$output/source.commit"
 printf '%s\n' "$release" > "$output/kernel.release"
 (cd "$output" && sha256sum ./* > SHA256SUMS)
