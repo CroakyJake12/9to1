@@ -1,0 +1,54 @@
+name: Book4 Edge compatibility preparation
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '9to1 OS/compatibility/wine/**'
+      - '9to1 OS/tooling/book4edge/**'
+      - 'eng/9to1.ps1'
+      - '.github/workflows/book4edge-compatibility.yml'
+permissions:
+  contents: read
+jobs:
+  package:
+    strategy:
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - name: Validate compatibility and media selection
+        shell: pwsh
+        run: ./eng/9to1.ps1 verify -Component compatibility
+      - name: Build architecture-independent desktop package
+        shell: pwsh
+        run: ./eng/9to1.ps1 package-linux -Component compatibility
+      - name: Install desktop dependencies and check package
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ./artifacts/packages/9to1-windows-compat_0.1.0_all.deb xvfb xdotool
+          9to1-compat capabilities
+          python3 - <<'PY'
+          import struct
+          data = bytearray(88)
+          data[:2] = b'MZ'
+          struct.pack_into('<I', data, 60, 64)
+          data[64:68] = b'PE\0\0'
+          struct.pack_into('<H', data, 68, 0x8664)
+          open('/tmp/chooser-fixture.exe', 'wb').write(data)
+          PY
+          9to1-open-exe --plan -- /tmp/chooser-fixture.exe
+          xvfb-run -a bash -euc '
+            9to1-open-exe -- /tmp/chooser-fixture.exe &
+            chooser_pid=$!
+            trap "kill $chooser_pid 2>/dev/null || true" EXIT
+            timeout 15 xdotool search --sync --onlyvisible --name "Open Windows application"
+          '
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-compat-${{ matrix.runner }}
+          path: artifacts/packages/*.deb
+          if-no-files-found: error

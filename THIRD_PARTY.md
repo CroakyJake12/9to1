@@ -20,6 +20,8 @@ Preserve notices, source offers and licence files when packaging or moving code.
 | glycin / Loupe | `9to1 Workspace/Picture/Source/{glycin,loupe}/` | glycin MPL/LGPL dual, Loupe GPL-3.0-or-later; loader integration and viewer parity still open. |
 | GStreamer / GES | `9to1 Workspace/{Wave,Motion}/Source/{GStreamer,GES}/` | LGPL notices retained; plugin-specific terms and runtime acceptance remain separate. |
 | Wine / WinBoat | `9to1 OS/compatibility/{wine,winboat}/Source/` | Wine LGPL-2.1-or-later, WinBoat MIT; host launch and VM/container acceptance not proven. |
+| Hangover / FEX runtime preparation | `9to1 OS/compatibility/wine/prepare-hangover.py` | External [Hangover 11.16 release](https://github.com/AndreRH/hangover/releases/tag/hangover-11.16), Ubuntu 26.04 ARM64 archive pinned by SHA-256. No third-party runtime bytes committed. Staged Wine/FEX/Box64 package copyright and licence files remain under `share/doc/`; preserve their component-specific terms and upstream source references. |
+| Samsung Book4 Edge kernel / DTB | `9to1 OS/tooling/book4edge/profile.json` | External `zensanp/linux-book4-edge` commit `19de1891668a1032b9385de072cc77129e64b094`; Linux and per-file SPDX notices apply (16-inch DTS: BSD-3-Clause). Builds remain experimental, separate from Ubuntu's signed image and security maintenance. |
 | GNOME Shell and Mutter | `9to1 OS/platform/` submodules | Preserve upstream licences and exact submodule revisions in OS source and images. |
 | Historical CakeOS/CakeAI material | `reference/` | Reference-only unless deliberately promoted with its original provenance and licence reviewed. |
 

@@ -34,6 +34,25 @@ acceptance chain has evidence.
 
 The follow-on native-host headless test found and corrected lost authored CUI component IDs at the Avalonia loader boundary. The actual Home host now shows and arranges its canonical CUI route in the headless backend, with observed unavailable catalog/runtime state; Home host Debug/Release tests pass 1/1 each, CUI Runtime Release 53/53 and Boards app Release 50/50. Physical UI and screenshot comparison remain unverified.
 
+## 2026-10-15: Book4 Edge preparation and Windows EXE chooser
+
+The [preparation kit](../9to1%20OS/tooling/book4edge/README.md) and
+[EXE chooser](../9to1%20OS/compatibility/wine/EXE-CHOOSER.md) are an experimental
+Ubuntu integration surface, not a CUI migration completion claim.
+
+| Evidence | State |
+| --- | --- |
+| Final Ubuntu ARM64 image | Ubuntu 26.04.1 downloaded; official checksum signature and complete ISO SHA-256 verified. 26.10 final ARM64 checksums were unavailable at inspection time. |
+| ARM64 Wine/FEX runtime | Hangover 11.16 Ubuntu 26.04 archive verified against pinned release SHA-256 and staged with both FEX DLLs; native ELF architecture checked without execution. |
+| WinBoat release | 0.9.2 amd64 Debian artifact downloaded and SHA-256 verified for the preparation PC. No upstream ARM64 frontend release found. |
+| 16-inch device tree | Compiled from `19de1891668a1032b9385de072cc77129e64b094`; model/compatible fields match the 16-inch Samsung. Compiler warnings retained. Matching kernel and installer integration **NOT BUILT**. |
+| Python contract checks | 21 tests cover broker prerequisites, EXE routing and stable image selection. No Wine or Windows guest execution is inferred. |
+| Debian packaging | PowerShell repository entry builds the architecture-independent chooser/CLI package. CI defines package installation and visible GTK dialog checks on amd64 and ARM64. |
+| Hardware and Windows applications | Physical laptop boot, driver operation, firmware extraction, partition changes, dual boot, ARM64 Wine applications and live WinBoat RemoteApp **UNVERIFIED**. |
+
+The external FreeRDP adapter is distinct from the sandboxed broker's still-disabled
+WinBoat provider. It does not inherit or claim its offline per-app isolation.
+
 ## Non-negotiable verification gates
 
 - Do not call a build, static parser test, source file, or package recipe a product verification.
