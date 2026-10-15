@@ -79,6 +79,9 @@ def build(tree, base_report, firmware, radio, output, bundle=None, root_overlay=
         if live.sha(image) != old['imageSHA256']:
             raise ValueError('Baseline kernel identity changed')
     runtime = recipe.with_name('runtime')
+    if not bundle:
+        entries['usr/sbin/book4edge-battery-test'] = (EXE,
+            recipe.with_name('battery-test').joinpath('start-battery-test.sh').read_text().encode())
     address = radio.read_text().strip()
     if not re.fullmatch(r'(?:[0-9A-F]{2}:){5}[0-9A-F]{2}',address):
         raise ValueError('Expected original Windows radio address')

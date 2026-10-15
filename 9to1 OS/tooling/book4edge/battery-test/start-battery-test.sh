@@ -4,11 +4,27 @@ set -eu
 case " $(cat /proc/cmdline) " in *' book4edge.battery=1 '*) ;; *) exit 0 ;; esac
 test "$(uname -r)" = 6.19.0-9to1-book4edge16
 test "$(cat /sys/class/dmi/id/board_name)" = NP960XMA-KB1UK
-if ! test -f /var/log/book4edge-internal-readonly.txt ||
-   ! grep -q 'protected read-only' /var/log/book4edge-internal-readonly.txt; then
-    echo 'Battery test skipped: internal UFS read-only protection was not confirmed. Check UFS driver startup in kernel.log.' >&2
+# Disk discovery is independent of the EC. Require the exact-model late-device
+# guard and verify every currently exposed matching disk/partition is read-only.
+# An absent UFS device must not suppress otherwise valid battery reporting.
+guard=/etc/udev/rules.d/99-book4edge-internal-test.rules
+grep -Fq 'ATTRS{model}=="THGJFJT2T85BAT0A*", RUN+="/sbin/blockdev --setro /dev/%k"' "$guard" || {
+    echo 'Battery test skipped: live storage protection rule is missing.' >&2
     exit 1
-fi
+}
+seen=0
+for disk in /sys/class/block/sd*; do
+    test -f "$disk/device/model" || continue
+    test "$(tr -d '[:space:]' < "$disk/device/model")" = THGJFJT2T85BAT0A || continue
+    seen=$((seen + 1))
+    test "$(cat "$disk/ro")" = 1 || { echo 'Internal disk is not protected read-only.' >&2; exit 1; }
+    name=${disk##*/}
+    for part in "$disk"/"$name"*; do
+        test -f "$part/partition" || continue
+        test "$(cat "$part/ro")" = 1 || { echo 'Internal partition is not protected read-only.' >&2; exit 1; }
+    done
+done
+echo "Live storage protection checked; internal UFS disks detected: $seen"
 bus=
 attempt=0
 while test -z "$bus" && test "$attempt" -lt 30; do

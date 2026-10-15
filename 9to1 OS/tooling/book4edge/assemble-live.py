@@ -309,7 +309,9 @@ WantedBy=multi-user.target
         raise ValueError("UFS controller driver not available")
     entries["conf/modules"] = (stat.S_IFREG | 0o644, ("\n".join(modules) + "\n").encode())
     entries["etc/udev/rules.d/99-book4edge-keyboard.rules"] = (stat.S_IFREG | 0o644, KEYBOARD_RULE.encode())
-    disk_rule = 'SUBSYSTEM=="block", ATTRS{model}=="THGJFJT2T85BAT0A*", ENV{UDISKS_IGNORE}="1"\n'
+    disk_rule = ('SUBSYSTEM=="block", ATTRS{model}=="THGJFJT2T85BAT0A*", ENV{UDISKS_IGNORE}="1"\n'
+                 'ACTION=="add|change", SUBSYSTEM=="block", ATTRS{model}=="THGJFJT2T85BAT0A*", '
+                 'RUN+="/sbin/blockdev --setro /dev/%k"\n')
     entries["etc/udev/rules.d/99-book4edge-internal-test.rules"] = (stat.S_IFREG | 0o644, disk_rule.encode())
     hook = f'''#!/bin/sh
 case "$1" in prereqs) exit 0 ;; esac
