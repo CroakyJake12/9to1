@@ -46,6 +46,29 @@ snapshot() {
         if command -v upower >/dev/null 2>&1; then
             timeout 3 upower --dump > "$out/upower.txt.new" 2>&1 && mv "$out/upower.txt.new" "$out/upower.txt"
         fi
+        for result in /run/user/[0-9]*/book4edge-hardware-check.json; do
+            test -f "$result" && test ! -L "$result" || continue
+            head -c 65536 "$result" > "$out/user-hardware-check.json.new" && mv "$out/user-hardware-check.json.new" "$out/user-hardware-check.json"
+        done
+        if test "$((count % 6))" -eq 0; then
+            {
+                printf '\n=== PCI drivers ===\n'; timeout 3 lspci -nnk
+                printf '\n=== USB devices ===\n'; timeout 3 lsusb
+                printf '\n=== Network status ===\n'; timeout 3 nmcli device status
+                printf '\n=== Radio state ===\n'; timeout 3 rfkill list
+                printf '\n=== Bluetooth configuration ===\n'; timeout 3 btmgmt info
+                printf '\n=== ALSA cards ===\n'; cat /proc/asound/cards
+                printf '\n=== Playback devices ===\n'; timeout 3 aplay -l
+                printf '\n=== Capture devices ===\n'; timeout 3 arecord -l
+                printf '\n=== Storage protection ===\n'; lsblk -o NAME,MODEL,SIZE,RO,TYPE,MOUNTPOINTS
+                printf '\n=== Camera devices ===\n'; ls -l /dev/video* /dev/media* 2>/dev/null
+                printf '\n=== Deferred drivers ===\n'; cat /sys/kernel/debug/devices_deferred 2>/dev/null
+                printf '\n=== Graphics drivers ===\n'; ls -l /sys/class/drm/card*/device/driver 2>/dev/null
+                printf '\n=== Brightness and keyboard lights ===\n'; ls /sys/class/backlight /sys/class/leds 2>/dev/null
+                printf '\n=== CPU frequency drivers ===\n'; cat /sys/devices/system/cpu/cpufreq/policy*/scaling_driver 2>/dev/null
+            } > "$out/hardware-status.txt.new" 2>&1
+            mv "$out/hardware-status.txt.new" "$out/hardware-status.txt"
+        fi
     fi
     cat /proc/uptime > "$out/last-snapshot-uptime.txt"
     sync
@@ -112,7 +135,7 @@ while test "$attempt" -lt 120; do
         cat /proc/mounts > "$out/mounts.txt"
         printf '%s\n' "$phase reached; USB identity matched; this is not a hardware pass" > "$out/logger-started.txt"
         count=0
-        while test "$count" -lt 180; do
+        while test "$count" -lt 720; do
             snapshot
             sleep 5
             count=$((count + 1))

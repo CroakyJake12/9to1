@@ -113,7 +113,7 @@ def tar_members(name, data):
     return tarfile.open(fileobj=io.BytesIO(data), mode="r:*")
 
 
-def module_entries(deb):
+def module_entries(deb, release=RELEASE):
     members = deb_members(deb)
     data_names = [n for n in members if n.startswith("data.tar")]
     if len(data_names) != 1:
@@ -125,7 +125,7 @@ def module_entries(deb):
             name = safe_name(member.name)
             if name == "lib/modules" or name.startswith("lib/modules/"):
                 name = "usr/" + name
-            prefix = "usr/lib/modules/" + RELEASE
+            prefix = "usr/lib/modules/" + release
             if name != prefix and not name.startswith(prefix + "/"):
                 continue
             if member.isdir():
@@ -140,7 +140,7 @@ def module_entries(deb):
             else:
                 raise ValueError(f"Unexpected module entry: {name}")
     for required in ("modules.dep", "modules.dep.bin", "modules.alias.bin", "modules.builtin"):
-        if f"usr/lib/modules/{RELEASE}/{required}" not in entries:
+        if f"usr/lib/modules/{release}/{required}" not in entries:
             raise ValueError(f"Package lacks matching {required}")
     if not any("/kernel/drivers/ufs/" in n and ".ko" in n for n in entries):
         raise ValueError("Package has no UFS driver modules")
@@ -155,13 +155,13 @@ def add_parents(entries):
     return dict(sorted(entries.items(), key=lambda item: (item[0].count("/"), item[0])))
 
 
-def verify_kernel_bundle(directory):
+def verify_kernel_bundle(directory, release=RELEASE):
     for line in (directory / "SHA256SUMS").read_text().splitlines():
         digest, name = line.split(maxsplit=1)
         name = safe_name(name.lstrip("*"))
         if sha((directory / name).read_bytes()) != digest:
             raise ValueError(f"Kernel artifact hash mismatch: {name}")
-    if (directory / "kernel.release").read_text().strip() != RELEASE:
+    if (directory / "kernel.release").read_text().strip() != release:
         raise ValueError("Kernel release does not match this assembly recipe")
     image = (directory / "Image").read_bytes()
     if image[56:60] != b"ARM\x64":
@@ -273,7 +273,9 @@ WantedBy=multi-user.target
         runtime_manifest = json.loads((linux_firmware / "manifest.json").read_text(encoding="utf-8-sig"))
         for record in runtime_manifest["firmware"]:
             name = safe_name(record["file"])
-            if not (name.startswith(("qca/", "ath12k/WCN7850/hw2.0/")) or name == "qcom/gen70500_sqe.fw"):
+            if not (name.startswith(("qca/", "ath12k/WCN7850/hw2.0/")) or name in (
+                    "qcom/gen70500_sqe.fw", "qcom/gen70500_gmu.bin", "regulatory.db", "regulatory.db.p7s",
+                    "qcom/x1e80100/X1E80100-GalaxyBook4Edge-tplg.bin")):
                 raise ValueError(f"Unexpected runtime firmware path: {name}")
             data = (linux_firmware / name).read_bytes()
             if sha(data) != record["sha256"]:
