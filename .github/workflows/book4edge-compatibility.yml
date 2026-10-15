@@ -1,6 +1,11 @@
 name: Book4 Edge compatibility preparation
 on:
   workflow_dispatch:
+    inputs:
+      display_dtb:
+        description: 'Prepare the separate GPU-enabled 16-inch display test DTB'
+        type: boolean
+        default: false
   pull_request:
     paths:
       - '9to1 OS/compatibility/wine/**'
@@ -9,6 +14,7 @@ on:
       - '.github/workflows/book4edge-compatibility.yml'
 permissions:
   contents: read
+  actions: read
 jobs:
   package:
     strategy:
@@ -29,7 +35,7 @@ jobs:
       - name: Install desktop dependencies and check package
         run: |
           sudo apt-get update
-          sudo apt-get install -y ./artifacts/packages/9to1-windows-compat_0.1.0_all.deb xvfb xdotool grub-common shellcheck
+          sudo apt-get install -y ./artifacts/packages/9to1-windows-compat_0.1.0_all.deb xvfb xdotool grub-common shellcheck device-tree-compiler
           9to1-compat capabilities
           python3 - <<'PY'
           import struct
@@ -53,12 +59,33 @@ jobs:
           import runpy
           from pathlib import Path
           recipe = runpy.run_path('9to1 OS/tooling/book4edge/assemble-live.py')
-          for logging in (False, True):
-              Path(f'artifacts/book4edge-grub-{logging}.cfg').write_text(recipe['grub_config'](logging), encoding='utf-8')
+          for logging, display in ((False, False), (True, False), (True, True)):
+              Path(f'artifacts/book4edge-grub-{logging}-{display}.cfg').write_text(recipe['grub_config'](logging, display), encoding='utf-8')
           PY
           for menu in artifacts/book4edge-grub-*.cfg; do grub-script-check "$menu"; done
           sh -n '9to1 OS/tooling/book4edge/boot-log.sh'
           shellcheck -S warning '9to1 OS/tooling/book4edge/boot-log.sh'
+      - name: Retrieve the verified matching kernel DTB
+        if: inputs.display_dtb && matrix.runner == 'ubuntu-24.04-arm'
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 38726175861
+          name: book4edge16-kernel-ed869653cd33078dfa92ed7e3057e1573504464a
+          path: kernel-input
+      - name: Prepare an isolated native display test
+        if: inputs.display_dtb && matrix.runner == 'ubuntu-24.04-arm'
+        run: |
+          mkdir -p artifacts/display-test
+          python3 '9to1 OS/tooling/book4edge/make-display-test.py' kernel-input/x1e80100-samsung-galaxy-book4-edge-16.dtb artifacts/display-test/book4edge16-gpu.dtb
+          test "$(fdtget artifacts/display-test/book4edge16-gpu.dtb /sound status)" = disabled
+          test "$(fdtget artifacts/display-test/book4edge16-gpu.dtb /soc@0/gpu@3d00000 status)" = okay
+      - uses: actions/upload-artifact@v4
+        if: inputs.display_dtb && matrix.runner == 'ubuntu-24.04-arm'
+        with:
+          name: book4edge-display-test
+          path: artifacts/display-test/
+          if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
           name: windows-compat-${{ matrix.runner }}

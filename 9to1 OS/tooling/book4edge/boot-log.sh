@@ -1,5 +1,5 @@
 #!/bin/sh
-# Initramfs-only diagnostics. Never mount any partition except the configured USB.
+# Live boot diagnostics. Never mount any partition except the configured USB.
 set -u
 export PATH=/usr/sbin:/usr/bin:/sbin:/bin
 umask 077
@@ -10,19 +10,24 @@ test -f /etc/book4edge-log-target || exit 0
 mountpoint=/run/book4edge-log-usb
 phase=initramfs
 test "${1:-}" != --userspace || phase=userspace
+lockdir=/run/book4edge-log-$phase.lock
+mkdir "$lockdir" 2>/dev/null || exit 0
 out=
 mounted=no
 
 snapshot() {
     test -n "$out" || return 0
     dmesg > "$out/kernel.log.new" 2>&1 && mv "$out/kernel.log.new" "$out/kernel.log"
-    for source in /run/initramfs/initramfs.debug /casper.log /root/var/log/casper.log; do
+    for source in /run/initramfs/initramfs.debug /casper.log /root/var/log/casper.log /var/log/casper.log /run/book4edge-root-init.log /root/var/log/book4edge-internal-readonly.txt /var/log/book4edge-internal-readonly.txt; do
         test -f "$source" || continue
         name=${source##*/}
         tail -c 4194304 "$source" > "$out/$name.new" 2>&1 && mv "$out/$name.new" "$out/$name"
     done
     if test "$phase" = userspace && command -v journalctl >/dev/null 2>&1; then
         journalctl -b --no-pager -n 2000 > "$out/journal.log.new" 2>&1 && mv "$out/journal.log.new" "$out/journal.log"
+    fi
+    if test "$phase" = userspace && command -v timeout >/dev/null 2>&1; then
+        timeout 3 systemctl --no-pager list-jobs > "$out/systemd-jobs.txt" 2>&1 || true
     fi
     cat /proc/uptime > "$out/last-snapshot-uptime.txt"
     sync
@@ -36,6 +41,7 @@ finish() {
         sync
         umount "$mountpoint" || true
     fi
+    rmdir "$lockdir" 2>/dev/null || true
     exit 0
 }
 trap finish TERM INT EXIT
@@ -85,6 +91,7 @@ while test "$attempt" -lt 120; do
         mkdir -p "$out" || exit 0
         cat /proc/cmdline > "$out/cmdline.txt"
         uname -a > "$out/kernel-version.txt"
+        cat /proc/mounts > "$out/mounts.txt"
         printf '%s\n' "$phase reached; USB identity matched; this is not a hardware pass" > "$out/logger-started.txt"
         count=0
         while test "$count" -lt 180; do
