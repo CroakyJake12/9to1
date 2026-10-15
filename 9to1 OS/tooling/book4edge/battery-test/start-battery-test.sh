@@ -13,7 +13,7 @@ while test -z "$bus" && test "$attempt" -lt 30; do
         for link in "$candidate/of_node" "$candidate/device/of_node"; do
             node=$(readlink -f "$link") || continue
             case "$node" in
-                */soc@0/geniqup@b00000/i2c@b80000)
+                */soc@0/geniqup@bc0000/i2c@b80000)
                     found=${candidate##*/}
                     test -z "$bus" || test "$bus" = "$found"
                     bus=$found
