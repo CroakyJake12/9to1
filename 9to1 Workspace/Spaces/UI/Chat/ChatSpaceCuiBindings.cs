@@ -66,10 +66,11 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
     public void Refresh()
     {
         _snapshot = _state();
-        // CuiViewModel resolves a dotted path by its last segment alone, which would make
-        // "Conversation.Title" and "Status.Message" collide with any other Title or Message in the
-        // document. Reads therefore go through TryGetValue below against exact paths; this view
-        // model exists only to raise the change notification the repeat reconciler listens for.
+        // Reads go through TryGetValue below rather than through this view model. CuiViewModel now
+        // resolves an exact key before falling back to the final path segment, so both approaches
+        // agree; resolving here anyway keeps every authored path listed in one place and means an
+        // unrecognised path is visibly absent instead of silently matching some other property.
+        // The view model exists to raise the change notification the repeat reconciler listens for.
         _values.Set("Revision", _revision++);
     }
 
