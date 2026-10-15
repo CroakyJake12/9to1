@@ -234,7 +234,7 @@ WantedBy=sysinit.target
     return entries
 
 
-def assemble(tree, bundle, firmware, linux_firmware=None, log_target=None, display_dtb=None):
+def assemble(tree, bundle, firmware, linux_firmware=None, log_target=None, display_dtb=None, battery_module=None):
     image = verify_kernel_bundle(bundle)
     kernel_deb = bundle / f"linux-image-{RELEASE}_6.19.0-1_arm64.deb"
     entries = module_entries(kernel_deb.read_bytes())
@@ -242,6 +242,32 @@ def assemble(tree, bundle, firmware, linux_firmware=None, log_target=None, displ
     original = original_initrd_entries(source_initrd)
     if log_target is not None:
         entries.update(logging_entries(original, log_target))
+    battery_report = None
+    if battery_module is not None:
+        if log_target is None or display_dtb is None:
+            raise ValueError('Battery testing requires the verified display and USB logging')
+        battery_report = json.loads(battery_module.with_name('battery-test.json').read_text())
+        data = battery_module.read_bytes()
+        source = Path(__file__).with_name('battery-test') / 'book4_ec.c'
+        if (battery_report['kernelRelease'] != RELEASE or
+                battery_report['moduleSHA256'] != sha(data) or
+                battery_report['sourceSHA256'] != sha(source.read_text().encode()) or
+                not data.startswith(b'\x7fELF\x02\x01') or data[18:20] != b'\xb7\0'):
+            raise ValueError('Battery module provenance, source or architecture mismatch')
+        entries['usr/lib/book4edge/book4_ec.ko'] = (stat.S_IFREG | 0o644, data)
+        entries['usr/sbin/book4edge-battery-test'] = (stat.S_IFREG | 0o755,
+            source.with_name('start-battery-test.sh').read_text().encode())
+        entries['etc/systemd/system/book4edge-battery-test.service'] = (stat.S_IFREG | 0o644, b'''[Unit]
+Description=Opt-in Samsung battery reporting test
+After=systemd-udev-trigger.service
+ConditionKernelCommandLine=book4edge.battery=1
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/book4edge-battery-test
+RemainAfterExit=yes
+[Install]
+WantedBy=multi-user.target
+''')
     runtime_firmware = []
     if linux_firmware is not None:
         runtime_manifest = json.loads((linux_firmware / "manifest.json").read_text(encoding="utf-8-sig"))
@@ -320,6 +346,13 @@ if test -f /etc/book4edge-log-target; then
     cp /etc/systemd/system/book4edge-boot-log.service /root/etc/systemd/system/
     ln -sf ../book4edge-boot-log.service /root/etc/systemd/system/sysinit.target.wants/book4edge-boot-log.service
 fi
+if test -f /usr/lib/book4edge/book4_ec.ko; then
+    mkdir -p /root/usr/lib/book4edge /root/usr/sbin /root/etc/systemd/system/multi-user.target.wants
+    cp /usr/lib/book4edge/book4_ec.ko /root/usr/lib/book4edge/
+    cp /usr/sbin/book4edge-battery-test /root/usr/sbin/
+    cp /etc/systemd/system/book4edge-battery-test.service /root/etc/systemd/system/
+    ln -sf ../book4edge-battery-test.service /root/etc/systemd/system/multi-user.target.wants/book4edge-battery-test.service
+fi
 if test -f /run/book4edge-internal-readonly; then
     cp /run/book4edge-internal-readonly /root/var/log/book4edge-internal-readonly.txt
 fi
@@ -362,7 +395,7 @@ printf '%s\\n' 'Experimental Book4 Edge 16 live hardware test. Kernel/modules/fi
         shutil.copy2(stock_cfg, backup)
     # ISO copies on Windows retain the read-only attribute on these output files.
     stock_cfg.chmod(stock_cfg.stat().st_mode | stat.S_IWUSR)
-    stock_cfg.write_text(grub_config(log_target is not None, display_dtb is not None), encoding="utf-8", newline="\n")
+    stock_cfg.write_text(grub_config(log_target is not None, display_dtb is not None, battery_module is not None), encoding="utf-8", newline="\n")
     # The stock casper checksum list covers files we changed; regenerate it.
     checksums = []
     for p in sorted(tree.rglob("*")):
@@ -383,11 +416,12 @@ printf '%s\\n' 'Experimental Book4 Edge 16 live hardware test. Kernel/modules/fi
               "internalDiskReadOnlyRule": "KIOXIA THGJFJT2T85BAT0A; verify lsblk RO before testing",
               "usbBootLoggingConfigured": log_target is not None,
               "displayTestDTBSHA256": display_hash,
+              "batteryTestModule": battery_report,
               "initrdBytes": len(combined), "overlayBytes": len(overlay)}
     return result
 
 
-def grub_config(enable_usb_logging=False, native_display=False):
+def grub_config(enable_usb_logging=False, native_display=False, battery_test=False):
     # Keep diagnostics separate: reduced graphics is not a hardware-support pass.
     config = '''set timeout=-1
 set default=0
@@ -480,6 +514,10 @@ menuentry "Power off" {
             display_entry = display_entry.replace(' nomodeset module_blacklist=msm', '')
             display_entry = display_entry.replace(' systemd.unit=multi-user.target', '')
             auto_entry = auto_entry.replace(' (select this first)', ' (firmware display fallback)')
+            if battery_test:
+                battery_entry = display_entry.replace('NATIVE DISPLAY + USB LOGS', 'TOUCHSCREEN + BATTERY TEST')
+                battery_entry = battery_entry.replace(' book4edge.log=1', ' module_blacklist=qcom_battmgr book4edge.battery=1 book4edge.log=1')
+                display_entry = battery_entry + display_entry.replace(' (select this first)', ' (without battery test)')
             auto_entry = display_entry + auto_entry
         config = config.replace('insmod fdt\n', 'insmod fdt\n' + auto_entry, 1)
     return config

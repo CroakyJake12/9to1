@@ -28,6 +28,17 @@ class LiveAssemblyTests(unittest.TestCase):
             self.assertNotIn(' panic=', menu)
             self.assertEqual('book4edge.log=1' in menu, logging)
 
+    def test_battery_module_is_selected_only_in_its_diagnostic_entry(self):
+        self.assertNotIn('book4edge.battery=1', live.grub_config(True, True))
+        menu = live.grub_config(True, True, True)
+        entries = menu.split('menuentry ')[1:]
+        selected = [e for e in entries if 'book4edge.battery=1' in e]
+        self.assertEqual(len(selected), 1)
+        self.assertIn('TOUCHSCREEN + BATTERY TEST', selected[0])
+        self.assertIn('module_blacklist=qcom_battmgr', selected[0])
+        self.assertIn('book4edge.log=1', selected[0])
+        self.assertNotIn('nomodeset', selected[0])
+
     def test_cpio_roundtrip_preserves_linux_modes_and_symlinks(self):
         entries = live.add_parents({
             "usr/lib/modules/test/driver.ko": (stat.S_IFREG | 0o644, b"module\0payload"),

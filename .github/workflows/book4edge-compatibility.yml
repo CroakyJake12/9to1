@@ -71,12 +71,13 @@ jobs:
           import runpy
           from pathlib import Path
           recipe = runpy.run_path('9to1 OS/tooling/book4edge/assemble-live.py')
-          for logging, display in ((False, False), (True, False), (True, True)):
-              Path(f'artifacts/book4edge-grub-{logging}-{display}.cfg').write_text(recipe['grub_config'](logging, display), encoding='utf-8')
+          for logging, display, battery in ((False, False, False), (True, False, False), (True, True, False), (True, True, True)):
+              Path(f'artifacts/book4edge-grub-{logging}-{display}-{battery}.cfg').write_text(recipe['grub_config'](logging, display, battery), encoding='utf-8')
           PY
           for menu in artifacts/book4edge-grub-*.cfg; do grub-script-check "$menu"; done
           sh -n '9to1 OS/tooling/book4edge/boot-log.sh'
           shellcheck -S warning '9to1 OS/tooling/book4edge/boot-log.sh'
+          shellcheck -S warning '9to1 OS/tooling/book4edge/battery-test/start-battery-test.sh'
       - name: Retrieve the verified matching kernel DTB
         if: (inputs.display_dtb || inputs.battery_test) && matrix.runner == 'ubuntu-24.04-arm'
         uses: actions/download-artifact@v4
