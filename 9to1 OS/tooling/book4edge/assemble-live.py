@@ -282,36 +282,7 @@ printf '%s\\n' 'Experimental Book4 Edge 16 live hardware test. Kernel/modules/fi
         shutil.copy2(stock_cfg, backup)
     # ISO copies on Windows retain the read-only attribute on these output files.
     stock_cfg.chmod(stock_cfg.stat().st_mode | stat.S_IWUSR)
-    stock_cfg.write_text('''set timeout=30
-set default=0
-loadfont unicode
-if [ "$lockdown" = "y" ]; then
-    echo "This experimental Samsung test cannot run while GRUB is locked down."
-    sleep --interruptible 30
-    halt
-fi
-insmod mmap
-if cutmem 0x8800000000 0x8fffffffff; then
-    echo "Samsung memory reservation applied."
-else
-    echo "Required memory reservation failed; stopping the test boot."
-    sleep --interruptible 30
-    halt
-fi
-insmod fdt
-menuentry "Samsung Book4 Edge 16 - TRY Ubuntu (hardware test)" {
-    set gfxpayload=keep
-    devicetree /book4edge/book4edge16.dtb
-    linux /book4edge/Image boot=casper nopersistent clk_ignore_unused pd_ignore_unused arm64.nopauth cma=256M console=tty0 ---
-    initrd /book4edge/initrd
-}
-menuentry "UEFI firmware settings" {
-    fwsetup
-}
-menuentry "Power off" {
-    halt
-}
-''', encoding="utf-8", newline="\n")
+    stock_cfg.write_text(grub_config(), encoding="utf-8", newline="\n")
     # The stock casper checksum list covers files we changed; regenerate it.
     checksums = []
     for p in sorted(tree.rglob("*")):
@@ -332,6 +303,57 @@ menuentry "Power off" {
               "internalDiskReadOnlyRule": "KIOXIA THGJFJT2T85BAT0A; verify lsblk RO before testing",
               "initrdBytes": len(combined), "overlayBytes": len(overlay)}
     return result
+
+
+def grub_config():
+    # Keep diagnostics separate: reduced graphics is not a hardware-support pass.
+    return '''set timeout=-1
+set default=0
+loadfont unicode
+if [ "$lockdown" = "y" ]; then
+    echo "This experimental Samsung test cannot run while GRUB is locked down."
+    sleep --interruptible 30
+    halt
+fi
+insmod mmap
+if cutmem 0x8800000000 0x8fffffffff; then
+    echo "Samsung memory reservation applied."
+else
+    echo "Required memory reservation failed; stopping the test boot."
+    sleep --interruptible 30
+    halt
+fi
+insmod fdt
+menuentry "Book4 Edge - DIAGNOSTIC text boot (select this first)" {
+    set gfxpayload=keep
+    echo "[1/4] Loading the Samsung 16-inch device tree..."
+    if devicetree /book4edge/book4edge16.dtb; then
+        echo "[2/4] Loading the matched Linux kernel..."
+        if linux /book4edge/Image boot=casper nopersistent clk_ignore_unused pd_ignore_unused arm64.nopauth cma=256M console=tty0 acpi=off earlycon=efifb loglevel=7 ignore_loglevel initcall_debug printk.time=1 log_buf_len=4M panic=0 fbcon=nodefer nomodeset module_blacklist=msm noplymouth plymouth.enable=0 systemd.show_status=1 systemd.unit=multi-user.target ---; then
+            echo "[3/4] Loading the matching initramfs (about 305 MB)..."
+            if initrd /book4edge/initrd; then
+                echo "[4/4] Starting Linux in 5 seconds. Film the next messages if it hangs."
+                sleep --interruptible 5
+                boot
+            fi
+        fi
+    fi
+    echo "A boot command returned or failed. Photograph the messages above."
+    sleep --interruptible 300
+}
+menuentry "Samsung Book4 Edge 16 - TRY Ubuntu (hardware test)" {
+    set gfxpayload=keep
+    devicetree /book4edge/book4edge16.dtb
+    linux /book4edge/Image boot=casper nopersistent clk_ignore_unused pd_ignore_unused arm64.nopauth cma=256M console=tty0 ---
+    initrd /book4edge/initrd
+}
+menuentry "UEFI firmware settings" {
+    fwsetup
+}
+menuentry "Power off" {
+    halt
+}
+'''
 
 
 if __name__ == "__main__":
