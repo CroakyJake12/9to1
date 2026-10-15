@@ -1,11 +1,6 @@
 name: Book4 Edge experimental kernel
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - '9to1 OS/tooling/book4edge/build-hardware.sh'
-      - '9to1 OS/tooling/book4edge/profile.json'
-      - '.github/workflows/book4edge-kernel.yml'
 permissions:
   contents: read
 jobs:

@@ -1,10 +1,6 @@
 name: Book4 Edge broader driver candidate
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - '.github/workflows/book4edge-next-kernel.yml'
-      - '9to1 OS/tooling/book4edge/build-next-hardware.sh'
 permissions:
   contents: read
   actions: read

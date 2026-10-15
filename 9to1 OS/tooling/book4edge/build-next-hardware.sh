@@ -12,6 +12,9 @@ git -C "$work" remote add origin https://github.com/n1c0la84/linux-book4-edge.gi
 git -C "$work" fetch --depth 1 origin "$revision"
 git -C "$work" checkout --detach FETCH_HEAD
 [[ $(git -C "$work" rev-parse HEAD) == "$revision" ]]
+# Kconfig parses this include even with EVDI disabled. Use the exact gitlink
+# pinned by the kernel tree; none of these unrelated custom drivers is built.
+git -C "$work" submodule update --init --depth 1 drivers/custom/evdi
 cp "$base_config" "$work/.config"
 "$work/scripts/config" --file "$work/.config" \
   --disable DEBUG_INFO --disable DEBUG_INFO_DWARF5 \
@@ -22,6 +25,9 @@ cp "$base_config" "$work/.config"
   --module EC_SAMSUNG_GALAXYBOOK --module TYPEC_SAMSUNG_EMUEC \
   --module VIDEO_QCOM_CAMSS --module I2C_QCOM_CCI --module VIDEO_OV02C10 \
   --module ARM_SCMI_CPUFREQ --module SM_VIDEOCC_8550
+for option in AYN AYANEO BMI260 XONE FANATEC LG4FF TMFF2 T150 RAZER S76 S76IO DRM_EVDI V4L2LOOP; do
+  "$work/scripts/config" --file "$work/.config" --disable "$option"
+done
 make -C "$work" ARCH=arm64 olddefconfig
 for option in SECURITY_APPARMOR BLK_DEV_INITRD RD_GZIP RD_ZSTD SQUASHFS_ZSTD; do
   grep -q "^CONFIG_${option}=y$" "$work/.config"
