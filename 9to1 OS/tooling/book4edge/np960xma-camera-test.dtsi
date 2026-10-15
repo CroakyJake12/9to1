@@ -1,0 +1,95 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// NP960XMA: sensor and GPIO sequence decoded from this machine's Windows
+// SCFG_FRONT_QRD/CAMF_RES_QRD and ACPI CAMP/CSHU resources. Physical test pending.
+// Do not use permanent supply GPIO hogs: the sensor driver powers down when idle.
+#include <dt-bindings/leds/common.h>
+
+/ {
+    camera-leds {
+        compatible = "gpio-leds";
+        pinctrl-names = "default";
+        pinctrl-0 = <&cam_indicator_en>;
+        cam_privacy_led: led-camera-indicator {
+            label = "white:camera-indicator";
+            function = LED_FUNCTION_INDICATOR;
+            color = <LED_COLOR_ID_WHITE>;
+            gpios = <&tlmm 110 GPIO_ACTIVE_HIGH>;
+            default-state = "off";
+        };
+    };
+};
+
+&camss {
+    vdd-csiphy-0p8-supply = <&vreg_l2c_0p8>;
+    vdd-csiphy-1p2-supply = <&vreg_l1c_1p2>;
+    status = "okay";
+    ports {
+        port@0 {
+            csiphy0_ep: endpoint {
+                data-lanes = <0 1>;
+                remote-endpoint = <&ov02c10_ep>;
+            };
+        };
+    };
+};
+
+&cci0 { status = "okay"; };
+&cci0_i2c0 {
+    clock-frequency = <100000>;
+    camera@36 {
+        compatible = "ovti,ov02c10";
+        reg = <0x36>;
+        reset-gpios = <&tlmm 109 GPIO_ACTIVE_LOW>;
+        // Private extension implemented in the matching patched OV02C10 module.
+        // GPIO99 then GPIO96, 1 ms apart; no guessed PMIC voltage settings.
+        samsung,np960xma-power-sequence;
+        power-gpios = <&tlmm 99 GPIO_ACTIVE_HIGH>, <&tlmm 96 GPIO_ACTIVE_HIGH>;
+        enable-gpios = <&tlmm 221 GPIO_ACTIVE_HIGH>;
+        pinctrl-names = "default";
+        pinctrl-0 = <&cam_rgb_default>;
+        clocks = <&camcc CAM_CC_MCLK4_CLK>;
+        assigned-clocks = <&camcc CAM_CC_MCLK4_CLK>;
+        assigned-clock-rates = <19200000>;
+        leds = <&cam_privacy_led>;
+        led-names = "privacy";
+        orientation = <0>;
+        rotation = <180>;
+        port {
+            ov02c10_ep: endpoint {
+                data-lanes = <1 2>;
+                link-frequencies = /bits/ 64 <400000000>;
+                remote-endpoint = <&csiphy0_ep>;
+            };
+        };
+    };
+};
+
+&tlmm {
+    cam_indicator_en: cam-indicator-en-state {
+        pins = "gpio110";
+        function = "gpio";
+        drive-strength = <2>;
+        bias-disable;
+    };
+    cam_rgb_default: cam-rgb-default-state {
+        mclk-pins {
+            pins = "gpio100";
+            function = "cam_aon";
+            drive-strength = <16>;
+            bias-disable;
+        };
+        reset-n-pins {
+            pins = "gpio109";
+            function = "gpio";
+            drive-strength = <2>;
+            bias-disable;
+        };
+        // ACPI declares GPIO225 shared/pull-up, not an output-enable signal.
+        camera-state-pins {
+            pins = "gpio225";
+            function = "gpio";
+            input-enable;
+            bias-pull-up;
+        };
+    };
+};
