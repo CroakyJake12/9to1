@@ -14,6 +14,10 @@ on:
         description: 'Test GPIO34 touchscreen input without the old GPIO48 reset output'
         type: boolean
         default: false
+      battery_test:
+        description: 'Build the opt-in NP960XMA battery reporting module'
+        type: boolean
+        default: false
   pull_request:
     paths:
       - '9to1 OS/compatibility/wine/**'
@@ -74,7 +78,7 @@ jobs:
           sh -n '9to1 OS/tooling/book4edge/boot-log.sh'
           shellcheck -S warning '9to1 OS/tooling/book4edge/boot-log.sh'
       - name: Retrieve the verified matching kernel DTB
-        if: inputs.display_dtb && matrix.runner == 'ubuntu-24.04-arm'
+        if: (inputs.display_dtb || inputs.battery_test) && matrix.runner == 'ubuntu-24.04-arm'
         uses: actions/download-artifact@v4
         with:
           github-token: ${{ github.token }}
@@ -108,6 +112,39 @@ jobs:
         with:
           name: book4edge-display-test
           path: artifacts/display-test/
+          if-no-files-found: error
+      - name: Build opt-in battery reporting against the matching kernel
+        if: inputs.battery_test && matrix.runner == 'ubuntu-24.04-arm'
+        run: |
+          sudo apt-get install -y build-essential libelf-dev kmod
+          echo '7a9bc29fe05f44bb90f994d022e354f1048ed8a5b5673353ce9935ab22b113e5  kernel-input/linux-headers-6.19.0-9to1-book4edge16_6.19.0-1_arm64.deb' | sha256sum -c -
+          dpkg-deb -x kernel-input/linux-headers-6.19.0-9to1-book4edge16_6.19.0-1_arm64.deb "$RUNNER_TEMP/battery-headers"
+          cp -a '9to1 OS/tooling/book4edge/battery-test' "$RUNNER_TEMP/book4-battery"
+          headers="$RUNNER_TEMP/battery-headers/usr/src/linux-headers-6.19.0-9to1-book4edge16"
+          test -s "$headers/Module.symvers"
+          make -C "$headers" M="$RUNNER_TEMP/book4-battery" modules
+          modinfo "$RUNNER_TEMP/book4-battery/book4_ec.ko"
+          test "$(modinfo -F vermagic "$RUNNER_TEMP/book4-battery/book4_ec.ko" | cut -d ' ' -f1)" = '6.19.0-9to1-book4edge16'
+          readelf -h "$RUNNER_TEMP/book4-battery/book4_ec.ko" | grep -q 'Machine:.*AArch64'
+          mkdir -p artifacts/battery-test
+          cp "$RUNNER_TEMP/book4-battery/book4_ec.ko" artifacts/battery-test/
+          python3 - <<'PY'
+          import hashlib, json, os, subprocess
+          from pathlib import Path
+          module = Path('artifacts/battery-test/book4_ec.ko')
+          report = {'kernelRelease': '6.19.0-9to1-book4edge16',
+                    'moduleSHA256': hashlib.sha256(module.read_bytes()).hexdigest(),
+                    'sourceSHA256': hashlib.sha256(Path('9to1 OS/tooling/book4edge/battery-test/book4_ec.c').read_bytes()).hexdigest(),
+                    'sourceCommit': os.environ['GITHUB_SHA'],
+                    'vermagic': subprocess.check_output(['modinfo', '-F', 'vermagic', str(module)], text=True).strip(),
+                    'physicalBatteryVerified': False}
+          module.with_name('battery-test.json').write_text(json.dumps(report, indent=2) + '\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: inputs.battery_test && matrix.runner == 'ubuntu-24.04-arm'
+        with:
+          name: book4edge-battery-test
+          path: artifacts/battery-test/
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
