@@ -280,6 +280,8 @@ printf '%s\\n' 'Experimental Book4 Edge 16 live hardware test. Kernel/modules/fi
     backup = tree / "boot/grub/grub-stock.cfg"
     if not backup.exists():
         shutil.copy2(stock_cfg, backup)
+    # ISO copies on Windows retain the read-only attribute on these output files.
+    stock_cfg.chmod(stock_cfg.stat().st_mode | stat.S_IWUSR)
     stock_cfg.write_text('''set timeout=30
 set default=0
 loadfont unicode
@@ -317,7 +319,10 @@ menuentry "Power off" {
             with p.open("rb") as f:
                 digest = hashlib.file_digest(f, "md5").hexdigest()
             checksums.append(f"{digest}  ./{p.relative_to(tree).as_posix()}")
-    (tree / "md5sum.txt").write_text("\n".join(checksums) + "\n", encoding="utf-8", newline="\n")
+    checksum_file = tree / "md5sum.txt"
+    if checksum_file.exists():
+        checksum_file.chmod(checksum_file.stat().st_mode | stat.S_IWUSR)
+    checksum_file.write_text("\n".join(checksums) + "\n", encoding="utf-8", newline="\n")
     result = {"kernelRelease": RELEASE, "hardwareTested": False, "purpose": "live hardware test only", "firmwareFiles": chosen,
               "runtimeFirmware": runtime_firmware,
               "moduleFiles": sum(".ko" in n for n in entries), "forcedModules": modules,
