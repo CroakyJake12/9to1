@@ -1,0 +1,58 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// NP960XMA-KB1UK test only. Local Windows DSDT identifies USB3 (0xa400000)
+// with I2C7@0xb98000 address 0x43/reset GPIO184, and USB4 (0xa200000)
+// with the same bus address 0x4f/reset GPIO26. Windows enumerates the Egis
+// reader below USB4. Linux names this bus i2c6. Do not apply to the 14-inch.
+// Keep the unmodified kernel DTB as a separate fallback.
+
+&eusb5_repeater { status = "disabled"; };
+&eusb6_repeater { status = "disabled"; };
+
+&i2c6 {
+    clock-frequency = <400000>;
+    status = "okay";
+    np960_usb_a_repeater: redriver@43 {
+        compatible = "nxp,ptn3222";
+        reg = <0x43>;
+        #phy-cells = <0>;
+        vdd3v3-supply = <&vreg_l13b_3p0>;
+        vdd1v8-supply = <&vreg_l4b_1p8>;
+        reset-gpios = <&tlmm 184 GPIO_ACTIVE_LOW>;
+        pinctrl-0 = <&np960_usb_a_reset>;
+        pinctrl-names = "default";
+    };
+    np960_fingerprint_repeater: redriver@4f {
+        compatible = "nxp,ptn3222";
+        reg = <0x4f>;
+        #phy-cells = <0>;
+        vdd3v3-supply = <&vreg_l13b_3p0>;
+        vdd1v8-supply = <&vreg_l4b_1p8>;
+        reset-gpios = <&tlmm 26 GPIO_ACTIVE_LOW>;
+        pinctrl-0 = <&np960_fingerprint_reset>;
+        pinctrl-names = "default";
+    };
+};
+&tlmm {
+    np960_usb_a_reset: np960-usb-a-reset-state {
+        pins = "gpio184";
+        function = "gpio";
+        drive-strength = <2>;
+        bias-disable;
+        output-low;
+    };
+    np960_fingerprint_reset: np960-fingerprint-reset-state {
+        pins = "gpio26";
+        function = "gpio";
+        drive-strength = <2>;
+        bias-disable;
+        output-low;
+    };
+};
+&usb_mp_hsphy0 { phys = <&np960_usb_a_repeater>; };
+&usb_2 { dr_mode = "host"; status = "okay"; };
+&usb_2_hsphy {
+    vdd-supply = <&vreg_l2e_0p8>;
+    vdda12-supply = <&vreg_l3e_1p2>;
+    phys = <&np960_fingerprint_repeater>;
+    status = "okay";
+};

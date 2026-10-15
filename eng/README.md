@@ -32,3 +32,12 @@ The strict final markup gate is intentionally expected to fail during migration:
 It must not pass until active applications are CUI-native and any retained donor
 or historical markup has been excluded by an reviewed source-classification
 policy. A normal verification reports legacy counts as an unfinished condition.
+
+## Windows compatibility preparation
+
+`./eng/9to1.ps1 verify -Component compatibility` runs the dependency-free Python
+checks for the EXE chooser, ARM64 managed runtimes and stable Ubuntu image
+selection. `./eng/9to1.ps1 package-linux -Component compatibility` builds
+`artifacts/packages/9to1-windows-compat_0.1.0_all.deb`. GTK, Wine/WinBoat runtime
+and real Book4 Edge hardware acceptance are separate checks; see
+[`../9to1 OS/tooling/book4edge/README.md`](../9to1%20OS/tooling/book4edge/README.md).

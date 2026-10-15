@@ -30,6 +30,19 @@ def _preflight_facts(runtimes: list[dict[str, object]]) -> dict[str, object]:
 
 
 class DependencyAuditTests(unittest.TestCase):
+    def test_arm64_rejects_an_unidentified_executable_runtime(self) -> None:
+        facts = _preflight_facts([{"id": "legacy", "executable": True}])
+        facts["platform"]["machine"] = "aarch64"
+        result = audit.evaluate_preflight(facts)["wineSlice1"]
+        self.assertFalse(result["prerequisitesPresent"])
+        self.assertIn("managed-arm64-hangover-fex-runtime", result["missing"])
+
+    def test_arm64_accepts_matching_fex_runtime_prerequisites(self) -> None:
+        facts = _preflight_facts([{"id": "hangover", "executable": True,
+                                  "architectureCompatible": True, "translation": "hangover-fex"}])
+        facts["platform"]["machine"] = "aarch64"
+        self.assertTrue(audit.evaluate_preflight(facts)["wineSlice1"]["prerequisitesPresent"])
+
     def test_non_executable_runtime_does_not_satisfy_wine_preflight(self) -> None:
         preflight = audit.evaluate_preflight(
             _preflight_facts([{"id": "wine-11.0", "executable": False}])

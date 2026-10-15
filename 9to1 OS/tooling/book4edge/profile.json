@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-10-15",
+  "model": "Samsung Galaxy Book4 Edge 16-inch, Snapdragon X Elite",
+  "ubuntu": "26.04.1",
+  "architecture": "arm64",
+  "preserveWindows": true,
+  "hardwareTested": false,
+  "kernel": {
+    "repository": "https://github.com/zensanp/linux-book4-edge.git",
+    "reference": "x1e80100-book4e-6.19-playground",
+    "commit": "19de1891668a1032b9385de072cc77129e64b094",
+    "dts": "arch/arm64/boot/dts/qcom/x1e80100-samsung-galaxy-book4-edge-16.dts",
+    "status": "experimental; build kernel, modules and DTB together; not an Ubuntu security-maintained kernel"
+  },
+  "sources": [
+    "https://cdimage.ubuntu.com/ubuntu/releases/26.04.1/release/",
+    "https://discourse.ubuntu.com/t/faq-ubuntu-25-04-25-10-on-snapdragon-x-elite/61016",
+    "https://bugs.launchpad.net/ubuntu-concept/+bug/2084591",
+    "https://github.com/zensanp/linux-book4-edge/tree/x1e80100-book4e-6.19-playground",
+    "https://github.com/AndreRH/hangover/releases/tag/hangover-11.16",
+    "https://github.com/winboat-org/winboat/releases/tag/v0.9.2"
+  ]
+}

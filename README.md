@@ -77,6 +77,12 @@ consolidation sets and fails honestly for package paths that do not exist:
 
 Use the PowerShell entry (`eng/9to1.ps1`) for restore/build/test/package commands; some packaging and image steps require a Linux host. See `eng/README.md` for component and packaging commands.
 
+The [Galaxy Book4 Edge 16-inch preparation kit](9to1%20OS/tooling/book4edge/README.md)
+provides verified Ubuntu ARM64 downloads, Windows-preserving dual-boot guidance
+and the [Wine/WinBoat EXE chooser](9to1%20OS/compatibility/wine/EXE-CHOOSER.md).
+It is experimental preparation; Samsung boot and Windows application runtime
+acceptance have not been established.
+
 ## Verification and licensing
 
 The acceptance chain and current blockers are maintained in the master status

@@ -4,7 +4,7 @@ param(
     [ValidateSet('restore', 'build', 'test', 'verify', 'package-linux', 'package-windows')]
     [string]$Action,
 
-    [ValidateSet('core', 'cui', 'home', 'spaces', 'shared', 'dulche', 'canvas', 'boards', 'studio', 'shell', 'welcome')]
+    [ValidateSet('core', 'cui', 'home', 'spaces', 'shared', 'dulche', 'canvas', 'boards', 'studio', 'shell', 'welcome', 'compatibility')]
     [string]$Component = 'core',
 
     [ValidateSet('Debug', 'Release')]
@@ -76,6 +76,7 @@ function Invoke-LinuxPackage {
         studio = '9to1 OS/packaging/build-havenos-studio-deb.sh'
         shell = '9to1 OS/packaging/build-havenos-shell-deb.sh'
         welcome = '9to1 OS/packaging/build-haven-welcome-deb.sh'
+        compatibility = '9to1 OS/compatibility/wine/build-deb.sh'
     }
     if (-not $scripts.ContainsKey($Component)) {
         throw "No accepted Linux package recipe is registered for '$Component'."
@@ -113,6 +114,23 @@ function Invoke-RepositoryVerification {
 
 Push-Location $root
 try {
+    if ($Component -eq 'compatibility' -and $Action -ne 'package-linux') {
+        switch ($Action) {
+            'restore' { Write-Host 'Compatibility tests use the Python standard library; no restore needed.' }
+            'build' {
+                Invoke-Checked python3 @('-m', 'compileall', '-q', '9to1 OS/compatibility/wine/haven_compat')
+            }
+            { $_ -in 'test', 'verify' } {
+                Push-Location (Join-Path $root '9to1 OS')
+                try {
+                    Invoke-Checked python3 @('-m', 'unittest', 'discover', '-s', 'compatibility/wine/tests', '-v')
+                    Invoke-Checked python3 @('-m', 'unittest', 'discover', '-s', 'tooling/book4edge/tests', '-v')
+                } finally { Pop-Location }
+            }
+            default { throw 'The compatibility desktop package targets Linux.' }
+        }
+        return
+    }
     switch ($Action) {
         'restore' { Invoke-DotnetAction restore }
         'build' { Invoke-DotnetAction build }
