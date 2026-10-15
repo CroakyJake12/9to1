@@ -58,7 +58,7 @@ To build the experimental 16-inch DTB and optionally matching kernel packages:
 ```sh
 # Build dependencies on the preparation PC:
 sudo apt install build-essential gcc-aarch64-linux-gnu flex bison bc libssl-dev \
-  libelf-dev dwarves dpkg-dev debhelper fakeroot rsync cpio
+  libelf-dev libdw-dev dwarves dpkg-dev debhelper fakeroot rsync cpio
 bash '9to1 OS/tooling/book4edge/build-hardware.sh' "$PWD/artifacts/book4edge-kernel" --kernel
 ```
 
