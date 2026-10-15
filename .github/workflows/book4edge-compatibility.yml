@@ -96,6 +96,21 @@ jobs:
           python3 -m py_compile '9to1 OS/tooling/book4edge/assemble-suite.py' '9to1 OS/tooling/book4edge/runtime/hardware-check.py' '9to1 OS/tooling/book4edge/runtime/keyboard-backlight.py'
           python3 '9to1 OS/tooling/book4edge/test-bluetooth-address.py'
           python3 '9to1 OS/tooling/book4edge/test-battery-storage-guard.py'
+          python3 '9to1 OS/tooling/book4edge/installer/test_guards.py'
+          python3 '9to1 OS/tooling/book4edge/test-ucm-syntax.py'
+          shellcheck -S warning '9to1 OS/tooling/book4edge/installer/initramfs-hook' '9to1 OS/tooling/book4edge/installer/post-update-hook'
+          python3 - <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0,'9to1 OS/tooling/book4edge/installer')
+          from finish import installed_menu
+          Path('artifacts/book4edge-installed.cfg').write_text(installed_menu('00000000-0000-0000-0000-000000000001','1234-5678'))
+          import runpy
+          menu=runpy.run_path('9to1 OS/tooling/book4edge/simple-menu.py')
+          Path('artifacts/book4edge-media.cfg').write_text(menu['render']('1234-5678',True,True))
+          PY
+          grub-script-check artifacts/book4edge-installed.cfg
+          grub-script-check artifacts/book4edge-media.cfg
           xvfb-run -a bash -euc '
             export XDG_RUNTIME_DIR=$(mktemp -d)
             python3 "9to1 OS/tooling/book4edge/runtime/hardware-check.py" &

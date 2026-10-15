@@ -5,7 +5,7 @@ from pathlib import Path
 import re
 
 
-def render(windows_uuid, updated_drivers=False):
+def render(windows_uuid, updated_drivers=False, media=False):
     if not re.fullmatch(r'[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}', windows_uuid):
         raise ValueError('Expected the verified Windows EFI FAT filesystem UUID')
     common = ('boot=casper nopersistent clk_ignore_unused pd_ignore_unused arm64.nopauth '
@@ -75,7 +75,7 @@ menuentry "Windows" --id windows {{
 submenu "More options" {{
 '''
     if updated_drivers:
-        menu += ubuntu('Ubuntu (updated drivers)', 'ubuntu-updated', 'book4edge-next', 'initrd', indent='    ')
+        menu += ubuntu('Ubuntu (updated drivers)', 'ubuntu-updated', 'book4edge-media' if media else 'book4edge-next', 'initrd', ' book4edge.media=1' if media else '', indent='    ')
     menu += '''    menuentry "Firmware settings" {
         fwsetup
     }
@@ -94,6 +94,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--windows-uuid', required=True)
     parser.add_argument('--updated-drivers', action='store_true')
+    parser.add_argument('--media', action='store_true')
     parser.add_argument('output', type=Path)
     args = parser.parse_args()
-    args.output.write_text(render(args.windows_uuid, args.updated_drivers), encoding='utf-8', newline='\n')
+    args.output.write_text(render(args.windows_uuid, args.updated_drivers, args.media), encoding='utf-8', newline='\n')
