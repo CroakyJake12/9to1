@@ -31,6 +31,23 @@ def suite_grub_config(previous):
         'TOUCHSCREEN + BATTERY TEST (select this first)',
         'TOUCHSCREEN + BATTERY TEST (previous input test)',1)
 
+def retest_grub_config(previous):
+    start = previous.index('menuentry ')
+    end = previous.index('menuentry ', start + 1)
+    first = previous[start:end]
+    if 'WIRELESS + TOUCH + BATTERY TEST (select this first)' not in first:
+        raise ValueError('Expected the physically tested wireless suite first')
+    first = first.replace('WIRELESS + TOUCH + BATTERY TEST (select this first)',
+                          'BATTERY + WIFI + BLUETOOTH RETEST (select this first)')
+    first = first.replace('/book4edge/initrd-suite;', '/book4edge/initrd-retest;')
+    # systemd also interprets debug, causing startup errors to scroll out of logs.
+    first = first.replace(' debug ---', ' ---')
+    if first.count('/book4edge/initrd-retest') != 1:
+        raise ValueError('Unexpected initrd syntax')
+    return previous[:start] + first + previous[start:].replace(
+        'WIRELESS + TOUCH + BATTERY TEST (select this first)',
+        'WIRELESS + TOUCH + BATTERY TEST (previous test)', 1)
+
 def build(tree, base_report, firmware, radio, output, bundle=None, root_overlay=None):
     old = json.loads(base_report.read_text())
     data = (tree/'book4edge/initrd').read_bytes()
