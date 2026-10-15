@@ -1,2 +1,0 @@
-# Preserve original raw output and its recorded SHA-256 hashes.
-*.log whitespace=-blank-at-eof,-blank-at-eol

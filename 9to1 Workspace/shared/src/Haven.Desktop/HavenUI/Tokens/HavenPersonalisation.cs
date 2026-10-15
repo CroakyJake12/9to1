@@ -11,7 +11,30 @@ namespace Haven.Desktop.HavenUI.Tokens;
 internal static class HavenPersonalisation
 {
     /// <summary>Active canonical theme. Defaults to Glow (pre-theme baseline).</summary>
-    internal static HavenUiTheme Theme { get; set => field = Enum.IsDefined(value) ? value : HavenUiTheme.Glow; } = HavenUiTheme.Glow;
+    internal static HavenUiTheme Theme
+    {
+        get => field;
+        set
+        {
+            field = Enum.IsDefined(value) ? value : HavenUiTheme.Glow;
+
+            // Merge stage M2: CUI is the theme authority, so the legacy axis writes through to
+            // it. Previously this legacy static was the only theme state and the CUI palette
+            // used by the Spaces surfaces had no idea what the user had selected - CUI's
+            // ActiveTheme was only ever written by Boards. Writing through keeps one authority
+            // and keeps this legacy projection consistent with it. Removed at stage M3/M5.
+            CakeOS.Cui.Themes.CuiSurfacePaletteCatalog.ActiveTheme = ToCui(field);
+        }
+    }
+
+    private static CakeOS.Cui.Themes.CuiTheme ToCui(HavenUiTheme theme) => theme switch
+    {
+        HavenUiTheme.Bubble => CakeOS.Cui.Themes.CuiTheme.Bubble,
+        HavenUiTheme.Retro => CakeOS.Cui.Themes.CuiTheme.Retro,
+        HavenUiTheme.Playful => CakeOS.Cui.Themes.CuiTheme.Playful,
+        HavenUiTheme.Cinematic => CakeOS.Cui.Themes.CuiTheme.Cinematic,
+        _ => CakeOS.Cui.Themes.CuiTheme.Glow
+    };
 
     /// <summary>When true, accent anchors come from <see cref="Accent"/> instead of surface hues.</summary>
     internal static bool OverrideAccent { get; set; }

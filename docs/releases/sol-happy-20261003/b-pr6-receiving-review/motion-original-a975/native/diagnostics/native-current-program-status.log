@@ -1,1 +1,0 @@
-{"ProductMapping":"Video \u2192 Motion","Route":"motion","EngineAvailable":false,"TimelineAvailable":true,"RenderAvailable":false,"ExportAvailable":false,"PersistenceAvailable":true,"MediaInspectionAvailable":true,"Message":"Project persistence and basic insert/split timeline commands are available; playback, rendering, and export are unavailable."}

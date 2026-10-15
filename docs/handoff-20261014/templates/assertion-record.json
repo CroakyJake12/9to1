@@ -1,0 +1,17 @@
+{
+  "record_type": "TEMPLATE_NOT_VERIFICATION",
+  "assertion_id": null,
+  "source_clause_id": null,
+  "source_requirement_id": null,
+  "exact_condition": null,
+  "normative_level_from_source": null,
+  "applicability_and_reason": null,
+  "platform_variants": [],
+  "approved_decision_ids": [],
+  "implementation_owner_location": null,
+  "scenario_ids": [],
+  "concrete_test_steps": [],
+  "status": "NOT_RUN",
+  "evidence_records": [],
+  "independent_verdict": null
+}

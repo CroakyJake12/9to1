@@ -1,4 +1,0 @@
-Unhandled exception. System.InvalidOperationException: The actual presenter finished before the exact native display acknowledgement.
-   at Haven.Desktop.Validation.HomePromptNativeActivationProbe.ObserveAsync(CancellationToken originalToken, NativeProbeProfileWitness profile) in /_/9to1 Workspace/shared/src/Haven.Desktop/Diagnostics/HomePromptNativeActivationProbe.cs:line 104
-   at Haven.Desktop.Validation.HomePromptNativeActivationProbe.ObserveAsync(CancellationToken originalToken, NativeProbeProfileWitness profile) in /_/9to1 Workspace/shared/src/Haven.Desktop/Diagnostics/HomePromptNativeActivationProbe.cs:line 161
-   at Haven.Desktop.Validation.HomePromptNativeActivationProbe.Main(String[] args) in /_/9to1 Workspace/shared/src/Haven.Desktop/Diagnostics/HomePromptNativeActivationProbe.cs:line 37

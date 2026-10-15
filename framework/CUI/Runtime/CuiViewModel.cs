@@ -46,21 +46,42 @@ public sealed class CuiViewModel : ICuiWritableBindingContext, ICuiActionDispatc
     /// <summary>ICuiBindingContext: resolve a binding path.</summary>
     public bool TryGetValue(string path, out object? value)
     {
-        // Support dotted paths: "ViewModel.Count" → lookup "Count"
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+
+        // An exact key always wins. A view model can legitimately hold both "Conversation.Title"
+        // and "Status.Message"; resolving a dotted path by its last segment alone made those two
+        // indistinguishable, so whichever was published last silently answered both bindings.
+        // Checking the exact key first is what lets a document disambiguate, and it changes
+        // nothing for a model that stores flat keys: a flat key is either found on the exact
+        // attempt or still resolved by the fallback exactly as before.
+        if (_properties.TryGetValue(path, out value))
+            return true;
+
         var lastDot = path.LastIndexOf('.');
-        var key = lastDot >= 0 ? path[(lastDot + 1)..] : path;
-        return _properties.TryGetValue(key, out value);
+        if (lastDot < 0)
+            return false;
+
+        return _properties.TryGetValue(path[(lastDot + 1)..], out value);
     }
 
     /// <summary>ICuiWritableBindingContext: update a bound value and notify the runtime.</summary>
     public bool TrySetValue(string path, object? value)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
-        var lastDot = path.LastIndexOf('.');
-        var key = lastDot >= 0 ? path[(lastDot + 1)..] : path;
-        if (!_properties.ContainsKey(key))
-            return false;
-        Set(key, value);
+
+        // Mirrors TryGetValue: a write must land on the same key a read resolved, otherwise a
+        // two-way binding would read one property and silently write a different one.
+        if (!_properties.ContainsKey(path))
+        {
+            var lastDot = path.LastIndexOf('.');
+            if (lastDot < 0)
+                return false;
+            path = path[(lastDot + 1)..];
+            if (!_properties.ContainsKey(path))
+                return false;
+        }
+
+        Set(path, value);
         return true;
     }
 

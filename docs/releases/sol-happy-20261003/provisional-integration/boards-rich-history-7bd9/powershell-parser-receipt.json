@@ -1,6 +1,0 @@
-{
-  "parserVersion": "7.6.6",
-  "parsedActualSource": ".github/scripts/boards-packaged-ui-controls.ps1",
-  "errors": [],
-  "qualification": "Linux PowerShell7 syntax parsing only, not Windows PowerShell5.1/native UI execution."
-}

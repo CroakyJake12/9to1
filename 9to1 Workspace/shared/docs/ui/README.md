@@ -1,9 +1,1 @@
-# UI
-
-- [CUI (HUI)](haven-ui.md) — framework design: parser, scene, layout, renderer, backend bridge.
-- [Building UI](building-ui.md) — how a normal 9to1 surface is composed, component reuse, correctness checklist.
-- [Theming and personalisation](theming-and-personalisation.md) — five themes, four appearances, accent precedence, fonts and avatars.
-
-- [Present editor](present-editor-redesign.md) — command inventory, shared editor components, measured canvas and acceptance boundaries.
-
-The mandatory visual law is `HAVEN_UI_RULES.md` in the repository root.
+‣䥕਍਍‭䍛䥕⠠啈⥉⡝慨敶⵮極洮⥤钀映慲敭潷歲搠獥杩㩮瀠牡敳Ⱳ猠散敮‬慬潹瑵‬敲摮牥牥‬慢正湥⁤牢摩敧മⴊ嬠畂汩楤杮唠嵉戨極摬湩ⵧ極洮⥤钀栠睯愠渠牯慭⁬琹ㅯ猠牵慦散椠⁳潣灭獯摥‬潣灭湯湥⁴敲獵ⱥ挠牯敲瑣敮獳挠敨正楬瑳മⴊ嬠桔浥湩⁧湡⁤数獲湯污獩瑡潩嵮琨敨業杮愭摮瀭牥潳慮楬慳楴湯洮⥤钀映癩⁥桴浥獥‬潦牵愠灰慥慲据獥‬捡散瑮瀠敲散敤据ⱥ映湯獴愠摮愠慶慴獲മഊⴊ嬠牐獥湥⁴摥瑩牯⡝牰獥湥⵴摥瑩牯爭摥獥杩⹮摭 胢ₔ潣浭湡⁤湩敶瑮牯ⱹ猠慨敲⁤摥瑩牯挠浯潰敮瑮ⱳ洠慥畳敲⁤慣癮獡愠摮愠捣灥慴据⁥潢湵慤楲獥മഊ吊敨洠湡慤潴祲瘠獩慵⁬慬⁷獩怠䅈䕖彎䥕剟䱕卅洮恤椠⁮桴⁥敲潰楳潴祲爠潯⹴਍

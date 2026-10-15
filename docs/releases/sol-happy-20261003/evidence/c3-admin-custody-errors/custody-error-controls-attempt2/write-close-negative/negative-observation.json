@@ -1,7 +1,0 @@
-{
-  "errors": [
-    "BodyFailure('Original actual child receipt failure')",
-    "OSError(9, 'Bad file descriptor')"
-  ],
-  "originalSealDrained": false
-}

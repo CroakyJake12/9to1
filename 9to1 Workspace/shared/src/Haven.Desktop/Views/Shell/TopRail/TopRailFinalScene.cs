@@ -71,8 +71,13 @@ internal sealed class TopRailFinalScene
         TabActionsHost = new Container { Name = "TopRail.TabActions", Layout = HavenLayout.Horizontal };
         TabActionsHost.SetValue(HavenProperties.Gap, HavenLength.Px(7));
         TabActionsHost.SetValue(HavenProperties.VerticalAlignment, HavenVerticalAlignment.Center);
-        AddTabButton = AccentIconButton("TopRail.Tabs.Add", "plus", "New tab");
-        TabOverviewButton = AccentIconButton("TopRail.Tabs.Overview", "window", "All tabs");
+        // Utility icon actions use the neutral Icon surface rather than a solid accent fill.
+        // CUI-PRO-202 calls for restrained outlines, calm grouping and coherent icons with
+        // honest hit areas; the approved Chat header shows search/notification as restrained
+        // neutral controls, not saturated accent pills. Accent stays for genuine primary
+        // navigation (Apps, Actions, the model pill).
+        AddTabButton = IconButton("TopRail.Tabs.Add", "plus", "New tab");
+        TabOverviewButton = IconButton("TopRail.Tabs.Overview", "window", "All tabs");
         TabActionsHost.Add(AddTabButton);
         TabActionsHost.Add(TabOverviewButton);
         Root.Add(TabActionsHost);
@@ -91,15 +96,19 @@ internal sealed class TopRailFinalScene
         Root.Add(ActionsHost);
         ModelHost = Dropdown("TopRail.ModelHost", 236, "cpu", "Local model · 60%", "TopRail.Actions.Model", out var model);
         ModelButton = model;
-        ModelButton.SetValue(HavenProperties.Background, "HavenModelReasoningBalancedBrush");
-        ModelButton.SetValue(HavenProperties.Foreground, "TextOnAccent");
+        // The model pill is a control surface, not a status fill. The approved reference renders it
+        // as a restrained neutral capsule (measured surface #2C2F38) with light text; a
+        // saturated reasoning-brush fill made it read as an alert. The reasoning level still
+        // travels in the label text, so no information is lost.
+        ModelButton.SetValue(HavenProperties.Background, "SurfaceRaised");
+        ModelButton.SetValue(HavenProperties.Foreground, "TextPrimary");
         Root.Add(ModelHost);
 
         NotificationHost = new Container { Name = "TopRail.Notifications", Layout = HavenLayout.Overlay };
         NotificationHost.SetValue(HavenProperties.Width, HavenLength.Px(42));
         NotificationHost.SetValue(HavenProperties.Height, HavenLength.Px(42));
         NotificationHost.SetValue(HavenProperties.VerticalAlignment, HavenVerticalAlignment.Center);
-        NotificationsButton = AccentIconButton("TopRail.Actions.Notifications", "bell", "Notifications");
+        NotificationsButton = IconButton("TopRail.Actions.Notifications", "bell", "Notifications");
         NotificationBadge = new Container { Name = "TopRail.Notifications.Badge", Layout = HavenLayout.Overlay };
         NotificationBadge.SetValue(HavenProperties.Width, HavenLength.Px(20));
         NotificationBadge.SetValue(HavenProperties.Height, HavenLength.Px(20));
@@ -122,7 +131,7 @@ internal sealed class TopRailFinalScene
         NotificationHost.Add(NotificationBadge);
         Root.Add(NotificationHost);
 
-        SearchButton = AccentIconButton("TopRail.Actions.Search", "search", "Search 9to1");
+        SearchButton = IconButton("TopRail.Actions.Search", "search", "Search 9to1");
         Root.Add(SearchButton);
 
         LogoButton.Invoked += (_, _) => HomeRequested?.Invoke(this, EventArgs.Empty);
@@ -255,6 +264,18 @@ internal sealed class TopRailFinalScene
         var effort = Math.Clamp(reasoningPercent, 0, 100);
         ModelButton.Content = $"{DisplayModel(name)} · {effort}%";
         ModelButton.Accessibility.AccessibleName = $"Model {name}, reasoning {effort}%";
+        // The model pill fill is a deliberate information channel: TopRailRegressionCorrectionTests
+        // pins 20% -> HavenModelReasoningLowBrush, 80% -> High, 100% -> Max, so the pill colour
+        // encodes the reasoning effort level. Removing it would delete that signal, so it is
+        // deliberately NOT flattened to a neutral surface.
+        //
+        // KNOWN OPEN CONFLICT (recorded, not changed): the reference renders a neutral pill
+        // (#2C2F38) that conveys effort in the label text ("Qwen 3.6 - 100%"), whereas this
+        // conveys it by fill and renders a continuous "{effort}%". SPUI-133 defines discrete
+        // LevelIDs (3 tiers 35/70/100, 4 tiers 25/50/75/100, 5 tiers 20/40/60/80/100) and
+        // forbids a continuous fictitious strength control, so both the tier boundaries
+        // (<35/<70/<95) and the continuous percentage are in question. This is
+        // model-governance behaviour, not a visual correction, and needs an owner decision.
         ModelButton.SetValue(HavenProperties.Background, effort switch
         {
             < 35 => "HavenModelReasoningLowBrush",

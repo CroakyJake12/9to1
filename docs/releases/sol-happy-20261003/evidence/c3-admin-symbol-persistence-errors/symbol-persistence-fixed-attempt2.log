@@ -1,9 +1,0 @@
-test_actual_symbols_fresh_exclusive_durable_and_identical (__main__.Persistence.test_actual_symbols_fresh_exclusive_durable_and_identical) ... ok
-test_close_only_native_failure_is_not_success (__main__.Persistence.test_close_only_native_failure_is_not_success) ... ok
-test_fsync_only_failure_retains_exact_original (__main__.Persistence.test_fsync_only_failure_retains_exact_original) ... ok
-test_native_fsync_and_same_handle_close_failures_preserved (__main__.Persistence.test_native_fsync_and_same_handle_close_failures_preserved) ... ok
-
-----------------------------------------------------------------------
-Ran 4 tests in 0.005s
-
-OK

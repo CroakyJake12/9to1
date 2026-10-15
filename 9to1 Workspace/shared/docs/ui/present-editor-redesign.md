@@ -1,25 +1,25 @@
-# Present editor redesign — command migration
+# Present editor redesign ÔÇö command migration
 
 Status: the canvas regression and compact editor repair pass the bounded cloud-browser checks below. Whole-product acceptance remains open; compilation and native tests alone do not establish acceptance.
 Inventory captured before changing Present.cui on 12 October 2026. The existing PresentEditor, repository CAS/recovery, import/export services, route identity and retained canvas remain authoritative.
 
 | Existing commands / workflows | New destination |
 |---|---|
-| ShellHome; ReturnToStart; ResumePresentation | 9to1 navigation; File → Back to Present start; retained start/resume journey |
-| Create; Refresh; Open (saved/recent); ToggleFiles; Close | File → New / Open / Refresh / Close; existing start and library |
-| Save; Inspect unknown commit | Header Save/status; File → Save / Inspect saved state |
-| ImportPowerPoint; ExportPowerPoint | File → Import .pptx / Export .pptx; import also remains on start |
+| ShellHome; ReturnToStart; ResumePresentation | 9to1 navigation; File ÔåÆ Back to Present start; retained start/resume journey |
+| Create; Refresh; Open (saved/recent); ToggleFiles; Close | File ÔåÆ New / Open / Refresh / Close; existing start and library |
+| Save; Inspect unknown commit | Header Save/status; File ÔåÆ Save / Inspect saved state |
+| ImportPowerPoint; ExportPowerPoint | File ÔåÆ Import .pptx / Export .pptx; import also remains on start |
 | Undo; Redo; Copy; Paste; DeleteElement / DeleteObject | Edit menu; undo/redo toolbar; canvas keyboard |
 | AddSlide; DuplicateSlide; DeleteSlide | Slide menu; Add slide toolbar |
-| SlideUp / MoveSlideEarlier; SlideDown / MoveSlideLater | Slide → Move slide up/down; thumbnail Ctrl+Up/Down and drag reorder |
+| SlideUp / MoveSlideEarlier; SlideDown / MoveSlideLater | Slide ÔåÆ Move slide up/down; thumbnail Ctrl+Up/Down and drag reorder |
 | PreviousSlide; NextSlide; SelectSlide | Thumbnails, footer navigation and Slide menu |
-| ToggleHidden; HideSlide; ShowSlide | Slide → Hide / Show slide (same owner; aliases retained) |
+| ToggleHidden; HideSlide; ShowSlide | Slide ÔåÆ Hide / Show slide (same owner; aliases retained) |
 | AddText; AddShape | Insert menu; stable toolbar controls |
-| Bold; Italic; FontLarger; FontSmaller | Edit → Text formatting; contextual text toolbar and Properties |
-| Grow; Shrink; RotateLeft; RotateRight; RotateObject | Arrange → Transform; numeric contextual Properties |
-| MoveObjectLeft/Right/Up/Down | Arrange → Move; canvas keyboard and drag |
-| BringToFront; SendToBack; BringForward; SendBackward | Arrange → Order; contextual Properties order menu |
-| AlignLeft/Center/Top/Middle; DistributeHorizontal/Vertical | Arrange → Align / Distribute; contextual toolbar menu |
+| Bold; Italic; FontLarger; FontSmaller | Edit ÔåÆ Text formatting; contextual text toolbar and Properties |
+| Grow; Shrink; RotateLeft; RotateRight; RotateObject | Arrange ÔåÆ Transform; numeric contextual Properties |
+| MoveObjectLeft/Right/Up/Down | Arrange ÔåÆ Move; canvas keyboard and drag |
+| BringToFront; SendToBack; BringForward; SendBackward | Arrange ÔåÆ Order; contextual Properties order menu |
+| AlignLeft/Center/Top/Middle; DistributeHorizontal/Vertical | Arrange ÔåÆ Align / Distribute; contextual toolbar menu |
 | Group; Ungroup | Arrange; contextual toolbar menu |
 | ApplyFill; ApplyStroke; ApplyStrokeWidth | Shape Properties with actual color/width values |
 | ApplyTransition | Slide Properties: typed transition selector and duration |
@@ -41,7 +41,7 @@ All existing command names retain their dispatch implementations, including sema
 - Implemented genuine current/previous saved-version history through the existing repository boundary. Restore is undoable and preserves the current CAS base; Save creates a new revision. No unlimited timeline is implied.
 - Comments/collaboration have no Present browser owner. Do not show false enabled controls. They remain a broader specification gap.
 - The current browser editor exposes text and shapes, but no image/media picker. Existing model APIs alone are not working browser media insertion; do not add placeholder toolbar items.
-- Implemented measured Fit and 50–250% zoom on the actual retained canvas. Fit fills the bounded editing stage, with centred aspect-preserving paper and canonical document drawing scaled as one unit. Resizing/panels/notes update the measured space.
+- Implemented measured Fit and 50ÔÇô250% zoom on the actual retained canvas. Fit fills the bounded editing stage, with centred aspect-preserving paper and canonical document drawing scaled as one unit. Resizing/panels/notes update the measured space.
 - Implemented owner bindings for contextual position/size/rotation, opacity, typography, layout and background. Position is relative to slide centre with Y positive upward; stored normalized model coordinates remain compatible.
 
 ## Shared architecture
@@ -68,10 +68,10 @@ The retained slide root had an automatic height and measured its empty native co
 
 Final native runs cover the complete 312-assertion owner workflow, 177 viewport/semantics assertions, 57 direct manipulation/paragraph/colour assertions and 43 durable-history assertions. Shared CUI Runtime 224 tests and native browser accessibility 34+4 checks pass within their source boundaries. These are source/native evidence only.
 
-Actual cloud Chromium publish 20 exercises real text colour/alignment, title/geometry edits, slide add/duplicate/reorder/delete/undo, notes, resizable panels, 75%/125% zoom and Fit (implemented range 50–250%), playback, saved history and file transfer. Eleven measured screenshot frames have full 16:9 paper inside the actual stage with less than two pixels of centre error. Three corrected Home → Picture → Home cycles complete without JS/managed exceptions. An earlier harness batch used the wrong Home label and is recorded as a failed selector batch, not passing navigation evidence.
+Actual cloud Chromium publish 20 exercises real text colour/alignment, title/geometry edits, slide add/duplicate/reorder/delete/undo, notes, resizable panels, 75%/125% zoom and Fit (implemented range 50ÔÇô250%), playback, saved history and file transfer. Eleven measured screenshot frames have full 16:9 paper inside the actual stage with less than two pixels of centre error. Three corrected Home ÔåÆ Picture ÔåÆ Home cycles complete without JS/managed exceptions. An earlier harness batch used the wrong Home label and is recorded as a failed selector batch, not passing navigation evidence.
 
-Publish 21 changes only speaker-notes wrapping after publish 20. Its actual 390×844, 900×650 and 1280×900 screenshots, Properties/notes toggles, five theme choices, start/resume and reload/reopen preserve the full owner slide. Ten measured frames pass aspect/centering checks. Re-entry through Home resumes the open workspace; four unnecessary recent-file waits in the appearance harness timed out, while the captured title and actual canvas confirm the correct document. The reload harness also briefly expected Home, while the application correctly restored the Present start route; it then opened the actual recent document. These five wait/click pairs are recorded as harness errors, not application errors or additional workflow passes. No JS/managed exception occurred in publish 20 or 21. Source/artifact hashes and private evidence are retained in the cloud handoff.
+Publish 21 changes only speaker-notes wrapping after publish 20. Its actual 390├ù844, 900├ù650 and 1280├ù900 screenshots, Properties/notes toggles, five theme choices, start/resume and reload/reopen preserve the full owner slide. Ten measured frames pass aspect/centering checks. Re-entry through Home resumes the open workspace; four unnecessary recent-file waits in the appearance harness timed out, while the captured title and actual canvas confirm the correct document. The reload harness also briefly expected Home, while the application correctly restored the Present start route; it then opened the actual recent document. These five wait/click pairs are recorded as harness errors, not application errors or additional workflow passes. No JS/managed exception occurred in publish 20 or 21. Source/artifact hashes and private evidence are retained in the cloud handoff.
 
 Text uses the existing canonical paragraph shaper for wrapping, horizontal/vertical alignment, caret hit testing and selection. Authored point sizes convert to 96-dpi document pixels once and remain independent of text-box height; one slide transform handles zoom. Bounded immutable paragraph caching reuses measurements across paints. Short hex, alpha hex and named colours use the same literal parser as the editor; invalid imported colours fall back to a real document colour instead of looking up a literal as a semantic resource. Browser publish 19 exposed this colour-entry error and remains failed diagnostic evidence.
 
-Browser theme-change completion (choice click to current theme plus two animation frames) measured 196–249 ms for five warmed Settings choices in publish 20, versus earlier multi-second observations. Publish 21 measured 281–511 ms for four choices while navigating between Settings and the editor. These software-rendered cloud measurements are bounded observations, not approved whole-app performance budgets or cold-start acceptance.
+Browser theme-change completion (choice click to current theme plus two animation frames) measured 196ÔÇô249 ms for five warmed Settings choices in publish 20, versus earlier multi-second observations. Publish 21 measured 281ÔÇô511 ms for four choices while navigating between Settings and the editor. These software-rendered cloud measurements are bounded observations, not approved whole-app performance budgets or cold-start acceptance.

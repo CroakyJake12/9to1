@@ -25,7 +25,10 @@ public sealed record SpaceScope
 
     public static SpaceScope Tasks { get; } = new("spaces.tasks", SpaceRegistry.TasksSpaceId);
 
-    public static SpaceScope Agent { get; } = new("spaces.agent", SpaceRegistry.AgentSpaceId);
+    // Scope key stays "spaces.agent" and the registered ID stays AgentSpaceId so existing
+        // persisted Space records and preferences keep resolving; only the product name is
+        // "Assistants" (SPUI-154ff). See SpaceRegistry.BuiltIns for the full rationale.
+        public static SpaceScope Agent { get; } = new("spaces.agent", SpaceRegistry.AgentSpaceId);
 
     public static SpaceScope Shopping { get; } = new("spaces.shopping", SpaceRegistry.ShoppingSpaceId);
 
@@ -179,7 +182,7 @@ public sealed class SpacesModel
             "Plan and supervise individual work items and runs.",
             "tasks",
             true),
-        new(SpaceScope.Agent, SpacesDestinationKind.Agent, "Agent", "Select and supervise persistent Agents and their runs.", "agents", true),
+        new(SpaceScope.Agent, SpacesDestinationKind.Agent, "Assistants", "Open persistent Assistants with their Main conversations, Teams and owned Specialists.", "agents", true),
         new(SpaceScope.Shopping, SpacesDestinationKind.Shopping, "Shopping", "Compare products while preserving source provenance.", "cart", true),
         new(SpaceScope.Research, SpacesDestinationKind.Research, "Research", "Manage source-backed research plans, findings and outputs.", "search", true),
         new(SpaceScope.Translate, SpacesDestinationKind.Translate, "Translate", "Translate through the normal Space conversation and context.", "translate", true),

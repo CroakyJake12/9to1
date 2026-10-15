@@ -14,7 +14,19 @@ public static class ChatSpaceProjection
             .GroupBy(item => item.MessageId!.Value)
             .ToDictionary(group => group.Key, group => (IReadOnlyList<MessageAttachment>)group.ToArray());
 
-        var messages = data.Messages.Select(message => new ChatSpaceMessage(
+        // D04: the transcript is one ordered event stream, not a list of strings. Canonical
+        // chronology is imposed HERE, at the projection owner, so the rendered order never
+        // depends on whatever order the repository happened to return messages in. Without
+        // this, work/tool events can appear after the result they conclude, or a final answer
+        // can precede the work that produced it, purely because two records came from
+        // different arrays.
+        //
+        // OrderBy is a stable sort, so events recorded at the same instant keep their stored
+        // order instead of being reshuffled: chronology decides first, recorded order is the
+        // tiebreak. Message, Conversation and Branch identities are untouched by this ordering.
+        var messages = data.Messages
+            .OrderBy(message => message.CreatedAt)
+            .Select(message => new ChatSpaceMessage(
             message.Id,
             message.Role,
             message.Content,

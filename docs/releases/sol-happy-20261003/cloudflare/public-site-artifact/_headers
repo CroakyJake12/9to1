@@ -1,4 +1,0 @@
-/*
-  X-Content-Type-Options: nosniff
-  Referrer-Policy: strict-origin-when-cross-origin
-  Content-Security-Policy: default-src 'none'; img-src https: data:; style-src 'unsafe-inline'; base-uri https://cakemods.com; frame-ancestors 'none'

@@ -70,7 +70,7 @@ The existing registered `PresentRetainedSceneControl` is the UI boundary:
   single-argument overload retains its old relative-Fit behaviour for callers that
   have not migrated. `EffectiveZoom` reports the currently rendered scale.
 
-Manual zoom uses slide inches × 96 logical pixels and does not change when panels or
+Manual zoom uses slide inches ├ù 96 logical pixels and does not change when panels or
 the window resize. Fit measures the actual constrained editing stage, preserves the
 slide aspect ratio and centres it. The session's `IsZoomed` binding enables the CUI
 scroll viewport for every manual scale, including 100% and smaller scales that can
@@ -155,7 +155,7 @@ The `thumbnail-wheel` native regression uses the independently authored 24-slide
 PPTX, real window wheel/pointer/key input and current canonical CUI. It checks
 bidirectional scrolling, gutter routing, dynamic visible automation items, exact
 model preservation, read-only browsing, notification stability and last-slide
-visibility at 1280×900 and 800×700. Failed pre-repair native evidence is retained
+visibility at 1280├ù900 and 800├ù700. Failed pre-repair native evidence is retained
 outside the repository. Browser29 must independently retest these workflows;
 these native results alone are not browser, donor or whole-app acceptance.
 

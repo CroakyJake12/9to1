@@ -8,9 +8,13 @@ using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Controls;
 using Haven.Desktop.Events;
+using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.HavenUI.Components;
 using Haven.Desktop.HavenUI.Tokens;
+using Haven.Desktop.Prefabs;
+using Haven.Desktop.Views.Pages.Chat;
 using Haven.Desktop.Views.Pages.Go;
+using Haven.Desktop.Views.Shell.NativePresentation;
 using Haven.Desktop.Views.Pages.Automations;
 using Haven.Desktop.Views.Shell.TopRail;
 
@@ -22,6 +26,11 @@ namespace Haven.Desktop.Tests;
 /// </summary>
 public sealed class HavenUiVisualCaptureTests
 {
+    /// <summary>Reference desktop viewport width from references/REFERENCE-MEASUREMENTS.md (image 01, 1527 x 947).</summary>
+    private const double ChatReferenceWidth = 1527;
+
+    /// <summary>Reference desktop viewport height from references/REFERENCE-MEASUREMENTS.md (image 01, 1527 x 947).</summary>
+    private const double ChatReferenceHeight = 947;
     [AvaloniaFact]
     public void Capture_primary_surfaces_when_requested()
     {
@@ -241,9 +250,9 @@ public sealed class HavenUiVisualCaptureTests
         }
     }
 
-    private static IBrush SettledTide(HavenSurface surface)
+    private static IBrush SettledTide(HavenSurface surface, HavenUiAppearance appearance = HavenUiAppearance.SuperDark)
     {
-        var palette = SurfacePaletteCatalog.For(surface, HavenUiAppearance.SuperDark);
+        var palette = SurfacePaletteCatalog.For(surface, appearance);
         return new LinearGradientBrush
         {
             StartPoint = new RelativePoint(0, 0.5, RelativeUnit.Relative),
@@ -257,6 +266,149 @@ public sealed class HavenUiVisualCaptureTests
             }
         };
     }
+
+    /// <summary>
+    /// Opt-in capture of the real Chat production surface in the three composer states
+    /// the owner reference depicts, at the reference desktop viewport.
+    ///
+    /// SCOPE: deterministic labelled FIXTURE state, not live integration and not
+    /// acceptance. Content is neutral placeholder data of comparable shape; it is
+    /// deliberately NOT the reference's illustrative example text, so that nothing keys
+    /// the product to one example prompt. No model, provider or account is involved.
+    /// These frames exist so the reference can be compared against the real component
+    /// tree rather than a description of it.
+    /// </summary>
+    [AvaloniaFact]
+    public void Capture_chat_composer_states_when_requested()
+    {
+        var destination = Environment.GetEnvironmentVariable("HAVEN_VISUAL_CAPTURE_DIR");
+        if (string.IsNullOrWhiteSpace(destination))
+            return;
+
+        Directory.CreateDirectory(destination);
+        HavenUiResourceApplier.Apply(SurfacePaletteCatalog.For(HavenSurface.Go, HavenUiAppearance.SuperDark));
+
+        // State 01 - compact composer, populated transcript, real sidebar.
+        CaptureChat(Path.Combine(destination, "chat-01-compact.png"), expanded: false, addMenuOpen: false);
+
+        // State 02 - expanded composer.
+        CaptureChat(Path.Combine(destination, "chat-02-expanded.png"), expanded: true, addMenuOpen: false);
+
+        // State 03 - attachment/invocation panel open over the expanded composer.
+        CaptureChat(Path.Combine(destination, "chat-03-add-panel.png"), expanded: true, addMenuOpen: true);
+
+        // Appearance probe. The approved reference's measured conversation surface (#14151A)
+        // is far closer to CUI Professional Dark (TideColour #171819) than to SuperDark
+        // (#090B0E). Rather than guess which appearance the reference corresponds to, render
+        // the same real state at every dark appearance and compare. Diagnostic only.
+        foreach (var appearance in new[] { HavenUiAppearance.Dark, HavenUiAppearance.SuperDark })
+        {
+            HavenUiResourceApplier.Apply(SurfacePaletteCatalog.For(HavenSurface.Go, appearance));
+            CaptureChat(
+                Path.Combine(destination, $"chat-appearance-{appearance}.png"),
+                expanded: false,
+                addMenuOpen: false,
+                appearance);
+        }
+    }
+
+    private static void CaptureChat(
+        string path,
+        bool expanded,
+        bool addMenuOpen,
+        HavenUiAppearance appearance = HavenUiAppearance.SuperDark)
+    {
+        using var sidebar = new ChatSidebarHavenScene();
+        sidebar.SetSpaceScope(null);
+        sidebar.SetRows(
+            [new ChatSidebarEntry(ChatSidebarEntryKind.Conversation, Guid.NewGuid(), "Quarterly plan", false, false, true)],
+            [new ChatSidebarEntry(ChatSidebarEntryKind.Conversation, Guid.NewGuid(), "Supplier quotes", false, true, false)],
+            [new ChatSidebarEntry(ChatSidebarEntryKind.Group, Guid.NewGuid(), "Operations", true, false, false, true)],
+            [],
+            [
+                new ChatSidebarEntry(ChatSidebarEntryKind.Conversation, Guid.NewGuid(), "Onboarding checklist", true, false, false),
+                new ChatSidebarEntry(ChatSidebarEntryKind.Conversation, Guid.NewGuid(), "Inventory reconciliation", false, false, false),
+                new ChatSidebarEntry(ChatSidebarEntryKind.Conversation, Guid.NewGuid(), "Supplier shortlist", false, false, false)
+            ]);
+
+        using var chat = new ChatHavenScene();
+        chat.SetHasMessages(true);
+        chat.SetSending(false, modelAvailable: true);
+        chat.SyncMessages(BuildFixtureTranscript());
+        if (expanded)
+        {
+            chat.Instruction.Text = "Summarise the open items and flag anything blocked.";
+            ChatComposerController.For(chat.Chatbox).SetExpanded(true);
+        }
+
+        if (addMenuOpen)
+            chat.ShowAddMenu();
+
+        var shell = new Grid { ColumnDefinitions = new ColumnDefinitions("280,*") };
+        var sidebarHost = new HavenSceneControl { Root = sidebar.Root };
+        var chatHost = new HavenSceneControl { Root = chat.Root };
+        Avalonia.Controls.Grid.SetColumn(chatHost, 1);
+        shell.Children.Add(sidebarHost);
+        shell.Children.Add(chatHost);
+
+        var window = new Window
+        {
+            Width = ChatReferenceWidth,
+            Height = ChatReferenceHeight,
+            CanResize = false,
+            Background = SettledTide(HavenSurface.Go, appearance),
+            Content = shell
+        };
+
+        try
+        {
+            window.Show();
+            window.UpdateLayout();
+            if (addMenuOpen)
+                window.UpdateLayout();
+
+            var frame = window.CaptureRenderedFrame();
+            Assert.NotNull(frame);
+            frame.Save(path);
+        }
+        finally
+        {
+            window.Content = null;
+            window.Close();
+        }
+    }
+
+    /// <summary>
+    /// Deterministic fixture transcript exercising the D04 required order:
+    /// user request, AI acknowledgement, recorded work, clarification, user answer,
+    /// further work, result. IDs are per-run GUIDs; no canonical ID is implied.
+    /// </summary>
+    private static IReadOnlyList<ChatSceneMessage> BuildFixtureTranscript() =>
+    [
+        new ChatSceneMessage(
+            Guid.NewGuid(), MessageRole.User, "Pull together the current supplier options and compare them.",
+            "You", false, string.Empty),
+        new ChatSceneMessage(
+            Guid.NewGuid(), MessageRole.Assistant, "Gathering the current supplier options now.",
+            "Assistant", false, "Worked for 12 sec"),
+        new ChatSceneMessage(
+            Guid.NewGuid(), MessageRole.Assistant, "Compiling the comparison table.",
+            "Assistant", false, "Worked for 31 sec"),
+        new ChatSceneMessage(
+            Guid.NewGuid(), MessageRole.Assistant,
+            "Quick question: do the quotes include shipping, or is that billed separately?",
+            "Assistant", false, string.Empty),
+        new ChatSceneMessage(
+            Guid.NewGuid(), MessageRole.Assistant, "You answered Shipping is quoted separately.",
+            "Assistant", false, string.Empty),
+        new ChatSceneMessage(
+            Guid.NewGuid(), MessageRole.Assistant, "Rebuilding the table with a separate shipping column.",
+            "Assistant", false, "Worked for 8 sec"),
+        new ChatSceneMessage(
+            Guid.NewGuid(), MessageRole.Assistant,
+            "Here are the suppliers worth shortlisting, with shipping called out separately.",
+            "Assistant", false, string.Empty)
+    ];
 
     private sealed class EmptyWorkspaceStateRepository : IWorkspaceStateRepository
     {

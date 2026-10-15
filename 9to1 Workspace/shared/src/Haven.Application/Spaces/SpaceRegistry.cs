@@ -575,7 +575,14 @@ public sealed partial class SpaceRegistry
             BuiltIn(ChatSpaceId, "Chat", "chat", SpaceKind.Chat, "General conversation, shared objects and authorised app actions.", SpaceThinkingMode.Default, epoch),
             BuiltIn(StudySpaceId, "Study", "book", SpaceKind.Study, "Use the Study product for subject, topic, progress and assessment work.", SpaceThinkingMode.Balanced, epoch),
             BuiltIn(TasksSpaceId, "Tasks", "tasks", SpaceKind.Tasks, "Keep the objective, plan, steps, dependencies, blockers, approvals and observed outputs explicit.", SpaceThinkingMode.Deep, epoch),
-            BuiltIn(AgentSpaceId, "Agent", "agents", SpaceKind.Agent, "Show persistent Agent identity and effective permissions; Subagents remain runtime children, not persistent Agents.", SpaceThinkingMode.Deep, epoch),
+            // Product name is "Assistants" per the 13 October 2026 Spaces companion
+            // (SPUI-154-159, OWNER-CONFIRMED): Assistants is a Space with a permanent
+            // Main conversation per Assistant, Teams, and owned Specialist launch.
+            // The stable ID and SpaceKind stay "Agent" on purpose: SpaceID must survive a
+            // rename (identity invariant), SpaceKind numeric values must never be
+            // renumbered, and persisted records key on both. This is a deliberate
+            // display/registry migration, not a new Space and not a deletion.
+            BuiltIn(AgentSpaceId, "Assistants", "agents", SpaceKind.Agent, "Open persistent Assistants, each with its permanent Main conversation, their Teams, and the user's owned Specialists. Subagents and delegated workers remain runtime children, not persistent Assistants.", SpaceThinkingMode.Deep, epoch),
             BuiltIn(ShoppingSpaceId, "Shopping", "cart", SpaceKind.Shopping, "Help compare options and preserve the user's requirements and trade-offs.", SpaceThinkingMode.Balanced, epoch),
             BuiltIn(ResearchSpaceId, "Research", "search", SpaceKind.Research, "Separate sourced facts, inference and unresolved questions.", SpaceThinkingMode.Deep, epoch),
             BuiltIn(TranslateSpaceId, "Translate", "translate", SpaceKind.Translate, "Use the selected target languages and preserve one labelled response variant per language.", SpaceThinkingMode.Default, epoch),

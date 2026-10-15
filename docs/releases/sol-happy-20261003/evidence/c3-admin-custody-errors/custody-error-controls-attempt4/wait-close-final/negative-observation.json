@@ -1,9 +1,0 @@
-{
-  "scenario": "wait-close",
-  "launcherReleased": true,
-  "creatorWaitProven": true,
-  "primary": "None",
-  "cleanup": [],
-  "retainedData": "/tmp/original-custody-uqnc9gw2",
-  "sessionInitialized": true
-}

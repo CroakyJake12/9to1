@@ -1,9 +1,0 @@
-b48423585970123b592243014989f4132adb90092ef2a57ec0d472bca6a4ea0e /workspace/team-c/c5-workers-ai-metadata/9to1 Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs
-371df9ef4ec65689fa3843a53e5f1b64c538d75bc4b509d1747c91169b10e15f /workspace/team-c/c5-workers-ai-metadata/9to1 Workspace/shared/src/Haven.Infrastructure/Providers/ProviderToolTurnCorrelation.cs
-b999194c5733502d209de7ee963b63cb71f8c6a4c04954913d0a8ef920b5502c /workspace/team-c/c5-workers-ai-metadata/9to1 Workspace/shared/src/Haven.Application/ModelProviderAbstractions.cs
-9fcae62998ce231789cfae22fb7e934cad2ad53ab399952fc92c3e8c8fcc98fa /workspace/team-c/c5-workers-ai-metadata/9to1 Workspace/shared/src/Haven.Application/UsageAbstractions.cs
-c532dec31f93c3aec1af4f3dc9f969da4a0987454bac9d98bb40830223e2d574 /workspace/team-c/c5-workers-ai-metadata/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs
-ba158b9f675dc04f1e4574f4c69f95f6097226cf8c2d6aee6fc5dc7b1660827f /workspace/team-c/c5-workers-ai-metadata/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ProviderEndpointSecurityTests.cs
-2c0ad3163afa1a6c3bcdff1f0476a57d04871ac3de0d9fa2b0a2cc8a9e15c588 /workspace/team-c/c5-workers-ai-metadata/9to1 Workspace/shared/src/Haven.Application/Abstractions.cs
-3bf306530e1cb848336dc08856cd39ffc44ea0efd7d6c3cdf1247def02dcbc1a /workspace/team-c/c5-workers-ai-metadata/9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/ModelUsageRepository.cs
-ba158b9f675dc04f1e4574f4c69f95f6097226cf8c2d6aee6fc5dc7b1660827f /workspace/team-c/c5-workers-ai-metadata/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ProviderEndpointSecurityTests.cs

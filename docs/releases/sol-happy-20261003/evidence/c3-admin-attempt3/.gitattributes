@@ -1,4 +1,0 @@
-# Preserve exact original generated-source and tool-log bytes.
-debug/original-generated-or-materialized-sources/artifacts/root14-managed-build/obj/Accounts.Specs/debug_linux-x64/Accounts.Specs.AssemblyInfo.cs whitespace=-blank-at-eof
-debug/original-generated-or-materialized-sources/artifacts/root14-managed-build/obj/NineToOne.Accounts/debug_linux-x64/NineToOne.Accounts.AssemblyInfo.cs whitespace=-blank-at-eof
-logs/workloads.log whitespace=-blank-at-eof

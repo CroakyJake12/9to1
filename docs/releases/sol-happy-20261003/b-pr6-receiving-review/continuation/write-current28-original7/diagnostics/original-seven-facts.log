@@ -1,5 +1,0 @@
-Test run for /workspace/team-c-resume-evidence/c5-b-pr6-receiving/write-current28-original7/artifacts/bin/Write.OriginalFormats.Tests/release_linux-x64/NineToOne.Write.OriginalFormats.Tests.dll (.NETCoreApp,Version=v10.0)
-A total of 1 test files matched the specified pattern.
-Results File: /workspace/team-c-resume-evidence/c5-b-pr6-receiving/write-current28-original7/test-results/write-original-formats.trx
-
-Passed!  - Failed:     0, Passed:     7, Skipped:     0, Total:     7, Duration: 398 ms - NineToOne.Write.OriginalFormats.Tests.dll (net10.0)

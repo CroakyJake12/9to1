@@ -1,8 +1,0 @@
-{
-  "TargetPath": "/workspace/team-c-resume-evidence/c4-browser-receiving/navigation5-3b0b-attempt02/artifacts/bin/BrowserNavigationCancellation.Tests/release_linux-x64/BrowserNavigationCancellation.Tests.dll",
-  "TargetDir": "/workspace/team-c-resume-evidence/c4-browser-receiving/navigation5-3b0b-attempt02/artifacts/bin/BrowserNavigationCancellation.Tests/release_linux-x64/",
-  "TargetFramework": "net10.0",
-  "RuntimeIdentifier": "linux-x64",
-  "UseAppHost": "true",
-  "AvaloniaBuildTasksLocation": "/workspace/team-c-resume-evidence/c4-browser-receiving/navigation5-3b0b-attempt02/artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
-}

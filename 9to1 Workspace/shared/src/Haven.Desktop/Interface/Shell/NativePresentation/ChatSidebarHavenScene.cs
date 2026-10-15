@@ -511,19 +511,25 @@ internal sealed class ChatSidebarHavenScene : IDisposable
               <Input Name="Search" Row="1" Width="100%" Height="34px" MinHeight="34px" Placeholder="Search chats, groups and files" Visibility="Collapsed" />
               <Container Name="ScrollHost" Row="2" Layout="Vertical" Width="100%" Overflow="Scroll" Clip="true" Gap="4px">
                 <Button Name="NewChat" Variant="Navigation" IconKey="plus" Content="New Chat" Width="100%" MinHeight="36px" />
-                <Text Name="FilesHeading" Content="File Library" Level="H3" />
+                <!-- Section labels inside a navigation list, NOT third-level headings.
+                     Level H3 resolves to 24px/700 (TextDefaults.For), which rendered these
+                     larger than the conversation body. CUI-PRO-202 requires disciplined
+                     whitespace and clear logical grouping; the approved Chat reference shows
+                     them as small muted section labels, which is Caption (12px/600,
+                     TextSecondary). Only these five labels changed. -->
+                <Text Name="FilesHeading" Content="File Library" Level="Caption" />
                 <DynamicUIRuntime Name="FileRows" Width="100%" />
                 <Text Name="FilesEmpty" Content="Files attached to chats appear here." FontSize="11" Foreground="TextSecondary" Visibility="Collapsed" />
                 <Container Name="GroupsHeader" Layout="Grid" Columns="1fr 30px" Width="100%" Gap="4px">
-                  <Text Name="GroupsHeading" Content="Chat Groups" Level="H3" Column="0" VerticalAlignment="Center" />
+                  <Text Name="GroupsHeading" Content="Chat Groups" Level="Caption" Column="0" VerticalAlignment="Center" />
                   <Button Name="NewGroup" Variant="Icon" IconKey="plus" Content="" Column="1" Width="30px" Height="30px" MinHeight="30px" />
                 </Container>
                 <DynamicUIRuntime Name="GroupRows" Width="100%" />
-                <Text Name="PinnedHeading" Content="Pinned" Level="H3" Visibility="Collapsed" />
+                <Text Name="PinnedHeading" Content="Pinned" Level="Caption" Visibility="Collapsed" />
                 <DynamicUIRuntime Name="PinnedRows" Width="100%" />
-                <Text Name="UnreadHeading" Content="Unread" Level="H3" Visibility="Collapsed" />
+                <Text Name="UnreadHeading" Content="Unread" Level="Caption" Visibility="Collapsed" />
                 <DynamicUIRuntime Name="UnreadRows" Width="100%" />
-                <Text Name="ChatsHeading" Content="Chats" Level="H3" />
+                <Text Name="ChatsHeading" Content="Chats" Level="Caption" />
                 <DynamicUIRuntime Name="ChatRows" Width="100%" />
               </Container>
               <Text Name="Status" Row="3" Content="" FontSize="11" Foreground="TextSecondary" Visibility="Collapsed" />

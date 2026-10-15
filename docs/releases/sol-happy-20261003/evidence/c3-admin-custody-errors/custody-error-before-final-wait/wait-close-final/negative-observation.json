@@ -1,9 +1,0 @@
-{
-  "scenario": "wait-close",
-  "launcherReleased": true,
-  "creatorWaitProven": true,
-  "primary": "AssertionError('Original body/close failure was replaced')",
-  "cleanup": [],
-  "retainedData": "/tmp/original-custody-1p4ze1qv",
-  "sessionInitialized": true
-}

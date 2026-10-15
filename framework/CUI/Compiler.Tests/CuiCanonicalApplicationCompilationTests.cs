@@ -22,6 +22,31 @@ public sealed class CuiCanonicalApplicationCompilationTests
         Assert.True(result.Succeeded, string.Join(Environment.NewLine, result.Diagnostics));
         Assert.NotNull(result.Output);
     }
+
+    /// <summary>
+    /// The Spaces and Chat surfaces this merge is delivering, compiled against the real
+    /// canonical compiler rather than assumed to be canonical.
+    ///
+    /// These are the files most likely to drift into an invented dialect - elements such as
+    /// <c>Aside</c>, <c>AdaptiveSplit</c>, <c>Heading</c> and <c>List</c> read naturally but are
+    /// not in CUI's vocabulary, and a source file can look like CUI while compiling as nothing.
+    /// </summary>
+    [Theory]
+    [InlineData("9to1 Workspace/Spaces/UI/Home/SpacesHome.cui")]
+    [InlineData("9to1 Workspace/Spaces/UI/Chat/ChatSpace.cui")]
+    [InlineData("9to1 Workspace/Spaces/UI/Tasks/SpaceTaskWidget.cui")]
+    [InlineData("9to1 Workspace/Boards/app/Boards.cui")]
+    [InlineData("9to1 Workspace/Home/UI/Home.cui")]
+    [InlineData("9to1 Workspace/Home/UI/ModelPicker.cui")]
+    [InlineData("9to1 Workspace/Mail/UI/MailWorkspace.cui")]
+    public void Actual_spaces_and_chat_source_compiles_against_canonical_cui(string relativePath)
+    {
+        var path = Path.Combine(RepositoryRoot(), relativePath);
+        Assert.True(File.Exists(path), $"Shipping source missing: {relativePath}");
+        var result = new CuiCompiler().Compile(File.ReadAllText(path), path, new(new("1", "1", "2.0")));
+        Assert.True(result.Succeeded, string.Join(Environment.NewLine, result.Diagnostics));
+        Assert.NotNull(result.Output);
+    }
     private static string RepositoryRoot([CallerFilePath] string sourceFile = "") =>
         Path.GetFullPath(Path.Combine(Path.GetDirectoryName(sourceFile)!, "../../.."));
 }

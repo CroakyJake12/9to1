@@ -1008,7 +1008,7 @@ public sealed class CuiControlLoader : IDisposable
                 definition.Source.Span));
 
         var seenKeys = new HashSet<string>(StringComparer.Ordinal);
-        var nextItems = new List<(string Key, object? Item)>();
+        var nextItems = new List<(string Key, object? Item, string? Template)>();
         foreach (var item in items)
         {
             var itemScope = new RepeatItemScope(this, definition.ItemName, item, _bindingContext);
@@ -1020,11 +1020,44 @@ public sealed class CuiControlLoader : IDisposable
                 throw new CuiRuntimeLoadException(new CuiDiagnostic(
                     "CUIR052", CuiDiagnosticSeverity.Error,
                     $"Repeat key '{key}' is duplicated in this source collection.", definition.Key.Span));
-            nextItems.Add((key, item));
+            nextItems.Add((key, item, ResolveRepeatTemplate(definition.Template, itemScope, key)));
         }
 
         ReplaceRepeatItems(state, nextItems);
         state.SetSource(source, () => RequestRepeatRefresh(state));
+    }
+
+    /// <summary>
+    /// Resolves the per-item template name for a Repeat.
+    ///
+    /// This is what lets one list mix shapes. HUI's DynamicUI chose a template per item
+    /// (<c>CreateItem(template, location, id, values)</c>) and the Chat transcript relies on it,
+    /// because messages and tool-activity cards are structurally different. CUI previously had no
+    /// equivalent: a Repeat instantiated every child for every item, so a mixed list could not
+    /// be expressed. A Repeat that declares a Template resolves it against each item and
+    /// instantiates only the matching Definition child.
+    /// </summary>
+    private string? ResolveRepeatTemplate(CuiValue? template, RepeatItemScope scope, string key)
+    {
+        if (template is null)
+        {
+            return null;
+        }
+
+        var resolved = template switch
+        {
+            CuiLiteralValue literal => literal.Value,
+            CuiBindingValue binding when scope.TryGetValue(binding.Path, out var value) => value,
+            _ => null
+        };
+        var name = resolved is null
+            ? null
+            : Convert.ToString(resolved, System.Globalization.CultureInfo.InvariantCulture);
+        if (string.IsNullOrWhiteSpace(name))
+            throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                "CUIR053", CuiDiagnosticSeverity.Error,
+                $"Repeat item '{key}' must resolve its Template to a non-empty template name.", template.Span));
+        return name;
     }
 
     private bool TryResolveRepeatKey(CuiValue keyValue, RepeatItemScope scope, out string? key)
@@ -1039,13 +1072,21 @@ public sealed class CuiControlLoader : IDisposable
         return key is not null;
     }
 
-    private void ReplaceRepeatItems(CuiRepeatState state, IReadOnlyList<(string Key, object? Item)> nextItems)
+    private void ReplaceRepeatItems(CuiRepeatState state, IReadOnlyList<(string Key, object? Item, string? Template)> nextItems)
     {
         var nextInstances = new Dictionary<string, RepeatItemInstance>(StringComparer.Ordinal);
         var nextRoots = new List<Control>(nextItems.Count);
-        foreach (var (key, item) in nextItems)
+        // Instances whose template changed keep their key, so the removal pass below would skip
+        // them and leave the superseded scope subscribed and its control tree attached. They are
+        // retired here instead.
+        var replaced = new List<RepeatItemInstance>();
+        foreach (var (key, item, template) in nextItems)
         {
-            if (state.Items.TryGetValue(key, out var existing))
+            // Reuse only when the shape still matches. A per-item template can change under a
+            // stable key (a message that becomes an assistant reply), and reusing the old control
+            // would leave the wrong subtree on screen; the key alone is not sufficient identity.
+            if (state.Items.TryGetValue(key, out var existing)
+                && string.Equals(existing.Template, template, StringComparison.Ordinal))
             {
                 existing.Scope.Update(item);
                 // Update publishes the new item through the registered scope
@@ -1054,6 +1095,11 @@ public sealed class CuiControlLoader : IDisposable
                 nextInstances.Add(key, existing);
                 nextRoots.Add(existing.Root);
                 continue;
+            }
+
+            if (state.Items.TryGetValue(key, out var superseded))
+            {
+                replaced.Add(superseded);
             }
 
             var identity = CreateRepeatIdentityPrefix(state.Component, key);
@@ -1076,6 +1122,21 @@ public sealed class CuiControlLoader : IDisposable
                 }
                 foreach (var child in state.Component.Children.Where(child => !child.IsDefinition))
                     itemRoot.Children.Add(LoadComponent(child));
+                if (template is not null)
+                {
+                    // Instantiate only the selected Definition child. An unmatched name is an
+                    // error rather than an empty row: silently rendering nothing would hide a
+                    // template typo behind an apparently working list.
+                    var selected = state.Component.Children.FirstOrDefault(child =>
+                        child.IsDefinition
+                        && string.Equals(child.Name ?? child.StableId, template, StringComparison.Ordinal));
+                    if (selected is null)
+                        throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                            "CUIR054", CuiDiagnosticSeverity.Error,
+                            $"Repeat item '{key}' selected template '{template}', which is not a Definition child of this Repeat.",
+                            state.Component.Span));
+                    itemRoot.Children.Add(LoadComponent(selected));
+                }
             }
             finally
             {
@@ -1083,7 +1144,7 @@ public sealed class CuiControlLoader : IDisposable
                 _currentRepeatIdentity = previousIdentity;
             }
 
-            var instance = new RepeatItemInstance(scope, itemRoot);
+            var instance = new RepeatItemInstance(scope, itemRoot, template);
             SubscribeScope(scope);
             WireBindingsRecursive(itemRoot);
             nextInstances.Add(key, instance);
@@ -1097,6 +1158,16 @@ public sealed class CuiControlLoader : IDisposable
             UnsubscribeScope(removed.Scope);
             DetachControlTree(removed.Root);
             state.Host.Children.Remove(removed.Root);
+        }
+
+        foreach (var retired in replaced)
+        {
+            UnsubscribeScope(retired.Scope);
+            DetachControlTree(retired.Root);
+            // The key survives into nextInstances, so the removal pass above deliberately skips
+            // it. Without this the superseded row stays parented and renders alongside its
+            // replacement.
+            state.Host.Children.Remove(retired.Root);
         }
 
         state.Items.Clear();
@@ -2715,7 +2786,7 @@ public sealed class CuiControlLoader : IDisposable
         public bool LastValue { get; set; }
     }
 
-    private sealed record RepeatItemInstance(RepeatItemScope Scope, Panel Root);
+    private sealed record RepeatItemInstance(RepeatItemScope Scope, Panel Root, string? Template);
 
     private sealed class CuiRepeatState : IDisposable
     {

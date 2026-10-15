@@ -1,50 +1,59 @@
 <Cui id="spaces.chat" version="1">
-  <Page id="chat-space" role="main" accessible-name="Chat Space" font-family="Montserrat" layout="vertical" scalable-text="true" high-contrast="semantic" reduced-motion="respect">
-    <AdaptiveSplit id="chat-layout" compact-breakpoint="720" primary-min-width="0">
-      <Aside id="recent-chats" role="navigation" accessible-name="Recent chats" compact-mode="drawer">
-        <Heading level="2">Recent chats</Heading>
-        <Button id="new-chat" action="chat.new" accessible-name="Start a new chat" shortcut="Ctrl+N" touch-target="44">New chat</Button>
-        <SearchField id="recent-search" binding="recentQuery" accessible-name="Search recent chats" placeholder="Search chats" clear-action="chat.clear-recent-search" />
-        <List id="recent-list" binding="recentChats" role="list" accessible-name="Recent conversations" empty-text="No recent chats">
-          <Button id="recent-row" repeat="recentChats" action="chat.open" action-argument="{id}" accessible-name="Open {title}" selected="{isCurrent}" shortcut-scope="list">
-            <Text binding="title" />
-            <Text binding="updatedLabel" tone="muted" />
-          </Button>
-        </List>
-      </Aside>
-      <Main id="conversation" accessible-name="Conversation">
-        <Toolbar id="conversation-toolbar" accessible-name="Conversation controls" wrap="true">
-          <Heading id="conversation-title" level="1" binding="conversation.title">New chat</Heading>
-          <Select id="model-choice" binding="models" selected-binding="composer.selectedModelName" action="chat.select-model" accessible-name="Choose model" description="Selects the model for the next message" />
-          <Select id="branch-choice" binding="conversation.branches" selected-binding="conversation.currentBranchId" action="chat.switch-branch" accessible-name="Choose conversation branch" description="Switches the visible message history" />
-        </Toolbar>
-        <ScrollView id="transcript-scroll" follow="when-at-end" restore-position="true">
-          <List id="transcript" binding="conversation.messages" role="log" accessible-name="Conversation messages" live="polite" relevant="additions text" empty-text="Ask anything to begin">
-            <Article id="message" repeat="conversation.messages" role="listitem" accessible-name="{speakerLabel}, {createdLabel}">
-              <Text binding="speakerLabel" weight="semibold" />
-              <Markdown binding="content" selectable="true" />
-              <List binding="attachments" role="list" accessible-name="Message attachments" compact="true" />
-              <List binding="citations" role="list" accessible-name="Sources and citations" compact="true" />
-              <List binding="toolActivities" role="list" accessible-name="Tool activity" live="polite" compact="true" />
-              <Row id="message-actions" accessible-name="Message actions" wrap="true">
-                <Button action="chat.branch" action-argument="{id}" accessible-name="Branch from this message" shortcut="Ctrl+Shift+B" touch-target="44">Branch</Button>
-                <Button action="chat.regenerate" action-argument="{id}" visible="{canRegenerate}" accessible-name="Regenerate this response" shortcut="Ctrl+Shift+R" touch-target="44">Regenerate</Button>
-              </Row>
-            </Article>
-          </List>
-        </ScrollView>
-        <Composer id="composer" accessible-name="Message composer" sticky="bottom">
-          <List id="attachment-tray" binding="composer.attachments" role="list" accessible-name="Attachments for the next message">
-            <Button action="chat.remove-attachment" action-argument="{id}" accessible-name="Remove {name}" touch-target="44">Remove</Button>
-          </List>
-          <TextArea id="composer-input" binding="composer.draft" action="chat.update-draft" accessible-name="Message" description="Enter sends. Shift Enter starts a new line." multiline="true" submit-shortcut="Enter" newline-shortcut="Shift+Enter" />
-          <Row id="composer-actions" wrap="true">
-            <Button id="attach" action="chat.attach" accessible-name="Attach a file" description="Adds a file to this chat without navigating away" shortcut="Ctrl+O" touch-target="44">Attach</Button>
-            <Button id="send" action="chat.send" enabled="{composer.canSend}" accessible-name="Send message" shortcut="Enter" touch-target="44" variant="primary">Send</Button>
-          </Row>
-        </Composer>
-        <Text id="chat-status" binding="status.message" role="status" live="polite" accessible-name="Chat status" />
-      </Main>
-    </AdaptiveSplit>
+  <Page id="chat-space" accessible-name="Chat Space">
+    <Container id="chat-layout" Type="Horizontal Stack" CellGap="16">
+      <Container id="recent-chats" Type="Vertical Stack" CellGap="8" accessible-name="Recent chats">
+        <Text id="recent-chats-title" text="Recent chats" font-size="18" />
+        <Button id="new-chat" action="chat.new" content="New chat" accessible-name="Start a new chat" />
+        <Input id="recent-search" Type="Text" Value="{Binding RecentSearchQuery}" placeholdertext="Search chats" accessible-name="Search recent chats" action="chat.clear-search" />
+        <Repeat Source="{Binding RecentChats}" As="recent" Key="{Binding recent.Id}">
+          <Button id="recent-row" action="chat.open" action-argument="{Binding recent.Id}" content="{Binding recent.Title}" accessible-name="Open this conversation" Interactive="{Binding recent.IsCurrent}" />
+          <Text text="{Binding recent.UpdatedLabel}" text-wrapping="Wrap" accessible-name="Conversation last updated" />
+        </Repeat>
+      </Container>
+
+      <Container id="conversation" Type="Vertical Stack" CellGap="12" accessible-name="Conversation">
+        <Container id="conversation-toolbar" Type="Wrap" CellGap="8" accessible-name="Conversation controls">
+          <Text id="conversation-title" text="{Binding Conversation.Title}" font-size="24" text-wrapping="Wrap" />
+          <Input id="model-choice" Type="Select" Items="{Binding Models}" action="chat.select-model" accessible-name="Choose model" />
+          <Text id="model-choice-current" text="{Binding Composer.SelectedModelName}" accessible-name="Current model" />
+          <Input id="branch-choice" Type="Select" Items="{Binding Conversation.Branches}" action="chat.switch-branch" accessible-name="Choose conversation branch" />
+        </Container>
+
+        <Container id="transcript" Type="Vertical Stack" CellGap="12" accessible-name="Conversation messages">
+          <Repeat Source="{Binding Conversation.Messages}" As="message" Key="{Binding message.Id}">
+            <Container id="message" Type="Vertical Stack" CellGap="6" accessible-name="One conversation message">
+              <Text text="{Binding message.SpeakerLabel}" font-weight="SemiBold" />
+              <Text text="{Binding message.Content}" text-wrapping="Wrap" accessible-name="Message content" />
+              <Repeat Source="{Binding message.Attachments}" As="attachment" Key="{Binding attachment.Id}">
+                <Text text="{Binding attachment.OriginalName}" accessible-name="Attached file" />
+              </Repeat>
+              <Repeat Source="{Binding message.Citations}" As="citation" Key="{Binding citation.Number}">
+                <Text text="{Binding citation.Title}" text-wrapping="Wrap" accessible-name="Citation source" />
+              </Repeat>
+              <Repeat Source="{Binding message.ToolActivities}" As="activity" Key="{Binding activity.Id}">
+                <Text text="{Binding activity.Title}" accessible-name="Tool activity" />
+              </Repeat>
+              <Container id="message-actions" Type="Wrap" CellGap="8" accessible-name="Message actions">
+                <Button action="chat.branch" action-argument="{Binding message.Id}" content="Branch" accessible-name="Branch from this message" />
+                <Button action="chat.regenerate" action-argument="{Binding message.Id}" content="Regenerate" accessible-name="Regenerate this response" Interactive="{Binding message.CanRegenerate}" />
+              </Container>
+            </Container>
+          </Repeat>
+        </Container>
+
+        <Container id="composer" Type="Vertical Stack" CellGap="8" accessible-name="Message composer">
+          <Repeat Source="{Binding Composer.Attachments}" As="attachment" Key="{Binding attachment.Id}">
+            <Button action="chat.remove-attachment" action-argument="{Binding attachment.Id}" content="{Binding attachment.OriginalName}" accessible-name="Remove this attachment" />
+          </Repeat>
+          <Input id="composer-input" Type="Text" Multiline="true" Value="{Binding Composer.Draft}" placeholdertext="Message" accessible-name="Message" />
+          <Container id="composer-actions" Type="Wrap" CellGap="8">
+            <Button id="attach" action="chat.attach" content="Attach" accessible-name="Attach a file" />
+            <Button id="send" action="chat.send" content="Send" accessible-name="Send message" Interactive="{Binding Composer.CanSend}" />
+          </Container>
+        </Container>
+
+        <Text id="chat-status" text="{Binding Status.Message}" accessible-name="Chat status" />
+      </Container>
+    </Container>
   </Page>
 </Cui>

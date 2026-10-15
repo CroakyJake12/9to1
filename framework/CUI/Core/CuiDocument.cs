@@ -193,6 +193,12 @@ public sealed class CuiComponent
         if (Repeat is not null)
         {
             semanticParts.Add($"repeat:{Repeat.ItemName}:{DescribeValue(Repeat.Source)}:{DescribeValue(Repeat.Key)}");
+            // Template participates in identity: changing it changes which subtree each item
+            // renders, so a document that differs only here must not compare equal.
+            if (Repeat.Template is not null)
+            {
+                semanticParts.Add($"template:{DescribeValue(Repeat.Template)}");
+            }
         }
         if (PropertyRegion is not null)
         {

@@ -1,5 +1,0 @@
-Test run for /home/runner/work/9to1/9to1/artifacts/canvas65-managed-build/bin/Haven.Core.Tests/release_linux-x64/Haven.Core.Tests.dll (.NETCoreApp,Version=v10.0)
-A total of 1 test files matched the specified pattern.
-Results File: /home/runner/work/9to1/9to1/artifacts/canvas65-managed/trx/core.trx
-
-Passed!  - Failed:     0, Passed:    13, Skipped:     0, Total:    13, Duration: 343 ms - Haven.Core.Tests.dll (net10.0)

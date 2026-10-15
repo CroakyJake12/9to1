@@ -1,9 +1,0 @@
-{
-  "sourceCommit": "ce7f7ce15cc75b5fac40bae2bce20f232a3d6f38",
-  "safeSummarySha256": "e99e1d364e30f5c43b1012bed0bb5cddbccb14bb1069e0e389e5b0cef739f02f",
-  "c6RuntimeReceipt": {
-    "path": "/workspace/team-c-c6-durable-validation-20261004/dependency-closure/native-r2-owning-suite-independent-readback.json",
-    "sha256": "f9438c783751f5cb033cef3ed57b86e193a6c334d09d921e8b9ace459d9b8513"
-  },
-  "ack": "Independent readback of actual76/76 whole owning suite, all21 original NativeR2 cases, compiled Sites binary and source/custody pins. Full provider/authority/session/scanner/import/publication acceptance remains NOT_RUN."
-}

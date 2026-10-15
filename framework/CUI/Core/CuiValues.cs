@@ -47,7 +47,8 @@ public sealed record CuiRepeatDefinition(
     CuiValue Source,
     string ItemName,
     CuiValue Key,
-    CuiSourceSpan Span);
+    CuiSourceSpan Span,
+    CuiValue? Template = null);
 
 public sealed record CuiPropertyRegionDefinition(
     string PropertyName,
