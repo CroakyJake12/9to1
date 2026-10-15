@@ -2,6 +2,10 @@ name: Book4 Edge compatibility preparation
 on:
   workflow_dispatch:
     inputs:
+      media_candidate:
+        description: Build the separate camera and quiet speaker candidate
+        type: boolean
+        default: false
       next_dtb:
         description: 'Compile the separate 7.2.7 NP960XMA USB wiring test'
         type: boolean
@@ -181,4 +185,31 @@ jobs:
         with:
           name: windows-compat-${{ matrix.runner }}
           path: artifacts/packages/*.deb
+          if-no-files-found: error
+
+  media:
+    if: inputs.media_candidate
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 38780090393
+          name: book4edge16-next-f16e32b85403e6f54647a54586b74ddbca4cb8ec
+          path: kernel-input
+      - name: Validate matching headers and build media modules
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libelf-dev kmod device-tree-compiler
+          (cd kernel-input && sha256sum -c SHA256SUMS)
+          dpkg-deb -x kernel-input/linux-headers-7.2.7-9to1-book4edge16-next_7.2.7-1_arm64.deb "$RUNNER_TEMP/headers"
+          bash '9to1 OS/tooling/book4edge/build-media-candidate.sh' "$RUNNER_TEMP/source" "$RUNNER_TEMP/headers/usr/src/linux-headers-7.2.7-9to1-book4edge16-next" "$PWD/artifacts/media-candidate"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: book4edge16-media-${{ github.sha }}
+          path: artifacts/media-candidate/
           if-no-files-found: error
