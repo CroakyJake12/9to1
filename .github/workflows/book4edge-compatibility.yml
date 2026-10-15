@@ -51,7 +51,7 @@ jobs:
       - name: Install desktop dependencies and check package
         run: |
           sudo apt-get update
-          sudo apt-get install -y ./artifacts/packages/9to1-windows-compat_0.1.0_all.deb xvfb xdotool grub-common shellcheck device-tree-compiler
+          sudo apt-get install -y ./artifacts/packages/9to1-windows-compat_0.1.0_all.deb xvfb xdotool grub-common shellcheck device-tree-compiler zenity
           9to1-compat capabilities
           python3 - <<'PY'
           import struct

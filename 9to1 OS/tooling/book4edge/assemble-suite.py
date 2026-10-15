@@ -124,6 +124,7 @@ X-GNOME-Autostart-enabled=true
         raise ValueError('CPIO roundtrip failed')
     combined=stock+b'\0'*(-len(stock)%4)+gzip.compress(overlay,compresslevel=6,mtime=0)
     output.mkdir(parents=True,exist_ok=False)
+    (output/'firmware-manifest.json').write_bytes((firmware/'manifest.json').read_bytes())
     (output/'initrd').write_bytes(combined)
     (output/'Image').write_bytes(image)
     if bundle:
