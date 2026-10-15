@@ -31,9 +31,12 @@ snapshot() {
         journalctl -b --no-pager -n 2000 > "$out/journal.log.new" 2>&1 && mv "$out/journal.log.new" "$out/journal.log"
         journalctl -b --no-pager -p warning -n 2000 > "$out/warnings.log.new" 2>&1 && mv "$out/warnings.log.new" "$out/warnings.log"
         journalctl -b --no-pager -n 2000 -u gdm.service -u gdm3.service -u display-manager.service > "$out/display-manager.log.new" 2>&1 && mv "$out/display-manager.log.new" "$out/display-manager.log"
+        # Keep helper failures even when the general journal fills at shutdown.
+        journalctl -b --no-pager -u book4edge-battery-test.service -u book4edge-bluetooth-address.service -u bluetooth.service -u upower.service > "$out/driver-services.log.new" 2>&1 && mv "$out/driver-services.log.new" "$out/driver-services.log"
     fi
     if test "$phase" = userspace && command -v timeout >/dev/null 2>&1; then
         timeout 3 systemctl --no-pager list-jobs > "$out/systemd-jobs.txt" 2>&1 || true
+        timeout 3 systemctl --no-pager show book4edge-battery-test.service book4edge-bluetooth-address.service bluetooth.service upower.service -p Id -p ActiveState -p SubState -p Result -p ExecMainStatus > "$out/driver-service-status.txt" 2>&1 || true
         # Read only standard kernel attributes; no EC commands or register scans.
         {
             for supply in /sys/class/power_supply/*; do
@@ -58,6 +61,7 @@ snapshot() {
                 printf '\n=== Network status ===\n'; timeout 3 nmcli device status
                 printf '\n=== Radio state ===\n'; timeout 3 rfkill list
                 printf '\n=== Bluetooth configuration ===\n'; timeout 3 btmgmt info
+                printf '\n=== Unconfigured Bluetooth controllers ===\n'; timeout 3 btmgmt config
                 printf '\n=== ALSA cards ===\n'; cat /proc/asound/cards
                 printf '\n=== Playback devices ===\n'; timeout 3 aplay -l
                 printf '\n=== Capture devices ===\n'; timeout 3 arecord -l
@@ -69,6 +73,12 @@ snapshot() {
                 printf '\n=== CPU frequency drivers ===\n'; cat /sys/devices/system/cpu/cpufreq/policy*/scaling_driver 2>/dev/null
             } > "$out/hardware-status.txt.new" 2>&1
             mv "$out/hardware-status.txt.new" "$out/hardware-status.txt"
+            # Preserve one pre-shutdown status instead of overwriting all evidence.
+            if test "$count" -ge 12 && test ! -f "$out/hardware-status-early.txt"; then
+                cp "$out/hardware-status.txt" "$out/hardware-status-early.txt"
+                cp "$out/power-supplies.txt" "$out/power-supplies-early.txt"
+                cp "$out/driver-service-status.txt" "$out/driver-service-status-early.txt"
+            fi
         fi
     fi
     cat /proc/uptime > "$out/last-snapshot-uptime.txt"

@@ -86,6 +86,7 @@ jobs:
           shellcheck -S warning '9to1 OS/tooling/book4edge/battery-test/start-battery-test.sh'
           shellcheck -S warning '9to1 OS/tooling/book4edge/runtime/bluetooth-address.sh'
           python3 -m py_compile '9to1 OS/tooling/book4edge/assemble-suite.py' '9to1 OS/tooling/book4edge/runtime/hardware-check.py'
+          python3 '9to1 OS/tooling/book4edge/test-bluetooth-address.py'
           xvfb-run -a bash -euc '
             export XDG_RUNTIME_DIR=$(mktemp -d)
             python3 "9to1 OS/tooling/book4edge/runtime/hardware-check.py" &

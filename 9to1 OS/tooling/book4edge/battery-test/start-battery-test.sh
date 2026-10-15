@@ -4,8 +4,11 @@ set -eu
 case " $(cat /proc/cmdline) " in *' book4edge.battery=1 '*) ;; *) exit 0 ;; esac
 test "$(uname -r)" = 6.19.0-9to1-book4edge16
 test "$(cat /sys/class/dmi/id/board_name)" = NP960XMA-KB1UK
-test -f /var/log/book4edge-internal-readonly.txt
-grep -q 'protected read-only' /var/log/book4edge-internal-readonly.txt
+if ! test -f /var/log/book4edge-internal-readonly.txt ||
+   ! grep -q 'protected read-only' /var/log/book4edge-internal-readonly.txt; then
+    echo 'Battery test skipped: internal UFS read-only protection was not confirmed. Check UFS driver startup in kernel.log.' >&2
+    exit 1
+fi
 bus=
 attempt=0
 while test -z "$bus" && test "$attempt" -lt 30; do

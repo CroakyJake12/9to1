@@ -44,6 +44,12 @@ def build(tree, base_report, firmware, radio, output, bundle=None, root_overlay=
     release = old['kernelRelease']
     hook_key = 'scripts/casper-bottom/98book4edge-modules'
     hook = entries[hook_key][1].decode()
+    # Protect the exact inventoried UFS model even if it appears after the
+    # initial casper scan. This sets a volatile kernel flag, not disk metadata.
+    entries['etc/udev/rules.d/99-book4edge-internal-test.rules'] = (REG, (
+        'SUBSYSTEM=="block", ATTRS{model}=="THGJFJT2T85BAT0A*", ENV{UDISKS_IGNORE}="1"\n'
+        'ACTION=="add|change", SUBSYSTEM=="block", ATTRS{model}=="THGJFJT2T85BAT0A*", '
+        'RUN+="/sbin/blockdev --setro /dev/%k"\n').encode())
     firmware_report = json.loads((firmware/'manifest.json').read_text())
     for item in firmware_report['firmware']:
         name = live.safe_name(item['file'])
@@ -78,11 +84,11 @@ def build(tree, base_report, firmware, radio, output, bundle=None, root_overlay=
         raise ValueError('Expected original Windows radio address')
     entries['usr/sbin/book4edge-boot-log'] = (EXE,recipe.with_name('boot-log.sh').read_text().encode())
     entries['book4edge-root/etc/book4edge/bluetooth-address'] = (stat.S_IFREG|0o600,(address+'\n').encode())
-    entries['book4edge-root/usr/sbin/book4edge-bluetooth-address'] = (EXE,(runtime/'bluetooth-address.sh').read_text().encode())
+    entries['book4edge-root/usr/sbin/book4edge-bluetooth-address'] = (EXE,(runtime/'bluetooth-address.py').read_text().encode())
     entries['book4edge-root/usr/bin/book4edge-hardware-check'] = (EXE,(runtime/'hardware-check.py').read_text().encode())
     service = b'''[Unit]
 Description=Restore this laptop original Bluetooth radio address in the live session
-After=bluetooth.service
+Before=bluetooth.service
 Wants=bluetooth.service
 ConditionKernelCommandLine=book4edge.suite=1
 [Service]
