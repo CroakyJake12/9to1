@@ -1,0 +1,3 @@
+Proposalc814daac preserves exact original write/flush/fsync and same-handle close exceptions independently. Exclusive creation, budget-before-write, raw symlink refusal, durable flush/fsync and source-symbol equality guards remain. The new original A3 whole-tooling HELD receipt remains an owner hold, not an ACK.
+
+The actual old87eb helper fails the native fsync+close fault control (four discovered, three passed, exit1); the corrected helper passes four/four exit0 using genuine emitted portable symbols. Existing18producer/symbol/bounds and17Sites controls each pass0 separately. Failed initial test-lookup attempts remain retained and qualified. No full SDK7 run or global source/tooling adoption follows; SDK6 remains its original103-command/two-Debug-suite refusal.

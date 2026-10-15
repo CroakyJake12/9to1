@@ -1,0 +1,318 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="4f74d603-1f7f-4dda-8613-2e76238f8209" name="@0209ad767592 2026-10-04 14:34:24" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-04T14:34:24.4484915+00:00" queuing="2026-10-04T14:34:24.4484915+00:00" start="2026-10-04T14:34:21.9930834+00:00" finish="2026-10-04T14:34:25.8082896+00:00" />
+  <TestSettings name="default" id="a16cba57-4c03-4971-bc03-edf592e55aa3">
+    <Deployment runDeploymentRoot="_0209ad767592_2026-10-04_14_34_24" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="f790364f-8574-4e70-95c0-ee3607195daf" testId="388002f4-9281-d68b-ad1d-bb60c93c5115" testName="HavenOS.Images.Tests.ImageJourneyTests.PngExportAppliesMetadataPrivacyModeAndNeverChangesTheSource" computerName="0209ad767592" duration="00:00:00.2211911" startTime="2026-10-04T14:34:25.3533982+00:00" endTime="2026-10-04T14:34:25.5820708+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f790364f-8574-4e70-95c0-ee3607195daf">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ
+Expected: None
+Actual:   XMP | Png</Message>
+          <StackTrace>   at HavenOS.Images.Tests.ImageJourneyTests.PngExportAppliesMetadataPrivacyModeAndNeverChangesTheSource() in /workspace/team-c-c5-b-picture-eec-closure-provisional/9to1 Workspace/Picture/Tests/ImageJourneyTests.cs:line 333
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="5acd8cee-1cd4-47ae-9cd0-b53bdc4f8575" testId="89dd6630-9faf-edff-d885-546ca9e36d7a" testName="HavenOS.Images.Tests.ImageJourneyTests.MetadataReaderReportsAvailableFileFactsWithoutInventingOptionalMetadata" computerName="0209ad767592" duration="00:00:00.0897647" startTime="2026-10-04T14:34:24.6052591+00:00" endTime="2026-10-04T14:34:24.6953065+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5acd8cee-1cd4-47ae-9cd0-b53bdc4f8575" />
+    <UnitTestResult executionId="0ac58a6a-b53d-4d8f-b830-802ecbc2cb01" testId="77b3c1f5-8bfe-4c38-1f9e-db9f9eccce7f" testName="HavenOS.Images.Tests.ImageJourneyTests.ExportRejectsSourceChangedAfterDocumentWasOpened" computerName="0209ad767592" duration="00:00:00.0141374" startTime="2026-10-04T14:34:25.3313787+00:00" endTime="2026-10-04T14:34:25.3456817+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0ac58a6a-b53d-4d8f-b830-802ecbc2cb01" />
+    <UnitTestResult executionId="27f034d7-2618-4526-8189-1740291a0b24" testId="8734adfa-8453-a0a3-3723-d458d5fc7ce5" testName="HavenOS.Images.Tests.ImageJourneyTests.ViewportPanAndResetUpdateZoomAvailability" computerName="0209ad767592" duration="00:00:00.0069039" startTime="2026-10-04T14:34:25.5978061+00:00" endTime="2026-10-04T14:34:25.6047671+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="27f034d7-2618-4526-8189-1740291a0b24" />
+    <UnitTestResult executionId="f888bd62-cc13-4db9-b265-339e98186bda" testId="516c4363-20c9-6038-ff3a-d0456f19b4d0" testName="HavenOS.Images.Tests.ImageJourneyTests.ViewportZoomKeepsTheImagePointUnderThePointerFixed" computerName="0209ad767592" duration="00:00:00.0004761" startTime="2026-10-04T14:34:25.6715370+00:00" endTime="2026-10-04T14:34:25.6720858+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f888bd62-cc13-4db9-b265-339e98186bda" />
+    <UnitTestResult executionId="4818cf71-88f3-46f8-896d-7114aba6e263" testId="45bd6ea6-797a-3004-2eb9-ecc468b196f1" testName="HavenOS.Images.Tests.ImageJourneyTests.PickerPolicyRejectsUnlistedExtensions(path: &quot;sample.svg&quot;)" computerName="0209ad767592" duration="00:00:00.0001576" startTime="2026-10-04T14:34:25.6058379+00:00" endTime="2026-10-04T14:34:25.6060587+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4818cf71-88f3-46f8-896d-7114aba6e263" />
+    <UnitTestResult executionId="e5a39159-f83a-4ea1-a4fe-335cd0401d33" testId="7c5f8f6f-4ce6-26fa-6d44-ad09c1b99a80" testName="HavenOS.Images.Tests.ImageJourneyTests.PictureDocumentRejectsOutOfBoundsCropWithoutChangingSource" computerName="0209ad767592" duration="00:00:00.0011663" startTime="2026-10-04T14:34:25.6773733+00:00" endTime="2026-10-04T14:34:25.6785659+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e5a39159-f83a-4ea1-a4fe-335cd0401d33" />
+    <UnitTestResult executionId="0a7fee4b-516f-4d6f-b6d8-18cff3fef2d7" testId="c5b052a9-f573-6348-e9fa-d60a16e321d6" testName="HavenOS.Images.Tests.ImageJourneyTests.PictureDocumentCropIsNonDestructiveAndRoundTripsWithStableIdentity" computerName="0209ad767592" duration="00:00:00.1123032" startTime="2026-10-04T14:34:25.2085027+00:00" endTime="2026-10-04T14:34:25.3219075+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0a7fee4b-516f-4d6f-b6d8-18cff3fef2d7" />
+    <UnitTestResult executionId="c30c5d85-2e2c-4b13-9eac-39d5abcd57b9" testId="c939dcb1-21b0-e6ef-e08d-5ddd88769fc0" testName="HavenOS.Images.Tests.ImageJourneyTests.PickerPolicyAcceptsSupportedRasterExtensions(path: &quot;sample.png&quot;)" computerName="0209ad767592" duration="00:00:00.0000111" startTime="2026-10-04T14:34:24.0404330+00:00" endTime="2026-10-04T14:34:24.0404576+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c30c5d85-2e2c-4b13-9eac-39d5abcd57b9" />
+    <UnitTestResult executionId="8f475970-c7da-4858-9946-c2561722bc66" testId="bd0e5726-4263-91a1-5132-97a688ebfdc8" testName="HavenOS.Images.Tests.ImageJourneyTests.PickerPolicyAcceptsSupportedRasterExtensions(path: &quot;sample.jpeg&quot;)" computerName="0209ad767592" duration="00:00:00.0114407" startTime="2026-10-04T14:34:24.0166640+00:00" endTime="2026-10-04T14:34:24.0356443+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8f475970-c7da-4858-9946-c2561722bc66" />
+    <UnitTestResult executionId="9dc3843a-3cb2-4831-9a42-f8b9eb645fbb" testId="c0d6c327-9f55-b679-8a39-84c47100aca7" testName="HavenOS.Images.Tests.ImageJourneyTests.NavigationUsesOnlySupportedSiblingImagesInFileNameOrder" computerName="0209ad767592" duration="00:00:00.0034846" startTime="2026-10-04T14:34:25.6725570+00:00" endTime="2026-10-04T14:34:25.6760838+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9dc3843a-3cb2-4831-9a42-f8b9eb645fbb" />
+    <UnitTestResult executionId="81634fc8-9169-477d-86d5-c7665941db08" testId="de628b8c-51b9-5931-a85f-b73b5cc815a9" testName="HavenOS.Images.Tests.ImageJourneyTests.PickerPolicyAcceptsSupportedRasterExtensions(path: &quot;sample.GIF&quot;)" computerName="0209ad767592" duration="00:00:00.0003457" startTime="2026-10-04T14:34:24.0398333+00:00" endTime="2026-10-04T14:34:24.0402473+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="81634fc8-9169-477d-86d5-c7665941db08" />
+    <UnitTestResult executionId="c51c0975-6765-4604-81dc-bbe74dd2938a" testId="b4d3053d-21b1-4580-879f-0a76619de223" testName="HavenOS.Images.Tests.ImageJourneyTests.PickerPolicyRejectsUnlistedExtensions(path: &quot;sample.txt&quot;)" computerName="0209ad767592" duration="00:00:00.0000129" startTime="2026-10-04T14:34:25.6066145+00:00" endTime="2026-10-04T14:34:25.6066435+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c51c0975-6765-4604-81dc-bbe74dd2938a" />
+    <UnitTestResult executionId="8a2d0720-97b9-4be7-95a2-4087a9f145fd" testId="564230b5-c631-a6fe-f572-edcc0a9c8a66" testName="HavenOS.Images.Tests.ImageJourneyTests.PictureDocumentRejectsUnknownSchemaInsteadOfGuessing" computerName="0209ad767592" duration="00:00:00.0085752" startTime="2026-10-04T14:34:25.5886225+00:00" endTime="2026-10-04T14:34:25.5972772+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8a2d0720-97b9-4be7-95a2-4087a9f145fd" />
+    <UnitTestResult executionId="616dc9cb-7a8b-4dc1-898a-ec2ff6288139" testId="28961228-81a0-3c83-e0c8-79294c4e7e43" testName="HavenOS.Images.Tests.ImageJourneyTests.CropExportDoesNotOverwriteSourceOrExistingUserFile" computerName="0209ad767592" duration="00:00:00.0039397" startTime="2026-10-04T14:34:25.6486275+00:00" endTime="2026-10-04T14:34:25.6703888+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="616dc9cb-7a8b-4dc1-898a-ec2ff6288139" />
+    <UnitTestResult executionId="b16c952e-ee9f-4dde-8350-0422bffb99e1" testId="265edd12-cde6-33aa-cf57-bd29c16da6a3" testName="HavenOS.Images.Tests.ImageJourneyTests.PickerPolicyAcceptsSupportedRasterExtensions(path: &quot;sample.webp&quot;)" computerName="0209ad767592" duration="00:00:00.0000080" startTime="2026-10-04T14:34:24.0407578+00:00" endTime="2026-10-04T14:34:24.0407787+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b16c952e-ee9f-4dde-8350-0422bffb99e1" />
+    <UnitTestResult executionId="2c97536c-270b-4289-ba6c-a4238e114c9c" testId="e6fff20a-8879-27ae-cbae-df01ab1d4ef9" testName="HavenOS.Images.Tests.ImageJourneyTests.PickerPolicyAcceptsSupportedRasterExtensions(path: &quot;sample.bmp&quot;)" computerName="0209ad767592" duration="00:00:00.0000271" startTime="2026-10-04T14:34:24.0408866+00:00" endTime="2026-10-04T14:34:24.0409310+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2c97536c-270b-4289-ba6c-a4238e114c9c" />
+    <UnitTestResult executionId="2c26d5ce-542b-49c0-9ec2-add0f714a0ab" testId="e96b0c89-8e01-bb18-8e3f-0178fec0f1aa" testName="HavenOS.Images.Tests.ImageJourneyTests.PickerPolicyRejectsUnlistedExtensions(path: &quot;&quot;)" computerName="0209ad767592" duration="00:00:00.0000805" startTime="2026-10-04T14:34:25.6063261+00:00" endTime="2026-10-04T14:34:25.6064434+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2c26d5ce-542b-49c0-9ec2-add0f714a0ab" />
+    <UnitTestResult executionId="33195c06-8f4a-4ce1-81a5-0b248d6f2203" testId="e7f805f1-dd10-b60d-f7a3-d55a4a90640b" testName="HavenOS.Images.Tests.ImageJourneyTests.PickerPolicyAcceptsSupportedRasterExtensions(path: &quot;sample.JPG&quot;)" computerName="0209ad767592" duration="00:00:00.0000278" startTime="2026-10-04T14:34:24.0406018+00:00" endTime="2026-10-04T14:34:24.0406406+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="33195c06-8f4a-4ce1-81a5-0b248d6f2203" />
+    <UnitTestResult executionId="47251350-bbd4-4991-8012-bad290e97c0d" testId="94c8c5f1-d40e-3ec0-a20b-524dc7ec7a5b" testName="HavenOS.Images.Tests.ImageJourneyTests.CropExportUsesSourcePixelsAndReopenedDocument" computerName="0209ad767592" duration="00:00:00.0293567" startTime="2026-10-04T14:34:25.6143127+00:00" endTime="2026-10-04T14:34:25.6437762+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="47251350-bbd4-4991-8012-bad290e97c0d" />
+    <UnitTestResult executionId="f314cba7-78af-49df-9311-12914e367a2e" testId="2ba271ad-f325-498e-c2f8-1a81730fc3ea" testName="HavenOS.Images.Tests.ImageJourneyTests.CropEditorRendersAtNormalAndMinimumWindowSizesWithAccessibleEmptyState" computerName="0209ad767592" duration="00:00:00.4739039" startTime="2026-10-04T14:34:24.7081697+00:00" endTime="2026-10-04T14:34:25.1946661+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f314cba7-78af-49df-9311-12914e367a2e">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : Could not create glyphTypeface. Font family: Inter (key: compositefont:fonts:Inter#Inter, $Default). Style: Normal. Weight: Normal. Stretch: Normal</Message>
+          <StackTrace>   at Avalonia.Media.Typeface.get_GlyphTypeface()
+   at Avalonia.Media.TextFormatting.TextRunProperties.get_CachedGlyphTypeface()
+   at Avalonia.Media.TextFormatting.TextCharacters.CreateShapeableRun(ReadOnlyMemory`1 text, TextRunProperties defaultProperties, SByte biDiLevel, FontManager fontManager, TextRunProperties&amp; previousProperties)
+   at Avalonia.Media.TextFormatting.TextCharacters.GetShapeableCharacters(ReadOnlyMemory`1 text, SByte biDiLevel, FontManager fontManager, TextRunProperties&amp; previousProperties, RentedList`1 results)
+   at Avalonia.Media.TextFormatting.TextFormatterImpl.CoalesceLevels(IReadOnlyList`1 textCharacters, ReadOnlySpan`1 levels, FontManager fontManager, RentedList`1 processedRuns)
+   at Avalonia.Media.TextFormatting.TextFormatterImpl.ShapeTextRuns(IReadOnlyList`1 textRuns, TextParagraphProperties paragraphProperties, FormattingObjectPool objectPool, FontManager fontManager, FlowDirection&amp; resolvedFlowDirection)
+   at Avalonia.Media.TextFormatting.TextFormatterImpl.FormatLine(ITextSource textSource, Int32 firstTextSourceIndex, Double paragraphWidth, TextParagraphProperties paragraphProperties, TextLineBreak previousLineBreak)
+   at Avalonia.Media.TextFormatting.TextLayout.CreateTextLines()
+   at Avalonia.Media.TextFormatting.TextLayout..ctor(ITextSource textSource, TextParagraphProperties paragraphProperties, TextTrimming textTrimming, Double maxWidth, Double maxHeight, Int32 maxLines)
+   at Avalonia.Controls.TextBlock.CreateTextLayout(String text)
+   at Avalonia.Controls.Primitives.AccessText.CreateTextLayout(String text)
+   at Avalonia.Controls.TextBlock.get_TextLayout()
+   at Avalonia.Controls.TextBlock.MeasureOverride(Size availableSize)
+   at Avalonia.Layout.Layoutable.MeasureCore(Size availableSize)
+   at Avalonia.Layout.Layoutable.Measure(Size availableSize)
+   at Avalonia.Layout.LayoutHelper.MeasureChild(Layoutable control, Size availableSize, Thickness padding, Thickness borderThickness)
+   at Avalonia.Controls.Presenters.ContentPresenter.MeasureOverride(Size availableSize)
+   at Avalonia.Layout.Layoutable.MeasureCore(Size availableSize)
+   at Avalonia.Layout.Layoutable.Measure(Size availableSize)
+   at Avalonia.Layout.Layoutable.MeasureOverride(Size availableSize)
+   at Avalonia.Layout.Layoutable.MeasureCore(Size availableSize)
+   at Avalonia.Layout.Layoutable.Measure(Size availableSize)
+   at Avalonia.Controls.Grid.MeasureCell(Int32 cell, Boolean forceInfinityV)
+   at Avalonia.Controls.Grid.MeasureCellsGroup(Int32 cellsHead, Boolean ignoreDesiredSizeU, Boolean forceInfinityV, Boolean&amp; hasDesiredSizeUChanged)
+   at Avalonia.Controls.Grid.MeasureCellsGroup(Int32 cellsHead, Boolean ignoreDesiredSizeU, Boolean forceInfinityV)
+   at Avalonia.Controls.Grid.MeasureOverride(Size constraint)
+   at Avalonia.Layout.Layoutable.MeasureCore(Size availableSize)
+   at Avalonia.Layout.Layoutable.Measure(Size availableSize)
+   at Avalonia.Controls.Grid.MeasureCell(Int32 cell, Boolean forceInfinityV)
+   at Avalonia.Controls.Grid.MeasureCellsGroup(Int32 cellsHead, Boolean ignoreDesiredSizeU, Boolean forceInfinityV, Boolean&amp; hasDesiredSizeUChanged)
+   at Avalonia.Controls.Grid.MeasureCellsGroup(Int32 cellsHead, Boolean ignoreDesiredSizeU, Boolean forceInfinityV)
+   at Avalonia.Controls.Grid.MeasureOverride(Size constraint)
+   at Avalonia.Layout.Layoutable.MeasureCore(Size availableSize)
+   at Avalonia.Layout.Layoutable.Measure(Size availableSize)
+   at Avalonia.Layout.LayoutHelper.MeasureChild(Layoutable control, Size availableSize, Thickness padding, Thickness borderThickness)
+   at Avalonia.Controls.Presenters.ContentPresenter.MeasureOverride(Size availableSize)
+   at Avalonia.Layout.Layoutable.MeasureCore(Size availableSize)
+   at Avalonia.Layout.Layoutable.Measure(Size availableSize)
+   at Avalonia.Layout.LayoutHelper.MeasureChild(Layoutable control, Size availableSize, Thickness padding)
+   at Avalonia.Controls.Decorator.MeasureOverride(Size availableSize)
+   at Avalonia.Controls.Primitives.VisualLayerManager.MeasureOverride(Size availableSize)
+   at Avalonia.Layout.Layoutable.MeasureCore(Size availableSize)
+   at Avalonia.Layout.Layoutable.Measure(Size availableSize)
+   at Avalonia.Layout.Layoutable.MeasureOverride(Size availableSize)
+   at Avalonia.Layout.Layoutable.MeasureCore(Size availableSize)
+   at Avalonia.Layout.Layoutable.Measure(Size availableSize)
+   at Avalonia.Layout.Layoutable.MeasureOverride(Size availableSize)
+   at Avalonia.Controls.Window.MeasureOverride(Size availableSize)
+   at Avalonia.Controls.WindowBase.MeasureCore(Size availableSize)
+   at Avalonia.Layout.Layoutable.Measure(Size availableSize)
+   at Avalonia.Controls.TopLevelHost.MeasureOverride(Size availableSize)
+   at Avalonia.Layout.Layoutable.MeasureCore(Size availableSize)
+   at Avalonia.Layout.Layoutable.Measure(Size availableSize)
+   at Avalonia.Layout.LayoutManager.Measure(Layoutable control)
+   at Avalonia.Layout.LayoutManager.ExecuteInitialLayoutPass()
+   at Avalonia.Controls.Window.ShowCore[TResult](Window owner, Boolean modal)
+   at Avalonia.Controls.Window.Show()
+   at HavenOS.Images.Tests.ImageJourneyTests.CropEditorRendersAtNormalAndMinimumWindowSizesWithAccessibleEmptyState() in /workspace/team-c-c5-b-picture-eec-closure-provisional/9to1 Workspace/Picture/Tests/ImageJourneyTests.cs:line 354
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="09d583b8-eeae-42d2-b5a6-e12b7e7aa4f3" testId="6c1906fd-3282-a865-0e74-04c4741a97c4" testName="HavenOS.Images.Tests.ImageJourneyTests.ViewportRejectsPanAndZoomThatWouldOverflowWithoutChangingState" computerName="0209ad767592" duration="00:00:00.0002233" startTime="2026-10-04T14:34:25.6768143+00:00" endTime="2026-10-04T14:34:25.6770650+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="09d583b8-eeae-42d2-b5a6-e12b7e7aa4f3" />
+    <UnitTestResult executionId="8e301d1c-a321-487f-9ddf-f7604d90c9eb" testId="69553ba6-c18b-9e5e-2f2f-c3115a31c2e9" testName="HavenOS.Images.Tests.ImageJourneyTests.PickerPolicyRejectsUnlistedExtensions(path: &quot;sample.tiff&quot;)" computerName="0209ad767592" duration="00:00:00.0000800" startTime="2026-10-04T14:34:25.6054379+00:00" endTime="2026-10-04T14:34:25.6055774+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8e301d1c-a321-487f-9ddf-f7604d90c9eb" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.NavigationUsesOnlySupportedSiblingImagesInFileNameOrder" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="c0d6c327-9f55-b679-8a39-84c47100aca7">
+      <Execution id="9dc3843a-3cb2-4831-9a42-f8b9eb645fbb" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="NavigationUsesOnlySupportedSiblingImagesInFileNameOrder" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.PickerPolicyRejectsUnlistedExtensions(path: &quot;&quot;)" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="e96b0c89-8e01-bb18-8e3f-0178fec0f1aa">
+      <Execution id="2c26d5ce-542b-49c0-9ec2-add0f714a0ab" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="PickerPolicyRejectsUnlistedExtensions" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.ViewportPanAndResetUpdateZoomAvailability" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="8734adfa-8453-a0a3-3723-d458d5fc7ce5">
+      <Execution id="27f034d7-2618-4526-8189-1740291a0b24" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="ViewportPanAndResetUpdateZoomAvailability" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.CropEditorRendersAtNormalAndMinimumWindowSizesWithAccessibleEmptyState" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="2ba271ad-f325-498e-c2f8-1a81730fc3ea">
+      <Execution id="f314cba7-78af-49df-9311-12914e367a2e" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="CropEditorRendersAtNormalAndMinimumWindowSizesWithAccessibleEmptyState" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.PictureDocumentCropIsNonDestructiveAndRoundTripsWithStableIdentity" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="c5b052a9-f573-6348-e9fa-d60a16e321d6">
+      <Execution id="0a7fee4b-516f-4d6f-b6d8-18cff3fef2d7" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="PictureDocumentCropIsNonDestructiveAndRoundTripsWithStableIdentity" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.PickerPolicyAcceptsSupportedRasterExtensions(path: &quot;sample.GIF&quot;)" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="de628b8c-51b9-5931-a85f-b73b5cc815a9">
+      <Execution id="81634fc8-9169-477d-86d5-c7665941db08" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="PickerPolicyAcceptsSupportedRasterExtensions" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.PickerPolicyAcceptsSupportedRasterExtensions(path: &quot;sample.bmp&quot;)" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="e6fff20a-8879-27ae-cbae-df01ab1d4ef9">
+      <Execution id="2c97536c-270b-4289-ba6c-a4238e114c9c" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="PickerPolicyAcceptsSupportedRasterExtensions" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.ViewportZoomKeepsTheImagePointUnderThePointerFixed" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="516c4363-20c9-6038-ff3a-d0456f19b4d0">
+      <Execution id="f888bd62-cc13-4db9-b265-339e98186bda" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="ViewportZoomKeepsTheImagePointUnderThePointerFixed" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.PickerPolicyRejectsUnlistedExtensions(path: &quot;sample.svg&quot;)" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="45bd6ea6-797a-3004-2eb9-ecc468b196f1">
+      <Execution id="4818cf71-88f3-46f8-896d-7114aba6e263" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="PickerPolicyRejectsUnlistedExtensions" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.PickerPolicyRejectsUnlistedExtensions(path: &quot;sample.tiff&quot;)" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="69553ba6-c18b-9e5e-2f2f-c3115a31c2e9">
+      <Execution id="8e301d1c-a321-487f-9ddf-f7604d90c9eb" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="PickerPolicyRejectsUnlistedExtensions" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.ExportRejectsSourceChangedAfterDocumentWasOpened" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="77b3c1f5-8bfe-4c38-1f9e-db9f9eccce7f">
+      <Execution id="0ac58a6a-b53d-4d8f-b830-802ecbc2cb01" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="ExportRejectsSourceChangedAfterDocumentWasOpened" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.PickerPolicyAcceptsSupportedRasterExtensions(path: &quot;sample.jpeg&quot;)" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="bd0e5726-4263-91a1-5132-97a688ebfdc8">
+      <Execution id="8f475970-c7da-4858-9946-c2561722bc66" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="PickerPolicyAcceptsSupportedRasterExtensions" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.PickerPolicyAcceptsSupportedRasterExtensions(path: &quot;sample.webp&quot;)" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="265edd12-cde6-33aa-cf57-bd29c16da6a3">
+      <Execution id="b16c952e-ee9f-4dde-8350-0422bffb99e1" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="PickerPolicyAcceptsSupportedRasterExtensions" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.PictureDocumentRejectsOutOfBoundsCropWithoutChangingSource" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="7c5f8f6f-4ce6-26fa-6d44-ad09c1b99a80">
+      <Execution id="e5a39159-f83a-4ea1-a4fe-335cd0401d33" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="PictureDocumentRejectsOutOfBoundsCropWithoutChangingSource" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.PickerPolicyRejectsUnlistedExtensions(path: &quot;sample.txt&quot;)" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="b4d3053d-21b1-4580-879f-0a76619de223">
+      <Execution id="c51c0975-6765-4604-81dc-bbe74dd2938a" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="PickerPolicyRejectsUnlistedExtensions" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.CropExportDoesNotOverwriteSourceOrExistingUserFile" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="28961228-81a0-3c83-e0c8-79294c4e7e43">
+      <Execution id="616dc9cb-7a8b-4dc1-898a-ec2ff6288139" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="CropExportDoesNotOverwriteSourceOrExistingUserFile" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.PngExportAppliesMetadataPrivacyModeAndNeverChangesTheSource" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="388002f4-9281-d68b-ad1d-bb60c93c5115">
+      <Execution id="f790364f-8574-4e70-95c0-ee3607195daf" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="PngExportAppliesMetadataPrivacyModeAndNeverChangesTheSource" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.PickerPolicyAcceptsSupportedRasterExtensions(path: &quot;sample.png&quot;)" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="c939dcb1-21b0-e6ef-e08d-5ddd88769fc0">
+      <Execution id="c30c5d85-2e2c-4b13-9eac-39d5abcd57b9" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="PickerPolicyAcceptsSupportedRasterExtensions" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.CropExportUsesSourcePixelsAndReopenedDocument" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="94c8c5f1-d40e-3ec0-a20b-524dc7ec7a5b">
+      <Execution id="47251350-bbd4-4991-8012-bad290e97c0d" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="CropExportUsesSourcePixelsAndReopenedDocument" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.MetadataReaderReportsAvailableFileFactsWithoutInventingOptionalMetadata" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="89dd6630-9faf-edff-d885-546ca9e36d7a">
+      <Execution id="5acd8cee-1cd4-47ae-9cd0-b53bdc4f8575" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="MetadataReaderReportsAvailableFileFactsWithoutInventingOptionalMetadata" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.ViewportRejectsPanAndZoomThatWouldOverflowWithoutChangingState" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="6c1906fd-3282-a865-0e74-04c4741a97c4">
+      <Execution id="09d583b8-eeae-42d2-b5a6-e12b7e7aa4f3" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="ViewportRejectsPanAndZoomThatWouldOverflowWithoutChangingState" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.PictureDocumentRejectsUnknownSchemaInsteadOfGuessing" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="564230b5-c631-a6fe-f572-edcc0a9c8a66">
+      <Execution id="8a2d0720-97b9-4be7-95a2-4087a9f145fd" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="PictureDocumentRejectsUnknownSchemaInsteadOfGuessing" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Images.Tests.ImageJourneyTests.PickerPolicyAcceptsSupportedRasterExtensions(path: &quot;sample.JPG&quot;)" storage="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/havenos.images.tests/release/havenos.images.tests.dll" id="e7f805f1-dd10-b60d-f7a3-d55a4a90640b">
+      <Execution id="33195c06-8f4a-4ce1-81a5-0b248d6f2203" />
+      <TestMethod codeBase="/workspace/team-c-resume-evidence/c5-b-pr6-receiving/picture-owning-normal-release/artifacts/bin/HavenOS.Images.Tests/release/HavenOS.Images.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Images.Tests.ImageJourneyTests" name="PickerPolicyAcceptsSupportedRasterExtensions" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="388002f4-9281-d68b-ad1d-bb60c93c5115" executionId="f790364f-8574-4e70-95c0-ee3607195daf" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="89dd6630-9faf-edff-d885-546ca9e36d7a" executionId="5acd8cee-1cd4-47ae-9cd0-b53bdc4f8575" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="77b3c1f5-8bfe-4c38-1f9e-db9f9eccce7f" executionId="0ac58a6a-b53d-4d8f-b830-802ecbc2cb01" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8734adfa-8453-a0a3-3723-d458d5fc7ce5" executionId="27f034d7-2618-4526-8189-1740291a0b24" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="516c4363-20c9-6038-ff3a-d0456f19b4d0" executionId="f888bd62-cc13-4db9-b265-339e98186bda" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="45bd6ea6-797a-3004-2eb9-ecc468b196f1" executionId="4818cf71-88f3-46f8-896d-7114aba6e263" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7c5f8f6f-4ce6-26fa-6d44-ad09c1b99a80" executionId="e5a39159-f83a-4ea1-a4fe-335cd0401d33" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c5b052a9-f573-6348-e9fa-d60a16e321d6" executionId="0a7fee4b-516f-4d6f-b6d8-18cff3fef2d7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c939dcb1-21b0-e6ef-e08d-5ddd88769fc0" executionId="c30c5d85-2e2c-4b13-9eac-39d5abcd57b9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bd0e5726-4263-91a1-5132-97a688ebfdc8" executionId="8f475970-c7da-4858-9946-c2561722bc66" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c0d6c327-9f55-b679-8a39-84c47100aca7" executionId="9dc3843a-3cb2-4831-9a42-f8b9eb645fbb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="de628b8c-51b9-5931-a85f-b73b5cc815a9" executionId="81634fc8-9169-477d-86d5-c7665941db08" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b4d3053d-21b1-4580-879f-0a76619de223" executionId="c51c0975-6765-4604-81dc-bbe74dd2938a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="564230b5-c631-a6fe-f572-edcc0a9c8a66" executionId="8a2d0720-97b9-4be7-95a2-4087a9f145fd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="28961228-81a0-3c83-e0c8-79294c4e7e43" executionId="616dc9cb-7a8b-4dc1-898a-ec2ff6288139" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="265edd12-cde6-33aa-cf57-bd29c16da6a3" executionId="b16c952e-ee9f-4dde-8350-0422bffb99e1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e6fff20a-8879-27ae-cbae-df01ab1d4ef9" executionId="2c97536c-270b-4289-ba6c-a4238e114c9c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e96b0c89-8e01-bb18-8e3f-0178fec0f1aa" executionId="2c26d5ce-542b-49c0-9ec2-add0f714a0ab" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e7f805f1-dd10-b60d-f7a3-d55a4a90640b" executionId="33195c06-8f4a-4ce1-81a5-0b248d6f2203" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="94c8c5f1-d40e-3ec0-a20b-524dc7ec7a5b" executionId="47251350-bbd4-4991-8012-bad290e97c0d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2ba271ad-f325-498e-c2f8-1a81730fc3ea" executionId="f314cba7-78af-49df-9311-12914e367a2e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6c1906fd-3282-a865-0e74-04c4741a97c4" executionId="09d583b8-eeae-42d2-b5a6-e12b7e7aa4f3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="69553ba6-c18b-9e5e-2f2f-c3115a31c2e9" executionId="8e301d1c-a321-487f-9ddf-f7604d90c9eb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="23" executed="23" passed="21" failed="2" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.12)
+[xUnit.net 00:00:00.30]   Discovering: HavenOS.Images.Tests
+[xUnit.net 00:00:00.74]   Discovered:  HavenOS.Images.Tests
+[xUnit.net 00:00:01.00]   Starting:    HavenOS.Images.Tests
+[xUnit.net 00:00:02.24]       System.InvalidOperationException : Could not create glyphTypeface. Font family: Inter (key: compositefont:fonts:Inter#Inter, $Default). Style: Normal. Weight: Normal. Stretch: Normal
+[xUnit.net 00:00:02.24]       Stack Trace:
+[xUnit.net 00:00:02.24]            at Avalonia.Media.Typeface.get_GlyphTypeface()
+[xUnit.net 00:00:02.24]            at Avalonia.Media.TextFormatting.TextRunProperties.get_CachedGlyphTypeface()
+[xUnit.net 00:00:02.24]            at Avalonia.Media.TextFormatting.TextCharacters.CreateShapeableRun(ReadOnlyMemory`1 text, TextRunProperties defaultProperties, SByte biDiLevel, FontManager fontManager, TextRunProperties&amp; previousProperties)
+[xUnit.net 00:00:02.24]            at Avalonia.Media.TextFormatting.TextCharacters.GetShapeableCharacters(ReadOnlyMemory`1 text, SByte biDiLevel, FontManager fontManager, TextRunProperties&amp; previousProperties, RentedList`1 results)
+[xUnit.net 00:00:02.24]            at Avalonia.Media.TextFormatting.TextFormatterImpl.CoalesceLevels(IReadOnlyList`1 textCharacters, ReadOnlySpan`1 levels, FontManager fontManager, RentedList`1 processedRuns)
+[xUnit.net 00:00:02.24]            at Avalonia.Media.TextFormatting.TextFormatterImpl.ShapeTextRuns(IReadOnlyList`1 textRuns, TextParagraphProperties paragraphProperties, FormattingObjectPool objectPool, FontManager fontManager, FlowDirection&amp; resolvedFlowDirection)
+[xUnit.net 00:00:02.24]            at Avalonia.Media.TextFormatting.TextFormatterImpl.FormatLine(ITextSource textSource, Int32 firstTextSourceIndex, Double paragraphWidth, TextParagraphProperties paragraphProperties, TextLineBreak previousLineBreak)
+[xUnit.net 00:00:02.24]            at Avalonia.Media.TextFormatting.TextLayout.CreateTextLines()
+[xUnit.net 00:00:02.24]            at Avalonia.Media.TextFormatting.TextLayout..ctor(ITextSource textSource, TextParagraphProperties paragraphProperties, TextTrimming textTrimming, Double maxWidth, Double maxHeight, Int32 maxLines)
+[xUnit.net 00:00:02.24]            at Avalonia.Controls.TextBlock.CreateTextLayout(String text)
+[xUnit.net 00:00:02.24]            at Avalonia.Controls.Primitives.AccessText.CreateTextLayout(String text)
+[xUnit.net 00:00:02.24]            at Avalonia.Controls.TextBlock.get_TextLayout()
+[xUnit.net 00:00:02.24]            at Avalonia.Controls.TextBlock.MeasureOverride(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.Layoutable.MeasureCore(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.Layoutable.Measure(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.LayoutHelper.MeasureChild(Layoutable control, Size availableSize, Thickness padding, Thickness borderThickness)
+[xUnit.net 00:00:02.24]            at Avalonia.Controls.Presenters.ContentPresenter.MeasureOverride(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.Layoutable.MeasureCore(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.Layoutable.Measure(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.Layoutable.MeasureOverride(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.Layoutable.MeasureCore(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.Layoutable.Measure(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Controls.Grid.MeasureCell(Int32 cell, Boolean forceInfinityV)
+[xUnit.net 00:00:02.24]            at Avalonia.Controls.Grid.MeasureCellsGroup(Int32 cellsHead, Boolean ignoreDesiredSizeU, Boolean forceInfinityV, Boolean&amp; hasDesiredSizeUChanged)
+[xUnit.net 00:00:02.24]            at Avalonia.Controls.Grid.MeasureCellsGroup(Int32 cellsHead, Boolean ignoreDesiredSizeU, Boolean forceInfinityV)
+[xUnit.net 00:00:02.24]            at Avalonia.Controls.Grid.MeasureOverride(Size constraint)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.Layoutable.MeasureCore(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.Layoutable.Measure(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Controls.Grid.MeasureCell(Int32 cell, Boolean forceInfinityV)
+[xUnit.net 00:00:02.24]            at Avalonia.Controls.Grid.MeasureCellsGroup(Int32 cellsHead, Boolean ignoreDesiredSizeU, Boolean forceInfinityV, Boolean&amp; hasDesiredSizeUChanged)
+[xUnit.net 00:00:02.24]            at Avalonia.Controls.Grid.MeasureCellsGroup(Int32 cellsHead, Boolean ignoreDesiredSizeU, Boolean forceInfinityV)
+[xUnit.net 00:00:02.24]            at Avalonia.Controls.Grid.MeasureOverride(Size constraint)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.Layoutable.MeasureCore(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.Layoutable.Measure(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.LayoutHelper.MeasureChild(Layoutable control, Size availableSize, Thickness padding, Thickness borderThickness)
+[xUnit.net 00:00:02.24]            at Avalonia.Controls.Presenters.ContentPresenter.MeasureOverride(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.Layoutable.MeasureCore(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.Layoutable.Measure(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.LayoutHelper.MeasureChild(Layoutable control, Size availableSize, Thickness padding)
+[xUnit.net 00:00:02.24]            at Avalonia.Controls.Decorator.MeasureOverride(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Controls.Primitives.VisualLayerManager.MeasureOverride(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.Layoutable.MeasureCore(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.Layoutable.Measure(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.Layoutable.MeasureOverride(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.Layoutable.MeasureCore(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.Layoutable.Measure(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.Layoutable.MeasureOverride(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Controls.Window.MeasureOverride(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Controls.WindowBase.MeasureCore(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.Layoutable.Measure(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Controls.TopLevelHost.MeasureOverride(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.Layoutable.MeasureCore(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.Layoutable.Measure(Size availableSize)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.LayoutManager.Measure(Layoutable control)
+[xUnit.net 00:00:02.24]            at Avalonia.Layout.LayoutManager.ExecuteInitialLayoutPass()
+[xUnit.net 00:00:02.24]            at Avalonia.Controls.Window.ShowCore[TResult](Window owner, Boolean modal)
+[xUnit.net 00:00:02.24]            at Avalonia.Controls.Window.Show()
+[xUnit.net 00:00:02.24]         /workspace/team-c-c5-b-picture-eec-closure-provisional/9to1 Workspace/Picture/Tests/ImageJourneyTests.cs(354,0): at HavenOS.Images.Tests.ImageJourneyTests.CropEditorRendersAtNormalAndMinimumWindowSizesWithAccessibleEmptyState()
+[xUnit.net 00:00:02.24]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:02.24]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:02.62]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:02.62]       Expected: None
+[xUnit.net 00:00:02.62]       Actual:   XMP | Png
+[xUnit.net 00:00:02.62]       Stack Trace:
+[xUnit.net 00:00:02.62]         /workspace/team-c-c5-b-picture-eec-closure-provisional/9to1 Workspace/Picture/Tests/ImageJourneyTests.cs(333,0): at HavenOS.Images.Tests.ImageJourneyTests.PngExportAppliesMetadataPrivacyModeAndNeverChangesTheSource()
+[xUnit.net 00:00:02.62]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:02.72]   Finished:    HavenOS.Images.Tests (ID = 'f39d69a4f5b1739f3ef6665ee01f8acf6e53d6c6edd4a69700ef408ca71f6075')
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="0209ad767592" outcome="Error" timestamp="2026-10-04T14:34:25.2073234+00:00">
+        <Text>[xUnit.net 00:00:02.23]     HavenOS.Images.Tests.ImageJourneyTests.CropEditorRendersAtNormalAndMinimumWindowSizesWithAccessibleEmptyState [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="0209ad767592" outcome="Error" timestamp="2026-10-04T14:34:25.5926738+00:00">
+        <Text>[xUnit.net 00:00:02.62]     HavenOS.Images.Tests.ImageJourneyTests.PngExportAppliesMetadataPrivacyModeAndNeverChangesTheSource [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

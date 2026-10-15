@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="0a316239-093d-4f7f-b945-8c8fb6e4ce38" name="@5f26f397bc73 2026-10-03 17:19:37" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-03T17:19:37.8403319+00:00" queuing="2026-10-03T17:19:37.8403320+00:00" start="2026-10-03T17:19:37.0174541+00:00" finish="2026-10-03T17:19:37.8450070+00:00" />
+  <TestSettings name="default" id="d23517dc-66c7-433d-bb03-c015a0c23dbc">
+    <Deployment runDeploymentRoot="_5f26f397bc73_2026-10-03_17_19_37" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="399d641e-314b-4446-8b46-f2b2d25f6003" testId="321af90e-3158-fcfc-161a-cc8097eef155" testName="HavenOS.Home.Tests.HomePermissionTrustServiceTests.Temporary_action_limit_rolls_down_only_when_user_selected_it" computerName="5f26f397bc73" duration="00:00:00.0093940" startTime="2026-10-03T17:19:37.6978846+00:00" endTime="2026-10-03T17:19:37.7144005+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="399d641e-314b-4446-8b46-f2b2d25f6003">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ
+Expected: Approved
+Actual:   PendingApproval</Message>
+          <StackTrace>   at HavenOS.Home.Tests.HomePermissionTrustServiceTests.Temporary_action_limit_rolls_down_only_when_user_selected_it() in /workspace/team-c/c2/9to1 Workspace/Home/Tests/HomePermissionTrustServiceTests.cs:line 130
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="841fc33b-f416-4046-8117-d074404db2cb" testId="b45f6c0e-7be1-af7d-d3ff-440649e9e268" testName="HavenOS.Home.Tests.HomePermissionTrustServiceTests.Block_denies_caller_and_execution_attempts_are_separately_audited" computerName="5f26f397bc73" duration="00:00:00.0152175" startTime="2026-10-03T17:19:37.6850344+00:00" endTime="2026-10-03T17:19:37.6977495+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="841fc33b-f416-4046-8117-d074404db2cb" />
+    <UnitTestResult executionId="211d6ceb-ed65-4941-ad0a-904e9820ecf2" testId="76bea327-efe9-8124-3711-ddfa4e7281fc" testName="HavenOS.Home.Tests.HomePermissionTrustServiceTests.Changed_caller_identity_cannot_inherit_session_approval(identityVersion: &quot;hash-v2&quot;)" computerName="5f26f397bc73" duration="00:00:00.0030245" startTime="2026-10-03T17:19:37.7199314+00:00" endTime="2026-10-03T17:19:37.7230853+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="211d6ceb-ed65-4941-ad0a-904e9820ecf2" />
+    <UnitTestResult executionId="bde55bfe-2d23-470b-b16e-8c4086450290" testId="746897ab-4ff7-7b8a-57f0-2b78b3231daf" testName="HavenOS.Home.Tests.HomePermissionTrustServiceTests.Changed_caller_identity_cannot_inherit_session_approval(identityVersion: null)" computerName="5f26f397bc73" duration="00:00:00.0056018" startTime="2026-10-03T17:19:37.7197767+00:00" endTime="2026-10-03T17:19:37.7198487+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="bde55bfe-2d23-470b-b16e-8c4086450290" />
+    <UnitTestResult executionId="6c2d1ba6-f823-4ffb-b04a-00274faf6a6b" testId="012ac9ee-7b50-2158-5473-a0b2435a7f87" testName="HavenOS.Home.Tests.HomePermissionTrustServiceTests.Ordinary_trust_lasts_thirty_days_but_does_not_cover_elevated_actions" computerName="5f26f397bc73" duration="00:00:00.1608779" startTime="2026-10-03T17:19:37.5035261+00:00" endTime="2026-10-03T17:19:37.6732223+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6c2d1ba6-f823-4ffb-b04a-00274faf6a6b" />
+    <UnitTestResult executionId="b7e318c6-61b9-431c-80d9-feacbc17e6aa" testId="cc4855e2-8292-93cd-0503-7a7864f8e626" testName="HavenOS.Home.Tests.HomePermissionTrustServiceTests.Accept_is_session_scoped_and_exact_scope_is_required_after_restart" computerName="5f26f397bc73" duration="00:00:00.0103427" startTime="2026-10-03T17:19:37.7323492+00:00" endTime="2026-10-03T17:19:37.7429198+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b7e318c6-61b9-431c-80d9-feacbc17e6aa" />
+    <UnitTestResult executionId="d5653225-3154-4b1c-b911-86ad26267e61" testId="e0cb515c-2bc7-0f24-b3da-2ccb81f8b538" testName="HavenOS.Home.Tests.HomePermissionTrustServiceTests.Unknown_action_policy_fails_closed_and_is_audited" computerName="5f26f397bc73" duration="00:00:00.0064874" startTime="2026-10-03T17:19:37.6842146+00:00" endTime="2026-10-03T17:19:37.6844378+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d5653225-3154-4b1c-b911-86ad26267e61" />
+    <UnitTestResult executionId="d46875dc-aa78-44ff-a299-ebab5893c2b1" testId="8dab9d66-be1b-8015-417e-d2e981d18c76" testName="HavenOS.Home.Tests.HomePermissionTrustServiceTests.Always_trust_requires_warning_and_trust_is_revoked_before_dispatch" computerName="5f26f397bc73" duration="00:00:00.0088075" startTime="2026-10-03T17:19:37.7232385+00:00" endTime="2026-10-03T17:19:37.7322013+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d46875dc-aa78-44ff-a299-ebab5893c2b1" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="HavenOS.Home.Tests.HomePermissionTrustServiceTests.Changed_caller_identity_cannot_inherit_session_approval(identityVersion: null)" storage="/tmp/c6-c2-home-harness/bin/release/net10.0/c2.tests.dll" id="746897ab-4ff7-7b8a-57f0-2b78b3231daf">
+      <Execution id="bde55bfe-2d23-470b-b16e-8c4086450290" />
+      <TestMethod codeBase="/tmp/c6-c2-home-harness/bin/Release/net10.0/C2.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Home.Tests.HomePermissionTrustServiceTests" name="Changed_caller_identity_cannot_inherit_session_approval" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Home.Tests.HomePermissionTrustServiceTests.Accept_is_session_scoped_and_exact_scope_is_required_after_restart" storage="/tmp/c6-c2-home-harness/bin/release/net10.0/c2.tests.dll" id="cc4855e2-8292-93cd-0503-7a7864f8e626">
+      <Execution id="b7e318c6-61b9-431c-80d9-feacbc17e6aa" />
+      <TestMethod codeBase="/tmp/c6-c2-home-harness/bin/Release/net10.0/C2.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Home.Tests.HomePermissionTrustServiceTests" name="Accept_is_session_scoped_and_exact_scope_is_required_after_restart" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Home.Tests.HomePermissionTrustServiceTests.Changed_caller_identity_cannot_inherit_session_approval(identityVersion: &quot;hash-v2&quot;)" storage="/tmp/c6-c2-home-harness/bin/release/net10.0/c2.tests.dll" id="76bea327-efe9-8124-3711-ddfa4e7281fc">
+      <Execution id="211d6ceb-ed65-4941-ad0a-904e9820ecf2" />
+      <TestMethod codeBase="/tmp/c6-c2-home-harness/bin/Release/net10.0/C2.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Home.Tests.HomePermissionTrustServiceTests" name="Changed_caller_identity_cannot_inherit_session_approval" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Home.Tests.HomePermissionTrustServiceTests.Temporary_action_limit_rolls_down_only_when_user_selected_it" storage="/tmp/c6-c2-home-harness/bin/release/net10.0/c2.tests.dll" id="321af90e-3158-fcfc-161a-cc8097eef155">
+      <Execution id="399d641e-314b-4446-8b46-f2b2d25f6003" />
+      <TestMethod codeBase="/tmp/c6-c2-home-harness/bin/Release/net10.0/C2.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Home.Tests.HomePermissionTrustServiceTests" name="Temporary_action_limit_rolls_down_only_when_user_selected_it" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Home.Tests.HomePermissionTrustServiceTests.Always_trust_requires_warning_and_trust_is_revoked_before_dispatch" storage="/tmp/c6-c2-home-harness/bin/release/net10.0/c2.tests.dll" id="8dab9d66-be1b-8015-417e-d2e981d18c76">
+      <Execution id="d46875dc-aa78-44ff-a299-ebab5893c2b1" />
+      <TestMethod codeBase="/tmp/c6-c2-home-harness/bin/Release/net10.0/C2.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Home.Tests.HomePermissionTrustServiceTests" name="Always_trust_requires_warning_and_trust_is_revoked_before_dispatch" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Home.Tests.HomePermissionTrustServiceTests.Unknown_action_policy_fails_closed_and_is_audited" storage="/tmp/c6-c2-home-harness/bin/release/net10.0/c2.tests.dll" id="e0cb515c-2bc7-0f24-b3da-2ccb81f8b538">
+      <Execution id="d5653225-3154-4b1c-b911-86ad26267e61" />
+      <TestMethod codeBase="/tmp/c6-c2-home-harness/bin/Release/net10.0/C2.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Home.Tests.HomePermissionTrustServiceTests" name="Unknown_action_policy_fails_closed_and_is_audited" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Home.Tests.HomePermissionTrustServiceTests.Ordinary_trust_lasts_thirty_days_but_does_not_cover_elevated_actions" storage="/tmp/c6-c2-home-harness/bin/release/net10.0/c2.tests.dll" id="012ac9ee-7b50-2158-5473-a0b2435a7f87">
+      <Execution id="6c2d1ba6-f823-4ffb-b04a-00274faf6a6b" />
+      <TestMethod codeBase="/tmp/c6-c2-home-harness/bin/Release/net10.0/C2.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Home.Tests.HomePermissionTrustServiceTests" name="Ordinary_trust_lasts_thirty_days_but_does_not_cover_elevated_actions" />
+    </UnitTest>
+    <UnitTest name="HavenOS.Home.Tests.HomePermissionTrustServiceTests.Block_denies_caller_and_execution_attempts_are_separately_audited" storage="/tmp/c6-c2-home-harness/bin/release/net10.0/c2.tests.dll" id="b45f6c0e-7be1-af7d-d3ff-440649e9e268">
+      <Execution id="841fc33b-f416-4046-8117-d074404db2cb" />
+      <TestMethod codeBase="/tmp/c6-c2-home-harness/bin/Release/net10.0/C2.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.Home.Tests.HomePermissionTrustServiceTests" name="Block_denies_caller_and_execution_attempts_are_separately_audited" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="321af90e-3158-fcfc-161a-cc8097eef155" executionId="399d641e-314b-4446-8b46-f2b2d25f6003" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b45f6c0e-7be1-af7d-d3ff-440649e9e268" executionId="841fc33b-f416-4046-8117-d074404db2cb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="76bea327-efe9-8124-3711-ddfa4e7281fc" executionId="211d6ceb-ed65-4941-ad0a-904e9820ecf2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="746897ab-4ff7-7b8a-57f0-2b78b3231daf" executionId="bde55bfe-2d23-470b-b16e-8c4086450290" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="012ac9ee-7b50-2158-5473-a0b2435a7f87" executionId="6c2d1ba6-f823-4ffb-b04a-00274faf6a6b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="cc4855e2-8292-93cd-0503-7a7864f8e626" executionId="b7e318c6-61b9-431c-80d9-feacbc17e6aa" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e0cb515c-2bc7-0f24-b3da-2ccb81f8b538" executionId="d5653225-3154-4b1c-b911-86ad26267e61" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8dab9d66-be1b-8015-417e-d2e981d18c76" executionId="d46875dc-aa78-44ff-a299-ebab5893c2b1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="8" executed="8" passed="7" failed="1" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.0.2+dd36e86129 (64-bit .NET 10.0.12)
+[xUnit.net 00:00:00.07]   Discovering: C2.Tests
+[xUnit.net 00:00:00.12]   Discovered:  C2.Tests
+[xUnit.net 00:00:00.14]   Starting:    C2.Tests
+[xUnit.net 00:00:00.38]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:00.38]       Expected: Approved
+[xUnit.net 00:00:00.38]       Actual:   PendingApproval
+[xUnit.net 00:00:00.38]       Stack Trace:
+[xUnit.net 00:00:00.38]         /workspace/team-c/c2/9to1 Workspace/Home/Tests/HomePermissionTrustServiceTests.cs(130,0): at HavenOS.Home.Tests.HomePermissionTrustServiceTests.Temporary_action_limit_rolls_down_only_when_user_selected_it()
+[xUnit.net 00:00:00.38]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.41]   Finished:    C2.Tests
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-03T17:19:37.7174732+00:00">
+        <Text>[xUnit.net 00:00:00.38]     HavenOS.Home.Tests.HomePermissionTrustServiceTests.Temporary_action_limit_rolls_down_only_when_user_selected_it [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

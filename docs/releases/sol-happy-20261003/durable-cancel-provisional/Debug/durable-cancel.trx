@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="5465514d-6632-4107-a303-25a0ec6af179" name="@0209ad767592 2026-10-04 12:43:55" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-04T12:43:55.8807351+00:00" queuing="2026-10-04T12:43:55.8807351+00:00" start="2026-10-04T12:43:54.5914108+00:00" finish="2026-10-04T12:43:56.0562528+00:00" />
+  <TestSettings name="default" id="2ba5f41b-86eb-4412-8c85-c0482052f5bb">
+    <Deployment runDeploymentRoot="_0209ad767592_2026-10-04_12_43_55" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="7da50348-cbc2-40c7-b936-66725e59976e" testId="dc2b37c7-bb03-a0fa-87b2-99056e5ed0d7" testName="Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Intervening_progress_or_failure_survives_stale_cancellation_and_restart(status: InProgress)" computerName="0209ad767592" duration="00:00:00.0459529" startTime="2026-10-04T12:43:55.5960025+00:00" endTime="2026-10-04T12:43:55.6423205+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7da50348-cbc2-40c7-b936-66725e59976e" />
+    <UnitTestResult executionId="8fcff6e8-8f10-4dc4-94e8-2f01c75d296d" testId="c3d2b3f1-3565-5c58-7107-63650dc16dca" testName="Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Intervening_progress_or_failure_survives_stale_cancellation_and_restart(status: Failed)" computerName="0209ad767592" duration="00:00:00.0447250" startTime="2026-10-04T12:43:55.6424859+00:00" endTime="2026-10-04T12:43:55.6895377+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8fcff6e8-8f10-4dc4-94e8-2f01c75d296d" />
+    <UnitTestResult executionId="17544f14-ac50-444f-ae4a-54f3391c4e52" testId="98778795-8693-2090-c679-9f1acfccc2ea" testName="Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Completion_committed_after_cancel_read_cannot_be_overwritten_by_stale_cancel" computerName="0209ad767592" duration="00:00:00.0506697" startTime="2026-10-04T12:43:55.8800806+00:00" endTime="2026-10-04T12:43:55.9300439+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="17544f14-ac50-444f-ae4a-54f3391c4e52">
+      <Output>
+        <StdOut>Actual retained database=/workspace/team-c-c5-provisional-runtime/Debug/databases/actual-task-17bff162e5134727b185126250c91e6c/tasks.db; cancelReturned=False; restoredStatus=Completed; result=retained-result; idempotency=completion-1</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="332eaa41-22e0-4d0c-ae05-8e63d98ccdfa" testId="35a830f4-5e0b-3dd7-7497-10b34dc610d9" testName="Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Wrong_owner_cannot_cancel_or_reconnect_and_completed_task_refuses_cancel" computerName="0209ad767592" duration="00:00:00.0473467" startTime="2026-10-04T12:43:55.9302608+00:00" endTime="2026-10-04T12:43:55.9775498+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="332eaa41-22e0-4d0c-ae05-8e63d98ccdfa" />
+    <UnitTestResult executionId="9caa12b2-6c1d-47b8-be97-a88c6d39a3fc" testId="9c4231ae-b4c8-7a2c-5dc6-eef585fc4494" testName="Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Renewed_claim_survives_stale_cancellation_and_restart" computerName="0209ad767592" duration="00:00:00.0538397" startTime="2026-10-04T12:43:55.5415131+00:00" endTime="2026-10-04T12:43:55.5958110+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9caa12b2-6c1d-47b8-be97-a88c6d39a3fc" />
+    <UnitTestResult executionId="84b087a1-299f-427e-8eb1-4e4a792d2b7c" testId="220e60e6-73ae-2f11-3c7d-34e225308f05" testName="Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Cancelled_task_survives_restart_and_original_lease_cannot_complete_it" computerName="0209ad767592" duration="00:00:00.0501246" startTime="2026-10-04T12:43:55.8540510+00:00" endTime="2026-10-04T12:43:55.8795925+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="84b087a1-299f-427e-8eb1-4e4a792d2b7c">
+      <Output>
+        <StdOut>Actual cancellation/reconnect database=/workspace/team-c-c5-provisional-runtime/Debug/databases/actual-task-31982b4cff9f4125b0826a90f684b59d/tasks.db</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="b8c121b9-3da2-43e0-9197-3394dc8ed5ce" testId="0c614afc-3cf0-fd1b-d124-8a55bb4bf45f" testName="Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Unchanged_valid_JSON_whitespace_does_not_prevent_cancellation" computerName="0209ad767592" duration="00:00:00.0429605" startTime="2026-10-04T12:43:55.7357762+00:00" endTime="2026-10-04T12:43:55.7787390+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b8c121b9-3da2-43e0-9197-3394dc8ed5ce" />
+    <UnitTestResult executionId="1e39b987-a5cf-414b-ab3f-477d30c11389" testId="1ed2be64-99cb-dedd-ab7f-3e30d04148b1" testName="Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Competing_cancellations_commit_once_and_preserve_the_first_commit_after_restart" computerName="0209ad767592" duration="00:00:00.0478160" startTime="2026-10-04T12:43:55.6897613+00:00" endTime="2026-10-04T12:43:55.7355921+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1e39b987-a5cf-414b-ab3f-477d30c11389" />
+    <UnitTestResult executionId="fc0d9f9a-a259-4544-a15d-58f1823c0cfe" testId="ae8261c3-dbe5-cd85-6242-da335bc8defd" testName="Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests.Migration_23_round_trips_graph_feedback_session_notifications_and_sources" computerName="0209ad767592" duration="00:00:00.1548111" startTime="2026-10-04T12:43:55.3375330+00:00" endTime="2026-10-04T12:43:55.4818186+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fc0d9f9a-a259-4544-a15d-58f1823c0cfe" />
+    <UnitTestResult executionId="17472523-f304-4ce3-9496-aa2c6911e792" testId="47ba9b7c-3304-907c-830b-bcb9f81d2368" testName="Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Caller_cancellation_before_write_leaves_the_durable_task_unchanged" computerName="0209ad767592" duration="00:00:00.0473438" startTime="2026-10-04T12:43:55.7790177+00:00" endTime="2026-10-04T12:43:55.8265118+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="17472523-f304-4ce3-9496-aa2c6911e792" />
+    <UnitTestResult executionId="a82dedb5-ffda-4f29-8ffd-8204d0ecb2df" testId="575a7362-a7df-d227-2c5e-f75cdb1e809c" testName="Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.A_deleted_task_is_not_recreated_by_stale_cancellation" computerName="0209ad767592" duration="00:00:00.0532154" startTime="2026-10-04T12:43:55.4842989+00:00" endTime="2026-10-04T12:43:55.5402471+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a82dedb5-ffda-4f29-8ffd-8204d0ecb2df" />
+    <UnitTestResult executionId="cbbf9b03-afa0-4eee-b8c4-d0b706979e09" testId="c5ab2666-c13f-539f-e3b8-08695e3af228" testName="Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests.External_task_claim_is_exclusive_and_idempotent_completion_is_persisted" computerName="0209ad767592" duration="00:00:00.1846419" startTime="2026-10-04T12:43:55.1369558+00:00" endTime="2026-10-04T12:43:55.3272437+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cbbf9b03-afa0-4eee-b8c4-d0b706979e09" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.A_deleted_task_is_not_recreated_by_stale_cancellation" storage="/workspace/team-c-c5-provisional-runtime/artifacts/bin/c5.durablejob.tests/debug/haven.infrastructure.tests.dll" id="575a7362-a7df-d227-2c5e-f75cdb1e809c">
+      <Execution id="a82dedb5-ffda-4f29-8ffd-8204d0ecb2df" />
+      <TestMethod codeBase="/workspace/team-c-c5-provisional-runtime/artifacts/bin/C5.DurableJob.Tests/debug/Haven.Infrastructure.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests" name="A_deleted_task_is_not_recreated_by_stale_cancellation" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Intervening_progress_or_failure_survives_stale_cancellation_and_restart(status: Failed)" storage="/workspace/team-c-c5-provisional-runtime/artifacts/bin/c5.durablejob.tests/debug/haven.infrastructure.tests.dll" id="c3d2b3f1-3565-5c58-7107-63650dc16dca">
+      <Execution id="8fcff6e8-8f10-4dc4-94e8-2f01c75d296d" />
+      <TestMethod codeBase="/workspace/team-c-c5-provisional-runtime/artifacts/bin/C5.DurableJob.Tests/debug/Haven.Infrastructure.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests" name="Intervening_progress_or_failure_survives_stale_cancellation_and_restart" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests.External_task_claim_is_exclusive_and_idempotent_completion_is_persisted" storage="/workspace/team-c-c5-provisional-runtime/artifacts/bin/c5.durablejob.tests/debug/haven.infrastructure.tests.dll" id="c5ab2666-c13f-539f-e3b8-08695e3af228">
+      <Execution id="cbbf9b03-afa0-4eee-b8c4-d0b706979e09" />
+      <TestMethod codeBase="/workspace/team-c-c5-provisional-runtime/artifacts/bin/C5.DurableJob.Tests/debug/Haven.Infrastructure.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests" name="External_task_claim_is_exclusive_and_idempotent_completion_is_persisted" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Intervening_progress_or_failure_survives_stale_cancellation_and_restart(status: InProgress)" storage="/workspace/team-c-c5-provisional-runtime/artifacts/bin/c5.durablejob.tests/debug/haven.infrastructure.tests.dll" id="dc2b37c7-bb03-a0fa-87b2-99056e5ed0d7">
+      <Execution id="7da50348-cbc2-40c7-b936-66725e59976e" />
+      <TestMethod codeBase="/workspace/team-c-c5-provisional-runtime/artifacts/bin/C5.DurableJob.Tests/debug/Haven.Infrastructure.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests" name="Intervening_progress_or_failure_survives_stale_cancellation_and_restart" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests.Migration_23_round_trips_graph_feedback_session_notifications_and_sources" storage="/workspace/team-c-c5-provisional-runtime/artifacts/bin/c5.durablejob.tests/debug/haven.infrastructure.tests.dll" id="ae8261c3-dbe5-cd85-6242-da335bc8defd">
+      <Execution id="fc0d9f9a-a259-4544-a15d-58f1823c0cfe" />
+      <TestMethod codeBase="/workspace/team-c-c5-provisional-runtime/artifacts/bin/C5.DurableJob.Tests/debug/Haven.Infrastructure.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.UnifiedExecutionPersistenceTests" name="Migration_23_round_trips_graph_feedback_session_notifications_and_sources" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Completion_committed_after_cancel_read_cannot_be_overwritten_by_stale_cancel" storage="/workspace/team-c-c5-provisional-runtime/artifacts/bin/c5.durablejob.tests/debug/haven.infrastructure.tests.dll" id="98778795-8693-2090-c679-9f1acfccc2ea">
+      <Execution id="17544f14-ac50-444f-ae4a-54f3391c4e52" />
+      <TestMethod codeBase="/workspace/team-c-c5-provisional-runtime/artifacts/bin/C5.DurableJob.Tests/debug/Haven.Infrastructure.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests" name="Completion_committed_after_cancel_read_cannot_be_overwritten_by_stale_cancel" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Unchanged_valid_JSON_whitespace_does_not_prevent_cancellation" storage="/workspace/team-c-c5-provisional-runtime/artifacts/bin/c5.durablejob.tests/debug/haven.infrastructure.tests.dll" id="0c614afc-3cf0-fd1b-d124-8a55bb4bf45f">
+      <Execution id="b8c121b9-3da2-43e0-9197-3394dc8ed5ce" />
+      <TestMethod codeBase="/workspace/team-c-c5-provisional-runtime/artifacts/bin/C5.DurableJob.Tests/debug/Haven.Infrastructure.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests" name="Unchanged_valid_JSON_whitespace_does_not_prevent_cancellation" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Wrong_owner_cannot_cancel_or_reconnect_and_completed_task_refuses_cancel" storage="/workspace/team-c-c5-provisional-runtime/artifacts/bin/c5.durablejob.tests/debug/haven.infrastructure.tests.dll" id="35a830f4-5e0b-3dd7-7497-10b34dc610d9">
+      <Execution id="332eaa41-22e0-4d0c-ae05-8e63d98ccdfa" />
+      <TestMethod codeBase="/workspace/team-c-c5-provisional-runtime/artifacts/bin/C5.DurableJob.Tests/debug/Haven.Infrastructure.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests" name="Wrong_owner_cannot_cancel_or_reconnect_and_completed_task_refuses_cancel" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests.Cancelled_task_survives_restart_and_original_lease_cannot_complete_it" storage="/workspace/team-c-c5-provisional-runtime/artifacts/bin/c5.durablejob.tests/debug/haven.infrastructure.tests.dll" id="220e60e6-73ae-2f11-3c7d-34e225308f05">
+      <Execution id="84b087a1-299f-427e-8eb1-4e4a792d2b7c" />
+      <TestMethod codeBase="/workspace/team-c-c5-provisional-runtime/artifacts/bin/C5.DurableJob.Tests/debug/Haven.Infrastructure.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ExternalAgentDurableCancellationTests" name="Cancelled_task_survives_restart_and_original_lease_cannot_complete_it" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Competing_cancellations_commit_once_and_preserve_the_first_commit_after_restart" storage="/workspace/team-c-c5-provisional-runtime/artifacts/bin/c5.durablejob.tests/debug/haven.infrastructure.tests.dll" id="1ed2be64-99cb-dedd-ab7f-3e30d04148b1">
+      <Execution id="1e39b987-a5cf-414b-ab3f-477d30c11389" />
+      <TestMethod codeBase="/workspace/team-c-c5-provisional-runtime/artifacts/bin/C5.DurableJob.Tests/debug/Haven.Infrastructure.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests" name="Competing_cancellations_commit_once_and_preserve_the_first_commit_after_restart" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Renewed_claim_survives_stale_cancellation_and_restart" storage="/workspace/team-c-c5-provisional-runtime/artifacts/bin/c5.durablejob.tests/debug/haven.infrastructure.tests.dll" id="9c4231ae-b4c8-7a2c-5dc6-eef585fc4494">
+      <Execution id="9caa12b2-6c1d-47b8-be97-a88c6d39a3fc" />
+      <TestMethod codeBase="/workspace/team-c-c5-provisional-runtime/artifacts/bin/C5.DurableJob.Tests/debug/Haven.Infrastructure.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests" name="Renewed_claim_survives_stale_cancellation_and_restart" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests.Caller_cancellation_before_write_leaves_the_durable_task_unchanged" storage="/workspace/team-c-c5-provisional-runtime/artifacts/bin/c5.durablejob.tests/debug/haven.infrastructure.tests.dll" id="47ba9b7c-3304-907c-830b-bcb9f81d2368">
+      <Execution id="17472523-f304-4ce3-9496-aa2c6911e792" />
+      <TestMethod codeBase="/workspace/team-c-c5-provisional-runtime/artifacts/bin/C5.DurableJob.Tests/debug/Haven.Infrastructure.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ExternalAgentCancellationConcurrencyTests" name="Caller_cancellation_before_write_leaves_the_durable_task_unchanged" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="dc2b37c7-bb03-a0fa-87b2-99056e5ed0d7" executionId="7da50348-cbc2-40c7-b936-66725e59976e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c3d2b3f1-3565-5c58-7107-63650dc16dca" executionId="8fcff6e8-8f10-4dc4-94e8-2f01c75d296d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="98778795-8693-2090-c679-9f1acfccc2ea" executionId="17544f14-ac50-444f-ae4a-54f3391c4e52" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="35a830f4-5e0b-3dd7-7497-10b34dc610d9" executionId="332eaa41-22e0-4d0c-ae05-8e63d98ccdfa" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9c4231ae-b4c8-7a2c-5dc6-eef585fc4494" executionId="9caa12b2-6c1d-47b8-be97-a88c6d39a3fc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="220e60e6-73ae-2f11-3c7d-34e225308f05" executionId="84b087a1-299f-427e-8eb1-4e4a792d2b7c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0c614afc-3cf0-fd1b-d124-8a55bb4bf45f" executionId="b8c121b9-3da2-43e0-9197-3394dc8ed5ce" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1ed2be64-99cb-dedd-ab7f-3e30d04148b1" executionId="1e39b987-a5cf-414b-ab3f-477d30c11389" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ae8261c3-dbe5-cd85-6242-da335bc8defd" executionId="fc0d9f9a-a259-4544-a15d-58f1823c0cfe" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="47ba9b7c-3304-907c-830b-bcb9f81d2368" executionId="17472523-f304-4ce3-9496-aa2c6911e792" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="575a7362-a7df-d227-2c5e-f75cdb1e809c" executionId="a82dedb5-ffda-4f29-8ffd-8204d0ecb2df" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c5ab2666-c13f-539f-e3b8-08695e3af228" executionId="cbbf9b03-afa0-4eee-b8c4-d0b706979e09" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="12" executed="12" passed="12" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.12)
+[xUnit.net 00:00:00.07]   Discovering: Haven.Infrastructure.Tests
+[xUnit.net 00:00:00.12]   Discovered:  Haven.Infrastructure.Tests
+[xUnit.net 00:00:00.14]   Starting:    Haven.Infrastructure.Tests
+[xUnit.net 00:00:01.01]   Finished:    Haven.Infrastructure.Tests
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

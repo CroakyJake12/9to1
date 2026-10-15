@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="a50fff0c-c96e-4eba-91c8-8b52d961b21c" name="@runnervm8df0l 2026-10-03 18:42:33" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-03T18:42:33.7571186+00:00" queuing="2026-10-03T18:42:33.7571186+00:00" start="2026-10-03T18:42:31.9414197+00:00" finish="2026-10-03T18:42:33.7679457+00:00" />
+  <TestSettings name="default" id="e5cc5163-fa7a-495c-a6a4-b716793823f5">
+    <Deployment runDeploymentRoot="_runnervm8df0l_2026-10-03_18_42_33" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="dfb90580-fa1f-4a3b-b66d-2856a1e8f11a" testId="74927869-856d-6c0c-f3b4-010b78090cac" testName="HavenOS.AIStudio.Tests.StudioRegisteredToolEvidenceTests.Registered_tool_assertions_require_originating_binding_and_fresh_owning_row(invoke: False, changeRow: False)" computerName="runnervm8df0l" duration="00:00:00.5994384" startTime="2026-10-03T18:42:32.7995213+00:00" endTime="2026-10-03T18:42:33.3761628+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="dfb90580-fa1f-4a3b-b66d-2856a1e8f11a" />
+    <UnitTestResult executionId="0c721f30-0cbf-4bf6-8a65-bd353a7410ff" testId="42d27ca1-9c5d-1f4a-9aa1-54390810b3da" testName="HavenOS.AIStudio.Tests.StudioRegisteredToolEvidenceTests.Registered_tool_assertions_require_originating_binding_and_fresh_owning_row(invoke: True, changeRow: False)" computerName="runnervm8df0l" duration="00:00:00.0862215" startTime="2026-10-03T18:42:33.5319364+00:00" endTime="2026-10-03T18:42:33.6149573+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0c721f30-0cbf-4bf6-8a65-bd353a7410ff" />
+    <UnitTestResult executionId="12b4aaf6-fdf4-4729-bdc6-e90cdddf355a" testId="143cca5c-dac0-9945-a427-00b90c133b8c" testName="HavenOS.AIStudio.Tests.StudioRegisteredToolEvidenceTests.Registered_tool_assertions_require_originating_binding_and_fresh_owning_row(invoke: True, changeRow: True)" computerName="runnervm8df0l" duration="00:00:00.1506472" startTime="2026-10-03T18:42:33.4014187+00:00" endTime="2026-10-03T18:42:33.5283302+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="12b4aaf6-fdf4-4729-bdc6-e90cdddf355a" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="HavenOS.AIStudio.Tests.StudioRegisteredToolEvidenceTests.Registered_tool_assertions_require_originating_binding_and_fresh_owning_row(invoke: False, changeRow: False)" storage="/home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/havenos.aistudio.tests/release_linux-x64/havenos.aistudio.tests.dll" id="74927869-856d-6c0c-f3b4-010b78090cac">
+      <Execution id="dfb90580-fa1f-4a3b-b66d-2856a1e8f11a" />
+      <TestMethod codeBase="/home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.AIStudio.Tests/release_linux-x64/HavenOS.AIStudio.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.AIStudio.Tests.StudioRegisteredToolEvidenceTests" name="Registered_tool_assertions_require_originating_binding_and_fresh_owning_row" />
+    </UnitTest>
+    <UnitTest name="HavenOS.AIStudio.Tests.StudioRegisteredToolEvidenceTests.Registered_tool_assertions_require_originating_binding_and_fresh_owning_row(invoke: True, changeRow: True)" storage="/home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/havenos.aistudio.tests/release_linux-x64/havenos.aistudio.tests.dll" id="143cca5c-dac0-9945-a427-00b90c133b8c">
+      <Execution id="12b4aaf6-fdf4-4729-bdc6-e90cdddf355a" />
+      <TestMethod codeBase="/home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.AIStudio.Tests/release_linux-x64/HavenOS.AIStudio.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.AIStudio.Tests.StudioRegisteredToolEvidenceTests" name="Registered_tool_assertions_require_originating_binding_and_fresh_owning_row" />
+    </UnitTest>
+    <UnitTest name="HavenOS.AIStudio.Tests.StudioRegisteredToolEvidenceTests.Registered_tool_assertions_require_originating_binding_and_fresh_owning_row(invoke: True, changeRow: False)" storage="/home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/havenos.aistudio.tests/release_linux-x64/havenos.aistudio.tests.dll" id="42d27ca1-9c5d-1f4a-9aa1-54390810b3da">
+      <Execution id="0c721f30-0cbf-4bf6-8a65-bd353a7410ff" />
+      <TestMethod codeBase="/home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.AIStudio.Tests/release_linux-x64/HavenOS.AIStudio.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="HavenOS.AIStudio.Tests.StudioRegisteredToolEvidenceTests" name="Registered_tool_assertions_require_originating_binding_and_fresh_owning_row" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="74927869-856d-6c0c-f3b4-010b78090cac" executionId="dfb90580-fa1f-4a3b-b66d-2856a1e8f11a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="42d27ca1-9c5d-1f4a-9aa1-54390810b3da" executionId="0c721f30-0cbf-4bf6-8a65-bd353a7410ff" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="143cca5c-dac0-9945-a427-00b90c133b8c" executionId="12b4aaf6-fdf4-4729-bdc6-e90cdddf355a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="3" executed="3" passed="3" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.12)
+[xUnit.net 00:00:00.09]   Discovering: HavenOS.AIStudio.Tests
+[xUnit.net 00:00:00.14]   Discovered:  HavenOS.AIStudio.Tests
+[xUnit.net 00:00:00.17]   Starting:    HavenOS.AIStudio.Tests
+[xUnit.net 00:00:01.07]   Finished:    HavenOS.AIStudio.Tests
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="runnervm8df0l" outcome="Warning" timestamp="2026-10-03T18:42:33.6944028+00:00">
+        <Text>Data collector 'Blame' message: All tests finished running, Sequence file will not be generated.</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

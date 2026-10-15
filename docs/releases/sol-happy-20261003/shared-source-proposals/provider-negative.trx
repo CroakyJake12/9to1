@@ -1,0 +1,346 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="6d724967-1e6f-4d74-980e-e24a3150a0a0" name="@5f26f397bc73 2026-10-03 18:35:00" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-03T18:35:00.6722198+00:00" queuing="2026-10-03T18:35:00.6722198+00:00" start="2026-10-03T18:34:59.9740171+00:00" finish="2026-10-03T18:35:00.7115343+00:00" />
+  <TestSettings name="default" id="9d677b80-8b35-40a4-bdc6-d66ddbaba5a7">
+    <Deployment runDeploymentRoot="_5f26f397bc73_2026-10-03_18_35_00" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="be3637b7-8204-4dfb-a272-aed6aedc35f2" testId="7319d7d7-5a2f-7195-f642-300d448953fe" testName="Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(body: &quot;&quot;)" computerName="5f26f397bc73" duration="00:00:00.0031018" startTime="2026-10-03T18:35:00.6440583+00:00" endTime="2026-10-03T18:35:00.6453396+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="be3637b7-8204-4dfb-a272-aed6aedc35f2">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)</Message>
+          <StackTrace>   at Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(String body) in /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderRoutingFailureTests.cs:line 29
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="aea4be8d-49c4-44fa-8d94-d8d3264a992c" testId="584eb04e-0054-c5d6-2d57-0919ff92ccb5" testName="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Remote_or_invalid_insecure_endpoints_are_rejected_at_transport_boundary(endpoint: &quot;http://example.com/v1&quot;)" computerName="5f26f397bc73" duration="00:00:00.0000387" startTime="2026-10-03T18:35:00.5624301+00:00" endTime="2026-10-03T18:35:00.5624611+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="aea4be8d-49c4-44fa-8d94-d8d3264a992c" />
+    <UnitTestResult executionId="8ba359f0-ca84-4bb9-8900-c523909d94a9" testId="a52eda3b-7faa-07ea-e897-46b668f1de77" testName="Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Completion_marker_preserves_content_and_ignores_trailing_transport_data" computerName="5f26f397bc73" duration="00:00:00.0068274" startTime="2026-10-03T18:35:00.6475683+00:00" endTime="2026-10-03T18:35:00.6476125+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8ba359f0-ca84-4bb9-8900-c523909d94a9" />
+    <UnitTestResult executionId="d5d3112a-0093-474a-ac99-48589391a6bb" testId="178bbed9-7eda-7363-f58d-5265b1a42da3" testName="Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Null_error_and_empty_usage_frame_do_not_break_completed_stream" computerName="5f26f397bc73" duration="00:00:00.0007034" startTime="2026-10-03T18:35:00.6479722+00:00" endTime="2026-10-03T18:35:00.6480117+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d5d3112a-0093-474a-ac99-48589391a6bb" />
+    <UnitTestResult executionId="f6c5cb61-91ca-4bf6-9b99-0fa7eca2835b" testId="f2dcfc74-fa3f-e04e-d72f-0406d547046f" testName="Haven.Infrastructure.Tests.ResilientProviderRoutingModelClientTests.StreamingDoesNotReplayAfterAnyChunkWasEmitted" computerName="5f26f397bc73" duration="00:00:00.0173971" startTime="2026-10-03T18:35:00.6474116+00:00" endTime="2026-10-03T18:35:00.6485172+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f6c5cb61-91ca-4bf6-9b99-0fa7eca2835b" />
+    <UnitTestResult executionId="432dc88e-d08d-4fa7-ac5f-e9c33ac3e030" testId="c5b9845f-a886-4fc8-0cd1-acbbc513a165" testName="Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Confirmed_usage_is_preserved_for_completed_and_interrupted_responses(completed: False)" computerName="5f26f397bc73" duration="00:00:00.0012784" startTime="2026-10-03T18:35:00.6460675+00:00" endTime="2026-10-03T18:35:00.6461097+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="432dc88e-d08d-4fa7-ac5f-e9c33ac3e030">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)</Message>
+          <StackTrace>   at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Confirmed_usage_is_preserved_for_completed_and_interrupted_responses(Boolean completed) in /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs:line 99
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="f0d4429c-4ed6-4894-a547-dc911df1c862" testId="8dd7f483-9d2d-208d-d8fa-43a0a1bc890f" testName="Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Provider_error_frame_is_failure_and_does_not_expose_error_payload(prefix: &quot;data: {\&quot;choices\&quot;:[{\&quot;delta\&quot;:{\&quot;content\&quot;:\&quot;part&quot;···)" computerName="5f26f397bc73" duration="00:00:00.0039588" startTime="2026-10-03T18:35:00.6453006+00:00" endTime="2026-10-03T18:35:00.6458714+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f0d4429c-4ed6-4894-a547-dc911df1c862">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)</Message>
+          <StackTrace>   at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Provider_error_frame_is_failure_and_does_not_expose_error_payload(String prefix) in /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs:line 52
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="68be6b9d-83ff-4c28-826a-2006c3a05145" testId="45290f6e-eb02-3961-1783-18e59a0b0732" testName="Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Provider_error_frame_is_failure_and_does_not_expose_error_payload(prefix: &quot;&quot;)" computerName="5f26f397bc73" duration="00:00:00.0011472" startTime="2026-10-03T18:35:00.6449075+00:00" endTime="2026-10-03T18:35:00.6450151+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="68be6b9d-83ff-4c28-826a-2006c3a05145">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)</Message>
+          <StackTrace>   at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Provider_error_frame_is_failure_and_does_not_expose_error_payload(String prefix) in /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs:line 52
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="5495c4ff-fad9-4615-a0fb-0f75d0724236" testId="d984f7b4-c775-84f5-41fa-4072c43ac484" testName="Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(body: &quot;data: {\&quot;choices\&quot;:[{\&quot;delta\&quot;:{},\&quot;finish_reason\&quot;···)" computerName="5f26f397bc73" duration="00:00:00.0003311" startTime="2026-10-03T18:35:00.6440214+00:00" endTime="2026-10-03T18:35:00.6441349+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5495c4ff-fad9-4615-a0fb-0f75d0724236">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)</Message>
+          <StackTrace>   at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(String body) in /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs:line 34
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="e1d27392-dbff-49f0-ab81-df646c4c9bb2" testId="119be01a-db36-5a44-00f1-a176f0e5e0ce" testName="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Loopback_http_and_remote_https_are_allowed(endpoint: &quot;https://example.com/v1&quot;)" computerName="5f26f397bc73" duration="00:00:00.0003391" startTime="2026-10-03T18:35:00.5603850+00:00" endTime="2026-10-03T18:35:00.5607191+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e1d27392-dbff-49f0-ab81-df646c4c9bb2" />
+    <UnitTestResult executionId="b6fcbbc4-7b0b-45d6-81d4-9d7bf42cfb7a" testId="4a464f5e-d6e6-49f4-24eb-68da96001ae8" testName="Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(body: &quot;data: {\&quot;choices\&quot;:[{\&quot;delta\&quot;:{\&quot;content\&quot;:\&quot;part&quot;···)" computerName="5f26f397bc73" duration="00:00:00.0010152" startTime="2026-10-03T18:35:00.6455274+00:00" endTime="2026-10-03T18:35:00.6455706+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b6fcbbc4-7b0b-45d6-81d4-9d7bf42cfb7a">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)</Message>
+          <StackTrace>   at Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(String body) in /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderRoutingFailureTests.cs:line 29
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="5eea8cf7-ac41-49f4-9849-82ee21f3813b" testId="8de8bedd-a774-1cc9-b27f-0c423555c7f7" testName="Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Confirmed_usage_is_preserved_for_completed_and_interrupted_responses(completed: True)" computerName="5f26f397bc73" duration="00:00:00.0095449" startTime="2026-10-03T18:35:00.6462891+00:00" endTime="2026-10-03T18:35:00.6474658+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5eea8cf7-ac41-49f4-9849-82ee21f3813b" />
+    <UnitTestResult executionId="b5a88dd7-446b-404c-b3de-172c5084c19c" testId="ceb9e49d-c8ac-f2fa-da36-0cc1cfd7dad1" testName="Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Cancellation_during_stream_is_propagated_and_disposes_response" computerName="5f26f397bc73" duration="00:00:00.0023544" startTime="2026-10-03T18:35:00.6481138+00:00" endTime="2026-10-03T18:35:00.6481557+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b5a88dd7-446b-404c-b3de-172c5084c19c">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.ThrowsAny() Failure: No exception was thrown
+Expected: typeof(System.OperationCanceledException)</Message>
+          <StackTrace>   at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Cancellation_during_stream_is_propagated_and_disposes_response() in /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs:line 71
+   at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Cancellation_during_stream_is_propagated_and_disposes_response() in /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs:line 73
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="efed0169-93e8-406a-9b9f-302e171dd319" testId="8a0652dd-4178-74f0-9b4a-0db2e648946c" testName="Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(body: &quot;&quot;)" computerName="5f26f397bc73" duration="00:00:00.0001051" startTime="2026-10-03T18:35:00.6445978+00:00" endTime="2026-10-03T18:35:00.6446466+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="efed0169-93e8-406a-9b9f-302e171dd319">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)</Message>
+          <StackTrace>   at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(String body) in /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs:line 34
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="2f37b6b6-f903-4ce1-a889-9318ea72fb0b" testId="3134e832-bc1b-11c6-4521-943007da12c5" testName="Haven.Infrastructure.Tests.ResilientProviderRoutingModelClientTests.LocalSelectionDoesNotCrossIntoCloudWithoutExplicitPermission" computerName="5f26f397bc73" duration="00:00:00.0008097" startTime="2026-10-03T18:35:00.6487393+00:00" endTime="2026-10-03T18:35:00.6487737+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2f37b6b6-f903-4ce1-a889-9318ea72fb0b" />
+    <UnitTestResult executionId="1aa83804-d21d-4ede-bf21-a24f86b1c374" testId="1030a14a-f807-e6d9-d86c-8f0c567132ba" testName="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Remote_or_invalid_insecure_endpoints_are_rejected_at_transport_boundary(endpoint: &quot;relative/path&quot;)" computerName="5f26f397bc73" duration="00:00:00.0012841" startTime="2026-10-03T18:35:00.5621801+00:00" endTime="2026-10-03T18:35:00.5622174+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1aa83804-d21d-4ede-bf21-a24f86b1c374" />
+    <UnitTestResult executionId="8a05266e-577b-4cbc-b809-47539bf0a0cf" testId="74c8c114-ead2-3241-ecf7-fd04c78d317f" testName="Haven.Infrastructure.Tests.ResilientProviderRoutingModelClientTests.LocalOnlyModeHidesAndRejectsCloudProvider" computerName="5f26f397bc73" duration="00:00:00.0054858" startTime="2026-10-03T18:35:00.6486176+00:00" endTime="2026-10-03T18:35:00.6486543+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8a05266e-577b-4cbc-b809-47539bf0a0cf" />
+    <UnitTestResult executionId="eb2c453e-397b-453b-80eb-2764363901b1" testId="d5edf3e7-d242-662e-7c34-2c03806f11d3" testName="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Loopback_http_and_remote_https_are_allowed(endpoint: &quot;http://localhost:11434/v1&quot;)" computerName="5f26f397bc73" duration="00:00:00.0052280" startTime="2026-10-03T18:35:00.5356136+00:00" endTime="2026-10-03T18:35:00.5501187+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="eb2c453e-397b-453b-80eb-2764363901b1" />
+    <UnitTestResult executionId="2cd608c2-83c5-481a-bf4f-8eda93b77f8e" testId="ae4417ce-9f61-7140-3b91-afc7217e2f79" testName="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Remote_or_invalid_insecure_endpoints_are_rejected_at_transport_boundary(endpoint: &quot;ftp://example.com/v1&quot;)" computerName="5f26f397bc73" duration="00:00:00.0003133" startTime="2026-10-03T18:35:00.5623212+00:00" endTime="2026-10-03T18:35:00.5623626+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2cd608c2-83c5-481a-bf4f-8eda93b77f8e" />
+    <UnitTestResult executionId="746aed41-0319-4601-9c94-2d3e4e26bffc" testId="abe4fe7f-6547-1d0e-369b-ef2990690f11" testName="Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(body: &quot;data: {\&quot;error\&quot;:{\&quot;message\&quot;:\&quot;private error deta&quot;···)" computerName="5f26f397bc73" duration="00:00:00.0492097" startTime="2026-10-03T18:35:00.5343185+00:00" endTime="2026-10-03T18:35:00.6117559+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="746aed41-0319-4601-9c94-2d3e4e26bffc">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)</Message>
+          <StackTrace>   at Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(String body) in /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderRoutingFailureTests.cs:line 29
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="88464a79-f2ff-4a42-acee-9c4f49eb79be" testId="fb82aef3-6241-02c4-3388-29b2c8023713" testName="Haven.Infrastructure.Tests.ResilientProviderRoutingModelClientTests.CloudProviderCanReportAvailableWhenLocalOnlyModeIsOff" computerName="5f26f397bc73" duration="00:00:00.0004178" startTime="2026-10-03T18:35:00.6488564+00:00" endTime="2026-10-03T18:35:00.6489658+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="88464a79-f2ff-4a42-acee-9c4f49eb79be" />
+    <UnitTestResult executionId="03521e2a-48b1-43ea-8e8c-9d6d7780e789" testId="f0551aa3-cbea-6469-d088-b292464c4f34" testName="Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(body: &quot;data: {\&quot;choices\&quot;:[{\&quot;delta\&quot;:{\&quot;content\&quot;:\&quot;part&quot;···)" computerName="5f26f397bc73" duration="00:00:00.0345995" startTime="2026-10-03T18:35:00.5639320+00:00" endTime="2026-10-03T18:35:00.5991187+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="03521e2a-48b1-43ea-8e8c-9d6d7780e789">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)</Message>
+          <StackTrace>   at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(String body) in /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs:line 34
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="baca86f0-781b-46a3-a665-c827057d924a" testId="b80bbb0b-80f0-a35b-e08b-8ac4f88c3229" testName="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Loopback_http_and_remote_https_are_allowed(endpoint: &quot;http://127.0.0.1:11434/v1&quot;)" computerName="5f26f397bc73" duration="00:00:00.0000346" startTime="2026-10-03T18:35:00.5614896+00:00" endTime="2026-10-03T18:35:00.5615291+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="baca86f0-781b-46a3-a665-c827057d924a" />
+    <UnitTestResult executionId="18fd4242-1c14-4610-90c9-203c29e20673" testId="77c39e09-1c81-b682-804f-5181b4093421" testName="Haven.Infrastructure.Tests.ResilientProviderRoutingModelClientTests.CompletionFallsBackAfterRecoverableFailureBeforeOutput" computerName="5f26f397bc73" duration="00:00:00.0098074" startTime="2026-10-03T18:35:00.6458344+00:00" endTime="2026-10-03T18:35:00.6463289+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="18fd4242-1c14-4610-90c9-203c29e20673" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Confirmed_usage_is_preserved_for_completed_and_interrupted_responses(completed: False)" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="c5b9845f-a886-4fc8-0cd1-acbbc513a165">
+      <Execution id="432dc88e-d08d-4fa7-ac5f-e9c33ac3e030" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudModelProviderStreamTests" name="Confirmed_usage_is_preserved_for_completed_and_interrupted_responses" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Loopback_http_and_remote_https_are_allowed(endpoint: &quot;http://localhost:11434/v1&quot;)" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="d5edf3e7-d242-662e-7c34-2c03806f11d3">
+      <Execution id="eb2c453e-397b-453b-80eb-2764363901b1" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests" name="Loopback_http_and_remote_https_are_allowed" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ResilientProviderRoutingModelClientTests.LocalOnlyModeHidesAndRejectsCloudProvider" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="74c8c114-ead2-3241-ecf7-fd04c78d317f">
+      <Execution id="8a05266e-577b-4cbc-b809-47539bf0a0cf" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ResilientProviderRoutingModelClientTests" name="LocalOnlyModeHidesAndRejectsCloudProvider" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(body: &quot;&quot;)" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="8a0652dd-4178-74f0-9b4a-0db2e648946c">
+      <Execution id="efed0169-93e8-406a-9b9f-302e171dd319" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudModelProviderStreamTests" name="Eof_without_completion_is_failure_without_repeating_request" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ResilientProviderRoutingModelClientTests.CompletionFallsBackAfterRecoverableFailureBeforeOutput" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="77c39e09-1c81-b682-804f-5181b4093421">
+      <Execution id="18fd4242-1c14-4610-90c9-203c29e20673" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ResilientProviderRoutingModelClientTests" name="CompletionFallsBackAfterRecoverableFailureBeforeOutput" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(body: &quot;data: {\&quot;choices\&quot;:[{\&quot;delta\&quot;:{},\&quot;finish_reason\&quot;···)" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="d984f7b4-c775-84f5-41fa-4072c43ac484">
+      <Execution id="5495c4ff-fad9-4615-a0fb-0f75d0724236" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudModelProviderStreamTests" name="Eof_without_completion_is_failure_without_repeating_request" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Loopback_http_and_remote_https_are_allowed(endpoint: &quot;http://127.0.0.1:11434/v1&quot;)" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="b80bbb0b-80f0-a35b-e08b-8ac4f88c3229">
+      <Execution id="baca86f0-781b-46a3-a665-c827057d924a" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests" name="Loopback_http_and_remote_https_are_allowed" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Loopback_http_and_remote_https_are_allowed(endpoint: &quot;https://example.com/v1&quot;)" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="119be01a-db36-5a44-00f1-a176f0e5e0ce">
+      <Execution id="e1d27392-dbff-49f0-ab81-df646c4c9bb2" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests" name="Loopback_http_and_remote_https_are_allowed" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ResilientProviderRoutingModelClientTests.CloudProviderCanReportAvailableWhenLocalOnlyModeIsOff" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="fb82aef3-6241-02c4-3388-29b2c8023713">
+      <Execution id="88464a79-f2ff-4a42-acee-9c4f49eb79be" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ResilientProviderRoutingModelClientTests" name="CloudProviderCanReportAvailableWhenLocalOnlyModeIsOff" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ResilientProviderRoutingModelClientTests.LocalSelectionDoesNotCrossIntoCloudWithoutExplicitPermission" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="3134e832-bc1b-11c6-4521-943007da12c5">
+      <Execution id="2f37b6b6-f903-4ce1-a889-9318ea72fb0b" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ResilientProviderRoutingModelClientTests" name="LocalSelectionDoesNotCrossIntoCloudWithoutExplicitPermission" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Cancellation_during_stream_is_propagated_and_disposes_response" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="ceb9e49d-c8ac-f2fa-da36-0cc1cfd7dad1">
+      <Execution id="b5a88dd7-446b-404c-b3de-172c5084c19c" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudModelProviderStreamTests" name="Cancellation_during_stream_is_propagated_and_disposes_response" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Remote_or_invalid_insecure_endpoints_are_rejected_at_transport_boundary(endpoint: &quot;relative/path&quot;)" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="1030a14a-f807-e6d9-d86c-8f0c567132ba">
+      <Execution id="1aa83804-d21d-4ede-bf21-a24f86b1c374" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests" name="Remote_or_invalid_insecure_endpoints_are_rejected_at_transport_boundary" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Null_error_and_empty_usage_frame_do_not_break_completed_stream" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="178bbed9-7eda-7363-f58d-5265b1a42da3">
+      <Execution id="d5d3112a-0093-474a-ac99-48589391a6bb" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudModelProviderStreamTests" name="Null_error_and_empty_usage_frame_do_not_break_completed_stream" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Provider_error_frame_is_failure_and_does_not_expose_error_payload(prefix: &quot;data: {\&quot;choices\&quot;:[{\&quot;delta\&quot;:{\&quot;content\&quot;:\&quot;part&quot;···)" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="8dd7f483-9d2d-208d-d8fa-43a0a1bc890f">
+      <Execution id="f0d4429c-4ed6-4894-a547-dc911df1c862" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudModelProviderStreamTests" name="Provider_error_frame_is_failure_and_does_not_expose_error_payload" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(body: &quot;data: {\&quot;error\&quot;:{\&quot;message\&quot;:\&quot;private error deta&quot;···)" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="abe4fe7f-6547-1d0e-369b-ef2990690f11">
+      <Execution id="746aed41-0319-4601-9c94-2d3e4e26bffc" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests" name="Incomplete_actual_provider_stream_never_dispatches_configured_fallback" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(body: &quot;&quot;)" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="7319d7d7-5a2f-7195-f642-300d448953fe">
+      <Execution id="be3637b7-8204-4dfb-a272-aed6aedc35f2" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests" name="Incomplete_actual_provider_stream_never_dispatches_configured_fallback" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Provider_error_frame_is_failure_and_does_not_expose_error_payload(prefix: &quot;&quot;)" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="45290f6e-eb02-3961-1783-18e59a0b0732">
+      <Execution id="68be6b9d-83ff-4c28-826a-2006c3a05145" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudModelProviderStreamTests" name="Provider_error_frame_is_failure_and_does_not_expose_error_payload" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Confirmed_usage_is_preserved_for_completed_and_interrupted_responses(completed: True)" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="8de8bedd-a774-1cc9-b27f-0c423555c7f7">
+      <Execution id="5eea8cf7-ac41-49f4-9849-82ee21f3813b" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudModelProviderStreamTests" name="Confirmed_usage_is_preserved_for_completed_and_interrupted_responses" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Completion_marker_preserves_content_and_ignores_trailing_transport_data" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="a52eda3b-7faa-07ea-e897-46b668f1de77">
+      <Execution id="8ba359f0-ca84-4bb9-8900-c523909d94a9" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudModelProviderStreamTests" name="Completion_marker_preserves_content_and_ignores_trailing_transport_data" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(body: &quot;data: {\&quot;choices\&quot;:[{\&quot;delta\&quot;:{\&quot;content\&quot;:\&quot;part&quot;···)" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="f0551aa3-cbea-6469-d088-b292464c4f34">
+      <Execution id="03521e2a-48b1-43ea-8e8c-9d6d7780e789" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudModelProviderStreamTests" name="Eof_without_completion_is_failure_without_repeating_request" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Remote_or_invalid_insecure_endpoints_are_rejected_at_transport_boundary(endpoint: &quot;http://example.com/v1&quot;)" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="584eb04e-0054-c5d6-2d57-0919ff92ccb5">
+      <Execution id="aea4be8d-49c4-44fa-8d94-d8d3264a992c" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests" name="Remote_or_invalid_insecure_endpoints_are_rejected_at_transport_boundary" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ResilientProviderRoutingModelClientTests.StreamingDoesNotReplayAfterAnyChunkWasEmitted" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="f2dcfc74-fa3f-e04e-d72f-0406d547046f">
+      <Execution id="f6c5cb61-91ca-4bf6-9b99-0fa7eca2835b" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ResilientProviderRoutingModelClientTests" name="StreamingDoesNotReplayAfterAnyChunkWasEmitted" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Remote_or_invalid_insecure_endpoints_are_rejected_at_transport_boundary(endpoint: &quot;ftp://example.com/v1&quot;)" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="ae4417ce-9f61-7140-3b91-afc7217e2f79">
+      <Execution id="2cd608c2-83c5-481a-bf4f-8eda93b77f8e" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests" name="Remote_or_invalid_insecure_endpoints_are_rejected_at_transport_boundary" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(body: &quot;data: {\&quot;choices\&quot;:[{\&quot;delta\&quot;:{\&quot;content\&quot;:\&quot;part&quot;···)" storage="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/debug/net10.0/c5.provider.tests.dll" id="4a464f5e-d6e6-49f4-24eb-68da96001ae8">
+      <Execution id="b6fcbbc4-7b0b-45d6-81d4-9d7bf42cfb7a" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c5/reconciled/negative-routing-harness/bin/Debug/net10.0/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests" name="Incomplete_actual_provider_stream_never_dispatches_configured_fallback" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="7319d7d7-5a2f-7195-f642-300d448953fe" executionId="be3637b7-8204-4dfb-a272-aed6aedc35f2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="584eb04e-0054-c5d6-2d57-0919ff92ccb5" executionId="aea4be8d-49c4-44fa-8d94-d8d3264a992c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a52eda3b-7faa-07ea-e897-46b668f1de77" executionId="8ba359f0-ca84-4bb9-8900-c523909d94a9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="178bbed9-7eda-7363-f58d-5265b1a42da3" executionId="d5d3112a-0093-474a-ac99-48589391a6bb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f2dcfc74-fa3f-e04e-d72f-0406d547046f" executionId="f6c5cb61-91ca-4bf6-9b99-0fa7eca2835b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c5b9845f-a886-4fc8-0cd1-acbbc513a165" executionId="432dc88e-d08d-4fa7-ac5f-e9c33ac3e030" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8dd7f483-9d2d-208d-d8fa-43a0a1bc890f" executionId="f0d4429c-4ed6-4894-a547-dc911df1c862" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="45290f6e-eb02-3961-1783-18e59a0b0732" executionId="68be6b9d-83ff-4c28-826a-2006c3a05145" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d984f7b4-c775-84f5-41fa-4072c43ac484" executionId="5495c4ff-fad9-4615-a0fb-0f75d0724236" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="119be01a-db36-5a44-00f1-a176f0e5e0ce" executionId="e1d27392-dbff-49f0-ab81-df646c4c9bb2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4a464f5e-d6e6-49f4-24eb-68da96001ae8" executionId="b6fcbbc4-7b0b-45d6-81d4-9d7bf42cfb7a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8de8bedd-a774-1cc9-b27f-0c423555c7f7" executionId="5eea8cf7-ac41-49f4-9849-82ee21f3813b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ceb9e49d-c8ac-f2fa-da36-0cc1cfd7dad1" executionId="b5a88dd7-446b-404c-b3de-172c5084c19c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8a0652dd-4178-74f0-9b4a-0db2e648946c" executionId="efed0169-93e8-406a-9b9f-302e171dd319" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3134e832-bc1b-11c6-4521-943007da12c5" executionId="2f37b6b6-f903-4ce1-a889-9318ea72fb0b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1030a14a-f807-e6d9-d86c-8f0c567132ba" executionId="1aa83804-d21d-4ede-bf21-a24f86b1c374" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="74c8c114-ead2-3241-ecf7-fd04c78d317f" executionId="8a05266e-577b-4cbc-b809-47539bf0a0cf" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d5edf3e7-d242-662e-7c34-2c03806f11d3" executionId="eb2c453e-397b-453b-80eb-2764363901b1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ae4417ce-9f61-7140-3b91-afc7217e2f79" executionId="2cd608c2-83c5-481a-bf4f-8eda93b77f8e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="abe4fe7f-6547-1d0e-369b-ef2990690f11" executionId="746aed41-0319-4601-9c94-2d3e4e26bffc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="fb82aef3-6241-02c4-3388-29b2c8023713" executionId="88464a79-f2ff-4a42-acee-9c4f49eb79be" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f0551aa3-cbea-6469-d088-b292464c4f34" executionId="03521e2a-48b1-43ea-8e8c-9d6d7780e789" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b80bbb0b-80f0-a35b-e08b-8ac4f88c3229" executionId="baca86f0-781b-46a3-a665-c827057d924a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="77c39e09-1c81-b682-804f-5181b4093421" executionId="18fd4242-1c14-4610-90c9-203c29e20673" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="24" executed="24" passed="14" failed="10" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.12)
+[xUnit.net 00:00:00.08]   Discovering: C5.Provider.Tests
+[xUnit.net 00:00:00.14]   Discovered:  C5.Provider.Tests
+[xUnit.net 00:00:00.17]   Starting:    C5.Provider.Tests
+[xUnit.net 00:00:00.27]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:00.27]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:00.27]       Stack Trace:
+[xUnit.net 00:00:00.27]         /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs(34,0): at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(String body)
+[xUnit.net 00:00:00.27]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.28]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:00.28]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:00.28]       Stack Trace:
+[xUnit.net 00:00:00.28]         /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderRoutingFailureTests.cs(29,0): at Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(String body)
+[xUnit.net 00:00:00.28]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.31]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:00.31]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:00.31]       Stack Trace:
+[xUnit.net 00:00:00.31]         /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs(34,0): at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(String body)
+[xUnit.net 00:00:00.31]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.31]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:00.31]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:00.31]       Stack Trace:
+[xUnit.net 00:00:00.31]         /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs(34,0): at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(String body)
+[xUnit.net 00:00:00.31]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.31]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:00.31]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:00.31]       Stack Trace:
+[xUnit.net 00:00:00.31]         /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs(52,0): at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Provider_error_frame_is_failure_and_does_not_expose_error_payload(String prefix)
+[xUnit.net 00:00:00.31]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.31]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:00.31]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:00.31]       Stack Trace:
+[xUnit.net 00:00:00.31]         /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderRoutingFailureTests.cs(29,0): at Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(String body)
+[xUnit.net 00:00:00.31]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.31]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:00.31]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:00.31]       Stack Trace:
+[xUnit.net 00:00:00.31]         /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderRoutingFailureTests.cs(29,0): at Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(String body)
+[xUnit.net 00:00:00.31]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.31]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:00.31]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:00.31]       Stack Trace:
+[xUnit.net 00:00:00.31]         /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs(52,0): at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Provider_error_frame_is_failure_and_does_not_expose_error_payload(String prefix)
+[xUnit.net 00:00:00.31]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.31]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:00.31]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:00.31]       Stack Trace:
+[xUnit.net 00:00:00.31]         /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs(99,0): at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Confirmed_usage_is_preserved_for_completed_and_interrupted_responses(Boolean completed)
+[xUnit.net 00:00:00.31]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.31]       Assert.ThrowsAny() Failure: No exception was thrown
+[xUnit.net 00:00:00.31]       Expected: typeof(System.OperationCanceledException)
+[xUnit.net 00:00:00.31]       Stack Trace:
+[xUnit.net 00:00:00.31]         /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs(71,0): at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Cancellation_during_stream_is_propagated_and_disposes_response()
+[xUnit.net 00:00:00.31]         /workspace/team-c/c5-provider-reconciled/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudModelProviderStreamTests.cs(73,0): at Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Cancellation_during_stream_is_propagated_and_disposes_response()
+[xUnit.net 00:00:00.31]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.31]   Finished:    C5.Provider.Tests
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-03T18:35:00.6082805+00:00">
+        <Text>[xUnit.net 00:00:00.27]     Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(body: "data: {\"choices\":[{\"delta\":{\"content\":\"part"···) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-03T18:35:00.6120177+00:00">
+        <Text>[xUnit.net 00:00:00.28]     Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(body: "data: {\"error\":{\"message\":\"private error deta"···) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-03T18:35:00.6784339+00:00">
+        <Text>[xUnit.net 00:00:00.31]     Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(body: "data: {\"choices\":[{\"delta\":{},\"finish_reason\"···) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-03T18:35:00.6784580+00:00">
+        <Text>[xUnit.net 00:00:00.31]     Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Eof_without_completion_is_failure_without_repeating_request(body: "") [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-03T18:35:00.6784741+00:00">
+        <Text>[xUnit.net 00:00:00.31]     Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Provider_error_frame_is_failure_and_does_not_expose_error_payload(prefix: "") [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-03T18:35:00.6784921+00:00">
+        <Text>[xUnit.net 00:00:00.31]     Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(body: "") [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-03T18:35:00.6785036+00:00">
+        <Text>[xUnit.net 00:00:00.31]     Haven.Infrastructure.Tests.CloudModelProviderRoutingFailureTests.Incomplete_actual_provider_stream_never_dispatches_configured_fallback(body: "data: {\"choices\":[{\"delta\":{\"content\":\"part"···) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-03T18:35:00.6785153+00:00">
+        <Text>[xUnit.net 00:00:00.31]     Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Provider_error_frame_is_failure_and_does_not_expose_error_payload(prefix: "data: {\"choices\":[{\"delta\":{\"content\":\"part"···) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-03T18:35:00.6785263+00:00">
+        <Text>[xUnit.net 00:00:00.31]     Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Confirmed_usage_is_preserved_for_completed_and_interrupted_responses(completed: False) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-03T18:35:00.6788392+00:00">
+        <Text>[xUnit.net 00:00:00.31]     Haven.Infrastructure.Tests.CloudModelProviderStreamTests.Cancellation_during_stream_is_propagated_and_disposes_response [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="14e6ce00-f475-43b8-8dce-37a6cf38eaa4" name="runneradmin@runnervmdlhio 2026-10-04 20:14:38" runUser="runnervmdlhio\runneradmin" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-04T20:14:38.8334980+00:00" queuing="2026-10-04T20:14:38.8334983+00:00" start="2026-10-04T20:14:36.8555473+00:00" finish="2026-10-04T20:14:38.8500622+00:00" />
+  <TestSettings name="default" id="dc22cd09-b147-44c5-ab88-19911fd2d8b6">
+    <Deployment runDeploymentRoot="runneradmin_runnervmdlhio_2026-10-04_20_14_38" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="2560c707-14a6-4dc1-b44e-497566d6f733" testId="13133123-c918-b346-8f14-e9c360959038" testName="AvaloniaHome.Tests.HomeHostOriginalLifetimeTests.Work_Core_and_exit_faults_keep_exact_causes_and_stop_remaining_actual_services(foreignCancellation: False)" computerName="runnervmdlhio" duration="00:00:00.0060156" startTime="2026-10-04T20:14:37.7680097+00:00" endTime="2026-10-04T20:14:37.7742132+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2560c707-14a6-4dc1-b44e-497566d6f733" />
+    <UnitTestResult executionId="3b32ec10-7265-44c7-89b8-455264025cef" testId="7b7ba3e3-7404-f820-9f95-bd1750d5cfc2" testName="AvaloniaHome.Tests.HomeHostOriginalLifetimeTests.Work_Core_and_exit_faults_keep_exact_causes_and_stop_remaining_actual_services(foreignCancellation: True)" computerName="runnervmdlhio" duration="00:00:00.0017321" startTime="2026-10-04T20:14:37.7744685+00:00" endTime="2026-10-04T20:14:37.7764714+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3b32ec10-7265-44c7-89b8-455264025cef" />
+    <UnitTestResult executionId="fa4b8478-3826-4bfa-b18a-d56fc63b9451" testId="b62aeddb-d448-9432-4f4d-f1f9950f9d33" testName="AvaloniaHome.Tests.HomeHostOriginalLifetimeTests.Held_original_work_and_actual_Core_stop_settle_before_desktop_exit" computerName="runnervmdlhio" duration="00:00:00.1439144" startTime="2026-10-04T20:14:37.6227741+00:00" endTime="2026-10-04T20:14:37.7544870+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fa4b8478-3826-4bfa-b18a-d56fc63b9451" />
+    <UnitTestResult executionId="0d48596d-d70f-4693-911f-cd58462c9cfe" testId="b7f918bc-2639-3a49-4d04-463360a1de0d" testName="AvaloniaHome.Tests.HomeHostOriginalLifetimeTests.Original_close_is_published_before_Core_callback_reentry" computerName="runnervmdlhio" duration="00:00:00.0327420" startTime="2026-10-04T20:14:37.5431965+00:00" endTime="2026-10-04T20:14:37.6061933+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0d48596d-d70f-4693-911f-cd58462c9cfe" />
+    <UnitTestResult executionId="d4394c9c-fc5a-4ddf-8f13-daf8b4f0e428" testId="ac987285-d583-f63e-d29a-88d5c4a1744c" testName="AvaloniaHome.Tests.HomeHostRenderTests.Native_home_host_loads_canonical_cui_into_a_measured_window" computerName="runnervmdlhio" duration="00:00:01.1610255" startTime="2026-10-04T20:14:37.5410167+00:00" endTime="2026-10-04T20:14:38.7112693+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d4394c9c-fc5a-4ddf-8f13-daf8b4f0e428" />
+    <UnitTestResult executionId="e08bbacd-5158-4fb6-a902-ce3b76897ac2" testId="bb6acc5c-df60-4286-7c2b-a2a1566a6f75" testName="AvaloniaHome.Tests.HomeHostOriginalLifetimeTests.Successful_originals_prune_but_all_128_faults_block_further_admission_and_remain_on_close" computerName="runnervmdlhio" duration="00:00:00.0127161" startTime="2026-10-04T20:14:37.7558811+00:00" endTime="2026-10-04T20:14:37.7677104+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e08bbacd-5158-4fb6-a902-ce3b76897ac2" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="AvaloniaHome.Tests.HomeHostOriginalLifetimeTests.Work_Core_and_exit_faults_keep_exact_causes_and_stop_remaining_actual_services(foreignCancellation: True)" storage="d:\a\_temp\home-original-37231041584-1\artifacts\bin\avaloniahome.tests\release\avaloniahome.tests.dll" id="7b7ba3e3-7404-f820-9f95-bd1750d5cfc2">
+      <Execution id="3b32ec10-7265-44c7-89b8-455264025cef" />
+      <TestMethod codeBase="D:\a\_temp\home-original-37231041584-1\artifacts\bin\AvaloniaHome.Tests\release\AvaloniaHome.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AvaloniaHome.Tests.HomeHostOriginalLifetimeTests" name="Work_Core_and_exit_faults_keep_exact_causes_and_stop_remaining_actual_services" />
+    </UnitTest>
+    <UnitTest name="AvaloniaHome.Tests.HomeHostOriginalLifetimeTests.Original_close_is_published_before_Core_callback_reentry" storage="d:\a\_temp\home-original-37231041584-1\artifacts\bin\avaloniahome.tests\release\avaloniahome.tests.dll" id="b7f918bc-2639-3a49-4d04-463360a1de0d">
+      <Execution id="0d48596d-d70f-4693-911f-cd58462c9cfe" />
+      <TestMethod codeBase="D:\a\_temp\home-original-37231041584-1\artifacts\bin\AvaloniaHome.Tests\release\AvaloniaHome.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AvaloniaHome.Tests.HomeHostOriginalLifetimeTests" name="Original_close_is_published_before_Core_callback_reentry" />
+    </UnitTest>
+    <UnitTest name="AvaloniaHome.Tests.HomeHostOriginalLifetimeTests.Successful_originals_prune_but_all_128_faults_block_further_admission_and_remain_on_close" storage="d:\a\_temp\home-original-37231041584-1\artifacts\bin\avaloniahome.tests\release\avaloniahome.tests.dll" id="bb6acc5c-df60-4286-7c2b-a2a1566a6f75">
+      <Execution id="e08bbacd-5158-4fb6-a902-ce3b76897ac2" />
+      <TestMethod codeBase="D:\a\_temp\home-original-37231041584-1\artifacts\bin\AvaloniaHome.Tests\release\AvaloniaHome.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AvaloniaHome.Tests.HomeHostOriginalLifetimeTests" name="Successful_originals_prune_but_all_128_faults_block_further_admission_and_remain_on_close" />
+    </UnitTest>
+    <UnitTest name="AvaloniaHome.Tests.HomeHostOriginalLifetimeTests.Work_Core_and_exit_faults_keep_exact_causes_and_stop_remaining_actual_services(foreignCancellation: False)" storage="d:\a\_temp\home-original-37231041584-1\artifacts\bin\avaloniahome.tests\release\avaloniahome.tests.dll" id="13133123-c918-b346-8f14-e9c360959038">
+      <Execution id="2560c707-14a6-4dc1-b44e-497566d6f733" />
+      <TestMethod codeBase="D:\a\_temp\home-original-37231041584-1\artifacts\bin\AvaloniaHome.Tests\release\AvaloniaHome.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AvaloniaHome.Tests.HomeHostOriginalLifetimeTests" name="Work_Core_and_exit_faults_keep_exact_causes_and_stop_remaining_actual_services" />
+    </UnitTest>
+    <UnitTest name="AvaloniaHome.Tests.HomeHostRenderTests.Native_home_host_loads_canonical_cui_into_a_measured_window" storage="d:\a\_temp\home-original-37231041584-1\artifacts\bin\avaloniahome.tests\release\avaloniahome.tests.dll" id="ac987285-d583-f63e-d29a-88d5c4a1744c">
+      <Execution id="d4394c9c-fc5a-4ddf-8f13-daf8b4f0e428" />
+      <TestMethod codeBase="D:\a\_temp\home-original-37231041584-1\artifacts\bin\AvaloniaHome.Tests\release\AvaloniaHome.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AvaloniaHome.Tests.HomeHostRenderTests" name="Native_home_host_loads_canonical_cui_into_a_measured_window" />
+    </UnitTest>
+    <UnitTest name="AvaloniaHome.Tests.HomeHostOriginalLifetimeTests.Held_original_work_and_actual_Core_stop_settle_before_desktop_exit" storage="d:\a\_temp\home-original-37231041584-1\artifacts\bin\avaloniahome.tests\release\avaloniahome.tests.dll" id="b62aeddb-d448-9432-4f4d-f1f9950f9d33">
+      <Execution id="fa4b8478-3826-4bfa-b18a-d56fc63b9451" />
+      <TestMethod codeBase="D:\a\_temp\home-original-37231041584-1\artifacts\bin\AvaloniaHome.Tests\release\AvaloniaHome.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AvaloniaHome.Tests.HomeHostOriginalLifetimeTests" name="Held_original_work_and_actual_Core_stop_settle_before_desktop_exit" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="13133123-c918-b346-8f14-e9c360959038" executionId="2560c707-14a6-4dc1-b44e-497566d6f733" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7b7ba3e3-7404-f820-9f95-bd1750d5cfc2" executionId="3b32ec10-7265-44c7-89b8-455264025cef" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b62aeddb-d448-9432-4f4d-f1f9950f9d33" executionId="fa4b8478-3826-4bfa-b18a-d56fc63b9451" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b7f918bc-2639-3a49-4d04-463360a1de0d" executionId="0d48596d-d70f-4693-911f-cd58462c9cfe" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ac987285-d583-f63e-d29a-88d5c4a1744c" executionId="d4394c9c-fc5a-4ddf-8f13-daf8b4f0e428" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bb6acc5c-df60-4286-7c2b-a2a1566a6f75" executionId="e08bbacd-5158-4fb6-a902-ce3b76897ac2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="6" executed="6" passed="6" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.12)&#xD;
+[xUnit.net 00:00:00.10]   Discovering: AvaloniaHome.Tests&#xD;
+[xUnit.net 00:00:00.16]   Discovered:  AvaloniaHome.Tests&#xD;
+[xUnit.net 00:00:00.19]   Starting:    AvaloniaHome.Tests&#xD;
+[9-1 Home] Loading canonical .cui: D:\a\_temp\home-original-37231041584-1\artifacts\bin\AvaloniaHome.Tests\release\UI\Home.cui&#xD;
+[9-1 Home] Diagnostics: 0&#xD;
+[9-1 Home] Root: StackPanel - CUI loaded into window&#xD;
+[9-1 Home] Loading canonical .cui: D:\a\_temp\home-original-37231041584-1\artifacts\bin\AvaloniaHome.Tests\release\UI\Home.cui&#xD;
+[9-1 Home] Diagnostics: 0&#xD;
+[9-1 Home] Root: StackPanel - CUI loaded into window&#xD;
+[xUnit.net 00:00:01.39]   Finished:    AvaloniaHome.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

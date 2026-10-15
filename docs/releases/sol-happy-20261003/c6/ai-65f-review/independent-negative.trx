@@ -1,0 +1,411 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="3d4faf42-0a7e-4880-85b8-e7d052a47a44" name="@5f26f397bc73 2026-10-04 10:08:59" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-04T10:08:59.6927982+00:00" queuing="2026-10-04T10:08:59.6927983+00:00" start="2026-10-04T10:08:59.0609944+00:00" finish="2026-10-04T10:08:59.7421902+00:00" />
+  <TestSettings name="default" id="630e291d-5c76-408c-8106-d6de3f2ad50e">
+    <Deployment runDeploymentRoot="_5f26f397bc73_2026-10-04_10_08_59" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="84444e00-7ffe-4cfb-9b3a-de8482d560da" testId="325a18d0-e2ea-67da-318c-4d6ceb8fa290" testName="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Other_endpoints_keep_original_OpenAI_discovery(endpoint: &quot;https://api.cloudflare.com/client/v4/accounts/8aea&quot;···)" computerName="5f26f397bc73" duration="00:00:00.0000274" startTime="2026-10-04T10:08:59.6638396+00:00" endTime="2026-10-04T10:08:59.6638779+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="84444e00-7ffe-4cfb-9b3a-de8482d560da" />
+    <UnitTestResult executionId="afcffb67-9f01-4574-8662-e32a59563d79" testId="871e9313-e696-d179-439d-907b9ab7795c" testName="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Cancellation_and_disabled_configuration_prevent_transport" computerName="5f26f397bc73" duration="00:00:00.0041531" startTime="2026-10-04T10:08:59.6762454+00:00" endTime="2026-10-04T10:08:59.6763297+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="afcffb67-9f01-4574-8662-e32a59563d79" />
+    <UnitTestResult executionId="e5ef425e-a450-4676-b0c8-118f8726e324" testId="d5edf3e7-d242-662e-7c34-2c03806f11d3" testName="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Loopback_http_and_remote_https_are_allowed(endpoint: &quot;http://localhost:11434/v1&quot;)" computerName="5f26f397bc73" duration="00:00:00.0008259" startTime="2026-10-04T10:08:59.6285685+00:00" endTime="2026-10-04T10:08:59.6286092+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e5ef425e-a450-4676-b0c8-118f8726e324" />
+    <UnitTestResult executionId="3798794b-d456-4417-b15b-9fa09ce093ae" testId="beebc952-9273-ca67-4924-f88040e14e0e" testName="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Ollama_locality_uses_actual_transport_not_configuration_claim(endpoint: &quot;http://127.0.0.1.remote.example/&quot;, expected: False)" computerName="5f26f397bc73" duration="00:00:00.0000242" startTime="2026-10-04T10:08:59.6276280+00:00" endTime="2026-10-04T10:08:59.6276770+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3798794b-d456-4417-b15b-9fa09ce093ae" />
+    <UnitTestResult executionId="0fa3bfdb-9162-4480-8056-8bd8997e2db6" testId="02a32fba-2895-b7c5-7af3-99f6f5d4cd76" testName="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unconfirmed_or_invalid_native_catalogue_is_not_healthy(body: &quot;{\&quot;data\&quot;:[]}&quot;)" computerName="5f26f397bc73" duration="00:00:00.0013029" startTime="2026-10-04T10:08:59.6745392+00:00" endTime="2026-10-04T10:08:59.6745888+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0fa3bfdb-9162-4480-8056-8bd8997e2db6">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)</Message>
+          <StackTrace>   at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unconfirmed_or_invalid_native_catalogue_is_not_healthy(String body) in /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs:line 69
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="3c66409c-ea80-4dd6-90f7-ee400b0d6fbc" testId="1030a14a-f807-e6d9-d86c-8f0c567132ba" testName="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Remote_or_invalid_insecure_endpoints_are_rejected_at_transport_boundary(endpoint: &quot;relative/path&quot;)" computerName="5f26f397bc73" duration="00:00:00.0031363" startTime="2026-10-04T10:08:59.6633812+00:00" endTime="2026-10-04T10:08:59.6656742+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3c66409c-ea80-4dd6-90f7-ee400b0d6fbc" />
+    <UnitTestResult executionId="56624035-57d2-4b0d-9328-fc53ff455d7f" testId="c89c5d16-b186-c9b7-5626-d69fb17bbf00" testName="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unconfirmed_or_invalid_native_catalogue_is_not_healthy(body: &quot;{\&quot;success\&quot;:false,\&quot;result\&quot;:[]}&quot;)" computerName="5f26f397bc73" duration="00:00:00.0002560" startTime="2026-10-04T10:08:59.6747877+00:00" endTime="2026-10-04T10:08:59.6748249+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="56624035-57d2-4b0d-9328-fc53ff455d7f">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)</Message>
+          <StackTrace>   at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unconfirmed_or_invalid_native_catalogue_is_not_healthy(String body) in /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs:line 69
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="bd811c29-3b3a-44a7-a774-c772394d8d2e" testId="42b8d80c-8e3c-aeb0-fddc-e6cff6b77587" testName="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Actual_catalogue_preserves_provider_model_identity_and_context_without_granting_capabilities" computerName="5f26f397bc73" duration="00:00:00.0006518" startTime="2026-10-04T10:08:59.6770339+00:00" endTime="2026-10-04T10:08:59.6770688+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="bd811c29-3b3a-44a7-a774-c772394d8d2e">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Single() Failure: The collection was empty</Message>
+          <StackTrace>   at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Actual_catalogue_preserves_provider_model_identity_and_context_without_granting_capabilities() in /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs:line 28
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="dcbfa550-d17a-4290-9663-2dad8697eb9b" testId="6b700072-ac71-296d-2bfa-7b625b235ba3" testName="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Other_endpoints_keep_original_OpenAI_discovery(endpoint: &quot;https://api.cloudflare.com:8443/client/v4/accounts&quot;···)" computerName="5f26f397bc73" duration="00:00:00.0002038" startTime="2026-10-04T10:08:59.6636168+00:00" endTime="2026-10-04T10:08:59.6636544+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="dcbfa550-d17a-4290-9663-2dad8697eb9b" />
+    <UnitTestResult executionId="a2ab812f-74b1-412d-84bb-bebdd9ad1182" testId="81df337f-2271-2c74-ba81-84fc84ff666b" testName="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Ollama_locality_uses_actual_transport_not_configuration_claim(endpoint: &quot;ftp://localhost/&quot;, expected: False)" computerName="5f26f397bc73" duration="00:00:00.0132390" startTime="2026-10-04T10:08:59.5953851+00:00" endTime="2026-10-04T10:08:59.6153796+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a2ab812f-74b1-412d-84bb-bebdd9ad1182" />
+    <UnitTestResult executionId="cf10cb87-f523-4917-9c56-effbefafd23c" testId="4bf5262e-2689-e91e-7748-8c69789a0980" testName="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unknown_context_is_not_fabricated_and_price_does_not_grant_routing_capabilities" computerName="5f26f397bc73" duration="00:00:00.0020068" startTime="2026-10-04T10:08:59.6655991+00:00" endTime="2026-10-04T10:08:59.6676667+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cf10cb87-f523-4917-9c56-effbefafd23c">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Single() Failure: The collection was empty</Message>
+          <StackTrace>   at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unknown_context_is_not_fabricated_and_price_does_not_grant_routing_capabilities() in /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs:line 130
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="ab0022a4-77cd-4380-93a5-e073f3f7b3df" testId="3d1cc3f9-7fb7-a7e4-e0d4-61fa7f2e8f04" testName="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Ollama_locality_uses_actual_transport_not_configuration_claim(endpoint: &quot;http://[::1]:11434/&quot;, expected: True)" computerName="5f26f397bc73" duration="00:00:00.0014924" startTime="2026-10-04T10:08:59.6274466+00:00" endTime="2026-10-04T10:08:59.6274820+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ab0022a4-77cd-4380-93a5-e073f3f7b3df" />
+    <UnitTestResult executionId="6656f58a-29c4-429f-a35f-d9efb4458ad7" testId="41acd1ca-e662-3956-5fe2-ccbeb6074361" testName="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Ollama_locality_uses_actual_transport_not_configuration_claim(endpoint: &quot;https://remote.example/&quot;, expected: False)" computerName="5f26f397bc73" duration="00:00:00.0000166" startTime="2026-10-04T10:08:59.6273288+00:00" endTime="2026-10-04T10:08:59.6273650+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6656f58a-29c4-429f-a35f-d9efb4458ad7" />
+    <UnitTestResult executionId="73707032-cc73-4819-a385-8ee354ef896e" testId="b80bbb0b-80f0-a35b-e08b-8ac4f88c3229" testName="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Loopback_http_and_remote_https_are_allowed(endpoint: &quot;http://127.0.0.1:11434/v1&quot;)" computerName="5f26f397bc73" duration="00:00:00.0000095" startTime="2026-10-04T10:08:59.6631530+00:00" endTime="2026-10-04T10:08:59.6631954+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="73707032-cc73-4819-a385-8ee354ef896e" />
+    <UnitTestResult executionId="4fa0b7d9-41d6-4223-86f5-50047d31dd7c" testId="1990db82-daec-2b58-de85-9b6dc2459ada" testName="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Ollama_locality_uses_actual_transport_not_configuration_claim(endpoint: &quot;http://user@localhost/&quot;, expected: False)" computerName="5f26f397bc73" duration="00:00:00.0000252" startTime="2026-10-04T10:08:59.6275399+00:00" endTime="2026-10-04T10:08:59.6275729+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4fa0b7d9-41d6-4223-86f5-50047d31dd7c" />
+    <UnitTestResult executionId="019ea1d9-dfa2-4ebe-b95d-1bb348713a53" testId="f90ba24b-f841-7eeb-abe1-c3d22cab78bf" testName="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unconfirmed_or_invalid_native_catalogue_is_not_healthy(body: &quot;{\&quot;success\&quot;:true,\&quot;result\&quot;:[{\&quot;id\&quot;:\&quot;wrong-iden&quot;···)" computerName="5f26f397bc73" duration="00:00:00.0000799" startTime="2026-10-04T10:08:59.6750560+00:00" endTime="2026-10-04T10:08:59.6750949+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="019ea1d9-dfa2-4ebe-b95d-1bb348713a53">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)</Message>
+          <StackTrace>   at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unconfirmed_or_invalid_native_catalogue_is_not_healthy(String body) in /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs:line 69
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="e60180ec-5028-44af-9643-ada51a5e519e" testId="897e301e-6e2e-b7b9-9dfe-b5a4310171cc" testName="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Other_endpoints_keep_original_OpenAI_discovery(endpoint: &quot;https://example.com/client/v4/accounts/8aea00ca3c4&quot;···)" computerName="5f26f397bc73" duration="00:00:00.0000349" startTime="2026-10-04T10:08:59.6637234+00:00" endTime="2026-10-04T10:08:59.6637611+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e60180ec-5028-44af-9643-ada51a5e519e" />
+    <UnitTestResult executionId="db0bfd21-315d-491d-9e71-343b99cd6716" testId="ec36f226-e99f-aa54-43c0-c305bf32cf33" testName="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Actual_catalogue_health_is_read_only_metadata_not_inference" computerName="5f26f397bc73" duration="00:00:00.0026516" startTime="2026-10-04T10:08:59.6767346+00:00" endTime="2026-10-04T10:08:59.6767825+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="db0bfd21-315d-491d-9e71-343b99cd6716">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Strings differ
+                                          ↓ (pos 82)
+Expected: ···"3c4635410861efcc6a5f593b/ai/models/search"
+Actual:   ···"00ca3c4635410861efcc6a5f593b/ai/v1/models"
+                                              ↑ (pos 82)</Message>
+          <StackTrace>   at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.AssertMetadataRequest(Call call, Int32 page) in /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs:line 138
+   at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Actual_catalogue_health_is_read_only_metadata_not_inference() in /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs:line 43
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="473acd0e-e02e-4172-b153-9768e83c57ea" testId="73ade372-1117-3ef5-e509-bd3ceed6e123" testName="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Pagination_uses_actual_page_length_and_deduplicates_stable_names" computerName="5f26f397bc73" duration="00:00:00.0288002" startTime="2026-10-04T10:08:59.6740084+00:00" endTime="2026-10-04T10:08:59.6741049+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="473acd0e-e02e-4172-b153-9768e83c57ea">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ
+Expected: 100
+Actual:   0</Message>
+          <StackTrace>   at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Pagination_uses_actual_page_length_and_deduplicates_stable_names() in /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs:line 86
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="4952d20a-f3a3-4073-8df8-92a2cc1e1805" testId="bcd2b854-712e-aa73-f161-10b6646b1b6b" testName="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Ollama_locality_uses_actual_transport_not_configuration_claim(endpoint: &quot;http://127.0.0.1:11434/&quot;, expected: True)" computerName="5f26f397bc73" duration="00:00:00.0004034" startTime="2026-10-04T10:08:59.6265448+00:00" endTime="2026-10-04T10:08:59.6266753+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4952d20a-f3a3-4073-8df8-92a2cc1e1805" />
+    <UnitTestResult executionId="215645a3-f04d-41a6-b9b8-d4e5ed8c57d3" testId="584eb04e-0054-c5d6-2d57-0919ff92ccb5" testName="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Remote_or_invalid_insecure_endpoints_are_rejected_at_transport_boundary(endpoint: &quot;http://example.com/v1&quot;)" computerName="5f26f397bc73" duration="00:00:00.0000318" startTime="2026-10-04T10:08:59.6658642+00:00" endTime="2026-10-04T10:08:59.6658993+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="215645a3-f04d-41a6-b9b8-d4e5ed8c57d3" />
+    <UnitTestResult executionId="079f0574-1a58-4253-a251-39cb8c49e412" testId="1b9d3524-04e7-a869-3e17-42cfeed734df" testName="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Other_endpoints_keep_original_OpenAI_discovery(endpoint: &quot;https://api.cloudflare.com/client/v4/accounts/8aea&quot;···)" computerName="5f26f397bc73" duration="00:00:00.0211926" startTime="2026-10-04T10:08:59.5941822+00:00" endTime="2026-10-04T10:08:59.6634246+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="079f0574-1a58-4253-a251-39cb8c49e412" />
+    <UnitTestResult executionId="d6b64d97-4e2c-4243-8161-47a23935939b" testId="ae4417ce-9f61-7140-3b91-afc7217e2f79" testName="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Remote_or_invalid_insecure_endpoints_are_rejected_at_transport_boundary(endpoint: &quot;ftp://example.com/v1&quot;)" computerName="5f26f397bc73" duration="00:00:00.0002884" startTime="2026-10-04T10:08:59.6657587+00:00" endTime="2026-10-04T10:08:59.6658025+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d6b64d97-4e2c-4243-8161-47a23935939b" />
+    <UnitTestResult executionId="8070927e-cc38-4445-bd5b-6ee19506ad5e" testId="932000e3-b6a5-f3fb-3cb6-3c3f5f770aab" testName="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Ollama_locality_uses_actual_transport_not_configuration_claim(endpoint: &quot;http://localhost:11434/&quot;, expected: True)" computerName="5f26f397bc73" duration="00:00:00.0002769" startTime="2026-10-04T10:08:59.6277394+00:00" endTime="2026-10-04T10:08:59.6277741+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8070927e-cc38-4445-bd5b-6ee19506ad5e" />
+    <UnitTestResult executionId="75295d8a-0b4d-4d82-be51-ccd2fbeef579" testId="44c8a429-005d-95bc-4033-fcd00dadbfb1" testName="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Other_endpoints_keep_original_OpenAI_discovery(endpoint: &quot;https://api.cloudflare.com.evil.example/client/v4/&quot;···)" computerName="5f26f397bc73" duration="00:00:00.0000209" startTime="2026-10-04T10:08:59.6639391+00:00" endTime="2026-10-04T10:08:59.6639766+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="75295d8a-0b4d-4d82-be51-ccd2fbeef579" />
+    <UnitTestResult executionId="7d6ae8b6-f885-468e-ba50-d37d0850f3be" testId="48893136-9274-84f0-e5a7-ef31c3680fb1" testName="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.HTTP_denial_and_malformed_JSON_do_not_become_healthy" computerName="5f26f397bc73" duration="00:00:00.0009148" startTime="2026-10-04T10:08:59.6774988+00:00" endTime="2026-10-04T10:08:59.6775341+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7d6ae8b6-f885-468e-ba50-d37d0850f3be">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.False() Failure
+Expected: False
+Actual:   True</Message>
+          <StackTrace>   at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.HTTP_denial_and_malformed_JSON_do_not_become_healthy() in /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs:line 78
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="ba52b6b4-775c-440d-95a7-750ea42a1d7c" testId="b3dfa174-7996-44a3-067a-8147544e66d0" testName="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Other_endpoints_keep_original_OpenAI_discovery(endpoint: &quot;https://api.cloudflare.com/client/v4/accounts/not-&quot;···)" computerName="5f26f397bc73" duration="00:00:00.0006556" startTime="2026-10-04T10:08:59.6635106+00:00" endTime="2026-10-04T10:08:59.6635508+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ba52b6b4-775c-440d-95a7-750ea42a1d7c" />
+    <UnitTestResult executionId="bb44517f-08da-4ae5-9ebf-2f0aedf7638d" testId="119be01a-db36-5a44-00f1-a176f0e5e0ce" testName="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Loopback_http_and_remote_https_are_allowed(endpoint: &quot;https://example.com/v1&quot;)" computerName="5f26f397bc73" duration="00:00:00.0003219" startTime="2026-10-04T10:08:59.6627328+00:00" endTime="2026-10-04T10:08:59.6628127+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="bb44517f-08da-4ae5-9ebf-2f0aedf7638d" />
+    <UnitTestResult executionId="484372c3-852a-46f8-8797-1871f008517e" testId="def9a8d4-a7ab-d01e-b2c0-4baed7f3f1bb" testName="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Repeated_full_pages_refuse_partial_catalogue_at_bound" computerName="5f26f397bc73" duration="00:00:00.0009463" startTime="2026-10-04T10:08:59.6772749+00:00" endTime="2026-10-04T10:08:59.6773136+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="484372c3-852a-46f8-8797-1871f008517e">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)</Message>
+          <StackTrace>   at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Repeated_full_pages_refuse_partial_catalogue_at_bound() in /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs:line 109
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="a7b84f7a-a50f-4755-a613-de57bd5a551f" testId="1521dd45-8f80-2e78-e33a-6888a9fbf4ec" testName="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Oversized_provider_page_refuses_catalogue_and_health_without_followup_requests" computerName="5f26f397bc73" duration="00:00:00.0012218" startTime="2026-10-04T10:08:59.6764688+00:00" endTime="2026-10-04T10:08:59.6765065+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a7b84f7a-a50f-4755-a613-de57bd5a551f">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)</Message>
+          <StackTrace>   at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Oversized_provider_page_refuses_catalogue_and_health_without_followup_requests() in /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs:line 96
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="3737dbb4-960e-465f-bb36-f5f22db6d4c6" testId="7962d873-64eb-a031-1bf7-eab7eb6345ca" testName="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unconfirmed_or_invalid_native_catalogue_is_not_healthy(body: &quot;{\&quot;success\&quot;:true,\&quot;result\&quot;:{}}&quot;)" computerName="5f26f397bc73" duration="00:00:00.0000618" startTime="2026-10-04T10:08:59.6753881+00:00" endTime="2026-10-04T10:08:59.6754430+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3737dbb4-960e-465f-bb36-f5f22db6d4c6">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)</Message>
+          <StackTrace>   at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unconfirmed_or_invalid_native_catalogue_is_not_healthy(String body) in /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs:line 69
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Ollama_locality_uses_actual_transport_not_configuration_claim(endpoint: &quot;http://127.0.0.1.remote.example/&quot;, expected: False)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="beebc952-9273-ca67-4924-f88040e14e0e">
+      <Execution id="3798794b-d456-4417-b15b-9fa09ce093ae" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests" name="Ollama_locality_uses_actual_transport_not_configuration_claim" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Ollama_locality_uses_actual_transport_not_configuration_claim(endpoint: &quot;http://[::1]:11434/&quot;, expected: True)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="3d1cc3f9-7fb7-a7e4-e0d4-61fa7f2e8f04">
+      <Execution id="ab0022a4-77cd-4380-93a5-e073f3f7b3df" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests" name="Ollama_locality_uses_actual_transport_not_configuration_claim" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Remote_or_invalid_insecure_endpoints_are_rejected_at_transport_boundary(endpoint: &quot;ftp://example.com/v1&quot;)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="ae4417ce-9f61-7140-3b91-afc7217e2f79">
+      <Execution id="d6b64d97-4e2c-4243-8161-47a23935939b" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests" name="Remote_or_invalid_insecure_endpoints_are_rejected_at_transport_boundary" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Other_endpoints_keep_original_OpenAI_discovery(endpoint: &quot;https://api.cloudflare.com.evil.example/client/v4/&quot;···)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="44c8a429-005d-95bc-4033-fcd00dadbfb1">
+      <Execution id="75295d8a-0b4d-4d82-be51-ccd2fbeef579" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests" name="Other_endpoints_keep_original_OpenAI_discovery" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.HTTP_denial_and_malformed_JSON_do_not_become_healthy" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="48893136-9274-84f0-e5a7-ef31c3680fb1">
+      <Execution id="7d6ae8b6-f885-468e-ba50-d37d0850f3be" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests" name="HTTP_denial_and_malformed_JSON_do_not_become_healthy" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unconfirmed_or_invalid_native_catalogue_is_not_healthy(body: &quot;{\&quot;data\&quot;:[]}&quot;)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="02a32fba-2895-b7c5-7af3-99f6f5d4cd76">
+      <Execution id="0fa3bfdb-9162-4480-8056-8bd8997e2db6" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests" name="Unconfirmed_or_invalid_native_catalogue_is_not_healthy" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unconfirmed_or_invalid_native_catalogue_is_not_healthy(body: &quot;{\&quot;success\&quot;:true,\&quot;result\&quot;:{}}&quot;)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="7962d873-64eb-a031-1bf7-eab7eb6345ca">
+      <Execution id="3737dbb4-960e-465f-bb36-f5f22db6d4c6" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests" name="Unconfirmed_or_invalid_native_catalogue_is_not_healthy" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Actual_catalogue_preserves_provider_model_identity_and_context_without_granting_capabilities" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="42b8d80c-8e3c-aeb0-fddc-e6cff6b77587">
+      <Execution id="bd811c29-3b3a-44a7-a774-c772394d8d2e" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests" name="Actual_catalogue_preserves_provider_model_identity_and_context_without_granting_capabilities" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Other_endpoints_keep_original_OpenAI_discovery(endpoint: &quot;https://api.cloudflare.com/client/v4/accounts/8aea&quot;···)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="325a18d0-e2ea-67da-318c-4d6ceb8fa290">
+      <Execution id="84444e00-7ffe-4cfb-9b3a-de8482d560da" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests" name="Other_endpoints_keep_original_OpenAI_discovery" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unconfirmed_or_invalid_native_catalogue_is_not_healthy(body: &quot;{\&quot;success\&quot;:false,\&quot;result\&quot;:[]}&quot;)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="c89c5d16-b186-c9b7-5626-d69fb17bbf00">
+      <Execution id="56624035-57d2-4b0d-9328-fc53ff455d7f" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests" name="Unconfirmed_or_invalid_native_catalogue_is_not_healthy" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Ollama_locality_uses_actual_transport_not_configuration_claim(endpoint: &quot;https://remote.example/&quot;, expected: False)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="41acd1ca-e662-3956-5fe2-ccbeb6074361">
+      <Execution id="6656f58a-29c4-429f-a35f-d9efb4458ad7" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests" name="Ollama_locality_uses_actual_transport_not_configuration_claim" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Loopback_http_and_remote_https_are_allowed(endpoint: &quot;https://example.com/v1&quot;)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="119be01a-db36-5a44-00f1-a176f0e5e0ce">
+      <Execution id="bb44517f-08da-4ae5-9ebf-2f0aedf7638d" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests" name="Loopback_http_and_remote_https_are_allowed" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Cancellation_and_disabled_configuration_prevent_transport" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="871e9313-e696-d179-439d-907b9ab7795c">
+      <Execution id="afcffb67-9f01-4574-8662-e32a59563d79" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests" name="Cancellation_and_disabled_configuration_prevent_transport" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Remote_or_invalid_insecure_endpoints_are_rejected_at_transport_boundary(endpoint: &quot;http://example.com/v1&quot;)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="584eb04e-0054-c5d6-2d57-0919ff92ccb5">
+      <Execution id="215645a3-f04d-41a6-b9b8-d4e5ed8c57d3" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests" name="Remote_or_invalid_insecure_endpoints_are_rejected_at_transport_boundary" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Other_endpoints_keep_original_OpenAI_discovery(endpoint: &quot;https://api.cloudflare.com/client/v4/accounts/8aea&quot;···)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="1b9d3524-04e7-a869-3e17-42cfeed734df">
+      <Execution id="079f0574-1a58-4253-a251-39cb8c49e412" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests" name="Other_endpoints_keep_original_OpenAI_discovery" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Repeated_full_pages_refuse_partial_catalogue_at_bound" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="def9a8d4-a7ab-d01e-b2c0-4baed7f3f1bb">
+      <Execution id="484372c3-852a-46f8-8797-1871f008517e" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests" name="Repeated_full_pages_refuse_partial_catalogue_at_bound" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Oversized_provider_page_refuses_catalogue_and_health_without_followup_requests" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="1521dd45-8f80-2e78-e33a-6888a9fbf4ec">
+      <Execution id="a7b84f7a-a50f-4755-a613-de57bd5a551f" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests" name="Oversized_provider_page_refuses_catalogue_and_health_without_followup_requests" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Actual_catalogue_health_is_read_only_metadata_not_inference" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="ec36f226-e99f-aa54-43c0-c305bf32cf33">
+      <Execution id="db0bfd21-315d-491d-9e71-343b99cd6716" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests" name="Actual_catalogue_health_is_read_only_metadata_not_inference" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Loopback_http_and_remote_https_are_allowed(endpoint: &quot;http://127.0.0.1:11434/v1&quot;)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="b80bbb0b-80f0-a35b-e08b-8ac4f88c3229">
+      <Execution id="73707032-cc73-4819-a385-8ee354ef896e" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests" name="Loopback_http_and_remote_https_are_allowed" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Other_endpoints_keep_original_OpenAI_discovery(endpoint: &quot;https://api.cloudflare.com:8443/client/v4/accounts&quot;···)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="6b700072-ac71-296d-2bfa-7b625b235ba3">
+      <Execution id="dcbfa550-d17a-4290-9663-2dad8697eb9b" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests" name="Other_endpoints_keep_original_OpenAI_discovery" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Ollama_locality_uses_actual_transport_not_configuration_claim(endpoint: &quot;ftp://localhost/&quot;, expected: False)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="81df337f-2271-2c74-ba81-84fc84ff666b">
+      <Execution id="a2ab812f-74b1-412d-84bb-bebdd9ad1182" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests" name="Ollama_locality_uses_actual_transport_not_configuration_claim" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Ollama_locality_uses_actual_transport_not_configuration_claim(endpoint: &quot;http://user@localhost/&quot;, expected: False)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="1990db82-daec-2b58-de85-9b6dc2459ada">
+      <Execution id="4fa0b7d9-41d6-4223-86f5-50047d31dd7c" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests" name="Ollama_locality_uses_actual_transport_not_configuration_claim" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Loopback_http_and_remote_https_are_allowed(endpoint: &quot;http://localhost:11434/v1&quot;)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="d5edf3e7-d242-662e-7c34-2c03806f11d3">
+      <Execution id="e5ef425e-a450-4676-b0c8-118f8726e324" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests" name="Loopback_http_and_remote_https_are_allowed" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Pagination_uses_actual_page_length_and_deduplicates_stable_names" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="73ade372-1117-3ef5-e509-bd3ceed6e123">
+      <Execution id="473acd0e-e02e-4172-b153-9768e83c57ea" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests" name="Pagination_uses_actual_page_length_and_deduplicates_stable_names" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Other_endpoints_keep_original_OpenAI_discovery(endpoint: &quot;https://example.com/client/v4/accounts/8aea00ca3c4&quot;···)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="897e301e-6e2e-b7b9-9dfe-b5a4310171cc">
+      <Execution id="e60180ec-5028-44af-9643-ada51a5e519e" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests" name="Other_endpoints_keep_original_OpenAI_discovery" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Ollama_locality_uses_actual_transport_not_configuration_claim(endpoint: &quot;http://127.0.0.1:11434/&quot;, expected: True)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="bcd2b854-712e-aa73-f161-10b6646b1b6b">
+      <Execution id="4952d20a-f3a3-4073-8df8-92a2cc1e1805" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests" name="Ollama_locality_uses_actual_transport_not_configuration_claim" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unconfirmed_or_invalid_native_catalogue_is_not_healthy(body: &quot;{\&quot;success\&quot;:true,\&quot;result\&quot;:[{\&quot;id\&quot;:\&quot;wrong-iden&quot;···)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="f90ba24b-f841-7eeb-abe1-c3d22cab78bf">
+      <Execution id="019ea1d9-dfa2-4ebe-b95d-1bb348713a53" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests" name="Unconfirmed_or_invalid_native_catalogue_is_not_healthy" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unknown_context_is_not_fabricated_and_price_does_not_grant_routing_capabilities" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="4bf5262e-2689-e91e-7748-8c69789a0980">
+      <Execution id="cf10cb87-f523-4917-9c56-effbefafd23c" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests" name="Unknown_context_is_not_fabricated_and_price_does_not_grant_routing_capabilities" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Other_endpoints_keep_original_OpenAI_discovery(endpoint: &quot;https://api.cloudflare.com/client/v4/accounts/not-&quot;···)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="b3dfa174-7996-44a3-067a-8147544e66d0">
+      <Execution id="ba52b6b4-775c-440d-95a7-750ea42a1d7c" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests" name="Other_endpoints_keep_original_OpenAI_discovery" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Remote_or_invalid_insecure_endpoints_are_rejected_at_transport_boundary(endpoint: &quot;relative/path&quot;)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="1030a14a-f807-e6d9-d86c-8f0c567132ba">
+      <Execution id="3c66409c-ea80-4dd6-90f7-ee400b0d6fbc" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests" name="Remote_or_invalid_insecure_endpoints_are_rejected_at_transport_boundary" />
+    </UnitTest>
+    <UnitTest name="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests.Ollama_locality_uses_actual_transport_not_configuration_claim(endpoint: &quot;http://localhost:11434/&quot;, expected: True)" storage="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/c5.provider.tests/debug/c5.provider.tests.dll" id="932000e3-b6a5-f3fb-3cb6-3c3f5f770aab">
+      <Execution id="8070927e-cc38-4445-bd5b-6ee19506ad5e" />
+      <TestMethod codeBase="/workspace/team-c/evidence/c6/ai-65f/negative-artifacts/bin/C5.Provider.Tests/debug/C5.Provider.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Haven.Infrastructure.Tests.ProviderEndpointSecurityTests" name="Ollama_locality_uses_actual_transport_not_configuration_claim" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="325a18d0-e2ea-67da-318c-4d6ceb8fa290" executionId="84444e00-7ffe-4cfb-9b3a-de8482d560da" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="871e9313-e696-d179-439d-907b9ab7795c" executionId="afcffb67-9f01-4574-8662-e32a59563d79" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d5edf3e7-d242-662e-7c34-2c03806f11d3" executionId="e5ef425e-a450-4676-b0c8-118f8726e324" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="beebc952-9273-ca67-4924-f88040e14e0e" executionId="3798794b-d456-4417-b15b-9fa09ce093ae" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="02a32fba-2895-b7c5-7af3-99f6f5d4cd76" executionId="0fa3bfdb-9162-4480-8056-8bd8997e2db6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1030a14a-f807-e6d9-d86c-8f0c567132ba" executionId="3c66409c-ea80-4dd6-90f7-ee400b0d6fbc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c89c5d16-b186-c9b7-5626-d69fb17bbf00" executionId="56624035-57d2-4b0d-9328-fc53ff455d7f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="42b8d80c-8e3c-aeb0-fddc-e6cff6b77587" executionId="bd811c29-3b3a-44a7-a774-c772394d8d2e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6b700072-ac71-296d-2bfa-7b625b235ba3" executionId="dcbfa550-d17a-4290-9663-2dad8697eb9b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="81df337f-2271-2c74-ba81-84fc84ff666b" executionId="a2ab812f-74b1-412d-84bb-bebdd9ad1182" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4bf5262e-2689-e91e-7748-8c69789a0980" executionId="cf10cb87-f523-4917-9c56-effbefafd23c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3d1cc3f9-7fb7-a7e4-e0d4-61fa7f2e8f04" executionId="ab0022a4-77cd-4380-93a5-e073f3f7b3df" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="41acd1ca-e662-3956-5fe2-ccbeb6074361" executionId="6656f58a-29c4-429f-a35f-d9efb4458ad7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b80bbb0b-80f0-a35b-e08b-8ac4f88c3229" executionId="73707032-cc73-4819-a385-8ee354ef896e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1990db82-daec-2b58-de85-9b6dc2459ada" executionId="4fa0b7d9-41d6-4223-86f5-50047d31dd7c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f90ba24b-f841-7eeb-abe1-c3d22cab78bf" executionId="019ea1d9-dfa2-4ebe-b95d-1bb348713a53" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="897e301e-6e2e-b7b9-9dfe-b5a4310171cc" executionId="e60180ec-5028-44af-9643-ada51a5e519e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ec36f226-e99f-aa54-43c0-c305bf32cf33" executionId="db0bfd21-315d-491d-9e71-343b99cd6716" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="73ade372-1117-3ef5-e509-bd3ceed6e123" executionId="473acd0e-e02e-4172-b153-9768e83c57ea" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bcd2b854-712e-aa73-f161-10b6646b1b6b" executionId="4952d20a-f3a3-4073-8df8-92a2cc1e1805" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="584eb04e-0054-c5d6-2d57-0919ff92ccb5" executionId="215645a3-f04d-41a6-b9b8-d4e5ed8c57d3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1b9d3524-04e7-a869-3e17-42cfeed734df" executionId="079f0574-1a58-4253-a251-39cb8c49e412" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ae4417ce-9f61-7140-3b91-afc7217e2f79" executionId="d6b64d97-4e2c-4243-8161-47a23935939b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="932000e3-b6a5-f3fb-3cb6-3c3f5f770aab" executionId="8070927e-cc38-4445-bd5b-6ee19506ad5e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="44c8a429-005d-95bc-4033-fcd00dadbfb1" executionId="75295d8a-0b4d-4d82-be51-ccd2fbeef579" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="48893136-9274-84f0-e5a7-ef31c3680fb1" executionId="7d6ae8b6-f885-468e-ba50-d37d0850f3be" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b3dfa174-7996-44a3-067a-8147544e66d0" executionId="ba52b6b4-775c-440d-95a7-750ea42a1d7c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="119be01a-db36-5a44-00f1-a176f0e5e0ce" executionId="bb44517f-08da-4ae5-9ebf-2f0aedf7638d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="def9a8d4-a7ab-d01e-b2c0-4baed7f3f1bb" executionId="484372c3-852a-46f8-8797-1871f008517e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1521dd45-8f80-2e78-e33a-6888a9fbf4ec" executionId="a7b84f7a-a50f-4755-a613-de57bd5a551f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7962d873-64eb-a031-1bf7-eab7eb6345ca" executionId="3737dbb4-960e-465f-bb36-f5f22db6d4c6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="31" executed="31" passed="20" failed="11" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.12)
+[xUnit.net 00:00:00.07]   Discovering: C5.Provider.Tests
+[xUnit.net 00:00:00.13]   Discovered:  C5.Provider.Tests
+[xUnit.net 00:00:00.15]   Starting:    C5.Provider.Tests
+[xUnit.net 00:00:00.26]       Assert.Single() Failure: The collection was empty
+[xUnit.net 00:00:00.26]       Stack Trace:
+[xUnit.net 00:00:00.26]         /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs(130,0): at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unknown_context_is_not_fabricated_and_price_does_not_grant_routing_capabilities()
+[xUnit.net 00:00:00.26]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.26]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:00.26]       Expected: 100
+[xUnit.net 00:00:00.26]       Actual:   0
+[xUnit.net 00:00:00.26]       Stack Trace:
+[xUnit.net 00:00:00.26]         /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs(86,0): at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Pagination_uses_actual_page_length_and_deduplicates_stable_names()
+[xUnit.net 00:00:00.26]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.26]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:00.26]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:00.26]       Stack Trace:
+[xUnit.net 00:00:00.26]         /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs(69,0): at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unconfirmed_or_invalid_native_catalogue_is_not_healthy(String body)
+[xUnit.net 00:00:00.26]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.26]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:00.26]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:00.26]       Stack Trace:
+[xUnit.net 00:00:00.26]         /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs(69,0): at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unconfirmed_or_invalid_native_catalogue_is_not_healthy(String body)
+[xUnit.net 00:00:00.26]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.26]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:00.26]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:00.26]       Stack Trace:
+[xUnit.net 00:00:00.26]         /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs(69,0): at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unconfirmed_or_invalid_native_catalogue_is_not_healthy(String body)
+[xUnit.net 00:00:00.26]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.26]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:00.26]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:00.26]       Stack Trace:
+[xUnit.net 00:00:00.26]         /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs(69,0): at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unconfirmed_or_invalid_native_catalogue_is_not_healthy(String body)
+[xUnit.net 00:00:00.26]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.26]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:00.26]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:00.26]       Stack Trace:
+[xUnit.net 00:00:00.26]         /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs(96,0): at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Oversized_provider_page_refuses_catalogue_and_health_without_followup_requests()
+[xUnit.net 00:00:00.26]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.26]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:00.26]                                                 ↓ (pos 82)
+[xUnit.net 00:00:00.26]       Expected: ···"3c4635410861efcc6a5f593b/ai/models/search"
+[xUnit.net 00:00:00.26]       Actual:   ···"00ca3c4635410861efcc6a5f593b/ai/v1/models"
+[xUnit.net 00:00:00.26]                                                     ↑ (pos 82)
+[xUnit.net 00:00:00.26]       Stack Trace:
+[xUnit.net 00:00:00.26]         /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs(138,0): at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.AssertMetadataRequest(Call call, Int32 page)
+[xUnit.net 00:00:00.26]         /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs(43,0): at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Actual_catalogue_health_is_read_only_metadata_not_inference()
+[xUnit.net 00:00:00.26]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.26]       Assert.Single() Failure: The collection was empty
+[xUnit.net 00:00:00.26]       Stack Trace:
+[xUnit.net 00:00:00.26]         /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs(28,0): at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Actual_catalogue_preserves_provider_model_identity_and_context_without_granting_capabilities()
+[xUnit.net 00:00:00.26]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.26]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:00.26]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:00.26]       Stack Trace:
+[xUnit.net 00:00:00.26]         /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs(109,0): at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Repeated_full_pages_refuse_partial_catalogue_at_bound()
+[xUnit.net 00:00:00.26]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.26]       Assert.False() Failure
+[xUnit.net 00:00:00.26]       Expected: False
+[xUnit.net 00:00:00.26]       Actual:   True
+[xUnit.net 00:00:00.26]       Stack Trace:
+[xUnit.net 00:00:00.26]         /workspace/team-c/c5-workers-ai-owner-rebase/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CloudflareWorkersAiMetadataTests.cs(78,0): at Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.HTTP_denial_and_malformed_JSON_do_not_become_healthy()
+[xUnit.net 00:00:00.26]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.27]   Finished:    C5.Provider.Tests
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-04T10:08:59.7035851+00:00">
+        <Text>[xUnit.net 00:00:00.26]     Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unknown_context_is_not_fabricated_and_price_does_not_grant_routing_capabilities [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-04T10:08:59.7038400+00:00">
+        <Text>[xUnit.net 00:00:00.26]     Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Pagination_uses_actual_page_length_and_deduplicates_stable_names [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-04T10:08:59.7038620+00:00">
+        <Text>[xUnit.net 00:00:00.26]     Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unconfirmed_or_invalid_native_catalogue_is_not_healthy(body: "{\"data\":[]}") [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-04T10:08:59.7038780+00:00">
+        <Text>[xUnit.net 00:00:00.26]     Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unconfirmed_or_invalid_native_catalogue_is_not_healthy(body: "{\"success\":false,\"result\":[]}") [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-04T10:08:59.7038936+00:00">
+        <Text>[xUnit.net 00:00:00.26]     Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unconfirmed_or_invalid_native_catalogue_is_not_healthy(body: "{\"success\":true,\"result\":[{\"id\":\"wrong-iden"···) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-04T10:08:59.7039135+00:00">
+        <Text>[xUnit.net 00:00:00.26]     Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Unconfirmed_or_invalid_native_catalogue_is_not_healthy(body: "{\"success\":true,\"result\":{}}") [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-04T10:08:59.7046790+00:00">
+        <Text>[xUnit.net 00:00:00.26]     Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Oversized_provider_page_refuses_catalogue_and_health_without_followup_requests [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-04T10:08:59.7046946+00:00">
+        <Text>[xUnit.net 00:00:00.26]     Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Actual_catalogue_health_is_read_only_metadata_not_inference [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-04T10:08:59.7047180+00:00">
+        <Text>[xUnit.net 00:00:00.26]     Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Actual_catalogue_preserves_provider_model_identity_and_context_without_granting_capabilities [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-04T10:08:59.7047376+00:00">
+        <Text>[xUnit.net 00:00:00.26]     Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.Repeated_full_pages_refuse_partial_catalogue_at_bound [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5f26f397bc73" outcome="Error" timestamp="2026-10-04T10:08:59.7047502+00:00">
+        <Text>[xUnit.net 00:00:00.26]     Haven.Infrastructure.Tests.CloudflareWorkersAiMetadataTests.HTTP_denial_and_malformed_JSON_do_not_become_healthy [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>
