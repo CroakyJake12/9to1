@@ -42,7 +42,6 @@ cat >> "$work/$dts" <<'DTS'
 
 &{/sound} {
     status = "okay";
-    /delete-node/ wsa-dai-link;
     audio-routing = "IN1_HPHL", "HPHL_OUT",
                     "IN2_HPHR", "HPHR_OUT",
                     "AMIC2", "MIC BIAS2",
@@ -51,10 +50,14 @@ cat >> "$work/$dts" <<'DTS'
                     "VA DMIC2", "MIC BIAS1",
                     "VA DMIC3", "MIC BIAS1",
                     "TX SWR_INPUT1", "ADC2_OUTPUT";
+    /delete-node/ wsa-dai-link;
 };
 &swr0 { status = "disabled"; };
 &swr3 { status = "disabled"; };
 DTS
+# Fail on the small board configuration before compiling thousands of modules.
+make -C "$work" ARCH=arm64 LOCALVERSION=-9to1-book4edge16-next \
+  qcom/x1e84100-samsung-galaxy-book4-edge-16.dtb
 make -C "$work" ARCH=arm64 -j"$(nproc)" \
   LOCALVERSION=-9to1-book4edge16-next KDEB_PKGVERSION=7.2.7-1 bindeb-pkg
 make -C "$work" ARCH=arm64 LOCALVERSION=-9to1-book4edge16-next \
