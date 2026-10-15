@@ -33,6 +33,19 @@ snapshot() {
     fi
     if test "$phase" = userspace && command -v timeout >/dev/null 2>&1; then
         timeout 3 systemctl --no-pager list-jobs > "$out/systemd-jobs.txt" 2>&1 || true
+        # Read only standard kernel attributes; no EC commands or register scans.
+        {
+            for supply in /sys/class/power_supply/*; do
+                test -d "$supply" || continue
+                printf '\n%s\n' "$supply"
+                timeout 2 cat "$supply/uevent" 2>&1 || true
+            done
+        } > "$out/power-supplies.txt.new"
+        mv "$out/power-supplies.txt.new" "$out/power-supplies.txt"
+        cat /proc/bus/input/devices > "$out/input-devices.txt" 2>&1 || true
+        if command -v upower >/dev/null 2>&1; then
+            timeout 3 upower --dump > "$out/upower.txt.new" 2>&1 && mv "$out/upower.txt.new" "$out/upower.txt"
+        fi
     fi
     cat /proc/uptime > "$out/last-snapshot-uptime.txt"
     sync
