@@ -10,6 +10,8 @@ from pathlib import Path
 
 EXPECTED_SOURCE = '23ffc8a4fb10d80143c966e791bee28aada6f7b90afb0578f1c53ab7121f4714'
 GPU = '/soc@0/gpu@3d00000'
+DISPLAY = '/soc@0/display-subsystem@ae00000/displayport-controller@aea0000'
+PANEL = DISPLAY + '/aux-bus/panel'
 
 
 def properties(data):
@@ -53,26 +55,46 @@ def properties(data):
     return result, (compatible, cpu, reservations)
 
 
-def create(source, output):
+def create(source, output, controller_hpd=False):
     old = source.read_bytes()
     if hashlib.sha256(old).hexdigest() != EXPECTED_SOURCE:
         raise ValueError('DTB is not from the verified matching kernel build')
     before, header = properties(old)
     if before[(GPU, 'status')] != b'disabled\0' or before[('/sound', 'status')] != b'disabled\0':
         raise ValueError('Unexpected GPU or sound state')
+    if controller_hpd:
+        tlmm = before[('/soc@0/pinctrl@f100000', 'phandle')]
+        if before[(PANEL, 'hpd-gpios')] != tlmm + struct.pack('>II', 119, 0):
+            raise ValueError('Unexpected panel HPD GPIO')
+        state = '/soc@0/pinctrl@f100000/edp0-hpd-default-state'
+        if (before[(DISPLAY, 'pinctrl-0')] != before[(state, 'phandle')]
+                or before[(state, 'pins')] != b'gpio119\0'
+                or before[(state, 'function')] != b'edp0_hot\0'):
+            raise ValueError('Controller does not own the expected HPD input')
     if output.exists():
         raise ValueError('Refusing to overwrite a display test')
     shutil.copyfile(source, output)
     subprocess.run(['fdtput', '-t', 's', str(output), GPU, 'status', 'okay'], check=True)
+    if controller_hpd:
+        # The pinned panel driver supports controller/AUX HPD when this optional
+        # GPIO is absent. Retain the controller's dedicated edp0_hot input.
+        subprocess.run(['fdtput', '-d', str(output), PANEL, 'hpd-gpios'], check=True)
     after, new_header = properties(output.read_bytes())
     expected = dict(before)
     expected[(GPU, 'status')] = b'okay\0'
+    if controller_hpd:
+        del expected[(PANEL, 'hpd-gpios')]
     if after != expected or header != new_header:
-        raise ValueError('Unexpected change beyond the GPU status property')
+        raise ValueError('Unexpected change beyond the selected display properties')
     report = {'originalDTBSHA256': EXPECTED_SOURCE,
               'displayDTBSHA256': hashlib.sha256(output.read_bytes()).hexdigest(),
               'onlyChangedProperty': GPU + '/status', 'newValue': 'okay',
               'soundStillDisabled': True, 'physicalDisplayVerified': False}
+    if controller_hpd:
+        del report['onlyChangedProperty']
+        report['changedProperties'] = {GPU + '/status': 'okay', PANEL + '/hpd-gpios': 'removed'}
+        report['controllerHpdRetained'] = True
+        report['reason'] = 'Physical boot: panel GPIO119 request conflicts with controller edp0_hot ownership'
     output.with_name('display-test.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(report, indent=2))
 
@@ -81,5 +103,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('source', type=Path)
     parser.add_argument('output', type=Path)
+    parser.add_argument('--controller-hpd', action='store_true', help='Remove the panel duplicate GPIO119 request; keep native controller HPD')
     args = parser.parse_args()
-    create(args.source, args.output)
+    create(args.source, args.output, args.controller_hpd)

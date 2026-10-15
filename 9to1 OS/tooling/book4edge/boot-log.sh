@@ -18,6 +18,9 @@ mounted=no
 snapshot() {
     test -n "$out" || return 0
     dmesg > "$out/kernel.log.new" 2>&1 && mv "$out/kernel.log.new" "$out/kernel.log"
+    if test ! -f "$out/kernel-first.log" && test -f "$out/kernel.log"; then
+        cp "$out/kernel.log" "$out/kernel-first.log"
+    fi
     for source in /run/initramfs/initramfs.debug /casper.log /root/var/log/casper.log /var/log/casper.log /run/book4edge-root-init.log /root/var/log/book4edge-internal-readonly.txt /var/log/book4edge-internal-readonly.txt; do
         test -f "$source" || continue
         name=${source##*/}
@@ -25,6 +28,8 @@ snapshot() {
     done
     if test "$phase" = userspace && command -v journalctl >/dev/null 2>&1; then
         journalctl -b --no-pager -n 2000 > "$out/journal.log.new" 2>&1 && mv "$out/journal.log.new" "$out/journal.log"
+        journalctl -b --no-pager -p warning -n 2000 > "$out/warnings.log.new" 2>&1 && mv "$out/warnings.log.new" "$out/warnings.log"
+        journalctl -b --no-pager -n 2000 -u gdm.service -u gdm3.service -u display-manager.service > "$out/display-manager.log.new" 2>&1 && mv "$out/display-manager.log.new" "$out/display-manager.log"
     fi
     if test "$phase" = userspace && command -v timeout >/dev/null 2>&1; then
         timeout 3 systemctl --no-pager list-jobs > "$out/systemd-jobs.txt" 2>&1 || true

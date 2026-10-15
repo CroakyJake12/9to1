@@ -462,7 +462,7 @@ menuentry "Power off" {
     set gfxpayload=keep
     echo "Loading Samsung device tree, kernel and automatic USB logger..."
     if devicetree /book4edge/book4edge16.dtb; then
-        if linux /book4edge/Image boot=casper nopersistent clk_ignore_unused pd_ignore_unused arm64.nopauth cma=256M console=tty0 acpi=off loglevel=7 printk.time=1 log_buf_len=4M fbcon=nodefer nomodeset module_blacklist=msm noplymouth plymouth.enable=0 systemd.show_status=1 systemd.unit=multi-user.target systemd.log_target=kmsg init=/usr/sbin/book4edge-init book4edge.log=1 debug ---; then
+        if linux /book4edge/Image boot=casper nopersistent clk_ignore_unused pd_ignore_unused arm64.nopauth cma=256M console=tty0 acpi=off loglevel=7 printk.time=1 log_buf_len=4M fbcon=nodefer nomodeset module_blacklist=msm noplymouth plymouth.enable=0 systemd.show_status=1 systemd.unit=multi-user.target systemd.log_target=kmsg systemd.log_level=info udev.log_level=info init=/usr/sbin/book4edge-init book4edge.log=1 debug ---; then
             if initrd /book4edge/initrd; then
                 echo "Boot logs will be saved to BOOK4E_DATA/boot-logs once the USB is available."
                 sleep --interruptible 5
