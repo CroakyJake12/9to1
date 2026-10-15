@@ -1,0 +1,45 @@
+name: Book4 Edge broader driver candidate
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  kernel:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: 9to1 OS/tooling/book4edge
+          submodules: false
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 38726175861
+          name: book4edge16-kernel-ed869653cd33078dfa92ed7e3057e1573504464a
+          path: baseline
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential flex bison bc libssl-dev libelf-dev libdw-dev dwarves dpkg-dev debhelper fakeroot rsync cpio device-tree-compiler
+      - name: Build separate 16-inch driver candidate
+        run: bash '9to1 OS/tooling/book4edge/build-next-hardware.sh' "$RUNNER_TEMP/book4edge-next" "$PWD/baseline/kernel.config"
+      - name: Verify artifact identity and internal speaker exclusion
+        run: |
+          cd "$RUNNER_TEMP/book4edge-next/output"
+          sha256sum -c SHA256SUMS
+          test "$(cat kernel.release)" = 7.2.7-9to1-book4edge16-next
+          dtb=x1e84100-samsung-galaxy-book4-edge-16.dtb
+          test "$(fdtget "$dtb" / model)" = 'Samsung Galaxy Book4 Edge (16 inch)'
+          test "$(fdtget "$dtb" /sound status)" = okay
+          ! fdtget -l "$dtb" /sound | grep -q '^wsa-dai-link$'
+          grep -q '^# CONFIG_SND_SOC_WSA883X is not set$' kernel.config
+          test -s linux-image-7.2.7-9to1-book4edge16-next_7.2.7-1_arm64.deb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: book4edge16-next-${{ github.sha }}
+          path: ${{ runner.temp }}/book4edge-next/output/
+          compression-level: 0
+          retention-days: 14
+          if-no-files-found: error
