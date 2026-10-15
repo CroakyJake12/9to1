@@ -15,6 +15,22 @@ spec.loader.exec_module(live)
 REG = stat.S_IFREG | 0o644
 EXE = stat.S_IFREG | 0o755
 
+def suite_grub_config(previous):
+    start=previous.index('menuentry ')
+    end=previous.index('menuentry ',start+1)
+    first=previous[start:end]
+    if 'TOUCHSCREEN + BATTERY TEST (select this first)' not in first:
+        raise ValueError('Expected the existing opt-in input test first')
+    first=first.replace('TOUCHSCREEN + BATTERY TEST (select this first)',
+                        'WIRELESS + TOUCH + BATTERY TEST (select this first)')
+    first=first.replace('/book4edge/initrd;', '/book4edge/initrd-suite;')
+    first=first.replace(' book4edge.log=1', ' book4edge.suite=1 book4edge.log=1')
+    if first.count('/book4edge/initrd-suite') != 1:
+        raise ValueError('Unexpected initrd syntax')
+    return previous[:start]+first+previous[start:].replace(
+        'TOUCHSCREEN + BATTERY TEST (select this first)',
+        'TOUCHSCREEN + BATTERY TEST (previous input test)',1)
+
 def build(tree, base_report, firmware, radio, output, bundle=None, root_overlay=None):
     old = json.loads(base_report.read_text())
     data = (tree/'book4edge/initrd').read_bytes()

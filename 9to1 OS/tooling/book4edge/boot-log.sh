@@ -14,6 +14,7 @@ lockdir=/run/book4edge-log-$phase.lock
 mkdir "$lockdir" 2>/dev/null || exit 0
 out=
 mounted=no
+count=0
 
 snapshot() {
     test -n "$out" || return 0

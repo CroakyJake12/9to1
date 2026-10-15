@@ -75,8 +75,10 @@ jobs:
           import runpy
           from pathlib import Path
           recipe = runpy.run_path('9to1 OS/tooling/book4edge/assemble-live.py')
+          suite = runpy.run_path('9to1 OS/tooling/book4edge/assemble-suite.py')
           for logging, display, battery in ((False, False, False), (True, False, False), (True, True, False), (True, True, True)):
               Path(f'artifacts/book4edge-grub-{logging}-{display}-{battery}.cfg').write_text(recipe['grub_config'](logging, display, battery), encoding='utf-8')
+          Path('artifacts/book4edge-grub-suite.cfg').write_text(suite['suite_grub_config'](recipe['grub_config'](True, True, True)), encoding='utf-8')
           PY
           for menu in artifacts/book4edge-grub-*.cfg; do grub-script-check "$menu"; done
           sh -n '9to1 OS/tooling/book4edge/boot-log.sh'
@@ -84,6 +86,13 @@ jobs:
           shellcheck -S warning '9to1 OS/tooling/book4edge/battery-test/start-battery-test.sh'
           shellcheck -S warning '9to1 OS/tooling/book4edge/runtime/bluetooth-address.sh'
           python3 -m py_compile '9to1 OS/tooling/book4edge/assemble-suite.py' '9to1 OS/tooling/book4edge/runtime/hardware-check.py'
+          xvfb-run -a bash -euc '
+            export XDG_RUNTIME_DIR=$(mktemp -d)
+            python3 "9to1 OS/tooling/book4edge/runtime/hardware-check.py" &
+            check_pid=$!
+            trap "kill $check_pid 2>/dev/null || true" EXIT
+            timeout 15 xdotool search --sync --onlyvisible --name "Book4 Edge hardware check"
+          '
       - name: Compile the separate NP960XMA USB wiring test
         if: inputs.next_dtb && matrix.runner == 'ubuntu-24.04-arm'
         run: bash '9to1 OS/tooling/book4edge/build-next-dtb.sh' "$RUNNER_TEMP/next-dtb-source" "$PWD/artifacts/next-dtb"
