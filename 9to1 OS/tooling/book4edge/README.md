@@ -69,9 +69,9 @@ keys removed. The internal sound card is disabled in both configuration and DTB
 for first boot because speaker protection is unverified. The DTB-only mode uses
 ARM64 defconfig. The experimental kernel workflow builds on native ARM64 and
 checks the resulting model, configuration and package identity. Kernel packages, their
-modules, initramfs and DTB must be deployed as a matched set. Integrating that set
-into the live installer and its installed target is an outstanding hardware
-enablement step; copying a DTB alone is insufficient. This community kernel is
+modules, initramfs and DTB must be deployed as a matched set. The live assembly
+recipe below integrates them for a USB hardware test; integration into an
+installed target still requires validation. Copying a DTB alone is insufficient. This community kernel is
 experimental and is not maintained by Ubuntu's security team.
 
 | Component | Preparation and remaining validation |
@@ -83,7 +83,41 @@ experimental and is not maintained by Ubuntu's security team.
 | Speakers/microphone | Unverified. Upstream warns about missing speaker protection; no amplifier or volume overrides are applied. Use a USB headset until validated. |
 | Suspend/battery | Sleep may resume while consuming substantial power. Use balanced mode, test suspend/resume unplugged, and shut down for transport until measured. No TLP/PPD stacking or persistent performance mode. |
 | Camera, touch, USB-C display/hotplug | Model/kernel dependent; 14-inch fixes do not establish 16-inch support. Test individually. |
+| Fingerprint | The locally observed USB ID is `1c7a:05a1`. Upstream libfprint's development support list includes it; the staged Ubuntu image contains libfprint 1.95.1 and fprintd. Confirm the shipped driver claims it and test authentication without clearing the sensor's existing Windows enrollments. |
 | KVM | Check `/dev/kvm` on the target. ARM firmware must expose the virtualization facilities; installing Docker does not supply them. |
+
+### Assemble a private live test tree
+
+Copy the authenticated Ubuntu ISO's complete filesystem into a new writable
+directory. With Python 3.12 and `zstandard` available, run:
+
+```sh
+python3 assemble-live.py --tree /path/to/usb-files \
+  --kernel /path/to/verified-kernel-artifact \
+  --firmware /path/to/private-windows-firmware \
+  --report /path/to/live-assembly.json
+```
+
+The assembler verifies the kernel artifact hashes and firmware export hashes,
+adds the matching modules and required Samsung firmware to the initramfs, and
+copies them into Casper's RAM-backed live root before starting the desktop.
+It also applies the narrowly matched keyboard classification quirk documented
+in the Samsung enablement discussion. It retains the stock initrd and places
+the candidate under `book4edge/`. Its GRUB changes affect only the supplied
+file tree; it never writes a disk, NVRAM, internal EFI partition or BIOS.
+
+This remains a **hardware test candidate**, not a validated installer. Speakers
+stay disabled, and the pinned source's GPU enablement state is retained. The
+live root changes are not a recipe for a reliable installed system. Keep the
+firmware-bearing tree private. Validate the actual laptop's hardware before
+partitioning or installing, and record missing devices as failures rather than
+silently accepting a reduced feature set. Windows drivers cannot substitute
+for Linux kernel drivers through Wine or a WinBoat guest.
+
+`probe.py` collects display, input, storage, radio, audio, camera, fingerprint,
+battery, temperature, sleep-mode and kernel-warning evidence. It does not play
+audio, enroll fingerprints, suspend the laptop or modify firmware. Detection
+alone does not establish correct operation; physical checks are still required.
 
 Once a working Ubuntu 26.04 session is installed, run:
 
@@ -103,9 +137,11 @@ after firmware extraction, then reboot and collect another report.
 
 ## Preserve Windows and prepare dual boot
 
-1. In Windows, back up personal data, create recovery media, update Samsung/UEFI
-   firmware and save the BitLocker/device-encryption recovery key somewhere
+1. In Windows, back up personal data, create recovery media and save the
+   BitLocker/device-encryption recovery key somewhere
    accessible without this laptop. Do not paste that key into a report.
+   Record the installed BIOS version. Do not flash firmware as part of media
+   preparation; any justified firmware update is a separate, explicit decision.
 2. Run `windows-preflight.ps1` in an elevated PowerShell window and keep the
    inventory. It reads the model, CPU, partitions, encryption and Secure Boot
    state without changing them or exporting recovery secrets.
@@ -178,6 +214,7 @@ switches backend or installs/starts a Windows VM.
 - [Canonical Snapdragon FAQ](https://discourse.ubuntu.com/t/faq-ubuntu-25-04-25-10-on-snapdragon-x-elite/61016)
 - [Samsung enablement discussion](https://bugs.launchpad.net/ubuntu-concept/+bug/2084591)
 - [Model-specific kernel source](https://github.com/zensanp/linux-book4-edge/tree/x1e80100-book4e-6.19-playground)
+- [libfprint development device support](https://fprint.freedesktop.org/supported-devices.html)
 - [Canonical Secure Boot explanation](https://discourse.ubuntu.com/t/ubuntu-on-arm-summer-26-update/84872)
 - [Hangover release](https://github.com/AndreRH/hangover/releases/tag/hangover-11.16)
 - [WinBoat release](https://github.com/winboat-org/winboat/releases/tag/v0.9.2)
