@@ -30,7 +30,7 @@ def sha(data):
 
 def safe_name(name):
     p = PurePosixPath(name)
-    if p.is_absolute() or ".." in p.parts or "\\" in name or "\0" in name:
+    if p.is_absolute() or ".." in p.parts or "\\" in name or "\0" in name or ":" in name:
         raise ValueError(f"Unsafe archive path: {name}")
     return str(p)
 
@@ -173,12 +173,24 @@ def verify_kernel_bundle(directory):
     return image
 
 
-def assemble(tree, bundle, firmware):
+def assemble(tree, bundle, firmware, linux_firmware=None):
     image = verify_kernel_bundle(bundle)
     kernel_deb = bundle / f"linux-image-{RELEASE}_6.19.0-1_arm64.deb"
     entries = module_entries(kernel_deb.read_bytes())
     source_initrd = (tree / "casper/initrd").read_bytes()
     original = original_initrd_entries(source_initrd)
+    runtime_firmware = []
+    if linux_firmware is not None:
+        runtime_manifest = json.loads((linux_firmware / "manifest.json").read_text(encoding="utf-8-sig"))
+        for record in runtime_manifest["firmware"]:
+            name = safe_name(record["file"])
+            if not (name.startswith(("qca/", "ath12k/WCN7850/hw2.0/")) or name == "qcom/gen70500_sqe.fw"):
+                raise ValueError(f"Unexpected runtime firmware path: {name}")
+            data = (linux_firmware / name).read_bytes()
+            if sha(data) != record["sha256"]:
+                raise ValueError(f"Runtime firmware hash mismatch: {name}")
+            entries[f"usr/lib/firmware/updates/{name}"] = (stat.S_IFREG | 0o644, data)
+            runtime_firmware.append(record)
     manifest = json.loads((firmware / "manifest.json").read_text(encoding="utf-8-sig"))
     chosen = {}
     for name in FIRMWARE:
@@ -206,17 +218,40 @@ def assemble(tree, bundle, firmware):
         raise ValueError("UFS controller driver not available")
     entries["conf/modules"] = (stat.S_IFREG | 0o644, ("\n".join(modules) + "\n").encode())
     entries["etc/udev/rules.d/99-book4edge-keyboard.rules"] = (stat.S_IFREG | 0o644, KEYBOARD_RULE.encode())
+    disk_rule = 'SUBSYSTEM=="block", ATTRS{model}=="THGJFJT2T85BAT0A*", ENV{UDISKS_IGNORE}="1"\n'
+    entries["etc/udev/rules.d/99-book4edge-internal-test.rules"] = (stat.S_IFREG | 0o644, disk_rule.encode())
     hook = f'''#!/bin/sh
 case "$1" in prereqs) exit 0 ;; esac
 set -eu
 test "$(uname -r)" = "{RELEASE}"
+# Protect the specifically inventoried internal UFS disk for this live test.
+# This changes only the running kernel's read-only flag, never on-disk metadata.
+for sysdisk in /sys/class/block/sd*; do
+    test -f "$sysdisk/device/model" || continue
+    model=$(tr -d '[:space:]' < "$sysdisk/device/model")
+    test "$model" = THGJFJT2T85BAT0A || continue
+    disk=${{sysdisk##*/}}
+    blockdev --setro "/dev/$disk"
+    test "$(blockdev --getro "/dev/$disk")" = 1
+    for syspart in "$sysdisk"/"$disk"*; do
+        test -f "$syspart/partition" || continue
+        part=${{syspart##*/}}
+        blockdev --setro "/dev/$part"
+        test "$(blockdev --getro "/dev/$part")" = 1
+    done
+    printf '%s\\n' "$disk protected read-only for live testing" >> /run/book4edge-internal-readonly
+done
 # /root is the casper RAM overlay, never an internal disk mount.
 test -d /root/usr
 mkdir -p /root/usr/lib/modules /root/{FW_PATH}
 cp -a /usr/lib/modules/{RELEASE} /root/usr/lib/modules/
-cp -a /{FW_PATH}/. /root/{FW_PATH}/
+cp -a /usr/lib/firmware/updates/. /root/usr/lib/firmware/updates/
 mkdir -p /root/etc/modprobe.d /root/etc/udev/rules.d /root/var/log
 cp /etc/udev/rules.d/99-book4edge-keyboard.rules /root/etc/udev/rules.d/
+cp /etc/udev/rules.d/99-book4edge-internal-test.rules /root/etc/udev/rules.d/
+if test -f /run/book4edge-internal-readonly; then
+    cp /run/book4edge-internal-readonly /root/var/log/book4edge-internal-readonly.txt
+fi
 printf '%s\\n' 'blacklist snd_soc_x1e80100' > /root/etc/modprobe.d/9to1-first-boot-speakers.conf
 printf '%s\\n' 'Experimental Book4 Edge 16 live hardware test. Kernel/modules/firmware matched. Speakers disabled. Installation and internal partitions have not been prepared.' > /root/var/log/9to1-live-candidate.txt
 '''
@@ -248,13 +283,24 @@ printf '%s\\n' 'Experimental Book4 Edge 16 live hardware test. Kernel/modules/fi
     stock_cfg.write_text('''set timeout=30
 set default=0
 loadfont unicode
-if [ "$lockdown" != "y" ]; then
-    cutmem 0x8800000000 0x8fffffffff
+if [ "$lockdown" = "y" ]; then
+    echo "This experimental Samsung test cannot run while GRUB is locked down."
+    sleep --interruptible 30
+    halt
 fi
+insmod mmap
+if cutmem 0x8800000000 0x8fffffffff; then
+    echo "Samsung memory reservation applied."
+else
+    echo "Required memory reservation failed; stopping the test boot."
+    sleep --interruptible 30
+    halt
+fi
+insmod fdt
 menuentry "Samsung Book4 Edge 16 - TRY Ubuntu (hardware test)" {
     set gfxpayload=keep
     devicetree /book4edge/book4edge16.dtb
-    linux /book4edge/Image boot=casper nopersistent clk_ignore_unused pd_ignore_unused arm64.nopauth console=tty0 ---
+    linux /book4edge/Image boot=casper nopersistent clk_ignore_unused pd_ignore_unused arm64.nopauth cma=256M console=tty0 ---
     initrd /book4edge/initrd
 }
 menuentry "UEFI firmware settings" {
@@ -273,8 +319,12 @@ menuentry "Power off" {
             checksums.append(f"{digest}  ./{p.relative_to(tree).as_posix()}")
     (tree / "md5sum.txt").write_text("\n".join(checksums) + "\n", encoding="utf-8", newline="\n")
     result = {"kernelRelease": RELEASE, "hardwareTested": False, "purpose": "live hardware test only", "firmwareFiles": chosen,
+              "runtimeFirmware": runtime_firmware,
               "moduleFiles": sum(".ko" in n for n in entries), "forcedModules": modules,
               "stockInitrdSHA256": sha(source_initrd), "initrdSHA256": sha(combined), "imageSHA256": sha(image),
+              "dtbSHA256": sha((dest / "book4edge16.dtb").read_bytes()),
+              "grubSHA256": sha(stock_cfg.read_bytes()),
+              "internalDiskReadOnlyRule": "KIOXIA THGJFJT2T85BAT0A; verify lsblk RO before testing",
               "initrdBytes": len(combined), "overlayBytes": len(overlay)}
     return result
 
@@ -284,8 +334,9 @@ if __name__ == "__main__":
     parser.add_argument("--tree", required=True, type=Path)
     parser.add_argument("--kernel", required=True, type=Path)
     parser.add_argument("--firmware", required=True, type=Path)
+    parser.add_argument("--linux-firmware", type=Path, help="Hash-manifested Qualcomm runtime files for early driver probing")
     parser.add_argument("--report", required=True, type=Path)
     args = parser.parse_args()
-    result = assemble(args.tree, args.kernel, args.firmware)
+    result = assemble(args.tree, args.kernel, args.firmware, args.linux_firmware)
     args.report.write_text(json.dumps(result, indent=2) + "\n")
-    print(json.dumps({k: v for k, v in result.items() if k != "firmwareFiles"}, indent=2))
+    print(json.dumps({k: v for k, v in result.items() if k not in ("firmwareFiles", "runtimeFirmware")}, indent=2))

@@ -24,7 +24,7 @@ class LiveAssemblyTests(unittest.TestCase):
         self.assertEqual(end % 4, 0)
 
     def test_rejects_path_traversal_and_windows_paths(self):
-        for name in ("/etc/passwd", "../../outside", "safe/../outside", "C:\\Windows\\file"):
+        for name in ("/etc/passwd", "../../outside", "safe/../outside", "C:\\Windows\\file", "C:/Windows/file", "file:stream"):
             with self.subTest(name=name), self.assertRaises(ValueError):
                 live.safe_name(name)
 

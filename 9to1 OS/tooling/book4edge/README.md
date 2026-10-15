@@ -19,8 +19,8 @@ validate its package/driver compatibility before using that image with this kit.
 The Samsung-specific kernel, DTB, firmware and laptop boot sequence still need
 validation on the actual laptop. Generic ARM64 support does not establish
 Samsung support. An ISO hash or a QEMU `virt` boot cannot establish this either.
-Do not partition the laptop until a live session can use its display, keyboard,
-touchpad and UFS storage reliably.
+Do not partition the laptop until every hardware feature required by the owner
+has been tested successfully. Display, input and UFS are only the first boot gate.
 
 ## Prepare on the 5080 Linux PC
 
@@ -83,26 +83,50 @@ experimental and is not maintained by Ubuntu's security team.
 | Speakers/microphone | Unverified. Upstream warns about missing speaker protection; no amplifier or volume overrides are applied. Use a USB headset until validated. |
 | Suspend/battery | Sleep may resume while consuming substantial power. Use balanced mode, test suspend/resume unplugged, and shut down for transport until measured. No TLP/PPD stacking or persistent performance mode. |
 | Camera, touch, USB-C display/hotplug | Model/kernel dependent; 14-inch fixes do not establish 16-inch support. Test individually. |
-| Fingerprint | The locally observed USB ID is `1c7a:05a1`. Upstream libfprint's development support list includes it; the staged Ubuntu image contains libfprint 1.95.1 and fprintd. Confirm the shipped driver claims it and test authentication without clearing the sensor's existing Windows enrollments. |
+| Fingerprint | The locally observed USB ID is `1c7a:05a1`. The authenticated Ubuntu 26.04.1 image's libfprint already contains SDCP and Egis ETU905 code; older Fedora instructions to build SDCP separately may not apply. Verify real authentication and dual-boot persistence without clearing Windows enrollments. |
 | KVM | Check `/dev/kvm` on the target. ARM firmware must expose the virtualization facilities; installing Docker does not supply them. |
 
 ### Assemble a private live test tree
 
 Copy the authenticated Ubuntu ISO's complete filesystem into a new writable
-directory. With Python 3.12 and `zstandard` available, run:
+directory. With Python 3.12, `zstandard` and `PySquashfsImage==0.9.0` available,
+stage early firmware from that image and the pinned upstream Wi-Fi fallback:
+
+```sh
+git clone --depth 1 --branch 20251111 --filter=blob:none --sparse \
+  https://gitlab.com/kernel-firmware/linux-firmware.git linux-firmware-source
+git -C linux-firmware-source sparse-checkout set ath12k/WCN7850/hw2.0
+python3 stage-runtime-firmware.py --tree /path/to/usb-files \
+  --firmware-source linux-firmware-source --output /path/to/new-runtime-firmware
+```
+
+The staging script verifies both fallback firmware files against their pinned
+upstream Git blob identities, preserves licence information, and records SHA-256
+hashes. Then assemble the private live tree:
 
 ```sh
 python3 assemble-live.py --tree /path/to/usb-files \
   --kernel /path/to/verified-kernel-artifact \
   --firmware /path/to/private-windows-firmware \
+  --linux-firmware /path/to/new-runtime-firmware \
   --report /path/to/live-assembly.json
 ```
 
 The assembler verifies the kernel artifact hashes and firmware export hashes,
 adds the matching modules and required Samsung firmware to the initramfs, and
 copies them into Casper's RAM-backed live root before starting the desktop.
+The optional `--linux-firmware` input supplies early Qualcomm Wi-Fi/Bluetooth
+firmware with a SHA-256 manifest; these drivers may probe before the live root
+is available. The prepared runtime set uses the official linux-firmware
+20251111 c5-00302 Wi-Fi files because the image's c7-00108 version has a reported
+Book4 regression. It retains Ubuntu's board database without inventing a board
+identity or substituting another model's calibration. This is runtime loading,
+not device flashing. Physical Wi-Fi validation remains required.
 It also applies the narrowly matched keyboard classification quirk documented
-in the Samsung enablement discussion. It retains the stock initrd and places
+in the Samsung enablement discussion. The live hook marks the inventoried
+KIOXIA THGJFJT2T85BAT0A disk and its partitions read-only in the running kernel
+and suppresses desktop automount; verify `lsblk` reports `RO=1`. This does not
+alter disk metadata and does not survive reboot. It retains the stock initrd and places
 the candidate under `book4edge/`. Its GRUB changes affect only the supplied
 file tree; it never writes a disk, NVRAM, internal EFI partition or BIOS.
 
@@ -118,6 +142,14 @@ for Linux kernel drivers through Wine or a WinBoat guest.
 battery, temperature, sleep-mode and kernel-warning evidence. It does not play
 audio, enroll fingerprints, suspend the laptop or modify firmware. Detection
 alone does not establish correct operation; physical checks are still required.
+
+Newer [Anatase-based Book4 work](https://github.com/n1c0la84/book4-edge-linux)
+adds substantial enablement, primarily tested on the 14-inch model. Its
+[open problems](https://github.com/n1c0la84/book4-edge-linux/blob/main/docs/TODO.md)
+include charging after hotplug, sleep drain and fingerprint persistence across
+Windows boots. Camera tuning and speaker protection also remain incomplete.
+The newer tree has a separate 16-inch DTS; its board routing and Ubuntu kernel
+configuration need review before changing this pinned diagnostic build.
 
 Once a working Ubuntu 26.04 session is installed, run:
 
