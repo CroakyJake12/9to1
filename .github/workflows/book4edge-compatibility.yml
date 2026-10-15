@@ -80,13 +80,16 @@ jobs:
               Path(f'artifacts/book4edge-grub-{logging}-{display}-{battery}.cfg').write_text(recipe['grub_config'](logging, display, battery), encoding='utf-8')
           Path('artifacts/book4edge-grub-suite.cfg').write_text(suite['suite_grub_config'](recipe['grub_config'](True, True, True)), encoding='utf-8')
           Path('artifacts/book4edge-grub-retest.cfg').write_text(suite['retest_grub_config'](suite['suite_grub_config'](recipe['grub_config'](True, True, True))), encoding='utf-8')
+          menu = runpy.run_path('9to1 OS/tooling/book4edge/simple-menu.py')
+          for updated in (False, True):
+              Path(f'artifacts/book4edge-grub-simple-{updated}.cfg').write_text(menu['render']('1234-5678', updated), encoding='utf-8')
           PY
           for menu in artifacts/book4edge-grub-*.cfg; do grub-script-check "$menu"; done
           sh -n '9to1 OS/tooling/book4edge/boot-log.sh'
           shellcheck -S warning '9to1 OS/tooling/book4edge/boot-log.sh'
           shellcheck -S warning '9to1 OS/tooling/book4edge/battery-test/start-battery-test.sh'
           shellcheck -S warning '9to1 OS/tooling/book4edge/runtime/bluetooth-address.sh'
-          python3 -m py_compile '9to1 OS/tooling/book4edge/assemble-suite.py' '9to1 OS/tooling/book4edge/runtime/hardware-check.py'
+          python3 -m py_compile '9to1 OS/tooling/book4edge/assemble-suite.py' '9to1 OS/tooling/book4edge/runtime/hardware-check.py' '9to1 OS/tooling/book4edge/runtime/keyboard-backlight.py'
           python3 '9to1 OS/tooling/book4edge/test-bluetooth-address.py'
           python3 '9to1 OS/tooling/book4edge/test-battery-storage-guard.py'
           xvfb-run -a bash -euc '

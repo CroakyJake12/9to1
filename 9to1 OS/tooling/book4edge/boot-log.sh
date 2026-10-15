@@ -70,6 +70,13 @@ snapshot() {
                 printf '\n=== Deferred drivers ===\n'; cat /sys/kernel/debug/devices_deferred 2>/dev/null
                 printf '\n=== Graphics drivers ===\n'; ls -l /sys/class/drm/card*/device/driver 2>/dev/null
                 printf '\n=== Brightness and keyboard lights ===\n'; ls /sys/class/backlight /sys/class/leds 2>/dev/null
+                for light in /sys/class/leds/*kbd_backlight; do
+                    test -d "$light" || continue
+                    printf '\n%s\n' "$light"
+                    timeout 2 cat "$light/brightness" "$light/max_brightness" 2>/dev/null
+                done
+                printf '\n=== Audio card identity ===\n'; timeout 3 alsactl info
+                printf '\n=== Fingerprint detection ===\n'; timeout 3 gdbus call --system --dest net.reactivated.Fprint --object-path /net/reactivated/Fprint/Manager --method net.reactivated.Fprint.Manager.GetDevices
                 printf '\n=== CPU frequency drivers ===\n'; cat /sys/devices/system/cpu/cpufreq/policy*/scaling_driver 2>/dev/null
             } > "$out/hardware-status.txt.new" 2>&1
             mv "$out/hardware-status.txt.new" "$out/hardware-status.txt"

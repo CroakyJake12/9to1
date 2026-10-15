@@ -96,6 +96,17 @@ def build(tree, base_report, firmware, radio, output, bundle=None, root_overlay=
         if live.sha(image) != old['imageSHA256']:
             raise ValueError('Baseline kernel identity changed')
     runtime = recipe.with_name('runtime')
+    if bundle:
+        entries['book4edge-root/usr/bin/book4edge-keyboard-backlight'] = (EXE, (runtime/'keyboard-backlight.py').read_text().encode())
+        entries['book4edge-root/usr/share/applications/book4edge-keyboard-backlight.desktop'] = (REG, b'''[Desktop Entry]
+Type=Application
+Name=Keyboard backlight
+Comment=Adjust the Samsung keyboard light
+Exec=/usr/bin/book4edge-keyboard-backlight
+Icon=preferences-desktop-keyboard
+Terminal=false
+Categories=Settings;HardwareSettings;
+''')
     if not bundle:
         entries['usr/sbin/book4edge-battery-test'] = (EXE,
             recipe.with_name('battery-test').joinpath('start-battery-test.sh').read_text().encode())
