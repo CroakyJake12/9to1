@@ -324,7 +324,25 @@ else
     halt
 fi
 insmod fdt
-menuentry "Book4 Edge - DIAGNOSTIC text boot (select this first)" {
+menuentry "Book4 Edge - SLOW DIAGNOSTIC log capture (select this first)" {
+    set gfxpayload=keep
+    echo "[1/4] Loading the Samsung 16-inch device tree..."
+    if devicetree /book4edge/book4edge16.dtb; then
+        echo "[2/4] Loading the matched Linux kernel..."
+        if linux /book4edge/Image boot=casper nopersistent clk_ignore_unused pd_ignore_unused arm64.nopauth cma=256M console=tty0 acpi=off earlycon=efifb keep_bootcon boot_delay=200 loglevel=7 printk.time=1 log_buf_len=4M panic=0 fbcon=nodefer nomodeset module_blacklist=msm noplymouth plymouth.enable=0 systemd.show_status=1 systemd.unit=multi-user.target ---; then
+            echo "[3/4] Loading the matching initramfs (about 305 MB)..."
+            if initrd /book4edge/initrd; then
+                echo "[4/4] Starting Linux in 5 seconds. Record the screen now."
+                echo "This diagnostic deliberately slows kernel messages. Allow several minutes while text changes."
+                sleep --interruptible 5
+                boot
+            fi
+        fi
+    fi
+    echo "A boot command returned or failed. Photograph the messages above."
+    sleep --interruptible 300
+}
+menuentry "Book4 Edge - previous DIAGNOSTIC text boot" {
     set gfxpayload=keep
     echo "[1/4] Loading the Samsung 16-inch device tree..."
     if devicetree /book4edge/book4edge16.dtb; then
