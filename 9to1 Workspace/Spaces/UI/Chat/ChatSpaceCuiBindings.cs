@@ -83,6 +83,20 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
     }
 
     /// <summary>
+    /// Clears the recent-chat search box.
+    ///
+    /// The document's clear control carries only an action, so the host has no value to write.
+    /// The projection owns the query - it is what the two-way input writes through
+    /// <see cref="TrySetValue"/> - so clearing it belongs here and republishes like any other
+    /// state change. Previously this command was a documented no-op.
+    /// </summary>
+    public void ClearRecentSearch()
+    {
+        _recentSearchQuery = string.Empty;
+        Refresh();
+    }
+
+    /// <summary>
     /// Resolves the exact authored paths against the published snapshot.
     ///
     /// Nothing is read reflectively and nothing falls back to a partial match: an unrecognised

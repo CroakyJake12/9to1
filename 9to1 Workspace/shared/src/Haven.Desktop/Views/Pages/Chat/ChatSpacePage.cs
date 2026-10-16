@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
@@ -193,8 +194,15 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
             case "chat.regenerate" when parameter is Guid messageId:
                 await original.AwaitAsync(InvokeOriginalSource(() => _controller.RegenerateAsync(messageId, token))).ConfigureAwait(false);
                 break;
-            case "chat.attach" when parameter is string path:
-                await original.AwaitAsync(InvokeOriginalSource(() => _controller.AddAttachmentAsync(path, token))).ConfigureAwait(false);
+            case "chat.attach":
+                // The authored document raises chat.attach with no argument, so the picker is the
+                // normal path; the string form is kept for programmatic callers. Previously the
+                // argument-less button missed every `when` clause and reached the refusal below.
+                var paths = parameter is string supplied && !string.IsNullOrWhiteSpace(supplied)
+                    ? [supplied]
+                    : await PickOriginalAttachmentPathsAsync(original, token).ConfigureAwait(false);
+                foreach (var candidate in paths)
+                    await original.AwaitAsync(InvokeOriginalSource(() => _controller.AddAttachmentAsync(candidate, token))).ConfigureAwait(false);
                 break;
             case "chat.remove-attachment" when parameter is Guid attachmentId:
                 await original.AwaitAsync(InvokeOriginalSource(() => _controller.RemoveAttachmentAsync(attachmentId, token))).ConfigureAwait(false);
@@ -203,9 +211,9 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
                 await original.AwaitAsync(InvokeOriginalSource(() => _controller.SendAsync(token))).ConfigureAwait(false);
                 break;
             case "chat.clear-search":
-                // The recent-search input currently owns its own value through TrySetValue.
-                // Clearing it here would require a two-way binding, which Select/Text do not
-                // support for the search query. Kept as a no-op marker for the delta document.
+                // The search box is two-way bound, so the projection owns the query and the host
+                // clears it through the projection rather than writing the control directly.
+                InvokeOriginalSource(_bindings.ClearRecentSearch);
                 break;
             default:
                 throw new InvalidOperationException($"Chat Space command '{command}' is not owned by this host.");
@@ -221,6 +229,27 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
         if (parameter is string name && state.Models.Any(m => m.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
             return name;
         return null;
+    }
+
+    /// <summary>
+    /// Resolves attachment paths through the platform file picker.
+    ///
+    /// An unavailable picker is raised as an action failure rather than silently ignored, so the
+    /// surface shows the real reason the Attach control did nothing instead of appearing broken.
+    /// </summary>
+    private async Task<string[]> PickOriginalAttachmentPathsAsync(
+        DesktopOriginalWorkLifetime.Original original, CancellationToken token)
+    {
+        var storage = await original.AwaitAsync(InvokeOriginalSource(() => Dispatcher.UIThread.InvokeAsync(
+            () => TopLevel.GetTopLevel(this)?.StorageProvider).GetTask())).ConfigureAwait(false);
+        if (storage is null)
+            throw new InvalidOperationException("The platform file picker is unavailable in this Chat Space window.");
+        original.DemandPublication();
+        var files = await original.AwaitAsync(InvokeOriginalSource(() => storage.OpenFilePickerAsync(
+            new FilePickerOpenOptions { Title = "Add files to this chat", AllowMultiple = true })))
+            .ConfigureAwait(false);
+        return files.Select(file => file.TryGetLocalPath()).OfType<string>()
+            .Where(path => !string.IsNullOrWhiteSpace(path)).ToArray();
     }
 
     private void OnBindingsPropertyChanged(object? sender, PropertyChangedEventArgs args) =>

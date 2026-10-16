@@ -204,6 +204,63 @@ public sealed class ChatSpaceCuiRenderingTests
         Assert.Equal("draft text", dispatched[0].Parameter);
     }
 
+    [Fact]
+    public async Task Clear_search_empties_the_owned_query_and_republishes()
+    {
+        var state = State();
+        var notifications = 0;
+        var bindings = new ChatSpaceCuiBindings(() => state, (_, _, _) => ValueTask.CompletedTask);
+        bindings.PropertyChanged += (_, _) => notifications++;
+        bindings.TrySetValue("RecentSearchQuery", "half typed");
+
+        Assert.True(bindings.TryGetValue("RecentSearchQuery", out var typed));
+        Assert.Equal("half typed", typed);
+
+        bindings.ClearRecentSearch();
+
+        Assert.True(bindings.TryGetValue("RecentSearchQuery", out var cleared));
+        Assert.Equal(string.Empty, cleared);
+        // The republish must reach the loader, or the visible box keeps the stale text.
+        Assert.True(notifications > 0, "clearing the search must raise a change notification");
+    }
+
+    [Fact]
+    public async Task Clearing_the_search_box_updates_the_rendered_input()
+    {
+        using var lifetime = new CancellationTokenSource();
+        await using var session = HeadlessUnitTestSession.StartNew(TestApplication.Instance.GetType());
+        await session.Dispatch<bool>(async () =>
+        {
+            var state = State();
+            var bindings = new ChatSpaceCuiBindings(() => state, (_, _, _) => ValueTask.CompletedTask);
+
+            using var loader = new CuiControlLoader();
+            loader.SetBindingContext(bindings);
+            loader.SetActionDispatcher(bindings);
+            try
+            {
+                var (tree, diagnostics) = loader.LoadMarkup(ReadAuthoredSource());
+                Assert.True(diagnostics.Count == 0, string.Join(" | ", diagnostics.Select(d => d.Code)));
+                var root = Assert.IsAssignableFrom<Control>(tree);
+                loader.WireBindings(root);
+
+                var search = root.GetVisualDescendants().OfType<TextBox>()
+                    .Single(box => box.Name == "recent-search" ||
+                        Avalonia.Automation.AutomationProperties.GetAutomationId(box) == "recent-search");
+                bindings.TrySetValue("RecentSearchQuery", "half typed");
+                await loader.WhenActionsIdleAsync();
+                Assert.Equal("half typed", search.Text);
+
+                bindings.ClearRecentSearch();
+                await loader.WhenActionsIdleAsync();
+
+                Assert.Equal(string.Empty, search.Text);
+            }
+            finally { loader.Dispose(); await loader.WhenActionsIdleAsync(); }
+            return true;
+        }, lifetime.Token);
+    }
+
     private static string ReadAuthoredSource()
     {
         var assembly = typeof(ChatSpaceCuiBindings).Assembly;
