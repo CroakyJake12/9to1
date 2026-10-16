@@ -5,6 +5,8 @@ Persistent queue: [GitHub issue #35](https://github.com/CroakyJake12/9to1/issues
 ## Current authorised integration — 16 October 2026
 Status: **WORKING**, not whole-suite acceptance. Target: **17–18 October 2026, Europe/London**.
 
+**Subsequent direct owner clarification, 16 October 2026:** “standalone assistants depreciated and folded into spaces”. Assistants is a destination within Spaces; its standalone product is deprecated. This supersedes the older standalone-Assistants paragraphs in the saved V2 snapshot. Preserve existing Assistant identities, conversations, configuration and saved links. Retained legacy executable/route aliases are compatibility entries into Spaces, not another current app or required standalone package. This is a direct chat instruction; no claim is made that the Google document was updated.
+
 This is a child of the existing [master queue #21](https://github.com/CroakyJake12/9to1/issues/21), not a replacement task authority. The saved [V2 specification](https://docs.google.com/document/d/17BoC2kINJzizCCA0ffqaeHukTtEtg_1FAWeO6zIGIFY/edit) now makes Browse the primary application branded 9to1; the previous main shell's functions are merged into it. Web/search and actual native CUI app surfaces share tabs. All actual applications retain standalone executables sharing canonical resources/services. Preserve the full remaining scope; 9to1OS remains separately staged.
 
 Source read-back: native revision `AHj4eMQi_FaewmbEiK6tLlKz84Cg1W08unRVHfHpzaVmW0UIFui6lhC7E38AItSGnwT_41zWogIYC7dXhlaxOeSBcR7WYMgP5IPnfudwisE`; modified 2026-10-16T19:43:06.150Z. Reconcile existing repository mirror and historical source records without pretending old evidence validates new requirements.

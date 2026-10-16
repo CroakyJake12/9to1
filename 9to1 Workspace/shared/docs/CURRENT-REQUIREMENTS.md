@@ -25,6 +25,8 @@ Execution and acceptance tasks are tracked in
 [the active task mirror](../../../docs/development/unified-host-tasks.md) and issue #35 under
 master #21. A target date does not establish completion or acceptance.
 
+**Subsequent direct owner clarification, 16 October 2026:** “standalone assistants depreciated and folded into spaces”. Assistants is a destination within Spaces; its standalone product is deprecated. This supersedes the older standalone-Assistants paragraphs in the saved V2 snapshot. Preserve existing Assistant identities, conversations, configuration and saved links. Retained legacy executable/route aliases are compatibility entries into Spaces, not another current app or required standalone package. This is a direct chat instruction; no claim is made that the Google document was updated.
+
 ---
 
 ## 1. Security, privacy and sandbox

@@ -1373,6 +1373,13 @@
     "backlog": "docs/development/unified-host-tasks.md",
     "queue": "https://github.com/CroakyJake12/9to1/issues/35",
     "historical_evidence": "The original sources and extracts above remain the 14 October snapshot; their hashes/ranges are not rewritten or claimed to validate the new host.",
-    "priority": "Unified Browse-based 9to1 host is an immediate dependency within the full retained application scope; target 17–18 October 2026 Europe/London. 9to1OS separately staged."
+    "priority": "Unified Browse-based 9to1 host is an immediate dependency within the full retained application scope; target 17–18 October 2026 Europe/London. 9to1OS separately staged.",
+    "owner_clarification": {
+      "date": "2026-10-16",
+      "source": "Direct owner chat clarification",
+      "quote": "standalone assistants depreciated and folded into spaces",
+      "effect": "Assistants folded into Spaces; standalone product deprecated. Preserve stable identities, conversations, configuration and legacy links; compatibility entry points are not current standalone packages.",
+      "source_document_updated": false
+    }
   }
 }
