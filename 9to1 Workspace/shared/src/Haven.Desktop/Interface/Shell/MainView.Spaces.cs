@@ -1,7 +1,10 @@
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Services;
+using Haven.Desktop.Views.Pages.Chat;
 using Haven.Desktop.Views.Pages.Spaces;
+using HavenOS.Apps.Spaces.Chat;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Desktop.Views.Shell;
 
@@ -145,5 +148,40 @@ public sealed partial class MainView
             forceNewTab: true);
         ApplyShellVisualState();
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Opens the CUI Chat Space page in a tab. This is the M3 shell-wiring validation surface;
+    /// <see cref="NewChatPage"/> remains the live Chat surface until the CUI page demonstrably
+    /// covers threading settings, send queueing, dual-model selection, attachments, follow-at-end
+    /// scrolling and Select bound-value display.
+    /// </summary>
+    internal async Task OpenChatSpacePageAsync(Guid? conversationId = null)
+    {
+        var services = Haven.Desktop.App.Services;
+        var backend = new HavenChatSpaceBackend(
+            _conversations,
+            services?.GetRequiredService<IConversationProductionRepository>()
+                ?? throw new InvalidOperationException("The Chat Space backend requires conversation production."),
+            _conversationVersioning,
+            services?.GetRequiredService<IMessageAttachmentService>()
+                ?? throw new InvalidOperationException("The Chat Space backend requires attachment services."),
+            new HavenChatSpaceModelCatalog(_ollama, _preferences),
+            new HavenChatSpaceTurnExecutor(_sessions, _preferences, services?.GetService<IMessageAttachmentService>()));
+
+        DemandCanonicalPageAcquisition();
+        var page = new ChatSpacePage(backend, ChatSpacePage.ImmediateReadinessInstance, conversationId);
+        // A fresh page per open is not reachable from a shell field, so it must join the retained
+        // cohort or its retirement would never be joined and the native CUI host would leak.
+        RetainOriginalCanonicalPage(page);
+        AddOrSelectTab(
+            conversationId is { } id ? $"space-chat-cui-{id:N}" : $"space-chat-cui-{Guid.NewGuid():N}",
+            "Chat Space (CUI)",
+            page,
+            true,
+            HavenSurface.Spaces,
+            forceNewTab: true);
+        await page.ActivateAsync(CancellationToken.None);
+        ApplyShellVisualState();
     }
 }

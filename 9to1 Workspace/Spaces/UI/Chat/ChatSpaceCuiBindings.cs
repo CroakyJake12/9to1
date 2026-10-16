@@ -32,7 +32,7 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
     {
         "chat.new", "chat.open", "chat.select-model", "chat.switch-branch",
         "chat.branch", "chat.regenerate", "chat.attach", "chat.remove-attachment",
-        "chat.send", "chat.clear-search"
+        "chat.send", "chat.clear-search", "chat.update-draft"
     };
 
     private readonly CuiViewModel _values = new();
@@ -70,8 +70,16 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
         // resolves an exact key before falling back to the final path segment, so both approaches
         // agree; resolving here anyway keeps every authored path listed in one place and means an
         // unrecognised path is visibly absent instead of silently matching some other property.
-        // The view model exists to raise the change notification the repeat reconciler listens for.
+        //
+        // The scalar below exists only to carry a monotone publication marker. It is NOT what
+        // re-renders the document: the loader's notification filter re-applies a binding only when
+        // the raised property name matches that binding's authored path (or its last segment), so a
+        // notification named "Revision" matches neither `Conversation.Messages` nor
+        // `Composer.Draft` and the transcript would silently never refresh. A null property name is
+        // the loader's invalidate-everything signal, which is what a projection that recomputes
+        // every authored path on every publish must actually raise.
         _values.Set("Revision", _revision++);
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     }
 
     /// <summary>

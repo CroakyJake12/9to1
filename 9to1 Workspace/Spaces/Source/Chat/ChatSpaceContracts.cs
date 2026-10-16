@@ -45,7 +45,14 @@ public sealed record ChatSpaceModelChoice(
     string Name,
     string DisplayName,
     string Description,
-    IReadOnlySet<ToolCapability> Capabilities);
+    IReadOnlySet<ToolCapability> Capabilities)
+{
+    /// <summary>
+    /// Returns the human-readable model label so native selector controls that lack an explicit
+    /// display-member binding render the intended name instead of the record's CLR format.
+    /// </summary>
+    public override string ToString() => DisplayName;
+}
 
 public sealed record ChatSpaceModelInventory(
     IReadOnlyList<ModelDescriptor> Models,

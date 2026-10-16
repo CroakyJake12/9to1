@@ -3001,6 +3001,15 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
                 new("Manage Apps", "rocket", () => _ = ShowAppLauncherAsync(false), Category: "Tools", Description: "Manage installed and pinned 9to1 Apps.")
             ]);
         }
+        else if (CurrentSurface == HavenSurface.Spaces)
+        {
+            contextual.AddRange(
+            [
+                // Merge stage M3: the CUI Chat Space surface, opened alongside the live HUI Chat.
+                // This is a validation route, not a replacement; ChatHavenScene stays the live surface.
+                new("Open Chat Space (CUI)", "chat", () => _ = OpenChatSpacePageAsync(), Category: "Tools", Description: "Open the canonical CUI Chat Space surface for merge validation.")
+            ]);
+        }
         else if (CurrentSurface == HavenSurface.Training)
         {
             contextual.AddRange(

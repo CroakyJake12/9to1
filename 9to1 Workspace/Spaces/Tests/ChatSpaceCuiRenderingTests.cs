@@ -126,6 +126,16 @@ public sealed class ChatSpaceCuiRenderingTests
                 Assert.Same(before["Working on it"], after["Working on it"]);
                 Assert.Same(before["All done"], after["All done"]);
                 Assert.Same(before["Please fix it"], after["Please fix it"]);
+
+                // Identity alone is not enough to prove the re-rank happened: if Refresh()
+                // published a notification that matched no authored path, the controls would be
+                // the same instances in the same order and every assertion above would still pass.
+                // Assert the published order actually reached the visual tree.
+                var order = root.GetVisualDescendants().OfType<TextBlock>()
+                    .Select(t => t.Text ?? string.Empty)
+                    .Where(text => text is "Working on it" or "All done" or "Please fix it")
+                    .ToArray();
+                Assert.Equal(["Please fix it", "Working on it", "All done"], order);
             }
             finally { loader.Dispose(); await loader.WhenActionsIdleAsync(); }
             return true;
@@ -169,6 +179,29 @@ public sealed class ChatSpaceCuiRenderingTests
         };
         var readyBindings = new ChatSpaceCuiBindings(() => ready, (_, _, _) => ValueTask.CompletedTask);
         Assert.True(readyBindings.IsActionAvailable("chat.send"));
+    }
+
+    [Fact]
+    public void Model_choice_renders_its_display_name_for_native_selector_labels()
+    {
+        var choice = new ChatSpaceModelChoice("model-a", "Model A", "A model", new HashSet<ToolCapability>());
+        Assert.Equal("Model A", choice.ToString());
+    }
+
+    [Fact]
+    public async Task Update_draft_command_is_admitted_and_dispatched()
+    {
+        var state = State();
+        var dispatched = new List<(string Command, object? Parameter)>();
+        var bindings = new ChatSpaceCuiBindings(
+            () => state,
+            (command, parameter, _) => { dispatched.Add((command, parameter)); return ValueTask.CompletedTask; });
+
+        await bindings.DispatchAsync("chat.update-draft", "draft text");
+
+        Assert.Single(dispatched);
+        Assert.Equal("chat.update-draft", dispatched[0].Command);
+        Assert.Equal("draft text", dispatched[0].Parameter);
     }
 
     private static string ReadAuthoredSource()
