@@ -216,6 +216,10 @@ public sealed class CuiControlRegistry
             "container" => CreateContainer(component, resolveValue, out error),
             "text" => new TextBlock(),
             "image" => new Image(),
+            // Markdown is a first-class CUI element, not a host-registered Object renderer.
+            // It was previously reachable only through a per-host RegisterObjectRenderer call,
+            // which made a real framework primitive look like an app-specific workaround.
+            "markdown" => new CuiMarkdownView(),
             "button" => CreateButton(component, resolveValue, out error),
             "input" => CreateInput(component, resolveValue, out error),
             "anchor" => new ContentControl(),
@@ -347,7 +351,7 @@ public sealed class CuiControlRegistry
         {
             ("Page", false, []), ("Container", false, []), ("Text", false, []), ("Image", false, []),
             ("Audio", true, []), ("Video", true, []), ("Object", true, []), ("Button", false, []),
-            ("Input", false, []), ("Layer", false, []), ("Anchor", false, [])
+            ("Input", false, []), ("Layer", false, []), ("Anchor", false, []), ("Markdown", false, [])
         };
 
         var result = new Dictionary<string, CuiRuntimeElementDescriptor>(StringComparer.OrdinalIgnoreCase);
@@ -364,6 +368,9 @@ public sealed class CuiControlRegistry
                 "Anchor" => common.Concat(new[] { "Target", "Placement" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
                 "Audio" or "Video" => common.Concat(new[] { "Type", "Source" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
                 "Object" => common.Concat(new[] { "Text", "Type" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
+                // Rich body text. `Text` carries the Markdown source; `CodeActions` opts into the
+                // host-owned code-block action surface that CuiMarkdownView already raises.
+                "Markdown" => text.Concat(new[] { "CodeActions", "CodeActionEnabled" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
                 _ => common.ToFrozenSet(StringComparer.OrdinalIgnoreCase),
             };
             result[name] = new CuiRuntimeElementDescriptor(
