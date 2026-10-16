@@ -12,6 +12,19 @@ Naming follows the owner's 2026-10-14 consolidation: **9to1** (product), **CakeU
 into the CUI authoring contract). Internal assembly names are not yet renamed; see
 `docs/handoff-20261014/NAMING-CONSOLIDATION-2026-10-14.md`.
 
+**16 October 2026 source reconciliation:** the saved authoritative
+[Development Specification V2](https://docs.google.com/document/d/17BoC2kINJzizCCA0ffqaeHukTtEtg_1FAWeO6zIGIFY/edit)
+now makes **Browse the primary application branded 9to1**. Merge the former main-shell
+functions into its shared web/native app tab system. This supersedes conflicting shell
+placement, navigation and delivery order only; every compatible requirement below and the
+remaining full application scope remain binding. The target is 17–18 October 2026,
+Europe/London; 9to1OS stays separately staged. Source revision and exact native paragraph
+ranges are recorded as a current reconciliation in the existing source manifest. Historical
+14 October source hashes and acceptance evidence are retained, not re-labelled as current.
+Execution and acceptance tasks are tracked in
+[the active task mirror](../../../docs/development/unified-host-tasks.md) and issue #35 under
+master #21. A target date does not establish completion or acceptance.
+
 ---
 
 ## 1. Security, privacy and sandbox
@@ -52,6 +65,28 @@ into the CUI authoring contract). Internal assembly names are not yet renamed; s
   never recycle one.
 - `MainView.LaunchAppAsync` and `HavenAppRoutePolicy` are the single launch-routing contract.
   Every enabled App must open a real working surface or an honest setup-required state.
+  Adapt that contract into the unified Browse host without a second divergent registry.
+  The existing `9to1://` app namespace must resolve to the actual native CUI app using real
+  services and canonical resource identities. Keep web, Browse internal, generic CUI and
+  privileged native routes distinct; native routes must never fall through to web search.
+- The normal packaged 9to1 entry opens the unified Browse host. Compose shared Home views
+  rather than nesting the entire former shell. Home has a stable Home-icon entry with
+  Apps, Dashboard and Models/Discover sidebar views. New Tab shares those views and adds
+  its own landing canvas. Preserve its widgets, Generative Areas, saved layouts and default
+  Search with explicitly selected AI. Library, Events, Mesh, Settings, accounts and
+  notifications remain reachable. Preserve configurable tab placement and the established
+  groups, workspaces, splits and recovery model.
+- Every actual in-scope app retains a working standalone executable sharing its embedded
+  implementation, persistence, permissions and canonical resources/revisions. Spaces is
+  an app; Assistants remains within Spaces, not a separate app for every Space mode.
+  Standalone use must not require the visible main window or an open Home tab. Home Core,
+  Dulche, accounts, permission brokerage, provider configuration and package authority each
+  retain one canonical implementation with service ownership independent of views.
+- Implementation defaults, unless a compatible approved detail already governs: app
+  selection fills an empty New Tab; selection from Home opens an app tab retaining Home;
+  the sidebar New Tab view selects the canvas; tab-strip + creates a tab. Sidebar order,
+  initial selection and Home closability are implementation decisions, not newly attributed
+  owner requirements.
 - App-owned business state is authoritative. GenUI, templates and Floating Activities
   reflect/share it rather than creating disconnected copies.
 - Persistence changes are forward-only. Back up and integrity-check before migration, keep
@@ -107,6 +142,12 @@ Validation is proportional to affected risk and always includes more than compil
   where specified.
 - Record exact command/configuration/platform, outcome, counts, logs/screenshots and
   unresolved limitations.
+- Unified-host first journey: packaged 9to1 launch → Home → website → native app tab →
+  meaningful operation → save → reopen the same resource through its standalone executable.
+  Then exercise every applicable app and supported target, including profile/permission
+  boundaries, unsaved work, active tasks, close/reopen/recovery and old-function reachability.
+  One sample app, a component harness or successful compilation does not establish full
+  application acceptance.
 
 ### Failure rules
 

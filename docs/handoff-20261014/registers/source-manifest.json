@@ -1328,5 +1328,51 @@
       ]
     }
   ],
-  "important_note": "M is the full 12459-line direct export. The 990-line truncated materialisation was rejected. S/P/T/R use complete available text materialisations with their own exact snapshot line numbers. No model training/weight-design scope is included."
+  "important_note": "M is the full 12459-line direct export. The 990-line truncated materialisation was rejected. S/P/T/R use complete available text materialisations with their own exact snapshot line numbers. No model training/weight-design scope is included.",
+  "current_reconciliation": {
+    "date": "2026-10-16",
+    "status": "WORKING — source read-back and execution backlog reconciled; implementation acceptance pending",
+    "source_id": "M",
+    "native_revision": "AHj4eMQi_FaewmbEiK6tLlKz84Cg1W08unRVHfHpzaVmW0UIFui6lhC7E38AItSGnwT_41zWogIYC7dXhlaxOeSBcR7WYMgP5IPnfudwisE",
+    "modified_time": "2026-10-16T19:43:06.150Z",
+    "readable_snapshot_sha256": "dbec39056f989d4e5920f812a8d79c2928e9059e92ba420f20b330078cb46942",
+    "readable_snapshot_bytes": 1542450,
+    "readable_snapshot_lines": 12460,
+    "authority": "Saved V2 opening 16 October directive and existing delivery, Home and Browse sections",
+    "native_paragraph_ranges": [
+      [
+        923,
+        1571
+      ],
+      [
+        24331,
+        24856
+      ],
+      [
+        238835,
+        239415
+      ],
+      [
+        239783,
+        240136
+      ],
+      [
+        240164,
+        240518
+      ],
+      [
+        1107670,
+        1108140
+      ],
+      [
+        1113880,
+        1114170
+      ]
+    ],
+    "mirror": "9to1 Workspace/shared/docs/CURRENT-REQUIREMENTS.md",
+    "backlog": "docs/development/unified-host-tasks.md",
+    "queue": "https://github.com/CroakyJake12/9to1/issues/35",
+    "historical_evidence": "The original sources and extracts above remain the 14 October snapshot; their hashes/ranges are not rewritten or claimed to validate the new host.",
+    "priority": "Unified Browse-based 9to1 host is an immediate dependency within the full retained application scope; target 17–18 October 2026 Europe/London. 9to1OS separately staged."
+  }
 }
