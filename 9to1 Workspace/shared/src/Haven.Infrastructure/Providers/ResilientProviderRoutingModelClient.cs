@@ -34,7 +34,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
     ITaskRunProviderContextAuthority? taskContextAuthority = null,
     IProviderCatalogueEligibility? catalogueEligibility = null,
     IManagedDulcheOriginalModelRequestConsumer? originalModelRequests = null,
-    ITaskRunColdRecoveryJournal? coldRecoveryJournal = null) : IProviderModelClient, ITaskRunOriginalRequestFailureSource, ITaskRunOriginalToolCheckpointSelectionSource, ITaskRunOriginalToolResponseDispatchWitnessSource, ITaskRunColdToolCheckpointSelectionSource
+    ITaskRunColdRecoveryJournal? coldRecoveryJournal = null) : IProviderModelClient, IOriginalPrivateContextModelClient, ITaskRunOriginalRequestFailureSource, ITaskRunOriginalToolCheckpointSelectionSource, ITaskRunOriginalToolResponseDispatchWitnessSource, ITaskRunColdToolCheckpointSelectionSource
 {
     // Preserve the original six-argument CLR entry for already compiled ordinary clients.
     // Its absence of canonical owners conveys no Task/Run, cloud context or tool authority.
@@ -102,7 +102,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
         var state = new RoutingState(request.ExecutionContext);
         await CaptureOriginalAttemptAsync(state, cancellationToken).ConfigureAwait(false);
         var candidates = await GetCandidatesAsync(request.Model, required, cancellationToken, context: state.Context, requireObservedLocalStreaming: true,
-            constraints: request.Options?.RequestedRoutingConstraints).ConfigureAwait(false);
+            constraints: request.Options?.RequestedRoutingConstraints, privateContextOptions: request.Options).ConfigureAwait(false);
         Exception? firstFailure = null;
         var emitted = false;
         for (var index = 0; index < candidates.Count; index++)
@@ -134,6 +134,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
                 try
                 {
                     GuardSelectedProvider(selected, request.Options?.RequestedRoutingConstraints);
+                    await ValidateOriginalPrivateContextAsync(request.Options, selected, token).ConfigureAwait(false);
                     // Maintained provider streams are actual async iterators: their factory and
                     // enumerator creation defer provider work until the first MoveNext invocation.
                     // Gate that SAME finite original operation, never an async loop or its await.
@@ -254,7 +255,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
         {
             await CaptureOriginalAttemptAsync(state, cancellationToken).ConfigureAwait(false);
             var candidates = await GetCandidatesAsync(request.Model, required, cancellationToken, context: state.Context,
-                constraints: request.Options?.RequestedRoutingConstraints).ConfigureAwait(false);
+                constraints: request.Options?.RequestedRoutingConstraints, privateContextOptions: request.Options).ConfigureAwait(false);
             Exception? firstFailure = null;
             for (var index = 0; index < candidates.Count; index++)
             {
@@ -274,11 +275,13 @@ public sealed partial class ResilientProviderRoutingModelClient(
                 var routedRequest = CreateRoutedRequest(request, selected, state.Context);
                 try
                 {
-                    originalFrame = RunOriginalContextFrameAsync(state, request, routedRequest, (invocationFence, token) =>
+                    originalFrame = RunOriginalContextFrameAsync(state, request, routedRequest, async (invocationFence, token) =>
                     {
                         GuardSelectedProvider(selected, request.Options?.RequestedRoutingConstraints);
-                        try { return originalProviderTask = StartRawInvocation(invocationFence, () => RawOriginalSelectedComplete(state, request, selected, routedRequest, token)); }
+                        await ValidateOriginalPrivateContextAsync(request.Options, selected, token).ConfigureAwait(false);
+                        try { originalProviderTask = StartRawInvocation(invocationFence, () => RawOriginalSelectedComplete(state, request, selected, routedRequest, token)); }
                         catch (Exception failure) { synchronousProviderFailure = failure; throw; }
+                        return await originalProviderTask.ConfigureAwait(false);
                     }, cancellationToken);
                     return await AwaitExactTaskAsync(originalFrame).ConfigureAwait(false);
                 }
@@ -317,7 +320,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
         {
             await CaptureOriginalAttemptAsync(state, cancellationToken).ConfigureAwait(false);
             var candidates = await GetCandidatesAsync(request.Model, required, cancellationToken, restrictions, state.Context,
-                constraints: request.Options?.RequestedRoutingConstraints).ConfigureAwait(false);
+                constraints: request.Options?.RequestedRoutingConstraints, privateContextOptions: request.Options).ConfigureAwait(false);
             Exception? firstFailure = null;
             for (var index = 0; index < candidates.Count; index++)
             {
@@ -337,11 +340,13 @@ public sealed partial class ResilientProviderRoutingModelClient(
                 var routedRequest = CreateRoutedRequest(request, selected, state.Context);
                 try
                 {
-                    originalFrame = RunOriginalContextFrameAsync(state, request, routedRequest, (invocationFence, token) =>
+                    originalFrame = RunOriginalContextFrameAsync(state, request, routedRequest, async (invocationFence, token) =>
                     {
                         GuardSelectedProvider(selected, request.Options?.RequestedRoutingConstraints);
-                        try { return originalProviderTask = StartRawInvocation(invocationFence, () => RawOriginalSelectedTools(state, request, selected, routedRequest, token)); }
+                        await ValidateOriginalPrivateContextAsync(request.Options, selected, token).ConfigureAwait(false);
+                        try { originalProviderTask = StartRawInvocation(invocationFence, () => RawOriginalSelectedTools(state, request, selected, routedRequest, token)); }
                         catch (Exception failure) { synchronousProviderFailure = failure; throw; }
+                        return await originalProviderTask.ConfigureAwait(false);
                     }, cancellationToken);
                     BindOriginalToolDispatchFrame(state, originalFrame);
                     var response = await AwaitExactTaskAsync(originalFrame).ConfigureAwait(false);
@@ -375,11 +380,14 @@ public sealed partial class ResilientProviderRoutingModelClient(
         CancellationToken cancellationToken,
         IReadOnlyCollection<RestrictedModelCapability>? restrictions = null,
         ProviderExecutionContext? context = null, bool requireObservedLocalStreaming = false,
-        ModelRequestRoutingConstraints? constraints = null)
+        ModelRequestRoutingConstraints? constraints = null, GenerationOptions? privateContextOptions = null)
     {
+        OriginalPrivateContextDispatch.ValidateProviderRoute(privateContextOptions,
+            providers.Find(ResolveRequestedProviderId(requestedModel)));
         GuardRequestedProvider(requestedModel, constraints);
         var onlyProvider = constraints?.AllowFallback == false ? ResolveRequestedProviderId(requestedModel) : null;
-        var availability = await GetEligibleModelsAsync(cancellationToken, constraints, onlyProvider).ConfigureAwait(false);
+        var availability = await GetEligibleModelsAsync(cancellationToken, constraints, onlyProvider,
+            requirePrivateContextProvider: OriginalPrivateContextDispatch.RequiresGuard(privateContextOptions)).ConfigureAwait(false);
         var descriptors = availability.Models;
         var requested = descriptors.FirstOrDefault(item => item.Matches(requestedModel));
         if (requested is null)
@@ -790,6 +798,10 @@ public sealed partial class ResilientProviderRoutingModelClient(
             throw new UnauthorizedAccessException("Cloud providers are disabled by the current local-only or safety policy.");
     }
 
+    private Task ValidateOriginalPrivateContextAsync(GenerationOptions? options, SelectedProvider selected, CancellationToken token) =>
+        OriginalPrivateContextDispatch.ValidateProviderAsync(options,
+            selected.Descriptor is { } descriptor ? providers.Find(descriptor.ProviderId) : null, token);
+
     private IAsyncEnumerable<string> RawStream(SelectedProvider selected, OllamaChatRequest request, CancellationToken token) =>
         selected.Descriptor is { } actual
             ? providers.GetRequired(actual.ProviderId).StreamChatAsync(request.Model == actual.Name ? request : request with { Model = actual.Name }, token)
@@ -834,11 +846,12 @@ public sealed partial class ResilientProviderRoutingModelClient(
         if (!actual.IsLocal) throw new UnauthorizedAccessException("This original request disallows cloud providers.");
     }
     private async Task<ProviderCatalogueAvailability> GetEligibleModelsAsync(CancellationToken cancellationToken,
-        ModelRequestRoutingConstraints? constraints = null, string? onlyProvider = null)
+        ModelRequestRoutingConstraints? constraints = null, string? onlyProvider = null, bool requirePrivateContextProvider = false)
     {
         var models = new List<ProviderModelDescriptor>();
         var failures = new Dictionary<string, ProviderCatalogueFailure>(StringComparer.OrdinalIgnoreCase);
         foreach (var provider in providers.Providers.Where(item =>
+            (!requirePrivateContextProvider || item is IOriginalPrivateContextModelProvider { IsLocal: true }) &&
             (onlyProvider is null || item.Id.Equals(onlyProvider, StringComparison.OrdinalIgnoreCase)) &&
             ((constraints?.AllowCloud != false && !privacy.Current.LocalOnlyMode && !RuntimeSafetyState.IsSafeMode) || item.IsLocal)))
         {

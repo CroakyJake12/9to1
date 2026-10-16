@@ -149,7 +149,8 @@ internal sealed partial class NativeAssistantsDesktopPage : UserControl,
                     actual => _surface = actual, migration: _migration, migrationUnavailableReason: _migrationUnavailableReason,
                     developmentRoute: _developmentRoute, memoryManagement: _memoryManagement,
                     memoryUnavailableReason: _memoryUnavailableReason, miniComputerManagement: _miniComputerManagement,
-                    miniComputerUnavailableReason: _miniComputerUnavailableReason); // SAME partial and borrowers precede native callbacks.
+                    miniComputerUnavailableReason: _miniComputerUnavailableReason,
+                    ucmlFilePicker: new AssistantUcmlFilePicker(() => _originalWindow.StorageProvider)); // SAME partial and borrowers precede native callbacks.
                 return true;
             });
             var actualSurface = surface ?? throw new InvalidOperationException("No actual Assistant surface was acquired.");

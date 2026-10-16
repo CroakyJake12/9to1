@@ -171,6 +171,7 @@ public sealed partial class DenAssistantCanonicalBridge : IAssistantCanonicalBri
     private static string Operation(Guid id, string verb) => $"assistants.{verb}.{id:D}";
     private static void ValidateConfiguration(ConfiguredIdentityKind kind, AssistantConfiguration config, Guid operation)
     {
+        config.Memory.ValidateUcmlPolicy();
         if (!Enum.IsDefined(kind) || operation == Guid.Empty || string.IsNullOrWhiteSpace(config.Name))
             throw new AssistantCommandRefusedException("A configured type, nonempty name and operation identity are required.");
         if (kind == ConfiguredIdentityKind.Specialist && (config.Proactive.AllowCheckIns || config.Proactive.AllowUnsolicitedConversations))

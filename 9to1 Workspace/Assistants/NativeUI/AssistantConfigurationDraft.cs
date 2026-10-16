@@ -28,6 +28,7 @@ public sealed partial class AssistantConfigurationDraft
     public bool TrySetText(string field, string? value)
     {
         value ??= "";
+        if (field is "DraftUcmlCategories" or "DraftUcmlAskCategories" or "DraftUcmlExpiry") return TrySetUcmlPreferenceText(field, value);
         var replacement = field switch
         {
             "DraftName" => Configuration with { Name = value },
@@ -64,18 +65,22 @@ public sealed partial class AssistantConfigurationDraft
         ArgumentNullException.ThrowIfNull(configuration);
         var captured = Copy(configuration);
         if (captured == Configuration) return;
-        Configuration = captured;
+        Configuration = captured; ResetUcmlPreferenceText();
         _generation = checked(_generation + 1);
     }
 
     public void DiscardChanges()
     {
-        Configuration = Copy(_saved);
+        Configuration = Copy(_saved); ResetUcmlPreferenceText();
         _generation = checked(_generation + 1);
         _savedGeneration = _generation;
     }
 
-    public Submission CaptureSubmission() => new(this, Identity, ExpectedRevision, _generation, Copy(Configuration));
+    public Submission CaptureSubmission()
+    {
+        if (UcmlPreferenceError.Length != 0) throw new InvalidOperationException(UcmlPreferenceError);
+        return new(this, Identity, ExpectedRevision, _generation, Copy(Configuration));
+    }
 
     /// <summary>Accepts an observed canonical save only for this same submission. New edits survive.</summary>
     public void Acknowledge(Submission submitted, AssistantDefinitionSnapshot observed)
@@ -92,7 +97,7 @@ public sealed partial class AssistantConfigurationDraft
         _saved = Copy(observed.Configuration);
         if (_generation == submitted.Generation)
         {
-            Configuration = Copy(_saved);
+            Configuration = Copy(_saved); ResetUcmlPreferenceText();
             _savedGeneration = _generation;
         }
         // A successful create binds newer edits to the SAME newly saved identity.
@@ -113,6 +118,11 @@ public sealed partial class AssistantConfigurationDraft
 
     private static AssistantConfiguration Copy(AssistantConfiguration value) => value with
     {
+        Memory = value.Memory with
+        {
+            UcmlCategories = Array.AsReadOnly(value.Memory.UcmlCategories.ToArray()),
+            UcmlAskCategories = Array.AsReadOnly(value.Memory.UcmlAskCategories.ToArray())
+        },
         ToolIds = Array.AsReadOnly(value.ToolIds.ToArray()),
         ConnectedAppIds = Array.AsReadOnly(value.ConnectedAppIds.ToArray()),
         KnowledgeResourceIds = Array.AsReadOnly(value.KnowledgeResourceIds.ToArray()),

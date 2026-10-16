@@ -236,10 +236,20 @@ public sealed partial class OriginalAssistantPersonalDenHost : IHomeOriginalScop
         try
         {
             await source.ConfigureAwait(false);
-            lock (_gate) _successfullyJoinedSources.Add(source);
+            MarkOriginalSourceSuccessfullyJoined(source);
         }
         catch (Exception error)
         { foreach (var cause in source.Exception?.InnerExceptions ?? new[] { error }.AsEnumerable()) Add(errors, cause); }
+    }
+    private void MarkOriginalSourceSuccessfullyJoined(Task source)
+    {
+        lock (_gate)
+        {
+            // Two nested scopes may independently join the same raw child. The
+            // first receipt can already have been consumed by TrackOriginalSource;
+            // a later join must not recreate an orphan receipt retaining its result.
+            if (_sources.Any(actual => ReferenceEquals(actual, source))) _successfullyJoinedSources.Add(source);
+        }
     }
     private static void Add(List<Exception> errors, Exception cause)
     { if (!errors.Any(error => ReferenceEquals(error, cause))) errors.Add(cause); }

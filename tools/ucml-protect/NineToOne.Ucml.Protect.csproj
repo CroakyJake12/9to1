@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AssemblyName>9to1-ucml-protect</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../9to1 Models/Dulche Alpha/Context/NineToOne.Dulche.Context.csproj" />
+    <ProjectReference Include="../../9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj" />
+    <Compile Include="../../9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/Secure/LinuxProviderSecretStore.cs" Link="ExistingOwners/LinuxProviderSecretStore.cs" />
+    <Compile Include="../../9to1 Workspace/Assistants/Memory/Source/ProviderSecretUcmlKeyCustody.cs" Link="ExistingOwners/ProviderSecretUcmlKeyCustody.cs" />
+  </ItemGroup>
+</Project>

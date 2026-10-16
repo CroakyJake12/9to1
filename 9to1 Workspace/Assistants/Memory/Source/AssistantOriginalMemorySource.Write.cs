@@ -47,14 +47,17 @@ public sealed partial class AssistantOriginalMemorySource : ICanonicalAssistantM
     private sealed class WriteIntent(AssistantOriginalMemorySource owner, Input input, Conversation conversation,
         VerifiedResourceStoreOwnership denPermission,
         KnowledgeLibraryService.AssistantMemoryCreatePreparation? prepared, MemoryWriteReceipt receipt,
-        KnowledgeLibraryService.AssistantMemoryOriginalRecord? original = null)
-        : ICanonicalAssistantMemoryRevisionWriteIntent
+        KnowledgeLibraryService.AssistantMemoryOriginalRecord? original = null, string? encryptedDurableReceipt = null,
+        KnowledgeRecord? encryptedRetiredRecord = null)
+        : ICanonicalAssistantMemoryRevisionWriteIntent, ICanonicalAssistantMemoryProtectedWriteIntent
     {
         internal AssistantOriginalMemorySource Owner => owner;
         internal Input Input => input;
         internal KnowledgeLibraryService.AssistantMemoryCreatePreparation? Prepared => prepared;
         internal KnowledgeLibraryService.AssistantMemoryOriginalRecord? Original => original;
+        internal KnowledgeRecord? EncryptedRetiredRecord => encryptedRetiredRecord;
         internal MemoryWriteReceipt Durable => receipt;
+        public string? EncryptedDurableReceipt => encryptedDurableReceipt;
         public AuthenticatedResourceActor Actor => input.Actor;
         public ResourceStoreIdentity OriginalStoreIdentity => input.Store;
         public VerifiedResourceStoreOwnership OriginalStoreOwnership => input.Permission;
@@ -134,6 +137,12 @@ public sealed partial class AssistantOriginalMemorySource : ICanonicalAssistantM
     public Task<ICanonicalAssistantMemoryWriteIntent> PrepareOriginalWriteWithinSourceAsync(
         IChatOriginalPersistentMemoryInput sameInput, Conversation sameConversation, string title, string summary,
         Guid operationId, Action<Action> scope, Action<Task> retain, CancellationToken token) =>
+        PrepareOriginalWriteCoreAsync(sameInput, sameConversation, title, summary, operationId, scope, retain, token, null);
+
+    private Task<ICanonicalAssistantMemoryWriteIntent> PrepareOriginalWriteCoreAsync(
+        IChatOriginalPersistentMemoryInput sameInput, Conversation sameConversation, string title, string summary,
+        Guid operationId, Action<Action> scope, Action<Task> retain, CancellationToken token,
+        NineToOne.Dulche.Context.UcmlDocument? ucml) =>
         WriteSourceAsync<ICanonicalAssistantMemoryWriteIntent>(scope, retain, async source =>
         {
             var input = DemandInput(sameInput);
@@ -148,11 +157,14 @@ public sealed partial class AssistantOriginalMemorySource : ICanonicalAssistantM
                 if (_writeOperations.TryGetValue(operationId, out var prior))
                 {
                     if (!ReferenceEquals(prior.Input, input) || prior.OriginalConversation != sameConversation ||
-                        prior.MutationKind != CanonicalAssistantMemoryMutationKind.Create || prior.Candidate.Title != title.Trim() || prior.Candidate.Summary != summary.Trim())
+                        prior.MutationKind != CanonicalAssistantMemoryMutationKind.Create || prior.Candidate.Title != title.Trim() ||
+                        prior.Candidate.Summary != (ucml is null ? summary.Trim() : summary) ||
+                        (ucml is null ? prior.Candidate.Origin != KnowledgeOrigin.Explicit :
+                            prior.Candidate.LearnedBecause != UcmlMetadataPrefix + NineToOne.Dulche.Context.UcmlCodec.SerializeMetadata(ucml.Metadata)))
                         throw new InvalidOperationException("Preserve the original operation; its draft and scoped input cannot be replaced.");
                     return prior;
                 }
-                if (_writeOperations.Count >= 128) throw new InvalidOperationException("This source's prepared memory operations require retirement.");
+                if (_writeOperations.Count >= 1024) throw new InvalidOperationException("This source's prepared memory operations require retirement.");
             }
             var denPermission = await source.Read(() => _ownership.GetVerifiedWithinOriginalSourceAsync(
                 "den", input.Binding.Definition.Identity.DenId, source.Run, source.Retain, token).AsTask()).ConfigureAwait(false);
@@ -168,13 +180,29 @@ public sealed partial class AssistantOriginalMemorySource : ICanonicalAssistantM
                     null, null, now, now, null, "ExplicitUser") }), Scope: input.ReadScope.StorageScope, Origin: KnowledgeOrigin.Explicit,
                 LastConfirmedAt: now, IsUserLocked: true, AppId: KnowledgeLibraryService.AssistantMemoryApplicationId,
                 AgentId: input.Binding.Definition.Identity.DefinitionId);
-            var prepared = await source.Read(() => _knowledge.PrepareOriginalAssistantMemoryCreateAsync(input.ReadScope, record, source, token)).ConfigureAwait(false);
+            if (ucml is not null)
+            {
+                DemandUcmlImport(ucml, input.Binding.Definition.Identity.DefinitionId);
+                record = record with
+                {
+                    Id = ucml.Metadata.Id, Summary = ucml.Markdown, Topic = ucml.Metadata.Category,
+                    Confidence = ucml.Metadata.Confidence, Origin = KnowledgeOrigin.Imported,
+                    LearnedBecause = UcmlMetadataPrefix + NineToOne.Dulche.Context.UcmlCodec.SerializeMetadata(ucml.Metadata),
+                    Sources = Array.AsReadOnly(ucml.Metadata.Sources.Select(item => new KnowledgeSource(item.Id,
+                        item.Title, item.Kind, null, item.Uri, item.ObservedAt, null, null, "ImportedProvenance")).ToArray()),
+                    IsUserLocked = true
+                };
+            }
+            var prepared = await source.Read(() => ucml is null
+                ? _knowledge.PrepareOriginalAssistantMemoryCreateAsync(input.ReadScope, record, source, token)
+                : _knowledge.PrepareOriginalAssistantMemoryImportAsync(input.ReadScope, record, source, token)).ConfigureAwait(false);
             await source.Read(() => ValidateOriginalWithinSourceAsync(input, sameConversation, null, source.Run, source.Retain, token)).ConfigureAwait(false);
             var identity = input.Binding.Definition.Identity;
             var receipt = new MemoryWriteReceipt(1, input.Store.StoreId, input.Actor, identity.DenId, identity.NamespaceId,
                 identity.DefinitionId, input.Binding.Definition.Revision, input.Binding.DenSessionId, input.Binding.DenSessionRevision,
                 sameConversation.Id, operationId, prepared.Record, prepared.IndexPreparation.Document);
-            var intent = new WriteIntent(this, input, sameConversation, denPermission, prepared, receipt);
+            var encryptedReceipt = await source.Read(() => ProtectDurableReceiptAsync(input, receipt, token)).ConfigureAwait(false);
+            var intent = new WriteIntent(this, input, sameConversation, denPermission, prepared, receipt, encryptedDurableReceipt: encryptedReceipt);
             lock (_writeGate)
             {
                 if (_writeOperations.ContainsKey(operationId)) throw new InvalidOperationException("The original operation was concurrently prepared; refresh its original preview.");
@@ -361,12 +389,12 @@ public sealed partial class AssistantOriginalMemorySource : ICanonicalAssistantM
         if (intent.Original is { } retired)
             await _knowledge.RetireOriginalAssistantMemoryWithinTransactionAsync(pin, retired, intent.Candidate, intent.OperationId,
                 intent.MutationKind == CanonicalAssistantMemoryMutationKind.Correct ? KnowledgeRecordStatus.Superseded : KnowledgeRecordStatus.Rejected,
-                Demand, token).ConfigureAwait(false);
+                Demand, token, intent.EncryptedRetiredRecord).ConfigureAwait(false);
         await KnowledgeLibraryService.ExecuteAssistantMemoryInsertAsync(pin, command =>
         {
             Demand(); command.CommandText = "INSERT INTO settings(key,value,updated_at) VALUES($key,$value,$at);";
             command.Parameters.AddWithValue("$key", (intent.MutationKind == CanonicalAssistantMemoryMutationKind.Create ? MemoryWriteReceiptPrefix : "canonical.sqlite.assistant-memory.revision.v1.") + intent.OperationId.ToString("N"));
-            command.Parameters.AddWithValue("$value", JsonSerializer.Serialize(intent.Durable));
+            command.Parameters.AddWithValue("$value", intent.EncryptedDurableReceipt ?? JsonSerializer.Serialize(intent.Durable));
             command.Parameters.AddWithValue("$at", intent.Candidate.CreatedAt.ToString("O"));
         }, token).ConfigureAwait(false);
         await pin.CommitPinnedOriginalAsync(Demand, token).ConfigureAwait(false);

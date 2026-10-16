@@ -20,7 +20,7 @@ namespace Haven.Infrastructure;
 public sealed class ProviderRoutingModelClient(
     IOllamaClient localOllama,
     IModelProviderRegistry providers,
-    IPrivacyPreferenceStore privacy) : IProviderModelClient
+    IPrivacyPreferenceStore privacy) : IProviderModelClient, IOriginalPrivateContextModelClient
 {
     /// <summary>
     /// Reports whether available async applies to the current state.
@@ -88,6 +88,7 @@ public sealed class ProviderRoutingModelClient(
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var resolved = Resolve(request.Model);
+        await OriginalPrivateContextDispatch.ValidateProviderAsync(request.Options, resolved.Provider, cancellationToken).ConfigureAwait(false);
         await foreach (var chunk in resolved.Provider.StreamChatAsync(request with { Model = resolved.ModelName }, cancellationToken).ConfigureAwait(false))
             yield return chunk;
     }
@@ -95,19 +96,21 @@ public sealed class ProviderRoutingModelClient(
     /// <summary>
     /// Performs complete asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    public Task<string> CompleteAsync(OllamaChatRequest request, CancellationToken cancellationToken)
+    public async Task<string> CompleteAsync(OllamaChatRequest request, CancellationToken cancellationToken)
     {
         var resolved = Resolve(request.Model);
-        return resolved.Provider.CompleteAsync(request with { Model = resolved.ModelName }, cancellationToken);
+        await OriginalPrivateContextDispatch.ValidateProviderAsync(request.Options, resolved.Provider, cancellationToken).ConfigureAwait(false);
+        return await resolved.Provider.CompleteAsync(request with { Model = resolved.ModelName }, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
     /// Performs chat with tools asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    public Task<OllamaToolResponse> ChatWithToolsAsync(OllamaToolRequest request, CancellationToken cancellationToken)
+    public async Task<OllamaToolResponse> ChatWithToolsAsync(OllamaToolRequest request, CancellationToken cancellationToken)
     {
         var resolved = Resolve(request.Model);
-        return resolved.Provider.ChatWithToolsAsync(request with { Model = resolved.ModelName }, cancellationToken);
+        await OriginalPrivateContextDispatch.ValidateProviderAsync(request.Options, resolved.Provider, cancellationToken).ConfigureAwait(false);
+        return await resolved.Provider.ChatWithToolsAsync(request with { Model = resolved.ModelName }, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>

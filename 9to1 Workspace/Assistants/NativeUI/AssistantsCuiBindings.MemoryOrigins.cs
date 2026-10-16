@@ -4,7 +4,11 @@ public sealed partial class AssistantsMemoryCuiBindings
 {
     private void RefreshMemoryOriginActions() => _publish(() =>
     {
-        if (Current) PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs("CanChange"));
+        if (Current)
+        {
+            PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs("CanChange"));
+            PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs("CanExport"));
+        }
     });
 
     // Observation only. The actual source must still authorize every operation.

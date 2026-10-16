@@ -9,12 +9,13 @@ namespace Haven.Infrastructure;
 public sealed partial class KnowledgeLibraryService
 {
     internal sealed class AssistantMemoryCreatePreparation(KnowledgeLibraryService library,
-        AssistantOriginalReadScope selection, KnowledgeRecord record, string sourcesJson, int estimatedBytes,
+        AssistantOriginalReadScope selection, KnowledgeRecord record, KnowledgeRecord storedRecord, string sourcesJson, int estimatedBytes,
         RetrievalIndexService index, RetrievalIndexService.AssistantMemoryIndexPreparation indexPreparation)
     {
         internal KnowledgeLibraryService Library => library;
         internal AssistantOriginalReadScope Selection => selection;
         internal KnowledgeRecord Record => record;
+        internal KnowledgeRecord StoredRecord => storedRecord;
         internal string SourcesJson => sourcesJson;
         internal int EstimatedBytes => estimatedBytes;
         internal RetrievalIndexService Index => index;
@@ -32,9 +33,16 @@ public sealed partial class KnowledgeLibraryService
         CanonicalSqliteOriginalSourceScope source, CancellationToken token) =>
         PrepareOriginalAssistantMemoryCandidateAsync(selection, candidate, source, false, token);
 
+    // Only the canonical Assistant producer can enter this branch, after validating UCML
+    // restrictions. Imported provenance remains imported; importing is not a fact assertion.
+    internal Task<AssistantMemoryCreatePreparation> PrepareOriginalAssistantMemoryImportAsync(
+        AssistantOriginalReadScope selection, KnowledgeRecord candidate,
+        CanonicalSqliteOriginalSourceScope source, CancellationToken token) =>
+        PrepareOriginalAssistantMemoryCandidateAsync(selection, candidate, source, false, token, true);
+
     internal async Task<AssistantMemoryCreatePreparation> PrepareOriginalAssistantMemoryCandidateAsync(
         AssistantOriginalReadScope selection, KnowledgeRecord candidate,
-        CanonicalSqliteOriginalSourceScope source, bool correction, CancellationToken token)
+        CanonicalSqliteOriginalSourceScope source, bool correction, CancellationToken token, bool ucmlImport = false)
     {
         if (!_assistantMemoryScopes.TryGetValue(selection, out _) || !ReferenceEquals(selection.Library, this) ||
             !HasOriginalLocalAssistantMemoryWriter(selection.Store))
@@ -42,13 +50,15 @@ public sealed partial class KnowledgeLibraryService
         source.Run(() =>
         {
             if (candidate.Id == Guid.Empty || candidate.Category != KnowledgeCategory.LearnMe ||
-                candidate.Origin != KnowledgeOrigin.Explicit || candidate.Status != (correction ? KnowledgeRecordStatus.Corrected : KnowledgeRecordStatus.Active) ||
-                candidate.PrivacyClass != KnowledgePrivacyClass.Private || candidate.Confidence != 1 ||
+                candidate.Origin != (ucmlImport ? KnowledgeOrigin.Imported : KnowledgeOrigin.Explicit) || candidate.Status != (correction ? KnowledgeRecordStatus.Corrected : KnowledgeRecordStatus.Active) ||
+                candidate.PrivacyClass != KnowledgePrivacyClass.Private ||
+                (ucmlImport ? !double.IsFinite(candidate.Confidence) || candidate.Confidence is < 0 or > 1 ||
+                    !candidate.LearnedBecause.StartsWith("ucml.v1:", StringComparison.Ordinal) || candidate.LearnedBecause.Length > 65544 : candidate.Confidence != 1) ||
                 candidate.Scope != selection.StorageScope || candidate.AgentId != selection.DefinitionId ||
                 candidate.AppId != AssistantMemoryApplicationId || candidate.ProjectId is not null || candidate.KnowledgeBankId is not null ||
                 (correction ? candidate.UserCorrection is null || candidate.SupersedesId is null : candidate.UserCorrection is not null || candidate.SupersedesId is not null) ||
                 (!correction && candidate.ExpiresAt is not null) || candidate.Title.Length is < 1 or > 160 ||
-                candidate.Summary.Length is < 1 or > 4000 || candidate.Sources.Count < (correction ? 0 : 1) || candidate.Sources.Count > (correction ? 64 : 1))
+                candidate.Summary.Length is < 1 or > 4000 || candidate.Sources.Count < (correction ? 0 : 1) || candidate.Sources.Count > (correction || ucmlImport ? 64 : 1))
                 throw new ArgumentException("Only the exact bounded explicit private Assistant memory candidate may be created.");
             KnowledgeContentSafety.ThrowIfContainsSecret(candidate.Topic, candidate.Title, candidate.Summary,
                 candidate.LearnedBecause, candidate.Scope);
@@ -56,15 +66,21 @@ public sealed partial class KnowledgeLibraryService
                 KnowledgeContentSafety.ThrowIfContainsSecret(originalSource.Title, originalSource.SourceId);
         });
         var record = candidate with { Sources = Array.AsReadOnly(candidate.Sources.ToArray()) };
-        var sourcesJson = JsonSerializer.Serialize(record.Sources, JsonOptions);
-        var estimated = KnowledgeContentSafety.Utf8Bytes(record.Topic, record.Title, record.Summary,
-            record.LearnedBecause, sourcesJson, record.Summary, record.Scope, record.UserCorrection) + 256;
+        var stored = record;
+        if (record.LearnedBecause.StartsWith("ucml.v1:", StringComparison.Ordinal))
+        {
+            var protection = selection.Protection ?? throw new UnauthorizedAccessException("Canonical UCML requires per-user encryption custody before import.");
+            stored = await source.Read(() => protection.ProtectAsync(record, selection.ProtectionOwnerId, selection.StorageScope, token)).ConfigureAwait(false);
+        }
+        var sourcesJson = JsonSerializer.Serialize(stored.Sources, JsonOptions);
+        var estimated = KnowledgeContentSafety.Utf8Bytes(stored.Topic, stored.Title, stored.Summary,
+            stored.LearnedBecause, sourcesJson, stored.Summary, stored.Scope, stored.UserCorrection) + 256;
         var index = (RetrievalIndexService)retrieval;
         // Uses the SAME configured normalizer, chunker and local embedding owner before
         // holding the SQLite writer transaction. This stage performs no persistence.
         var preparedIndex = await source.Read(() => index.PrepareOriginalAssistantMemoryIndexAsync(
             selection.Store, record, source, token)).ConfigureAwait(false);
-        var prepared = new AssistantMemoryCreatePreparation(this, selection, record, sourcesJson, estimated, index, preparedIndex);
+        var prepared = new AssistantMemoryCreatePreparation(this, selection, record, stored, sourcesJson, estimated, index, preparedIndex);
         _assistantCreates.Add(prepared, new()); return prepared;
     }
 
@@ -79,7 +95,7 @@ public sealed partial class KnowledgeLibraryService
             if (preparation.Consumed) throw new InvalidOperationException("The actual memory preparation cannot be replayed.");
             preparation.Consumed = true;
         }
-        var record = preparation.Record;
+        var record = preparation.StoredRecord;
         var existingBytes = await ExecuteAssistantMemoryScalarAsync(lease, command =>
         {
             demandOriginalWrite();

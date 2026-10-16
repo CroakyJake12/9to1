@@ -40,6 +40,7 @@ public sealed partial class ResourceAuthorizationService
                 if (raw.Exception is { } group) foreach (var direct in group.InnerExceptions) Add(direct);
                 else Add(cause);
             }
+        ReleaseSuccessfulResourceOriginals(callbacks);
         if (failures.Count != 0)
         {
             if (bodyFailure is OperationCanceledException && originals.Any(raw => raw.IsCanceled) &&
@@ -84,11 +85,21 @@ public sealed partial class ResourceAuthorizationService
         Action<Task> retainOriginalTask, Task raw)
     {
         ArgumentNullException.ThrowIfNull(raw);
+        ReleaseSuccessfulResourceOriginals(callbacks);
         lock (callbacks.Originals)
             if (!callbacks.Originals.Any(value => ReferenceEquals(value, raw))) callbacks.Originals.Add(raw);
         // Capture precedes every external retention callback. Its synchronous cause is
         // recorded even if the parent swallows/replaces it.
         callbacks.Run(() => retainOriginalTask(raw));
+    }
+    private static void ReleaseSuccessfulResourceOriginals(TaskRunOriginalResponseSourceCallbacks callbacks)
+    {
+        lock (callbacks.Originals)
+        {
+            foreach (var raw in callbacks.Originals.Where(static value => value.IsCompletedSuccessfully))
+                raw.GetAwaiter().GetResult();
+            callbacks.Originals.RemoveAll(static value => value.IsCompletedSuccessfully);
+        }
     }
     private static async Task<T> ReadResourceOriginalAsync<T>(TaskRunOriginalResponseSourceCallbacks callbacks,
         Action<Task> retain, Func<Task<T>> factory)

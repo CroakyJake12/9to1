@@ -77,6 +77,11 @@ public static partial class OriginalLocalTaskConsole
         "status | read <project-relative-path> | steer <instruction> | queue <instruction> | pause | stop | resume",
         "cold-input | cold-resume (explicit protected native recovery opt-in; the same saved Task/Run)",
         "home-requests | home-display <request-id> | home-accept <displayed-request-id> | home-decline <displayed-request-id>",
+        "assistant-setup | assistant-store-bind-empty | assistant-store-request | assistant-store-complete | assistants | assistant-create <name> | assistant-open <definition-id> [conversation-id]",
+        "assistant-categories <comma-separated exact categories or none> | assistant-ask-categories <categories or none> | assistant-expiry <ISO timestamp or none>",
+        "assistant-models | assistant-chat <prompt> | assistant-chat-status",
+        "ucml-review <absolute directory or file> | ucml-commit <displayed batch-id> | ucml-status | ucml-list | ucml-export <record-id> <new absolute path>",
+        "UCML import requires Home review of each exact memory write. Import never enables model disclosure; select categories separately. Only local Assistant routing is supported.",
         "cf-connections | cf-setup | cf-prepare <saved-connection-id> <account-id> <observed-revision> | cf-commit <prepared-request-id>",
         "cf-discover (read-only KV list on the SAME authentic current Task attempt) | history",
         "cloud-approve <displayed-request-id> | cloud-deny <displayed-request-id> | quit",
@@ -176,17 +181,18 @@ public static partial class OriginalLocalTaskConsole
                 var store = new FileHomeCoreStateStore(Path.Combine(_paths.DataDirectory, "Home", "state.json"));
                 PrepareOriginalDeveloperPolicies();
                 PrepareOriginalCurrentProjectExecutionPolicies();
+                PrepareOriginalUcmlOwners();
                 _registration = CloudflareLocalDomainRegistration.CreateOriginal(store, new OperatingSystemPrincipalSource(), _paths,
                     originalResolvers: ProjectConfigurationRequested
-                        ? [new HomeColdProjectReadResourceResolver(RequireCapturedOriginalProjectSource), _setupReadResolver!, _setupDestinationResolver!, _currentExecutionResolver!, _strataArtifactResolver]
-                        : [_setupReadResolver!, _setupDestinationResolver!, _strataArtifactResolver],
+                        ? [new HomeColdProjectReadResourceResolver(RequireCapturedOriginalProjectSource), _setupReadResolver!, _setupDestinationResolver!, _currentExecutionResolver!, _strataArtifactResolver, _ucmlWriteResolver!]
+                        : [_setupReadResolver!, _setupDestinationResolver!, _strataArtifactResolver, _ucmlWriteResolver!],
                     originalPolicies: ProjectConfigurationRequested
-                        ? [new HomeColdProjectReadActionPolicySource(), _setupReadPolicy!, _setupPolicy!, _currentExecutionPolicy!, new HomeStrataDeveloperArtifactActionPolicySource()]
-                        : [_setupReadPolicy!, _setupPolicy!, new HomeStrataDeveloperArtifactActionPolicySource()],
+                        ? [new HomeColdProjectReadActionPolicySource(), _setupReadPolicy!, _setupPolicy!, _currentExecutionPolicy!, new HomeStrataDeveloperArtifactActionPolicySource(), _ucmlWritePolicy!, new LocalStoreImportPolicy(), new HomeUcmlContextActionPolicy()]
+                        : [_setupReadPolicy!, _setupPolicy!, new HomeStrataDeveloperArtifactActionPolicySource(), _ucmlWritePolicy!, new LocalStoreImportPolicy(), new HomeUcmlContextActionPolicy()],
                     configureOriginalStores: identity =>
                     {
                         _nativeFiles = new NativeFilesWorkspaceService(identity.StateStore, identity.Profiles);
-                        return new HomeLocalDomainStoreRegistrations([_nativeFiles], new Dictionary<Type, object>
+                        return new HomeLocalDomainStoreRegistrations([_nativeFiles, .. CaptureOriginalUcmlStores(identity)], new Dictionary<Type, object>
                         { [typeof(NativeFilesWorkspaceService)] = _nativeFiles });
                     },
                     configureOriginalResolvers: components =>
@@ -204,6 +210,7 @@ public static partial class OriginalLocalTaskConsole
                 collection.AddHavenPlannerInfrastructure();
                 collection.AddHavenOwnedNativeTaskColdRecovery(_coldConfiguration!);
                 _registration!.ConfigureOriginalServices(collection);
+                ConfigureOriginalUcmlServices(collection);
                 collection.AddHavenApprovedDeveloperStrataArtifacts(_registration.OriginalHome);
                 // Exactly the same precreated Files objects feed Home evidence/resolution
                 // and normal Files/Dev service factories. TryAdd cannot create replacements.
@@ -279,6 +286,7 @@ public static partial class OriginalLocalTaskConsole
             var argument = separator < 0 ? "" : line[(separator + 1)..].Trim();
             if (command == "help") { Write(Help); return Task.CompletedTask; }
             if (!_started) throw new InvalidOperationException("The actual original startup has not completed.");
+            ValidateOriginalUcmlCommandAdmission(command, argument);
             return _work.RunAsync(original => CommandBodyAsync(original, command, argument, commandToken));
         }
 
@@ -287,6 +295,12 @@ public static partial class OriginalLocalTaskConsole
         {
             switch (command)
             {
+                case "assistant-setup": case "assistant-store-bind-empty": case "assistant-store-request": case "assistant-store-complete":
+                case "assistants": case "assistant-create": case "assistant-open": case "assistant-categories":
+                case "assistant-expiry": case "assistant-ask-categories": case "assistant-models": case "assistant-chat":
+                case "assistant-chat-status":
+                case "ucml-review": case "ucml-commit": case "ucml-status": case "ucml-list": case "ucml-export":
+                    await ExecuteOriginalUcmlCommandAsync(original, command, argument, token).ConfigureAwait(false); break;
                 case "models":
                 {
                     ArgumentException.ThrowIfNullOrWhiteSpace(argument);
@@ -667,6 +681,7 @@ public static partial class OriginalLocalTaskConsole
             if (_managed is not null) Request(_managed.RequestStop);
             if (_strataInstallations is not null) Request(_strataInstallations.RequestOriginalRetirement);
             if (_session is not null) Request(_session.RequestOriginalObservationRetirement);
+            RequestOriginalUcmlRetirement(failures);
             Request(_work.RequestRetirement);
             Task? actual = null;
             try { CleanupCallback(() => actual = _work.CloseAndDrainAsync()); }
@@ -697,6 +712,8 @@ public static partial class OriginalLocalTaskConsole
         {
             var failures = new List<Exception>(); var closes = new List<Task>();
             lock (_gate) failures.AddRange(_requests);
+            await CloseOriginalUcmlBorrowersAsync(failures).ConfigureAwait(false);
+            Throw(failures);
             // Acquire every actual global close before any await. CF independently joins
             // the SAME canonical close before its permission/audit work settles.
             if (_canonicalProcess is not null) AcquireClose(_canonicalProcess.CloseAndSuspendOriginalProducersAsync, closes, failures);

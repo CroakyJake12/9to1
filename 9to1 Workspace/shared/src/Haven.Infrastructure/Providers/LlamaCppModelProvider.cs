@@ -25,7 +25,7 @@ public sealed record LlamaCppLocalEndpointOptions(
 /// <summary>One borrowed, kernel-identified local llama.cpp endpoint. It owns its HTTP work;
 /// the external process owner must close this provider after Dulche/Task originals drain and
 /// before terminating the server. Construction never sends, launches, loads, or grants use.</summary>
-public sealed partial class LlamaCppModelProvider : IModelProvider, ILocalModelEndpointObservationSource, IOriginalInferenceEngineModelSource, IAsyncDisposable
+public sealed partial class LlamaCppModelProvider : IOriginalPrivateContextModelProvider, ILocalModelEndpointObservationSource, IOriginalInferenceEngineModelSource, IAsyncDisposable
 {
     private const int Capacity = 128;
     private readonly object _sync = new();
@@ -151,12 +151,14 @@ public sealed partial class LlamaCppModelProvider : IModelProvider, ILocalModelE
     public Task<string> CompleteAsync(OllamaChatRequest request, CancellationToken token) => StartOriginal(async ct =>
     {
         await RequireGenerationAsync(request.Model, ToolCapability.Text, ct).ConfigureAwait(false);
+        await ObserveOriginalAsync(() => OriginalPrivateContextDispatch.ValidateAsync(request.Options, true, ct)).ConfigureAwait(false);
         var result = await CompleteWireAsync(ChatPayload(request, false), ct).ConfigureAwait(false);
         return ReadText(result);
     }, token);
     public Task<OllamaToolResponse> ChatWithToolsAsync(OllamaToolRequest request, CancellationToken token) => StartOriginal(async ct =>
     {
         await RequireGenerationAsync(request.Model, ToolCapability.Tools, ct).ConfigureAwait(false);
+        await ObserveOriginalAsync(() => OriginalPrivateContextDispatch.ValidateAsync(request.Options, true, ct)).ConfigureAwait(false);
         if (request.Messages.Any(message => message.Images is { Count: > 0 })) throw new NotSupportedException("Vision has no original local capability probe.");
         var payload = new { model = request.Model, messages = OpenAiCompatibleModelProviderBase.BuildToolMessages(request.Messages, request.SystemPrompt),
             tools = request.Tools.Select(tool => new { type = "function", function = new { name = tool.Name, description = tool.Description, parameters = ProviderHttp.ConvertToolSchema(tool) } }).ToArray(),
@@ -250,6 +252,9 @@ public sealed partial class LlamaCppModelProvider : IModelProvider, ILocalModelE
         try
         {
             await RequireGenerationAsync(request.Model, ToolCapability.Streaming, token).ConfigureAwait(false);
+            // Peer/GGUF verification can take time. Recheck the actual Home memory selection
+            // after it settles and before sending any private prompt bytes to llama-server.
+            await ObserveOriginalAsync(() => OriginalPrivateContextDispatch.ValidateAsync(request.Options, true, token)).ConfigureAwait(false);
             resource = await OpenStreamAsync(InvokePhysical(() => ChatPayload(request, true)), token).ConfigureAwait(false);
             body = AcquireOriginalTask(() => ReadOriginalSseAsync(resource.Reader, writer, token));
             await ObserveAcquiredAsync(body).ConfigureAwait(false);

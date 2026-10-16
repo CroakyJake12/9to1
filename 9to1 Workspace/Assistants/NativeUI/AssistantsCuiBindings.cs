@@ -305,7 +305,7 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
         "assistants.avatar.choose" => CanChooseAvatar,
         "assistants.avatar.select" => HasCurrentAvatarRows,
         "assistants.avatar.cancel" => _avatarChooserVisible && CanChooseAvatar,
-        "assistants.configuration.save" => _draft is not null && !Busy && _draft.Configuration.Name.Trim().Length != 0,
+        "assistants.configuration.save" => _draft is not null && _draft.UcmlPreferenceError.Length == 0 && !Busy && _draft.Configuration.Name.Trim().Length != 0,
         "assistants.configuration.discard" => _draft?.IsDirty == true && !Busy,
         "assistants.configuration.model.choose" => CanChooseConfigurationModel,
         "assistants.configuration.models.read" => CanReadConfigurationModels,
@@ -440,7 +440,7 @@ public sealed partial class AssistantsCuiBindings : ICuiWritableBindingContext, 
         Set("EffortChoices", Enum.GetValues<EffortLevel>().Select(effort => new EffortRow(effort.ToString(), effort,
             configuration?.Model.Effort == effort ? $"{effort} · selected" : effort.ToString(), usable && _draft is not null && !Busy)).ToArray());
         Set("CanEditConfiguration", usable && !Busy && _draft is not null); Set("CanLeaveConfiguration", _draft?.IsDirty != true && !Busy);
-        Set("CanSaveConfiguration", usable && _draft is not null && !Busy && configuration?.Name.Trim().Length > 0);
+        Set("CanSaveConfiguration", usable && _draft is not null && _draft.UcmlPreferenceError.Length == 0 && !Busy && configuration?.Name.Trim().Length > 0);
         Set("CanDiscardConfiguration", usable && _draft?.IsDirty == true && !Busy);
         Set("SaveConfigurationLabel", _snapshot.IsSaving ? "Saving…" : _draft?.Identity is null ? "Create Assistant" : "Save changes");
         Set("ConfigurationStatus", _draft?.IsDirty == true ? "Unsaved changes" : "");

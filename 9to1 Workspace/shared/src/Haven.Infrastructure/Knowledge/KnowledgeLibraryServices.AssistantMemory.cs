@@ -21,21 +21,23 @@ public sealed partial class KnowledgeLibraryService
     internal sealed class AssistantOriginalReadScope
     {
         internal AssistantOriginalReadScope(KnowledgeLibraryService library, CanonicalSqliteOriginalStoreOwner store,
-            string definitionId, string storageScope, bool allowVerifiedLegacy)
-        { Library = library; Store = store; DefinitionId = definitionId; StorageScope = storageScope; AllowVerifiedLegacy = allowVerifiedLegacy; }
+            string definitionId, string storageScope, bool allowVerifiedLegacy, IAssistantMemoryRecordProtection? protection, string protectionOwnerId)
+        { Library = library; Store = store; DefinitionId = definitionId; StorageScope = storageScope; AllowVerifiedLegacy = allowVerifiedLegacy; Protection = protection; ProtectionOwnerId = protectionOwnerId; }
         internal KnowledgeLibraryService Library { get; }
         internal CanonicalSqliteOriginalStoreOwner Store { get; }
         internal string DefinitionId { get; }
         internal string StorageScope { get; }
         internal bool AllowVerifiedLegacy { get; }
+        internal IAssistantMemoryRecordProtection? Protection { get; }
+        internal string ProtectionOwnerId { get; }
     }
     private readonly ConditionalWeakTable<AssistantOriginalReadScope, object> _assistantMemoryScopes = new();
     internal AssistantOriginalReadScope CreateOriginalAssistantMemoryReadScope(CanonicalSqliteOriginalStoreOwner store,
-        string actualDefinitionId, string fullStorageScope, bool allowVerifiedLegacy)
+        string actualDefinitionId, string fullStorageScope, bool allowVerifiedLegacy, IAssistantMemoryRecordProtection? protection, string protectionOwnerId)
     {
         if (!HasOriginalAssistantMemoryStoreOwner(store) || string.IsNullOrWhiteSpace(actualDefinitionId) || string.IsNullOrWhiteSpace(fullStorageScope))
             throw new UnauthorizedAccessException("The actual canonical Assistant memory scope is unavailable.");
-        var scope = new AssistantOriginalReadScope(this, store, actualDefinitionId, fullStorageScope, allowVerifiedLegacy);
+        var scope = new AssistantOriginalReadScope(this, store, actualDefinitionId, fullStorageScope, allowVerifiedLegacy, protection, protectionOwnerId);
         _assistantMemoryScopes.Add(scope, new()); return scope;
     }
 
@@ -53,6 +55,9 @@ public sealed partial class KnowledgeLibraryService
         return await ReadAssistantMemoryRowsAsync<IReadOnlyList<KnowledgeRecord>>(originalLease, command =>
         {
             ConfigureOriginalAssistantMemorySelect(command, scope, DateTimeOffset.UtcNow.ToString("O"));
+            // UCML requires category/purpose/recipient selection through its broker.
+            // The legacy prompt path must not turn canonical storage into an access bypass.
+            command.CommandText += " AND substr(r.learned_because,1,8)<>'ucml.v1:'";
             command.CommandText += " ORDER BY r.is_pinned DESC,r.confidence DESC,COALESCE(d.freshness,0) DESC,r.updated_at DESC,r.id LIMIT $limit;";
             command.Parameters.AddWithValue("$limit", limit);
         }, async reader =>

@@ -62,12 +62,13 @@ public sealed partial class AssistantsNativeCuiSurface : UserControl, IDisposabl
         ILegacyAgentMigrationController? migration = null, string? migrationUnavailableReason = null,
         IAssistantsNativeOriginalDevelopmentRoute? developmentRoute = null,
         IAssistantMemoryManagementController? memoryManagement = null, string? memoryUnavailableReason = null,
-        IAssistantMiniComputerController? miniComputerManagement = null, string? miniComputerUnavailableReason = null)
+        IAssistantMiniComputerController? miniComputerManagement = null, string? miniComputerUnavailableReason = null,
+        IAssistantUcmlFilePicker? ucmlFilePicker = null)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _readiness = readiness ?? throw new ArgumentNullException(nameof(readiness));
         _migration = migration; _developmentRoute = developmentRoute;
-        _memoryManagement = memoryManagement;
+        _memoryManagement = memoryManagement; _ucmlFilePicker = ucmlFilePicker;
         _miniComputerManagement = miniComputerManagement;
         _miniComputerUnavailableReason = miniComputerUnavailableReason ?? "The actual Mini Computer catalogue and separate Home VM operation source are not yet configured.";
         _memoryUnavailableReason = memoryUnavailableReason ?? "Scoped Assistant memory requires its actual Home store import and configured memory owner.";

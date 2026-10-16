@@ -150,7 +150,7 @@ public sealed partial class OriginalAssistantPersonalDenHost
                     {
                         value = original is null ? await actual.ConfigureAwait(false) : await original.AwaitAsync(actual).ConfigureAwait(false);
                         lock (_gate) _joined.Add(actual);
-                        lock (_owner._gate) _owner._successfullyJoinedSources.Add(actual);
+                        _owner.MarkOriginalSourceSuccessfullyJoined(actual);
                         // Resource custody precedes rethrow even when a caller
                         // rejected publication after acquiring this same source.
                         capture?.Invoke(value);
@@ -181,7 +181,7 @@ public sealed partial class OriginalAssistantPersonalDenHost
                     {
                         if (original is null) await actual.ConfigureAwait(false);
                         else await original.AwaitAsync(actual).ConfigureAwait(false);
-                        lock (_owner._gate) _owner._successfullyJoinedSources.Add(actual);
+                        _owner.MarkOriginalSourceSuccessfullyJoined(actual);
                     }
                     catch (Exception cause)
                     {

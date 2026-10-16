@@ -26,7 +26,11 @@ internal sealed class HomeOwnershipOriginalSourceCallbacks(Action<Action> caller
     internal void Retain(Task raw)
     {
         ArgumentNullException.ThrowIfNull(raw);
-        lock (_originals) if (!_originals.Any(value => ReferenceEquals(value, raw))) _originals.Add(raw);
+        lock (_originals)
+        {
+            JoinAndReleaseCompletedSuccesses();
+            if (!_originals.Any(value => ReferenceEquals(value, raw))) _originals.Add(raw);
+        }
         try { retain(raw); }
         catch (Exception cause)
         {
@@ -142,7 +146,17 @@ internal sealed class HomeOwnershipOriginalSourceCallbacks(Action<Action> caller
                 else Add(cause);
             }
         }
+        lock (_originals) JoinAndReleaseCompletedSuccesses();
         Throw(); return actual is null ? throw new InvalidOperationException("No original ownership Task captured.") : result;
+    }
+    // Call under the original-task gate. These callbacks are retained by immutable
+    // write claims for replay detection, but each successful Home-state read result
+    // need not remain live for the lifetime of every claim in a bulk import.
+    private void JoinAndReleaseCompletedSuccesses()
+    {
+        foreach (var raw in _originals.Where(static value => value.IsCompletedSuccessfully))
+            raw.GetAwaiter().GetResult();
+        _originals.RemoveAll(static value => value.IsCompletedSuccessfully);
     }
     private void Add(Exception cause) { lock (_errors) if (!_errors.Any(value => ReferenceEquals(value, cause))) _errors.Add(cause); }
     private void Throw() { var errors = Errors; if (errors.Length != 0) throw new AggregateException("Actual scoped ownership callback/source failure.", errors); }

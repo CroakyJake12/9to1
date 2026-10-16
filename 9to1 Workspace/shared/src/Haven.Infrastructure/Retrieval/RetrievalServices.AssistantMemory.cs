@@ -35,12 +35,15 @@ public sealed partial class RetrievalIndexService
             throw new NotSupportedException("This Assistant memory writer requires its configured local embedding owner.");
         var scope = new RetrievalScope(RetrievalScopeKind.Collection, record.Id);
         source.Run(() => ValidateSource(scope, "knowledge", record.Id.ToString(), record.Title));
-        var normalized = source.Invoke(() => NormalizeText(record.Summary));
+        // UCML retrieval is broker-only. Keep the canonical document identity needed
+        // for revision receipts, but never place its text in the generic retrieval index.
+        var brokerOnly = record.LearnedBecause.StartsWith("ucml.v1:", StringComparison.Ordinal);
+        var normalized = source.Invoke(() => brokerOnly ? "" : NormalizeText(record.Summary));
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(normalized))).ToLowerInvariant();
         var document = new RetrievalDocument(Guid.NewGuid(), scope.Kind, scope.Id, "knowledge",
-            record.Id.ToString(), record.Title.Trim(), hash, record.CreatedAt, record.UpdatedAt);
+            record.Id.ToString(), brokerOnly ? "Scoped UCML context" : record.Title.Trim(), hash, record.CreatedAt, record.UpdatedAt);
         var chunks = new List<RetrievalChunk>();
-        foreach (var segment in Split(normalized))
+        foreach (var segment in brokerOnly ? [] : Split(normalized))
         {
             token.ThrowIfCancellationRequested();
             var actualVector = await source.Read(() => embeddings.EmbedAsync(segment.Text, token)).ConfigureAwait(false);

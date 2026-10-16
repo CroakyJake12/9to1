@@ -468,7 +468,17 @@ public sealed partial class ChatSessionService(
             ChatExecutionStage.Preparing,
             // Canonical tasks have no issuer-enrolled estimator yet. Keep their ETA unknown
             // instead of starting an unowned provider call outside the actual attempt.
-            canonicalIntent ? null : EstimateEtaAsync,
+            // A UCML-bound ordinary turn also owns only its actual reply selection. An
+            // auxiliary ETA would reuse the captured guard, compete with a local reply,
+            // and leave a canceled provider original when that reply completes. Include
+            // pending source lineage before selection installs the live dispatch guard.
+            canonicalIntent || generationOptions?.RequireOriginalPrivateContext == true ||
+                generationOptions?.OriginalPrivateContext is not null ||
+                (ordinaryOriginal is not null && !conversation.IsTemporary && !conversation.IsArchived &&
+                    generationOptions?.RequestedContextConstraints?.AllowPersistentMemoryRead == true &&
+                    generationOptions.RequestedRoutingConstraints?.AllowCloud == false &&
+                    OriginalPersistentMemorySource is IChatOriginalUcmlContextSource &&
+                    UsesOriginalPersistentMemory(generationOptions)) ? null : EstimateEtaAsync,
             executionContext?.ExecutionId);
         await using IAsyncDisposable? ordinaryExecution = canonicalIntent ? null
             : ordinaryOriginal is null ? execution : ordinaryOriginal.OwnTracker(execution);
@@ -762,6 +772,19 @@ public sealed partial class ChatSessionService(
                     selectedPersistentMemory = Array.AsReadOnly(selectedMemories.ToArray());
                 }
             }
+        }
+
+        var originalUcml = await ReadOriginalUcmlContextAsync(generationOptions, conversation, prompt,
+            ordinaryOriginal, cancellationToken).ConfigureAwait(false);
+        if (originalUcml is not null)
+        {
+            personalityDirective = string.IsNullOrWhiteSpace(personalityDirective) ? originalUcml.Context
+                : personalityDirective + "\n\n" + originalUcml.Context;
+            generationOptions = generationOptions! with
+            {
+                OriginalPrivateContext = new OriginalUcmlDispatchGuard(originalUcml, ordinaryOriginal!),
+                RequireOriginalPrivateContext = true
+            };
         }
 
         string? providerDefaultsDirective = null;

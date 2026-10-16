@@ -168,6 +168,7 @@ public sealed partial class HomeResourceOperationBroker
         var originals = new CloudflareOriginalTaskLedger(); HomeOwnershipOriginalSourceCallbacks sources = null!;
         sources = new(scope, raw =>
         {
+            originals.ReleaseSuccessfullyObservedOriginals();
             _ = originals.Track(raw);
             sources.Run(() =>
             {
@@ -180,6 +181,7 @@ public sealed partial class HomeResourceOperationBroker
         catch (Exception cause) { originals.Retain(cause); }
         await originals.ObserveAllOriginalTasksAsync().ConfigureAwait(false);
         foreach (var cause in sources.Errors) originals.Retain(cause);
+        originals.ReleaseSuccessfullyObservedOriginals();
         if (originals.OriginalErrors.Count != 0) throw new AggregateException("Actual scoped Home broker source failed.", originals.OriginalErrors);
         return result;
     }

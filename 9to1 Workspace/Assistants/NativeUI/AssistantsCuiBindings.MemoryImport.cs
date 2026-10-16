@@ -26,7 +26,7 @@ public sealed partial class AssistantsMemoryCuiBindings
     { _importUnconfirmed = true; _view = null; _error = reason; Refresh(); }
     private bool IsImportActionAvailable(string command)
     {
-        if (!_supportsImport || !_hasOwner || _busy || HasUnconfirmedWriteChanges || _importPreview is null) return false;
+        if (!_supportsImport || !_hasOwner || _busy || HasUnconfirmedWriteChanges || HasUnconfirmedUcml || _importPreview is null) return false;
         return command switch
         {
             "assistants.memory.import.request" => !_importUnconfirmed && _importPreview.CanRequest,

@@ -233,7 +233,7 @@ public sealed partial class OriginalLocalTaskConsoleSmokeTests
         protected override void Dispose(bool disposing) { if (disposing) _commands.Writer.TryComplete(); base.Dispose(disposing); }
     }
 
-    private sealed class ReviewedSetupOutput : TextWriter
+    private sealed class ReviewedSetupOutput(bool boundedPermissionHistory = false) : TextWriter
     {
         private readonly Channel<string> _lines = Channel.CreateUnbounded<string>(new() { SingleReader = true });
         private readonly StringBuilder _text = new(); private readonly object _gate = new();
@@ -243,21 +243,27 @@ public sealed partial class OriginalLocalTaskConsoleSmokeTests
         internal IReadOnlyList<Task> OriginalReads => _reads.ToArray();
         public override void WriteLine(string? value)
         {
-            lock (_gate) _text.AppendLine(value);
+            // Bulk migration observes each snapshot once. Recording every growing
+            // audit history as strings, parsed documents and completed read results
+            // would turn the observer itself into an unbounded memory benchmark.
+            if (!boundedPermissionHistory || value?.Contains("\"PendingRequests\":", StringComparison.Ordinal) != true)
+                lock (_gate) _text.AppendLine(value);
             if (!_lines.Writer.TryWrite(value ?? "")) throw new InvalidOperationException("The actual output observer was closed.");
         }
         public override string ToString() { lock (_gate) return _text.ToString(); }
-        internal async Task<JsonElement> NextAsync(Func<JsonElement, bool> predicate, CancellationToken token)
+        internal async Task<JsonElement> NextAsync(Func<JsonElement, bool> predicate, CancellationToken token, bool allowCommandFailure = false,
+            int timeoutSeconds = 30)
         {
-            using var observation = CancellationTokenSource.CreateLinkedTokenSource(token); observation.CancelAfter(TimeSpan.FromSeconds(30));
+            using var observation = CancellationTokenSource.CreateLinkedTokenSource(token); observation.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
             while (true)
             {
+                if (boundedPermissionHistory) _reads.RemoveAll(static prior => prior.IsCompletedSuccessfully);
                 var actual = _lines.Reader.ReadAsync(observation.Token).AsTask(); _reads.Add(actual);
                 using var document = JsonDocument.Parse(await actual);
                 var value = document.RootElement.Clone();
                 if (value.ValueKind != JsonValueKind.Object) continue;
-                _events.Add(value);
-                if (value.TryGetProperty("commandFailed", out _) || value.TryGetProperty("processFailed", out _))
+                if (!boundedPermissionHistory || !value.TryGetProperty("PendingRequests", out _)) _events.Add(value);
+                if ((!allowCommandFailure && value.TryGetProperty("commandFailed", out _)) || value.TryGetProperty("processFailed", out _))
                     throw new InvalidOperationException(value.GetRawText());
                 if (predicate(value)) return value;
             }

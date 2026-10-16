@@ -14,8 +14,12 @@ namespace Haven.Infrastructure;
 /// There are no asynchronous internal factories or external callbacks in finite operations.</summary>
 public sealed class LinuxProviderSecretStore : IProviderSecretStore, IDisposable
 {
-    private const ulong CloseOnExec = 0x80000, DirectoryFlag = 0x10000, NonBlocking = 0x800;
-    private const ulong AnonymousWrite = 0x410000 | 2 | CloseOnExec;
+    private const ulong CloseOnExec = 0x80000, NonBlocking = 0x800;
+    // Linux arm64 overrides O_DIRECTORY to 0x4000, while x86_64
+    // uses 0x10000. O_TMPFILE is __O_TMPFILE (0x400000) | O_DIRECTORY.
+    // Using the x86_64 values on arm64 requests O_DIRECT on a directory (EINVAL).
+    private static readonly ulong DirectoryFlag = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? 0x4000UL : 0x10000UL;
+    private static readonly ulong AnonymousWrite = 0x400000 | DirectoryFlag | 2 | CloseOnExec;
     private const int MaximumSecretBytes = 65536;
     private readonly object _gate = new();
     private readonly IAppPaths _paths;

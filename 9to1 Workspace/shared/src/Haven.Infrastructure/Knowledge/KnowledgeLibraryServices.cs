@@ -246,6 +246,8 @@ public sealed partial class KnowledgeLibraryService(
     public async Task<KnowledgeRecord> UpsertAsync(KnowledgeRecord record, string indexedText, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(record);
+        if (record.LearnedBecause.StartsWith("ucml.v1:", StringComparison.Ordinal))
+            throw new UnauthorizedAccessException("UCML memories must be imported or revised through their canonical scoped owner.");
         if (record.PrivacyClass == KnowledgePrivacyClass.NeverLearn)
             throw new InvalidOperationException("Never Learn records cannot be stored.");
         if (record.Confidence is < 0 or > 1) throw new ArgumentOutOfRangeException(nameof(record));
@@ -315,7 +317,8 @@ public sealed partial class KnowledgeLibraryService(
         {
             command.Transaction = transaction;
             ConfigureCanonicalRecordUpsert(command, record, sourcesJson);
-            await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            if (await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
+                throw new UnauthorizedAccessException("The generic write cannot replace a canonical UCML record.");
         }
 
         await using (var details = connection.CreateCommand())
@@ -333,10 +336,14 @@ public sealed partial class KnowledgeLibraryService(
     {
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var command = connection.CreateCommand();
-        command.CommandText = "SELECT sources_json FROM knowledge_records WHERE id=$id;";
+        command.CommandText = "SELECT sources_json,learned_because FROM knowledge_records WHERE id=$id;";
         command.Parameters.AddWithValue("$id", id.ToString());
-        var value = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
-        if (value is not string json || string.IsNullOrWhiteSpace(json)) return [];
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false)) return [];
+        if (reader.GetString(1).StartsWith("ucml.v1:", StringComparison.Ordinal))
+            throw new UnauthorizedAccessException("A generic update cannot replace a canonical UCML memory, even if its incoming metadata was removed.");
+        var json = reader.GetString(0);
+        if (string.IsNullOrWhiteSpace(json)) return [];
         return JsonSerializer.Deserialize<KnowledgeSource[]>(json, JsonOptions) ?? [];
     }
 
@@ -385,6 +392,7 @@ public sealed partial class KnowledgeLibraryService(
             FROM knowledge_records r
             LEFT JOIN knowledge_record_details d ON d.id=r.id
             WHERE ($query='' OR r.title LIKE $like OR r.topic LIKE $like OR r.summary LIKE $like)
+              AND substr(r.learned_because,1,8)<>'ucml.v1:'
               AND ($category=-1 OR r.category=$category)
             ORDER BY r.is_pinned DESC,COALESCE(d.status,0),r.updated_at DESC
             LIMIT 300;
@@ -421,6 +429,7 @@ public sealed partial class KnowledgeLibraryService(
             FROM knowledge_records r
             LEFT JOIN knowledge_record_details d ON d.id=r.id
             WHERE r.category=$category
+              AND substr(r.learned_because,1,8)<>'ucml.v1:'
               AND COALESCE(d.status,0) IN (0,1)
               AND NOT (r.expires_at IS NOT NULL AND r.expires_at <= $now AND COALESCE(d.freshness,0) <> 0)
             ORDER BY r.is_pinned DESC,r.confidence DESC,COALESCE(d.freshness,0) DESC,r.updated_at DESC
@@ -526,7 +535,7 @@ public sealed partial class KnowledgeLibraryService(
         await KnowledgeSchema.EnsureAsync(factory, cancellationToken).ConfigureAwait(false);
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var command = connection.CreateCommand();
-        command.CommandText = "UPDATE knowledge_records SET is_pinned=$pinned,updated_at=$updated WHERE id=$id;";
+        command.CommandText = "UPDATE knowledge_records SET is_pinned=$pinned,updated_at=$updated WHERE id=$id AND substr(learned_because,1,8)<>'ucml.v1:';";
         command.Parameters.AddWithValue("$pinned", pinned ? 1 : 0);
         command.Parameters.AddWithValue("$updated", DateTimeOffset.UtcNow.ToString("O"));
         command.Parameters.AddWithValue("$id", id.ToString());
@@ -602,6 +611,13 @@ public sealed partial class KnowledgeLibraryService(
         await KnowledgeSchema.EnsureAsync(factory, cancellationToken).ConfigureAwait(false);
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        await using (var protectedRecord = connection.CreateCommand())
+        {
+            protectedRecord.Transaction = transaction;
+            protectedRecord.CommandText = "SELECT count(*) FROM knowledge_records WHERE id=$id AND substr(learned_because,1,8)='ucml.v1:';";
+            protectedRecord.Parameters.AddWithValue("$id", id.ToString());
+            if (Convert.ToInt64(await protectedRecord.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false)) != 0) return false;
+        }
         if (!preserveRejection)
         {
             await using var rejection = connection.CreateCommand();
@@ -634,7 +650,7 @@ public sealed partial class KnowledgeLibraryService(
         await using (var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false))
         await using (var command = connection.CreateCommand())
         {
-            command.CommandText = "SELECT id FROM knowledge_records WHERE category=$category;";
+            command.CommandText = "SELECT id FROM knowledge_records WHERE category=$category AND substr(learned_because,1,8)<>'ucml.v1:';";
             command.Parameters.AddWithValue("$category", (int)category);
             await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
             while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false)) ids.Add(Guid.Parse(reader.GetString(0)));
@@ -654,6 +670,14 @@ public sealed partial class KnowledgeLibraryService(
         await KnowledgeSchema.EnsureAsync(factory, cancellationToken).ConfigureAwait(false);
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        await using (var protectedRecord = connection.CreateCommand())
+        {
+            protectedRecord.Transaction = transaction;
+            protectedRecord.CommandText = "SELECT count(*) FROM knowledge_records WHERE id=$id AND substr(learned_because,1,8)='ucml.v1:';";
+            protectedRecord.Parameters.AddWithValue("$id", id.ToString());
+            if (Convert.ToInt64(await protectedRecord.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false)) != 0)
+                throw new UnauthorizedAccessException("UCML status changes require the canonical scoped memory owner.");
+        }
         await using (var detail = connection.CreateCommand())
         {
             detail.Transaction = transaction;
@@ -702,6 +726,7 @@ public sealed partial class KnowledgeLibraryService(
             FROM knowledge_records r
             JOIN knowledge_record_details d ON d.id=r.id
             WHERE r.category=$category AND r.topic=$topic COLLATE NOCASE AND r.title=$title COLLATE NOCASE
+              AND substr(r.learned_because,1,8)<>'ucml.v1:'
               AND d.scope=$scope COLLATE NOCASE AND d.origin=$explicit AND d.status=$corrected
               AND d.app_id IS $app AND d.project_id IS $project AND d.agent_id IS $agent
             ORDER BY r.updated_at DESC LIMIT 1;

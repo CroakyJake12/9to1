@@ -14,7 +14,8 @@ public sealed partial class KnowledgeLibraryService
             VALUES($id,$category,$topic,$title,$summary,$privacy,$confidence,$pinned,$created,$updated,$expires,$because,$sources)
             ON CONFLICT(id) DO UPDATE SET category=excluded.category,topic=excluded.topic,title=excluded.title,summary=excluded.summary,
               privacy_class=excluded.privacy_class,confidence=excluded.confidence,is_pinned=excluded.is_pinned,updated_at=excluded.updated_at,
-              expires_at=excluded.expires_at,learned_because=excluded.learned_because,sources_json=excluded.sources_json;
+              expires_at=excluded.expires_at,learned_because=excluded.learned_because,sources_json=excluded.sources_json
+            WHERE substr(knowledge_records.learned_because,1,8)<>'ucml.v1:';
             """;
         command.Parameters.AddWithValue("$id", record.Id.ToString());
         command.Parameters.AddWithValue("$category", (int)record.Category);

@@ -81,23 +81,31 @@ public sealed partial class KnowledgeLibraryService
     }
     internal async Task RetireOriginalAssistantMemoryWithinTransactionAsync(CanonicalSqliteOriginalStoreLease lease,
         AssistantMemoryOriginalRecord original, KnowledgeRecord candidate, Guid operationId,
-        KnowledgeRecordStatus state, Action demandOriginalWrite, CancellationToken token)
+        KnowledgeRecordStatus state, Action demandOriginalWrite, CancellationToken token, KnowledgeRecord? encryptedRetiredRecord = null)
     {
         DemandOriginalAssistantMemoryRecord(lease, original);
         if (state is not (KnowledgeRecordStatus.Superseded or KnowledgeRecordStatus.Rejected))
             throw new ArgumentException("Only a separately approved correction or rejection can retire this source.");
+        var confidential = original.Record.LearnedBecause.StartsWith("ucml.v1:", StringComparison.Ordinal);
+        if (confidential && (encryptedRetiredRecord is null || encryptedRetiredRecord.Id != original.Record.Id ||
+            encryptedRetiredRecord.Status != state || encryptedRetiredRecord.UpdatedAt != candidate.UpdatedAt ||
+            !encryptedRetiredRecord.LearnedBecause.StartsWith("ucml.v1:sealed:", StringComparison.Ordinal)))
+            throw new UnauthorizedAccessException("UCML retirement requires its new authenticated encrypted lifecycle projection.");
         // Caller rechecked the complete snapshot inside this SAME reserved writer.
         // Preserve all original columns and rows except the maintained status fields.
         await ExecuteAssistantMemoryInsertAsync(lease, command =>
         {
             demandOriginalWrite(); command.CommandText = "UPDATE knowledge_record_details SET status=$status,user_correction=$reason WHERE id=$id AND COALESCE(status,0) IN ($active,$corrected);";
-            command.Parameters.AddWithValue("$status", (int)state); command.Parameters.AddWithValue("$reason", candidate.UserCorrection ?? "Explicit user decision");
+            command.Parameters.AddWithValue("$status", (int)state); command.Parameters.AddWithValue("$reason", confidential ? DBNull.Value : candidate.UserCorrection ?? "Explicit user decision");
             command.Parameters.AddWithValue("$id", original.Record.Id.ToString());
             command.Parameters.AddWithValue("$active", (int)KnowledgeRecordStatus.Active); command.Parameters.AddWithValue("$corrected", (int)KnowledgeRecordStatus.Corrected);
         }, token).ConfigureAwait(false);
         await ExecuteAssistantMemoryInsertAsync(lease, command =>
         {
-            demandOriginalWrite(); command.CommandText = "UPDATE knowledge_records SET updated_at=$at WHERE id=$id;";
+            demandOriginalWrite(); command.CommandText = confidential
+                ? "UPDATE knowledge_records SET updated_at=$at,learned_because=$ciphertext WHERE id=$id;"
+                : "UPDATE knowledge_records SET updated_at=$at WHERE id=$id;";
+            if (confidential) command.Parameters.AddWithValue("$ciphertext", encryptedRetiredRecord!.LearnedBecause);
             command.Parameters.AddWithValue("$at", candidate.UpdatedAt.ToString("O")); command.Parameters.AddWithValue("$id", original.Record.Id.ToString());
         }, token).ConfigureAwait(false);
         var provenance = await ExecuteAssistantMemoryScalarAsync(lease, command =>

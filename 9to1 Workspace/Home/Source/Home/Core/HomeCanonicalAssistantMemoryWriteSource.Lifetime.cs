@@ -270,6 +270,9 @@ public sealed partial class HomeCanonicalAssistantMemoryWriteSource
         {
             await Errors.ObserveAllOriginalTasksAsync().ConfigureAwait(false);
             foreach (var cause in _protocol.Errors) Errors.Retain(cause);
+            // Keep the immutable intent/acknowledgment for exact replay detection,
+            // without retaining all successful Home-state validation snapshots.
+            Errors.ReleaseSuccessfullyObservedOriginals();
             if (Errors.OriginalErrors.Count != 0) throw new AggregateException("Actual Home WRITE callback/raw source custody failed.", Errors.OriginalErrors);
         }
     }

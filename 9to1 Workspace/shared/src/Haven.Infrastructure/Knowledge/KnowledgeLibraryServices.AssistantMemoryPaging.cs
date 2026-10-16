@@ -19,7 +19,7 @@ public sealed partial class KnowledgeLibraryService
         {
             ConfigureOriginalAssistantMemorySelect(command, scope, DateTimeOffset.UtcNow.ToString("O"));
             command.CommandText += """
-                 AND ($search='' OR instr(lower(r.title),lower($search))>0 OR instr(lower(r.summary),lower($search))>0)
+                 AND ($search='' OR substr(r.learned_because,1,8)='ucml.v1:' OR instr(lower(r.title),lower($search))>0 OR instr(lower(r.summary),lower($search))>0)
                  AND ($after=0 OR r.created_at<$created OR (r.created_at=$created AND r.id>$id))
                  ORDER BY r.created_at DESC,r.id ASC LIMIT $limit;
                 """;
@@ -30,14 +30,17 @@ public sealed partial class KnowledgeLibraryService
             command.Parameters.AddWithValue("$limit", maximum + 1);
         }, async reader =>
         {
-            var records = new List<KnowledgeRecord>(); AssistantMemoryPagePosition? last = null; var more = false;
+            var records = new List<KnowledgeRecord>(); AssistantMemoryPagePosition? last = null; var more = false; var scanned = 0;
             while (await lease.ReadOriginalSourceAsync(() => reader.ReadAsync(token)).ConfigureAwait(false))
             {
-                if (records.Count == maximum) { more = true; break; }
-                lease.InvokeOriginalSource(() =>
+                if (scanned++ == maximum) { more = true; break; }
+                var stored = lease.InvokeOriginalSource(() =>
                 {
-                    records.Add(ReadRecord(reader)); last = new(reader.GetString(8), reader.GetString(0)); return true;
+                    last = new(reader.GetString(8), reader.GetString(0)); return ReadRecord(reader);
                 });
+                var record = await lease.ReadOriginalSourceAsync(() => HydrateAssistantMemoryAsync(scope, stored, token)).ConfigureAwait(false);
+                if (search.Length == 0 || record.Title.Contains(search, StringComparison.OrdinalIgnoreCase) || record.Summary.Contains(search, StringComparison.OrdinalIgnoreCase))
+                    records.Add(record);
             }
             return new AssistantMemoryRecordPage(records.AsReadOnly(), more ? last : null);
         }, token).ConfigureAwait(false);
@@ -52,7 +55,11 @@ public sealed partial class KnowledgeLibraryService
             ConfigureOriginalAssistantMemorySelect(command, scope, DateTimeOffset.UtcNow.ToString("O"));
             command.CommandText += " AND r.id=$id LIMIT 1;";
             command.Parameters.AddWithValue("$id", selectedId.ToString());
-        }, async reader => await lease.ReadOriginalSourceAsync(() => reader.ReadAsync(token)).ConfigureAwait(false)
-            ? lease.InvokeOriginalSource(() => ReadRecord(reader)) : null, token).ConfigureAwait(false);
+        }, async reader =>
+        {
+            if (!await lease.ReadOriginalSourceAsync(() => reader.ReadAsync(token)).ConfigureAwait(false)) return null;
+            var stored = lease.InvokeOriginalSource(() => ReadRecord(reader));
+            return await lease.ReadOriginalSourceAsync(() => HydrateAssistantMemoryAsync(scope, stored, token)).ConfigureAwait(false);
+        }, token).ConfigureAwait(false);
     }
 }

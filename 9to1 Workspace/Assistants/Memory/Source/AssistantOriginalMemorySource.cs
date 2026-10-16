@@ -95,7 +95,9 @@ public sealed partial class AssistantOriginalMemorySource : IAssistantOriginalPe
                 var storageScope = JsonSerializer.Serialize(new[] { "assistant-memory.v1", lease.OriginalIdentity.StoreId.ToString("D"),
                     identity.DenId, identity.NamespaceId, identity.DefinitionId });
                 var legacy = await PrepareLegacyMemoryAsync(sameBinding, lease.OriginalIdentity, source, token).ConfigureAwait(false);
-                var selection = _knowledge.CreateOriginalAssistantMemoryReadScope(_store, identity.DefinitionId, storageScope, legacy is not null);
+                lock (_writeGate) _ucmlInputsIssued = true;
+                var selection = _knowledge.CreateOriginalAssistantMemoryReadScope(_store, identity.DefinitionId, storageScope, legacy is not null,
+                    _ucmlProtection, CanonicalUcmlRecordProtection.OwnerId(current.Actor));
                 return new AssistantOriginalMemoryPreparation(new Input(this, membership, sameBinding,
                     current.Actor, lease.OriginalIdentity, permission!, selection, legacy),
                     "Only this Assistant's permitted local Learn Me records are prepared.", storageScope);

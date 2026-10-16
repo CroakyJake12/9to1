@@ -9,6 +9,14 @@ public sealed partial class AssistantsCuiBindings
         var memory = configuration?.Memory;
         Set("DraftMemoryEnabled", memory?.Enabled == true);
         Set("DraftMemoryIncludeProjectContext", memory?.IncludeProjectContext == true);
+        Set("DraftUcmlCategories", _draft?.UcmlCategoryText ?? "");
+        Set("DraftUcmlAskCategories", _draft?.UcmlAskCategoryText ?? "");
+        Set("DraftUcmlExpiry", _draft?.UcmlExpiryText ?? "");
+        Set("UcmlPreferenceError", _draft?.UcmlPreferenceError ?? "");
+        Set("HasUcmlPreferenceError", !string.IsNullOrEmpty(_draft?.UcmlPreferenceError));
+        Set("UcmlPreferenceStatus", memory is not null && (memory.UcmlCategories.Count > 0 || memory.UcmlAskCategories.Count > 0)
+            ? $"Local personalization: {memory.UcmlCategories.Count} allowed categories; {memory.UcmlAskCategories.Count} categories ask in Home before each use. Other categories are denied. Home permissions and expiry remain enforced."
+            : "UCML disclosure is disabled. Choose exact categories and save to allow local personalization or ask before each use.");
         Set("CanEditMemoryPreferences", usable && !Busy && _draft is not null);
         Set("MemoryPreferenceStatus", memory?.Enabled != true
             ? "Memory is off. This Assistant will not read saved memories."

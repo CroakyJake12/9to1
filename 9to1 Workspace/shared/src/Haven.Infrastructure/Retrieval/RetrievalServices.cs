@@ -166,6 +166,7 @@ public sealed partial class RetrievalIndexService(
 
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        await DemandGenericKnowledgeIndexMutationAsync(connection, transaction, scope, sourceType, sourceId, cancellationToken).ConfigureAwait(false);
         await using (var upsert = connection.CreateCommand())
         {
             upsert.Transaction = transaction;
@@ -207,13 +208,17 @@ public sealed partial class RetrievalIndexService(
     {
         await RetrievalSchema.EnsureAsync(factory, cancellationToken).ConfigureAwait(false);
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        await DemandGenericKnowledgeIndexMutationAsync(connection, transaction, scope, sourceType, sourceId, cancellationToken).ConfigureAwait(false);
         await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText = "DELETE FROM retrieval_documents WHERE scope_kind=$scopeKind AND scope_id=$scopeId AND source_type=$sourceType AND source_id=$sourceId;";
         command.Parameters.AddWithValue("$scopeKind", (int)scope.Kind);
         command.Parameters.AddWithValue("$scopeId", scope.Id.ToString());
         command.Parameters.AddWithValue("$sourceType", sourceType.Trim());
         command.Parameters.AddWithValue("$sourceId", sourceId.Trim());
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>

@@ -66,7 +66,7 @@ public sealed partial class ChatSessionService
     /// joined before any returned memory can enter a provider request. Raw child roles are
     /// conservatively unknown: cancellation never waives an accepted cleanup/write sibling.</summary>
     private sealed class OriginalMemorySourceScope(ChatOrdinaryOriginalInvocation? ordinary,
-        TaskRunInvocationCustody? canonical)
+        TaskRunInvocationCustody? canonical, int maximumChildren = 256)
     {
         private readonly TaskRunColdOriginalSourceScope? _coldSource;
         private readonly Action<Task>? _coldRetain;
@@ -74,7 +74,6 @@ public sealed partial class ChatSessionService
             : this((ChatOrdinaryOriginalInvocation?)null, (TaskRunInvocationCustody?)null) { _coldSource = sameColdSource; _coldRetain = sameRetainer; }
         private readonly object _gate = new();
         private readonly List<Task> _tasks = [];
-        private const int MaximumActualChildren = 256;
         internal void Retain(Task actual)
         {
             ArgumentNullException.ThrowIfNull(actual);
@@ -104,7 +103,13 @@ public sealed partial class ChatSessionService
                 {
                     if (!active || claimed || sourceThread != Environment.CurrentManagedThreadId)
                         throw new InvalidOperationException("Acquire each original memory source synchronously once.");
-                    if (_tasks.Count >= MaximumActualChildren)
+                    // A complete Home/Den/store validation legitimately produces many short
+                    // reads. Independently join each healthy child before releasing its local
+                    // custody slot; held, canceled and failed originals remain retained.
+                    for (var index = _tasks.Count - 1; index >= 0; index--)
+                        if (_tasks[index].IsCompletedSuccessfully)
+                        { _tasks[index].GetAwaiter().GetResult(); _tasks.RemoveAt(index); }
+                    if (_tasks.Count >= maximumChildren)
                         throw new InvalidOperationException("Original memory source child custody requires settlement before another acquisition.");
                     claimed = true;
                 }

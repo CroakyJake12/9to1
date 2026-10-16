@@ -15,10 +15,12 @@ public sealed partial class AssistantsMemoryCuiBindings : ICuiRepeatItemBindingC
     }
     public bool TryGetItemValue(object item, string path, out object? value)
     {
+        if (TryGetUcmlItemValue(item, path, out value)) return true;
         value = null;
         if (!Current || item is not MemoryRow row || !_memoryRows.Any(actual => ReferenceEquals(actual, row))) return false;
         value = path switch { "Id" => row.Id, "Title" => row.Title, "Summary" => row.Summary, "Privacy" => row.Privacy,
             "Origin" => _view?.IsPreservedLegacyRecord(row.Original) == true ? "Preserved saved Agent memory · read-only" : "This Assistant’s memory",
+            "CanExport" => CanExportUcmlRow(row),
             "CanChange" => CanChangeOriginalMemoryRow(row) && IsActionAvailable("assistants.memory.correct") == true, _ => null };
         return value is not null;
     }

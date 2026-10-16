@@ -26,6 +26,8 @@
     <Compile Include="../Haven.Desktop.Tests/OriginalLocalTaskConsoleSmokeTests.ProjectResources.cs" Link="OriginalLocalTaskConsoleSmokeTests.ProjectResources.cs" />
     <Compile Include="../Haven.Desktop.Tests/OriginalLocalTaskConsoleSmokeTests.DeveloperSetup.cs" Link="OriginalLocalTaskConsoleSmokeTests.DeveloperSetup.cs" />
     <Compile Include="../Haven.Desktop.Tests/OriginalLocalTaskConsoleSmokeTests.CommandRead.cs" Link="OriginalLocalTaskConsoleSmokeTests.CommandRead.cs" />
+    <Compile Include="../Haven.Desktop.Tests/OriginalLocalTaskConsoleSmokeTests.Ucml.cs" Link="OriginalLocalTaskConsoleSmokeTests.Ucml.cs" />
+    <Compile Include="../Haven.Desktop.Tests/OriginalLocalTaskConsoleSmokeTests.DenRetention.cs" Link="OriginalLocalTaskConsoleSmokeTests.DenRetention.cs" />
     <Compile Include="../Haven.Desktop.Tests/OriginalLocalTaskConsoleSmokeTests.DeveloperSetupCompletion.cs" Link="OriginalLocalTaskConsoleSmokeTests.DeveloperSetupCompletion.cs" />
   </ItemGroup>
 </Project>

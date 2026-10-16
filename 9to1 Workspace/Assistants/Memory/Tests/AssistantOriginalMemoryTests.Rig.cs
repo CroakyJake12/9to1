@@ -44,6 +44,8 @@ public sealed partial class AssistantOriginalMemoryTests
         internal KnowledgeLibraryService Knowledge = null!;
         internal CanonicalSqliteOriginalStoreOwner Store = null!;
         internal AssistantOriginalMemorySource Memory = null!;
+        internal IProviderSecretStore UcmlSecrets = null!;
+        private readonly EphemeralUcmlSecrets _nonLinuxUcmlSecrets = new();
         internal DenAssistantCanonicalBridge Bridge = null!;
         internal HomePersonalDenFactory Home = null!;
         internal HomePermissionTrustService Permissions = null!;
@@ -76,7 +78,8 @@ public sealed partial class AssistantOriginalMemoryTests
                 : await HomeDenStoreEvidenceProvider.OpenAsync(Path.Combine(Root, "den"), profiles, Token);
             var permissions = new HomePermissionTrustService(state, (app, action) =>
                 app == "9to1.home.local-profile" && action == "home.profile.importStore" ? new(HavenOS.Home.PermissionsTrustNotifications.HomePermissionRisk.High, false, false, true) :
-                new HomeCanonicalAssistantMemoryWriteActionPolicy().TryGet(app, action) ?? originalAdditionalPolicy?.TryGet(app, action));
+                new HomeCanonicalAssistantMemoryWriteActionPolicy().TryGet(app, action) ??
+                new HomeUcmlContextActionPolicy().TryGet(app, action) ?? originalAdditionalPolicy?.TryGet(app, action));
             Permissions = permissions;
             var originalEvidence = new List<IHomeLocalStoreEvidenceProvider> { _den, evidence, catalogueEvidence };
             if (OriginalLegacyEvidence is not null) originalEvidence.Add(OriginalLegacyEvidence);
@@ -99,6 +102,10 @@ public sealed partial class AssistantOriginalMemoryTests
             var tasks = configuredTaskFactory?.Invoke(this) ?? new TaskExecutionCoordinator(new TaskExecutionRepository(Database), new NoExecutionEvents());
             Memory = new(home, conversations, tasks, Knowledge, Store, profiles, authority,
                 OriginalLegacyEvidence as IAssistantOriginalLegacyMemorySource);
+            UcmlSecrets = OperatingSystem.IsLinux() ? new LinuxProviderSecretStore(paths) : _nonLinuxUcmlSecrets;
+            Memory.BindOriginalUcmlSecretStore(UcmlSecrets);
+            Memory.BindOriginalUcmlAccessAudit(new(state, profiles, permissions, Memory));
+            Memory.BindOriginalUcmlContextApproval(new(state, profiles, permissions, Memory));
             if (bindMemoryImport)
             {
                 OriginalMemoryImports = new(AssistantOriginalMemorySource.ResourceKind, Memory, profiles, ownership,
@@ -225,6 +232,7 @@ public sealed partial class AssistantOriginalMemoryTests
             if (Store is not null) { var close = Store.CloseAndDrainAsync(); try { await close; } catch (Exception failure) { if (!ReferenceEquals(close, ExpectedStoreClose)) failures.Add(failure); } }
             if (failures.Count > 0) throw new AggregateException("Actual memory borrowers did not join; owners retained.", failures);
             if (_den is not null) await _den.DisposeAsync();
+            (UcmlSecrets as IDisposable)?.Dispose();
         }
     }
     private sealed record Paths(string DataDirectory) : IAppPaths

@@ -22,7 +22,7 @@ public sealed partial class AssistantsNativeCuiSurface
     {
         var target = _binding ?? throw new InvalidOperationException("Open this Assistant's actual conversation before its memory.");
         var generation = PresentationGeneration; _memoryTarget = target; _memoryPresentationGeneration = generation;
-        PublishSynchronous(() => { Bindings.ShowMemory(); MemoryBindings.SetRevisionSupport(_memoryManagement is IAssistantMemoryRevisionManagementController); MemoryBindings.SetPagingSupport(_memoryManagement is IAssistantMemoryManagementPagingController); });
+        PublishSynchronous(() => { Bindings.ShowMemory(); MemoryBindings.SetUcmlSupport(_ucmlFilePicker is not null && _memoryManagement is IAssistantUcmlMemoryManagementController); MemoryBindings.SetRevisionSupport(_memoryManagement is IAssistantMemoryRevisionManagementController); MemoryBindings.SetPagingSupport(_memoryManagement is IAssistantMemoryManagementPagingController); });
         if (_memoryManagement is null)
         { PublishSynchronous(() => MemoryBindings.SetUnavailable(_memoryUnavailableReason)); return; }
         await ReadOriginalMemoryAsync(target, generation, token);
@@ -48,6 +48,8 @@ public sealed partial class AssistantsNativeCuiSurface
         var generation = _memoryPresentationGeneration;
         if (!IsMemoryCurrent(target, generation)) throw new InvalidOperationException("The original Assistant conversation changed; reopen its memory.");
         var owner = _memoryManagement ?? throw new InvalidOperationException(_memoryUnavailableReason);
+        if (command.StartsWith("assistants.memory.ucml.", StringComparison.Ordinal))
+        { await DispatchUcmlAsync(command, parameter, target, generation, token); return; }
         if (command.StartsWith("assistants.memory.import.", StringComparison.Ordinal))
         { await DispatchOriginalMemoryImportAsync(command, target, generation, token); return; }
         if (command == "assistants.memory.status") { PublishOriginalMemoryObservation(owner, target, generation); return; }

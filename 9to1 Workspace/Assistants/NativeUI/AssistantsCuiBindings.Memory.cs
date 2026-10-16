@@ -57,7 +57,7 @@ public sealed partial class AssistantsMemoryCuiBindings : ICuiWritableBindingCon
         _operation = Guid.NewGuid(); _preview = null; _result = null; _approval = ""; _error = "";
         _status = kind == CanonicalAssistantMemoryMutationKind.Correct ? "Edit this local correction, then review it." : "Review stopping recall of this memory. Its original history is retained."; Refresh();
     }
-    internal bool HasUnconfirmedChanges => HasUnconfirmedImport || HasUnconfirmedWriteChanges;
+    internal bool HasUnconfirmedChanges => HasUnconfirmedImport || HasUnconfirmedWriteChanges || HasUnconfirmedUcml;
     private bool HasUnconfirmedWriteChanges => _commitPending || _outcomeUnconfirmed ||
         _result?.Saved != true && (_preview is not null || _title.Length != 0 || _summary.Length != 0);
     public void Revoke() => _revoked = true;
@@ -109,6 +109,7 @@ public sealed partial class AssistantsMemoryCuiBindings : ICuiWritableBindingCon
     }
     public bool TrySetValue(string path, object? value)
     {
+        if (HasUnconfirmedUcml) return false;
         if (path == "MemorySearch") return TrySetMemorySearch(value);
         if (!Current || !_hasOwner || _view?.IsAvailable != true || _mutationKind == CanonicalAssistantMemoryMutationKind.Reject || _busy || _commitPending || _preview is not null || value is not string text) return false;
         var accepted = false;
@@ -133,26 +134,28 @@ public sealed partial class AssistantsMemoryCuiBindings : ICuiWritableBindingCon
         "assistants.memory.revise" => _preview is not null && !_busy && !_commitPending && !_outcomeUnconfirmed,
         "assistants.memory.discard" => !_busy && !_commitPending && !_outcomeUnconfirmed &&
             (_preview is not null || _title.Length != 0 || _summary.Length != 0),
-        _ => IsImportActionAvailable(command) || IsPagingActionAvailable(command)
+        _ => IsImportActionAvailable(command) || IsPagingActionAvailable(command) || IsUcmlActionAvailable(command)
     });
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken token = default) =>
         IsActionAvailable(command) == true &&
         (command is not ("assistants.memory.correct" or "assistants.memory.reject") ||
-            parameter is MemoryRow row && CanChangeOriginalMemoryRow(row))
+            parameter is MemoryRow row && CanChangeOriginalMemoryRow(row)) &&
+        (command != "assistants.memory.ucml.export" || parameter is MemoryRow exportRow && CanExportUcmlRow(exportRow)) &&
+        (command != "assistants.memory.ucml.inspect" || parameter is UcmlImportRow reviewed && _ucmlRows.Any(actual => ReferenceEquals(actual, reviewed)))
             ? _dispatch(command, parameter, token) :
             ValueTask.FromException(new InvalidOperationException("This action is unavailable for the current memory review."));
     private void Set(string path, object? value) => _publish(() => { if (Current) _values.Set(path, value); });
     private void Refresh()
     {
         RefreshMemoryPaging();
-        RefreshMemoryImport();
+        RefreshMemoryImport(); RefreshUcml();
         Set("MemoryHeading", _view is null ? "Assistant memory" : _view.Definition.Configuration.Name + " · memory");
         Set("MemoryStatus", _hasOwner ? _status : _unavailableReason); Set("MemoryError", _error); Set("HasMemoryError", _error.Length != 0);
         PublishMemoryRepeatRows();
         Set("CanMemoryChangeRecord", IsActionAvailable("assistants.memory.correct") == true);
         RefreshMemoryOriginActions();
         Set("MemoryDraftHeading", _mutationKind switch { CanonicalAssistantMemoryMutationKind.Correct => "Correct selected preference", CanonicalAssistantMemoryMutationKind.Reject => "Stop recalling selected preference", _ => "Add a private preference" });
-        Set("HasMemoryRecords", _view?.Records.Count > 0); Set("CanEditMemoryDraft", _mutationKind != CanonicalAssistantMemoryMutationKind.Reject && _hasOwner && _view?.IsAvailable == true && !_busy && !_commitPending && _preview is null);
+        Set("HasMemoryRecords", _view?.Records.Count > 0); Set("CanEditMemoryDraft", !HasUnconfirmedUcml && _mutationKind != CanonicalAssistantMemoryMutationKind.Reject && _hasOwner && _view?.IsAvailable == true && !_busy && !_commitPending && _preview is null);
         Set("MemoryDraftTitle", _title); Set("MemoryDraftSummary", _summary); Set("HasMemoryPreview", _preview is not null);
         Set("MemoryPreviewTitle", _preview?.Candidate.Title ?? ""); Set("MemoryPreviewSummary", _preview?.Candidate.Summary ?? "");
         Set("MemoryOperation", _preview?.OperationId.ToString("D") ?? ""); Set("MemoryApprovalRequest", _approval); Set("HasMemoryApprovalRequest", _approval.Length != 0);

@@ -227,6 +227,11 @@ public sealed record ChatDelta(string? Content = null, string? Thinking = null);
 /// </summary>
 public sealed record GenerationOptions(double Temperature = 0.7, int ContextLimit = 32768, int ActionLimit = 24)
 {
+    [System.Text.Json.Serialization.JsonIgnore]
+    public IOriginalPrivateContextDispatchGuard? OriginalPrivateContext { get; init; }
+    /// <summary>Cold serialized requests cannot silently lose their private context guard.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool RequireOriginalPrivateContext { get; init; }
     /// <summary>Optional request restrictions intersect central routing policy. True grants nothing;
     /// null preserves existing behavior. Captured in the original request for continuation/recovery.</summary>
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]

@@ -122,7 +122,10 @@ internal sealed class HomeLocalDomainStateLayout : IAsyncDisposable
     private static int Open(int parent, string path, bool directory)
     {
         // O_NONBLOCK refuses FIFO/device candidates without blocking before kind checks.
-        var how = new OpenHow { Flags = 0x80000UL | 0x800UL | (directory ? 0x10000UL : 0UL), Mode = 0, Resolve = 0x6UL };
+        // Linux arm64 overrides O_DIRECTORY; using the x64 value makes openat2
+        // reject the request. Keep identical no-symlink resolution on both ABIs.
+        var directoryFlag = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? 0x4000UL : 0x10000UL;
+        var how = new OpenHow { Flags = 0x80000UL | 0x800UL | (directory ? directoryFlag : 0UL), Mode = 0, Resolve = 0x6UL };
         var result = OpenAt2(437, parent, path, ref how, (ulong)Marshal.SizeOf<OpenHow>());
         if (result >= 0) return checked((int)result);
         var error = Marshal.GetLastPInvokeError();

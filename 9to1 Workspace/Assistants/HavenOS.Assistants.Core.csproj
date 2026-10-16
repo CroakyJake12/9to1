@@ -24,6 +24,7 @@
     <ProjectReference Include="../shared/src/Haven.Application/Haven.Application.csproj" />
     <ProjectReference Include="../Home/HavenOS.Home.csproj" />
     <ProjectReference Include="../../9to1 Models/Dulche Alpha/Den.csproj" />
+    <ProjectReference Include="../../9to1 Models/Dulche Alpha/Context/NineToOne.Dulche.Context.csproj" />
     <ProjectReference Include="../Dev/HavenOS.Dev.csproj" />
   </ItemGroup>
 </Project>

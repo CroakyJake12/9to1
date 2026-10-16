@@ -123,7 +123,7 @@ public sealed class AssistantMemoryCustodyTests
         Assert.Same(release.Task, Assert.Single(retained)); Assert.False(actual.IsCompleted);
         release.SetResult(expected); Assert.Same(failure, await Assert.ThrowsAsync<IOException>(() => actual));
         Assert.Same(expected, captured);
-        Assert.Same(failure, await Assert.ThrowsAsync<IOException>(scope.JoinAsync));
+        Assert.Same(failure, await Assert.ThrowsAsync<IOException>(() => scope.JoinAsync()));
     }
 
     [Fact]
@@ -155,8 +155,26 @@ public sealed class AssistantMemoryCustodyTests
         }, _ => { });
         var observed = Assert.Throws<AggregateException>(() => scope.Run(() => throw bodyFailure));
         Assert.Contains(bodyFailure, observed.InnerExceptions); Assert.Contains(foreignFailure, observed.InnerExceptions);
-        var joined = await Assert.ThrowsAsync<AggregateException>(scope.JoinAsync);
+        var joined = await Assert.ThrowsAsync<AggregateException>(() => scope.JoinAsync());
         Assert.Contains(bodyFailure, joined.InnerExceptions); Assert.Contains(foreignFailure, joined.InnerExceptions);
+    }
+
+    [Fact]
+    public async Task Successful_child_reclamation_keeps_pending_and_failed_originals_in_custody()
+    {
+        var originals = new AssistantMemoryOriginals();
+        var pending = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var failure = new IOException("Retained original child failure.");
+        var failed = Task.FromException<int>(failure);
+        var scope = originals.CreateScope(body => body(), _ => { });
+        scope.Retain(pending.Task); scope.Retain(failed);
+        // Exercise repeated healthy validation results after the failed source was
+        // retained. Reclamation must not turn an old failure into a healthy join.
+        for (var index = 0; index < 256; index++) await scope.Read(() => Task.FromResult(index));
+        var joined = scope.JoinAsync(); Assert.False(joined.IsCompleted);
+        pending.SetResult(1);
+        Assert.Same(failure, await Assert.ThrowsAsync<IOException>(() => joined));
+        Assert.Same(failure, await Assert.ThrowsAsync<IOException>(() => scope.JoinAsync()));
     }
 
     [Fact]
@@ -170,6 +188,6 @@ public sealed class AssistantMemoryCustodyTests
         }, _ => { });
         Assert.Throws<InvalidOperationException>(() => scope.Run(() => invoked++));
         Assert.Equal(1, invoked);
-        await Assert.ThrowsAsync<InvalidOperationException>(scope.JoinAsync);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => scope.JoinAsync());
     }
 }

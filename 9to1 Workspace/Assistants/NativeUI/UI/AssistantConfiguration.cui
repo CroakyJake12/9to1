@@ -97,6 +97,14 @@
         <Input id="assistant-memory-project-context" Type="Checkbox" Content="Request project context for memory" AccessibleName="Request project memory context" Checked="{Binding DraftMemoryIncludeProjectContext, Mode=TwoWay}" Interactive="{Binding CanEditMemoryPreferences}" />
         <Text Text="{Binding MemoryPreferenceStatus}" TextWrapping="Wrap" AccessibleName="Memory preference status" />
         <Text Text="{Binding MemoryPreferenceAvailability}" TextWrapping="Wrap" AccessibleName="Memory availability" />
+        <Text Text="Allow local UCML categories" FontWeight="SemiBold" />
+        <Text Text="Enter exact category names, one per line or separated by commas. Categories absent from both lists are denied. To revoke one, remove it and save. A category can appear in only one list. Importing a file never adds categories." TextWrapping="Wrap" />
+        <Input id="assistant-ucml-categories" Type="Text" Multiline="True" MinHeight="70" AccessibleName="Allowed local UCML categories" PlaceholderText="For example: communication, study" Value="{Binding DraftUcmlCategories, Mode=TwoWay}" Interactive="{Binding CanEditMemoryPreferences}" />
+        <Text Text="Ask before each use" FontWeight="SemiBold" />
+        <Input id="assistant-ucml-ask-categories" Type="Text" Multiline="True" MinHeight="70" AccessibleName="UCML categories requiring a Home decision" PlaceholderText="Exact categories to review in Home before disclosure" Value="{Binding DraftUcmlAskCategories, Mode=TwoWay}" Interactive="{Binding CanEditMemoryPreferences}" />
+        <Input id="assistant-ucml-expiry" Type="Text" AccessibleName="UCML access expiry in UTC" PlaceholderText="Optional UTC expiry: 2027-01-01T00:00:00Z" Value="{Binding DraftUcmlExpiry, Mode=TwoWay}" Interactive="{Binding CanEditMemoryPreferences}" />
+        <Text Text="{Binding UcmlPreferenceError}" TextWrapping="Wrap" Active="{Binding HasUcmlPreferenceError}" />
+        <Text Text="{Binding UcmlPreferenceStatus}" TextWrapping="Wrap" />
         <Text Text="Save these preferences to apply them. Home still controls access; adding or changing memories needs a separate approval. Turning memory off keeps existing memories and conversation history." TextWrapping="Wrap" />
       </Container>
       <Container Type="Vertical Stack" CellGap="8">

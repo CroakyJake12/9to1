@@ -6,6 +6,26 @@ namespace HavenOS.Home.Tests;
 public sealed class HomeOwnershipOriginalSourceCallbacksTests
 {
     [Fact]
+    public async Task Successful_validation_reclamation_does_not_discard_pending_or_failed_children()
+    {
+        var held = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var cause = new IOException("Original retained validation failed.");
+        var failed = Task.FromException<string>(cause);
+        var callbacks = new HomeOwnershipOriginalSourceCallbacks(body => body(), _ => { });
+        callbacks.Retain(held.Task); callbacks.Retain(failed);
+        for (var index = 0; index < 256; index++) callbacks.Retain(Task.FromResult(index));
+        Assert.False(callbacks.HasIndependentlyJoinedHealthySources);
+        var read = callbacks.ReadAsync(() => Task.FromResult("current"));
+        Assert.False(read.IsCompleted);
+        held.SetResult("released");
+        var observed = await Assert.ThrowsAsync<AggregateException>(() => read);
+        Assert.Contains(cause, observed.InnerExceptions);
+        Assert.False(callbacks.HasIndependentlyJoinedHealthySources);
+        var repeated = await Assert.ThrowsAsync<AggregateException>(() => callbacks.ReadAsync(() => Task.FromResult("later")));
+        Assert.Contains(cause, repeated.InnerExceptions);
+    }
+
+    [Fact]
     public async Task Actual_canceled_child_and_independent_scope_OCE_remain_faulted_with_each_original_occurrence()
     {
         using var canceled = new CancellationTokenSource(); canceled.Cancel();

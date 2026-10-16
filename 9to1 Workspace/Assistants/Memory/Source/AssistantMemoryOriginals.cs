@@ -216,7 +216,17 @@ internal sealed class AssistantMemoryOriginals
         }
         internal void Retain(Task actual)
         {
-            lock (_gate) if (!_raw.Any(prior => ReferenceEquals(prior, actual))) _raw.Add(actual);
+            lock (_gate)
+            {
+                // A successful terminal child cannot acquire a later failure. Its
+                // result can contain an entire Home state snapshot, so retaining
+                // every completed validation makes a long import grow quadratically.
+                // Pending, faulted and canceled originals remain in exact custody.
+                foreach (var prior in _raw.Where(static value => value.IsCompletedSuccessfully))
+                    prior.GetAwaiter().GetResult();
+                _raw.RemoveAll(static prior => prior.IsCompletedSuccessfully);
+                if (!_raw.Any(prior => ReferenceEquals(prior, actual))) _raw.Add(actual);
+            }
             retainer(actual); // Private capture precedes caller publication.
         }
         internal void RetainOriginalHomeImportSource(Task actual, HomeOriginalLocalStoreImportSession sameOwner)
@@ -286,6 +296,7 @@ internal sealed class AssistantMemoryOriginals
             }
             lock (_gate) foreach (var failure in _sync) if (!failures.Any(prior => ReferenceEquals(prior, failure))) failures.Add(failure);
             if (!_cleanupOnly) owner.AddUnexpectedCallbacks(failures);
+            lock (_gate) _raw.RemoveAll(static original => original.IsCompletedSuccessfully);
             Throw(failures);
         }
     }

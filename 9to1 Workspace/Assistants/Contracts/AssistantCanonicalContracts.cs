@@ -18,7 +18,27 @@ public sealed record AssistantModelPreferences(string? ProviderId = null, string
     EffortLevel Effort = EffortLevel.Medium, bool AllowCloud = false, bool AllowFallback = false);
 public sealed record AssistantUsageLimits(long? Tokens = null, TimeSpan? Time = null, long? Steps = null,
     long? ToolCalls = null, decimal? Cost = null);
-public sealed record AssistantMemoryPreferences(bool Enabled = false, bool IncludeProjectContext = false);
+public sealed record AssistantMemoryPreferences(bool Enabled = false, bool IncludeProjectContext = false)
+{
+    /// <summary>Explicit disclosure categories for local Assistant personalization. Empty/null
+    /// denies UCML context; importing a record does not enable model disclosure.</summary>
+    public IReadOnlyList<string> UcmlCategories { get; init; } = [];
+    /// <summary>These categories require a fresh Home review for each selected context request.</summary>
+    public IReadOnlyList<string> UcmlAskCategories { get; init; } = [];
+    public DateTimeOffset? UcmlAccessExpiresAt { get; init; }
+
+    public void ValidateUcmlPolicy()
+    {
+        if (UcmlCategories is null || UcmlAskCategories is null)
+            throw new AssistantCommandRefusedException("UCML category policies must be explicit lists; empty lists disable disclosure.");
+        var categories = UcmlCategories.Concat(UcmlAskCategories).ToArray();
+        if (categories.Length > 64 ||
+            categories.Any(value => string.IsNullOrWhiteSpace(value) || value.Length > 128 ||
+                value != value.Trim() || value.Contains('*') || value.Any(char.IsControl)) ||
+            categories.Distinct(StringComparer.Ordinal).Count() != categories.Length)
+            throw new AssistantCommandRefusedException("Choose up to 64 distinct, exact UCML categories across Allow and Ask; a category cannot occur in both lists. Empty lists disable disclosure.");
+    }
+}
 public sealed record AssistantProactivePreferences(bool Enabled = false, bool AllowCheckIns = false,
     bool AllowUnsolicitedConversations = false, IReadOnlyList<string>? EventKinds = null,
     IReadOnlyList<string>? NotificationChannels = null, IReadOnlyList<string>? AutomationIds = null);

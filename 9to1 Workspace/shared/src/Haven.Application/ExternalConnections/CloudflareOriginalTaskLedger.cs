@@ -28,6 +28,17 @@ public sealed class CloudflareOriginalTaskLedger
     public Task<T> Track<T>(ValueTask<T> original) => Track(original.AsTask());
     public Task Track(Task original) { lock (_sync) { if (!_tasks.Any(x => ReferenceEquals(x, original))) _tasks.Add(original); } return original; }
     public Task Track(ValueTask original) => Track(original.AsTask());
+    /// <summary>Release only successful terminal children after an owning scope has
+    /// joined them. Faulted, canceled and still-live originals retain exact custody.</summary>
+    public void ReleaseSuccessfullyObservedOriginals()
+    {
+        lock (_sync)
+        {
+            foreach (var original in _tasks.Where(static value => value.IsCompletedSuccessfully))
+                original.GetAwaiter().GetResult();
+            _tasks.RemoveAll(static original => original.IsCompletedSuccessfully);
+        }
+    }
     public void Retain(Exception error) { lock (_sync) { if (!_errors.Any(x => ReferenceEquals(x, error))) _errors.Add(error); } }
     public void Capture(Task? original, Exception observed)
     {

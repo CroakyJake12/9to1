@@ -77,9 +77,11 @@ public static class MemoryInjection
     public static string BuildDirective(IReadOnlyList<KnowledgeRecord> records)
     {
         if (records is null || records.Count == 0) return string.Empty;
+        var legacy = records.Where(record => !record.LearnedBecause.StartsWith("ucml.v1:", StringComparison.Ordinal)).Take(MaximumRecords).ToArray();
+        if (legacy.Length == 0) return string.Empty;
         var builder = new StringBuilder();
         builder.Append(DirectiveHeader).Append('\n');
-        foreach (var record in records.Take(MaximumRecords))
+        foreach (var record in legacy)
         {
             var line = LineFor(record);
             if (line.Length == 0) continue;

@@ -47,4 +47,8 @@ dist/
 *.tmp
 *.userprefs
 
+# Personal UCML exports belong outside the source repository, including sealed copies.
+*.ucml
+*.ucml.*
+
 

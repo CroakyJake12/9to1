@@ -51,7 +51,7 @@ public sealed partial class AssistantOriginalMemorySource
                         return (existing, "The same original revision preview is retained.");
                     return (null, "This operation already belongs to a different original preview.");
                 }
-                if (_writeOperations.Count >= 128) return (null, "Reopen this Assistant before preparing more memory operations.");
+                if (_writeOperations.Count >= 1024) return (null, "Reopen this Assistant before preparing more memory operations.");
             }
             var original = await source.Read(() => ReadOriginalRevisionSnapshotAsync(input, sameConversation,
                 sameSelectedRecord.Id, source.Run, source.Retain, token)).ConfigureAwait(false);
@@ -75,6 +75,15 @@ public sealed partial class AssistantOriginalMemorySource
                     IsUserLocked = true, ExpiresAt = original.Record.Freshness == KnowledgeFreshnessClass.Durable ? original.Record.ExpiresAt : null, PrivacyClass = KnowledgePrivacyClass.Private,
                     Scope = input.ReadScope.StorageScope, AppId = KnowledgeLibraryService.AssistantMemoryApplicationId }
                 : original.Record with { Status = KnowledgeRecordStatus.Rejected, UpdatedAt = now, UserCorrection = "User rejection" };
+            if (kind == CanonicalAssistantMemoryMutationKind.Correct && ReadUcmlDocument(original.Record) is { } ucml)
+                candidate = candidate with
+                {
+                    LearnedBecause = UcmlMetadataPrefix + NineToOne.Dulche.Context.UcmlCodec.SerializeMetadata(ucml.Metadata with
+                    {
+                        Id = candidate.Id, Revision = checked(ucml.Metadata.Revision + 1), Title = candidate.Title,
+                        CreatedAt = now, UpdatedAt = now, Confidence = 1, SupersedesId = original.Record.Id
+                    })
+                };
             KnowledgeLibraryService.AssistantMemoryCreatePreparation? prepared = null;
             if (kind == CanonicalAssistantMemoryMutationKind.Correct)
                 prepared = await source.Read(() => _knowledge.PrepareOriginalAssistantMemoryCandidateAsync(input.ReadScope,
@@ -85,7 +94,19 @@ public sealed partial class AssistantOriginalMemorySource
                 identity.DefinitionId, input.Binding.Definition.Revision, input.Binding.DenSessionId, input.Binding.DenSessionRevision,
                 sameConversation.Id, operationId, candidate, prepared?.IndexPreparation.Document ?? original.Document,
                 kind, original.Record, original.Sha256, original.RawJson);
-            var intent = new WriteIntent(this, input, sameConversation, denPermission, prepared, durable, original);
+            var encryptedReceipt = await source.Read(() => ProtectDurableReceiptAsync(input, durable, token)).ConfigureAwait(false);
+            KnowledgeRecord? encryptedRetired = null;
+            if (encryptedReceipt is not null)
+            {
+                var retired = original.Record with
+                {
+                    Status = kind == CanonicalAssistantMemoryMutationKind.Correct ? KnowledgeRecordStatus.Superseded : KnowledgeRecordStatus.Rejected,
+                    UpdatedAt = candidate.UpdatedAt, UserCorrection = candidate.UserCorrection
+                };
+                encryptedRetired = await source.Read(() => input.ReadScope.Protection!.ProtectAsync(retired,
+                    input.ReadScope.ProtectionOwnerId, input.ReadScope.StorageScope, token)).ConfigureAwait(false);
+            }
+            var intent = new WriteIntent(this, input, sameConversation, denPermission, prepared, durable, original, encryptedReceipt, encryptedRetired);
             lock (_writeGate)
             {
                 if (_writeOperations.ContainsKey(operationId)) return (null, "This original operation was concurrently prepared. Preserve its existing preview.");

@@ -222,9 +222,15 @@ public sealed partial class HomeCanonicalAssistantMemoryWriteSource : ICanonical
                 if (_ownership.ResourceKind != "assistant.memory" || _ownership.Receipt is null || _ownership.ProfileId != Actor.ProfileId ||
                     _ownership.StoreId != intent.OriginalStoreIdentity.StoreId.ToString("D"))
                     throw new UnauthorizedAccessException("The actual separately imported Assistant memory Home store receipt is required.");
+                var encrypted = (intent as ICanonicalAssistantMemoryProtectedWriteIntent)?.EncryptedDurableReceipt;
+                if (intent.Candidate.LearnedBecause.StartsWith("ucml.v1:", StringComparison.Ordinal) && encrypted is null)
+                    throw new UnauthorizedAccessException("UCML must have an encrypted durable receipt before Home approval.");
                 _arguments = JsonSerializer.SerializeToElement(new { intent.OperationId, intent.Actor,
                     intent.DenId, intent.NamespaceId, intent.DefinitionId, intent.DefinitionRevision,
-                    intent.OriginalStorageScope, intent.Candidate, intent.OriginalConversation,
+                    intent.OriginalStorageScope, Candidate = encrypted is null ? intent.Candidate : null,
+                    OriginalConversation = encrypted is null ? intent.OriginalConversation : null,
+                    OriginalConversationId = intent.OriginalConversation.Id,
+                    EncryptedReceiptSha256 = encrypted is null ? null : Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(encrypted))),
                     OriginalIntentDigest = _originalMutation.IntentDigest,
                     MutationKind = _originalMutation.Kind, Action = _originalMutation.Action,
                     OriginalRecordId = _originalMutation.Record?.Id, ExpectedOriginalRecordSha256 = _originalMutation.ExpectedRecordSha256,

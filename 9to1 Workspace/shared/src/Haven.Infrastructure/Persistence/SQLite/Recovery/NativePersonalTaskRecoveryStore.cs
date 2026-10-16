@@ -15,9 +15,12 @@ internal sealed partial class NativePersonalTaskRecoveryStore : IDisposable
     private readonly Identity _expectedDatabase;
     private readonly uint _uid;
     private bool _disposed;
-    private const int NoFollow = 0x20000;
+    // arm64's Linux fcntl ABI overrides the x86_64 directory/no-follow values.
+    // Keep no-follow protection on both architectures instead of accidentally
+    // requesting O_DIRECT/O_LARGEFILE and failing to open the original root.
+    private static readonly int NoFollow = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? 0x8000 : 0x20000;
     private const int CloseOnExec = 0x80000;
-    private const int DirectoryFlag = 0x10000;
+    private static readonly int DirectoryFlag = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? 0x4000 : 0x10000;
     private const int EmptyPath = 0x1000;
     private const uint StatBasic = 0x7ff;
 

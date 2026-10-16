@@ -21,7 +21,7 @@
           </Container>
         </Container>
       </Container>
-      <Text Text="{Binding SelectedAssistantActivity}" TextWrapping="Wrap" AccessibleName="Assistant activity" Foreground="{Resource CuiMutedTextBrush}" />
+      <Text Text="{Binding SelectedAssistantActivity}" TextWrapping="Wrap" AccessibleName="Assistant activity" Foreground="{Resource CuiTextSoftBrush}" />
       <Object id="assistant-conversation" Type="AssistantConversation" MinHeight="280" AccessibleName="Assistant conversation" />
       <Container Type="Vertical Stack" AccessibleName="Current Task progress" CellGap="8" Active="{Binding HasTaskProgress}">
         <Text Text="Current Task" FontSize="18" FontWeight="SemiBold" />
@@ -46,7 +46,7 @@
           <Repeat Source="{Binding TaskPlanRows}" As="step" Key="{Binding step.Id}">
             <Container Type="Vertical Stack" CellGap="3">
               <Text Text="{Binding step.Summary}" TextWrapping="Wrap" />
-              <Text Text="{Binding step.Status}" Foreground="{Resource CuiMutedTextBrush}" TextWrapping="Wrap" />
+              <Text Text="{Binding step.Status}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
             </Container>
           </Repeat>
         </Container>
@@ -55,7 +55,7 @@
           <Repeat Source="{Binding TaskSteerRows}" As="steer" Key="{Binding steer.Id}">
             <Container Type="Vertical Stack" CellGap="3">
               <Text Text="{Binding steer.Summary}" TextWrapping="Wrap" />
-              <Text Text="{Binding steer.Status}" Foreground="{Resource CuiMutedTextBrush}" TextWrapping="Wrap" />
+              <Text Text="{Binding steer.Status}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
             </Container>
           </Repeat>
         </Container>
@@ -64,7 +64,7 @@
           <Repeat Source="{Binding TaskQueueRows}" As="followup" Key="{Binding followup.Id}">
             <Container Type="Vertical Stack" CellGap="3">
               <Text Text="{Binding followup.Summary}" TextWrapping="Wrap" />
-              <Text Text="{Binding followup.Status}" Foreground="{Resource CuiMutedTextBrush}" TextWrapping="Wrap" />
+              <Text Text="{Binding followup.Status}" Foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
             </Container>
           </Repeat>
         </Container>

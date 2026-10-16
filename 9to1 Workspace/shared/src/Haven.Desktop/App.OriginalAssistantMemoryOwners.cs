@@ -62,6 +62,9 @@ public sealed partial class App
                     provider.GetRequiredService<TaskExecutionCoordinator>(), knowledge,
                     _actualAssistantSqliteStore!, home.Profiles, home.Ownership,
                     actualLegacyMemorySource: legacyMemory);
+                memory.BindOriginalUcmlSecretStore(provider.GetRequiredService<IProviderSecretStore>());
+                memory.BindOriginalUcmlAccessAudit(new(home.StateStore, home.Profiles, home.Permissions, memory));
+                memory.BindOriginalUcmlContextApproval(new(home.StateStore, home.Profiles, home.Permissions, memory));
                 // Retain the actual partial source before constructing/binding WRITE,
                 // import delivery or Chat. A later failure keeps exact owners for cleanup.
                 BindOriginalAssistantMemoryImportSession(provider, home, memory);

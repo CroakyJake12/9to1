@@ -8,7 +8,7 @@ namespace HavenOS.Apps.Assistants.Canonical;
 public sealed partial class DenAssistantCanonicalBridge
 {
     private sealed record OriginalAssistantMemoryRequest(AssistantDefinitionSnapshot Definition,
-        IChatOriginalPersistentMemoryInput? Input);
+        IChatOriginalPersistentMemoryInput? Input, ChatOriginalPersistentMemoryLineage? Lineage);
 
     private async Task<OriginalAssistantMemoryRequest> PrepareOriginalAssistantMemoryRequestAsync(
         AssistantConversationBinding binding, AssistantDefinitionSnapshot actualDefinition,
@@ -16,7 +16,7 @@ public sealed partial class DenAssistantCanonicalBridge
     {
         var current = await ValidateBindingAsync(binding, token).ConfigureAwait(false);
         DemandSameMemoryDefinition(actualDefinition, current.Definition);
-        if (!actualDefinition.Configuration.Memory.Enabled) return new(actualDefinition, null);
+        if (!actualDefinition.Configuration.Memory.Enabled) return new(actualDefinition, null, null);
         if (_memory is null || !_originals.Invoke(() => _chat.HasOriginalPersistentMemorySource(_memory) &&
             _memory.HasOriginalComposition(_home, _conversations)))
             throw new AssistantCommandRefusedException("Persistent-memory opt-in requires the SAME composed scoped source; the saved input remains available.");
@@ -27,7 +27,9 @@ public sealed partial class DenAssistantCanonicalBridge
             throw new AssistantCommandRefusedException(_originals.Invoke(() => prepared.Reason));
         if (!_originals.Invoke(() => _memory.IsIssuedOriginalInput(input)))
             throw new InvalidOperationException("The actual Assistant memory source did not issue this preparation input.");
-        var request = new OriginalAssistantMemoryRequest(actualDefinition, input);
+        var lineage = _memory is IChatOriginalPersistentMemoryColdSource cold
+            ? _originals.Invoke(() => cold.ObserveOriginalLineage(input)) : null;
+        var request = new OriginalAssistantMemoryRequest(actualDefinition, input, lineage);
         await DemandCurrentOriginalAssistantMemoryRequestAsync(binding, request, token).ConfigureAwait(false);
         return request;
     }
@@ -69,6 +71,7 @@ public sealed partial class DenAssistantCanonicalBridge
         {
             RequireOriginalPersistentMemoryInput = request.Definition.Configuration.Memory.Enabled
         },
-        OriginalPersistentMemoryInput = request.Input
+        OriginalPersistentMemoryInput = request.Input,
+        RequestedPersistentMemoryLineage = request.Lineage
     };
 }
