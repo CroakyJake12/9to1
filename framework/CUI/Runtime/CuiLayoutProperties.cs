@@ -54,7 +54,7 @@ public static class CuiLayoutProperties
                     value = bool.Parse(text); type = typeof(bool); initial = false; break;
                 case "CellMargin": value = Thickness.Parse(text); type = typeof(Thickness); initial = default(Thickness); break;
                 case "Orientation": value = Enum.Parse<Orientation>(text, true); type = typeof(Orientation); initial = Orientation.Horizontal; break;
-                case "HorizontalScrolling": case "VerticalScrolling":
+                case "HorizontalScrolling": case "VerticalScrolling": case "FollowAtEnd":
                     if (_control is not CuiContainerControl) return false;
                     value = bool.Parse(text); type = typeof(bool); initial = false; break;
                 default: return false;
@@ -101,6 +101,7 @@ public static class CuiLayoutProperties
                     break;
                 case "HorizontalScrolling": ((CuiContainerControl)_control).SetScrolling(horizontal: (bool)property.Value!); break;
                 case "VerticalScrolling": ((CuiContainerControl)_control).SetScrolling(vertical: (bool)property.Value!); break;
+                case "FollowAtEnd": ((CuiContainerControl)_control).SetFollowAtEnd((bool)property.Value!); break;
             }
         }
         public void Dispose() { }

@@ -14,6 +14,7 @@ public sealed class CuiContainerControl : CuiMaterialBorder, IDisposable
     internal bool InheritY { get; private set; }
     private readonly ScrollViewer _scroll = new();
     private bool _horizontalScrolling, _verticalScrolling;
+    private bool _followAtEnd, _followingLatest = true;
     private Thickness _cellMargin;
     private readonly List<Border> _cells = [];
     private readonly List<(Control Control, EventHandler<AvaloniaPropertyChangedEventArgs> Handler)> _placementHandlers = [];
@@ -65,6 +66,33 @@ public sealed class CuiContainerControl : CuiMaterialBorder, IDisposable
             _ => throw new ArgumentOutOfRangeException(nameof(layoutType), layoutType, "Unknown canonical Container layout Type.")
         };
         Child = Layout;
+        _scroll.ScrollChanged += OnScrollChanged;
+    }
+
+    /// <summary>Follow new content only while the reader remains at the end of the vertical viewport.</summary>
+    public void SetFollowAtEnd(bool enabled)
+    {
+        if (_followAtEnd == enabled) return;
+        _followAtEnd = enabled;
+        _followingLatest = IsAtEnd();
+    }
+
+    private bool IsAtEnd() => _scroll.Extent.Height - _scroll.Viewport.Height - _scroll.Offset.Y <= 1;
+
+    private void OnScrollChanged(object? sender, ScrollChangedEventArgs args)
+    {
+        if (!ReferenceEquals(args.Source, _scroll) || !_followAtEnd || !_verticalScrolling) return;
+        var end = Math.Max(0, _scroll.Extent.Height - _scroll.Viewport.Height);
+        var layoutChanged = args.ExtentDelta.Y != 0 || args.ViewportDelta.Y != 0;
+        // Layout and input can arrive in the same notification. Preserve a
+        // reader's movement while allowing the layout's own offset clamp.
+        var previousOffset = _scroll.Offset.Y - args.OffsetDelta.Y;
+        var clampedOffset = Math.Clamp(previousOffset, 0, end);
+        var readerMoved = Math.Abs(_scroll.Offset.Y - clampedOffset) > 1;
+        if (!layoutChanged || readerMoved)
+            _followingLatest = IsAtEnd();
+        if (layoutChanged && _followingLatest)
+            _scroll.Offset = new Vector(_scroll.Offset.X, end);
     }
 
     public void SetScrolling(bool? horizontal = null, bool? vertical = null)
@@ -122,7 +150,7 @@ public sealed class CuiContainerControl : CuiMaterialBorder, IDisposable
         }
     }
     public void Dispose()
-    { foreach (var (control, handler) in _placementHandlers) control.PropertyChanged -= handler; _placementHandlers.Clear(); (Layout as IDisposable)?.Dispose(); }
+    { _scroll.ScrollChanged -= OnScrollChanged; foreach (var (control, handler) in _placementHandlers) control.PropertyChanged -= handler; _placementHandlers.Clear(); (Layout as IDisposable)?.Dispose(); }
 
     public void SetCellGap(double value)
     {
