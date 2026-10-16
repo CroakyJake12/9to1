@@ -43,3 +43,4 @@ No unresolved product requirement was identified in this reconciliation. Impleme
 - GitHub issue #34 saved and read back; MG-T01–MG-T12 registered with dependencies.
 - Repository commit records only this task mirror, the proposal and master-write evidence; concurrent application implementation is excluded.
 - Product implementation tests and acceptance: NOT EXECUTED for Model Groups. The checkpoint does not establish COMPLETED or VERIFIED feature status.
+- A third insertion attempt in a separate tab also failed. The empty tab was removed; final connector read-back confirmed the original body is identical and only the original tab remains. Master content was preserved.

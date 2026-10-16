@@ -6,6 +6,8 @@ Source: approved user handoff, 16 October 2026. This is the reconciled specifica
 
 Persistent backlog: [GitHub issue #34](https://github.com/CroakyJake12/9to1/issues/34), linked to existing parent queue #21. Task mirror: [model-groups-tasks.md](../development/model-groups-tasks.md).
 
+A separate-tab insertion was also attempted to avoid the original tab's insertion constraints. Google allowed creating the tab but rejected its text with the same error. The empty tab was removed. Final read-back verified that the original tab body and sole tab ID are unchanged; only revision history records the attempted tab creation/removal. No Model Groups content was saved to the master.
+
 ## Model Groups — DULCHE-MODEL-GROUPS-V2
 
 Approved requirements, 16 October 2026. Implementation status: WORKING — specification and backlog registration; implementation and independent acceptance remain pending. This feature belongs to Shared Frameworks → Dulche and follows the existing dependency priority. It does not displace active critical work or weaken any existing model-routing, Den, CUI, permission, privacy, persistence, platform or acceptance requirement.

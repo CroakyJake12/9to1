@@ -16,9 +16,20 @@
       "kind": "revision-guarded minimal insertText",
       "outcome": "HTTP 400 FAILED_PRECONDITION",
       "message": "Precondition check failed."
+    },
+    {
+      "kind": "scoped addition in a new document tab",
+      "outcome": "HTTP 400 FAILED_PRECONDITION",
+      "message": "Precondition check failed.",
+      "cleanup": "The successfully created empty tab was deleted; final read-back confirms the original tab body is byte-for-byte equal as returned by the connector."
     }
   ],
   "masterUpdated": false,
   "backlogUrl": "https://github.com/CroakyJake12/9to1/issues/34",
-  "acceptanceExecuted": false
+  "acceptanceExecuted": false,
+  "finalRevision": "AHj4eMSpM_9wksHbMNimtorJQ1C3pT5t01sFcF3CENxW_eMBP0sAbzMNkwtif7N6d97Qs9IJMWiOFeIyLOJylltQQWSAhvJB3TVVKAsUV18",
+  "finalOriginalBodyUnchanged": true,
+  "finalTabIds": [
+    "t.0"
+  ]
 }
