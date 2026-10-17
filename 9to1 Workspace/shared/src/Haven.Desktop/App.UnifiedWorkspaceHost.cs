@@ -124,9 +124,18 @@ public sealed partial class App
                 () => new Haven.Desktop.Views.Pages.Home.HomeDiscoverPage(new HomeDiscoverCatalog(catalogue.Providers.Select(provider =>
                     new HomeRegisteredModelCatalogueSource(catalogue, provider.Id, () => !privacy.Current.LocalOnlyMode)))),
                 (intent, settlement) => OriginalClose is null && _workspace is { } workspace && workspace.QueueNavigation(intent, settlement),
-                // Spaces owns draft creation and the actual destination. Refuse before
-                // writing an orphan draft until that real content binding is composed.
-                (_, _) => Task.FromException<AppContentAddress>(new NotSupportedException("The Spaces native destination is not yet available in this host.")),
+                // Spaces owns the canonical draft. Create it through the shared conversation
+                // repository, then open the registered Spaces destination in the same tab.
+                async (text, token) =>
+                {
+                    var conversations = _services.GetRequiredService<IConversationRepository>();
+                    var now = DateTimeOffset.UtcNow;
+                    var conversation = new Conversation(
+                        Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, text, null, null,
+                        false, true, now, now, SpaceId: SpaceRegistry.ChatSpaceId);
+                    await conversations.UpsertConversationAsync(conversation, token).ConfigureAwait(false);
+                    return AppContentAddress.Parse("9to1://spaces");
+                },
                 AdmitHomeAsync, () => IsCurrent, _windowLifetime, aiAvailable: false);
             IBrowseEngineHostFactory? engines = null;
             if (!OperatingSystem.IsWindows())
