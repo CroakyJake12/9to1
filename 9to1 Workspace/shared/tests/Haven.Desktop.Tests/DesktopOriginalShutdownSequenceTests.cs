@@ -11,9 +11,13 @@ public sealed class DesktopOriginalShutdownSequenceTests
     [Fact]
     public Task Repeated_close_joins_same_held_startup_and_does_not_prepare_early() => RunCase(async scope =>
     {
-        var startup = scope.Hold(); scope.App = () => startup.Task;
+        var startup = scope.Hold();
+        var startupEntered = NewHold();
+        scope.App = () => { startupEntered.TrySetResult(); return startup.Task; };
         var close = scope.Close();
         Assert.Same(close, scope.Close()); Assert.False(close.IsCompleted);
+        await startupEntered.Task.WaitAsync(Bound);
+        Assert.False(startup.Task.IsCompleted);
         Assert.Empty(scope.Order); Assert.NotNull(scope.Owner.OriginalRequiredDrain);
         startup.TrySetResult(); await close.WaitAsync(Bound);
         Assert.Equal(["save", "prepare", "borrowers", "provider", "final"], scope.Order);
