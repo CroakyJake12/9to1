@@ -169,4 +169,124 @@ public sealed class CuiCompilerTests
 
         Assert.True(result.Succeeded, string.Join(Environment.NewLine, result.Diagnostics));
     }
+
+    [Fact]
+    public void Indexed_import_graph_reports_a_transitive_cycle_at_the_owning_import()
+    {
+        using var project = new ImportProject(new Dictionary<string, string>
+        {
+            ["a.cui"] = "<Cui><Import Source=\"b.cui\"/><Prefab (Definition) Type=\"static\" ID=\"RootCard\"><Text>A</Text></Prefab></Cui>",
+            ["b.cui"] = "<Cui><Import Source=\"c.cui\"/><Page/></Cui>",
+            ["c.cui"] = "<Cui><Import Source=\"b.cui\"/><Page/></Cui>",
+        });
+
+        var result = project.Compile("<Cui>\n  <Import Source=\"a.cui\"/>\n  <Page><RootCard/></Page>\n</Cui>");
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, item => item.Code == "CUIC020");
+        Assert.Contains("a.cui -> b.cui -> c.cui -> b.cui", diagnostic.Message);
+        Assert.Equal("consumer.cui", diagnostic.Span.SourceName);
+        Assert.Equal(2, diagnostic.Span.Start.Line);
+        Assert.True(diagnostic.Span.Start.Column > 0);
+        Assert.Null(result.Output);
+    }
+
+    [Fact]
+    public void Indexed_import_graph_reports_a_missing_transitive_dependency()
+    {
+        using var project = new ImportProject(new Dictionary<string, string>
+        {
+            ["a.cui"] = "<Cui><Import Source=\"b.cui\"/><Prefab (Definition) Type=\"static\" ID=\"RootCard\"><Text>A</Text></Prefab></Cui>",
+            ["b.cui"] = "<Cui><Import Source=\"missing.cui\"/><Page/></Cui>",
+        });
+
+        var result = project.Compile("<Cui>\n  <Import Source=\"a.cui\"/>\n  <Page><RootCard/></Page>\n</Cui>");
+
+        Assert.False(result.Succeeded);
+        var diagnostic = Assert.Single(result.Diagnostics, item => item.Code == "CUIC018");
+        Assert.Contains("a.cui -> b.cui -> missing.cui", diagnostic.Message);
+        Assert.Equal("consumer.cui", diagnostic.Span.SourceName);
+        Assert.Equal(2, diagnostic.Span.Start.Line);
+        Assert.Null(result.Output);
+    }
+
+    [Fact]
+    public void Indexed_import_aliases_disambiguate_the_same_symbol_from_distinct_packages()
+    {
+        using var project = ImportProject.WithCards();
+
+        var result = project.Compile("<Cui><Import Source=\"a.cui\" As=\"First\"/><Import Source=\"b.cui\" As=\"Second\"/><Page><First.Card/><Second.Card/></Page></Cui>");
+
+        Assert.True(result.Succeeded, string.Join(Environment.NewLine, result.Diagnostics));
+        var dependencies = result.Output!.Dependencies.Entries.Values.SelectMany(value => value).ToArray();
+        Assert.Contains(dependencies, item => item.Kind == CuiDependencyKind.Import && item.Name == "a.cui");
+        Assert.Contains(dependencies, item => item.Kind == CuiDependencyKind.Import && item.Name == "b.cui");
+    }
+
+    [Fact]
+    public void Indexed_import_aliases_can_bind_one_package_under_two_explicit_names()
+    {
+        using var project = ImportProject.WithCards();
+
+        var result = project.Compile("<Cui><Import Source=\"a.cui\" As=\"First\"/><Import Source=\"a.cui\" As=\"Second\"/><Page><First.Card/><Second.Card/></Page></Cui>");
+
+        Assert.True(result.Succeeded, string.Join(Environment.NewLine, result.Diagnostics));
+        Assert.NotNull(result.Output);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" As=\"Same\"")]
+    public void Indexed_import_aliases_still_reject_colliding_exposed_names(string alias)
+    {
+        using var project = ImportProject.WithCards();
+
+        var result = project.Compile($"<Cui><Import Source=\"a.cui\"{alias}/><Import Source=\"b.cui\"{alias}/><Page/></Cui>");
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, item => item.Code == "CUIC019");
+        Assert.Null(result.Output);
+    }
+
+    [Fact]
+    public void Indexed_import_graph_allows_shared_dependencies_without_reexporting_their_symbols()
+    {
+        using var project = new ImportProject(new Dictionary<string, string>
+        {
+            ["a.cui"] = "<Cui><Import Source=\"shared.cui\"/><Prefab (Definition) Type=\"static\" ID=\"First\"><Text>A</Text></Prefab></Cui>",
+            ["b.cui"] = "<Cui><Import Source=\"shared.cui\"/><Prefab (Definition) Type=\"static\" ID=\"Second\"><Text>B</Text></Prefab></Cui>",
+            ["shared.cui"] = "<Prefab (Definition) Type=\"static\" ID=\"PrivateCard\"><Text>Shared</Text></Prefab>",
+        });
+        const string imports = "<Import Source=\"a.cui\"/><Import Source=\"b.cui\"/>";
+
+        var valid = project.Compile($"<Cui>{imports}<Page><First/><Second/></Page></Cui>");
+        var undeclared = project.Compile($"<Cui>{imports}<Page><PrivateCard/></Page></Cui>");
+
+        Assert.True(valid.Succeeded, string.Join(Environment.NewLine, valid.Diagnostics));
+        Assert.False(undeclared.Succeeded);
+        Assert.Contains(undeclared.Diagnostics, item => item.Code == "CUIC011");
+    }
+
+    private sealed class ImportProject : IDisposable
+    {
+        private readonly string _root = Path.Combine(Path.GetTempPath(), $"cui-import-{Guid.NewGuid():N}");
+
+        public ImportProject(IReadOnlyDictionary<string, string> sources)
+        {
+            Directory.CreateDirectory(_root);
+            foreach (var (name, source) in sources)
+                File.WriteAllText(Path.Combine(_root, name), source);
+        }
+
+        public static ImportProject WithCards() => new(new Dictionary<string, string>
+        {
+            ["a.cui"] = "<Prefab (Definition) Type=\"static\" ID=\"Card\"><Text>A</Text></Prefab>",
+            ["b.cui"] = "<Prefab (Definition) Type=\"static\" ID=\"Card\"><Text>B</Text></Prefab>",
+        });
+
+        public CuiCompilation Compile(string source) => new CuiCompiler().Compile(source, "consumer.cui",
+            new CuiCompilerOptions(Options().Metadata, new CuiSourceIndex().Index(_root)));
+
+        public void Dispose() => Directory.Delete(_root, recursive: true);
+    }
 }

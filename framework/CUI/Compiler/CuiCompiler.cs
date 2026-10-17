@@ -249,7 +249,7 @@ public sealed class CuiCompiler
         foreach (var import in options.Imports ?? Array.Empty<CuiImportedSymbols>())
             supplied[import.Source] = import;
 
-        var resolved = new List<CuiImportedSymbols>();
+        var resolved = new List<(CuiImportDefinition Declaration, CuiImportedSymbols Symbols)>();
         foreach (var import in document.Imports)
         {
             if (!supplied.TryGetValue(import.Source, out var symbols))
@@ -259,31 +259,37 @@ public sealed class CuiCompiler
                 continue;
             }
 
-            resolved.Add(symbols);
+            resolved.Add((import, symbols));
         }
 
-        CuiSourceSpan SpanOfSource(string source) =>
-            document.Imports.First(entry => entry.Source == source).Span;
-
         var onStack = new HashSet<string>(StringComparer.Ordinal);
-        void Walk(string source, List<string> path)
+        var visited = new HashSet<string>(StringComparer.Ordinal);
+        void Walk(string source, List<string> path, CuiSourceSpan owningImportSpan)
         {
-            if (!onStack.Add(source)) return;
+            if (!visited.Add(source)) return;
+            onStack.Add(source);
             path.Add(source);
             if (supplied.TryGetValue(source, out var symbols))
             {
                 foreach (var dependency in symbols.ImportedSources)
                 {
-                    if (!supplied.ContainsKey(dependency)) continue;
+                    if (!supplied.ContainsKey(dependency))
+                    {
+                        diagnostics.Error("CUIC018",
+                            $"Import '{dependency}' is not present in the indexed CUI source roots. "
+                            + $"Dependency path: {string.Join(" -> ", path.Concat(new[] { dependency }))}.",
+                            owningImportSpan);
+                        continue;
+                    }
                     if (onStack.Contains(dependency))
                     {
                         diagnostics.Error("CUIC020",
                             $"Circular CUI import dependency: {string.Join(" -> ", path.Concat(new[] { dependency }))}.",
-                            SpanOfSource(dependency));
+                            owningImportSpan);
                         continue;
                     }
 
-                    Walk(dependency, path);
+                    Walk(dependency, path, owningImportSpan);
                 }
             }
 
@@ -291,15 +297,22 @@ public sealed class CuiCompiler
             onStack.Remove(source);
         }
 
-        foreach (var symbols in resolved) Walk(symbols.Source, new List<string>());
+        foreach (var (declaration, symbols) in resolved)
+        {
+            // The index carries dependency identities, not their authored spans. Attribute
+            // a transitive failure to this actual consumer import and retain the full path.
+            visited.Clear();
+            Walk(symbols.Source, new List<string>(), declaration.Span);
+        }
 
-        var exporters = new Dictionary<string, List<string>>(StringComparer.Ordinal);
-        foreach (var symbols in resolved)
+        var exporters = new Dictionary<string, List<CuiImportDefinition>>(StringComparer.Ordinal);
+        foreach (var (declaration, symbols) in resolved)
         {
             foreach (var symbol in symbols.Symbols)
             {
-                if (!exporters.TryGetValue(symbol, out var list)) exporters[symbol] = list = new List<string>();
-                list.Add(symbols.Source);
+                var name = declaration.Alias is null ? symbol : $"{declaration.Alias}.{symbol}";
+                if (!exporters.TryGetValue(name, out var list)) exporters[name] = list = new List<CuiImportDefinition>();
+                list.Add(declaration);
             }
         }
 
@@ -309,16 +322,14 @@ public sealed class CuiCompiler
             {
                 diagnostics.Error("CUIC019",
                     $"Ambiguous imported symbol '{symbol}' from imports "
-                    + string.Join(", ", sources.Select(source => $"'{source}'"))
+                    + string.Join(", ", sources.Select(source => $"'{source.Source}'"))
                     + ". Disambiguate with an explicit alias such as As:SharedUI.",
-                    SpanOfSource(sources[0]));
+                    sources[0].Span);
                 continue;
             }
 
-            var owner = document.Imports.First(entry => entry.Source == sources[0]);
-            var key = owner.Alias is null ? symbol : $"{owner.Alias}.{symbol}";
-            definitions.Add(key);
-            symbolSource[key] = sources[0];
+            definitions.Add(symbol);
+            symbolSource[symbol] = sources[0].Source;
         }
 
         return symbolSource;
