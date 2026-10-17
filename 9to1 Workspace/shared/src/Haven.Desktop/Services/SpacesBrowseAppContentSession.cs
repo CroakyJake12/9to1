@@ -3,6 +3,8 @@ using Avalonia.Threading;
 using Haven.Application;
 using Haven.Browser;
 using Haven.Core;
+using Haven.Desktop.Overlay;
+using Haven.Desktop.Views.Pages.Chat;
 using Haven.Desktop.Views.Pages.Spaces;
 using HavenOS.Apps.Browse;
 using HavenOS.Apps.Spaces;
@@ -22,7 +24,10 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
     private Task? _initialization;
     private Task? _close;
     private Task<bool>? _preparation;
-    private volatile SpacesHomePage? _page;
+    private readonly ContentControl _root = new();
+    private SpacesHomePage? _spacesPage;
+    private NewChatPage? _chatPage;
+    private volatile Control? _page;
     private volatile bool _published;
     private volatile bool _closing;
 
@@ -78,10 +83,25 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
             token.ThrowIfCancellationRequested();
             DemandAlive();
             var registry = _services.GetRequiredService<SpaceRegistry>();
-            var page = new SpacesHomePage(registry, new UnavailableSpacesActionHost(), SpacesHomePage.ImmediateReadinessInstance);
-            await page.ActivateAsync(token);
-            _page = page;
-            _published = true;
+            var navigationHost = new HavenSpacesActionHost(this);
+            var page = new SpacesHomePage(registry, navigationHost, SpacesHomePage.ImmediateReadinessInstance);
+            _spacesPage = page;
+            try
+            {
+                await page.ActivateAsync(token);
+                token.ThrowIfCancellationRequested();
+                if (_closing) throw new OperationCanceledException();
+                _root.Content = page;
+                _page = _root;
+                _published = true;
+            }
+            catch
+            {
+                if (page is IAsyncDisposable disposable)
+                    await disposable.DisposeAsync();
+                _spacesPage = null;
+                throw;
+            }
             StateChanged?.Invoke(this, EventArgs.Empty);
         }).ConfigureAwait(false);
     }
@@ -107,8 +127,8 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
         return await OnUiAsync(async () =>
         {
             linked.Token.ThrowIfCancellationRequested();
-            if (_closing || !_published || _page is null) return false;
-            return await _page.TryPrepareToCloseAsync(linked.Token);
+            if (_closing || !_published || _spacesPage is null) return false;
+            return await _spacesPage.TryPrepareToCloseAsync(linked.Token);
         }).ConfigureAwait(false);
     }
 
@@ -130,13 +150,20 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
     private async Task CloseDriverAsync(Task gate)
     {
         await gate.ConfigureAwait(false);
+        _lifetime.Cancel();
+        if (_initialization is { } initialization)
+            try { await initialization.ConfigureAwait(false); } catch { }
         await OnUiAsync(async () =>
         {
-            if (_page is IAsyncDisposable disposable)
-                await disposable.DisposeAsync();
+            if (_chatPage is IAsyncDisposable chatDisposable)
+                await chatDisposable.DisposeAsync();
+            if (_spacesPage is IAsyncDisposable spacesDisposable)
+                await spacesDisposable.DisposeAsync();
+            _chatPage = null;
+            _spacesPage = null;
+            _root.Content = null;
             _page = null;
         }).ConfigureAwait(false);
-        _lifetime.Cancel();
         try { _lifetime.Dispose(); } catch { }
     }
 
@@ -147,10 +174,25 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
         // The Spaces page owns its original work lifetime and close preflight.
     }
 
-    private sealed class UnavailableSpacesActionHost : ISpacesActionHost
+    private sealed class HavenSpacesActionHost(SpacesBrowseAppContentSession owner) : ISpacesActionHost
     {
-        public Task ExecuteAsync(SpacesAction action, CancellationToken cancellationToken = default) =>
-            Task.FromException(new NotSupportedException("Space destination launch is not available in this Haven tab."));
+        public async Task ExecuteAsync(SpacesAction action, CancellationToken cancellationToken = default)
+        {
+            if (action.Context.Definition.Destination != SpacesDestinationKind.Chat)
+                throw new NotSupportedException("Only the Chat destination is available in this Haven tab.");
+            var factory = new OverlayChatSessionFactory(owner._services,
+                owner._services.GetRequiredService<IConversationRepository>(),
+                owner._services.GetRequiredService<CapabilityRegistryService>(),
+                owner._services.GetRequiredService<ICatalogRepository>(),
+                owner._services.GetRequiredService<IModeRegistry>());
+            var page = await factory.CreateNewAsync(cancellationToken);
+            await page.AssignSpaceAsync(action.Context.Scope.RegisteredSpaceId);
+            await OnUiAsync(async () =>
+            {
+                owner._chatPage = page;
+                owner._root.Content = page;
+            });
+        }
     }
 
     private static async Task OnUiAsync(Func<Task> action)

@@ -210,6 +210,12 @@ public sealed class SpacesHomePage : UserControl, IActivatablePage,
             case "spaces.clear-search":
                 InvokeOriginalSource(() => _controller.SetQuery(string.Empty));
                 break;
+            case "spaces.select":
+                await original.AwaitAsync(InvokeOriginalSource(() => _controller.SelectSpaceAsync(id, token))).ConfigureAwait(false);
+                break;
+            case "spaces.set-rename-draft":
+                InvokeOriginalSource(() => _controller.SetRenameDraft(parameter?.ToString()));
+                break;
             case "spaces.set-query":
                 InvokeOriginalSource(() => _controller.SetQuery(parameter?.ToString()));
                 break;
