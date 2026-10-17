@@ -183,8 +183,11 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
         RefreshResponseControls();
         RefreshVisualState();
-        _ = InitialiseAsync();
+        OriginalInitialization = InitialiseAsync();
     }
+
+    // The factory must join this exact original before replacing its conversation target.
+    internal Task OriginalInitialization { get; }
 
     public HavenSceneControl Scene { get; }
 

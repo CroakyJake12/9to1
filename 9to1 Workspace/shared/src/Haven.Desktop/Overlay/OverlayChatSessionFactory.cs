@@ -1,4 +1,5 @@
 #if !ANDROID
+using Avalonia.Threading;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Views.Pages.Chat;
@@ -14,23 +15,53 @@ internal sealed class OverlayChatSessionFactory(
     ICatalogRepository catalog,
     IModeRegistry modes)
 {
-    public async Task<NewChatPage> CreateNewAsync(CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        var page = ActivatorUtilities.CreateInstance<NewChatPage>(services);
-        await page.StartFreshConversationAsync();
-        await PopulateCatalogueAsync(page, cancellationToken);
-        return page;
-    }
+    public Task<NewChatPage> CreateNewAsync(CancellationToken cancellationToken) =>
+        CreatePageAsync(page => page.StartFreshConversationAsync(), cancellationToken);
 
     public async Task<NewChatPage?> RestoreAsync(Guid conversationId, CancellationToken cancellationToken)
     {
+        Dispatcher.UIThread.VerifyAccess();
+        cancellationToken.ThrowIfCancellationRequested();
         var conversation = await conversations.GetAsync(conversationId, cancellationToken);
         if (conversation is null) return null;
+        return await CreatePageAsync(page => page.LoadConversationAsync(conversation), cancellationToken);
+    }
+
+    private async Task<NewChatPage> CreatePageAsync(
+        Func<NewChatPage, Task> selectConversation,
+        CancellationToken cancellationToken)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        cancellationToken.ThrowIfCancellationRequested();
         var page = ActivatorUtilities.CreateInstance<NewChatPage>(services);
-        await page.LoadConversationAsync(conversation);
-        await PopulateCatalogueAsync(page, cancellationToken);
-        return page;
+        try
+        {
+            // Construction starts original model discovery bound to the initial conversation.
+            // Join it before Fresh/Load replaces that target; keep all UI work on this dispatcher.
+            await page.OriginalInitialization.WaitAsync(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            await selectConversation(page);
+            cancellationToken.ThrowIfCancellationRequested();
+            await PopulateCatalogueAsync(page, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            return page;
+        }
+        catch (Exception creationFailure)
+        {
+            // Cancellation of our wait does not mean the original initialization has stopped.
+            // Drain the acquired, unpublished page, retaining both failures if cleanup also fails.
+            try
+            {
+                await page.DisposeAsync();
+            }
+            catch (Exception cleanupFailure)
+            {
+                throw new AggregateException(
+                    "Chat creation failed and the unpublished page did not retire cleanly.",
+                    creationFailure, cleanupFailure);
+            }
+            throw;
+        }
     }
 
     public async Task<CapabilityDefinition?> FindCapabilityAsync(OverlayContextActionDescriptor action, CancellationToken cancellationToken)
