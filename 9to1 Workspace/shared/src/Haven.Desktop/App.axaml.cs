@@ -128,11 +128,22 @@ public sealed partial class App : Avalonia.Application
             if (ValidateOriginalInitialProductDeclaration(typeof(App).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()) is null)
             {
                 var window = new MainWindow(preferences) { Title = "9to1", PreserveWorkspaceSessionOnClose = true };
-                var workspace = CreateOriginalUnifiedWorkspace(window);
+                UnifiedWorkspaceHost? workspace = null;
+                try
+                {
+                    workspace = CreateOriginalUnifiedWorkspace(window);
+                }
+                catch (Exception failure)
+                {
+                    UnifiedWorkspaceHost.ShowStartupFailure(window, Guid.NewGuid().ToString("N"), failure);
+                    desktop.MainWindow = window;
+                    base.OnFrameworkInitializationCompleted();
+                    return;
+                }
                 window.DataContext = workspace;
                 ConfigureOriginalUnifiedNativeRoutes(window, workspace);
                 ConfigureOriginalDesktopShutdown(desktop, window, null);
-                window.Opened += (_, _) => { _ = InitialiseUnifiedHaven(); };
+                window.Opened += (_, _) => { _ = InitialiseUnifiedHavenSafely(); };
                 desktop.MainWindow = window;
             }
             else
@@ -159,6 +170,16 @@ public sealed partial class App : Avalonia.Application
 #if !ANDROID
     private Task InitialiseUnifiedHaven() => _originalAppWork.RunAsync(
         original => InitialiseOriginalHavenAsync(original, null), actual => _actualStartupOriginal = actual);
+
+    private async Task InitialiseUnifiedHavenSafely()
+    {
+        try { await InitialiseUnifiedHaven(); }
+        catch (Exception failure)
+        {
+            if (_actualUnifiedWorkspace is not null)
+                _actualUnifiedWorkspace.ShowStartupFailureForHost(Guid.NewGuid().ToString("N"), failure);
+        }
+    }
 #endif
 
     private async Task InitialiseOriginalHavenAsync(DesktopOriginalWorkLifetime.Original original, MainView? shell)
@@ -265,6 +286,8 @@ public sealed partial class App : Avalonia.Application
 
             var userMessage = $"9to1 could not finish starting. Diagnostic reference: {correlationId}.";
             AcquireOriginalAppSynchronous(original, () => { shell?.SetStartupError(userMessage); return true; });
+            if (shell is null && _actualUnifiedWorkspace is not null)
+                _actualUnifiedWorkspace.ShowStartupFailureForHost(correlationId, ex);
             try
             {
                 AcquireOriginalAppSynchronous(original, () =>

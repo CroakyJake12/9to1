@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
+using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
 using Haven.Browser;
@@ -54,6 +55,7 @@ public sealed partial class App
         private readonly object _gate = new();
         private readonly HashSet<Task> _sources = new(ReferenceEqualityComparer.Instance);
         private CuiSceneHost? _scene;
+        private CuiSceneHost? _startupFailureHost;
         private Task? _initialization, _close, _pendingClose, _workspaceClose, _sceneClose, _sessionClose;
         private readonly List<Task> _closeAttempts = [];
         private Task<CuiSceneAvailability>? _sceneInitialization;
@@ -81,6 +83,48 @@ public sealed partial class App
         // when Browse accepts retirement, not when its outer close request is allocated.
         private bool IsCurrent => !_closed && !_startupRetirement && !_appLifetime.IsCancellationRequested &&
             !_windowLifetime.IsCancellationRequested && _chrome?.OriginalClose is null;
+
+
+        internal static void ShowStartupFailure(Window window, string correlationId, Exception exception)
+        {
+            ArgumentNullException.ThrowIfNull(window);
+            ArgumentNullException.ThrowIfNull(exception);
+            if (!Dispatcher.UIThread.CheckAccess()) throw new InvalidOperationException("Startup failure presentation requires the UI thread.");
+            var host = new CuiSceneHost();
+            var model = new CuiViewModel();
+            model.Set("Message", exception.Message);
+            model.Set("CorrelationId", correlationId);
+            var document = new CuiRichParser().Parse(
+                "<Cui><Theme Name=\"user_preference\"><Page AccessibleName=\"9to1 Haven startup failure\"><Container Type=\"Vertical Stack\" CellGap=\"12\" Padding=\"24\"><Text Text=\"9to1 Haven could not start\" FontSize=\"24\" FontWeight=\"Bold\" Foreground=\"{Resource CuiTextBrush}\" /><Text Text=\"{Binding Message}\" TextWrapping=\"Wrap\" Foreground=\"{Resource CuiTextBrush}\" /><Text Text=\"Diagnostic reference: {Binding CorrelationId}\" Foreground=\"{Resource CuiTextSoftBrush}\" /><Text Text=\"Close this window, resolve the reported issue, and restart 9to1 Haven.\" Foreground=\"{Resource CuiTextSoftBrush}\" /></Container></Page></Theme></Cui>",
+                "StartupFailure.cui");
+            var scene = new CuiNativeScene("startup-failure", "9to1 Haven", "Home", document, model, model,
+                new ImmediateStartupReadiness(new CuiSceneAvailability(CuiSceneAvailabilityState.Unavailable, "startup-failed", "9to1 Haven could not start.")));
+            window.Content = host;
+            _ = host.ShowAsync(scene, CancellationToken.None);
+        }
+
+        internal void ShowStartupFailureForHost(string correlationId, Exception exception)
+        {
+            Dispatcher.UIThread.VerifyAccess();
+            if (_closed) return;
+            var model = new CuiViewModel();
+            model.Set("Message", exception.Message);
+            model.Set("CorrelationId", correlationId);
+            var document = new CuiRichParser().Parse(
+                "<Cui><Theme Name=\"user_preference\"><Page AccessibleName=\"9to1 Haven startup failure\"><Container Type=\"Vertical Stack\" CellGap=\"12\" Padding=\"24\"><Text Text=\"9to1 Haven could not start\" FontSize=\"24\" FontWeight=\"Bold\" Foreground=\"{Resource CuiTextBrush}\" /><Text Text=\"{Binding Message}\" TextWrapping=\"Wrap\" Foreground=\"{Resource CuiTextBrush}\" /><Text Text=\"Diagnostic reference: {Binding CorrelationId}\" Foreground=\"{Resource CuiTextSoftBrush}\" /><Text Text=\"Close this window, resolve the reported issue, and restart 9to1 Haven.\" Foreground=\"{Resource CuiTextSoftBrush}\" /></Container></Page></Theme></Cui>",
+                "StartupFailure.cui");
+            var host = new CuiSceneHost();
+            var scene = new CuiNativeScene("startup-failure", "9to1 Haven", "Home", document, model, model,
+                new ImmediateStartupReadiness(new CuiSceneAvailability(CuiSceneAvailabilityState.Unavailable, "startup-failed", "9to1 Haven could not start.")));
+            _startupFailureHost = host;
+            Content = host;
+            _ = host.ShowAsync(scene, CancellationToken.None);
+        }
+
+        private sealed class ImmediateStartupReadiness(CuiSceneAvailability availability) : ICuiSceneReadiness
+        {
+            public ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken cancellationToken) => new(availability);
+        }
 
         internal Task InitializeAsync(CancellationToken token)
         {
