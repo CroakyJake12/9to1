@@ -286,6 +286,9 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
                 "Id" => activity.Id,
                 "Title" => activity.Title,
                 "Detail" => activity.Detail,
+                "Succeeded" => activity.Succeeded,
+                "Status" => activity.Succeeded ? "Completed" : "Failed",
+                "Meta" => BuildToolActivityMeta(activity),
                 _ => null
             };
             return value is not null;
@@ -300,6 +303,16 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
             snapshot.Conversation?.Messages.Any(message => message.Citations.Contains(candidate)) == true;
         bool OwnsActivity(ToolActivity candidate) =>
             snapshot.Conversation?.Messages.Any(message => message.ToolActivities.Contains(candidate)) == true;
+    }
+
+
+
+    private static string BuildToolActivityMeta(ToolActivity activity)
+    {
+        var parts = new List<string>();
+        if (activity.Duration > TimeSpan.Zero) parts.Add($"{activity.Duration.TotalSeconds:0.#}s");
+        if (activity.LinesAdded != 0 || activity.LinesRemoved != 0) parts.Add($"+{activity.LinesAdded} -{activity.LinesRemoved}");
+        return string.Join(" · ", parts);
     }
 
     /// <summary>
