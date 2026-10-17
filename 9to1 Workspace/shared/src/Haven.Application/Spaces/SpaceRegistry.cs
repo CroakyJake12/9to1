@@ -9,10 +9,7 @@ public sealed partial class SpaceRegistry
     private const int CurrentVersion = 3;
     private readonly IVersionedSettingsStore _settings;
     private readonly Func<DateTimeOffset> _clock;
-    private readonly SemaphoreSlim _readGate = new(1024, 1024);
-    private readonly SemaphoreSlim _writeGate = new(1, 1);
-    private readonly object _readCountLock = new();
-    private int _activeReaders;
+    private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly Func<CancellationToken, ValueTask<ISettingsCommitAdmission>>? _captureAdmission;
 
     public static Guid ChatSpaceId { get; } = Guid.Parse("b1000000-0000-0000-0000-000000000005");
@@ -46,7 +43,8 @@ public sealed partial class SpaceRegistry
 
     public async Task<IReadOnlyList<SpaceDefinition>> GetAllAsync(bool includeArchived = false, CancellationToken cancellationToken = default)
     {
-        using (await AcquireReadAsync(cancellationToken).ConfigureAwait(false))
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
         {
             var state = await LoadAndReconcileAsync(cancellationToken).ConfigureAwait(false);
             return state.Spaces
@@ -57,6 +55,10 @@ public sealed partial class SpaceRegistry
                 .ThenBy(space => space.Position)
                 .ThenBy(space => space.Name, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
+        }
+        finally
+        {
+            _gate.Release();
         }
     }
 
@@ -271,7 +273,7 @@ public sealed partial class SpaceRegistry
     /// <summary>Returns the Space the shell is currently scoped to, or null for unscoped Chat.</summary>
     public async Task<Guid?> GetCurrentSpaceIdAsync(CancellationToken cancellationToken = default)
     {
-        await _writeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             var value = await _settings.GetAsync<string>(CurrentSpaceSettingsKey, cancellationToken).ConfigureAwait(false);
@@ -279,14 +281,14 @@ public sealed partial class SpaceRegistry
         }
         finally
         {
-            _writeGate.Release();
+            _gate.Release();
         }
     }
 
     /// <summary>Persists the Space the shell is scoped to; null returns to unscoped Chat.</summary>
     public async Task SetCurrentSpaceIdAsync(Guid? spaceId, CancellationToken cancellationToken = default)
     {
-        await _writeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             if (_settings is IVersionedSettingsCompareExchange)
@@ -306,7 +308,7 @@ public sealed partial class SpaceRegistry
         }
         finally
         {
-            _writeGate.Release();
+            _gate.Release();
         }
     }
 
@@ -420,7 +422,7 @@ public sealed partial class SpaceRegistry
             ValidateDeletionState(result.State);
             return result;
         };
-        await _writeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             if (_settings is IVersionedSettingsCompareExchange)
@@ -433,49 +435,7 @@ public sealed partial class SpaceRegistry
         }
         finally
         {
-            _writeGate.Release();
-        }
-    }
-
-    private async Task<IDisposable> AcquireReadAsync(CancellationToken cancellationToken)
-    {
-        await _readGate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        bool firstReader = false;
-        try
-        {
-            lock (_readCountLock)
-            {
-                firstReader = _activeReaders == 0;
-                _activeReaders++;
-            }
-            if (firstReader) await _writeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
-            return new ReadLockReleaser(this, firstReader);
-        }
-        catch
-        {
-            lock (_readCountLock)
-            {
-                if (firstReader) _activeReaders = Math.Max(0, _activeReaders - 1);
-                else _activeReaders = Math.Max(0, _activeReaders - 1);
-            }
-            _readGate.Release();
-            throw;
-        }
-    }
-
-    private sealed class ReadLockReleaser(SpaceRegistry owner, bool firstReader) : IDisposable
-    {
-        private bool _disposed;
-        public void Dispose()
-        {
-            if (_disposed) return;
-            _disposed = true;
-            lock (owner._readCountLock)
-            {
-                owner._activeReaders = Math.Max(0, owner._activeReaders - 1);
-                if (owner._activeReaders == 0 && firstReader) owner._writeGate.Release();
-            }
-            owner._readGate.Release();
+            _gate.Release();
         }
     }
 

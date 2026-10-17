@@ -119,6 +119,7 @@ public sealed class SpacesHomeController
     private readonly ISpacesActionHost? _actionHost;
     private readonly ISpacesExtensionEditorHost? _extensionEditorHost;
     private readonly Func<string, CancellationToken, Task<string>>? _pickFileAsync;
+    private readonly Func<CancellationToken, Task>? _afterRegistryRead;
     private long _requestVersion;
     private Guid? _selectedId;
     private Guid? _pendingRenameSpaceId;
@@ -132,12 +133,25 @@ public sealed class SpacesHomeController
         ISpacesActionHost? actionHost = null,
         ISpacesExtensionEditorHost? extensionEditorHost = null,
         Func<string, CancellationToken, Task<string>>? pickFileAsync = null)
+        : this(registry, actionHost, extensionEditorHost, pickFileAsync, null)
+    {
+    }
+
+    // Tests can hold an already-returned response without holding the registry's
+    // persistence lock. Normal hosts retain the public constructor and no callback.
+    internal SpacesHomeController(
+        SpaceRegistry registry,
+        ISpacesActionHost? actionHost,
+        ISpacesExtensionEditorHost? extensionEditorHost,
+        Func<string, CancellationToken, Task<string>>? pickFileAsync,
+        Func<CancellationToken, Task>? afterRegistryRead)
     {
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
         _model = new SpacesModel(registry);
         _actionHost = actionHost;
         _extensionEditorHost = extensionEditorHost;
         _pickFileAsync = pickFileAsync;
+        _afterRegistryRead = afterRegistryRead;
     }
 
     public SpacesHomeViewState State { get; private set; } = SpacesHomeViewState.Empty;
@@ -165,6 +179,8 @@ public sealed class SpacesHomeController
         try
         {
             var registered = await _registry.GetAllAsync(includeArchived: false, cancellationToken).ConfigureAwait(false);
+            if (_afterRegistryRead is not null)
+                await _afterRegistryRead(cancellationToken).ConfigureAwait(false);
             if (request != Volatile.Read(ref _requestVersion)) return;
 
             var builtIns = SpacesModel.BuiltIns

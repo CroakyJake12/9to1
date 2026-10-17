@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="HavenOS.Spaces.Tests" />
     <Compile Remove="Tests\**\*.cs" />
     <Compile Remove="Presentation.Tests\**\*.cs" />
     <ProjectReference Include="..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />

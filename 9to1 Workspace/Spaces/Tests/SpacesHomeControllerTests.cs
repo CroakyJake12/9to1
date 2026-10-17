@@ -364,35 +364,53 @@ public sealed class SpacesHomeControllerTests
     [Fact]
     public async Task Held_load_does_not_overwrite_newer_selection()
     {
-        var release = new TaskCompletionSource();
-        var seedStore = new MemorySettingsStore();
-        var seedRegistry = new SpaceRegistry(seedStore);
-        var target = await seedRegistry.CreateAsync("Target");
-        var store = new DelayedMemorySettingsStore(release.Task, seedStore);
-        var registry = new SpaceRegistry(store);
-        var controller = new SpacesHomeController(registry);
+        var observed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var completedReads = 0;
+        var controller = new SpacesHomeController(registry, null, null, null, async cancellationToken =>
+        {
+            if (Interlocked.Increment(ref completedReads) != 1) return;
+            observed.TrySetResult(); // The actual canonical read and its lock have completed.
+            await release.Task.WaitAsync(cancellationToken);
+        });
 
         var loadTask = controller.LoadAsync();
         Task selectTask = Task.CompletedTask;
+        Exception? failure = null;
         try
         {
-            await store.ReadStarted.WaitAsync(TimeSpan.FromSeconds(5));
+            await observed.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            // The held snapshot deliberately predates this real mutation. The registry
+            // remains usable while delivery of that older response is suspended.
+            var target = await registry.CreateAsync("Target").WaitAsync(TimeSpan.FromSeconds(5));
             selectTask = controller.SelectSpaceAsync(target.Id);
             await selectTask.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.False(loadTask.IsCompleted, "The earlier load must remain held after the newer selection completes.");
+            Assert.Equal(target.Id, controller.State.Selection?.Id);
+            Assert.Equal(target.Id, await registry.GetCurrentSpaceIdAsync().WaitAsync(TimeSpan.FromSeconds(5)));
+            var selectedRevision = controller.State.Revision;
 
             release.TrySetResult();
             await loadTask.WaitAsync(TimeSpan.FromSeconds(5));
 
             Assert.Equal(target.Id, controller.State.Selection?.Id);
+            Assert.Equal(selectedRevision, controller.State.Revision);
             Assert.Equal("Spaces ready", controller.State.StatusMessage);
         }
+        catch (Exception error) { failure = error; }
         finally
         {
             release.TrySetResult();
             try { await Task.WhenAll(loadTask, selectTask).WaitAsync(TimeSpan.FromSeconds(5)); }
-            catch { }
+            catch (Exception cleanup)
+            {
+                if (failure is null) failure = cleanup;
+                else if (!ReferenceEquals(failure, cleanup))
+                    failure = new AggregateException("Held-load assertion and original task cleanup failed.", failure, cleanup);
+            }
         }
+        if (failure is not null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
     }
 
     private sealed class RecordingActionHost : ISpacesActionHost
