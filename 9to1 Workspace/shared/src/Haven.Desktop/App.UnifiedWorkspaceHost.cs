@@ -129,6 +129,9 @@ public sealed partial class App
                 (_, _) => Task.FromException<AppContentAddress>(new NotSupportedException("The Spaces native destination is not yet available in this host.")),
                 AdmitHomeAsync, () => IsCurrent, _windowLifetime, aiAvailable: false);
             IBrowseEngineHostFactory? engines = null;
+            if (!OperatingSystem.IsWindows())
+                engines = new LinuxWebKitEngineFactory((tab, engine, origin, kind) =>
+                    (_chrome ?? throw new InvalidOperationException("The original Browse owner is not published.")).ObserveOriginPermission(tab, engine, origin, kind));
 #if HAVEN_WINDOWS_DESKTOP
             engines = new WindowsChromiumEngineFactory((tab, engine, origin, kind) =>
                 (_chrome ?? throw new InvalidOperationException("The original Browse owner is not published."))

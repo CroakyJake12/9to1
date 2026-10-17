@@ -124,7 +124,7 @@ public sealed partial class App : Avalonia.Application
 
             var preferences = _services.GetRequiredService<UserPreferencesService>();
             preferences.ApplyAppearance(preferences.Appearance, save: false);
-#if HAVEN_WINDOWS_DESKTOP
+            // Linux uses the Browse-based unified host now that the Home composition runs.
             if (ValidateOriginalInitialProductDeclaration(typeof(App).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()) is null)
             {
                 var window = new MainWindow(preferences) { Title = "9to1", PreserveWorkspaceSessionOnClose = true };
@@ -136,10 +136,7 @@ public sealed partial class App : Avalonia.Application
                 desktop.MainWindow = window;
             }
             else
-#endif
             {
-                // Existing non-Windows and compiled standalone-product startup remains
-                // functional until its genuine unified admission is implemented.
                 var mainView = _services.GetRequiredService<MainView>();
                 mainView.ApplyEdition(HavenStartupExperiencePolicy.Edition);
                 _services.GetRequiredService<WorkspaceSessionCoordinator>().Register(mainView, WorkspaceWindowKind.Main, queueSave: false);

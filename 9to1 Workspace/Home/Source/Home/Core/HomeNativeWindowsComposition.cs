@@ -82,8 +82,6 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
         Func<HomeNativeWindowsIdentityComponents, HomeNativeWindowsStoreRegistrations>? configureOriginalStores = null,
         Func<HomeNativeWindowsOwnershipComponents, HomeNativeWindowsResolverRegistrations>? configureOriginalResolvers = null)
     {
-        if (!OperatingSystem.IsWindows())
-            throw new PlatformNotSupportedException("The Windows Home producer requires Windows.");
         StateStore = originalStateStore ?? throw new ArgumentNullException(nameof(originalStateStore));
         ArgumentNullException.ThrowIfNull(originalPrincipalSource);
         _paths = CapturedPaths.Capture(trustedHomePaths);

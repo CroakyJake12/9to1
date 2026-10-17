@@ -19,7 +19,6 @@ public sealed partial class App
 
     private void ConfigureOriginalWindowsHomeRegistrations(IServiceCollection collection)
     {
-        if (!OperatingSystem.IsWindows()) return;
         _originalAppWork.RunSynchronous(original => AcquireOriginalAppSynchronous(original, () =>
         {
             original.DemandPublication();

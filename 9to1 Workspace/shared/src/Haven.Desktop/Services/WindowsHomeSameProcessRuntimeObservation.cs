@@ -17,8 +17,6 @@ internal static class WindowsHomeSameProcessRuntimeObservation
     internal static void DemandOriginalBinding(IServiceProvider provider, HomeNativeWindowsComposition home)
     {
         ArgumentNullException.ThrowIfNull(provider); ArgumentNullException.ThrowIfNull(home);
-        if (!OperatingSystem.IsWindows())
-            throw new PlatformNotSupportedException("The same-process Windows Home route requires Windows.");
         _ = provider.RequireOriginalWindowsHomeComponents(home);
         if (!ReferenceEquals(provider.GetRequiredService<HomeCoreRuntime>(), home.Runtime) ||
             !ReferenceEquals(provider.GetRequiredService<HomeCoreApi>(), home.Api) ||

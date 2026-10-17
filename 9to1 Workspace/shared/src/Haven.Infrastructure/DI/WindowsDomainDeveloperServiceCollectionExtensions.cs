@@ -89,7 +89,6 @@ public static class WindowsDomainDeveloperServiceCollectionExtensions
     private static void RequireDomain(IServiceCollection services, HomeNativeWindowsComposition sameHome)
     {
         ArgumentNullException.ThrowIfNull(services); ArgumentNullException.ThrowIfNull(sameHome);
-        if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException("This composition uses the actual in-process Windows Home producer.");
         if (!HomeLocalReadComposition.IsBound(sameHome.StateStore, sameHome.Profiles, sameHome.Ownership)
             || !sameHome.Resources.IsBoundToActorSource(sameHome.Profiles)
             || !sameHome.Broker.IsBoundToOriginalComposition(sameHome.Resources, sameHome.Permissions))
