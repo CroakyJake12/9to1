@@ -203,8 +203,21 @@ public sealed class CuiCompiler
         var definitions = new HashSet<string>(document.Templates.Keys, StringComparer.Ordinal);
         foreach (var component in AllComponents(document.Components))
         {
-            if (component.IsDefinition && !CuiLanguageVocabulary.VisualElements.Contains(component.Type))
-                definitions.Add(component.Name ?? component.Type);
+            if (!component.IsDefinition) continue;
+            // A named definition is reusable by its authored identity, whether it wraps a
+            // built-in visual element (e.g. <Button (Definition) ID="Foo"/>) or a custom
+            // element. This matches the runtime loader, which registers visual-element
+            // definitions by name in the same dictionary.
+            if (component.Name is not null)
+            {
+                definitions.Add(component.Name);
+            }
+            else if (!CuiLanguageVocabulary.VisualElements.Contains(component.Type))
+            {
+                definitions.Add(component.Type);
+            }
+            // A visual-element definition without a name is a Type="..." definition,
+            // already tracked via _declaredTypes; it contributes no reusable element name.
         }
         return definitions;
     }

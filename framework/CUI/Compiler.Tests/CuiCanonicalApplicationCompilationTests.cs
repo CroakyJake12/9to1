@@ -18,7 +18,8 @@ public sealed class CuiCanonicalApplicationCompilationTests
     {
         var path = Path.Combine(RepositoryRoot(), relativePath);
         Assert.True(File.Exists(path), $"Shipping source missing: {relativePath}");
-        var result = new CuiCompiler().Compile(File.ReadAllText(path), path, new(new("1", "1", "2.0")));
+        var result = new CuiCompiler().Compile(File.ReadAllText(path), path,
+            new(new("1", "1", "2.0"), new CuiSourceIndex().Index(RepositoryRoot())));
         Assert.True(result.Succeeded, string.Join(Environment.NewLine, result.Diagnostics));
         Assert.NotNull(result.Output);
     }
@@ -43,7 +44,8 @@ public sealed class CuiCanonicalApplicationCompilationTests
     {
         var path = Path.Combine(RepositoryRoot(), relativePath);
         Assert.True(File.Exists(path), $"Shipping source missing: {relativePath}");
-        var result = new CuiCompiler().Compile(File.ReadAllText(path), path, new(new("1", "1", "2.0")));
+        var result = new CuiCompiler().Compile(File.ReadAllText(path), path,
+            new(new("1", "1", "2.0"), new CuiSourceIndex().Index(RepositoryRoot())));
         Assert.True(result.Succeeded, string.Join(Environment.NewLine, result.Diagnostics));
         Assert.NotNull(result.Output);
     }
