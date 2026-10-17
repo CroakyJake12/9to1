@@ -35,10 +35,12 @@
             <Text id="first-party-heading" text="First-party" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
 
             <Repeat id="first-party-spaces" Source="{Binding spaces.builtIns}" As="space" Key="{Binding space.id}">
-              <Container id="first-party-space" definition="true" Type="Vertical Stack">
+              <Container id="first-party-space" Type="Vertical Stack">
                 <Button id="first-party-space-open" action="spaces.open" action-argument="{Binding space.id}" accessible-name="Open {Binding space.name}">
-                  <Text id="first-party-space-name" text="{Binding space.name}" />
-                  <Text id="first-party-space-summary" text="{Binding space.summary}" foreground="{Resource CuiTextSoftBrush}" />
+                  <Container id="first-party-space-content" Type="Vertical Stack">
+                    <Text id="first-party-space-name" text="{Binding space.name}" />
+                    <Text id="first-party-space-summary" text="{Binding space.summary}" foreground="{Resource CuiTextSoftBrush}" />
+                  </Container>
                 </Button>
               </Container>
             </Repeat>
@@ -46,10 +48,12 @@
             <Text id="custom-spaces-heading" text="Your Spaces" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
 
             <Repeat id="custom-spaces" Source="{Binding spaces.customSpaces}" As="space" Key="{Binding space.id}">
-              <Container id="custom-space-row" definition="true" role="listitem" accessible-name="{Binding space.name}, custom Space" Type="Vertical Stack">
+              <Container id="custom-space-row" role="listitem" accessible-name="{Binding space.name}, custom Space" Type="Vertical Stack">
                 <Button id="open-custom-space" action="spaces.open" action-argument="{Binding space.id}" accessible-name="Open {Binding space.name}">
-                  <Text id="custom-space-name" text="{Binding space.name}" />
-                  <Text id="custom-space-summary" text="{Binding space.summary}" foreground="{Resource CuiTextSoftBrush}" />
+                  <Container id="custom-space-content" Type="Vertical Stack">
+                    <Text id="custom-space-name" text="{Binding space.name}" />
+                    <Text id="custom-space-summary" text="{Binding space.summary}" foreground="{Resource CuiTextSoftBrush}" />
+                  </Container>
                 </Button>
                 <Container id="custom-space-actions" accessible-name="Actions for {Binding space.name}" Type="Wrap">
                   <Button id="rename-custom-space" action="spaces.rename" action-argument="{Binding space.id}" content="Rename" accessible-name="Rename {Binding space.name}" />
@@ -59,7 +63,7 @@
                 </Container>
               </Container>
             </Repeat>
-            <If Condition="{Binding spaces.customSpaces.Count}" Negate="true">
+            <If Condition="!{Binding spaces.customSpaces.Count}">
               <Text id="custom-spaces-empty-text" text="Create a Space to keep related conversations and work together" foreground="{Resource CuiTextSoftBrush}" />
             </If>
             <Text id="spaces-status" text="{Binding status.message}" role="status" accessible-name="Spaces status" />
@@ -75,7 +79,7 @@
                 </Container>
               </Container>
             </If>
-            <If Condition="{Binding selection.isRenaming}" Negate="true">
+            <If Condition="!{Binding selection.isRenaming}">
               <Container id="selected-space-header" Type="Vertical Stack" CellGap="4">
                 <Text id="selected-space-name" text="{Binding selection.name}" font-size="24" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
                 <Container id="space-header-actions" Type="Wrap" CellGap="8">
@@ -85,7 +89,7 @@
                   <If Condition="{Binding selection.isBuiltIn}">
                     <Button id="edit-extensions" action="spaces.edit-extensions" action-argument="{Binding selection.id}" content="Edit extensions" Interactive="{Binding selection.canEditExtensions}" accessible-name="Edit Space extensions" />
                   </If>
-                  <If Condition="{Binding selection.isBuiltIn}" Negate="true">
+                  <If Condition="!{Binding selection.isBuiltIn}">
                     <Button id="edit-graph" action="spaces.edit-graph" action-argument="{Binding selection.id}" content="Edit Space graph" Interactive="{Binding selection.canEditGraph}" accessible-name="Edit Space graph" />
                   </If>
                 </Container>
@@ -101,13 +105,13 @@
               <Text id="space-context-heading" text="Context" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
 
               <Repeat id="space-context-items" Source="{Binding selection.contextReferences}" As="reference" Key="{Binding reference.id}">
-                <Container id="space-context-item" definition="true" role="listitem" accessible-name="{Binding reference.label}" Type="Vertical Stack">
+                <Container id="space-context-item" role="listitem" accessible-name="{Binding reference.label}" Type="Vertical Stack">
                   <Text id="space-context-item-label" text="{Binding reference.label}" />
                   <Text id="space-context-item-permission" text="{Binding reference.permissionLabel}" foreground="{Resource CuiTextSoftBrush}" />
                   <Text id="space-context-item-index-state" text="{Binding reference.indexStateLabel}" foreground="{Resource CuiTextSoftBrush}" />
                 </Container>
               </Repeat>
-              <If Condition="{Binding selection.contextReferences.Count}" Negate="true">
+              <If Condition="!{Binding selection.contextReferences.Count}">
                 <Text id="space-context-empty-text" text="No sources added" foreground="{Resource CuiTextSoftBrush}" />
               </If>
 
@@ -119,11 +123,11 @@
 
               <Text id="space-capabilities-heading" text="Capabilities" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
               <Repeat id="space-capabilities" Source="{Binding selection.capabilities}" As="capability" Key="{Binding capability.id}">
-                <Container id="space-capability" definition="true" Type="Vertical Stack">
+                <Container id="space-capability" Type="Vertical Stack">
                   <Text id="space-capability-label" text="{Binding capability.label}" />
                 </Container>
               </Repeat>
-              <If Condition="{Binding selection.capabilities.Count}" Negate="true">
+              <If Condition="!{Binding selection.capabilities.Count}">
                 <Text id="space-capabilities-empty-text" text="No extra capabilities enabled" foreground="{Resource CuiTextSoftBrush}" />
               </If>
             </Container>

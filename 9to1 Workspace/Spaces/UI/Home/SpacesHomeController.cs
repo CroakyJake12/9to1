@@ -182,7 +182,7 @@ public sealed class SpacesHomeController
             var pendingRenameSpaceId = intent.PendingRenameSpaceId ?? _pendingRenameSpaceId;
             var renameDraft = intent.RenameDraft ?? _renameDraft;
 
-            var selection = BuildSelection(registered, selectedId);
+            var selection = BuildSelection(registered, selectedId, pendingRenameSpaceId);
             var moveOptions = BuildMoveParentOptions(registered, selectedId);
             var moveIndex = ResolveMoveParentIndex(moveOptions, selection?.ParentSpaceId);
 
@@ -592,7 +592,7 @@ public sealed class SpacesHomeController
         return 0;
     }
 
-    private SpacesHomeSelection? BuildSelection(IReadOnlyList<SpaceDefinition> registered, Guid? selectedId)
+    private SpacesHomeSelection? BuildSelection(IReadOnlyList<SpaceDefinition> registered, Guid? selectedId, Guid? pendingRenameSpaceId = null)
     {
         if (selectedId is not { } id) return null;
         var space = registered.FirstOrDefault(s => s.Id == id);
@@ -621,7 +621,7 @@ public sealed class SpacesHomeController
             space.Description,
             space.IsBuiltIn,
             !space.IsBuiltIn,
-            selectedId == _pendingRenameSpaceId,
+            selectedId == (pendingRenameSpaceId ?? _pendingRenameSpaceId),
             space.ParentSpaceId,
             effectiveModel,
             webAccess.ToString(),
