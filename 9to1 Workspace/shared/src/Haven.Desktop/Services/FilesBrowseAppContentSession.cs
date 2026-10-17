@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using Haven.Application;
 using Haven.Core;
+using Haven.Desktop.Views.Pages.Files;
 using HavenOS.Apps.Browse;
 using HavenOS.Files.NativeUI;
 
@@ -17,26 +18,35 @@ internal sealed class FilesBrowseAppContentSession : IBrowseNativeAppContentSess
     private readonly CancellationTokenSource _lifetime;
     private readonly CancellationToken _token;
     private readonly object _gate = new();
+    private readonly Func<Control, Task<string?>> _chooseFolder;
     private Task? _initialization, _close;
     private Task<bool>? _preparation;
     private Task<Task>? _initializationDispatch, _closeDispatch;
     private Task? _initializationWork, _closeWork, _actualAdmission, _actualOpen, _actualLocation, _actualClose;
     private readonly List<Task> _preparations = [];
+    private readonly List<Task> _setupOperations = [];
+    private Task? _setupAction, _actualSetupClose;
+    private FilesWorkspaceSetupPage? _setupPage;
     private volatile FilesNativeBrowserSurface? _view;
     private volatile AppContentAddress _address;
     private volatile string _title = "Files";
     private volatile bool _published, _closing;
 
     internal FilesBrowseAppContentSession(BrowseAppContentRequest request, FilesBrowseAppContentAddress location,
-        NativeFilesDesktopRoute route, CancellationTokenSource lifetime)
-    { _request = request; _location = location; _route = route; _lifetime = lifetime; _token = lifetime.Token; _address = request.Address; }
+        NativeFilesDesktopRoute route, CancellationTokenSource lifetime, Func<Control, Task<string?>>? chooseFolder = null)
+    {
+        _request = request; _location = location; _route = route; _lifetime = lifetime; _token = lifetime.Token;
+        _address = request.Address; _chooseFolder = chooseFolder ?? FilesWorkspaceSetupPage.ChooseFolderAsync;
+    }
 
     public AppContentAddress Address => _address;
     public string Title => _title;
     public string IconKey => "folder";
     public event EventHandler? StateChanged;
     public bool IsPublicationCurrent => _published && !_closing && !_token.IsCancellationRequested
-        && OriginalInitialization is { IsCompletedSuccessfully: true } && _view is { OriginalPublicationIsAlive: true };
+        && _route.IsOriginalRouteAlive
+        && OriginalInitialization is { IsCompletedSuccessfully: true }
+        && (_view is { OriginalPublicationIsAlive: true } || _view is null && _setupPage is { IsAlive: true });
     public bool CanRetireOriginalView => OriginalClose is { IsCompletedSuccessfully: true };
     public Task? OriginalInitialization { get { lock (_gate) return _initialization; } }
     public Task? OriginalClose { get { lock (_gate) return _close; } }
@@ -45,11 +55,14 @@ internal sealed class FilesBrowseAppContentSession : IBrowseNativeAppContentSess
         get
         {
             Dispatcher.UIThread.VerifyAccess();
-            if (!IsPublicationCurrent || _view is not { } view)
+            if (!IsPublicationCurrent)
                 throw new InvalidOperationException("The original Files view has not completed admission.");
             _route.CheckOriginalAppContentProfile(_request.ProfileId);
-            _route.CheckPublicationCurrent(view);
-            return view;
+            if (_view is { } view) _route.CheckPublicationCurrent(view);
+            // Once mounted, the presentation root never changes. Only the setup
+            // page's child changes to this route's real configured Files view.
+            return _setupPage ?? (Control?)_view
+                ?? throw new InvalidOperationException("The original Files presentation is absent.");
         }
     }
 
@@ -83,23 +96,101 @@ internal sealed class FilesBrowseAppContentSession : IBrowseNativeAppContentSess
         _actualAdmission = _route.AdmitOriginalShellInitializationAsync(linked.Token);
         await _actualAdmission;
         _route.CheckOriginalAppContentProfile(_request.ProfileId); DemandAlive();
-        var opening = _route.OpenAsync(linked.Token); _actualOpen = opening;
+        if (_location.StoreId is null && _route.SupportsOriginalWorkspaceSetup
+            && await _route.ReadOriginalSetupConfigurationAsync(linked.Token) is null)
+        {
+            _route.CheckOriginalAppContentProfile(_request.ProfileId); DemandAlive(); linked.Token.ThrowIfCancellationRequested();
+            _setupPage = new FilesWorkspaceSetupPage(ChooseWorkspaceAsync);
+            _setupPage.Initialize();
+            _published = true;
+            CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { StateChanged?.Invoke(this, EventArgs.Empty); return true; });
+            return;
+        }
+        await OpenConfiguredViewAsync(linked.Token);
+    }
+
+    private async Task OpenConfiguredViewAsync(CancellationToken token)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        DemandAlive(); token.ThrowIfCancellationRequested();
+        var opening = _route.OpenAsync(token); _actualOpen = opening;
         var view = await opening;
         // Retain the actual view even if the requested store/folder is refused afterward.
         _view = view;
         if (_location.StoreId is { } store)
         {
-            _actualLocation = view.OpenOriginalLocationAsync(store, _location.FolderId, linked.Token);
+            _actualLocation = view.OpenOriginalLocationAsync(store, _location.FolderId, token);
             await _actualLocation;
         }
-        await _route.RevalidateBeforePublicationAsync(view, linked.Token);
+        await _route.RevalidateBeforePublicationAsync(view, token);
         _route.CheckOriginalAppContentProfile(_request.ProfileId);
-        _route.CheckPublicationCurrent(view); DemandAlive(); linked.Token.ThrowIfCancellationRequested();
+        _route.CheckPublicationCurrent(view); DemandAlive(); token.ThrowIfCancellationRequested();
         UpdateLocation(view);
         view.PropertyChanged += OnSurfaceChanged;
+        _setupPage?.ShowConfigured(view);
         _published = true;
         CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { StateChanged?.Invoke(this, EventArgs.Empty); return true; });
         _route.CheckPublicationCurrent(view); DemandAlive();
+    }
+
+    private Task ChooseWorkspaceAsync(CancellationToken caller)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        DemandAlive();
+        if (_setupAction is { IsCompleted: false }) return _setupAction;
+        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var actual = ChooseWorkspaceCoreAsync(start.Task, caller);
+        _setupAction = actual;
+        lock (_gate)
+        {
+            _setupOperations.RemoveAll(row => row.IsCompletedSuccessfully);
+            _setupOperations.Add(actual); // Before the native picker callback.
+        }
+        start.SetResult();
+        return actual;
+    }
+
+    private async Task ChooseWorkspaceCoreAsync(Task start, CancellationToken caller)
+    {
+        await start;
+        using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, _token);
+        var token = linked.Token;
+        var page = _setupPage ?? throw new InvalidOperationException("The original setup page is unavailable.");
+        DemandAlive(); token.ThrowIfCancellationRequested(); _route.CheckOriginalAppContentProfile(_request.ProfileId);
+        page.SetBusy(true); page.SetStatus("Choose an empty folder in the native folder picker.");
+        try
+        {
+            // Another Files tab may have completed setup while this one was open.
+            if (await _route.ReadOriginalSetupConfigurationAsync(token) is null)
+            {
+                var selected = await _chooseFolder(page);
+                DemandAlive(); token.ThrowIfCancellationRequested();
+                if (selected is null) { page.SetStatus("No folder selected. Your Files configuration is unchanged."); return; }
+                // User input refusal before any write. The canonical owner repeats
+                // these checks and enforces symlink, profile and ownership boundaries.
+                if (!Path.IsPathFullyQualified(selected) || !Directory.Exists(selected)
+                    || Directory.EnumerateFileSystemEntries(selected).Any())
+                {
+                    page.SetStatus("Choose an existing empty local folder. Existing files were preserved.");
+                    return;
+                }
+                if (await _route.ReadOriginalSetupConfigurationAsync(token) is null)
+                    await _route.ConfigureOriginalWorkspaceAsync(selected, token);
+            }
+            DemandAlive(); token.ThrowIfCancellationRequested();
+            await OpenConfiguredViewAsync(token);
+        }
+        catch (Exception error)
+        {
+            // A refused configured-view acquisition/publication never remains
+            // advertised as a current Files presentation merely because its
+            // first-use metadata page had previously been admitted.
+            if (_actualOpen is not null) _published = false;
+            if (!_closing) page.SetStatus("Files setup could not finish: " + error.Message + " Existing data was preserved.");
+            throw; // The exact failed original remains joined at external close.
+        }
+        finally { page.SetBusy(false); }
     }
 
     private void OnSurfaceChanged(object? sender, PropertyChangedEventArgs args)
@@ -140,7 +231,15 @@ internal sealed class FilesBrowseAppContentSession : IBrowseNativeAppContentSess
             using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, _token);
             linked.Token.ThrowIfCancellationRequested();
-            if (_closing || OriginalInitialization is not { IsCompletedSuccessfully: true } || _view is not { } view) return false;
+            if (_closing || OriginalInitialization is not { IsCompletedSuccessfully: true }
+                || _setupAction is { IsCompleted: false }) return false;
+            if (_view is not { } view)
+            {
+                if (_setupPage is not { IsAlive: true }) return false;
+                await _route.AdmitOriginalShellInitializationAsync(linked.Token);
+                _route.CheckOriginalAppContentProfile(_request.ProfileId);
+                return !_closing && _setupAction is not { IsCompleted: false };
+            }
             if (!view.CanPrepareOriginalClose()) return false;
             await _route.RevalidateBeforePublicationAsync(view, linked.Token);
             _route.CheckOriginalAppContentProfile(_request.ProfileId);
@@ -179,16 +278,22 @@ internal sealed class FilesBrowseAppContentSession : IBrowseNativeAppContentSess
         async Task Join(Task? original) { if (original is null) return; try { await original; } catch (Exception error) { Add(error); } }
         try { CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { _lifetime.Cancel(); return true; }); }
         catch (Exception error) { Add(error); }
+        try { if (_setupPage is not null) _actualSetupClose = _setupPage.CloseAndDrainAsync(); }
+        catch (Exception error) { Add(error); }
         // Begin cancellation/retirement before joining initialization or active owner work.
         try { _actualClose = CloudflareOriginalExecutionGuard.InvokeOriginal(this, _route.CloseAndDrainAsync); }
         catch (Exception error) { Add(error); }
         await Join(OriginalInitialization);
+        Task[] setup; lock (_gate) setup = _setupOperations.ToArray();
+        foreach (var actual in setup) await Join(actual);
+        await Join(_actualSetupClose);
         Task[] preparations; lock (_gate) preparations = _preparations.ToArray();
         foreach (var actual in preparations) await Join(actual);
         await Join(_actualClose);
         if (_view is { } view) view.PropertyChanged -= OnSurfaceChanged;
         try { _lifetime.Dispose(); } catch (Exception error) { Add(error); }
         if (failures.Count > 0) throw new AggregateException("The original Files presentation did not retire cleanly.", failures);
+        _setupPage?.ReleaseRetiredContent();
     }
 
     private void DemandAlive()
