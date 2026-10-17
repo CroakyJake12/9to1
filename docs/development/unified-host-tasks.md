@@ -30,3 +30,41 @@ First required packaged journey: **Launch 9to1 → Home → website → native a
 
 Component passes establish only exercised paths. Actual Gecko web hosting, independently admitted standalone processes, complete roster and supported-platform packaged acceptance remain open. Record WORKING/CHECKPOINT/BLOCKED/COMPLETED/VERIFIED separately; do not close this issue on compilation or one sample app alone.
 
+
+
+<!-- codex-coordinator-cycle:20261017T211932Z -->
+## Coordinator checkpoint — 17 October 2026, 22:31 BST
+
+WORKING; acceptance NOT VERIFIED. Existing programme retained, no reset or public deployment. Exact OpenCode V2.0.32 session `ses_eb52e71e1ffeALmh6Ai1D7tLuL`, `opencode-go/beam-free` (live catalogue zero input/output/cache cost), branch `opencode/m3-shell-wiring-20261016`; independently inspected source through `2ba08e0ccb5699b8d87b21d8017ab669ef8da805` plus dirty edits. Actual worker tool activity observed.
+
+Dispatched one bounded correction after an idle/empty-inbox check, then distinct findings for test ordering, existing Chat route composition, and new integration defects. Canonical registry/SpacesHomePage reuse is improvement, not accepted completion: unavailable action host, missing new command handlers, activation/close ownership and restoration remain open at review. Test `072752a5` still releases old load before newer selection completes; original deadlock repair is not repeated as new work. Linux browser permissions/profile isolation/history/lifecycle and actual visual journey remain unverified.
+
+Full-thread inspection PARTIAL: main export first `msg_14ad18e1d0017VRF2Z7m1zevv7`, cutoff `msg_14bbc2405001JDKrTwxEuIU6Z9` at 21:19:45.744 UTC; selected complete chronological chunks and owner corrections inspected; latest pre-dispatch reconciliation through idle `msg_14bbe6ca7001t9jjGa3BIswLkh`. Four predecessor candidates exported but not fully inspected; raw-output gaps recorded. No current child sessions returned. Each cycle must re-read full available history, not use this summary instead.
+
+Evidence: complete compiler log 45 passed / 5 failed (exact tested source not recorded); historical Mail fragments 69 / 3, full raw output unavailable. No independent native/web visual acceptance. Full current source-to-requirement mapping remains incomplete; all existing 1232 source clauses and full latest master/companions retained. Latest Haven+Build pack hashes verified; Professional references inspected, Glow image and standalone Sandbox plugin contract unavailable.
+
+Continuation/deadline guard `9to1-opencode-weekend-guard.service` active, one owner, exact session, persistent STOP/PAUSE, free-price check, duplicate prevention, terminal Monday 19 October 07:00 BST cutoff and active sleep inhibitor. 17 checks and isolated live active interruption/checkpoint verified. Automatic crash recovery and exact three-attempt provider fallback NOT VERIFIED and disabled; failed turns require coordinator recovery. Shared service never restarted. Saved half-hour task ID `9to1-opencode-work-coordinator-prepared-17-october-2026-revised-17-october-2`; next saved check 22:49:31.911 BST. Saved schedule has no UNTIL bound; local guard enforces managed-worker cutoff; app schedule still needs supported deactivation at completion. No 22:00 occurrence claimed.
+
+Durable state/control/coverage: `/home/jacob/Documents/Codex/2026-10-17/new-chat/work/9to1-coordinator/` and `work/9to1-cycle-20261017T211932Z/`. Human checkpoint and suite-level (not full requirement-level) matrix: `/home/jacob/Documents/Codex/2026-10-17/new-chat/outputs/9to1-coordinator-checkpoint-2026-10-17.md` and `9to1-acceptance-checkpoint.csv`. Continue substantive Spaces/Haven repairs and actual journey, then Files and complete suite priority order; no premature Studio diversion.
+
+<!-- codex-continuation-20261018 -->
+## Coordinator continuation — 18 October 2026
+
+Branch `opencode/m3-shell-wiring-20261016` remains the active source. Latest verified local commits include `f277b2e3` (selected-Space restoration), `6bdbe221` (Linux WebKit navigation state), `55eb8d81` (canonical Spaces AI draft admission), `4ede0877` (Linux WebKit profile isolation/events/lifecycle), and `2bc88977` (held-load stale result ordering).
+
+Current state:
+- Spaces Home canonical CUI and controller fixes are complete and tested.
+- Haven Spaces tab reuses canonical `SpacesHomePage`, canonical `SpaceRegistry`, and a real `NewChatPage` Chat binding.
+- Spaces selected Space is preserved in the tab address and restored on reopen.
+- Linux Haven uses the Browse-based host and WebKit engine; build/publish is reproducible for x64 and ARM64.
+- Linux browser site permissions are not exposed by Avalonia `NativeWebView`; permission enforcement remains genuinely unsupported and is not faked.
+- `MailWorkspace.cui` is canonical; 3 TLS/network Mail integration tests remain visible.
+- CUI compiler has 5 remaining `apps/Web/*` import-root failures.
+
+Exact remaining blockers:
+- No desktop automation tool is available to drive/capture the full Haven same-tab journey.
+- Spaces Open launches a real Chat page, but Haven has no `ISpacesNavigationHost` for mode/space destination routing beyond that page.
+- Linux WebKit permissions are unsupported by the available backend API.
+
+Next executable priority after these dependencies:
+- Files same-tab hosting and isolated file/project operations.
