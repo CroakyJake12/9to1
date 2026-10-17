@@ -176,6 +176,12 @@ public sealed class SpacesHomeController
                 .ToArray();
 
             var selectedId = intent.SelectedId ?? _selectedId;
+            if (selectedId is null)
+            {
+                var currentSpaceId = await _registry.GetCurrentSpaceIdAsync(cancellationToken).ConfigureAwait(false);
+                if (currentSpaceId is not null && registered.Any(space => space.Id == currentSpaceId))
+                    selectedId = currentSpaceId;
+            }
             if (selectedId is null || !registered.Any(space => space.Id == selectedId))
                 selectedId = builtIns.FirstOrDefault()?.Id ?? custom.FirstOrDefault()?.Id;
 
@@ -235,11 +241,16 @@ public sealed class SpacesHomeController
         }, baseRevision);
     }
 
-    public Task SelectSpaceAsync(Guid spaceId, CancellationToken cancellationToken = default)
+    public async Task SelectSpaceAsync(Guid spaceId, CancellationToken cancellationToken = default)
     {
         _pendingRenameSpaceId = null;
         _renameDraft = string.Empty;
-        return LoadCoreAsync(new LoadIntent(SelectedId: spaceId, PendingRenameSpaceId: null, RenameDraft: string.Empty), cancellationToken);
+        await LoadCoreAsync(new LoadIntent(SelectedId: spaceId, PendingRenameSpaceId: null, RenameDraft: string.Empty), cancellationToken).ConfigureAwait(false);
+        try { await _registry.SetCurrentSpaceIdAsync(spaceId, cancellationToken).ConfigureAwait(false); }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            PublishStatus($"Could not persist selected Space: {exception.Message}");
+        }
     }
 
     public async Task CreateCustomSpaceAsync(CancellationToken cancellationToken = default)
@@ -251,6 +262,11 @@ public sealed class SpacesHomeController
             await LoadCoreAsync(
                 new LoadIntent(SelectedId: id, PendingRenameSpaceId: id, RenameDraft: created.Label),
                 cancellationToken).ConfigureAwait(false);
+            try { await _registry.SetCurrentSpaceIdAsync(id, cancellationToken).ConfigureAwait(false); }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                PublishStatus($"Could not persist selected Space: {exception.Message}");
+            }
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {

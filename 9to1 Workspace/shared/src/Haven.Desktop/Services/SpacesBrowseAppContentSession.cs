@@ -8,6 +8,7 @@ using Haven.Desktop.Views.Pages.Chat;
 using Haven.Desktop.Views.Pages.Spaces;
 using HavenOS.Apps.Browse;
 using HavenOS.Apps.Spaces;
+using HavenOS.Home.Core;
 using HavenOS.Apps.Spaces.Home;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -86,6 +87,20 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
         {
             token.ThrowIfCancellationRequested();
             DemandAlive();
+            var home = _services.GetRequiredService<HomeNativeWindowsComposition>();
+            if (home.OriginalStartTask is { } homeStart)
+                await homeStart.ConfigureAwait(false);
+            var actor = await home.Profiles.GetCurrentAsync(token).ConfigureAwait(false)
+                ?? throw new UnauthorizedAccessException("The authenticated Home profile is unavailable.");
+            if (!string.Equals(actor.ProfileId, _request.ProfileId, StringComparison.Ordinal))
+                throw new UnauthorizedAccessException("The Spaces tab does not belong to the current authenticated profile.");
+            var runtime = home.Runtime.Current;
+            foreach (var required in new[] { "home.core", "home.state", "permissions.trust" })
+            {
+                var service = runtime.Services.SingleOrDefault(item => item.ServiceId == required);
+                if (service is null || !service.IsAvailable || service.State != HomeServiceLifecycleState.Ready)
+                    throw new UnauthorizedAccessException("A required Home service is unavailable for Spaces.");
+            }
             var registry = _services.GetRequiredService<SpaceRegistry>();
             var navigationHost = new HavenSpacesActionHost(this);
             var page = new SpacesHomePage(registry, navigationHost, SpacesHomePage.ImmediateReadinessInstance);
@@ -162,6 +177,13 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
         _lifetime.Cancel();
         if (_initialization is { } initialization)
             try { await initialization.ConfigureAwait(false); } catch { }
+        Task[] commands;
+        lock (_commandGate) commands = _commands.ToArray();
+        foreach (var command in commands)
+        {
+            try { await command.ConfigureAwait(false); }
+            catch { }
+        }
         await OnUiAsync(async () =>
         {
             if (_chatPage is IAsyncDisposable chatDisposable)
