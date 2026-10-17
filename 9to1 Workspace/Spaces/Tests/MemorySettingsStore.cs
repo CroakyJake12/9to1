@@ -45,6 +45,8 @@ public sealed class DelayedMemorySettingsStore : IVersionedSettingsStore
     private readonly IVersionedSettingsStore? _inner;
     private readonly Dictionary<string, object> _values = new(StringComparer.Ordinal);
     private int _delayedReads;
+    private readonly TaskCompletionSource _readStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    public Task ReadStarted => _readStarted.Task;
 
     public DelayedMemorySettingsStore(Task delay, IVersionedSettingsStore? inner = null)
     {
@@ -57,6 +59,7 @@ public sealed class DelayedMemorySettingsStore : IVersionedSettingsStore
         cancellationToken.ThrowIfCancellationRequested();
         if (key == "spaces.registry" && Interlocked.Increment(ref _delayedReads) == 1)
         {
+            _readStarted.TrySetResult();
             // Use a new cancellation-aware delay so the test can advance by releasing the task.
             var registration = cancellationToken.Register(() => _ = Task.Run(() => { }));
             await _delay.WaitAsync(cancellationToken).ConfigureAwait(false);

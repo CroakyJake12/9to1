@@ -373,12 +373,25 @@ public sealed class SpacesHomeControllerTests
         var controller = new SpacesHomeController(registry);
 
         var loadTask = controller.LoadAsync();
-        var selectTask = controller.SelectSpaceAsync(target.Id);
-        release.SetResult();
-        await Task.WhenAll(loadTask, selectTask).WaitAsync(TimeSpan.FromSeconds(5));
+        Task selectTask = Task.CompletedTask;
+        try
+        {
+            await store.ReadStarted.WaitAsync(TimeSpan.FromSeconds(5));
+            selectTask = controller.SelectSpaceAsync(target.Id);
+            Assert.False(loadTask.IsCompleted, "The earlier load must still be held when the newer selection starts.");
 
-        Assert.Equal(target.Id, controller.State.Selection?.Id);
-        Assert.Equal("Spaces ready", controller.State.StatusMessage);
+            release.TrySetResult();
+            await Task.WhenAll(loadTask, selectTask).WaitAsync(TimeSpan.FromSeconds(5));
+
+            Assert.Equal(target.Id, controller.State.Selection?.Id);
+            Assert.Equal("Spaces ready", controller.State.StatusMessage);
+        }
+        finally
+        {
+            release.TrySetResult();
+            try { await Task.WhenAll(loadTask, selectTask).WaitAsync(TimeSpan.FromSeconds(5)); }
+            catch { }
+        }
     }
 
     private sealed class RecordingActionHost : ISpacesActionHost
