@@ -378,10 +378,11 @@ public sealed class SpacesHomeControllerTests
         {
             await store.ReadStarted.WaitAsync(TimeSpan.FromSeconds(5));
             selectTask = controller.SelectSpaceAsync(target.Id);
-            Assert.False(loadTask.IsCompleted, "The earlier load must still be held when the newer selection starts.");
+            await selectTask.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.False(loadTask.IsCompleted, "The earlier load must remain held after the newer selection completes.");
 
             release.TrySetResult();
-            await Task.WhenAll(loadTask, selectTask).WaitAsync(TimeSpan.FromSeconds(5));
+            await loadTask.WaitAsync(TimeSpan.FromSeconds(5));
 
             Assert.Equal(target.Id, controller.State.Selection?.Id);
             Assert.Equal("Spaces ready", controller.State.StatusMessage);
