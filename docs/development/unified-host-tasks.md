@@ -68,3 +68,13 @@ Exact remaining blockers:
 
 Next executable priority after these dependencies:
 - Files same-tab hosting and isolated file/project operations.
+
+## Coordinator continuation — Spaces admission and restoration
+
+- Spaces Haven sessions now perform Home profile/service admission before activating the canonical Spaces page.
+- Selected Spaces are persisted through `SpaceRegistry` and restored from the tab address.
+- Tab command tasks are joined before page disposal; closing one tab does not dispose shared services.
+- Real Chat binding remains via `OverlayChatSessionFactory`; Chat drafts are retained while the tab remains open.
+- Linux WebKit profile isolation, committed navigation state, script execution, popup handling and safe disposal are implemented.
+- Linux site permissions remain genuinely unsupported by Avalonia `NativeWebView`; no permission callback is invoked or faked.
+- Exact blockers remain desktop automation/capture and the unavailable Haven `ISpacesNavigationHost` for non-Chat Space destinations.
