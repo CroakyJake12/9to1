@@ -36,7 +36,7 @@
 
             <Repeat id="first-party-spaces" Source="{Binding spaces.builtIns}" As="space" Key="{Binding space.id}">
               <Container id="first-party-space" Type="Vertical Stack">
-                <Button id="first-party-space-open" action="spaces.open" action-argument="{Binding space.id}" accessible-name="Open {Binding space.name}">
+                <Button id="first-party-space-open" action="spaces.select" action-argument="{Binding space.id}" accessible-name="Open {Binding space.name}">
                   <Container id="first-party-space-content" Type="Vertical Stack">
                     <Text id="first-party-space-name" text="{Binding space.name}" />
                     <Text id="first-party-space-summary" text="{Binding space.summary}" foreground="{Resource CuiTextSoftBrush}" />
@@ -49,7 +49,7 @@
 
             <Repeat id="custom-spaces" Source="{Binding spaces.customSpaces}" As="space" Key="{Binding space.id}">
               <Container id="custom-space-row" role="listitem" accessible-name="{Binding space.name}, custom Space" Type="Vertical Stack">
-                <Button id="open-custom-space" action="spaces.open" action-argument="{Binding space.id}" accessible-name="Open {Binding space.name}">
+                <Button id="open-custom-space" action="spaces.select" action-argument="{Binding space.id}" accessible-name="Open {Binding space.name}">
                   <Container id="custom-space-content" Type="Vertical Stack">
                     <Text id="custom-space-name" text="{Binding space.name}" />
                     <Text id="custom-space-summary" text="{Binding space.summary}" foreground="{Resource CuiTextSoftBrush}" />
@@ -85,6 +85,7 @@
                 <Container id="space-header-actions" Type="Wrap" CellGap="8">
                   <Button id="start-rename" action="spaces.rename" action-argument="{Binding selection.id}" content="Rename" Interactive="{Binding selection.canEdit}" accessible-name="Rename selected Space" />
                   <Button id="fork-space" action="spaces.fork" action-argument="{Binding selection.id}" content="Copy" accessible-name="Make a copy of selected Space" />
+                  <Button id="open-selected-space" action="spaces.open" action-argument="{Binding selection.id}" content="Open" accessible-name="Open selected Space" />
                   <Button id="archive-space" action="spaces.archive" action-argument="{Binding selection.id}" content="Archive" Interactive="{Binding selection.canEdit}" accessible-name="Archive selected Space" />
                   <If Condition="{Binding selection.isBuiltIn}">
                     <Button id="edit-extensions" action="spaces.edit-extensions" action-argument="{Binding selection.id}" content="Edit extensions" Interactive="{Binding selection.canEditExtensions}" accessible-name="Edit Space extensions" />

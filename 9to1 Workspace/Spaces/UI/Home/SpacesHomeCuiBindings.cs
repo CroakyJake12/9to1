@@ -18,7 +18,7 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
     private static readonly IReadOnlySet<string> KnownCommands = new HashSet<string>(StringComparer.Ordinal)
     {
         "spaces.create", "spaces.open", "spaces.rename", "spaces.move", "spaces.fork",
-        "spaces.archive", "spaces.add-context", "spaces.clear-search",
+        "spaces.archive", "spaces.add-context", "spaces.clear-search", "spaces.select", "spaces.set-rename-draft",
         "spaces.confirm-rename", "spaces.cancel-rename",
         "spaces.select-move-parent",
         "spaces.edit-extensions", "spaces.edit-graph"
@@ -98,6 +98,9 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
             case "spaces.selectedMoveParentIndex":
                 if (value is int index)
                     _ = _dispatch("spaces.select-move-parent", index, CancellationToken.None);
+                return true;
+            case "spaces.renameDraft":
+                _ = _dispatch("spaces.set-rename-draft", value, CancellationToken.None);
                 return true;
             default:
                 return false;
