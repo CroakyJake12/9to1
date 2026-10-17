@@ -6,7 +6,8 @@
 -->
 <Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="PlatformTarget">
   <PropertyGroup>
-    <TargetFrameworks>net10.0-windows10.0.19041.0;net10.0</TargetFrameworks>
+        <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows'))">net10.0-windows10.0.19041.0;net10.0</TargetFrameworks>
+    <TargetFrameworks Condition="!$([MSBuild]::IsOSPlatform('Windows'))">net10.0</TargetFrameworks>
     <Platforms>x64</Platforms>
     <Platform>x64</Platform>
     <PlatformTarget Condition="'$(TargetFramework)' != 'net10.0'">x64</PlatformTarget>

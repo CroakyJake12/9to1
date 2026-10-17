@@ -7,14 +7,15 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 project="$repo_root/src/Haven.Desktop/Haven.Desktop.csproj"
-rid="${HAVEN_LINUX_RID:-linux-x64}"
+rid="${HAVEN_LINUX_RID:-$(uname -m)}"
+if [[ "$rid" == "x86_64" ]]; then rid="linux-x64"; elif [[ "$rid" == "aarch64" ]]; then rid="linux-arm64"; fi
 configuration="${HAVEN_CONFIGURATION:-Release}"
 artifacts_root="${HAVEN_ARTIFACTS_DIR:-$repo_root/artifacts/linux/$rid}"
 publish_dir="$artifacts_root/publish"
 package_path="$artifacts_root/haven-linux-$rid.tar.gz"
 
-if [[ "$rid" != "linux-x64" ]]; then
-  printf 'Unsupported Haven Linux RID: %s (supported: linux-x64)\n' "$rid" >&2
+if [[ "$rid" != "linux-x64" && "$rid" != "linux-arm64" ]]; then
+  printf 'Unsupported Haven Linux RID: %s (supported: linux-x64, linux-arm64)\n' "$rid" >&2
   exit 64
 fi
 
@@ -33,7 +34,6 @@ dotnet publish "$project" \
   --framework net10.0 \
   --runtime "$rid" \
   --self-contained false \
-  -p:TargetFrameworks=net10.0 \
   -p:UseAppHost=true \
   --output "$publish_dir"
 
