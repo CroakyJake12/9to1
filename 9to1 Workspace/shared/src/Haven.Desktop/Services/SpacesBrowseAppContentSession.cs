@@ -23,6 +23,11 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
     private readonly CancellationTokenSource _lifetime;
     private readonly CancellationToken _token;
     private readonly object _gate = new();
+    private readonly List<Task> _commands = [];
+    private readonly SemaphoreSlim _commandSerial = new(1, 1);
+    private readonly Dictionary<Guid, NewChatPage> _chatsBySpace = [];
+    private readonly List<NewChatPage> _ownedChats = [];
+    private static readonly AsyncLocal<SpacesBrowseAppContentSession?> ExecutingCommand = new();
     private Task? _initialization;
     private Task? _close;
     private Task<bool>? _preparation;
@@ -113,7 +118,7 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
                 token.ThrowIfCancellationRequested();
                 if (_closing) throw new OperationCanceledException();
                 _stateChangedHandlerSpaces = OnSpacesStateChanged;
-            page.Controller.StateChanged += _stateChangedHandlerSpaces;
+                page.Controller.StateChanged += _stateChangedHandlerSpaces;
                 if (TryParseSelectedSpace(_request.Address, out var selectedSpaceId))
                     await page.Controller.SelectSpaceAsync(selectedSpaceId, token);
                 UpdateAddress(page.Controller.State.Selection?.Id);
@@ -176,30 +181,42 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
     private async Task CloseDriverAsync(Task gate)
     {
         await gate.ConfigureAwait(false);
-        _lifetime.Cancel();
+        List<Exception> failures = [];
+        try { _lifetime.Cancel(); } catch (Exception error) { failures.Add(error); }
         if (_initialization is { } initialization)
-            try { await initialization.ConfigureAwait(false); } catch { }
+            try { await initialization.ConfigureAwait(false); }
+            catch (OperationCanceledException) when (initialization.IsCanceled && _token.IsCancellationRequested) { }
+            catch (Exception error) { failures.Add(error); }
         Task[] commands;
-        lock (_commandGate) commands = _commands.ToArray();
+        lock (_gate) commands = _commands.ToArray();
         foreach (var command in commands)
         {
             try { await command.ConfigureAwait(false); }
-            catch { }
+            catch (OperationCanceledException) when (command.IsCanceled && _token.IsCancellationRequested) { }
+            catch (Exception error) { failures.Add(error); }
         }
         await OnUiAsync(async () =>
         {
-            if (_chatPage is IAsyncDisposable chatDisposable)
-                await chatDisposable.DisposeAsync();
+            foreach (var chat in _ownedChats.ToArray())
+            {
+                try { await chat.DisposeAsync(); _ownedChats.Remove(chat); }
+                catch (Exception error) { failures.Add(error); }
+            }
             if (_spacesPage is not null && _stateChangedHandlerSpaces is not null)
                 _spacesPage.Controller.StateChanged -= _stateChangedHandlerSpaces;
             if (_spacesPage is IAsyncDisposable spacesDisposable)
-                await spacesDisposable.DisposeAsync();
+                try { await spacesDisposable.DisposeAsync(); }
+                catch (Exception error) { failures.Add(error); }
             _chatPage = null;
+            _chatsBySpace.Clear();
             _spacesPage = null;
             _root.Content = null;
             _page = null;
         }).ConfigureAwait(false);
-        try { _lifetime.Dispose(); } catch { }
+        _commandSerial.Dispose();
+        _lifetime.Dispose();
+        if (failures.Count > 0)
+            throw new AggregateException("The original Spaces work did not retire cleanly.", failures);
     }
 
     private void OnSpacesStateChanged(SpacesHomeViewState state)
@@ -225,34 +242,108 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
         return Guid.TryParseExact(address.ResourceSegments[1], "D", out selectedSpaceId) && selectedSpaceId != Guid.Empty;
     }
 
-    private void DemandAlive() => ObjectDisposedException.ThrowIf(_closing, this);
+    private void DemandAlive()
+    {
+        ObjectDisposedException.ThrowIf(_closing, this);
+        _token.ThrowIfCancellationRequested();
+    }
 
     private void DemandExternalJoin()
     {
-        // The Spaces page owns its original work lifetime and close preflight.
+        if (ReferenceEquals(ExecutingCommand.Value, this))
+            throw new InvalidOperationException("An active Spaces command cannot join its own retirement.");
+    }
+
+    private Task ExecuteCommandAsync(SpacesAction action, CancellationToken caller)
+    {
+        lock (_gate)
+        {
+            DemandAlive();
+            caller.ThrowIfCancellationRequested();
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var actual = ExecuteCommandDriverAsync(start.Task, action, caller);
+            _commands.Add(actual);
+            start.SetResult();
+            return actual;
+        }
+    }
+
+    private async Task ExecuteCommandDriverAsync(Task start, SpacesAction action, CancellationToken caller)
+    {
+        await start.ConfigureAwait(false);
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, _token);
+        await _commandSerial.WaitAsync(linked.Token).ConfigureAwait(false);
+        try
+        {
+            await OnUiAsync(async () =>
+            {
+                var previous = ExecutingCommand.Value;
+                ExecutingCommand.Value = this;
+                try { await ExecuteChatOnUiAsync(action, linked.Token); }
+                finally { ExecutingCommand.Value = previous; }
+            }).ConfigureAwait(false);
+        }
+        finally { _commandSerial.Release(); }
+    }
+
+    private async Task ExecuteChatOnUiAsync(SpacesAction action, CancellationToken token)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        token.ThrowIfCancellationRequested();
+        DemandAlive();
+        if (action.Context.Definition.Destination != SpacesDestinationKind.Chat)
+            throw new NotSupportedException("Only the Chat destination is available in this Haven tab.");
+        var spaceId = action.Context.Scope.RegisteredSpaceId;
+        var key = spaceId ?? Guid.Empty;
+        if (_chatsBySpace.TryGetValue(key, out var existing))
+        {
+            lock (_gate)
+            {
+                token.ThrowIfCancellationRequested();
+                DemandAlive();
+                _chatPage = existing;
+                _root.Content = existing;
+            }
+            return;
+        }
+        var factory = new OverlayChatSessionFactory(_services,
+            _services.GetRequiredService<IConversationRepository>(),
+            _services.GetRequiredService<CapabilityRegistryService>(),
+            _services.GetRequiredService<ICatalogRepository>(),
+            _services.GetRequiredService<IModeRegistry>());
+        var page = await factory.CreateNewAsync(token);
+        _ownedChats.Add(page);
+        var published = false;
+        try
+        {
+            token.ThrowIfCancellationRequested();
+            DemandAlive();
+            await page.AssignSpaceAsync(spaceId);
+            lock (_gate)
+            {
+                token.ThrowIfCancellationRequested();
+                DemandAlive();
+                page.SetDraft(string.Empty);
+                _root.Content = page;
+                _chatsBySpace.Add(key, page);
+                _chatPage = page;
+                published = true;
+            }
+        }
+        finally
+        {
+            if (!published)
+            {
+                await page.DisposeAsync();
+                _ownedChats.Remove(page);
+            }
+        }
     }
 
     private sealed class HavenSpacesActionHost(SpacesBrowseAppContentSession owner) : ISpacesActionHost
     {
-        public async Task ExecuteAsync(SpacesAction action, CancellationToken cancellationToken = default)
-        {
-            if (action.Context.Definition.Destination != SpacesDestinationKind.Chat)
-                throw new NotSupportedException("Only the Chat destination is available in this Haven tab.");
-            var factory = new OverlayChatSessionFactory(owner._services,
-                owner._services.GetRequiredService<IConversationRepository>(),
-                owner._services.GetRequiredService<CapabilityRegistryService>(),
-                owner._services.GetRequiredService<ICatalogRepository>(),
-                owner._services.GetRequiredService<IModeRegistry>());
-            var page = await factory.CreateNewAsync(cancellationToken);
-            await page.AssignSpaceAsync(action.Context.Scope.RegisteredSpaceId);
-            await OnUiAsync(() =>
-            {
-                page.SetDraft(string.Empty);
-                owner._chatPage = page;
-                owner._root.Content = page;
-                return Task.CompletedTask;
-            });
-        }
+        public Task ExecuteAsync(SpacesAction action, CancellationToken cancellationToken = default) =>
+            owner.ExecuteCommandAsync(action, cancellationToken);
     }
 
     private static async Task OnUiAsync(Func<Task> action)
