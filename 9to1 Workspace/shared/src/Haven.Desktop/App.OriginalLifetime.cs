@@ -18,6 +18,7 @@ public sealed partial class App
     [ThreadStatic] private static List<App>? _synchronousAppSources;
     private IUpdateService? _actualSubscribedUpdates;
     private Task? _actualStartupOriginal;
+    private Task? _startupFailureClose;
     private DesktopOriginalShutdownSequence? _actualShutdownSequence;
     private Task? _actualShutdownDelivery;
     private Task? _actualDocumentClosePreflightAttempt;
@@ -37,6 +38,35 @@ public sealed partial class App
     public App() => _originalAppWork = new(StopOriginalAppSourcesAsync, JoinOriginalFailedStartupAcquisitionsAsync);
 
     internal Task? OriginalStartup => _actualStartupOriginal;
+
+    internal void StartStartupFailureDrain()
+    {
+        if (_startupFailureClose is not null) return;
+        _startupFailureClose = DrainStartupFailureAsync();
+        _ = _startupFailureClose.ContinueWith(task =>
+        {
+            try
+            {
+                if (task.IsFaulted)
+                    System.Diagnostics.Debug.WriteLine("[9to1 startup failure drain] " + task.Exception);
+                if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+                    desktop.Shutdown();
+            }
+            catch (Exception error)
+            {
+                System.Diagnostics.Debug.WriteLine("[9to1 startup failure shutdown] " + error);
+            }
+        }, TaskContinuationOptions.ExecuteSynchronously);
+    }
+
+    private async Task DrainStartupFailureAsync()
+    {
+        try { await _originalAppWork.CloseAndDrainAsync().ConfigureAwait(false); }
+        catch (Exception error)
+        {
+            System.Diagnostics.Debug.WriteLine("[9to1 startup failure drain] " + error);
+        }
+    }
     internal Task? OriginalShutdownDelivery => _actualShutdownDelivery;
     internal Task? OriginalDocumentClosePreflightAttempt => _actualDocumentClosePreflightAttempt;
     internal Task? OriginalDocumentClosePreflightDelivery => _actualDocumentClosePreflightDelivery;

@@ -121,6 +121,7 @@ public sealed partial class App
             if (_closed) return;
             var window = TopLevel.GetTopLevel(this) as Window;
             if (window is not null) ShowStartupFailure(window, correlationId, exception);
+            _app.StartStartupFailureDrain();
         }
 
         internal Task InitializeAsync(CancellationToken token)

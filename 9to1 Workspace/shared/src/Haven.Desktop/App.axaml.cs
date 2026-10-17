@@ -135,8 +135,20 @@ public sealed partial class App : Avalonia.Application
                 }
                 catch (Exception failure)
                 {
-                    UnifiedWorkspaceHost.ShowStartupFailure(window, Guid.NewGuid().ToString("N"), failure);
-                    desktop.MainWindow = window;
+                    // A failed unified startup must not inherit MainWindow's original
+                    // window-work veto or retained close delivery. Use a plain host window
+                    // whose canonical CUI failure content can close and drain normally.
+                    var failureWindow = new Window
+                    {
+                        Title = "9to1 Haven",
+                        Width = 900,
+                        Height = 560,
+                        MinWidth = 480,
+                        MinHeight = 320
+                    };
+                    UnifiedWorkspaceHost.ShowStartupFailure(failureWindow, Guid.NewGuid().ToString("N"), failure);
+                    StartStartupFailureDrain();
+                    desktop.MainWindow = failureWindow;
                     base.OnFrameworkInitializationCompleted();
                     return;
                 }
@@ -177,7 +189,10 @@ public sealed partial class App : Avalonia.Application
         catch (Exception failure)
         {
             if (_actualUnifiedWorkspace is not null)
+            {
                 _actualUnifiedWorkspace.ShowStartupFailureForHost(Guid.NewGuid().ToString("N"), failure);
+                _actualUnifiedWorkspace.StartStartupFailureDrain();
+            }
         }
     }
 #endif
