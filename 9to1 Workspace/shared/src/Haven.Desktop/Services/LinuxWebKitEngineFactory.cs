@@ -9,14 +9,23 @@ using HavenOS.Apps.Browse;
 namespace Haven.Desktop.Services;
 
 /// <summary>Linux embedded browser engine using Avalonia's NativeWebView (WebKitGTK).</summary>
-public sealed class LinuxWebKitEngineFactory : IBrowseEngineHostFactory
+public sealed class LinuxWebKitEngineFactory : IBrowseEngineHostFactory, IBrowseEngineAvailability
 {
-    public bool IsSupported => OperatingSystem.IsLinux();
-    public string UnsupportedReason => "The Linux WebKit engine is unavailable.";
+    // NativeWebView supplies WebKit here, not either engine required by Browse.
+    // Retain the adapter until a genuine engine supplier can satisfy the request.
+    public bool IsSupported => false;
+    public string UnsupportedReason => "Firefox (Gecko) and Chromium are not installed as Haven browser engines on Linux. The available WebKit adapter cannot substitute for either engine.";
+    public bool IsEngineSupported(BrowseEngineKind engine) => false;
+    public string UnsupportedReasonFor(BrowseEngineKind engine) => engine switch
+    {
+        BrowseEngineKind.Gecko => "The Firefox (Gecko) engine is unavailable on Linux. WebKit cannot substitute for Firefox. Your tab and engine preference are retained.",
+        BrowseEngineKind.Chromium => "The Chromium engine is unavailable on Linux. WebKit cannot substitute for Chromium. Your tab and engine preference are retained.",
+        _ => "The requested browser engine has no Linux supplier. Your tab and engine preference are retained."
+    };
     public Task<IBrowseEngineTab> CreateAsync(BrowseEngineTabRequest request, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
-        if (!IsSupported) throw new PlatformNotSupportedException(UnsupportedReason);
+        if (!IsEngineSupported(request.Engine)) throw new PlatformNotSupportedException(UnsupportedReasonFor(request.Engine));
         if (request.TabId == Guid.Empty) throw new ArgumentException("Tab id is required.", nameof(request));
         if (!Path.IsPathFullyQualified(request.ProfileDirectory)) throw new ArgumentException("The tab must supply an absolute engine profile.", nameof(request));
         return Dispatcher.UIThread.InvokeAsync(() => (IBrowseEngineTab)new LinuxWebKitEngineTab(request)).GetTask();
