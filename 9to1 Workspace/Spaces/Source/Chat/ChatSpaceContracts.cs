@@ -1,3 +1,4 @@
+using Haven.Application;
 using Haven.Core;
 
 namespace HavenOS.Apps.Spaces.Chat;
@@ -19,13 +20,27 @@ public sealed record ChatSpaceMessage(
     IReadOnlyList<MessageAttachment> Attachments,
     IReadOnlyList<ChatSpaceCitation> Citations,
     IReadOnlyList<ToolActivity> ToolActivities,
-    bool CanRegenerate);
+    bool CanRegenerate,
+    string? Thinking = null,
+    bool IsStreaming = false,
+    string? ProgressLabel = null,
+    bool CanEdit = false)
+{
+    public bool HasThinking => !string.IsNullOrWhiteSpace(Thinking);
+}
 
 public sealed record ChatSpaceBranch(
     Guid Id,
     string Name,
     ConversationBranchReason Reason,
-    bool IsCurrent);
+    bool IsCurrent)
+{
+    /// <summary>
+    /// Returns the branch name so native selector controls that lack an explicit display-member
+    /// binding render the intended label instead of the record's CLR format.
+    /// </summary>
+    public override string ToString() => Name;
+}
 
 public sealed record ChatSpaceConversation(
     Guid Id,
@@ -58,14 +73,26 @@ public sealed record ChatSpaceModelInventory(
     IReadOnlyList<ModelDescriptor> Models,
     string? PreferredModelName = null);
 
+public sealed record ChatSpaceThreadSettings(
+    ChatActionMode ActionMode,
+    GenerativeUiResponseMode ResponseMode);
+
+public sealed record ChatSpaceDualModelState(
+    bool IsActive,
+    string? SecondModelName,
+    bool IsRunning,
+    DuoMode Mode);
+
 public sealed record ChatSpaceComposer(
     string Draft,
     IReadOnlyList<MessageAttachment> Attachments,
     string? SelectedModelName,
-    bool IsSending)
+    bool IsSending,
+    int SelectedModelIndex = -1,
+    bool IsEditing = false,
+    Guid? EditingMessageId = null)
 {
     public bool CanSend =>
-        !IsSending &&
         !string.IsNullOrWhiteSpace(SelectedModelName) &&
         (!string.IsNullOrWhiteSpace(Draft) || Attachments.Count > 0);
 }
@@ -87,7 +114,11 @@ public sealed record ChatSpaceViewState(
     ChatSpaceComposer Composer,
     ChatSpaceStatus Status,
     bool IsLoading,
-    int Revision)
+    int Revision,
+    bool IsSafetyLocked = false,
+    ChatSpaceThreadSettings? ThreadSettings = null,
+    ChatSpaceDualModelState? DualModel = null,
+    int SelectedBranchIndex = -1)
 {
     public static ChatSpaceViewState Empty { get; } = new(
         [],
@@ -103,7 +134,14 @@ public sealed record ChatSpaceTurnRequest(
     Conversation Conversation,
     string Prompt,
     ModelDescriptor Model,
-    IReadOnlyList<Guid> AttachmentIds);
+    IReadOnlyList<Guid> AttachmentIds,
+    ChatActionMode ActionMode = ChatActionMode.AllowBasicActions,
+    GenerativeUiResponseMode ResponseMode = GenerativeUiResponseMode.Auto,
+    DuoMode DuoMode = DuoMode.Solo,
+    string? SecondModelName = null,
+    Guid? BranchId = null,
+    ChatMessage? ExistingUserInput = null,
+    Func<ChatMessage, CancellationToken, Task>? InputAccepted = null);
 
 /// <summary>
 /// Host adapter for the existing mature Chat turn pipeline. Implementations must retain the
@@ -111,7 +149,13 @@ public sealed record ChatSpaceTurnRequest(
 /// </summary>
 public interface IChatSpaceTurnExecutor
 {
-    Task ExecuteAsync(ChatSpaceTurnRequest request, CancellationToken cancellationToken);
+    Task ExecuteAsync(ChatSpaceTurnRequest request, IProgress<ChatStreamEvent>? progress, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Backward-compatible dispatch for callers that do not need live streaming deltas.
+    /// </summary>
+    Task ExecuteAsync(ChatSpaceTurnRequest request, CancellationToken cancellationToken) =>
+        ExecuteAsync(request, null, cancellationToken);
 }
 
 /// <summary>
@@ -130,11 +174,29 @@ public interface IChatSpaceBackend
     Task<ChatSpaceConversationData> GetConversationAsync(Guid conversationId, CancellationToken cancellationToken);
     Task SaveDraftAsync(Guid conversationId, Guid? branchId, string content, IReadOnlyList<Guid> attachmentIds, CancellationToken cancellationToken);
     Task<MessageAttachment> ImportAttachmentAsync(Guid conversationId, Guid? branchId, string path, CancellationToken cancellationToken);
-    Task RemoveAttachmentAsync(Guid attachmentId, CancellationToken cancellationToken);
-    Task SendAsync(ChatSpaceTurnRequest request, CancellationToken cancellationToken);
+    Task RemoveAttachmentAsync(Guid conversationId, Guid? branchId, Guid attachmentId, CancellationToken cancellationToken);
+    Task SendAsync(ChatSpaceTurnRequest request, IProgress<ChatStreamEvent>? progress, CancellationToken cancellationToken);
     Task<ConversationBranch> CreateBranchAsync(Guid conversationId, Guid messageId, string? name, CancellationToken cancellationToken);
     Task SwitchBranchAsync(Guid conversationId, Guid branchId, CancellationToken cancellationToken);
     Task RegenerateAsync(Guid conversationId, Guid assistantMessageId, ModelDescriptor model, CancellationToken cancellationToken);
+
+    // Governed safety state
+    Task<ConversationSafetySnapshot> GetSafetySnapshotAsync(Guid conversationId, CancellationToken cancellationToken);
+
+    // Per-message actions
+    Task<string> GetMessageContentAsync(Guid conversationId, Guid messageId, CancellationToken cancellationToken);
+    Task DeleteMessageAsync(Guid conversationId, Guid messageId, CancellationToken cancellationToken);
+    Task ForgetMessageAsync(Guid conversationId, Guid messageId, CancellationToken cancellationToken);
+    Task EditUserMessageAsync(Guid conversationId, Guid messageId, string content, MessageEditMode mode, CancellationToken cancellationToken);
+
+    // Dual-model forwarding
+    Task<DualModelRun> RunDualAsync(string prompt, ModelDescriptor first, string secondModelName, DuoMode mode, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Backward-compatible send without streaming.
+    /// </summary>
+    Task SendAsync(ChatSpaceTurnRequest request, CancellationToken cancellationToken) =>
+        SendAsync(request, null, cancellationToken);
 }
 
 public sealed record ChatSpaceConversationData(

@@ -1,4 +1,5 @@
 using System.Runtime.ExceptionServices;
+using System.Runtime.CompilerServices;
 using Avalonia.Threading;
 using Haven.Application;
 using Haven.Core;
@@ -10,11 +11,14 @@ namespace Haven.Desktop.Services;
 public sealed partial class WorkspaceSessionCoordinator(IWorkspaceSessionRepository repository)
 {
     private readonly object _gate = new();
-    private readonly Dictionary<MainView, WorkspaceWindowKind> _shells = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<IWorkspaceSessionSource, WorkspaceWindowKind> _shells = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Guid, PopUpRegistration> _popUps = [];
     private readonly List<QueuedSave> _queuedSaves = [];
     private QueuedSave? _pending;
     private Task? _finalSave;
+    internal bool IsFinalSnapshotSealed { get { lock (_gate) return _finalSave is not null; } }
+    private readonly ConditionalWeakTable<AggregateException, ReportedFailureCauses> _reportedFailures = new();
+    private sealed record ReportedFailureCauses(Exception[] Originals);
 
     private sealed record PopUpRegistration(
         Func<TabSessionSnapshot> CreateTabSnapshot,
@@ -41,13 +45,21 @@ public sealed partial class WorkspaceSessionCoordinator(IWorkspaceSessionReposit
     }
 
     public void Register(MainView shell, WorkspaceWindowKind kind, bool queueSave = true)
+        => Register((IWorkspaceSessionSource)shell, kind, queueSave);
+
+    internal void Register(IWorkspaceSessionSource shell, WorkspaceWindowKind kind, bool queueSave = true)
     {
+        ArgumentNullException.ThrowIfNull(shell);
         lock (_gate) _shells[shell] = kind;
         if (queueSave) QueueSave();
     }
 
     public void Unregister(MainView shell)
+        => Unregister((IWorkspaceSessionSource)shell);
+
+    internal void Unregister(IWorkspaceSessionSource shell)
     {
+        ArgumentNullException.ThrowIfNull(shell);
         lock (_gate) _shells.Remove(shell);
         QueueSave();
     }
@@ -170,13 +182,13 @@ public sealed partial class WorkspaceSessionCoordinator(IWorkspaceSessionReposit
     private WorkspaceSessionSnapshot CaptureSnapshotOnUiThread()
     {
         Dispatcher.UIThread.VerifyAccess();
-        MainView[] shells;
-        Dictionary<MainView, WorkspaceWindowKind> kinds;
+        IWorkspaceSessionSource[] shells;
+        Dictionary<IWorkspaceSessionSource, WorkspaceWindowKind> kinds;
         PopUpRegistration[] popUps;
         lock (_gate)
         {
             shells = _shells.Keys.Where(shell => !shell.IsDisposed).ToArray();
-            kinds = new Dictionary<MainView, WorkspaceWindowKind>(_shells, ReferenceEqualityComparer.Instance);
+            kinds = new Dictionary<IWorkspaceSessionSource, WorkspaceWindowKind>(_shells, ReferenceEqualityComparer.Instance);
             popUps = _popUps.Values.ToArray();
         }
         WorkspaceSessionSnapshot CreateSnapshot()
@@ -186,7 +198,7 @@ public sealed partial class WorkspaceSessionCoordinator(IWorkspaceSessionReposit
                 .DistinctBy(tab => tab.Id)
                 .ToArray();
             var groups = shells.SelectMany(shell => shell.CreateGroupSnapshots()).DistinctBy(group => group.Id).ToArray();
-            var windows = shells.Select(shell => shell.CreateWindowSnapshot(kinds[shell]))
+            var windows = shells.SelectMany(shell => shell.CreateWindowSnapshots(kinds[shell]))
                 .Concat(popUps.Select(popUp => popUp.CreateWindowSnapshot()))
                 .ToArray();
             return new WorkspaceSessionSnapshot(WorkspaceSessionSnapshot.CurrentSchemaVersion, tabs, groups, windows, DateTimeOffset.UtcNow);
@@ -391,7 +403,7 @@ public sealed partial class WorkspaceSessionCoordinator(IWorkspaceSessionReposit
         }
     }
 
-    private static async Task JoinOriginalTaskAsync(Task original, List<Exception> failures)
+    private async Task JoinOriginalTaskAsync(Task original, List<Exception> failures)
     {
         try { await original.ConfigureAwait(true); }
         catch (Exception error)
@@ -402,16 +414,27 @@ public sealed partial class WorkspaceSessionCoordinator(IWorkspaceSessionReposit
         }
     }
 
-    private static void AddFailure(List<Exception> failures, Exception error)
+    private void AddFailure(List<Exception> failures, Exception error)
     {
+        // Only unwrap aggregation receipts created by this coordinator. A repository's
+        // aggregate (including an empty one) is itself an original cause and stays intact.
+        if (error is AggregateException group && _reportedFailures.TryGetValue(group, out var reported))
+        {
+            foreach (var original in reported.Originals) AddFailure(failures, original);
+            return;
+        }
         if (!failures.Any(previous => ReferenceEquals(previous, error))) failures.Add(error);
     }
 
-    private static void ThrowFailures(List<Exception> failures)
+    private void ThrowFailures(List<Exception> failures)
     {
         if (failures.Count == 1 && failures[0] is not OperationCanceledException)
             ExceptionDispatchInfo.Capture(failures[0]).Throw();
         if (failures.Count > 0)
-            throw new AggregateException("Original workspace saves or final snapshot failed.", failures);
+        {
+            var reported = new AggregateException("Original workspace saves or final snapshot failed.", failures);
+            _reportedFailures.Add(reported, new(failures.ToArray()));
+            throw reported;
+        }
     }
 }

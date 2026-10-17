@@ -67,6 +67,31 @@ public sealed class BrowseAppRouteTests
         Assert.Null(host.LastNavigated);
     }
 
+    [Theory]
+    [InlineData("9to1://Write/private-document")]
+    [InlineData("browse://unregistered")]
+    [InlineData("  CUI://private/custom-page")]
+    public async Task Reserved_native_routes_never_become_external_search_queries(string address)
+    {
+        using var paths = new TestPaths();
+        using var session = new BrowserSessionService(paths);
+        var host = new FakeEmbeddedBrowserHost(); session.Attach(host);
+        var result = await new BrowseAppRoute(session).NavigateAsync("browse", address);
+        Assert.Null(host.LastNavigated);
+        Assert.Contains("not registered", result.Status);
+        await using var chrome = await BrowseChrome.CreateAsync(paths);
+        var original = chrome.State.SelectedTab;
+        var state = await chrome.NavigateAsync(address);
+        if (Haven.Core.AppContentAddress.TryParse(address, out var parsed) && parsed!.Namespace == Haven.Core.AppContentNamespace.NativeApp)
+        {
+            Assert.Equal(original.Id, state.SelectedTabId); Assert.Equal(parsed, state.SelectedTab.Address);
+            Assert.Null(state.SelectedTab.Address.WebUri); Assert.Equal(BrowseEngineState.Unsupported, state.SelectedTab.EngineState);
+        }
+        else Assert.Equal(original, state.SelectedTab);
+        Assert.Empty(state.History);
+        Assert.Contains("not registered", state.Status);
+    }
+
     private sealed class FakeEmbeddedBrowserHost : IEmbeddedBrowserHost
     {
         public event EventHandler<BrowserSnapshot>? StateChanged;

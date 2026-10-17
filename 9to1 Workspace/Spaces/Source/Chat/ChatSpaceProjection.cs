@@ -27,16 +27,20 @@ public static class ChatSpaceProjection
         var messages = data.Messages
             .OrderBy(message => message.CreatedAt)
             .Select(message => new ChatSpaceMessage(
-            message.Id,
-            message.Role,
-            message.Content,
-            SpeakerFor(message),
-            message.CreatedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture),
-            message.ModelName,
-            attachments.GetValueOrDefault(message.Id, []),
-            ReadCitations(message),
-            ReadToolActivities(message),
-            message.Role == MessageRole.Assistant)).ToArray();
+                message.Id,
+                message.Role,
+                message.Content,
+                SpeakerFor(message),
+                message.CreatedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture),
+                message.ModelName,
+                attachments.GetValueOrDefault(message.Id, []),
+                ReadCitations(message),
+                ReadToolActivities(message),
+                message.Role == MessageRole.Assistant,
+                null,
+                false,
+                null,
+                message.Role == MessageRole.User)).ToArray();
         var branches = data.Branches
             .OrderBy(item => item.CreatedAt)
             .Select(item => new ChatSpaceBranch(item.Id, item.Name, item.Reason, item.IsCurrent))

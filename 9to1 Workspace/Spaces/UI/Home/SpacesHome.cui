@@ -66,8 +66,37 @@
           </Container>
 
           <Container id="space-details" accessible-name="Selected Space" Type="Vertical Stack" CellGap="10">
-            <Text id="selected-space-name" text="{Binding selection.name}" font-size="24" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+            <If Condition="{Binding selection.isRenaming}">
+              <Container id="rename-controls" Type="Vertical Stack" CellGap="8">
+                <Input id="rename-input" Type="Text" Value="{Binding spaces.renameDraft}" accessible-name="Rename Space" />
+                <Container id="rename-actions" Type="Wrap" CellGap="8">
+                  <Button id="confirm-rename" action="spaces.confirm-rename" action-argument="{Binding selection.id}" content="Save" accessible-name="Confirm Space rename" />
+                  <Button id="cancel-rename" action="spaces.cancel-rename" content="Cancel" accessible-name="Cancel Space rename" />
+                </Container>
+              </Container>
+            </If>
+            <If Condition="{Binding selection.isRenaming}" Negate="true">
+              <Container id="selected-space-header" Type="Vertical Stack" CellGap="4">
+                <Text id="selected-space-name" text="{Binding selection.name}" font-size="24" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+                <Container id="space-header-actions" Type="Wrap" CellGap="8">
+                  <Button id="start-rename" action="spaces.rename" action-argument="{Binding selection.id}" content="Rename" Interactive="{Binding selection.canEdit}" accessible-name="Rename selected Space" />
+                  <Button id="fork-space" action="spaces.fork" action-argument="{Binding selection.id}" content="Copy" accessible-name="Make a copy of selected Space" />
+                  <Button id="archive-space" action="spaces.archive" action-argument="{Binding selection.id}" content="Archive" Interactive="{Binding selection.canEdit}" accessible-name="Archive selected Space" />
+                  <If Condition="{Binding selection.isBuiltIn}">
+                    <Button id="edit-extensions" action="spaces.edit-extensions" action-argument="{Binding selection.id}" content="Edit extensions" Interactive="{Binding selection.canEditExtensions}" accessible-name="Edit Space extensions" />
+                  </If>
+                  <If Condition="{Binding selection.isBuiltIn}" Negate="true">
+                    <Button id="edit-graph" action="spaces.edit-graph" action-argument="{Binding selection.id}" content="Edit Space graph" Interactive="{Binding selection.canEditGraph}" accessible-name="Edit Space graph" />
+                  </If>
+                </Container>
+              </Container>
+            </If>
             <Text id="selected-space-description" text="{Binding selection.description}" />
+            <Container id="space-move" accessible-name="Move selected Space" Type="Vertical Stack" CellGap="8" Interactive="{Binding selection.canEdit}">
+              <Text id="space-move-heading" text="Parent Space" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
+              <Input id="space-parent-select" Type="Select" ItemsSource="{Binding spaces.moveParentOptions}" SelectedIndex="{Binding spaces.selectedMoveParentIndex, mode=TwoWay, type=int}" accessible-name="Choose parent Space" />
+              <Button id="move-space" action="spaces.move" action-argument="{Binding selection.id}" content="Set parent" accessible-name="Set parent Space" />
+            </Container>
             <Container id="space-context" accessible-name="Space context and policy" background="{Resource CuiPanelBrush}" corner-radius="12" padding="16" Type="Vertical Stack" CellGap="8">
               <Text id="space-context-heading" text="Context" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
 

@@ -5,7 +5,7 @@ using Haven.Core;
 
 namespace HavenOS.Apps.Browse;
 
-public enum BrowseEngineState { Ready, Unsupported, Crashed }
+public enum BrowseEngineState { Ready, Unsupported, Crashed, NativePage, NativeApp }
 public enum BrowseTransportSecurity { NoPage, SecureTransport, InsecureTransport }
 
 public sealed record BrowseEngineTabRequest(
@@ -38,7 +38,7 @@ public interface IBrowseEngineHostFactory
 public sealed record BrowseTabSnapshot(
     Guid Id,
     string Title,
-    Uri Address,
+    AppContentAddress Address,
     BrowserTabPrivacy Privacy,
     BrowseEngineState EngineState,
     bool CanGoBack,
@@ -47,6 +47,11 @@ public sealed record BrowseTabSnapshot(
     string Status)
 {
     public BrowseEngineKind Engine { get; init; } = BrowseEngineKind.Gecko;
+    public BrowserNativePage NativePage { get; init; }
+    public string ProfileId { get; init; } = string.Empty;
+    public string IconKey { get; init; } = "web";
+    public bool IsHome { get; init; }
+    public bool IsCloseable { get; init; } = true;
 }
 
 public sealed record BrowseSecuritySnapshot(
@@ -82,8 +87,8 @@ public sealed record BrowseChromeSnapshot(
 /// </summary>
 public sealed partial class BrowseChrome : IAsyncDisposable
 {
-    private static readonly Uri BlankAddress = new("about:blank", UriKind.Absolute);
     private readonly BrowserDataService _data;
+    private readonly IBrowseTabSessionPersistence? _tabSessionPersistence;
     private readonly BrowserSitePermissionStore _permissions;
     private readonly BrowserPrivateProfileManager _privateProfiles;
     private readonly BrowseEnginePreferencesStore _enginePreferences;
@@ -94,8 +99,6 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     private readonly List<TabRuntime> _tabs = [];
     private IReadOnlyList<BrowserDownloadRecord> _downloads = [];
     private Guid _selectedTabId;
-    private string _findQuery = string.Empty;
-    private int _zoomPercent = 100;
     private string _popupStatus = "No popup request.";
     private string _status = "Browse is starting.";
     private bool _disposed;
@@ -104,60 +107,100 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         IAppPaths paths,
         IBrowseEngineHostFactory? engineFactory,
         IBrowserAutomationService? automation,
-        BrowseEnginePreferences preferences)
+        BrowseEnginePreferences preferences,
+        IBrowseAppContentFactory? appContentFactory,
+        IBrowseInternalContentFactory? internalContentFactory,
+        string homeProfileId,
+        IBrowseTabSessionPersistence? tabSessionPersistence)
     {
         _data = new BrowserDataService(paths);
+        _tabSessionPersistence = tabSessionPersistence;
         _permissions = new BrowserSitePermissionStore(paths);
         _privateProfiles = new BrowserPrivateProfileManager(paths.BrowserProfileDirectory);
         _enginePreferences = new BrowseEnginePreferencesStore(paths);
         _enginePolicy = BrowseEngineSelectionPolicy.Restore(preferences);
         _engineFactory = engineFactory;
         _automation = automation;
+        _appContentFactory = appContentFactory;
+        _internalContentFactory = internalContentFactory;
+        _homeProfileId = homeProfileId;
         StandardProfileDirectory = paths.BrowserProfileDirectory;
     }
 
     public string StandardProfileDirectory { get; }
     public event EventHandler<BrowseChromeSnapshot>? StateChanged;
+    /// <summary>Raised only after ordinary unsaved-work preflight accepted retirement.
+    /// Observers cannot prevent the original resources from being drained.</summary>
+    public event EventHandler? RetirementStarted;
+    private static readonly AsyncLocal<RetirementNotification?> LogicalRetirementNotification = new();
+    private sealed class RetirementNotification(BrowseChrome owner, RetirementNotification? parent)
+    {
+        public BrowseChrome Owner { get; } = owner;
+        public RetirementNotification? Parent { get; } = parent;
+        public volatile bool Active = true;
+    }
 
     public static async Task<BrowseChrome> CreateAsync(
         IAppPaths paths,
         IBrowseEngineHostFactory? engineFactory = null,
         IBrowserAutomationService? automation = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IBrowseAppContentFactory? appContentFactory = null,
+        IBrowseInternalContentFactory? internalContentFactory = null,
+        string homeProfileId = "",
+        IBrowseTabSessionPersistence? tabSessionPersistence = null)
     {
         ArgumentNullException.ThrowIfNull(paths);
         var preferenceStore = new BrowseEnginePreferencesStore(paths);
         var preferences = await preferenceStore.LoadAsync(cancellationToken).ConfigureAwait(false);
-        var chrome = new BrowseChrome(paths, engineFactory, automation, preferences);
+        var chrome = new BrowseChrome(paths, engineFactory, automation, preferences,
+            appContentFactory, internalContentFactory, homeProfileId, tabSessionPersistence);
         try
         {
-            var stored = chrome._data.Settings.RestoreTabs ? chrome._data.Tabs : [];
+            BrowseTabSessionProjection? projected = null;
+            if (tabSessionPersistence is not null)
+            {
+                var originalLoad = tabSessionPersistence.LoadAsync(cancellationToken)
+                    ?? throw new InvalidOperationException("The workspace owner supplied no original session load task.");
+                chrome.RetainAppSource(originalLoad); projected = await originalLoad.ConfigureAwait(false);
+            }
+            var stored = tabSessionPersistence is not null ? projected?.Tabs ?? []
+                : chrome._data.Settings.RestoreTabs ? chrome._data.Tabs : [];
             foreach (var tab in stored)
             {
                 // Older versions may have left private tabs in the session file; never restore them.
                 if (tab.Privacy == BrowserTabPrivacy.Private) continue;
-                if (!Uri.TryCreate(tab.Address, UriKind.Absolute, out var address)) continue;
-                await chrome.AddRuntimeAsync(tab.Id, tab.Title, address, tab.Privacy, tab.Group, cancellationToken).ConfigureAwait(false);
+                if (!TryStoredAddress(tab.Address, out var address)) continue;
+                if (chrome._tabs.Any(existing => existing.Id == tab.Id || IsHomeAddress(address!) && existing.IsHome)) continue;
+                await chrome.AddRuntimeAsync(tab.Id, tab.Title, address!, tab.Privacy, tab.Group, cancellationToken,
+                    string.IsNullOrEmpty(tab.ProfileId) ? homeProfileId : tab.ProfileId, restoring: true).ConfigureAwait(false);
             }
+
+            if (internalContentFactory is not null && !chrome._tabs.Any(tab => tab.IsHome))
+                await chrome.AddRuntimeAsync(Guid.NewGuid(), "Home", HomeAddress, BrowserTabPrivacy.Standard,
+                    string.Empty, cancellationToken, homeProfileId, restoring: true).ConfigureAwait(false);
 
             if (chrome._tabs.Count == 0)
             {
-                var home = new Uri(chrome._data.Settings.HomePage, UriKind.Absolute);
+                var home = AppContentAddress.Parse(chrome._data.Settings.HomePage);
                 await chrome.AddRuntimeAsync(Guid.NewGuid(), "New tab", home, BrowserTabPrivacy.Standard, string.Empty, cancellationToken).ConfigureAwait(false);
             }
 
-            chrome._selectedTabId = chrome._tabs[0].Id;
+            chrome._selectedTabId = projected?.SelectedTabId is { } restoredSelection && chrome._tabs.Any(tab => tab.Id == restoredSelection)
+                ? restoredSelection : chrome._tabs.FirstOrDefault(tab => tab.IsHome)?.Id ?? chrome._tabs[0].Id;
             chrome._status = chrome._tabs[0].EngineState == BrowseEngineState.Ready
                 ? "Browse is ready."
                 : chrome._tabs[0].Status;
             await chrome._privateProfiles.CleanupOrphansAsync(
                 chrome._tabs.Where(tab => tab.Privacy == BrowserTabPrivacy.Private).Select(tab => tab.Id).ToHashSet(),
                 cancellationToken).ConfigureAwait(false);
+            if (internalContentFactory is not null || tabSessionPersistence is not null) await chrome.SaveTabsAsync(cancellationToken).ConfigureAwait(false);
             return chrome;
         }
-        catch
+        catch (Exception startupFailure)
         {
-            await chrome.DisposeAsync().ConfigureAwait(false);
+            try { await chrome.RetireFailedStartupAsync().ConfigureAwait(false); }
+            catch (Exception cleanupFailure) { throw new AggregateException("Browse startup and original retirement failed.", startupFailure, cleanupFailure); }
             throw;
         }
     }
@@ -171,6 +214,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     public async Task<BrowseChromeSnapshot> SetDefaultEngineAsync(BrowseEngineKind engine, CancellationToken cancellationToken = default)
     {
         ThrowIfCannotAccept();
+        cancellationToken.ThrowIfCancellationRequested();
         _enginePolicy.SetDefault(engine);
         await SaveEnginePreferencesAsync(cancellationToken).ConfigureAwait(false);
         _status = $"Default browser engine set to {engine}. New tabs use this choice unless a site has its own preference.";
@@ -180,15 +224,16 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     public async Task<BrowseChromeSnapshot> SetSiteEngineAsync(BrowseEngineKind engine, CancellationToken cancellationToken = default)
     {
         ThrowIfCannotAccept();
+        cancellationToken.ThrowIfCancellationRequested();
         var tab = SelectedRuntime();
-        if (tab.Address.Scheme is not ("http" or "https"))
+        if (!tab.Address.IsWeb)
         {
             _status = "A site-specific engine preference is available after opening an HTTP or HTTPS page.";
             return Publish();
         }
-        _enginePolicy.SetSiteOverride(tab.Address, engine);
+        _enginePolicy.SetSiteOverride(tab.Address.WebUri!, engine);
         await SaveEnginePreferencesAsync(cancellationToken).ConfigureAwait(false);
-        await SetTabEngineAsync(tab, _enginePolicy.Resolve(tab.Address, tab.Id), cancellationToken, persistTabOverride: false).ConfigureAwait(false);
+        await SetTabEngineAsync(tab, _enginePolicy.Resolve(tab.Address.WebUri!, tab.Id), cancellationToken, persistTabOverride: false).ConfigureAwait(false);
         _status = _enginePolicy.TabOverrides.ContainsKey(tab.Id)
             ? $"Site preference set to {engine}. This tab keeps its explicit engine choice."
             : $"Site preference set to {engine}. " + tab.Status;
@@ -198,10 +243,13 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     public Task<BrowseChromeSnapshot> SetSelectedTabEngineAsync(BrowseEngineKind engine, CancellationToken cancellationToken = default) =>
         SetTabEngineAsync(SelectedRuntime(), engine, cancellationToken);
 
-    private async Task<BrowseChromeSnapshot> SetTabEngineAsync(TabRuntime tab, BrowseEngineKind engine, CancellationToken cancellationToken, bool persistTabOverride = true)
+    private async Task<BrowseChromeSnapshot> SetTabEngineAsync(TabRuntime tab, BrowseEngineKind engine, CancellationToken cancellationToken, bool persistTabOverride = true, Uri? initialAddress = null)
     {
         ThrowIfCannotAccept();
+        cancellationToken.ThrowIfCancellationRequested();
         if (!Enum.IsDefined(engine)) throw new ArgumentOutOfRangeException(nameof(engine));
+        if (!tab.Address.IsWeb)
+            throw new InvalidOperationException("Native Browse pages do not use a web engine.");
         var hadOverride = _enginePolicy.TabOverrides.TryGetValue(tab.Id, out var previousOverride);
         if (tab.Engine == engine)
         {
@@ -213,8 +261,10 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             return Publish();
         }
         var previous = tab.Engine;
+        var previousAddress = tab.Address;
         await ReleaseHostAsync(tab).ConfigureAwait(false);
         tab.Engine = engine;
+        if (initialAddress is not null) tab.Address = AppContentAddress.Parse(initialAddress.AbsoluteUri);
         try
         {
             if (IsEngineAvailable(tab.Engine)) await AttachHostAsync(tab, cancellationToken).ConfigureAwait(false);
@@ -230,15 +280,28 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             }
             _status = tab.EngineState == BrowseEngineState.Ready ? $"This tab now uses {engine}." : EngineUnavailableReason(engine);
         }
-        catch
+        catch (Exception switchFailure) when (switchFailure is not OutOfMemoryException)
         {
-            tab.Engine = previous;
             if (persistTabOverride) _enginePolicy.SetTabOverride(tab.Id, hadOverride ? previousOverride : null);
-            try { await AttachHostAsync(tab, CancellationToken.None).ConfigureAwait(false); }
+            try
+            {
+                // A preference write can fail after the new renderer was created.
+                // Retire that exact renderer before restoring the previous backend.
+                await ReleaseHostAsync(tab).ConfigureAwait(false);
+                tab.Engine = previous;
+                tab.Address = previousAddress;
+                if (IsEngineAvailable(previous)) await AttachHostAsync(tab, CancellationToken.None).ConfigureAwait(false);
+                else
+                {
+                    tab.EngineState = BrowseEngineState.Unsupported;
+                    tab.Status = EngineUnavailableReason(previous);
+                }
+            }
             catch (Exception recoveryFailure) when (recoveryFailure is not OutOfMemoryException)
             {
                 tab.EngineState = BrowseEngineState.Crashed;
                 tab.Status = "Engine switch failed and the previous renderer could not be restored.";
+                throw new AggregateException(tab.Status, switchFailure, recoveryFailure);
             }
             throw;
         }
@@ -259,11 +322,16 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         return original;
     }
 
-    public async Task<BrowseChromeSnapshot> NewTabAsync(bool isPrivate, CancellationToken cancellationToken = default)
+    public Task<BrowseChromeSnapshot> NewTabAsync(bool isPrivate, CancellationToken cancellationToken = default) =>
+        _internalContentFactory is null ? NewTabCoreAsync(isPrivate, cancellationToken)
+            : RetainNativeAdmission(() => NewTabCoreAsync(isPrivate, cancellationToken), cancellationToken);
+
+    private async Task<BrowseChromeSnapshot> NewTabCoreAsync(bool isPrivate, CancellationToken cancellationToken)
     {
         ThrowIfCannotAccept();
+        cancellationToken.ThrowIfCancellationRequested();
         var privacy = isPrivate ? BrowserTabPrivacy.Private : BrowserTabPrivacy.Standard;
-        var home = new Uri(_data.Settings.HomePage, UriKind.Absolute);
+        var home = _internalContentFactory is not null ? NewTabAddress : AppContentAddress.Parse(_data.Settings.HomePage);
         var tab = await AddRuntimeAsync(Guid.NewGuid(), isPrivate ? "Private tab" : "New tab", home, privacy, string.Empty, cancellationToken).ConfigureAwait(false);
         _selectedTabId = tab.Id;
         _status = isPrivate
@@ -279,70 +347,176 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         cancellationToken.ThrowIfCancellationRequested();
         var tab = RequireTab(tabId);
         _selectedTabId = tab.Id;
-        _findQuery = string.Empty;
-        _zoomPercent = 100;
         if (tab.EngineState == BrowseEngineState.Crashed)
             _status = "This tab's web renderer crashed. Recovery is available.";
         else
             _status = tab.Status;
+        if (_tabSessionPersistence is not null) await SaveTabsAsync(cancellationToken).ConfigureAwait(false);
         return Publish();
     }
 
     public async Task<BrowseChromeSnapshot> CloseTabAsync(Guid tabId, CancellationToken cancellationToken = default)
     {
         ThrowIfCannotAccept();
+        cancellationToken.ThrowIfCancellationRequested();
         var tab = RequireTab(tabId);
+        if (tab.IsHome) { _status = "Home stays available in this window."; return Publish(); }
+        if (!await PrepareContentCloseAsync(tab, cancellationToken).ConfigureAwait(false))
+        { _status = "Finish or save the app's pending work before closing this tab."; return Publish(); }
         var index = _tabs.IndexOf(tab);
         var wasSelected = tab.Id == _selectedTabId;
-        await ReleaseHostAsync(tab).ConfigureAwait(false);
+        BrowseEngineKind? engineOverride = _enginePolicy.TabOverrides.TryGetValue(tab.Id, out var explicitEngine) ? explicitEngine : null;
+        await ReleaseContentAsync(tab).ConfigureAwait(false);
         _tabs.Remove(tab);
         _enginePolicy.SetTabOverride(tab.Id, null);
-        tab.Session.Dispose();
-        if (tab.Privacy == BrowserTabPrivacy.Private)
-            await _privateProfiles.CleanupAsync(tab.Id, cancellationToken).ConfigureAwait(false);
-        await SaveEnginePreferencesAsync(cancellationToken).ConfigureAwait(false);
-
         if (_tabs.Count == 0)
         {
-            var home = new Uri(_data.Settings.HomePage, UriKind.Absolute);
-            var recreated = await AddRuntimeAsync(Guid.NewGuid(), "New tab", home, BrowserTabPrivacy.Standard, string.Empty, cancellationToken).ConfigureAwait(false);
-            _selectedTabId = recreated.Id;
+            try
+            {
+                var home = _internalContentFactory is not null ? HomeAddress : AppContentAddress.Parse(_data.Settings.HomePage);
+                var replacementId = Guid.NewGuid();
+                _selectedTabId = replacementId;
+                await AddRuntimeAsync(replacementId, "New tab", home, BrowserTabPrivacy.Standard, string.Empty, cancellationToken).ConfigureAwait(false);
+            }
+            catch
+            {
+                // Keep a valid canonical owner if the replacement engine cannot
+                // start. The retired original renderer is explicitly recoverable.
+                _tabs.Add(tab); _selectedTabId = tab.Id;
+                _enginePolicy.SetTabOverride(tab.Id, engineOverride);
+                tab.EngineState = BrowseEngineState.Crashed;
+                tab.Status = "The replacement tab could not start. Recover this tab or retry closing it.";
+                _status = tab.Status;
+                throw;
+            }
         }
         else if (wasSelected)
         {
             _selectedTabId = _tabs[Math.Clamp(index, 0, _tabs.Count - 1)].Id;
         }
+        // Selection must already identify a surviving tab before any later I/O
+        // can fail; callers must still be able to inspect the real remaining state.
+        tab.Session.Dispose();
+        if (tab.Privacy == BrowserTabPrivacy.Private)
+            await _privateProfiles.CleanupAsync(tab.Id, cancellationToken).ConfigureAwait(false);
+        await SaveEnginePreferencesAsync(cancellationToken).ConfigureAwait(false);
         _status = "Tab closed.";
         await SaveTabsAsync(cancellationToken).ConfigureAwait(false);
+        RememberClosedTab(tab, index, engineOverride);
         return Publish();
     }
 
-    public Task<BrowseChromeSnapshot> NavigateAsync(string value, CancellationToken cancellationToken = default) =>
-        RunNavigationAsync(async (tab, token) =>
+    public Task<BrowseChromeSnapshot> NavigateAsync(string value, CancellationToken cancellationToken = default)
+    {
+        ThrowIfCannotAccept(); cancellationToken.ThrowIfCancellationRequested();
+        ArgumentException.ThrowIfNullOrWhiteSpace(value);
+        if (AppContentAddress.IsReserved(value))
         {
-            if (!EngineAvailable || tab.Host is null)
-                throw new PlatformNotSupportedException(EngineUnsupportedReason);
-            var status = await tab.Session.NavigateAsync(value, token).ConfigureAwait(false);
+            if (!AppContentAddress.TryParse(value, out var reserved) || reserved!.Namespace == AppContentNamespace.Cui ||
+                reserved.Namespace == AppContentNamespace.Browse && !IsOwnedCanvas(reserved) && !BrowserNativePages.TryResolve(reserved.Value, out _))
+            { _status = BrowseInternalNavigation.UnavailableMessage; return Task.FromResult(Publish()); }
+            return OpenContentAsync(reserved, openInNewTab: false, cancellationToken: cancellationToken);
+        }
+        var web = BrowserSessionService.NormaliseAddress(value);
+        var assessment = BrowserNativeRequestPolicy.AssessTopLevel(web);
+        if (!assessment.IsAllowed) throw new InvalidOperationException(assessment.Reason);
+        return OpenContentAsync(AppContentAddress.Parse(web.AbsoluteUri), openInNewTab: false, cancellationToken: cancellationToken);
+    }
+
+    /// <summary>Opens an exact typed route in a canonical tab. Queued app actions
+    /// supply their original source identity so a later selection cannot redirect them.</summary>
+    public Task<BrowseChromeSnapshot> OpenContentAsync(AppContentAddress address, bool openInNewTab = true,
+        Guid? sourceTabId = null, CancellationToken cancellationToken = default)
+    {
+        ThrowIfCannotAccept(); cancellationToken.ThrowIfCancellationRequested(); ArgumentNullException.ThrowIfNull(address);
+        address = AppContentRouteMigration.Canonicalize(address);
+        if (address.Namespace == AppContentNamespace.Cui || address.Namespace == AppContentNamespace.Browse &&
+            !IsOwnedCanvas(address) && !BrowserNativePages.TryResolve(address.Value, out _))
+            throw new NotSupportedException("The content route is not registered in this host.");
+        return address.IsWeb ? OpenContentCoreAsync(address, openInNewTab, sourceTabId, cancellationToken)
+            : RetainNativeAdmission(() => OpenContentCoreAsync(address, openInNewTab, sourceTabId, cancellationToken), cancellationToken);
+    }
+    private async Task<BrowseChromeSnapshot> OpenContentCoreAsync(AppContentAddress address, bool openInNewTab,
+        Guid? sourceTabId, CancellationToken cancellationToken)
+    {
+        ThrowIfCannotAccept(); cancellationToken.ThrowIfCancellationRequested(); ArgumentNullException.ThrowIfNull(address);
+        address = AppContentRouteMigration.Canonicalize(address);
+        if (address.Namespace == AppContentNamespace.Cui || address.Namespace == AppContentNamespace.Browse &&
+            !IsOwnedCanvas(address) && !BrowserNativePages.TryResolve(address.Value, out _))
+            throw new NotSupportedException("The content route is not registered in this host.");
+        var source = RequireTab(sourceTabId ?? _selectedTabId);
+        var activate = source.Id == _selectedTabId;
+        if (IsHomeAddress(address) && _tabs.FirstOrDefault(tab => tab.IsHome) is { } home)
+        {
+            if (activate) _selectedTabId = home.Id;
+            if (_tabSessionPersistence is not null) await SaveTabsAsync(cancellationToken).ConfigureAwait(false);
+            return Publish();
+        }
+        if (openInNewTab || source.IsHome)
+        {
+            var created = await AddRuntimeAsync(Guid.NewGuid(), address.Authority, address, source.Privacy,
+                source.Group, cancellationToken, source.ProfileId).ConfigureAwait(false);
+            if (activate) _selectedTabId = created.Id;
+            await SaveTabsAsync(cancellationToken).ConfigureAwait(false);
+            _status = created.Status; return Publish();
+        }
+        return await RunNavigationAsync(source, async (tab, token) =>
+        {
+            if (!await PrepareContentCloseAsync(tab, token).ConfigureAwait(false))
+            { tab.Status = "Finish or save the app's pending work before navigating."; return; }
+            if (!address.IsWeb)
+            {
+                if (BrowserNativePages.TryResolve(address.Value, out var page))
+                { await ReleaseContentAsync(tab).ConfigureAwait(false); ApplyNativePage(tab, page); }
+                else
+                {
+                    var owner = await InitializeAppOwnerAsync(tab, address, token).ConfigureAwait(false);
+                    await ReleaseContentAsync(tab, owner).ConfigureAwait(false);
+                    ApplyAppContent(tab, address, owner);
+                }
+                await SaveTabsAsync(token).ConfigureAwait(false); return;
+            }
+            var web = address.WebUri!;
+            var assessment = BrowserNativeRequestPolicy.AssessTopLevel(web);
+            if (!assessment.IsAllowed) throw new InvalidOperationException(assessment.Reason);
+            var engine = _enginePolicy.Resolve(web, tab.Id);
+            if (!tab.Address.IsWeb)
+            {
+                await LeaveNativePageAsync(tab, web, engine, token).ConfigureAwait(false);
+                await SaveTabsAsync(token).ConfigureAwait(false); return;
+            }
+            if (engine != tab.Engine)
+            {
+                await SetTabEngineAsync(tab, engine, token, persistTabOverride: false, initialAddress: web).ConfigureAwait(false);
+                await SaveTabsAsync(token).ConfigureAwait(false); return;
+            }
+            if (tab.Host is null)
+            {
+                tab.Address = address; tab.Title = address.Authority;
+                tab.Status = EngineUnavailableReason(engine);
+                await SaveTabsAsync(token).ConfigureAwait(false); return;
+            }
+            tab.Status = await tab.Session.NavigateAsync(address.Value, token).ConfigureAwait(false);
             ApplyHostState(tab, tab.Session.State);
-            tab.Status = status;
-        }, cancellationToken);
+        }, cancellationToken).ConfigureAwait(false);
+    }
 
     public Task<BrowseChromeSnapshot> BackAsync(CancellationToken cancellationToken = default) =>
-        RunNavigationAsync(async (tab, token) =>
+        RunWebNavigationAsync(async (tab, token) =>
         {
             tab.Status = await tab.Session.BackAsync(token).ConfigureAwait(false);
             ApplyHostState(tab, tab.Session.State);
         }, cancellationToken);
 
     public Task<BrowseChromeSnapshot> ForwardAsync(CancellationToken cancellationToken = default) =>
-        RunNavigationAsync(async (tab, token) =>
+        RunWebNavigationAsync(async (tab, token) =>
         {
             tab.Status = await tab.Session.ForwardAsync(token).ConfigureAwait(false);
             ApplyHostState(tab, tab.Session.State);
         }, cancellationToken);
 
     public Task<BrowseChromeSnapshot> ReloadAsync(CancellationToken cancellationToken = default) =>
-        RunNavigationAsync(async (tab, token) =>
+        RunWebNavigationAsync(async (tab, token) =>
         {
             if (!EngineAvailable || tab.Host is null)
                 throw new PlatformNotSupportedException(EngineUnsupportedReason);
@@ -354,7 +528,9 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     public async Task<BrowseChromeSnapshot> StopAsync(CancellationToken cancellationToken = default)
     {
         ThrowIfCannotAccept();
+        cancellationToken.ThrowIfCancellationRequested();
         var tab = SelectedRuntime();
+        EnsureWebAddress(tab.Address);
         if (tab.Host is null) throw new PlatformNotSupportedException(EngineUnsupportedReason);
         await tab.Session.StopAsync(cancellationToken).ConfigureAwait(false);
         ApplyHostState(tab, tab.Session.State);
@@ -386,18 +562,22 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         CancellationToken cancellationToken = default)
     {
         ThrowIfCannotAccept();
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!Enum.IsDefined(kind)) throw new ArgumentOutOfRangeException(nameof(kind));
+        if (!Enum.IsDefined(decision)) throw new ArgumentOutOfRangeException(nameof(decision));
         var tab = SelectedRuntime();
         EnsureWebAddress(tab.Address);
         if (tab.Privacy == BrowserTabPrivacy.Private)
         {
-            if (decision == BrowserSitePermissionDecision.Ask) tab.PrivatePermissions.Remove(kind);
-            else tab.PrivatePermissions[kind] = decision;
-            _status = $"Private {kind} permission set to {decision} for this tab only.";
+            var key = PrivatePermissionKey(tab.Address.WebUri!, kind);
+            if (decision == BrowserSitePermissionDecision.Ask) tab.PrivatePermissions.Remove(key);
+            else tab.PrivatePermissions[key] = decision;
+            _status = $"Private {kind} permission set to {decision} for {tab.Address.Authority} in this tab only.";
         }
         else
         {
-            await _permissions.SetDecisionAsync(tab.Address, kind, decision, cancellationToken).ConfigureAwait(false);
-            _status = $"{kind} permission set to {decision} for {tab.Address.Host}.";
+            await _permissions.SetDecisionAsync(tab.Address.WebUri!, kind, decision, cancellationToken).ConfigureAwait(false);
+            _status = $"{kind} permission set to {decision} for {tab.Address.Authority}.";
         }
         return Publish();
     }
@@ -405,15 +585,16 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     public async Task<BrowserPopupAssessment> HandlePopupAsync(Uri requestedAddress, CancellationToken cancellationToken = default)
     {
         ThrowIfCannotAccept();
+        cancellationToken.ThrowIfCancellationRequested();
         ArgumentNullException.ThrowIfNull(requestedAddress);
         var opener = SelectedRuntime();
         var decision = GetPermission(opener, BrowserSitePermissionKind.WindowManagement);
-        var assessment = BrowserNativeRequestPolicy.AssessPopup(opener.Address, requestedAddress, decision);
+        var assessment = BrowserNativeRequestPolicy.AssessPopup(opener.Address.WebUri, requestedAddress, decision);
         _popupStatus = assessment.Reason;
         _status = assessment.Reason;
         if (assessment.IsAllowed)
         {
-            var tab = await AddRuntimeAsync(Guid.NewGuid(), requestedAddress.Host, requestedAddress, opener.Privacy, opener.Group, cancellationToken).ConfigureAwait(false);
+            var tab = await AddRuntimeAsync(Guid.NewGuid(), requestedAddress.Host, AppContentAddress.Parse(requestedAddress.AbsoluteUri), opener.Privacy, opener.Group, cancellationToken, opener.ProfileId).ConfigureAwait(false);
             _selectedTabId = tab.Id;
             await SaveTabsAsync(cancellationToken).ConfigureAwait(false);
         }
@@ -425,12 +606,13 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     {
         ThrowIfCannotAccept();
         var tab = RequireInteractiveTab();
-        _findQuery = query?.Trim() ?? string.Empty;
-        var script = string.IsNullOrEmpty(_findQuery)
+        var findQuery = query?.Trim() ?? string.Empty;
+        var script = string.IsNullOrEmpty(findQuery)
             ? "getSelection()?.removeAllRanges(); 'find-cleared'"
-            : $"window.find({JsonSerializer.Serialize(_findQuery)}, false, {(backwards ? "true" : "false")}, true, false, false, false) ? 'found' : 'not-found'";
+            : $"window.find({JsonSerializer.Serialize(findQuery)}, false, {(backwards ? "true" : "false")}, true, false, false, false) ? 'found' : 'not-found'";
         var result = await tab.Session.ExecuteUiScriptAsync(script, cancellationToken).ConfigureAwait(false);
-        _status = string.IsNullOrEmpty(_findQuery) ? "Find cleared." : result == "found" ? $"Found “{_findQuery}”." : $"No match for “{_findQuery}”.";
+        tab.FindQuery = findQuery;
+        _status = string.IsNullOrEmpty(findQuery) ? "Find cleared." : result == "found" ? $"Found “{findQuery}”." : $"No match for “{findQuery}”.";
         return Publish();
     }
 
@@ -438,11 +620,13 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     {
         ThrowIfCannotAccept();
         var tab = RequireInteractiveTab();
-        _zoomPercent = Math.Clamp(percent, 50, 200);
-        await tab.Session.ExecuteUiScriptAsync(
-            $"document.documentElement.style.zoom={JsonSerializer.Serialize(_zoomPercent + "%")}; 'zoomed'",
+        var zoomPercent = Math.Clamp(percent, 50, 200);
+        var result = await tab.Session.ExecuteUiScriptAsync(
+            $"document.documentElement.style.zoom={JsonSerializer.Serialize(zoomPercent + "%")}; 'zoomed'",
             cancellationToken).ConfigureAwait(false);
-        _status = $"Page content zoom: {_zoomPercent}%. This DOM zoom resets on navigation.";
+        if (result != "zoomed") throw new InvalidOperationException("The page did not confirm the requested zoom.");
+        tab.ZoomPercent = zoomPercent;
+        _status = $"Page content zoom: {zoomPercent}%. This DOM zoom resets on navigation.";
         return Publish();
     }
 
@@ -494,12 +678,33 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         return Publish();
     }
 
-    private async Task<BrowseChromeSnapshot> RunNavigationAsync(
+    private async Task<BrowseChromeSnapshot> RunWebNavigationAsync(
         Func<TabRuntime, CancellationToken, Task> operation,
         CancellationToken cancellationToken)
     {
-        ThrowIfDisposed();
+        ThrowIfCannotAccept(); cancellationToken.ThrowIfCancellationRequested();
         var tab = SelectedRuntime();
+        // Refuse before retaining a navigation source or cancelling any original
+        // app work. A web-only command must not poison native owner retirement.
+        EnsureWebAddress(tab.Address);
+        return await RunNavigationAsync(tab, operation, cancellationToken).ConfigureAwait(false);
+    }
+
+    private Task<BrowseChromeSnapshot> RunNavigationAsync(TabRuntime tab,
+        Func<TabRuntime, CancellationToken, Task> operation, CancellationToken cancellationToken)
+    {
+        ThrowIfCannotAccept(); cancellationToken.ThrowIfCancellationRequested();
+        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var original = RunNavigationCoreAsync(start.Task, tab, operation, cancellationToken);
+        RetainAppSource(original); start.SetResult(); return original;
+    }
+
+    private async Task<BrowseChromeSnapshot> RunNavigationCoreAsync(Task start, TabRuntime tab,
+        Func<TabRuntime, CancellationToken, Task> operation, CancellationToken cancellationToken)
+    {
+        await start.ConfigureAwait(false);
+        ThrowIfCannotAccept();
+        cancellationToken.ThrowIfCancellationRequested();
         if (tab.EngineState == BrowseEngineState.Crashed)
             throw new InvalidOperationException("Recover the crashed tab before navigating.");
         tab.NavigationCancellation?.Cancel();
@@ -522,10 +727,12 @@ public sealed partial class BrowseChrome : IAsyncDisposable
 
     private async Task ObserveCompletedNavigationAsync(TabRuntime tab, CancellationToken cancellationToken)
     {
+        if (tab.Host is null) return;
         var state = tab.Session.State;
         ApplyHostState(tab, state);
         if (tab.Host is IBrowseOriginalPageCommitSource) return;
         if (state.Address is null || state.IsLoading || state.Address.Scheme is not ("http" or "https")) return;
+        tab.ZoomPercent = 100;
         await _data.RecordVisitAsync(tab.Title, tab.Address.ToString(), tab.Privacy == BrowserTabPrivacy.Private, cancellationToken).ConfigureAwait(false);
         await SaveTabsAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -533,35 +740,74 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     private async Task<TabRuntime> AddRuntimeAsync(
         Guid id,
         string title,
-        Uri address,
+        AppContentAddress address,
         BrowserTabPrivacy privacy,
         string group,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? profileId = null,
+        bool restoring = false)
     {
+        address = AppContentRouteMigration.Canonicalize(address);
         var session = new BrowserSessionService(new TabPaths(StandardProfileDirectory));
-        var tab = new TabRuntime(id, title, address, privacy, group, session, _enginePolicy.Resolve(address, id));
+        var tab = new TabRuntime(id, title, address, privacy, group, session,
+            address.WebUri is { } web ? _enginePolicy.Resolve(web, id) : _enginePolicy.DefaultEngine, profileId ?? _homeProfileId);
         _tabs.Add(tab);
-        if (IsEngineAvailable(tab.Engine))
-            await AttachHostAsync(tab, cancellationToken).ConfigureAwait(false);
-        else
+        if (!_tabs.Any(item => item.Id == _selectedTabId)) _selectedTabId = tab.Id;
+        try
         {
-            tab.EngineState = BrowseEngineState.Unsupported;
-            tab.Status = EngineUnavailableReason(tab.Engine);
+            if (BrowserNativePages.TryResolve(address.Value, out var nativePage))
+                ApplyNativePage(tab, nativePage);
+            else if (!address.IsWeb)
+            {
+                try { await AttachAppContentAsync(tab, address, cancellationToken).ConfigureAwait(false); }
+                catch when (restoring && !cancellationToken.IsCancellationRequested)
+                { tab.EngineState = BrowseEngineState.Unsupported; tab.Status = "The saved native app could not start. Its route and original owner are retained."; }
+            }
+            else if (IsEngineAvailable(tab.Engine))
+                await AttachHostAsync(tab, cancellationToken).ConfigureAwait(false);
+            else
+            {
+                tab.EngineState = BrowseEngineState.Unsupported;
+                tab.Status = EngineUnavailableReason(tab.Engine);
+            }
+            return tab;
         }
-        return tab;
+        catch
+        {
+            // A refused factory has produced no renderer to retire. Remove the
+            // speculative tab while retaining any actually acquired host on failure.
+            if (tab.Host is null && tab.AppOwners.Count == 0) { _tabs.Remove(tab); session.Dispose(); }
+            else
+            {
+                tab.EngineState = tab.Address.IsWeb ? BrowseEngineState.Crashed : BrowseEngineState.Unsupported;
+                tab.Status = tab.Address.IsWeb ? "The tab engine could not finish starting." : "The original native app could not finish starting. Its owner is retained.";
+            }
+            throw;
+        }
     }
 
     private async Task AttachHostAsync(TabRuntime tab, CancellationToken cancellationToken)
     {
-        if (_engineFactory is null || !IsEngineAvailable(tab.Engine)) throw new PlatformNotSupportedException(EngineUnavailableReason(tab.Engine));
+        var host = await CreateEngineHostAsync(tab, tab.Address.WebUri ?? throw new InvalidOperationException("A web renderer requires a real web address."), tab.Engine, cancellationToken).ConfigureAwait(false);
+        AttachAcquiredHost(tab, host);
+    }
+
+    private async Task<IBrowseEngineTab> CreateEngineHostAsync(TabRuntime tab, Uri address, BrowseEngineKind engine, CancellationToken cancellationToken)
+    {
+        if (_engineFactory is null || !IsEngineAvailable(engine)) throw new PlatformNotSupportedException(EngineUnavailableReason(engine));
         var profileRoot = tab.Privacy == BrowserTabPrivacy.Private
             ? await _privateProfiles.CreateAsync(tab.Id, cancellationToken).ConfigureAwait(false)
             : StandardProfileDirectory;
-        var profile = Path.Combine(profileRoot, "engines", tab.Engine.ToString().ToLowerInvariant());
+        var profile = Path.Combine(profileRoot, "engines", engine.ToString().ToLowerInvariant());
         Directory.CreateDirectory(profile);
-        var host = await _engineFactory.CreateAsync(
-            new BrowseEngineTabRequest(tab.Id, tab.Privacy, profile, tab.Address, tab.Engine), cancellationToken).ConfigureAwait(false);
+        return await _engineFactory.CreateAsync(
+            new BrowseEngineTabRequest(tab.Id, tab.Privacy, profile, address, engine), cancellationToken).ConfigureAwait(false);
+    }
+
+    private void AttachAcquiredHost(TabRuntime tab, IBrowseEngineTab host)
+    {
         tab.Host = host;
+        tab.ZoomPercent = 100;
         tab.HasOriginalCommittedPage = false;
         tab.OriginalHostClose = null;
         tab.Session.Attach(host);
@@ -611,25 +857,51 @@ public sealed partial class BrowseChrome : IAsyncDisposable
 
     private void ApplyHostState(TabRuntime tab, BrowserSnapshot state)
     {
-        if (state.Address is not null) tab.Address = state.Address;
-        tab.Title = string.IsNullOrWhiteSpace(state.Title) ? tab.Address.Host : state.Title.Trim();
+        // Engine-private addresses (including about:blank) cannot reclassify the
+        // canonical tab as a privileged native surface.
+        if (state.Address is { Scheme: "http" or "https" } web && AppContentAddress.TryParse(web.AbsoluteUri, out var parsed)) tab.Address = parsed!;
+        tab.Title = string.IsNullOrWhiteSpace(state.Title) ? tab.Address.Authority : state.Title.Trim();
         tab.CanGoBack = state.CanGoBack;
         tab.CanGoForward = state.CanGoForward;
         tab.IsLoading = state.IsLoading;
         tab.Status = state.Status;
     }
 
-    private BrowserSitePermissionDecision GetPermission(TabRuntime tab, BrowserSitePermissionKind kind) =>
-        tab.Privacy == BrowserTabPrivacy.Private
-            ? tab.PrivatePermissions.GetValueOrDefault(kind, BrowserSitePermissionDecision.Ask)
-            : tab.Address.Scheme is "http" or "https"
-                ? _permissions.GetDecision(tab.Address, kind)
-                : BrowserSitePermissionDecision.Ask;
+    private static (string Origin, BrowserSitePermissionKind Kind) PrivatePermissionKey(Uri address, BrowserSitePermissionKind kind) =>
+        (BrowserSitePermissionStore.CanonicalOrigin(address).ToUpperInvariant(), kind);
 
-    private Task SaveTabsAsync(CancellationToken cancellationToken) => _data.SaveTabsAsync(
-        _tabs.Where(tab => tab.Privacy == BrowserTabPrivacy.Standard)
-            .Select(tab => new BrowserTabState(tab.Id, tab.Title, tab.Address.ToString(), tab.Privacy, tab.Group, DateTimeOffset.UtcNow)),
-        cancellationToken);
+    private BrowserSitePermissionDecision GetPermission(TabRuntime tab, BrowserSitePermissionKind kind) =>
+        !tab.Address.IsWeb ? BrowserSitePermissionDecision.Ask :
+        tab.Privacy == BrowserTabPrivacy.Private
+            ? tab.PrivatePermissions.GetValueOrDefault(PrivatePermissionKey(tab.Address.WebUri!, kind), BrowserSitePermissionDecision.Ask)
+            : _permissions.GetDecision(tab.Address.WebUri!, kind);
+
+    private BrowserTabState[] CaptureStandardTabs()
+    {
+        // The shared store sorts by UpdatedAt. One session snapshot must use
+        // one timestamp so its stable order survives that sort and restoration.
+        var capturedAt = DateTimeOffset.UtcNow;
+        return _tabs.Where(tab => tab.Privacy == BrowserTabPrivacy.Standard)
+            .Select(tab => new BrowserTabState(tab.Id, tab.Title, tab.Address.Value, tab.Privacy, tab.Group, capturedAt) { ProfileId = tab.ProfileId }).ToArray();
+    }
+
+    private async Task SaveTabsAsync(CancellationToken cancellationToken)
+    {
+        // An already accepted native commit must finish before a later tab edit
+        // persists its current snapshot, otherwise that old commit can restore
+        // a closed or replaced tab after the user action succeeds.
+        if (_lastOriginalPageCommit is { } originalCommit) await originalCommit.ConfigureAwait(false);
+        await SaveTabProjectionAsync(CaptureStandardTabs(), PersistedSelectedTabId(), cancellationToken).ConfigureAwait(false);
+    }
+    private Guid? PersistedSelectedTabId() => _tabs.Any(tab => tab.Id == _selectedTabId && tab.Privacy == BrowserTabPrivacy.Standard)
+        ? _selectedTabId : null;
+    private Task SaveTabProjectionAsync(IReadOnlyList<BrowserTabState> tabs, Guid? selectedTabId, CancellationToken token)
+    {
+        var original = _tabSessionPersistence is null ? _data.SaveTabsAsync(tabs, token)
+            : _tabSessionPersistence.SaveAsync(new(tabs, selectedTabId), token);
+        if (original is null) throw new InvalidOperationException("The workspace owner supplied no original session save task.");
+        RetainAppSource(original); return original;
+    }
 
     private BrowseChromeSnapshot CaptureState()
     {
@@ -637,7 +909,9 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         var selected = SelectedRuntime();
         var tabs = _tabs.Select(tab => new BrowseTabSnapshot(
             tab.Id, tab.Title, tab.Address, tab.Privacy, tab.EngineState,
-            tab.CanGoBack, tab.CanGoForward, tab.IsLoading, tab.Status) { Engine = tab.Engine }).ToArray();
+            tab.CanGoBack, tab.CanGoForward, tab.IsLoading, tab.Status)
+            { Engine = tab.Engine, NativePage = tab.NativePage, ProfileId = tab.ProfileId, IconKey = tab.IconKey,
+                IsHome = tab.IsHome, IsCloseable = !tab.IsHome }).ToArray();
         var security = SecurityFor(selected);
         return new BrowseChromeSnapshot(
             tabs,
@@ -650,17 +924,20 @@ public sealed partial class BrowseChrome : IAsyncDisposable
                 _automation is null ? "No approved download ledger is registered." : "Only completed, policy-approved downloads are listed.",
                 _downloads),
             security,
-            _findQuery,
-            _zoomPercent,
+            selected.FindQuery,
+            selected.ZoomPercent,
             _popupStatus,
             _status);
     }
 
     private static BrowseSecuritySnapshot SecurityFor(TabRuntime tab) =>
-        tab.EngineState != BrowseEngineState.Ready || tab.Host is null ||
+        !tab.Address.IsWeb
+        ? new(BrowseTransportSecurity.NoPage, tab.Address.Namespace == AppContentNamespace.NativeApp ? "Native 9to1 app" : "Native Browse page",
+            "This native surface uses its owning app's permissions. It is not a web origin and grants no authority to a referring site.")
+        : tab.EngineState != BrowseEngineState.Ready || tab.Host is null ||
         (tab.Host is IBrowseOriginalPageCommitSource && (!tab.HasOriginalCommittedPage || tab.IsLoading))
         ? new(BrowseTransportSecurity.NoPage, "No committed web page", "Transport security is available after the actual native page commits.")
-        : tab.Address.Scheme switch
+        : tab.Address.WebUri?.Scheme switch
     {
         "https" => new(BrowseTransportSecurity.SecureTransport, "HTTPS", "Transport is encrypted. Browse does not claim that encryption verifies the site's trustworthiness."),
         "http" => new(BrowseTransportSecurity.InsecureTransport, "Not secure", "This page uses unencrypted HTTP transport."),
@@ -686,31 +963,81 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     }
     private TabRuntime RequireTab(Guid id) => _tabs.FirstOrDefault(tab => tab.Id == id)
         ?? throw new ArgumentException("The browser tab does not exist.", nameof(id));
-    private static void EnsureWebAddress(Uri address)
+    private static void EnsureWebAddress(AppContentAddress address)
     {
-        if (address.Scheme is not ("http" or "https"))
+        if (!address.IsWeb)
             throw new InvalidOperationException("This action requires an HTTP or HTTPS page.");
     }
     private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_disposed, this);
     private void ThrowIfCannotAccept() => ObjectDisposedException.ThrowIf(_nativeRetiring || _disposed, this);
 
-    public ValueTask DisposeAsync()
+    /// <summary>Rejects an original callback joining its own retirement without starting close.</summary>
+    public void DemandExternalOriginalRetirementJoin()
     {
+        for (var notification = LogicalRetirementNotification.Value; notification is not null; notification = notification.Parent)
+            if (notification.Active && ReferenceEquals(notification.Owner, this))
+                throw new InvalidOperationException("A retirement observer cannot join its own original close.");
         if (ReferenceEquals(LogicalNativeSource.Value, this)) throw new InvalidOperationException("The original native callback cannot join its own Browse retirement.");
         foreach (var tab in _tabs) if (tab.Host is IBrowseEngineRetirementGuard guard) guard.DemandExternalJoin();
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        DemandExternalOriginalRetirementJoin();
         lock (_nativeSourceGate)
         {
             if (_originalChromeClose is not null) return new(_originalChromeClose);
+            if (_pendingExternalClose is not null) return new(_pendingExternalClose);
+            if (HasAppContent)
+            {
+                var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                _pendingExternalClose = PrepareExternalCloseAsync(gate.Task);
+                gate.SetResult(); return new(_pendingExternalClose);
+            }
+            return new(BeginAcceptedClose());
+        }
+    }
+    private Task? _pendingExternalClose;
+    private async Task PrepareExternalCloseAsync(Task start)
+    {
+        await start.ConfigureAwait(false);
+        try
+        {
+            if (!await TryPrepareToCloseAsync().ConfigureAwait(false))
+                throw new BrowseCloseVetoException();
+            Task actual;
+            lock (_nativeSourceGate)
+            {
+                _nativeRetiring = true;
+                _originalChromeClose = _pendingExternalClose;
+                actual = CloseOriginalChromeAsync(Task.CompletedTask);
+            }
+            await actual.ConfigureAwait(false);
+        }
+        finally { lock (_nativeSourceGate) if (_originalChromeClose is null) _pendingExternalClose = null; }
+    }
+    private Task RetireFailedStartupAsync()
+    { lock (_nativeSourceGate) return _originalChromeClose ?? BeginAcceptedClose(); }
+    private Task BeginAcceptedClose()
+    {
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             _nativeRetiring = true;
             _originalChromeClose = CloseOriginalChromeAsync(start.Task);
-            start.SetResult(); return new(_originalChromeClose);
-        }
+            start.SetResult(); return _originalChromeClose;
     }
     private async Task CloseOriginalChromeAsync(Task start)
     {
         await start.ConfigureAwait(false);
         var failures = new List<Exception>();
+        var priorNotification = LogicalRetirementNotification.Value;
+        var notification = new RetirementNotification(this, priorNotification);
+        LogicalRetirementNotification.Value = notification;
+        try
+        {
+            foreach (var observer in RetirementStarted?.GetInvocationList().Cast<EventHandler>() ?? [])
+                try { observer(this, EventArgs.Empty); } catch (Exception failure) { failures.Add(failure); }
+        }
+        finally { notification.Active = false; LogicalRetirementNotification.Value = priorNotification; }
         var joined = new HashSet<Task>(ReferenceEqualityComparer.Instance);
         async Task DrainOriginalSourcesAsync()
         {
@@ -722,12 +1049,19 @@ public sealed partial class BrowseChrome : IAsyncDisposable
                 { joined.Add(source); try { await source.ConfigureAwait(false); } catch (Exception failure) { failures.Add(failure); } }
             }
         }
-        await DrainOriginalSourcesAsync().ConfigureAwait(false);
+        var releases = new List<Task>();
         foreach (var tab in _tabs.ToArray())
         {
             try { tab.NavigationCancellation?.Cancel(); } catch (Exception failure) { failures.Add(failure); }
-            try { await ReleaseHostAsync(tab).ConfigureAwait(false); } catch (Exception failure) { failures.Add(failure); }
+            try { releases.Add(ReleaseContentAsync(tab)); } catch (Exception failure) { failures.Add(failure); }
         }
+        foreach (var release in releases)
+            try { await release.ConfigureAwait(false); } catch (Exception failure) { failures.Add(failure); }
+        await DrainOriginalSourcesAsync().ConfigureAwait(false);
+        // An admitted source may acquire its final native owner while cancellation
+        // settles. Close those exact late acquisitions before the terminal drain.
+        foreach (var tab in _tabs.ToArray())
+            try { await ReleaseContentAsync(tab).ConfigureAwait(false); } catch (Exception failure) { failures.Add(failure); }
         await DrainOriginalSourcesAsync().ConfigureAwait(false);
         // Keep the same tabs, stores and failed sources available to their owner
         // when any effect/retirement remains unsuccessful.
@@ -750,19 +1084,28 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     private sealed class TabRuntime(
         Guid id,
         string title,
-        Uri address,
+        AppContentAddress address,
         BrowserTabPrivacy privacy,
         string group,
         BrowserSessionService session,
-        BrowseEngineKind engine)
+        BrowseEngineKind engine,
+        string profileId)
     {
         public Guid Id { get; } = id;
         public string Title { get; set; } = title;
-        public Uri Address { get; set; } = address;
+        public AppContentAddress Address { get; set; } = address;
+        public string ProfileId { get; } = profileId;
+        public bool IsHome => IsHomeAddress(Address);
+        public string IconKey { get; set; } = "web";
+        public AppContentOwner? AppOwner { get; set; }
+        public List<AppContentOwner> AppOwners { get; } = [];
+        public List<IBrowseEngineTab> PendingHosts { get; } = [];
+        public Dictionary<IBrowseEngineTab, Task> PendingHostCloses { get; } = new(ReferenceEqualityComparer.Instance);
         public BrowserTabPrivacy Privacy { get; } = privacy;
         public string Group { get; } = group;
         public BrowserSessionService Session { get; } = session;
         public BrowseEngineKind Engine { get; set; } = engine;
+        public BrowserNativePage NativePage { get; set; }
         public IBrowseEngineTab? Host { get; set; }
         public Task? OriginalHostClose { get; set; }
         public EventHandler<BrowsePopupRequest>? PopupHandler { get; set; }
@@ -775,7 +1118,9 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         public bool IsLoading { get; set; }
         public bool HasOriginalCommittedPage { get; set; }
         public string Status { get; set; } = "Idle";
-        public Dictionary<BrowserSitePermissionKind, BrowserSitePermissionDecision> PrivatePermissions { get; } = [];
+        public string FindQuery { get; set; } = string.Empty;
+        public int ZoomPercent { get; set; } = 100;
+        public Dictionary<(string Origin, BrowserSitePermissionKind Kind), BrowserSitePermissionDecision> PrivatePermissions { get; } = [];
         public CancellationTokenSource? NavigationCancellation { get; set; }
         public long NavigationGeneration { get; set; }
     }

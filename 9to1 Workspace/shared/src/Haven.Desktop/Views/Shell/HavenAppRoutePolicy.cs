@@ -33,11 +33,20 @@ public enum HavenAppRouteKind
 }
 
 /// <summary>Describes the concrete route and visible surface for an App.</summary>
-public readonly record struct HavenAppRoute(HavenAppRouteKind Kind, HavenSurface Surface);
+public readonly record struct HavenAppRoute(HavenAppRouteKind Kind, HavenSurface Surface,
+    string? DestinationPath = null);
 
 /// <summary>Provides one exhaustive routing policy for built-in and user Apps.</summary>
 public static class HavenAppRoutePolicy
 {
+    // Keep the old catalogue identity resolvable for pins, usage and saved links.
+    // The owner folded this product into Spaces on 16 October 2026.
+    public static bool IsDeprecatedStandalone(ModeDefinition app)
+    {
+        ArgumentNullException.ThrowIfNull(app);
+        return app.Key.Trim().Equals("assistants", StringComparison.OrdinalIgnoreCase);
+    }
+
     public static HavenAppRoute Resolve(ModeDefinition app)
     {
         ArgumentNullException.ThrowIfNull(app);
@@ -64,7 +73,7 @@ public static class HavenAppRoutePolicy
             "translate" => new(HavenAppRouteKind.Translate, HavenSurface.Translate),
             "mesh" => new(HavenAppRouteKind.Mesh, HavenSurface.Mesh),
             "spaces" => new(HavenAppRouteKind.Spaces, HavenSurface.Spaces),
-            "assistants" => new(HavenAppRouteKind.Assistants, HavenSurface.Assistants),
+            "assistants" => new(HavenAppRouteKind.Spaces, HavenSurface.Spaces, "assistants"),
             "dev" => new(HavenAppRouteKind.Dev, HavenSurface.Studio),
             "boards" => new(HavenAppRouteKind.ModeWorkspace, HavenSurface.Boards),
             "maps" => new(HavenAppRouteKind.Maps, HavenSurface.Maps),

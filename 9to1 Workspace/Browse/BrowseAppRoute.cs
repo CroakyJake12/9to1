@@ -44,6 +44,9 @@ public sealed class BrowseAppRoute
         }
 
         ArgumentException.ThrowIfNullOrWhiteSpace(domainOrAddress);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (BrowseInternalNavigation.IsReserved(domainOrAddress))
+            return new(_browserSession.State, BrowseInternalNavigation.UnavailableMessage, _browserSession.IsInteractiveAvailable);
 
         var status = await _browserSession
             .NavigateAsync(domainOrAddress.Trim(), cancellationToken)

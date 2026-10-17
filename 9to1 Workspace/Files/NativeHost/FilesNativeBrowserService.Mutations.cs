@@ -57,6 +57,14 @@ public sealed partial class FilesNativeBrowserService
 
     public bool HasNativeMutationOwner => _mutationBroker is not null;
     public bool CanRenameNativeSelection(FilesNativeBrowserPage page, HostedItemMetadata row) =>
+        !page.IsTrash && CanChangeNativeSelection(page, row);
+    public bool CanDeleteNativeSelection(FilesNativeBrowserPage page, HostedItemMetadata row) =>
+        !page.IsTrash && CanChangeNativeSelection(page, row);
+    public bool CanMoveNativeSelection(FilesNativeBrowserPage page, HostedItemMetadata row) =>
+        !page.IsTrash && CanChangeNativeSelection(page, row);
+    public bool CanRestoreNativeSelection(FilesNativeBrowserPage page, HostedItemMetadata row) =>
+        page.IsTrash && CanChangeNativeSelection(page, row);
+    private bool CanChangeNativeSelection(FilesNativeBrowserPage page, HostedItemMetadata row) =>
         HasNativeMutationOwner && _originalPages.TryGetValue(page, out var original)
         && page.Items.Any(item => ReferenceEquals(item, row)) && row.CurrentRevisionId is not null
         && !original.Workspace.Configuration.AppFolders.Values.Contains(row.Id);
@@ -68,6 +76,8 @@ public sealed partial class FilesNativeBrowserService
         internal readonly FilesNativeBrowserService Issuer;
         internal readonly NativeFilesWorkspace Workspace;
         internal readonly FilesNativeBrowserPage Page;
+        internal readonly FilesNativeBrowserPage? DestinationPage;
+        internal readonly string? DestinationName;
         internal readonly AuthenticatedResourceActor Actor;
         internal readonly FilesOperation OriginalOperation;
         internal readonly string Name;
@@ -84,13 +94,22 @@ public sealed partial class FilesNativeBrowserService
         internal PreparedMutation(FilesNativeBrowserService issuer, NativeFilesWorkspace workspace,
             FilesNativeBrowserPage page, AuthenticatedResourceActor actor, FilesOperation operation,
             string name, IReadOnlyList<ResourceScope> scopes, IReadOnlyList<FilesItemRevisionPrecondition> parents,
-            JsonElement arguments, Func<bool> lifetime, HomePermissionAuthorization approval)
+            JsonElement arguments, Func<bool> lifetime, HomePermissionAuthorization approval,
+            FilesNativeBrowserPage? destinationPage = null, string? destinationName = null)
         { Issuer = issuer; Workspace = workspace; Page = page; Actor = actor; OriginalOperation = operation;
-            Name = name; Scopes = scopes; Parents = parents; Arguments = arguments; Lifetime = lifetime; Approval = approval; }
+            Name = name; Scopes = scopes; Parents = parents; Arguments = arguments; Lifetime = lifetime; Approval = approval;
+            DestinationPage = destinationPage; DestinationName = destinationName; }
         public HomePermissionAuthorization Approval { get; }
         /// <summary>SAME actual provider return, retained before cleanup/audit. Observation grants no effect replay.</summary>
         public FilesResult<FilesOperation>? ObservedOperation => Issuer.ReadObservedOperation(this);
-        public string Description => OriginalOperation.Operation == "CreateFolder" ? $"New folder: {Name}" : $"Rename to: {Name}";
+        public string Description => OriginalOperation.Operation switch
+        {
+            "CreateFolder" => $"New folder: {Name}",
+            "Delete" => $"Move to Trash: {Name}. Contents remain recoverable.",
+            "Restore" => $"Restore to original folder: {Name}",
+            "Move" => $"Move ‘{Name}’ to ‘{DestinationName}’",
+            _ => $"Rename to: {Name}"
+        };
         public bool HasObservedOutcome { get { lock (Gate) return OriginalOutcome is not null; } }
     }
 
@@ -122,12 +141,15 @@ public sealed partial class FilesNativeBrowserService
         await start.ConfigureAwait(false);
         ArgumentNullException.ThrowIfNull(lifetime);
         var broker = _mutationBroker ?? throw new NotSupportedException("Home-reviewed Files editing is not configured.");
-        if (operation is not ("CreateFolder" or "Rename") || string.IsNullOrWhiteSpace(name) || name.Length > 255
-            || name is "." or ".." || name.Any(character => char.IsControl(character) || "/\\<>:\"|?*".Contains(character))
+        if (operation is not ("CreateFolder" or "Rename" or "Delete" or "Restore") || string.IsNullOrWhiteSpace(name)
+            || operation is "CreateFolder" or "Rename" && (name.Length > 255 || name is "." or ".."
+                || name.Any(character => char.IsControl(character) || "/\\<>:\"|?*".Contains(character)))
             || string.IsNullOrWhiteSpace(sessionId) || sessionId.Length > 256)
             throw new ArgumentException("Choose a supported operation and a single bounded file name.");
         if (!lifetime() || !_originalPages.TryGetValue(page, out var original) || original.Actor != actor)
             throw new UnauthorizedAccessException("Retain the SAME original displayed Files page and actor.");
+        if (page.IsTrash != (operation == "Restore"))
+            throw new InvalidOperationException("Restore an original Trash selection; other changes require a live folder.");
         await RevalidateAsync(page, actor, token).ConfigureAwait(false);
         var workspace = original.Workspace;
         HostedItemMetadata scopeItem;
@@ -146,28 +168,38 @@ public sealed partial class FilesNativeBrowserService
             if (row is null || !page.Items.Any(item => ReferenceEquals(item, row)) || row.CurrentRevisionId is null
                 || workspace.Configuration.AppFolders.Values.Contains(row.Id))
                 throw new InvalidOperationException("Select an original item; configured App folders keep their registered names.");
+            if (operation is "Delete" or "Restore" && name != row.Name)
+                throw new InvalidOperationException("Retain the original selected item name for this review.");
             scopeItem = row;
-            if (page.ParentID is { } parentId)
+            var parent = operation == "Restore" ? row.ParentId?.Value : page.ParentID;
+            if (parent is { } parentId)
             {
-                var parent = await workspace.Provider.GetForOriginalStoreAsync(page.StoreID, new(parentId), token).ConfigureAwait(false);
-                if (!parent.IsSuccess || parent.Value is not { Kind: HostedItemKind.Folder, CurrentRevisionId: not null })
-                    throw new InvalidOperationException("The original parent folder is unavailable.");
-                parents.Add(new(parent.Value.Id, parent.Value.CurrentRevisionId));
+                var parentResult = await workspace.Provider.GetForOriginalStoreAsync(page.StoreID, new(parentId), token).ConfigureAwait(false);
+                if (!parentResult.IsSuccess || parentResult.Value is not { Kind: HostedItemKind.Folder, CurrentRevisionId: not null })
+                    throw new InvalidOperationException("The original parent folder is unavailable. Restore it before restoring this item.");
+                parents.Add(new(parentResult.Value.Id, parentResult.Value.CurrentRevisionId));
             }
         }
         var now = DateTimeOffset.UtcNow;
         var itemId = operation == "CreateFolder" ? HostedItemId.New() : scopeItem.Id;
         var intent = new FilesOperation(new(Guid.NewGuid()), actor.ActorId, itemId, scopeItem.ParentId,
             operation == "CreateFolder" ? scopeItem.Id : null, operation,
-            operation == "Rename" ? scopeItem.CurrentRevisionId : null, null, FilesOperationState.Pending, now, now, null, null);
+            operation != "CreateFolder" ? scopeItem.CurrentRevisionId : null, null, FilesOperationState.Pending, now, now, null, null);
         var scopes = Array.AsReadOnly(new[] { new ResourceScope("files.item", scopeItem.Id.ToString(),
             scopeItem.CurrentRevisionId!.Value.ToString(), ResourceAccess.Write) });
         var arguments = JsonSerializer.SerializeToElement(new { operationID = intent.Id.Value, storeID = page.StoreID,
             expectedStoreRevision = page.StoreRevision, itemID = itemId.Value,
-            parentID = page.ParentID, expectedRevision = intent.BaseRevisionId?.ToString(), operation, name });
+            parentID = operation == "Restore" ? scopeItem.ParentId?.Value : page.ParentID,
+            expectedRevision = intent.BaseRevisionId?.ToString(), operation, name });
+        var description = operation switch
+        {
+            "CreateFolder" => $"Create folder ‘{name}’ in ‘{scopeItem.Name}’.",
+            "Delete" => $"Move ‘{scopeItem.Name}’ to Trash. Its contents are retained for recovery; no files are permanently removed.",
+            "Restore" => $"Restore ‘{scopeItem.Name}’ to its original parent folder.",
+            _ => $"Rename ‘{scopeItem.Name}’ to ‘{name}’."
+        };
         var approval = await ObserveOriginalAsync(broker.AuthorizeForActorAsync(actor, "files", "9to1.Files." + operation,
-            scopes, arguments, operation == "CreateFolder" ? $"Create folder ‘{name}’ in ‘{scopeItem.Name}’."
-                : $"Rename ‘{scopeItem.Name}’ to ‘{name}’.", null, sessionId, token)).ConfigureAwait(false);
+            scopes, arguments, description, null, sessionId, token)).ConfigureAwait(false);
         await RevalidateAsync(page, actor, token).ConfigureAwait(false);
         if (!lifetime()) throw new ObjectDisposedException("Original Files view");
         var prepared = new PreparedMutation(this, workspace, page, actor, intent, name, scopes,
@@ -198,7 +230,7 @@ public sealed partial class FilesNativeBrowserService
         var broker = _mutationBroker!;
         bool Alive() => !original.Retired && original.Lifetime();
         if (!Alive()) throw new ObjectDisposedException("Original Files view");
-        await RevalidateAsync(original.Page, original.Actor, token).ConfigureAwait(false);
+        await RevalidateMutationPagesAsync(original, token).ConfigureAwait(false);
         var capability = await ObserveOriginalAsync(broker.BeginExecutionCapabilityAsync(original.Approval.RequestId, original.Arguments, token)).ConfigureAwait(false);
         if (capability is null) return new(null, true, false, "Home has not admitted execution. Check its current decision before choosing Apply.");
         lock (original.Gate) original.Capability = capability;
@@ -209,7 +241,7 @@ public sealed partial class FilesNativeBrowserService
         try
         {
             if (!Alive()) throw new ObjectDisposedException("Original Files view");
-            await RevalidateAsync(original.Page, original.Actor, token).ConfigureAwait(false);
+            await RevalidateMutationPagesAsync(original, token).ConfigureAwait(false);
             var claim = await ObserveOriginalAsync(broker.ClaimExecutionObservedAsync(capability, "files",
                 "9to1.Files." + original.OriginalOperation.Operation, original.Scopes, original.Arguments, token)).ConfigureAwait(false);
             if (claim.Disposition != HomeResourceClaimDisposition.Claimed || claim.Actor != original.Actor)
@@ -219,7 +251,8 @@ public sealed partial class FilesNativeBrowserService
                 Alive, token).AsTask()).ConfigureAwait(false);
             var guard = new FilesCommitAuthorityGuard(original.Actor.ActorId, fence.ValidateAsync);
             var actual = original.Workspace.Provider.CommitNativeBrowserStructureAsync(original.OriginalOperation,
-                original.Name, original.Page.StoreID, original.Page.StoreRevision, original.Parents, guard, token);
+                original.OriginalOperation.Operation is "Delete" or "Restore" or "Move" ? null : original.Name,
+                original.Page.StoreID, original.Page.StoreRevision, original.Parents, guard, token);
             try
             {
                 result = await actual.ConfigureAwait(false);

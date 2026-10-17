@@ -1,0 +1,46 @@
+<Cui id="home.dashboard" version="1">
+  <Theme Name="user_preference">
+    <Page id="home-dashboard" AccessibleName="Home dashboard">
+      <Container id="dashboard-root" Type="Grid" RowSizes="Auto 1fr Auto" Background="{Resource CuiBackgroundBrush}">
+        <Container Type="Grid" ColumnSizes="1fr Auto Auto" CellGap="8" Margin="24 74 24 0" Padding="8" Background="{Resource CuiPanelBrush}">
+          <Container Type="Overlay" HorizontalScrolling="True" VerticalScrolling="False">
+            <Container id="dashboard-page-tabs" Type="Horizontal Stack" />
+          </Container>
+          <Button id="dashboard-edit-page" Column="1" Content="Edit page" AccessibleName="Edit dashboard page" />
+          <Button id="dashboard-add-page" Column="2" Content="Add page" AccessibleName="Create dashboard page" />
+        </Container>
+        <Container id="dashboard-scroll" Row="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" Margin="24 18 24 16" CellGap="24">
+          <Container Type="Vertical Stack" CellGap="4">
+            <Text id="dashboard-welcome" Text="Welcome" FontSize="32" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />
+            <Text id="dashboard-date" FontSize="15" Foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+          <Container id="dashboard-pinned-section" Type="Vertical Stack" IsVisible="False" CellGap="12">
+            <Container Type="Wrap" CellGap="12">
+              <Text Text="Pinned Apps and Activities" FontSize="18" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />
+              <Button id="dashboard-edit-pinned" Content="Edit pinned" AccessibleName="Edit pinned apps" />
+            </Container>
+            <Container id="dashboard-pinned-apps" Type="Wrap" />
+            <Text id="dashboard-pinned-empty" Text="Pin apps from the App launcher to keep them here." IsVisible="False" Foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+          <Container id="dashboard-widget-controls" Type="Vertical Stack" IsVisible="False" CellGap="8">
+            <Text Text="Widgets" FontSize="18" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />
+            <Text Text="Drag and resize while arranging. Changes save to this dashboard page." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+            <Container Type="Wrap" CellGap="8">
+              <Button id="dashboard-add-widget" Content="Add widget" AccessibleName="Add a dashboard widget" />
+              <Button id="dashboard-refresh-widgets" Content="Refresh" AccessibleName="Refresh dashboard widgets" />
+              <Button id="dashboard-undo-layout" Content="Undo" IsEnabled="False" AccessibleName="Undo dashboard layout change" />
+              <Button id="dashboard-redo-layout" Content="Redo" IsEnabled="False" AccessibleName="Redo dashboard layout change" />
+              <Button id="dashboard-arrange-widgets" Content="Arrange" AccessibleName="Arrange dashboard widgets" />
+            </Container>
+            <Text id="dashboard-widget-status" Text="Loading dashboard widgets…" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+          <Container id="dashboard-live-widgets" Type="Vertical Stack" />
+        </Container>
+        <Container Row="2" Type="Wrap" Margin="24 0 24 16" CellGap="8">
+          <Button id="dashboard-discover" Content="Discover models" AccessibleName="Open Home Discover model catalogue" />
+          <Button id="dashboard-edit-with-ai" Content="Edit with 9to1" AccessibleName="Edit dashboard with 9to1" Padding="20 10" />
+        </Container>
+      </Container>
+    </Page>
+  </Theme>
+</Cui>

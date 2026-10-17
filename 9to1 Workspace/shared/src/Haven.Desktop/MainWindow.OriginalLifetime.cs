@@ -10,7 +10,7 @@ namespace Haven.Desktop;
 public sealed partial class MainWindow
 {
     private readonly DesktopOriginalWorkLifetime _originalWindowWork;
-    private readonly List<MainView> _originalWindowShells = [];
+    private readonly List<object> _originalWindowShells = [];
     private readonly List<Exception> _originalWindowStopFailures = [];
     private MainView? _actualSubscribedShell;
     private Task? _actualWindowCloseDelivery;
@@ -43,6 +43,15 @@ public sealed partial class MainWindow
         if (_originalWindowWork.IsRetiring) return;
         _originalWindowWork.RunSynchronous(original => AcquireOriginalWindowCallback(original, () =>
         {
+#if !ANDROID
+            if (DataContext is App.UnifiedWorkspaceHost unified)
+            {
+                if (!_originalWindowShells.Any(owner => ReferenceEquals(owner, unified))) _originalWindowShells.Add(unified);
+                _shell = null;
+                SetupBackground(); MainContent.Content = unified;
+                return;
+            }
+#endif
             if (DataContext is not MainView actual) return;
             if (!_originalWindowShells.Any(shell => ReferenceEquals(shell, actual))) _originalWindowShells.Add(actual);
             _shell = actual;

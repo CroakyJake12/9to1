@@ -31,7 +31,11 @@ internal static class OriginalAttachmentStateReadTests
                 fixture.ExpectOnly(failure, originals); fixture.ExpectOnly(closeFailure, originals);
                 Check.True(ReferenceEquals(close, store.CloseOriginalReadsAndDrainAsync())); Check.Equal(0, initial);
                 Check.False(File.Exists(path + ".lock"));
-                if (existingState) Check.True(before!.SequenceEqual(await fixture.Keep(File.ReadAllBytesAsync(path))));
+                if (existingState)
+                {
+                    var after = await fixture.Keep(File.ReadAllBytesAsync(path));
+                    Check.True(before!.SequenceEqual(after));
+                }
                 else Check.False(Directory.Exists(System.IO.Path.GetDirectoryName(path)));
             });
         }
@@ -47,7 +51,8 @@ internal static class OriginalAttachmentStateReadTests
             var raw = fixture.Keep(store.ReadExistingWithinOriginalSourceAsync(body => body(), fixture.Retain, CancellationToken.None));
             Check.Equal(new State(1, "actual maintained writer"), await raw);
             await fixture.Keep(store.CloseOriginalReadsAndDrainAsync());
-            Check.True(before.SequenceEqual(await fixture.Keep(File.ReadAllBytesAsync(path))));
+            var after = await fixture.Keep(File.ReadAllBytesAsync(path));
+            Check.True(before.SequenceEqual(after));
             Check.True(names.SequenceEqual(Directory.GetFiles(System.IO.Path.GetDirectoryName(path)!).Order())); Check.Equal(1, initial);
             await fixture.Keep(store.UpdateAsync(current => current with { Revision = 2 })); // Read retirement is not global store shutdown.
             Check.Equal(2, (await fixture.Keep(store.ReadExistingAsync())).Revision);

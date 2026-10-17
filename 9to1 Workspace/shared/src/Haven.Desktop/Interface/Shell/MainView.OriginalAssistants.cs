@@ -112,10 +112,10 @@ public sealed partial class MainView
                     if (existing.Length > 1 || existing.Any(tab => !ReferenceEquals(tab.Page, actualPage)))
                         throw new UnauthorizedAccessException("Retain one actual dedicated Assistants tab and native page.");
                     AddOrSelectTab("assistants-native", "Assistants", actualPage, false,
-                        HavenSurface.Assistants, forceNewTab: false);
+                        HavenSurface.Spaces, forceNewTab: false);
                     original.DemandPublication();
                     if (SelectedTab is not { Key: "assistants-native" } selected ||
-                        !ReferenceEquals(selected.Page, actualPage) || CurrentSurface != HavenSurface.Assistants ||
+                        !ReferenceEquals(selected.Page, actualPage) || CurrentSurface != HavenSurface.Spaces ||
                         !ReferenceEquals(TopLevel.GetTopLevel(actualPage), actualWindow))
                         throw new UnauthorizedAccessException("The actual Assistant tab/window association changed during publication.");
                     if (isNew && actualPage.OriginalDevelopmentRoute is not null)

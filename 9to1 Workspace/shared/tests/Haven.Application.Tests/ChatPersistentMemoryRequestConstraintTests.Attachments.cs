@@ -15,11 +15,21 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         var rig = new Rig(new MemorySource()); var source = new AttachmentConsumerSource(rig.OriginalChat);
         rig.OriginalChat.BindOriginalAttachmentInputSource(source);
         RetainedAttachmentConsumerControls.Add([rig, source]);
+        rig.Provider.BeforeChatDispatch = () =>
+        {
+            Assert.Equal(2, source.Validations);
+            Assert.Equal(1, source.AcceptedValidations);
+            Assert.NotNull(source.Acceptance);
+            Assert.Same(source.Acceptance,
+                rig.OriginalChat.ObserveOriginalAttachmentAcceptance(source.FirstRequest!, source.Input, source));
+        };
         await RunAttachmentConsumer(rig, source, source.Options);
         var request = Assert.Single(rig.Provider.Requests);
         Assert.Contains(request.Messages, row => row.Role == "user" && row.Content.Contains(AttachmentConsumerSource.Text, StringComparison.Ordinal));
         Assert.DoesNotContain(AttachmentConsumerSource.Text, request.SystemPrompt ?? "", StringComparison.Ordinal);
-        Assert.Equal(1, source.Reads); Assert.True(source.AcceptedValidations >= 2);
+        Assert.Equal(1, source.Reads);
+        Assert.Equal(2, source.Validations);
+        Assert.Equal(1, source.AcceptedValidations);
         var accepted = Assert.IsType<ChatOriginalAttachmentAcceptance>(source.Acceptance);
         Assert.Equal("Inspect the selected document", accepted.OriginalMessage.Content);
         Assert.Equal(source.Conversation.Id, accepted.OriginalMessage.ConversationId);
@@ -41,7 +51,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         var restored = JsonSerializer.Deserialize<GenerationOptions>(payload)!;
         Assert.Null(restored.OriginalAttachmentInput); Assert.NotNull(restored.RequestedOriginalAttachmentLineage);
         var refused = await Record.ExceptionAsync(() => RunAttachmentConsumer(rig, source, restored));
-        Assert.True(HasMessage(refused, "Attachment input requires its live approved source and local model route. Restored IDs cannot authorize it."));
+        Assert.True(HasMessage(refused, "Attachment input requires its live approved source and configured Task disclosure route (ordinary Chat is local only). Restored IDs cannot authorize it."));
         Assert.Single(rig.Provider.Requests); Assert.Equal(1, source.Reads);
     }
 
@@ -129,7 +139,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         internal readonly Exception ReplayFailure = new UnauthorizedAccessException("Exact controlled original-input replay refusal");
         internal ChatOriginalAttachmentRequest? FirstRequest;
         internal ChatOriginalAttachmentAcceptance? Acceptance;
-        internal int Reads, AcceptedValidations;
+        internal int Reads, Validations, AcceptedValidations;
         internal Task<AttachmentPromptContext>? Raw = null;
         internal GenerationOptions Options => new()
         {
@@ -160,7 +170,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         public Task ValidateOriginalAttachmentInputWithinSourceAsync(IChatOriginalAttachmentInput input,
             ChatOriginalAttachmentRequest request, ProviderExecutionContext? context, Action<Action> scope, Action<Task> retain, CancellationToken token)
         {
-            scope(() => { Demand(input, request); if (Acceptance is not null) AcceptedValidations++; }); return Task.CompletedTask;
+            scope(() => { Demand(input, request); Validations++; if (Acceptance is not null) AcceptedValidations++; }); return Task.CompletedTask;
         }
     }
 }

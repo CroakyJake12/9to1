@@ -1,0 +1,355 @@
+using Avalonia.Controls;
+using Avalonia.Controls.Templates;
+using Avalonia.Input;
+using Avalonia.Media;
+using Avalonia.Threading;
+using CakeOS.Cui;
+using CakeOS.Cui.Language;
+using CakeOS.Cui.Runtime;
+using Haven.Application;
+using Haven.Browser;
+using Haven.Core;
+using Haven.Desktop.Services;
+using Haven.Desktop.Views.Shell;
+using HavenOS.Apps.Browse;
+
+namespace Haven.Desktop.Views.Pages.Home;
+
+/// <summary>The same Home views serve Home and New Tab. This is a content page,
+/// not another shell or tab/session authority. Services remain owned by composition.</summary>
+internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiActionAvailability
+{
+    private readonly BrowseAppContentRequest _request;
+    private readonly IModeRegistry _modes;
+    private readonly Func<NewDashboardPage> _createDashboard;
+    private readonly Func<HomeDiscoverPage> _createDiscover;
+    private readonly Func<BrowseNavigationIntent, Task, bool> _queue;
+    private readonly Func<string, CancellationToken, Task<AppContentAddress>> _prepareAiDraft;
+    private readonly bool _aiAvailable;
+    private readonly DesktopOriginalWorkLifetime _work;
+    private readonly CuiControlLoader _loader = new();
+    private readonly CuiControlLoader _appsLoader = new();
+    private readonly Border _viewport = new();
+    private readonly TextBlock _heading = new(), _status = new();
+    private readonly TextBox _search = new();
+    private readonly ComboBox _searchMode = new() { ItemsSource = new[] { "Search", "AI" }, SelectedIndex = 0 };
+    private readonly ListBox _apps = new();
+    private readonly Button _openApp = new() { Content = "Open app" };
+    private CuiContainerControl? _root, _sidebar, _main, _searchRow;
+    private NewDashboardPage? _dashboard;
+    private HomeDiscoverPage? _discover;
+    private Control? _appsView;
+    private string _section;
+    private long _selection;
+    private Task? _initialization;
+    private Task<bool>? _preparation;
+    private readonly List<Task> _stopSources = [];
+    private bool _stopped;
+    private bool _stopping;
+
+    internal UnifiedHomePage(BrowseAppContentRequest request, IModeRegistry modes,
+        Func<NewDashboardPage> createDashboard, Func<HomeDiscoverPage> createDiscover,
+        Func<BrowseNavigationIntent, Task, bool> queue,
+        Func<string, CancellationToken, Task<AppContentAddress>> prepareAiDraft, bool aiAvailable = true)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        _request = request; _modes = modes; _createDashboard = createDashboard;
+        _createDiscover = createDiscover; _queue = queue; _prepareAiDraft = prepareAiDraft; _aiAvailable = aiAvailable;
+        _section = request.Address.Authority == "newtab" ? "newtab" : "apps";
+        _work = new(StopAsync, CleanupAsync);
+        using var stream = typeof(UnifiedHomePage).Assembly.GetManifestResourceStream("Haven.Desktop.Home.Unified.cui")
+            ?? throw new InvalidDataException("The shared Home document is missing.");
+        using var reader = new StreamReader(stream);
+        var parser = new CuiRichParser();
+        var document = parser.Parse(reader.ReadToEnd(), "UnifiedHome.cui");
+        if (parser.Diagnostics.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
+            throw new InvalidDataException("The shared Home document is invalid.");
+        _loader.SetActionDispatcher(this);
+        _loader.BindAuthoredControl("unified-home-root", _ => _root = new("Grid"));
+        _loader.BindAuthoredControl("home-sidebar", _ => _sidebar = new("Wrap"));
+        _loader.BindAuthoredControl("home-main", _ => _main = new("Grid"));
+        _loader.BindAuthoredControl("home-search-row", _ => _searchRow = new("Wrap"));
+        _loader.BindAuthoredControl("home-content", _ => _viewport);
+        _loader.BindAuthoredControl("home-heading", _ => _heading);
+        _loader.BindAuthoredControl("home-status", _ => _status);
+        _loader.BindAuthoredControl("home-search", _ => _search);
+        _loader.BindAuthoredControl("home-search-mode", _ => _searchMode);
+        var loaded = _loader.TryLoad(document);
+        if (loaded.Root is null || loaded.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
+            throw new InvalidDataException("The shared Home document could not be rendered.");
+        _loader.WireBindings(loaded.Root);
+        if (!_aiAvailable)
+            Set(_searchMode, "ItemsSource", new object[] { "Search", new ComboBoxItem { Content = "AI (unavailable)", IsEnabled = false } });
+        Content = loaded.Root;
+        _apps.ItemTemplate = new FuncDataTemplate<ModeDefinition>((mode, _) => new TextBlock
+        {
+            Text = mode is null ? string.Empty : $"{mode.Name}\n{mode.Description}",
+            TextWrapping = TextWrapping.Wrap
+        });
+        _openApp.Click += OnOpenApp;
+        _apps.DoubleTapped += OnOpenApp;
+        _search.KeyDown += OnSearchKey;
+        SizeChanged += OnHomeSizeChanged;
+    }
+
+    internal Task? OriginalInitialization => _initialization;
+    internal Task? OriginalClose => _work.OriginalClose;
+    internal bool IsAlive => !_work.IsRetiring && !_stopping;
+    internal Task WhenActionsIdleAsync() => _loader.WhenActionsIdleAsync();
+
+    internal Task InitializeAsync(CancellationToken cancellationToken)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        return _initialization ?? _work.RunAsync(original => SelectAsync(_section, original, cancellationToken),
+            task => _initialization = task);
+    }
+
+    public bool? IsActionAvailable(string command) => IsAlive && command is
+        "home.apps" or "home.dashboard" or "home.models" or "home.newtab" or "home.submit" or
+        "home.library" or "home.events" or "home.mesh" or "home.settings" or "home.account" or "home.notifications";
+
+    public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        if (IsActionAvailable(command) != true) throw new InvalidOperationException("This Home action is unavailable.");
+        return new(_work.RunAsync(async original =>
+        {
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(original.Token, cancellationToken);
+            switch (command)
+            {
+                case "home.apps": case "home.dashboard": case "home.models":
+                    await SelectAsync(command[5..], original, linked.Token); break;
+                case "home.newtab":
+                    if (_request.Address.Authority == "newtab") await SelectAsync("newtab", original, linked.Token);
+                    else Queue(AppContentAddress.Parse("browse://newtab"), original, true);
+                    break;
+                case "home.submit": await SubmitAsync(original, linked.Token); break;
+                case "home.mesh": Queue(AppContentAddress.Parse("9to1://mesh"), original); break;
+                default: Queue(AppContentAddress.Parse("9to1://home/" + command[5..]), original); break;
+            }
+        }));
+    }
+
+    private async Task SelectAsync(string section, DesktopOriginalWorkLifetime.Original original, CancellationToken token)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        var generation = ++_selection;
+        original.BindPublicationGuard(() => IsAlive && generation == _selection);
+        original.DemandPublication();
+        _dashboard?.Deactivate(); _discover?.Deactivate(); _section = section;
+        Set(_searchRow!, "IsVisible", section == "newtab");
+        Set(_heading, "Text", section switch { "newtab" => "New Tab", "models" => "Models / Discover", "dashboard" => "Dashboard", _ => "Apps" });
+        Set(_status, "Text", section == "newtab" && !_aiAvailable ? "Search is available. AI requires an available Spaces destination." : string.Empty);
+        if (section == "apps")
+        {
+            _appsView ??= BuildAppsView();
+            _viewport.Child = _appsView;
+            var modes = await original.AwaitAsync(_modes.GetModesAsync(token));
+            if (!IsAlive || generation != _selection) return;
+            original.DemandPublication();
+            _apps.ItemsSource = modes.Where(mode => mode.IsEnabled && !HavenAppRoutePolicy.IsDeprecatedStandalone(mode))
+                .OrderBy(mode => mode.Name, StringComparer.OrdinalIgnoreCase).ToArray();
+            Set(_status, "Text", _apps.ItemCount == 0 ? "No apps are available in this profile." : "Choose an app to open it in a tab.");
+        }
+        else if (section == "models")
+        {
+            if (_discover is null)
+            {
+                original.RunAcceptedPublicationCallback(() =>
+                {
+                    _discover = _createDiscover();
+                    _discover.ManageProvidersRequested += OnManageProviders;
+                });
+            }
+            if (!original.IsAcceptedPublicationCurrent) return;
+            var discover = _discover ?? throw new InvalidOperationException("The model catalogue owner was not acquired.");
+            _viewport.Child = discover;
+            await original.AwaitAsync(discover.ActivateAsync(token));
+        }
+        else
+        {
+            if (_dashboard is null)
+            {
+                original.RunAcceptedPublicationCallback(() =>
+                {
+                    _dashboard = _createDashboard();
+                    _dashboard.ModeRequested += OnDashboardApp;
+                    _dashboard.ManageAppsRequested += OnManageApps;
+                    _dashboard.DiscoverRequested += OnDiscover;
+                    _dashboard.ConversationRequested += OnConversation;
+                });
+            }
+            if (!original.IsAcceptedPublicationCurrent) return;
+            var dashboard = _dashboard ?? throw new InvalidOperationException("The dashboard owner was not acquired.");
+            _viewport.Child = dashboard;
+            await original.AwaitAsync(dashboard.ActivateAsync(token));
+        }
+        if (!IsAlive || generation != _selection) return;
+        original.DemandPublication(); UpdateLayoutMode();
+    }
+
+    private Control BuildAppsView()
+    {
+        using var stream = typeof(UnifiedHomePage).Assembly.GetManifestResourceStream("Haven.Desktop.Home.UnifiedApps.cui")
+            ?? throw new InvalidDataException("The Home apps document is missing.");
+        using var reader = new StreamReader(stream);
+        var parser = new CuiRichParser();
+        var document = parser.Parse(reader.ReadToEnd(), "UnifiedHomeApps.cui");
+        if (parser.Diagnostics.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
+            throw new InvalidDataException("The Home apps document is invalid.");
+        _appsLoader.BindAuthoredControl("home-app-list", _ => _apps);
+        _appsLoader.BindAuthoredControl("home-open-app", _ => _openApp);
+        var loaded = _appsLoader.TryLoad(document);
+        if (loaded.Root is null || loaded.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
+            throw new InvalidDataException("The Home apps document could not be rendered.");
+        _appsLoader.WireBindings(loaded.Root);
+        return loaded.Root;
+    }
+
+    private void OnOpenApp(object? sender, Avalonia.Interactivity.RoutedEventArgs args)
+    {
+        if (!IsAlive || _apps.SelectedItem is not ModeDefinition mode) return;
+        StartNavigation(AppContentAddress.Parse("9to1://" + mode.Key));
+    }
+    private void OnDashboardApp(object? sender, ModeDefinition mode)
+    {
+        var path = HavenAppRoutePolicy.IsDeprecatedStandalone(mode) ? "spaces/assistants" : mode.Key;
+        StartNavigation(AppContentAddress.Parse("9to1://" + path));
+    }
+    private void OnConversation(object? sender, Conversation conversation) =>
+        StartNavigation(AppContentAddress.Parse($"9to1://spaces/chat/{conversation.Id:D}"));
+    private void OnManageProviders(object? sender, EventArgs args) => StartNavigation(AppContentAddress.Parse("9to1://home/settings"));
+    private void OnManageApps(object? sender, EventArgs args) => StartSelection("apps");
+    private void OnDiscover(object? sender, EventArgs args) => StartSelection("models");
+    private void StartSelection(string section)
+    {
+        if (IsAlive) _ = _work.RunAsync(original => SelectAsync(section, original, original.Token));
+    }
+    private void StartNavigation(AppContentAddress address)
+    {
+        if (IsAlive) _ = _work.RunAsync(original => { Queue(address, original); return Task.CompletedTask; });
+    }
+    private void OnSearchKey(object? sender, KeyEventArgs args)
+    {
+        if (args.Key != Key.Enter || !IsAlive) return;
+        args.Handled = true; _ = _work.RunAsync(original => SubmitAsync(original, original.Token));
+    }
+    private async Task SubmitAsync(DesktopOriginalWorkLifetime.Original original, CancellationToken token)
+    {
+        var text = _search.Text?.Trim();
+        if (string.IsNullOrWhiteSpace(text)) return;
+        AppContentAddress address;
+        if (_searchMode.SelectedIndex == 1)
+        {
+            if (!_aiAvailable)
+            {
+                Set(_status, "Text", "AI is unavailable in this host. Choose Search to continue.");
+                return; // Expected availability refusal: retain input and a healthy owner.
+            }
+            // This callback saves the draft through the canonical conversation owner.
+            // Opening an AI destination never submits a model turn implicitly.
+            address = await original.AwaitAsync(_prepareAiDraft(text, token));
+            if (address.Namespace != AppContentNamespace.NativeApp || address.Authority != "spaces")
+                throw new InvalidOperationException("The canonical AI draft must open within Spaces.");
+        }
+        else if (AppContentAddress.IsReserved(text))
+        {
+            if (!AppContentAddress.TryParse(text, out var parsed) || parsed!.Namespace == AppContentNamespace.Cui)
+            {
+                Set(_status, "Text", "This app address is invalid or unavailable in this host.");
+                return; // A rejected local route never becomes an external search.
+            }
+            address = AppContentRouteMigration.Canonicalize(parsed);
+        }
+        else
+        {
+            try { address = AppContentAddress.Parse(BrowserSessionService.NormaliseAddress(text).AbsoluteUri); }
+            catch (Exception error) when (error is UriFormatException or ArgumentException)
+            {
+                Set(_status, "Text", "Enter a valid address or a search phrase.");
+                return;
+            }
+        }
+        Queue(address, original);
+    }
+    private void Queue(AppContentAddress address, DesktopOriginalWorkLifetime.Original original, bool? newTab = null)
+    {
+        original.Token.ThrowIfCancellationRequested();
+        var settlement = Task.WhenAll(original.Task, _loader.WhenActionsIdleAsync());
+        var accepted = false;
+        original.RunAcceptedPublicationCallback(() => accepted = _queue(
+            new(_request.TabId, address, newTab ?? _request.Address.Authority == "home"), settlement));
+        if (!accepted && original.IsAcceptedPublicationCurrent)
+            throw new InvalidOperationException("The original tab no longer accepts navigation.");
+    }
+
+    internal Task<bool> TryPrepareToCloseAsync(CancellationToken token)
+    {
+        Dispatcher.UIThread.VerifyAccess(); _work.DemandExternalClose();
+        if (_preparation is not null && !_preparation.IsCompletedSuccessfully) return _preparation;
+        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _preparation = _work.RunAsync(async original =>
+        {
+            await start.Task;
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, original.Token);
+            if (_dashboard is not null && !await original.AwaitAsync(_dashboard.TryPrepareToCloseAsync(linked.Token))) return false;
+            return _discover is null || await original.AwaitAsync(_discover.TryPrepareToCloseAsync(linked.Token));
+        });
+        start.SetResult(); return _preparation;
+    }
+    internal Task CloseAndDrainAsync() => _work.CloseAndDrainAsync();
+
+    private async Task StopAsync()
+    {
+        Dispatcher.UIThread.VerifyAccess(); _stopping = true; ++_selection;
+        List<Exception> failures = [];
+        void Attempt(Action action) { try { action(); } catch (Exception error) { failures.Add(error); } }
+        void Acquire(Func<Task> action) => Attempt(() => _stopSources.Add(action()));
+        Attempt(_loader.Dispose); Attempt(_appsLoader.Dispose);
+        // Start child retirement before joining admitted page actions.
+        if (_dashboard is not null) Acquire(_dashboard.CloseAndDrainAsync);
+        if (_discover is not null) Acquire(_discover.CloseAndDrainAsync);
+        Acquire(_loader.WhenActionsIdleAsync); Acquire(_appsLoader.WhenActionsIdleAsync);
+        foreach (var actual in _stopSources)
+            try { await actual; }
+            catch (Exception error)
+            {
+                if (actual.Exception is { } aggregate) failures.AddRange(aggregate.InnerExceptions);
+                else failures.Add(error);
+            }
+        if (failures.Count > 0) throw new AggregateException("Home content did not close cleanly.", failures);
+        _stopped = true;
+    }
+    private Task CleanupAsync()
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        if (!_stopped) throw new InvalidOperationException("The original Home children must finish closing before detachment.");
+        _openApp.Click -= OnOpenApp; _apps.DoubleTapped -= OnOpenApp; _search.KeyDown -= OnSearchKey;
+        SizeChanged -= OnHomeSizeChanged;
+        if (_dashboard is not null)
+        {
+            _dashboard.ModeRequested -= OnDashboardApp; _dashboard.ManageAppsRequested -= OnManageApps;
+            _dashboard.DiscoverRequested -= OnDiscover; _dashboard.ConversationRequested -= OnConversation;
+        }
+        if (_discover is not null) _discover.ManageProvidersRequested -= OnManageProviders;
+        _viewport.Child = null; Content = null;
+        return Task.CompletedTask;
+    }
+    private void UpdateLayoutMode()
+    {
+        if (!IsAlive || _root is null || _sidebar is null || _main is null) return;
+        var narrow = Bounds.Width > 0 && Bounds.Width < 720;
+        Layout(_root, "ColumnSizes", narrow ? "1fr" : "180 1fr");
+        Layout(_root, "RowSizes", narrow ? "Auto 1fr" : "1fr");
+        Layout(_sidebar, "Orientation", narrow ? "Horizontal" : "Vertical");
+        Layout(_main, "Column", narrow ? "0" : "1"); Layout(_main, "Row", narrow ? "1" : "0");
+    }
+    private void OnHomeSizeChanged(object? sender, SizeChangedEventArgs args)
+    {
+        if (IsAlive) _work.RunSynchronous(original => original.RunAcceptedPublicationCallback(UpdateLayoutMode));
+    }
+    private static void Set(Control control, string property, object? value) =>
+        CuiPropertyPresentation.Set(control, property, value, CuiPropertyLevel.Instance, "Shared Home state", order: 2);
+    private static void Layout(Control control, string property, string value) =>
+        CuiLayoutProperties.SetLiteral(control, property, value, CuiPropertyLevel.Instance, "Shared Home layout", order: 2);
+}

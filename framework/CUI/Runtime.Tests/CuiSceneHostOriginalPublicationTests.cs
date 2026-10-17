@@ -15,6 +15,160 @@ namespace CakeOS.Cui.Runtime.Tests;
 public sealed class CuiSceneHostOriginalPublicationTests
 {
     [Fact]
+    public async Task Actual_button_can_capture_its_original_loader_pipeline_for_an_external_navigation_owner()
+    {
+        await RunAsync(async rig =>
+        {
+            var action = new HeldAction();
+            _ = rig.Track(action.Original);
+            rig.Release(action.Complete);
+            Task<CuiSceneAvailability>? show = null;
+            Task? settlement = null;
+            await rig.Ui(() => show = rig.Track(rig.Host.ShowAsync(Scene(actions: action) with
+            { IsPublicationCurrent = () => true })));
+            await show!;
+            await rig.Ui(() =>
+            {
+                action.OnDispatch = () => settlement = rig.Track(rig.Host.CaptureOriginalActionSettlement(show!));
+                Assert.IsType<Button>(rig.Host.Content).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.NotNull(settlement);
+                Assert.False(settlement!.IsCompleted);
+                Assert.NotSame(action.Original, settlement); // Includes the real loader pipeline after dispatcher completion.
+                Assert.Null(rig.Host.OriginalClose);
+            });
+            Assert.Equal(1, action.Calls);
+            Assert.False(action.Original.IsCompleted);
+            action.Complete();
+            await settlement!; // External caller, never the included action itself.
+            Assert.True(action.Original.IsCompletedSuccessfully);
+            Assert.True(settlement!.IsCompletedSuccessfully);
+            await rig.Ui(() => Assert.IsType<Button>(rig.Host.Content));
+        });
+    }
+
+    [Fact]
+    public async Task Replacement_refuses_old_Show_capture_without_substituting_its_new_loader_or_losing_the_old_snapshot()
+    {
+        await RunAsync(async rig =>
+        {
+            var action = new HeldAction();
+            _ = rig.Track(action.Original);
+            rig.Release(action.Complete);
+            var readiness = new HeldReadiness();
+            _ = rig.Track(readiness.Original);
+            rig.Release(readiness.Complete);
+            Task<CuiSceneAvailability>? original = null, replacement = null;
+            Task? settlement = null;
+            Control? originalRoot = null;
+            await rig.Ui(() => original = rig.Track(rig.Host.ShowAsync(Scene(actions: action) with
+            { IsPublicationCurrent = () => true })));
+            await original!;
+            await rig.Ui(() =>
+            {
+                originalRoot = Assert.IsType<Button>(rig.Host.Content);
+                ((Button)originalRoot).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                settlement = rig.Track(rig.Host.CaptureOriginalActionSettlement(original!));
+                replacement = rig.Track(rig.Host.ShowAsync(Scene(readiness: readiness,
+                    markup: "<Cui><Text text=\"Replacement\" /></Cui>") with { IsPublicationCurrent = () => true }));
+                Assert.False(replacement.IsCompleted);
+                Assert.Same(originalRoot, rig.Host.Content); // A mounted old root alone is not currentness.
+                Assert.Throws<InvalidOperationException>(() => { _ = rig.Host.CaptureOriginalActionSettlement(original!); });
+            });
+            readiness.Complete();
+            await replacement!;
+            await rig.Ui(() =>
+            {
+                Assert.IsType<TextBlock>(rig.Host.Content);
+                Assert.Throws<InvalidOperationException>(() => { _ = rig.Host.CaptureOriginalActionSettlement(original!); });
+                var newSnapshot = rig.Track(rig.Host.CaptureOriginalActionSettlement(replacement!));
+                Assert.True(newSnapshot.IsCompletedSuccessfully);
+                Assert.False(settlement!.IsCompleted);
+            });
+            action.Complete();
+            await settlement!;
+            Assert.True(settlement!.IsCompletedSuccessfully);
+        });
+    }
+
+    [Theory]
+    [InlineData("withdrawn")]
+    [InlineData("detached")]
+    [InlineData("closing")]
+    [InlineData("closing-from-predicate")]
+    public async Task Original_action_capture_refuses_lost_publication_custody(string loss)
+    {
+        await RunAsync(async rig =>
+        {
+            var current = true;
+            var closeFromPredicate = false;
+            Task? close = null;
+            Task<CuiSceneAvailability>? show = null;
+            await rig.Ui(() => show = rig.Track(rig.Host.ShowAsync(Scene() with
+            {
+                IsPublicationCurrent = () =>
+                {
+                    if (closeFromPredicate) close = rig.Track(rig.Host.CloseOriginalAsync());
+                    return current;
+                }
+            })));
+            await show!;
+            await rig.Ui(() =>
+            {
+                switch (loss)
+                {
+                    case "withdrawn": current = false; break;
+                    case "detached": rig.Host.Content = new TextBlock { Text = "Unowned replacement" }; break;
+                    case "closing": close = rig.Track(rig.Host.CloseOriginalAsync()); break;
+                    case "closing-from-predicate": closeFromPredicate = true; break;
+                }
+                Assert.Throws<InvalidOperationException>(() => { _ = rig.Host.CaptureOriginalActionSettlement(show!); });
+            });
+            if (close is not null) await close;
+        });
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Original_action_capture_requires_the_exact_guarded_Show_task(bool legacy)
+    {
+        await RunAsync(async rig =>
+        {
+            Task<CuiSceneAvailability>? show = null;
+            await rig.Ui(() => show = rig.Track(rig.Host.ShowAsync(legacy ? Scene() : Scene() with
+            { IsPublicationCurrent = () => true })));
+            var availability = await show!;
+            await rig.Ui(() => Assert.Throws<InvalidOperationException>(() =>
+            { _ = rig.Host.CaptureOriginalActionSettlement(legacy ? show! : Task.FromResult(availability)); }));
+        });
+    }
+
+    [Fact]
+    public async Task Original_action_capture_requires_UI_access_and_retains_an_actual_owner_predicate_failure()
+    {
+        await RunAsync(async rig =>
+        {
+            var failure = new IOException("Original action settlement owner predicate.");
+            var fail = false;
+            Task<CuiSceneAvailability>? show = null;
+            await rig.Ui(() => show = rig.Track(rig.Host.ShowAsync(Scene() with
+            { IsPublicationCurrent = () => fail ? throw failure : true })));
+            await show!;
+            var wrongThread = await Task.Run(() => Record.Exception(() => { _ = rig.Host.CaptureOriginalActionSettlement(show!); }));
+            Assert.IsType<InvalidOperationException>(wrongThread);
+            await rig.Ui(() =>
+            {
+                fail = true;
+                Assert.Same(failure, Record.Exception(() => { _ = rig.Host.CaptureOriginalActionSettlement(show!); }));
+            });
+            rig.Expect(failure);
+            Task? close = null;
+            await rig.Ui(() => close = rig.Track(rig.Host.CloseOriginalAsync()));
+            Assert.Same(failure, await Record.ExceptionAsync(() => close!));
+        });
+    }
+
+    [Fact]
     public async Task Held_original_readiness_finishes_before_retired_publication_refuses()
     {
         await RunAsync(async rig =>
@@ -838,10 +992,11 @@ public sealed class CuiSceneHostOriginalPublicationTests
         private readonly TaskCompletionSource _original = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal Task Original => _original.Task;
         internal int Calls { get; private set; }
+        internal Action? OnDispatch { get; set; }
         internal void Complete() => _original.TrySetResult();
         internal void Fail(Exception error) => _original.TrySetException(error);
         public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
-        { Calls++; return new(Original); }
+        { Calls++; OnDispatch?.Invoke(); return new(Original); }
     }
 
 

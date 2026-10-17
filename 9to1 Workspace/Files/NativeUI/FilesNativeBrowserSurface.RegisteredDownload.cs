@@ -172,7 +172,7 @@ public sealed partial class FilesNativeBrowserSurface
                 RequireOriginalAlive(token);
                 _history.RemoveRange(_historyIndex + 1, _history.Count - _historyIndex - 1);
                 if (_history.Count >= 128) { _history.RemoveAt(0); _historyIndex--; }
-                _history.Add((page.ParentID, "Files folder"));
+                _history.Add((page.ParentID, "Files folder", false));
                 _historyIndex = _history.Count - 1;
                 ApplyDisplayedNameSort();
                 RequireOriginalAlive(token);

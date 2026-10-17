@@ -133,7 +133,13 @@ public sealed partial class BrowseNativeUiTests
             return new(workspace, BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness()), files, content);
         }
         public async Task Open()
-        { Window.Show(); await Observe(Window.InitializeAsync(), Window); await Click(Window, Workspace, Find(Window, "BrowseDownloadsButton")); }
+        {
+            Window.Show(); await Observe(Window.InitializeAsync(), Window);
+            // This fixture supplies Chromium only; explicitly activate that
+            // renderer before claiming it owns a current completed transfer.
+            await Click(Window, Workspace, Find(Window, "BrowseChromiumTabButton"));
+            await Click(Window, Workspace, Find(Window, "BrowseOpenDownloadsButton"));
+        }
     }
     private sealed class PlanDouble(Guid id) : IBrowserOriginalNativeDownloadTransportPlan { public Guid ActionId { get; } = id; }
     private sealed class ContentDouble(BrowserDownloadRecord record) : IBrowserOriginalDownloadContent

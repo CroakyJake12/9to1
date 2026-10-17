@@ -284,7 +284,11 @@ public sealed partial class ChatSessionService(
         IReadOnlyCollection<ActiveCapability>? availableCapabilities,
         ComputerUseRequest? computerUseRequest, ProviderExecutionContext? executionContext,
         TaskRunExecutionIntent taskExecutionIntent, TaskRunInvocationCustody? originalCustody,
-        ChatOrdinaryOriginalInvocation? ordinaryOriginal = null)
+        ChatOrdinaryOriginalInvocation? ordinaryOriginal = null,
+        Guid? expectedBranchId = null,
+        ChatMessage? existingUserInput = null,
+        IReadOnlyList<Guid>? branchAttachmentIds = null,
+        Func<ChatMessage, CancellationToken, Task>? branchInputAccepted = null)
     {
         if (originalCustody is not null)
         {
@@ -313,7 +317,8 @@ public sealed partial class ChatSessionService(
                 var original = SendOriginalAsync(conversation, prompt, model, effort, capabilities, agentName, agentInstructions,
                     duoMode, workspaceRoot, projectContext, projectInstructions, images, originalToken, prompts, registeredContext,
                     generationOptions, filePermission, commandPermission, browserPermission, explicitCapabilities,
-                    availableCapabilities, computerUseRequest, context, taskExecutionIntent, custody, ordinaryOriginal);
+                    availableCapabilities, computerUseRequest, context, taskExecutionIntent, custody, ordinaryOriginal, expectedBranchId, existingUserInput,
+                    branchAttachmentIds, branchInputAccepted);
                 return custody is null ? original : ObserveOriginalSendAsync(original, custody, originalToken);
             }
             return custody is null ? CreateBody(token)
@@ -429,7 +434,11 @@ public sealed partial class ChatSessionService(
         ProviderExecutionContext? executionContext = null,
         TaskRunExecutionIntent taskExecutionIntent = TaskRunExecutionIntent.OrdinaryConversation,
         TaskRunInvocationCustody? originalCustody = null,
-        ChatOrdinaryOriginalInvocation? ordinaryOriginal = null)
+        ChatOrdinaryOriginalInvocation? ordinaryOriginal = null,
+        Guid? expectedBranchId = null,
+        ChatMessage? existingUserInput = null,
+        IReadOnlyList<Guid>? branchAttachmentIds = null,
+        Func<ChatMessage, CancellationToken, Task>? branchInputAccepted = null)
     {
         if (!Enum.IsDefined(taskExecutionIntent)) throw new ArgumentOutOfRangeException(nameof(taskExecutionIntent));
         var canonicalIntent = taskExecutionIntent == TaskRunExecutionIntent.CanonicalAgenticTask;
@@ -437,6 +446,23 @@ public sealed partial class ChatSessionService(
             throw new InvalidOperationException("A canonical continuation requires explicit agentic-task intent.");
         if (canonicalIntent && (taskCoordinator is null || !taskCoordinator.HasAttemptAuthority || taskToolOwner is null || taskProviderContextCapture is null))
             throw new InvalidOperationException("The actual canonical task authority, typed tool owner and request context owner are unavailable.");
+        if (expectedBranchId is not null && (canonicalIntent || conversation.IsTemporary))
+            throw new InvalidOperationException("Explicit branch invocation requires a persisted ordinary conversation.");
+        await using var originalBranch = expectedBranchId is { } branchId
+            ? (conversations as IConversationBranchBoundRepository
+                ?? throw new InvalidOperationException("The original conversation repository cannot bind a branch invocation."))
+                .BindInvocation(conversation.Id, branchId)
+            : null;
+        if (existingUserInput is not null && (originalBranch is null || existingUserInput.ConversationId != conversation.Id || existingUserInput.Role != MessageRole.User))
+            throw new InvalidOperationException("Regeneration requires the original persisted branch input.");
+        Task WriteOriginalMessageAsync(ChatMessage message) => originalBranch is null
+            ? conversations.AddMessageAsync(message, cancellationToken)
+            : message.Role == MessageRole.User && branchAttachmentIds is { Count: > 0 }
+                ? originalBranch.AddUserMessageWithAttachmentsAsync(message, branchAttachmentIds, cancellationToken)
+                : originalBranch.AddMessageAsync(message, cancellationToken);
+        Task<IReadOnlyList<ChatMessage>> ReadOriginalHistoryAsync() => originalBranch is null
+            ? conversations.GetContextMessagesAsync(conversation.Id, cancellationToken)
+            : originalBranch.GetContextMessagesAsync(cancellationToken);
         DemandOriginalPersistentMemoryRequest(generationOptions, ordinaryOriginal, originalCustody);
         DemandOriginalAttachmentInput(generationOptions, ordinaryOriginal, originalCustody);
         CurrentCanonicalTask = null;
@@ -616,12 +642,14 @@ public sealed partial class ChatSessionService(
         execution.Changed += PublishExecution;
 
         var now = DateTimeOffset.UtcNow;
-        var resumedInput = originalCustody?.OriginalColdContinuation is { } coldContinuation
+        if (existingUserInput is not null)
+            await originalBranch!.AdmitExistingUserInputAsync(existingUserInput, cancellationToken).ConfigureAwait(false);
+        var resumedInput = existingUserInput ?? (originalCustody?.OriginalColdContinuation is { } coldContinuation
             ? coldContinuation.Entry.Capsule.AcceptedUserMessage
             : originalCustody?.OriginalUnstartedContinuation is { } continuation
             ? continuation.Original.OriginalUserMessage
                 ?? throw new InvalidOperationException("The actual accepted continuation input is unavailable.")
-            : null;
+            : null);
         var userMessage = resumedInput ?? new ChatMessage(
             Guid.NewGuid(),
             conversation.Id,
@@ -655,8 +683,8 @@ public sealed partial class ChatSessionService(
                 catch (Exception failure) when (originalCustody is not null)
                 { originalCustody.Retain(failure, actualConversationWrite); throw; }
                 var actualMessageWrite = ordinaryOriginal is null
-                    ? conversations.AddMessageAsync(userMessage, cancellationToken)
-                    : ordinaryOriginal.Write(() => conversations.AddMessageAsync(userMessage, cancellationToken));
+                    ? WriteOriginalMessageAsync(userMessage)
+                    : ordinaryOriginal.Write(() => WriteOriginalMessageAsync(userMessage));
                 if (originalCustody is not null)
                 {
                     originalCustody.OriginalUserMessageWrite = actualMessageWrite;
@@ -666,6 +694,10 @@ public sealed partial class ChatSessionService(
                 catch (Exception failure) when (originalCustody is not null)
                 { originalCustody.Retain(failure, actualMessageWrite); throw; }
                 RecordOriginalAttachmentAcceptance(originalAttachmentRequest, userMessage, actualConversationWrite, actualMessageWrite);
+                // This explicit branch callback acknowledges the actual committed input. The
+                // earlier UserMessage event keeps its legacy presentation-only semantics.
+                if (branchInputAccepted is not null)
+                    await branchInputAccepted(userMessage, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -688,8 +720,8 @@ public sealed partial class ChatSessionService(
                 null,
                 DateTimeOffset.UtcNow);
             if (!conversation.IsTemporary)
-                await (ordinaryOriginal is null ? conversations.AddMessageAsync(availabilityMessage, cancellationToken)
-                    : ordinaryOriginal.Write(() => conversations.AddMessageAsync(availabilityMessage, cancellationToken))).ConfigureAwait(false);
+                await (ordinaryOriginal is null ? WriteOriginalMessageAsync(availabilityMessage)
+                    : ordinaryOriginal.Write(() => WriteOriginalMessageAsync(availabilityMessage))).ConfigureAwait(false);
             execution.Complete();
             execution.Changed -= PublishExecution;
             yield return ChatStreamEvent.AssistantCompleted(availabilityMessage);
@@ -923,8 +955,8 @@ public sealed partial class ChatSessionService(
             throw new InvalidOperationException("This plain ordinary source does not issue canonical tool authority.");
 
         execution.Update(ChatExecutionStage.LoadingContext, "Loading Context");
-        var history = await (ordinaryOriginal is null ? conversations.GetContextMessagesAsync(conversation.Id, cancellationToken)
-            : ordinaryOriginal.Read(() => conversations.GetContextMessagesAsync(conversation.Id, cancellationToken), cancellationToken)).ConfigureAwait(false);
+        var history = await (ordinaryOriginal is null ? ReadOriginalHistoryAsync()
+            : ordinaryOriginal.Read(ReadOriginalHistoryAsync, cancellationToken)).ConfigureAwait(false);
 
         var contextBudget = (int)Math.Clamp(
             (long)(generationOptions?.ContextLimit ?? 32768) * 4L,
@@ -1764,8 +1796,8 @@ public sealed partial class ChatSessionService(
         var assistantMetadata = toolActivities.Count == 0 ? null : JsonSerializer.Serialize(new { toolActivities });
         var assistant = new ChatMessage(assistantId, conversation.Id, MessageRole.Assistant, buffer.ToString(), agentName, turnModel.Name, assistantMetadata, DateTimeOffset.UtcNow);
         if (!conversation.IsTemporary)
-            await (ordinaryOriginal is null ? conversations.AddMessageAsync(assistant, cancellationToken)
-                    : ordinaryOriginal.Write(() => conversations.AddMessageAsync(assistant, cancellationToken))).ConfigureAwait(false);
+            await (ordinaryOriginal is null ? WriteOriginalMessageAsync(assistant)
+                    : ordinaryOriginal.Write(() => WriteOriginalMessageAsync(assistant))).ConfigureAwait(false);
         if (taskCoordinator is not null && canonicalTask?.OwnerBinding is not null)
         {
             var current = await taskCoordinator.GetAsync(canonicalTask.TaskId, cancellationToken).ConfigureAwait(false)

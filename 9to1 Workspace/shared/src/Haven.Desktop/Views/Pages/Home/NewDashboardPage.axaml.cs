@@ -8,15 +8,16 @@ using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Controls;
 using Haven.Desktop.Events;
+using Haven.Desktop.ViewModels;
 using Haven.Desktop.HavenUI.Components;
 
 namespace Haven.Desktop.Views.Pages.Home;
 
 /// <summary>
-/// Mockup-native New Haven dashboard. The pinned shelf comes from the pin store;
+/// Source-backed Home dashboard. The pinned shelf comes from the pin store;
 /// every later row is derived from recent mode usage and conversation activity.
 /// </summary>
-public sealed partial class NewDashboardPage : UserControl, IDisposable
+public sealed partial class NewDashboardPage : UserControl, IActivatablePage, IDisposable
 {
     private const string PageStateKey = "dashboard.pages.v1";
     private const string HomePageId = "home";
@@ -35,6 +36,8 @@ public sealed partial class NewDashboardPage : UserControl, IDisposable
     private string _selectedPageId = HomePageId;
     private bool _pageStateLoaded;
     private bool _disposed;
+    private bool _dashboardActive;
+    private long _activationGeneration;
 
     public NewDashboardPage(
         HavenEventBus bus,
@@ -44,6 +47,7 @@ public sealed partial class NewDashboardPage : UserControl, IDisposable
         IConversationRepository conversations,
         IVersionedSettingsStore settings)
     {
+        _homeWork = new(StopHomeWorkAsync, DetachHomeWorkAsync);
         _bus = bus;
         _modes = modes;
         _usage = usage;
@@ -51,10 +55,17 @@ public sealed partial class NewDashboardPage : UserControl, IDisposable
         _conversations = conversations;
         _settings = settings;
         InitializeComponent();
+        LoadDashboardCui();
 
-        _clock = new DispatcherTimer(TimeSpan.FromMinutes(1), DispatcherPriority.Background, (_, _) => RefreshClock());
-        EditPinnedButton.Click += (_, _) => ManageAppsRequested?.Invoke(this, EventArgs.Empty);
-        EditWithHavenButton.Click += (_, _) => EditWithHavenRequested?.Invoke(this, EventArgs.Empty);
+        _clock = new DispatcherTimer(TimeSpan.FromMinutes(1), DispatcherPriority.Background, async (_, _) =>
+        {
+            RefreshClock();
+            if (_dashboardActive && !_disposed && _widgetDashboard is not null)
+                await RunHomeEventAsync(RefreshWidgetSurfaceAsync);
+        });
+        EditPinnedButton.Click += (_, _) => { if (!_homeWork.IsRetiring) ManageAppsRequested?.Invoke(this, EventArgs.Empty); };
+        EditWithHavenButton.Click += (_, _) => { if (!_homeWork.IsRetiring) EditWithHavenRequested?.Invoke(this, EventArgs.Empty); };
+        DiscoverModelsButton.Click += (_, _) => { if (!_homeWork.IsRetiring) DiscoverRequested?.Invoke(this, EventArgs.Empty); };
         AddPageButton.Click += (_, _) => ShowPageEditor(null);
         ConfigurePageButton.Click += (_, _) => ShowPageEditor(SelectedPage);
         Register("Dashboard.Pinned.Edit", EditPinnedButton);
@@ -68,33 +79,45 @@ public sealed partial class NewDashboardPage : UserControl, IDisposable
     public event EventHandler<Conversation>? ConversationRequested;
     public event EventHandler? ManageAppsRequested;
     public event EventHandler? EditWithHavenRequested;
+    public event EventHandler? DiscoverRequested;
 
-    public async Task ActivateAsync(CancellationToken cancellationToken)
+    public Task ActivateAsync(CancellationToken cancellationToken) => RunHomeWorkAsync(ActivateCoreAsync, cancellationToken);
+
+    private async Task ActivateCoreAsync(CancellationToken cancellationToken)
     {
         if (_disposed) return;
+        var generation = ++_activationGeneration;
+        _dashboardActive = true;
         _clock.Start();
         await EnsurePageStateLoadedAsync(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_disposed || !_dashboardActive || generation != _activationGeneration) return;
         if (_widgetDashboard is not null)
         {
             await RefreshWidgetSurfaceAsync(cancellationToken);
             return;
         }
-        await RefreshAsync(cancellationToken);
+        await RefreshAsync(generation, cancellationToken);
     }
 
     public void Deactivate()
     {
+        _dashboardActive = false;
+        _activationGeneration++;
         _clock.Stop();
         _widgetRefreshCancellation?.Cancel();
+        _dashboardAssistantCancellation?.Cancel();
     }
 
-    private async Task RefreshAsync(CancellationToken cancellationToken)
+    private async Task RefreshAsync(long generation, CancellationToken cancellationToken)
     {
-        var modesTask = _modes.GetModesAsync(cancellationToken);
-        var pinsTask = _pins.GetPinsAsync(cancellationToken);
-        var usageTask = _usage.GetRecentUsageAsync(90, cancellationToken);
-        var conversationsTask = _conversations.GetRecentAsync(null, 120, cancellationToken);
+        var modesTask = AwaitHomeSourceAsync(_modes.GetModesAsync(cancellationToken));
+        var pinsTask = AwaitHomeSourceAsync(_pins.GetPinsAsync(cancellationToken));
+        var usageTask = AwaitHomeSourceAsync(_usage.GetRecentUsageAsync(90, cancellationToken));
+        var conversationsTask = AwaitHomeSourceAsync(_conversations.GetRecentAsync(null, 120, cancellationToken));
         await Task.WhenAll(modesTask, pinsTask, usageTask, conversationsTask);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_disposed || !_dashboardActive || generation != _activationGeneration) return;
 
         _cachedModes = (await modesTask).Where(mode => mode.IsEnabled).ToArray();
         _cachedPins = await pinsTask;
@@ -105,6 +128,7 @@ public sealed partial class NewDashboardPage : UserControl, IDisposable
 
     private void RenderPage()
     {
+        if (_disposed || _homeWork.IsRetiring) return;
         if (_widgetDashboard is not null)
         {
             RenderWidgetPage();
@@ -125,10 +149,10 @@ public sealed partial class NewDashboardPage : UserControl, IDisposable
             if (modeById.TryGetValue(modeId, out var mode))
                 PinnedPanel.Children.Add(BuildModeCard(mode, page.IncludeAllPinned ? "Pinned app" : $"On {page.Title}"));
         }
-        PinnedEmptyText.IsVisible = PinnedPanel.Children.Count == 0;
-        PinnedEmptyText.Text = page.IncludeAllPinned
+        SetDashboardValue(PinnedEmptyText, "IsVisible", PinnedPanel.Children.Count == 0);
+        SetDashboardValue(PinnedEmptyText, "Text", page.IncludeAllPinned
             ? "Pin apps from the App launcher to keep them here."
-            : "Use Edit page to choose the Apps shown on this dashboard page.";
+            : "Use Edit page to choose the Apps shown on this dashboard page.");
 
         var usageByMode = _cachedUsage
             .GroupBy(item => item.ModeId)
@@ -201,7 +225,7 @@ public sealed partial class NewDashboardPage : UserControl, IDisposable
     private async Task EnsurePageStateLoadedAsync(CancellationToken cancellationToken)
     {
         if (_pageStateLoaded) return;
-        var stored = await _settings.GetAsync<DashboardPageState>(PageStateKey, cancellationToken);
+        var stored = await AwaitHomeSourceAsync(_settings.GetAsync<DashboardPageState>(PageStateKey, cancellationToken));
         if (stored is { Version: 1, Pages.Count: > 0 })
         {
             var valid = stored.Pages
@@ -226,7 +250,9 @@ public sealed partial class NewDashboardPage : UserControl, IDisposable
         _pageStateLoaded = true;
     }
 
-    private Task SavePageStateAsync(CancellationToken cancellationToken)
+    private Task SavePageStateAsync(CancellationToken cancellationToken) => RunHomeSaveAsync(() => SavePageStateCoreAsync(cancellationToken));
+
+    private Task SavePageStateCoreAsync(CancellationToken cancellationToken)
     {
         var normalized = _pages.Select((page, index) => page with
         {
@@ -241,6 +267,7 @@ public sealed partial class NewDashboardPage : UserControl, IDisposable
 
     private void RebuildPageTabs()
     {
+        if (_disposed || _homeWork.IsRetiring) return;
         PageTabsPanel.Children.Clear();
         foreach (var page in _pages.OrderBy(page => page.Order))
         {
@@ -252,16 +279,16 @@ public sealed partial class NewDashboardPage : UserControl, IDisposable
                 MinWidth = 82,
                 Height = 38
             };
-            button.Click += async (_, _) =>
+            button.Click += async (_, _) => await RunHomeEventAsync(async _ =>
             {
                 if (_disposed || page.Id.Equals(_selectedPageId, StringComparison.OrdinalIgnoreCase)) return;
                 _selectedPageId = page.Id;
                 await SavePageStateAsync(CancellationToken.None);
                 RenderPage();
-            };
+            });
             PageTabsPanel.Children.Add(button);
         }
-        ConfigurePageButton.IsEnabled = _pages.Count > 0;
+        SetDashboardValue(ConfigurePageButton, "IsEnabled", _pages.Count > 0);
     }
 
     private void ShowPageEditor(DashboardPageProfile? existing)
@@ -366,7 +393,7 @@ public sealed partial class NewDashboardPage : UserControl, IDisposable
                 Child = editor
             }
         };
-        save.Click += async (_, _) =>
+        save.Click += async (_, _) => await RunHomeEventAsync(async _ =>
         {
             var title = titleBox.Text?.Trim();
             if (string.IsNullOrWhiteSpace(title))
@@ -386,9 +413,9 @@ public sealed partial class NewDashboardPage : UserControl, IDisposable
             await SavePageStateAsync(CancellationToken.None);
             RenderPage();
             flyout.Hide();
-        };
+        });
         var deleteArmed = false;
-        remove.Click += async (_, _) =>
+        remove.Click += async (_, _) => await RunHomeEventAsync(async _ =>
         {
             if (!deleteArmed)
             {
@@ -401,8 +428,8 @@ public sealed partial class NewDashboardPage : UserControl, IDisposable
             await SavePageStateAsync(CancellationToken.None);
             RenderPage();
             flyout.Hide();
-        };
-        flyout.ShowAt(isNew ? AddPageButton : ConfigurePageButton);
+        });
+        ShowHomeEditor(flyout, isNew ? AddPageButton : ConfigurePageButton);
         titleBox.SelectAll();
         titleBox.Focus();
     }
@@ -453,9 +480,10 @@ public sealed partial class NewDashboardPage : UserControl, IDisposable
 
     private void RefreshClock()
     {
+        if (_disposed || _homeWork.IsRetiring) return;
         var now = DateTimeOffset.Now;
-        WelcomeText.Text = now.Hour < 12 ? "Good morning" : now.Hour < 18 ? "Good afternoon" : "Good evening";
-        DateText.Text = $"{now:h:mmtt} · {now:dddd d MMMM}";
+        SetDashboardValue(WelcomeText, "Text", now.Hour < 12 ? "Good morning" : now.Hour < 18 ? "Good afternoon" : "Good evening");
+        SetDashboardValue(DateText, "Text", $"{now:h:mmtt} · {now:dddd d MMMM}");
     }
 
     private void Register(string name, Control control)
@@ -469,10 +497,5 @@ public sealed partial class NewDashboardPage : UserControl, IDisposable
             ? brush
             : new SolidColorBrush(fallback);
 
-    public void Dispose()
-    {
-        if (_disposed) return;
-        _disposed = true;
-        _clock.Stop();
-    }
+    public void Dispose() => _homeWork.RequestRetirement();
 }

@@ -7,7 +7,7 @@ namespace HavenOS.Apps.Browse.Tests;
 
 // Explicit deterministic engine fixture: these tests certify Browse custody,
 // persistence and routing, not the platform renderer or installed authority.
-public sealed class BrowseNativeOwnershipTests
+public sealed partial class BrowseNativeOwnershipTests
 {
     private static readonly List<BrowseChrome> RetainedFailedOwners = [];
     [Fact]
@@ -47,12 +47,12 @@ public sealed class BrowseNativeOwnershipTests
         var history = Assert.Single(chrome.State.History);
         Assert.Equal("https://committed.example/final", history.Address);
         Assert.Equal("Committed title", history.Title);
-        Assert.Equal(new Uri(history.Address), chrome.State.SelectedTab.Address);
+        Assert.Equal(new Uri(history.Address), chrome.State.SelectedTab.Address.WebUri);
         var close = chrome.DisposeAsync().AsTask(); await close;
         Assert.Same(close, chrome.OriginalClose);
         await using var restored = await BrowseChrome.CreateAsync(paths);
         Assert.Equal(tabId, restored.State.SelectedTabId);
-        Assert.Equal(new Uri(history.Address), restored.State.SelectedTab.Address);
+        Assert.Equal(new Uri(history.Address), restored.State.SelectedTab.Address.WebUri);
         Assert.Equal(history, Assert.Single(restored.State.History));
     }
 
@@ -163,17 +163,65 @@ public sealed class BrowseNativeOwnershipTests
         Assert.Empty(reset.SiteOverrides); Assert.Equal(BrowseEngineKind.Chromium, reset.TabOverrides![originalId]);
     }
 
-    private sealed class ChromiumFixtureFactory : IBrowseEngineHostFactory, IBrowseEngineAvailability
+    [Theory]
+    [InlineData("https://other.example/")]
+    [InlineData("http://allowed.example/")]
+    [InlineData("https://allowed.example:8443/")]
+    public async Task Private_permission_grants_are_scoped_to_the_original_origin(string otherOrigin)
+    {
+        var paths = new PreservedPaths(); var factory = new ChromiumFixtureFactory();
+        await using var chrome = await BrowseChrome.CreateAsync(paths, factory);
+        await chrome.SetDefaultEngineAsync(BrowseEngineKind.Chromium);
+        var tab = (await chrome.NewTabAsync(true)).SelectedTab;
+        var host = Assert.Single(factory.Hosts);
+        host.CommitFixturePage(new Uri("https://allowed.example/first"), "Private");
+        await Task.WhenAll(chrome.OriginalNativeSources.ToArray());
+        await chrome.SetPermissionAsync(BrowserSitePermissionKind.Camera, BrowserSitePermissionDecision.Allow);
+        Assert.Equal(BrowserSitePermissionDecision.Allow,
+            chrome.ObserveOriginPermission(tab.Id, host, new Uri("https://allowed.example/second"), BrowserSitePermissionKind.Camera));
+
+        host.CommitFixturePage(new Uri(otherOrigin), "Other private origin");
+        await Task.WhenAll(chrome.OriginalNativeSources.ToArray());
+        Assert.Equal(BrowserSitePermissionDecision.Ask,
+            chrome.ObserveOriginPermission(tab.Id, host, new Uri(otherOrigin), BrowserSitePermissionKind.Camera));
+        await chrome.SetPermissionAsync(BrowserSitePermissionKind.Camera, BrowserSitePermissionDecision.Deny);
+
+        host.CommitFixturePage(new Uri("https://allowed.example/return"), "Original private origin");
+        await Task.WhenAll(chrome.OriginalNativeSources.ToArray());
+        Assert.Equal(BrowserSitePermissionDecision.Allow,
+            chrome.ObserveOriginPermission(tab.Id, host, new Uri("https://allowed.example/"), BrowserSitePermissionKind.Camera));
+        Assert.Empty(chrome.State.Permissions);
+        Assert.False(File.Exists(Path.Combine(paths.DataDirectory, "browser-site-permissions.json")));
+    }
+
+    [Fact]
+    public async Task Cancelled_private_permission_does_not_grant_access()
+    {
+        var paths = new PreservedPaths(); var factory = new ChromiumFixtureFactory();
+        await using var chrome = await BrowseChrome.CreateAsync(paths, factory);
+        await chrome.SetDefaultEngineAsync(BrowseEngineKind.Chromium);
+        var tab = (await chrome.NewTabAsync(true)).SelectedTab;
+        using var cancelled = new CancellationTokenSource(); cancelled.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => chrome.SetPermissionAsync(
+            BrowserSitePermissionKind.Camera, BrowserSitePermissionDecision.Allow, cancelled.Token));
+        Assert.Equal(BrowserSitePermissionDecision.Ask, chrome.ObserveOriginPermission(tab.Id,
+            factory.Hosts[0], tab.Address.WebUri!, BrowserSitePermissionKind.Camera));
+    }
+
+    private sealed class ChromiumFixtureFactory(bool includeGecko = false) : IBrowseEngineHostFactory, IBrowseEngineAvailability
     {
         public bool IsSupported => true;
         public string UnsupportedReason => "Fixture Chromium only";
         public List<BrowseEngineTabRequest> Requests { get; } = [];
         public List<FixtureTab> Hosts { get; } = [];
-        public bool IsEngineSupported(BrowseEngineKind engine) => engine == BrowseEngineKind.Chromium;
+        public BrowseEngineKind? FailEngine { get; set; }
+        public bool IsEngineSupported(BrowseEngineKind engine) => includeGecko || engine == BrowseEngineKind.Chromium;
         public string UnsupportedReasonFor(BrowseEngineKind engine) => "Fixture has no " + engine;
         public Task<IBrowseEngineTab> CreateAsync(BrowseEngineTabRequest request, CancellationToken token)
         {
-            token.ThrowIfCancellationRequested(); Requests.Add(request); var host = new FixtureTab(request); Hosts.Add(host);
+            token.ThrowIfCancellationRequested(); Requests.Add(request);
+            if (request.Engine == FailEngine) throw new IOException("Fixture engine startup failed.");
+            var host = new FixtureTab(request); Hosts.Add(host);
             return Task.FromResult<IBrowseEngineTab>(host);
         }
     }
@@ -185,6 +233,7 @@ public sealed class BrowseNativeOwnershipTests
         public event EventHandler<BrowsePopupRequest>? PopupRequested { add { } remove { } }
         public event EventHandler<BrowseEngineCrash>? Crashed { add { } remove { } }
         public int CloseCalls { get; private set; }
+        public List<string> WebNavigationCalls { get; } = [];
         public TaskCompletionSource OriginalCloseSource { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public void CommitFixturePage(Uri address, string title)
         {
@@ -193,11 +242,18 @@ public sealed class BrowseNativeOwnershipTests
         }
         public Task NavigateAsync(Uri address, CancellationToken token)
         { token.ThrowIfCancellationRequested(); State = State with { Address = address, IsLoading = true }; StateChanged?.Invoke(this, State); return Task.CompletedTask; }
-        public Task GoBackAsync(CancellationToken token) => Task.CompletedTask;
-        public Task GoForwardAsync(CancellationToken token) => Task.CompletedTask;
-        public Task ReloadAsync(CancellationToken token) => Task.CompletedTask;
-        public Task StopAsync(CancellationToken token) => Task.CompletedTask;
-        public Task<string?> ExecuteScriptAsync(string script, CancellationToken token) => Task.FromResult<string?>(null);
+        public Task GoBackAsync(CancellationToken token) { WebNavigationCalls.Add("back"); return Task.CompletedTask; }
+        public Task GoForwardAsync(CancellationToken token) { WebNavigationCalls.Add("forward"); return Task.CompletedTask; }
+        public Task ReloadAsync(CancellationToken token) { WebNavigationCalls.Add("reload"); return Task.CompletedTask; }
+        public Task StopAsync(CancellationToken token) { WebNavigationCalls.Add("stop"); return Task.CompletedTask; }
+        public Exception? ScriptFailure { get; set; }
+        public List<string> Scripts { get; } = [];
+        public Task<string?> ExecuteScriptAsync(string script, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested(); Scripts.Add(script);
+            return ScriptFailure is { } failure ? Task.FromException<string?>(failure)
+                : Task.FromResult<string?>(script.Contains("'zoomed'", StringComparison.Ordinal) ? "zoomed" : "found");
+        }
         public Task OpenDeveloperToolsAsync(CancellationToken token) => Task.CompletedTask;
         public ValueTask DisposeAsync()
         { CloseCalls++; OriginalCloseSource.TrySetResult(); return new(OriginalCloseSource.Task); }

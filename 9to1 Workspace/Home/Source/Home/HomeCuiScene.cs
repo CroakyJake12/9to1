@@ -66,14 +66,23 @@ public sealed class HomeCuiSurface : ICuiBindingContext, INotifyPropertyChanged
     public bool? AllowAIReorder => Layout?.AllowAiReorder;
     public string CatalogSummary => Snapshot is null ? "App catalogue is not connected" : $"{Snapshot.InstalledApps.Apps.Count} installed · {Snapshot.Catalog.Apps.Count} available";
     public string RuntimeSummary => Snapshot is null ? "Runtime status is not connected" : $"Runtime {Snapshot.Runtime.Runtime.State}; model {Snapshot.Runtime.Model.State}; voice {Snapshot.Runtime.Voice.State}";
-    public string BriefSummary => _tileContent.Count == 0 ? "No dashboard tiles have loaded." : string.Join("  ·  ", _tileContent.Values.Select(x => x.Summary));
+    public string BriefSummary
+    {
+        get
+        {
+            var summaries = Layout?.Tiles.Where(tile => tile.Visibility == HomeTileVisibility.Visible)
+                .OrderBy(tile => tile.Order).Where(tile => _tileContent.ContainsKey(tile.TileInstanceId))
+                .Select(tile => _tileContent[tile.TileInstanceId].Summary).ToArray() ?? [];
+            return summaries.Length == 0 ? "No dashboard tiles have loaded." : string.Join("  ·  ", summaries);
+        }
+    }
     public string DashboardTilesSummary => Layout is null || Layout.Tiles.Count == 0 ? "No dashboard tiles have been added." : string.Join("\n", Layout.Tiles
         .OrderBy(tile => tile.Order).Select(tile => $"{tile.TileType} · {tile.Size} · {(tile.Visibility == HomeTileVisibility.Visible ? "visible" : "hidden")}{(tile.Pinned ? " · pinned" : string.Empty)}{(tile.Locked ? " · locked" : string.Empty)}"));
     public string LibrarySummary => LibraryPage is null ? "Search authorised artifacts across your apps." : LibraryPage.Succeeded
         ? $"{LibraryPage.Items.Count} artifacts{(LibraryPage.HasMore ? " · more available" : string.Empty)}" : $"{LibraryPage.Code}: {LibraryPage.Message}";
     public string LibraryItemsSummary => LibraryItems.Count == 0 ? "No matching artifacts." : string.Join("\n", LibraryItems.Select(item =>
         $"{item.DisplayName} · {item.ArtifactType} · {item.OwnerApp} · {item.LastModified:g}"));
-    public string EventsSummary => EventsPage is null ? "No activity has been loaded." : EventsPage.Code == "Unavailable"
+    public string EventsSummary => EventsPage is null ? "No activity has been loaded." : !EventsPage.Succeeded
         ? EventsPage.Message : $"{EventsPage.Items.Count} activities{(EventsPage.Code == "Partial" ? " · some sources unavailable" : string.Empty)}";
     public string EventItemsSummary => EventItems.Count == 0 ? "No matching activity." : string.Join("\n", EventItems.Select(item =>
         $"{item.Timestamp:g} · {item.SourceApp} · {item.Summary}"));
@@ -133,10 +142,22 @@ public sealed class HomeCuiSurface : ICuiBindingContext, INotifyPropertyChanged
 
     public void ApplyLayout(HomeDashboardLayout layout)
     {
+        ArgumentNullException.ThrowIfNull(layout);
+        foreach (var id in _tileContent.Keys.ToArray())
+        {
+            var current = layout.Tiles.FirstOrDefault(tile => tile.TileInstanceId == id);
+            var previous = Layout?.Tiles.FirstOrDefault(tile => tile.TileInstanceId == id);
+            if (current is null || current.Visibility == HomeTileVisibility.Hidden || previous is null ||
+                current.ProviderId != previous.ProviderId || current.TileType != previous.TileType ||
+                !current.Configuration.OrderBy(item => item.Key).SequenceEqual(previous.Configuration.OrderBy(item => item.Key)) ||
+                !current.SourceEntityIds.SequenceEqual(previous.SourceEntityIds))
+                _tileContent.Remove(id);
+        }
         Layout = layout ?? throw new ArgumentNullException(nameof(layout));
         if (SelectedDashboardTileId is not null && !layout.Tiles.Any(x => x.TileInstanceId == SelectedDashboardTileId))
         { SelectedDashboardTileId = null; Notify(nameof(SelectedDashboardTileId)); }
         Notify(nameof(DashboardTilesSummary));
+        Notify(nameof(BriefSummary));
     }
     public bool SelectDashboardTile(string tileInstanceId)
     {
@@ -173,7 +194,13 @@ public sealed class HomeCuiSurface : ICuiBindingContext, INotifyPropertyChanged
         return true;
     }
     public void SetNavigationStatus(string status) => NavigationStatus = status ?? string.Empty;
-    public void ApplyTileContent(string tileId, HomeTileContent content) { _tileContent[tileId] = content; Notify(nameof(BriefSummary)); }
+    public void ApplyTileContent(string tileId, HomeTileContent content)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        if (Layout?.Tiles.Any(tile => tile.TileInstanceId == tileId && tile.Visibility == HomeTileVisibility.Visible) != true) return;
+        _tileContent[tileId] = content;
+        Notify(nameof(BriefSummary));
+    }
     public bool TryGetValue(string path, out object? value)
     {
         var key = path[(path.LastIndexOf('.') + 1)..];
@@ -205,6 +232,9 @@ public sealed class HomeCuiController(HomeDashboard dashboard, HomeCuiSurface? s
     IHomeFeatureNavigationHost? featureNavigation = null)
 {
     private readonly HomeDashboard _dashboard = dashboard ?? throw new ArgumentNullException(nameof(dashboard));
+    private long _libraryRefreshVersion;
+    private long _eventsRefreshVersion;
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, long> _tileRefreshVersions = new(StringComparer.Ordinal);
     public HomeNavigationState Navigation { get; } = navigation ?? new HomeNavigationState();
 
     public HomeCuiSurface Surface { get; } = surface ?? HomeCuiSurface.LoadDefault();
@@ -308,15 +338,21 @@ public sealed class HomeCuiController(HomeDashboard dashboard, HomeCuiSurface? s
 
     public async Task<HomeTileContent> RefreshTileAsync(string tileInstanceId, CancellationToken ct = default)
     {
+        var generation = _tileRefreshVersions.AddOrUpdate(tileInstanceId, 1, (_, prior) => prior + 1);
+        var revision = Surface.Layout?.Revision;
         var content = await Required(layoutService, "Dashboard layout").RefreshTileAsync(tileInstanceId, ct).ConfigureAwait(false);
-        Surface.ApplyTileContent(tileInstanceId, content);
+        ct.ThrowIfCancellationRequested();
+        if (_tileRefreshVersions[tileInstanceId] == generation && Surface.Layout?.Revision == revision)
+            Surface.ApplyTileContent(tileInstanceId, content);
         return content;
     }
 
     public async Task<HomeLibraryPage> SearchLibraryAsync(HomeLibraryQuery query, CancellationToken ct = default)
     {
+        var generation = Interlocked.Increment(ref _libraryRefreshVersion);
         var page = await Required(libraryService, "Library").SearchAsync(query, ct).ConfigureAwait(false);
-        Surface.ApplyLibraryPage(page);
+        ct.ThrowIfCancellationRequested();
+        if (Volatile.Read(ref _libraryRefreshVersion) == generation) Surface.ApplyLibraryPage(page);
         return page;
     }
 
@@ -335,8 +371,10 @@ public sealed class HomeCuiController(HomeDashboard dashboard, HomeCuiSurface? s
 
     public async Task<HomeEventsPage> RefreshEventsAsync(HomeEventsQuery query, CancellationToken ct = default)
     {
+        var generation = Interlocked.Increment(ref _eventsRefreshVersion);
         var page = await Required(eventsService, "Events").ListAsync(query, ct).ConfigureAwait(false);
-        Surface.ApplyEventsPage(page);
+        ct.ThrowIfCancellationRequested();
+        if (Volatile.Read(ref _eventsRefreshVersion) == generation) Surface.ApplyEventsPage(page);
         return page;
     }
 

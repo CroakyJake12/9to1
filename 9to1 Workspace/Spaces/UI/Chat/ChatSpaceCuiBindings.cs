@@ -32,7 +32,10 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
     {
         "chat.new", "chat.open", "chat.select-model", "chat.switch-branch",
         "chat.branch", "chat.regenerate", "chat.attach", "chat.remove-attachment",
-        "chat.send", "chat.clear-search", "chat.update-draft"
+        "chat.send", "chat.clear-search", "chat.update-draft",
+        "chat.copy", "chat.delete", "chat.forget", "chat.edit", "chat.cancel-edit",
+        "chat.set-action-mode", "chat.set-response-mode",
+        "chat.toggle-dual", "chat.select-second-model", "chat.select-dual-mode"
     };
 
     private readonly CuiViewModel _values = new();
@@ -42,6 +45,7 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
     private ChatSpaceViewState _snapshot = ChatSpaceViewState.Empty;
     private string _recentSearchQuery = string.Empty;
     private long _revision;
+    private bool _narrow;
 
     public ChatSpaceCuiBindings(
         Func<ChatSpaceViewState> state,
@@ -66,19 +70,15 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
     public void Refresh()
     {
         _snapshot = _state();
-        // Reads go through TryGetValue below rather than through this view model. CuiViewModel now
-        // resolves an exact key before falling back to the final path segment, so both approaches
-        // agree; resolving here anyway keeps every authored path listed in one place and means an
-        // unrecognised path is visibly absent instead of silently matching some other property.
-        //
-        // The scalar below exists only to carry a monotone publication marker. It is NOT what
-        // re-renders the document: the loader's notification filter re-applies a binding only when
-        // the raised property name matches that binding's authored path (or its last segment), so a
-        // notification named "Revision" matches neither `Conversation.Messages` nor
-        // `Composer.Draft` and the transcript would silently never refresh. A null property name is
-        // the loader's invalidate-everything signal, which is what a projection that recomputes
-        // every authored path on every publish must actually raise.
         _values.Set("Revision", _revision++);
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+    }
+
+    public void UpdateViewportWidth(double width)
+    {
+        var narrow = width > 0 && width < 720;
+        if (_narrow == narrow) return;
+        _narrow = narrow;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     }
 
@@ -105,10 +105,15 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
     /// </summary>
     public bool TryGetValue(string path, out object? value)
     {
-        var snapshot = _snapshot;
+        var snapshot = Snapshot;
         switch (path)
         {
-            case "RecentChats": value = snapshot.RecentChats; return true;
+            case "RecentChats": value = snapshot.RecentChats.Where(item => string.IsNullOrWhiteSpace(_recentSearchQuery) || item.Title.Contains(_recentSearchQuery, StringComparison.OrdinalIgnoreCase)).ToArray(); return true;
+            case "Layout.Columns": value = _narrow ? "1fr" : "220 1fr"; return true;
+            case "Layout.Rows": value = _narrow ? "Auto 1fr" : "1fr"; return true;
+            case "Layout.ConversationColumn": value = _narrow ? 0 : 1; return true;
+            case "Layout.ConversationRow": value = _narrow ? 1 : 0; return true;
+            case "Layout.RecentHeight": value = _narrow ? 160d : 100000d; return true;
             case "RecentSearchQuery": value = _recentSearchQuery; return true;
             case "Models": value = snapshot.Models; return true;
             case "Status.Message": value = snapshot.Status.Message; return true;
@@ -119,7 +124,19 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
             case "Composer.Draft": value = snapshot.Composer.Draft; return true;
             case "Composer.Attachments": value = snapshot.Composer.Attachments; return true;
             case "Composer.SelectedModelName": value = snapshot.Composer.SelectedModelName; return true;
-            case "Composer.CanSend": value = snapshot.Composer.CanSend; return true;
+            case "Composer.SelectedModelIndex": value = snapshot.Composer.SelectedModelIndex; return true;
+            case "Composer.CanSend": value = !snapshot.IsLoading && !snapshot.IsSafetyLocked && snapshot.Composer.CanSend; return true;
+            case "Composer.IsSending": value = snapshot.Composer.IsSending; return true;
+            case "Composer.IsEditing": value = snapshot.Composer.IsEditing; return true;
+            case "IsSafetyLocked": value = snapshot.IsSafetyLocked; return true;
+            case "SelectedBranchIndex": value = snapshot.SelectedBranchIndex; return true;
+            case "ThreadSettings.ActionMode": value = snapshot.ThreadSettings?.ActionMode ?? ChatActionMode.AllowBasicActions; return true;
+            case "ThreadSettings.ResponseMode": value = snapshot.ThreadSettings?.ResponseMode ?? GenerativeUiResponseMode.Auto; return true;
+            case "DualModel.IsActive": value = snapshot.DualModel?.IsActive ?? false; return true;
+            case "DualModel.SecondModelName": value = snapshot.DualModel?.SecondModelName; return true;
+            case "DualModel.SecondModelIndex": value = Array.FindIndex(snapshot.Models.ToArray(), model => model.Name.Equals(snapshot.DualModel?.SecondModelName, StringComparison.OrdinalIgnoreCase)); return true;
+            case "DualModel.IsRunning": value = snapshot.DualModel?.IsRunning ?? false; return true;
+            case "DualModel.Mode": value = snapshot.DualModel?.Mode ?? DuoMode.Solo; return true;
             default: value = null; return false;
         }
     }
@@ -131,21 +148,32 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
     /// </summary>
     public bool TrySetValue(string path, object? value)
     {
+        if (!Current) return false;
+        var snapshot = Snapshot;
         switch (path)
         {
             case "RecentSearchQuery":
                 _recentSearchQuery = Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
-                break;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+                return true;
             case "Composer.Draft":
-            case "Composer.SelectedModelName":
-                PublishWrite(path, value);
-                break;
-            default:
-                return false;
+                PublishWrite("chat.update-draft", value);
+                return true;
+            case "Composer.SelectedModelName" when value is string name && snapshot.Models.Any(model => model.Name == name):
+                PublishWrite("chat.select-model", name);
+                return true;
+            case "Composer.SelectedModelIndex" when value is int index && index >= 0 && index < snapshot.Models.Count:
+                // Resolve the identity from the exact collection which populated the selector.
+                PublishWrite("chat.select-model", snapshot.Models[index].Name);
+                return true;
+            case "DualModel.SecondModelIndex" when value is int index && index >= 0 && index < snapshot.Models.Count:
+                PublishWrite("chat.select-second-model", snapshot.Models[index].Name);
+                return true;
+            case "SelectedBranchIndex" when value is int index && snapshot.Conversation is { } conversation && index >= 0 && index < conversation.Branches.Count:
+                PublishWrite("chat.switch-branch", conversation.Branches[index].Id);
+                return true;
+            default: return false;
         }
-
-        Refresh();
-        return true;
     }
 
     public bool? IsActionAvailable(string command)
@@ -155,11 +183,21 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
             return null;
         }
 
+        if (!Current) return false;
         var snapshot = Snapshot;
+        if (snapshot.IsLoading) return false;
         return command switch
         {
-            "chat.send" => snapshot.Composer.CanSend,
-            "chat.branch" or "chat.regenerate" => true,
+            "chat.send" => !snapshot.IsSafetyLocked && snapshot.Composer.CanSend,
+            "chat.copy" => snapshot.Conversation is not null,
+            "chat.delete" => snapshot.Conversation is not null && !snapshot.Composer.IsSending,
+            "chat.forget" => snapshot.Conversation is not null && !snapshot.IsSafetyLocked && !snapshot.Composer.IsSending,
+            "chat.edit" => snapshot.Conversation is not null && !snapshot.IsSafetyLocked && !snapshot.Composer.IsSending,
+            "chat.branch" or "chat.regenerate" or "chat.switch-branch" => snapshot.Conversation is not null && !snapshot.IsSafetyLocked && !snapshot.Composer.IsSending,
+            "chat.attach" or "chat.remove-attachment" => !snapshot.IsSafetyLocked,
+            "chat.cancel-edit" => snapshot.Composer.IsEditing,
+            "chat.toggle-dual" => !snapshot.Composer.IsSending && snapshot.Models.Count >= 2,
+            "chat.select-second-model" => snapshot.DualModel?.IsActive == true,
             _ => true
         };
     }
@@ -168,8 +206,6 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
     {
         if (!KnownCommands.Contains(command))
         {
-            // An unknown command is a document defect, not a user error. Refusing it here keeps
-            // markup from naming anything the host has not explicitly admitted.
             throw new InvalidOperationException($"Chat Space CUI command '{command}' is not owned by this binding.");
         }
 
@@ -204,9 +240,14 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
                 "CreatedLabel" => message.CreatedLabel,
                 "Content" => message.Content,
                 "CanRegenerate" => message.CanRegenerate,
+                "CanEdit" => message.CanEdit,
+                "HasThinking" => message.HasThinking,
                 "Attachments" => message.Attachments,
                 "Citations" => message.Citations,
                 "ToolActivities" => message.ToolActivities,
+                "Thinking" => message.Thinking,
+                "IsStreaming" => message.IsStreaming,
+                "ProgressLabel" => message.ProgressLabel,
                 _ => null
             };
             return value is not null;
@@ -271,6 +312,10 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
     /// comes back through <see cref="Refresh"/>. This must not block the CUI write path on an
     /// async round trip, so the task is deliberately not awaited here.
     /// </summary>
-    private void PublishWrite(string path, object? value) =>
-        _ = _dispatch(path == "Composer.Draft" ? "chat.update-draft" : "chat.select-model", value, CancellationToken.None);
+    private void PublishWrite(string command, object? value)
+    {
+        if (IsActionAvailable(command) != true) return;
+        // The owning host retains and reports command failures through its original-work lifetime.
+        _ = _dispatch(command, value, CancellationToken.None);
+    }
 }

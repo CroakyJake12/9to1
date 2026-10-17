@@ -56,6 +56,8 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
     private sealed class OriginalPublication
     {
         internal Task<CuiSceneAvailability>? Show;
+        internal Func<bool>? IsPublicationCurrent;
+        internal long Generation;
         internal Task<CuiSceneAvailability>? Readiness;
         internal Task? ShowBody;
         internal Task? NativePublication;
@@ -85,6 +87,51 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
     /// <summary>The SAME optional-owner close, once requested. Completion is settlement, not action success.</summary>
     public Task? OriginalClose { get { lock (_originalGate) return _originalClose; } }
 
+    /// <summary>
+    /// Captures the actual loader action settlement for this same successfully shown,
+    /// currently mounted guarded publication. Call on the UI thread after action admission.
+    /// The snapshot includes already accepted actions, not future clicks, and is not a
+    /// success or authority witness. An external navigation owner must join it; an action
+    /// must never await a snapshot containing itself. A replacement Show cannot stand in
+    /// for the supplied original, and closing or retired publications refuse capture.
+    /// </summary>
+    public Task CaptureOriginalActionSettlement(Task<CuiSceneAvailability> originalShow)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        ArgumentNullException.ThrowIfNull(originalShow);
+        OriginalPublication publication;
+        lock (_originalGate)
+        {
+            publication = _originalPublications.FirstOrDefault(item => ReferenceEquals(item.Show, originalShow))
+                ?? throw new InvalidOperationException("Retain the exact guarded scene Show task to capture its actions.");
+            DemandSameMountedPublication();
+        }
+
+        bool current;
+        // The owner predicate is external code. Do not call it while holding the
+        // publication lock, and recheck custody if it retires or replaces the scene.
+        try { current = publication.IsPublicationCurrent!(); }
+        catch (Exception error) { AddOriginal(publication.Errors, error); throw; }
+        lock (_originalGate)
+        {
+            DemandSameMountedPublication();
+            if (!current)
+                throw new InvalidOperationException("The original scene owner no longer admits action settlement capture.");
+            return publication.Loader!.WhenActionsIdleAsync();
+        }
+
+        void DemandSameMountedPublication()
+        {
+            if (_ownerMode != 2 || _originalClose is not null || _disposed ||
+                !originalShow.IsCompletedSuccessfully || publication.IsPublicationCurrent is null ||
+                publication.Generation != Interlocked.Read(ref _generation) ||
+                publication.Retired || publication.DisposeAttempted || publication.Loader is null || publication.Root is null ||
+                !ReferenceEquals(_loader, publication.Loader) || !ReferenceEquals(_contentLoader, publication.Loader) ||
+                !ReferenceEquals(_contentRoot, publication.Root) || !ReferenceEquals(Content, publication.Root))
+                throw new InvalidOperationException("Only the same live mounted guarded scene can capture its action settlement.");
+        }
+    }
+
     public Task<CuiSceneAvailability> ShowAsync(CuiNativeScene scene, CancellationToken cancellationToken = default)
     {
         var predicate = scene?.IsPublicationCurrent;
@@ -111,7 +158,7 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
             if (_originalPublications.Count >= MaximumOriginalPublications)
                 return Task.FromException<CuiSceneAvailability>(OriginalCapacityRefusal());
             _ownerMode = 2;
-            publication = new OriginalPublication();
+            publication = new OriginalPublication { IsPublicationCurrent = predicate };
             original = publication.Show = RunOriginalShowAsync(start.Task, publication, scene!, predicate, cancellationToken);
             _originalPublications.Add(publication);
         }
@@ -288,6 +335,7 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
         ArgumentException.ThrowIfNullOrWhiteSpace(scene.Surface);
         using var request = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token, cancellationToken);
         var generation = Interlocked.Increment(ref _generation);
+        if (publication is not null) publication.Generation = generation;
         CuiSceneAvailability availability;
         try
         {

@@ -193,7 +193,7 @@ internal sealed class WindowsChromiumEngineTab : IBrowseNativeEngineTab, IBrowse
     {
         using var originalDriver = OriginalNativeInvocation.EnterDriver(this);
         await start.ConfigureAwait(false); token.ThrowIfCancellationRequested();
-        var originalUi = Dispatcher.UIThread.InvokeAsync(() =>
+        var originalUi = Dispatcher.UIThread.InvokeAsync<Task<T>>(() =>
         { using var invocation = OriginalNativeInvocation.EnterExternal(this); token.ThrowIfCancellationRequested(); return operation(); }).GetTask();
         lock (_sourceGate) _originalSources.Add(originalUi);
         var originalBody = await originalUi.ConfigureAwait(false);
@@ -243,7 +243,7 @@ internal sealed class WindowsChromiumEngineTab : IBrowseNativeEngineTab, IBrowse
         }
         if (_originalDownloadBridge is not null)
         {
-            var originalBridgeRequest = Dispatcher.UIThread.InvokeAsync(() => { using var invocation = OriginalNativeInvocation.EnterExternal(this); return _originalDownloadBridge.DisposeAsync().AsTask(); }).GetTask();
+            var originalBridgeRequest = Dispatcher.UIThread.InvokeAsync<Task>(() => { using var invocation = OriginalNativeInvocation.EnterExternal(this); return _originalDownloadBridge.DisposeAsync().AsTask(); }).GetTask();
             lock (_sourceGate) _originalSources.Add(originalBridgeRequest);
             try
             {
@@ -272,7 +272,7 @@ internal sealed class WindowsChromiumEngineTab : IBrowseNativeEngineTab, IBrowse
         {
             try
             {
-                var originalScopeRequest = Dispatcher.UIThread.InvokeAsync(() =>
+                var originalScopeRequest = Dispatcher.UIThread.InvokeAsync<Task>(() =>
                 {
                     using var invocation = OriginalNativeInvocation.EnterExternal(this);
                     _originalRetirementScopeClose ??= sameOriginalScope.DisposeAsync().AsTask();

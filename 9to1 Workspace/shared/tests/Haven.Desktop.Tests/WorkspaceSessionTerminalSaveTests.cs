@@ -165,6 +165,35 @@ public sealed class WorkspaceSessionTerminalSaveTests
         });
 
     [AvaloniaFact]
+    public Task Repository_aggregate_is_an_original_cause_even_when_its_message_matches_a_coordinator_receipt() =>
+        RunCaseAsync(async scope =>
+        {
+            var nested = new IOException("Original nested repository cause.");
+            var compound = new AggregateException("Original workspace saves or final snapshot failed.", nested);
+            var sibling = new IOException("Original repository sibling.");
+            scope.Repository.OnSave = write =>
+            {
+                if (write.Index == 0) write.Fail(compound, sibling);
+                else write.Complete();
+            };
+            var actual = scope.Track(scope.Coordinator.SaveNowAsync(CancellationToken.None));
+            var fault = await Assert.ThrowsAsync<AggregateException>(() => actual);
+            Assert.Equal(2, fault.InnerExceptions.Count);
+            Assert.Same(compound, fault.InnerExceptions[0]);
+            Assert.Same(sibling, fault.InnerExceptions[1]);
+            Assert.Same(nested, Assert.Single(compound.InnerExceptions));
+            scope.ExpectObservedFault(actual);
+            scope.ExpectObservedFault(Assert.Single(scope.Repository.Writes).OriginalTask);
+
+            var final = scope.Seal();
+            var finalFault = await Assert.ThrowsAsync<AggregateException>(() => final);
+            Assert.Equal(2, finalFault.InnerExceptions.Count);
+            Assert.Same(compound, finalFault.InnerExceptions[0]);
+            Assert.Same(sibling, finalFault.InnerExceptions[1]);
+            scope.ExpectObservedFault(final);
+        });
+
+    [AvaloniaFact]
     public Task Concurrent_held_cancellation_callback_is_joined_before_final_write_or_resource_disposal() =>
         RunCaseAsync(async scope =>
         {
@@ -374,6 +403,7 @@ public sealed class WorkspaceSessionTerminalSaveTests
         {
             Task? requested = null;
             Exception? refusal = null;
+            var callback = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             scope.RegisterPopUp();
             scope.Repository.OnSave = write =>
             {
@@ -383,10 +413,14 @@ public sealed class WorkspaceSessionTerminalSaveTests
                     {
                         requested = scope.Coordinator.SaveFinalSnapshotAndSealAsync(CancellationToken.None);
                         refusal = Assert.Throws<InvalidOperationException>(() => { _ = scope.Coordinator.JoinOriginalFinalSaveAsync(); });
+                        callback.SetResult();
                     }));
             };
             var held = await scope.Repository.NextAsync();
             var final = scope.Seal();
+            // Final save publishes before its gated driver invokes cancellation callbacks.
+            // Observe the actual callback instead of assuming it ran before Seal returned.
+            await callback.Task.WaitAsync(Bound);
             Assert.Same(final, requested);
             Assert.NotNull(refusal);
             Assert.False(final.IsCompleted);

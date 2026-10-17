@@ -107,7 +107,7 @@ public sealed partial class BrowseNativeWorkspace : IBrowserOriginalDownloadReco
         }
         var contents = _chrome.State.Tabs.Select(tab => _chrome.ObserveOriginalEngine(tab.Id))
             .OfType<IBrowseOriginalDownloadContentSource>().Select(source => WithinOriginalFiles(() => source.ObserveOriginalDownloadContent(actual)))
-            .Where(content => content is not null).Distinct(ReferenceEqualityComparer.Instance).ToArray();
+            .OfType<IBrowserOriginalDownloadContent>().Distinct<IBrowserOriginalDownloadContent>(ReferenceEqualityComparer.Instance).ToArray();
         if (contents.Length != 1 || !WithinOriginalFiles(() => service.OriginalContentOwner.IsIssuedOriginalContent(contents[0]!)))
         { _downloadFilesStatus = "This download has no active original transfer or Files registration. Recover its browser transfer to keep it in Files."; return; }
         _selectedDownloadId = actual.Id; _selectedOriginalContent = contents[0]!;
@@ -270,7 +270,7 @@ public sealed partial class BrowseNativeWorkspace : IBrowserOriginalDownloadReco
                 if (invocation.Active && ReferenceEquals(invocation.Owner, owner)) return true;
             return false;
         }
-        if (Contains(PhysicalFiles, this) || Contains(LogicalFiles.Value, this) || ReferenceEquals(LogicalDriver.Value, this))
+        if (Contains(PhysicalFiles, this) || Contains(LogicalFiles.Value, this) || IsInsideOriginalCommand())
             throw new InvalidOperationException("The original Files callback cannot join its own browser retirement.");
     }
 }

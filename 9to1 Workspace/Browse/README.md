@@ -1,32 +1,113 @@
 # Browse
 
-Browse owns its existing canonical tab/session, engine preference, history, bookmark, permission, private-profile, popup, recovery and completed-download state. `Core/HavenOS.Apps.Browse.Core.csproj` compiles those maintained source files once. The existing Haven.UI scene remains available in the legacy app assembly through type forwarding; the current native consumer uses canonical `framework/CUI/Runtime`, bundled Montserrat and authored `NativeUI/UI/BrowseWorkspace.cui`.
+Browse owns canonical tab/session, engine preferences, bookmarks, history,
+permissions, private profiles, popup policy, recovery and completed-download state.
+`Core/HavenOS.Apps.Browse.Core.csproj` compiles the maintained domain source once.
+`NativeUI/UI/BrowseWorkspace.cui` is the maintained canonical CUI shell. The legacy
+Haven.UI scene remains in the compatibility app assembly through type forwarding.
 
-The native surface binds real actions to the same `BrowseChrome`: tab creation/selection/closure, private tabs, navigation, back/forward/reload/stop, engine choices, bookmarks/history, site popup permissions, find/zoom, recovery and developer tools. Repeat rows use explicit maintained item bindings and current source-issued tab targets. Inactive native views stay mounted so tab selection does not destroy live renderer state. Requested addresses do not become visits until an original native committed-page event arrives; private visits/tabs remain excluded from the shared store.
+The native shell binds real operations to `BrowseChrome`, including tab selection,
+new/private/close, address/bookmark/history navigation, back/forward/reload/stop,
+engine preferences, popup permissions, find/zoom, recovery, developer tools and
+completed-download Files integration. Standard closed tabs can be reopened through
+the authored control or Ctrl+Shift+T; Ctrl+Shift+P opens a private tab. Up to 25
+closed standard tabs retain their canonical identity, placement and explicit
+engine preference in memory. Private tabs never enter this recovery list; this
+is not a persistent closed-tab history implementation. Current source-issued row targets guard
+against stale or foreign selections. Native tab views remain mounted while
+inactive, preserving their actual renderer state. Authored buttons reflect the
+same action availability enforced by command admission; editable inputs reflect
+workspace readiness/busy state.
 
-`NativeWindows` provides an actual Windows Chromium/Blink adapter through the maintained Avalonia.Controls.WebView 12.0.1 and WebView2 package. It preserves canonical tab IDs and engine/profile directories, sets typed Windows environment/profile/private properties, consumes real native navigation/script/security/permission events, and sends native page downloads through the existing approval service and transport rather than replaying URLs or inventing a ledger. Native retirement retains the same public asynchronous scope, its original disposal task and actual adapter destruction event. Metadata inspection verifies signatures only; Windows runtime, callback ordering and actual retirement still require owning qualification.
+Engine selection retains tab identity. Explicit tab choices override site rules;
+site rules override the default. Navigation resolves the destination rule before
+creating its renderer. An unavailable selected engine retains the destination and
+offers explicit engine choices. “Use site or default engine” removes a tab
+exception. Resetting a site rule preserves explicit tab choices. Engine-switch
+rollback retires a new renderer before recreating the previous backend.
 
-Firefox/Gecko remains the default primary choice. Chromium availability never certifies Firefox. The receiving donor directory contains provenance but no usable Gecko runtime supplier; an unavailable Firefox tab keeps its identity and preference and offers an explicit Chromium choice. No HTML/text stub, external system browser or relabeled Blink instance substitutes for Gecko.
+Private grants are keyed by canonical origin and permission kind within their
+private tab, never written to the standard permission store. Canceled permission
+or tab operations do not perform their initial mutation. Find and confirmed DOM
+zoom are tracked per tab. Zoom resets on an actual new committed document;
+requesting navigation alone is not evidence that the document changed. Session
+snapshots use one timestamp so the canonical tab order survives shared-store
+sorting and restart. A failed close retains valid selected state; a failed last-tab
+replacement exposes recovery for the same retired tab. Failed
+scripts cannot publish successful zoom or find state. Native committed-page
+receipts, rather than requested addresses, supply browsing history.
 
-The actual installed Home/root/profile bootstrap and launcher binding must supply `BrowseWindowsStartupAttempt` with original readiness, canonical paths and original policy/services. Constructor injection and local test readiness are not authority or production bootstrap completion. Until that producer exists, standalone installed startup remains unavailable. Full specification work—including Gecko, all internal namespace routes, split/group/workspace features, integrated pending-download controls, extensions, sync and broader browser product fit—remains open. This bounded slice does not mark Browse IMPLEMENTED, PACKAGEABLE, PACKAGED, SMOKE-PASSED or EXTENSIVELY VERIFIED.
+Built-in `browse://history`, `browse://bookmarks`, `browse://downloads` and
+`browse://settings` are real native CUI tabs through the canonical model, shared
+store and existing saved-entry/download/settings actions. They never load in a
+web renderer or enter web history. Native pages restore standard tab identity;
+private native tabs never persist or reopen. The exact allowlist rejects origin
+spoofing on built-in routes. The unified-host source now carries typed
+`AppContentAddress` values and retained native-app owners in the same tabs.
+`9to1://` never becomes a fake URI or a web search. Native owners revalidate
+canonical app resources and the original Home profile on initialization/restore;
+serialized profile metadata cannot authorize access. Deprecated Assistants routes
+canonicalize to Spaces. A separate Browse-owned factory supplies stable Home and
+NewTab tabs. Generic `cui://` remains refused pending its own scoped owner.
+Actual shared-host composition and the complete revised architecture still need
+acceptance beyond these source seams and deterministic lifecycle tests.
 
-Owning checks from the recovered repository root (not yet run for this slice):
+Native close preparation keeps host publication current until retirement is
+accepted. A veto leaves commands and the same view alive for retry. Accepted
+retirement starts actual owner close before joining held initialization; failed
+close retains the scene. An optional `IBrowseTabSessionPersistence` projects
+standard tabs and selection into the existing canonical workspace session owner,
+without duplicating its group/window/layout/pin schema or moving browser data.
+
+## Platform implementation and outstanding gates
+
+`NativeWindows` contains an actual Chromium/Blink adapter using the maintained
+Avalonia WebView and WebView2 packages. It consumes original native navigation,
+security, permission, crash and download callbacks; downloads use the existing
+approval owner and transport. Native retirement retains original asynchronous
+sources and actual adapter-destruction evidence.
+
+Firefox/Gecko remains the default, but no usable Gecko runtime supplier exists in
+this checkout. The declared `Source/FirefoxGecko/` donor and tracked gitlink were
+restored at exact pin `5836a062726f715fda621338a17b51aff30d0a8c`; see
+`Source/DONOR-PROVENANCE.md`. This source retrieval supplies no engine runtime.
+Chromium is never relabeled as Firefox, and an external browser or HTML
+stub does not replace the required embedded engine.
+
+`9to1.Browse` is a standalone executable with an authored CUI setup/recovery route.
+Normal Browse activation still requires an authentic installed Home/root/profile
+startup attempt. Test readiness and constructor injection do not supply installed
+authority. Actual installed startup, Gecko, full namespace routing, multi-profile
+workspaces, groups/splits/orientations, New Tab canvas, full Dulche integration,
+WebExtensions, Site Enhancers and engine update/rollback qualification remain open.
+See [the architecture and acceptance matrix](../../docs/architecture/browse.md).
+
+## Owning checks
+
+The last verified typed-host component snapshot passes **120 Core tests and 30 native
+CUI tests in each of Debug and Release**, with zero skipped. This includes native
+ownership, real CUI action queuing, unsaved-work retry, close ordering, alias
+restore and canonical session projection/save-source regressions. The previous
+Windows component evidence predates this migration and needs a separate rerun.
+A later source change guards direct Core Back/Forward/Reload/Stop calls before
+retaining navigation work, matching the UI's HTTP(S) restriction. Ten added
+regression rows are awaiting compilation and execution while the laptop power
+hold remains active; the counts above apply to the earlier verified snapshot.
+
+
+Run from the repository root, serializing builds with the other applications:
 
 ```sh
-dotnet test "9to1 Workspace/Browse/Tests/HavenOS.Apps.Browse.Tests.csproj" -c Debug
-dotnet test "9to1 Workspace/Browse/NativeUI/Tests/HavenOS.Apps.Browse.NativeUI.Tests.csproj" -c Debug
-dotnet test "9to1 Workspace/Browse/NativeWindows/Tests/HavenOS.Apps.Browse.NativeWindows.Tests.csproj" -c Debug -p:EnableWindowsTargeting=true
-dotnet build "9to1 Workspace/Browse/NativeWindows/HavenOS.Apps.Browse.NativeWindows.csproj" -c Debug -p:EnableWindowsTargeting=true
+dotnet test "9to1 Workspace/Browse/Tests/HavenOS.Apps.Browse.Tests.csproj" -c Debug -m:1 --disable-build-servers -p:UseSharedCompilation=false
+dotnet test "9to1 Workspace/Browse/Tests/HavenOS.Apps.Browse.Tests.csproj" -c Release -m:1 --disable-build-servers -p:UseSharedCompilation=false
+dotnet test "9to1 Workspace/Browse/NativeUI/Tests/HavenOS.Apps.Browse.NativeUI.Tests.csproj" -c Debug -m:1 --disable-build-servers -p:UseSharedCompilation=false
+dotnet test "9to1 Workspace/Browse/NativeUI/Tests/HavenOS.Apps.Browse.NativeUI.Tests.csproj" -c Release -m:1 --disable-build-servers -p:UseSharedCompilation=false
+dotnet test "9to1 Workspace/Browse/NativeWindows/Tests/HavenOS.Apps.Browse.NativeWindows.Tests.csproj" -c Debug -m:1 --disable-build-servers -p:UseSharedCompilation=false -p:EnableWindowsTargeting=true
 ```
 
-The new six Core controls exercise actual shared persistence, tab/profile isolation, source-scoped permission observation and retained original failure/close identities with explicit deterministic engine fixtures. The two native UI controls raise real authored CUI button events, await the same loader pipeline and validate current row identity across same-key refresh. They do not qualify the real Windows WebView, installed authority or full browser acceptance.
-
-The entity-action additive replaces saved-entry display strings with typed current-source rows. Bookmark/history buttons navigate by canonical current record ID; removed/foreign/stale targets decline before command admission. Reset site engine preference uses the maintained policy API, removes only the site setting and preserves genuine explicit tab choices. The site-preference action no longer creates an unrelated tab override. Three additional declared controls cover both reset paths and real authored saved-row clicks.
-
-Completed download records now have typed rows, but their canonical Home/Files open/reveal producer remains unavailable: the shared download record contains a legacy StoredPath/hash, not a source-issued HostedItemId. Legacy Process.Start is not imported as authority. Files owner confirmed no maintained canonical mapping; an actual original Files import/descriptor/open producer is required from shared composition before that journey can qualify.
-
-`NativeWindows/HavenOS.Apps.Browse.NativeWindows.csproj` now produces the standalone `9to1.Browse` executable. Normal direct launch mounts a canonical CUI setup/recovery surface without creating a profile or browsing against a fabricated Home session. `BrowseExecutable.RunFromOriginalStartup` is the actual desktop consumer of the retained startup attempt supplied by the authentic Home/root launcher: it awaits the same Home/Chrome/window initialization sources, publishes the same native Browse window, and retires its original setup scene through guarded CUI lifetime. Startup failures remain retained and readable as recovery status. The installed enrolled Home/root/launcher supplier is still missing, so normal installed native activation remains unqualified.
-
-The normal Browse scene now opts into the canonical guarded publication lifetime with the same workspace-owned withdrawal predicate. That predicate observes lifetime only and does not replace actual Home readiness or permission checks. SDK/actual executable/Windows runtime tests remain UNRUN; neither an executable nor its setup branch marks the whole app complete.
-
-Two additional standalone controls exercise the actual canonical missing-Home screen and its original scene close, plus the real window close joining the same admitted startup driver and retaining a failed close on retry. Explicit fixture drivers do not provide production Home authority. The parent publication driver settles before the separately acquired handoff close, so setup retirement joins its original parent without a self-cycle. Logical and synchronous physical owner preflights remain in force during native/startup callbacks. All seventeen newly declared Browse controls remain compiler/discovery/runtime UNRUN.
+Core tests use explicit deterministic engine fixtures. NativeUI tests use the real
+CUI loader, authored actions, original-source lifetime and headless rendering,
+with explicit engine/readiness/Files doubles. Optional
+`BROWSE_EVIDENCE_DIRECTORY` records rendered desktop/narrow screenshots for all
+four appearances. None of this certifies a real Gecko/WebView renderer, an
+installed Home authority, Windows/Linux device behavior, or full Browse acceptance.

@@ -103,19 +103,28 @@ public sealed class ChatSpaceControllerRoutingTests
             return Task.FromResult(NextAttachment ?? throw new InvalidOperationException("no attachment configured"));
         }
 
-        public Task RemoveAttachmentAsync(Guid attachmentId, CancellationToken cancellationToken)
+        public Task RemoveAttachmentAsync(Guid conversationId, Guid? branchId, Guid attachmentId, CancellationToken cancellationToken)
         {
             Calls.Add(nameof(RemoveAttachmentAsync));
             RemovedAttachments.Add(attachmentId);
             return Task.CompletedTask;
         }
 
-        public Task SendAsync(ChatSpaceTurnRequest request, CancellationToken cancellationToken)
+        public Task SendAsync(ChatSpaceTurnRequest request, IProgress<ChatStreamEvent>? progress, CancellationToken cancellationToken)
         {
             Calls.Add(nameof(SendAsync));
             Sent.Add(request);
             return Task.CompletedTask;
         }
+
+        public Task<ConversationSafetySnapshot> GetSafetySnapshotAsync(Guid conversationId, CancellationToken cancellationToken) =>
+            Task.FromResult(new ConversationSafetySnapshot(conversationId, 0, ConversationSafetyState.Active, null, 0));
+        public Task<string> GetMessageContentAsync(Guid conversationId, Guid messageId, CancellationToken cancellationToken) =>
+            Task.FromResult(_conversations[conversationId].Messages.Single(message => message.Id == messageId).Content);
+        public Task DeleteMessageAsync(Guid conversationId, Guid messageId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task ForgetMessageAsync(Guid conversationId, Guid messageId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task EditUserMessageAsync(Guid conversationId, Guid messageId, string content, MessageEditMode mode, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<DualModelRun> RunDualAsync(string prompt, ModelDescriptor first, string secondModelName, DuoMode mode, CancellationToken cancellationToken) => throw new NotSupportedException();
 
         public Task<ConversationBranch> CreateBranchAsync(Guid conversationId, Guid messageId, string? name,
             CancellationToken cancellationToken)
@@ -339,9 +348,9 @@ public sealed class ChatSpaceControllerRoutingTests
         public Task<MessageAttachment> ImportAttachmentAsync(Guid conversationId, Guid? branchId, string path, CancellationToken cancellationToken)
             => throw new NotSupportedException();
 
-        public Task RemoveAttachmentAsync(Guid attachmentId, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task RemoveAttachmentAsync(Guid conversationId, Guid? branchId, Guid attachmentId, CancellationToken cancellationToken) => Task.CompletedTask;
 
-        public Task SendAsync(ChatSpaceTurnRequest request, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task SendAsync(ChatSpaceTurnRequest request, IProgress<ChatStreamEvent>? progress, CancellationToken cancellationToken) => Task.CompletedTask;
 
         public Task<ConversationBranch> CreateBranchAsync(Guid conversationId, Guid messageId, string? name, CancellationToken cancellationToken)
         {
@@ -355,5 +364,13 @@ public sealed class ChatSpaceControllerRoutingTests
 
         public Task RegenerateAsync(Guid conversationId, Guid assistantMessageId, ModelDescriptor model, CancellationToken cancellationToken)
             => throw new NotSupportedException();
+        public Task<ConversationSafetySnapshot> GetSafetySnapshotAsync(Guid conversationId, CancellationToken cancellationToken) =>
+            Task.FromResult(new ConversationSafetySnapshot(conversationId, 0, ConversationSafetyState.Active, null, 0));
+        public Task<string> GetMessageContentAsync(Guid conversationId, Guid messageId, CancellationToken cancellationToken) =>
+            Task.FromResult(data.Messages.Single(message => message.Id == messageId).Content);
+        public Task DeleteMessageAsync(Guid conversationId, Guid messageId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task ForgetMessageAsync(Guid conversationId, Guid messageId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task EditUserMessageAsync(Guid conversationId, Guid messageId, string content, MessageEditMode mode, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<DualModelRun> RunDualAsync(string prompt, ModelDescriptor first, string secondModelName, DuoMode mode, CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 }

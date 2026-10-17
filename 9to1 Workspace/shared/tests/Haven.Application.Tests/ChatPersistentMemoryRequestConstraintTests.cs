@@ -156,6 +156,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
     {
         internal readonly List<OllamaChatRequest> Requests = [];
         internal readonly List<OllamaToolRequest> ToolRequests = [];
+        internal Action? BeforeChatDispatch;
         internal OllamaToolCall? NextControlledToolCall;
         public Task<bool> IsAvailableAsync(CancellationToken token) => Task.FromResult(true);
         public Task<IReadOnlyList<ModelDescriptor>> GetModelsAsync(CancellationToken token) =>
@@ -163,7 +164,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
         public async IAsyncEnumerable<string> StreamChatAsync(OllamaChatRequest request,
             [EnumeratorCancellation] CancellationToken token)
         {
-            token.ThrowIfCancellationRequested(); Requests.Add(request);
+            token.ThrowIfCancellationRequested(); BeforeChatDispatch?.Invoke(); Requests.Add(request);
             await Task.CompletedTask; yield return "Controlled response.";
         }
         public Task<string> CompleteAsync(OllamaChatRequest request, CancellationToken token) =>

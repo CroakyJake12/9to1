@@ -10,4 +10,6 @@
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Haven.Desktop.Tests")]
+[assembly: InternalsVisibleTo("HavenOS.Home.Presentation.Tests")]
+[assembly: InternalsVisibleTo("HavenOS.Browse.Host.Tests")]
 [assembly: InternalsVisibleTo("Haven.Console.Tests")]

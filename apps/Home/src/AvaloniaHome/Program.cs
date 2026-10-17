@@ -299,7 +299,11 @@ internal sealed partial class HomeApp : Application
 
     private async Task RefreshAsync()
     {
-        ApplySnapshot(await _controller.RefreshAsync());
+        await RunWorkspaceActionAsync(async () =>
+        {
+            ApplySnapshot(await _controller.RefreshAsync());
+            await RefreshWorkspaceAsync();
+        });
     }
 
     private async Task InstallAllAsync()
@@ -321,8 +325,9 @@ internal sealed partial class HomeApp : Application
         _viewModel.Set(nameof(HomeCuiSurface.IsEvents), _controller.Surface.IsEvents);
         _viewModel.Set("CatalogSummary", snapshot.Catalog.Status.Message);
         _viewModel.Set("RuntimeSummary", snapshot.Runtime.Runtime.Message);
-        _viewModel.Set("EventsSummary", "An events provider is not configured in this host.");
+        _viewModel.Set("EventsSummary", _controller.Surface.EventsSummary);
         _viewModel.Set("OperationSummary", $"{snapshot.LastOperation.State}: {snapshot.LastOperation.Message}");
+        _viewModel.SetActionAvailability("InstallAllUpdates", snapshot.CanInstallAll);
         ApplyWorkspaceBindings();
         _loader?.RefreshBindings();
     }

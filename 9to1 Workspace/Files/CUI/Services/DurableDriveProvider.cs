@@ -94,7 +94,7 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
     /// store revision and parent/item revisions are checked inside the metadata transaction;
     /// the supplied guard holds the same claimed Home fence through durable publication.</summary>
     public Task<FilesResult<FilesOperation>> CommitNativeBrowserStructureAsync(FilesOperation operation,
-        string newName, Guid originalStoreId, string originalStoreRevision,
+        string? newName, Guid originalStoreId, string originalStoreRevision,
         IReadOnlyList<FilesItemRevisionPrecondition> originalParents, FilesCommitAuthorityGuard originalAuthority,
         CancellationToken cancellationToken)
     {
@@ -104,11 +104,17 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
         if (originalStoreId == Guid.Empty || string.IsNullOrWhiteSpace(originalStoreRevision)
             || operation.State != FilesOperationState.Pending || operation.Id.Value == Guid.Empty
             || operation.ItemId.Value == Guid.Empty || operation.ActorId != _owner || originalAuthority.ActorId != _owner
-            || operation.Operation is not ("CreateFolder" or "Rename") || parents.Length > 1
+            || operation.Operation is not ("CreateFolder" or "Rename" or "Move" or "Delete" or "Restore") || parents.Length > 2
             || parents.Any(parent => parent is null || parent.ItemId.Value == Guid.Empty || parent.ExpectedRevision is null)
+            || parents.Select(parent => parent.ItemId).Distinct().Count() != parents.Length
             || operation.Operation == "CreateFolder" && (operation.BaseRevisionId is not null
                 || operation.DestinationParentId is not { } destination || parents.Length != 1 || parents[0].ItemId != destination)
-            || operation.Operation == "Rename" && operation.BaseRevisionId is null)
+            || operation.Operation != "CreateFolder" && operation.BaseRevisionId is null
+            || operation.Operation is "Delete" or "Restore" or "Move" && newName is not null
+            || operation.Operation != "Move" && parents.Length > 1
+            || operation.Operation == "Move" && (operation.DestinationParentId is not { } moveDestination
+                || !parents.Any(parent => parent.ItemId == moveDestination)
+                || operation.SourceParentId is { } sourceParent && !parents.Any(parent => parent.ItemId == sourceParent)))
             return Task.FromResult(Fail<FilesOperation>(FilesErrorCode.PermissionDenied,
                 "Retain the exact native browser operation, original store/parents and held Home commit guard.", operation.Operation, operation.ItemId));
         return MutateCoreAsync(operation, newName, originalStoreId, parents, originalAuthority,
@@ -156,8 +162,14 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
             { result = Fail<FilesOperation>(FilesErrorCode.ItemNotFound, "Invalid target identity.", operation.Operation, operation.ItemId); return state; }
             if (!create && !IsVisible(state, existing!) && operation.Operation != "Restore")
             { result = Fail<FilesOperation>(FilesErrorCode.ItemNotFound, "Item is in Trash.", operation.Operation, operation.ItemId); return state; }
+            if (operation.Operation == "Restore" && !existing!.Deleted)
+            { result = Fail<FilesOperation>(FilesErrorCode.InvalidState, "Only a deleted item can be restored.", operation.Operation, operation.ItemId); return state; }
             if (!create && operation.BaseRevisionId != existing!.Metadata.CurrentRevisionId)
             { result = Fail<FilesOperation>(FilesErrorCode.RevisionConflict, "The item changed; refresh before retrying.", operation.Operation, operation.ItemId); return state; }
+            if (operation.Operation == "Move" && operation.SourceParentId != existing!.Metadata.ParentId)
+            { result = Fail<FilesOperation>(FilesErrorCode.RevisionConflict, "The original source folder changed; refresh before moving.", operation.Operation, operation.ItemId); return state; }
+            if (operation.Operation == "Move" && operation.DestinationParentId == existing!.Metadata.ParentId)
+            { result = Fail<FilesOperation>(FilesErrorCode.InvalidState, "The item is already in this folder.", operation.Operation, operation.ItemId); return state; }
             var name = create || operation.Operation == "Rename" ? newName : existing!.Metadata.Name;
             if (string.IsNullOrWhiteSpace(name) || name is "." or ".." || name.IndexOfAny(['/', '\\', '\0']) >= 0)
             { result = Fail<FilesOperation>(FilesErrorCode.InvalidName, "Name must be a single non-empty path component.", operation.Operation, operation.ItemId); return state; }

@@ -219,9 +219,16 @@ public sealed class BuiltInModeSeed
         { InvocationOperability = new(AppOperabilityClassification.OrdinaryApplication, AppOperabilityPath.TypedApi) },
         new ModeDefinition(
             Guid.Parse("a0000000-0000-0000-0000-000000000029"),
-            "assistants", "Assistants", "Create personal Assistants and continue their conversations and work", "user",
+            "assistants", "Assistants", "Open Assistants within Spaces (legacy application link)", "user",
             HavenMode.Chat, "[\"Assistants\"]", "[]", "[]", "[]", "",
             ModeSource.BuiltIn, ModeInstallState.BuiltIn, "Haven", "1.0.0", "[\"general\",\"productivity\"]",
+            DateTimeOffset.MinValue, DateTimeOffset.MinValue)
+        { InvocationOperability = new(AppOperabilityClassification.OrdinaryApplication, AppOperabilityPath.TypedApi) },
+        new ModeDefinition(
+            Guid.Parse("a0000000-0000-0000-0000-000000000030"),
+            "files", "Files", "Browse and manage your files", "folder",
+            HavenMode.Chat, "[\"Files\"]", "[]", "[]", "[]", "",
+            ModeSource.BuiltIn, ModeInstallState.BuiltIn, "Haven", "1.0.0", "[\"productivity\"]",
             DateTimeOffset.MinValue, DateTimeOffset.MinValue)
         { InvocationOperability = new(AppOperabilityClassification.OrdinaryApplication, AppOperabilityPath.TypedApi) }
     ];

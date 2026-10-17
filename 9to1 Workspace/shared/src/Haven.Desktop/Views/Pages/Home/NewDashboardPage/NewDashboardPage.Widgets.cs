@@ -30,6 +30,7 @@ public sealed partial class NewDashboardPage
     private DashboardWidgetLayoutState? _widgetLayoutState;
     private IReadOnlyList<DashboardWidgetViewState> _widgetViews = [];
     private CancellationTokenSource? _widgetRefreshCancellation;
+    private Task? _widgetRefreshTask;
     private bool _widgetCustomizing;
     private bool _widgetRefreshInProgress;
     private bool _widgetWorkspaceConfigured;
@@ -37,9 +38,9 @@ public sealed partial class NewDashboardPage
     private StackPanel? _widgetHiddenHost;
     private WrapPanel? _widgetHiddenPanel;
     private TextBlock? _widgetHiddenEmpty;
-    private HavenButton? _widgetArrangeButton;
-    private HavenButton? _widgetUndoButton;
-    private HavenButton? _widgetRedoButton;
+    private Button? _widgetArrangeButton;
+    private Button? _widgetUndoButton;
+    private Button? _widgetRedoButton;
 
     public NewDashboardPage(
         HavenEventBus bus,
@@ -73,56 +74,19 @@ public sealed partial class NewDashboardPage
         _widgetWorkspaceConfigured = true;
         DynamicRowsPanel.Children.Clear();
 
-        var toolbar = new Grid
-        {
-            ColumnDefinitions = new ColumnDefinitions("*,Auto,Auto,Auto,Auto,Auto"),
-            ColumnSpacing = 8
-        };
-        var heading = new StackPanel { Spacing = 2, VerticalAlignment = VerticalAlignment.Center };
-        heading.Children.Add(new TextBlock { Text = "Widgets", FontSize = 18, FontWeight = FontWeight.ExtraBold });
-        heading.Children.Add(new TextBlock { Text = "Drag and resize while arranging. Changes save to this dashboard page.", Classes = { "muted" }, FontSize = 11 });
-        toolbar.Children.Add(heading);
-
-        var addWidget = new HavenButton { Content = "+ Widget", Classes = { "subtle" } };
-        addWidget.Click += (_, _) => ShowCustomWidgetEditor(null, addWidget);
-        Grid.SetColumn(addWidget, 1);
-        toolbar.Children.Add(addWidget);
-
-        var refresh = new HavenButton { Content = "Refresh", Classes = { "subtle" } };
-        refresh.Click += async (_, _) => await RefreshWidgetSurfaceAsync(CancellationToken.None);
-        Grid.SetColumn(refresh, 2);
-        toolbar.Children.Add(refresh);
-
-        _widgetUndoButton = new HavenButton { Content = "Undo", Classes = { "subtle" }, IsEnabled = false };
-        _widgetUndoButton.Click += (_, _) => _widgetCanvas.Undo();
-        Grid.SetColumn(_widgetUndoButton, 3);
-        toolbar.Children.Add(_widgetUndoButton);
-
-        _widgetRedoButton = new HavenButton { Content = "Redo", Classes = { "subtle" }, IsEnabled = false };
-        _widgetRedoButton.Click += (_, _) => _widgetCanvas.Redo();
-        Grid.SetColumn(_widgetRedoButton, 4);
-        toolbar.Children.Add(_widgetRedoButton);
-
-        _widgetArrangeButton = new HavenButton { Content = "Arrange", Classes = { "subtle" } };
-        _widgetArrangeButton.Click += (_, _) =>
+        SetDashboardValue(_widgetControls!, "IsVisible", true);
+        AddWidgetButton.Click += (_, _) => ShowCustomWidgetEditor(null, AddWidgetButton);
+        RefreshWidgetsButton.Click += async (_, _) => await RunHomeEventAsync(RefreshWidgetSurfaceAsync);
+        _widgetUndoButton!.Click += (_, _) => _widgetCanvas.Undo();
+        _widgetRedoButton!.Click += (_, _) => _widgetCanvas.Redo();
+        _widgetArrangeButton!.Click += (_, _) =>
         {
             _widgetCustomizing = !_widgetCustomizing;
             _widgetCanvas.SetCustomizing(_widgetCustomizing);
-            _widgetArrangeButton.Content = _widgetCustomizing ? "Done arranging" : "Arrange";
+            SetDashboardValue(_widgetArrangeButton, "Content", _widgetCustomizing ? "Done arranging" : "Arrange");
             RebuildHiddenWidgetPalette();
             RefreshWidgetToolbar();
         };
-        Grid.SetColumn(_widgetArrangeButton, 5);
-        toolbar.Children.Add(_widgetArrangeButton);
-
-        _widgetStatus = new TextBlock
-        {
-            Text = "Loading dashboard widgets…",
-            Classes = { "muted" },
-            FontSize = 12,
-            TextWrapping = TextWrapping.Wrap
-        };
-
         _widgetHiddenPanel = new WrapPanel { Orientation = Orientation.Horizontal };
         _widgetHiddenEmpty = new TextBlock { Text = "No hidden widgets.", Classes = { "muted2" }, FontSize = 11 };
         _widgetHiddenHost = new StackPanel { Spacing = 7, IsVisible = false };
@@ -136,14 +100,13 @@ public sealed partial class NewDashboardPage
             if (!TryOpenCustomWidget(actionKey)) DashboardActionRequested?.Invoke(this, actionKey);
         };
 
-        DynamicRowsPanel.Children.Add(toolbar);
-        DynamicRowsPanel.Children.Add(_widgetStatus);
         DynamicRowsPanel.Children.Add(_widgetCanvas);
         DynamicRowsPanel.Children.Add(_widgetHiddenHost);
     }
 
     private void RenderWidgetPage()
     {
+        if (_disposed || _homeWork.IsRetiring) return;
         if (_widgetDashboard is null || !_widgetWorkspaceConfigured) return;
         RebuildPageTabs();
         RefreshClock();
@@ -157,29 +120,47 @@ public sealed partial class NewDashboardPage
                 provider.Definition, null, DashboardWidgetDataState.Loading)));
         _widgetViews = views;
         _widgetCanvas.SetWidgets(views, placements, _widgetCustomizing);
-        if (_widgetStatus is not null && _widgetRefreshInProgress) _widgetStatus.Text = "Refreshing live widget data…";
+        if (_widgetStatus is not null && _widgetRefreshInProgress) SetDashboardValue(_widgetStatus, "Text", "Refreshing live widget data…");
         RebuildHiddenWidgetPalette();
         RefreshWidgetToolbar();
         if (_widgetViews.Count == 0 && !_widgetRefreshInProgress)
             _ = RefreshWidgetSurfaceAsync(CancellationToken.None);
     }
 
-    private async Task RefreshWidgetSurfaceAsync(CancellationToken cancellationToken)
+    private Task RefreshWidgetSurfaceAsync(CancellationToken cancellationToken) => RunHomeWorkAsync(RefreshWidgetSurfaceWorkAsync, cancellationToken);
+
+    private Task RefreshWidgetSurfaceWorkAsync(CancellationToken cancellationToken)
     {
-        if (_widgetDashboard is null || _widgetRefreshInProgress) return;
+        if (_widgetDashboard is null || _disposed || !_dashboardActive) return Task.CompletedTask;
+        if (_widgetRefreshTask is { IsCompleted: false } pending)
+            return _widgetRefreshCancellation?.IsCancellationRequested == true
+                ? RestartWidgetRefreshAfterCancellationAsync(pending, cancellationToken)
+                : pending.WaitAsync(cancellationToken);
+        return _widgetRefreshTask = RefreshWidgetSurfaceCoreAsync(cancellationToken);
+    }
+
+    private async Task RestartWidgetRefreshAfterCancellationAsync(Task pending, CancellationToken cancellationToken)
+    {
+        await pending.WaitAsync(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        await RefreshWidgetSurfaceAsync(cancellationToken);
+    }
+
+    private async Task RefreshWidgetSurfaceCoreAsync(CancellationToken cancellationToken)
+    {
         _widgetRefreshCancellation?.Cancel();
         _widgetRefreshCancellation?.Dispose();
         _widgetRefreshCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var token = _widgetRefreshCancellation.Token;
         _widgetRefreshInProgress = true;
-        if (_widgetStatus is not null) _widgetStatus.Text = "Refreshing live widget data…";
+        if (_widgetStatus is not null) SetDashboardValue(_widgetStatus, "Text", "Refreshing live widget data…");
 
         string finalStatus;
         try
         {
             await EnsureCustomWidgetStateLoadedAsync(token);
             await EnsureWidgetLayoutStateLoadedAsync(token);
-            var snapshot = await _widgetDashboard.GetSnapshotAsync(DateTimeOffset.UtcNow, token);
+            var snapshot = await AwaitHomeSourceAsync(_widgetDashboard!.GetSnapshotAsync(DateTimeOffset.UtcNow, token));
             token.ThrowIfCancellationRequested();
             var staleSnapshot = DateTimeOffset.UtcNow - snapshot.CapturedAt > WidgetStaleAfter;
             var loaded = await Task.WhenAll(_widgetProviders.Select(provider => LoadWidgetAsync(provider, snapshot, staleSnapshot, token)));
@@ -201,6 +182,7 @@ public sealed partial class NewDashboardPage
         }
         catch (Exception ex)
         {
+            if (token.IsCancellationRequested || _disposed || !_dashboardActive) return;
             _widgetViews = AppendCustomWidgetViews(_widgetProviders.Select(provider =>
             {
                 if (_widgetCache.TryGetValue(provider.Definition.Key, out var cached))
@@ -216,8 +198,9 @@ public sealed partial class NewDashboardPage
             _widgetRefreshInProgress = false;
         }
 
+        if (token.IsCancellationRequested || _disposed || !_dashboardActive) return;
         RenderWidgetPage();
-        if (_widgetStatus is not null) _widgetStatus.Text = finalStatus;
+        if (_widgetStatus is not null) SetDashboardValue(_widgetStatus, "Text", finalStatus);
     }
 
     private async Task<(DashboardWidgetViewState View, DashboardTileData? FreshData)> LoadWidgetAsync(
@@ -228,7 +211,7 @@ public sealed partial class NewDashboardPage
     {
         try
         {
-            var data = await provider.GetDataAsync(snapshot, token);
+            var data = await AwaitHomeSourceAsync(provider.GetDataAsync(snapshot, token));
             return (new DashboardWidgetViewState(
                 provider.Definition,
                 data,
@@ -249,7 +232,7 @@ public sealed partial class NewDashboardPage
     private async Task EnsureWidgetLayoutStateLoadedAsync(CancellationToken token)
     {
         if (_widgetLayoutState is not null) return;
-        var stored = await _settings.GetAsync<DashboardWidgetLayoutState>(WidgetLayoutStateKey, token);
+        var stored = await AwaitHomeSourceAsync(_settings.GetAsync<DashboardWidgetLayoutState>(WidgetLayoutStateKey, token));
         _widgetLayoutState = stored is { Version: 1 }
             ? new DashboardWidgetLayoutState(1, new Dictionary<string, List<DashboardWidgetPlacement>>(stored.Pages, StringComparer.OrdinalIgnoreCase))
             : new DashboardWidgetLayoutState(1, new Dictionary<string, List<DashboardWidgetPlacement>>(StringComparer.OrdinalIgnoreCase));
@@ -258,7 +241,7 @@ public sealed partial class NewDashboardPage
         IReadOnlyList<DashboardTileLayout> legacy = [];
         if (_widgetLegacyLayout is not null)
         {
-            try { legacy = await _widgetLegacyLayout.GetAsync(token); }
+            try { legacy = await AwaitHomeSourceAsync(_widgetLegacyLayout.GetAsync(token)); }
             catch { legacy = []; }
         }
         var legacyByKey = legacy.ToDictionary(item => item.Key, StringComparer.OrdinalIgnoreCase);
@@ -305,7 +288,9 @@ public sealed partial class NewDashboardPage
         _ = SaveWidgetLayoutStateAsync(_selectedPageId.Equals(HomePageId, StringComparison.OrdinalIgnoreCase));
     }
 
-    private async Task SaveWidgetLayoutStateAsync(bool syncLegacyHome)
+    private Task SaveWidgetLayoutStateAsync(bool syncLegacyHome) => RunHomeSaveAsync(() => SaveWidgetLayoutStateCoreAsync(syncLegacyHome));
+
+    private async Task SaveWidgetLayoutStateCoreAsync(bool syncLegacyHome)
     {
         if (_widgetLayoutState is null) return;
         await _widgetSaveGate.WaitAsync();
@@ -317,7 +302,7 @@ public sealed partial class NewDashboardPage
                     pair => pair.Key,
                     pair => pair.Value.ToList(),
                     StringComparer.OrdinalIgnoreCase));
-            await _settings.SetAsync(WidgetLayoutStateKey, snapshot, CancellationToken.None);
+            await AwaitHomeSourceAsync(_settings.SetAsync(WidgetLayoutStateKey, snapshot, CancellationToken.None));
 
             if (syncLegacyHome && _widgetLegacyLayout is not null && snapshot.Pages.TryGetValue(HomePageId, out var home))
             {
@@ -337,12 +322,13 @@ public sealed partial class NewDashboardPage
                     index,
                     item.IsVisible,
                     DashboardWidgetLayoutEngine.ToTileSize(item))).ToArray();
-                await _widgetLegacyLayout.SaveAsync(legacy, CancellationToken.None);
+                await AwaitHomeSourceAsync(_widgetLegacyLayout.SaveAsync(legacy, CancellationToken.None));
             }
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[Dashboard] Could not persist widget layout: {ex.Message}");
+            throw;
         }
         finally
         {
@@ -429,7 +415,7 @@ public sealed partial class NewDashboardPage
             }
         };
 
-        save.Click += async (_, _) =>
+        save.Click += async (_, _) => await RunHomeEventAsync(async _ =>
         {
             var title = titleBox.Text?.Trim();
             if (string.IsNullOrWhiteSpace(title))
@@ -454,10 +440,10 @@ public sealed partial class NewDashboardPage
             await SavePageStateAsync(CancellationToken.None);
             RenderPage();
             flyout.Hide();
-        };
+        });
 
         var deleteArmed = false;
-        remove.Click += async (_, _) =>
+        remove.Click += async (_, _) => await RunHomeEventAsync(async _ =>
         {
             if (!deleteArmed)
             {
@@ -476,17 +462,17 @@ public sealed partial class NewDashboardPage
             await SavePageStateAsync(CancellationToken.None);
             RenderPage();
             flyout.Hide();
-        };
+        });
 
-        flyout.ShowAt(isNew ? AddPageButton : ConfigurePageButton);
+        ShowHomeEditor(flyout, isNew ? AddPageButton : ConfigurePageButton);
         titleBox.SelectAll();
         titleBox.Focus();
     }
 
     private void RefreshWidgetToolbar()
     {
-        if (_widgetUndoButton is not null) _widgetUndoButton.IsEnabled = _widgetCanvas.CanUndo;
-        if (_widgetRedoButton is not null) _widgetRedoButton.IsEnabled = _widgetCanvas.CanRedo;
+        if (_widgetUndoButton is not null) SetDashboardValue(_widgetUndoButton, "IsEnabled", _widgetCanvas.CanUndo);
+        if (_widgetRedoButton is not null) SetDashboardValue(_widgetRedoButton, "IsEnabled", _widgetCanvas.CanRedo);
     }
 
     private sealed record WidgetCacheEntry(DashboardTileData Data, DateTimeOffset CapturedAt);

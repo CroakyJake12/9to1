@@ -409,9 +409,11 @@ public sealed class BrowserSessionService(IAppPaths paths) : IBrowserToolService
     }
 
     /// <summary>
-    /// Performs the normalise address step owned by this component.
+    /// Resolves UI address/search input consistently before an engine is selected.
+    /// This constructs an address; it does not authorise navigation or bypass the
+    /// caller's native/automation network policy.
     /// </summary>
-    private static Uri NormaliseAddress(string value)
+    public static Uri NormaliseAddress(string value)
     {
         var candidate = value.Trim();
         if (Uri.TryCreate(candidate, UriKind.Absolute, out var direct) && direct.Scheme is "http" or "https") return direct;

@@ -26,7 +26,12 @@ public sealed record BrowserHistoryEntry(Guid Id, string Title, string Address, 
 /// <summary>
 /// Represents browser tab state and keeps its related state and behavior together.
 /// </summary>
-public sealed record BrowserTabState(Guid Id, string Title, string Address, BrowserTabPrivacy Privacy, string Group, DateTimeOffset UpdatedAt);
+public sealed record BrowserTabState(Guid Id, string Title, string Address, BrowserTabPrivacy Privacy, string Group, DateTimeOffset UpdatedAt)
+{
+    /// <summary>Presentation metadata, never authentication. The actual app owner
+    /// revalidates its original Home profile on every launch and restore.</summary>
+    public string ProfileId { get; init; } = string.Empty;
+}
 /// <summary>
 /// Represents the durable, non-private Browse Research checkpoint restored across restarts.
 /// Mixed sessions containing private sources are intentionally never written to disk.
@@ -201,7 +206,7 @@ public sealed class BrowserDataService : IDisposable
     {
         ArgumentNullException.ThrowIfNull(tabs);
         var safeTabs = tabs.Where(item => item.Privacy != BrowserTabPrivacy.Private)
-            .Where(item => Uri.TryCreate(item.Address, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https")
+            .Where(item => BrowserNativePages.IsStoredTabAddress(item.Address))
             .GroupBy(item => item.Id)
             .Select(group => group.OrderByDescending(item => item.UpdatedAt).First())
             .OrderByDescending(item => item.UpdatedAt)
@@ -406,7 +411,7 @@ public sealed class BrowserDataService : IDisposable
             SchemaVersion = CurrentSchemaVersion,
             Bookmarks = data.Bookmarks ?? [],
             History = (data.History ?? []).Take(2000).ToArray(),
-            Tabs = (data.Tabs ?? []).Where(item => item.Privacy != BrowserTabPrivacy.Private).ToArray(),
+            Tabs = (data.Tabs ?? []).Where(item => item.Privacy != BrowserTabPrivacy.Private && BrowserNativePages.IsStoredTabAddress(item.Address)).ToArray(),
             Logins = data.Logins ?? [],
             Extensions = data.Extensions ?? [],
             Settings = data.Settings ?? BrowserSettings.Default,

@@ -1,0 +1,431 @@
+using Haven.Application;
+using Haven.Core;
+using Xunit;
+
+namespace HavenOS.Apps.Spaces.Tests;
+
+public sealed class SpacesHomeControllerTests
+{
+    [Fact]
+    public async Task LoadAsync_exposes_built_ins_and_empty_custom_list()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var controller = new SpacesHomeController(registry);
+
+        await controller.LoadAsync();
+
+        Assert.Equal(8, controller.State.BuiltIns.Count);
+        Assert.Contains(controller.State.BuiltIns, item => item.Name == "Chat");
+        Assert.Contains(controller.State.BuiltIns, item => item.Name == "Assistants");
+        Assert.Empty(controller.State.CustomSpaces);
+        Assert.NotNull(controller.State.Selection);
+        Assert.True(controller.State.Selection!.IsBuiltIn);
+        Assert.False(controller.State.Selection.CanEdit);
+    }
+
+    [Fact]
+    public async Task CreateCustomSpaceAsync_creates_selects_and_starts_rename()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var controller = new SpacesHomeController(registry);
+        await controller.LoadAsync();
+
+        await controller.CreateCustomSpaceAsync();
+
+        Assert.Single(controller.State.CustomSpaces);
+        var custom = controller.State.CustomSpaces[0];
+        Assert.Equal("New Space", custom.Name);
+        Assert.Equal(controller.State.Selection?.Id, custom.Id);
+        Assert.Equal(custom.Id, controller.State.PendingRenameSpaceId);
+        Assert.True(controller.State.Selection?.IsRenaming);
+        Assert.Equal("New Space", controller.State.RenameDraft);
+    }
+
+    [Fact]
+    public async Task RenameSpaceAsync_renames_custom_space()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var controller = new SpacesHomeController(registry);
+        await controller.LoadAsync();
+        await controller.CreateCustomSpaceAsync();
+        var id = controller.State.CustomSpaces[0].Id;
+
+        await controller.RenameSpaceAsync(id, "Recipes");
+
+        Assert.Equal("Recipes", controller.State.CustomSpaces[0].Name);
+        Assert.Equal("Recipes", controller.State.Selection?.Name);
+        Assert.Null(controller.State.PendingRenameSpaceId);
+    }
+
+    [Fact]
+    public async Task RenameSpaceAsync_rejects_built_in()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var controller = new SpacesHomeController(registry);
+        await controller.LoadAsync();
+
+        await controller.RenameSpaceAsync(SpaceRegistry.ChatSpaceId, "Forbidden");
+
+        Assert.Contains("Built-in", controller.State.StatusMessage);
+        Assert.Equal("Chat", controller.State.BuiltIns[0].Name);
+    }
+
+    [Fact]
+    public async Task RenameSpaceAsync_rejects_stale_revision()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var controller = new SpacesHomeController(registry);
+        await controller.LoadAsync();
+        await controller.CreateCustomSpaceAsync();
+        var id = controller.State.CustomSpaces[0].Id;
+
+        // Advance the registry revision behind the controller's back.
+        await registry.RenameAsync(id, "Changed externally");
+
+        await controller.RenameSpaceAsync(id, "Recipes");
+
+        Assert.Contains("revision", controller.State.StatusMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ArchiveSpaceAsync_removes_custom_space_from_home()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var controller = new SpacesHomeController(registry);
+        await controller.LoadAsync();
+        await controller.CreateCustomSpaceAsync();
+        var id = controller.State.CustomSpaces[0].Id;
+
+        await controller.ArchiveSpaceAsync(id);
+
+        Assert.Empty(controller.State.CustomSpaces);
+        Assert.DoesNotContain(id, controller.State.BuiltIns.Select(item => item.Id));
+    }
+
+    [Fact]
+    public async Task ArchiveSpaceAsync_rejects_built_in()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var controller = new SpacesHomeController(registry);
+        await controller.LoadAsync();
+
+        await controller.ArchiveSpaceAsync(SpaceRegistry.ChatSpaceId);
+
+        Assert.Contains("Built-in", controller.State.StatusMessage);
+    }
+
+    [Fact]
+    public async Task ForkSpaceAsync_creates_independent_copy()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var controller = new SpacesHomeController(registry);
+        await controller.LoadAsync();
+        await controller.CreateCustomSpaceAsync();
+        var originalId = controller.State.CustomSpaces[0].Id;
+
+        await controller.ForkSpaceAsync(originalId);
+
+        Assert.Equal(2, controller.State.CustomSpaces.Count);
+        Assert.Contains(controller.State.CustomSpaces, item => item.Name == "New Space copy");
+    }
+
+    [Fact]
+    public async Task MoveSpaceAsync_nests_custom_space_under_another_custom_space()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var controller = new SpacesHomeController(registry);
+        await controller.LoadAsync();
+        var parent = await registry.CreateAsync("Projects");
+        var child = await registry.CreateAsync("Alpha");
+        await controller.LoadAsync();
+        await controller.SelectSpaceAsync(child.Id);
+
+        var parentIndex = controller.State.MoveParentOptions
+            .Select((option, index) => (option, index))
+            .First(pair => pair.option.Id == parent.Id).index;
+        controller.SelectMoveParentIndex(parentIndex);
+        await controller.MoveSpaceAsync(child.Id);
+
+        Assert.Equal(parent.Id, controller.State.Selection?.ParentSpaceId);
+    }
+
+    [Fact]
+    public async Task MoveSpaceAsync_rejects_stale_revision()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var controller = new SpacesHomeController(registry);
+        await controller.LoadAsync();
+        var parent = await registry.CreateAsync("Projects");
+        var child = await registry.CreateAsync("Alpha");
+        await controller.LoadAsync();
+        await controller.SelectSpaceAsync(child.Id);
+        controller.SelectMoveParentIndex(controller.State.MoveParentOptions
+            .Select((option, index) => (option, index))
+            .First(pair => pair.option.Id == parent.Id).index);
+
+        // Mutate the child behind the controller's back so the captured revision is stale.
+        await registry.RenameAsync(child.Id, "Changed externally");
+
+        await controller.MoveSpaceAsync(child.Id);
+
+        Assert.Contains("revision", controller.State.StatusMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task MoveSpaceAsync_rejects_built_in()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var controller = new SpacesHomeController(registry);
+        await controller.LoadAsync();
+
+        await controller.MoveSpaceAsync(SpaceRegistry.ChatSpaceId);
+
+        Assert.Contains("Built-in", controller.State.StatusMessage);
+    }
+
+    [Fact]
+    public async Task Search_filters_custom_spaces_and_preserves_selection_and_hierarchy()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var controller = new SpacesHomeController(registry);
+        await controller.LoadAsync();
+        var alpha = await registry.CreateAsync("Alpha recipes");
+        var beta = await registry.CreateAsync("Beta notes");
+        await controller.LoadAsync();
+        await controller.SelectSpaceAsync(alpha.Id);
+
+        controller.SetQuery("beta");
+
+        Assert.Single(controller.State.CustomSpaces);
+        Assert.Equal(beta.Id, controller.State.CustomSpaces[0].Id);
+        // Selection is preserved even when the selected Space is filtered out of the list.
+        Assert.Equal(alpha.Id, controller.State.Selection?.Id);
+
+        controller.SetQuery(string.Empty);
+
+        Assert.Equal(2, controller.State.CustomSpaces.Count);
+        Assert.Equal(alpha.Id, controller.State.Selection?.Id);
+    }
+
+    [Fact]
+    public async Task Clearing_search_restores_exact_ids_and_order()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var controller = new SpacesHomeController(registry);
+        await controller.LoadAsync();
+        var first = await registry.CreateAsync("First");
+        var second = await registry.CreateAsync("Second");
+        await controller.LoadAsync();
+        var originalIds = controller.State.CustomSpaces.Select(item => item.Id).ToArray();
+
+        controller.SetQuery("none");
+        Assert.Empty(controller.State.CustomSpaces);
+
+        controller.SetQuery(string.Empty);
+
+        Assert.Equal(originalIds, controller.State.CustomSpaces.Select(item => item.Id));
+    }
+
+    [Fact]
+    public async Task Delayed_load_does_not_overwrite_newer_query()
+    {
+        var release = new TaskCompletionSource();
+        var store = new DelayedMemorySettingsStore(release.Task);
+        var registry = new SpaceRegistry(store);
+        var controller = new SpacesHomeController(registry);
+
+        var loadTask = controller.LoadAsync();
+        controller.SetQuery("typed while loading");
+        release.SetResult();
+        await loadTask;
+
+        Assert.Equal("typed while loading", controller.State.Query);
+        // The stale load result was discarded because the query advanced the revision.
+        Assert.NotEqual("Spaces ready", controller.State.StatusMessage);
+    }
+
+    [Fact]
+    public async Task OpenSpaceAsync_delegates_to_action_host()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var host = new RecordingActionHost();
+        var controller = new SpacesHomeController(registry, host);
+        await controller.LoadAsync();
+
+        await controller.OpenSpaceAsync(SpaceRegistry.StudySpaceId);
+
+        Assert.Single(host.Actions);
+        Assert.Equal(SpacesActionKind.Open, host.Actions[0].Kind);
+        Assert.Equal(SpaceRegistry.StudySpaceId, host.Actions[0].Context.Scope.RegisteredSpaceId);
+    }
+
+    [Fact]
+    public async Task AddContextAsync_adds_file_reference_to_registry()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var controller = new SpacesHomeController(registry);
+        await controller.LoadAsync();
+        await controller.CreateCustomSpaceAsync();
+        var id = controller.State.CustomSpaces[0].Id;
+
+        await controller.AddContextAsync(id, "/tmp/recipe.md");
+
+        var space = await registry.GetAsync(id);
+        Assert.NotNull(space);
+        Assert.Contains(space!.Files, file => file.Path.EndsWith("recipe.md", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task EditExtensionsAsync_delegates_to_extension_editor_host_for_built_ins()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var host = new RecordingExtensionEditorHost();
+        var controller = new SpacesHomeController(registry, extensionEditorHost: host);
+        await controller.LoadAsync();
+        await controller.SelectSpaceAsync(SpaceRegistry.StudySpaceId);
+
+        await controller.EditExtensionsAsync(SpaceRegistry.StudySpaceId);
+
+        Assert.Single(host.EventsAndExtensionsCalls);
+        Assert.Empty(host.GraphEditorCalls);
+    }
+
+    [Fact]
+    public async Task EditGraphAsync_delegates_to_extension_editor_host_for_custom_spaces()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var host = new RecordingExtensionEditorHost();
+        var controller = new SpacesHomeController(registry, extensionEditorHost: host);
+        await controller.LoadAsync();
+        await controller.CreateCustomSpaceAsync();
+        var id = controller.State.CustomSpaces[0].Id;
+
+        await controller.EditGraphAsync(id);
+
+        Assert.Single(host.GraphEditorCalls);
+        Assert.Empty(host.EventsAndExtensionsCalls);
+    }
+
+    [Fact]
+    public async Task EditExtensionsAsync_reports_unavailable_when_host_absent()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var controller = new SpacesHomeController(registry);
+        await controller.LoadAsync();
+
+        await controller.EditExtensionsAsync(SpaceRegistry.StudySpaceId);
+
+        Assert.Contains("not available", controller.State.StatusMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task OpenSpaceAsync_reports_opened_for_direct_host()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var host = new RecordingActionHost();
+        var controller = new SpacesHomeController(registry, host);
+        await controller.LoadAsync();
+
+        await controller.OpenSpaceAsync(SpaceRegistry.StudySpaceId);
+
+        Assert.Single(host.Actions);
+        Assert.Contains("Opened", controller.State.StatusMessage);
+    }
+
+    [Fact]
+    public async Task OpenSpaceAsync_reports_opening_for_queued_admission_host()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var host = new QueuedAdmissionHost();
+        var controller = new SpacesHomeController(registry, host);
+        await controller.LoadAsync();
+
+        await controller.OpenSpaceAsync(SpaceRegistry.StudySpaceId);
+
+        Assert.Single(host.Actions);
+        Assert.Contains("Opening", controller.State.StatusMessage);
+        Assert.DoesNotContain("Opened", controller.State.StatusMessage);
+    }
+
+    [Fact]
+    public async Task Rejected_queue_admission_is_observable_through_status()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var host = new RefusingAdmissionHost();
+        var controller = new SpacesHomeController(registry, host);
+        await controller.LoadAsync();
+
+        await controller.OpenSpaceAsync(SpaceRegistry.StudySpaceId);
+
+        Assert.Contains("refused", controller.State.StatusMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Opened", controller.State.StatusMessage);
+    }
+
+    [Fact]
+    public async Task Held_load_does_not_overwrite_newer_selection()
+    {
+        var release = new TaskCompletionSource();
+        var store = new DelayedMemorySettingsStore(release.Task);
+        var registry = new SpaceRegistry(store);
+        var target = await registry.CreateAsync("Target");
+        var controller = new SpacesHomeController(registry);
+
+        var loadTask = controller.LoadAsync();
+        await controller.SelectSpaceAsync(target.Id);
+        release.SetResult();
+        await loadTask;
+
+        Assert.Equal(target.Id, controller.State.Selection?.Id);
+        Assert.Equal("Spaces ready", controller.State.StatusMessage);
+    }
+
+    private sealed class RecordingActionHost : ISpacesActionHost
+    {
+        public List<SpacesAction> Actions { get; } = [];
+
+        public Task ExecuteAsync(SpacesAction action, CancellationToken cancellationToken = default)
+        {
+            Actions.Add(action);
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class QueuedAdmissionHost : ISpacesActionHost, ISpacesActionAdmissionHost
+    {
+        public List<SpacesAction> Actions { get; } = [];
+
+        public bool IsQueueAdmission => true;
+
+        public Task ExecuteAsync(SpacesAction action, CancellationToken cancellationToken = default)
+        {
+            Actions.Add(action);
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class RefusingAdmissionHost : ISpacesActionHost, ISpacesActionAdmissionHost
+    {
+        public bool IsQueueAdmission => true;
+
+        public Task ExecuteAsync(SpacesAction action, CancellationToken cancellationToken = default)
+            => throw new InvalidOperationException("The navigation queue refused the Spaces action.");
+    }
+
+    private sealed class RecordingExtensionEditorHost : ISpacesExtensionEditorHost
+    {
+        public List<Guid> EventsAndExtensionsCalls { get; } = [];
+        public List<Guid> GraphEditorCalls { get; } = [];
+
+        public Task OpenEventsAndExtensionsAsync(Guid spaceId, CancellationToken cancellationToken = default)
+        {
+            EventsAndExtensionsCalls.Add(spaceId);
+            return Task.CompletedTask;
+        }
+
+        public Task OpenSpaceGraphEditorAsync(Guid spaceId, CancellationToken cancellationToken = default)
+        {
+            GraphEditorCalls.Add(spaceId);
+            return Task.CompletedTask;
+        }
+    }
+}

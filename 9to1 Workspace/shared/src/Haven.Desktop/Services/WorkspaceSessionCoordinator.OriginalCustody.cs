@@ -77,7 +77,7 @@ public sealed partial class WorkspaceSessionCoordinator
         }
     }
 
-    private static async Task AwaitActualOriginalAsync(Task actual)
+    private async Task AwaitActualOriginalAsync(Task actual)
     {
         try { await actual.ConfigureAwait(false); }
         catch (Exception error) when (actual.IsFaulted)
@@ -91,7 +91,7 @@ public sealed partial class WorkspaceSessionCoordinator
         }
     }
 
-    private static async Task<T> AwaitActualOriginalAsync<T>(Task<T> actual)
+    private async Task<T> AwaitActualOriginalAsync<T>(Task<T> actual)
     {
         try { return await actual.ConfigureAwait(false); }
         catch (Exception error) when (actual.IsFaulted)

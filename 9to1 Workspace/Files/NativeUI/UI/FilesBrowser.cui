@@ -3,6 +3,7 @@
     <Container id="files-browser-shell" accessible-name="Files browser" Type="Grid" RowSizes="Auto Auto Auto 1fr Auto Auto">
       <Container orientation="Horizontal" Type="Wrap">
         <Button id="files-home" content="Files" action="9to1.Files.Home" accessible-name="Go to Files root" Interactive="{Binding CanNavigate}" />
+        <Button id="files-trash" content="Trash" action="9to1.Files.Trash" accessible-name="Browse recoverable deleted items" Interactive="{Binding CanNavigate}" />
         <Button id="files-up" content="Up" action="9to1.Files.Up" accessible-name="Go to canonical parent folder" Interactive="{Binding CanUp}" />
         <Button id="files-back" content="Back" action="9to1.Files.Back" accessible-name="Previous folder" Interactive="{Binding CanBack}" />
         <Button id="files-forward" content="Forward" action="9to1.Files.Forward" accessible-name="Next folder in history" Interactive="{Binding CanForward}" />
@@ -20,13 +21,22 @@
         <Input id="files-name-input" accessible-name="Folder or item name" Type="Text" />
         <Button id="files-create-folder" content="New folder" action="9to1.Files.CreateFolder" accessible-name="Review creating a folder in Home" Interactive="{Binding CanCreateFolder}" />
         <Button id="files-rename" content="Rename" action="9to1.Files.Rename" accessible-name="Review renaming the selected item in Home" Interactive="{Binding CanRename}" />
+        <Button id="files-delete" content="Move to Trash" action="9to1.Files.Delete" accessible-name="Review moving the selected item to recoverable Trash in Home" Interactive="{Binding CanDelete}" />
+        <Button id="files-restore" content="Restore" action="9to1.Files.Restore" accessible-name="Review restoring the selected deleted item to its original folder in Home" Interactive="{Binding CanRestore}" />
+        <Button id="files-choose-move" content="Move…" action="9to1.Files.ChooseMove" accessible-name="Choose a destination folder for the selected item" Interactive="{Binding CanChooseMove}" />
+        <Button id="files-move" content="Move here" action="9to1.Files.Move" accessible-name="Review moving the original selected item into this folder in Home" Interactive="{Binding CanMove}" />
+        <Button id="files-cancel-move" content="Cancel move" action="9to1.Files.CancelMove" accessible-name="Cancel choosing a move destination" Interactive="{Binding CanCancelMove}" />
+        <Text text="{Binding MoveSelection}" accessible-name="Item being moved" />
         <Text text="{Binding PendingChange}" accessible-name="Pending Files change" />
         <Button id="files-apply" content="Apply" action="9to1.Files.Apply" accessible-name="Apply the original Home-reviewed Files change" Interactive="{Binding CanApply}" />
         <Button id="files-cancel-review" content="Cancel change" action="9to1.Files.CancelReview" accessible-name="Cancel the pending change before execution" Interactive="{Binding CanCancelReview}" />
         <Button id="files-retry-audit" content="Retry audit" action="9to1.Files.RetryAudit" accessible-name="Retry Home audit without repeating the Files change" Interactive="{Binding CanRetryAudit}" />
       </Container>
       <Input id="files-canonical-list" accessible-name="Canonical Files items" Type="List" Row="3" />
-      <Text id="files-selected-details" text="{Binding SelectedDetails}" accessible-name="Selected item displayed details" Row="4" />
+      <Container Type="Vertical Stack" Row="4">
+        <Button id="files-technical-details" content="{Binding TechnicalDetailsLabel}" action="9to1.Files.TechnicalDetails" accessible-name="Show or hide stable identity and technical details for the selected item" Interactive="{Binding CanShowDetails}" />
+        <Text id="files-selected-details" text="{Binding SelectedDetails}" accessible-name="Selected item displayed details" />
+      </Container>
       <Text id="files-status" text="{Binding Status}" accessible-name="Files operation status" Row="5" />
     </Container>
   </Page>

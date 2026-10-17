@@ -1,3 +1,4 @@
+using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -123,15 +124,32 @@ public sealed partial class App : Avalonia.Application
 
             var preferences = _services.GetRequiredService<UserPreferencesService>();
             preferences.ApplyAppearance(preferences.Appearance, save: false);
-            var mainView = _services.GetRequiredService<MainView>();
-            mainView.ApplyEdition(HavenStartupExperiencePolicy.Edition);
-            _services.GetRequiredService<WorkspaceSessionCoordinator>().Register(mainView, WorkspaceWindowKind.Main, queueSave: false);
-            var window = new MainWindow(preferences) { DataContext = mainView, PreserveWorkspaceSessionOnClose = true };
-            ConfigureOriginalWindowsNativeRoutes(window, mainView);
-            ConfigureOriginalAutomationLibraryShell(window, mainView);
-            ConfigureOriginalDesktopShutdown(desktop, window, mainView);
-            window.Opened += (_, _) => { _ = InitialiseHaven(mainView); };
-            desktop.MainWindow = window;
+#if HAVEN_WINDOWS_DESKTOP
+            if (ValidateOriginalInitialProductDeclaration(typeof(App).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()) is null)
+            {
+                var window = new MainWindow(preferences) { Title = "9to1", PreserveWorkspaceSessionOnClose = true };
+                var workspace = CreateOriginalUnifiedWorkspace(window);
+                window.DataContext = workspace;
+                ConfigureOriginalUnifiedNativeRoutes(window, workspace);
+                ConfigureOriginalDesktopShutdown(desktop, window, null);
+                window.Opened += (_, _) => { _ = InitialiseUnifiedHaven(); };
+                desktop.MainWindow = window;
+            }
+            else
+#endif
+            {
+                // Existing non-Windows and compiled standalone-product startup remains
+                // functional until its genuine unified admission is implemented.
+                var mainView = _services.GetRequiredService<MainView>();
+                mainView.ApplyEdition(HavenStartupExperiencePolicy.Edition);
+                _services.GetRequiredService<WorkspaceSessionCoordinator>().Register(mainView, WorkspaceWindowKind.Main, queueSave: false);
+                var window = new MainWindow(preferences) { DataContext = mainView, PreserveWorkspaceSessionOnClose = true };
+                ConfigureOriginalWindowsNativeRoutes(window, mainView);
+                ConfigureOriginalAutomationLibraryShell(window, mainView);
+                ConfigureOriginalDesktopShutdown(desktop, window, mainView);
+                window.Opened += (_, _) => { _ = InitialiseHaven(mainView); };
+                desktop.MainWindow = window;
+            }
         }
 #endif
 
@@ -141,7 +159,12 @@ public sealed partial class App : Avalonia.Application
     private Task InitialiseHaven(MainView shell) => _originalAppWork.RunAsync(
         original => InitialiseOriginalHavenAsync(original, shell), actual => _actualStartupOriginal = actual);
 
-    private async Task InitialiseOriginalHavenAsync(DesktopOriginalWorkLifetime.Original original, MainView shell)
+#if !ANDROID
+    private Task InitialiseUnifiedHaven() => _originalAppWork.RunAsync(
+        original => InitialiseOriginalHavenAsync(original, null), actual => _actualStartupOriginal = actual);
+#endif
+
+    private async Task InitialiseOriginalHavenAsync(DesktopOriginalWorkLifetime.Original original, MainView? shell)
     {
         var correlationId = Guid.NewGuid().ToString("N");
         try
@@ -167,12 +190,21 @@ public sealed partial class App : Avalonia.Application
             await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => services.GetRequiredService<ModeSeedService>().SeedBuiltInModesAsync(CancellationToken.None)));
             var migration = await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
                 () => services.GetRequiredService<ILegacyStateMigrator>().MigrateIfNeededAsync(CancellationToken.None)));
-            await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => shell.InitializeAsync(migration, CancellationToken.None)));
-            await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => shell.RestoreWorkspaceSessionAsync(CancellationToken.None)));
-
+            if (shell is not null)
+            {
+                await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => shell.InitializeAsync(migration, CancellationToken.None)));
+                await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => shell.RestoreWorkspaceSessionAsync(CancellationToken.None)));
 #if !ANDROID
-            await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
-                () => OpenOriginalInitialProductRouteAsync(shell, original.Token)));
+                await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
+                    () => OpenOriginalInitialProductRouteAsync(shell, original.Token)));
+#endif
+            }
+#if !ANDROID
+            else
+            {
+                var workspace = _actualUnifiedWorkspace ?? throw new InvalidOperationException("The original unified host is unavailable.");
+                await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => workspace.InitializeAsync(original.Token)));
+            }
 #endif
 
 #if !ANDROID

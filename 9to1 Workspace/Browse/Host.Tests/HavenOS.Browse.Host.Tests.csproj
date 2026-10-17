@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../shared/src/Haven.Desktop/Haven.Desktop.csproj" SetTargetFramework="TargetFramework=net10.0" />
+    <Compile Include="../../shared/tests/Haven.Desktop.Tests/AssemblyInfo.cs" Link="AssemblyInfo.cs" />
+    <Compile Include="HostTestApp.cs" />
+    <Compile Include="../../shared/tests/Haven.Desktop.Tests/NativeAppContentRegistryTests.cs" Link="NativeAppContentRegistryTests.cs" />
+    <Compile Include="../../shared/tests/Haven.Desktop.Tests/HavenAppRoutePolicyTests.cs" Link="HavenAppRoutePolicyTests.cs" />
+    <Compile Include="../../shared/tests/Haven.Desktop.Tests/UnifiedHomeContentTests.cs" Link="UnifiedHomeContentTests.cs" />
+    <Compile Include="../../shared/tests/Haven.Desktop.Tests/WorkspaceSessionSourceTests.cs" Link="WorkspaceSessionSourceTests.cs" />
+    <Compile Include="../../shared/tests/Haven.Desktop.Tests/UnifiedWorkspaceTabStateTests.cs" Link="UnifiedWorkspaceTabStateTests.cs" />
+    <Compile Include="../../shared/tests/Haven.Desktop.Tests/UnifiedWorkspaceSessionTests.cs" Link="UnifiedWorkspaceSessionTests.cs" />
+    <Compile Include="../../shared/tests/Haven.Desktop.Tests/UnifiedWorkspaceSessionProjectionTests.cs" Link="UnifiedWorkspaceSessionProjectionTests.cs" />
+    <Compile Include="../../shared/tests/Haven.Desktop.Tests/WorkspaceSessionTerminalSaveTests.cs" Link="WorkspaceSessionTerminalSaveTests.cs" />
+    <Using Include="Xunit" />
+    <PackageReference Include="Avalonia.Headless.XUnit" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio"><PrivateAssets>all</PrivateAssets></PackageReference>
+  </ItemGroup>
+</Project>

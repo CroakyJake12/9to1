@@ -21,6 +21,7 @@ internal sealed partial class HomeApp
 {
     private ListBox _workspaceTiles = new();
     private ListBox _workspaceRequests = new();
+    private ListBox _workspaceEvents = new();
     private AuthenticatedResourceActor? _workspaceActor;
     private Window? _workspaceWindow;
     private bool _workspaceBusy;
@@ -46,14 +47,18 @@ internal sealed partial class HomeApp
         var store = new HomeOwnedDashboardStateStore(_coreStateStore, _nativeComposition.Profiles, actor);
         var layouts = new HomeDashboardLayoutService(new HomeCoreDashboardLayoutStore(store),
             new CoreTileRegistry(_homeCore));
-        _controller = new HomeCuiController(_dashboard, layoutService: layouts, featureNavigation: _featureNavigation);
+        var activity = new HomePermissionActivitySource(_nativeComposition.Permissions, _nativeComposition.Profiles, actor);
+        _controller = new HomeCuiController(_dashboard, layoutService: layouts,
+            eventsService: new HomeEventsService([activity], activity), featureNavigation: _featureNavigation);
         _workspaceActor = actor;
-        foreach (var route in new[] { HomeRoute.Dashboard, HomeRoute.Settings, HomeRoute.Permissions })
+        foreach (var route in new[] { HomeRoute.Dashboard, HomeRoute.Events, HomeRoute.Settings, HomeRoute.Permissions })
         {
             var registered = _featureNavigation.Register(new OwnedRoute(this, HomeRouteIds.For(route)));
             if (!registered.Succeeded) throw new InvalidOperationException(registered.Message);
         }
         await _controller.RefreshLayoutAsync().ConfigureAwait(false);
+        foreach (var tile in _controller.Surface.Layout!.Tiles.Where(tile => tile.Visibility == HomeTileVisibility.Visible))
+            await _controller.RefreshTileAsync(tile.TileInstanceId).ConfigureAwait(false);
         _workspaceInitialized = true;
     }
 
@@ -66,12 +71,14 @@ internal sealed partial class HomeApp
 
     private void RegisterWorkspaceActions()
     {
-        foreach (var command in new[] { "NavigateDashboard", "NavigateHome", "NavigateSettings", "NavigatePermissions" })
+        foreach (var command in new[] { "NavigateDashboard", "NavigateHome", "NavigateEvents", "NavigateSettings", "NavigatePermissions" })
             RegisterWorkspaceAction(command, () => DispatchWorkspaceAsync(command));
         foreach (var command in LayoutActions)
             RegisterWorkspaceAction(command, () => DispatchWorkspaceAsync(command));
         RegisterWorkspaceAction("RefreshHomePermissions", RefreshWorkspacePermissionsAsync);
         RegisterWorkspaceAction("RefreshHomeWorkspace", RefreshWorkspaceAsync);
+        RegisterWorkspaceAction("RefreshEvents", RefreshWorkspaceEventsAsync);
+        RegisterWorkspaceAction("OpenEventObject", OpenWorkspaceEventAsync);
         // Approval is native owning-window intent, not a Home CUI/AI action capability.
         _viewModel.SetActionAvailability("AcceptHomePermission", false);
         _viewModel.SetActionAvailability("DeclineHomePermission", false);
@@ -128,6 +135,7 @@ internal sealed partial class HomeApp
         {
             "NavigateDashboard" or "NavigateHome" => HomeRoute.Dashboard,
             "NavigateSettings" => HomeRoute.Settings,
+            "NavigateEvents" => HomeRoute.Events,
             "NavigatePermissions" => HomeRoute.Permissions,
             _ => (HomeRoute?)null
         };
@@ -136,6 +144,7 @@ internal sealed partial class HomeApp
             var navigation = await _controller.NavigateFeatureAsync(route.Value);
             _controller.Surface.SetNavigationStatus($"{navigation.Code}: {navigation.Message}");
             if (_controller.Navigation.Current == HomeRoute.Permissions) await RefreshWorkspacePermissionsAsync();
+            if (_controller.Navigation.Current == HomeRoute.Events) await RefreshWorkspaceEventsAsync();
             return;
         }
         var layout = _controller.Surface.Layout ?? (await _controller.RefreshLayoutAsync()).Layout;
@@ -199,9 +208,31 @@ internal sealed partial class HomeApp
     private async Task RefreshWorkspaceAsync()
     {
         await _controller.RefreshLayoutAsync();
-        foreach (var tile in _controller.Surface.Layout!.Tiles)
+        foreach (var tile in _controller.Surface.Layout!.Tiles.Where(tile => tile.Visibility == HomeTileVisibility.Visible))
             await _controller.RefreshTileAsync(tile.TileInstanceId);
+        await RefreshWorkspaceEventsAsync();
         if (_controller.Navigation.Current == HomeRoute.Permissions) await RefreshWorkspacePermissionsAsync();
+    }
+
+    private async Task RefreshWorkspaceEventsAsync()
+    {
+        var selected = _controller.Surface.SelectedEventObject;
+        await _controller.RefreshEventsAsync(new HomeEventsQuery(Limit: 200));
+        if (selected is not null) _controller.Surface.SelectEventObject(selected.EventId, selected.ObjectIndex);
+    }
+
+    private async Task OpenWorkspaceEventAsync()
+    {
+        if (_controller.Surface.SelectedEventObject is not { } selected)
+        {
+            _controller.Surface.SetNavigationStatus("Select an activity item first.");
+            return;
+        }
+        var opened = await _controller.OpenEventObjectAsync(selected.EventId, selected.ObjectIndex,
+            new HomeFeatureDeepLinkRouter(_featureNavigation));
+        _controller.Surface.SetNavigationStatus($"{opened.Code}: {opened.Message}");
+        if (opened.Succeeded && _controller.Navigation.Current == HomeRoute.Permissions)
+            await RefreshWorkspacePermissionsAsync();
     }
 
     private async Task RefreshWorkspacePermissionsAsync()
@@ -214,9 +245,22 @@ internal sealed partial class HomeApp
         _displayedRequests = snapshot.PendingRequests.Where(request =>
             request.Impact.ResourceBinding?.OriginalActor == _workspaceActor).ToArray();
         _workspaceRequests.ItemsSource = _displayedRequests;
+        var selectedId = _controller.Navigation.State(HomeRoute.Permissions).SelectedObjectId;
+        if (selectedId is not null)
+            _workspaceRequests.SelectedItem = _displayedRequests.FirstOrDefault(request => request.RequestId == selectedId);
         _viewModel.Set("HomePermissionSummary", $"{_displayedRequests.Count} requests for this device profile. " +
             "Select a request to review its exact action and affected objects.");
         UpdateSelectedPermissionDetails();
+        if (selectedId is not null && _workspaceRequests.SelectedItem is null)
+        {
+            var historical = await _nativeComposition.Permissions.ReadRequestObservationAsync(selectedId);
+            await RequireWorkspaceActorAsync();
+            if (historical is not null && _workspaceActor is not null &&
+                historical.Impact.ResourceBinding?.OriginalActor == _workspaceActor)
+                _viewModel.Set("SelectedHomePermission", $"{historical.Caller.DisplayName}\n" +
+                    $"{historical.Scope.TargetAppId}: {historical.Scope.ActionName}\n{historical.State}: {historical.ResultMessage}\n" +
+                    "This activity is historical. It does not grant permission to run the action again.");
+        }
     }
 
     private void RegisterWorkspaceControls(CuiControlLoader loader, Window window)
@@ -227,7 +271,7 @@ internal sealed partial class HomeApp
         {
             var list = new ListBox();
             list.ItemTemplate = new FuncDataTemplate<HomeTileInstance>((tile, _) => new TextBlock
-            { Text = tile is null ? "" : "${tile.TileType} · {tile.Size} · {tile.Visibility}" });
+            { Text = tile is null ? "" : $"{tile.TileType} · {tile.Size} · {tile.Visibility}" });
             list.SelectionChanged += (_, _) =>
             {
                 if (ReferenceEquals(_workspaceWindow, window) && list.SelectedItem is HomeTileInstance selected &&
@@ -242,7 +286,7 @@ internal sealed partial class HomeApp
         {
             var list = new ListBox();
             list.ItemTemplate = new FuncDataTemplate<HomePermissionRequest>((request, _) => new TextBlock
-            { Text = request is null ? "" : "${request.Caller.DisplayName} · {request.Scope.ActionName}" });
+            { Text = request is null ? "" : $"{request.Caller.DisplayName} · {request.Scope.ActionName}" });
             list.SelectionChanged += (_, _) =>
             { if (ReferenceEquals(_workspaceWindow, window)) UpdateSelectedPermissionDetails(); };
             _workspaceRequests = list;
@@ -268,6 +312,26 @@ internal sealed partial class HomeApp
         loader.BindAuthoredControl("home-permission-requests", permissionRequests);
         loader.BindAuthoredControl("home-permission-accept", reviewButton);
         loader.BindAuthoredControl("home-permission-decline", reviewButton);
+        loader.BindAuthoredControl("events-page-items", _ =>
+        {
+            var list = new ListBox();
+            list.ItemTemplate = new FuncDataTemplate<HomeActivityEvent>((activity, _) => new TextBlock
+            {
+                Text = activity is null ? "" : $"{activity.Timestamp:g} · {activity.Summary}",
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap
+            });
+            list.SelectionChanged += (_, _) =>
+            {
+                if (!ReferenceEquals(_workspaceWindow, window) || list.SelectedItem is not HomeActivityEvent selected ||
+                    !_controller.Surface.EventItems.Any(item => ReferenceEquals(item, selected))) return;
+                _controller.Surface.SelectEventObject(selected.EventId, 0);
+                ApplyWorkspaceBindings();
+                _loader?.RefreshBindings();
+            };
+            _workspaceEvents = list;
+            ApplyWorkspaceBindings();
+            return list;
+        });
         ApplyWorkspaceBindings();
     }
 
@@ -329,6 +393,15 @@ internal sealed partial class HomeApp
         _viewModel.Set("NavigationStatus", surface.NavigationStatus);
         _viewModel.Set("BriefSummary", surface.BriefSummary);
         _viewModel.Set("DashboardTilesSummary", surface.DashboardTilesSummary);
+        _viewModel.Set("EventsSummary", surface.EventsSummary);
+        _viewModel.Set("EventItemsSummary", surface.EventItemsSummary);
+        if (_workspaceEvents.ItemsSource != surface.EventItems)
+        {
+            _workspaceEvents.ItemsSource = surface.EventItems;
+            _workspaceEvents.SelectedItem = surface.EventItems.FirstOrDefault(item => item.EventId == surface.SelectedEventObject?.EventId);
+        }
+        _viewModel.SetActionAvailability("OpenEventObject", _workspaceInitialized && !_workspaceBusy && surface.SelectedEventObject is not null);
+        _viewModel.SetActionAvailability("RefreshEvents", _workspaceInitialized && !_workspaceBusy);
         _viewModel.Set("HomeProfileSummary", _workspaceActor is null ? "Local profile is unavailable." :
             $"Device profile {_workspaceActor.ProfileId}. CAKE ID sign-in is separate from Home permissions. Open CAKE ID account to connect your session.");
         _viewModel.Set("HomeLayoutSummary", surface.Layout is null ? "Dashboard preferences have not loaded." :

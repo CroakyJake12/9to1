@@ -117,6 +117,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     private IReadOnlyList<CapabilityDefinition> _availableCapabilities = [];
     private HomePage? _homePage;
     private NewDashboardPage? _newDashboardPage;
+    private HomeDiscoverPage? _homeDiscoverPage;
     private GoPage? _goPage;
     private NewChatPage? _newChatPage;
     private PlanPageViewModel? _planPage;
@@ -411,7 +412,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     /// </summary>
     public void ApplyEdition(HavenShellEdition edition)
     {
-        if (_edition == edition && (edition == HavenShellEdition.Classic || _goPage is not null)) return;
+        if (_edition == edition && (edition == HavenShellEdition.Classic || _newDashboardPage is not null)) return;
         _edition = edition;
 
         if (edition == HavenShellEdition.New)
@@ -428,8 +429,10 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             OpenTabs.Clear();
             _selectedTab = null;
             _currentPage = null;
-            _goPage = CreateGoPage();
-            AddOrSelectTab("go", "Go", _goPage, false, HavenSurface.Go, forceNewTab: true);
+            _goPage = null;
+            _homeDiscoverPage = null;
+            _newDashboardPage = CreateNewDashboardPage();
+            AddOrSelectTab("dashboard", "Home", _newDashboardPage, false, HavenSurface.Dashboard, forceNewTab: true);
         }
         else
         {
@@ -862,7 +865,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     private Task OpenHomeAsync()
     {
         if (_edition == HavenShellEdition.New)
-            return OpenGoAsync();
+            return OpenDashboardAsync();
 
         _homePage ??= CreateHomePage();
         AddOrSelectTab("home", "Home", _homePage, false, HavenSurface.Home);
@@ -917,8 +920,30 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     private async Task OpenDashboardAsync()
     {
         _newDashboardPage ??= CreateNewDashboardPage();
+        var alreadySelected = ReferenceEquals(SelectedTab?.Page, _newDashboardPage);
         AddOrSelectTab("dashboard", "Dashboard", _newDashboardPage, false, HavenSurface.Dashboard);
-        await _newDashboardPage.ActivateAsync(CancellationToken.None);
+        // Selecting a different tab activates IActivatablePage through ApplySelectedTab.
+        // An explicit Home click on the current tab still refreshes its existing page.
+        if (alreadySelected) await _newDashboardPage.ActivateAsync(CancellationToken.None);
+    }
+
+    private async Task OpenHomeDiscoverAsync()
+    {
+        if (_homeDiscoverPage is null)
+        {
+            var sources = _modelProviders.Providers.Select(provider =>
+                new HavenOS.Home.Discover.HomeRegisteredModelCatalogueSource(
+                    _modelProviders, provider.Id, () => !_privacy.Current.LocalOnlyMode));
+            _homeDiscoverPage = new HomeDiscoverPage(new HavenOS.Home.Discover.HomeDiscoverCatalog(sources));
+            _homeDiscoverPage.ManageProvidersRequested += (_, _) => StartOriginalShellEvent(original =>
+            {
+                AcquireOriginalShellSynchronous(original, () => { OpenApplicationSettings(); return true; });
+                return Task.CompletedTask;
+            });
+        }
+        var alreadySelected = ReferenceEquals(SelectedTab?.Page, _homeDiscoverPage);
+        AddOrSelectTab("home-discover", "Discover", _homeDiscoverPage, false, HavenSurface.Home);
+        if (alreadySelected) await _homeDiscoverPage.ActivateAsync(CancellationToken.None);
     }
 
     private async Task OpenNewChatAsync(
@@ -1636,7 +1661,8 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     };
 
     private static bool IsRetiredApp(ModeDefinition app) =>
-        app.Key.Equals("do", StringComparison.OrdinalIgnoreCase)
+        HavenAppRoutePolicy.IsDeprecatedStandalone(app)
+        || app.Key.Equals("do", StringComparison.OrdinalIgnoreCase)
         || app.Name.Equals("Do", StringComparison.OrdinalIgnoreCase)
         || app.Key.Equals("teach", StringComparison.OrdinalIgnoreCase)
         || app.Name.Equals("Teach", StringComparison.OrdinalIgnoreCase);
@@ -1678,7 +1704,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         {
             await OpenOriginalDevelopmentCatalogAsync(openInNewTab);
         }
-        else if (route.Kind == HavenAppRouteKind.Assistants)
+        else if (route.Kind == HavenAppRouteKind.Spaces && route.DestinationPath == "assistants")
         {
 #if !ANDROID
             await OpenOriginalRegisteredAssistantsAsync();
@@ -2016,6 +2042,8 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         });
         page.ManageAppsRequested += (_, _) => StartOriginalShellEvent(original =>
             original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => ShowAppLauncherAsync(false))));
+        page.DiscoverRequested += (_, _) => StartOriginalShellEvent(original =>
+            original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => OpenHomeDiscoverAsync())));
         return page;
     }
 

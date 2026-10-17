@@ -25,6 +25,11 @@ var tests = new (string Name, Func<string, Task> Run)[]
     ("invalid-and-nonfolder-deep-links-denied", InvalidRoute),
     ("actual-cui-parser-and-consumable-owner-route", ActualRoute),
     ("pagination-is-bounded-and-preserves-canonical-items", Pagination),
+    ("history-reopens-canonical-folders-and-truncates-forward-path", NavigationHistory),
+    ("provider-search-is-folder-scoped-and-retained-across-history", FolderSearch),
+    ("loaded-item-sorting-preserves-identities-and-selection", LoadedSort),
+    ("stale-and-moved-rows-cannot-remain-selected", StaleSelection),
+    ("search-capability-and-private-teardown-are-enforced", SearchPrivacy),
 };
 Console.WriteLine($"EXPECTED={tests.Length}; backend=DurableDriveProvider; browser=NOT_RUN; HTTP=NOT_RUN");
 var passed = 0;
@@ -283,6 +288,91 @@ static async Task Pagination(string directory)
     Check(view.IsActionAvailable("More") == false, "End-of-page not respected.");
 }
 
+static async Task NavigationHistory(string directory)
+{
+    var s = Store(directory); using var view = new FilesBrowserController(s.Provider, s.Owner);
+    await view.InitializeAsync(null, default);
+    var first = await Create(view, "First"); await view.DispatchAsync("Open", null);
+    var child = await Create(view, "Child"); await view.DispatchAsync("Open", null);
+    await view.DispatchAsync("Back", null); Check(view.CurrentFolderId == first.Id, "Back did not reopen the same parent identity.");
+    await view.DispatchAsync("Back", null); Check(view.CurrentFolderId is null, "Back did not reopen provider root.");
+    await view.DispatchAsync("Forward", null); Check(view.CurrentFolderId == first.Id, "Forward did not restore the canonical folder.");
+    var now = DateTimeOffset.UtcNow;
+    Check((await s.Provider.MutateAsync(new(new(Guid.NewGuid()), s.Owner, child.Id, child.ParentId, null, "Rename",
+        child.CurrentRevisionId, null, FilesOperationState.Pending, now, now, null, null), "Renamed child", default)).IsSuccess,
+        "External child rename failed.");
+    await view.DispatchAsync("Forward", null);
+    Check(view.CurrentFolderId == child.Id && Value(view, "FolderName") as string == "Renamed child", "History replayed stale metadata or a path identity.");
+    await view.DispatchAsync("Back", null); await view.DispatchAsync("Home", null);
+    Check(view.CurrentFolderId is null && view.IsActionAvailable("Forward") == false, "New navigation retained a stale forward branch.");
+    await view.DispatchAsync("NewFolder", null);
+    Check(view.IsActionAvailable("Back") == false && view.IsActionAvailable("Home") == false, "History navigation discarded an active draft.");
+}
+
+static async Task FolderSearch(string directory)
+{
+    var s = Store(directory); using var view = new FilesBrowserController(s.Provider, s.Owner);
+    await view.InitializeAsync(null, default);
+    var folder = await Create(view, "Research"); await view.DispatchAsync("Open", null);
+    await Create(view, "Alpha notes"); await Create(view, "Beta notes"); await Create(view, "Other");
+    Check(view.TrySetValue("SearchText", "  NOTES  "), "Search was not editable.");
+    await view.DispatchAsync("Search", null);
+    Check(view.Items.Count == 2 && view.Items.All(item => item.Metadata.ParentId == folder.Id && item.Metadata.Name.EndsWith("notes")), "Search escaped its folder or did not query actual provider names.");
+    Check(view.SelectedItem is null, "Search retained an off-result selection.");
+    await view.DispatchAsync("Select", view.Items.First()); await view.DispatchAsync("Open", null);
+    await view.DispatchAsync("Back", null);
+    Check(view.CurrentFolderId == folder.Id && view.Items.Count == 2 && Value(view, "SearchText") as string == "NOTES", "Back lost the applied search.");
+    await view.DispatchAsync("Refresh", null); Check(view.Items.Count == 2, "Refresh discarded the provider search.");
+    Check(view.TrySetValue("SearchText", "missing"), "Second search was not editable."); await view.DispatchAsync("Search", null);
+    Check(view.Items.Count == 0 && Value(view, "EmptyMessage") is string empty && empty.Contains("No names match"), "Empty search impersonated an empty folder.");
+    await view.DispatchAsync("ClearSearch", null); Check(view.Items.Count == 3 && Value(view, "SearchText") as string == "", "Clear search did not restore original children.");
+}
+
+static async Task LoadedSort(string directory)
+{
+    var s = Store(directory); using var view = new FilesBrowserController(s.Provider, s.Owner);
+    await view.InitializeAsync(null, default); await Create(view, "Zulu"); await Create(view, "Alpha"); await Create(view, "Middle");
+    var identity = view.SelectedItem!.Id; var ids = view.Items.Select(row => row.Metadata.Id).ToHashSet();
+    await view.DispatchAsync("SortNameDescending", null);
+    Check(view.Items.Select(row => row.Metadata.Name).SequenceEqual(new[] { "Zulu", "Middle", "Alpha" }), "Descending loaded-name sort was not applied.");
+    await view.DispatchAsync("SortNameAscending", null);
+    Check(view.Items.Select(row => row.Metadata.Name).SequenceEqual(new[] { "Alpha", "Middle", "Zulu" }) &&
+        view.SelectedItem?.Id == identity && ids.SetEquals(view.Items.Select(row => row.Metadata.Id)), "Sort changed canonical identities or selection.");
+    await view.DispatchAsync("SortNewest", null);
+    Check(view.Items.First().Metadata.Id == identity, "Newest sort did not use actual modification timestamps.");
+}
+
+static async Task StaleSelection(string directory)
+{
+    var s = Store(directory); using var view = new FilesBrowserController(s.Provider, s.Owner);
+    await view.InitializeAsync(null, default); var folder = await Create(view, "Destination"); var item = await Create(view, "Source");
+    var stale = view.Items.Single(row => row.Metadata.Id == item.Id); await view.DispatchAsync("Refresh", null);
+    await view.DispatchAsync("Select", view.Items.Single(row => row.Metadata.Id == folder.Id));
+    await view.DispatchAsync("Select", stale); Check(view.SelectedItem?.Id == folder.Id, "A retired rendered row selected an item in the refreshed page.");
+    var current = view.Items.Single(row => row.Metadata.Id == item.Id);
+    var now = DateTimeOffset.UtcNow;
+    Check((await s.Provider.MutateAsync(new(new(Guid.NewGuid()), s.Owner, item.Id, null, folder.Id, "Move", item.CurrentRevisionId,
+        null, FilesOperationState.Pending, now, now, null, null), null, default)).IsSuccess, "Actual provider move failed.");
+    await view.DispatchAsync("Select", current); Check(view.SelectedItem is null, "A moved item was selected from its stale parent listing.");
+    await view.DispatchAsync("Refresh", null); Check(view.Items.Count == 1 && view.SelectedItem is null, "Refresh retained a moved selection.");
+}
+
+static async Task SearchPrivacy(string directory)
+{
+    var s = Store(directory); var adapter = new RevokedProvider(s.Provider);
+    using var view = new FilesBrowserController(adapter, s.Owner); await view.InitializeAsync(null, default);
+    await Create(view, "Private folder"); await view.DispatchAsync("Open", null);
+    view.TrySetValue("SearchText", "private query"); await view.DispatchAsync("Search", null);
+    adapter.DenyGet = true; await view.DispatchAsync("Refresh", null);
+    CheckPrivateCleared(view);
+    Check(Value(view, "SearchText") as string == "" && view.IsActionAvailable("Back") == false && view.IsActionAvailable("Forward") == false,
+        "Denial retained private search/history.");
+    using var noSearch = new FilesBrowserController(new SearchUnsupportedProvider(s.Provider), s.Owner);
+    await noSearch.InitializeAsync(null, default);
+    Check(noSearch.IsActionAvailable("Search") == false && !noSearch.TrySetValue("SearchText", "forbidden"), "Search ignored the provider capability declaration.");
+    Check(!noSearch.TrySetValue("SearchText", new string('x', 257)), "Unbounded search input accepted.");
+}
+
 // Fault injection wraps the real durable engine; it discards one successful reply after disk commit.
 // It does not replace storage or supply a synthetic success result.
 sealed class LoseFirstMutationReply(IFilesProvider real) : IFilesProvider
@@ -300,12 +390,16 @@ sealed class LoseFirstMutationReply(IFilesProvider real) : IFilesProvider
 abstract class RealProviderAdapter(IFilesProvider real) : IFilesProvider
 {
     protected IFilesProvider Real => real;
-    public FilesLocation Location => real.Location;
+    public virtual FilesLocation Location => real.Location;
     public virtual Task<FilesPage<HostedItemMetadata>> ListAsync(HostedItemId? parentId, FilesSearchQuery? query, string? pageToken, CancellationToken ct) => real.ListAsync(parentId, query, pageToken, ct);
     public virtual Task<FilesResult<HostedItemMetadata>> GetAsync(HostedItemId itemId, CancellationToken ct) => real.GetAsync(itemId, ct);
     public virtual Task<FilesResult<FilesOperation>> MutateAsync(FilesOperation operation, string? name, CancellationToken ct) => real.MutateAsync(operation, name, ct);
     public IAsyncEnumerable<FilesChangeEvent> SubscribeAsync(FilesChangeCursor? after, CancellationToken ct) => real.SubscribeAsync(after, ct);
     public Task<FilesPage<FilesChangeEvent>> GetChangesAsync(FilesChangeCursor? after, int limit, CancellationToken ct) => real.GetChangesAsync(after, limit, ct);
+}
+sealed class SearchUnsupportedProvider(IFilesProvider real) : RealProviderAdapter(real)
+{
+    public override FilesLocation Location => base.Location with { Capabilities = base.Location.Capabilities & ~FilesProviderCapabilities.Search };
 }
 sealed class TypedLostMutationReply(IFilesProvider real) : RealProviderAdapter(real)
 {

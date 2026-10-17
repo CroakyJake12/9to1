@@ -1,4 +1,5 @@
-<!-- Dedicated Windows executable; startup remains the SAME original Desktop bootstrap. -->
+<!-- Deprecated compatibility entry only. Assistants is a destination within Spaces;
+     retain the executable identity for existing shortcuts, not as a current product. -->
 <Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="PlatformTarget">
   <PropertyGroup>
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
@@ -7,6 +8,8 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <AssemblyName>HavenOS.Assistants</AssemblyName>
     <RootNamespace>HavenOS.Apps.Assistants.Host</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <Description>Deprecated compatibility launcher for Assistants within Spaces.</Description>
     <Platforms>x64</Platforms>
     <Platform>x64</Platform>
     <PlatformTarget>x64</PlatformTarget>
@@ -20,7 +23,7 @@
     <ProjectReference Include="../shared/src/Haven.Desktop/Haven.Desktop.csproj"
                       SetTargetFramework="TargetFramework=$(TargetFramework)"
                       SkipGetTargetFrameworkProperties="true"
-                      AdditionalProperties="ProductInitialApp=assistants;ProductDisplayName=Assistants;ProductWindowsAppId=9to1.Assistants" />
+                      AdditionalProperties="ProductInitialApp=assistants;ProductDisplayName=9to1;ProductWindowsAppId=9to1.Assistants" />
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Desktop" />
   </ItemGroup>

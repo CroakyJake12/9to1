@@ -1,0 +1,10 @@
+<Cui id="home.apps" version="1">
+  <Theme Name="user_preference">
+    <Page AccessibleName="Installed apps">
+      <Container Type="Grid" RowSizes="1fr Auto" CellGap="8">
+        <Input id="home-app-list" Type="List" AccessibleName="Available apps" />
+        <Button id="home-open-app" Row="1" Content="Open app" AccessibleName="Open selected app" />
+      </Container>
+    </Page>
+  </Theme>
+</Cui>

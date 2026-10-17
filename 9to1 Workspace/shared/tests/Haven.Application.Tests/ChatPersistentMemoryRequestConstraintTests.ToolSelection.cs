@@ -61,6 +61,7 @@ public sealed partial class ChatPersistentMemoryRequestConstraintTests
             Assert.Equal(["read_file"], request.Tools.Select(tool => tool.Name));
             var activity = Assert.Single(rig.ToolActivities);
             Assert.False(activity.Succeeded);
+            Assert.NotNull(activity.InvocationEvidence);
             var evidence = Assert.Single(activity.InvocationEvidence);
             Assert.Equal(ToolInvocationObservationStatus.DeniedBeforeDispatch, evidence.Status);
             Assert.Equal("REQUEST_TOOL_NOT_SELECTED", evidence.ReportedFailureCode);

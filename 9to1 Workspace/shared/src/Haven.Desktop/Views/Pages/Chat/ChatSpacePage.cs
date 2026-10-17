@@ -23,7 +23,7 @@ namespace Haven.Desktop.Views.Pages.Chat;
 /// lifetime, and explicit external retirement.
 /// </summary>
 public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
-    ICuiWritableBindingContext, ICuiActionDispatcher, ICuiActionAvailability,
+    ICuiWritableBindingContext, ICuiActionDispatcher, ICuiActionAvailability, ICuiRepeatItemBindingContext,
     IDesktopOriginalRetirementParticipant, IDesktopOriginalRetirementJoinGuard,
     INotifyPropertyChanged, IDisposable, IAsyncDisposable
 {
@@ -35,12 +35,13 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
     private readonly object _gate = new();
     [ThreadStatic] private static List<ChatSpacePage>? _sourceCallbacks;
     private bool _active;
+    private bool _initialized;
     private long _generation;
     private Task? _hostClose;
 
-    public ChatSpacePage(IChatSpaceBackend backend, ICuiSceneReadiness readiness, Guid? conversationId = null)
+    public ChatSpacePage(IChatSpaceBackend backend, ICuiSceneReadiness readiness, Guid? conversationId = null, IPlatformShellService? clipboard = null)
     {
-        _controller = new ChatSpaceController(backend ?? throw new ArgumentNullException(nameof(backend)));
+        _controller = new ChatSpaceController(backend ?? throw new ArgumentNullException(nameof(backend)), clipboard);
         _readiness = readiness ?? throw new ArgumentNullException(nameof(readiness));
         _work = new(StopOriginalPresentationAsync, DetachOriginalPresentationAsync);
         _bindings = new ChatSpaceCuiBindings(
@@ -57,6 +58,7 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
         _host = new CuiSceneHost();
         AutomationProperties.SetAutomationId(this, "ChatSpacePage");
         AutomationProperties.SetName(this, "Chat Space (CUI)");
+        SizeChanged += (_, _) => _bindings.UpdateViewportWidth(Bounds.Width);
         Content = _host;
         InitialConversationId = conversationId;
     }
@@ -100,8 +102,16 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
     private async Task RefreshOriginalAsync(DesktopOriginalWorkLifetime.Original original, long generation, CancellationToken token)
     {
         original.DemandPublication();
-        var init = InvokeOriginalSource(() => _controller.InitializeAsync(InitialConversationId, token));
-        await original.AwaitAsync(init).ConfigureAwait(false);
+        bool initialize;
+        lock (_gate) initialize = !_initialized;
+        if (initialize)
+        {
+            var init = InvokeOriginalSource(() => _controller.InitializeAsync(InitialConversationId, token));
+            await original.AwaitAsync(init).ConfigureAwait(false);
+            lock (_gate) _initialized = !_controller.State.IsLoading && _controller.State.Status.Tone != ChatSpaceStatusTone.Error;
+        }
+        // A tab reactivation republishes this same controller, including navigation, draft and
+        // any response completed while hidden. It does not reopen the construction-time chat.
         await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
         {
             original.DemandPublication();
@@ -143,6 +153,9 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
     {
         return _bindings.TrySetValue(path, value);
     }
+
+    public bool TryGetItemValue(object item, string path, out object? value) => _bindings.TryGetItemValue(item, path, out value);
+    public bool TrySetItemValue(object item, string path, object? value) => _bindings.TrySetItemValue(item, path, value);
 
     public bool? IsActionAvailable(string command)
     {
@@ -194,6 +207,36 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
             case "chat.regenerate" when parameter is Guid messageId:
                 await original.AwaitAsync(InvokeOriginalSource(() => _controller.RegenerateAsync(messageId, token))).ConfigureAwait(false);
                 break;
+            case "chat.copy" when parameter is Guid messageId:
+                await original.AwaitAsync(InvokeOriginalSource(() => _controller.CopyMessageAsync(messageId, token))).ConfigureAwait(false);
+                break;
+            case "chat.delete" when parameter is Guid messageId:
+                await original.AwaitAsync(InvokeOriginalSource(() => _controller.DeleteMessageAsync(messageId, token))).ConfigureAwait(false);
+                break;
+            case "chat.forget" when parameter is Guid messageId:
+                await original.AwaitAsync(InvokeOriginalSource(() => _controller.ForgetMessageAsync(messageId, token))).ConfigureAwait(false);
+                break;
+            case "chat.edit" when parameter is Guid messageId:
+                InvokeOriginalSource(() => _controller.StartEditMessage(messageId));
+                break;
+            case "chat.cancel-edit":
+                InvokeOriginalSource(_controller.CancelEdit);
+                break;
+            case "chat.set-action-mode" when Enum.TryParse<ChatActionMode>(parameter?.ToString(), out var actionMode):
+                InvokeOriginalSource(() => _controller.SetThreadActionMode(actionMode));
+                break;
+            case "chat.set-response-mode" when Enum.TryParse<GenerativeUiResponseMode>(parameter?.ToString(), out var responseMode):
+                InvokeOriginalSource(() => _controller.SetThreadResponseMode(responseMode));
+                break;
+            case "chat.toggle-dual":
+                InvokeOriginalSource(_controller.ToggleDualModel);
+                break;
+            case "chat.select-second-model" when ResolveModelName(parameter) is { } secondModel:
+                InvokeOriginalSource(() => _controller.SelectDualSecondModel(secondModel));
+                break;
+            case "chat.select-dual-mode" when Enum.TryParse<DuoMode>(parameter?.ToString(), out var mode):
+                InvokeOriginalSource(() => _controller.SelectDualMode(mode));
+                break;
             case "chat.attach":
                 // The authored document raises chat.attach with no argument, so the picker is the
                 // normal path; the string form is kept for programmatic callers. Previously the
@@ -223,7 +266,7 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
     private string? ResolveModelName(object? parameter)
     {
         if (parameter is ChatSpaceModelChoice choice) return choice.Name;
-        var state = _controller.State;
+        var state = _bindings.Snapshot;
         if (parameter is int index && index >= 0 && index < state.Models.Count)
             return state.Models[index].Name;
         if (parameter is string name && state.Models.Any(m => m.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))

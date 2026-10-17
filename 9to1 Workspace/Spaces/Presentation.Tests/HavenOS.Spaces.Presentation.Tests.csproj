@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Actual portable Desktop views; the original Windows/x64 suite remains unchanged. -->
+    <ProjectReference Include="../../shared/src/Haven.Desktop/Haven.Desktop.csproj" SetTargetFramework="TargetFramework=net10.0" />
+    <Compile Include="../../shared/tests/Haven.Desktop.Tests/AssemblyInfo.cs" Link="AssemblyInfo.cs" />
+    <Compile Include="../../Home/Presentation.Tests/HomePresentationTestApp.cs" Link="PresentationTestApp.cs" />
+    <Compile Include="../../shared/tests/Haven.Desktop.Tests/ChatSpacePageAcceptanceTests.cs" Link="ChatSpacePageAcceptanceTests.cs" />
+    <Using Include="Xunit" />
+    <PackageReference Include="Avalonia.Headless.XUnit" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio"><PrivateAssets>all</PrivateAssets></PackageReference>
+  </ItemGroup>
+</Project>

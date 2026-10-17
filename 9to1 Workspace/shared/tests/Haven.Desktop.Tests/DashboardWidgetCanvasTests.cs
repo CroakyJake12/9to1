@@ -140,6 +140,46 @@ public sealed class DashboardWidgetCanvasTests
         Assert.Equal(2, reconciled.Count);
     }
 
+    [AvaloniaFact]
+    public void Narrow_render_stacks_widgets_without_rewriting_the_saved_desktop_layout()
+    {
+        var original = new[]
+        {
+            new DashboardWidgetPlacement("a", 0, 0, 3, 2),
+            new DashboardWidgetPlacement("b", 3, 0, 3, 2)
+        };
+        var canvas = new DashboardWidgetCanvas();
+        canvas.SetWidgets([View("a", 0, "12"), View("b", 1, "7")], original, false);
+        var window = new Avalonia.Controls.Window
+        {
+            Width = 390, Height = 844,
+            Content = new Avalonia.Controls.ScrollViewer { Content = canvas }
+        };
+        try
+        {
+            window.Show();
+            window.UpdateLayout();
+            Assert.Equal(original, canvas.Placements);
+            Assert.Equal(2, canvas.Children.Count);
+            Assert.All(canvas.Children, child =>
+            {
+                Assert.Equal(0, Avalonia.Controls.Canvas.GetLeft(child));
+                Assert.True(child.Width > 0 && child.Width <= canvas.Bounds.Width);
+            });
+            Assert.True(Avalonia.Controls.Canvas.GetTop(canvas.Children[1]) >= canvas.Children[0].Height);
+            window.Width = 1280;
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            window.Measure(new Avalonia.Size(1280, 844));
+            window.Arrange(new Avalonia.Rect(0, 0, 1280, 844));
+            window.UpdateLayout();
+            Assert.Equal(original, canvas.Placements);
+            Assert.True(Avalonia.Controls.Canvas.GetLeft(canvas.Children[1]) > 0,
+                $"Wide window {window.Bounds.Width}, canvas {canvas.Bounds.Width}, second widget X {Avalonia.Controls.Canvas.GetLeft(canvas.Children[1])}.");
+            Assert.False(canvas.CanUndo);
+        }
+        finally { window.Close(); }
+    }
+
     private static DashboardTileDefinition Tile(string key, int order) =>
         new(key, key.ToUpperInvariant(), $"{key} description", "chat", "action", key, DashboardTileSize.Standard, order);
 

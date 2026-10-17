@@ -15,11 +15,11 @@
 
 | Donor feature area | Classification | CUI status |
 |---|---|---|
-| Sidebar, locations, navigation history, tabs, breadcrumbs and address bar | Preserve | Not implemented or parity-verified in the current CUI surface |
-| Toolbar, command menu, New menu, context menus and keyboard shortcuts | Preserve | Not implemented or parity-verified in the current CUI surface |
-| File and folder listing, selection, grid/list/details layouts, sorting, grouping and columns | Preserve | Not implemented or parity-verified in the current CUI surface |
-| Search, tags, favourites, properties, previews and thumbnails | Preserve | Not implemented or parity-verified in the current CUI surface |
-| Rename, create, copy, move, duplicate, delete/trash and file-operation progress | Preserve | Not implemented or parity-verified in the current CUI surface |
+| Sidebar, locations, navigation history, tabs, breadcrumbs and address bar | Preserve | Native/web canonical folder, up/root and back/forward navigation exist. Full location sidebar, tabs/session restoration, breadcrumbs and editable address bar remain incomplete. |
+| Toolbar, command menu, New menu, context menus and keyboard shortcuts | Preserve | Native reviewed create/rename/Move/Trash/restore and navigation controls exist; web create/rename/navigation/search exist. Full New/context catalog and donor shortcut parity remain incomplete. |
+| File and folder listing, selection, grid/list/details layouts, sorting, grouping and columns | Preserve | Bounded list, current-item selection and displayed-name sorting exist; web also sorts loaded items by modification date. Grid/details/grouping/column and multi-pane parity remain incomplete. |
+| Search, tags, favourites, properties, previews and thumbnails | Preserve | Folder-scoped provider name search and selected metadata/details exist. Tags/favorites, complete properties, previews and thumbnails remain incomplete. |
+| Rename, create, copy, move, duplicate, delete/trash and file-operation progress | Preserve | Stable-ID create/rename, same-store native Move and native Trash/restore use the same Home review and durable provider; focused component checks pass. Move preserves subtree identity and rejects stale state, cycles and name conflicts. Cross-provider moves, copy/duplicate, bulk operations and progress UI remain incomplete. Exact runtime qualification is recorded separately in docs/parity/files.md. |
 | Conflict prompts, clipboard, drag/drop, archives and destination handling | Preserve | Not implemented or parity-verified in the current CUI surface |
 | Local disks, removable media, network locations and provider-specific constraints | Preserve | Not implemented or parity-verified in the current CUI surface |
 | Settings, folder/view preferences, accessibility, localization and session restoration | Preserve | Not implemented or parity-verified in the current CUI surface |

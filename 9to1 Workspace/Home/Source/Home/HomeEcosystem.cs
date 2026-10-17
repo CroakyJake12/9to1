@@ -292,6 +292,10 @@ public sealed class HomeDashboardLayoutService(IHomeDashboardLayoutStore store, 
         try
         {
             var content = await provider.RefreshAsync(tile, ct).ConfigureAwait(false);
+            ct.ThrowIfCancellationRequested();
+            if (provider.Descriptor.RequiredPermissions.Count > 0 &&
+                (permissionGate is null || !await permissionGate.CanReadProviderAsync(tile.ProviderId, provider.Descriptor.RequiredPermissions, ct).ConfigureAwait(false)))
+                return new("stale", "Access to this tile's source is unavailable.", [], new Dictionary<string, string>(), [], "PermissionRevoked");
             if (content.SourceEntityIds.Count == 0 || content.Actions.Any(action => !provider.Descriptor.Actions.Contains(action)))
                 return new("unavailable", "The provider returned content without valid provenance or declared actions.", [], new Dictionary<string, string>(), [], "InvalidProviderResponse");
             return content;
@@ -581,8 +585,10 @@ public sealed class HomeLibraryService(IHomeArtifactSearchIndex index, IHomeArti
 {
     public async Task<HomeLibraryPage> SearchAsync(HomeLibraryQuery query, CancellationToken ct = default)
     {
-        if (query.Offset < 0 || query.Limit is < 1 or > 200 || query.Cursor is not null && query.Offset != 0)
-            return new([], query.Offset, query.Limit, false, "InvalidQuery", "Library pagination values are invalid.", false);
+        ct.ThrowIfCancellationRequested();
+        if (query.Offset < 0 || query.Limit is < 1 or > 200 || query.Cursor is not null && query.Offset != 0 ||
+            query.Sort is not ("recent" or "oldest" or "name" or "type"))
+            return new([], query.Offset, query.Limit, false, "InvalidQuery", "Library pagination or sort values are invalid.", false);
         IReadOnlyList<HomeArtifactReference> all;
         try { all = await index.SearchAsync(query, ct).ConfigureAwait(false); }
         catch (OperationCanceledException) { throw; }
@@ -610,6 +616,7 @@ public sealed class HomeLibraryService(IHomeArtifactSearchIndex index, IHomeArti
             _ => throw new ArgumentException("Unsupported Library sort order.", nameof(query)),
         };
         var materialized = ordered.ToArray();
+        ct.ThrowIfCancellationRequested();
         var page = materialized.Skip(query.Offset).Take(query.Limit).ToArray();
         return new(page, query.Offset, query.Limit, query.Offset + page.Length < materialized.Length);
     }
@@ -620,7 +627,8 @@ public sealed class HomeLibraryService(IHomeArtifactSearchIndex index, IHomeArti
         catch (OperationCanceledException) { throw; }
         catch (HomeFeatureProviderException exception) { return new(false, exception.Code, exception.Message, Recoverable: exception.Recoverable); }
         catch (Exception) { return new(false, "SearchUnavailable", "The shared search service could not resolve this artifact."); }
-        if (item is null || item.OwnerApp != ownerApp || item.ArtifactId != artifactId || string.IsNullOrWhiteSpace(item.OpenLink.TargetRouteId) ||
+        if (item is null || item.OwnerApp != ownerApp || item.ArtifactId != artifactId ||
+            item.OpenLink.OwnerApp != ownerApp || item.OpenLink.ObjectId != artifactId || string.IsNullOrWhiteSpace(item.OpenLink.TargetRouteId) ||
             !await authorization.CanReadAsync(ownerApp, artifactId, ct).ConfigureAwait(false) ||
             !await authorization.CanOpenAsync(item.OpenLink, ct).ConfigureAwait(false))
             return new(false, "ArtifactUnavailable", "This artifact is unavailable or access was revoked.");
@@ -661,8 +669,11 @@ public sealed class HomeEventsService(IEnumerable<IHomeActivitySource> sources, 
     private readonly IHomeActivitySource[] _sources = sources.ToArray();
     public async Task<HomeEventsPage> ListAsync(HomeEventsQuery query, CancellationToken ct = default)
     {
-        if (query.Offset < 0 || query.Limit is < 1 or > 200)
-            return new([], query.Offset, query.Limit, false, [], "InvalidQuery", "Events pagination values are invalid.");
+        ct.ThrowIfCancellationRequested();
+        if (query.Offset < 0 || query.Limit is < 1 or > 200 || query.From > query.To)
+            return new([], query.Offset, query.Limit, false, [], "InvalidQuery", "Events pagination or date range values are invalid.");
+        if (_sources.Length == 0)
+            return new([], query.Offset, query.Limit, false, [], "Unavailable", "No activity sources are connected.");
         var read = await Task.WhenAll(_sources.Select(async source =>
         {
             try
@@ -676,6 +687,7 @@ public sealed class HomeEventsService(IEnumerable<IHomeActivitySource> sources, 
             catch (Exception)
             { return (Source: source.SourceId, Events: (IReadOnlyList<HomeActivityEvent>)[], Status: new HomeActivitySourceStatus(source.SourceId, "unavailable", "SourceUnavailable", "An activity source could not be read.")); }
         })).ConfigureAwait(false);
+        ct.ThrowIfCancellationRequested();
         var sourceStatus = read.Select(x => x.Status).ToArray();
         var records = read.SelectMany(x => x.Events.Select(e => (x.Source, Event: e)))
             .Where(x => x.Event.SourceApp == x.Source && !string.IsNullOrWhiteSpace(x.Event.EventId) &&
@@ -694,6 +706,7 @@ public sealed class HomeEventsService(IEnumerable<IHomeActivitySource> sources, 
             (query.SourceApp is null || e.SourceApp == query.SourceApp) && (query.Category is null || e.Category == query.Category) &&
             (query.Severity is null || e.Severity == query.Severity)).OrderByDescending(e => e.Timestamp).ToArray();
         var page = filtered.Skip(query.Offset).Take(query.Limit).ToArray();
+        ct.ThrowIfCancellationRequested();
         var failedSources = sourceStatus.Count(x => x.State != "available");
         var resultCode = failedSources == 0 ? "Succeeded" : failedSources == sourceStatus.Length ? "Unavailable" : "Partial";
         var resultMessage = resultCode switch

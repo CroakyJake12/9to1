@@ -23,7 +23,7 @@ public sealed class UsageTrackingConversationRepository(
     IModelUsageRepository usageRepository,
     IProviderConfigurationStore configurations,
     IProviderPricingService pricingService,
-    ProviderUsageCaptureBuffer usageCapture) : IConversationRepository, IConversationCreateOnlyRepository
+    ProviderUsageCaptureBuffer usageCapture) : IConversationRepository, IConversationCreateOnlyRepository, IConversationBranchBoundRepository
 {
     /// <summary>
     /// Stores turn started locally so this component can preserve the dependency, cache, or state between member calls.
@@ -80,10 +80,67 @@ public sealed class UsageTrackingConversationRepository(
     /// <summary>
     /// Performs add message asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    public async Task AddMessageAsync(ChatMessage message, CancellationToken cancellationToken)
+    public Task AddMessageAsync(ChatMessage message, CancellationToken cancellationToken) =>
+        AddAndTrackMessageAsync(message, () => inner.AddMessageAsync(message, cancellationToken),
+            () => inner.GetContextMessagesAsync(message.ConversationId, cancellationToken), cancellationToken);
+
+    public IConversationBranchInvocation BindInvocation(Guid conversationId, Guid branchId) =>
+        new TrackedBranchInvocation(this, inner.BindInvocation(conversationId, branchId));
+
+    private sealed class TrackedBranchInvocation(UsageTrackingConversationRepository owner, IConversationBranchInvocation original) : IConversationBranchInvocation
+    {
+        private readonly SemaphoreSlim _operations = new(1, 1);
+        private int _closed;
+        public Guid ConversationId => original.ConversationId;
+        public Guid BranchId => original.BranchId;
+        public Task AdmitExistingUserInputAsync(ChatMessage message, CancellationToken cancellationToken) =>
+            WithinLifetimeAsync(async () =>
+            {
+                await original.AdmitExistingUserInputAsync(message, cancellationToken).ConfigureAwait(false);
+                owner._turnStarted[message.ConversationId] = Stopwatch.GetTimestamp();
+                return true;
+            }, cancellationToken);
+        public Task AddMessageAsync(ChatMessage message, CancellationToken cancellationToken) =>
+            WithinLifetimeAsync(async () =>
+            {
+                await owner.AddAndTrackMessageAsync(message, () => original.AddMessageAsync(message, cancellationToken),
+                    () => original.GetContextMessagesAsync(cancellationToken), cancellationToken).ConfigureAwait(false);
+                return true;
+            }, cancellationToken);
+        public Task<IReadOnlyList<ChatMessage>> GetContextMessagesAsync(CancellationToken cancellationToken) =>
+            WithinLifetimeAsync(() => original.GetContextMessagesAsync(cancellationToken), cancellationToken);
+        public Task AddUserMessageWithAttachmentsAsync(ChatMessage message, IReadOnlyList<Guid> attachmentIds, CancellationToken cancellationToken) =>
+            WithinLifetimeAsync(async () =>
+            {
+                await owner.AddAndTrackMessageAsync(message,
+                    () => original.AddUserMessageWithAttachmentsAsync(message, attachmentIds, cancellationToken),
+                    () => original.GetContextMessagesAsync(cancellationToken), cancellationToken).ConfigureAwait(false);
+                return true;
+            }, cancellationToken);
+        private async Task<T> WithinLifetimeAsync<T>(Func<Task<T>> operation, CancellationToken cancellationToken)
+        {
+            await _operations.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                ObjectDisposedException.ThrowIf(Volatile.Read(ref _closed) != 0, this);
+                return await operation().ConfigureAwait(false);
+            }
+            finally { _operations.Release(); }
+        }
+        public async ValueTask DisposeAsync()
+        {
+            Interlocked.Exchange(ref _closed, 1);
+            await _operations.WaitAsync().ConfigureAwait(false);
+            try { await original.DisposeAsync().ConfigureAwait(false); }
+            finally { _operations.Release(); }
+        }
+    }
+
+    private async Task AddAndTrackMessageAsync(ChatMessage message, Func<Task> write,
+        Func<Task<IReadOnlyList<ChatMessage>>> readHistory, CancellationToken cancellationToken)
     {
         if (message.Role == MessageRole.User) _turnStarted[message.ConversationId] = Stopwatch.GetTimestamp();
-        await inner.AddMessageAsync(message, cancellationToken).ConfigureAwait(false);
+        await write().ConfigureAwait(false);
         if (message.Role != MessageRole.Assistant) return;
 
         try
@@ -94,7 +151,7 @@ public sealed class UsageTrackingConversationRepository(
             var providerId = captured?.ProviderId ?? expectedProvider;
             var modelName = captured?.ModelName ?? expectedModel;
             var history = captured is null
-                ? await inner.GetContextMessagesAsync(message.ConversationId, cancellationToken).ConfigureAwait(false)
+                ? await readHistory().ConfigureAwait(false)
                 : [];
             var inputTokens = captured?.InputTokens ?? EstimateTokens(string.Join('\n', history.Where(item => item.Id != message.Id).Select(item => item.Content)));
             var outputTokens = captured?.OutputTokens ?? EstimateTokens(message.Content);

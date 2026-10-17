@@ -43,6 +43,15 @@ public sealed partial class MainView
 
     private async Task LaunchSpaceAsync(SpaceDefinition space)
     {
+        if (space.Id == SpaceRegistry.AgentSpaceId)
+        {
+#if !ANDROID
+            await OpenOriginalRegisteredAssistantsAsync();
+#else
+            _notifications.Show("Assistants setup required", "This host has no configured Assistant owner. Your existing data is preserved.", ToastKind.Warning, TimeSpan.FromSeconds(6));
+#endif
+            return;
+        }
         if (space.Kind == SpaceKind.Tasks)
         {
             await OpenOriginalCanonicalTaskSpaceAsync(space.Id);
@@ -55,7 +64,6 @@ public sealed partial class MainView
             return;
         }
 
-        if (_nativeChatSidebar is not null)
         if (_nativeChatSidebar is not null)
         {
             _nativeChatSidebar.SetMode(HavenMode.Chat);
@@ -167,10 +175,13 @@ public sealed partial class MainView
             services?.GetRequiredService<IMessageAttachmentService>()
                 ?? throw new InvalidOperationException("The Chat Space backend requires attachment services."),
             new HavenChatSpaceModelCatalog(_ollama, _preferences),
-            new HavenChatSpaceTurnExecutor(_sessions, _preferences, services?.GetService<IMessageAttachmentService>()));
+            new HavenChatSpaceTurnExecutor(_sessions, _preferences,
+                capabilities: services?.GetService<ICapabilityRepository>(), attachments: services?.GetService<IMessageAttachmentService>()),
+            _conversationSafety);
 
         DemandCanonicalPageAcquisition();
-        var page = new ChatSpacePage(backend, ChatSpacePage.ImmediateReadinessInstance, conversationId);
+        var page = new ChatSpacePage(backend, ChatSpacePage.ImmediateReadinessInstance, conversationId,
+            clipboard: services?.GetService<IPlatformShellService>());
         // A fresh page per open is not reachable from a shell field, so it must join the retained
         // cohort or its retirement would never be joined and the native CUI host would leak.
         RetainOriginalCanonicalPage(page);

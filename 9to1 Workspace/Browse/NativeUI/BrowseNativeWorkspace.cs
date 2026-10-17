@@ -15,7 +15,19 @@ namespace HavenOS.Apps.Browse;
 public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, ICuiActionDispatcher,
     ICuiActionAvailability, ICuiRepeatItemBindingContext, INotifyPropertyChanged, IAsyncDisposable
 {
-    private static readonly AsyncLocal<BrowseNativeWorkspace?> LogicalDriver = new();
+    private static readonly AsyncLocal<CommandInvocation?> LogicalDriver = new();
+    private sealed class CommandInvocation(BrowseNativeWorkspace owner, CommandInvocation? parent)
+    {
+        public BrowseNativeWorkspace Owner { get; } = owner;
+        public CommandInvocation? Parent { get; } = parent;
+        public volatile bool Active = true;
+    }
+    private bool IsInsideOriginalCommand()
+    {
+        for (var invocation = LogicalDriver.Value; invocation is not null; invocation = invocation.Parent)
+            if (invocation.Active && ReferenceEquals(invocation.Owner, this)) return true;
+        return false;
+    }
     private readonly BrowseChrome _chrome;
     private readonly Func<string, bool> _originalActionAvailability;
     private readonly object _sourceGate = new();
@@ -28,14 +40,16 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     private string _address, _find = string.Empty, _status;
     private bool _addressDraft, _busy, _ready, _disposed;
     private volatile bool _retiring;
-    private Task? _originalCommand, _originalClose, _originalChromeClose;
+    private Task? _originalCommand, _originalClose, _originalChromeClose, _pendingCloseAttempt;
+    private readonly List<Task> _closeAttempts = [];
     public event PropertyChangedEventHandler? PropertyChanged;
     public BrowseChromeSnapshot State => _snapshot;
-    public bool IsOriginalPublicationCurrent => !_retiring && !_disposed;
-    public bool IsReady => _ready && !_retiring && !_disposed;
+    public bool IsOriginalPublicationCurrent => !_retiring && !_disposed && _chrome.OriginalClose is null;
+    public bool IsReady => _ready && IsOriginalPublicationCurrent && _pendingCloseAttempt is null;
     public BrowseChrome OriginalChrome => _chrome;
     public Task? OriginalCommand => _originalCommand;
-    public Task? OriginalClose => _originalClose;
+    public Task? OriginalClose => _originalClose ?? (_chrome.OriginalClose is not null ? _pendingCloseAttempt : null);
+    public IReadOnlyList<Task> OriginalCloseAttempts => _closeAttempts.ToArray();
     public Task? OriginalChromeClose => _originalChromeClose;
     public IReadOnlyList<Task> OriginalCommands { get { lock (_sourceGate) return _originalCommands.ToArray(); } }
     public IReadOnlyList<Task> OriginalOperations { get { lock (_sourceGate) return _originalOperations.ToArray(); } }
@@ -48,6 +62,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         _originalActionAvailability = originalActionAvailability ?? throw new ArgumentNullException(nameof(originalActionAvailability));
         _snapshot = _chrome.State; _address = _snapshot.SelectedTab.Address.ToString(); _status = _snapshot.Status;
         IssueCurrentRows(); IssueSavedEntryRows(); _chrome.StateChanged += OnChromeStateChanged;
+        _chrome.RetirementStarted += OnChromeRetirementStarted;
     }
     public static CuiDocument LoadDocument()
     {
@@ -66,11 +81,23 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     }
     public bool TryGetValue(string path, out object? value)
     {
+        if (path.StartsWith("Can.", StringComparison.Ordinal))
+        { value = IsActionAvailable("9to1.Browse." + path[4..]) == true; return true; }
         if (TryGetDownloadFilesBinding(path, out value)) return true;
         var selected = _snapshot.SelectedTab;
         value = path switch
         {
             "Tabs" => _tabRows,
+            "IsWebPage" => selected.Address.IsWeb,
+            "IsNativePage" => selected.NativePage != BrowserNativePage.None,
+            "IsHistory" => selected.NativePage == BrowserNativePage.History,
+            "IsBookmarks" => selected.NativePage == BrowserNativePage.Bookmarks,
+            "IsDownloads" => selected.NativePage == BrowserNativePage.Downloads,
+            "IsSettings" => selected.NativePage == BrowserNativePage.Settings,
+            "NativeTitle" => selected.Title,
+            "EmptyBookmarks" => _bookmarkRows.Length == 0,
+            "EmptyHistory" => _historyRows.Length == 0,
+            "EmptyDownloads" => _downloadRows.Length == 0,
             "Address" => _address, "FindQuery" => _find, "Status" => _status,
             "Security" => _snapshot.Security.Label + " · " + _snapshot.Security.Explanation,
             "Profile" => selected.Privacy == BrowserTabPrivacy.Private ? "Private tab · isolated temporary profile" : "Standard profile",
@@ -112,19 +139,23 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         {
             "9to1.Browse.Back" => interactive && tab.CanGoBack,
             "9to1.Browse.Forward" => interactive && tab.CanGoForward,
-            "9to1.Browse.Navigate" or "9to1.Browse.Reload" or "9to1.Browse.FindNext" or "9to1.Browse.FindPrevious" or
-                "9to1.Browse.ZoomIn" or "9to1.Browse.ZoomOut" or "9to1.Browse.ZoomReset" or "9to1.Browse.DevTools" or
-                "9to1.Browse.OpenBookmark" or "9to1.Browse.OpenHistory" => interactive,
+            "9to1.Browse.Navigate" or "9to1.Browse.OpenBookmark" or "9to1.Browse.OpenHistory" => tab.EngineState != BrowseEngineState.Crashed,
+            "9to1.Browse.Reload" or "9to1.Browse.FindNext" or "9to1.Browse.FindPrevious" or
+                "9to1.Browse.ZoomIn" or "9to1.Browse.ZoomOut" or "9to1.Browse.ZoomReset" or "9to1.Browse.DevTools" => interactive,
             "9to1.Browse.Stop" => interactive && tab.IsLoading,
             "9to1.Browse.Bookmark" or "9to1.Browse.AllowPopups" or "9to1.Browse.DenyPopups" or
-                "9to1.Browse.FirefoxSite" or "9to1.Browse.ChromiumSite" or "9to1.Browse.ResetSiteEngine" => tab.Address.Scheme is "http" or "https",
+                "9to1.Browse.FirefoxSite" or "9to1.Browse.ChromiumSite" or "9to1.Browse.ResetSiteEngine" => tab.Address.IsWeb,
             "9to1.Browse.Recover" => tab.EngineState == BrowseEngineState.Crashed,
+            "9to1.Browse.FirefoxTab" or "9to1.Browse.ChromiumTab" or "9to1.Browse.ResetTabEngine" => tab.Address.IsWeb,
+            "9to1.Browse.ReopenClosedTab" => _chrome.CanReopenClosedTab,
+            "9to1.Browse.CloseTab" => tab.IsCloseable,
             "9to1.Browse.ShowDownloadInFiles" => _originalDownloadFilesService is not null,
             "9to1.Browse.RegisterDownloadDestination" => _originalDownloadFilesService is not null && _downloadDestinations.Length > 0,
             "9to1.Browse.RetryDownloadRegistration" => CanRetryOriginalDownloadRegistration,
             "9to1.Browse.Downloads" => _snapshot.Downloads.IsSupported,
-            "9to1.Browse.NewTab" or "9to1.Browse.NewPrivateTab" or "9to1.Browse.CloseTab" or "9to1.Browse.SelectTab" or
-                "9to1.Browse.ClearHistory" or "9to1.Browse.FirefoxTab" or "9to1.Browse.ChromiumTab" or
+            "9to1.Browse.NewTab" or "9to1.Browse.NewPrivateTab" or "9to1.Browse.SelectTab" or
+                "9to1.Browse.ClearHistory" or "9to1.Browse.OpenHistoryPage" or "9to1.Browse.OpenBookmarksPage" or
+                "9to1.Browse.OpenDownloadsPage" or "9to1.Browse.OpenSettingsPage" or
                 "9to1.Browse.DefaultFirefox" or "9to1.Browse.DefaultChromium" => true,
             "9to1.Browse.DiscardAddress" => _addressDraft,
             _ => false
@@ -153,7 +184,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     }
     private async Task RunAsync(Task start, string command, object? parameter, CancellationToken token)
     {
-        var prior = LogicalDriver.Value; LogicalDriver.Value = this;
+        var prior = LogicalDriver.Value; var invocation = new CommandInvocation(this, prior); LogicalDriver.Value = invocation;
         var failures = new List<Exception>();
         try
         {
@@ -161,6 +192,12 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             var tabId = _snapshot.SelectedTabId;
             switch (command)
             {
+                case "9to1.Browse.OpenHistoryPage": await Operation(() => _chrome.OpenNativePageAsync(BrowserNativePage.History, token)); _addressDraft = false; break;
+                case "9to1.Browse.OpenBookmarksPage": await Operation(() => _chrome.OpenNativePageAsync(BrowserNativePage.Bookmarks, token)); _addressDraft = false; break;
+                case "9to1.Browse.OpenDownloadsPage":
+                    await Operation(() => _chrome.OpenNativePageAsync(BrowserNativePage.Downloads, token)); _addressDraft = false;
+                    if (_snapshot.Downloads.IsSupported) await Operation(() => _chrome.RefreshDownloadsAsync(token)); break;
+                case "9to1.Browse.OpenSettingsPage": await Operation(() => _chrome.OpenNativePageAsync(BrowserNativePage.Settings, token)); _addressDraft = false; break;
                 case "9to1.Browse.Navigate": await Operation(() => _chrome.NavigateAsync(_address, token)); _addressDraft = false; break;
                 case "9to1.Browse.Back": await Operation(() => _chrome.BackAsync(token)); break;
                 case "9to1.Browse.Forward": await Operation(() => _chrome.ForwardAsync(token)); break;
@@ -169,6 +206,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 case "9to1.Browse.NewTab": await Operation(() => _chrome.NewTabAsync(false, token)); _addressDraft = false; break;
                 case "9to1.Browse.NewPrivateTab": await Operation(() => _chrome.NewTabAsync(true, token)); _addressDraft = false; break;
                 case "9to1.Browse.CloseTab": await Operation(() => _chrome.CloseTabAsync(tabId, token)); _addressDraft = false; break;
+                case "9to1.Browse.ReopenClosedTab": await Operation(() => _chrome.ReopenClosedTabAsync(token)); _addressDraft = false; break;
                 case "9to1.Browse.SelectTab":
                     if (!IsCurrentTabTarget(parameter)) { _status = "The tab row changed before selection; select its current row again."; break; }
                     var selectedTarget = (TabSelection)parameter!;
@@ -180,6 +218,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                     var entry = (SavedEntrySelection)parameter!;
                     await Operation(() => entryKind == SavedEntryKind.Bookmark ? _chrome.OpenBookmarkAsync(entry.Id, token) : _chrome.OpenHistoryEntryAsync(entry.Id, token));
                     _addressDraft = false; break;
+                case "9to1.Browse.ResetTabEngine": await Operation(() => _chrome.ResetSelectedTabEngineAsync(token)); break;
                 case "9to1.Browse.ResetSiteEngine": await Operation(() => _chrome.ResetSiteEngineAsync(token)); break;
                 case "9to1.Browse.Bookmark": await Operation(() => _chrome.ToggleBookmarkAsync(token)); break;
                 case "9to1.Browse.ClearHistory": await Operation(() => _chrome.ClearHistoryAsync(token)); break;
@@ -209,14 +248,19 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 case "9to1.Browse.DiscardAddress": _addressDraft = false; break;
                 default: throw new ArgumentOutOfRangeException(nameof(command));
             }
-            ApplySnapshot(_chrome.State); _status = _snapshot.Status;
+            if (IsOriginalPublicationCurrent) { ApplySnapshot(_chrome.State); _status = _snapshot.Status; }
         }
-        catch (Exception failure) { failures.Add(failure); _status = "Browse retained the original failed operation: " + failure.Message; }
+        catch (Exception failure)
+        {
+            failures.Add(failure);
+            try { if (IsOriginalPublicationCurrent) ApplySnapshot(_chrome.State); } catch (Exception observationFailure) { failures.Add(observationFailure); }
+            _status = "Browse retained the original failed operation: " + failure.Message;
+        }
         finally
         {
             _busy = false;
             try { Changed(); } catch (Exception failure) { failures.Add(failure); }
-            LogicalDriver.Value = prior;
+            invocation.Active = false; LogicalDriver.Value = prior;
         }
         if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
         if (failures.Count > 1) throw new AggregateException("Browse retained operation and observer failures.", failures);
@@ -228,9 +272,19 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         lock (_sourceGate) Retain(_originalOperations, original);
         await original;
     }
+    private void OnChromeRetirementStarted(object? sender, EventArgs args)
+    {
+        // Core has accepted the ordinary preflight. Keep publication current
+        // until this exact boundary; a rejected attempt never reaches it.
+        _retiring = true;
+        _originalClose ??= _pendingCloseAttempt;
+        _originalChromeClose = _chrome.OriginalClose;
+        var original = Dispatcher.UIThread.InvokeAsync(Changed).GetTask();
+        lock (_sourceGate) Retain(_originalUiOperations, original);
+    }
     private void OnChromeStateChanged(object? sender, BrowseChromeSnapshot snapshot)
     {
-        if (_retiring || _disposed) return;
+        if (!IsOriginalPublicationCurrent) return;
         lock (_sourceGate) CheckAdmission(_originalNotifications);
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var original = NotifyAsync(start.Task, snapshot);
@@ -242,7 +296,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         await start.ConfigureAwait(false);
         var originalUi = Dispatcher.UIThread.InvokeAsync(() =>
         {
-            if (!_retiring && !_disposed) ApplySnapshot(_chrome.State);
+            if (IsOriginalPublicationCurrent) ApplySnapshot(_chrome.State);
         }).GetTask();
         lock (_sourceGate) Retain(_originalUiOperations, originalUi);
         await originalUi.ConfigureAwait(false);
@@ -251,6 +305,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     {
         Dispatcher.UIThread.VerifyAccess();
         if (_retiring || _disposed) return;
+        if (_snapshot.SelectedTabId != snapshot.SelectedTabId || _snapshot.SelectedTab.NativePage != snapshot.SelectedTab.NativePage) _find = snapshot.FindQuery;
         _snapshot = snapshot; IssueCurrentRows(); IssueSavedEntryRows();
         if (!_addressDraft) _address = snapshot.SelectedTab.Address.ToString();
         _status = snapshot.Status; Changed();
@@ -277,25 +332,48 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             { _status = "Complete or cancel the current page download through Browser approval before closing its engine."; Changed(); return false; }
         return true;
     }
-    public void WithdrawForClose()
+    /// <summary>Checks original callback ownership without changing publication, status or close admission.</summary>
+    public void DemandExternalOriginalRetirementJoin()
     {
         Dispatcher.UIThread.VerifyAccess();
-        _retiring = true;
+        DemandOriginalFilesExternalJoin();
+        _chrome.DemandExternalOriginalRetirementJoin();
     }
+
     public ValueTask DisposeAsync()
     {
-        DemandOriginalFilesExternalJoin();
-        Dispatcher.UIThread.VerifyAccess();
-        if (ReferenceEquals(LogicalDriver.Value, this)) throw new InvalidOperationException("A Browse source callback cannot join its own retirement.");
-        if (_originalClose is not null) return new(_originalClose);
+        DemandExternalOriginalRetirementJoin();
+        if (OriginalClose is { } accepted) return new(accepted);
+        if (_pendingCloseAttempt is not null) return new(_pendingCloseAttempt);
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        _retiring = true; _originalClose = CloseAsync(start.Task); start.SetResult();
-        return new(_originalClose);
+        _pendingCloseAttempt = CloseAsync(start.Task); _closeAttempts.Add(_pendingCloseAttempt);
+        start.SetResult(); return new(_pendingCloseAttempt);
     }
     private async Task CloseAsync(Task start)
     {
         await start; var failures = new List<Exception>();
         async Task Join(Task original) { try { await original; } catch (Exception failure) { failures.Add(failure); } }
+        try
+        {
+            // Core first resolves unsaved work while this host is still current,
+            // then cancels/closes actual owners before joining their initialization.
+            var attempt = _chrome.DisposeAsync().AsTask();
+            try { await attempt; }
+            catch (Exception failure)
+            {
+                if (_chrome.OriginalClose is null) throw; // Veto: keep commands and publication alive.
+                failures.Add(failure);
+            }
+        }
+        finally
+        {
+            if (_chrome.OriginalClose is null) _pendingCloseAttempt = null;
+            else
+            {
+                _originalClose ??= _pendingCloseAttempt; _retiring = true;
+                _originalChromeClose = _chrome.OriginalClose;
+            }
+        }
         var joined = new HashSet<Task>(ReferenceEqualityComparer.Instance);
         while (true)
         {
@@ -305,10 +383,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             if (admitted.Length == 0) break;
             foreach (var source in admitted) { joined.Add(source); await Join(source); }
         }
-        try { _originalChromeClose = _chrome.DisposeAsync().AsTask(); } catch (Exception failure) { failures.Add(failure); }
-        if (_originalChromeClose is not null) await Join(_originalChromeClose);
         if (failures.Count != 0) throw new AggregateException("Browse retained its same source or engine retirement failure.", failures);
-        _chrome.StateChanged -= OnChromeStateChanged; _disposed = true;
+        _chrome.StateChanged -= OnChromeStateChanged;
+        _chrome.RetirementStarted -= OnChromeRetirementStarted; _disposed = true;
     }
     private sealed record TabSelection(BrowseNativeWorkspace Owner, Guid TabId, long Epoch);
     private void IssueCurrentRows()
@@ -316,7 +393,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         var actualRows = _snapshot.Tabs.Select(tab => (tab.Id, Key: tab.Id.ToString("D"),
             Label: (tab.Id == _snapshot.SelectedTabId ? "● " : string.Empty) + tab.Title +
             (tab.Privacy == BrowserTabPrivacy.Private ? " · Private" : string.Empty) +
-            (tab.Engine == BrowseEngineKind.Chromium ? " · Chromium" : " · Firefox"))).ToArray();
+            (!tab.Address.IsWeb ? (tab.IsHome ? " · Home" : " · " + tab.Address.Authority) : tab.Engine == BrowseEngineKind.Chromium ? " · Chromium" : " · Firefox"))).ToArray();
         if (_tabRows.Length == actualRows.Length && _tabRows.Zip(actualRows).All(pair =>
             pair.First.Key == pair.Second.Key && pair.First.Label == pair.Second.Label)) return;
         var epoch = checked(++_rowEpoch);

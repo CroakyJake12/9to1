@@ -7,7 +7,7 @@
             <Text id="brand" text="9-1" font-size="22" font-weight="Bold" foreground="{Resource CuiTextBrush}" margin="0 0 24 0" />
             <Input id="global-search" placeholder-text="Search 9-1" accessible-name="Search 9-1" width="360" margin="0 0 16 0" Type="Text" />
             <Button id="open-studio" action="OpenStudio" content="Open Studio" margin="0 0 8 0" />
-            <Button id="install-all" action="InstallAllUpdates" content="Install apps" />
+            <Button id="install-all" action="InstallAllUpdates" content="Install updates" />
           </Container>
           <Container id="home-workspace-scroll" height="700" horizontal-scrolling="true" vertical-scrolling="true" Type="Overlay">
             <Container id="home-body" margin="24" Type="Horizontal Stack">
@@ -135,8 +135,9 @@
                     <Text text="Activity from your authorised apps and services." foreground="{Resource CuiTextSoftBrush}" margin="0 6 0 14" />
                     <Button id="events-refresh" action="RefreshEvents" content="Refresh activity" />
                     <Text id="events-page-status" text="{Binding EventsSummary}" foreground="{Resource CuiTextSoftBrush}" margin="0 10 0 12" />
-                    <Text id="events-page-items" text="{Binding EventItemsSummary}" foreground="{Resource CuiTextBrush}" />
+                    <Input id="events-page-items" Type="List" height="320" accessible-name="Activity items" />
                     <Button id="events-open-selected" action="OpenEventObject" content="Open selected activity item" margin="0 12 0 0" />
+                    <Text text="{Binding NavigationStatus}" foreground="{Resource CuiTextSoftBrush}" margin="0 12 0 0" />
                   </Container>
                 </If>
                 <If Condition="{Binding IsSettings}">

@@ -421,7 +421,7 @@ internal sealed class DashboardWidgetCanvas : Canvas
         {
             if (!dragging) return;
             var point = args.GetPosition(this);
-            Canvas.SetLeft(frame, Math.Max(0, originalX + point.X - start.X));
+            Canvas.SetLeft(frame, IsNarrow ? 0 : Math.Max(0, originalX + point.X - start.X));
             Canvas.SetTop(frame, Math.Max(0, originalY + point.Y - start.Y));
             args.Handled = true;
         };
@@ -443,6 +443,26 @@ internal sealed class DashboardWidgetCanvas : Canvas
 
     private void CommitDrag(Control frame, string key)
     {
+        if (IsNarrow)
+        {
+            var ordered = _placements.Where(item => item.IsVisible && item.Key != key)
+                .OrderBy(item => item.Row).ThenBy(item => item.Column).ToList();
+            var moved = _placements.Single(item => item.Key == key);
+            var top = Canvas.GetTop(frame);
+            var index = ordered.FindIndex(item => _frames.TryGetValue(item.Key, out var other) &&
+                top < Canvas.GetTop(other) + other.Height / 2);
+            ordered.Insert(index < 0 ? ordered.Count : index, moved);
+            var narrowRow = 0;
+            var projected = new Dictionary<string, DashboardWidgetPlacement>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in ordered)
+            {
+                projected[item.Key] = item with { Row = narrowRow };
+                narrowRow += item.Height;
+            }
+            ApplyLayout(_placements.Select(item => projected.GetValueOrDefault(item.Key, item)).ToArray());
+            ApplyGeometry();
+            return;
+        }
         var unitX = CellWidth + Gap;
         var unitY = RowHeight + Gap;
         var column = (int)Math.Round(Math.Max(0, Canvas.GetLeft(frame)) / unitX);
@@ -470,7 +490,7 @@ internal sealed class DashboardWidgetCanvas : Canvas
         {
             if (!resizing) return;
             var point = args.GetPosition(this);
-            frame.Width = Math.Max(CellWidth, originalWidth + point.X - start.X);
+            frame.Width = IsNarrow ? Bounds.Width : Math.Max(CellWidth, originalWidth + point.X - start.X);
             frame.Height = Math.Max(RowHeight, originalHeight + point.Y - start.Y);
             args.Handled = true;
         };
@@ -492,25 +512,31 @@ internal sealed class DashboardWidgetCanvas : Canvas
 
     private void CommitResize(Control frame, string key)
     {
-        var width = Math.Clamp((int)Math.Round((frame.Width + Gap) / (CellWidth + Gap)), 1, DashboardWidgetLayoutEngine.Columns);
+        var width = IsNarrow ? _placements.Single(item => item.Key == key).Width :
+            Math.Clamp((int)Math.Round((frame.Width + Gap) / (CellWidth + Gap)), 1, DashboardWidgetLayoutEngine.Columns);
         var height = Math.Clamp((int)Math.Round((frame.Height + Gap) / (RowHeight + Gap)), 1, 6);
         ResizeWidget(key, width, height);
     }
 
     private void ApplyGeometry()
     {
-        foreach (var placement in _placements.Where(item => item.IsVisible))
+        var narrowTop = 0d;
+        foreach (var placement in _placements.Where(item => item.IsVisible).OrderBy(item => item.Row).ThenBy(item => item.Column))
         {
             if (!_frames.TryGetValue(placement.Key, out var frame)) continue;
-            Canvas.SetLeft(frame, placement.Column * (CellWidth + Gap));
-            Canvas.SetTop(frame, placement.Row * (RowHeight + Gap));
-            frame.Width = placement.Width * CellWidth + Math.Max(0, placement.Width - 1) * Gap;
+            Canvas.SetLeft(frame, IsNarrow ? 0 : placement.Column * (CellWidth + Gap));
+            Canvas.SetTop(frame, IsNarrow ? narrowTop : placement.Row * (RowHeight + Gap));
+            frame.Width = IsNarrow ? Bounds.Width : placement.Width * CellWidth + Math.Max(0, placement.Width - 1) * Gap;
             frame.Height = placement.Height * RowHeight + Math.Max(0, placement.Height - 1) * Gap;
+            narrowTop += frame.Height + Gap;
         }
 
         var rows = _placements.Where(item => item.IsVisible).Select(item => item.Row + item.Height).DefaultIfEmpty(4).Max();
-        Height = Math.Max(480, rows * RowHeight + Math.Max(0, rows - 1) * Gap + 8);
+        Height = Math.Max(480, IsNarrow ? narrowTop + 8 : rows * RowHeight + Math.Max(0, rows - 1) * Gap + 8);
     }
+
+    // Pixel adaptation never rewrites the user's canonical six-column layout.
+    private bool IsNarrow => Bounds.Width is > 0 and < 720;
 
     private double CellWidth
     {

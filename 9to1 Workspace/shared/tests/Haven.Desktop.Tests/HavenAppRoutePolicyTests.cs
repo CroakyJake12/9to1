@@ -9,7 +9,7 @@ public sealed class HavenAppRoutePolicyTests
     private static readonly string[] ExpectedBuiltInKeys =
     [
         "chat", "study", "automations", "terminal", "tasks", "studio", "dev", "browse", "plan", "training", "imagine", "canvas",
-        "present", "data", "vision", "play", "translate", "launcher", "go", "dashboard", "write", "mesh", "spaces", "boards", "maps", "motion", "forms", "shelf", "assistants"
+        "present", "data", "vision", "play", "translate", "launcher", "go", "dashboard", "write", "mesh", "spaces", "boards", "maps", "motion", "forms", "shelf", "assistants", "files"
     ];
 
     public static TheoryData<string, HavenAppRouteKind, HavenSurface> BuiltInRoutes => new()
@@ -42,7 +42,8 @@ public sealed class HavenAppRoutePolicyTests
         { "motion", HavenAppRouteKind.ModeWorkspace, HavenSurface.Motion },
         { "forms", HavenAppRouteKind.Forms, HavenSurface.Forms },
         { "shelf", HavenAppRouteKind.BaseMode, HavenSurface.Chat },
-        { "assistants", HavenAppRouteKind.Assistants, HavenSurface.Assistants }
+        { "assistants", HavenAppRouteKind.Spaces, HavenSurface.Spaces },
+        { "files", HavenAppRouteKind.Files, HavenSurface.Files }
     };
 
     [Theory]
@@ -69,7 +70,7 @@ public sealed class HavenAppRoutePolicyTests
     }
 
     [Fact]
-    public void AssistantsRetainsItsOwnStableRegisteredIdentityAndDedicatedRoute()
+    public void LegacyAssistantsIdentityResolvesToItsDestinationWithinSpaces()
     {
         var app = Assert.Single(BuiltInModeSeed.Modes, item => item.Key == "assistants");
         Assert.Equal(Guid.Parse("a0000000-0000-0000-0000-000000000029"), app.Id);
@@ -78,7 +79,9 @@ public sealed class HavenAppRoutePolicyTests
         Assert.Equal(string.Empty, app.SystemPromptSuffix);
         Assert.Equal(20, (int)HavenAppRouteKind.Assistants);
         Assert.Equal(31, (int)HavenSurface.Assistants);
-        Assert.Equal(new HavenAppRoute(HavenAppRouteKind.Assistants, HavenSurface.Assistants), HavenAppRoutePolicy.Resolve(app));
+        Assert.Equal(new HavenAppRoute(HavenAppRouteKind.Spaces, HavenSurface.Spaces, "assistants"), HavenAppRoutePolicy.Resolve(app));
+        Assert.True(HavenAppRoutePolicy.IsDeprecatedStandalone(app));
+        Assert.False(HavenAppRoutePolicy.IsDeprecatedStandalone(BuiltInModeSeed.Modes.Single(item => item.Key == "spaces")));
         Assert.Equal(BuiltInModeSeed.Modes.Count, BuiltInModeSeed.Modes.Select(item => item.Id).Distinct().Count());
     }
 

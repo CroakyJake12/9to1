@@ -30,7 +30,7 @@ public sealed partial class NewDashboardPage
 
     private void ConfigureDashboardAssistantPanel()
     {
-        if (_dashboardAssistantPanel is not null || Content is not Grid root) return;
+        if (_dashboardAssistantPanel is not null || _dashboardRoot is not { } root) return;
 
         var title = new TextBlock
         {
@@ -63,11 +63,13 @@ public sealed partial class NewDashboardPage
             FontSize = 11
         };
         _dashboardAssistantApply = new HavenPrimaryButton { Content = "Apply with 9to1" };
-        _dashboardAssistantApply.Click += async (_, _) => await ApplyDashboardAssistantAsync();
+        _dashboardAssistantApply.Click += async (_, _) => await RunHomeEventAsync(_ => ApplyDashboardAssistantAsync());
         _dashboardAssistantRevert = new HavenButton { Content = "Revert last 9to1 change", Classes = { "subtle" }, IsEnabled = false };
-        _dashboardAssistantRevert.Click += async (_, _) => await RevertDashboardAssistantAsync();
+        _dashboardAssistantRevert.Click += async (_, _) => await RunHomeEventAsync(_ => RevertDashboardAssistantAsync());
 
-        var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        var buttons = new WrapPanel { Orientation = Orientation.Horizontal };
+        _dashboardAssistantApply.Margin = new Thickness(0, 0, 8, 8);
+        _dashboardAssistantRevert.Margin = new Thickness(0, 0, 0, 8);
         buttons.Children.Add(_dashboardAssistantApply);
         buttons.Children.Add(_dashboardAssistantRevert);
 
@@ -86,10 +88,10 @@ public sealed partial class NewDashboardPage
 
         _dashboardAssistantPanel = new HavenPanel
         {
-            Width = 410,
-            HorizontalAlignment = HorizontalAlignment.Right,
+            MaxWidth = 410,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
             VerticalAlignment = VerticalAlignment.Stretch,
-            Margin = new Thickness(0, 118, 24, 82),
+            Margin = new Thickness(16, 118, 16, 82),
             Padding = new Thickness(18),
             CornerRadius = new CornerRadius(20),
             IsVisible = false,
@@ -100,9 +102,9 @@ public sealed partial class NewDashboardPage
                 Content = body
             }
         };
-        Grid.SetRowSpan(_dashboardAssistantPanel, 2);
+        Grid.SetRowSpan(_dashboardAssistantPanel, 3);
         _dashboardAssistantPanel.SetValue(Panel.ZIndexProperty, 40);
-        root.Children.Add(_dashboardAssistantPanel);
+        root.AddChild(_dashboardAssistantPanel);
     }
 
     private void ToggleDashboardAssistant(bool? forceVisible = null)
@@ -112,7 +114,9 @@ public sealed partial class NewDashboardPage
         if (_dashboardAssistantPanel.IsVisible) _dashboardAssistantInput?.Focus();
     }
 
-    private async Task ApplyDashboardAssistantAsync()
+    private Task ApplyDashboardAssistantAsync() => RunHomeWorkAsync(_ => ApplyDashboardAssistantCoreAsync());
+
+    private async Task ApplyDashboardAssistantCoreAsync()
     {
         if (_dashboardEditPlanner is null || _dashboardAssistantInput is null || _dashboardAssistantStatus is null
             || _dashboardAssistantApply is null || _dashboardAssistantBusy) return;
@@ -139,14 +143,22 @@ public sealed partial class NewDashboardPage
                 ? _widgetViews
                 : _widgetProviders.Select(provider => new DashboardWidgetViewState(provider.Definition, null, DashboardWidgetDataState.Loading)).ToArray();
             var page = SelectedPage;
-            var result = await _dashboardEditPlanner.PlanAsync(instruction, page.Title, views, _widgetCanvas.Placements, token);
+            var snapshot = new DashboardAssistantSnapshot(page.Id, page.Title, _widgetCanvas.Placements.ToArray());
+            var result = await AwaitHomeSourceAsync(_dashboardEditPlanner.PlanAsync(instruction, page.Title, views, snapshot.Layout, token));
+            token.ThrowIfCancellationRequested();
+            if (_disposed || _homeWork.IsRetiring) return;
+            if (SelectedPage.Id != snapshot.PageId || SelectedPage.Title != snapshot.Title ||
+                !_widgetCanvas.Placements.SequenceEqual(snapshot.Layout))
+            {
+                _dashboardAssistantStatus.Text = "The dashboard changed while the edit was being planned. Your changes were preserved; ask again to use the current layout.";
+                return;
+            }
             if (!result.Succeeded || result.Plan is null)
             {
                 _dashboardAssistantStatus.Text = result.Message;
                 return;
             }
 
-            var snapshot = new DashboardAssistantSnapshot(page.Id, page.Title, _widgetCanvas.Placements.ToArray());
             var applied = DashboardEditPlanApplier.Apply(
                 result.Plan,
                 page.Title,
@@ -169,6 +181,8 @@ public sealed partial class NewDashboardPage
                 return;
             }
 
+            if (string.Equals(_dashboardAssistantInput.Text?.Trim(), instruction, StringComparison.Ordinal))
+                _dashboardAssistantInput.Text = string.Empty;
             _lastDashboardAssistantSnapshot = snapshot;
             if (_dashboardAssistantRevert is not null) _dashboardAssistantRevert.IsEnabled = true;
             _dashboardAssistantStatus.Text = $"{result.Plan.Summary} · Applied as one reversible change.";
@@ -184,11 +198,13 @@ public sealed partial class NewDashboardPage
         finally
         {
             _dashboardAssistantBusy = false;
-            _dashboardAssistantApply.IsEnabled = true;
+            if (!_disposed && !_homeWork.IsRetiring) _dashboardAssistantApply.IsEnabled = true;
         }
     }
 
-    private async Task RevertDashboardAssistantAsync()
+    private Task RevertDashboardAssistantAsync() => RunHomeWorkAsync(_ => RevertDashboardAssistantCoreAsync());
+
+    private async Task RevertDashboardAssistantCoreAsync()
     {
         if (_lastDashboardAssistantSnapshot is not { } snapshot || _dashboardAssistantStatus is null) return;
         if (!snapshot.PageId.Equals(_selectedPageId, StringComparison.OrdinalIgnoreCase))

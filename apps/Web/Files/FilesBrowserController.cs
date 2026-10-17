@@ -16,8 +16,12 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
     private IReadOnlyList<FilesBrowserRow> _items = [];
     private HostedItemMetadata? _folder, _selected, _editTarget;
     private FilesOperation? _pending;
+    private sealed record FolderVisit(HostedItemId? Id, string Query);
+    private readonly List<FolderVisit> _history = [];
+    private int _historyIndex = -1;
     private string? _cursor;
     private string _name = "", _status = "";
+    private string _searchDraft = "", _query = "", _sort = "NameAscending";
     private bool _busy, _disposed, _editing, _creating, _savedNeedsRefresh, _folderUnavailable, _accessDenied;
 
     public FilesBrowserController(IFilesProvider provider, string authenticatedActor)
@@ -65,7 +69,7 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetime.Token);
         if (!_provider.Location.IsAvailable || !_provider.Location.Capabilities.Supports(FilesProviderCapabilities.Read))
             throw new InvalidOperationException("Files location is unavailable.");
-        await OpenFolderAsync(folderId, linked.Token);
+        await NavigateAsync(folderId, "", linked.Token);
         Changed();
     }
 
@@ -78,6 +82,10 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
             "FolderName" => _accessDenied || _disposed ? "Files" : _folder?.Name ?? _provider.Location.Name,
             "Status" => _status,
             "Empty" => !_busy && _items.Count == 0,
+            "EmptyMessage" => _query.Length == 0 ? "This folder is empty." : "No names match this search in this folder.",
+            "SearchText" => _searchDraft,
+            "SearchSummary" => _query.Length == 0 ? "All items in this folder" : $"Names containing: {_query}",
+            "SortDescription" => _sort switch { "NameDescending" => "Loaded items: name Z–A", "Newest" => "Loaded items: newest first", _ => "Loaded items: name A–Z" },
             "Editing" => _editing,
             "EditTitle" => _creating ? "New folder" : "Rename selected item",
             "Name" => _name,
@@ -88,13 +96,18 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
             "CanRename" => Available("Rename"),
             "CanOpen" => Available("Open"),
             "CanUp" => Available("Up"),
+            "CanBack" => Available("Back"),
+            "CanForward" => Available("Forward"),
+            "CanSearch" => Available("Search"),
+            "CanClearSearch" => Available("ClearSearch"),
             "CanMore" => Available("More"),
             "CanSave" => Available("Save"),
             "CanCancel" => Available("Cancel"),
             "CanEditName" => !_disposed && !_busy && _editing && _pending is null,
             _ => null
         };
-        return path is "Items" or "LocationName" or "FolderName" or "Status" or "Empty" or "Editing"
+        return path is "Items" or "LocationName" or "FolderName" or "Status" or "Empty" or "EmptyMessage" or "Editing"
+            or "SearchText" or "SearchSummary" or "SortDescription" or "CanBack" or "CanForward" or "CanSearch" or "CanClearSearch"
             or "EditTitle" or "Name" or "SelectedName" or "SelectedDetails" or "CanBrowse" or "CanCreate"
             or "CanRename" or "CanOpen" or "CanUp" or "CanMore" or "CanSave" or "CanCancel" or "CanEditName";
     }
@@ -102,6 +115,8 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
     public bool TrySetValue(string path, object? value)
     {
         if (CommandAdmission?.Invoke() == false) return false;
+        if (path == "SearchText" && value is string search && search.Length <= 256 && Available("Search"))
+        { _searchDraft = search; Changed(); return true; }
         if (path != "Name" || value is not string name || _disposed || _busy || !_editing || _pending is not null)
             return false;
         _name = name;
@@ -120,6 +135,12 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
             "Select" or "Refresh" => !_editing && capabilities.Supports(FilesProviderCapabilities.Read),
             "Open" => !_editing && _selected?.Kind == HostedItemKind.Folder,
             "Up" => !_editing && _folder is not null,
+            "Home" => !_editing && capabilities.Supports(FilesProviderCapabilities.Read),
+            "Back" => !_editing && _historyIndex > 0 && capabilities.Supports(FilesProviderCapabilities.Read),
+            "Forward" => !_editing && _historyIndex + 1 < _history.Count && capabilities.Supports(FilesProviderCapabilities.Read),
+            "Search" => !_editing && !_folderUnavailable && capabilities.Supports(FilesProviderCapabilities.Read | FilesProviderCapabilities.Search),
+            "ClearSearch" => !_editing && (_query.Length != 0 || _searchDraft.Length != 0) && capabilities.Supports(FilesProviderCapabilities.Read),
+            "SortNameAscending" or "SortNameDescending" or "SortNewest" => !_editing && capabilities.Supports(FilesProviderCapabilities.Read),
             "More" => !_editing && _cursor is not null,
             "NewFolder" => !_editing && !_folderUnavailable && capabilities.Supports(FilesProviderCapabilities.Write),
             "Rename" => !_editing && _selected is not null && capabilities.Supports(FilesProviderCapabilities.Rename),
@@ -145,19 +166,28 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
             switch (command)
             {
                 case "Select":
-                    if (parameter is FilesBrowserRow row && _items.Any(item => item.Metadata.Id == row.Metadata.Id))
+                    if (parameter is FilesBrowserRow row && _items.Any(item => ReferenceEquals(item, row)))
                     {
                         var result = await _provider.GetAsync(row.Metadata.Id, ct);
                         ct.ThrowIfCancellationRequested();
-                        if (result.IsSuccess) _selected = result.Value;
+                        if (result.IsSuccess && result.Value is { } current && IsCurrentRow(current)) _selected = current;
+                        else if (result.IsSuccess) { _selected = null; _status = "This item moved or changed. Refresh the folder."; }
                         else if (IsDenied(result.Error!)) ClearDeniedPresentation();
                         else { _selected = null; _status = Describe(result.Error!); }
                     }
                     break;
                 case "Refresh": await ReadPageAsync(false, ct); break;
                 case "More": await ReadPageAsync(true, ct); break;
-                case "Open": await OpenFolderAsync(_selected!.Id, ct); break;
-                case "Up": await OpenFolderAsync(_folder!.ParentId, ct); break;
+                case "Open": await NavigateAsync(_selected!.Id, "", ct); break;
+                case "Up": await NavigateAsync(_folder!.ParentId, "", ct); break;
+                case "Home": await NavigateAsync(null, "", ct); break;
+                case "Back": await NavigateHistoryAsync(_historyIndex - 1, ct); break;
+                case "Forward": await NavigateHistoryAsync(_historyIndex + 1, ct); break;
+                case "Search": await NavigateAsync(_folder?.Id, _searchDraft.Trim(), ct); break;
+                case "ClearSearch": await NavigateAsync(_folder?.Id, "", ct); break;
+                case "SortNameAscending": _sort = "NameAscending"; SortItems(); break;
+                case "SortNameDescending": _sort = "NameDescending"; SortItems(); break;
+                case "SortNewest": _sort = "Newest"; SortItems(); break;
                 case "NewFolder":
                     _editing = _creating = true; _name = ""; _editTarget = null; _status = "Choose a folder name."; break;
                 case "Rename":
@@ -218,13 +248,33 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
         var saved = await _provider.GetAsync(id, ct);
         ct.ThrowIfCancellationRequested();
         if (saved.Error is { } savedError && IsDenied(savedError)) { ClearDeniedPresentation(); return; }
-        _selected = saved.IsSuccess ? saved.Value : null;
+        _selected = saved.IsSuccess && saved.Value is { } item && IsCurrentRow(item) ? item : null;
         _status = saved.IsSuccess ? "Saved." : "Saved. " + Describe(saved.Error!);
         _savedNeedsRefresh = false;
     }
 
-    private async Task OpenFolderAsync(HostedItemId? id, CancellationToken ct)
+    private async Task NavigateAsync(HostedItemId? id, string query, CancellationToken ct)
     {
+        await OpenFolderAsync(id, query, ct);
+        var visit = new FolderVisit(id, query);
+        if (_historyIndex >= 0 && _history[_historyIndex] == visit) return;
+        _history.RemoveRange(_historyIndex + 1, _history.Count - _historyIndex - 1);
+        if (_history.Count == 128) _history.RemoveAt(0);
+        _history.Add(visit);
+        _historyIndex = _history.Count - 1;
+    }
+
+    private async Task NavigateHistoryAsync(int index, CancellationToken ct)
+    {
+        var visit = _history[index];
+        await OpenFolderAsync(visit.Id, visit.Query, ct);
+        _historyIndex = index;
+    }
+
+    private async Task OpenFolderAsync(HostedItemId? id, string query, CancellationToken ct)
+    {
+        if (query.Length != 0 && !_provider.Location.Capabilities.Supports(FilesProviderCapabilities.Search))
+            throw new InvalidOperationException("This provider no longer supports search.");
         HostedItemMetadata? folder = null;
         if (id is { } folderId)
         {
@@ -238,10 +288,13 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
             folder = result.Value;
             if (folder?.Kind != HostedItemKind.Folder) throw new InvalidOperationException("Destination is not a folder.");
         }
-        var page = await _provider.ListAsync(id, null, null, ct);
+        var page = await _provider.ListAsync(id, SearchQuery(query, id), null, ct);
         ct.ThrowIfCancellationRequested();
+        if (page.Items.Count > 500) throw new InvalidOperationException("The provider returned an oversized Files page.");
         _folder = folder; _folderUnavailable = false; _selected = null;
+        _query = _searchDraft = query;
         _items = page.Items.Select(item => new FilesBrowserRow(item)).ToArray(); _cursor = page.NextPageToken;
+        SortItems();
         _status = "Folder opened.";
     }
 
@@ -261,19 +314,42 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
             _folder = current.Value; _folderUnavailable = false;
         }
         // Keep rendering bounded; each explicit page replaces the previous page beyond 500 items.
-        var page = await _provider.ListAsync(_folder?.Id, null, append ? _cursor : null, ct);
+        var page = await _provider.ListAsync(_folder?.Id, SearchQuery(_query, _folder?.Id), append ? _cursor : null, ct);
         ct.ThrowIfCancellationRequested();
+        if (page.Items.Count > 500) throw new InvalidOperationException("The provider returned an oversized Files page.");
         var rows = page.Items.Select(item => new FilesBrowserRow(item));
-        _items = append && _items.Count + page.Items.Count <= 500 ? _items.Concat(rows).ToArray() : rows.ToArray();
+        _items = (append && _items.Count + page.Items.Count <= 500 ? _items.Concat(rows) : rows)
+            .DistinctBy(row => row.Metadata.Id).Take(500).ToArray();
+        SortItems();
         _cursor = page.NextPageToken;
         if (_selected is not null)
         {
             var selected = await _provider.GetAsync(_selected.Id, ct);
             ct.ThrowIfCancellationRequested();
             if (selected.Error is { } selectedError && IsDenied(selectedError)) { ClearDeniedPresentation(); return; }
-            _selected = selected.IsSuccess ? selected.Value : null;
+            _selected = selected.IsSuccess && selected.Value is { } item && IsCurrentRow(item) ? item : null;
         }
         _status = "Folder refreshed.";
+    }
+
+    private FilesSearchQuery? SearchQuery(string query, HostedItemId? parentId)
+    {
+        if (query.Length == 0) return null;
+        if (!_provider.Location.Capabilities.Supports(FilesProviderCapabilities.Search))
+            throw new InvalidOperationException("This provider no longer supports search.");
+        return new(query, _provider.Location.Id, parentId, Limit: 100);
+    }
+    private bool IsCurrentRow(HostedItemMetadata item) => item.LocationId == _provider.Location.Id &&
+        item.ParentId == _folder?.Id && _items.Any(row => row.Metadata.Id == item.Id) &&
+        (_query.Length == 0 || item.Name.Contains(_query, StringComparison.OrdinalIgnoreCase));
+    private void SortItems()
+    {
+        _items = (_sort switch
+        {
+            "NameDescending" => _items.OrderByDescending(row => row.Metadata.Name, StringComparer.OrdinalIgnoreCase),
+            "Newest" => _items.OrderByDescending(row => row.Metadata.ModifiedAt),
+            _ => _items.OrderBy(row => row.Metadata.Name, StringComparer.OrdinalIgnoreCase)
+        }).ThenBy(row => row.Metadata.Id.Value).ToArray();
     }
 
     private void EndEdit() { _editing = _creating = false; _editTarget = null; _pending = null; _name = ""; }
@@ -284,6 +360,7 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
     private void ClearDeniedPresentation()
     {
         _accessDenied = true; _items = []; _selected = _folder = null; _cursor = null; EndEdit();
+        ClearNavigation();
         _status = "Files access was denied. Reopen Files after signing in.";
     }
     private static string Describe(FilesError error) => error.Code == FilesErrorCode.RevisionConflict
@@ -303,7 +380,9 @@ public sealed class FilesBrowserController : ICuiWritableBindingContext, ICuiAct
     internal void ClearPrivatePresentation()
     {
         _disposed = true; _items = []; _selected = _folder = null; _cursor = null; EndEdit(); _status = "";
+        ClearNavigation();
     }
+    private void ClearNavigation() { _history.Clear(); _historyIndex = -1; _query = _searchDraft = ""; }
     public void Dispose()
     {
         lock (_issuedGate)

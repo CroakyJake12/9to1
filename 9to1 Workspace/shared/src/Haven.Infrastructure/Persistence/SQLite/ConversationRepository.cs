@@ -16,7 +16,7 @@ namespace Haven.Infrastructure;
 /// <summary>
 /// Represents conversation repository and keeps its related state and behavior together.
 /// </summary>
-public sealed partial class ConversationRepository(ISqliteConnectionFactory factory) : IConversationRepository, IConversationCreateOnlyRepository
+public sealed partial class ConversationRepository(ISqliteConnectionFactory factory) : IConversationRepository, IConversationCreateOnlyRepository, IConversationBranchBoundRepository
 {
     /// <summary>
     /// Retrieves recent async for the current operation.
@@ -131,12 +131,19 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
     /// <summary>
     /// Performs read messages asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    private async Task<IReadOnlyList<ChatMessage>> ReadMessagesAsync(Guid conversationId, bool includeCompacted, CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<ChatMessage>> ReadMessagesAsync(Guid conversationId, bool includeCompacted, CancellationToken cancellationToken, Guid? boundBranchId = null)
     {
         await ConversationProductionSchema.EnsureAsync(factory, cancellationToken).ConfigureAwait(false);
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
-        var branchId = await GetCurrentBranchIdAsync(connection, null, conversationId, cancellationToken).ConfigureAwait(false);
+        var branchId = boundBranchId ?? await GetCurrentBranchIdAsync(connection, null, conversationId, cancellationToken).ConfigureAwait(false);
+        return await ReadBranchMessagesAsync(connection, null, conversationId, branchId, includeCompacted, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task<IReadOnlyList<ChatMessage>> ReadBranchMessagesAsync(SqliteConnection connection,
+        SqliteTransaction? transaction, Guid conversationId, Guid? branchId, bool includeCompacted, CancellationToken cancellationToken)
+    {
         await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         if (branchId is null)
         {
             command.CommandText = includeCompacted
@@ -223,11 +230,26 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
     /// <summary>
     /// Performs add message asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    public async Task AddMessageAsync(ChatMessage message, CancellationToken cancellationToken)
+    public Task AddMessageAsync(ChatMessage message, CancellationToken cancellationToken) =>
+        AddMessageCoreAsync(message, null, false, cancellationToken);
+
+    private async Task AddMessageCoreAsync(ChatMessage message, Guid? boundBranchId, bool requireCurrentBranch, CancellationToken cancellationToken,
+        IReadOnlyList<Guid>? attachmentIds = null)
     {
         await ConversationProductionSchema.EnsureAsync(factory, cancellationToken).ConfigureAwait(false);
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        if (boundBranchId is { } expected)
+        {
+            await using var admission = connection.CreateCommand();
+            admission.Transaction = transaction;
+            admission.CommandText = "SELECT is_current FROM conversation_branches WHERE id=$branchId AND conversation_id=$conversationId;";
+            admission.Parameters.AddWithValue("$branchId", expected.ToString());
+            admission.Parameters.AddWithValue("$conversationId", message.ConversationId.ToString());
+            var current = await admission.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+            if (current is null || current is DBNull || requireCurrentBranch && Convert.ToInt32(current, System.Globalization.CultureInfo.InvariantCulture) != 1)
+                throw new InvalidOperationException("The original conversation branch is no longer available for this invocation.");
+        }
         await using (var command = connection.CreateCommand())
         {
             command.Transaction = transaction;
@@ -235,6 +257,8 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
                 INSERT OR REPLACE INTO messages(id, conversation_id, role, content, agent_name, model_name, metadata_json, created_at,is_compacted)
                 VALUES($id,$conversationId,$role,$content,$agentName,$modelName,$metadataJson,$createdAt,$isCompacted);
                 """;
+            if (boundBranchId is not null)
+                command.CommandText = command.CommandText.Replace("INSERT OR REPLACE", "INSERT", StringComparison.Ordinal);
             command.Parameters.AddWithValue("$id", message.Id.ToString());
             command.Parameters.AddWithValue("$conversationId", message.ConversationId.ToString());
             command.Parameters.AddWithValue("$role", (int)message.Role);
@@ -247,7 +271,7 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
             await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        var branchId = await EnsureCurrentBranchCoreAsync(connection, transaction, message.ConversationId, cancellationToken).ConfigureAwait(false);
+        var branchId = boundBranchId ?? await EnsureCurrentBranchCoreAsync(connection, transaction, message.ConversationId, cancellationToken).ConfigureAwait(false);
         var sequence = await GetNextMessageSequenceAsync(connection, transaction, branchId, cancellationToken).ConfigureAwait(false);
         await using (var mapping = connection.CreateCommand())
         {
@@ -274,6 +298,23 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
             await version.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
         await UpdateTurnsForMessageAsync(connection, transaction, branchId, message, cancellationToken).ConfigureAwait(false);
+        foreach (var attachmentId in (attachmentIds ?? []).Distinct())
+        {
+            await using var attachment = connection.CreateCommand();
+            attachment.Transaction = transaction;
+            attachment.CommandText = """
+                UPDATE message_attachments SET message_id=$messageId, branch_id=$branchId, updated_at=$updated
+                WHERE id=$id AND conversation_id=$conversationId AND message_id IS NULL
+                  AND (branch_id IS NULL OR branch_id=$branchId);
+                """;
+            attachment.Parameters.AddWithValue("$id", attachmentId.ToString());
+            attachment.Parameters.AddWithValue("$messageId", message.Id.ToString());
+            attachment.Parameters.AddWithValue("$branchId", branchId.ToString());
+            attachment.Parameters.AddWithValue("$conversationId", message.ConversationId.ToString());
+            attachment.Parameters.AddWithValue("$updated", DateTimeOffset.UtcNow.ToString("O"));
+            if (await attachment.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
+                throw new InvalidOperationException("A submitted attachment is no longer pending on the original conversation branch.");
+        }
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
     }
 

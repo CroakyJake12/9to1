@@ -1,9 +1,12 @@
 # Assistants
 
-Assistants is a standalone product for persistent configured personal AI
-identities. Its dedicated home, configuration and conversation surfaces consume
+Assistants is part of Spaces, following the owner's 16 October 2026 clarification.
+The standalone Assistants product is deprecated. Its home, configuration and conversation surfaces consume
 the same Conversation, Task, model, tool, permission, project and resource owners
-as Spaces. Opening an Assistant does not create or select a Space.
+as the rest of Spaces. Opening an Assistant preserves its existing identity and
+conversation membership; it does not create a new Space for that Assistant.
+The old application ID and executable remain compatibility entries into Spaces,
+not a separately shipped product in the current standalone application roster.
 
 ## Source ownership
 
@@ -36,7 +39,7 @@ visible as unresolved custody rather than a clean shutdown acknowledgment.
 ## Receiving status
 
 The product source is being implemented. This file and its records/contracts do
-not establish standalone application readiness. Windows composition, its actual
+not establish integrated Spaces acceptance. Windows composition, its actual
 original Home/resource authority, supported package/publish entry point, rendered
 create/edit/reopen/multiple-conversation workflows and canonical work controls
 require owning runtime evidence. Browser additionally needs the actual browser
@@ -52,6 +55,5 @@ implemented, packageable, packaged, smoke-passed and extensively verified.
 
 The relevant shared guidance is `shared/docs/architecture/state-and-persistence.md`,
 `shared/docs/architecture/agent-observation-retirement.md`,
-`shared/docs/ARCHITECTURE_RULES.md`, `shared/HAVEN_UI_RULES.md`, and
-`shared/docs/VALIDATION_RULES.md`. The current user direction takes precedence
+`shared/docs/CURRENT-REQUIREMENTS.md`. The current user direction takes precedence
 over the older retired Agents product description.

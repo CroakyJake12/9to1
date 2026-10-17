@@ -16,6 +16,20 @@ public sealed partial class App
     private bool _windowsNativeRoutesTransferred;
     private NativeFilesDesktopRoute? _actualSameProcessFilesRoute;
 
+    private void ConfigureOriginalUnifiedNativeRoutes(MainWindow actualWindow, UnifiedWorkspaceHost actualWorkspace)
+    {
+        var provider = _services ?? throw new InvalidOperationException("The original App provider is unavailable.");
+        var home = _actualWindowsHome ?? throw new InvalidOperationException("The original Home owner is unavailable.");
+        WindowsHomeSameProcessRuntimeObservation.DemandOriginalBinding(provider, home);
+        if (!ReferenceEquals(actualWindow.DataContext, actualWorkspace) ||
+            !ReferenceEquals(actualWorkspace, _actualUnifiedWorkspace) ||
+            _actualSameProcessNativeWindow is not null || _actualSameProcessNativeShell is not null)
+            throw new InvalidOperationException("Retain the SAME original unified host/window once.");
+        // Files sessions are separately allocated per tab by the genuine factory.
+        // Retain this native window for partial-startup cleanup without constructing a MainView.
+        _actualSameProcessNativeWindow = actualWindow;
+    }
+
     private void ConfigureOriginalWindowsNativeRoutes(MainWindow actualWindow, MainView actualShell)
     {
         var home = _actualWindowsHome;
@@ -69,6 +83,7 @@ public sealed partial class App
 
     private void DemandOriginalWindowsNativeRouteRetirementJoin()
     {
+        _actualUnifiedWorkspace?.DemandExternalOriginalRetirementJoin();
         _actualSameProcessFilesRoute?.DemandExternalOriginalRetirementJoin();
         _actualSameProcessNativeShell?.DemandExternalOriginalRetirementJoin();
         _actualSameProcessNativeWindow?.DemandExternalOriginalRetirementJoin();

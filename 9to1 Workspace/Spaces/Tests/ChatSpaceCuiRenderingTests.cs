@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.VisualTree;
+using Avalonia.Threading;
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
 using Haven.Core;
@@ -49,7 +50,7 @@ public sealed class ChatSpaceCuiRenderingTests
     public async Task Authored_chat_space_renders_the_transcript_from_real_domain_state()
     {
         using var lifetime = new CancellationTokenSource();
-        await using var session = HeadlessUnitTestSession.StartNew(TestApplication.Instance.GetType());
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));
         await session.Dispatch<bool>(async () =>
         {
             var first = Message(Guid.NewGuid(), "You", "Hello");
@@ -60,6 +61,7 @@ public sealed class ChatSpaceCuiRenderingTests
             using var loader = new CuiControlLoader();
             loader.SetBindingContext(bindings);
             loader.SetActionDispatcher(bindings);
+            Window? window = null;
             try
             {
                 var (tree, diagnostics) = loader.LoadMarkup(ReadAuthoredSource());
@@ -67,8 +69,12 @@ public sealed class ChatSpaceCuiRenderingTests
                     string.Join(" | ", diagnostics.Select(d => $"{d.Code}:{d.Message}")));
                 var root = Assert.IsAssignableFrom<Control>(tree);
                 loader.WireBindings(root);
+                window = new Window { Content = root, Width = 1280, Height = 900 };
+                window.Show();
+                for (var pass = 0; pass < 3; pass++) { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); using var frame = window.CaptureRenderedFrame(); }
 
-                var texts = root.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text).ToArray();
+                var texts = root.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text)
+                    .Concat(root.GetVisualDescendants().OfType<CuiMarkdownView>().Select(view => view.Text)).ToArray();
 
                 // Every message reached the document through its Repeat, in published order.
                 var rendered = string.Join(" | ", texts);
@@ -79,7 +85,7 @@ public sealed class ChatSpaceCuiRenderingTests
                 // projection rather than a hardcoded shell.
                 Assert.True(texts.Contains("Space chat"), $"title did not bind. Rendered: {rendered}");
             }
-            finally { loader.Dispose(); await loader.WhenActionsIdleAsync(); }
+            finally { window?.Close(); loader.Dispose(); await loader.WhenActionsIdleAsync(); }
             return true;
         }, lifetime.Token);
     }
@@ -88,7 +94,7 @@ public sealed class ChatSpaceCuiRenderingTests
     public async Task Transcript_reorder_keeps_each_message_control_by_canonical_identity()
     {
         using var lifetime = new CancellationTokenSource();
-        await using var session = HeadlessUnitTestSession.StartNew(TestApplication.Instance.GetType());
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));
         await session.Dispatch<bool>(async () =>
         {
             var work = Message(Guid.NewGuid(), "Haven", "Working on it");
@@ -100,14 +106,18 @@ public sealed class ChatSpaceCuiRenderingTests
             using var loader = new CuiControlLoader();
             loader.SetBindingContext(bindings);
             loader.SetActionDispatcher(bindings);
+            Window? window = null;
             try
             {
                 var (tree, diagnostics) = loader.LoadMarkup(ReadAuthoredSource());
                 Assert.True(diagnostics.Count == 0, string.Join(" | ", diagnostics.Select(d => d.Code)));
                 var root = Assert.IsAssignableFrom<Control>(tree);
                 loader.WireBindings(root);
+                window = new Window { Content = root, Width = 1280, Height = 900 };
+                window.Show();
+                for (var pass = 0; pass < 3; pass++) { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); using var frame = window.CaptureRenderedFrame(); }
 
-                var before = root.GetVisualDescendants().OfType<TextBlock>()
+                var before = root.GetVisualDescendants().OfType<CuiMarkdownView>()
                     .Where(t => t.Text is "Working on it" or "All done" or "Please fix it")
                     .ToDictionary(t => t.Text!, t => t);
 
@@ -115,8 +125,9 @@ public sealed class ChatSpaceCuiRenderingTests
                 state = State(request, work, answer);
                 bindings.Refresh();
                 await loader.WhenActionsIdleAsync();
+                for (var pass = 0; pass < 3; pass++) { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); using var frame = window.CaptureRenderedFrame(); }
 
-                var after = root.GetVisualDescendants().OfType<TextBlock>()
+                var after = root.GetVisualDescendants().OfType<CuiMarkdownView>()
                     .Where(t => t.Text is "Working on it" or "All done" or "Please fix it")
                     .ToDictionary(t => t.Text!, t => t);
 
@@ -131,13 +142,13 @@ public sealed class ChatSpaceCuiRenderingTests
                 // published a notification that matched no authored path, the controls would be
                 // the same instances in the same order and every assertion above would still pass.
                 // Assert the published order actually reached the visual tree.
-                var order = root.GetVisualDescendants().OfType<TextBlock>()
+                var order = root.GetVisualDescendants().OfType<CuiMarkdownView>()
                     .Select(t => t.Text ?? string.Empty)
                     .Where(text => text is "Working on it" or "All done" or "Please fix it")
                     .ToArray();
                 Assert.Equal(["Please fix it", "Working on it", "All done"], order);
             }
-            finally { loader.Dispose(); await loader.WhenActionsIdleAsync(); }
+            finally { window?.Close(); loader.Dispose(); await loader.WhenActionsIdleAsync(); }
             return true;
         }, lifetime.Token);
     }
@@ -146,7 +157,7 @@ public sealed class ChatSpaceCuiRenderingTests
     public async Task An_unauthored_command_is_refused_rather_than_dispatched()
     {
         using var lifetime = new CancellationTokenSource();
-        await using var session = HeadlessUnitTestSession.StartNew(TestApplication.Instance.GetType());
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));
         await session.Dispatch<bool>(async () =>
         {
             var state = State();
@@ -228,7 +239,7 @@ public sealed class ChatSpaceCuiRenderingTests
     public async Task Clearing_the_search_box_updates_the_rendered_input()
     {
         using var lifetime = new CancellationTokenSource();
-        await using var session = HeadlessUnitTestSession.StartNew(TestApplication.Instance.GetType());
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));
         await session.Dispatch<bool>(async () =>
         {
             var state = State();
@@ -237,26 +248,32 @@ public sealed class ChatSpaceCuiRenderingTests
             using var loader = new CuiControlLoader();
             loader.SetBindingContext(bindings);
             loader.SetActionDispatcher(bindings);
+            Window? window = null;
             try
             {
                 var (tree, diagnostics) = loader.LoadMarkup(ReadAuthoredSource());
                 Assert.True(diagnostics.Count == 0, string.Join(" | ", diagnostics.Select(d => d.Code)));
                 var root = Assert.IsAssignableFrom<Control>(tree);
                 loader.WireBindings(root);
+                window = new Window { Content = root, Width = 1280, Height = 900 };
+                window.Show();
+                for (var pass = 0; pass < 3; pass++) { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); using var frame = window.CaptureRenderedFrame(); }
 
                 var search = root.GetVisualDescendants().OfType<TextBox>()
                     .Single(box => box.Name == "recent-search" ||
                         Avalonia.Automation.AutomationProperties.GetAutomationId(box) == "recent-search");
                 bindings.TrySetValue("RecentSearchQuery", "half typed");
                 await loader.WhenActionsIdleAsync();
+                for (var pass = 0; pass < 3; pass++) { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); using var frame = window.CaptureRenderedFrame(); }
                 Assert.Equal("half typed", search.Text);
 
                 bindings.ClearRecentSearch();
                 await loader.WhenActionsIdleAsync();
+                for (var pass = 0; pass < 3; pass++) { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); using var frame = window.CaptureRenderedFrame(); }
 
                 Assert.Equal(string.Empty, search.Text);
             }
-            finally { loader.Dispose(); await loader.WhenActionsIdleAsync(); }
+            finally { window?.Close(); loader.Dispose(); await loader.WhenActionsIdleAsync(); }
             return true;
         }, lifetime.Token);
     }

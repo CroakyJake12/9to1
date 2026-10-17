@@ -39,10 +39,14 @@ public sealed class BrowseNativeWindow : Window
     private readonly CuiSceneHost _scene;
     private Task<CuiSceneAvailability>? _initialization;
     private Task? _originalClose, _originalSceneClose, _originalWorkspaceClose;
+    private Task<bool>? _originalClosePreparation;
+    private readonly List<Task<bool>> _closePreparations = [];
     private bool _allowClose;
     public CuiSceneHost SceneHost => _scene;
     public Task? OriginalInitialization => _initialization;
     public Task? OriginalClose => _originalClose;
+    public Task<bool>? OriginalClosePreparation => _originalClosePreparation;
+    public IReadOnlyList<Task<bool>> OriginalClosePreparations => _closePreparations.ToArray();
     internal BrowseNativeWindow(BrowseNativeWorkspace workspace, CuiNativeScene originalScene)
     {
         _workspace = workspace; _originalScene = originalScene; _scene = new(originalScene.ControlRegistry);
@@ -71,6 +75,26 @@ public sealed class BrowseNativeWindow : Window
         if (_allowClose) return; args.Cancel = true;
         _workspace.DemandOriginalFilesExternalJoin();
         if (_originalClose is null && !_workspace.CanAdmitClose()) return;
+        if (_originalClose is null && _workspace.OriginalChrome.HasAppContent)
+        {
+            if (_originalClosePreparation is { IsCompleted: false } or { IsFaulted: true }) return;
+            var original = _workspace.OriginalChrome.TryPrepareToCloseAsync();
+            _originalClosePreparation = original; _closePreparations.Add(original);
+            ObserveClosePreparation(original); return;
+        }
+        BeginOriginalClose();
+    }
+    private async void ObserveClosePreparation(Task<bool> original)
+    {
+        try
+        {
+            if (!await original || _originalClose is not null || !_workspace.CanAdmitClose()) return;
+            BeginOriginalClose();
+        }
+        catch (Exception failure) { System.Diagnostics.Trace.TraceError("Browse retained native close preparation failure: {0}", failure); }
+    }
+    private void BeginOriginalClose()
+    {
         if (_originalClose is null)
         {
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -87,7 +111,6 @@ public sealed class BrowseNativeWindow : Window
     {
         await start; var failures = new List<Exception>();
         async Task Join(Task? source) { if (source is null) return; try { await source; } catch (Exception failure) { failures.Add(failure); } }
-        _workspace.WithdrawForClose();
         // Ready native engines retire while their views still belong to this
         // scene. A pending readiness attempt has no mounted engine surface;
         // withdrawing that original scene first releases its actual attempt.
@@ -96,10 +119,11 @@ public sealed class BrowseNativeWindow : Window
         if (!originalReady)
             try { _originalSceneClose = _scene.CloseOriginalAsync(); } catch (Exception failure) { failures.Add(failure); }
         await Join(_initialization);
-        foreach (var source in _workspace.OriginalCommands) await Join(source);
         try { _originalWorkspaceClose = _workspace.DisposeAsync().AsTask(); } catch (Exception failure) { failures.Add(failure); }
         await Join(_originalWorkspaceClose);
-        if (originalReady)
+        foreach (var source in _workspace.OriginalCommands) await Join(source);
+        // A failed actual app close keeps its native view and scene mounted.
+        if (originalReady && _originalWorkspaceClose is { IsCompletedSuccessfully: true })
             try { _originalSceneClose = _scene.CloseOriginalAsync(); } catch (Exception failure) { failures.Add(failure); }
         await Join(_originalSceneClose);
         if (failures.Count != 0) throw new AggregateException("Browse retained its actual original source failures.", failures);
@@ -116,7 +140,8 @@ public sealed class BrowseNativeWindow : Window
         }
         var command = args.Key switch
         {
-            Key.T when args.KeyModifiers.HasFlag(KeyModifiers.Control) => args.KeyModifiers.HasFlag(KeyModifiers.Shift) ? "9to1.Browse.NewPrivateTab" : "9to1.Browse.NewTab",
+            Key.T when args.KeyModifiers.HasFlag(KeyModifiers.Control) && !args.KeyModifiers.HasFlag(KeyModifiers.Alt) => args.KeyModifiers.HasFlag(KeyModifiers.Shift) ? "9to1.Browse.ReopenClosedTab" : "9to1.Browse.NewTab",
+            Key.P when args.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Shift) => "9to1.Browse.NewPrivateTab",
             Key.W when args.KeyModifiers.HasFlag(KeyModifiers.Control) => "9to1.Browse.CloseTab",
             Key.R when args.KeyModifiers.HasFlag(KeyModifiers.Control) => "9to1.Browse.Reload",
             Key.Left when args.KeyModifiers.HasFlag(KeyModifiers.Alt) => "9to1.Browse.Back",
@@ -136,6 +161,7 @@ internal sealed class BrowseEngineViewport : ContentControl
     private readonly BrowseNativeWorkspace _workspace;
     private readonly Grid _surfaces = new();
     private readonly Dictionary<IBrowseEngineTab, Control> _originalViews = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<IBrowseAppContentSession, Border> _originalAppViews = new(ReferenceEqualityComparer.Instance);
     private readonly TextBlock _unavailable = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(24),
         HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
     public BrowseEngineViewport(BrowseNativeWorkspace workspace)
@@ -152,9 +178,30 @@ internal sealed class BrowseEngineViewport : ContentControl
     {
         if (!_workspace.IsReady) return;
         var state = _workspace.State; var current = new HashSet<IBrowseEngineTab>(ReferenceEqualityComparer.Instance);
+        var currentApps = new HashSet<IBrowseAppContentSession>(ReferenceEqualityComparer.Instance);
         var selectedHasView = false;
         foreach (var tab in state.Tabs)
         {
+            if (_workspace.OriginalChrome.ObserveOriginalAppContent(tab.Id) is IBrowseNativeAppContentSession app)
+            {
+                currentApps.Add(app);
+                if (app.OriginalInitialization is { IsCompletedSuccessfully: true } && app.IsPublicationCurrent)
+                {
+                    var view = app.OriginalNativeView;
+                    if (!_originalAppViews.TryGetValue(app, out var mountedApp))
+                    {
+                        if (view.Parent is not null) throw new InvalidOperationException("The original app view belongs to another native owner.");
+                        // The app owns its authored visibility and bindings. The
+                        // host owns only this stable tab presentation boundary.
+                        mountedApp = new Border { Child = view };
+                        _originalAppViews.Add(app, mountedApp); _surfaces.Children.Add(mountedApp);
+                    }
+                    else if (!ReferenceEquals(mountedApp.Child, view)) throw new InvalidOperationException("The app replaced its original native view.");
+                    mountedApp.IsVisible = tab.Id == state.SelectedTabId;
+                    if (mountedApp.IsVisible) selectedHasView = true;
+                }
+                else if (_originalAppViews.TryGetValue(app, out var retained)) retained.IsVisible = false;
+            }
             var original = _workspace.OriginalChrome.ObserveOriginalEngine(tab.Id);
             if (original is not IBrowseNativeEngineTab native) continue;
             current.Add(original);
@@ -165,16 +212,26 @@ internal sealed class BrowseEngineViewport : ContentControl
                 _originalViews.Add(original, originalView); _surfaces.Children.Add(originalView);
             }
             else if (!ReferenceEquals(mounted, originalView)) throw new InvalidOperationException("The same engine replaced its original native view.");
-            originalView.IsVisible = tab.Id == state.SelectedTabId;
+            originalView.IsVisible = tab.Id == state.SelectedTabId && tab.Address.IsWeb && tab.EngineState == BrowseEngineState.Ready;
             if (originalView.IsVisible) selectedHasView = true;
         }
         foreach (var original in _originalViews.Keys.Where(original => !current.Contains(original)).ToArray())
-        { _surfaces.Children.Remove(_originalViews[original]); _originalViews.Remove(original); }
+        {
+            if (original is IBrowseNativeEngineTab native && !native.CanRetireOriginalView)
+                throw new InvalidOperationException("The original renderer still owns its native view.");
+            _surfaces.Children.Remove(_originalViews[original]); _originalViews.Remove(original);
+        }
+        foreach (var original in _originalAppViews.Keys.Where(original => !currentApps.Contains(original)).ToArray())
+        {
+            if (original.OriginalClose is not { IsCompletedSuccessfully: true } || !original.CanRetireOriginalView)
+                throw new InvalidOperationException("The original app still owns its native view.");
+            _surfaces.Children.Remove(_originalAppViews[original]); _originalAppViews.Remove(original);
+        }
         // Inactive views remain mounted: selecting a tab does not destroy its
         // native adapter, authentication state or navigation history.
-        _unavailable.IsVisible = !selectedHasView;
         var selected = state.SelectedTab;
-        _unavailable.Text = selected.EngineState == BrowseEngineState.Crashed ? selected.Status :
+        _unavailable.IsVisible = !selectedHasView && selected.NativePage == Haven.Browser.BrowserNativePage.None;
+        _unavailable.Text = !selected.Address.IsWeb || selected.EngineState == BrowseEngineState.Crashed ? selected.Status :
             "The native " + (selected.Engine == BrowseEngineKind.Gecko ? "Firefox" : "Chromium") + " renderer is not connected. Tab identity, bookmarks and browser settings are retained.";
     }
 }

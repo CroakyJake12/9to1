@@ -6,6 +6,9 @@ using Haven.Desktop.Services;
 using Haven.Desktop.Views.Shell;
 using Haven.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+#if !ANDROID
+using HavenOS.Apps.Browse;
+#endif
 
 namespace Haven.Desktop;
 
@@ -26,6 +29,7 @@ public sealed partial class App
     private Exception? _actualShutdownFailure;
     private IClassicDesktopStyleApplicationLifetime? _actualDesktop;
     private MainWindow? _actualPrimaryWindow;
+    private IReadOnlyList<object> _actualDesktopBorrowers = [];
     private ComputerUseOverlayCoordinator? _actualComputerUseOverlay;
     private readonly object _actualStartupAcquisitionGate = new();
     private readonly HashSet<Task> _actualFailedStartupAcquisitionCloses = new(ReferenceEqualityComparer.Instance);
@@ -188,15 +192,27 @@ public sealed partial class App
     }
     private async Task JoinOriginalAppProducersAsync()
     {
+        DemandOriginalDesktopBorrowerJoins(_actualDesktopBorrowers.Concat(_actualDesktop?.Windows.OfType<MainWindow>() ?? [])
+            .Distinct(ReferenceEqualityComparer.Instance).ToArray());
         if (_synchronousAppSources?.Any(owner => ReferenceEquals(owner, this)) == true)
             throw new InvalidOperationException("An actual App callback must return before its external retirement join.");
         var failures = new List<Exception>();
         foreach (var actual in _actualDocumentClosePreflightDeliveries.ToArray())
             await JoinOriginalAppTaskAsync(actual, failures);
+#if !ANDROID
+        // Browse closes its actual tab/presentation producers while App/Home and
+        // window lifetimes still exist. Its canonical projection then seals/drains
+        // before the coordinator captures the final workspace snapshot.
+        if (_actualUnifiedWorkspace is { } unified)
+        {
+            try { await JoinOriginalAppTaskAsync(unified.CloseAndDrainAsync(), failures); }
+            catch (Exception error) { AddAppCause(failures, error); }
+        }
+#endif
         await JoinOriginalAppTaskAsync(_originalAppWork.CloseAndDrainAsync(), failures);
         ThrowAppCauses(failures);
     }
-    private void ConfigureOriginalDesktopShutdown(IClassicDesktopStyleApplicationLifetime desktop, MainWindow window, MainView shell)
+    private void ConfigureOriginalDesktopShutdown(IClassicDesktopStyleApplicationLifetime desktop, MainWindow window, MainView? shell)
     {
         var services = _services ?? throw new InvalidOperationException("The actual original App provider is unavailable.");
         var sessions = services.GetRequiredService<WorkspaceSessionCoordinator>();
@@ -212,7 +228,11 @@ public sealed partial class App
         if (_actualAssistantConversationProcess is { } actualAssistantProcess)
             actualBorrowers.Add(actualAssistantProcess);
 #endif
-        actualBorrowers.AddRange([shell, windows, notifications]);
+        if (shell is not null) actualBorrowers.Add(shell);
+#if !ANDROID
+        else actualBorrowers.Add(_actualUnifiedWorkspace ?? throw new InvalidOperationException("The original unified borrower is unavailable."));
+#endif
+        actualBorrowers.AddRange([windows, notifications]);
 #if !ANDROID
         actualBorrowers.AddRange(CaptureOriginalNativeDevelopmentBorrowers(services));
         actualBorrowers.Add(CaptureOriginalNativeCakeAccountBorrower(services));
@@ -230,6 +250,7 @@ public sealed partial class App
         actualBorrowers.Add(services.GetRequiredService<Haven.Desktop.Overlay.OverlayWorkspaceController>());
 #endif
         _actualDesktop = desktop; _actualPrimaryWindow = window;
+        _actualDesktopBorrowers = actualBorrowers.ToArray();
         _actualDocumentClosePrimaryShell = shell;
         _actualShutdownSequence = new(JoinOriginalAppProducersAsync,
             () => sessions.SaveFinalSnapshotAndSealAsync(CancellationToken.None),
@@ -298,6 +319,15 @@ public sealed partial class App
                 foreach (var candidate in attempt.Candidates)
                     if (!await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
                         () => candidate.PrepareAsync(CancellationToken.None)))) return;
+#if !ANDROID
+                attempt.Unified = _actualUnifiedWorkspace;
+                if (attempt.Unified is { } unified)
+                {
+                    attempt.UnifiedPreparation = AcquireOriginalAppSynchronous(original,
+                        () => unified.TryPrepareToCloseAsync(CancellationToken.None));
+                    if (!await original.AwaitAsync(attempt.UnifiedPreparation)) return;
+                }
+#endif
                 original.DemandPublication();
                 attempt.Prepared = true; // Candidate only; delivery still joins this SAME actual Task.
             }, actual => attempt.Original = _actualDocumentClosePreflightAttempt = actual);
@@ -313,6 +343,11 @@ public sealed partial class App
         internal Avalonia.Controls.Window[] Windows = [];
         internal MainView[] Shells = [];
         internal OriginalDocumentClosePreflight[] Candidates = [];
+#if !ANDROID
+        internal UnifiedWorkspaceHost? Unified;
+        internal Task<bool>? UnifiedPreparation;
+        internal Task? UnifiedRetirement;
+#endif
         internal bool Prepared;
     }
     private async Task DeliverOriginalDocumentClosePreflightAsync(Task start, OriginalDocumentCloseAttempt attempt)
@@ -331,15 +366,34 @@ public sealed partial class App
         ThrowAppCauses(failures); // Actual handoff is terminal before encompassing retirement can join it.
         if (!attempt.Prepared) return;
         Dispatcher.UIThread.VerifyAccess();
+        if (!IsOriginalDocumentCloseAttemptCurrent(attempt)) return;
+#if !ANDROID
+        if (attempt.Unified is { } unified)
+        {
+            var desktop = attempt.Desktop!;
+            DemandOriginalDesktopBorrowerJoins(_actualDesktopBorrowers.Concat(desktop.Windows.OfType<MainWindow>())
+                .Distinct(ReferenceEqualityComparer.Instance).ToArray());
+            // The originating App preflight is already terminal. Resolve the real
+            // Browse close decision BEFORE acquiring permanent App shutdown. Its
+            // second unsaved-work preflight may legitimately decline this attempt.
+            attempt.UnifiedRetirement = unified.CloseAndDrainAsync();
+            try { await attempt.UnifiedRetirement; }
+            catch (BrowseCloseVetoException) when (unified.OriginalClose is null) { return; }
+            catch when (unified.OriginalClose is not null)
+            {
+                // Accepted retirement remains the same failed original. The existing
+                // shutdown sequence joins it again and withholds final save/clean.
+            }
+        }
+#endif
         TaskCompletionSource? shutdownStart = null;
         (_synchronousAppSources ??= []).Add(this);
         try
         {
-            var desktop = attempt.Desktop ?? throw new InvalidOperationException("The actual document desktop is unavailable.");
-            if (_originalAppWork.IsRetiring || !ReferenceEquals(desktop, _actualDesktop) ||
-                !attempt.Windows.SequenceEqual(desktop.Windows, ReferenceEqualityComparer.Instance) ||
-                !attempt.Shells.SequenceEqual(CaptureOriginalDocumentCloseShells(desktop), ReferenceEqualityComparer.Instance) ||
-                attempt.Candidates.Any(candidate => !candidate.IsCurrentAndPrepared)) return;
+            if (!IsOriginalDocumentCloseAttemptCurrent(attempt)) return;
+#if !ANDROID
+            if (attempt.Unified is { OriginalClose: null }) return;
+#endif
             // The SAME App preflight Task is already terminal. No await intervenes
             // between final revalidation and existing shutdown acquisition.
             shutdownStart = AcquireOriginalDesktopShutdownDelivery();
@@ -350,6 +404,19 @@ public sealed partial class App
         // This publication driver uses no borrowed page/provider after release;
         // the SAME acquired shutdown delivery owns all subsequent source stages.
         shutdownStart?.TrySetResult();
+    }
+    private bool IsOriginalDocumentCloseAttemptCurrent(OriginalDocumentCloseAttempt attempt)
+    {
+        var desktop = attempt.Desktop ?? throw new InvalidOperationException("The actual document desktop is unavailable.");
+        if (_originalAppWork.IsRetiring || !ReferenceEquals(desktop, _actualDesktop) ||
+            !attempt.Windows.SequenceEqual(desktop.Windows, ReferenceEqualityComparer.Instance) ||
+            !attempt.Shells.SequenceEqual(CaptureOriginalDocumentCloseShells(desktop), ReferenceEqualityComparer.Instance) ||
+            attempt.Candidates.Any(candidate => !candidate.IsCurrentAndPrepared)) return false;
+#if !ANDROID
+        if (!ReferenceEquals(attempt.Unified, _actualUnifiedWorkspace) ||
+            (attempt.Unified is not null && attempt.UnifiedPreparation is not { IsCompletedSuccessfully: true, Result: true })) return false;
+#endif
+        return true;
     }
     private MainView[] CaptureOriginalDocumentCloseShells(IClassicDesktopStyleApplicationLifetime desktop) =>
         (_actualDocumentClosePrimaryShell is { } primary ? new[] { primary } : Array.Empty<MainView>())
@@ -394,12 +461,8 @@ public sealed partial class App
             throw; // SAME failed original remains inspectable, never retried or described as no effect.
         }
     }
-    private async Task JoinOriginalDesktopBorrowersAsync(IReadOnlyList<object> actualBorrowers,
-        IClassicDesktopStyleApplicationLifetime desktop)
+    private void DemandOriginalDesktopBorrowerJoins(IReadOnlyList<object> actualOwners)
     {
-        var failures = new List<Exception>();
-        var actualOwners = actualBorrowers.Concat(desktop.Windows.OfType<MainWindow>())
-            .Distinct(ReferenceEqualityComparer.Instance).ToArray();
         // Pure whole-cohort preflight before ANY stop/close acquisition. A live
         // child's encompassing self-join cannot partially retire its siblings.
         var preflightFailures = new List<Exception>();
@@ -416,6 +479,15 @@ public sealed partial class App
                 try { guard.DemandExternalOriginalRetirementJoin(); }
                 catch (Exception error) { AddAppCause(preflightFailures, error); }
         ThrowAppCauses(preflightFailures);
+    }
+
+    private async Task JoinOriginalDesktopBorrowersAsync(IReadOnlyList<object> actualBorrowers,
+        IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        var failures = new List<Exception>();
+        var actualOwners = actualBorrowers.Concat(desktop.Windows.OfType<MainWindow>())
+            .Distinct(ReferenceEqualityComparer.Instance).ToArray();
+        DemandOriginalDesktopBorrowerJoins(actualOwners);
         foreach (var owner in actualOwners)
         {
             if (owner is not IDesktopOriginalRetirementParticipant participant || owner is not IDesktopOriginalRetirementJoinGuard)

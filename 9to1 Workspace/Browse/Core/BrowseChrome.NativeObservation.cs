@@ -69,8 +69,7 @@ public sealed partial class BrowseChrome
     {
         if (_nativeRetiring || _disposed || !ReferenceEquals(tab.Host, original) || !_tabs.Contains(tab) ||
             snapshot.IsLoading || snapshot.Address is not { Scheme: "http" or "https" }) return;
-        var originalTabState = _tabs.Where(item => item.Privacy == BrowserTabPrivacy.Standard)
-            .Select(item => new BrowserTabState(item.Id, item.Title, item.Address.ToString(), item.Privacy, item.Group, DateTimeOffset.UtcNow)).ToArray();
+        var originalTabState = CaptureStandardTabs();
         lock (_nativeSourceGate)
         {
             if (_nativeRetiring || _disposed || !ReferenceEquals(tab.Host, original) || !_tabs.Contains(tab)) return;
@@ -78,7 +77,8 @@ public sealed partial class BrowseChrome
             if (_originalNativeSources.Count >= 128) throw new InvalidOperationException("Browse retains unresolved native history sources.");
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             tab.HasOriginalCommittedPage = true;
-            var driver = PersistOriginalCommitAsync(start.Task, _lastOriginalPageCommit, snapshot, tab.Privacy, originalTabState);
+            tab.ZoomPercent = 100;
+            var driver = PersistOriginalCommitAsync(start.Task, _lastOriginalPageCommit, snapshot, tab.Privacy, originalTabState, PersistedSelectedTabId());
             _lastOriginalPageCommit = driver;
             _originalNativeSources.Add(driver);
             try { Publish(); }
@@ -87,14 +87,14 @@ public sealed partial class BrowseChrome
         }
     }
     private async Task PersistOriginalCommitAsync(Task start, Task? previousOriginalCommit, BrowserSnapshot snapshot, Haven.Core.BrowserTabPrivacy privacy,
-        BrowserTabState[] originalTabState)
+        BrowserTabState[] originalTabState, Guid? selectedTabId)
     {
         await start.ConfigureAwait(false);
         if (previousOriginalCommit is not null) await previousOriginalCommit.ConfigureAwait(false);
         var originalVisit = _data.RecordVisitAsync(snapshot.Title, snapshot.Address!.ToString(), privacy == Haven.Core.BrowserTabPrivacy.Private, CancellationToken.None);
         lock (_nativeSourceGate) _originalNativeSources.Add(originalVisit);
         await originalVisit.ConfigureAwait(false);
-        var originalSession = _data.SaveTabsAsync(originalTabState, CancellationToken.None);
+        var originalSession = SaveTabProjectionAsync(originalTabState, selectedTabId, CancellationToken.None);
         lock (_nativeSourceGate) _originalNativeSources.Add(originalSession);
         await originalSession.ConfigureAwait(false);
         if (!_nativeRetiring && !_disposed) Publish();
@@ -111,8 +111,8 @@ public sealed partial class BrowseChrome
         if (_nativeRetiring) return BrowserSitePermissionDecision.Deny;
         var tab = RequireTab(tabId);
         if (!ReferenceEquals(tab.Host, originalEngine) || tab.EngineState != BrowseEngineState.Ready ||
-            origin.Scheme is not ("http" or "https") || tab.Address.Scheme is not ("http" or "https") ||
-            !string.Equals(origin.GetLeftPart(UriPartial.Authority), tab.Address.GetLeftPart(UriPartial.Authority), StringComparison.OrdinalIgnoreCase))
+            origin.Scheme is not ("http" or "https") || !tab.Address.IsWeb ||
+            !string.Equals(origin.GetLeftPart(UriPartial.Authority), tab.Address.WebUri!.GetLeftPart(UriPartial.Authority), StringComparison.OrdinalIgnoreCase))
             return BrowserSitePermissionDecision.Deny;
         return GetPermission(tab, kind);
     }
@@ -121,6 +121,6 @@ public sealed partial class BrowseChrome
     {
         ThrowIfDisposed();
         var tab = RequireTab(tabId);
-        return tab.EngineState == BrowseEngineState.Ready ? tab.Host : null;
+        return tab.Host;
     }
 }

@@ -47,6 +47,8 @@
     <Compile Include="AssemblyInfo.cs;TestAppBuilder.cs" />
     <Compile Include="WritePageOriginalLifetimeTests.cs;PresentPageOriginalLifetimeTests.cs;NativeSpacesPageLifecycleTests.cs;SpaceGeneratedSurfaceRendererTests.cs;OriginalInitialDocumentProductTests.cs;OriginalDocumentClosePreflightTests.cs" />
     <Compile Include="HavenAppRoutePolicyTests.cs;NativeAssistantsSetupDesktopPageTests.cs" />
+    <Compile Include="HomeDashboardCuiRenderTests.cs;HomeDiscoverCuiRenderTests.cs;DashboardWidgetCanvasTests.cs;DashboardEditPlannerTests.cs" />
+    <Compile Include="ChatSpacePageAcceptanceTests.cs" />
     <!-- Actual native home/configuration/empty conversation captures over the already linked genuine Memory rig. -->
     <Compile Include="NativeAssistantCanonicalVisualCaptureTests.cs" />
     <!-- Actual original Files parent-page selection and finite caller/readiness custody. -->

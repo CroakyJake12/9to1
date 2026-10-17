@@ -67,10 +67,10 @@ public sealed partial class MainView
                         tab.Page is not NativeAssistantsSetupDesktopPage { OriginalClose.IsCompletedSuccessfully: true }))
                         throw new InvalidOperationException("The SAME original setup tab still owns another unclosed page.");
                     AddOrSelectTab("assistants-setup", "Assistants", actualPage, false,
-                        HavenSurface.Assistants, forceNewTab: false);
+                        HavenSurface.Spaces, forceNewTab: false);
                     original.DemandPublication();
                     if (SelectedTab is not { Key: "assistants-setup" } selected ||
-                        !ReferenceEquals(selected.Page, actualPage) || CurrentSurface != HavenSurface.Assistants ||
+                        !ReferenceEquals(selected.Page, actualPage) || CurrentSurface != HavenSurface.Spaces ||
                         !ReferenceEquals(TopLevel.GetTopLevel(actualPage), actualWindow))
                         throw new UnauthorizedAccessException("The actual Assistants setup tab/window association changed.");
                 }));

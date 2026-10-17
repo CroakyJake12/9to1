@@ -45,6 +45,9 @@
     <ProjectReference Include="../../../Assistants/NativeUI/HavenOS.Assistants.NativeUI.csproj" />
     <ProjectReference Include="../../../Files/NativeUI/HavenOS.Files.NativeUI.csproj" />
     <ProjectReference Include="..\Haven.Browser\Haven.Browser.csproj" />
+    <ProjectReference Include="../../../Browse/NativeUI/HavenOS.Apps.Browse.NativeUI.csproj" />
+    <ProjectReference Include="../../../Browse/NativeWindows/HavenOS.Apps.Browse.NativeWindows.csproj"
+                      Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'" />
     <!-- During Phase 2 this desktop project is the Avalonia backend/host for platform-neutral Haven.UI. -->
     <ProjectReference Include="..\Haven.UI\Haven.UI.csproj" />
     <!-- The original Sites authority adapter consumes the existing typed Files/Home ownership modules. -->
@@ -73,6 +76,10 @@
     <EmbeddedResource Include="Prefabs\**\*.hui" />
     <EmbeddedResource Include="DynamicUI\**\*.hui" />
     <EmbeddedResource Include="Views/Pages/Automations/UI/OriginalAutomationLibrary.cui" LogicalName="Haven.Desktop.OriginalAutomationLibrary.cui" />
+    <EmbeddedResource Include="Views/Pages/Home/Dashboard.cui" LogicalName="Haven.Desktop.Home.Dashboard.cui" />
+    <EmbeddedResource Include="Views/Pages/Home/Discover.cui" LogicalName="Haven.Desktop.Home.Discover.cui" />
+    <EmbeddedResource Include="Views/Pages/Home/UnifiedHome.cui" LogicalName="Haven.Desktop.Home.Unified.cui" />
+    <EmbeddedResource Include="Views/Pages/Home/UnifiedHomeApps.cui" LogicalName="Haven.Desktop.Home.UnifiedApps.cui" />
     <Compile Update="Prefabs\**\*.hui.cs"><DependentUpon>%(Filename)</DependentUpon></Compile>
   </ItemGroup>
   <ItemGroup>

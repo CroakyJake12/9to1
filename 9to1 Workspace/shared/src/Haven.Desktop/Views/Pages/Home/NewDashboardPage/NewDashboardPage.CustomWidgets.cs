@@ -59,7 +59,7 @@ public sealed partial class NewDashboardPage
     private async Task EnsureCustomWidgetStateLoadedAsync(CancellationToken token)
     {
         if (_customWidgetState is not null) return;
-        var stored = await _settings.GetAsync<DashboardCustomWidgetState>(CustomWidgetStateKey, token);
+        var stored = await AwaitHomeSourceAsync(_settings.GetAsync<DashboardCustomWidgetState>(CustomWidgetStateKey, token));
         var pages = new Dictionary<string, List<DashboardCustomWidgetDefinition>>(StringComparer.OrdinalIgnoreCase);
         if (stored is { Version: 1 })
         {
@@ -153,7 +153,7 @@ public sealed partial class NewDashboardPage
             Content = new HavenDropdownCard { CornerRadius = new CornerRadius(22), Child = body }
         };
 
-        save.Click += async (_, _) =>
+        save.Click += async (_, _) => await RunHomeEventAsync(async _ =>
         {
             var title = titleBox.Text?.Trim() ?? string.Empty;
             var value = valueBox.Text?.Trim() ?? string.Empty;
@@ -170,10 +170,10 @@ public sealed partial class NewDashboardPage
             await SaveCustomWidgetStateAsync();
             await ReconcileCustomWidgetPresentationAsync();
             flyout.Hide();
-        };
+        });
 
         var deleteArmed = false;
-        remove.Click += async (_, _) =>
+        remove.Click += async (_, _) => await RunHomeEventAsync(async _ =>
         {
             if (!deleteArmed) { deleteArmed = true; remove.Content = "Confirm delete"; return; }
             if (_customWidgetState?.Pages.TryGetValue(_selectedPageId, out var widgets) == true)
@@ -184,9 +184,9 @@ public sealed partial class NewDashboardPage
             await SaveWidgetLayoutStateAsync(_selectedPageId.Equals(HomePageId, StringComparison.OrdinalIgnoreCase));
             await ReconcileCustomWidgetPresentationAsync();
             flyout.Hide();
-        };
+        });
 
-        flyout.ShowAt(anchor);
+        ShowHomeEditor(flyout, anchor);
         titleBox.SelectAll();
         titleBox.Focus();
     }
@@ -204,7 +204,9 @@ public sealed partial class NewDashboardPage
         RenderWidgetPage();
     }
 
-    private Task SaveCustomWidgetStateAsync()
+    private Task SaveCustomWidgetStateAsync() => RunHomeSaveAsync(SaveCustomWidgetStateCoreAsync);
+
+    private Task SaveCustomWidgetStateCoreAsync()
     {
         _customWidgetState ??= new DashboardCustomWidgetState(1, new Dictionary<string, List<DashboardCustomWidgetDefinition>>(StringComparer.OrdinalIgnoreCase));
         var snapshot = new DashboardCustomWidgetState(1, _customWidgetState.Pages.ToDictionary(

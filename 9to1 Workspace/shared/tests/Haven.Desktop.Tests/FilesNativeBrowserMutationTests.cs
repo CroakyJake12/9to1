@@ -1,6 +1,8 @@
 using System.Reflection;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
@@ -66,6 +68,133 @@ public sealed class FilesNativeBrowserMutationTests
     }
 
     [Fact]
+    public async Task Trash_and_restore_require_Home_review_and_preserve_the_same_subtree()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        async Task<HostedItemId> Create(Guid parent, string name)
+        {
+            var page = await h.Browser.ListAsync(h.Workspace.Actor, parent, token: token);
+            var request = await h.Browser.PrepareNativeMutationAsync(page, null, h.Workspace.Actor,
+                "CreateFolder", name, () => true, "files-trash-control", token);
+            Assert.True((await h.Permissions.DecideAsync(request.Approval.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+            return (await h.Browser.ApplyNativeMutationAsync(request, token)).Operation!.Value!.ItemId;
+        }
+        var folder = await Create(h.Parent.Value, "Recoverable folder");
+        var child = await Create(folder.Value, "Retained child");
+        var originalChild = (await h.Workspace.Provider.GetAsync(child, token)).Value!;
+        var current = await h.Browser.ListAsync(h.Workspace.Actor, h.Parent.Value, token: token);
+        var row = Assert.Single(current.Items);
+        Assert.True(h.Browser.CanDeleteNativeSelection(current, row));
+        var deletion = await h.Browser.PrepareNativeMutationAsync(current, row, h.Workspace.Actor,
+            "Delete", row.Name, () => true, "files-trash-control", token);
+        Assert.Equal(HomePermissionRequestState.PendingApproval, deletion.Approval.State);
+        Assert.True((await h.Browser.ApplyNativeMutationAsync(deletion, token)).AwaitingHomeReview);
+        Assert.True((await h.Workspace.Provider.GetAsync(child, token)).IsSuccess);
+        Assert.True((await h.Permissions.DecideAsync(deletion.Approval.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+        var deleted = await h.Browser.ApplyNativeMutationAsync(deletion, token);
+        Assert.True(deleted.Operation!.IsSuccess); Assert.True(deleted.AuditRecorded);
+        Assert.False((await h.Workspace.Provider.GetAsync(child, token)).IsSuccess);
+        var trash = await h.Browser.ListAsync(h.Workspace.Actor, token: token, isTrash: true);
+        var trashed = Assert.Single(trash.Items);
+        Assert.Equal(folder, trashed.Id); Assert.Equal(h.Parent, trashed.ParentId);
+        Assert.True(h.Browser.CanRestoreNativeSelection(trash, trashed));
+        Assert.False(h.Browser.CanRenameNativeSelection(trash, trashed));
+        Assert.False(h.Browser.CanDeleteNativeSelection(trash, trashed));
+        var restoration = await h.Browser.PrepareNativeMutationAsync(trash, trashed, h.Workspace.Actor,
+            "Restore", trashed.Name, () => true, "files-trash-control", token);
+        Assert.True((await h.Browser.ApplyNativeMutationAsync(restoration, token)).AwaitingHomeReview);
+        Assert.True((await h.Permissions.DecideAsync(restoration.Approval.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+        var restoreTask = h.Browser.ApplyNativeMutationAsync(restoration, token);
+        Assert.True((await restoreTask).Operation!.IsSuccess);
+        Assert.Same(restoreTask, h.Browser.ApplyNativeMutationAsync(restoration, token));
+        Assert.Empty((await h.Browser.ListAsync(h.Workspace.Actor, token: token, isTrash: true)).Items);
+        Assert.Equal(originalChild, (await h.Workspace.Provider.GetAsync(child, token)).Value);
+        Assert.Equal(folder, Assert.Single((await h.Browser.ListAsync(h.Workspace.Actor, h.Parent.Value, token: token)).Items).Id);
+        Assert.Equal(4, (await h.Workspace.Provider.GetChangesAsync(null, 100, token)).Items.Count(change => change.ItemId == folder || change.ItemId == child));
+    }
+
+    [Fact]
+    public async Task Move_requires_original_pages_and_Home_review_then_preserves_identity_and_subtree_once()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var folder = await CreateReviewedFolder(h, h.Parent.Value, "Moving folder", token);
+        var child = await CreateReviewedFolder(h, folder.Value, "Same child", token);
+        var destination = await CreateReviewedFolder(h, h.Parent.Value, "Destination", token);
+        var sourcePage = await h.Browser.ListAsync(h.Workspace.Actor, h.Parent.Value, token: token);
+        var row = sourcePage.Items.Single(item => item.Id == folder);
+        var destinationPage = await h.Browser.ListAsync(h.Workspace.Actor, destination.Value, token: token);
+        var childBefore = (await h.Workspace.Provider.GetAsync(child, token)).Value!;
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => h.Browser.PrepareNativeMoveAsync(sourcePage, row,
+            destinationPage with { }, h.Workspace.Actor, () => true, "files-move-control", token));
+        var move = await h.Browser.PrepareNativeMoveAsync(sourcePage, row, destinationPage,
+            h.Workspace.Actor, () => true, "files-move-control", token);
+        Assert.Equal(HomePermissionRequestState.PendingApproval, move.Approval.State);
+        Assert.True((await h.Browser.ApplyNativeMutationAsync(move, token)).AwaitingHomeReview);
+        Assert.Equal(h.Parent, (await h.Workspace.Provider.GetAsync(folder, token)).Value!.ParentId);
+        Assert.True((await h.Permissions.DecideAsync(move.Approval.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+        var actual = h.Browser.ApplyNativeMutationAsync(move, token);
+        var result = await actual;
+        Assert.True(result.Operation!.IsSuccess); Assert.True(result.AuditRecorded);
+        Assert.Same(actual, h.Browser.ApplyNativeMutationAsync(move, token));
+        var moved = Assert.Single((await h.Browser.ListAsync(h.Workspace.Actor, destination.Value, token: token)).Items);
+        Assert.Equal(folder, moved.Id); Assert.Equal(destination, moved.ParentId); Assert.Equal(row.Name, moved.Name);
+        Assert.NotEqual(row.CurrentRevisionId, moved.CurrentRevisionId);
+        Assert.Equal(childBefore, (await h.Workspace.Provider.GetAsync(child, token)).Value);
+        Assert.DoesNotContain((await h.Browser.ListAsync(h.Workspace.Actor, h.Parent.Value, token: token)).Items, item => item.Id == folder);
+        var change = Assert.Single((await h.Workspace.Provider.GetChangesAsync(null, 100, token)).Items, item => item.Kind == "Move");
+        Assert.Equal(folder, change.ItemId); Assert.Equal(result.Operation.Value!.Id, change.OperationId);
+        Assert.Equal(h.Parent, result.Operation.Value.SourceParentId); Assert.Equal(destination, result.Operation.Value.DestinationParentId);
+    }
+
+    [Fact]
+    public async Task Move_rejects_cycles_and_conflicts_without_losing_items_and_refuses_stale_destinations()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var folder = await CreateReviewedFolder(h, h.Parent.Value, "Same name", token);
+        var child = await CreateReviewedFolder(h, folder.Value, "Child", token);
+        var destination = await CreateReviewedFolder(h, h.Parent.Value, "Destination", token);
+        var occupied = await CreateReviewedFolder(h, destination.Value, "Same name", token);
+        var source = await h.Browser.ListAsync(h.Workspace.Actor, h.Parent.Value, token: token);
+        var row = source.Items.Single(item => item.Id == folder);
+        var self = await h.Browser.ListAsync(h.Workspace.Actor, folder.Value, token: token);
+        var descendant = await h.Browser.ListAsync(h.Workspace.Actor, child.Value, token: token);
+        var target = await h.Browser.ListAsync(h.Workspace.Actor, destination.Value, token: token);
+        var changesBeforeRefusal = (await h.Workspace.Provider.GetChangesAsync(null, 100, token)).Items.Count;
+        Assert.False(h.Browser.CanPrepareNativeMove(source, row, self));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => h.Browser.PrepareNativeMoveAsync(source, row,
+            descendant, h.Workspace.Actor, () => true, "files-move-control", token));
+        Assert.Empty((await h.Permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
+        var move = await h.Browser.PrepareNativeMoveAsync(source, row, target, h.Workspace.Actor,
+            () => true, "files-move-control", token);
+        Assert.True((await h.Permissions.DecideAsync(move.Approval.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+        var refused = await h.Browser.ApplyNativeMutationAsync(move, token);
+        Assert.Equal(FilesErrorCode.NameConflict, refused.Operation!.Error!.Code); Assert.True(refused.AuditRecorded);
+        Assert.Equal(h.Parent, (await h.Workspace.Provider.GetAsync(folder, token)).Value!.ParentId);
+        Assert.Equal(occupied, Assert.Single((await h.Browser.ListAsync(h.Workspace.Actor, destination.Value, token: token)).Items).Id);
+        Assert.Equal(changesBeforeRefusal, (await h.Workspace.Provider.GetChangesAsync(null, 100, token)).Items.Count);
+        var stale = await h.Browser.PrepareNativeMoveAsync(source, row, target, h.Workspace.Actor,
+            () => true, "files-move-control", token);
+        Assert.True((await h.Permissions.DecideAsync(stale.Approval.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+        await CreateReviewedFolder(h, destination.Value, "Concurrent destination change", token);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => h.Browser.ApplyNativeMutationAsync(stale, token));
+        Assert.Equal(h.Parent, (await h.Workspace.Provider.GetAsync(folder, token)).Value!.ParentId);
+    }
+
+    private static async Task<HostedItemId> CreateReviewedFolder(Harness h, Guid parent, string name, CancellationToken token)
+    {
+        var page = await h.Browser.ListAsync(h.Workspace.Actor, parent, token: token);
+        var request = await h.Browser.PrepareNativeMutationAsync(page, null, h.Workspace.Actor,
+            "CreateFolder", name, () => true, "files-move-control", token);
+        Assert.True((await h.Permissions.DecideAsync(request.Approval.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+        var result = await h.Browser.ApplyNativeMutationAsync(request, token);
+        Assert.True(result.Operation!.IsSuccess);
+        return result.Operation.Value!.ItemId;
+    }
+
+    [Fact]
     public async Task Copied_page_configured_App_root_and_retired_review_cannot_admit_an_effect()
     {
         var token = TestContext.Current.CancellationToken;
@@ -73,6 +202,10 @@ public sealed class FilesNativeBrowserMutationTests
         var root = await h.Browser.ListAsync(h.Workspace.Actor, token: token);
         var appRoot = root.Items.Single(item => item.Id == h.Parent);
         Assert.False(h.Browser.CanRenameNativeSelection(root, appRoot));
+        Assert.False(h.Browser.CanDeleteNativeSelection(root, appRoot));
+        Assert.False(h.Browser.CanMoveNativeSelection(root, appRoot));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => h.Browser.PrepareNativeMutationAsync(root,
+            appRoot, h.Workspace.Actor, "Delete", appRoot.Name, () => true, "files-control", token));
         await Assert.ThrowsAsync<InvalidOperationException>(() => h.Browser.PrepareNativeMutationAsync(root,
             appRoot, h.Workspace.Actor, "Rename", "Wrong root", () => true, "files-control", token));
         var page = await h.Browser.ListAsync(h.Workspace.Actor, h.Parent.Value, token: token);
@@ -204,8 +337,175 @@ public sealed class FilesNativeBrowserMutationTests
             Assert.Equal("Native folder", Assert.Single(list.Items.Cast<HostedItemMetadata>()).Name);
             Assert.True(view.IsActionAvailable("9to1.Files.Refresh"));
             Assert.False(view.IsActionAvailable("9to1.Files.Apply"));
+            list.SelectedItem = Assert.Single(list.Items.Cast<HostedItemMetadata>());
+            var originalId = ((HostedItemMetadata)list.SelectedItem).Id;
+            Assert.True(view.TryGetValue("SelectedDetails", out var humanDetails));
+            Assert.DoesNotContain(originalId.ToString(), Assert.IsType<string>(humanDetails));
+            await view.DispatchAsync("9to1.Files.TechnicalDetails", null, token);
+            Assert.True(view.TryGetValue("SelectedDetails", out var technicalDetails));
+            Assert.Contains(originalId.ToString(), Assert.IsType<string>(technicalDetails));
+            await view.DispatchAsync("9to1.Files.TechnicalDetails", null, token);
+            await CaptureComponentSceneAsync(window, "files-current-folder");
+            await view.DispatchAsync("9to1.Files.Delete", null, token);
+            var deleteReview = Assert.Single((await h.Permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
+            Assert.Equal("9to1.Files.Delete", deleteReview.Scope.ActionName);
+            Assert.True((await h.Permissions.DecideAsync(deleteReview.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+            await view.DispatchAsync("9to1.Files.Apply", null, token); Assert.Empty(list.Items);
+            await view.DispatchAsync("9to1.Files.Trash", null, token);
+            list.SelectedItem = Assert.Single(list.Items.Cast<HostedItemMetadata>());
+            Assert.True(view.IsActionAvailable("9to1.Files.Restore"));
+            Assert.False(view.IsActionAvailable("9to1.Files.Open"));
+            await CaptureComponentSceneAsync(window, "files-recoverable-trash");
+            await view.DispatchAsync("9to1.Files.Restore", null, token);
+            var restoreReview = Assert.Single((await h.Permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
+            Assert.Equal("9to1.Files.Restore", restoreReview.Scope.ActionName);
+            Assert.True((await h.Permissions.DecideAsync(restoreReview.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+            await view.DispatchAsync("9to1.Files.Apply", null, token); Assert.Empty(list.Items);
+            Assert.Equal(originalId, Assert.Single((await h.Browser.ListAsync(h.Workspace.Actor, h.Parent.Value, token: token)).Items).Id);
+            await view.DispatchAsync("9to1.Files.Home", null, token);
+            list.SelectedItem = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == h.Parent);
+            await view.DispatchAsync("9to1.Files.Open", null, token);
+            list.SelectedItem = Assert.Single(list.Items.Cast<HostedItemMetadata>());
+            await view.DispatchAsync("9to1.Files.ChooseMove", null, token);
+            Assert.False(view.IsActionAvailable("9to1.Files.Move"));
+            await view.DispatchAsync("9to1.Files.Home", null, token);
+            var destination = h.Workspace.Configuration.AppFolders["canvas"];
+            list.SelectedItem = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == destination);
+            await view.DispatchAsync("9to1.Files.Open", null, token);
+            Assert.True(view.IsActionAvailable("9to1.Files.Move"));
+            await view.DispatchAsync("9to1.Files.Move", null, token);
+            var moveReview = Assert.Single((await h.Permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
+            Assert.Equal("9to1.Files.Move", moveReview.Scope.ActionName);
+            Assert.True((await h.Permissions.DecideAsync(moveReview.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+            await view.DispatchAsync("9to1.Files.Apply", null, token);
+            list.SelectedItem = Assert.Single(list.Items.Cast<HostedItemMetadata>());
+            Assert.Equal(originalId, ((HostedItemMetadata)list.SelectedItem).Id);
+            Assert.Empty((await h.Browser.ListAsync(h.Workspace.Actor, h.Parent.Value, token: token)).Items);
+            Assert.False(view.IsActionAvailable("9to1.Files.CancelMove"));
+            await CaptureComponentSceneAsync(window, "files-move-destination");
         }
         finally { await view.CloseAndDrainAsync(); window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Distinct_native_presentations_reopen_the_same_canonical_store_and_folder()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var folder = await CreateReviewedFolder(h, h.Parent.Value, "Shared folder", token);
+        var child = await CreateReviewedFolder(h, folder.Value, "Same resource", token);
+        await using var first = new FilesNativeBrowserSurface(h.Browser, null, h.Workspace.Actor, new Readiness(), CancellationToken.None);
+        await using var second = new FilesNativeBrowserSurface(h.Browser, null, h.Workspace.Actor, new Readiness(), CancellationToken.None);
+        var one = new Window { Content = first }; var two = new Window { Content = second };
+        one.Show(); two.Show();
+        try
+        {
+            await first.InitializeAsync(token); await second.InitializeAsync(token);
+            await first.OpenOriginalLocationAsync(h.Workspace.Configuration.StoreId, folder.Value, token);
+            await second.OpenOriginalLocationAsync(h.Workspace.Configuration.StoreId, folder.Value, token);
+            one.UpdateLayout(); two.UpdateLayout();
+            Assert.NotSame(first, second); Assert.NotSame(first.Content, second.Content);
+            Assert.True(first.TryGetOriginalLocation(out var store, out var location, out var title));
+            Assert.Equal(h.Workspace.Configuration.StoreId, store); Assert.Equal(folder.Value, location); Assert.Equal("Shared folder", title);
+            Assert.True(second.TryGetOriginalLocation(out var otherStore, out var otherLocation, out _));
+            Assert.Equal(store, otherStore); Assert.Equal(location, otherLocation);
+            foreach (var view in new[] { first, second })
+            {
+                var list = Assert.Single(view.GetVisualDescendants().OfType<ListBox>());
+                Assert.Equal(child, Assert.Single(list.Items.Cast<HostedItemMetadata>()).Id);
+                Assert.True(view.CanPrepareOriginalClose());
+            }
+            await first.CloseAndDrainAsync();
+            Assert.False(first.OriginalPublicationIsAlive); Assert.True(second.OriginalPublicationIsAlive);
+            await second.RefreshAsync(token);
+            Assert.Equal(child, Assert.Single(Assert.Single(second.GetVisualDescendants().OfType<ListBox>()).Items.Cast<HostedItemMetadata>()).Id);
+        }
+        finally { await first.CloseAndDrainAsync(); await second.CloseAndDrainAsync(); one.Close(); two.Close(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Close_preflight_preserves_typed_drafts_and_pending_Home_review_until_user_resolves_them()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        await using var view = new FilesNativeBrowserSurface(h.Browser, null, h.Workspace.Actor, new Readiness(), CancellationToken.None);
+        var window = new Window { Content = view }; window.Show();
+        try
+        {
+            await view.InitializeAsync(token);
+            await view.OpenOriginalLocationAsync(h.Workspace.Configuration.StoreId, h.Parent.Value, token);
+            window.UpdateLayout();
+            var name = view.GetVisualDescendants().OfType<TextBox>().Single(input => input.PlaceholderText == "Folder or item name");
+            var originalContent = view.Content;
+            name.Text = "Unsubmitted folder";
+            Assert.False(view.CanPrepareOriginalClose()); Assert.Equal("Unsubmitted folder", name.Text);
+            Assert.Same(originalContent, view.Content); Assert.True(view.OriginalPublicationIsAlive);
+            await view.DispatchAsync("9to1.Files.CreateFolder", null, token);
+            name.Text = ""; // The outstanding review itself must still veto close.
+            Assert.False(view.CanPrepareOriginalClose()); Assert.True(view.IsActionAvailable("9to1.Files.CancelReview"));
+            Assert.Empty((await h.Browser.ListAsync(h.Workspace.Actor, h.Parent.Value, token: token)).Items);
+            await view.DispatchAsync("9to1.Files.CancelReview", null, token);
+            Assert.True(view.CanPrepareOriginalClose()); Assert.Same(originalContent, view.Content);
+            Assert.True(view.OriginalPublicationIsAlive);
+        }
+        finally { await view.CloseAndDrainAsync(); window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Foreign_store_deep_link_refuses_without_rebinding_or_clean_retirement_receipt()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var view = new FilesNativeBrowserSurface(h.Browser, null, h.Workspace.Actor, new Readiness(), CancellationToken.None);
+        var window = new Window { Content = view }; window.Show();
+        try
+        {
+            await view.InitializeAsync(token);
+            var before = await h.Workspace.Provider.GetStoreEvidenceAsync(h.Workspace.Configuration.StoreId, token);
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => view.OpenOriginalLocationAsync(Guid.NewGuid(), h.Parent.Value, token));
+            Assert.False(view.OriginalPublicationIsAlive); Assert.False(view.TryGetOriginalLocation(out _, out _, out _));
+            Assert.Equal(before, await h.Workspace.Provider.GetStoreEvidenceAsync(h.Workspace.Configuration.StoreId, token));
+            var close = view.CloseAndDrainAsync(); Assert.Same(close, view.CloseAndDrainAsync());
+            Assert.NotNull(await Record.ExceptionAsync(() => close)); Assert.True(close.IsFaulted);
+        }
+        finally { _ = await Record.ExceptionAsync(() => view.CloseAndDrainAsync()); window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Canonical_file_identity_cannot_be_reinterpreted_as_a_folder_deep_link()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var file = HostedItemId.New();
+        Assert.True((await h.Workspace.Provider.RegisterArtifactAsync(new("write", Guid.NewGuid().ToString("D"), file,
+            h.Parent, nameof(FilesArtifactType.WriteDocument), "A document"), h.Workspace.Actor.ActorId, token)).IsSuccess);
+        var view = new FilesNativeBrowserSurface(h.Browser, null, h.Workspace.Actor, new Readiness(), CancellationToken.None);
+        var window = new Window { Content = view }; window.Show();
+        try
+        {
+            await view.InitializeAsync(token);
+            var before = (await h.Workspace.Provider.GetAsync(file, token)).Value;
+            await Assert.ThrowsAsync<InvalidOperationException>(() => view.OpenOriginalLocationAsync(h.Workspace.Configuration.StoreId, file.Value, token));
+            Assert.False(view.OriginalPublicationIsAlive);
+            Assert.Equal(before, (await h.Workspace.Provider.GetAsync(file, token)).Value);
+        }
+        finally { Assert.NotNull(await Record.ExceptionAsync(() => view.CloseAndDrainAsync())); window.Close(); }
+    }
+
+    private static async Task CaptureComponentSceneAsync(Window window, string name)
+    {
+        var directory = Environment.GetEnvironmentVariable("HAVEN_VISUAL_CAPTURE_DIR");
+        if (string.IsNullOrWhiteSpace(directory)) return;
+        for (var frameIndex = 0; frameIndex < 30; frameIndex++)
+        {
+            window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+            AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+            await Task.Delay(10, TestContext.Current.CancellationToken);
+        }
+        using var frame = window.CaptureRenderedFrame();
+        Assert.NotNull(frame);
+        Directory.CreateDirectory(directory);
+        frame.Save(Path.Combine(directory, name + ".png"));
     }
 
     private sealed class PersistedObserver : IHomePersistedWriteObserver

@@ -12,11 +12,26 @@
       <Text text="{Binding FolderName}" font-size="20" margin="0,8" />
       <Text text="{Binding Status}" text-wrapping="Wrap" accessible-name="Files status" margin="0,8" />
       <Container Type="Wrap">
+        <Button content="Files root" action="Home" Interactive="{Binding CanBrowse}" />
+        <Button content="Back" action="Back" Interactive="{Binding CanBack}" />
+        <Button content="Forward" action="Forward" Interactive="{Binding CanForward}" />
         <Button content="Up" action="Up" Interactive="{Binding CanUp}" />
         <Button content="Refresh" action="Refresh" Interactive="{Binding CanBrowse}" />
         <Button content="New folder" action="NewFolder" Interactive="{Binding CanCreate}" />
         <Button content="Open selected folder" action="Open" Interactive="{Binding CanOpen}" />
         <Button content="Rename" action="Rename" Interactive="{Binding CanRename}" />
+      </Container>
+      <Container Type="Wrap" margin="0,8">
+        <Input id="files-search" accessible-name="Search names in this folder" Type="Text" Value="{Binding SearchText, Mode=TwoWay}" Interactive="{Binding CanSearch}" />
+        <Button content="Search folder" action="Search" Interactive="{Binding CanSearch}" />
+        <Button content="Clear search" action="ClearSearch" Interactive="{Binding CanClearSearch}" />
+      </Container>
+      <Text text="{Binding SearchSummary}" text-wrapping="Wrap" />
+      <Container Type="Wrap" margin="0,8">
+        <Text text="{Binding SortDescription}" />
+        <Button content="Name A–Z" action="SortNameAscending" Interactive="{Binding CanBrowse}" />
+        <Button content="Name Z–A" action="SortNameDescending" Interactive="{Binding CanBrowse}" />
+        <Button content="Newest" action="SortNewest" Interactive="{Binding CanBrowse}" />
       </Container>
       <If Condition="{Binding Editing}">
         <Container margin="0,12" Type="Vertical Stack">
@@ -29,7 +44,7 @@
         </Container>
       </If>
       <If Condition="{Binding Empty}">
-        <Text text="This folder is empty." margin="0,12" />
+        <Text text="{Binding EmptyMessage}" margin="0,12" />
       </If>
       <Repeat Source="{Binding Items}" As="item" Key="{Binding item.Id}">
         <Container margin="0,8" Type="Vertical Stack">

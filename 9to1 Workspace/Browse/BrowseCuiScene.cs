@@ -168,7 +168,7 @@ public sealed class BrowseCuiScene
                 tab.Id.ToString(),
                 tab.Privacy == BrowserTabPrivacy.Private ? $"Private · {tab.Title}" : tab.Title,
                 tab.Id == snapshot.SelectedTabId)).ToArray());
-            AddressInput.Text = selected.Address.Scheme == "about" ? string.Empty : selected.Address.ToString();
+            AddressInput.Text = selected.Address.Value;
             FindInput.Text = snapshot.FindQuery;
             WebSurface.Url = selected.EngineState == BrowseEngineState.Ready ? selected.Address.ToString() : string.Empty;
             ZoomText.Content = $"{snapshot.ZoomPercent}%";
