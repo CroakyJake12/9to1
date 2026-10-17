@@ -187,10 +187,12 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
                 owner._services.GetRequiredService<IModeRegistry>());
             var page = await factory.CreateNewAsync(cancellationToken);
             await page.AssignSpaceAsync(action.Context.Scope.RegisteredSpaceId);
-            await OnUiAsync(async () =>
+            await OnUiAsync(() =>
             {
+                page.SetDraft(string.Empty);
                 owner._chatPage = page;
                 owner._root.Content = page;
+                return Task.CompletedTask;
             });
         }
     }

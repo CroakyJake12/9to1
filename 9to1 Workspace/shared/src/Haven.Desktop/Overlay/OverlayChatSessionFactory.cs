@@ -36,7 +36,7 @@ internal sealed class OverlayChatSessionFactory(
     public async Task<CapabilityDefinition?> FindCapabilityAsync(OverlayContextActionDescriptor action, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(action.ImplementationKey)) return null;
-        var available = await capabilities.DiscoverAsync(CapabilityPlatform.Windows, cancellationToken);
+        var available = await capabilities.DiscoverAsync(OperatingSystem.IsWindows() ? CapabilityPlatform.Windows : CapabilityPlatform.Linux, cancellationToken);
         return available.FirstOrDefault(capability =>
             capability.ImplementationKey.Equals(action.ImplementationKey, StringComparison.OrdinalIgnoreCase));
     }
@@ -45,7 +45,7 @@ internal sealed class OverlayChatSessionFactory(
     {
         var agents = await catalog.GetAgentsAsync(cancellationToken);
         var prompts = await catalog.GetPromptsAsync(cancellationToken);
-        var availableCapabilities = await capabilities.DiscoverAsync(CapabilityPlatform.Windows, cancellationToken);
+        var availableCapabilities = await capabilities.DiscoverAsync(OperatingSystem.IsWindows() ? CapabilityPlatform.Windows : CapabilityPlatform.Linux, cancellationToken);
         var apps = await modes.GetModesAsync(cancellationToken);
         page.SetAddCatalogue(agents, availableCapabilities, prompts, apps);
     }
