@@ -286,6 +286,7 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
                 "Id" => activity.Id,
                 "Title" => activity.Title,
                 "Detail" => activity.Detail,
+                "HasDetail" => !string.IsNullOrWhiteSpace(activity.Detail),
                 "Succeeded" => activity.Succeeded,
                 "Status" => activity.Succeeded ? "Completed" : "Failed",
                 "Meta" => BuildToolActivityMeta(activity),

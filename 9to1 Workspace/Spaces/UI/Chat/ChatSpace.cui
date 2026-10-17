@@ -69,11 +69,11 @@
                 <Text text="{Binding citation.Title}" text-wrapping="Wrap" accessible-name="Citation source" />
               </Repeat>
               <Repeat Source="{Binding message.ToolActivities}" As="activity" Key="{Binding activity.Id}">
-                <Container id="tool-activity" Type="Grid" ColumnSizes="88px 1fr Auto" CellGap="8" background="{Resource CuiPanelBrush}" corner-radius="12" padding="10" accessible-name="Tool activity">
+                <Container id="tool-activity" Type="Grid" ColumnSizes="88 1fr Auto" CellGap="8" background="{Resource CuiPanelBrush}" corner-radius="12" padding="10" accessible-name="Tool activity">
                   <Text text="{Binding activity.Status}" Column="0" font-size="12" foreground="{Resource CuiTextSoftBrush}" />
                   <Text text="{Binding activity.Title}" Column="1" font-weight="SemiBold" />
                   <Text text="{Binding activity.Meta}" Column="2" font-size="12" foreground="{Resource CuiTextSoftBrush}" />
-                  <If Condition="{Binding activity.Detail}">
+                  <If Condition="{Binding activity.HasDetail}">
                     <Text text="{Binding activity.Detail}" Column="1" Row="1" text-wrapping="Wrap" font-size="12" foreground="{Resource CuiTextSoftBrush}" />
                   </If>
                 </Container>

@@ -77,7 +77,7 @@ public sealed class ChatSpaceCuiRenderingTests
                     .Concat(root.GetVisualDescendants().OfType<CuiMarkdownView>().Select(view => view.Text)).ToArray();
 
                 // Every message reached the document through its Repeat, in published order.
-                var rendered = string.Join(" | ", texts);
+                var rendered = string.Join(" | ", texts) + $" [grids={root.GetVisualDescendants().OfType<Grid>().Count()} borders={root.GetVisualDescendants().OfType<Border>().Count()}]";
                 Assert.True(texts.Contains("Hello"), $"message body did not bind. Rendered: {rendered}");
                 Assert.True(texts.Contains("Hi there"), $"assistant body did not bind. Rendered: {rendered}");
 
@@ -110,7 +110,7 @@ public sealed class ChatSpaceCuiRenderingTests
             try
             {
                 var (tree, diagnostics) = loader.LoadMarkup(ReadAuthoredSource());
-                Assert.True(diagnostics.Count == 0, string.Join(" | ", diagnostics.Select(d => d.Code)));
+                Assert.True(diagnostics.Count == 0, string.Join(" | ", diagnostics.Select(d => $"{d.Code}:{d.Message}")));
                 var root = Assert.IsAssignableFrom<Control>(tree);
                 loader.WireBindings(root);
                 window = new Window { Content = root, Width = 1280, Height = 900 };
