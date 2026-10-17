@@ -32,7 +32,7 @@ public sealed partial class BrowseNativeUiTests
             var originalParent = originalEngine.OriginalNativeView.Parent; Assert.NotNull(originalParent);
             var webId = chrome.State.SelectedTabId;
             var button = Find(window, commandId);
-            window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+            window.UpdateLayout(); button.BringIntoView(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
             var point = button.TranslatePoint(new Point(button.Bounds.Width / 2, button.Bounds.Height / 2), window);
             Assert.NotNull(point); Assert.True(button.IsEffectivelyVisible);
             var previous = workspace.OriginalCommand;

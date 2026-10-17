@@ -11,6 +11,7 @@ using Haven.Application;
 using Haven.Browser;
 using Haven.Core;
 using Haven.Desktop.Services;
+using Haven.Desktop.Events;
 using Haven.Desktop.Views.Pages.Home;
 using HavenOS.Apps.Browse;
 
@@ -23,8 +24,9 @@ public sealed class UnifiedHomeContentTests
 
     private static UnifiedHomeContentFactory Factory(Registry source, CancellationToken lifetime,
         Func<BrowseNavigationIntent, Task, bool>? navigation = null,
-        Func<BrowseAppContentRequest, CancellationToken, Task>? admission = null, bool aiAvailable = true) => new(source,
-            () => throw new InvalidOperationException("Apps must not construct an unused dashboard."),
+        Func<BrowseAppContentRequest, CancellationToken, Task>? admission = null, bool aiAvailable = true,
+        Func<NewDashboardPage>? dashboard = null) => new(source,
+            dashboard ?? (() => throw new InvalidOperationException("Apps must not construct an unused dashboard.")),
             () => throw new InvalidOperationException("Apps must not construct an unused model catalogue."),
             navigation ?? ((_, _) => true),
             (_, _) => throw new InvalidOperationException("Search must not implicitly invoke AI."),
@@ -34,29 +36,35 @@ public sealed class UnifiedHomeContentTests
     public async Task Unavailable_AI_retains_input_does_not_invoke_draft_and_keeps_Search_and_close_usable()
     {
         using var lifetime = new CancellationTokenSource();
+        using var bus = new HavenEventBus();
         BrowseNavigationIntent? navigation = null;
         var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Factory(new(), lifetime.Token,
-            (intent, _) => { navigation = intent; return true; }, aiAvailable: false).CreateSession(Request()));
+            (intent, _) => { navigation = intent; return true; }, aiAvailable: false,
+            dashboard: () => new NewDashboardPage(bus, null!, null!, null!, null!, new EmptySettings(),
+                new EmptyDashboard(), new EmptyDashboardLayout(), [])).CreateSession(Request("browse://newtab")));
         await session.InitializeAsync();
         var page = Assert.IsType<UnifiedHomePage>(session.OriginalNativeView);
         var window = Show(page);
-        var mode = Assert.Single(page.GetVisualDescendants().OfType<ComboBox>());
-        Assert.False(Assert.IsType<ComboBoxItem>(mode.Items.Cast<object>().ElementAt(1)).IsEnabled);
-        var search = Assert.Single(page.GetVisualDescendants().OfType<TextBox>());
-        search.Text = "charging diagnosis";
-        mode.SelectedIndex = 1; // Programmatic/late action must also refuse harmlessly.
-        await page.DispatchAsync("home.submit", null);
-        Assert.Equal("charging diagnosis", search.Text);
-        Assert.Null(navigation);
-        Assert.Contains(page.GetVisualDescendants().OfType<TextBlock>(), item => item.Text?.Contains("AI is unavailable") == true);
-        mode.SelectedIndex = 0;
-        await page.DispatchAsync("home.submit", null);
-        Assert.NotNull(navigation);
-        Assert.True(navigation.Address.IsWeb);
-        Assert.True(await session.TryPrepareToCloseAsync());
-        await session.CloseAndDrainAsync();
+        try
+        {
+            var mode = page.GetVisualDescendants().OfType<ComboBox>().Single(item => item.Name == "home-search-mode");
+            Assert.False(Assert.IsType<ComboBoxItem>(mode.Items.Cast<object>().ElementAt(1)).IsEnabled);
+            var search = page.GetVisualDescendants().OfType<TextBox>().Single(item => item.Name == "home-search");
+            Assert.True(search.IsEffectivelyVisible);
+            search.Text = "charging diagnosis";
+            mode.SelectedIndex = 1; // Programmatic/late action must also refuse harmlessly.
+            await page.DispatchAsync("home.submit", null);
+            Assert.Equal("charging diagnosis", search.Text);
+            Assert.Null(navigation);
+            Assert.Contains(page.GetVisualDescendants().OfType<TextBlock>(), item => item.Text?.Contains("AI is unavailable") == true);
+            mode.SelectedIndex = 0;
+            await page.DispatchAsync("home.submit", null);
+            Assert.NotNull(navigation);
+            Assert.True(navigation.Address.IsWeb);
+            Assert.True(await session.TryPrepareToCloseAsync());
+        }
+        finally { await session.CloseAndDrainAsync(); window.Close(); }
         Assert.True(session.CanRetireOriginalView);
-        window.Close();
     }
 
     [AvaloniaTheory]
@@ -226,6 +234,132 @@ public sealed class UnifiedHomeContentTests
             }
         }
         finally { await session.CloseAndDrainAsync(); window.Close(); }
+    }
+
+    [AvaloniaTheory]
+    [InlineData(1440, 920)]
+    [InlineData(1280, 520)]
+    [InlineData(390, 844)]
+    public async Task Browse_hosted_Home_sidebar_scrolls_without_spilling_into_main_content(int width, int height)
+    {
+        using var lifetime = new CancellationTokenSource();
+        var paths = new LayoutPaths();
+        var chrome = await BrowseChrome.CreateAsync(paths,
+            internalContentFactory: Factory(new(), lifetime.Token), homeProfileId: "layout-fixture-profile");
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new LayoutReadiness());
+        window.Width = width; window.Height = height;
+        try
+        {
+            window.Show(); await window.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(20)); Layout();
+            var page = Assert.Single(window.GetVisualDescendants().OfType<UnifiedHomePage>());
+            var sidebar = Assert.IsType<CuiContainerControl>(page.GetVisualDescendants().OfType<Control>()
+                .Single(item => item.Name == "home-sidebar"));
+            var main = page.GetVisualDescendants().OfType<Control>().Single(item => item.Name == "home-main");
+            var sideOrigin = sidebar.TranslatePoint(default, window)!.Value;
+            var mainOrigin = main.TranslatePoint(default, window)!.Value;
+            var scroll = Assert.IsType<ScrollViewer>(sidebar.Child);
+            var buttons = sidebar.AuthoredChildren.OfType<Button>().ToArray();
+            Assert.Equal(10, buttons.Length);
+            foreach (var button in buttons)
+            {
+                var caption = Assert.Single(button.GetVisualDescendants().OfType<TextBlock>());
+                Assert.True(caption.TextLayout.Width <= caption.Bounds.Width + .5,
+                    $"{button.Content} caption is clipped at {width}×{height}.");
+            }
+            if (width >= 720)
+            {
+                Assert.Equal(global::Avalonia.Layout.Orientation.Vertical, Assert.IsType<WrapPanel>(sidebar.Layout).Orientation);
+                Assert.True(sideOrigin.X + sidebar.Bounds.Width <= mainOrigin.X + .5);
+                double previousBottom = -1;
+                foreach (var button in buttons)
+                {
+                    var origin = button.TranslatePoint(default, sidebar.Layout)!.Value;
+                    Assert.True(origin.Y >= previousBottom, "The sidebar wrapped into a second column.");
+                    Assert.InRange(origin.X, 0, 1);
+                    previousBottom = origin.Y + button.Bounds.Height;
+                }
+            }
+            else
+            {
+                Assert.Equal(global::Avalonia.Layout.Orientation.Horizontal, Assert.IsType<WrapPanel>(sidebar.Layout).Orientation);
+                Assert.InRange(sidebar.Bounds.Height, 40, 160);
+                Assert.True(sideOrigin.Y + sidebar.Bounds.Height <= mainOrigin.Y + .5);
+            }
+            Assert.True(main.Bounds.Height >= height - 300, $"Apps has only {main.Bounds.Height} vertical space.");
+            Assert.True(scroll.Extent.Width <= scroll.Viewport.Width + .5, "Sidebar content spills horizontally.");
+            if (height <= 520 || width < 720)
+            {
+                Assert.True(scroll.Extent.Height > scroll.Viewport.Height);
+                scroll.Offset = new Vector(0, scroll.Extent.Height); Layout();
+                Assert.True(scroll.Offset.Y > 0);
+                var last = buttons.Single(item => item.Content?.ToString() == "Notifications");
+                var lastOrigin = last.TranslatePoint(default, window)!.Value;
+                Assert.True(lastOrigin.Y >= sideOrigin.Y);
+                Assert.True(lastOrigin.Y + last.Bounds.Height <= sideOrigin.Y + sidebar.Bounds.Height + .5);
+            }
+            var appList = Assert.Single(page.GetVisualDescendants().OfType<ListBox>());
+            Assert.True(appList.Bounds.Width >= 150 && appList.Bounds.Height >= 180);
+            var selectedId = chrome.State.SelectedTabId;
+            scroll.Offset = default; Layout();
+            var apps = buttons.Single(item => item.Name == "home-apps");
+            apps.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            Assert.Equal(selectedId, chrome.State.SelectedTabId);
+            Assert.Same(page, Assert.Single(window.GetVisualDescendants().OfType<UnifiedHomePage>()));
+            using var frame = window.CaptureRenderedFrame(); Assert.NotNull(frame);
+            var folder = Environment.GetEnvironmentVariable("HAVEN_UNIFIED_HOME_CAPTURES");
+            if (!string.IsNullOrEmpty(folder))
+            { Directory.CreateDirectory(folder); frame.Save(Path.Combine(folder, $"browse-home-{width}x{height}.png")); }
+        }
+        finally
+        {
+            window.Close();
+            if (window.OriginalClosePreparation is { } preparation)
+                Assert.True(await preparation.WaitAsync(TimeSpan.FromSeconds(20)));
+            Dispatcher.UIThread.RunJobs();
+            Assert.NotNull(window.OriginalClose);
+            await window.OriginalClose!.WaitAsync(TimeSpan.FromSeconds(20));
+            Directory.Delete(paths.DataDirectory, true);
+        }
+        void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); }
+    }
+
+    // The New Tab fixture renders the real dashboard with empty, local repositories.
+    private sealed class EmptyDashboard : IDashboardRepository
+    {
+        public Task<DashboardSnapshot> GetSnapshotAsync(DateTimeOffset now, CancellationToken token) =>
+            Task.FromResult(new DashboardSnapshot(now, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, TimeSpan.Zero, [], []));
+    }
+    private sealed class EmptyDashboardLayout : IDashboardLayoutRepository
+    {
+        public Task<IReadOnlyList<DashboardTileLayout>> GetAsync(CancellationToken token) => Task.FromResult<IReadOnlyList<DashboardTileLayout>>([]);
+        public Task SaveAsync(IReadOnlyList<DashboardTileLayout> layout, CancellationToken token) => Task.CompletedTask;
+    }
+    private sealed class EmptySettings : IVersionedSettingsStore
+    {
+        private readonly Dictionary<string, object> _values = [];
+        public Task<T?> GetAsync<T>(string key, CancellationToken token) where T : class => Task.FromResult(_values.GetValueOrDefault(key) as T);
+        public Task SetAsync<T>(string key, T value, CancellationToken token) where T : class { _values[key] = value; return Task.CompletedTask; }
+        public Task RemoveAsync(string key, CancellationToken token) { _values.Remove(key); return Task.CompletedTask; }
+        public Task<SettingsExportManifest> ExportAsync(CancellationToken token) => throw new NotSupportedException();
+        public Task<SettingsImportResult> ImportAsync(SettingsExportManifest manifest, CancellationToken token) => throw new NotSupportedException();
+    }
+
+    private sealed class LayoutReadiness : ICuiSceneReadiness
+    {
+        public ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken token) => ValueTask.FromResult(
+            new CuiSceneAvailability(CuiSceneAvailabilityState.Ready, "home-layout-fixture", "Explicit headless layout fixture"));
+    }
+    private sealed class LayoutPaths : IAppPaths
+    {
+        public LayoutPaths() { Directory.CreateDirectory(DataDirectory); }
+        public string DataDirectory { get; } = Path.Combine(Path.GetTempPath(), "home-layout-" + Guid.NewGuid().ToString("N"));
+        public string DatabasePath => Path.Combine(DataDirectory, "fixture.db");
+        public string BrowserProfileDirectory => Path.Combine(DataDirectory, "browser");
+        public string AttachmentsDirectory => Path.Combine(DataDirectory, "attachments");
+        public string LogsDirectory => Path.Combine(DataDirectory, "logs");
+        public string LegacyStatePath => Path.Combine(DataDirectory, "missing.json");
     }
 
     private static Window Show(Control page)

@@ -339,9 +339,13 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     {
         if (!IsAlive || _root is null || _sidebar is null || _main is null) return;
         var narrow = Bounds.Width > 0 && Bounds.Width < 720;
-        Layout(_root, "ColumnSizes", narrow ? "1fr" : "180 1fr");
+        Layout(_root, "ColumnSizes", narrow ? "1fr" : "208 1fr");
         Layout(_root, "RowSizes", narrow ? "Auto 1fr" : "1fr");
+        // A vertical scrolling viewport measures the desktop rail with unbounded
+        // height, so its Wrap never spills a second column over the content.
+        // Narrow layouts explicitly wrap horizontally within a bounded rail.
         Layout(_sidebar, "Orientation", narrow ? "Horizontal" : "Vertical");
+        Set(_sidebar, "MaxHeight", narrow ? 160d : double.PositiveInfinity);
         Layout(_main, "Column", narrow ? "0" : "1"); Layout(_main, "Row", narrow ? "1" : "0");
     }
     private void OnHomeSizeChanged(object? sender, SizeChangedEventArgs args)

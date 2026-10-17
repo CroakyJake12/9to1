@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Collections;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
@@ -20,8 +21,13 @@ namespace HavenOS.Apps.Browse.Tests;
 
 public static class BrowseTestAppBuilder
 {
-    public static AppBuilder BuildAvaloniaApp() => CuiNativeHost.ConfigureFonts(AppBuilder.Configure<Application>()
+    public static AppBuilder BuildAvaloniaApp() => CuiNativeHost.ConfigureFonts(AppBuilder.Configure<BrowseTestApplication>()
         .UseSkia().UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false }));
+}
+
+public sealed class BrowseTestApplication : Application
+{
+    public override void Initialize() => CuiNativeHost.InitialisePrimitiveTheme(this, "Browse");
 }
 
 // This fixture observes actual CUI loader actions and explicit fake engine data.
@@ -264,6 +270,7 @@ public sealed partial class BrowseNativeUiTests
             await Observe(loader.WhenActionsIdleAsync(), window);
             Assert.NotNull(workspace.OriginalCommand); await Observe(workspace.OriginalCommand!, window);
             Assert.Equal(2, chrome.State.Tabs.Count);
+            await Click(window, workspace, Find(window, "BrowseMoreButton"));
             // Rendered toolbar labels must fit at the narrow width too; a
             // clickable clipped label is not satisfactory visual acceptance.
             window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
@@ -271,11 +278,13 @@ public sealed partial class BrowseNativeUiTests
                 "BrowseOpenHistoryButton", "BrowseOpenBookmarksButton", "BrowseOpenDownloadsButton", "BrowseOpenSettingsButton" })
             {
                 var action = Find(window, id);
+                action.BringIntoView(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
                 var caption = Assert.Single(action.GetVisualDescendants().OfType<TextBlock>());
                 Assert.True(caption.TextLayout.Width <= caption.Bounds.Width + 0.5,
                     $"{id} caption requires {caption.TextLayout.Width} but has {caption.Bounds.Width} at width {width}.");
                 Assert.InRange(action.TranslatePoint(new Point(action.Bounds.Width / 2, action.Bounds.Height / 2), window)!.Value.Y, 0, height);
             }
+            await Click(window, workspace, Find(window, "BrowseCloseToolsButton"));
             var address = window.GetLogicalDescendants().OfType<TextBox>().Single(control => control.Name == "BrowseAddressBox");
             Assert.True(address.Bounds.Width >= 80, $"The address entry is clipped to {address.Bounds.Width} at width {width}.");
             address.Focus(); address.SelectAll(); window.KeyTextInput("https://typed.example/path");
@@ -293,9 +302,23 @@ public sealed partial class BrowseNativeUiTests
 
     private static BrowseNativeWorkspace.TabRow[] Rows(BrowseNativeWorkspace workspace)
     { Assert.True(workspace.TryGetValue("Tabs", out var value)); return Assert.IsType<BrowseNativeWorkspace.TabRow[]>(value); }
-    private static Button Find(BrowseNativeWindow window, string name) => window.GetLogicalDescendants().OfType<Button>().Single(button => button.Name == name);
+    private static CuiControlLoader Loader(BrowseNativeWindow window) => Assert.IsType<CuiControlLoader>(
+        typeof(CuiSceneHost).GetField("_contentLoader", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(window.SceneHost));
+    private static Button Find(BrowseNativeWindow window, string name)
+    {
+        // Closed tool panels retain their authored controls outside the active logical tree.
+        // Actions still have to open the real panel before interacting with those controls.
+        var authored = Assert.IsAssignableFrom<IDictionary>(typeof(CuiControlLoader)
+            .GetField("_authoredControls", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(Loader(window)));
+        return authored.Keys.Cast<Control>().OfType<Button>().Single(button => button.Name == name);
+    }
     private static async Task Click(BrowseNativeWindow window, BrowseNativeWorkspace workspace, Button button)
     {
+        if ((TopLevel.GetTopLevel(button) is null || !button.IsEffectivelyVisible) && button.Name != "BrowseMoreButton")
+            await Click(window, workspace, Find(window, "BrowseMoreButton"));
+        window.UpdateLayout(); button.BringIntoView(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+        Assert.Same(window, TopLevel.GetTopLevel(button));
+        Assert.True(button.IsEffectivelyVisible);
         Assert.True(button.IsEnabled);
         var loader = Assert.IsType<CuiControlLoader>(typeof(CuiSceneHost).GetField("_contentLoader", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(window.SceneHost));
         var diagnostics = Assert.IsType<CuiControlDiagnostics>(loader.Inspect(button));

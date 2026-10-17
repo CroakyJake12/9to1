@@ -6,56 +6,28 @@
     <Action name="ShowDownloadInFiles" command="9to1.Browse.ShowDownloadInFiles" parameter="{Binding download.Target}" />
     <Action name="RegisterDownloadDestination" command="9to1.Browse.RegisterDownloadDestination" parameter="{Binding folder.Target}" />
   </Actions>
-  <Page id="BrowseRoot" AccessibleName="Browse browser">
-    <Container Type="Grid" Margin="8" RowSizes="Auto Auto Auto 1fr Auto" ColumnSizes="1fr" CellGap="6">
-      <Container Type="Vertical Stack" CellGap="4">
+  <Page id="BrowseRoot" AccessibleName="9to1 Haven browser">
+    <Container id="BrowseLayout" Type="Grid" Margin="6" RowSizes="Auto Auto 1fr Auto" ColumnSizes="1fr" CellGap="4">
+      <Container id="BrowseTabStrip" Type="Grid" ColumnSizes="1fr Auto Auto" CellGap="4">
         <Container Type="Overlay" HorizontalScrolling="True" VerticalScrolling="False">
-          <Container Type="Horizontal Stack" CellGap="4">
-            <Repeat Source="{Binding Tabs}" As="tab" Key="{Binding tab.Key}" Panel="Horizontal Stack">
-              <Button action="SelectTab" Text="{Binding tab.Label}" AccessibleName="{Binding tab.Label}" Interactive="{Binding Can.SelectTab}" />
-            </Repeat>
-          </Container>
+          <Repeat Source="{Binding Tabs}" As="tab" Key="{Binding tab.Key}" Panel="Horizontal Stack">
+            <Button action="SelectTab" Text="{Binding tab.Label}" AccessibleName="{Binding tab.Label}" Selected="{Binding tab.Selected}" Interactive="{Binding Can.SelectTab}" MaxWidth="240" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14" />
+          </Repeat>
         </Container>
-        <Container Type="Grid" ColumnSizes="1fr 1fr 1fr">
-          <Button id="BrowseNewTabButton" action="9to1.Browse.NewTab" Interactive="{Binding Can.NewTab}">New tab</Button>
-          <Button id="BrowsePrivateTabButton" action="9to1.Browse.NewPrivateTab" Column="1" Interactive="{Binding Can.NewPrivateTab}">Private tab</Button>
-          <Button id="BrowseCloseTabButton" action="9to1.Browse.CloseTab" Column="2" Interactive="{Binding Can.CloseTab}">Close tab</Button>
-        </Container>
+        <Button id="BrowseNewTabButton" action="9to1.Browse.NewTab" Column="1" Interactive="{Binding Can.NewTab}" AccessibleName="New tab" Height="32" MinHeight="32" MinWidth="44" Padding="6 2" FontSize="14">+</Button>
+        <Button id="BrowseCloseTabButton" action="9to1.Browse.CloseTab" Column="2" Interactive="{Binding Can.CloseTab}" AccessibleName="Close selected tab" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14">×</Button>
       </Container>
-      <Container Type="Vertical Stack" Row="1" CellGap="4">
-        <Container Type="Grid" ColumnSizes="Auto Auto Auto Auto 1fr">
-          <Button id="BrowseBackButton" action="9to1.Browse.Back" AccessibleName="Go back" Interactive="{Binding CanBack}">←</Button>
-          <Button id="BrowseForwardButton" action="9to1.Browse.Forward" AccessibleName="Go forward" Interactive="{Binding CanForward}" Column="1">→</Button>
-          <Button id="BrowseReloadButton" action="9to1.Browse.Reload" Column="2" Interactive="{Binding Can.Reload}">Reload</Button>
-          <Button id="BrowseStopButton" action="9to1.Browse.Stop" Column="3" Interactive="{Binding Can.Stop}">Stop</Button>
-          <Input Type="Text" id="BrowseAddressBox" Interactive="{Binding CanEdit}" AccessibleName="Search or enter web address" Column="4" Value="{Binding Address, mode=TwoWay}" />
-        </Container>
-        <Container Type="Grid" ColumnSizes="1fr 1fr 1fr">
-          <Button id="BrowseNavigateButton" action="9to1.Browse.Navigate" Interactive="{Binding Can.Navigate}">Go</Button>
-          <Button id="BrowseBookmarkButton" action="9to1.Browse.Bookmark" Column="1" Interactive="{Binding Can.Bookmark}">Bookmark</Button>
-          <Button id="BrowseDiscardAddressButton" action="9to1.Browse.DiscardAddress" Column="2" Interactive="{Binding Can.DiscardAddress}" AccessibleName="Discard address draft">Discard</Button>
-        </Container>
+      <Container id="BrowseNavigationBar" Type="Grid" Row="1" ColumnSizes="Auto Auto Auto Auto 1fr Auto Auto Auto" CellGap="2">
+        <Button id="BrowseBackButton" action="9to1.Browse.Back" AccessibleName="Go back" Interactive="{Binding CanBack}" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14">←</Button>
+        <Button id="BrowseForwardButton" action="9to1.Browse.Forward" Column="1" AccessibleName="Go forward" Interactive="{Binding CanForward}" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14">→</Button>
+        <Button id="BrowseReloadButton" action="9to1.Browse.Reload" Column="2" AccessibleName="Reload page" Interactive="{Binding Can.Reload}" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14">↻</Button>
+        <Button id="BrowseStopButton" action="9to1.Browse.Stop" Column="3" AccessibleName="Stop loading" Interactive="{Binding Can.Stop}" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14">×</Button>
+        <Input Type="Text" id="BrowseAddressBox" Column="4" Interactive="{Binding CanEdit}" AccessibleName="Search or enter web address" Value="{Binding Address, mode=TwoWay}" Height="32" MinHeight="32" MinWidth="80" Padding="8 2" FontSize="14" />
+        <Button id="BrowseNavigateButton" action="9to1.Browse.Navigate" Column="5" AccessibleName="Go to address" Interactive="{Binding Can.Navigate}" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14">Go</Button>
+        <Button id="BrowseBookmarkButton" action="9to1.Browse.Bookmark" Column="6" AccessibleName="Bookmark page" Interactive="{Binding Can.Bookmark}" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14">☆</Button>
+        <Button id="BrowseMoreButton" action="9to1.Browse.ToggleTools" Column="7" AccessibleName="Browser tools" Selected="{Binding ToolsOpen}" Interactive="{Binding Can.ToggleTools}" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14">⋯</Button>
       </Container>
-      <Container Type="Vertical Stack" Row="2" CellGap="4">
-        <Text Text="{Binding Security}" TextWrapping="Wrap" />
-        <Text Text="{Binding Profile}" TextWrapping="Wrap" />
-        <Container Type="Grid" ColumnSizes="1fr 1fr 1fr">
-          <Button id="BrowseFirefoxTabButton" action="9to1.Browse.FirefoxTab" Interactive="{Binding Can.FirefoxTab}" AccessibleName="Use Firefox for this tab">Firefox</Button>
-          <Button id="BrowseChromiumTabButton" action="9to1.Browse.ChromiumTab" Column="1" Interactive="{Binding Can.ChromiumTab}" AccessibleName="Use Chromium for this tab">Chromium</Button>
-          <Button id="BrowseRecoverButton" action="9to1.Browse.Recover" Column="2" Interactive="{Binding Can.Recover}" AccessibleName="Recover this tab">Recover</Button>
-        </Container>
-        <Container Type="Grid" ColumnSizes="1fr 1fr" CellGap="4">
-          <Button id="BrowseReopenTabButton" action="9to1.Browse.ReopenClosedTab" Interactive="{Binding Can.ReopenClosedTab}" AccessibleName="Reopen closed tab">Reopen tab</Button>
-          <Button id="BrowseResetTabEngineButton" action="9to1.Browse.ResetTabEngine" Interactive="{Binding Can.ResetTabEngine}" AccessibleName="Use site or default engine" Column="1">Automatic engine</Button>
-        </Container>
-        <Container Type="Grid" ColumnSizes="1fr 1fr" RowSizes="Auto Auto" CellGap="4">
-          <Button id="BrowseOpenHistoryButton" action="9to1.Browse.OpenHistoryPage" Interactive="{Binding Can.OpenHistoryPage}" Column="0" Row="0">History</Button>
-          <Button id="BrowseOpenBookmarksButton" action="9to1.Browse.OpenBookmarksPage" Interactive="{Binding Can.OpenBookmarksPage}" Column="1" Row="0">Bookmarks</Button>
-          <Button id="BrowseOpenDownloadsButton" action="9to1.Browse.OpenDownloadsPage" Interactive="{Binding Can.OpenDownloadsPage}" Column="0" Row="1">Downloads</Button>
-          <Button id="BrowseOpenSettingsButton" action="9to1.Browse.OpenSettingsPage" Interactive="{Binding Can.OpenSettingsPage}" Column="1" Row="1">Settings</Button>
-        </Container>
-      </Container>
-      <Container Type="Grid" Row="3" ColumnSizes="1fr" RowSizes="1fr" MinHeight="180">
+      <Container id="BrowseContentViewport" Type="Grid" Row="2" ColumnSizes="1fr Auto" RowSizes="1fr" MinHeight="180">
         <Object Type="browse.engine" id="BrowseEngineView" MinHeight="180" AccessibleName="Original native browser engine surface" />
         <Container id="BrowseNativePagePanel" Type="Overlay" VerticalScrolling="True" HorizontalScrolling="False" IsVisible="{Binding IsNativePage}">
           <Container Type="Vertical Stack" CellGap="8" Margin="12">
@@ -105,33 +77,58 @@
             </Container>
           </Container>
         </Container>
-      </Container>
-      <Container MaxHeight="220" Type="Overlay" Row="4" VerticalScrolling="True" HorizontalScrolling="False">
-        <Container Type="Vertical Stack" CellGap="4">
-          <Text Text="{Binding EngineStatus}" TextWrapping="Wrap" />
-          <Text Text="{Binding Status}" TextWrapping="Wrap" AccessibleName="Browse operation status" />
-          <Container Type="Grid" ColumnSizes="1fr 1fr 1fr">
-            <Input Type="Text" id="BrowseFindBox" Interactive="{Binding CanEdit}" AccessibleName="Find on current page" Value="{Binding FindQuery, mode=TwoWay}" />
-            <Button id="BrowseFindPreviousButton" action="9to1.Browse.FindPrevious" Column="1" Interactive="{Binding Can.FindPrevious}">Previous</Button>
-            <Button id="BrowseFindNextButton" action="9to1.Browse.FindNext" Column="2" Interactive="{Binding Can.FindNext}">Next</Button>
+
+        <Container id="BrowseToolsPanel" Type="Vertical Stack" Column="1" IsVisible="{Binding ToolsOpen}" Width="320" VerticalScrolling="True" HorizontalScrolling="False" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" Padding="12" CellGap="8" AccessibleName="Browser tools">
+          <Container Type="Grid" ColumnSizes="1fr Auto">
+            <Text Text="Browser tools" FontWeight="Bold" VerticalAlignment="Center" />
+            <Button id="BrowseCloseToolsButton" action="9to1.Browse.CloseTools" Column="1" AccessibleName="Close browser tools" Interactive="{Binding Can.CloseTools}" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14">×</Button>
           </Container>
-          <Container Type="Grid" ColumnSizes="1fr 1fr 1fr 1fr">
-            <Button id="BrowseZoomOutButton" action="9to1.Browse.ZoomOut" Interactive="{Binding Can.ZoomOut}" AccessibleName="Zoom out">−</Button>
-            <Text Text="{Binding Zoom}" Column="1" />
-            <Button id="BrowseZoomInButton" action="9to1.Browse.ZoomIn" Column="2" Interactive="{Binding Can.ZoomIn}" AccessibleName="Zoom in">+</Button>
-            <Button id="BrowseZoomResetButton" action="9to1.Browse.ZoomReset" Column="3" Interactive="{Binding Can.ZoomReset}" AccessibleName="Reset zoom">Reset</Button>
+          <Container Type="Wrap" CellGap="4">
+            <Button id="BrowsePrivateTabButton" action="9to1.Browse.NewPrivateTab" Interactive="{Binding Can.NewPrivateTab}">Private tab</Button>
+            <Button id="BrowseReopenTabButton" action="9to1.Browse.ReopenClosedTab" Interactive="{Binding Can.ReopenClosedTab}" AccessibleName="Reopen closed tab">Reopen tab</Button>
+            <Button id="BrowseDiscardAddressButton" action="9to1.Browse.DiscardAddress" Interactive="{Binding Can.DiscardAddress}" AccessibleName="Discard address draft">Discard draft</Button>
           </Container>
-          <Container Type="Grid" ColumnSizes="1fr 1fr" RowSizes="Auto Auto Auto Auto Auto">
+          <Container Type="Wrap" CellGap="4">
+            <Button id="BrowseOpenHistoryButton" action="9to1.Browse.OpenHistoryPage" Interactive="{Binding Can.OpenHistoryPage}">History</Button>
+            <Button id="BrowseOpenBookmarksButton" action="9to1.Browse.OpenBookmarksPage" Interactive="{Binding Can.OpenBookmarksPage}">Bookmarks</Button>
+            <Button id="BrowseOpenDownloadsButton" action="9to1.Browse.OpenDownloadsPage" Interactive="{Binding Can.OpenDownloadsPage}">Downloads</Button>
+            <Button id="BrowseOpenSettingsButton" action="9to1.Browse.OpenSettingsPage" Interactive="{Binding Can.OpenSettingsPage}">Settings</Button>
+          </Container>
+          <Text Text="Find on page" FontWeight="Bold" />
+          <Input Type="Text" id="BrowseFindBox" Interactive="{Binding CanEdit}" AccessibleName="Find on current page" Value="{Binding FindQuery, mode=TwoWay}" />
+          <Container Type="Horizontal Stack" CellGap="4">
+            <Button id="BrowseFindPreviousButton" action="9to1.Browse.FindPrevious" Interactive="{Binding Can.FindPrevious}">Previous</Button>
+            <Button id="BrowseFindNextButton" action="9to1.Browse.FindNext" Interactive="{Binding Can.FindNext}">Next</Button>
+          </Container>
+          <Container Type="Horizontal Stack" CellGap="6">
+            <Text Text="{Binding Zoom}" VerticalAlignment="Center" AccessibleName="Page zoom" />
+            <Button id="BrowseZoomOutButton" action="9to1.Browse.ZoomOut" Interactive="{Binding Can.ZoomOut}" AccessibleName="Zoom out" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14">−</Button>
+            <Button id="BrowseZoomInButton" action="9to1.Browse.ZoomIn" Interactive="{Binding Can.ZoomIn}" AccessibleName="Zoom in" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14">+</Button>
+            <Button id="BrowseZoomResetButton" action="9to1.Browse.ZoomReset" Interactive="{Binding Can.ZoomReset}" AccessibleName="Reset zoom" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14">Reset</Button>
+          </Container>
+          <Text Text="Tab engine" FontWeight="Bold" />
+          <Container Type="Wrap" CellGap="4">
+            <Button id="BrowseFirefoxTabButton" action="9to1.Browse.FirefoxTab" Interactive="{Binding Can.FirefoxTab}" AccessibleName="Use Firefox for this tab">Firefox</Button>
+            <Button id="BrowseChromiumTabButton" action="9to1.Browse.ChromiumTab" Interactive="{Binding Can.ChromiumTab}" AccessibleName="Use Chromium for this tab">Chromium</Button>
+            <Button id="BrowseResetTabEngineButton" action="9to1.Browse.ResetTabEngine" Interactive="{Binding Can.ResetTabEngine}" AccessibleName="Use site or default engine">Automatic engine</Button>
+            <Button id="BrowseRecoverButton" action="9to1.Browse.Recover" Interactive="{Binding Can.Recover}" AccessibleName="Recover this tab">Recover</Button>
+          </Container>
+          <Text Text="Site preferences" FontWeight="Bold" />
+          <Container Type="Wrap" CellGap="4">
             <Button id="BrowseFirefoxSiteButton" action="9to1.Browse.FirefoxSite" Interactive="{Binding Can.FirefoxSite}" AccessibleName="Prefer Firefox for this site">Site: Firefox</Button>
-            <Button id="BrowseChromiumSiteButton" action="9to1.Browse.ChromiumSite" Column="1" Interactive="{Binding Can.ChromiumSite}" AccessibleName="Prefer Chromium for this site">Site: Chromium</Button>
-            <Button id="BrowseAllowPopupsButton" action="9to1.Browse.AllowPopups" Row="2" Interactive="{Binding Can.AllowPopups}">Allow site popups</Button>
-            <Button id="BrowseDenyPopupsButton" action="9to1.Browse.DenyPopups" Row="2" Column="1" Interactive="{Binding Can.DenyPopups}">Block site popups</Button>
-            <Button id="BrowseDevToolsButton" action="9to1.Browse.DevTools" Row="3" Interactive="{Binding Can.DevTools}">Developer tools</Button>
-            <Button id="BrowseResetSiteEngineButton" action="9to1.Browse.ResetSiteEngine" Row="4" ColumnSpan="2" Interactive="{Binding Can.ResetSiteEngine}">Reset site engine preference</Button>
+            <Button id="BrowseChromiumSiteButton" action="9to1.Browse.ChromiumSite" Interactive="{Binding Can.ChromiumSite}" AccessibleName="Prefer Chromium for this site">Site: Chromium</Button>
+            <Button id="BrowseAllowPopupsButton" action="9to1.Browse.AllowPopups" Interactive="{Binding Can.AllowPopups}">Allow site popups</Button>
+            <Button id="BrowseDenyPopupsButton" action="9to1.Browse.DenyPopups" Interactive="{Binding Can.DenyPopups}">Block site popups</Button>
+            <Button id="BrowseDevToolsButton" action="9to1.Browse.DevTools" Interactive="{Binding Can.DevTools}">Developer tools</Button>
+            <Button id="BrowseResetSiteEngineButton" action="9to1.Browse.ResetSiteEngine" Interactive="{Binding Can.ResetSiteEngine}">Reset site engine preference</Button>
           </Container>
+          <Text Text="{Binding Security}" TextWrapping="Wrap" />
+          <Text Text="{Binding Profile}" TextWrapping="Wrap" />
+          <Text Text="{Binding EngineStatus}" TextWrapping="Wrap" />
           <Text Text="{Binding PopupStatus}" TextWrapping="Wrap" />
         </Container>
       </Container>
+      <Text Row="3" Text="{Binding Status}" FontSize="12" AccessibleName="Browse operation status" />
     </Container>
   </Page>
 </Cui>
