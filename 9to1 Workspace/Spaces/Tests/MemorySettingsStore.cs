@@ -1,4 +1,5 @@
 using Haven.Application;
+using System.Threading;
 
 namespace HavenOS.Apps.Spaces.Tests;
 
@@ -41,29 +42,35 @@ public sealed class MemorySettingsStore : IVersionedSettingsStore
 public sealed class DelayedMemorySettingsStore : IVersionedSettingsStore
 {
     private readonly Task _delay;
+    private readonly IVersionedSettingsStore? _inner;
     private readonly Dictionary<string, object> _values = new(StringComparer.Ordinal);
+    private int _delayedReads;
 
-    public DelayedMemorySettingsStore(Task delay)
+    public DelayedMemorySettingsStore(Task delay, IVersionedSettingsStore? inner = null)
     {
         _delay = delay ?? throw new ArgumentNullException(nameof(delay));
+        _inner = inner;
     }
 
     public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken) where T : class
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (key == "spaces.registry")
+        if (key == "spaces.registry" && Interlocked.Increment(ref _delayedReads) == 1)
         {
             // Use a new cancellation-aware delay so the test can advance by releasing the task.
             var registration = cancellationToken.Register(() => _ = Task.Run(() => { }));
             await _delay.WaitAsync(cancellationToken).ConfigureAwait(false);
             registration.Dispose();
         }
+        if (_inner is not null)
+            return await _inner.GetAsync<T>(key, cancellationToken).ConfigureAwait(false);
         return _values.TryGetValue(key, out var value) ? (T?)value : null;
     }
 
     public Task SetAsync<T>(string key, T value, CancellationToken cancellationToken) where T : class
     {
         cancellationToken.ThrowIfCancellationRequested();
+        if (_inner is not null) return _inner.SetAsync(key, value, cancellationToken);
         _values[key] = value!;
         return Task.CompletedTask;
     }
@@ -71,6 +78,7 @@ public sealed class DelayedMemorySettingsStore : IVersionedSettingsStore
     public Task RemoveAsync(string key, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        if (_inner is not null) return _inner.RemoveAsync(key, cancellationToken);
         _values.Remove(key);
         return Task.CompletedTask;
     }

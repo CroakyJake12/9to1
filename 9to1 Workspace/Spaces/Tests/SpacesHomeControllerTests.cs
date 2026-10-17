@@ -365,15 +365,17 @@ public sealed class SpacesHomeControllerTests
     public async Task Held_load_does_not_overwrite_newer_selection()
     {
         var release = new TaskCompletionSource();
-        var store = new DelayedMemorySettingsStore(release.Task);
+        var seedStore = new MemorySettingsStore();
+        var seedRegistry = new SpaceRegistry(seedStore);
+        var target = await seedRegistry.CreateAsync("Target");
+        var store = new DelayedMemorySettingsStore(release.Task, seedStore);
         var registry = new SpaceRegistry(store);
-        var target = await registry.CreateAsync("Target");
         var controller = new SpacesHomeController(registry);
 
         var loadTask = controller.LoadAsync();
-        await controller.SelectSpaceAsync(target.Id);
+        var selectTask = controller.SelectSpaceAsync(target.Id);
         release.SetResult();
-        await loadTask;
+        await Task.WhenAll(loadTask, selectTask).WaitAsync(TimeSpan.FromSeconds(5));
 
         Assert.Equal(target.Id, controller.State.Selection?.Id);
         Assert.Equal("Spaces ready", controller.State.StatusMessage);
