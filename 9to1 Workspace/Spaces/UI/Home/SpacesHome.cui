@@ -72,7 +72,7 @@
           <Container id="space-details" accessible-name="Selected Space" Type="Vertical Stack" CellGap="10">
             <If Condition="{Binding selection.isRenaming}">
               <Container id="rename-controls" Type="Vertical Stack" CellGap="8">
-                <Input id="rename-input" Type="Text" Value="{Binding spaces.renameDraft}" accessible-name="Rename Space" />
+                <Input id="rename-input" Type="Text" Value="{Binding spaces.renameDraft, mode=TwoWay}" accessible-name="Rename Space" />
                 <Container id="rename-actions" Type="Wrap" CellGap="8">
                   <Button id="confirm-rename" action="spaces.confirm-rename" action-argument="{Binding selection.id}" content="Save" accessible-name="Confirm Space rename" />
                   <Button id="cancel-rename" action="spaces.cancel-rename" content="Cancel" accessible-name="Cancel Space rename" />
