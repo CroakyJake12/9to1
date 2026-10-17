@@ -130,8 +130,7 @@ public sealed partial class App
                 AdmitHomeAsync, () => IsCurrent, _windowLifetime, aiAvailable: false);
             IBrowseEngineHostFactory? engines = null;
             if (!OperatingSystem.IsWindows())
-                engines = new LinuxWebKitEngineFactory((tab, engine, origin, kind) =>
-                    (_chrome ?? throw new InvalidOperationException("The original Browse owner is not published.")).ObserveOriginPermission(tab, engine, origin, kind));
+                engines = new LinuxWebKitEngineFactory();
 #if HAVEN_WINDOWS_DESKTOP
             engines = new WindowsChromiumEngineFactory((tab, engine, origin, kind) =>
                 (_chrome ?? throw new InvalidOperationException("The original Browse owner is not published."))
