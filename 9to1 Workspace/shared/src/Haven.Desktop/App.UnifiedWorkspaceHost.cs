@@ -75,6 +75,7 @@ public sealed partial class App
             _app = app; _services = services; _home = home;
             _appLifetime = appLifetime; _windowLifetime = windowLifetime;
             KeyDown += OnWorkspaceKeyDown;
+            ShowStartupLoading();
         }
 
         internal Task? OriginalInitialization => _initialization;
@@ -87,7 +88,7 @@ public sealed partial class App
 
 
         internal static void ShowStartupFailure(Window window, string correlationId, Exception exception,
-            Func<Task>? windowClosedCallback = null)
+            string? recoveryGuidance = null)
         {
             ArgumentNullException.ThrowIfNull(window);
             ArgumentNullException.ThrowIfNull(exception);
@@ -99,11 +100,12 @@ public sealed partial class App
             model.Set("Message", exception.Message);
             model.Set("CorrelationId", correlationId);
             model.Set("DiagnosticReference", "Diagnostic reference: " + correlationId);
+            model.Set("Guidance", recoveryGuidance ?? "Close this window, resolve the reported issue, and restart 9to1 Haven.");
             var handlerAlreadyAttached = window.Tag is CuiControlLoader;
             if (window.Tag is CuiControlLoader existingLoader) existingLoader.Dispose();
             window.Tag = null;
             var loader = new CuiControlLoader();
-            const string markup = "<Cui><Theme Name=\"user_preference\"><Page AccessibleName=\"9to1 Haven startup failure\"><Container Type=\"Vertical Stack\" CellGap=\"12\" Padding=\"24\"><Text Text=\"9to1 Haven could not start\" FontSize=\"24\" FontWeight=\"Bold\" Foreground=\"{Resource CuiTextBrush}\" /><Text Text=\"{Binding Message}\" TextWrapping=\"Wrap\" Foreground=\"{Resource CuiTextBrush}\" /><Text Text=\"{Binding DiagnosticReference}\" Foreground=\"{Resource CuiTextSoftBrush}\" /><Text Text=\"Close this window, resolve the reported issue, and restart 9to1 Haven.\" Foreground=\"{Resource CuiTextSoftBrush}\" /></Container></Page></Theme></Cui>";
+            const string markup = "<Cui><Theme Name=\"user_preference\"><Page AccessibleName=\"9to1 Haven startup failure\"><Container Type=\"Vertical Stack\" CellGap=\"12\" Padding=\"24\"><Text Text=\"9to1 Haven could not start\" FontSize=\"24\" FontWeight=\"Bold\" Foreground=\"{Resource CuiTextBrush}\" /><Text Text=\"{Binding Message}\" TextWrapping=\"Wrap\" Foreground=\"{Resource CuiTextBrush}\" /><Text Text=\"{Binding DiagnosticReference}\" Foreground=\"{Resource CuiTextSoftBrush}\" /><Text Text=\"{Binding Guidance}\" Foreground=\"{Resource CuiTextSoftBrush}\" /></Container></Page></Theme></Cui>";
             loader.SetBindingContext(model);
             loader.SetActionDispatcher(model);
             var (root, diagnostics) = loader.LoadMarkup(markup, "StartupFailure.cui");
@@ -119,14 +121,13 @@ public sealed partial class App
             if (application.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
                 desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
             if (!handlerAlreadyAttached)
-                window.Closed += async (_, _) =>
+                window.Closed += (_, _) =>
                 {
                     if (window.Tag is CuiControlLoader ownedLoader)
                     {
                         ownedLoader.Dispose();
                         window.Tag = null;
                     }
-                    if (windowClosedCallback is not null) await windowClosedCallback();
                 };
         }
 
@@ -137,13 +138,9 @@ public sealed partial class App
             _startupLoadingLoader?.Dispose(); _startupLoadingLoader = null;
             var window = TopLevel.GetTopLevel(this) as Window;
             if (window is not null)
-            {
-                var handlerAlreadyAttached = window.Tag is CuiControlLoader;
-                ShowStartupFailure(window, correlationId, exception, _app.CloseStartupFailureWindowAsync);
-                _app.StartStartupFailureDrain();
-                if (!handlerAlreadyAttached)
-                    window.Closed += async (_, _) => await _app.CloseStartupFailureWindowAsync();
-            }
+                ShowStartupFailure(window, correlationId, exception);
+            // Presentation does not retire App or bypass the configured native
+            // Closing/preflight/shutdown owner. That graph owns all borrowers.
         }
 
         internal Task InitializeAsync(CancellationToken token)
@@ -165,7 +162,7 @@ public sealed partial class App
             Dispatcher.UIThread.VerifyAccess();
             if (Content is not null) return;
             var application = Avalonia.Application.Current;
-            if (application is not null && !application.Resources.TryGetResource("CuiBackgroundBrush", null, out _))
+            if (application is not null && !application.Resources.TryGetResource("CuiBackgroundBrush", application.ActualThemeVariant, out _))
                 CuiNativeHost.InitialisePrimitiveTheme(application, "Home", CakeOS.Cui.Themes.CuiAppearance.Dark);
             var model = new CuiViewModel();
             model.Set("Status", "Loading 9to1 Haven…");
@@ -177,7 +174,8 @@ public sealed partial class App
             if (root is null || diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
             {
                 loader.Dispose();
-                return;
+                throw new InvalidDataException("The canonical startup-loading CUI did not produce a usable control: " +
+                    string.Join("; ", diagnostics));
             }
             loader.WireBindings(root);
             _startupLoadingLoader = loader;
@@ -431,6 +429,8 @@ public sealed partial class App
                 }
                 _close ??= _pendingClose;
                 KeyDown -= OnWorkspaceKeyDown;
+                try { _startupLoadingLoader?.Dispose(); _startupLoadingLoader = null; }
+                catch (Exception error) { AddAppCause(failures, error); }
                 // A failed CreateAsync can retain an owner whose own cleanup failed.
                 // A null returned owner is therefore not proof that producers stopped.
                 var producersStopped = _workspaceClose is { IsCompletedSuccessfully: true } ||

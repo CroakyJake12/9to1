@@ -147,12 +147,11 @@ public sealed partial class App : Avalonia.Application
                         MinHeight = 320
                     };
                     var correlationId = Guid.NewGuid().ToString("N");
-                    UnifiedWorkspaceHost.ShowStartupFailure(failureWindow, correlationId, failure);
-                    StartStartupFailureDrain();
-                    failureWindow.Closed += (_, _) =>
-                    {
-                        if (_startupFailureClose is null) StartStartupFailureDrain();
-                    };
+                    UnifiedWorkspaceHost.ShowStartupFailure(failureWindow, correlationId, failure,
+                        "Startup stopped before safe window shutdown was configured. This diagnostic window will remain open for recovery.");
+                    // No full window/borrower ownership graph was configured. Keep the
+                    // diagnostic visible; closing it cannot certify resource cleanup.
+                    failureWindow.Closing += (_, args) => args.Cancel = true;
                     desktop.MainWindow = failureWindow;
                     base.OnFrameworkInitializationCompleted();
                     return;
@@ -196,7 +195,6 @@ public sealed partial class App : Avalonia.Application
             if (_actualUnifiedWorkspace is not null)
             {
                 _actualUnifiedWorkspace.ShowStartupFailureForHost(Guid.NewGuid().ToString("N"), failure);
-                _actualUnifiedWorkspace.StartStartupFailureDrain();
             }
         }
     }
