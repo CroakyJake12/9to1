@@ -73,6 +73,18 @@ public sealed class SpacesHomeCuiRenderingTests
                 Assert.Contains("Study", rendered);
                 Assert.Contains("Recipes", rendered);
                 Assert.Contains("Spaces", rendered);
+                Assert.DoesNotContain("Create a Space to keep related conversations and work together", texts);
+                Assert.Contains("No sources added", texts);
+                Assert.Contains("No extra capabilities enabled", texts);
+
+                // The same authored surface must restore its empty label when the real
+                // projection becomes empty, rather than permanently suppressing it.
+                state = state with { CustomSpaces = [] };
+                bindings.Refresh();
+                window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                var emptyTexts = root.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text).ToArray();
+                Assert.Contains("Create a Space to keep related conversations and work together", emptyTexts);
+                Assert.DoesNotContain("Recipes", emptyTexts);
             }
             finally { window?.Close(); loader.Dispose(); await loader.WhenActionsIdleAsync(); }
             return true;
@@ -116,6 +128,9 @@ public sealed class SpacesHomeCuiRenderingTests
                 Assert.Contains("Ready", rendered);
                 Assert.Contains("Plugin:analysis", rendered);
                 Assert.Contains("model-a", rendered);
+                Assert.DoesNotContain("No sources added", texts);
+                Assert.DoesNotContain("No extra capabilities enabled", texts);
+                Assert.DoesNotContain("Create a Space to keep related conversations and work together", texts);
             }
             finally { window?.Close(); loader.Dispose(); await loader.WhenActionsIdleAsync(); }
             return true;

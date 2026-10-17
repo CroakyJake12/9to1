@@ -42,9 +42,9 @@
   </Actions>
   <Theme Name="user_preference">
     <Page id="spaces-page" role="main" accessible-name="Spaces">
-      <Container id="spaces-body" Type="Vertical Stack" CellGap="16">
-        <Container id="spaces-layout" Type="Horizontal Stack" CellGap="16">
-          <Container id="spaces-sidebar" role="navigation" accessible-name="Spaces navigation" width="280" Type="Vertical Stack" CellGap="10">
+      <Container id="spaces-body" Type="Grid" RowSizes="1fr" ColumnSizes="1fr">
+        <Container id="spaces-layout" Type="Grid" RowSizes="1fr" ColumnSizes="280 1fr" CellGap="16">
+          <Container id="spaces-sidebar" role="navigation" accessible-name="Spaces navigation" width="280" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="10">
             <Text id="spaces-heading" text="Spaces" font-size="24" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
             <Input id="spaces-search" Type="Text" accessible-name="Search Spaces" placeholdertext="Find a Space" Value="{Binding spaces.query}" action="spaces.clear-search" />
             <Button id="create-space" action="spaces.create" content="New Space" accessible-name="Create a custom Space" />
@@ -79,13 +79,13 @@
                 </Container>
               </Container>
             </Repeat>
-            <If Condition="!{Binding spaces.customSpaces.Count}">
+            <If Condition="!{Binding spaces.hasCustomSpaces}">
               <Text id="custom-spaces-empty-text" text="Create a Space to keep related conversations and work together" foreground="{Resource CuiTextSoftBrush}" />
             </If>
             <Text id="spaces-status" text="{Binding status.message}" role="status" accessible-name="Spaces status" />
           </Container>
 
-          <Container id="space-details" accessible-name="Selected Space" Type="Vertical Stack" CellGap="10">
+          <Container id="space-details" accessible-name="Selected Space" Column="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="10">
             <If Condition="{Binding selection.isRenaming}">
               <Container id="rename-controls" Type="Vertical Stack" CellGap="8">
                 <Input id="rename-input" Type="Text" Value="{Binding spaces.renameDraft, mode=TwoWay}" accessible-name="Rename Space" />
@@ -128,7 +128,7 @@
                   <Text id="space-context-item-index-state" text="{Binding reference.indexStateLabel}" foreground="{Resource CuiTextSoftBrush}" />
                 </Container>
               </Repeat>
-              <If Condition="!{Binding selection.contextReferences.Count}">
+              <If Condition="!{Binding selection.hasContextReferences}">
                 <Text id="space-context-empty-text" text="No sources added" foreground="{Resource CuiTextSoftBrush}" />
               </If>
 
@@ -144,7 +144,7 @@
                   <Text id="space-capability-label" text="{Binding capability.label}" />
                 </Container>
               </Repeat>
-              <If Condition="!{Binding selection.capabilities.Count}">
+              <If Condition="!{Binding selection.hasCapabilities}">
                 <Text id="space-capabilities-empty-text" text="No extra capabilities enabled" foreground="{Resource CuiTextSoftBrush}" />
               </If>
             </Container>

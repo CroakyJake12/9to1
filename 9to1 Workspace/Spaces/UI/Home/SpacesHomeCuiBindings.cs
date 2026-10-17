@@ -64,6 +64,7 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
             "spaces.query" => snapshot.Query,
             "spaces.builtIns" => snapshot.BuiltIns,
             "spaces.customSpaces" => snapshot.CustomSpaces,
+            "spaces.hasCustomSpaces" => snapshot.CustomSpaces.Count > 0,
             "spaces.moveParentOptions" => snapshot.MoveParentOptions,
             "spaces.pendingRenameSpaceId" => snapshot.PendingRenameSpaceId,
             "spaces.renameDraft" => snapshot.RenameDraft,
@@ -83,7 +84,9 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
             "selection.webAccessLabel" => snapshot.Selection?.WebAccessLabel ?? string.Empty,
             "selection.memoryScopeLabel" => snapshot.Selection?.MemoryScopeLabel ?? string.Empty,
             "selection.contextReferences" => snapshot.Selection?.ContextReferences ?? [],
+            "selection.hasContextReferences" => snapshot.Selection?.ContextReferences.Count > 0,
             "selection.capabilities" => snapshot.Selection?.Capabilities ?? [],
+            "selection.hasCapabilities" => snapshot.Selection?.Capabilities.Count > 0,
             _ => Unresolved
         };
         return !ReferenceEquals(value, Unresolved);

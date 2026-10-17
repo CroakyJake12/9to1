@@ -86,6 +86,10 @@ public sealed class SpacesHomeNativeRenderingTests
         Assert.True(button.IsEnabled); Assert.True(button.IsEffectivelyVisible);
         var point = button.TranslatePoint(new Point(button.Bounds.Width / 2, button.Bounds.Height / 2), window);
         Assert.NotNull(point);
+        Assert.True(new Rect(window.ClientSize).Contains(point.Value), "Pointer target is outside the window.");
+        var hit = Assert.IsAssignableFrom<Visual>(window.InputHitTest(point.Value));
+        Assert.True(ReferenceEquals(hit, button) || hit.GetVisualAncestors().Contains(button),
+            "The requested button is clipped or covered at the pointer target.");
         window.MouseMove(point.Value);
         window.MouseDown(point.Value, MouseButton.Left);
         window.MouseUp(point.Value, MouseButton.Left);
@@ -308,6 +312,87 @@ public sealed class SpacesHomeNativeRenderingTests
 
             Button Row(string id, string label) => root.GetVisualDescendants().OfType<Button>()
                 .Single(item => item.Name == id && AutomationProperties.GetName(item) == label);
+        }, lifetime.Token);
+    }
+
+    [Theory]
+    [InlineData(1440, 920)]
+    [InlineData(1280, 420)]
+    public async Task Bounded_panes_scroll_independently_and_expose_custom_rows_to_real_pointer_input(int width, int height)
+    {
+        using var lifetime = new CancellationTokenSource();
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));
+        await session.Dispatch<bool>(async () =>
+        {
+            var registry = new SpaceRegistry(new MemorySettingsStore());
+            var spaces = new List<SpaceDefinition>();
+            for (var index = 1; index <= 8; index++)
+                spaces.Add(await registry.CreateAsync($"Viewport Space {index}"));
+            await registry.SetCurrentSpaceIdAsync(spaces[0].Id);
+            var target = spaces[^1];
+            var (controller, _, loader, root) = LoadInWindow(registry);
+            await controller.LoadAsync();
+            var window = new Window { Width = width, Height = height, Content = root };
+            try
+            {
+                window.Show(); Layout();
+                var sidebar = Pane("spaces-sidebar");
+                var details = Pane("space-details");
+                var sidebarScroll = Assert.IsType<ScrollViewer>(sidebar.Child);
+                var detailsScroll = Assert.IsType<ScrollViewer>(details.Child);
+                var sideBounds = BoundsInWindow(sidebar);
+                var detailBounds = BoundsInWindow(details);
+                Assert.InRange(sideBounds.Height, height - 40, height);
+                Assert.InRange(detailBounds.Height, height - 40, height);
+                Assert.True(sideBounds.Right <= detailBounds.Left);
+                Assert.True(detailBounds.Right <= width + .5 && detailBounds.Bottom <= height + .5);
+                Assert.True(sidebarScroll.Extent.Height > sidebarScroll.Viewport.Height);
+                Assert.True(sidebarScroll.Extent.Width <= sidebarScroll.Viewport.Width + .5);
+                Assert.True(detailsScroll.Extent.Width <= detailsScroll.Viewport.Width + .5);
+                var row = root.GetVisualDescendants().OfType<Button>().Single(item =>
+                    item.Name == "open-custom-space" && AutomationProperties.GetName(item) == $"Open {target.Name}");
+                Assert.True(BoundsInWindow(row).Top >= sideBounds.Bottom, "Fixture must start with the target row offscreen.");
+                var detailOffset = detailsScroll.Offset;
+                var sideWheelPoint = sideBounds.Center;
+                var wheelTrace = new List<string>();
+                for (var attempt = 0; attempt < 80 && !sideBounds.Contains(BoundsInWindow(row)); attempt++)
+                {
+                    if (attempt < 12) wheelTrace.Add($"{sidebarScroll.Offset.Y}:{window.InputHitTest(sideWheelPoint)?.GetType().Name}:{(window.InputHitTest(sideWheelPoint) as Control)?.Name}");
+                    window.MouseWheel(sideWheelPoint, new Vector(0, -3));
+                    Layout();
+                }
+                Assert.True(sidebarScroll.Offset.Y > 0);
+                Assert.True(sideBounds.Contains(BoundsInWindow(row)), $"Wheel scrolling must expose the complete target row. Pane={sideBounds}; row={BoundsInWindow(row)}; offset={sidebarScroll.Offset}; viewport={sidebarScroll.Viewport}; extent={sidebarScroll.Extent}; trace={string.Join("|", wheelTrace)}.");
+                Assert.Equal(detailOffset, detailsScroll.Offset);
+                Assert.Equal(detailBounds, BoundsInWindow(details));
+                if (height <= 520)
+                {
+                    Assert.True(detailsScroll.Extent.Height > detailsScroll.Viewport.Height);
+                    var sideOffset = sidebarScroll.Offset;
+                    window.MouseWheel(detailBounds.Center, new Vector(0, -20)); Layout();
+                    Assert.True(detailsScroll.Offset.Y > 0);
+                    Assert.Equal(sideOffset, sidebarScroll.Offset);
+                }
+                // Click only after real wheel input made the row visible; ClickAsync also
+                // checks the window hit test, so an offscreen accessibility action cannot pass.
+                await ClickAsync(window, loader, row);
+                Assert.Equal(target.Id, controller.State.Selection!.Id);
+                Assert.Equal(target.Id, await registry.GetCurrentSpaceIdAsync());
+                using var frame = window.CaptureRenderedFrame(); Assert.NotNull(frame);
+                var captures = Environment.GetEnvironmentVariable("HAVEN_SPACES_HOME_CAPTURES");
+                if (!string.IsNullOrEmpty(captures))
+                {
+                    Directory.CreateDirectory(captures);
+                    frame.Save(Path.Combine(captures, $"spaces-scrolled-{width}x{height}.png"));
+                }
+            }
+            finally { loader.Dispose(); window.Close(); }
+            return true;
+
+            CuiContainerControl Pane(string id) => root.GetVisualDescendants().OfType<CuiContainerControl>()
+                .Single(item => item.Name == id);
+            Rect BoundsInWindow(Control control) => new(control.TranslatePoint(default, window)!.Value, control.Bounds.Size);
+            void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); }
         }, lifetime.Token);
     }
 

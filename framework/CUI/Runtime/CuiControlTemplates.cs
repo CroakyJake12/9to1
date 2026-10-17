@@ -196,7 +196,8 @@ public static class CuiControlTemplates
     private static Control Scroll(ScrollViewer owner, INameScope scope)
     {
         var root = new Grid { ColumnDefinitions = new("*,Auto"), RowDefinitions = new("*,Auto") };
-        var content = Name(new ScrollContentPresenter(), "PART_ContentPresenter", scope);
+        // Keep wheel input inside the presenter even when the pointer is over a gap between children.
+        var content = Name(new ScrollContentPresenter { Background = Brushes.Transparent }, "PART_ContentPresenter", scope);
         Bind(content, ContentPresenter.PaddingProperty, owner, "Padding");
         var vertical = Name(new ScrollBar { Orientation = Orientation.Vertical }, "PART_VerticalScrollBar", scope);
         var horizontal = Name(new ScrollBar { Orientation = Orientation.Horizontal }, "PART_HorizontalScrollBar", scope);
