@@ -89,8 +89,10 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
             DemandAlive();
             var home = _services.GetRequiredService<HomeNativeWindowsComposition>();
             if (home.OriginalStartTask is { } homeStart)
-                await homeStart.ConfigureAwait(false);
-            var actor = await home.Profiles.GetCurrentAsync(token).ConfigureAwait(false)
+                await homeStart;
+            // This continuation creates and activates the native page. Retain the
+            // dispatcher context while genuine Home admission performs async I/O.
+            var actor = await home.Profiles.GetCurrentAsync(token)
                 ?? throw new UnauthorizedAccessException("The authenticated Home profile is unavailable.");
             if (!string.Equals(actor.ProfileId, _request.ProfileId, StringComparison.Ordinal))
                 throw new UnauthorizedAccessException("The Spaces tab does not belong to the current authenticated profile.");
