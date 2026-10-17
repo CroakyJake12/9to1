@@ -148,6 +148,14 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
         }
 
         var start = new TaskCompletionSource(); // Publish before any readiness/native callback.
+        var original = AdmitOriginalShow(start.Task, scene!, predicate, cancellationToken);
+        start.SetResult();
+        return original;
+    }
+
+    private Task<CuiSceneAvailability> AdmitOriginalShow(Task start, CuiNativeScene scene,
+        Func<bool> predicate, CancellationToken cancellationToken)
+    {
         OriginalPublication publication;
         Task<CuiSceneAvailability> original;
         lock (_originalGate)
@@ -158,11 +166,17 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
             if (_originalPublications.Count >= MaximumOriginalPublications)
                 return Task.FromException<CuiSceneAvailability>(OriginalCapacityRefusal());
             _ownerMode = 2;
-            publication = new OriginalPublication { IsPublicationCurrent = predicate };
-            original = publication.Show = RunOriginalShowAsync(start.Task, publication, scene!, predicate, cancellationToken);
+            // Admission, not continuation scheduling, defines replacement order. The old
+            // mounted root may remain visible while readiness waits, but cannot admit a
+            // new action snapshot after this Show has taken publication custody.
+            publication = new OriginalPublication
+            {
+                IsPublicationCurrent = predicate,
+                Generation = Interlocked.Increment(ref _generation)
+            };
+            original = publication.Show = RunOriginalShowAsync(start, publication, scene, predicate, cancellationToken);
             _originalPublications.Add(publication);
         }
-        start.SetResult();
         return original;
     }
 
@@ -334,8 +348,7 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
         ArgumentException.ThrowIfNullOrWhiteSpace(scene.Title);
         ArgumentException.ThrowIfNullOrWhiteSpace(scene.Surface);
         using var request = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token, cancellationToken);
-        var generation = Interlocked.Increment(ref _generation);
-        if (publication is not null) publication.Generation = generation;
+        var generation = publication?.Generation ?? Interlocked.Increment(ref _generation);
         CuiSceneAvailability availability;
         try
         {

@@ -46,8 +46,10 @@ public sealed class CuiSceneHostOriginalPublicationTests
         });
     }
 
-    [Fact]
-    public async Task Replacement_refuses_old_Show_capture_without_substituting_its_new_loader_or_losing_the_old_snapshot()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Replacement_refuses_old_Show_capture_without_substituting_its_new_loader_or_losing_the_old_snapshot(bool queuedStart)
     {
         await RunAsync(async rig =>
         {
@@ -57,6 +59,8 @@ public sealed class CuiSceneHostOriginalPublicationTests
             var readiness = new HeldReadiness();
             _ = rig.Track(readiness.Original);
             rig.Release(readiness.Complete);
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            rig.Release(() => start.TrySetResult());
             Task<CuiSceneAvailability>? original = null, replacement = null;
             Task? settlement = null;
             Control? originalRoot = null;
@@ -68,14 +72,20 @@ public sealed class CuiSceneHostOriginalPublicationTests
                 originalRoot = Assert.IsType<Button>(rig.Host.Content);
                 ((Button)originalRoot).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 settlement = rig.Track(rig.Host.CaptureOriginalActionSettlement(original!));
-                replacement = rig.Track(rig.Host.ShowAsync(Scene(readiness: readiness,
-                    markup: "<Cui><Text text=\"Replacement\" /></Cui>") with { IsPublicationCurrent = () => true }));
+                var next = Scene(readiness: readiness,
+                    markup: "<Cui><Text text=\"Replacement\" /></Cui>") with { IsPublicationCurrent = () => true };
+                replacement = rig.Track(queuedStart
+                    ? AdmitHeldShow(rig.Host, next, start.Task)
+                    : rig.Host.ShowAsync(next));
+                if (queuedStart) Assert.Equal(0, readiness.Calls);
                 Assert.False(replacement.IsCompleted);
                 Assert.Same(originalRoot, rig.Host.Content); // A mounted old root alone is not currentness.
                 Assert.Throws<InvalidOperationException>(() => { _ = rig.Host.CaptureOriginalActionSettlement(original!); });
             });
+            start.SetResult();
             readiness.Complete();
             await replacement!;
+            Assert.Equal(1, readiness.Calls);
             await rig.Ui(() =>
             {
                 Assert.IsType<TextBlock>(rig.Host.Content);
@@ -87,6 +97,50 @@ public sealed class CuiSceneHostOriginalPublicationTests
             action.Complete();
             await settlement!;
             Assert.True(settlement!.IsCompletedSuccessfully);
+        });
+    }
+
+    [Fact]
+    public async Task Earlier_admitted_Show_cannot_retake_publication_when_its_start_runs_after_a_later_Show()
+    {
+        await RunAsync(async rig =>
+        {
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            rig.Release(() => start.TrySetResult());
+            var readiness = new HeldReadiness();
+            _ = rig.Track(readiness.Original);
+            rig.Release(readiness.Complete);
+            Task<CuiSceneAvailability>? earlier = null, later = null;
+            Control? laterRoot = null;
+            await rig.Ui(() =>
+            {
+                earlier = rig.Track(AdmitHeldShow(rig.Host, Scene(readiness: readiness) with
+                    { IsPublicationCurrent = () => true }, start.Task));
+                Assert.Equal(0, readiness.Calls);
+                later = rig.Track(rig.Host.ShowAsync(Scene(markup: "<Cui><Text text=\"Later admission\" /></Cui>") with
+                    { IsPublicationCurrent = () => true }));
+            });
+            await later!.WaitAsync(TimeSpan.FromSeconds(10));
+            await rig.Ui(() => laterRoot = Assert.IsType<TextBlock>(rig.Host.Content));
+            start.SetResult();
+            readiness.Complete();
+            Assert.Same(earlier, await Task.WhenAny(earlier!, Task.Delay(TimeSpan.FromSeconds(10))));
+            var error = await Record.ExceptionAsync(() => earlier!);
+            Assert.IsAssignableFrom<OperationCanceledException>(error);
+            rig.Expect(error!);
+            Assert.True(earlier!.IsCanceled);
+            Assert.Equal(1, readiness.Calls);
+            await rig.Ui(() =>
+            {
+                Assert.Same(laterRoot, rig.Host.Content);
+                Assert.Equal("Later admission", ((TextBlock)laterRoot!).Text);
+                Assert.True(rig.Track(rig.Host.CaptureOriginalActionSettlement(later)).IsCompletedSuccessfully);
+                Assert.Throws<InvalidOperationException>(() => { _ = rig.Host.CaptureOriginalActionSettlement(earlier); });
+            });
+            Task? close = null;
+            await rig.Ui(() => close = rig.Track(rig.Host.CloseOriginalAsync()));
+            Assert.Same(close, await Task.WhenAny(close!, Task.Delay(TimeSpan.FromSeconds(10))));
+            Assert.Same(error, await Record.ExceptionAsync(() => close!));
         });
     }
 
@@ -860,6 +914,17 @@ public sealed class CuiSceneHostOriginalPublicationTests
 
     private static T Field<T>(object owner, string name) where T : class =>
         Assert.IsAssignableFrom<T>(OptionalField(owner, name));
+
+    // Hold the same start gate used by ShowAsync, after its actual locked admission and
+    // original-task custody. This controls continuation order without scheduler timing.
+    private static Task<CuiSceneAvailability> AdmitHeldShow(CuiSceneHost host, CuiNativeScene scene, Task start)
+    {
+        Assert.False(start.IsCompleted);
+        var admit = typeof(CuiSceneHost).GetMethod("AdmitOriginalShow", BindingFlags.Instance | BindingFlags.NonPublic)
+            ?? throw new MissingMethodException(typeof(CuiSceneHost).FullName, "AdmitOriginalShow");
+        return Assert.IsAssignableFrom<Task<CuiSceneAvailability>>(
+            admit.Invoke(host, [start, scene, scene.IsPublicationCurrent!, CancellationToken.None]));
+    }
 
     private static object? OptionalField(object owner, string name) =>
         (owner.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)
