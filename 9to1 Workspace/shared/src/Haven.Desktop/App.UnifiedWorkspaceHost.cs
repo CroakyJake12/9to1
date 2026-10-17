@@ -118,7 +118,7 @@ public sealed partial class App
             var catalogue = _app.RetainOriginalModelCatalogueRegistry(_services.GetRequiredService<IServiceProvider>());
             var privacy = _services.GetRequiredService<IPrivacyPreferenceStore>();
             var home = new UnifiedHomeContentFactory(modes, CreateDashboard,
-                () => new HomeDiscoverPage(new HomeDiscoverCatalog(catalogue.Providers.Select(provider =>
+                () => new Haven.Desktop.Views.Pages.Home.HomeDiscoverPage(new HomeDiscoverCatalog(catalogue.Providers.Select(provider =>
                     new HomeRegisteredModelCatalogueSource(catalogue, provider.Id, () => !privacy.Current.LocalOnlyMode)))),
                 (intent, settlement) => OriginalClose is null && _workspace is { } workspace && workspace.QueueNavigation(intent, settlement),
                 // Spaces owns draft creation and the actual destination. Refuse before

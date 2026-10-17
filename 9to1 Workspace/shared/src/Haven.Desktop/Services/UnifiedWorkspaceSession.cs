@@ -108,7 +108,7 @@ internal sealed class UnifiedWorkspaceSession : IWorkspaceSessionSource
                         UnifiedWorkspaceTabState.TryProject(row, ProfileId, out var tab)) projected.Add(tab!);
                 // Load does not authorize deletion. Browse can refuse a restored
                 // row; only tabs it actually publishes in Save become managed.
-                return new BrowseTabSessionProjection(Array.AsReadOnly(projected.ToArray()),
+                return (BrowseTabSessionProjection?)new BrowseTabSessionProjection(Array.AsReadOnly(projected.ToArray()),
                     projected.Any(tab => tab.Id == window.SelectedTabId) ? window.SelectedTabId : null);
             }));
 

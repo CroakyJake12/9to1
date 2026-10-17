@@ -267,7 +267,7 @@ public sealed partial class App : Avalonia.Application
             }
 
             var userMessage = $"9to1 could not finish starting. Diagnostic reference: {correlationId}.";
-            AcquireOriginalAppSynchronous(original, () => { shell.SetStartupError(userMessage); return true; });
+            AcquireOriginalAppSynchronous(original, () => { shell?.SetStartupError(userMessage); return true; });
             try
             {
                 AcquireOriginalAppSynchronous(original, () =>
