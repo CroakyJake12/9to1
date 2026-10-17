@@ -131,11 +131,19 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
         _ = _work.RunAsync(async original =>
         {
             original.BindPublicationGuard(() => IsCurrent(generation));
-            await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+            try
             {
-                original.DemandPublication();
-                _bindings.Refresh();
-            }).GetTask()).ConfigureAwait(false);
+                await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    if (!IsCurrent(generation)) return;
+                    _bindings.Refresh();
+                }).GetTask()).ConfigureAwait(false);
+            }
+            catch (InvalidOperationException)
+            {
+                // The presentation was replaced or retired between the state change and
+                // the dispatcher callback. The next state change republishes; nothing to do.
+            }
         });
     }
 

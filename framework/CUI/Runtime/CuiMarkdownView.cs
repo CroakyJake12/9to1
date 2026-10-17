@@ -53,6 +53,16 @@ public class CuiMarkdownView : UserControl
         this.GetObservable(TextProperty).Subscribe(new TextObserver(this));
     }
 
+    protected override void OnApplyTemplate(Avalonia.Controls.Primitives.TemplateAppliedEventArgs e)
+    {
+        // Detach _root from the UserControl (its current direct parent) before the
+        // ContentPresenter tries to adopt it, otherwise re-applying the template
+        // raises 'already has a visual parent'.
+        if (ReferenceEquals(_root.Parent, this)) Content = null;
+        base.OnApplyTemplate(e);
+        if (!ReferenceEquals(Content, _root)) Content = _root;
+    }
+
     public string Text
     {
         get => GetValue(TextProperty);
