@@ -72,7 +72,7 @@ public sealed class BuiltInModeSeed
         { InvocationOperability = new(AppOperabilityClassification.OrdinaryApplication, AppOperabilityPath.TypedApi) },
         new ModeDefinition(
             Guid.Parse("a0000000-0000-0000-0000-000000000005"),
-            "browse", "Browse", "Isolated tabbed browser with side assistant", "globe",
+            "browse", "9to1 Haven", "Standalone desktop browser and super-app", "globe",
             HavenMode.Chat, "[\"Browse\"]", "[]", "[]", "[\"BrowserUse\",\"WebSearch\"]", "",
             ModeSource.BuiltIn, ModeInstallState.BuiltIn, "Haven", "1.0.0", "[]",
             DateTimeOffset.MinValue, DateTimeOffset.MinValue)
