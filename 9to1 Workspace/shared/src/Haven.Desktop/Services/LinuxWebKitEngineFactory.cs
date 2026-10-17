@@ -46,7 +46,7 @@ public sealed class LinuxWebKitEngineTab : IBrowseNativeEngineTab
         _navigationCompleted = (_, args) =>
         {
             if (_disposed) return;
-            _state = _state with { Address = args.Request, IsLoading = false, Status = args.IsSuccess ? "Loaded" : "Navigation failed" };
+            _state = _state with { Address = args.Request, IsLoading = false, CanGoBack = _view.CanGoBack, CanGoForward = _view.CanGoForward, Status = args.IsSuccess ? "Loaded" : "Navigation failed" };
             StateChanged?.Invoke(this, _state);
             if (!args.IsSuccess) Crashed?.Invoke(this, new BrowseEngineCrash("Navigation failed."));
         };
