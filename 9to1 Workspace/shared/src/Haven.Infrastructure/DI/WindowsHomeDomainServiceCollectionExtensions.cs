@@ -18,8 +18,6 @@ public static class WindowsHomeDomainServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(sameHome);
         ArgumentNullException.ThrowIfNull(samePaths);
         ArgumentNullException.ThrowIfNull(samePrincipal);
-        if (!OperatingSystem.IsWindows())
-            throw new PlatformNotSupportedException("The actual Windows Home domain requires Windows.");
         Type[] owners = [typeof(HomeNativeWindowsComposition), typeof(HomeLocalDomainComposition),
             typeof(FileHomeCoreStateStore), typeof(IHomeCoreStateStore), typeof(HomeLocalProfileIdentity),
             typeof(IAuthenticatedResourceActorSource), typeof(ITrustedHostPrincipalSource),
