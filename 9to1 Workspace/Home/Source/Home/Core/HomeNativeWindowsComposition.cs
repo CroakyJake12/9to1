@@ -36,9 +36,9 @@ public sealed record HomeNativeWindowsOwnerComponents(
     HomeResourceStoreOwnershipAuthority Ownership,
     HomeResourceOperationBroker Broker);
 
-/// <summary>Concrete Windows Home producer over the canonical local state/profile, manual
-/// permission service and private session issuer. Its immutable provider belongs to this
-/// Home process. Native apps own separate providers and require issued IPC domain ports;
+/// <summary>Canonical desktop Home producer over local state/profile, manual permissions and
+/// the private session issuer. Windows owns its native accepting host; Linux currently owns
+/// process-local services only. Native peer apps still require authenticated IPC domain ports;
 /// compatibility/readiness never transfers raw Home objects, store bindings or receipts.</summary>
 public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
 {
@@ -50,6 +50,8 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
     private Task? _close;
     private bool _closing;
     private HomeNativeWindowsBootstrap? _bootstrap;
+    // Linux has a genuine process-local owner, but no Windows Root listener/receipt.
+    private HomeNativeLinuxProcessBootstrap? _linuxBootstrap;
     private Task? _originalBootstrapStart;
     private Task? _originalBootstrapClose;
     private Task? _originalIssuerClose;
@@ -194,15 +196,23 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
         using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
         var actor = await Profiles.GetCurrentAsync(RunOriginalHomeProcessSource, RetainOriginalHomeProcessSource, _process.Token).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("The original OS-local Home profile is unavailable.");
-        HomeNativeWindowsBootstrap bootstrap;
         Task bootstrapStart;
         lock (_sync)
         {
             ObjectDisposedException.ThrowIf(_closing, this);
             _process.Token.ThrowIfCancellationRequested();
-            bootstrap = _bootstrap = HomeNativeWindowsBootstrap.Start(
-                new(Services, Runtime, Profiles), _paths, _endpoint, _process.Token);
-            bootstrapStart = _originalBootstrapStart = bootstrap.OriginalStartTask;
+            if (OperatingSystem.IsLinux())
+            {
+                _linuxBootstrap = HomeNativeLinuxProcessBootstrap.Start(
+                    new(Services, Runtime, Profiles), _paths, _process.Token);
+                bootstrapStart = _originalBootstrapStart = _linuxBootstrap.OriginalStartTask;
+            }
+            else
+            {
+                _bootstrap = HomeNativeWindowsBootstrap.Start(
+                    new(Services, Runtime, Profiles), _paths, _endpoint, _process.Token);
+                bootstrapStart = _originalBootstrapStart = _bootstrap.OriginalStartTask;
+            }
         }
         await bootstrapStart.ConfigureAwait(false);
         if (actor != await Profiles.GetCurrentAsync(RunOriginalHomeProcessSource, RetainOriginalHomeProcessSource, _process.Token).ConfigureAwait(false))
@@ -235,7 +245,11 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
         // bootstrap/listener/lease they borrowed can be disposed.
         await JoinOriginalRootListeningAsync(failures).ConfigureAwait(false);
         lock (_sync)
-            try { if (_bootstrap is not null) _originalBootstrapClose = _bootstrap.CloseAndDrainAsync(); }
+            try
+            {
+                if (_bootstrap is not null) _originalBootstrapClose = _bootstrap.CloseAndDrainAsync();
+                else if (_linuxBootstrap is not null) _originalBootstrapClose = _linuxBootstrap.CloseAndDrainAsync();
+            }
             catch (Exception error) { Add(error); }
         // With an acquired bootstrap, its SAME close first seals/cancels its owned listener.
         // Canceling the original process token sooner would turn healthy close into caller cancellation.
