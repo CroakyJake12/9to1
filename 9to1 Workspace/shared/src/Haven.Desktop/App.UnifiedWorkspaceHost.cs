@@ -56,6 +56,7 @@ public sealed partial class App
         private readonly object _gate = new();
         private readonly HashSet<Task> _sources = new(ReferenceEqualityComparer.Instance);
         private CuiSceneHost? _scene;
+        private CuiControlLoader? _startupLoadingLoader;
         private Task? _initialization, _close, _pendingClose, _workspaceClose, _sceneClose, _sessionClose;
         private readonly List<Task> _closeAttempts = [];
         private Task<CuiSceneAvailability>? _sceneInitialization;
@@ -85,7 +86,8 @@ public sealed partial class App
             !_windowLifetime.IsCancellationRequested && _chrome?.OriginalClose is null;
 
 
-        internal static void ShowStartupFailure(Window window, string correlationId, Exception exception)
+        internal static void ShowStartupFailure(Window window, string correlationId, Exception exception,
+            Func<Task>? windowClosedCallback = null)
         {
             ArgumentNullException.ThrowIfNull(window);
             ArgumentNullException.ThrowIfNull(exception);
@@ -97,6 +99,9 @@ public sealed partial class App
             model.Set("Message", exception.Message);
             model.Set("CorrelationId", correlationId);
             model.Set("DiagnosticReference", "Diagnostic reference: " + correlationId);
+            var handlerAlreadyAttached = window.Tag is CuiControlLoader;
+            if (window.Tag is CuiControlLoader existingLoader) existingLoader.Dispose();
+            window.Tag = null;
             var loader = new CuiControlLoader();
             const string markup = "<Cui><Theme Name=\"user_preference\"><Page AccessibleName=\"9to1 Haven startup failure\"><Container Type=\"Vertical Stack\" CellGap=\"12\" Padding=\"24\"><Text Text=\"9to1 Haven could not start\" FontSize=\"24\" FontWeight=\"Bold\" Foreground=\"{Resource CuiTextBrush}\" /><Text Text=\"{Binding Message}\" TextWrapping=\"Wrap\" Foreground=\"{Resource CuiTextBrush}\" /><Text Text=\"{Binding DiagnosticReference}\" Foreground=\"{Resource CuiTextSoftBrush}\" /><Text Text=\"Close this window, resolve the reported issue, and restart 9to1 Haven.\" Foreground=\"{Resource CuiTextSoftBrush}\" /></Container></Page></Theme></Cui>";
             loader.SetBindingContext(model);
@@ -109,19 +114,36 @@ public sealed partial class App
                     string.Join("; ", diagnostics));
             }
             loader.WireBindings(root);
+            window.Tag = loader;
             window.Content = root;
             if (application.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
                 desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
-            window.Closed += (_, _) => loader.Dispose();
+            if (!handlerAlreadyAttached)
+                window.Closed += async (_, _) =>
+                {
+                    if (window.Tag is CuiControlLoader ownedLoader)
+                    {
+                        ownedLoader.Dispose();
+                        window.Tag = null;
+                    }
+                    if (windowClosedCallback is not null) await windowClosedCallback();
+                };
         }
 
         internal void ShowStartupFailureForHost(string correlationId, Exception exception)
         {
             Dispatcher.UIThread.VerifyAccess();
             if (_closed) return;
+            _startupLoadingLoader?.Dispose(); _startupLoadingLoader = null;
             var window = TopLevel.GetTopLevel(this) as Window;
-            if (window is not null) ShowStartupFailure(window, correlationId, exception);
-            _app.StartStartupFailureDrain();
+            if (window is not null)
+            {
+                var handlerAlreadyAttached = window.Tag is CuiControlLoader;
+                ShowStartupFailure(window, correlationId, exception, _app.CloseStartupFailureWindowAsync);
+                _app.StartStartupFailureDrain();
+                if (!handlerAlreadyAttached)
+                    window.Closed += async (_, _) => await _app.CloseStartupFailureWindowAsync();
+            }
         }
 
         internal Task InitializeAsync(CancellationToken token)
@@ -131,10 +153,35 @@ public sealed partial class App
             {
                 if (_initialization is not null) return _initialization;
                 if (OriginalClose is not null) throw new ObjectDisposedException(nameof(UnifiedWorkspaceHost));
+                ShowStartupLoading();
                 var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                 _initialization = InitializeCoreAsync(start.Task, token);
                 start.SetResult(); return _initialization;
             }
+        }
+
+        private void ShowStartupLoading()
+        {
+            Dispatcher.UIThread.VerifyAccess();
+            if (Content is not null) return;
+            var application = Avalonia.Application.Current;
+            if (application is not null && !application.Resources.TryGetResource("CuiBackgroundBrush", null, out _))
+                CuiNativeHost.InitialisePrimitiveTheme(application, "Home", CakeOS.Cui.Themes.CuiAppearance.Dark);
+            var model = new CuiViewModel();
+            model.Set("Status", "Loading 9to1 Haven…");
+            var loader = new CuiControlLoader();
+            const string markup = "<Cui><Theme Name=\"user_preference\"><Page AccessibleName=\"9to1 Haven loading\"><Container Type=\"Vertical Stack\" CellGap=\"12\" Padding=\"24\"><Text Text=\"{Binding Status}\" FontSize=\"24\" FontWeight=\"Bold\" Foreground=\"{Resource CuiTextBrush}\" /><Text Text=\"Checking required Home services and authentication…\" Foreground=\"{Resource CuiTextSoftBrush}\" /></Container></Page></Theme></Cui>";
+            loader.SetBindingContext(model);
+            loader.SetActionDispatcher(model);
+            var (root, diagnostics) = loader.LoadMarkup(markup, "StartupLoading.cui");
+            if (root is null || diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
+            {
+                loader.Dispose();
+                return;
+            }
+            loader.WireBindings(root);
+            _startupLoadingLoader = loader;
+            Content = root;
         }
 
         private async Task InitializeCoreAsync(Task start, CancellationToken token)
@@ -194,6 +241,7 @@ public sealed partial class App
             DemandCurrent();
             _workspace = new BrowseNativeWorkspace(_chrome, _ => IsCurrent);
             var scene = BrowseNativeSurface.CreateScene(_workspace, this);
+            _startupLoadingLoader?.Dispose(); _startupLoadingLoader = null;
             _scene = new CuiSceneHost(scene.ControlRegistry); Content = _scene;
             _sceneInitialization = Track(_scene.ShowAsync(scene, currentToken));
             var ready = await _sceneInitialization;
