@@ -16,6 +16,13 @@ native failures. Every row below is cited to source, not to appearance.
 
 **No swap is proposed.** `ChatHavenScene` remains the live surface.
 
+**Update 2026-10-16 (later pass):** Phase 2 (Markdown, ScrollView/FollowAtEnd) and most of Phase 3
+(streaming, all six message actions, safety lock, thread settings, dual model, edit mode) are now
+implemented and committed on this branch by the combined worker. The remaining open items are
+§3.7 (follow-at-end is now a Container property, resolved), §3.9 (avatars), §3.10 (streaming
+presentation is now incremental, resolved), §3.11 (tool activity interleaving vs nesting) and
+the visual-evidence route. See §8 below.
+
 ## 1. Method
 
 | | |
@@ -168,6 +175,40 @@ positional, not identity-based, and would mis-resolve if a future host bound a s
 capabilities, prompts and apps with search and mention completion. The CUI surface has no
 equivalent; its `RecentSearchQuery` filters nothing (`ChatSpaceCuiBindings` stores the query and
 `ChatSpaceController` never reads it).
+
+## 3.5 Resolved since the first delta pass
+
+| Gap (original §3) | Resolution | Evidence |
+|---|---|---|
+| 3.1 Markdown bodies (framework gap) | `CuiMarkdownView` exposed as first-class CUI element `Markdown` | commit `a26119d4`; `CuiMarkdownElementTests` 4/4 |
+| 3.7 Follow-at-end scrolling (framework gap) | `Container` gains `VerticalScrolling` + `FollowAtEnd` | commit `f5446e9e`; `CuiFollowAtEndTests` 4/4 |
+| 3.2 Message actions (2 of 6) | All six: copy, delete, forget, edit, branch, regenerate | `ChatSpaceController.Actions.cs` |
+| 3.3 Reasoning row | `message.HasThinking` / `message.Thinking` rendered | `ChatSpace.cui:55-60` |
+| 3.4 Send queueing | `TurnQueue` with `MaxSendQueue=8` and queued pump | `ChatSpaceController.Sending.cs` |
+| 3.5 Threading settings | `SetThreadActionMode`, `SetThreadResponseMode` | `Actions.cs` |
+| 3.6 Dual-model | `ToggleDualModel`, `SelectDualSecondModel`, `SelectDualMode` | `Actions.cs` |
+| 3.8 Safety lock | `IsSafetyLocked` gates send/attach/edit/forget; copy+delete remain | `Actions.cs` CanMutate/TryBeginMutation |
+| 3.10 Streaming | `IProgress<ChatStreamEvent>` forwarded, overlay merged per event | `Sending.cs` Stream() |
+| 3.12 Select bound values | `SelectedIndex` two-way via `SelectedModelIndex`/`SelectedBranchIndex` | bindings + controller |
+| 3.13 Add-menu | still not migrated | — |
+
+## 8. Independent acceptance evidence
+
+- `ChatSpacePresentationAcceptanceTests` — 5/5 (viewport + composer placement, selector identity + stale-write refusal, search filter, reasoning/edit binding, safety-lock permissions).
+- `ChatSpaceCuiRenderingTests` — 8/8 (render, reorder identity, command refusal, send gating, model label, update-draft).
+- `ChatSpaceCuiHostRenderingTests` — 3/3 (host publication, republish re-render, degraded handshake).
+- `ChatSpaceControllerRoutingTests` — 7/7.
+- CUI Runtime — 349/349 (Markdown + FollowAtEnd included).
+- CUI Compiler — 43 pass / 7 fail (unchanged baseline).
+- Spaces — 92/92 (with `SpacesTestApp` loading the primitive theme).
+
+## 9. Remaining open items
+
+1. **Avatars** (§3.9) — still not modelled in `ChatSpace.cui` or `ChatSpaceMessage`.
+2. **Tool-activity interleaving** (§3.11) — still nested under the message rather than interleaved in the transcript stream.
+3. **Visual evidence** — `NativeAssistantCanonicalVisualCaptureTests…emit_opt_in_captures` is in the pre-existing native failure band; no frame comparison exists for any CUI surface.
+4. **Native Chat parity proof** — `Haven.Desktop` does not build on this host because of unrelated UCML in-flight edits, so `ChatSpacePage` is compile-verified only, not executed.
+5. **Swap decision** — still `NOT READY FOR SWAP`. Avatars and visual evidence are the gating items; the framework prerequisites (Markdown, ScrollView) are now satisfied.
 
 ## 4. Corrected from the previous pass
 
