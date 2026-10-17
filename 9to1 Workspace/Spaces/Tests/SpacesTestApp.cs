@@ -16,6 +16,7 @@ public sealed class SpacesTestApp : Application
     // duplicating global styles across cases.
     public override void Initialize()
     {
+        CuiNativeHost.InitialisePrimitiveTheme(this);
     }
 
     public static AppBuilder BuildAvaloniaApp() => CuiNativeHost.ConfigureFonts(
