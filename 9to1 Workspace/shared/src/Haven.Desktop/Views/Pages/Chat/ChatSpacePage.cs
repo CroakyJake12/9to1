@@ -207,6 +207,22 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
             case "chat.regenerate" when parameter is Guid messageId:
                 await original.AwaitAsync(InvokeOriginalSource(() => _controller.RegenerateAsync(messageId, token))).ConfigureAwait(false);
                 break;
+            case "chat.attach":
+                var paths = parameter is string supplied && !string.IsNullOrWhiteSpace(supplied)
+                    ? new[] { supplied }
+                    : await PickOriginalAttachmentPathsAsync(original, token).ConfigureAwait(false);
+                foreach (var candidate in paths)
+                    await original.AwaitAsync(InvokeOriginalSource(() => _controller.AddAttachmentAsync(candidate, token))).ConfigureAwait(false);
+                break;
+            case "chat.remove-attachment" when parameter is Guid attachmentId:
+                await original.AwaitAsync(InvokeOriginalSource(() => _controller.RemoveAttachmentAsync(attachmentId, token))).ConfigureAwait(false);
+                break;
+            case "chat.send":
+                await original.AwaitAsync(InvokeOriginalSource(() => _controller.SendAsync(token))).ConfigureAwait(false);
+                break;
+            case "chat.clear-search":
+                InvokeOriginalSource(_bindings.ClearRecentSearch);
+                break;
             case "chat.copy" when parameter is Guid messageId:
                 await original.AwaitAsync(InvokeOriginalSource(() => _controller.CopyMessageAsync(messageId, token))).ConfigureAwait(false);
                 break;
@@ -222,41 +238,20 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
             case "chat.cancel-edit":
                 InvokeOriginalSource(_controller.CancelEdit);
                 break;
-            case "chat.set-action-mode" when Enum.TryParse<ChatActionMode>(parameter?.ToString(), out var actionMode):
-                InvokeOriginalSource(() => _controller.SetThreadActionMode(actionMode));
+            case "chat.set-action-mode" when parameter is string actionMode && Enum.TryParse<ChatActionMode>(actionMode, true, out var parsedAction):
+                InvokeOriginalSource(() => _controller.SetThreadActionMode(parsedAction));
                 break;
-            case "chat.set-response-mode" when Enum.TryParse<GenerativeUiResponseMode>(parameter?.ToString(), out var responseMode):
-                InvokeOriginalSource(() => _controller.SetThreadResponseMode(responseMode));
+            case "chat.set-response-mode" when parameter is string responseMode && Enum.TryParse<GenerativeUiResponseMode>(responseMode, true, out var parsedResponse):
+                InvokeOriginalSource(() => _controller.SetThreadResponseMode(parsedResponse));
                 break;
             case "chat.toggle-dual":
                 InvokeOriginalSource(_controller.ToggleDualModel);
                 break;
-            case "chat.select-second-model" when ResolveModelName(parameter) is { } secondModel:
+            case "chat.select-second-model" when parameter is string secondModel:
                 InvokeOriginalSource(() => _controller.SelectDualSecondModel(secondModel));
                 break;
-            case "chat.select-dual-mode" when Enum.TryParse<DuoMode>(parameter?.ToString(), out var mode):
-                InvokeOriginalSource(() => _controller.SelectDualMode(mode));
-                break;
-            case "chat.attach":
-                // The authored document raises chat.attach with no argument, so the picker is the
-                // normal path; the string form is kept for programmatic callers. Previously the
-                // argument-less button missed every `when` clause and reached the refusal below.
-                var paths = parameter is string supplied && !string.IsNullOrWhiteSpace(supplied)
-                    ? [supplied]
-                    : await PickOriginalAttachmentPathsAsync(original, token).ConfigureAwait(false);
-                foreach (var candidate in paths)
-                    await original.AwaitAsync(InvokeOriginalSource(() => _controller.AddAttachmentAsync(candidate, token))).ConfigureAwait(false);
-                break;
-            case "chat.remove-attachment" when parameter is Guid attachmentId:
-                await original.AwaitAsync(InvokeOriginalSource(() => _controller.RemoveAttachmentAsync(attachmentId, token))).ConfigureAwait(false);
-                break;
-            case "chat.send":
-                await original.AwaitAsync(InvokeOriginalSource(() => _controller.SendAsync(token))).ConfigureAwait(false);
-                break;
-            case "chat.clear-search":
-                // The search box is two-way bound, so the projection owns the query and the host
-                // clears it through the projection rather than writing the control directly.
-                InvokeOriginalSource(_bindings.ClearRecentSearch);
+            case "chat.select-dual-mode" when parameter is string dualMode && Enum.TryParse<DuoMode>(dualMode, true, out var parsedDuo):
+                InvokeOriginalSource(() => _controller.SelectDualMode(parsedDuo));
                 break;
             default:
                 throw new InvalidOperationException($"Chat Space command '{command}' is not owned by this host.");
