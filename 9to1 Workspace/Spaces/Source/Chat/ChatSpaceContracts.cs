@@ -24,7 +24,9 @@ public sealed record ChatSpaceMessage(
     string? Thinking = null,
     bool IsStreaming = false,
     string? ProgressLabel = null,
-    bool CanEdit = false)
+    bool CanEdit = false,
+    bool AvatarVisible = false,
+    string? AvatarSource = null)
 {
     public bool HasThinking => !string.IsNullOrWhiteSpace(Thinking);
 }
@@ -81,7 +83,15 @@ public sealed record ChatSpaceDualModelState(
     bool IsActive,
     string? SecondModelName,
     bool IsRunning,
-    DuoMode Mode);
+    DuoMode Mode,
+    int SecondModelIndex = -1);
+
+public sealed record ChatSpaceLayout(
+    string? Columns = null,
+    string? Rows = null,
+    int ConversationColumn = 0,
+    int ConversationRow = 0,
+    double? RecentHeight = null);
 
 public sealed record ChatSpaceComposer(
     string Draft,
@@ -115,6 +125,7 @@ public sealed record ChatSpaceViewState(
     ChatSpaceStatus Status,
     bool IsLoading,
     int Revision,
+    ChatSpaceLayout? Layout = null,
     bool IsSafetyLocked = false,
     ChatSpaceThreadSettings? ThreadSettings = null,
     ChatSpaceDualModelState? DualModel = null,
@@ -127,7 +138,8 @@ public sealed record ChatSpaceViewState(
         new ChatSpaceComposer(string.Empty, [], null, false),
         new ChatSpaceStatus("Ready", ChatSpaceStatusTone.Neutral, false),
         false,
-        0);
+        0,
+        new ChatSpaceLayout("280px 1fr", "1fr", 1, 0, null));
 }
 
 public sealed record ChatSpaceTurnRequest(
@@ -141,7 +153,8 @@ public sealed record ChatSpaceTurnRequest(
     string? SecondModelName = null,
     Guid? BranchId = null,
     ChatMessage? ExistingUserInput = null,
-    Func<ChatMessage, CancellationToken, Task>? InputAccepted = null);
+    Func<ChatMessage, CancellationToken, Task>? InputAccepted = null,
+    Action<ChatStreamEvent>? OnStreamEvent = null);
 
 /// <summary>
 /// Host adapter for the existing mature Chat turn pipeline. Implementations must retain the

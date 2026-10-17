@@ -164,6 +164,18 @@ public sealed partial class MainView
     /// covers threading settings, send queueing, dual-model selection, attachments, follow-at-end
     /// scrolling and Select bound-value display.
     /// </summary>
+    private static (bool Visible, string? Source) ResolveChatSpaceAvatar(MessageRole role)
+    {
+        var havenSide = role == MessageRole.Assistant;
+        var enabled = havenSide ? Haven.Desktop.HavenUI.Tokens.HavenPersonalisation.HavenAvatarEnabled
+            : Haven.Desktop.HavenUI.Tokens.HavenPersonalisation.UserAvatarEnabled;
+        var available = AvatarStore.Current?.Has(havenSide ? HavenAvatarKind.Haven : HavenAvatarKind.User) == true;
+        if (!enabled || !available) return (false, null);
+        return (true, havenSide
+            ? Haven.Desktop.HavenUI.Backend.HavenDesktopImageResolver.HavenAvatarSource
+            : Haven.Desktop.HavenUI.Backend.HavenDesktopImageResolver.UserAvatarSource);
+    }
+
     internal async Task OpenChatSpacePageAsync(Guid? conversationId = null)
     {
         var services = Haven.Desktop.App.Services;
@@ -181,7 +193,8 @@ public sealed partial class MainView
 
         DemandCanonicalPageAcquisition();
         var page = new ChatSpacePage(backend, ChatSpacePage.ImmediateReadinessInstance, conversationId,
-            clipboard: services?.GetService<IPlatformShellService>());
+            clipboard: services?.GetService<IPlatformShellService>(),
+            avatarResolver: role => ResolveChatSpaceAvatar(role));
         // A fresh page per open is not reachable from a shell field, so it must join the retained
         // cohort or its retirement would never be joined and the native CUI host would leak.
         RetainOriginalCanonicalPage(page);

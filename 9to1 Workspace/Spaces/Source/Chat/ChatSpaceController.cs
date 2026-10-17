@@ -10,6 +10,7 @@ public sealed partial class ChatSpaceController
     private const int RecentLimit = 24;
     private readonly IChatSpaceBackend _backend;
     private readonly IPlatformShellService? _clipboard;
+    private readonly Func<MessageRole, (bool Visible, string? Source)>? _avatarResolver;
     private readonly object _gate = new();
     private ChatSpaceViewState _state = ChatSpaceViewState.Empty;
     private IReadOnlyList<ModelDescriptor> _modelDescriptors = [];
@@ -20,8 +21,10 @@ public sealed partial class ChatSpaceController
     private ChatSpaceDualModelState _dualModel = new(false, null, false, DuoMode.Solo);
     private readonly record struct View(long Version, Guid? ConversationId, Guid? BranchId);
 
-    public ChatSpaceController(IChatSpaceBackend backend, IPlatformShellService? clipboard = null)
-    { _backend = backend ?? throw new ArgumentNullException(nameof(backend)); _clipboard = clipboard; }
+    public ChatSpaceController(IChatSpaceBackend backend, IPlatformShellService? clipboard = null,
+        Func<MessageRole, (bool Visible, string? Source)>? avatarResolver = null)
+    { _backend = backend ?? throw new ArgumentNullException(nameof(backend)); _clipboard = clipboard;
+        _avatarResolver = avatarResolver; }
     public ChatSpaceViewState State => Volatile.Read(ref _state);
     public event Action<ChatSpaceViewState>? StateChanged;
     private View CurrentView() { lock (_gate) return new(_navigationVersion, _state.Conversation?.Id, _state.Conversation?.CurrentBranchId); }
@@ -227,6 +230,15 @@ public sealed partial class ChatSpaceController
     private ChatSpaceViewState Loaded(IReadOnlyList<Conversation> recent, ChatSpaceConversationData? data, string? model, string status, bool locked)
     {
         var conversation = data is null ? null : ChatSpaceProjection.Project(data);
+        if (conversation is not null && _avatarResolver is not null)
+        {
+            var messages = conversation.Messages.Select(message =>
+            {
+                var (visible, source) = _avatarResolver(message.Role);
+                return message with { AvatarVisible = visible, AvatarSource = source };
+            }).ToArray();
+            conversation = conversation with { Messages = messages };
+        }
         var pending = data?.Attachments.Where(item => item.MessageId is null && (item.BranchId is null || item.BranchId == conversation?.CurrentBranchId)).ToArray() ?? [];
         var modelIndex = Array.FindIndex(_modelDescriptors.ToArray(), item => item.Name.Equals(model, StringComparison.OrdinalIgnoreCase));
         var branchIndex = conversation is null ? -1 : Array.FindIndex(conversation.Branches.ToArray(), item => item.Id == conversation.CurrentBranchId);
@@ -235,7 +247,7 @@ public sealed partial class ChatSpaceController
             conversation, _modelDescriptors.Select(item => new ChatSpaceModelChoice(item.Name, item.Name,
                 $"{item.Family} · {item.ParameterSize} · {item.SizeLabel}", item.Capabilities)).ToArray(),
             new(data?.Draft?.Content ?? string.Empty, pending, model, conversation is not null && _turns.ContainsKey(conversation.Id), modelIndex),
-            new(status, ChatSpaceStatusTone.Success, true), false, _state.Revision + 1, locked, _threadSettings, _dualModel, branchIndex);
+            new(status, ChatSpaceStatusTone.Success, true), false, _state.Revision + 1, new ChatSpaceLayout("280px 1fr", "1fr", 1, 0, null), locked, _threadSettings, _dualModel, branchIndex);
     }
     private static string? ResolveSelectedModel(string? current, ChatSpaceModelInventory inventory) =>
         inventory.Models.FirstOrDefault(item => item.Name.Equals(current, StringComparison.OrdinalIgnoreCase))?.Name

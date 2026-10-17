@@ -39,9 +39,10 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
     private long _generation;
     private Task? _hostClose;
 
-    public ChatSpacePage(IChatSpaceBackend backend, ICuiSceneReadiness readiness, Guid? conversationId = null, IPlatformShellService? clipboard = null)
+    public ChatSpacePage(IChatSpaceBackend backend, ICuiSceneReadiness readiness, Guid? conversationId = null, IPlatformShellService? clipboard = null,
+        Func<MessageRole, (bool Visible, string? Source)>? avatarResolver = null)
     {
-        _controller = new ChatSpaceController(backend ?? throw new ArgumentNullException(nameof(backend)), clipboard);
+        _controller = new ChatSpaceController(backend ?? throw new ArgumentNullException(nameof(backend)), clipboard, avatarResolver);
         _readiness = readiness ?? throw new ArgumentNullException(nameof(readiness));
         _work = new(StopOriginalPresentationAsync, DetachOriginalPresentationAsync);
         _bindings = new ChatSpaceCuiBindings(

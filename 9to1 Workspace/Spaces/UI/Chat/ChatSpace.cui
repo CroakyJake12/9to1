@@ -46,8 +46,12 @@
 
         <Container id="transcript" Row="1" Type="Vertical Stack" CellGap="12" accessible-name="Conversation messages" VerticalScrolling="true" FollowAtEnd="true">
           <Repeat Source="{Binding Conversation.Messages}" As="message" Key="{Binding message.Id}">
-            <Container id="message" Type="Vertical Stack" CellGap="6" accessible-name="One conversation message">
-              <Text text="{Binding message.SpeakerLabel}" font-weight="SemiBold" />
+            <Container id="message" Type="Horizontal Stack" CellGap="8" accessible-name="One conversation message">
+              <If Condition="{Binding message.AvatarVisible}">
+                <Image id="message-avatar" Source="{Binding message.AvatarSource}" Width="28" Height="28" corner-radius="14" accessible-name="Sender avatar" />
+              </If>
+              <Container id="message-body-stack" Type="Vertical Stack" CellGap="6">
+                <Text text="{Binding message.SpeakerLabel}" font-weight="SemiBold" />
               <Markdown id="message-content" Text="{Binding message.Content}" AccessibleName="Message content" />
               <If Condition="{Binding message.IsStreaming}">
                 <Text text="{Binding message.ProgressLabel}" foreground="{Resource CuiTextSoftBrush}" accessible-name="Message progress" />
@@ -67,6 +71,7 @@
               <Repeat Source="{Binding message.ToolActivities}" As="activity" Key="{Binding activity.Id}">
                 <Text text="{Binding activity.Title}" accessible-name="Tool activity" />
               </Repeat>
+              </Container>
               <Container id="message-actions" Type="Wrap" CellGap="8" accessible-name="Message actions">
                 <Button action="chat.copy" action-argument="{Binding message.Id}" content="Copy" accessible-name="Copy this message" />
                 <Button action="chat.delete" action-argument="{Binding message.Id}" content="Delete" accessible-name="Delete this message" />

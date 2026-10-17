@@ -242,6 +242,8 @@ public sealed class ChatSpaceCuiBindings : ICuiWritableBindingContext, ICuiActio
                 "CanRegenerate" => message.CanRegenerate,
                 "CanEdit" => message.CanEdit,
                 "HasThinking" => message.HasThinking,
+                "AvatarVisible" => message.AvatarVisible,
+                "AvatarSource" => message.AvatarSource,
                 "Attachments" => message.Attachments,
                 "Citations" => message.Citations,
                 "ToolActivities" => message.ToolActivities,
