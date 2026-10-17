@@ -91,7 +91,7 @@ public sealed partial class App
             ArgumentNullException.ThrowIfNull(exception);
             if (!Dispatcher.UIThread.CheckAccess()) throw new InvalidOperationException("Startup failure presentation requires the UI thread.");
             var application = Avalonia.Application.Current ?? throw new InvalidOperationException("Avalonia application is unavailable.");
-            if (!application.Resources.Contains("CuiBackgroundBrush"))
+            if (!application.Resources.TryGetResource("CuiBackgroundBrush", application.ActualThemeVariant, out _))
                 CuiNativeHost.InitialisePrimitiveTheme(application, "Home", CakeOS.Cui.Themes.CuiAppearance.Dark);
             var model = new CuiViewModel();
             model.Set("Message", exception.Message);
