@@ -4,6 +4,7 @@ using Haven.Core;
 using HavenOS.Apps.Browse;
 using HavenOS.Apps.Spaces;
 using HavenOS.Apps.Spaces.Home;
+using HavenOS.Home.Core;
 
 namespace Haven.Desktop.Services;
 
@@ -21,12 +22,15 @@ internal sealed class SpacesBrowseAppContentFactory : IBrowseAppContentFactory
     }
 
     internal static SpacesBrowseAppContentFactory BindOriginalSameProcess(IServiceProvider originalProvider,
+        HomeNativeWindowsComposition sameHome, CancellationToken originalAppLifetime,
         CancellationToken originalHostLifetime)
     {
+        WindowsHomeSameProcessRuntimeObservation.DemandOriginalBinding(originalProvider, sameHome);
         ArgumentNullException.ThrowIfNull(originalProvider);
+        originalAppLifetime.ThrowIfCancellationRequested();
         originalHostLifetime.ThrowIfCancellationRequested();
-        if (!originalHostLifetime.CanBeCanceled)
-            throw new ArgumentException("Retain the actual native host lifetime.", nameof(originalHostLifetime));
+        if (!originalAppLifetime.CanBeCanceled || !originalHostLifetime.CanBeCanceled)
+            throw new ArgumentException("Retain the actual native app and host lifetimes.");
         return new(originalProvider, originalHostLifetime);
     }
 
