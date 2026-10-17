@@ -1,19 +1,17 @@
-using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Threading;
-using CakeOS.Cui;
-using CakeOS.Cui.Runtime;
 using Haven.Application;
 using Haven.Browser;
 using Haven.Core;
+using Haven.Desktop.Views.Pages.Spaces;
 using HavenOS.Apps.Browse;
 using HavenOS.Apps.Spaces;
-using HavenOS.Apps.Spaces.Home;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Desktop.Services;
 
-/// <summary>A distinct Spaces view owner per Haven tab, borrowing the shared Home services.</summary>
+/// <summary>A distinct Spaces view owner per Haven tab, reusing the canonical
+/// Spaces Home page and its services.</summary>
 internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSession
 {
     private readonly BrowseAppContentRequest _request;
@@ -24,12 +22,9 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
     private Task? _initialization;
     private Task? _close;
     private Task<bool>? _preparation;
-    private volatile Control? _view;
+    private volatile SpacesHomePage? _page;
     private volatile bool _published;
     private volatile bool _closing;
-    private SpacesHomeController? _controller;
-    private SpacesHomeCuiBindings? _bindings;
-    private CuiControlLoader? _loader;
 
     internal SpacesBrowseAppContentSession(BrowseAppContentRequest request, IServiceProvider services,
         CancellationToken hostLifetime)
@@ -44,8 +39,7 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
     public string Title => "Spaces";
     public string IconKey => "spaces";
     public event EventHandler? StateChanged;
-    public bool IsPublicationCurrent => _published && !_closing && !_token.IsCancellationRequested
-        && _view is not null;
+    public bool IsPublicationCurrent => _published && !_closing && !_token.IsCancellationRequested && _page is not null;
     public bool CanRetireOriginalView => _close is { IsCompletedSuccessfully: true };
     public Task? OriginalInitialization => _initialization;
     public Task? OriginalClose => _close;
@@ -55,9 +49,9 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
         get
         {
             Dispatcher.UIThread.VerifyAccess();
-            if (!_published || _closing || _view is null)
+            if (!_published || _closing || _page is null)
                 throw new InvalidOperationException("The Spaces view has not completed admission.");
-            return _view;
+            return _page;
         }
     }
 
@@ -83,47 +77,10 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
         {
             token.ThrowIfCancellationRequested();
             DemandAlive();
-            var registry = new SpaceRegistry(_services.GetRequiredService<IVersionedSettingsStore>());
-            _controller = new SpacesHomeController(registry);
-            _bindings = new SpacesHomeCuiBindings(() => _controller.State, async (command, parameter, cancellationToken) =>
-            {
-                var id = parameter is Guid g ? g : _controller.State.Selection?.Id ?? Guid.Empty;
-                switch (command)
-                {
-                    case "spaces.create": await _controller.CreateCustomSpaceAsync(cancellationToken); break;
-                    case "spaces.open": await _controller.OpenSpaceAsync(id, cancellationToken); break;
-                    case "spaces.rename": _controller.StartRename(id); break;
-                    case "spaces.move": await _controller.MoveSpaceAsync(id, cancellationToken); break;
-                    case "spaces.fork": await _controller.ForkSpaceAsync(id, cancellationToken); break;
-                    case "spaces.archive": await _controller.ArchiveSpaceAsync(id, cancellationToken); break;
-                    case "spaces.add-context": await _controller.AddContextAsync(id, null, cancellationToken); break;
-                    case "spaces.clear-search": _controller.SetQuery(string.Empty); break;
-                    case "spaces.set-query": _controller.SetQuery(parameter?.ToString()); break;
-                    case "spaces.confirm-rename": await _controller.ConfirmRenameAsync(cancellationToken); break;
-                    case "spaces.cancel-rename": _controller.CancelRename(); break;
-                    case "spaces.select-move-parent": _controller.SelectMoveParentIndex((int)parameter!); break;
-                    case "spaces.edit-extensions": await _controller.EditExtensionsAsync(id, cancellationToken); break;
-                    case "spaces.edit-graph": await _controller.EditGraphAsync(id, cancellationToken); break;
-                    default: throw new InvalidOperationException($"Unknown Spaces command {command}");
-                }
-            });
-            _controller.StateChanged += _ => _bindings.Refresh();
-
-            _loader = new CuiControlLoader();
-            _loader.SetBindingContext(_bindings);
-            _loader.SetActionDispatcher(_bindings);
-            using var stream = typeof(SpacesHomeCuiDocument).Assembly
-                .GetManifestResourceStream(SpacesHomeCuiDocument.ResourceName)
-                ?? throw new InvalidOperationException("Embedded Spaces CUI resource was not found.");
-            using var reader = new StreamReader(stream);
-            var (tree, diagnostics) = _loader.LoadMarkup(reader.ReadToEnd());
-            if (diagnostics.Count > 0)
-                throw new InvalidOperationException(string.Join(Environment.NewLine, diagnostics));
-            var root = tree as Control ?? throw new InvalidOperationException("Spaces CUI did not produce a root control.");
-            _view = root;
-            _loader.WireBindings(root);
-
-            await _controller.LoadAsync(token);
+            var registry = _services.GetRequiredService<SpaceRegistry>();
+            var page = new SpacesHomePage(registry, new UnavailableSpacesActionHost(), SpacesHomePage.ImmediateReadinessInstance);
+            await page.ActivateAsync(token);
+            _page = page;
             _published = true;
             StateChanged?.Invoke(this, EventArgs.Empty);
         }).ConfigureAwait(false);
@@ -138,7 +95,6 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
             if (_preparation is not null && !_preparation.IsCompletedSuccessfully) return _preparation;
             var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             _preparation = PrepareDriverAsync(gate.Task, cancellationToken);
-            _preparation.ContinueWith(_ => { }, TaskContinuationOptions.ExecuteSynchronously);
             gate.SetResult();
             return _preparation;
         }
@@ -151,7 +107,8 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
         return await OnUiAsync(async () =>
         {
             linked.Token.ThrowIfCancellationRequested();
-            return !_closing && _published && _view is not null;
+            if (_closing || !_published || _page is null) return false;
+            return await _page.TryPrepareToCloseAsync(linked.Token);
         }).ConfigureAwait(false);
     }
 
@@ -175,14 +132,9 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
         await gate.ConfigureAwait(false);
         await OnUiAsync(async () =>
         {
-            if (_loader is not null)
-            {
-                _loader.Dispose();
-                _loader = null;
-            }
-            _view = null;
-            _controller = null;
-            _bindings = null;
+            if (_page is IAsyncDisposable disposable)
+                await disposable.DisposeAsync();
+            _page = null;
         }).ConfigureAwait(false);
         _lifetime.Cancel();
         try { _lifetime.Dispose(); } catch { }
@@ -192,8 +144,13 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
 
     private void DemandExternalJoin()
     {
-        // Minimal session does not own the Home original composition; the host validates
-        // this session before publication. No cross-owner join is retained here.
+        // The Spaces page owns its original work lifetime and close preflight.
+    }
+
+    private sealed class UnavailableSpacesActionHost : ISpacesActionHost
+    {
+        public Task ExecuteAsync(SpacesAction action, CancellationToken cancellationToken = default) =>
+            Task.FromException(new NotSupportedException("Space destination launch is not available in this Haven tab."));
     }
 
     private static async Task OnUiAsync(Func<Task> action)
