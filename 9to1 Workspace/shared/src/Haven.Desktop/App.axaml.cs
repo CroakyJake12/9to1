@@ -146,8 +146,13 @@ public sealed partial class App : Avalonia.Application
                         MinWidth = 480,
                         MinHeight = 320
                     };
-                    UnifiedWorkspaceHost.ShowStartupFailure(failureWindow, Guid.NewGuid().ToString("N"), failure);
+                    var correlationId = Guid.NewGuid().ToString("N");
+                    UnifiedWorkspaceHost.ShowStartupFailure(failureWindow, correlationId, failure);
                     StartStartupFailureDrain();
+                    failureWindow.Closed += (_, _) =>
+                    {
+                        if (_startupFailureClose is null) StartStartupFailureDrain();
+                    };
                     desktop.MainWindow = failureWindow;
                     base.OnFrameworkInitializationCompleted();
                     return;

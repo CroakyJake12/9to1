@@ -111,7 +111,7 @@ public sealed partial class App
             loader.WireBindings(root);
             window.Content = root;
             if (application.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
-                desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
+                desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
             window.Closed += (_, _) => loader.Dispose();
         }
 
