@@ -48,7 +48,7 @@
           <Repeat Source="{Binding Conversation.Messages}" As="message" Key="{Binding message.Id}">
             <Container id="message" Type="Horizontal Stack" CellGap="8" accessible-name="One conversation message">
               <If Condition="{Binding message.AvatarVisible}">
-                <Image id="message-avatar" Source="{Binding message.AvatarSource}" Width="28" Height="28" corner-radius="14" accessible-name="Sender avatar" />
+                <Image id="message-avatar" Source="{Binding message.AvatarSource}" Width="28" Height="28" accessible-name="Sender avatar" />
               </If>
               <Container id="message-body-stack" Type="Vertical Stack" CellGap="6">
                 <Text text="{Binding message.SpeakerLabel}" font-weight="SemiBold" />

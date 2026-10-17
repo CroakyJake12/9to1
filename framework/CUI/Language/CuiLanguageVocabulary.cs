@@ -6,7 +6,7 @@ namespace CakeOS.Cui.Language;
 public static class CuiLanguageVocabulary
 {
     public static IReadOnlySet<string> VisualElements { get; } = new[]
-    { "Page", "Container", "Text", "Image", "Audio", "Video", "Object", "Button", "Input", "Layer" }
+    { "Page", "Container", "Text", "Image", "Audio", "Video", "Object", "Button", "Input", "Layer", "Markdown" }
         .ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
     public static IReadOnlySet<string> NonvisualElements { get; } = new[]

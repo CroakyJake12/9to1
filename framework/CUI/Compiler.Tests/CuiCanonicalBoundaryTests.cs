@@ -65,7 +65,7 @@ public sealed class CuiCanonicalBoundaryTests
     public void Types_and_layout_values_are_validated_per_canonical_element(string source) =>
         Assert.False(new CuiCompiler().Compile(source, "bad.cui", Options).Succeeded);
     [Fact]
-    public void Public_registry_has_ten_visual_primitives_and_separate_anchor()
+    public void Public_registry_has_eleven_visual_primitives_and_separate_anchor()
     {
         Assert.Equal(CuiLanguageVocabulary.VisualElements.Order(StringComparer.Ordinal), CuiControlRegistry.Default.Elements.Where(element => element.IsVisual).Select(element => element.Name).Order(StringComparer.Ordinal));
         Assert.True(CuiControlRegistry.Default.TryResolveElement("Anchor", out var anchor));
