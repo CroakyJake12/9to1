@@ -8,6 +8,7 @@ using Haven.Desktop.Views.Pages.Chat;
 using Haven.Desktop.Views.Pages.Spaces;
 using HavenOS.Apps.Browse;
 using HavenOS.Apps.Spaces;
+using HavenOS.Apps.Spaces.Home;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Desktop.Services;
@@ -26,8 +27,10 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
     private Task<bool>? _preparation;
     private readonly ContentControl _root = new();
     private SpacesHomePage? _spacesPage;
+    private Action<SpacesHomeViewState>? _stateChangedHandlerSpaces;
     private NewChatPage? _chatPage;
     private volatile Control? _page;
+    private volatile AppContentAddress _address;
     private volatile bool _published;
     private volatile bool _closing;
 
@@ -38,9 +41,10 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
         _services = services;
         _lifetime = CancellationTokenSource.CreateLinkedTokenSource(hostLifetime);
         _token = _lifetime.Token;
+        _address = request.Address;
     }
 
-    public AppContentAddress Address => _request.Address;
+    public AppContentAddress Address => _address;
     public string Title => "Spaces";
     public string IconKey => "spaces";
     public event EventHandler? StateChanged;
@@ -91,6 +95,11 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
                 await page.ActivateAsync(token);
                 token.ThrowIfCancellationRequested();
                 if (_closing) throw new OperationCanceledException();
+                _stateChangedHandlerSpaces = OnSpacesStateChanged;
+            page.Controller.StateChanged += _stateChangedHandlerSpaces;
+                if (TryParseSelectedSpace(_request.Address, out var selectedSpaceId))
+                    await page.Controller.SelectSpaceAsync(selectedSpaceId, token);
+                UpdateAddress(page.Controller.State.Selection?.Id);
                 _root.Content = page;
                 _page = _root;
                 _published = true;
@@ -157,6 +166,8 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
         {
             if (_chatPage is IAsyncDisposable chatDisposable)
                 await chatDisposable.DisposeAsync();
+            if (_spacesPage is not null && _stateChangedHandlerSpaces is not null)
+                _spacesPage.Controller.StateChanged -= _stateChangedHandlerSpaces;
             if (_spacesPage is IAsyncDisposable spacesDisposable)
                 await spacesDisposable.DisposeAsync();
             _chatPage = null;
@@ -165,6 +176,29 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
             _page = null;
         }).ConfigureAwait(false);
         try { _lifetime.Dispose(); } catch { }
+    }
+
+    private void OnSpacesStateChanged(SpacesHomeViewState state)
+    {
+        if (_closing) return;
+        UpdateAddress(state.Selection?.Id);
+        StateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void UpdateAddress(Guid? selectedSpaceId)
+    {
+        if (selectedSpaceId is { } id && id != Guid.Empty)
+            _address = AppContentAddress.Parse($"9to1://spaces/selected/{id:D}");
+        else
+            _address = AppContentAddress.Parse("9to1://spaces");
+    }
+
+    private static bool TryParseSelectedSpace(AppContentAddress address, out Guid selectedSpaceId)
+    {
+        selectedSpaceId = Guid.Empty;
+        if (address.ResourceSegments.Count < 2 || !string.Equals(address.ResourceSegments[0], "selected", StringComparison.Ordinal))
+            return false;
+        return Guid.TryParseExact(address.ResourceSegments[1], "D", out selectedSpaceId) && selectedSpaceId != Guid.Empty;
     }
 
     private void DemandAlive() => ObjectDisposedException.ThrowIf(_closing, this);
