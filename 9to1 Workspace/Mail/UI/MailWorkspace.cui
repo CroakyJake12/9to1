@@ -1,6 +1,5 @@
 <Cui id="mail.workspace" version="1">
-  <Theme Name="user_preference">
-    <Page id="mail-page" role="main" accessible-name="9to1 Mail">
+  <Page id="mail-page" role="main" accessible-name="9to1 Mail">
       <Container Type="Horizontal Stack" CellGap="12">
         <Container id="mail-navigation" width="260" role="navigation" accessible-name="Mail navigation" Type="Vertical Stack" CellGap="8">
           <Text text="Mail" font-size="24" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
@@ -171,5 +170,4 @@
         </Container>
       </Container>
     </Page>
-  </Theme>
 </Cui>
