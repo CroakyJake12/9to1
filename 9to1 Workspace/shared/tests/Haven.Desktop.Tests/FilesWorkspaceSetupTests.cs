@@ -21,8 +21,10 @@ namespace Haven.Desktop.Tests;
 public sealed class FilesWorkspaceSetupTests
 {
     private static readonly TimeSpan Limit = TimeSpan.FromSeconds(20);
+    public static bool UsesLinuxFilesSetupFixture => OperatingSystem.IsLinux();
 
-    [AvaloniaFact]
+    [AvaloniaFact(SkipUnless = nameof(UsesLinuxFilesSetupFixture),
+        Skip = "Actual Linux Home/Files custody fixture; native Windows and macOS acceptance is separate.")]
     public async Task First_use_cancel_and_nonempty_refusal_preserve_state_then_explicit_empty_choice_opens_real_Files()
     {
         await using var rig = new Rig(); await rig.StartAsync();
@@ -71,7 +73,8 @@ public sealed class FilesWorkspaceSetupTests
         finally { window.Content = null; window.Close(); }
     }
 
-    [AvaloniaFact]
+    [AvaloniaFact(SkipUnless = nameof(UsesLinuxFilesSetupFixture),
+        Skip = "Actual Linux Home/Files custody fixture; native Windows and macOS acceptance is separate.")]
     public async Task Existing_configuration_keeps_real_distinct_views_and_exact_store_without_setup_or_replacement()
     {
         await using var rig = new Rig(); await rig.StartAsync();
@@ -90,7 +93,8 @@ public sealed class FilesWorkspaceSetupTests
         Assert.True(second.IsPublicationCurrent); Assert.Null(rig.Home.OriginalCloseTask);
     }
 
-    [AvaloniaFact]
+    [AvaloniaFact(SkipUnless = nameof(UsesLinuxFilesSetupFixture),
+        Skip = "Actual Linux Home/Files custody fixture; native Windows and macOS acceptance is separate.")]
     public async Task Failed_Files_retirement_keeps_real_child_after_setup_loader_settles()
     {
         await using var rig = new Rig(); await rig.StartAsync();
@@ -111,7 +115,8 @@ public sealed class FilesWorkspaceSetupTests
         Assert.Null(rig.Home.OriginalCloseTask);
     }
 
-    [AvaloniaFact]
+    [AvaloniaFact(SkipUnless = nameof(UsesLinuxFilesSetupFixture),
+        Skip = "Actual Linux Home/Files custody fixture; native Windows and macOS acceptance is separate.")]
     public async Task Failed_configured_view_publication_is_retained_without_replacing_or_rolling_back_canonical_store()
     {
         await using var rig = new Rig(); await rig.StartAsync();
@@ -136,7 +141,8 @@ public sealed class FilesWorkspaceSetupTests
         Assert.Equal(FilesBrowseAppContentAddress.For(configuration.StoreId, null), reopened.Address);
     }
 
-    [AvaloniaFact]
+    [AvaloniaFact(SkipUnless = nameof(UsesLinuxFilesSetupFixture),
+        Skip = "Actual Linux Home/Files custody fixture; native Windows and macOS acceptance is separate.")]
     public async Task Another_tab_finishing_setup_during_picker_preserves_its_store_and_does_not_adopt_second_choice()
     {
         await using var rig = new Rig(); await rig.StartAsync();
@@ -171,7 +177,8 @@ public sealed class FilesWorkspaceSetupTests
         }
     }
 
-    [AvaloniaFact]
+    [AvaloniaFact(SkipUnless = nameof(UsesLinuxFilesSetupFixture),
+        Skip = "Actual Linux Home/Files custody fixture; native Windows and macOS acceptance is separate.")]
     public async Task Wrong_profile_and_unconfigured_typed_store_do_not_offer_setup_or_create_a_different_store()
     {
         await using var rig = new Rig(); await rig.StartAsync();
@@ -190,7 +197,8 @@ public sealed class FilesWorkspaceSetupTests
         Assert.Null(await rig.Files.GetConfigurationAsync()); Assert.Empty(Directory.EnumerateFileSystemEntries(rig.Empty));
     }
 
-    [AvaloniaFact]
+    [AvaloniaFact(SkipUnless = nameof(UsesLinuxFilesSetupFixture),
+        Skip = "Actual Linux Home/Files custody fixture; native Windows and macOS acceptance is separate.")]
     public async Task Close_joins_the_actual_held_picker_and_never_creates_after_retirement()
     {
         await using var rig = new Rig(); await rig.StartAsync();
@@ -230,7 +238,8 @@ public sealed class FilesWorkspaceSetupTests
         }
     }
 
-    [AvaloniaFact]
+    [AvaloniaFact(SkipUnless = nameof(UsesLinuxFilesSetupFixture),
+        Skip = "Actual Linux Home/Files custody fixture; native Windows and macOS acceptance is separate.")]
     public async Task Changed_OS_principal_after_folder_choice_is_refused_before_configuration()
     {
         await using var rig = new Rig(); await rig.StartAsync();
