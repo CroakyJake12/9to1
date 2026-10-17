@@ -236,7 +236,11 @@ public sealed class SpacesHomeController
     }
 
     public Task SelectSpaceAsync(Guid spaceId, CancellationToken cancellationToken = default)
-        => LoadCoreAsync(new LoadIntent(SelectedId: spaceId, PendingRenameSpaceId: null, RenameDraft: string.Empty), cancellationToken);
+    {
+        _pendingRenameSpaceId = null;
+        _renameDraft = string.Empty;
+        return LoadCoreAsync(new LoadIntent(SelectedId: spaceId, PendingRenameSpaceId: null, RenameDraft: string.Empty), cancellationToken);
+    }
 
     public async Task CreateCustomSpaceAsync(CancellationToken cancellationToken = default)
     {
@@ -256,6 +260,11 @@ public sealed class SpacesHomeController
 
     public async Task RenameSpaceAsync(Guid spaceId, string newName, CancellationToken cancellationToken = default)
     {
+        if (_fullBuiltIns.Any(item => item.Id == spaceId))
+        {
+            PublishStatus("Built-in Spaces cannot be renamed.");
+            return;
+        }
         var item = _fullCustomSpaces.FirstOrDefault(space => space.Id == spaceId);
         if (item is null)
         {
@@ -276,6 +285,8 @@ public sealed class SpacesHomeController
             if (registered.Revision != expectedRevision)
                 throw new SpaceRevisionConflictException(spaceId, expectedRevision, registered.Revision);
             await _model.RenameCustomSpaceAsync(scope, newName, expectedRevision, cancellationToken).ConfigureAwait(false);
+            _pendingRenameSpaceId = null;
+            _renameDraft = string.Empty;
             await LoadCoreAsync(
                 new LoadIntent(PendingRenameSpaceId: null, RenameDraft: string.Empty),
                 cancellationToken).ConfigureAwait(false);
