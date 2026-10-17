@@ -1,6 +1,7 @@
 using System.IO;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Automation;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Threading;
@@ -31,20 +32,23 @@ public sealed class SpacesHomeNativeRenderingTests
         return reader.ReadToEnd();
     }
 
-    private static (SpacesHomeController Controller, SpacesHomeCuiBindings Bindings, CuiControlLoader Loader, Control Root) LoadInWindow()
+    private static (SpacesHomeController Controller, SpacesHomeCuiBindings Bindings, CuiControlLoader Loader, Control Root) LoadInWindow(SpaceRegistry? originalRegistry = null, Action<string, object?>? observe = null)
     {
-        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var registry = originalRegistry ?? new SpaceRegistry(new MemorySettingsStore());
         var controller = new SpacesHomeController(registry);
         var bindings = new SpacesHomeCuiBindings(
             () => controller.State,
             async (command, parameter, cancellationToken) =>
             {
+                observe?.Invoke(command, parameter);
                 var id = parameter is Guid g ? g : controller.State.Selection?.Id ?? Guid.Empty;
                 switch (command)
                 {
                     case "spaces.create": await controller.CreateCustomSpaceAsync(cancellationToken); break;
                     case "spaces.open": await controller.OpenSpaceAsync(id, cancellationToken); break;
-                    case "spaces.rename": controller.StartRename(id); break;
+                    case "spaces.select": await controller.SelectSpaceAsync(id, cancellationToken); break;
+                    case "spaces.set-rename-draft": controller.SetRenameDraft(parameter?.ToString()); break;
+                    case "spaces.rename": await controller.StartRenameAsync(id, cancellationToken); break;
                     case "spaces.move": await controller.MoveSpaceAsync(id, cancellationToken); break;
                     case "spaces.fork": await controller.ForkSpaceAsync(id, cancellationToken); break;
                     case "spaces.archive": await controller.ArchiveSpaceAsync(id, cancellationToken); break;
@@ -78,13 +82,15 @@ public sealed class SpacesHomeNativeRenderingTests
 
     private static async Task ClickAsync(Window window, CuiControlLoader loader, Button button)
     {
+        window.UpdateLayout(); button.BringIntoView(); window.UpdateLayout();
+        Assert.True(button.IsEnabled); Assert.True(button.IsEffectivelyVisible);
         var point = button.TranslatePoint(new Point(button.Bounds.Width / 2, button.Bounds.Height / 2), window);
         Assert.NotNull(point);
         window.MouseMove(point.Value);
         window.MouseDown(point.Value, MouseButton.Left);
         window.MouseUp(point.Value, MouseButton.Left);
-        await loader.WhenActionsIdleAsync();
-        Dispatcher.UIThread.RunJobs();
+        await loader.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
     }
 
     [Theory]
@@ -237,6 +243,71 @@ public sealed class SpacesHomeNativeRenderingTests
                 window.Close();
             }
             return true;
+        }, lifetime.Token);
+    }
+
+    [Fact]
+    public async Task Pointer_row_actions_select_and_rename_the_actual_row_identity_not_the_previous_selection()
+    {
+        using var lifetime = new CancellationTokenSource();
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));
+        await session.Dispatch<bool>(async () =>
+        {
+            var registry = new SpaceRegistry(new MemorySettingsStore());
+            var alpha = await registry.CreateAsync("Alpha");
+            var beta = await registry.CreateAsync("Beta");
+            var calls = new List<(string Command, object? Parameter)>();
+            var (controller, _, loader, root) = LoadInWindow(registry, (command, value) => calls.Add((command, value)));
+            await controller.LoadAsync();
+            var window = new Window { Width = 1280, Height = 1100, Content = root };
+            try
+            {
+                window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                await ClickAsync(window, loader, Row("open-custom-space", "Open Alpha"));
+                Assert.Equal(alpha.Id, controller.State.Selection!.Id);
+                Assert.Equal(alpha.Id, await registry.GetCurrentSpaceIdAsync());
+                await ClickAsync(window, loader, Row("open-custom-space", "Open Beta"));
+                Assert.Equal(beta.Id, controller.State.Selection!.Id);
+                Assert.Equal(beta.Id, Assert.IsType<Guid>(calls.Last(item => item.Command == "spaces.select").Parameter));
+                Assert.Equal(beta.Id, await registry.GetCurrentSpaceIdAsync());
+
+                // The row being renamed deliberately differs from the current selection.
+                await ClickAsync(window, loader, Row("rename-custom-space", "Rename Alpha"));
+                Assert.Equal(alpha.Id, Assert.IsType<Guid>(calls.Last(item => item.Command == "spaces.rename").Parameter));
+                Assert.Equal(alpha.Id, controller.State.PendingRenameSpaceId);
+                Assert.Equal(alpha.Id, controller.State.Selection!.Id);
+                Assert.True(controller.State.Selection.IsRenaming);
+                Assert.Equal(alpha.Id, await registry.GetCurrentSpaceIdAsync());
+                await ClickAsync(window, loader, FindButton(root, "cancel-rename"));
+                Assert.Null(controller.State.PendingRenameSpaceId);
+                Assert.False(controller.State.Selection.IsRenaming);
+                Assert.DoesNotContain(root.GetVisualDescendants().OfType<TextBox>(), item => item.Name == "rename-input");
+                Assert.Equal("Alpha", (await registry.GetAsync(alpha.Id))!.Name);
+                await ClickAsync(window, loader, Row("rename-custom-space", "Rename Alpha"));
+                var rename = FindTextBox(root, "rename-input");
+                rename.Focus(); rename.SelectAll(); window.KeyTextInput("Alpha renamed");
+                await loader.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+                await ClickAsync(window, loader, FindButton(root, "confirm-rename"));
+                Assert.Equal(alpha.Id, Assert.IsType<Guid>(calls.Last(item => item.Command == "spaces.confirm-rename").Parameter));
+                Assert.Equal("Alpha renamed", (await registry.GetAsync(alpha.Id))!.Name);
+                Assert.Equal("Beta", (await registry.GetAsync(beta.Id))!.Name);
+                Assert.Null(controller.State.PendingRenameSpaceId);
+                Assert.DoesNotContain(root.GetVisualDescendants().OfType<TextBox>(), item => item.Name == "rename-input");
+                Assert.Equal("Open Alpha renamed", AutomationProperties.GetName(Row("open-custom-space", "Open Alpha renamed")));
+
+                await ClickAsync(window, loader, Row("archive-custom-space", "Archive Beta"));
+                Assert.Equal(beta.Id, Assert.IsType<Guid>(calls.Last(item => item.Command == "spaces.archive").Parameter));
+                Assert.True((await registry.GetAsync(beta.Id))!.IsArchived);
+                Assert.False((await registry.GetAsync(alpha.Id))!.IsArchived);
+                await ClickAsync(window, loader, Row("first-party-space-open", "Open Chat"));
+                Assert.Equal(SpaceRegistry.ChatSpaceId, controller.State.Selection!.Id);
+                Assert.Equal(SpaceRegistry.ChatSpaceId, await registry.GetCurrentSpaceIdAsync());
+            }
+            finally { loader.Dispose(); window.Close(); }
+            return true;
+
+            Button Row(string id, string label) => root.GetVisualDescendants().OfType<Button>()
+                .Single(item => item.Name == id && AutomationProperties.GetName(item) == label);
         }, lifetime.Token);
     }
 

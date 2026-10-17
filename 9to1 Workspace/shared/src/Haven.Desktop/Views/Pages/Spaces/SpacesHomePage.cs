@@ -193,7 +193,7 @@ public sealed class SpacesHomePage : UserControl, IActivatablePage,
                 await original.AwaitAsync(InvokeOriginalSource(() => _controller.OpenSpaceAsync(id, token))).ConfigureAwait(false);
                 break;
             case "spaces.rename":
-                InvokeOriginalSource(() => _controller.StartRename(id));
+                await original.AwaitAsync(InvokeOriginalSource(() => _controller.StartRenameAsync(id, token))).ConfigureAwait(false);
                 break;
             case "spaces.move":
                 await original.AwaitAsync(InvokeOriginalSource(() => _controller.MoveSpaceAsync(id, token))).ConfigureAwait(false);

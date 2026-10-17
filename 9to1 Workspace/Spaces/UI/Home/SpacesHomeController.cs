@@ -329,14 +329,27 @@ public sealed class SpacesHomeController
         }
     }
 
+    public async Task StartRenameAsync(Guid spaceId, CancellationToken cancellationToken = default)
+    {
+        if (!_fullCustomSpaces.Any(space => space.Id == spaceId)) return;
+        // A row command can target a different Space from the details pane. Select it
+        // through the canonical registry before exposing an editor for that resource.
+        if (State.Selection?.Id != spaceId)
+            await SelectSpaceAsync(spaceId, cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        StartRename(spaceId);
+    }
+
     public void StartRename(Guid spaceId)
     {
         var item = _fullCustomSpaces.FirstOrDefault(space => space.Id == spaceId);
-        if (item is null) return;
+        var selection = State.Selection;
+        if (item is null || selection?.Id != spaceId || !selection.CanEdit) return;
         var baseRevision = State.Revision;
         if (TryPublish(State with
         {
             PendingRenameSpaceId = spaceId,
+            Selection = selection with { IsRenaming = true },
             RenameDraft = item.Name,
             StatusMessage = "Rename the Space and confirm."
         }, baseRevision))
@@ -365,7 +378,13 @@ public sealed class SpacesHomeController
     public void CancelRename()
     {
         var baseRevision = State.Revision;
-        if (TryPublish(State with { PendingRenameSpaceId = null, RenameDraft = string.Empty, StatusMessage = "Rename cancelled" }, baseRevision))
+        if (TryPublish(State with
+        {
+            PendingRenameSpaceId = null,
+            Selection = State.Selection is { } selection ? selection with { IsRenaming = false } : null,
+            RenameDraft = string.Empty,
+            StatusMessage = "Rename cancelled"
+        }, baseRevision))
         {
             _pendingRenameSpaceId = null;
             _renameDraft = string.Empty;

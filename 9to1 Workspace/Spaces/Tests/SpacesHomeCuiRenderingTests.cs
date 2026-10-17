@@ -19,11 +19,6 @@ namespace HavenOS.Apps.Spaces.Tests;
 /// </summary>
 public sealed class SpacesHomeCuiRenderingTests
 {
-    private sealed class TestApplication : Application
-    {
-        public static Application Instance { get; } = new TestApplication();
-    }
-
     private static SpacesHomeViewState StateWithSelection(SpacesHomeSelection selection) =>
         SpacesHomeViewState.Empty with
         {
@@ -49,7 +44,7 @@ public sealed class SpacesHomeCuiRenderingTests
     public async Task Authored_spaces_home_renders_built_in_and_custom_space_names()
     {
         using var lifetime = new CancellationTokenSource();
-        await using var session = HeadlessUnitTestSession.StartNew(TestApplication.Instance.GetType());
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));
         await session.Dispatch<bool>(async () =>
         {
             var state = StateWithSelection(new SpacesHomeSelection(
@@ -88,7 +83,7 @@ public sealed class SpacesHomeCuiRenderingTests
     public async Task Selection_details_render_context_references_and_capabilities()
     {
         using var lifetime = new CancellationTokenSource();
-        await using var session = HeadlessUnitTestSession.StartNew(TestApplication.Instance.GetType());
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));
         await session.Dispatch<bool>(async () =>
         {
             var contextId = Guid.NewGuid();
@@ -131,7 +126,7 @@ public sealed class SpacesHomeCuiRenderingTests
     public async Task An_unauthored_command_is_refused_rather_than_dispatched()
     {
         using var lifetime = new CancellationTokenSource();
-        await using var session = HeadlessUnitTestSession.StartNew(TestApplication.Instance.GetType());
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));
         await session.Dispatch<bool>(async () =>
         {
             var state = StateWithSelection(new SpacesHomeSelection(

@@ -24,6 +24,22 @@
       * font-family="Montserrat" - the CUI default interface family resolved by the host
         (CuiNativeHost maps it to the bundled assets), not a per-document override.
   -->
+  <Actions>
+    <Action name="SelectRow" command="spaces.select" parameter="{Binding space.id}" />
+    <Action name="RenameRow" command="spaces.rename" parameter="{Binding space.id}" />
+    <Action name="MoveRow" command="spaces.move" parameter="{Binding space.id}" />
+    <Action name="ForkRow" command="spaces.fork" parameter="{Binding space.id}" />
+    <Action name="ArchiveRow" command="spaces.archive" parameter="{Binding space.id}" />
+    <Action name="ConfirmRename" command="spaces.confirm-rename" parameter="{Binding spaces.pendingRenameSpaceId}" />
+    <Action name="RenameSelected" command="spaces.rename" parameter="{Binding selection.id}" />
+    <Action name="ForkSelected" command="spaces.fork" parameter="{Binding selection.id}" />
+    <Action name="OpenSelected" command="spaces.open" parameter="{Binding selection.id}" />
+    <Action name="ArchiveSelected" command="spaces.archive" parameter="{Binding selection.id}" />
+    <Action name="EditExtensions" command="spaces.edit-extensions" parameter="{Binding selection.id}" />
+    <Action name="EditGraph" command="spaces.edit-graph" parameter="{Binding selection.id}" />
+    <Action name="MoveSelected" command="spaces.move" parameter="{Binding selection.id}" />
+    <Action name="AddContext" command="spaces.add-context" parameter="{Binding selection.id}" />
+  </Actions>
   <Theme Name="user_preference">
     <Page id="spaces-page" role="main" accessible-name="Spaces">
       <Container id="spaces-body" Type="Vertical Stack" CellGap="16">
@@ -36,7 +52,7 @@
 
             <Repeat id="first-party-spaces" Source="{Binding spaces.builtIns}" As="space" Key="{Binding space.id}">
               <Container id="first-party-space" Type="Vertical Stack">
-                <Button id="first-party-space-open" action="spaces.select" action-argument="{Binding space.id}" accessible-name="Open {Binding space.name}">
+                <Button id="first-party-space-open" action="SelectRow" accessible-name="{Binding space.openLabel}">
                   <Container id="first-party-space-content" Type="Vertical Stack">
                     <Text id="first-party-space-name" text="{Binding space.name}" />
                     <Text id="first-party-space-summary" text="{Binding space.summary}" foreground="{Resource CuiTextSoftBrush}" />
@@ -48,18 +64,18 @@
             <Text id="custom-spaces-heading" text="Your Spaces" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
 
             <Repeat id="custom-spaces" Source="{Binding spaces.customSpaces}" As="space" Key="{Binding space.id}">
-              <Container id="custom-space-row" role="listitem" accessible-name="{Binding space.name}, custom Space" Type="Vertical Stack">
-                <Button id="open-custom-space" action="spaces.select" action-argument="{Binding space.id}" accessible-name="Open {Binding space.name}">
+              <Container id="custom-space-row" role="listitem" accessible-name="{Binding space.customLabel}" Type="Vertical Stack">
+                <Button id="open-custom-space" action="SelectRow" accessible-name="{Binding space.openLabel}">
                   <Container id="custom-space-content" Type="Vertical Stack">
                     <Text id="custom-space-name" text="{Binding space.name}" />
                     <Text id="custom-space-summary" text="{Binding space.summary}" foreground="{Resource CuiTextSoftBrush}" />
                   </Container>
                 </Button>
-                <Container id="custom-space-actions" accessible-name="Actions for {Binding space.name}" Type="Wrap">
-                  <Button id="rename-custom-space" action="spaces.rename" action-argument="{Binding space.id}" content="Rename" accessible-name="Rename {Binding space.name}" />
-                  <Button id="move-custom-space" action="spaces.move" action-argument="{Binding space.id}" content="Move" accessible-name="Move {Binding space.name}" />
-                  <Button id="fork-custom-space" action="spaces.fork" action-argument="{Binding space.id}" content="Copy" accessible-name="Make a copy of {Binding space.name}" />
-                  <Button id="archive-custom-space" action="spaces.archive" action-argument="{Binding space.id}" content="Archive" accessible-name="Archive {Binding space.name}" />
+                <Container id="custom-space-actions" accessible-name="{Binding space.actionsLabel}" Type="Wrap">
+                  <Button id="rename-custom-space" action="RenameRow" content="Rename" accessible-name="{Binding space.renameLabel}" />
+                  <Button id="move-custom-space" action="MoveRow" content="Move" accessible-name="{Binding space.moveLabel}" />
+                  <Button id="fork-custom-space" action="ForkRow" content="Copy" accessible-name="{Binding space.forkLabel}" />
+                  <Button id="archive-custom-space" action="ArchiveRow" content="Archive" accessible-name="{Binding space.archiveLabel}" />
                 </Container>
               </Container>
             </Repeat>
@@ -74,7 +90,7 @@
               <Container id="rename-controls" Type="Vertical Stack" CellGap="8">
                 <Input id="rename-input" Type="Text" Value="{Binding spaces.renameDraft, mode=TwoWay}" accessible-name="Rename Space" />
                 <Container id="rename-actions" Type="Wrap" CellGap="8">
-                  <Button id="confirm-rename" action="spaces.confirm-rename" action-argument="{Binding selection.id}" content="Save" accessible-name="Confirm Space rename" />
+                  <Button id="confirm-rename" action="ConfirmRename" content="Save" accessible-name="Confirm Space rename" />
                   <Button id="cancel-rename" action="spaces.cancel-rename" content="Cancel" accessible-name="Cancel Space rename" />
                 </Container>
               </Container>
@@ -83,15 +99,15 @@
               <Container id="selected-space-header" Type="Vertical Stack" CellGap="4">
                 <Text id="selected-space-name" text="{Binding selection.name}" font-size="24" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
                 <Container id="space-header-actions" Type="Wrap" CellGap="8">
-                  <Button id="start-rename" action="spaces.rename" action-argument="{Binding selection.id}" content="Rename" Interactive="{Binding selection.canEdit}" accessible-name="Rename selected Space" />
-                  <Button id="fork-space" action="spaces.fork" action-argument="{Binding selection.id}" content="Copy" accessible-name="Make a copy of selected Space" />
-                  <Button id="open-selected-space" action="spaces.open" action-argument="{Binding selection.id}" content="Open" accessible-name="Open selected Space" />
-                  <Button id="archive-space" action="spaces.archive" action-argument="{Binding selection.id}" content="Archive" Interactive="{Binding selection.canEdit}" accessible-name="Archive selected Space" />
+                  <Button id="start-rename" action="RenameSelected" content="Rename" Interactive="{Binding selection.canEdit}" accessible-name="Rename selected Space" />
+                  <Button id="fork-space" action="ForkSelected" content="Copy" accessible-name="Make a copy of selected Space" />
+                  <Button id="open-selected-space" action="OpenSelected" content="Open" accessible-name="Open selected Space" />
+                  <Button id="archive-space" action="ArchiveSelected" content="Archive" Interactive="{Binding selection.canEdit}" accessible-name="Archive selected Space" />
                   <If Condition="{Binding selection.isBuiltIn}">
-                    <Button id="edit-extensions" action="spaces.edit-extensions" action-argument="{Binding selection.id}" content="Edit extensions" Interactive="{Binding selection.canEditExtensions}" accessible-name="Edit Space extensions" />
+                    <Button id="edit-extensions" action="EditExtensions" content="Edit extensions" Interactive="{Binding selection.canEditExtensions}" accessible-name="Edit Space extensions" />
                   </If>
                   <If Condition="!{Binding selection.isBuiltIn}">
-                    <Button id="edit-graph" action="spaces.edit-graph" action-argument="{Binding selection.id}" content="Edit Space graph" Interactive="{Binding selection.canEditGraph}" accessible-name="Edit Space graph" />
+                    <Button id="edit-graph" action="EditGraph" content="Edit Space graph" Interactive="{Binding selection.canEditGraph}" accessible-name="Edit Space graph" />
                   </If>
                 </Container>
               </Container>
@@ -100,7 +116,7 @@
             <Container id="space-move" accessible-name="Move selected Space" Type="Vertical Stack" CellGap="8" Interactive="{Binding selection.canEdit}">
               <Text id="space-move-heading" text="Parent Space" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
               <Input id="space-parent-select" Type="Select" ItemsSource="{Binding spaces.moveParentOptions}" SelectedIndex="{Binding spaces.selectedMoveParentIndex, mode=TwoWay, type=int}" accessible-name="Choose parent Space" />
-              <Button id="move-space" action="spaces.move" action-argument="{Binding selection.id}" content="Set parent" accessible-name="Set parent Space" />
+              <Button id="move-space" action="MoveSelected" content="Set parent" accessible-name="Set parent Space" />
             </Container>
             <Container id="space-context" accessible-name="Space context and policy" background="{Resource CuiPanelBrush}" corner-radius="12" padding="16" Type="Vertical Stack" CellGap="8">
               <Text id="space-context-heading" text="Context" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
@@ -116,7 +132,7 @@
                 <Text id="space-context-empty-text" text="No sources added" foreground="{Resource CuiTextSoftBrush}" />
               </If>
 
-              <Button id="add-context" action="spaces.add-context" content="Add source" Interactive="{Binding selection.canEdit}" accessible-name="Add a source to this Space" />
+              <Button id="add-context" action="AddContext" content="Add source" Interactive="{Binding selection.canEdit}" accessible-name="Add a source to this Space" />
               <Text id="space-access-heading" text="Model and access" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
               <Text id="space-effective-model" text="{Binding selection.effectiveModelLabel}" accessible-name="Effective model" />
               <Text id="space-web-access" text="{Binding selection.webAccessLabel}" accessible-name="Web access policy" />

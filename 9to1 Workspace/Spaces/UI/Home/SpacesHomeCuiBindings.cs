@@ -69,6 +69,7 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
             "spaces.renameDraft" => snapshot.RenameDraft,
             "spaces.selectedMoveParentIndex" => snapshot.SelectedMoveParentIndex,
             "status.message" => snapshot.StatusMessage,
+            "selection.id" => snapshot.Selection?.Id,
             "selection.name" => snapshot.Selection?.Name ?? string.Empty,
             "selection.description" => snapshot.Selection?.Description ?? string.Empty,
             "selection.isBuiltIn" => snapshot.Selection?.IsBuiltIn ?? false,
@@ -143,6 +144,13 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
         {
             value = path.Equals("id", StringComparison.OrdinalIgnoreCase) ? homeItem.Id
                 : path.Equals("name", StringComparison.OrdinalIgnoreCase) ? homeItem.Name
+                : path.Equals("openLabel", StringComparison.OrdinalIgnoreCase) ? $"Open {homeItem.Name}"
+                : path.Equals("customLabel", StringComparison.OrdinalIgnoreCase) ? $"{homeItem.Name}, custom Space"
+                : path.Equals("actionsLabel", StringComparison.OrdinalIgnoreCase) ? $"Actions for {homeItem.Name}"
+                : path.Equals("renameLabel", StringComparison.OrdinalIgnoreCase) ? $"Rename {homeItem.Name}"
+                : path.Equals("moveLabel", StringComparison.OrdinalIgnoreCase) ? $"Move {homeItem.Name}"
+                : path.Equals("forkLabel", StringComparison.OrdinalIgnoreCase) ? $"Make a copy of {homeItem.Name}"
+                : path.Equals("archiveLabel", StringComparison.OrdinalIgnoreCase) ? $"Archive {homeItem.Name}"
                 : path.Equals("summary", StringComparison.OrdinalIgnoreCase) ? homeItem.Summary
                 : path.Equals("scopeKey", StringComparison.OrdinalIgnoreCase) ? homeItem.ScopeKey
                 : path.Equals("isBuiltIn", StringComparison.OrdinalIgnoreCase) ? homeItem.IsBuiltIn
