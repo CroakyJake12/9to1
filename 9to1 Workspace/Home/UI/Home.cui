@@ -3,6 +3,7 @@
     <Page>
       <Container id="home-root" background="{Resource CuiBackgroundBrush}" Type="Vertical Stack">
         <If Condition="{Binding IsNativeHomeShell, fallback=true}">
+          <Container id="home-native-shell" Type="Vertical Stack">
           <Container id="top-bar" padding="24 16" background="{Resource CuiPanelBrush}" Type="Horizontal Stack">
             <Text id="brand" text="9-1" font-size="22" font-weight="Bold" foreground="{Resource CuiTextBrush}" margin="0 0 24 0" />
             <Input id="global-search" placeholder-text="Search 9-1" accessible-name="Search 9-1" width="360" margin="0 0 16 0" Type="Text" />
@@ -172,6 +173,7 @@
                 </If>
               </Container>
             </Container>
+          </Container>
           </Container>
         </If>
         <If Condition="{Binding IsNativeCakeAccountWindow, fallback=false}">

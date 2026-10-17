@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Input.Raw;
+using Avalonia.VisualTree;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
@@ -128,6 +129,10 @@ public sealed class CuiViewModelDispatchRegressionTests
                 window.Show();
                 window.UpdateLayout();
                 Assert.True(Controls(root).Count() > 40); // Full Home, not a two-control substitute.
+                var header = WindowBounds(window, Find<CuiContainerControl>(root, "top-bar"));
+                var workspace = WindowBounds(window, Find<CuiContainerControl>(root, "home-workspace-scroll"));
+                Assert.True(header.Bottom <= workspace.Top,
+                    $"The real Home toolbar must sit above its content pane: header={header}, workspace={workspace}.");
 
                 var search = Find<TextBox>(root, "global-search");
                 Assert.Equal("Search 9-1", AutomationProperties.GetName(search));
@@ -210,11 +215,21 @@ public sealed class CuiViewModelDispatchRegressionTests
         foreach (var descendant in Controls(child)) yield return descendant;
     }
 
+    private static Rect WindowBounds(Window window, Control control) => new(
+        control.TranslatePoint(default, window)
+            ?? throw new InvalidOperationException("The authored control is not attached to the native Home window."),
+        control.Bounds.Size);
+
     private static void Click(Window window, Button button)
     {
         window.UpdateLayout();
-        var point = button.TranslatePoint(new Point(button.Bounds.Width / 2, button.Bounds.Height / 2), window)
-            ?? throw new InvalidOperationException("The authored button is not attached to the native Home window.");
+        var bounds = WindowBounds(window, button);
+        Assert.True(new Rect(window.ClientSize).Contains(bounds),
+            $"The complete {button.Name} button must be inside the Home window: {bounds}.");
+        var point = bounds.Center;
+        var hit = window.InputHitTest(point) as Visual;
+        Assert.True(ReferenceEquals(hit, button) || hit?.GetVisualAncestors().Contains(button) == true,
+            $"The pointer must hit {button.Name}, not a covering control ({hit?.GetType().Name}).");
         window.MouseMove(point);
         window.MouseDown(point, MouseButton.Left);
         window.MouseUp(point, MouseButton.Left);
