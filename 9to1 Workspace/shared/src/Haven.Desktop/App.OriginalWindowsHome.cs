@@ -109,6 +109,8 @@ public sealed partial class App
         if (home is null) return Task.CompletedTask; // Other platform owners are unchanged.
         _ = (_services ?? throw new InvalidOperationException("The original App provider is unavailable."))
             .RequireOriginalWindowsHomeComponents(home);
+        if (!OperatingSystem.IsWindows())
+            return home.StartOriginalAsync();
         return StartOriginalNativeHomeDependencyAsync(home);
     }
 
