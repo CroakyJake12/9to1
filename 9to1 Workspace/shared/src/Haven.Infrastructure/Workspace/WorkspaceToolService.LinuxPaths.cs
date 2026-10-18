@@ -175,8 +175,11 @@ public sealed partial class WorkspaceToolService
         public void Dispose() { if (_closed) return; _closed = true; _rootHandle.Dispose(); }
     }
 
-    private const ulong LinuxPath = 0x200000, LinuxDirectory = 0x10000, LinuxCloseOnExec = 0x80000, LinuxNonBlocking = 0x800;
-    private const ulong LinuxAnonymousWrite = 0x410000 | 2 | LinuxCloseOnExec;
+    private const ulong LinuxPath = 0x200000, LinuxCloseOnExec = 0x80000, LinuxNonBlocking = 0x800;
+    // Linux UAPI O_DIRECTORY differs between the supported x64 and ARM64 ABIs.
+    // O_TMPFILE includes that same directory bit; resolve/path guards stay identical.
+    private static readonly ulong LinuxDirectory = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? 0x4000UL : 0x10000UL;
+    private static readonly ulong LinuxAnonymousWrite = 0x400000UL | LinuxDirectory | 2 | LinuxCloseOnExec;
     private readonly record struct LinuxIdentity(ulong Inode, uint DeviceMajor, uint DeviceMinor, ulong MountId, ushort Mode, uint Links, ulong Size, long ModifiedSeconds, uint ModifiedNanos, long ChangedSeconds, uint ChangedNanos)
     {
         public bool IsDirectory => (Mode & 0xf000) == 0x4000;
