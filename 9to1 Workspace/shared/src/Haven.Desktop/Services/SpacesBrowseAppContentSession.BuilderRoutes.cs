@@ -49,7 +49,7 @@ internal sealed partial class SpacesBrowseAppContentSession
                 if (!_buildersBySpace.TryGetValue(id, out page) || page.OriginalClose is not null)
                 {
                     var extensions = _services.GetService<Haven.Application.ExtensionManager>();
-                page = new SpaceBuilderPage(registry, id, SpacesHomePage.ImmediateReadinessInstance,
+                    page = new SpaceBuilderPage(registry, id, SpacesHomePage.ImmediateReadinessInstance,
                         settlement => QueueHomeReturnForBuilder(page!, settlement), extensions);
                     lock (_gate) _ownedBuilders.Add(page);
                     acquired = true;
@@ -62,6 +62,7 @@ internal sealed partial class SpacesBrowseAppContentSession
                 var currentSpace = await registry.ReadExistingAsync(id, token);
                 if (currentSpace is null || currentSpace.IsArchived || currentSpace.IsBuiltIn || currentSpace.Origin != SpaceOrigin.UserCreated)
                     throw new InvalidOperationException("The Space builder target changed during admission.");
+                await DemandDetailsHomeAdmissionAsync(token);
                 lock (_gate)
                 {
                     token.ThrowIfCancellationRequested(); DemandAlive();

@@ -147,7 +147,7 @@ internal sealed partial class SpacesBrowseAppContentSession
                         priorBuilder = _publishedBuilderRoute; priorDetails = _publishedDetailsRoute; priorChat = _publishedChatRoute; priorAddress = _address;
                         SetRootContent(page);
                         _publishedDetailsRoute = new(page, Haven.Core.AppContentAddress.Parse($"9to1://spaces/details/{page.State.SpaceId:D}"));
-                        _publishedChatRoute = null; _address = _publishedDetailsRoute.Address;
+                        _publishedBuilderRoute = null; _publishedChatRoute = null; _address = _publishedDetailsRoute.Address;
                         candidate.Epoch = ++_routeEpoch;
                         switched = true;
                     }
