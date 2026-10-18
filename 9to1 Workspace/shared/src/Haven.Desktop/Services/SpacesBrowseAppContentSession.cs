@@ -38,6 +38,11 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     private SpacesHomePage? _spacesPage;
     private Action<SpacesHomeViewState>? _stateChangedHandlerSpaces;
     private NewChatPage? _chatPage;
+    // Published only after the UI owner actually installs this exact Chat page.
+    // Controller notifications may arrive on a pool thread; they consume this
+    // immutable projection, never Avalonia properties or mutable Chat state.
+    private sealed record PublishedChatRoute(NewChatPage Page, AppContentAddress Address);
+    private PublishedChatRoute? _publishedChatRoute; // Guarded by _gate.
     private CuiSceneHost? _retiredDiagnosticHost;
     private volatile Control? _page;
     private volatile AppContentAddress _address;
@@ -223,7 +228,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             if (_spacesPage is IAsyncDisposable spacesDisposable)
                 try { await spacesDisposable.DisposeAsync(); }
                 catch (Exception error) { failures.Add(error); }
-            _chatPage = null;
+            lock (_gate) { _chatPage = null; _publishedChatRoute = null; }
             _chatsBySpace.Clear();
             _spacesPage = null;
             // Only a clean retirement may drop the root to an empty tab. A failed retirement
@@ -317,22 +322,36 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
 
     private void OnSpacesStateChanged(SpacesHomeViewState state)
     {
-        if (_closing || !_published) return;
-        UpdateAddress(state.Selection?.Id);
+        lock (_gate)
+        {
+            if (_closing || !_published) return;
+            UpdateAddress(state.Selection?.Id);
+        }
         StateChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void UpdateAddress(Guid? selectedSpaceId)
     {
-        if (_chatPage is { } chat && ReferenceEquals(_root.Content, chat))
+        lock (_gate)
         {
-            _address = ConversationAddress(chat.CurrentConversation);
-            return;
+            if (_publishedChatRoute is { } chat)
+                _address = chat.Address;
+            else if (selectedSpaceId is { } id && id != Guid.Empty)
+                _address = AppContentAddress.Parse($"9to1://spaces/selected/{id:D}");
+            else
+                _address = AppContentAddress.Parse("9to1://spaces");
         }
-        if (selectedSpaceId is { } id && id != Guid.Empty)
-            _address = AppContentAddress.Parse($"9to1://spaces/selected/{id:D}");
-        else
-            _address = AppContentAddress.Parse("9to1://spaces");
+    }
+
+    // All callers hold _gate and retain the actual UI dispatcher. The native
+    // setter must succeed before its current page/address projection is published.
+    private void PublishChatPage(NewChatPage chat)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        _root.Content = chat;
+        _chatPage = chat;
+        _publishedChatRoute = new(chat, ConversationAddress(chat.CurrentConversation));
+        _address = _publishedChatRoute.Address;
     }
 
     private static bool TryParseSelectedSpace(AppContentAddress address, out Guid selectedSpaceId)
@@ -402,9 +421,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             {
                 token.ThrowIfCancellationRequested();
                 DemandAlive();
-                _chatPage = existing;
-                _root.Content = existing;
-                _address = ConversationAddress(existing.CurrentConversation);
+                PublishChatPage(existing);
             }
             StateChanged?.Invoke(this, EventArgs.Empty);
             return;
@@ -427,11 +444,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 token.ThrowIfCancellationRequested();
                 DemandAlive();
                 page.SetDraft(string.Empty);
-                _root.Content = page;
+                PublishChatPage(page);
                 _chatsBySpace[key] = page;
-                _chatPage = page;
                 ObserveConversationRoute(page);
-                _address = ConversationAddress(page.CurrentConversation);
                 published = true;
             }
             StateChanged?.Invoke(this, EventArgs.Empty);

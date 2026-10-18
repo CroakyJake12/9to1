@@ -10,6 +10,7 @@ using Haven.Desktop;
 using Haven.Desktop.Events;
 using Haven.Desktop.Services;
 using Haven.Desktop.Views.Pages.Chat;
+using Haven.Desktop.Views.Pages.Spaces;
 using HavenOS.Apps.Browse;
 using HavenOS.Home.Core;
 using Microsoft.Extensions.DependencyInjection;
@@ -208,6 +209,47 @@ public sealed class SpacesConversationRouteTests
     private static NewChatPage Chat(SpacesBrowseAppContentSession session) =>
         (NewChatPage)typeof(SpacesBrowseAppContentSession).GetField("_chatPage", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(session)!;
 
+    [AvaloniaFact]
+    public async Task Public_spaces_open_and_draft_can_retire_without_pre_draining_page_originals()
+    {
+        using var rig = new Rig(withHome: true, allowConversationWrites: true);
+        var failures = new List<Exception>();
+        SpacesBrowseAppContentSession? session = null;
+        try
+        {
+            await rig.Home!.StartOriginalAsync().WaitAsync(Bound);
+            var actor = await rig.Home.Profiles.GetCurrentAsync(CancellationToken.None);
+            Assert.NotNull(actor);
+            session = rig.Session("9to1://spaces", profileId: actor.ProfileId);
+            await session.InitializeAsync().WaitAsync(Bound);
+            var root = Assert.IsType<ContentControl>(session.OriginalNativeView);
+            var spaces = Assert.IsType<SpacesHomePage>(root.Content);
+            await spaces.DispatchAsync("spaces.open", SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
+            var chat = Assert.IsType<NewChatPage>(root.Content);
+            chat.SetDraft("Unsent close-boundary fixture");
+            Assert.True(await session.TryPrepareToCloseAsync().WaitAsync(Bound));
+
+            // The real owner close must join its own admitted work. Do not run the
+            // settled-route SystemIdle helper or pre-join Chat originals here.
+            var close = session.CloseAndDrainAsync();
+            Assert.Same(close, session.OriginalClose);
+            await close.WaitAsync(Bound);
+            Assert.True(session.CanRetireOriginalView);
+            Assert.False(session.IsPublicationCurrent);
+            Assert.Null(root.Content);
+        }
+        catch (Exception failure) { failures.Add(failure); }
+        finally
+        {
+            try { if (session is not null) await session.CloseAndDrainAsync().WaitAsync(Bound); }
+            catch (Exception failure) { failures.Add(failure); }
+            try { await rig.Home!.CloseAndDrainAsync().WaitAsync(Bound); }
+            catch (Exception failure) { failures.Add(failure); }
+        }
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1) throw new AggregateException("Spaces close boundary and independent cleanup failed.", failures);
+    }
+
     private static async Task CloseSettledRouteAsync(SpacesBrowseAppContentSession session)
     {
         // These checks concern a settled restored page. Let its genuinely queued
@@ -228,7 +270,7 @@ public sealed class SpacesConversationRouteTests
         private readonly ServiceProvider _services;
         internal HomeNativeWindowsComposition? Home { get; }
         private readonly string _directory = Path.Combine(Path.GetTempPath(), "9to1-space-route-" + Guid.NewGuid().ToString("N"));
-        internal Rig(bool withHome = false)
+        internal Rig(bool withHome = false, bool allowConversationWrites = false)
         {
             Directory.CreateDirectory(_directory);
             SavedMessage = new(Guid.NewGuid(), Row!.Id, MessageRole.User, "Persisted history fixture", null, null, null, DateTimeOffset.UnixEpoch);
@@ -237,7 +279,7 @@ public sealed class SpacesConversationRouteTests
                 "GetAsync" => Task.FromResult(Row is { } row && row.Id == (Guid)args![0]! ? row : null),
                 "GetMessagesAsync" => Task.FromResult<IReadOnlyList<ChatMessage>>([SavedMessage with { ConversationId = Row!.Id }]),
                 "GetContextEntriesAsync" => Task.FromResult<IReadOnlyList<ConversationContextEntry>>([]),
-                "UpsertConversationAsync" => RecordUnexpectedWrite(),
+                "UpsertConversationAsync" => allowConversationWrites ? RecordConversationWrite((Conversation)args![0]!) : RecordUnexpectedWrite(),
                 _ => throw Unexpected(name)
             });
             var ollama = Proxy<IOllamaClient>((name, _) => name == "GetModelsAsync" ? Models() : throw Unexpected(name));
@@ -283,6 +325,7 @@ public sealed class SpacesConversationRouteTests
             _services = services.BuildServiceProvider();
         }
         private Task RecordUnexpectedWrite() { ConversationWrites++; throw Unexpected("Creating or modifying a saved conversation during restore"); }
+        private Task RecordConversationWrite(Conversation conversation) { ConversationWrites++; Row = conversation; return Task.CompletedTask; }
         private Task<IReadOnlyList<ModelDescriptor>> Models() { ModelReads++; return Task.FromResult<IReadOnlyList<ModelDescriptor>>([]); }
         internal SpacesBrowseAppContentSession Session(string address, Guid? tabId = null, string profileId = "profile") => new(
             new BrowseAppContentRequest(tabId ?? Guid.NewGuid(), AppContentAddress.Parse(address), profileId, BrowserTabPrivacy.Standard), _services, CancellationToken.None);

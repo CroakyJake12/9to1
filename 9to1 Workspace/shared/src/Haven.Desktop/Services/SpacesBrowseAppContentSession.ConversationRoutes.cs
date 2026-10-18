@@ -81,11 +81,9 @@ internal sealed partial class SpacesBrowseAppContentSession
             {
                 token.ThrowIfCancellationRequested();
                 DemandAlive();
-                _chatPage = chat;
+                PublishChatPage(chat);
                 _chatsBySpace[chat.CurrentConversation.SpaceId ?? Guid.Empty] = chat;
                 ObserveConversationRoute(chat);
-                _root.Content = chat;
-                _address = ConversationAddress(chat.CurrentConversation);
             }
             return true;
         }
@@ -120,8 +118,14 @@ internal sealed partial class SpacesBrowseAppContentSession
         if (_conversationRouteHandlers.ContainsKey(chat)) return;
         EventHandler handler = (_, _) =>
         {
-            if (_closing || !_published || !ReferenceEquals(_chatPage, chat) || !ReferenceEquals(_root.Content, chat)) return;
-            _address = ConversationAddress(chat.CurrentConversation);
+            lock (_gate)
+            {
+                if (_closing || !_published || _publishedChatRoute is not { } current || !ReferenceEquals(current.Page, chat)) return;
+                // CurrentConversation is a plain immutable domain record. The exact
+                // page callback can update its route without reading native controls.
+                _publishedChatRoute = new(chat, ConversationAddress(chat.CurrentConversation));
+                _address = _publishedChatRoute.Address;
+            }
             StateChanged?.Invoke(this, EventArgs.Empty);
         };
         _conversationRouteHandlers.Add(chat, handler);
