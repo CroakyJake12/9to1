@@ -27,10 +27,20 @@ public sealed class AppPaths : IAppPaths
         LogsDirectory = Path.Combine(DataDirectory, "Logs");
         LegacyStatePath = Path.Combine(appData, "LocalCode", "state.json");
 
-        Directory.CreateDirectory(DataDirectory);
-        Directory.CreateDirectory(BrowserProfileDirectory);
-        Directory.CreateDirectory(AttachmentsDirectory);
-        Directory.CreateDirectory(LogsDirectory);
+        CreateApplicationDirectory(DataDirectory);
+        CreateApplicationDirectory(BrowserProfileDirectory);
+        CreateApplicationDirectory(AttachmentsDirectory);
+        CreateApplicationDirectory(LogsDirectory);
+    }
+
+    private static void CreateApplicationDirectory(string path)
+    {
+        // Linux credential custody requires a private application root. The creation
+        // mode applies only to new directories; existing permissions are never rewritten.
+        if (OperatingSystem.IsLinux())
+            Directory.CreateDirectory(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        else
+            Directory.CreateDirectory(path);
     }
 
     /// <summary>

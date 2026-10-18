@@ -38,8 +38,29 @@ public static class WindowsHomeDomainServiceCollectionExtensions
         if (paths.Length != 1 || paths[0].Lifetime != ServiceLifetime.Singleton ||
             !(ReferenceEquals(paths[0].ImplementationInstance, samePaths) || paths[0].ImplementationType == typeof(AppPaths)))
             throw new InvalidOperationException("The maintained uninstantiated paths descriptor or SAME supplied paths instance is required.");
+        ServiceDescriptor? linuxSecret = null;
+        if (OperatingSystem.IsLinux())
+        {
+            var secrets = services.Where(row => row.ServiceType == typeof(IProviderSecretStore)).Take(2).ToArray();
+            if (secrets.Length != 1 || secrets[0].Lifetime != ServiceLifetime.Singleton ||
+                secrets[0].ImplementationType != typeof(WindowsProviderSecretStore) ||
+                services.Any(row => row.ServiceType == typeof(LinuxProviderSecretStore)))
+                throw new InvalidOperationException("The maintained uninstantiated secret descriptor is required for the Linux desktop Home owner.");
+            linuxSecret = secrets[0];
+        }
         // All refusal checks precede descriptor changes. Existing Home state is never adopted.
         services.Remove(paths[0]); services.AddSingleton(samePaths);
+        if (linuxSecret is not null)
+        {
+            services.Remove(linuxSecret);
+            services.AddSingleton<LinuxProviderSecretStore>(provider =>
+            {
+                if (!ReferenceEquals(provider.GetRequiredService<IAppPaths>(), samePaths))
+                    throw new UnauthorizedAccessException("The Linux desktop credential owner requires SAME actual Home paths.");
+                return new LinuxProviderSecretStore(samePaths);
+            });
+            services.AddSingleton<IProviderSecretStore>(provider => provider.GetRequiredService<LinuxProviderSecretStore>());
+        }
         services.AddSingleton(sameHome);
         services.AddSingleton(sameHome.StateStore); services.AddSingleton<IHomeCoreStateStore>(sameHome.StateStore);
         services.AddSingleton(sameHome.Profiles); services.AddSingleton<IAuthenticatedResourceActorSource>(sameHome.Profiles);
