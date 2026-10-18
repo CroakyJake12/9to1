@@ -325,8 +325,16 @@ public sealed partial class App
                 if (attempt.Unified is { } unified)
                 {
                     attempt.UnifiedPreparation = AcquireOriginalAppSynchronous(original,
-                        () => unified.TryPrepareToCloseAsync(CancellationToken.None));
-                    if (!await original.AwaitAsync(attempt.UnifiedPreparation)) return;
+                        () => unified.PrepareCloseAsync(CancellationToken.None));
+                    try { await original.AwaitAsync(attempt.UnifiedPreparation); }
+                    finally
+                    {
+                        // AwaitAsync may reject publication AFTER the actual child
+                        // yielded a lease. Recover that SAME result for external abort.
+                        if (attempt.UnifiedPreparation.IsCompletedSuccessfully)
+                            attempt.UnifiedLease = attempt.UnifiedPreparation.GetAwaiter().GetResult();
+                    }
+                    if (attempt.UnifiedLease is null) return;
                 }
 #endif
                 original.DemandPublication();
@@ -346,8 +354,9 @@ public sealed partial class App
         internal OriginalDocumentClosePreflight[] Candidates = [];
 #if !ANDROID
         internal UnifiedWorkspaceHost? Unified;
-        internal Task<bool>? UnifiedPreparation;
-        internal Task? UnifiedRetirement;
+        internal Task<UnifiedWorkspaceHost.ClosePreparation?>? UnifiedPreparation;
+        internal UnifiedWorkspaceHost.ClosePreparation? UnifiedLease;
+        internal Task? UnifiedRetirement, UnifiedReportedRetirement, UnifiedAbort;
 #endif
         internal bool Prepared;
     }
@@ -363,48 +372,77 @@ public sealed partial class App
     private async Task PublishOriginalDocumentClosePreflightAsync(Task actualHandoff, OriginalDocumentCloseAttempt attempt)
     {
         var failures = new List<Exception>();
-        await JoinOriginalAppTaskAsync(actualHandoff, failures);
-        ThrowAppCauses(failures); // Actual handoff is terminal before encompassing retirement can join it.
-        if (!attempt.Prepared) return;
-        Dispatcher.UIThread.VerifyAccess();
-        if (!IsOriginalDocumentCloseAttemptCurrent(attempt)) return;
+        try { await PublishSettledAttemptAsync(); }
+        catch (Exception failure) { AddAppCause(failures, failure); }
+        finally
+        {
 #if !ANDROID
-        if (attempt.Unified is { } unified)
-        {
-            var desktop = attempt.Desktop!;
-            DemandOriginalDesktopBorrowerJoins(_actualDesktopBorrowers.Concat(desktop.Windows.OfType<MainWindow>())
-                .Distinct(ReferenceEqualityComparer.Instance).ToArray());
-            // The originating App preflight is already terminal. Resolve the real
-            // Browse close decision BEFORE acquiring permanent App shutdown. Its
-            // second unsaved-work preflight may legitimately decline this attempt.
-            attempt.UnifiedRetirement = unified.CloseAndDrainAsync();
-            try { await attempt.UnifiedRetirement; }
-            catch (BrowseCloseVetoException) when (unified.OriginalClose is null) { return; }
-            catch when (unified.OriginalClose is not null)
+            // This outer driver owns restoration even when the actual originating
+            // preflight/handoff faulted or any later currentness/borrower check vetoed.
+            if (attempt.UnifiedLease is { IsAcceptedOriginal: false } unaccepted)
             {
-                // Accepted retirement remains the same failed original. The existing
-                // shutdown sequence joins it again and withholds final save/clean.
+                try
+                {
+                    attempt.UnifiedAbort ??= unaccepted.AbortAsync();
+                    await JoinOriginalAppTaskAsync(attempt.UnifiedAbort, failures);
+                }
+                catch (Exception cleanup) { AddAppCause(failures, cleanup); }
             }
-        }
 #endif
-        TaskCompletionSource? shutdownStart = null;
-        (_synchronousAppSources ??= []).Add(this);
-        try
+        }
+        ThrowAppCauses(failures);
+
+        async Task PublishSettledAttemptAsync()
         {
+            await JoinOriginalAppTaskAsync(actualHandoff, failures);
+            ThrowAppCauses(failures); // SAME actual origin/handoff terminal before encompassing retirement.
+            if (!attempt.Prepared) return;
+            Dispatcher.UIThread.VerifyAccess();
             if (!IsOriginalDocumentCloseAttemptCurrent(attempt)) return;
 #if !ANDROID
-            if (attempt.Unified is { OriginalClose: null }) return;
+            if (attempt.Unified is { } unified)
+            {
+                var desktop = attempt.Desktop!;
+                DemandOriginalDesktopBorrowerJoins(_actualDesktopBorrowers.Concat(desktop.Windows.OfType<MainWindow>())
+                    .Distinct(ReferenceEqualityComparer.Instance).ToArray());
+                try { attempt.UnifiedRetirement = attempt.UnifiedLease!.BeginClose(); }
+                catch (Exception failure) { AddAppCause(failures, failure); }
+                // A throwing acquisition/observer can already have issued the real
+                // original. Retain both references before deciding whether to abort.
+                try { attempt.UnifiedReportedRetirement = unified.OriginalClose; }
+                catch (Exception observation) { AddAppCause(failures, observation); }
+                if (attempt.UnifiedRetirement is { } actual)
+                    await JoinOriginalAppTaskAsync(actual, failures);
+                try { attempt.UnifiedReportedRetirement ??= unified.OriginalClose; }
+                catch (Exception observation) { AddAppCause(failures, observation); }
+                if (attempt.UnifiedReportedRetirement is { } reported
+                    && !ReferenceEquals(reported, attempt.UnifiedRetirement))
+                    await JoinOriginalAppTaskAsync(reported, failures);
+                if (!attempt.UnifiedLease!.IsAcceptedOriginal)
+                {
+                    // A legacy bool owner can still veto its current close. Its
+                    // weak token never claimed frozen edits or accepted retirement.
+                    if (failures.All(failure => failure is BrowseCloseVetoException or UnifiedWorkspaceHost.CloseVetoException)) failures.Clear();
+                    ThrowAppCauses(failures); return;
+                }
+                // Accepted failures remain in this receipt AND the SAME host original
+                // joined again by the shutdown sequence, which withholds clean/save.
+            }
 #endif
-            // The SAME App preflight Task is already terminal. No await intervenes
-            // between final revalidation and existing shutdown acquisition.
-            shutdownStart = AcquireOriginalDesktopShutdownDelivery();
+            TaskCompletionSource? shutdownStart = null;
+            (_synchronousAppSources ??= []).Add(this);
+            try
+            {
+                if (!IsOriginalDocumentCloseAttemptCurrent(attempt)) return;
+#if !ANDROID
+                if (attempt.Unified is { OriginalClose: null }) return;
+#endif
+                shutdownStart = AcquireOriginalDesktopShutdownDelivery();
+            }
+            finally { _synchronousAppSources.RemoveAt(_synchronousAppSources.Count - 1); }
+            // No borrowed page/provider work follows this physical callback release.
+            shutdownStart?.TrySetResult();
         }
-        finally { _synchronousAppSources.RemoveAt(_synchronousAppSources.Count - 1); }
-        // Release only after the real physical callback has returned. No source
-        // mutation or await occurs between guarded acquisition and this release.
-        // This publication driver uses no borrowed page/provider after release;
-        // the SAME acquired shutdown delivery owns all subsequent source stages.
-        shutdownStart?.TrySetResult();
     }
     private bool IsOriginalDocumentCloseAttemptCurrent(OriginalDocumentCloseAttempt attempt)
     {
@@ -415,7 +453,10 @@ public sealed partial class App
             attempt.Candidates.Any(candidate => !candidate.IsCurrentAndPrepared)) return false;
 #if !ANDROID
         if (!ReferenceEquals(attempt.Unified, _actualUnifiedWorkspace) ||
-            (attempt.Unified is not null && attempt.UnifiedPreparation is not { IsCompletedSuccessfully: true, Result: true })) return false;
+            (attempt.Unified is not null && (attempt.UnifiedPreparation is not { IsCompletedSuccessfully: true }
+                || attempt.UnifiedLease is not { } lease
+                || !ReferenceEquals(attempt.UnifiedPreparation.GetAwaiter().GetResult(), lease)
+                || !(lease.IsAcceptedOriginal || lease.IsCurrent)))) return false;
 #endif
         return true;
     }

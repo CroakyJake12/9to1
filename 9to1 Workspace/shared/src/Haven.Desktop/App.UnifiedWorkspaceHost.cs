@@ -45,7 +45,7 @@ public sealed partial class App
 
     /// <summary>One real Browse content host; no hidden MainView, second provider,
     /// app catalogue, or workspace repository. The App retains this owner before startup.</summary>
-    internal sealed class UnifiedWorkspaceHost : ContentControl, IDesktopOriginalRetirementParticipant,
+    internal sealed partial class UnifiedWorkspaceHost : ContentControl, IDesktopOriginalRetirementParticipant,
         IDesktopOriginalRetirementJoinGuard, ICuiSceneReadiness
     {
         private readonly App _app;
@@ -360,13 +360,10 @@ public sealed partial class App
         {
             Dispatcher.UIThread.VerifyAccess(); DemandExternalOriginalRetirementJoin();
             if (OriginalClose is not null) return true;
-            // A startup that is still waiting must be closable. Actual retirement
-            // cancels this host's startup source before it joins the initializer.
-            if (_initialization is { IsCompleted: false }) return true;
-            if (_workspace is null) return true;
-            if (!_workspace.CanAdmitClose()) return false;
-            var original = Track(_chrome!.TryPrepareToCloseAsync(token));
-            return await original && _workspace.CanAdmitClose();
+            var preparation = await PrepareCloseAsync(token);
+            if (preparation is null) return false;
+            await preparation.AbortAsync(); // A bool caller cannot retain a strong lease.
+            return true;
         }
 
         public void DemandExternalOriginalRetirementJoin()
@@ -391,6 +388,7 @@ public sealed partial class App
         private async Task CloseCoreAsync(Task start)
         {
             await start;
+            using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
             var failures = new List<Exception>();
             async Task Join(Task? source) { if (source is not null) await JoinOriginalAppTaskAsync(source, failures); }
             try
@@ -400,10 +398,19 @@ public sealed partial class App
                     // Retain the exact accepted owner before cancellation callbacks
                     // run. App/window authority remains alive for late acquisitions.
                     _startupRetirement = true; _close = _pendingClose;
+                    lock (_gate) AcceptPreparation(_activePreparation ?? new ClosePreparation(this, captureOwners: false));
                     KeyDown -= OnWorkspaceKeyDown;
                     try { _startupCancellation.Cancel(); } catch (Exception error) { AddAppCause(failures, error); }
                     try { _sceneClose = _scene?.CloseOriginalAsync(); } catch (Exception error) { AddAppCause(failures, error); }
                 }
+                if (!_startupRetirement && _close is null && HasStrongOwner(_chrome))
+                {
+                    var preparation = await AcquirePreparation(CancellationToken.None);
+                    if (preparation is null) throw new CloseVetoException();
+                    _ = BeginPreparedClose(preparation); // SAME pending host driver; never join itself.
+                }
+                else if (!_startupRetirement && _close is null && _activePreparation is { } weak && !weak.IsCurrent)
+                    throw new CloseVetoException();
                 await Join(_initialization);
                 try
                 {
@@ -428,6 +435,9 @@ public sealed partial class App
                     else AddAppCause(failures, error);
                 }
                 _close ??= _pendingClose;
+                lock (_gate) AcceptPreparation(_activePreparation ?? new ClosePreparation(this, captureOwners: false));
+                foreach (var cause in _acceptedPreparationFailures) AddAppCause(failures, cause);
+                foreach (var actual in _acceptedChromeSources.Distinct()) await Join(actual);
                 KeyDown -= OnWorkspaceKeyDown;
                 try { _startupLoadingLoader?.Dispose(); _startupLoadingLoader = null; }
                 catch (Exception error) { AddAppCause(failures, error); }
@@ -448,10 +458,20 @@ public sealed partial class App
                 ThrowAppCauses(failures);
                 _closed = true;
             }
+            catch (Exception failure) { AddAppCause(failures, failure); }
             finally
             {
-                if (OriginalClose is null) { _pendingClose = null; _workspaceClose = null; }
+                if (OriginalClose is null)
+                {
+                    if (_activePreparation is { Accepted: false } unaccepted)
+                    {
+                        try { await Join(AbortPreparation(unaccepted)); }
+                        catch (Exception cleanup) { AddAppCause(failures, cleanup); }
+                    }
+                    _pendingClose = null; _workspaceClose = null;
+                }
             }
+            ThrowAppCauses(failures);
         }
     }
 }

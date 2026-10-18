@@ -28,8 +28,10 @@ public sealed class UnifiedWorkspaceHostLifetimeTests
         var workspace = new BrowseNativeWorkspace(chrome, _ => true);
         Set(rig.Host, "_initialization", creation); Set(rig.Host, "_chromeCreation", creation);
         Set(rig.Host, "_chrome", chrome); Set(rig.Host, "_workspace", workspace);
-        var preparation = rig.Host.TryPrepareToCloseAsync(CancellationToken.None);
-        Assert.True(await preparation);
+        var preparation = Call<Task>(rig.Host, "PrepareCloseAsync", CancellationToken.None);
+        await preparation;
+        var lease = preparation.GetType().GetProperty("Result")!.GetValue(preparation);
+        Assert.NotNull(lease);
         var owner = factory.Owner!; owner.AllowClose = false;
 
         var desktop = new ClassicDesktopStyleApplicationLifetime();
@@ -38,7 +40,7 @@ public sealed class UnifiedWorkspaceHostLifetimeTests
         var attemptType = typeof(App).GetNestedType("OriginalDocumentCloseAttempt", BindingFlags.NonPublic)!;
         var attempt = Activator.CreateInstance(attemptType, nonPublic: true)!;
         Set(attempt, "Desktop", desktop); Set(attempt, "Windows", desktop.Windows.ToArray());
-        Set(attempt, "Unified", rig.Host); Set(attempt, "UnifiedPreparation", preparation);
+        Set(attempt, "Unified", rig.Host); Set(attempt, "UnifiedPreparation", preparation); Set(attempt, "UnifiedLease", lease);
         Set(attempt, "Prepared", true);
         await Call<Task>(rig.App, "PublishOriginalDocumentClosePreflightAsync", preparation, attempt);
 
