@@ -139,7 +139,10 @@ public sealed class HomeAppsLauncherTests
             Assert.DoesNotContain(root.GetVisualDescendants().OfType<Button>(), button => button.Name == "home-open-app");
             tiles[1].RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await loader.WhenActionsIdleAsync();
-            Assert.Contains(("home.open-app", (object?)"automations"), actions);
+            // Exactly one activation for the clicked tile, with the exact registered identity. Other
+            // commands (query/clear) are legitimate and are not counted here.
+            Assert.Equal([("home.open-app", (object?)"automations")],
+                actions.Where(action => action.Command == "home.open-app").ToArray());
         }
     }
 

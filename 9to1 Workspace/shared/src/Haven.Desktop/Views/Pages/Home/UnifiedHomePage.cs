@@ -143,29 +143,27 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         var generation = ++_selection;
         original.BindPublicationGuard(() => IsAlive && generation == _selection);
         original.DemandPublication();
-        var previous = _section;
-        _dashboard?.Deactivate(); _discover?.Deactivate(); _section = section;
-        Set(_searchRow!, "IsVisible", section == "newtab");
-        if (section != "apps") Set(_heading, "Text", HeadingFor(section));
-        Set(_status, "Text", section == "newtab" && !_aiAvailable ? "Search is available. AI requires an available Spaces destination." : string.Empty);
+        // The authored launcher is prepared BEFORE any previous surface is touched. A failed
+        // publication must not leave the prior section deactivated, its search row hidden or its
+        // heading relabelled: the page stays exactly as it was, with the real diagnostic reported.
+        Control? prepared = null;
         if (section == "apps")
         {
-            // The authored launcher is built before any heading or content change. If publication
-            // fails, the previous section keeps its own content AND its own label, and the actual
-            // parser/loader diagnostic is reported rather than leaving a Dashboard under an
-            // "Apps" heading while the real cause stays invisible.
-            Control built;
-            try { built = _appsView ??= BuildAppsView(); }
+            try { prepared = _appsView ??= BuildAppsView(); }
             catch (Exception failure)
             {
-                _section = previous;
-                Set(_heading, "Text", HeadingFor(previous));
                 Set(_status, "Text", "The Apps launcher could not be published: " + failure.Message);
                 original.Retain(failure);
                 return;
             }
-            _viewport.Child = built;
-            Set(_heading, "Text", "Apps");
+        }
+        _dashboard?.Deactivate(); _discover?.Deactivate(); _section = section;
+        Set(_searchRow!, "IsVisible", section == "newtab");
+        Set(_heading, "Text", HeadingFor(section));
+        Set(_status, "Text", section == "newtab" && !_aiAvailable ? "Search is available. AI requires an available Spaces destination." : string.Empty);
+        if (section == "apps")
+        {
+            _viewport.Child = prepared!;
             var modes = await original.AwaitAsync(_modes.GetModesAsync(token));
             if (!IsAlive || generation != _selection) return;
             original.DemandPublication();
