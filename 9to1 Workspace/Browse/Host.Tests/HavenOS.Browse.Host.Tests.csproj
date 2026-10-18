@@ -10,6 +10,7 @@
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/AssemblyInfo.cs" Link="AssemblyInfo.cs" />
     <Compile Include="HostTestApp.cs" />
     <Compile Include="UnifiedClosePreparationTests.cs" />
+    <Compile Include="NativeAdmissionShutdownTests.cs" />
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/UnifiedWorkspaceHostLifetimeTests.cs" Link="UnifiedWorkspaceHostLifetimeTests.cs" />
     <Compile Include="LinuxWebKitEngineAvailabilityTests.cs" />
     <Compile Include="OverlayChatInitializationTests.cs" />
