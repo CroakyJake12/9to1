@@ -25,6 +25,10 @@ public interface IConversationRepository
     }
     Task<IReadOnlyList<Conversation>> GetBySpaceAsync(Guid spaceId, int limit, CancellationToken cancellationToken) =>
         throw new NotSupportedException("This conversation store does not support Space membership queries.");
+    /// <summary>Legacy general Chat rows with no Space membership. Implementations must apply
+    /// the null membership and Chat scope predicates before LIMIT; this does not assign them.</summary>
+    Task<IReadOnlyList<Conversation>> GetUnassignedGeneralChatsAsync(int limit, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("This conversation store does not support unassigned Chat history queries.");
     Task DetachSpaceAsync(Guid spaceId, CancellationToken cancellationToken) =>
         throw new NotSupportedException("This conversation store does not support Space membership mutation.");
     Task<IReadOnlyList<Conversation>> GetArchivedAsync(HavenMode? mode, int limit, CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<Conversation>>([]);

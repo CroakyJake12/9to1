@@ -46,6 +46,8 @@ public sealed class UsageTrackingConversationRepository(
         inner.GetRecentInScopeAsync(scope, limit, cancellationToken);
     public Task<IReadOnlyList<Conversation>> GetBySpaceAsync(Guid spaceId, int limit, CancellationToken cancellationToken) =>
         inner.GetBySpaceAsync(spaceId, limit, cancellationToken);
+    public Task<IReadOnlyList<Conversation>> GetUnassignedGeneralChatsAsync(int limit, CancellationToken cancellationToken) =>
+        inner.GetUnassignedGeneralChatsAsync(limit, cancellationToken);
     public Task DetachSpaceAsync(Guid spaceId, CancellationToken cancellationToken) =>
         inner.DetachSpaceAsync(spaceId, cancellationToken);
 

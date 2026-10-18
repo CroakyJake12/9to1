@@ -71,6 +71,17 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
         return await ReadConversationsAsync(command, cancellationToken).ConfigureAwait(false);
     }
 
+    public async Task<IReadOnlyList<Conversation>> GetUnassignedGeneralChatsAsync(int limit, CancellationToken cancellationToken)
+    {
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT * FROM conversations WHERE space_id IS NULL AND mode=$mode AND kind=$kind AND container_id IS NULL AND lesson_id IS NULL AND is_temporary=0 AND is_archived=0 ORDER BY updated_at DESC LIMIT $limit;";
+        command.Parameters.AddWithValue("$mode", (int)HavenMode.Chat);
+        command.Parameters.AddWithValue("$kind", (int)ConversationKind.Chat);
+        command.Parameters.AddWithValue("$limit", Math.Max(0, limit));
+        return await ReadConversationsAsync(command, cancellationToken).ConfigureAwait(false);
+    }
+
     public async Task DetachSpaceAsync(Guid spaceId, CancellationToken cancellationToken)
     {
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);

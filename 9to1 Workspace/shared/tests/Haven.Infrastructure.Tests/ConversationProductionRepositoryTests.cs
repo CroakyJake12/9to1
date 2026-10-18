@@ -206,6 +206,27 @@ public sealed partial class ConversationProductionRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task LegacyChatHistoryFiltersMembershipAndScopeBeforeLimitWithoutMigration()
+    {
+        var database = await CreateDatabaseAsync();
+        var repository = new ConversationRepository(database);
+        var now = DateTimeOffset.UtcNow;
+        var legacy = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat,
+            "Legacy", null, null, false, false, now, now);
+        await repository.UpsertConversationAsync(legacy, CancellationToken.None);
+        for (var index = 0; index < 12; index++)
+            await repository.UpsertConversationAsync(legacy with { Id = Guid.NewGuid(), SpaceId = Guid.NewGuid(), UpdatedAt = now.AddMinutes(index + 1) }, CancellationToken.None);
+        await repository.UpsertConversationAsync(legacy with { Id = Guid.NewGuid(), Kind = ConversationKind.QuickChat, Mode = HavenMode.Study, UpdatedAt = now.AddHours(1) }, CancellationToken.None);
+        await repository.UpsertConversationAsync(legacy with { Id = Guid.NewGuid(), IsArchived = true, UpdatedAt = now.AddHours(2) }, CancellationToken.None);
+        await repository.UpsertConversationAsync(legacy with { Id = Guid.NewGuid(), IsTemporary = true, UpdatedAt = now.AddHours(3) }, CancellationToken.None);
+        var reopened = new ConversationRepository(new SqliteDatabase(_paths));
+        var result = Assert.Single(await reopened.GetUnassignedGeneralChatsAsync(1, CancellationToken.None));
+        Assert.Equal(legacy.Id, result.Id);
+        Assert.Null(result.SpaceId);
+        Assert.Null((await reopened.GetAsync(legacy.Id, CancellationToken.None))!.SpaceId);
+    }
+
+    [Fact]
     public async Task DetachSpacePreservesConversationAndClearsMembership()
     {
         var database = await CreateDatabaseAsync();

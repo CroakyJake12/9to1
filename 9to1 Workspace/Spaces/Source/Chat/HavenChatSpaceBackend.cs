@@ -8,44 +8,108 @@ namespace HavenOS.Apps.Spaces.Chat;
 /// Thin adapter over Haven's existing Chat repositories and services. It owns no persistence and
 /// delegates every stored mutation to the shared production contracts.
 /// </summary>
-public sealed class HavenChatSpaceBackend(
-    IConversationRepository conversations,
-    IConversationProductionRepository production,
-    IConversationVersioningService versioning,
-    IMessageAttachmentService attachmentService,
-    IChatSpaceModelCatalog models,
-    IChatSpaceTurnExecutor turns,
-    IConversationSafetyService safety) : IChatSpaceBackend
+public sealed class HavenChatSpaceBackend : IChatSpaceBackend
 {
-    public async Task<IReadOnlyList<Conversation>> GetRecentChatsAsync(int limit, CancellationToken cancellationToken) =>
-        (await conversations.GetRecentInScopeAsync(ConversationScope.GeneralChat, Math.Clamp(limit, 1, 100), cancellationToken)
-            .ConfigureAwait(false))
-        .Where(item => !item.IsArchived && !item.IsTemporary &&
-            (item.SpaceId is null || item.SpaceId == SpaceRegistry.ChatSpaceId))
-        .OrderByDescending(item => item.UpdatedAt)
-        .ToArray();
+    private readonly IConversationRepository conversations;
+    private readonly IConversationProductionRepository production;
+    private readonly IConversationVersioningService versioning;
+    private readonly IMessageAttachmentService attachmentService;
+    private readonly IChatSpaceModelCatalog models;
+    private readonly IChatSpaceTurnExecutor turns;
+    private readonly IConversationSafetyService safety;
+    private readonly SpaceRegistry? registry;
+    private readonly SpaceScope scope = SpaceScope.Chat;
 
-    public Task<ChatSpaceModelInventory> GetModelInventoryAsync(CancellationToken cancellationToken) =>
-        models.GetInventoryAsync(cancellationToken);
+    // Keep this actual overload: extensions already compiled against seven parameters retain
+    // their Chat-only boundary rather than being rebound to a newly optional parameter.
+    public HavenChatSpaceBackend(IConversationRepository conversations,
+        IConversationProductionRepository production, IConversationVersioningService versioning,
+        IMessageAttachmentService attachmentService, IChatSpaceModelCatalog models,
+        IChatSpaceTurnExecutor turns, IConversationSafetyService safety)
+    {
+        this.conversations = conversations ?? throw new ArgumentNullException(nameof(conversations));
+        this.production = production ?? throw new ArgumentNullException(nameof(production));
+        this.versioning = versioning ?? throw new ArgumentNullException(nameof(versioning));
+        this.attachmentService = attachmentService ?? throw new ArgumentNullException(nameof(attachmentService));
+        this.models = models ?? throw new ArgumentNullException(nameof(models));
+        this.turns = turns ?? throw new ArgumentNullException(nameof(turns));
+        this.safety = safety ?? throw new ArgumentNullException(nameof(safety));
+    }
+
+    /// <summary>One immutable selected-Space boundary per hosted view. The supplied context is
+    /// identity, never a durable permission grant; every operation reads current membership.</summary>
+    public HavenChatSpaceBackend(IConversationRepository conversations,
+        IConversationProductionRepository production, IConversationVersioningService versioning,
+        IMessageAttachmentService attachmentService, IChatSpaceModelCatalog models,
+        IChatSpaceTurnExecutor turns, IConversationSafetyService safety,
+        SpacesContext context, SpaceRegistry registry)
+        : this(conversations, production, versioning, attachmentService, models, turns, safety)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        this.registry = registry ?? throw new ArgumentNullException(nameof(registry));
+        scope = context.Scope;
+        if (scope.RegisteredSpaceId is not { } id || id == Guid.Empty ||
+            context.RegisteredSpace is not { } registered || registered.Id != id ||
+            registered.IsArchived || context.Definition.IsBuiltIn != registered.IsBuiltIn ||
+            scope != ScopeFor(registered))
+            throw new InvalidOperationException("The selected Space context does not match its registered identity.");
+    }
+
+    public Guid SpaceId => scope.RegisteredSpaceId!.Value;
+
+    public async Task<IReadOnlyList<Conversation>> GetRecentChatsAsync(int limit, CancellationToken cancellationToken)
+    {
+        await RequireActiveSpaceAsync(cancellationToken).ConfigureAwait(false);
+        var maximum = Math.Clamp(limit, 1, 100);
+        // Explicitly scoped queries filter by Space BEFORE the repository applies LIMIT.
+        // Legacy unassigned general Chats remain readable only in built-in Chat. Neither
+        // selecting Chat nor reading its history migrates or rewrites their saved IDs.
+        var rows = registry is null
+            ? await conversations.GetRecentInScopeAsync(ConversationScope.GeneralChat, maximum, cancellationToken).ConfigureAwait(false)
+            : await conversations.GetBySpaceAsync(SpaceId, maximum, cancellationToken).ConfigureAwait(false);
+        if (registry is not null && SpaceId == SpaceRegistry.ChatSpaceId)
+        {
+            var legacy = await conversations.GetUnassignedGeneralChatsAsync(maximum, cancellationToken).ConfigureAwait(false);
+            rows = rows.Concat(legacy).DistinctBy(item => item.Id).ToArray();
+        }
+        var result = new List<Conversation>();
+        foreach (var row in rows.Where(IsMember).Where(item => !item.IsArchived && !item.IsTemporary))
+        {
+            var current = await conversations.GetAsync(row.Id, cancellationToken).ConfigureAwait(false);
+            if (current is not null && IsMember(current) && !current.IsArchived && !current.IsTemporary)
+                result.Add(current);
+        }
+        await RequireActiveSpaceAsync(cancellationToken).ConfigureAwait(false);
+        return result.OrderByDescending(item => item.UpdatedAt).Take(maximum).ToArray();
+    }
+
+    public async Task<ChatSpaceModelInventory> GetModelInventoryAsync(CancellationToken cancellationToken)
+    {
+        await RequireActiveSpaceAsync(cancellationToken).ConfigureAwait(false);
+        var result = await models.GetInventoryAsync(cancellationToken).ConfigureAwait(false);
+        await RequireActiveSpaceAsync(cancellationToken).ConfigureAwait(false);
+        return result;
+    }
 
     public async Task<Conversation> CreateChatAsync(CancellationToken cancellationToken)
     {
+        await RequireActiveSpaceAsync(cancellationToken).ConfigureAwait(false);
         var now = DateTimeOffset.UtcNow;
+        var study = SpaceId == SpaceRegistry.StudySpaceId;
         var conversation = new Conversation(
-            Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "New chat", null, null,
-            false, false, now, now, SpaceId: SpaceRegistry.ChatSpaceId);
+            Guid.NewGuid(), study ? HavenMode.Study : HavenMode.Chat,
+            study ? ConversationKind.QuickChat : ConversationKind.Chat, "New chat", null, null,
+            false, false, now, now, SpaceId: SpaceId);
+        cancellationToken.ThrowIfCancellationRequested();
         await conversations.UpsertConversationAsync(conversation, cancellationToken).ConfigureAwait(false);
+        await RequireConversationAsync(conversation.Id, cancellationToken).ConfigureAwait(false);
         await production.EnsureRootBranchAsync(conversation.Id, cancellationToken).ConfigureAwait(false);
-        return conversation;
+        return await RequireConversationAsync(conversation.Id, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<ChatSpaceConversationData> GetConversationAsync(Guid conversationId, CancellationToken cancellationToken)
     {
-        var conversation = await conversations.GetAsync(conversationId, cancellationToken).ConfigureAwait(false)
-            ?? throw new KeyNotFoundException($"Chat '{conversationId}' was not found.");
-        if (!ConversationScope.GeneralChat.Matches(conversation) ||
-            conversation.SpaceId is { } spaceId && spaceId != SpaceRegistry.ChatSpaceId)
-            throw new InvalidOperationException("Chat Space can open only general Chat conversations assigned to Chat.");
+        var conversation = await RequireConversationAsync(conversationId, cancellationToken).ConfigureAwait(false);
 
         var current = await production.GetCurrentBranchAsync(conversationId, cancellationToken).ConfigureAwait(false)
             ?? await production.EnsureRootBranchAsync(conversationId, cancellationToken).ConfigureAwait(false);
@@ -54,6 +118,15 @@ public sealed class HavenChatSpaceBackend(
         var branchTask = production.GetBranchesAsync(conversationId, cancellationToken);
         var draftTask = production.GetDraftAsync(conversationId, current.Id, cancellationToken);
         await Task.WhenAll(messageTask, attachmentTask, branchTask, draftTask).ConfigureAwait(false);
+        var publishedBranch = await production.GetCurrentBranchAsync(conversationId, cancellationToken).ConfigureAwait(false);
+        if (publishedBranch?.Id != current.Id || current.ConversationId != conversationId ||
+            publishedBranch.ConversationId != conversationId ||
+            messageTask.Result.Any(item => item.ConversationId != conversationId) ||
+            attachmentTask.Result.Any(item => item.ConversationId != conversationId) ||
+            branchTask.Result.Any(item => item.ConversationId != conversationId) ||
+            draftTask.Result is { } draft && (draft.ConversationId != conversationId || draft.BranchId != current.Id))
+            throw new InvalidOperationException("The conversation branch changed while its content was loading.");
+        conversation = await RequireConversationAsync(conversationId, cancellationToken).ConfigureAwait(false);
         return new(conversation, messageTask.Result, attachmentTask.Result, branchTask.Result, draftTask.Result);
     }
 
@@ -95,7 +168,10 @@ public sealed class HavenChatSpaceBackend(
         var actual = await GetConversationAsync(conversationId, cancellationToken).ConfigureAwait(false);
         RequireCurrentBranch(actual, branchId);
         await EnsureMayActAsync(conversationId, "chat.attach", cancellationToken).ConfigureAwait(false);
-        return await attachmentService.ImportAsync(conversationId, null, branchId, path, null, cancellationToken).ConfigureAwait(false);
+        RequireCurrentBranch(await GetConversationAsync(conversationId, cancellationToken).ConfigureAwait(false), branchId);
+        var imported = await attachmentService.ImportAsync(conversationId, null, branchId, path, null, cancellationToken).ConfigureAwait(false);
+        await RequireConversationAsync(conversationId, cancellationToken).ConfigureAwait(false);
+        return imported;
     }
 
     public async Task RemoveAttachmentAsync(Guid conversationId, Guid? branchId, Guid attachmentId, CancellationToken cancellationToken)
@@ -106,6 +182,7 @@ public sealed class HavenChatSpaceBackend(
                 (item.BranchId is null || item.BranchId == branchId)))
             throw new InvalidOperationException("Only a pending attachment on this conversation branch can be removed.");
         await EnsureMayActAsync(conversationId, "chat.remove-attachment", cancellationToken).ConfigureAwait(false);
+        RequireCurrentBranch(await GetConversationAsync(conversationId, cancellationToken).ConfigureAwait(false), branchId);
         await attachmentService.DeleteAsync(attachmentId, cancellationToken).ConfigureAwait(false);
     }
 
@@ -117,6 +194,11 @@ public sealed class HavenChatSpaceBackend(
         var inventory = await models.GetInventoryAsync(cancellationToken).ConfigureAwait(false);
         var model = inventory.Models.FirstOrDefault(item => item.Name.Equals(request.Model.Name, StringComparison.OrdinalIgnoreCase))
             ?? throw new InvalidOperationException("The selected model is no longer available in the governed inventory.");
+        // The inventory lookup may await a provider: do not dispatch the earlier membership,
+        // branch, attachment or safety snapshot if another action changed it while waiting.
+        actual = await GetConversationAsync(request.Conversation.Id, cancellationToken).ConfigureAwait(false);
+        RequireCurrentBranch(actual, request.BranchId);
+        await EnsureMayActAsync(actual.Conversation.Id, "chat.send", cancellationToken).ConfigureAwait(false);
         if (request.AttachmentIds.Any(id => !actual.Attachments.Any(item => item.Id == id && item.ConversationId == actual.Conversation.Id &&
                 item.MessageId is null && (item.BranchId is null || item.BranchId == request.BranchId))))
             throw new InvalidOperationException("A submitted attachment is no longer owned by this conversation.");
@@ -141,7 +223,9 @@ public sealed class HavenChatSpaceBackend(
             string.IsNullOrWhiteSpace(name) ? $"Branch {DateTimeOffset.Now:g}" : name.Trim(),
             ConversationBranchReason.Manual,
             cancellationToken).ConfigureAwait(false);
+        await EnsureMayActAsync(conversationId, "chat.branch", cancellationToken).ConfigureAwait(false);
         await production.SetCurrentBranchAsync(conversationId, branch.Id, cancellationToken).ConfigureAwait(false);
+        await RequireConversationAsync(conversationId, cancellationToken).ConfigureAwait(false);
         return branch;
     }
 
@@ -164,7 +248,6 @@ public sealed class HavenChatSpaceBackend(
         model = inventory.Models.FirstOrDefault(item => item.Name.Equals(model.Name, StringComparison.OrdinalIgnoreCase))
             ?? throw new InvalidOperationException("The selected model is no longer available in the governed inventory.");
         await EnsureMayActAsync(conversationId, "chat.regenerate", cancellationToken).ConfigureAwait(false);
-        var conversation = actual.Conversation;
         var messages = actual.Messages;
         var index = Array.FindIndex(messages.ToArray(), item => item.Id == assistantMessageId);
         if (index < 0) throw new InvalidOperationException("The response no longer exists in this chat.");
@@ -181,14 +264,22 @@ public sealed class HavenChatSpaceBackend(
             isLatest,
             isLatest ? ResponseRegenerationMode.Here : ResponseRegenerationMode.NewBranch,
             cancellationToken).ConfigureAwait(false);
+        var admitted = await GetConversationAsync(conversationId, cancellationToken).ConfigureAwait(false);
+        RequireCurrentBranch(admitted, branch.Id);
+        await EnsureMayActAsync(conversationId, "chat.regenerate", cancellationToken).ConfigureAwait(false);
         await turns.ExecuteAsync(
-            new ChatSpaceTurnRequest(conversation, precedingUser.Content, model,
+            new ChatSpaceTurnRequest(admitted.Conversation, precedingUser.Content, model,
                 actual.Attachments.Where(item => item.MessageId == precedingUser.Id).Select(item => item.Id).ToArray(), BranchId: branch.Id, ExistingUserInput: precedingUser),
             cancellationToken).ConfigureAwait(false);
     }
 
-    public Task<ConversationSafetySnapshot> GetSafetySnapshotAsync(Guid conversationId, CancellationToken cancellationToken) =>
-        safety.GetSnapshotAsync(conversationId, cancellationToken);
+    public async Task<ConversationSafetySnapshot> GetSafetySnapshotAsync(Guid conversationId, CancellationToken cancellationToken)
+    {
+        await RequireConversationAsync(conversationId, cancellationToken).ConfigureAwait(false);
+        var snapshot = await safety.GetSnapshotAsync(conversationId, cancellationToken).ConfigureAwait(false);
+        await RequireConversationAsync(conversationId, cancellationToken).ConfigureAwait(false);
+        return snapshot;
+    }
 
     private async Task<ChatMessage> RequireMessageAsync(Guid conversationId, Guid messageId, CancellationToken token)
     {
@@ -201,6 +292,7 @@ public sealed class HavenChatSpaceBackend(
     public async Task DeleteMessageAsync(Guid conversationId, Guid messageId, CancellationToken cancellationToken)
     {
         await RequireMessageAsync(conversationId, messageId, cancellationToken).ConfigureAwait(false);
+        await EnsureMayActAsync(conversationId, "chat.delete-message", cancellationToken).ConfigureAwait(false);
         await conversations.DeleteMessageAsync(conversationId, messageId, cancellationToken).ConfigureAwait(false);
     }
     public async Task ForgetMessageAsync(Guid conversationId, Guid messageId, CancellationToken cancellationToken)
@@ -227,12 +319,58 @@ public sealed class HavenChatSpaceBackend(
         DuoMode mode, CancellationToken cancellationToken) =>
         Task.FromException<DualModelRun>(new NotSupportedException("Dual-model Chat requires canonical persistence and is not available on this surface yet."));
 
-    private async Task EnsureMayActAsync(Guid conversationId, string operation, CancellationToken cancellationToken) =>
+    private async Task EnsureMayActAsync(Guid conversationId, string operation, CancellationToken cancellationToken)
+    {
+        await RequireConversationAsync(conversationId, cancellationToken).ConfigureAwait(false);
         await safety.EnsureMayActAsync(conversationId, operation, cancellationToken).ConfigureAwait(false);
+        await RequireConversationAsync(conversationId, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<Conversation> RequireConversationAsync(Guid conversationId, CancellationToken cancellationToken)
+    {
+        await RequireActiveSpaceAsync(cancellationToken).ConfigureAwait(false);
+        var current = await conversations.GetAsync(conversationId, cancellationToken).ConfigureAwait(false)
+            ?? throw new KeyNotFoundException($"Chat '{conversationId}' was not found.");
+        cancellationToken.ThrowIfCancellationRequested();
+        if (current.Id != conversationId || !IsMember(current) || current.IsArchived)
+            throw new InvalidOperationException("The conversation is not available in the selected Space.");
+        await RequireActiveSpaceAsync(cancellationToken).ConfigureAwait(false);
+        return current;
+    }
+
+    private bool IsMember(Conversation conversation)
+    {
+        var belongs = conversation.SpaceId == SpaceId ||
+            conversation.SpaceId is null && SpaceId == SpaceRegistry.ChatSpaceId && ConversationScope.GeneralChat.Matches(conversation);
+        if (!belongs) return false;
+        if (registry is null) return ConversationScope.GeneralChat.Matches(conversation);
+        return conversation.Mode == HavenMode.Chat && conversation.Kind == ConversationKind.Chat ||
+            conversation.Mode == HavenMode.Study && conversation.Kind is ConversationKind.QuickChat or ConversationKind.LessonChat;
+    }
+
+    private async Task RequireActiveSpaceAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (registry is null) return; // Original Chat-only constructor has no registry dependency.
+        var current = await registry.ReadExistingAsync(SpaceId, cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (current is null || current.IsArchived || scope != ScopeFor(current))
+            throw new InvalidOperationException("The selected Space is no longer available.");
+        // This is an availability/membership check, not a grant of model, tool or source access.
+        // Canonical safety and executor permissions remain mandatory at their owning boundaries.
+    }
+
+    private static SpaceScope ScopeFor(SpaceDefinition space)
+    {
+        if (!space.IsBuiltIn) return SpaceScope.ForCustom(space.Id);
+        return new[] { SpaceScope.Chat, SpaceScope.Study, SpaceScope.Tasks, SpaceScope.Agent,
+            SpaceScope.Shopping, SpaceScope.Research, SpaceScope.Translate, SpaceScope.Experiences }
+            .Single(item => item.RegisteredSpaceId == space.Id);
+    }
 
     private static void RequireCurrentBranch(ChatSpaceConversationData actual, Guid? expected)
     {
-        if (expected is null || !actual.Branches.Any(branch => branch.Id == expected && branch.IsCurrent))
+        if (expected is null || !actual.Branches.Any(branch => branch.Id == expected && branch.ConversationId == actual.Conversation.Id && branch.IsCurrent))
             throw new InvalidOperationException("The original conversation branch changed. Reopen it before continuing.");
     }
 }
