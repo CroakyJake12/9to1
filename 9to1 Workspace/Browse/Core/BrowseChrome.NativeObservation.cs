@@ -47,6 +47,7 @@ public sealed partial class BrowseChrome
         {
             if (_nativeRetiring || _disposed || !ReferenceEquals(tab.Host, original) || !_tabs.Contains(tab)) return;
             _originalNativeSources.RemoveAll(source => source.IsCompletedSuccessfully && !_contractSources.Contains(source));
+            PruneAdmissionRefusalsLocked(_originalNativeSources);
             if (_originalNativeSources.Count >= 128) throw new InvalidOperationException("Browse retains unresolved original native callbacks.");
             ContentTransition admission;
             try { admission = AdmitContentTransition(); }
@@ -83,6 +84,7 @@ public sealed partial class BrowseChrome
         {
             if (_nativeRetiring || _disposed || !ReferenceEquals(tab.Host, original) || !_tabs.Contains(tab)) return;
             _originalNativeSources.RemoveAll(source => source.IsCompletedSuccessfully && !_contractSources.Contains(source));
+            PruneAdmissionRefusalsLocked(_originalNativeSources);
             if (_originalNativeSources.Count >= 128) throw new InvalidOperationException("Browse retains unresolved native history sources.");
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             tab.HasOriginalCommittedPage = true;

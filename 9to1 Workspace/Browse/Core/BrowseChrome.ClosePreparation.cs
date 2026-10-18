@@ -19,6 +19,7 @@ public sealed partial class BrowseChrome
         lock (_nativeSourceGate)
         {
             _originalContentTransitions.RemoveAll(task => task.IsCompletedSuccessfully);
+            PruneAdmissionRefusalsLocked(_originalContentTransitions);
             _originalContentTransitions.Add(actual);
         }
     }
@@ -36,6 +37,10 @@ public sealed partial class BrowseChrome
             ThrowIfCannotAccept();
             if (_windowPreparation is not null)
                 throw new InvalidOperationException("The window has a reversible close preparation. Abort it before changing content.");
+            // A refused native admission acquired nothing, so it must not consume
+            // unresolved transition capacity forever. It moves to the chrome's
+            // inspectable admission-refusal ledger instead.
+            PruneAdmissionRefusalsLocked(_originalContentTransitions);
             if (_originalContentTransitions.Count(task => !task.IsCompletedSuccessfully) >= 128)
                 throw new InvalidOperationException("Retire this host before admitting more unresolved content transitions.");
             var actual = new ContentTransition(this);

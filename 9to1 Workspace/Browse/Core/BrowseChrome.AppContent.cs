@@ -41,7 +41,7 @@ public sealed partial class BrowseChrome
     private void PinContractSource(Task? source)
     { if (source is not null) lock (_nativeSourceGate) { _contractSources.Add(source); _originalNativeSources.Add(source); } }
     private void RetainAppSource(Task source)
-    { lock (_nativeSourceGate) { _originalNativeSources.RemoveAll(task => task.IsCompletedSuccessfully && !_contractSources.Contains(task)); _originalNativeSources.Add(source); } }
+    { lock (_nativeSourceGate) { _originalNativeSources.RemoveAll(task => task.IsCompletedSuccessfully && !_contractSources.Contains(task)); PruneAdmissionRefusalsLocked(_originalNativeSources); _originalNativeSources.Add(source); } }
 
     private Task<BrowseChromeSnapshot> RetainNativeAdmission(Func<Task<BrowseChromeSnapshot>> operation, CancellationToken token)
     {
@@ -63,12 +63,25 @@ public sealed partial class BrowseChrome
         if (_tabs.Sum(item => item.AppOwners.Count) >= 128)
             throw new InvalidOperationException("Browse retains unresolved original app owners. Retire this host before opening another app.");
         var request = new BrowseAppContentRequest(tab.Id, address, tab.ProfileId, tab.Privacy);
-        IBrowseAppContentSession? session = address.Namespace switch
+        IBrowseAppContentSession? session;
+        try
         {
-            AppContentNamespace.NativeApp => _appContentFactory?.CreateSession(request),
-            AppContentNamespace.Browse when IsOwnedCanvas(address) => _internalContentFactory?.CreateSession(request),
-            _ => throw new NotSupportedException("The content route is not registered in this host.")
-        };
+            session = address.Namespace switch
+            {
+                AppContentNamespace.NativeApp => _appContentFactory?.CreateSession(request),
+                AppContentNamespace.Browse when IsOwnedCanvas(address) => _internalContentFactory?.CreateSession(request),
+                _ => throw new NotSupportedException("The content route is not registered in this host.")
+            };
+        }
+        catch (Exception refusal)
+        {
+            // Witnessed by this chrome: this exact CreateSession call for this exact
+            // request returned no session, so a trusted missing-binding proof acquired
+            // nothing to retire. Every other route rejection and factory fault keeps its
+            // ordinary conservative handling.
+            TryWitnessAdmissionRefusal(refusal, request);
+            throw;
+        }
         if (session is null) return null;
         if (_tabs.SelectMany(item => item.AppOwners).Any(owner => ReferenceEquals(owner.Session, session)))
             throw new InvalidOperationException("The app factory reused an existing tab's content owner.");

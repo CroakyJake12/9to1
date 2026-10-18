@@ -17,6 +17,36 @@ public interface IBrowseAppContentFactory
     IBrowseAppContentSession CreateSession(BrowseAppContentRequest request);
 }
 
+/// <summary>
+/// Composition-issued proof that the trusted native app-content registry holds no
+/// binding for the exact request this chrome minted for one admission. The registry
+/// creates it at its binding lookup, strictly before any session, owner, view or
+/// subscription exists, so the chrome can treat that one admission as having nothing
+/// to retire: the action stays failed and inspectable and only the retirement
+/// obligation is withdrawn.
+/// The constructor is internal to the composition boundary, so an ordinary factory
+/// cannot claim this proof after acquiring effects, and a refusal naming a different
+/// request never matches. Every other fault, including a factory that throws after
+/// taking an effect, a wrapper that reuses a genuine refusal, an unwitnessed refusal
+/// and any mixed fault graph, stays a conservative retirement failure.
+/// </summary>
+public abstract class BrowseNativeAdmissionRefusal : NotSupportedException
+{
+    internal BrowseNativeAdmissionRefusal(BrowseAppContentRequest request, IBrowseAppContentFactory issuingFactory)
+        : base("This app does not have a registered native surface in the current host.")
+    {
+        Request = request ?? throw new ArgumentNullException(nameof(request));
+        IssuingFactory = issuingFactory ?? throw new ArgumentNullException(nameof(issuingFactory));
+    }
+
+    /// <summary>The exact chrome-minted request this refusal answers. Provenance is
+    /// per admission, so a captured refusal cannot bless a later or unrelated action.</summary>
+    public BrowseAppContentRequest Request { get; }
+
+    /// <summary>The factory instance that issued the proof.</summary>
+    public IBrowseAppContentFactory IssuingFactory { get; }
+}
+
 /// <summary>Explicit composition for Browse-owned Home and New Tab content only.
 /// Invocation is thread-neutral; native owners marshal actual UI operations asynchronously.
 /// This contract does not admit native-app or generic CUI namespaces.</summary>

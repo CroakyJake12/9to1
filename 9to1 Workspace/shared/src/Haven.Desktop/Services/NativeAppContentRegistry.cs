@@ -54,9 +54,15 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
             || string.IsNullOrWhiteSpace(request.ProfileId))
             throw new UnauthorizedAccessException("A native app requires an original tab and Home profile context.");
         if (!_bindings.TryGetValue(request.Address.Authority, out var binding))
-            throw new NotSupportedException("This app does not have a registered native surface in the current host.");
+            throw new NativeAppContentAdmissionRefusal(request, this);
         return new RegisteredSession(this, request, binding);
     }
+
+    /// <summary>The registry's own proof that the binding lookup above found nothing.
+    /// It is constructed only at that lookup, before any session, owner or view exists,
+    /// and names the exact request it answers. Nothing else may create this proof.</summary>
+    internal sealed class NativeAppContentAdmissionRefusal(BrowseAppContentRequest request,
+        IBrowseAppContentFactory issuingFactory) : BrowseNativeAdmissionRefusal(request, issuingFactory);
 
     private void DemandHost()
     {

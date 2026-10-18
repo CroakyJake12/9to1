@@ -73,6 +73,27 @@ public sealed class NativeAdmissionShutdownTests
             Assert.All(retained, actual => Assert.True(HasCause(actual, refusal)));
             Assert.All(Faulted(chrome.OriginalContentTransitions), actual => Assert.True(HasCause(actual, refusal)));
 
+            // Typed admission accounting at the poison path: the chrome witnessed this
+            // exact refusal at its own app-content creation for this exact request.
+            var record = Assert.Single(chrome.AdmissionRefusals);
+            Assert.True(ReferenceEquals(record.Refusal, refusal));
+            Assert.Equal(chrome.State.SelectedTabId, record.TabId);
+            Assert.Equal("9to1://shelf", record.Address.Value);
+            Assert.Equal(AppContentNamespace.NativeApp, record.Address.Namespace);
+
+            // Permanence half of the defect: a refused no-effect admission must not
+            // consume unresolved admission capacity. The same authority is admitted again
+            // and fails again with its own fresh composition proof.
+            Assert.True(workspace.QueueNavigation(new(chrome.State.SelectedTabId,
+                AppContentAddress.Parse("9to1://shelf"), false), Task.CompletedTask));
+            var repeat = workspace.OriginalCommand!;
+            var repeatRefusal = await Record.ExceptionAsync(() => repeat).AsTask().WaitAsync(Bound);
+            Assert.NotNull(repeatRefusal);
+            Assert.NotSame(refusal, repeatRefusal);
+            Assert.Equal(RefusalMessage, repeatRefusal!.Message);
+            Assert.Equal(2, chrome.AdmissionRefusals.Count);
+            Assert.Equal(1, files.Creations);
+
             // The defect: this no-effect admission refusal permanently poisons host shutdown,
             // so the actual host close cannot complete and a fresh workspace is not admittable.
             var close = rig.Host.CloseAndDrainAsync();
@@ -80,6 +101,14 @@ public sealed class NativeAdmissionShutdownTests
             Assert.True(close.IsCompletedSuccessfully);
             Assert.NotNull(chrome.OriginalClose); Assert.True(chrome.OriginalClose!.IsCompletedSuccessfully);
             Assert.NotNull(workspace.OriginalClose); Assert.True(workspace.OriginalClose!.IsCompletedSuccessfully);
+            // Only the retirement obligation was withdrawn: no refused source remains in the
+            // retirement sets, while both refusals stay failed and inspectable in the ledger.
+            var stillRetired = Faulted(chrome.OriginalNativeSources);
+            Assert.True(stillRetired.Length == 0,
+                "retained: " + string.Join(" ;; ", stillRetired.Select(actual => Graph(actual.Exception))));
+            Assert.Empty(Faulted(chrome.OriginalContentTransitions));
+            Assert.Equal(2, chrome.AdmissionRefusals.Count);
+            Assert.True(driver.IsFaulted);
             await rig.Host.CloseAndDrainAsync().WaitAsync(Bound);
             await rig.ReopenNativeWorkspaceAsync();
         });
@@ -113,6 +142,17 @@ public sealed class NativeAdmissionShutdownTests
             Assert.True(close.IsCompletedSuccessfully);
             Assert.NotNull(chrome.OriginalClose); Assert.True(chrome.OriginalClose!.IsCompletedSuccessfully);
             Assert.NotNull(workspace.OriginalClose); Assert.True(workspace.OriginalClose!.IsCompletedSuccessfully);
+            // The refusal is accounted in the failed-action ledger, not as a retirement cause.
+            var record = Assert.Single(chrome.AdmissionRefusals);
+            Assert.True(ReferenceEquals(record.Refusal, refusal));
+            // The chrome admits the canonical native route for this authority, so the ledger
+            // records the request the chrome actually made rather than the typed intent text.
+            Assert.EndsWith("assistants", record.Address.Value);
+            Assert.Equal(AppContentNamespace.NativeApp, record.Address.Namespace);
+            Assert.Equal(chrome.State.SelectedTabId, record.TabId);
+            Assert.Empty(Faulted(chrome.OriginalNativeSources));
+            Assert.Empty(Faulted(chrome.OriginalContentTransitions));
+            Assert.True(driver.IsFaulted);
         });
     }
 
@@ -155,7 +195,127 @@ public sealed class NativeAdmissionShutdownTests
         });
     }
 
+    // Negative control for the observed forgery risk: an ordinary app-content factory that
+    // takes a real effect and then throws a marker-shaped exception, or that reuses a genuine
+    // composition refusal inside its own wrapper, never has its retirement obligation waived.
+    // Only the composition-issued proof naming the exact chrome-minted request is witnessed.
+    [AvaloniaFact]
+    public async Task Effectful_factory_marker_and_reused_genuine_refusal_never_waive_retirement()
+    {
+        var files = new FilesFactory(); var marker = new MarkerForgeryFactory(); var wrapper = new WrapperForgeryFactory();
+        await using var rig = await Rig.CreateAsync((Files, files), (Shelf, marker), (Assistants, wrapper));
+        await RunBoundedAsync(rig, async rig =>
+        {
+            var chrome = rig.Chrome!; var workspace = rig.Workspace!;
+
+            // A genuine missing-binding refusal, witnessed by the chrome for its own request.
+            Assert.True(workspace.QueueNavigation(new(chrome.State.SelectedTabId,
+                AppContentAddress.Parse("9to1://planner"), false), Task.CompletedTask));
+            var genuine = await Record.ExceptionAsync(() => workspace.OriginalCommand!).AsTask().WaitAsync(Bound);
+            Assert.NotNull(genuine);
+            Assert.Equal(RefusalMessage, genuine!.Message);
+            var genuineRecord = Assert.Single(chrome.AdmissionRefusals);
+            Assert.True(ReferenceEquals(genuineRecord.Refusal, genuine));
+            wrapper.Captured = genuine;
+
+            // Bound authority whose factory takes a real effect, then throws the same
+            // exception type and message as the genuine refusal.
+            Assert.True(workspace.QueueNavigation(new(chrome.State.SelectedTabId,
+                AppContentAddress.Parse("9to1://shelf"), false), Task.CompletedTask));
+            var forged = workspace.OriginalCommand!;
+            Assert.NotNull(await Record.ExceptionAsync(() => forged).AsTask().WaitAsync(Bound));
+            Assert.True(HasCause(forged, marker.Failure), Graph(forged.Exception));
+
+            // Bound authority whose factory takes a real effect and reuses the genuine
+            // refusal inside its own wrapper.
+            Assert.True(workspace.QueueNavigation(new(chrome.State.SelectedTabId,
+                AppContentAddress.Parse("9to1://assistants"), false), Task.CompletedTask));
+            var reused = workspace.OriginalCommand!;
+            Assert.NotNull(await Record.ExceptionAsync(() => reused).AsTask().WaitAsync(Bound));
+            Assert.True(HasCause(reused, wrapper.Failure!));
+            Assert.True(HasCause(reused, genuine!)); // the genuine instance is inside the wrapper
+
+            // Neither forgery was witnessed: only the real missing-binding admission is in
+            // the ledger, and both effectful failures stay retained retirement causes.
+            Assert.Single(chrome.AdmissionRefusals);
+            Assert.Equal(2, marker.Effects + wrapper.Effects);
+            Assert.Contains(marker.Failure, FaultedCauses(chrome.OriginalNativeSources));
+            Assert.Contains(wrapper.Failure, FaultedCauses(chrome.OriginalNativeSources));
+
+            var close = rig.Host.CloseAndDrainAsync();
+            rig.AssertedFailedClose = close;
+            var first = await Record.ExceptionAsync(() => close).AsTask().WaitAsync(Bound);
+            Assert.NotNull(first);
+            Assert.True(close.IsFaulted);
+            Assert.True(HasCause(close, marker.Failure));
+            Assert.True(HasCause(close, wrapper.Failure!));
+            Assert.Same(close, rig.Host.CloseAndDrainAsync());
+        });
+    }
+
+    // Negative control for the observed mixed-graph risk: classification uses the source's
+    // complete original fault graph, in either fault order, and a genuine sibling keeps the
+    // whole source blocking. The terminal failed close task identity is preserved.
+    [AvaloniaFact]
+    public async Task Refused_admission_sharing_a_graph_with_a_genuine_failure_still_blocks_close()
+    {
+        var files = new FilesFactory(); var shelf = new FaultyFactory();
+        await using var rig = await Rig.CreateAsync((Files, files), (Shelf, shelf));
+        await RunBoundedAsync(rig, async rig =>
+        {
+            var chrome = rig.Chrome!; var workspace = rig.Workspace!;
+
+            Assert.True(workspace.QueueNavigation(new(chrome.State.SelectedTabId,
+                AppContentAddress.Parse("9to1://planner"), false), Task.CompletedTask));
+            var refusal = await Record.ExceptionAsync(() => workspace.OriginalCommand!).AsTask().WaitAsync(Bound);
+            Assert.NotNull(refusal);
+            var genuineRecord = Assert.Single(chrome.AdmissionRefusals);
+            Assert.True(ReferenceEquals(genuineRecord.Refusal, refusal));
+
+            // Same source graph, both orderings: the genuine sibling must keep it blocking.
+            var saveFailure = new IOException("The original session save failed.");
+            var refusalFirst = Task.FromException(new AggregateException((Exception)refusal!, saveFailure));
+            var siblingFirst = Task.FromException(new AggregateException(saveFailure, (Exception)refusal!));
+            Assert.False(chrome.TryRetireAdmissionSource(refusalFirst));
+            Assert.False(chrome.TryRetireAdmissionSource(siblingFirst));
+
+            // End to end: a refused no-effect admission and a genuine acquired-owner fault
+            // coexist in one chrome. The genuine cause still blocks close permanently.
+            Assert.True(workspace.QueueNavigation(new(chrome.State.SelectedTabId,
+                AppContentAddress.Parse("9to1://shelf"), false), Task.CompletedTask));
+            var effectful = workspace.OriginalCommand!;
+            Assert.NotNull(await Record.ExceptionAsync(() => effectful).AsTask().WaitAsync(Bound));
+            Assert.True(HasCause(effectful, shelf.Failure));
+
+            var close = rig.Host.CloseAndDrainAsync();
+            rig.AssertedFailedClose = close;
+            var first = await Record.ExceptionAsync(() => close).AsTask().WaitAsync(Bound);
+            Assert.NotNull(first);
+            Assert.True(close.IsFaulted);
+            Assert.True(HasCause(close, shelf.Failure));
+            Assert.Same(close, rig.Host.CloseAndDrainAsync());
+            Assert.Single(chrome.AdmissionRefusals);
+        });
+    }
+
     private static Task[] Faulted(IReadOnlyList<Task> sources) => sources.Where(actual => actual.IsFaulted).ToArray();
+
+    // Renders the exact production fault graph, so a classification assertion says which
+    // node it rejected instead of only that it rejected one.
+    private static string Graph(Exception? error, int depth = 0)
+    {
+        if (error is null) return string.Empty;
+        var shape = error is AggregateException group
+            ? string.Join(" | ", group.InnerExceptions.Select(inner => Graph(inner, depth + 1)))
+            : Graph(error.InnerException, depth + 1);
+        var prefix = new string(' ', depth * 2);
+        return error is AggregateException
+            ? $"{prefix}AGG[{shape}]"
+            : $"{prefix}{error.GetType().Name}: {error.Message}{(shape.Length == 0 ? string.Empty : " -> " + shape)}";
+    }
+
+    private static Exception[] FaultedCauses(IReadOnlyList<Task> sources) =>
+        sources.Where(actual => actual.IsFaulted).SelectMany(actual => actual.Exception!.InnerExceptions).ToArray();
 
     // Compares the exact retained diagnostic identity through the whole exception graph:
     // aggregate members and single-inner wrappers, because the host re-wraps on each attempt.
@@ -305,6 +465,37 @@ public sealed class NativeAdmissionShutdownTests
         internal int Creations;
         public IBrowseAppContentSession CreateSession(BrowseAppContentRequest request)
         { Creations++; throw Failure; }
+    }
+
+    // A bound authority whose factory takes a real filesystem effect and then throws the
+    // same exception type and message as a genuine missing-binding refusal.
+    private sealed class MarkerForgeryFactory : IBrowseAppContentFactory
+    {
+        internal readonly Exception Failure = new NotSupportedException(RefusalMessage);
+        internal int Effects;
+        public IBrowseAppContentSession CreateSession(BrowseAppContentRequest request)
+        { TakeEffect(); Effects++; throw Failure; }
+    }
+
+    // A bound authority whose factory takes a real effect and reuses a genuine composition
+    // refusal inside its own wrapper, so a captured valid refusal cannot bless that effect.
+    private sealed class WrapperForgeryFactory : IBrowseAppContentFactory
+    {
+        internal Exception? Captured, Failure;
+        internal int Effects;
+        public IBrowseAppContentSession CreateSession(BrowseAppContentRequest request)
+        {
+            TakeEffect(); Effects++;
+            throw Failure = new InvalidOperationException(
+                "The native surface took an effect and reused a captured refusal.", Captured);
+        }
+    }
+
+    private static void TakeEffect()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "r01-forged-effect-" + Guid.NewGuid().ToString("N"));
+        File.WriteAllText(path, "effect");
+        File.Delete(path);
     }
 
     private sealed class Modes : IModeRegistry

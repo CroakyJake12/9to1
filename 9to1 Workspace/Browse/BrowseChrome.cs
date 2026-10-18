@@ -1084,7 +1084,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
                 Task[] originals; lock (_nativeSourceGate) originals = _originalNativeSources.Where(source => !joined.Contains(source)).Distinct().ToArray();
                 if (originals.Length == 0) return;
                 foreach (var source in originals)
-                { joined.Add(source); try { await source.ConfigureAwait(false); } catch (Exception failure) { AddCloseCauses(failures, source, failure); } }
+                { joined.Add(source); try { await source.ConfigureAwait(false); } catch (Exception failure) { if (!TryRetireAdmissionSource(source)) AddCloseCauses(failures, source, failure); } }
             }
         }
         var releases = new List<Task>();
@@ -1096,7 +1096,8 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         foreach (var release in releases)
             try { await release.ConfigureAwait(false); } catch (Exception failure) { AddCloseCauses(failures, release, failure); }
         foreach (var active in activeTransitions)
-            try { await active.ConfigureAwait(false); } catch (Exception failure) { AddCloseCauses(failures, active, failure); }
+            try { await active.ConfigureAwait(false); }
+            catch (Exception failure) { if (!TryRetireAdmissionSource(active)) AddCloseCauses(failures, active, failure); }
         await DrainOriginalSourcesAsync().ConfigureAwait(false);
         // An admitted source may acquire its final native owner while cancellation
         // settles. Close those exact late acquisitions before the terminal drain.

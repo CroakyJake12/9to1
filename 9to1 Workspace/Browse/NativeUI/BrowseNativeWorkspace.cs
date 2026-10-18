@@ -333,17 +333,26 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         _status = snapshot.Status; Changed();
     }
     private void Changed() => PropertyChanged?.Invoke(this, new(string.Empty));
-    private static void CheckAdmission(List<Task> sources)
+    private void CheckAdmission(List<Task> sources)
     {
-        sources.RemoveAll(task => task.IsCompletedSuccessfully);
+        PruneAdmissionRefusals(sources);
         if (sources.Count >= 128) throw new InvalidOperationException("Browse retains unresolved source failures. Retire this same workspace before continuing.");
     }
-    private static void Retain(List<Task> sources, Task original)
+    private void Retain(List<Task> sources, Task original)
     {
         // Admission is checked before producing a new source. Always retain a
         // source that already exists, including a source produced reentrantly.
-        sources.RemoveAll(task => task.IsCompletedSuccessfully);
+        PruneAdmissionRefusals(sources);
         sources.Add(original);
+    }
+    /// <summary>A native admission this chrome's own composition owner proved it had not
+    /// registered created no session, owner or view here, so it must not permanently
+    /// retain a workspace source or consume unresolved-source capacity. The exact refusal
+    /// stays failed and inspectable in the chrome's admission ledger; the chrome withdraws
+    /// only that retirement obligation, so a mixed or unwitnessed graph is retained.</summary>
+    private void PruneAdmissionRefusals(List<Task> sources)
+    {
+        sources.RemoveAll(task => task.IsCompletedSuccessfully || _chrome.TryRetireAdmissionSource(task));
     }
     public bool CanAdmitClose()
     {
@@ -374,7 +383,20 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     private async Task CloseAsync(Task start)
     {
         await start; var failures = new List<Exception>();
-        async Task Join(Task original) { try { await original; } catch (Exception failure) { failures.Add(failure); } }
+        async Task Join(Task original)
+        {
+            try { await original; }
+            catch (Exception failure)
+            {
+                // The chrome classifies the source's COMPLETE original graph, never only
+                // the first fault this await happened to expose.
+                if (_chrome.TryRetireAdmissionSource(original)) return;
+                // Retain every sibling cause, not just the exposed one.
+                foreach (var cause in original.Exception is { } group
+                    ? (IEnumerable<Exception>)group.InnerExceptions : new[] { failure })
+                    if (!failures.Any(existing => ReferenceEquals(existing, cause))) failures.Add(cause);
+            }
+        }
         try
         {
             // Core first resolves unsaved work while this host is still current,
