@@ -245,6 +245,10 @@ public sealed partial class MessageAttachmentService(
     /// <summary>
     /// Performs delete asynchronously so I/O does not block the caller's thread.
     /// </summary>
+    public Task<bool> TryDeletePendingAsync(Guid attachmentId, Guid conversationId, Guid branchId, CancellationToken cancellationToken) =>
+        repository.TryDeletePendingAttachmentAsync(attachmentId, conversationId, branchId, cancellationToken);
+
+    /// <summary>Deletes an attachment by identity for callers that own the full attachment lifecycle.</summary>
     public async Task DeleteAsync(Guid attachmentId, CancellationToken cancellationToken)
     {
         MessageAttachment? attachment = null;

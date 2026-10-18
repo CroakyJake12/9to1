@@ -177,13 +177,22 @@ public sealed class HavenChatSpaceBackend : IChatSpaceBackend
     public async Task RemoveAttachmentAsync(Guid conversationId, Guid? branchId, Guid attachmentId, CancellationToken cancellationToken)
     {
         var actual = await GetConversationAsync(conversationId, cancellationToken).ConfigureAwait(false);
-        RequireCurrentBranch(actual, branchId);
-        if (!actual.Attachments.Any(item => item.Id == attachmentId && item.MessageId is null &&
-                (item.BranchId is null || item.BranchId == branchId)))
-            throw new InvalidOperationException("Only a pending attachment on this conversation branch can be removed.");
+        RequirePendingAttachment(actual, branchId, attachmentId);
         await EnsureMayActAsync(conversationId, "chat.remove-attachment", cancellationToken).ConfigureAwait(false);
-        RequireCurrentBranch(await GetConversationAsync(conversationId, cancellationToken).ConfigureAwait(false), branchId);
-        await attachmentService.DeleteAsync(attachmentId, cancellationToken).ConfigureAwait(false);
+        // Safety may suspend while a send claims this attachment. Fresh validation
+        // gives an actionable failure; the repository guard closes the final race.
+        actual = await GetConversationAsync(conversationId, cancellationToken).ConfigureAwait(false);
+        RequirePendingAttachment(actual, branchId, attachmentId);
+        if (!await attachmentService.TryDeletePendingAsync(attachmentId, conversationId, branchId!.Value, cancellationToken).ConfigureAwait(false))
+            throw new InvalidOperationException("The pending attachment or its conversation branch changed before removal.");
+    }
+
+    private static void RequirePendingAttachment(ChatSpaceConversationData actual, Guid? branchId, Guid attachmentId)
+    {
+        RequireCurrentBranch(actual, branchId);
+        if (!actual.Attachments.Any(item => item.Id == attachmentId && item.ConversationId == actual.Conversation.Id
+                && item.MessageId is null && (item.BranchId is null || item.BranchId == branchId)))
+            throw new InvalidOperationException("Only a pending attachment on this conversation branch can be removed.");
     }
 
     public async Task SendAsync(ChatSpaceTurnRequest request, IProgress<ChatStreamEvent>? progress, CancellationToken cancellationToken)

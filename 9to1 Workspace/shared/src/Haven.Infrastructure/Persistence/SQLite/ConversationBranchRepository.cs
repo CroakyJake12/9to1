@@ -438,6 +438,25 @@ public sealed partial class ConversationProductionRepository(
     /// <summary>
     /// Performs delete attachment asynchronously so I/O does not block the caller's thread.
     /// </summary>
+    public async Task<bool> TryDeletePendingAttachmentAsync(Guid attachmentId, Guid conversationId, Guid branchId, CancellationToken cancellationToken)
+    {
+        await EnsureSchemaAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            DELETE FROM message_attachments
+            WHERE id=$id AND conversation_id=$conversationId AND message_id IS NULL
+              AND (branch_id IS NULL OR branch_id=$branchId)
+              AND EXISTS (SELECT 1 FROM conversation_branches
+                          WHERE id=$branchId AND conversation_id=$conversationId AND is_current=1);
+            """;
+        command.Parameters.AddWithValue("$id", attachmentId.ToString());
+        command.Parameters.AddWithValue("$conversationId", conversationId.ToString());
+        command.Parameters.AddWithValue("$branchId", branchId.ToString());
+        return await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) == 1;
+    }
+
+    /// <summary>Deletes an attachment by identity for callers that own the full attachment lifecycle.</summary>
     public async Task DeleteAttachmentAsync(Guid attachmentId, CancellationToken cancellationToken)
     {
         await EnsureSchemaAsync(cancellationToken).ConfigureAwait(false);

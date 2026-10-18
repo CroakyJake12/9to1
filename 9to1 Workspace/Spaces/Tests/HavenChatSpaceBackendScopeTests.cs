@@ -227,6 +227,59 @@ public sealed class HavenChatSpaceBackendScopeTests
         Assert.Contains(typeof(HavenChatSpaceBackend).GetConstructors(), constructor => constructor.GetParameters().Length == 7);
     }
 
+    [Fact]
+    public async Task Attachment_claimed_while_safety_waits_is_preserved()
+    {
+        var rig = await Rig.CreateAsync();
+        var row = rig.Add(rig.Space.Id);
+        var branch = rig.Branch(row.Id);
+        var attachment = PendingAttachment(row.Id, branch.Id);
+        rig.Attachments.Add(attachment);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        rig.SafetyAdmission = () => { entered.TrySetResult(); return release.Task; };
+        var removal = rig.Backend.RemoveAttachmentAsync(row.Id, branch.Id, attachment.Id, default);
+        try
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            rig.Attachments[0] = attachment with { MessageId = Guid.NewGuid() };
+            release.TrySetResult();
+            await Assert.ThrowsAsync<InvalidOperationException>(() => removal.WaitAsync(TimeSpan.FromSeconds(5)));
+            Assert.NotNull(Assert.Single(rig.Attachments).MessageId);
+            Assert.Equal(0, rig.PendingDeleteCalls);
+            Assert.Equal(0, rig.UnconditionalDeleteCalls);
+        }
+        finally
+        {
+            release.TrySetResult();
+            try { await removal.WaitAsync(TimeSpan.FromSeconds(5)); }
+            catch (InvalidOperationException) { }
+        }
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Attachment_removal_uses_atomic_owner_boundary_and_reports_a_lost_race(bool admitted)
+    {
+        var rig = await Rig.CreateAsync();
+        var row = rig.Add(rig.Space.Id);
+        var branch = rig.Branch(row.Id);
+        var attachment = PendingAttachment(row.Id, branch.Id);
+        rig.Attachments.Add(attachment);
+        rig.PendingDeleteResult = admitted;
+        var removal = rig.Backend.RemoveAttachmentAsync(row.Id, branch.Id, attachment.Id, default);
+        if (admitted) await removal;
+        else await Assert.ThrowsAsync<InvalidOperationException>(() => removal);
+        Assert.Equal(1, rig.PendingDeleteCalls);
+        Assert.Equal((attachment.Id, row.Id, branch.Id), rig.PendingDeleteOwner);
+    }
+
+    private static MessageAttachment PendingAttachment(Guid conversationId, Guid branchId) => new(
+        Guid.NewGuid(), conversationId, null, branchId, "pending.txt", "pending.txt", "text/plain",
+        MessageAttachmentKind.PlainText, 1, "hash", AttachmentProcessingState.Ready,
+        AttachmentAnalysisMethod.TextExtracted, "draft", "{}", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow);
+
     private sealed class Rig
     {
         internal readonly SpaceRegistry Registry = new(new MemorySettingsStore());
@@ -239,6 +292,12 @@ public sealed class HavenChatSpaceBackendScopeTests
         internal readonly List<string> SensitiveCalls = [];
         internal int GeneralQueries;
         internal bool Locked;
+        internal readonly List<MessageAttachment> Attachments = [];
+        internal Func<Task>? SafetyAdmission;
+        internal int PendingDeleteCalls;
+        internal int UnconditionalDeleteCalls;
+        internal bool PendingDeleteResult = true;
+        internal (Guid, Guid, Guid) PendingDeleteOwner;
         internal Func<Task<IReadOnlyList<ChatMessage>>> MessageRead = () => Task.FromResult<IReadOnlyList<ChatMessage>>([]);
         internal Func<Task<ChatSpaceModelInventory>>? InventoryRead;
         internal Func<Guid, Task<ConversationSafetySnapshot>>? SnapshotRead;
@@ -296,7 +355,7 @@ public sealed class HavenChatSpaceBackendScopeTests
                     nameof(IConversationProductionRepository.GetCurrentBranchAsync) => Task.FromResult<ConversationBranch?>(Branch(id)),
                     nameof(IConversationProductionRepository.EnsureRootBranchAsync) => Task.FromResult(Branch(id)),
                     nameof(IConversationProductionRepository.GetBranchesAsync) => Task.FromResult<IReadOnlyList<ConversationBranch>>([Branch(id)]),
-                    nameof(IConversationProductionRepository.GetAttachmentsAsync) => Task.FromResult<IReadOnlyList<MessageAttachment>>([]),
+                    nameof(IConversationProductionRepository.GetAttachmentsAsync) => Task.FromResult<IReadOnlyList<MessageAttachment>>(Attachments.Where(item => item.ConversationId == id).ToArray()),
                     nameof(IConversationProductionRepository.GetDraftAsync) => Task.FromResult(Drafts.GetValueOrDefault((id, (Guid?)args[1]))),
                     nameof(IConversationProductionRepository.SaveDraftAsync) => SaveDraft((ConversationDraft)args[0]!),
                     _ => throw new InvalidOperationException("Unexpected production call " + method)
@@ -309,12 +368,24 @@ public sealed class HavenChatSpaceBackendScopeTests
                 if (method == nameof(IConversationSafetyService.GetSnapshotAsync) && SnapshotRead is not null)
                     return SnapshotRead((Guid)args[0]!);
                 if (method != nameof(IConversationSafetyService.EnsureMayActAsync)) throw new InvalidOperationException("Unexpected safety read.");
-                return Locked ? Task.FromException(new ConversationSafetyLockException((Guid)args[0]!, (string)args[1]!)) : Task.CompletedTask;
+                return Locked ? Task.FromException(new ConversationSafetyLockException((Guid)args[0]!, (string)args[1]!)) : SafetyAdmission?.Invoke() ?? Task.CompletedTask;
             });
             var turns = StrictProxy.Create<IChatSpaceTurnExecutor>((method, _) => { SensitiveCalls.Add(method); return Task.CompletedTask; });
             return new(conversations, production,
                 StrictProxy.Create<IConversationVersioningService>((method, _) => throw new InvalidOperationException(method)),
-                StrictProxy.Create<IMessageAttachmentService>((method, _) => throw new InvalidOperationException(method)),
+                StrictProxy.Create<IMessageAttachmentService>((method, args) =>
+                {
+                    if (method == nameof(IMessageAttachmentService.DeleteAsync))
+                    {
+                        UnconditionalDeleteCalls++;
+                        Attachments.RemoveAll(item => item.Id == (Guid)args[0]!);
+                        return Task.CompletedTask;
+                    }
+                    if (method != nameof(IMessageAttachmentService.TryDeletePendingAsync)) throw new InvalidOperationException(method);
+                    PendingDeleteCalls++;
+                    PendingDeleteOwner = ((Guid)args[0]!, (Guid)args[1]!, (Guid)args[2]!);
+                    return Task.FromResult(PendingDeleteResult);
+                }),
                 catalog, turns, safety, context, Registry);
         }
         private Task SaveDraft(ConversationDraft draft) { Drafts[(draft.ConversationId, draft.BranchId)] = draft; return Task.CompletedTask; }

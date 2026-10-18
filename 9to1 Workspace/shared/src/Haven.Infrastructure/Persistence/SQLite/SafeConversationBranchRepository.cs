@@ -176,6 +176,9 @@ public sealed class SafeConversationProductionRepository(
     /// Performs delete attachment asynchronously so I/O does not block the caller's thread.
     /// </summary>
     public Task DeleteAttachmentAsync(Guid attachmentId, CancellationToken cancellationToken) => inner.DeleteAttachmentAsync(attachmentId, cancellationToken);
+
+    public Task<bool> TryDeletePendingAttachmentAsync(Guid attachmentId, Guid conversationId, Guid branchId, CancellationToken cancellationToken) =>
+        inner.TryDeletePendingAttachmentAsync(attachmentId, conversationId, branchId, cancellationToken);
     /// <summary>
     /// Retrieves draft async for the current operation.
     /// </summary>

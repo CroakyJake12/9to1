@@ -64,6 +64,10 @@ public interface IConversationProductionRepository
     Task<MessageAttachment> UpsertAttachmentAsync(MessageAttachment attachment, CancellationToken cancellationToken);
     Task DeleteAttachmentAsync(Guid attachmentId, CancellationToken cancellationToken);
 
+    /// <summary>Checks pending state, conversation ownership and current branch in the same mutation.</summary>
+    Task<bool> TryDeletePendingAttachmentAsync(Guid attachmentId, Guid conversationId, Guid branchId, CancellationToken cancellationToken) =>
+        Task.FromException<bool>(new NotSupportedException("This repository does not support atomic pending attachment removal."));
+
     Task<ConversationDraft?> GetDraftAsync(Guid conversationId, Guid? branchId, CancellationToken cancellationToken);
     Task SaveDraftAsync(ConversationDraft draft, CancellationToken cancellationToken);
     Task DeleteDraftAsync(Guid conversationId, Guid? branchId, CancellationToken cancellationToken);

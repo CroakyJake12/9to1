@@ -51,6 +51,10 @@ public interface IMessageAttachmentService
         CancellationToken cancellationToken);
 
     Task DeleteAsync(Guid attachmentId, CancellationToken cancellationToken);
+
+    /// <summary>Atomically removes only an unclaimed attachment on the expected current conversation branch.</summary>
+    Task<bool> TryDeletePendingAsync(Guid attachmentId, Guid conversationId, Guid branchId, CancellationToken cancellationToken) =>
+        Task.FromException<bool>(new NotSupportedException("This attachment service does not support atomic pending removal."));
 }
 
 /// <summary>
