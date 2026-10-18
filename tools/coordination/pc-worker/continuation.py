@@ -65,9 +65,11 @@ def backoff(count, base, maximum):
 
 
 class APIError(RuntimeError):
-    def __init__(self, kind):
+    def __init__(self, kind, operation=None, response_error_type=None):
         super().__init__('OpenCode API ' + kind)
         self.kind = kind
+        self.operation = operation
+        self.response_error_type = response_error_type
 
 
 class NoRedirect(urlrequest.HTTPRedirectHandler):
@@ -98,15 +100,27 @@ class API:
             result = subprocess.run(args, cwd=self.config['directory'], env=env,
                                     capture_output=True, text=True, timeout=30)
         except subprocess.TimeoutExpired:
-            raise APIError('transport') from None
+            raise APIError('transport', operation, 'TimeoutExpired') from None
         if result.returncode or 'Error:' in result.stderr:
             diagnostic = result.stdout + result.stderr  # Classified privately; never logged.
             if re.search(r'UnauthorizedError|ForbiddenError|\b(?:401|403)\b', diagnostic):
-                raise APIError('authentication')
+                raise APIError('authentication', operation)
             if re.search(r'InvalidRequestError|SessionNotFoundError|LocationNotFoundError', diagnostic):
-                raise APIError('configuration')
-            raise APIError('transport')
-        return json.loads(result.stdout) if result.stdout.strip() else {}
+                raise APIError('configuration', operation)
+            raise APIError('transport', operation)
+        try:
+            response = json.loads(result.stdout) if result.stdout.strip() else {}
+        except (ValueError, TypeError) as error:
+            raise APIError('invalid_response', operation, type(error).__name__) from None
+        read_shapes = {'session.active': dict, 'session.get': dict, 'session.message.list': list,
+                       'session.message.get': dict, 'session.inbox.list': list, 'session.permission.list': list,
+                       'session.form.list': list, 'model.list': list, 'agent.get': dict}
+        if operation in read_shapes:
+            if not isinstance(response, dict) or 'data' not in response:
+                raise APIError('invalid_response', operation, 'MissingDataEnvelope')
+            if not isinstance(response['data'], read_shapes[operation]):
+                raise APIError('invalid_response', operation, 'InvalidDataShape')
+        return response
 
     def probe_gateway(self, config, now):
         policy = config.get('recovery', {})
@@ -545,10 +559,14 @@ class Continuation:
             return self.persist('held_other_dispatcher')
         except Exception as error:
             # No exception message/provider body, prompt, credential or tool output is logged.
+            details = {'error_type': type(error).__name__}
+            if isinstance(error, APIError):
+                details.update(api_operation=error.operation, api_error_kind=error.kind,
+                               response_error_type=error.response_error_type)
             if isinstance(error, APIError) and error.kind in ('authentication', 'configuration'):
-                return self.park('held_local_api_' + error.kind)
+                return self.park('held_local_api_' + error.kind, **details)
             if isinstance(error, (ValueError, KeyError, FileNotFoundError)):
-                return self.park('held_configuration_unavailable')
+                return self.park('held_configuration_unavailable', **details)
             count = min(1000000, self.state.get('api_failures', 0) + 1)
             self.state.update(api_failures=count, next_probe=self.now() + backoff(count, 5, 300))
             if not self.state.get('pending'):
@@ -557,12 +575,12 @@ class Continuation:
                 except Exception as recovery_error:
                     self.state['service_recovery_status'] = 'unavailable_' + type(recovery_error).__name__
             return self.persist('held_ambiguous_dispatch' if self.state.get('pending') else 'unavailable',
-                                error_type=type(error).__name__, consecutive_failures=count,
+                                **details, consecutive_failures=count,
                                 retry_at=self.state['next_probe'])
 
-    def park(self, mode):
+    def park(self, mode, **fields):
         self.state['parked'] = {'mode': mode, 'epoch': self.config.get('recovery_epoch', 0)}
-        return self.persist(mode)
+        return self.persist(mode, **fields)
 
     def transient_terminal(self, snapshot):
         assistant = self.inference_phase(snapshot)

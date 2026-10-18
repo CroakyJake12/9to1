@@ -995,5 +995,104 @@ print(json.dumps({'mode':result,'prompts':len(api.prompts),'probes':api.gateway_
         self.assertEqual('deferred_control_changed', self.worker.tick()); self.assertFalse(self.api.prompts)
         self.assertNotIn('pending', self.worker.state); self.assertEqual('stopped', self.worker.tick())
 
+    def cli_reply(self, operation, body, returncode=0, stderr='', data=None):
+        original_read = module.read
+        def fixture_read(path):
+            return {'password': 'fixture-credential'} if str(path) == self.config['service_config'] else original_read(path)
+        with mock.patch.object(module, 'read', side_effect=fixture_read), mock.patch.object(module.subprocess, 'run',
+                return_value=subprocess.CompletedProcess([], returncode, stdout=body, stderr=stderr)):
+            return module.API(self.config).request(operation, {'sessionID': SID}, data)
+    def test_read_api_blank_invalid_and_missing_envelope_backoff_then_recover_without_epoch(self):
+        for body, error_type in (('', 'MissingDataEnvelope'), ('{fixture-private', 'JSONDecodeError'),
+                ('{}', 'MissingDataEnvelope'), ('{"data":null}', 'InvalidDataShape'),
+                ('{"data":[]}', 'InvalidDataShape')):
+            with self.subTest(body=body):
+                self.api = API(); self.worker.state_path.unlink(missing_ok=True); self.worker = self.new_worker()
+                original = self.api.request; failures = [body]
+                def request(operation, params=None, data=None):
+                    if operation == 'session.get' and failures:
+                        return self.cli_reply(operation, failures.pop())
+                    return original(operation, params, data)
+                self.api.request = request
+                self.assertEqual('unavailable', self.worker.tick()); self.assertNotIn('parked', self.worker.state)
+                self.assertEqual('session.get', self.worker.state['api_operation'])
+                self.assertEqual('invalid_response', self.worker.state['api_error_kind'])
+                self.assertEqual(error_type, self.worker.state['response_error_type'])
+                self.clock += 4; self.assertEqual('api_backoff', self.worker.tick()); self.assertFalse(self.api.prompts)
+                self.clock += 1; self.assertEqual('dispatched', self.new_worker().tick())
+                self.assertEqual(1, len(self.api.prompts))
+        events = (self.root / 'continuation-events.jsonl').read_text()
+        self.assertNotIn('fixture-private', events); self.assertNotIn('fixture-credential', events)
+    def test_read_api_operation_envelope_shapes_are_checked_but_empty_valid_collections_are_allowed(self):
+        shapes = {'session.active': {}, 'session.get': {}, 'session.message.list': [],
+                  'session.message.get': {}, 'session.inbox.list': [], 'session.permission.list': [],
+                  'session.form.list': [], 'model.list': [], 'agent.get': {}}
+        for operation, empty in shapes.items():
+            with self.subTest(operation=operation):
+                self.assertEqual({'data': empty}, self.cli_reply(operation, json.dumps({'data': empty})))
+                with self.assertRaises(module.APIError) as caught: self.cli_reply(operation, '[]')
+                self.assertEqual('invalid_response', caught.exception.kind); self.assertEqual(operation, caught.exception.operation)
+                with self.assertRaises(module.APIError): self.cli_reply(operation, '{"data":"fixture-private"}')
+    def test_read_response_fix_preserves_permanent_explicit_auth_configuration_and_identity_holds(self):
+        for diagnostic, mode in (('UnauthorizedError fixture-private', 'held_local_api_authentication'),
+                ('InvalidRequestError fixture-private', 'held_local_api_configuration')):
+            with self.subTest(mode=mode):
+                self.api = API(); self.worker.state_path.unlink(missing_ok=True); self.worker = self.new_worker()
+                def reject(operation, params=None, data=None):
+                    return self.cli_reply(operation, '', returncode=1, stderr=diagnostic)
+                self.api.request = reject
+                self.assertEqual(mode, self.worker.tick()); self.assertEqual(mode, self.worker.state['parked']['mode'])
+                self.assertEqual('session.get', self.worker.state['api_operation'])
+                with mock.patch.object(self.api, 'request', side_effect=AssertionError('Park must not retry')):
+                    self.clock += 1000; self.assertEqual(mode, self.new_worker().tick())
+        self.api = API(); self.worker.state_path.unlink(); self.worker = self.new_worker()
+        self.api.session['id'] = 'ses_wrong_identity'
+        self.assertEqual('held_configuration_unavailable', self.worker.tick())
+        self.assertEqual('ValueError', self.worker.state['error_type']); self.assertFalse(self.api.prompts)
+        self.assertNotIn('fixture-private', (self.root / 'continuation-events.jsonl').read_text())
+    def test_stop_bypasses_invalid_response_backoff_and_stops_only_pinned_session(self):
+        original = self.api.request; fail = [True]
+        def request(operation, params=None, data=None):
+            if operation == 'session.active' and fail:
+                fail.pop(); return self.cli_reply(operation, '')
+            return original(operation, params, data)
+        self.api.request = request; self.api.active = {SID: {'type': 'running'}, 'ses_unrelated': {'type': 'running'}}
+        self.assertEqual('unavailable', self.worker.tick()); self.control.write_text(json.dumps({'mode': 'STOP'}))
+        self.assertEqual('stopped', self.new_worker().tick())
+        self.assertNotIn(SID, self.api.active); self.assertIn('ses_unrelated', self.api.active); self.assertFalse(self.api.prompts)
+    def test_actual_local_auth_file_json_and_missing_key_errors_remain_configuration_holds(self):
+        auth = self.root / 'fixture-auth.json'; self.config['service_config'] = str(auth); self.write_config()
+        for body, error_type in (('{fixture-private', 'JSONDecodeError'), ('{}', 'KeyError')):
+            with self.subTest(error_type=error_type):
+                auth.write_text(body); self.api = API(); self.worker.state_path.unlink(missing_ok=True)
+                self.api.request = module.API(self.config).request; self.worker = self.new_worker()
+                with mock.patch.object(module.subprocess, 'run', side_effect=AssertionError('Invalid local auth must not call CLI')):
+                    self.assertEqual('held_configuration_unavailable', self.worker.tick())
+                self.assertEqual(error_type, self.worker.state['error_type']); self.assertIn('parked', self.worker.state)
+        self.assertNotIn('fixture-private', (self.root / 'continuation-events.jsonl').read_text())
+    def test_malformed_prompt_response_retains_intent_and_reconciles_without_resend(self):
+        original = self.api.request
+        def request(operation, params=None, data=None):
+            result = original(operation, params, data)
+            if operation == 'session.prompt': return self.cli_reply(operation, '{fixture-private', data=data)
+            return result
+        self.api.request = request
+        self.assertEqual('held_ambiguous_dispatch', self.worker.tick()); self.assertIn('pending', self.worker.state)
+        self.assertNotIn('parked', self.worker.state); self.assertEqual('session.prompt', self.worker.state['api_operation'])
+        self.clock += 5; self.assertEqual('dispatch_reconciled', self.new_worker().tick())
+        self.assertEqual(1, len(self.api.prompts)); self.assertNotIn('fixture-private', self.worker.state_path.read_text())
+    def test_malformed_interrupt_response_retains_intent_without_blind_repeat(self):
+        self.enable_recovery(active=True); self.active_generation(); self.api.gateway_result = {'kind': 'unavailable'}
+        original = self.api.request
+        def request(operation, params=None, data=None):
+            if operation == 'session.interrupt':
+                self.api.calls.append((operation, params, data))
+                return self.cli_reply(operation, '{fixture-private')
+            return original(operation, params, data)
+        self.api.request = request
+        self.assertEqual('unavailable', self.collect_outage()); self.assertEqual('intent', self.worker.state['outage_interrupt']['status'])
+        self.clock += 30; self.assertEqual('held_ambiguous_outage_interrupt', self.new_worker().tick())
+        self.assertEqual(1, len([c for c in self.api.calls if c[0] == 'session.interrupt'])); self.assertFalse(self.api.prompts)
+
 
 if __name__ == '__main__': unittest.main(verbosity=2)
