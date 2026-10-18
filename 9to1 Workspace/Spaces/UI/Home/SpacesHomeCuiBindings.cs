@@ -21,7 +21,7 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
         "spaces.archive", "spaces.add-context", "spaces.clear-search", "spaces.select", "spaces.set-rename-draft",
         "spaces.confirm-rename", "spaces.cancel-rename",
         "spaces.select-move-parent",
-        "spaces.edit-extensions", "spaces.edit-graph"
+        "spaces.edit-extensions", "spaces.edit-graph", "spaces.edit-details"
     };
 
     private readonly CuiViewModel _values = new();
@@ -79,6 +79,7 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
             "selection.hasExtensionEditor" => snapshot.Selection?.HasExtensionEditor ?? false,
             "selection.canEditExtensions" => snapshot.Selection?.CanEditExtensions ?? false,
             "selection.canEditGraph" => snapshot.Selection?.CanEditGraph ?? false,
+            "selection.canEditDetails" => snapshot.Selection?.CanEditDetails ?? false,
             "selection.parentSpaceId" => snapshot.Selection?.ParentSpaceId,
             "selection.effectiveModelLabel" => snapshot.Selection?.EffectiveModelLabel ?? string.Empty,
             "selection.webAccessLabel" => snapshot.Selection?.WebAccessLabel ?? string.Empty,
@@ -126,6 +127,7 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
             "spaces.confirm-rename" => snapshot.PendingRenameSpaceId.HasValue,
             "spaces.edit-extensions" => selection is { CanEditExtensions: true },
             "spaces.edit-graph" => selection is { CanEditGraph: true },
+            "spaces.edit-details" => !snapshot.IsLoading && selection is { CanEditDetails: true, IsBuiltIn: false },
             _ => true
         };
     }

@@ -413,6 +413,143 @@ public sealed class SpacesHomeControllerTests
         if (failure is not null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
     }
 
+    [Fact]
+    public async Task Edit_details_uses_the_selected_canonical_record_without_mutating_it_or_opening_graph()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var target = await registry.CreateAsync("Details target", "Preserved description");
+        target = await registry.UpdateAsync(target with { Instructions = "Preserved instructions", ContextPolicy = new(SpaceWebAccessPolicy.Disabled) });
+        var host = new DetailsActionHost();
+        var editors = new RecordingExtensionEditorHost();
+        var controller = new SpacesHomeController(registry, host, editors);
+        await controller.SelectSpaceAsync(target.Id);
+        Assert.True(controller.State.Selection!.CanEditDetails);
+        Assert.True(controller.State.Selection.CanEditGraph);
+
+        await controller.EditDetailsAsync(target.Id);
+
+        var action = Assert.Single(host.Actions);
+        Assert.Equal(SpacesActionKind.EditDetails, action.Kind);
+        Assert.Equal(SpaceScope.ForCustom(target.Id), action.Context.Scope);
+        Assert.Equal(System.Text.Json.JsonSerializer.Serialize(target), System.Text.Json.JsonSerializer.Serialize(action.Context.RegisteredSpace));
+        Assert.Equal(System.Text.Json.JsonSerializer.Serialize(target), System.Text.Json.JsonSerializer.Serialize(await registry.GetAsync(target.Id)));
+        Assert.Empty(editors.GraphEditorCalls);
+        await controller.EditGraphAsync(target.Id);
+        Assert.Equal(target.Id, Assert.Single(editors.GraphEditorCalls));
+        await controller.SelectSpaceAsync(SpaceRegistry.ChatSpaceId);
+        Assert.False(controller.State.Selection!.CanEditDetails);
+        await controller.EditExtensionsAsync(SpaceRegistry.ChatSpaceId);
+        Assert.Equal(SpaceRegistry.ChatSpaceId, Assert.Single(editors.EventsAndExtensionsCalls));
+    }
+
+    [Fact]
+    public async Task Legacy_host_cannot_advertise_or_dispatch_details()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var target = await registry.CreateAsync("Legacy target");
+        var host = new RecordingActionHost();
+        var controller = new SpacesHomeController(registry, host);
+        await controller.SelectSpaceAsync(target.Id);
+        Assert.False(controller.State.Selection!.CanEditDetails);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => controller.EditDetailsAsync(target.Id));
+        Assert.Empty(host.Actions);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Details_refuses_nonselected_or_archived_target_after_selection(bool archive)
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var target = await registry.CreateAsync("Removed target");
+        var host = new DetailsActionHost();
+        var controller = new SpacesHomeController(registry, host);
+        await controller.SelectSpaceAsync(target.Id);
+        if (archive) await registry.SetArchivedAsync(target.Id, true);
+        var id = archive ? target.Id : Guid.NewGuid();
+        await Assert.ThrowsAsync<InvalidOperationException>(() => controller.EditDetailsAsync(id));
+        Assert.Empty(host.Actions);
+    }
+
+    [Fact]
+    public async Task Details_refuses_built_in_and_nonselected_targets()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var target = await registry.CreateAsync("Other target");
+        var host = new DetailsActionHost();
+        var controller = new SpacesHomeController(registry, host);
+        await controller.SelectSpaceAsync(SpaceRegistry.ChatSpaceId);
+        Assert.False(controller.State.Selection!.CanEditDetails);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => controller.EditDetailsAsync(SpaceRegistry.ChatSpaceId));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => controller.EditDetailsAsync(target.Id));
+        Assert.Empty(host.Actions);
+    }
+
+    [Fact]
+    public async Task Held_details_resolution_cannot_dispatch_after_a_new_selection_starts()
+    {
+        var settings = new HeldDetailsSettings();
+        var registry = new SpaceRegistry(settings);
+        var first = await registry.CreateAsync("First");
+        var second = await registry.CreateAsync("Second");
+        var host = new DetailsActionHost();
+        var controller = new SpacesHomeController(registry, host);
+        await controller.SelectSpaceAsync(first.Id);
+        settings.HoldNextRegistryRead = true;
+        var edit = controller.EditDetailsAsync(first.Id);
+        Task? select = null;
+        try
+        {
+            await settings.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            select = controller.SelectSpaceAsync(second.Id);
+            // The read-only existing-record query does not hold the registry mutation lock:
+            // the newer selection must actually complete while the older details read is held.
+            await select.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.False(edit.IsCompleted);
+            Assert.Equal(second.Id, controller.State.Selection!.Id);
+            settings.Release.TrySetResult();
+            await Assert.ThrowsAsync<InvalidOperationException>(() => edit.WaitAsync(TimeSpan.FromSeconds(5)));
+            Assert.Equal(second.Id, controller.State.Selection!.Id);
+            Assert.Empty(host.Actions);
+        }
+        finally
+        {
+            settings.Release.TrySetResult();
+            _ = await Record.ExceptionAsync(() => edit.WaitAsync(TimeSpan.FromSeconds(5)));
+            if (select is not null) await select.WaitAsync(TimeSpan.FromSeconds(5));
+        }
+    }
+
+    private sealed class DetailsActionHost : ISpacesActionHost, ISpacesActionSupport
+    {
+        public List<SpacesAction> Actions { get; } = [];
+        public bool SupportsAction(SpacesActionKind action) => action is SpacesActionKind.Open or SpacesActionKind.EditDetails;
+        public Task ExecuteAsync(SpacesAction action, CancellationToken cancellationToken = default)
+        { Actions.Add(action); return Task.CompletedTask; }
+    }
+
+    private sealed class HeldDetailsSettings : IVersionedSettingsStore
+    {
+        private readonly MemorySettingsStore _inner = new();
+        public bool HoldNextRegistryRead { get; set; }
+        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public async Task<T?> GetAsync<T>(string key, CancellationToken token) where T : class
+        {
+            if (key == "spaces.registry" && HoldNextRegistryRead)
+            {
+                HoldNextRegistryRead = false;
+                Entered.TrySetResult();
+                await Release.Task.WaitAsync(token);
+            }
+            return await _inner.GetAsync<T>(key, token);
+        }
+        public Task SetAsync<T>(string key, T value, CancellationToken token) where T : class => _inner.SetAsync(key, value, token);
+        public Task RemoveAsync(string key, CancellationToken token) => _inner.RemoveAsync(key, token);
+        public Task<SettingsExportManifest> ExportAsync(CancellationToken token) => _inner.ExportAsync(token);
+        public Task<SettingsImportResult> ImportAsync(SettingsExportManifest value, CancellationToken token) => _inner.ImportAsync(value, token);
+    }
+
     private sealed class RecordingActionHost : ISpacesActionHost
     {
         public List<SpacesAction> Actions { get; } = [];

@@ -1,3 +1,8 @@
+using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
+using HavenOS.Apps.Spaces;
 using Avalonia.Headless.XUnit;
 using Haven.Application;
 using Haven.Core;
@@ -165,6 +170,149 @@ public sealed class NativeSpacesPageLifecycleTests
         scene.CreateSpace.Invalidated += (_, _) => allowed = false;
         Assert.Throws<InvalidOperationException>(() => scene.SetBusy(true));
         Assert.Equal(originalSave, scene.Save.GetValue(HavenProperties.Enabled));
+    }
+
+    [AvaloniaFact]
+    public async Task Actual_home_CUI_details_action_queues_exact_target_and_settles_before_external_retirement()
+    {
+        var registry = new SpaceRegistry(new Settings());
+        var target = await registry.CreateAsync("Real queued details");
+        var host = new DetailsHost();
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        SpacesAction? captured = null;
+        Task? settlement = null;
+        var incompleteAtAdmission = false;
+        var page = new SpacesHomePage(registry, host, SpacesHomePage.ImmediateReadinessInstance,
+            queueNavigation: (action, actualSettlement) =>
+            {
+                captured = action;
+                settlement = actualSettlement;
+                incompleteAtAdmission = !actualSettlement.IsCompleted;
+                entered.TrySetResult();
+                return true;
+            });
+        var window = new Window { Width = 1280, Height = 900, Content = page };
+        try
+        {
+            window.Show();
+            await page.ActivateAsync(CancellationToken.None);
+            await page.Controller.SelectSpaceAsync(target.Id);
+            Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+            var button = Assert.Single(page.GetVisualDescendants().OfType<Button>(), b => b.Name == "edit-space-details");
+            button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.Equal(SpacesActionKind.EditDetails, captured!.Kind);
+            Assert.Equal(target.Id, captured.Context.Scope.RegisteredSpaceId);
+            Assert.Equal(System.Text.Json.JsonSerializer.Serialize(target), System.Text.Json.JsonSerializer.Serialize(captured.Context.RegisteredSpace));
+            Assert.True(incompleteAtAdmission, "The real originating command and loader must still own admission.");
+            await settlement!.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.True(settlement.IsCompletedSuccessfully);
+            Assert.Empty(host.Actions); // Navigation belongs to the queue, not a second direct dispatch.
+            Assert.NotNull(page.Content);
+            Assert.True(await page.TryPrepareToCloseAsync(CancellationToken.None));
+            var close = page.CloseAndDrainAsync();
+            Assert.Same(close, page.CloseAndDrainAsync());
+            await close.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.Null(page.Content);
+        }
+        finally
+        {
+            _ = await Record.ExceptionAsync(() => page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(5)));
+            window.Close();
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Home_queue_does_not_manufacture_details_support_for_a_legacy_inner_host()
+    {
+        var registry = new SpaceRegistry(new Settings());
+        var target = await registry.CreateAsync("Unsupported details");
+        var calls = 0;
+        var page = new SpacesHomePage(registry, new LegacyHost(), SpacesHomePage.ImmediateReadinessInstance,
+            queueNavigation: (_, _) => { calls++; return true; });
+        try
+        {
+            await page.ActivateAsync(CancellationToken.None);
+            await page.Controller.SelectSpaceAsync(target.Id);
+            Assert.False(page.Controller.State.Selection!.CanEditDetails);
+            Assert.False(page.IsActionAvailable("spaces.edit-details"));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => page.DispatchAsync("spaces.edit-details", target.Id).AsTask());
+            Assert.Equal(0, calls);
+            await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        }
+        finally { _ = await Record.ExceptionAsync(() => page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(5))); }
+    }
+
+    [AvaloniaFact]
+    public async Task Pending_home_binding_refresh_settles_after_close_without_publishing_to_retired_page()
+    {
+        var registry = new SpaceRegistry(new Settings());
+        var target = await registry.CreateAsync("Pending refresh target");
+        var page = new SpacesHomePage(registry, new LegacyHost(), SpacesHomePage.ImmediateReadinessInstance);
+        var publications = 0;
+        try
+        {
+            await page.ActivateAsync(CancellationToken.None);
+            Dispatcher.UIThread.RunJobs(); // Settle setup before acquiring the new controlled cohort.
+            page.PropertyChanged += CountPublication;
+            var selection = page.Controller.SelectSpaceAsync(target.Id);
+            Assert.True(selection.IsCompletedSuccessfully);
+            Assert.Equal(0, publications); // The actual UI refresh dispatcher callbacks are still queued.
+            var close = page.CloseAndDrainAsync();
+            Assert.False(close.IsCompleted);
+            await close.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.Equal(0, publications);
+            Assert.Null(page.Content);
+        }
+        finally
+        {
+            page.PropertyChanged -= CountPublication;
+            _ = await Record.ExceptionAsync(() => page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(5)));
+        }
+        void CountPublication(object? sender, System.ComponentModel.PropertyChangedEventArgs args) => publications++;
+    }
+
+    [AvaloniaFact]
+    public async Task Actual_home_binding_callback_fault_is_retained_by_external_close()
+    {
+        var registry = new SpaceRegistry(new Settings());
+        var target = await registry.CreateAsync("Binding fault target");
+        var page = new SpacesHomePage(registry, new LegacyHost(), SpacesHomePage.ImmediateReadinessInstance);
+        var cause = new IOException("Actual binding observer failure");
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        try
+        {
+            await page.ActivateAsync(CancellationToken.None);
+            Dispatcher.UIThread.RunJobs();
+            page.PropertyChanged += FailPublication;
+            await page.Controller.SelectSpaceAsync(target.Id);
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            var error = await Record.ExceptionAsync(() => page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(5)));
+            Assert.NotNull(error);
+            Assert.True(ContainsSameCause(error!, cause));
+            Assert.False(page.OriginalClose!.IsCompletedSuccessfully);
+        }
+        finally
+        {
+            page.PropertyChanged -= FailPublication;
+            _ = await Record.ExceptionAsync(() => page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(5)));
+        }
+        void FailPublication(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+        { entered.TrySetResult(); throw cause; }
+    }
+
+    private sealed class DetailsHost : ISpacesActionHost, ISpacesActionSupport
+    {
+        public List<SpacesAction> Actions { get; } = [];
+        public bool SupportsAction(SpacesActionKind action) => action is SpacesActionKind.Open or SpacesActionKind.EditDetails;
+        public Task ExecuteAsync(SpacesAction action, CancellationToken cancellationToken = default)
+        { Actions.Add(action); return Task.CompletedTask; }
+    }
+
+    private sealed class LegacyHost : ISpacesActionHost
+    {
+        public Task ExecuteAsync(SpacesAction action, CancellationToken cancellationToken = default) =>
+            throw new InvalidOperationException("Unsupported details must never reach the legacy host.");
     }
 
     private static bool ContainsSameCause(Exception actual, Exception sought) =>

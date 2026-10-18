@@ -76,7 +76,10 @@ public sealed record SpacesHomeSelection(
     IReadOnlyList<SpacesHomeCapability> Capabilities,
     bool HasExtensionEditor,
     bool CanEditExtensions,
-    bool CanEditGraph);
+    bool CanEditGraph)
+{
+    public bool CanEditDetails { get; init; }
+}
 
 public sealed record SpacesHomeMoveCandidate(Guid? Id, string Name)
 {
@@ -485,6 +488,31 @@ public sealed class SpacesHomeController
         }
     }
 
+    public async Task EditDetailsAsync(Guid spaceId, CancellationToken cancellationToken = default)
+    {
+        var selection = State;
+        var request = Interlocked.Read(ref _requestVersion);
+        DemandCurrentSelection();
+
+        var action = await _model.CreateEditDetailsActionAsync(
+            SpaceScope.ForCustom(spaceId), cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        DemandCurrentSelection();
+        await _actionHost!.ExecuteAsync(action, cancellationToken).ConfigureAwait(false);
+        PublishStatus(_actionHost is ISpacesActionAdmissionHost { IsQueueAdmission: true }
+            ? $"Opening details for {action.Context.Definition.Label}."
+            : $"Opened details for {action.Context.Definition.Label}.");
+
+        void DemandCurrentSelection()
+        {
+            if (!ReferenceEquals(State, selection) || Interlocked.Read(ref _requestVersion) != request ||
+                selection.IsLoading || selection.Selection is not { CanEditDetails: true, IsBuiltIn: false } current ||
+                current.Id != spaceId ||
+                _actionHost is not ISpacesActionSupport support || !support.SupportsAction(SpacesActionKind.EditDetails))
+                throw new InvalidOperationException("Editing details is unavailable for the current Space selection.");
+        }
+    }
+
     public async Task OpenSpaceAsync(Guid spaceId, CancellationToken cancellationToken = default)
     {
         if (_actionHost is null)
@@ -692,7 +720,11 @@ public sealed class SpacesHomeController
             capabilities,
             hasEditor,
             space.IsBuiltIn && hasEditor,
-            !space.IsBuiltIn && hasEditor);
+            !space.IsBuiltIn && hasEditor)
+        {
+            CanEditDetails = !space.IsBuiltIn && space.Origin == SpaceOrigin.UserCreated && !space.IsArchived &&
+                _actionHost is ISpacesActionSupport support && support.SupportsAction(SpacesActionKind.EditDetails)
+        };
     }
 
     private static IReadOnlyList<SpacesHomeItem> Filter(IReadOnlyList<SpacesHomeItem> source, string query)

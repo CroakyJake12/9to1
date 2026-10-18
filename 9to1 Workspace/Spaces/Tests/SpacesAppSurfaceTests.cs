@@ -54,7 +54,10 @@ public sealed class SpacesAppSurfaceTests
             .Select(component =>
             {
                 component.TryGetLiteralAttribute("action", out var action);
-                return action;
+                // Resolve canonical CUI action references; buttons may use a named action
+                // whose command and selected-ID parameter belong to document.Actions.
+                return action is not null && document.Actions.TryGetValue(action, out var definition)
+                    ? definition.Command : action;
             })
             .ToHashSet(StringComparer.Ordinal);
 
@@ -64,6 +67,9 @@ public sealed class SpacesAppSurfaceTests
         Assert.Contains("spaces.move", actions);
         Assert.Contains("spaces.fork", actions);
         Assert.Contains("spaces.archive", actions);
+        Assert.Contains("spaces.edit-details", actions);
+        Assert.Contains("spaces.edit-graph", actions);
+        Assert.Contains("spaces.edit-extensions", actions);
         Assert.Contains(components, component => component.Name == "custom-spaces");
         Assert.Contains(components, component => component.Name == "space-context-items");
     }
@@ -248,6 +254,63 @@ public sealed class SpacesAppSurfaceTests
         Assert.Equal(SpaceRegistry.StudySpaceId, host.Space!.Id);
         Assert.Equal(SpaceRegistry.ChatSpaceId, await registry.GetCurrentSpaceIdAsync());
         Assert.Equal(SpacesDestination.Chat, surface.CurrentDestination);
+    }
+
+    [Fact]
+    public async Task Typed_details_action_preserves_the_canonical_id_policies_and_document()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var target = await registry.CreateAsync("Details model", "Description");
+        target = await registry.UpdateAsync(target with { Instructions = "Original instructions", ModelPolicy = new("retained-model"), ContextPolicy = new(SpaceWebAccessPolicy.Disabled),
+            LayoutDocument = new([new(Guid.NewGuid(), "user", "Preserved graph") { Metadata = new Dictionary<string, string> { ["custom"] = "retained" } }], []) });
+        var before = await registry.GetAllAsync(includeArchived: true);
+        var action = await new SpacesModel(registry).CreateEditDetailsActionAsync(SpaceScope.ForCustom(target.Id));
+        Assert.Equal(0, (int)SpacesActionKind.Open);
+        Assert.Equal(SpacesActionKind.EditDetails, action.Kind);
+        Assert.Equal(SpaceScope.ForCustom(target.Id), action.Context.Scope);
+        Assert.Equal(System.Text.Json.JsonSerializer.Serialize(target), System.Text.Json.JsonSerializer.Serialize(action.Context.RegisteredSpace));
+        Assert.Equal(System.Text.Json.JsonSerializer.Serialize(before), System.Text.Json.JsonSerializer.Serialize(await registry.GetAllAsync(includeArchived: true)));
+    }
+
+    [Fact]
+    public async Task Typed_details_action_rejects_builtin_archived_missing_and_canceled_resolution()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var model = new SpacesModel(registry);
+        Assert.True((await registry.GetAsync(SpaceRegistry.ChatSpaceId))!.IsBuiltIn);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => model.CreateEditDetailsActionAsync(SpaceScope.Chat));
+        var target = await registry.CreateAsync("Archived");
+        await registry.SetArchivedAsync(target.Id, true);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => model.CreateEditDetailsActionAsync(SpaceScope.ForCustom(target.Id)));
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => model.CreateEditDetailsActionAsync(SpaceScope.ForCustom(Guid.NewGuid())));
+        using var canceled = new CancellationTokenSource();
+        canceled.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => model.CreateEditDetailsActionAsync(SpaceScope.ForCustom(target.Id), canceled.Token));
+    }
+
+    [Fact]
+    public async Task Missing_existing_details_does_not_seed_or_write_registry_state()
+    {
+        var settings = new MemorySettingsStore();
+        var model = new SpacesModel(new SpaceRegistry(settings));
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => model.CreateEditDetailsActionAsync(SpaceScope.ForCustom(Guid.NewGuid())));
+        Assert.Null(await settings.GetAsync<object>("spaces.registry", CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Legacy_navigation_explicitly_refuses_details_without_opening_chat_or_a_space()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var target = await registry.CreateAsync("No details route");
+        var action = await new SpacesModel(registry).CreateEditDetailsActionAsync(SpaceScope.ForCustom(target.Id));
+        var navigation = new RecordingHost();
+        var host = new SpacesNavigationActionHost(navigation);
+        Assert.True(host.SupportsAction(SpacesActionKind.Open));
+        Assert.False(host.SupportsAction(SpacesActionKind.EditDetails));
+        await Assert.ThrowsAsync<NotSupportedException>(() => host.ExecuteAsync(action));
+        Assert.Null(navigation.Mode);
+        Assert.Null(navigation.Space);
+        Assert.False(navigation.HomeOpened);
     }
 
     private sealed class BlockingRecordingHost : ISpacesNavigationHost

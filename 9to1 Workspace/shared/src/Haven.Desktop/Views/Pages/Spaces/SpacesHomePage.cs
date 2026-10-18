@@ -142,10 +142,7 @@ public sealed class SpacesHomePage : UserControl, IActivatablePage,
             original.BindPublicationGuard(() => IsCurrent(generation));
             using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
             await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                original.DemandPublication();
-                _bindings.Refresh();
-            }).GetTask()).ConfigureAwait(false);
+                original.RunAcceptedPublicationCallback(_bindings.Refresh)).GetTask()).ConfigureAwait(false);
         });
     }
 
@@ -191,6 +188,9 @@ public sealed class SpacesHomePage : UserControl, IActivatablePage,
                 break;
             case "spaces.open":
                 await original.AwaitAsync(InvokeOriginalSource(() => _controller.OpenSpaceAsync(id, token))).ConfigureAwait(false);
+                break;
+            case "spaces.edit-details":
+                await original.AwaitAsync(InvokeOriginalSource(() => _controller.EditDetailsAsync(id, token))).ConfigureAwait(false);
                 break;
             case "spaces.rename":
                 await original.AwaitAsync(InvokeOriginalSource(() => _controller.StartRenameAsync(id, token))).ConfigureAwait(false);
@@ -343,7 +343,7 @@ public sealed class SpacesHomePage : UserControl, IActivatablePage,
     /// downstream navigation. Without the callback, the inner host is called directly so direct
     /// standalone/domain callers keep their normal completion semantics.
     /// </summary>
-    private sealed class QueuedSpacesActionHost : ISpacesActionHost, ISpacesActionAdmissionHost
+    private sealed class QueuedSpacesActionHost : ISpacesActionHost, ISpacesActionAdmissionHost, ISpacesActionSupport
     {
         private readonly SpacesHomePage _page;
         private readonly ISpacesActionHost _inner;
@@ -360,8 +360,14 @@ public sealed class SpacesHomePage : UserControl, IActivatablePage,
 
         public bool IsQueueAdmission => _queueNavigation is not null;
 
+        public bool SupportsAction(SpacesActionKind action) =>
+            _inner is ISpacesActionSupport support && support.SupportsAction(action);
+
         public Task ExecuteAsync(SpacesAction action, CancellationToken cancellationToken)
         {
+            if (action.Kind == SpacesActionKind.EditDetails && !SupportsAction(action.Kind))
+                throw new NotSupportedException("The actual Spaces host does not support editing details.");
+
             if (_queueNavigation is null)
                 return _inner.ExecuteAsync(action, cancellationToken);
 
@@ -375,11 +381,11 @@ public sealed class SpacesHomePage : UserControl, IActivatablePage,
             if (exactShow is null)
                 throw new InvalidOperationException("No exact original Spaces Home Show is available for action settlement.");
 
-            return ExecuteQueuedAsync(action, originating, exactShow, cancellationToken);
+            return ExecuteQueuedAsync(action, originating, exactShow, _page._controller.State, cancellationToken);
         }
 
         private async Task ExecuteQueuedAsync(SpacesAction action, DesktopOriginalWorkLifetime.Original originating,
-            Task<CuiSceneAvailability> exactShow, CancellationToken cancellationToken)
+            Task<CuiSceneAvailability> exactShow, SpacesHomeViewState selection, CancellationToken cancellationToken)
         {
             // Capture the actual loader action settlement on the UI dispatcher, then combine it
             // with the SAME originating page original so the queue cannot navigate until both the
@@ -393,6 +399,13 @@ public sealed class SpacesHomePage : UserControl, IActivatablePage,
             {
                 originating.RunAcceptedPublicationCallback(() =>
                 {
+                    if (action.Kind == SpacesActionKind.EditDetails)
+                        cancellationToken.ThrowIfCancellationRequested();
+                    if (action.Kind == SpacesActionKind.EditDetails &&
+                        (!ReferenceEquals(_page._controller.State, selection) ||
+                         selection.Selection is not { CanEditDetails: true, IsBuiltIn: false } current ||
+                         current.Id != action.Context.Scope.RegisteredSpaceId || !SupportsAction(action.Kind)))
+                        throw new InvalidOperationException("The Space selection changed before details queue admission.");
                     admitted = _queueNavigation!(action, combined);
                 });
             }

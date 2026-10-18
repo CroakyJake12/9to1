@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui;
@@ -246,6 +247,52 @@ public sealed class SpacesHomeCuiRenderingTests
         Assert.Single(dispatched);
         Assert.Equal("spaces.set-query", dispatched[0].Command);
         Assert.Equal("find", dispatched[0].Parameter);
+    }
+
+    [Fact]
+    public async Task Authored_details_action_is_distinct_targeted_and_hidden_without_host_availability()
+    {
+        using var lifetime = new CancellationTokenSource();
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));
+        await session.Dispatch<bool>(async () =>
+        {
+            var id = Guid.NewGuid();
+            var selection = new SpacesHomeSelection(id, "Details target", "Description", false, true, false, null,
+                "Default", "Ask", "Conversation", [], [], true, false, true) { CanEditDetails = true };
+            var state = StateWithSelection(selection);
+            var actions = new List<(string Command, object? Parameter)>();
+            var bindings = new SpacesHomeCuiBindings(() => state, (command, parameter, _) =>
+            { actions.Add((command, parameter)); return ValueTask.CompletedTask; });
+            using var loader = new CuiControlLoader();
+            loader.SetBindingContext(bindings);
+            loader.SetActionDispatcher(bindings);
+            Window? window = null;
+            try
+            {
+                var (tree, diagnostics) = loader.LoadMarkup(ReadAuthoredSource());
+                Assert.Empty(diagnostics);
+                var root = Assert.IsAssignableFrom<Control>(tree);
+                loader.WireBindings(root);
+                window = new Window { Content = root, Width = 1280, Height = 900 };
+                window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                var details = Assert.Single(root.GetVisualDescendants().OfType<Button>(), button => button.Name == "edit-space-details");
+                Assert.True(details.IsEnabled);
+                Assert.True(bindings.IsActionAvailable("spaces.edit-details"));
+                details.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await loader.WhenActionsIdleAsync();
+                Assert.Equal(("spaces.edit-details", (object?)id), Assert.Single(actions));
+                Assert.Contains(root.GetVisualDescendants().OfType<Button>(), button => button.Name == "edit-graph");
+                Assert.True(bindings.IsActionAvailable("spaces.edit-graph"));
+
+                state = state with { Selection = selection with { CanEditDetails = false } };
+                bindings.Refresh(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                Assert.False(bindings.IsActionAvailable("spaces.edit-details"));
+                Assert.DoesNotContain(root.GetVisualDescendants().OfType<Button>(), button => button.Name == "edit-space-details");
+                Assert.True(bindings.IsActionAvailable("spaces.edit-graph"));
+            }
+            finally { window?.Close(); loader.Dispose(); await loader.WhenActionsIdleAsync(); }
+            return true;
+        }, lifetime.Token);
     }
 
     private static string ReadAuthoredSource()

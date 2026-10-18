@@ -95,7 +95,8 @@ public sealed record SpacesContext(
 
 public enum SpacesActionKind
 {
-    Open
+    Open,
+    EditDetails
 }
 
 public sealed record SpacesAction(SpacesActionKind Kind, SpacesContext Context);
@@ -109,10 +110,19 @@ public interface ISpacesActionHost
 }
 
 /// <summary>
+/// Optional host support for distinct actions. This describes implementation availability only;
+/// it does not grant permission to read or change a Space.
+/// </summary>
+public interface ISpacesActionSupport
+{
+    bool SupportsAction(SpacesActionKind action);
+}
+
+/// <summary>
 /// Adapts the typed model to the existing Haven navigation surface without recreating Chat, Study,
 /// Tasks, or configured Space launch behaviour.
 /// </summary>
-public sealed class SpacesNavigationActionHost : ISpacesActionHost
+public sealed class SpacesNavigationActionHost : ISpacesActionHost, ISpacesActionSupport
 {
     private readonly ISpacesNavigationHost _navigation;
 
@@ -121,6 +131,8 @@ public sealed class SpacesNavigationActionHost : ISpacesActionHost
         _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
     }
 
+    public bool SupportsAction(SpacesActionKind action) => action == SpacesActionKind.Open;
+
     public Task ExecuteAsync(SpacesAction action, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(action);
@@ -128,6 +140,7 @@ public sealed class SpacesNavigationActionHost : ISpacesActionHost
         return action.Kind switch
         {
             SpacesActionKind.Open => OpenAsync(action.Context, cancellationToken),
+            SpacesActionKind.EditDetails => throw new NotSupportedException("This navigation host does not support editing Space details."),
             _ => throw new ArgumentOutOfRangeException(nameof(action), action.Kind, "Unknown Spaces action.")
         };
     }
@@ -305,6 +318,22 @@ public sealed class SpacesModel
             throw new InvalidOperationException(
                 $"Spaces scope '{scope.Key}' does not match registered Space '{registeredSpaceId}'.");
         return new(SpacesActionKind.Open, new(definition, registeredSpace));
+    }
+
+    public async Task<SpacesAction> CreateEditDetailsActionAsync(
+        SpaceScope scope,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(scope);
+        cancellationToken.ThrowIfCancellationRequested();
+        var id = scope.RegisteredSpaceId
+            ?? throw new InvalidOperationException("This destination has no registered Space record.");
+        // Read existing canonical state without reconciling, migrating or seeding registry records.
+        var space = await _spaces.ReadExistingAsync(id, cancellationToken).ConfigureAwait(false)
+            ?? throw new KeyNotFoundException($"Registered Space '{id}' was not found.");
+        if (space.IsBuiltIn || space.Origin != SpaceOrigin.UserCreated || space.IsArchived || scope != SpaceScope.ForCustom(id))
+            throw new InvalidOperationException("Only an active user-created Space has editable details.");
+        return new(SpacesActionKind.EditDetails, new(FromRegisteredSpace(space), space));
     }
 
     private static SpacesSpaceDefinition FindBuiltIn(SpacesDestinationKind destination) =>

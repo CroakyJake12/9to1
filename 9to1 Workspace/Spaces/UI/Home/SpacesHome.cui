@@ -37,6 +37,7 @@
     <Action name="ArchiveSelected" command="spaces.archive" parameter="{Binding selection.id}" />
     <Action name="EditExtensions" command="spaces.edit-extensions" parameter="{Binding selection.id}" />
     <Action name="EditGraph" command="spaces.edit-graph" parameter="{Binding selection.id}" />
+    <Action name="EditDetails" command="spaces.edit-details" parameter="{Binding selection.id}" />
     <Action name="MoveSelected" command="spaces.move" parameter="{Binding selection.id}" />
     <Action name="AddContext" command="spaces.add-context" parameter="{Binding selection.id}" />
   </Actions>
@@ -102,6 +103,9 @@
                   <Button id="start-rename" action="RenameSelected" content="Rename" Interactive="{Binding selection.canEdit}" accessible-name="Rename selected Space" />
                   <Button id="fork-space" action="ForkSelected" content="Copy" accessible-name="Make a copy of selected Space" />
                   <Button id="open-selected-space" action="OpenSelected" content="Open" accessible-name="Open selected Space" />
+                  <If Condition="{Binding selection.canEditDetails}">
+                    <Button id="edit-space-details" action="EditDetails" content="Edit details" Interactive="{Binding selection.canEditDetails}" accessible-name="Edit Space details" />
+                  </If>
                   <Button id="archive-space" action="ArchiveSelected" content="Archive" Interactive="{Binding selection.canEdit}" accessible-name="Archive selected Space" />
                   <If Condition="{Binding selection.isBuiltIn}">
                     <Button id="edit-extensions" action="EditExtensions" content="Edit extensions" Interactive="{Binding selection.canEditExtensions}" accessible-name="Edit Space extensions" />
