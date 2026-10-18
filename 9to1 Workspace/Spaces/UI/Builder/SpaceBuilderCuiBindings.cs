@@ -72,6 +72,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             {
                 id = b.CapabilityId,
                 kind = b.Kind.ToString(),
+                key = b.Kind.ToString() + ":" + b.CapabilityId,
                 version = b.VersionPin ?? "(unpinned)"
             }).ToArray(),
             "builder.hasNoCapabilities" => state.Draft.CapabilityBindings.Count == 0,
@@ -171,11 +172,14 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
     {
         if (IsActionAvailable(command) != true)
             throw new InvalidOperationException("This Space Builder command is unavailable.");
-        if (command == "space-builder.capability.remove" && parameter is string capId)
+        if (command == "space-builder.capability.remove" && parameter is string compositeKey)
         {
-            var kind = _state().Draft.CapabilityBindings.FirstOrDefault(b => b.CapabilityId == capId)?.Kind ?? SpaceCapabilityKind.Plugin;
-            _detachCapability(kind, capId);
-            return;
+            var parts = compositeKey.Split(':', 2);
+            if (parts.Length == 2 && Enum.TryParse<SpaceCapabilityKind>(parts[0], out var kind))
+            {
+                _detachCapability(kind, parts[1]);
+                return;
+            }
         }
         await _dispatch(command, parameter, cancellationToken);
     }

@@ -128,7 +128,7 @@ internal sealed partial class SpacesBrowseAppContentSession
                 if (action.Context.Scope.RegisteredSpaceId is not { } id ||
                     action.Context.Scope != SpaceScope.ForCustom(id) || action.Context.Definition.IsBuiltIn)
                     throw new InvalidOperationException("Retain the canonical user-created Details target.");
-                await OpenDetailsOnUiAsync(id, token);
+                await OpenBuilderOnUiAsync(id, token);
                 break;
             default: throw new ArgumentOutOfRangeException(nameof(action), action.Kind, "Unknown Spaces action.");
         }
@@ -209,6 +209,7 @@ internal sealed partial class SpacesBrowseAppContentSession
                     SetRootContent(page); // Only successful native publication changes the immutable projection.
                     _publishedDetailsRoute = new(page, AppContentAddress.Parse($"9to1://spaces/details/{id:D}"));
                     _publishedChatRoute = null;
+                    _publishedBuilderRoute = null;
                     _address = _publishedDetailsRoute.Address;
                     _routeEpoch++;
                     _detailsBySpace[id] = page;
@@ -314,7 +315,7 @@ internal sealed partial class SpacesBrowseAppContentSession
                         {
                             DemandAlive(); linked.Token.ThrowIfCancellationRequested();
                             SetRootContent(home);
-                            _publishedDetailsRoute = null; _publishedChatRoute = null;
+                            _publishedDetailsRoute = null; _publishedChatRoute = null; _publishedBuilderRoute = null;
                             _routeEpoch++; UpdateAddress(home.Controller.State.Selection?.Id);
                         }
                         PublishStateChanged();

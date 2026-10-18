@@ -209,6 +209,13 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
 
     private async ValueTask DispatchAsync(string command, object? parameter, CancellationToken token)
     {
+        if (command == "space-builder.capability.remove" && parameter is string compositeKey)
+        {
+            var parts = compositeKey.Split(':', 2);
+            if (parts.Length == 2 && Enum.TryParse<SpaceCapabilityKind>(parts[0], out var kind))
+                TryDetachCapability(kind, parts[1]);
+            return;
+        }
         if (command == "space-builder.skill.attach" && parameter is string skillId)
         {
             var skill = _installedSkills.FirstOrDefault(s => s.SkillId == skillId);

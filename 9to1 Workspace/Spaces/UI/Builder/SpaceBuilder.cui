@@ -1,6 +1,6 @@
 <Cui id="spaces.builder" version="1">
   <Actions>
-    <Action name="RemoveCapability" command="space-builder.capability.remove" parameter="{Binding cap.id}" />
+    <Action name="RemoveCapability" command="space-builder.capability.remove" parameter="{Binding cap.key}" />
     <Action name="AttachSkill" command="space-builder.skill.attach" parameter="{Binding skill.id}" />
     <Action name="AttachPlugin" command="space-builder.plugin.attach" parameter="{Binding plugin.id}" />
   </Actions>
@@ -58,7 +58,7 @@
         <Container Type="Vertical Stack" CellGap="4">
           <Text text="Attached capabilities" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
           <Text text="Canonical IDs and pinned versions. Attached references do not install or grant permissions." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-          <Repeat id="space-builder-capabilities" Source="{Binding builder.capabilities}" As="cap" Key="{Binding cap.id}">
+          <Repeat id="space-builder-capabilities" Source="{Binding builder.capabilities}" As="cap" Key="{Binding cap.key}">
             <Container id="space-builder-capability-row" Type="Horizontal Stack" CellGap="8">
               <Text id="space-builder-capability-kind" text="{Binding cap.kind}" foreground="{Resource CuiTextBrush}" />
               <Text id="space-builder-capability-id" text="{Binding cap.id}" foreground="{Resource CuiTextBrush}" />
