@@ -24,10 +24,11 @@ public sealed class SpacesHomeControllerTests
     }
 
     [Fact]
-    public async Task CreateCustomSpaceAsync_creates_selects_and_starts_rename()
+    public async Task CreateCustomSpaceAsync_creates_selects_and_queues_builder()
     {
         var registry = new SpaceRegistry(new MemorySettingsStore());
-        var controller = new SpacesHomeController(registry);
+        var host = new DetailsActionHost();
+        var controller = new SpacesHomeController(registry, host);
         await controller.LoadAsync();
 
         await controller.CreateCustomSpaceAsync();
@@ -36,9 +37,11 @@ public sealed class SpacesHomeControllerTests
         var custom = controller.State.CustomSpaces[0];
         Assert.Equal("New Space", custom.Name);
         Assert.Equal(controller.State.Selection?.Id, custom.Id);
-        Assert.Equal(custom.Id, controller.State.PendingRenameSpaceId);
-        Assert.True(controller.State.Selection?.IsRenaming);
-        Assert.Equal("New Space", controller.State.RenameDraft);
+        Assert.Null(controller.State.PendingRenameSpaceId);
+        Assert.False(controller.State.Selection?.IsRenaming ?? false);
+        Assert.Single(host.Actions);
+        Assert.Equal(SpacesActionKind.EditDetails, host.Actions[0].Kind);
+        Assert.Equal(custom.Id, host.Actions[0].Context.Scope.RegisteredSpaceId);
         var canonical = await registry.GetAsync(custom.Id);
         Assert.NotNull(canonical);
         await registry.UpdateAsync(canonical! with { IconKey = "book" }, canonical!.Revision);

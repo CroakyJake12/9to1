@@ -282,13 +282,15 @@ public sealed class SpacesHomeController
             var created = await _model.CreateCustomSpaceAsync("New Space", null, cancellationToken).ConfigureAwait(false);
             var id = created.Scope.RegisteredSpaceId ?? throw new InvalidOperationException("Created Space did not receive an identifier.");
             await LoadCoreAsync(
-                new LoadIntent(SelectedId: id, PendingRenameSpaceId: id, RenameDraft: created.Label),
+                new LoadIntent(SelectedId: id, PendingRenameSpaceId: null, RenameDraft: string.Empty),
                 cancellationToken).ConfigureAwait(false);
             try { await _registry.SetCurrentSpaceIdAsync(id, cancellationToken).ConfigureAwait(false); }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
                 PublishStatus($"Could not persist selected Space: {exception.Message}");
             }
+            if (_actionHost is not null)
+                await EditDetailsAsync(id, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
