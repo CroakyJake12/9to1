@@ -426,7 +426,7 @@ public sealed class CuiCompiler
         if (!component.IsDefinition && component.Type.Equals("Container", StringComparison.OrdinalIgnoreCase) && declaredType is null && !component.Properties.Keys.Any(key => key.Equals("Type", StringComparison.OrdinalIgnoreCase)))
             diagnostics.Error("CUIC022", "Container requires a registered Type.", component.Span);
         if (element is not null && declaredType is not null && component.Type is not ("Object" or "Audio" or "Video") && !typeValues.Contains(declaredType.Value)
-            && !_declaredTypes.Contains(component.Type + "\0" + declaredType.Value) && !_registry.IsRegisteredRuntimeType(declaredType.Value))
+            && !_declaredTypes.Contains(component.Type + "\0" + declaredType.Value) && !_registry.IsRegisteredControlType(declaredType.Value))
             diagnostics.Error("CUIC017", $"Unknown {component.Type} Type '{declaredType.Value}'. Supported Types: {string.Join(", ", typeValues)}.", declaredType.Span);
         foreach (var (name, value) in component.Properties)
         {
@@ -441,15 +441,11 @@ public sealed class CuiCompiler
 
             // A custom Definition has no built-in descriptor, but registered literal
             // types still apply. Do not let reuse turn an invalid number/bool into output.
-            if (element is not null && !element.AllowedProperties.Contains(property.Name)
-                && !property.IsAttached)
+            if (element is not null && !_registry.SupportsProperty(element, declaredType?.Value, property))
             {
                 diagnostics.Error("CUIC013", $"Property '{property.Name}' is not allowed on '{component.Type}'.", value.Span);
                 continue;
             }
-
-            if (element is not null && !property.IsAttached && !property.SupportedElementTypes.Contains(element.Name))
-                diagnostics.Error("CUIC014", $"Property '{property.Name}' is not supported on '{component.Type}'.", value.Span);
 
             if (declaredType is not null && property.Name is "RowSizes" or "ColumnSizes" or "Rows" or "Columns"
                 && !declaredType.Value.Equals("Grid", StringComparison.OrdinalIgnoreCase))
@@ -458,7 +454,7 @@ public sealed class CuiCompiler
             if (value is CuiLiteralValue literal && !IsValidLiteral(property.LanguageType, literal.Value))
                 diagnostics.Error("CUIC015", $"Value '{literal.Value}' is not valid for {property.LanguageType} property '{property.Name}'.", value.Span);
             else if (value is CuiLiteralValue symbol && property.AllowedValues.Count > 0
-                      && !property.AllowedValues.Contains(symbol.Value) && !_registry.IsRegisteredRuntimeType(symbol.Value))
+                      && !property.AllowedValues.Contains(symbol.Value))
             {
                 var suggestion = Suggest(symbol.Value, property.AllowedValues);
                 diagnostics.Error("CUIC017", suggestion is null

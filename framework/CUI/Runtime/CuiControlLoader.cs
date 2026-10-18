@@ -1489,6 +1489,10 @@ public sealed class CuiControlLoader : IDisposable
 
     private void ApplyProperties(Control control, CuiComponent component)
     {
+        var objectType = component.Type == "Object"
+            ? component.Properties.FirstOrDefault(pair => pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)).Value
+            : null;
+        var resolvedObjectType = objectType is null ? null : ResolveValue(objectType);
         var typeName = component.Properties.FirstOrDefault(pair => pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)).Value as CuiLiteralValue;
         if (typeName is not null && _typeDefinitions.TryGetValue(component.Type + "\0" + typeName.Value, out var typeDefinition))
             foreach (var (name, value) in typeDefinition.Properties.Where(pair => !pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)))
@@ -1498,7 +1502,7 @@ public sealed class CuiControlLoader : IDisposable
             if (component.Repeat is not null && (propName.Equals("Panel", StringComparison.OrdinalIgnoreCase) || RepeatItemPlacement(propName) is not null)) continue;
             if (!_controlRegistry.TryGetProperty(propName, out var descriptor))
                 throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR052", CuiDiagnosticSeverity.Error, $"Unknown or forbidden CUI property '{propName}'.", value.Span));
-            if (_controlRegistry.TryResolveElement(component.Type, out var element) && !element.AllowedProperties.Contains(descriptor.Name) && !descriptor.IsAttached)
+            if (_controlRegistry.TryResolveElement(component.Type, out var element) && !_controlRegistry.SupportsProperty(element, resolvedObjectType, descriptor))
                 throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR052", CuiDiagnosticSeverity.Error, $"CUI property '{propName}' is not supported on {component.Type}.", value.Span));
             // Type selects the native lowering of core polymorphic elements.
             if (propName.Equals("Type", StringComparison.OrdinalIgnoreCase))

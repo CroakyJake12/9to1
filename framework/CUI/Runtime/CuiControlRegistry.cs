@@ -18,6 +18,7 @@ public sealed class CuiControlRegistry
     public const string ComponentRegistryVersion = "2.0";
     private readonly Dictionary<string, Func<CuiComponent, Control>> _customFactories = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Func<CuiComponent, Control>> _objectFactories = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, IReadOnlySet<string>> _objectProperties = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Func<CuiComponent, Control>> _authoredFactories = new(StringComparer.Ordinal);
     private ICuiBackdropRenderer? _backdropRenderer;
     private Func<string, Control, Avalonia.Media.IImage?>? _imageSourceResolver;
@@ -27,6 +28,15 @@ public sealed class CuiControlRegistry
 
     /// <summary>The canonical read-only CUI element/property metadata registry.</summary>
     public static CuiControlRegistry Default { get; } = new();
+
+    public CuiControlRegistry()
+    {
+        // Markdown is a specialised content renderer behind Object's typed boundary,
+        // not an additional visual primitive or an application-owned UI factory.
+        RegisterObjectRenderer("Markdown", _ => new CuiMarkdownView(),
+            ["Foreground", "FontFamily", "FontSize", "FontWeight", "FontStyle", "FontRole",
+             "TextDecoration", "TextWrapping", "TextAlignment", "VerticalTextAlignment"]);
+    }
 
     /// <summary>Resolve host-owned, bounded image identities without opening arbitrary files or network locations.</summary>
     public void RegisterImageSourceResolver(Func<string, Control, Avalonia.Media.IImage?> resolver)
@@ -67,7 +77,9 @@ public sealed class CuiControlRegistry
             values = property.AllowedValues.Order(StringComparer.Ordinal),
             animatable = property.IsAnimatable, placement = property.IsAttached, writable = property.IsWritable
         }),
-        objectTypes = _objectFactories.Keys.Order(StringComparer.Ordinal)
+        objectTypes = _objectFactories.Keys.Order(StringComparer.Ordinal),
+        objectTypeProperties = _objectProperties.OrderBy(pair => pair.Key, StringComparer.Ordinal)
+            .Select(pair => new { type = pair.Key, properties = pair.Value.Order(StringComparer.Ordinal) })
     }, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
 
     public static IReadOnlySet<string> TypesFor(string element) => (element.ToLowerInvariant() switch
@@ -87,6 +99,12 @@ public sealed class CuiControlRegistry
         descriptor = null!;
         return false;
     }
+
+    /// <summary>Specialised Object capabilities extend only their registered type's property contract.</summary>
+    public bool SupportsProperty(CuiRuntimeElementDescriptor element, string? objectType, CuiRuntimePropertyDescriptor property) =>
+        property.IsAttached || element.AllowedProperties.Contains(property.Name)
+        || element.Name == "Object" && objectType is not null
+        && _objectProperties.TryGetValue(objectType, out var properties) && properties.Contains(property.Name);
 
     /// <summary>Resolve canonical metadata for a registered runtime property.</summary>
     public bool TryGetProperty(string name, out CuiRuntimePropertyDescriptor descriptor)
@@ -135,12 +153,18 @@ public sealed class CuiControlRegistry
     }
 
     /// <summary>Register a typed renderer for an Object component's Type property.</summary>
-    public void RegisterObjectRenderer(string objectType, Func<CuiComponent, Control> factory)
+    public void RegisterObjectRenderer(string objectType, Func<CuiComponent, Control> factory,
+        IEnumerable<string>? additionalProperties = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(objectType);
         ArgumentNullException.ThrowIfNull(factory);
+        var properties = (additionalProperties ?? []).Select(name =>
+            TryGetProperty(name, out var property) ? property.Name
+                : throw new ArgumentException($"Unknown CUI property '{name}' for Object Type '{objectType}'.", nameof(additionalProperties)))
+            .ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         if (!_objectFactories.TryAdd(objectType, factory))
             throw new ArgumentException($"A CUI object renderer named '{objectType}' is already registered.", nameof(objectType));
+        _objectProperties.Add(objectType, properties);
     }
 
     internal bool TryCreate(CuiComponent component, Func<CuiValue, string?> resolveValue, out Control? control, out string? error)
@@ -216,10 +240,6 @@ public sealed class CuiControlRegistry
             "container" => CreateContainer(component, resolveValue, out error),
             "text" => new TextBlock(),
             "image" => new Image(),
-            // Markdown is a first-class CUI element, not a host-registered Object renderer.
-            // It was previously reachable only through a per-host RegisterObjectRenderer call,
-            // which made a real framework primitive look like an app-specific workaround.
-            "markdown" => new CuiMarkdownView(),
             "button" => CreateButton(component, resolveValue, out error),
             "input" => CreateInput(component, resolveValue, out error),
             "anchor" => new ContentControl(),
@@ -316,6 +336,9 @@ public sealed class CuiControlRegistry
     public bool IsRegisteredRuntimeType(string name) =>
         name is not null && (_customFactories.ContainsKey(name) || _objectFactories.ContainsKey(name));
 
+    /// <summary>Object renderer identities cannot select a native primitive's specialised control type.</summary>
+    public bool IsRegisteredControlType(string name) => name is not null && _customFactories.ContainsKey(name);
+
     private static bool IsReservedType(string typeName) => BuiltInElements.Keys.Contains(typeName, StringComparer.OrdinalIgnoreCase) || CuiLanguageVocabulary.IsForbiddenElement(typeName);
 
     private static FrozenDictionary<string, CuiRuntimeElementDescriptor> CreateElementDescriptors()
@@ -351,7 +374,7 @@ public sealed class CuiControlRegistry
         {
             ("Page", false, []), ("Container", false, []), ("Text", false, []), ("Image", false, []),
             ("Audio", true, []), ("Video", true, []), ("Object", true, []), ("Button", false, []),
-            ("Input", false, []), ("Layer", false, []), ("Anchor", false, []), ("Markdown", false, [])
+            ("Input", false, []), ("Layer", false, []), ("Anchor", false, [])
         };
 
         var result = new Dictionary<string, CuiRuntimeElementDescriptor>(StringComparer.OrdinalIgnoreCase);
@@ -368,9 +391,6 @@ public sealed class CuiControlRegistry
                 "Anchor" => common.Concat(new[] { "Target", "Placement" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
                 "Audio" or "Video" => common.Concat(new[] { "Type", "Source" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
                 "Object" => common.Concat(new[] { "Text", "Type" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
-                // Rich body text. `Text` carries the Markdown source; `CodeActions` opts into the
-                // host-owned code-block action surface that CuiMarkdownView already raises.
-                "Markdown" => text.Concat(new[] { "CodeActions", "CodeActionEnabled" }).ToFrozenSet(StringComparer.OrdinalIgnoreCase),
                 _ => common.ToFrozenSet(StringComparer.OrdinalIgnoreCase),
             };
             result[name] = new CuiRuntimeElementDescriptor(

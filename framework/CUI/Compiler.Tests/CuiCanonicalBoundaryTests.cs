@@ -65,12 +65,40 @@ public sealed class CuiCanonicalBoundaryTests
     public void Types_and_layout_values_are_validated_per_canonical_element(string source) =>
         Assert.False(new CuiCompiler().Compile(source, "bad.cui", Options).Succeeded);
     [Fact]
-    public void Public_registry_has_eleven_visual_primitives_and_separate_anchor()
+    public void Public_registry_has_exactly_ten_visual_primitives_and_separate_anchor()
     {
+        Assert.Equal(10, CuiLanguageVocabulary.VisualElements.Count);
         Assert.Equal(CuiLanguageVocabulary.VisualElements.Order(StringComparer.Ordinal), CuiControlRegistry.Default.Elements.Where(element => element.IsVisual).Select(element => element.Name).Order(StringComparer.Ordinal));
+        Assert.False(CuiControlRegistry.Default.TryResolveElement("Markdown", out _));
         Assert.True(CuiControlRegistry.Default.TryResolveElement("Anchor", out var anchor));
         Assert.False(anchor.IsVisual);
         Assert.Throws<ArgumentException>(() => new CuiControlRegistry().RegisterControlType("Grid", _ => new Avalonia.Controls.Grid()));
+    }
+
+    [Fact]
+    public void Markdown_uses_a_registered_object_type_without_extending_the_primitive_vocabulary()
+    {
+        var compiler = new CuiCompiler();
+        var primitive = compiler.Compile("<Page><Markdown Text=\"Hello\"/></Page>", "invalid-markdown.cui", Options);
+        Assert.False(primitive.Succeeded);
+        Assert.Contains(primitive.Diagnostics, diagnostic => diagnostic.Code == "CUIC011");
+        var specialised = compiler.Compile("<Page><Object Type=\"Markdown\" Text=\"Hello\" FontFamily=\"Montserrat\"/></Page>", "markdown.cui", Options);
+        Assert.True(specialised.Succeeded, string.Join(Environment.NewLine, specialised.Diagnostics));
+        Assert.Equal("Object", specialised.Output!.Components[0].Children[0].Type);
+        var unrelated = compiler.Compile("<Page><Object Type=\"OtherRenderer\" FontFamily=\"Montserrat\"/></Page>", "other.cui", Options);
+        Assert.False(unrelated.Succeeded);
+        Assert.Contains(unrelated.Diagnostics, diagnostic => diagnostic.Code == "CUIC013");
+    }
+
+    [Theory]
+    [InlineData("<Page><Text Type=\"Markdown\">Hello</Text></Page>")]
+    [InlineData("<Page><Text TextWrapping=\"Markdown\">Hello</Text></Page>")]
+    [InlineData("<Page><Object Type=\"Markdown\" TextWrapping=\"Markdown\"/></Page>")]
+    public void Registered_object_names_cannot_bypass_primitive_type_or_property_value_contracts(string source)
+    {
+        var result = new CuiCompiler().Compile(source, "invalid-object-boundary.cui", Options);
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "CUIC017");
     }
     [Fact]
     public void Compiler_refuses_a_caller_invented_registry_identity()

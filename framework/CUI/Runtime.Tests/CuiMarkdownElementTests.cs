@@ -2,6 +2,7 @@ using System.Security;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Headless;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.VisualTree;
 using CakeOS.Cui;
@@ -12,15 +13,8 @@ using Xunit;
 namespace CakeOS.Cui.Runtime.Tests;
 
 /// <summary>
-/// Merge stage M3, framework: <c>Markdown</c> as a first-class CUI element.
-///
-/// Before this, <see cref="CuiMarkdownView"/> was reachable only through a host-supplied
-/// <c>RegisterObjectRenderer</c> call, so a real framework primitive depended on each app
-/// wiring it by hand. These tests pin that the element is part of the canonical vocabulary on its
-/// own, and that an authored document renders actual structure rather than a single opaque blob.
-///
-/// The desktop renderer tests cover Markdown parsing; this file covers the CUI element,
-/// its authored structure, its binding, and its incremental update path.
+/// The registered Markdown Object renders structured content through the canonical
+/// ten-element language. It retains the actual renderer, binding and streaming path.
 /// </summary>
 public sealed class CuiMarkdownElementTests
 {
@@ -42,7 +36,7 @@ public sealed class CuiMarkdownElementTests
     // Literal XML attribute whitespace is normalized by the parser. Character references
     // preserve the Markdown line boundaries that an authored multiline value requires.
     private static string AuthoredMarkdown(string text) =>
-        "<Cui><Markdown id=\"body\" text=\"" + SecurityElement.Escape(text)!
+        "<Cui><Object Type=\"Markdown\" id=\"body\" text=\"" + SecurityElement.Escape(text)!
             .Replace("\r", "&#13;").Replace("\n", "&#10;").Replace("\t", "&#9;") + "\" /></Cui>";
 
     /// <summary>The element may be the authored root, so search self-or-descendants.</summary>
@@ -53,13 +47,13 @@ public sealed class CuiMarkdownElementTests
     }
 
     [Fact]
-    public void Markdown_is_part_of_the_canonical_element_vocabulary()
+    public void Markdown_is_a_registered_object_type_not_an_extra_primitive()
     {
-        var descriptor = CuiControlRegistry.Default.Elements
-            .SingleOrDefault(element => element.Name == "Markdown");
-
-        Assert.NotNull(descriptor);
-        Assert.Contains("Text", descriptor!.AllowedProperties);
+        Assert.DoesNotContain(CuiControlRegistry.Default.Elements, element => element.Name == "Markdown");
+        Assert.True(CuiControlRegistry.Default.IsRegisteredRuntimeType("Markdown"));
+        Assert.Equal(10, CuiControlRegistry.Default.Elements.Count(element => element.IsVisual));
+        Assert.True(CuiControlRegistry.Default.TryResolveElement("Object", out var descriptor));
+        Assert.Contains("Text", descriptor.AllowedProperties);
     }
 
     [Fact]
@@ -125,13 +119,14 @@ public sealed class CuiMarkdownElementTests
             try
             {
                 var (tree, diagnostics) = loader.LoadMarkup(
-                    "<Cui><Markdown id=\"body\" text=\"{Binding Body}\" /></Cui>");
+                    "<Cui><Object Type=\"Markdown\" id=\"body\" text=\"{Binding Body}\" FontFamily=\"Montserrat\" /></Cui>");
                 Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error);
                 var root = Assert.IsAssignableFrom<Control>(tree);
                 loader.WireBindings(root);
                 window.Content = root; window.Show(); window.UpdateLayout();
 
                 var markdown = MarkdownOf(root);
+                Assert.Equal("Montserrat", markdown.FontFamily.Name);
                 var original = Assert.Single(markdown.GetVisualDescendants().OfType<TextBlock>());
                 Assert.Equal("first paragraph", original.Text);
                 Assert.True(original.Bounds.Width > 0 && original.Bounds.Height > 0);
@@ -149,6 +144,55 @@ public sealed class CuiMarkdownElementTests
                 Assert.Contains(updated, block => block.Text == "Growing" && block.FontWeight == FontWeight.SemiBold);
                 Assert.Contains(updated, block => block.Text == "item");
                 Assert.Single(updated, block => block.Text == "•");
+                return true;
+            }
+            finally { loader.Dispose(); await loader.WhenActionsIdleAsync(); window.Close(); }
+        }, lifetime.Token);
+    }
+
+    [Fact]
+    public async Task Registered_markdown_preserves_current_code_action_requests_after_live_updates()
+    {
+        using var lifetime = new CancellationTokenSource();
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            var model = new CuiViewModel();
+            model.Set("Body", "```csharp\nvar first = 1;\n```");
+            var loader = new CuiControlLoader();
+            loader.SetBindingContext(model);
+            var window = new Window { Width = 800, Height = 600 };
+            try
+            {
+                var (tree, diagnostics) = loader.LoadMarkup(
+                    "<Cui><Object Type=\"Markdown\" id=\"body\" text=\"{Binding Body}\" /></Cui>");
+                Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error);
+                var root = Assert.IsAssignableFrom<Control>(tree);
+                loader.WireBindings(root);
+                window.Content = root; window.Show(); window.UpdateLayout();
+                var markdown = MarkdownOf(root);
+                var requests = new List<CuiMarkdownCodeActionRequest>();
+                markdown.CodeActionRequested += requests.Add;
+                var original = Assert.Single(markdown.GetVisualDescendants().OfType<Button>(), button => Equals(button.Content, "Copy"));
+                original.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                var first = Assert.Single(requests);
+                Assert.Equal(CuiMarkdownCodeAction.Copy, first.Action);
+                Assert.Equal("csharp", first.Language);
+                Assert.Equal("var first = 1;", first.Code);
+                Assert.True(markdown.IsCurrentOriginalCodeAction(first));
+
+                model.Set("Body", "```csharp\nvar second = 2;\n```");
+                await loader.WhenActionsIdleAsync();
+                window.UpdateLayout();
+                Assert.False(markdown.IsCurrentOriginalCodeAction(first));
+                original.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.Single(requests);
+                var current = Assert.Single(markdown.GetVisualDescendants().OfType<Button>(), button => Equals(button.Content, "Ask to run"));
+                current.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.Equal(2, requests.Count);
+                Assert.Equal(CuiMarkdownCodeAction.AskToRun, requests[1].Action);
+                Assert.Equal("var second = 2;", requests[1].Code);
+                Assert.True(markdown.IsCurrentOriginalCodeAction(requests[1]));
                 return true;
             }
             finally { loader.Dispose(); await loader.WhenActionsIdleAsync(); window.Close(); }
