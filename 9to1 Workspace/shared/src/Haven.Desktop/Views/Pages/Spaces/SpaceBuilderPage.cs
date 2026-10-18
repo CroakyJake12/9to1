@@ -17,6 +17,7 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
 {
     private readonly object _gate = new();
     private readonly SpaceBuilderController _controller;
+    private readonly ExtensionManager? _extensions;
     private readonly SpaceBuilderCuiBindings _bindings;
     private readonly ICuiSceneReadiness _readiness;
     private readonly CuiSceneHost _host;
@@ -30,17 +31,23 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
     private long _editEpoch;
     private int _controllerOperations;
     private ClosePreparation? _lease;
+    private IReadOnlyList<Haven.Core.ExtensionSkillCatalogEntry> _installedSkills = [];
+    private IReadOnlyList<Haven.Core.InstalledExtensionPackage> _installedPlugins = [];
     private Task<ClosePreparation?>? _preparation;
     private Decision? _decision;
     private readonly List<Decision> _decisions = [];
 
     public SpaceBuilderPage(SpaceRegistry registry, Guid spaceId, ICuiSceneReadiness readiness)
-        : this(registry, spaceId, readiness, null) { }
+        : this(registry, spaceId, readiness, null, null) { }
 
     public SpaceBuilderPage(SpaceRegistry registry, Guid spaceId, ICuiSceneReadiness readiness, Func<Task, bool>? queueBack)
+        : this(registry, spaceId, readiness, queueBack, null) { }
+
+    public SpaceBuilderPage(SpaceRegistry registry, Guid spaceId, ICuiSceneReadiness readiness, Func<Task, bool>? queueBack, ExtensionManager? extensions)
     {
         Dispatcher.UIThread.VerifyAccess();
         _controller = new(registry, spaceId);
+        _extensions = extensions;
         _readiness = readiness ?? throw new ArgumentNullException(nameof(readiness));
         _queueBack = queueBack;
         var document = SpaceBuilderCuiDocument.Load();
@@ -50,6 +57,8 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
             (field, value) => TryEdit(field, value),
             (category, state) => TrySetCategory(category, state),
             (kind, id) => TryDetachCapability(kind, id),
+            () => _installedSkills,
+            () => _installedPlugins,
             DispatchAsync, CanMutate, () => _queueBack is not null);
         _controller.StateChanged += OnStateChanged;
         Document = document;
@@ -78,6 +87,15 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
                 original.BindPublicationGuard(IsPresentationCurrent);
                 using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, original.Token);
                 await original.AwaitAsync(Source(() => _controller.LoadAsync(linked.Token))).ConfigureAwait(false);
+                if (_extensions is not null)
+                {
+                    try
+                    {
+                        _installedSkills = await original.AwaitAsync(Source(() => _extensions.ListSkillsAsync(linked.Token))).ConfigureAwait(false);
+                        _installedPlugins = await original.AwaitAsync(Source(() => _extensions.ListPluginsAsync(linked.Token))).ConfigureAwait(false);
+                    }
+                    catch { _installedSkills = []; _installedPlugins = []; }
+                }
                 Task<CuiSceneAvailability>? show = null;
                 var dispatch = Dispatcher.UIThread.InvokeAsync(() =>
                 {
@@ -148,6 +166,23 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
         }
     }
 
+    public bool TryAttachCapability(SpaceCapabilityBinding binding)
+    {
+        lock (_gate)
+        {
+            if (!CanMutate()) return false;
+            var accepted = false;
+            _work.RunSynchronous(original =>
+            {
+                original.BindPublicationGuard(IsPresentationCurrent);
+                original.DemandPublication();
+                accepted = Source(() => _controller.AttachCapability(binding));
+                if (accepted) _editEpoch++;
+            });
+            return accepted;
+        }
+    }
+
     public Task<bool> SaveAsync(CancellationToken token = default) => RunControllerAsync(_controller.SaveAsync, token);
     public Task<bool> DiscardChangesAsync(CancellationToken token = default) => RunControllerAsync(_controller.DiscardChangesAsync, token);
     public Task<bool> ReloadAsync(CancellationToken token = default) => RunControllerAsync(_controller.LoadAsync, token);
@@ -174,6 +209,27 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
 
     private async ValueTask DispatchAsync(string command, object? parameter, CancellationToken token)
     {
+        if (command == "space-builder.skill.attach" && parameter is string skillId)
+        {
+            var skill = _installedSkills.FirstOrDefault(s => s.SkillId == skillId);
+            if (skill is not null)
+            {
+                var binding = new SpaceCapabilityBinding(skill.SkillId, SpaceCapabilityKind.Skill, SpaceCapabilityOverride.Inherit, skill.PackageVersion);
+                TryAttachCapability(binding);
+            }
+            return;
+        }
+        if (command == "space-builder.plugin.attach" && parameter is string pluginId)
+        {
+            var plugin = _installedPlugins.FirstOrDefault(p => p.Manifest.PackageId == pluginId);
+            if (plugin is not null && plugin.Manifest.Capabilities.Count > 0)
+            {
+                var cap = plugin.Manifest.Capabilities[0];
+                var binding = new SpaceCapabilityBinding($"extension.{pluginId}.{cap.Id}", SpaceCapabilityKind.Plugin, SpaceCapabilityOverride.Inherit, plugin.Manifest.Version);
+                TryAttachCapability(binding);
+            }
+            return;
+        }
         if (command == "space-builder.back")
         {
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

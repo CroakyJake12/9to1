@@ -10,6 +10,8 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
     ICuiActionAvailability, ICuiRepeatItemBindingContext, INotifyPropertyChanged
 {
     private readonly Func<SpaceBuilderState> _state;
+    private readonly Func<IReadOnlyList<Haven.Core.ExtensionSkillCatalogEntry>> _installedSkills;
+    private readonly Func<IReadOnlyList<Haven.Core.InstalledExtensionPackage>> _installedPlugins;
     private readonly Action<SpaceBuilderField, string> _edit;
     private readonly Action<SpaceBuilderCategory, SpaceCapabilityCategoryState> _setCategory;
     private readonly Action<SpaceCapabilityKind, string> _detachCapability;
@@ -21,18 +23,24 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
     public SpaceBuilderCuiBindings(Func<SpaceBuilderState> state, Action<SpaceBuilderField, string> edit,
         Action<SpaceBuilderCategory, SpaceCapabilityCategoryState> setCategory,
         Action<SpaceCapabilityKind, string> detachCapability,
+        Func<IReadOnlyList<Haven.Core.ExtensionSkillCatalogEntry>> installedSkills,
+        Func<IReadOnlyList<Haven.Core.InstalledExtensionPackage>> installedPlugins,
         Func<string, object?, CancellationToken, ValueTask> dispatch, Func<bool>? isCurrent = null)
-        : this(state, edit, setCategory, detachCapability, dispatch, isCurrent, null) { }
+        : this(state, edit, setCategory, detachCapability, installedSkills, installedPlugins, dispatch, isCurrent, null) { }
 
     public SpaceBuilderCuiBindings(Func<SpaceBuilderState> state, Action<SpaceBuilderField, string> edit,
         Action<SpaceBuilderCategory, SpaceCapabilityCategoryState> setCategory,
         Action<SpaceCapabilityKind, string> detachCapability,
+        Func<IReadOnlyList<Haven.Core.ExtensionSkillCatalogEntry>> installedSkills,
+        Func<IReadOnlyList<Haven.Core.InstalledExtensionPackage>> installedPlugins,
         Func<string, object?, CancellationToken, ValueTask> dispatch, Func<bool>? isCurrent, Func<bool>? canGoBack)
     {
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _edit = edit ?? throw new ArgumentNullException(nameof(edit));
         _setCategory = setCategory ?? throw new ArgumentNullException(nameof(setCategory));
         _detachCapability = detachCapability ?? throw new ArgumentNullException(nameof(detachCapability));
+        _installedSkills = installedSkills ?? (() => []);
+        _installedPlugins = installedPlugins ?? (() => []);
         _dispatch = dispatch ?? throw new ArgumentNullException(nameof(dispatch));
         _isCurrent = isCurrent ?? (() => true);
         _canGoBack = canGoBack ?? (() => false);
@@ -67,6 +75,22 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
                 version = b.VersionPin ?? "(unpinned)"
             }).ToArray(),
             "builder.hasNoCapabilities" => state.Draft.CapabilityBindings.Count == 0,
+            "builder.installedSkills" => _installedSkills().Select(s => new
+            {
+                id = s.SkillId,
+                name = s.Name,
+                version = s.PackageVersion,
+                status = s.IsAvailable ? "Available" : "Unavailable",
+                attached = state.Draft.CapabilityBindings.Any(b => b.CapabilityId == s.SkillId)
+            }).ToArray(),
+            "builder.installedPlugins" => _installedPlugins().Select(p => new
+            {
+                id = p.Manifest.PackageId,
+                name = p.Manifest.DisplayName,
+                version = p.Manifest.Version,
+                state = p.State.ToString(),
+                attached = state.Draft.CapabilityBindings.Any(b => b.CapabilityId == p.Manifest.PackageId)
+            }).ToArray(),
             "builder.category.options" => CategoryOptions,
             "builder.category.skills" => CategoryIndex(SpaceBuilderCategory.Skills),
             "builder.category.plugins" => CategoryIndex(SpaceBuilderCategory.Plugins),

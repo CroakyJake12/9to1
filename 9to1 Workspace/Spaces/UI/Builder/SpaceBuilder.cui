@@ -1,6 +1,8 @@
 <Cui id="spaces.builder" version="1">
   <Actions>
     <Action name="RemoveCapability" command="space-builder.capability.remove" parameter="{Binding cap.id}" />
+    <Action name="AttachSkill" command="space-builder.skill.attach" parameter="{Binding skill.id}" />
+    <Action name="AttachPlugin" command="space-builder.plugin.attach" parameter="{Binding plugin.id}" />
   </Actions>
   <Theme Name="user_preference">
     <Page id="space-builder-editor" role="main" accessible-name="Space Builder">
@@ -32,6 +34,26 @@
           <Input id="space-builder-category-models" Type="Select" ItemsSource="{Binding builder.category.options}" SelectedIndex="{Binding builder.category.models, mode=TwoWay}" Interactive="{Binding builder.canEdit}" accessible-name="Models category state" />
           <Text text="Memory" foreground="{Resource CuiTextBrush}" />
           <Input id="space-builder-category-memory" Type="Select" ItemsSource="{Binding builder.category.options}" SelectedIndex="{Binding builder.category.memory, mode=TwoWay}" Interactive="{Binding builder.canEdit}" accessible-name="Memory category state" />
+        </Container>
+        <Container Type="Vertical Stack" CellGap="4">
+          <Text text="Installed Skills" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <Repeat id="space-builder-installed-skills" Source="{Binding builder.installedSkills}" As="skill" Key="{Binding skill.id}">
+            <Container id="space-builder-installed-skill-row" Type="Horizontal Stack" CellGap="8">
+              <Text id="space-builder-skill-name" text="{Binding skill.name}" foreground="{Resource CuiTextBrush}" />
+              <Text id="space-builder-skill-status" text="{Binding skill.status}" foreground="{Resource CuiTextSoftBrush}" />
+              <Button id="space-builder-attach-skill" content="Attach" action="space-builder.skill.attach" Interactive="{Binding builder.canEdit}" accessible-name="Attach skill" />
+            </Container>
+          </Repeat>
+        </Container>
+        <Container Type="Vertical Stack" CellGap="4">
+          <Text text="Installed Plugins" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <Repeat id="space-builder-installed-plugins" Source="{Binding builder.installedPlugins}" As="plugin" Key="{Binding plugin.id}">
+            <Container id="space-builder-installed-plugin-row" Type="Horizontal Stack" CellGap="8">
+              <Text id="space-builder-plugin-name" text="{Binding plugin.name}" foreground="{Resource CuiTextBrush}" />
+              <Text id="space-builder-plugin-state" text="{Binding plugin.state}" foreground="{Resource CuiTextSoftBrush}" />
+              <Button id="space-builder-attach-plugin" content="Attach" action="space-builder.plugin.attach" Interactive="{Binding builder.canEdit}" accessible-name="Attach plugin" />
+            </Container>
+          </Repeat>
         </Container>
         <Container Type="Vertical Stack" CellGap="4">
           <Text text="Attached capabilities" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
