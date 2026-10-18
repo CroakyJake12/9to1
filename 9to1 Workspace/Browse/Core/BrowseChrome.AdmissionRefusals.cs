@@ -37,6 +37,27 @@ public sealed partial class BrowseChrome
 {
     private readonly List<BrowseAdmissionRefusalRecord> _admissionRefusals = [];
 
+    // The witness is not just an exception instance: it is the exact live content
+    // admission that produced it, plus the action tasks that were already in flight for
+    // this chrome at that moment. Retirement is only ever considered for that admission's
+    // own propagation chain, so a later bound factory or owner that forwards, rethrows or
+    // aggregates the same refusal keeps its full obligation.
+    private readonly List<(BrowseAdmissionRefusalRecord Record, ContentTransition? Fence, Task[] Actions)> _admissionProvenance = [];
+    private readonly List<Task> _declaredActions = [];
+
+    /// <summary>Declares the exact outer action task a caller is running against this chrome,
+    /// so a witnessed no-effect admission can account its own propagation chain. Only tasks
+    /// in flight at the moment of the witness become part of that admission's chain.</summary>
+    public void DeclareAdmissionPropagation(Task action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        lock (_nativeSourceGate)
+        {
+            _declaredActions.RemoveAll(declared => declared.IsCompleted);
+            if (!_declaredActions.Contains(action, ReferenceEqualityComparer.Instance)) _declaredActions.Add(action);
+        }
+    }
+
     /// <summary>Native admissions this chrome's own composition owner refused before
     /// returning any session, oldest first. They remain failed and inspectable and are
     /// never presented as a successful open or a clean retirement.</summary>
@@ -44,15 +65,17 @@ public sealed partial class BrowseChrome
     { get { lock (_nativeSourceGate) return _admissionRefusals.ToArray(); } }
 
     /// <summary>
-    /// Withdraws the retirement obligation of one retained source, and only when this
-    /// chrome personally witnessed that source's refusal at its own app-content creation
-    /// for the exact recorded request, and the source's COMPLETE original fault graph
-    /// (task.Exception, including every sibling) contains nothing else. The refusal stays
-    /// failed and inspectable in the ledger; the source leaves the retirement sets so it
-    /// cannot permanently block close or consume bounded unresolved-source capacity.
-    /// A genuine sibling, a hand-made wrapper reusing a captured refusal, an unwitnessed
-    /// refusal, a pinned contract source and any other fault all return false and keep
-    /// their full retirement obligation.
+    /// Withdraws the retirement obligation of one retained source, and only when that
+    /// source belongs to the propagation chain of a specific admission this chrome
+    /// witnessed: the source must be a task the chrome retained for that exact live
+    /// content admission (or an enclosing one), and the source's COMPLETE original fault
+    /// graph (task.Exception, including every sibling) must contain nothing but that
+    /// admission's own refusal. The refusal stays failed and inspectable in the ledger;
+    /// the source leaves the retirement sets so it cannot permanently block close or
+    /// consume bounded unresolved-source capacity.
+    /// A later task that rethrows, wraps or aggregates a captured refusal, a genuine
+    /// sibling, a hand-made wrapper, a pinned contract source and any other fault all
+    /// return false and keep their full retirement obligation.
     /// </summary>
     public bool TryRetireAdmissionSource(Task source)
     { lock (_nativeSourceGate) return TryRetireAdmissionSourceLocked(source); }
@@ -71,7 +94,10 @@ public sealed partial class BrowseChrome
     {
         if (source is not { IsFaulted: true } || source.Exception is not { } graph) return false;
         if (_contractSources.Contains(source)) return false;
-        return IsWitnessedAdmissionGraph(graph);
+        foreach (var (record, fence, actions) in _admissionProvenance)
+            if ((IsOwnedByAdmissionChain(fence, source) || actions.Contains(source, ReferenceEqualityComparer.Instance))
+                && IsExactRefusalGraph(graph, record.Refusal)) return true;
+        return false;
     }
 
     /// <summary>
@@ -79,35 +105,46 @@ public sealed partial class BrowseChrome
     /// right now. Called only from the catch around this chrome's own CreateSession call,
     /// so the chrome itself establishes that no session was returned. The proof must be the
     /// composition-issued type, must name this exact chrome-minted request and must come
-    /// from this chrome's own factory. Returns false for every other fault, which then
-    /// keeps its ordinary conservative handling.
+    /// from this chrome's own factory. The chrome also records which live content admission
+    /// was executing, which is the only propagation chain retirement may later consider.
+    /// Returns false for every other fault, which then keeps its ordinary conservative
+    /// handling.
     /// </summary>
     private bool TryWitnessAdmissionRefusal(Exception failure, BrowseAppContentRequest request)
     {
         if (failure is not BrowseNativeAdmissionRefusal refusal) return false;
         if (!ReferenceEquals(refusal.Request, request)) return false;
         if (!ReferenceEquals(refusal.IssuingFactory, _appContentFactory)) return false;
+        var fence = _executingContentTransition.Value;
         lock (_nativeSourceGate)
         {
-            foreach (var existing in _admissionRefusals)
-                if (ReferenceEquals(existing.Refusal, refusal)) return true;
-            _admissionRefusals.Add(new BrowseAdmissionRefusalRecord(request, refusal));
+            foreach (var existing in _admissionProvenance)
+                if (ReferenceEquals(existing.Record.Refusal, refusal)) return true;
+            var record = new BrowseAdmissionRefusalRecord(request, refusal);
+            _admissionRefusals.Add(record);
+            _admissionProvenance.Add((record, fence, _declaredActions.Where(action => !action.IsCompleted).ToArray()));
         }
         return true;
     }
 
+    private static bool IsOwnedByAdmissionChain(ContentTransition? fence, Task source)
+    {
+        for (; fence is not null; fence = fence.Parent)
+            if (fence.Retained.Contains(source, ReferenceEqualityComparer.Instance)) return true;
+        return false;
+    }
+
     /// <summary>
-    /// Walks the complete fault graph. Every node must be either a refusal this chrome
-    /// witnessed for one of its own admissions, or a task aggregate produced by task
-    /// composition over such refusals. Any other node, including a hand-made wrapper that
-    /// captured a genuine refusal and any genuine sibling cause, makes the whole graph
-    /// conservative.
+    /// Walks the complete fault graph. Every node must be either the exact refusal of one
+    /// witnessed admission or a task aggregate produced by task composition over such
+    /// refusals. Any other node, including a wrapper that captured a refusal and any
+    /// genuine sibling cause, makes the whole graph conservative.
     /// </summary>
-    private bool IsWitnessedAdmissionGraph(Exception graph)
+    private static bool IsExactRefusalGraph(Exception graph, Exception refusal)
     {
         var seen = new HashSet<Exception>(ReferenceEqualityComparer.Instance);
         var pending = new Stack<Exception>();
-        var witnessed = 0;
+        var leaves = 0;
         pending.Push(graph);
         while (pending.Count != 0)
         {
@@ -119,19 +156,10 @@ public sealed partial class BrowseChrome
                 foreach (var nested in group.InnerExceptions) pending.Push(nested);
                 continue;
             }
-            if (current is not BrowseNativeAdmissionRefusal) return false;
-            if (current.InnerException is not null) return false;
-            if (!IsWitnessedRefusal(current)) return false;
-            witnessed++;
+            if (!ReferenceEquals(current, refusal) || current.InnerException is not null) return false;
+            leaves++;
         }
-        return witnessed > 0;
-    }
-
-    private bool IsWitnessedRefusal(Exception failure)
-    {
-        foreach (var record in _admissionRefusals)
-            if (ReferenceEquals(record.Refusal, failure)) return true;
-        return false;
+        return leaves > 0;
     }
 
     /// <summary>Withdraws provably no-effect admission failures from a retirement set.

@@ -1104,6 +1104,14 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         foreach (var tab in _tabs.ToArray())
             try { await ReleaseContentAsync(tab).ConfigureAwait(false); } catch (Exception failure) { failures.Add(failure); }
         await DrainOriginalSourcesAsync().ConfigureAwait(false);
+        // A no-effect admission may be retained only in the transition set. Withdraw it
+        // from both sets here so the inspectable accounting matches the ledger; genuine
+        // causes were already added to 'failures' above and stay blocking.
+        lock (_nativeSourceGate)
+        {
+            PruneAdmissionRefusalsLocked(_originalContentTransitions);
+            PruneAdmissionRefusalsLocked(_originalNativeSources);
+        }
         // Keep the same tabs, stores and failed sources available to their owner
         // when any effect/retirement remains unsuccessful.
         if (failures.Count != 0) throw new AggregateException("Browse retained its original native source/resource failures.", failures);

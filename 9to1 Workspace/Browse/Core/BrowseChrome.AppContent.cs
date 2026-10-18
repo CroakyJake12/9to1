@@ -40,8 +40,8 @@ public sealed partial class BrowseChrome
     private readonly HashSet<Task> _contractSources = [];
     private void PinContractSource(Task? source)
     { if (source is not null) lock (_nativeSourceGate) { _contractSources.Add(source); _originalNativeSources.Add(source); } }
-    private void RetainAppSource(Task source)
-    { lock (_nativeSourceGate) { _originalNativeSources.RemoveAll(task => task.IsCompletedSuccessfully && !_contractSources.Contains(task)); PruneAdmissionRefusalsLocked(_originalNativeSources); _originalNativeSources.Add(source); } }
+    private void RetainAppSource(Task source, ContentTransition? fence = null)
+    { lock (_nativeSourceGate) { (fence ?? _executingContentTransition.Value)?.Retained.Add(source); _originalNativeSources.RemoveAll(task => task.IsCompletedSuccessfully && !_contractSources.Contains(task)); PruneAdmissionRefusalsLocked(_originalNativeSources); _originalNativeSources.Add(source); } }
 
     private Task<BrowseChromeSnapshot> RetainNativeAdmission(Func<Task<BrowseChromeSnapshot>> operation, CancellationToken token)
     {

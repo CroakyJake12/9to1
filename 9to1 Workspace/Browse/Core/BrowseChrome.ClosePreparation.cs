@@ -14,10 +14,11 @@ public sealed partial class BrowseChrome
     private readonly List<Task> _originalContentTransitions = [];
     public IReadOnlyList<Task> OriginalContentTransitions
     { get { lock (_nativeSourceGate) return _originalContentTransitions.ToArray(); } }
-    private void RetainContentSource(Task actual)
+    private void RetainContentSource(Task actual, ContentTransition? fence = null)
     {
         lock (_nativeSourceGate)
         {
+            (fence ?? _executingContentTransition.Value)?.Retained.Add(actual);
             _originalContentTransitions.RemoveAll(task => task.IsCompletedSuccessfully);
             PruneAdmissionRefusalsLocked(_originalContentTransitions);
             _originalContentTransitions.Add(actual);
@@ -28,6 +29,14 @@ public sealed partial class BrowseChrome
     // counter or a substitute completion receipt for an app/engine source.
     private sealed class ContentTransition(BrowseChrome owner) : IDisposable
     {
+        /// <summary>The enclosing live admission, so a witnessed admission can prove which
+        /// tasks are its own propagation chain rather than any later task that happens to
+        /// carry the same exception.</summary>
+        public ContentTransition? Parent;
+
+        /// <summary>The exact tasks this fence retained while it was live.</summary>
+        public readonly List<Task> Retained = [];
+
         public void Dispose() { lock (owner._nativeSourceGate) owner._contentTransitions.Remove(this); }
     }
     private ContentTransition AdmitContentTransition()
@@ -43,7 +52,7 @@ public sealed partial class BrowseChrome
             PruneAdmissionRefusalsLocked(_originalContentTransitions);
             if (_originalContentTransitions.Count(task => !task.IsCompletedSuccessfully) >= 128)
                 throw new InvalidOperationException("Retire this host before admitting more unresolved content transitions.");
-            var actual = new ContentTransition(this);
+            var actual = new ContentTransition(this) { Parent = _executingContentTransition.Value };
             _contentTransitions.Add(actual);
             return actual;
         }
@@ -54,8 +63,8 @@ public sealed partial class BrowseChrome
         var admission = AdmitContentTransition();
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var original = RunAsync();
-        RetainContentSource(original);
-        if (blocksRetirement) RetainAppSource(original);
+        RetainContentSource(original, admission);
+        if (blocksRetirement) RetainAppSource(original, admission);
         start.SetResult(); return original;
         async Task<T> RunAsync()
         {
@@ -67,8 +76,8 @@ public sealed partial class BrowseChrome
                 try
                 {
                     var actual = operation() ?? throw new InvalidOperationException("The content transition supplied no original task.");
-                    RetainContentSource(actual);
-                    if (blocksRetirement) RetainAppSource(actual);
+                    RetainContentSource(actual, admission);
+                    if (blocksRetirement) RetainAppSource(actual, admission);
                     return await actual.ConfigureAwait(false);
                 }
                 finally { _executingContentTransition.Value = previous; }

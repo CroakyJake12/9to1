@@ -343,6 +343,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         // Admission is checked before producing a new source. Always retain a
         // source that already exists, including a source produced reentrantly.
         PruneAdmissionRefusals(sources);
+        // The chrome accounts only the actions in flight when it witnesses a no-effect
+        // admission, so this declares the exact task the workspace is running.
+        _chrome.DeclareAdmissionPropagation(original);
         sources.Add(original);
     }
     /// <summary>A native admission this chrome's own composition owner proved it had not

@@ -55,6 +55,7 @@ public sealed class NativeAdmissionShutdownTests
             Assert.Equal(1, files.Creations);
             Assert.False(rig.Registry!.HasImplementation(Shelf));
             Assert.NotNull(chrome.State.SelectedTab); Assert.False(chrome.State.SelectedTab.IsHome);
+            var originalTabId = chrome.State.SelectedTabId;
 
             Assert.True(workspace.QueueNavigation(new(chrome.State.SelectedTabId,
                 AppContentAddress.Parse("9to1://shelf"), false), Task.CompletedTask));
@@ -94,6 +95,12 @@ public sealed class NativeAdmissionShutdownTests
             Assert.Equal(2, chrome.AdmissionRefusals.Count);
             Assert.Equal(1, files.Creations);
 
+            // The chrome stays usable: a real admitted native navigation succeeds after the
+            // refusals, so the repair is not merely letting a broken session close.
+            await chrome.NavigateAsync("9to1://files/after-refusal").WaitAsync(Bound);
+            Assert.Equal("9to1://files/after-refusal", chrome.State.SelectedTab!.Address.Value);
+            Assert.Equal(2, files.Creations);
+
             // The defect: this no-effect admission refusal permanently poisons host shutdown,
             // so the actual host close cannot complete and a fresh workspace is not admittable.
             var close = rig.Host.CloseAndDrainAsync();
@@ -110,7 +117,7 @@ public sealed class NativeAdmissionShutdownTests
             Assert.Equal(2, chrome.AdmissionRefusals.Count);
             Assert.True(driver.IsFaulted);
             await rig.Host.CloseAndDrainAsync().WaitAsync(Bound);
-            await rig.ReopenNativeWorkspaceAsync();
+            await rig.ReopenNativeWorkspaceAsync(originalTabId, "9to1://files/after-refusal");
         });
     }
 
@@ -125,7 +132,8 @@ public sealed class NativeAdmissionShutdownTests
             Assert.Equal(1, files.Creations);
             Assert.False(rig.Registry!.HasImplementation(Assistants));
 
-            Assert.True(workspace.QueueNavigation(new(chrome.State.SelectedTabId,
+            var selectedTabId = chrome.State.SelectedTabId;
+            Assert.True(workspace.QueueNavigation(new(selectedTabId,
                 AppContentAddress.Parse("9to1://assistants"), true), Task.CompletedTask));
             var driver = workspace.OriginalCommand!;
             var refusal = await Record.ExceptionAsync(() => driver).AsTask().WaitAsync(Bound);
@@ -145,11 +153,16 @@ public sealed class NativeAdmissionShutdownTests
             // The refusal is accounted in the failed-action ledger, not as a retirement cause.
             var record = Assert.Single(chrome.AdmissionRefusals);
             Assert.True(ReferenceEquals(record.Refusal, refusal));
-            // The chrome admits the canonical native route for this authority, so the ledger
-            // records the request the chrome actually made rather than the typed intent text.
-            Assert.EndsWith("assistants", record.Address.Value);
+            // The chrome admits the canonical route for this authority, so the ledger keeps the
+            // full address identity the chrome actually requested, not the typed intent text.
+            Assert.Equal("9to1://spaces/assistants", record.Address.Value);
+            Assert.Equal("spaces", record.Address.Authority);
             Assert.Equal(AppContentNamespace.NativeApp, record.Address.Namespace);
-            Assert.Equal(chrome.State.SelectedTabId, record.TabId);
+            // A new-tab admission is owned by the speculative new tab, which the chrome
+            // removes once the admission is refused, so the ledger keeps that tab's identity
+            // rather than the source tab's.
+            Assert.NotEqual(Guid.Empty, record.TabId);
+            Assert.NotEqual(selectedTabId, record.TabId);
             Assert.Empty(Faulted(chrome.OriginalNativeSources));
             Assert.Empty(Faulted(chrome.OriginalContentTransitions));
             Assert.True(driver.IsFaulted);
@@ -195,60 +208,63 @@ public sealed class NativeAdmissionShutdownTests
         });
     }
 
-    // Negative control for the observed forgery risk: an ordinary app-content factory that
-    // takes a real effect and then throws a marker-shaped exception, or that reuses a genuine
-    // composition refusal inside its own wrapper, never has its retirement obligation waived.
-    // Only the composition-issued proof naming the exact chrome-minted request is witnessed.
-    [AvaloniaFact]
-    public async Task Effectful_factory_marker_and_reused_genuine_refusal_never_waive_retirement()
+    public enum RefusalReplay { Marker, DirectRethrow, AggregateForward, WrapperForward }
+
+    // Negative control for the observed replay risk: a bound authority whose factory takes a
+    // real effect and then throws a marker-shaped exception, directly rethrows a genuine
+    // refusal captured from an earlier admission in the same chrome, aggregates that refusal,
+    // or wraps it, never has its retirement obligation waived. Each shape runs in its own
+    // rig, because a prior effectful failure intentionally poisons that owner's lifetime and
+    // would otherwise stop the next factory from being invoked at all.
+    [AvaloniaTheory]
+    [InlineData(RefusalReplay.Marker)]
+    [InlineData(RefusalReplay.DirectRethrow)]
+    [InlineData(RefusalReplay.AggregateForward)]
+    [InlineData(RefusalReplay.WrapperForward)]
+    public async Task Captured_or_marker_refusal_replayed_by_an_effectful_owner_never_waives_retirement(
+        RefusalReplay replay)
     {
-        var files = new FilesFactory(); var marker = new MarkerForgeryFactory(); var wrapper = new WrapperForgeryFactory();
-        await using var rig = await Rig.CreateAsync((Files, files), (Shelf, marker), (Assistants, wrapper));
+        var files = new FilesFactory(); var replayer = new ReplayFactory(replay);
+        await using var rig = await Rig.CreateAsync((Files, files), (Shelf, replayer));
         await RunBoundedAsync(rig, async rig =>
         {
             var chrome = rig.Chrome!; var workspace = rig.Workspace!;
+            var selectedTabId = chrome.State.SelectedTabId;
 
-            // A genuine missing-binding refusal, witnessed by the chrome for its own request.
-            Assert.True(workspace.QueueNavigation(new(chrome.State.SelectedTabId,
-                AppContentAddress.Parse("9to1://planner"), false), Task.CompletedTask));
+            // A genuine missing-binding refusal, witnessed by this chrome for its own request.
+            Assert.True(workspace.QueueNavigation(new(selectedTabId,
+                AppContentAddress.Parse("9to1://boards"), false), Task.CompletedTask));
             var genuine = await Record.ExceptionAsync(() => workspace.OriginalCommand!).AsTask().WaitAsync(Bound);
             Assert.NotNull(genuine);
             Assert.Equal(RefusalMessage, genuine!.Message);
-            var genuineRecord = Assert.Single(chrome.AdmissionRefusals);
-            Assert.True(ReferenceEquals(genuineRecord.Refusal, genuine));
-            wrapper.Captured = genuine;
+            Assert.True(ReferenceEquals(Assert.Single(chrome.AdmissionRefusals).Refusal, genuine));
+            replayer.Captured = genuine;
 
-            // Bound authority whose factory takes a real effect, then throws the same
-            // exception type and message as the genuine refusal.
-            Assert.True(workspace.QueueNavigation(new(chrome.State.SelectedTabId,
+            // The bound authority takes a real effect and then reproduces the refusal shape.
+            Assert.True(workspace.QueueNavigation(new(selectedTabId,
                 AppContentAddress.Parse("9to1://shelf"), false), Task.CompletedTask));
-            var forged = workspace.OriginalCommand!;
-            Assert.NotNull(await Record.ExceptionAsync(() => forged).AsTask().WaitAsync(Bound));
-            Assert.True(HasCause(forged, marker.Failure), Graph(forged.Exception));
+            var effectful = workspace.OriginalCommand!;
+            Assert.NotNull(await Record.ExceptionAsync(() => effectful).AsTask().WaitAsync(Bound));
 
-            // Bound authority whose factory takes a real effect and reuses the genuine
-            // refusal inside its own wrapper.
-            Assert.True(workspace.QueueNavigation(new(chrome.State.SelectedTabId,
-                AppContentAddress.Parse("9to1://assistants"), false), Task.CompletedTask));
-            var reused = workspace.OriginalCommand!;
-            Assert.NotNull(await Record.ExceptionAsync(() => reused).AsTask().WaitAsync(Bound));
-            Assert.True(HasCause(reused, wrapper.Failure!));
-            Assert.True(HasCause(reused, genuine!)); // the genuine instance is inside the wrapper
+            // Fixture fact before any product attribution: the bound factory really ran and
+            // really took its effect, and its exact failure is the one being carried.
+            Assert.Equal(1, replayer.Effects);
+            Assert.NotNull(replayer.Failure);
+            Assert.True(HasCause(effectful, replayer.Failure!), Graph(effectful.Exception));
 
-            // Neither forgery was witnessed: only the real missing-binding admission is in
-            // the ledger, and both effectful failures stay retained retirement causes.
-            Assert.Single(chrome.AdmissionRefusals);
-            Assert.Equal(2, marker.Effects + wrapper.Effects);
-            Assert.Contains(marker.Failure, FaultedCauses(chrome.OriginalNativeSources));
-            Assert.Contains(wrapper.Failure, FaultedCauses(chrome.OriginalNativeSources));
+            // Only the real missing-binding admission was witnessed. A replayed refusal does
+            // not become that admission's provenance, so the ledger still holds exactly one.
+            Assert.True(ReferenceEquals(Assert.Single(chrome.AdmissionRefusals).Refusal, genuine));
+            Assert.Contains(replayer.Failure!, FaultedCauses(chrome.OriginalNativeSources));
 
+            // The effectful owner keeps its obligation: the actual host close stays failed
+            // and terminal, carrying that exact cause.
             var close = rig.Host.CloseAndDrainAsync();
             rig.AssertedFailedClose = close;
             var first = await Record.ExceptionAsync(() => close).AsTask().WaitAsync(Bound);
             Assert.NotNull(first);
             Assert.True(close.IsFaulted);
-            Assert.True(HasCause(close, marker.Failure));
-            Assert.True(HasCause(close, wrapper.Failure!));
+            Assert.True(HasCause(close, replayer.Failure!), Graph(close.Exception));
             Assert.Same(close, rig.Host.CloseAndDrainAsync());
         });
     }
@@ -266,7 +282,7 @@ public sealed class NativeAdmissionShutdownTests
             var chrome = rig.Chrome!; var workspace = rig.Workspace!;
 
             Assert.True(workspace.QueueNavigation(new(chrome.State.SelectedTabId,
-                AppContentAddress.Parse("9to1://planner"), false), Task.CompletedTask));
+                AppContentAddress.Parse("9to1://boards"), false), Task.CompletedTask));
             var refusal = await Record.ExceptionAsync(() => workspace.OriginalCommand!).AsTask().WaitAsync(Bound);
             Assert.NotNull(refusal);
             var genuineRecord = Assert.Single(chrome.AdmissionRefusals);
@@ -391,9 +407,10 @@ public sealed class NativeAdmissionShutdownTests
             return host;
         }
         // Same disposable profile and same real registry: after an accepted host close a fresh
-        // Browse workspace and native view must be admittable without carrying the earlier
-        // refusal in. This is a reopened workspace in the same host/profile, not a new process.
-        internal async Task ReopenNativeWorkspaceAsync()
+        // Browse workspace and native view must be admittable, and the saved session must come
+        // back with its original tab identity. This is a reopened workspace in the same
+        // host/profile, not a new process.
+        internal async Task ReopenNativeWorkspaceAsync(Guid expectedTabId, string expectedAddress)
         {
             var profile = await Home.Profiles.GetCurrentAsync(CancellationToken.None).AsTask().WaitAsync(Bound);
             Assert.NotNull(profile);
@@ -401,7 +418,8 @@ public sealed class NativeAdmissionShutdownTests
             var registry = new NativeAppContentRegistry(new Modes(), new[] { new NativeAppContentRegistration(Files.Id, Files.Key,
                 HavenAppRoutePolicy.Resolve(Files).Kind, new FilesFactory()) }, () => alive);
             var chrome = await BrowseChrome.CreateAsync(Paths, appContentFactory: registry, homeProfileId: profile!.ProfileId).WaitAsync(Bound);
-            await chrome.NavigateAsync("9to1://files/reopened").WaitAsync(Bound);
+            var restored = chrome.State.Tabs.Single(tab => tab.Id == expectedTabId);
+            Assert.Equal(expectedAddress, restored.Address.Value);
             var workspace = new BrowseNativeWorkspace(chrome, _ => true);
             await PublishNativeSceneAsync(workspace).WaitAsync(Bound);
             await workspace.DisposeAsync().AsTask().WaitAsync(Bound);
@@ -467,33 +485,35 @@ public sealed class NativeAdmissionShutdownTests
         { Creations++; throw Failure; }
     }
 
-    // A bound authority whose factory takes a real filesystem effect and then throws the
-    // same exception type and message as a genuine missing-binding refusal.
-    private sealed class MarkerForgeryFactory : IBrowseAppContentFactory
-    {
-        internal readonly Exception Failure = new NotSupportedException(RefusalMessage);
-        internal int Effects;
-        public IBrowseAppContentSession CreateSession(BrowseAppContentRequest request)
-        { TakeEffect(); Effects++; throw Failure; }
-    }
-
-    // A bound authority whose factory takes a real effect and reuses a genuine composition
-    // refusal inside its own wrapper, so a captured valid refusal cannot bless that effect.
-    private sealed class WrapperForgeryFactory : IBrowseAppContentFactory
+    // A bound authority whose factory takes a real filesystem effect and then reproduces one
+    // of the observed replay shapes. Only the composition-issued proof for the exact
+    // chrome-minted request may ever be witnessed, so none of these may waive retirement.
+    private sealed class ReplayFactory(RefusalReplay replay) : IBrowseAppContentFactory
     {
         internal Exception? Captured, Failure;
         internal int Effects;
         public IBrowseAppContentSession CreateSession(BrowseAppContentRequest request)
         {
             TakeEffect(); Effects++;
-            throw Failure = new InvalidOperationException(
-                "The native surface took an effect and reused a captured refusal.", Captured);
+            Failure = replay switch
+            {
+                // Same exception type and message as a genuine refusal, wrong type identity.
+                RefusalReplay.Marker => new NotSupportedException(RefusalMessage),
+                // The genuine witnessed refusal, forwarded unchanged after taking an effect.
+                RefusalReplay.DirectRethrow => Captured!,
+                // The genuine refusal inside a task-shaped aggregate.
+                RefusalReplay.AggregateForward => new AggregateException(Captured!),
+                // The genuine refusal inside an ordinary wrapper.
+                _ => new InvalidOperationException(
+                    "The native surface took an effect and reused a captured refusal.", Captured),
+            };
+            throw Failure;
         }
     }
 
     private static void TakeEffect()
     {
-        var path = Path.Combine(Path.GetTempPath(), "r01-forged-effect-" + Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(Path.GetTempPath(), "r01-replayed-effect-" + Guid.NewGuid().ToString("N"));
         File.WriteAllText(path, "effect");
         File.Delete(path);
     }
