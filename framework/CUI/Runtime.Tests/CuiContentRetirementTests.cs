@@ -3,7 +3,11 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Skia;
-using Avalonia.Themes.Fluent;
+using Avalonia.Controls.Presenters;
+using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Templates;
+using Avalonia.Data;
+using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Language;
@@ -30,7 +34,7 @@ public sealed class CuiContentRetirementTests
     [InlineData(true)]
     public async Task Mounted_nested_control_content_retires_without_a_second_visual_parent(bool throughSceneHost)
     {
-        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiFluentRetirementTestApplication));
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiRetirementTestApplication));
         await session.Dispatch<bool>(async () =>
         {
             CuiControlLoader? loader = null;
@@ -116,12 +120,27 @@ public sealed class CuiContentRetirementTests
     }
 }
 
-// The real desktop host supplies Fluent before embedding CUI. Keep that competing
-// backend template present: a CUI-only test app would conceal fence-release bugs.
-public sealed class CuiFluentRetirementTestApplication : Application
+// Exercise the actual competing-template transition without loading a forbidden
+// donor theme. The deliberately small test template still re-parents real content
+// when CUI releases its projection; removing that competition would weaken this test.
+public sealed class CuiRetirementTestApplication : Application
 {
-    public override void Initialize() => Styles.Add(new FluentTheme());
+    public override void Initialize()
+    {
+        CuiNativeHost.InitialisePrimitiveTheme(this);
+        var replacement = new ControlTheme(typeof(Button));
+        replacement.Setters.Add(new Setter(TemplatedControl.TemplateProperty,
+            new FuncControlTemplate<Button>((_, names) =>
+            {
+                var presenter = new ContentPresenter { Name = "PART_ContentPresenter" };
+                names.Register(presenter.Name, presenter);
+                presenter.Bind(ContentPresenter.ContentProperty, new TemplateBinding(ContentControl.ContentProperty));
+                return presenter;
+            })));
+        Resources[typeof(Button)] = replacement;
+    }
+
     public static AppBuilder BuildAvaloniaApp() => CuiNativeHost.ConfigureFonts(
-        AppBuilder.Configure<CuiFluentRetirementTestApplication>()
+        AppBuilder.Configure<CuiRetirementTestApplication>()
             .UseSkia().UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false }));
 }

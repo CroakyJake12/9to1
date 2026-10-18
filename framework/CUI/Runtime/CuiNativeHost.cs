@@ -61,7 +61,14 @@ public static class CuiNativeHost
     private sealed class NativeApplication(CuiNativeScene scene) : Application
     {
         private readonly CancellationTokenSource _shutdown = new();
-        public override void Initialize() => InitialisePrimitiveTheme(this, scene.Surface, scene.Appearance);
+        private CuiSceneThemeBinding? _themeBinding;
+        public override void Initialize()
+        {
+            InitialisePrimitiveTheme(this, scene.Surface, scene.Appearance);
+            _themeBinding = new CuiSceneThemeBinding(scene);
+            Resources.MergedDictionaries.Add(_themeBinding.Resources);
+            this.Bind(RequestedThemeVariantProperty, this.GetResourceObservable("CuiSceneThemeVariant"));
+        }
         public override void OnFrameworkInitializationCompleted()
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -71,7 +78,7 @@ public static class CuiNativeHost
                 // CUI owns the same opaque surface on every backend. A native
                 // platform material must not become Professional's background.
                 window.Bind(Window.BackgroundProperty, window.GetResourceObservable("CuiBackgroundBrush"));
-                window.Closed += (_, _) => { _shutdown.Cancel(); host.Dispose(); };
+                window.Closed += (_, _) => { _themeBinding?.Dispose(); _shutdown.Cancel(); host.Dispose(); };
                 desktop.MainWindow = window;
                 _ = InitialiseAsync(host);
             }

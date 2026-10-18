@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using CakeOS.Cui.Language;
@@ -19,6 +20,9 @@ public sealed record CuiNativeScene(string AppId, string Title, string Surface, 
 {
     // Supplied by the host's canonical profile/theme authority; null inherits the current canonical appearance.
     public CuiAppearance? Appearance { get; init; }
+    /// <summary>Borrowed canonical Home preference context, including authorised offline cache.
+    /// The source owner retains its lifetime; a scene retires only its own subscriptions.</summary>
+    public CuiThemePreferenceContext? ThemePreference { get; init; }
     /// <summary>Trusted in-process owning app factories for typed native Object controls.</summary>
     public CuiControlRegistry? ControlRegistry { get; init; }
     /// <summary>Optional synchronous native-owner observation for each publication notification.
@@ -45,6 +49,8 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
     private CuiViewModel? _failureModel;
     public CuiActionFailure? LastActionFailure { get; private set; }
     private Avalonia.Controls.ResourceDictionary? _visualResources;
+    private CuiSceneThemeBinding? _themeBinding;
+    private CuiNativeScene? _currentScene;
     private readonly CancellationTokenSource _lifetime = new();
     private long _generation;
     private bool _disposed;
@@ -67,6 +73,7 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
         internal CuiControlLoader? Loader;
         internal Control? Root;
         internal Avalonia.Controls.ResourceDictionary? Resources;
+        internal CuiSceneThemeBinding? ThemeBinding;
         internal Task? Actions;
         internal Task? TerminalActions;
         internal bool Retired;
@@ -286,7 +293,7 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
                     if (publication.Resources is { } resources)
                         AttemptOriginal(errors, () => Resources.MergedDictionaries.Remove(resources));
                 }
-                _visualResources = null;
+                _visualResources = null; _themeBinding = null; _currentScene = null;
                 AttemptOriginal(errors, _lifetime.Dispose);
             });
         }
@@ -324,6 +331,7 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
     private static void RetireOriginal(OriginalPublication publication, List<Exception> errors)
     {
         CaptureRetirement(publication, errors);
+        AttemptOriginal(errors, () => publication.ThemeBinding?.Dispose());
         if (publication.DisposeAttempted || publication.Loader is not { } loader) return;
         publication.DisposeAttempted = true; // One original close attempt before callbacks.
         AttemptOriginal(errors, loader.Dispose);
@@ -381,17 +389,42 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
                 return;
             }
             if (_disposed || generation != Interlocked.Read(ref _generation)) return;
-            var effectiveAppearance = scene.Appearance ?? CuiThemeScopeApplier.DetectAppearance();
-            var visualResources = CuiSceneVisualResources.Create(scene.Surface, effectiveAppearance);
+            var (next, root, diagnostics, nextTheme) = LoadLegacyScene(scene, availability);
+            var old = _loader;
+            var oldTheme = _themeBinding;
+            next.ActionFailed += (_, failure) => ShowActionFailure(next, failure);
+            _failureLoader?.Dispose(); _failureLoader = null; _failureModel = null; LastActionFailure = null;
+            _loader = next;
+            _currentScene = scene;
+            _themeBinding = nextTheme;
             if (_visualResources is not null) Resources.MergedDictionaries.Remove(_visualResources);
-            Resources.MergedDictionaries.Add(visualResources);
-            _visualResources = visualResources;
-            SetValue(ThemeVariantScope.RequestedThemeVariantProperty, CuiSceneVisualResources.Variant(effectiveAppearance));
-            Background = (Avalonia.Media.IBrush?)visualResources["CuiBackgroundBrush"];
-            Foreground = (Avalonia.Media.IBrush?)visualResources["CuiTextBrush"];
-            var next = new CuiControlLoader(_registry);
-            next.SetSurface(scene.Surface);
-            next.SetAppearance(effectiveAppearance);
+            _visualResources = nextTheme.Resources;
+            Resources.MergedDictionaries.Add(_visualResources);
+            ApplySceneChrome(_visualResources, () => !_disposed && ReferenceEquals(_themeBinding, nextTheme));
+            Content = root;
+            Diagnostics = diagnostics;
+            Availability = availability;
+            oldTheme?.Dispose();
+            old?.Dispose();
+        }).GetTask();
+        if (publication is not null) publication.NativePublication = originalNativePublication;
+        try { await originalNativePublication.ConfigureAwait(false); }
+        catch (Exception error)
+        {
+            if (publication is not null) CaptureOriginalStage(publication, originalNativePublication, error);
+            throw;
+        }
+        return availability;
+    }
+
+    private (CuiControlLoader Loader, Control Root, IReadOnlyList<CuiDiagnostic> Diagnostics, CuiSceneThemeBinding Theme)
+        LoadLegacyScene(CuiNativeScene scene, CuiSceneAvailability availability)
+    {
+        var next = new CuiControlLoader(_registry);
+        CuiSceneThemeBinding? theme = null;
+        try
+        {
+            ConfigureSceneLoader(next, scene);
             if (availability.State == CuiSceneAvailabilityState.Ready)
             {
                 next.SetBindingContext(scene.Bindings);
@@ -408,28 +441,22 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
                 new CuiRichParser().Parse("<Cui><Container Type=\"Vertical Stack\"><Text id=\"scene-availability\" text=\"{Binding AvailabilityMessage}\" accessible-name=\"Application availability\" /></Container></Cui>");
             var loaded = next.TryLoad(document);
             if (loaded.Root is null || loaded.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
-            {
-                next.Dispose();
                 throw new InvalidDataException("The canonical CUI scene did not produce a usable root control.");
-            }
-            var old = _loader;
             next.WireBindings(loaded.Root);
-            next.ActionFailed += (_, failure) => ShowActionFailure(next, failure);
-            _failureLoader?.Dispose(); _failureLoader = null; _failureModel = null; LastActionFailure = null;
-            _loader = next;
-            Content = loaded.Root;
-            Diagnostics = loaded.Diagnostics;
-            Availability = availability;
-            old?.Dispose();
-        }).GetTask();
-        if (publication is not null) publication.NativePublication = originalNativePublication;
-        try { await originalNativePublication.ConfigureAwait(false); }
+            // A failed replacement attempt must not freeze the retained scene.
+            // Liveness follows the exact mounted binding, not the latest Show generation.
+            bool CanPublish() => !_disposed && ReferenceEquals(_themeBinding, theme);
+            theme = new CuiSceneThemeBinding(scene, CanPublish, resources => ApplySceneChrome(resources, CanPublish));
+            return (next, loaded.Root, loaded.Diagnostics, theme);
+        }
         catch (Exception error)
         {
-            if (publication is not null) CaptureOriginalStage(publication, originalNativePublication, error);
+            var errors = new List<Exception> { error };
+            AttemptOriginal(errors, () => theme?.Dispose());
+            AttemptOriginal(errors, next.Dispose);
+            ThrowOriginal(errors);
             throw;
         }
-        return availability;
     }
 
     private void ShowActionFailure(CuiControlLoader sender, CuiActionFailure failure)
@@ -441,7 +468,9 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
         if (_failureModel is null)
         {
             _failureModel = new CuiViewModel();
-            _failureLoader = new CuiControlLoader(_registry); _failureLoader.SetBindingContext(_failureModel);
+            _failureLoader = new CuiControlLoader(_registry);
+            if (_currentScene is { } currentScene) ConfigureSceneLoader(_failureLoader, currentScene);
+            _failureLoader.SetBindingContext(_failureModel);
             var banner = _failureLoader.Load(new CuiRichParser().Parse(
                 "<Cui><Text id=\"scene-action-status\" text=\"{Binding ActionStatus}\" text-wrapping=\"Wrap\" margin=\"12\" /></Cui>")) ?? throw new InvalidDataException("The action status CUI did not produce a control.");
             var original = Content as Control; Content = null;
@@ -469,11 +498,13 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
         try
         {
             DemandPublicationCurrent(generation, isPublicationCurrent, cancellationToken, publication);
-            var appearance = scene.Appearance ?? CuiThemeScopeApplier.DetectAppearance();
-            visualResources = publication.Resources = CuiSceneVisualResources.Create(scene.Surface, appearance);
+            bool CanPublish() => !_disposed && !publication.Retired &&
+                ReferenceEquals(_themeBinding, publication.ThemeBinding) && isPublicationCurrent();
+            publication.ThemeBinding = new CuiSceneThemeBinding(scene, CanPublish,
+                resources => ApplySceneChrome(resources, CanPublish));
+            visualResources = publication.Resources = publication.ThemeBinding.Resources;
             next = publication.Loader = new CuiControlLoader(_registry);
-            next.SetSurface(scene.Surface);
-            next.SetAppearance(appearance);
+            ConfigureSceneLoader(next, scene);
             if (availability.State == CuiSceneAvailabilityState.Ready)
             {
                 next.SetBindingContext(scene.Bindings);
@@ -502,14 +533,17 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
                 Publish(() => Resources.MergedDictionaries.Remove(oldResources));
             _visualResources = visualResources;
             Publish(() => Resources.MergedDictionaries.Add(visualResources));
-            Publish(() => SetValue(ThemeVariantScope.RequestedThemeVariantProperty, CuiSceneVisualResources.Variant(appearance)));
-            Publish(() => Background = (Avalonia.Media.IBrush?)visualResources["CuiBackgroundBrush"]);
-            Publish(() => Foreground = (Avalonia.Media.IBrush?)visualResources["CuiTextBrush"]);
+            Publish(() => SetValue(ThemeVariantScope.RequestedThemeVariantProperty,
+                SceneResource<Avalonia.Styling.ThemeVariant>(visualResources, "CuiSceneThemeVariant")));
+            Publish(() => Background = SceneResource<Avalonia.Media.IBrush>(visualResources, "CuiBackgroundBrush"));
+            Publish(() => Foreground = SceneResource<Avalonia.Media.IBrush>(visualResources, "CuiTextBrush"));
 
             previous = PublicationFor(_loader);
             previousFailure = PublicationFor(_failureLoader);
             _failureLoader = null; _failureModel = null; LastActionFailure = null;
             _loader = next;
+            _currentScene = scene;
+            _themeBinding = publication.ThemeBinding;
             _contentLoader = next; _contentRoot = root; // Exact assigned Content custody before its notification.
             transferred = true;
             Publish(() => Content = root);
@@ -580,6 +614,7 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
             {
                 model = new CuiViewModel();
                 acquired = publication.Loader = new CuiControlLoader(_registry);
+                if (_currentScene is { } currentScene) ConfigureSceneLoader(acquired, currentScene);
                 acquired.SetBindingContext(model);
                 var banner = acquired.Load(new CuiRichParser().Parse(
                     "<Cui><Text id=\"scene-action-status\" text=\"{Binding ActionStatus}\" text-wrapping=\"Wrap\" margin=\"12\" /></Cui>"))
@@ -754,6 +789,30 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
         return window;
     }
 
+    private void ApplySceneChrome(ResourceDictionary resources, Func<bool> canPublish)
+    {
+        if (!canPublish()) return;
+        SetValue(ThemeVariantScope.RequestedThemeVariantProperty,
+            SceneResource<Avalonia.Styling.ThemeVariant>(resources, "CuiSceneThemeVariant"));
+        if (!canPublish()) return;
+        Background = SceneResource<Avalonia.Media.IBrush>(resources, "CuiBackgroundBrush");
+        if (!canPublish()) return;
+        Foreground = SceneResource<Avalonia.Media.IBrush>(resources, "CuiTextBrush");
+    }
+
+    private static T SceneResource<T>(ResourceDictionary resources, string key) =>
+        resources.TryGetResource(key, null, out var value) && value is T typed ? typed :
+            throw new InvalidOperationException($"CUI_SCENE_THEME_RESOURCE: missing '{key}'.");
+
+    private static void ConfigureSceneLoader(CuiControlLoader loader, CuiNativeScene scene)
+    {
+        loader.SetSurface(scene.Surface, CuiSceneVisualResources.AccentAppId(scene));
+        if (scene.ThemePreference is { } context) loader.SetThemePreferenceContext(context);
+        // An explicit scene appearance is a preview override. Otherwise leave
+        // it unset so live Home appearance updates remain reactive.
+        if (scene.Appearance is { } appearance) loader.SetAppearance(appearance);
+    }
+
     public void Dispose()
     {
         lock (_originalGate)
@@ -769,6 +828,7 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
         _disposed = true;
         Interlocked.Increment(ref _generation);
         _lifetime.Cancel();
+        _themeBinding?.Dispose(); _themeBinding = null; _currentScene = null;
         _loader?.Dispose();
         _failureLoader?.Dispose(); _failureLoader = null; _failureModel = null;
         _loader = null;
