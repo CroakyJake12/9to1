@@ -76,23 +76,48 @@ public sealed class ApplicationLifecycleService : IApplicationLifecycle
     /// </summary>
     public async Task StartupAsync(CancellationToken cancellationToken)
     {
+        Interlocked.Exchange(ref _isStartupComplete, 0);
+        Task? actualStage = null;
         try
         {
-            await CheckPreviousShutdownAsync(cancellationToken).ConfigureAwait(false);
-            await _database.InitializeAsync(cancellationToken).ConfigureAwait(false);
-            await RunSqliteIntegrityCheckAsync(cancellationToken).ConfigureAwait(false);
-            await RunPreMigrationBackupsAsync(cancellationToken).ConfigureAwait(false);
+            await (actualStage = CheckPreviousShutdownAsync(cancellationToken)).ConfigureAwait(false);
+            await (actualStage = _database.InitializeAsync(cancellationToken)).ConfigureAwait(false);
+            await (actualStage = RunSqliteIntegrityCheckAsync(cancellationToken)).ConfigureAwait(false);
+            await (actualStage = RunPreMigrationBackupsAsync(cancellationToken)).ConfigureAwait(false);
 
             var markerPath = GetStartupMarkerPath();
-            await File.WriteAllTextAsync(markerPath, DateTimeOffset.UtcNow.ToString("O"), cancellationToken).ConfigureAwait(false);
+            await (actualStage = File.WriteAllTextAsync(markerPath, DateTimeOffset.UtcNow.ToString("O"), cancellationToken)).ConfigureAwait(false);
 
+            await (actualStage = _diagnostics.RecordErrorAsync("Startup", "Application started successfully", null, CancellationToken.None)).ConfigureAwait(false);
             Interlocked.Exchange(ref _isStartupComplete, 1);
-            await _diagnostics.RecordErrorAsync("Startup", "Application started successfully", null, CancellationToken.None).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
+            Interlocked.Exchange(ref _isStartupComplete, 0);
             Interlocked.Exchange(ref _isSafeMode, 1);
-            await _diagnostics.RecordErrorAsync("Startup", $"Startup failed: {ex.Message}", null, CancellationToken.None).ConfigureAwait(false);
+            var failures = new List<Exception>();
+            Capture(actualStage, ex);
+            Task? failureReport = null;
+            try
+            {
+                failureReport = _diagnostics.RecordErrorAsync("Startup", $"Startup failed: {ex.Message}", null, CancellationToken.None);
+                await failureReport.ConfigureAwait(false);
+            }
+            catch (Exception reportingFailure) { Capture(failureReport, reportingFailure); }
+            if (failures.Count == 1 && failures[0] is not OperationCanceledException)
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+            throw new AggregateException("Application startup or its failure report did not complete.", failures);
+
+            void Capture(Task? actual, Exception observed)
+            {
+                // Await exposes one observation; the SAME failed source may retain
+                // independent siblings. Preserve opaque groups and exact references.
+                if (actual?.Exception is { InnerExceptions.Count: > 0 } group)
+                    foreach (var cause in group.InnerExceptions) Add(cause);
+                else Add(observed);
+            }
+            void Add(Exception cause)
+            { if (!failures.Any(existing => ReferenceEquals(existing, cause))) failures.Add(cause); }
         }
     }
 
